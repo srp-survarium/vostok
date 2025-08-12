@@ -3471,6 +3471,26 @@
 					</File>
 				</Filter>
 			</Filter>
+			<Filter
+				Name="body_parts"
+				>
+				<File
+					RelativePath=".\body_part_parameters.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\body_part_parameters.h"
+					>
+				</File>
+				<File
+					RelativePath=".\hit_type_parameters.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\hit_type_parameters.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="input_handlers"

@@ -12,6 +12,8 @@
 #include "game_camera.h"
 #include "bullet_manager_input_handler.h"
 
+#include "hit_type_parameters.h"
+
 #include <xray/tasks_system.h>
 #include <xray/buffer_vector.h>
 #include <xray/console_command.h>
@@ -58,6 +60,9 @@ bullet_manager::bullet_manager ( game& game ) :
 {
 	initialize					( );
 	register_console_commands	( );
+
+	hit_type_parameters* htp = new hit_type_parameters("hand", 1., 1., 1., 0);
+	htp->apply_damage(10., 100);
 
 	static bullet_manager_input_handler	input_handler( *this );
 }
