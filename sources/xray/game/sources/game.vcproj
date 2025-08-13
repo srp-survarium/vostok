@@ -3514,6 +3514,10 @@
 					RelativePath=".\temp_include_all.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\temp_include_all.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

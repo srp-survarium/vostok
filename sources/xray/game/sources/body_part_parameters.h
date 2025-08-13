@@ -10,6 +10,7 @@ namespace stalker2 {
 class damage_protector;
 
 // @TODO: Should those enums be moved somewhere else?
+// Make sure their size is __int32
 enum hit_affects_type_enum
 {
   affects_type_death = 0x0,
@@ -29,6 +30,14 @@ enum affects_applying_type_enum
   type_apply_directly = 0x0,
   type_read_only = 0x1,
 };
+
+enum affect_event_type_enum
+{
+  affect_applying = 0x0,
+  affect_recalling = 0x1,
+  affect_canceling = 0x2,
+};
+
 //
 
 
