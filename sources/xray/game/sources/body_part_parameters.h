@@ -7,9 +7,32 @@
 
 namespace stalker2 {
 
-typedef void damage_protector;
+class damage_protector;
 
-class body_part_parameters : private boost::noncopyable {
+// @TODO: Should those enums be moved somewhere else?
+enum hit_affects_type_enum
+{
+  affects_type_death = 0x0,
+  affects_type_bleeding = 0x1,
+  affects_type_concussion = 0x2,
+  affects_type_hand_damage = 0x3,
+  affects_type_leg_damage = 0x4,
+  affects_type_critical_poisoning = 0x5,
+  affects_type_poisoning = 0x6,
+  affects_type_radiation_sickness = 0x7,
+  affects_type_blindness = 0x8,
+  affect_types_count = 0x9,
+};
+
+enum affects_applying_type_enum
+{
+  type_apply_directly = 0x0,
+  type_read_only = 0x1,
+};
+//
+
+
+class body_part_parameters : public boost::noncopyable {
 public:
 	body_part_parameters();
 
@@ -22,7 +45,9 @@ public:
 		damage_protector *prot
 		);
 
-private:
+public:
+	body_part_parameters* next;
+	// vostok::intrusive_list
 
 }; // class body_part_parameters 
 

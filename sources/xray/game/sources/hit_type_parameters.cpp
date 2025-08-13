@@ -8,10 +8,6 @@
 
 namespace stalker2 {
 
-//
-//
-//
-//
 hit_type_parameters::hit_type_parameters(const char* type, float absorption, float armor, float reduce, unsigned int bdb_count):
 	next(NULL),
 	m_type(type),
@@ -32,16 +28,6 @@ void hit_type_parameters::apply_damage(float delta, unsigned int time_in_ms)
 			it->first->hit_by_type( m_type.c_str(), time_in_ms, it->second * delta, 0.0f, 0, 0 );
 }
 
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 void hit_type_parameters::set_parameters(float armor, float reduce, float absorbtion)
 {
 	m_armor = armor;

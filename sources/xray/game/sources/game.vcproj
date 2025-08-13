@@ -3475,6 +3475,14 @@
 				Name="body_parts"
 				>
 				<File
+					RelativePath=".\affects_threshold.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\affects_threshold.h"
+					>
+				</File>
+				<File
 					RelativePath=".\body_part_parameters.cpp"
 					>
 				</File>
@@ -3483,11 +3491,27 @@
 					>
 				</File>
 				<File
+					RelativePath=".\damage_model.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\damage_model.h"
+					>
+				</File>
+				<File
+					RelativePath=".\damage_protector.h"
+					>
+				</File>
+				<File
 					RelativePath=".\hit_type_parameters.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\hit_type_parameters.h"
+					>
+				</File>
+				<File
+					RelativePath=".\temp_include_all.cpp"
 					>
 				</File>
 			</Filter>

@@ -12,7 +12,7 @@ namespace stalker2 {
 
 class body_part_parameters;
 
-class hit_type_parameters : private boost::noncopyable {
+class hit_type_parameters : public boost::noncopyable {
 public:
 	hit_type_parameters (
 		const char* type,
