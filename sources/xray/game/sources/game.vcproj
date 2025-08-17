@@ -3515,6 +3515,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\body_part_parameters.h"
+					>
+				</File>
+				<File
 					RelativePath=".\damage_model.cpp"
 					>
 				</File>
@@ -3551,30 +3555,10 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="predicates"
-					>
-					<File
-						RelativePath=".\find_hit_parameters_by_type_predicate.h"
-						>
-					</File>
-					<File
-						RelativePath=".\protect_affect_predicate.h"
-						>
-					</File>
-					<File
-						RelativePath=".\protect_damage_predicate.h"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="todo"
 					>
 					<File
 						RelativePath=".\body_part_parameters.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\body_part_parameters.h"
 						>
 					</File>
 					<File

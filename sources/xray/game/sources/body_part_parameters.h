@@ -12,6 +12,10 @@
 #include "affects_threshold.h"	 // intrusive_list
 #include "damage_protector.h"	 // intrusive_list
 
+//////////////////////////
+// FORWARD DECLARATIONS //
+//////////////////////////
+
 namespace stalker2 {
 	class damage_model;
 }
@@ -21,6 +25,10 @@ namespace xray {
 		struct npc_statistics;
 	}
 }
+
+//////////////////////////
+//     DEFINITIONS      //
+//////////////////////////
 
 namespace stalker2 {
 
@@ -190,6 +198,12 @@ public:
 	damage_protector_type				m_damage_protectors;
 
 }; // class body_part_parameters 
+
+namespace {
+	typedef char size_assert[
+		sizeof(body_part_parameters) == 0xB8 ? 1 : -1
+	];
+}
 
 } // namespace stalker2
 
