@@ -37,7 +37,7 @@ public:
 		return pointer_cast< std::pair<body_part_parameters*, float> const* >( pointer_cast< pcbyte >( this ) + sizeof( *this ) );
 	}
 
-private:
+public:
 	hit_type_parameters* next;
 	const xray::fixed_string<16> m_type;
 	float m_absorption_amount;

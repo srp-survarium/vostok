@@ -3384,38 +3384,6 @@
 				</Filter>
 			</Filter>
 			<Filter
-				Name="bullet_manager"
-				>
-				<File
-					RelativePath=".\bullet.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet.h"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_debug_render.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_input_handler.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_input_handler.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="animations_selector"
 				>
 				<File
@@ -3471,6 +3439,70 @@
 					</File>
 				</Filter>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="input_handlers"
+			>
+			<Filter
+				Name="game_exit"
+				>
+				<File
+					RelativePath=".\game_exit_handler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\game_exit_handler.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="npc_manipulation"
+				>
+				<File
+					RelativePath=".\npc_manipulation_handler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\npc_manipulation_handler.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="game_core"
+			>
+			<Filter
+				Name="bullet_manager"
+				>
+				<File
+					RelativePath=".\bullet.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bullet.h"
+					>
+				</File>
+				<File
+					RelativePath=".\bullet_manager.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bullet_manager.h"
+					>
+				</File>
+				<File
+					RelativePath=".\bullet_manager_debug_render.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bullet_manager_input_handler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bullet_manager_input_handler.h"
+					>
+				</File>
+			</Filter>
 			<Filter
 				Name="body_parts"
 				>
@@ -3518,34 +3550,38 @@
 					RelativePath=".\temp_include_all.h"
 					>
 				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="input_handlers"
-			>
-			<Filter
-				Name="game_exit"
-				>
-				<File
-					RelativePath=".\game_exit_handler.cpp"
+				<Filter
+					Name="enums"
 					>
-				</File>
-				<File
-					RelativePath=".\game_exit_handler.h"
+					<File
+						RelativePath=".\affect_event_type_enum.h"
+						>
+					</File>
+					<File
+						RelativePath=".\affects_applying_type_enum.h"
+						>
+					</File>
+					<File
+						RelativePath=".\hit_affects_type_enum.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="predicates"
 					>
-				</File>
-			</Filter>
-			<Filter
-				Name="npc_manipulation"
-				>
-				<File
-					RelativePath=".\npc_manipulation_handler.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\npc_manipulation_handler.h"
-					>
-				</File>
+					<File
+						RelativePath=".\find_hit_parameters_by_type_predicate.h"
+						>
+					</File>
+					<File
+						RelativePath=".\protect_affect_predicate.h"
+						>
+					</File>
+					<File
+						RelativePath=".\protect_damage_predicate.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<File

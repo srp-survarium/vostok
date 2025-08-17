@@ -12,23 +12,26 @@
 #include <xray/unmanaged_allocation_resource.h>
 #include <xray/intrusive_list.h>
 #include <xray/threading_policies.h>
+#include <xray/ai/npc_statistics.h>
 
 #include "damage_protector.h"
 #include "body_part_parameters.h"
 
 // TODO
 namespace xray {
-namespace network_core {
-	class packet_reader {};
-}
+	namespace network_core {
+		class packet_reader {};
+	}
 }
 
 namespace stalker2 {
+	// Should be part of outer scope owning this struct
+	typedef
+		boost::function< void ( unsigned int, float, float, char const* ) >
+		dump_state_functor;
+}
 
-// TODO
-typedef void options_tab;
-typedef void body_part;
-
+namespace stalker2 {
 
 // FORWARD DECLARATIONS
 
@@ -52,16 +55,14 @@ public:
 struct booster_damage_protector: public damage_protector {
 public:
 	booster_damage_protector(
-		const char* damage_type,
-		float reduce,
-		float absorb
-		);
+		const char*								damage_type,
+		float									reduce,
+		float									absorb);
 	
 	float reduce_damage(
-		const char* __formal,
-		const char* damage_type,
-		float amount
-		);
+		const char*								__formal,
+		const char*								damage_type,
+		float									amount);
 
 public:
 	char						m_hit_type[16];
@@ -70,145 +71,162 @@ public:
 	booster_damage_protector*	next;
 };
 
+// MAIN
 
-class damage_model : public xray::resources::unmanaged_resource, public boost::noncopyable {
+class damage_model : public resources::unmanaged_resource, public boost::noncopyable {
 public:
+	damage_model(damage_model const&) /* no source */;
+
 	damage_model(
-		affects_applying_type_enum affects_applying_type
-		);
+		affects_applying_type_enum         affects_applying_type);
 
-	~damage_model();
-
-	body_part* pop_body_part();
-
-	void tick(
-		unsigned int time_delta_in_ms,
-		unsigned int current_time_in_ms
-		);
+	virtual ~damage_model( );
 
 	void add_body_part(
-		body_part* new_body_part
-		);
+		body_part_parameters*              new_body_part);
 
-	body_part_parameters* get_body_part(
-		const char* part_name
-		);
-
-	void hit_body_part(
-		unsigned __int8 initiator,
-	    const char* part_name,
-		const char* damage_type,
-		float amount,
-		float armor_piercing,
-		unsigned int time_in_ms,
-		bullet const* bullet
-		);
+	bool hit_body_part(
+		u8                                 initiator,
+		pcstr                              part_name,
+		pcstr                              damage_type,
+		float                              amount,
+		float                              armor_piercing,
+		u32                                time_in_ms,
+		bullet*                            bullet);
 
 	void apply_med_kit(
-		const char* part_name,
-		float amount
-		);
+		pcstr                              part_name,
+		float                              amount);
+
+	void tick(
+		u32                                time_delta_ms,
+		u32                                current_time_in_ms);
+
+	// sushi@TODO
+	// void fill_stats(damage_info_type&, u32) const /* no source */;
 
 	void fill_stats(
-		options_tab* stats,
-		unsigned int current_time_in_ms
-		);
+		xray::ai::npc_statistics&          stats,
+		u32                                current_time_in_ms);
 
 	void dump_stats(
-		boost::function< void ( unsigned int, float, float, char const* ) > callback
-		);
+		boost::function<void __cdecl(u32,float,float,pcstr)> callback);
 
-	void subscribe_on_affect(
-		hit_affects_type_enum affect_type,
-		affect_subscriber const* subscriber
-		);
-
-	void unsubscribe_from_affect(
-		hit_affects_type_enum affect_type,
-		affect_subscriber const* subscriber
-		);
-
-	void notify_on_affect_event(
-		const char*					body_part_name,
-		hit_affects_type_enum		affect_type,
-		affect_event_type_enum		event_type
-		);
+	bool is_healthy() const /* no source */;
 
 	void reset( );
 
 	void apply_affect(
-		const char*					part_name,
-		hit_affects_type_enum		affect,
-		affect_event_type_enum		event_type
-		);
-
-	unsigned __int8 get_total_health(	);
+		pcstr                              part_name,
+		hit_affects_type_enum              affect,
+		affect_event_type_enum             event_type);
 
 	void cancel_affect(
-		const char*					part_name,
-		hit_affects_type_enum		affect
-		);
+		pcstr                              part_name,
+		hit_affects_type_enum              affect);
 
-	void register_body_part_damage_protector(
-		const char*					part_name,
-		damage_protector*			protector
-		);
+	void subscribe_on_affect(
+		hit_affects_type_enum              affect_type,
+		affect_subscriber*                 subscriber);
 
-	void unregister_body_part_damage_protector(
-		const char*					part_name,
-		damage_protector*			protector
-		);
+	void unsubscribe_from_affect(
+		hit_affects_type_enum              affect_type,
+		affect_subscriber*                 subscriber);
+
+	void notify_on_affect_event(
+		pcstr                              body_part_name,
+		hit_affects_type_enum              affect_type,
+		affect_event_type_enum             event_type);
 
 	void add_damage_protector(
-		const char*					damage_type,
-		float						reduce,
-		float						absorb
-		);
+		pcstr                              damage_type,
+		float                              reduce,
+		float                              absorb);
+
+	void register_body_part_damage_protector(
+		pcstr                              part_name,
+		damage_protector*                  protector);
+
+	void unregister_body_part_damage_protector(
+		pcstr                              part_name,
+		damage_protector*                  protector);
+
+	u8 broken_legs_count() const /* no source */;
+
+	u8 broken_hands_count() const /* no source */;
+
+	u32 get_parts_count() const /* no source */;
+
+	u8 get_last_aggressor_id() const /* no source */;
+
+	affects_applying_type_enum get_affects_applying_type() const /* no source */;
+
+	body_part_parameters* get_body_part(
+		pcstr                              part_name);
+
+	u8 get_body_part_index(pcstr) const /* no source */;
+
+	pcstr get_body_part_name(u8) const /* no source */;
+
+	body_part_parameters* pop_body_part( );
+
+	u8 get_total_health( );
+
+	body_part_parameters* get_body_part_with_min_health() const /* no source */;
+
+	// sushi@TODO: Networking
+	// void serialize(xray::network_core::udp_match_packet&, s32) const /* no source */;
+
+	// sushi@TODO: Networking
+	// void deserialize(
+	// 	xray::network_core::packet_reader& reader);
 
 	void on_broken_limb_affect(
-		const char*					bodypart,
-		hit_affects_type_enum		affect,
-		affect_event_type_enum		type
-		);
+		pcstr                              bodypart,
+		hit_affects_type_enum              affect,
+		affect_event_type_enum             type);
 
-	void deserialize(
-		xray::network_core::packet_reader* reader
-		);
-
-private:
+public:
 	typedef xray::intrusive_list< body_part_parameters,
 		body_part_parameters *,
 		&body_part_parameters::next,
 		xray::threading::single_threading_policy,
-		xray::size_policy > body_parts;
+		xray::size_policy,
+		xray::no_debug_policy > body_parts;
 
 	typedef xray::intrusive_list< affect_subscriber,
 		affect_subscriber *,
 		&affect_subscriber::next,
 		xray::threading::mutex,
-		xray::size_policy > affect_subscriptions;
+		xray::size_policy,
+		xray::no_debug_policy > affect_subscriptions;
 
 	typedef xray::intrusive_list< booster_damage_protector,
 		booster_damage_protector *,
 		&booster_damage_protector::next,
 		xray::threading::single_threading_policy,
-		xray::size_policy > damage_protectors;
-	
-private:
-	body_parts								m_body_parts;
-	boost::array<affect_subscriptions, 9>	m_affect_subscriptions;
-	affects_applying_type_enum				m_affects_applying_type;
-	damage_protectors						m_damage_protectors;
+		xray::size_policy,
+		xray::no_debug_policy > damage_protectors;
 
-	unsigned int							m_last_tick_time_in_ms;
-	unsigned __int8							m_last_hit_initiator;
-	affect_subscriber						m_leg_damage_subscriber;
-	affect_subscriber						m_hand_damage_subscriber;
-	unsigned __int8							m_broken_legs_count[2];
-	unsigned __int8							m_broken_hands_count[2];
+public:
+	// STATE_M[UNVERIFIED]
+	/* offset 0x0000 */ /* fields for resources::unmanaged_resource */
+	/* offset 0x0108 */ /* fields for boost::noncopyable */
+	/* offset 0x0108 */ body_parts							m_body_parts;
+	/* offset 0x0118 */ boost::array< 
+							affect_subscriptions,
+							hit_affects_type_enum::affect_types_count
+						>									m_affect_subscriptions;
+	/* offset 0x02c8 */ affects_applying_type_enum          m_affects_applying_type;
+	/* offset 0x02cc */ damage_protectors					m_damage_protectors;
 
+	/* offset 0x02dc */ u32                                 m_last_tick_time_in_ms;
+	/* offset 0x02e0 */ u8                                  m_last_hit_initiator;
+	/* offset 0x02e8 */ affect_subscriber                   m_leg_damaged_subscriber;
+	/* offset 0x0310 */ affect_subscriber                   m_hand_damaged_subscriber;
+	/* offset 0x0338 */ u8									m_broken_legs_count[2];
+	/* offset 0x033a */ u8									m_broken_hands_count[2];
 }; // class damage_model
-
 } // namespace stalker2
 
 #endif // #ifndef DAMAGE_MODEL_H_INCLUDED
