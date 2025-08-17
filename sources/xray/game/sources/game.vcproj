@@ -3515,14 +3515,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\body_part_parameters.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\body_part_parameters.h"
-					>
-				</File>
-				<File
 					RelativePath=".\damage_model.cpp"
 					>
 				</File>
@@ -3540,14 +3532,6 @@
 				</File>
 				<File
 					RelativePath=".\hit_type_parameters.h"
-					>
-				</File>
-				<File
-					RelativePath=".\temp_include_all.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\temp_include_all.h"
 					>
 				</File>
 				<Filter
@@ -3579,6 +3563,26 @@
 					</File>
 					<File
 						RelativePath=".\protect_damage_predicate.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="todo"
+					>
+					<File
+						RelativePath=".\body_part_parameters.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\body_part_parameters.h"
+						>
+					</File>
+					<File
+						RelativePath=".\temp_include_all.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\temp_include_all.h"
 						>
 					</File>
 				</Filter>

@@ -223,7 +223,7 @@ void body_part_parameters::regenerate(
 	increase_health(amount);
 
 	if (m_damage_model.m_affects_applying_type == affects_applying_type_enum::type_apply_directly) // sushi@TODO: Needs getter
-		; // update_affects(current_time_in_ms);
+		{ ; } // update_affects(current_time_in_ms);
 	// FUNCTION BODY
 
 

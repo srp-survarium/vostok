@@ -27,7 +27,7 @@ namespace stalker2 {
 
 namespace xray {
 	namespace ai {
-		class npc_statistics;
+		struct npc_statistics;
 	}
 }
 
@@ -232,7 +232,16 @@ public:
 	/* offset 0x0310 */ affect_subscriber                   m_hand_damaged_subscriber;
 	/* offset 0x0338 */ u8									m_broken_legs_count[2];
 	/* offset 0x033a */ u8									m_broken_hands_count[2];
+
+
 }; // class damage_model
+
+namespace { 
+	typedef char size_assert[
+		sizeof(damage_model) == 0x340 ? 1 : -1
+	];
+}
+
 } // namespace stalker2
 
 #endif // #ifndef DAMAGE_MODEL_H_INCLUDED

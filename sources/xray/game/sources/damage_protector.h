@@ -10,24 +10,32 @@
 
 namespace stalker2 {
 
+//////////////////////////
+// FORWARD DECLARATIONS //
+//////////////////////////
+
 enum hit_affects_type_enum;
 
-class damage_protector : public boost::noncopyable {
-public:
-    inline damage_protector( ): 
-		reduce_damage_functor( ),
-		protect_affect_functor( ),
-		next(NULL)
-    { }
+//////////////////////////
+//     DEFINITIONS      //
+//////////////////////////
 
-    inline virtual ~damage_protector()
-	{ }
+struct damage_protector : public boost::noncopyable {
+public:
+    damage_protector( ): next(NULL) {}
+	virtual ~damage_protector( );
 
 public:
-	boost::function< float ( char const*, char const*, float, float ) > reduce_damage_functor;
-	boost::function< bool ( char const*, hit_affects_type_enum ) > protect_affect_functor;
+	boost::function< float ( pcstr, pcstr, float, float ) > reduce_damage_functor;
+	boost::function< bool ( pcstr, hit_affects_type_enum ) > protect_affect_functor;
 	damage_protector* next;
 }; // class damage_protector
+
+namespace { 
+	typedef char size_assert[
+		sizeof(damage_protector) == 0x50 ? 1 : -1
+	];
+}
 
 } // namespace stalker2
 

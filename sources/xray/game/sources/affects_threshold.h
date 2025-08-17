@@ -11,14 +11,22 @@
 
 namespace stalker2 {
 
+//////////////////////////
+// FORWARD DECLARATIONS //
+//////////////////////////
+
 class body_part_parameters;
+
+//////////////////////////
+//     DEFINITIONS      //
+//////////////////////////
 
 class affects_threshold : public boost::noncopyable {
 public:
 	affects_threshold(
-		float						value,
-		unsigned int				affects_count,
-		body_part_parameters*		bodypart);
+		float                              value,
+		u32                                affects_count,
+		body_part_parameters*              bodypart);
 
 	float							value()				const { return m_value; }
 	u32								get_affects_count() const { return m_affects_count; }
@@ -26,12 +34,18 @@ public:
 	body_part_parameters*			bodypart()			const { return m_bodypart; }
 
 public:
-	// STATE_M[UNVERIFIED]
 	affects_threshold*			next;
 	const float					m_value;
 	const u32					m_affects_count;
 	body_part_parameters*		m_bodypart;
 }; // class affects_threshold
+
+namespace { 
+	typedef char size_assert[
+		sizeof(affects_threshold) == 0x10 ? 1 : -1
+	];
+}
+
 
 } // namespace stalker2
 

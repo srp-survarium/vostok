@@ -13,13 +13,13 @@
 #include "damage_protector.h"	 // intrusive_list
 
 namespace stalker2 {
-class damage_model;
+	class damage_model;
 }
 
 namespace xray {
-namespace ai {
-class npc_statistics;
-}
+	namespace ai {
+		struct npc_statistics;
+	}
 }
 
 namespace stalker2 {

@@ -7,7 +7,11 @@
 
 namespace stalker2 {
 
-affects_threshold::affects_threshold(float value, unsigned int affects_count, body_part_parameters *const bodypart):
+// STATE[UNVERIFIED]
+affects_threshold::affects_threshold(
+	float                              value,
+	u32                                affects_count,
+	body_part_parameters*              bodypart) :
 	next(NULL),
 	m_value(value),
 	m_affects_count(affects_count),
