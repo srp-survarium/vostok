@@ -12,41 +12,38 @@
 #include <xray/unmanaged_allocation_resource.h>
 #include <xray/intrusive_list.h>
 #include <xray/threading_policies.h>
-#include <xray/ai/npc_statistics.h>
 
 #include "damage_protector.h"
 #include "body_part_parameters.h"
 
-// TODO
+//////////////////////////
+// FORWARD DECLARATIONS //
+//////////////////////////
+
+namespace stalker2 {
+	enum affects_applying_type_enum;
+	class bullet;
+}
+
 namespace xray {
-	namespace network_core {
-		class packet_reader {};
+	namespace ai {
+		class npc_statistics;
 	}
 }
 
-namespace stalker2 {
-	// Should be part of outer scope owning this struct
-	typedef
-		boost::function< void ( unsigned int, float, float, char const* ) >
-		dump_state_functor;
-}
+//////////////////////////
+//     DEFINITIONS      //
+//////////////////////////
 
 namespace stalker2 {
 
-// FORWARD DECLARATIONS
-
-enum affects_applying_type_enum;
-class damage_protector;
-class bullet;
-
-// DEFINITIONS
-
-struct affect_subscriber: public boost::noncopyable { // @TODO: Possibly move to its own header
+struct affect_subscriber: public boost::noncopyable {
 public:
 	typedef boost::function<void ( char const *,
 		enum hit_affects_type_enum,
 		enum affect_event_type_enum )> subscription_functor;
 
+public:
 	subscription_functor	subscription_callback;
 	affect_subscriber*		next;
 };
@@ -55,28 +52,28 @@ public:
 struct booster_damage_protector: public damage_protector {
 public:
 	booster_damage_protector(
-		const char*								damage_type,
+		pcstr									damage_type,
 		float									reduce,
 		float									absorb);
 	
 	float reduce_damage(
-		const char*								__formal,
-		const char*								damage_type,
+		pcstr									__formal,
+		pcstr									damage_type,
 		float									amount);
 
-public:
+
 	char						m_hit_type[16];
 	float						m_reduce;
 	float						m_absorb;
 	booster_damage_protector*	next;
 };
 
-// MAIN
+//////////////////////////
+//     DAMAGE_MODEL     //
+//////////////////////////
 
 class damage_model : public resources::unmanaged_resource, public boost::noncopyable {
 public:
-	damage_model(damage_model const&) /* no source */;
-
 	damage_model(
 		affects_applying_type_enum         affects_applying_type);
 
@@ -112,7 +109,8 @@ public:
 	void dump_stats(
 		boost::function<void __cdecl(u32,float,float,pcstr)> callback);
 
-	bool is_healthy() const /* no source */;
+	// sushi@TODO
+	// bool is_healthy() const /* no source */;
 
 	void reset( );
 
@@ -151,35 +149,44 @@ public:
 		pcstr                              part_name,
 		damage_protector*                  protector);
 
-	u8 broken_legs_count() const /* no source */;
+	// sushi@TODO
+	// u8 broken_legs_count() const /* no source */;
 
-	u8 broken_hands_count() const /* no source */;
+	// sushi@TODO
+	// u8 broken_hands_count() const /* no source */;
 
-	u32 get_parts_count() const /* no source */;
+	// sushi@TODO
+	// u32 get_parts_count() const /* no source */;
 
-	u8 get_last_aggressor_id() const /* no source */;
+	// sushi@TODO
+	// u8 get_last_aggressor_id() const /* no source */;
 
-	affects_applying_type_enum get_affects_applying_type() const /* no source */;
+	// sushi@TODO
+	// affects_applying_type_enum get_affects_applying_type() const /* no source */;
 
 	body_part_parameters* get_body_part(
 		pcstr                              part_name);
 
-	u8 get_body_part_index(pcstr) const /* no source */;
+	// sushi@TODO
+	// u8 get_body_part_index(pcstr) const /* no source */;
 
-	pcstr get_body_part_name(u8) const /* no source */;
+	// sushi@TODO
+	// pcstr get_body_part_name(u8) const /* no source */;
 
 	body_part_parameters* pop_body_part( );
 
 	u8 get_total_health( );
 
-	body_part_parameters* get_body_part_with_min_health() const /* no source */;
+	// sushi@TODO
+	// body_part_parameters* get_body_part_with_min_health() const /* no source */;
 
 	// sushi@TODO: Networking
-	// void serialize(xray::network_core::udp_match_packet&, s32) const /* no source */;
+#if 0 
+	void serialize(xray::network_core::udp_match_packet&, s32) const /* no source */;
 
-	// sushi@TODO: Networking
-	// void deserialize(
-	// 	xray::network_core::packet_reader& reader);
+	void deserialize(
+	 	xray::network_core::packet_reader& reader);
+#endif
 
 	void on_broken_limb_affect(
 		pcstr                              bodypart,
@@ -215,8 +222,7 @@ public:
 	/* offset 0x0108 */ body_parts							m_body_parts;
 	/* offset 0x0118 */ boost::array< 
 							affect_subscriptions,
-							hit_affects_type_enum::affect_types_count
-						>									m_affect_subscriptions;
+							affect_types_count>				m_affect_subscriptions;
 	/* offset 0x02c8 */ affects_applying_type_enum          m_affects_applying_type;
 	/* offset 0x02cc */ damage_protectors					m_damage_protectors;
 

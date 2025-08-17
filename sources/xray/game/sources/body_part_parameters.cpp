@@ -8,7 +8,7 @@
 #include "protect_damage_predicate.h"
 #include "protect_affect_predicate.h"
 
-#include "affects_applying_type_enum.h";
+#include "affects_applying_type_enum.h"
 
 #include "damage_model.h"
 #include "body_part_parameters.h"

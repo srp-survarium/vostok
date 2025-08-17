@@ -13,8 +13,16 @@
 #include "damage_protector.h"	 // intrusive_list
 
 namespace stalker2 {
-
 class damage_model;
+}
+
+namespace xray {
+namespace ai {
+class npc_statistics;
+}
+}
+
+namespace stalker2 {
 
 class body_part_parameters : public boost::noncopyable {
 public:
@@ -56,11 +64,11 @@ public:
 		u32                                index);
 #if 0
 	void dump_state(damage_info_type&, u32) const /* no source */;
-
+#endif
 	void dump_state(
 		xray::ai::npc_statistics&          stats,
 		u32                                current_time_in_ms);
-
+#if 0
 	void remove_edges(body_part_parameters*) /* no source */;
 #endif
 	void reset( );
