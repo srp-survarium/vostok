@@ -197,7 +197,7 @@ public:
 	u8									m_damage_group;
 	damage_protector_type				m_damage_protectors;
 
-}; // class body_part_parameters 
+}; // class body_part_parameters
 
 namespace {
 	typedef char size_assert[

@@ -23,7 +23,7 @@ enum hit_affects_type_enum;
 struct damage_protector : public boost::noncopyable {
 public:
     damage_protector( ): next(NULL) {}
-	virtual ~damage_protector( );
+	virtual ~damage_protector( ) {};
 
 public:
 	boost::function< float ( pcstr, pcstr, float, float ) > reduce_damage_functor;

@@ -4,6 +4,9 @@
 namespace stalker2
 {
 
+void bpp_dump_stats(u32, float, float, pcstr) { }
+
+
 IncludeAll::IncludeAll()
 {
 	hit_type_parameters* htp = new hit_type_parameters("hand", 1., 1., 1., 0);
@@ -25,6 +28,9 @@ IncludeAll::IncludeAll()
 		1);
 
 	bpp->hit_by_type("hit_type", 10, 10., 10., false, NULL);
+	bpp->reset();
+	bpp->can_affect_death();
+	bpp->dump_state(&bpp_dump_stats, 0);
 
 	Callback1 cb1;
 	Callback2 cb2;

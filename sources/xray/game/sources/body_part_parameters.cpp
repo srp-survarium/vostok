@@ -9,6 +9,8 @@
 #include "damage_model.h"
 
 
+#include <xray/ai/npc_statistics.h>
+
 namespace stalker2 {
 
 //
@@ -21,7 +23,9 @@ public:
 	find_hit_parameters_by_type_predicate(pcstr hit_t) : hit_type(hit_t) {}
 
 	// STATE[PARTIAL] sushi@TODO: hit_type_params most likely uses getter
-	bool operator()(hit_type_parameters* hit_type_params) const { return strings::equal(hit_type, hit_type_params->m_type.c_str()); }
+	bool operator()(hit_type_parameters* hit_type_params) const {
+		return strings::equal(hit_type, hit_type_params->m_type.c_str());
+	}
 
 private:
 	/* offset 0x0000 */ pcstr                               hit_type;
@@ -31,24 +35,34 @@ struct protect_affect_predicate : boost::noncopyable {
 public:
 	protect_affect_predicate(
 		pcstr								body_type_name,
-		hit_affects_type_enum				affect_type): 
+		hit_affects_type_enum				affect_type):
 		m_body_type_name					(body_type_name),
-		m_affect_type						(affect_type) {}
+		m_affect_type						(affect_type),
+		m_result							(0)	{ }
 
 	void operator()(
 		damage_protector*                  protector);
 
-private:
+public:
 	/* offset 0x0000 */ pcstr                               m_body_type_name;
 	/* offset 0x0004 */ hit_affects_type_enum               m_affect_type;
 	/* offset 0x0008 */ bool                                m_result;
 }; // struct protect_affect_predicate
 
+// STATE[UNVERIFIED]
+void protect_affect_predicate::operator()(
+	damage_protector*                  protector)
+{
+	if (!m_result && protector->protect_affect_functor) // <0xc9f8f>
+		m_result = protector->protect_affect_functor(m_body_type_name, m_affect_type); // <0xc9fb9>
+}
+
+
 struct protect_damage_predicate : boost::noncopyable {
 public:
 	protect_damage_predicate(
 		float							   armor_piercing,
-		pcstr							   damage_type, 
+		pcstr							   damage_type,
 		pcstr							   body_type_name,
 		float							   amount) :
 		m_body_type_name				   (body_type_name),
@@ -66,6 +80,15 @@ private:
 	/* offset 0x000c */ float                               m_amount;
 }; // struct protect_damage_predicate
 
+// STATE[UNVERIFIED]
+void protect_damage_predicate::operator()(
+	damage_protector*                  protector)
+{
+	if (m_amount > 0.0f && protector->reduce_damage_functor) // <0xc9eff>
+		m_amount = protector->reduce_damage_functor(m_body_type_name, m_damage_type, m_amount, m_armor_piercing); // <0xc9f2f>
+
+}
+
 
 //
 // body_part_parameters
@@ -80,7 +103,7 @@ body_part_parameters::body_part_parameters(
 	bool                               can_be_assigned,
 	damage_model&                      owner,
 	u8                                 damage_group) :
-	
+
 	next								(NULL),
 	m_damage_model						(owner),
 	m_max_health						(health),
@@ -128,22 +151,6 @@ hit_type_parameters* body_part_parameters::get_hit_parameters(
 	return m_hit_types.find_if(find_predicate); // <0x5971c7>
 }
 
-// STATE[UNVERIFIED]
-void protect_damage_predicate::operator()(
-	damage_protector*                  protector)
-{
-	if (m_amount > 0.0f && protector->reduce_damage_functor) // <0xc9eff>
-		m_amount = protector->reduce_damage_functor(m_body_type_name, m_damage_type, m_amount, m_armor_piercing); // <0xc9f2f>
-
-}
-
-// STATE[UNVERIFIED]
-void protect_affect_predicate::operator()(
-	damage_protector*                  protector)
-{
-	if (!m_result && protector->protect_affect_functor) // <0xc9f8f>
-		m_result = protector->protect_affect_functor(m_body_type_name, m_affect_type); // <0xc9fb9>
-}
 
 // STATE[PENDING]: sushi@TODO: Requires get_hit_parameters
 // void survarium::body_part_parameters::hit_by_type(char const*, const unsigned int, const float, const float, const bool, survarium::damage_protector*)
@@ -248,12 +255,13 @@ void body_part_parameters::regenerate(
 
 	if (m_damage_model.m_affects_applying_type == affects_applying_type_enum::type_apply_directly) // sushi@TODO: Needs getter
 		{ ; } // update_affects(current_time_in_ms);
+
 	// FUNCTION BODY
 
 
 
 
-	
+
 	// <0x597869>
 
 	// <0x59786f>
@@ -326,24 +334,15 @@ void body_part_parameters::cancel_affect_by_force(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::check_affects(const unsigned int)
+// STATE[UNVERIFIED]: sushi@NOTE: check_affects doesn't checks them but applies them .
 void body_part_parameters::check_affects(
 	u32                                current_time_in_ms)
 {
-	// LOCALS
-	// affects_threshold*              it_threshold<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x597679> <block><1>
-
-	// <0x597692>
-
-	// <0x5976bb>
-	// <0x5976d4>
-
-	// ******
+	for ( affects_threshold* it_threshold = m_thresholds.front() ; it_threshold ; m_thresholds.get_next_of_object(it_threshold) )	// <0x597679> <block><1>
+		if ( m_health <= m_max_health * it_threshold->value() )																		// <0x597692>
+		{
+			it_threshold->bodypart()->apply_affects(it_threshold, current_time_in_ms);												// <0x5976bb>
+		}																															// <0x5976d4>
 }
 
 // STATE[STUB]
@@ -364,45 +363,29 @@ bool body_part_parameters::is_affect_applied(
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::body_part_parameters::has_affect_protector(const survarium::hit_affects_type_enum)
+// STATE[UNVERIFIED]
 bool body_part_parameters::has_affect_protector(
 	hit_affects_type_enum              affect)
 {
-	// LOCALS
-	// protect_affect_predicate        p
-	// ******
-
-	// FUNCTION BODY
-	// <0x5973e9>
-	// <0x59740f>
-	return true; // <0x597437>
-	// ******
+	protect_affect_predicate p(m_name.c_str(), affect); // <0x5973e9>
+	m_damage_protectors.for_each(p);					// <0x59740f>
+	return p.m_result;									// <0x597437> sushi@TODO: Maybe getter?
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::apply_affects(survarium::affects_threshold const*, const unsigned int)
+// STATE[UNVERIFIED]
 void body_part_parameters::apply_affects(
 	affects_threshold const*           threshold_reached,
 	u32                                current_time_in_ms)
 {
-	// LOCALS
-	// hit_affects_type_enum const*    it_begin
-	// hit_affects_type_enum const*    it_end
-	// hit_affects_type_enum const*    it<1>
-	// ******
+	hit_affects_type_enum const*    it_begin = threshold_reached->get_affects();							// <0x597599>
+	hit_affects_type_enum const*    it_end = it_begin + threshold_reached->get_affects_count();				// <0x5975ae>
 
-	// FUNCTION BODY
-	// <0x597599>
-	// <0x5975ae>
-
-	// <0x5975c3> <block><1>
-	// <0x5975e0>
-
-	// <0x59760a>
-	// <0x597629>
-	// <0x597664>
-	// ******
+	for ( hit_affects_type_enum const* it ; it != it_end ; ++it )											// <0x5975c3> <block><1>
+		if ( !is_affect_applied(*it) && !has_affect_protector(*it) )										// <0x5975e0>
+		{
+			m_damage_model.notify_on_affect_event(m_name.c_str(), *it, affect_applying);					// <0x59760a>
+			m_affects.push_back(std::make_pair(*it, current_time_in_ms + 1000 * affects_durations[*it]));	// <0x597629>
+		}																									// <0x597664>
 }
 
 // STATE[STUB]
@@ -488,128 +471,85 @@ void body_part_parameters::fill_new_stats_item<xray::ai::statistics_item<46,16> 
 }
 #endif
 
-// STATE[STUB]
-// void survarium::body_part_parameters::dump_state(vostok::ai::npc_statistics&, const unsigned int) const
+// STATE[PARTIAL] sushi@TODO: Requires fill_new_stats_item, which seems to be a m
 void body_part_parameters::dump_state(
 	xray::ai::npc_statistics&          stats,
 	u32                                current_time_in_ms)
 {
-	// LOCALS
-	// xray::ai::statistics_item<46,16> new_stats_item
-	// ******
-
-	// TYPEDEFS
-	// typedef
-	// 	xray::ai::statistics_item<46,16>
-	// 	content_type;
-
-	// FUNCTION BODY
-
-	// <0x59714f>
-	// <0x597165>
-	// <0x59717b>
-	// ******
+	typedef xray::ai::statistics_item<46,16> content_type;
+	content_type new_stats_item = content_type();					// <0x59714f>
+	// fill_new_stats_item(&new_stats_item, current_time_in_ms);	// <0x597165>
+	// stats->body_state.push_back(new_stats_item);					// <0x59717b>
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::dump_state(boost::function<void __cdecl(unsigned int,float,float,char const *)>, const unsigned int) const
+// STATE[PARTIAL]: sushi@TODO: We weren't able to fit the structure in the stub.
+// Inlining happened differently.
 void body_part_parameters::dump_state(
 	boost::function<void __cdecl(u32,float,float,pcstr)> callback,
 	u32                                index)
 {
-	// LOCALS
-	// xray::fixed_string<512>         affects_str
-	// u32                             i<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x597300>
-	// <0x59730b> <block><1>
-	// <0x597351>
-	// <0x597390>
-	// <0x597392>
-	// ******
+	xray::fixed_string<512>         affects_str;								// <0x597300>
+	for (u32 i = 0 ; i < m_affects.size() ; ++i)								// <0x59730b> <block><1>
+	{
+		// ASSERT																// <0x597351> // ?
+		affects_str.appendf("%s ", affects_captions[m_affects[i].first]);		// <0x597390>
+	}
+	callback(index, m_health, m_max_health, affects_str.c_str());				// <0x597392>
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::reset()
+// STATE[UNVERIFIED]
 void body_part_parameters::reset( )
 {
-	// FUNCTION BODY
-	// <0x596d49>
-	// <0x596d5b>
-	// <0x596d68>
-	// ******
+	m_health = m_max_health;	// <0x596d49>
+	m_last_hit_time = 0;		// <0x596d5b>
+	m_affects.clear();			// <0x596d68> sushi@TODO:  for ( i = this->m_affects.m_begin; i != this->m_affects.m_end; ++i ) { ; } this->m_affects.m_end = this->m_affects.m_begin;
 }
 
-// STATE[STUB]
-// bool survarium::body_part_parameters::can_affect_death()
+// STATE[VERIFIED]
 bool body_part_parameters::can_affect_death( )
 {
-	// LOCALS
-	// affects_threshold*              it_threshold<1>
-	// hit_affects_type_enum const*    threshold_affects<2>
-	// u32                             threshold_affects_count<2>
-	// u32                             i<3>
-	// ******
-
-	// FUNCTION BODY
-	// <0x596cc9> <block><1>
-
-	// <0x596ce2> <block><2>
-	// <0x596cf7>
-
-	// <0x596d00> <block><3>
-
-	// <0x596d1a>
-	// <0x596d26>
-	// <0x596d2a>
-	// <0x596d2c>
-	return true; // <0x596d2e>
-	// ******
+	for ( affects_threshold * it_threshold = m_thresholds.front() ;  it_threshold ; it_threshold = m_thresholds.get_next_of_object(it_threshold) ) // <0x596cc9> <block><1>
+	{
+		hit_affects_type_enum const* threshold_affects = it_threshold->get_affects();	// <0x596ce2> <block><2>
+		u32 threshold_affects_count = it_threshold->get_affects_count();				// <0x596cf7>
+		for ( u32 i = 0 ; i < threshold_affects_count ; ++i )							// <0x596d00> <block><3>
+		{
+			if (threshold_affects[i] == affects_type_death)								// <0x596d1a>
+				return true;															// <0x596d26>
+		}																				// <0x596d2a>
+	}																					// <0x596d2c>
+	return false;																		// <0x596d2e>
 }
 
-// STATE[STUB]
-// unsigned char survarium::body_part_parameters::get_health_in_percentage()
+// STATE[UNVERIFIED]
 u8 body_part_parameters::get_health_in_percentage( )
 {
-	// FUNCTION BODY
-	return 0; // <0x596c97>
-	// ******
+	return (u8)(100 * (m_health / m_max_health)); // <0x596c97>
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::add_damage_protector(survarium::damage_protector*)
+// STATE[UNVERIFIED]
 void body_part_parameters::add_damage_protector(
 	damage_protector*                  protector)
 {
-	// FUNCTION BODY
-	// <0x596e49>
-	// <0x596e55>
-	// ******
+	// ASSERT?									// <0x596e49>
+	m_damage_protectors.push_back(protector);	// <0x596e55>
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::remove_damage_protector(survarium::damage_protector*)
+// STATE[UNVERIFIED]
 void body_part_parameters::remove_damage_protector(
 	damage_protector*                  protector)
 {
-	// FUNCTION BODY
-	// <0x596e19>
-	// <0x596e25>
-	// ******
+	// ASSERT								// <0x596e19>
+	m_damage_protectors.erase(protector);	// <0x596e25>
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::set_parameters(float, float)
+// STATE[UNVERIFIED]
 void body_part_parameters::set_parameters(
 	float                              max_health,
 	float                              regeneration_speed)
 {
-	// FUNCTION BODY
-	// <0x596c67>
-	// <0x596c77>
-	// ******
+	m_max_health = max_health;					// <0x596c67>
+	m_regeneration_speed = regeneration_speed ; // <0x596c77>
 }
 
 #if 0
@@ -688,4 +628,4 @@ void body_part_parameters::deserialize(
 }
 #endif
 
-} // namespace stalker2 
+} // namespace stalker2

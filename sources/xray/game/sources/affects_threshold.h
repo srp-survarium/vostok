@@ -29,8 +29,15 @@ public:
 		body_part_parameters*              bodypart);
 
 	float							value()				const { return m_value; }
+
 	u32								get_affects_count() const { return m_affects_count; }
-	// hit_affects_type_enum const*	get_affects()		const { return NULL; } /* TODO */
+
+	hit_affects_type_enum const*	get_affects()		const {
+		return pointer_cast<hit_affects_type_enum const*>(
+			pointer_cast<pcbyte>(this) + sizeof(*this)
+		);
+	}
+
 	body_part_parameters*			bodypart()			const { return m_bodypart; }
 
 public:
