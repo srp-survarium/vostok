@@ -17,6 +17,7 @@ IncludeAll::IncludeAll()
 	bdp->reduce_damage("__whatever", "hand", 100);
 
 	damage_model owner = damage_model(affects_applying_type_enum::type_apply_directly);
+	owner.apply_med_kit("head", 1000);
 
 	body_part_parameters* bpp = new body_part_parameters(
 		"name",
@@ -31,6 +32,7 @@ IncludeAll::IncludeAll()
 	bpp->reset();
 	bpp->can_affect_death();
 	bpp->dump_state(&bpp_dump_stats, 0);
+	bpp->cancel_affect_by_force(hit_affects_type_enum::affects_type_concussion);
 
 	Callback1 cb1;
 	Callback2 cb2;

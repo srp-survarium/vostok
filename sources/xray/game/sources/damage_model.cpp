@@ -249,13 +249,13 @@ bool damage_model::hit_body_part(
 	return true;																									// <0x6ffc00>
 }
 
-// STATE[UNVERIFIED]
+// STATE[UNVERIFIED] TODO: CURRENT
 void damage_model::apply_med_kit(
 	pcstr                              part_name,
 	float                              amount)
 {
 	body_part_parameters * part = get_body_part(part_name);	// <0x6ff8e9>
-	// ASSERT (part exists?)								// <0x6ff8f8>
+	ASSERT(part);											// <0x6ff8f8>
 	part->increase_health(amount);							// <0x6ff904>
 }
 

@@ -310,7 +310,7 @@ void body_part_parameters::update_affects(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[PARTIAL] sushi@TODO: Assembly doesn't match properly
 // void survarium::body_part_parameters::cancel_affect_by_force(const survarium::hit_affects_type_enum)
 void body_part_parameters::cancel_affect_by_force(
 	hit_affects_type_enum              affect)
@@ -319,19 +319,22 @@ void body_part_parameters::cancel_affect_by_force(
 	// s32                             i<1>
 	// std::pair<enum hit_affects_type_enum,u32>* it_affect<2>
 	// ******
+	
+	R_ASSERT( affect == affects_type_blindness );
 
-	// FUNCTION BODY
-	// <0x5976e9> <block><1>
 
-	// <0x597717> <block><2>
-	// <0x597726>
-
-	// <0x597743>
-	// <0x59774f>
-	// <0x59776e>
-	// <0x59778a>
-
-	// ******
+	for ( s32 i = m_affects.size() ; i >= 0 ; --i )							// <0x5976e9>
+	{
+			ASSERT ( affect == affects_type_blindness );
+		std::pair<hit_affects_type_enum, u32> * it_affect = &m_affects[i];	// <0x597717><block><2>
+		// ASSERT															// <0x597726>
+		
+		if ( it_affect->first == affect )									// <0x597743> incorrect
+		{
+			m_damage_model.notify_on_affect_event( m_name.c_str(), it_affect->first, affect_canceling ); // <0x59774f>
+			m_affects.erase( it_affect );									// <0x59776e>
+		}
+	}																		// <0x59778a>
 }
 
 // STATE[UNVERIFIED]: sushi@NOTE: check_affects doesn't checks them but applies them .
