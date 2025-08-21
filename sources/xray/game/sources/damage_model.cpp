@@ -101,7 +101,9 @@ public:
 	find_body_part_by_name_predicate(pcstr body_part_name) : body_part_name(body_part_name) {}
 	
 	// STATE[UNVERIFIED]
-	bool operator()(body_part_parameters* params) const { return strings::equal(body_part_name, params->get_name()); };
+	bool operator()(body_part_parameters* params) const { 
+		return strings::equal(params->get_name(), body_part_name);
+	};
 
 private:
 	/* offset 0x0000 */ pcstr                               body_part_name;
@@ -148,11 +150,10 @@ public:
 
 // STATE[UNVERIFIED]
 damage_model::damage_model(
-	affects_applying_type_enum         affects_applying_type) :
+	affects_applying_type_enum				affects_applying_type) :
 	xray::resources::unmanaged_resource		(1),
 	m_affect_subscriptions					( ),
 	m_affects_applying_type					(affects_applying_type),
-	// m_damage_protectors need to be initialized somehow?
 	m_last_tick_time_in_ms					(0),
 	m_last_hit_initiator					(255)
 {
@@ -212,9 +213,10 @@ void damage_model::add_body_part(
 body_part_parameters* damage_model::get_body_part(
 	pcstr                              part_name)
 {
-	find_body_part_by_name_predicate find_predicate(part_name); // <0x6ff739>
+	find_body_part_by_name_predicate find_predicate(part_name); // <0x6ff739> // why twice, isn't it boost::noncopy?, it looks like our asm has a copy :shrug:
 	return m_body_parts.find_if(find_predicate);				// <0x6ff747>
 }
+
 
 // STATE[PARTIAL]
 bool damage_model::hit_body_part(
@@ -248,6 +250,7 @@ bool damage_model::hit_body_part(
 
 	return true;																									// <0x6ffc00>
 }
+
 
 // STATE[UNVERIFIED] TODO: CURRENT
 void damage_model::apply_med_kit(

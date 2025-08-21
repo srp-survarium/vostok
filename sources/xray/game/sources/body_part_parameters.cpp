@@ -214,14 +214,14 @@ void body_part_parameters::hit_by_type(
 void body_part_parameters::increase_health(
 	float                              amount)
 {
-	m_health = math::clamp_r<float>(0.0f, m_health + amount, m_max_health); // <0x596ec9>
+	m_health = math::clamp_r<float>(m_health + amount, 0.0f, m_max_health); // <0x596ec9>
 }
 
 // STATE[UNVERIFIED]
 void body_part_parameters::decrease_health(
 	float                              amount)
 {
-	m_health = math::clamp_r<float>(0.0f, m_health - amount, m_max_health); // <0x596e79>
+	m_health = math::clamp_r<float>(m_health - amount, 0.0f, m_max_health); // <0x596e79>
 }
 
 // STATE[PENDING] sushi@TODO: Requires update_affects
@@ -311,23 +311,13 @@ void body_part_parameters::update_affects(
 }
 
 // STATE[PARTIAL] sushi@TODO: Assembly doesn't match properly
-// void survarium::body_part_parameters::cancel_affect_by_force(const survarium::hit_affects_type_enum)
 void body_part_parameters::cancel_affect_by_force(
 	hit_affects_type_enum              affect)
 {
-	// LOCALS
-	// s32                             i<1>
-	// std::pair<enum hit_affects_type_enum,u32>* it_affect<2>
-	// ******
-	
-	R_ASSERT( affect == affects_type_blindness );
-
-
 	for ( s32 i = m_affects.size() ; i >= 0 ; --i )							// <0x5976e9>
 	{
-			ASSERT ( affect == affects_type_blindness );
 		std::pair<hit_affects_type_enum, u32> * it_affect = &m_affects[i];	// <0x597717><block><2>
-		// ASSERT															// <0x597726>
+		ASSERT ( it_affect );												// <0x597726> sushi@NOTE: Kind of a stupid assert, why would there be nullptrs in the array?
 		
 		if ( it_affect->first == affect )									// <0x597743> incorrect
 		{
@@ -494,10 +484,10 @@ void body_part_parameters::dump_state(
 	xray::fixed_string<512>         affects_str;								// <0x597300>
 	for (u32 i = 0 ; i < m_affects.size() ; ++i)								// <0x59730b> <block><1>
 	{
-		// ASSERT																// <0x597351> // ?
+		ASSERT( NULL );															// <0x597351> // ?
 		affects_str.appendf("%s ", affects_captions[m_affects[i].first]);		// <0x597390>
 	}
-	callback(index, m_health, m_max_health, affects_str.c_str());				// <0x597392>
+	callback(index, m_health, m_max_health, affects_str.c_str());				// <0x597392> @TODO: Currently callback execution is inlined, which is not true in survarium
 }
 
 // STATE[UNVERIFIED]
