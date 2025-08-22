@@ -40,7 +40,7 @@ static console_commands::cc_bool rtp_dbg_input( "rtp_dbg_input", b_rtp_dbg_input
 game_world::game_world( game& game )
 :m_game					( game ),
 m_cell_manager			( NEW (cell_manager) ( game ) ),
-m_bullet_manager		( NEW (bullet_manager) ( game ) ),
+m_bullet_manager		( NEW (bullet_manager) ( ) ),
 m_collision_tree		( NULL ),
 m_game_time_ms			( 0 ),
 m_game_time_sec			( 0 ),

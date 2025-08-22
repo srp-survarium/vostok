@@ -7,10 +7,6 @@
 #include "pch.h"
 #include <vostok/game_core/bullet_manager.h>
 
-
-// #include "game.h"
-// #include "game_world.h"
-// #include "game_camera.h"
 #include "bullet_manager_input_handler.h"
 
 #include <vostok/tasks_system.h>
@@ -33,10 +29,9 @@
 namespace survarium {
 
 /////////////////////////////			   I N I T I A L I Z E				///////////////////////////////////////
-bullet_manager::bullet_manager ( game& game ) :
-	m_bullets				( NULL, 0 ),
+bullet_manager::bullet_manager ( ) :
+	m_bullets					( NULL, 0 ),
 	m_gravity					( float3( 0, -9.8f, 0 ) ),
-	m_game						( game ),
 	m_task_type					( tasks::create_new_task_type( "bullet", tasks::task_type_flags_no_self_parallelization_hint ) ),
 	m_max_bullets_count			( 0 ),
 	m_max_bullets_decals_count	( 64 ),
@@ -137,26 +132,21 @@ void bullet_manager::tick ( float elapsed_game_seconds )
 #endif // #ifndef MASTER_GOLD
 }
 
-game& bullet_manager::get_game ( ) const
-{
-	return m_game;
-}
-
 float3 const& bullet_manager::get_gravity						( ) const
 {
 	return m_gravity;
 }
 
-void bullet_manager::fire ( float3 position, float3 direction )
+void bullet_manager::fire ( float3 position, float3 direction, u32 current_time_in_ms  )
 {
 #ifndef MASTER_GOLD
 
 	if( m_is_fixed )
-		emit_bullet( m_fixed_position, m_fixed_direction * 900, m_current_air_resistance );
+		emit_bullet( m_fixed_position, m_fixed_direction * 900, m_current_air_resistance, current_time_in_ms );
 	else
 
 #endif // #ifndef MASTER_GOLD
-		emit_bullet( position, direction, m_current_air_resistance );
+		emit_bullet( position, direction, m_current_air_resistance, current_time_in_ms );
 }
 
 float bullet_manager::get_bullet_time_factor ( )
@@ -191,7 +181,8 @@ void bullet_manager::add_decal ( float3 const& position, float3 const& direction
 	properties.alpha_angle						= 0.0f;
 	properties.clip_angle						= -90.0f;
 	
-	m_game.renderer( ).scene( ).update_decal( m_game.get_render_scene( ), m_current_decal_id++, properties );
+	// sushi@TODO: Final impl is different
+	// m_game.renderer( ).scene( ).update_decal( m_game.get_render_scene( ), m_current_decal_id++, properties );
 
 	if( m_current_decal_id == m_max_bullets_decals_count )
 		m_current_decal_id = 0;
@@ -244,12 +235,15 @@ void bullet_manager::store_bullet_trajectory ( bullet* bullet )
 void bullet_manager::toggle_is_fixed ( )
 {
 	m_is_fixed = !m_is_fixed;
+	// sushi@TODO: We don't have the final impl
+	/*
 	if( m_is_fixed )
 	{
 		float4x4 view_transform		= m_game.get_game_world( ).get_camera_director( )->get_active_camera( )->get_inverted_view_matrix( );
 		m_fixed_position			= view_transform.c.xyz( );
 		m_fixed_direction			= view_transform.k.xyz( );
 	}
+	*/
 }
 
 void bullet_manager::add_collision_point ( float3 const& point, math::color const& color )
@@ -407,12 +401,12 @@ void bullet_manager::material_ready_out ( resources::queries_result& data, vosto
 	}
 }
 
-void bullet_manager::emit_bullet ( float3 position, float3 velocity, float air_resistance )
+void bullet_manager::emit_bullet ( float3 position, float3 velocity, float air_resistance, u32 current_time_in_ms )
 {
 	if ( m_bullets_allocator_ref->total_size( ) == m_bullets_allocator_ref->allocated_size( ) )
 		displace_one_bullet		( );
-	
-	bullet* new_bullet			= VOSTOK_NEW_IMPL	( m_bullets_allocator_ref.c_ptr( ), bullet )( position, velocity, m_game.get_game_world().game_time_sec( ), air_resistance ); 
+	// sushi@TODO: cast for int not needed
+	bullet* new_bullet			= VOSTOK_NEW_IMPL	( m_bullets_allocator_ref.c_ptr( ), bullet )( position, velocity, (float)current_time_in_ms, air_resistance ); 
 	m_bullets.push_back	( new_bullet );
 
 #ifndef MASTER_GOLD
@@ -440,26 +434,15 @@ void bullet_manager::destroy_bullet ( bullets_type::iterator& destroying_bullet_
 
 void bullet_manager::displace_one_bullet ( )
 {
-	float3 const&		camera_position			= m_game.get_game_world( ).get_camera_director( )->get_active_camera( )->get_inverted_view_matrix( ).c.xyz( );
-
-#pragma message( VOSTOK_TODO("jes to all: this may be a bottleneck in some circumstances") )
-
-	float	farthest_distance_square					= 0;
-	bullets_type::iterator farthest_bullet	= NULL;
+	// sushi@TODO: Final impl doesn't do any of this logic. Instead it just pops earliest bullets from the queue
 
 	bullets_type::iterator	current = m_bullets.begin	( );
 	bullets_type::iterator	end		= m_bullets.end	( );
-
-	for ( ; current != end; ++current )
+	
+	if ( current != end )
 	{
-		float	distance_square			= ( (*current)->get_position( ) - camera_position ).squared_length( );	
-		if( distance_square > farthest_distance_square )
-		{
-			farthest_bullet				= current;
-			farthest_distance_square	= distance_square;
-		}
+		destroy_bullet(current);
 	}
-	destroy_bullet			( farthest_bullet );
 }
 
 } // namespace survarium

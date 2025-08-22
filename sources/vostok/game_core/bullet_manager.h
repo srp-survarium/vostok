@@ -31,22 +31,20 @@ namespace vostok{
 namespace survarium
 {
 
-class	game;
 struct	bullet_ticker_predicate;
 
 class bullet_manager 
 {
 public:
-					bullet_manager					( game& game );
+					bullet_manager					( );
 					~bullet_manager					( );
 	void			initialize						( );
 	void			register_console_commands		( );
 
 public:
 	void			tick							( float elapsed_game_seconds );
-	game&			get_game						( ) const;
 	float3 const&	get_gravity						( ) const;
-	void			fire							( float3 position, float3 direction );
+	void			fire							( float3 position, float3 direction, u32 current_time_in_ms );
 	float			get_bullet_time_factor			( );
 	void			add_decal						( float3 const& position, float3 const& direction, float3 const& normal, bool is_front_face );
 
@@ -68,7 +66,7 @@ private:
 	void			material_ready					( resources::queries_result& data, vostok::render::material_effects_instance_cook_data* cook_data );
 	void			material_ready_out				( resources::queries_result& data, vostok::render::material_effects_instance_cook_data* cook_data );
 
-	void			emit_bullet						( float3 position, float3 direction, float air_resistance );
+	void			emit_bullet						( float3 position, float3 direction, float air_resistance, u32 current_time_in_ms );
 	void			destroy_bullet					( buffer_vector<bullet*>::iterator& bullet );
 	void			displace_one_bullet				( );
 
@@ -87,7 +85,6 @@ private:
 	unmanaged_allocation_resource_ptr				m_bullets_memory_ptr;
 	uninitialized_reference< bullets_allocator >	m_bullets_allocator_ref;
 
-	game&											m_game;
 	tasks::task_type*								m_task_type;
 
 	u32												m_max_bullets_count;

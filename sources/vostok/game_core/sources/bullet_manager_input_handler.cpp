@@ -4,25 +4,24 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
+
 #include "pch.h"
 #include "bullet_manager_input_handler.h"
 
 #include <vostok/game_core/bullet_manager.h>
-/*
-#include "game.h"
-#include "game_world.h"
-#include "game_camera.h"
-*/
 
 #include <vostok/input/world.h>
 #include <vostok/input/keyboard.h>
 
-namespace survarium{
+// sushi@TODO: Doesn't seem to exist at all
+
+namespace survarium {
+
 
 bullet_manager_input_handler::bullet_manager_input_handler	( bullet_manager& bullet_manager )
-:m_bullet_manager( bullet_manager )
+	: m_bullet_manager( bullet_manager )
 {
-	m_bullet_manager.get_game( ).input_world( ).add_handler( *this );
+	// m_bullet_manager.get_game( ).input_world( ).add_handler( *this );
 }
 
 bullet_manager_input_handler::~bullet_manager_input_handler	( )
@@ -40,8 +39,11 @@ bool bullet_manager_input_handler::on_keyboard_action( vostok::input::world* inp
 	{
 		case vostok::input::key_f:
 		{
+			// sushi@TODO: Now shooting is done by the networking server.
+			/*
 			float4x4 view_transform = m_bullet_manager.get_game( ).get_game_world( ).get_camera_director( )->get_active_camera( )->get_inverted_view_matrix( );
 			m_bullet_manager.fire( view_transform.c.xyz( ), view_transform.k.xyz( ) * 900 );
+			*/
 			return			true;
 		}
 		case vostok::input::key_g:
