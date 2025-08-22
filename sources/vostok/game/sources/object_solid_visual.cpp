@@ -9,7 +9,7 @@
 #include "game_world.h"
 #include "game.h"
 #include <vostok/collision/space_partitioning_tree.h>
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/physics/rigid_body.h>
 

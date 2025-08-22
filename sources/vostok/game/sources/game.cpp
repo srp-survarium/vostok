@@ -5,8 +5,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-
 #include "game.h"
+
 #include "game_exit_handler.h"
 #include "npc_manipulation_handler.h"
 #include "game_world.h"
@@ -36,7 +36,7 @@
 #include <vostok/rtp/world.h>
 #include <vostok/ai_navigation/world.h>
 #include <vostok/ai/world.h>
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/game_test_suite.h>
 #include "animated_model_instance_cook.h"

@@ -6,15 +6,18 @@
 
 #include "pch.h"
 #include "game_world.h"
-#include "game.h"
+
 #include "camera_director.h"
 #include "cell_manager.h"
-#include "bullet_manager.h"
-#include <vostok/console_command.h>
 #include "event_manager.h"
-#include "object_scene.h"
-#include "hud.h"
 #include "free_fly_camera.h"
+#include "game.h"
+#include "hud.h"
+#include "object_scene.h"
+
+#include <vostok/game_core/bullet_manager.h>
+
+#include <vostok/console_command.h>
 #include <vostok/physics/api.h>
 #include <vostok/physics/world.h>
 
@@ -37,7 +40,7 @@ static console_commands::cc_bool rtp_dbg_input( "rtp_dbg_input", b_rtp_dbg_input
 game_world::game_world( game& game )
 :m_game					( game ),
 m_cell_manager			( NEW (cell_manager) ( game ) ),
-m_bullet_manager		( NEW (bullet_manager) ( game ) ),
+m_bullet_manager		( NEW (bullet_manager) ( ) ),
 m_collision_tree		( NULL ),
 m_game_time_ms			( 0 ),
 m_game_time_sec			( 0 ),
