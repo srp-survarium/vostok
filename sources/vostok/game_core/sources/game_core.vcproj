@@ -12,12 +12,6 @@
 		<Platform
 			Name="Win32"
 		/>
-		<Platform
-			Name="Xbox 360"
-		/>
-		<Platform
-			Name="x64"
-		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
