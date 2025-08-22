@@ -337,22 +337,17 @@ void body_part_parameters::check_affects(
 		}																															// <0x5976d4>
 }
 
-// STATE[STUB]
+// STATE[UNVERIFIED]: stick@NOTE: the assembly code looks identical except for assert
 // bool survarium::body_part_parameters::is_affect_applied(const survarium::hit_affects_type_enum)
 bool body_part_parameters::is_affect_applied(
-	hit_affects_type_enum              affect)
+	hit_affects_type_enum				affect)
 {
-	// LOCALS
-	// u32                             i<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x596da9> <block><1>
-	// <0x596dd7>
-	// <0x596df4>
-
-	return true; // <0x596df8>
-	// ******
+	for ( u32 i = 0; i < m_affects.size(); ++i )			// <0x596da9> <block><1>
+	{
+		ASSERT( NULL );										// <0x596dd7>
+		if ( m_affects[i].first == affect ) return true;	// <0x596df4>
+	}														// <0x596df8>
+	return false;
 }
 
 // STATE[UNVERIFIED]

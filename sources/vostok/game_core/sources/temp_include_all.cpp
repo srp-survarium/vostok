@@ -33,6 +33,7 @@ IncludeAll::IncludeAll()
 	bpp->can_affect_death();
 	bpp->dump_state(&bpp_dump_stats, 0);
 	bpp->cancel_affect_by_force(hit_affects_type_enum::affects_type_concussion);
+	bpp->is_affect_applied(hit_affects_type_enum::affects_type_blindness);
 
 	Callback1 cb1;
 	Callback2 cb2;
