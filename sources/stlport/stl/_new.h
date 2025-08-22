@@ -145,12 +145,12 @@ inline void* _STLP_CALL __stl_new(size_t __n)   { _STLP_CHECK_NULL_ALLOC(::opera
 inline void  _STLP_CALL __stl_delete(void* __p) { ::operator delete(__p, __FILE__, __LINE__); }
 #  else
 inline void* _STLP_CALL __stl_new(size_t __n)   {
-#if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 	_STLP_CHECK_NULL_ALLOC(::operator _STLP_NEW(__n));
-#else // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#else // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 	(void)__n;
 	return 0;
-#endif // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#endif // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 }
 inline void  _STLP_CALL __stl_delete(void* __p) { ::operator delete(__p); }
 #  endif

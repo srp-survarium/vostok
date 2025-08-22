@@ -184,7 +184,7 @@ namespace boost
     public:
       virtual ~error_category(){}
       virtual inline const char *    name() const;  // see implementation note below
-      virtual inline xray::network::std_string     message( int ev ) const;   // see implementation note below
+      virtual inline vostok::network::std_string     message( int ev ) const;   // see implementation note below
       virtual inline error_condition default_error_condition( int ev ) const;
       virtual inline bool equivalent( int code, const error_condition & condition ) const;
       virtual inline bool equivalent( const error_code & code, int condition ) const;
@@ -257,7 +257,7 @@ namespace boost
       // observers:
       int                     value() const    { return m_val; }
       const error_category &  category() const { return *m_cat; }
-      xray::network::std_string             message() const  { return m_cat->message(value()); }
+      vostok::network::std_string             message() const  { return m_cat->message(value()); }
 
       typedef void (*unspecified_bool_type)();
       static void unspecified_bool_true() {}
@@ -344,7 +344,7 @@ namespace boost
       int                     value() const    { return m_val; }
       const error_category &  category() const { return *m_cat; }
       error_condition         default_error_condition() const  { return m_cat->default_error_condition(value()); }
-      xray::network::std_string             message() const  { return m_cat->message(value()); }
+      vostok::network::std_string             message() const  { return m_cat->message(value()); }
 
       typedef void (*unspecified_bool_type)();
       static void unspecified_bool_true() {}
@@ -503,9 +503,9 @@ namespace boost
       return "error: should never be called";
     }
 
-    inline xray::network::std_string error_category::message( int ) const
+    inline vostok::network::std_string error_category::message( int ) const
     { 
-      static xray::network::std_string s("error: should never be called");
+      static vostok::network::std_string s("error: should never be called");
       return s;
     }
 

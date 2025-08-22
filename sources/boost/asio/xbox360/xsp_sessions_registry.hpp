@@ -14,9 +14,9 @@
 #include <boost/asio/detail/socket_types.hpp>
 #include <boost/asio/ip/address.hpp>
 
-#include <xray/intrusive_ptr.h>
-#include <xray/network/sources/writers.h>
-#include <xray/network/sources/readers.h>
+#include <vostok/intrusive_ptr.h>
+#include <vostok/network/sources/writers.h>
+#include <vostok/network/sources/readers.h>
 
 namespace boost {
 namespace asio {
@@ -41,8 +41,8 @@ class secure_inaddr : public sinaddr_intrusive_base
 {
 public:
 	typedef boost::asio::detail::in4_addr_type		in_addr_type;
-	typedef xray::intrusive_ptr<secure_inaddr, sinaddr_intrusive_base,
-		xray::threading::multi_threading_policy_base>	pointer_type;
+	typedef vostok::intrusive_ptr<secure_inaddr, sinaddr_intrusive_base,
+		vostok::threading::multi_threading_policy_base>	pointer_type;
 
 	inline						secure_inaddr	(sessions_registry* owner,
 												 in_addr_type const & secure_addr);
@@ -73,11 +73,11 @@ public:
 		XNADDR		m_peer_xnaddr;
 
 		template <typename Reader>
-		xray::signalling_bool		read(Reader & reader)
+		vostok::signalling_bool		read(Reader & reader)
 		{
-			xray::mutable_buffer	key_dest	((pvoid)&m_peer_key, sizeof(m_peer_key));
-			xray::mutable_buffer	kid_dest	((pvoid)&m_peer_kid, sizeof(m_peer_kid));
-			xray::mutable_buffer	peer_addr	((pvoid)&m_peer_xnaddr, sizeof(m_peer_xnaddr));
+			vostok::mutable_buffer	key_dest	((pvoid)&m_peer_key, sizeof(m_peer_key));
+			vostok::mutable_buffer	kid_dest	((pvoid)&m_peer_kid, sizeof(m_peer_kid));
+			vostok::mutable_buffer	peer_addr	((pvoid)&m_peer_xnaddr, sizeof(m_peer_xnaddr));
 
 			return (
 				reader.read(key_dest,	sizeof(m_peer_key)) &&
@@ -132,7 +132,7 @@ private:
 		}
 	}
 
-	typedef xray::network::vector<secure_inaddr*>	sessions_type;	
+	typedef vostok::network::vector<secure_inaddr*>	sessions_type;	
 	
 	sessions_type				m_sessions;
 	secure_inaddr::pointer_type	m_title_address;

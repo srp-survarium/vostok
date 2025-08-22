@@ -68,7 +68,7 @@ namespace asio {
  * @code boost::asio::write_at(d, 42, boost::asio::buffer(data, size)); @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  *
  * @note This overload is equivalent to calling:
  * @code boost::asio::write_at(
@@ -126,7 +126,7 @@ std::size_t write_at(SyncRandomAccessWriteDevice& d,
  *     boost::asio::transfer_at_least(32)); @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename SyncRandomAccessWriteDevice, typename ConstBufferSequence,
     typename CompletionCondition>
@@ -361,7 +361,7 @@ std::size_t write_at(SyncRandomAccessWriteDevice& d, boost::uint64_t offset,
  * @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename AsyncRandomAccessWriteDevice, typename ConstBufferSequence,
     typename WriteHandler>
@@ -432,7 +432,7 @@ void async_write_at(AsyncRandomAccessWriteDevice& d, boost::uint64_t offset,
  *     handler); @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename AsyncRandomAccessWriteDevice, typename ConstBufferSequence,
     typename CompletionCondition, typename WriteHandler>

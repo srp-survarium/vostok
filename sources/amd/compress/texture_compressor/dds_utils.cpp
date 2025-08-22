@@ -482,7 +482,7 @@ u8* create_texture_ati_compress(	u32& result_buffer_size,
 									pcstr fmt,
 									u32 const tga_file_data_size,
 									bool generate_mip_maps,
-									xray::texture_compressor::texture_dimension texture_dim,
+									vostok::texture_compressor::texture_dimension texture_dim,
 									bool highquality,
 									bool is_srgb)
 {
@@ -493,8 +493,8 @@ u8* create_texture_ati_compress(	u32& result_buffer_size,
 	options.nCompressionSpeed		= highquality ? ATI_TC_Speed_Normal : ATI_TC_Speed_SuperFast;
 	options.bDisableMultiThreading	= false;
 	
-	bool is_cubemap					= texture_dim == xray::texture_compressor::texture_cube;
-	bool is_volume_texture			= texture_dim == xray::texture_compressor::texture_3D;
+	bool is_cubemap					= texture_dim == vostok::texture_compressor::texture_cube;
+	bool is_volume_texture			= texture_dim == vostok::texture_compressor::texture_3D;
 	
 	FIBITMAP* original_fb			= get_freeimage_from_memory (tga_file_data,tga_file_data_size);
 	if ( !original_fb )
@@ -722,7 +722,7 @@ u8* create_texture_nv_compress(		u32& result_buffer_size,
 									pcstr fmt,
 									u32 const tga_file_data_size,
 									bool generate_mip_maps,
-									xray::texture_compressor::texture_dimension texture_dim,
+									vostok::texture_compressor::texture_dimension texture_dim,
 									bool is_srgb)
 {
 	nvtt::Format dest_format	= get_nv_texture_format(fmt);
@@ -745,8 +745,8 @@ u8* create_texture_nv_compress(		u32& result_buffer_size,
 	FreeImage_FlipVertical		( original_fb );
 	BYTE* pdata					= FreeImage_GetBits( original_fb );
 
-	bool bcubemap				= (texture_dim==xray::texture_compressor::texture_cube);
-	bool bvolume_texture		= (texture_dim==xray::texture_compressor::texture_3D);
+	bool bcubemap				= (texture_dim==vostok::texture_compressor::texture_cube);
+	bool bvolume_texture		= (texture_dim==vostok::texture_compressor::texture_3D);
 	
 	if (bvolume_texture)
 	{

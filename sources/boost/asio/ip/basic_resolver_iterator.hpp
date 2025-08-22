@@ -62,13 +62,13 @@ public:
   /// Create an iterator from an addrinfo list returned by getaddrinfo.
   static basic_resolver_iterator create(
       boost::asio::detail::addrinfo_type* address_info,
-      const xray::network::std_string& host_name, const xray::network::std_string& service_name)
+      const vostok::network::std_string& host_name, const vostok::network::std_string& service_name)
   {
     basic_resolver_iterator iter;
     if (!address_info)
       return iter;
 
-    xray::network::std_string actual_host_name = host_name;
+    vostok::network::std_string actual_host_name = host_name;
     if (address_info->ai_canonname)
       actual_host_name = address_info->ai_canonname;
 
@@ -102,7 +102,7 @@ public:
   /// Create an iterator from an endpoint, host name and service name.
   static basic_resolver_iterator create(
       const typename InternetProtocol::endpoint& endpoint,
-      const xray::network::std_string& host_name, const xray::network::std_string& service_name)
+      const vostok::network::std_string& host_name, const vostok::network::std_string& service_name)
   {
     basic_resolver_iterator iter;
     iter.values_.reset(new values_type);
@@ -141,7 +141,7 @@ private:
     return **iter_;
   }
 
-  typedef xray::network::vector_size_t<basic_resolver_entry<InternetProtocol> > values_type;
+  typedef vostok::network::vector_size_t<basic_resolver_entry<InternetProtocol> > values_type;
   typedef typename values_type::const_iterator values_iter_type;
   boost::shared_ptr<values_type> values_;
   boost::optional<values_iter_type> iter_;

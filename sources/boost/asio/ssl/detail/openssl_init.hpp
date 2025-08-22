@@ -110,7 +110,7 @@ private:
     }
 
     // Mutexes to be used in locking callbacks.
-    xray::network::vector<boost::shared_ptr<boost::asio::detail::mutex> > mutexes_;
+    vostok::network::vector<boost::shared_ptr<boost::asio::detail::mutex> > mutexes_;
 
 #if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
     // The thread identifiers to be used by openssl.

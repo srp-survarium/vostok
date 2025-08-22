@@ -16,7 +16,7 @@
 #if defined(_MSC_VER) && (_MSC_VER >= 1200)
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
-//#include <boost/xray_defines.hpp>
+//#include <boost/vostok_defines.hpp>
 #if !defined(_XBOX) && !defined(SN_TARGET_PS3)
 #include <boost/asio/basic_datagram_socket.hpp>
 #include <boost/asio/basic_deadline_timer.hpp>

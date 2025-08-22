@@ -700,14 +700,14 @@ private:
   reactor_op_queue<socket_type> except_op_queue_;
 
   // The timer queues.
-  xray::network::vector_size_t<timer_queue_base*> timer_queues_;
+  vostok::network::vector_size_t<timer_queue_base*> timer_queues_;
 
   // A copy of the timer queues, used when cleaning up timers. The copy is
   // stored as a class data member to avoid unnecessary memory allocation.
-  xray::network::vector_size_t<timer_queue_base*> timer_queues_for_cleanup_;
+  vostok::network::vector_size_t<timer_queue_base*> timer_queues_for_cleanup_;
 
   // The descriptors that are pending cancellation.
-  xray::network::vector_size_t<socket_type> pending_cancellations_;
+  vostok::network::vector_size_t<socket_type> pending_cancellations_;
 
   // Does the reactor loop thread need to stop.
   bool stop_thread_;

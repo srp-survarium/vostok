@@ -433,9 +433,9 @@ public:
   ~buffer_debug_check()
   {
 #if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
-    // MSVC's string iterator checking may crash in a xray::network::std_string::iterator
+    // MSVC's string iterator checking may crash in a vostok::network::std_string::iterator
     // object's destructor when the iterator points to an already-destroyed
-    // xray::network::std_string object, unless the iterator is cleared first.
+    // vostok::network::std_string object, unless the iterator is cleared first.
     iter_ = Iterator();
 #endif // BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
   }
@@ -456,7 +456,7 @@ private:
  *
  * @brief The boost::asio::buffer function is used to create a buffer object to
  * represent raw memory, an array of POD elements, a vector of POD elements,
- * or a xray::network::std_string.
+ * or a vostok::network::std_string.
  *
  * A buffer object represents a contiguous region of memory as a 2-tuple
  * consisting of a pointer and size in bytes. A tuple of the form <tt>{void*,
@@ -477,14 +477,14 @@ private:
  * passed to the socket's write function. A buffer created for modifiable
  * memory also meets the requirements of the MutableBufferSequence concept.
  *
- * An individual buffer may be created from a builtin array, xray::network::vector or
+ * An individual buffer may be created from a builtin array, vostok::network::vector or
  * boost::array of POD elements. This helps prevent buffer overruns by
  * automatically determining the size of the buffer:
  *
  * @code char d1[128];
  * size_t bytes_transferred = sock.receive(boost::asio::buffer(d1));
  *
- * xray::network::vector_size_t<char> d2(128);
+ * vostok::network::vector_size_t<char> d2(128);
  * bytes_transferred = sock.receive(boost::asio::buffer(d2));
  *
  * boost::array<char, 128> d3;
@@ -519,12 +519,12 @@ private:
  * is no longer available, the buffer is said to have been invalidated.
  *
  * For the boost::asio::buffer overloads that accept an argument of type
- * xray::network::vector, the buffer objects returned are invalidated by any vector
+ * vostok::network::vector, the buffer objects returned are invalidated by any vector
  * operation that also invalidates all references, pointers and iterators
  * referring to the elements in the sequence (C++ Std, 23.2.4)
  *
  * For the boost::asio::buffer overloads that accept an argument of type
- * xray::network::std_string, the buffer objects returned are invalidated according to the
+ * vostok::network::std_string, the buffer objects returned are invalidated according to the
  * rules defined for invalidation of references, pointers and iterators
  * referring to elements of the sequence (C++ Std, 21.3).
  *
@@ -573,7 +573,7 @@ private:
  *
  * @code
  * char d1[128];
- * xray::network::vector_size_t<char> d2(128);
+ * vostok::network::vector_size_t<char> d2(128);
  * boost::array<char, 128> d3;
  *
  * boost::array<mutable_buffer, 3> bufs1 = {
@@ -582,7 +582,7 @@ private:
  *   boost::asio::buffer(d3) };
  * bytes_transferred = sock.receive(bufs1);
  *
- * xray::network::vector_size_t<const_buffer> bufs2;
+ * vostok::network::vector_size_t<const_buffer> bufs2;
  * bufs2.push_back(boost::asio::buffer(d1));
  * bufs2.push_back(boost::asio::buffer(d2));
  * bufs2.push_back(boost::asio::buffer(d3));
@@ -911,7 +911,7 @@ inline mutable_buffers_1 buffer(std::vector<PodType, Allocator>& data)
       mutable_buffer(data.size() ? &data[0] : 0, data.size() * sizeof(PodType)
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
         , detail::buffer_debug_check<
-            typename xray::network::vector_size_t<PodType, Allocator>::iterator
+            typename vostok::network::vector_size_t<PodType, Allocator>::iterator
           >(data.begin())
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
         ));
@@ -937,7 +937,7 @@ inline mutable_buffers_1 buffer(std::vector<PodType, Allocator>& data,
         ? data.size() * sizeof(PodType) : max_size_in_bytes
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
         , detail::buffer_debug_check<
-            typename xray::network::vector_size_t<PodType, Allocator>::iterator
+            typename vostok::network::vector_size_t<PodType, Allocator>::iterator
           >(data.begin())
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
         ));
@@ -961,7 +961,7 @@ inline const_buffers_1 buffer(
       const_buffer(data.size() ? &data[0] : 0, data.size() * sizeof(PodType)
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
         , detail::buffer_debug_check<
-            typename xray::network::vector_size_t<PodType, Allocator>::const_iterator
+            typename vostok::network::vector_size_t<PodType, Allocator>::const_iterator
           >(data.begin())
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
         ));
@@ -987,7 +987,7 @@ inline const_buffers_1 buffer(
         ? data.size() * sizeof(PodType) : max_size_in_bytes
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
         , detail::buffer_debug_check<
-            typename xray::network::vector_size_t<PodType, Allocator>::const_iterator
+            typename vostok::network::vector_size_t<PodType, Allocator>::const_iterator
           >(data.begin())
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
         ));
@@ -1000,11 +1000,11 @@ inline const_buffers_1 buffer(
  * @note The buffer is invalidated by any non-const operation called on the
  * given string object.
  */
-inline const_buffers_1 buffer(const xray::network::std_string& data)
+inline const_buffers_1 buffer(const vostok::network::std_string& data)
 {
   return const_buffers_1(const_buffer(data.data(), data.size()
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
-        , detail::buffer_debug_check<xray::network::std_string::const_iterator>(data.begin())
+        , detail::buffer_debug_check<vostok::network::std_string::const_iterator>(data.begin())
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
         ));
 }
@@ -1019,7 +1019,7 @@ inline const_buffers_1 buffer(const xray::network::std_string& data)
  * @note The buffer is invalidated by any non-const operation called on the
  * given string object.
  */
-inline const_buffers_1 buffer(const xray::network::std_string& data,
+inline const_buffers_1 buffer(const vostok::network::std_string& data,
     std::size_t max_size_in_bytes)
 {
   return const_buffers_1(
@@ -1027,7 +1027,7 @@ inline const_buffers_1 buffer(const xray::network::std_string& data,
         data.size() < max_size_in_bytes
         ? data.size() : max_size_in_bytes
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
-        , detail::buffer_debug_check<xray::network::std_string::const_iterator>(data.begin())
+        , detail::buffer_debug_check<vostok::network::std_string::const_iterator>(data.begin())
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
         ));
 }

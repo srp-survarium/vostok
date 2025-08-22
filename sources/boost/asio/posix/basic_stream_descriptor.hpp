@@ -113,7 +113,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on writing multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers)
@@ -180,7 +180,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on writing multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
   void async_write_some(const ConstBufferSequence& buffers,
@@ -215,7 +215,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on reading into multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence>
   std::size_t read_some(const MutableBufferSequence& buffers)
@@ -284,7 +284,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on reading into multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
   void async_read_some(const MutableBufferSequence& buffers,

@@ -30,10 +30,10 @@ namespace boost {
     {
      public:
        data_not_accessible() : 
-         std::logic_error(xray::network::std_string("Unable to locate or access the required datafile.")) 
+         std::logic_error(vostok::network::std_string("Unable to locate or access the required datafile.")) 
        {}
-       data_not_accessible(const xray::network::std_string& filespec) : 
-         std::logic_error(xray::network::std_string("Unable to locate or access the required datafile. Filespec: " + filespec)) 
+       data_not_accessible(const vostok::network::std_string& filespec) : 
+         std::logic_error(vostok::network::std_string("Unable to locate or access the required datafile. Filespec: " + filespec)) 
        {}
     };
     
@@ -41,7 +41,7 @@ namespace boost {
     class bad_field_count : public std::out_of_range
     {
      public:
-       bad_field_count(const xray::network::std_string& s) : 
+       bad_field_count(const vostok::network::std_string& s) : 
          std::out_of_range(s) 
       {}
     };
@@ -168,10 +168,10 @@ namespace boost {
 
       //! Process csv data file, may throw exceptions
       /*! May throw data_not_accessible, or bad_field_count exceptions */
-      void load_from_file(const xray::network::std_string& pathspec)
+      void load_from_file(const vostok::network::std_string& pathspec)
       {
         string_type in_str;
-        xray::network::std_string  buff;
+        vostok::network::std_string  buff;
         
         std::ifstream ifs(pathspec.c_str());
         if(!ifs){
@@ -211,9 +211,9 @@ namespace boost {
       }
 
       //! Returns a vector of strings holding the time zone regions in the database
-      std::vector<xray::network::std_string> region_list() const
+      std::vector<vostok::network::std_string> region_list() const
       {
-        typedef std::vector<xray::network::std_string> vector_type;
+        typedef std::vector<vostok::network::std_string> vector_type;
         vector_type regions;
         typename map_type::const_iterator itr = m_zone_map.begin();
         while(itr != m_zone_map.end()) {
@@ -336,7 +336,7 @@ namespace boost {
 
         // initializations
         bool has_dst = true; 
-        if(result[DSTABBR] == xray::network::std_string()){
+        if(result[DSTABBR] == vostok::network::std_string()){
           has_dst = false;
         }
 

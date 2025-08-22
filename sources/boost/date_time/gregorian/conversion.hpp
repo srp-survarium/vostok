@@ -26,7 +26,7 @@ namespace gregorian {
   {
     if (d.is_special())
     {
-        xray::network::std_string s = "tm unable to handle ";
+        vostok::network::std_string s = "tm unable to handle ";
         switch (d.as_special())
         {
         case date_time::not_a_date_time:

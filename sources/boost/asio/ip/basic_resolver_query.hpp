@@ -47,7 +47,7 @@ public:
   typedef InternetProtocol protocol_type;
 
   /// Construct with specified service name for any protocol.
-  basic_resolver_query(const xray::network::std_string& service_name,
+  basic_resolver_query(const vostok::network::std_string& service_name,
       int flags = passive | address_configured)
     : hints_(),
       host_name_(),
@@ -66,7 +66,7 @@ public:
 
   /// Construct with specified service name for a given protocol.
   basic_resolver_query(const protocol_type& protocol,
-      const xray::network::std_string& service_name,
+      const vostok::network::std_string& service_name,
       int flags = passive | address_configured)
     : hints_(),
       host_name_(),
@@ -83,8 +83,8 @@ public:
   }
 
   /// Construct with specified host name and service name for any protocol.
-  basic_resolver_query(const xray::network::std_string& host_name,
-      const xray::network::std_string& service_name, int flags = address_configured)
+  basic_resolver_query(const vostok::network::std_string& host_name,
+      const vostok::network::std_string& service_name, int flags = address_configured)
     : hints_(),
       host_name_(host_name),
       service_name_(service_name)
@@ -102,7 +102,7 @@ public:
 
   /// Construct with specified host name and service name for a given protocol.
   basic_resolver_query(const protocol_type& protocol,
-      const xray::network::std_string& host_name, const xray::network::std_string& service_name,
+      const vostok::network::std_string& host_name, const vostok::network::std_string& service_name,
       int flags = address_configured)
     : hints_(),
       host_name_(host_name),
@@ -125,21 +125,21 @@ public:
   }
 
   /// Get the host name associated with the query.
-  xray::network::std_string host_name() const
+  vostok::network::std_string host_name() const
   {
     return host_name_;
   }
 
   /// Get the service name associated with the query.
-  xray::network::std_string service_name() const
+  vostok::network::std_string service_name() const
   {
     return service_name_;
   }
 
 private:
   boost::asio::detail::addrinfo_type hints_;
-  xray::network::std_string host_name_;
-  xray::network::std_string service_name_;
+  vostok::network::std_string host_name_;
+  vostok::network::std_string service_name_;
 };
 
 } // namespace ip

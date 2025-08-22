@@ -17,7 +17,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
-#include <xray/intrusive_double_linked_list.h>
+#include <vostok/intrusive_double_linked_list.h>
 #include <boost/asio/detail/pop_options.hpp>
 
 #include <boost/asio/io_service.hpp>
@@ -320,12 +320,12 @@ private:
 		bool							m_results_ready;
 	}; // class accept_operation
 	
-	typedef xray::intrusive_double_linked_list<
+	typedef vostok::intrusive_double_linked_list<
 		implementation_type,
 		implementation_type *,
 		&implementation_type::m_prev_ptr,
 		&implementation_type::m_next_ptr,
-		xray::threading::mutex>	implementation_list_t;
+		vostok::threading::mutex>	implementation_list_t;
 
 	Protocol							m_protocol;
 	implementation_list_t				m_impl_list;

@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="false"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/vostok_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)../libraries/$(PlatformName)/"
 				GenerateDebugInformation="true"
@@ -172,7 +172,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/vostok_$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)../libraries/$(PlatformName)/"
 				GenerateDebugInformation="true"

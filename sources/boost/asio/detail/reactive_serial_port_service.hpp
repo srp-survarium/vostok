@@ -79,7 +79,7 @@ public:
 
   // Open the serial port using the specified device name.
   boost::system::error_code open(implementation_type& impl,
-      const xray::network::std_string& device, boost::system::error_code& ec)
+      const vostok::network::std_string& device, boost::system::error_code& ec)
   {
     if (is_open(impl))
     {

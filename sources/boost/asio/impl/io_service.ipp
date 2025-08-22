@@ -35,14 +35,14 @@ namespace boost {
 namespace asio {
 
 inline io_service::io_service()
-  : service_registry_(XRAY_BOOST_NEW(boost::asio::detail::service_registry)(*this)),
+  : service_registry_(VOSTOK_BOOST_NEW(boost::asio::detail::service_registry)(*this)),
     impl_(service_registry_->use_service<impl_type>())
 {
   impl_.init((std::numeric_limits<std::size_t>::max)());
 }
 
 inline io_service::io_service(std::size_t concurrency_hint)
-  : service_registry_(XRAY_BOOST_NEW(boost::asio::detail::service_registry)(*this)),
+  : service_registry_(VOSTOK_BOOST_NEW(boost::asio::detail::service_registry)(*this)),
     impl_(service_registry_->use_service<impl_type>())
 {
   impl_.init(concurrency_hint);
@@ -50,7 +50,7 @@ inline io_service::io_service(std::size_t concurrency_hint)
 
 inline io_service::~io_service()
 {
-  XRAY_BOOST_DELETE(service_registry_);
+  VOSTOK_BOOST_DELETE(service_registry_);
 }
 
 inline std::size_t io_service::run()

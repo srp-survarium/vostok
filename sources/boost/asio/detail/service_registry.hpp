@@ -81,7 +81,7 @@ public:
     {
       boost::asio::io_service::service* next_service = first_service_->next_;
 	  first_service_->~service();
-      XRAY_BOOST_FREE(first_service_);
+      VOSTOK_BOOST_FREE(first_service_);
       first_service_ = next_service;
     }
   }
@@ -107,7 +107,7 @@ public:
     // at this time to allow for nested calls into this function from the new
     // service's constructor.
     lock.unlock();
-    std::auto_ptr<Service> new_service(XRAY_BOOST_NEW(Service)(owner_));
+    std::auto_ptr<Service> new_service(VOSTOK_BOOST_NEW(Service)(owner_));
     init_service_id(*new_service, Service::id);
     Service& new_service_ref = *new_service;
     lock.lock();
@@ -120,7 +120,7 @@ public:
       if (service_id_matches(*service, Service::id))
 	  {
 		Service* todel_service = new_service.release();
-		XRAY_BOOST_DELETE(todel_service);
+		VOSTOK_BOOST_DELETE(todel_service);
 		return *static_cast<Service*>(service);
 	  }
       service = service->next_;

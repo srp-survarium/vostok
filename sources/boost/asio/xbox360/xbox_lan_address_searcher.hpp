@@ -23,7 +23,7 @@ class xbox_lan_address_searcher :
 {
 public:
 	typedef full_secure_address					address_type;
-	typedef xray::network::vector<address_type>	addresses_type;
+	typedef vostok::network::vector<address_type>	addresses_type;
 	typedef addresses_type::const_iterator		const_iterator;
 	typedef void (*handler_function_type)		(void* context,
 												 boost::system::error_code const & ec,
@@ -68,7 +68,7 @@ private:
 	public:
 		virtual char const * name() const  {
 			return "boost::asio::ip::xsp::xbox_lan_address_searcher"; }
-		virtual inline xray::network::std_string message(int value) const;
+		virtual inline vostok::network::std_string message(int value) const;
 	}; // class error_category
 
 	inline void received_data		(boost::system::error_code const & ec,

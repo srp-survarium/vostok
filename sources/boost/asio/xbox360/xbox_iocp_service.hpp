@@ -137,7 +137,7 @@ public:
 	
 	long volatile &					outstanding_operations() { return m_outstanding_operations; };
 private:
-	typedef xray::network::vector<timer_queue_base*>	timer_queues_t;
+	typedef vostok::network::vector<timer_queue_base*>	timer_queues_t;
 	
 	struct timer_euque_predicate
 	{
@@ -165,7 +165,7 @@ private:
 	long volatile				m_stop_signal;
 	long volatile				m_shutdown_signal;
 	xbox_io_completion_queue	m_completion_queue;
-	xray::threading::mutex		m_timer_queues_mutex;
+	vostok::threading::mutex		m_timer_queues_mutex;
 	timer_queues_t				m_timer_queues;
 	// thread id that waits for timers
 	long volatile				m_timer_thread_id;

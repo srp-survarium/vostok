@@ -139,8 +139,8 @@ public:
       boost::system::error_code& ec)
   {
     boost::asio::detail::addrinfo_type* address_info = 0;
-    xray::network::std_string host_name = query.host_name();
-    xray::network::std_string service_name = query.service_name();
+    vostok::network::std_string host_name = query.host_name();
+    vostok::network::std_string service_name = query.service_name();
     boost::asio::detail::addrinfo_type hints = query.hints();
 
     socket_ops::getaddrinfo(host_name.length() ? host_name.c_str() : 0,
@@ -180,8 +180,8 @@ public:
 
       // Perform the blocking host resolution operation.
       boost::asio::detail::addrinfo_type* address_info = 0;
-      xray::network::std_string host_name = query_.host_name();
-      xray::network::std_string service_name = query_.service_name();
+      vostok::network::std_string host_name = query_.host_name();
+      vostok::network::std_string service_name = query_.service_name();
       boost::asio::detail::addrinfo_type hints = query_.hints();
       boost::system::error_code ec;
       socket_ops::getaddrinfo(host_name.length() ? host_name.c_str() : 0,

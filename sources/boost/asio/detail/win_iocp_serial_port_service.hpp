@@ -73,7 +73,7 @@ public:
 
   // Open the serial port using the specified device name.
   boost::system::error_code open(implementation_type& impl,
-      const xray::network::std_string& device, boost::system::error_code& ec)
+      const vostok::network::std_string& device, boost::system::error_code& ec)
   {
     if (is_open(impl))
     {
@@ -82,7 +82,7 @@ public:
     }
 
     // For convenience, add a leading \\.\ sequence if not already present.
-    xray::network::std_string name = (device[0] == '\\') ? device : "\\\\.\\" + device;
+    vostok::network::std_string name = (device[0] == '\\') ? device : "\\\\.\\" + device;
 
     // Open a handle to the serial port.
     ::HANDLE handle = ::CreateFileA(name.c_str(),

@@ -104,7 +104,7 @@ public:
 
   /// Load a certification authority file for performing verification.
   boost::system::error_code load_verify_file(impl_type& impl,
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     return service_impl_.load_verify_file(impl, filename, ec);
   }
@@ -112,14 +112,14 @@ public:
   /// Add a directory containing certification authority files to be used for
   /// performing verification.
   boost::system::error_code add_verify_path(impl_type& impl,
-      const xray::network::std_string& path, boost::system::error_code& ec)
+      const vostok::network::std_string& path, boost::system::error_code& ec)
   {
     return service_impl_.add_verify_path(impl, path, ec);
   }
 
   /// Use a certificate from a file.
   boost::system::error_code use_certificate_file(impl_type& impl,
-      const xray::network::std_string& filename, context_base::file_format format,
+      const vostok::network::std_string& filename, context_base::file_format format,
       boost::system::error_code& ec)
   {
     return service_impl_.use_certificate_file(impl, filename, format, ec);
@@ -127,14 +127,14 @@ public:
 
   /// Use a certificate chain from a file.
   boost::system::error_code use_certificate_chain_file(impl_type& impl,
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     return service_impl_.use_certificate_chain_file(impl, filename, ec);
   }
 
   /// Use a private key from a file.
   boost::system::error_code use_private_key_file(impl_type& impl,
-      const xray::network::std_string& filename, context_base::file_format format,
+      const vostok::network::std_string& filename, context_base::file_format format,
       boost::system::error_code& ec)
   {
     return service_impl_.use_private_key_file(impl, filename, format, ec);
@@ -142,7 +142,7 @@ public:
 
   /// Use an RSA private key from a file.
   boost::system::error_code use_rsa_private_key_file(impl_type& impl,
-      const xray::network::std_string& filename, context_base::file_format format,
+      const vostok::network::std_string& filename, context_base::file_format format,
       boost::system::error_code& ec)
   {
     return service_impl_.use_rsa_private_key_file(impl, filename, format, ec);
@@ -150,7 +150,7 @@ public:
 
   /// Use the specified file to obtain the temporary Diffie-Hellman parameters.
   boost::system::error_code use_tmp_dh_file(impl_type& impl,
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     return service_impl_.use_tmp_dh_file(impl, filename, ec);
   }

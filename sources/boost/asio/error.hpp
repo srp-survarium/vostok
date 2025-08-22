@@ -230,7 +230,7 @@ public:
     return "asio.netdb";
   }
 
-  xray::network::std_string message(int value) const
+  vostok::network::std_string message(int value) const
   {
     if (value == error::host_not_found)
       return "Host not found (authoritative)";
@@ -262,7 +262,7 @@ public:
     return "asio.addrinfo";
   }
 
-  xray::network::std_string message(int value) const
+  vostok::network::std_string message(int value) const
   {
     if (value == error::service_not_found)
       return "Service not found";
@@ -304,7 +304,7 @@ public:
     return "asio.misc";
   }
 
-  xray::network::std_string message(int value) const
+  vostok::network::std_string message(int value) const
   {
     if (value == error::already_open)
       return "Already open";
@@ -336,7 +336,7 @@ public:
     return "asio.ssl";
   }
 
-  xray::network::std_string message(int) const
+  vostok::network::std_string message(int) const
   {
     return "asio.ssl error";
   }

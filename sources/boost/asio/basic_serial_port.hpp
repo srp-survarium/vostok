@@ -100,7 +100,7 @@ public:
    * port.
    */
   explicit basic_serial_port(boost::asio::io_service& io_service,
-      const xray::network::std_string& device)
+      const vostok::network::std_string& device)
     : basic_io_object<SerialPortService>(io_service)
   {
     boost::system::error_code ec;
@@ -165,7 +165,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void open(const xray::network::std_string& device)
+  void open(const vostok::network::std_string& device)
   {
     boost::system::error_code ec;
     this->service.open(this->implementation, device, ec);
@@ -181,7 +181,7 @@ public:
    *
    * @param ec Set the indicate what error occurred, if any.
    */
-  boost::system::error_code open(const xray::network::std_string& device,
+  boost::system::error_code open(const vostok::network::std_string& device,
       boost::system::error_code& ec)
   {
     return this->service.open(this->implementation, device, ec);
@@ -432,7 +432,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on writing multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers)
@@ -499,7 +499,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on writing multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
   void async_write_some(const ConstBufferSequence& buffers,
@@ -534,7 +534,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on reading into multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence>
   std::size_t read_some(const MutableBufferSequence& buffers)
@@ -603,7 +603,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on reading into multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
   void async_read_some(const MutableBufferSequence& buffers,
