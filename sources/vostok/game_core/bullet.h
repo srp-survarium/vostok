@@ -4,8 +4,8 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef BULLET_H_INCLUDED
-#define BULLET_H_INCLUDED
+#ifndef VOSTOK_GAME_CORE_BULLET_H_INCLUDED
+#define VOSTOK_GAME_CORE_BULLET_H_INCLUDED
 
 #define	STRICT_FOLLOW_TRAJECTORY
 
@@ -158,4 +158,4 @@ private:
 
 } // namespace survarium
 
-#endif // #ifndef BULLET_H_INCLUDED
+#endif // #ifndef VOSTOK_GAME_CORE_BULLET_H_INCLUDED

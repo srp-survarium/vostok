@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "object_collision_geometry.h"
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 #include "game_world.h"
 #include "game_camera.h"
 

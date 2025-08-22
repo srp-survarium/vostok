@@ -7,6 +7,7 @@
 #include "pch.h"
 #include <vostok/engine/pc/library_linkage.h>
 #include <vostok/game/library_linkage.h>
+#include <vostok/game_core/library_linkage.h>
 
 #ifdef VOSTOK_STATIC_LIBRARIES
 #	include <vostok/engine/library_linkage.h>

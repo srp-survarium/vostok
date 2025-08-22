@@ -14,7 +14,7 @@
 #include <vostok/ai/sensed_sound_object.h>
 #include <vostok/ai/sensed_hit_object.h>
 #include <vostok/collision/geometry.h>
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/render/facade/game_renderer.h>
