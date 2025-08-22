@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "hud.h"
+
 #include <vostok/animation/instant_interpolator.h>
 #include <vostok/animation/mixing_animation_lexeme.h>
 #include <vostok/animation/mixing_math.h>
@@ -18,7 +19,7 @@
 #include <vostok/physics/character_controller.h>
 #include <vostok/physics/world.h>
 #include <vostok/physics/rigid_body.h>
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 #include <vostok/input/mouse.h>
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
 
