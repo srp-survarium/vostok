@@ -719,12 +719,12 @@ private:
   bool timer_interrupt_issued_;
 
   // The timer queues.
-  xray::network::vector_size_t<timer_queue_base*> timer_queues_;
+  vostok::network::vector_size_t<timer_queue_base*> timer_queues_;
 
   // A copy of the timer queues, used when dispatching, cancelling and cleaning
   // up timers. The copy is stored as a class data member to avoid unnecessary
   // memory allocation.
-  xray::network::vector_size_t<timer_queue_base*> timer_queues_copy_;
+  vostok::network::vector_size_t<timer_queue_base*> timer_queues_copy_;
 };
 
 } // namespace detail

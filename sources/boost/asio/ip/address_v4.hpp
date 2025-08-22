@@ -114,23 +114,23 @@ public:
   }
 
   /// Get the address as a string in dotted decimal format.
-  xray::network::std_string to_string() const
+  vostok::network::std_string to_string() const
   {
     boost::system::error_code ec;
-    xray::network::std_string addr = to_string(ec);
+    vostok::network::std_string addr = to_string(ec);
     boost::asio::detail::throw_error(ec);
     return addr;
   }
 
   /// Get the address as a string in dotted decimal format.
-  xray::network::std_string to_string(boost::system::error_code& ec) const
+  vostok::network::std_string to_string(boost::system::error_code& ec) const
   {
     char addr_str[boost::asio::detail::max_addr_v4_str_len];
     const char* addr =
       boost::asio::detail::socket_ops::inet_ntop(AF_INET, &addr_, addr_str,
           boost::asio::detail::max_addr_v4_str_len, 0, ec);
     if (addr == 0)
-      return xray::network::std_string();
+      return vostok::network::std_string();
     return addr;
   }
 
@@ -154,13 +154,13 @@ public:
   }
 
   /// Create an address from an IP address string in dotted decimal form.
-  static address_v4 from_string(const xray::network::std_string& str)
+  static address_v4 from_string(const vostok::network::std_string& str)
   {
     return from_string(str.c_str());
   }
 
   /// Create an address from an IP address string in dotted decimal form.
-  static address_v4 from_string(const xray::network::std_string& str,
+  static address_v4 from_string(const vostok::network::std_string& str,
       boost::system::error_code& ec)
   {
     return from_string(str.c_str(), ec);
@@ -286,7 +286,7 @@ std::basic_ostream<Elem, Traits>& operator<<(
     std::basic_ostream<Elem, Traits>& os, const address_v4& addr)
 {
   boost::system::error_code ec;
-  xray::network::std_string s = addr.to_string(ec);
+  vostok::network::std_string s = addr.to_string(ec);
   if (ec)
   {
     if (os.exceptions() & std::ios::failbit)
@@ -295,7 +295,7 @@ std::basic_ostream<Elem, Traits>& operator<<(
       os.setstate(std::ios_base::failbit);
   }
   else
-    for (xray::network::std_string::iterator i = s.begin(); i != s.end(); ++i)
+    for (vostok::network::std_string::iterator i = s.begin(); i != s.end(); ++i)
       os << os.widen(*i);
   return os;
 }

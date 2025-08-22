@@ -54,7 +54,7 @@ void save(Archive & ar,
           const ::boost::gregorian::date & d, 
           unsigned int /* version */)
 {
-  xray::network::std_string ds = to_iso_string(d);
+  vostok::network::std_string ds = to_iso_string(d);
   ar & make_nvp("date", ds);
 }
 
@@ -68,7 +68,7 @@ void load(Archive & ar,
           ::boost::gregorian::date & d, 
           unsigned int /*version*/)
 {
-  xray::network::std_string ds;
+  vostok::network::std_string ds;
   ar & make_nvp("date", ds);
   try{
     d = ::boost::gregorian::from_undelimited_string(ds);

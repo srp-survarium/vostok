@@ -86,7 +86,7 @@ public:
   }
 
   /// Construct an endpoint using the specified path name.
-  basic_endpoint(const xray::network::std_string& path)
+  basic_endpoint(const vostok::network::std_string& path)
   {
     init(path.data(), path.length());
   }
@@ -161,9 +161,9 @@ public:
   }
 
   /// Get the path associated with the endpoint.
-  xray::network::std_string path() const
+  vostok::network::std_string path() const
   {
-    return xray::network::std_string(data_.local.sun_path, path_length_);
+    return vostok::network::std_string(data_.local.sun_path, path_length_);
   }
 
   /// Set the path associated with the endpoint.
@@ -174,7 +174,7 @@ public:
   }
 
   /// Set the path associated with the endpoint.
-  void path(const xray::network::std_string& p)
+  void path(const vostok::network::std_string& p)
   {
     init(p.data(), p.length());
   }

@@ -25,7 +25,7 @@ namespace boost
       system_error( error_code ec )
           : std::runtime_error(""), m_error_code(ec) {}
 
-      system_error( error_code ec, const xray::network::std_string & what_arg )
+      system_error( error_code ec, const vostok::network::std_string & what_arg )
           : std::runtime_error(what_arg), m_error_code(ec) {}
 
       system_error( error_code ec, const char* what_arg )
@@ -35,7 +35,7 @@ namespace boost
           : std::runtime_error(""), m_error_code(ev,ecat) {}
 
       system_error( int ev, const error_category & ecat,
-        const xray::network::std_string & what_arg )
+        const vostok::network::std_string & what_arg )
           : std::runtime_error(what_arg), m_error_code(ev,ecat) {}
 
       system_error( int ev, const error_category & ecat,
@@ -49,7 +49,7 @@ namespace boost
 
     private:
       error_code           m_error_code;
-      mutable xray::network::std_string  m_what;
+      mutable vostok::network::std_string  m_what;
     };
 
     //  implementation  ------------------------------------------------------//

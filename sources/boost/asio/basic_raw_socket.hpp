@@ -149,7 +149,7 @@ public:
    * @code socket.send(boost::asio::buffer(data, size)); @endcode
    * See the @ref buffer documentation for information on sending multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence>
   std::size_t send(const ConstBufferSequence& buffers)
@@ -243,7 +243,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on sending multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
   void async_send(const ConstBufferSequence& buffers, WriteHandler handler)
@@ -309,7 +309,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on sending multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence>
   std::size_t send_to(const ConstBufferSequence& buffers,
@@ -409,7 +409,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on sending multiple
    * buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
   void async_send_to(const ConstBufferSequence& buffers,
@@ -477,7 +477,7 @@ public:
    * @code socket.receive(boost::asio::buffer(data, size)); @endcode
    * See the @ref buffer documentation for information on receiving into
    * multiple buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence>
   std::size_t receive(const MutableBufferSequence& buffers)
@@ -577,7 +577,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on receiving into
    * multiple buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
   void async_receive(const MutableBufferSequence& buffers, ReadHandler handler)
@@ -644,7 +644,7 @@ public:
    * @endcode
    * See the @ref buffer documentation for information on receiving into
    * multiple buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence>
   std::size_t receive_from(const MutableBufferSequence& buffers,
@@ -743,7 +743,7 @@ public:
    *     boost::asio::buffer(data, size), 0, sender_endpoint, handler); @endcode
    * See the @ref buffer documentation for information on receiving into
    * multiple buffers in one go, and how to use it with arrays, boost::array or
-   * xray::network::vector.
+   * vostok::network::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
   void async_receive_from(const MutableBufferSequence& buffers,

@@ -314,7 +314,7 @@ bool AABBTreeNode::Subdivide(AABBTreeBuilder* builder)
 		mPos = (size_t)NEW ( AABBTreeNode );	CHECKALLOC(mPos);
 		mNeg = (size_t)NEW ( AABBTreeNode );	CHECKALLOC(mNeg);
 #else
-		AABBTreeNode* PosNeg = XRAY_NEW_ARRAY_IMPL ( builder->m_allocator, AABBTreeNode, 2 );
+		AABBTreeNode* PosNeg = VOSTOK_NEW_ARRAY_IMPL ( builder->m_allocator, AABBTreeNode, 2 );
 		CHECKALLOC(PosNeg);
 		mPos = (size_t)PosNeg;
 #endif

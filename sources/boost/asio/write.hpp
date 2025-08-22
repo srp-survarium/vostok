@@ -64,7 +64,7 @@ namespace asio {
  * @code boost::asio::write(s, boost::asio::buffer(data, size)); @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  *
  * @note This overload is equivalent to calling:
  * @code boost::asio::write(
@@ -118,7 +118,7 @@ std::size_t write(SyncWriteStream& s, const ConstBufferSequence& buffers);
  *     boost::asio::transfer_at_least(32)); @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename SyncWriteStream, typename ConstBufferSequence,
     typename CompletionCondition>
@@ -335,7 +335,7 @@ std::size_t write(SyncWriteStream& s, basic_streambuf<Allocator>& b,
  * @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename AsyncWriteStream, typename ConstBufferSequence,
     typename WriteHandler>
@@ -404,7 +404,7 @@ void async_write(AsyncWriteStream& s, const ConstBufferSequence& buffers,
  *     handler); @endcode
  * See the @ref buffer documentation for information on writing multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename AsyncWriteStream, typename ConstBufferSequence,
     typename CompletionCondition, typename WriteHandler>

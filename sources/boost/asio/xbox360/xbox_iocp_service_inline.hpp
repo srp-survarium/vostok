@@ -109,7 +109,7 @@ inline void xbox_iocp_service::shutdown_service()
 			}
 		}
 	}
-	xray::threading::mutex_raii		lock(m_timer_queues_mutex);
+	vostok::threading::mutex_raii		lock(m_timer_queues_mutex);
 	for (timer_queues_t::iterator i = m_timer_queues.begin(),
 		ie = m_timer_queues.end(); i != ie; ++i)
 	{
@@ -220,7 +220,7 @@ inline void xbox_iocp_service::post_timer_rearrange()
 template <typename Time_Traits>
 void xbox_iocp_service::add_timer_queue(timer_queue<Time_Traits>& timer_queue)
 {
-	xray::threading::mutex_raii	lock(m_timer_queues_mutex);
+	vostok::threading::mutex_raii	lock(m_timer_queues_mutex);
 	BOOST_ASSERT(
 		std::find(
 			m_timer_queues.begin(),
@@ -232,7 +232,7 @@ void xbox_iocp_service::add_timer_queue(timer_queue<Time_Traits>& timer_queue)
 template <typename Time_Traits>
 void xbox_iocp_service::remove_timer_queue(timer_queue<Time_Traits>& timer_queue)
 {
-	xray::threading::mutex_raii	lock(m_timer_queues_mutex);
+	vostok::threading::mutex_raii	lock(m_timer_queues_mutex);
 	timer_queues_t::iterator tmp_iter = std::find(
 		m_timer_queues.begin(),
 		m_timer_queues.end(),
@@ -289,7 +289,7 @@ std::size_t	xbox_iocp_service::cancel_timer(timer_queue<Time_Traits>& timer_queu
 
 inline void xbox_iocp_service::dispatch_timers()
 {
-	xray::threading::mutex_raii		lock(m_timer_queues_mutex);
+	vostok::threading::mutex_raii		lock(m_timer_queues_mutex);
 	for (timer_queues_t::iterator i = m_timer_queues.begin(),
 		ie = m_timer_queues.end(); i != ie; ++i)
 	{
@@ -310,7 +310,7 @@ inline size_t xbox_iocp_service::do_one(bool blocking_mode,
 	}
 	
 	size_t			result				= 0;
-	long			this_thread_id		= static_cast<long>(xray::threading::current_thread_id());
+	long			this_thread_id		= static_cast<long>(vostok::threading::current_thread_id());
 
 	::InterlockedCompareExchange		(&m_timer_thread_id, this_thread_id, 0);
 	bool			is_responsible_for_timer = 
@@ -390,7 +390,7 @@ inline size_t xbox_iocp_service::do_one(bool blocking_mode,
 
 inline bool xbox_iocp_service::all_timers_empty()
 {
-	xray::threading::mutex_raii	lock(m_timer_queues_mutex);
+	vostok::threading::mutex_raii	lock(m_timer_queues_mutex);
 	for (timer_queues_t::iterator i = m_timer_queues.begin(),
 		ie = m_timer_queues.end(); i != ie; ++i)
 	{

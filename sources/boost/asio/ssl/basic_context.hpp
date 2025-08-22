@@ -146,7 +146,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void load_verify_file(const xray::network::std_string& filename)
+  void load_verify_file(const vostok::network::std_string& filename)
   {
     boost::system::error_code ec;
     service_.load_verify_file(impl_, filename, ec);
@@ -163,7 +163,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  boost::system::error_code load_verify_file(const xray::network::std_string& filename,
+  boost::system::error_code load_verify_file(const vostok::network::std_string& filename,
       boost::system::error_code& ec)
   {
     return service_.load_verify_file(impl_, filename, ec);
@@ -181,7 +181,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void add_verify_path(const xray::network::std_string& path)
+  void add_verify_path(const vostok::network::std_string& path)
   {
     boost::system::error_code ec;
     service_.add_verify_path(impl_, path, ec);
@@ -200,7 +200,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  boost::system::error_code add_verify_path(const xray::network::std_string& path,
+  boost::system::error_code add_verify_path(const vostok::network::std_string& path,
       boost::system::error_code& ec)
   {
     return service_.add_verify_path(impl_, path, ec);
@@ -216,7 +216,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void use_certificate_file(const xray::network::std_string& filename, file_format format)
+  void use_certificate_file(const vostok::network::std_string& filename, file_format format)
   {
     boost::system::error_code ec;
     service_.use_certificate_file(impl_, filename, format, ec);
@@ -233,7 +233,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  boost::system::error_code use_certificate_file(const xray::network::std_string& filename,
+  boost::system::error_code use_certificate_file(const vostok::network::std_string& filename,
       file_format format, boost::system::error_code& ec)
   {
     return service_.use_certificate_file(impl_, filename, format, ec);
@@ -249,7 +249,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void use_certificate_chain_file(const xray::network::std_string& filename)
+  void use_certificate_chain_file(const vostok::network::std_string& filename)
   {
     boost::system::error_code ec;
     service_.use_certificate_chain_file(impl_, filename, ec);
@@ -267,7 +267,7 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   boost::system::error_code use_certificate_chain_file(
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     return service_.use_certificate_chain_file(impl_, filename, ec);
   }
@@ -282,7 +282,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void use_private_key_file(const xray::network::std_string& filename, file_format format)
+  void use_private_key_file(const vostok::network::std_string& filename, file_format format)
   {
     boost::system::error_code ec;
     service_.use_private_key_file(impl_, filename, format, ec);
@@ -299,7 +299,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  boost::system::error_code use_private_key_file(const xray::network::std_string& filename,
+  boost::system::error_code use_private_key_file(const vostok::network::std_string& filename,
       file_format format, boost::system::error_code& ec)
   {
     return service_.use_private_key_file(impl_, filename, format, ec);
@@ -316,7 +316,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void use_rsa_private_key_file(const xray::network::std_string& filename, file_format format)
+  void use_rsa_private_key_file(const vostok::network::std_string& filename, file_format format)
   {
     boost::system::error_code ec;
     service_.use_rsa_private_key_file(impl_, filename, format, ec);
@@ -335,7 +335,7 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   boost::system::error_code use_rsa_private_key_file(
-      const xray::network::std_string& filename, file_format format,
+      const vostok::network::std_string& filename, file_format format,
       boost::system::error_code& ec)
   {
     return service_.use_rsa_private_key_file(impl_, filename, format, ec);
@@ -351,7 +351,7 @@ public:
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void use_tmp_dh_file(const xray::network::std_string& filename)
+  void use_tmp_dh_file(const vostok::network::std_string& filename)
   {
     boost::system::error_code ec;
     service_.use_tmp_dh_file(impl_, filename, ec);
@@ -368,7 +368,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  boost::system::error_code use_tmp_dh_file(const xray::network::std_string& filename,
+  boost::system::error_code use_tmp_dh_file(const vostok::network::std_string& filename,
       boost::system::error_code& ec)
   {
     return service_.use_tmp_dh_file(impl_, filename, ec);
@@ -381,7 +381,7 @@ public:
    *
    * @param callback The function object to be used for obtaining the password.
    * The function signature of the handler must be:
-   * @code xray::network::std_string password_callback(
+   * @code vostok::network::std_string password_callback(
    *   std::size_t max_length,  // The maximum size for a password.
    *   password_purpose purpose // Whether password is for reading or writing.
    * ); @endcode
@@ -404,7 +404,7 @@ public:
    *
    * @param callback The function object to be used for obtaining the password.
    * The function signature of the handler must be:
-   * @code xray::network::std_string password_callback(
+   * @code vostok::network::std_string password_callback(
    *   std::size_t max_length,  // The maximum size for a password.
    *   password_purpose purpose // Whether password is for reading or writing.
    * ); @endcode

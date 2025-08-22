@@ -9,8 +9,8 @@
 
 #include <boost/asio/detail/push_options.hpp>
 #include <boost/asio/xbox360/xsp_sessions_registry.hpp>
-#include <boost/xray_defines.hpp>
-#include <xray/intrusive_ptr.h>
+#include <boost/vostok_defines.hpp>
+#include <vostok/intrusive_ptr.h>
 
 
 namespace boost {
@@ -21,10 +21,10 @@ namespace xsp {
 class resolver_iterator_base_impl
 {
 public:
-	typedef xray::intrusive_ptr<
+	typedef vostok::intrusive_ptr<
 		resolver_iterator_base_impl,
 		resolver_iterator_base_impl,
-		xray::threading::multi_threading_policy_base>	pointer_type;
+		vostok::threading::multi_threading_policy_base>	pointer_type;
 
 	inline		resolver_iterator_base_impl	(sessions_registry & sess_reg) :
 		m_reference_count(0),

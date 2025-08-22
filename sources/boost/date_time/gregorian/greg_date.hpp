@@ -56,7 +56,7 @@ namespace gregorian {
       : date_time::date<date, gregorian_calendar, date_duration>(y, m, d)
     {
       if (gregorian_calendar::end_of_month_day(y, m) < d) {
-        boost::throw_exception(bad_day_of_month(xray::network::std_string("Day of month is not valid for year")));
+        boost::throw_exception(bad_day_of_month(vostok::network::std_string("Day of month is not valid for year")));
       }
     }
     //! Constructor from a ymd_type structure

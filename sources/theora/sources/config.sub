@@ -495,9 +495,9 @@ case $basic_machine in
 		basic_machine=h8300-hitachi
 		os=-hms
 		;;
-	h8300xray)
+	h8300vostok)
 		basic_machine=h8300-hitachi
-		os=-xray
+		os=-vostok
 		;;
 	h8500hms)
 		basic_machine=h8500-hitachi
@@ -1122,7 +1122,7 @@ case $os in
 	-nto*)
 		os=-nto-qnx
 		;;
-	-sim | -es1800* | -hms* | -xray | -os68k* | -none* | -v88r* \
+	-sim | -es1800* | -hms* | -vostok | -os68k* | -none* | -v88r* \
 	      | -windows* | -osx | -abug | -netware* | -os9* | -beos* \
 	      | -macos* | -mpw* | -magic* | -mmixware* | -mon960* | -lnews*)
 		;;

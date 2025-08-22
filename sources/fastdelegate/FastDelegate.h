@@ -52,11 +52,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#if !XRAY_PLATFORM_PS3
+#if !VOSTOK_PLATFORM_PS3
 #	include <memory.h> // to allow <,> comparisons
-#else// #if !XRAY_PLATFORM_PS3
+#else// #if !VOSTOK_PLATFORM_PS3
 #	include <string.h> // to allow <,> comparisons
-#endif // #if !XRAY_PLATFORM_PS3
+#endif // #if !VOSTOK_PLATFORM_PS3
 
 //////////////////////////////////////////////////
 //#define DELEGATE_CALL	__cdecl
@@ -571,7 +571,7 @@ struct SimplifyMemFunc<SINGLE_MEMFUNCPTR_SIZE + 3*sizeof(int) >
 // Note that the Sun C++ and MSVC documentation explicitly state that they 
 // support static_cast between void * and function pointers.
 
-class XRAY_CORE_API DelegateMemento {
+class VOSTOK_CORE_API DelegateMemento {
 protected: 
 	// the data is protected, not private, because many
 	// compilers have problems with template friends.

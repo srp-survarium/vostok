@@ -55,10 +55,10 @@ public:
   typedef std::pair<K, V> value_type;
 
   // The type of a non-const iterator over the hash map.
-  typedef typename xray::network::list<value_type>::iterator iterator;
+  typedef typename vostok::network::list<value_type>::iterator iterator;
 
   // The type of a const iterator over the hash map.
-  typedef typename xray::network::list<value_type>::const_iterator const_iterator;
+  typedef typename vostok::network::list<value_type>::const_iterator const_iterator;
 
   // Constructor.
   hash_map()
@@ -273,11 +273,11 @@ private:
   std::size_t size_;
 
   // The list of all values in the hash map.
-  xray::network::list<value_type> values_;
+  vostok::network::list<value_type> values_;
 
   // The list of spare nodes waiting to be recycled. Assumes that POD types only
   // are stored in the hash map.
-  xray::network::list<value_type> spares_;
+  vostok::network::list<value_type> spares_;
 
   // The type for a bucket in the hash table.
   struct bucket_type
@@ -289,7 +289,7 @@ private:
   };
 
   // The buckets in the hash.
-  xray::network::vector_size_t<bucket_type> buckets_;
+  vostok::network::vector_size_t<bucket_type> buckets_;
 };
 
 } // namespace detail

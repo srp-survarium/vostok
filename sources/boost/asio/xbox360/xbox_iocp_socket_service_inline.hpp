@@ -72,7 +72,7 @@ template <typename BuffersSequence, int MaxCount>
 struct wsabuf_buffers_sequence
 {
 	typedef typename BuffersSequence::const_iterator	src_const_iterator;
-	typedef xray::fixed_vector<::WSABUF, MaxCount>		buffers_t;
+	typedef vostok::fixed_vector<::WSABUF, MaxCount>		buffers_t;
 	wsabuf_buffers_sequence(src_const_iterator from, src_const_iterator end)
 	{
 		m_summary_size = 0;
@@ -260,7 +260,7 @@ template <typename Protocol>
 boost::system::error_code xbox_iocp_socket_service<Protocol>::cancel(implementation_type& impl,
 																	 boost::system::error_code& ec)
 {
-#pragma message (XRAY_TODO("implement cancel io functionality for timers"))
+#pragma message (VOSTOK_TODO("implement cancel io functionality for timers"))
 	int errorcode = WSACancelOverlappedIO(impl.m_socket);
 	if (errorcode)
 	{

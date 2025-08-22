@@ -128,7 +128,7 @@ namespace boost {
           bool is_volatile_qualified;
         } obj_ref;
 
-        void* xray_pointer_size_alignment[6];
+        void* vostok_pointer_size_alignment[6];
 
         // To relax aliasing constraints
         mutable char data;
@@ -369,26 +369,26 @@ namespace boost {
             // Clone the functor
             // GCC 2.95.3 gets the CV qualifiers wrong here, so we
             // can't do the static_cast that we should do.
-#if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
             const functor_type* f =
               (const functor_type*)(in_buffer.obj_ptr);
             functor_type* new_f = 
 				new functor_type(*f);
             out_buffer.obj_ptr = new_f;
-#else // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#else // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 			UNREACHABLE_CODE	( );
-#endif // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#endif // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
           } else if (op == move_functor_tag) {
             out_buffer.obj_ptr = in_buffer.obj_ptr;
             in_buffer.obj_ptr = 0;
           } else if (op == destroy_functor_tag) {
-#if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
             /* Cast from the void pointer to the functor pointer type */
             functor_type* f =
               static_cast<functor_type*>(out_buffer.obj_ptr);
             delete f;
             out_buffer.obj_ptr = 0;
-#endif // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#endif // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
           } else if (op == check_functor_type_tag) {
             const BOOST_FUNCTION_STD_NS::type_info& check_type
               = *out_buffer.type.type;
@@ -628,12 +628,12 @@ namespace boost {
  * functions (and as such can be used to tell if we have one of the
  * functionN objects).
  */
-#ifndef XRAY_CORE_API
-#	define XRAY_CORE_API
-#	define XRAY_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
-#endif // #ifndef XRAY_CORE_API
+#ifndef VOSTOK_CORE_API
+#	define VOSTOK_CORE_API
+#	define VOSTOK_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
+#endif // #ifndef VOSTOK_CORE_API
 
-class XRAY_CORE_API function_base
+class VOSTOK_CORE_API function_base
 {
 public:
   function_base() : vtable(0) { }
@@ -738,10 +738,10 @@ public: // should be protected, but GCC 2.95.3 will fail to allow access
   mutable detail::function::function_buffer functor;
 };
 
-#ifdef XRAY_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
-#	undef XRAY_CORE_API
-#	undef XRAY_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
-#endif // #ifdef XRAY_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
+#ifdef VOSTOK_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
+#	undef VOSTOK_CORE_API
+#	undef VOSTOK_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
+#endif // #ifdef VOSTOK_CORE_API_WAS_DEFINED_IN_BOOST_FUNCTION_BASE_HPP
 
 /**
  * The bad_function_call exception class is thrown when a boost::function

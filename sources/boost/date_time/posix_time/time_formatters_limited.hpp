@@ -23,7 +23,7 @@ namespace posix_time {
   //! Time duration to string -hh::mm::ss.fffffff. Example: 10:09:03.0123456
   /*!\ingroup time_format
    */
-  inline xray::network::std_string to_simple_string(time_duration td) {
+  inline vostok::network::std_string to_simple_string(time_duration td) {
     std::ostringstream ss;
     if(td.is_special()) {
       /* simply using 'ss << td.get_rep()' won't work on compilers
@@ -85,7 +85,7 @@ namespace posix_time {
   /*!\ingroup time_format
    */
   inline 
-  xray::network::std_string 
+  vostok::network::std_string 
   to_iso_string(time_duration td) 
   {
     std::ostringstream ss;
@@ -148,10 +148,10 @@ namespace posix_time {
   /*!\ingroup time_format
    */
   inline 
-  xray::network::std_string 
+  vostok::network::std_string 
   to_simple_string(ptime t) 
   {
-    xray::network::std_string ts = gregorian::to_simple_string(t.date());// + " ";
+    vostok::network::std_string ts = gregorian::to_simple_string(t.date());// + " ";
     if(!t.time_of_day().is_special()) {
       return ts + " " + to_simple_string(t.time_of_day());
     }
@@ -164,21 +164,21 @@ namespace posix_time {
   /*!\ingroup time_format
    */
   inline 
-  xray::network::std_string 
+  vostok::network::std_string 
   to_simple_string(time_period tp) 
   {
-    xray::network::std_string d1(to_simple_string(tp.begin()));
-    xray::network::std_string d2(to_simple_string(tp.last()));
-    return xray::network::std_string("[" + d1 + "/" + d2 +"]");
+    vostok::network::std_string d1(to_simple_string(tp.begin()));
+    vostok::network::std_string d2(to_simple_string(tp.last()));
+    return vostok::network::std_string("[" + d1 + "/" + d2 +"]");
   }
 
   //! Convert iso short form YYYYMMDDTHHMMSS where T is the date-time separator
   /*!\ingroup time_format
    */
   inline 
-  xray::network::std_string to_iso_string(ptime t) 
+  vostok::network::std_string to_iso_string(ptime t) 
   {
-    xray::network::std_string ts = gregorian::to_iso_string(t.date());// + "T";
+    vostok::network::std_string ts = gregorian::to_iso_string(t.date());// + "T";
     if(!t.time_of_day().is_special()) {
       return ts + "T" + to_iso_string(t.time_of_day());
     }
@@ -191,10 +191,10 @@ namespace posix_time {
   /*!\ingroup time_format
    */
   inline 
-  xray::network::std_string 
+  vostok::network::std_string 
   to_iso_extended_string(ptime t) 
   {
-    xray::network::std_string ts = gregorian::to_iso_extended_string(t.date());// + "T";
+    vostok::network::std_string ts = gregorian::to_iso_extended_string(t.date());// + "T";
     if(!t.time_of_day().is_special()) {
       return ts + "T" + to_simple_string(t.time_of_day());
     }

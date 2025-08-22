@@ -140,7 +140,7 @@ public:
   }
 
   /// Get the address as a string in dotted decimal format.
-  xray::network::std_string to_string() const
+  vostok::network::std_string to_string() const
   {
     if (type_ == ipv6)
       return ipv6_address_.to_string();
@@ -148,7 +148,7 @@ public:
   }
 
   /// Get the address as a string in dotted decimal format.
-  xray::network::std_string to_string(boost::system::error_code& ec) const
+  vostok::network::std_string to_string(boost::system::error_code& ec) const
   {
     if (type_ == ipv6)
       return ipv6_address_.to_string(ec);
@@ -194,14 +194,14 @@ public:
 
   /// Create an address from an IPv4 address string in dotted decimal form,
   /// or from an IPv6 address in hexadecimal notation.
-  static address from_string(const xray::network::std_string& str)
+  static address from_string(const vostok::network::std_string& str)
   {
     return from_string(str.c_str());
   }
 
   /// Create an address from an IPv4 address string in dotted decimal form,
   /// or from an IPv6 address in hexadecimal notation.
-  static address from_string(const xray::network::std_string& str,
+  static address from_string(const vostok::network::std_string& str,
       boost::system::error_code& ec)
   {
     return from_string(str.c_str(), ec);

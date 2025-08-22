@@ -70,7 +70,7 @@ namespace asio {
  * @code boost::asio::read_at(d, 42, boost::asio::buffer(data, size)); @endcode
  * See the @ref buffer documentation for information on reading into multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  *
  * @note This overload is equivalent to calling:
  * @code boost::asio::read_at(
@@ -129,7 +129,7 @@ std::size_t read_at(SyncRandomAccessReadDevice& d,
  *     boost::asio::transfer_at_least(32)); @endcode
  * See the @ref buffer documentation for information on reading into multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename SyncRandomAccessReadDevice, typename MutableBufferSequence,
     typename CompletionCondition>
@@ -365,7 +365,7 @@ std::size_t read_at(SyncRandomAccessReadDevice& d,
  * @endcode
  * See the @ref buffer documentation for information on reading into multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  *
  * @note This overload is equivalent to calling:
  * @code boost::asio::async_read_at(
@@ -441,7 +441,7 @@ void async_read_at(AsyncRandomAccessReadDevice& d, boost::uint64_t offset,
  *     handler); @endcode
  * See the @ref buffer documentation for information on reading into multiple
  * buffers in one go, and how to use it with arrays, boost::array or
- * xray::network::vector.
+ * vostok::network::vector.
  */
 template <typename AsyncRandomAccessReadDevice, typename MutableBufferSequence,
     typename CompletionCondition, typename ReadHandler>

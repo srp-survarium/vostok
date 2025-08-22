@@ -429,21 +429,21 @@ protected:
 
     if (__n != 0) {
       size_type __buf_size = __n * sizeof(value_type);
-#if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 	  _Tp* __ret = 
-#endif // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#endif // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 		  __REINTERPRET_CAST(_Tp*, __sgi_alloc::allocate(__buf_size));
 #if defined (_STLP_DEBUG_UNINITIALIZED) && !defined (_STLP_DEBUG_ALLOC)
       if (__ret != 0) {
         memset((char*)__ret, _STLP_SHRED_BYTE, __buf_size);
       }
 #endif
-#if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
       __allocated_n = __buf_size / sizeof(value_type);
       return __ret;
-#else // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#else // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
       return 0;
-#endif // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#endif // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
     }
     else
       return 0;

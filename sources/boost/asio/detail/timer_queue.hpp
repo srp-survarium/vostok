@@ -422,7 +422,7 @@ private:
   hash_map<void*, timer_base*> timers_;
 
   // The heap of timers, with the earliest timer at the front.
-  xray::network::vector_size_t<timer_base*> heap_;
+  vostok::network::vector_size_t<timer_base*> heap_;
 
   // The list of timers to be cancelled.
   timer_base* cancelled_timers_;

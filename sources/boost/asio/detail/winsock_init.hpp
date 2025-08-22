@@ -86,7 +86,7 @@ public:
     // catch the exception.
     if (!ref_.initialized())
 	{
-		XRAY_CONSTRUCT_REFERENCE(ref_, do_init);
+		VOSTOK_CONSTRUCT_REFERENCE(ref_, do_init);
 	}
     if (/*this != &instance_ && */ref_->result() != 0)
     {
@@ -105,7 +105,7 @@ public:
 
   static void finalize()
   {
-	  XRAY_DESTROY_REFERENCE(ref_);
+	  VOSTOK_DESTROY_REFERENCE(ref_);
   }
 
 private:
@@ -115,11 +115,11 @@ private:
   // Reference to singleton do_init object to ensure that winsock does not get
   // cleaned up until the last user has finished with it.
   //boost::shared_ptr<do_init> ref_;
-  static xray::uninitialized_reference<do_init>	ref_;
+  static vostok::uninitialized_reference<do_init>	ref_;
 };
 
 template <int Major, int Minor>
-xray::uninitialized_reference<
+vostok::uninitialized_reference<
 	typename winsock_init<Major, Minor>::do_init> winsock_init<Major, Minor>::ref_;
 
 } // namespace detail

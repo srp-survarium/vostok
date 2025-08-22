@@ -7,8 +7,8 @@
 #ifndef XBOX_LAN_ADDRESS_SEARCHER_INLINE_HPP_INCLUDED
 #define XBOX_LAN_ADDRESS_SEARCHER_INLINE_HPP_INCLUDED
 
-#include <xray/network/sources/writers.h>
-#include <xray/network/sources/readers.h>
+#include <vostok/network/sources/writers.h>
+#include <vostok/network/sources/readers.h>
 
 namespace boost {
 namespace asio {
@@ -73,7 +73,7 @@ inline void xbox_lan_address_searcher::key_sender_functor::operator()(
 	m_owner->mykey_sent(ec, bytes_transferred);
 }
 
-inline xray::network::std_string xbox_lan_address_searcher::error_category::message(
+inline vostok::network::std_string xbox_lan_address_searcher::error_category::message(
 	int value) const
 {
 	switch (value)
@@ -198,11 +198,11 @@ inline bool xbox_lan_address_searcher::open_socket(unsigned short udp_port)
 
 inline void xbox_lan_address_searcher::send_request()
 {
-	xray::mutable_buffer		tmp_mbuffer	(m_send_buffer.data(), m_send_buffer.size());
-	xray::buffer_writer_device	tmp_wdevice	(tmp_mbuffer);
-	xray::buffer_writer			tmp_writer	(tmp_wdevice);
+	vostok::mutable_buffer		tmp_mbuffer	(m_send_buffer.data(), m_send_buffer.size());
+	vostok::buffer_writer_device	tmp_wdevice	(tmp_mbuffer);
+	vostok::buffer_writer			tmp_writer	(tmp_wdevice);
 	
-	XNetRandom				(xray::pointer_cast<BYTE*>(m_random_id.m_data),
+	XNetRandom				(vostok::pointer_cast<BYTE*>(m_random_id.m_data),
 		sizeof(m_random_id.m_data));
 
 	tmp_writer.w_char_array	(lan_search_request_string);
@@ -216,20 +216,20 @@ inline void xbox_lan_address_searcher::send_request()
 
 inline void xbox_lan_address_searcher::process_response(std::size_t bytes_transferred)
 {
-	typedef xray::reader<xray::buffer_reader_device, true>	signalling_buffer_reader;
+	typedef vostok::reader<vostok::buffer_reader_device, true>	signalling_buffer_reader;
 	
-	xray::buffer_reader_device	tmp_rdevice(
-		xray::const_buffer(m_receive_buffer.data(), bytes_transferred));
+	vostok::buffer_reader_device	tmp_rdevice(
+		vostok::const_buffer(m_receive_buffer.data(), bytes_transferred));
 	signalling_buffer_reader	tmp_reader(tmp_rdevice);
 
 	random_id				dest_id;
 	random_id				sender_id;
-	xray::fixed_string512	tmp_str;
+	vostok::fixed_string512	tmp_str;
 	secure_inaddr::reader	tmp_host_addr;
 
 	bool result =
 		tmp_reader.r_string		(tmp_str) &&
-		!xray::strings::compare	(tmp_str.c_str(), lan_search_response_string) &&
+		!vostok::strings::compare	(tmp_str.c_str(), lan_search_response_string) &&
 		dest_id.read			(tmp_reader) &&
 		tmp_host_addr.read		(tmp_reader) &&
 		sender_id.read			(tmp_reader);
@@ -244,9 +244,9 @@ inline void xbox_lan_address_searcher::process_response(std::size_t bytes_transf
 
 	BOOST_ASSERT(address_ptr && *address_ptr);
 
-	xray::mutable_buffer		tmp_mbuffer	(m_send_buffer.data(), m_send_buffer.size());
-	xray::buffer_writer_device	tmp_wdevice	(tmp_mbuffer);
-	xray::buffer_writer			tmp_writer	(tmp_wdevice);
+	vostok::mutable_buffer		tmp_mbuffer	(m_send_buffer.data(), m_send_buffer.size());
+	vostok::buffer_writer_device	tmp_wdevice	(tmp_mbuffer);
+	vostok::buffer_writer			tmp_writer	(tmp_wdevice);
 
 	tmp_writer.w_char_array		(lan_my_key_string);
 	sender_id.write				(tmp_writer);
