@@ -466,7 +466,7 @@ void body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16
 // STATE[PARTIAL] sushi@TODO: Requires fill_new_stats_item, which seems to be a m
 void body_part_parameters::dump_state(
 	vostok::ai::npc_statistics&          stats,
-	u32                                current_time_in_ms)
+	u32                                current_time_in_ms) const
 {
 	typedef vostok::ai::statistics_item<46,16> content_type;
 	content_type new_stats_item = content_type();					// <0x59714f>
@@ -478,7 +478,7 @@ void body_part_parameters::dump_state(
 // Inlining happened differently.
 void body_part_parameters::dump_state(
 	boost::function<void __cdecl(u32,float,float,pcstr)> callback,
-	u32                                index)
+	u32                                index) const
 {
 	vostok::fixed_string<512>         affects_str;								// <0x597300>
 	for (u32 i = 0 ; i < m_affects.size() ; ++i)								// <0x59730b> <block><1>

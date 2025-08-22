@@ -211,10 +211,10 @@ void damage_model::add_body_part(
 
 // STATE[UNVERIFIED]
 body_part_parameters* damage_model::get_body_part(
-	pcstr                              part_name)
+	pcstr                              part_name) const
 {
 	find_body_part_by_name_predicate find_predicate(part_name); // <0x6ff739> // why twice, isn't it boost::noncopy?, it looks like our asm has a copy :shrug:
-	return m_body_parts.find_if(find_predicate);				// <0x6ff747>
+	return m_body_parts.find_if<find_body_part_by_name_predicate>(find_predicate);				// <0x6ff747>
 }
 
 

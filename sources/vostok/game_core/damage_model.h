@@ -165,7 +165,7 @@ public:
 	// affects_applying_type_enum get_affects_applying_type() const /* no source */;
 
 	body_part_parameters* get_body_part(
-		pcstr                              part_name);
+		pcstr                              part_name) const;
 
 	// sushi@TODO
 	// u8 get_body_part_index(pcstr) const /* no source */;

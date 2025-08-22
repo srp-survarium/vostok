@@ -69,13 +69,13 @@ public:
 
 	void dump_state(
 		boost::function<void __cdecl(u32,float,float,pcstr)> callback,
-		u32                                index);
+		u32                                index) const;
 #if 0
 	void dump_state(damage_info_type&, u32) const /* no source */;
 #endif
 	void dump_state(
 		vostok::ai::npc_statistics&          stats,
-		u32                                current_time_in_ms);
+		u32                                current_time_in_ms) const;
 #if 0
 	void remove_edges(body_part_parameters*) /* no source */;
 #endif
