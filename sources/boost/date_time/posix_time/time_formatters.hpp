@@ -91,7 +91,7 @@ namespace posix_time {
   //! Time duration to string -hh::mm::ss.fffffff. Example: 10:09:03.0123456
   /*!\ingroup time_format
    */
-  inline xray::network::std_string to_simple_string(time_duration td) {
+  inline vostok::network::std_string to_simple_string(time_duration td) {
     return to_simple_string_type<char>(td);
   }
 
@@ -160,7 +160,7 @@ namespace posix_time {
   //! Time duration in iso format -hhmmss,fffffff Example: 10:09:03,0123456
   /*!\ingroup time_format
    */
-  inline xray::network::std_string to_iso_string(time_duration td){
+  inline vostok::network::std_string to_iso_string(time_duration td){
     return to_iso_string_type<char>(td);
   }
 
@@ -180,7 +180,7 @@ namespace posix_time {
       return ts;
     }
   }
-  inline xray::network::std_string to_simple_string(ptime t){
+  inline vostok::network::std_string to_simple_string(ptime t){
     return to_simple_string_type<char>(t);
   }
 
@@ -197,7 +197,7 @@ namespace posix_time {
   //! Convert to string of form [YYYY-mmm-DD HH:MM::SS.ffffff/YYYY-mmm-DD HH:MM::SS.fffffff]
   /*!\ingroup time_format
    */
-  inline xray::network::std_string to_simple_string(time_period tp){
+  inline vostok::network::std_string to_simple_string(time_period tp){
     return to_simple_string_type<char>(tp);
   }
 
@@ -218,7 +218,7 @@ namespace posix_time {
   //! Convert iso short form YYYYMMDDTHHMMSS where T is the date-time separator
   /*!\ingroup time_format
    */
-  inline xray::network::std_string to_iso_string(ptime t){
+  inline vostok::network::std_string to_iso_string(ptime t){
     return to_iso_string_type<char>(t);
   }
 
@@ -240,7 +240,7 @@ namespace posix_time {
   //! Convert to form YYYY-MM-DDTHH:MM:SS where T is the date-time separator
   /*!\ingroup time_format
    */
-  inline xray::network::std_string to_iso_extended_string(ptime t){
+  inline vostok::network::std_string to_iso_extended_string(ptime t){
     return to_iso_extended_string_type<char>(t);
   }
 

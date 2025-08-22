@@ -7,8 +7,8 @@
 #ifndef XSP_LAN_ADDRESSES_SYNC_DEFINES_HPP_INCLUDED
 #define XSP_LAN_ADDRESSES_SYNC_DEFINES_HPP_INCLUDED
 
-#include <xray/network/sources/writers.h>
-#include <xray/network/sources/readers.h>
+#include <vostok/network/sources/writers.h>
+#include <vostok/network/sources/readers.h>
 
 namespace boost {
 namespace asio {
@@ -32,16 +32,16 @@ struct random_id
 		writer.write	(m_data, random_length);
 	}
 	template <typename Reader>
-	xray::signalling_bool		read(Reader & reader)
+	vostok::signalling_bool		read(Reader & reader)
 	{
-		xray::mutable_buffer	tmp_dest(m_data, random_length);
+		vostok::mutable_buffer	tmp_dest(m_data, random_length);
 		return reader.read		(tmp_dest, random_length) ? true : false;
 	}
 	bool equal(random_id const & right) const
 	{
-		return (xray::memory::compare(
-			xray::const_buffer(m_data, random_length),
-			xray::const_buffer(right.m_data, random_length)) == 0);
+		return (vostok::memory::compare(
+			vostok::const_buffer(m_data, random_length),
+			vostok::const_buffer(right.m_data, random_length)) == 0);
 	}
 	bool operator != (random_id const & right) const
 	{

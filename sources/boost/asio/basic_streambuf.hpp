@@ -98,7 +98,7 @@ namespace asio {
  * b.commit(n);
  *
  * std::istream is(&b);
- * xray::network::std_string s;
+ * vostok::network::std_string s;
  * is >> s;
  * @endcode
  */

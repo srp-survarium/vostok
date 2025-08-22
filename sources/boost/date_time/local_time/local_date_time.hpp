@@ -26,19 +26,19 @@ namespace local_time {
   //! simple exception for reporting when STD or DST cannot be determined
   struct ambiguous_result : public std::logic_error
   {
-    ambiguous_result (xray::network::std_string const& msg = xray::network::std_string()) :
-      std::logic_error(xray::network::std_string("Daylight Savings Results are ambiguous: " + msg)) {}
+    ambiguous_result (vostok::network::std_string const& msg = vostok::network::std_string()) :
+      std::logic_error(vostok::network::std_string("Daylight Savings Results are ambiguous: " + msg)) {}
   };
   //! simple exception for when time label given cannot exist
   struct time_label_invalid : public std::logic_error
   {
-    time_label_invalid (xray::network::std_string const& msg = xray::network::std_string()) :
-      std::logic_error(xray::network::std_string("Time label given is invalid: " + msg)) {}
+    time_label_invalid (vostok::network::std_string const& msg = vostok::network::std_string()) :
+      std::logic_error(vostok::network::std_string("Time label given is invalid: " + msg)) {}
   };
   struct dst_not_valid: public std::logic_error
   {
-    dst_not_valid(xray::network::std_string const& msg = xray::network::std_string()) :
-      std::logic_error(xray::network::std_string("is_dst flag does not match resulting dst for time label given: " + msg)) {}
+    dst_not_valid(vostok::network::std_string const& msg = vostok::network::std_string()) :
+      std::logic_error(vostok::network::std_string("is_dst flag does not match resulting dst for time label given: " + msg)) {}
   };
 
   //TODO: I think these should be in local_date_time_base and not 
@@ -277,7 +277,7 @@ namespace local_time {
     /*! Returns string in the form "2003-Aug-20 05:00:00 EDT". If
      * time_zone is NULL the time zone abbreviation will be "UTC". The time 
      * zone abbrev will not be included if calling object is a special_value*/
-    xray::network::std_string to_string() const
+    vostok::network::std_string to_string() const
     {
       //TODO is this a temporary function ???
       std::ostringstream ss;
@@ -315,14 +315,14 @@ namespace local_time {
     /*! Optional bool parameter will return time zone as an offset 
      * (ie "+07:00" extended iso format). Empty string is returned for 
      * classes that do not use a time_zone */
-    xray::network::std_string zone_name(bool as_offset=false) const
+    vostok::network::std_string zone_name(bool as_offset=false) const
     {
       if(zone_ == boost::shared_ptr<tz_type>()) {
         if(as_offset) {
-          return xray::network::std_string("Z");
+          return vostok::network::std_string("Z");
         }
         else {
-          return xray::network::std_string("Coordinated Universal Time");
+          return vostok::network::std_string("Coordinated Universal Time");
         }
       }
       if (is_dst()) {
@@ -349,14 +349,14 @@ namespace local_time {
     /*! Optional bool parameter will return time zone as an offset 
      * (ie "+0700" iso format). Empty string is returned for classes 
      * that do not use a time_zone */
-    xray::network::std_string zone_abbrev(bool as_offset=false) const
+    vostok::network::std_string zone_abbrev(bool as_offset=false) const
     {
       if(zone_ == boost::shared_ptr<tz_type>()) {
         if(as_offset) {
-          return xray::network::std_string("Z");
+          return vostok::network::std_string("Z");
         }
         else {
-          return xray::network::std_string("UTC");
+          return vostok::network::std_string("UTC");
         }
       }
       if (is_dst()) {
@@ -381,10 +381,10 @@ namespace local_time {
     }
 
     //! returns a posix_time_zone string for the associated time_zone. If no time_zone, "UTC+00" is returned.
-    xray::network::std_string zone_as_posix_string() const
+    vostok::network::std_string zone_as_posix_string() const
     {
       if(zone_ == shared_ptr<tz_type>()) {
-        return xray::network::std_string("UTC+00");
+        return vostok::network::std_string("UTC+00");
       }
       return zone_->to_posix_string();
     }
@@ -496,8 +496,8 @@ namespace local_time {
 
     /*! Simple formatting code -- todo remove this?
      */
-    xray::network::std_string zone_as_offset(const time_duration_type& td, 
-                               const xray::network::std_string& separator) const
+    vostok::network::std_string zone_as_offset(const time_duration_type& td, 
+                               const vostok::network::std_string& separator) const
     {
       std::ostringstream ss;
       if(td.is_negative()) {

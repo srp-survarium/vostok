@@ -65,7 +65,7 @@ public:
 	  {
 		strand_impl* me = this; 
 		me->~strand_impl();
-        XRAY_BOOST_FREE(me);
+        VOSTOK_BOOST_FREE(me);
 	  }
     }
 

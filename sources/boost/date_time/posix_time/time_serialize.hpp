@@ -41,7 +41,7 @@ void save(Archive & ar,
   bool is_special = td.is_special();
   ar & make_nvp("is_special", is_special);
   if(is_special) {
-    xray::network::std_string s = to_simple_string(td);
+    vostok::network::std_string s = to_simple_string(td);
     ar & make_nvp("sv_time_duration", s);
   }
   else {
@@ -69,7 +69,7 @@ void load(Archive & ar,
   bool is_special = false;
   ar & make_nvp("is_special", is_special);
   if(is_special) {
-    xray::network::std_string s;
+    vostok::network::std_string s;
     ar & make_nvp("sv_time_duration", s);
     posix_time::special_values sv = gregorian::special_value_from_string(s);
     td = posix_time::time_duration(sv);

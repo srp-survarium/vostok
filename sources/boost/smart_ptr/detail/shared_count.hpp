@@ -94,7 +94,7 @@ public:
 
 #else
 
-        pi_ = XRAY_BOOST_NEW (sp_counted_impl_p<Y>)( p );
+        pi_ = VOSTOK_BOOST_NEW (sp_counted_impl_p<Y>)( p );
 
         if( pi_ == 0 )
         {
@@ -131,7 +131,7 @@ public:
 
 #else
 		typedef sp_counted_impl_pd<P, D> tmp_sp_counted_impl_pd;
-        pi_ = XRAY_BOOST_NEW(tmp_sp_counted_impl_pd)(p, d);
+        pi_ = VOSTOK_BOOST_NEW(tmp_sp_counted_impl_pd)(p, d);
 
         if(pi_ == 0)
         {
@@ -199,7 +199,7 @@ public:
 #endif
     {
 		typedef sp_counted_impl_p<Y> sp_counted_impl_p_Y_t;
-		pi_ = XRAY_BOOST_NEW (sp_counted_impl_p_Y_t)( r.get() );
+		pi_ = VOSTOK_BOOST_NEW (sp_counted_impl_p_Y_t)( r.get() );
 #ifdef BOOST_NO_EXCEPTIONS
 
         if( pi_ == 0 )

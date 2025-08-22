@@ -122,7 +122,7 @@ struct is_match_condition
  * @code boost::asio::streambuf b;
  * boost::asio::read_until(s, b, '\n');
  * std::istream is(&b);
- * xray::network::std_string line;
+ * vostok::network::std_string line;
  * std::getline(is, line); @endcode
  */
 template <typename SyncReadStream, typename Allocator>
@@ -199,12 +199,12 @@ std::size_t read_until(SyncReadStream& s,
  * @code boost::asio::streambuf b;
  * boost::asio::read_until(s, b, "\r\n");
  * std::istream is(&b);
- * xray::network::std_string line;
+ * vostok::network::std_string line;
  * std::getline(is, line); @endcode
  */
 template <typename SyncReadStream, typename Allocator>
 std::size_t read_until(SyncReadStream& s,
-    boost::asio::basic_streambuf<Allocator>& b, const xray::network::std_string& delim);
+    boost::asio::basic_streambuf<Allocator>& b, const vostok::network::std_string& delim);
 
 /// Read data into a streambuf until it contains a specified delimiter.
 /**
@@ -238,7 +238,7 @@ std::size_t read_until(SyncReadStream& s,
  */
 template <typename SyncReadStream, typename Allocator>
 std::size_t read_until(SyncReadStream& s,
-    boost::asio::basic_streambuf<Allocator>& b, const xray::network::std_string& delim,
+    boost::asio::basic_streambuf<Allocator>& b, const vostok::network::std_string& delim,
     boost::system::error_code& ec);
 
 /// Read data into a streambuf until some part of the data it contains matches
@@ -278,7 +278,7 @@ std::size_t read_until(SyncReadStream& s,
  * @code boost::asio::streambuf b;
  * boost::asio::read_until(s, b, boost::regex("\r\n"));
  * std::istream is(&b);
- * xray::network::std_string line;
+ * vostok::network::std_string line;
  * std::getline(is, line); @endcode
  */
 template <typename SyncReadStream, typename Allocator>
@@ -549,7 +549,7 @@ std::size_t read_until(SyncReadStream& s,
  *   if (!e)
  *   {
  *     std::istream is(&b);
- *     xray::network::std_string line;
+ *     vostok::network::std_string line;
  *     std::getline(is, line);
  *     ...
  *   }
@@ -618,7 +618,7 @@ void async_read_until(AsyncReadStream& s,
  *   if (!e)
  *   {
  *     std::istream is(&b);
- *     xray::network::std_string line;
+ *     vostok::network::std_string line;
  *     std::getline(is, line);
  *     ...
  *   }
@@ -628,7 +628,7 @@ void async_read_until(AsyncReadStream& s,
  */
 template <typename AsyncReadStream, typename Allocator, typename ReadHandler>
 void async_read_until(AsyncReadStream& s,
-    boost::asio::basic_streambuf<Allocator>& b, const xray::network::std_string& delim,
+    boost::asio::basic_streambuf<Allocator>& b, const vostok::network::std_string& delim,
     ReadHandler handler);
 
 /// Start an asynchronous operation to read data into a streambuf until some
@@ -690,7 +690,7 @@ void async_read_until(AsyncReadStream& s,
  *   if (!e)
  *   {
  *     std::istream is(&b);
- *     xray::network::std_string line;
+ *     vostok::network::std_string line;
  *     std::getline(is, line);
  *     ...
  *   }

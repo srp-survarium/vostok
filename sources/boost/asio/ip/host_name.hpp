@@ -30,29 +30,29 @@ namespace asio {
 namespace ip {
 
 /// Get the current host name.
-xray::network::std_string host_name();
+vostok::network::std_string host_name();
 
 /// Get the current host name.
-xray::network::std_string host_name(boost::system::error_code& ec);
+vostok::network::std_string host_name(boost::system::error_code& ec);
 
-inline xray::network::std_string host_name()
+inline vostok::network::std_string host_name()
 {
   char name[1024];
   boost::system::error_code ec;
   if (boost::asio::detail::socket_ops::gethostname(name, sizeof(name), ec) != 0)
   {
     boost::asio::detail::throw_error(ec);
-    return xray::network::std_string();
+    return vostok::network::std_string();
   }
-  return xray::network::std_string(name);
+  return vostok::network::std_string(name);
 }
 
-inline xray::network::std_string host_name(boost::system::error_code& ec)
+inline vostok::network::std_string host_name(boost::system::error_code& ec)
 {
   char name[1024];
   if (boost::asio::detail::socket_ops::gethostname(name, sizeof(name), ec) != 0)
-    return xray::network::std_string();
-  return xray::network::std_string(name);
+    return vostok::network::std_string();
+  return vostok::network::std_string(name);
 }
 
 } // namespace ip

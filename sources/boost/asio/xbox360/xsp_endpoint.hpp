@@ -10,7 +10,7 @@
 #include <boost/asio/detail/push_options.hpp>
 #include <boost/asio/detail/socket_types.hpp>
 #include <boost/asio/ip/address.hpp>
-#include <boost/xray_defines.hpp>
+#include <boost/vostok_defines.hpp>
 
 namespace boost {
 namespace asio {

@@ -316,7 +316,7 @@ std::ostream& operator<<(std::ostream& os,
 {
   const address& addr = endpoint.address();
   boost::system::error_code ec;
-  xray::network::std_string a = addr.to_string(ec);
+  vostok::network::std_string a = addr.to_string(ec);
   if (ec)
   {
     if (os.exceptions() & std::ios::failbit)
@@ -345,7 +345,7 @@ std::basic_ostream<Elem, Traits>& operator<<(
 {
   const address& addr = endpoint.address();
   boost::system::error_code ec;
-  xray::network::std_string a = addr.to_string(ec);
+  vostok::network::std_string a = addr.to_string(ec);
   if (ec)
   {
     if (os.exceptions() & std::ios::failbit)

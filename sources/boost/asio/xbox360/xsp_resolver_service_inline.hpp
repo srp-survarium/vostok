@@ -43,7 +43,7 @@ typename resolver_service<Protocol>::iterator_type
 
 		while (lookup_result->iStatus == WSAEINPROGRESS) 
 		{
-			impl.wait(xray::threading::event::wait_time_infinite);
+			impl.wait(vostok::threading::event::wait_time_infinite);
 		}
 		if (lookup_result->iStatus)
 		{
@@ -124,7 +124,7 @@ void resolver_service<Protocol>::async_resolver<Handler>::lan_resolved(
 	async_resolver* me = static_cast<async_resolver*>(this_ptr);
 	if (!ec)
 	{
-		lan_iterator* lanaddrs_iter = xray::static_cast_checked<lan_iterator*>(
+		lan_iterator* lanaddrs_iter = vostok::static_cast_checked<lan_iterator*>(
 			me->m_result.get_impl().get());
 		BOOST_ASSERT(lanaddrs_iter);
 		lanaddrs_iter->push_back(new_one);

@@ -117,7 +117,7 @@ private:
   size_type end_offset_;
   
   // The data in the buffer.
-  xray::network::vector_size_t<byte_type> buffer_;
+  vostok::network::vector_size_t<byte_type> buffer_;
 };
 
 } // namespace detail

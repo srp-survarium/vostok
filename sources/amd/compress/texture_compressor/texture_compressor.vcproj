@@ -70,11 +70,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;..\vc8\MT DLL Release\$(PlatformName)\ati_compress_mt_dll_vc8.lib&quot;"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/vostok_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -149,11 +149,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;..\vc8\MT DLL Release\$(PlatformName)\ati_compress_mt_dll_vc8.lib&quot;"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/vostok_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -236,11 +236,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;..\vc8\MT DLL Release\$(PlatformName)\ati_compress_mt_dll_vc8.lib&quot;"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/vostok_$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -322,13 +322,13 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;..\vc8\MT DLL Release\$(PlatformName)\ati_compress_mt_dll_vc8.lib&quot;"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/vostok_$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				ImportLibrary="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 				TargetMachine="17"
 			/>
 			<Tool

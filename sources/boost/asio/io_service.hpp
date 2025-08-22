@@ -33,9 +33,9 @@
 #include <boost/asio/detail/select_reactor_fwd.hpp>
 #include <boost/asio/detail/service_registry_fwd.hpp>
 
-#ifndef XRAY_NO_SIGNALS_H
+#ifndef VOSTOK_NO_SIGNALS_H
 #	include <boost/asio/detail/signal_init.hpp>
-#endif // #ifndef XRAY_NO_SIGNALS_H
+#endif // #ifndef VOSTOK_NO_SIGNALS_H
 
 #include <boost/asio/detail/task_io_service_fwd.hpp>
 #include <boost/asio/detail/win_iocp_io_service_fwd.hpp>

@@ -27,14 +27,14 @@ namespace local_time{
   //! simple exception for UTC and Daylight savings start/end offsets
   struct bad_offset : public std::out_of_range
   {
-    bad_offset(xray::network::std_string const& msg = xray::network::std_string()) :
-      std::out_of_range(xray::network::std_string("Offset out of range: " + msg)) {}
+    bad_offset(vostok::network::std_string const& msg = vostok::network::std_string()) :
+      std::out_of_range(vostok::network::std_string("Offset out of range: " + msg)) {}
   };
   //! simple exception for UTC daylight savings adjustment
   struct bad_adjustment : public std::out_of_range
   {
-    bad_adjustment(xray::network::std_string const& msg = xray::network::std_string()) :
-      std::out_of_range(xray::network::std_string("Adjustment out of range: " + msg)) {}
+    bad_adjustment(vostok::network::std_string const& msg = vostok::network::std_string()) :
+      std::out_of_range(vostok::network::std_string("Adjustment out of range: " + msg)) {}
   };
   
   typedef boost::date_time::dst_adjustment_offsets<boost::posix_time::time_duration> dst_adjustment_offsets;
@@ -442,13 +442,13 @@ namespace local_time{
     }
 
     //! helper function used when throwing exceptions
-    static xray::network::std_string td_as_string(const time_duration_type& td)
+    static vostok::network::std_string td_as_string(const time_duration_type& td)
     {
-      xray::network::std_string s;
+      vostok::network::std_string s;
 #if defined(USE_DATE_TIME_PRE_1_33_FACET_IO)
       s = posix_time::to_simple_string(td);
 #else
-      xray::network::std_stringstream ss;
+      vostok::network::std_stringstream ss;
       ss << td;
       s = ss.str();
 #endif

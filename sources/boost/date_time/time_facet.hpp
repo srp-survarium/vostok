@@ -1211,7 +1211,7 @@ namespace date_time {
         }
         this->m_sv_parser.match(sitr, stream_end, mr);
         if(mr.current_match == match_results::PARSE_ERROR) {
-          xray::network::std_string tmp = convert_string_type<char_type, char>(mr.cache);
+          vostok::network::std_string tmp = convert_string_type<char_type, char>(mr.cache);
           boost::throw_exception(std::ios_base::failure("Parse failed. No match found for '" + tmp + "'"));
           BOOST_DATE_TIME_UNREACHABLE_EXPRESSION(return sitr); // should never reach
         }

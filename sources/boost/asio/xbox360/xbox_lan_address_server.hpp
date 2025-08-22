@@ -10,8 +10,8 @@
 #include <boost/asio/detail/push_options.hpp>
 #include <boost/array.hpp>
 #include <boost/asio/xbox360/xsp_lan_addresses_sync_defines.hpp>
-#include <xray/network/sources/writers.h>
-#include <xray/network/sources/readers.h>
+#include <vostok/network/sources/writers.h>
+#include <vostok/network/sources/readers.h>
 
 namespace boost {
 namespace asio {
@@ -29,8 +29,8 @@ public:
 	inline bool	start_active_host			(unsigned short udp_port,
 											 boost::system::error_code & ec);
 	inline void	shutdown					();
-	inline void	on_receive					(xray::const_buffer const & buffer);
-	inline void on_receive_key				(xray::const_buffer const & buffer);
+	inline void	on_receive					(vostok::const_buffer const & buffer);
+	inline void on_receive_key				(vostok::const_buffer const & buffer);
 	inline void on_receive_key_timeout		();
 private:
 	typedef xsp::udp::socket				socket_type;
@@ -75,7 +75,7 @@ private:
 	sessions_registry &				m_sessions_registry;
 	socket_type						m_host;
 	deadline_timer					m_keyreceive_expire_timer;
-#pragma message ( XRAY_TODO( "implement smart accept preparing algorithm" ) )
+#pragma message ( VOSTOK_TODO( "implement smart accept preparing algorithm" ) )
 	secure_inaddr::pointer_type		m_last_peer_addr;
 	random_id						m_dialog_session;
 	

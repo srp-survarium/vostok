@@ -18,7 +18,7 @@
 #include <boost/asio/xbox360/xsp_resolver_service.hpp>
 #include <boost/asio/xbox360/xsp_resolver_query.hpp>
 #include <boost/asio/xbox360/xsp_resolver_iterator.hpp>
-#include <boost/xray_defines.hpp>
+#include <boost/vostok_defines.hpp>
 
 namespace boost {
 namespace asio {

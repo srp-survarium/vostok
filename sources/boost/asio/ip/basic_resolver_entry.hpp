@@ -51,7 +51,7 @@ public:
 
   /// Construct with specified endpoint, host name and service name.
   basic_resolver_entry(const endpoint_type& endpoint,
-      const xray::network::std_string& host_name, const xray::network::std_string& service_name)
+      const vostok::network::std_string& host_name, const vostok::network::std_string& service_name)
     : endpoint_(endpoint),
       host_name_(host_name),
       service_name_(service_name)
@@ -71,21 +71,21 @@ public:
   }
 
   /// Get the host name associated with the entry.
-  xray::network::std_string host_name() const
+  vostok::network::std_string host_name() const
   {
     return host_name_;
   }
 
   /// Get the service name associated with the entry.
-  xray::network::std_string service_name() const
+  vostok::network::std_string service_name() const
   {
     return service_name_;
   }
 
 private:
   endpoint_type endpoint_;
-  xray::network::std_string host_name_;
-  xray::network::std_string service_name_;
+  vostok::network::std_string host_name_;
+  vostok::network::std_string service_name_;
 };
 
 } // namespace ip
