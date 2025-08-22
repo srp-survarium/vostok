@@ -6,11 +6,15 @@
 
 
 #include "pch.h"
-#include "bullet.h"
-#include "bullet_manager.h"
-#include "game.h"
-#include "game_world.h"
-#include "collision_object_types.h"
+#include <vostok/game_core/bullet.h>
+
+#include <vostok/game_core/bullet_manager.h>
+// #include <vostok/game/api.h>
+
+// #include "bullet_manager.h"
+// #include "game.h"
+// #include "game_world.h"
+// #include "collision_object_types.h"
 
 #include <vostok/collision/common_types.h>
 #include <vostok/collision/space_partitioning_tree.h>

@@ -5,11 +5,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "bullet_manager.h"
-#include "bullet.h"
-#include "game.h"
-#include "game_world.h"
-#include "game_camera.h"
+#include <vostok/game_core/bullet_manager.h>
+
+
+// #include "game.h"
+// #include "game_world.h"
+// #include "game_camera.h"
 #include "bullet_manager_input_handler.h"
 
 #include <vostok/tasks_system.h>

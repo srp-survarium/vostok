@@ -4,12 +4,13 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef BULLET_MANAGER_H_INCLUDED
-#define BULLET_MANAGER_H_INCLUDED
+#ifndef VOSTOK_GAME_CORE_BULLET_MANAGER_H_INCLUDED
+#define VOSTOK_GAME_CORE_BULLET_MANAGER_H_INCLUDED
 
 #include <vostok/memory_single_size_buffer_allocator.h>
 #include <vostok/unmanaged_allocation_resource.h>
-#include "bullet.h"
+
+#include <vostok/game_core/bullet.h>
 
 #ifndef MASTER_GOLD
 
@@ -135,4 +136,4 @@ private:
 
 } // namespace survarium
 
-#endif // #ifndef BULLET_MANAGER_H_INCLUDED
+#endif // #ifndef VOSTOK_GAME_CORE_BULLET_MANAGER_H_INCLUDED

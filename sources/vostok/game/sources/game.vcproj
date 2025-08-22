@@ -2404,6 +2404,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\collision_object_types.h"
+				>
+			</File>
+			<File
 				RelativePath="..\library_linkage.h"
 				>
 			</File>
@@ -2937,10 +2941,6 @@
 						RelativePath=".\ai_collision_object.h"
 						>
 					</File>
-					<File
-						RelativePath=".\collision_object_types.h"
-						>
-					</File>
 				</Filter>
 				<Filter
 					Name="weapon"
@@ -3382,38 +3382,6 @@
 						>
 					</File>
 				</Filter>
-			</Filter>
-			<Filter
-				Name="bullet_manager"
-				>
-				<File
-					RelativePath=".\bullet.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet.h"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_debug_render.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_input_handler.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_input_handler.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="animations_selector"

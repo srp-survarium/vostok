@@ -6,15 +6,18 @@
 
 #include "pch.h"
 #include "game_world.h"
-#include "game.h"
+
 #include "camera_director.h"
 #include "cell_manager.h"
-#include "bullet_manager.h"
-#include <vostok/console_command.h>
 #include "event_manager.h"
-#include "object_scene.h"
-#include "hud.h"
 #include "free_fly_camera.h"
+#include "game.h"
+#include "hud.h"
+#include "object_scene.h"
+
+#include <vostok/game_core/bullet_manager.h>
+
+#include <vostok/console_command.h>
 #include <vostok/physics/api.h>
 #include <vostok/physics/world.h>
 
