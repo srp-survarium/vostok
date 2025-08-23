@@ -11,6 +11,8 @@
 #include "game_world.h"
 #endif
 
+#include "temp_include_all.h"
+
 #include <vostok/tasks_system.h>
 #include <vostok/buffer_vector.h>
 #include <vostok/console_command.h>
@@ -58,7 +60,9 @@ bullet_manager::bullet_manager ( /* game_world& w */ )
 	initialize					( );
 	register_console_commands	( );
 
-//	static bullet_manager_input_handler	input_handler( *this );
+	// static bullet_manager_input_handler	input_handler( *this );
+
+	IncludeAll __include_all; // sushi@TODO: Hacky way to build related classes
 }
 
 bullet_manager::~bullet_manager ( )
