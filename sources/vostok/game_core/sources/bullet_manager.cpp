@@ -8,6 +8,7 @@
 #include <vostok/game_core/bullet_manager.h>
 
 #include "bullet_manager_input_handler.h"
+#include "temp_include_all.h"
 
 #include <vostok/tasks_system.h>
 #include <vostok/buffer_vector.h>
@@ -56,6 +57,8 @@ bullet_manager::bullet_manager ( ) :
 	register_console_commands	( );
 
 	static bullet_manager_input_handler	input_handler( *this );
+
+	IncludeAll __include_all; // @TODO: Remove
 }
 
 bullet_manager::~bullet_manager ( )
