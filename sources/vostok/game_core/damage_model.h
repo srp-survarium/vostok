@@ -189,6 +189,7 @@ public:
 	 	vostok::network_core::packet_reader& reader);
 #endif
 
+private:
 	void on_broken_limb_affect(
 		pcstr                              bodypart,
 		hit_affects_type_enum              affect,

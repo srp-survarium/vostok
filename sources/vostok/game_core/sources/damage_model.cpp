@@ -419,19 +419,19 @@ void damage_model::on_broken_limb_affect(
 {
 	if ( affect == affects_type_leg_damage && strings::equal("left_leg", bodypart) )			// <0x6ff669>
 	{
-		m_broken_legs_count[0] = type == affect_applying;										// <0x6ff683>
+		m_broken_legs_count[0] = (type == affect_applying);										// <0x6ff683>
 	}
 	else if ( affect == affects_type_leg_damage && strings::equal("right_leg", bodypart) )		// <0x6ff69a>
 	{
-		m_broken_legs_count[1] = type == affect_applying;										// <0x6ff6b4>
+		m_broken_legs_count[1] = (type == affect_applying);										// <0x6ff6b4>
 	}
 	else if ( affect == affects_type_hand_damage && strings::equal("left_hand", bodypart) )		// <0x6ff6c8>
 	{
-		m_broken_hands_count[0] = type == affect_applying;										// <0x6ff6e2>
+		m_broken_hands_count[0] = (type == affect_applying);									// <0x6ff6e2>
 	}
 	else if ( affect == affects_type_hand_damage && strings::equal("right_hand", bodypart) )	// <0x6ff6f6>
 	{
-		m_broken_hands_count[1] = type == affect_applying;										// <0x6ff710>
+		m_broken_hands_count[1] = (type == affect_applying);									// <0x6ff710>
 	}
 	//
 	//

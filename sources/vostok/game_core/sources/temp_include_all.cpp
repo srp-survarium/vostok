@@ -18,19 +18,47 @@ IncludeAll::IncludeAll()
 	booster_damage_protector* bdp = new booster_damage_protector("hand", 0.5, 1.);
 	bdp->reduce_damage("__whatever", "hand", 100);
 
-	damage_model owner = damage_model(type_apply_directly);
-	owner.apply_med_kit("head", 1000);
+	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
+	
+	//
+	// DAMAGE MODEL
+	//
+	damage_model dm = damage_model(type_apply_directly);
 
+	dm.add_body_part(NULL);
+	dm.hit_body_part(1, "part_name", "damage_type", 10., 20., 30, NULL);
+	dm.apply_med_kit("head", 1000);
+	dm.tick(10, 20);
+	dm.fill_stats(stats, 20);
+	dm.dump_stats(&bpp_dump_stats);
+	dm.reset();
+	dm.apply_affect("part_name", affects_type_bleeding, affect_canceling);
+	dm.cancel_affect("part_name", affects_type_bleeding);
+	dm.subscribe_on_affect(affects_type_bleeding, NULL);
+	dm.unsubscribe_from_affect(affects_type_bleeding, NULL);
+	dm.notify_on_affect_event("body_part_name", affects_type_bleeding, affect_canceling);
+	dm.add_damage_protector("damage_type", 1000., 10000.);
+	dm.register_body_part_damage_protector("part_name", NULL);
+	dm.unregister_body_part_damage_protector("part_name", NULL);
+	dm.get_affects_applying_type();
+	dm.get_body_part("part_name");
+	dm.pop_body_part();
+	dm.get_total_health();
+	// dm.on_broken_limb_affect("bodypart", affects_type_bleeding, affect_canceling);
+
+	//
+	// BODY PART PARAMETERS
+	//
 	body_part_parameters* bpp = new body_part_parameters(
 		"name",
 		10.f,
 		10.f,
 		10.f,
 		true,
-		owner,
+		dm,
 		1);
 
-	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
+
 	
 	bpp->add_hit_type(NULL);
 	bpp->add_threshold(NULL);
