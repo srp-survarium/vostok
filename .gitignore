@@ -1,6 +1,9 @@
 ## stk2 crash reports
 user_data/
 
+## Build data
+binaries/
+
 ## Libraries are stored in a different repository
 *.pdb
 *.exe
@@ -46,10 +49,7 @@ obj/x64/
 bin/x86/
 obj/x86/
 
-[Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-[Aa][Rr][Mm]64[Ee][Cc]/
 bld/
 [Oo]bj/
 [Oo]ut/
