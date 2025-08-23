@@ -866,17 +866,57 @@
 			Name="include"
 			>
 			<File
-				RelativePath="..\bullet.h"
+				RelativePath="..\affect_event_type_enum.h"
 				>
 			</File>
 			<File
-				RelativePath="..\bullet_manager.h"
+				RelativePath="..\affects_applying_type_enum.h"
+				>
+			</File>
+			<File
+				RelativePath="..\hit_affects_type_enum.h"
 				>
 			</File>
 			<File
 				RelativePath="..\library_linkage.h"
 				>
 			</File>
+			<Filter
+				Name="bullet_manager"
+				>
+				<File
+					RelativePath="..\bullet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\bullet_manager.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="damage_model"
+				>
+				<File
+					RelativePath="..\affects_threshold.h"
+					>
+				</File>
+				<File
+					RelativePath="..\body_part_parameters.h"
+					>
+				</File>
+				<File
+					RelativePath="..\damage_model.h"
+					>
+				</File>
+				<File
+					RelativePath="..\damage_protector.h"
+					>
+				</File>
+				<File
+					RelativePath="..\hit_type_parameters.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="game_core"
@@ -902,6 +942,38 @@
 				</File>
 				<File
 					RelativePath=".\bullet_manager_input_handler.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="temp_include_all"
+				>
+				<File
+					RelativePath=".\temp_include_all.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\temp_include_all.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="damage_model"
+				>
+				<File
+					RelativePath=".\affects_threshold.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\body_part_parameters.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\damage_model.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\hit_type_parameters.cpp"
 					>
 				</File>
 			</Filter>
