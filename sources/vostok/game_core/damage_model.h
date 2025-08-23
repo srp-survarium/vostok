@@ -161,8 +161,9 @@ public:
 	// sushi@TODO
 	// u8 get_last_aggressor_id() const /* no source */;
 
-	// sushi@TODO
-	// affects_applying_type_enum get_affects_applying_type() const /* no source */;
+	affects_applying_type_enum get_affects_applying_type() const {
+		return m_affects_applying_type;
+	}
 
 	body_part_parameters* get_body_part(
 		pcstr                              part_name) const;

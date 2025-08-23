@@ -44,7 +44,7 @@ public:
 		u8                                 damage_group);
 
 	void add_hit_type(
-		hit_type_parameters*               new_hit_type);
+		hit_type_parameters*		       new_hit_type);
 
 	void add_threshold(
 		affects_threshold*                 new_threshold);
@@ -125,7 +125,7 @@ public:
 		hit_affects_type_enum              affect);
 
 	hit_type_parameters* get_hit_parameters(
-		pcstr                              hit_type);
+		pcstr                              hit_type) const;
 
 	void set_parameters(
 		float                              max_health,
@@ -140,11 +140,13 @@ public:
 		vostok::network_core::packet_reader& reader);
 	*/
 
+public: // sushi@TODO: Should mark private
 	void check_affects(
 		u32                                current_time_in_ms);
 
 	void update_affects(
 		u32                                current_time_in_ms);
+
 
 	void apply_affects(
 		affects_threshold const*           threshold_reached,
@@ -186,7 +188,7 @@ public:
 	affects_threshold_type				m_thresholds;
 	hit_affects_types					m_affects;
 	damage_model&                       m_damage_model;
-	vostok::fixed_string<16>				m_name;
+	vostok::fixed_string<16>			m_name;
 	float                               m_max_health;
 	float                               m_health;
 	float                               m_regeneration_speed;	/* health per second */

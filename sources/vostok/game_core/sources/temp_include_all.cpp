@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "temp_include_all.h"
 
+#include <vostok/ai/npc_statistics.h>
+
 namespace survarium
 {
 
@@ -16,7 +18,7 @@ IncludeAll::IncludeAll()
 	booster_damage_protector* bdp = new booster_damage_protector("hand", 0.5, 1.);
 	bdp->reduce_damage("__whatever", "hand", 100);
 
-	damage_model owner = damage_model(affects_applying_type_enum::type_apply_directly);
+	damage_model owner = damage_model(type_apply_directly);
 	owner.apply_med_kit("head", 1000);
 
 	body_part_parameters* bpp = new body_part_parameters(
@@ -28,12 +30,35 @@ IncludeAll::IncludeAll()
 		owner,
 		1);
 
+	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
+	
+	bpp->add_hit_type(NULL);
+	bpp->add_threshold(NULL);
 	bpp->hit_by_type("hit_type", 10, 10., 10., false, NULL);
-	bpp->reset();
-	bpp->can_affect_death();
+	bpp->increase_health(10);
+	bpp->decrease_health(20);
+	bpp->regenerate(10, 20);
 	bpp->dump_state(&bpp_dump_stats, 0);
-	bpp->cancel_affect_by_force(hit_affects_type_enum::affects_type_concussion);
-	bpp->is_affect_applied(hit_affects_type_enum::affects_type_blindness);
+	bpp->dump_state(stats, 10);
+	bpp->reset();
+
+	bpp->apply_affect_by_force(affects_type_blindness, affect_canceling, 20);
+	bpp->can_affect_death();
+	bpp->has_affect_protector(affects_type_blindness);
+	bpp->get_health_in_percentage();
+	bpp->cancel_affect_by_force(affects_type_blindness);
+	bpp->add_damage_protector(NULL);
+	bpp->remove_damage_protector(NULL);
+	bpp->pop_hit_type();
+	bpp->pop_threshold();
+
+	bpp->is_affect_applied(affects_type_blindness);
+	bpp->get_hit_parameters("hit_params");
+	bpp->set_parameters(10.f, 20.f);
+
+	bpp->check_affects(10);
+	bpp->update_affects(20);
+	bpp->apply_affects(NULL, 30);
 
 	Callback1 cb1;
 	Callback2 cb2;

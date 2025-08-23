@@ -7,6 +7,7 @@
 
 #include <vostok/game_core/affects_applying_type_enum.h>
 #include <vostok/game_core/damage_model.h>
+#include <vostok/game_core/damage_protector.h>
 
 #include <vostok/ai/npc_statistics.h>
 
@@ -72,7 +73,7 @@ public:
 	void operator()(
 		damage_protector*                  protector);
 
-private:
+public:
 	/* offset 0x0000 */ pcstr                               m_body_type_name;
 	/* offset 0x0004 */ pcstr                               m_damage_type;
 	/* offset 0x0008 */ float                               m_armor_piercing;
@@ -105,6 +106,7 @@ body_part_parameters::body_part_parameters(
 
 	next								(NULL),
 	m_damage_model						(owner),
+	m_name								(name), // TODO: check
 	m_max_health						(health),
 	m_health							(health),
 	m_regeneration_speed				(regeneration_speed),
@@ -116,43 +118,44 @@ body_part_parameters::body_part_parameters(
 	m_regeneration_timeout = math::floor(1000.0f * regeneration_timeout); // <0x597105>
 }
 
-// STATE[UNVERIFIED]
+// STATE[UNVERIFIED] NOTE: Check is alredy done inside pop_front
 hit_type_parameters* body_part_parameters::pop_hit_type( )
 {
-	return m_hit_types.pop_front(); // <0x596f99>
+	return m_hit_types.empty() ? NULL : m_hit_types.pop_front(); // <0x596f99>
 }
 
 // STATE[UNVERIFIED]
 affects_threshold* body_part_parameters::pop_threshold( )
 {
-	return m_thresholds.pop_front(); // <0x596f59>
+	return m_thresholds.empty() ? NULL : m_thresholds.pop_front(); // <0x596f59>
 }
 
-// STATE[UNVERIFIED]
+// STATE[UNVERIFIED]: NOTE: Making them const requires m_hit_types to be const, which would require pop to return const, which it isn't
 void body_part_parameters::add_hit_type(
-	hit_type_parameters*               new_hit_type)
+	hit_type_parameters*			new_hit_type)
 {
 	m_hit_types.push_back(new_hit_type); // <0x596f39>
 }
 
 // STATE[UNVERIFIED]
 void body_part_parameters::add_threshold(
-	affects_threshold*                 new_threshold)
+	affects_threshold*				new_threshold)
 {
 	m_thresholds.push_back(new_threshold); // <0x596f19>
 }
 
 // STATE[UNVERIFIED]
 hit_type_parameters* body_part_parameters::get_hit_parameters(
-	pcstr                              hit_type)
+	pcstr                              hit_type) const
 {
-	find_hit_parameters_by_type_predicate find_predicate = find_hit_parameters_by_type_predicate(hit_type); // <0x5971b9>
-	return m_hit_types.find_if(find_predicate); // <0x5971c7>
+	find_hit_parameters_by_type_predicate find_predicate(hit_type); // <0x5971b9>
+	return m_hit_types.find_if<find_hit_parameters_by_type_predicate>(find_predicate); // <0x5971c7>
 }
 
 
+static float g_arp_arm_coeff = 1.0;
+
 // STATE[PENDING]: sushi@TODO: Requires get_hit_parameters
-// void survarium::body_part_parameters::hit_by_type(char const*, const unsigned int, const float, const float, const bool, survarium::damage_protector*)
 void body_part_parameters::hit_by_type(
 	pcstr                              hit_type,
 	u32                                time_in_ms,
@@ -161,52 +164,45 @@ void body_part_parameters::hit_by_type(
 	bool                               __formal,
 	damage_protector*                  prot)
 {
-	// LOCALS
-	// float                           delta
-	// float                           e_wnd
-	// float                           arp_arm_coeff
-	// hit_type_parameters*            params
-	// protect_damage_predicate        p
-	// ******
+	hit_type_parameters * params = get_hit_parameters(hit_type);
+	ASSERT(params);
 
-	// FUNCTION BODY
-	// <0x59791f>
-	// <0x597931>
+	float delta = amount;
 
-	// <0x59793d>
+	float arp_arm_coeff;
+	if ( params->m_armor == 0.0f )
+	{
+		arp_arm_coeff = g_arp_arm_coeff;
+	}
+	else
+	{
+		arp_arm_coeff = math::min((armor_piercing / params->m_armor) - g_arp_arm_coeff, g_arp_arm_coeff);
+	}
 
+	float e_wnd = math::max(0.0f, arp_arm_coeff);
 
+	delta = delta * e_wnd 
+		+ math::max(
+			0.0f,
+			(g_arp_arm_coeff - params->m_reduce) * delta * (g_arp_arm_coeff - e_wnd) - params->m_absorption_amount);
 
-	// <0x597947>
-	// <0x597966>
-	// <0x597973>
-	// <0x597975>
+	protect_damage_predicate p(armor_piercing, hit_type, m_name.c_str(), delta);
+	m_damage_protectors.for_each(p);
+	delta = math::max(0.0f, p.m_amount); // @TODO: Check if other predicates in the source code have members being public. The generated header doesn't have a getter though.
 
-	// <0x5979a6>
+	if ( prot ) 
+	{
+		delta = math::max(0.0f, prot->reduce_damage_functor(m_name.c_str(), hit_type, delta, armor_piercing));
+	}
 
-	// <0x5979bd>
+	decrease_health(delta);
+	m_last_hit_health = m_health;
+	m_last_hit_time = time_in_ms;
 
-	// <0x597a2f>
-	// <0x597a68>
-	// <0x597a93>
+	if ( m_damage_model.get_affects_applying_type() == type_apply_directly )
+		check_affects(time_in_ms);
 
-	// <0x597aaa>
-	// <0x597ab0>
-
-
-
-
-
-
-	// <0x597afc>
-	// <0x597b0e>
-	// <0x597b26>
-
-	// <0x597b35>
-	// <0x597b53>
-
-	// <0x597b62>
-	// ******
+	params->apply_damage(delta, time_in_ms);
 }
 
 // STATE[UNVERIFIED]
@@ -223,106 +219,65 @@ void body_part_parameters::decrease_health(
 	m_health = math::clamp_r<float>(m_health - amount, 0.0f, m_max_health); // <0x596e79>
 }
 
-// STATE[PENDING] sushi@TODO: Requires update_affects
-// `time_delta_ms` frame duration.
-// void survarium::body_part_parameters::regenerate(const unsigned int, const unsigned int)
+
+// Regenerates and removes negative affects if they have passed.
+//
+// # Arguments
+// * `time_delta_ms` - frame duration.
+//
+// STATE[UNVERIFIED]
 void body_part_parameters::regenerate(
 	u32                                time_delta_ms,
 	u32                                current_time_in_ms)
 {
-	// LOCALS
-	// u32                             regenerate_delta
-	// float                           amount
-	// u32                             next_regen_time<1>
-	// u32                             regen_allowed<1>
-	// ******
+	u32 regenerate_delta = time_delta_ms; // <0x597869>
 
-	// SKIPPED BLOCKS
-	// <0x597879><1>
-	// ******
-
-	u32 regenerate_delta = time_delta_ms;
-	if (m_regeneration_timeout)
+	if ( m_regeneration_timeout ) // <0x59786f>
 	{
-		u32 next_regen_time = m_regeneration_timeout + m_last_hit_time;
-		if (current_time_in_ms <= next_regen_time )
-			return;
-		regenerate_delta = math::min(current_time_in_ms - next_regen_time, time_delta_ms);
-	}
-	float amount = regenerate_delta * m_regeneration_speed / 1000.0f;
-	increase_health(amount);
+		u32 next_regen_time = m_last_hit_time + m_regeneration_timeout; // <0x59787b>
 
-	if (m_damage_model.m_affects_applying_type == affects_applying_type_enum::type_apply_directly) // sushi@TODO: Needs getter
-		{ ; } // update_affects(current_time_in_ms);
+		if (current_time_in_ms <= next_regen_time )						// <0x597890>
+			return;														// <0x597898>
+		
+		u32 regen_allowed = current_time_in_ms - next_regen_time;		// <0x59789a>
+		regenerate_delta = math::min(regen_allowed, time_delta_ms);		// <0x5978a3>
+		// sushi@NOTE: There is an ifdef of some kind
+	}				
+													
+	float amount = regenerate_delta * m_regeneration_speed / 1000.0f;   // <0x5978b1>
+	increase_health(amount);											// <0x5978d3>
 
-	// FUNCTION BODY
-
-
-
-
-
-	// <0x597869>
-
-	// <0x59786f>
-
-	// <0x59787b>
-
-	// <0x597890>
-	// <0x597898>
-
-	// <0x59789a>
-	// <0x5978a3>
-
-
-
-
-
-	// <0x5978b1>
-	// <0x5978d3>
-
-	// <0x5978e2>
-	// <0x5978f7>
-	// ******
+	if ( m_damage_model.get_affects_applying_type() == type_apply_directly ) // <0x5978e2> sushi@TODO: Needs getter
+		update_affects(current_time_in_ms);								// <0x5978f7>
 }
 
-// STATE[PENDING]
-// void survarium::body_part_parameters::update_affects(const unsigned int)
+// STATE[UNVERIFIED]
 void body_part_parameters::update_affects(
 	u32                                current_time_in_ms)
 {
-	// LOCALS
-	// s32                             i<1>
-	// stlp_std::pair<enum hit_affects_type_enum,u32>* it_affect<2>
-	// ******
-
-	// FUNCTION BODY
-	for (s32 i = m_affects.size(); i >= 0; --i) // <0x5977a9> <block><1>
+	for ( s32 i = m_affects.size(); i >= 0; --i )										// <0x5977a9> <block><1>
 	{
-	// <0x5977d7> <block><2>
-	// <0x5977e6>
-
-	// <0x597804>
-	// <0x597810>
-	// <0x59782f>
-	// <0x59784b>
-	}
-	// ******
+		std::pair<hit_affects_type_enum, u32> & it_affect = m_affects.at(i);			// <0x5977d7> <block><2>
+		if ( it_affect.second <= current_time_in_ms )									// <0x5977e6>
+		{
+			m_damage_model.notify_on_affect_event(m_name.c_str(), it_affect.first, affect_recalling); // <0x597804>
+			m_affects.erase(&it_affect);												// <0x597810>
+		}																				// <0x59782f>
+	}																					// <0x59784b>
 }
 
-// STATE[PARTIAL] sushi@TODO: Assembly doesn't match properly
+// STATE[UNVERIFIED]
 void body_part_parameters::cancel_affect_by_force(
 	hit_affects_type_enum              affect)
 {
 	for ( s32 i = m_affects.size() ; i >= 0 ; --i )							// <0x5976e9>
 	{
-		std::pair<hit_affects_type_enum, u32> * it_affect = &m_affects[i];	// <0x597717><block><2>
-		ASSERT ( it_affect );												// <0x597726> sushi@NOTE: Kind of a stupid assert, why would there be nullptrs in the array?
-		
-		if ( it_affect->first == affect )									// <0x597743> incorrect
+		std::pair<hit_affects_type_enum, u32> & it_affect = m_affects.at(i);// <0x597717><block><2>
+		if ( it_affect.first == affect )									// <0x597726>
 		{
-			m_damage_model.notify_on_affect_event( m_name.c_str(), it_affect->first, affect_canceling ); // <0x59774f>
-			m_affects.erase( it_affect );									// <0x59776e>
-		}
+			m_damage_model.notify_on_affect_event(m_name.c_str(), it_affect.first, affect_canceling); // <0x597743>
+			m_affects.erase(&it_affect);									// <0x59774f>
+		}																	// <0x59776e>
 	}																		// <0x59778a>
 }
 
@@ -330,24 +285,23 @@ void body_part_parameters::cancel_affect_by_force(
 void body_part_parameters::check_affects(
 	u32                                current_time_in_ms)
 {
-	for ( affects_threshold* it_threshold = m_thresholds.front() ; it_threshold ; m_thresholds.get_next_of_object(it_threshold) )	// <0x597679> <block><1>
+	for ( affects_threshold* it_threshold = m_thresholds.front() ; it_threshold ; it_threshold = m_thresholds.get_next_of_object(it_threshold) )	// <0x597679> <block><1>
 		if ( m_health <= m_max_health * it_threshold->value() )																		// <0x597692>
 		{
 			it_threshold->bodypart()->apply_affects(it_threshold, current_time_in_ms);												// <0x5976bb>
 		}																															// <0x5976d4>
 }
 
-// STATE[UNVERIFIED]: stick@NOTE: the assembly code looks identical except for assert
-// bool survarium::body_part_parameters::is_affect_applied(const survarium::hit_affects_type_enum)
+// STATE[UNVERIFIED]
 bool body_part_parameters::is_affect_applied(
 	hit_affects_type_enum				affect)
 {
 	for ( u32 i = 0; i < m_affects.size(); ++i )			// <0x596da9> <block><1>
 	{
-		ASSERT( NULL );										// <0x596dd7>
-		if ( m_affects[i].first == affect ) return true;	// <0x596df4>
-	}														// <0x596df8>
-	return false;
+		if ( m_affects.at(i).first == affect ) return true;	// <0x596dd7>
+	}														// <0x596df4>
+
+	return false;											// <0x596df8>
 }
 
 // STATE[UNVERIFIED]
@@ -375,41 +329,31 @@ void body_part_parameters::apply_affects(
 		}																									// <0x597664>
 }
 
-// STATE[STUB]
-// void survarium::body_part_parameters::apply_affect_by_force(const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum, const unsigned int)
+// STATE[PARTIAL]: MATCHING IS INCORERCT
 void body_part_parameters::apply_affect_by_force(
 	hit_affects_type_enum              affect,
 	affect_event_type_enum             event_type,
 	u32                                current_time_in_ms)
 {
-	// LOCALS
-	// std::pair<enum hit_affects_type_enum,u32>* it_affect<1>
-	// u32                             i<2>
-	// ******
-
-	// FUNCTION BODY
-	// <0x597459>
-
-	// <0x597472>
-	// <0x597491>
-
-
-	// <0x5974cd>
-
-	// <0x5974d7> <block><1>
-	// <0x5974e6> <block><2>
-
-	// <0x597514>
-
-	// <0x597531>
-	// <0x59753d>
-	// <0x59755a>
-
-	// <0x597576>
-
-	// <0x597578>
-
-	// ******
+	if ( event_type == affect_applying && !is_affect_applied(affect) )
+	{
+		m_damage_model.notify_on_affect_event(m_name.c_str(), affect, affect_applying);						// <0x597472>
+		m_affects.push_back(std::make_pair(affect, current_time_in_ms + 1000 * affects_durations[affect]));	// <0x597491>: @TODO: Most likely inlined helper. Used in multiple places
+	
+	}
+	else if ( event_type == affect_recalling ) // <0x5974cd>
+	{
+		for ( u32 i = 0 ; i < m_affects.size() ; ++i )
+		{
+			std::pair<hit_affects_type_enum, u32> & it_affect = m_affects.at(i); 
+			if ( it_affect.first == affect ) 
+			{
+				m_damage_model.notify_on_affect_event(m_name.c_str(), affect, affect_recalling);
+				m_affects.erase(&it_affect);
+				return;
+			}
+		}
+	}
 }
 
 // sushi@TODO: This one is very strange, since there is no such function in the header?
@@ -469,19 +413,17 @@ void body_part_parameters::dump_state(
 	// stats->body_state.push_back(new_stats_item);					// <0x59717b>
 }
 
-// STATE[PARTIAL]: sushi@TODO: We weren't able to fit the structure in the stub.
-// Inlining happened differently.
+// STATE[UNVERIFIED]
 void body_part_parameters::dump_state(
 	boost::function<void __cdecl(u32,float,float,pcstr)> callback,
 	u32                                index) const
 {
 	vostok::fixed_string<512>         affects_str;								// <0x597300>
-	for (u32 i = 0 ; i < m_affects.size() ; ++i)								// <0x59730b> <block><1>
+	for ( u32 i = 0 ; i < m_affects.size() ; ++i )								// <0x59730b> <block><1>
 	{
-		ASSERT( NULL );															// <0x597351> // ?
-		affects_str.appendf("%s ", affects_captions[m_affects[i].first]);		// <0x597390>
-	}
-	callback(index, m_health, m_max_health, affects_str.c_str());				// <0x597392> @TODO: Currently callback execution is inlined, which is not true in survarium
+		affects_str.appendf("%s ", affects_captions[m_affects.at(i).first]);	// <0x597351>
+	}																			// <0x597390>
+	callback(index, m_health, m_max_health, affects_str.c_str());				// <0x597392> @TODO: Currently callback execution is inlined, which is not true in target
 }
 
 // STATE[UNVERIFIED]
@@ -508,17 +450,18 @@ bool body_part_parameters::can_affect_death( )
 	return false;																		// <0x596d2e>
 }
 
-// STATE[UNVERIFIED]
+// STATE[UNVERIFIED]: sushi@NOTE: Seems like the target impl is incorrect.
 u8 body_part_parameters::get_health_in_percentage( )
 {
-	return (u8)(100 * (m_health / m_max_health)); // <0x596c97>
+	// return (u8)(100 * (m_health / m_max_health)); // <0x596c97>
+	return 100 * (u8)(m_health / m_max_health);
 }
 
 // STATE[UNVERIFIED]
 void body_part_parameters::add_damage_protector(
 	damage_protector*                  protector)
 {
-	// ASSERT?									// <0x596e49>
+	ASSERT(protector);							// <0x596e49>
 	m_damage_protectors.push_back(protector);	// <0x596e55>
 }
 
@@ -526,7 +469,7 @@ void body_part_parameters::add_damage_protector(
 void body_part_parameters::remove_damage_protector(
 	damage_protector*                  protector)
 {
-	// ASSERT								// <0x596e19>
+	ASSERT(protector);						// <0x596e19>
 	m_damage_protectors.erase(protector);	// <0x596e25>
 }
 
