@@ -220,7 +220,7 @@ void body_part_parameters::decrease_health(
 }
 
 
-// Regenerates and removes negative affects if they have passed.
+// Regenerates health and removes negative affects if they have passed.
 //
 // # Arguments
 // * `time_delta_ms` - frame duration.
@@ -251,26 +251,28 @@ void body_part_parameters::regenerate(
 		update_affects(current_time_in_ms);								// <0x5978f7>
 }
 
-// STATE[UNVERIFIED]
+// STATE[PARTIAL]: Incorrectly opened up
 void body_part_parameters::update_affects(
 	u32                                current_time_in_ms)
 {
-	for ( s32 i = m_affects.size(); i >= 0; --i )										// <0x5977a9> <block><1>
+	for ( s32 i = m_affects.size() - 1 ; i >= 0; --i )									// <0x5977a9> <block><1>
 	{
-		std::pair<hit_affects_type_enum, u32> & it_affect = m_affects.at(i);			// <0x5977d7> <block><2>
-		if ( it_affect.second <= current_time_in_ms )									// <0x5977e6>
+		std::pair<hit_affects_type_enum, u32> * it_affect = m_affects.begin();			// <0x5977d7> <block><2>
+		ASSERT( false );																// <0x5977e6>
+		if ( it_affect[i].second <= current_time_in_ms )								
 		{
-			m_damage_model.notify_on_affect_event(m_name.c_str(), it_affect.first, affect_recalling); // <0x597804>
-			m_affects.erase(&it_affect);												// <0x597810>
-		}																				// <0x59782f>
-	}																					// <0x59784b>
+			it_affect += i;																// <0x597804>
+			m_damage_model.notify_on_affect_event(m_name.c_str(), it_affect->first, affect_recalling);  // <0x597810>
+			m_affects.erase(it_affect);												    // <0x59782f>
+		}																				// <0x59784b>
+	}																					
 }
 
 // STATE[UNVERIFIED]
 void body_part_parameters::cancel_affect_by_force(
 	hit_affects_type_enum              affect)
 {
-	for ( s32 i = m_affects.size() ; i >= 0 ; --i )							// <0x5976e9>
+	for ( s32 i = m_affects.size() - 1 ; i >= 0 ; --i )							// <0x5976e9>
 	{
 		std::pair<hit_affects_type_enum, u32> & it_affect = m_affects.at(i);// <0x597717><block><2>
 		if ( it_affect.first == affect )									// <0x597726>
