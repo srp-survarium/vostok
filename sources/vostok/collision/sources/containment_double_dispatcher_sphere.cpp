@@ -14,10 +14,9 @@
 #include <vostok/collision/geometry.h>
 #include <vostok/collision/geometry_instance.h>
 
-namespace vostok{
+namespace vostok {
 namespace collision	{
 
-float3 closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement );
 
 void containment_double_dispatcher::dispatch	( box_geometry_instance const& bounding_volume,				sphere_geometry_instance const& testee )
 {

@@ -24,13 +24,6 @@ namespace collision{
       Pb = P3 + mub (P4 - P3)
    Return FALSE if no solution exists.
 */
-float3 closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement )
-{
-	float domen_value	= ( ( point - segment_origin ) | segment_displacement ) / segment_displacement.squared_length( );
-	math::clamp			( domen_value, 0.f, 1.f );
-
-	return segment_origin + segment_displacement * domen_value;
-}
 
 bool line_line_intersect ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
 {
@@ -63,35 +56,6 @@ bool line_line_intersect ( float3 const& p1, float3 const& d1, float3 const& p2,
 	return true;
 }
 
-bool line_line_intersect_non_parallel ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
-{
-	R_ASSERT( !math::is_zero( d1.x ) || !math::is_zero( d1.y ) || !math::is_zero( d1.z ) );
-	R_ASSERT( !math::is_zero( d2.x ) || !math::is_zero( d2.y ) || !math::is_zero( d2.z ) );
-
-	float3 const&	p34		= d2;
-	float3 const&	p12		= d1;
-	float3 const	p31		= p1 - p2;
-
-	float const		d3412	= p34 | p12;
-	float const		d3434	= p34 | p34;
-	float const		d1212	= p12 | p12;
-
-	float const		denom	= d1212 * d3434 - d3412 * d3412;
-	R_ASSERT( !math::is_zero( denom ) );
-	
-	float const		d3134	= p31 | p34;
-	float const		d3112	= p31 | p12;
-
-	float const		numer	= d3134 * d3412 - d3112 * d3434;
-
-	mua	= numer / denom;
-	mub	= ( d3134 + d3412 * mua ) / d3434;
-
-	pa	= p1 + mua * d1;
-	pb	= p2 + mub * d2;
-
-	return true;
-}
 bool segment_segment_intersect ( float3 const& p1, float3 const& p2, float3 const& p3, float3 const& p4, float max_distance )
 {
 	float max_distance_squared = math::sqr( max_distance );
