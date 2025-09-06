@@ -42,9 +42,14 @@ static non_null< geometry_instance >::ptr new_sphere_geometry	(
 		memory::base_allocator* allocator
 	)
 {
+<<<<<<< Updated upstream
 	VOSTOK_UNREFERENCED_PARAMETER	( config );
 	// sushi@TODO
 	return						new_sphere_geometry_instance( allocator, transform /*, scale.x / 2.f */ );
+=======
+	VOSTOK_UNREFERENCED_PARAMETERS	( config, &scale );
+	return						new_sphere_geometry_instance( allocator, transform /*, scale.x / 2.f */ ); // sushi@TODO
+>>>>>>> Stashed changes
 }
 
 template < class ConfigValueType >
