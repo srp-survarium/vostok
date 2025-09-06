@@ -10,6 +10,7 @@
 #include <vostok/math_randoms_generator.h>
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/collision/primitives.h>
+#include <vostok/math_functions.h>
 
 namespace vostok {
 namespace collision {
@@ -88,16 +89,19 @@ bool capsule_geometry_instance::cuboid_test	( math::cuboid const& cuboid ) const
 	NOT_IMPLEMENTED					( return false );
 }
 
+// [DONE]
+// sushi@TODO: What is even the point of passing `distance`.
+// sushi@TODO: Why the algo was changed? segment_segment_intersect vs. segment_to_segment_distance
+// sushi@TODO: segment_to_segment_distance is implemented differently in vostok
 bool capsule_geometry_instance::ray_test		( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER( distance );
-	return segment_segment_intersect			( 
+	return segment_to_segment_distance			( 
 		origin, 
 		origin + direction * max_distance,
 		m_matrix.c.xyz( ) - m_matrix.j.xyz( ) * m_half_length,
-		m_matrix.c.xyz( ) + m_matrix.j.xyz( ) * m_half_length,
-		m_radius
-	);
+		m_matrix.c.xyz( ) + m_matrix.j.xyz( ) * m_half_length
+	) <= m_radius;
 }
 
 void capsule_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer ) const 
@@ -107,6 +111,12 @@ void capsule_geometry_instance::render( render::scene_ptr const& scene, render::
 
 void capsule_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const 
 {
+	renderer.draw_line_capsule	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
+}
+
+void capsule_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const 
+{
+	renderer.draw_solid_capsule ( scene, transform, float3( m_radius, m_half_length, m_radius ), color ); 
 	renderer.draw_line_capsule	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
 }
 
