@@ -265,12 +265,6 @@ void cylinder_geometry_instance::render	( render::scene_ptr const& scene, render
 	renderer.draw_cylinder	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
 }
 
-void cylinder_geometry_instance::render ( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
-{
-	/* sushi@TODO */
-}
-
-
 void cylinder_geometry_instance::enumerate_primitives( enumerate_primitives_callback& cb ) const
 {
 	cb.enumerate( float4x4().identity(), primitive( cylinder( m_half_length, m_radius ) ) );
