@@ -38,8 +38,9 @@ public:
 
 private:
 	virtual	void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
-	virtual	void		render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
-	
+	virtual	void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
+	virtual void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const { VOSTOK_UNREFERENCED_PARAMETERS( &scene, &renderer, &transform, &color ); }
+
 	virtual	math::float3 const* vertices	( ) const;
 	virtual	u32			vertex_count		( ) const;
 	virtual	u32 const*	indices				( ) const;
