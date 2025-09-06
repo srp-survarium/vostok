@@ -40,7 +40,8 @@ public:
 	virtual	bool			is_valid			( ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
-	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const { /* sushi@TODO */ }
+	virtual void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const { VOSTOK_UNREFERENCED_PARAMETERS( &scene, &renderer, &transform, &color ); }
+
 
 	virtual	void			enumerate_primitives( enumerate_primitives_callback& cb ) const;
 	virtual	void			enumerate_primitives( float4x4 const& transform, enumerate_primitives_callback& cb ) const;

@@ -93,7 +93,7 @@ void terrain_geometry_instance::render( render::scene_ptr const& scene, render::
 	NOT_IMPLEMENTED( ); 
 }
 
-void terrain_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const 
+void terrain_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS			( &scene, &renderer, &transform, &color );
 	NOT_IMPLEMENTED( ); 

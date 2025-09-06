@@ -17,7 +17,6 @@
 namespace vostok {
 namespace collision	{
 
-
 void containment_double_dispatcher::dispatch	( box_geometry_instance const& bounding_volume,				sphere_geometry_instance const& testee )
 {
 	float3 const& center_to_sphere_center	= m_testee.get_matrix( ).c.xyz( ) - m_bounding_volume.get_matrix( ).c.xyz( );

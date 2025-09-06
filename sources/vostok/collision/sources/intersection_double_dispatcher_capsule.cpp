@@ -24,7 +24,6 @@ namespace collision{
       Pb = P3 + mub (P4 - P3)
    Return FALSE if no solution exists.
 */
-
 bool line_line_intersect ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
 {
 	R_ASSERT( !math::is_zero( d1.x ) || !math::is_zero( d1.y ) || !math::is_zero( d1.z ) );

@@ -65,10 +65,10 @@ public:
 	virtual	math::aabb				get_aabb			( ) const = 0;
 	virtual	math::aabb				get_geometry_aabb	( ) const = 0;
 	virtual	bool					is_valid			( ) const = 0;
-
+	
 	virtual	void					render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const = 0;
 	virtual	void					render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const = 0;
-	virtual	void					render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const = 0;
+	virtual void					render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const = 0;		
 
 	virtual	void					enumerate_primitives( enumerate_primitives_callback& cb ) const = 0;
 	virtual	void					enumerate_primitives( float4x4 const& transform, enumerate_primitives_callback& cb ) const = 0;
