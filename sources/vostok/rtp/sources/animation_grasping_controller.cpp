@@ -71,7 +71,7 @@ void		animation_grasping_controller::debug_render(
 {
 
 	super::debug_render( scene, scene_renderer, debug_renderer );
-	debug_renderer.draw_sphere( scene, m_controller_position.target_pos.c.xyz(), 0.3f, math::color( 255,0,0 ) );
+	debug_renderer.draw_sphere( scene, math::create_translation( m_controller_position.target_pos.c.xyz() ), 0.3f, math::color( 255,0,0 ) );
 }
 
 
