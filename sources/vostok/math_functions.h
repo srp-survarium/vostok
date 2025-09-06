@@ -109,6 +109,11 @@ class float3_pod;
 class float3;
 VOSTOK_CORE_API	math::float3 to_close_xyz ( math::float3_pod const& angles, math::float3_pod const& to_angles, float const average_distance = pi );
 
+
+VOSTOK_CORE_API float3	closest_point_on_segment			( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement );
+VOSTOK_CORE_API bool	line_line_intersect_non_parallel	( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub );
+VOSTOK_CORE_API float	segment_to_segment_distance			( float3 const& v0, float3 const& v1, float3 const& u0, float3 const& u1 );
+
 enum intersection {
 	intersection_none,
 	intersection_inside,
