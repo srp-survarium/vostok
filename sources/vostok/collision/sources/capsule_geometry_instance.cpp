@@ -114,6 +114,12 @@ void capsule_geometry_instance::render( render::scene_ptr const& scene, render::
 	renderer.draw_line_capsule	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
 }
 
+void capsule_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const 
+{
+	renderer.draw_solid_capsule ( scene, transform, float3( m_radius, m_half_length, m_radius ), color ); 
+	renderer.draw_line_capsule	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
+}
+
 math::float3 const* capsule_geometry_instance::vertices	( ) const
 {
 	NOT_IMPLEMENTED(return 0);

@@ -16,7 +16,7 @@ namespace collision {
 class sphere_geometry_instance : public geometry_instance
 {
 public:
-							sphere_geometry_instance	( float4x4 const& matrix, float radius );
+							sphere_geometry_instance	( float4x4 const& matrix );
 	virtual					~sphere_geometry_instance	( );
 
 	virtual void			destroy				( memory::base_allocator* allocator ) { VOSTOK_UNREFERENCED_PARAMETER( allocator ); }
@@ -38,7 +38,8 @@ public:
 
 	virtual	bool			is_valid			( ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
-	virtual	void			render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
+	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
+	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const;
 
 	virtual	void			enumerate_primitives( enumerate_primitives_callback& cb ) const;
 	virtual	void			enumerate_primitives( float4x4 const& transform, enumerate_primitives_callback& cb ) const;
@@ -52,15 +53,15 @@ public:
 	virtual	u32					index_count		( ) const;
 
 	virtual	float				get_surface_area( ) const;
-	virtual	float3		get_random_surface_point( math::random32& randomizer ) const;
-	virtual	float3			get_closest_point_to( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
+	virtual	float3				get_random_surface_point( math::random32& randomizer ) const;
+	virtual	float3				get_closest_point_to( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
 
 	VOSTOK_IMPLEMENT_COLLISION_GEOMETRY_VISIT_FUNCTIONS
 
-	inline	float			radius				( ) const { return m_radius; }
+	inline	float			radius				( ) const { return m_matrix.i.length(); }
+	inline	float			radius_unit			( ) const { return 1.; }		
 private:
 	float4x4			m_matrix;
-	float				m_radius;
 }; // class sphere_geometry_instance
 
 } // namespace collision

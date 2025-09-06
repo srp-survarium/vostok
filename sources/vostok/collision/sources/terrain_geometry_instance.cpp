@@ -82,14 +82,20 @@ bool terrain_geometry_instance::is_valid			( ) const
 	return true;
 }
 
-void terrain_geometry_instance::render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const
+void terrain_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer ) const
 {
 	render									( scene, renderer, m_matrix );
 }
 
-void terrain_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void terrain_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETERS					( &scene, &renderer, &transform );
+	VOSTOK_UNREFERENCED_PARAMETERS			( &scene, &renderer, &transform );
+	NOT_IMPLEMENTED( ); 
+}
+
+void terrain_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const 
+{
+	VOSTOK_UNREFERENCED_PARAMETERS			( &scene, &renderer, &transform, &color );
 	NOT_IMPLEMENTED( ); 
 }
 
