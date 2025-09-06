@@ -33,11 +33,25 @@ bool sphere_geometry_instance::cuboid_query			( object const* object, math::cubo
 	return false; 
 }
 
-bool sphere_geometry_instance::ray_query			( object const* object, math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance, ray_triangles_type& triangles, triangles_predicate_type const& predicate ) const
+bool sphere_geometry_instance::ray_query			(
+	object const*					object,
+	math::float3 const&				origin,
+	math::float3 const&				direction,
+	float							max_distance,
+	float&							distance,
+	ray_triangles_type&				triangles, 
+	triangles_predicate_type const&	predicate ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( object, &origin, &direction, max_distance, distance, &triangles, &predicate );
 
-	return ray_test( origin, direction, max_distance, distance );
+	if ( !ray_test( origin, direction, max_distance, distance ) )
+		return false;
+
+	ray_triangle_result		result( object, u32(-1), distance );
+	predicate( result );
+	triangles.push_back( result );
+
+	return true;
 }
 
 bool sphere_geometry_instance::aabb_test			( math::aabb const& aabb ) const
