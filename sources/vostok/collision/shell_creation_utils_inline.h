@@ -43,7 +43,8 @@ static non_null< geometry_instance >::ptr new_sphere_geometry	(
 	)
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( config );
-	return						new_sphere_geometry_instance( allocator, transform, scale.x / 2.f );
+	// sushi@TODO
+	return						new_sphere_geometry_instance( allocator, transform /*, scale.x / 2.f */ );
 }
 
 template < class ConfigValueType >
@@ -78,6 +79,7 @@ static non_null< geometry_instance >::ptr new_geometry	(
 	)
 {
 	if ( strings::equal( config["type"], "sphere" ) )
+		// sushi@TODO: Exactly like in a box?
 		return				new_sphere_geometry( config, transform, scale, allocator );
 	
 	else if ( strings::equal( config["type"], "box" ) )

@@ -217,7 +217,7 @@ void	test_grasping_action::render( const test_grasping_world_params& a, vostok::
 		else 
 			c.set(0, 0, 255, 255 );
 
-	renderer.draw_sphere( scene, render_pos( a.pos ), 0.02f, c );
+	renderer.draw_sphere( scene, math::create_translation( render_pos( a.pos ) ) , 0.02f, c );
 }
 
 void	test_grasping_action::render( const grasping_space_params& a, vostok::render::scene_ptr const& scene,  vostok::render::debug::renderer& renderer ) const
@@ -240,9 +240,9 @@ void	test_grasping_action::render( const grasping_space_params& a, vostok::rende
 
 	//renderer.draw_arrow( p0, p1, math::color_xrgb( 120 + u8( 120.f * abs( m_rotation0 + m_rotation1 )/2.f/math::pi ),  u8( 255.f * abs( translate.x )/0.3f ), 50 );//
 	if(b_grasping)
-		renderer.draw_sphere( scene, p0, 0.02f,  math::color( 255,0,0 ) );//
+		renderer.draw_sphere( scene, math::create_translation( p0 ), 0.02f,  math::color( 255,0,0 ) );//
 	else
-		renderer.draw_sphere( scene, p0, 0.01f,  math::color( 120 + u8( 120.f * abs( m_rotation0 + m_rotation1 )/2.f/math::pi ),  u8( 255.f * abs( translate.x )/0.3f ), 50  ) );//
+		renderer.draw_sphere( scene, math::create_translation( p0 ), 0.01f,  math::color( 120 + u8( 120.f * abs( m_rotation0 + m_rotation1 )/2.f/math::pi ),  u8( 255.f * abs( translate.x )/0.3f ), 50  ) );//
 
 }
 

@@ -424,16 +424,20 @@ void renderer::draw_cylinder	( scene_ptr const& scene, float4x4 const& matrix, f
 	);
 }
 
-void renderer::draw_sphere		( scene_ptr const& scene, float3 const& center, const float &radius, vostok::math::color const& color, bool const use_depth )
+void renderer::draw_sphere		( scene_ptr const& scene, float4x4 const& m, const float &radius, vostok::math::color const& color, bool const use_depth )
 {
-	math::sphere sp(center, radius);
-	if(frustum.test(sp)==math::intersection_outside)
+	math::sphere sp(m.c.xyz(), radius);
+	if( frustum.test(sp) == math::intersection_outside )
 		return;
-
-	draw_ellipsoid				(
+	
+	draw_lines					(
 		scene,
-		math::create_translation( center ),
-		float3( radius, radius, radius ),
+		m,
+		float3(radius, radius, radius),
+		geometry_utils::ellipsoid::vertices,
+		geometry_utils::ellipsoid::vertex_count,
+		geometry_utils::ellipsoid::pairs,
+		geometry_utils::ellipsoid::pair_count,
 		color,
 		use_depth
 	);

@@ -145,7 +145,7 @@ shell_static* physics_world::debug_new_static_shell()
 
 	shell_static* res = VOSTOK_NEW_IMPL( m_allocator, shell_static )( 
 		 *VOSTOK_NEW_IMPL( m_allocator, static_element )( 
-			(*collision::new_sphere_geometry_instance( vostok::physics::g_ph_allocator, pose, 1.f ) )
+			(*collision::new_sphere_geometry_instance( vostok::physics::g_ph_allocator, pose /*, 1.f */ ) )
 			) 
 		);
 

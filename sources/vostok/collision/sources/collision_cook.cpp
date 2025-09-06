@@ -101,8 +101,8 @@ void collision_cook::on_primitives_collision_config_loaded( resources::queries_r
 		case primitive_sphere:
 			{// sphere
 				non_null<collision::geometry_instance>::ptr instance= collision::new_sphere_geometry_instance( resources::unmanaged_allocator(), 
-																										create_rotation(rotation)*create_translation(position), 
-																										scale.x ); 
+																										create_rotation(rotation)*create_translation(position)
+																										/* scale.x */ ); // sushi@TODO 
 				instances.push_back									( &*instance );
 			}break;
 		case collision::primitive_box:

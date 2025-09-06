@@ -86,7 +86,7 @@ namespace rtp {
 		
 		float3 start = float3(0,0,0);
 		//current_world.dbg_get_pose( start );
-		r.draw_sphere( scene, start + disp, 0.1f, math::color(255,0, u32( float( m_id ) * ( 255.f/trajectories_count ) ) ) );
+		r.draw_sphere( scene, math::create_translation( start + disp ), 0.1f, math::color(255,0, u32( float( m_id ) * ( 255.f/trajectories_count ) ) ) );
 		
 		if( size() < 2 )
 			return;
