@@ -40,7 +40,7 @@ composite_building::composite_building(
 	m_renderer						( renderer ),
 	m_position						( position ),
 	m_visibility_parameters			( 0.75f ),
-	m_geometry_cylinder				( &*collision::new_cylinder_geometry_instance	( g_allocator, float4x4().identity(), cylinder_radius, half_length ) ),
+	m_geometry_cylinder				( &*collision::new_cylinder_geometry_instance	( g_allocator, float4x4().identity() /*, cylinder_radius, half_length */ ) ), // sushi@TODO
 	m_geometry_sphere				( &*collision::new_sphere_geometry_instance		( g_allocator, float4x4().identity() /*, sphere_radius */) )
 {
 	float4x4 const transform		= math::create_translation				( float3( 0.f, half_length, 0.f ) );
