@@ -65,8 +65,8 @@ static non_null< geometry_instance >::ptr new_cylinder_geometry	(
 		memory::base_allocator* allocator
 	)
 {
-	VOSTOK_UNREFERENCED_PARAMETER	( config );
-	return						new_cylinder_geometry_instance( allocator, transform, scale.x / 2.f, scale.y / 2.f );
+	VOSTOK_UNREFERENCED_PARAMETERS	( config, &scale ); // sushi@TODO: Should apply scale here somewhere?
+	return						new_cylinder_geometry_instance( allocator, transform /*, scale.x / 2.f, scale.y / 2.f */);
 }
 
 template < class ConfigValueType >

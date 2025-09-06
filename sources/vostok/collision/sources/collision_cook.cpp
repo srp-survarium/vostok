@@ -114,9 +114,9 @@ void collision_cook::on_primitives_collision_config_loaded( resources::queries_r
 		case collision::primitive_cylinder:
 			{// 
 				non_null<collision::geometry_instance>::ptr instance= collision::new_cylinder_geometry_instance( resources::unmanaged_allocator(), 
-																										create_rotation(rotation)*create_translation(position), 
-																										scale.x,
-																										scale.y );
+																										create_rotation(rotation)*create_translation(position)// , 
+																										//scale.x, sushi@TODO
+																										/*scale.y*/ );
 				instances.push_back									( &*instance );
 			}break;
 		}

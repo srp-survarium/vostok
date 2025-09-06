@@ -38,8 +38,7 @@ public:
 	virtual	bool			is_valid			( ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
-	virtual void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const { VOSTOK_UNREFERENCED_PARAMETERS( &scene, &renderer, &transform, &color ); }
-
+	virtual void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const;
 
 	virtual	void			enumerate_primitives( enumerate_primitives_callback& cb ) const;
 	virtual	void			enumerate_primitives( float4x4 const& transform, enumerate_primitives_callback& cb ) const;
@@ -58,8 +57,8 @@ public:
 
 	VOSTOK_IMPLEMENT_COLLISION_GEOMETRY_VISIT_FUNCTIONS
 
-	inline	float			radius				( ) const { return 0.f; /* TODO */ }
-	inline	float			half_length			( ) const { return 0.f; /* TODO */ }
+	inline	float			radius				( ) const { return m_matrix.i.xyz().length(); }
+	inline	float			half_length			( ) const { return m_matrix.j.xyz().length(); }
 private:
 	float4x4			m_matrix;
 	float4x4			m_inverted_matrix;

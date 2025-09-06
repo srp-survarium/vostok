@@ -226,7 +226,7 @@ bool cylinder_geometry_instance::ray_test			( math::float3 const& origin, math::
 	float3 const new_direction	= m_inverted_matrix.transform_direction(direction);
 	float const new_max_distance= length(m_inverted_matrix.transform_position(origin + direction*max_distance) - new_origin);
 
-	if ( !cylinder_ray_test( m_radius, m_half_length, new_origin, new_direction, new_max_distance, distance ) )
+	if ( !cylinder_ray_test( radius(), half_length(), new_origin, new_direction, new_max_distance, distance ) )
 		return					false;
 
 	distance					*= max_distance/new_max_distance;
@@ -236,16 +236,16 @@ bool cylinder_geometry_instance::ray_test			( math::float3 const& origin, math::
 math::aabb cylinder_geometry_instance::get_aabb		( ) const
 {
 	return	math::create_aabb_min_max (
-		float3( -m_radius, -m_half_length, -m_radius ),
-		float3( +m_radius, +m_half_length, +m_radius )
-	);
+		float3( -1.f, -1.f, -1.f ),
+		float3( +1.f, +1.f, +1.f )
+	).modify(m_matrix);
 }
 
 math::aabb cylinder_geometry_instance::get_geometry_aabb	( ) const
 {
 	return	math::create_aabb_min_max (
-		float3( -m_radius, -m_half_length, -m_radius ),
-		float3( +m_radius, +m_half_length, +m_radius )
+		float3( -1.f, -1.f, -1.f ),
+		float3( +1.f, +1.f, +1.f )
 	);
 }
 
@@ -259,19 +259,25 @@ void cylinder_geometry_instance::render				( render::scene_ptr const& scene, ren
 	render			( scene, renderer, m_matrix );
 }
 
-void cylinder_geometry_instance::render	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void cylinder_geometry_instance::render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
-	renderer.draw_cylinder	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
+	renderer.draw_cylinder	( scene, transform, float3( 1.f, 1.f, 1.f ), math::color( 255u, 255u, 255u, 255u ) );
+}
+
+void cylinder_geometry_instance::render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
+{
+	renderer.draw_cylinder_solid ( scene, transform, float3( 1.f, 1.f, 1.f ), color );
+	renderer.draw_cylinder	( scene, transform, float3( 1.f, 1.f, 1.f ), math::color( 255u, 255u, 255u, 255u ) );
 }
 
 void cylinder_geometry_instance::enumerate_primitives( enumerate_primitives_callback& cb ) const
 {
-	cb.enumerate( float4x4().identity(), primitive( cylinder( m_half_length, m_radius ) ) );
+	cb.enumerate( float4x4().identity(), primitive( cylinder( half_length(), radius() ) ) );
 }
 
 void cylinder_geometry_instance::enumerate_primitives( float4x4 const& transform, enumerate_primitives_callback& cb ) const
 {
-	cb.enumerate( transform, primitive( sphere( m_radius ) ) );
+	cb.enumerate( transform, primitive( cylinder( half_length(), radius() ) ) );
 }
 
 void cylinder_geometry_instance::add_triangles		( triangles_type& triangles ) const
@@ -308,14 +314,14 @@ u32 cylinder_geometry_instance::index_count				( ) const
 
 float cylinder_geometry_instance::get_surface_area		( ) const
 {
-	return 2 * math::pi * m_radius * ( m_radius + 2 * m_half_length );
+	return 2 * math::pi * radius() * ( radius() + 2 * half_length() );
 }
 
 float3 cylinder_geometry_instance::get_random_surface_point( math::random32& randomizer ) const
 {
-	float const area1					= math::pi * math::sqr( m_radius );
-	float const area2					= 2 * math::pi * m_radius * m_half_length;
-	float const total_area				= 2 * area1 + area2;
+	float const area1					= math::pi * math::sqr( radius() );
+	float const area2					= 2 * math::pi * radius() * half_length();
+	float const total_area				= 2 * area1 + area2; // sushi@NOTE: This is just get_surface_area
 
 	typedef fixed_vector< float, 6 >	cylinder_planes_type;
 	cylinder_planes_type				cylinder_planes;
@@ -340,18 +346,18 @@ float3 cylinder_geometry_instance::get_random_surface_point( math::random32& ran
 	{
 		case cylinder_plane_type_round_side:
 		{
-			result.y					= -m_half_length + randomizer.random_f( 2.f * m_half_length );
-			result.x					= m_radius * math::cos( alpha );
-			result.z					= m_radius * math::sin( alpha );
+			result.y					= -half_length() + randomizer.random_f( 2.f * half_length() );
+			result.x					= radius() * math::cos( alpha );
+			result.z					= radius() * math::sin( alpha );
 		}
 		break;
 
 		case cylinder_plane_type_top_circle:
 		case cylinder_plane_type_bottom_circle:
 		{
-			result.y					= plane_type == cylinder_plane_type_top_circle ? m_half_length : -m_half_length;
-			float const radius_random	= -m_radius + randomizer.random_f( 2.f * m_radius );
-			float const r_coefficient	= math::sqrt( math::sqr( m_radius ) - math::sqr( radius_random ) );
+			result.y					= plane_type == cylinder_plane_type_top_circle ? half_length() : -half_length();
+			float const radius_random	= -radius() + randomizer.random_f( 2.f * radius() );
+			float const r_coefficient	= math::sqrt( math::sqr( radius() ) - math::sqr( radius_random ) );
 			result.x					= r_coefficient * math::cos( alpha );
 			result.z					= r_coefficient * math::sin( alpha );
 		}
@@ -366,8 +372,8 @@ float3 cylinder_geometry_instance::get_closest_point_to	( float3 const& point, f
 	float4x4 transform				= origin * m_matrix;
 	float3 center					= transform.c.xyz( );
 	float3 y_axis					= transform.j.xyz( );
-	float3 top_surface_center		= center + m_half_length * y_axis;
-	float3 bottom_surface_center	= center - m_half_length * y_axis;
+	float3 top_surface_center		= center + half_length() * y_axis;
+	float3 bottom_surface_center	= center - half_length() * y_axis;
 	float3 height_vector			= bottom_surface_center - top_surface_center;
 	float proj_to_y_axis			= ( point - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 	
@@ -375,10 +381,11 @@ float3 cylinder_geometry_instance::get_closest_point_to	( float3 const& point, f
 	{
 		float3 height_vector_proj_point	= top_surface_center + proj_to_y_axis * height_vector;
 		float3 dir						= point - height_vector_proj_point;
-		if ( ( dir ).squared_length( ) < m_radius * m_radius )
+		// sushi@NOTE: Suboptimal impl, which does sqrt twice
+		if ( ( dir ).squared_length( ) < radius() * radius() )
 			return point;
 
-		return							height_vector_proj_point + dir.normalize( ) * m_radius;
+		return							height_vector_proj_point + dir.normalize( ) * radius();
 	}
 
 	float3 surface_center;
@@ -390,8 +397,8 @@ float3 cylinder_geometry_instance::get_closest_point_to	( float3 const& point, f
 	float3 circle_point_dir		= point - surface_center;
 	float3 proj					= circle_point_dir.dot_product( y_axis ) * y_axis;
 	float3 circle_proj_vec		= circle_point_dir - proj;
-	if ( circle_proj_vec.squared_length( ) > m_radius * m_radius )
-		return surface_center + m_radius * circle_proj_vec.normalize();
+	if ( circle_proj_vec.squared_length( ) >  radius() * radius() )
+		return surface_center + radius() * circle_proj_vec.normalize();
 	else
 		return surface_center + circle_proj_vec;
 }
