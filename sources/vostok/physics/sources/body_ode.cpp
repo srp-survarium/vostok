@@ -99,7 +99,7 @@ void	body_ode::render( render::scene_ptr const& scene, render::debug::renderer& 
 {
 	float4x4 m;
 	get_pose( m );
-	renderer.draw_sphere( scene, m.c.xyz(), 0.03f, math::color( 255u, 0u, 0u, 255u ) );
+	renderer.draw_sphere( scene, math::create_translation(m.c.xyz()), 0.03f, math::color( 255u, 0u, 0u, 255u ) );
 }
 
 void body_ode::move_position( const float3 &delta )

@@ -62,7 +62,7 @@ public:
 	void 	draw_ellipsoid		( scene_ptr const& scene, float4x4 const& matrix, float3 const& size, math::color const& color, bool use_depth = true );
 	void 	draw_circle			( scene_ptr const& scene, float4x4 const& matrix, float3 const& size, math::color const& color, bool use_depth = true );
 	void 	draw_cylinder		( scene_ptr const& scene, float4x4 const& matrix, float3 const& size, math::color const& color, bool use_depth = true );
-	void 	draw_sphere			( scene_ptr const& scene, float3 const& center, const float &radius, math::color const& color, bool use_depth = true );
+	void 	draw_sphere			( scene_ptr const& scene, float4x4 const& matrix, const float &radius, math::color const& color, bool use_depth = true );
 	void 	draw_cone			( scene_ptr const& scene, float4x4 const& matrix, float3 const& size, math::color const& color, bool use_depth = true );
 	void 	draw_arrow			( scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& arrow_color, math::color const& cone_color, bool use_depth = true );
 	void 	draw_arrow			( scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& color, bool use_depth = true );
