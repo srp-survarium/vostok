@@ -90,6 +90,7 @@ object_collision_geometry::~object_collision_geometry ( )
 
 ////////////////		P U B L I C   M E T H O D S			////////////////
 
+// sushi@TODO: No longer exists. Why? survarium::collision_geometry::load is present
 void object_collision_geometry::load ( configs::binary_config_value const& config_value )
 {
 	super::load							( config_value );
@@ -148,7 +149,7 @@ void object_collision_geometry::load ( configs::binary_config_value const& confi
 		switch ( primitive_type )
 		{
 		case collision::primitive_sphere:
-			instance	= &*collision::new_sphere_geometry_instance		( g_allocator, matrix, primitive.sphere( ).radius  );
+			instance	= &*collision::new_sphere_geometry_instance		( g_allocator, matrix /*, primitive.sphere( ).radius */ );
 			break;
 
 		case collision::primitive_box:
@@ -214,7 +215,7 @@ void object_collision_geometry::load ( configs::binary_config_value const& confi
 
 		switch ( primitive_type )
 		{
-			case collision::primitive_sphere:	instance = &*collision::new_sphere_geometry_instance	( g_allocator, matrix, primitive.sphere( ).radius ); break;
+			case collision::primitive_sphere:	instance = &*collision::new_sphere_geometry_instance	( g_allocator, matrix /*, primitive.sphere( ).radius */ ); break;
 			case collision::primitive_box:		instance = &*collision::new_box_geometry_instance		( g_allocator, math::create_scale(primitive.box( ).half_side) * matrix ); break;
 			case collision::primitive_cylinder:	instance = &*collision::new_cylinder_geometry_instance	( g_allocator, matrix, primitive.cylinder( ).radius, primitive.cylinder( ).half_length ); break;
 			case collision::primitive_capsule:	instance = &*collision::new_capsule_geometry_instance	( g_allocator, matrix, primitive.capsule( ).radius, primitive.capsule( ).half_length ); break;

@@ -17,6 +17,7 @@
 #include <vostok/math_randoms_generator.h>
 #include "ai_collision_object.h"
 
+// sushi@NOTE: DOESN'T exist
 namespace survarium {
 
 composite_building::composite_building(
@@ -40,7 +41,7 @@ composite_building::composite_building(
 	m_position						( position ),
 	m_visibility_parameters			( 0.75f ),
 	m_geometry_cylinder				( &*collision::new_cylinder_geometry_instance	( g_allocator, float4x4().identity(), cylinder_radius, half_length ) ),
-	m_geometry_sphere				( &*collision::new_sphere_geometry_instance		( g_allocator, float4x4().identity(), sphere_radius ) )
+	m_geometry_sphere				( &*collision::new_sphere_geometry_instance		( g_allocator, float4x4().identity() /*, sphere_radius */) )
 {
 	float4x4 const transform		= math::create_translation				( float3( 0.f, half_length, 0.f ) );
 	float4x4 const global_transform	= math::create_translation				( position );
