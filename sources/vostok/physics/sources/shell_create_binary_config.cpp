@@ -49,7 +49,7 @@ non_null<vostok::collision::geometry_instance>::ptr	new_cylinder_collision( cons
 	VOSTOK_UNREFERENCED_PARAMETER	( root );
 	float4x4 pose =float4x4().identity();
 	pose.c.xyz() = cfg["position"] ;
-	return collision::new_cylinder_geometry_instance( vostok::physics::g_ph_allocator, pose, cfg["radius"], cfg["half_length"] );
+	return collision::new_cylinder_geometry_instance( vostok::physics::g_ph_allocator, pose /*, cfg["radius"], cfg["half_length"] */ ); // sushi@TODO
 }
 
 non_null<vostok::collision::geometry_instance>::ptr	new_collision( const vostok::configs::binary_config_value	&cfg , const vostok::configs::binary_config_value &root)
