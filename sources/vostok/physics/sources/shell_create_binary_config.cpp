@@ -35,7 +35,7 @@ non_null<vostok::collision::geometry_instance>::ptr	new_sphere_collision( const 
 	float4x4 pose = float4x4().identity();//
 
 	pose.c.xyz() = cfg["position"] ;
-	return collision::new_sphere_geometry_instance( vostok::physics::g_ph_allocator, pose, cfg["radius"] );
+	return collision::new_sphere_geometry_instance( vostok::physics::g_ph_allocator, pose /*, cfg["radius"] */ ); // sushi@TODO
 }
 
 non_null<vostok::collision::geometry_instance>::ptr	new_box_collision( const vostok::configs::binary_config_value	&cfg , const vostok::configs::binary_config_value &root )

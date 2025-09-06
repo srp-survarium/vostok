@@ -209,12 +209,15 @@ void light::on_properties_changed	( )
 
 	switch ( flags.type ) {
 		case light_type_parallel:
+
 		case render::light_type_point : {
 			m_collision_object	= 
 				&*collision::new_collision_object	(
 					g_allocator,
 					1,
-					m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ), range ),
+					// sushi@TODO: new_sphere_geometry_instance no longer accepts a radius
+					// m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ), range ),
+					m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ) ),
 					this
 				);
 			transform			= math::create_scale( float3(range, range, range) ) * math::create_translation( position );
@@ -286,7 +289,9 @@ void light::on_properties_changed	( )
 				&*collision::new_collision_object(
 					g_allocator,
 					1,
-					m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ), range + scale.x ),
+					// sushi@TODO: new_sphere_geometry_instance no longer accepts a radius
+					// m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ), range + scale.x ),
+					m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ) ),
 					this
 				);
 			transform			=

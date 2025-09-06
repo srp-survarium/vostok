@@ -73,7 +73,7 @@ void	render( const dxJointContact	&contact, render::scene_ptr const& scene, rend
 	const float scale = 1;
 	const float3 &p0 = cast_xr(contact.contact.geom.pos);
 	const float3 &p1 = cast_xr(contact.contact.geom.pos)+cast_xr(contact.contact.geom.normal)*contact.contact.geom.depth*scale;
-	renderer.draw_sphere( scene, p0, 0.01f, math::color( 255u, 255u, 0u, 255u ) );
+	renderer.draw_sphere( scene, math::create_translation(p0), 0.01f, math::color( 255u, 255u, 0u, 255u ) );
 	//world.debug(user_id).draw_arrow( p0, p1, math::color_xrgb( 255, 0, 0 ) );
 
 	renderer.draw_line( scene, p0, p1, math::color( 255u, 0u, 0u, 255u ) );
