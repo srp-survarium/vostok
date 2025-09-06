@@ -16,7 +16,7 @@ namespace collision {
 class cylinder_geometry_instance : public geometry_instance
 {
 public:
-							cylinder_geometry_instance	( float4x4 const& matrix, float radius, float half_length );
+							cylinder_geometry_instance	( float4x4 const& matrix );
 	virtual					~cylinder_geometry_instance	( );
 
 	virtual void			destroy				( memory::base_allocator* allocator ) { VOSTOK_UNREFERENCED_PARAMETER( allocator ); }
@@ -53,18 +53,24 @@ public:
 	virtual	u32						index_count			( ) const;
 
 	virtual	float					get_surface_area	( ) const;
-	virtual	float3				get_random_surface_point( math::random32& randomizer ) const;
-	virtual	float3				get_closest_point_to	( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
+	virtual	float3					get_random_surface_point( math::random32& randomizer ) const;
+	virtual	float3					get_closest_point_to	( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
+
 	VOSTOK_IMPLEMENT_COLLISION_GEOMETRY_VISIT_FUNCTIONS
 
-	inline	float			radius				( ) const { return m_radius; }
-	inline	float			half_length			( ) const { return m_half_length; }
+	inline	float			radius				( ) const { return 0.f; /* TODO */ }
+	inline	float			half_length			( ) const { return 0.f; /* TODO */ }
 private:
 	float4x4			m_matrix;
 	float4x4			m_inverted_matrix;
-	float				m_radius;
-	float				m_half_length;
 }; // class cylinder_geometry_instance
+
+
+namespace {
+	typedef char size_assert[
+		sizeof(cylinder_geometry_instance) == 0x88 ? 1 : -1
+	];
+}
 
 } // namespace collision
 } // namespace vostok

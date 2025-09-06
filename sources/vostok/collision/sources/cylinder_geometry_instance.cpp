@@ -20,11 +20,10 @@ enum cylinder_plane_types_enum
 	cylinder_plane_type_round_side
 };
 
-cylinder_geometry_instance::cylinder_geometry_instance	( float4x4 const& matrix, float radius, float half_length ) :
+// sushi@TODO: No constructor in the target executable
+cylinder_geometry_instance::cylinder_geometry_instance	( float4x4 const& matrix ) :
 	m_matrix			( matrix ),
-	m_inverted_matrix	( math::invert4x3( matrix ) ),
-	m_radius			( radius ),
-	m_half_length		( half_length )
+	m_inverted_matrix	( math::invert4x3( matrix ) )
 {
 }
 
