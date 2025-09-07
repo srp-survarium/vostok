@@ -90,9 +90,20 @@ bool composite_geometry_instance::ray_query			( object const* object, math::floa
 
 	bool res = false;
 	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
-	for ( ; i != e; ++i )
-		res = (*i)->ray_query	( object, new_origin, new_direction, max_distance, new_max_distance, triangles, triangles_predicate_type( &helper, &composite_ray_query_helper::predicate) ) || res;
-	
+	for ( s32 id = 0; i != e; ++i, id += 4 )
+	{
+		u32  ray_triangle_result_count = triangles.size();
+		if ( (*i)->ray_query	( object, new_origin, new_direction, max_distance, new_max_distance, triangles, triangles_predicate_type( &helper, &composite_ray_query_helper::predicate) ) )
+		{
+			res = true;
+			u32  ray_triangle_result_count_new = triangles.size();
+			for ( u32 j = ray_triangle_result_count ; j < ray_triangle_result_count_new ; ++j )
+			{
+				triangles[j].triangle_id = id >> 2;
+			}
+		}
+	}
+
 	distance					= helper.min_distance();
 	return res;
 }
@@ -172,13 +183,23 @@ void composite_geometry_instance::render			( render::scene_ptr const& scene, ren
 	render			( scene, renderer, m_matrix );
 }
 
-void composite_geometry_instance::render	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void composite_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
 	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
 	for ( ; i != e; ++i )
 	{
 		float4x4 m = (*i)->get_matrix() * transform;
 		(*i)->render( scene, renderer, m );
+	}
+}
+
+void composite_geometry_instance::render			( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
+{
+	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
+	for ( ; i != e; ++i )
+	{
+		float4x4 m = (*i)->get_matrix() * transform;
+		(*i)->render( scene, renderer, m, color );
 	}
 }
 
