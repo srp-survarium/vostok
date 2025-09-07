@@ -65,6 +65,12 @@ private:
 	float4x4	m_inverted_matrix;
 }; // class box_geometry_instance
 
+namespace {
+	typedef char size_assert[
+		sizeof(box_geometry_instance) == 0x88 ? 1 : -1
+	];
+}
+
 } // namespace collision
 } // namespace vostok
 

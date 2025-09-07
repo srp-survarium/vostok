@@ -77,6 +77,11 @@ bool box_geometry_instance::aabb_test			( math::aabb const& aabb ) const
 
 bool box_geometry_instance::cuboid_test			( math::cuboid const& cuboid ) const
 {
+	VOSTOK_UNREFERENCED_PARAMETER	(cuboid);
+	return true;
+
+	// sushi@NOTE: Removed most likely because the test is redundant at that point
+#if 0
 	return
 		math::cuboid( cuboid, m_inverted_matrix ).test_inexact	( 
 			math::create_aabb_center_radius	(
@@ -84,6 +89,7 @@ bool box_geometry_instance::cuboid_test			( math::cuboid const& cuboid ) const
 				float3( 1.f, 1.f, 1.f )
 			)
 		) != math::intersection_outside;
+#endif
 }
 
 bool box_geometry_instance::ray_test			( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
