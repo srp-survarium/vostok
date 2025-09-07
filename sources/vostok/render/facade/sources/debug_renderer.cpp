@@ -104,9 +104,9 @@ void renderer::draw_triangle	( scene_ptr const& scene, vertex_colored const ( &v
 
 void renderer::draw_cube			( scene_ptr const& scene, float4x4 const& matrix, float3 const& size, vostok::math::color const& color, bool const use_depth )
 {
-	//math::aabb bb = (math::aabb().identity()*size).modify(matrix);
-	//if(frustum.test_inexact(bb)==math::intersection_outside)
-	//	return;
+	math::aabb bb = create_aabb_min_max(-size, size).modify(matrix);
+	if(frustum.test_inexact(bb)==math::intersection_outside)
+		return;
 
 	draw_lines					(
 		scene,
