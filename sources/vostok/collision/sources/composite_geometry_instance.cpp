@@ -172,13 +172,23 @@ void composite_geometry_instance::render			( render::scene_ptr const& scene, ren
 	render			( scene, renderer, m_matrix );
 }
 
-void composite_geometry_instance::render	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void composite_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
 	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
 	for ( ; i != e; ++i )
 	{
 		float4x4 m = (*i)->get_matrix() * transform;
 		(*i)->render( scene, renderer, m );
+	}
+}
+
+void composite_geometry_instance::render			( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
+{
+	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
+	for ( ; i != e; ++i )
+	{
+		float4x4 m = (*i)->get_matrix() * transform;
+		(*i)->render( scene, renderer, m, color );
 	}
 }
 
