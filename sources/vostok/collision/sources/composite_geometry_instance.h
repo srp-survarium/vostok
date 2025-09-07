@@ -40,8 +40,7 @@ public:
 	virtual	bool			is_valid			( ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
 	virtual	void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
-	virtual void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const { VOSTOK_UNREFERENCED_PARAMETERS( &scene, &renderer, &transform, &color ); }
-
+	virtual void			render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const;
 
 	virtual	void			enumerate_primitives( enumerate_primitives_callback& cb ) const;
 	virtual	void			enumerate_primitives( float4x4 const& transform, enumerate_primitives_callback& cb ) const;
@@ -55,7 +54,7 @@ public:
 	virtual	u32						index_count			( ) const;
 
 	virtual	float					get_surface_area	( ) const;
-	virtual	float3				get_random_surface_point( math::random32& randomizer ) const;
+	virtual	float3					get_random_surface_point( math::random32& randomizer ) const;
 	virtual	float3					get_closest_point_to( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
 
 	non_null<composite_geometry const>::ptr get_geometry( ) const { return m_geometry; }
@@ -66,6 +65,13 @@ private:
 	float4x4								m_inverted_matrix;
 	non_null<composite_geometry const>::ptr	m_geometry;
 }; // class composite_geometry_instance
+
+
+namespace {
+	typedef char size_assert[
+		sizeof(composite_geometry_instance) == 0x8C ? 1 : -1
+	];
+}
 
 } // namespace collision
 } // namespace vostok
