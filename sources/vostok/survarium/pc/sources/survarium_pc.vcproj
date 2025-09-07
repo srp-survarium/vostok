@@ -513,6 +513,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Generate COFF files"
+				CommandLine="E:\Projects\vostok\scripts\vostok-generate-coff.bat"
 			/>
 		</Configuration>
 		<Configuration
