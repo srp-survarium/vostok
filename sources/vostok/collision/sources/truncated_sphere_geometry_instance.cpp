@@ -229,8 +229,8 @@ void	truncated_sphere_geometry_instance::enumerate_primitives	( float4x4 const& 
 math::aabb	truncated_sphere_geometry_instance::get_aabb		( ) const
 {
 	return	create_aabb_min_max(
-			m_matrix.transform( float3( -m_radius, -m_radius, -m_radius ) ),
-			m_matrix.transform( float3( +m_radius, +m_radius, +m_radius ) )
+			m_matrix.transform_position( float3( -m_radius, -m_radius, -m_radius ) ),
+			m_matrix.transform_position( float3( +m_radius, +m_radius, +m_radius ) )
 		);
 }
 
