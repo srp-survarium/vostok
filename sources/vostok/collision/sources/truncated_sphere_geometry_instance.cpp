@@ -94,12 +94,12 @@ bool truncated_sphere_geometry_instance::ray_test		( math::float3 const& origin,
 	NOT_IMPLEMENTED					( return false );
 }
 
-void	truncated_sphere_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer ) const 
+void truncated_sphere_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer ) const 
 {
 	render					( scene, renderer, m_matrix );
 }
 
-void truncated_sphere_geometry_instance::render	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void truncated_sphere_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
 	float4x4 local_matrix = math::create_scale( float3( m_radius, m_radius, m_radius ) ) * transform;
 
@@ -163,6 +163,13 @@ void truncated_sphere_geometry_instance::render	( render::scene_ptr const& scene
 
 	renderer.draw_lines	( scene, vertices, indices, false );
 }
+
+void truncated_sphere_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
+{
+	VOSTOK_UNREFERENCED_PARAMETER		( color );
+	render					( scene, renderer, transform ); 
+}
+
 
 math::aabb& truncated_sphere_geometry_instance::get_aabb	( math::aabb& result ) const
 {
