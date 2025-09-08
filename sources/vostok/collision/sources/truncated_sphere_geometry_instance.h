@@ -37,7 +37,7 @@ public:
 private:
 	virtual	void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
 	virtual	void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
-	virtual void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const { VOSTOK_UNREFERENCED_PARAMETERS( &scene, &renderer, &transform, &color ); }
+	virtual void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const;
 
 	virtual	math::float3 const* vertices	( ) const;
 	virtual	u32			vertex_count		( ) const;
@@ -66,6 +66,7 @@ private:
 public:
 	virtual	math::aabb&	get_aabb			( math::aabb& result ) const;
 	virtual	void		get_aabb			( math::aabb& bbox, float4x4 const& self_transform ) const;
+
 	virtual	float3		get_random_surface_point( math::random32& randomizer ) const;
 	virtual float3		get_closest_point_to( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
 	virtual	float		get_surface_area	( ) const;
@@ -80,6 +81,13 @@ private:
 	buffer_vector< float4 >		m_planes;
 	float						m_radius;
 }; // class truncated_sphere
+
+namespace {
+	typedef char size_assert[
+		sizeof(truncated_sphere_geometry_instance) == 0x94 ? 1 : -1
+	];
+}
+
 
 } // namespace collision
 } // namespace vostok
