@@ -181,11 +181,12 @@ math::aabb& truncated_sphere_geometry_instance::get_aabb	( math::aabb& result ) 
 	return				result;
 }
 
+// Changed transform to transform_position
 void		truncated_sphere_geometry_instance::get_aabb	( math::aabb& bbox, float4x4 const& self_transform ) const
 {
 	bbox = math::create_aabb_min_max(
-			self_transform.transform( float3( -m_radius, -m_radius, -m_radius ) ),
-			self_transform.transform( float3( +m_radius, +m_radius, +m_radius ) )
+			self_transform.transform_position( float3( -m_radius, -m_radius, -m_radius ) ),
+			self_transform.transform_position( float3( +m_radius, +m_radius, +m_radius ) )
 		);
 }
 

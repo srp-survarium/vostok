@@ -66,6 +66,7 @@ private:
 public:
 	virtual	math::aabb&	get_aabb			( math::aabb& result ) const;
 	virtual	void		get_aabb			( math::aabb& bbox, float4x4 const& self_transform ) const;
+
 	virtual	float3		get_random_surface_point( math::random32& randomizer ) const;
 	virtual float3		get_closest_point_to( float3 const& point, float4x4 const& origin = float4x4().identity() ) const;
 	virtual	float		get_surface_area	( ) const;
