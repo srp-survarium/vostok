@@ -11,7 +11,7 @@ namespace vostok {
 namespace resources {
 
 enum class_id_enum
-{ 
+{
 	unknown_data_class,
 	fs_iterator_class,
 	fs_iterator_recursive_class,
@@ -22,36 +22,42 @@ enum class_id_enum
 	texture_wrapper_class,
 	texture_class,
 	texture_converter_class,
+	texture_gpu_converter_class,                   // [+]
 	texture_tga_to_argb_class,
 	shader_binary_source_class,
 	render_effect_class,
-	
+
+	tracer_model_instance_class,                   // [+]
 	material_effects_instance_class,
 	speedtree_class,
 	speedtree_instance_class,
 	speedtree_render_instance_class,
-	
+
 	static_model_instance_class,			// final class for user
 	skeleton_model_instance_class,			// final class for user
+	skeleton_combined_model_instance_class,        // [+]
 	static_render_model_class,				// static render model class (shared between instances)
 	skeleton_render_model_class,			// skeleton render model class (shared between instances)
 	static_render_model_instance_class,		// static_render_model_instance
 	skeleton_render_model_instance_class,	// skeleton_render_model_instance
-	composite_render_model_class,			// composite_render_model
-	composite_render_model_instance_class,	// composite_render_model_instance
-	user_mesh_class,						// user mesh instance (not shared). terrain cursor, and other user-defined geometry
-	
+
+	composite_render_model_class,									 // [-] // composite_render_model
+	composite_render_model_instance_class,				 // [-] // composite_render_model_instance
+
+	skeleton_combined_render_model_instance_class, // [+]
+
+	skeleton_combined_model_class,                 // [+]
+	user_mesh_class,						// user mesh instance (not shared).terrain cursor, and other user-defined geometry
+
 	grass_render_model_class,				// grass render model class (shared)
-	
-	converted_model_class,
 	collision_geometry_class,
 
 	collision_bt_shape_class_dynamic,	// bullet shape impl
 	collision_bt_shape_class_static,	// bullet shape impl
 
 	material_class,
-	config_class,
-	binary_config_class,
+	binary_config_class_impl,                      // [+]
+	config_class,                                  // [-]
 	ltx_config_class,
 	lua_config_class,
 
@@ -72,13 +78,17 @@ enum class_id_enum
 	ogg_converter_class,
 	ogg_options_converter_class,
 	sound_spl_class,
-	spl_class,
+	spl_class,                                     // [-]
 
+	audibility_graph_class,                        // [+]
+	sound_environment_class,                       // [+]
 	skeleton_class,
+	bi_spline_skeleton_animation_baked_class,      // [+]
+	bi_spline_skeleton_animation_impl_class,       // [+]
 	bi_spline_skeleton_animation_class,
 	cubic_spline_skeleton_animation_class,
 	animation_class,
-	animation_controller_class,
+	animation_controller_class,                    // [-]
 
 	texture_options_lua_class,
 	texture_options_binary_class,
@@ -92,22 +102,49 @@ enum class_id_enum
 	preview_particle_system_class,
 	particle_system_instance_class,
 	sound_class,
-	sound_stream_class,
+	sound_stream_class,                            // [-]
 	ogg_raw_file,
+
 	dialog_class,
 	game_dialog_class,
-	game_project_class,
-	game_project_simple_class,
-	game_cell_class,
-	game_object_class,
-	game_object_scene_class,
+
+	game_project_class,                            // [-]
+	game_project_simple_class,                     // [-]
+	game_cell_class,                               // [-]
+	game_object_class,                             // [-]
+	game_object_scene_class,                       // [-]
+
+	client_game_project_class,                     // [+]
+	server_game_project_class,                     // [+]
+	server_player_class,                           // [+]
+	inventory_class,                               // [+]
+	items_dictionary_class,                        // [+]
+
 	brain_unit_class,
 	human_npc_class,
 	weapon_class,
-	sound_player_logic_class,
-	sound_player_editor_class,
+
+	weapon_ammunition_class,                       // [+]
+	missile_weapon_class,                          // [+]
+	item_class,                                    // [+]
+	booby_trap_set_class,                          // [+]
+	booby_trap_class,                              // [+]
+	rifle_scope_class,                             // [+]
+
+	sound_player_logic_class,                      // [-]
+	sound_player_editor_class,                     // [-]
+	sound_player_class,                            // [+]
+
 	unmanaged_allocation_class,
 	behaviour_class,
+
+	game_material_manager_class,                   // [+]
+	damage_model_class,                            // [+]
+	animation_space_graph_class,                   // [+]
+	player_class,                                  // [+]
+	player_skin_visual_class,                      // [+]
+	player_parameters_class,                       // [+]
+	victory_item_class,                            // [+]
 
 	render_animated_model_instance_class,
 	physics_animated_model_instance_class,
@@ -117,21 +154,69 @@ enum class_id_enum
 	scene_class,
 	scene_view_class,
 	render_output_window_class,
-	
+
 	renderer_class,
-	
+
+	grass_world_class,                             // [+]
+	portal_sector_structure_class,                 // [+]
+	damage_zone_class,                             // [+]
+	artefact_class,                                // [+]
+	animation_analysis_result_class,               // [+]
+	ladder_class,                                  // [+]
+	victory_items_container_class,                 // [+]
+	animation_container_class,                     // [+]
+	empty_hands_class,                             // [+]
+
 	//these class ids are exported to lua and therefore must have the same value during engine life
 	single_sound_class	= 256,
 	composite_sound_class,
 	sound_collection_class,
 
+	weapon_inactive_state_class,                   // [+]
+	weapon_show_state_class,                       // [+]
+	weapon_hide_state_class,                       // [+]
+	weapon_idle_state_class,                       // [+]
+	weapon_reload_state_class,                     // [+]
+	weapon_chamber_a_round_state_class,            // [+]
+	weapon_chamber_a_round_aimed_state_class,      // [+]
+	weapon_fire_state_class,                       // [+]
+	weapon_aimed_state_class,                      // [+]
+	weapon_aimed_fire_state_class,                 // [+]
+	weapon_shotgun_reload_state_class,             // [+]
+	weapon_shotgun_reload_start_substate_class,    // [+]
+	weapon_shotgun_reload_one_substate_class,      // [+]
+	weapon_shotgun_reload_finish_substate_class,   // [+]
+	double_barreled_weapon_show_state_class,       // [+]
+	double_barreled_weapon_hide_state_class,       // [+]
+	double_barreled_weapon_idle_state_class,       // [+]
+	double_barreled_weapon_reload_state_class,     // [+]
+	double_barreled_weapon_fire_state_class,       // [+]
+	double_barreled_weapon_aimed_state_class,      // [+]
+	double_barreled_weapon_aimed_fire_state_class, // [+]
+	pistol_weapon_show_state_class,                // [+]
+	pistol_weapon_hide_state_class,                // [+]
+	pistol_weapon_idle_state_class,                // [+]
+	pistol_weapon_reload_state_class,              // [+]
+	pistol_weapon_fire_state_class,                // [+]
+	pistol_weapon_aimed_state_class,               // [+]
+	pistol_weapon_aimed_fire_state_class,          // [+]
+
+
 	//these class ids are exported to lua and therefore must have the same value during engine life
 	single_animation_class = 512,
 	composite_animation_class,
 	animation_collection_class,
-	
+
+	flash_movie_class,                             // [+]
+	game_world_class,                              // [+]
 	last_resource_class,
+	platformed_raw_data_class,                     // [+]
+
+	converted_model_class,
+	binary_config_class,
+	inherits_binary_config_class,                  // [+]
 };
+
 
 } // namespace resources
 } // namespace vostok
