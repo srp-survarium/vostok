@@ -16,7 +16,7 @@
 #include "triangle_mesh_geometry_instance.h"
 #include <vostok/resources_fs.h>
 
-namespace vostok{
+namespace vostok {
 namespace collision {
 
 void initialize( )
@@ -33,18 +33,7 @@ collision_cook::collision_cook( )
 
 void collision_cook::translate_query( resources::query_result_for_cook&	parent )
 {
-	fs_new::virtual_path_string req_path_primitives		= parent.get_requested_path();
-	req_path_primitives.append("/primitives");
-
-	resources::query_resource(
-		req_path_primitives.c_str(),
-		resources::binary_config_class,
-		boost::bind	(&collision_cook::on_primitives_collision_config_loaded, this, _1, &parent ),
-		resources::unmanaged_allocator(), 
-		0, 
-		& parent, 
-		assert_on_fail_false
-	);
+	query_triangle_mesh( parent );
 }
 
 void collision_cook::query_triangle_mesh ( resources::query_result_for_cook * parent_query )
