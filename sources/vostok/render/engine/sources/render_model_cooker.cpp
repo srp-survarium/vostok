@@ -702,7 +702,7 @@ void render_model_cook::delete_resource( resources::resource_base* resource )
 
 
 composite_render_model_cook::composite_render_model_cook( )
-:super(resources::composite_render_model_class, reuse_true, use_current_thread_id)
+:super(resources::unknown_data_class, reuse_true, use_current_thread_id) // sushi@TODO: Was removed in target
 {}
 
 void composite_render_model_cook::translate_query( resources::query_result_for_cook& parent )
@@ -787,7 +787,7 @@ void composite_render_model_cook::delete_resource( resources::resource_base* res
 
 
 composite_render_model_instance_cook::composite_render_model_instance_cook( )
-:super(resources::composite_render_model_instance_class, reuse_false, use_current_thread_id)
+:super(resources::unknown_data_class, reuse_false, use_current_thread_id) // sushi@TODO: was removed in target
 {}
 
 void composite_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
@@ -795,7 +795,7 @@ void composite_render_model_instance_cook::translate_query( resources::query_res
 
 	resources::query_resource(
 		parent.get_requested_path(),
-		resources::composite_render_model_class,
+		resources::unknown_data_class, // sushi@TODO: was removed in target
 		boost::bind(&composite_render_model_instance_cook::on_sub_resources_loaded, this, _1),
 		vostok::render::g_allocator,
 		0, 
