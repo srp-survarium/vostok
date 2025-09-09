@@ -68,6 +68,7 @@ bool triangle_mesh_geometry_instance::ray_query				(
 	float3 const new_origin		= m_inverted_matrix.transform_position(origin);
 	float3 const new_direction	= m_inverted_matrix.transform_direction(direction);
 	float const new_max_distance = length(m_inverted_matrix.transform_position(origin + direction*max_distance) - new_origin);
+
 	ray_query_helper			helper(max_distance/new_max_distance, predicate );
 	if ( !m_triangle_mesh->ray_query( object, new_origin, new_direction, new_max_distance, distance, triangles, triangles_predicate_type( &helper, &ray_query_helper::predicate) ) )
 		return					false;
@@ -127,13 +128,19 @@ void triangle_mesh_geometry_instance::enumerate_primitives	( float4x4 const& tra
 	m_triangle_mesh->enumerate_primitives( get_matrix( ) * transform, cb );
 }
 
-void triangle_mesh_geometry_instance::render				( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const
+void triangle_mesh_geometry_instance::render		( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const
 {
 	render					( scene, renderer, m_matrix );
 }
 
 void triangle_mesh_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
+	m_triangle_mesh->render			( scene, renderer, transform );
+}
+
+void triangle_mesh_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
+{
+	VOSTOK_UNREFERENCED_PARAMETER	( color );
 	m_triangle_mesh->render			( scene, renderer, transform );
 }
 
