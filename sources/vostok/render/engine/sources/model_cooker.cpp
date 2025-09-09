@@ -39,7 +39,7 @@ void static_model_instance_cook::translate_query( resources::query_result_for_co
 	{
 		render_path.assignf		( "resources/composite_models/%s.composite_model/composite_render", parent.get_requested_path() );
 		collision_path.assignf	( "resources/composite_models/%s.composite_model/collision", parent.get_requested_path() );
-		needed_class_id			= resources::composite_render_model_instance_class;
+		needed_class_id			= resources::unknown_data_class; // sushi@TODO: was removed in target
 	}else
 	{
 		render_path.assignf		( "resources/models/%s.model/render", parent.get_requested_path() );
