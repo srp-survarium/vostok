@@ -16,7 +16,7 @@
 #include "triangle_mesh_geometry_instance.h"
 #include <vostok/resources_fs.h>
 
-namespace vostok{
+namespace vostok {
 namespace collision {
 
 void initialize( )
@@ -33,24 +33,14 @@ collision_cook::collision_cook( )
 
 void collision_cook::translate_query( resources::query_result_for_cook&	parent )
 {
-	fs_new::virtual_path_string req_path_primitives		= parent.get_requested_path();
-	req_path_primitives.append("/primitives");
-
-	resources::query_resource(
-		req_path_primitives.c_str(),
-		resources::binary_config_class,
-		boost::bind	(&collision_cook::on_primitives_collision_config_loaded, this, _1, &parent ),
-		resources::unmanaged_allocator(), 
-		0, 
-		& parent, 
-		assert_on_fail_false
-	);
+	query_triangle_mesh( &parent );
 }
 
 void collision_cook::query_triangle_mesh ( resources::query_result_for_cook * parent_query )
 {
-	fs_new::virtual_path_string	vertices_path = parent_query->get_requested_path();
-	fs_new::virtual_path_string	indices_path  = parent_query->get_requested_path();
+	fs_new::virtual_path_string	vertices_path = fs_new::virtual_path_string(); // sushi@TODO: target PDB file has statement here, our code doesn't
+	vertices_path = parent_query->get_requested_path();
+	fs_new::virtual_path_string	indices_path = vertices_path;
 	
 	vertices_path.append("/vertices");
 	indices_path.append ("/indices");
@@ -157,13 +147,6 @@ void collision_cook::on_triangle_mesh_collision_loaded( resources::queries_resul
 			(u32 const*)indices_reader.pointer(),
 			indices_reader.length() / sizeof(u32)
 		);
-	
-	//collision::geometry_instance_ptr resource	= &*collision::new_triangle_mesh_geometry_instance 
-	//	(
-	//		resources::unmanaged_allocator(),
-	//		float4x4().identity(),
-	//		mesh
-	//	);
 
 	parent_query->set_unmanaged_resource	( resource.c_ptr(), resources::nocache_memory, sizeof(collision::triangle_mesh_geometry) );
 	parent_query->finish_query				( result_success );
