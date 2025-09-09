@@ -38,7 +38,8 @@ void collision_cook::translate_query( resources::query_result_for_cook&	parent )
 
 void collision_cook::query_triangle_mesh ( resources::query_result_for_cook * parent_query )
 {
-	fs_new::virtual_path_string	vertices_path = parent_query->get_requested_path();
+	fs_new::virtual_path_string	vertices_path;
+	vertices_path = parent_query->get_requested_path();
 	fs_new::virtual_path_string	indices_path  = vertices_path;
 	
 	vertices_path.append("/vertices");
