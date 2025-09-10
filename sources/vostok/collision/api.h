@@ -56,7 +56,8 @@ VOSTOK_COLLISION_API	u32						get_box_geometry_instance_size			( );
 
 VOSTOK_COLLISION_API	non_null<geometry_instance>::ptr new_sphere_geometry_instance	(
 												memory::base_allocator* allocator,
-												float4x4 const& matrix
+												float4x4 const& matrix,
+												float radius
 											);
 
 VOSTOK_COLLISION_API	u32						get_sphere_geometry_instance_size		( );
@@ -64,7 +65,9 @@ VOSTOK_COLLISION_API	u32						get_sphere_geometry_instance_size		( );
 
 VOSTOK_COLLISION_API	non_null<geometry_instance>::ptr new_cylinder_geometry_instance	(
 												memory::base_allocator* allocator,
-												float4x4 const& matrix
+												float4x4 const& matrix,
+												float radius, 
+												float half_length
 											);
 
 VOSTOK_COLLISION_API	u32						get_cylinder_geometry_instance_size		( );

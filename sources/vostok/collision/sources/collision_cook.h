@@ -29,12 +29,6 @@ private:
 																resources::query_result_for_cook* parent_query );
 };
 
-namespace {
-	typedef char size_assert[
-		sizeof(collision_cook) == 0x20 ? 1 : -1
-	];
-}
-
 } // namespace collision
 } // namespace vostok
 

@@ -49,22 +49,23 @@ bool box_geometry_instance::cuboid_query		( object const* object, math::cuboid c
 
 bool box_geometry_instance::ray_query			( object const* object, math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance, ray_triangles_type& triangles, triangles_predicate_type const& predicate ) const
 {
-	if ( !ray_test( origin, direction, max_distance, distance ) )
-		return false;
-	
-	ray_triangle_result		result( object, u32(-1), distance );
-	predicate( result );
-	triangles.push_back( result );
+	VOSTOK_UNREFERENCED_PARAMETER	( predicate );
+	float3 const new_origin		= m_inverted_matrix.transform_position(origin);
+	float3 const new_direction	= m_inverted_matrix.transform_direction(direction);
+	float const new_max_distance = length(m_inverted_matrix.transform_position(origin + direction*max_distance) - new_origin);
+
+	bool const ray_test_succeeded	= ray_test( new_origin, new_direction, new_max_distance, distance );
+	if ( ray_test_succeeded )
+		triangles.push_back		( ray_triangle_result( object, u32(-1), distance ) );
+
+	if ( !ray_test_succeeded )
+		return			false;
 
 	return				true;
 }
 
 bool box_geometry_instance::aabb_test			( math::aabb const& aabb ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETER	(aabb);
-	return true;
-
-#if 0
 	return
 		math::cuboid( aabb, m_inverted_matrix ).test_inexact	( 
 			math::create_aabb_center_radius	(
@@ -72,16 +73,10 @@ bool box_geometry_instance::aabb_test			( math::aabb const& aabb ) const
 				float3( 1.f, 1.f, 1.f )
 			)
 		) != math::intersection_outside;
-#endif
 }
 
 bool box_geometry_instance::cuboid_test			( math::cuboid const& cuboid ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETER	(cuboid);
-	return true;
-
-	// sushi@NOTE: Removed most likely because the test is redundant at the checking point
-#if 0
 	return
 		math::cuboid( cuboid, m_inverted_matrix ).test_inexact	( 
 			math::create_aabb_center_radius	(
@@ -89,7 +84,6 @@ bool box_geometry_instance::cuboid_test			( math::cuboid const& cuboid ) const
 				float3( 1.f, 1.f, 1.f )
 			)
 		) != math::intersection_outside;
-#endif
 }
 
 bool box_geometry_instance::ray_test			( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
@@ -130,14 +124,8 @@ void box_geometry_instance::render				( render::scene_ptr const& scene, render::
 	render		( scene, renderer, m_matrix );
 }
 
-void box_geometry_instance::render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void box_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
-	renderer.draw_cube	( scene, transform, float3( 1.f, 1.f, 1.f ), math::color( 255u, 255u, 255u, 255u ) );
-}
-
-void box_geometry_instance::render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
-{
-	renderer.draw_cube_solid ( scene, transform, float3( 1.f, 1.f, 1.f ), color );	
 	renderer.draw_cube	( scene, transform, float3( 1.f, 1.f, 1.f ), math::color( 255u, 255u, 255u, 255u ) );
 }
 

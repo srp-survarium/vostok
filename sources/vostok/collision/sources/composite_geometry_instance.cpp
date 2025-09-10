@@ -11,9 +11,9 @@
 namespace vostok {
 namespace collision {
 
-class ray_query_helper : private boost::noncopyable {
+class composite_ray_query_helper : private boost::noncopyable {
 public:
-	inline		ray_query_helper				(
+	inline		composite_ray_query_helper				(
 			float const	factor,
 			triangles_predicate_type const& predicate
 		) :
@@ -40,7 +40,7 @@ private:
 	triangles_predicate_type const& m_predicate;
 	float const						m_factor;
 	float							m_min_distance;
-}; // class ray_query_helper
+}; // class composite_ray_query_helper
 
 composite_geometry_instance::composite_geometry_instance	( memory::base_allocator* allocator, float4x4 const& matrix, non_null<composite_geometry const>::ptr geometry ) :
 	m_matrix			( matrix ),
@@ -86,24 +86,13 @@ bool composite_geometry_instance::ray_query			( object const* object, math::floa
 	float3 const new_direction	= m_inverted_matrix.transform_direction(direction);
 	float new_max_distance		= length(m_inverted_matrix.transform_position(origin + direction*max_distance) - new_origin);
 	
-	ray_query_helper			helper(max_distance/new_max_distance, predicate );
+	composite_ray_query_helper			helper(max_distance/new_max_distance, predicate );
 
 	bool res = false;
 	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
-	for ( s32 id = 0; i != e; ++i, id += 4 )
-	{
-		u32  ray_triangle_result_count = triangles.size();
-		if ( (*i)->ray_query	( object, new_origin, new_direction, max_distance, new_max_distance, triangles, triangles_predicate_type( &helper, &ray_query_helper::predicate) ) )
-		{
-			res = true;
-			u32  ray_triangle_result_count_new = triangles.size();
-			for ( u32 j = ray_triangle_result_count ; j < ray_triangle_result_count_new ; ++j )
-			{
-				triangles[j].triangle_id = id >> 2;
-			}
-		}
-	}
-
+	for ( ; i != e; ++i )
+		res = (*i)->ray_query	( object, new_origin, new_direction, max_distance, new_max_distance, triangles, triangles_predicate_type( &helper, &composite_ray_query_helper::predicate) ) || res;
+	
 	distance					= helper.min_distance();
 	return res;
 }
@@ -183,23 +172,13 @@ void composite_geometry_instance::render			( render::scene_ptr const& scene, ren
 	render			( scene, renderer, m_matrix );
 }
 
-void composite_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void composite_geometry_instance::render	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
 	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
 	for ( ; i != e; ++i )
 	{
 		float4x4 m = (*i)->get_matrix() * transform;
 		(*i)->render( scene, renderer, m );
-	}
-}
-
-void composite_geometry_instance::render			( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
-{
-	vectora< geometry_instance* >::const_iterator i = m_geometry->begin(), e = m_geometry->end();
-	for ( ; i != e; ++i )
-	{
-		float4x4 m = (*i)->get_matrix() * transform;
-		(*i)->render( scene, renderer, m, color );
 	}
 }
 

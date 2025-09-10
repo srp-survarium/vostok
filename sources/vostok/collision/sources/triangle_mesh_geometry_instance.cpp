@@ -128,19 +128,13 @@ void triangle_mesh_geometry_instance::enumerate_primitives	( float4x4 const& tra
 	m_triangle_mesh->enumerate_primitives( get_matrix( ) * transform, cb );
 }
 
-void triangle_mesh_geometry_instance::render		( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const
+void triangle_mesh_geometry_instance::render				( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const
 {
 	render					( scene, renderer, m_matrix );
 }
 
 void triangle_mesh_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
-	m_triangle_mesh->render			( scene, renderer, transform );
-}
-
-void triangle_mesh_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
-{
-	VOSTOK_UNREFERENCED_PARAMETER	( color );
 	m_triangle_mesh->render			( scene, renderer, transform );
 }
 

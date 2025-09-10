@@ -14,8 +14,9 @@
 namespace vostok {
 namespace collision {
 
-sphere_geometry_instance::sphere_geometry_instance	( float4x4 const& matrix ) : 
-	m_matrix			( matrix )
+sphere_geometry_instance::sphere_geometry_instance	( float4x4 const& matrix, float radius ) : 
+	m_matrix			( matrix ),
+	m_radius			( radius )
 { }
 
 sphere_geometry_instance::~sphere_geometry_instance	( )
@@ -33,25 +34,11 @@ bool sphere_geometry_instance::cuboid_query			( object const* object, math::cubo
 	return false; 
 }
 
-bool sphere_geometry_instance::ray_query			(
-	object const*					object,
-	math::float3 const&				origin,
-	math::float3 const&				direction,
-	float							max_distance,
-	float&							distance,
-	ray_triangles_type&				triangles, 
-	triangles_predicate_type const&	predicate ) const
+bool sphere_geometry_instance::ray_query			( object const* object, math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance, ray_triangles_type& triangles, triangles_predicate_type const& predicate ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( object, &origin, &direction, max_distance, distance, &triangles, &predicate );
 
-	if ( !ray_test( origin, direction, max_distance, distance ) )
-		return false;
-
-	ray_triangle_result		result( object, u32(-1), distance );
-	predicate( result );
-	triangles.push_back( result );
-
-	return true;
+	return ray_test( origin, direction, max_distance, distance );
 }
 
 bool sphere_geometry_instance::aabb_test			( math::aabb const& aabb ) const
@@ -71,7 +58,7 @@ bool sphere_geometry_instance::ray_test				( math::float3 const& origin, math::f
 	float3 const& to_sphere			= m_matrix.c.xyz( ) - origin;
 	float const projection_squared_length	= math::sqr( to_sphere | direction );
 	float const squared_distance	= to_sphere.squared_length( ) - projection_squared_length;
-	float const squared_radius		= math::sqr(radius_unit());
+	float const squared_radius		= math::sqr(m_radius);
 	if ( squared_distance > squared_radius )
 		return						false;
 
@@ -84,7 +71,7 @@ math::aabb sphere_geometry_instance::get_aabb			( ) const
 	math::aabb tmp				= math::create_aabb_center_radius	
 								( 
 									float3( 0.f, 0.f, 0.f ),
-									float3( radius_unit(), radius_unit(), radius_unit() )
+									float3( m_radius, m_radius, m_radius )
 								);
 	return						tmp.modify( m_matrix );
 }
@@ -94,7 +81,7 @@ math::aabb sphere_geometry_instance::get_geometry_aabb	( ) const
 	return						math::create_aabb_center_radius	
 								( 
 									float3( 0.f, 0.f, 0.f ),
-									float3( radius_unit(), radius_unit(), radius_unit() )
+									float3( m_radius, m_radius, m_radius )
 								);
 }
 
@@ -108,25 +95,19 @@ void sphere_geometry_instance::render					( render::scene_ptr const& scene, rend
 	render		( scene, renderer, m_matrix );
 }
 
-void sphere_geometry_instance::render					( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
+void sphere_geometry_instance::render		( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const
 {
-	renderer.draw_sphere		( scene, math::create_translation(transform.c.xyz()), radius(), math::color( 255u, 255u, 255u, 255u ) );
-}
-
-void sphere_geometry_instance::render					( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
-{
-	renderer.draw_sphere_solid	( scene, transform.c.xyz(), radius(), color );
-	renderer.draw_sphere		( scene, math::create_translation(transform.c.xyz()), radius(), math::color( 255u, 255u, 255u, 255u ) );
+	renderer.draw_sphere( scene, transform.c.xyz(), m_radius, math::color( 255u, 255u, 255u, 255u ) );
 }
 
 void sphere_geometry_instance::enumerate_primitives		( enumerate_primitives_callback& cb ) const
 {
-	cb.enumerate( float4x4().identity(), primitive( sphere( radius() ) ) );
+	cb.enumerate( float4x4().identity(), primitive( sphere( m_radius ) ) );
 }
 
 void sphere_geometry_instance::enumerate_primitives		( float4x4 const& transform, enumerate_primitives_callback& cb ) const
 {
-	cb.enumerate( transform, primitive( sphere( radius() ) ) );
+	cb.enumerate( transform, primitive( sphere( m_radius ) ) );
 }
 
 void sphere_geometry_instance::add_triangles		( triangles_type& triangles ) const
@@ -163,14 +144,14 @@ u32 sphere_geometry_instance::index_count				( ) const
 
 float sphere_geometry_instance::get_surface_area		( ) const
 {
-	return 4 * math::pi * math::sqr( radius() );
+	return 4 * math::pi * math::sqr( m_radius );
 }
 
 float3 sphere_geometry_instance::get_random_surface_point( math::random32& randomizer ) const
 {
-	float const z_random		= -radius() + randomizer.random_f( 2.f * radius() );
+	float const z_random		= -m_radius + randomizer.random_f( 2.f * m_radius );
 	float const teta_angle		= randomizer.random_f( math::pi_x2 );
-	float const r_coefficient	= math::sqrt( math::sqr( radius() ) - math::sqr( z_random ) );
+	float const r_coefficient	= math::sqrt( math::sqr( m_radius ) - math::sqr( z_random ) );
 	float const x_random		= r_coefficient * math::cos( teta_angle );
  	float const y_random		= r_coefficient * math::sin( teta_angle );
 
@@ -183,11 +164,11 @@ float3 sphere_geometry_instance::get_closest_point_to	( float3 const& point, flo
 	float3 position				= transform.c.xyz();
 	float3 direction			= point - position;
 
-	if ( direction.squared_length( ) < radius_unit() )
+	if ( direction.squared_length( ) < m_radius*m_radius )
 		return point;
 
 	float3 result				= direction.normalize();
-	// result						*= m_radius; // * 1.0
+	result						*= m_radius;
 	result						+= position;
 	return						result;
 }

@@ -40,8 +40,6 @@ public:
 	virtual	bool			is_valid				( ) const;
 	virtual	void			render					( render::scene_ptr const& scene, render::debug::renderer& renderer ) const;
 	virtual	void			render					( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
-	virtual void			render					( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const;
-
 
 	virtual	void			enumerate_primitives	( enumerate_primitives_callback& cb ) const;
 	virtual	void			enumerate_primitives	( float4x4 const& transform, enumerate_primitives_callback& cb ) const;
@@ -64,12 +62,6 @@ private:
 	float4x4	m_matrix;
 	float4x4	m_inverted_matrix;
 }; // class box_geometry_instance
-
-namespace {
-	typedef char size_assert[
-		sizeof(box_geometry_instance) == 0x88 ? 1 : -1
-	];
-}
 
 } // namespace collision
 } // namespace vostok

@@ -17,6 +17,8 @@
 namespace vostok{
 namespace collision	{
 
+float3 closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement );
+
 static float3 const cuboid_vertices[] = {
 	float3( -1.f, -1.f, -1.f ),
 	float3( -1.f, -1.f, +1.f ),

@@ -97,18 +97,21 @@ non_null<geometry_instance>::ptr new_box_geometry_instance		(
 
 non_null<geometry_instance>::ptr new_sphere_geometry_instance		(
 												memory::base_allocator* allocator,
-												float4x4 const& matrix
+												float4x4 const& matrix,
+												float radius
 											)
 {
-	return VOSTOK_NEW_IMPL( allocator, sphere_geometry_instance ) ( matrix );
+	return VOSTOK_NEW_IMPL( allocator, sphere_geometry_instance ) ( matrix, radius );
 }
 
 non_null<geometry_instance>::ptr new_cylinder_geometry_instance		(
 												memory::base_allocator* allocator,
-												float4x4 const& matrix
+												float4x4 const& matrix,
+												float radius, 
+												float half_length
 											)
 {
-	return VOSTOK_NEW_IMPL( allocator, cylinder_geometry_instance ) ( matrix );
+	return VOSTOK_NEW_IMPL( allocator, cylinder_geometry_instance ) ( matrix, radius, half_length );
 }
 
 non_null<geometry_instance>::ptr new_terrain_geometry_instance	( 
