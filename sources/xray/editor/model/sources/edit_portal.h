@@ -19,7 +19,7 @@ namespace collision {
 namespace model_editor {
 
 ref class unique_name_helper;
-ref class edit_object_mesh;
+ref class edit_object_solid_mesh;
 class portal_vertex_collision;
 class portal_collision_object;
 
@@ -50,8 +50,8 @@ public:
 	typedef System::Collections::Generic::IList<edit_portal^> portal_ilist;
 	enum class vertex_edit_mode { edit_portal_mode_free_vertices, edit_portal_mode_fit_to_plane, edit_portal_mode_fit_to_vertex };
 
-								edit_portal							( edit_object_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, configs::lua_config_value const& cfg  );
-								edit_portal							( edit_object_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, System::String^ name );
+								edit_portal							( edit_object_solid_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, configs::lua_config_value const& cfg  );
+								edit_portal							( edit_object_solid_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, System::String^ name );
 								~edit_portal						( );
 	property System::String^ Name
 	{
@@ -102,7 +102,7 @@ private:
 	void						delete_vertex_impl					( u32 index );
 	bool						delete_first_selected_vertex		( );
 	u32							get_picked_vertex_index				( );
-	edit_object_mesh^			m_parent_object; 
+	edit_object_solid_mesh^		m_parent_object; 
 	unique_name_helper^			m_unique_name_helper;
 	portal_ilist^				m_instances;
 	System::String^				m_name;

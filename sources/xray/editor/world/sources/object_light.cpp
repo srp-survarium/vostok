@@ -8,6 +8,7 @@
 #include "object_light.h"
 #include "tool_light.h"
 #include <xray/editor/base/collision_object_types.h>
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #include <xray/collision/collision_object.h>
@@ -60,12 +61,6 @@ object_light::~object_light( )
 	destroy_collision				( );
 
 	DELETE					( m_scene );
-}
-
-void object_light::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( g_allocator );
 }
 
 void object_light::load_defaults( )
@@ -175,17 +170,8 @@ void object_light::save( configs::lua_config_value t )
 	t["is_shadower"]				= m_is_shadower;
 }
 
-//!
-//void object_light::update_collision_transform( )
-//{
-//	float4x4 m = create_translation(get_position());
-//	m_collision->set_matrix		( &m );
-//}
-
 void object_light::initialize_collision( )
 {
-	ASSERT( !m_collision->initialized() );
-
 	m_collision->create_from_geometry	(
 					false,
 					this,
@@ -195,7 +181,7 @@ void object_light::initialize_collision( )
 	m_collision->insert			( m_transform );
 }
 
-void object_light::unload_contents	( bool bdestroy )
+void object_light::unload_contents( bool bdestroy )
 {
 	XRAY_UNREFERENCED_PARAMETERS	( bdestroy );
 

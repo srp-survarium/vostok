@@ -14,13 +14,21 @@
 #include <xray/logging_settings.h>
 #include <xray/fs_path.h>
 #include <xray/fs_utils.h>
+#include <xray/console_command.h>
 
 static xray::command_line::key	s_use_console("console", "", "logging", "turns on console output");
 static xray::command_line::key	s_log_to_stdout("log_to_stdout", "", "logging", "turns on writing to stdout");
 
+static xray::core::log_file_usage s_log_file_usage	=	xray::core::uninitialized_log;
+
+xray::core::log_file_usage	 get_log_file_usage ()
+{
+	return						s_log_file_usage;
+}
+
 xray::memory::doug_lea_allocator_type xray::logging::g_allocator;
 
-typedef std::pair<char*, int>					initiator_rule;
+typedef std::pair<char*, std::pair<int, u32> >	initiator_rule;
 typedef xray::logging::vector<initiator_rule>	rules_stack;
 
 using xray::logging::rule_tree::node;
@@ -37,6 +45,121 @@ static xray::uninitialized_reference<mutex>	s_log_mutex;
 
 namespace xray {
 namespace logging {
+
+class cc_logging_rule : public console_commands::console_command
+{
+	typedef console_commands::console_command	super;
+public:
+						cc_logging_rule			( pcstr name );
+	virtual void		execute					( pcstr args );
+	virtual void		save_to					( console_commands::save_storage& f, memory::base_allocator* a)	const;
+} g_cc_logging_rule("logging_rule");// class cc_logging_rule
+
+pcstr verbosity_to_str_str[] ={
+	"", // reserved
+	"silent",
+	"error",
+	"warning",
+	"info",
+	"debug",
+	"trace",
+	NULL,
+};
+
+verbosity string_to_value( pcstr item )
+{
+	u32 idx = 1;
+	while( verbosity_to_str_str[idx] )
+	{
+		if(0==strings::compare(verbosity_to_str_str[idx], item))
+			return (verbosity)idx;
+
+		++idx;
+	}
+	return invalid; // not found
+}
+
+cc_logging_rule::cc_logging_rule( pcstr name )
+:super		( name, true, console_commands::command_type_user_specific )
+{
+	m_need_args = true;
+}
+
+void cc_logging_rule::execute( pcstr args )
+{
+	string512			rule;
+	pcstr s				= strings::get_token( args, rule, ' ' );
+	
+	if(s==NULL)
+	{
+		on_invalid_syntax	( args );
+		return;
+	}
+	string512			verb;
+	strings::get_token	( s, verb, ' ' );
+
+	xray::logging::verbosity t_verb = string_to_value(verb);
+	if( t_verb==xray::logging::invalid )
+	{
+		on_invalid_syntax	( args );
+		return;
+	}
+
+	push_rule					( rule, t_verb );
+}
+
+struct rule_name_eq
+{
+	rule_name_eq( pcstr s ):name(s){}
+	
+	bool operator () (const initiator_rule& item) const
+	{
+		return 0==strings::compare(item.first, name);
+	}
+private:
+	pcstr name;
+};
+
+void cc_logging_rule::save_to( console_commands::save_storage& f, memory::base_allocator* a) const
+{
+	typedef vectora<initiator_rule>		rules_vec;
+	rules_vec							uniq(a);
+	
+	rules_stack::const_iterator it		= (*s_rules_stack).begin();
+	rules_stack::const_iterator it_e	= (*s_rules_stack).end();
+	for(; it!=it_e; ++it)
+	{
+		rules_vec::iterator found = std::find_if(uniq.begin(), uniq.end(), rule_name_eq(it->first) );
+		if(found!=uniq.end())
+		{
+			initiator_rule& rule	= *found;
+			rule.second				= it->second;
+		}else
+			uniq.push_back(*it);
+	}
+	
+	u32 max_length			= 0;
+	rules_vec::const_iterator uit_b		= uniq.begin();
+	rules_vec::const_iterator uit_e		= uniq.end();
+	for ( rules_vec::const_iterator uit = uit_b; uit != uit_e; ++uit )
+	{
+		pcstr rule_str		= (*uit).first;
+		pcstr verbosity_str = verbosity_to_str_str[(*uit).second.first];
+		u32 const length_to_test	= strings::length(rule_str) + strings::length(verbosity_str);
+		if ( length_to_test > max_length )
+			max_length		= length_to_test;
+	}
+
+	u32 const buffer_size	= (max_length + strings::length( name() ) + 3)*sizeof(char);
+	pstr const out_str		= static_cast<pstr>( ALLOCA( buffer_size ) );
+	for ( rules_vec::const_iterator uit = uit_b; uit != uit_e; ++uit )
+	{
+		pcstr rule_str		= (*uit).first;
+		pcstr verbosity_str = verbosity_to_str_str[(*uit).second.first];
+		strings::join		( out_str, buffer_size, name(), " ", rule_str, " ", verbosity_str );
+		f.add_line			( out_str );
+	}
+}
 
 mutex&	get_log_mutex							( )
 {
@@ -117,6 +240,7 @@ void   generate_log_file_name (xray::fs::path_string * out_result, pcstr extensi
 	ASSERT						(extension);
 	ASSERT						(out_result);
 	* out_result				=  xray::core::user_data_directory();
+	* out_result				+= "/";
 	* out_result				+= xray::core::application_name();
 	xray::fs::path_string user_name	=	xray::core::user_name();
 	if ( user_name.length() )
@@ -131,6 +255,8 @@ void xray::logging::initialize					( core::log_file_usage log_file_usage, int co
 	check_not_ready_for_use		( );
 
 	XRAY_CONSTRUCT_REFERENCE	( s_log_mutex, mutex );
+
+	s_log_file_usage			= log_file_usage;
 
 	ASSERT						( !s_log_file );
 	if ( log_file_usage != core::no_log ) {
@@ -202,14 +328,14 @@ static void build_tree							( )
 	rules_stack::iterator		i = s_rules_stack->begin( );
 	rules_stack::iterator		e = s_rules_stack->end( );
 	for ( ; i != e; ++i )
-		s_initiator_tree->set	( ( *i ).first, ( *i ).second );
+		s_initiator_tree->set	( ( *i ).first, ( *i ).second.first, ( *i ).second.second );
 }
 
-void xray::logging::push_rule			( pcstr initiator, int const verbosity )
+void xray::logging::push_rule			( pcstr initiator, int const verbosity, u32 const thread_id )
 {
 	ready_for_use_guard			guard;
 
-	ASSERT						( s_rules_stack );
+	R_ASSERT					( s_rules_stack );
 	if ( !initiator )
 		initiator				= "";
 
@@ -221,12 +347,13 @@ void xray::logging::push_rule			( pcstr initiator, int const verbosity )
 	rule.first					= LOG_ALLOC( char, initiator_len + 1 );
 	get_log_mutex().unlock		( );
 
-	strings::copy					( rule.first, initiator_len + 1, initiator );
+	strings::copy				( rule.first, initiator_len + 1, initiator );
 
-	rule.second					= verbosity;
+	rule.second.first			= verbosity;
+	rule.second.second			= thread_id;
 
 	get_log_mutex().lock		( );
-
+	g_allocator.user_current_thread_id( );
 	s_rules_stack->push_back	( rule );	
 	build_tree					();
 
@@ -360,6 +487,13 @@ xray::logging::log_file* xray::logging::get_log_file( )
 	return						( s_log_file );
 }
 
+namespace xray {
+	namespace fs {
+		FILE * file_type_to_FILE(xray::fs::file_type * file);
+	} // namespace fs
+} // namespace xray
+
+
 void   xray::logging::write_exit_code_file ( int exit_code )
 {
 	if ( !get_log_file() )
@@ -368,10 +502,10 @@ void   xray::logging::write_exit_code_file ( int exit_code )
 	fs::path_string				file_name;
 	generate_log_file_name		(& file_name, "exit_code");
 
-	FILE * file				=	NULL;
+	fs::file_type * file		=	NULL;
 	if ( fs::open_file(& file, fs::open_file_create | fs::open_file_truncate | fs::open_file_write, file_name.c_str()) )
 	{
-		fprintf						(file, "%d", exit_code);
-		fclose						(file);
+		fprintf					(fs::file_type_to_FILE(file), "%d", exit_code);
+		fs::close_file			(file);
 	}
 }

@@ -10,13 +10,12 @@
 #include "level_editor.h"
 #include "window_ide.h"
 #include "editor_world.h"
-#include "le_transform_control_helper.h"
 #include "object_inspector_tab.h"
 #include "project_tab.h"
 #include "tools_tab.h"
 #include "project.h"
-#include "project_items.h"
 #include "input_actions.h"
+#include "object_collision.h"
 
 #include "object_patrol_graph_complete_graph_action.h"
 #include "object_patrol_graph_delete_part_action.h"
@@ -30,9 +29,9 @@
 #include "object_patrol_graph_look_point.h"
 
 #include <xray/editor/base/collision_object_types.h>
-#include <xray/geometry_primitives.h>
 
 #pragma managed( push, off )
+#	include<xray/geometry_primitives.h>
 #	include <xray/render/facade/debug_renderer.h>
 #	include <xray/collision/space_partitioning_tree.h>
 #	include <xray/collision/geometry.h>
@@ -169,12 +168,6 @@ void object_patrol_graph::save ( configs::lua_config_value t )
 }
 
 
-
-void object_patrol_graph::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( &debug::g_mt_allocator );
-}
 
 aabb object_patrol_graph::get_aabb ( )
 {
@@ -390,7 +383,6 @@ void object_patrol_graph::render ( )
 
 				get_debug_renderer( ).draw_sphere_solid	( get_editor_world( ).scene( ), vertex.position, 0.5f, ( look_point == m_selected_graph_part ) ? alpha_color_selected : alpha_color );
 				get_debug_renderer( ).draw_circle( get_editor_world( ).scene( ), transform, float3( 0.5f, 0.5f, 0.5f ), white_color );
-				get_debug_renderer( ).draw_circle( get_editor_world( ).scene( ), create_translation( vertex.position ), float3( 0.5f, 0.5f, 0.5f ), white_color );
 			}
 		}
 
@@ -431,7 +423,14 @@ List<String^>^ object_patrol_graph::get_signals_list ( )
 	for each( node^ n in m_nodes )
 	{
 		if ( n->signal != nullptr && n->signal != "" && !ret_lst->Contains( n->signal ) )
-			ret_lst->Add( n->signal );		
+			ret_lst->Add( n->signal );	
+		for each( look_point^ lp in n->look_points )
+		{
+			if ( lp->signal_on_end != nullptr && lp->signal_on_end != "" && !ret_lst->Contains( lp->signal_on_end ) )
+				ret_lst->Add( lp->signal_on_end );	
+			if ( lp->signal_on_begin != nullptr && lp->signal_on_begin != "" && !ret_lst->Contains( lp->signal_on_begin ) )
+				ret_lst->Add( lp->signal_on_begin );	
+		}
 	}
 	return ret_lst;
 }
@@ -552,7 +551,7 @@ void object_patrol_graph::init_collision ( )
 	ASSERT						( !m_collision->initialized( ) );
 	float3 extents				( 0.3f,0.3f,0.3f );
 
-	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( &debug::g_mt_allocator, math::create_scale( extents ) );
+	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( g_allocator, math::create_scale( extents ) );
 	m_collision->create_from_geometry( true, this, geom, editor_base::collision_object_type_dynamic | editor_base::collision_object_type_touch );
 	m_collision->insert			( m_transform );
 }

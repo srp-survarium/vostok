@@ -32,6 +32,7 @@ struct statistics_group: public boost::noncopyable
 					~statistics_group	();
 	u32				render				(xray::ui::world& ui_world, u32 x, u32 y);
 	void			start				();
+	void			clear				();
 	u32				get_num_text_lines	() const;
 	statistics_base*					first_statistics;
 	
@@ -48,7 +49,7 @@ struct statistics_base: public boost::noncopyable
 					~statistics_base	();
 	virtual void	print				(fs_new::virtual_path_string& out_result) = 0;
 	virtual void	start				() = 0;
-	
+	virtual void	clear				() {};
 protected:
 	friend struct						statistics_group;
 	xray::fixed_string<128>				m_name;
@@ -61,6 +62,7 @@ template< class T > struct statistics_value: public statistics_base
 					statistics_value	(statistics_group* group, pcstr name);
 	virtual void	start				();
 	virtual void	print				(fs_new::virtual_path_string& out_result) = 0;
+	virtual void	clear				();
 			T		average				();
 	
 	T									value;
@@ -275,6 +277,15 @@ struct lpv_statistics_group: public statistics_group
 	statistics_cpu_gpu					rsm_rendering_time;
 };
 
+struct grass_statistics_group: public statistics_group
+{
+	grass_statistics_group				(pcstr group_name);
+	
+	statistics_int						num_total_patches;
+	statistics_int						num_rendered_patches;
+	statistics_int						num_visible_patches;
+}; // struct grass_statistics_group
+
 class statistics: public quasi_singleton<statistics>
 {
 public:
@@ -282,6 +293,7 @@ public:
 	~statistics								();
 	void start								();
 	void render								(xray::ui::world& ui_world, u32 x, u32 y);
+	void clear								();
 	u32 get_num_text_lines					() const;
 	statistics_group*						first_group;
 	
@@ -293,6 +305,7 @@ public:
 	speedtree_statistics_group				speedtree_stat_group;
 	forward_stage_statistics_group			forward_stage_stat_group;
 	cascaded_sun_shadow_statistics_group	cascaded_sun_shadow_stat_group;
+	grass_statistics_group					grass_stat_group;
 	gbuffer_statistics_group				gbuffer_stat_group;
 	forward_decals_statistics_group			forward_decals_stat_group;
 	lpv_statistics_group					lpv_stat_group;

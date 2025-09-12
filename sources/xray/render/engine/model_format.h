@@ -41,6 +41,7 @@ enum mesh_type_enum {
 	mt_skinned_submesh_2w	= 45,
 	mt_skinned_submesh_3w	= 46,
 	mt_skinned_submesh_4w	= 47,
+	mt_grass_mesh			= 200,
 }; // enum mesh_type_enum
 
 // quantization helpers

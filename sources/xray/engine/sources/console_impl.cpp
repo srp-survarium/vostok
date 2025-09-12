@@ -177,12 +177,12 @@ struct dialog_guard :private boost::noncopyable
 		m_ui_window.draw(m_ui_renderer, m_scene_view);
 	}
 private:	
-	ui::window&				m_ui_window;
-	render::ui::renderer&	m_ui_renderer;
-	render::scene_view_ptr	m_scene_view;
+	ui::window&						m_ui_window;
+	render::ui::renderer&			m_ui_renderer;
+	render::scene_view_ptr const&	m_scene_view;
 };
 
-void console_impl::tick( )
+void console_impl::tick( render::scene_view_ptr const& scene_view )
 {
 	ASSERT (get_active() );
 
@@ -191,7 +191,7 @@ void console_impl::tick( )
 	logging::log_file* l				= logging::get_log_file();
 
 	logging_transaction		transaction		( l );
-	dialog_guard			dialog_updater	( *m_ui_dialog->w(), m_ui_world.get_renderer(), m_ui_world.get_scene_view() );
+	dialog_guard			dialog_updater	( *m_ui_dialog->w(), m_ui_world.get_renderer(), scene_view );
 	u32 log_cnt								= l->get_lines_count();
 	if(log_cnt==0)
 		return;

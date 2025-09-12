@@ -9,16 +9,13 @@
 
 #include "project_defines.h"
 #include "objects_library.h"
-#include <xray/render/engine/base_classes.h>
 
 namespace xray {
+
 namespace editor {
 
-ref class level_editor;
-ref class tool_base;
 ref class window_ide;
 interface class tool_tab;
-class editor_world;
 
 public ref class tool_base abstract
 {

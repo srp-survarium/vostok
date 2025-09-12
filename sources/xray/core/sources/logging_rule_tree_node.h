@@ -21,7 +21,7 @@ class node : private boost::noncopyable {
 public:
 	inline	explicit	node			(int rule) : m_verbosity(rule) {}
 						~node			();
-			void		set				(pcstr initiator_path, int rule);
+			void		set				(pcstr initiator_path, int verbosity, u32 thread_id);
 	inline	int			get_verbosity	(path_parts* path) { return get_verbosity(path, silent); }
 			void		clean			();
 
@@ -48,8 +48,10 @@ private:
 	typedef associative_vector<pcstr, node*, vector, compare_predicate> Folder;
 
 private:
-	Folder	m_folder;
-	int		m_verbosity;
+	Folder				m_folder;
+	threading::mutex	m_mutex;
+	int					m_verbosity;
+	u32					m_thread_id;
 }; // class node
 
 } // namespace rule_tree

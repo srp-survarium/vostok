@@ -10,6 +10,7 @@
 #include "event_manager.h"
 #include "object_scene.h"
 #include <xray/math_randoms_generator.h>
+#include "game_world.h"
 
 namespace stalker2 {
 
@@ -99,20 +100,22 @@ static math::random32 random(100500);
 void action_filtered_set_object_behaviour::execute( game_event const& e )
 {
 	XRAY_UNREFERENCED_PARAMETER	( e );
+	
+	random.seed( m_job->get_game_world().game_time_ms() );
 
 	object_behaviour* new_behaviour = NULL;
 
-	u32 random_value = random.random( 100 );
+	float random_value = random.random_f( 100.f );
 	
 	configs::binary_config_value::const_iterator behaviours_it		= m_action_data["behaviours"].begin( );
 	configs::binary_config_value::const_iterator behaviours_it_end	= m_action_data["behaviours"].end( );
 	
-	u32 prev_val = 0;
-	u32 next_val = 0;
+	float prev_val = 0.f;
+	float next_val = 0.f;
 	pcstr current_behaviour = NULL;
 	for ( ; behaviours_it != behaviours_it_end ; ++behaviours_it )
 	{
-		next_val = u32(*behaviours_it) + prev_val;
+		next_val = float(*behaviours_it) + prev_val;
 		current_behaviour = behaviours_it->key();
 		if ( random_value >= prev_val && random_value <= next_val ){
 			new_behaviour = m_job->get_behaviour( current_behaviour );		

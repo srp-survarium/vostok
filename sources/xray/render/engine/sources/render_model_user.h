@@ -47,6 +47,8 @@ public:
 	virtual math::aabb	get_aabb					( ) { return m_surface->m_aabbox; }
 			void		assign_surface				( user_render_surface* surface ); 
 	virtual void		get_surfaces				( render_surface_instances&, bool visible_only );
+	virtual u32			get_surfaces_count			( ) const {return 1;}
+	virtual void		get_surface_stats			( u32 surface_id, surface_stats& stats ) const;
 
 	user_render_surface*		m_surface;
 	render_surface_instance		m_surface_instance;

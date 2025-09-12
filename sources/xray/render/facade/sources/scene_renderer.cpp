@@ -394,12 +394,12 @@ void scene_renderer::update_speedtree_instance( scene_ptr const& scene, xray::re
 }
 
 #ifndef MASTER_GOLD
-void scene_renderer::draw_render_statistics( xray::ui::world& ui_world )
+void scene_renderer::draw_render_statistics( xray::ui::world& ui_world, xray::render::scene_view_ptr const& scene )
 {
 	m_channel.owner_push_back	(
 		XRAY_NEW_IMPL( m_allocator, functor_command ) (
 			boost::bind( &xray::render::engine::world::draw_render_statistics, &m_render_engine_world, &ui_world),
-			boost::bind( &render::defer_execution, _1, ui_world.get_scene_view() )
+			boost::bind( &render::defer_execution, _1, scene )
 		)
 	);
 }

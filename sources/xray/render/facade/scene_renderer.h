@@ -136,7 +136,7 @@ public:
 	void			set_sky_material				( scene_ptr const& scene, xray::resources::unmanaged_resource_ptr const& mtl_ptr);
 	
 #ifndef MASTER_GOLD
-	void			draw_render_statistics			( xray::ui::world& ui_world );
+	void			draw_render_statistics			( xray::ui::world& ui_world, render::scene_view_ptr const& scene );
 #endif // #ifndef MASTER_GOLD
 
 private:

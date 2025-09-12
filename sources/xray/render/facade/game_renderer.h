@@ -11,6 +11,11 @@
 #include <xray/render/engine/base_classes.h>
 #include <xray/render/engine/vertex_colored.h>
 
+namespace stalker2
+{
+	struct flash_movie;
+}
+
 namespace xray {
 
 namespace particle	{
@@ -71,6 +76,9 @@ public:
 	debug::renderer& debug	( ) const;
 	ui::renderer& ui		( ) const;
 	scene_renderer& scene	( ) const;
+
+	void	show_movie		( render_output_window_ptr const& render_output_window, stalker2::flash_movie* movie );
+	void	hide_movie		( render_output_window_ptr const& render_output_window, stalker2::flash_movie* movie );
 
 	void	draw_scene		(
 				scene_ptr const& scene,

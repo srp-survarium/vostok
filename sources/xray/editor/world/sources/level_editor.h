@@ -175,7 +175,8 @@ private:
 			bool			camera_view_panel_visible		( );
 			bool			scene_graph_visible				( );
 			bool			triangulation_tester_visible	( );
-			
+			void			gather_project_statistic_action	( );
+
 			void			toggle_debug_renderer_enabled	( )		{ m_debug_renderer_enabled =!m_debug_renderer_enabled; }
 			bool			debug_renderer_enabled			( )		{ return m_debug_renderer_enabled;}
 

@@ -9,12 +9,10 @@
 
 #include "object_base.h"
 
-#include <xray/render/engine/base_classes.h>
-
 namespace xray {
-	namespace render{
-		struct material_effects_instance_cook_data;
-	}
+
+namespace render{ struct material_effects_instance_cook_data; }
+
 namespace editor {
 
 ref class object_decal: public object_base
@@ -27,7 +25,6 @@ public:
 	virtual void	load_props				(configs::lua_config_value const& t)	override;
 	virtual void	load_contents			()										override;
 	virtual void	unload_contents			(bool)									override;
-	virtual void	destroy_collision		()									override;
 	virtual void	render					() override;
 	virtual void	load_defaults			() override;
 	virtual void	set_visible				(bool bvisible) override;

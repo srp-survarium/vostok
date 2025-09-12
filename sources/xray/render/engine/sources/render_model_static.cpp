@@ -123,5 +123,18 @@ bool static_render_model_instance::get_locator( pcstr locator_name, model_locato
 	return m_original->get_locator( locator_name, result );
 }
 
+void  static_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
+{
+	R_ASSERT			(surface_id<m_instances_count);
+	render_surface_instance* inst = m_surface_instances+surface_id;
+	stats.vcount		= inst->m_render_surface->m_render_geometry.vertex_count;
+	stats.tricount		= inst->m_render_surface->m_render_geometry.primitive_count;
+	if(inst->m_render_surface->m_materail_effects_instance.c_ptr())
+		stats.material		= inst->m_render_surface->m_materail_effects_instance->get_material_name().c_str();
+	else
+		stats.material		= "_not_assigned";
+
+}
+
 } // namespace render 
 } // namespace xray 

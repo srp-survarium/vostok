@@ -13,29 +13,29 @@
 
 namespace stalker2 {
 
-object_volumetric_sound::object_volumetric_sound		( game_world& w ) :
-	super				( w ),
+object_volumetric_sound::object_volumetric_sound( game_scene& w ) 
+:	super				( w ),
 	m_collision_geometry( 0 ),
-	m_world_user		( w.get_game().sound_world().get_logic_world_user() ),
-	m_sound_scene		( w.get_game().get_sound_scene() ),
+	m_world_user		( w.get_game().get_sound_world().get_logic_world_user() ),
+	m_sound_scene		( w.get_sound_scene() ),
 	m_radius			( 0.0f )
 {}
 
-object_volumetric_sound::~object_volumetric_sound		( )
+object_volumetric_sound::~object_volumetric_sound( )
 {
 	unload_contents			( );
 }
 
-void object_volumetric_sound::load						( configs::binary_config_value const& config_value )
+void object_volumetric_sound::load( configs::binary_config_value const& config_value )
 {
 	super::load							( config_value );
 
 	pcstr	collision_geometry_name		= config_value["collision_geometry"];
 
-	m_game_world.query_object_by_name(
-		collision_geometry_name,
-		object_loaded_callback_type( this, &object_volumetric_sound::on_collision_object_loaded )
-	);
+// 	m_game_world.query_object_by_name(
+// 		collision_geometry_name,
+// 		object_loaded_callback_type( this, &object_volumetric_sound::on_collision_object_loaded )
+// 	);
 	m_sound_name						= config_value["sound"];
 }
 

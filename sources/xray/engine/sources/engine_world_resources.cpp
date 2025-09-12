@@ -47,7 +47,7 @@ void engine_world::cooker_thread ( apc::threads_enum const apc_thread_id )
 	apc::process						( apc_thread_id );
 }
 
-#ifndef MASTER_GOLD
+#if XRAY_FS_NEW_WATCHER_ENABLED
 void engine_world::watcher_thread ( apc::threads_enum const apc_thread_id )
 {
 	apc::assign_thread_id				( apc_thread_id, threading::current_thread_id( ) );
@@ -63,7 +63,7 @@ void engine_world::watcher_thread ( apc::threads_enum const apc_thread_id )
 	
 	apc::process						( apc_thread_id );
 }
-#endif // #ifndef MASTER_GOLD
+#endif // #if XRAY_FS_NEW_WATCHER_ENABLED
 
 void   engine_world::initialize_resources ()
 {
@@ -76,8 +76,8 @@ void   engine_world::initialize_resources ()
 	apc::assign_thread_id				( apc::res_cook, u32(-1) );
 	apc::assign_thread_id				( apc::fs_watcher, u32(-1) );
 
-#ifndef MASTER_GOLD
-	if ( !s_no_fs_watch )
+#if XRAY_FS_NEW_WATCHER_ENABLED
+	if ( !s_no_fs_watch && !threading::g_debug_single_thread )
 	{
 		threading::spawn					(
 			boost::bind( &engine_world::watcher_thread, this, apc::fs_watcher ), 
@@ -87,31 +87,32 @@ void   engine_world::initialize_resources ()
 			1 % threading::core_count(),
 			threading::tasks_aware
 		);
-		apc::run_remote_only				( apc::fs_watcher, boost::bind(&apc::empty::function), apc::break_process_loop, apc::wait_for_completion );
+		apc::run_remote_only			( apc::fs_watcher, boost::bind(&apc::empty::function), apc::break_process_loop, apc::wait_for_completion );
 	}
-#endif //#ifndef MASTER_GOLD
+#endif // #if XRAY_FS_NEW_WATCHER_ENABLED
 
-	threading::spawn					(
-		boost::bind( &engine_world::resources_thread, this, apc::res_man ), 
-		"resources manager", 
-		"res_man", 
-		0,
-		2 % threading::core_count(),
-		threading::tasks_aware
-	);
+	if ( !threading::g_debug_single_thread ) {
+		threading::spawn					(
+			boost::bind( &engine_world::resources_thread, this, apc::res_man ), 
+			"resources manager", 
+			"res_man", 
+			0,
+			2 % threading::core_count(),
+			threading::tasks_aware
+		);
+		apc::run						( apc::res_man,	& resources::on_resources_thread_started, apc::break_process_loop, apc::wait_for_completion);
 
-	apc::run							( apc::res_man,	& resources::on_resources_thread_started, apc::break_process_loop, apc::wait_for_completion);
+		threading::spawn				(
+			boost::bind( &engine_world::cooker_thread, this, apc::res_cook ), 
+			"resources cooker", 
+			"res_cook", 
+			0,
+			2 % threading::core_count(),
+			threading::tasks_aware
+		);
 
-	threading::spawn					(
-		boost::bind( &engine_world::cooker_thread, this, apc::res_cook ), 
-		"resources cooker", 
-		"res_cook", 
-		0,
-		2 % threading::core_count(),
-		threading::tasks_aware
-	);
-
-	apc::run							( apc::res_cook,	boost::bind(&apc::empty::function), apc::break_process_loop, apc::wait_for_completion);
+		apc::run						( apc::res_cook,	boost::bind(&apc::empty::function), apc::break_process_loop, apc::wait_for_completion);
+	}
 
 	R_ASSERT_BOX						(
 		resources::get_physical_path_info( fs_new::native_path_string::convert(get_resources_path()) ).does_exist_and_is_folder( ),

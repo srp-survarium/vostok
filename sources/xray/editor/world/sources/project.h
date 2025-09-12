@@ -78,6 +78,7 @@ public:
 	void			set_changed				( );
 	void			set_unchanged			( );
 	void			set_modified_caption	( bool const is_modified );	
+	void			gather_statistic		( scene_statistic^ stats );
 
 	System::String^ project_name				( );
 	fs_new::virtual_path_string cfg_resource_name			( );

@@ -1,21 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 27.12.2010
+//	Created		: 14.12.2011
 //	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2010
+//	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef XRAY_RENDER_CORE_API_H_INCLUDED
-#define XRAY_RENDER_CORE_API_H_INCLUDED
+// header guards are omitted intentionally,
+// do not add them here!
 
-namespace xray {
-namespace render {
-namespace core {
-
-void	initialize	( );
-void	finalize	( );
-
-} // namespace core
-} // namespace render
-} // namespace xray
-
-#endif // #ifndef XRAY_RENDER_CORE_API_H_INCLUDED
+#include <xray/render/core/platform_helper.h>
+#include XRAY_RENDER_CORE_FILE(api.h)

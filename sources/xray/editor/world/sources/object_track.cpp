@@ -12,17 +12,16 @@
 #include "le_transform_control_helper.h"
 #include "animation_curve_editor_panel.h"
 #include "project.h"
-#include "project_items.h"
 #include <xray/editor/base/collision_object_types.h>
-#include <xray/ui/world.h>
+#include "object_collision.h"
+
 
 #pragma managed( push, off )
-#	include <xray/animation/anim_track_common.h>
+#	include <xray/ui/world.h>
 #	include <xray/animation/anim_track.h>
 #	include <xray/render/facade/debug_renderer.h>
+#	include<xray/collision/collision_object.h>
 #	include <xray/collision/space_partitioning_tree.h>
-#	include <xray/collision/geometry.h>
-#	include <xray/collision/api.h>
 #	include <xray/render/facade/scene_renderer.h>
 #	include <xray/render/facade/editor_renderer.h>
 #pragma managed( pop )
@@ -41,6 +40,53 @@ typedef System::Windows::Vector Vector;
 using	xray::editor::wpf_controls::curve_editor::panel_curve_group;
 
 inline float3 matrix_get_scale( math::float4x4 const& m);
+
+
+class collision_object_track_key: public collision::collision_object
+{
+private:
+	typedef collision::collision_object	super;
+
+public:
+	collision_object_track_key		( collision::geometry_instance* geometry, object_track^ o, int key_idx );
+
+private:
+	int						m_key_idx;
+	gcroot<object_track^>	m_owner;
+
+public:
+	void					set_key_index( int new_key_index );
+	virtual bool			touch	( ) const;
+
+}; //collision_object_track_key
+
+class collision_object_track_key_tangent: public collision::collision_object
+{
+private:
+	typedef collision::collision_object	super;
+
+public:
+	collision_object_track_key_tangent		( collision::geometry_instance* geometry, object_track^ o, int key_idx, int tangent_index );
+
+private:
+	int						m_key_idx;
+	int						m_tangent_idx;
+	gcroot<object_track^>	m_owner;
+
+public:
+	virtual bool			touch	( ) const;
+
+}; //collision_object_track_key_tangent
+
+u32 track_object_key_transform_data::get_collision( collision_objects_list^% r)
+{
+	editor_base::collision_object_wrapper w;
+	w.m_collision_object			= (*m_object_path->m_keys_collision)[m_key_index];
+	r->Add							( w );
+	
+	return r->Count;
+}
+
 
 
 ////////////////		I N I T I A L I Z E			////////////////
@@ -93,12 +139,6 @@ object_track::~object_track					( )
 	animation_curve_editor_control^ animation_curve_editor = owner_tool( )->get_level_editor( )->get_animation_curve_editor_panel( )->editor;
 	if( animation_curve_editor->get_viewed_object( ) == this )
 		animation_curve_editor->reset( );
-}
-
-void object_track::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( &debug::g_mt_allocator );
 }
 
 ////////////////		P R O P E R T I E S			////////////////
@@ -450,12 +490,13 @@ void			object_track::clear_animation_curve_editor	( )
 		*m_camera_model				= NULL;
 	}
 }
+
 void			object_track::init_collision				( )
 {
 	ASSERT( !m_collision->initialized( ) );
 	float3 extents				( 0.3f,0.3f,0.3f );
 
-	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( &debug::g_mt_allocator, create_scale( extents ) );
+	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( g_allocator, create_scale( extents ) );
 	m_collision->create_from_geometry( true, this, geom, xray::editor_base::collision_object_type_dynamic | xray::editor_base::collision_object_type_touch );
 	m_collision->insert			( m_transform );
 }
@@ -811,7 +852,7 @@ void			object_track::get_camera_transform			( Vector3D% position, Vector3D% rota
 void			object_track::render						( )
 {
 	super::render			( );
-
+	render::scene_view_ptr const& scene_view = get_editor_world().scene_view();
 	get_debug_renderer( ).draw_origin		( *m_scene, get_transform( ), 2.0f );
 
 	int count				= keys_count( );
@@ -967,7 +1008,8 @@ void			object_track::render						( )
 					m_text->w( )->set_visible	( true );
 					m_text->set_color			( 0xff00ffff );
 					m_text->w( )->tick			( );
-					m_text->w( )->draw			( ui_world->get_renderer( ), ui_world->get_scene_view() );
+
+					m_text->w( )->draw			( ui_world->get_renderer( ), scene_view );
 				}
 			}
 			

@@ -60,6 +60,10 @@ void input_world::tick		( )
 	if ( m_mouse )
 		m_mouse->execute		( );
 
+	handlers_type::iterator it_e = m_handlers.end();
+	for( handlers_type::iterator it	= m_handlers.begin() ;it!=it_e; ++it)
+		(*it)->on_before_processing( this );
+
 	if ( m_gamepad )
 		m_gamepad->process		( m_handlers );
 
@@ -68,6 +72,10 @@ void input_world::tick		( )
 
 	if ( m_mouse )
 		m_mouse->process		( m_handlers );
+
+	it_e = m_handlers.end();
+	for( handlers_type::iterator it	= m_handlers.begin() ;it!=it_e; ++it)
+		(*it)->on_after_processing( this );
 }
 
 void input_world::clear_resources		( )

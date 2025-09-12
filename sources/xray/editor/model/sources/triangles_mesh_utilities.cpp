@@ -642,7 +642,19 @@ void on_surfaces_ready( resources::queries_result& data, geometry_utils::geometr
 			if( p0.is_similar(p1) || p0.is_similar(p2) || p1.is_similar(p2) )
 				continue;
 
-			collector->add_triangle( p0, p2, p1 );
+			geometry_utils::geometry_collector_vert v0,v1,v2;
+			v0.p	= p0;
+			v0.n	= float3(0,1,0);
+			v0.uv	= float2(0,0);
+
+			v1.p = p1;
+			v1.n	= float3(0,1,0);
+			v1.uv	= float2(0,0);
+
+			v2.p = p2;
+			v2.n	= float3(0,1,0);
+			v2.uv	= float2(0,0);
+			collector->add_triangle( v0, v2, v1 );
 		}
 	}
 }

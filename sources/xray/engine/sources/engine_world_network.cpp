@@ -9,19 +9,17 @@
 #include "apc.h"
 #include <xray/network/world.h>
 #include <xray/network/api.h>
-#include <xray/render/facade/engine_renderer.h>
-#include <xray/render/world.h>
 
 using xray::engine::engine_world;
 
 void engine_world::initialize_network_modules	( )
 {
 	m_network_allocator.user_current_thread_id	( );
-	network::set_memory_allocator	( m_network_allocator );
+	network::memory_allocator( m_network_allocator );
 
 	threading::interlocked_exchange_pointer	(
 		m_network_world,
-		network::create_world( *this )
+		network::create_world( *this, m_engine_user_module_proxy.allocator() )
 	);
 }
 
@@ -43,7 +41,7 @@ void engine_world::initialize_network	( )
 void engine_world::network_tick			( )
 {
 	resources::dispatch_callbacks	( );
-	m_network_world->tick			( m_logic_frame_id );
+	m_network_world->tick			( );
 }
 
 void engine_world::network				( )
@@ -55,12 +53,7 @@ void engine_world::network				( )
 		if ( m_destruction_started )
 			break;
 
-//		network_tick				( );
-
-		//while ( ( m_logic_frame_id > m_render_world->engine_renderer().frame_id( ) + 1 ) && !m_destruction_started ) {
-		//	if ( !apc::try_process_single_call( apc::network ) )
-		//		threading::yield	( 1 );
-		//}
+		network_tick				( );
 
 		threading::yield			( 10 );
 	}

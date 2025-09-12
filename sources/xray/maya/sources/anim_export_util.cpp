@@ -832,7 +832,7 @@ MStatus write_discrete_data( discrete_data &data, const MSelectionList &all_join
 #include <io.h>
 
 
-static xray::threading::mutex s_build_animation_data_mutex;
+static xray::threading::mutex_tasks_unaware s_build_animation_data_mutex;
 static bool s_build_animation_data_ready = false;
 
 void build_animation_data_thread( const discrete_data *data, bi_spline_skeleton_animation *animation_data )
@@ -854,7 +854,7 @@ void build_animation_data_thread( const discrete_data *data, bi_spline_skeleton_
 void run_build_animation_data_thread( const discrete_data *data, bi_spline_skeleton_animation *animation_data )
 {
 	s_build_animation_data_ready = false;
-	xray::threading::spawn( boost::bind( &build_animation_data_thread, data, animation_data ), "build_animation_data_thread", "build_animation_data_thread", 0, 0, xray::threading::tasks_aware ); ;
+	xray::threading::spawn( boost::bind( &build_animation_data_thread, data, animation_data ), "build_animation_data_thread", "build_animation_data_thread", 0, 0, xray::threading::tasks_unaware ); ;
 
 	for(;;){
 		s_build_animation_data_mutex.lock();

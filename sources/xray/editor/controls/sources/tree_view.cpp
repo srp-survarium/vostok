@@ -11,7 +11,6 @@
 #include "tree_view_search_panel.h"
 #include "tree_view_filter_panel.h"
 
-using namespace System::IO;
 using namespace System::Windows::Forms;
 
 using System::Reflection::BindingFlags;
@@ -26,28 +25,29 @@ tree_view::~tree_view()
 		delete m_source;
 }
 
-tree_view_source^		tree_view::source::get					()												
+tree_view_source^ tree_view::source::get( )												
 {
 	return m_source;
 }
 
-void					tree_view::source::set					(tree_view_source^ value)						
+void tree_view::source::set(tree_view_source^ value)						
 {
 	m_source = value;
 	if(value != nullptr)
 		value->parent = this;
 }
 
-Boolean					tree_view::auto_expand_on_filter::get	()												
+Boolean tree_view::auto_expand_on_filter::get( )
 {
 	return m_filter_panel->m_auto_expand_on_filter;
 }
-void					tree_view::auto_expand_on_filter::set	(Boolean value)									
+
+void tree_view::auto_expand_on_filter::set( Boolean value )
 {
 	m_filter_panel->m_auto_expand_on_filter = value;
 }
 
-Boolean					tree_view::filter_visible::get			()												
+Boolean tree_view::filter_visible::get( )
 {
 	return m_filter_panel->Visible;
 }
@@ -56,24 +56,24 @@ void					tree_view::filter_visible::set			(Boolean value)
 	m_filter_panel->Visible = value;
 }
 
-void					tree_view::refresh						()												
+void tree_view::refresh( )												
 {
 	nodes->Clear();
 	if(m_source != nullptr)
 		m_source->refresh();
 }
 
-TreeNode^				tree_view::process_item_path			(array<String^>^ segments, Boolean create_path)	
+TreeNode^ tree_view::process_item_path(array<String^>^ segments, Boolean create_path)	
 {
 	return process_item_path	(segments, create_path, -1, -1);
 }
 
-void					tree_view::on_items_loaded				()												
+void tree_view::on_items_loaded( )												
 {
 	items_loaded(this, EventArgs::Empty);
 }
 
-TreeNode^				tree_view::process_item_path			(array<String^>^ segments, Boolean create_path, Int32 image_index_collapsed, Int32 image_index_expanded)
+TreeNode^ tree_view::process_item_path(array<String^>^ segments, Boolean create_path, Int32 image_index_collapsed, Int32 image_index_expanded)
 {
 	TreeNode^ node = root;
 
@@ -85,8 +85,7 @@ TreeNode^				tree_view::process_item_path			(array<String^>^ segments, Boolean c
 		{
 			node							= safe_cast<tree_node^>(node->Nodes[segment]);
 			continue;
-		}
-		else
+		}else
 		{
 			if(!create_path)
 				return nullptr;
@@ -96,20 +95,19 @@ TreeNode^				tree_view::process_item_path			(array<String^>^ segments, Boolean c
 			new_node->m_image_index_collapsed	= image_index_collapsed;
 			new_node->m_image_index_expanded	= image_index_expanded;
 			new_node->Name						= segment;
+			
 			if(image_index_collapsed == -1)
 			{
 				new_node->ImageIndex			= 0;
 				new_node->SelectedImageIndex	= 0;
-			}
-			else
+			}else
 			{
 				new_node->ImageIndex			= image_index_collapsed;
 				new_node->SelectedImageIndex	= image_index_collapsed;
 			}
-			new_node->m_node_type			= tree_node_type::group_item;
-			//new_node->ContextMenuStrip		= m_nodes_context_menu;
+			new_node->m_node_type				= tree_node_type::group_item;
 			
-			node->Nodes->Add				(new_node);
+			node->Nodes->Add				( new_node );
 			node							= new_node;
 		}
 	}
@@ -117,17 +115,17 @@ TreeNode^				tree_view::process_item_path			(array<String^>^ segments, Boolean c
 	return node;
 }
 
-TreeNode^				tree_view::process_item_path			(array<String^>^ segments)						
+TreeNode^ tree_view::process_item_path(array<String^>^ segments)						
 {
 	return process_item_path(segments, true);
 }
 
-TreeNode^				tree_view::process_item_path			(String^ segments, String^ separator)			
+TreeNode^ tree_view::process_item_path(String^ segments, String^ separator)			
 {
 	return process_item_path(segments->Split(gcnew array<String^>{separator}, StringSplitOptions::RemoveEmptyEntries), true);
 }
 
-TreeNode^				tree_view::process_item_path			(String^ segments)								
+TreeNode^ tree_view::process_item_path(String^ segments)								
 {
 	return process_item_path(segments, PathSeparator);
 }
@@ -137,7 +135,7 @@ tree_node^ tree_view::add_item( String^ file_path )
 	return add_item(file_path, -1);
 }
 
-tree_node^ tree_view::add_item( String^ file_path, Int32 image_index )
+tree_node^ tree_view::add_item( String^ file_path, int image_index )
 {
 	array<String^>^		segments		= file_path->Split('/');
 	String^				file_name		= segments[segments->Length-1];
@@ -153,32 +151,32 @@ tree_node^ tree_view::add_item( String^ file_path, Int32 image_index )
 	return add_item( nod, file_name, image_index );
 }
 
-tree_node^				tree_view::add_item						( tree_node^ destination, String^ item_name )
+tree_node^ tree_view::add_item( tree_node^ destination, String^ item_name )
 {
 	return add_item( destination, item_name, -1 );
 }
 
-tree_node^				tree_view::add_item						( tree_node^ destination, String^ item_name, Int32 image_index )
+tree_node^ tree_view::add_item						( tree_node^ destination, String^ item_name, Int32 image_index )
 {
 	return add_item( safe_cast<TreeNode^>( destination ), item_name, image_index );
 }
 
-tree_node^				tree_view::add_group					( String^ folder_path )							
+tree_node^ tree_view::add_group					( String^ folder_path )							
 {
 	return safe_cast<tree_node^>(process_item_path(folder_path->Split('/')));
 }
 
-tree_node^				tree_view::add_group					(String^ folder_path, Int32 image_index_collapsed, Int32 image_index_expanded)
+tree_node^ tree_view::add_group					(String^ folder_path, Int32 image_index_collapsed, Int32 image_index_expanded)
 {
 	return safe_cast<tree_node^>(process_item_path(folder_path->Split('/'), true, image_index_collapsed, image_index_expanded));
 }
 
-tree_node^				tree_view::add_group					( tree_node^ destination, String^ group_name )
+tree_node^ tree_view::add_group( tree_node^ destination, String^ group_name )
 {
 	return add_group( destination, group_name, -1, -1 );
 }
 
-tree_node^				tree_view::add_group					( tree_node^ destination, String^ group_name, Int32 image_index_collapsed, Int32 image_index_expanded )
+tree_node^ tree_view::add_group( tree_node^ destination, String^ group_name, Int32 image_index_collapsed, Int32 image_index_expanded )
 {
 	tree_node^ new_node			= gcnew tree_node( group_name );
 
@@ -203,29 +201,29 @@ tree_node^				tree_view::add_group					( tree_node^ destination, String^ group_n
 	return new_node;
 }
 
-void					tree_view::remove_item					(String^ folder_path)							
+void tree_view::remove_item(String^ folder_path)							
 {
 	TreeNode^ node = process_item_path(folder_path->Split('/'), false);
 	if(node)
 		node->Remove();
 }
 
-void					tree_view::remove_group					(String^ group_path)							
+void tree_view::remove_group(String^ group_path)							
 {
 	remove_item	( group_path);
 }
 
-void					tree_view::remove_item					( tree_node^ item_node )
+void tree_view::remove_item( tree_node^ item_node )
 {
 	item_node->Remove	( );
 }
 
-void					tree_view::remove_group					( tree_node^ group_node )
+void tree_view::remove_group( tree_node^ group_node )
 {
 	group_node->Remove	( );
 }
 
-void					tree_view::change_item_context			(String^ file_path, Object^ context)			
+void tree_view::change_item_context(String^ file_path, Object^ context)			
 {
 	array<String^>^		segments		= file_path->Split('/');
 	String^				file_name		= segments[segments->Length-1];
@@ -237,7 +235,7 @@ void					tree_view::change_item_context			(String^ file_path, Object^ context)
 		dir->Nodes[file_name]->Tag = context;
 }
 
-void					tree_view::OnAfterExpand				(System::Windows::Forms::TreeViewEventArgs^  e)	
+void tree_view::OnAfterExpand(System::Windows::Forms::TreeViewEventArgs^  e)	
 {
 	tree_node^ node = safe_cast<tree_node^>(e->Node);
 	if(node->m_image_index_collapsed != -1)
@@ -246,10 +244,10 @@ void					tree_view::OnAfterExpand				(System::Windows::Forms::TreeViewEventArgs^
 		e->Node->SelectedImageIndex		= node->m_image_index_expanded;		
 	}
 
-	TreeView::OnAfterExpand(e);
+	super::OnAfterExpand(e);
 }
 
-void					tree_view::OnAfterCollapse				(System::Windows::Forms::TreeViewEventArgs^  e)	
+void tree_view::OnAfterCollapse(System::Windows::Forms::TreeViewEventArgs^  e)	
 {
 	tree_node^ node = safe_cast<tree_node^>(e->Node);
 	if(node->m_image_index_collapsed != -1)
@@ -258,10 +256,10 @@ void					tree_view::OnAfterCollapse				(System::Windows::Forms::TreeViewEventArg
 		e->Node->SelectedImageIndex		= node->m_image_index_collapsed;		
 	}
 
-	TreeView::OnAfterCollapse(e);
+	super::OnAfterCollapse(e);
 }
 
-void					tree_view::track_active_node			(System::String^ full_path)						
+void tree_view::track_active_node(System::String^ full_path)						
 {
 	tree_node^	node = get_node(full_path);
 	if(node != nullptr)
@@ -274,7 +272,7 @@ void					tree_view::track_active_node			(System::String^ full_path)
 	}
 }
 
-void					tree_view::track_active_nodes			(List<System::String^>^ full_paths)						
+void tree_view::track_active_nodes(List<System::String^>^ full_paths)						
 {
 	deselect_nodes( m_selected_nodes );
 	for each(System::String^ node_name in full_paths)
@@ -292,7 +290,7 @@ void					tree_view::track_active_nodes			(List<System::String^>^ full_paths)
 	}
 }
 
-tree_node^				tree_view::get_node						(String^ full_path)								
+tree_node^ tree_view::get_node(String^ full_path)								
 {
 	array<System::String^ >^ segments = full_path->Split('/');
 	TreeNode^ node = root;
@@ -313,44 +311,31 @@ tree_node^				tree_view::get_node						(String^ full_path)
 	return safe_cast<tree_node^>(node);
 }
 
-void					tree_view::OnNodeMouseClick				(System::Windows::Forms::TreeNodeMouseClickEventArgs^ e)
+void tree_view::OnNodeMouseClick(System::Windows::Forms::TreeNodeMouseClickEventArgs^ e)
 {
 	if( e->Button == System::Windows::Forms::MouseButtons::Right && !selected_nodes->Contains( safe_cast<tree_node^>( e->Node ) ) )
 		SelectedNode = e->Node;
-	TreeView::OnNodeMouseClick(e);
+	
+	super::OnNodeMouseClick(e);
 }
 
-//void					tree_view::create_item					(System::Object^ sender, System::EventArgs^ e)	
+//void tree_view::add_items( GObjIList^ items )				
 //{
-//	item_create(this, gcnew tree_view_event_args());
+//	for each(String^ item in items)
+//	{
+//		add_item(item);
+//	}
+//}
+//
+//void tree_view::add_items(array<Object^>^ items)							
+//{
+//	for each(String^ item in items)
+//	{
+//		add_item(item);
+//	}
 //}
 
-//void					tree_view::create_group					(System::Object^ sender, System::EventArgs^ e)	
-//{
-//	group_create(this, gcnew tree_view_event_args());
-//}
-
-//void					tree_view::remove_item					(System::Object^ sender, System::EventArgs^ e)	
-//{
-//	item_remove(this, gcnew tree_view_event_args());
-//}
-
-void					tree_view::add_items					( GObjIList^ items )				
-{
-	for each(String^ item in items)
-	{
-		add_item(item);
-	}
-}
-void					tree_view::add_items					(array<Object^>^ items)							
-{
-	for each(String^ item in items)
-	{
-		add_item(item);
-	}
-}
-
-void					tree_view::OnKeyDown					(KeyEventArgs^  e)								
+void tree_view::OnKeyDown(KeyEventArgs^  e)								
 {
 	if(e->KeyCode == Keys::F && e->Control)
 	{
@@ -384,22 +369,21 @@ void					tree_view::OnKeyDown					(KeyEventArgs^  e)
 	}
 
 	if( keyboard_search_enabled )
-		TreeView::OnKeyDown( e );
+		super::OnKeyDown( e );
 }
 
-void					tree_view::OnKeyUp						(KeyEventArgs^  e)
+void tree_view::OnKeyUp(KeyEventArgs^  e)
 {
-	TreeView::OnKeyUp(e);
+	super::OnKeyUp(e);
 }
 
-
-void					tree_view::clear						()
+void tree_view::clear( )
 {
 	nodes->Clear();
 	m_selected_nodes->Clear();
 }
 
-tree_node^				tree_view::add_item						( TreeNode^ destination, String^ item_name, Int32 image_index )
+tree_node^ tree_view::add_item( TreeNode^ destination, String^ item_name, int image_index )
 {
 	tree_node^ node				= gcnew tree_node( item_name );
 	node->Tag					= nullptr;
@@ -415,8 +399,8 @@ tree_node^				tree_view::add_item						( TreeNode^ destination, String^ item_nam
 		node->m_image_index_expanded	= image_index;
 		node->m_image_index_collapsed	= image_index;
 	}
+
 	node->m_node_type					= tree_node_type::single_item;
-	//node->ContextMenuStrip				= m_nodes_context_menu;
 
 	destination->Nodes->Add				( node );
 	return								node;

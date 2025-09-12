@@ -47,6 +47,12 @@ bool exit_handler::on_keyboard_action( xray::input::world* input_world, xray::in
 			m_game.scene_close_query( );
 			return					true;
 		}
+
+		case xray::input::key_f1:
+		{
+			m_game.switch_to_lobby( );
+			return					true;
+		}
 	}
 	return		false;
 }
@@ -59,9 +65,9 @@ bool exit_handler::on_gamepad_action( xray::input::world* input_world, xray::inp
 
 bool exit_handler::on_mouse_key_action	( xray::input::world* input_world, xray::input::mouse_button button, xray::input::enum_mouse_key_action action )
 {
-	if ( button == xray::input::mouse_button_left && action == xray::input::ms_key_down &&
-	   ( input_world->get_keyboard()->is_key_down( xray::input::key_lalt ) || input_world->get_keyboard()->is_key_down( xray::input::key_ralt ) ) )
-		m_game.setup_movement_target	( );
+	//if ( button == xray::input::mouse_button_left && action == xray::input::ms_key_down &&
+	//   ( input_world->get_keyboard()->is_key_down( xray::input::key_lalt ) || input_world->get_keyboard()->is_key_down( xray::input::key_ralt ) ) )
+	//	m_game.setup_movement_target	( );
 	return false;
 }
 

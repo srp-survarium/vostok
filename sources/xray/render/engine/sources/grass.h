@@ -14,6 +14,9 @@
 #include "material_effects.h"
 //#include <xray/resources_fs.h>
 
+
+#if 0
+
 namespace xray {
 namespace render {
 
@@ -101,5 +104,7 @@ private:
 
 } // namespace render
 } // namespace xray
+
+#endif // #if 0
 
 #endif // #ifndef XRAY_RENDER_GRASS_H_INCLUDED

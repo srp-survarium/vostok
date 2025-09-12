@@ -7,7 +7,6 @@
 #include "pch.h"
 #include "test_anim_object.h"
 #include "game_world.h"
-#include "game.h"
 #include <xray/render/facade/scene_renderer.h>
 #include <xray/animation/mixing_animation_lexeme.h>
 #include <xray/animation/mixing_math.h>

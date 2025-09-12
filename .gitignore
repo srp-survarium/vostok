@@ -3,3 +3,6 @@
 *.dll
 *.a
 *.lib
+
+*.user
+*.XML

@@ -295,7 +295,8 @@ void object_wire_set::render( )
 	float3 pt1 = *m_item->m_offset1 * m;
 
 	math::color center_lines_clr (255,255,0,100);
-	debug_renderer.draw_line( scene, pt0, pt1, center_lines_clr );
+	if(m_project_item->get_selected())
+		debug_renderer.draw_line( scene, pt0, pt1, center_lines_clr );
 
 	debug_renderer.draw_cross( scene, pt0, half_size, clr );
 	debug_renderer.draw_cross( scene, pt1, half_size, clr );
@@ -464,6 +465,8 @@ wpf_controls::property_container^ object_wire_set::get_property_container( )
 
 void object_wire_set::destroy_collision( )
 {
+	super::destroy_collision	( );
+
 	if(m_start_point_collision && m_end_point_collision)
 	{
 		collision::space_partitioning_tree* tree = get_level_editor()->get_collision_tree();

@@ -170,46 +170,70 @@ cell_cooker_user_data* get_cell(	user_data_cont& container,
 	return result;
 }
 
+bool check_for_switching_by_patrol_signal ( configs::lua_config_value const& source_event_handlers, pcstr signal_name )
+{
+	configs::lua_config_iterator source_event_handlers_it	= source_event_handlers.begin();
+	configs::lua_config_iterator source_event_handlers_it_e	= source_event_handlers.end();
+	for ( ; source_event_handlers_it != source_event_handlers_it_e; ++source_event_handlers_it )
+	{
+		configs::lua_config_value current_source_event_handler = *source_event_handlers_it;
+		if ( strings::equal( current_source_event_handler["event_name"], signal_name ) )
+		{
+			configs::lua_config_iterator event_handler_actions_it	= current_source_event_handler["actions"].begin();
+			configs::lua_config_iterator event_handler_actions_it_e	= current_source_event_handler["actions"].end();
+
+			for ( ; event_handler_actions_it != event_handler_actions_it_e; ++event_handler_actions_it )
+			{
+				configs::lua_config_value current_action = *event_handler_actions_it;	
+				if ( strings::equal( current_action["action_type"], "switch_to_behaviour" ) )
+				{
+					return true;
+					break;
+				}						
+			}
+		}
+	}
+	return false;
+}
 
 void process_patrol_path_behaviour( configs::lua_config_value const& patrol_config,
 								   configs::lua_config_value& result_behaviours_config,
 								   configs::lua_config_value& source_patrol_behaviour_config)
 {
-	configs::lua_config_value brain_behaviour_template = source_patrol_behaviour_config["behaviour_config"].copy( );
+	configs::lua_config_value reach_position_behaviour_template = source_patrol_behaviour_config["behaviour_config"]["reach_position_behaviour"].copy( );
+	configs::lua_config_value play_animation_behaviour_template = source_patrol_behaviour_config["behaviour_config"]["play_animation_behaviour"].copy( );
 
 	configs::lua_config_iterator patrol_nodes_it	= patrol_config["graph"]["nodes"].begin();
 	configs::lua_config_iterator patrol_nodes_it_e	= patrol_config["graph"]["nodes"].end();
 
-	int index = 1;
+	int patrol_point_index = 1;
 
 	for ( ; patrol_nodes_it != patrol_nodes_it_e; ++patrol_nodes_it )
 	{
-		fs_new::virtual_path_string behaviour_name		= source_patrol_behaviour_config.get_field_id( );
-		behaviour_name.appendf("point%d", index );
+		fixed_string<128> behaviour_name		= source_patrol_behaviour_config.get_field_id( );
+		behaviour_name.appendf("point%d", patrol_point_index );
 
-		configs::lua_config_value current_behaviour_config = result_behaviours_config[ behaviour_name.c_str( )].create_table();
+		configs::lua_config_value current_point_behaviour_config = result_behaviours_config[ (pcstr)behaviour_name.c_str( )].create_table();
 		
-		current_behaviour_config["behaviour_type"] = "npc_reach_location";		
+		current_point_behaviour_config["behaviour_type"] = "npc_reach_location";		
 
-		current_behaviour_config["behaviour_config"].assign_lua_value( brain_behaviour_template.copy( ) );
+		current_point_behaviour_config["behaviour_config"].assign_lua_value( reach_position_behaviour_template.copy( ) );
 
-		current_behaviour_config["behaviour_config"]["goals"][0]["filter_sets"][0]["parameter0_filter"][0]["positions"][0]["target_point"].assign_lua_value( (*patrol_nodes_it)["position"] );
+		current_point_behaviour_config["behaviour_config"]["goals"][0]["filter_sets"][0]["parameter0_filter"][0]["positions"][0]["target_point"].assign_lua_value( (*patrol_nodes_it)["position"] );
 
-		current_behaviour_config["events"].create_table( );
+		current_point_behaviour_config["events"].create_table( );
 
 		if ( !source_patrol_behaviour_config["events"].empty( ) )
 		{
-			current_behaviour_config["events"].assign_lua_value( source_patrol_behaviour_config["events"].copy() );
+			current_point_behaviour_config["events"].assign_lua_value( source_patrol_behaviour_config["events"].copy() );
 		}
 
 		fixed_string<128> generated_event_handler_name = "event";
-		generated_event_handler_name.appendf("%d", current_behaviour_config["events"].size() );
-
-		bool need_to_switch_by_signal = false;
+		generated_event_handler_name.appendf("%d", current_point_behaviour_config["events"].size() );
 
 		if ( (*patrol_nodes_it).value_exists("signal") )
 		{
-			configs::lua_config_value event_handlers_config = current_behaviour_config["events"][(pcstr)generated_event_handler_name.c_str()];
+			configs::lua_config_value event_handlers_config = current_point_behaviour_config["events"][(pcstr)generated_event_handler_name.c_str()];
 			event_handlers_config["event_name"] = "on_location_reached";
 			event_handlers_config["is_global"] = false;
 
@@ -224,41 +248,26 @@ void process_patrol_path_behaviour( configs::lua_config_value const& patrol_conf
 			action_config["raised_event"]	= signal_name;
 			action_config["is_global"]		= false;
 
-			configs::lua_config_iterator source_event_handlers_it	= current_behaviour_config["events"].begin();
-			configs::lua_config_iterator source_event_handlers_it_e	= current_behaviour_config["events"].end();
-			for ( ; source_event_handlers_it != source_event_handlers_it_e; ++source_event_handlers_it )
-			{
-				configs::lua_config_value current_source_event_handler = *source_event_handlers_it;
-				if ( strings::equal( current_source_event_handler["event_name"], signal_name ) )
-				{
-					configs::lua_config_iterator event_handler_actions_it	= current_source_event_handler["actions"].begin();
-					configs::lua_config_iterator event_handler_actions_it_e	= current_source_event_handler["actions"].end();
+						
+			// don't process edges and look points switch in case of signal switching
+			if ( check_for_switching_by_patrol_signal( current_point_behaviour_config["events"], signal_name ) ){
+				patrol_point_index++;
+				continue;			
+			}
+		} 
 
-					for ( ; event_handler_actions_it != event_handler_actions_it_e; ++event_handler_actions_it )
-					{
-						configs::lua_config_value current_action = *event_handler_actions_it;	
-						if ( strings::equal( current_action["action_type"], "switch_to_behaviour" ) )
-						{
-							need_to_switch_by_signal = true;
-							break;
-						}						
-					}
-				}
-				if ( need_to_switch_by_signal )
-					break;
-			}			
-		}		
-
-		if ( (*patrol_nodes_it).value_exists("edges") && !need_to_switch_by_signal )
+		configs::lua_config_value switch_by_edges_event_handler_config = current_point_behaviour_config["events"].copy();
+		switch_by_edges_event_handler_config.clear();
+		
+		if ( (*patrol_nodes_it).value_exists("edges") )
 		{
-			configs::lua_config_value event_handlers_config = current_behaviour_config["events"][(pcstr)generated_event_handler_name.c_str()];
-			event_handlers_config["event_name"] = "on_location_reached";
-			event_handlers_config["is_global"] = false;
+			switch_by_edges_event_handler_config["event_name"] = "on_location_reached";
+			switch_by_edges_event_handler_config["is_global"] = false;
 			
 			fixed_string<128> action_name = "action";
-			action_name.appendf("%d", event_handlers_config["actions"].size( ) );
+			action_name.appendf("%d", switch_by_edges_event_handler_config["actions"].size( ) );
 
-			configs::lua_config_value action_config = event_handlers_config["actions"][(pcstr)action_name.c_str()];
+			configs::lua_config_value action_config = switch_by_edges_event_handler_config["actions"][(pcstr)action_name.c_str()];
 			action_config["action_type"] = "filtered_switch_to_behaviour";
 			
 			configs::lua_config_iterator patrol_edges_it	= (*patrol_nodes_it)["edges"].begin();
@@ -271,7 +280,161 @@ void process_patrol_path_behaviour( configs::lua_config_value const& patrol_conf
 				action_config["behaviours"][dest_behaviour_name.c_str()] = (int)( *patrol_edges_it )["probability"];
 			}
 		}
-		index++;
+		
+		// there we need to parse look points.
+
+		if ( (*patrol_nodes_it).value_exists("look_points") )
+		{
+			u8 look_point_chooser_type = (*patrol_nodes_it)["look_point_selection"];
+			
+			configs::lua_config_iterator look_points_it		= (*patrol_nodes_it)["look_points"].begin();
+			configs::lua_config_iterator look_points_it_e	= (*patrol_nodes_it)["look_points"].end();
+			
+			u8 look_point_index = 1;
+			u32 last_look_point_index = (*patrol_nodes_it)["look_points"].size();
+			
+			for ( ; look_points_it != look_points_it_e; ++look_points_it )
+			{
+				fixed_string<128> look_point_turn_behaviour_name = behaviour_name;
+				look_point_turn_behaviour_name.appendf("look_point%d", look_point_index );
+				configs::lua_config_value current_look_point_behaviour_config = result_behaviours_config[ (pcstr)look_point_turn_behaviour_name.c_str( )].create_table();
+				
+				current_look_point_behaviour_config["behaviour_type"] = "npc_play_animation" /*"npc_look_at_position"*/;
+				current_look_point_behaviour_config["behaviour_config"].assign_lua_value( play_animation_behaviour_template.copy( ) );
+				
+
+				if ( !source_patrol_behaviour_config["events"].empty( ) )
+				{
+					current_look_point_behaviour_config["events"].assign_lua_value( source_patrol_behaviour_config["events"].copy() );
+				}
+				
+				pcstr switch_event = NULL;
+				float look_point_duration  = (*look_points_it)["duration"];
+				pcstr look_point_animation = (*look_points_it)["animation"];
+
+				if (  !strings::equal( look_point_animation, "" ) )
+				{
+					configs::lua_config_value goal_config = current_look_point_behaviour_config["behaviour_config"]["goals"][0]["filter_sets"][0]["parameter0_filter"][0]["filenames"][0];
+					goal_config.assign_lua_value( (*look_points_it)["animation_for_cook"] );					
+				}
+
+				if ( look_point_duration > 0.f )
+				{
+					fixed_string<128> timing_event_name = "on_time";
+					timing_event_name.appendf("%f", look_point_duration );
+					current_look_point_behaviour_config["timing"].create_table();
+					current_look_point_behaviour_config["timing"][0]["time"]	= look_point_duration ;
+					current_look_point_behaviour_config["timing"][0]["value"]	= (pcstr)timing_event_name.c_str();
+					switch_event = timing_event_name.c_str();		
+					
+				}
+				else if (  !strings::equal( look_point_animation, "" ) )
+				{					
+					switch_event = "animation_end";			
+				}
+				else 
+					switch_event = "turn_end";
+
+				pcstr signal_on_begin	= (*look_points_it)["signal_on_begin"];
+
+				if ( !strings::equal( signal_on_begin, "" ) )
+				{ 
+					fixed_string<128> event_handler_name = "event";
+					event_handler_name.appendf("%d", current_look_point_behaviour_config["events"].size());
+					
+					configs::lua_config_value look_point_event_handler_config = current_look_point_behaviour_config["events"][(pcstr)event_handler_name.c_str()];
+					look_point_event_handler_config["event_name"] = "turn_end";
+					
+					configs::lua_config_value action_config = look_point_event_handler_config["actions"]["action0"];
+					action_config["action_type"]	= "raise_event";
+					action_config["raised_event"]	= signal_on_begin;
+					
+					if ( check_for_switching_by_patrol_signal( current_point_behaviour_config["events"], signal_on_begin ) ){
+						look_point_index++;					
+						continue; // look_points iterator
+					}
+				}
+
+				pcstr signal_on_end		= (*look_points_it)["signal_on_end"];
+
+				if ( !strings::equal( signal_on_end, "" ) )
+				{ 
+					fixed_string<128> event_handler_name = "event";
+					event_handler_name.appendf("%d", current_look_point_behaviour_config["events"].size());
+
+					configs::lua_config_value look_point_event_handler_config = current_look_point_behaviour_config["events"][(pcstr)event_handler_name.c_str()];
+					look_point_event_handler_config["event_name"] = "turn_end";
+
+					configs::lua_config_value action_config = look_point_event_handler_config["actions"]["action0"];
+					action_config["action_type"]	= switch_event;
+					action_config["raised_event"]	= signal_on_end;
+
+					if ( check_for_switching_by_patrol_signal( current_point_behaviour_config["events"], signal_on_end ) ){
+						look_point_index++;					
+						continue; // look_points iterator
+					}
+				}
+		
+				
+				fixed_string<128> event_handler_name = "event";
+				event_handler_name.appendf("%d", current_look_point_behaviour_config["events"].size());
+								
+				configs::lua_config_value look_point_event_handler_config = current_look_point_behaviour_config["events"][(pcstr)event_handler_name.c_str()];
+				look_point_event_handler_config["event_name"] = switch_event;
+
+
+				if ( look_point_chooser_type == 0 || look_point_index == last_look_point_index )
+				{
+					look_point_event_handler_config.assign_lua_value(switch_by_edges_event_handler_config.copy());
+					look_point_event_handler_config["event_name"] = switch_event;
+				}
+				else if ( look_point_chooser_type == 1 )
+				{
+					look_point_event_handler_config["is_global"] = false;
+
+					configs::lua_config_value action_config = look_point_event_handler_config["actions"]["action0"];
+					action_config["action_type"]	= "switch_to_behaviour";
+
+					fixed_string<128> switch_to_behaviour_name		= behaviour_name;
+					switch_to_behaviour_name.appendf("look_point%d", look_point_index + 1 );
+
+					action_config["switching_to_behaviour"]		= switch_to_behaviour_name.c_str();
+				}
+				look_point_index++;
+			}
+			
+			configs::lua_config_value current_point_behaviour_event_handlers_config = current_point_behaviour_config["events"][(pcstr)generated_event_handler_name.c_str()];
+			current_point_behaviour_event_handlers_config["event_name"] = "on_location_reached";
+			current_point_behaviour_event_handlers_config["is_global"]	= false;
+			fixed_string<128> action_name = "action";
+			action_name.appendf("%d", current_point_behaviour_event_handlers_config["actions"].size( ) );
+			if ( look_point_chooser_type == 0 )
+			{
+				current_point_behaviour_event_handlers_config["actions"][(pcstr)action_name.c_str()]["action_type"] = "filtered_switch_to_behaviour";
+				configs::lua_config_iterator look_points_it		= (*patrol_nodes_it)["look_points"].begin();
+				configs::lua_config_iterator look_points_it_e	= (*patrol_nodes_it)["look_points"].end();
+				u8 index = 1;
+				for ( ; look_points_it != look_points_it_e; ++look_points_it )
+				{
+					fixed_string<128> look_point_name = behaviour_name;
+					look_point_name.appendf("look_point%d", index++);
+					current_point_behaviour_event_handlers_config["actions"][(pcstr)action_name.c_str()]["behaviours"][(pcstr)look_point_name.c_str()] = (float)(*look_points_it)["probability"];
+				}
+			}
+			else if ( look_point_chooser_type == 1 )
+			{
+				current_point_behaviour_event_handlers_config["actions"]["action0"]["action_type"] = "switch_to_behaviour";
+				fixed_string<128> switch_to_behaviour_name		= behaviour_name;
+				switch_to_behaviour_name.appendf("look_point%d", 1 );
+				current_point_behaviour_event_handlers_config["actions"]["action0"]["switching_to_behaviour"] = (pcstr)switch_to_behaviour_name.c_str();
+			}
+		}
+		else
+		{
+			if ( !switch_by_edges_event_handler_config.empty() )
+				current_point_behaviour_config["events"][(pcstr)generated_event_handler_name.c_str()].assign_lua_value(switch_by_edges_event_handler_config);
+		}
+		patrol_point_index++;
 	}
 
 	source_patrol_behaviour_config.clear();
@@ -376,6 +539,10 @@ void process_object ( configs::lua_config_value const& current,
 	full_name.append			( name );
 	
 	pcstr game_object_type = current["game_object_type"];
+	if(strings::equal(game_object_type, "camera"))
+	{
+		// do not process camera
+	}else
 	if(strings::equal(game_object_type, "scene"))
 	{
 		process_scene		( folder_name, current, t_objects, t_scenes );
@@ -473,7 +640,6 @@ void process_folder( configs::lua_config_value const& t_folders,
 
 			configs::lua_config_value const& t_current = t_objects[guid];
 			pcstr tool_name			= t_current["tool_name"];
-
 			if(0==strings::compare(tool_name, "terrain"))
 			{ // process terrain here
 				configs::lua_config_value const& t_nodes	= t_current["nodes"];
@@ -603,7 +769,7 @@ void project_cooker::make_game_project( configs::lua_config_ptr const& editor_co
 	fs_new::virtual_path_string		path_to_save;
 	path_to_save.appendf			( "%sprojects/%s/project", resources_converted_path, project_name.c_str() );
 	fs_new::native_path_string		path_to_save_disk_path;
-	bool need_save_to_file			= !m_editor_present;
+	bool need_save_to_file			= true;//!m_editor_present;
 
 
 	if(need_save_to_file)

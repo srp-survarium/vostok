@@ -18,6 +18,7 @@
 #include <xray/render/world.h>
 #include <xray/collision/api.h>
 #include <xray/core_entry_point.h>
+#include <xray/network/world.h>
 
 static xray::command_line::key			s_build_resources		("build_resources", "", "application", "runs engine in build resources mode");
 
@@ -126,8 +127,8 @@ void engine_world::initialize			( )
 	apc::wait							( apc::sound );
 	R_ASSERT							( m_sound_world );
 
-	// initialize sound users
 	apc::run							( apc::logic,	boost::bind(&sound::world_user::initialize, &m_sound_world->get_logic_world_user()), apc::continue_process_loop, apc::dont_wait_for_completion);
+	apc::run							( apc::logic,	boost::bind(&network::world::initialize, m_network_world), apc::continue_process_loop, apc::dont_wait_for_completion);
 	
 #ifndef MASTER_GOLD
 	if ( is_editor )
@@ -256,6 +257,7 @@ void engine_world::finalize				( )
 	apc::wait							( apc::editor );
 
 	apc::run							( apc::logic,	boost::bind(&render::one_way_render_channel::owner_finalize, &m_render_world->logic_channel() ), apc::continue_process_loop, apc::dont_wait_for_completion );
+//!	apc::run							( apc::logic,	boost::bind(&network::world::finalize, m_network_world), apc::continue_process_loop, apc::dont_wait_for_completion );
 	apc::run							( apc::logic,	boost::bind(&sound::world_user::finalize, &m_sound_world->get_logic_world_user()), apc::continue_process_loop, apc::dont_wait_for_completion );
 
 #ifndef MASTER_GOLD
@@ -288,6 +290,7 @@ void engine_world::finalize				( )
 		apc::wait						( apc::build );
 
 	apc::run							( apc::logic,	boost::bind(&engine_world::logic_finalize_modules, this), apc::continue_process_loop, apc::dont_wait_for_completion );
+	apc::run							( apc::logic,	boost::bind(&network::world::finalize, m_network_world ), apc::continue_process_loop, apc::dont_wait_for_completion );
 	apc::run_remote_only				( apc::logic,	boost::bind(&resources::finalize_thread_usage, false), apc::break_process_loop, apc::dont_wait_for_completion );
 
 	apc::run							( apc::network,	boost::bind(&network::destroy_world, m_network_world), apc::continue_process_loop, apc::dont_wait_for_completion );

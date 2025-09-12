@@ -28,6 +28,7 @@ public:
 	inline	u32				get_non_root_bones_count( ) const;
 	inline	skeleton_bone const&	get_bone		( bone_index_type index ) const;
 	inline	skeleton_bone const&	get_root		( ) const;
+	inline	skeleton_bone const&	get_root_bone	( ) const;
 	inline	bool					is_root_bone	( bone_index_type index ) const;
 
 private:

@@ -9,20 +9,15 @@
 #include "object_human_npc.h"
 #include "tool_misc.h"
 #include "project_items.h"
-#include <xray/collision/collision_object.h>
 #include <xray/editor/base/collision_object_types.h>
-#include <xray/collision/animated_object.h>
-#include <xray/animation/mixing_expression.h>
-#include <xray/animation/instant_interpolator.h>
-#include <xray/animation/mixing_animation_lexeme_parameters.h>
-#include <xray/render/facade/debug_renderer.h>
 #include "editor_world.h"
+#include "object_collision.h"
 
 #pragma managed( push, off )
-#	include <xray/render/world.h>
-#	include <xray/editor/world/engine.h>
+#	include <xray/animation/mixing_animation_lexeme_parameters.h>
 #	include <xray/render/facade/scene_renderer.h>
 #	include <xray/render/facade/editor_renderer.h>
+#	include <xray/animation/mixing_expression.h>
 #pragma managed( pop )
 
 namespace xray {
@@ -75,12 +70,6 @@ object_human_npc::~object_human_npc	( )
 	DELETE							( m_scene );
 }
 
-void object_human_npc::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy		( g_allocator );
-}
-
 void object_human_npc::set_visible	( bool is_visible )
 {
 	ASSERT							( is_visible != get_visible() );
@@ -106,7 +95,6 @@ void object_human_npc::set_transform( float4x4 const& transform )
 	if ( get_visible() && m_model_instance->c_ptr() )
 	{
 		get_editor_renderer().scene().update_model	( *m_scene, m_model_instance->c_ptr()->m_render_model->m_model, *m_transform );
-		get_editor_renderer().select_model			( *m_scene, m_model_instance->c_ptr()->m_render_model->m_model, m_project_item->get_selected() );
 	}
 }
 

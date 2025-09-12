@@ -7,7 +7,6 @@
 #include "pch.h"
 #include "object_sky.h"
 #include "game_world.h"
-#include "game.h"
 
 #include <xray/render/world.h>
 
@@ -18,15 +17,12 @@
 
 namespace stalker2{
 
-object_sky::object_sky( game_world& w ):
-	super		( w )
-{
-}
+object_sky::object_sky( game_scene& w )
+:super		( w )
+{}
 
 object_sky::~object_sky( )
-{
-	
-}
+{}
 
 void object_sky::load( configs::binary_config_value const& t )
 {
@@ -59,20 +55,15 @@ void object_sky::material_ready( resources::queries_result& data, xray::render::
 	
 	if(data.is_successful())
 	{
-		m_game_world.get_game().renderer().scene().set_sky_material(m_game_world.get_game().get_render_scene(), 
-																	data[0].get_unmanaged_resource());
+		m_game_scene.renderer().scene().set_sky_material(m_game_scene.get_render_scene(), data[0].get_unmanaged_resource());
 	}
 }
 
 void object_sky::unload_contents( )
-{
-	
-}
+{}
 
 void object_sky::load_contents( )
-{
-	
-}
+{}
 
 
 } // namespace stalker2

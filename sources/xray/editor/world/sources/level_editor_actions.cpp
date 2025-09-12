@@ -220,6 +220,11 @@ void level_editor::register_actions( )
 	get_input_engine()->register_action( a, "" );
 	ide()->add_action_menu_item ( gui_binder, action_name, "FileMenuItem", 11);
 
+	action_name		= "Statistic";
+	a				= gcnew action_delegate(action_name, gcnew  execute_delegate_managed(this, &level_editor::gather_project_statistic_action));
+	get_input_engine()->register_action( a, "" );
+	ide()->add_action_menu_item ( gui_binder, action_name, "FileMenuItem", 10);
+
 	action_name		= "open project";
 	get_input_engine()->register_action( gcnew action_delegate(action_name, gcnew  execute_delegate_managed(this, &level_editor::open_project_action) ), "Control+O" );
 	ide()->add_action_menu_item ( gui_binder, action_name, "ProjectMenuItem", 1);
@@ -618,6 +623,15 @@ void level_editor::export_project_as_obj_action()
 void level_editor::export_selection_as_obj_action()
 {
 	m_project->export_as_obj( true );
+}
+
+void level_editor::gather_project_statistic_action( )
+{
+	scene_statistic stats;
+	m_project->gather_statistic( %stats );
+
+	wpf_controls::property_container^ container = stats.get_property_container();
+	m_object_inspector_tab->show_properties( container );
 }
 
 void level_editor::close_project_action( )

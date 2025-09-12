@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="particle_editor"
 	ProjectGUID="{7B841BC8-D6BD-4665-92B9-21DE323D20FA}"
 	RootNamespace="particle_editor"
@@ -80,7 +80,7 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)stlport/libraries/$(PlatformName)&quot;"
 				EmbedManagedResourceFile="$(TargetDir)intermediates\$(ConfigurationName)\editor_base\editor_base.resources.resources"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)../binaries/$(PlatformName)/$(TargetName).pdb"
@@ -253,7 +253,7 @@
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)/stlport/libraries/$(PlatformName)&quot;"
 				EmbedManagedResourceFile=""
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -400,13 +400,13 @@
 			RelativePathToProject=".\xray\editor\controls\sources\editor_controls.vcproj"
 		/>
 		<AssemblyReference
-			RelativePath="p:\VS2008\Visual Studio Tools for Office\PIA\Office12\Microsoft.Office.Interop.Excel.dll"
+			RelativePath="Microsoft.Office.Interop.Excel.dll"
 			AssemblyName="Microsoft.Office.Interop.Excel, Version=12.0.0.0, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL"
 			MinFrameworkVersion="0"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{AC5DD91F-CE10-4E05-B48A-E1DDEC5CCD9C}"
-			RelativePathToProject=".\xray\engine\pc\sources\engine_pc.vcproj"
+			RelativePathToProject=".\xray\engine\pc\dx11\sources\engine_pc_dx11.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{D48CBBFF-8B47-4E0F-915B-3220F3BC2402}"

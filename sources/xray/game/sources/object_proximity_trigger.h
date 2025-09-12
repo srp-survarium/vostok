@@ -25,9 +25,9 @@ namespace stalker2
 		proximity_trigger_testee_status_outside
 	};
 
-	class object_proximity_trigger: public game_object_static, public object_controlled
+	class object_proximity_trigger: public game_world_object, public object_controlled
 	{
-		typedef game_object_static									super;
+		typedef game_world_object									super;
 		typedef buffer_vector< collision::geometry_instance* >		instances_vector;
 	public:
 						object_proximity_trigger	( game_world& w );

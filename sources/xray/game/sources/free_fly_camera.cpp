@@ -22,24 +22,12 @@ using xray::input::mouse;
 
 namespace stalker2{
 
-//const console_commands::command_token cameras[] = 
-//{
-//	{ type_camera_free_fly,				"free_fly" },
-//	{ type_camera_terrain_along_fly,	"along_terrain" },
-//};
-//
-//u32 s_type_camera			= type_camera_free_fly;
-//u32 s_current_type_camera	= u32(-1);
-//console_commands::cc_token camera_cmd( "camera_type", s_type_camera, cameras, array_size( cameras ), true, xray::console_commands::command_type_user_specific  );
-//
-//float s_terrain_fly_height = 1.8f;
-//static console_commands::cc_float s_cmd_terrain_fly_height( "camera_terrain_fly_height", s_terrain_fly_height, 0.2f, 5.f, true, console_commands::command_type_user_specific );
-
-free_fly_camera::free_fly_camera( stalker2::game_world& w ) 
+free_fly_camera::free_fly_camera( stalker2::game_scene& w, camera_director_ptr& cd ) 
 :super				( w ),
-m_start_time_ms		( 0 ),
+m_prev_time_ms		( 0 ),
+m_prev_delta_sec	( -1.0f ),
 m_mouse_move		( 0,0,0 ),
-m_camera_director	( w.get_camera_director() )
+m_camera_director	( cd )
 {
 }
 
@@ -51,12 +39,6 @@ bool free_fly_camera::on_keyboard_action( xray::input::world* input_world,
 
 	if(action == xray::input::kb_key_hold)
 		m_keyb_events.push_back	( key );
-
-	if(action == xray::input::kb_key_down && key == xray::input::key_p)
-		m_game_world.test_physics1();
-
-	if(action == xray::input::kb_key_down && key == xray::input::key_o)
-		m_game_world.test_physics2();
 
 	return false;
 }
@@ -129,35 +111,6 @@ void free_fly_camera::build_view_matrix( xray::math::float2 const& raw_angles, f
 	float4x4 const translation		= math::create_translation( position );
 
 	m_inverted_view_matrix			= rotation * translation;
-
-	//if(s_type_camera== type_camera_terrain_along_fly)
-	//{
-	//	if(m_game_world.get_collision_tree())
-	//	{
-	//		collision::ray_objects_type			collision_results( g_allocator );
-
-	//		const float pick_point_height_camera_point = 0.3f;//1000.f;
-	//		const float pick_length = 1000.f + pick_point_height_camera_point;
-	//		
-
-
-	//		const float3 pick_point = m_inverted_view_matrix.c.xyz() + float3( 0, pick_point_height_camera_point, 0 );
-	//		
-	//		const float3 dir( 0, -1, 0 );
-
-	//		bool ray_query_result = m_game_world.get_collision_tree()->ray_query(
-	//									collision_object_type_terrain,
-	//									pick_point,
-	//									dir,
-	//									pick_length,  
-	//									collision_results, 
-	//									collision::objects_predicate_type( )
-	//								);
-
-	//		if(ray_query_result)
-	//			m_inverted_view_matrix.c.xyz().y = ( pick_point.y - collision_results[0].distance + s_terrain_fly_height );
-	//	}	
-	//}
 }
 
 
@@ -166,15 +119,16 @@ void free_fly_camera::on_focus( bool b_focus_enter )
 	super::on_focus ( b_focus_enter );
 	if(b_focus_enter)
 	{
-		m_game_world.get_game().input_world().add_handler						(*this);
+		m_game_scene.get_game().input_world().add_handler						(*this);
 	}else
-		m_game_world.get_game().input_world().remove_handler(*this);
+		m_game_scene.get_game().input_world().remove_handler(*this);
 }
 
 void free_fly_camera::on_activate( camera_director* cd )
 {
 	super::on_activate		( cd );
-	m_start_time_ms			= m_game_world.get_game().time_ms();
+	m_prev_time_ms			= m_game_scene.get_game().time_ms();
+	m_prev_delta_sec		= -1.0f;
 	m_inverted_view_matrix	= cd->get_inverted_view_matrix	( );
 }
 
@@ -182,15 +136,24 @@ void free_fly_camera::tick( )
 {
 
 #if XRAY_PLATFORM_WINDOWS
-	u32 const game_time_ms		= m_game_world.get_game().time_ms( );
+	u32 const game_time_ms		= m_game_scene.get_game().time_ms( );
 
-	ASSERT						( game_time_ms >= m_start_time_ms );
-	float const time_delta		= float( game_time_ms - m_start_time_ms );
+	ASSERT						( game_time_ms >= m_prev_time_ms );
+	float const current_time_delta	= float( game_time_ms - m_prev_time_ms );
 
-	float factor				= 60.f * 0.001f * time_delta;
+	if(m_prev_delta_sec<0.0f)
+		m_prev_delta_sec		= current_time_delta;
+	else
+		m_prev_delta_sec		= current_time_delta*0.1f + m_prev_delta_sec*0.9f;
+
+	float factor				= 60.f * 0.001f * m_prev_delta_sec;
 	float angle_factor			= 0.5f;
 
-	m_start_time_ms				= game_time_ms;
+	m_prev_time_ms				= game_time_ms;
+
+	static u32 counter = 0;
+	if(keyb_event_present(input::key_q))
+		LOG_INFO("[%d] %f",counter++, current_time_delta);
 
 	if( m_keyb_events.empty() && 
 		m_mouse_events.empty() && 
