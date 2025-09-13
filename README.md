@@ -66,3 +66,8 @@ python ./scripts/copy_lib_files.py ../vostok-libs/sources/ sources/
     * Set base build directory to `base`.
     * Disable relocation diffs: Diff Options > Function relocation diffs > None.
     * Now you can choose any object file (e.g. `vostok\collision\box_geometry_instance.obj`) and start matching assembly!
+
+
+## Quick guide on matching assembly
+
+https://gist.github.com/sushi-shi/8bf16f82c3b1c65fd357d73ecfda909e
