@@ -61,8 +61,8 @@ python ./scripts/copy_lib_files.py ../vostok-libs/sources/ sources/
 
 5. Setup `objdiff`:
     * Open Project `Settings`.
-    * Set project directory to `vostok-coff-delinker`.
+    * Set project directory to cloned `vostok-coff-delinker` project.
     * Set target build directory to `target`.
     * Set base build directory to `base`.
     * Disable relocation diffs: Diff Options > Function relocation diffs > None.
-    * Now you can choose any object file (e.g. `vostok\collision\box_geometry_instance.obj`) and start matching!
+    * Now you can choose any object file (e.g. `vostok\collision\box_geometry_instance.obj`) and start matching assembly!
