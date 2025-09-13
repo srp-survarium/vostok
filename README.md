@@ -25,15 +25,34 @@
     * `python` - Install newest version from here: https://www.python.org/downloads/
     * `rustc` - Install nightly Rust toolchain like so: `rustup default nightly`
 
+5. Misc. projects
+    * Other projects need to be cloned at the same level this project is cloned.
+    * Before you do that, make sure long paths on Windows are enabled
+        - In Registry (requires administrator privilidges):
+        ```
+        reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+        ```
+        - In Git (requires administrator privilidges):
+        ```
+        git config --system core.longpaths true
+        ```
+    * Then clone those repositories (at the same level)
+    ```
+    git clone git@github.com:srp-survarium/srp.git
+    git clone git@github.com:srp-survarium/xray-structure.git
+    git clone git@github.com:srp-survarium/vostok-structure.git
+    git clone git@github.com:srp-survarium/vostok-coff-delinker.git
+    git clone git@github.com:srp-survarium/vostok-libs.git
+    ```
 
 ## Setting up
 
-1. Missing
-
-1. To get missing libraries clone `vostok-libs` project and then run this command:
+1. Install missing proprietary libraries by running this command from the root of the project
 ```terminal
 python ./scripts/copy_lib_files.py ../vostok-libs/sources/ sources/
 ```
 
-2. You can download VS2008 from here: https://archive.org/details/en_visual_studio_2008_professional_x86_dvd_x14-26326_202310
-3. The hash can be verified here: https://files.rg-adguard.net/search
+2. Build `survarium - PC - Windows` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
+3. Build `game_core` solution in VS2008 in `Master Gold` configuration.
+4. Build `survarium - PC - Windows` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
+
