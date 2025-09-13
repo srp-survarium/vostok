@@ -24,6 +24,7 @@
     * `objdiff` - Install newest version from here: https://github.com/encounter/objdiff
     * `python` - Install newest version from here: https://www.python.org/downloads/
     * `rustc` - Install nightly Rust toolchain like so: `rustup default nightly`
+    * `IDA Free` - Install from here (requires getting free license): https://hex-rays.com/ida-free
 
 5. Misc. projects
     * Other projects need to be cloned at the same level this project is cloned.
@@ -53,6 +54,15 @@ python ./scripts/copy_lib_files.py ../vostok-libs/sources/ sources/
 ```
 
 2. Build `survarium - PC - Windows` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
+    * TODO: This step should be removed and be set as a dependency in `survarium - PC - Windows`.
 3. Build `game_core` solution in VS2008 in `Master Gold` configuration.
+    * TODO: This step should be removed and be set as a dependency in `survarium - PC - Windows`.
 4. Build `survarium - PC - Windows` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
 
+5. Setup `objdiff`:
+    * Open Project `Settings`.
+    * Set project directory to `vostok-coff-delinker`.
+    * Set target build directory to `target`.
+    * Set base build directory to `base`.
+    * Disable relocation diffs: Diff Options > Function relocation diffs > None.
+    * Now you can choose any object file (e.g. `vostok\collision\box_geometry_instance.obj`) and start matching!
