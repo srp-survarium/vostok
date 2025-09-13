@@ -29,21 +29,21 @@
     * Other projects need to be cloned at the same level this project is cloned.
     * Before you do that, make sure long paths on Windows are enabled
         - In Registry (requires administrator privilidges):
-        ```
-        reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
-        ```
+            ```
+            reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+            ```
         - In Git (requires administrator privilidges):
-        ```
-        git config --system core.longpaths true
-        ```
+            ```
+            git config --system core.longpaths true
+            ```
     * Then clone those repositories (at the same level)
-    ```
-    git clone git@github.com:srp-survarium/srp.git
-    git clone git@github.com:srp-survarium/xray-structure.git
-    git clone git@github.com:srp-survarium/vostok-structure.git
-    git clone git@github.com:srp-survarium/vostok-coff-delinker.git
-    git clone git@github.com:srp-survarium/vostok-libs.git
-    ```
+        ```
+        git clone git@github.com:srp-survarium/srp.git
+        git clone git@github.com:srp-survarium/xray-structure.git
+        git clone git@github.com:srp-survarium/vostok-structure.git
+        git clone git@github.com:srp-survarium/vostok-coff-delinker.git
+        git clone git@github.com:srp-survarium/vostok-libs.git
+        ```
 
 ## Setting up
 
