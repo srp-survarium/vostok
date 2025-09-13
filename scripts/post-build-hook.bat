@@ -6,14 +6,21 @@
 :: The script current directory is: :/sources/vostok/survarium/pc/sources
 ::
 
-if not defined VOSTOK_DIR    set    "VOSTOK_DIR=%cd%/../../../../.."
-if not defined SRP_DIR       set       "SRP_DIR=%VOSTOK_DIR%/../srp" :: TODO: Consider storing `srp` in the same repo.
-if not defined COFF_DIR      set      "COFF_DIR=%VOSTOK_DIR%/../vostok-coff-delinker"
-if not defined XRAY_STUB_DIR set "XRAY_STUB_DIR=%VOSTOK_DIR%/../xray-structure"
+if not defined VOSTOK_DIR    set    "VOSTOK_DIR=%cd%\..\..\..\..\.."
+if not defined SRP_DIR       set       "SRP_DIR=%VOSTOK_DIR%\..\srp"
+if not defined COFF_DIR      set      "COFF_DIR=%VOSTOK_DIR%\..\vostok-coff-delinker"
+if not defined XRAY_STUB_DIR set "XRAY_STUB_DIR=%VOSTOK_DIR%\..\xray-structure"
 
-set "TEMP_DIR=%VOSTOK_DIR%/binaries/temp_ghidra_project"
-set "PDB_FILE=%VOSTOK_DIR%/binaries/Win32/survarium-win32-gold.pdb"
-set "EXE_FILE=%VOSTOK_DIR%/binaries/Win32/survarium-win32-gold.exe"
+:: Normalize paths in environment variables
+for %%I in ("%VOSTOK_DIR%")     do set "VOSTOK_DIR=%%~fI"
+for %%I in ("%SRP_DIR%")        do set "SRP_DIR=%%~fI"
+for %%I in ("%COFF_DIR%")       do set "COFF_DIR=%%~fI"
+for %%I in ("%XRAY_STUB_DIR%")  do set "XRAY_STUB_DIR=%%~fI"
+
+set "ENGINE_DIR=%VOSTOK_DIR%\sources\vostok"
+set   "TEMP_DIR=%VOSTOK_DIR%\binaries\temp_ghidra_project"
+set   "PDB_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-win32-gold.pdb"
+set   "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-win32-gold.exe"
 
 if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::collision"
 
@@ -28,7 +35,7 @@ if not exist "%TEMP_DIR%" (
 pushd "%SRP_DIR%"
 
 echo Regenerating structure based on the compiled PDB file
-cargo run --release --bin pdb-parser -- --pdb-path "%PDB_FILE%" --output-path "%XRAY_STUB_DIR%"
+cargo run --release --bin pdb-parser -- --pdb-path "%PDB_FILE%" --output-path "%XRAY_STUB_DIR%" --engine-path "%ENGINE_DIR%" --as-base
 
 popd
 
