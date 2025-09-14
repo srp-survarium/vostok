@@ -24,6 +24,8 @@ public:
 	virtual	void				translate_query			( resources::query_result_for_cook&	parent );
 	virtual void				delete_resource			( resources::resource_base* resource );
 
+
+
 private:
 			void				on_game_project_loaded( resources::queries_result& data, 
 														  resources::query_result_for_cook* parent );

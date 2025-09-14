@@ -63,22 +63,33 @@ public:
     virtual void* Alloc(UPInt size, UPInt /*align*/)
     {
         //return _aligned_malloc(size, align);
-		//return XRAY_MALLOC_IMPL( xray::memory::g_mt_allocator, size, "scaleform" );
+#ifdef MASTER_GOLD
+		return XRAY_MALLOC_IMPL( xray::memory::g_mt_allocator, size, "scaleform" );
+#else
 		return XRAY_MALLOC_IMPL( xray::debug::g_mt_allocator, size, "scaleform" );
+#endif
     }
 
     virtual void  Free(void* ptr, UPInt size, UPInt align)
     {
         SF_UNUSED2(size, align);
         //_aligned_free(ptr);
+#ifdef MASTER_GOLD
+		return XRAY_FREE_IMPL( xray::memory::g_mt_allocator, ptr );
+#else
 		return XRAY_FREE_IMPL( xray::debug::g_mt_allocator, ptr );
+#endif
     }
 
     virtual void* Realloc(void* oldPtr, UPInt oldSize, UPInt newSize, UPInt /*align*/)
     {
         SF_UNUSED(oldSize);
         //return _aligned_realloc(oldPtr, newSize, align);
+#ifdef MASTER_GOLD
+		return XRAY_REALLOC_IMPL( xray::memory::g_mt_allocator, oldPtr, newSize, "scaleform");
+#else
 		return XRAY_REALLOC_IMPL( xray::debug::g_mt_allocator, oldPtr, newSize, "scaleform");
+#endif
     }
 #elif defined(SF_OS_PS3)
     virtual void* Alloc(UPInt size, UPInt align)
