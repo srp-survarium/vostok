@@ -9,7 +9,8 @@
 
 #include <vostok/memory_single_size_buffer_allocator.h>
 #include <vostok/unmanaged_allocation_resource.h>
-#include "bullet.h"
+
+#include <vostok/game_core/bullet.h>
 
 #ifndef MASTER_GOLD
 
@@ -36,7 +37,7 @@ struct	bullet_ticker_predicate;
 class bullet_manager 
 {
 public:
-					bullet_manager					( game_world& w );
+					bullet_manager					( /* game_world& w */ );
 					~bullet_manager					( );
 	void			initialize						( );
 	void			register_console_commands		( );
@@ -47,7 +48,9 @@ public:
 	void			fire							( float3 position, float3 direction );
 	float			get_bullet_time_factor			( );
 	void			add_decal						( float3 const& position, float3 const& direction, float3 const& normal, bool is_front_face );
+#if 0
 	game_world&		get_game_world					( ) {return m_game_world;}
+#endif
 
 #ifndef MASTER_GOLD
 	void			render_debug					( render::debug::renderer& renderer, render::scene_ptr const& scene );
@@ -85,7 +88,9 @@ private:
 	unmanaged_allocation_resource_ptr				m_bullets_memory_ptr;
 	uninitialized_reference< bullets_allocator >	m_bullets_allocator_ref;
 
+#if 0
 	game_world&										m_game_world;
+#endif
 	tasks::task_type*								m_task_type;
 
 	u32												m_max_bullets_count;

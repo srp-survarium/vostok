@@ -6,14 +6,19 @@
 
 
 #include "pch.h"
-#include "bullet.h"
-#include "bullet_manager.h"
+#include <vostok/game_core/bullet.h>
+
+#if 0
 #include "game.h"
 #include "game_world.h"
-#include "collision_object_types.h"
+#endif
+
+#include <vostok/game_core/bullet_manager.h>
+#include <vostok/game/collision_object_types.h>
 
 #include <vostok/collision/common_types.h>
 #include <vostok/collision/space_partitioning_tree.h>
+#include <vostok/collision/collision_object.h>
 
 namespace survarium {
 
@@ -428,6 +433,7 @@ collision_result bullet::check_collision (	bullet_manager& bullet_manager,
 		direction						*= 1.f / distance;
 		
 		collision::ray_triangles_type triangles				= collision::ray_triangles_type( g_allocator );
+#if 0
 		collision::space_partitioning_tree * const tree		= bullet_manager.get_game_world().get_collision_tree();
 
 		if ( !tree )
@@ -445,7 +451,7 @@ collision_result bullet::check_collision (	bullet_manager& bullet_manager,
 
 		if ( !does_ray_intersect_something )
 			break;
-
+#endif
 		bool const need_new_collision_check	=
 			process_ray_query(
 				bullet_manager,
