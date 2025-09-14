@@ -8,7 +8,7 @@
 #include "game_world.h"
 #include "game.h"
 #include "cell_manager.h"
-#include "bullet_manager.h"
+#include <vostok/game_core/bullet_manager.h>
 #include "event_manager.h"
 #include "object_scene.h"
 #include "actor.h"
@@ -78,7 +78,7 @@ m_client				( game.get_network_world() )
 #ifndef MASTER_GOLD
 	m_dbg_name							= "Game World";
 #endif //#ifndef MASTER_GOLD
-	m_bullet_manager					= NEW(bullet_manager)( *this );
+	m_bullet_manager					= NEW(bullet_manager)( );
 	m_camera_director					= NEW(camera_director)( *this );
 	m_camera_director->set_no_delete	( );
 	m_actor_input_controller			= NEW(actor_input_controller)( *this );

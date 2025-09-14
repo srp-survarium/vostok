@@ -17,7 +17,7 @@
 #include <vostok/render/facade/terrain_base.h>
 #include <vostok/physics/rigid_body.h>
 #include <vostok/physics/world.h>
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 
 namespace survarium {
 

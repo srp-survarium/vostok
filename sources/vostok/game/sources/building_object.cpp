@@ -8,7 +8,7 @@
 
 #include "building_object.h"
 #include <vostok/collision/geometry_instance.h>
-#include "collision_object_types.h"
+#include <vostok/game/collision_object_types.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/render/facade/game_renderer.h>
