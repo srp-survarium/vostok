@@ -1,0 +1,6 @@
+sampler2D	s_base : register(s0);
+
+half4 	main(half2 tc : TEXCOORD0) : COLOR
+{
+	return	tex2D(s_base, tc);
+}

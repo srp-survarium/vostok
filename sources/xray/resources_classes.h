@@ -41,6 +41,8 @@ enum class_id_enum
 	composite_render_model_instance_class,	// composite_render_model_instance
 	user_mesh_class,						// user mesh instance (not shared). terrain cursor, and other user-defined geometry
 	
+	grass_render_model_class,				// grass render model class (shared)
+	
 	converted_model_class,
 	collision_geometry_class,
 
@@ -95,6 +97,7 @@ enum class_id_enum
 	dialog_class,
 	game_dialog_class,
 	game_project_class,
+	game_project_simple_class,
 	game_cell_class,
 	game_object_class,
 	game_object_scene_class,

@@ -22,6 +22,8 @@ using xray::logging::log_file;
 
 static log_callback				s_log_callback	= 0;
 
+xray::core::log_file_usage	 get_log_file_usage ();
+
 namespace xray {
 namespace logging {
 
@@ -200,10 +202,15 @@ static void backdoor_process	(
 		va_list const args
 	)
 {
+	using namespace xray::fs;
+
 	XRAY_UNREFERENCED_PARAMETERS(initiator, settings);
 	XRAY_UNREFERENCED_PARAMETER(helper);
 	static bool s_in_backdoor	=	false;
 	if ( s_in_backdoor )
+		return;
+
+	if ( get_log_file_usage() == xray::core::no_log || get_log_file_usage() == xray::core::uninitialized_log )
 		return;
 
 	s_in_backdoor		=	true;
@@ -212,22 +219,21 @@ static void backdoor_process	(
 	message_buffer		+=	"\n";
 	xray::debug::output		(message_buffer.c_str());
 	
-	xray::fs::path_string	log_file_name;
+	path_string	log_file_name;
 	generate_log_file_name (& log_file_name, "log");
-	xray::fs::path_string	log_file_directory;
-	xray::fs::directory_part_from_path	(& log_file_directory, log_file_name.c_str());
+	path_string	log_file_directory;
+	directory_part_from_path	(& log_file_directory, log_file_name.c_str());
 
-	xray::fs::make_dir_r	(log_file_directory.c_str());
+	make_dir_r	(log_file_directory.c_str());
 
-	FILE * file			=	NULL;
-	if ( xray::fs::open_file (& file,	xray::fs::open_file_create	| 
-										xray::fs::open_file_write	| 
-										xray::fs::open_file_truncate, log_file_name.c_str(), false) )
+	file_type * file	=	NULL;
+	if ( open_file (& file, open_file_create | open_file_write | open_file_append, 
+							  log_file_name.c_str(), false) )
 	{
 		if ( file )
 		{
-			fwrite			(message_buffer.c_str(), 1, message_buffer.length(), file);
-			fclose			(file);
+			write_file		(file, message_buffer.c_str(), message_buffer.length());
+			close_file		(file);
 		}
 	}
 
@@ -267,7 +273,9 @@ static void process				(
 
 	path.add_part			(0);
 
-	if ( get_tree_verbosity( &path ) < helper.m_verbosity ) {
+	bool const force_verbosity	=	settings && (settings->flags & xray::logging::settings::flags_force_verbosity);
+
+	if ( !force_verbosity && get_tree_verbosity( &path ) < helper.m_verbosity ) {
 		xray::logging::ready_for_use	( true );
 		return;
 	}

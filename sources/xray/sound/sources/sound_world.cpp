@@ -320,9 +320,11 @@ channels_type sound_world::master_channel_type ( ) const
 	m_master_voice->GetVoiceDetails( &voice_details );
 	switch ( voice_details.InputChannels )
 	{
-	case 1:		return mono;
-	case 2:		return stereo;
-	default:	NODEFAULT( return channels_type_count );
+		case 1:		return mono;
+		case 2:		return stereo;
+		// temporarily for Xbox360
+		case 6:		return stereo;
+		default:	NODEFAULT( return channels_type_count );
 	}
 #else //  XRAY_PLATFORM_WINDOWS | XRAY_PLATFORM_XBOX_360
 	NOT_IMPLEMENTED ( return channels_type_count );
@@ -692,8 +694,8 @@ void sound_world::remove_scene_from_active	( sound_scene& scene )
 }
 
 void sound_world::set_active_sound_scene_impl(	sound_scene& scene,
-																u32 fade_in_time,
-																u32 fade_out_time  )
+												u32 fade_in_time,
+												u32 fade_out_time  )
 {
 	if ( m_current_scene )
 	{

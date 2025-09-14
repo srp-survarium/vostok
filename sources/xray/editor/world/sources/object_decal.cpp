@@ -6,8 +6,8 @@
 
 #include "pch.h"
 #include "object_decal.h"
-#include "object_base.h"
 #include "project.h"
+#include "object_collision.h"
 
 #include <xray/editor/base/collision_object_types.h>
 
@@ -17,7 +17,6 @@
 #include <xray/render/facade/scene_renderer.h>
 #include <xray/render/facade/decal_properties.h>
 #include <xray/render/facade/material_effects_instance_cook_data.h>
-#include <xray/render/facade/vertex_input_type.h>
 #include <xray/collision/collision_object.h>
 #pragma managed(pop)
 
@@ -146,7 +145,7 @@ void object_decal::initialize_collision ()
 	ASSERT								(!m_collision->initialized());
 
 	float3					extents		(0.2f, 0.2f, 0.2f);
-	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance(&debug::g_mt_allocator, math::create_scale(extents) );
+	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance(g_allocator, math::create_scale(extents) );
 	m_collision->create_from_geometry	(
 		true,
 		this,
@@ -244,12 +243,6 @@ void object_decal::unload_contents(bool bdestroy)
 	XRAY_UNREFERENCED_PARAMETERS		(bdestroy);
 
 	destroy_collision					();
-}
-
-void object_decal::destroy_collision()
-{
-	if (m_collision->initialized())
-		m_collision->destroy			(&debug::g_mt_allocator);
 }
 
 void object_decal::render( )

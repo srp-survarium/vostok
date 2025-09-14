@@ -1,0 +1,68 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 13.01.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+	CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common_defines.h"
+
+//uniform float3x4 m_V2W;
+
+#include "material.h"
+#include "vertex_input.h"
+
+float4 current_max_texture_dimension;
+static const float2 current_texture_dimension = current_max_texture_dimension.xy;
+
+float4 main(in vertex_output_struct input) : SV_TARGET
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float2 dx = ddx(parameters.tc * current_texture_dimension.x );
+	float2 dy = ddy(parameters.tc * current_texture_dimension.y );
+	
+	float uv_gradient 		= length(cross(float3(dx,0.0f), float3(dy,0.0f)));
+	float position_gradient = length(cross(ddx(parameters.world_view_position.xyz), ddy(parameters.world_view_position.xyz)));
+	
+	// Get const gradient.
+	float texture_density = uv_gradient / position_gradient;
+	
+	// TODO: Get from constants.
+	static const float max_texture_density  = 1024.0f * 1024.0f;
+	static const float base_texture_density = 512.0f * 512.0f;
+	static const float min_texture_density  = 128.0f * 128.0f;
+	
+	static const float4 max_density_color   = float4(1.0f, 0.0f, 0.0f, 0.0f);
+	static const float4 base_density_color  = float4(0.0f, 1.0f, 0.0f, 0.0f);
+	static const float4 min_density_color   = float4(0.0f, 0.0f, 1.0f, 0.0f);
+	
+	return lerp(
+		lerp(base_density_color, 
+			min_density_color, 
+			(base_texture_density-texture_density) / (base_texture_density-min_texture_density)
+		),
+		lerp(base_density_color, 
+			max_density_color, 
+			(texture_density-base_texture_density) / (max_texture_density-base_texture_density)
+		),
+		texture_density>=base_texture_density
+	);
+}
+
+/*
+	texcoordDensity = area of ddx(texcoords),ddy(texcoords)
+	worldSpaceDensity = area of ddx(worldpos),ddy(worldpos)
+	
+	texCoordDensityPerWorldUnit = texcoordDensity / worldSpaceDensity
+*/
+
+
+
+
+

@@ -102,6 +102,9 @@ public:
 // world methods
 public:
 			void	set_view_matrix					( scene_view_ptr const& scene_view, math::float4x4 const& view_matrix );
+#ifndef MASTER_GOLD
+			void	set_view_matrix_only			( scene_view_ptr const& scene_view, float4x4 const& view_matrix );
+#endif // #ifndef MASTER_GOLD
 			void	set_projection_matrix			( scene_view_ptr const& scene_view, math::float4x4 const& projection );
 			void	set_world_matrix				( scene_view_ptr const& scene_view, math::float4x4 const& w );
 

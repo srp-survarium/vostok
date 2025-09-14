@@ -107,6 +107,9 @@ private:
 			void			initialize_render		( );
 			void			initialize_logic		( );
 			void			initialize_logic_thread	( );
+			void			initialize_scaleform	( );
+			void			destroy_scaleform		( );
+
 			void			post_initialize			( bool const show_window );
 			void			enable_game_impl		( bool const value );
 

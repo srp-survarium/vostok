@@ -60,7 +60,6 @@ namespace xray
 			virtual		void				save						( configs::lua_config_value t )			override;
 
 			virtual		aabb				get_aabb					( )										override;
-			virtual		void				destroy_collision			( )										override;
 			
 			virtual		void				set_transform				( float4x4 const& transform )			override;
 

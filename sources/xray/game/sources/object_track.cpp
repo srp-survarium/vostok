@@ -11,7 +11,7 @@
 
 namespace stalker2{
 
-object_track::object_track( game_world& w )
+object_track::object_track( game_scene& w )
 :super( w )
 {
 	m_track = NEW(xray::animation::anm_track)(g_allocator, 10);

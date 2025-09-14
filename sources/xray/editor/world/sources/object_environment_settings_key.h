@@ -13,7 +13,7 @@ namespace xray
 	{
 		ref class object_environment_settings;
 
-		public ref class object_environment_settings_key
+		ref class object_environment_settings_key
 		{
 		public:
 			object_environment_settings_key	( object_environment_settings^ parent );

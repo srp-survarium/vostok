@@ -18,7 +18,7 @@ class object_light : public game_object_static, public object_controlled
 {
 	typedef game_object_static		super;
 public:
-					object_light			( game_world& w );
+					object_light			( game_scene& w );
 	virtual			~object_light			( );
 	virtual void	load					( configs::binary_config_value const& t );
 	virtual void	load_contents			( );
@@ -31,7 +31,6 @@ public:
 			void	remove_from_scene		( );
 protected:
 	render::light_props m_props;
-	render::scene_ptr	m_scene;
 	u32					m_light_id;
 	bool				m_current_state;
 }; // class object_light

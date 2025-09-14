@@ -5,7 +5,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <xray/engine/pc/library_linkage.h>
+
+#ifdef OPENGL
+#	include <xray/engine/pc/opengl/library_linkage.h>
+#else // #ifdef OPENGL
+#	include <xray/engine/pc/dx11/library_linkage.h>
+#endif // #ifdef OPENGL
+
 #include <xray/game/library_linkage.h>
 
 #ifdef XRAY_STATIC_LIBRARIES
@@ -17,7 +23,6 @@
 #	pragma comment( lib, "x3daudio.lib" )
 #	include <ode/library_linkage.h>
 #	include <xray/render/engine/library_linkage.h>
-#	include <xray/render/core/library_linkage.h>
 
 #	include <xray/linkage_helper.h>
 	XRAY_INCLUDE_TO_LINKAGE(sound_library_linkage)

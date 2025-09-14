@@ -1,0 +1,59 @@
+
+
+-- do not delete this variable!
+local UNDEFINED = 0
+
+
+DEFINES = 
+{
+	CONFIG_TDETAIL					= { "1" },
+	CONFIG_TDIFFUSE 				= { "1" },
+	CONFIG_TNORMAL					= { "1" },
+	CONFIG_TDETAIL_NORMAL			= { "1" },
+	CONFIG_PARALLAX					= { "1" },
+	CONFIG_TRANSLUCENCY				= { "1" },
+	CONFIG_TTRANSPARENCY			= { "1" },
+	CONFIG_TSPECULAR_INTENSITY		= { "1" },
+	CONFIG_TSPECULAR_POWER			= { "1" },
+	CONFIG_TDIFFUSE_POWER			= { "1" },
+	CONFIG_EMISSIVE					= { "1" },
+	CONFIG_TFRESNEL_AT_0_DEGREE		= { "1" },
+	CONFIG_ALPHA_TEST				= { "1" },
+	CONFIG_REFLECTION				= { "2" },
+	CONFIG_VARIATION_MASK			= { "1" },
+	CONFIG_DECAL_MATERIAL			= { "1" },
+	CONFIG_DECAL_TYPE				= { "0" },
+	CONFIG_SEQUENCE					= { "1" },
+	CONFIG_REFLECTION_MASK			= { "1" },	
+	GLOBAL_GBUFFER_POS_PACKING		= { "GBUFFER_POS_PACKING_Z_QUADRATIC_NORM_PARAM", },	--{"0", "1", }, 		// G buffer pusiton packing strategy
+	GLOBAL_GBUFFER_NORMAL_PACKING 	= { "GBUFFER_NORMAL_PACKING_XY_UNORM_MAT_ZSIGN", },   	--{"0", "1", "2", },    // G buffer normal packing strategy
+	GLOBAL_ALLOW_STEEPPARALLAX		= { "1" },
+	GLOBAL_FP16_BLEND				= { "1" },
+	GLOBAL_USE_BRANCHING			= { "1" },
+	GLOBAL_SPOT_SHADOWMAP_SIZE		= { "1024" },
+	GLOBAL_SHADOWMAP_SIZE			= { "1024" },
+	GLOBAL_TEST_FLOAT				= { "1.0" },
+	GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE = { "1024" },
+	GLOBAL_USE_LOOP_UNROLLING		= { "1" },	
+} -- DEFINES
+
+
+CONFLICTS = 
+{
+
+	[0] = 
+	{
+		SKIN_NONE = { "1", },
+		SKIN_0	  = { "1", },
+	},
+	
+	
+} -- conflicts
+
+
+
+
+
+
+
+

@@ -39,7 +39,7 @@ void sound_debug_stats::set_detail_view_proxy_id	( u32 proxy_id )
 	threading::interlocked_exchange		( m_s_proxy_id, proxy_id );
 }
 
-sound_debug_stats::sound_debug_stats	( memory::base_allocator* allocator, world_user& user, sound_scene_ptr scene, ui::world& ui_world ) :
+sound_debug_stats::sound_debug_stats	( memory::base_allocator* allocator, world_user& user, sound_scene_ptr const& scene, ui::world& ui_world ) :
 	m_ui_world					( ui_world ),
 	m_world_user				( user ),
 	m_scene						( static_cast_checked<sound_scene*>( scene.c_ptr() ) ),
@@ -142,22 +142,22 @@ void sound_debug_stats::on_statistic_updated( )
 }
 #endif //#ifndef MASTER_GOLD
 
-void sound_debug_stats::draw				( render::scene_ptr scene )
+void sound_debug_stats::draw( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view )
 {
 	R_ASSERT								( m_actual_statistic != -1 );
 
 	switch ( m_s_debug_draw_mode )
 	{
 	case none:		return;
-	case overall:	draw_overall_stats		( scene );				break;
-	case detail:	draw_detail_stats		( scene, m_s_proxy_id );break;
-	case hdr:		draw_hdr_stats			( scene );				break;
+	case overall:	draw_overall_stats		( scene, scene_view );				break;
+	case detail:	draw_detail_stats		( scene, scene_view, m_s_proxy_id );break;
+	case hdr:		draw_hdr_stats			( scene, scene_view );				break;
 	default:		NODEFAULT				( );
 	};
 }
 
 #ifndef MASTER_GOLD
-void sound_debug_stats::draw_overall_stats	( render::scene_ptr scene )
+void sound_debug_stats::draw_overall_stats( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view )
 {
 	R_ASSERT										( m_actual_statistic != -1 );
 
@@ -165,15 +165,15 @@ void sound_debug_stats::draw_overall_stats	( render::scene_ptr scene )
 	text_tree text_tree_view						( buffer, 64 * xray::Kb, "sound scene statistic" );
 
 	m_statistic[m_actual_statistic]->fill_text_tree	( &text_tree_view.root( ) );
-	update_window									( &text_tree_view.root( ) );
+	update_window									( &text_tree_view.root( ), scene_view );
 }
 
-void sound_debug_stats::draw_hdr_stats		( render::scene_ptr scene )
+void sound_debug_stats::draw_hdr_stats		( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view )
 {
 	R_ASSERT								( m_actual_statistic != -1 );
 }
 
-void sound_debug_stats::draw_detail_stats	( render::scene_ptr scene, u32 proxy_id )
+void sound_debug_stats::draw_detail_stats( render::scene_ptr  const& scene, render::scene_view_ptr const& scene_view, u32 proxy_id )
 {
 	R_ASSERT								( m_actual_statistic != -1 );
 
@@ -211,7 +211,7 @@ void sound_debug_stats::draw_detail_stats	( render::scene_ptr scene, u32 proxy_i
 			ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, debug::g_mt_allocator );
 
 			h.output							( &text_tree_view.root( ) );
-			m_main_window->draw					( m_ui_world.get_renderer(), m_ui_world.get_scene_view() );
+			m_main_window->draw					( m_ui_world.get_renderer(), scene_view );
 //			update_window							( &text_tree_view.root( ) );
 			return;
 		}
@@ -221,10 +221,10 @@ void sound_debug_stats::draw_detail_stats	( render::scene_ptr scene, u32 proxy_i
 	pvoid buffer							= XRAY_ALLOCA_IMPL( 64 * xray::Kb );
 	text_tree text_tree_view				( buffer, 64 * xray::Kb, "sound proxy statistic" );
 	text_tree_view.root( ).new_child		( "proxy with current id not exist" );
-	update_window							( &text_tree_view.root( ) );
+	update_window							( &text_tree_view.root( ), scene_view );
 }
 
-void sound_debug_stats::update_window		( xray::strings::text_tree_item* item )
+void sound_debug_stats::update_window( xray::strings::text_tree_item* item, render::scene_view_ptr const& scene_view  )
 {
 	R_ASSERT								( m_main_window );
 	R_ASSERT								( item );
@@ -242,7 +242,7 @@ void sound_debug_stats::update_window		( xray::strings::text_tree_item* item )
 	ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, debug::g_mt_allocator );
 
 	h.output							( item );
-	m_main_window->draw					( m_ui_world.get_renderer(), m_ui_world.get_scene_view() );
+	m_main_window->draw					( m_ui_world.get_renderer(), scene_view );
 }
 #endif //#ifndef MASTER_GOLD
 

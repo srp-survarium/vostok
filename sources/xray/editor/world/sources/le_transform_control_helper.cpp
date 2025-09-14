@@ -13,6 +13,7 @@
 #include "object_composite.h"
 #include "command_apply_control_transform.h"
 #include "project_items.h"
+#include "object_collision.h"
 
 using xray::editor_base::transform_control_translation;
 using xray::editor_base::transform_control_rotation;
@@ -241,15 +242,6 @@ math::float4x4 track_object_key_transform_data::get_ancor_transform( )
 {
 	math::float4x4 ret_t = create_translation( m_object_path->get_key_transform( m_key_index ).c.xyz( ) ) * m_object_path->get_transform( );
 	return ret_t;
-}
-
-u32 track_object_key_transform_data::get_collision( collision_objects_list^% r)
-{
-	editor_base::collision_object_wrapper w;
-	w.m_collision_object			= (*m_object_path->m_keys_collision)[m_key_index];
-	r->Add							( w );
-	
-	return r->Count;
 }
 
 ////////////////////////////////////////// track_object_key_tangent_transform_data  /////

@@ -1,0 +1,39 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 04.10.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "spherical_harmonics_common.h"
+
+struct geometry_output_struct
+{
+    float4 position 			: SV_Position;
+	float3 grid_position_norm	: TEXCOORD0;
+    uint rt_index 				: SV_RenderTargetArrayIndex;
+};
+
+Texture3D 	t_radiance_r;
+Texture3D 	t_radiance_g;
+Texture3D 	t_radiance_b;
+
+void main(in geometry_output_struct input,
+		  out float4 out_radiance_coefficients_r : SV_Target0,
+		  out float4 out_radiance_coefficients_g : SV_Target1,
+		  out float4 out_radiance_coefficients_b : SV_Target2)
+{
+	out_radiance_coefficients_r		= 	t_radiance_r.SampleLevel(s_accumulator, input.grid_position_norm, 0);
+	out_radiance_coefficients_g		= 	t_radiance_g.SampleLevel(s_accumulator, input.grid_position_norm, 0);
+	out_radiance_coefficients_b		= 	t_radiance_b.SampleLevel(s_accumulator, input.grid_position_norm, 0);
+}
+
+
+
+
+
+
+
+
+
+

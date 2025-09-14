@@ -1,0 +1,18 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 22.08.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	return t_base.Sample(s_material1, input.uv * 4.0f);
+}

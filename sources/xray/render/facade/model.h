@@ -27,11 +27,22 @@ struct model_locator_item
 	u16			m_bone;
 };
 
+struct surface_stats
+{
+ u32 vcount;
+ u32 tricount;
+ fs::path_string material;
+};
+
 class render_model_instance : public resources::unmanaged_resource 
 {
 public:
-	virtual void		update		( )		{}
-	virtual bool		get_locator	( pcstr /*locator_name*/, model_locator_item& /*result*/ ) const {return false;}
+	virtual void		update				( )		{}
+	virtual bool		get_locator			( pcstr /*locator_name*/, model_locator_item& /*result*/ ) const {return false;}
+	virtual u32			get_surfaces_count	( ) const =0;
+	virtual void		get_surface_stats	( u32 surface_id, surface_stats& stats ) const =0;
+	virtual void		get_bind_pose		( float4x4* /*matrices*/, u32 /*count*/ ) const {};
+
 protected:
 	XRAY_DECLARE_PURE_VIRTUAL_DESTRUCTOR( render_model_instance )
 }; // class render_model_instance
@@ -58,6 +69,7 @@ class skeleton_model_instance : public resources::unmanaged_resource
 public:
 	render_model_instance_ptr			m_render_model;
 	animation::skeleton_ptr				m_skeleton;
+	void		get_bind_pose			( float4x4* matrices, u32 count ) const;
 }; // class skeleton_model_instance
 
 typedef	resources::resource_ptr<

@@ -9,9 +9,9 @@
 #include "object_patrol_graph_edge.h"
 #include "object_patrol_graph_node.h"
 #include "object_patrol_graph_part_collision.h"
+#include "object_collision.h"
 
 #pragma managed ( push, off )
-#	include <xray/collision/api.h>
 #	include <xray/collision/space_partitioning_tree.h>
 #pragma managed ( push, on )
 

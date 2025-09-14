@@ -11,19 +11,19 @@
 
 #if XRAY_PLATFORM_WINDOWS_32
 #	if XRAY_STATIC_LIBRARIES
-#		pragma comment( lib, "SpeedTreeCore_v5.2_VC80MT_Static.lib" )
-#		pragma comment( lib, "SpeedTreeForest_v5.2_VC80MT_Static.lib" )
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MT_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MT_Static.lib" )
 #	else // #endif // #if XRAY_STATIC_LIBRARIES
-#		pragma comment( lib, "SpeedTreeCore_v5.2_VC80MTDLL_Static.lib" )
-#		pragma comment( lib, "SpeedTreeForest_v5.2_VC80MTDLL_Static.lib" )
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MTDLL_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MTDLL_Static.lib" )
 #	endif // #if XRAY_STATIC_LIBRARIES
 #else // #if XRAY_PLATFORM_WINDOWS_32
 #	if XRAY_STATIC_LIBRARIES
-#		pragma comment( lib, "SpeedTreeCore_v5.2_VC80MT64_Static.lib" )
-#		pragma comment( lib, "SpeedTreeForest_v5.2_VC80MT64_Static.lib" )
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MT64_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MT64_Static.lib" )
 #	else // #endif // #if XRAY_STATIC_LIBRARIES
-#		pragma comment( lib, "SpeedTreeCore_v5.2_VC80MTDLL64_Static.lib" )
-#		pragma comment( lib, "SpeedTreeForest_v5.2_VC80MTDLL64_Static.lib" )
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MTDLL64_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MTDLL64_Static.lib" )
 #	endif // #if XRAY_STATIC_LIBRARIES
 #endif // #if XRAY_PLATFORM_WINDOWS_32
 

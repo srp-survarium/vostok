@@ -1,0 +1,234 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_ALLOW_STEEPPARALLAX,
+		GLOBAL_FP16_BLEND,
+		GLOBAL_GBUFFER_POS_PACKING,
+		GLOBAL_GBUFFER_NORMAL_PACKING,
+		GLOBAL_USE_BRANCHING,
+		
+		CONFIG_TFRESNEL_AT_0_DEGREE,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_TDIFFUSE,
+		CONFIG_TNORMAL,
+		CONFIG_TSPECULAR_INTENSITY,
+		CONFIG_TSPECULAR_POWER,
+		CONFIG_TDIFFUSE_POWER,
+		CONFIG_TDETAIL,
+		CONFIG_ALPHA_TEST,
+		CONFIG_LIGHT_TYPE,
+*/
+
+#include "common.h"
+
+#include "psf_alpha_test.h"
+#include "psf_detail.h"
+#include "psf_normal.h"
+#include "psf_parallax.h"
+#include "psf_translucent.h"
+#include "psf_tspecular_intensity.h"
+#include "psf_tspecular_power.h"
+#include "psf_tdiffuse_power.h"
+#include "psf_emissive.h"
+#include "psf_make_tangent_transform.h"
+#include "psf_fresnel.h"
+
+float4x4  light_local_to_world;
+
+#include "light_ps_helper.h"
+#include "point_light.h"
+#include "parallel_light.h"
+#include "plane_spot_light.h"
+#include "obb_light.h"
+#include "capsule_light.h"
+#include "sphere_light.h"
+
+#include "gamma_correction.h"
+
+
+#include "gbuffer.h"
+#include "material.h"
+#include "vertex_input.h"
+
+Texture2D t_fresnel_at_0_degree;
+Texture2D t_translucency;
+Texture2D t_specular_intensity;
+Texture2D t_specular_power;
+Texture2D t_diffuse_power;
+Texture2D t_emission;
+Texture2D t_height_map;
+Texture2D t_transparency;
+TextureCube t_cubemap;
+
+float4 far_fog_color_and_distance;
+float near_fog_distance;
+
+#define LIGHT_TYPE_POINT 		0
+#define LIGHT_TYPE_SPOT 		1
+#define LIGHT_TYPE_OBB 			2
+#define LIGHT_TYPE_CAPSULE 		3
+#define LIGHT_TYPE_PARALLEL 	4
+#define LIGHT_TYPE_SPHERE 		5
+#define LIGHT_TYPE_PLANE_SPOT 	6
+
+int light_type;
+
+uniform float4	screen_res;
+
+Texture2D t_roughness;
+// roughness.xy, min, max
+float2 roughness_uv_parameters;
+
+float3 specular_color_parameter;
+
+int use_shadows;
+
+float4 ambient_color;
+
+void main(in vertex_output_struct input,
+			out float4 out_scattering_color_and_specular: SV_Target0,
+			out float4 out_blurring_stretch: SV_Target1)
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float3 		position 		= parameters.world_view_position.xyz;
+	float3	 	normal 			= parameters.normal;
+	float2 		tc				= parameters.tc;
+	float2 		tcdetail		= 0.f;
+	float3x3	tangent_trans	= 0.f;
+	
+	tangent_trans 				= parameters.tangent_to_viewspace;
+	
+	float4	diffuse_color		= float4 ( convert_to_linear_space(solid_color_specular.xyz), 1.f);
+	
+	if( CONFIG_TDIFFUSE)
+		diffuse_color			*= t_base.Sample	( s_base, tc);
+	
+	// Alpha test
+	if( CONFIG_ALPHA_TEST)
+		psf_alpha_test			( diffuse_color.a);
+	
+	// Diffise detail mapping
+	if( CONFIG_TDETAIL)
+		diffuse_color.rgb		= psf_tdetail( t_detail, diffuse_color.rgb, tc);
+	
+	if( CONFIG_TNORMAL)
+	{
+		normal				= psf_tnormal( t_normal, tangent_trans, tc, float3(1,1,1));
+		//normal					= t_normal.Sample(s_normal, tc).xyz * 2.0f - 1.0f;
+		//normal					= normalize(mul(m_V, float4(normal * float3(-1,1,-1), 0.0f)).xyz);
+	}
+	else
+		normal					= 	normalize( mul( parameters.tangent_to_viewspace, float3(0.0f,0.0f,1.0f)) );
+	
+	
+	float3 	specular_color 		= convert_to_linear_space(specular_color_parameter);
+	if( CONFIG_TSPECULAR_INTENSITY)
+		specular_color 			*= psf_tspecular_intensity(t_specular_intensity, tc);
+	
+	
+	float2 	roughness 			= roughness_uv_parameters.xy / 255.0f;
+	if (CONFIG_TSPECULAR_POWER) // TODO: error when packing values [0..1]
+		roughness 				= psf_tspecular_power(t_roughness, tc);
+	
+	float 	diffuse_power 		= solid_material_params.y;
+	if( CONFIG_TDIFFUSE_POWER)
+		diffuse_power 			= psf_tdiffuse_power( t_diffuse_power, tc);
+	
+	float3 final_color 			= 0.0f;
+	
+	float fresnel_at_0_degree_value = fresnel_at_0_degree;
+#if CONFIG_TFRESNEL_AT_0_DEGREE
+	fresnel_at_0_degree_value 			= t_fresnel_at_0_degree.Sample(s_base, tc).x;
+#endif // #if CONFIG_TFRESNEL_AT_0_DEGREE		
+	
+	light_factors light 		= (light_factors)0;
+	
+	
+	FORCECASE switch(light_type)
+	{
+	case LIGHT_TYPE_POINT:
+		light = point_light_impl(position, normal, light_position, light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree_value, alpha_model_parameter, 0.0f, 0.0f));
+		
+		if (use_shadows > 0)
+		{
+			float4 shadow_factor 	= get_pointlight_shadow_factor( position, m_V2W );
+			light.diffuse 			*= shadow_factor.x;
+			light.specular 			*= shadow_factor.x;			
+		}
+		
+		break;
+	case LIGHT_TYPE_SPOT:
+		light = spot_light_impl(position, normal, light_position, light_direction, light_spot_falloff, light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree_value, 0.0f, 0.0f, 0.0f));
+		
+		if (use_shadows > 0)
+		{
+			float4 shadow_factor 	= get_spotlight_shadow_factor( position, m_V2W );
+			light.diffuse 			*= shadow_factor.x;
+			light.specular 			*= shadow_factor.x;			
+		}
+		
+		break;
+	case LIGHT_TYPE_OBB:
+		light = point_light_impl(position, normal, nearest_point_on_obb(position), light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree_value, alpha_model_parameter, 0.0f, 0.0f));
+		break;
+	case LIGHT_TYPE_CAPSULE:
+		light = point_light_impl(position, normal, nearest_point_on_capsule(position, light_direction), light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree_value, alpha_model_parameter, 0.0f, 0.0f));
+		break;
+	case LIGHT_TYPE_PARALLEL:
+		light = parallel_light_impl( position, normal, light_direction, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree_value, alpha_model_parameter, 0.0f, 0.0f));
+		break;
+	case LIGHT_TYPE_SPHERE:
+		light = point_light_impl(position, normal, nearest_point_on_sphere(position), light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree_value, alpha_model_parameter, 0.0f, 0.0f));
+		break;
+	case LIGHT_TYPE_PLANE_SPOT:
+		light = spot_light_impl(position, normal, nearest_point_on_plane(position), normalize( mul( float4( 0.f, -1.f, 0.f, 0.f), light_local_to_world).xyz ), light_spot_falloff, light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
+		break;
+	default:
+		break;
+	}
+	
+	float3 lc = length(light_color.rgb);
+	light_accumulator accumulator = get_light_accumulator( /*light_color.rgb*/lc, light );
+	
+	float specular = 0.1f * pow(saturate(1-saturate(beckmann_specular(normal, -normalize(light_position - position), -position, 1.2))),2.0f);
+	
+	// TODO: why 0.25f ???
+	final_color.rgb += /*diffuse_color.rgb * */accumulator.diffuse.rgb;
+	//final_color += 0.25f * specular_color * specular;//accumulator.specular;
+	//final_color.rgb += normal.xyz;
+	
+	float3 derivu 		= ddx( position );  
+	float3 derivv 		= ddy( position );  
+	float stretchU 		= 1.0 / length( derivu );  
+	float stretchV 		= 1.0 / length( derivv );  
+	
+	out_scattering_color_and_specular 	= float4(
+		max(
+			final_color, 
+			convert_to_linear_space(ambient_color.rgb)
+		), 
+		accumulator.specular.x
+	);
+	out_blurring_stretch				= float4(stretchU, stretchV, 0.0f, 0.0f);
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

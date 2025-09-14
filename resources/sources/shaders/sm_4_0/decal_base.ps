@@ -1,0 +1,173 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.07.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_USE_BRANCHING
+		
+		CONFIG_TDIFFUSE,
+		CONFIG_TNORMAL,
+		CONFIG_DECAL_MATERIAL,
+		CONFIG_REFLECTION,
+		CONFIG_DECAL_TYPE,
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+/*
+	ACCUMULATED_DECAL_TYPE
+	FORWARD_DECAL_TYPE
+	ADVANCED_DECAL_TYPE
+*/
+#include "common.h"
+#include "gbuffer.h"
+#include "psf_normal.h"
+#include "psf_reflection.h"
+#include "material.h"
+#include "vertex_input.h"
+
+uniform float4 screen_res;
+float4 constant_diffuse;
+float3 constant_normal_multiplier;
+
+//#if CONFIG_DECAL_MATERIAL
+	float4x4 world_to_decal;
+//#endif // #if CONFIG_DECAL_MATERIAL
+
+uniform float3 s_eye_ray_corner;
+
+float4x4 decal_tangent_to_view_space_matrix;
+
+Texture2D t_normal_map;
+
+// values: -1.0f, 1.0f
+float blend_with_geometry_normals;
+
+float4 decal_angle_parameters;
+static const float decal_alpha_angle = decal_angle_parameters.x;
+static const float decal_clip_angle = decal_angle_parameters.y;
+
+TextureCube t_cubemap;
+
+
+void main(in vertex_output_struct input,
+		  out float4 out_diffuse_target : SV_Target0
+#if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
+		  ,
+		  out float4 out_normals_target : SV_Target1
+#endif // #if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
+  )
+{
+	material_parameters parameters 		= get_material_parameters(input);
+	fill_material_parameters			(parameters);
+	
+	float2 screen_uv					= input.homogeneous_position.xy * screen_res.zw;
+	
+	float3 eye_ray; 
+	eye_ray.xy							= s_eye_ray_corner.xy * (1.0f - screen_uv.xy * 2.0f);
+	eye_ray.z							= s_eye_ray_corner.z;
+	
+	float3 scene_position;
+	float2 temp;
+	gbuffer_read_rt_position			(
+		screen_uv,
+		eye_ray, 
+		scene_position, 
+		temp.x, 
+		temp.y
+	);
+	
+	float3 world_scene_normal_real		= mul(
+		m_V2W, 
+		//normalize(cross(ddx(scene_position), ddy(scene_position)))
+		float4(gbuffer_read_frame_normal(screen_uv), 0.0f)
+	).xyz;
+	
+	float3 world_scene_normal			= -decal_tangent_to_view_space_matrix[2].xyz;
+	
+	BRANCH if (blend_with_geometry_normals > 0.0f)
+		world_scene_normal				= world_scene_normal_real;
+	
+	const float3 decal_tangent			= decal_tangent_to_view_space_matrix[0].xyz;
+	const float3 decal_normal			= decal_tangent_to_view_space_matrix[2].xyz;
+	const float3 binormal				= -cross(decal_tangent, world_scene_normal);
+	const float3 tangent				= cross(binormal, world_scene_normal);
+	
+	parameters.tangent_to_viewspace		= mul(
+		(float3x3)m_V, 
+		transpose(
+			float3x3(
+				tangent, 
+				binormal, 
+				world_scene_normal
+			)
+		)
+	);
+	
+	float3 world_scene_position			= mul(m_V2W, float4(scene_position, 1.0f)).xyz;
+	float4 decal_projected_position 	= mul(world_to_decal, float4(world_scene_position, 1.0f));
+	
+	parameters.tc						= 
+		float2(1.0f, -1.0f) * decal_projected_position.xy / decal_projected_position.w * 0.5f + 0.5f;
+	
+	float3	 	normal 					= parameters.normal;
+	
+	float4 		diffuse_color			= constant_diffuse;
+	float		base_alpha				= 1.0f;
+	
+	//float3		surface_normal			= normalize(cross(ddx(scene_position), ddy(scene_position)));
+	//			world_scene_normal		= mul(m_V2W, surface_normal).xyz;
+	
+	float scattered_alpha				= saturate(dot(world_scene_normal_real, -decal_normal) - decal_alpha_angle);
+	scattered_alpha						*=dot(world_scene_normal_real, -decal_normal) > decal_clip_angle ? 1.0f : 0.0f;
+	
+	if (CONFIG_TDIFFUSE)
+	{
+		diffuse_color					*= t_base.Sample(s_base, parameters.tc);
+		base_alpha						= t_base.Sample(s_base, parameters.tc).a;
+	}
+	
+	if (CONFIG_TNORMAL)
+		normal 							= psf_tnormal(
+			t_normal_map, 
+			parameters.tangent_to_viewspace, 
+			parameters.tc, 
+			constant_normal_multiplier
+		);
+	else
+		normal							= normalize(mul(parameters.tangent_to_viewspace, float3(0.0f,0.0f,1.0f)) );
+	
+	if (CONFIG_REFLECTION == 1)
+		diffuse_color.rgb				+= psf_reflection(
+			float3(0.0f, 0.0f, 0.0f),
+			t_cubemap,
+			normal,
+			scene_position
+		);
+	
+	diffuse_color.a 					*= scattered_alpha;
+	base_alpha 							*= scattered_alpha;
+	
+	out_diffuse_target 					= float4(
+#if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
+		diffuse_color.a * 
+#endif // #if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE	
+		diffuse_color.rgb, 
+		diffuse_color.a
+	);
+	
+#if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
+	out_normals_target					= float4(base_alpha * normal, base_alpha);
+#endif // #if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE	
+	
+}
+
+
+
+
+
+
+
+
+

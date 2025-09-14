@@ -1,0 +1,99 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 19.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_TDIFFUSE,
+*/
+
+#include "material.h"
+#include "vertex_input.h"
+#include "gamma_correction.h"
+
+float4x4  light_local_to_world;
+
+#include "light_ps_helper.h"
+#include "spot_light.h"
+#include "parallel_light.h"
+
+float3 diffuse_color_parameter;
+
+uniform float4 screen_res;
+int light_type;
+
+#define LIGHT_TYPE_POINT 		0
+#define LIGHT_TYPE_SPOT 		1
+#define LIGHT_TYPE_OBB 			2
+#define LIGHT_TYPE_CAPSULE 		3
+#define LIGHT_TYPE_PARALLEL 	4
+#define LIGHT_TYPE_SPHERE 		5
+#define LIGHT_TYPE_PLANE_SPOT 	6
+
+void main(in vertex_output_struct input,
+		  out float4 out_rsm_albedo 	: SV_Target0,
+		  out float4 out_rsm_normal 	: SV_Target1,
+		  out float4 out_rsm_position 	: SV_Target2)
+{
+	material_parameters parameters 	= 	get_material_parameters(input);
+	fill_material_parameters		(parameters);
+	
+	float2 uv						= 	parameters.tc;
+	
+	float3 diffuse_color			= 	convert_to_linear_space(diffuse_color_parameter);
+	
+	if (CONFIG_TDIFFUSE)
+		diffuse_color				*= 	t_base.Sample(s_base, uv).rgb;
+	
+	float3 normal					= 	normalize(mul(m_V2W, float4(transpose(parameters.tangent_to_viewspace)[2], 0.f)).xyz);
+	/*
+	light_factors light = (light_factors)0;
+	
+	float2 roughness				= 0.5f;
+	float fresnel_at_0_degree		= 0.2f;
+	
+	FORCECASE switch(light_type)
+	{
+		case LIGHT_TYPE_SPOT:
+		light = spot_light_impl(parameters.world_view_position.xyz,
+			normalize(transpose(parameters.tangent_to_viewspace)[2]),
+			light_position,
+			light_direction,
+			light_spot_falloff,
+			light_range,
+			roughness,
+			0.0f,
+			255.0f,
+			input.homogeneous_position.xy * screen_res.zw,
+			float4(fresnel_at_0_degree, 0.0f, 0.0f, 0.0f)
+		);
+		break;
+		case LIGHT_TYPE_PARALLEL:
+		light = parallel_light_impl		(
+			parameters.world_view_position.xyz,
+			normalize(transpose(parameters.tangent_to_viewspace)[2]),
+			light_direction, 
+			roughness, 
+			0.0f, 
+			255.0f, 
+			input.homogeneous_position.xy * screen_res.zw, 
+			float4(fresnel_at_0_degree, 0.0f, 0.0f, 0.0f)
+		);
+		break;
+	}; 
+	*/
+	
+	float2 rsm_uv					= 	input.homogeneous_position.xy * screen_res.zw;
+	
+	out_rsm_albedo					= 	float4(diffuse_color * /*light.diffuse * */convert_to_linear_space(light_color) * light_intensity, 0.0f);
+	out_rsm_normal					=	float4(normal, 0.0f);
+	out_rsm_position				= 	float4(parameters.world_position.xyz, 0.0f);
+}
+
+
+
+
+
+

@@ -1,0 +1,162 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 20.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_Position;
+	float2 uv		: TEXCOORD0;
+};
+
+float3 	light_direction;
+float3 	grid_origin;
+float 	grid_cell_size;
+float 	invert_rsm_size;
+
+float3 s_eye_ray_corner;
+
+float3 get_grid_cell(float3 world_pos)
+{
+	return floor(abs((world_pos.xyz - grid_origin) / grid_cell_size));
+}
+
+float3 get_grid_cell_norm(float3 world_pos)
+{
+	return abs((world_pos.xyz - grid_origin) / grid_cell_size);
+}
+
+float calc_texel_lum(float3 color, float3 normal) 
+{
+	float luminance = dot(color, float3(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f));
+	return luminance * max(0.0, dot(normal, -light_direction) );
+}
+
+float3 read_screen_vs_position(float2 uv)
+{
+	float2 temp_value 		= 	0;
+	float3 position			=	0;
+	
+	float3 eye_ray			=	0;
+	eye_ray.xy				= 	s_eye_ray_corner.xy * (1.0f - uv.xy * 2.0f);
+	eye_ray.z				= 	s_eye_ray_corner.z;
+	
+	gbuffer_read_rt_position(uv, eye_ray, position, temp_value.x, temp_value.y);	
+	
+	return position;
+}
+
+float3 read_screen_normal(float3 pos, float2 uv)
+{
+	float3 normal			= 	0;
+	float2 temp_value 		= 	0;
+	
+	float3 pos2				=	read_screen_vs_position(uv);
+	
+	gbuffer_read_rt_normal	(uv, normal, temp_value.x, temp_value.y);
+	float3 normal2			= 	normalize(cross(ddx(pos2), ddy(pos2)));
+	
+	return normalize(mul(m_V2W, float4(normal2, 0.0f)).xyz);
+}
+
+float3 read_screen_vs_normal(float2 uv)
+{
+	float3 normal			= 	0;
+	float2 temp_value 		= 	0;
+	
+	gbuffer_read_rt_normal	(uv, normal, temp_value.x, temp_value.y);
+	
+	return normal;
+}
+
+float3 read_screen_position(float2 uv)
+{
+	float2 temp_value 		= 	0;
+	float3 position			=	0;
+	
+	float3 eye_ray			=	0;
+	eye_ray.xy				= 	s_eye_ray_corner.xy * (1.0f - uv.xy * 2.0f);
+	eye_ray.z				= 	s_eye_ray_corner.z;
+	
+	gbuffer_read_rt_position(uv, eye_ray, position, temp_value.x, temp_value.y);	
+	
+	return mul(m_V2W, float4(position, 1.0f)).xyz;
+}
+
+
+uniform float4 screen_res;
+//uniform float4 eye_position;
+
+
+void main(in vertex_output_struct input,
+		  out float4 out_position 	: SV_Target0,
+		  out float4 out_normal 	: SV_Target1)
+{
+	float2 uv 				= input.uv;
+	
+	float3 result_position 	= 0;
+	float3 result_normal 	= 0;
+	float min_d				= 100000.0f;
+	
+	float3 pos = 0;
+	float3 norm = 0;
+	bool found = false;
+	float max_l = 100000000;
+	
+	for (int i = 0; i <= 3; i++)
+	{
+		for (int j = 0; j <= 3; j++)
+		{
+			float2 sample_uv 		= 	uv + 1.0f * float2(i, j) * screen_res.zw;
+			float3 sample_position 	= 	read_screen_position(sample_uv);
+			float3 sample_normal 	= 	read_screen_normal(sample_position, sample_uv);
+			float len 				= 	length(eye_position.xyz - sample_position);
+			
+			if (len < min_d && length(read_screen_vs_normal(sample_uv)) > 0.001f)
+			{
+				min_d					= 	len;
+				result_position			= 	sample_position;
+				result_normal			= 	sample_normal;
+				
+				//float3 cell				=	get_grid_cell_norm(sample_position);
+				//cell					=	cell - get_grid_cell(sample_position);
+				
+				//if (length(cell) < max_l)
+				//{
+					//max_l 	= length(cell);
+					//pos 	= sample_position;
+					//norm 	= sample_normal;
+					//found 	= true;
+					//break;
+				//}
+			}
+		}
+	}
+	
+	//if (found)
+	//{
+	//	result_position			= pos;
+	//	result_normal 			= norm;
+	//}
+	//else
+	//{
+	//	clip(-1);
+	//}
+	
+	result_position 		= result_position / 1.0f;
+	result_normal 			= result_normal / 1.0f;
+	
+	out_position 			= float4(result_position, 0.0f);
+	out_normal 				= float4(result_normal, 0.0f);
+}
+
+
+
+

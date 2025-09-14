@@ -80,18 +80,19 @@ public:
 												 viewport_type const& viewport,
 												 boost::function< void ( bool ) > const& on_draw_scene,
 												 bool draw_debug_terrain);
-	void		present							(render_output_window_ptr output_window, viewport_type const& viewport);
-	inline	u32	frame_id						() const { return m_frame_id; }
+	void			present							(render_output_window_ptr output_window, viewport_type const& viewport);
+	inline	u32		frame_id						() const { return m_frame_id; }
 
 public:
-	void		setup_render_output_window		(render_output_window_ptr in_output_window,
+	void			setup_render_output_window		(render_output_window_ptr in_output_window,
 												 viewport_type const& viewport);
-	void		toggle_render_stage				(enum_render_stage_type stage_type, bool toggle);
-	void		draw_text						(pcstr text, xray::math::float2 const& position, xray::ui::font* const in_font, xray::math::color const& in_color);
+	void			toggle_render_stage				(enum_render_stage_type stage_type, bool toggle);
+	void			draw_text						(pcstr text, xray::math::float2 const& position, xray::ui::font* const in_font, xray::math::color const& in_color);
+//	flash_renderer&	get_flash_renderer			( );
 
 private:
-	void		execute_stages					();
-	bool		is_effects_ready				() const;
+	void			execute_stages					( );
+	bool			is_effects_ready				( ) const;
 
 	stages_type									m_stages;
 	

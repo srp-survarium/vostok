@@ -5,11 +5,10 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 
 using namespace xray::editor::wpf_controls;
 using namespace xray::editor::wpf_controls::control_containers;
-using namespace System;
 
 typedef xray::editor::wpf_controls::control_containers::button button;
 
@@ -120,57 +119,6 @@ property_container^ edit_object_mesh::get_surfaces_property_container( )
 	return result;
 }
 
-property_container^ edit_object_mesh::get_portals_edit_property_container( )
-{
-	property_container^	result = gcnew property_container;
-
-	control_container^ container	= result->add_dock_container( false );
-	container->category				= "General";
-	button^ button_instance = container->add_button( "Switch to edit", gcnew Action<button^>( this, &edit_object_mesh::switch_to_portals_clicked ) );
-	button_instance->width	= 80;
-	
-	button_instance = container->add_button( "Make coplanar", gcnew Action<button^>( this, &edit_object_mesh::make_portals_coplanar_clicked ) );
-	button_instance->width	= 80;
-
-	button_instance = container->add_button( "New portal", gcnew Action<button^>( this, &edit_object_mesh::add_portal_clicked ) );
-	button_instance->width	= 80;
-
-	button_instance = container->add_button( "Delete portal", gcnew Action<button^>( this, &edit_object_mesh::delete_selected_portals_clicked ) );
-	button_instance->width	= 80;
-
-	for each ( edit_portal^ portal in m_portals )
-	{
-		portal->set_selected( false );
-		property_container^	sub		= gcnew property_container;
-		property_descriptor^ desc	= 
-			gcnew property_descriptor( "Name", gcnew property_property_value( portal, "Name" ) );
-		desc->select_behavior		= select_behavior::select_parent;
-		sub->properties->add		( desc );
-		desc = result->properties->add_container( portal->Name, "all portals", "no description", sub );
-		desc->selection_changed += gcnew System::Action<System::Boolean>(portal, &edit_portal::set_selected);
-	}
-	return result;
-}
-
-xray::editor::wpf_controls::property_container^	edit_object_mesh::get_portals_generation_property_container( )
-{
-	property_container^	result = gcnew property_container;
-
-	control_container^ container	= result->add_dock_container( false );
-	container->category				= "General";
-	button^ button_instance			= nullptr;
-
-	button_instance = container->add_button( "Build sectors", gcnew Action<button^>( this, &edit_object_mesh::generate_sectors_clicked ) );
-	button_instance->width	= 80;
-
-	button_instance = container->add_button( "Generate portals", gcnew Action<button^>( this, &edit_object_mesh::generate_portals_clicked ) );
-	button_instance->width	= 80;
-
-	button_instance = container->add_button( "Build BSP-tree", gcnew Action<button^>( this, &edit_object_mesh::generate_bsp_tree_clicked ) );
-	button_instance->width	= 80;
-
-	return result;
-}
 
 
 } // namespace model_editor

@@ -10,15 +10,14 @@
 namespace xray {
 namespace editor {
 namespace controls {
+
 	public enum class ChunkType: int 
 	{
 		Alphanumeric = 0,
 		Numeric = 1,
 	};
 
-	using namespace System;
-
-	public ref class AlphanumComparator: Collections::Generic::IComparer<String^>
+	public ref class AlphanumComparator: System::Collections::Generic::IComparer<System::String^>
 	{
 		private:
 					bool	InChunk		(char ch, char otherCh);
@@ -28,7 +27,7 @@ namespace controls {
 	}; // ref class AlphanumComparator
 
 } // namespace controls
-} // namespace dialog_editor
+} // namespace editor
 } // namespace xray
 
 #endif // #ifndef ALPHANUM_COMPARATOR_H_INCLUDED

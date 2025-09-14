@@ -21,12 +21,13 @@ namespace xray {
 namespace logging {
 
 enum verbosity {
-	silent	= 1 << 0,
-	error	= 1 << 1,
-	warning	= 1 << 2,
-	info	= 1 << 3,
-	debug	= 1 << 4,
-	trace	= 1 << 5,
+	invalid	= 0, // do not use it !!
+	silent	= 1,//1 << 0,
+	error	= 2,//1 << 1,
+	warning	= 3,//1 << 2,
+	info	= 4,//1 << 3,
+	debug	= 5,//1 << 4,
+	trace	= 6,//1 << 5,
 	unset	= 1 << 31,
 }; // enum verbosity
 
@@ -61,9 +62,11 @@ XRAY_CORE_API	void			flush				( pcstr file_name = 0 );
 XRAY_CORE_API	void			set_log_callback	( log_callback callback );
 XRAY_CORE_API	log_callback	get_log_callback	( );
 
-XRAY_CORE_API	void			push_rule			( pcstr initiator, int verbosity );
+XRAY_CORE_API	void			push_rule			( pcstr initiator, int verbosity, u32 thread_id = u32(-1) );
 XRAY_CORE_API	void			pop_rule			( );
 XRAY_CORE_API	void			on_thread_spawn		( );
+
+XRAY_CORE_API	pcstr			thread_id_to_string	( u32 thread_id );
 
 } // namespace logging
 } // namespace xray

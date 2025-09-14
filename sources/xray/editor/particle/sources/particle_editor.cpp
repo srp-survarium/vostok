@@ -151,14 +151,16 @@ particle_editor::~particle_editor( )
 
 void particle_editor::query_create_render_resources()
 {
-	render::editor_renderer_configuration render_configuration;
-	render_configuration.m_create_particle_world		= true;
+	render::scene_configuration						scene_configuration;
+	scene_configuration.m_create_particle_world		= true;
 	
-	System::Int32 hwnd					= m_view_window->view_handle();
+ 	System::Int32 hwnd								= m_view_window->view_handle();
+	render::output_window_configuration				window_configuration;
+	window_configuration.m_hwnd						= *(HWND*)&hwnd;
 	
 	resources::user_data_variant* temp_data[] = { NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
-	temp_data[0]->set(render_configuration);
-	temp_data[2]->set(*(HWND*)&hwnd);
+	temp_data[0]->set(scene_configuration);
+	temp_data[2]->set(window_configuration);
 	
 	resources::user_data_variant const* data[] = {temp_data[0], temp_data[1], temp_data[2]};
 	
@@ -203,7 +205,7 @@ void particle_editor::on_render_resources_ready(resources::queries_result& data)
 
 }
 
-static void draw_text(xray::ui::world& ui_world, pcstr str, float pos_x, float pos_y, u32 clr)
+static void draw_text(xray::ui::world& ui_world, xray::render::scene_view_ptr const& scene_view, pcstr str, float pos_x, float pos_y, u32 clr)
 {
 	float2 line_size		(100.0f, 10.0f);
 	
@@ -221,7 +223,7 @@ static void draw_text(xray::ui::world& ui_world, pcstr str, float pos_x, float p
 	txt->set_text(str);
 	
 	txt->w()->tick();
-	txt->w()->draw(ui_world.get_renderer(), ui_world.get_scene_view() );
+	txt->w()->draw(ui_world.get_renderer(), scene_view );
 	
 	ui_world.destroy_window(txt->w());
 }
@@ -265,7 +267,7 @@ void particle_editor::draw_statistics()
 			props[i].num_fire_events
 		);
 		
-		draw_text(m_ui_world, buffer.c_str(), 20.0f, pos, 0xffffffff);
+		draw_text(m_ui_world, *m_scene_view, buffer.c_str(), 20.0f, pos, 0xffffffff);
 		
 		pos += 20.0f;
 	}
@@ -273,7 +275,7 @@ void particle_editor::draw_statistics()
 	fixed_string<256> total_particles_str;
 	total_particles_str.assignf("%d/%d", total_num_live_particles, total_num_current_max_particles);
 	
-	draw_text(m_ui_world, total_particles_str.c_str(), 20.0f, pos, 0xffccffcc);
+	draw_text(m_ui_world, *m_scene_view, total_particles_str.c_str(), 20.0f, pos, 0xffccffcc);
 	
 	XRAY_FREE_IMPL					( g_allocator, props );
 }
@@ -1256,10 +1258,8 @@ void 			particle_editor::on_document_add_new_lod					(Object^ , EventArgs^){
 	
 }
 
-void			particle_editor::on_document_delete_lod						()
+void particle_editor::on_document_delete_lod( xray::editor::controls::tree_node^ node )
 {
-	xray::editor::controls::tree_node^ node = safe_cast<xray::editor::controls::tree_node^>(m_particles_panel->tree_view->selected_nodes[0]);
-	
 	String^ message;
 
 	if(node->Parent->FirstNode == node)
@@ -1322,14 +1322,15 @@ void 			particle_editor::on_tree_view_folder_new_document			(Object^ , EventArgs
 }
 
 
-void 			particle_editor::on_tree_view_remove_document		()
+void particle_editor::on_tree_view_remove_document( )
 {
-	Boolean is_lod		= safe_cast<xray::editor::controls::tree_node^>(m_particles_panel->tree_view->selected_nodes[0])->m_node_type == tree_node_type::file_part_item;
-	Boolean is_file		= safe_cast<xray::editor::controls::tree_node^>(m_particles_panel->tree_view->selected_nodes[0])->m_node_type == tree_node_type::single_item;
+	xray::editor::controls::tree_node^ node = safe_cast<xray::editor::controls::tree_node^>(m_particles_panel->tree_view->selected_nodes[0]);
+	bool is_lod		= (node->m_node_type == tree_node_type::file_part_item);
+	bool is_file	= (node->m_node_type == tree_node_type::single_item);
 
 	if (is_lod)
 	{
-		on_document_delete_lod();
+		on_document_delete_lod	( node );
 		return;
 	}
 

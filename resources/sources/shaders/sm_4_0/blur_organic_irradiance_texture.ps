@@ -1,0 +1,90 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 22.08.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE,
+		CONFIG_USE_ORGANIC_SCATTERING_DEPTH_TEXTURE,
+*/
+
+#include "common.h"
+
+#define NUM_SAMPLES 9
+
+uniform float4 offsets_weights[NUM_SAMPLES];
+
+Texture2D t_skin_scattering;
+Texture2D t_scattering_depth;
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+static const float blurDeltaWidths[6] = 
+{
+	0.0f,
+	0.22f,
+	0.213f,
+	0.320f,
+	0.659f,
+	1.31f
+};
+
+static const float gaussianBlur5x5[5][5] =
+{
+   0.000788907f,   0.006581144f,   0.013347322f,   0.006581144f,   0.000788907f,
+   0.006581144f,   0.054900876f,   0.111345294f,   0.054900876f,   0.006581144f,
+   0.013347322f,   0.111345294f,   0.225821052f,   0.111345294f,   0.013347322f,
+   0.006581144f,   0.054900876f,   0.111345294f,   0.054900876f,   0.006581144f,
+   0.000788907f,   0.006581144f,   0.013347322f,   0.006581144f,   0.000788907f,
+};
+
+// min, max depth
+float4 scattering_depth_parameters;
+float4 scattering_component_blurring_weights_and_color_multiplier;
+
+static const float blurred_irradiance_texture_size 	= GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE * 0.25f;
+static const float max_irradiance_texture_size		= 2048.0f;
+
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	float3 final_color 	= 0.0f;
+	float2 stretch 		= t_skin_scattering.Sample(s_base, 4.0f * input.uv).yz / blurred_irradiance_texture_size;
+	
+	float blur_scale	= scattering_depth_parameters.y;// * (GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE / max_irradiance_texture_size);
+	
+#if CONFIG_USE_ORGANIC_SCATTERING_DEPTH_TEXTURE
+	blur_scale			= scattering_depth_parameters.x + 
+		(scattering_depth_parameters.y - scattering_depth_parameters.x) * t_scattering_depth.Sample(s_base, 4.0f * float2(input.uv.x, input.uv.y)).r;
+#endif // CONFIG_USE_ORGANIC_SCATTERING_DEPTH_TEXTURE
+	
+	float3 light_color 	= 0.0f;
+	float3 temp_value 	= 0.0f;
+	
+	for (int y = -2; y <= 2; y++)
+	{
+		for (int x = -2; x <= 2; x++)
+		{
+			float2 uv0 		= input.uv.xy + scattering_component_blurring_weights_and_color_multiplier.x * float2(y, x) * stretch * blur_scale / blurred_irradiance_texture_size;
+			float2 uv1 		= input.uv.xy + scattering_component_blurring_weights_and_color_multiplier.y * float2(y, x) * stretch * blur_scale / blurred_irradiance_texture_size;
+			float2 uv2 		= input.uv.xy + scattering_component_blurring_weights_and_color_multiplier.z * float2(y, x) * stretch * blur_scale / blurred_irradiance_texture_size;
+			
+			light_color.r 	= t_base.Sample(s_material1, 4.0f * uv0).r;
+			light_color.g 	= t_base.Sample(s_material1, 4.0f * uv1).r;
+			light_color.b 	= t_base.Sample(s_material1, 4.0f * uv2).r;
+			
+			temp_value 		+= 
+				scattering_component_blurring_weights_and_color_multiplier.a * 
+				light_color;// * 
+				//gaussianBlur5x5[y + 2][x + 2];
+		}
+	}
+	
+	final_color += temp_value / 25.0f;
+	
+	return float4(final_color, 1.0f);
+}

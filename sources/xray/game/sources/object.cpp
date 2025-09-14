@@ -6,20 +6,25 @@
 
 #include "pch.h"
 #include "object.h"
+#include "game_world.h"
 
 namespace stalker2{
 
-game_object_::game_object_( game_world& w )
-:m_game_world	( w ),
+game_object_::game_object_( game_scene& s )
+:m_game_scene	( s ),
 m_loaded_cnt	( 0 )
 {}
 
 void game_object_::load( configs::binary_config_value const& )
 {
 }
+game_world_object::game_world_object( game_world& w )
+:super(w),
+m_game_world(w)
+{};
 
-game_object_static::game_object_static( game_world& w )
-:super			( w )
+game_object_static::game_object_static(game_scene& s )
+:super	( s )
 {}
 
 void game_object_static::load( configs::binary_config_value const& t )

@@ -236,34 +236,39 @@ void terrain_tool_tab::button2_Click(System::Object^, System::EventArgs^)
 		vert_id_list^ src_list			= key_en->Current.Value;
 		terrain_node^ current_terrain	= core->m_nodes[key_en->Current.Key];
 		terrain_quad		quad;
+
+		geometry_utils::geometry_collector_vert v;
+		v.n	= float3(0,1,0);
+		v.uv	= float2(0,0);
+
 		for each (u16 quad_idx in src_list)
 		{
 			if(!current_terrain->get_quad(quad, quad_idx))
 				continue; // ??
 
-			float3 p				= current_terrain->position_g(quad.index_lb);
-			p.z *=-1;
-			collector.add_vertex	( p );
+			v.p				= current_terrain->position_g(quad.index_lb);
+			v.p.z *=-1;
+			collector.add_vertex	( v );
 
-			p						= current_terrain->position_g(quad.index_lt);
-			p.z *=-1;
-			collector.add_vertex	( p );
+			v.p						= current_terrain->position_g(quad.index_lt);
+			v.p.z *=-1;
+			collector.add_vertex	( v );
 
-			p						= current_terrain->position_g(quad.index_rt);
-			p.z *=-1;
-			collector.add_vertex	( p );
+			v.p						= current_terrain->position_g(quad.index_rt);
+			v.p.z *=-1;
+			collector.add_vertex	( v );
 
-			p						= current_terrain->position_g(quad.index_lb);
-			p.z *=-1;
-			collector.add_vertex	( p );
+			v.p						= current_terrain->position_g(quad.index_lb);
+			v.p.z *=-1;
+			collector.add_vertex	( v );
 
-			p						= current_terrain->position_g(quad.index_rt);
-			p.z *=-1;
-			collector.add_vertex	( p );
+			v.p						= current_terrain->position_g(quad.index_rt);
+			v.p.z *=-1;
+			collector.add_vertex	( v );
 
-			p						= current_terrain->position_g(quad.index_rb);
-			p.z *=-1;
-			collector.add_vertex	( p );
+			v.p						= current_terrain->position_g(quad.index_rb);
+			v.p.z *=-1;
+			collector.add_vertex	( v );
 		}
 	}
 	System::Windows::Forms::SaveFileDialog		saveFileDialog;
@@ -274,7 +279,7 @@ void terrain_tool_tab::button2_Click(System::Object^, System::EventArgs^)
 		fn					+=".obj";
 		System::String^		message;
 
-		if( collector.write_obj_file( unmanaged_string(fn).c_str(), 100.0f ))
+		if( collector.write_obj_file( unmanaged_string(fn).c_str(), 100.0f, false, false ))
 			message = "Selection succesfully exported to " + gcnew System::String(fn);
 		else
 			message = "Error while exporting selection to " + gcnew System::String(fn);

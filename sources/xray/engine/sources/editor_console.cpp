@@ -10,15 +10,15 @@
 namespace xray{
 namespace engine{
 
-	editor_console::editor_console( xray::ui::world& uw, xray::memory::base_allocator& a )
+editor_console::editor_console( xray::ui::world& uw, xray::memory::base_allocator& a )
 :super			( uw, a )
 {
 	m_self_deactivate = false;
 }
 
-void editor_console::tick( )
+void editor_console::tick( xray::render::scene_view_ptr const& scene_view )
 {
-	super::tick	( );
+	super::tick	( scene_view );
 }
 
 void editor_console::on_activate( )

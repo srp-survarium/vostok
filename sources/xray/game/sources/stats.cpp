@@ -21,9 +21,9 @@ stats::~stats()
 	m_ui_world.destroy_window(m_main_window);
 }
 
-void stats::draw(render::ui::renderer& w)
+void stats::draw(render::ui::renderer& w, render::scene_view_ptr const& scene_view )
 {
-	m_main_window->draw(w, m_ui_world.get_scene_view());
+	m_main_window->draw( w, scene_view );
 }
 
 void stats::set_fps_stats(float fps)
@@ -31,6 +31,13 @@ void stats::set_fps_stats(float fps)
 	string64		buff;
 	xray::sprintf	(buff, "%3.2f", fps);
 	m_fps->set_text	(buff);
+}
+
+void stats::set_active_scene( pcstr scene_name )
+{
+	string64		buff;
+	xray::sprintf	(buff, "active scene: %s", scene_name );
+	m_active_scene_info->set_text( buff );
 }
 
 void stats::set_camera_stats(float3 const& pos, float3 const& dir)
@@ -46,16 +53,6 @@ void stats::set_camera_stats(float3 const& pos, float3 const& dir)
 void stats::set_resources_stats( pcstr str )
 {
 	m_resources_activity->set_text	( str );
-}
-
-void stats::set_rtp_controllers_dump	( pcstr str )
-{
-	m_rtp_controllers_dump->set_text( str );
-}
-
-void stats::set_navmesh_info			( pcstr str )
-{
-	m_navmesh_info->set_text( str );
 }
 
 void stats::create()
@@ -102,22 +99,13 @@ void stats::create()
 	m_main_window->add_child			(m_resources_activity->w(), true);
 
 	
-	m_rtp_controllers_dump					= m_ui_world.create_text();
-	m_rtp_controllers_dump->w()->set_visible(true);
-	m_rtp_controllers_dump->w()->set_position(float2(0.0f, 60.0f));
-	m_rtp_controllers_dump->w()->set_size	(float2(100.0f, 20.0f));
-	m_rtp_controllers_dump->set_font		(xray::ui::fnt_arial);
-	m_rtp_controllers_dump->set_text_mode	(xray::ui::tm_default);
-	m_rtp_controllers_dump->set_color		(0xffffffff);
-	m_main_window->add_child			(m_rtp_controllers_dump->w(), true);
-
-	m_navmesh_info							= m_ui_world.create_text();
-	m_navmesh_info->w()->set_visible		(true);
-	m_navmesh_info->w()->set_position		(float2(0.0f, 100.0f));
-	m_navmesh_info->w()->set_size			(float2(300.0f, 40.0f));
-	m_navmesh_info->set_font				(xray::ui::fnt_arial);
-	m_navmesh_info->set_text_mode			(xray::ui::tm_multiline);
-	m_navmesh_info->set_color				(0xffffffff);
-	m_main_window->add_child			(m_navmesh_info->w(), true);
+	m_active_scene_info						= m_ui_world.create_text();
+	m_active_scene_info->w()->set_visible	(true);
+	m_active_scene_info->w()->set_position	(float2(0.0f, 80.0f));
+	m_active_scene_info->w()->set_size		(float2(300.0f, 40.0f));
+	m_active_scene_info->set_font			(xray::ui::fnt_arial);
+	m_active_scene_info->set_text_mode		(xray::ui::tm_multiline);
+	m_active_scene_info->set_color			(0xffffffff);
+	m_main_window->add_child				(m_active_scene_info->w(), true);
 
 }

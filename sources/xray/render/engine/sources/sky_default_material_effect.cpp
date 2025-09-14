@@ -23,6 +23,7 @@ void sky_default_material_effect::compile( effect_compiler& compiler, custom_con
 		compiler.begin_pass("sky2", NULL, "sky2", shader_configuration(), NULL);
 			compiler.set_depth(false, false);
 			compiler.set_stencil(true, 0x00, 0xff, 0x00, D3D_COMPARISON_EQUAL);
+			compiler.set_alpha_blend(true);
 			compiler.set_texture("t_skybox", pcstr(config["sky_texture"]));
 		compiler.end_pass();
 	compiler.end_technique();

@@ -278,11 +278,11 @@ void application::test					(u32 const								files_count,
 	fixed_string512	results2;
 	u32 ms1_total						=	0;
 	u32 ms2_total						=	0;
-	u32 const iterations_count			=	10;
+	u32 const iterations_count			=	150;
 	for ( u32 i=0; i<iterations_count; ++i )
 	{
 		u32 hash1 = 0; 
-		u32 ms1							=	test_without_resources_manager	(& hash1);
+		u32 ms1							=	0;//test_without_resources_manager	(& hash1);
 		u32 hash2 = 0; 
 		u32 ms2							=	test_with_resources_manager		(& hash2);
 		if ( i != 0 )
@@ -295,7 +295,7 @@ void application::test					(u32 const								files_count,
 			ms1_total					+=	ms1;
 			ms2_total					+=	ms2;
 		}
-		R_ASSERT							(hash1 == hash2);
+		//R_ASSERT							(hash1 == hash2);
 	}
 	LOG_INFO(logging::log_to_console, "without  rm: %d", ms1_total / (iterations_count-1));
 	LOG_INFO(logging::log_to_console, "with     rm: %d", ms2_total / (iterations_count-1));

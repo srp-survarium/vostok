@@ -1,0 +1,81 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 17.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_TDIFFUSE,
+		CONFIG_TTRANSPARENCY,
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+
+static const float far_clip = near_far_invn_invf.y;
+
+float4 mode_direction_and_uv_tile;
+
+Texture2D t_sphere_falloff;
+Texture2D t_spot_falloff;
+Texture2D t_transparency;
+float 	  solid_transparency;
+float 	  attenuation_scale;
+
+#include "material.h"
+#include "vertex_input.h"
+
+uniform float4 volume_color;
+uniform float4 screen_res; // Screen resolution (x-Width,y-Height, zw - 1/resolution)
+
+//uniform float3x4 m_V2W;
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float4 out_color		= 0;
+	
+	float3 position			= parameters.world_view_position.xyz;
+	float3 normal 			= float3(0.0f, 0.0f, 1.0f);
+	
+	float3x3 tangent_trans	= mul(m_V2W, parameters.tangent_to_viewspace);
+	
+	float2 tc_proj			= input.homogeneous_position.xy / screen_res.xy;
+	
+	float3 view_direction 	= normalize( eye_position - mul(m_V2W, float4(position,1)) );
+	float3 view_direction_tangent_space	= normalize( mul(view_direction, tangent_trans) );
+	
+	float3 reflection   	= reflect(view_direction_tangent_space, normal);
+	reflection.z 			= pow((reflection.z + 8.0f) * 0.8f, 0.5f);
+	
+	float pixel_depth 		= position.z;
+	float depth_diff 		= saturate(0.75f * (gbuffer_read_frame_depth(tc_proj)-pixel_depth));
+	
+	float attenuation		= saturate(attenuation_scale * pow(pixel_depth,1.0f));
+	
+	const float2 spot_uv	= float2(reflection.x / reflection.z + 0.5, parameters.tc.y);
+	float cone				= t_spot_falloff.Sample(s_base, spot_uv).r;
+							// = saturate(10.0f*pow(((input.tc.y*1.0f) * (1-input.tc.y*1.0f)),1.3f));
+	
+	float alpha 			= saturate(attenuation * cone * depth_diff * volume_color.a * t_sphere_falloff.Sample(s_base, float2(reflection.x / reflection.z + 0.5, reflection.y / reflection.z + 0.5)).r);
+	
+	float2 moved_uv			= mode_direction_and_uv_tile.w * (parameters.tc + mode_direction_and_uv_tile.xy * scene_time);
+	
+	if (CONFIG_TTRANSPARENCY)
+		alpha 				*= t_transparency.Sample( s_linear, moved_uv ).a;
+	else
+		alpha				*= solid_transparency;
+	
+	float3 dust_color		= (1.0f).xxx;
+	
+	if (CONFIG_TDIFFUSE)
+		dust_color			= t_diffuse.Sample(s_base, moved_uv).rgb;
+	
+	out_color.rgb			= dust_color;
+	out_color.a				= alpha;
+	
+	return out_color;
+}

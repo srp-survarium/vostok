@@ -21,6 +21,24 @@ public:
 
 }; // class game_project
 
+typedef vector<game_object_*> game_objects;
+
+class simple_game_project :	public resources::unmanaged_resource,
+		public boost::noncopyable
+	{
+
+	public:
+		configs::binary_config_ptr		m_config;
+		game_objects					m_objects;
+
+	}; // class simple_game_project
+
+typedef	xray::resources::resource_ptr<
+		simple_game_project,
+		resources::unmanaged_intrusive_base
+	> simple_game_project_ptr;
+
+
 typedef	xray::resources::resource_ptr<
 			game_project,
 			resources::unmanaged_intrusive_base

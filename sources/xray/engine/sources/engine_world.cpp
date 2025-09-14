@@ -94,6 +94,8 @@ engine_world::engine_world				(
 engine_world::~engine_world		( )
 {
 	finalize							( );
+	
+	destroy_scaleform	( );
 	core::finalize						( );
 }
 
@@ -121,8 +123,10 @@ void engine_world::tick					( )
 	//if ( threading::g_debug_single_thread )
 	//	network_tick					( );
 
-	if ( threading::g_debug_single_thread )
+	if ( threading::g_debug_single_thread ) {
 		sound_tick						( );
+		network_tick					( );
+	}
 
 	if ( threading::core_count( ) == 1 ) {
 		logic_tick						( );

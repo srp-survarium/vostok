@@ -16,10 +16,9 @@
 
 #include "tool_base.h"
 #include "level_editor.h"
+#include "object_collision.h"
 
 #pragma managed ( push, off )
-#	include <xray/collision/api.h>
-#	include <xray/collision/collision_object.h>
 #	include <xray/collision/space_partitioning_tree.h>
 #pragma managed ( push, on )
 

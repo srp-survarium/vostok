@@ -25,7 +25,6 @@ ref class object_light : public object_base
 public:
 							object_light			( tool_light^ t, render::scene_ptr const& scene );
 	virtual					~object_light			( );
-	virtual void			destroy_collision		( )									override;
 
 	virtual void			load_props				( configs::lua_config_value const& t ) override;
 	virtual void			save					( configs::lua_config_value t ) override;

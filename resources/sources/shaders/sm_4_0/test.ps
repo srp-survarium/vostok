@@ -1,0 +1,17 @@
+#include "common.h"
+
+struct test_vert_out
+{
+	float4 p 	: SV_POSITION;
+	float4 c 	: COLOR;
+	float2 tc 	: TEXCOORD0;
+};
+
+
+float4 main( test_vert_out input ) : SV_TARGET
+{
+	float4 c = 	t_base.Sample(s_base, input.tc); 
+//    c.rgb 	*= 	sqrt(dot(input.c.rgb,1.h/3.0h));
+
+	return c;
+}

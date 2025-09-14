@@ -320,7 +320,7 @@ void xray::core::finalize			( )
 		fixed_string512		message;
 		message.assignf		("program exit code: %d", s_engine->get_exit_code());
 		debug::notify_xbox_debugger	(message.c_str());
-	}
+	}	
 }
 
 xray::fs_new::synchronous_device_interface &	xray::core::get_core_synchronous_device	( )

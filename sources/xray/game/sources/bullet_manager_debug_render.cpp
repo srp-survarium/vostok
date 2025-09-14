@@ -21,32 +21,43 @@
 
 namespace stalker2 {
 
-static void		draw_bullets( game& game, render::debug::renderer& renderer, buffer_vector<bullet*> const& m_bullets );
-static void		draw_collision_points(
-					game& game,
+static void	draw_bullets( 
 					render::debug::renderer& renderer,
+					render::scene_ptr const& scene,
+					 buffer_vector<bullet*> const& m_bullets );
+
+static void	draw_collision_points(
+					render::debug::renderer& renderer,
+					render::scene_ptr const& scene,
 					debug::vector<float3>& collision_points,
-					debug::vector<math::color>& points_colors
-				);
-static void		draw_main_bullet_path(
-					game& game,
+					debug::vector<math::color>& points_colors );
+
+static void	draw_main_bullet_path(
 					render::debug::renderer& renderer,
+					render::scene_ptr const& scene,
 					vectora< render::vertex_colored > bullet_trajectories_points,
-					debug::vector< u32 > bullet_sequences_sizes
-				);
-static void		draw_collision_rays( game& game, render::debug::renderer& renderer, stalker2::bullet* bullet );
-static void		draw_decal_data( game& game, render::debug::renderer& renderer, debug::vector<bullet_manager::decal_data>& decals );
+					debug::vector< u32 > bullet_sequences_sizes );
 
-void			bullet_manager::render_debug				( )
+static void	draw_collision_rays( 
+					render::debug::renderer& renderer,
+					render::scene_ptr const& scene,
+					stalker2::bullet* bullet,
+					float3 const& gravity );
+
+static void	draw_decal_data( 
+					render::debug::renderer& renderer,
+					render::scene_ptr const& scene,
+					debug::vector<bullet_manager::decal_data>& decals );
+
+void bullet_manager::render_debug( render::debug::renderer& renderer, render::scene_ptr const& scene )
 {
-	render::debug::renderer& renderer = m_game.renderer( ).debug( );
+	draw_bullets			( renderer, scene, m_bullets );
 
-	draw_bullets			( m_game, renderer, m_bullets );
 	if( m_is_draw_collision_points )
-		draw_collision_points	( m_game, renderer, m_collision_points, m_collision_point_colors );
+		draw_collision_points	( renderer, scene, m_collision_points, m_collision_point_colors );
 
-	if( m_is_fixed )
-		renderer.draw_frustum( m_game.get_render_scene( ), 0.5f, .1f, 2, 1.333f, m_fixed_position, m_fixed_direction, float3( 0, 1, 0 ), math::color( 0, 0, 255 ) );
+	//if( m_is_fixed )
+	//	renderer.draw_frustum( scene, 0.5f, .1f, 2, 1.333f, m_fixed_position, m_fixed_direction, float3( 0, 1, 0 ), math::color( 0, 0, 255 ) );
 
 	if( m_is_draw_collision_trajectories && !m_bullets.empty( ) )
 	{
@@ -58,38 +69,44 @@ void			bullet_manager::render_debug				( )
 			if( end - current > 8 )
 				continue;
 			
-			draw_collision_rays		( m_game, renderer, *current );
+			draw_collision_rays		( renderer, scene, *current, get_gravity() );
 		}
 	}
 
 	if( m_is_draw_trajectories )
-		draw_main_bullet_path	( m_game, renderer, m_bullet_trajectories_points, m_bullet_sequences_sizes );
+		draw_main_bullet_path	( renderer, scene, m_bullet_trajectories_points, m_bullet_sequences_sizes );
 
 	if( m_is_draw_decals_data )
-		draw_decal_data			( m_game, renderer, m_decals );
+		draw_decal_data			( renderer, scene, m_decals );
 }
 
-static void		draw_bullets( game& game, render::debug::renderer& renderer, buffer_vector<bullet*> const& m_bullets )
+static void draw_bullets( render::debug::renderer& renderer, 
+						render::scene_ptr const& scene, 
+						buffer_vector<bullet*> const& m_bullets )
 {
 	buffer_vector<bullet*>::const_iterator	current = m_bullets.begin( );
 	buffer_vector<bullet*>::const_iterator	end		= m_bullets.end( );
 
 	for( ; current != end; ++current )
-		renderer.draw_sphere_solid( game.get_render_scene( ), (*current)->get_position( ), .1f, math::color( 0, 0, 255, 128 ) ); 
+		renderer.draw_sphere_solid( scene, (*current)->get_position( ), .1f, math::color( 0, 0, 255, 128 ) ); 
 }
 
-static void		draw_collision_points( game& game, render::debug::renderer& renderer, debug::vector<float3>& collision_points, debug::vector<math::color>& points_colors )
+static void	draw_collision_points(	render::debug::renderer& renderer, 
+									render::scene_ptr const& scene, 
+									debug::vector<float3>& collision_points, 
+									debug::vector<math::color>& points_colors )
 {
-	vector<float3>::iterator current_position	= collision_points.begin	( );
-	vector<float3>::iterator end_position		= collision_points.end		( );
-	vector<math::color>::iterator current_color	= points_colors.begin		( );
+	vector<float3>::iterator current_position	= collision_points.begin( );
+	vector<float3>::iterator end_position		= collision_points.end( );
+	vector<math::color>::iterator current_color	= points_colors.begin( );
+
 	for( ; current_position != end_position; ++current_position, ++current_color )
-		renderer.draw_sphere_solid( game.get_render_scene( ), *current_position, .05f, *current_color ); 
+		renderer.draw_sphere_solid( scene, *current_position, .05f, *current_color ); 
 }
 
-static void		draw_main_bullet_path( 
-					game& game,
+static void draw_main_bullet_path( 
 					render::debug::renderer& renderer,
+					render::scene_ptr const& scene, 
 					vectora< render::vertex_colored > bullet_trajectories_points,
 					debug::vector< u32 > bullet_sequences_sizes
 				)
@@ -120,11 +137,14 @@ static void		draw_main_bullet_path(
 			indices.push_back		( i );
 		}
 
-		renderer.draw_lines		( game.get_render_scene( ), start_point, end_point, indices );
+		renderer.draw_lines		( scene, start_point, end_point, indices );
 	}
 }
 
-static void		draw_collision_rays( game& game, render::debug::renderer& renderer, stalker2::bullet* bullet )
+static void draw_collision_rays( render::debug::renderer& renderer,
+								render::scene_ptr const& scene, 
+								stalker2::bullet* bullet,
+								float3 const& gravity )
 {
 	render::debug_vertices_type		vertices	( g_allocator );
 	render::debug_indices_type		indices		( g_allocator );
@@ -135,7 +155,6 @@ static void		draw_collision_rays( game& game, render::debug::renderer& renderer,
 	bool	is_even				= false;
 	float	tmp;
 
-	float3 const& gravity		= game.get_game_world( ).get_bullet_manager( ).get_gravity( );
 	float3	last_position		= bullet->evaluate_position( 0, tmp, gravity );
 	float	time_step			= 1.0f;
 	u16		index				= 0;
@@ -177,10 +196,12 @@ static void		draw_collision_rays( game& game, render::debug::renderer& renderer,
 		}
 	}
 
-	renderer.draw_lines		( game.get_render_scene( ), vertices, indices );
+	renderer.draw_lines		( scene, vertices, indices );
 }
 
-static void		draw_decal_data( game& game, render::debug::renderer& renderer, debug::vector<bullet_manager::decal_data>& decals )
+static void draw_decal_data( render::debug::renderer& renderer, 
+							render::scene_ptr const& scene,
+							debug::vector<bullet_manager::decal_data>& decals )
 {
 	int count = decals.size( );
 
@@ -203,7 +224,7 @@ static void		draw_decal_data( game& game, render::debug::renderer& renderer, deb
 		indices.push_back( i * 2 + 1 );
 	}
 
-	renderer.draw_lines		( game.get_render_scene( ), vertices, indices );
+	renderer.draw_lines		( scene, vertices, indices );
 }
 
 } // namespace stalker2

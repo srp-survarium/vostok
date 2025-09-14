@@ -17,7 +17,7 @@ void effect_copy_image::compile( effect_compiler& compiler, const custom_config_
 	
 	compiler.begin_technique(); // copy_rewrite
 		compiler.begin_pass("copy_image", NULL, "copy_image", shader_configuration(), NULL);
-			compiler.set_depth( false, false);
+			compiler.set_depth(false, false);
 			compiler.set_cull_mode(D3D_CULL_NONE);
 			compiler.set_fill_mode(D3D_FILL_SOLID);
 			compiler.set_alpha_blend(false);
@@ -26,7 +26,7 @@ void effect_copy_image::compile( effect_compiler& compiler, const custom_config_
 	
 	compiler.begin_technique(); // copy_additive
 		compiler.begin_pass("copy_image", NULL, "copy_image_simple", shader_configuration(), NULL);
-			compiler.set_depth( false, false);
+			compiler.set_depth(false, false);
 			compiler.set_cull_mode(D3D_CULL_NONE);
 			compiler.set_fill_mode(D3D_FILL_SOLID);
 			compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE);

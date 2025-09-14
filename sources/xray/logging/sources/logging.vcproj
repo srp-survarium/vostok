@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="logging"
 	ProjectGUID="{1E8DB72A-E3ED-4E15-979B-31BA5BFDD4C1}"
 	RootNamespace="library"
@@ -2381,10 +2381,6 @@
 			</File>
 			<File
 				RelativePath="..\log_file.h"
-				>
-			</File>
-			<File
-				RelativePath="..\logging_settings.h"
 				>
 			</File>
 			<File

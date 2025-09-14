@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "collision_primitive_item.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 #include "model_editor.h"
 #include "input_actions.h"
 #include "property_grid_panel.h"
@@ -22,48 +22,212 @@
 namespace xray{
 namespace model_editor{
 
-collision_primitive_item::collision_primitive_item( edit_object_mesh^ parent )
+math::float4x4 start_modify_matrix;
+
+collision_primitive_item_solid_mesh::collision_primitive_item_solid_mesh( model_editor^ me, edit_object_solid_mesh^ parent )
+:super				( me, parent),
+m_parent_solid_mesh	( parent )
+{}
+
+void collision_primitive_item_solid_mesh::set_position_impl( Float3 p )
+{
+	m_matrix->c.xyz()		= float3(p);
+	m_parent_solid_mesh->m_mass_center_item->collision_item_moved( );
+	m_parent->set_modified	( );
+}
+
+collision_primitive_item_skeletal_mesh::collision_primitive_item_skeletal_mesh( model_editor^ me, edit_object_skeletal_mesh^ parent )
+:super					( me, parent),
+m_parent_skeletal_mesh	( parent )
+{
+	health = 0.5f;
+	armor = 0.5f;
+}
+
+void collision_primitive_item_skeletal_mesh::set_position_impl( Float3 p )
+{
+	m_matrix->c.xyz()		= float3(p);
+	//m_parent_solid_mesh->m_mass_center_item->collision_item_moved( );
+	m_parent->set_modified	( );
+}
+
+void collision_primitive_item_skeletal_mesh::render(render::scene_ptr const& scene, 
+													render::debug::renderer& r, 
+													math::color const& clr )
+{
+	math::float4x4 attach_bone_matrix	= m_parent_skeletal_mesh->get_bone_matrix(bone_name);
+
+	math::float4x4 angles_m			= create_rotation( m_matrix->get_angles_xyz() );
+	math::float4x4 translation_m	= create_translation( m_matrix->c.xyz() );
+
+	float4x4 m							= angles_m * (attach_bone_matrix * translation_m);
+	render_impl							(scene, r, clr, m );
+}
+
+float4x4 collision_primitive_item_skeletal_mesh::get_ancor_transform( )
+{
+	math::float4x4 attach_bone_matrix	= m_parent_skeletal_mesh->get_bone_matrix(bone_name);
+	return								attach_bone_matrix * *m_matrix;
+}
+
+void collision_primitive_item_skeletal_mesh::start_modify( editor_base::transform_control_base^ control )
+{
+	super::start_modify( control );
+	//if(control->GetType() == editor_base::transform_control_scaling::typeid)
+	//{
+	//	start_modify_matrix = math::create_scale(scale);
+	//}else
+	//	start_modify_matrix = get_ancor_transform();
+}
+
+void collision_primitive_item_skeletal_mesh::execute_preview( editor_base::transform_control_base^ control )
+{
+
+	if(control->GetType() == editor_base::transform_control_scaling::typeid)
+	{
+		math::float4x4 m	= control->calculate( start_modify_matrix );
+		scale				= Float3(m.get_scale());
+		update_collision	( );
+	}else
+	{
+		math::float4x4 m	= control->calculate( start_modify_matrix );
+		m					= create_rotation( m.get_angles_xyz() ) * create_translation( m.c.xyz() ); // revove scale
+
+		float4x4 const P	= start_modify_matrix;
+		float4x4 P_i		= math::invert4x3( P );
+		float4x4 m_i		= P_i * m;
+		float4x4 mr			= P * m_i;
+
+		*m_matrix			= mr;
+
+
+//		float4x4 const P		= start_matrix;
+//		float4x4 P_i			= math::invert4x3( P );
+//		
+//		math::float4x4 const m	= control->calculate( P );
+//		
+//		float4x4 m_i			= P_i * m;
+//		float4x4 mr				= P * m_i;
+//
+//		set_matrix				( mr );
+//
+//		*m_matrix		= create_rotation( m.get_angles_xyz() ) * create_translation( m.c.xyz() );
+
+		m_model_editor->collision_tree->move( m_active_collision_object, *m_matrix );
+	}
+	m_parent_skeletal_mesh->get_collision_panel()->refresh_properties();
+}
+
+void collision_primitive_item_skeletal_mesh::load( configs::lua_config_value const& t )
+{
+	m_primitive->type	= (collision::primitive_type)((int)t["type"]);
+	float3 position		= t["position"];
+	float3 rotation		= t["rotation"];
+	float3 scale		= t["scale"];
+	armor				= t.value_exists("armor") ? t["armor"] : 0.5f;
+	health				= t.value_exists("health") ? t["health"] : 0.5f;
+	pcstr bn			= t["animation_bone"];
+	bone_name			= gcnew System::String(bn);
+
+	*m_matrix = create_rotation(rotation)* create_translation(position);
+
+	switch (m_primitive->type)
+	{
+
+	case collision::primitive_sphere:
+		{
+			m_primitive->data_ = float3(scale.x, scale.x, scale.x) ;
+		}break;
+
+	case collision::primitive_box:
+		{
+			m_primitive->data_ = scale;
+		}break;
+
+	case collision::primitive_cylinder:
+		{
+			m_primitive->data_ = scale;
+		}break;
+	}
+
+}
+
+void collision_primitive_item_skeletal_mesh::save( configs::lua_config_value& t )
+{
+	t["type"]			= (int)m_primitive->type;
+	t["position"]		= m_matrix->c.xyz();
+	t["rotation"]		= m_matrix->get_angles_xyz();
+	t["scale"]			= m_primitive->data_;
+	t["animation_bone"]	= unmanaged_string(bone_name).c_str();
+	t["armor"]			= armor;
+	t["health"]			= health;
+}
+
+void collision_primitive_item_skeletal_mesh::set_selected( bool value )
+{
+	super::set_selected( value );
+	if(value)
+		m_parent_skeletal_mesh->select_bone( bone_name );
+}
+
+void collision_primitive_item_skeletal_mesh::bone_name::set( System::String^ name )
+{
+	m_bone_name = name;
+	if(is_selected())
+		m_parent_skeletal_mesh->select_bone( m_bone_name );
+}
+
+
+collision_primitive_item_mesh::collision_primitive_item_mesh(model_editor^ me, edit_object_mesh^ parent )
 :m_matrix		( NEW(float4x4) ),
 m_primitive		( NEW(collision::primitive) ),
+m_model_editor	( me ),
 m_parent		( parent )
 {
 }
 
-collision_primitive_item::~collision_primitive_item( )
+collision_primitive_item_mesh::~collision_primitive_item_mesh( )
 {
 	activate	( false );
 	DELETE		( m_matrix );
 	DELETE		( m_primitive );
 }
 
-void collision_primitive_item::render(	render::scene_ptr const& scene, 
-										render::debug::renderer& r, 
-										math::color const& clr )
+void collision_primitive_item_mesh::render_impl(	render::scene_ptr const& scene, 
+													render::debug::renderer& r, 
+													math::color const& clr,
+													math::float4x4 const& m)
 {
-	//math::color clr(104,178,35,200);//rgba
 	switch (m_primitive->type)
 	{
 	case collision::primitive_sphere:
 		{
 			collision::sphere sp = m_primitive->sphere();
-			r.draw_sphere_solid( scene, m_matrix->c.xyz(), sp.radius, clr );
+			r.draw_sphere_solid( scene, m.c.xyz(), sp.radius, clr );
 		}break;
 
 	case collision::primitive_box:
 		{
 			collision::box box = m_primitive->box();
-			r.draw_cube_solid( scene, *m_matrix, box.half_side, clr );
+			r.draw_cube_solid( scene, m, box.half_side, clr );
 		}break;
 
 	case collision::primitive_cylinder:
 		{
 			collision::cylinder cylinder = m_primitive->cylinder();
-			r.draw_cylinder_solid( scene, *m_matrix, float3(cylinder.radius, cylinder.half_length, cylinder.radius), clr );
+			r.draw_cylinder_solid( scene, m, float3(cylinder.radius, cylinder.half_length, cylinder.radius), clr );
 		}break;
 	}
 }
 
-void collision_primitive_item::load( configs::lua_config_value const& t, float3 const& mass_center )
+void collision_primitive_item_mesh::render(	render::scene_ptr const& scene, 
+										render::debug::renderer& r, 
+										math::color const& clr )
+{
+	render_impl(scene, r, clr, *m_matrix );
+}
+
+void collision_primitive_item_solid_mesh::load( configs::lua_config_value const& t, float3 const& mass_center )
 {
 	m_primitive->type	= (collision::primitive_type)((int)t["type"]);
 	float3 position		= t["position"] + mass_center;
@@ -93,7 +257,7 @@ void collision_primitive_item::load( configs::lua_config_value const& t, float3 
 
 }
 
-void collision_primitive_item::save( configs::lua_config_value& t, float3 const& mass_center )
+void collision_primitive_item_solid_mesh::save( configs::lua_config_value& t, float3 const& mass_center )
 {
 	t["type"]			= (int)m_primitive->type;
 	t["position"]		= m_matrix->c.xyz() - mass_center;
@@ -101,25 +265,18 @@ void collision_primitive_item::save( configs::lua_config_value& t, float3 const&
 	t["scale"]			= m_primitive->data_;
 }
 
-Float3 collision_primitive_item::position::get( )
+Float3 collision_primitive_item_mesh::position::get( )
 {
 	return Float3(m_matrix->c.xyz());
 }
 
-void collision_primitive_item::position::set( Float3 p )
-{
-	m_matrix->c.xyz()		= float3(p);
-	m_parent->m_mass_center_item->collision_item_moved( );
-	m_parent->set_modified	( );
-}
-
-Float3 collision_primitive_item::rotation::get( )
+Float3 collision_primitive_item_mesh::rotation::get( )
 {
 	float3 angles_rad		= m_matrix->get_angles_xyz();
 	return Float3( angles_rad*(180.0f/math::pi) );
 }
 
-void collision_primitive_item::rotation::set( Float3 p )
+void collision_primitive_item_mesh::rotation::set( Float3 p )
 {
 	float3 angles_rad		= float3(p) * (math::pi/180.0f);
 
@@ -127,29 +284,29 @@ void collision_primitive_item::rotation::set( Float3 p )
 	m_parent->set_modified	( );
 }
 
-Float3 collision_primitive_item::scale::get( )
+Float3 collision_primitive_item_mesh::scale::get( )
 {
 	return Float3(m_primitive->data_);
 }
 
-void collision_primitive_item::scale::set( Float3 p )
+void collision_primitive_item_mesh::scale::set( Float3 p )
 {
 	m_primitive->data_		= float3(p);
 	m_parent->set_modified	( );
 }
 
-int collision_primitive_item::type::get( )
+int collision_primitive_item_mesh::type::get( )
 {
 	return m_primitive->type;
 }
 
-void collision_primitive_item::type::set( int t )
+void collision_primitive_item_mesh::type::set( int t )
 {
 	m_primitive->type		= (collision::primitive_type)t;
 	m_parent->set_modified	( );
 }
 
-collision::geometry_instance* collision_primitive_item::create_geometry_instance( )
+collision::geometry_instance* collision_primitive_item_mesh::create_geometry_instance( )
 {
 	collision::geometry_instance* result = NULL; 
 	switch (m_primitive->type)
@@ -176,7 +333,7 @@ collision::geometry_instance* collision_primitive_item::create_geometry_instance
 	return result;
 }
 
-void collision_primitive_item::activate( bool value )
+void collision_primitive_item_mesh::activate( bool value )
 {
 	if(value == (m_active_collision_object!=NULL) )
 		return;
@@ -184,22 +341,20 @@ void collision_primitive_item::activate( bool value )
 	if(value)
 	{
 		m_active_collision_object	= NEW (collision_primitive_item_collision)( this );
-		m_parent->get_model_editor()->collision_tree->insert(
+		m_model_editor->collision_tree->insert(
 			m_active_collision_object, 
 			*m_matrix
 		);
 	}else
 	{
 		set_selected				( false );
-		m_parent->get_model_editor()->collision_tree->erase( m_active_collision_object );
+		m_model_editor->collision_tree->erase( m_active_collision_object );
 		DELETE						( m_active_collision_object );
 		m_active_collision_object	= NULL;
 	}
 }
 
-math::float4x4 start_modify_matrix;
-
-void collision_primitive_item::start_modify( editor_base::transform_control_base^ control )
+void collision_primitive_item_mesh::start_modify( editor_base::transform_control_base^ control )
 {
 	if(control->GetType() == editor_base::transform_control_scaling::typeid)
 	{
@@ -208,7 +363,7 @@ void collision_primitive_item::start_modify( editor_base::transform_control_base
 		start_modify_matrix = *m_matrix;
 }
 
-void collision_primitive_item::execute_preview( editor_base::transform_control_base^ control )
+void collision_primitive_item_solid_mesh::execute_preview( editor_base::transform_control_base^ control )
 {
 	math::float4x4 m	= control->calculate( start_modify_matrix );
 	if(control->GetType() == editor_base::transform_control_scaling::typeid)
@@ -219,32 +374,32 @@ void collision_primitive_item::execute_preview( editor_base::transform_control_b
 	{
 		*m_matrix		= create_rotation( m.get_angles_xyz() ) * create_translation( m.c.xyz() );
 		
-		m_parent->m_mass_center_item->collision_item_moved( );
+		m_parent_solid_mesh->m_mass_center_item->collision_item_moved( );
 
-		m_parent->get_model_editor()->collision_tree->move(
+		m_model_editor->collision_tree->move(
 			m_active_collision_object,
 			*m_matrix
 		);
 	}
-	m_parent->get_collision_panel()->refresh_properties();
+	m_parent_solid_mesh->get_collision_panel()->refresh_properties();
 }
 
-bool collision_primitive_item::is_selected( )
+bool collision_primitive_item_mesh::is_selected( )
 {
-	transform_control_object^ current_object = m_parent->get_model_editor()->m_transform_control_helper->m_object;
+	transform_control_object^ current_object = m_model_editor->m_transform_control_helper->m_object;
 	return (current_object == this);
 }
 
-void collision_primitive_item::set_selected( bool value )
+void collision_primitive_item_mesh::set_selected( bool value )
 {
-	transform_control_object^ current_object = m_parent->get_model_editor()->m_transform_control_helper->m_object;
+	transform_control_object^ current_object = m_model_editor->m_transform_control_helper->m_object;
 
 	bool is_selected_now = is_selected();
 	
 	if(is_selected_now == value)
 		return;
 
-	collision_primitive_item^ prev = (is_selected_now)? nullptr : dynamic_cast<collision_primitive_item^>(current_object);
+	collision_primitive_item_mesh^ prev = (is_selected_now)? nullptr : dynamic_cast<collision_primitive_item_mesh^>(current_object);
 
 	if(!m_active_collision_object)
 		return;
@@ -254,27 +409,27 @@ void collision_primitive_item::set_selected( bool value )
 		if(prev)
 			prev->set_selected( false );
 
-		m_parent->get_model_editor()->m_transform_control_helper->m_object = this;
+		m_model_editor->m_transform_control_helper->m_object = this;
 	}else
 	{
 		if(is_selected_now)
-			m_parent->get_model_editor()->m_transform_control_helper->m_object = nullptr;
+			m_model_editor->m_transform_control_helper->m_object = nullptr;
 	}
-	m_parent->get_model_editor()->m_transform_control_helper->m_changed = true;
+	m_model_editor->m_transform_control_helper->m_changed = true;
 
 	m_current_desc->is_selected = value;
 }
 
-void collision_primitive_item::end_modify( editor_base::transform_control_base^ )
+void collision_primitive_item_mesh::end_modify( editor_base::transform_control_base^ )
 {
 }
 
-float4x4 collision_primitive_item::get_ancor_transform( )
+float4x4 collision_primitive_item_mesh::get_ancor_transform( )
 {
 	return *m_matrix;
 }
 
-u32 collision_primitive_item::get_collision( System::Collections::Generic::List<editor_base::collision_object_wrapper>^% result_list )
+u32 collision_primitive_item_mesh::get_collision( System::Collections::Generic::List<editor_base::collision_object_wrapper>^% result_list )
 {
 	editor_base::collision_object_wrapper	wrapper;
 	wrapper.m_collision_object				= m_active_collision_object;
@@ -283,7 +438,7 @@ u32 collision_primitive_item::get_collision( System::Collections::Generic::List<
 	return result_list->Count;
 }
 
-void collision_primitive_item::update_collision( )
+void collision_primitive_item_mesh::update_collision( )
 {
 	bool was_selected = is_selected();
 
@@ -294,7 +449,7 @@ void collision_primitive_item::update_collision( )
 		set_selected(true);
 }
 
-collision_primitive_item_collision::collision_primitive_item_collision( collision_primitive_item^ parent )
+collision_primitive_item_collision::collision_primitive_item_collision( collision_primitive_item_mesh^ parent )
 :super( g_allocator, xray::editor_base::collision_object_type_touch, parent->create_geometry_instance() )
 {
 	m_parent = parent;
@@ -307,7 +462,7 @@ bool collision_primitive_item_collision::touch( ) const
 }
 
 // mass center item
-mass_center_item::mass_center_item( edit_object_mesh^ parent )
+mass_center_item::mass_center_item( edit_object_solid_mesh^ parent )
 :m_parent		( parent )
 {
 }
@@ -459,7 +614,7 @@ void mass_center_item::collision_item_moved( )
 
 // rigid body construction info
 
-rigid_body_construction_info_ref::rigid_body_construction_info_ref( edit_object_mesh^ parent )
+rigid_body_construction_info_ref::rigid_body_construction_info_ref( edit_object_solid_mesh^ parent )
 :m_parent( parent )
 {
 	m_info = NEW(physics::bt_rigid_body_construction_info)();
@@ -470,9 +625,9 @@ rigid_body_construction_info_ref::~rigid_body_construction_info_ref()
 	DELETE(m_info);
 }
 
-void rigid_body_construction_info_ref::save_to( configs::lua_config_ptr config )
+void rigid_body_construction_info_ref::save_to( configs::lua_config_value& root )
 {
-	m_info->save( config->get_root() );
+	m_info->save( root );
 }
 void rigid_body_construction_info_ref::load_from( configs::lua_config_ptr const config )
 {

@@ -16,7 +16,7 @@ namespace stalker2 {
 
 struct animated_model_instance : public resources::unmanaged_resource 
 {
-	render::animated_model_instance_ptr		m_render_model;
+	xray::render::animated_model_instance_ptr		m_render_model;
 	physics::animated_model_instance_ptr	m_physics_model;
 	collision::animated_object*				m_damage_collision;
 	animation::animation_player*			m_animation_player;

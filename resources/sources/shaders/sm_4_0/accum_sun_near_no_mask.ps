@@ -1,0 +1,67 @@
+#include "common.h"
+#include "light.h"
+#include "shadow.h"
+#include "gbuffer.h"
+#include "light_accumulator.h"
+#include "parallel_light.h"
+#include "light_ps_helper.h"
+
+#define EPS	(0.9f/255.f)
+#define CLIP_THRESHOLD	(1.0f/255.f)
+
+light_accumulator 	main		( v2p_sun I ) : SV_TARGET
+{
+	light_accumulator result;
+//	float4	_N		= t_normal.Sample			( s_normal,   	I.Tex0);
+//	float4	_N		= gbuffer_read_rt_normal	( I.Tex0);
+
+	g_data gb	= gbuffer_read	( I.Tex0, I.eye_ray);
+	
+	float	L 		= /*_N.w **/ dot( light_direction.xyz, gb.normal.xyz) + EPS; // Use hemisphere as approximation of max light
+  
+	// --ACCUMULATOR TEST
+	//float4 result = float4(0,0,0,0);
+	
+	[branch]if( -( L - CLIP_THRESHOLD)+ gb.sh_param < 0)
+	{
+		//clip ( -1);
+		result.diffuse = float4(0,0,0,0);
+		result.specular = float4(0,0,0,0);
+	}
+	else
+	{
+////		float4 _P		= t_position.Sample 	(s_position, 	I.Tex0);
+////		float4 _P		= gbuffer_read_rt_position	( I.Tex0, I.eye_ray);
+//		
+//		// ----- light-model
+//		float 	m;
+//
+//		m = 10.f;//
+//		float2	light 	= phong_infinity ( gb.position.xyz, gb.normal.xyz, light_direction.xyz, gb.specular_power, gb.sh_param, gb.diffuse_power);
+//
+//		// ----- shadow
+//	//  	float4 	P4 	= float4	(_P.x,_P.y,_P.z,1.f);
+//	//	float4 	PS	= mul		(m_shadow0,	P4);
+//	//	float 	s 	= sunmask	(P4);
+//		#ifdef 	USE_SJITTER
+//	//	  s 	*= shadowtest_sun 	(PS,tcJ);
+//		#else
+//	//	  s 	*= shadow		(PS);
+//		#endif
+//		
+//		float s=1;
+//	
+//		// --ACCUMULATOR TEST
+//		//result = /*(float4(1,0,0,1),tc);//*/blend(light_color * light * s, I.Tex0);
+//		
+//		result.diffuse = float4( light_color.rgb * light.x * s / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0);
+//		result.specular = float4( light_color.rgb * light.y * s / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0);
+		return
+			get_light_accumulator(
+				light_color,
+				parallel_light( gb, I.Tex0 )
+			);
+	}
+	
+	return (result);
+}

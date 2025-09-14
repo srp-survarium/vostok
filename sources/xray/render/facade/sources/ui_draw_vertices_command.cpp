@@ -17,8 +17,8 @@ draw_vertices_command::draw_vertices_command	(
 		xray::render::ui::vertex const* const end,
 		xray::memory::base_allocator& allocator,
 		u32 const primitives_type,
-		u32 const points_type
-	) :
+		u32 const points_type ) 
+:
 	super					( true ),
 	m_vertices				( allocator, begin, end ),
 	m_render_engine_world	( render_engine_world ),
@@ -26,6 +26,7 @@ draw_vertices_command::draw_vertices_command	(
 	m_primitives_type		( primitives_type ),
 	m_points_type			( points_type )
 {
+	R_ASSERT( m_scene_view );
 }
 
 void draw_vertices_command::execute				( )

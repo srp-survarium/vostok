@@ -8,24 +8,35 @@
 #define OBJECT_H_INCLUDED
 
 namespace stalker2 {
+class game_scene;
 class game_world;
 
 class game_object_ :	public resources::unmanaged_resource,
 						private boost::noncopyable 
 {
 public:
-					game_object_			( game_world& w );
+					game_object_			( game_scene& s );
 	virtual void	load					( configs::binary_config_value const& t );
 
-	virtual void	on_scene_start			(  ){};
+	virtual void	on_scene_start			( ){};
 
 	virtual void	load_contents			( ){};
 	virtual void	unload_contents			( ){};
 
 	s16				m_loaded_cnt;
 
-	game_world&		get_game_world			( ) {return m_game_world;}
+	game_scene&		get_game_scene			( ) {return m_game_scene;}
 
+protected:
+	game_scene&		m_game_scene;
+};
+
+class game_world_object :	public game_object_
+{
+	typedef game_object_ super;
+public:
+					game_world_object		( game_world& w );
+	game_world&		get_game_world			( ) { return m_game_world; }
 protected:
 	game_world&		m_game_world;
 };
@@ -34,7 +45,7 @@ class game_object_static :	public game_object_
 {
 	typedef game_object_ super;
 public:
-					game_object_static		( game_world& w );
+					game_object_static		( game_scene& w );
 	virtual void	load					( configs::binary_config_value const& t );
 
 protected:

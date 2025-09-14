@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="vfs"
 	ProjectGUID="{5F3E5796-D883-4D50-A1E2-246480650808}"
 	RootNamespace="library"
@@ -2067,6 +2067,10 @@
 			Name="core"
 			>
 			<File
+				RelativePath=".\library_linkage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pch.cpp"
 				>
 				<FileConfiguration
@@ -2350,24 +2354,12 @@
 				RelativePath=".\pch.h"
 				>
 			</File>
-			<File
-				RelativePath=".\library_linkage.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="include"
 			>
 			<File
 				RelativePath="..\api.h"
-				>
-			</File>
-			<File
-				RelativePath="..\engine.h"
-				>
-			</File>
-			<File
-				RelativePath="..\library_linkage.h"
 				>
 			</File>
 			<File
@@ -2379,11 +2371,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\engine.h"
+				>
+			</File>
+			<File
 				RelativePath="..\find_results.h"
 				>
 			</File>
 			<File
 				RelativePath="..\hashset.h"
+				>
+			</File>
+			<File
+				RelativePath="..\library_linkage.h"
 				>
 			</File>
 			<File

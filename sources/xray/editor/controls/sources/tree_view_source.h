@@ -7,26 +7,26 @@
 #ifndef TREE_VIEW_SOURCE_H_INCLUDED
 #define TREE_VIEW_SOURCE_H_INCLUDED
 
-namespace xray
+namespace xray{
+namespace editor{
+namespace controls{
+
+public interface class tree_view_source
 {
-	namespace editor
+public:
+	property tree_view^	parent
 	{
-		namespace controls
-		{
-			public interface class tree_view_source
-			{
-			public:
-				property tree_view^	parent
-				{
-					tree_view^			get	();
-					void				set	(tree_view^ value);
-				};
+		tree_view^			get	();
+		void				set	(tree_view^ value);
+	};
 
-			public:
-				void refresh();
+public:
+	void refresh			( );
 
-			}; // class tree_view_source
-		}//namespace controls
-	}//namespace editor
+}; // class tree_view_source
+
+}//namespace controls
+}//namespace editor
 }//namespace xray
+
 #endif // #ifndef FILE_TREE_VIEW_SOURCE_H_INCLUDED

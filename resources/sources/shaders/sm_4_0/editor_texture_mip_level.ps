@@ -1,0 +1,80 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 14.01.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+	CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common_defines.h"
+//uniform float3x4 m_V2W;
+#include "material.h"
+#include "vertex_input.h"
+
+#define USE_LINEAR_MIP_LEVEL 1
+
+
+Texture2D t_albedo_color;
+uniform float4 screen_res;
+
+
+float get_mip_level(float2 uv, float2 texture_dimension, float num_mip_levels)
+{
+	float2 dx = ddx(uv) * texture_dimension;
+	float2 dy = ddy(uv) * texture_dimension;
+	float  d  = max( dot(dx, dx), dot(dy, dy) );
+	
+	d = clamp(d, 1.0, pow(2.0f, (num_mip_levels - 1.0f) * 2.0f));
+	
+	return 0.5 * log2(d);
+}
+
+float get_num_mip_levels(float2 texture_dimension)
+{
+	return log2(min(texture_dimension.x, texture_dimension.y)) / log2(2.0) + 1;
+}
+
+float4 current_max_texture_dimension;
+static const float2 current_texture_dimension = current_max_texture_dimension.xy;
+
+float4 main(in vertex_output_struct input) : SV_TARGET
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float mip 		= get_mip_level(parameters.tc, current_texture_dimension, get_num_mip_levels(current_texture_dimension));
+	float alpha 	= frac(mip);
+	int   mip_index = floor(mip);
+	
+	float2 projected_uv = input.homogeneous_position.xy * screen_res.zw;
+	float3 albedo_color = float3(1.0f, 1.0f, 1.0f);//t_albedo_color.Sample(s_accumulator, projected_uv).rgb;
+	
+	float3 mip_colors[13] = {
+		albedo_color, //float3(1.0f, 1.0f, 1.0f),
+		float3(1.0f, 0.0f, 0.0f),
+		float3(0.0f, 1.0f, 0.0f),
+		float3(0.0f, 0.0f, 1.0f),
+		float3(1.0f, 1.0f, 0.0f),
+		float3(1.0f, 0.0f, 1.0f),
+		float3(0.0f, 1.0f, 1.0f),
+		float3(0.5f, 0.0f, 0.0f),
+		float3(0.0f, 0.5f, 0.0f),
+		float3(0.0f, 0.0f, 0.5f),
+		float3(0.5f, 0.5f, 0.0f),
+		float3(5.0f, 0.0f, 0.5f),
+		float3(0.5f, 0.5f, 0.0f),
+	};
+	
+#if USE_LINEAR_MIP_LEVEL
+	float3 out_color = lerp(mip_colors[mip_index], mip_colors[mip_index+1], alpha);
+#else
+	float3 out_color = mip_colors[mip_index];
+#endif
+	
+	return float4(out_color, 0);
+}
+
+

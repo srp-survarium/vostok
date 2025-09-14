@@ -12,13 +12,12 @@
 #include "colliders_aabb_geometry.h"
 #include "colliders_cuboid_geometry.h"
 #include "sphere_geometry.h"
-
 #include "triangle_sphere_contact_tests.h"
 #include "triangle_box_contact_tests.h"
 #include "triangle_cylinder_contact_tests.h"
-
+#include <xray/collision/geometry_double_dispatcher.h>
 #include <xray/collision/contact_info.h>
-#include <xray/render/base/debug_renderer.h>
+#include <xray/render/facade/debug_renderer.h>
 
 using xray::math::aabb;
 using xray::math::float3;
@@ -31,10 +30,11 @@ using xray::collision::ray_triangles_type;
 using xray::collision::triangles_type;
 using xray::collision::triangles_predicate_type;
 using xray::collision::triangle_mesh_base;
-using xray::memory::base_allocator;
 
-triangle_mesh_base::triangle_mesh_base	( base_allocator* allocator )	:
-	m_allocator				( allocator ),
+namespace xray {
+namespace collision {
+
+triangle_mesh_base::triangle_mesh_base	( memory::base_allocator* allocator ) :
 	m_triangle_data			( *allocator ),
 	m_mesh					( 0 ),
 	m_model					( 0 ),
@@ -47,11 +47,11 @@ void triangle_mesh_base::add_triangles		( triangles_type& triangles ) const
 	XRAY_UNREFERENCED_PARAMETER	(triangles);
 }
 
-void triangle_mesh_base::initialize		( float3 const* const vertices, u32 const vertex_count, u32 const* const indices, u32 const index_count )
+void triangle_mesh_base::initialize		( memory::base_allocator* allocator, float3 const* const vertices, u32 const vertex_count, u32 const* const indices, u32 const index_count )
 {
 	ASSERT					( (index_count % 3) == 0 );
 
-	m_mesh					= XRAY_NEW_IMPL ( m_allocator, Opcode::MeshInterface )( m_allocator );
+	m_mesh					= XRAY_NEW_IMPL ( allocator, Opcode::MeshInterface )( allocator );
 	m_mesh->SetNbTriangles	( index_count / 3 );
 	m_mesh->SetNbVertices	( vertex_count );
 	m_mesh->SetPointers		( ( IndexedTriangle const* )indices, ( Point const* )vertices );
@@ -65,18 +65,22 @@ void triangle_mesh_base::initialize		( float3 const* const vertices, u32 const v
 	options.mQuantized		= false;
 	options.mCanRemap		= false;
 
-	m_model					= XRAY_NEW_IMPL ( m_allocator, Opcode::Model )( m_allocator );
+	m_model					= XRAY_NEW_IMPL ( allocator, Opcode::Model )( allocator );
 	m_model->Build			( options );
 
-	m_root					= dynamic_cast<Opcode::AABBNoLeafTree const*>( m_model->GetTree( ) )->GetNodes( );
+	m_root					= static_cast_checked<Opcode::AABBNoLeafTree const*>( m_model->GetTree( ) )->GetNodes( );
 
 	calculate_aabb			( vertices, vertex_count, indices, index_count );
 }
 
+void triangle_mesh_base::destroy	( memory::base_allocator* allocator )
+{
+	XRAY_DELETE_IMPL				( allocator, m_model );
+	XRAY_DELETE_IMPL				( allocator, m_mesh );
+}
+
 triangle_mesh_base::~triangle_mesh_base		( )
 {
-	XRAY_DELETE_IMPL		( m_allocator, m_model );
-	XRAY_DELETE_IMPL		( m_allocator, m_mesh );
 }
 
 Opcode::AABBNoLeafNode const* triangle_mesh_base::root	( ) const
@@ -90,9 +94,24 @@ float3 const* triangle_mesh_base::vertices				( ) const
 	return					( ( float3 const* )m_mesh->GetVerts( ) );
 }
 
+u32 triangle_mesh_base::vertex_count					( ) const
+{
+	return					( m_mesh->GetNbVertices( ) );
+}
+
+u32 const* triangle_mesh_base::indices					( ) const
+{
+	return					&m_mesh->GetTris( )->mVRef[0];
+}
+
 u32 const* triangle_mesh_base::indices					( u32 const triangle_id ) const
 {
 	return					( m_mesh->GetTris( )[ triangle_id ].mVRef );
+}
+
+u32 triangle_mesh_base::index_count						( ) const
+{
+	return					( 3*m_mesh->GetNbTriangles( ) );
 }
 
 bool triangle_mesh_base::aabb_test		( aabb const& aabb ) const
@@ -149,7 +168,7 @@ bool triangle_mesh_base::ray_test		(
 	return					result;
 }
 
-void triangle_mesh_base::render			( xray::render::debug::renderer& renderer, float4x4 const& matrix ) const
+void triangle_mesh_base::render			( xray::render::scene_ptr const& scene, xray::render::debug::renderer& renderer, float4x4 const& matrix ) const
 {
 	//u32 const vertex_buffer_size	= (m_mesh->GetNbVertices())*sizeof(vertex_colored);
 	//u32 const index_buffer_size		= (m_mesh->GetNbIndices())*sizeof(u16);
@@ -191,41 +210,24 @@ void triangle_mesh_base::render			( xray::render::debug::renderer& renderer, flo
 			)),
 		};
 
-		float const step			= 10.f;
-		float const inverted_step	= 1.f / step;
-
+		math::color clr(0, 127, 0, 127);
 		using xray::render::vertex_colored;
 		vertex_colored const draw_vertices[]=
 		{
-			{
+			vertex_colored(
 				positions[0],
-				math::color(
-					0*( math::clamp_r( ( positions[0].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					1*( math::clamp_r( ( positions[0].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					0*( math::clamp_r( ( positions[0].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					255.0f
-				).get_d3dcolor()
-			},
-			{
+				clr
+			),
+			vertex_colored(
 				positions[1],
-				math::color(
-					0*( math::clamp_r( ( positions[1].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					1*( math::clamp_r( ( positions[1].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					0*( math::clamp_r( ( positions[1].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					255.0f
-				).get_d3dcolor()
-			},
-			{
+				clr
+			),
+			vertex_colored(
 				positions[2],
-				math::color(
-					0*( math::clamp_r( ( positions[2].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					1*( math::clamp_r( ( positions[2].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					0*( math::clamp_r( ( positions[2].y - step*.5f) * inverted_step * 127.f + 127, 0.f, 255.f) ),
-					255.0f
-				).get_d3dcolor()
-			}
+				clr
+			)
 		};
-		renderer.draw_triangle	( draw_vertices );
+		renderer.draw_triangle	( scene, draw_vertices );
 	}
 }
 
@@ -285,11 +287,50 @@ aabb&	triangle_mesh_base::get_aabb( aabb& result ) const
 	result					= m_bounding_aabb;
 	return					result;
 }
-void		triangle_mesh_base::generate_contacts( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const xray::collision::geometry& og )const
+
+float3 triangle_mesh_base::get_random_surface_point ( math::random32& randomizer ) const
 {
-	og.generate_contacts( c, transform, self_transform, *this );
+	XRAY_UNREFERENCED_PARAMETER	( randomizer );
+	UNREACHABLE_CODE			( return float3() );
 }
-void	triangle_mesh_base::generate_contacts( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const xray::collision::sphere_geometry& og ) const 
+
+float triangle_mesh_base::get_surface_area	( ) const
+{
+	// TODO: calculate real area as sum of triangles
+	NOT_IMPLEMENTED				( return 0.f );
+}
+
+void triangle_mesh_base::accept	( geometry_double_dispatcher& dispatcher, geometry const& node ) const
+{
+	XRAY_UNREFERENCED_PARAMETERS		( dispatcher, node );
+	NOT_IMPLEMENTED( );
+}
+
+void triangle_mesh_base::visit	( geometry_double_dispatcher& dispatcher, box_geometry const& node ) const
+{
+	XRAY_UNREFERENCED_PARAMETERS		( dispatcher, node );
+	NOT_IMPLEMENTED( );
+}
+
+void triangle_mesh_base::visit	( geometry_double_dispatcher& dispatcher, sphere_geometry const& node ) const
+{
+	XRAY_UNREFERENCED_PARAMETERS		( dispatcher, node );
+	NOT_IMPLEMENTED( );
+}
+
+void triangle_mesh_base::visit	( geometry_double_dispatcher& dispatcher, cylinder_geometry const& node ) const
+{
+	XRAY_UNREFERENCED_PARAMETERS		( dispatcher, node );
+	NOT_IMPLEMENTED( );
+}
+
+void triangle_mesh_base::generate_contacts( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const xray::collision::geometry& og )const
+{
+	c.change_order( ); 
+	og.generate_contacts( c, transform, self_transform, *this ); //change order
+	c.change_order( ); 
+}
+void triangle_mesh_base::generate_contacts( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const xray::collision::sphere_geometry& og ) const 
 {
 	t_generate_contact_primitive<detail::triangle_sphere_contact_tests>( c, self_transform,  transform, og );
 }
@@ -307,9 +348,14 @@ void triangle_mesh_base::generate_contacts( xray::collision::on_contact& c, cons
 void triangle_mesh_base::generate_contacts ( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const xray::collision::triangle_mesh_base& og ) const
 {
 	XRAY_UNREFERENCED_PARAMETERS	(&c, &self_transform, &transform, &og);
+	//ASSERT( false, "mesh - mesh collision not implemented" );
+	LOG_ERROR( "mesh - mesh collision not implemented!" );
 }
 
-void triangle_mesh_base::generate_contacts ( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform,  const xray::collision::compound_geometry& og ) const	
+void triangle_mesh_base::generate_contacts ( xray::collision::on_contact& c, const float4x4 &self_transform, const float4x4 &transform,  const xray::collision::composite_geometry& og ) const	
 {
 	XRAY_UNREFERENCED_PARAMETERS	(&c, &self_transform, &transform, &og);
 }
+
+} // namespace collision
+} // namespace xray

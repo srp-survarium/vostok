@@ -1,0 +1,7 @@
+#include "common.h"
+
+float4 	main( v2p_TL I )	: SV_TARGET
+{											
+	return 	float4( I.Color.bgr, I.Color.a * t_base.SampleLevel( s_base, I.Tex0, 0).r);								
+}
+

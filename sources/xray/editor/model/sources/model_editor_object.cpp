@@ -25,7 +25,8 @@ m_type_name				( "base" )
 {}
 
 void model_editor_object::tick( )
-{}
+{
+}
 
 bool model_editor_object::save( )
 {

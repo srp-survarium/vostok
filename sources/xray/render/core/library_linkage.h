@@ -1,14 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 17.11.2008
+//	Created		: 14.12.2011
 //	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2009
+//	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef XRAY_RENDER_CORE_LIBRARY_LINKAGE_H_INCLUDED
-#define XRAY_RENDER_CORE_LIBRARY_LINKAGE_H_INCLUDED
+// header guards are omitted intentionally,
+// do not add them here!
 
-#include <xray/macro_library_name.h>
-
-#pragma comment(lib, XRAY_LIBRARY_NAME( render_core_dx11, lib ) )
-
-#endif // #ifndef XRAY_RENDER_CORE_LIBRARY_LINKAGE_H_INCLUDED
+#include <xray/render/core/platform_helper.h>
+#include XRAY_RENDER_CORE_FILE(library_linkage.h)

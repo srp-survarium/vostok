@@ -16,7 +16,7 @@ class object_wire :public game_object_static
 {
 	typedef game_object_static				super;
 public:
-					object_wire				( game_world& w );
+					object_wire				( game_scene& w );
 	virtual			~object_wire			( );
 	virtual void	load					( configs::binary_config_value const& t );
 	virtual void	load_contents			( );

@@ -1,0 +1,51 @@
+#include "common.h"
+#include "light.h"
+#include "shadow.h"
+#include "gbuffer.h"
+#include "light_accumulator.h"
+#include "parallel_light.h"
+#include "light_ps_helper.h"
+
+#define EPS	(0.9f/255.f)
+#define CLIP_THRESHOLD	(1.0f/255.f)
+
+light_accumulator 	main		( v2p_sun I ) : SV_TARGET
+{
+//	float4 _P		= t_position.Sample 	(s_position, 	I.Tex0);
+//	float4 _P		= gbuffer_read_rt_position	( I.Tex0, I.eye_ray);
+	
+	g_data gb		= gbuffer_read	( I.Tex0, I.eye_ray);
+  
+	light_accumulator result;
+	
+	[branch]if( gb.mat_id > 1.5 )
+	{
+		//clip ( -1);
+		result.diffuse	= result.specular = float4(0,0,0,0);
+		return			result;
+	}
+	else
+	{
+
+	//	// ----- shadow
+	////  	float4 	P4 	= float4	(_P.x,_P.y,_P.z,1.f);
+	////	float4 	PS	= mul		(m_shadow0,	P4);
+	////	float 	s 	= sunmask	(P4);
+	//	#ifdef 	USE_SJITTER
+	////	  s 	*= shadowtest_sun 	(PS,tcJ);
+	//	#else
+	////	  s 	*= shadow		(PS);
+	//	#endif
+	//	
+	//	float s = 1.f;
+	//
+	//	result.diffuse = float4( light_color.rgb * light.diffuse * s / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0);
+	//	result.specular = float4( light_color.rgb * light.specular * s / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0);
+	//	return result;
+		return
+			get_light_accumulator(
+				light_color,
+				parallel_light( gb, I.Tex0 )
+			);
+	}
+}

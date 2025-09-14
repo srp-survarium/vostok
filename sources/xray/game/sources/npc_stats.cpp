@@ -57,8 +57,8 @@ npc_stats::~npc_stats					( )
 
 void npc_stats::draw					( xray::render::ui::renderer& ui_renderer, render::scene_view_ptr const& scene_view )
 {
-	XRAY_UNREFERENCED_PARAMETER			( scene_view );
-	m_main_window->draw					( ui_renderer, m_ui_world.get_scene_view() );
+	//XRAY_UNREFERENCED_PARAMETER			( scene_view );
+	m_main_window->draw					( ui_renderer, scene_view/*m_ui_world.get_scene_view()*/ );
 }
 
 void npc_stats::set_stats				( human_npc const* const owner )

@@ -1,0 +1,13 @@
+#include "common_iostructs.h"
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Vertex
+v2p_T main ( v_T_positiont I )
+{
+	v2p_T O;
+
+	O.HPos = I.P;
+	O.Tex0 = I.Tex0;
+
+ 	return O;
+}

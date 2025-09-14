@@ -122,7 +122,7 @@ void weapon_part_solid_visual::set_transform( float4x4 const& transform )
 	super::set_transform( transform );
 	if(m_visible)
 	{
-		render::scene_ptr scene		= m_parent->get_game_world().get_game().get_render_scene();
+		render::scene_ptr scene		= m_parent->get_game_world().get_render_scene();
 		render::game::renderer& r	= m_parent->get_game_world().get_game().renderer();
 
 		r.scene().update_model			( scene, m_model->m_render_model, m_transform );
@@ -134,7 +134,7 @@ void weapon_part_solid_visual::show( float4x4 const& initial_transform )
 	super::show	( initial_transform );
 
 	{
-		render::scene_ptr scene		= m_parent->get_game_world().get_game().get_render_scene();
+		render::scene_ptr scene		= m_parent->get_game_world().get_render_scene();
 		render::game::renderer& r	= m_parent->get_game_world().get_game().renderer();
 
 		r.scene().add_model			( scene, m_model->m_render_model, m_transform );
@@ -146,7 +146,7 @@ void weapon_part_solid_visual::hide( )
 	super::hide	( );
 
 	{
-		render::scene_ptr scene		= m_parent->get_game_world().get_game().get_render_scene();
+		render::scene_ptr scene		= m_parent->get_game_world().get_render_scene();
 		render::game::renderer& r	= m_parent->get_game_world().get_game().renderer();
 
 		r.scene().remove_model			( scene, m_model->m_render_model );
@@ -209,7 +209,7 @@ void weapon_part_skinned_visual::set_transform( float4x4 const& transform )
 	super::set_transform			( transform );
 	if(m_visible)
 	{
-		render::scene_ptr scene		= m_parent->get_game_world().get_game().get_render_scene();
+		render::scene_ptr scene		= m_parent->get_game_world().get_render_scene();
 		render::game::renderer& r	= m_parent->get_game_world().get_game().renderer();
 
 		r.scene().update_model			( scene, m_model->m_render_model, m_transform );
@@ -221,7 +221,7 @@ void weapon_part_skinned_visual::show( float4x4 const& initial_transform )
 	super::show	( initial_transform );
 
 	{
-		render::scene_ptr scene		= m_parent->get_game_world().get_game().get_render_scene();
+		render::scene_ptr scene		= m_parent->get_game_world().get_render_scene();
 		render::game::renderer& r	= m_parent->get_game_world().get_game().renderer();
 
 		r.scene().add_model			( scene, m_model->m_render_model, m_transform );
@@ -235,7 +235,7 @@ void weapon_part_skinned_visual::hide( )
 	super::hide	( );
 
 	{
-		render::scene_ptr scene		= m_parent->get_game_world().get_game().get_render_scene();
+		render::scene_ptr scene		= m_parent->get_game_world().get_render_scene();
 		render::game::renderer& r	= m_parent->get_game_world().get_game().renderer();
 
 		r.scene().remove_model		( scene, m_model->m_render_model );

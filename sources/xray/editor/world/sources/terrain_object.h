@@ -85,7 +85,6 @@ public:
 	virtual void		unload_contents			( bool bdestroy ) override;
 
 			void		initialize_collision	( );
-	virtual	void		destroy_collision		( )				override;
 			
 			void		save_config				( configs::lua_config_value t );
 			void		load_config				( configs::lua_config_value const& t );

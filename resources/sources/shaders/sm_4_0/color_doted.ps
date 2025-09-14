@@ -1,0 +1,18 @@
+#include "common.h"
+
+uniform float grid_density;
+//uniform texture2D 	t_grid;
+//uniform sampler 	s_grid;
+
+float4 main( v2p_TL0uv vin) : SV_TARGET
+{
+	float2 tc = float2( vin.HPos.x/2.f, vin.HPos.y/2.f);
+	
+	float2 mask =  frac(tc);//t_grid.Sample( s_grid, tc).x;
+
+	float switcher = (grid_density > 0.25) ? 1 : mask.y;
+	
+	clip( frac( mask.x + mask.y)*switcher - 0.25);
+	
+	return vin.Color;
+}

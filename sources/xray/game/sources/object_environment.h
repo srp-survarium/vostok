@@ -16,14 +16,13 @@ class object_environment :public game_object_static
 {
 	typedef game_object_static				super;
 public:
-					object_environment		( game_world& w );
+					object_environment		( game_scene& w );
 	virtual			~object_environment		( );
 	virtual void	load					( configs::binary_config_value const& t );
 	virtual void	load_contents			( );
 	virtual void	unload_contents			( );
 			void	requery_material		( ) {}
 			void	material_ready			( resources::queries_result& data );
-	render::scene_view_ptr					m_scene_view;
 }; // class object_environment
 
 } // namespace stalker2

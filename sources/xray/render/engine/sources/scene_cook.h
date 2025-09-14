@@ -14,17 +14,15 @@ namespace render {
 
 class scene;
 
-class scene_cook : public resources::unmanaged_cook
+class scene_cook : public resources::translate_query_cook, public boost::noncopyable	
 {
 public:
 	scene_cook										();
-	virtual	mutable_buffer	allocate_resource		(resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist);
-	virtual void			deallocate_resource		(pvoid buffer);
-	virtual void			create_resource			(resources::query_result_for_cook& in_out_query, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer);
-	virtual void			destroy_resource		(resources::unmanaged_resource* resource);
+	virtual	void			translate_query			( resources::query_result_for_cook&	parent );
+	virtual void			delete_resource			( xray::resources::resource_base* resource );
 	
 private:
-			void			on_particle_world_created(resources::queries_result& result, xray::render::scene* created_resource, resources::query_result_for_cook* in_out_query);
+	void			on_particle_world_created(resources::queries_result& result, xray::render::scene* created_resource, resources::query_result_for_cook* in_out_query);
 }; // class scene_cook
 
 void register_scene_cook();

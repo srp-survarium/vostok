@@ -37,8 +37,9 @@ void effect_gstage_default_materials::compile( effect_compiler& compiler, const 
 	
 	configuration.use_sequence				= custom_config.value_exists("use_sequence") ? bool(custom_config["use_sequence"]) : false;
 	
-	if (custom_config.value_exists("use_variation_mask"))
-		configuration.use_variation_mask	= bool(custom_config["use_variation_mask"]);
+	if (custom_config.value_exists("use_variation_mask") && custom_config.value_exists("texture_variation_mask"))
+		configuration.use_variation_mask	=	bool(custom_config["use_variation_mask"]) && 
+												!strings::equal(pcstr(custom_config["texture_variation_mask"]),"");
 	
 	if ( bool(custom_config["use_emissive"]))
 	{
@@ -354,6 +355,8 @@ void effect_gstage_default_materials::compile( effect_compiler& compiler, const 
 				
 				if (custom_config.value_exists("texture_variation_mask"))
 					compiler.set_texture ( "t_variation_mask", pcstr(custom_config["texture_variation_mask"]));
+				else
+					compiler.set_texture ( "t_variation_mask", "");
 			}
 			
 			if (pass_index == 1)

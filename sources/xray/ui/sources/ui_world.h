@@ -27,8 +27,8 @@ public:
 							ui_world				(
 								engine& engine,
 								xray::render::ui::renderer& renderer,
-								memory::base_allocator& allocator,
-								xray::render::scene_view_ptr const& scene_view
+								memory::base_allocator& allocator
+//								,xray::render::scene_view_ptr const& scene_view
 							);
 	virtual	void			tick					( );
 	virtual	void			clear_resources			( );
@@ -42,7 +42,7 @@ public:
 	virtual void			destroy_window			( window* w );
 	virtual	xray::ui::font const *default_font			( );
 	virtual render::ui::renderer& get_renderer( )	{ return m_renderer; }
-	virtual xray::render::scene_view_ptr const& get_scene_view	( ) const { return m_scene_view; }
+//	virtual xray::render::scene_view_ptr const& get_scene_view	( ) const { return m_scene_view; }
 
 	virtual void			on_device_reset			( );
 	void					client_to_screen_scaled ( float2 const& src, float2& dst );
@@ -59,7 +59,7 @@ private:
 	engine&							m_engine;
 	render::ui::renderer&			m_renderer;	
 	memory::base_allocator&			m_allocator;
-	xray::render::scene_view_ptr	m_scene_view;
+//	xray::render::scene_view_ptr	m_scene_view;
 	float2							m_base_screen_size;
 	font_manager					m_font_manager;
 	timing::timer					m_timer;

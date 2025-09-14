@@ -107,8 +107,8 @@ namespace animation_editor {
 		virtual void							clear_resources			( );
 		virtual bool							close_query				( );
 		virtual	void							tick					( );
-		virtual void							load_settings			( RegistryKey^ /*product_key*/ ) {};
-		virtual void							save_settings			( RegistryKey^ /*product_key*/ ) {};
+		virtual void							load_settings			( RegistryKey^ product_key );
+		virtual void							save_settings			( RegistryKey^ product_key );
 		virtual String^							name					( ) {return m_name;};
 		virtual	void							Show					( String^ context1, String^ context2 );
 		virtual System::Windows::Forms::Form^	main_form				( );
@@ -344,7 +344,7 @@ namespace animation_editor {
 		ToolStripMenuItem^						m_menu_view_viewport;
 		
 		xray::editor_base::tool_window_holder^	m_holder;
-		bool									m_closed;
+		bool									m_closed_;
 
 // for test	
 		void						show_statistics();

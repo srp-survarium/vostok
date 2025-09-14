@@ -33,7 +33,7 @@ ref class			tree_view_selection_event_args;
 
 public ref class tree_view : public TreeView
 {
-
+	typedef TreeView super;
 #pragma region |   Events   |
 
 public:
@@ -45,8 +45,8 @@ public:
 #pragma region | Initialize |
 
 public:
-	tree_view();
-	~tree_view();
+						tree_view		( );
+	virtual				~tree_view		( );
 
 #pragma endregion
 
@@ -155,8 +155,8 @@ public:
 	void			on_items_loaded			( );
 	void			clear					( );
 
-	void			add_items				( GObjIList^ items );
-	void			add_items				( array<Object^>^ items );
+	//void			add_items				( GObjIList^ items );
+	//void			add_items				( array<Object^>^ items );
 
 internal:
 	TreeNode^		process_item_path		( array<String^>^ segments );

@@ -40,7 +40,7 @@
 #	include <xray/text_tree_item.h>
 #	include <xray/text_tree_log_helper.h>
 #	include <xray/ui/text_tree_draw_helper.h>
-#	include <xray/profiler.h>
+//#	include <xray/profiler.h>
 #	include <xray/animation/i_animation_controller.h>
 #	include <xray/animation/anim_track_common.h>
 #pragma managed( pop )
@@ -70,8 +70,8 @@ m_ui_world(ui_wrld),									// for test
 m_render_world(render_world),
 m_holder(holder)
 {
-	xray::g_profiler = NEW(xray::profiler)();
-	START_PROFILE("constructor");
+//	xray::g_profiler = NEW(xray::profiler)();
+//	START_PROFILE("constructor");
 	m_resources_path = rp;
 	m_name = "animation_editor";
 	m_in_navigation_mode = false;
@@ -105,7 +105,7 @@ m_holder(holder)
 	m_text_wnd->set_position(float2(0, 0));
 	m_text_wnd->set_size(float2(600,600));
 	m_text_wnd->set_visible(true);
-	STOP_PROFILE;
+//	STOP_PROFILE;
 }
 
 animation_editor::~animation_editor()
@@ -114,10 +114,11 @@ animation_editor::~animation_editor()
 
 void animation_editor::close_internal()
 {
-	if(m_closed)
+	if(m_closed_)
 		return;
 
-	m_closed = true;
+	save_settings		( base_registry_key::get() );
+	m_closed_ = true;
 	clear_resources();
 	m_holder->unregister_tool_window(this);
 	delete this;
@@ -125,13 +126,19 @@ void animation_editor::close_internal()
 
 void animation_editor::query_create_render_resources()
 {
- 	START_PROFILE("query_create_render_resources");
-	render::editor_renderer_configuration render_configuration;
- 	render_configuration.m_create_particle_world = false;
- 	System::Int32 hwnd = m_view_window->view_handle();
- 	resources::user_data_variant* temp_data[] = {NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
- 	temp_data[0]->set(render_configuration);
- 	temp_data[2]->set(*(HWND*)&hwnd);
+// 	START_PROFILE("query_create_render_resources");
+	render::scene_configuration					scene_configuration;
+ 	scene_configuration.m_create_particle_world	= false;
+
+ 	System::Int32 hwnd							= m_view_window->view_handle();
+	render::output_window_configuration			window_configuration;
+	window_configuration.m_hwnd					= *(HWND*)&hwnd;
+
+	resources::user_data_variant* temp_data[]	= {NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
+
+	temp_data[0]->set(scene_configuration);
+	temp_data[2]->set(window_configuration);//temp_data[2]->set(*(HWND*)&hwnd);
+
  	resources::user_data_variant const* data[] = {temp_data[0], temp_data[1], temp_data[2]};
  	query_result_delegate* q = NEW(query_result_delegate)(gcnew query_result_delegate::Delegate(this, &animation_editor::on_render_resources_ready), g_allocator);
  	const_buffer temp_buffer("", 1);
@@ -149,12 +156,12 @@ void animation_editor::query_create_render_resources()
   	);
  	DELETE(temp_data[0]);
  	DELETE(temp_data[2]);
-	STOP_PROFILE;
+//	STOP_PROFILE;
 }
 
 void animation_editor::on_render_resources_ready(xray::resources::queries_result& data)
 {
-  	START_PROFILE("on_render_resources_ready");
+//  	START_PROFILE("on_render_resources_ready");
 	R_ASSERT(data.is_successful());
 	*m_scene = static_cast_resource_ptr<render::scene_ptr>(data[0].get_unmanaged_resource());
  	*m_scene_view = static_cast_resource_ptr<render::scene_view_ptr>(data[1].get_unmanaged_resource());
@@ -180,12 +187,12 @@ void animation_editor::on_render_resources_ready(xray::resources::queries_result
 	m_input_engine->register_action(gcnew action_select_active_control("select none", this, nullptr), "Escape(View)");
 
 	m_view_window->register_actions(m_input_engine, m_gui_binder , true);
-	STOP_PROFILE;
+//	STOP_PROFILE;
 }
 
 void animation_editor::initialize()
 {
-  	START_PROFILE("initialize");
+//  	START_PROFILE("initialize");
 	m_form = gcnew animation_editor_form(m_name);
 	m_form->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &animation_editor::on_editor_closing);
 	m_form->main_dock_panel->ActiveContentChanged += gcnew System::EventHandler(this, &animation_editor::on_form_active_document_changed);
@@ -536,7 +543,7 @@ void animation_editor::initialize()
 	m_view_window->add_action_button_item(m_gui_binder, "render controller debug info", "MainToolStrip", 1);
 
 	query_create_render_resources();
-	STOP_PROFILE;
+//	STOP_PROFILE;
 }
 
 void animation_editor::clear_resources()
@@ -617,7 +624,7 @@ System::Windows::Forms::Form^ animation_editor::main_form()
 
 void animation_editor::tick()
 {
-  	START_PROFILE("tick");
+//  	START_PROFILE("tick");
 	if(!m_renderer)
 		return;
 
@@ -656,7 +663,7 @@ void animation_editor::tick()
 	}
 
 	m_renderer->draw_scene(*m_scene, *m_scene_view, *m_output_window, render::viewport_type(float2(0.f, 0.f), float2(1.f, 1.f)));
-	STOP_PROFILE;
+//	STOP_PROFILE;
 }
 
 void animation_editor::Show( System::String^, System::String^ )
@@ -720,7 +727,7 @@ void animation_editor::on_editor_closing(Object^, FormClosingEventArgs^ e)
 
 animation_editor_form^ animation_editor::form::get()
 {
-  	PROFILE_FUNCTION("form::get");
+//  	PROFILE_FUNCTION("form::get");
 	return m_form;
 }
 
@@ -969,7 +976,7 @@ void animation_editor::stop_saving_controller_scene()
 
 bool animation_editor::is_saving_controller_scene()
 {
-  	PROFILE_FUNCTION("is_saving_controller_scene");
+//  	PROFILE_FUNCTION("is_saving_controller_scene");
 	if(m_controller_config->c_ptr())
 		return true;
 
@@ -997,7 +1004,7 @@ void animation_editor::reset_time_scale()
 
 xray::animation_editor::animation_node_clip^ animation_editor::clip_by_name(System::String^ clip_name)
 {
-  	PROFILE_FUNCTION("clip_by_name");
+//  	PROFILE_FUNCTION("clip_by_name");
 	if(m_clips->ContainsKey(clip_name))
 		return m_clips[clip_name];
 
@@ -1006,16 +1013,16 @@ xray::animation_editor::animation_node_clip^ animation_editor::clip_by_name(Syst
 
 void animation_editor::refresh_animation_node_clip(System::String^ name)
 {
-  	START_PROFILE("refresh_animation_node_clip");
+//  	START_PROFILE("refresh_animation_node_clip");
 	animation_node_clip^ clip = clip_by_name(name);
 	if(clip!=nullptr)
 		clip->load_intervals();
-	STOP_PROFILE;
+//	STOP_PROFILE;
 }
 
 long animation_editor::request_animation_clip(System::String^ name, xray::animation_editor::animation_clip_request_callback^ callback)
 {
-  	PROFILE_FUNCTION("request_animation_clip");
+//  	PROFILE_FUNCTION("request_animation_clip");
 	animation_node_clip^ clip = clip_by_name(name);
 	if(clip!=nullptr)
 	{
@@ -1046,7 +1053,7 @@ long animation_editor::request_animation_clip(System::String^ name, xray::animat
 
 void animation_editor::on_anim_clip_loaded(xray::resources::queries_result& result, xray::animation_editor::animation_clip_request_callback^ cb)
 {
-  	PROFILE_FUNCTION("on_anim_clip_loaded");
+//  	PROFILE_FUNCTION("on_anim_clip_loaded");
 	System::String^ requested_path = gcnew System::String(result[0].get_requested_path());
 	requested_path = requested_path->Remove(0, animation_editor::single_animations_path->Length + 1 );
 	if( result[0].is_successful( ) )
@@ -1174,6 +1181,25 @@ void animation_editor::show_viewport(System::Object^, System::EventArgs^)
 		m_view_window->Show();
 }
 
+void animation_editor::load_settings( RegistryKey^ product_key )
+{
+	RegistryKey^ editor_key		= xray::base_registry_key::get_sub_key(product_key, "animation_editor");
+
+	m_view_window->load_settings( editor_key );
+
+	editor_key->Close		( );
+}
+
+void animation_editor::save_settings( RegistryKey^ product_key )
+{
+	RegistryKey^ editor_key		= xray::base_registry_key::get_sub_key(product_key, "animation_editor");
+
+	m_view_window->save_settings( editor_key );
+
+	editor_key->Close		( );
+}
+
+
 // for test
 #include "animation_node_interval.h"
 void animation_editor::show_statistics()
@@ -1184,7 +1210,7 @@ void animation_editor::show_statistics()
 	
 	pvoid buffer = ALLOCA(64*xray::Kb);
 	text_tree m_text_tree_view(buffer, 64*xray::Kb, " ----------- Loaded animations --------------- "); 
-	xray::get_profiler().show_stats(&m_text_tree_view.root(), true);
+//	xray::get_profiler().show_stats(&m_text_tree_view.root(), true);
 	//text_tree m_text_tree_view(buffer, 64*xray::Kb, " ----------- Loaded animations --------------- "); 
 	//for each(KeyValuePair<String^, animation_node_clip^> p in m_clips)
 	//{

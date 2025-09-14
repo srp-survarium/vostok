@@ -82,7 +82,7 @@ void objects_library::process_library_lodaing( configs::lua_config_value t )
 		System::String^ full_name		= gcnew System::String(current["name"]);
 
 		lib_item^ itm					= load_lib_item( *it  );
-		m_tool_library->Add				( itm );
+		m_tool_library.Add				( itm );
 
 		System::String^ folder			= System::IO::Path::GetDirectoryName( full_name )->Replace('\\', '/');
 		System::String^ item_name		= System::IO::Path::GetFileName( full_name );

@@ -7,13 +7,12 @@
 #include "pch.h"
 #include "object_wire.h"
 #include "game_world.h"
-#include "game.h"
 #include <xray/render/engine/model_format.h>
 #include <xray/render/facade/scene_renderer.h>
 
 namespace stalker2{
 
-object_wire::object_wire( game_world& w )
+object_wire::object_wire( game_scene& w )
 :super		( w ),
 m_points	( NULL )
 {}
@@ -116,8 +115,7 @@ void object_wire::unload_contents( )
 {
 	if( m_visual )
 	{
-		m_game_world.get_game().renderer().scene().remove_model( m_game_world.get_game().get_render_scene(), 
-																m_visual );
+		m_game_scene.renderer().scene().remove_model( m_game_scene.get_render_scene(),  m_visual );
 		m_visual = NULL;
 	}
 
@@ -132,8 +130,7 @@ void object_wire::resources_ready( resources::queries_result& data )
 
 	m_visual							= static_cast_resource_ptr<render::render_model_instance_ptr>(data[0].get_unmanaged_resource());
 
-	m_game_world.get_game().renderer().scene().add_model( m_game_world.get_game().get_render_scene(), 
-															m_visual, m_transform );
+	m_game_scene.renderer().scene().add_model( m_game_scene.get_render_scene(), m_visual, m_transform );
 }
 
 } //namespace stalker2

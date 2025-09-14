@@ -44,6 +44,8 @@
 #include "scene_view.h"
 #include <xray/geometry_primitives.h>
 
+#include <xray/math_randoms_generator.h>
+
 #include <xray/console_command.h>
 #include <xray/console_command_processor.h>
 
@@ -67,6 +69,16 @@
 
 static float s_shadow_z_near_value = 0.025f;
 static xray::console_commands::cc_float s_shadow_z_near("shadow_z_near", s_shadow_z_near_value, 0.0f, 1.0f, true, xray::console_commands::command_type_engine_internal);
+
+
+static bool s_one_light_dip_value = true;
+static xray::console_commands::cc_bool s_one_light_dip("one_light_dip", s_one_light_dip_value, false, xray::console_commands::command_type_engine_internal);
+
+static bool s_lights_cull_value = true;
+static xray::console_commands::cc_bool s_lights_cull("lights_cull", s_lights_cull_value, false, xray::console_commands::command_type_engine_internal);
+
+static bool s_draw_lights_value = false;
+static xray::console_commands::cc_bool s_draw_lights("draw_lights", s_draw_lights_value, false, xray::console_commands::command_type_engine_internal);
 
 using xray::render::stage_lights;
 using xray::render::renderer_context;
@@ -159,6 +171,19 @@ void stage_lights::create_obb_geometry	( )
 	};
 	m_obb_geometry.geometry			= resource_manager::ref().create_geometry( desc, sizeof(float3), *m_obb_geometry.vertex_buffer, *m_obb_geometry.index_buffer);
 }
+
+const D3D_INPUT_ELEMENT_DESC instance_data_layout[] = 
+{
+	{"POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,	D3D_INPUT_PER_VERTEX_DATA,	 0},
+	{"LightColor",		0, DXGI_FORMAT_R32G32B32_FLOAT,		1, 0,	D3D_INPUT_PER_INSTANCE_DATA, 1},
+	{"LightPosition",	0, DXGI_FORMAT_R32G32B32_FLOAT,		1, 12,	D3D_INPUT_PER_INSTANCE_DATA, 1},
+	{"LightRange",		0, DXGI_FORMAT_R32_FLOAT,			1, 24,	D3D_INPUT_PER_INSTANCE_DATA, 1},
+};
+
+
+
+
+
 
 stage_lights::stage_lights( renderer_context* context, bool is_forward_lighting_pass): 
 	stage							( context ), 
@@ -388,6 +413,104 @@ stage_lights::stage_lights( renderer_context* context, bool is_forward_lighting_
 		backend::ref().vertex.buffer(),
 		*m_screen_vertex_ib
 	);
+	
+#if 0	
+	math::random32										r(1000);
+	
+	u32 size_xy											=	math::floor(math::sqrt(options::ref().m_num_test_lights / 4));
+	
+	m_num_instanced_lights								=	size_xy * size_xy;// / 4;
+	
+	m_instance_data_array								=	NEW_ARRAY(instance_data, m_num_instanced_lights);
+	
+	int idx												=	0;
+	for (int i = 0; i < 2; i++)
+	for (int j = 0; j < 2; j++)
+	{
+		u32 index										=	0;
+		for (int y = 0; y < size_xy; y++)
+		for (int x = 0; x < size_xy; x++)
+		{
+			m_instance_data_array[index].position			=	float3(
+																2.0f * x + i,
+																0.1f,
+																2.0f * y + j
+															);
+			
+			m_instance_data_array[index].color			=	float3(
+																r.random_f(0.5f) + 0.2f,
+																r.random_f(0.5f) + 0.2f,
+																r.random_f(0.5f) + 0.2f
+															);
+			if (idx == 0)
+				m_instance_data_array[index].color		=	float3(1.0f, 0.0f, 0.0f);
+			else if (idx == 1)
+				m_instance_data_array[index].color		=	float3(0.0f, 1.0f, 0.0f);
+			else if (idx == 2)
+				m_instance_data_array[index].color		=	float3(0.0f, 0.0f, 1.0f);
+			else
+				m_instance_data_array[index].color		=	float3(1.0f, 1.0f, 0.0f);
+			
+			m_instance_data_array[index].range			=	1.0f;//r.random_f(1.0f) + 0.5f;
+			
+			index++;
+		}
+		
+		m_lights_instance[idx].m_instance_vb			=	resource_manager::ref().create_buffer(
+																m_num_instanced_lights * sizeof(instance_data), 
+																m_instance_data_array, 
+																enum_buffer_type_vertex, 
+																false
+															);
+		idx++;
+	}
+	
+	m_instance_declaration							=	resource_manager::ref().create_declaration(instance_data_layout);
+#endif // #if 0
+}
+
+void stage_lights::render_instances()
+{
+#if 0
+	if (!s_draw_lights_value)
+		return;
+
+	if (s_lights_cull_value)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 3; j < 6; j++)
+			{
+				m_point_light_accumulator->apply		(j);
+				
+				m_sphere_geometry.geometry->apply		();
+				backend::ref().set_declaration			(&*m_instance_declaration);
+				backend::ref().set_vb_instance_data		(&*m_lights_instance[i].m_instance_vb, sizeof(instance_data), 0);
+				
+				float3 const* const eye_rays			=	m_context->get_eye_rays();
+				backend::ref().set_ps_constant			(m_c_eye_ray_corner, ((float4*)eye_rays)[0]);
+				
+				backend::ref().render_indexed_instanced	(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, DU_SPHERE_NUMFACES * 3, 0, 0, m_num_instanced_lights, 0);			
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			m_point_light_accumulator->apply			(6);
+			
+			m_sphere_geometry.geometry->apply			();
+			backend::ref().set_declaration				(&*m_instance_declaration);
+			backend::ref().set_vb_instance_data			(&*m_lights_instance[i].m_instance_vb, sizeof(instance_data), 0);
+			
+			float3 const* const eye_rays				=	m_context->get_eye_rays();
+			backend::ref().set_ps_constant				(m_c_eye_ray_corner, ((float4*)eye_rays)[0]);
+			
+			backend::ref().render_indexed_instanced		(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, DU_SPHERE_NUMFACES * 3, 0, 0, m_num_instanced_lights, 0);			
+		}
+	}
+#endif // #if 0
 }
 
 static xray::math::float3 view_matrix_parameters[6][3] = {	
@@ -671,6 +794,7 @@ void stage_lights::render_to_cubemap( u32 shadow_quality, light* in_light )
 
 stage_lights::~stage_lights()
 {
+	//DELETE_ARRAY(m_instance_data_array);
 }
 
 void stage_lights::render_particle_lighting(xray::render::render_particle_emitter_instance* instance, light* l, u32 num_particles)
@@ -1581,6 +1705,25 @@ void stage_lights::execute()
 	
 	if (!identity(m_is_forward_lighting_pass))
 	{
+		m_context->set_w							(float4x4().identity());
+		backend::ref().set_render_targets			(&*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
+		backend::ref().reset_depth_stencil_target	();
+		
+		// mask
+//		m_point_light_accumulator->apply			(3);
+//		render_instances							();
+		
+		// 1st
+//		m_point_light_accumulator->apply			(4);
+//		render_instances							();
+		
+		// 2nd
+//		m_point_light_accumulator->apply			(5);
+//		render_instances							();
+
+//		render_instances							();		
+//		return;
+
 		collision::objects_type objects		= g_allocator;
 		objects.reserve						( e_lights.size() );
 		
@@ -1636,7 +1779,7 @@ void stage_lights::execute()
 	}
 	
 	// SpeedTree
-	if (options::ref().m_enabled_draw_speedtree)
+	if (options::ref().m_enabled_draw_speedtree && m_context->scene()->get_speedtree_forest())
 	{
 		speedtree_forest::tree_render_info_array_type visible_trees;
 		
@@ -1982,19 +2125,34 @@ void stage_lights::render_light( light* l, bool shadowers_pass)
 	backend::ref().set_render_targets	( &*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0); 
 	backend::ref().reset_depth_stencil_target();
 	
-	// Mask opaque geometry.
-	m_effect_accum_mask->apply	(effect_light_mask::tech_mask_local_light);
-	geometry->apply				();
-	draw_geometry				(l);
+//	if (!s_one_light_dip_value)
+	{
+		// Mask opaque geometry.
+		m_effect_accum_mask->apply	(effect_light_mask::tech_mask_local_light);
+		geometry->apply				();
+		draw_geometry				(l);
+	}
 	
 	switch ( l->get_type() ) {
 		case light_type_point : {
-			for (u32 tech_index=0; tech_index<2; tech_index++)
+			
+			u32 num_passes = 2;
+			//if (s_one_light_dip_value)
+			//	num_passes = 1;
+
+			for (u32 tech_index = 0; tech_index < num_passes; tech_index++)
 			{
-				if (l->is_shadower)
-					m_point_light_shadower->apply( tech_index );
-				else
-					m_point_light_accumulator->apply( tech_index );
+			//	if (s_one_light_dip_value)
+			//	{
+			//		m_point_light_shadower->apply( 2 );
+			//	}
+			//	else
+				{
+					if (l->is_shadower)
+						m_point_light_shadower->apply( tech_index );
+					else
+						m_point_light_accumulator->apply( tech_index );
+				}
 				
 				backend::ref().set_ps_constant	( m_c_light_position,		light_position );
 				backend::ref().set_ps_constant	( m_c_light_range,			light_range );
@@ -2201,7 +2359,11 @@ void stage_lights::render_light( light* l, bool shadowers_pass)
 		default : NODEFAULT( );
 	}
 	END_CPUGPU_TIMER;
-	backend::ref().flush_rt_shader_resources();
+	
+	if (!s_one_light_dip_value)
+	{
+		backend::ref().flush_rt_shader_resources();
+	}
 }
 
 void stage_lights::draw_geometry	( light* l )

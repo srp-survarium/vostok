@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "edit_surface.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 
 namespace xray {
 namespace model_editor {
@@ -127,7 +127,12 @@ void edit_surface::Selected::set( bool value )
 	}
 
 	if(m_hypergraph_node)
-		m_hypergraph_node->hypergraph->select_node( m_hypergraph_node->id );
+	{
+		if(value)
+			m_hypergraph_node->hypergraph->select_node( m_hypergraph_node->id );
+		else		
+			m_hypergraph_node->hypergraph->deselect_node( m_hypergraph_node->id );
+	}
 }
 
 void edit_surface::requery_material( )
