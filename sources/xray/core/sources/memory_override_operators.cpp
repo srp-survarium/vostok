@@ -13,7 +13,7 @@
 #include <xray/construction.h>
 #include <xray/memory_doug_lea_mt_allocator.h>
 
-#ifdef XRAY_STATIC_LIBRARIES
+#if 0//def XRAY_STATIC_LIBRARIES
 
 pvoid __cdecl operator new		( size_t buffer_size )
 {
@@ -96,6 +96,7 @@ void __cdecl operator delete[]	( pvoid pointer ) throw ( )
 	UNREACHABLE_CODE			( );
 #endif // #if XRAY_DISABLE_CRT_ALLOCATOR
 }
+#endif // #ifdef XRAY_STATIC_LIBRARIES
 
 namespace xray {
 namespace memory {
@@ -153,7 +154,9 @@ inline void check_if_CRT_allocations_enabled	( )
 	}
 }
 
-#ifdef _MSC_VER
+//#if 0//def XRAY_STATIC_LIBRARIES
+
+#if defined(_MSC_VER) && !defined(_DLL)
 extern "C" {
 
 pvoid malloc					( size_t size )
@@ -255,12 +258,12 @@ pvoid _aligned_offset_realloc	( pvoid ptr, size_t size, size_t alignment, size_t
 
 } // extern "C"
 
-#endif // #ifdef _MSC_VER
+#endif // #if defined(_MSC_VER) && !defined(_DLL)
+
+//#endif // #ifdef XRAY_STATIC_LIBRARIES
 
 } // namespace memory
 } // namespace xray
-
-#endif // #ifdef XRAY_STATIC_LIBRARIES
 
 
 extern "C" {

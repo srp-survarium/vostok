@@ -39,10 +39,12 @@ public:
 	virtual	void			remove_handler	( handler& handler );
 	virtual	void			acquire			( );
 	virtual	void			unacquire		( );
-
+	
 	virtual gamepad_ptr_type	get_gamepad	( );
 	virtual keyboard_ptr_type	get_keyboard( );
 	virtual mouse_ptr_type		get_mouse	( );
+
+
 
 private:
 			void			create_devices	( HWND window_handle );

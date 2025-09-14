@@ -19,7 +19,7 @@ class object_track : public game_object_static
 {
 	typedef game_object_static	super;
 public:
-					object_track		( game_world& w );
+					object_track		( game_scene& w );
 	virtual			~object_track		( );
 	virtual void	load				( configs::binary_config_value const& t );
 	virtual void	load_contents		( );

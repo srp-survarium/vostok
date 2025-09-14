@@ -1,0 +1,175 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 13.05.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_ALLOW_STEEPPARALLAX,
+		GLOBAL_FP16_BLEND,
+		GLOBAL_GBUFFER_POS_PACKING,
+		GLOBAL_GBUFFER_NORMAL_PACKING,
+		GLOBAL_USE_BRANCHING,
+		
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_TDIFFUSE,
+		CONFIG_TNORMAL,
+		CONFIG_TTRANSPARENCY,
+		CONFIG_TSPECULAR_INTENSITY,
+		CONFIG_TSPECULAR_POWER,
+		CONFIG_TDIFFUSE_POWER,
+		CONFIG_TDETAIL,
+		CONFIG_ALPHA_TEST,
+		CONFIG_LIGHT_TYPE,
+*/
+
+#include "common.h"
+
+#include "psf_alpha_test.h"
+#include "psf_detail.h"
+#include "psf_normal.h"
+#include "psf_parallax.h"
+#include "psf_translucent.h"
+#include "psf_tspecular_intensity.h"
+#include "psf_tspecular_power.h"
+#include "psf_tdiffuse_power.h"
+#include "psf_emissive.h"
+#include "psf_make_tangent_transform.h"
+#include "psf_fresnel.h"
+
+#include "light_ps_helper.h"
+#include "point_light.h"
+#include "parallel_light.h"
+#include "spot_light.h"
+
+Texture2D t_translucency;
+Texture2D t_specular_intensity;
+Texture2D t_specular_power;
+Texture2D t_diffuse_power;
+Texture2D t_emission;
+Texture2D t_height_map;
+Texture2D t_transparency;
+TextureCube t_cubemap;
+
+float 	  solid_transparency;
+
+Texture2D t_skin_scattering;
+
+float is_unwrap_pass;
+
+#include "gbuffer.h"
+#include "material.h"
+#include "vertex_input.h"
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	return 0;
+	/*
+	float3 		position 		= 	parameters.world_view_position.xyz;
+	float3	 	normal 			= 	parameters.normal;
+	float2 		tc				= 	0.f;
+	float2 		tcdetail		= 	0.f;
+	float3x3	tangent_trans	= 	0.f;
+
+	tc							= 	parameters.tc;
+
+	tangent_trans 				= 	parameters.tangent_to_viewspace;
+	
+	float4	D 					= 	float4 ( solid_color_specular.xyz, 1.f);
+	if( CONFIG_TDIFFUSE)
+		D						= 	t_base.Sample	( s_base, tc);
+	
+	// Alpha test
+	if( CONFIG_ALPHA_TEST)
+		psf_alpha_test			( D.a);
+	
+	// Diffise detail mapping
+	if( CONFIG_TDETAIL)
+		D.rgb					= 	psf_tdetail( t_detail, D.rgb, tc);
+	
+	if( CONFIG_TNORMAL)
+		normal					= 	psf_tnormal( t_normal, tangent_trans, tc, float3(1,1,1));
+	else
+		normal					= 	normalize( mul( parameters.tangent_to_viewspace, float3(0.0f,0.0f,1.0f)) );
+	
+	 // Translucency
+	float 	transparency 		=	solid_transparency;
+	if( CONFIG_TTRANSPARENCY)
+		transparency 			*= 	t_transparency.Sample( s_linear, tc ).a;
+	
+	float3 	specular_intensity 	= 	solid_color_specular.w;
+	if( CONFIG_TSPECULAR_INTENSITY)
+		specular_intensity 		= 	psf_tspecular_intensity( t_specular_intensity, tc);
+	
+	float2 	specular_power 		= 	solid_material_params.x;
+	if( CONFIG_TSPECULAR_POWER)
+		specular_power 			= 	psf_tspecular_power( t_specular_power, tc);
+	
+	float 	diffuse_power 		= 	solid_material_params.y;
+	if( CONFIG_TDIFFUSE_POWER)
+		diffuse_power 			= 	psf_tdiffuse_power( t_diffuse_power, tc);
+	
+	float3 final_color = 0;
+	
+	//float2	light 	= 0;
+	light_factors light = (light_factors)0;
+	
+#if	CONFIG_LIGHT_TYPE == 0
+	
+	light = point_light_impl(
+				position,
+				normal,
+				light_position,
+				light_range,
+				(specular_power).xx,
+				0.0f,
+				diffuse_power
+			);
+#elif CONFIG_LIGHT_TYPE == 1
+	light = spot_light_impl(
+			position,
+			normal,
+			light_position,
+			light_direction,
+			light_spot_falloff,
+			light_range,
+			(specular_power).xx,
+			0.0f,
+			diffuse_power
+		);
+#elif CONFIG_LIGHT_TYPE == 4
+	light = parallel_light_impl(
+			position,
+			normal,
+			light_direction,
+			(specular_power).xx,
+			0.0f,
+			diffuse_power
+		);
+#endif
+	
+	if (is_unwrap_pass < 1.0f)
+	{
+		return float4(parameters.tc, 0.0f, 1.0f);
+	}
+	else
+	{
+		return float4(0.2f, 0.2f, 1.0f ,1.0f) * t_skin_scattering.Sample(s_base, float2(0.5f, 1.0f) * parameters.tc);
+	}
+	
+#if	CONFIG_LIGHT_TYPE == 0
+	//return float4(0,0,0,1);
+#endif
+	final_color += D.rgb * float3( light_color.rgb * saturate(light.diffuse));
+	final_color += specular_intensity * float3( light_color.rgb * saturate(light.specular));
+	
+	return parameters.color * float4(final_color, saturate(transparency));
+	*/
+	
+	//transparency *= saturate(length(light.diffuse));
+	
+	//return parameters.color * float4(final_color, 0.15*transparency);
+}

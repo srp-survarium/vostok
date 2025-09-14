@@ -51,6 +51,14 @@ void user_render_model_instance::get_surfaces( render_surface_instances& dest, b
 	dest.push_back				( &m_surface_instance );
 };
 
+void user_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
+{
+	R_ASSERT		( surface_id==0 );
+	NOT_IMPLEMENTED();
+	//vcount		= row * row;
+	//tricount		= (row-1)*(row-1)*2;
+	//material		= "terrain";
+}
 
 
 const D3D_INPUT_ELEMENT_DESC layout_editable[] =

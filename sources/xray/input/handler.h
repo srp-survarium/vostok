@@ -37,8 +37,9 @@ public:
 	virtual	bool	on_gamepad_action	( world* world, gamepad_button button, enum_gamepad_action action )	= 0;
 	virtual	bool	on_mouse_key_action	( world* world, mouse_button button, enum_mouse_key_action action )	= 0;
 	virtual	bool	on_mouse_move		( world* world, int x, int y, int z )								= 0;
+	virtual	void	on_before_processing( world* /*world*/ ){}
+	virtual	void	on_after_processing( world* /*world*/ ){}
 	virtual int		input_priority		( ) = 0;
-	virtual void	update				( input::world*  )													{ NODEFAULT(); }
 
 public:
 	XRAY_DECLARE_PURE_VIRTUAL_DESTRUCTOR( handler )

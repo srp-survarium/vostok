@@ -43,10 +43,10 @@ namespace statistics {
 class XRAY_SOUND_API sound_debug_stats : private sound::noncopyable
 {
 public:
-					sound_debug_stats			( memory::base_allocator* allocator, world_user& user, sound_scene_ptr scene, ui::world& ui_world );
+					sound_debug_stats			( memory::base_allocator* allocator, world_user& user, sound_scene_ptr const& scene, ui::world& ui_world );
 					~sound_debug_stats			( );
 
-			void	draw						( render::scene_ptr scene );
+			void	draw						( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view );
 	inline	bool	is_stats_available			( ) const { return m_actual_statistic != -1; }
 			void	clear_resources				( world_user& user );
 public:
@@ -61,14 +61,14 @@ public:
 	static	void	set_debug_draw_mode			( mode debug_draw_mode );
 	static	void	set_detail_view_proxy_id	( u32 proxy_id );
 private:
-			void	draw_overall_stats			( render::scene_ptr scene );
-			void	draw_hdr_stats				( render::scene_ptr scene );
-			void	draw_detail_stats			( render::scene_ptr scene, u32 proxy_id );
+			void	draw_overall_stats			( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view  );
+			void	draw_hdr_stats				( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view  );
+			void	draw_detail_stats			( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view, u32 proxy_id );
 
 			void	create_statistic			( );
 			void	update_statistic			( );
 			void	on_statistic_updated		( );
-			void	update_window				( strings::text_tree_item* item );
+			void	update_window				( strings::text_tree_item* item, render::scene_view_ptr const& scene_view );
 private:
 	debug_statistic*				m_statistic[2];
 	ui::progress_bar**				m_progress_bars;

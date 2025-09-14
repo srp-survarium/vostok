@@ -7,7 +7,6 @@
 #include "pch.h"
 #include "object_light.h"
 #include "game_world.h"
-#include "game.h"
 #include <xray/render/world.h>
 #include <xray/render/facade/scene_renderer.h>
 
@@ -15,13 +14,11 @@ namespace stalker2{
 
 static u32 light_ids = 1000000;
 
-object_light::object_light( game_world& w ) 
+object_light::object_light( game_scene& w ) 
 :super			( w ),
 m_current_state	( false )
 {
 	m_light_id	= ++light_ids;
-	m_scene = m_game_world.get_game().get_render_scene();
-	R_ASSERT(m_scene);
 }
 
 object_light::~object_light( )
@@ -90,7 +87,7 @@ void object_light::update_props( )
 {
 	if(m_current_state)
 	{
-		m_game_world.get_game().renderer().scene().update_light	( m_scene, m_light_id, m_props );
+		m_game_scene.renderer().scene().update_light( m_game_scene.get_render_scene(), m_light_id, m_props );
 	}
 }
 
@@ -99,7 +96,7 @@ void object_light::add_to_scene( )
 	if(m_current_state)
 		return;
 
-	m_game_world.get_game().renderer().scene().add_light	( m_scene, m_light_id, m_props );
+	m_game_scene.renderer().scene().add_light( m_game_scene.get_render_scene(), m_light_id, m_props );
 	m_current_state = true;
 }
 
@@ -108,7 +105,7 @@ void object_light::remove_from_scene( )
 	if(!m_current_state)
 		return;
 
-	m_game_world.get_game().renderer().scene().remove_light	( m_scene, m_light_id );
+	m_game_scene.renderer().scene().remove_light( m_game_scene.get_render_scene(), m_light_id );
 	m_current_state = false;
 }
 

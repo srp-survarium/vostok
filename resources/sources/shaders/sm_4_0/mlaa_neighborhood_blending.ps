@@ -1,0 +1,100 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 06.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_BRANCHING,
+*/
+
+#include "common.h"
+#include "gamma_correction.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture2D 	t_blend;
+Texture2D 	t_edges;
+Texture2D 	t_frame_color;
+Texture2D 	t_area;
+
+uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+
+// http://visual-computing.intel-research.net/publications/papers/2009/mlaa/mlaa.pdf
+// http://igm.univ-mlv.fr/~biri/mlaa-gpu/
+
+static const float2 pixel_size = screen_res.zw;
+
+float4 mad2(float4 m, float4 a, float4 b) {
+    return m * a + b;
+}
+
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	float2 uv 					= input.uv;
+	
+    // Fetch the blending weights for current pixel:
+    float4 top_left 			= t_blend.SampleLevel(s_accumulator, uv, 0);
+    float right 				= t_blend.SampleLevel(s_accumulator, uv, 0, int2(0, 1)).g;
+	float bottom 				= t_blend.SampleLevel(s_accumulator, uv, 0, int2(1, 0)).a;
+    
+	
+    float4 a 					= float4(top_left.r, right, top_left.b, bottom);
+	
+    // There is some blending weight with a value greater than 0.0?
+	
+    float4 w = a;// * a * a;
+
+    // There is some blending weight with a value greater than 0.0?
+    float sum = dot(w, 1.0);
+    //if (sum < 1e-5)
+    //    discard;
+		
+    //float sum 					= dot(a, 1.0);
+	
+	if (sum > 0.0f)
+	{
+		float4 color = 0.0f;
+		
+/*		color += a.r * t_frame_color.SampleLevel(s_linear, uv + pixel_size.yx * float2(0.0f, -a.r), 0);
+		color += a.g * t_frame_color.SampleLevel(s_linear, uv + pixel_size.yx * float2(0.0f,  a.g), 0);
+		color += a.b * t_frame_color.SampleLevel(s_linear, uv + pixel_size.yx * float2(-a.b, 0.0f), 0);
+		color += a.a * t_frame_color.SampleLevel(s_linear, uv + pixel_size.yx * float2(a.a,  0.0f), 0);
+*/		
+		float4 o = saturate(a) * pixel_size.yyxx;
+		
+		color = mad2(t_frame_color.SampleLevel(s_linear, uv + float2( 0.0, -o.r), 0), w.r, color);
+		color = mad2(t_frame_color.SampleLevel(s_linear, uv + float2( 0.0,  o.g), 0), w.g, color);
+		color = mad2(t_frame_color.SampleLevel(s_linear, uv + float2(-o.b,  0.0), 0), w.b, color);
+		color = mad2(t_frame_color.SampleLevel(s_linear, uv + float2( o.a,  0.0), 0), w.a, color);
+		/*
+		float4 coords = mad(float4( 0.0, -a.r, 0.0,  a.g), pixel_size.yyyy, uv.xyxy);
+		color = mad(t_frame_color.SampleLevel(s_linear, coords.xy, 0), w.r, color);
+		color = mad(t_frame_color.SampleLevel(s_linear, coords.zw, 0), w.g, color);
+		
+		coords = mad(float4(-a.b,  0.0, a.a,  0.0), pixel_size.xxxx, uv.xyxy);
+		color = mad(t_frame_color.SampleLevel(s_linear, coords.xy, 0), w.b, color);
+		color = mad(t_frame_color.SampleLevel(s_linear, coords.zw, 0), w.a, color);
+		*/
+		return float4(convert_from_linear_space(color.rgb / sum), 0);
+	}
+	else
+	{
+		return float4(convert_from_linear_space(t_frame_color.SampleLevel(s_accumulator, uv, 0).rgb), 1);
+	}
+}
+
+
+
+
+
+
+
+
+
+

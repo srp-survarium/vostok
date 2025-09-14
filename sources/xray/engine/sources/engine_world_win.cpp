@@ -27,10 +27,8 @@
 #include <xray/os_include.h>
 
 #include <objbase.h>				// for COINIT_MULTITHREADED
-
 #pragma comment( lib, "delayimp.lib" )
 
-static xray::command_line::key	bhwWindowed("windowed", "", "", "windowed mode");
 
 using xray::engine::engine_world;
 
@@ -113,37 +111,33 @@ HWND new_window			( )
 	s_window_class			= temp;
 	RegisterClassEx			( &s_window_class );
 
-	HWND result;
-
 	u32 const screen_size_x	= GetSystemMetrics( SM_CXSCREEN );
 	u32 const screen_size_y	= GetSystemMetrics( SM_CYSCREEN );
 
-	if ( bhwWindowed ) {
-		DWORD const	window_style = WS_OVERLAPPED;// | WS_CAPTION;
+	DWORD const	window_style = WS_OVERLAPPED;// | WS_CAPTION;
 
-		u32 window_size_x		= 0;
-		u32 window_size_y		= 0;
+	u32 window_size_x		= 0;
+	u32 window_size_y		= 0;
 
-		u32 const window_sizes_x []	= { 1024, 800, 640 };
-		u32 const window_sizes_y []	= { 768, 600, 480 };
-		for ( u32 i=0; i<xray::array_size(window_sizes_x); ++i ) {
-			if ( window_sizes_x[i] < screen_size_x && 
-				window_sizes_y[i] < screen_size_y )
-			{
-				window_size_x	= window_sizes_x[i];
-				window_size_y	= window_sizes_y[i];
-				break;
-			}
+	u32 const window_sizes_x []	= { 1024, 800, 640 };
+	u32 const window_sizes_y []	= { 768, 600, 480 };
+	for ( u32 i=0; i<xray::array_size(window_sizes_x); ++i ) {
+		if ( window_sizes_x[i] < screen_size_x && 
+			 window_sizes_y[i] < screen_size_y )
+		{
+			window_size_x	= window_sizes_x[i];
+			window_size_y	= window_sizes_y[i];
+			break;
 		}
+	}
 
-		R_ASSERT				(window_size_x);
+	R_ASSERT				(window_size_x);
 
-		RECT window_size		= { 0, 0, window_size_x, window_size_y };
+	RECT window_size		= { 0, 0, window_size_x, window_size_y };
+	AdjustWindowRect		( &window_size, window_style, false );
 
-		AdjustWindowRect(&window_size, window_style, false);
-
-		result =
-			CreateWindow (
+	HWND const result		= 
+		CreateWindow (
 			s_window_class_id,
 			s_window_id,
 			window_style,
@@ -155,33 +149,8 @@ HWND new_window			( )
 			0,
 			s_window_class.hInstance,
 			0
-			);
-	} else {
-
-		DWORD const	window_style = WS_EX_TOPMOST | WS_POPUP;
-
-		result =
-			CreateWindow(
-			s_window_class_id,
-			s_window_id,
-			window_style,
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-			screen_size_x,
-			screen_size_y,
-			GetDesktopWindow(),
-			0,
-			s_window_class.hInstance,
-			0
-			);
-
-		//ShowWindow(result, SW_MAXIMIZE);
-		//UpdateWindow(result);
-		//ShowCursor( FALSE);
-	}
-
+		);
 	R_ASSERT				( result );
-
 	return					result;
 }
 
@@ -210,6 +179,8 @@ void engine_world::initialize_core	( )
 		core::initialize	( lua_config_device_folder_to_save_to, debug_thread_id, core::perform_debug_initialization );
 	else
 		core::initialize	( lua_config_device_folder_to_save_to, debug_thread_id, core::delay_debug_initialization );
+
+	initialize_scaleform	( );
 }
 
 void engine_world::create_render	( )

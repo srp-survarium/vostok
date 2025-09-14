@@ -13,6 +13,9 @@ void xray::render::depth_accumulate_material_effect::compile	( effect_compiler& 
 	shader_configuration				configuration;
 	configuration.use_alpha_test		= config.value_exists("use_alpha_test") ? bool(config["use_alpha_test"]) : false;
 	
+	if (config.value_exists("wind_motion"))
+		configuration.wind_motion = s32(config["wind_motion"]);
+	
 	compile_begin("vertex_base", "depth_accumulate", compiler, &configuration, config);	
 		
 		if (configuration.use_alpha_test)

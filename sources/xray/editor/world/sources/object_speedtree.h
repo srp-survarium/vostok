@@ -27,7 +27,6 @@ public:
 	virtual	void	set_visible					( bool bvisible )						override;
 	virtual void	save						( configs::lua_config_value t )			override;
 	virtual void	set_library_name			( System::String^ ln )					override;
-	virtual void	destroy_collision			( ) override;
 	virtual enum_terrain_interaction get_terrain_interaction( )							override	{return enum_terrain_interaction::tr_vertical_snap;}
 	
 	virtual void	load_contents				( )	override;

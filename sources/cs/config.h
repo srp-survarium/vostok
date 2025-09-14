@@ -20,7 +20,7 @@
 #endif // #if CS_USE_LUAJIT
 
 #if CS_PLATFORM_WINDOWS_32
-#	define CS_USE_LUAJIT		1
+#	define CS_USE_LUAJIT		0
 #else // #if CS_PLATFORM_WINDOWS_32
 #	define CS_USE_LUAJIT		0
 #endif // #if CS_PLATFORM_WINDOWS_32

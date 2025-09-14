@@ -130,9 +130,8 @@ void animation_collection_document::in_constructor ( )
 	m_tree_view->MouseMove += gcnew MouseEventHandler( this, &animation_collection_document::document_mouse_move );
 	m_tree_view->selected_items_changed += gcnew EventHandler<xray::editor::controls::tree_view_selection_event_args^>(this, &animation_collection_document::selection_changed);
 
-	m_loading_node = gcnew tree_node( );
-	m_loading_node->Text = "loading...";
-	m_tree_view->nodes->Add( m_loading_node );
+	m_loading_node = gcnew tree_node( "loading..." );
+//	m_tree_view->nodes->Add( m_loading_node );
 
 	AllowEndUserDocking = false;
 	AutoScaleDimensions = System::Drawing::SizeF(6, 13);

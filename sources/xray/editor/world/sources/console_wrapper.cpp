@@ -38,9 +38,9 @@ bool console_wrapper::get_active( )
 	return m_console ? m_console->get_active() : false;
 }
 
-void console_wrapper::tick( )
+void console_wrapper::tick( xray::render::scene_view_ptr const& scene_view )
 {
-	m_console->tick();
+	m_console->tick( scene_view );
 }
 
 bool console_wrapper::on_key_up( System::Windows::Forms::KeyEventArgs^ k )

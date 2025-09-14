@@ -190,7 +190,6 @@ namespace luabind { namespace detail
 			// if you get caught in this assert you are
 			// trying to use an unregistered type
 			assert(crep && "you are trying to use an unregistered type");
-			XRAY_ANALYSIS_ASSUME( crep );
 
 			// create the struct to hold the object
 			void* obj = lua_newuserdata(L, sizeof(object_rep));
@@ -216,7 +215,6 @@ namespace luabind { namespace detail
 			
 			object_rep* obj = static_cast<object_rep*>(lua_touserdata(L, index));
 			assert((obj != 0) && "internal error, please report"); // internal error
-			XRAY_ANALYSIS_ASSUME( obj != 0 );
 			const class_rep* crep = obj->crep();
 
 			return static_cast<T*>(crep->convert_to(LUABIND_TYPEID(T), obj, storage));
@@ -263,7 +261,6 @@ namespace luabind { namespace detail
 			// if you get caught in this assert you are
 			// trying to use an unregistered type
 			assert(crep && "you are trying to use an unregistered type");
-			XRAY_ANALYSIS_ASSUME( crep );
 
 			void* obj_rep;
 			void* held;
@@ -331,11 +328,9 @@ namespace luabind { namespace detail
 			{
 				obj = static_cast<object_rep*>(lua_touserdata(L, index));
 				assert((obj != 0) && "internal error, please report"); // internal error
-				XRAY_ANALYSIS_ASSUME( (obj != 0) );
 				crep = obj->crep();
 			}
 			assert(crep);
-			XRAY_ANALYSIS_ASSUME( crep );
 
 			return *static_cast<T*>(crep->convert_to(LUABIND_TYPEID(T), obj, storage));
 		}
@@ -535,11 +530,9 @@ namespace luabind { namespace detail
 			{
 				obj = static_cast<object_rep*>(lua_touserdata(L, index));
 				assert((obj != 0) && "internal error, please report"); // internal error
-				XRAY_ANALYSIS_ASSUME( (obj != 0) );
 				crep = obj->crep();
 			}
 			assert(crep);
-			XRAY_ANALYSIS_ASSUME( crep );
 
 			return *static_cast<T*>(crep->convert_to(LUABIND_TYPEID(T), obj, storage));
 		}

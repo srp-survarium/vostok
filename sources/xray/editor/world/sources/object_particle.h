@@ -35,7 +35,6 @@ ref class object_particle :public object_base
 public:
 					object_particle			( tool_particle^ t, render::scene_ptr const& scene );
 	virtual			~object_particle		( );
-	virtual void	destroy_collision		( )										override;
 
 	virtual	void	set_transform			( float4x4 const& transform )			override;
 	virtual	void	on_selected				( bool selected )						override;

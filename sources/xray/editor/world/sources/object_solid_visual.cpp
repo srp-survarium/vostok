@@ -7,18 +7,15 @@
 #include "pch.h"
 #include "object_solid_visual.h"
 #include "tool_solid_visual.h"
-#include "project_items.h"
 #include "level_editor.h"
 #include "collision_object_dynamic.h"
 #include "project.h"
 #include "editor_world.h"
 #include <xray/editor/base/collision_object_types.h>
 #include "window_ide.h"
+#include "object_collision.h"
 
 #pragma managed( push, off )
-#	include <xray/collision/api.h>
-#	include <xray/render/world.h>
-#	include <xray/editor/world/engine.h>
 #	include <xray/render/facade/scene_renderer.h>
 #	include <xray/render/facade/editor_renderer.h>
 #	include <xray/render/facade/debug_renderer.h>
@@ -28,8 +25,8 @@
 namespace xray {
 namespace editor {
 
-object_solid_visual::object_solid_visual(tool_solid_visual^ t, render::scene_ptr const& scene ):
-super				(t), 
+object_solid_visual::object_solid_visual(tool_solid_visual^ t, render::scene_ptr const& scene )
+:super				(t), 
 m_tool_solid_visual	(t),
 m_scene				( NEW (render::scene_ptr) (scene) ),
 m_snap_to_terrain	( true ),
@@ -56,12 +53,6 @@ object_solid_visual::~object_solid_visual()
 
 	if(m_model_query)
 		m_model_query->m_rejected = true;
-}
-
-void object_solid_visual::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( g_allocator );
 }
 
 void object_solid_visual::load_props( configs::lua_config_value const& t )
@@ -392,6 +383,28 @@ wpf_controls::property_container^ object_solid_visual::get_property_container( )
 	but->width	= 20;
 
 	return cont;
+}
+
+void object_solid_visual::gather_statistic( scene_statistic^ stats )
+{
+	super::gather_statistic	( stats );
+
+	u32 surf_count = (*m_model_instance)->m_render_model->get_surfaces_count();
+	for(u32 i=0; i<surf_count; ++i)
+	{
+		xray::render::surface_stats	surface_stats;
+		(*m_model_instance)->m_render_model->get_surface_stats( i, surface_stats );
+		stats->add_statistic("solid:surfaces", 1);
+		stats->add_statistic("solid:verts", surface_stats.vcount);
+		stats->add_statistic("solid:tris", surface_stats.tricount);
+
+		System::String^ mtl_sect = System::String::Concat("solid:material:", gcnew System::String(surface_stats.material.c_str()));
+		stats->add_statistic( mtl_sect, 1 );
+
+		stats->add_statistic( System::String::Concat(mtl_sect, ":verts"), surface_stats.vcount );
+		stats->add_statistic( System::String::Concat(mtl_sect, ":tris"), surface_stats.tricount );
+	}
+	
 }
 
 } // namespace editor

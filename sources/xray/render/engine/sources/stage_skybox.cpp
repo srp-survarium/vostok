@@ -142,7 +142,8 @@ bool stage_skybox::is_enabled() const
 {
 	if (stage::is_enabled())
 	{
-		return true;
+		return m_context->scene()->sky_enabled();
+		//return true;
 	}
 	else
 	{

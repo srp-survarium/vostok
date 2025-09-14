@@ -16,7 +16,7 @@
 #include "speedtree_forest.h"
 #include "speedtree_tree.h"
 #include "speedtree_instance_impl.h"
-#include "grass.h"
+#include "grass_world.h"
 #include "render_particle_emitter_instance.h"
 #include <xray/particle/world.h>
 #include "light.h"
@@ -29,6 +29,10 @@
 #include <xray/collision/space_partitioning_tree.h>
 
 #include <xray/render/core/options.h>
+
+#include <xray/render/core/res_geometry.h>
+
+#include "render_model_grass.h"
 
 static const u32 s_max_vertex_count	= 64*1024;
 
@@ -79,25 +83,26 @@ void scene::particle_engine::destroy	( particle::render_particle_emitter_instanc
 
 static int test_grass = 0;
 
-scene::scene( xray::render::editor_renderer_configuration const& renderer_configuration)
+scene::scene( xray::render::scene_configuration const& renderer_configuration)
 :
 //.	m_models			( NEW(xray::render::model_manager) ),
 	m_lights			( NEW(lights_db) ),
-	m_speedtree_forest	( NEW(speedtree_forest)),
+	m_speedtree_forest	( renderer_configuration.m_create_speedtree_world ? NEW(speedtree_forest) : NULL),
 	m_terrain			( renderer_configuration.m_create_terrain ? NEW(render::terrain) : NULL ),
 	m_particle_world	( NULL ),
 	m_scene_slomo		( 1.0f ),
-	m_grass				( NEW(grass_world) ),
+	m_grass				( renderer_configuration.m_create_grass_world ? NEW(grass_world) : NULL ),
 	m_decals_tree		( &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) ),
-	m_models_tree		( &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) )
+	m_models_tree		( &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) ),
+	m_sky_enabled		( renderer_configuration.m_sky_enabled)
 {
-	if (s_grass_key.is_set())
-	{
-		if (test_grass==1)
-			m_grass->initialize_test_grass();
-		
-		test_grass++;
-	}
+// 	if (s_grass_key.is_set())
+// 	{
+// 		if (test_grass==1)
+// 			m_grass->initialize_test_grass();
+// 		
+// 		test_grass++;
+// 	}
 }
 
 scene::~scene()
@@ -166,7 +171,15 @@ void scene::select_models( float4x4 const & mat_vp, render_surface_instances& se
 {
 	if (!options::ref().m_enabled_draw_models)
 		return;
-	
+
+//	if (s_grass_key.is_set())
+//	{
+//		if (test_grass==10)
+//			m_grass->initialize_test_grass();
+//		
+//		test_grass++;
+//	}
+
 	BEGIN_TIMER(statistics::ref().visibility_stat_group.culling_time);
 
 	if(options::ref().m_enabled_draw_models)

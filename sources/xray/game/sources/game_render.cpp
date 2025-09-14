@@ -5,26 +5,23 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "game.h"
-#include "game_world.h"
-#include <xray/render/world.h>
-#include <xray/render/facade/debug_renderer.h>
-#include <xray/render/facade/game_renderer.h>
-#include <xray/input/api.h>
-#include <xray/collision/geometry_instance.h>
 
-#include <xray/collision/object.h>
-#include <xray/physics/world.h>
-#include <xray/console_command_processor.h>
+//#include "game.h"
+//#include "game_world.h"
+//#include <xray/render/world.h>
+//#include <xray/render/facade/debug_renderer.h>
+//#include <xray/render/facade/game_renderer.h>
+//#include <xray/input/api.h>
+//#include <xray/collision/geometry_instance.h>
+//
+//#include <xray/collision/object.h>
+//#include <xray/physics/world.h>
+//#include <xray/console_command_processor.h>
 
-// temporary for debug purposes
-//static xray::collision::geometry*	s_collision			= NULL;
-//static xray::collision::object*		s_collision_object	= NULL;
-//static xray::physics::shell*		s_statics_shell		= NULL;
 
 namespace stalker2 {
 
-void game::test					( )
+void /*game::*/test					( )
 {
 	return;
 #if 0

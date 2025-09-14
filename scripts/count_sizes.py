@@ -28,6 +28,9 @@ for dirpath, _, files in os.walk(root):
             st = os.stat(path, follow_symlinks=False)
         except OSError:
             continue
+        if ext_of(fn) == "pack":
+            print(dirpath)
+            print(fn)
         totals[ext_of(fn)] += st.st_size
 
 # print sorted by size ascending

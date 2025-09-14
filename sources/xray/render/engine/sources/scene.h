@@ -56,13 +56,13 @@ struct light_props;
 class render_model_instance;
 class lights_db;
 class terrain;
-struct editor_renderer_configuration;
+struct scene_configuration;
 struct speedtree_forest;
-class grass_world;
+struct grass_world;
 
 class scene : public base_scene {
 public:
-								scene					( editor_renderer_configuration const& renderer_configuration );
+								scene					( scene_configuration const& renderer_configuration );
 	virtual						~scene					( );
 			
 			void		add_speedtree_instance			( speedtree_instance_ptr v, math::float4x4 const& transform, bool populate_forest );
@@ -109,7 +109,7 @@ public:
 			// TODO: move to environment			
 			void				set_sky_material		(material_effects_instance_ptr const& in_material) { m_sky_material = in_material; }
 			material_effects_instance_ptr const& get_sky_material() const { return m_sky_material; }
-			
+			inline bool			sky_enabled				( ) const { return m_sky_enabled;}
 private:
 	friend	class				scene_cook;
 	
@@ -188,6 +188,7 @@ private:
 	render::speedtree_forest*			m_speedtree_forest;
 	grass_world*						m_grass;
 	float								m_scene_slomo;
+	bool								m_sky_enabled;
 }; // class scene
 
 

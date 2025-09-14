@@ -10,14 +10,14 @@
 #include <xray/resources_cook_classes.h>
 
 namespace stalker2 {
-class game;
+class game_world;
 
 class object_cooker :		public resources::unmanaged_cook,
 							private boost::noncopyable
 {
 	typedef resources::unmanaged_cook	super;
 public:
-									object_cooker			( game& game );
+									object_cooker			( game_world& w );
 	virtual	mutable_buffer			allocate_resource		( resources::query_result_for_cook&	in_query, 
 															 const_buffer						raw_file_data, 
 															 bool								file_exist );
@@ -31,7 +31,7 @@ public:
 	virtual void					destroy_resource		( resources::unmanaged_resource *		resource );
 
 private:
-	game&							m_game;
+	game_world&							m_game_world;
 }; //class object_cooker
 
 struct object_scene_cooker : public resources::translate_query_cook,
@@ -39,7 +39,7 @@ struct object_scene_cooker : public resources::translate_query_cook,
 {
 	typedef resources::translate_query_cook		super;
 
-					object_scene_cooker		( game& game );
+					object_scene_cooker		( game_world& w );
 	virtual	void	translate_query			( resources::query_result_for_cook&	parent );
 
 	virtual void	delete_resource			( resources::resource_base* resource );
@@ -50,7 +50,7 @@ private:
 
 
 private:
-	game&							m_game;
+	game_world&							m_game_world;
 }; //object_scene_cooker
 
 

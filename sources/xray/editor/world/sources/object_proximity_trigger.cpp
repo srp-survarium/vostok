@@ -7,19 +7,14 @@
 #include "pch.h"
 #include "object_proximity_trigger.h"
 #include "tool_misc.h"
-#include "project_items.h"
-#include "tool_scripting.h"
 #include "level_editor.h"
 #include "project.h"
 #include <xray/editor/base/collision_object_types.h>
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #	include <xray/collision/collision_object.h>
 #pragma managed( pop )
-
-
-using xray::editor::wpf_controls::property_descriptor;
-using xray::editor::wpf_controls::property_editors::attributes::external_editor_event_handler;
 
 namespace xray{
 namespace editor{

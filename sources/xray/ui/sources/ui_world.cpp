@@ -14,13 +14,13 @@ namespace ui {
 ui_world::ui_world(
 		engine& engine,
 		render::ui::renderer& renderer,
-		memory::base_allocator& allocator,
-		render::scene_view_ptr const& scene_view
+		memory::base_allocator& allocator
+		//,render::scene_view_ptr const& scene_view
 	) :
 	m_engine			( engine ),
 	m_allocator			( allocator ),
 	m_renderer			( renderer ),
-	m_scene_view		( scene_view ),
+//	m_scene_view		( scene_view ),
 	m_base_screen_size	( 1024.0f, 768.0f ),
 	m_font_manager		( allocator )
 {

@@ -1154,6 +1154,10 @@
 				RelativePath=".\My Amplifier Results\r000hs\r000hs.ampl"
 				>
 			</File>
+			<File
+				RelativePath=".\My Amplifier Results\r001hs\r001hs.ampl"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\resources_performance_test_entry_point.cpp"

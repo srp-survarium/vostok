@@ -10,10 +10,11 @@
 namespace xray {
 namespace logging {
 
-class XRAY_CORE_API settings : private detail::noncopyable {
+class XRAY_CORE_API settings : private core::noncopyable {
 public:
-	enum			flags_enum { flags_log_only_user_string	=	1, 
-								 flags_log_to_console		=	2, };
+	enum			flags_enum { flags_log_only_user_string	=	1 << 0, 
+								 flags_log_to_console		=	1 << 1,
+								 flags_force_verbosity		=	1 << 2,	};
 	flags_enum		flags;
 
 	explicit		settings			( pcstr initiator_prefix, u32 flags = 0 );

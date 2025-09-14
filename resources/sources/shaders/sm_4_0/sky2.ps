@@ -1,0 +1,124 @@
+#include "common.h"
+#include "gamma_correction.h"
+
+struct v2p_sky_box
+{
+	float4 factor	: COLOR0;        // for SM3 - factor.rgb - tonemap-prescaled
+	float3 tc		: TEXCOORD0;
+	float4 hpos		: SV_POSITION;
+};
+
+struct sky_box_output
+{	
+	float4 low		: SV_TARGET0;
+	float4 high		: SV_TARGET1;
+};
+
+TextureCube t_skybox;
+
+/*
+float3 sun_direction;
+static const float3 sun_position 	= -sun_direction * 20000.0f;
+
+float moon_scattered_color(float2 screen_uv)
+{
+	float scattering_power			= 1.0f;//1.0f - saturate(get_luminance(frame_color));
+	
+	// TODO: optimize, do in lower resolution target
+	static const int num_samples 	= 100;
+	
+	float4 projected_sun_position 	= 	mul(m_VP, float4(sun_position, 1.0f));
+	projected_sun_position.xy 		/= 	projected_sun_position.w;
+	projected_sun_position.y		*=	-1.0f;
+	projected_sun_position.xy		= 	projected_sun_position.xy * 0.5f + 0.5f;
+	
+	if (projected_sun_position.w <= 0.0f)
+		return 0.0f;
+	
+	float2 to_sun_vector_delta		= 	(screen_uv - projected_sun_position.xy) / num_samples;
+	
+	float3 final_color				= 	0.0f;
+	
+	float dist						= 	pow(distance(screen_uv, projected_sun_position.xy),0.125);
+	
+	if (dist < 0.65f)
+	{
+		return 1.0f;
+	}
+	
+	return pow(saturate(0.1f + (1.0f - dist)), 3.0);//lerp(saturate(0.1f + (1.2f - dist2)), night_color, pow(1-night_to_day, 0.5));
+}
+
+float sun_scattered_color(float2 screen_uv)
+{
+	float scattering_power			= 1.0f;//1.0f - saturate(get_luminance(frame_color));
+	
+	// TODO: optimize, do in lower resolution target
+	static const int num_samples 	= 100;
+	
+	float4 projected_sun_position 	= 	mul(m_VP, float4(sun_position, 1.0f));
+	projected_sun_position.xy 		/= 	projected_sun_position.w;
+	projected_sun_position.y		*=	-1.0f;
+	projected_sun_position.xy		= 	projected_sun_position.xy * 0.5f + 0.5f;
+	
+	if (projected_sun_position.w <= 0.0f)
+		return 0.0f;
+	
+	float2 to_sun_vector_delta		= 	(screen_uv - projected_sun_position.xy) / num_samples;
+	
+	float3 final_color				= 	0.0f;
+	
+	float dist						= 	pow(distance(screen_uv, projected_sun_position.xy),0.125);
+	
+	float night_to_day			=	pow(saturate(dot(-sun_direction, float3(0,1,0))),1);
+	
+	if (dist < 0.6f * (0.16f + pow((1.25f - 1.0f * saturate(dot(-sun_direction, float3(0,1,0)))),0.125)))
+	{
+		return 1.0f + 5.0f * saturate(0.75f - night_to_day);
+	}
+	
+	float dist2						= 	pow(distance(screen_uv, projected_sun_position.xy),0.3f);
+	
+	float night_color 				=	
+		pow(saturate(0.125*dot(normalize(projected_sun_position.xy - screen_uv), float2(0.0f, 1.0f))), 2.0f);
+	
+	return saturate(0.1f + (1.2f - dist2));//lerp(saturate(0.1f + (1.2f - dist2)), night_color, pow(1-night_to_day, 0.5));
+}
+*/
+//uniform float4 screen_res;
+
+void main ( in v2p_sky_box input,
+			out sky_box_output output
+	)
+{
+	float3 skybox_color = input.factor.xyz * convert_to_linear_space( t_skybox.SampleLevel(s_rtlinear, input.tc, 0).xyz );
+	
+//	float3 skybox_color = input.factor.xyz * lerp (
+//		(t_sky0.SampleLevel( s_rtlinear, input.tc, 0 ).xyz), 
+//		(t_sky1.SampleLevel( s_rtlinear, input.tc, 0 ).xyz), 
+//		/*input.factor.w*/1.0f
+//	);
+	/*
+	float2 screen_uv		=	input.hpos.xy * screen_res.zw;
+	float to_sun	  		=	sun_scattered_color(screen_uv);
+	
+#if 1
+	float3 down_color		=	 float3(0.1f, 0.3f, 0.5f);
+	float3 up_color			=	 float3(1.0f, 1.0f, 0.5f);
+#else
+	float3 down_color		=	 float3(0.0f, 0.0f, 0.0f);
+	float3 up_color			=	 float3(0.8f, 0.8f, 1.0f);
+#endif // #if 0	
+
+	float night_to_day		=	saturate(dot(-sun_direction, float3(0,1,0)));
+	
+#if 1	
+	down_color				=	lerp(float3(0.0f, 0.0f, 0.0f), down_color, night_to_day);
+	up_color				=	lerp(float3(0.5f, 0.01f, 0.0f), up_color, night_to_day);
+#endif // #if 0
+	
+	skybox_color			=	pow(0.1+night_to_day, 1) * lerp(down_color, up_color, to_sun);
+	*/
+	output.low    		  	= 	float4(skybox_color, 0.0f);
+	output.high        	  	= 	float4(skybox_color, 0.0f);
+}

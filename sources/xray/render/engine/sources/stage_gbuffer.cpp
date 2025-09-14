@@ -8,6 +8,7 @@
 #include <xray/render/core/custom_config.h>
 #include "stage_gbuffer.h"
 #include "model_manager.h"
+#include "render_model_grass.h"
 
 #include <xray/render/core/backend.h>
 #include <xray/render/core/pix_event_wrapper.h>
@@ -31,7 +32,7 @@
 #include "speedtree_forest.h"
 #include "speedtree_convert_type.h"
 
-#include "grass.h"
+#include "grass_world.h"
 
 #include "material.h"
 
@@ -118,10 +119,10 @@ void stage_gbuffer::execute()
 	}
 	
 	m_context->scene()->select_models( m_context->get_culling_vp(), m_dynamic_visuals);
-
+	
 	render_surface_instances::iterator it_d			= m_dynamic_visuals.begin();
 	render_surface_instances::const_iterator	end_d	= m_dynamic_visuals.end();
-	
+	int cnt = 0;
 	for ( ; it_d != end_d; ++it_d)
 	{
 		render_surface_instance& instance = *(*it_d);
@@ -138,35 +139,40 @@ void stage_gbuffer::execute()
 		m_context->set_w					( *instance.m_transform );
 		
 		me.m_effects[geometry_render_stage]->apply(tech_index);
-		backend::ref().set_ps_constant(m_object_transparency_scale_parameter, 1.0f);
+		
+//		backend::ref().set_ps_constant(m_object_transparency_scale_parameter, 1.0f);
 		
 		instance.set_constants		( );
 		geometry.geom->apply		( );
+		
+		if (!m_is_pre_pass)
+		{
+			backend::ref().set_ps_constant(
+				m_far_fog_color_and_distance,
+				float4(
+					m_context->scene_view()->post_process_parameters().environment_far_fog_color,
+					m_context->scene_view()->post_process_parameters().environment_far_fog_distance
+				)
+			);
+			
+			backend::ref().set_ps_constant(
+				m_near_fog_distance,
+				m_context->scene_view()->post_process_parameters().environment_near_fog_distance
+			);
+		}
+		
+//		backend::ref().set_ps_constant(
+//			m_ambient_color, 
+//			float4(
+//				m_context->scene_view()->post_process_parameters().environment_ambient_color,
+//				0
+//			)
+//		);
 
-		backend::ref().set_ps_constant(
-			m_far_fog_color_and_distance,
-			float4(
-				m_context->scene_view()->post_process_parameters().environment_far_fog_color,
-				m_context->scene_view()->post_process_parameters().environment_far_fog_distance
-			)
-		);
-		
-		backend::ref().set_ps_constant(
-			m_near_fog_distance,
-			m_context->scene_view()->post_process_parameters().environment_near_fog_distance
-		);
-		
-		backend::ref().set_ps_constant(
-			m_ambient_color, 
-			float4(
-				m_context->scene_view()->post_process_parameters().environment_ambient_color,
-				0
-			)
-		);
 		// TODO: remove skylight from sun pass, add the skylight_pass
-		backend::ref().set_ps_constant( m_c_environment_skylight_upper_color, m_context->get_scene_view()->post_process_parameters().environment_skylight_upper_color );
-		backend::ref().set_ps_constant( m_c_environment_skylight_lower_color, m_context->get_scene_view()->post_process_parameters().environment_skylight_lower_color );
-		backend::ref().set_ps_constant( m_c_environment_skylight_parameters, m_context->get_scene_view()->post_process_parameters().environment_skylight_parameters );
+//		backend::ref().set_ps_constant( m_c_environment_skylight_upper_color, m_context->get_scene_view()->post_process_parameters().environment_skylight_upper_color );
+//		backend::ref().set_ps_constant( m_c_environment_skylight_lower_color, m_context->get_scene_view()->post_process_parameters().environment_skylight_lower_color );
+//		backend::ref().set_ps_constant( m_c_environment_skylight_parameters, m_context->get_scene_view()->post_process_parameters().environment_skylight_parameters );
 		
 		if (tech_index==0)
 		{
@@ -178,12 +184,68 @@ void stage_gbuffer::execute()
 		
 		//backend::ref().set_gs_constant(m_c_gs_test_constant, float4(20.0f, 10.0f, 5.0f, 0.0f));
 		
-		backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count*3, 0, 0);
-
+		backend::ref().render_indexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count * 3, 0, 0);
+		
 		if(tech_index==1)
 			statistics::ref().visibility_stat_group.num_models.value++;
-	}
 
+		cnt++;
+	}
+	//m_context->scene()->get_grass()->render(m_context, (u32)geometry_render_stage);
+	
+	if (m_context->scene()->get_grass())
+	{
+		m_context->scene()->get_grass()->render(m_context, m_context->get_view_pos(), geometry_render_stage, tech_index);
+	}
+	/*if (m_context->scene()->get_grass() && m_context->scene()->get_grass()->m_model.c_ptr())
+	{
+		grass_render_model::children::iterator it_begin		=	m_context->scene()->get_grass()->m_model->m_children.begin();
+		grass_render_model::children::iterator it_end		=	m_context->scene()->get_grass()->m_model->m_children.end();
+		grass_render_model::children::iterator it			=	it_begin;
+		
+		for (; it != it_end; ++it)
+		{
+			grass_render_surface* surface = (*it);
+			surface->m_render_geometry.geom->apply();
+			surface->get_material_effects().m_effects[geometry_render_stage]->apply(tech_index);
+
+			backend::ref().set_ps_constant(
+				m_far_fog_color_and_distance,
+				float4(
+					m_context->scene_view()->post_process_parameters().environment_far_fog_color,
+					m_context->scene_view()->post_process_parameters().environment_far_fog_distance
+				)
+			);
+			
+			backend::ref().set_ps_constant(
+				m_near_fog_distance,
+				m_context->scene_view()->post_process_parameters().environment_near_fog_distance
+			);
+			
+			backend::ref().set_ps_constant(
+				m_ambient_color, 
+				float4(
+					m_context->scene_view()->post_process_parameters().environment_ambient_color,
+					0
+				)
+			);
+			// TODO: remove skylight from sun pass, add the skylight_pass
+			backend::ref().set_ps_constant( m_c_environment_skylight_upper_color, m_context->get_scene_view()->post_process_parameters().environment_skylight_upper_color );
+			backend::ref().set_ps_constant( m_c_environment_skylight_lower_color, m_context->get_scene_view()->post_process_parameters().environment_skylight_lower_color );
+			backend::ref().set_ps_constant( m_c_environment_skylight_parameters, m_context->get_scene_view()->post_process_parameters().environment_skylight_parameters );
+			
+			m_context->set_w					( float4x4().identity() );
+			
+			if (tech_index==0)
+			{
+				backend::ref().set_stencil_ref(all_geometry_type + static_geometry_type);
+			}
+			backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, surface->m_render_geometry.primitive_count * 3, 0, 0);
+		}
+	}
+	*/
+	
+#if 1	
 	//
 //////////////////////////////////////////////////////////////////////////
 	typedef render::vector<terrain_render_model_instance_ptr>		terrain_ptr_cells;
@@ -265,10 +327,12 @@ void stage_gbuffer::execute()
 			statistics::ref().visibility_stat_group.num_triangles.value += primitive_count / 3;
 		}
 	}
+
+#endif // #if 0	
 	
-	
+#if 1	
 	// SpeedTree
-	if (options::ref().m_enabled_draw_speedtree)
+	if (options::ref().m_enabled_draw_speedtree && m_context->scene()->get_speedtree_forest())
 	{
 		speedtree_forest::tree_render_info_array_type visible_trees;
 		math::float3 const& view_position = m_context->get_v_inverted().c.xyz();
@@ -344,7 +408,6 @@ void stage_gbuffer::execute()
 		END_CPUGPU_TIMER;
 	}
 	
-	m_context->scene()->get_grass()->render(m_context, (u32)geometry_render_stage);
 	
 	xray::particle::world* part_world = m_context->scene()->particle_world();
 	
@@ -416,6 +479,8 @@ void stage_gbuffer::execute()
 			}
 		}
 	}
+#endif // #if 0
+
 /*	
 	/*if (!m_is_pre_pass)
 	{
@@ -435,10 +500,10 @@ void stage_gbuffer::execute()
 	END_CPUGPU_TIMER;
 	
 	//if (m_is_pre_pass)
-	backend::ref().reset_render_targets();
-	backend::ref().reset_depth_stencil_target();
-	
-	m_context->set_w					(float4x4().identity());
+//	backend::ref().reset_render_targets();
+//	backend::ref().reset_depth_stencil_target();
+//	
+//	m_context->set_w					(float4x4().identity());
 }
 
 } // namespace render

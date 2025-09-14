@@ -8,9 +8,11 @@
 #include "object_patrol_graph.h"
 #include "object_patrol_graph_part.h"
 #include "object_patrol_graph_part_collision.h"
+#include "object_collision.h"
 
-#include <xray/collision/geometry_instance.h>
-#include <xray/collision/space_partitioning_tree.h>
+#pragma managed( push, off )
+#	include <xray/collision/space_partitioning_tree.h>
+#pragma managed( pop )
 
 namespace xray{
 namespace editor{

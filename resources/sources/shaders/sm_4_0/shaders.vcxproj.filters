@@ -1,0 +1,589 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ui">
+      <UniqueIdentifier>{84709b9a-eafc-430c-88d2-ab9cd0511c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system">
+      <UniqueIdentifier>{397c9297-8196-444d-9997-f197d43f724b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\grid">
+      <UniqueIdentifier>{a18b94f7-d289-430e-bc41-868dae5cd308}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\line">
+      <UniqueIdentifier>{fb66303d-0dc5-4963-bccb-4905bd27b39e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sky">
+      <UniqueIdentifier>{33b25419-1757-47c4-a1a3-4c8ea9523ed6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="post_process">
+      <UniqueIdentifier>{fae08854-67d4-4050-9cf0-e815f1963643}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="post_process\bloom">
+      <UniqueIdentifier>{aa437b65-e351-4b23-bea7-f63ad3af3113}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="post_process\blur">
+      <UniqueIdentifier>{91b7a601-c3fa-4302-bdb5-d8e3a56adc56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="post_process\depth of field">
+      <UniqueIdentifier>{1c34ebb3-2aa5-4008-980f-2545a1a139a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="post_process\complex_post_process_blend">
+      <UniqueIdentifier>{6b84cbb0-8725-44b4-bae7-a64db2b0d774}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="forward render">
+      <UniqueIdentifier>{276a3ea5-16f3-4969-a866-e225c50e5d59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="forward render\distortion">
+      <UniqueIdentifier>{3f52bacb-a0ca-47d5-b5c9-92c9906e7df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="forward render\particles">
+      <UniqueIdentifier>{12450181-b521-46ac-aa02-f2d0ad22399c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="forward render\advanced">
+      <UniqueIdentifier>{0d0dbefa-c555-4532-a3f9-3023c58d6590}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="forward render\advanced\lighting_skin_base">
+      <UniqueIdentifier>{1f755f13-c370-40ed-a262-bdfe70fa9c74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="forward render\advanced\subsurface_scattering">
+      <UniqueIdentifier>{b96885ac-af02-4d75-bfc0-6e434d22bf43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="benchmark">
+      <UniqueIdentifier>{554d227f-6982-444e-93f5-06d3f3c2b95d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{d695fd0f-c473-4672-8d1d-8c79a86ae0a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\color">
+      <UniqueIdentifier>{9f04292b-7fc8-4ec6-aa64-b182c77b81c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\copy_image">
+      <UniqueIdentifier>{00574958-f557-4ce3-95af-ebad0d7b884d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\defines">
+      <UniqueIdentifier>{0343acd5-64ca-4a30-8921-7ab40d1ccec3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\stub">
+      <UniqueIdentifier>{0e0305d4-f532-413f-aa44-a57e423b86e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\test">
+      <UniqueIdentifier>{58906a39-f191-4bb4-bd73-ae3146ea73e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\unsorted">
+      <UniqueIdentifier>{2a9464a2-cd46-4d12-b876-4a936a391065}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render">
+      <UniqueIdentifier>{ae8917bc-c011-40c1-9942-0202a14290dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\combine">
+      <UniqueIdentifier>{3de1a605-94ad-4031-b97c-879b24bc1285}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting">
+      <UniqueIdentifier>{3f8ead81-3011-4dc2-a2f6-aaf0314656d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\sun">
+      <UniqueIdentifier>{c90378f5-0576-4ee9-a2d5-e80f427ae86a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\shadowless_lights">
+      <UniqueIdentifier>{01db822e-b981-4ef0-b2e7-80a2e06ac462}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\shadowless_lights\point">
+      <UniqueIdentifier>{317c0aca-4739-4d99-9ca7-2cb7cc2a5a01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\shadowless_lights\spot">
+      <UniqueIdentifier>{8c1594fa-84d4-4622-9ce4-c2951ad221bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\shadowless_lights\capsule">
+      <UniqueIdentifier>{9a5e5c27-8f29-4e82-b4b1-e403a85c4b08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\shadowless_lights\obb">
+      <UniqueIdentifier>{498da37f-3ac4-46a1-8aa9-328962e153ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\lighting\shadowless_lights\parallel">
+      <UniqueIdentifier>{07af22e8-c812-45f4-ad1a-28bc69a1e78c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\materials">
+      <UniqueIdentifier>{9fdf74b0-79de-4f2b-89d7-04df4abbc235}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\materials\default">
+      <UniqueIdentifier>{cfdb47e7-78b3-48f7-a015-9bc91eb0d693}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\materials\building blocks">
+      <UniqueIdentifier>{21fa7bc2-8433-4249-a3ca-752d2ba8ec74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\skin">
+      <UniqueIdentifier>{e2e13d21-2c24-46fb-bcac-6c02c64e7be0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\terrain">
+      <UniqueIdentifier>{cd81007d-0ea3-4ac8-b3d8-1d5765e7f079}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\shadows">
+      <UniqueIdentifier>{bd19ec2c-122d-4998-b9b3-e749a58237e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deferred shading render\obsolete">
+      <UniqueIdentifier>{688d1d7c-b372-4b85-a25a-a78cde5a420b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <HLSL_Compiler Include="image.ps">
+      <Filter>ui</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="ui.ps">
+      <Filter>ui</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="ui_fill.ps">
+      <Filter>ui</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="ui_font.ps">
+      <Filter>ui</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_grid.ps">
+      <Filter>system\grid</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_grid.vs">
+      <Filter>system\grid</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_line.ps">
+      <Filter>system\line</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_line.vs">
+      <Filter>system\line</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_line_top.vs">
+      <Filter>system\line</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="sky2.ps">
+      <Filter>sky</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="sky2.vs">
+      <Filter>sky</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="post_process_distortion.ps">
+      <Filter>post_process</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="gather_bloom.ps">
+      <Filter>post_process\bloom</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="gather_bloom.vs">
+      <Filter>post_process\bloom</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="blur.vs">
+      <Filter>post_process\blur</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="blur_horizontally.ps">
+      <Filter>post_process\blur</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="blur_vertically.ps">
+      <Filter>post_process\blur</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="complex_post_process_blend.ps">
+      <Filter>post_process\complex_post_process_blend</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_base.ps">
+      <Filter>forward render</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_base.vs">
+      <Filter>forward render</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_lighting.ps">
+      <Filter>forward render</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_lighting.vs">
+      <Filter>forward render</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_volume_cone_base.ps">
+      <Filter>forward render</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_volume_sphere_base.ps">
+      <Filter>forward render</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="apply_distortion.ps">
+      <Filter>forward render\distortion</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="apply_distortion.vs">
+      <Filter>forward render\distortion</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="d_base.ps">
+      <Filter>forward render\distortion</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="d_base.vs">
+      <Filter>forward render\distortion</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="distortion_particle.ps">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_particle.ps">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_particle_move_tc.ps">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle.ps">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle_beamtrail.vs">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle_billboard.vs">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle_selected.ps">
+      <Filter>forward render\particles</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="lighting_skin_base.ps">
+      <Filter>forward render\advanced\lighting_skin_base</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="lighting_skin_base.vs">
+      <Filter>forward render\advanced\lighting_skin_base</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="sa_quad.vs">
+      <Filter>common</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color.ps">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color.vs">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color_doted.ps">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color_fixed.ps">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color_top.vs">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="dumb.ps">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="dumb.vs">
+      <Filter>common\color</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="copy_image.ps">
+      <Filter>common\copy_image</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="copy_image.vs">
+      <Filter>common\copy_image</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform.vs">
+      <Filter>common\stub</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform_2pos.vs">
+      <Filter>common\stub</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform_2uv.vs">
+      <Filter>common\stub</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform_t.vs">
+      <Filter>common\stub</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="test.ps">
+      <Filter>common\test</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="test.vs">
+      <Filter>common\test</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_mask.vs">
+      <Filter>common\unsorted</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="combine_1.ps">
+      <Filter>deferred shading render\combine</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="combine_1.vs">
+      <Filter>deferred shading render\combine</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_far.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_mask.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_materials.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_branch.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_mat2.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_mat2_branch.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_mat2_no_mask.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_no_mask.ps">
+      <Filter>deferred shading render\lighting\sun</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="light.vs">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="point_light_accumulator.ps">
+      <Filter>deferred shading render\lighting\shadowless_lights\point</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="spot_light_accumulator.ps">
+      <Filter>deferred shading render\lighting\shadowless_lights\spot</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="capsule_light_accumulator.ps">
+      <Filter>deferred shading render\lighting\shadowless_lights\capsule</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="obb_light_accumulator.ps">
+      <Filter>deferred shading render\lighting\shadowless_lights\obb</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="parallel_light_accumulator.ps">
+      <Filter>deferred shading render\lighting\shadowless_lights\parallel</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="g_base.ps">
+      <Filter>deferred shading render\materials\default</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="g_base.vs">
+      <Filter>deferred shading render\materials\default</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="terrain.ps">
+      <Filter>deferred shading render\terrain</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="terrain.vs">
+      <Filter>deferred shading render\terrain</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_base.vs">
+      <Filter>deferred shading render\shadows</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_base_aref.ps">
+      <Filter>deferred shading render\shadows</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_base_aref.vs">
+      <Filter>deferred shading render\shadows</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_tree_s.vs">
+      <Filter>deferred shading render\shadows</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_aref_bump.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_aref_flat.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_bump.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_bump.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_bump_emiss.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat_emiss.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat_tex_test.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_fr_test.ps">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_fr_test.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_model_bump.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_bump.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_flat.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_s_bump.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_s_flat.vs">
+      <Filter>deferred shading render\obsolete</Filter>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="common.h">
+      <Filter>common</Filter>
+    </HLSL_Compiler>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mblur.h">
+      <Filter>post_process\blur</Filter>
+    </ClInclude>
+    <ClInclude Include="dof_functions.h">
+      <Filter>post_process\depth of field</Filter>
+    </ClInclude>
+    <ClInclude Include="v_particle_beamtrail.h">
+      <Filter>forward render\particles</Filter>
+    </ClInclude>
+    <ClInclude Include="v_particle_sprite.h">
+      <Filter>forward render\particles</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_benchmark_common.h">
+      <Filter>benchmark</Filter>
+    </ClInclude>
+    <ClInclude Include="BranchingShadows.h">
+      <Filter>common\unsorted</Filter>
+    </ClInclude>
+    <ClInclude Include="gbuffer.h">
+      <Filter>deferred shading render</Filter>
+    </ClInclude>
+    <ClInclude Include="hmodel.h">
+      <Filter>deferred shading render\combine</Filter>
+    </ClInclude>
+    <ClInclude Include="hmodel_f.h">
+      <Filter>deferred shading render\combine</Filter>
+    </ClInclude>
+    <ClInclude Include="lighting.h">
+      <Filter>deferred shading render\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="colored_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </ClInclude>
+    <ClInclude Include="directional_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </ClInclude>
+    <ClInclude Include="light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </ClInclude>
+    <ClInclude Include="light_accumulator.h">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </ClInclude>
+    <ClInclude Include="light_ps_helper.h">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </ClInclude>
+    <ClInclude Include="positional_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights</Filter>
+    </ClInclude>
+    <ClInclude Include="point_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights\point</Filter>
+    </ClInclude>
+    <ClInclude Include="spot_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights\spot</Filter>
+    </ClInclude>
+    <ClInclude Include="capsule_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights\capsule</Filter>
+    </ClInclude>
+    <ClInclude Include="obb_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights\obb</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_light.h">
+      <Filter>deferred shading render\lighting\shadowless_lights\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_alpha_test.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_detail.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_diffuse.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_emissive.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_emissive_write.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_fresnel.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_make_tangent_transform.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_normal.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_parallax.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_reflection.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_tc_modifiers.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_tdiffuse_power.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_translucent.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_tspecular_intensity.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="psf_tspecular_power.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="vsf_copy_tc.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="vsf_tangent_space_transform.h">
+      <Filter>deferred shading render\materials\building blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="skin.h">
+      <Filter>deferred shading render\skin</Filter>
+    </ClInclude>
+    <ClInclude Include="terrain.h">
+      <Filter>deferred shading render\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="v2p_terrain.h">
+      <Filter>deferred shading render\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="v_terrain.h">
+      <Filter>deferred shading render\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="shadow.h">
+      <Filter>deferred shading render\shadows</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="defines.def">
+      <Filter>common\defines</Filter>
+    </None>
+    <None Include="defines_full.def">
+      <Filter>common\defines</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="common_cbuffers.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="common_defines.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="common_functions.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="common_iostructs.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="common_policies.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="common_samplers.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="v2p_base.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="v2p_common.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="v_base.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="v_common.h">
+      <Filter>common</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

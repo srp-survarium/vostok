@@ -47,8 +47,6 @@ System::String^ lib_item::full_path_name( )
 objects_library::objects_library( )
 {
 	m_library_cfg		= NEW( configs::lua_config_ptr )();
-	m_tool_library		= gcnew library_items;
-	m_folders			= gcnew library_folders;
 }
 
 objects_library::~objects_library( )
@@ -61,7 +59,7 @@ objects_library::~objects_library( )
 
 library_items^ objects_library::get_all_library_tems( )					
 { 
-	return m_tool_library; 
+	return %m_tool_library; 
 }
 
 lib_item^ objects_library::get_library_item_by_guid( System::Guid guid )
@@ -96,10 +94,10 @@ lib_item^ objects_library::load_lib_item( configs::lua_config_value const& t )
 
 void objects_library::on_commit( lib_item^ lib_item )
 {
-	int idx = m_tool_library->IndexOf	( lib_item );
+	int idx = m_tool_library.IndexOf	( lib_item );
 	
 	if(idx==-1) //edit or new 
-		m_tool_library->Add				( lib_item );
+		m_tool_library.Add				( lib_item );
 }
 
 lib_item^ objects_library::new_lib_item( System::String^ library_name )
@@ -122,7 +120,7 @@ lib_item^ objects_library::new_lib_item( System::String^ library_name )
 
 void objects_library::delete_library_item( lib_item^ itm )
 {
-	m_tool_library->Remove( itm );
+	m_tool_library.Remove( itm );
 	delete					itm;
 }
 
@@ -158,7 +156,7 @@ lib_folder^ objects_library::get_folder_item_by_full_path( System::String^ folde
 			lib_folder^ f		= gcnew lib_folder;
 			f->m_name			= curr;
 			f->m_parent_folder	= result;
-			m_folders->Add		( f );
+			m_folders.Add		( f );
 			result				= f;
 		}else
 			return nullptr;
@@ -171,7 +169,7 @@ lib_folder^ objects_library::get_folder_item_by_full_path( System::String^ folde
 lib_item^ objects_library::add_simple( System::String^ full_name )
 {
 	lib_item^ itm				= gcnew lib_item;
-	m_tool_library->Add			( itm );
+	m_tool_library.Add			( itm );
 
 	System::String^ dir			= System::IO::Path::GetDirectoryName( full_name )->Replace('\\', '/');
 	System::String^ item_name	= System::IO::Path::GetFileName( full_name );
@@ -290,7 +288,7 @@ void objects_library::delete_folder_item( lib_folder^ folder )
 			items_to_delete.Add(itm);
 
 	for each (lib_folder^ f in folders_to_delete)
-		m_folders->Remove( f );
+		m_folders.Remove( f );
 
 	for each (lib_item^ itm in items_to_delete)
 		delete_library_item( itm );

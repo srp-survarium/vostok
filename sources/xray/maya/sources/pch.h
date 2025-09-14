@@ -30,11 +30,6 @@
 #include <d3dx9.h>
 #pragma warning(pop)
 
-namespace std {
-	class ostream;
-	class istream;
-} // namespace std
-
 // what this is for?
 #define NT_PLUGIN
 
@@ -131,8 +126,6 @@ inline T const & identity_( T const & value ) { return value; }
 	}									\
 }
 
-
-
 #define CHK_ST(_status, ret)		\
 {									\
 	if(_status.error()) 					\
@@ -141,9 +134,6 @@ inline T const & identity_( T const & value ) { return value; }
 		ret;							\
 	}								\
 }
-
-//#define CHK_STAT(_status)			\
-//CHK_ST(_status, {})
 
 #define CHK_STAT_R(_status)			\
 CHK_ST(_status, return _status)
@@ -154,14 +144,6 @@ CHK_ST(_status, return _ret_val)
 #define CHK_STAT_RV(_status)		\
 CHK_ST(_status, return)
 
-#define LOG_MAYA_WARNING(expression, warning_string)		\
-{									\
-	if(!expression)					\
-	{								\
-	R_ASSERT_U( false, warning_string );\
-	}								\
-}
-
 void display_info		( MString str );
 void display_info		( pcstr str );
 void display_warning	( MString str );
@@ -169,16 +151,14 @@ void display_warning	( pcstr str );
 void display_error		( MString str );
 bool is_batch_mode		();
 
-//using xray::math::float2;
-//using xray::math::float3;
 using xray::maya::vector;
 using xray::maya::map;
 using xray::maya::set;
 
-typedef vector<u16>					u16vec;
-typedef vector<u32>					u32vec;
-typedef vector<xray::math::float3>		float3vec;
-typedef vector<xray::math::float2>		float2vec;
+typedef vector< u16 >					u16vec;
+typedef vector< u32 >					u32vec;
+typedef vector< xray::math::float3 >	float3vec;
+typedef vector< xray::math::float2 >	float2vec;
 
 #include "helpers.h"
 

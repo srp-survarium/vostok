@@ -28,13 +28,13 @@ namespace stalker2
 		object_collision_geometry_mode_mesh_intersection
 	};
 
-	class object_collision_geometry: public game_object_static
+	class object_collision_geometry: public game_object_
 	{
-		typedef game_object_static		super;
+		typedef game_object_		super;
 	public:
 		typedef buffer_vector< collision::geometry_instance* >	instances_container;
 	public:
-						object_collision_geometry	( game_world& w );
+						object_collision_geometry	( game_scene& w );
 		virtual			~object_collision_geometry	( );
 
 	public:
@@ -57,6 +57,7 @@ namespace stalker2
 		collision::collision_object*					m_anti_collision;
 		collision::geometry*							m_anti_composite_geometry;
 		object_collision_geometry_mode					m_mode;
+		math::float4x4									m_transform;
 
 #ifndef MASTER_GOLD
 	private:

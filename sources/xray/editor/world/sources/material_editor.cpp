@@ -223,12 +223,15 @@ void material_editor::in_constructor( )
 
 void material_editor::query_create_render_resources()
 {
-	render::editor_renderer_configuration render_configuration;
- 	System::Int32 hwnd					= m_view_window->view_handle();
+	render::scene_configuration					scene_configuration;
  	
+ 	System::Int32 hwnd							= m_view_window->view_handle();
+	render::output_window_configuration			window_configuration;
+	window_configuration.m_hwnd					= *(HWND*)&hwnd;
+
  	resources::user_data_variant* temp_data[] = { NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
- 	temp_data[0]->set(render_configuration);
- 	temp_data[2]->set(*(HWND*)&hwnd);
+ 	temp_data[0]->set(scene_configuration);
+ 	temp_data[2]->set(window_configuration);
  	
  	resources::user_data_variant const* data[] = {temp_data[0], temp_data[1], temp_data[2]};
  	

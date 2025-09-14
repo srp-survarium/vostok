@@ -31,9 +31,9 @@ public:
 	virtual void get_properties	( wpf_property_container^ to_container )	override;
 
 	[DisplayNameAttribute("Cycled")]
-	property bool cycled;
+	property bool cycled_animation;
 	[DisplayNameAttribute("Length")]
-	property float length
+	property float animation_length
 	{
 		float	get( ){ return m_animation_length; }
 		void	set( float value )

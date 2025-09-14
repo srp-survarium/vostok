@@ -1,0 +1,46 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 29.03.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_ALPHA_TEST,
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common.h"
+#include "material.h"
+#include "vertex_input.h"
+#include "psf_alpha_test.h"
+
+float3 light_position;
+
+float4 	main			(in vertex_output_struct input): SV_Target0
+{
+	material_parameters parameters 	= get_material_parameters(input);
+	fill_material_parameters		(parameters);
+	
+	float3 world_position 			= mul(m_V2W, float4(parameters.world_view_position.xyz, 1.0f)).xyz;
+	float3 l_pos 					= light_position;
+	
+	if( CONFIG_ALPHA_TEST)
+	{
+		const float alpha		= parameters.color.a * t_base.SampleLevel(s_base, parameters.tc, 0).a;
+		psf_alpha_test			(alpha);
+	}
+	
+	const float dist 				= distance(world_position, light_position);
+	
+	return float4(dist, dist, dist, 1.f);
+}
+
+
+
+
+
+
+
+
+
+

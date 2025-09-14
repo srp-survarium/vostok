@@ -88,12 +88,18 @@ sound_scene_document::~sound_scene_document()
 
 void sound_scene_document::query_create_render_resources()
 {
- 	render::editor_renderer_configuration render_configuration;
- 	render_configuration.m_create_terrain = true;
- 	System::Int32 hwnd = m_view_window->view_handle();
+ 	render::scene_configuration				scene_configuration;
+ 	scene_configuration.m_create_terrain	= true;
+
+	System::Int32 hwnd						= m_view_window->view_handle();
+	render::output_window_configuration		window_configuration;
+	window_configuration.m_hwnd				= *(HWND*)&hwnd;
+
+
  	resources::user_data_variant* temp_data[] = {NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
- 	temp_data[0]->set(render_configuration);
- 	temp_data[2]->set(*(HWND*)&hwnd);
+ 	temp_data[0]->set						(scene_configuration);
+ 	temp_data[2]->set						(window_configuration);
+
  	resources::user_data_variant const* data[] = {temp_data[0], temp_data[1], temp_data[2]};
  	query_result_delegate* q = NEW(query_result_delegate)(gcnew query_result_delegate::Delegate(this, &sound_scene_document::on_render_resources_ready), g_allocator);
  	const_buffer temp_buffer("", 1);

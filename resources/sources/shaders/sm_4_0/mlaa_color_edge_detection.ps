@@ -1,0 +1,50 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 06.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture2D 	t_frame_color;
+
+// http://visual-computing.intel-research.net/publications/papers/2009/mlaa/mlaa.pdf
+// http://igm.univ-mlv.fr/~biri/mlaa-gpu/
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	float2 uv 					= input.uv;
+
+   float3 weights 				= 1;//float3(0.2126,0.7152, 0.0722);
+	
+    float l 					= dot(t_frame_color.SampleLevel(s_accumulator, uv, 0).rgb, weights);
+    float lleft 				= dot(t_frame_color.SampleLevel(s_accumulator, uv, 0, -int2(1, 0)).rgb, weights);
+    float ltop  				= dot(t_frame_color.SampleLevel(s_accumulator, uv, 0, -int2(0, 1)).rgb, weights);
+    float lright 				= dot(t_frame_color.SampleLevel(s_accumulator, uv, 0, int2(1, 0)).rgb, weights);
+    float lbottom  				= dot(t_frame_color.SampleLevel(s_accumulator, uv, 0, int2(0, 1)).rgb, weights);
+	
+	const float threshold 		= 1.1f;
+	
+    float4 delta 				= abs(l.xxxx - float4(lleft, ltop, lright, lbottom));
+    float4 edges 				= step(threshold.xxxx, delta);
+	
+    if (dot(edges, 1.0) == 0.0)
+        discard;
+	
+    return edges;
+}
+
+
+
+
+
+
+
+
+
+

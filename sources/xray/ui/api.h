@@ -44,8 +44,8 @@ typedef memory::doug_lea_allocator_type	allocator_type;
 XRAY_UI_API	world*	create_world		(
 						engine& engine,
 						render::ui::renderer& renderer,
-						memory::base_allocator& allocator,
-						render::scene_view_ptr const& scene_view
+						memory::base_allocator& allocator
+						//render::scene_view_ptr const& scene_view
 					);
 XRAY_UI_API	void	destroy_world		( world*& world);
 

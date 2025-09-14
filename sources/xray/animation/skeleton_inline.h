@@ -46,6 +46,11 @@ inline skeleton_bone const& skeleton::get_root	( ) const
 	return				*pointer_cast<skeleton_bone const*>( static_cast<pcvoid>(this + 1) );
 }
 
+inline skeleton_bone const& skeleton::get_root_bone	( ) const
+{
+	return				*pointer_cast<skeleton_bone const*>( static_cast<pcvoid>(this + 1) );
+}
+
 inline skeleton_bone& skeleton::get_root		( )
 {
 	return				*pointer_cast<skeleton_bone*>( static_cast<pvoid>(this + 1) );

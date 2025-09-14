@@ -48,6 +48,9 @@ public:
 	virtual void		get_surfaces				( render_surface_instances& list, bool visible_only );
 			void		assign_original				( composite_render_model_ptr v );
 	virtual void		set_transform				( float4x4 const& transform );
+	virtual u32			get_surfaces_count			( ) const {return m_instances_count;}
+	virtual void		get_surface_stats			( u32 /*surface_id*/, surface_stats& stats ) const{NOT_IMPLEMENTED();}
+
 protected:
 	composite_render_model_ptr		m_original;
 	u16								m_instances_count;

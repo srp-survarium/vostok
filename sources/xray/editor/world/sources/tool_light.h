@@ -8,11 +8,11 @@
 #define TOOL_LIGHT_H_INCLUDED
 
 #include "tool_base.h"
-#include <xray/render/world.h>
-#include <xray/render/facade/model.h>
-
 
 namespace xray {
+
+namespace collision{class geometry;}
+
 namespace editor {
 
 ref class light_tool_tab;
@@ -33,7 +33,7 @@ public:
 	void				load_library			( );
 	virtual void		save_library			( )	override;
 	virtual tool_tab^	ui						( ) override;
-	collision::geometry*		m_object_geometry;
+	collision::geometry* m_object_geometry;
 
 protected:
 	virtual void		on_library_loaded		( ) override;

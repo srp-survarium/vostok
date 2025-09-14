@@ -7,7 +7,6 @@
 #include "pch.h"
 #include "object_decal.h"
 #include "game_world.h"
-#include "game.h"
 #include <xray/render/world.h>
 
 #include <xray/render/facade/scene_renderer.h>
@@ -20,16 +19,15 @@ namespace stalker2{
 
 static u32 decal_ids					= 0;
 
-object_decal::object_decal(game_world& w):
-	super(w)
+object_decal::object_decal(game_scene& w)
+:super(w)
 {
-	m_scene								= m_game_world.get_game().get_render_scene();	
 	m_decal_id							= decal_ids++;
 }
 
 object_decal::~object_decal()
 {
-	m_game_world.get_game().renderer().scene().remove_decal(m_scene, m_decal_id);
+	m_game_scene.renderer().scene().remove_decal(m_game_scene.get_render_scene(), m_decal_id);
 }
 
 void object_decal::load( configs::binary_config_value const& t )
@@ -94,8 +92,8 @@ void object_decal::material_ready( resources::queries_result& data, xray::render
 	
 	if(data.is_successful())
 	{
-		m_game_world.get_game().renderer().scene().update_decal(
-			m_scene, 
+		m_game_scene.renderer().scene().update_decal(
+			m_game_scene.get_render_scene(), 
 			m_decal_id, 
 			xray::render::decal_properties(
 				m_transform,

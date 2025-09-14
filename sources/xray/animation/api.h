@@ -66,7 +66,7 @@ typedef memory::doug_lea_allocator_type				allocator_type;
 
 XRAY_ANIMATION_API	world*							create_world				(
 														engine& engine,
-														render::scene_ptr const& test_scene,
+//														render::scene_ptr const& test_scene,
 														render::scene_renderer* scene_renderer,
 														render::debug::renderer* debug_renderer
 													);

@@ -8,6 +8,7 @@
 #include "model_manager.h"
 #include <xray/render/engine/model_format.h>
 #include "render_model_static.h"
+#include "render_model_grass.h"
 #include "terrain_render_model.h"
 #include "skeleton_mesh_gpu_skinning_4weights.h"
 #include "render_model_user.h"
@@ -68,6 +69,9 @@ render_surface* create_render_surface(u16 type)
 	case mt_user_mesh_wire:
 		result = NEW(user_render_surface_wire)();
 		break;
+	case mt_grass_mesh:
+		result = NEW(grass_render_surface)();
+		break;
 
 	default:
 		NODEFAULT();
@@ -82,6 +86,10 @@ render_model* create_render_model(u16 type)
 	{
 	case mt_static_mesh:
 		result = NEW(static_render_model)();
+		break;
+
+	case mt_grass_mesh:
+		result = NEW(grass_render_model)();
 		break;
 
 	case mt_terrain_cell:

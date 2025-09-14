@@ -15,6 +15,9 @@
 
 #include <xray/math_randoms_generator.h>
 
+#if 0
+
+
 static xray::math::random32 randomizer(100);
 static u32 const random_max = 65535;
 
@@ -384,3 +387,6 @@ void grass_world::test_grass_data_loaded(xray::resources::queries_result& result
 
 } // namespace render
 } // namespace xray
+
+
+#endif // #if 0

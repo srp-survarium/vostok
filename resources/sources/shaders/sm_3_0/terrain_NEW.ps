@@ -1,0 +1,59 @@
+#include "common.h"
+#include "terrain.h"
+
+uniform sampler2D       s_tile;             	//
+
+//const float4 tile_count = float4	( 4.h, 4.h, 1.f/4.f, 1.f/4.f);
+
+/*
+half2 get_cell_coords( half index)
+{
+	half2 res;
+	res.x = floor(index*16.h);
+	res.y = floor((index*16.h-res.x)*16.h);
+	
+	return res;
+}
+*/
+
+half2 get_cell_coords( half index)
+{
+	half2 res;
+	res.y = floor((index)/4.h);
+	res.x = floor((index)-(res.y*4.h));
+
+//	half2 res;
+//	res.x = frac(index/4.h);
+//	res.y = index/4.h-res.x;
+//	res.x *= 4.h;
+	
+	return res;
+}
+
+#define EPS	(0.0001f)
+
+f_deffer main( terrain_vert_out input ) 
+{
+	float2 	tmp_tc = frac(input.tc0);
+
+	half4 c0 = 	tex2D( s_tile, (tmp_tc/4.f) + get_cell_coords(input.tc_inds.x*255.f+EPS)/4.h ); 
+	
+			tmp_tc = frac(input.tc1);
+	half4 c1 = 	tex2D( s_tile, (tmp_tc/4.f) + get_cell_coords(input.tc_inds.y*255.f+EPS)/4.h ); 
+	
+			tmp_tc = frac(input.tc2);
+	half4 c2 = 	tex2D( s_tile, (tmp_tc/4.f) + get_cell_coords(input.tc_inds.z*255.f+EPS)/4.h ); 
+
+	half3 tex_c = (c0.rgb*input.c0.r + c1.rgb*input.c0.g + c2.rgb*input.c0.b);
+		
+	half a_grey = 1-(input.c0.r+input.c0.g+input.c0.b);	
+	
+	half3 c =  (tex_c + (a_grey*0.5)) * input.c1.rgb * 2;
+
+	f_deffer	O;	
+	O.Ne          	= half4		( normalize(input.N.xyz), 					1.h );
+	O.position    	= half4 	( input.P.xyz + O.Ne.xyz*def_virtualh/2.h,	0.h	);
+	O.C				= half4		( c.rgb,									0.h	);	// OUT: rgb.gloss
+
+	return O;
+}

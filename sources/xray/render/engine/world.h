@@ -8,7 +8,7 @@
 #define XRAY_RENDER_ENGINE_PLATFORM_H_INCLUDED
 
 #if XRAY_PLATFORM_WINDOWS
-#	include <xray/render/engine/world_dx11.h>
+#	include <xray/render/engine/world_pc.h>
 #elif XRAY_PLATFORM_XBOX_360 // #if XRAY_PLATFORM_WINDOWS
 #	include <xray/render/engine/world_xbox360.h>
 #elif XRAY_PLATFORM_PS3 // #elif XRAY_PLATFORM_XBOX360

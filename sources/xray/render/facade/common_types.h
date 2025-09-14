@@ -14,16 +14,31 @@ namespace render {
 // Editor renderer configuration
 ///////////////////////////////////////////////////////////////////////////
 
-struct editor_renderer_configuration
+struct scene_configuration
 {
-	editor_renderer_configuration():
-		m_create_terrain	   (false),
-		m_create_particle_world(false) 
+	scene_configuration():
+		m_create_terrain		(false),
+		m_create_particle_world	(false),
+		m_create_speedtree_world(false),
+		m_create_grass_world	(false),
+		m_sky_enabled			(false)
 	{}
 	bool m_create_terrain			:1;
 	bool m_create_particle_world	:1;
+	bool m_create_speedtree_world	:1;
+	bool m_create_grass_world		:1;
+	bool m_sky_enabled				:1;
 };
 
+struct output_window_configuration
+{
+	output_window_configuration():
+		m_create_flash_renderer(false),
+		m_hwnd(NULL) 
+	{}
+	bool	m_create_flash_renderer;
+	void*	m_hwnd;
+};
 
 ////////////////////////////////////////////////////////////////////////////
 // Terrain defines

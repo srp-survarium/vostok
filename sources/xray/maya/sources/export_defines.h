@@ -19,8 +19,8 @@
 #define tootle_opt_flag			"-t"
 #define tootle_opt_flag_l		"-tootle"
 
-#define tootle_opt_hq_flag		"-hq"
-#define tootle_opt_hq_flag_l	"-hq_l"
+#define tootle_opt_hq_flag		"-thq"
+#define tootle_opt_hq_flag_l	"-thq_l"
 
 #define no_out_to_db_flag		"-ndb"
 #define no_out_to_db_flag_l		"-ndb_l"

@@ -1,0 +1,105 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 17.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_TDIFFUSE,
+		CONFIG_TTRANSPARENCY,
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+#include "material.h"
+#include "vertex_input.h"
+
+uniform float4 volume_color;
+uniform float4 screen_res; // Screen resolution (x-Width,y-Height, zw - 1/resolution)
+
+float4 mode_direction_and_uv_tile;
+
+float attenuation_scale;
+
+static const float far_clip = near_far_invn_invf.y;
+Texture2D t_sphere_falloff;
+
+Texture2D t_transparency;
+float 	  solid_transparency;
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+
+	float4 out_color		= 0;
+	
+	float3 position			= parameters.world_view_position.xyz;
+	float3 normal 			= float3(0.0f, 0.0f, 1.0f);
+	
+	float3x3 tangent_trans	= mul(m_V2W, parameters.tangent_to_viewspace);
+	
+	float2 tc_proj			= input.homogeneous_position.xy / screen_res.xy;
+	
+	float3 view_direction 	= normalize( eye_position - mul(m_V2W, float4(position,1)) );
+	float3 view_direction_tangent_space	= normalize( mul(view_direction, tangent_trans) );
+	
+	float3 reflection   	= reflect(view_direction_tangent_space, normal);
+	reflection.z 			= pow((reflection.z + 8.0f) * 0.8f, 0.5f);
+	
+	float pixel_depth 		= position.z;
+	float depth_diff 		= saturate(0.75f * (gbuffer_read_frame_depth(tc_proj)-pixel_depth));
+	
+	float attenuation		= saturate(attenuation_scale * pow(pixel_depth,1.0f));
+	
+	float alpha 			= saturate(attenuation * depth_diff * volume_color.a * pow(t_sphere_falloff.Sample(s_base, float2(reflection.x / reflection.z + 0.5, reflection.y / reflection.z + 0.5)).r,2));
+	
+	float2 moved_uv			= mode_direction_and_uv_tile.w * (parameters.tc + mode_direction_and_uv_tile.xy * scene_time);
+	
+	if (CONFIG_TTRANSPARENCY)
+		alpha 				*= t_transparency.Sample( s_linear, moved_uv ).a;
+	else
+		alpha				*= solid_transparency;
+	
+	float3 dust_color		= (1.0f).xxx;
+	
+	if (CONFIG_TDIFFUSE)
+		dust_color			= t_diffuse.Sample(s_base, moved_uv).rgb;
+							
+	out_color.rgb			= dust_color * volume_color.rgb;
+	out_color.a				= alpha;
+	
+	return out_color;
+}
+
+/*
+float4 main ( v2p_base input) : SV_TARGET0
+{
+	float4 out_color	= 0;
+	
+	float3 position		= input.position;
+	float3 normal 		= normalize( input.normal);
+	
+	float2 tc_proj		= input.hposition.xy / screen_res.xy;
+	
+	float3 scene_position;
+	float2 temp;
+	gbuffer_read_rt_position(tc_proj, float3(1,1,1), scene_position, temp.x, temp.y);
+	
+	float depth			= scene_position.z;
+	
+	float pixel_depth 	= abs(position.z / far_clip);
+	float frame_depth 	= abs(depth);
+	float depth_diff 	= saturate(0.75f * far_clip * abs(pixel_depth-frame_depth));
+	
+	float attenuation	= saturate(pow(far_clip * pixel_depth,2.0f));
+	
+	float alpha			= attenuation * volume_color.a * depth_diff * pow(dot(-normalize(input.position), normal),3);
+	
+	out_color.rgb		= volume_color;
+	out_color.a			= alpha;
+	
+	return out_color;
+}
+*/

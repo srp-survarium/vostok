@@ -232,6 +232,8 @@ void material::config_loaded( resources::queries_result& result )
 	R_ASSERT(m_name->Length!=0);
 	m_old_name			= m_name;
 
+	config->get_root().copy();
+
 	load_from_config	( config );
 }
 

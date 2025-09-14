@@ -1,0 +1,29 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 16.12.2010
+//	Author		: Dmitriy Iassenev
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		CONFIG_SHADOWED_LIGHT,
+*/
+
+#include "light_ps_helper.h"
+#include "parallel_light.h"
+#include "common_iostructs.h"	// move v2p_sun to appropriate header
+
+light_accumulator main			( v2p_sun input ) : SV_TARGET
+{
+	return
+		get_light_accumulator(
+			light_color,
+			parallel_light(
+				gbuffer_read(
+					input.Tex0,
+					input.eye_ray
+				),
+				input.Tex0
+			)
+		);
+}

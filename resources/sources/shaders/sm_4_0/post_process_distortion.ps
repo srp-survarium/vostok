@@ -1,0 +1,39 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 15.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common.h"
+
+uniform float distortion_scale;
+Texture2D t_frame_color;
+
+#include "material.h"
+#include "vertex_input.h"
+
+float4 	main			(in vertex_output_struct input) : SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float2 distortion  = t_base.Sample(s_base, parameters.tc).rg * 2 - 1;
+	float3 frame_color = t_frame_color.Sample(s_accumulator, parameters.tc + distortion_scale * distortion / 255.0f).rgb;
+	
+	return float4(frame_color.rgb,1);
+}
+
+
+
+
+
+
+
+
+
+

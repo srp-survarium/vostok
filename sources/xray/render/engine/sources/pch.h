@@ -14,12 +14,16 @@
 #include <xray/macro_platform.h>
 
 #if XRAY_PLATFORM_WINDOWS
-#	define USE_DX10	0
-#	if USE_DX10
-#		define XRAY_LOG_MODULE_INITIATOR	"render_dx10"
-#	else // #if USE_DX10
-#		define XRAY_LOG_MODULE_INITIATOR	"render_dx11"
-#	endif // #if USE_DX10
+#	ifdef XRAY_OPENGL
+#		define XRAY_LOG_MODULE_INITIATOR		"render_pc_opengl"
+#	else // #ifdef XRAY_OPENGL
+#		define USE_DX10	0
+#		if USE_DX10
+#			define XRAY_LOG_MODULE_INITIATOR	"render_pc_dx10"
+#		else // #if USE_DX10
+#			define XRAY_LOG_MODULE_INITIATOR	"render_pc_dx11"
+#		endif // #if USE_DX10
+#	endif // #ifdef XRAY_OPENGL
 #elif XRAY_PLATFORM_XBOX_360 // #if XRAY_PLATFORM_WINDOWS
 #	define XRAY_LOG_MODULE_INITIATOR		"render_xbox360"
 #elif XRAY_PLATFORM_PS3 // #elif XRAY_PLATFORM_XBOX_360

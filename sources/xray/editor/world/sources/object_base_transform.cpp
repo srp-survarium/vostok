@@ -10,6 +10,7 @@
 #include "level_editor.h"
 #include "project.h"
 #include "command_set_object_transform.h"
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #	include <xray/collision/space_partitioning_tree.h>

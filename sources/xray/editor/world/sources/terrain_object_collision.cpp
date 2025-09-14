@@ -9,6 +9,7 @@
 #include "terrain_collision_geometry.h"
 #include "editor_world.h"
 #include <xray/editor/base/collision_object_types.h>
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #include <xray/collision/collision_object.h>
@@ -17,12 +18,6 @@
 
 namespace xray {
 namespace editor {
-
-void terrain_node::destroy_collision()
-{
-	if( m_collision->initialized() )
-		m_collision->destroy	( g_allocator );
-}
 
 void terrain_node::initialize_collision()
 {

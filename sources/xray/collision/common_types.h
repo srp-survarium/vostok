@@ -8,12 +8,6 @@
 #define XRAY_COLLISION_COMMON_TYPES_H_INCLUDED
 
 namespace xray {
-namespace render {
-namespace debug {
-	class renderer;
-} // namespace debug
-} // namespace render
-
 namespace collision {
 
 class object;

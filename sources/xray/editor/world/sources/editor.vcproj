@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="editor"
 	ProjectGUID="{F9523302-4516-4FEC-863B-01031632EC37}"
 	RootNamespace="xray.editor"
@@ -83,7 +83,7 @@
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)stlport/libraries/$(PlatformName)&quot;"
 				EmbedManagedResourceFile=""
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
@@ -284,7 +284,7 @@
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)/stlport/libraries/$(PlatformName)&quot;"
 				EmbedManagedResourceFile=""
 				DelayLoadDLLs=""
 				AssemblyLinkResource=""
@@ -460,7 +460,7 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{AC5DD91F-CE10-4E05-B48A-E1DDEC5CCD9C}"
-			RelativePathToProject=".\xray\engine\pc\sources\engine_pc.vcproj"
+			RelativePathToProject=".\xray\engine\pc\dx11\sources\engine_pc_dx11.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{C75532C4-765B-418E-B09B-46D36B2ABDB1}"
@@ -475,7 +475,7 @@
 			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
-			RelativePath="c:\Program Files (x86)\Microsoft Visual Studio 9.0\Visual Studio Tools for Office\PIA\Office12\Microsoft.Office.Interop.Excel.dll"
+			RelativePath="Microsoft.Office.Interop.Excel.dll"
 			AssemblyName="Microsoft.Office.Interop.Excel, Version=12.0.0.0, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL"
 			MinFrameworkVersion="0"
 		/>

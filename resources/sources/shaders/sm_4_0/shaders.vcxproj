@@ -1,0 +1,517 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Master Gold|Win32">
+      <Configuration>Master Gold</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>shaders - Shader Model 4.0</ProjectName>
+    <ProjectGuid>{1BEF05DB-4870-46D4-AA52-B49F745110D0}</ProjectGuid>
+    <RootNamespace>shaders</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="..\..\..\..\tools\msvs\HLSL Compiler.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">$(SolutionDir)../binaries/$(Platform)/intermediates/$(Configuration)/$(ProjectName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">$(SolutionDir)../binaries/$(Platform)/intermediates/$(Configuration)/$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../binaries/$(Platform)/intermediates/$(Configuration)/$(ProjectName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../binaries/$(Platform)/intermediates/$(Configuration)/$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">
+    <PreBuildEvent>
+      <Message>Compiling...</Message>
+      <Command>rem </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Message>Compiling...</Message>
+      <Command>rem </Command>
+    </PreBuildEvent>
+    <HLSL_Compiler>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+    </HLSL_Compiler>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <HLSL_Compiler Include="image.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_samplers.h</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_samplers.h</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="ui.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="ui_fill.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="ui_font.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_grid.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_grid.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_iostructs.h</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_iostructs.h</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_line.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_line.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="system_line_top.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="sky2.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="sky2.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="post_process_distortion.ps" />
+    <HLSL_Compiler Include="gather_bloom.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="gather_bloom.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="blur.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="blur_horizontally.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="blur_vertically.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="complex_post_process_blend.ps" />
+    <HLSL_Compiler Include="forward_base.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_base.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_lighting.ps" />
+    <HLSL_Compiler Include="forward_lighting.vs" />
+    <HLSL_Compiler Include="forward_volume_cone_base.ps" />
+    <HLSL_Compiler Include="forward_volume_sphere_base.ps" />
+    <HLSL_Compiler Include="apply_distortion.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="apply_distortion.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="d_base.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="d_base.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;v_common.h;v_base.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;v_common.h;v_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="distortion_particle.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_particle.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="forward_particle_move_tc.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;psf_tc_modifiers.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;psf_tc_modifiers.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">v2p_common.h;v2p_base.h;</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">v2p_common.h;v2p_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle_beamtrail.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;v_particle_beamtrail.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;v_particle_beamtrail.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle_billboard.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">v_particle_sprite.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">v_particle_sprite.h;v2p_common.h;v2p_base.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="particle_selected.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="lighting_skin_base.ps" />
+    <HLSL_Compiler Include="lighting_skin_base.vs" />
+    <HLSL_Compiler Include="sa_quad.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color_doted.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color_fixed.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="color_top.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="dumb.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="dumb.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="copy_image.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="copy_image.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_iostructs.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_iostructs.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform_2pos.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_iostructs.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_iostructs.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform_2uv.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_iostructs.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_iostructs.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="stub_notransform_t.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_iostructs.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_iostructs.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="test.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="test.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_iostructs.h</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_iostructs.h</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_mask.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="combine_1.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;hmodel.h;gbuffer.h</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;hmodel.h;gbuffer.h</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="combine_1.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_far.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_mask.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;gbuffer.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;gbuffer.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_materials.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_branch.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_mat2.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_mat2_branch.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_mat2_no_mask.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="accum_sun_near_no_mask.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="light.vs" />
+    <HLSL_Compiler Include="point_light_accumulator.ps" />
+    <HLSL_Compiler Include="spot_light_accumulator.ps" />
+    <HLSL_Compiler Include="capsule_light_accumulator.ps" />
+    <HLSL_Compiler Include="obb_light_accumulator.ps" />
+    <HLSL_Compiler Include="parallel_light_accumulator.ps" />
+    <HLSL_Compiler Include="g_base.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;psf_diffuse.h;psf_alpha_test.h;psf_detail.h;psf_normal.h;psf_parallax.h;psf_translucent.h;psf_tspecular_intensity.h;[sf_tspecular_power.h;psf_tdiffuse_power.h;psf_emissive.h;psf_make_tangent_transform.h;psf_reflection.h;psf_fresnel.h;v2p_base.h;gbuffer.h;psf_emissive_write.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;psf_diffuse.h;psf_alpha_test.h;psf_detail.h;psf_normal.h;psf_parallax.h;psf_translucent.h;psf_tspecular_intensity.h;[sf_tspecular_power.h;psf_tdiffuse_power.h;psf_emissive.h;psf_make_tangent_transform.h;psf_reflection.h;psf_fresnel.h;v2p_base.h;gbuffer.h;psf_emissive_write.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="g_base.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;vsf_tangent_space_transform.h;vsf_copy_tc.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;vsf_tangent_space_transform.h;vsf_copy_tc.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="terrain.ps">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;gbuffer.h;psf_normal.h;psf_parallax.h;psf_make_tangent_transform.h;v2p_terrain.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;gbuffer.h;psf_normal.h;psf_parallax.h;psf_make_tangent_transform.h;v2p_terrain.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="terrain.vs">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;vsf_tangent_space_transform.h;v_terrain.h;v2p_terrain.h;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;vsf_tangent_space_transform.h;v_terrain.h;v2p_terrain.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_base.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_base_aref.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_base_aref.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="shadow_direct_tree_s.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shadow_direct_tree.vs;</AdditionalDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">shadow_direct_tree.vs;</AdditionalDependencies>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_aref_bump.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_aref_flat.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_bump.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_bump.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_bump_emiss.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat_emiss.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_base_flat_tex_test.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_fr_test.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_fr_test.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_model_bump.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_bump.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_flat.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_s_bump.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+    <HLSL_Compiler Include="deffer_tree_s_flat.vs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">true</ExcludedFromBuild>
+    </HLSL_Compiler>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mblur.h" />
+    <ClInclude Include="dof_functions.h" />
+    <ClInclude Include="v_particle_beamtrail.h" />
+    <ClInclude Include="v_particle_sprite.h" />
+    <ClInclude Include="graphics_benchmark_common.h" />
+    <HLSL_Compiler Include="common.h">
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h</AdditionalDependencies>
+    </HLSL_Compiler>
+    <CustomBuild Include="common_cbuffers.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="common_defines.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="common_functions.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="common_iostructs.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="common_policies.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="common_samplers.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="v2p_base.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="v2p_common.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="v_base.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="v_common.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Master Gold|Win32'">common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <ClInclude Include="BranchingShadows.h" />
+    <ClInclude Include="gbuffer.h" />
+    <ClInclude Include="hmodel.h" />
+    <ClInclude Include="hmodel_f.h" />
+    <ClInclude Include="lighting.h" />
+    <ClInclude Include="colored_light.h" />
+    <ClInclude Include="directional_light.h" />
+    <ClInclude Include="light.h" />
+    <ClInclude Include="light_accumulator.h" />
+    <ClInclude Include="light_ps_helper.h" />
+    <ClInclude Include="positional_light.h" />
+    <ClInclude Include="point_light.h" />
+    <ClInclude Include="spot_light.h" />
+    <ClInclude Include="capsule_light.h" />
+    <ClInclude Include="obb_light.h" />
+    <ClInclude Include="parallel_light.h" />
+    <ClInclude Include="psf_alpha_test.h" />
+    <ClInclude Include="psf_detail.h" />
+    <ClInclude Include="psf_diffuse.h" />
+    <ClInclude Include="psf_emissive.h" />
+    <ClInclude Include="psf_emissive_write.h" />
+    <ClInclude Include="psf_fresnel.h" />
+    <ClInclude Include="psf_make_tangent_transform.h" />
+    <ClInclude Include="psf_normal.h" />
+    <ClInclude Include="psf_parallax.h" />
+    <ClInclude Include="psf_reflection.h" />
+    <ClInclude Include="psf_tc_modifiers.h" />
+    <ClInclude Include="psf_tdiffuse_power.h" />
+    <ClInclude Include="psf_translucent.h" />
+    <ClInclude Include="psf_tspecular_intensity.h" />
+    <ClInclude Include="psf_tspecular_power.h" />
+    <ClInclude Include="vsf_copy_tc.h" />
+    <ClInclude Include="vsf_tangent_space_transform.h" />
+    <ClInclude Include="skin.h" />
+    <ClInclude Include="terrain.h" />
+    <ClInclude Include="v2p_terrain.h" />
+    <ClInclude Include="v_terrain.h" />
+    <ClInclude Include="shadow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="defines.def" />
+    <None Include="defines_full.def" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\..\..\tools\msvs\HLSL Compiler.targets" />
+  </ImportGroup>
+</Project>

@@ -1,0 +1,68 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 20.05.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_LOOP_UNROLLING,
+*/
+
+#include "common.h"
+
+struct	v2p_TL0uv_SL
+{
+	float4	Color			: COLOR;
+	float4 	HPos			: SV_Position;	// Clip-space position 	(for rasterization)
+	float4	LineStartP		: TEXCOORD0;
+	float	Shift			: TEXCOORD1;
+	uint	Pattern			: TEXCOORD2;
+};
+
+static const uint pattern_length = 8;
+
+uniform float2 screen_res;
+
+//uniform int is_2d_line;
+
+float4 main( v2p_TL0uv_SL vin) : SV_TARGET
+{	
+	// pixel screen position
+	float2 sPos 	= vin.HPos.xy;
+	
+	// line start screen position
+	float2 sLSPos 	= (vin.LineStartP.xy / vin.LineStartP.w  * float2(0.5,-0.5) + 0.5 ) * screen_res;
+	
+	// calc pattern index with shift
+	float pattern_index = frac( max(abs(sPos.x-sLSPos.x), abs(sPos.y-sLSPos.y)) / (float)pattern_length ) * ((float)pattern_length) + vin.Shift;
+	
+	// set it to [0;7]
+	if ( (uint)pattern_index > 7.0 )
+		pattern_index = pattern_index - 8.0;
+	
+	// read right 8 bits
+	bool is_clip = false;
+	uint current_pattern = vin.Pattern;
+	
+	UNROLL
+	for ( uint i = 0; i < pattern_length; i++)
+	{
+		if ( (uint)pattern_index == pattern_length - 1 - i )
+			is_clip = current_pattern % 2 != 0;
+		
+		current_pattern /= 2;
+	}
+	
+	clip( is_clip - 0.5 );
+	
+	return vin.Color;
+}
+
+
+
+
+
+
+
+

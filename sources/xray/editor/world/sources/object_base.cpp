@@ -13,6 +13,7 @@
 #include "project.h"
 #include "command_set_object_transform.h"
 #include "lua_config_value_editor.h"
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #	include <xray/render/facade/editor_renderer.h>
@@ -226,6 +227,12 @@ level_editor^ object_base::get_level_editor( )
 	return m_owner_tool->get_level_editor();
 }
 
+void object_base::destroy_collision	( )
+{
+	if ( m_collision->initialized() )
+		m_collision->destroy( g_allocator );
+}
+
 object_base^ create_object( level_editor^ le, configs::lua_config_value cfg )
 {
 	System::String^ tool_name	= gcnew System::String(cfg["tool_name"]);
@@ -281,6 +288,12 @@ System::String^	 object_base::check_valid_library_name( System::String^ name )
 
 	R_ASSERT(result!=nullptr);
 	return result;
+}
+
+void object_base::gather_statistic( scene_statistic^ stats )
+{
+	stats->add_statistic(System::String::Format("objects:{0}",owner_tool()->name()), 1);
+	stats->add_statistic("objects:total", 1);
 }
 
 } // namespace editor

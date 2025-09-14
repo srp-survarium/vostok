@@ -13,7 +13,6 @@
 namespace stalker2{
 
 class logic_action;
-class game_world;
 class camera_director;
 
 class free_fly_camera :		public game_camera,
@@ -21,14 +20,14 @@ class free_fly_camera :		public game_camera,
 {
 	typedef	game_camera super;
 public:
-						free_fly_camera	( game_world& w );
+						free_fly_camera	( game_scene& w, camera_director_ptr& cd );
 
 	virtual	bool		on_keyboard_action	( input::world* input_world, input::enum_keyboard key, input::enum_keyboard_action action );
 	virtual	bool		on_gamepad_action	( input::world* input_world, input::gamepad_button button, input::enum_gamepad_action action );
 	virtual	bool		on_mouse_key_action	( input::world* input_world, input::mouse_button button, input::enum_mouse_key_action action );
 	virtual	bool		on_mouse_move		( input::world* input_world, int x, int y, int z );
-	
 	virtual int			input_priority		( ) {return 10;}
+
 	virtual void		tick				( );
 	virtual void		on_activate			( camera_director* cd );
 	virtual void		on_focus			( bool b_focus_enter);
@@ -40,14 +39,13 @@ protected:
 			bool		mouse_event_present	( int e );
 
 protected:
-	camera_director_ptr		m_camera_director;
-	u32						m_start_time_ms;
+	camera_director_ptr&	m_camera_director;
+	u32						m_prev_time_ms;
+	float					m_prev_delta_sec;
 	vector<int>				m_keyb_events;
 	vector<int>				m_mouse_events;
 	float3					m_mouse_move;
 };
-
-class game_world;
 
 } // namespace stalker2
 

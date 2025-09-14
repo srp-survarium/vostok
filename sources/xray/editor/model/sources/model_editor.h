@@ -63,6 +63,7 @@ public:
 	System::String^							get_resources_path				( ) { return m_resources_path; }
 
 	void									execute_action					( System::String^ action_name );
+
 private: // actions
 	editor_base::editor_control_base^		m_active_control;
 	editor_base::tool_window_holder^		m_holder;
@@ -72,7 +73,7 @@ private: // actions
 	void									register_actions				( );
 	void									action_open_solid_model			( );
 	void									action_open_tree_model			( );
-	void									action_new_composite_model		( );
+//	void									action_new_composite_model		( );
 
 	void									apply_button_Click				( System::Object^  sender, System::EventArgs^  e);
 	void									cancel_button_Click				( System::Object^  sender, System::EventArgs^  e);
@@ -85,6 +86,7 @@ private: // actions
 	void									set_default_layout				( );
 	IDockContent^							find_dock_content				( System::String^ );
 	System::String^							registry_key_name				( );
+
 private:
 	render::world&							m_render_world;
 	editor_base::input_engine^				m_input_engine;

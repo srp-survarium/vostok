@@ -30,22 +30,33 @@ XRAY_CORE_API bool		create_ring		( geom_vertices_type& vertices, geom_indices_ty
 
 #pragma warning(push)
 #pragma warning(disable:4251)
+
+struct geometry_collector_vert{
+	math::float3	p;
+	math::float3	n;
+	math::float2	uv;
+	bool is_equal( geometry_collector_vert const& other ) const;
+};
+
 struct XRAY_CORE_API geometry_collector
 {
 						geometry_collector	( memory::base_allocator& a);
 
-	void					add_vertex			( math::float3 const& p );
-	void					add_triangle		( math::float3 const& p0, math::float3 const& p1, math::float3 const& p2 );
-	bool					write_obj_file		( pcstr fn, float const scale );
+	void					add_vertex	( geometry_collector_vert const& v );
+	void					add_triangle		(	geometry_collector_vert const& v0,
+													geometry_collector_vert const& v1, 
+													geometry_collector_vert const& v2 );
+
+	bool					write_obj_file		( pcstr fn, float const scale, bool save_uv, bool save_norm );
 
 protected:	
-	typedef vectora<math::float3>	vertices_type;
-	typedef vectora<u32>			indices_type;
+	typedef vectora<geometry_collector_vert>	vertices_type;
+	typedef vectora<u32>						indices_type;
 
 	vertices_type			m_vertices;
 	indices_type			m_indices;
 
-	int						find_vertex				( math::float3 const& pos ) const;
+	int						find_vertex				( geometry_collector_vert const& v ) const;
 	struct lookup_item
 	{
 		float		square_magnitude;

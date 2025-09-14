@@ -18,11 +18,11 @@ namespace collision {
 
 namespace stalker2 {
 
-class object_volumetric_sound : public game_object_static
+class object_volumetric_sound : public game_object_
 {
-	typedef game_object_static				super;
+	typedef game_object_				super;
 public:
-					object_volumetric_sound	( game_world& w );
+					object_volumetric_sound	( game_scene& w );
 	virtual			~object_volumetric_sound( );
 	virtual void	load					( configs::binary_config_value const& t );
 	virtual void	load_contents			( );

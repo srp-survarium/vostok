@@ -1,0 +1,31 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 03.11.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+struct vertex_output_struct
+{
+	float4 hposition			: SV_Position;
+	float3 world_position		: TEXCOORD0;
+};
+
+Texture3D 	t_clouds;
+
+float4 main(in vertex_output_struct input): SV_TARGET0
+{
+	float3 color	=	t_clouds.SampleLevel(s_accumulator, input.world_position / 10.0f, 0).xyz;
+	return float4	(color, 0.5f);
+}
+
+
+
+
+
+
+
+
+
+

@@ -8,20 +8,8 @@
 #include "object_composite.h"
 #include "tool_composite.h"
 #include "level_editor.h"
-#include "project_items.h"
-#include "lua_config_value_editor.h"
-#include "attribute.h"
 #include "project.h"
 #include "le_transform_control_helper.h"
-#include <xray/editor/base/collision_object_types.h>
-
-#pragma managed( push, off )
-#include <xray/editor/world/engine.h>
-#include <xray/collision/collision_object.h>
-#include <xray/render/facade/debug_renderer.h>
-#pragma managed( pop )
-
-using namespace System;
 
 namespace xray{
 namespace editor{
@@ -73,12 +61,6 @@ m_tool_composite		( t )
 
 object_composite::~object_composite( )
 {
-}
-
-void object_composite::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( &debug::g_mt_allocator );
 }
 
 void object_composite::set_visible( bool bvisible )
@@ -331,12 +313,12 @@ wpf_controls::property_container^ object_composite::get_property_container( )
 
 	get_public_properties_container( cont );
 
-	for each (composite_object_item^ itm in m_objects)
-	{
-		wpf_controls::property_container^ item_container		= itm->m_object->get_property_container( );
-		item_container->owner									= itm->m_object;		
-		cont->properties->add_container			( itm->m_object->get_name(), "objects in group", "no description", item_container )->is_read_only = true;	
-	}	
+	//for each (composite_object_item^ itm in m_objects)
+	//{
+	//	wpf_controls::property_container^ item_container		= itm->m_object->get_property_container( );
+	//	item_container->owner									= itm->m_object;		
+	//	cont->properties->add_container			( itm->m_object->get_name(), "objects in group", "no description", item_container )->is_read_only = true;	
+	//}	
 	return cont;
 }
 
@@ -356,8 +338,8 @@ wpf_controls::property_container^ object_composite::get_object_property_containe
 			if(desc->is_read_only)
 				continue;
 
-			wpf_controls::property_descriptor^ chk = 
-				gcnew wpf_controls::property_descriptor(
+			property_descriptor^ chk = 
+				gcnew property_descriptor(
 					"public check",
 					gcnew wpf_controls::dictionary_item_property_value< System::String^, bool >(public_props, desc->full_name)
 				);
@@ -379,6 +361,13 @@ object_base^ object_composite::get_child_by_name	( System::String^ name )
 	return nullptr;
 }
 
+void object_composite::gather_statistic( scene_statistic^ stats )
+{
+//	super::gather_statistic	( stats );
+
+	for each ( composite_object_item^ item in m_objects )
+		item->m_object->gather_statistic( stats );
+}
 
 } //namespace editor
 } //namespace xray

@@ -12,7 +12,8 @@
 namespace xray {
 namespace render {
 
-struct editor_renderer_configuration;
+struct scene_configuration;
+struct output_window_configuration;
 
 class scene;
 class scene_view;
@@ -33,13 +34,13 @@ public:
 	void		remove_render_output_window	( render_output_window* in_output_window);
 
 	
-	scene*		create_scene	( xray::render::editor_renderer_configuration const& renderer_configuration);
+	scene*		create_scene	( xray::render::scene_configuration const& renderer_configuration);
 	void		destroy			( scene* scene);
 
 	scene_view*	create_scene_view();
 	void		destroy			( scene_view* view);
 
-	render_output_window*	create_render_output_window( HWND window);
+	render_output_window*		create_render_output_window( xray::render::output_window_configuration const& window_configuration );
 	void		destroy			( render_output_window* output_window );
 	inline	u32	scene_count		( ) const { return m_scenes.size(); }
 

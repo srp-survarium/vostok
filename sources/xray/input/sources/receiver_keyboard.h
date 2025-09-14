@@ -29,10 +29,12 @@ public:
 					keyboard		( IDirectInput8A& direct_input, HWND window_handle, xray::input::world& input_world );
 	virtual			~keyboard		( );
 	virtual	bool	is_key_down		( enum_keyboard key ) const;
+	virtual	bool	get_dik_name	( int dik, pstr dest_str, int dest_sz ) const;
 			void	on_activate		( );
 			void	on_deactivate	( );
 			void	execute			( );
 			void	process			( handlers_type& handlers );
+	
 
 private:
 			bool	is_key_down		( char value ) const;

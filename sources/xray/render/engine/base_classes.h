@@ -14,6 +14,8 @@
 namespace xray {
 namespace render {
 
+namespace debug { class renderer; }
+
 class base_command;
 
 struct base_scene : public resources::unmanaged_resource {

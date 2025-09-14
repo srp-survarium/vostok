@@ -24,9 +24,9 @@ typedef	intrusive_ptr<
 > object_scene_ptr;
 
 
-class object_scene : public game_object_
+class object_scene : public game_world_object
 {
-	typedef game_object_ super;
+	typedef game_world_object super;
 public:
 					object_scene			( game_world& w );
 	virtual			~object_scene			( );
@@ -82,7 +82,7 @@ class object_timer :public game_object_, public object_controlled
 {
 	typedef game_object_ super;
 public:
-					object_timer			( game_world& w ):super(w){};
+					object_timer			( game_scene& w ):super(w){};
 	virtual			~object_timer			( ){};
 }; // class object_timer
 

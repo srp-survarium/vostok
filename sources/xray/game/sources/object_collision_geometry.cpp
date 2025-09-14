@@ -8,7 +8,7 @@
 #include "object_collision_geometry.h"
 #include "collision_object_types.h"
 #include "game_world.h"
-#include "game_camera.h"
+//#include "game_camera.h"
 
 #include <xray/console_command.h>
 #include <xray/collision/api.h>
@@ -18,7 +18,6 @@
 
 #ifndef MASTER_GOLD
 
-#include "game.h"
 #include <xray/render/facade/debug_renderer.h>
 
 #endif // #ifndef MASTER_GOLD
@@ -33,10 +32,8 @@ typedef buffer_vector< collision::geometry_instance* >::iterator geometries_iter
 
 namespace stalker2{
 
-////////////////			I N I T I A L I Z E				////////////////
-
-object_collision_geometry::object_collision_geometry ( game_world& w ):
-	super						( w ),
+object_collision_geometry::object_collision_geometry ( game_scene& w )
+:	super						( w ),
 	m_instances					( 0, 0 ),
 	m_anti_instances			( 0, 0 ),
 	m_geometries				( 0, 0 ),
@@ -87,8 +84,6 @@ object_collision_geometry::~object_collision_geometry ( )
 	if( pointer != NULL )
 		XRAY_FREE_IMPL	( g_allocator, pointer );
 }
-
-////////////////		P U B L I C   M E T H O D S			////////////////
 
 void object_collision_geometry::load ( configs::binary_config_value const& config_value )
 {
@@ -278,9 +273,7 @@ bool object_collision_geometry::check_object_inside	( collision::geometry_instan
 	return ret_value;
 }
 
-/////////////////////////////////////			P R I V A T E   M E T H O D S			/////////////////////////////////////
-
-bool object_collision_geometry::check_object_inside_containment_mode	( collision::geometry_instance const & testee )
+bool object_collision_geometry::check_object_inside_containment_mode( collision::geometry_instance const& testee )
 {
 	bool ret_value = false;
 
@@ -290,8 +283,8 @@ bool object_collision_geometry::check_object_inside_containment_mode	( collision
 	for ( ; current != end; ++current )
 	{
 #ifndef MASTER_GOLD
-		render::scene_ptr			scene		= m_game_world.get_game( ).get_render_scene( );
-		render::debug::renderer&	renderer	= m_game_world.get_game( ).renderer( ).debug( );
+		render::scene_ptr			scene		= m_game_scene.get_render_scene( );
+		render::debug::renderer&	renderer	= m_game_scene.renderer().debug( );
 
 		if( xray::collision::contains( **current, testee, &renderer, &scene ) )
 #else
@@ -312,8 +305,8 @@ bool object_collision_geometry::check_object_inside_containment_mode	( collision
 	for ( ; current != end; ++current )
 	{
 #ifndef MASTER_GOLD
-		render::scene_ptr			scene		= m_game_world.get_game( ).get_render_scene( );
-		render::debug::renderer&	renderer	= m_game_world.get_game( ).renderer( ).debug( );
+		render::scene_ptr			scene		= m_game_scene.get_render_scene( );
+		render::debug::renderer&	renderer	= m_game_scene.renderer( ).debug( );
 
 		if( xray::collision::intersects( **current, testee, &renderer, &scene ) )
 #else
@@ -337,8 +330,8 @@ bool object_collision_geometry::check_object_inside_intersection_mode	( collisio
 	for ( ; current != end; ++current )
 	{
 #ifndef MASTER_GOLD
-		render::scene_ptr			scene		= m_game_world.get_game( ).get_render_scene( );
-		render::debug::renderer&	renderer	= m_game_world.get_game( ).renderer( ).debug( );
+		render::scene_ptr			scene		= m_game_scene.get_render_scene( );
+		render::debug::renderer&	renderer	= m_game_scene.renderer( ).debug( );
 
 		if( xray::collision::intersects( **current, testee, &renderer, &scene ) )
 #else
@@ -359,8 +352,8 @@ bool object_collision_geometry::check_object_inside_intersection_mode	( collisio
 	for ( ; current != end; ++current )
 	{
 #ifndef MASTER_GOLD
-		render::scene_ptr			scene		= m_game_world.get_game( ).get_render_scene( );
-		render::debug::renderer&	renderer	= m_game_world.get_game( ).renderer( ).debug( );
+		render::scene_ptr			scene		= m_game_scene.get_render_scene( );
+		render::debug::renderer&	renderer	= m_game_scene.renderer( ).debug( );
 
 		if( xray::collision::contains( **current, testee, &renderer, &scene ) )
 #else
@@ -386,14 +379,12 @@ void object_collision_geometry::set_transform ( float4x4 const& transform )
 		(*current)->set_matrix( (*current)->get_matrix( ) * delta );
 }
 
-/////////////////////////////////////			D E B U G   M E T H O D S			/////////////////////////////////////
-
 #ifndef MASTER_GOLD
 
-void object_collision_geometry::draw_collision ( )
+void object_collision_geometry::draw_collision( )
 {
-	render::scene_ptr			scene		= m_game_world.get_game( ).get_render_scene( );
-	render::debug::renderer&	renderer	= m_game_world.get_game( ).renderer( ).debug( );
+	render::scene_ptr			scene		= m_game_scene.get_render_scene( );
+	render::debug::renderer&	renderer	= m_game_scene.renderer( ).debug( );
 
 	if( !m_is_draw_collisions )
 		return;

@@ -9,6 +9,7 @@
 #include "tool_speedtree.h"
 #include "project_items.h"
 #include <xray/editor/base/collision_object_types.h>
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #include <xray/render/facade/editor_renderer.h>
@@ -43,18 +44,12 @@ object_speedtree::~object_speedtree( )
 		m_model_query->m_rejected = true;
 }
 
-void object_speedtree::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( &debug::g_mt_allocator );
-}
-
 void object_speedtree::initialize_collision( )
 {
 	ASSERT( !m_collision->initialized() );
 	float3 extents					 (1.0f,1.0f,1.0f);
 	
-	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( &debug::g_mt_allocator, math::create_scale(extents) );
+	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( g_allocator, math::create_scale(extents) );
 	m_collision->create_from_geometry(
 		true,
 		this,

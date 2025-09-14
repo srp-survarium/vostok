@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "object_portals_panel.h"
 #include "model_editor.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 #include "edit_portal.h"
 
 using namespace xray::editor::wpf_controls;

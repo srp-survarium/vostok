@@ -1,0 +1,104 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 11.04.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "filters.h"
+
+Texture2D  t_ssao_accumulator;
+uniform float4 screen_res; // Screen resolution (x-Width,y-Height, zw - 1/resolution)
+
+
+
+float4 main( v2p_post_process input) : SV_TARGET
+{
+	//return t_ssao_accumulator.Sample(s_material1, input.uv).x;
+	return depth_based_diagonal_filter(input.uv, t_ssao_accumulator, s_material1, screen_res.xy);
+	
+#if 1
+	float2 uv = input.uv;
+	//return bilateral_filtering(uv);
+	
+	static const float2 offsets[9] = 
+	{
+		float2( 1.0f,  1.0f),
+		float2( 1.0f,  0.0f),
+		float2( 1.0f, -1.0f),
+		float2( 0.0f,  1.0f),
+		float2( 0.0f, -1.0f), 
+		float2(-1.0f,  1.0f),
+		float2(-1.0f,  0.0f),
+		float2(-1.0f, -1.0f),
+		float2( 0.0f,  0.0f)
+	};
+
+	float total_weight 	= 0.0f;
+	float ao_sum 		= 0.0f;
+	float center_depth 	= gbuffer_read_frame_depth(uv);
+	
+	for (int i=0; i<9; i++)
+	{
+		float2 sample_uv	  = uv + offsets[i] / screen_res.xy * 1.0f;
+		float sample_ao		  = t_ssao_accumulator.Sample(s_material1, sample_uv).x;
+		float sample_depth 	  = gbuffer_read_frame_depth(sample_uv);
+		
+		float depth_compares  = 1.0f - saturate(pow((center_depth - sample_depth), 2) / (0.0001f * sample_depth));
+		
+		depth_compares 		  += 0.2f;
+		
+		total_weight 		  += depth_compares;
+		
+		ao_sum 				  += sample_ao;// * depth_compares;
+	}
+	return t_ssao_accumulator.Sample( s_nofilter, uv).x;
+	
+	return ao_sum / 9;//(total_weight);
+	
+	int2 screen_uv = uv * screen_res.xy;
+	
+	int2 pos = screen_uv % 4;
+	
+	int2 curr_pos = screen_uv - pos;
+	
+	float ssao_result = 0.0f;
+	
+	int x = curr_pos.x;
+	int y = curr_pos.y;
+	
+	float ss = 0.0f;
+	float c = 1.0f;
+	
+	c = t_ssao_accumulator.Sample( s_nofilter, uv).x;
+	
+	float mn = 1.0f;
+	float mx = 0.0f;
+	for (int k=0; k<4; k++)
+	for (int j=0; j<4; j++)
+	{
+		int sx 		= x + k;
+		int sy 		= y + j;
+		
+		float2 tc	= float2(sx, sy) / screen_res.xy;
+	
+	return 1;
+		
+		float depth = gbuffer_read_frame_depth(tc);
+		
+		float s 	= t_ssao_accumulator.Sample( s_nofilter, tc).x;
+		
+		ssao_result += s;
+		
+		ss += s;
+	}
+	
+	//return median_filter_3x3(uv, t_ssao_accumulator, s_base, screen_res.xy).x;
+	//return ssao_result / 16.0f;
+	
+	return t_ssao_accumulator.Sample(s_base, uv).x;//ao_sum / total_weight;
+	
+#endif // #if 0
+
+}

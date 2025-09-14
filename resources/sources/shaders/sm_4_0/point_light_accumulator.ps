@@ -1,0 +1,480 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 16.12.2010
+//	Author		: Dmitriy Iassenev
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_LOOP_UNROLLING,
+		CONFIG_SHADOWED_LIGHT,
+*/
+
+#include "light_ps_helper.h"
+#include "point_light.h"
+
+uniform float3 s_eye_ray_corner;
+
+
+//light_factors szirmay_kalos_brdf2(
+//		float3 light_direction,
+//		float3 view_direction,
+//		float3 surface_normal,
+//		float surface_roughness,
+//		float2 texture_coordinates
+//	)
+//{
+//	light_factors				result;
+//
+//	// yellow satin
+//	//float f0										= 0.207;
+//	//float anisotropic_roughness_surface_factor_x	= 0.129;
+//	//float anisotropic_roughness_surface_factor_y	= 1.084;
+//	//float alpha_model_parameter					= 0.197;
+//
+//	// red velvet
+//	//float f0										= 0.041;
+//	//float anisotropic_roughness_surface_factor_x	= 2.487;
+//	//float anisotropic_roughness_surface_factor_y	= 2.487;
+//	//float alpha_model_parameter					= 0.000;
+//
+//	// brushed aluminium
+//	//float f0										= 0.999;
+//	//float anisotropic_roughness_surface_factor_x	= 0.035;
+//	//float anisotropic_roughness_surface_factor_y	= 0.129;
+//	//float alpha_model_parameter					= 0.005;
+//
+//	float4 material_parameters						= gbuffer_read_material_parameters(texture_coordinates);//t_emissive.Sample( s_accumulator, texture_coordinates );
+//	float f0										= saturate( material_parameters.x );
+//	float alpha_model_parameter					 	= material_parameters.y;
+//
+//	float isotropic_roughness_surface_factor		= max( surface_roughness/255, 0.01);
+//	float anisotropic_roughness_surface_factor_x	= isotropic_roughness_surface_factor;
+//	float anisotropic_roughness_surface_factor_y	= isotropic_roughness_surface_factor;
+//	
+//	// we use Schlicks approximation formula
+//	// where f0 - is cumulative zero degree material fresnel factor
+//	float3 halfway_direction	= normalize(light_direction + view_direction);
+//	float view_dot_halfway		= dot( view_direction, halfway_direction );
+//	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+//	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
+//	
+//	float light_dot_normal		= dot( light_direction, surface_normal );
+//	float light_dot_normal_plus	= pow( max( light_dot_normal, 0.f ), 3 );
+//
+//	// Half Lambert
+//	//result.diffuse			= (light_dot_normal/2 + 0.5) * max(1.f - fresnel_factor, 0);
+//	result.diffuse				= light_dot_normal_plus;// * ( 1.f - fresnel_factor );
+//
+//	// compute normalized distribution functions
+//	// Beckmann distribution function in case of isotropic materials
+//	float cosine_theta			= dot( surface_normal, halfway_direction );
+//	float square_cosine_theta	= square( cosine_theta );
+//	float square_sine_theta		= 1.f - square_cosine_theta;
+//	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
+//
+//	float2 packed_tangent		= 2*(material_parameters.ba - 0.5);
+//	float3 surface_tangent		=
+//		normalize(
+//			surface_normal.x != 0.f ?
+//			float3( -dot( packed_tangent.xy, surface_normal.yz )/surface_normal.x, packed_tangent.xy ) :
+//			(
+//				surface_normal.y != 0.f ?
+//				float3( packed_tangent.x, -dot( packed_tangent.xy, surface_normal.xz )/surface_normal.y, packed_tangent.y ) :
+//				float3( packed_tangent.xy, -dot( packed_tangent.xy, surface_normal.xy )/surface_normal.z )
+//			)
+//		);
+//	float3 surface_bitangent	= normalize( cross(surface_normal, surface_tangent) );
+//	float square_cosine_phi		= saturate( square( dot( normalize( surface_tangent*dot( surface_tangent, halfway_direction ) + surface_bitangent*dot( surface_bitangent, halfway_direction ) ), surface_bitangent ) ) );
+//	float square_sine_phi		= 1.f - square_cosine_phi;
+//
+//	float distribution_function	=
+//		exp(
+//			-square_tangent_theta
+//			*(
+//				square_cosine_phi / square( anisotropic_roughness_surface_factor_x )
+//				+
+//				square_sine_phi / square( anisotropic_roughness_surface_factor_y )
+//			)
+//		);
+////	float distribution_function	= exp( -square_tangent_theta / square( isotropic_roughness_surface_factor ) );
+//
+//	float normalized_distribution_function	=
+//		distribution_function/
+//		(
+//			anisotropic_roughness_surface_factor_x * anisotropic_roughness_surface_factor_y * square(square_cosine_theta)
+//		);
+//
+//	result.specular					=
+//		light_dot_normal > 0.f
+//		?
+//			fresnel_factor * normalized_distribution_function /
+//			(
+//				4.f * view_dot_halfway_plus *
+//				pow(
+//					ABS_TO_REMOVE_WARNING(
+//						light_dot_normal *
+//						dot(view_direction, surface_normal)
+//					),
+//					alpha_model_parameter
+//				)
+//			)
+//		:
+//			0.f;
+//
+//	return						result;
+//}
+
+// pure Szirmay-Kalos BRDF
+// http://66.147.242.191/~westmand/siggraph/computer-graphics/Anisotropic_BRDF_Model_SIGGRAPH_Computer-Graphics_vol-44_num-1_2010.pdf
+light_factors szirmay_kalos_brdf2(
+		float3 light_direction,
+		float3 view_direction,
+		float3 surface_normal,
+		float2 surface_roughness,
+		float2 texture_coordinates,
+		float4 material_parameters
+	)
+{
+	light_factors				result;
+
+	// yellow satin
+	//float f0										= 0.207;
+	//float anisotropic_roughness_surface_factor_x	= 0.129;
+	//float anisotropic_roughness_surface_factor_y	= 1.084;
+	//float alpha_model_parameter					= 0.197;
+
+	// red velvet
+	//float f0										= 0.041;
+	//float anisotropic_roughness_surface_factor_x	= 2.487;
+	//float anisotropic_roughness_surface_factor_y	= 2.487;
+	//float alpha_model_parameter					= 0.000;
+
+	// brushed aluminium
+	//float f0										= 0.999;
+	//float anisotropic_roughness_surface_factor_x	= 0.035;
+	//float anisotropic_roughness_surface_factor_y	= 0.129;
+	//float alpha_model_parameter					= 0.005;
+
+	//float4 material_parameters					= t_emissive.Sample( s_accumulator, texture_coordinates );
+	float f0										= material_parameters.x;//saturate( 0.5 * pow(material_parameters.x, 2) );
+	float alpha_model_parameter					 	= material_parameters.y;
+	
+	float2 isotropic_roughness_surface_factor		= max(surface_roughness, (0.01f).xx);
+	float anisotropic_roughness_surface_factor_x	= isotropic_roughness_surface_factor.x;
+	float anisotropic_roughness_surface_factor_y	= isotropic_roughness_surface_factor.y;
+	
+	// we use Schlicks approximation formula
+	// where f0 - is cumulative zero degree material fresnel factor
+	float3 halfway_direction	= normalize(light_direction + view_direction);
+	float view_dot_halfway		= dot( view_direction, halfway_direction );
+	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
+	
+	float light_dot_normal		= dot( light_direction, surface_normal );
+	float light_dot_normal_plus	= pow( max( light_dot_normal, 0.f ), 1 );
+	
+	// Half Lambert
+	//result.diffuse			= (light_dot_normal/2 + 0.5) * max(1.f - fresnel_factor, 0);
+	result.diffuse				= light_dot_normal_plus * ( 1.f - fresnel_factor );
+	
+	// compute normalized distribution functions
+	// Beckmann distribution function in case of isotropic materials
+	float cosine_theta			= dot( surface_normal, halfway_direction );
+	float square_cosine_theta	= square( cosine_theta );
+	float square_sine_theta		= 1.f - square_cosine_theta;
+	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
+	
+	float3 surface_tangent		= t_tangents.Sample(s_accumulator, texture_coordinates).xyz * 2.0f - 1.0f;
+	float3 half_projection		= normalize(halfway_direction - surface_normal * dot(surface_normal, halfway_direction));
+	float square_cosine_phi		= saturate(square( dot(half_projection, surface_tangent) ));
+	float square_sine_phi		= 1.0f - square_cosine_phi;
+	
+	float distribution_function	=
+		 exp(
+			 -square_tangent_theta
+			 *(
+				 square_cosine_phi / square( anisotropic_roughness_surface_factor_x )
+				 +
+				 square_sine_phi / square( anisotropic_roughness_surface_factor_y )
+			 )
+		 );
+	//float distribution_function	= exp( -square_tangent_theta / square( isotropic_roughness_surface_factor ) );
+	
+	float normalized_distribution_function	=
+		distribution_function /
+		(
+			pi * anisotropic_roughness_surface_factor_x * anisotropic_roughness_surface_factor_y * square(square_cosine_theta)
+		);
+	
+	result.specular					=
+		light_dot_normal > 0.f
+		?
+			light_dot_normal_plus * fresnel_factor * normalized_distribution_function /
+			(
+				4.f * view_dot_halfway_plus *
+				pow(
+					ABS_TO_REMOVE_WARNING(
+						light_dot_normal *
+						dot(view_direction, surface_normal)
+					),
+					alpha_model_parameter
+				)
+			)
+		:
+			0.f;
+	result.specular				= clamp(result.specular, 0.0f, 4.0f);
+	
+	return						result;
+}
+
+light_factors brdf2				(
+		float3 light_direction,
+		float3 view_direction,
+		float3 surface_normal,
+		float2 specular_roughness,
+		float2 texture_coordinates,
+		float4 material_parameters
+	)
+{
+	light_factors result;
+
+//	specular_power				= max( specular_power, .02f );
+	
+	//switch ( lighting_model ) {
+	//	case 0 : {
+	//		result				= phong_brdf( light_direction, view_direction, surface_normal, specular_power );
+	//		break;
+	//	}
+	//	case 1 : {
+	//		result				= blinn_phong_brdf( light_direction, view_direction, surface_normal, specular_power );
+	//		break;
+	//	}
+	//	case 2 : {
+	//		result				= hoffman_brdf( light_direction, view_direction, surface_normal, specular_power, texture_coordinates, material_parameters );
+	//		break;
+	//	}
+	//	case 3 : {
+ //   		result				= szirmay_kalos_brdf2( light_direction, view_direction, surface_normal, specular_power, texture_coordinates );
+ //   		break;
+	//	}
+	//}
+
+  	result						= szirmay_kalos_brdf2( light_direction, view_direction, surface_normal, material_parameters.zw, texture_coordinates, material_parameters );
+	//result.diffuse				= abs( result.diffuse );
+	//result.specular				= abs( result.specular );
+
+	return						result;
+}
+
+light_factors point_light_impl2	(
+		float3 surface_position,
+		float3 surface_normal,
+		float3 light_position,
+		float light_range,
+		float2 surface_roughness,
+		float translucency,
+		float diffuse_power,
+		float2 texture_coordinates,
+		float4 material_parameters
+	)
+{
+	light_factors				result;
+	
+	float3 light_direction		= light_position - surface_position;
+	
+	// distance from surface to light
+	float square_distance		= squared_length( light_direction );
+	float distance				= sqrt( square_distance );
+	light_direction				/= distance;
+
+	float3 eye_view_space		= mul(m_V, float4(eye_position.xyz, 1)).xyz;
+	float3 view_direction		= normalize( eye_view_space - surface_position );
+	
+	result						= brdf2( light_direction, view_direction, surface_normal, surface_roughness, texture_coordinates, material_parameters );
+
+	// physical attenuation
+	//float attenuation_helper	= square_distance + 1.f;//dot( float3(1.f, 0.f, 1.f), float3(square_distance, distance, 1.f ) );
+	//float attenuation			= attenuation_helper > 0.f ? 1.f/attenuation_helper : 1.f;
+	//attenuation				= (distance > light_range) ? 0.f : attenuation;
+
+	// radial_attenuation
+	float attenuation			= pow( 1.f - saturate( square_distance/square(light_range) ), light_attenuation_power );
+	
+	result.diffuse				*= attenuation;
+	result.specular				*= attenuation;
+
+	return						result;
+}
+
+light_factors point_light2		( g_data surface, float2 texture_coordinates )
+{
+	float4 material_parameters	= gbuffer_read_material_parameters(texture_coordinates);
+
+	light_factors result		= 
+		point_light_impl(
+			surface.position,
+			surface.normal,
+			light_position,
+			light_range,
+			material_parameters.zw,
+			surface.sh_param,	// translucency
+			surface.diffuse_power,
+			texture_coordinates,
+			material_parameters
+		);
+	
+	float4 shadow_factor 		= get_pointlight_shadow_factor( surface.position.xyz, m_V2W );
+	result.diffuse 				*= shadow_factor.x;
+	result.specular 			*= shadow_factor.x;
+
+	return						result;
+}
+
+light_accumulator main			( pixel_shader_input input ) : SV_TARGET
+{
+	return
+		get_light_accumulator(
+			light_color,
+			point_light(
+				get_gbuffer_data(
+					input.texture_coordinates.xyw,
+					s_eye_ray_corner
+				),
+				input.texture_coordinates.xy / input.texture_coordinates.w
+			)
+		);
+	
+#if 0
+#if CONFIG_SHADOWED_LIGHT
+	static const float shadow_map_size = 1024.0f;
+	static const float correct 		   = 2.0f / shadow_map_size;
+	static const float2 kernel_offset_4[4] = 
+	{
+		float2( 0.0f,  0.0f),
+		float2( 1.0f,  0.0f),
+		float2( 0.0f,  1.0f),
+		float2( 1.0f,  1.0f)
+	};
+	
+	float4 P4 		= float4(mul(m_V2W, float4(data.position.xyz, 1.0f)), 1.0f);
+	float4 shd_pos 	= mul(view_to_light_matrix, P4);
+	float4 shd_tc   = shd_pos / shd_pos.w;
+	shd_tc 			= light_to_texture_space(shd_tc, 0.0001f);
+	
+	float accum_shadow = 0.0;
+	
+	UNROLL
+	for (int i=0; i<4; i++)
+	{
+		float2 tc 		= shd_tc.xy + kernel_offset_4[i] / shadow_map_size;
+		tc 				= correct + tc * (1.0f - correct * 2.0f);
+		accum_shadow 	+= t_shmap.SampleCmpLevelZero(s_shmap, tc.xy, shd_tc.z).r;
+	}
+	accum_shadow /= 4.0f;
+	
+	output.diffuse  *= accum_shadow;
+	output.specular *= accum_shadow;
+#endif // #if CONFIG_SHADOWED_LIGHT
+	return output;
+#endif // #if 0
+}
+
+
+
+
+
+
+
+#if 0	
+	float3 n = -normalize(mul(m_V2W, data.normal));
+	
+	float3 l_pos = mul(m_V2W, float4(light_position, 1.0f));
+	
+	float3 to_light_vec 		 = (l_pos - mul(m_V2W, float4(data.position, 1.0f)));
+	
+	float4 in_shadow = 0;
+	
+	static const float3 random_vectors[8] = 
+	{
+		float3(-0.14, 1.0, -0.28),
+		float3(0.4, 0.1, -0.8),
+		float3(1.7, -0.5, 0.8),
+		float3(1.0, 0.0, 1.74),
+		float3(0.711, -1.0, -1.0),
+		float3(1.41, 0.5, 2.0),
+		float3(-0.9, -1.4, 0.86),	
+		float3(-0.71, 0.8, 0.20),
+	};
+	
+	UNROLL
+	for (int i=0; i<8; i++)
+	{
+		float3 t_light = to_light_vec + random_vectors[i] / 64.0f;
+		
+		float shadow_depth			 = shadow_cubemap_texture.Sample(s_base, -normalize(t_light)).r;
+		if (length(t_light) > shadow_depth+0.1)
+			in_shadow += 1.0f;
+	}
+	in_shadow /= 8.0f;
+	
+	output.diffuse	*= 1.0f - in_shadow;
+	output.specular	*= 1.0f - in_shadow;
+
+	static const float2 offset_vectors[8] = 
+	{
+		float2( 1.0f,  1.0f),
+		float2( 1.0f,  0.0f),
+		float2( 1.0f, -1.0f),
+		float2( 0.0f,  1.0f),
+		float2( 0.0f, -1.0f), 
+		float2(-1.0f,  1.0f),
+		float2(-1.0f,  0.0f),
+		float2(-1.0f, -1.0f)
+	};
+	static const float2 offset_4[4] = 
+	{
+		float2( 0.0f,  0.0f),
+		float2( 1.0f,  0.0f),
+		float2( 0.0f,  1.0f),
+		float2( 1.0f,  1.0f)
+	};	
+	static const float shd_map_size = 0.5*1024.0f;
+	
+	float dist = length(to_light_vec);
+	
+	float2 size = 1.0f / float2(shd_map_size, shd_map_size);
+	
+	float2 lookup_tc = lookup_vcm_texture.SampleLevel(s_material1, -normalize(to_light_vec) * 0.001f, 0).rg;
+	lookup_tc = clamp(lookup_tc, float2(0.0f, 0.0f), float2(0.99f, 0.99f));
+	
+	float2 sample_step = frac(lookup_tc * float2(shd_map_size, shd_map_size));
+	
+	
+	float shd = 0.1f*vcm_texture.SampleLevel(s_material1, lookup_tc, 0).r;
+	
+	float4 d2x2[4];
+	
+	UNROLL
+	for(int i=0; i<4; i++)	
+	{
+		d2x2[i] = vcm_texture.SampleLevel(s_material1, lookup_tc + offset_4[i] * size, 0).r;
+		d2x2[i] = d2x2[i] + 0.1f < dist ? 0.0f : 1.0f;
+	}
+	
+	float4 lerp1, lerp2;
+	lerp1.xy = lerp(d2x2[0].xy, d2x2[0].wz, sample_step.y);
+	lerp1.wz = lerp(d2x2[1].xy, d2x2[1].wz, sample_step.y);
+	lerp2.xy = lerp(d2x2[2].xy, d2x2[2].wz, sample_step.y);
+	lerp2.wz = lerp(d2x2[3].xy, d2x2[3].wz, sample_step.y);
+	
+	float4 lerp9;
+	lerp9.x = lerp(lerp1.x, lerp1.y, sample_step.x);
+	lerp9.y = lerp(lerp1.w, lerp1.z, sample_step.x);
+	lerp9.z = lerp(lerp2.x, lerp2.y, sample_step.x);
+	lerp9.w = lerp(lerp2.w, lerp2.z, sample_step.x);
+	float sh = dot(lerp9, 0.25f);
+	
+	output.diffuse	= float4(lookup_tc,0,0);
+	output.specular	*= 0*shd;
+#endif // if 0

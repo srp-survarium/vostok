@@ -14,9 +14,12 @@
 namespace xray {
 namespace render {
 
+struct flash_renderer;
+struct output_window_configuration;
+
 class render_output_window: public base_output_window {
 public:
-											render_output_window( HWND window );
+											render_output_window( xray::render::output_window_configuration const& window_configuration );
 			void							resize				( );
 	inline	res_render_output*				render_output		( )	const	{ return &*m_output; }
 	inline	renderer_context_targets const&	target_context		( ) const	{ return m_targets; }
@@ -31,6 +34,9 @@ private:
 	math::uint2						m_current_size;
 	ref_render_output				m_output;
 	HWND							m_window;
+public:
+	flash_renderer*			m_flash_renderer;
+
 }; // class render_output_window
 
 } // namespace render

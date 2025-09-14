@@ -12,18 +12,14 @@
 #include "level_editor.h"
 #include "project.h"
 #include "object_collision_geometry_add_remove_mesh_commands.h"
+#include "object_collision.h"
 #include <xray/editor/base/collision_object_types.h>
 
 #pragma managed( push, off )
 #	include <xray/geometry_utils.h>
 #	include <xray/geometry_primitives.h>
 #	include <xray/render/facade/debug_renderer.h>
-#	include <xray/collision/space_partitioning_tree.h>
 #	include <xray/collision/geometry.h>
-#	include <xray/collision/collision_object.h>
-#	include <xray/render/engine/base_classes.h>
-#	include <xray/render/facade/scene_renderer.h>
-#	include <xray/render/facade/editor_renderer.h>
 #pragma managed( pop )
 
 using namespace System;

@@ -18,6 +18,9 @@
 #include <xray/render/core/backend.h>
 #include <xray/render/core/effect_manager.h>
 #include "effect_editor_gbuffer_to_screen.h"
+#include "grass_world.h"
+
+#include "flash_renderer.h"
 
 // render stages
 #include "stage_gbuffer.h"
@@ -180,9 +183,13 @@ renderer::renderer( renderer_context * renderer_context ):
 	m_stages[post_process_render_stage]				= NEW(stage_postprocess)				(m_renderer_context);
 	
 	m_stage_debug									= NEW(stage_debug)						(m_renderer_context);
-	m_present_stage									= NEW(stage_screen_image)				(m_renderer_context);
 	m_view_mode_stage								= NEW(stage_view_mode)					(m_renderer_context);
-	
+	m_present_stage									= NEW(stage_screen_image)				(m_renderer_context);
+
+
+//	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_rt_generic_0, 0, 0, 0);
+
+
 	m_timer.start();
 }
 
@@ -323,10 +330,14 @@ void renderer::render(scene_ptr const& in_scene,
 	
 	xray::particle::world* part_world = m_renderer_context->scene()->particle_world();
 	
-	scene->get_speedtree_forest()->tick(m_renderer_context);
+	if(scene->get_speedtree_forest())
+		scene->get_speedtree_forest()->tick(m_renderer_context);
 	
 	if (part_world)
 		part_world->tick( time_delta, m_renderer_context->get_v() );
+	
+	if (scene->get_grass())
+		scene->get_grass()->process_culling(m_renderer_context, 100.0f);
 	
 	backend::ref().reset();
 	//backend::ref().flush();
@@ -362,6 +373,9 @@ void renderer::render(scene_ptr const& in_scene,
 			case lit_view_mode:
 			case lit_with_histogram_view_mode:
 			{
+				//if (m_stages[post_process_render_stage])
+				//	m_stages[post_process_render_stage]->set_enabled(false);
+				
 				execute_stages();
 				
 				if (view_mode==lit_with_histogram_view_mode)
@@ -502,16 +516,16 @@ void renderer::render(scene_ptr const& in_scene,
 	backend::ref().set_render_targets( &*m_renderer_context->m_targets->m_rt_present, 0, 0, 0);
 	
 	scene->flush					( on_draw_scene );
-
+	
 	backend::ref().reset_depth_stencil_target();
 	
 	if (m_stages[lighting_render_stage])
 		m_stages[lighting_render_stage]->debug_render	( );
 	
-#endif // #ifdef MASTER_GOLD
+	if (scene->get_grass())
+		scene->get_grass()->render_debug(m_renderer_context);
 	
-	END_TIMER;
-	END_CPUGPU_TIMER;
+#endif // #ifdef MASTER_GOLD
 	
 	statistics::ref().visibility_stat_group.num_total_rendered_triangles.value = backend::ref().num_total_rendered_triangles;
 	statistics::ref().visibility_stat_group.num_total_rendered_points.value = backend::ref().num_total_rendered_points;
@@ -530,7 +544,11 @@ void renderer::render(scene_ptr const& in_scene,
 	if (draw_debug_terrain)
 		system_renderer::ref().draw_debug_terrain();
 	
+	
 	present							( output_window, viewport );
+	
+	END_TIMER;
+	END_CPUGPU_TIMER;
 }
 
 void renderer::present	( render_output_window_ptr in_output_window, viewport_type const& viewport )
@@ -543,12 +561,16 @@ void renderer::present	( render_output_window_ptr in_output_window, viewport_typ
 	
 	if( output_window )
 	{
+		if(output_window->m_flash_renderer)
+			output_window->m_flash_renderer->present( );
+
 		output_window->render_output()->present();
 	}
 	
 	backend::ref().reset_depth_stencil_target();
 	backend::ref().clear_depth_stencil	( D3D_CLEAR_DEPTH|D3D_CLEAR_STENCIL, 1.0f, 0);
 	
+
 	backend::ref().reset();
 	backend::ref().flush();
 	
@@ -605,6 +627,11 @@ void renderer::draw_text( pcstr text, xray::math::float2 const& position, xray::
 // //	w.ui().destroy_command(cmd);
 // 	render.push_command		(cmd);
 }
+
+//flash_renderer& renderer::get_flash_renderer( )
+//{
+//	return *m_flash_renderer; 
+//}
 
 } // namespace render 
 } // namespace xray 

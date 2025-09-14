@@ -24,8 +24,10 @@ static xray::console_commands::cc_bool		cells_debug_draw( "cells_debug_draw", g_
 static xray::console_commands::cc_u32		cells_flood_depth( "cells_flood_depth", g_cells_flood_depth, 3, 1000, true, xray::console_commands::command_type_engine_internal );
 
 
-cell_manager::cell_manager( game& game ) :
-	m_game	( game )
+cell_manager::cell_manager( game& game, game_world& w ) 
+:m_game		( game ),
+m_game_world( w )
+
 {
 }
 
@@ -104,11 +106,13 @@ void cell_manager::game_cell_loaded( resources::queries_result& data )
 		if( m_game_project->m_cells.find( k ) == m_game_project->m_cells.end( ) )
 			m_game_project->m_cells[k]			= cell;
 
-		cell->m_game		= &m_game;
+		cell->m_game_			= &m_game;
+		cell->m_game_world		= &m_game_world;
 		cell->load_contents	( this );
 	}
 
-	load_scenes		( );
+//	load_scenes		( );
+	m_game_world.start_game		( );
 }
 
 void cell_manager::unload( )
@@ -281,7 +285,7 @@ void cell_manager::register_object( shared_string const& name, game_object_ptr_ 
 
 void cell_manager::load_scenes( )
 {
-
+	UNREACHABLE_CODE();
 	configs::binary_config_value t_objects		= (*m_game_project->m_config)["scenes"];
 	
 	configs::binary_config_value::const_iterator it			= t_objects.begin();
@@ -307,6 +311,7 @@ void cell_manager::load_scenes( )
 
 void cell_manager::on_scenes_loaded(  resources::queries_result& data )
 {
+	UNREACHABLE_CODE();
 	R_ASSERT		( data.is_successful() );
 	u32 count		= data.size();
 
@@ -322,7 +327,7 @@ void cell_manager::on_scenes_loaded(  resources::queries_result& data )
 		DELETE								( ud );
 	}
 	
-	m_game.get_game_world().start_game		( );
+	m_game_world.start_game		( );
 }
 
 } // namespace stalker2

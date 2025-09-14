@@ -39,6 +39,18 @@ skeleton_render_model::~skeleton_render_model( )
 		FREE(m_locators);
 }
 
+void skeleton_render_model::get_bind_pose( float4x4* matrices, u32 count ) const
+{
+	R_ASSERT(count == m_inverted_bones_matrices_in_bind_pose.size());
+
+	for( u32 i=0; i<count; ++i)
+	{
+		float4x4& m					= matrices[i];
+		float4x4 const& bind_matrix_inv	= m_inverted_bones_matrices_in_bind_pose[i];
+		m.try_invert					( bind_matrix_inv );
+	}
+}
+
 void skeleton_render_model::load_bones( memory::reader& bones_chunk )
 {
 	u16 bone_count				= bones_chunk.r_u16( );
@@ -132,6 +144,12 @@ void skeleton_render_model_instance::get_surfaces( render_surface_instances& lis
 	}
 }
 
+void  skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats  ) const
+{
+	R_ASSERT(surface_id<m_instances_count);
+	render_surface_instance* inst = m_surface_instances+surface_id;
+}
+
 void skeleton_render_model_instance::update( )
 {
 	PIX_EVENT( skeleton_render_model_instance );
@@ -177,6 +195,12 @@ bool skeleton_render_model_instance::get_locator( pcstr locator_name, model_loca
 {
 	return m_original->get_locator( locator_name, result );
 }
+
+void skeleton_render_model_instance::get_bind_pose( float4x4* matrices, u32 count ) const
+{
+	m_original->get_bind_pose( matrices, count );
+}
+
 
 } // namespace render 
 } // namespace xray 

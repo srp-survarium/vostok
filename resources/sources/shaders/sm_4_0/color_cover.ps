@@ -1,0 +1,44 @@
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float grid_density;
+uniform float4 screen_res;
+
+Texture2D t_random_rotates;
+
+int is_line;
+
+float4 main( v2p_TL0uv_pos vin) : SV_TARGET
+{
+	float3 view_space_position 	= mul(m_V, float4(vin.Pos, 1));
+	
+	float2 tc 					= float2(vin.HPos.x/2.f, vin.HPos.y/2.f);
+	
+	float2 screen_uv 			= vin.HPos.xy * screen_res.zw;
+		
+	float frame_depth 			= gbuffer_read_frame_depth(vin.HPos.xy * screen_res.zw);
+	
+	bool is_cover 				= frame_depth < view_space_position.z;
+	
+	float2 mask 				= frac(tc);//t_grid.Sample( s_grid, tc).x;
+	
+	float switcher 				= ((grid_density > 0.25) ? 1 : mask.y);
+	
+	float3 normal 				= t_random_rotates.Sample(s_nofilter, 512.0f * screen_uv).rgb;
+	
+	if (is_cover)
+	{
+		//if (normal.x > 0.666 || normal.y > 0.666)
+		//	clip(-1);
+			
+		//if (get_random_value(screen_uv) > 0.01f)
+		//	clip(-1);
+		
+		//clip( frac( mask.x + mask.y)*switcher - 0.25);
+		
+		if (frac( mask.x + mask.y)*switcher - 0.25 < 0.0f)
+			return float4(vin.Color.rgb, 0.25f * vin.Color.a);
+	}
+	
+	return vin.Color;
+}

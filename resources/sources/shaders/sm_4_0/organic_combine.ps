@@ -1,0 +1,145 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_USE_BRANCHING,
+		CONFIG_TDIFFUSE,
+		CONFIG_TNORMAL,
+		CONFIG_TSPECULAR_INTENSITY,
+		
+		CONFIG_USE_AO_TEXTURE,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_USE_ORGANIC_SCATTERING_AMOUNT_MASK,
+		CONFIG_USE_ORGANIC_BACK_ILLUMINATION_TEXTURE,
+		CONFIG_USE_ORGANIC_SUBDERMAL_TEXTURE,	
+*/
+
+#include "common.h"
+#include "material.h"
+#include "vertex_input.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+#include "psf_normal.h"
+#include "psf_tspecular_intensity.h"
+
+Texture2D t_transparency;
+float 	  solid_transparency;
+
+float4 far_fog_color_and_distance;
+float near_fog_distance;
+
+Texture2D t_frame_color;
+uniform float4 screen_res;
+
+Texture2D t_skin_scattering;
+Texture2D t_skin_scattering_blurred_0;
+Texture2D t_skin_scattering_blurred_1;
+Texture2D t_skin_scattering_blurred_2;
+Texture2D t_skin_scattering_blurred_3;
+Texture2D t_skin_scattering_blurred_4;
+
+Texture2D t_sss_amount;
+Texture2D t_back_color;
+Texture2D t_subdermal;
+Texture2D t_ao;
+
+Texture2D t_specular_intensity;
+
+float3 light_position;
+float3 light_color;
+float light_range;
+
+float3 specular_color_parameter;
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float2 screen_uv			= input.homogeneous_position.xy * screen_res.zw;
+	
+	float4 final_color			= 1.0f;
+	
+	final_color.rgb				= convert_to_linear_space(solid_color_specular.xyz);
+	
+	if (CONFIG_TDIFFUSE)
+		final_color.rgb  	    *= t_base.Sample( s_base, parameters.tc ).rgb;
+	
+	final_color					*= parameters.color;
+	
+	float3 model_diffuse_color	= final_color.rgb;
+	
+	float ao_result				= 1.0f;
+	
+#if CONFIG_USE_AO_TEXTURE	
+	ao_result					= t_ao.Sample(s_base, parameters.tc).r;
+#endif // CONFIG_USE_AO_TEXTURE
+	
+	float3 diffuse_color		= 0.0f;
+	float3 diffuse_point 		= t_skin_scattering.Sample(s_material1, parameters.tc).rrr;
+	float light_map_amount 		= 1.0f;
+	
+#if CONFIG_USE_ORGANIC_SCATTERING_AMOUNT_MASK	
+	light_map_amount			= saturate(1.0f * t_sss_amount.Sample(s_base, parameters.tc).r);
+#endif // CONFIG_USE_ORGANIC_SCATTERING_AMOUNT_MASK
+	
+	float diffuse_to_subdermal	= 1.0f - pow(saturate(t_skin_scattering_blurred_0.Sample(s_base, parameters.tc).r), 1);
+	
+	float3 subdermal_color		= t_subdermal.Sample(s_base, parameters.tc).rgb;
+	
+	float3 diffuseBlurred 		= 0.0f;
+	
+	diffuseBlurred 				+= t_skin_scattering_blurred_0.Sample(s_base, parameters.tc).rgb; 
+	
+#if CONFIG_USE_ORGANIC_SUBDERMAL_TEXTURE
+	diffuse_color 				= lerp(model_diffuse_color * diffuse_point, 1.0f * lerp(diffuse_point, diffuseBlurred, light_map_amount) * subdermal_color, 0.5f);
+#else // #endif // CONFIG_USE_ORGANIC_SUBDERMAL_TEXTURE
+	diffuse_color 				= model_diffuse_color * lerp(diffuse_point, lerp(diffuse_point, diffuseBlurred, light_map_amount), 0.5f);
+#endif // CONFIG_USE_ORGANIC_SUBDERMAL_TEXTURE
+	
+	
+	float3 normal				= 0.0f;
+	if (CONFIG_TNORMAL)
+	{
+		normal					= psf_tnormal( t_normal, parameters.tangent_to_viewspace, parameters.tc, float3(1,1,1));
+		
+		// if we are using the world space textures.
+		//normal					= t_normal.Sample(s_normal, parameters.tc).xyz * 2.0f - 1.0f;
+		//normal					= normalize(mul(m_V, float4(normal * float3(-1,1,1), 0.0f)).xyz);
+	}
+	else
+		normal					= 	normalize(mul(parameters.tangent_to_viewspace, float3(0.0f, 0.0f, 1.0f)));	
+	
+	float3 	specular_color 		= convert_to_linear_space(specular_color_parameter);
+	
+	if (CONFIG_TSPECULAR_INTENSITY)
+		specular_color 			*= psf_tspecular_intensity(t_specular_intensity, parameters.tc);
+	
+	float3 light_vector			= normalize(light_position - parameters.world_view_position.xyz);
+	float diffuse 				= saturate(dot(light_vector, normal));
+	
+	float specular 				= t_skin_scattering.Sample(s_base, parameters.tc).w;//diffuse_point.x * diffuse * KelemenSzirmayKalosSpec( -normalize(parameters.world_view_position.xyz), normal, light_vector, eccentricity, rolloff, weight );
+	
+	final_color.rgb 			= (diffuse_color + light_color * specular * specular_color);
+	
+#if CONFIG_USE_ORGANIC_BACK_ILLUMINATION_TEXTURE
+	float3 back_color			= t_back_color.Sample(s_base, parameters.tc).rgb;
+	final_color.rgb				+= diffuse_to_subdermal * back_color.rgb * saturate(pow(dot(-light_vector, normal), 1.0f) - 0.0f);
+#endif // CONFIG_USE_ORGANIC_BACK_ILLUMINATION_TEXTURE
+	
+	//return float4(diffuse_point, 0);
+	
+	//float4(diffuse_point,0) + 0.1f * 
+	//return 3*model_diffuse_color.rgbb;//
+	return float4(ao_result * final_color.rgb, 1);
+}
+
+
+
+
+
+
+

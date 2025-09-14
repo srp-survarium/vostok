@@ -1,0 +1,42 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 19.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_LOOP_UNROLLING,
+		GLOBAL_USE_BRANCHING,
+*/
+
+#include "common.h"
+#include "fxaa_common.h"
+#include "gamma_correction.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture2D 	t_frame_color;
+
+uniform float4 screen_res;
+
+//http://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	FxaaTex tex = { s_base, t_frame_color };
+	return float4(convert_from_linear_space(FxaaPixelShader(input.uv, tex, screen_res.zw)), 1.0f);
+}
+
+
+
+
+
+
+
+
+
+

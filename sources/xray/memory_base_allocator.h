@@ -81,7 +81,7 @@ private:
 #ifndef MASTER_GOLD
 	bool	m_use_leak_detector;
 #endif // #ifndef MASTER_GOLD
-}; // class doug_lea_allocator
+}; // class base_allocator
 
 namespace monitor {
 extern u32 const housekeeping_size;

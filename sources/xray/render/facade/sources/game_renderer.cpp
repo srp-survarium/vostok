@@ -14,6 +14,9 @@
 #include <xray/render/facade/scene_renderer.h>
 #include "functor_with_big_buffer_to_copy_command.h"
 #include <xray/render/facade/model.h>
+#include <xray/render/engine/sources/flash_renderer.h>
+#include <xray/game/sources/flash_factory.h>
+
 
 namespace xray {
 namespace render {
@@ -23,6 +26,8 @@ renderer::renderer	( world& world, engine::world& engine_world ) :
 	m_world					( world ),
 	m_render_engine_world	( engine_world )
 {
+	//m_render_engine_world.flash_renderer();
+
 	m_debug					= NEW ( debug::renderer )	( world.logic_channel(), *logic::g_allocator, engine_world );
 	m_ui					= NEW ( ui::renderer )		( world.logic_channel(), *logic::g_allocator, engine_world );
 	m_scene					= NEW ( scene_renderer )	( world.logic_channel(), *logic::g_allocator, engine_world, &m_debug->frustum );
@@ -107,6 +112,23 @@ xray::render::scene_renderer& renderer::scene				( ) const
 {
 	ASSERT					( m_scene );
 	return					*m_scene;
+}
+
+void renderer::show_movie						( render_output_window_ptr const& render_output_window, stalker2::flash_movie* movie )
+{
+ 	m_world.logic_channel().owner_push_back	( 
+ 		L_NEW( functor_command ) ( 
+		boost::bind( &engine::world::show_movie, &m_render_engine_world, render_output_window, movie )
+ 		) 
+	);
+}
+void renderer::hide_movie						( render_output_window_ptr const& render_output_window, stalker2::flash_movie* movie )
+{
+	m_world.logic_channel().owner_push_back	( 
+		L_NEW( functor_command ) ( 
+		boost::bind( &engine::world::hide_movie, &m_render_engine_world, render_output_window, movie )
+		) 
+		);
 }
 
 } // namespace game

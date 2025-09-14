@@ -12,6 +12,10 @@
 #include <xray/associative_vector.h>
 #include <xray/hash_multiset.h>
 
+#include <xray/os_preinclude.h>
+#define _WIN32_WINNT				0x0500
+#include <xray/os_include.h>
+
 namespace stalker2 {
 
 extern xray::memory::doug_lea_allocator_type*	g_allocator;

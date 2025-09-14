@@ -160,15 +160,20 @@ bool create_ring( geom_vertices_type& vertices,
 	return true;
 }
 
+bool geometry_collector_vert::is_equal( geometry_collector_vert const& other ) const
+{
+	return p.is_similar(other.p) && n.is_similar(other.n) && uv.is_similar(other.uv);
+}
+
 geometry_collector::geometry_collector( memory::base_allocator& a)
 :m_vertices(a),
 m_indices(a),
 m_lookup(a)
 {}
 
-int geometry_collector::find_vertex( float3 const& position ) const
+int geometry_collector::find_vertex( geometry_collector_vert const& v ) const
 {
-	float const sqm	= position.squared_length();
+	float const sqm	= v.p.squared_length();
 
 	lookup_table::const_iterator it		= std::lower_bound(m_lookup.begin(), m_lookup.end(), sqm);
 	lookup_table::const_iterator it_e	= m_lookup.end();
@@ -178,26 +183,26 @@ int geometry_collector::find_vertex( float3 const& position ) const
 		if(rec.square_magnitude > sqm+0.1f)
 			break;
 
-		float3 const& p		= m_vertices[rec.vertex_id];
+		geometry_collector_vert const& v_current		= m_vertices[rec.vertex_id];
 		
-		if(p.is_similar(position))
+		if(v_current.is_equal(v))
 			return rec.vertex_id;
 	}
 	return -1;
 }
 
 
-void geometry_collector::add_vertex(	float3 const& pos ) 
+void geometry_collector::add_vertex( geometry_collector_vert const& v ) 
 {
-	int idx = find_vertex( pos );
+	int idx = find_vertex( v );
 
 	if(-1==idx)
 	{
 		idx						= m_vertices.size();
-		m_vertices.push_back	( pos );
+		m_vertices.push_back	( v );
 		
 		lookup_item				rec;
-		rec.square_magnitude	= pos.squared_length();
+		rec.square_magnitude	= v.p.squared_length();
 		rec.vertex_id			= idx;
 
 		lookup_table::iterator it = std::lower_bound(m_lookup.begin(), m_lookup.end(), rec);
@@ -207,17 +212,19 @@ void geometry_collector::add_vertex(	float3 const& pos )
 	m_indices.push_back			( idx );
 }
 
-void geometry_collector::add_triangle( float3 const& p0, float3 const& p1, float3 const& p2 )
+void geometry_collector::add_triangle(	geometry_collector_vert const& v0, 
+										geometry_collector_vert const& v1,  
+										geometry_collector_vert const& v2 )
 {
-	add_vertex(	p0 ) ;
-	add_vertex(	p1 ) ;
-	add_vertex(	p2 ) ;
+	add_vertex(	v0 ) ;
+	add_vertex(	v1 ) ;
+	add_vertex(	v2 ) ;
 }
 
-bool geometry_collector::write_obj_file( pcstr fn, float const scale )
+bool geometry_collector::write_obj_file( pcstr fn, float const scale, bool save_uv, bool save_norm )
 {
 	using namespace fs_new;
-	synchronous_device_interface const & device	=	resources::get_synchronous_device();
+	synchronous_device_interface const & device	= resources::get_synchronous_device();
 	
 	file_type*	f;
 	
@@ -230,19 +237,53 @@ bool geometry_collector::write_obj_file( pcstr fn, float const scale )
 	vertices_type::iterator it		= m_vertices.begin();
 	vertices_type::iterator it_e	= m_vertices.end();
 	string1024						buff;
+	// "v"
 	for(; it!=it_e; ++it)
 	{
-		float3&	v	= *it;
-		sprintf_s	( buff, "v %f %f %f\n", v.x*scale, v.y*scale, v.z*scale );
+		geometry_collector_vert const&	v	= *it;
+		sprintf_s	( buff, "v %f %f %f\n", v.p.x*scale, v.p.y*scale, v.p.z*scale );
+		device->write	( f, buff, strings::length(buff) );
+	}
+
+	// "vt"
+	if(save_uv)
+	for(it = m_vertices.begin(); it!=it_e; ++it)
+	{
+		geometry_collector_vert const&	v	= *it;
+		sprintf_s	( buff, "vt %f %f\n", v.uv.x, v.uv.y );
+		device->write	( f, buff, strings::length(buff) );
+	}
+
+	// "vn"
+	if(save_norm)
+	for(it = m_vertices.begin(); it!=it_e; ++it)
+	{
+		geometry_collector_vert const&	v	= *it;
+		sprintf_s	( buff, "vn %f %f %f\n", v.n.x, v.n.y, v.n.z );
 		device->write	( f, buff, strings::length(buff) );
 	}
 
 	for(u32 idx=0; idx<m_indices.size();)
 	{
-		sprintf_s		( buff, "f %d %d %d\n", 1+ (m_indices[idx]), 1+ (m_indices[idx+1]), 1+ (m_indices[idx+2])  );
-		device->write	( f, buff, strings::length(buff) );
+		u32 idx0,idx1,idx2;
+		idx0 = 1+ (m_indices[idx]);
+		idx1 = 1+ (m_indices[idx+1]);
+		idx2 = 1+ (m_indices[idx+2]);
 
-		idx		+=3;
+	if(save_uv && save_norm)
+	{
+		sprintf_s		( buff, "f %d/%d/%d %d/%d/%d %d/%d/%d\n", idx0,idx0,idx0, idx1,idx1,idx1, idx2,idx2,idx2);
+	}else
+	if(save_norm)
+	{
+		sprintf_s		( buff, "f %d/%d %d/%d %d/%d\n", idx0,idx0, idx1,idx1, idx2,idx2);
+	}else
+	{
+		sprintf_s		( buff, "f %d %d %d\n", idx0, idx1, idx2  );
+	}
+	device->write	( f, buff, strings::length(buff) );
+
+	idx		+=3;
 	}
 
 	device->close(f);

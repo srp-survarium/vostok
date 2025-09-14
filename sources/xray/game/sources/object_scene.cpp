@@ -42,7 +42,8 @@ void object_scene::load( configs::binary_config_value const& t )
 
 void object_scene::start( )
 {
-	get_game_world().on_scene_start						( this );
+	NOT_IMPLEMENTED();
+//.	get_game_world().on_scene_start						( this );
 
 	configs::binary_config_value t_jobs					= m_data["jobs"];
 	configs::binary_config_value::const_iterator it		= t_jobs.begin();
@@ -164,8 +165,9 @@ void object_scene::stop( bool unloading )
 	}
 	m_actions.clear							( );
 
-	if(!unloading)
-		get_game_world().on_scene_stop		( this );
+	//if(!unloading)
+	//	get_game_world().on_scene_stop		( this );
+	NOT_IMPLEMENTED();
 }
 
 void object_scene::tick( )

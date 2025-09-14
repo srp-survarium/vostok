@@ -27,10 +27,16 @@ class triangle_mesh_base :
 public:
 						triangle_mesh_base		( memory::base_allocator* allocator );
 	virtual				~triangle_mesh_base		( );
-			void		initialize				( float3 const* vertices, u32 vertex_count, u32 const* indices, u32 index_count );
+	
+	virtual	void		destroy					( memory::base_allocator* allocator );
+
+			void		initialize				( memory::base_allocator* allocator, float3 const* vertices, u32 vertex_count, u32 const* indices, u32 index_count );
 	
 	virtual	math::float3 const* vertices		( ) const;
-	virtual	u32 const*			indices			( u32 triangle_id ) const;
+	virtual	u32			vertex_count			( ) const;
+	virtual	u32 const*	indices					( ) const;
+	virtual	u32 const*	indices					( u32 triangle_id ) const;
+	virtual	u32			index_count				( ) const;
 	
 	Opcode::AABBNoLeafNode const* root			( ) const;
 	inline Opcode::MeshInterface* mesh			( ) const { return m_mesh; }
@@ -55,9 +61,19 @@ public:
 	virtual	bool		cuboid_test				( math::cuboid const& cuboid ) const;
 	virtual	bool		ray_test				( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const;
 
-	virtual	void		render					( render::debug::renderer& renderer, float4x4 const& matrix ) const;
+	virtual	void		render					( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& matrix ) const;
 	virtual	math::aabb&	get_aabb				( math::aabb& result ) const;
-	virtual	memory::base_allocator&	get_allocator ( ) const { return *m_allocator; }
+	virtual	float3		get_random_surface_point( math::random32& randomizer ) const;
+	virtual	float		get_surface_area		( ) const;
+
+	virtual void		accept					( geometry_double_dispatcher& dispatcher, geometry const& node ) const;
+	virtual void		visit					( geometry_double_dispatcher& dispatcher, box_geometry const& node ) const;
+	virtual void		visit					( geometry_double_dispatcher& dispatcher, sphere_geometry const& node ) const;
+	virtual void		visit					( geometry_double_dispatcher& dispatcher, cylinder_geometry const& node ) const;
+
+public:
+	virtual	void		enumerate_primitives	( enumerate_primitives_callback&  ) const {};
+	virtual	void		enumerate_primitives	( float4x4 const&, enumerate_primitives_callback& ) const {};
 
 public:
 	virtual	void		generate_contacts		( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const collision::geometry& og )					const;
@@ -65,7 +81,7 @@ public:
 	virtual	void		generate_contacts		( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const box_geometry& og )						const;
 	virtual	void		generate_contacts		( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const cylinder_geometry& og )					const;
 	virtual	void		generate_contacts		( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const collision::triangle_mesh_base& og )		const;
-	virtual	void		generate_contacts		( on_contact& c, const float4x4 &self_transform, const float4x4 &transform,  const compound_geometry& og )					const;
+	virtual	void		generate_contacts		( on_contact& c, const float4x4 &self_transform, const float4x4 &transform,  const composite_geometry& og )					const;
 
 private:
 	template < class ContactTests >
@@ -79,7 +95,6 @@ protected:
 
 private:
 	math::aabb 						m_bounding_aabb;
-	mutable memory::base_allocator*	m_allocator;
 	Opcode::MeshInterface*			m_mesh;
 	Opcode::Model*					m_model;
 	Opcode::AABBNoLeafNode const*	m_root;

@@ -54,13 +54,11 @@ void	xray::debug::enable_log_callback	( )
 	interlocked_decrement					(s_log_disable_counter);
 }
 
-#if !defined(XRAY_STATIC_LIBRARIES) || defined(MASTER_GOLD)
 void boost::throw_exception			( std::exception const& exception )
 {
 	XRAY_UNREFERENCED_PARAMETERS	( &exception );
 	FATAL							( "boost::throw_exception: %s", exception.what() );
 }
-#endif // #ifndef XRAY_STATIC_LIBRARIES
 
 void xray::debug::initialize		( debug::engine * engine )
 {

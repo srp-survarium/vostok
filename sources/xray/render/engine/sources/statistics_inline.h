@@ -29,6 +29,13 @@ template< class T > void statistics_value<T>::start()
 	value						= (T)0;
 }
 
+template< class T > void statistics_value<T>::clear()
+{
+	xray::memory::zero			(history);
+	history_index				=	0;
+	value						=	(T)0;
+}
+
 template< class T > T statistics_value<T>::average()
 {
 	T result = (T)0;

@@ -257,7 +257,7 @@ void project::clear( )
 	fill_tree_view						( m_project_tab->treeView->nodes );
 	m_map_backgrounds.Clear				( );
 	m_missing_resource_registry->clear	( );
-	m_level_editor->get_editor_world().get_ai_navigation_world().get_graph_generator()->clear_geometry	( );
+//	m_level_editor->get_editor_world().get_ai_navigation_world().get_graph_generator()->clear_geometry	( );
 
 	for(u16 i=0; i<uid_size; ++i)
 		session_uid[i] = 'a' + (char)uid_random.random(u32('z'-'a'));
@@ -640,6 +640,28 @@ void project::set_changed( )
 		m_level_editor->ide()->Text		= m_project_name + " (Modified) - X-Ray Editor";
 
 	m_changed = true;
+}
+
+void gather_statistic_object( scene_statistic^ stats, object_base^ o )
+{
+	o->gather_statistic( stats );
+}
+
+void gather_statistic_folder( scene_statistic^ stats, project_item_base^ f )
+{
+	project_item_folder^ folder = safe_cast<project_item_folder^>(f);
+
+	for each(project_item_base^ pf in folder->m_folders)
+		gather_statistic_folder( stats, pf );
+
+	for each(project_item_base^ po in folder->m_objects)
+		gather_statistic_object( stats, po->get_object() );
+}
+
+void project::gather_statistic( scene_statistic^ stats )
+{
+	project_item_folder^ f		= m_root_folder;
+	gather_statistic_folder		( stats, f );
 }
 
 } // namespace editor

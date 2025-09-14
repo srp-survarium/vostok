@@ -1,55 +1,84 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 20.11.2008
+//	Created		: 23.03.2012
 //	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2009
+//	Copyright (C) GSC Game World - 2012
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "network_world.h"
-
-#if !XRAY_PLATFORM_PS3
-#	include "io_service.h"
-#endif // #if !XRAY_PLATFORM_PS3
-
-#ifndef MASTER_GOLD
-static xray::command_line::key	s_no_network_key	("no_network", "", "", "disable network");
-#endif // #ifndef MASTER_GOLD
+#include <xray/network/packet.h>
+#include <xray/network/engine.h>
+#include "functor_response.h"
+#include "functor_order.h"
 
 using xray::network::network_world;
 
-network_world::network_world		( xray::network::engine& engine ) :
-	m_engine					( engine )
+static void empty_function ( ) { }
+
+network_world::network_world					( xray::network::engine& engine, xray::memory::base_allocator& orders_allocator ) :
+	m_engine							( engine ),
+	m_channel							( *xray::network::g_allocator, orders_allocator )
 {
-#ifndef MASTER_GOLD
-	if ( !s_no_network_key.is_set() )
-#endif // #ifndef MASTER_GOLD
-#if !XRAY_PLATFORM_PS3
-		m_ioservice				= XN_NEW(lowlevel::io_service);	
-#else // #if !XRAY_PLATFORM_PS3
-		(void)0;
-#endif // #if !XRAY_PLATFORM_PS3
+	m_channel.orders.user_initialize	( );
+	m_channel.responses.owner_initialize( NEW(functor_response)( &empty_function ), NEW(functor_response)( &empty_function ) );
 }
 
-network_world::~network_world		( )
+network_world::~network_world					( )
 {
-#if !XRAY_PLATFORM_PS3
-	XN_DELETE					( m_ioservice );
-#endif // #if !XRAY_PLATFORM_PS3
+	m_channel.responses.owner_finalize	( );
 }
 
-void network_world::tick			( u32 const logic_frame_id )
+void network_world::initialize					( )
 {
-	XRAY_UNREFERENCED_PARAMETER	( logic_frame_id );
-#ifndef MASTER_GOLD
-	if ( !s_no_network_key.is_set() )
-#endif // #ifndef MASTER_GOLD
-#if !XRAY_PLATFORM_PS3
-		m_ioservice->tick		( );
-#else // #if !XRAY_PLATFORM_PS3
-		(void)0;
-#endif // #if !XRAY_PLATFORM_PS3
+	m_channel.orders.owner_initialize	( XRAY_NEW_IMPL(orders_allocator(), functor_order)( &empty_function ), XRAY_NEW_IMPL(orders_allocator(), functor_order)( &empty_function ) );
+	m_channel.responses.user_initialize	( );
 }
 
-void network_world::clear_resources	( )
+void network_world::finalize					( )
 {
+	m_channel.orders.owner_finalize		( );
+}
+
+void network_world::tick						( )
+{
+	process_orders						( );
+	m_io_service.poll					( );
+}
+
+void network_world::add_order					( xray::network::order* const order )
+{
+	m_channel.orders.owner_push_back	( order );
+}
+
+void network_world::add_response				( xray::network::response* const response )
+{
+	m_channel.responses.owner_push_back	( response );
+}
+
+void network_world::process_orders				( )
+{
+	m_channel.responses.owner_delete_processed_items	( );
+	while ( order* const order = m_channel.orders.user_pop_front( ) )
+		order->execute					( );
+}
+
+void network_world::process_responses			( )
+{
+	m_channel.orders.owner_delete_processed_items	( );
+	while ( response* const response = m_channel.responses.user_pop_front() )
+		response->execute				( );
+}
+
+void network_world::clear_resources				( )
+{
+}
+
+void network_world::dispatch_callbacks			( )
+{
+	process_responses					( );
+}
+
+xray::network::packet* network_world::new_packet( )
+{
+	return								NEW( packet ) ( *g_allocator );
 }

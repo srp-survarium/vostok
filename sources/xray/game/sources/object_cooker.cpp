@@ -15,18 +15,17 @@
 #include "object_collision_geometry.h"
 #include "object_proximity_trigger.h"
 #include "object_scene.h"
-#include "object_values_storage.h"
 #include "object_composite.h"
 #include "object_volumetric_sound.h"
 #include "object_wire.h"
-#include "game_camera.h"
-#include "game.h" 
+//#include "game_camera.h"
+#include "game_world.h" 
 
 namespace stalker2 {
 
-object_cooker::object_cooker( game& game)
-:super	( resources::game_object_class, reuse_true, use_current_thread_id, use_current_thread_id ),
-m_game	( game )
+object_cooker::object_cooker( game_world& w )
+:super			( resources::game_object_class, reuse_true, use_current_thread_id, use_current_thread_id ),
+m_game_world	( w )
 {}
 
 mutable_buffer object_cooker::allocate_resource( resources::query_result_for_cook&	in_query, 
@@ -78,10 +77,10 @@ mutable_buffer object_cooker::allocate_resource( resources::query_result_for_coo
 	{
 		object_size = sizeof(object_track);
 	}else
-	if( strings::equal("camera", type))
-	{
-		object_size = sizeof(game_camera);
-	}else
+	//if( strings::equal("camera", type))
+	//{
+	//	object_size = sizeof(game_camera);
+	//}else
 	if( strings::equal("timer", type))
 	{
 		object_size = sizeof(object_timer);
@@ -93,10 +92,10 @@ mutable_buffer object_cooker::allocate_resource( resources::query_result_for_coo
 	if( strings::equal("proximity_trigger", type))
 	{
 		object_size = sizeof(object_proximity_trigger);
-	}else
-	if( strings::equal("values_storage", type))
-	{
-		object_size = sizeof(object_values_storage);
+	//}else
+	//if( strings::equal("values_storage", type))
+	//{
+	//	object_size = sizeof(object_values_storage);
 	}else
 	if( strings::equal("composite", type))
 	{
@@ -137,75 +136,75 @@ void object_cooker::create_resource( resources::query_result_for_cook& in_out_qu
 
 	if( strings::equal("solid_visual", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_solid_visual( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_solid_visual( m_game_world );
 	}else 
 	if( strings::equal("dynamic_visual", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_dynamic_visual( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_dynamic_visual( m_game_world );
 	}else 
 	if( strings::equal("skeleton_visual", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_skeleton_visual( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_skeleton_visual( m_game_world );
 	}else 
 	if( strings::equal("environment", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_environment( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_environment( m_game_world );
 	}else 
 	if( strings::equal("sky", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_sky( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_sky( m_game_world );
 	}else 
 	if( strings::equal("decal", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_decal( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_decal( m_game_world );
 	}else 
 	if( strings::equal("light", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_light( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_light( m_game_world );
 	}else
 	if( strings::equal("particle", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_particle_visual( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_particle_visual( m_game_world );
 	}else
 	if( strings::equal("speedtree", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_speedtree_visual( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_speedtree_visual( m_game_world );
 	}else
 	if( strings::equal("track", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_track( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_track( m_game_world );
 	}else
-	if( strings::equal("camera", type))
-	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) game_camera( m_game.get_game_world() );
-	}else
+	//if( strings::equal("camera", type))
+	//{
+	//	resource = new (in_out_unmanaged_resource_buffer.c_ptr()) game_camera(m_game_world );
+	//}else
 	if( strings::equal("timer", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_timer( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_timer( m_game_world );
 	}else
 	if( strings::equal("collision_geometry", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_collision_geometry( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_collision_geometry( m_game_world );
 	}else
 	if( strings::equal("proximity_trigger", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_proximity_trigger( m_game.get_game_world() );
-	}else
-	if( strings::equal("values_storage", type))
-	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_values_storage( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_proximity_trigger( m_game_world );
+	//}else
+	//if( strings::equal("values_storage", type))
+	//{
+	//	resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_values_storage( m_game.get_game_world() );
 	}else	
 	if( strings::equal("composite", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_composite( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_composite( m_game_world );
 	}else
 	if( strings::equal("volumetric_sound", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_volumetric_sound( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_volumetric_sound( m_game_world );
 	}else	
 	if( strings::equal("wire_set", type))
 	{
-		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_wire( m_game.get_game_world() );
+		resource = new (in_out_unmanaged_resource_buffer.c_ptr()) object_wire( m_game_world );
 	}else	
 	{
 		NOT_IMPLEMENTED				( );
@@ -223,9 +222,9 @@ void object_cooker::destroy_resource( resources::unmanaged_resource* resource )
 	resource->~unmanaged_resource();
 }
 
-object_scene_cooker::object_scene_cooker( game& game )
+object_scene_cooker::object_scene_cooker( game_world& w )
 :super	( resources::game_object_scene_class, reuse_true, use_current_thread_id, use_current_thread_id ),
-m_game	( game )
+m_game_world	( w )
 {}
 
 void object_scene_cooker::translate_query( resources::query_result_for_cook& parent )
@@ -283,7 +282,7 @@ void object_scene_cooker::on_scene_creation	( resources::query_result_for_cook* 
 {
 	configs::binary_config_value* t_object	= (configs::binary_config_value*)(parent->creation_data_from_user().c_ptr());
 
-	object_scene* resource					= NEW(object_scene)(m_game.get_game_world());
+	object_scene* resource					= NEW(object_scene)(m_game_world);
 	resource->load							( *t_object );
 	parent->set_unmanaged_resource			( resource, resources::nocache_memory, sizeof(object_scene) );
 	parent->finish_query					( result_success );

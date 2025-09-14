@@ -7,7 +7,7 @@
 #include "pch.h"
 #include "object_particle.h"
 #include "tool_particle.h"
-
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #include <xray/render/facade/editor_renderer.h>
@@ -40,18 +40,12 @@ object_particle::~object_particle( )
 	DELETE			( m_scene );
 }
 
-void object_particle::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( &debug::g_mt_allocator );
-}
-
 void object_particle::initialize_collision( )
 {
 	ASSERT( !m_collision->initialized() );
 	float3 extents				(1.0f,1.0f,1.0f);
 	
-	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( &debug::g_mt_allocator, create_scale( extents ) );
+	collision::geometry_instance* geom	= &*collision::new_box_geometry_instance( g_allocator, create_scale( extents ) );
 	m_collision->create_from_geometry	(
 					true,
 					this,

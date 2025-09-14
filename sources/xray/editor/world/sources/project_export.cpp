@@ -19,6 +19,116 @@
 namespace xray{
 namespace editor{
 
+scene_statistic::stat_node^ scene_statistic::find_child( stat_node::nodes^ storage, System::String^ name )
+{
+	for each(scene_statistic::stat_node^ n in storage)
+		if(n->m_name==name)
+			return n;
+	return nullptr;
+}
+
+scene_statistic::stat_node^ scene_statistic::build_hierrarchy( System::String^ key )
+{
+	array<System::String^>^ tree		= key->Split(':');
+	stat_node::nodes^ current_storage	= %m_storage;
+	scene_statistic::stat_node^ result	= nullptr;
+
+	u32 size	= tree->Length;
+	for(u32 i=0; i<size; ++i)
+	{
+		System::String^ name = tree[i];
+
+		result = find_child( current_storage, name );
+		if(result)
+		{
+			current_storage = %result->m_childs;
+		}else
+		{
+			result				= gcnew scene_statistic::stat_node;
+			result->m_name		= name;
+			R_ASSERT(result->m_name->Length!=0);
+			result->m_value		= 0;
+			current_storage->Add( result );
+			current_storage		= %result->m_childs;
+		}
+	}
+
+	return result;
+}
+
+void scene_statistic::add_statistic( System::String^ key, u32 value )
+{
+	scene_statistic::stat_node^ n = build_hierrarchy( key );
+	n->m_value						+= value;
+}
+
+void scene_statistic::add_properties( stat_node::nodes^ storage, wpf_controls::property_container^ container )
+{
+	for each(scene_statistic::stat_node^ n in storage)
+	{
+		property_descriptor^ curr_desc = nullptr;
+
+		if(n->m_childs.Count!=0)
+		{
+			wpf_controls::property_container^ sub	= gcnew wpf_controls::property_container;
+
+			curr_desc = container->properties->add_container	( n->m_name, "stats", "", sub );
+
+			add_properties							( %n->m_childs, sub );
+		}
+
+
+		if(n->m_value!=0)
+		{ // add value item
+				property_descriptor^ desc = gcnew property_descriptor( 
+											n->m_name,
+											"stats",
+											"",
+											nullptr, 
+											gcnew wpf_controls::object_property_value<u32>(n->m_value)
+											);
+
+				if(curr_desc)
+				{
+					curr_desc->inner_properties->Add("asd", desc);
+				}else
+					container->properties->add	( desc );
+		}
+
+	}
+}
+
+wpf_controls::property_container^ scene_statistic::get_property_container	( )
+{
+	wpf_controls::property_container^ result = gcnew wpf_controls::property_container;
+	add_properties	( %m_storage, result);
+
+	//for each( System::String^ k in m_storage.Keys )
+	//{
+	//	wpf_controls::property_container^ to_add	= result;
+
+	//	System::String^ prop_name					= k;
+	//	array<System::String^>^ tree				= k->Split(':');
+
+	//	u32 size  = tree->Length;
+	//	for(u32 i=0; i<size-1; ++i)
+	//	{
+	//		System::String^ curr = tree[i];
+	//	}
+
+	//	u32 value					= m_storage[k];
+	//	property_descriptor^ desc = gcnew property_descriptor( 
+	//								prop_name, 
+	//								gcnew wpf_controls::object_property_value<u32>(value)
+	//								);
+
+	//	result->properties->add		( desc );
+	//}
+
+	return result;
+}
+
+
 void on_vertices_loaded( resources::queries_result& data, 
 						xray::geometry_utils::geometry_collector* collector, 
 						float4x4 const* m, bool is_skeleton )
@@ -34,32 +144,80 @@ void on_vertices_loaded( resources::queries_result& data,
 
 	u32 vert_struct_size				= is_skeleton ? sizeof(render::vert_boned_4w) : sizeof(render::vert_static);
 	u32 position_offset					= is_skeleton ? (sizeof(u16[4])) : 0;
+	
+	u32 normal_offset					= position_offset + sizeof(float3);// normal lays after position
+
+	u32 uv_offset						= is_skeleton ?  
+										(
+										sizeof(u16[4])
+										+sizeof(float3)//p
+										+sizeof(float3)//n
+										+sizeof(float3)//t
+										+sizeof(float3)//bn
+										+sizeof(float[3])//w
+										)
+										: 
+										(
+										sizeof(float3) //p
+										+sizeof(float3)//n
+										+sizeof(float3)//t
+										+sizeof(float3)//bn
+										);
 
 	/*u32 icount =*/ indices_reader.r_u32();
-	u32 vert_start_offset = sizeof(u32) + position_offset;
+	u32 vert_start_offset = sizeof(u32);// + position_offset;
 
 	while(!indices_reader.eof())
 	{
 		u16 idx0			= indices_reader.r_u16();
 		u16 idx1			= indices_reader.r_u16();
 		u16 idx2			= indices_reader.r_u16();
-		
-		vertices_reader.seek(vert_start_offset+vert_struct_size*idx0);
-		float3 p0			= vertices_reader.r_float3() * (*m);
-		p0.z				*=-1.0f;
 
-		vertices_reader.seek(vert_start_offset+vert_struct_size*idx1);
-		float3 p1			= vertices_reader.r_float3() * (*m);
-		p1.z				*=-1.0f;
+		geometry_utils::geometry_collector_vert v0,v1,v2;
 
-		vertices_reader.seek(vert_start_offset+vert_struct_size*idx2);
-		float3 p2			= vertices_reader.r_float3() * (*m);
-		p2.z				*=-1.0f;
+		//v0
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx0 + position_offset);
+		v0.p				= vertices_reader.r_float3() * (*m);
+		v0.p.z				*=-1.0f;
 
-		if( p0.is_similar(p1) || p0.is_similar(p2) || p1.is_similar(p2) )
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx0 + normal_offset);
+		v0.n				= vertices_reader.r_float3();
+		v0.n.z				*=-1.0f;
+
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx0 + uv_offset);
+		v0.uv				= vertices_reader.r_float2();
+		v0.uv.y				= 1.0f - v0.uv.y;
+
+		//v1
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx1 + position_offset);
+		v1.p				= vertices_reader.r_float3() * (*m);
+		v1.p.z				*=-1.0f;
+
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx1 + normal_offset);
+		v1.n				= vertices_reader.r_float3();
+		v1.n.z				*=-1.0f;
+
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx1 + uv_offset);
+		v1.uv				= vertices_reader.r_float2();
+		v1.uv.y				= 1.0f - v1.uv.y;
+
+		//v2
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx2 + position_offset);
+		v2.p				= vertices_reader.r_float3() * (*m);
+		v2.p.z				*=-1.0f;
+
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx2 + normal_offset);
+		v2.n				= vertices_reader.r_float3();
+		v2.n.z				*=-1.0f;
+
+		vertices_reader.seek(vert_start_offset+vert_struct_size*idx2 + uv_offset);
+		v2.uv				= vertices_reader.r_float2();
+		v2.uv.y				= 1.0f - v2.uv.y;
+
+		if( v0.p.is_similar(v1.p) || v0.p.is_similar(v2.p) || v1.p.is_similar(v2.p) )
 			continue;
 
-		collector->add_triangle( p0, p2, p1 );
+		collector->add_triangle( v0, v2, v1 );
 	}
 }
 
@@ -155,7 +313,7 @@ void project::export_as_obj( bool selection_only )
 		System::String^ fn	= saveFileDialog.FileName->Replace("/", "\\");
 		fn					+=".obj";
 
-		collector.write_obj_file		(unmanaged_string(fn).c_str(), 100.0f);
+		collector.write_obj_file		(unmanaged_string(fn).c_str(), 100.0f, true, true );
 		get_level_editor()->ShowMessageBox( System::String::Format("OBJ file export to {0} succeeded.", fn), 
 											System::Windows::Forms::MessageBoxButtons::OK, 
 											System::Windows::Forms::MessageBoxIcon::Information );

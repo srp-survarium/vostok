@@ -45,6 +45,14 @@ void statistics_group::start()
 	}
 }
 
+void statistics_group::clear()
+{
+	for (statistics_base* it = first_statistics; it != 0; it = it->m_next)
+	{
+		it->clear();
+	}
+}
+
 u32 statistics_group::get_num_text_lines() const
 {
 	u32 num_lines = 1;
@@ -170,6 +178,17 @@ u32 statistics_group::render(xray::ui::world& ui_world, u32 x, u32 y)
  	
  	for (statistics_base* it = first_statistics; it != 0; it = it->m_next)
  	{
+		if (it->m_name != "render frame time" && 
+			it->m_name != "num draw calls" && 
+			it->m_name != "num total rendered triangles" && 
+			it->m_name != "num visible triangles" && 
+			it->m_name != "FPS" &&
+			it->m_name != "culling time" && 
+			it->m_name != "num total patches" && 
+			it->m_name != "num rendered patches" && 
+			it->m_name != "num visible patches")
+			continue;
+		
  		fs_new::virtual_path_string value;
  		it->print(value);
  		
@@ -225,6 +244,11 @@ void statistics::render(xray::ui::world& ui_world, u32 x, u32 y)
 	
  	for (statistics_group* it = first_group; it != 0; it = it->m_next)
  	{
+		if (it != &general_stat_group && 
+			it != &visibility_stat_group &&
+			it != &grass_stat_group)
+			continue;
+		
 		if (y_offset > 800)
 		{
 			x_offset	+= 350;
@@ -364,6 +388,13 @@ lpv_statistics_group::lpv_statistics_group(pcstr group_name):
 	lpv_lookup_time			(this, "LPV lookup time")
 {}
 
+grass_statistics_group::grass_statistics_group(pcstr group_name):
+	statistics_group		(group_name),
+	num_total_patches		(this, "num total patches"),
+	num_rendered_patches	(this, "num rendered patches"),
+	num_visible_patches		(this, "num visible patches")
+{}
+
 #pragma warning(pop)
 
 statistics::statistics():
@@ -382,7 +413,8 @@ statistics::statistics():
 	forward_decals_stat_group		("forward decals statistics"),
 	deferred_decals_stat_group		("deferred decals statistics"),
 	visibility_stat_group			("visibility statistics"),
-	general_stat_group				("general statistics")
+	general_stat_group				("general statistics"),
+	grass_stat_group				("grass statistics")
 {}
 
 u32 statistics::get_num_text_lines() const
@@ -407,6 +439,20 @@ void statistics::start()
 	backend::ref().num_setted_shader_constants		= 0;
 	backend::ref().num_draw_calls					= 0;
 }
+
+void statistics::clear()
+{
+	for (statistics_group* it = first_group; it != 0; it = it->m_next)
+	{
+		it->clear();
+	}
+
+	backend::ref().num_total_rendered_triangles		= 0;
+	backend::ref().num_total_rendered_points		= 0;
+	backend::ref().num_setted_shader_constants		= 0;
+	backend::ref().num_draw_calls					= 0;
+}
+
 
 statistics::~statistics()
 {

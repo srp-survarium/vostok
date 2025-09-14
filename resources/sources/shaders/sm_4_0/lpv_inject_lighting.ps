@@ -1,0 +1,45 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 22.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "spherical_harmonics_common.h"
+
+struct geometry_output_struct
+{
+    float4 position 	: SV_Position; // 2D slice vertex coordinates in homogenous clip space
+    float3 normal 		: NORMAL;
+    float3 color 		: COLOR;
+    uint rt_index 		: SV_RenderTargetArrayIndex;  // used to choose the destination slice
+};
+
+float3 	light_direction;
+float3 	light_position;
+float 	inject_flux_weight;
+
+void main(in geometry_output_struct input,
+		  out float4 out_radiance_coefficients_r : SV_Target0,
+		  out float4 out_radiance_coefficients_g : SV_Target1,
+		  out float4 out_radiance_coefficients_b : SV_Target2)
+{
+    float3 normal 				=	normalize(input.normal);
+	//float4 sh_coefficients 		=	low_order_sh_project_cone(normal, 3.0f / 4.0f * sh_pi);
+	float4 sh_coefficients 		=	low_order_sh_project_clampled_cosine_lobe(normal);// / 3.14f;
+	float flux 					= 	5.0f;
+	out_radiance_coefficients_r = 	flux * /*inject_flux_weight * */input.color.r * sh_coefficients;
+	out_radiance_coefficients_g = 	flux * /*inject_flux_weight * */input.color.g * sh_coefficients;
+	out_radiance_coefficients_b = 	flux * /*inject_flux_weight * */input.color.b * sh_coefficients;
+}
+
+
+
+
+
+
+
+
+
+
+

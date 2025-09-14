@@ -90,6 +90,8 @@ class terrain_render_model_instance : public render_model_instance_impl
 public:
 							terrain_render_model_instance	( )	{}
 	virtual math::aabb		get_aabb						( ) {return m_terrain_model->aabb();}
+	virtual u32				get_surfaces_count				( ) const {return 1;}
+	virtual void			get_surface_stats				( u32 surface_id, surface_stats& stats ) const;
 
 	terrain_render_model_ptr	m_terrain_model;
 };

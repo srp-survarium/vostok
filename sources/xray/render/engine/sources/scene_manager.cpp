@@ -15,6 +15,7 @@
 #include <xray/render/core/res_geometry.h>
 #include <xray/render/core/custom_config.h>
 #include <xray/render/core/untyped_buffer.h>
+#include <xray/render/facade/common_types.h>
 
 namespace xray {
 namespace render {
@@ -85,7 +86,7 @@ void scene_manager::remove_render_output_window	( render_output_window* in_outpu
 	m_output_windows.erase(found);
 }
 
-scene*	scene_manager::create_scene( xray::render::editor_renderer_configuration const& renderer_configuration)
+scene*	scene_manager::create_scene( xray::render::scene_configuration const& renderer_configuration)
 {
 	scene* new_scene	= NEW(scene) (renderer_configuration);
 	m_scenes.push_back(new_scene);
@@ -137,8 +138,9 @@ struct render_output_window_predicate
 	HWND		m_window;
 };
 
-render_output_window*	scene_manager::create_render_output_window( HWND window)
+render_output_window*	scene_manager::create_render_output_window( xray::render::output_window_configuration const& window_configuration )
 {
+	HWND window = (HWND)window_configuration.m_hwnd;
  	render_output_windows::iterator it = std::find_if( m_output_windows.begin(), m_output_windows.end(), render_output_window_predicate( window) );
  	if( it != m_output_windows.end())
 	{
@@ -146,8 +148,8 @@ render_output_window*	scene_manager::create_render_output_window( HWND window)
  		return *it;
 	}
 
-	render_output_window* new_output	= NEW(render_output_window)( window);
-	m_output_windows.push_back(new_output);
+	render_output_window* new_output	= NEW(render_output_window)( window_configuration );
+	m_output_windows.push_back			( new_output );
 
 	return new_output;
 }

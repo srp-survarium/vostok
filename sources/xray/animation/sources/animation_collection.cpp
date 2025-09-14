@@ -86,9 +86,9 @@ expression animation_collection::emit_impl	( mutable_buffer& buffer, animation_l
 
 	if( driving_animation )
 	{
-		expression ret_expression	= emitter->emit( buffer, *driving_animation, m_is_child_last_animation );
-		is_last_animation			= is_last_animation && m_is_child_last_animation; 
-		return ret_expression;
+		expression const& ret_expression	= emitter->emit( buffer, *driving_animation, m_is_child_last_animation );
+		is_last_animation					= is_last_animation && m_is_child_last_animation; 
+		return								ret_expression;
 	}
 	else
 	{

@@ -1,0 +1,86 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 16.03.2012
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2012
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "brdf.h"
+#include "gbuffer.h"
+#include "light.h"
+#include "positional_light.h"
+#include "colored_light.h"
+#include "spot_shadow.h"
+#include "light_ps_helper.h"
+
+struct vertex_output_struct
+{
+    float4 	position 		: SV_Position;
+	float3  color			: LightColor;
+	float3  base_position	: LightPosition;
+	float   range			: LightRange;
+};
+
+uniform float4 screen_res;
+uniform float3 s_eye_ray_corner;
+
+void main(in vertex_output_struct input,
+			out float4 out_color0: SV_Target0,
+			out float4 out_color1: SV_Target1)
+{
+	float2 screen_uv			=	input.position.xy * screen_res.zw;
+	
+	// Compute eye_ray using screen texture coordinates
+	float3						eye_ray; 
+	eye_ray.xy					= 	s_eye_ray_corner.xy * (1 - screen_uv.xy * 2.0f);
+	eye_ray.z					= 	s_eye_ray_corner.z;
+	
+	g_data gb					=	gbuffer_read(screen_uv, eye_ray);
+	
+	light_factors				result;
+	
+	//mul(m_V, float4(0,20,0,1)).xyz
+	
+	float3 base_position		= 	mul(m_V, float4(input.base_position, 1.0f)).xyz;
+	
+	float3 light_direction		= 	base_position - gb.position;
+	
+	// distance from surface to light
+	float square_distance		= squared_length( light_direction );
+	float distance				= sqrt( square_distance );
+	light_direction				/= distance;
+	
+//	float3 eye_view_space		= mul(m_V, float4(eye_position.xyz, 1)).xyz;
+//	float3 view_direction		= normalize( eye_view_space - surface_position );
+	float3 view_direction		= normalize( -gb.position );
+	
+	//
+	
+	// radial_attenuation
+	float attenuation			= pow( 
+		max( abs(1.f - saturate( square_distance/square(input.range) )), 0.001f ), 
+		2.0f  
+	);
+	
+	float3 diffuse				=	attenuation * input.color * saturate(dot(light_direction, normalize(gb.normal)));
+	
+	float3 reflected_light_direction	= reflect(-light_direction, normalize(gb.normal));
+	
+	const float spec_power		=	30.0f;
+	
+	float3 specular				= attenuation * input.color * pow(saturate(dot( reflected_light_direction, view_direction )), spec_power);
+	//	attenuation  * pow(
+	//		max( dot( reflected_light_direction, view_direction ), 0.f ),
+	//		clamp( spec_power * (1.0f - dot( light_direction, normalize(gb.normal) )) / 2.f, 0.001f, 255.0f) 
+	//	) * (spec_power + 2.f);	
+	
+	out_color0			=	float4(0.5f * diffuse, 1.0f);
+	out_color1			=	float4(0.5f * specular, 1.0f);
+}
+
+
+
+
+
+
+

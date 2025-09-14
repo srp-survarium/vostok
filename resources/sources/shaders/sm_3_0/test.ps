@@ -1,0 +1,17 @@
+#include "common.h"
+
+struct test_vert_out
+{
+	half4 p 	: POSITION;
+	half4 c 	: COLOR;
+	half2 tc 	: TEXCOORD0;
+};
+
+
+half4 main( test_vert_out input ) : COLOR0
+{
+	half4 c = 	tex2D	(s_base, input.tc); 
+//    c.rgb 	*= 	sqrt(dot(input.c.rgb,1.h/3.0h));
+
+	return c;
+}

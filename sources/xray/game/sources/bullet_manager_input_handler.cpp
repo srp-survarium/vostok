@@ -9,7 +9,7 @@
 #include "bullet_manager.h"
 #include "game.h"
 #include "game_world.h"
-#include "game_camera.h"
+//#include "game_camera.h"
 #include <xray/input/world.h>
 #include <xray/input/keyboard.h>
 

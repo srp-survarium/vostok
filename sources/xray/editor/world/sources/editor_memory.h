@@ -7,10 +7,6 @@
 #ifndef MEMORY_H_INCLUDED
 #define MEMORY_H_INCLUDED
 
-#ifdef DEBUG
-#	include <typeinfo.h>
-#endif // #ifdef DEBUG
-
 #include <xray/memory_macros.h>
 #include <xray/editor/world/api.h>
 

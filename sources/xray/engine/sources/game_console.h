@@ -24,7 +24,7 @@ public:
 	virtual bool			get_active			( ) const;
 	virtual void			on_activate			( );
 	virtual void			on_deactivate		( );
-	virtual void			tick				( );
+	virtual void			tick				( xray::render::scene_view_ptr const& scene_view );
 
 	virtual	bool			on_keyboard_action	( input::world* input_world, input::enum_keyboard key, input::enum_keyboard_action action );
 	virtual	bool			on_gamepad_action	( input::world* input_world, input::gamepad_button button, input::enum_gamepad_action action );

@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 #include "property_grid_panel.h"
 #include "model_editor.h"
 
@@ -19,7 +19,7 @@ using namespace xray::editor::wpf_controls::control_containers;
 namespace xray {
 namespace model_editor {
 
-void edit_object_mesh::on_collision_settings_ready( resources::queries_result& data )
+void edit_object_solid_mesh::on_collision_settings_ready( resources::queries_result& data )
 {
 	if( data.is_successful() )
 	{
@@ -33,9 +33,9 @@ void edit_object_mesh::on_collision_settings_ready( resources::queries_result& d
 		set_modified	( );
 }
 
-bool edit_object_mesh::load_collision( )
+bool edit_object_solid_mesh::load_collision( )
 {
-	for each ( collision_primitive_item^ p in m_collision_primitives ) delete p;
+	for each ( collision_primitive_item_solid_mesh^ p in m_collision_primitives ) delete p;
 	m_collision_primitives.Clear();
 
 	bool result = true;
@@ -49,8 +49,8 @@ bool edit_object_mesh::load_collision( )
 	float3 const mass_center = m_physics_settings->mass_center;
 	for( ;it!=it_e; ++it)
 	{
-		configs::lua_config_value const& current = (*it);
-		collision_primitive_item^ itm		= gcnew collision_primitive_item(this);
+		configs::lua_config_value const& current		= (*it);
+		collision_primitive_item_solid_mesh^ itm		= gcnew collision_primitive_item_solid_mesh(m_model_editor, this);
 		itm->load							( current, mass_center );
 		m_collision_primitives.Add			( itm );
 	}
@@ -62,7 +62,7 @@ bool edit_object_mesh::load_collision( )
 	return							result;
 }
 
-void edit_object_mesh::save_collision( )
+void edit_object_solid_mesh::save_collision( )
 {
 	if(m_collision_primitives.Count)
 	{
@@ -72,7 +72,7 @@ void edit_object_mesh::save_collision( )
 
 		float3 const mass_center = m_physics_settings->mass_center;
 		int i=0;
-		for each ( collision_primitive_item^ prim in m_collision_primitives )
+		for each ( collision_primitive_item_solid_mesh^ prim in m_collision_primitives )
 		{
 			configs::lua_config_value current	= root[i];
 			prim->save							( current, mass_center );
@@ -90,12 +90,12 @@ void edit_object_mesh::save_collision( )
 	}
 }
 
-void edit_object_mesh::duplicate_collision_primitive_clicked( button^ button )
+void edit_object_solid_mesh::duplicate_collision_primitive_clicked( button^ button )
 {
-	collision_primitive_item^ prim					= safe_cast<collision_primitive_item^>(button->tag);
+	collision_primitive_item_solid_mesh^ prim	= safe_cast<collision_primitive_item_solid_mesh^>(button->tag);
 	
 
-	collision_primitive_item^ prim_copy	= gcnew collision_primitive_item(this);
+	collision_primitive_item_solid_mesh^ prim_copy	= gcnew collision_primitive_item_solid_mesh(m_model_editor, this);
 	prim_copy->type						= prim->type;
 	prim_copy->position					= prim->position;
 	prim_copy->rotation					= prim->rotation;
@@ -110,9 +110,9 @@ void edit_object_mesh::duplicate_collision_primitive_clicked( button^ button )
 	set_modified						( );
 }
 
-void edit_object_mesh::remove_collision_primitive_clicked( button^ button )
+void edit_object_solid_mesh::remove_collision_primitive_clicked( button^ button )
 {
-	collision_primitive_item^ prim					= safe_cast<collision_primitive_item^>(button->tag);
+	collision_primitive_item_solid_mesh^ prim		= safe_cast<collision_primitive_item_solid_mesh^>(button->tag);
 	m_collision_primitives.Remove					( prim );
 
 	prim->set_selected								( false );
@@ -123,9 +123,9 @@ void edit_object_mesh::remove_collision_primitive_clicked( button^ button )
 	m_collision_panel->set_property_container		( get_collision_property_container() );
 }
 
-void edit_object_mesh::add_sphere_collision_primitive_clicked( button^ )
+void edit_object_solid_mesh::add_sphere_collision_primitive_clicked( button^ )
 {
-	collision_primitive_item^ prim		= gcnew collision_primitive_item(this);
+	collision_primitive_item_solid_mesh^ prim		= gcnew collision_primitive_item_solid_mesh(m_model_editor, this);
 	prim->type						= (int)collision::primitive_sphere;
 	prim->position					= Float3(float3(0,0,0));
 	prim->rotation					= Float3(float3(0,0,0));
@@ -136,9 +136,9 @@ void edit_object_mesh::add_sphere_collision_primitive_clicked( button^ )
 	prim->activate					( true );
 }
 
-void edit_object_mesh::add_box_collision_primitive_clicked ( button^ )
+void edit_object_solid_mesh::add_box_collision_primitive_clicked ( button^ )
 {
-	collision_primitive_item^ prim		= gcnew collision_primitive_item(this);
+	collision_primitive_item_solid_mesh^ prim		= gcnew collision_primitive_item_solid_mesh(m_model_editor, this);
 	prim->type						= (int)collision::primitive_box;
 	prim->position					= Float3(float3(0,0,0));
 	prim->rotation					= Float3(float3(0,0,0));
@@ -149,9 +149,9 @@ void edit_object_mesh::add_box_collision_primitive_clicked ( button^ )
 	prim->activate					( true );
 }
 
-void edit_object_mesh::add_cylinder_collision_primitive_clicked ( button^ )
+void edit_object_solid_mesh::add_cylinder_collision_primitive_clicked ( button^ )
 {
-	collision_primitive_item^ prim		= gcnew collision_primitive_item(this);
+	collision_primitive_item_solid_mesh^ prim		= gcnew collision_primitive_item_solid_mesh(m_model_editor, this);
 	prim->type						= (int)collision::primitive_cylinder;
 	prim->position					= Float3(float3(0,0,0));
 	prim->rotation					= Float3(float3(0,0,0));
@@ -163,27 +163,27 @@ void edit_object_mesh::add_cylinder_collision_primitive_clicked ( button^ )
 }
 
 
-property_container^ edit_object_mesh::get_collision_property_container	( )
+property_container^ edit_object_solid_mesh::get_collision_property_container	( )
 {
 	property_container^	result		= gcnew property_container;
 
 	control_container^ container	= result->add_dock_container( false );
 	container->category				= "General";
-	button^ but = container->add_button( "Switch to edit", gcnew Action<button^>( this, &edit_object_mesh::switch_to_collision_clicked ) );
+	button^ but = container->add_button( "Switch to edit", gcnew Action<button^>( this, &edit_object_solid_mesh::switch_to_collision_clicked ) );
 	but->width	= 100;
 
 	container						= result->add_dock_container( false );
 	container->category				= "Add new item";
 
-	but		= container->add_button( "sphere", gcnew Action<button^>( this, &edit_object_mesh::add_sphere_collision_primitive_clicked ) );
+	but		= container->add_button( "sphere", gcnew Action<button^>( this, &edit_object_solid_mesh::add_sphere_collision_primitive_clicked ) );
 	but->width	= 50;
-	but		= container->add_button	( "box", gcnew Action<button^>( this, &edit_object_mesh::add_box_collision_primitive_clicked ) );
+	but		= container->add_button	( "box", gcnew Action<button^>( this, &edit_object_solid_mesh::add_box_collision_primitive_clicked ) );
 	but->width	= 40;
-	but		= container->add_button	( "cyliner", gcnew Action<button^>( this, &edit_object_mesh::add_cylinder_collision_primitive_clicked ) );
+	but		= container->add_button	( "cyliner", gcnew Action<button^>( this, &edit_object_solid_mesh::add_cylinder_collision_primitive_clicked ) );
 	but->width	= 50;
 
 	int i=0;
-	for each ( collision_primitive_item^ prim in m_collision_primitives )
+	for each ( collision_primitive_item_solid_mesh^ prim in m_collision_primitives )
 	{
 		property_container^	sub		= gcnew property_container;
 		editor_base::object_properties::initialize_property_container( prim, sub );
@@ -200,10 +200,10 @@ property_container^ edit_object_mesh::get_collision_property_container	( )
 			}
 		);
 
-		prim->m_current_desc->add_button( " x ", "", gcnew Action<button^>( this, &edit_object_mesh::remove_collision_primitive_clicked ) )->tag = prim;
-		prim->m_current_desc->add_button( "duplicate", "", gcnew Action<button^>( this, &edit_object_mesh::duplicate_collision_primitive_clicked ) )->tag = prim;
+		prim->m_current_desc->add_button( " x ", "", gcnew Action<button^>( this, &edit_object_solid_mesh::remove_collision_primitive_clicked ) )->tag = prim;
+		prim->m_current_desc->add_button( "duplicate", "", gcnew Action<button^>( this, &edit_object_solid_mesh::duplicate_collision_primitive_clicked ) )->tag = prim;
 		
-		prim->m_current_desc->selection_changed		+= gcnew System::Action<System::Boolean>(prim, &collision_primitive_item::set_selected);
+		prim->m_current_desc->selection_changed		+= gcnew System::Action<System::Boolean>(prim, &collision_primitive_item_mesh::set_selected);
 	}
 
 	editor_base::object_properties::initialize_property_container( m_physics_settings, result );

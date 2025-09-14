@@ -6,4 +6,3 @@
 
 #include "pch.h"
 #include <xray/core/library_linkage.h>
-#include <xray/render/engine/library_linkage.h>

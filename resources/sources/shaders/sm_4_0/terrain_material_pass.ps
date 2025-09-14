@@ -1,0 +1,86 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 20.03.2012
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2012
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_TDETAIL,
+		CONFIG_TNORMAL
+*/
+
+//		CONFIG_TDIFFUSE,
+
+#include "common.h"
+#include "gbuffer.h"
+#include "material.h"
+#include "vertex_input.h"
+#include "gamma_correction.h"
+
+Texture2D 	texture_mask;
+
+Texture2D 	texture_diffuse_0;
+Texture2D 	texture_diffuse_1;
+Texture2D 	texture_diffuse_2;
+Texture2D 	texture_diffuse_3;
+
+Texture2D 	texture_detail_0;
+Texture2D 	texture_detail_1;
+
+Texture2D  	t_accumulator_dif;
+Texture2D  	t_accumulator_spec;
+Texture2D  	t_ssao_accumulator;
+
+float4 		constant_tiles;
+
+float4 		constant_detail_tiles;
+
+uniform float4 screen_res;
+
+void main(in vertex_output_struct input,
+		  out float4 out_color: SV_Target0)
+{
+	material_parameters parameters 		= get_material_parameters(input);
+	fill_material_parameters			(parameters);
+	
+	out_color							=	float4(0.0f, 0.0f, 0.0f, 0.0f);
+	
+	const float2 screen_uv				= 	input.homogeneous_position.xy / screen_res.xy;
+	
+	const float3 accum_diffuse			= 	t_accumulator_dif.Sample(s_accumulator, screen_uv).rgb;
+	const float3 accum_specular			= 	t_accumulator_spec.Sample(s_accumulator, screen_uv).rgb;
+	
+	float4 mask							=	texture_mask.Sample(s_base, parameters.tc);
+	mask								=	normalize(mask);
+	
+	float4 diffuse_0					=	texture_diffuse_0.Sample(s_base, parameters.tc * constant_tiles.x);
+	float4 diffuse_1					=	texture_diffuse_1.Sample(s_base, parameters.tc * constant_tiles.y);
+	float4 diffuse_2					=	texture_diffuse_2.Sample(s_base, parameters.tc * constant_tiles.z);
+	float4 diffuse_3					=	texture_diffuse_3.Sample(s_base, parameters.tc * constant_tiles.w);
+	
+	float4 detail_0						=	1.0f;
+	float4 detail_1						=	1.0f;
+	
+#if CONFIG_TDETAIL	
+	detail_0							=	texture_detail_0.Sample(s_base, parameters.tc * constant_detail_tiles.x);
+	detail_1							=	texture_detail_1.Sample(s_base, parameters.tc * constant_detail_tiles.y);
+#endif // #if CONFIG_TDETAIL
+	
+	float3 diffuse						=	mask.x * diffuse_0.xyz + 
+											mask.y * diffuse_1.xyz + 
+											mask.z * diffuse_2.xyz + 
+											mask.w * diffuse_3.xyz;
+										
+	diffuse								*=	accum_diffuse;
+	
+	out_color							= 	(min(detail_0.x, detail_1.x)) * (float4(diffuse, 1.0f) + float4(accum_specular, 0.0f));
+}
+
+
+
+
+
+
+
+

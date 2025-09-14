@@ -1,0 +1,44 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 07.06.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+float3 sun_direction_parameter;
+static const float3 sun_position = -sun_direction_parameter * 500.0f;
+
+float4 main(v2p_TL input) : SV_TARGET
+{
+	float2 uv 						= input.Tex0;
+	float4 projected_sun_position 	= mul(m_VP, float4(sun_position, 1.0f));
+	projected_sun_position.xy 		/= projected_sun_position.w;
+	float frame_depth 				= gbuffer_read_frame_depth(uv) / 400.0f;
+	
+	FLATTEN 
+	if (projected_sun_position.w >= 0.0f && frame_depth >= 1.0f)
+	{
+		projected_sun_position 		= projected_sun_position * 0.5f + 0.5f;
+		projected_sun_position.y 	= 1.0f - projected_sun_position.y;
+		
+		float dist 					= saturate(distance(uv, projected_sun_position.xy));
+		
+		return pow(1.0f - dist, 3.0f);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+
+
+
+
+
+
+
+
+
+

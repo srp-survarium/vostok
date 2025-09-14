@@ -41,7 +41,7 @@ static configs::enum_tuple animation_tuples[] =
 
 xray::animation::world* xray::animation::create_world(
 		engine& engine,
-		render::scene_ptr const& test_scene,
+//		render::scene_ptr const& test_scene,
 		render::scene_renderer* scene_renderer,
 		render::debug::renderer* debug_renderer
 	)
@@ -54,7 +54,7 @@ xray::animation::world* xray::animation::create_world(
 	}
 #endif // #ifndef MASTER_GOLD
 
-	XRAY_CONSTRUCT_REFERENCE	( s_world, animation_world )( engine, test_scene, scene_renderer, debug_renderer );
+	XRAY_CONSTRUCT_REFERENCE	( s_world, animation_world )( engine, /*test_scene, */scene_renderer, debug_renderer );
 	return						( s_world.c_ptr() );
 }
 

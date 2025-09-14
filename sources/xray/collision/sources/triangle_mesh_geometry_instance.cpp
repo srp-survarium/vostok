@@ -68,6 +68,7 @@ bool triangle_mesh_geometry_instance::ray_query				(
 	float3 const new_origin		= m_inverted_matrix.transform_position(origin);
 	float3 const new_direction	= m_inverted_matrix.transform_direction(direction);
 	float const new_max_distance = length(m_inverted_matrix.transform_position(origin + direction*max_distance) - new_origin);
+
 	ray_query_helper			helper(max_distance/new_max_distance, predicate );
 	if ( !m_triangle_mesh->ray_query( object, new_origin, new_direction, new_max_distance, distance, triangles, triangles_predicate_type( &helper, &ray_query_helper::predicate) ) )
 		return					false;

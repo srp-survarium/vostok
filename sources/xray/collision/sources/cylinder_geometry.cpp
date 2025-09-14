@@ -5,110 +5,238 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "cylinder_geometry.h"
 
+#include "cylinder_geometry.h"
 #include "sphere_geometry.h"
 #include "box_geometry.h"
 #include "triangle_mesh_base.h"
+#include <xray/collision/geometry_double_dispatcher.h>
 #include <xray/collision/contact_info.h>
-#include <xray/render/base/debug_renderer.h>
+#include <xray/render/facade/debug_renderer.h>
+#include "xray/math_randoms_generator.h"
+//. #include <ode/odemath.h>
+
+/*
+ * 3-way dot product. dDOTpq means that elements of `a' and `b' are spaced
+ * p and q indexes apart respectively. dDOT() means dDOT11.
+ * in C++ we could use function templates to get all the versions of these
+ * functions - but on some compilers this will result in sub-optimal code.
+ */
+
+//#define dDOTpq(a,b,p,q) ((a)[0]*(b)[0] + (a)[p]*(b)[q] + (a)[2*(p)]*(b)[2*(q)])
+
+//extern float dDOT   (const float *a, const float *b);// { return dDOTpq(a,b,1,1); }
+//extern float dDOT13 (const float *a, const float *b);// { return dDOTpq(a,b,1,3); }
+//extern float dDOT31 (const float *a, const float *b);// { return dDOTpq(a,b,3,1); }
+//extern float dDOT33 (const float *a, const float *b);// { return dDOTpq(a,b,3,3); }
+//extern float dDOT14 (const float *a, const float *b);// { return dDOTpq(a,b,1,4); }
+//extern float dDOT41 (const float *a, const float *b);// { return dDOTpq(a,b,4,1); }
+//extern float dDOT44 (const float *a, const float *b);// { return dDOTpq(a,b,4,4); }
 
 namespace xray {
 namespace collision {
 
-cylinder_geometry::cylinder_geometry( xray::memory::base_allocator* allocator, float radius, float half_length ):
-m_radius( radius ), m_half_length( half_length )
+cylinder_geometry::cylinder_geometry( float radius, float half_length ) :
+	m_radius						( radius ),
+	m_half_length					( half_length )
 {
-	XRAY_UNREFERENCED_PARAMETERS(allocator);
 }
 
-void	cylinder_geometry::generate_contacts( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const collision::geometry& og )const
+void cylinder_geometry::destroy		( memory::base_allocator* allocator )
 {
-		og.generate_contacts( c, transform, self_transform, *this );
+	XRAY_UNREFERENCED_PARAMETER		( allocator );
 }
 
-void	cylinder_geometry::generate_contacts( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const triangle_mesh_base& og )const
+void cylinder_geometry::accept	( geometry_double_dispatcher& dispatcher, geometry const& node ) const
 {
-		og.generate_contacts( c, transform, self_transform, *this );
+	node.visit			( dispatcher, *this );
 }
 
-void	cylinder_geometry::generate_contacts( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const compound_geometry& og )const
+void cylinder_geometry::visit	( geometry_double_dispatcher& dispatcher, box_geometry const& node ) const
 {
-	XRAY_UNREFERENCED_PARAMETERS	(&c, &self_transform, &transform, &og);
+	dispatcher.dispatch	( node, *this );
 }
 
-void	cylinder_geometry::render( render::debug::renderer& renderer, float4x4 const& matrix ) const
+void cylinder_geometry::visit	( geometry_double_dispatcher& dispatcher, sphere_geometry const& node ) const
 {
-	renderer.draw_cylinder_solid( matrix, float3( radius(), half_length(), radius() ), math::color( 255u, 0u, 0u, 255u ) );
+	dispatcher.dispatch	( node, *this );
 }
 
-void cylinder_geometry::add_triangles				( triangles_type& triangles ) const
+void cylinder_geometry::visit	( geometry_double_dispatcher& dispatcher, cylinder_geometry const& node ) const
 {
-	XRAY_UNREFERENCED_PARAMETER		(triangles);
-	UNREACHABLE_CODE();
+	dispatcher.dispatch	( node, *this );
 }
 
-bool cylinder_geometry::aabb_query			( object const* object, math::aabb const& aabb, triangles_type& triangles ) const
+void cylinder_geometry::generate_contacts	(
+		on_contact& c,
+		const float4x4& self_transform,
+		const float4x4& transform,
+		const collision::geometry& og
+	) const
 {
-	XRAY_UNREFERENCED_PARAMETERS	(object, &aabb, &triangles);
+	c.change_order( ); 
+	og.generate_contacts( c, transform, self_transform, *this ); //change order
+	c.change_order( ); 
+}
+
+void cylinder_geometry::generate_contacts	(
+		on_contact& c,
+		const float4x4& self_transform,
+		const float4x4& transform,
+		const triangle_mesh_base& og
+	) const
+{
+	c.change_order( ); 
+	og.generate_contacts( c, transform, self_transform, *this ); //change order
+	c.change_order( ); 
+}
+
+void cylinder_geometry::generate_contacts	(
+		on_contact& c,
+		const float4x4& self_transform,
+		const float4x4& transform,
+		const composite_geometry& og
+	) const
+{
+	XRAY_UNREFERENCED_PARAMETERS	( &c, &self_transform, &transform, &og );
+}
+
+void cylinder_geometry::render	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& matrix ) const
+{
+//	renderer.draw_cylinder_solid( scene, matrix, float3( radius(), half_length(), radius() ), math::color( 255u, 0u, 0u, 255u ) );
+	renderer.draw_cylinder( scene, matrix, float3( radius(), half_length(), radius() ), math::color( 255u, 255u, 255u, 255u ) );
+}
+
+void cylinder_geometry::add_triangles	( triangles_type& triangles ) const
+{
+	XRAY_UNREFERENCED_PARAMETER			( triangles );
+	UNREACHABLE_CODE					( );
+}
+
+bool cylinder_geometry::aabb_query		( object const* object, math::aabb const& aabb, triangles_type& triangles ) const
+{
+	XRAY_UNREFERENCED_PARAMETERS		( object, &aabb, &triangles );
 	return	false;
 }
 
-bool cylinder_geometry::cuboid_query		( object const* object, math::cuboid const& cuboid, triangles_type& triangles ) const
+enum cylinder_plane_types_enum
 {
-	XRAY_UNREFERENCED_PARAMETERS	(object, &cuboid, &triangles);
+	cylinder_plane_type_top_circle,
+	cylinder_plane_type_bottom_circle,
+	cylinder_plane_type_round_side
+};
+
+float3 cylinder_geometry::get_random_surface_point	( math::random32& randomizer ) const
+{
+	float const area1					= math::pi * math::sqr( m_radius );
+	float const area2					= 2 * math::pi * m_radius * m_half_length;
+	float const total_area				= 2 * area1 + area2;
+
+	typedef fixed_vector< float, 6 >	cylinder_planes_type;
+	cylinder_planes_type				cylinder_planes;
+
+	cylinder_planes.push_back			( area1 );
+	cylinder_planes.push_back			( cylinder_planes[0] + area1 );
+	cylinder_planes.push_back			( cylinder_planes[1] + area2 );
+
+	float random_area					= randomizer.random_f( total_area );
+	cylinder_planes_type::iterator iter	= std::lower_bound( cylinder_planes.begin(), cylinder_planes.end(), random_area, std::less<float>() );
+	R_ASSERT							( iter != cylinder_planes.end() );
+
+	float const previous_area			= iter == cylinder_planes.begin() ? 0 : (*(iter - 1));
+	float const delta_area				= ( random_area - previous_area ) / ( *iter - previous_area );
+	R_ASSERT							( delta_area >= 0 );
+	float const alpha					= math::pi_x2 - delta_area * math::pi_x2;
+
+	cylinder_plane_types_enum const plane_type = cylinder_plane_types_enum( iter - cylinder_planes.begin() );
+	
+	float3								result;
+	switch ( plane_type )
+	{
+		case cylinder_plane_type_round_side:
+		{
+			result.y					= -m_half_length + randomizer.random_f( 2.f * m_half_length );
+			result.x					= m_radius * math::cos( alpha );
+			result.z					= m_radius * math::sin( alpha );
+		}
+		break;
+
+		case cylinder_plane_type_top_circle:
+		case cylinder_plane_type_bottom_circle:
+		{
+			result.y					= plane_type == cylinder_plane_type_top_circle ? m_half_length : -m_half_length;
+			float const radius_random	= -m_radius + randomizer.random_f( 2.f * m_radius );
+			float const r_coefficient	= math::sqrt( math::sqr( m_radius ) - math::sqr( radius_random ) );
+			result.x					= r_coefficient * math::cos( alpha );
+			result.z					= r_coefficient * math::sin( alpha );
+		}
+		break;
+	}
+	
+	return								result;
+}
+
+float cylinder_geometry::get_surface_area	( ) const
+{
+	return 2 * math::pi * m_radius * ( m_radius + 2 * m_half_length );
+}
+
+bool cylinder_geometry::cuboid_query	( object const* object, math::cuboid const& cuboid, triangles_type& triangles ) const
+{
+	XRAY_UNREFERENCED_PARAMETERS		( object, &cuboid, &triangles );
 	return	false;
 }
 
-bool cylinder_geometry::ray_query			(	object const* object,
-												float3 const& origin,
-												float3 const& direction,
-												float max_distance,
-												float& distance,
-												ray_triangles_type& triangles,
-												triangles_predicate_type const& predicate	) const
+bool cylinder_geometry::ray_query		(
+		object const* object,
+		float3 const& origin,
+		float3 const& direction,
+		float max_distance,
+		float& distance,
+		ray_triangles_type& triangles,
+		triangles_predicate_type const& predicate
+	) const
 {
-	XRAY_UNREFERENCED_PARAMETERS	(object, &origin, &direction, max_distance, distance, &triangles, &predicate);
+	XRAY_UNREFERENCED_PARAMETERS		( object, &origin, &direction, max_distance, distance, &triangles, &predicate );
 	return	false;
 }
 
-xray::math::aabb& cylinder_geometry::get_aabb		( math::aabb& result ) const
+xray::math::aabb& cylinder_geometry::get_aabb	( math::aabb& result ) const
 {
-	result				= 
-		math::create_min_max(
-			float3( -m_radius, -m_half_length, -m_radius ),
-			float3( +m_radius, +m_half_length, +m_radius )
-		);
-	return				result;
+	result										= math::create_aabb_min_max(
+														float3( -m_radius, -m_half_length, -m_radius ),
+														float3( +m_radius, +m_half_length, +m_radius )
+													);
+	return										result;
 }
 
 bool cylinder_geometry::aabb_test		( math::aabb const& aabb ) const
 {
-	XRAY_UNREFERENCED_PARAMETERS		(&aabb);
+	XRAY_UNREFERENCED_PARAMETERS		( &aabb );
 	return true;
 }
 
 bool cylinder_geometry::cuboid_test		( math::cuboid const& cuboid ) const
 {
-	XRAY_UNREFERENCED_PARAMETERS		(&cuboid);
+	XRAY_UNREFERENCED_PARAMETERS		( &cuboid );
 	return true;
 }
 
-bool cylinder_geometry::ray_test		( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
-{
-	XRAY_UNREFERENCED_PARAMETERS		(&origin, &direction, max_distance, distance);
-	return true;
-}
+//bool cylinder_geometry::ray_test		( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
+//{
+//	XRAY_UNREFERENCED_PARAMETERS		( &origin, &direction, max_distance, distance );
+//	return true;
+//}
 
-void cylinder_geometry::get_aabb		( math::aabb &bbox, const float4x4 &self_transform ) const
+void cylinder_geometry::get_aabb		( math::aabb& bbox, const float4x4& self_transform ) const
 {
 	
-	float3 size = float3( self_transform.j.xyz() * half_length() ).abs() +  
-					(	float3( self_transform.i.xyz() ).abs() + 
-						float3( self_transform.k.xyz() ).abs() ) * radius();
+	float3 size							= float3( self_transform.j.xyz() * half_length() ).abs() +  
+										( float3( self_transform.i.xyz() ).abs() + 
+										  float3( self_transform.k.xyz() ).abs() ) * radius();
 
-	bbox = math::create_min_max( self_transform.c.xyz() - size, self_transform.c.xyz()  + size );
-
+	bbox								= math::create_aabb_min_max( self_transform.c.xyz() - size,
+																self_transform.c.xyz() + size );
 }
 
 ////////////////////////////////////////////////NOT//REFACTORED//////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +271,8 @@ static const float  M_SQRT1_2		=0.7071067811865475244008443621048490f;
 //computes distances O1-O3, O1-O4, O2-O3, O2-O4
 //in "point" returns mean point between intersection points with smallest distance
 /////////////////////////////////////////////////////////////////////////////////////////////////
-inline bool circleIntersection(const float3& n1,const float3 &cp1,float r1,const float3 &n2,const float3 &cp2,float r2,float3 &point){
+inline bool circleIntersection(const float3& n1,const float3 &cp1,float r1,const float3 &n2,const float3 &cp2,float r2,float3 &point)
+{
 float c1=(cp1|n1);
 float c2=(cp2|n2);
 float _cos=(n1|n2);
@@ -327,13 +456,16 @@ void lineClosestApproach (const float3 &pa, const float3 &ua,
 // @@@ some stuff to optimize here, reuse code in contact point calculations.
 
 void dCylBox ( on_contact& on_c,
-			const float3& p1, const float4x4 &RR1,
+			const float3& p1, const float4x4 &RR1_,
 			const float radius,const float lz, const float3 &p2,
-			const float4x4 &RR2, const float3 &side2
+			const float4x4 &RR2_, const float3 &side2
 			//float3 &normal, float *depth, int *code,
 			//int maxc, int skip
 			)
 {
+	
+	float4x4 RR1 = RR1_, RR2 = RR2_;
+	remove_scale( RR1 ); remove_scale( RR2 );
 	
 	float depth;
 	int code;
@@ -535,7 +667,7 @@ tAx = R1k * _cos - R1i * _sin;
 //dCROSS114(Ax,=,tAx,R2+0);
 Ax = tAx ^ R2i;
 
-float Axmag = Ax.magnitude();
+float Axmag = Ax.length();
 if(Axmag>math::epsilon_7)
 {
 Ax *= 1.f/Axmag;
@@ -563,7 +695,7 @@ proj=(p1-p2)|R2j;
 
 tAx = -p1 + p2 + R2j * proj;
 //dNormalize3(tAx);
-float tAxmag = tAx.magnitude();
+float tAxmag = tAx.length();
 if( tAxmag > math::epsilon_7 )
 {
 	//tAx.normalize();
@@ -599,7 +731,7 @@ Ax = -p1 + p2 + R2k*proj;
 //Ax[0]=-p1[0]+p2[0]+R2[2]*proj;
 //Ax[1]=-p1[1]+p2[1]+R2[6]*proj;
 //Ax[2]=-p1[2]+p2[2]+R2[10]*proj;
-tAxmag = tAx.magnitude();
+tAxmag = tAx.length();
 if( tAxmag > math::epsilon_7 )
 {
  tAx *= 1.f/tAxmag;
@@ -742,7 +874,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],(_sin*radius+_cos*hlz+boxProj),Ax[0],Ax[1]
 	
 	contact_info ci;
 	ci.depth	= depth;
-	ci.normal	=  normal;//+-?//replacement/distance;
+	ci.normal	=  -normal;//+-?//replacement/distance;
 	ci.position	= (pa + pb) * 0.5f;
 	on_c( ci );
 
@@ -759,7 +891,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],(_sin*radius+_cos*hlz+boxProj),Ax[0],Ax[1]
 		//for (i=0; i<3; ++i) contact[0].pos[i] = pb[i];
 		ci.position	= pb;
 		//contact[0].depth = *depth;
-		ci.normal	=  normal;
+		ci.normal	=  -normal;
 		ci.depth = depth;
 		on_c( ci );
 		//return 1;
@@ -866,7 +998,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],(_sin*radius+_cos*hlz+boxProj),Ax[0],Ax[1]
 			ci[0].depth = depth;
 		for(i=0;i<ret;++i)
 		{
-			ci[i].normal = normal;
+			ci[i].normal = -normal;
 			on_c(ci[i]);
 		}
 		//return ret;
@@ -878,7 +1010,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],(_sin*radius+_cos*hlz+boxProj),Ax[0],Ax[1]
   //contact[0].depth = *depth;
   contact_info ci;
   ci.position = vertex;
-  ci.normal = normal;
+  ci.normal = -normal;
   ci.depth = depth;
   on_c(ci);
   //return 1;
@@ -903,6 +1035,8 @@ void dCylCyl (on_contact& on_c,
 	R1.c.xyz().set(0,0,0);
 	float4x4 R2 = RR2;
 	R2.c.xyz().set(0,0,0);
+
+	remove_scale( R1 ); remove_scale( R2 );
 
 	const float3	&R1i = R1.lines[0].xyz();
 	const float3	&R1j = R1.lines[1].xyz();
@@ -983,7 +1117,7 @@ float3 tAx,Ax,pa,pb;
 Ax = R1j ^ R2j;
 //dNormalize3(Ax);
 
-float Axmag = Ax.magnitude();
+float Axmag = Ax.length();
 if(Axmag > math::epsilon_7)
 {
 	Ax *= 1.f/Axmag;
@@ -1214,7 +1348,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],cyl1Pr+cyl2Pr,Ax[0],Ax[1],Ax[2],5);
 		//return 1;
 		contact_info ci;
 		ci.position = pb;
-		ci.normal = normal;
+		ci.normal = -normal;
 		ci.depth = depth;
 		on_c(ci);
 		return;
@@ -1226,7 +1360,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],cyl1Pr+cyl2Pr,Ax[0],Ax[1],Ax[2],5);
 		//return 1;
 		contact_info ci;
 		ci.position = pa;
-		ci.normal = normal;
+		ci.normal = -normal;
 		ci.depth = depth;
 		on_c(ci);
 		return;
@@ -1238,7 +1372,7 @@ TEST(p[0]*Ax[0]+p[1]*Ax[1]+p[2]*Ax[2],cyl1Pr+cyl2Pr,Ax[0],Ax[1],Ax[2],5);
 		//return 1;
 		contact_info ci;
 		ci.position = point;
-		ci.normal = normal;
+		ci.normal = -normal;
 		ci.depth = depth;
 		on_c(ci);
 		return;
@@ -1314,7 +1448,7 @@ if (code == 6) {
 	contact_info ci;
 	ci.position = 0.5f*(pa+pb);
 	ci.depth = depth;
-	ci.normal = normal;
+	ci.normal = -normal;
 	on_c( ci );
 	return;
   }
@@ -1455,7 +1589,7 @@ if (code == 6) {
   ci[0].position = vertex;
   ci[0].depth = depth;
   for(int i = 0; i < ret; ++i )
-  {	  ci[i].normal = normal;
+  {	  ci[i].normal = -normal;
 	  on_c(ci[i]);
   }
   //return ret;
@@ -1482,7 +1616,8 @@ void dCollideCylS (
  	
 	float4x4 R = RR;
 	R.c.xyz().set(0,0,0);
-
+	
+	remove_scale( R );
 	
 	const float3	&Ri = R.lines[0].xyz();
 	const float3	&Rj = R.lines[1].xyz();
@@ -1559,7 +1694,7 @@ proj = (p2-p1)| Rj;
 	//Ax[1]=p2[1]-p1[1]-R[5]*proj;
 	//Ax[2]=p2[2]-p1[2]-R[9]*proj;
 Ax = p2 - p1 - Rj * proj;
-float Axmag = Ax.magnitude();
+float Axmag = Ax.length();
 if(Axmag>math::epsilon_7)
 {
 	//Ax.normalize();
@@ -1572,8 +1707,22 @@ if(Axmag>math::epsilon_7)
 //Ax[1]=p[1];
 //Ax[2]=p[2];
 Ax = p;
+
+float Ax_sq_magnitude = Ax.square_length();
+
+if( Ax_sq_magnitude < math::epsilon_7 )// the centers of the primitives  coincide
+{
+	contact_info ci; 
+	ci.depth = sphereRadius;
+	ci.normal = float3(0,1,0);
+	ci.position = p2;
+	on_c(ci);
+	return;
+}
+//float Ax_magnitude = math::sqrt( Ax_sq_magnitude );
 //dNormalize3(Ax);
-Ax.normalize();
+//Ax.normalize();
+Ax *= Ax_sq_magnitude;
 
 	float3 pa;
     float sign, factor;
@@ -1645,7 +1794,7 @@ TEST((p|Ax),sphereRadius+cylRadius*_sin+hl*_cos,Ax[0],Ax[1],Ax[2],14);
 //return 1;
 contact_info ci; 
 ci.depth = -s;
-ci.normal = normal;
+ci.normal = -normal;
 ci.position = p2 - normal * sphereRadius;
 on_c(ci);
 return;
@@ -1665,7 +1814,7 @@ void	cylinder_geometry::generate_contacts( on_contact& c, const float4x4 &self_t
 
 		//dxGeom *o1, dxGeom *o2, int flags,
 		//dContactGeom *contact, int skip
-		);
+		); 
 }
 void	cylinder_geometry::generate_contacts( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const box_geometry& og )				const 
 {
@@ -1681,11 +1830,223 @@ math::float3 const* cylinder_geometry::vertices	( ) const
 	NOT_IMPLEMENTED(return 0);
 }
 
+u32 cylinder_geometry::vertex_count				( ) const
+{
+	NOT_IMPLEMENTED(return 0);
+}
+
+u32 const* cylinder_geometry::indices			( ) const
+{
+	NOT_IMPLEMENTED(return 0);
+}
+
 u32 const* cylinder_geometry::indices			( u32 triangle_id ) const
 {
 	XRAY_UNREFERENCED_PARAMETER (triangle_id);
 	NOT_IMPLEMENTED(return 0);
 }
+
+u32 cylinder_geometry::index_count				( ) const
+{
+	NOT_IMPLEMENTED(return 0);
+}
+
+void	cylinder_geometry::enumerate_primitives	( enumerate_primitives_callback& cb ) const
+{
+	cb.enumerate( float4x4().identity(), primitive( cylinder( m_half_length, m_radius ) ) );
+}
+
+void	cylinder_geometry::enumerate_primitives	( float4x4 const& transform, enumerate_primitives_callback& cb ) const
+{
+	cb.enumerate( transform, primitive( sphere( m_radius ) ) );
+}
+
+inline void	d_matrix_tmp(  float *out_ode_rotation, float *out_ode_position, const float4x4	&in_m )
+{
+	//ode_rotation : 4x3 is 12 max index 11 3,7,11 unused
+
+	out_ode_rotation[0] = in_m.i[0]; out_ode_rotation[4] = in_m.i[1]; out_ode_rotation[8] =  in_m.i[2];
+	out_ode_rotation[1] = in_m.j[0]; out_ode_rotation[5] = in_m.j[1]; out_ode_rotation[9] =  in_m.j[2];
+	out_ode_rotation[2] = in_m.k[0]; out_ode_rotation[6] = in_m.k[1]; out_ode_rotation[10] = in_m.k[2];
+	
+	out_ode_rotation[3] = out_ode_rotation[7] = out_ode_rotation[11] = 0;
+
+	out_ode_position[0] = in_m.c[0]; out_ode_position[1]=in_m.c[1]; out_ode_position[2]=in_m.c[2]; out_ode_position[3] = 0;
+}
+
+bool cylinder_geometry::ray_test(	math::float3 const& origin, 
+									math::float3 const& direction, 
+									float max_distance, 
+									float& distance ) const
+//int dCollideCylRay(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip) 
+{
+	//(o1) == dCylinderClassUser);
+	//(o2) == dRayClass);
+   float radius = m_radius;
+//   float lz		= m_half_length* 2.0f;
+   float lz2	= m_half_length;
+
+//const float* R = dGeomGetRotation(o1); // rotation of the cylinder
+//const float* p = dGeomGetPosition(o1); // rotation of the cylinder
+   float R[12];
+   float p[4];
+   d_matrix_tmp(R, p, float4x4().identity());
+
+   float3 start,dir;
+   start = origin;
+   dir= direction;
+
+   float length = max_distance;
+
+   // compute some useful info
+   float3 cs,q,r;
+   float C,k;
+   cs[0] = start[0] - p[0];
+   cs[1] = start[1] - p[1];
+   cs[2] = start[2] - p[2];
+
+//   k = dDOT41(R+1, cs.elements);	// position of ray start along cyl axis (Y)
+   k = (float3(R[0*4+1], R[1*4+1], R[2*4+1]) | cs);	// position of ray start along cyl axis (Y)
+   
+   q[0] = k*R[0*4+1] - cs[0];
+   q[1] = k*R[1*4+1] - cs[1];
+   q[2] = k*R[2*4+1] - cs[2];
+
+   C = (q | q) - radius*radius;
+   // if C < 0 then ray start position within infinite extension of cylinder
+   // if ray start position is inside the cylinder
+   int inside_cyl=0;
+   if (C<0 && !(k<-lz2 || k>lz2)) 
+	   inside_cyl=1;
+   // compute ray collision with infinite cylinder, except for the case where
+   // the ray is outside the cylinder but within the infinite cylinder
+   // (it that case the ray can only hit endcaps)
+   if (!inside_cyl && C < 0) 
+   {
+	   // set k to cap position to check
+	   if (k < 0) 
+		   k = -lz2; 
+	   else 
+		   k = lz2;
+   }else 
+   {
+	   float uv = (float3(R[0*4+1], R[1*4+1], R[2*4+1]) | dir);
+
+	   r[0] = uv*R[0*4+1] - dir[0];
+	   r[1] = uv*R[1*4+1] - dir[1];
+	   r[2] = uv*R[2*4+1] - dir[2];
+	   float A = (r | r);
+	   float B = 2*(q | r);
+	   k = B*B-4*A*C;
+	   if (k < 0) 
+	   {
+		   // the ray does not intersect the infinite cylinder, but if the ray is
+		   // inside and parallel to the cylinder axis it may intersect the end
+		   // caps. set k to cap position to check.
+		   if (!inside_cyl) 
+			   return false;
+
+		   if (uv < 0) 
+			   k = -lz2; 
+		   else 
+			   k = lz2;
+	   }else 
+	   {
+		   k = math::sqrt(k);
+		   A = 1.0f / (2*A);
+		   float alpha = (-B-k)*A;
+		   if (alpha < 0) 
+		   {
+			   alpha = (-B+k)*A;
+			   if (alpha<0) 
+				   return false;
+		   }
+		   if (alpha>length) 
+			   return false;
+		   // the ray intersects the infinite cylinder. check to see if the
+		   // intersection point is between the caps
+		   float3 contact_pos, contact_norm;
+		   contact_pos[0] = start[0] + alpha*dir[0];
+		   contact_pos[1] = start[1] + alpha*dir[1];
+		   contact_pos[2] = start[2] + alpha*dir[2];
+		   q[0] = contact_pos[0] - p[0];
+		   q[1] = contact_pos[1] - p[1];
+		   q[2] = contact_pos[2] - p[2];
+
+//		   k = dDOT14(q.elements, R+1);
+		   k = (q | float3( R[1+4*0], R[1+4*1], R[1+4*2]) );
+
+		   float nsign = inside_cyl ? -1.0f : 1.0f;
+		   if (k >= -lz2 && k <= lz2) 
+		   {
+			   contact_norm[0] = nsign * (contact_pos[0] -
+				   (p[0] + k*R[0*4+1]));
+			   contact_norm[1] = nsign * (contact_pos[1] -
+				   (p[1] + k*R[1*4+1]));
+			   contact_norm[2] = nsign * (contact_pos[2] -
+				   (p[2] + k*R[2*4+1]));
+
+			   contact_norm.normalize_safe(float3(0,1,0));
+			   distance = alpha;
+			   return true;
+		   }
+		   // the infinite cylinder intersection point is not between the caps.
+		   // set k to cap position to check.
+		   if (k < 0) 
+			   k = -lz2; 
+		   else 
+			   k = lz2;
+	   }
+   }
+
+   math::plane	cap_plane( float3(0,1,0), -k );
+   
+   float cap_intersect_dist;
+   if( cap_plane.intersect_ray(start, dir, cap_intersect_dist))
+   {
+
+	float3 pt_intersect = start + dir*cap_intersect_dist;
+	float dist = (pt_intersect-float3(0,k,0)).length();
+	if(dist<radius)
+	{
+		distance = cap_intersect_dist;
+		return true;
+	}else
+	{
+		return false;
+	}
+   }else
+	   return false;
+
+   //// check for ray intersection with the caps. k must indicate the cap
+   //// position to check
+   //// perform a ray plan interesection
+   //// R+1 is the plan normal
+   //q[0]			= start[0] - (p[0] + k*R[0*4+1]);
+   //q[1]			= start[1] - (p[1] + k*R[1*4+1]);
+   //q[2]			= start[2] - (p[2] + k*R[2*4+1]);
+   //float alpha	= -dDOT14(q.elements,R+1);
+   //float k2		= dDOT14(dir.elements,R+1);
+   //
+   //if (k2==0) 
+	  // return 0; // ray parallel to the plane
+
+   //alpha/=k2;
+   //
+   //if (alpha<0 || alpha>length) 
+	  // return 0; // too short
+
+   ////contact->pos[0]=start[0]+alpha*dir[0];
+   ////contact->pos[1]=start[1]+alpha*dir[1];
+   ////contact->pos[2]=start[2]+alpha*dir[2];
+   ////float nsign = (k<0)?-REAL(1.):REAL(1.);
+   ////contact->normal[0]=nsign*R[0*4+1];
+   ////contact->normal[1]=nsign*R[1*4+1];
+   ////contact->normal[2]=nsign*R[2*4+1];
+   //distance=alpha;
+   //return 1;
+}
+
 
 //int dCollideCylB (dxGeom *o1, dxGeom *o2, int flags,
 //		dContactGeom *contact, int skip)
@@ -1762,24 +2123,6 @@ u32 const* cylinder_geometry::indices			( u32 triangle_id ) const
 //  aabb[4] = pos[2] - zrange;
 //  aabb[5] = pos[2] + zrange;
 //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 } // namespace collision
 } // namespace xray

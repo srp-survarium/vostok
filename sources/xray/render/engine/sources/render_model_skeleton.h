@@ -41,6 +41,8 @@ public:
 			void	update					( render::vector<float4x4> const& bones );
 
 	children const&	models					( ) const { return m_children; }
+			
+			void	get_bind_pose			( float4x4* matrices, u32 count ) const;
 
 	shader_constant_host*			m_bones_matrices_shader_constant;
 	render::vector< float4x4 >		m_inverted_bones_matrices_in_bind_pose;
@@ -67,6 +69,9 @@ public:
 			void			assign_original			( skeleton_render_model_ptr v );
 			void			update_render_matrices	( float4x4 const* matrices, u32 count );
 	virtual bool			get_locator				( pcstr locator_name, model_locator_item& result ) const;
+	virtual u32				get_surfaces_count		( ) const {return m_instances_count;}
+	virtual void			get_surface_stats		( u32 surface_id, surface_stats& stats ) const;
+	virtual void			get_bind_pose			( float4x4* matrices, u32 count ) const;
 
 	render::vector< float4x4 >			m_bones_matrices;
 	skeleton_render_model_ptr			m_original;

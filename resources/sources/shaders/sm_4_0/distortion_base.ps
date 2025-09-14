@@ -1,0 +1,34 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_USE_BRANCHING,
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common.h"
+#include "material.h"
+#include "vertex_input.h"
+
+uniform float3 distortion_scale;
+
+float4 	main			(in vertex_output_struct input) : SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	float2 dist_vector 	= t_base.Sample(s_linear, parameters.tc).xy;
+	
+	return float4((dist_vector.xy * 2.0f - 1.0f) * parameters.color.rg * distortion_scale.xy / 255.0f, 1, 1.0);
+}
+
+
+
+
+
+
+
+

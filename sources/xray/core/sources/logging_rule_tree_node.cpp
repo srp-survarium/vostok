@@ -16,22 +16,24 @@ node::~node				()
 {
 }
 
-void node::set			(pcstr initiator_path, int rule)
+void node::set			(pcstr const initiator_path, int const verbosity, u32 const thread_id)
 {
 	if ( !initiator_path || !*initiator_path )
 	{
-		m_verbosity = rule & ~recurse_0;
-		if ( !(rule & recurse_0) )
+		m_verbosity = verbosity & ~recurse_0;
+		m_thread_id	= thread_id;
+		if ( !(verbosity & recurse_0) )
 		{
 			clean();
 		}
 		return;
 	}
 
+	pcstr const next_path_portion = strchr(initiator_path, initiator_separator);
+
+	threading::mutex_raii guard( m_mutex );
+
 	Folder::iterator it = m_folder.find( initiator_path );
-
-	pcstr next_path_portion = strchr(initiator_path, initiator_separator);
-
 	node* child;
 	if ( it != m_folder.end() )
 	{
@@ -43,11 +45,13 @@ void node::set			(pcstr initiator_path, int rule)
 		m_folder.insert( std::make_pair(initiator_path, child) );
 	}
 	
-	return child->set(next_path_portion ? next_path_portion+1 : NULL, rule);
+	return child->set(next_path_portion ? next_path_portion+1 : NULL, verbosity, thread_id);
 }
 
 void node::clean		()
 {
+	threading::mutex_raii guard( m_mutex );
+
 	Folder::iterator	i = m_folder.begin( );
 	Folder::iterator	e = m_folder.end( );
 	for ( ; i != e; ++i ) {
@@ -62,7 +66,16 @@ void node::clean		()
 
 int node::get_verbosity	(path_parts* path, int inherited_verbosity)
 {
-	int verbosity = m_verbosity != 0 ? m_verbosity : inherited_verbosity;
+	threading::mutex_raii guard( m_mutex );
+
+	int verbosity = 
+		(m_thread_id != u32(-1) && m_thread_id != threading::current_thread_id()) ?
+		silent :
+		(
+			m_verbosity != 0 ?
+			m_verbosity :
+			inherited_verbosity
+		);
 
 	pcstr cur_part = path->get_current_element();
 	if ( !cur_part || cur_part[0] == NULL )

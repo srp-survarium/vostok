@@ -1,0 +1,24 @@
+#include "common.h"
+#include "sload.h"
+#include "gbuffer.h"
+
+uniform float  base_tex_bias;
+
+g_struct 	main	( p_flat I )
+{
+	// diffuse
+	float3 D	= t_base.SampleBias( s_base, I.tcdh.xy, base_tex_bias).xyz;	// IN:  rgb.a
+
+	// hemi,sun,material
+	float 	ms;
+	float 	h	= I.position.w;
+
+	g_struct O 	= gbuffer_store ( I.position, normalize((float3)I.N.xyz), float4( D.rgb, 0.f), 0.f, 0.f, 1.f, 1.f);
+		
+	// 2. Standart output
+//	O.Ne       	= float4	(normalize((float3)I.N.xyz), 					1.h);
+//	O.position 	= float4 	(I.position.xyz + O.Ne.xyz*def_virtualh/2.h,	0.h);
+//	O.C			= float4	(D.rgb,											0.f);	// OUT: rgb.gloss
+
+	return O;
+}

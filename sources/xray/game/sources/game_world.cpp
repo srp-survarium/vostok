@@ -7,107 +7,108 @@
 #include "pch.h"
 #include "game_world.h"
 #include "game.h"
-#include "camera_director.h"
 #include "cell_manager.h"
 #include "bullet_manager.h"
-#include <xray/console_command.h>
 #include "event_manager.h"
 #include "object_scene.h"
-#include "hud.h"
+#include "actor.h"
+#include "actor_input_controller.h"
 #include "free_fly_camera.h"
-#include <xray/physics/api.h>
-#include <xray/physics/world.h>
+#include "stats.h"
 
-#include "test_anim_object.h"
+#include <xray/sound/world.h>
+#include <xray/sound/world_user.h>
+#include <xray/console_command.h>
 
-namespace stalker2{
+#include <xray/network/packet_reader.h>
 
-#ifdef XRAY_STATIC_LIBRARIES
-extern xray::uninitialized_reference< xray::memory::doug_lea_allocator_type >	g_physics_allocator;
-#endif // #ifdef XRAY_STATIC_LIBRARIES
+#include <xray/render/facade/scene_renderer.h>
+
+//static void server_on_packet_received	( xray::network::server& server, xray::network::client_session& client, xray::network::packet_reader& packet )
+//{
+//	string256 message;
+//	packet.r_string						( message );
+//
+//	xray::network::packet* const answer_packet = NEW (xray::network::packet) ( *stalker2::g_allocator );
+//	answer_packet->append				( message );
+//	server.send							( client, answer_packet );
+//}
+//
+static void client_on_packet_received	( xray::network::client& client, xray::network::packet_reader& packet )
+{
+	string256 message;
+	packet.r_string						( message );
+
+	xray::network::packet* const answer_packet = NEW (xray::network::packet) ( *stalker2::g_allocator );
+	answer_packet->append				( "the second message" );
+	client.send							( answer_packet );
+}
+
+static void client_on_connected			( xray::network::client& client )
+{
+	xray::network::packet* const packet = NEW (xray::network::packet) ( *stalker2::g_allocator );
+	packet->append						( "Hello, world!" );
+	client.send							( packet );
+}
+
+namespace stalker2 {
+
 
 extern pcstr  editor_project_ext;
 extern pcstr  resources_converted_path;
 extern pcstr  resources_path;
 
 
-extern bool	b_rtp_dbg_input;
-static console_commands::cc_bool rtp_dbg_input( "rtp_dbg_input", b_rtp_dbg_input, true, console_commands::command_type_user_specific );
-
 game_world::game_world( game& game )
-:m_game					( game ),
-m_cell_manager			( NEW (cell_manager) ( game ) ),
-m_bullet_manager		( NEW (bullet_manager) ( game ) ),
+:super					( game ),
 m_collision_tree		( NULL ),
 m_game_time_ms			( 0 ),
 m_game_time_sec			( 0 ),
 m_last_frame_time_ms	( 0 ),
 m_last_frame_time_sec	( 0 ),
-m_physics_world			( NULL ),
-m_test_anim_object		( NULL )
+//m_test_anim_object	( NULL ),
+m_bullet_manager		( 0 ),
+m_local_actor			( NULL ),
+//m_server				( game.get_network_world() ),
+m_client				( game.get_network_world() )
 {
-	m_camera_director					= NEW(camera_director)	( *this );
+	init_physics						( );
+
+	m_cell_manager		= NEW(cell_manager)( game, *this),
+#ifndef MASTER_GOLD
+	m_dbg_name							= "Game World";
+#endif //#ifndef MASTER_GOLD
+	m_bullet_manager					= NEW(bullet_manager)( *this );
+	m_camera_director					= NEW(camera_director)( *this );
 	m_camera_director->set_no_delete	( );
-	turn_rtp_debug						( NULL );
-	rtp_dbg_input.subscribe_on_change( boost::bind( &game_world::turn_rtp_debug, this, _1 ) );
+	m_actor_input_controller			= NEW(actor_input_controller)( *this );
+	m_free_fly_camera					= NEW(free_fly_camera)(*this, m_camera_director);
+//	m_test_anim_object					= NEW(test_anim_object)(*this);
+	query_resources			( );
 
-	init_physics		( );
-	m_hud				= NEW(hud)( *this );
+	u16 const port					= 2510;
 
-	m_free_fly_camera	= NEW(free_fly_camera)(*this);
+//	m_server.set_on_packet_received	( boost::bind( &server_on_packet_received, boost::ref(m_server), _1, _2) );
+//	m_server.start_accepting		( port, 16 );
 
-//	m_test_anim_object	= NEW(test_anim_object)(*this);
+	m_client.set_on_packet_received	( boost::bind( &client_on_packet_received, boost::ref(m_client), _1) );
+	m_client.set_on_connected		( boost::bind( &client_on_connected, boost::ref(m_client)) );
+	m_client.connect				( "localhost", port );
 }
 
-void game_world::init_physics( )
-{
-#ifdef XRAY_STATIC_LIBRARIES
-	m_physics_world					= physics::create_world_bt( stalker2::g_physics_allocator.c_ptr(), *this );
-#else // #ifdef XRAY_STATIC_LIBRARIES
-	m_physics_world					= physics::create_world_bt( memory::g_crt_allocator, *this );
-#endif // #ifdef XRAY_STATIC_LIBRARIES
-	m_physics_world->initialize		( );
-}
 
-bool g_physics_enabled = true;
-void game_world::test_physics1( )
-{
-	g_physics_enabled = !g_physics_enabled;
-	LOG_INFO("physics is %s now.", g_physics_enabled?"enabled":"disabled");
-//	if(!m_dynamicsWorld)
-//		return;
-//
-//	if(body_added)
-//		m_dynamicsWorld->removeRigidBody( m_dynamic_body );
-//
-//
-//	btTransform			trans;
-//	trans.setRotation	( start_rotation );
-//	trans.setOrigin		( start_point );
-//
-//	m_dynamic_body->setWorldTransform	( trans );
-////	m_dynamic_body->setAngularVelocity	( btVector3(math::pi_d2, math::pi_d2,0) );
-//	m_dynamicsWorld->addRigidBody	( m_dynamic_body );
-//	m_dynamic_body->activate(true);
-////.	m_dynamic_body->setGravity			( btVector3(0,-0.05f,0) );
-//	body_added = true;
-}
 
-void game_world::test_physics2( )
-{
-}
-
-void game_world::test_physics3( )
-{}
 
 game_world::~game_world( )
 {
 	DELETE				( m_free_fly_camera );
-	DELETE				( m_hud );
+	DELETE				( m_local_actor );
+	DELETE				( m_actor_input_controller );
+
 	camera_director* cd = m_camera_director.c_ptr(); 
 	m_camera_director	= NULL;
 	DELETE				( cd );
-	DELETE				( m_test_anim_object );
+//	DELETE				( m_test_anim_object );
 }
 
 void game_world::time_update( )
@@ -124,24 +125,44 @@ void game_world::time_update( )
 
 void game_world::tick( )
 {
+	super::tick					( );
 	time_update					( );
 
-	if(m_test_anim_object)
-		m_test_anim_object->tick();
+	//if(m_test_anim_object)
+	//	m_test_anim_object->tick();
 
-//	g_physics_enabled = false;
-	if(g_physics_enabled)
-		m_physics_world->tick			( );
-
-	scenes_list::iterator it = m_active_scenes.begin();
-	scenes_list::iterator it_e = m_active_scenes.end();
-	for( ;it!=it_e; ++it)
-		(*it)->tick			( );
+	//scenes_list::iterator it = m_active_scenes.begin();
+	//scenes_list::iterator it_e = m_active_scenes.end();
+	//for( ;it!=it_e; ++it)
+	//	(*it)->tick			( );
 
 	m_camera_director->tick				( );
+
+	if(m_local_actor)
+	{
+		m_local_actor->tick				( );
+		m_actor_input_controller->inverted_view_matrix() = m_local_actor->character_head_transform();
+		//m_actor_input_controller->update_camera_matrix(	float2( m_frame_events.m_onframe_turn_x, m_frame_events.m_onframe_turn_y ), 
+		//										m_frame_events.m_onframe_move_fwd, 
+		//										m_frame_events.m_onframe_move_right,
+		//										m_inverted_view_matrix );
+
+	}
+
+	m_camera_director->apply			( );
+
 	m_cell_manager->set_inv_view_matrix	( m_camera_director->get_inverted_view_matrix( ) );
 	m_cell_manager->tick				( );
 	m_bullet_manager->tick				( m_game_time_sec );
+
+	get_game().get_sound_world().get_logic_world_user().set_listener_properties_interlocked(
+		get_sound_scene(),
+		m_inverted_view_matrix.c.xyz(),
+		m_inverted_view_matrix.k.xyz(),
+		m_inverted_view_matrix.j.xyz());
+
+	get_game().get_stats().set_camera_stats	( m_inverted_view_matrix.c.xyz(), m_inverted_view_matrix.k.xyz() );
+
 }
 
 u32 game_world::game_time_ms	( )
@@ -165,14 +186,17 @@ float game_world::last_frame_time_sec ( )
 
 void game_world::unload( )
 {
-	scenes_list::iterator it = m_active_scenes.begin();
-	scenes_list::iterator it_e = m_active_scenes.end();
-	for( ;it!=it_e; ++it)
-	{
-		(*it)->stop			( true );
-	}
+	//scenes_list::iterator it = m_active_scenes.begin();
+	//scenes_list::iterator it_e = m_active_scenes.end();
+	//for( ;it!=it_e; ++it)
+	//{
+	//	(*it)->stop			( true );
+	//}
 
-	m_active_scenes.clear				( );
+	switch_to_free_fly_camera	( );
+	DELETE						( m_local_actor );
+
+//	m_active_scenes.clear				( );
 	m_camera_director->switch_to_camera	( NULL, "null" );
 	m_cell_manager->unload				( );
 	ASSERT								( empty() );
@@ -183,7 +207,8 @@ void game_world::unload( )
 
 void game_world::switch_to_hud_camera( )
 {
-	m_camera_director->switch_to_camera	( m_hud, "hud game camera" );
+	if(m_local_actor)
+		m_camera_director->switch_to_camera	( m_actor_input_controller, "actor camera" );
 }
 
 void game_world::switch_to_free_fly_camera( )
@@ -229,12 +254,17 @@ void game_world::on_project_loaded( resources::queries_result& data )
 	math::float3 camera_direction	= (*m_game_project->m_config)["camera"]["direction"];
 	m_camera_director->set_position_direction( camera_position, camera_direction );
 	switch_to_free_fly_camera		( );
+
+	m_local_actor						= NEW(actor)( *this );
 }
 
 void game_world::on_activate( )
 {
 	super::on_activate			( );
 	m_camera_director->on_focus	( true );
+	
+	if(get_sound_scene())
+		get_game().get_sound_world().get_logic_world_user().set_active_sound_scene( get_sound_scene(), 0, 0 );
 }
 
 void game_world::on_deactivate( )
@@ -268,31 +298,87 @@ void game_world::start_game( )
 	camera_director_ptr object_ptr			= get_camera_director();
 	m_cell_manager->m_named_registry["camera_director"]		= object_ptr.c_ptr();
 	
-	configs::binary_config_value scenes_to_start = (*m_game_project->m_config)["start"]["scenes_to_start"];
-	for ( u32 i = 0; i < scenes_to_start.size(); i++ )
-	{
-		pcstr start_scene		= (pcstr)scenes_to_start[i];
-		game_object_ptr_ s		= get_object_by_name(start_scene);
-		object_scene_ptr scene	= static_cast_resource_ptr<object_scene_ptr>(s);
-		scene->start			( );
-	}
+	//configs::binary_config_value scenes_to_start = (*m_game_project->m_config)["start"]["scenes_to_start"];
+	//for ( u32 i = 0; i < scenes_to_start.size(); i++ )
+	//{
+	//	pcstr start_scene		= (pcstr)scenes_to_start[i];
+	//	game_object_ptr_ s		= get_object_by_name(start_scene);
+	//	object_scene_ptr scene	= static_cast_resource_ptr<object_scene_ptr>(s);
+	//	scene->start			( );
+	//}
+}
+
+//void game_world::on_scene_start( object_scene_ptr scene )
+//{
+//	m_active_scenes.push_back	( scene );
+//}
+//
+//void game_world::on_scene_stop( object_scene_ptr scene )
+//{
+//	scenes_list::iterator it	= std::find(m_active_scenes.begin(), m_active_scenes.end(), scene );
+//	R_ASSERT					( it!=m_active_scenes.end() );
+//	m_active_scenes.erase		( it );
+//}
+
+void game_world::query_resources( )
+{
+	xray::render::scene_configuration				scene_configuration;
+	scene_configuration.m_create_terrain			= true;
+	scene_configuration.m_create_particle_world		= true;
+	scene_configuration.m_create_speedtree_world	= true;
+	scene_configuration.m_create_grass_world		= true;
+	scene_configuration.m_sky_enabled				= true;
 	
-// 	pcstr start_scene		= (*m_game_project->m_config)["start"]["scene_name"];
-// 	game_object_ptr_ s		= get_object_by_name(start_scene);
-// 	object_scene_ptr scene	= static_cast_resource_ptr<object_scene_ptr>(s);
-// 	scene->start			( );
+	resources::user_data_variant					scene_data;
+	scene_data.set									( scene_configuration );
+
+	
+	xray::resources::user_data_variant const* data[] = { &scene_data, 0, 0  };
+
+	xray::const_buffer			temp_buffer( "", 1 );
+
+	xray::resources::creation_request requests[] = 
+	{
+		xray::resources::creation_request( "game_scene", temp_buffer, resources::scene_class ),
+		xray::resources::creation_request( "game_scene_view", temp_buffer, resources::scene_view_class ),
+		xray::resources::creation_request( "game_sound_scene", temp_buffer, resources::sound_scene_class ),
+	};
+ 	xray::resources::query_create_resources(
+ 		requests,
+		boost::bind( &game_world::on_resources_ready, this, _1 ),
+ 		stalker2::g_allocator,
+ 		data
+ 	);
 }
 
-void game_world::on_scene_start( object_scene_ptr scene )
+void game_world::on_resources_ready( resources::queries_result& data )
 {
-	m_active_scenes.push_back	( scene );
+	R_ASSERT			( data.is_successful( ) );
+
+	m_scene				= static_cast_resource_ptr< xray::render::scene_ptr >( data[0].get_unmanaged_resource() );
+	m_scene_view		= static_cast_resource_ptr< xray::render::scene_view_ptr >( data[1].get_unmanaged_resource() );
+
+	m_sound_scene		= static_cast_resource_ptr< xray::sound::sound_scene_ptr >( data[2].get_unmanaged_resource() );
+	
+	if(is_active())
+		get_game().get_sound_world().get_logic_world_user().set_active_sound_scene( get_sound_scene(), 1000, 0 );
 }
 
-void game_world::on_scene_stop( object_scene_ptr scene )
+void game_world::clear_resources( )
 {
-	scenes_list::iterator it	= std::find(m_active_scenes.begin(), m_active_scenes.end(), scene );
-	R_ASSERT					( it!=m_active_scenes.end() );
-	m_active_scenes.erase		( it );
+	get_game().get_sound_world().get_logic_world_user().remove_sound_scene	( get_sound_scene() );
+}
+
+void game_world::tmp_actor_ready( actor* a )
+{
+	R_ASSERT				(a==m_local_actor);
+	a->set_input_source		( m_actor_input_controller );
+
+	float4x4 initial_matrix = float4x4().identity();
+	initial_matrix.c		= m_camera_director->get_inverted_view_matrix().c;
+	a->activate				( initial_matrix );
+
+	m_camera_director->switch_to_camera	( m_actor_input_controller, "actor camera" );
 }
 
 } // namespace stalker2

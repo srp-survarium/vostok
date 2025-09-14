@@ -21,7 +21,6 @@ ref class texture_editor_resource: public resource_editor_resource
 {
 	typedef resource_editor_resource super;
 	typedef xray::editor::wpf_controls::property_container wpf_property_container;
-	typedef xray::editor::wpf_controls::property_descriptor property_descriptor;
 	typedef xray::editor::wpf_controls::property_editors::property prop;
 public:
 									texture_editor_resource			( System::String^ resource_name, resource_changed_delegate^ ,resource_load_delegate^ );

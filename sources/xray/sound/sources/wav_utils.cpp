@@ -128,8 +128,8 @@ wav_fmt get_wav_format ( fs_new::native_path_string const & wav_file_path,
 	
 	R_ASSERT			( len == 16 || len == 18 || len == 40, "INVALID format chunk in wav header." );
 
-	size_t const bytes_readed	= device->read( wav_file, buf, len );
-	R_ASSERT_U			( bytes_readed == len );
+	xray::file_size_type const bytes_readed	= device->read( wav_file, buf, len );
+	R_ASSERT_CMP_U		( bytes_readed, ==, len );
 
 
 	format.format		= read_u16_le(buf); 

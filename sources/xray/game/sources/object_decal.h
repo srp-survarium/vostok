@@ -21,13 +21,12 @@ class object_decal: public game_object_static
 {
 	typedef game_object_static				super;
 public:
-					object_decal			(game_world& w);
+					object_decal			(game_scene& w);
 					~object_decal			();
 	virtual void	load					(configs::binary_config_value const& t);
 			void	requery_material		();
 			void	material_ready			(resources::queries_result& data, xray::render::material_effects_instance_cook_data* cook_data);
 	
-			render::scene_ptr				m_scene;
 			u32								m_decal_id;
 			float							m_alpha_angle;
 			float							m_clip_angle;

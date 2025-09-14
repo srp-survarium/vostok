@@ -26,8 +26,13 @@
 #pragma comment( lib, "OpenMayaAnim.lib" )
 #pragma comment( lib, "OpenMayaRender.lib" )
 
+#pragma comment( lib, "libgfx.lib" )
+#pragma comment( lib, "libgfx_zlib.lib" )
+#pragma comment( lib, "libgfx_libpng.lib" )
+
 #if defined WIN64
 	#pragma comment( lib, "TootleSoftwareOnlyStatic_2k8_MTDLL64.lib" )
 #else
-	#pragma comment( lib, "TootleSoftwareOnlyStatic_2k8_MTDLL.lib" )
+//	#pragma comment( lib, "TootleSoftwareOnlyStatic_2k8_MTDLL.lib" )
+	#pragma comment( lib, "TootleStatic_2k8_MTDLL.lib" )
 #endif

@@ -570,6 +570,9 @@ struct SimplifyMemFunc<SINGLE_MEMFUNCPTR_SIZE + 3*sizeof(int) >
 //       single_inheritance class).
 // Note that the Sun C++ and MSVC documentation explicitly state that they 
 // support static_cast between void * and function pointers.
+#ifndef XRAY_CORE_API
+#	define XRAY_CORE_API
+#endif // #ifndef XRAY_CORE_API
 
 class XRAY_CORE_API DelegateMemento {
 protected: 

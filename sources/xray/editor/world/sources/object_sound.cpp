@@ -8,11 +8,16 @@
 #include "object_sound.h"
 #include "tool_sound.h"
 #include "project.h"
-#include "project_items.h"
-#include <xray/render/facade/debug_renderer.h>
-#include <xray/collision/collision_object.h>
+//#include "project_items.h"
 #include <xray/editor/base/collision_object_types.h>
+#include "object_collision.h"
+
+#pragma managed( push, off )
+#include <xray/collision/collision_object.h>
 #include <xray/sound/sound_instance_proxy.h>
+#include <xray/render/facade/debug_renderer.h>
+#pragma managed( pop )
+
 
 namespace xray{
 namespace editor{

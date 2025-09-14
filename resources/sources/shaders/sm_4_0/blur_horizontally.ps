@@ -1,0 +1,26 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 07.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_LOOP_UNROLLING,
+*/
+
+#include "common.h"
+
+#define NUM_SAMPLES 27
+
+uniform float4 offsets_weights[NUM_SAMPLES];
+
+float4 main( v2p_TL vin) : SV_TARGET
+{
+    float4 final_color = 0;
+    
+	UNROLL for(int i=0; i<NUM_SAMPLES; i++)
+		final_color += t_base.Sample(s_material1, vin.Tex0 + float2( offsets_weights[i].x, 0.0f )) * offsets_weights[i].y;
+    
+	return final_color;
+}

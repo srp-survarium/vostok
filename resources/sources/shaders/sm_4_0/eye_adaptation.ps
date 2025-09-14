@@ -1,0 +1,31 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 11.05.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "luminance.h"
+
+Texture2D t_previous_luminance;
+Texture2D t_current_luminanace;
+
+float adaptation_factor;  // elapsed_frame_time * (1.0f / speed in seconds)
+float elapsed_time;
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+float4 main( vertex_output_struct input ) : SV_TARGET
+{
+	float3 previous_luminances 	= t_previous_luminance.Sample(s_accumulator, input.uv).rgb;
+	float3 current_luminances  	= t_current_luminanace.Sample(s_accumulator, input.uv).rgb;
+	
+	const float factor			= adaptation_factor;//1.0f - pow( 0.95f, elapsed_time * 60.0f );
+	float3 new_luminances		= max(previous_luminances + (current_luminances - previous_luminances) * factor, 0.0f);
+	
+	return 						float4(new_luminances, 1.0f);
+}

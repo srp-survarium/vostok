@@ -69,11 +69,11 @@ public:
 	
 	void				load						( configs::lua_config* cfg );
 	void				save_as						( pcstr filename );
-	u32					items_count					( ) { return m_tool_library->Count;}
+	u32					items_count					( ) { return m_tool_library.Count;}
 	void				fill_tree					( System::Windows::Forms::TreeNodeCollection^ root, tool_base^ tool, bool show_empty_folders, System::String^ filter );
 
-	library_items^				m_tool_library;
-	library_folders^			m_folders;
+	library_items				m_tool_library;
+	library_folders				m_folders;
 	configs::lua_config_ptr*	m_library_cfg;
 protected:
 	void				process_library_lodaing		( configs::lua_config_value t );

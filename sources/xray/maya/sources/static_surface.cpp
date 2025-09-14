@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "static_surface.h"
+#include "export_defines.h"
 #include <amd/tootle/tootlelib.h>
 
 void			fill_mender_input				(	float3vec const& in_vertices, 
@@ -246,12 +247,14 @@ MStatus render_static_surface::calculate_tb( MArgDatabase const& arglist )
 
 MStatus render_static_surface::optimize_mesh( MArgDatabase const& arglist )
 {
-	if(!arglist.isFlagSet("-t"))
-		return MStatus::kSuccess;
-
 	MString status_str;
 
-	TootleOverdrawOptimizer overdraw_mode = arglist.isFlagSet("-hq") ? TOOTLE_OVERDRAW_AUTO : TOOTLE_OVERDRAW_FAST;
+	if(!arglist.isFlagSet(tootle_opt_flag))
+		return MStatus::kSuccess;
+
+	TootleOverdrawOptimizer overdraw_mode = arglist.isFlagSet(tootle_opt_hq_flag) ? TOOTLE_OVERDRAW_AUTO : TOOTLE_OVERDRAW_FAST;
+
+//	TootleOverdrawOptimizer overdraw_mode = TOOTLE_OVERDRAW_AUTO;
 
 	status_str				= "tootle optimization started in "; 
 	status_str				+= (overdraw_mode==TOOTLE_OVERDRAW_AUTO)? "High Quality Mode" : "Fast Mode";
@@ -269,10 +272,11 @@ MStatus render_static_surface::optimize_mesh( MArgDatabase const& arglist )
 	u32 nfaces		= m_indices.size()/3;
 	u32 num_cluster_out = 0;
 	u32 vstride		= sizeof(float3);
+	TootleResult	res;
+/*
 	float			cache_efficiency;
 	float			overdraw_avg;
 	float			overdraw_max;
-	TootleResult	res;
 
 	res = TootleMeasureCacheEfficiency(
 		pib,
@@ -293,19 +297,19 @@ MStatus render_static_surface::optimize_mesh( MArgDatabase const& arglist )
 		TOOTLE_CW,
 		&overdraw_avg,
 		&overdraw_max,
-		TOOTLE_OVERDRAW_DIRECT3D
+		TOOTLE_OVERDRAW_AUTO
 		);
 	if(res!=TOOTLE_OK)		display_warning( "TootleMeasureOverdraw failed" );
 
 	status_str = "Efficiency before :";
-	status_str += "VCache-";
+	status_str += "VCache:";
 	status_str += cache_efficiency;
-	status_str += " OverdrawAVG-";
+	status_str += " OverdrawAVG:";
 	status_str += overdraw_avg;
-	status_str += " OverdrawMAX-";
+	status_str += " OverdrawMAX:";
 	status_str += overdraw_max;
 	display_info( status_str );
-
+*/
 	res = TootleOptimize	(
 		pvb,
 		pib,
@@ -326,7 +330,7 @@ MStatus render_static_surface::optimize_mesh( MArgDatabase const& arglist )
 
 	for(u32 i=0; i<m_indices.size(); ++i)
 		m_indices[i] = (u16)u32indices[i];
-
+/*
 	res = TootleMeasureCacheEfficiency(
 		pib,
 		nfaces,
@@ -346,19 +350,19 @@ MStatus render_static_surface::optimize_mesh( MArgDatabase const& arglist )
 		TOOTLE_CW,
 		&overdraw_avg,
 		&overdraw_max,
-		TOOTLE_OVERDRAW_DIRECT3D
+		TOOTLE_OVERDRAW_AUTO
 		);
 	if(res!=TOOTLE_OK)		display_warning( "TootleMeasureOverdraw failed" );
 
 	status_str = "Efficiency after  :";
-	status_str += "VCache-";
+	status_str += "VCache:";
 	status_str += cache_efficiency;
-	status_str += " OverdrawAVG-";
+	status_str += " OverdrawAVG:";
 	status_str += overdraw_avg;
-	status_str += " OverdrawMAX-";
+	status_str += " OverdrawMAX:";
 	status_str += overdraw_max;
 	display_info( status_str );
-
+*/
 	TootleCleanup	( );
 
 	return (res==TOOTLE_OK) ? MStatus::kSuccess : MStatus::kFailure;

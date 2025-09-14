@@ -3,55 +3,216 @@
 //	Author		: Konstantin Slipchenko
 //	Description : geometry: box geometry
 ////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
+
 #include "box_geometry.h"
 #include "sphere_geometry.h"
 #include "triangle_mesh_base.h"
+#include "colliders_ray_aabb.h"
+#include "cylinder_geometry.h"
+#include <xray/collision/geometry_double_dispatcher.h>
 
 #include <xray/collision/contact_info.h>
-#include <xray/render/base/debug_renderer.h>
-
-using xray::memory::base_allocator;
+#include <xray/render/facade/debug_renderer.h>
+#include <xray/math_randoms_generator.h>
 
 namespace xray {
 namespace collision {
 
-box_geometry::box_geometry					( base_allocator* allocator, const float3 &half_sides ):
-	m_allocator( allocator ),
-	m_half_sides( half_sides )
+box_geometry::box_geometry	( const float3& half_sides ) :
+	m_half_sides			( half_sides )
 {
+}
+
+void box_geometry::destroy			( memory::base_allocator* allocator )
+{
+	XRAY_UNREFERENCED_PARAMETERS	( allocator );
+}
+
+void box_geometry::accept	( geometry_double_dispatcher& dispatcher, geometry const& node ) const
+{
+	node.visit			( dispatcher, *this );
+}
+
+void box_geometry::visit	( geometry_double_dispatcher& dispatcher, box_geometry const& node ) const
+{
+	dispatcher.dispatch	( node, *this );
+}
+
+void box_geometry::visit	( geometry_double_dispatcher& dispatcher, sphere_geometry const& node ) const
+{
+	dispatcher.dispatch	( node, *this );
+}
+
+void box_geometry::visit	( geometry_double_dispatcher& dispatcher, cylinder_geometry const& node ) const
+{
+	dispatcher.dispatch	( node, *this );
 }
 
 void box_geometry::generate_contacts		(  on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const collision::geometry& og )		const
 {
-	og.generate_contacts( c, transform, self_transform, *this );
+	c.change_order( );
+	og.generate_contacts( c, transform, self_transform, *this ); //change order
+	c.change_order( ); 
 }
 
 void box_geometry::generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const triangle_mesh_base& og )			const 
 {
-	og.generate_contacts( c, transform, self_transform, *this );
+	c.change_order( );
+	og.generate_contacts( c, transform, self_transform, *this ); //change order
+	c.change_order( ); 
 }
 
 void box_geometry::generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const cylinder_geometry& og )			const
 {
 	XRAY_UNREFERENCED_PARAMETERS	(&c, &self_transform, &transform, &og);
+	c.change_order( );
+	og.generate_contacts( c, transform, self_transform, *this ); //change order
+	c.change_order( ); 
 }
 
-void box_geometry::generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const compound_geometry& og )			const 
+void box_geometry::generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const composite_geometry& og )			const 
 {
 	XRAY_UNREFERENCED_PARAMETERS	(&c, &self_transform, &transform, &og);
 }
 
-void box_geometry::render					( render::debug::renderer& renderer, float4x4 const& matrix ) const 
+void box_geometry::render					( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& matrix ) const 
 {
-	renderer.draw_obb( matrix, m_half_sides, math::color( 255u, 255u, 255u, 255u ) );
+	renderer.draw_cube( scene, matrix, m_half_sides, math::color( 255u, 255u, 255u, 255u ) );
 	//.draw_sphere( matrix.c.xyz(), m_radius, math::color_xrgb( 255, 255, 255 ) );
 }
 
 xray::math::aabb& box_geometry::get_aabb		( math::aabb& result ) const
 {
-	result				= math::create_min_max( -m_half_sides, m_half_sides );
+	result				= math::create_aabb_min_max( -m_half_sides, m_half_sides );
 	return				result;
+}
+
+enum box_plane_types_enum
+{
+	box_plane_type_front_xy,
+	box_plane_type_back_xy,
+	box_plane_type_left_zy,
+	box_plane_type_right_zy,
+	box_plane_type_top_xz,
+	box_plane_type_bottom_xz
+};
+
+static void random_point_inside_axis_aligned_rectangle	(
+		math::random32& randomizer,
+		float2 const& center,
+		float2 const& half_size,
+		float const& x_part,
+		float& result_x,
+		float& result_y
+	)
+{
+	float2 result(
+		x_part * half_size.x * 2.f,
+		randomizer.random_f( 2.f * half_size.y )
+	);
+
+	result		+= center - half_size;
+
+	result_x	= result.x;
+	result_y	= result.y;
+}
+
+float3 box_geometry::get_random_surface_point	( math::random32& randomizer ) const
+{
+	float const area1					= 4 * m_half_sides.x * m_half_sides.y;
+	float const area2					= 4 * m_half_sides.z * m_half_sides.y;
+	float const area3					= 4 * m_half_sides.x * m_half_sides.z;
+	float const total_area				= 2 * ( area1 + area2 + area3 ); 
+	
+	typedef fixed_vector< float, 6 >	box_planes_type;
+	box_planes_type						box_planes;
+
+	box_planes.push_back				( area1 );
+	box_planes.push_back				( box_planes[0] + area1 );
+	box_planes.push_back				( box_planes[1] + area2 );
+	box_planes.push_back				( box_planes[2] + area2 );
+	box_planes.push_back				( box_planes[3] + area3 );
+	box_planes.push_back				( box_planes[4] + area3 );
+
+	float random_area					= randomizer.random_f( total_area );
+	box_planes_type::iterator iter		= std::lower_bound( box_planes.begin(), box_planes.end(), random_area, std::less<float>() );
+	R_ASSERT							( iter != box_planes.end() );
+
+	typedef std::pair< float3, float3 >	box_plane_coords;
+	box_plane_coords const coords[]		=
+	{
+ 		std::make_pair( float3( -m_half_sides.x, m_half_sides.y, -m_half_sides.z ), float3( m_half_sides.x, -m_half_sides.y, -m_half_sides.z ) ),
+ 		std::make_pair( float3( -m_half_sides.x, m_half_sides.y, m_half_sides.z ), float3( m_half_sides.x, -m_half_sides.y, m_half_sides.z ) ),
+ 		std::make_pair( float3( -m_half_sides.x, m_half_sides.y, m_half_sides.z ), float3( -m_half_sides.x, -m_half_sides.y, -m_half_sides.z ) ), 
+ 		std::make_pair( float3( m_half_sides.x, m_half_sides.y, m_half_sides.z ), float3( m_half_sides.x, -m_half_sides.y, -m_half_sides.z ) ),
+ 		std::make_pair( float3( -m_half_sides.x, m_half_sides.y, m_half_sides.z ), float3( m_half_sides.x, m_half_sides.y, -m_half_sides.z ) ),
+ 		std::make_pair( float3( -m_half_sides.x, -m_half_sides.y, m_half_sides.z ), float3( m_half_sides.x, -m_half_sides.y, -m_half_sides.z ) )
+	};
+		
+	float const previous_area			= iter == box_planes.begin() ? 0 : (*(iter - 1));
+	float const delta_area				= ( random_area - previous_area ) / ( *iter - previous_area );
+	R_ASSERT							( delta_area >= 0 );
+
+	box_plane_types_enum const plane_type = box_plane_types_enum( iter - box_planes.begin() );
+	box_plane_coords const& plane_coords = coords[plane_type];
+	
+	float3								result;
+	switch ( plane_type )
+	{
+		case box_plane_type_front_xy:
+		case box_plane_type_back_xy:
+		{
+			result.z					= plane_coords.first.z;
+			random_point_inside_axis_aligned_rectangle(
+				randomizer,
+				float2( 0.f, 0.f ),
+				float2( math::abs( plane_coords.first.x ), math::abs( plane_coords.first.y ) ),
+				delta_area,
+				result.x,
+				result.y
+			);
+		}
+		break;
+
+		case box_plane_type_left_zy:
+		case box_plane_type_right_zy:
+		{
+			result.x					= plane_coords.first.x;
+			random_point_inside_axis_aligned_rectangle(
+				randomizer,
+				float2( 0.f, 0.f ),
+				float2( math::abs( plane_coords.first.z ), math::abs( plane_coords.first.y ) ),
+				delta_area,
+				result.z,
+				result.y
+			);
+		}
+		break;
+
+		case box_plane_type_top_xz:
+		case box_plane_type_bottom_xz:
+		{
+			result.y					= plane_coords.first.y;
+			random_point_inside_axis_aligned_rectangle(
+				randomizer,
+				float2( 0.f, 0.f ),
+				float2( math::abs( plane_coords.first.x ), math::abs( plane_coords.first.z ) ),
+				delta_area,
+				result.x,
+				result.z
+			);
+		}
+		break;
+	}
+	
+	return								result;
+}
+
+float box_geometry::get_surface_area( ) const
+{
+	return 8 * ( m_half_sides.x * m_half_sides.y + m_half_sides.y * m_half_sides.z + m_half_sides.x * m_half_sides.z );
 }
 
 bool box_geometry::aabb_query	( object const* object, math::aabb const& aabb, triangles_type& triangles ) const 
@@ -60,7 +221,7 @@ bool box_geometry::aabb_query	( object const* object, math::aabb const& aabb, tr
 	return false; 
 }
 
-bool box_geometry::cuboid_query	( object const* object, math::cuboid const& cuboid, triangles_type& triangles ) const
+bool box_geometry::cuboid_query		( object const* object, math::cuboid const& cuboid, triangles_type& triangles ) const
 {
 	XRAY_UNREFERENCED_PARAMETERS	(object, &cuboid, &triangles);
 	return false; 
@@ -74,26 +235,40 @@ bool box_geometry::ray_query		( object const* object,
 									 ray_triangles_type& triangles,
 									 triangles_predicate_type const& predicate ) const				
 {
-	XRAY_UNREFERENCED_PARAMETERS	( object, &origin, &direction, max_distance, distance, &triangles, &predicate );
-	return false; 
+	XRAY_UNREFERENCED_PARAMETER		( predicate );
+	bool const ray_test_succeeded	= ray_test( origin, direction, max_distance, distance );
+	if ( ray_test_succeeded )
+		triangles.push_back			( ray_triangle_result( object, u32(-1), distance ) );
+	return							ray_test_succeeded;
 }
 
-bool box_geometry::aabb_test				( math::aabb const& aabb ) const
+bool box_geometry::aabb_test		( math::aabb const& aabb ) const
 {
-	XRAY_UNREFERENCED_PARAMETER				( aabb );
+	XRAY_UNREFERENCED_PARAMETER		( aabb );
 	return true;
 }
 
-bool box_geometry::cuboid_test				( math::cuboid const& cuboid ) const
+bool box_geometry::cuboid_test		( math::cuboid const& cuboid ) const
 {
-	XRAY_UNREFERENCED_PARAMETER				( cuboid );
-	return true;
+	return							
+		cuboid.test_inexact (
+			math::create_aabb_center_radius (
+				float3( 0.f, 0.f, 0.f ),
+				m_half_sides
+			)
+		) != math::intersection_outside;
 }
 
-bool box_geometry::ray_test					( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
+bool box_geometry::ray_test			( math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance ) const
 {
-	XRAY_UNREFERENCED_PARAMETERS			( &origin, &direction, max_distance, distance );
-	return true;
+	colliders::ray_aabb_collider aabb_collider( origin, direction, max_distance );
+
+	XRAY_ALIGN(16) colliders::sse::aabb_a16	aabb;
+	float3 center( 0, 0, 0 );
+	colliders::sse::construct_aabb_a16( aabb, center, m_half_sides );
+
+	return aabb_collider.intersects_aabb_sse( aabb, distance );
+
 }
 
 void dLineClosestApproach (const float3 &pa, const float3 &ua,
@@ -271,7 +446,7 @@ void dBoxBox (
 	
 	float3 normal;
 	float depth; 
-	int return_code;
+//	int return_code;
 	
 	int maxc = 8;
 
@@ -279,6 +454,8 @@ void dBoxBox (
 	R1.c.xyz().set(0,0,0);
 	float4x4 R2 = RR2;
 	R2.c.xyz().set(0,0,0);
+	
+	remove_scale( R1 ); remove_scale( R2 );
 
 	const float3	&R1i = R1.lines[0].xyz();
 	const float3	&R1j = R1.lines[1].xyz();
@@ -609,10 +786,10 @@ void dBoxBox (
 			if(ci[ret].depth>0.f) 
 				ret++;
 		}
-		return_code = code;
+//		return_code = code;
 		for( int ri = 0; ri < ret; ri++ )
 		{
-			ci[ri].normal = normal;
+			ci[ri].normal = -normal;
 			on_c(ci[ri]);
 		}
 		return ;
@@ -825,10 +1002,10 @@ void dBoxBox (
 		cnum = maxc;
 	}
 
-	return_code = code;
+//	return_code = code;
 	for( int ri = 0; ri < cnum; ri++ )
 	{
-		ci[ri].normal = normal;
+		ci[ri].normal = -normal;
 		on_c(ci[ri]);
 	}
 	//return cnum;
@@ -841,11 +1018,15 @@ void dCollideSphereBox (
 				float sphere_radius,
 				const float3 &box_pos,
 				const float3 &box_half_sides,
-				const float4x4 &box_transform
+				const float4x4 &box_transform_
 			  //dxGeom *o1, dxGeom *o2, int flags,
 		      // dContactGeom *contact, int skip
 			   )
 {
+	float4x4 box_transform = box_transform_;
+
+	remove_scale( box_transform );
+	
   // this is easy. get the sphere center `p' relative to the box, and then clip
   // that to the boundary of the box (call that point `q'). if q is on the
   // boundary of the box and |p-q| is <= sphere radius, they touch.
@@ -975,10 +1156,36 @@ math::float3 const* box_geometry::vertices	( ) const
 	UNREACHABLE_CODE(return 0);
 }
 
+u32 box_geometry::vertex_count				( ) const
+{
+	NOT_IMPLEMENTED(return 0);
+}
+
+u32 const* box_geometry::indices			( ) const
+{
+	UNREACHABLE_CODE(return 0);
+}
+
 u32 const* box_geometry::indices			( u32 triangle_id ) const
 {
 	XRAY_UNREFERENCED_PARAMETER		( triangle_id );
 	UNREACHABLE_CODE(return 0);
+}
+
+u32 box_geometry::index_count				( ) const
+{
+	NOT_IMPLEMENTED(return 0);
+}
+
+
+void	box_geometry::enumerate_primitives	( enumerate_primitives_callback& cb ) const
+{
+	cb.enumerate( float4x4().identity(), primitive( box( m_half_sides ) ) );
+}
+
+void	box_geometry::enumerate_primitives	( float4x4 const& transform, enumerate_primitives_callback& cb ) const
+{
+	cb.enumerate( transform, primitive( box( m_half_sides ) ) );
 }
 
 } // namespace collision

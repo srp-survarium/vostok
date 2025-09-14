@@ -1,0 +1,30 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 11.01.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+/*
+	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+//uniform float3x4 m_V2W;
+
+#include "material.h"
+#include "vertex_input.h"
+
+float3 wireframe_color;
+
+float4 main(in vertex_output_struct input) : SV_TARGET
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	return float4(wireframe_color, parameters.world_view_position.z);
+}
+
+
+
+
+
+

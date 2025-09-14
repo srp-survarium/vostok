@@ -507,13 +507,13 @@ void editor_world::tick( )
 				System::String^ cam_props		= System::String::Format("Cam: X={0:f1} Y={1:f1} Z={2:f1} Cur[{3} {4}]", p.x, p.y, p.z, cur.X, cur.Y );
 				ide()->set_status_label			( 0, cam_props );
 
-				float4x4 const& projection_matrix	= m_view_window->get_projection_matrix();
-				float4x4 const& view_matrix			= math::invert4x3( m_view_window->get_inverted_view_matrix() );
-				m_ai_navigation_world->get_graph_generator()->set_frustum		( math::frustum( mul4x4(view_matrix, projection_matrix ) ) );
-				m_ai_navigation_world->tick				( );
+				//float4x4 const& projection_matrix	= m_view_window->get_projection_matrix();
+				//float4x4 const& view_matrix			= math::invert4x3( m_view_window->get_inverted_view_matrix() );
+				//m_ai_navigation_world->get_graph_generator()->set_frustum		( math::frustum( mul4x4(view_matrix, projection_matrix ) ) );
+				//m_ai_navigation_world->tick				( );
 
 				if( m_console_wrapper->get_active() )
-					m_console_wrapper->tick		( );
+					m_console_wrapper->tick		( scene_view());
 			}
 		}
 
@@ -530,10 +530,10 @@ void editor_world::tick( )
 		render							( 0, math::float4x4() );
 		
 		if ( g_show_render_statistics && m_ui_world )
-			get_renderer().scene().draw_render_statistics( *m_ui_world );
+			get_renderer().scene().draw_render_statistics( *m_ui_world, scene_view() );
 
 		if ( m_sound_stats && m_sound_stats->is_stats_available( ) )
-			m_sound_stats->draw( *m_scene );
+			m_sound_stats->draw( *m_scene, *m_scene_view );
 
 		m_physics_world->debug_render	( *m_scene, get_renderer().debug() );
 		
@@ -925,15 +925,13 @@ void editor_world::on_render_resources_created(resources::queries_result& data)
 	m_camera_view_window->set_render_view_mode(m_view_window->render_view_mode());
 	m_camera_view_window->setup_scene( m_scene->c_ptr(), m_scene_view->c_ptr(), get_renderer(), false );
 	
-	m_ui_world						= ui::create_world( *this, get_renderer().ui(), *g_allocator, *m_scene_view );
+	m_ui_world						= ui::create_world( *this, get_renderer().ui(), *g_allocator );
 	m_console_wrapper->m_console	= m_engine.create_editor_console( *m_ui_world );
 	R_ASSERT						( m_console_wrapper->m_console );
 
-	m_ai_navigation_world			= xray::ai::navigation::create_world( *this, *m_scene, get_renderer().debug() );
+//	m_ai_navigation_world			= xray::ai::navigation::create_world( *this, *m_scene, get_renderer().debug() );
 
 	load_editors					( );
-
-	m_ai_navigation_world			= xray::ai::navigation::create_world( *this, *m_scene, get_renderer().debug() );
 
 	on_after_render_scene_created	( );
 
@@ -951,16 +949,27 @@ void editor_world::on_sound_scene_created( resources::queries_result& data )
 	init_sound_statistics			( );
 }
 
-void editor_world::query_scene		( )
+void editor_world::query_scene( )
 {
-	render::editor_renderer_configuration			render_configuration;
-	render_configuration.m_create_terrain			= true;
-	render_configuration.m_create_particle_world	= true;
+	render::scene_configuration						scene_configuration;
+	scene_configuration.m_create_terrain			= true;
+	scene_configuration.m_create_particle_world		= true;
+	scene_configuration.m_create_speedtree_world	= true;
+	scene_configuration.m_create_grass_world		= true;
+	scene_configuration.m_sky_enabled				= true;
 	
+
+	
+	render::output_window_configuration				window_configuration1;
+	window_configuration1.m_hwnd					= view_handle( );
+
+	render::output_window_configuration				window_configuration2;
+	window_configuration2.m_hwnd					= camera_view_handle( );
+
 	resources::user_data_variant* temp_data[] = { NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant), NEW(resources::user_data_variant)};
-	temp_data[0]->set(render_configuration);
-	temp_data[2]->set( view_handle( ) );
-	temp_data[3]->set( camera_view_handle( ) );
+	temp_data[0]->set( scene_configuration);
+	temp_data[2]->set( window_configuration1/*view_handle()*/ );
+	temp_data[3]->set( window_configuration2/*camera_view_handle( )*/ );
 	
 	resources::user_data_variant const* data[] = {temp_data[0], temp_data[1], temp_data[2], temp_data[3]};
 	

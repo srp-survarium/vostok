@@ -69,7 +69,8 @@ private:
 
 public:
 	configs::binary_config_ptr	m_config;
-	game*						m_game;
+	game*						m_game_;
+	game_world*					m_game_world;
 	bool						m_quality;
 }; // class game_cell
 

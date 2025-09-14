@@ -40,7 +40,7 @@ struct XRAY_NOVTABLE world {
 	virtual	void						clear_resources					( ) = 0;
 	virtual	void						tick							( ) = 0;
 	
-	virtual void						set_test_scene					( render::scene_ptr const& scene ) = 0;
+//	virtual void						set_test_scene					( render::scene_ptr const& scene ) = 0;
 
 	virtual bi_spline_skeleton_animation* create_skeleton_animation_data( u32 bones_count ) = 0;
 	virtual	void						destroy							( bi_spline_skeleton_animation	* &p ) =0;

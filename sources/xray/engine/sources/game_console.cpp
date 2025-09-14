@@ -19,9 +19,9 @@ m_input_world	( iw )
 	m_self_deactivate = true;
 }
 
-void game_console::tick( )
+void game_console::tick( xray::render::scene_view_ptr const& scene_view )
 {
-	super::tick	( );
+	super::tick	( scene_view );
 }
 
 void game_console::on_activate( )

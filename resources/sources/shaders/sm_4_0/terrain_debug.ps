@@ -1,0 +1,72 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 21.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+Texture2D t_gradient;
+
+// Defaults: (0.5f, 0.5f, 0.5f), 15.0f
+float4 deepening_color_and_range;
+
+// Defaults: 2.0f, 10.5f, 4.0f
+float4 deepening_parameters; // clip_dist, scale, power, 0
+
+uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+
+
+float4 main( v2p_TL vin) : SV_TARGET
+{
+	float2 uv 			= vin.Tex0;
+	float  frame_depth  = gbuffer_read_frame_depth(uv);
+	
+	float3 normal;
+	
+	float shparam = 0,
+		  mat_id  = 0;
+	
+	gbuffer_read_rt_normal(uv, normal, shparam, mat_id);
+	normal = normalize(normal);
+	
+	float2 grad_uv = 1.0f - float2(normal.x * 0.5f + 0.5f, normal.y * 0.5f - 0.5f);
+	
+	float3 grad_color = t_gradient.Sample(s_base, grad_uv).rgb;
+	
+	static const int samples_count = 8;
+	static const float2 offsets[samples_count] = 
+	{
+		float2(-1, 0),
+		float2(-1,-1),
+		float2( 0,-1),
+		float2( 1,-1),
+		float2( 1, 0),
+		float2( 1, 1),
+		float2( 0, 1),
+		float2(-1, 1),
+	};
+	
+	float avg_depth = 10;
+	
+	for (int i=0; i<samples_count; i++)
+	{
+		float depth  = gbuffer_read_frame_depth(uv + deepening_color_and_range.a * offsets[i] / screen_res.xy);
+		//float depth  = gbuffer_read_frame_depth(uv + deepening_color_and_range.a * offsets[i] / screen_res.xy / frame_depth * 30.0f);
+		
+		float diff = frame_depth - depth;
+		
+		if (diff<deepening_parameters.x)
+			avg_depth -= diff;
+	}
+	
+	avg_depth /= deepening_parameters.y;
+	avg_depth = pow( abs(avg_depth),deepening_parameters.z);	
+	
+	float3 out_color = lerp(deepening_color_and_range.rgb, grad_color, saturate(avg_depth));
+	
+	static const float gamma_correction_factor = 1.0f;
+	return float4(convert_from_linear_space(out_color),0);
+}

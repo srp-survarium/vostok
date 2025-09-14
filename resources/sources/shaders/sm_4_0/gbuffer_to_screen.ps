@@ -1,0 +1,153 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 11.01.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+#include "luminance.h"
+
+/*
+	enum scene_view_mode
+	{
+	
+	0-1	wireframe_view_mode			= 0,
+	1-2	wireframe_two_sided_view_mode,
+	
+*	2-3	unlit_view_mode,
+	3-4	lit_view_mode,
+	
+*	4-5	normals_view_mode,
+	
+*	5-6	specular_intencity_view_mode,
+*	6-7	specular_power_view_mode,
+*	7-8	miplevel_view_mode,
+	
+*	8-9	lighting_view_mode,
+	
+*	9-10    lighting_diffuse_view_mode,
+*	10-11   lighting_specular_view_mode,
+	
+	11-12   shader_complexity_view_mode,
+	12-13	texture_complexity_view_mode,
+	13-14	geometry_complexity_view_mode,
+	
+*	14-15	emissive_only_view_mode,
+*	15-16	distortion_only_view_mode,
+*	16-17	ambient_occlusion_only_view_mode,
+*	17-18   unlit_with_ao_view_mode,
+*	18-19	lit_with_histogram_view_mode,
+*	19-20	overdraw_view_mode,
+*	20-21	indirect_lighting_mode,
+	
+	}; // enum scene_view_mode
+*/
+
+float gbuffer_to_screen_type;
+
+Texture2D t_frame_color0;
+Texture2D t_frame_color1;
+Texture2D t_emissive;
+Texture2D t_distortion;
+Texture2D t_accumulator_dif;
+Texture2D t_accumulator_spec;
+Texture2D t_ssao_accumulator;
+Texture2D t_frame_luminance;
+Texture2D t_frame_luminance_histogram;
+
+//uniform float3x4	m_V2W;
+
+float4 main_impl(v2p_post_process input)
+{
+	float2 uv 				= input.uv;
+	float4 accum_diff   	= t_accumulator_dif.Sample(s_accumulator, uv);
+	float4 accum_spec   	= t_accumulator_spec.Sample(s_accumulator, uv);
+	static const float type = gbuffer_to_screen_type;
+	
+	if (type>2.0f && type<3.0f || type>17.0f && type<18.0f)
+	{
+		float3 diffuse_color = t_frame_color0.Sample(s_accumulator, uv).rgb;
+		return float4(diffuse_color, 0.0f);
+	}
+	else if (type>4.0f && type<5.0f)
+	{
+		float3 normal = gbuffer_read_frame_normal(uv);
+		return float4(mul(m_V2W, float4(normal, 0.f)).xyz, 0.0f);
+	}
+	else if (type>5.0f && type<6.0f)
+	{
+		float3 diffuse;
+		float specular_intensity;
+		gbuffer_read_rt_color( uv, diffuse, specular_intensity);
+		
+		return float4(specular_intensity,specular_intensity,specular_intensity,0);
+	}
+	else if (type>6.0f && type<7.0f)
+	{
+		float specular_power;
+		float diffuse_power;
+		float3 position;
+		
+		gbuffer_read_rt_position( uv, float3(1,1,1), position, diffuse_power, specular_power);
+		
+		specular_power /= 255.0f;
+		
+		return float4(specular_power,specular_power,specular_power,0);
+	}		
+	else if (type>8.0f && type<11.0f)
+	{
+		if (type>8.0f && type<9.0f)
+		{
+			return float4(accum_diff.rgb + accum_spec.rgb,0);
+		}
+		else if (type>9.0f && type<10.0f)
+		{
+			return float4(accum_diff.rgb, 0);
+		}
+		else
+		{
+			return float4(accum_spec.rgb, 0);
+		}
+	}
+	else if (type>14.0f && type<15.0f)
+	{
+		float4 gb_emissive 	= 1.0f * t_emissive.Sample( s_position, uv);
+		return float4(gb_emissive.rgb,0);
+	}
+	else if (type>15.0f && type<16.0f)
+	{
+		float2 distortions = 255.0f * (t_distortion.Sample( s_position, uv).xy);
+		return float4(distortions.xy, 0.0f, 0.0f);
+	}	
+	else if (type>16.0f && type<17.0f)
+	{
+		return float4(t_ssao_accumulator.Sample(s_position, uv).xxx, 0.0f);
+	}
+	else if (type>18.0f && type<19.0f)
+	{
+		float4 final_color 			= t_diffuse.Sample(s_position, uv);
+		
+		float2 scale 				= 1.0f;//0.5f * pow(exp(1.0f - uv.x), 0.5f);
+		float num_pixels_norm		= t_frame_luminance_histogram.Sample(s_position, uv * scale).r / num_luminance_pixels;
+		
+		if (uv.y > (1.0f - num_pixels_norm) )
+			return lerp(final_color, float4(num_pixels_norm, 1.0f - num_pixels_norm, 0.0f, 0.0f), 0.75f);
+		
+		return final_color;
+		
+		//return float4( get_luminance(final_color.rgb) > 0.9f, (0.0f).xxx);
+	}
+	else if (type>20.0f && type<21.0f)
+	{
+		return float4(1*accum_diff.rgb, 0.0f);
+	}
+	return float4(0.5f, 0.1f, 0.2f, 0.0f);
+}
+
+float4 main(v2p_post_process input) : SV_TARGET
+{
+	float4 result	= main_impl( input );
+	return			float4( convert_from_linear_space( result.xyz ), result.w );
+}

@@ -74,7 +74,7 @@ struct hit_object
 struct npc_cook_params
 {
 	ai::brain_unit_cook_params	brain_unit_params;
-	render::scene_ptr			scene;
+	xray::render::scene_ptr			scene;
 	sound::sound_scene_ptr		sound_scene;
 	physics::world*				physics_world;
 }; // struct npc_cook_params

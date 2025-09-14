@@ -8,6 +8,7 @@
 #define XRAY_ENGINE_CONSOLE_H_INCLUDED
 
 #include <xray/input/handler.h>
+#include <xray/render/engine/base_classes.h>
 
 namespace xray {
 namespace engine {
@@ -19,7 +20,7 @@ public:
 	virtual bool			get_active			( ) const	= 0;
 	virtual void			on_activate			( )			= 0;
 	virtual void			on_deactivate		( )			= 0;
-	virtual void			tick				( )			= 0;
+	virtual void			tick				( xray::render::scene_view_ptr const& scene_view )			= 0;
 }; // class console
 
 } // namespace engine

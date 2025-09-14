@@ -8,17 +8,12 @@
 #define OBJECT_TRACK_H_INCLUDED
 
 #include "object_base.h"
-#include <xray/collision/collision_object.h>
 
 #pragma managed( push, off )
 #include <xray/render/facade/model.h>
-#include <xray/render/engine/base_classes.h>
 #pragma managed( pop )
 
 using xray::editor::wpf_controls::animation_curve_editor;
-
-using namespace System;
-using namespace System::Collections::Generic;
 
 namespace xray
 {
@@ -37,7 +32,6 @@ namespace xray
 
 	namespace editor
 	{
-		typedef wpf_controls::property_container									property_container;
 		typedef xray::editor::wpf_controls::float_curve								float_curve;
 		typedef xray::editor::wpf_controls::float_curve_key							float_curve_key;
 		typedef xray::editor::wpf_controls::float_curve_key_type					curve_key_type;
@@ -91,8 +85,8 @@ namespace xray
 			property_container^						m_temp_container;
 			xray::ui::text*							m_text;
 			bool									m_is_selected;
-			List<float_curve^>^						m_animation_curves;
-			List<curve_to_channel_binder^>^			m_binders;
+			System::Collections::Generic::List<float_curve^>^					m_animation_curves;
+			System::Collections::Generic::List<curve_to_channel_binder^>^		m_binders;
 			collision_object_track_key_tangent*		m_input_tangent_collision;
 			collision_object_track_key_tangent*		m_output_tangent_collision;
 			render::static_model_ptr*				m_camera_model;
@@ -166,7 +160,7 @@ namespace xray
 			void			editor_track_time_changed		( );
 			void			curve_editor_selection_changed	( int index );
 			void			tick							( );
-			void			tick_animation_curve_editor		( Single elapsed_time );
+			void			tick_animation_curve_editor		( float elapsed_time );
 			u32				keys_count						( );
 			math::float3	key_position					( u32 idx );
 			math::float3	key_angles						( u32 idx );
@@ -191,7 +185,6 @@ namespace xray
 			virtual		void				unload_contents				( bool bdestroy )						override;
 			virtual		void				load_props					( configs::lua_config_value const& t )	override;
 			virtual		void				save						( configs::lua_config_value t )			override;
-			virtual		void				destroy_collision			( )										override;
 			virtual		void				set_transform				( float4x4 const& transform )			override;
 			
 						void				set_key_transform			( u32 idx, math::float4x4 const& t );
@@ -239,48 +232,12 @@ namespace xray
 				void			write_key				( animation::EtKey* channel_key, float_curve_key^ key, bool need_convert );
 
 			public:
-				void			update_key				( Int32 key_index );
-				void			raise_key_changed		( Int32 key_index );
+				void			update_key				( int key_index );
+				void			raise_key_changed		( int key_index );
 				
 			}; //ref class curve_to_channel_binder
 
 		}; // class object_track
-
-		class collision_object_track_key: public collision::collision_object
-		{
-		private:
-			typedef collision::collision_object	super;
-
-		public:
-			collision_object_track_key		( collision::geometry_instance* geometry, object_track^ o, int key_idx );
-
-		private:
-			int						m_key_idx;
-			gcroot<object_track^>	m_owner;
-
-		public:
-			void					set_key_index( int new_key_index );
-			virtual bool			touch	( ) const;
-		
-		}; //collision_object_track_key
-
-		class collision_object_track_key_tangent: public collision::collision_object
-		{
-		private:
-			typedef collision::collision_object	super;
-
-		public:
-			collision_object_track_key_tangent		( collision::geometry_instance* geometry, object_track^ o, int key_idx, int tangent_index );
-
-		private:
-			int						m_key_idx;
-			int						m_tangent_idx;
-			gcroot<object_track^>	m_owner;
-
-		public:
-			virtual bool			touch	( ) const;
-		
-		}; //collision_object_track_key_tangent
 
 	} // namespace editor
 } // namespace xray

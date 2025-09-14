@@ -93,7 +93,7 @@ XRAY_DLL_EXPORT MStatus initializePlugin( MObject obj )
 
 	xray::animation::set_memory_allocator( xray::maya::g_allocator );
 
-	core_engine.animation_world = xray::animation::create_world( core_engine, 0, 0, 0 );
+	core_engine.animation_world = xray::animation::create_world( core_engine, 0, 0 );
 	ASSERT( core_engine.animation_world );
 	
 	xray::maya_animation::set_memory_allocator( xray::maya::g_allocator );

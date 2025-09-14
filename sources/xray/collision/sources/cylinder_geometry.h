@@ -19,15 +19,26 @@ class cylinder_geometry:
 	private boost::noncopyable
 {
 public:
-						cylinder_geometry	( memory::base_allocator* allocator, float radius, float half_length );
+						cylinder_geometry	( float radius, float half_length );
 	virtual				~cylinder_geometry	( )			{ }
+	
+	virtual	void		destroy				( memory::base_allocator* allocator );
+	
 	inline	float		radius				( ) const	{ return m_radius; }
 	inline	float		half_length			( ) const	{ return m_half_length; }
 
+	virtual void		accept				( geometry_double_dispatcher& dispatcher, geometry const& node ) const;
+	virtual void		visit				( geometry_double_dispatcher& dispatcher, box_geometry const& node ) const;
+	virtual void		visit				( geometry_double_dispatcher& dispatcher, sphere_geometry const& node ) const;
+	virtual void		visit				( geometry_double_dispatcher& dispatcher, cylinder_geometry const& node ) const;
+
 private:
-	virtual	void		render				( render::debug::renderer& renderer, float4x4 const& matrix ) const;
+	virtual	void		render				( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& matrix ) const;
 	virtual	math::float3 const* vertices	( ) const;
+	virtual	u32			vertex_count		( ) const;
+	virtual	u32 const*	indices				( ) const;
 	virtual	u32 const*	indices				( u32 triangle_id ) const;
+	virtual	u32			index_count			( ) const;
 
 	virtual	bool		aabb_query			( object const* object, math::aabb const& aabb, triangles_type& triangles ) const;
 	virtual	bool		cuboid_query		( object const* object, math::cuboid const& cuboid, triangles_type& triangles ) const;
@@ -50,20 +61,26 @@ private:
 public:
 	virtual	math::aabb&	get_aabb			( math::aabb& result ) const;
 	virtual	void		get_aabb			( math::aabb& bbox, float4x4 const& self_transform ) const;
+	virtual	float3		get_random_surface_point( math::random32& randomizer ) const;
+	virtual	float		get_surface_area	( ) const;
 
-private:
-	virtual	memory::base_allocator&	get_allocator ( ) const { return *m_allocator; }
+	virtual	void		enumerate_primitives	( enumerate_primitives_callback& cb ) const;
+	virtual	void		enumerate_primitives	( float4x4 const& transform, enumerate_primitives_callback& cb ) const;
+
 
 private:
 	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const collision::geometry& og )		const;
+
+public:
 	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const sphere_geometry& og )			const;
 	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const box_geometry& og )				const;
-	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const cylinder_geometry& og )		const;
-	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const triangle_mesh_base& og )		const;
-	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const compound_geometry& og )		const;
 
 private:
-	mutable memory::base_allocator*			m_allocator;
+	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const cylinder_geometry& og )		const;
+	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const triangle_mesh_base& og )		const;
+	virtual	void		generate_contacts	( on_contact& c, const float4x4 &self_transform, const float4x4 &transform, const composite_geometry& og )		const;
+
+private:
 	float									m_radius;
 	float									m_half_length;
 	

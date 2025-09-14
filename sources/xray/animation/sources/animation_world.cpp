@@ -44,14 +44,14 @@ extern command_line::key	check_animation_b_spline_approximation;
 
 animation_world::animation_world(
 		xray::animation::engine& engine,
-		render::scene_ptr const& test_scene,
+//		render::scene_ptr const& test_scene,
 		render::scene_renderer* scene_renderer,
 		render::debug::renderer* debug_renderer
 	) :
 	m_engine					( engine ),
 	m_scene_renderer			( scene_renderer ),
-	m_debug_renderer			( debug_renderer ),
-	m_test_scene				( test_scene )
+	m_debug_renderer			( debug_renderer )
+//	m_test_scene				( test_scene )
 {
 	static skeleton_animation_cook s_skeleton_animation_cook( *this );
 	static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_cook;
@@ -65,10 +65,10 @@ animation_world::animation_world(
 #endif // #if XRAY_USE_MAYA_ANIMATION
 }
 
-void animation_world::set_test_scene( render::scene_ptr const& scene )
-{
-	m_test_scene = scene;
-}
+//void animation_world::set_test_scene( render::scene_ptr const& scene )
+//{
+//	m_test_scene = scene;
+//}
 
 animation_world::~animation_world( )
 {

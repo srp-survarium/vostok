@@ -9,10 +9,6 @@
 #include "tool_solid_visual.h"
 #include "project_items.h"
 
-#include <xray/collision/api.h>
-#include <xray/render/world.h>
-#include <xray/editor/world/engine.h>
-
 #pragma managed( push, off )
 #	include <xray/render/facade/scene_renderer.h>
 #	include <xray/render/facade/editor_renderer.h>
@@ -35,12 +31,6 @@ object_skeleton_visual::~object_skeleton_visual()
 	R_ASSERT			( !get_visible() );
 	DELETE				( m_model_instance );
 	DELETE				( m_scene );
-}
-
-void object_skeleton_visual::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( g_allocator );
 }
 
 void object_skeleton_visual::save( configs::lua_config_value t )

@@ -1,0 +1,148 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 06.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_BRANCHING,
+*/
+
+#include "common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture2D 	t_edges;
+Texture2D 	t_area;
+
+uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+
+#define MAX_DISTANCE 32
+
+static const float2 pixel_size = 1.0f / screen_res.xy;
+static const int max_search_steps = 8;
+
+float2 get_area(float2 distance, float e1, float e2) 
+{
+    float2 pixcoord 	= MAX_DISTANCE * round(4.0 * float2(e1, e2)) + distance;
+    float2 texcoord 	= pixcoord / (MAX_DISTANCE * 5 - 1.0);
+	
+    return t_area.SampleLevel(s_accumulator, texcoord, 0).rg;
+}
+
+float search_x_left(float2 texcoord) 
+{
+    texcoord -= float2(1.5, 0.0) * pixel_size;
+    float e = 0.0;
+    // We offset by 0.5 to sample between edgels, thus fetching two in a row
+	int i = 0;
+	
+    for (i = 0; i < max_search_steps; i++) {
+        e += t_edges.SampleLevel(s_linear, texcoord, 0).g;
+        // We compare with 0.9 to prevent bilinear access precision problems
+        FLATTEN if (e < 0.9) break;
+        texcoord -= float2(2.0, 0.0) * pixel_size;
+    }
+    // When we exit the loop without founding the end, we want to return
+    // -2 * max_search_steps
+    return (max(-2.0 * i - 2.0 * e, -2.0 * max_search_steps));
+}
+
+float search_x_right(float2 texcoord) {
+    texcoord += float2(1.5, 0.0) * pixel_size;
+    float e = 0.0;
+    
+	for (int i = 0; i < max_search_steps; i++) {
+        e = t_edges.SampleLevel(s_linear, texcoord, 0).g;
+        FLATTEN if (e < 0.9) break;
+        texcoord += float2(2.0, 0.0) * pixel_size;
+    }
+    return (min(2.0 * i + 2.0 * e, 2.0 * max_search_steps));
+}
+
+float search_y_up(float2 texcoord) {
+    texcoord -= float2(0.0, 1.5) * pixel_size;
+    float e = 0.0;
+	
+    for (int i = 0; i < max_search_steps; i++) {
+        e = t_edges.SampleLevel(s_linear, texcoord, 0).r;
+        FLATTEN if (e < 0.9) break;
+        texcoord -= float2(0.0, 2.0) * pixel_size;
+    }
+    return (max(-2.0 * i - 2.0 * e, -2.0 * max_search_steps));
+}
+
+float search_y_down(float2 texcoord) {
+    texcoord += float2(0.0, 1.5) * pixel_size;
+    float e = 0.0;
+	
+    for (int i = 0; i < max_search_steps; i++) {
+        e = t_edges.SampleLevel(s_linear, texcoord, 0).r;
+        FLATTEN if (e < 0.9) break;
+        texcoord += float2(0.0, 2.0) * pixel_size;
+    }
+    return (min(2.0 * i + 2.0 * e, 2.0 * max_search_steps));
+}
+
+// http://visual-computing.intel-research.net/publications/papers/2009/mlaa/mlaa.pdf
+// http://igm.univ-mlv.fr/~biri/mlaa-gpu/
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	float2 uv 					= input.uv;
+	
+    float4 weights = 0.0;
+	
+    float2 e = t_edges.SampleLevel(s_accumulator, uv, 0).rg;
+	
+	// Edge at north
+    BRANCH
+    if (e.g) 
+	{ 
+        // Search distances to the left and to the right:
+        float2 d = float2(search_x_left(uv), search_x_right(uv));
+		
+        // Now fetch the crossing edges. Instead of sampling between edgels, we
+        // sample at -0.25, to be able to discern what value has each edgel:
+        float4 coords = mad(float4(d.x, -0.25, d.y + 1.0, -0.25),
+                            pixel_size.xyxy, uv.xyxy);
+        float e1 = t_edges.SampleLevel(s_linear, coords.xy, 0).r;
+        float e2 = t_edges.SampleLevel(s_linear, coords.zw, 0).r;
+		
+        // Ok, we know how this pattern looks like, now it is time for getting
+        // the actual get_area:
+        weights.rg = get_area(abs(d), e1, e2);
+    }
+	
+	// Edge at west
+    BRANCH
+    if (e.r) 
+	{
+        // Search distances to the top and to the bottom:
+        float2 d = float2(search_y_up(uv), search_y_down(uv));
+        
+        // Now fetch the crossing edges (yet again):
+        float4 coords = mad(float4(-0.25, d.x, -0.25, d.y + 1.0),
+                            pixel_size.xyxy, uv.xyxy);
+        float e1 = t_edges.SampleLevel(s_linear, coords.xy, 0).g;
+        float e2 = t_edges.SampleLevel(s_linear, coords.zw, 0).g;
+		
+        // Get the get_area for this direction:
+        weights.ba = get_area(abs(d), e1, e2);
+    }
+    return saturate(weights);
+}
+
+
+
+
+
+
+
+
+
+

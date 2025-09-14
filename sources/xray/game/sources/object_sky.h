@@ -18,11 +18,11 @@ namespace xray {
 
 namespace stalker2{
 
-class object_sky :public game_object_static
+class object_sky :public game_object_
 {
-	typedef game_object_static				super;
+	typedef game_object_				super;
 public:
-					object_sky				( game_world& w );
+					object_sky				( game_scene& w );
 	virtual			~object_sky				( );
 	virtual void	load					( configs::binary_config_value const& t );
 	virtual void	load_contents			( );

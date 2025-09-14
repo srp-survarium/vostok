@@ -5,20 +5,10 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "object_logic.h"
 #include "object_scene.h"
 #include "tool_scripting.h"
 #include "project_items.h"
-#include "level_editor.h"
-#include "logic_editor_panel.h"
 #include "lua_config_value_editor.h"
-#include <xray/editor/base/collision_object_types.h>
-
-#pragma managed( push, off )
-#include <xray/render/facade/editor_renderer.h>
-#include <xray/render/facade/debug_renderer.h>
-#include <xray/collision/collision_object.h>
-#pragma managed( pop )
 
 namespace xray{
 namespace editor{
@@ -31,12 +21,6 @@ m_tool_scripting(t)
 
 object_logic::~object_logic( )
 {
-}
-
-void object_logic::destroy_collision	( )
-{
-	if ( m_collision->initialized() )
-		m_collision->destroy( &debug::g_mt_allocator );
 }
 
 void object_logic::load_props( configs::lua_config_value const& t )
