@@ -13,7 +13,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/detail/service_base.hpp>
 #include <boost/asio/xbox360/xsp_sessions_registry.hpp>
-#include <boost/xray_defines.hpp>
+#include <boost/vostok_defines.hpp>
 
 class xbox_lan_host_service
 {

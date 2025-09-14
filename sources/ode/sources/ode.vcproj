@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);&quot;$(SN_PS3_PATH)\ppu\include\sn&quot;;&quot;$(SCE_PS3_ROOT)\target\ppu\include&quot;;&quot;$(SCE_PS3_ROOT)\target\common\include&quot;"
-				PreprocessorDefinitions="SN_TARGET_PS3;__GCC__;__CELL_ASSERT__;XRAY_STATIC_LIBRARIES;"
+				PreprocessorDefinitions="SN_TARGET_PS3;__GCC__;__CELL_ASSERT__;VOSTOK_STATIC_LIBRARIES;"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 			/>
@@ -63,7 +63,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-static-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/vostok_$(ProjectName)-static-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -236,7 +236,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-static.lib"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/vostok_$(ProjectName)-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -409,7 +409,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-static.lib"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/vostok_$(ProjectName)-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -566,7 +566,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="SN_TARGET_PS3;__SNC__;__CELL_ASSERT__;XRAY_STATIC_LIBRARIES;"
+				PreprocessorDefinitions="SN_TARGET_PS3;__SNC__;__CELL_ASSERT__;VOSTOK_STATIC_LIBRARIES;"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 			/>
@@ -582,7 +582,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-snc-static-debug.a"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/vostok_$(ProjectName)-snc-static-debug.a"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -755,7 +755,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-snc-static.a"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/vostok_$(ProjectName)-snc-static.a"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -929,7 +929,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-snc-static-gold.a"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/vostok_$(ProjectName)-snc-static-gold.a"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1132,7 +1132,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1310,7 +1310,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1409,7 +1409,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1601,7 +1601,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1661,7 +1661,7 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;XRAY_STATIC_LIBRARIES;"
+				PreprocessorDefinitions="WIN32;VOSTOK_STATIC_LIBRARIES;"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
@@ -1692,7 +1692,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1781,7 +1781,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1837,7 +1837,7 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;XRAY_STATIC_LIBRARIES;"
+				PreprocessorDefinitions="WIN64;VOSTOK_STATIC_LIBRARIES;"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
@@ -1868,7 +1868,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1935,7 +1935,7 @@
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;NDEBUG;XRAY_STATIC_LIBRARIES;"
+				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -1968,7 +1968,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2064,7 +2064,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_ode-static.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_ode-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2127,7 +2127,7 @@
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;NDEBUG;XRAY_STATIC_LIBRARIES;"
+				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES;"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -2159,7 +2159,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2226,7 +2226,7 @@
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
+				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -2259,7 +2259,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static-gold.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-gold.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2356,7 +2356,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static-gold.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-gold.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2419,7 +2419,7 @@
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
+				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -2451,7 +2451,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/ignore:4221"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-static-gold.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-gold.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

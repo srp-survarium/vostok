@@ -74,7 +74,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -238,7 +238,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -325,7 +325,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool

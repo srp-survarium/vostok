@@ -4,8 +4,8 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef XRAY_SHADERS_SM_4_0_SPHERICAL_HARMONICS_H_INCLUDED
-#define XRAY_SHADERS_SM_4_0_SPHERICAL_HARMONICS_H_INCLUDED
+#ifndef VOSTOK_SHADERS_SM_4_0_SPHERICAL_HARMONICS_H_INCLUDED
+#define VOSTOK_SHADERS_SM_4_0_SPHERICAL_HARMONICS_H_INCLUDED
 
 static const float sh_pi = 3.14159265f;
 
@@ -95,4 +95,4 @@ float4 low_order_sh_project_cone_90degrees(float3 direction)
 	return low_order_sh_rotate(direction, float2(0.5f, 0.75f));
 }
 
-#endif	//	XRAY_SHADERS_SM_4_0_SPHERICAL_HARMONICS_H_INCLUDED
+#endif	//	VOSTOK_SHADERS_SM_4_0_SPHERICAL_HARMONICS_H_INCLUDED

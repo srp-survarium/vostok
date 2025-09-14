@@ -37,7 +37,7 @@ inline secure_inaddr::pointer_type const & lan_iterator::dereference()
 
 inline bool	lan_iterator::equal(pointer_type const & other)
 {
-	using namespace xray;
+	using namespace vostok;
 	lan_iterator* other_ptr = static_cast_checked<lan_iterator*>(
 		other.c_ptr());
 	BOOST_ASSERT(other_ptr);

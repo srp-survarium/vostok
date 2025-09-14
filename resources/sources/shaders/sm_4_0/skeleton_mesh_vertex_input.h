@@ -11,9 +11,9 @@
 #include "common_cbuffers.h"
 #include "vsf_tangent_space_transform.h"
 
-#define XRAY_USE_SOFTWARE_SKINNING	0
+#define VOSTOK_USE_SOFTWARE_SKINNING	0
 
-#if XRAY_USE_SOFTWARE_SKINNING
+#if VOSTOK_USE_SOFTWARE_SKINNING
 	struct vertex_input_struct {
 		float3	position		: POSITION;
 		float4	normal			: NORMAL;
@@ -21,7 +21,7 @@
 		float4	binormal		: BINORMAL;
 		float2	tc				: TEXCOORD0;
 	}; // struct vertex_input_struct
-#else // #if XRAY_USE_SOFTWARE_SKINNING
+#else // #if VOSTOK_USE_SOFTWARE_SKINNING
 	struct vertex_input_struct {
 		float3	position		: POSITION;
 		uint4	bones_indices	: BLENDINDICES;
@@ -31,7 +31,7 @@
 		float4	binormal		: BINORMAL;
 		float2	tc				: TEXCOORD0;
 	}; // struct vertex_input_struct
-#endif // #if XRAY_USE_SOFTWARE_SKINNING
+#endif // #if VOSTOK_USE_SOFTWARE_SKINNING
 
 struct vertex_output_struct
 {	
@@ -62,9 +62,9 @@ material_parameters get_material_parameters(vertex_output_struct input)
 	return parameters;
 }
 
-#if !XRAY_USE_SOFTWARE_SKINNING
+#if !VOSTOK_USE_SOFTWARE_SKINNING
 	uniform float4x4 bones_matrices[64];
-#endif // #if XRAY_USE_SOFTWARE_SKINNING
+#endif // #if VOSTOK_USE_SOFTWARE_SKINNING
 
 void fill_output_vertex(in vertex_input_struct input, out vertex_output_struct output)
 {
@@ -73,7 +73,7 @@ void fill_output_vertex(in vertex_input_struct input, out vertex_output_struct o
 	float3 skinned_tangent	= unpack_bx4( unpack_D3DCOLOR( input.tangent.xyz));
 	float3 skinned_binormal	= unpack_bx4( unpack_D3DCOLOR( input.binormal.xyz));
 
-#if !XRAY_USE_SOFTWARE_SKINNING
+#if !VOSTOK_USE_SOFTWARE_SKINNING
 	float4x4 m0			= bones_matrices[ input.bones_indices[0] ];
 	float4x4 m1			= bones_matrices[ input.bones_indices[1] ];
 	float4x4 m2			= bones_matrices[ input.bones_indices[2] ];
@@ -110,7 +110,7 @@ void fill_output_vertex(in vertex_input_struct input, out vertex_output_struct o
 			mul( m2, float4(skinned_binormal, 0.f) ).xyz * input.bones_weights[2] +
 			mul( m3, float4(skinned_binormal, 0.f) ).xyz * fourth_weight
 		);
-#endif // #if XRAY_USE_SOFTWARE_SKINNING
+#endif // #if VOSTOK_USE_SOFTWARE_SKINNING
 	
 	output.position		= mul(m_W,  float4( skinned_position, 1.f));
 	output.normal		= mul((float3x3)m_WV,	skinned_normal);

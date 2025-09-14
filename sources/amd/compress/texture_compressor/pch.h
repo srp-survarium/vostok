@@ -7,14 +7,14 @@
 #ifndef AMD_COMPRESS_TEXTURE_COMPRESSOR_PCH_H_INCLUDED
 #define AMD_COMPRESS_TEXTURE_COMPRESSOR_PCH_H_INCLUDED
 
-#define	XRAY_TEXTURE_COMPRESSOR_BUILDING
-#include <xray/os_preinclude.h>
+#define	VOSTOK_TEXTURE_COMPRESSOR_BUILDING
+#include <vostok/os_preinclude.h>
 #undef NOKERNEL
 #undef NOD3D
 #undef NOGDI
 #undef NOUSER
 #undef NOMSG
-#include <xray/os_include.h>
+#include <vostok/os_include.h>
 
 typedef unsigned char	u8;
 typedef unsigned short	u16;
@@ -28,8 +28,8 @@ typedef unsigned int	uint;
 #include <math.h>
 #include <stdio.h>
 
-using xray::texture_compressor::malloc_function_ptr_type;
-using xray::texture_compressor::free_function_ptr_type;
+using vostok::texture_compressor::malloc_function_ptr_type;
+using vostok::texture_compressor::free_function_ptr_type;
 
 #include <freeimage/FreeImage.h>
 #include <freeimage/FreeImageIO.h>

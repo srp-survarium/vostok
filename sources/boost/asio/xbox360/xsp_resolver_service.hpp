@@ -42,7 +42,7 @@ public:
 	/// The iterator type.
 	typedef typename Protocol::resolver_iterator		iterator_type;
 
-	typedef xray::threading::event						implementation_type;
+	typedef vostok::threading::event						implementation_type;
 
 	/// Construct a new resolver service for the specified io_service.
 	explicit resolver_service(boost::asio::io_service& io_service) :

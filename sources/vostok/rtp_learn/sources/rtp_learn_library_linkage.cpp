@@ -1,0 +1,10 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 13.07.2010
+//	Author		: Dmitriy Iassenev
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include <vostok/core/library_linkage.h>
+#include <vostok/rtp/library_linkage.h>
+#include <vostok/animation/library_linkage.h>

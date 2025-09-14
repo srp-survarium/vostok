@@ -38,7 +38,7 @@ namespace debug {
 #	define DEBUG_BREAK			__debugbreak
 #elif CS_PLATFORM_PS3			// #elif CS_PLATFORM_XBOX_360
 #	define DEBUG_BREAK			__builtin_trap
-#endif // #if XRAY_PLATFORM_WINDOWS
+#endif // #if VOSTOK_PLATFORM_WINDOWS
 
 
 #ifndef _MANAGED
