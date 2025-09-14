@@ -60,14 +60,14 @@
 #		define	OUTPUT_DEBUG_STRING(string)
 #	endif // #ifdef DEBUG
 #elif CS_PLATFORM_PS3						// #elif CS_PLATFORM_XBOX_360
-	namespace xray {
+	namespace vostok {
 		inline bool false_predicate( ) { return false; }
 		inline bool true_predicate( ) { return true; }
 	}
 #	ifndef NDEBUG
-#		define	IS_DEBUGGER_PRESENT			xray::true_predicate
+#		define	IS_DEBUGGER_PRESENT			vostok::true_predicate
 #	else // #ifndef NDEBUG
-#		define	IS_DEBUGGER_PRESENT			xray::false_predicate
+#		define	IS_DEBUGGER_PRESENT			vostok::false_predicate
 #	endif // #ifndef NDEBUG
 
 #	define OUTPUT_DEBUG_STRING( a )			printf("%s",(a));

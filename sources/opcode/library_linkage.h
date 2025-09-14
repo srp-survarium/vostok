@@ -6,11 +6,11 @@
 //	Description : collision library linkage
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef XRAY_COLLISION_LIBRARY_LINKAGE_H_INCLUDED
-#define XRAY_COLLISION_LIBRARY_LINKAGE_H_INCLUDED
+#ifndef VOSTOK_COLLISION_LIBRARY_LINKAGE_H_INCLUDED
+#define VOSTOK_COLLISION_LIBRARY_LINKAGE_H_INCLUDED
 
-#include <xray/extensions.h>
+#include <vostok/extensions.h>
 
-#pragma comment(lib, XRAY_LIBRARY_NAME( opcode, lib ) )
+#pragma comment(lib, VOSTOK_LIBRARY_NAME( opcode, lib ) )
 
-#endif // #ifndef XRAY_COLLISION_LIBRARY_LINKAGE_H_INCLUDED
+#endif // #ifndef VOSTOK_COLLISION_LIBRARY_LINKAGE_H_INCLUDED

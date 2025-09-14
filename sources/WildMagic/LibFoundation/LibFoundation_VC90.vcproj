@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -133,7 +133,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -206,7 +206,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -270,7 +270,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -993,7 +993,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1065,7 +1065,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName).lib"
+				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

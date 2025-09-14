@@ -15,8 +15,8 @@
 
 namespace PAPI {
 
-	xray::memory::base_allocator* g_allocator = 0;
-	void set_memory_allocator	( xray::memory::base_allocator& allocator )
+	vostok::memory::base_allocator* g_allocator = 0;
+	void set_memory_allocator	( vostok::memory::base_allocator& allocator )
 	{
 		g_allocator	= &allocator;
 	}

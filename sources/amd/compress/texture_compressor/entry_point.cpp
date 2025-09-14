@@ -7,9 +7,9 @@
 #include "pch.h"
 #include "utils.h"
 
-xray::texture_compressor::outputlog_function_ptr_type	g_log_fn = NULL;
+vostok::texture_compressor::outputlog_function_ptr_type	g_log_fn = NULL;
 
-void xray::texture_compressor::set_log_function( xray::texture_compressor::outputlog_function_ptr_type fn )
+void vostok::texture_compressor::set_log_function( vostok::texture_compressor::outputlog_function_ptr_type fn )
 {
 	g_log_fn = fn;
 }
@@ -29,7 +29,7 @@ u8* create_texture_ati_compress(	u32& result_buffer_size,
 									pcstr dest_format,
 									u32 const tga_file_data_size,
 									bool generate_mip_maps,
-									xray::texture_compressor::texture_dimension texture_dim,
+									vostok::texture_compressor::texture_dimension texture_dim,
 									bool highquality,
 									bool is_srgb);
 
@@ -43,10 +43,10 @@ u8* create_texture_nv_compress(		u32& result_buffer_size,
 									pcstr dest_format,
 									u32 const tga_file_data_size,
 									bool generate_mip_maps,
-									xray::texture_compressor::texture_dimension texture_dim,
+									vostok::texture_compressor::texture_dimension texture_dim,
 									bool is_srgb);
 
-u8* xray::texture_compressor::create_texture(
+u8* vostok::texture_compressor::create_texture(
 	u32& result_buffer_size,
 	bool only_calculate_destination_size,
 	u8* opt_destination_buffer, // can be NULL
@@ -55,7 +55,7 @@ u8* xray::texture_compressor::create_texture(
 	free_function_ptr_type deallocator,
 	u8 const* const tga_file_data,
 	pcstr dest_format,
-	xray::texture_compressor::compression_type const quality,
+	vostok::texture_compressor::compression_type const quality,
 	u32 const tga_file_data_size,
 	bool generate_mip_maps,
 	texture_dimension texture_dim,
@@ -113,13 +113,13 @@ u8* xray::texture_compressor::create_texture(
 
 
 /*
-u8* xray::texture_compressor::create_texture	(
+u8* vostok::texture_compressor::create_texture	(
 		u32& result_buffer_size,
 		malloc_function_ptr_type allocator,
 		free_function_ptr_type deallocator,
 		u8 const* const tga_file_data,
 		ATI_TC_FORMAT const format,
-		xray::texture_compressor::compression_speed const compression_speed,
+		vostok::texture_compressor::compression_speed const compression_speed,
 		bool enable_multithreading,
 		u32 const tga_file_data_size,
 		bool generate_mip_maps

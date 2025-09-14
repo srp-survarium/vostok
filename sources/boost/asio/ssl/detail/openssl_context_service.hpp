@@ -44,7 +44,7 @@ public:
   typedef ::SSL_CTX* impl_type;
 
   // The type for the password callback function object.
-  typedef boost::function<xray::network::std_string(std::size_t,
+  typedef boost::function<vostok::network::std_string(std::size_t,
       context_base::password_purpose)> password_callback_type;
 
   // Constructor.
@@ -152,7 +152,7 @@ public:
 
   // Load a certification authority file for performing verification.
   boost::system::error_code load_verify_file(impl_type& impl,
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     if (::SSL_CTX_load_verify_locations(impl, filename.c_str(), 0) != 1)
     {
@@ -167,7 +167,7 @@ public:
   // Add a directory containing certification authority files to be used for
   // performing verification.
   boost::system::error_code add_verify_path(impl_type& impl,
-      const xray::network::std_string& path, boost::system::error_code& ec)
+      const vostok::network::std_string& path, boost::system::error_code& ec)
   {
     if (::SSL_CTX_load_verify_locations(impl, 0, path.c_str()) != 1)
     {
@@ -181,7 +181,7 @@ public:
 
   // Use a certificate from a file.
   boost::system::error_code use_certificate_file(impl_type& impl,
-      const xray::network::std_string& filename, context_base::file_format format,
+      const vostok::network::std_string& filename, context_base::file_format format,
       boost::system::error_code& ec)
   {
     int file_type;
@@ -212,7 +212,7 @@ public:
 
   // Use a certificate chain from a file.
   boost::system::error_code use_certificate_chain_file(impl_type& impl,
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     if (::SSL_CTX_use_certificate_chain_file(impl, filename.c_str()) != 1)
     {
@@ -226,7 +226,7 @@ public:
 
   // Use a private key from a file.
   boost::system::error_code use_private_key_file(impl_type& impl,
-      const xray::network::std_string& filename, context_base::file_format format,
+      const vostok::network::std_string& filename, context_base::file_format format,
       boost::system::error_code& ec)
   {
     int file_type;
@@ -257,7 +257,7 @@ public:
 
   // Use an RSA private key from a file.
   boost::system::error_code use_rsa_private_key_file(impl_type& impl,
-      const xray::network::std_string& filename, context_base::file_format format,
+      const vostok::network::std_string& filename, context_base::file_format format,
       boost::system::error_code& ec)
   {
     int file_type;
@@ -289,7 +289,7 @@ public:
 
   // Use the specified file to obtain the temporary Diffie-Hellman parameters.
   boost::system::error_code use_tmp_dh_file(impl_type& impl,
-      const xray::network::std_string& filename, boost::system::error_code& ec)
+      const vostok::network::std_string& filename, boost::system::error_code& ec)
   {
     ::BIO* bio = ::BIO_new_file(filename.c_str(), "r");
     if (!bio)
@@ -327,7 +327,7 @@ public:
     {
       password_callback_type* callback =
         static_cast<password_callback_type*>(data);
-      xray::network::std_string passwd = (*callback)(static_cast<std::size_t>(size),
+      vostok::network::std_string passwd = (*callback)(static_cast<std::size_t>(size),
           purpose ? context_base::for_writing : context_base::for_reading);
       *buf = '\0';
       strncat(buf, passwd.c_str(), size);

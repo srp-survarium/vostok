@@ -8,17 +8,17 @@
 #ifndef pdomain_h
 #define pdomain_h
 
-#ifndef XRAY_STATIC_LIBRARIES
-#	define XRAY_ENGINE_BUILDING
-#endif // #ifndef XRAY_STATIC_LIBRARIES
+#ifndef VOSTOK_STATIC_LIBRARIES
+#	define VOSTOK_ENGINE_BUILDING
+#endif // #ifndef VOSTOK_STATIC_LIBRARIES
 
 #include <boost/noncopyable.hpp>
-#include <xray/macro_extensions.h>
-#include <xray/optimization_extensions.h>
-#include <xray/type_extensions.h>
-#include <xray/debug_extensions.h>
-#include <xray/detail_noncopyable.h>
-#include <xray/memory_extensions.h>
+#include <vostok/macro_extensions.h>
+#include <vostok/optimization_extensions.h>
+#include <vostok/type_extensions.h>
+#include <vostok/debug_extensions.h>
+#include <vostok/detail_noncopyable.h>
+#include <vostok/memory_extensions.h>
 
 #include <ParticleAPI/pError.h>
 #include <ParticleAPI/pVec.h>
@@ -26,20 +26,20 @@
 #include <vector>
 
 namespace PAPI {
-	extern xray::memory::base_allocator*		g_allocator;
+	extern vostok::memory::base_allocator*		g_allocator;
 
 #	define USER_ALLOCATOR						*::PAPI::g_allocator
-#	include <xray/std_allocator.h>
-#	include <xray/vector.h>
+#	include <vostok/std_allocator.h>
+#	include <vostok/vector.h>
 #	undef USER_ALLOCATOR
 } // namespace PAPI
 
-#define NEW( type )			XRAY_NEW_IMPL(		g_allocator, type )
-#define DELETE( pointer )	XRAY_DELETE_IMPL(	g_allocator, pointer )
+#define NEW( type )			VOSTOK_NEW_IMPL(		g_allocator, type )
+#define DELETE( pointer )	VOSTOK_DELETE_IMPL(	g_allocator, pointer )
 
 namespace PAPI
 {
-	void set_memory_allocator	( xray::memory::base_allocator& allocator );
+	void set_memory_allocator	( vostok::memory::base_allocator& allocator );
 
     const float P_PLANAR_EPSILON = 1e-3f; ///< How small the dot product must be to declare that a point is in a plane for Within().
 

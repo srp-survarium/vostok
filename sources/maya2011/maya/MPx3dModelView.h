@@ -246,7 +246,7 @@ public:
 	//
 	MStatus			setWireframeOnShaded(bool on);
 	bool			isWireframeOnShaded(MStatus *ReturnStatus = NULL) const;
-	MStatus			setXrayEnabled(bool xray);
+	MStatus			setXrayEnabled(bool vostok);
 	bool			isXrayEnabled(MStatus *ReturnStatus = NULL) const;
 
 	MStatus			setTextureDisplayEnabled(bool texture);

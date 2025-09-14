@@ -25,14 +25,14 @@
 #	define _ogg_realloc realloc
 #	define _ogg_free    free
 #else // #if 0
-	void* xray_ogg_malloc( size_t size );
-	void* xray_ogg_calloc( size_t count, size_t element_size );
-	void* xray_ogg_realloc( void* pointer, size_t size );
-	void xray_ogg_free( void* pointer );
-#	define _ogg_malloc  xray_ogg_malloc
-#	define _ogg_calloc  xray_ogg_calloc
-#	define _ogg_realloc xray_ogg_realloc
-#	define _ogg_free    xray_ogg_free
+	void* vostok_ogg_malloc( size_t size );
+	void* vostok_ogg_calloc( size_t count, size_t element_size );
+	void* vostok_ogg_realloc( void* pointer, size_t size );
+	void vostok_ogg_free( void* pointer );
+#	define _ogg_malloc  vostok_ogg_malloc
+#	define _ogg_calloc  vostok_ogg_calloc
+#	define _ogg_realloc vostok_ogg_realloc
+#	define _ogg_free    vostok_ogg_free
 #endif // #if 0
 
 #if defined(_WIN32) 

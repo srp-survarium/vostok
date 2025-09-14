@@ -7,22 +7,22 @@
 #ifndef AMD_COMPRESS_TEXTURE_COMPRESSOR_API_H_INCLUDED
 #define AMD_COMPRESS_TEXTURE_COMPRESSOR_API_H_INCLUDED
 
-#include <xray/os_include.h>
+#include <vostok/os_include.h>
 #include <amd/compress/ati_compress.h>
 
-#ifndef XRAY_TEXTURE_COMPRESSOR_API
-#	ifdef XRAY_STATIC_LIBRARIES
-#		define XRAY_TEXTURE_COMPRESSOR_API			extern
-#	else // #ifdef XRAY_STATIC_LIBRARIES
-#		ifdef XRAY_TEXTURE_COMPRESSOR_BUILDING
-#			define XRAY_TEXTURE_COMPRESSOR_API		XRAY_DLL_EXPORT
-#		else // #ifdef XRAY_TEXTURE_COMPRESSOR_BUILDING
-#			define XRAY_TEXTURE_COMPRESSOR_API		XRAY_DLL_IMPORT
-#		endif // #ifdef XRAY_TEXTURE_COMPRESSOR_BUILDING
-#	endif // #ifdef XRAY_STATIC_LIBRARIES
-#endif // #ifndef XRAY_TEXTURE_COMPRESSOR_API
+#ifndef VOSTOK_TEXTURE_COMPRESSOR_API
+#	ifdef VOSTOK_STATIC_LIBRARIES
+#		define VOSTOK_TEXTURE_COMPRESSOR_API			extern
+#	else // #ifdef VOSTOK_STATIC_LIBRARIES
+#		ifdef VOSTOK_TEXTURE_COMPRESSOR_BUILDING
+#			define VOSTOK_TEXTURE_COMPRESSOR_API		VOSTOK_DLL_EXPORT
+#		else // #ifdef VOSTOK_TEXTURE_COMPRESSOR_BUILDING
+#			define VOSTOK_TEXTURE_COMPRESSOR_API		VOSTOK_DLL_IMPORT
+#		endif // #ifdef VOSTOK_TEXTURE_COMPRESSOR_BUILDING
+#	endif // #ifdef VOSTOK_STATIC_LIBRARIES
+#endif // #ifndef VOSTOK_TEXTURE_COMPRESSOR_API
 
-namespace xray {
+namespace vostok {
 namespace texture_compressor {
 
 typedef void* (*malloc_function_ptr_type)( u32 size, bool temp_data );
@@ -30,7 +30,7 @@ typedef void (*free_function_ptr_type)( pvoid buffer );
 
 typedef void (*outputlog_function_ptr_type)( pcstr string );
 
-XRAY_TEXTURE_COMPRESSOR_API	void set_log_function( outputlog_function_ptr_type );
+VOSTOK_TEXTURE_COMPRESSOR_API	void set_log_function( outputlog_function_ptr_type );
 
 enum compression_type{
 	compression_fast,
@@ -65,7 +65,7 @@ enum texture_dimension
 	texture_2D_array,
 };
 
-XRAY_TEXTURE_COMPRESSOR_API	u8*				create_texture			(
+VOSTOK_TEXTURE_COMPRESSOR_API	u8*				create_texture			(
 												u32& result_buffer_size,
 												bool only_calculate_destination_size,
 												u8* opt_destination_buffer, // can be NULL
@@ -81,9 +81,9 @@ XRAY_TEXTURE_COMPRESSOR_API	u8*				create_texture			(
 												bool is_srgb
 											);
 
-//XRAY_TEXTURE_COMPRESSOR_API	ATI_TC_FORMAT	parse_format			( pcstr format_string );
+//VOSTOK_TEXTURE_COMPRESSOR_API	ATI_TC_FORMAT	parse_format			( pcstr format_string );
 
-XRAY_TEXTURE_COMPRESSOR_API u32*			load_tga				( 
+VOSTOK_TEXTURE_COMPRESSOR_API u32*			load_tga				( 
 												malloc_function_ptr_type allocator, 
 												free_function_ptr_type deallocator, 
 												u8 const* buffer, 
@@ -92,6 +92,6 @@ XRAY_TEXTURE_COMPRESSOR_API u32*			load_tga				(
 
 
 } // namespace texture_compressor
-} // namespace xray
+} // namespace vostok
 
 #endif // #ifndef AMD_COMPRESS_TEXTURE_COMPRESSOR_API_H_INCLUDED

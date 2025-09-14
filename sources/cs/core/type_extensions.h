@@ -44,7 +44,7 @@ typedef	unsigned	int			u32;
 		typedef u64				uint64_t;
 		typedef s64				int64_t;
 	} // namespace std
-#endif // #if XRAY_PLATFORM_PS3
+#endif // #if VOSTOK_PLATFORM_PS3
 
 typedef float					f32;
 typedef double					f64;

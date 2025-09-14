@@ -41,7 +41,7 @@
 	//! Fast square root for floating-point values.
 	inline_ float FastSqrt(float square)
 	{
-#if XRAY_PLATFORM_WINDOWS_32
+#if VOSTOK_PLATFORM_WINDOWS_32
 			float retval;
 
 			__asm {
@@ -52,9 +52,9 @@
 					mov             [retval], eax
 			}
 			return retval;
-#else // #if XRAY_PLATFORM_WINDOWS_32
+#else // #if VOSTOK_PLATFORM_WINDOWS_32
 		return sqrtf( square );
-#endif // #if XRAY_PLATFORM_WINDOWS_32
+#endif // #if VOSTOK_PLATFORM_WINDOWS_32
 	}
 
 	//! Saturates positive to zero.
@@ -225,7 +225,7 @@
 	//! A global function to find MAX(a,b) using FCOMI/FCMOV
 	inline_ float FCMax2(float a, float b)
 	{
-#if XRAY_PLATFORM_WINDOWS_32
+#if VOSTOK_PLATFORM_WINDOWS_32
 		float Res;
 		_asm	fld		[a]
 		_asm	fld		[b]
@@ -234,15 +234,15 @@
 		_asm	fstp	[Res]
 		_asm	fcomp
 		return Res;
-#else // #if XRAY_PLATFORM_WINDOWS_32
+#else // #if VOSTOK_PLATFORM_WINDOWS_32
 		return	a >= b ? a : b;
-#endif // #if XRAY_PLATFORM_WINDOWS_32
+#endif // #if VOSTOK_PLATFORM_WINDOWS_32
 	}
 
 	//! A global function to find MIN(a,b) using FCOMI/FCMOV
 	inline_ float FCMin2(float a, float b)
 	{
-#if XRAY_PLATFORM_WINDOWS_32
+#if VOSTOK_PLATFORM_WINDOWS_32
 		float Res;
 		_asm	fld		[a]
 		_asm	fld		[b]
@@ -251,15 +251,15 @@
 		_asm	fstp	[Res]
 		_asm	fcomp
 		return Res;
-#else // #if XRAY_PLATFORM_WINDOWS_32
+#else // #if VOSTOK_PLATFORM_WINDOWS_32
 		return a <= b ? a : b;
-#endif // #if XRAY_PLATFORM_WINDOWS_32
+#endif // #if VOSTOK_PLATFORM_WINDOWS_32
 	}
 
 	//! A global function to find MAX(a,b,c) using FCOMI/FCMOV
 	inline_ float FCMax3(float a, float b, float c)
 	{
-#if XRAY_PLATFORM_WINDOWS_32
+#if VOSTOK_PLATFORM_WINDOWS_32
 		float Res;
 		_asm	fld		[a]
 		_asm	fld		[b]
@@ -271,15 +271,15 @@
 		_asm	fstp	[Res]
 		_asm	fcompp
 		return Res;
-#else // #if XRAY_PLATFORM_WINDOWS_32
+#else // #if VOSTOK_PLATFORM_WINDOWS_32
 		return FCMax2( FCMax2(a,b), c);
-#endif // #if XRAY_PLATFORM_WINDOWS_32
+#endif // #if VOSTOK_PLATFORM_WINDOWS_32
 	}
 
 	//! A global function to find MIN(a,b,c) using FCOMI/FCMOV
 	inline_ float FCMin3(float a, float b, float c)
 	{
-#if XRAY_PLATFORM_WINDOWS_32
+#if VOSTOK_PLATFORM_WINDOWS_32
 		float Res;
 		_asm	fld		[a]
 		_asm	fld		[b]
@@ -291,9 +291,9 @@
 		_asm	fstp	[Res]
 		_asm	fcompp
 		return Res;
-#else // #if XRAY_PLATFORM_WINDOWS_32
+#else // #if VOSTOK_PLATFORM_WINDOWS_32
 		return FCMin2( FCMin2(a,b), c);
-#endif // #if XRAY_PLATFORM_WINDOWS_32
+#endif // #if VOSTOK_PLATFORM_WINDOWS_32
 	}
 
 	inline_ int ConvertToSortable(float f)

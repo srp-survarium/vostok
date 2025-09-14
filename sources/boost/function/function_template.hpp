@@ -580,12 +580,12 @@ namespace boost {
         {
 		  (void)functor;
 		  (void)f;
-#if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
           functor.obj_ptr = new FunctionObj(f);
 		  return true;
-#else // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#else // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
 		  UNREACHABLE_CODE( return false );
-#endif // #if !defined(XRAY_DISABLE_CRT_ALLOCATOR) || !XRAY_DISABLE_CRT_ALLOCATOR
+#endif // #if !defined(VOSTOK_DISABLE_CRT_ALLOCATOR) || !VOSTOK_DISABLE_CRT_ALLOCATOR
         }
         template<typename FunctionObj,typename Allocator>
         void 

@@ -2,7 +2,7 @@
 
 #include "utils.h"
 
-u32* xray::texture_compressor::load_tga	( malloc_function_ptr_type allocator, free_function_ptr_type deallocator, u8 const* buffer, ATI_TC_Texture& texture )
+u32* vostok::texture_compressor::load_tga	( malloc_function_ptr_type allocator, free_function_ptr_type deallocator, u8 const* buffer, ATI_TC_Texture& texture )
 {
 	TgaHeader* const tga	= (TgaHeader*)buffer;
 	buffer					+= TgaHeader::Size + tga->id_length;

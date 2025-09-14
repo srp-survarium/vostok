@@ -93,7 +93,7 @@ std::size_t read_until(SyncReadStream& s,
 
 template <typename SyncReadStream, typename Allocator>
 inline std::size_t read_until(SyncReadStream& s,
-    boost::asio::basic_streambuf<Allocator>& b, const xray::network::std_string& delim)
+    boost::asio::basic_streambuf<Allocator>& b, const vostok::network::std_string& delim)
 {
   boost::system::error_code ec;
   std::size_t bytes_transferred = read_until(s, b, delim, ec);
@@ -138,7 +138,7 @@ namespace detail
 
 template <typename SyncReadStream, typename Allocator>
 std::size_t read_until(SyncReadStream& s,
-    boost::asio::basic_streambuf<Allocator>& b, const xray::network::std_string& delim,
+    boost::asio::basic_streambuf<Allocator>& b, const vostok::network::std_string& delim,
     boost::system::error_code& ec)
 {
   std::size_t next_search_start = 0;
@@ -474,7 +474,7 @@ namespace detail
   public:
     read_until_delim_string_handler(AsyncReadStream& stream,
         boost::asio::basic_streambuf<Allocator>& streambuf,
-        const xray::network::std_string& delim, std::size_t next_search_start,
+        const vostok::network::std_string& delim, std::size_t next_search_start,
         ReadHandler handler)
       : stream_(stream),
         streambuf_(streambuf),
@@ -549,7 +549,7 @@ namespace detail
   //private:
     AsyncReadStream& stream_;
     boost::asio::basic_streambuf<Allocator>& streambuf_;
-    xray::network::std_string delim_;
+    vostok::network::std_string delim_;
     std::size_t next_search_start_;
     ReadHandler handler_;
   };
@@ -585,7 +585,7 @@ namespace detail
 
 template <typename AsyncReadStream, typename Allocator, typename ReadHandler>
 void async_read_until(AsyncReadStream& s,
-    boost::asio::basic_streambuf<Allocator>& b, const xray::network::std_string& delim,
+    boost::asio::basic_streambuf<Allocator>& b, const vostok::network::std_string& delim,
     ReadHandler handler)
 {
   // Determine the range of the data to be searched.

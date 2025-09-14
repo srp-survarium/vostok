@@ -52,7 +52,7 @@
 ////////////////////////////////////////////////////////////////////////////
 #ifdef CS_PLATFORM_XBOX_360
 #	error do not define CS_PLATFORM_XBOX_360 macro
-#endif // #ifdef XRAY_CORE_BUILDING
+#endif // #ifdef VOSTOK_CORE_BUILDING
 
 #ifdef _XBOX
 #	define CS_PLATFORM_XBOX_360		1
@@ -65,7 +65,7 @@
 ////////////////////////////////////////////////////////////////////////////
 #ifdef CS_PLATFORM_PS3
 #	error do not define CS_PLATFORM_PS3 macro
-#endif // #ifdef XRAY_CORE_BUILDING
+#endif // #ifdef VOSTOK_CORE_BUILDING
 
 #ifdef SN_TARGET_PS3
 #	define CS_PLATFORM_PS3			1
@@ -78,11 +78,11 @@
 ////////////////////////////////////////////////////////////////////////////
 #ifdef CS_LITTLE_ENDIAN
 #	error do not define CS_LITTLE_ENDIAN macro
-#endif // #ifdef XRAY_CORE_BUILDING
+#endif // #ifdef VOSTOK_CORE_BUILDING
 
 #ifdef CS_BIG_ENDIAN
 #	error do not define CS_BIG_ENDIAN macro
-#endif // #ifdef XRAY_CORE_BUILDING
+#endif // #ifdef VOSTOK_CORE_BUILDING
 
 #if CS_PLATFORM_WINDOWS 
 #	define	CS_LITTLE_ENDIAN	1

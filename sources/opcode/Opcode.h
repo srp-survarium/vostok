@@ -29,8 +29,8 @@
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Automatic linking
 	#ifndef BAN_OPCODE_AUTOLINK
-		#include <xray/macro_library_name.h>
-		#pragma comment( lib, XRAY_LIBRARY_NAME( opcode, lib ) )
+		#include <vostok/macro_library_name.h>
+		#pragma comment( lib, VOSTOK_LIBRARY_NAME( opcode, lib ) )
 	#endif
 #endif
 
@@ -40,11 +40,11 @@
 	#ifdef OPCODE_EXPORTS
 		#define OPCODE_API						__declspec(dllexport)
 	#else
-		#ifndef XRAY_ENGINE_BUILDING
+		#ifndef VOSTOK_ENGINE_BUILDING
 			#define OPCODE_API					__declspec(dllimport)
-		#else // #ifndef XRAY_ENGINE_BUILDING
+		#else // #ifndef VOSTOK_ENGINE_BUILDING
 			#define OPCODE_API
-		#endif // #ifndef XRAY_ENGINE_BUILDING
+		#endif // #ifndef VOSTOK_ENGINE_BUILDING
 	#endif
 #else
 		#define OPCODE_API
@@ -52,7 +52,7 @@
 
 	namespace Opcode {
 		typedef
-				::xray::memory::base_allocator	allocator_type;
+				::vostok::memory::base_allocator	allocator_type;
 	} // namespace Opcode
 
 	#include "OPC_IceHook.h"
