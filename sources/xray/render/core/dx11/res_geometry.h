@@ -10,9 +10,9 @@
 #include <xray/render/core/resource_intrusive_base.h>
 #include <xray/render/core/res_declaration.h>
 
-#ifndef MASTER_GOLD
-#	include <xray/render/core/untyped_buffer.h>
-#endif // #ifndef MASTER_GOLD
+//#ifndef MASTER_GOLD
+#include <xray/render/core/untyped_buffer.h>
+//#endif // #ifndef MASTER_GOLD
 
 namespace xray {
 namespace render {
