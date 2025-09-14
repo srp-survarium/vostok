@@ -53,9 +53,9 @@
 python ./scripts/copy_lib_files.py ../vostok-libs/sources/ sources/
 ```
 
-2. Build `survarium - PC - Windows` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
-    * TODO: This step should be removed and be set as a dependency in `survarium - PC - Windows`.
-3. Build `survarium - PC - Windows` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
+2. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
+    * TODO: This step should be removed and be set as a dependency in `survarium - PC - DirectX 11`.
+3. Build `survarium - PC - DirectX 11` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
 
 4. Setup `objdiff`:
     * Open Project `Settings`.
