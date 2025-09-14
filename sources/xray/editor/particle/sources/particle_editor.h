@@ -212,7 +212,7 @@ private:	System::Windows::Forms::ToolStripMenuItem^  optionsToolStripMenuItem;
 
 			document_base^	on_create_document				();
 			void 			on_document_add_new_lod			(Object^ sender, EventArgs^ e);
-			void			on_document_delete_lod			();
+			void			on_document_delete_lod			(  xray::editor::controls::tree_node^ node );
 			void			on_tree_view_expand_node		(Object^, TreeViewCancelEventArgs^ e);
 			void			load_document					(xray::editor::controls::tree_node^ node);
 			void			load_particles_library			( );

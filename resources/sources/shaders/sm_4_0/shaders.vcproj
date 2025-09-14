@@ -1,0 +1,2375 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="shaders - Shader Model 4.0"
+	ProjectGUID="{1BEF05DB-4870-46D4-AA52-B49F745110D0}"
+	RootNamespace="shaders"
+	TargetFrameworkVersion="196613"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+		<ToolFile
+			RelativePath="..\..\..\..\tools\msvs\HLSL Compiler.rules"
+		/>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Master Gold|Win32"
+			OutputDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="10"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Compiling..."
+				CommandLine="rem "
+			/>
+			<Tool
+				Name="HLSL Compiler"
+				CommandLine="&quot;$(SolutionDir)../resources/sources/shaders/shader_compiler_vs.exe&quot; &quot;$(InputPath)&quot; &quot;$(SolutionDir)../resources/sources/shaders/sm_4_0/defines.def&quot; -dx10 -shader_model=&quot;4.0&quot; -ext=&quot;ps,vs&quot; -vs_output=&quot;$(IntDir)\$(InputName)$(InputExt).obj&quot;"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="10"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Compiling..."
+				CommandLine="rem "
+			/>
+			<Tool
+				Name="HLSL Compiler"
+				CommandLine="&quot;$(SolutionDir)../resources/sources/shaders/shader_compiler_vs.exe&quot; &quot;$(InputPath)&quot; &quot;$(SolutionDir)../resources/sources/shaders/sm_4_0/defines_full.def&quot; -dx10 -shader_model=&quot;4.0&quot; -ext=&quot;ps,vs&quot; -vs_output=&quot;$(IntDir)\$(InputName)$(InputExt).obj&quot;"
+				AdditionalDependencies=""
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="ui"
+			>
+			<File
+				RelativePath=".\image.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common_samplers.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common_samplers.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\ui.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\ui_fill.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\ui_font.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="system"
+			>
+			<Filter
+				Name="grid"
+				>
+				<File
+					RelativePath=".\system_grid.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\system_grid.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="line"
+				>
+				<File
+					RelativePath=".\system_line.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\system_line.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\system_line_top.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="sky"
+			>
+			<File
+				RelativePath=".\sky2.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sky2.vs"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="post_process"
+			>
+			<File
+				RelativePath=".\gbuffer_to_screen.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\log_luv_color_space.h"
+				>
+			</File>
+			<File
+				RelativePath=".\post_process_distortion.ps"
+				>
+			</File>
+			<Filter
+				Name="bloom"
+				>
+				<File
+					RelativePath=".\gather_bloom.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\gather_bloom.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="blur"
+				>
+				<File
+					RelativePath=".\blur.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\blur_horizontally.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\blur_vertically.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\mblur.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="depth of field"
+				>
+				<File
+					RelativePath=".\dof_functions.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="complex_post_process_blend"
+				>
+				<File
+					RelativePath=".\complex_post_process_blend.ps"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="ssao"
+				>
+				<File
+					RelativePath=".\ssao_accumulation.ps"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="luminance"
+				>
+				<File
+					RelativePath=".\gather_log_luminance.ps"
+					>
+				</File>
+				<File
+					RelativePath=".\gather_luminance.ps"
+					>
+				</File>
+				<File
+					RelativePath=".\gather_luminance.vs"
+					>
+				</File>
+				<File
+					RelativePath=".\gather_luminance2.vs"
+					>
+				</File>
+				<File
+					RelativePath=".\gather_luminance_count.ps"
+					>
+				</File>
+				<File
+					RelativePath=".\gather_luminance_histogram.ps"
+					>
+				</File>
+				<File
+					RelativePath=".\gather_luminance_in_range.ps"
+					>
+				</File>
+				<File
+					RelativePath=".\luminance.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="forward render"
+			>
+			<File
+				RelativePath=".\forward_base.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v2p_base.h;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\forward_lighting.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_volume_cone_base.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_volume_sphere_base.ps"
+				>
+			</File>
+			<Filter
+				Name="distortion"
+				>
+				<File
+					RelativePath=".\apply_distortion.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\apply_distortion.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="advanced"
+				>
+				<Filter
+					Name="lighting_skin_base"
+					>
+					<File
+						RelativePath=".\lighting_skin_base.ps"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="subsurface_scattering"
+					>
+				</Filter>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="benchmark"
+			>
+			<File
+				RelativePath=".\graphics_benchmark_common.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="common"
+			>
+			<File
+				RelativePath=".\common.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\common_cbuffers.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\common_defines.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\common_functions.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\common_iostructs.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\common_policies.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\common_samplers.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\debug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\gamma_correction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sa_quad.vs"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="HLSL Compiler"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\v2p_base.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\v2p_common.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\v_base.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\v_common.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="common_defines.h,common_policies.h,common_iostructs.h,common_samplers.h,common_cbuffers.h,common_functions.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<Filter
+				Name="color"
+				>
+				<File
+					RelativePath=".\color.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\color.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\color_doted.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\color_fixed.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\color_top.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\dumb.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\dumb.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="copy_image"
+				>
+				<File
+					RelativePath=".\copy_image.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\copy_image.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="defines"
+				>
+				<File
+					RelativePath=".\defines.def"
+					>
+				</File>
+				<File
+					RelativePath=".\defines_full.def"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="stub"
+				>
+				<File
+					RelativePath=".\stub_notransform.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\stub_notransform_2pos.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\stub_notransform_2uv.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\stub_notransform_t.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="test"
+				>
+				<File
+					RelativePath=".\test.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\test.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common_iostructs.h"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="deferred shading render"
+			>
+			<File
+				RelativePath=".\gbuffer.h"
+				>
+			</File>
+			<Filter
+				Name="combine"
+				>
+				<File
+					RelativePath=".\combine_1.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;hmodel.h;gbuffer.h"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;hmodel.h;gbuffer.h"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\combine_1.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\hmodel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\hmodel_f.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="lighting"
+				>
+				<File
+					RelativePath=".\lighting.h"
+					>
+				</File>
+				<Filter
+					Name="sun"
+					>
+					<File
+						RelativePath=".\accum_sun_far.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_mask.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;gbuffer.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;gbuffer.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_materials.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_near.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_near_branch.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_near_mat2.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_near_mat2_branch.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_near_mat2_no_mask.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\accum_sun_near_no_mask.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;lights.h;shadow.h;gbuffer.h;light_accumulator.h;"
+							/>
+						</FileConfiguration>
+					</File>
+				</Filter>
+				<Filter
+					Name="lights"
+					>
+					<File
+						RelativePath=".\brdf.h"
+						>
+					</File>
+					<File
+						RelativePath=".\light.vs"
+						>
+					</File>
+					<Filter
+						Name="parallel"
+						>
+						<File
+							RelativePath=".\parallel_light.h"
+							>
+						</File>
+						<File
+							RelativePath=".\parallel_light_accumulator.ps"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="area"
+						>
+						<Filter
+							Name="capsule"
+							>
+							<File
+								RelativePath=".\capsule_light.h"
+								>
+							</File>
+							<File
+								RelativePath=".\capsule_light_accumulator.ps"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="obb"
+							>
+							<File
+								RelativePath=".\obb_light.h"
+								>
+							</File>
+							<File
+								RelativePath=".\obb_light_accumulator.ps"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="plane_spot"
+							>
+							<File
+								RelativePath=".\plane_spot_light.h"
+								>
+							</File>
+							<File
+								RelativePath=".\plane_spot_light_accumulator.ps"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="sphere"
+							>
+							<File
+								RelativePath=".\sphere_light.h"
+								>
+							</File>
+							<File
+								RelativePath=".\sphere_light_accumulator.ps"
+								>
+							</File>
+						</Filter>
+					</Filter>
+					<Filter
+						Name="point"
+						>
+						<Filter
+							Name="point"
+							>
+							<File
+								RelativePath=".\point_light.h"
+								>
+							</File>
+							<File
+								RelativePath=".\point_light_accumulator.ps"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="spot"
+							>
+							<File
+								RelativePath=".\spot_light.h"
+								>
+							</File>
+							<File
+								RelativePath=".\spot_light_accumulator.ps"
+								>
+							</File>
+						</Filter>
+					</Filter>
+					<Filter
+						Name="helpers"
+						>
+						<File
+							RelativePath=".\colored_light.h"
+							>
+						</File>
+						<File
+							RelativePath=".\directional_light.h"
+							>
+						</File>
+						<File
+							RelativePath=".\light.h"
+							>
+						</File>
+						<File
+							RelativePath=".\light_accumulator.h"
+							>
+						</File>
+						<File
+							RelativePath=".\light_functions.h"
+							>
+						</File>
+						<File
+							RelativePath=".\light_ps_helper.h"
+							>
+						</File>
+						<File
+							RelativePath=".\positional_light.h"
+							>
+						</File>
+					</Filter>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="materials"
+				>
+				<Filter
+					Name="default"
+					>
+					<File
+						RelativePath=".\g_base.ps"
+						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;psf_diffuse.h;psf_alpha_test.h;psf_detail.h;psf_normal.h;psf_parallax.h;psf_translucent.h;psf_tspecular_intensity.h;[sf_tspecular_power.h;psf_tdiffuse_power.h;psf_emissive.h;psf_make_tangent_transform.h;psf_reflection.h;psf_fresnel.h;v2p_base.h;gbuffer.h;psf_emissive_write.h;"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="HLSL Compiler"
+								AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;psf_diffuse.h;psf_alpha_test.h;psf_detail.h;psf_normal.h;psf_parallax.h;psf_translucent.h;psf_tspecular_intensity.h;[sf_tspecular_power.h;psf_tdiffuse_power.h;psf_emissive.h;psf_make_tangent_transform.h;psf_reflection.h;psf_fresnel.h;v2p_base.h;gbuffer.h;psf_emissive_write.h;"
+							/>
+						</FileConfiguration>
+					</File>
+				</Filter>
+				<Filter
+					Name="building blocks"
+					>
+					<File
+						RelativePath=".\psf_alpha_test.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_detail.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_diffuse.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_emissive.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_emissive_write.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_fresnel.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_make_tangent_transform.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_normal.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_parallax.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_reflection.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_tc_modifiers.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_tdiffuse_power.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_translucent.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_tspecular_intensity.h"
+						>
+					</File>
+					<File
+						RelativePath=".\psf_tspecular_power.h"
+						>
+					</File>
+					<File
+						RelativePath=".\vsf_copy_tc.h"
+						>
+					</File>
+					<File
+						RelativePath=".\vsf_tangent_space_transform.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="skin"
+				>
+				<File
+					RelativePath=".\skin.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="terrain"
+				>
+				<File
+					RelativePath=".\terrain.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;vsf_tangent_space_transform.h;v_terrain.h;v2p_terrain.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;v2p_common.h;v_common.h;vsf_tangent_space_transform.h;v_terrain.h;v2p_terrain.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\v2p_terrain.h"
+					>
+				</File>
+				<File
+					RelativePath=".\v_terrain.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="shadows"
+				>
+				<File
+					RelativePath=".\shadow.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shadow_direct_base.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\shadow_direct_base_aref.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\shadow_direct_base_aref.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\shadow_direct_tree_s.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="shadow_direct_tree.vs;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+							AdditionalDependencies="shadow_direct_tree.vs;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="obsolete"
+				>
+				<File
+					RelativePath=".\deffer_base_aref_bump.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_aref_flat.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_bump.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_bump.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_bump_emiss.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_flat.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_flat.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_flat_emiss.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_base_flat_tex_test.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_fr_test.ps"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_fr_test.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_model_bump.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_tree_bump.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_tree_flat.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_tree_s_bump.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\deffer_tree_s_flat.vs"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="HLSL Compiler"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="ssao"
+				>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="editor"
+			>
+			<File
+				RelativePath=".\editor_apply_wireframe.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\editor_shader_complexity.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\editor_texture_density.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\editor_texture_mip_level.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\editor_wireframe_accumulation.ps"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="particles"
+			>
+			<File
+				RelativePath=".\particle_beamtrail_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\particle_selected.ps"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="HLSL Compiler"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\particle_vertex_input.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="unsorted"
+			>
+			<File
+				RelativePath=".\accum_mask.vs"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="HLSL Compiler"
+						AdditionalDependencies="common.h;common_defines.h;common_policies.h;common_iostructs.h;common_samplers.h;common_cbuffers.h;common_functions.h;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\blend_texture.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\BranchingShadows.h"
+				>
+			</File>
+			<File
+				RelativePath=".\decal_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\depth_accumulate.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\distortion_base.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\distortion_panner.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\dof.h"
+				>
+			</File>
+			<File
+				RelativePath=".\editor_geometry_complexity.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\editor_selection.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\filters.h"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_base_fire_subuv.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_base_move_tc.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_base_smoke_custom_lighted.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_base_subuv.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\forward_soft.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\g_base_burning_wood.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\ghost.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\lensflares_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lmodel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\make_vcm.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\make_vcm.vs"
+				>
+			</File>
+			<File
+				RelativePath=".\material.h"
+				>
+			</File>
+			<File
+				RelativePath=".\null_mesh_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\particle_beamtrail.vs"
+				>
+			</File>
+			<File
+				RelativePath=".\particle_billboard.vs"
+				>
+			</File>
+			<File
+				RelativePath=".\post_process.vs"
+				>
+			</File>
+			<File
+				RelativePath=".\post_process0.vs"
+				>
+			</File>
+			<File
+				RelativePath=".\post_process_antialiasing.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\post_process_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sload.h"
+				>
+			</File>
+			<File
+				RelativePath=".\spot_light.h.orig"
+				>
+			</File>
+			<File
+				RelativePath=".\spot_shadow.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ssao_filter4x4.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\ssao_filter4x4_1.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\static_mesh_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\terrain_debug.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\terrain_vertex_input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\v_particle_beamtrail.h"
+				>
+			</File>
+			<File
+				RelativePath=".\v_particle_sprite.h"
+				>
+			</File>
+			<File
+				RelativePath=".\vertex_input.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="skinning"
+			>
+			<File
+				RelativePath=".\skeleton_mesh_vertex_input.h"
+				>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

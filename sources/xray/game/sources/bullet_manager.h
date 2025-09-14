@@ -30,29 +30,28 @@ namespace xray{
 namespace stalker2
 {
 
-class	game;
+class	game_world;
 struct	bullet_ticker_predicate;
 
 class bullet_manager 
 {
 public:
-					bullet_manager					( game& game );
+					bullet_manager					( game_world& w );
 					~bullet_manager					( );
 	void			initialize						( );
 	void			register_console_commands		( );
 
 public:
 	void			tick							( float elapsed_game_seconds );
-	game&			get_game						( ) const;
 	float3 const&	get_gravity						( ) const;
 	void			fire							( float3 position, float3 direction );
 	float			get_bullet_time_factor			( );
 	void			add_decal						( float3 const& position, float3 const& direction, float3 const& normal, bool is_front_face );
+	game_world&		get_game_world					( ) {return m_game_world;}
 
 #ifndef MASTER_GOLD
-	void			render_debug					( );
+	void			render_debug					( render::debug::renderer& renderer, render::scene_ptr const& scene );
 	void			store_bullet_trajectory			( bullet* bullet );
-	void			toggle_is_fixed					( );
 	void			add_collision_point				( float3 const& point, math::color const& color );
 #endif // #ifndef MASTER_GOLD		
 
@@ -86,7 +85,7 @@ private:
 	unmanaged_allocation_resource_ptr				m_bullets_memory_ptr;
 	uninitialized_reference< bullets_allocator >	m_bullets_allocator_ref;
 
-	game&											m_game;
+	game_world&										m_game_world;
 	tasks::task_type*								m_task_type;
 
 	u32												m_max_bullets_count;
@@ -120,10 +119,6 @@ private:
 	debug::vector< decal_data >						m_decals;
 	vectora< render::vertex_colored >				m_bullet_trajectories_points;
 	debug::vector< u32 >							m_bullet_sequences_sizes;
-
-	float3											m_fixed_position;
-	float3											m_fixed_direction;
-	bool											m_is_fixed;
 
 	bool											m_is_draw_debug;
 	bool											m_is_draw_trajectories;

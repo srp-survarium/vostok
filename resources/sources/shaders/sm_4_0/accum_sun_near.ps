@@ -1,0 +1,84 @@
+//#include "common.h"
+//#include "light.h"
+//#include "shadow.h"
+//#include "gbuffer.h"
+#include "light_accumulator.h"
+#include "parallel_light.h"
+#include "light_ps_helper.h"
+#include "common_iostructs.h"
+#include "shadow.h"
+#include "gamma_correction.h"
+
+/*$DEFINES$:
+	GLOBAL_SHADOWMAP_SIZE,
+*/
+
+float shadow_transparency;
+
+Texture2D	t_target_ex;	
+Texture2D	t_depth;		
+
+light_accumulator 	main		( v2p_sun input ) : SV_TARGET
+{
+	g_data gb					= gbuffer_read	( input.Tex0, input.eye_ray);
+	
+	light_factors light_factors	= parallel_light( gb, input.Tex0 );
+	
+	float4  emissive_color 		= float4(t_emissive.Sample( s_position, input.Tex0));
+	emissive_color.rgb 			*= LIGHT_ACCUMULATOR_MAGNIFY_FACTOR;
+	
+	// TODO: Do not read all cascads, use stencil masks for this!
+	
+	float3 offset				= gb.normal * 16.0f / GLOBAL_SHADOWMAP_SIZE;
+	
+  	float4 	fixed_position 		= float4(gb.position.xyz + offset + float3( 0.f, 0.f, -0.00f), 1.f);
+	float4 	projected_position0	= mul(m_shadow0, fixed_position);
+	float4 	projected_position1	= mul(m_shadow1, fixed_position);
+	float4 	projected_position2	= mul(m_shadow2, fixed_position);
+	float4 	projected_position3	= mul(m_shadow3, fixed_position);
+	
+	float shadow_factor			= saturate( shadow_hw_all_cascades(
+		fixed_position, projected_position0, projected_position1, projected_position2, projected_position3) + shadow_transparency 
+	);
+	
+	light_factors.diffuse		*= light_factors.diffuse >= 0.0f ? shadow_factor : 1.0f;
+	light_factors.specular		*= shadow_factor;//light_factors.diffuse >= 0.0f ? shadow_factor : 1.0f;
+	
+//	float3 from_sky				= normalize(mul(m_V, float4(0.0f, -1.0f, 0.0f, 0.0f)).xyz);
+//	float3 from_ground			= normalize(mul(m_V, float4(0.0f, 1.0f, 0.0f, 0.0f)).xyz);
+	
+//	float sky_dot_normal		= saturate(dot(-from_sky, gb.normal) + 0.1);
+//	float ground_dot_normal		= saturate(dot(-from_ground, gb.normal));
+	
+	light_accumulator result	= get_light_accumulator( light_color, light_factors );
+	
+//	result.diffuse				+= float4(sky_dot_normal * environment_skylight_upper_color.a * environment_skylight_upper_color.rgb, 1.0f);
+//	result.diffuse				+= float4(ground_dot_normal * environment_skylight_lower_color.a * environment_skylight_lower_color.rgb, 1.0f);
+	
+	return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+	
+/*
+	float3 P_n;
+	//float z_depth = -1000.f*0.2f/((1000.f-0.2f)*(depth-1000.f/(1000.f-0.2f)));
+	P_n.z = _P.z*_P.z;
+	//P_n.z = z_depth;
+	P_n = P_n.z*I.eye_ray;
+	float3 P_dif = (_P.xyz - _P_ex.xyz);
+	//float3 P_dif = 4*(_P - _P_ex);
+	float3 tmp_N = _N.xyz;
+	float3 N_dif = 20*(tmp_N - _P_ex.xyz);
+	//float z_depth = 400*0.2/(400 - depth*(400+0.2));
+	//P_dif.z = 2*(z_depth - _P_ex.z);
+*/

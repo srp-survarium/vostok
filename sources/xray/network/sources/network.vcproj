@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="network"
-	ProjectGUID="{A20C1E29-2B0A-4036-A258-BAB22695D214}"
-	RootNamespace="network"
+	ProjectGUID="{7B585959-958A-4B8B-8A0B-C7FCB38D43BE}"
+	RootNamespace="library"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -46,9 +46,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-g -Wall -Wextra -mwarn-lhs -mwarn-microcode -fno-exceptions -fsigned-char -fms-extensions"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);&quot;$(SN_PS3_PATH)\ppu\include\sn&quot;;&quot;$(SCE_PS3_ROOT)\target\ppu\include&quot;;&quot;$(SCE_PS3_ROOT)\target\common\include&quot;"
 				PreprocessorDefinitions="SN_TARGET_PS3;__GCC__;__CELL_ASSERT__;XRAY_STATIC_LIBRARIES;"
-				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 			/>
@@ -84,8 +85,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 GCC Debug|Xbox 360"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			UseOfMFC="-1"
 			UseOfATL="0"
 			>
@@ -106,8 +108,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -119,19 +119,13 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCX360LinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
-				Name="VCX360ImageTool"
-			/>
-			<Tool
 				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCX360DeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -141,7 +135,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 GCC Debug|x64"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -160,8 +156,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -173,13 +167,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -189,9 +180,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -221,9 +209,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-g -Wall -Wextra -mwarn-lhs -mwarn-microcode -mcallprof=1 -fno-exceptions -fsigned-char -fms-extensions -O2 -funroll-loops"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);&quot;$(SN_PS3_PATH)\ppu\include\sn&quot;;&quot;$(SCE_PS3_ROOT)\target\ppu\include&quot;;&quot;$(SCE_PS3_ROOT)\target\common\include&quot;"
 				PreprocessorDefinitions="SN_TARGET_PS3;NDEBUG;__GCC__"
-				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 			/>
@@ -259,8 +248,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 GCC Release|Xbox 360"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			UseOfMFC="-1"
 			UseOfATL="0"
 			>
@@ -281,8 +271,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -294,19 +282,13 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCX360LinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
-				Name="VCX360ImageTool"
-			/>
-			<Tool
 				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCX360DeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -316,7 +298,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 GCC Release|x64"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -335,8 +319,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -348,13 +330,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -364,9 +343,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -396,9 +372,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-g -Wall -Wextra -mwarn-lhs -mwarn-microcode -fno-exceptions -fsigned-char -fms-extensions -O2 -funroll-loops"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);&quot;$(SN_PS3_PATH)\ppu\include\sn&quot;;&quot;$(SCE_PS3_ROOT)\target\ppu\include&quot;;&quot;$(SCE_PS3_ROOT)\target\common\include&quot;"
 				PreprocessorDefinitions="SN_TARGET_PS3;NDEBUG;__GCC__;MASTER_GOLD;"
-				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 			/>
@@ -414,7 +391,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions=""
-				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-static.lib"
+				OutputFile="$(SolutionDir)../binaries/PS3/libraries/xray_$(ProjectName)-static-gold.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -434,8 +411,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 GCC Master Gold|Xbox 360"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			UseOfMFC="-1"
 			UseOfATL="0"
 			>
@@ -456,8 +434,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -469,19 +445,13 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCX360LinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
-				Name="VCX360ImageTool"
-			/>
-			<Tool
 				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCX360DeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -491,7 +461,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 GCC Master Gold|x64"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -510,8 +482,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -523,13 +493,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -539,9 +506,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -571,12 +535,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-g --use_pch=&quot;$(IntDir)/$(TargetName).pch&quot;"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="SN_TARGET_PS3;__SNC__;__CELL_ASSERT__;XRAY_STATIC_LIBRARIES;"
-				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
-				DisableSpecificWarnings="1319"
+				DisableSpecificWarnings="1779,229,262,341,1319"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -610,8 +575,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 SNC Debug|Xbox 360"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			UseOfMFC="-1"
 			UseOfATL="0"
 			>
@@ -632,8 +598,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -645,19 +609,13 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCX360LinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
-				Name="VCX360ImageTool"
-			/>
-			<Tool
 				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCX360DeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -667,7 +625,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 SNC Debug|x64"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -686,8 +646,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -699,13 +657,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -715,9 +670,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -747,9 +699,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-g -O2 --use_pch=&quot;$(IntDir)/$(TargetName).pch&quot; -Xcallprof=1 -Xbranchless=2 -Xunrollssa=30"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="SN_TARGET_PS3;NDEBUG;__SNC__;XRAY_STATIC_LIBRARIES;"
-				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 				DisableSpecificWarnings="1319"
@@ -786,8 +739,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 SNC Release|Xbox 360"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			UseOfMFC="-1"
 			UseOfATL="0"
 			>
@@ -808,8 +762,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -821,19 +773,13 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCX360LinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
-				Name="VCX360ImageTool"
-			/>
-			<Tool
 				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCX360DeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -843,7 +789,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 SNC Release|x64"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -862,8 +810,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -875,13 +821,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -891,9 +834,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -923,9 +863,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-O2 --use_pch=&quot;$(IntDir)/$(TargetName).pch&quot; -Xbranchless=2 -Xunrollssa=30"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="SN_TARGET_PS3;NDEBUG;__SNC__;MASTER_GOLD;XRAY_STATIC_LIBRARIES;"
-				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				ProgramDataBaseFileName=""
 				CompileAs="0"
 				DisableSpecificWarnings="1319"
@@ -962,8 +903,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 SNC Master Gold|Xbox 360"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			UseOfMFC="-1"
 			UseOfATL="0"
 			>
@@ -984,8 +926,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -997,19 +937,13 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCX360LinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
-				Name="VCX360ImageTool"
-			/>
-			<Tool
 				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCX360DeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1019,8 +953,9 @@
 		</Configuration>
 		<Configuration
 			Name="PS3 SNC Master Gold|x64"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			OutputDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/PS3/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -1039,8 +974,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				MinimalRebuild="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -1052,13 +985,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -1068,9 +998,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1101,17 +1028,16 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;WINDOWS;NDEBUG;"
+				PreprocessorDefinitions="WIN32;NDEBUG;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -1177,15 +1103,14 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
+				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="_XBOX;NDEBUG;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -1249,16 +1174,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;WINDOWS;NDEBUG;"
+				PreprocessorDefinitions="WIN64;NDEBUG;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -1321,15 +1244,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;WINDOWS;_WIN32_WINNT=0x0501;"
+				PreprocessorDefinitions="WIN32;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
-				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
@@ -1393,12 +1314,11 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="_XBOX;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
@@ -1463,15 +1383,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;WINDOWS;"
+				PreprocessorDefinitions="WIN64;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
@@ -1534,17 +1452,16 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;WINDOWS;NDEBUG;XRAY_STATIC_LIBRARIES"
+				PreprocessorDefinitions="WIN32;NDEBUG;XRAY_STATIC_LIBRARIES"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -1610,7 +1527,6 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
@@ -1619,7 +1535,6 @@
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="_XBOX;NDEBUG;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -1683,16 +1598,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;WINDOWS;NDEBUG;XRAY_STATIC_LIBRARIES"
+				PreprocessorDefinitions="WIN64;NDEBUG;XRAY_STATIC_LIBRARIES"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -1755,15 +1668,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN32;XRAY_STATIC_LIBRARIES;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="0"
-				SmallerTypeCheck="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
@@ -1827,12 +1738,11 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="_XBOX;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
@@ -1846,7 +1756,6 @@
 				PrecompiledHeaderFile="$(IntDir)\$(ProjectName).pch"
 				WarningLevel="4"
 				DebugInformationFormat="3"
-				ShowIncludes="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -1898,15 +1807,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN64;XRAY_STATIC_LIBRARIES;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
@@ -1969,17 +1876,16 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN32;WINDOWS;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
+				PreprocessorDefinitions="WIN32;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -2045,15 +1951,14 @@
 			/>
 			<Tool
 				Name="VCCLX360CompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
+				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="_XBOX;NDEBUG;MASTER_GOLD;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -2117,16 +2022,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
-				PreprocessorDefinitions="WIN64;WINDOWS;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
+				PreprocessorDefinitions="WIN64;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -2173,19 +2076,7 @@
 			Name="core"
 			>
 			<File
-				RelativePath=".\async_callback_proxies.h"
-				>
-			</File>
-			<File
-				RelativePath=".\async_handler_host.h"
-				>
-			</File>
-			<File
-				RelativePath=".\boost_api.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\boost_api.h"
+				RelativePath=".\handler_allocator.h"
 				>
 			</File>
 			<File
@@ -2210,6 +2101,22 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="PS3 GCC Debug|Xbox 360"
+					>
+			<Tool
+				Name="VCCLX360CompilerTool"
+				UsePrecompiledHeader="1"
+			/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 GCC Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="PS3 GCC Release|Win32"
 					>
 					<Tool
@@ -2217,6 +2124,22 @@
 						AdditionalOptions="-g -Wall -Wextra -mwarn-lhs -mwarn-microcode -fno-exceptions -O2"
 						UsePrecompiledHeader="1"
 						PrecompiledHeaderFile="$(InputName).h.gch/$(ProjectName)_$(ConfigurationName).h.gch"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 GCC Release|Xbox 360"
+					>
+			<Tool
+				Name="VCCLX360CompilerTool"
+				UsePrecompiledHeader="1"
+			/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 GCC Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2230,6 +2153,22 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="PS3 GCC Master Gold|Xbox 360"
+					>
+			<Tool
+				Name="VCCLX360CompilerTool"
+				UsePrecompiledHeader="1"
+			/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 GCC Master Gold|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="PS3 SNC Debug|Win32"
 					>
 					<Tool
@@ -2237,6 +2176,22 @@
 						AdditionalOptions="-g --create_pch=&quot;$(IntDir)/$(TargetName).pch&quot;"
 						UsePrecompiledHeader="1"
 						PrecompiledHeaderFile="$(IntDir)/$(TargetName).pch"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 SNC Debug|Xbox 360"
+					>
+			<Tool
+				Name="VCCLX360CompilerTool"
+				UsePrecompiledHeader="1"
+			/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 SNC Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2250,6 +2205,22 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="PS3 SNC Release|Xbox 360"
+					>
+			<Tool
+				Name="VCCLX360CompilerTool"
+				UsePrecompiledHeader="1"
+			/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 SNC Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="PS3 SNC Master Gold|Win32"
 					>
 					<Tool
@@ -2257,6 +2228,22 @@
 						AdditionalOptions="-g -O2 --create_pch=&quot;$(IntDir)/$(TargetName).pch&quot;"
 						UsePrecompiledHeader="1"
 						PrecompiledHeaderFile="$(IntDir)/$(TargetName).pch"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 SNC Master Gold|Xbox 360"
+					>
+			<Tool
+				Name="VCCLX360CompilerTool"
+				UsePrecompiledHeader="1"
+			/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PS3 SNC Master Gold|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2384,670 +2371,6 @@
 				RelativePath=".\pch.h"
 				>
 			</File>
-			<File
-				RelativePath=".\std_string.h"
-				>
-			</File>
-			<File
-				RelativePath=".\std_string_inline.h"
-				>
-			</File>
-			<File
-				RelativePath=".\stlport_config.h"
-				>
-			</File>
-			<Filter
-				Name="boost"
-				>
-				<File
-					RelativePath=".\boost\system\error_code.cpp"
-					>
-				</File>
-				<Filter
-					Name="asio"
-					>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_datagram_socket.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_deadline_timer.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_io_object.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_raw_socket.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_serial_port.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_socket.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_socket_acceptor.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_socket_iostream.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_socket_streambuf.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_stream_socket.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\basic_streambuf.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffer.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffered_read_stream.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffered_read_stream_fwd.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffered_stream.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffered_stream_fwd.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffered_write_stream.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffered_write_stream_fwd.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\buffers_iterator.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\completion_condition.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\datagram_socket_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\deadline_timer.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\deadline_timer_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\error.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\handler_alloc_hook.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\handler_invoke_hook.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\io_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\is_read_buffered.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\is_write_buffered.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\placeholders.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\raw_socket_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\read.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\read_at.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\read_until.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\serial_port.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\serial_port_base.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\serial_port_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\socket_acceptor_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\socket_base.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\ssl.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\strand.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\stream_socket_service.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\streambuf.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\time_traits.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\version.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\write.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\boost\asio\write_at.hpp"
-						>
-					</File>
-					<Filter
-						Name="detail"
-						>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\bind_handler.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\buffer_resize_guard.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\buffered_stream_storage.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\call_stack.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\const_buffers_iterator.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\consuming_buffers.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\deadline_timer_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\descriptor_ops.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\dev_poll_reactor.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\dev_poll_reactor_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\epoll_reactor.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\epoll_reactor_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\event.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\eventfd_select_interrupter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\fd_set_adapter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\handler_alloc_helpers.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\handler_base_from_member.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\handler_invoke_helpers.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\handler_queue.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\hash_map.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\indirect_handler_queue.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\io_control.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\kqueue_reactor.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\kqueue_reactor_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\local_free_on_block_exit.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\mutex.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\noncopyable.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\null_event.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\null_mutex.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\null_signal_blocker.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\null_thread.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\null_tss_ptr.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\old_win_sdk_compat.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\pipe_select_interrupter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\pop_options.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\posix_event.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\posix_fd_set_adapter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\posix_mutex.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\posix_signal_blocker.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\posix_thread.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\posix_tss_ptr.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\push_options.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\reactive_descriptor_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\reactive_serial_port_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\reactive_socket_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\reactor_op_queue.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\resolver_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\scoped_lock.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\select_interrupter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\select_reactor.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\select_reactor_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\service_base.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\service_id.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\service_registry.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\service_registry_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\signal_blocker.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\signal_init.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\socket_holder.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\socket_ops.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\socket_option.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\socket_select_interrupter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\socket_types.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\strand_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\task_io_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\task_io_service_2lock.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\task_io_service_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\thread.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\throw_error.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\timer_queue.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\timer_queue_base.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\tss_ptr.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_event.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_fd_set_adapter.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_iocp_handle_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_iocp_io_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_iocp_io_service_fwd.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_iocp_overlapped_ptr.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_iocp_serial_port_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_iocp_socket_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_mutex.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_signal_blocker.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_thread.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\win_tss_ptr.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\wince_thread.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\winsock_init.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\wrapped_handler.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\detail\xbox360_sdk_compat.hpp"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="ip"
-						>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\address.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\address_v4.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\address_v6.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\basic_endpoint.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\basic_resolver.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\basic_resolver_entry.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\basic_resolver_iterator.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\basic_resolver_query.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\host_name.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\icmp.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\multicast.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\resolver_query_base.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\resolver_service.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\tcp.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\udp.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\unicast.hpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\boost\asio\ip\v6_only.hpp"
-							>
-						</File>
-						<Filter
-							Name="detail"
-							>
-							<File
-								RelativePath="..\..\..\boost\asio\ip\detail\socket_option.hpp"
-								>
-							</File>
-						</Filter>
-					</Filter>
-				</Filter>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="include"
-			>
-			<File
-				RelativePath="..\api.h"
-				>
-			</File>
-			<File
-				RelativePath="..\engine.h"
-				>
-			</File>
-			<File
-				RelativePath="..\library_linkage.h"
-				>
-			</File>
-			<File
-				RelativePath="..\world.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="world"
@@ -3060,817 +2383,173 @@
 				RelativePath=".\network_world.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="layers"
-			>
+			<File
+				RelativePath=".\two_way_threads_channel.h"
+				>
+			</File>
 			<Filter
-				Name="lowlevel"
+				Name="client"
 				>
 				<File
-					RelativePath=".\asio_handler_hook.h"
+					RelativePath=".\client.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\io_service.cpp"
-					>
-					<FileConfiguration
-						Name="PS3 GCC Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\io_service.h"
-					>
-				</File>
-				<File
-					RelativePath=".\io_service_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\ip_version.h"
-					>
-				</File>
-				<File
-					RelativePath=".\platform_initializer.h"
-					>
-				</File>
-				<File
-					RelativePath=".\platform_initializer_ps3.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release(static)|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release(static)|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release(static)|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug(static)|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug(static)|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug(static)|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\platform_initializer_win.cpp"
-					>
-					<FileConfiguration
-						Name="PS3 GCC Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release(static)|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug(static)|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\platform_initializer_xbox360.cpp"
-					>
-					<FileConfiguration
-						Name="PS3 GCC Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 GCC Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|Xbox 360"
-						ExcludedFromBuild="true"
-						>
-			<Tool
-				Name="VCCLX360CompilerTool"
-			/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PS3 SNC Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release(static)|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release(static)|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug(static)|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug(static)|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Master Gold|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Master Gold|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-			</Filter>
-			<Filter
-				Name="application"
-				>
-			</Filter>
-			<Filter
-				Name="transport"
-				>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="io"
-			>
-			<Filter
-				Name="devices"
-				>
-				<File
-					RelativePath=".\buffer_reader_device.h"
-					>
-				</File>
-				<File
-					RelativePath=".\buffer_reader_device_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\buffer_writer_device.h"
-					>
-				</File>
-				<File
-					RelativePath=".\buffer_writer_device_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\device_traits_meta_functions.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="writers"
-				>
-				<File
-					RelativePath=".\writer.h"
-					>
-				</File>
-				<File
-					RelativePath=".\writer_base.h"
-					>
-				</File>
-				<File
-					RelativePath=".\writer_base_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\writer_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\writers.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="readers"
-				>
-				<File
-					RelativePath=".\reader.h"
-					>
-				</File>
-				<File
-					RelativePath=".\reader_base.h"
-					>
-				</File>
-				<File
-					RelativePath=".\reader_base_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\reader_inline.h"
-					>
-				</File>
-				<File
-					RelativePath=".\readers.h"
+					RelativePath=".\client_error_codes.h"
 					>
 				</File>
 				<Filter
-					Name="signalling"
+					Name="impl"
 					>
 					<File
-						RelativePath=".\signalling_reader.h"
+						RelativePath=".\client_impl.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\signalling_reader_inline.h"
+						RelativePath=".\client_impl.h"
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="server"
+				>
+				<File
+					RelativePath=".\server.cpp"
+					>
+				</File>
+				<Filter
+					Name="impl"
+					>
+					<File
+						RelativePath=".\server_impl.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\server_impl.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="client_session"
+					>
+					<File
+						RelativePath=".\client_session.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\client_session.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="packet_socket"
+				>
+				<File
+					RelativePath=".\packet_socket.h"
+					>
+				</File>
+				<File
+					RelativePath=".\packet_socket_inline.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="packet"
+				>
+				<File
+					RelativePath=".\packet.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="orders"
+				>
+				<File
+					RelativePath=".\connect_order.h"
+					>
+				</File>
+				<File
+					RelativePath=".\functor_order.h"
+					>
+				</File>
+				<File
+					RelativePath=".\order.h"
+					>
+				</File>
+				<File
+					RelativePath=".\send_order.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="responses"
+				>
+				<File
+					RelativePath=".\functor_response.h"
+					>
+				</File>
+				<File
+					RelativePath=".\receive_response.h"
+					>
+				</File>
+				<File
+					RelativePath=".\response.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="include"
+			>
+			<File
+				RelativePath="..\api.h"
+				>
+			</File>
+			<File
+				RelativePath="..\client.h"
+				>
+			</File>
+			<File
+				RelativePath="..\engine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\library_linkage.h"
+				>
+			</File>
+			<File
+				RelativePath="..\server.h"
+				>
+			</File>
+			<File
+				RelativePath="..\world.h"
+				>
+			</File>
+			<Filter
+				Name="packet"
+				>
+				<File
+					RelativePath="..\packet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\packet_inline.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="packet_reader"
+				>
+				<File
+					RelativePath="..\packet_reader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\packet_reader_inline.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<File

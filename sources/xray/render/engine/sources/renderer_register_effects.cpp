@@ -32,6 +32,7 @@
 #include "decal_default_material_effect.h"
 #include "effect_lighting_stage_organic_base_materials.h"
 #include "sky_default_material_effect.h"
+#include "effect_gstage_terrain_materials.h"
 
 // This file is temporary to find a correct place for effect descriptor initialization.
 
@@ -55,6 +56,7 @@ void register_effect_descriptors()
 	effect_manager::ref().register_effect_desctiptor("distortion_panner",				NEW(effect_distortion_stage_panner_materials));
 	effect_manager::ref().register_effect_desctiptor("distortion_default",				NEW(effect_distortion_stage_default_materials));
 	effect_manager::ref().register_effect_desctiptor("g_stage_default",					NEW(effect_gstage_default_materials));
+	effect_manager::ref().register_effect_desctiptor("g_stage_terrain",					NEW(effect_gstage_terrain_materials));
 	effect_manager::ref().register_effect_desctiptor("g_stage_default_tiled",			NEW(effect_gstage_default_materials));
 	effect_manager::ref().register_effect_desctiptor("g_stage_burning_wood",			NEW(effect_gstage_burning_wood_materials));
 	effect_manager::ref().register_effect_desctiptor("post_process_blend_texture",		NEW(effect_post_process_blend_texture_materials));

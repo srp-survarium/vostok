@@ -1107,7 +1107,7 @@
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -1325,7 +1325,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
 				PreprocessorDefinitions="WIN32;"
 				StringPooling="false"
 				MinimalRebuild="false"
@@ -1353,6 +1353,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/xray_$(ProjectName)-debug.lib"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1544,7 +1545,7 @@
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
 				PreprocessorDefinitions="WIN32;NDEBUG;XRAY_STATIC_LIBRARIES;"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -1765,7 +1766,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
 				PreprocessorDefinitions="WIN32;XRAY_STATIC_LIBRARIES;"
 				StringPooling="false"
 				MinimalRebuild="false"
@@ -1986,7 +1987,7 @@
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
 				PreprocessorDefinitions="WIN32;NDEBUG;XRAY_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -2407,6 +2408,10 @@
 		<Filter
 			Name="world"
 			>
+			<File
+				RelativePath=".\engine_scaleform_initialize.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\engine_world.cpp"
 				>

@@ -9,7 +9,7 @@
 #include "ide.h"
 #include "lod_view_panel.h"
 #include "property_grid_panel.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 #include "edit_object_speedtree.h"
 #include "edit_object_composite_visual.h"
 #include "contexts_manager.h"
@@ -80,14 +80,16 @@ m_resources_path			( gcnew System::String(resources_path) )
 
 void model_editor::query_create_render_resources( )
 {
- 	render::editor_renderer_configuration render_configuration;
- 	render_configuration.m_create_particle_world		= false;
+ 	render::scene_configuration						scene_configuration;
+ 	scene_configuration.m_create_particle_world		= false;
  	
- 	System::Int32 hwnd					= m_view_window->view_handle();
- 	
+ 	System::Int32 hwnd								= m_view_window->view_handle();
+	render::output_window_configuration				window_configuration;
+	window_configuration.m_hwnd						= *(HWND*)&hwnd;
+
  	resources::user_data_variant* temp_data[] = { NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
- 	temp_data[0]->set(render_configuration);
- 	temp_data[2]->set(*(HWND*)&hwnd);
+ 	temp_data[0]->set(scene_configuration);
+ 	temp_data[2]->set(window_configuration);
  	
  	resources::user_data_variant const* data[] = {temp_data[0], temp_data[1], temp_data[2]};
  	
@@ -208,14 +210,17 @@ void model_editor::Show( System::String^ context1, System::String^ context2 )
 	if( !context2 )
 		return;
 
-	if(context1=="solid_visual" || context1=="skinned_visual")
-		m_edit_object					= gcnew edit_object_mesh( this, (context1=="skinned_visual") );
+	if(context1=="solid_visual")
+		m_edit_object					= gcnew edit_object_solid_mesh( this );
+	else
+	if(context1=="skinned_visual")
+		m_edit_object					= gcnew edit_object_skeletal_mesh( this );
 	else
 	if(context1=="speedtree")
 		m_edit_object					= gcnew edit_object_speedtree( this );
-	else
-	if(context1=="composite_visual")
-		m_edit_object					= gcnew edit_object_composite_visual( this );
+	//else
+	//if(context1=="composite_visual")
+	//	m_edit_object					= gcnew edit_object_composite_visual( this );
 
 	m_edit_object->register_actions	( true );
 

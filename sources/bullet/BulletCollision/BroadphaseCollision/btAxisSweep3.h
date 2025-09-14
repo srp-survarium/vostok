@@ -617,6 +617,8 @@ void btAxisSweep3Internal<BP_FP_INT_TYPE>::removeHandle(BP_FP_INT_TYPE handle,bt
 template <typename BP_FP_INT_TYPE>
 void btAxisSweep3Internal<BP_FP_INT_TYPE>::resetPool(btDispatcher* dispatcher)
 {
+	(void)dispatcher;
+
 	if (m_numHandles == 0)
 	{
 		m_firstFreeHandle = 1;

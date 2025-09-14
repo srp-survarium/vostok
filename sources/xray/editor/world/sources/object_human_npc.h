@@ -43,7 +43,6 @@ public:
 					object_human_npc	( tool_misc^ tool, render::scene_ptr const& scene );
 	virtual			~object_human_npc	( );
 	
-	virtual void	destroy_collision	( )										override;
 	virtual void	load_contents		( )										override;
 	virtual void	unload_contents		( bool )								override;
 	virtual	void	set_visible			( bool is_visible )						override;

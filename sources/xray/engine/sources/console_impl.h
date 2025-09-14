@@ -7,6 +7,7 @@
 #define CONSOLE_IMPL_H_INCLUDED
 
 #include <xray/input/handler.h>
+#include <xray/render/engine/base_classes.h>
 
 namespace xray {
 
@@ -31,7 +32,7 @@ public:
 
 	virtual	void			on_activate			( );
 	virtual	void			on_deactivate		( );
-			void			tick				( );
+			void			tick				( xray::render::scene_view_ptr const& scene_view );
 
 			bool			on_keyboard_action	( input::world* input_world, input::enum_keyboard key, input::enum_keyboard_action action );
 			bool			on_gamepad_action	( input::world* input_world, input::gamepad_button button, input::enum_gamepad_action action );

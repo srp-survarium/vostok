@@ -1,0 +1,120 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 20.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+*/
+
+#include "common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_Position;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture2D t_lpv_rsm_albedo_source;
+Texture2D t_lpv_rsm_normal_source;
+Texture2D t_lpv_rsm_position_source;
+
+float3 	light_direction;
+float3 	grid_origin;
+float 	grid_cell_size;
+float 	invert_rsm_size;
+
+float3 get_grid_cell(float3 world_pos)
+{
+	return floor(abs((world_pos.xyz - grid_origin) / grid_cell_size));
+}
+
+float calc_texel_lum(float3 color, float3 normal) 
+{
+	float luminance = dot(color, float3(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f));
+	return luminance * max(0.0, dot(normal, -light_direction) );
+}
+
+void main(in vertex_output_struct input,
+		  out float4 out_rsm_albedo 	: SV_Target0,
+		  out float4 out_rsm_normal 	: SV_Target1,
+		  out float4 out_rsm_position 	: SV_Target2)
+{
+	float2 uv 				= input.uv;
+	
+	float3 g_color 			= t_lpv_rsm_albedo_source.SampleLevel(s_accumulator, uv, 0).xyz;
+	float3 g_normal 		= t_lpv_rsm_normal_source.SampleLevel(s_accumulator, uv, 0).xyz;
+	float3 g_world_pos 		= t_lpv_rsm_position_source.SampleLevel(s_accumulator, uv, 0).xyz;	
+	
+	float max_lum 			= 0.0f;
+	float3 chosen_grid_cell = 1000000.0f;
+	
+	int i 					= 0;
+	int j 					= 0;
+	
+	for (i = 0; i <= 2; i++)
+	{
+		for (j = 0; j <= 2; j++)
+		{
+			float2 sample_uv 	= uv + 1.0f * float2(i, j) * invert_rsm_size;
+			
+			float3 color 		= t_lpv_rsm_albedo_source.SampleLevel(s_accumulator, sample_uv, 0).xyz;
+			float3 normal 		= t_lpv_rsm_normal_source.SampleLevel(s_accumulator, sample_uv, 0).xyz;
+			float3 world_pos 	= t_lpv_rsm_position_source.SampleLevel(s_accumulator, sample_uv, 0).xyz;
+			
+			float cur_tex_lum 	= calc_texel_lum(color, normal);
+			
+			if (cur_tex_lum > max_lum)
+			{
+				chosen_grid_cell 	= get_grid_cell(world_pos);
+				max_lum 			= cur_tex_lum;
+			}
+		}
+	}
+	
+	float3 average_position 	= 0.0f;
+	float3 average_color 		= 0.0f;
+	float3 average_normal 		= 0.0f;
+	
+	int num_samples 			= 0;
+	
+	for (i = 0; i <= 2; i++)
+	{
+		for (j = 0; j <= 2; j++)
+		{
+			float2 sample_uv 	= uv + 1.0f * float2(i, j) * invert_rsm_size;
+			
+			float3 normal 		= t_lpv_rsm_normal_source.SampleLevel(s_accumulator, sample_uv, 0).xyz;
+			float3 world_pos 	= t_lpv_rsm_position_source.SampleLevel(s_accumulator, sample_uv, 0).xyz;
+			
+			float3 texel_cell 	= get_grid_cell(world_pos);
+			
+			float3 dist_grid 	= texel_cell - chosen_grid_cell;
+			
+			if (dot(dist_grid, dist_grid) < 3.0)
+			{
+				average_position 	+= world_pos;
+				average_color 		+= t_lpv_rsm_albedo_source.SampleLevel(s_accumulator, sample_uv, 0).xyz;
+				average_normal 		+= normal;
+				num_samples			++;
+			}
+		}
+	}
+	
+	if (num_samples > 0)
+	{
+		average_position 	/= num_samples;
+		average_color 		/= 4.0f;
+		average_normal 		= normalize(average_normal);	
+	}
+	
+	//out_rsm_albedo 		= chosen_grid_cell.xyzz * grid_cell_size / 10.0f;
+	
+	out_rsm_albedo 		= float4(average_color, 0.0f);
+	out_rsm_normal 		= float4(average_normal, 0.0f);
+	out_rsm_position 	= float4(average_position, 0.0f);
+}
+
+
+
+

@@ -1,0 +1,196 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 30.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+#include "spherical_harmonics_common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_Position;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture3D	t_radiance_r;
+Texture3D	t_radiance_g;
+Texture3D	t_radiance_b;
+
+//Texture3D	t_previous_radiance_r;
+//Texture3D	t_previous_radiance_g;
+//Texture3D	t_previous_radiance_b;
+
+//Texture3D	t_occluders;
+
+int 		cascade_index;
+int 		num_cascades;
+
+float3 		s_eye_ray_corner;
+
+float		grid_cell_size;
+float		grid_size;
+float3		grid_origin;
+
+float		smaller_cascade_grid_cell_size;
+float		smaller_cascade_grid_size;
+float3		smaller_cascade_grid_origin;
+
+Texture2D  t_ssao_accumulator;
+
+//float 		radiance_blend_factor;
+
+float interreflection_contribution;
+
+float is_inside_volume(float3 norm_pos)
+{
+	const float blend_region 	= 0.3f;
+	
+	const float inside_x 		= min( min(blend_region, norm_pos.x), min(blend_region, 1.0f - norm_pos.x));
+	const float inside_y 		= min( min(blend_region, norm_pos.y), min(blend_region, 1.0f - norm_pos.y));
+	const float inside_z 		= min( min(blend_region, norm_pos.z), min(blend_region, 1.0f - norm_pos.z));
+	const float inside 			= clamp(min(inside_x, min(inside_y,inside_z)) / blend_region, 0.0f, 1.0f);
+	
+	return inside;
+}
+
+void main(in vertex_output_struct 	input,
+		  out float4 out_diffuse 	: SV_Target0)
+{
+	const float pi 						= 	3.14159265f;
+	
+	float2 screen_uv					= 	input.uv;
+	
+	float3 normal						= 	0;
+	float2 temp_value 					= 	0;
+	float3 position						=	0;
+	
+	float3 eye_ray						=	0;
+	eye_ray.xy							= 	s_eye_ray_corner.xy * (1.0f - screen_uv.xy * 2.0f);
+	eye_ray.z							= 	s_eye_ray_corner.z;
+	
+	gbuffer_read_rt_normal				(screen_uv, normal, temp_value.x, temp_value.y);
+	gbuffer_read_rt_position			(screen_uv, eye_ray, position, temp_value.x, temp_value.y);
+	
+	float3 world_space_normal			= 	normalize(mul(m_V2W, float4(normal, 0.0f)).xyz);
+	float3 world_position				= 	mul(m_V2W, float4(position, 1.0f)).xyz;
+	
+	const float distance_to_pixel		= 	length(eye_position.xyz - world_position);
+	const float volume_scale			=	grid_cell_size * grid_size;
+	const float smaller_volume_scale	=	smaller_cascade_grid_cell_size * smaller_cascade_grid_size;
+	
+	float3 grid_position_normalized		= 	(world_position - grid_origin) / (grid_cell_size) / grid_size;
+	
+	float inside						=	is_inside_volume(grid_position_normalized);
+	
+	//float4 previous_radiance_r			= 	t_previous_radiance_r.SampleLevel(s_material1, grid_position_normalized, 0);
+	//float4 previous_radiance_g			= 	t_previous_radiance_g.SampleLevel(s_material1, grid_position_normalized, 0);
+	//float4 previous_radiance_b			= 	t_previous_radiance_b.SampleLevel(s_material1, grid_position_normalized, 0);
+	
+	float4 radiance_r					= 	t_radiance_r.SampleLevel(s_material1, grid_position_normalized, 0);
+	float4 radiance_g					= 	t_radiance_g.SampleLevel(s_material1, grid_position_normalized, 0);
+	float4 radiance_b					= 	t_radiance_b.SampleLevel(s_material1, grid_position_normalized, 0);
+	
+	//radiance_r							= 	previous_radiance_r + (radiance_r - previous_radiance_r) * radiance_blend_factor;
+	//radiance_g							= 	previous_radiance_g + (radiance_g - previous_radiance_g) * radiance_blend_factor;
+	//radiance_b							= 	previous_radiance_b + (radiance_b - previous_radiance_b) * radiance_blend_factor;
+	
+	//radiance_r							= 	lerp(previous_radiance_r, radiance_r, 1);
+	//radiance_g							= 	lerp(previous_radiance_g, radiance_g, 1);
+	//radiance_b							= 	lerp(previous_radiance_b, radiance_b, 1);
+	
+#if 0
+	float3 n_grid_position_normalized	= 	(world_position - grid_origin) / (grid_cell_size) / grid_size + 0.4f * world_space_normal / 32.0f;
+	
+	float4 n_radiance_r					= 	t_radiance_r.SampleLevel(s_material1, n_grid_position_normalized, 0);
+	float4 n_radiance_g					= 	t_radiance_g.SampleLevel(s_material1, n_grid_position_normalized, 0);
+	float4 n_radiance_b					= 	t_radiance_b.SampleLevel(s_material1, n_grid_position_normalized, 0);	
+	
+	float4 diff_c_0						=	n_radiance_r - radiance_r;
+	float4 diff_c_1						=	n_radiance_g - radiance_g;
+	float4 diff_c_2						=	n_radiance_b - radiance_b;
+	
+	float3 atten3						=	float3(
+		saturate(dot(sh_c_normalize(radiance_r), sh_c_normalize(diff_c_0))),
+		saturate(dot(sh_c_normalize(radiance_g), sh_c_normalize(diff_c_1))),
+		saturate(dot(sh_c_normalize(radiance_b), sh_c_normalize(diff_c_2)))
+	);
+		
+	float atten0						= 	pow(max(atten3.x, max(atten3.y, atten3.z)), 0.1f);
+	
+	radiance_r							*= atten0;
+	radiance_g							*= atten0;
+	radiance_b							*= atten0;
+#endif // #if 0
+	
+	//float4 sh_coefficients 				= 	low_order_sh_project_cone( -world_space_normal, 1.0f / 8.0f * sh_pi );
+	float4 sh_coefficients 				= 	low_order_sh_project_clampled_cosine_lobe( -world_space_normal );
+	
+	//sh_coefficients.x					*=	0.125f;
+	
+	//float4 occl							=	t_occluders.SampleLevel(s_linear, grid_position_normalized, 0);
+	//float occl_d						=	max(0, dot(occl, sh_coefficients));
+	
+	float3 indirect_lighting;
+	
+	indirect_lighting.r 				= 	dot(sh_coefficients, radiance_r);
+	indirect_lighting.g 				= 	dot(sh_coefficients, radiance_g);
+	indirect_lighting.b 				= 	dot(sh_coefficients, radiance_b);
+	
+	indirect_lighting 					= 	max(indirect_lighting, 0.0f);
+	
+	//indirect_lighting					=	pow(indirect_lighting, 1.0f);
+	
+	indirect_lighting					*=	interreflection_contribution / pi;
+	
+	const float ssao_result				= 	t_ssao_accumulator.Sample(s_base, screen_uv).x;
+	
+	indirect_lighting					*= 	ssao_result;
+	
+	out_diffuse							= 	0.0f;
+	
+	const float attenuation				=	smoothstep(
+		0.0f, 
+		1.0f, 
+		saturate(pow(1.0f - saturate(distance_to_pixel / volume_scale), 1))
+	);
+	
+	const float smaller_inv_attenuation	=	pow(
+		smoothstep(
+			0.0f, 
+			1.0f, 
+			saturate(distance_to_pixel / smaller_volume_scale)
+		), 
+		5.0f
+	);
+	
+	//if (cascade_index == 2)
+	out_diffuse.rgb						=	
+		  attenuation 
+		* inside
+		* indirect_lighting
+		* (cascade_index > 0.0f ? smaller_inv_attenuation : 1.0f);
+	
+	//if (cascade_index == 2)
+	//	out_diffuse.rgb						=	0.25f * inside + 0.0001f * indirect_lighting + 0.00001f * out_diffuse.rgb;
+	//else
+	//	out_diffuse.rgb = 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -7,7 +7,7 @@
 #include "pch.h"
 #include "edit_portal.h"
 #include "input_actions.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 #include "unique_name_helper.h"
 #include "portal_vertex_shift.h"
 #include "model_editor_object.h"
@@ -101,7 +101,7 @@ bool get_three_different_elements( Cont const& cont, typename Cont::size_type& f
 
 ////////////////////////////////////////////////////////////////////////////
 //constructor for portal that is loaded from config
-edit_portal::edit_portal(  edit_object_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, configs::lua_config_value const& cfg  )
+edit_portal::edit_portal(  edit_object_solid_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, configs::lua_config_value const& cfg  )
 :m_parent_object( parent ),
 m_unique_name_helper( name_helper ),
 m_instances( portals ),
@@ -125,7 +125,7 @@ m_selected( false )
 }
 
 //constructor for portal that is created manually
-edit_portal::edit_portal( edit_object_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, System::String^ name )
+edit_portal::edit_portal( edit_object_solid_mesh^ parent, unique_name_helper^ name_helper, portal_ilist^ portals, System::String^ name )
 :m_parent_object( parent ), 
 m_unique_name_helper( name_helper ),
 m_instances( portals ),

@@ -1,0 +1,29 @@
+#include "common.h"
+#include "terrain.h"
+
+uniform sampler2D       s_layer0;             	//
+uniform sampler2D       s_layer1;             	//
+uniform sampler2D       s_layer2;             	//
+
+f_deffer main( terrain_vert_out input ) 
+{
+	half4 c0 = 	tex2D	(s_layer0, input.tc0); 
+	half4 c1 = 	tex2D	(s_layer1, input.tc1); 
+	half4 c2 = 	tex2D	(s_layer2, input.tc2); 
+//    c.rgb 	*= 	sqrt(dot(input.c.rgb,1.h/3.0h));
+
+//	half a = 1-input.c.r-input.c.g;
+	
+	half4 c = (c0*input.c.r + c1*input.c.g + c2*input.c.b) * input.c2 * 2;
+//	return input.c2;
+
+	f_deffer	O;	
+	
+	O.Ne          	= half4		( normalize(input.N.xyz), 					1.h );
+	O.position    	= half4 	( input.P.xyz + O.Ne.xyz*def_virtualh/2.h,	0.h	);
+	O.C				= half4		( c.rgb,									0.h	);	// OUT: rgb.gloss
+
+	return O;
+	
+	//return lerp(c0, c1, 0.5);input.c.g);
+}

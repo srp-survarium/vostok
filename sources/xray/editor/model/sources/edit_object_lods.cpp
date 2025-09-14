@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "edit_object_base.h"
+#include "edit_object_mesh.h"
 #include "lod_view_panel.h"
 
 namespace xray{
@@ -98,6 +98,7 @@ void edit_object_mesh::fill_lod_view( )
 		if(n==nullptr)
 		{
 			n					= hg->create_properties_node(d->name);
+			n->name				= d->name;
 			n->position			= System::Windows::Point(lod_column, h);
 			n->Width			= lod_column_width-5;
 			n->Height			= 20;
@@ -113,6 +114,7 @@ void edit_object_mesh::fill_lod_view( )
 			if(n==nullptr)
 			{
 				n							= hg->create_properties_node(s->name);
+				n->name						= s->name;
 				n->Width					= 100;
 				n->Height					= 40;
 				s->m_hypergraph_node		= n;

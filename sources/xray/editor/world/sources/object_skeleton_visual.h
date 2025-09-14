@@ -22,7 +22,6 @@ ref class object_skeleton_visual : public object_base
 public:
 					object_skeleton_visual	( tool_solid_visual^ t, render::scene_ptr const& scene );
 	virtual			~object_skeleton_visual	( );
-	virtual void	destroy_collision		( )										override;
 
 	virtual void	save					( configs::lua_config_value t )			override;
 	virtual	void	set_transform			( float4x4 const& transform )			override;

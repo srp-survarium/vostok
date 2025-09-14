@@ -7,6 +7,7 @@
 #ifndef CONSOLE_WRAPPER_H_INCLUDED
 #define CONSOLE_WRAPPER_H_INCLUDED
 
+#include <xray/render/engine/base_classes.h>
 
 namespace xray {
 namespace engine{class console;}
@@ -19,7 +20,7 @@ public:
 	void		on_activate			( editor_base::input_keys_holder^ key_holder );
 	void		on_deactivate		( editor_base::input_keys_holder^ key_holder );
 	bool		get_active			( );
-	void		tick				( );
+	void		tick				( xray::render::scene_view_ptr const& scene_view );
 
 	xray::engine::console*				m_console;
 	editor_base::input_keys_holder^		m_active_key_holder;

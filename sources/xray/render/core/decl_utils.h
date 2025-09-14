@@ -1,22 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 21.04.2010
-//	Author		: Armen Abroyan
-//	Copyright (C) GSC Game World - 2010
+//	Created		: 14.12.2011
+//	Author		: Dmitriy Iassenev
+//	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef INPUT_LAYOUT_UTILS_H_INCLUDED
-#define INPUT_LAYOUT_UTILS_H_INCLUDED
+// header guards are omitted intentionally,
+// do not add them here!
 
-#include <d3d9types.h>
-
-namespace xray {
-namespace render {
-namespace decl_utils {
-
-void	convert_vertex_declaration( const vector<D3DVERTEXELEMENT9> &declIn, vector<D3D_INPUT_ELEMENT_DESC> &declOut);
-
-} // namespace decl_utils
-} // namespace render
-} // namespace xray
-
-#endif // #ifndef INPUT_LAYOUT_UTILS_H_INCLUDED
+#include <xray/render/core/platform_helper.h>
+#include XRAY_RENDER_CORE_FILE(decl_utils.h)

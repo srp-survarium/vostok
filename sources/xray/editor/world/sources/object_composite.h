@@ -49,13 +49,14 @@ public:
 	virtual void	on_selected				( bool b )								override;
 	virtual	void	set_visible				( bool bvisible )						override;
 	virtual void	set_transform			( math::float4x4 const& transform )		override;
-	virtual void	destroy_collision		( )										override;
 			void	save_as_library			( configs::lua_config_value& t );
 			void	load_from_library		( configs::lua_config_value const& t );
 			void	re_load_lib				( );
 
 	virtual void	load_contents			( )	override;
 	virtual void	unload_contents			( bool bdestroy ) override;
+	virtual	void	gather_statistic		( scene_statistic^ stats ) override;
+
 	virtual bool	get_persistent			( )	override;
 	virtual enum_terrain_interaction get_terrain_interaction( )						override	{return enum_terrain_interaction::tr_vertical_snap;}
 

@@ -16,7 +16,7 @@
 	} // namespace std
 #endif // #ifdef SN_TARGET_PS3
 
-#define BOOST_NO_EXCEPTIONS   
+#define BOOST_NO_EXCEPTIONS
 #include <boost/noncopyable.hpp>
 
 #include <xray/macro_extensions.h>

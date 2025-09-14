@@ -37,7 +37,7 @@ job_behaviour_light_anim::job_behaviour_light_anim( object_job^ parent_job )
 
 	color_curve				= gcnew wpf_controls::color_curve();
 	color_curve->keys->Add( gcnew wpf_controls::color_curve_key( 0.f, default_color ) );
-	color_curve->max_time	= length;
+	color_curve->max_time	= animation_length;
 	
 	intensity_and_range_list = gcnew Generic::List<wpf_controls::float_curve^>();
 
@@ -67,8 +67,8 @@ void job_behaviour_light_anim::load			( configs::lua_config_value const& config 
 {
 	job_behaviour_base::load(config);
 
-	cycled		=	config["cycled"];
-	length		= 	config["length"];
+	cycled_animation		=	config["cycled"];
+	animation_length		= 	config["length"];
 
 	intensity_and_range_list->Clear();
 
@@ -86,7 +86,7 @@ void job_behaviour_light_anim::load			( configs::lua_config_value const& config 
 
 	curve_config = config[ "color_curve" ];
 	color_curve = editor_base::curves_serializer::load_color_curve_from_config( curve_config );
-	color_curve->max_time = length;
+	color_curve->max_time = animation_length;
 	
 }
 
@@ -94,8 +94,8 @@ void job_behaviour_light_anim::save( configs::lua_config_value& config )
 {
 	job_behaviour_base::save(config);
 
-	config["cycled"] = cycled;
-	config["length"] = length;	
+	config["cycled"] = cycled_animation;
+	config["length"] = animation_length;	
 	for each( wpf_controls::float_curve^ curve in intensity_and_range_list )
 	{
 		configs::lua_config_value curve_config = config[ unmanaged_string( curve->name ).c_str( ) ];
@@ -108,11 +108,11 @@ void job_behaviour_light_anim::save( configs::lua_config_value& config )
 
 void job_behaviour_light_anim::get_properties	( wpf_property_container^ to_container )
 {
-	property_descriptor^ prop_descriptor = gcnew property_descriptor( this, "cycled" );
+	property_descriptor^ prop_descriptor = gcnew property_descriptor( this, "cycled_animation" );
 	prop_descriptor->dynamic_attributes->add( gcnew editor::wpf_controls::hypergraph::node_property_attribute( false, false ));	
 	to_container->properties->add(prop_descriptor);
 
-	prop_descriptor = gcnew property_descriptor( this, "length" );
+	prop_descriptor = gcnew property_descriptor( this, "animation_length" );
 	prop_descriptor->dynamic_attributes->add( gcnew editor::wpf_controls::hypergraph::node_property_attribute( false, false ));	
 	to_container->properties->add(prop_descriptor);
 
@@ -128,7 +128,7 @@ void job_behaviour_light_anim::get_properties	( wpf_property_container^ to_conta
 	
 	wpf_controls::property_editors::attributes::float_curve_editor_attribute^ float_curve_attr = gcnew wpf_controls::property_editors::attributes::float_curve_editor_attribute();
 	on_length_changed += gcnew System::Action<System::Double>( float_curve_attr, &wpf_controls::property_editors::attributes::float_curve_editor_attribute::set_right_limit ) ;
-	float_curve_attr->initial_right_limit	= length;
+	float_curve_attr->initial_right_limit	= animation_length;
 	float_curve_attr->initial_bottom_limit	= 0;
 	float_curve_attr->initial_left_limit	= 0;
 		

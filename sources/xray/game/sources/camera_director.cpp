@@ -6,15 +6,15 @@
 
 #include "pch.h"
 #include "camera_director.h"
-#include "game_world.h"
 #include "game.h"
+#include "game_scene.h"
 #include "game_camera.h"
 #include <xray/console_command.h>
 
 namespace stalker2{
 
-camera_director::camera_director( game_world& w )
-:game_object_		( w ),
+camera_director::camera_director( game_scene& w )
+:super				( w ),
 m_active_camera		( NULL )
 {
 	static xray::console_commands::cc_float3 cc_cam_pos	("camera_pos", m_inverted_view.c.xyz(), float3(-1000,-1000,-1000), float3(1000,1000,1000), false, xray::console_commands::command_type_user_specific);
@@ -35,20 +35,26 @@ void camera_director::set_position_direction( math::float3 const& p, math::float
 void camera_director::tick( )
 {
 	if(m_active_camera)
-	{
 		m_active_camera->tick	( );
-		m_inverted_view			= m_active_camera->get_inverted_view_matrix();
-		m_projection			= m_active_camera->get_projection_matrix();
-	}
+}
 
-	m_game_world.get_game().apply_camera(this);
+void camera_director::apply( )
+{
+	if(m_active_camera)
+	{
+		m_inverted_view			= m_active_camera->get_inverted_view_matrix();
+
+		float2 window_size		= m_game_scene.get_game().engine().get_render_window_size();
+		m_projection			= m_active_camera->get_projection_matrix( window_size );
+	}
+	m_game_scene.apply_camera(this);
 }
 
 void camera_director::switch_to_camera( game_camera* c, pcstr camera_name )
 {
 	LOG_ERROR("switching to camera %s", camera_name );
 
-	bool bfocused = m_game_world.is_active();
+	bool bfocused = m_game_scene.is_active();
 
 	if(m_active_camera)
 	{

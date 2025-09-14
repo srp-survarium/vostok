@@ -1,0 +1,25 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 25.02.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+	CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+uniform float4 selection_color;
+
+//uniform float3x4 m_V2W;
+
+#include "material.h"
+#include "vertex_input.h"
+
+float4 	main(in vertex_output_struct input): SV_TARGET
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	return selection_color;
+}

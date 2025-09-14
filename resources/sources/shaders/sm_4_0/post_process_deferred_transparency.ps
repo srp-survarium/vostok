@@ -1,0 +1,85 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 28.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+Texture2D 	t_frame_color;
+
+uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+
+float3 get_frame_color_point(float2 uv)
+{
+	return t_frame_color.Sample(s_accumulator, uv).rgb;
+}
+
+float3 get_frame_color_linear(float2 uv)
+{
+	return t_frame_color.Sample(s_base, uv).rgb;
+}
+
+#define c_epsilon 0.01f
+
+float4 main( v2p_post_process input) : SV_TARGET
+{
+	float2 uv = input.uv;
+
+	float2 diffuse_power;
+	float2 specular_power;
+	float3 position;
+	
+	const float2 pixel_size = screen_res.zw;
+	
+	float2 uv_low = uv + float2(0.0f, pixel_size.y);
+	
+	gbuffer_read_rt_position(uv, float3(0,0,0), position, diffuse_power.x, specular_power.x);
+	gbuffer_read_rt_position(uv_low, float3(0,0,0), position, diffuse_power.y, specular_power.y);
+	
+	float3 scene_color 		= float4(t_frame_color.Sample(s_accumulator, uv).rgb, 0).rgb;
+	float3 scene_color_low  = float4(t_frame_color.Sample(s_accumulator, uv_low).rgb, 0).rgb;
+	
+	float alpha  	= diffuse_power.x / 255.0f;
+	float alpha_low = diffuse_power.y / 255.0f;
+	
+	static const float num_offsets = 2;
+	
+	static const float2 offsets[num_offsets] = 
+	{
+		float2( 1.0f,  0.0f),
+		float2(-1.0f,  0.0f),
+		//float2( 0.0f,  -2.0f),
+		//float2( 0.0f,  2.0f),
+	};
+	
+//	float3 c0 = scene_color.rgb;
+//	for (int i=0; i<num_offsets; i++)
+//		c0 += t_frame_color.Sample(s_accumulator, uv + offsets[i] * screen_res.zw).rgb;
+//	scene_color = c0 / (1.0f + num_offsets);
+	
+	float3 c1 = scene_color_low.rgb;
+	for (int i=0; i<num_offsets; i++)
+		c1 += t_frame_color.Sample(s_accumulator, uv_low + offsets[i] * screen_res.zw).rgb;
+	scene_color_low = c1 / (1.0f + num_offsets);
+	
+	FLATTEN
+	if (alpha_low < 1.0 - c_epsilon)
+		return float4(scene_color * (1.0 - alpha_low) + scene_color_low * alpha_low, 0.0f);
+	else
+	if (alpha < 1.0 - c_epsilon)
+		return float4(scene_color * alpha + scene_color_low * (1.0 - alpha ), 0.0f);
+	
+	return float4(t_frame_color.Sample(s_accumulator, uv).rgb, 0);
+}
+
+
+
+
+
+
+
+
+
+

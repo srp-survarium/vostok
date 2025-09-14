@@ -7,22 +7,19 @@
 #ifndef TREE_NODE_TYPE_H_INCLUDED
 #define TREE_NODE_TYPE_H_INCLUDED
 
-namespace xray
-{
-	namespace editor
-	{
-		namespace controls
-		{
+namespace xray{
+namespace editor{
+namespace controls{
 	
-			public enum class tree_node_type
-			{
-				single_item,
-				group_item,
-				file_part_item
-			}; // class tree_node_type
+public enum class tree_node_type
+{
+	single_item,
+	group_item,
+	file_part_item
+}; // class tree_node_type
 
-		} // namespace controls
-	} // namespace editor
+} // namespace controls
+} // namespace editor
 } // namespace xray
 
 #endif // #ifndef TREE_NODE_TYPE_H_INCLUDED

@@ -1,0 +1,66 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_USE_BRANCHING,
+		CONFIG_TTRANSPARENCY,
+		CONFIG_EMISSIVE,
+		CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+#include "common.h"
+#include "material.h"
+#include "vertex_input.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+Texture2D t_transparency;
+float 	  solid_transparency;
+
+//float4 far_fog_color_and_distance;
+//float near_fog_distance;
+
+Texture2D t_frame_color;
+uniform float4 screen_res;
+
+float2 constant_tile_uv;
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	parameters.tc				*= constant_tile_uv;
+	
+	float2 screen_uv			= input.homogeneous_position.xy * screen_res.zw;
+	
+	float4 final_color			= 0;
+	final_color.rgb				= convert_to_linear_space(solid_color_specular.rgb * solid_color_specular.a);
+	
+	if( CONFIG_EMISSIVE==2)
+		final_color.rgb  	    *= t_base.Sample( s_base, parameters.tc ).rgb;
+	
+	final_color.a				= solid_transparency;
+	if (CONFIG_TTRANSPARENCY)
+		final_color.a 			*= t_transparency.Sample( s_linear, parameters.tc ).a;
+	
+	final_color					*= parameters.color;
+	
+	//float far_fog 				= 1.0f - saturate( exp( -(parameters.world_view_position.z - near_fog_distance) / (far_fog_color_and_distance.a) ) );
+	//final_color.rgb				= lerp(final_color.rgb, far_fog_color_and_distance.rgb, far_fog);
+	
+	return final_color;
+}
+
+
+
+
+
+
+
+
+
+

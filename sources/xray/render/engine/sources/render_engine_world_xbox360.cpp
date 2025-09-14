@@ -11,6 +11,13 @@
 #include <xray/render/facade/render_stage_types.h>
 #include <xray/render/facade/ui_renderer.h>
 
+//#include "scene_xbox360.h"
+#include "scene_cook_xbox360.h"
+//#include "scene_view_xbox360.h"
+#include "scene_view_cook_xbox360.h"
+//#include "render_output_window_xbox360.h"
+#include "render_output_window_cook_xbox360.h"
+
 #include <xray/os_preinclude.h>
 #undef NOD3D
 #pragma warning(push)
@@ -31,6 +38,21 @@ namespace render {
 namespace engine {
 
 static xray::uninitialized_reference< world > s_world;
+
+static void register_cooks				( )
+{
+	using resources::register_cook;
+
+	static scene_cook					scene_cook;
+	register_cook						( &scene_cook );
+	
+	static scene_view_cook				scene_view_cook;
+	register_cook						( &scene_view_cook );
+
+ 	static render_output_window_cook	render_output_window_cook;
+ 	register_cook						( &render_output_window_cook );
+}
+
 
 world* create_world					( )
 {
@@ -57,6 +79,8 @@ world::world						( ) :
 	m_frame_id						( 0 ),
 	m_started_scene					( false )
 {
+	register_cooks					( );
+
 	create_device					( );
 	create_vertex_shader			( );
 	create_pixel_shader				( );
@@ -180,7 +204,7 @@ void world::create_vertex_shader	( )
 	"     Out.Color = In.Color;                    "  // Projected space and 
 	"     return Out;                              "  // Transfer color
 	" }                                            ";
-
+	
     ID3DXBuffer* shader_code		= 0;
     ID3DXBuffer* error_message		= 0;
 	HRESULT const result			= 
@@ -191,9 +215,10 @@ void world::create_vertex_shader	( )
 			&shader_code,
 			&error_message, 0
 		);
+	
 	XRAY_UNREFERENCED_PARAMETER		( result );
-	R_ASSERT						( !FAILED( result ), "%s", error_message );
-
+	R_ASSERT						( !FAILED( result ), "%s", error_message ? error_message->GetBufferPointer() : "" );
+	
     device( ).CreateVertexShader	( ( DWORD* )shader_code->GetBufferPointer( ), &m_vertex_shader );
     shader_code->Release			( );
 }

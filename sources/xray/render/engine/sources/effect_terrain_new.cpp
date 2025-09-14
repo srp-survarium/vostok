@@ -32,9 +32,9 @@ void effect_terrain_NEW::compile( effect_compiler& compiler, custom_config_value
 			compiler.begin_technique( /*LEVEL*/);
 				
 				if (pass_index == 0)
-					compiler.begin_pass			( "terrain", NULL, "terrain_pre_pass", configuration, NULL);
+					compiler.begin_pass			( "terrain", NULL, "terrain_pre_pass0", configuration, NULL);
 				else if (pass_index == 1)
-					compiler.begin_pass			( "terrain", NULL, "terrain_material_pass", configuration, NULL);
+					compiler.begin_pass			( "terrain", NULL, "terrain_material_pass0", configuration, NULL);
 				else 
 					compiler.begin_pass			( "terrain", NULL, "terrain_shadow_pass", configuration, NULL);
 					//.set_fill_mode		( D3D_FILL_WIREFRAME)

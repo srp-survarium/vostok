@@ -1,0 +1,69 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 13.01.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_LOOP_UNROLLING,
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+
+Texture2D t_wireframe_buffer;
+
+uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+
+float4 main(v2p_post_process input) : SV_TARGET
+{
+	float2 uv = input.uv;
+	float4 wireframe_color_and_depth = t_wireframe_buffer.Sample(s_position, uv);
+	
+	float frame_depth = wireframe_color_and_depth.a;
+	
+	static const int num_offsets = 8;
+	static const float2 offsets[num_offsets] = 
+	{
+		float2( 1.0f,  1.0f),
+		float2( 1.0f,  0.0f),
+		float2( 1.0f, -1.0f),
+		float2( 0.0f,  1.0f),
+		float2( 0.0f, -1.0f), 
+		float2(-1.0f,  1.0f),
+		float2(-1.0f,  0.0f),
+		float2(-1.0f, -1.0f)
+	};
+	
+	float depth_difference  = 1.0f;
+	float depth_alpha 		= frame_depth / 500.0f;
+	
+	if (frame_depth!=0.0f)
+	{
+		UNROLL
+		for (int i=0; i<num_offsets; i++)
+		{
+			float sample_depth = t_wireframe_buffer.Sample(s_position, uv + offsets[i] * screen_res.zw).a;
+			
+			if (sample_depth!=0.0f)
+			{
+				depth_difference -= 5.5f * (frame_depth - sample_depth);// * abs(1.0f - 5*depth_alpha);
+			}
+		}
+	}
+	return saturate(depth_difference) * wireframe_color_and_depth;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

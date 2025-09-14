@@ -8,6 +8,7 @@
 #include "render_output_window_cook.h"
 #include "scene_manager.h"
 #include "render_output_window.h"
+#include <xray/render/facade/common_types.h>
 
 namespace xray {
 namespace render {
@@ -31,14 +32,12 @@ void render_output_window_cook::create_resource(resources::query_result_for_cook
 {	
 	XRAY_UNREFERENCED_PARAMETERS(&in_out_unmanaged_resource_buffer, &raw_file_data);
 	
-	HWND hwnd = NULL;
+	xray::render::output_window_configuration window_configuration;
 	
-	if( in_out_query.user_data() )
-		in_out_query.user_data()->try_get(hwnd);
+	in_out_query.user_data()->try_get(window_configuration);
+
 	
-	ASSERT_CMP(hwnd, !=, 0);
-	
-	render_output_window* created_resource	= new(in_out_unmanaged_resource_buffer.c_ptr())xray::render::render_output_window(hwnd);
+	render_output_window* created_resource	= new(in_out_unmanaged_resource_buffer.c_ptr())xray::render::render_output_window(window_configuration);
 	scene_manager::ref().add_render_output_window(created_resource);
 	
 	in_out_query.set_unmanaged_resource(created_resource, resources::nocache_memory, sizeof(xray::render::render_output_window));

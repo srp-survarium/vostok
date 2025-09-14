@@ -9,28 +9,12 @@
 
 #include "project_defines.h"
 #include "attribute.h"
-#include "object_collision.h"
-
-using xray::editor::wpf_controls::property_editors::attributes::value_range_and_format_attribute;
-using xray::editor::wpf_controls::property_editors::attributes::external_editor_attribute;
-using xray::editor_base::transform_control_base;
 
 namespace xray {
-
-namespace render {
-	namespace editor { class renderer; }
-} // namespace render
-namespace editor_base { ref class ValueAttribute; }
-
 namespace editor {
 
 
-
 ref struct object_collision;
-ref class object_base;
-ref class level_editor;
-ref class tool_base;
-class editor_world;
 
 object_base^ create_object( level_editor^ le, configs::lua_config_value cfg );
 
@@ -39,7 +23,6 @@ float3 deg2rad		( float3 const& deg );
 void set_scale_impl	( float3 s, float4x4& transform );
 
 public delegate void object_message( object_base^ );
-
 public enum class enum_terrain_interaction : int {tr_free=0, tr_vertical_snap=1, tr_physical_snap=2 };
 
 public ref class object_base abstract
@@ -50,7 +33,7 @@ public:
 	virtual void					load_props			( configs::lua_config_value const& t );
 	virtual void					save				( configs::lua_config_value t );
 	virtual void					load_defaults		( ) {}
-	virtual void					destroy_collision	( ) {}
+	virtual void					destroy_collision	( );
 			tool_base^				owner_tool			( )								{ return m_owner_tool; }
 	
 			void					set_parent			( object_base^ p );
@@ -103,6 +86,8 @@ public:
 			void					set_scale_revertible( math::float3 p );
 			virtual void			load_contents		( )							= 0;
 			virtual void			unload_contents		( bool bdestroy )			= 0;
+	virtual	void					gather_statistic	( scene_statistic^ stats );
+
 public:
 
 	render::editor::renderer&		get_editor_renderer ( );
@@ -115,8 +100,6 @@ protected:
 	void							on_property_changed	( System::String^ prop_name );
 	bool							is_slave_attribute	( System::String^ prop_name );
 	System::String^	check_valid_library_name	( System::String^ name );
-
-//	virtual void					update_collision_transform( );
 
 	tool_base^						m_owner_tool;
 	object_base^					m_parent_object_base; // compound?

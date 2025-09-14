@@ -140,6 +140,8 @@ public:
 	float	m_lpv_occlusion_amplifier;
 	
 	bool	m_enabled_draw_models;
+
+	u32		m_num_test_lights;
 }; // struct options
 
 } // namespace render

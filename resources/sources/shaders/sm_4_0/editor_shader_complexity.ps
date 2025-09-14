@@ -1,0 +1,39 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 12.01.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+	CONFIG_VERTEX_INPUT_TYPE,
+*/
+
+//uniform float3x4 m_V2W;
+
+#include "material.h"
+#include "vertex_input.h"
+
+float shader_complexity;
+float shader_complexity_min;
+float shader_complexity_max;
+
+float4 main(in vertex_output_struct input) : SV_TARGET
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+	
+	static const float3 shader_complexity_color_min = float3(0,1,0);
+	static const float3 shader_complexity_color_max = float3(1,0,0);
+	
+	float alpha 		= (shader_complexity - shader_complexity_min) / shader_complexity_max;
+	float3 out_color 	= lerp(shader_complexity_color_min, shader_complexity_color_max, alpha);
+	
+	return float4(out_color, 1);
+}
+
+
+
+
+
+

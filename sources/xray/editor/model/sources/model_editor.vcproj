@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="model_editor"
 	ProjectGUID="{09BE8F4A-0DCC-484D-9AB8-517E456EA429}"
 	RootNamespace="xray.model_editor"
@@ -80,7 +80,7 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)stlport/libraries/$(PlatformName)&quot;"
 				EmbedManagedResourceFile="$(TargetDir)intermediates\$(ConfigurationName)\editor_base\editor_base.resources.resources"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)../binaries/$(PlatformName)/$(TargetName).pdb"
@@ -265,7 +265,7 @@
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)/stlport/libraries/$(PlatformName)&quot;"
 				EmbedManagedResourceFile=""
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -414,13 +414,13 @@
 			RelativePathToProject=".\xray\editor\controls\sources\editor_controls.vcproj"
 		/>
 		<AssemblyReference
-			RelativePath="p:\VS2008\Visual Studio Tools for Office\PIA\Office12\Microsoft.Office.Interop.Excel.dll"
+			RelativePath="Microsoft.Office.Interop.Excel.dll"
 			AssemblyName="Microsoft.Office.Interop.Excel, Version=12.0.0.0, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL"
 			MinFrameworkVersion="0"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{AC5DD91F-CE10-4E05-B48A-E1DDEC5CCD9C}"
-			RelativePathToProject=".\xray\engine\pc\sources\engine_pc.vcproj"
+			RelativePathToProject=".\xray\engine\pc\dx11\sources\engine_pc_dx11.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{D48CBBFF-8B47-4E0F-915B-3220F3BC2402}"
@@ -805,17 +805,9 @@
 					RelativePath=".\model_editor_object.h"
 					>
 				</File>
-				<File
-					RelativePath=".\render_model_wrapper.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\render_model_wrapper.h"
-					>
-				</File>
 			</Filter>
 			<Filter
-				Name="mesh"
+				Name="solid_mesh"
 				>
 				<File
 					RelativePath=".\collision_primitive_item.cpp"
@@ -826,15 +818,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\edit_object_base.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\edit_object_base.h"
-					>
-				</File>
-				<File
 					RelativePath=".\edit_object_lods.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\edit_object_mesh.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\edit_object_mesh.h"
 					>
 				</File>
 				<File
@@ -850,11 +842,27 @@
 					>
 				</File>
 				<File
+					RelativePath=".\edit_object_skeletal_mesh.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\edit_object_solid_mesh.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\edit_surface.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\edit_surface.h"
+					>
+				</File>
+				<File
+					RelativePath=".\render_model_wrapper.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\render_model_wrapper.h"
 					>
 				</File>
 			</Filter>

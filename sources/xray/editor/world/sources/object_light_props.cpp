@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "object_light.h"
+#include "object_collision.h"
 
 #pragma managed( push, off )
 #include <xray/render/facade/editor_renderer.h>

@@ -5,6 +5,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include "direct_input_include.h"
+#include "stdlib.h"
 #include "receiver_keyboard.h"
 #include <xray/input/handler.h>
 
@@ -45,4 +47,30 @@ void keyboard::process		( handlers_type& handlers )
 			continue;
 		}
 	}
+}
+
+
+bool keyboard::get_dik_name(  int dik, pstr dest_str, int dest_sz ) const
+{
+	DIPROPSTRING keyname;
+	keyname.diph.dwSize			= sizeof(DIPROPSTRING);
+	keyname.diph.dwHeaderSize	= sizeof(DIPROPHEADER);
+	keyname.diph.dwObj			= static_cast<DWORD>(dik);
+	keyname.diph.dwHow			= DIPH_BYOFFSET;
+	HRESULT hr					= m_device->GetProperty(DIPROP_KEYNAME, &keyname.diph);
+	if(FAILED(hr))
+		return false;
+
+	const wchar_t* wct			= keyname.wsz;
+	if(0==wcslen(wct))
+		return					false;
+	
+	size_t converted_size = 0;
+	
+	errno_t res = wcstombs_s ( &converted_size, dest_str, dest_sz, (keyname.wsz),dest_sz )	;//				= WideCharToMultiByte(,0,keyname.wsz,-1,dest_str,dest_sz,NULL,NULL);
+	
+	if(res == EINVAL)
+		return false;
+	
+	return						true;
 }

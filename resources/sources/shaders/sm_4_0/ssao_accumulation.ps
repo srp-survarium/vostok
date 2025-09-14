@@ -1,0 +1,894 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 23.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		GLOBAL_USE_BRANCHING,
+		GLOBAL_USE_LOOP_UNROLLING
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+
+static const float4 random_tangle16[16] =
+{
+		float4(0.355512,   -0.709318, 	-0.102371,  0.0 ),
+		float4(0.534186,    0.71511, 	-0.115167,  0.0 ),
+		float4(-0.87866,    0.157139, 	-0.115167,  0.0 ),
+		float4(0.140679,   -0.475516, 	-0.0639818, 0.0 ),
+		float4(-0.0796121,  0.158842, 	-0.677075,  0.0 ),
+		float4(-0.0759516, -0.101676, 	-0.483625,  0.0 ),
+		float4(0.12493,    -0.0223423,	-0.483625,  0.0 ),
+		float4(-0.0720074,  0.243395, 	-0.967251,  0.0 ),
+		float4(-0.207641,   0.414286, 	 0.187755,  0.0 ),
+		float4(-0.277332,  -0.371262, 	 0.187755,  0.0 ),
+		float4(0.63864,    -0.114214, 	 0.262857,  0.0 ),
+		float4(-0.184051,   0.622119, 	 0.262857,  0.0 ),
+		float4(0.110007,   -0.219486, 	 0.435574,  0.0 ),
+		float4(0.235085,    0.314707,    0.696918,  0.0 ),
+		float4(-0.290012,   0.0518654,   0.522688,  0.0 ),
+		float4(0.0975089,  -0.329594,    0.609803,  0.0 )
+};
+				
+static const float4	random_table[8] = {
+	float4(0.068099, -0.029749, 0.345655, 0.0),
+	float4(-0.333219, -0.031481, -0.371448, 0.0),
+	float4(0.484993, -0.106742, -0.358312, 0.0),
+	float4(0.140918, 0.672336, -0.167649, 0.0),
+	float4(0.005538, -0.785597, -0.088357, 0.0),
+	float4(-0.633421, 0.527250, 0.266055, 0.0),
+	float4(-0.744960, -0.458875, 0.330861, 0.0),
+	float4(0.870996, 0.392627, 0.295312, 0.0),
+};	
+	//UNROLLN(2) for (int x=-1; x<=1; x+=2)
+	//UNROLLN(2) for (int y=-1; y<=1; y+=2)
+	//UNROLLN(2) for (int z=-1; z<=1; z+=2)
+static const float4	random_table2[8] = {
+	float4(-1,-1,-1,0),
+	float4(-1,-1, 1,0),
+	float4(-1, 1,-1,0),
+	float4(-1, 1, 1,0),
+	float4( 1,-1,-1,0),
+	float4( 1,-1, 1,0),
+	float4( 1, 1,-1,0),
+	float4( 1, 1, 1,0),
+};	
+
+float4 ao_parameters;
+static const float ao_saturation   = ao_parameters.x; // 1.0f
+static const float ao_radius_scale = ao_parameters.y; // 1.0f
+
+#define SSAO_METHOD 0
+
+uniform float3 s_eye_ray_corner;
+
+uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+//uniform float3x4 m_V2W;
+
+static const float far_clip 	= near_far_invn_invf.y;
+
+g_data get_gbuffer_data(float2 tc_proj, float3 eye_ray_corner)
+{
+	// Compute eye_ray using screen texture coordinates
+	float3				eye_ray; 
+	eye_ray.xy			= eye_ray_corner.xy*( 1 - tc_proj.xy*2 );
+	eye_ray.z			= eye_ray_corner.z;
+	
+	return				gbuffer_read( tc_proj, eye_ray );
+}
+
+#if SSAO_METHOD==0
+
+Texture2D t_random_rotates;
+
+float4 compute_ssao_0(float2 uv, float3 eye_ray)
+{
+/*
+	const float radius 	  = 0.12f;
+	
+	float 	z	 = -gbuffer_read_frame_depth(uv);
+	float	att = 0.0;
+	float3	plane = t_random_rotates.Sample(s_nofilter, screen_res.xy * uv / 4.0f).xyz * 2.0f - 1.0f;
+	
+	for (int i=0; i<8; i++)
+	{
+		float	sample_z = texture2D ( depthMap, uv + radius*sample.xy / z ).x;
+		float	dist = max (sample_z - z, 0.0f)  * 0.1f;
+		float	occl = 100.0f * max ( dist * (1.0f - dist), 0.0 );
+		
+		att += 1.0 / ( 1.0 + occl*occl );
+	}
+	
+	att = clamp(att/8.0 + 0.145, 0.0, 1.0 ) * 0.5f;
+	
+	return att;
+*/
+	return 1;
+}
+
+float4 compute_ssao_with_normal_old(float2 uv, float3 eye_ray)
+{
+	g_data data 			= gbuffer_read( uv, eye_ray );
+	float3 vs_normal 		= data.normal;
+	float3 ws_normal 		= mul(m_V2W, float4(vs_normal, 0.0f)).xyz;
+	float4 ps_normal4 		= mul(m_P, float4(vs_normal, 1.0f));
+	float3 ps_normal		= ps_normal4.xyz / ps_normal4.w;
+	
+	float3 position;
+	float diffuse_power;
+	float specular_power;
+	gbuffer_read_rt_position(uv, eye_ray, position, diffuse_power, specular_power);
+	
+	float3 rotation 		= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h = 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 	=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 	= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 	= -rotation.x;
+	
+	rotation_matrix._m10 	= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 	=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 	=  -rotation.y;
+	
+	rotation_matrix._m20 	=  rotation.x;
+	rotation_matrix._m21 	=  rotation.y;
+	rotation_matrix._m22 	=  rotation.z;
+	
+	/* 
+	rotation_matrix[0]		= cross(rotation, normalize(float3(0.0f, 1.0f, 0.0f)));
+	rotation_matrix[1]		= cross(rotation, rotation_matrix[0]);
+	rotation_matrix[2]		= rotation;
+	*/
+	
+	float frame_depth 	 	= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 	= 24;
+	
+	float offset_scale 		= ao_radius_scale * 0.075f;
+	const float offset_scale_step = 1.0f + 1.0f / num_samples;
+	
+	float access = 0.0f;
+		
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 offset 			= (1.0f + ao_radius_scale * 0.25f * i) * normalize(random_table2[j].xyz);
+		float3 rotated_offset 	= mul(offset, rotation_matrix);
+		rotated_offset			= sign(dot(rotated_offset, vs_normal)) * rotated_offset;
+		
+		float4 screen_pos		= mul(m_P, float4(position + rotated_offset * (offset_scale *= offset_scale_step) * (frame_depth * 0.25f), 1.0f));
+		screen_pos.xy			/= screen_pos.w;
+		
+		float2 sample_uv 		= float2(screen_pos.x * 0.5f + 0.5f, 1.0f - (screen_pos.y * 0.5f + 0.5f));
+		//uv + 0.1 * float2(rotated_offset.x * 0.5f + 0.5f, 1.0f - (rotated_offset.y * 0.5f + 0.5f)) * (offset_scale *= offset_scale_step);
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		float tested_depth		= screen_pos.z;
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		bool visible			= real_depth > tested_depth;
+		
+		access 					+= lerp(visible, 1.0f, range_is_invalid);
+	}
+	
+	access /= num_samples;
+	
+	return pow(access, ao_saturation);//pow(saturate(1.0f * access * access + 1.0f * access), 0.5f);
+}
+
+float4 compute_ssao_with_normal_optimized(float2 uv, float3 eye_ray)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	
+	float3 rotation 			= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float3x3 normal_rotation_matrix;
+	normal_rotation_matrix[0]	= normalize(cross(projection_normal, normalize(float3(-0.151f, 0.42f, -0.41f))));
+	normal_rotation_matrix[1]	= normalize(cross(projection_normal, normal_rotation_matrix[0]));
+	normal_rotation_matrix[2]	= normalize(projection_normal);
+	
+	
+	static const int num_samples= 24;
+	
+	float4 depth_offsetscale_offsetstep_access = float4
+	(
+		gbuffer_read_frame_depth(uv),
+		ao_radius_scale * 0.01f,
+		1.0f + 1.0f / num_samples,
+		0.0f
+	);
+	
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= normalize(mul(random_table[j].xyz, rotation_matrix));// * (depth_offsetscale_offsetstep_access.y *= depth_offsetscale_offsetstep_access.z);
+		//rotated_offset 			= (0.0f * i + 1.0f) * mul(float3(rotated_offset.xy, 1.0), normal_rotation_matrix) * (depth_offsetscale_offsetstep_access.y *= depth_offsetscale_offsetstep_access.z);
+		
+		float2 sample_uv 		= uv + rotated_offset.xy;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= depth_offsetscale_offsetstep_access.x + 0.125*depth_offsetscale_offsetstep_access.x * rotated_offset.z;// * saturate(1.0f-abs(rotated_offset.z));
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (tested_depth * 0.25f) );
+		
+		depth_offsetscale_offsetstep_access.w 					+= (rotated_offset.x>0)?1:0.25;//lerp(real_depth > tested_depth, 1.0f, 0*range_is_invalid);
+	}
+	depth_offsetscale_offsetstep_access.w /= num_samples;
+	
+	return pow(1.5*depth_offsetscale_offsetstep_access.w, 2.0f);
+}
+
+float4 compute_ssao_with_normal(float2 uv, float3 eye_ray)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	//projection_normal.z			= data.normal.z;
+	float3 vs_normal			= data.normal;
+	vs_normal.y					= -vs_normal.y;
+	
+	float3 rotation 			= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / float2(4.0f, 4.0f), 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float frame_depth 	 		= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 		= 16;
+	
+	float offset_scale 			= ao_radius_scale * 0.0075f;
+	float offset_scale_step 	= 1.0f + 1.0f / num_samples;
+	
+	float access 				= 0.0f;
+	
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= (ao_radius_scale * 1.0f * i + 1.0f) * normalize(mul(random_table[j].xyz, rotation_matrix)) * (offset_scale *= offset_scale_step);
+		
+		float n_dot_r			= dot(normalize(vs_normal), normalize(rotated_offset));
+		
+		rotated_offset			*= (n_dot_r<=0.0f) ? -1.0f : 1.0f;//;
+		
+		float2 sample_uv 		= uv + rotated_offset.xy;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= frame_depth + frame_depth * rotated_offset.z * 0.75f;
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		access 					+= lerp(real_depth > tested_depth, 0.75f, range_is_invalid);
+	}
+	access /= num_samples;
+	
+	return pow(access, ao_saturation * 2.0f);
+}
+
+float4 compute_ssao_with_normal_very_hard(float2 uv, float3 eye_ray)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	
+	float3 rotation 			= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float3x3 normal_rotation_matrix;
+	normal_rotation_matrix[0]	= normalize(cross(projection_normal, normalize(float3(-0.151f, 0.42f, -0.41f))));
+	normal_rotation_matrix[1]	= normalize(cross(projection_normal, normal_rotation_matrix[0]));
+	normal_rotation_matrix[2]	= normalize(projection_normal);
+	
+	float frame_depth 	 		= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 		= 16;
+	
+	float offset_scale 			= ao_radius_scale * 0.0075f;
+	float offset_scale_step 	= 1.0f + 1.0f / num_samples;
+	
+	float access 				= 0.0f;
+	
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= (ao_radius_scale * 1.5f * i + 1.0f) * normalize(mul(random_table[j].xyz, rotation_matrix)) * (offset_scale *= offset_scale_step);
+		//float3 rotated_offset 	= (1.0f * i + 1.0f) * normalize(random_table[j].xyz) * (offset_scale *= offset_scale_step);
+		//rotated_offset 			= (0.5f * i + 1.0f) * mul(float3(rotated_offset.xy, 1.0), normal_rotation_matrix) * (offset_scale *= offset_scale_step);
+		
+		float3 normal			= data.normal;
+		normal.y				= normal.y;
+		//normal.z 				= -1;
+		
+		float d					= dot(normalize(normal), normalize(rotated_offset));
+		if (d<=0.0f)
+			rotated_offset		*= -1;//;
+		
+		//if (dot(float3(normal.xy, normal.z*0.5+0.5), float3(rotated_offset.xy, rotated_offset.z))<=0.0f)
+		//	rotated_offset.z		*= -1;
+		
+		float z					= data.position.z + data.position.z * rotated_offset.z*1.25;
+		
+		float4 pp				= mul(m_P, float4(data.position + data.position.z * rotated_offset*1.25, 1));
+		pp.xy					/= pp.w;
+		pp.x					= pp.x * 0.5f + 0.5f;
+		pp.y					= 1.0f - (pp.y * 0.5f + 0.5f);
+		
+		float2 sample_uv 		= pp.xy;//uv + rotated_offset.xy;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= z;//frame_depth + frame_depth * rotated_offset.z*0.75;// * saturate(1.0f-abs(rotated_offset.z));
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		access 					+= lerp(real_depth > tested_depth, 0.75f, 1*range_is_invalid);
+	}
+	access /= num_samples;
+	//access = clamp(access, 0.0f, 0.8f);
+	
+	return pow(access, ao_saturation);
+}
+
+float4 compute_ssao_with_normal_prev(float2 uv, float3 eye_ray)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	
+	float3 rotation 			= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float3x3 normal_rotation_matrix;
+	normal_rotation_matrix[0]	= normalize(cross(projection_normal, normalize(float3(-0.151f, 0.42f, -0.41f))));
+	normal_rotation_matrix[1]	= normalize(cross(projection_normal, normal_rotation_matrix[0]));
+	normal_rotation_matrix[2]	= normalize(projection_normal);
+	
+	float frame_depth 	 		= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 		= 16;
+	
+	float offset_scale 			= ao_radius_scale * 0.01f;
+	float offset_scale_step 	= 1.0f + 1.0f / num_samples;
+	
+	float access 				= 0.0f;
+	
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= normalize(mul(random_table[j].xyz, rotation_matrix));
+		rotated_offset 			= (ao_radius_scale * 0.5f * i + 1.0f) * mul(float3(rotated_offset.xy, 1.0), normal_rotation_matrix) * (offset_scale *= offset_scale_step);
+		
+		float2 sample_uv 		= uv + rotated_offset.xy;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= frame_depth + frame_depth * rotated_offset.z;// * saturate(1.0f-abs(rotated_offset.z));
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.25f) );
+		
+		access 					+= lerp(real_depth > tested_depth, 1.0f, range_is_invalid);
+	}
+	access /= num_samples;
+	
+	return pow(access, ao_saturation * 2.0f);
+}
+
+float4 compute_ssao_with_normal_prev2(float2 uv, float3 eye_ray)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= data.normal;//mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	
+	float3 rotation 			= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float3x3 normal_rotation_matrix;
+	normal_rotation_matrix[0]	= normalize(cross(projection_normal, normalize(float3(-0.151f, 0.42f, -0.41f))));
+	normal_rotation_matrix[1]	= normalize(cross(projection_normal, normal_rotation_matrix[0]));
+	normal_rotation_matrix[2]	= normalize(projection_normal);
+	
+	float frame_depth 	 		= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 		= 8;
+	
+	float offset_scale 			= ao_radius_scale * 0.0075f;
+	float offset_scale_step 	= 1.0f + 1.0f / num_samples;
+	
+	float access 				= 0.0f;
+	
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= (mul(random_table2[j].xyz, rotation_matrix));
+		rotated_offset 			= (ao_radius_scale * 0.25f * i + 1.0f) * mul(float3(rotated_offset.xy, 1.0), normal_rotation_matrix) * (offset_scale *= offset_scale_step);
+		
+		float2 sample_uv 		= uv + rotated_offset.xy;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= frame_depth + 0.5*frame_depth * rotated_offset.z;// * saturate(1.0f-abs(rotated_offset.z));
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		access 					+= lerp(real_depth > tested_depth, 1.0f, range_is_invalid);
+	}
+	access /= num_samples;
+	
+	return pow(access, ao_saturation * 1.75f);
+}
+
+
+float4 compute_ssao_ref(float2 uv, float3 eye_ray)
+{
+	g_data data 			= gbuffer_read( uv, eye_ray );
+	float3 vs_normal 		= data.normal;
+	
+	vs_normal.xy			= mul(m_P, float4(data.normal, 1.0f)).xy;
+	vs_normal.x				= vs_normal.x * 0.5f + 0.5f;
+	vs_normal.y				= 1.0f - (vs_normal.y * 0.5f + 0.5f);
+	
+	float3 rotation 		= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h = 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 	=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 	= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 	= -rotation.x;
+	
+	rotation_matrix._m10 	= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 	=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 	=  -rotation.y;
+	
+	rotation_matrix._m20 	=  rotation.x;
+	rotation_matrix._m21 	=  rotation.y;
+	rotation_matrix._m22 	=  rotation.z;
+	
+	/* 
+	rotation_matrix[0]		= cross(rotation, normalize(float3(0.0f, 1.0f, 0.0f)));
+	rotation_matrix[1]		= cross(rotation, rotation_matrix[0]);
+	rotation_matrix[2]		= rotation;
+	*/
+	
+	float frame_depth 	 	= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 	= 24;
+	
+	float offset_scale 		= ao_radius_scale * 0.008f;
+	const float offset_scale_step = 1.0f + 1.0f / num_samples;
+	
+	float access = 0.0f;
+		
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 offset 			= (ao_radius_scale * 1.0f * i + 1.0f) * normalize(random_table2[j].xyz) * (offset_scale *= offset_scale_step);
+		float3 rotated_offset 	= mul(offset, rotation_matrix);
+		
+		float2 sample_uv 		= uv + rotated_offset.xy;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= frame_depth + frame_depth * rotated_offset.z * 0.125f;
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		bool visible			= real_depth > tested_depth;
+		
+		const float max_lerp_color = 0.25f;
+		
+		const float min_lerp_color = !visible ? 0.0f : ( ((real_depth - tested_depth) < 0.0227f) ? 0.75f : 0.5f);
+		
+		access 				+= lerp(min_lerp_color, max_lerp_color, range_is_invalid);
+		 
+		// TODO: optimize.
+		/*
+		BRANCH
+		if (!visible)
+		{
+			access 				+= lerp(0, max_lerp_color, range_is_invalid);
+		}
+		else
+		{
+			BRANCH
+			if ((real_depth - tested_depth) < 0.0227f)
+			{
+				access 			+= lerp(0.75, max_lerp_color, range_is_invalid);
+			}
+			else
+			{
+				access 			+= lerp(0.5, max_lerp_color, range_is_invalid);
+			}
+		}
+		*/
+	}
+
+	access /= num_samples;
+	
+	return pow(saturate(2.0f * access * access + 1.0f * access), ao_saturation * 0.7f);
+}
+
+
+float4 compute_separable_ssao_with_normals(float2 uv, float3 eye_ray, const float2 mul_to, float plus_rnd_offset)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= data.normal;//mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	
+	float3 rotation 			= t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float3x3 normal_rotation_matrix;
+	normal_rotation_matrix[0]	= normalize(cross(projection_normal, normalize(float3(-0.151f, 0.42f, -0.41f))));
+	normal_rotation_matrix[1]	= normalize(cross(projection_normal, normal_rotation_matrix[0]));
+	normal_rotation_matrix[2]	= normalize(projection_normal);
+	
+	float frame_depth 	 		= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 		= 16;
+	
+	float offset_scale 			= ao_radius_scale * 0.0075f;
+	float offset_scale_step 	= 1.0f + 1.0f / num_samples;
+	
+	float access 				= 0.0f;
+	
+	UNROLL for (int i=0; i<(num_samples/8); i++)
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= (mul(random_table2[j].xyz, rotation_matrix));
+		rotated_offset 			*= (ao_radius_scale * 0.25f * i + 1.0f) * /*mul(float3(rotated_offset.xy, 1.0), normal_rotation_matrix) * */(offset_scale *= offset_scale_step);
+		
+		float2 sample_uv 		= uv + rotated_offset.xy * mul_to;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= frame_depth + 0.5*frame_depth * rotated_offset.z;// * saturate(1.0f-abs(rotated_offset.z));
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		access 					+= lerp(real_depth > tested_depth, 1.0f, range_is_invalid);
+	}
+	access /= num_samples;
+	
+	return pow(access, ao_saturation * 1.75f);
+}
+
+float4 compute_separable_ssao_with_normals2(float2 uv, float3 eye_ray, const float2 mul_to, float plus_rnd_offset)
+{
+	g_data data 				= gbuffer_read( uv, eye_ray );
+	
+	float3 projection_normal	= data.normal;//mul(m_P, float4(data.normal, 1.0f)).xyz;
+	projection_normal.y			= -projection_normal.y;
+	
+	float3 rotation 			= get_random_value(plus_rnd_offset + uv);//t_random_rotates.SampleLevel(s_nofilter, screen_res.xy * uv / 4.0f, 0).xyz * 2.0f - 1.0f;
+	
+	float3x3 rotation_matrix;
+	float h 					= 1.0f / (1.0f + rotation.z);
+	
+	rotation_matrix._m00 		=  h * rotation.y * rotation.y + rotation.z;
+	rotation_matrix._m01 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m02 		= -rotation.x;
+	
+	rotation_matrix._m10 		= -h * rotation.y * rotation.x;
+	rotation_matrix._m11 		=  h * rotation.x * rotation.x + rotation.z;
+	rotation_matrix._m12 		=  -rotation.y;
+	
+	rotation_matrix._m20 		=  rotation.x;
+	rotation_matrix._m21 		=  rotation.y;
+	rotation_matrix._m22 		=  rotation.z;
+	
+	float3x3 normal_rotation_matrix;
+	normal_rotation_matrix[0]	= normalize(cross(projection_normal, normalize(float3(-0.151f, 0.42f, -0.41f))));
+	normal_rotation_matrix[1]	= normalize(cross(projection_normal, normal_rotation_matrix[0]));
+	normal_rotation_matrix[2]	= normalize(projection_normal);
+	
+	float frame_depth 	 		= gbuffer_read_frame_depth(uv);
+	
+	const int num_samples 		= 8;
+	
+	float offset_scale 			= ao_radius_scale * 0.0075f;
+	float offset_scale_step 	= 1.0f + 1.0f / num_samples;
+	
+	float access 				= 0.0f;
+	
+	UNROLL for (int j=0; j<8; j++)
+	{
+		float3 rotated_offset 	= mul(random_table2[j].xyz, rotation_matrix);
+		
+		//rotated_offset 			= mul(float3(rotated_offset.xy, 1.0), normal_rotation_matrix) * (offset_scale *= offset_scale_step);
+		
+		float2 sample_uv 		= uv + rotated_offset.xy * mul_to;
+		float real_depth 		= gbuffer_read_frame_depth(sample_uv);
+		
+		float tested_depth		= frame_depth + 0.5*frame_depth * rotated_offset.z;// * saturate(1.0f-abs(rotated_offset.z));
+		
+		float range_is_invalid 	= saturate( (tested_depth - real_depth) / (real_depth * 0.125f) );
+		
+		access 					+= lerp(real_depth > tested_depth, 1.0f, range_is_invalid);
+	}
+	access /= num_samples;
+	
+	return pow(access, ao_saturation * 1.75f);
+}
+
+float4 compute_ssao(float2 uv, float3 eye_ray)
+{
+	//return compute_ssao_ref(uv, eye_ray);
+	//return compute_ssao_with_normal(uv, eye_ray);
+	//return compute_ssao_with_normal_prev(uv, eye_ray);
+	return compute_ssao_with_normal_prev2(uv, eye_ray);
+	
+//	float ao0 = compute_separable_ssao_with_normals(uv, eye_ray, float2(1, 0), 0.0f).x;
+//	float ao1 = compute_separable_ssao_with_normals(uv, eye_ray, float2(0, 1), 0.784f).x;
+//	return (ao0 + ao1) / 2.0f;
+	
+	//return compute_ssao_with_normal_very_hard(uv, eye_ray);
+	//return compute_ssao_with_normal_old(uv, eye_ray);
+}
+
+float4 main( v2p_post_process input) : SV_TARGET
+{
+	return compute_ssao(input.uv, input.eye_ray);
+	
+#if 0
+	
+	#define SAMPLES_COUNT 8
+	
+	//float4 ssao_parameters;
+	static const float ao_radius		 = 0.12f;//ssao_parameters.x;
+	static const float ao_distance_scale = 0.2f;//ssao_parameters.y;
+
+	float2 uv = input.uv;
+	
+	static const float	ao_offset 			= 0.5f;
+	static const float  ao_power 			= 7.0f;
+	static const float  ao_occlusion_scale 	= 15.0f;
+	static const float  ao_distance_clip 	= 2.0f;
+	
+	static const float3 random_table[SAMPLES_COUNT] = 
+	{
+		float3(-0.5f, -0.5f, -0.5f),
+		float3( 0.5f, -0.5f, -0.5f),
+		float3(-0.5f,  0.5f, -0.5f),
+		float3( 0.5f,  0.5f, -0.5f),
+		float3(-0.5f, -0.5f,  0.5f),
+		float3( 0.5f, -0.5f,  0.5f),
+		float3(-0.5f,  0.5f,  0.5f),
+		float3( 0.5f,  0.5f,  0.5f)
+	};
+	static const float2 offsets[8] = 
+	{
+		float2( 1.0f,  1.0f),
+		float2( 1.0f,  0.0f),
+		float2( 1.0f, -1.0f),
+		float2( 0.0f,  1.0f),
+		float2( 0.0f, -1.0f), 
+		float2(-1.0f,  1.0f),
+		float2(-1.0f,  0.0f),
+		float2(-1.0f, -1.0f)
+	};	
+	float attenuation 	= 0.0f;
+	float frame_depth 	= (gbuffer_read_frame_depth(uv));
+	float3 normal 		= t_random_rotates.Sample(s_base, 256.0f * uv).rgb;
+	
+	for (int i=0; i<SAMPLES_COUNT; i++)
+	{
+		float3	reflection  	= reflect(random_table[i], normal);
+		
+		float	current_depth 	= gbuffer_read_frame_depth(uv + ao_radius * reflection.xy / frame_depth);
+		
+		float	distance 		= max(frame_depth - current_depth, 0.0f) / ao_distance_scale;	
+		float	occlusion		= ao_occlusion_scale * max(distance * (ao_distance_clip - distance), 0.0f);
+		
+		attenuation 		   += 1.5f / (2.0f + occlusion * occlusion);
+	}
+	
+	attenuation = pow(clamp( attenuation / SAMPLES_COUNT + ao_offset, 0.0f, 1.0f ), ao_power);
+	
+	return float4(attenuation,0,0,0);
+
+#endif // #if 0
+}
+
+#elif SSAO_METHOD==1
+	
+Texture2D t_random_rotates;
+
+	
+float readDepth(float2 coord)
+{       
+	return gbuffer_read_frame_depth(coord) * 0.125f;
+}
+
+float compareDepths(in float depth1, in float depth2, inout int far)    
+{       
+	float diff = (depth1 - depth2)*5; //depth difference (0-100)     
+	float gdisplace = 0.2; //gauss bell center     
+	float garea = 2.0; //gauss bell width 2     
+	
+	//reduce left bell width to avoid self-shadowing     
+	if (diff<gdisplace)
+	{        
+		garea = 0.1;     
+	}
+	else
+	{        
+		far = 1;     
+	}     
+	float gauss = pow(2.7182,-2*(diff-gdisplace)*(diff-gdisplace)/(garea*garea));    
+	
+	return gauss;   
+}     
+
+float calAO(float2 uv, float depth,float dw, float dh)     
+{       
+	float temp = 0;    
+	float temp2 = 0;    
+	float coordw = uv.x  + 15*dw/depth;    
+	float coordh = uv.y  + 15*dh/depth;    
+	float coordw2 = uv.x - 15*dw/depth;     
+	float coordh2 = uv.y - 15*dh/depth;     
+	
+	if (coordw  < 1.0 && coordw  > 0.0 && coordh < 1.0 && coordh  > 0.0)
+	{     	
+		float2 coord = float2(coordw , coordh);        
+		float2 coord2 = float2(coordw2, coordh2);       
+		int far = 0;     	
+		temp = compareDepths(depth, readDepth(coord),far);        
+		 
+		//DEPTH EXTRAPOLATION:        
+		if (far > 0)
+		{          
+			temp2 = compareDepths(readDepth(coord2),depth,far);         
+			temp += (1.0-temp)*temp2;        
+		}     
+	}      
+	return temp;     
+}
+
+float4 main( v2p_post_process input) : SV_TARGET
+{
+	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	float2 uv = input.uv;
+	
+	float pw = 1.0f / screen_res.x * 0.5f;
+	float ph = 1.0f / screen_res.y * 0.5f;
+	
+	//randomization texture:    
+	float2 fres = float2(20,20);     
+	float3 random = t_random_rotates.Sample(s_base, 256*uv);    
+	random = random*2.0-1.0;     //initialize stuff:     
+	float depth = readDepth(uv);      
+	float ao = 0.0;
+	for(int i=0; i<4; ++i)     
+	{        
+		//calculate color bleeding and ao:      
+		ao+=calAO(uv, depth,  pw, ph);        
+		ao+=calAO(uv, depth,  pw, -ph);        
+		ao+=calAO(uv, depth,  -pw, ph);        
+		ao+=calAO(uv, depth,  -pw, -ph);       
+		ao+=calAO(uv, depth,  pw*1.2, 0);        
+		ao+=calAO(uv, depth,  -pw*1.2, 0);        
+		ao+=calAO(uv, depth,  0, ph*1.2);         
+		ao+=calAO(uv, depth,  0, -ph*1.2);            
+		
+		//sample jittering:      
+		pw += random.x*0.0007;       
+		ph += random.y*0.0007;       
+		//increase sampling area:      
+		pw *= 1.7;         
+		ph *= 1.7;         
+	}              
+	
+	//final values, some adjusting:    
+	float finalAO = 1.0-(ao/32.0);
+	return pow(1.3*finalAO,2.0);
+}
+	
+#else
+
+float4 main( v2p_post_process input) : SV_TARGET
+{
+	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+
+#endif
+
+
+
+
+
+
+
+

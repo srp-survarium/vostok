@@ -135,5 +135,5 @@ int AlphanumComparator::Compare(String^ x, String^ y)
 }
 
 } // namespace controls
-} // namespace dialog_editor
+} // namespace editor
 } // namespace xray

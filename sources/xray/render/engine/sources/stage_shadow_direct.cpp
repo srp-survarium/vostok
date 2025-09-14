@@ -13,6 +13,7 @@
 #include "light.h"
 #include "renderer_context.h"
 #include "scene.h"
+#include "grass_world.h"
 #include "lights_db.h"
 #include "shadow_cascade_volume.h"
 #include "render_model.h"
@@ -444,12 +445,12 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	
 	float3 view_pos = m_context->get_view_pos();
 	
-	m_context->push_set_v( light_view_transform);
-	m_context->push_set_p( light_projection_transform);
+	m_context->push_set_v(light_view_transform);
+	m_context->push_set_p(light_projection_transform);
 
- 	m_context->scene()->select_models( m_context->get_culling_vp(), m_caster_model);
+ 	m_context->scene()->select_models(m_context->get_culling_vp(), m_caster_model);
 
-	render_surface_instances::iterator		it_d	= m_caster_model.begin();
+	render_surface_instances::iterator			it_d	= m_caster_model.begin();
 	render_surface_instances::const_iterator	end_d	= m_caster_model.end();
 
 	D3D_VIEWPORT orig_viewport;
@@ -504,7 +505,10 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		
 	}
 	
-	if (options::ref().m_enabled_draw_speedtree)
+	if (m_context->scene()->get_grass())
+		m_context->scene()->get_grass()->render(m_context, view_pos, shadow_render_stage, 0, 25.0f, false);
+
+	if (options::ref().m_enabled_draw_speedtree && m_context->scene()->get_speedtree_forest())
 		render_speedtree_instances(view_pos, cascade_index);
 	
 	if (options::ref().m_enabled_draw_terrain && options::ref().m_enabled_terrain_shadows)

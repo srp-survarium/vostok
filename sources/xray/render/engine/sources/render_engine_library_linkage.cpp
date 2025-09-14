@@ -5,4 +5,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <xray/render/core/library_linkage.h>
+
+#include <xray/render/core/platform_helper.h>
+#include XRAY_RENDER_CORE_FILE(library_linkage.h)

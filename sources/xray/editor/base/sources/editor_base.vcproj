@@ -81,7 +81,7 @@
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName).dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)stlport/libraries/$(PlatformName)&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)../binaries/$(PlatformName)/$(TargetName).pdb"
 				SubSystem="2"
@@ -259,7 +259,7 @@
 				AdditionalOptions="/ignore:4248"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/xray_$(ProjectName)-debug.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)../binaries/$(PlatformName)/libraries/;$(SolutionDir)cs/libraries/$(PlatformName)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)/stlport/libraries/$(PlatformName)&quot;"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(SolutionDir)../binaries/$(PlatformName)/$(TargetName).pdb"
@@ -406,7 +406,7 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{AC5DD91F-CE10-4E05-B48A-E1DDEC5CCD9C}"
-			RelativePathToProject=".\xray\engine\pc\sources\engine_pc.vcproj"
+			RelativePathToProject=".\xray\engine\pc\dx11\sources\engine_pc_dx11.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{C75532C4-765B-418E-B09B-46D36B2ABDB1}"

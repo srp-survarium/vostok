@@ -52,8 +52,8 @@ graph_generator::graph_generator			(
 	m_min_agent_radius					( 0.3f ),
 	m_min_agent_height					( 0.5f ),
 	m_show_processed_model				( false ),
-	m_show_triangle_faces				( false ),
-	m_show_navigation_mesh				( false ),
+	m_show_triangle_faces				( true ),
+	m_show_navigation_mesh				( true ),
 	m_show_marked_triangles				( false ),
 	m_show_path_channel					( false ),
 	m_start_node						( u32(-1) ),
@@ -599,8 +599,8 @@ void graph_generator::tick					( )
 	}
 	*/
 
-//	m_renderer.draw_sphere ( m_scene, m_start_position, m_path_finder_agent_radius, math::color( 255, 128, 128 ) );
-//	m_renderer.draw_sphere ( m_scene, m_goal_position, m_path_finder_agent_radius, math::color( 128, 128, 255 ) );
+	m_renderer.draw_sphere ( m_scene, m_start_position, m_path_finder_agent_radius, math::color( 255, 128, 128 ) );
+	m_renderer.draw_sphere ( m_scene, m_goal_position, m_path_finder_agent_radius, math::color( 128, 128, 255 ) );
 
 	if ( m_show_path_channel ) {
 		u32 channel_triangles_count = m_channel.size();

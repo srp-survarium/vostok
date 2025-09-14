@@ -42,7 +42,6 @@ typedef	resources::resource_ptr<
 			resources::unmanaged_intrusive_base
 		> static_render_model_ptr;
 
-
 class static_render_model_instance : public render_model_instance_impl
 {
 	typedef render_model_instance_impl		super;
@@ -54,6 +53,8 @@ public:
 	virtual void		get_surfaces				( render_surface_instances& list, bool visible_only );
 			void		assign_original				( static_render_model_ptr v );
 	virtual bool		get_locator					( pcstr locator_name, model_locator_item& result ) const;
+	virtual u32			get_surfaces_count			( ) const {return m_instances_count;}
+	virtual void		get_surface_stats			( u32 surface_id, surface_stats& stats ) const;
 
 protected:
 	static_render_model_ptr				m_original;

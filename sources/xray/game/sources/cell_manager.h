@@ -21,7 +21,7 @@ class cell_manager : public boost::noncopyable
 {
 
 public:
-	explicit						cell_manager		( game& game );
+	explicit						cell_manager		( game& game, game_world& w );
 									~cell_manager		( ) { }
 	void							load				( game_project_ptr const& game_project );
 	void							unload				( );
@@ -72,6 +72,7 @@ private:
 
 	game_project_ptr				m_game_project;
 	game&							m_game;
+	game_world&						m_game_world;
 }; // class cell_manager
 
 } // namespace stalker2

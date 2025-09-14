@@ -1,0 +1,145 @@
+
+
+-- do not delete this variable!
+local UNDEFINED = 0
+
+
+DEFINES = 
+{
+	CONFIG_TDETAIL					= { "0", "1" },
+	CONFIG_TDIFFUSE 				= { "0", "1" },
+	CONFIG_TNORMAL					= { "0", "1" },
+	CONFIG_TDETAIL_NORMAL			= { "0", "1" },
+	CONFIG_PARALLAX					= { "0", "1" },
+	CONFIG_TRANSLUCENCY				= { "0", "1" },
+	CONFIG_TTRANSPARENCY			= { "0", "1" },
+	CONFIG_TSPECULAR_INTENSITY		= { "0", "1" },
+	CONFIG_TSPECULAR_POWER			= { "0", "1" },
+	CONFIG_TDIFFUSE_POWER			= { "0", "1" },
+	CONFIG_EMISSIVE					= { "0", "1", "2" },
+	CONFIG_TFRESNEL_AT_0_DEGREE		= { "0", "1" },
+	CONFIG_ALPHA_TEST				= { "0", "1" },
+	CONFIG_REFLECTION				= { "0", "1", "2" },
+	CONFIG_VARIATION_MASK			= { "0", "1" },
+	CONFIG_DECAL_MATERIAL			= { "0", "1" },
+	CONFIG_DECAL_TYPE				= { "0", "1", "2" },
+	CONFIG_SEQUENCE					= { "0", "1" },	
+	CONFIG_REFLECTION_MASK			= { "0", "1" },	
+	GLOBAL_GBUFFER_POS_PACKING		= { "GBUFFER_POS_PACKING_Z_QUADRATIC_NORM_PARAM", },	--{"0", "1", }, 		// G buffer pusiton packing strategy
+	GLOBAL_GBUFFER_NORMAL_PACKING 	= { "GBUFFER_NORMAL_PACKING_XY_UNORM_MAT_ZSIGN", },   	--{"0", "1", "2", },    // G buffer normal packing strategy
+	GLOBAL_ALLOW_STEEPPARALLAX		= { "0" },
+	GLOBAL_FP16_BLEND				= { "0" },
+	GLOBAL_USE_BRANCHING			= { "0" },	
+	GLOBAL_SPOT_SHADOWMAP_SIZE		= { "512", "1024", "2048" },
+	GLOBAL_SHADOWMAP_SIZE			= { "512", "1024", "2048" },
+	GLOBAL_TEST_FLOAT				= { "1.0" },
+	GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE = { "512", "1024", "2048" },
+	GLOBAL_USE_LOOP_UNROLLING		= { "0", "1" },	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	FP16_FILTER				=	{	UNDEFINED, },
+	FP16_BLEND				=	{	UNDEFINED, },
+	USE_BRANCHING			=	{	UNDEFINED, },
+	
+	USE_SUNFILTER			=	{	UNDEFINED,	"1", },			--accum_sun...
+	SUN_QUALITY				=	{	UNDEFINED,	"1", "2" },		--accum_sun_far.ps
+	USE_SUNMASK				=	{	UNDEFINED,	},				--shadow.h, 
+	USE_SJITTER				=	{	UNDEFINED,	},				--common_iostructs.h, accum_sun..., accum_voume...
+	SUNSHAFTS_DYNAMIC		=	{	UNDEFINED,	},				--shadow.h
+	USE_R2_STATIC_SUN		=	{	UNDEFINED,	},				--deffer_..., accum_...
+	SUN_FARPLANE			=	{	UNDEFINED,	"1", },			--accum_sun_far.ps
+	
+	USE_VTF					=	{	UNDEFINED,	},				--sky, combine, common.h
+
+	USE_HWSMAP				=	{	UNDEFINED,	"1", },			--accum_sun_far.ps, shadow.h, shadow_...
+	USE_HWSMAP_PCF			=	{	UNDEFINED,	"1", },			--shadow.h, shadow()
+	USE_FETCH4				=	{	"1", },						--accum_... main(), shadow.h, shadow()
+	SMAP_size				=	{	"1024",			 },
+	
+	USE_LM_HEMI				=	{	UNDEFINED,	},				--deffer_base_..., common_iostructs.h
+	
+	USE_TREEWAVE			=	{	UNDEFINED,	"1", },			--deffer, shadow, main()
+
+	USE_TDETAIL				=	{	UNDEFINED,	}, 				--deffer,common, sload, main()
+	USE_TDETAIL_BUMP		=	{	UNDEFINED,	},				--sload.h, sload_i()
+	USE_TRANSLUENCY			=	{	UNDEFINED,	"1", },         --deffer_aref
+	
+	USE_PARALLAX			=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, sload.h, UpdateTC(), sload()
+	USE_STEEPPARALLAX		=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, sload.h, UpdateTC(), sload()
+	ALLOW_STEEPPARALLAX		=	{	UNDEFINED,	"1", },			--sload.h, UpdateTC(), sload()
+
+
+
+	SKIN_NONE				=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, main()
+	SKIN_0					=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, main()
+	SKIN_1					=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, main()
+	SKIN_2					=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, main()
+	SKIN_3					=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, main()
+	SKIN_4					=	{	UNDEFINED,	"1", },			--deffer_model_bump.vs, main()
+	SKIN_COLOR				=	{	UNDEFINED,	"1", },			--skin.h, skinning_3()
+
+
+--	EXTEND_F_DEFFER			=	{	UNDEFINED,	"1", },			--f_deffer pack_gbuffer, mask, only
+	GBUFFER_OPTIMIZATION	=	{	UNDEFINED,	},				--common_..., gbuffer.h, 
+	                                                    	
+
+
+
+--	MSAA_OPTIMIZATION			=	{	UNDEFINED,	"1", },
+--	MSAA_ALPHATEST_DX10_1_ATOC	=	{	UNDEFINED,	"1", },
+--	MSAA_ALPHATEST_DX10_1		=	{	UNDEFINED,	"1", },
+--	MSAA_SAMPLES				=	{	"2", "4", "8", },
+--	USE_MSAA					=	{	UNDEFINED,	"1", },
+
+	USE_DOF					=	{	UNDEFINED,	"1", },			--dof.h
+
+	USE_GAMMA_22			=	{	UNDEFINED,	"1", },			--hmodel.h, hmodel_.h, hmodel(),
+
+	USE_LIGHTING_PARAMS_FROM_TEXTURE	=	{	UNDEFINED,	"1", },	--LightingCommon.h, GetMaterialParams()
+
+	USE_MBLUR				=	{	UNDEFINED,	"1", },			--mblur.h, mblur()
+
+	USE_DISTORT				=	{	UNDEFINED,	"1", },			--unused
+
+} -- DEFINES
+
+
+CONFLICTS = 
+{
+
+	[0] = 
+	{
+		SKIN_NONE = { "1", },
+		SKIN_0	  = { "1", },
+	},
+	
+	
+} -- conflicts
+
+
+
+
+
+
+
+

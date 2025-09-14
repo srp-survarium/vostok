@@ -1,0 +1,37 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 20.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_TDIFFUSE,
+*/
+#include "common.h"
+#include "material.h"
+#include "vertex_input.h"
+
+SamplerState default_sampler
+{
+    Filter = MIN_MAG_MIP_LINEAR;
+    AddressU = Wrap;
+    AddressV = Wrap;
+};
+
+Texture2D t_default_texture;
+
+void main(in vertex_output_struct input,
+		  out float4 rt0: SV_Target0)
+{
+	material_parameters parameters 		= get_material_parameters(input);
+	fill_material_parameters			(parameters);
+	
+	float4	texture_diffuse_color		= float4(1.0f, 1.0f, 1.0f, 1.0f);
+	
+#if CONFIG_TDIFFUSE
+	texture_diffuse_color				= t_default_texture.SampleLevel(s_base, parameters.tc, 0);
+#endif // #if CONFIG_TDIFFUSE
+	
+	rt0									= texture_diffuse_color;
+}

@@ -26,7 +26,7 @@ struct XRAY_NOVTABLE world {
 	virtual	xray::ui::font const *default_font			( )						= 0;
 	
 	virtual render::ui::renderer& get_renderer			( )						= 0;
-	virtual xray::render::scene_view_ptr const& get_scene_view( ) const			= 0;
+//	virtual xray::render::scene_view_ptr const& get_scene_view( ) const			= 0;
 
 protected:
 	XRAY_DECLARE_PURE_VIRTUAL_DESTRUCTOR( world )

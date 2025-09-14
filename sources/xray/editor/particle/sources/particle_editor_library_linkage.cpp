@@ -5,4 +5,4 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <xray/engine/pc/library_linkage.h>
+#include <xray/engine/pc/dx11/library_linkage.h>

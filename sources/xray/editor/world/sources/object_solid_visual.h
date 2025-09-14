@@ -28,7 +28,6 @@ ref class object_solid_visual : public object_base
 public:
 					object_solid_visual		( tool_solid_visual^ t, render::scene_ptr const& scene );
 	virtual			~object_solid_visual	( );
-	virtual void	destroy_collision		( )										override;
 
 	virtual void	save					( configs::lua_config_value t )			override;
 	virtual void	load_props				( configs::lua_config_value const& t )	override;
@@ -42,6 +41,7 @@ public:
 
 	virtual void	load_contents			( )	override;
 	virtual void	unload_contents			( bool bdestroy ) override;
+	virtual	void	gather_statistic		( scene_statistic^ stats ) override;
 
 protected:
 	void			tick					( );

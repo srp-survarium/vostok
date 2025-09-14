@@ -1,0 +1,60 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 22.08.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+	GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE,
+*/
+
+#include "common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture2D t_skin_scattering_temp;
+
+float4 main(vertex_output_struct input) : SV_TARGET
+{
+	float4 result 		= t_skin_scattering_temp.Sample(s_material1, input.uv);
+	
+	if (result.r < 0.0f)
+	{
+		float res = 0.0f;
+		int num = 0;
+		
+		LOOP
+		for (int i = -2; i <= 2; i++)
+		{
+			LOOP
+			for (int j = -2; j <= 2; j++)
+			{
+				float2 uv = input.uv + 10.0f * float2(i, j) / GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE;
+				
+				float r = t_skin_scattering_temp.SampleLevel(s_material1, uv, 0).r;
+				
+				if (r >= 0.0f)
+				{
+					res += r;
+					num += 1;
+				}
+			}
+		}
+		
+		//if (num != 0)
+			result.rgb = res / max(num, 0.001f);//res / num;
+	}
+	
+	return result;
+}
+
+
+
+
+
+
+

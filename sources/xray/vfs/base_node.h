@@ -80,10 +80,16 @@ public:
 	void				get_full_path	(fs_new::virtual_path_string * out_string) const;
 	u16					get_flags		() const { return m_flags; }
 	bool				has_flags		(u32 flags) const { return ((u32)m_flags & flags) == flags; }
-	void				set_flags		(enum_flags<vfs_node_enum> flags) { threading::interlocked_exchange((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)(u32)flags); }
-	void				add_flags		(enum_flags<vfs_node_enum> flags) { threading::interlocked_or((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)(u32)flags); }
-	void				unset_flags		(enum_flags<vfs_node_enum> flags) { threading::interlocked_and((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)(u32)~flags); }
-	
+	void				set_flags		(enum_flags<vfs_node_enum> flags) { m_flags	= (u16)(u32)flags; }
+	void				add_flags		(enum_flags<vfs_node_enum> flags) {
+		u32 const platformed_flags	=	((u32)flags) << (platform::big_endian() ? 16 : 0);
+		threading::interlocked_or((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)platformed_flags);
+	}
+	void				unset_flags		(enum_flags<vfs_node_enum> flags) {
+		u32 const platformed_flags	=	((u32)flags) << (platform::big_endian() ? 16 : 0);
+		threading::interlocked_and((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)~platformed_flags);
+	}
+
 	bool				is_folder		() const { return has_flags(vfs_node_is_folder); }
 	bool				is_file			() const { return !has_flags(vfs_node_is_folder); }
 	bool				is_physical		() const { return has_flags(vfs_node_is_physical); }

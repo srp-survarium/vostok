@@ -45,6 +45,9 @@ typedef intrusive_ptr<render_target, resource_intrusive_base, threading::single_
 class res_texture;
 typedef intrusive_ptr<res_texture, resource_intrusive_base, threading::single_threading_policy> ref_texture;
 
+class res_declaration;
+typedef xray::intrusive_ptr<res_declaration, resource_intrusive_base, threading::single_threading_policy>	ref_declaration;
+
 
 class shader_constant_host;
 
@@ -188,6 +191,28 @@ private:
 	
 	untyped_buffer_ptr		m_screen_vertex_ib;
 	ref_geometry			m_screen_vertex_geometry;
+	
+
+	struct lights_instance
+	{
+		untyped_buffer_ptr		m_instance_vb;
+	}; // struct lights_instance
+	
+	ref_declaration			m_instance_declaration;
+	
+	int						m_num_instanced_lights;
+	
+	struct instance_data
+	{
+		xray::math::float3 color;
+		xray::math::float3 position;
+		float range;
+	}; // struct instance_data
+	
+	instance_data*			m_instance_data_array;
+	
+	lights_instance			m_lights_instance[4];
+	void					render_instances();
 	
 	shader_constant_host*	m_gamma_correction_factor;
 	

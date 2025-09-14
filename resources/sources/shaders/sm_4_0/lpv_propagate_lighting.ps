@@ -1,0 +1,144 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 26.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "spherical_harmonics_common.h"
+
+struct geometry_output_struct
+{
+    float4 position 			: SV_Position;
+	float3 grid_position_norm	: TEXCOORD0;
+    uint rt_index 				: SV_RenderTargetArrayIndex;
+};
+
+Texture3D 	t_radiance_r;
+Texture3D 	t_radiance_g;
+Texture3D 	t_radiance_b;
+
+Texture3D 	t_occluders;
+
+float num_grid_cells;
+int propagate_iteration_index;
+float flux_amplifier;
+int cascade_index;
+float occlusion_amplifier;
+
+static const float3 p_offsets[] = 
+{
+	float3(1,0,0),
+	float3(-1,0,0),
+	float3(0,1,0),
+	float3(0,-1,0),
+	float3(0,0,1),
+	float3(0,0,-1),
+};
+
+float4 load_offset_texture_value(in Texture3D in_texture, in float3 in_pos, in float3 in_offset)
+{
+	return in_texture.SampleLevel( s_linear, in_pos - in_offset / num_grid_cells, 0 );
+}
+
+void propagate_direction(inout float4 coef_r,
+				   inout float4 coef_g,
+				   inout float4 coef_b,
+				   in int dir_index,
+				   in geometry_output_struct input,
+				   in float3 offset)
+{
+	//float4 dir_sh			=	low_order_sh_project_cone(-offset, sh_pi / 2.0f);
+	float4 dir_sh			=	low_order_sh_project_clampled_cosine_lobe(-offset);// / 3.14f;
+	//dir_sh.x 				*= 	0.5f;
+	
+	//float4 dir_sh2			=	low_order_sh_project_cone(-offset, 0.5f * sh_pi);
+	float4 dir_sh2			=	dir_sh;//low_order_sh_project_clampled_cosine_lobe(-offset);
+	
+	const float3 uvw		=	input.grid_position_norm + offset / num_grid_cells;
+	const float3 uvw2		=	input.grid_position_norm + float3(0.0f,0.0f,0.5f) / num_grid_cells + offset / num_grid_cells;
+	const float3 uvw3		=	input.grid_position_norm + offset / num_grid_cells + 0.5f / num_grid_cells;;
+	
+	float4 occl_sh_this		= 	t_occluders.SampleLevel(s_accumulator, input.grid_position_norm, 0);
+	float4 occl_sh			= 	t_occluders.SampleLevel(s_accumulator, uvw, 0);
+	
+	float occlusion_factor 	= 	1.0f - clamp(occlusion_amplifier * low_order_sh_dot_abs(dir_sh2, occl_sh),0,1);
+	
+	occlusion_factor		= 	pow(occlusion_factor, occlusion_amplifier);
+	
+	//if (cascade_index == 0 && propagate_iteration_index < 0)// ||
+	//	occlusion_factor = 1;
+	
+	//if (length(occl_sh_this) > 0.0f)
+	//	occlusion_factor 	= 	0.0f;
+	
+	//if (length(occl_sh) > 0.0f)
+	//	occlusion_factor 	= 	0.0f;
+	
+	float4 radiance_r		=	t_radiance_r.SampleLevel(s_accumulator, uvw, 0);
+	float4 radiance_g		=	t_radiance_g.SampleLevel(s_accumulator, uvw, 0);
+	float4 radiance_b		=	t_radiance_b.SampleLevel(s_accumulator, uvw, 0);
+	
+	float3 lum;
+	lum.x					=	max(0.0f, dot(radiance_r, dir_sh));
+	lum.y					=	max(0.0f, dot(radiance_g, dir_sh));
+	lum.z					=	max(0.0f, dot(radiance_b, dir_sh));
+	
+	/*
+	UNROLL for(int face = 0; face < 6; face++)
+	{
+		float3 face_position 	=	p_offsets[face] * 0.5f;
+		float3 vec_from_ncc 	=	face_position - offset;
+		
+		float vec_length		=	length(vec_from_ncc);
+		
+		vec_from_ncc 			=	vec_from_ncc / vec_length;
+		
+		float solid_angle		=	vec_length >= 1.5f ? 22.95668f / (4.0f * 180.0f) : 24.26083f / (4.0f * 180.0f);
+		
+		float3 dir				= 	normalize(vec_from_ncc);
+		
+		float4 sh_dir			=	low_order_sh_project(dir);
+		
+		float rr				=	flux_amplifier * solid_angle * max(0, dot(sh_dir, radiance_r));
+		float gg				=	flux_amplifier * solid_angle * max(0, dot(sh_dir, radiance_g));
+		float bb				=	flux_amplifier * solid_angle * max(0, dot(sh_dir, radiance_b));
+		
+		coef_r					+=	occlusion_factor * dir_sh * rr;
+		coef_g					+=	occlusion_factor * dir_sh * gg;
+		coef_b					+=	occlusion_factor * dir_sh * bb;
+	}
+	*/
+	
+	float flux				=	flux_amplifier;
+	coef_r					+=	flux * occlusion_factor * dir_sh * lum.x;
+	coef_g					+=	flux * occlusion_factor * dir_sh * lum.y;
+	coef_b					+=	flux * occlusion_factor * dir_sh * lum.z;
+}
+
+
+
+void main(in geometry_output_struct input,
+		  out float4 out_radiance_coefficients_r : SV_Target0,
+		  out float4 out_radiance_coefficients_g : SV_Target1,
+		  out float4 out_radiance_coefficients_b : SV_Target2)
+{
+	float4 R = 0, G = 0, B = 0;
+	
+	for (int dir_index = 0; dir_index < 6; dir_index++)
+		propagate_direction(R, G, B, dir_index, input, p_offsets[dir_index]);
+	
+	out_radiance_coefficients_r				= R;// / sh_pi;
+	out_radiance_coefficients_g				= G;// / sh_pi;
+	out_radiance_coefficients_b				= B;// / sh_pi;
+}
+
+
+
+
+
+
+
+
+
+

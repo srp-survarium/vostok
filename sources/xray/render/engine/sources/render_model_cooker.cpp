@@ -8,6 +8,7 @@
 #include "render_model_cooker.h"
 #include "model_manager.h"
 #include "render_model_static.h"
+#include "render_model_grass.h"
 #include "render_model_skeleton.h"
 #include "render_model_user.h"
 #include "render_model_composite.h"
@@ -435,7 +436,12 @@ void render_model_cook::on_subresources_loaded( resources::queries_result& data,
 	configs::binary_config_value const&	mesh_properties_config = config_ptr->get_root();
 	++request_index;
 	
-	render_model* model					= model_factory::create_render_model( u16(mesh_properties_config["type"]) );
+	u16 model_type						= u16(mesh_properties_config["type"]);
+	
+	if (get_class_id() == resources::grass_render_model_class)
+		model_type									= mt_grass_mesh;
+	
+	render_model* model					= model_factory::create_render_model( model_type );
 	R_ASSERT							( model );
 
 	model->load_properties				( mesh_properties_config );
@@ -514,14 +520,16 @@ static xray::render::enum_vertex_input_type	mesh_type_to_vertex_input_type	(xray
 		case mt_static_mesh:
 		case mt_static_submesh:
 			return static_mesh_vertex_input_type;
-			break;
 		case mt_skinned_mesh:
 		case mt_skinned_submesh_1w:
 		case mt_skinned_submesh_2w:
 		case mt_skinned_submesh_3w:
 		case mt_skinned_submesh_4w:
 			return skeletal_mesh_vertex_input_type;
-			break;
+		case mt_user_mesh_wire:
+			return wires_vertex_input_type;
+		case mt_grass_mesh:
+			return grassmesh_vertex_input_type;
 		default: NODEFAULT(return unknown_vertex_input_type);
 	};
 }
@@ -573,6 +581,10 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 	{
 		configs::binary_config_value const& properties	= cook_data->assets[model_index].export_properties_config->get_root();
 		mesh_type_enum						model_type	= (mesh_type_enum)u16(properties["type"]);
+		
+		if (get_class_id() == resources::grass_render_model_class)
+			model_type									= mt_grass_mesh;
+		
 		pcstr								sg_name		= cook_data->assets[model_index].m_surface_name.c_str();
 		int									mtl_idx		= cook_data->find_material_index(sg_name);
 		
@@ -637,6 +649,9 @@ void render_model_cook::finish_model_creation( resources::queries_result& data_m
 		configs::binary_config_value const& properties = prop_config_ptr->get_root();
 		
 		u16 model_type						= u16(properties["type"]);
+		
+		if (get_class_id() == resources::grass_render_model_class)
+			model_type						= mt_grass_mesh;
 		
 		resources::pinned_ptr_const<u8> converted_model_ptr	( cook_data->assets[model_index].converted_model_buffer );
 

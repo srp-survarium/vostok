@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="LibFoundation"
 	ProjectGUID="{9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0}"
 	RootNamespace="LibFoundation"
@@ -249,7 +249,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
+				InlineFunctionExpansion="2"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;./;Approximation;ComputationalGeometry;Containment;Curves;Distance;Interpolation;Intersection;Mathematics;Meshes;Miscellaneous;NumericalAnalysis;Surfaces;System"
+				PreprocessorDefinitions="WIN64;NDEBUG;"
 				MinimalRebuild="false"
 				UsePrecompiledHeader="1"
 				PrecompiledHeaderThrough="Wm4FoundationPCH.h"

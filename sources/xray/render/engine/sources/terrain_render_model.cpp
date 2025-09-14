@@ -269,5 +269,14 @@ void terrain_render_model::create_maps	( math::uint2 size,
 	++s_unique_ind;
 }
 
+void terrain_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
+{
+	R_ASSERT			( surface_id==0 );
+	u32 row				= m_terrain_model->vertex_row_size();
+	stats.vcount		= row * row;
+	stats.tricount		= (row-1)*(row-1)*2;
+	stats.material		= "terrain";
+}
+
 } // namespace render 
 } // namespace xray 

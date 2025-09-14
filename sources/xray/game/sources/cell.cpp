@@ -55,7 +55,8 @@ cell_key::fixed_string16 cell_key::to_string( ) const
 
 game_cell::game_cell		( /*xray::render::scene_ptr const& scene*/ ) :
 //	m_scene					( scene ),
-	m_game					( NULL ),
+	m_game_					( NULL ),
+	m_game_world			( NULL ),
 	m_quality				( false ),
 	m_visibility_parameters	( 0.f )
 {
@@ -185,13 +186,13 @@ void game_cell::unload_terrain( )
 {
 	if(m_terrain)
 	{
-		m_game->renderer().scene().terrain_remove_cell( m_game->get_render_scene(), m_terrain->m_render_model );
-		m_game->get_game_world().get_collision_tree()->erase	( m_terrain_collision );
+		m_game_->renderer().scene().terrain_remove_cell( m_game_world->get_render_scene(), m_terrain->m_render_model );
+		m_game_world->get_collision_tree()->erase	( m_terrain_collision );
 		m_terrain_collision->destroy( g_allocator );
 		DELETE					( m_terrain_collision );
 		m_terrain				= 0;
 	
-		m_game->get_game_world().get_physics_world()->remove_rigid_body( m_terrain_rigid_body );
+		m_game_world->get_physics_world()->remove_rigid_body( m_terrain_rigid_body );
 		physics::destroy_rigid_body( m_terrain_rigid_body );
 		m_terrain_rigid_body	= NULL;
 	}
@@ -213,8 +214,8 @@ void game_cell::load_terrain( )
 		query_path.assignf						("terrain%s/%d_%d.terr", terrain_prefix, k.x, k.y);
 
 		render::terrain_cook_user_data			prj_name_terrain_pair; 
-		prj_name_terrain_pair.current_project_resource_path	= m_game->get_game_world().project_resource_path();
-		prj_name_terrain_pair.scene							= m_game->get_render_scene();
+		prj_name_terrain_pair.current_project_resource_path	= m_game_world->project_resource_path();
+		prj_name_terrain_pair.scene							= m_game_world->get_render_scene();
 
 		resources::user_data_variant user_data;
 		user_data.set							( prj_name_terrain_pair );
@@ -236,7 +237,7 @@ void game_cell::on_terrain_visual_ready( resources::queries_result& data )
 		R_ASSERT				( data.is_successful() );
 		m_terrain				= static_cast_resource_ptr<render::terrain_model_ptr>( data[0].get_unmanaged_resource() );
 
-		m_game->renderer().scene().terrain_add_cell( m_game->get_render_scene(), m_terrain->m_render_model );
+		m_game_world->renderer().scene().terrain_add_cell( m_game_world->get_render_scene(), m_terrain->m_render_model );
 
 		m_terrain_collision		= NEW(collision::collision_object)(g_allocator, collision_object_type_terrain, m_terrain->m_collision_geom, &m_visibility_parameters );
 		
@@ -249,21 +250,21 @@ void game_cell::on_terrain_visual_ready( resources::queries_result& data )
 //		m_terrain_collision->set_matrix			( terrain_transform );
 //		float3 center				= m_terrain_collision->get_aabb_center();
 
-		m_game->get_game_world().get_collision_tree()->insert	(m_terrain_collision, terrain_transform );
+		m_game_world->get_collision_tree()->insert	(m_terrain_collision, terrain_transform );
 //		m_game->get_game_world().get_collision_tree()->insert	(m_terrain_collision, center, extents);
 
-	physics::bt_rigid_body_construction_info	info;
-	info.m_collisionShape			= m_terrain->m_bt_collision_shape;
-	info.m_mass						= 0.0f;
-	info.m_friction					= 100.0f;
-	math::aabb bb = m_terrain_collision->get_aabb();
-	info.m_render_model_offset		= float3( sz/2.0f, bb.min.y+(bb.max.y-bb.min.y)/2.0f, -sz/2.0f );
+		physics::bt_rigid_body_construction_info	info;
+		info.m_collisionShape			= m_terrain->m_bt_collision_shape;
+		info.m_mass						= 0.0f;
+		info.m_friction					= 100.0f;
+		math::aabb bb = m_terrain_collision->get_aabb();
+		info.m_render_model_offset		= float3( sz/2.0f, bb.min.y+(bb.max.y-bb.min.y)/2.0f, -sz/2.0f );
 
-	m_terrain_rigid_body			= physics::create_rigid_body( info );
+		m_terrain_rigid_body			= physics::create_rigid_body( info );
 
-	m_terrain_rigid_body->set_transform( terrain_transform );
-	
-	m_game->get_game_world().get_physics_world()->add_rigid_body( m_terrain_rigid_body );
+		m_terrain_rigid_body->set_transform( terrain_transform );
+
+		m_game_world->get_physics_world()->add_rigid_body( m_terrain_rigid_body );
 
 	}
 }

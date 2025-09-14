@@ -1,0 +1,49 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 22.09.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "spherical_harmonics_common.h"
+
+struct geometry_output_struct
+{
+    float4 position 		: SV_Position;
+    float3 normal 			: NORMAL;
+    float3 color 			: COLOR;
+	float3 world_position	: TEXCOORD0;
+    uint rt_index 			: SV_RenderTargetArrayIndex;
+};
+
+float3 light_position;
+
+void main(in geometry_output_struct input,
+		  out float4 out_occlusion_coefficients : SV_Target0)
+{
+	float3 normal					=	normalize(input.normal);
+	
+	//out_occlusion_coefficients 		= 	low_order_sh_project_cone(normal, 0.8f * sh_pi);
+	out_occlusion_coefficients 		= 	low_order_sh_project_clampled_cosine_lobe(normal);
+	//out_occlusion_coefficients 		= 	low_order_sh_project_clampled_cosine_lobe(normalize(light_position - input.world_position));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

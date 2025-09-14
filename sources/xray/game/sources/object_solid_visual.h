@@ -15,32 +15,26 @@
 #include <xray/physics/model.h>
 #include <xray/physics/world.h>
 
-//namespace xray {
-//	namespace collision {
-//		class collision_object_geometry;
-//	} // namespace collision
-//} // namespace xray
-
 namespace stalker2 {
 
-class object_visual : public game_object_static
+class object_visual : public game_object_
 {
-	typedef game_object_static	super;
+	typedef game_object_	super;
 public:
-						object_visual	( game_world& w );
+						object_visual	( game_scene& w );
 	virtual				~object_visual	( );
 	virtual void		load			( configs::binary_config_value const& t );
 
 protected:
 	fs::path_string		m_visual_name;
-
+	math::float4x4		m_transform;
 };
 
 class object_solid_visual : public object_visual
 {
 	typedef object_visual	super;
 public:
-						object_solid_visual		( game_world& w );
+						object_solid_visual		( game_scene& w );
 
 	virtual void		load_contents			( );
 	virtual void		unload_contents			( );
@@ -58,7 +52,7 @@ class object_dynamic_visual : public object_visual
 {
 	typedef object_visual	super;
 public:
-						object_dynamic_visual	( game_world& w );
+						object_dynamic_visual	( game_scene& w );
 
 	virtual void		load_contents			( );
 	virtual void		unload_contents			( );
@@ -77,7 +71,7 @@ class object_skeleton_visual : public object_visual
 {
 	typedef object_visual	super;
 public:
-						object_skeleton_visual	( game_world& w );
+						object_skeleton_visual	( game_scene& w );
 
 	virtual void		load_contents			( );
 	virtual void		unload_contents			( );
@@ -93,7 +87,7 @@ class object_particle_visual : public object_visual
 {
 	typedef object_visual	super;
 public:
-						object_particle_visual	( game_world& w );
+						object_particle_visual	( game_scene& w );
 
 	virtual void		load_contents			( );
 	virtual void		unload_contents			( );
@@ -110,7 +104,7 @@ class object_speedtree_visual : public object_visual
 {
 	typedef object_visual	super;
 public:
-						object_speedtree_visual	( game_world& w );
+						object_speedtree_visual	( game_scene& w );
 	
 	virtual void		load_contents			( );
 	virtual void		unload_contents			( );

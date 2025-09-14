@@ -14,10 +14,9 @@
 
 #include "tool_base.h"
 #include "level_editor.h"
+#include "object_collision.h"
 
 #pragma managed ( push, off )
-#	include <xray/collision/api.h>
-#	include <xray/collision/collision_object.h>
 #	include <xray/collision/space_partitioning_tree.h>
 #pragma managed ( push, on )
 
@@ -157,6 +156,21 @@ void object_patrol_graph_look_point::save ( configs::lua_config_value config_val
 	config_value["signal_on_begin"]			= unmanaged_string( signal_on_begin ).c_str( );
 	config_value["signal_on_end"]			= unmanaged_string( signal_on_end ).c_str( );
 	config_value["animation"]				= unmanaged_string( animation ).c_str( );
+	if ( animation != "" )
+	{
+		int index = animation->IndexOf("/");
+		System::String^ animation_name = animation->Substring( index + 1, animation->Length - index - 1 );
+		System::String^ animation_type = animation->Substring(0, index);
+
+		config_value["animation_for_cook"]["name"] = unmanaged_string( animation_name ).c_str( );
+
+		if ( animation_type == "single" )
+			config_value["animation_for_cook"]["type"] = resources::single_animation_class;
+		else if ( animation_type == "collections" )
+			config_value["animation_for_cook"]["type"] = resources::animation_collection_class;
+		else
+			UNREACHABLE_CODE();
+	}
 	config_value["probability"]				= m_probability;
 	config_value["position"]				= m_position.operator float3( );
 }

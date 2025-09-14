@@ -1,12 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 20.11.2008
+//	Created		: 23.03.2012
 //	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2009
+//	Copyright (C) GSC Game World - 2012
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include <xray/debug/library_linkage.h>
+#include <xray/logging/library_linkage.h>
 #include <xray/core/library_linkage.h>
-
-#if XRAY_PLATFORM_XBOX_360
-#	pragma comment( lib, "xapilib.lib" )
-#endif // #if XRAY_PLATFORM_XBOX_360

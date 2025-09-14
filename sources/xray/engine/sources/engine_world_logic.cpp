@@ -12,7 +12,7 @@
 #include <xray/input/world.h>
 #include <xray/physics/api.h>
 #include <xray/physics/world.h>
-#include <xray/network/api.h>
+#include <xray/network/world.h>
 #include <xray/sound/api.h>
 #include <xray/sound/world.h>
 #include <xray/sound/world_user.h>
@@ -87,8 +87,8 @@ void engine_world::logic_finalize_modules	( )
 void engine_world::logic_dispatch_callbacks	( )
 {
 	xray::resources::dispatch_callbacks		( );
-	xray::network::dispatch_callbacks		( );
 	m_sound_world->get_logic_world_user().dispatch_callbacks	( );
+	m_network_world->dispatch_callbacks		( );
 	m_render_world->logic_channel().owner_delete_processed_items( );
 }
 

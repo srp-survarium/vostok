@@ -26,7 +26,6 @@ namespace xray {
 			object_logic				(tool_scripting^ t);
 			virtual						~object_logic( );
 
-			virtual void			destroy_collision		( )										override;
 			virtual void			load_props				( configs::lua_config_value const& t )	override;
 			virtual void			save					( configs::lua_config_value t )			override;
 			

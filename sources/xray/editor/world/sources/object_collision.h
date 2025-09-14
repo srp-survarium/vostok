@@ -13,7 +13,10 @@
 
 namespace xray {
 
-namespace collision { class geometry_instance; struct space_partitioning_tree;}
+namespace collision { 
+	class geometry_instance; 
+	struct space_partitioning_tree;
+}
 
 namespace editor {
 
