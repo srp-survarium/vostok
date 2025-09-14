@@ -5,9 +5,11 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "bullet_manager.h"
-#include "bullet.h"
+#include <vostok/game_core/bullet_manager.h>
+
+#if 0
 #include "game_world.h"
+#endif
 
 #include <vostok/tasks_system.h>
 #include <vostok/buffer_vector.h>
@@ -28,10 +30,12 @@
 
 namespace survarium {
 
-bullet_manager::bullet_manager ( game_world& w ) 
+bullet_manager::bullet_manager ( /* game_world& w */ ) 
 :	m_bullets					( NULL, 0 ),
 	m_gravity					( float3( 0, -9.81f, 0 ) ),
+#if 0
 	m_game_world				( w ),
+#endif
 	m_task_type					( tasks::create_new_task_type( "bullet", tasks::task_type_flags_no_self_parallelization_hint ) ),
 	m_max_bullets_count			( 0 ),
 	m_max_bullets_decals_count	( 64 ),
@@ -123,8 +127,10 @@ void bullet_manager::tick ( float elapsed_game_seconds )
 	}
 
 #ifndef MASTER_GOLD
+#if 0
 	if( m_is_draw_debug )
 		render_debug			( m_game_world.renderer().debug(), m_game_world.get_render_scene() );
+#endif
 #endif // #ifndef MASTER_GOLD
 }
 
@@ -171,8 +177,9 @@ void bullet_manager::add_decal ( float3 const& position, float3 const& direction
 	properties.alpha_angle						= 0.0f;
 	properties.clip_angle						= -90.0f;
 	
+#if 0
 	m_game_world.renderer().scene().update_decal( m_game_world.get_render_scene(), m_current_decal_id++, properties );
-
+#endif
 	if( m_current_decal_id == m_max_bullets_decals_count )
 		m_current_decal_id = 0;
 }
@@ -378,11 +385,15 @@ void bullet_manager::material_ready_out ( resources::queries_result& data, vosto
 
 void bullet_manager::emit_bullet ( float3 position, float3 velocity, float air_resistance )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( position, velocity, air_resistance );
+
 	if ( m_bullets_allocator_ref->total_size( ) == m_bullets_allocator_ref->allocated_size( ) )
 		displace_one_bullet		( );
-	
+
+#if 0
 	bullet* new_bullet			= VOSTOK_NEW_IMPL	( m_bullets_allocator_ref.c_ptr( ), bullet )( position, velocity, m_game_world.game_time_sec( ), air_resistance ); 
 	m_bullets.push_back	( new_bullet );
+#endif
 
 #ifndef MASTER_GOLD
 	store_bullet_trajectory		( new_bullet );
