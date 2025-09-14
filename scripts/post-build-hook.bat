@@ -17,16 +17,11 @@ for %%I in ("%SRP_DIR%")        do set "SRP_DIR=%%~fI"
 for %%I in ("%COFF_DIR%")       do set "COFF_DIR=%%~fI"
 for %%I in ("%XRAY_STUB_DIR%")  do set "XRAY_STUB_DIR=%%~fI"
 
-set "ENGINE_DIR=%VOSTOK_DIR%\sources\vostok"
-set   "TEMP_DIR=%VOSTOK_DIR%\binaries\temp_ghidra_project"
-set   "PDB_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.pdb"
-set   "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.exe"
+set   "ENGINE_DIR=%VOSTOK_DIR%\sources\vostok"
+set     "PDB_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.pdb"
+set     "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.exe"
 
 if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::collision"
-
-if not exist "%TEMP_DIR%" (
-    mkdir "%TEMP_DIR%"
-)
 
 ::
 :: Rerun pdb-parser script
@@ -43,7 +38,6 @@ popd
 :: Generate COFF files for a newly built executable
 ::
 
-set "PROJECTS_DIR=%TEMP_DIR%"
 
 :: `-import`        - will import an executable into the project.
 :: `-overwrite`     - will ensure that a new project is always created.
