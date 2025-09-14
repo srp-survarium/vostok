@@ -10,15 +10,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("src", type=Path)
     parser.add_argument("dest", type=Path)
-    parser.add_argument("--combine", action="store_true")
     args = parser.parse_args()
 
     src = args.src.resolve()
     dest = args.dest.resolve()
     copied = 0
-
-    if args.combine:
-        src, dest = dest, src
 
     for file in src.rglob("*"):
         if file.is_file() and file.suffix.lower() in EXTS:
