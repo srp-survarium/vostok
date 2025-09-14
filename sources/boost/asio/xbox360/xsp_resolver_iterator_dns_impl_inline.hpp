@@ -41,7 +41,7 @@ inline secure_inaddr::pointer_type const & dns_iterator::dereference()
 
 inline bool dns_iterator::equal(pointer_type const & other)
 {
-	using namespace xray;
+	using namespace vostok;
 	dns_iterator* other_ptr = static_cast_checked<dns_iterator*>(
 		other.c_ptr());
 	BOOST_ASSERT(other_ptr);

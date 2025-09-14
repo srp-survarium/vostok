@@ -7,8 +7,8 @@
 #ifndef ODE_LIBRARY_LINKAGE_H_INCLUDED
 #define ODE_LIBRARY_LINKAGE_H_INCLUDED
 
-#include <xray/macro_library_name.h>
+#include <vostok/macro_library_name.h>
 
-#pragma comment(lib, XRAY_LIBRARY_NAME( ode, lib ) )
+#pragma comment(lib, VOSTOK_LIBRARY_NAME( ode, lib ) )
 
 #endif // #ifndef ODE_LIBRARY_LINKAGE_H_INCLUDED

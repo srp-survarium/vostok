@@ -8,25 +8,25 @@
 #define OPCODE_API_H_INCLUDED
 
 #ifndef ICE_NO_DLL
-#	ifdef XRAY_STATIC_LIBRARIES
+#	ifdef VOSTOK_STATIC_LIBRARIES
 #		define	ICE_NO_DLL
-#	endif // #ifdef XRAY_STATIC_LIBRARIES
+#	endif // #ifdef VOSTOK_STATIC_LIBRARIES
 #else // #ifndef ICE_NO_DLL
-#	ifdef XRAY_STATIC_LIBRARIES
-#	endif // #ifdef XRAY_STATIC_LIBRARIES
+#	ifdef VOSTOK_STATIC_LIBRARIES
+#	endif // #ifdef VOSTOK_STATIC_LIBRARIES
 #endif // #ifndef ICE_NO_DLL
 
-#ifndef XRAY_STATIC_LIBRARIES
-#	define XRAY_ENGINE_BUILDING
-#endif // #ifndef XRAY_STATIC_LIBRARIES
+#ifndef VOSTOK_STATIC_LIBRARIES
+#	define VOSTOK_ENGINE_BUILDING
+#endif // #ifndef VOSTOK_STATIC_LIBRARIES
 
 #include <boost/noncopyable.hpp>
-#include <xray/macro_extensions.h>
-#include <xray/optimization_extensions.h>
-#include <xray/type_extensions.h>
-#include <xray/debug/extensions.h>
-#include <xray/detail_noncopyable.h>
-#include <xray/memory_extensions.h>
+#include <vostok/macro_extensions.h>
+#include <vostok/optimization_extensions.h>
+#include <vostok/type_extensions.h>
+#include <vostok/debug/extensions.h>
+#include <vostok/detail_noncopyable.h>
+#include <vostok/memory_extensions.h>
 
 #undef BOOL
 #undef ASSERT

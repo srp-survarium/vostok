@@ -19,7 +19,7 @@ class lan_iterator : public resolver_iterator_base_impl
 {
 public:
 	typedef full_secure_address						address_type;
-	typedef xray::network::list<address_type>		addresses_list_type;
+	typedef vostok::network::list<address_type>		addresses_list_type;
 	typedef addresses_list_type::const_iterator		const_iterator;
 
 	inline				lan_iterator	(sessions_registry & sess_reg);

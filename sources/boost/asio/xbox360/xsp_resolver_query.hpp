@@ -11,7 +11,7 @@
 #include <boost/asio/detail/socket_types.hpp>
 #include <boost/asio/detail/socket_ops.hpp>
 #include <boost/asio/ip/resolver_query_base.hpp>
-#include <boost/xray_defines.hpp>
+#include <boost/vostok_defines.hpp>
 
 namespace boost {
 namespace asio {
@@ -49,7 +49,7 @@ public:
 	{
 	}
 	/// Construct with specified xlsp host name and service identifier
-	resolver_query(xray::network::std_string const & host_name,
+	resolver_query(vostok::network::std_string const & host_name,
 				 DWORD const service_id) :
 		m_host_name(host_name),
 		m_xlsp_service_id(service_id),
@@ -58,7 +58,7 @@ public:
 	}
 
 	/// Get the host name associated with the query.
-	xray::network::std_string const &		host_name	() const
+	vostok::network::std_string const &		host_name	() const
 	{
 		return m_host_name;
 	}
@@ -81,7 +81,7 @@ public:
 	}
 private:
   resolver_query() {}
-  xray::network::std_string		m_host_name;
+  vostok::network::std_string		m_host_name;
   // XLSP service identifier (in case of ert_dns_xslp)
   union
   {

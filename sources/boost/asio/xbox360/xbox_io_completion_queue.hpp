@@ -18,7 +18,7 @@ struct event_type
 {
 	void	set				(bool state)	{ m_event_impl.set(state); }
 	HANDLE	get_handle		() 				{ return m_event_impl.get_handle(); }
-	xray::threading::event	m_event_impl;
+	vostok::threading::event	m_event_impl;
 	//event_type*				m_prev;
 	//event_type*				m_next;
 }; //struct event_type
@@ -27,7 +27,7 @@ template <typename T>
 class wait_queue
 {
 public:
-	typedef xray::network::vector<HANDLE> event_handles_type;
+	typedef vostok::network::vector<HANDLE> event_handles_type;
 
 			wait_queue	();
 			~wait_queue	()	{}
@@ -50,7 +50,7 @@ private:
 		T					m_operation;
 	}; //struct operation_item
 
-	typedef xray::network::vector<operation_item>	operations_type;
+	typedef vostok::network::vector<operation_item>	operations_type;
 	
 	/* if the queue will use several threads, then interrupter event
 	is required, because if the one thread pushes a wait event to queue
