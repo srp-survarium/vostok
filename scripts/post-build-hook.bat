@@ -6,10 +6,15 @@
 :: The script current directory is: :/sources/vostok/survarium/pc/sources
 ::
 
-if not defined VOSTOK_DIR    set    "VOSTOK_DIR=%cd%\..\..\..\..\.."
-if not defined SRP_DIR       set       "SRP_DIR=%VOSTOK_DIR%\..\srp"
-if not defined COFF_DIR      set      "COFF_DIR=%VOSTOK_DIR%\..\vostok-coff-delinker"
-if not defined XRAY_STUB_DIR set "XRAY_STUB_DIR=%VOSTOK_DIR%\..\xray-structure"
+if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::collision"
+
+if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
+for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
+
+if not defined VOSTOK_DIR    set    "VOSTOK_DIR=%ROOT_DIR%\vostok"
+if not defined SRP_DIR       set       "SRP_DIR=%ROOT_DIR%\srp"
+if not defined COFF_DIR      set      "COFF_DIR=%ROOT_DIR%\vostok-coff-delinker"
+if not defined XRAY_STUB_DIR set "XRAY_STUB_DIR=%ROOT_DIR%\xray-structure"
 
 :: Normalize paths in environment variables
 for %%I in ("%VOSTOK_DIR%")     do set "VOSTOK_DIR=%%~fI"
@@ -20,8 +25,6 @@ for %%I in ("%XRAY_STUB_DIR%")  do set "XRAY_STUB_DIR=%%~fI"
 set   "ENGINE_DIR=%VOSTOK_DIR%\sources\vostok"
 set     "PDB_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.pdb"
 set     "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.exe"
-
-if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::collision"
 
 ::
 :: Rerun pdb-parser script
@@ -45,6 +48,7 @@ popd
 set "PROCESS_ARGS=-import %EXE_FILE% -overwrite -deleteproject"
 set "OUTPUT_DIR=%COFF_DIR%\base"
 set "CLASS_FILTER=%REQUIRED_CLASS%"
+set "PROJECTS_DIR=%VOSTOK_DIR%\binaries\temp_ghidra_project_2"
 
 echo Regenerating COFF object files
-"%SRP_DIR%\vostok-generate-coff.bat"
+"%VOSTOK_DIR%\scripts\vostok-generate-coff.bat"
