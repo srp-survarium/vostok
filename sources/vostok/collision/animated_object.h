@@ -19,6 +19,10 @@ namespace debug {
 } // namespace debug
 } // namespace render
 
+namespace physics {
+	class bt_animated_rigid_body;
+} // namespace physics
+
 namespace collision {
 
 class geometry;
@@ -44,8 +48,12 @@ public:
 	inline	u32		get_bones_count	( ) const { return m_geometries_data.size(); }
 			math::aabb	get_aabb	( ) const;
 			geometry*	get_geometry( ) const { return m_geometry; } 
+			
+			// sushi@NOTE: Not generated in `target`. Most likely unused.
 			void	draw_collision	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
 			
+			pcstr	body_part_name			( u32 const bone_index ) const;
+
 			float3	get_random_surface_point( u32 const current_time ) const;
 			float3	get_head_bone_center	( ) const;
 			float3	get_eyes_direction		( ) const;
@@ -54,10 +62,18 @@ private:
 	typedef buffer_vector< bone_collision_data > bone_collisions_type;
 
 private:
-	bone_collisions_type			m_geometries_data;
-	geometry*						m_geometry;
-	u32								m_head_bone_index;
+	bone_collisions_type				m_geometries_data;
+	memory::stack_allocator				m_allocator;
+	geometry*							m_geometry;
+	physics::bt_animated_rigid_body*	m_body;
+	u32									m_head_bone_index;
 }; // class animated_object
+
+namespace {
+	typedef char size_assert[
+		sizeof(animated_object) == 0x2C ? 1 : -1
+	];
+}
 
 typedef	resources::resource_ptr < animated_object, resources::unmanaged_intrusive_base > animated_object_ptr;
 

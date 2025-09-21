@@ -13,6 +13,8 @@
 #include "composite_geometry.h"
 #include "composite_geometry_instance.h"
 
+#include <vostok/physics/bullet_utils.h>
+
 namespace vostok {
 namespace collision {
 
@@ -145,21 +147,28 @@ float3 animated_object::get_head_bone_center	( ) const
 //	return										head_aabb.center() /** head_bone_transform*//* * head_collision_transform*/;
 }
 
-float3 animated_object::get_eyes_direction	( ) const
+float3 animated_object::get_eyes_direction( ) const
 {
 	R_ASSERT								( m_head_bone_index != u32(-1) );
 
-	composite_geometry_instance const* const cgi = static_cast_checked< composite_geometry_instance const* >( &*m_geometries_data[m_head_bone_index].bone_geometry_instance );
-	non_null< composite_geometry const >::ptr collision_element	= cgi->get_geometry();
- 	geometry_instance* const* bone_instance	= collision_element->begin();
-	R_ASSERT								( *bone_instance );
-	float4x4 const&	head_bone_transform		= (*bone_instance)->get_matrix();
-	float4x4 const& head_collision_transform = m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
-	
-	// this ugly code will remain until exported configs become corrected to support usual z-axis direction
-	float3 direction						= head_collision_transform.transform_direction( -head_bone_transform.j.xyz() );
-	
-	return									direction.normalize();
+	if ( m_geometry )	
+	{
+		composite_geometry_instance const* const cgi = static_cast_checked< composite_geometry_instance const* >( &*m_geometries_data[m_head_bone_index].bone_geometry_instance );
+		non_null< composite_geometry const >::ptr collision_element	= cgi->get_geometry();
+ 		geometry_instance* const* bone_instance	= collision_element->begin();
+		R_ASSERT								( *bone_instance );
+		float4x4 const&	head_bone_transform		= (*bone_instance)->get_matrix();
+		float4x4 const& head_collision_transform = m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
+
+		float3 direction						= head_collision_transform.transform_direction( head_bone_transform.k.xyz() );
+		return									direction.normalize();
+	}
+	else
+	{
+		float3 direction = *m_geometries_data[m_head_bone_index].bone_geometry_instance->vertices();	// physics::from_bullet( m_body --> m_transform ), // Also seems like the function has changed
+		//
+		return									direction.normalize();
+	}
 }
 
 void animated_object::draw_collision		(
@@ -173,6 +182,15 @@ void animated_object::draw_collision		(
 	m_geometry->render						( scene, renderer, transform );
 //	cg->get_geometry()->render				( scene, renderer, cg->get_matrix( ) * transform );
 }
+
+pcstr animated_object::body_part_name(
+	u32                                bone_index) const
+{
+	R_ASSERT ( bone_index < m_geometries_data.size() ); // sushi@NOTE: It was compiled out, not sure this one is correct
+	return m_geometries_data[bone_index].body_part_name.c_str();
+}
+
+
 
 } // namespace collision
 } // namespace vostok

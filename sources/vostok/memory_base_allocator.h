@@ -76,6 +76,7 @@ protected:
 	pvoid	m_arena_start;
 	pvoid	m_arena_end;
 	pcstr	m_arena_id;
+	bool	m_use_memory_monitor;
 
 private:
 #ifndef MASTER_GOLD
