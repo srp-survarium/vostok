@@ -45,14 +45,10 @@ public:
 	virtual u16					get_collision_group() const override;
 	virtual btCollisionObject*	get_bt_collision_obect()	override;
 
-	/* self methods */
-	void		update_bone_matrix	(
-		u32                                index,
-		float4x4 const&                    new_transform,
-		bool                               recalculate_aabb);
+	/* self methods: sushi@NOTE: Seems like those didn't inline in target, but did here */
+	void		update_bone_matrix	( u32 index, float4x4 const& new_transform, bool recalculate_aabb );
 	math::aabb	get_aabb			( )				const;
-	float4x4	get_bone_transform	(
-		u32                                index)	const;
+	float4x4	get_bone_transform	( u32 index )	const;
 
 private:
 	/* offset 0x0000 */ /* fields for physics::bt_rigid_body_base */
