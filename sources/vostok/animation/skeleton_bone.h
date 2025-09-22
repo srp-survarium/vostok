@@ -29,7 +29,7 @@ private:
 	skeleton_bone const* const		m_parent;
 	skeleton_bone const* const		m_children_begin;
 	skeleton_bone const* const		m_children_end;
-	u32								m_mask;
+	u32								m_mask; // sushi@TODO: Added, but not implemented anything related
 }; // class skeleton_bone
 
 } // namespace animation

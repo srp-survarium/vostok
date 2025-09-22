@@ -34,7 +34,7 @@ namespace game {
 namespace debug {
 
 class VOSTOK_RENDER_API renderer : private core::noncopyable {
-public: // sushi@TODO: Was private
+public: // sushi@TODO: Temporarily made public to get constructor for temp module
 	friend class editor::renderer;
 	friend class game::renderer;
 			renderer			( one_way_render_channel& channel, memory::base_allocator& allocator, engine::world& engine_world );

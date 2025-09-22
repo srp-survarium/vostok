@@ -77,11 +77,16 @@ namespace {
 typedef buffer_vector<collision::bone_collision_data>										geometries_type;
 
 // sushi@NOTE: Not sure why symbols of those methods are generated without arguments and return values. Makes matching awkward
+/* sushi@NOTE: Made private to try to coax linker to not generate symbols
 btCollisionShape*	new_bt_primitive							( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator );
 btCompoundShape*	new_bt_element_joint						( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data );
+*/
 btCompoundShape*	new_compound_shape_from_hit_targets_config	( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator );
 
+/* sushi@NOTE: Made private to try to coax linker to not generate symbols
 u32					calculate_bt_hit_target_size							( configs::binary_config_value const& config );
+*/
+// sushi@NOTE: This should be also hidden, but it doesn't have XREFs..
 u32					calculate_bt_joint_size									( configs::binary_config_value const& config );
 u32					calculate_bt_animated_body_size_from_hit_targets_config	( configs::binary_config_value const& config );
 

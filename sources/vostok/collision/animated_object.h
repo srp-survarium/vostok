@@ -10,7 +10,7 @@
 #include <vostok/collision/api.h>
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/render/engine/base_classes.h>
-#include <vostok/physics/animated_rigid_body.h> // sushi@TODO: Most likely needs to be removed. Was added to implement `set_owner`.
+#include <vostok/physics/animated_rigid_body.h> 
 
 namespace vostok {
 
@@ -19,12 +19,6 @@ namespace debug {
 	class renderer;
 } // namespace debug
 } // namespace render
-
-/*
-namespace physics {
-	class bt_animated_rigid_body;
-} // namespace physics
-*/
 
 namespace collision {
 

@@ -58,16 +58,6 @@ namespace vostok
 		}
 
 		{
-			float3 dimension;
-			physics::new_bt_primitive( collision::primitive_box, dimension, NULL ); 
-		}
-
-		{
-			configs::binary_config_value value = configs::binary_config_value();
-			physics::new_bt_element_joint ( value , NULL, NULL );
-		}
-
-		{
 			// btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 			configs::binary_config_value config = configs::binary_config_value();
 			physics::geometries_type geometries( NULL, 10 );
@@ -76,7 +66,7 @@ namespace vostok
 
 		{
 			configs::binary_config_value config = configs::binary_config_value();
-			physics::calculate_bt_hit_target_size( config );
+			// physics::calculate_bt_hit_target_size( config );
 
 			// calculate_bt_animated_body_size_from_hit_targets_config
 			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
