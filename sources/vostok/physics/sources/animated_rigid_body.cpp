@@ -54,7 +54,7 @@ float4x4 bt_animated_rigid_body::get_transform( ) const
 // STATE[PARTIAL: 69%]: Looks like linker optimizations
 void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
-	btTransform& new_child_transform = from_vostok( new_transform );				// <0x6bf92a>|0x000|0x000:'56'
+	btTransform new_child_transform = from_vostok( new_transform );					// <0x6bf92a>|0x000|0x000:'56'
 	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );	// <0x6bf933>|0x009|0x009:'57'
 }
 // STATE[DONE]
@@ -235,7 +235,7 @@ collision::animated_object* new_animated_bt_hit_model(
 	stack_allocator.initialize			( arena, arena_size, "collision::animated_object memory" );
 	// sushi@TODO: Incorrect method: get_bones_count_from_hit_targets_config
 	u32 bones_count = collision::get_bones_count_from_physics_shell_config<vostok::configs::binary_config_value>(config);
-	collision::animated_object* object = VOSTOK_NEW_IMPL( stack_allocator, collision::animated_object )( config, model_skeleton, bones_count, &stack_allocator );
+	collision::animated_object* object = VOSTOK_NEW_IMPL( stack_allocator, collision::animated_object )( config, model_skeleton, bones_count, stack_allocator );
 
 	return object;
 }

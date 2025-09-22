@@ -35,7 +35,7 @@ namespace collision {
 
 namespace physics {
 
-class bt_animated_rigid_body : bt_rigid_body_base {
+class bt_animated_rigid_body : public bt_rigid_body_base {
 public:
 	bt_animated_rigid_body( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
 

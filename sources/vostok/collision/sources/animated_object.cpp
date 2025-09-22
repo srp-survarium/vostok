@@ -22,12 +22,12 @@ animated_object::animated_object(
 		configs::binary_config_value const& config,
 		animation::skeleton_ptr const& model_skeleton,
 		u32 const bones_count,
-		memory::base_allocator* allocator
+		memory::stack_allocator& allocator
 	) :
 	m_geometries_data			( VOSTOK_MALLOC_IMPL( allocator, bones_count * sizeof( bone_collision_data ), "geometry instances vector" ), bones_count ),
 	m_head_bone_index			( u32(-1) )
 {
-	m_geometry					= &*new_composite_geometry_from_physics_shell_config( config, m_geometries_data, allocator );
+	m_geometry					= &*new_composite_geometry_from_physics_shell_config( config, m_geometries_data, &allocator );
 	
 	u32 const non_root_bones_count				= model_skeleton->get_non_root_bones_count();
 	R_ASSERT_CMP								( non_root_bones_count, <, model_skeleton->get_bones_count() );
@@ -91,7 +91,7 @@ void animated_object::update	( float4x4 const* const bones_matrices_begin, float
 
 math::aabb animated_object::get_aabb	( ) const
 {
- 	return m_geometry->get_aabb			( );
+ 	return m_geometry ? m_geometry->get_aabb( ) : m_body->get_aabb();
 }
 
 float3 animated_object::get_random_surface_point( u32 const current_time ) const

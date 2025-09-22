@@ -275,7 +275,7 @@ animated_object* new_animated_object(
 	stack_allocator.initialize		( arena, total_object_size, description );
 	
 	u32 const bones_count			= get_bones_count_from_physics_shell_config( config );
-	animated_object* new_object		= VOSTOK_NEW_IMPL( stack_allocator, animated_object )( config, model_skeleton, bones_count, &stack_allocator );
+	animated_object* new_object		= VOSTOK_NEW_IMPL( stack_allocator, animated_object )( config, model_skeleton, bones_count, stack_allocator );
 	R_ASSERT						( stack_allocator.allocated_size() == total_object_size );
 	return							new_object;
 }

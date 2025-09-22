@@ -10,6 +10,7 @@
 #include <vostok/collision/api.h>
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/render/engine/base_classes.h>
+#include <vostok/physics/animated_rigid_body.h> // sushi@TODO: Most likely needs to be removed. Was added to implement `set_owner`.
 
 namespace vostok {
 
@@ -19,13 +20,16 @@ namespace debug {
 } // namespace debug
 } // namespace render
 
+/*
 namespace physics {
 	class bt_animated_rigid_body;
 } // namespace physics
+*/
 
 namespace collision {
 
 class geometry;
+struct game_object;
 
 #pragma warning( push )
 #pragma warning( disable : 4231 )
@@ -39,15 +43,22 @@ public:
 				configs::binary_config_value const& config,
 				animation::skeleton_ptr const& model_skeleton,
 				u32 const bones_count,
-				memory::base_allocator* allocator
+				memory::stack_allocator& allocator
 			);
+			// sushi@NOTE: It seems like they added another inline constructor with `bool` at the end.
+			// animated_object(configs::binary_config_value const&, animation::skeleton_ptr const&, u32, memory::stack_allocator&, bool)
+
 			~animated_object		( );
 
 			void	update			( float4x4 const* const bones_matrices_begin, float4x4 const* const bones_matrices_end );
 			void	destroy			( memory::base_allocator* allocator );
-	inline	u32		get_bones_count	( ) const { return m_geometries_data.size(); }
+
 			math::aabb	get_aabb	( ) const;
-			geometry*	get_geometry( ) const { return m_geometry; } 
+
+	inline	u32									get_bones_count	( ) const { return m_geometries_data.size(); }
+	inline	physics::bt_animated_rigid_body*	get_rigid_body	( ) const { return m_body; }
+	inline	void								set_owner		( game_object* owner ) { m_body->user_data = owner; } // sushi@TODO: What is set exactly?
+	inline	geometry*							get_geometry	( ) const { return m_geometry; } 
 			
 			// sushi@NOTE: Not generated in `target`. Most likely unused.
 			void	draw_collision	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
@@ -64,7 +75,7 @@ private:
 private:
 	bone_collisions_type				m_geometries_data;
 	memory::stack_allocator				m_allocator;
-	geometry*							m_geometry;
+	geometry*							m_geometry; // sushi@TODO: I need to figure out who can set `m_geometry` and when? It seems like in the target it is always `NULL` (though the optimizer didn't understand that).
 	physics::bt_animated_rigid_body*	m_body;
 	u32									m_head_bone_index;
 }; // class animated_object

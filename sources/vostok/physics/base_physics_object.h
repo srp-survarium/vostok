@@ -24,9 +24,9 @@ public:
 
 	virtual u16					get_collision_group() const = 0;
 	virtual btCollisionObject*	get_bt_collision_obect()	= 0;
-protected:
+public:
 	/* offset 0x0004 */ /* fields for loose_ptr_base */
-	/* offset 0x0008 */ collision::game_object*             user_data;
+	/* offset 0x0008 */ collision::game_object*             user_data; // sushi@NOTE: Most likely needs to be private, though there are no getters/setters in the header
 }; // class base_physics_object
 
 namespace {

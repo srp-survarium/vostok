@@ -16,25 +16,27 @@ namespace vostok
 {
 	void use_animated_object()
 	{
-			configs::binary_config_value bcv = configs::binary_config_value();
-			animation::skeleton_ptr ms = animation::skeleton_ptr();
-		collision::animated_object ao = collision::animated_object(bcv, ms, 10, NULL);
-		
+
+		configs::binary_config_value bcv = configs::binary_config_value();
+		animation::skeleton_ptr ms = animation::skeleton_ptr();
+		memory::stack_allocator stack_allocator;
+
+		collision::animated_object ao = collision::animated_object(bcv, ms, 10, stack_allocator);
 		ao.update(NULL, NULL);
 		ao.destroy(NULL);
 		ao.get_bones_count();
 		ao.get_aabb();
 		ao.get_geometry();
 
-			render::scene_ptr scene = vostok::render::scene_ptr();
+		render::scene_ptr scene = vostok::render::scene_ptr();
+		memory::managed_allocator alloc = memory::managed_allocator(100, 100);
+		render::one_way_render_channel channel = render::one_way_render_channel(alloc);
+		render::engine::world world = render::engine::world();
+		render::debug::renderer renderer = render::debug::renderer(channel, alloc, world);
 
-			memory::managed_allocator alloc = memory::managed_allocator(100, 100);
-			render::one_way_render_channel channel = render::one_way_render_channel(alloc);
-			render::engine::world world = render::engine::world();
 
-			render::debug::renderer renderer = render::debug::renderer(channel, alloc, world);
 
-			float4x4 transform;
+		float4x4 transform;
 		ao.draw_collision(scene, renderer, transform); 
 
 		ao.get_random_surface_point(10);
