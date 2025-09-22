@@ -29,6 +29,7 @@ private:
 	skeleton_bone const* const		m_parent;
 	skeleton_bone const* const		m_children_begin;
 	skeleton_bone const* const		m_children_end;
+	u32								m_mask;
 }; // class skeleton_bone
 
 } // namespace animation

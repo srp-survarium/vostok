@@ -76,7 +76,7 @@ private:
 	bone_collisions_type				m_geometries_data;
 	memory::stack_allocator				m_allocator;
 	geometry*							m_geometry; // sushi@TODO: I need to figure out who can set `m_geometry` and when? It seems like in the target it is always `NULL` (though the optimizer didn't understand that).
-	physics::bt_animated_rigid_body*	m_body;
+	physics::bt_animated_rigid_body*	m_body;		// sushi@NOTE: We are owning this ptr
 	u32									m_head_bone_index;
 }; // class animated_object
 

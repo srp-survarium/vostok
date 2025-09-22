@@ -197,7 +197,7 @@ u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_con
 	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
 }
 
-// STATE[UNVERIFIED]
+// STATE[UNVERIFIED]: sushi@NOTE: Does it take ownership of shape?
 bt_animated_rigid_body* new_animated_rigid_body(
 	btCompoundShape*                   shape,
 	u16                                game_material_id,

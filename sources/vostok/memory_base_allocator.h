@@ -48,7 +48,7 @@ protected:
 	virtual	void	call_free			( pvoid pointer VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION ) = 0;
 	virtual	size_t	usable_size_impl	( pvoid pointer ) const = 0;
 
-protected:
+public: // sushi@TODO: Was protected. Changed to call in `animated_object.cpp`
 			void	copy				( base_allocator const& allocator );
 #if VOSTOK_USE_MEMORY_TOOLS
 			pvoid	on_malloc			( pvoid buffer, size_t buffer_size, size_t previous_size, pcstr description ) const;

@@ -18,6 +18,7 @@
 namespace vostok {
 namespace collision {
 
+// STATE[PARTIAL: 92%]: Seems like the main problem is that linker removed id from `new_animated_rigid_body`.
 animated_object::animated_object(
 		configs::binary_config_value const& config,
 		animation::skeleton_ptr const& model_skeleton,
@@ -25,10 +26,13 @@ animated_object::animated_object(
 		memory::stack_allocator& allocator
 	) :
 	m_geometries_data			( VOSTOK_MALLOC_IMPL( allocator, bones_count * sizeof( bone_collision_data ), "geometry instances vector" ), bones_count ),
-	m_head_bone_index			( u32(-1) )
+	m_head_bone_index			( u32(-1) ),
+	m_geometry					( NULL )
 {
-	m_geometry					= &*new_composite_geometry_from_physics_shell_config( config, m_geometries_data, &allocator );
+	btCompoundShape* bt_shape = physics::new_compound_shape_from_hit_targets_config( config, m_geometries_data, &allocator );
 	
+	m_body = physics::new_animated_rigid_body( bt_shape, 10, &allocator );
+
 	u32 const non_root_bones_count				= model_skeleton->get_non_root_bones_count();
 	R_ASSERT_CMP								( non_root_bones_count, <, model_skeleton->get_bones_count() );
 	u32 const root_bones_count					= model_skeleton->get_bones_count() - non_root_bones_count;
@@ -44,14 +48,22 @@ animated_object::animated_object(
 		if ( iter->bone_name == "Head" )
 			m_head_bone_index					= std::distance( m_geometries_data.begin(), iter );
 	}
+
+	m_allocator.swap( allocator );
 }
 
+// STATE[STUB]
 animated_object::~animated_object	( )
 {
+	VOSTOK_DELETE_IMPL( m_allocator, m_body );
 }
 
+// STATE[DONE]
 void animated_object::destroy		( memory::base_allocator* allocator )
 {
+	if ( !m_geometry )
+		return;
+
 	composite_geometry* geometry	= static_cast_checked< composite_geometry* >( m_geometry );
 	
 	m_geometries_data.clear			( );
@@ -74,28 +86,43 @@ void animated_object::destroy		( memory::base_allocator* allocator )
 		delete_geometry_instance	( allocator, instances[i] );
 }
 
+
+// STATE[PARTIAL: 76%]: structure is not matching, bones_matrices_end is not used
+// try (and all permutations of the above :3):
+// i on same line
+// remove iter
+// do not hardcode size
+
+//    iter + i outside + size() x2 -> 63%
+// no iter + i inside  + size() x2 -> 76% | from_vostok in target uses regs, while base stack
 void animated_object::update	( float4x4 const* const bones_matrices_begin, float4x4 const* const bones_matrices_end )
-{
-	R_ASSERT					( m_geometry );
-
-	bone_collisions_type::iterator iter			= m_geometries_data.begin();
-	bone_collisions_type::const_iterator end	= m_geometries_data.end();
-
-	for ( ; iter != end; ++iter )
+{	
+	VOSTOK_UNREFERENCED_PARAMETER( bones_matrices_end );
+	for ( u32 i = 0; i < m_geometries_data.size()  ; ++i )
 	{
-		R_ASSERT				( iter->bone_geometry_instance );
-		R_ASSERT_CMP			( iter->skeleton_bone_index, <, u32(bones_matrices_end - bones_matrices_begin) );
-		iter->bone_geometry_instance->set_matrix( bones_matrices_begin[iter->skeleton_bone_index] );
+		if ( m_geometry )
+		{
+			m_geometries_data[i].bone_geometry_instance->set_matrix( bones_matrices_begin[m_geometries_data[i].skeleton_bone_index] );
+		}
+		else
+		{
+			m_body->update_bone_matrix( i, bones_matrices_begin[m_geometries_data[i].skeleton_bone_index], i == m_geometries_data.size() - 1 );
+		}
 	}
 }
-
+// STATE[DONE]
 math::aabb animated_object::get_aabb	( ) const
 {
  	return m_geometry ? m_geometry->get_aabb( ) : m_body->get_aabb();
 }
 
+// STATE[DONE]
 float3 animated_object::get_random_surface_point( u32 const current_time ) const
 {
+	if (!m_geometry) {
+		return float3( 0.f, 0.f, 0.f );
+	}
+
  	typedef buffer_vector< float >		bones_type;
 	u32 const bones_count				= get_bones_count();
  	bones_type bones					( ALLOCA( sizeof( float ) * bones_count ), bones_count );
@@ -128,25 +155,23 @@ float3 animated_object::get_random_surface_point( u32 const current_time ) const
 	return									collision_coords * m_geometries_data[bone_index].bone_geometry_instance->get_matrix();
 }
 
+// STATE[DONE]
 float3 animated_object::get_head_bone_center	( ) const
 {
 	R_ASSERT									( m_head_bone_index != u32(-1) );
-	float4x4 const& head_bone_matrix			= m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
-//	geometry_instance* const* bone_instance		= 
-	return head_bone_matrix.c.xyz();// bone_instance->get_aabb( ).center( );
-//	R_ASSERT									( m_head_bone_index != u32(-1) );
-//	composite_geometry_instance const* const composite_instance	= static_cast_checked<composite_geometry_instance const*>( &*m_geometries_data[m_head_bone_index].bone_geometry_instance );
-//	non_null<composite_geometry const>::ptr collision_element	= composite_instance->get_geometry();
-// 	geometry_instance* const* bone_instance		= collision_element->begin();
-//
-//	R_ASSERT									( *bone_instance );
-//	math::aabb const& head_aabb					= (*bone_instance)->get_aabb( );
-//
-////	float4x4 const&	head_bone_transform			= (*bone_instance)->get_matrix();
-//	float4x4 const& head_collision_transform	= m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
-//	return										head_aabb.center() /** head_bone_transform*//* * head_collision_transform*/;
+	if ( m_geometry )
+	{
+		const float4x4& matrix = m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
+		return matrix.c.xyz();
+	}
+	else 
+	{
+		const float4x4& matrix = m_body->get_bone_transform(m_head_bone_index);
+		return matrix.c.xyz();
+	}
 }
 
+// STATE[DONE]
 float3 animated_object::get_eyes_direction( ) const
 {
 	R_ASSERT								( m_head_bone_index != u32(-1) );
@@ -157,20 +182,20 @@ float3 animated_object::get_eyes_direction( ) const
 		non_null< composite_geometry const >::ptr collision_element	= cgi->get_geometry();
  		geometry_instance* const* bone_instance	= collision_element->begin();
 		R_ASSERT								( *bone_instance );
-		float4x4 const&	head_bone_transform		= (*bone_instance)->get_matrix();
-		float4x4 const& head_collision_transform = m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
+		float4x4 const&	head_bone_transform			= (*bone_instance)->get_matrix();
+		float4x4 const& head_collision_transform	= m_geometries_data[m_head_bone_index].bone_geometry_instance->get_matrix();
 
 		float3 direction						= head_collision_transform.transform_direction( head_bone_transform.k.xyz() );
 		return									direction.normalize();
 	}
 	else
 	{
-		float3 direction = *m_geometries_data[m_head_bone_index].bone_geometry_instance->vertices();	// physics::from_bullet( m_body --> m_transform ), // Also seems like the function has changed
-		//
-		return									direction.normalize();
+		float3 direction = m_body->get_bone_transform(m_head_bone_index).k.xyz();
+		return direction.normalize();
 	}
 }
 
+// STATE[UNUSED]
 void animated_object::draw_collision		(
 		render::scene_ptr const& scene,
 		render::debug::renderer& renderer,
@@ -183,13 +208,13 @@ void animated_object::draw_collision		(
 //	cg->get_geometry()->render				( scene, renderer, cg->get_matrix( ) * transform );
 }
 
+// STATE[DONE]
 pcstr animated_object::body_part_name(
 	u32                                bone_index) const
 {
 	R_ASSERT ( bone_index < m_geometries_data.size() ); // sushi@NOTE: It was compiled out, not sure this one is correct
 	return m_geometries_data[bone_index].body_part_name.c_str();
 }
-
 
 
 } // namespace collision

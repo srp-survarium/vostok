@@ -16,6 +16,17 @@ stack_allocator::stack_allocator	( ) :
 {
 }
 
+void stack_allocator::swap( stack_allocator& other )
+{
+    std::swap(m_arena_start, other.m_arena_start);
+    std::swap(m_arena_end, other.m_arena_end);
+    std::swap(m_arena_current_position, other.m_arena_current_position);
+    std::swap(m_arena_id, other.m_arena_id);
+	// <>
+	// <>
+	// <>
+}
+
 size_t stack_allocator::total_size	( ) const
 {
 	pbyte const arena_end			= static_cast< pbyte >( m_arena_end );
