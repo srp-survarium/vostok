@@ -214,10 +214,12 @@ bt_animated_rigid_body* new_animated_rigid_body(
 	return rigid_body;
 }
 
-// STATE[UNVERIFIED]: sushi@NOTE: Where is this function used? There are no xrefs to this code! Incorrect.
+// STATE[UNVERIFIED]: sushi@NOTE: It is used, but is being inlined in `animated_object` destructor.
+// sushi@TODO: What is concerning, however, is that there are two NEW calls in `new`, but only one DELETE here.
+// The target structure shows that there is only a single statement, however.
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
-	VOSTOK_FREE_IMPL( allocator, body ); // <0x6bf475>|0x000|0x000:'227'
+	VOSTOK_DELETE_IMPL( allocator, body ); // <0x6bf475>|0x000|0x000:'227'
 }
 
 // STATE[UNVERIFIED]

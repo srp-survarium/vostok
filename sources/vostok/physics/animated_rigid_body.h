@@ -37,7 +37,8 @@ namespace physics {
 
 class bt_animated_rigid_body : public bt_rigid_body_base {
 public:
-	bt_animated_rigid_body( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
+	bt_animated_rigid_body							( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
+	virtual ~bt_animated_rigid_body					( ) {};
 
 	/* bt_rigid_body_base overrides */
 	virtual btRigidBody*	get_rigid_body			( )														override;

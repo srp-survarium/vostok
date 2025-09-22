@@ -16,6 +16,7 @@ namespace physics {
 class  bt_rigid_body_base : public base_physics_object
 {
 public:
+	virtual					~bt_rigid_body_base		( )														{} ;
 	virtual btRigidBody*	get_rigid_body			( )														= 0;
 
 	virtual u16				get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			= 0;

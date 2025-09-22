@@ -52,13 +52,13 @@ animated_object::animated_object(
 	m_allocator.swap( allocator );
 }
 
-// STATE[STUB]
+// STATE[DONE]
 animated_object::~animated_object	( )
 {
-	VOSTOK_DELETE_IMPL( m_allocator, m_body );
+	physics::destroy_animated_rigid_body( m_body, &m_allocator );
 }
 
-// STATE[DONE]
+// STATE[DONE]: sushi@NOTE: As I understand, destructors are not used to not store allocators inside objects
 void animated_object::destroy		( memory::base_allocator* allocator )
 {
 	if ( !m_geometry )
