@@ -18,6 +18,7 @@ public:
 					stack_allocator		( );
 
 	inline	void	reset				( ) { m_arena_current_position	= m_arena_start;}
+			void	swap				( stack_allocator& other );
 
 	virtual	size_t	total_size			( ) const;
 	virtual	size_t	allocated_size		( ) const;
