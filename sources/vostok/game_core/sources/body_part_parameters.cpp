@@ -323,7 +323,7 @@ void body_part_parameters::apply_affects(
 	hit_affects_type_enum const*    it_begin = threshold_reached->get_affects();							// <0x597599>
 	hit_affects_type_enum const*    it_end = it_begin + threshold_reached->get_affects_count();				// <0x5975ae>
 
-	for ( hit_affects_type_enum const* it ; it != it_end ; ++it )											// <0x5975c3> <block><1>
+	for ( hit_affects_type_enum const* it = it_begin ; it != it_end ; ++it )								// <0x5975c3> <block><1>
 		if ( !is_affect_applied(*it) && !has_affect_protector(*it) )										// <0x5975e0>
 		{
 			m_damage_model.notify_on_affect_event(m_name.c_str(), *it, affect_applying);					// <0x59760a>
