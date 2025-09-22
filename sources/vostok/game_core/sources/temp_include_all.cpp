@@ -45,16 +45,50 @@ namespace vostok
 
 	void use_animated_rigid_body()
 	{
-		physics::bt_animated_rigid_body arb = physics::bt_animated_rigid_body( NULL, NULL, 10 );
-		arb.center_of_mass_offset();
-
+		{
+			physics::bt_animated_rigid_body arb = physics::bt_animated_rigid_body( NULL, NULL, 10 );
 			float4x4 matrix;
-		arb.update_bone_matrix(10, matrix, true);
-		arb.get_aabb();
-		arb.get_bone_transform(10);
-		
+
+			arb.center_of_mass_offset();
+			arb.update_bone_matrix(10, matrix, true);
+			arb.get_aabb();
+			arb.get_bone_transform(10);
+		}
+
+		{
 			float3 dimension;
-		physics::new_bt_primitive( collision::primitive_box, dimension, NULL ); 
+			physics::new_bt_primitive( collision::primitive_box, dimension, NULL ); 
+		}
+
+		{
+			configs::binary_config_value value = configs::binary_config_value();
+			physics::new_bt_element_joint ( value , NULL, NULL );
+		}
+
+		{
+			// btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
+			configs::binary_config_value config = configs::binary_config_value();
+			physics::geometries_type geometries( NULL, 10 );
+			physics::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
+		}
+
+		{
+			configs::binary_config_value config = configs::binary_config_value();
+			physics::calculate_bt_hit_target_size( config );
+
+			// calculate_bt_animated_body_size_from_hit_targets_config
+			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
+		}
+		
+		{
+			// sushi@NOTE: Called from animated_object::animated_object there game_material_id is set to 10 and linker hardcoded it here
+			// bt_animated_rigid_body*	new_animated_rigid_body		( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator );
+			physics::new_animated_rigid_body ( NULL, 10, NULL );
+		}
+		{
+			// void						destroy_animated_rigid_body	( bt_animated_rigid_body* body, memory::base_allocator* allocator );
+			physics::destroy_animated_rigid_body( NULL, NULL );
+		}
 	}
 
 }
@@ -72,6 +106,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	vostok::use_animated_object();
+	vostok::use_animated_rigid_body();
 
 	//
 	// YEEET
