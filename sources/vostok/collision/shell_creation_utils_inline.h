@@ -208,7 +208,7 @@ non_null< geometry >::ptr	new_composite_geometry_from_physics_shell_config	(
 	{
 		geometry_instance& instance		= *new_element_collision( bodies_table[bi], allocator );
 		
-		bone_collision_data				data( bodies_table[bi]["anim_joint"], &instance );
+		bone_collision_data				data( bodies_table[bi]["anim_joint"], &instance, NULL ); // sushi@TODO: NULL
 		geometries_data.push_back		( data );
 		instances.push_back				( &instance );
 	}

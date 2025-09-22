@@ -12,15 +12,17 @@
 namespace vostok {
 namespace collision {
 
+class geometry_instance;
 class composite_geometry_instance;
 
 class bone_collision_data
 {
 public:
-	inline	bone_collision_data	( pcstr name, geometry_instance* instance ) :
+	inline	bone_collision_data	( pcstr name, geometry_instance* instance, pcstr part_name ) :
 		bone_name				( name ),
+		body_part_name			( part_name ),
 		bone_geometry_instance	( instance ),
-		skeleton_bone_index		( u32( -1 ) ) 
+		skeleton_bone_index		( u32( -1 ) )
 	{
 	}
 
@@ -34,9 +36,16 @@ private:
 
 public:
 	fixed_string<64>				bone_name;
+	fixed_string<16>				body_part_name;
 	animation::bone_index_type		skeleton_bone_index;
 	geometry_instance*				bone_geometry_instance;
 };
+
+namespace {
+	typedef char size_assert[
+		sizeof(bone_collision_data) == 0x70 ? 1 : -1
+	];
+}
 
 } // namespace collision
 } // namespace vostok

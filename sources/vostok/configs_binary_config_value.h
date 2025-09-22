@@ -16,8 +16,8 @@ private:
 	typedef platform_pointer<void const, platform_pointer_default>::type	pcvoid_type;
 
 public:
-	pcstr_type				id;
 	pcvoid_type				data;				// value if type<t_embedded_types, pointer to value, or pointer to first child if table
+	pcstr_type				id;
 	u32						id_crc;				// crc of the name
 	u16						type;
 	u16						count;				// children count if table, value mem_usage otherwise
