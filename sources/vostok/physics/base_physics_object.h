@@ -20,9 +20,11 @@ namespace physics {
 
 class base_physics_object : loose_ptr_base {
 public:
+	inline base_physics_object() : user_data(NULL) { }
+
 	virtual u16					get_collision_group() const = 0;
 	virtual btCollisionObject*	get_bt_collision_obect()	= 0;
-private:
+protected:
 	/* offset 0x0004 */ /* fields for loose_ptr_base */
 	/* offset 0x0008 */ collision::game_object*             user_data;
 }; // class base_physics_object
