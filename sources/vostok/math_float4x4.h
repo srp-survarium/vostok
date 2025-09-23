@@ -44,7 +44,7 @@ public:
 public:
 	inline				float4x4						( );
 	inline				float4x4						( float4 const& other_i, float4 const& other_j, float4 const& other_k, float4 const& other_c );
-	inline	float4x4&	identity						( );
+	inline	DISABLE_LINKER_GL float4x4&	identity						( );
 
 	inline	float4x4&	operator *=						( float4x4::type value );
 	inline	float4x4&	operator /=						( float4x4::type value );

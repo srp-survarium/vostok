@@ -57,7 +57,7 @@ public:
 	inline	type		dot_product		( float3_pod const& other ) const;
 	inline	float3&		cross_product	( float3_pod const& other );
 
-	inline	float3&		normalize		( );
+	inline	DISABLE_LINKER_GL float3&		normalize		( );
 	inline	type		normalize_r		( ); // returns old length
 
 	inline	float3&		normalize_safe	( float3_pod const& result_in_case_of_zero );

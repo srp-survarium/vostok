@@ -131,7 +131,7 @@ inline float3& float3_pod::cross_product		( float3_pod const& other )
 	return		( static_cast<float3&>(*this) );
 }
 
-inline float3& float3_pod::normalize			( )
+inline DISABLE_LINKER_GL float3& float3_pod::normalize			( )
 {
 	return		( *this /= length( ) );
 }
