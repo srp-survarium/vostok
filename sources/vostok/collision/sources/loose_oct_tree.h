@@ -62,10 +62,17 @@ public:
 						objects_predicate_type const& predicate
 					);
 
-	inline non_null<oct_node const>::ptr root ( ) const;
-	inline float3 const& aabb_center		( ) const;
-	inline float	aabb_extents				( ) const;
-	memory::base_allocator& get_allocator	( ) const;
+public:
+	virtual math::aabb get_aabb					( ) const override;
+
+	inline non_null<oct_node const>::ptr root	( ) const;
+	inline float3 const&	aabb_center			( ) const;
+	inline float			aabb_extents		( ) const;
+
+	memory::base_allocator& get_allocator		( ) const;
+
+public:
+	virtual void	unmove_all				( ) override;
 
 public:
 			u32		object_count			( ) const;

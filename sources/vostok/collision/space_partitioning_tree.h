@@ -55,8 +55,12 @@ struct VOSTOK_NOVTABLE space_partitioning_tree
 	virtual	bool	cuboid_test		( math::cuboid const& cuboid, triangles_predicate_type const& predicate ) = 0;
 	virtual	bool	ray_test		( math::float3 const& origin, math::float3 const& direction, float max_distance, triangles_predicate_type const& predicate ) = 0;
 
+	virtual void	unmove_all		( ) = 0;
+	
 	typedef fastdelegate::FastDelegate< void ( object const* )>	predicate_type;
 	virtual	void	for_each		( predicate_type const& predicate ) const = 0;
+
+	virtual math::aabb get_aabb		( ) const = 0;
 
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( space_partitioning_tree )
