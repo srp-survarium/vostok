@@ -136,7 +136,7 @@ void loose_oct_tree::remove_nodes	( non_null<oct_node>::ptr node )
 
 	m_allocator->deallocate	( &*node );
 }
-
+// STATE[DONE]
 void loose_oct_tree::initialize		( non_null<object>::ptr object, float3 const& aabb_center, float3 const& aabb_extents )
 {
 	ASSERT					( !m_initialized );
@@ -147,6 +147,8 @@ void loose_oct_tree::initialize		( non_null<object>::ptr object, float3 const& a
 
 	m_root					= m_allocator->allocate();
 	m_root->objects			= &*object;
+
+	object->set_moved(true);
 
 	object->m_node			= m_root;
 	object->m_next			= 0;
@@ -179,7 +181,7 @@ void loose_oct_tree::initialize		( non_null<object>::ptr object, float3 const& a
 // STATE[DONE]
 static void unmove_object			( object const* in_this )
 {
-	const_cast<object *>(in_this)->set_moved(false);
+	const_cast<object *>(in_this)->set_moved(false); // sushi@NOTE: While not UB right now, it can become UB at any point
 }
 
 // STATE[DONE]
@@ -567,6 +569,7 @@ struct move_helper : private boost::noncopyable {
 	inline void operator ()	( ) const
 	{
 		m_tree.insert		( &m_object, m_local_to_world );
+		m_object.set_moved(true);
 		ASSERT				( m_object.get_node( ) );
 	}
 }; // struct helper
@@ -619,6 +622,7 @@ inline void loose_oct_tree::validate		( oct_node* node, u32* object_count ) cons
 #endif // #ifdef DEBUG
 }
 
+// STATE[DONE]
 void loose_oct_tree::move	( non_null<collision::object>::ptr object, float4x4 const& new_local_to_world )
 {
 	R_ASSERT				( object->get_node(), "cannot move object which is not in the tree");
@@ -648,6 +652,7 @@ u32 loose_oct_tree::node_count		( ) const
 	return					m_allocator->node_count( );
 }
 
+// STATE[PARTIAL: 92%]: math::create_translation didn't get \GL'd in target
 void loose_oct_tree::render_iterate	( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer, non_null< oct_node const>::ptr const node, float3 const& aabb_center, float const aabb_extents )
 {
 	ASSERT					( m_initialized );

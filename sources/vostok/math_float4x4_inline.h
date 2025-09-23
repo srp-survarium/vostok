@@ -219,7 +219,7 @@ inline float4x4 transpose					( float4x4 const& other )
 	return		( result );
 }
 
-inline float4x4 create_translation			( float3 const& position )
+inline DISABLE_LINKER_GL float4x4 create_translation			( float3 const& position )
 {
 	float4x4	result;
 
@@ -250,7 +250,7 @@ inline float4x4 create_rotation ( float3 const& angles, vostok::math::axis_rotat
 	return		( result );
 }
 
-inline float4x4 create_rotation				( float3 const& angles )
+inline DISABLE_LINKER_GL float4x4 create_rotation				( float3 const& angles )
 {
 	float4x4	result;
 
