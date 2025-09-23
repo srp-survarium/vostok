@@ -87,7 +87,7 @@ btCompoundShape*	new_compound_shape_from_hit_targets_config	( configs::binary_co
 u32					calculate_bt_hit_target_size							( configs::binary_config_value const& config );
 */
 // sushi@NOTE: This should be also hidden, but it doesn't have XREFs..
-u32					calculate_bt_joint_size									( configs::binary_config_value const& config );
+static u32					calculate_bt_joint_size									( configs::binary_config_value const& config );
 u32					calculate_bt_animated_body_size_from_hit_targets_config	( configs::binary_config_value const& config );
 
 bt_animated_rigid_body* new_animated_rigid_body		( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator );
