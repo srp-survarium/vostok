@@ -68,6 +68,9 @@ inline void loose_oct_tree::for_each_iterate				(
 template < typename P >
 inline void loose_oct_tree::for_each						( P const& predicate ) const
 {
+	if ( !m_root )
+		return;
+
 	for_each_iterate		( predicate, m_root, m_aabb_center, m_aabb_extents );
 }
 
