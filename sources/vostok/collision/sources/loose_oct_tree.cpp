@@ -652,7 +652,7 @@ u32 loose_oct_tree::node_count		( ) const
 	return					m_allocator->node_count( );
 }
 
-// STATE[PARTIAL: 92%]: math::create_translation didn't get \GL'd in target
+// STATE[DONE]
 void loose_oct_tree::render_iterate	( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer, non_null< oct_node const>::ptr const node, float3 const& aabb_center, float const aabb_extents )
 {
 	ASSERT					( m_initialized );
