@@ -54,6 +54,8 @@ public:
 	inline	u32					get_type			( ) const { ASSERT( m_type != memory::uninitialized_value<u32>() ); return m_type; }
 	inline	bool				is_type_suitable	( u32 const mask ) const { ASSERT( m_type != memory::uninitialized_value<u32>() ); return ((m_type & mask) != 0); }
 	inline	pvoid				user_data			( ) const { return m_user_data; }
+	inline  void				set_moved			( bool moved ) { m_moved = moved; }
+	inline	bool				is_moved			( ) const { return m_moved; }
 
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR			( object )
 protected:
@@ -81,6 +83,7 @@ protected:
 
 private:
 	u32				m_type;
+	bool			m_moved; // sushi@TODO: Related logic is still not implemented
 
 	friend class loose_oct_tree;
 }; // class object

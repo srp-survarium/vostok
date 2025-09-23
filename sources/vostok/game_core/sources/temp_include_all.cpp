@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "temp_include_all.h"
 
+#include "../../collision/sources/loose_oct_tree.h"
+
 #include <vostok/ai/npc_statistics.h>
 #include <vostok/collision/animated_object.h>
 #include <vostok/collision/bone_collision_data.h>
@@ -14,6 +16,13 @@
 
 namespace vostok
 {
+	void use_loose_oct_tree()
+	{
+		collision::loose_oct_tree tree(NULL, 100., 10);
+		tree.unmove_all();
+		tree.get_aabb();
+	}
+	
 	void use_animated_object()
 	{
 

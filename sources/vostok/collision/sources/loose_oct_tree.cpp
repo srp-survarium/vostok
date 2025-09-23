@@ -176,6 +176,18 @@ void loose_oct_tree::initialize		( non_null<object>::ptr object, float3 const& a
 	ASSERT					( float3( m_aabb_extents, m_aabb_extents, m_aabb_extents ) >= aabb_extents );
 }
 
+// STATE[DONE]
+static void unmove_object			( object const* in_this )
+{
+	const_cast<object *>(in_this)->set_moved(false);
+}
+
+// STATE[DONE]
+void loose_oct_tree::unmove_all		( )
+{
+	for_each(&unmove_object);
+}
+
 static float make_non_zero			( float const value )
 {
 	if ( !math::is_zero( value ) )
@@ -770,4 +782,10 @@ void loose_oct_tree::for_each		( predicate_type const& predicate ) const
 		return;
 
 	for_each_iterate				( predicate, root(), m_aabb_center, m_aabb_extents );
+}
+
+// STATE[DONE]
+math::aabb loose_oct_tree::get_aabb	( ) const
+{
+	return math::create_aabb_center_radius( m_aabb_center, float3 ( m_aabb_extents, m_aabb_extents, m_aabb_extents ) );
 }
