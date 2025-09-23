@@ -22,7 +22,7 @@ namespace vostok
 		tree.unmove_all();
 		tree.get_aabb();
 	}
-	
+
 	void use_animated_object()
 	{
 
