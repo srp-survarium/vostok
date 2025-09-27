@@ -128,8 +128,17 @@ bool composite_geometry::ray_query(
 { 
 	bool res = false;
 	vectora< geometry_instance* >::const_iterator i = m_geometry_instances.begin(), e = m_geometry_instances.end();
-	for ( ; i != e; ++i )
-		res = (*i)->ray_query( object, origin, direction, max_distance, distance, triangles, predicate ) || res;
+	for ( s32 id = 0 ; i != e; ++i, id += 4 )
+	{
+		u32 j = triangles.size();
+		if ( (*i)->ray_query( object, origin, direction, max_distance, distance, triangles, predicate ) )
+		{
+			res = true;
+			u32 new_triangles_size = triangles.size();
+			for ( ; j < new_triangles_size ; ++j )
+				triangles[j].triangle_id = id >> 2;
+		}		
+	}
 	return res; 
 }
 
