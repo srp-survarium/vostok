@@ -55,7 +55,7 @@ bool aabb_object::aabb_query		( math::aabb const& aabb, triangles_type& triangle
 
 bool aabb_object::cuboid_query		( math::cuboid const& cuboid, triangles_type& triangles ) const
 {
-	if ( cuboid.test_inexact( m_aabb ) == intersection_outside )	// if ( cuboid_test( cuboid ) ) // though no?
+	if ( cuboid.test_inexact( m_aabb ) != intersection_outside )	// if ( cuboid_test( cuboid ) ) // though no?
 	{
 		triangles.push_back( triangle_result( this, u32(-1) ) );	// add_triangles( triangles );
 		return true;
