@@ -4,14 +4,19 @@
 #include "../../collision/sources/loose_oct_tree.h"
 
 #include <vostok/ai/npc_statistics.h>
+
 #include <vostok/collision/animated_object.h>
 #include <vostok/collision/bone_collision_data.h>
+#include <vostok/collision/api.h>
+
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/managed_allocator.h>
+
 #include <vostok/render/facade/one_way_render_channel.h>
 #include <vostok/render/world.h>
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/debug_renderer.h>
+
 #include <vostok/physics/animated_rigid_body.h>
 
 namespace vostok
@@ -44,7 +49,6 @@ namespace vostok
 		render::debug::renderer renderer = render::debug::renderer(channel, alloc, world);
 
 
-
 		float4x4 transform;
 		ao.draw_collision(scene, renderer, transform); 
 
@@ -52,6 +56,11 @@ namespace vostok
 		ao.get_head_bone_center();
 		ao.get_eyes_direction();
 		ao.body_part_name(10);
+	}
+
+	void use_aabb_object()
+	{
+		collision::new_aabb_object( NULL, 20, float3( 1.f, 1.f, 1.f ) );
 	}
 
 	void use_animated_rigid_body()
@@ -108,6 +117,7 @@ IncludeAll::IncludeAll()
 	//
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
+	vostok::use_aabb_object();
 
 	//
 	// YEEET

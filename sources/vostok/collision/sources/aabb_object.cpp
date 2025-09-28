@@ -44,14 +44,24 @@ void aabb_object::render	( render::scene_ptr const& scene, render::debug::render
 
 bool aabb_object::aabb_query		( math::aabb const& aabb, triangles_type& triangles ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &aabb, &triangles );
-	NOT_IMPLEMENTED					( return false );
+	if ( m_aabb.intersect( aabb ) )									// if ( aabb_test( aabb ) )
+	{
+		triangles.push_back( triangle_result( this, u32(-1) ) );	// add_triangles( triangles );
+		return true;
+	}
+
+	return false;
 }
 
 bool aabb_object::cuboid_query		( math::cuboid const& cuboid, triangles_type& triangles ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &cuboid, &triangles );
-	NOT_IMPLEMENTED					( return false );
+	if ( cuboid.test_inexact( m_aabb ) == intersection_outside )	// if ( cuboid_test( cuboid ) ) // though no?
+	{
+		triangles.push_back( triangle_result( this, u32(-1) ) );	// add_triangles( triangles );
+		return true;
+	}
+
+	return false;
 }
 
 bool aabb_object::ray_query			(
@@ -94,8 +104,7 @@ bool aabb_object::ray_test				(
 
 void aabb_object::add_triangles		( triangles_type& triangles ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETER		( triangles );
-	NOT_IMPLEMENTED					( );
+	triangles.push_back( triangle_result( this, u32(-1) ) );
 }
 
 } // namespace collision
