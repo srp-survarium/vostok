@@ -63,8 +63,9 @@ protected:
 	inline						object				( ) :
 		m_next	( 0 ),
 		m_node	( 0 ),
-		m_type	( memory::uninitialized_value<u32>() ),
-		m_aabb	( math::create_zero_aabb() )
+		m_type	( memory::uninitialized_value<u32>() ), // 0xFDFDCDCD
+		m_aabb	( math::create_zero_aabb() ),
+		m_moved ( true )
 	{
 	}
 	//inline					~object					( ) { }
