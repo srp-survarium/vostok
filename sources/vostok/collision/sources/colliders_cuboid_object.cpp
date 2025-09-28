@@ -132,7 +132,8 @@ void cuboid_object::add_triangles			( non_null<oct_node const>::ptr const node )
 	}
 
 	for ( collision::object const* i = node->objects; i; i = i->get_next() )
-		(*i).add_triangles	( *m_triangles );
+		if ( i->is_type_suitable( m_query_type ) ) 
+			(*i).add_triangles	( *m_triangles );
 }
 
 void cuboid_object::query					( non_null<oct_node const>::ptr const node, float3 const& aabb_center, float const aabb_extents ) const
