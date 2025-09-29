@@ -18,9 +18,18 @@
 #include <vostok/render/facade/debug_renderer.h>
 
 #include <vostok/physics/animated_rigid_body.h>
+#include <vostok/physics/ghost_object.h>
 
 namespace vostok
 {
+	void use_ghost_object()
+	{
+		physics::bt_collision_shape_ptr shape(NULL);
+		physics::bt_ghost_object ghost = physics::bt_ghost_object( shape, NULL );
+
+		ghost.get_overlapping_objects_count();
+	}
+
 	void use_loose_oct_tree()
 	{
 		collision::loose_oct_tree tree(NULL, 100., 10);
@@ -118,6 +127,7 @@ IncludeAll::IncludeAll()
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
 	vostok::use_aabb_object();
+	vostok::use_ghost_object();
 
 	//
 	// YEEET

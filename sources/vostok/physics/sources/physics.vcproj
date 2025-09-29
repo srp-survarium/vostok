@@ -3064,6 +3064,10 @@
 				RelativePath=".\animated_rigid_body.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ghost_object.cpp"
+				>
+			</File>
 			<Filter
 				Name="include"
 				>
@@ -3073,6 +3077,10 @@
 				</File>
 				<File
 					RelativePath="..\base_physics_object.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ghost_object.h"
 					>
 				</File>
 				<File
