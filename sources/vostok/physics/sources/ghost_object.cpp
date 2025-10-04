@@ -46,14 +46,13 @@ void bt_ghost_object::get_overlapping_objects(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[UNVERIFIED]
 u32 bt_ghost_object::get_overlapping_objects_count( ) const
 {
 	return m_bt_object->getNumOverlappingObjects(); // <0x583860>|0x000|0x000:'44'
 }
 
-// STATE[STUB]
-// unsigned short vostok::physics::bt_ghost_object::get_collision_group() const
+// STATE[UNVERIFIED]
 u16 bt_ghost_object::get_collision_group( ) const
 {
 	// ASSERT?
@@ -84,9 +83,11 @@ bt_ghost_object* create_ghost_object(
 
 // STATE[STUB]
 // void vostok::physics::destroy_ghost_object(vostok::physics::bt_ghost_object*)
-void destroy_ghost_object(
-	bt_ghost_object*                   obj)
+void destroy_ghost_object( bt_ghost_object* obj )
 {
+	// VOSTOK_DELETE_IMPL( vostok::physics::g_ph_allocator, obj );
+	VOSTOK_DELETE_IMPL( vostok::physics::g_ph_allocator, obj );
+
 	// FUNCTION BODY
 
 	// <0x583ec1>|0x000|0x000:'66'
@@ -113,8 +114,7 @@ void bt_ghost_object::contact_test(
 
 // STATE[STUB]
 // bool vostok::physics::bt_ghost_object::contact_test(vostok::physics::world*)
-bool bt_ghost_object::contact_test(
-	world*                             world)
+bool bt_ghost_object::contact_test( world* world )
 {
 	return true;
 
@@ -202,11 +202,7 @@ void bt_ghost_object::non_compound_shapes_centers(
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_ghost_object::insert(vostok::physics::world*, unsigned short, unsigned short)
-void bt_ghost_object::insert(
-	world*                             w,
-	u16                                group,
-	u16                                mask)
+void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x572733 }, type_index: TypeIndex(0x15eda) })
@@ -231,24 +227,19 @@ void bt_ghost_object::remove( world* w )
 	// ******
 }
 
-// STATE[STUB]
-// btCollisionObject* vostok::physics::bt_ghost_object::get_bt_collision_obect()
+// STATE[UNVERIFIED]
 btCollisionObject* bt_ghost_object::get_bt_collision_obect( )
 {
-	return NULL;
-
-	// FUNCTION BODY
-	// <0x5836f0>|0x000|0x000:'174'
-	// ******
+	return m_bt_object; // <0x5836f0>|0x000|0x000:'174'
 }
 
-// STATE[STUB]
+// STATE[UNVERIFIED]
 void bt_ghost_object::set_transform( float4x4 const& transform )
 {
 	m_bt_object->setWorldTransform( from_vostok( transform ) ); // <0x583d6a>|0x000|0x000:'179'
 }
 
-// STATE[STUB]
+// STATE[UNVERIFIED]
 float4x4 bt_ghost_object::get_transform( ) const
 {
 	return from_bullet( m_bt_object->getWorldTransform() ); // <0x583d10>|0x000|0x000:'184'
