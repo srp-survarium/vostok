@@ -11,11 +11,11 @@ EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
 
-VOSTOK_DIR = ROOT_DIR / "vostok"
 LIBS_DIR   = ROOT_DIR / "vostok-libs"
+VOSTOK_DIR = ROOT_DIR / "vostok"
 
-SRC        = VOSTOK_DIR / "sources"
-DEST       = LIBS_DIR   / "sources"
+SRC         = LIBS_DIR   / "sources"
+DEST        = VOSTOK_DIR / "sources"
 
 def main():
     parser = argparse.ArgumentParser()

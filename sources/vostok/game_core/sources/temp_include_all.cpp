@@ -17,15 +17,31 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/debug_renderer.h>
 
-#include <vostok/physics/animated_rigid_body.h>
-#include <vostok/physics/ghost_object.h>
+#include <vostok/physics_2/animated_rigid_body.h>
+#include <vostok/physics_2/ghost_object.h>
+#include <vostok/physics_2/collision_shapes.h>
 
 namespace vostok
 {
+	void use_collision_shape()
+	{
+		physics_2::bt_collision_shape shape(NULL);
+		shape.get_triangle_material( 10, true );
+
+		configs::binary_config_value bcv = configs::binary_config_value();
+
+		physics_2::destroy_bt_shape			( NULL );
+		physics_2::destroy_shape			( NULL );
+		physics_2::create_bt_primitive		( collision::primitive_box, float3(), float3() );
+		physics_2::create_primitive_shape	( collision::primitive_box, float3(), float3() );
+		physics_2::create_compound_shape	( bcv, float3(), "model_path" );
+	}
+
+
 	void use_ghost_object()
 	{
-		physics::bt_collision_shape_ptr shape(NULL);
-		physics::bt_ghost_object ghost = physics::bt_ghost_object( shape, NULL );
+		physics_2::bt_collision_shape_ptr shape(NULL);
+		physics_2::bt_ghost_object ghost = physics_2::bt_ghost_object( shape, NULL );
 
 		ghost.get_overlapping_objects_count( );
 		ghost.set_transform( math::float4x4() );
@@ -80,7 +96,7 @@ namespace vostok
 	void use_animated_rigid_body()
 	{
 		{
-			physics::bt_animated_rigid_body arb = physics::bt_animated_rigid_body( NULL, NULL, 10 );
+			physics_2::bt_animated_rigid_body arb = physics_2::bt_animated_rigid_body( NULL, NULL, 10 );
 			float4x4 matrix;
 
 			arb.center_of_mass_offset();
@@ -92,26 +108,26 @@ namespace vostok
 		{
 			// btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 			configs::binary_config_value config = configs::binary_config_value();
-			physics::geometries_type geometries( NULL, 10 );
-			physics::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
+			physics_2::geometries_type geometries( NULL, 10 );
+			physics_2::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
 		}
 
 		{
 			configs::binary_config_value config = configs::binary_config_value();
-			// physics::calculate_bt_hit_target_size( config );
+			// physics_2::calculate_bt_hit_target_size( config );
 
 			// calculate_bt_animated_body_size_from_hit_targets_config
-			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
+			physics_2::calculate_bt_animated_body_size_from_hit_targets_config( config );
 		}
 		
 		{
 			// sushi@NOTE: Called from animated_object::animated_object there game_material_id is set to 10 and linker hardcoded it here
 			// bt_animated_rigid_body*	new_animated_rigid_body		( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator );
-			physics::new_animated_rigid_body ( NULL, 10, NULL );
+			physics_2::new_animated_rigid_body ( NULL, 10, NULL );
 		}
 		{
 			// void						destroy_animated_rigid_body	( bt_animated_rigid_body* body, memory::base_allocator* allocator );
-			physics::destroy_animated_rigid_body( NULL, NULL );
+			physics_2::destroy_animated_rigid_body( NULL, NULL );
 		}
 	}
 
@@ -133,6 +149,7 @@ IncludeAll::IncludeAll()
 	vostok::use_animated_rigid_body();
 	vostok::use_aabb_object();
 	vostok::use_ghost_object();
+	vostok::use_collision_shape();
 
 	//
 	// YEEET

@@ -57,11 +57,11 @@ def gather_units(skip_missing: bool, filter_prefix: Optional[str] = None):
         if should_exclude(unit):
             continue
 
-        if filter_prefix and not unit.startswith(filter_prefix):
+        if filter_prefix and filter_prefix not in unit:
             continue
 
         target_path = f"./target/{unit}.obj"
-        base_path   = f"./base/{unit}.obj"
+        base_path   = f"./base/{unit}.obj".replace("physics", "physics_2")
 
         if skip_missing and not (COFF_DIR / base_path).exists():
             base_path = f"./base/dummy.obj"
