@@ -151,13 +151,14 @@ bt_collision_shape* create_primitive_shape( collision::primitive_type type, floa
 {
 	btCollisionShape* bt_shape = create_bt_primitive( type, dim, local_scale );							// <0x72ca3e>|0x000|0x000:'167'
 
-	bt_shape->setLocalScaling( btVector3( local_scale.x, local_scale.y, local_scale.z ) );				// <0x72ca43>|0x005|0x005:'169' // from_vostok, but without `local_scale.z` reversed
+	bt_shape->setLocalScaling( btVector3( local_scale.x, local_scale.y, local_scale.z ) );				// <0x72ca43>|0x005|0x005:'169' // sushi@NOTE: from_vostok, but without `local_scale.z` reversed, maybe from_vostok was changed?
 	
 	bt_collision_shape* result = VOSTOK_NEW_IMPL( g_ph_allocator, bt_collision_shape )( bt_shape );		// <0x72ca7c>|0x03e|0x039:'171'
 
 	// ASSERT? How exactly `m_shapes_face_data` is set?
 	result->m_shapes_face_data = VOSTOK_NEW_IMPL( g_ph_allocator, u16 );								// <0x72cac4>|0x086|0x048:'174'
-	return result;																						// <0x72cad9>|0x09b|0x015:'175'
+	*result->m_shapes_face_data = 0;																	// <0x72cad9>|0x09b|0x015:'175'
+	return result;																						
 }
 
 // STATE[STUB]

@@ -16,7 +16,7 @@ inline float sqrt_safe( float val )
 	return val<=0.f ? 0 : sqrt( val );	
 }
 
-quaternion::quaternion	( float4x4 matrix )
+quaternion::quaternion	( float4x4 const& matrix )
 {
 	matrix.set_scale( float3(1.f, 1.f, 1.f) );
 	float const	trace = matrix.e00 + matrix.e11 + matrix.e22;
