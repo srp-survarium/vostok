@@ -20,9 +20,25 @@
 #include <vostok/physics_2/animated_rigid_body.h>
 #include <vostok/physics_2/ghost_object.h>
 #include <vostok/physics_2/collision_shapes.h>
+#include <vostok/physics_2/static_rigid_body.h>
 
 namespace vostok
 {
+	void use_static_rigid_body()
+	{
+		physics_2::bt_collision_shape_ptr shape(NULL);
+		
+		physics_2::bt_static_rigid_body body( shape, NULL );
+		body.get_rigid_body( );
+		body.get_triangle_material( 10, true );
+		body.apply_impulse( float3(), float3() );
+		body.set_transform( float4x4() );
+		body.get_transform( );
+		body.get_collision_group( );
+		body.get_bt_collision_obect( );
+
+	}
+
 	void use_collision_shape()
 	{
 		physics_2::bt_collision_shape shape(NULL);
@@ -35,6 +51,10 @@ namespace vostok
 		physics_2::create_bt_primitive		( collision::primitive_box, float3(), float3() );
 		physics_2::create_primitive_shape	( collision::primitive_box, float3(), float3() );
 		physics_2::create_compound_shape	( bcv, float3(), "model_path" );
+
+		physics_2::geometry_resource_ptr resource_ptr	( NULL );
+		physics_2::create_btBvhTriangleMeshShape		( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
+		physics_2::create_static_triangle_mesh_shape	( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
 	}
 
 
@@ -145,6 +165,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
 	vostok::use_aabb_object();

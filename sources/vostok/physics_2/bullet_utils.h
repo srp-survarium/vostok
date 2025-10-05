@@ -15,6 +15,9 @@ namespace physics_2 {
 inline btVector3	from_vostok(float3 const& v){ return btVector3(v.x, v.y, -v.z); }
 inline float3		from_bullet(btVector3 const& v){ return float3(v.x(), v.y(), -v.z()); }
 
+inline btVector3	from_vostok_pos(float3 const& v){ return btVector3(v.x, v.y, v.z); }
+inline float3		from_bullet_pos(btVector3 const& v){ return float3(v.x(), v.y(), v.z()); }
+
 btTransform			from_vostok(float4x4 const& m);
 float4x4			from_bullet(btTransform const& m);
 

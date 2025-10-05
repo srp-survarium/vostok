@@ -16,8 +16,10 @@ inline float sqrt_safe( float val )
 	return val<=0.f ? 0 : sqrt( val );	
 }
 
-quaternion::quaternion	( float4x4 const& matrix )
+// sushi@NOTE: The target implementation has 80 empty lines here for whatever reason
+quaternion::quaternion	( float4x4 const& matrix_raw )
 {
+	float4x4 matrix = matrix_raw;
 	matrix.set_scale( float3(1.f, 1.f, 1.f) );
 	float const	trace = matrix.e00 + matrix.e11 + matrix.e22;
 	float		s;

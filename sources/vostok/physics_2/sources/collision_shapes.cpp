@@ -10,17 +10,20 @@
 
 namespace vostok {
 namespace physics_2 {
-/*
+
 // STATE[STUB]
-// vostok::physics::btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(btStridingMeshInterface*, unsigned short*, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const&, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const&)
 btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 	btStridingMeshInterface*           meshInterface,
 	u16*                               face_data,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& vertices_resource,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& indices_resource)
+	geometry_resource_ptr const&       vertices_resource,
+	geometry_resource_ptr const&       indices_resource):
+	btBvhTriangleMeshShape	( meshInterface, true ),
+	m_face_data				( face_data ),
+	m_raw_vertices			( vertices_resource ),
+	m_raw_indices			( indices_resource )
 {
 }
-*/
+
 // STATE[STUB]
 bt_collision_shape::bt_collision_shape( btCollisionShape* sh ):
 	m_tri_face_data		( NULL ),
@@ -146,12 +149,12 @@ btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 co
 	return result;
 }
 
-// STATE[STUB]
+// STATE[PARTIAL: 96%]: `unamanged_resource` constructor got LTCG'd differently 
 bt_collision_shape* create_primitive_shape( collision::primitive_type type, float3 const& dim, float3 const& local_scale )
 {
 	btCollisionShape* bt_shape = create_bt_primitive( type, dim, local_scale );							// <0x72ca3e>|0x000|0x000:'167'
 
-	bt_shape->setLocalScaling( btVector3( local_scale.x, local_scale.y, local_scale.z ) );				// <0x72ca43>|0x005|0x005:'169' // sushi@NOTE: from_vostok, but without `local_scale.z` reversed, maybe from_vostok was changed?
+	bt_shape->setLocalScaling( from_vostok_pos( local_scale ) );										// <0x72ca43>|0x005|0x005:'169'
 	
 	bt_collision_shape* result = VOSTOK_NEW_IMPL( g_ph_allocator, bt_collision_shape )( bt_shape );		// <0x72ca7c>|0x03e|0x039:'171'
 
@@ -181,7 +184,7 @@ bt_collision_shape* create_compound_shape( configs::binary_config_value const& s
 		float3 rotation						= (*it)["rotation"];
 		float3 dim							= (*it)["scale"];
 
-		*face_data_it = it->value_exists("mtl") ? (*it)["mtl"] : 0;				// <0x72c62f>|0x12e|0x0b5:'198'
+		*face_data_it = it->value_exists("mtl") ? (u16)(*it)["mtl"] : 0;		// <0x72c62f>|0x12e|0x0b5:'198'
 		btCollisionShape* child_shape = create_bt_primitive( type, dim, dim );	// <0x72c638>|0x137|0x009:'199': sushi@NOTE: Note sure the last argument is needed.
 	
 
@@ -228,33 +231,26 @@ btBvhTriangleMeshShape* create_btBvhTriangleMeshShape(
 	float3 const&                      local_scale,
 	geometry_resource_ptr const&       vertices_resource,
 	geometry_resource_ptr const&       indices_resource)
-{
-	return NULL;
+{	
+	btIndexedMesh mesh;
+	mesh.m_triangleIndexBase		= (u8*)indices;		// <0x72cb5d>|0x000|0x000:'243'
+	mesh.m_numTriangles				= num_indices/3;	// <0x72cb65>|0x008|0x008:'244'
+	mesh.m_numVertices				= num_vertices;		// <0x72cb6e>|0x011|0x009:'245'
+	mesh.m_triangleIndexStride		= sizeof(int)*3;
+	mesh.m_vertexStride				= sizeof(float3);	// <0x72cb77>|0x01a|0x009:'247'
+	mesh.m_vertexBase				= (u8*)vertices;
+	mesh.m_vertexType				= PHY_FLOAT;
+	mesh.m_indexType				= PHY_INTEGER;
 
-	// LOCALS
-	// btIndexedMesh                   mesh
-	// ******
+	btTriangleIndexVertexArray* mesh_interface	= VOSTOK_NEW_IMPL( g_ph_allocator, btTriangleIndexVertexArray );	// <0x72cb7e>|0x021|0x007:'251'
+	mesh_interface->setScaling					( from_vostok( local_scale ) );										// <0x72cbe7>|0x08a|0x069:'252'
+	mesh_interface->addIndexedMesh				( mesh );															// <0x72cc19>|0x0bc|0x032:'253'
+	btBvhTriangleMeshShape* result				= VOSTOK_NEW_IMPL( g_ph_allocator, btBvhTriangleMeshShapeResource )( mesh_interface, face_data, vertices_resource, indices_resource ); // <0x72cc36>|0x0d9|0x01d:'254'
+	
+	if ( !result->getOptimizedBvh( ) )			// <0x72cc62>|0x105|0x02c:'256'
+		result->buildOptimizedBvh( );			// <0x72cc67>|0x10a|0x005:'257'
 
-	// FUNCTION BODY
-
-	// <0x72cb5d>|0x000|0x000:'243'
-	// <0x72cb65>|0x008|0x008:'244'
-	// <0x72cb6e>|0x011|0x009:'245'
-
-	// <0x72cb77>|0x01a|0x009:'247'
-
-
-
-	// <0x72cb7e>|0x021|0x007:'251'
-	// <0x72cbe7>|0x08a|0x069:'252'
-	// <0x72cc19>|0x0bc|0x032:'253'
-	// <0x72cc36>|0x0d9|0x01d:'254'
-
-	// <0x72cc62>|0x105|0x02c:'256'
-	// <0x72cc67>|0x10a|0x005:'257'
-
-
-	// ******
+	return result;
 }
 
 // STATE[STUB]
@@ -269,21 +265,10 @@ bt_collision_shape* create_static_triangle_mesh_shape(
 	geometry_resource_ptr const&       vertices_resource,
 	geometry_resource_ptr const&       indices_resource)
 {
-	return NULL;
+	btCollisionShape* bt_shape	= create_btBvhTriangleMeshShape( vertices, indices, num_vertices, num_indices, face_data, local_scale, vertices_resource, indices_resource ); // <0x72cc81>|0x000|0x000:'278'
 
-	// FUNCTION BODY
-
-
-
-
-
-
-
-	// <0x72cc81>|0x000|0x000:'278'
-
-	// <0x72cca6>|0x025|0x025:'280'
-	// <0x72ccef>|0x06e|0x049:'281'
-	// ******
+	bt_collision_shape* shape			= VOSTOK_NEW_IMPL( g_ph_allocator, bt_collision_shape )( bt_shape );	// <0x72cca6>|0x025|0x025:'280'
+	return shape;																								// <0x72ccef>|0x06e|0x049:'281'
 }
 
 } // namespace physics

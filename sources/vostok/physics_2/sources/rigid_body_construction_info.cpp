@@ -3,13 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "rigid_body_construction_info.h"
+#include <vostok/physics_2/static_rigid_body.h>
 
 namespace vostok {
-namespace physics {
+namespace physics_2 {
 
 // STATE[STUB]
-// vostok::physics::bt_rigid_body_construction_info::bt_rigid_body_construction_info()
 bt_rigid_body_construction_info::bt_rigid_body_construction_info( )
 {
 }

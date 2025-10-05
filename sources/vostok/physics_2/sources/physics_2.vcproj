@@ -274,13 +274,6 @@
 			<File
 				RelativePath=".\bullet_physics_world.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\character_controller.cpp"
@@ -309,31 +302,16 @@
 			<File
 				RelativePath=".\collision_shapes.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ghost_object.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\rigid_body_construction_info.cpp"
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -345,7 +323,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -378,6 +355,10 @@
 			</File>
 			<File
 				RelativePath="..\rigid_body_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\static_rigid_body.h"
 				>
 			</File>
 		</Filter>

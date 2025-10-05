@@ -10,7 +10,10 @@
 #include <vostok/physics_2/api.h>
 #include <vostok/collision/primitives.h>
 
+#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+
 class btCollisionShape;
+class btStridingMeshInterface;
 
 namespace vostok {
 namespace physics_2 {
@@ -46,26 +49,66 @@ typedef resources::resource_ptr<
 	resources::managed_intrusive_base
 > geometry_resource_ptr;
 
-VOSTOK_PHYSICS_2_API void					destroy_bt_shape						( btCollisionShape* sh );
-VOSTOK_PHYSICS_2_API void					destroy_shape							( bt_collision_shape* shape );
-VOSTOK_PHYSICS_2_API btCollisionShape*		create_bt_primitive						( collision::primitive_type type, float3 const& dim, float3 const& __formal );
-VOSTOK_PHYSICS_2_API bt_collision_shape*	create_primitive_shape					( collision::primitive_type type, float3 const& dim, float3 const& local_scale );
-VOSTOK_PHYSICS_2_API bt_collision_shape*	create_compound_shape					( configs::binary_config_value const& shapes_root, float3 const& local_scale, pcstr model_path );
+VOSTOK_PHYSICS_2_API void						destroy_bt_shape						( btCollisionShape* sh );
+VOSTOK_PHYSICS_2_API void						destroy_shape							( bt_collision_shape* shape );
+VOSTOK_PHYSICS_2_API btCollisionShape*			create_bt_primitive						( collision::primitive_type type, float3 const& dim, float3 const& __formal );
+VOSTOK_PHYSICS_2_API bt_collision_shape*		create_primitive_shape					( collision::primitive_type type, float3 const& dim, float3 const& local_scale );
+VOSTOK_PHYSICS_2_API bt_collision_shape*		create_compound_shape					( configs::binary_config_value const& shapes_root, float3 const& local_scale, pcstr model_path );
 
+VOSTOK_PHYSICS_2_API btBvhTriangleMeshShape*	create_btBvhTriangleMeshShape			(
+																							float3*                            vertices,
+																							u32*                               indices,
+																							u32                                num_vertices,
+																							u32                                num_indices,
+																							u16*                               face_data,
+																							float3 const&                      local_scale,
+																							geometry_resource_ptr const&       vertices_resource,
+																							geometry_resource_ptr const&       indices_resource);
+
+VOSTOK_PHYSICS_2_API bt_collision_shape*		create_static_triangle_mesh_shape		(
+																							float3*                            vertices,
+																							u32*                               indices,
+																							u32                                num_vertices,
+																							u32                                num_indices,
+																							u16*                               face_data,
+																							float3 const&                      local_scale,
+																							geometry_resource_ptr const&       vertices_resource,
+																							geometry_resource_ptr const&       indices_resource);
+
+class btBvhTriangleMeshShapeResource : public btBvhTriangleMeshShape {
+public:
+	btBvhTriangleMeshShapeResource(
+		btStridingMeshInterface*           meshInterface,
+		u16*                               face_data,
+		geometry_resource_ptr const&       vertices_resource,
+		geometry_resource_ptr const&       indices_resource);
+
+private:
+	/* offset 0x0000 */ /* fields for btBvhTriangleMeshShape */
+	/* offset 0x0060 */ u16*                   m_face_data;
+	/* offset 0x0064 */ geometry_resource_ptr  m_raw_vertices;
+	/* offset 0x0068 */ geometry_resource_ptr  m_raw_indices;
+}; // class btBvhTriangleMeshShapeResource
+
+namespace {
+	typedef char size_assert[
+		sizeof(btBvhTriangleMeshShapeResource) == 0x70 ? 1 : -1
+	];
+}
 
 typedef	resources::resource_ptr<
 	bt_collision_shape,
 	resources::unmanaged_intrusive_base
 > bt_collision_shape_ptr;
 
-
+/*
 VOSTOK_PHYSICS_2_API bt_collision_shape* create_primitive_shape				( memory::base_allocator& allocator, vostok::collision::primitive_type type, float3 const& dim );
 VOSTOK_PHYSICS_2_API bt_collision_shape* create_compound_shape				( memory::base_allocator& allocator, configs::binary_config_value const& config );
 VOSTOK_PHYSICS_2_API bt_collision_shape* create_static_triangle_mesh_shape	( memory::base_allocator& allocator, float3* vertices, u32* indices, u32 num_vertices, u32 num_indices );
 VOSTOK_PHYSICS_2_API bt_collision_shape* create_dynamic_triangle_mesh_shape	( memory::base_allocator& allocator, float3* vertices, u32* indices, u32 num_vertices, u32 num_indices );
 VOSTOK_PHYSICS_2_API bt_collision_shape* create_terrain_shape				( memory::base_allocator& allocator, float* heighfield, u32 rowcol, float min_height, float max_height );
 VOSTOK_PHYSICS_2_API void				 destroy_shape						( memory::base_allocator& allocator, bt_collision_shape* shape );
-
+*/
 
 } // namespace physics
 } // namespace vostok
