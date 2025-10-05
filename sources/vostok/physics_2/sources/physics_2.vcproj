@@ -236,7 +236,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -252,22 +251,9 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\bullet_character_controller.h"
-				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
 			</File>
@@ -280,7 +266,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -292,7 +277,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -334,6 +318,10 @@
 			Name="public_api"
 			>
 			<File
+				RelativePath="..\animated_model_instance_cook.h"
+				>
+			</File>
+			<File
 				RelativePath="..\animated_rigid_body.h"
 				>
 			</File>
@@ -346,7 +334,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\character_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\collision_shape_cook.h"
+				>
+			</File>
+			<File
 				RelativePath="..\collision_shapes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\contact_test_predicate.h"
 				>
 			</File>
 			<File
@@ -354,7 +354,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\ray_result.h"
+				>
+			</File>
+			<File
 				RelativePath="..\rigid_body_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\soft_body.h"
 				>
 			</File>
 			<File
@@ -365,6 +373,17 @@
 		<Filter
 			Name="private_api"
 			>
+			<File
+				RelativePath=".\bullet_character_controller.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath=".\bullet_include.h"
 				>

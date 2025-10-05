@@ -21,30 +21,23 @@ class bt_static_rigid_body : bt_rigid_body_base {
 public:
 
 	bt_static_rigid_body( bt_collision_shape_ptr shape, btRigidBody* body );
-
 	virtual ~bt_static_rigid_body( );
 
-	virtual btRigidBody* get_rigid_body( ) override;
+	virtual btRigidBody*		get_rigid_body				( ) override;
+	virtual u16					get_triangle_material		( s32 triangle_id, bool is_shape_index ) const override;
 
-	virtual u16 get_triangle_material( s32 triangle_id, bool is_shape_index ) const override;
+	virtual void				apply_impulse				( float3 const& impulse, float3 const& point_in_world ) override;
 
-	virtual void apply_impulse( float3 const& impulse, float3 const& point_in_world ) override;
+	virtual void				set_transform				( float4x4 const& transform ) override;
+	virtual float4x4			get_transform				( ) const override;
 
-	virtual void set_transform( float4x4 const& transform ) override;
+	virtual u16					get_collision_group			( ) const override;
+	virtual btCollisionObject*	get_bt_collision_obect		( ) override;
 
-	virtual float4x4 get_transform( ) const override;
-
-	virtual u16 get_collision_group( ) const override;
-
-	virtual btCollisionObject* get_bt_collision_obect( ) override;
-
-	bool is_active() const /* no source */;
-
-	void set_ccd_motion_thresholds(float, float) /* no source */;
-
-	resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base> get_collision_shape() const /* no source */;
-
-	void predict_integrated_transform(float, float4x4&) const /* no source */;
+	bool						is_active					( ) const					/* no source */;
+	void						set_ccd_motion_thresholds	(float, float)				/* no source */;
+	bt_collision_shape_ptr		get_collision_shape			( ) const					/* no source */;
+	void						predict_integrated_transform(float, float4x4&) const	/* no source */;
 
 private:
 	/* offset 0x0000 */ /* fields for bt_rigid_body_base */

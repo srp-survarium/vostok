@@ -5,6 +5,9 @@
 #include "pch.h"
 #include "bullet_physics_world.h"
 #include <vostok/physics_2/bullet_utils.h>
+#include <vostok/physics_2/collision_shapes.h>
+
+#include <vostok/physics_2/engine.h>
 
 namespace vostok {
 namespace physics_2 {
@@ -38,15 +41,13 @@ void `dynamic initializer for 's_ph_debug_cmd03''( )
 
 // STATE[STUB]
 // void dump_physics_profiler(char const*)
-void dump_physics_profiler(
-	pcstr                              __formal)
+void dump_physics_profiler( pcstr __formal )
 {
 }
 
 // STATE[STUB]
 // void reset_physics_profiler(char const*)
-void reset_physics_profiler(
-	pcstr                              __formal)
+void reset_physics_profiler( pcstr __formal )
 {
 }
 
@@ -94,8 +95,10 @@ float4x4 from_bullet( btTransform const& m )
 
 // STATE[STUB]
 // vostok::physics::bullet_physics_world::bullet_physics_world(vostok::memory::base_allocator&, vostok::physics::engine&)
-bullet_physics_world::bullet_physics_world(
-	engine&                            engine)
+bullet_physics_world::bullet_physics_world( engine& engine ):
+	m_allocator		( *g_ph_allocator ),
+	m_engine		( engine ),
+	m_world_aabb	( math::create_aabb_min_max( float3( ), float3( ) ) )
 {
 	// LOCALS
 	// memory::base_allocator&         allocator
@@ -105,8 +108,7 @@ bullet_physics_world::bullet_physics_world(
 
 // STATE[STUB]
 // void vostok::physics::log_cb(char*)
-void log_cb(
-	char*                              text)
+void log_cb( char* text )
 {
 	// FUNCTION BODY
 	// <0x6bf009>|0x000|0x000:'79'
@@ -205,11 +207,9 @@ void bullet_physics_world::destroy( )
 	// <0x6bcf4f>|0x13a|0x00c:'142'
 	// ******
 }
-#if 0
+
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::set_renderer(btIDebugDraw* const)
-void bullet_physics_world::set_renderer(
-	btIDebugDraw*                      renderer)
+void bullet_physics_world::set_renderer( btIDebugDraw* renderer )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab8a8 }, type_index: TypeIndex(0x162d1) })
@@ -218,11 +218,7 @@ void bullet_physics_world::set_renderer(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::draw_object(btCollisionShape* const, btTransform const&, btVector3 const&)
-void bullet_physics_world::draw_object(
-	btCollisionShape*                  shape,
-	btTransform const&                 transform,
-	btVector3 const&                   color)
+void bullet_physics_world::draw_object( btCollisionShape* shape, btTransform const& transform, btVector3 const& color )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab897 }, type_index: TypeIndex(0x162d3) })
@@ -234,7 +230,6 @@ void bullet_physics_world::draw_object(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::on_before_reuse()
 void bullet_physics_world::on_before_reuse( )
 {
 	// FUNCTION BODY
@@ -242,11 +237,9 @@ void bullet_physics_world::on_before_reuse( )
 	// <0x6bc878>|0x008|0x008:'158'
 	// ******
 }
-#endif
+
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::tick(const unsigned int)
-void bullet_physics_world::tick(
-	u32                                current_time_in_ms)
+void bullet_physics_world::tick( u32 current_time_in_ms )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6acef8 }, type_index: TypeIndex(0x15f07) })
@@ -270,9 +263,8 @@ void bullet_physics_world::tick(
 
 	// ******
 }
-#if 0
+
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::debug_draw_world()
 void bullet_physics_world::debug_draw_world( )
 {
 	// LOCALS
@@ -350,11 +342,7 @@ void bullet_physics_world::debug_draw_world( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::add(vostok::physics::bt_rigid_body_base*, unsigned short, unsigned short)
-void bullet_physics_world::add(
-	bt_rigid_body_base*                body,
-	u16                                filter_group,
-	u16                                filter_mask)
+void bullet_physics_world::add( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask )
 {
 	// LOCALS
 	// btTransform                     trans
@@ -384,9 +372,7 @@ void bullet_physics_world::add(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::remove(vostok::physics::bt_rigid_body_base*)
-void bullet_physics_world::remove(
-	bt_rigid_body_base*                body)
+void bullet_physics_world::remove( bt_rigid_body_base* body )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab852 }, type_index: TypeIndex(0x94c3) })
@@ -399,10 +385,7 @@ void bullet_physics_world::remove(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::move(vostok::physics::bt_rigid_body_base*, vostok::math::float4x4 const&)
-void bullet_physics_world::move(
-	bt_rigid_body_base*                body,
-	float4x4 const&                    new_transform)
+void bullet_physics_world::move( bt_rigid_body_base* body, float4x4 const& new_transform )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab82e }, type_index: TypeIndex(0x94c8) })
@@ -414,9 +397,7 @@ void bullet_physics_world::move(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::add(vostok::physics::bt_soft_body_rope*)
-void bullet_physics_world::add(
-	bt_soft_body_rope*                 body)
+void bullet_physics_world::add( bt_soft_body_rope* body )
 {
 	// FUNCTION BODY
 	// <0x6bd160>|0x000|0x000:'272'
@@ -424,9 +405,7 @@ void bullet_physics_world::add(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::remove(vostok::physics::bt_soft_body_rope*)
-void bullet_physics_world::remove(
-	bt_soft_body_rope*                 body)
+void bullet_physics_world::remove( bt_soft_body_rope* body )
 {
 	// FUNCTION BODY
 	// <0x6bcde0>|0x000|0x000:'277'
@@ -434,9 +413,7 @@ void bullet_physics_world::remove(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::add(vostok::physics::bt_constraint*)
-void bullet_physics_world::add(
-	bt_constraint*                     constraint)
+void bullet_physics_world::add( bt_constraint* constraint )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab812 }, type_index: TypeIndex(0x15eca) })
@@ -448,9 +425,7 @@ void bullet_physics_world::add(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::remove(vostok::physics::bt_constraint*)
-void bullet_physics_world::remove(
-	bt_constraint*                     constraint)
+void bullet_physics_world::remove( bt_constraint* constraint )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab7f3 }, type_index: TypeIndex(0x15ed6) })
@@ -492,19 +467,39 @@ void bullet_physics_world::create_test_scene( )
 	// ******
 }
 
+
+struct closest_ray_result_callback : btCollisionWorld::RayResultCallback {
+public:
+	closest_ray_result_callback( btVector3 const& rayFromWorld, btVector3 const& rayToWorld );
+
+	virtual float addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace ) override;
+
+	virtual ~closest_ray_result_callback() {}
+
+private:
+	/* offset 0x0000 */ /* fields for btCollisionWorld::RayResultCallback */
+	/* offset 0x0020 */ btVector3                           m_rayFromWorld;
+	/* offset 0x0030 */ btVector3                           m_rayToWorld;
+	/* offset 0x0040 */ btVector3                           m_hitNormalWorld;
+	/* offset 0x0050 */ btVector3                           m_hitPointWorld;
+	/* offset 0x0060 */ s32                                 m_triangleIndex;
+	/* offset 0x0064 */ bool                                m_is_shape_index;
+}; // struct closest_ray_result_callback
+
+namespace {
+	typedef char size_assert[
+		sizeof(closest_ray_result_callback) == 0x70 ? 1 : -1
+	];
+}
+
+
 // STATE[STUB]
-// vostok::physics::closest_ray_result_callback::closest_ray_result_callback(btVector3 const&, btVector3 const&)
-closest_ray_result_callback::closest_ray_result_callback(
-	btVector3 const&                   rayFromWorld,
-	btVector3 const&                   rayToWorld)
+closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFromWorld, btVector3 const& rayToWorld )
 {
 }
 
 // STATE[STUB]
-// float vostok::physics::closest_ray_result_callback::addSingleResult(btCollisionWorld::LocalRayResult&, bool)
-float closest_ray_result_callback::addSingleResult(
-	btCollisionWorld::LocalRayResult&  rayResult,
-	bool                               normalInWorldSpace)
+float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace )
 {
 	return 0.0f;
 
@@ -547,6 +542,9 @@ closest_ray_result bullet_physics_world::ray_test(
 	u16                                filter_group,
 	u16                                filter_mask)
 {
+	closest_ray_result result = closest_ray_result();
+	return result;
+
 	// LOCALS
 	// closest_ray_result_callback     cb
 	// btVector3                       from
@@ -585,7 +583,6 @@ closest_ray_result bullet_physics_world::ray_test(
 }
 
 // STATE[STUB]
-// bool vostok::physics::bullet_physics_world::recover_from_penetrations(vostok::physics::bt_collision_shape* const, vostok::math::float4x4 const&, vostok::math::float4x4&, unsigned short, unsigned short)
 bool bullet_physics_world::recover_from_penetrations(
 	bt_collision_shape*                shape,
 	float4x4 const&                    transform_initial,
@@ -782,7 +779,6 @@ void bullet_physics_world::object_query(
 	// <0x6be82f>|0x911|-0x035:'544'
 	// ******
 }
-
 /*
 // STATE[STUB]
 // `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::object_query_callback(vostok::vectora<vostok::physics::closest_ray_result>&, const unsigned short, const unsigned short)
@@ -797,7 +793,6 @@ void bullet_physics_world::object_query(
 	// <0x6bd3b0>|0x000|0x000:'488'
 	// ******
 }
-*/
 
 // STATE[STUB]
 // float `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult(btCollisionWorld::LocalConvexResult&, bool)
@@ -833,6 +828,7 @@ float `bullet_physics_world::object_query'::`2'::object_query_callback::addSingl
 	// <0x6bd14b>|0x1e2|0x063:'510'
 	// ******
 }
+*/
 
 // STATE[STUB]
 // void vostok::physics::bullet_physics_world::ray_query(vostok::math::float3 const&, vostok::math::float3 const&, const float, vostok::vectora<vostok::physics::closest_ray_result>&, unsigned short, unsigned short)
@@ -890,11 +886,9 @@ void bullet_physics_world::ray_query(
 }
 
 // STATE[STUB]
-// vostok::physics::primitive_type vostok::physics::from_bullet_shape_type(int)
-primitive_type from_bullet_shape_type(
-	s32                                type)
+collision::primitive_type from_bullet_shape_type( s32 type )
 {
-	return primitive_type::none;
+	return collision::primitive_box;
 
 	// STATICS
 	// static <NoType>                  = <0x6bc7b8>;
@@ -921,9 +915,7 @@ primitive_type from_bullet_shape_type(
 }
 
 // STATE[STUB]
-// vostok::math::float3 vostok::physics::dimensions_from_bullet_shape(btCollisionShape const*)
-float3 dimensions_from_bullet_shape(
-	btCollisionShape const*            bullet_shape)
+float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 {
 	float3 result = float3();
 	return result;
@@ -978,17 +970,41 @@ float3 dimensions_from_bullet_shape(
 
 	// ******
 }
+	
+struct contact_result_callback : btCollisionWorld::ContactResultCallback {
+public:
+	virtual btScalar addSingleResult(
+		btManifoldPoint&                   __formal_1,
+		btCollisionObject const*           colObj0,
+		s32                                __formal_2,
+		s32                                __formal_3,
+		btCollisionObject const*           colObj1,
+		s32                                __formal_4,
+		s32                                __formal_5) override;
+
+	virtual ~contact_result_callback() {}
+
+private:
+	/* offset 0x0000 */ /* fields for btCollisionWorld::ContactResultCallback */
+	/* offset 0x0008 */ contact_test_predicate*             m_predicate;
+}; // struct contact_result_callback
+
+namespace {
+	typedef char size_assert[
+		sizeof(contact_result_callback) == 0xC ? 1 : -1
+	];
+}
 
 // STATE[STUB]
 // float vostok::physics::contact_result_callback::addSingleResult(btManifoldPoint&, btCollisionObject const*, int, int, btCollisionObject const*, int, int)
-float contact_result_callback::addSingleResult(
-	btManifoldPoint&                   __formal,
+btScalar contact_result_callback::addSingleResult(
+	btManifoldPoint&                   __formal_1,
 	btCollisionObject const*           colObj0,
-	s32                                __formal,
-	s32                                __formal,
+	s32                                __formal_2,
+	s32                                __formal_3,
 	btCollisionObject const*           colObj1,
-	s32                                __formal,
-	s32                                __formal)
+	s32                                __formal_4,
+	s32                                __formal_5)
 {
 	return 0.0f;
 
@@ -1159,10 +1175,7 @@ void bullet_physics_world::notify_about_contact( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::subscribe_on_contact(vostok::physics::base_physics_object*, boost::function<void __cdecl(vostok::physics::base_physics_object *,vostok::physics::base_physics_object *,vostok::math::float3 const &)>*)
-void bullet_physics_world::subscribe_on_contact(
-	base_physics_object*               object,
-	boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)>* callback)
+void bullet_physics_world::subscribe_on_contact( base_physics_object* object, on_contact_callback* callback )
 {
 	// LOCALS
 	// std::pair<std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *> > >,std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *> > > > ret
@@ -1186,10 +1199,7 @@ void bullet_physics_world::subscribe_on_contact(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::unsubscribe_from_contact(vostok::physics::base_physics_object*, boost::function<void __cdecl(vostok::physics::base_physics_object *,vostok::physics::base_physics_object *,vostok::math::float3 const &)>*)
-void bullet_physics_world::unsubscribe_from_contact(
-	base_physics_object*               object,
-	boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)>* callback)
+void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object, on_contact_callback* callback )
 {
 	// LOCALS
 	// std::pair<std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *> > >,std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *> > > > ret
@@ -1218,7 +1228,6 @@ void bullet_physics_world::unsubscribe_from_contact(
 	// <0x6bca4f>|0x043|0x002:'883'
 	// ******
 }
-#endif
 
 } // namespace physics
 } // namespace vostok

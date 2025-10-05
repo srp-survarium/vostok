@@ -1,17 +1,20 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 28.08.2025
+//	Created 	: 05.10.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "collision_shape_cook.h"
+#include <vostok/physics_2/collision_shape_cook.h>
 
 namespace vostok {
-namespace physics {
+namespace physics_2 {
 
 // STATE[STUB]
-// vostok::physics::collision_shape_cook::collision_shape_cook(bool)
-collision_shape_cook::collision_shape_cook(
-	bool                               static_object)
+collision_shape_cook::collision_shape_cook( bool static_object ):
+	resources::translate_query_cook			( // dummy values
+		resources::single_animation_class,
+		reuse_true,
+		use_resource_manager_thread_id
+	)
 {
 	// FUNCTION BODY
 	// <0x72d2e5>|0x000|0x000:'29'
@@ -19,9 +22,7 @@ collision_shape_cook::collision_shape_cook(
 }
 
 // STATE[STUB]
-// void vostok::physics::collision_shape_cook::translate_query(vostok::resources::query_result_for_cook&)
-void collision_shape_cook::translate_query(
-	resources::query_result_for_cook&  parent)
+void collision_shape_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// LOCALS
 	// fs_new::virtual_path_string     model_config_path
@@ -93,10 +94,7 @@ void collision_shape_cook::translate_query(
 }
 
 // STATE[STUB]
-// void vostok::physics::collision_shape_cook::on_collision_sources_loaded(vostok::resources::queries_result&, vostok::physics::collision_shape_cook::cook_data*)
-void collision_shape_cook::on_collision_sources_loaded(
-	resources::queries_result&         data,
-	collision_shape_cook::cook_data*   cd)
+void collision_shape_cook::on_collision_sources_loaded( resources::queries_result& data, collision_shape_cook::cook_data* cd )
 {
 	// LOCALS
 	// bt_collision_shape*             result
@@ -273,9 +271,7 @@ void collision_shape_cook::on_collision_sources_loaded(
 }
 
 // STATE[STUB]
-// void vostok::physics::collision_shape_cook::delete_resource(vostok::resources::resource_base*)
-void collision_shape_cook::delete_resource(
-	resources::resource_base*          resource)
+void collision_shape_cook::delete_resource( resources::resource_base* resource )
 {
 	// FUNCTION BODY
 
@@ -284,10 +280,7 @@ void collision_shape_cook::delete_resource(
 }
 
 // STATE[STUB]
-// vostok::physics::bt_collision_shape* vostok::physics::collision_shape_cook::create_primitives_shape(vostok::configs::binary_config_value const&, vostok::physics::collision_shape_cook::cook_data*)
-bt_collision_shape* collision_shape_cook::create_primitives_shape(
-	configs::binary_config_value const& primitives_t,
-	collision_shape_cook::cook_data*   cd)
+bt_collision_shape* collision_shape_cook::create_primitives_shape( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd )
 {
 	return NULL;
 

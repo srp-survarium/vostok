@@ -7,19 +7,16 @@
 
 #include <vostok/physics_2/world.h>
 #include <vostok/physics_2/engine.h>
+#include <vostok/physics_2/soft_body.h>
+#include <vostok/physics_2/contact_test_predicate.h>
 
-class btGhostPairCallback;
-class btSoftRigidDynamicsWorld;
-struct btSoftBodyWorldInfo;
-class btConstraintSolver;
-class btBroadphaseInterface;
-class btCollisionConfiguration;
-class btCollisionDispatcher;
+#include "bullet_include.h"
 
 namespace vostok {
 namespace physics_2 {
 
 class base_physics_object;
+
 
 /*
 // STATE[STUB]
@@ -38,7 +35,7 @@ public:
 	virtual void destroy( ) override;
 
 	virtual void tick( u32 current_time_in_ms ) override;
-#if 0
+
 	virtual void create_test_scene( ) override;
 
 	virtual void set_renderer( btIDebugDraw* renderer ) override;
@@ -80,7 +77,7 @@ public:
 		u16                                filter_group,
 		u16                                filter_mask) override;
 
-	virtual math::aabb get_world_aabb() const /* no source */ override;
+	virtual math::aabb get_world_aabb() const override { return m_world_aabb; };
 
 	virtual void on_before_reuse( ) override;
 
@@ -91,14 +88,10 @@ public:
 		u16                                filter_group,
 		u16                                filter_mask) override;
 
-	virtual void subscribe_on_contact(
-		base_physics_object*               object,
-		boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)>* callback) override;
+	virtual void subscribe_on_contact		( base_physics_object* object, on_contact_callback* callback ) override;
+	virtual void unsubscribe_from_contact	( base_physics_object* object, on_contact_callback* callback ) override;
 
-	virtual void unsubscribe_from_contact(
-		base_physics_object*               object,
-		boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)>* callback) override;
-	/*
+
 	memory::base_allocator& allocator() /* no source */;
 
 	btSoftRigidDynamicsWorld* get_bt_internal() /* no source */;
@@ -106,7 +99,7 @@ public:
 	bt_soft_body_rope* create_soft_body_rope(rope_construction_info const&) /* no source */;
 
 	void destroy_soft_body_rope(bt_soft_body_rope*) /* no source */;
-	*/
+
 	void contact_pair_test(
 		contact_test_predicate&            predicate,
 		btCollisionObject*                 first_object,
@@ -121,7 +114,7 @@ public:
 		float4x4&                          transform);
 
 	void notify_about_contact( );
-#endif
+
 	typedef std::multimap<
 		base_physics_object *,
 		boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *,
@@ -134,7 +127,6 @@ public:
 		>
 	> callbacks_type;
 private:
-#if 0
 	/* offset 0x0000 */ /* fields for world */
 	/* offset 0x0004 */ /* fields for boost::noncopyable */
 	/* offset 0x0004 */ callbacks_type                      m_contact_callbacks;
@@ -150,15 +142,13 @@ private:
 	/* offset 0x0040 */ math::aabb                          m_world_aabb;
 	/* offset 0x0058 */ float                               m_last_frame_time;
 	/* offset 0x005c */ float                               m_last_frame_delta;
-#endif
 }; // class bullet_physics_world
-#if 0
+
 namespace {
 	typedef char size_assert[
 		sizeof(bullet_physics_world) == 0x60 ? 1 : -1
 	];
 }
-#endif
 
 } // namespace physics
 } // namespace vostok

@@ -3,15 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "character_controller.h"
+#include <vostok/physics_2/character_controller.h>
 
 namespace vostok {
-namespace physics {
+namespace physics_2 {
 
 // STATE[STUB]
-// vostok::physics::bt_character_controller* vostok::physics::create_character_controller(vostok::memory::base_allocator&, vostok::physics::world*)
-bt_character_controller* create_character_controller(
-	world*                             w)
+bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w )
 {
 	return NULL;
 	// FUNCTION BODY
@@ -20,9 +18,7 @@ bt_character_controller* create_character_controller(
 }
 
 // STATE[STUB]
-// vostok::physics::bt_character_controller::bt_character_controller(vostok::physics::world*)
-bt_character_controller::bt_character_controller(
-	world*                             w)
+bt_character_controller::bt_character_controller( world* w )
 {
 	// FUNCTION BODY
 	// <0x586854>|0x000|0x000:'29'
@@ -30,8 +26,7 @@ bt_character_controller::bt_character_controller(
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::~bt_character_controller()
-void bt_character_controller::~bt_character_controller( )
+bt_character_controller::~bt_character_controller( )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x575831 }, type_index: TypeIndex(0x20fb5) })
@@ -43,7 +38,7 @@ void bt_character_controller::~bt_character_controller( )
 	// ******
 }
 
-/*
+
 // STATE[STUB]
 // vostok::memory::base_allocator& vostok::physics::bt_character_controller::allocator()
 memory::base_allocator& bt_character_controller::allocator( )
@@ -52,10 +47,9 @@ memory::base_allocator& bt_character_controller::allocator( )
 	// <0x586800>|0x000|0x000:'40'
 	// ******
 }
-*/
+
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::initialize()
 void bt_character_controller::initialize( )
 {
 	// FUNCTION BODY
@@ -80,9 +74,7 @@ void bt_character_controller::initialize( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::activate(vostok::math::float4x4 const&)
-void bt_character_controller::activate(
-	float4x4 const&                    t)
+void bt_character_controller::activate( float4x4 const& t )
 {
 	// FUNCTION BODY
 
@@ -92,7 +84,6 @@ void bt_character_controller::activate(
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::deactivate()
 void bt_character_controller::deactivate( )
 {
 	// FUNCTION BODY
@@ -102,7 +93,6 @@ void bt_character_controller::deactivate( )
 }
 
 // STATE[STUB]
-// vostok::math::float4x4 vostok::physics::bt_character_controller::get_transform()
 float4x4 bt_character_controller::get_transform( )
 {
 	float4x4 result = float4x4();
@@ -114,9 +104,7 @@ float4x4 bt_character_controller::get_transform( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::set_transform(vostok::math::float4x4 const&)
-void bt_character_controller::set_transform(
-	float4x4 const&                    transform)
+void bt_character_controller::set_transform( float4x4 const& transform )
 {
 	// FUNCTION BODY
 	// <0x586a9a>|0x000|0x000:'85'
@@ -124,9 +112,7 @@ void bt_character_controller::set_transform(
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::set_walk_direction(vostok::math::float3 const&)
-void bt_character_controller::set_walk_direction(
-	float3 const&                      direction)
+void bt_character_controller::set_walk_direction( float3 const& direction )
 {
 	// FUNCTION BODY
 	// <0x586959>|0x000|0x000:'90'
@@ -134,8 +120,7 @@ void bt_character_controller::set_walk_direction(
 }
 
 // STATE[STUB]
-// bool vostok::physics::bt_character_controller::has_updates() const
-bool bt_character_controller::has_updates( )
+bool bt_character_controller::has_updates( ) const
 {
 	return false;
 
@@ -145,13 +130,11 @@ bool bt_character_controller::has_updates( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::jump()
 void bt_character_controller::jump( )
 {
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::end_jump()
 void bt_character_controller::end_jump( )
 {
 	// FUNCTION BODY
@@ -180,22 +163,15 @@ bool bt_character_controller::adjust_foot_transform(
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::update_action(const unsigned int)
-void bt_character_controller::update_action(
-	u32                                time_delta_in_ms)
+void bt_character_controller::update_action( u32 time_delta_in_ms )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5757e9 }, type_index: TypeIndex(0x20fb3) })
-	// ******
-
 	// FUNCTION BODY
 	// <0x5867c1>|0x000|0x000:'121'
 	// ******
 }
 
 // STATE[STUB]
-// bool vostok::physics::bt_character_controller::can_jump() const
-bool bt_character_controller::can_jump( )
+bool bt_character_controller::can_jump( ) const
 {
 	return false;
 
@@ -205,8 +181,7 @@ bool bt_character_controller::can_jump( )
 }
 
 // STATE[STUB]
-// bool vostok::physics::bt_character_controller::on_ground() const
-bool bt_character_controller::on_ground( )
+bool bt_character_controller::on_ground( ) const
 {
 	return false;
 
@@ -216,15 +191,12 @@ bool bt_character_controller::on_ground( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_character_controller::set_crouch(bool)
-void bt_character_controller::set_crouch(
-	bool                               crouch)
+void bt_character_controller::set_crouch( bool crouch )
 {
 }
 
 // STATE[STUB]
-// bool vostok::physics::bt_character_controller::can_crouch() const
-bool bt_character_controller::can_crouch( )
+bool bt_character_controller::can_crouch( ) const
 {
 	return false;
 
@@ -234,8 +206,7 @@ bool bt_character_controller::can_crouch( )
 }
 
 // STATE[STUB]
-// bool vostok::physics::bt_character_controller::can_stand() const
-bool bt_character_controller::can_stand( )
+bool bt_character_controller::can_stand( ) const
 {
 	return false;
 

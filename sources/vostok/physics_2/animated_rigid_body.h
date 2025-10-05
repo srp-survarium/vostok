@@ -37,24 +37,24 @@ namespace physics_2 {
 
 class bt_animated_rigid_body : public bt_rigid_body_base {
 public:
-	bt_animated_rigid_body							( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
-	virtual ~bt_animated_rigid_body					( ) {};
+	bt_animated_rigid_body								( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
+	virtual ~bt_animated_rigid_body						( ) {};
 
 	/* bt_rigid_body_base overrides */
-	virtual btRigidBody*	get_rigid_body			( )														override;
+	virtual btRigidBody*		get_rigid_body			( )														override;
 
-	virtual u16				get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			override;
-	virtual void			apply_impulse			( float3 const& impulse, float3 const& point_in_world )	override;
+	virtual u16					get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			override;
+	virtual void				apply_impulse			( float3 const& impulse, float3 const& point_in_world )	override;
 
-	virtual void			set_transform			( float4x4 const& transform )							override;
-	virtual float4x4		get_transform			( ) const												override;
+	virtual void				set_transform			( float4x4 const& transform )							override;
+	virtual float4x4			get_transform			( ) const												override;
 
 	/* self virtual methods */
-	virtual float3 const&		center_of_mass_offset( ) const;
+	virtual float3 const&		center_of_mass_offset	( ) const;
 
 	/* base_physics_object overrides */
-	virtual u16					get_collision_group() const override;
-	virtual btCollisionObject*	get_bt_collision_obect()	override;
+	virtual u16					get_collision_group		( ) const override;
+	virtual btCollisionObject*	get_bt_collision_obect	( )	override;
 
 	/* self methods: sushi@NOTE: Seems like those didn't inline in target, but did here */
 	void		update_bone_matrix	( u32 index, float4x4 const& new_transform, bool recalculate_aabb );

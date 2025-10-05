@@ -1,16 +1,20 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 28.08.2025
+//	Created 	: 05.10.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "animated_model_instance_cook.h"
+#include <vostok/physics_2/animated_model_instance_cook.h>
 
 namespace vostok {
-namespace physics {
+namespace physics_2 {
 
 // STATE[STUB]
-// vostok::physics::animated_model_instance_cook::animated_model_instance_cook()
-animated_model_instance_cook::animated_model_instance_cook( )
+animated_model_instance_cook::animated_model_instance_cook( ):
+	resources::translate_query_cook			( // dummy values
+		resources::single_animation_class,
+		reuse_true,
+		use_resource_manager_thread_id
+	)
 {
 	// FUNCTION BODY
 	// <0x72cd82>|0x000|0x000:'25'
@@ -18,10 +22,7 @@ animated_model_instance_cook::animated_model_instance_cook( )
 }
 
 // STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::translate_request_path(char const*, vostok::fs_new::virtual_path_string&) const
-void animated_model_instance_cook::translate_request_path(
-	pcstr                              request,
-	fs_new::virtual_path_string&       new_request)
+void animated_model_instance_cook::translate_request_path( pcstr request, fs_new::virtual_path_string& new_request ) const
 {
 	// FUNCTION BODY
 	// <0x72cdb0>|0x000|0x000:'30'
@@ -29,9 +30,7 @@ void animated_model_instance_cook::translate_request_path(
 }
 
 // STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::translate_query(vostok::resources::query_result_for_cook&)
-void animated_model_instance_cook::translate_query(
-	resources::query_result_for_cook&  parent)
+void animated_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// FUNCTION BODY
 
@@ -46,9 +45,7 @@ void animated_model_instance_cook::translate_query(
 }
 
 // STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::on_config_loaded(vostok::resources::queries_result&)
-void animated_model_instance_cook::on_config_loaded(
-	resources::queries_result&         data)
+void animated_model_instance_cook::on_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
 	// resources::query_result_for_cook* parent
@@ -84,9 +81,7 @@ void animated_model_instance_cook::on_config_loaded(
 }
 
 // STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::on_skeleton_config_loaded(vostok::resources::queries_result&)
-void animated_model_instance_cook::on_skeleton_config_loaded(
-	resources::queries_result&         data)
+void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
 	// resources::query_result_for_cook* parent
@@ -139,9 +134,7 @@ void animated_model_instance_cook::on_skeleton_config_loaded(
 }
 
 // STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::on_subresources_loaded(vostok::resources::queries_result&)
-void animated_model_instance_cook::on_subresources_loaded(
-	resources::queries_result&         data)
+void animated_model_instance_cook::on_subresources_loaded( resources::queries_result& data )
 {
 	// LOCALS
 	// resources::query_result_for_cook* parent
@@ -184,9 +177,7 @@ void animated_model_instance_cook::on_subresources_loaded(
 }
 
 // STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::delete_resource(vostok::resources::resource_base*)
-void animated_model_instance_cook::delete_resource(
-	resources::resource_base*          resource)
+void animated_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
 	// OTHER SYMBOLS
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x71bd21 }, type_index: TypeIndex(0xa6ae) })
