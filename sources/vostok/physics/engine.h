@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 20.11.2008
-//	Author		: Dmitriy Iassenev
-//	Description : physics engine interface
+//	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef VOSTOK_PHYSICS_ENGINE_H_INCLUDED
@@ -10,8 +8,23 @@
 namespace vostok {
 namespace physics {
 
-struct VOSTOK_NOVTABLE engine {
-}; // class engine
+/* vostok::physics::engine */
+
+//////////////////////////
+//     DEFINITIONS      //
+//////////////////////////
+
+struct engine  {
+public:
+
+private:
+}; // struct engine
+
+namespace {
+	typedef char size_assert[
+		sizeof(engine) == 0x1 ? 1 : -1
+	];
+}
 
 } // namespace physics
 } // namespace vostok
