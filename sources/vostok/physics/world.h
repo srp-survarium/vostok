@@ -6,8 +6,12 @@
 #define VOSTOK_PHYSICS_WORLD_H_INCLUDED
 
 #include <vostok/physics/ray_result.h>
+#include <vostok/physics/bullet_utils.h> // btVector3
 
-#include "bullet_include.h"
+class btCollisionShape;
+class btTransform;
+class btIDebugDraw;
+class btTypedConstraint;
 
 namespace vostok {
 namespace physics {
@@ -89,7 +93,7 @@ public:
 																u16                                filter_mask)				= 0;
 
 	virtual math::aabb				get_world_aabb			( ) const														= 0;
-	virtual void				on_before_reuse				( )																= 0;
+	virtual void					on_before_reuse			( )																= 0;
 
 	typedef	boost::function<void __cdecl( base_physics_object *, base_physics_object *, float3 const & )> on_contact_callback;
 	virtual void				subscribe_on_contact		( base_physics_object* object, on_contact_callback* callback )	= 0;
