@@ -50,7 +50,7 @@
 
 1. Install missing proprietary libraries by running this command from the root of the project
 ```terminal
-python ./scripts/copy_lib_files.py ../vostok-libs/sources/ sources/
+python ./scripts/copy_lib_files.py
 ```
 
 2. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.

@@ -1,110 +1,219 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 26.09.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include <vostok/physics/character_controller.h>
-#include "bullet_include.h"
-#include "bullet_physics_world.h"
-#include <vostok/linkage_helper.h>
-#include <vostok/collision/api.h>
-#include <vostok/collision/geometry_instance.h>
-#include <vostok/collision/geometry.h>
 
-VOSTOK_DECLARE_LINKAGE_ID(physics_character_controller)
+namespace vostok {
+namespace physics {
 
-namespace vostok{
-namespace physics{
-
-bt_character_controller* create_character_controller( memory::base_allocator& allocator, 
-														physics::world* w )
+// STATE[STUB]
+bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w )
 {
-	return VOSTOK_NEW_IMPL(allocator, bt_character_controller)(w);
+	return NULL;
+	// FUNCTION BODY
+	// <0x586866>|0x000|0x000:'23'
+	// ******
 }
 
-bt_character_controller::bt_character_controller( physics::world* w ):
-	m_capsule_height( 1.1f ),
-	m_capsule_radius( 0.4f )	// width = 80cm, total height = h+2R = 190cm
+// STATE[STUB]
+bt_character_controller::bt_character_controller( world* w )
 {
-	m_bt_physics_world	= static_cast_checked<bullet_physics_world*>(w);
+	// FUNCTION BODY
+	// <0x586854>|0x000|0x000:'29'
+	// ******
 }
 
+// STATE[STUB]
 bt_character_controller::~bt_character_controller( )
 {
-	vostok::collision::delete_geometry_instance	( &allocator(), m_geometry_instance );
+	// OTHER SYMBOLS
+	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x575831 }, type_index: TypeIndex(0x20fb5) })
+	// ******
+
+	// FUNCTION BODY
+
+	// <0x586810>|0x000|0x000:'35'
+	// ******
 }
 
+
+// STATE[STUB]
+// vostok::memory::base_allocator& vostok::physics::bt_character_controller::allocator()
 memory::base_allocator& bt_character_controller::allocator( )
 {
-	return m_bt_physics_world->allocator();
+	// FUNCTION BODY
+	// <0x586800>|0x000|0x000:'40'
+	// ******
 }
 
+
+// STATE[STUB]
 void bt_character_controller::initialize( )
 {
-	m_ghostObject						= VOSTOK_NEW_IMPL( allocator(), btPairCachingGhostObject)();
-	m_bt_physics_world->get_bt_internal()->getPairCache()->setInternalGhostPairCallback(VOSTOK_NEW_IMPL( allocator(), btGhostPairCallback)() );
-	m_center_of_shape_offset			= float3(0, m_capsule_height/2.0f+m_capsule_radius, 0);
-	btConvexShape* capsule				= VOSTOK_NEW_IMPL( allocator(), btCapsuleShape)(m_capsule_radius, m_capsule_height );
-	m_ghostObject->setCollisionShape	( capsule );
-	m_ghostObject->setCollisionFlags	( btCollisionObject::CF_CHARACTER_OBJECT );
-	m_ghostObject->setFriction			(100);
-	btScalar step_height				= 0.35f;
-	m_bt_controller						= VOSTOK_NEW_IMPL( allocator(), btKinematicCharacterController)( m_ghostObject, capsule, step_height );
+	// FUNCTION BODY
 
-	m_geometry_instance						= &*vostok::collision::new_capsule_geometry_instance( &allocator(), float4x4().identity(), m_capsule_radius, m_capsule_height / 2 );
+
+
+
+
+
+	// <0x5869d8>|0x000|0x000:'51'
+
+
+	// <0x5869fd>|0x025|0x025:'54'
+
+
+
+
+
+
+	// <0x586a17>|0x03f|0x01a:'61'
+	// ******
 }
 
-
+// STATE[STUB]
 void bt_character_controller::activate( float4x4 const& t )
 {
-	set_transform				( t );
+	// FUNCTION BODY
 
-	m_bt_physics_world->get_bt_internal()->addCollisionObject( m_ghostObject,
-											btBroadphaseProxy::CharacterFilter, 
-											btBroadphaseProxy::StaticFilter|btBroadphaseProxy::DefaultFilter );
-
-	m_bt_physics_world->get_bt_internal()->addAction( m_bt_controller );
+	// <0x586acd>|0x000|0x000:'68'
+	// <0x586adb>|0x00e|0x00e:'69'
+	// ******
 }
 
+// STATE[STUB]
 void bt_character_controller::deactivate( )
 {
-	m_bt_physics_world->get_bt_internal()->removeCollisionObject( m_ghostObject );
-	m_bt_physics_world->get_bt_internal()->removeAction			( m_bt_controller );
+	// FUNCTION BODY
+
+	// <0x586930>|0x000|0x000:'75'
+	// ******
 }
 
+// STATE[STUB]
 float4x4 bt_character_controller::get_transform( )
 {
-	float4x4 result = from_bullet( m_bt_controller->getGhostObject()->getWorldTransform() );
-	result.c.xyz() -= m_center_of_shape_offset;
-	m_geometry_instance->set_matrix( result );
+	float4x4 result = float4x4();
+	return result;
 
-	return			result;
+	// FUNCTION BODY
+	// <0x5869a6>|0x000|0x000:'80'
+	// ******
 }
 
-void bt_character_controller::set_transform	( float4x4 const& transform )
+// STATE[STUB]
+void bt_character_controller::set_transform( float4x4 const& transform )
 {
-	float4x4 m		= transform;
-	m.c.xyz()		+= m_center_of_shape_offset;
-
-	m_geometry_instance->set_matrix							( m );
-	m_bt_controller->getGhostObject()->setWorldTransform	( from_vostok(m) );
+	// FUNCTION BODY
+	// <0x586a9a>|0x000|0x000:'85'
+	// ******
 }
 
+// STATE[STUB]
 void bt_character_controller::set_walk_direction( float3 const& direction )
 {
-	m_bt_controller->setWalkDirection( from_vostok(direction) );
+	// FUNCTION BODY
+	// <0x586959>|0x000|0x000:'90'
+	// ******
 }
 
+// STATE[STUB]
+bool bt_character_controller::has_updates( ) const
+{
+	return false;
+
+	// FUNCTION BODY
+	// <0x5867f0>|0x000|0x000:'95'
+	// ******
+}
+
+// STATE[STUB]
 void bt_character_controller::jump( )
 {
-	m_bt_controller->jump();
-}
-collision::geometry_instance& bt_character_controller::get_capsule( )
-{
-	return *m_geometry_instance;
 }
 
+// STATE[STUB]
+void bt_character_controller::end_jump( )
+{
+	// FUNCTION BODY
+	// <0x5867b0>|0x000|0x000:'105'
+	// ******
 }
+
+// STATE[STUB]
+// bool vostok::physics::bt_character_controller::adjust_foot_transform(vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float3 const&, float, float, vostok::math::float4x4&)
+bool bt_character_controller::adjust_foot_transform(
+	float3 const&                      half_size,
+	float3 const&                      start,
+	float3 const&                      finish,
+	float                              rotation_koef0,
+	float4x4&                          transform)
+{
+	return false;
+
+	// LOCALS
+	// float                           __formal
+	// ******
+
+	// FUNCTION BODY
+	// <0x586b00>|0x000|0x000:'110'
+	// ******
 }
+
+// STATE[STUB]
+void bt_character_controller::update_action( u32 time_delta_in_ms )
+{
+	// FUNCTION BODY
+	// <0x5867c1>|0x000|0x000:'121'
+	// ******
+}
+
+// STATE[STUB]
+bool bt_character_controller::can_jump( ) const
+{
+	return false;
+
+	// FUNCTION BODY
+	// <0x5868d1>|0x000|0x000:'126'
+	// ******
+}
+
+// STATE[STUB]
+bool bt_character_controller::on_ground( ) const
+{
+	return false;
+
+	// FUNCTION BODY
+	// <0x586891>|0x000|0x000:'131'
+	// ******
+}
+
+// STATE[STUB]
+void bt_character_controller::set_crouch( bool crouch )
+{
+}
+
+// STATE[STUB]
+bool bt_character_controller::can_crouch( ) const
+{
+	return false;
+
+	// FUNCTION BODY
+	// <0x5867a0>|0x000|0x000:'146'
+	// ******
+}
+
+// STATE[STUB]
+bool bt_character_controller::can_stand( ) const
+{
+	return false;
+
+	// FUNCTION BODY
+	// <0x586790>|0x000|0x000:'151'
+	// ******
+}
+
+} // namespace physics
+} // namespace vostok
