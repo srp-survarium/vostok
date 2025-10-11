@@ -2,8 +2,8 @@
 //	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef BASE_PHYSICS_OBJECT_H_INCLUDED
-#define BASE_PHYSICS_OBJECT_H_INCLUDED
+#ifndef VOSTOK_PHYSICS_BASE_PHYSICS_OBJECT_H_INCLUDED
+#define VOSTOK_PHYSICS_BASE_PHYSICS_OBJECT_H_INCLUDED
 
 #include <vostok/loose_ptr_base.h>
 
@@ -38,4 +38,4 @@ namespace {
 } // namespace physics
 } // namespace vostok
 
-#endif // #ifndef BASE_PHYSICS_OBJECT_H_INCLUDED
+#endif // #ifndef VOSTOK_PHYSICS_BASE_PHYSICS_OBJECT_H_INCLUDED

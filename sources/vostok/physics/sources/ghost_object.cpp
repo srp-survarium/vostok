@@ -6,6 +6,7 @@
 #include <vostok/physics/ghost_object.h>
 
 #include "bullet_include.h"
+#include <vostok/physics/bullet_utils.h>
 
 namespace vostok {
 namespace physics {
@@ -86,7 +87,7 @@ bt_ghost_object* create_ghost_object(
 void destroy_ghost_object( bt_ghost_object* obj )
 {
 	// VOSTOK_DELETE_IMPL( vostok::physics::g_ph_allocator, obj );
-	VOSTOK_DELETE_IMPL( vostok::physics::g_ph_allocator, obj );
+	VOSTOK_DELETE_IMPL( g_ph_allocator, obj );
 
 	// FUNCTION BODY
 

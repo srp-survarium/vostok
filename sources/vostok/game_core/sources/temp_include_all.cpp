@@ -17,18 +17,18 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/debug_renderer.h>
 
-#include <vostok/physics_2/animated_rigid_body.h>
-#include <vostok/physics_2/ghost_object.h>
-#include <vostok/physics_2/collision_shapes.h>
-#include <vostok/physics_2/static_rigid_body.h>
+#include <vostok/physics/animated_rigid_body.h>
+#include <vostok/physics/ghost_object.h>
+#include <vostok/physics/collision_shapes.h>
+#include <vostok/physics/static_rigid_body.h>
 
 namespace vostok
 {
 	void use_static_rigid_body()
 	{
-		physics_2::bt_collision_shape_ptr shape(NULL);
+		physics::bt_collision_shape_ptr shape(NULL);
 		
-		physics_2::bt_static_rigid_body body( shape, NULL );
+		physics::bt_static_rigid_body body( shape, NULL );
 		body.get_rigid_body( );
 		body.get_triangle_material( 10, true );
 		body.apply_impulse( float3(), float3() );
@@ -41,27 +41,27 @@ namespace vostok
 
 	void use_collision_shape()
 	{
-		physics_2::bt_collision_shape shape(NULL);
+		physics::bt_collision_shape shape(NULL);
 		shape.get_triangle_material( 10, true );
 
 		configs::binary_config_value bcv = configs::binary_config_value();
 
-		physics_2::destroy_bt_shape			( NULL );
-		physics_2::destroy_shape			( NULL );
-		physics_2::create_bt_primitive		( collision::primitive_box, float3(), float3() );
-		physics_2::create_primitive_shape	( collision::primitive_box, float3(), float3() );
-		physics_2::create_compound_shape	( bcv, float3(), "model_path" );
+		physics::destroy_bt_shape			( NULL );
+		physics::destroy_shape			( NULL );
+		physics::create_bt_primitive		( collision::primitive_box, float3(), float3() );
+		physics::create_primitive_shape	( collision::primitive_box, float3(), float3() );
+		physics::create_compound_shape	( bcv, float3(), "model_path" );
 
-		physics_2::geometry_resource_ptr resource_ptr	( NULL );
-		physics_2::create_btBvhTriangleMeshShape		( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
-		physics_2::create_static_triangle_mesh_shape	( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
+		physics::geometry_resource_ptr resource_ptr	( NULL );
+		physics::create_btBvhTriangleMeshShape		( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
+		physics::create_static_triangle_mesh_shape	( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
 	}
 
 
 	void use_ghost_object()
 	{
-		physics_2::bt_collision_shape_ptr shape(NULL);
-		physics_2::bt_ghost_object ghost = physics_2::bt_ghost_object( shape, NULL );
+		physics::bt_collision_shape_ptr shape(NULL);
+		physics::bt_ghost_object ghost = physics::bt_ghost_object( shape, NULL );
 
 		ghost.get_overlapping_objects_count( );
 		ghost.set_transform( math::float4x4() );
@@ -116,7 +116,7 @@ namespace vostok
 	void use_animated_rigid_body()
 	{
 		{
-			physics_2::bt_animated_rigid_body arb = physics_2::bt_animated_rigid_body( NULL, NULL, 10 );
+			physics::bt_animated_rigid_body arb = physics::bt_animated_rigid_body( NULL, NULL, 10 );
 			float4x4 matrix;
 
 			arb.center_of_mass_offset();
@@ -128,26 +128,26 @@ namespace vostok
 		{
 			// btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 			configs::binary_config_value config = configs::binary_config_value();
-			physics_2::geometries_type geometries( NULL, 10 );
-			physics_2::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
+			physics::geometries_type geometries( NULL, 10 );
+			physics::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
 		}
 
 		{
 			configs::binary_config_value config = configs::binary_config_value();
-			// physics_2::calculate_bt_hit_target_size( config );
+			// physics::calculate_bt_hit_target_size( config );
 
 			// calculate_bt_animated_body_size_from_hit_targets_config
-			physics_2::calculate_bt_animated_body_size_from_hit_targets_config( config );
+			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
 		}
 		
 		{
 			// sushi@NOTE: Called from animated_object::animated_object there game_material_id is set to 10 and linker hardcoded it here
 			// bt_animated_rigid_body*	new_animated_rigid_body		( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator );
-			physics_2::new_animated_rigid_body ( NULL, 10, NULL );
+			physics::new_animated_rigid_body ( NULL, 10, NULL );
 		}
 		{
 			// void						destroy_animated_rigid_body	( bt_animated_rigid_body* body, memory::base_allocator* allocator );
-			physics_2::destroy_animated_rigid_body( NULL, NULL );
+			physics::destroy_animated_rigid_body( NULL, NULL );
 		}
 	}
 

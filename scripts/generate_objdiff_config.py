@@ -61,7 +61,7 @@ def gather_units(skip_missing: bool, filter_prefix: Optional[str] = None):
             continue
 
         target_path = f"./target/{unit}.obj"
-        base_path   = f"./base/{unit}.obj".replace("physics", "physics_2")
+        base_path   = f"./base/{unit}.obj"
 
         if skip_missing and not (COFF_DIR / base_path).exists():
             base_path = f"./base/dummy.obj"

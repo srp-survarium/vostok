@@ -2,11 +2,12 @@
 //	Created 	: 29.09.2025
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef BT_GHOST_OBJECT_H_INCLUDED
-#define BT_GHOST_OBJECT_H_INCLUDED
+#ifndef VOSTOK_PHYSICS_BT_GHOST_OBJECT_H_INCLUDED
+#define VOSTOK_PHYSICS_BT_GHOST_OBJECT_H_INCLUDED
 
 #include <vostok/physics/base_physics_object.h>
 #include <vostok/physics/collision_shapes.h>
+#include <vostok/physics/contact_test_predicate.h>
 
 class btPairCachingGhostObject;
 
@@ -14,51 +15,30 @@ namespace vostok {
 namespace physics {
 
 typedef buffer_vector<base_physics_object *> base_physics_objects_type; // sushi@TODO: Find proper place for the typedef
-typedef u32 contact_test_predicate; // sushi@TODO: Reimpl
 
 class bt_ghost_object : base_physics_object {
 public:
 
-	bt_ghost_object(
-		bt_collision_shape_ptr             shape,
-		btPairCachingGhostObject*          obj);
-
+	bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGhostObject* obj );
 	~bt_ghost_object( );
 
-	void set_transform(
-		float4x4 const&                    transform);
+	void		set_transform							( float4x4 const& transform );
+	float4x4	get_transform							( ) const;
 
-	float4x4 get_transform( ) const;
+	void		insert									( world* w, u16 group, u16 mask );
+	void		remove									( world* w );
 
-	void insert(
-		world*                             w,
-		u16                                group,
-		u16                                mask);
+	void		get_overlapping_objects					( base_physics_objects_type& result ) const;
+	u32			get_overlapping_objects_count			( ) const;
 
-	void remove(
-		world*                             w);
+	bool		contact_test							( world* world );
+	void		contact_test							( world* world, base_physics_object* object, contact_test_predicate& predicate );
 
-	void get_overlapping_objects(
-		base_physics_objects_type&         result) const;
 
-	u32 get_overlapping_objects_count( ) const;
+	void		dbg_render								( world* world, math::color const& color ) const /* no source */;
 
-	bool contact_test(
-		world*                             world);
-
-	void contact_test(
-		world*                             world,
-		base_physics_object*               object,
-		contact_test_predicate&            predicate);
-
-	void dbg_render( world* world, math::color const& color ) const /* no source */;
-
-	u32 non_compound_shapes_count() const /* no source */;
-
-	void non_compound_shapes_centers(
-		vectora<float3>&                   centres_results);
-
-	
+	u32			non_compound_shapes_count				( ) const /* no source */;
+	void		non_compound_shapes_centers				( vectora<float3>& centres_results );
 
 
 	virtual btCollisionObject*	get_bt_collision_obect	( )			override;
@@ -79,4 +59,4 @@ namespace {
 } // namespace physics
 } // namespace vostok
 
-#endif // #ifndef BT_GHOST_OBJECT_H_INCLUDED
+#endif // #ifndef VOSTOK_PHYSICS_BT_GHOST_OBJECT_H_INCLUDED

@@ -1,66 +1,80 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 04.10.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef VOSTOK_PHYSICS_SOFT_BODY_H_INCLUDED
 #define VOSTOK_PHYSICS_SOFT_BODY_H_INCLUDED
-
-// temporary (by Andy)
-#pragma warning (push)
-#pragma warning (disable:4251)
-
-#include <vostok/physics/api.h>
 
 class btSoftBody;
 
 namespace vostok {
 namespace physics {
 
-class VOSTOK_PHYSICS_API bt_soft_body_rope
-{
-	friend class bullet_physics_world;
+// sushi@NOTE: OG soft_body has more info
+
+class bt_soft_body_rope  {
 public:
-					bt_soft_body_rope			( btSoftBody* body );
-	bool			is_active					( ) const;
-	u32				get_fragments_count			( ) const;
-	void			get_fragment				( u32 idx, float3& pt0, float3& pt1 ) const;
-	u32				get_nodes_count				( ) const;
-	void			get_node					( u32 idx, float3& pt ) const;
+	bt_soft_body_rope			( btSoftBody* ) /* no source */;
+
+	bool	is_active			( ) const /* no source */;
+
+	u32		get_fragments_count	( ) const /* no source */;
+	void	get_fragment		( u32, float3&, float3& ) const /* no source */;
+	u32		get_nodes_count		( ) const /* no source */;
+	void	get_node			( u32, float3& ) const /* no source */;
+
+
 private:
-	btSoftBody*		m_bt_body;
-}; // class rigid_body
+	/* offset 0x0000 */ btSoftBody*                         m_bt_body;
+}; // class bt_soft_body_rope
 
-struct VOSTOK_PHYSICS_API rope_construction_info
-{
-		rope_construction_info::rope_construction_info();
-		float				kVCF;			// Velocities correction factor (Baumgarte)
-		float				kDP;			// Damping coefficient [0,1]
-		float				kDG;			// Drag coefficient [0,+inf]
-		float				kLF;			// Lift coefficient [0,+inf]
-		float				kPR;			// Pressure coefficient [-inf,+inf]
-		float				kVC;			// Volume conversation coefficient [0,+inf]
-		float				kDF;			// Dynamic friction coefficient [0,1]
-		float				kMT;			// Pose matching coefficient [0,1]		
-		float				kCHR;			// Rigid contacts hardness [0,1]
-		float				kKHR;			// Kinetic contacts hardness [0,1]
-		float				kSHR;			// Soft contacts hardness [0,1]
-		float				kAHR;			// Anchors hardness [0,1]
-		float				timescale;		// Time scale
+namespace {
+	typedef char size_assert[
+		sizeof(bt_soft_body_rope) == 0x4 ? 1 : -1
+	];
+}
 
-		int					fragments_count;
-		float				margin;
-		int					iterations;
-		float3				p0;
-		float3				p1;
-		float				stiftness;		//[0,1]
-};
+//
+// rope_construction_info
+//
 
+struct rope_construction_info  {
+public:
+	rope_construction_info() {}
+
+
+private:
+	/* offset 0x0000 */ float                               kVCF;
+	/* offset 0x0004 */ float                               kDP;
+	/* offset 0x0008 */ float                               kDG;
+	/* offset 0x000c */ float                               kLF;
+	/* offset 0x0010 */ float                               kPR;
+	/* offset 0x0014 */ float                               kVC;
+	/* offset 0x0018 */ float                               kDF;
+	/* offset 0x001c */ float                               kMT;
+	/* offset 0x0020 */ float                               kCHR;
+	/* offset 0x0024 */ float                               kKHR;
+	/* offset 0x0028 */ float                               kSHR;
+	/* offset 0x002c */ float                               kAHR;
+	/* offset 0x0030 */ float                               timescale;
+	/* offset 0x0034 */ s32                                 fragments_count;
+	/* offset 0x0038 */ float                               margin;
+	/* offset 0x003c */ s32                                 iterations;
+	/* offset 0x0040 */ float3                              p0;
+	/* offset 0x004c */ float3                              p1;
+	/* offset 0x0058 */ float                               stiftness;
+}; // struct rope_construction_info
+
+namespace {
+	typedef char size_assert[
+		sizeof(rope_construction_info) == 0x5C ? 1 : -1
+	];
+}
+
+/*
 VOSTOK_PHYSICS_API bt_soft_body_rope* create_soft_body_rope	( world* world, rope_construction_info const& construction_info );
 VOSTOK_PHYSICS_API void				destroy_soft_body_rope	(  world* world, bt_soft_body_rope* body );
-
-#pragma warning (pop)
+*/
 } // namespace physics
 } // namespace vostok
 

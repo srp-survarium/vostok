@@ -15,9 +15,10 @@
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/facade/terrain_base.h>
-#include <vostok/physics/rigid_body.h>
+#include <vostok/physics/rigid_body_base.h>
 #include <vostok/physics/world.h>
 #include <vostok/game/collision_object_types.h>
+#include <vostok/physics/static_rigid_body.h>
 
 namespace survarium {
 
@@ -192,8 +193,8 @@ void game_cell::unload_terrain( )
 		DELETE					( m_terrain_collision );
 		m_terrain				= 0;
 	
-		m_game_world->get_physics_world()->remove_rigid_body( m_terrain_rigid_body );
-		physics::destroy_rigid_body( m_terrain_rigid_body );
+		m_game_world->get_physics_world()->remove( m_terrain_rigid_body );
+		physics::destroy_static_rigid_body( m_terrain_rigid_body );
 		m_terrain_rigid_body	= NULL;
 	}
 }
@@ -258,13 +259,13 @@ void game_cell::on_terrain_visual_ready( resources::queries_result& data )
 		info.m_mass						= 0.0f;
 		info.m_friction					= 100.0f;
 		math::aabb bb = m_terrain_collision->get_aabb();
-		info.m_render_model_offset		= float3( sz/2.0f, bb.min.y+(bb.max.y-bb.min.y)/2.0f, -sz/2.0f );
+		// info.m_render_model_offset		= float3( sz/2.0f, bb.min.y+(bb.max.y-bb.min.y)/2.0f, -sz/2.0f ); sushi@TODO
 
-		m_terrain_rigid_body			= physics::create_rigid_body( info );
+		m_terrain_rigid_body			= physics::create_static_rigid_body( info );
 
 		m_terrain_rigid_body->set_transform( terrain_transform );
 
-		m_game_world->get_physics_world()->add_rigid_body( m_terrain_rigid_body );
+		m_game_world->get_physics_world()->add( m_terrain_rigid_body, 0, 0 );
 
 	}
 }
