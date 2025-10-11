@@ -1,0 +1,65 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 12.10.2025
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "character_dispersion_params.h"
+
+namespace survarium {
+
+// STATE[STUB]
+// survarium::character_dispersion_params::character_dispersion_params()
+character_dispersion_params::character_dispersion_params( )
+{
+}
+
+// STATE[STUB]
+// void survarium::character_dispersion_params::load(vostok::configs::binary_config_value const&)
+void character_dispersion_params::load( vostok::configs::binary_config_value const& cfg )
+{
+	// FUNCTION BODY
+	// <0x5a0d89>|0x000|0x000:'32'
+	// <0x5a0d9d>|0x014|0x014:'33'
+	// 1
+	// <0x5a0db6>|0x02d|0x019:'35'
+	// <0x5a0dca>|0x041|0x014:'36'
+	// 1
+	// <0x5a0de4>|0x05b|0x01a:'38'
+	// <0x5a0df8>|0x06f|0x014:'39'
+	// 1
+	// <0x5a0e12>|0x089|0x01a:'41'
+	// <0x5a0e26>|0x09d|0x014:'42'
+	// 1
+	// <0x5a0e40>|0x0b7|0x01a:'44'
+	// <0x5a0e54>|0x0cb|0x014:'45'
+	// 1
+	// <0x5a0e6e>|0x0e5|0x01a:'47'
+	// <0x5a0e82>|0x0f9|0x014:'48'
+	// 1
+	// <0x5a0e9c>|0x113|0x01a:'50'
+	// <0x5a0eb0>|0x127|0x014:'51'
+	// 1
+	// <0x5a0eca>|0x141|0x01a:'53'
+	// <0x5a0ede>|0x155|0x014:'54'
+	// 1
+	// <0x5a0ef8>|0x16f|0x01a:'56'
+	// <0x5a0f0c>|0x183|0x014:'57'
+	// 1
+	// <0x5a0f26>|0x19d|0x01a:'59'
+	// <0x5a0f3a>|0x1b1|0x014:'60'
+	// 1
+	// <0x5a0f54>|0x1cb|0x01a:'62'
+	// <0x5a0f68>|0x1df|0x014:'63'
+	// 1
+	// <0x5a0f82>|0x1f9|0x01a:'65'
+	// <0x5a0f96>|0x20d|0x014:'66'
+	// 1
+	// <0x5a0fb0>|0x227|0x01a:'68'
+	// <0x5a0fc4>|0x23b|0x014:'69'
+	// 1
+	// <0x5a0fde>|0x255|0x01a:'71'
+	// <0x5a0ff2>|0x269|0x014:'72'
+	// ******
+}
+
+} // namespace survarium

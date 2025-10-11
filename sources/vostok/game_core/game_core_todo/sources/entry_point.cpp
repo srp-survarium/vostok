@@ -1,0 +1,21 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 12.10.2025
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "entry_point.h"
+
+namespace survarium {
+
+// STATE[STUB]
+// void survarium::game_core_initialize()
+void game_core_initialize( )
+{
+	// FUNCTION BODY
+	// 1
+	// 2
+	// 3
+	// ******
+}
+
+} // namespace survarium
