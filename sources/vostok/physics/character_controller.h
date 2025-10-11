@@ -10,6 +10,7 @@ namespace physics {
 
 class bullet_physics_world;
 class bullet_character_controller;
+struct world;
 
 class bt_character_controller  {
 public:
@@ -65,6 +66,8 @@ namespace {
 		sizeof(bt_character_controller) == 0xC ? 1 : -1
 	];
 }
+
+VOSTOK_PHYSICS_API bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w );
 
 } // namespace physics
 } // namespace vostok

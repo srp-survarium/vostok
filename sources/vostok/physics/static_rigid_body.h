@@ -17,7 +17,7 @@ namespace physics {
 //     DEFINITIONS      //
 //////////////////////////
 
-class bt_static_rigid_body : bt_rigid_body_base {
+class bt_static_rigid_body : public bt_rigid_body_base {
 public:
 
 	bt_static_rigid_body( bt_collision_shape_ptr shape, btRigidBody* body );

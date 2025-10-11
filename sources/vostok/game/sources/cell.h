@@ -15,7 +15,8 @@
 
 namespace vostok{
 namespace physics{
-	class bt_rigid_body;
+	class bt_rigid_body_base;
+	class bt_static_rigid_body;
 }
 }
 namespace survarium {
@@ -63,7 +64,7 @@ private:
 
 	vostok::render::terrain_model_ptr						m_terrain;
 	collision::collision_object*						m_terrain_collision;
-	physics::bt_rigid_body*								m_terrain_rigid_body;
+	physics::bt_static_rigid_body*						m_terrain_rigid_body;
 	game_material_visibility_parameters					m_visibility_parameters;
 	cell_manager*										m_cell_manager;
 

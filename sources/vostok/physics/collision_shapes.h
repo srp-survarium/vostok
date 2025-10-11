@@ -10,10 +10,11 @@
 #include <vostok/physics/api.h>
 #include <vostok/collision/primitives.h>
 
-#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+// #include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
 
 class btCollisionShape;
 class btStridingMeshInterface;
+class btBvhTriangleMeshShape;
 
 namespace vostok {
 namespace physics {
@@ -51,7 +52,7 @@ typedef resources::resource_ptr<
 
 VOSTOK_PHYSICS_API void						destroy_bt_shape						( btCollisionShape* sh );
 VOSTOK_PHYSICS_API void						destroy_shape							( bt_collision_shape* shape );
-VOSTOK_PHYSICS_API btCollisionShape*			create_bt_primitive						( collision::primitive_type type, float3 const& dim, float3 const& __formal );
+VOSTOK_PHYSICS_API btCollisionShape*		create_bt_primitive						( collision::primitive_type type, float3 const& dim, float3 const& __formal );
 VOSTOK_PHYSICS_API bt_collision_shape*		create_primitive_shape					( collision::primitive_type type, float3 const& dim, float3 const& local_scale );
 VOSTOK_PHYSICS_API bt_collision_shape*		create_compound_shape					( configs::binary_config_value const& shapes_root, float3 const& local_scale, pcstr model_path );
 
@@ -74,7 +75,8 @@ VOSTOK_PHYSICS_API bt_collision_shape*		create_static_triangle_mesh_shape		(
 																							float3 const&                      local_scale,
 																							geometry_resource_ptr const&       vertices_resource,
 																							geometry_resource_ptr const&       indices_resource);
-
+#if 0
+// sushi@TODO: Moved to cpp
 class btBvhTriangleMeshShapeResource : public btBvhTriangleMeshShape {
 public:
 	btBvhTriangleMeshShapeResource(
@@ -95,6 +97,7 @@ namespace {
 		sizeof(btBvhTriangleMeshShapeResource) == 0x70 ? 1 : -1
 	];
 }
+#endif
 
 typedef	resources::resource_ptr<
 	bt_collision_shape,

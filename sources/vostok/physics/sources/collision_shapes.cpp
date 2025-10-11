@@ -11,6 +11,27 @@
 namespace vostok {
 namespace physics {
 
+class btBvhTriangleMeshShapeResource : public btBvhTriangleMeshShape {
+public:
+	btBvhTriangleMeshShapeResource(
+		btStridingMeshInterface*           meshInterface,
+		u16*                               face_data,
+		geometry_resource_ptr const&       vertices_resource,
+		geometry_resource_ptr const&       indices_resource);
+
+private:
+	/* offset 0x0000 */ /* fields for btBvhTriangleMeshShape */
+	/* offset 0x0060 */ u16*                   m_face_data;
+	/* offset 0x0064 */ geometry_resource_ptr  m_raw_vertices;
+	/* offset 0x0068 */ geometry_resource_ptr  m_raw_indices;
+}; // class btBvhTriangleMeshShapeResource
+
+namespace {
+	typedef char size_assert[
+		sizeof(btBvhTriangleMeshShapeResource) == 0x70 ? 1 : -1
+	];
+}
+
 // STATE[STUB]
 btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 	btStridingMeshInterface*           meshInterface,
@@ -55,22 +76,28 @@ u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_in
 	}
 }
 
-// STATE[STUB]: sushi@NOTE: There are allocations behind bt_shape. Not sure whether done by survarium or bt. Needs to be investigated first.
+// STATE[STUB]
 void destroy_bt_shape( btCollisionShape* sh )
 {
 	s32 shape_type = sh->getShapeType();
-
-	if ( shape_type == 31 ) // sushi@TODO: What is 31?
+	if ( shape_type == COMPOUND_SHAPE_PROXYTYPE )
 	{
-		
-		// sh->
-
-	}
-	else if ( shape_type == 21 )
+		btCompoundShape* shape = (btCompoundShape*)sh;
+		while ( shape->getNumChildShapes( ) )
+		{
+			btCollisionShape* child = shape->getChildList()->m_childShape;
+			shape->removeChildShapeByIndex(0);
+			destroy_bt_shape( child );
+		}		
+	} 
+	else if ( shape_type == TRIANGLE_MESH_SHAPE_PROXYTYPE )
 	{
-
+		btTriangleMeshShape* shape = (btTriangleMeshShape*)sh;
+		btStridingMeshInterface* mesh = shape->getMeshInterface( );
+		VOSTOK_DELETE_IMPL( g_ph_allocator, mesh );
 	}
 
+	VOSTOK_DELETE_IMPL( g_ph_allocator, sh );
 
 	// FUNCTION BODY
 	// <0x72c3a9>|0x000|0x000:'92'
