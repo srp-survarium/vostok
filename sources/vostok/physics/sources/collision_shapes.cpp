@@ -76,7 +76,7 @@ u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_in
 	}
 }
 
-// STATE[STUB]
+// STATE[DONE]
 void destroy_bt_shape( btCollisionShape* sh )
 {
 	s32 shape_type = sh->getShapeType();
@@ -98,28 +98,6 @@ void destroy_bt_shape( btCollisionShape* sh )
 	}
 
 	VOSTOK_DELETE_IMPL( g_ph_allocator, sh );
-
-	// FUNCTION BODY
-	// <0x72c3a9>|0x000|0x000:'92'
-
-
-
-	// <0x72c3b5>|0x00c|0x00c:'96'
-
-	// <0x72c3c0>|0x017|0x00b:'98'
-	// <0x72c3c6>|0x01d|0x006:'99'
-	// <0x72c3cd>|0x024|0x007:'100'
-
-	// <0x72c3dc>|0x033|0x00f:'102'
-	// <0x72c3de>|0x035|0x002:'103'
-
-
-	// <0x72c3e3>|0x03a|0x005:'106'
-	// <0x72c3e6>|0x03d|0x003:'107'
-
-
-	// <0x72c415>|0x06c|0x02f:'110'
-	// ******
 }
 
 // STATE[STUB]
