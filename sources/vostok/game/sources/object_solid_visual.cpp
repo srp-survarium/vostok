@@ -10,8 +10,8 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/game/collision_object_types.h>
 #include <vostok/render/facade/scene_renderer.h>
-#include <vostok/physics/rigid_body.h>
-
+#include <vostok/physics/rigid_body_base.h>
+#include <vostok/physics/static_rigid_body.h>
 
 namespace survarium{
 
@@ -45,8 +45,8 @@ void object_solid_visual::unload_contents( )
 {
 	if(m_physics_rigid_body)
 	{
-		m_game_scene.get_physics_world()->remove_rigid_body( m_physics_rigid_body );
-		physics::destroy_rigid_body		( m_physics_rigid_body );
+		m_game_scene.get_physics_world()->remove( m_physics_rigid_body );
+		physics::destroy_static_rigid_body		( m_physics_rigid_body );
 		m_physics_rigid_body			= NULL;
 		m_collision_shape				= NULL;
 	}
@@ -119,14 +119,14 @@ void object_solid_visual::on_resources_ready( resources::queries_result& data )
 		info.m_mass						= 0.0f;
 
 
-		m_physics_rigid_body			= physics::create_rigid_body( info );
+		m_physics_rigid_body			= physics::create_static_rigid_body( info );
 
-		float3 local_center				= m_physics_rigid_body->render_model_offset();
+		float3 local_center				= float3(1., 1., 1.); // sushi@OTODO: m_physics_rigid_body->render_model_offset();
 		float4x4 t						= m_transform;
 		t.c.xyz()						+= local_center;
 		m_physics_rigid_body->set_transform( t );
 		
-		m_game_scene.get_physics_world()->add_rigid_body( m_physics_rigid_body );
+		m_game_scene.get_physics_world()->add( m_physics_rigid_body, 0, 0 ); // sushi@TODO:
 	}
 }
 
@@ -139,8 +139,8 @@ void object_dynamic_visual::unload_contents( )
 {
 	if(m_physics_rigid_body)
 	{
-		m_game_scene.get_physics_world()->remove_rigid_body( m_physics_rigid_body );
-		physics::destroy_rigid_body		( m_physics_rigid_body );
+		m_game_scene.get_physics_world()->remove( m_physics_rigid_body );
+		physics::destroy_static_rigid_body		( m_physics_rigid_body ); // sushi@TODO
 		m_physics_rigid_body			= NULL;
 		m_collision_shape				= NULL;
 	}
@@ -201,12 +201,12 @@ void object_dynamic_visual::on_resources_ready( resources::queries_result& data 
 	info.m_collisionShape			= m_collision_shape;
 	info.load						( cfg->get_root() );
 	
-	m_physics_rigid_body			= physics::create_rigid_body( info );
+	m_physics_rigid_body			= physics::create_static_rigid_body( info );
 
 	m_physics_rigid_body->set_transform( m_transform );
-	
-	m_physics_rigid_body->set_moved_callback			( boost::bind(&object_dynamic_visual::physics_update_transform, this) );
-	m_game_scene.get_physics_world()->add_rigid_body	( m_physics_rigid_body );
+	// sushi@TODO: No callbacks anymore?
+	// m_physics_rigid_body->set_moved_callback			( boost::bind(&object_dynamic_visual::physics_update_transform, this) );
+	m_game_scene.get_physics_world()->add	( m_physics_rigid_body, 0, 0 );
 }
 
 

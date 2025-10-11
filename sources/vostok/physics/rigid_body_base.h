@@ -2,8 +2,8 @@
 //	Created		: 21.09.2025
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef RIGID_BODY_BASE_H_INCLUDED
-#define RIGID_BODY_BASE_H_INCLUDED
+#ifndef VOSTOK_PHYSICS_RIGID_BODY_BASE_H_INCLUDED
+#define VOSTOK_PHYSICS_RIGID_BODY_BASE_H_INCLUDED
 
 #include <vostok/physics/base_physics_object.h>
 
@@ -35,4 +35,4 @@ namespace {
 } // namespace physics
 } // namespace vostok
 
-#endif // #ifndef RIGID_BODY_BASE_H_INCLUDED
+#endif // #ifndef VOSTOK_PHYSICS_RIGID_BODY_BASE_H_INCLUDED

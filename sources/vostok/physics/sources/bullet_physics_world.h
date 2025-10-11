@@ -1,74 +1,154 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 12.09.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef BULLET_PHYSICS_WORLD_H_INCLUDED
 #define BULLET_PHYSICS_WORLD_H_INCLUDED
 
-#include<vostok/physics/world.h>
-#include<vostok/physics/soft_body.h>
+#include <vostok/physics/world.h>
+#include <vostok/physics/engine.h>
+#include <vostok/physics/soft_body.h>
+#include <vostok/physics/contact_test_predicate.h>
 
-class btCollisionConfiguration;
-class btCollisionDispatcher;
-class btBroadphaseInterface;
-class btConstraintSolver;
-class btDiscreteDynamicsWorld;
-class btRigidBody;
-class btDynamicsWorld;
-class btSoftRigidDynamicsWorld;
-struct btSoftBodyWorldInfo;
-class btSoftBody;
+#include "bullet_include.h"
 
 namespace vostok {
 namespace physics {
 
-class bullet_physics_world :public world,
-							public boost::noncopyable
+class base_physics_object;
+
+
+/*
+// STATE[STUB]
+// void vostok::resources::resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>::~resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>()
+resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base>::~resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base>( )
 {
+}
+*/
+
+class bullet_physics_world : world, boost::noncopyable {
 public:
-	
-	bullet_physics_world	( memory::base_allocator& allocator, engine& engine );
-	virtual	void			initialize				( );
-	virtual	void			tick					( );
-	virtual	void			clear_resources			( ){};
-	virtual	void			debug_render			( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const;
-	virtual	void			set_ready				( bool ){};
-	virtual	void			create_test_scene		( );
+	bullet_physics_world( engine& engine );
 
-	virtual	void			add_rigid_body			( bt_rigid_body* );
-	virtual	void			remove_rigid_body		( bt_rigid_body* );
-	virtual	void			add_soft_body			( bt_soft_body_rope* );
-	virtual	void			remove_soft_body		( bt_soft_body_rope* );
+	virtual void initialize( ) override;
 
-	virtual closest_ray_result	ray_test			( float3 const& ray_from, float3 const& ray_dir, float const ray_length );
+	virtual void destroy( ) override;
 
-	inline memory::base_allocator&		allocator	( )		{ return m_allocator; }
-	btSoftRigidDynamicsWorld*	get_bt_internal		( )		{ return m_dynamicsWorld; }
-	
-	bt_soft_body_rope*			create_soft_body_rope( rope_construction_info const& construction_info );
-	void						destroy_soft_body_rope( bt_soft_body_rope* body );
+	virtual void tick( u32 current_time_in_ms ) override;
 
+	virtual void create_test_scene( ) override;
+
+	virtual void set_renderer( btIDebugDraw* renderer ) override;
+
+	virtual void draw_object( btCollisionShape* shape, btTransform const& transform, btVector3 const& color ) override;
+
+	virtual void debug_draw_world( ) override;
+
+	virtual void add( bt_constraint* constraint ) override;
+	virtual void add( bt_soft_body_rope* body ) override;
+	virtual void add( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask ) override;
+
+	virtual void remove( bt_constraint* constraint ) override;
+	virtual void remove( bt_soft_body_rope* body ) override;
+	virtual void remove( bt_rigid_body_base* body ) override;
+
+	virtual void move( bt_rigid_body_base* body, float4x4 const& new_transform ) override;
+
+	virtual closest_ray_result ray_test(
+		float3 const&                      ray_from,
+		float3 const&                      ray_dir,
+		float                              ray_length,
+		u16                                filter_group,
+		u16                                filter_mask) override;
+
+	virtual void ray_query(
+		float3 const&                      ray_from,
+		float3 const&                      ray_dir,
+		float                              ray_length,
+		vectora<closest_ray_result>&       results,
+		u16                                filter_group,
+		u16                                filter_mask) override;
+
+	virtual void object_query(
+		bt_collision_shape*                shape,
+		float4x4 const&                    transform_from,
+		float4x4 const&                    transform_to,
+		vectora<closest_ray_result>&       results,
+		u16                                filter_group,
+		u16                                filter_mask) override;
+
+	virtual math::aabb get_world_aabb() const override { return m_world_aabb; };
+
+	virtual void on_before_reuse( ) override;
+
+	virtual bool recover_from_penetrations(
+		bt_collision_shape*                shape,
+		float4x4 const&                    transform_initial,
+		float4x4&                          transform_result,
+		u16                                filter_group,
+		u16                                filter_mask) override;
+
+	virtual void subscribe_on_contact		( base_physics_object* object, on_contact_callback* callback ) override;
+	virtual void unsubscribe_from_contact	( base_physics_object* object, on_contact_callback* callback ) override;
+
+
+	memory::base_allocator& allocator() /* no source */;
+
+	btSoftRigidDynamicsWorld* get_bt_internal() /* no source */;
+
+	bt_soft_body_rope* create_soft_body_rope(rope_construction_info const&) /* no source */;
+
+	void destroy_soft_body_rope(bt_soft_body_rope*) /* no source */;
+
+	void contact_pair_test(
+		contact_test_predicate&            predicate,
+		btCollisionObject*                 first_object,
+		btCollisionObject*                 second_object);
+
+	bool adjust_foot_transform(
+		float3 const&                      half_size,
+		float3 const&                      start,
+		float3 const&                      finish,
+		float                              rotation_koef0,
+		float                              __formal,
+		float4x4&                          transform);
+
+	void notify_about_contact( );
+
+	typedef std::multimap<
+		base_physics_object *,
+		boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *,
+		std::less<base_physics_object *>,
+		std::allocator<
+			std::pair<
+				base_physics_object * const,
+				boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> 
+			*>
+		>
+	> callbacks_type;
 private:
-	timing::timer				m_timer;
-	memory::base_allocator&		m_allocator;
-// bullet physics
-	btCollisionConfiguration*	m_collisionConfiguration;
-	btCollisionDispatcher*		m_dispatcher;
-	btBroadphaseInterface*		m_overlappingPairCache;
-	btConstraintSolver*			m_constraintSolver;
-	
-	btSoftBodyWorldInfo*		m_softBodyWorldInfo;
-	btSoftRigidDynamicsWorld*	m_dynamicsWorld;
-
-	btRigidBody*				m_ground_plane_body;
-	bt_rigid_body*				m_dynamic_test_body;
-	btSoftBody*					m_test_rope_body;
-
-	engine&						m_engine;
-	float						m_last_frame_time;
+	/* offset 0x0000 */ /* fields for world */
+	/* offset 0x0004 */ /* fields for boost::noncopyable */
+	/* offset 0x0004 */ callbacks_type                      m_contact_callbacks;
+	/* offset 0x001c */ memory::base_allocator&             m_allocator;
+	/* offset 0x0020 */ btCollisionConfiguration*           m_collisionConfiguration;
+	/* offset 0x0024 */ btCollisionDispatcher*              m_dispatcher;
+	/* offset 0x0028 */ btBroadphaseInterface*              m_overlappingPairCache;
+	/* offset 0x002c */ btConstraintSolver*                 m_constraintSolver;
+	/* offset 0x0030 */ btSoftBodyWorldInfo*                m_softBodyWorldInfo;
+	/* offset 0x0034 */ btSoftRigidDynamicsWorld*           m_dynamicsWorld;
+	/* offset 0x0038 */ btGhostPairCallback*                m_ghost_pair_callback;
+	/* offset 0x003c */ engine&                             m_engine;
+	/* offset 0x0040 */ math::aabb                          m_world_aabb;
+	/* offset 0x0058 */ float                               m_last_frame_time;
+	/* offset 0x005c */ float                               m_last_frame_delta;
 }; // class bullet_physics_world
+
+namespace {
+	typedef char size_assert[
+		sizeof(bullet_physics_world) == 0x60 ? 1 : -1
+	];
+}
 
 } // namespace physics
 } // namespace vostok

@@ -44,7 +44,7 @@ terrain_render_model::~terrain_render_model()
 
 	m_bt_collision_shape						= NULL;
 
-	physics::destroy_shape						( *render::g_allocator, s );
+	physics::destroy_shape						( s );
 
 	DELETE_ARRAY								( m_heightfield );
 
@@ -136,12 +136,14 @@ void terrain_render_model::load_from_reader( memory::reader& F, render::terrain&
 
 	m_collision_geom				= &*collision::new_terrain_geometry_instance(render::g_allocator, float4x4().identity(), physical_size, vertex_row_size, m_heightfield, false  );
 	//m_collision_geom->set_no_delete	( );
+	m_bt_collision_shape			= physics::create_primitive_shape( collision::primitive_box, float3(0., 0., 0.), float3(1., 1., 1.) );
+	/*
 	m_bt_collision_shape			= physics::create_terrain_shape(*render::g_allocator, 
 																	m_heightfield, 
 																	vertex_row_size, 
 																	m_aabbox.min.y, 
 																	m_aabbox.max.y );
-
+	*/
 	m_bt_collision_shape->set_no_delete	( );
 
 	untyped_buffer_ptr vb			= resource_manager::ref().create_buffer ( m_render_geometry.vertex_count*vertex_size, tmp_buffer, enum_buffer_type_vertex, true);

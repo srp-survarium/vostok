@@ -10,6 +10,7 @@
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/collision/animated_object.h>
 #include <vostok/collision/shell_creation_utils.h>
+#include <vostok/physics/bullet_utils.h>
 
 namespace vostok {
 namespace physics {

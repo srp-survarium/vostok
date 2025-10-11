@@ -2,8 +2,8 @@
 //	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ANIMATED_RIGID_BODY_H_INCLUDED
-#define ANIMATED_RIGID_BODY_H_INCLUDED
+#ifndef VOSTOK_PHYSICS_ANIMATED_RIGID_BODY_H_INCLUDED
+#define VOSTOK_PHYSICS_ANIMATED_RIGID_BODY_H_INCLUDED
 
 #include <vostok/physics/rigid_body_base.h>
 #include <vostok/math_aabb.h> // sushi@TODO: Should be removed. What are the rules on when to import things or not?
@@ -37,24 +37,24 @@ namespace physics {
 
 class bt_animated_rigid_body : public bt_rigid_body_base {
 public:
-	bt_animated_rigid_body							( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
-	virtual ~bt_animated_rigid_body					( ) {};
+	bt_animated_rigid_body								( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
+	virtual ~bt_animated_rigid_body						( ) {};
 
 	/* bt_rigid_body_base overrides */
-	virtual btRigidBody*	get_rigid_body			( )														override;
+	virtual btRigidBody*		get_rigid_body			( )														override;
 
-	virtual u16				get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			override;
-	virtual void			apply_impulse			( float3 const& impulse, float3 const& point_in_world )	override;
+	virtual u16					get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			override;
+	virtual void				apply_impulse			( float3 const& impulse, float3 const& point_in_world )	override;
 
-	virtual void			set_transform			( float4x4 const& transform )							override;
-	virtual float4x4		get_transform			( ) const												override;
+	virtual void				set_transform			( float4x4 const& transform )							override;
+	virtual float4x4			get_transform			( ) const												override;
 
 	/* self virtual methods */
-	virtual float3 const&		center_of_mass_offset( ) const;
+	virtual float3 const&		center_of_mass_offset	( ) const;
 
 	/* base_physics_object overrides */
-	virtual u16					get_collision_group() const override;
-	virtual btCollisionObject*	get_bt_collision_obect()	override;
+	virtual u16					get_collision_group		( ) const override;
+	virtual btCollisionObject*	get_bt_collision_obect	( )	override;
 
 	/* self methods: sushi@NOTE: Seems like those didn't inline in target, but did here */
 	void		update_bone_matrix	( u32 index, float4x4 const& new_transform, bool recalculate_aabb );
@@ -87,7 +87,7 @@ btCompoundShape*	new_compound_shape_from_hit_targets_config	( configs::binary_co
 u32					calculate_bt_hit_target_size							( configs::binary_config_value const& config );
 */
 // sushi@NOTE: This should be also hidden, but it doesn't have XREFs..
-static u32					calculate_bt_joint_size									( configs::binary_config_value const& config );
+static u32			calculate_bt_joint_size									( configs::binary_config_value const& config );
 u32					calculate_bt_animated_body_size_from_hit_targets_config	( configs::binary_config_value const& config );
 
 bt_animated_rigid_body* new_animated_rigid_body		( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator );
@@ -99,4 +99,4 @@ collision::animated_object* new_animated_bt_hit_model( configs::binary_config_va
 } // namespace physics
 } // namespace vostok
 
-#endif // #ifndef ANIMATED_RIGID_BODY_H_INCLUDED
+#endif // #ifndef VOSTOK_PHYSICS_ANIMATED_RIGID_BODY_H_INCLUDED

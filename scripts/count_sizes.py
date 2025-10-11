@@ -1,8 +1,23 @@
-#!/usr/bin/env python3
+"""
+count_sized.py - Display how much disk memory different extensions take in the project.
+"""
 
-import os, sys
 from collections import defaultdict
 from math import log
+from pathlib import Path
+import argparse
+import os
+import sys
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
+
+VOSTOK_DIR = ROOT_DIR / "vostok"
+SRC        = VOSTOK_DIR / "sources"
+
+
+####################
+
 
 def humanize(n):
     if n < 1024: return f"{n}B"
@@ -21,15 +36,29 @@ def ext_of(name: str) -> str:
 root = sys.argv[1] if len(sys.argv) > 1 else "."
 totals = defaultdict(int)
 
-for dirpath, _, files in os.walk(root):
-    for fn in files:
-        path = os.path.join(dirpath, fn)
-        try:
-            st = os.stat(path, follow_symlinks=False)
-        except OSError:
-            continue
-        totals[ext_of(fn)] += st.st_size
 
-# print sorted by size ascending
-for ext, size in sorted(totals.items(), key=lambda kv: kv[1]):
-    print(f"{humanize(size)} {ext}")
+####################
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("src", nargs="?", type=Path, default=SRC)
+    args = parser.parse_args()
+
+    src = args.src.resolve()
+
+    for dirpath, _, files in os.walk(src):
+        for fn in files:
+            path = os.path.join(dirpath, fn)
+            try:
+                st = os.stat(path, follow_symlinks=False)
+            except OSError:
+                continue
+            totals[ext_of(fn)] += st.st_size
+
+    # print sorted by size ascending
+    for ext, size in sorted(totals.items(), key=lambda kv: kv[1]):
+        print(f"{humanize(size)} {ext}")
+
+if __name__ == "__main__":
+    main()

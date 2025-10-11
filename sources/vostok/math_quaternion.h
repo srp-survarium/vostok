@@ -156,7 +156,7 @@ public:
 
 public:
 	inline				quaternion	( );
-			explicit	quaternion	( float4x4 matrix );
+			explicit	quaternion	( float4x4 const& matrix_raw );
 	inline	explicit	quaternion	( float3 angles );
 	inline				quaternion	( float3 const& direction, float angle );
 	inline	explicit	quaternion	( float4 const& vector );

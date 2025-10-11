@@ -2,8 +2,8 @@
 //	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef BASE_PHYSICS_OBJECT_H_INCLUDED
-#define BASE_PHYSICS_OBJECT_H_INCLUDED
+#ifndef VOSTOK_PHYSICS_BASE_PHYSICS_OBJECT_H_INCLUDED
+#define VOSTOK_PHYSICS_BASE_PHYSICS_OBJECT_H_INCLUDED
 
 #include <vostok/loose_ptr_base.h>
 
@@ -22,8 +22,8 @@ class base_physics_object : loose_ptr_base {
 public:
 	inline base_physics_object() : user_data(NULL) { }
 
-	virtual u16					get_collision_group() const = 0;
-	virtual btCollisionObject*	get_bt_collision_obect()	= 0;
+	virtual u16					get_collision_group		( ) const	= 0;
+	virtual btCollisionObject*	get_bt_collision_obect	( )			= 0;
 public:
 	/* offset 0x0004 */ /* fields for loose_ptr_base */
 	/* offset 0x0008 */ collision::game_object*             user_data; // sushi@NOTE: Most likely needs to be private, though there are no getters/setters in the header
@@ -38,4 +38,4 @@ namespace {
 } // namespace physics
 } // namespace vostok
 
-#endif // #ifndef BASE_PHYSICS_OBJECT_H_INCLUDED
+#endif // #ifndef VOSTOK_PHYSICS_BASE_PHYSICS_OBJECT_H_INCLUDED

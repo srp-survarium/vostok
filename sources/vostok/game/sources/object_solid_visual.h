@@ -15,6 +15,8 @@
 #include <vostok/physics/model.h>
 #include <vostok/physics/world.h>
 
+#include <vostok/physics/static_rigid_body.h> // sushi@TODO: Not needed?
+
 namespace survarium {
 
 class object_visual : public game_object_
@@ -45,7 +47,7 @@ protected:
 	render::static_model_ptr				m_model;
 //	collision::collision_object_geometry*	m_collision;
 	physics::bt_collision_shape_ptr			m_collision_shape;
-	physics::bt_rigid_body*					m_physics_rigid_body;
+	physics::bt_static_rigid_body*			m_physics_rigid_body;
 }; // class object_solid_visual
 
 class object_dynamic_visual : public object_visual
@@ -64,7 +66,7 @@ protected:
 protected:
 	render::static_model_ptr				m_model;
 	physics::bt_collision_shape_ptr			m_collision_shape;
-	physics::bt_rigid_body*					m_physics_rigid_body;
+	physics::bt_static_rigid_body*			m_physics_rigid_body;
 }; // class object_dynamic_visual
 
 class object_skeleton_visual : public object_visual 
