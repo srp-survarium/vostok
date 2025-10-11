@@ -6,10 +6,10 @@
 #define VOSTOK_PHYSICS_WORLD_H_INCLUDED
 
 #include <vostok/physics/ray_result.h>
-#include <vostok/physics/bullet_utils.h> // btVector3
 
 class btCollisionShape;
 class btTransform;
+class btVector3;
 class btIDebugDraw;
 class btTypedConstraint;
 
