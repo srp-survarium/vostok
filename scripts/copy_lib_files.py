@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+copy_lib_files.py - Copy 3rd party libraries ('.dll's and '.lib's) into the project.
+"""
 
 import argparse
 import shutil
@@ -6,10 +8,19 @@ from pathlib import Path
 
 EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
+
+LIBS_DIR   = ROOT_DIR / "vostok-libs"
+VOSTOK_DIR = ROOT_DIR / "vostok"
+
+SRC         = LIBS_DIR   / "sources"
+DEST        = VOSTOK_DIR / "sources"
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("src", type=Path)
-    parser.add_argument("dest", type=Path)
+    parser.add_argument("src", nargs="?", type=Path, default=SRC)
+    parser.add_argument("dest", nargs="?", type=Path, default=DEST)
     args = parser.parse_args()
 
     src = args.src.resolve()

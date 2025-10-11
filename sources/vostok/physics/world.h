@@ -1,64 +1,111 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.01.2008
-//	Author		: Dmitriy Iassenev
-//	Description : default world interface
+//	Created 	: 28.08.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef VOSTOK_PHYSICS_WORLD_H_INCLUDED
 #define VOSTOK_PHYSICS_WORLD_H_INCLUDED
 
-#include <vostok/animation/type_definitions.h> 
-#include <vostok/render/engine/base_classes.h>
 #include <vostok/physics/ray_result.h>
 
-class btDynamicsWorld;
+class btCollisionShape;
+class btTransform;
+class btVector3;
+class btIDebugDraw;
+class btTypedConstraint;
 
 namespace vostok {
-namespace render {
-
-namespace debug {
-	class renderer;
-} // namespace debug
-} // namespace render
-
-namespace collision {
-	class geometry_instance;
-	struct space_partitioning_tree;
-} // namespace collision
-
 namespace physics {
 
-struct handler;
-struct shell;
-class bt_rigid_body;
+class bt_rigid_body_base;
 class bt_soft_body_rope;
+class bt_collision_shape;
+
+class bt_constraint {
+public:
+	bt_constraint		( ) {}
+	virtual void load	( configs::binary_config_value const& ) {}
+
+private:
+	/* offset 0x0004 */ btTypedConstraint*                  m_bt_typed_constraint;
+	/* offset 0x0008 */ bt_rigid_body_base*                 m_body_a;
+	/* offset 0x000c */ bt_rigid_body_base*                 m_body_b;
+};
+
+namespace {
+	typedef char size_assert[
+		sizeof(bt_constraint) == 0x10 ? 1 : -1
+	];
+}
+
 
 struct VOSTOK_NOVTABLE world {
-	virtual										~world				( )												{};
-	virtual	void								tick				( )												= 0;
-	virtual	void								clear_resources		( )												= 0;
-	virtual void								initialize			( )												= 0;
-	//virtual	non_null<shell>::ptr				new_physics_shell	( const configs::binary_config_value& cfg )		= 0;
-	//virtual	non_null<shell>::ptr				new_physics_shell	( non_null<collision::geometry_instance>::ptr g_instance ) = 0;
+public:
+	virtual								~world				( )												{};
+	virtual	void						tick				( u32 current_time_in_ms )						= 0;
 
-	//virtual	void								delete_shell		( non_null<shell>::ptr sh )						= 0;
-	//virtual	non_null<shell>::ptr				new_static_shell	( const configs::binary_config_value& cfg )		= 0;
-	//virtual	non_null<shell>::ptr				new_static_shell	( non_null<collision::geometry_instance>::ptr g_instance ) = 0;
+	virtual void						initialize			( )												= 0;
+	virtual void						destroy				( )												= 0;
 
-	virtual	void								debug_render		( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const = 0;
-	virtual	void								set_ready			( bool v )										= 0;
-//	virtual	void								set_space			( vostok::collision::space_partitioning_tree *space )	= 0;
+	virtual void						set_renderer		( btIDebugDraw* renderer )						= 0;
 
-	virtual	void								create_test_scene( )											= 0;
-	
-	virtual	void		add_rigid_body			( bt_rigid_body* )	=0;
-	virtual	void		remove_rigid_body		( bt_rigid_body* )	=0;
-	virtual	void		add_soft_body			( bt_soft_body_rope* )	=0;
-	virtual	void		remove_soft_body		( bt_soft_body_rope* )	=0;
-	virtual closest_ray_result ray_test			( float3 const& ray_from, float3 const& ray_dir, float const ray_length ) = 0;
-//	virtual	 collision::space_partitioning_tree* get_collision_tree	( ) const										= 0;
+	virtual void						debug_draw_world	( )												= 0;
+	virtual void						draw_object			( btCollisionShape* shape, btTransform const& transform, btVector3 const& color ) = 0;
+	virtual void						create_test_scene	( )												= 0;
 
-}; // class world
+	virtual void						add					( bt_constraint* constraint )									= 0;
+	virtual void						add					( bt_soft_body_rope* body )										= 0;
+	virtual void						add					( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask ) = 0;
+
+	virtual void						remove				( bt_constraint* constraint )									= 0;
+	virtual void						remove				( bt_soft_body_rope* body )										= 0;
+	virtual void						remove				( bt_rigid_body_base* body )									= 0;
+
+	virtual void						move				( bt_rigid_body_base* body, float4x4 const& new_transform )		= 0;
+
+	virtual closest_ray_result			ray_test			(
+																float3 const&                      ray_from,
+																float3 const&                      ray_dir,
+																float                              ray_length,
+																u16                                filter_group,
+																u16                                filter_mask)				= 0;
+
+	virtual void						ray_query			(
+																float3 const&                      ray_from,
+																float3 const&                      ray_dir,
+																float                              ray_length,
+																vectora<closest_ray_result>&       results,
+																u16                                filter_group,
+																u16                                filter_mask)				= 0;
+
+	virtual void						object_query		(
+																bt_collision_shape*                shape,
+																float4x4 const&                    transform_from,
+																float4x4 const&                    transform_to,
+																vectora<closest_ray_result>&       results,
+																u16                                filter_group,
+																u16                                filter_mask)				= 0;
+
+	virtual bool				recover_from_penetrations	(
+																bt_collision_shape*                shape,
+																float4x4 const&                    transform_initial,
+																float4x4&                          transform_result,
+																u16                                filter_group,
+																u16                                filter_mask)				= 0;
+
+	virtual math::aabb				get_world_aabb			( ) const														= 0;
+	virtual void					on_before_reuse			( )																= 0;
+
+	typedef	boost::function<void __cdecl( base_physics_object *, base_physics_object *, float3 const & )> on_contact_callback;
+	virtual void				subscribe_on_contact		( base_physics_object* object, on_contact_callback* callback )	= 0;
+	virtual void				unsubscribe_from_contact	( base_physics_object* object, on_contact_callback* callback )	= 0;
+private:
+}; // struct world
+
+namespace {
+	typedef char size_assert[
+		sizeof(world) == 0x4 ? 1 : -1
+	];
+}
 
 } // namespace physics
 } // namespace vostok

@@ -38,7 +38,7 @@ void game_scene::init_physics( )
 void game_scene::tick( )
 {
 	if(m_physics_world)
-		m_physics_world->tick();
+		m_physics_world->tick(0); // sushi@TODO: Temp now ticks take time
 }
 
 render::game::renderer& game_scene::renderer( )				
