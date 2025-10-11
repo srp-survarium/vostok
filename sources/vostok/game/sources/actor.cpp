@@ -16,10 +16,11 @@
 #include "game.h"
 #include <vostok/physics/character_controller.h>
 #include <vostok/physics/world.h>
-#include <vostok/physics/rigid_body.h>
+#include <vostok/physics/static_rigid_body.h>
 #include <vostok/game/collision_object_types.h>
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
 #include "actor_input_controller.h"
+#include "../../collision/sources/capsule_geometry_instance.h" // sushi@TODO
 #include "weapon.h"
 
 namespace survarium{
@@ -130,7 +131,9 @@ void actor::activate( math::float4x4 const& initial_matrix )
 
 collision::geometry_instance& actor::get_caracter_capsule( )
 {
-	return m_actor_physics_controller->get_capsule( );
+	collision::geometry_instance* capsule = collision::new_capsule_geometry_instance( g_allocator, m_character_transform, 10., 10.);
+	return *capsule;
+	// return m_actor_physics_controller->get_capsule( ); sushi@TODO
 }
 
 void actor::process_input_events( )
@@ -263,21 +266,21 @@ void actor::tick( )
 
 		render::debug::renderer& d	= r.debug();
 
-		physics::closest_ray_result result = m_game_world.get_physics_world()->ray_test( ray_from, ray_dir, ray_length );
+		physics::closest_ray_result result = m_game_world.get_physics_world()->ray_test( ray_from, ray_dir, ray_length, 0, 0 ); // sushi@TODO
 		
-		if(result.m_object)
+		if(result.object)
 		{
-			d.draw_aabb( scene, result.m_hit_point_world, float3(0.01f,0.01f,0.01f), math::color(0,255,0,255));
+			d.draw_aabb( scene, result.hit_point_world, float3(0.01f,0.01f,0.01f), math::color(0,255,0,255));
 
 			if(m_actor_input_controller && m_actor_input_controller->on_frame_fire())
 			{
 				// shooting
 				// weapon snd(2d or 3d???)
-				if(!result.m_object->is_static_or_kinematic_object())
+				// if(!result.object->is_static_or_kinematic_object()) sushi@TODO
 				{
 					// play shootmark snd 3d!!!
 					float const impulse_strength	= 100.f;
-					result.m_object->apply_impulse	( ray_dir*impulse_strength, result.m_hit_point_world );
+					// result.object->apply_impulse	( ray_dir*impulse_strength, result.hit_point_world ); // sushi@TODO
 				}
 			}
 		}
