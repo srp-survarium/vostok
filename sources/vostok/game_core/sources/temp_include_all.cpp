@@ -22,6 +22,9 @@
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/static_rigid_body.h>
 
+ //#include <boost/asio.hpp>
+// #include <vostok/network_core/http_client.h>
+
 namespace vostok
 {
 	void use_static_rigid_body()
