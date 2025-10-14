@@ -28,6 +28,12 @@
 
 namespace vostok
 {
+	void example_callback(const char *name)
+	{
+		printf("%s\n", name);
+	}
+
+
 	void use_network_core_http_client()
 	{
 		boost::asio::io_service io_service( 10 );
@@ -36,7 +42,8 @@ namespace vostok
 		
 		boost::system::error_code error( 10, boost::asio::error::get_addrinfo_category() );
 		http_client.handle_write_request( error );
-		
+
+		http_client.get( "server", "path", boost::bind(&example_callback, "hello" ) );
 	}
 
 	void use_static_rigid_body()

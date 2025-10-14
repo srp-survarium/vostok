@@ -43,38 +43,30 @@ http_client::http_client( boost::asio::io_service& io_service ) :
 }
 
 // STATE[STUB]
-// void vostok::network_core::http_client::get(char const*, char const*, boost::function<void __cdecl(void)> const&)
-void http_client::get( pcstr server, pcstr path, boost::function<void __cdecl(void)> const& callback )
+void http_client::get( pcstr server, pcstr path, boost::function<void()> const& callback )
 {
-	// LOCALS
-	// boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp> query
-	// std::basic_ostream<char,std::char_traits<char> > request_stream
-	// ******
-
-	// FUNCTION BODY
-	// <0x78abcf>|0x000|0x000:'32'
-	// <0x78abf8>|0x029|0x029:'33'
+	m_result_content = "";				// <0x78abcf>|0x000|0x000:'32' // seems like something is different there
+	m_on_content_downloaded = callback; // <0x78abf8>|0x029|0x029:'33'
 	// 1
 	// 2
 	// 3
 	// 4
 	// 5
-	// <0x78ac0d>|0x03e|0x015:'39'
-	// <0x78ac21>|0x052|0x014:'40'
-	// <0x78ac47>|0x078|0x026:'41'
-	// <0x78ac6d>|0x09e|0x026:'42'
-	// <0x78ac7a>|0x0ab|0x00d:'43'
+	std::ostream request_stream ( &m_request_buff );	// <0x78ac0d>|0x03e|0x015:'39'
+	request_stream << "GET ";							// <0x78ac21>|0x052|0x014:'40'
+	request_stream << path;								// <0x78ac47>|0x078|0x026:'41'
+	request_stream << " HTTP/1.0\r\n";					// <0x78ac6d>|0x09e|0x026:'42'
+	request_stream << "Connection: close\r\n\r\n";		// <0x78ac7a>|0x0ab|0x00d:'43'
+	boost::asio::ip::tcp::resolver::query query(						// 1
+		server,															// 2
+		"http",															// 3
+		boost::asio::ip::tcp::resolver::query::address_configured );	// <0x78ac87>|0x0b8|0x00d:'47'
+																		// 1
+	m_resolver.async_resolve(											// 2
+		query,															// 3
+		boost::bind( &http_client::handle_resolve, this, _1, _2 )		// 4
+	);																	// <0x78ad08>|0x139|0x081:'52'
 	// 1
-	// 2
-	// 3
-	// <0x78ac87>|0x0b8|0x00d:'47'
-	// 1
-	// 2
-	// 3
-	// 4
-	// <0x78ad08>|0x139|0x081:'52'
-	// 1
-	// ******
 }
 
 // STATE[STUB]
@@ -87,32 +79,24 @@ void http_client::on_error( boost::system::error_code const& err )
 }
 
 // STATE[STUB]
-// void vostok::network_core::http_client::handle_resolve(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)
-void http_client::handle_resolve( boost::system::error_code const& err, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> endpoint_iterator )
+void http_client::handle_resolve( boost::system::error_code const& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator )
 {
-	// LOCALS
-	// boost::asio::ip::basic_endpoint<boost::asio::ip::tcp> endpoint<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x78aa61>|0x000|0x000:'66'
-	// 1
-	// 2
-	// 3
-	// <0x78aa77>|0x016|0x016|[1]:'70'
-	// 1
-	// 2
-	// <0x78aaab>|0x04a|0x034:'73'
-	// <0x78ab7a>|0x119|0x0cf:'74'
-	// 1
-	// <0x78ab7c>|0x11b|0x002:'76'
-	// 1
-	// ******
+	if ( !err.value() )																	// <0x78aa61>|0x000|0x000:'66'
+	{																					// 1
+																						// 2
+																						// 3
+		boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator++;					// <0x78aa77>|0x016|0x016|[1]:'70'
+		m_socket.async_connect(															// 1
+			endpoint,																	// 2
+			boost::bind( &http_client::handle_connect, this, _1, endpoint_iterator ) );	// <0x78aaab>|0x04a|0x034:'73'
+	}																					// <0x78ab7a>|0x119|0x0cf:'74'
+	else																				// 1
+		on_error( err );																// <0x78ab7c>|0x11b|0x002:'76'
+																						// 1
 }
 
 // STATE[STUB]
-// void vostok::network_core::http_client::handle_connect(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)
-void http_client::handle_connect( boost::system::error_code const& err, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> endpoint_iterator )
+void http_client::handle_connect( boost::system::error_code const& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator )
 {
 	// LOCALS
 	// boost::asio::ip::basic_endpoint<boost::asio::ip::tcp> endpoint<1>
@@ -144,16 +128,16 @@ void http_client::handle_connect( boost::system::error_code const& err, boost::a
 // STATE[STUB]
 void http_client::handle_write_request( boost::system::error_code const& err )
 {
-	if ( !err.value() )		// <0x78a789>|0x000|0x000:'105'
+	if ( !err.value() )														// <0x78a789>|0x000|0x000:'105'
 		boost::asio::async_read_until(
-			m_socket, m_response_buff,
+			m_socket,
+			m_response_buff,
 			"\r\n",
-			boost::bind( &vostok::network_core::http_client::handle_read_status_line, this, _1 )
-		);
-	else					// <0x78a7fd>|0x074|0x062:'111'
-	{
-		on_error( err );	// <0x78a7ff>|0x076|0x002:'113'
-	}
+			boost::bind( &http_client::handle_read_status_line, this, _1 )	// <0x78a79b>|0x012|0x012:'110'
+		);																	// <0x78a7fd>|0x074|0x062:'111'
+	else 
+			on_error( err );												// <0x78a7ff>|0x076|0x002:'113'
+
 }
 
 // STATE[STUB]
