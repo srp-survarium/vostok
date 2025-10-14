@@ -22,11 +22,23 @@
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/static_rigid_body.h>
 
- //#include <boost/asio.hpp>
-// #include <vostok/network_core/http_client.h>
+// #include <boost/asio.hpp>
+#include <boost/asio/error.hpp>
+#include <vostok/network_core/http_client.h>
 
 namespace vostok
 {
+	void use_network_core_http_client()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::http_client http_client( io_service );
+		
+		
+		boost::system::error_code error( 10, boost::asio::error::get_addrinfo_category() );
+		http_client.handle_write_request( error );
+		
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -168,6 +180,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_network_core_http_client();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();

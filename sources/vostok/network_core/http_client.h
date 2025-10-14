@@ -7,7 +7,12 @@
 
 #include <vostok/network_core/api.h>
 
-// #include <boost/asio.hpp> // sushi@NOTE: I DON"T THINK THIS SHOULD BE INCLUDED AAAAAAAAAAAAA
+#	undef BOOL						
+#	undef APIENTRY					
+#	undef HMODULE					
+
+#	undef	HWND					
+#include <boost/asio.hpp> // sushi@NOTE: I DON"T THINK THIS SHOULD BE INCLUDED AAAAAAAAAAAAA
 
 namespace vostok {
 namespace network_core {
@@ -32,7 +37,7 @@ public:
 
 			void					get						( pcstr server, pcstr path, boost::function<void()> const& callback );
 
-			void					set_on_error			( boost::function<void(boost::system::error_code)> const& callback );
+			void					set_on_error			( boost::function<void(boost::system::error_code)> const& callback ) {}
 
 	inline	std::string const&		result_content			( ) const { /* no source */ }
 
@@ -47,7 +52,7 @@ public:
 			bool					add_result_content		( );
 			void					close_connection		( );
 
-									~http_client			( );
+									// ~http_client			( );
 
 private:
 	/* 0x0000 */	boost::asio::ip::tcp::resolver		m_resolver;
@@ -60,14 +65,6 @@ private:
 }; // class http_client
 
 STATIC_SIZE_ASSERT(http_client, 0x108);
-
-
-
-// STATE[STUB]
-// void vostok::network_core::http_client::set_on_error(boost::function<void __cdecl(boost::system::error_code)> const&)
-void http_client::set_on_error( boost::function<void __cdecl(boost::system::error_code)> const& callback )
-{
-}
 
 } // namespace network_core
 } // namespace vostok
