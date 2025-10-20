@@ -88,5 +88,5 @@ def main(skip_missing: bool, filter_prefix: Optional[str]):
         f.write("\n")
 
 if __name__ == "__main__":
-    main(skip_missing=True, filter_prefix="vostok/physics")
+    main(skip_missing=True, filter_prefix="vostok/network_core")
     # main(skip_missing=True, filter_prefix=None)

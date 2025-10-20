@@ -1,0 +1,13 @@
+[workspace]
+members = [
+  "scripts/pdb-parser",             # Parser for available `.pdb` files
+]
+exclude = []
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.lints.clippy]
+new_without_default = "allow"
