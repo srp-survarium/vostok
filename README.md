@@ -42,6 +42,7 @@
         git clone git@github.com:srp-survarium/vostok.git
         git clone git@github.com:srp-survarium/vostok-structure.git
         git clone git@github.com:srp-survarium/vostok-coff-delinker.git
+        git clone git@github.com:srp-survarium/xray-structure.git
         ```
     * Download proprietary libraries and unpack them at the root level: https://drive.google.com/file/d/1ShmDiJArDcOiuPA0DyswEzhXHeRa0Psx/view?usp=sharing
     * Then install them by running this command:
