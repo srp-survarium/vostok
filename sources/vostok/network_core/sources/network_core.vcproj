@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="game_core"
-	ProjectGUID="{DF4E4F25-7D8B-4CB6-B5F4-95DFB333CC29}"
-	RootNamespace="game_core"
+	Name="network_core"
+	ProjectGUID="{25A7363B-1DAF-48D3-AEDE-4B7186FA29D6}"
+	RootNamespace="library"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -41,17 +41,16 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -59,7 +58,6 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -115,22 +113,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN32;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
-				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -187,17 +182,16 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -205,7 +199,6 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -219,7 +212,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/ignore:4221"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static.lib"
 			/>
 			<Tool
@@ -262,22 +254,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN32;VOSTOK_STATIC_LIBRARIES;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
-				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -291,7 +280,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/ignore:4221"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-debug.lib"
 			/>
 			<Tool
@@ -335,17 +323,17 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -353,9 +341,7 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4481"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -368,7 +354,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/ignore:4221"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-gold.lib"
 			/>
 			<Tool
@@ -413,16 +398,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN64;NDEBUG;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -430,7 +413,6 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -487,22 +469,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN64;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -560,16 +539,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
-				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
+				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -577,7 +554,6 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -591,7 +567,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/ignore:4221"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static.lib"
 			/>
 			<Tool
@@ -635,22 +610,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN64;VOSTOK_STATIC_LIBRARIES;"
 				StringPooling="false"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -664,7 +636,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/ignore:4221"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-debug.lib"
 			/>
 			<Tool
@@ -709,16 +680,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -726,7 +695,6 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -740,7 +708,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/ignore:4221"
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/libraries/vostok_$(ProjectName)-static-gold.lib"
 			/>
 			<Tool
@@ -767,11 +734,11 @@
 			Name="core"
 			>
 			<File
-				RelativePath=".\game_core_library_linkage.cpp"
+				RelativePath="..\api.h"
 				>
 			</File>
 			<File
-				RelativePath=".\game_core_memory.h"
+				RelativePath="..\library_linkage.h"
 				>
 			</File>
 			<File
@@ -867,126 +834,367 @@
 			Name="include"
 			>
 			<File
-				RelativePath="..\affect_event_type_enum.h"
+				RelativePath="..\async_connector.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\base_packet.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\handler_allocator.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\http_client.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\packet.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\packet_inline.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\packet_reader.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\packet_reader_inline.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\sequence_number.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\sequence_number_inline.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\tcp_packet.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\tcp_packet_client.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\tcp_packet_inline.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\tcp_packet_socket.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\tcp_packet_socket_inline.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_client.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_connection.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_connection_inline.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_packet.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_packets_allocator.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_server.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_match_stats.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\udp_network_flow_emulator.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="source"
+			>
+			<File
+				RelativePath=".\async_connector.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\http_client.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\affects_applying_type_enum.h"
+				RelativePath=".\tcp_packet.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\hit_affects_type_enum.h"
+				RelativePath=".\tcp_packet_client.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\library_linkage.h"
+				RelativePath=".\udp_match_client.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
-			<Filter
-				Name="bullet_manager"
+			<File
+				RelativePath=".\udp_match_connection.cpp"
 				>
-				<File
-					RelativePath="..\bullet.h"
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
 					>
-				</File>
-				<File
-					RelativePath="..\bullet_manager.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="damage_model"
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\udp_network_flow_emulator.cpp"
 				>
-				<File
-					RelativePath="..\affects_threshold.h"
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
 					>
-				</File>
-				<File
-					RelativePath="..\body_part_parameters.h"
-					>
-				</File>
-				<File
-					RelativePath="..\damage_model.h"
-					>
-				</File>
-				<File
-					RelativePath="..\damage_protector.h"
-					>
-				</File>
-				<File
-					RelativePath="..\hit_type_parameters.h"
-					>
-				</File>
-			</Filter>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
-		<Filter
-			Name="game_core"
+		<File
+			RelativePath=".\network_core_entry_point.cpp"
 			>
-			<Filter
-				Name="bullet_manager"
+			<FileConfiguration
+				Name="Master Gold|Win32"
+				ExcludedFromBuild="true"
 				>
-				<File
-					RelativePath=".\bullet.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_debug_render.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_input_handler.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\bullet_manager_input_handler.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="temp_include_all"
-				>
-				<File
-					RelativePath=".\temp_include_all.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\temp_include_all.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="damage_model"
-				>
-				<File
-					RelativePath=".\affects_threshold.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\body_part_parameters.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\damage_model.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\hit_type_parameters.cpp"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="public_api"
-			>
-		</Filter>
-		<Filter
-			Name="sources"
-			>
-		</Filter>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

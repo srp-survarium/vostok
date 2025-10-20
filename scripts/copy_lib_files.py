@@ -21,10 +21,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("src", nargs="?", type=Path, default=SRC)
     parser.add_argument("dest", nargs="?", type=Path, default=DEST)
+    parser.add_argument("--reverse", action="store_true", help="Swap src and dest")
     args = parser.parse_args()
 
     src = args.src.resolve()
     dest = args.dest.resolve()
+    if args.reverse:
+        src, dest = dest, src
+
     copied = 0
 
     for file in src.rglob("*"):
