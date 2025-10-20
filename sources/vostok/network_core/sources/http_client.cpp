@@ -9,24 +9,20 @@ namespace vostok {
 namespace network_core {
 
 // STATE[STUB]
-// void vostok::network_core::read_lines_from_stream(char const*, boost::asio::basic_streambuf<stlp_std::allocator<char> >&)
-void read_lines_from_stream( pcstr prefix, boost::asio::basic_streambuf<std::allocator<char> >& buff )
+// Have no idea how to match that, this function should read lines from buff.
+// But what is the point of `prefix`? It is set to `read_status_line` and it doesn't seem to be used anywhere (except assert);
+// It comes from `http_client::handle_write_request`.
+void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 {
-	// LOCALS
-	// std::basic_string<char,std::char_traits<char>,std::allocator<char> > str
-	// std::basic_istream<char,std::char_traits<char> > response_stream
-	// ******
 
-	// FUNCTION BODY
-	// <0x789e63>|0x000|0x000:'15'
-	// <0x789e88>|0x025|0x025:'16'
-	// <0x789ed6>|0x073|0x04e:'17'
-	// 1
-	// <0x789ef8>|0x095|0x022:'19'
-	// 1
-	// 2
-	// <0x789f72>|0x10f|0x07a:'22'
-	// ******
+	ASSERT( prefix );								// <0x789e63>|0x000|0x000:'15'
+	std::istream response_stream( &buff );			// <0x789e88>|0x025|0x025:'16'
+	std::string str;								// <0x789ed6>|0x073|0x04e:'17'
+		// 1
+	while ( std::getline( response_stream, str ) )	// <0x789ef8>|0x095|0x022:'19'
+	{	// 1
+		// 2
+	}	// <0x789f72>|0x10f|0x07a:'22'
 }
 
 // STATE[STUB]

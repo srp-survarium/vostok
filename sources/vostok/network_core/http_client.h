@@ -66,6 +66,8 @@ private:
 
 STATIC_SIZE_ASSERT(http_client, 0x108);
 
+VOSTOK_NETWORK_CORE_API void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff );
+
 } // namespace network_core
 } // namespace vostok
 

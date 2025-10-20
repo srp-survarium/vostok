@@ -5,10 +5,12 @@
 #ifndef NETWORK_CORE_BASE_PACKET_H_INCLUDED
 #define NETWORK_CORE_BASE_PACKET_H_INCLUDED
 
+#include <vostok/network_core/api.h>
+
 namespace vostok {
 namespace network_core {
 
-class base_packet  {
+class base_packet {
 public:
 	inline	explicit	base_packet		( u8* buffer, u32 buffer_size ) : m_buffer( buffer ), m_buffer_size( buffer_size ) {}
 

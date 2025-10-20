@@ -12,13 +12,11 @@ if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
 if not defined VOSTOK_DIR    set    "VOSTOK_DIR=%ROOT_DIR%\vostok"
-if not defined SRP_DIR       set       "SRP_DIR=%ROOT_DIR%\srp"
 if not defined COFF_DIR      set      "COFF_DIR=%ROOT_DIR%\vostok-coff-delinker"
 if not defined XRAY_STUB_DIR set "XRAY_STUB_DIR=%ROOT_DIR%\xray-structure"
 
 :: Normalize paths in environment variables
 for %%I in ("%VOSTOK_DIR%")     do set "VOSTOK_DIR=%%~fI"
-for %%I in ("%SRP_DIR%")        do set "SRP_DIR=%%~fI"
 for %%I in ("%COFF_DIR%")       do set "COFF_DIR=%%~fI"
 for %%I in ("%XRAY_STUB_DIR%")  do set "XRAY_STUB_DIR=%%~fI"
 
@@ -30,7 +28,7 @@ set     "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.exe"
 :: Rerun pdb-parser script
 ::
 
-pushd "%SRP_DIR%"
+pushd "%VOSTOK_DIR%"
 
 echo Regenerating structure based on the compiled PDB file
 cargo run --release --bin pdb-parser -- --pdb-path "%PDB_FILE%" --output-path "%XRAY_STUB_DIR%" --engine-path "%ENGINE_DIR%" --as-base

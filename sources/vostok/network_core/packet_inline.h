@@ -1,5 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created		: 21.02.2012
+//	Author		: Dmitriy Iassenev
+//	Copyright (C) GSC Game World - 2012
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef PACKET_INLINE_H_INCLUDED
@@ -8,61 +10,129 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// vostok::network_core::packet<vostok::network_core::udp_match_packet>::packet<vostok::network_core::udp_match_packet>()
-packet<udp_match_packet>::packet<udp_match_packet>( )
+template <typename T> // STATE[STUB]
+inline packet<T>::packet		( )
 {
 }
 
-// STATE[STUB]
-// void vostok::network_core::packet<vostok::network_core::udp_match_packet>::append(const unsigned char)
-void packet<udp_match_packet>::append( u8 value )
+
+
+
+
+template <typename T>
+inline void packet<T>::reallocate	( u32 const new_size )
 {
-	// FUNCTION BODY
-	// <0x8d751>|0x000|0x000:'57'
-	// ******
+	m_allocated_size	= new_size;
+	m_buffer_size		= std::min( m_buffer_size, m_allocated_size );
+	m_buffer			= static_cast<pbyte>( VOSTOK_REALLOC_IMPL( m_allocator, m_buffer ? m_buffer - 3 : 0, new_size + 3, "packet" ) ) + 3;
 }
 
-// STATE[STUB]
-// void vostok::network_core::packet<vostok::network_core::udp_match_packet>::append(const unsigned short)
-void packet<udp_match_packet>::append( u16 value )
+template <typename T>
+inline void packet<T>::reserve		( u32 const size )
 {
-	// FUNCTION BODY
-	// <0x8d731>|0x000|0x000:'69'
-	// ******
+	if ( m_allocated_size >= size )
+		return;
+
+	reallocate			( size );
 }
 
-// STATE[STUB]
-// void vostok::network_core::packet<vostok::network_core::udp_match_packet>::append(const float)
-void packet<udp_match_packet>::append( float value )
+template <typename T>
+inline void	packet<T>::resize		( u32 const size )
 {
-	// FUNCTION BODY
-	// <0x8d711>|0x000|0x000:'105'
-	// ******
+	ASSERT				( !m_buffer_size );
+	reserve				( size );
+	m_buffer_size		= m_allocated_size;
 }
 
-// STATE[STUB]
-// void vostok::network_core::packet<vostok::network_core::udp_match_packet>::append(vostok::math::float2 const&)
-void packet<udp_match_packet>::append( float2 const& value )
+template <typename T>
+inline void	packet<T>::clone		( base_packet const& other )
 {
-	// FUNCTION BODY
-	// <0x8d701>|0x000|0x000:'111'
-	// ******
+	m_buffer_size		= 0;
+	append				( other.m_buffer, other.m_buffer_size );
 }
 
-// STATE[STUB]
-// void vostok::network_core::packet<vostok::network_core::udp_match_packet>::append(vostok::math::float3 const&)
-void packet<udp_match_packet>::append( float3 const& value )
+template <typename T> // STATE[STUB]
+inline void packet<T>::append( u8 value )
 {
-	// FUNCTION BODY
-	// <0x8d6f1>|0x000|0x000:'117'
-	// ******
+	append				( &value, sizeof(value) ); // <0x8d751>|0x000|0x000:'57'
 }
 
-// STATE[STUB]
-// void vostok::network_core::packet<vostok::network_core::udp_match_packet>::append(void const*, unsigned int)
-void packet<udp_match_packet>::append( void const* buffer, u32 buffer_size )
+template <typename T>
+inline void packet<T>::append( s8 value )
 {
+	append				( &value, sizeof(value) );
+}
+
+template <typename T> // STATE[STUB]
+inline void packet<T>::append( u16 value )
+{
+	append				( &value, sizeof(value) ); // <0x8d731>|0x000|0x000:'69'
+}
+
+template <typename T>
+inline void packet<T>::append( s16 value )
+{
+	append				( &value, sizeof(value) );
+}
+
+template <typename T>
+inline void packet<T>::append( u32 value )
+{
+	append				( &value, sizeof(value) );
+}
+
+template <typename T>
+inline void packet<T>::append( s32 value )
+{
+	append				( &value, sizeof(value) );
+}
+
+template <typename T>
+inline void packet<T>::append( u64 value )
+{
+	append				( &value, sizeof(value) );
+}
+
+template <typename T>
+inline void packet<T>::append( s64 value )
+{
+	append				( &value, sizeof(value) );
+}
+
+template <typename T> // STATE[STUB]
+inline void packet<T>::append( float value )
+{
+	append				( &value, sizeof(value) ); // <0x8d711>|0x000|0x000:'105'
+}
+
+template <typename T> // STATE[STUB]
+inline void packet<T>::append( float2 const& value )
+{
+	append				( &value, sizeof(value) ); // <0x8d701>|0x000|0x000:'111'
+}
+
+template <typename T> // STATE[STUB]
+inline void packet<T>::append( float3 const& value )
+{
+	append				( &value, sizeof(value) ); // <0x8d6f1>|0x000|0x000:'117'
+}
+
+template <typename T> // STATE[STUB]
+inline void packet<T>::append( pcvoid const buffer, u32 const buffer_size )
+{
+	if ( m_buffer_size + buffer_size > m_allocated_size ) {
+		u32 new_allocated_size	= m_allocated_size ? m_allocated_size : buffer_size;
+		while ( new_allocated_size < m_buffer_size + buffer_size )
+			new_allocated_size	*= 2;
+
+		reallocate		( new_allocated_size );
+	}
+
+	ASSERT				( m_buffer_size + buffer_size <= m_allocated_size );
+	memcpy				( m_buffer + m_buffer_size, buffer, buffer_size );
+	m_buffer_size		+= buffer_size;
+
+
 	// OTHER SYMBOLS
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x7c6e5 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN44") })
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x7c6cb }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN45") })
@@ -82,25 +152,6 @@ void packet<udp_match_packet>::append( void const* buffer, u32 buffer_size )
 	// <0x8d6db>|0x046|0x010:'147'
 	// ******
 }
-
-	// TYPEDEFS
-	typedef
-		collision::bone_collision_data const*
-		iterator_type;
-
-	typedef
-		collision::bone_collision_data*
-		iterator_type;
-
-	typedef
-		survarium::base_project::resolve_link_object*
-		iterator_type;
-
-	typedef
-		survarium::scheduler::record*
-		iterator_type;
-
-	// ******
 
 } // namespace network_core
 } // namespace vostok

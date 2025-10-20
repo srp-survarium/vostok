@@ -14,7 +14,6 @@ template <typename T>
 class packet : public base_packet {
 public:
 	inline	explicit	packet			( );
-	inline				~packet			( );
 
 	inline	u32			allocated_size	( ) const { return m_allocated_size; }
 	inline	void		clear			( );
@@ -23,11 +22,11 @@ public:
 	inline	void		clone			( base_packet const& other );
 
 	inline	void		append			( pcvoid buffer, u32 buffer_size );
-	inline	void		append			( pcstr string, u8 string_length );
-	inline	void		append			( pcstr string );
+	// inline	void		append			( pcstr string, u8 string_length );
+	// inline	void		append			( pcstr string );
 
-	inline	void		append			( float3 size );
-	inline	void		append			( float2 size );
+	inline	void		append			( float3 const& size );
+	inline	void		append			( float2 const& size );
 	inline	void		append			( float size );
 
 	inline	void		append			( s64 size );
@@ -54,5 +53,7 @@ private:
 
 } // namespace network_core
 } // namespace vostok
+
+#include <vostok/network_core/packet_inline.h>
 
 #endif // #ifndef NETWORK_CORE_PACKET_H_INCLUDED
