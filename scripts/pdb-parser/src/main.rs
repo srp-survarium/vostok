@@ -6,8 +6,7 @@
 //! Hardcoded to work only with `survarium.pdb`, though this can be improved later on.
 //! (See constants in `run` module)
 //!
-//! Execute from the root of the workspace like so (assuming `vostok-structure` repo is cloned in
-//! the same folder `srp` was):
+//! Execute from the root of the workspace like so:
 //!
 //! ```ignore
 //! cargo run --bin pdb-parser --release -- --pdb_path="D:/Projects/Survarium/binaries/win32/survarium.pdb" --output_path="../vostok-structure"
