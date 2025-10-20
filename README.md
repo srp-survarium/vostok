@@ -52,9 +52,9 @@
 
 ## Setting up
 
-1. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
+1. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration for `Win32`. It will fail, but this is fine, we only need `zlibn` to be built.
     * TODO: This step should be removed and be set as a dependency in `survarium - PC - DirectX 11`.
-2. Build `survarium - PC - DirectX 11` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
+2. Build `survarium - PC - DirectX 11` solutin in VS2008 in `Master Gold` configuration for `Win32`. Build should succeeded.
 
 3. Setup `objdiff`:
     * Open Project `Settings`.
