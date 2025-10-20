@@ -22,8 +22,43 @@
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/static_rigid_body.h>
 
+// #include <boost/asio.hpp>
+#include <boost/asio/error.hpp>
+#include <vostok/network_core/http_client.h>
+#include <vostok/network_core/tcp_packet.h>
+
 namespace vostok
 {
+	void example_callback(const char *name)
+	{
+		printf("%s\n", name);
+	}
+
+	void use_network_core_tcp_packet()
+	{
+		memory::stack_allocator stack_allocator;
+		network_core::tcp_packet packet( stack_allocator );
+
+		network_core::buffer_to_send( packet );
+		network_core::buffer_to_receive_into( packet );
+	}
+
+
+	void use_network_core_http_client()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::http_client http_client( io_service );
+		
+		
+		boost::system::error_code error( 10, boost::asio::error::get_addrinfo_category() );
+		http_client.handle_write_request( error );
+
+		http_client.get( "server", "path", boost::bind(&example_callback, "hello" ) );
+
+		boost::asio::streambuf buff;
+		network_core::read_lines_from_stream( "prefix", buff );
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -165,6 +200,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_network_core_http_client();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();

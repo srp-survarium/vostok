@@ -11,14 +11,13 @@
 if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
-if not defined SRP_DIR        set       "SRP_DIR=%ROOT_DIR%\srp"
 if not defined COFF_DIR       set      "COFF_DIR=%ROOT_DIR%\vostok-coff-delinker"
 if not defined VOSTOK_DIR     set    "VOSTOK_DIR=%ROOT_DIR%\vostok"
 if not defined SURVARIUM_BIN  set "SURVARIUM_BIN=D:\Projects\Survarium\binaries\win32"
 
 if not defined GHIDRA_HOME    set   "GHIDRA_HOME=C:\Program Files\ghidra_11.4_PUBLIC"
 if not defined PROJECTS_DIR   set  "PROJECTS_DIR=%VOSTOK_DIR%\binaries\temp_ghidra_project"
-if not defined SCRIPTS_DIR    set   "SCRIPTS_DIR=%SRP_DIR%\resources\ghidra_scripts"
+if not defined SCRIPTS_DIR    set   "SCRIPTS_DIR=%VOSTOK_DIR%\scripts\ghidra"
 if not defined OUTPUT_DIR     set    "OUTPUT_DIR=%COFF_DIR%\target"
 
 

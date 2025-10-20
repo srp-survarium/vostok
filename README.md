@@ -37,27 +37,26 @@
             ```
             git config --system core.longpaths true
             ```
-    * Then clone those repositories (at the same level)
+    * At the root level (which is a level where all Git repositories will be stored, including this one) clone:
         ```
-        git clone git@github.com:srp-survarium/srp.git
-        git clone git@github.com:srp-survarium/xray-structure.git
+        git clone git@github.com:srp-survarium/vostok.git
         git clone git@github.com:srp-survarium/vostok-structure.git
         git clone git@github.com:srp-survarium/vostok-coff-delinker.git
+        git clone git@github.com:srp-survarium/xray-structure.git
         ```
-    * Download proprietary libraries and unpack them (at the same level) from here: https://drive.google.com/file/d/1w2MpQNBWqPQSRzFj_hmgkNWj_2u7vOlG
+    * Download proprietary libraries and unpack them at the root level: https://drive.google.com/file/d/1ShmDiJArDcOiuPA0DyswEzhXHeRa0Psx/view?usp=sharing
+    * Then install them by running this command:
+        ```terminal
+        python ./scripts/copy_lib_files.py
+        ```
 
 ## Setting up
 
-1. Install missing proprietary libraries by running this command from the root of the project
-```terminal
-python ./scripts/copy_lib_files.py
-```
-
-2. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
+1. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration. It will fail, but this is fine, we only need `zlibn` to be built.
     * TODO: This step should be removed and be set as a dependency in `survarium - PC - DirectX 11`.
-3. Build `survarium - PC - DirectX 11` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
+2. Build `survarium - PC - DirectX 11` solutin in VS2008 in `Master Gold` configuration. Build should succeeded.
 
-4. Setup `objdiff`:
+3. Setup `objdiff`:
     * Open Project `Settings`.
     * Set project directory to cloned `vostok-coff-delinker` project.
     * Set target build directory to `target`.
