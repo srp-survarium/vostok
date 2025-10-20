@@ -17,6 +17,7 @@ if not defined XRAY_STUB_DIR   set   "XRAY_STUB_DIR=%ROOT_DIR%\xray-structure"
 if not defined VOSTOK_STUB_DIR set "VOSTOK_STUB_DIR=%ROOT_DIR%\vostok-structure"
 
 if not defined IDA_HOME        set "IDA_HOME=C:\Program Files\IDA Free 9.1"
+if not defined OBJDIFF_HOME    set "OBJDIFF_HOME=C:\Program Files\scripts"
 
 :: Normalize paths in environment variables
 for %%I in ("%IDA_HOME%")      do set "IDA_HOME=%%~fI"
@@ -33,14 +34,16 @@ if errorlevel 1 (
 
 tasklist /FI "IMAGENAME eq devenv.exe" | find /I "devenv.exe" >nul
 if errorlevel 1 (
-    start "Vostok Engine"    "%VS2008_PATH%" "%SOLUTION_PATH%"
+    start "Vostok Engine" "%VS2008_PATH%" "%SOLUTION_PATH%"
+)
 
-    start "Stubs for Vostok" "%VS2008_PATH%" "%VOSTOK_STUB_DIR%\vostok_structure.sln"
-    start "Stubs for XRay"   "%VS2008_PATH%"   "%XRAY_STUB_DIR%\xray_structure.sln"
+tasklist /FI "IMAGENAME eq objdiff.exe" | find /I "objdiff.exe" >nul
+if errorlevel 1 (
+    start "" "%OBJDIFF_HOME%\objdiff.exe"
 )
 
 wt ^
-new-tab -d "%VOSTOK_DIR%"      --title "nvim"         powershell -NoExit -Command "nvim ./scripts/pdb-parser/src/main.rs" ; ^
+new-tab -d "%VOSTOK_DIR%"      --title "nvim"         powershell -NoExit -Command "nvim ./scripts"             ; ^
 new-tab -d "%VOSTOK_DIR%"      --title "cargo build"  powershell -NoExit -Command "$c='cargo check' \; iex $c" ; ^
 new-tab -d "%VOSTOK_SRC_DIR%"  --title "vostok"       powershell -NoExit -Command "ls"                         ; ^
 new-tab -d "%VOSTOK_STUB_DIR%" --title "vostok stubs" powershell -NoExit -Command "ls"                         ; ^
