@@ -1,5 +1,7 @@
 # vostok-2.0-dsgn
 
+Decompilation of the Vostok Engine used by Survarium (version v0.100b).
+
 ### Prerequisites
 
 1. DirectX SDK June 2010
@@ -18,22 +20,21 @@
     * Requires OpenJDK to be installed also.  (Just install the newest one)
     * Install from here: https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_11.4_build
     * Install Delinker Extension from here: https://github.com/boricj/ghidra-delinker-extension/releases
-    * `GHIDRA_HOME` global environment variable needs to be set for `.bat` scripts, the default value is `GHIDRA_HOME=C:\Program Files\ghidra_11.4_PUBLIC`
 
-4. Misc. tools
+4. Tooling
     * `objdiff` - Install newest version from here: https://github.com/encounter/objdiff
     * `python` - Install newest version from here: https://www.python.org/downloads/
     * `rustc` - Install nightly Rust toolchain like so: `rustup default nightly`
     * `IDA Free` - Install from here (requires getting free license): https://hex-rays.com/ida-free
 
-5. Misc. projects
+5. Git projects
     * Other projects need to be cloned at the same level this project is cloned.
     * Before you do that, make sure long paths on Windows are enabled
-        - In Registry (requires administrator privilidges):
+        - In Registry (requires administrator privileges):
             ```
             reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
             ```
-        - In Git (requires administrator privilidges):
+        - In Git (requires administrator privileges):
             ```
             git config --system core.longpaths true
             ```
@@ -50,11 +51,27 @@
         python ./scripts/copy_lib_files.py
         ```
 
+6. Game builds
+    * Download and install the game from here: https://archive.org/details/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013
+    * Other builds are available here: https://archive.org/search?query=creator%3A%22Vostok+Games%22
+
+
+7. Environment variables
+    * Environment variables should be set up for a local user for scripts to work correctly. Otherwise you can install required tooling to the default paths.
+    * `GHIDRA_HOME` - Path to installed Ghidra. Default value: `GHIDRA_HOME=C:\Program Files\ghidra_11.4_PUBLIC`.
+    * `IDA_HOME` - Path to installed IDA. Default value: `IDA_HOME=C:\Program Files\IDA Free 9.1`.
+    * `OBJDIFF_HOME` - Path to installed objdiff. Default value: `OBJDIFF_HOME=C:\Program Files\scripts`.
+    * `SURVARIUM_BIN` - Path to the game executable. Default value: `D:\Projects\Survarium\binaries\win32`.
+
+8. Recommendations
+    * On Windows 11 it is recommended to set up Dev Drive. This will speed up filesystem operations significantly.
+    * `ripgrep` helps when searching for engine functions, classes, arguments, and other code references across all repositories.
+
 ## Setting up
 
 1. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration for `Win32`. It will fail, but this is fine, we only need `zlibn` to be built.
     * TODO: This step should be removed and be set as a dependency in `survarium - PC - DirectX 11`.
-2. Build `survarium - PC - DirectX 11` solutin in VS2008 in `Master Gold` configuration for `Win32`. Build should succeeded.
+2. Build `survarium - PC - DirectX 11` solution in VS2008 in `Master Gold` configuration for `Win32`. Build should succeed.
 
 3. Setup `objdiff`:
     * Open Project `Settings`.
