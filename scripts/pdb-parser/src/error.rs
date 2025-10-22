@@ -2,7 +2,6 @@ use std::error;
 use std::fmt;
 use std::panic;
 
-#[derive(Debug)]
 pub struct Error {
     source: Box<dyn error::Error + Send + Sync>,
     file: &'static str,
@@ -12,6 +11,12 @@ pub struct Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} at '{}:{}'", self.source, self.file, self.line)
+    }
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self, f)
     }
 }
 
