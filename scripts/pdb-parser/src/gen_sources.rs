@@ -1,54 +1,49 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::collections::HashSet;
+use std::path::Path;
 use std::sync::LazyLock;
 
 use pdb::ConstantSymbol;
 use pdb::DataSymbol;
-use pdb::ItemIndex;
 use pdb::RegisterRelativeSymbol;
 use pdb::RegisterVariableSymbol;
 use pdb::{BasePointerRelativeSymbol, BlockSymbol, FallibleIterator, SymbolData};
 use pdb_addr2line::type_parser;
 
-use crate::addr2line::Formatter;
+use crate::data::{Files, FunctionCache};
+use crate::pdb_parser::Formatter;
 use crate::utils;
 use crate::utils::Type;
+use crate::utils_fs;
 use crate::GenFlags;
 use crate::TEST_MODULE;
 
 const GAME_IB: u32 = 0x10000;
 
 #[derive(Clone)]
-struct Function<'a> {
-    module_id: usize,
-    type_index: pdb::TypeIndex,
+pub struct Function<'a> {
+    pub module_id: usize,
+    pub type_index: pdb::TypeIndex,
 
-    flags: GenFlags,
+    pub flags: GenFlags,
 
-    fn_t: pdb_addr2line::type_parser::Function,
-    name_orig: String,
+    pub fn_t: pdb_addr2line::type_parser::Function,
+    pub name_orig: String,
 
-    args: Vec<(pdb::RawString<'a>, Type)>,
-    locals: Vec<(pdb::RawString<'a>, Type, usize)>,
+    pub args: Vec<(pdb::RawString<'a>, Type)>,
+    pub locals: Vec<(pdb::RawString<'a>, Type, usize)>,
 
-    proc_start: u32,
-    proc_end: u32,
-    statements: Vec<Statement>,
+    pub proc_start: u32,
+    pub proc_end: u32,
+    pub statements: Vec<Statement>,
 
-    constants: Vec<(pdb::RawString<'a>, Type, pdb::Variant)>,
-    statics: Vec<(pdb::RawString<'a>, Type, pdb::Rva)>,
+    pub constants: Vec<(pdb::RawString<'a>, Type, pdb::Variant)>,
+    pub statics: Vec<(pdb::RawString<'a>, Type, pdb::Rva)>,
 
-    blocks: Vec<(pdb::Rva, i32)>,
-    typedefs: Vec<(Type, Type)>,
-    symbols: Vec<pdb::SymbolData<'a>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct FunctionSignature {
-    pub fn_t: type_parser::Function,
-    pub args: Vec<(String, Type)>,
+    pub blocks: Vec<(pdb::Rva, i32)>,
+    pub typedefs: Vec<(Type, Type)>,
+    pub symbols: Vec<pdb::SymbolData<'a>>,
 }
 
 #[derive(Default, Clone)]
@@ -56,29 +51,6 @@ pub struct Statement {
     rva: pdb::Rva,
     line_start: u32,
     depth: i32,
-}
-
-/// Iterating through modules gives me names of the arguments.
-/// But the class name IS NOT removed from the function name,
-/// resulting in signatures like so:
-/// `void survarium::bullet_manager::tick()`.
-///
-/// While when iterating through classes, argument names are not provided.
-/// But the class name IS removed from the function name,
-/// resulting in signatures like so:
-/// `void tick()`.
-///
-/// So to properly find arguments in the cache (to generate headers with them).
-/// I convert the function name from sources files to:
-/// `void bullet_manager::tick()` (by removing `survarium::`)
-///
-/// While on the header size the class name is appended:
-/// `void bullet_manager::tick()`
-///
-/// This allows me to match on a cache signatures and provide arguments in the header.
-pub struct FunctionCache {
-    // Original Name -> FunctionSignature
-    cache: HashMap<String, FunctionSignature>,
 }
 
 //
@@ -91,12 +63,13 @@ pub fn dump_sources(
     output_path: &std::path::Path,
     engine_path: &str,
     flags: GenFlags,
+    files: &mut Files,
 ) -> crate::Result<FunctionCache> {
     let address_map = pdb.address_map()?;
     let string_table = pdb.string_table()?;
 
     let mut output_path = output_path.to_path_buf();
-    output_path.push("sources");
+    let mut source_path = Path::new("sources").to_path_buf();
 
     let dbi = pdb.debug_information()?;
     let mut modules = dbi.modules()?;
@@ -129,7 +102,13 @@ pub fn dump_sources(
         )?;
 
         module.update_cache(&mut cache, flags);
-        module.write(&output_path, engine_path, flags)?;
+        module.write(
+            &mut output_path,
+            &mut source_path,
+            engine_path,
+            flags,
+            files,
+        )?;
     }
 
     Ok(cache)
@@ -506,119 +485,77 @@ impl<'a> Function<'a> {
     }
 }
 
-impl FunctionCache {
-    pub fn new() -> Self {
-        Self {
-            cache: Default::default(),
-        }
-    }
-
-    fn insert_from_source(&mut self, fun: &Function) {
-        let Function {
-            name_orig,
-            fn_t,
-            args,
-            ..
-        } = fun.clone();
-
-        let cache_method_name = name_orig
-            // .replace("survarium::", "")
-            ;
-
-        let args = args
-            .into_iter()
-            .map(|(t, n)| (t.to_string().to_string(), n))
-            .collect::<Vec<_>>();
-
-        self.cache
-            .insert(cache_method_name, FunctionSignature { fn_t, args });
-    }
-
-    pub fn get_from_header(
-        &self,
-        class_name: &str,
-        name: &pdb::RawString,
-        formatter: &Formatter,
-        type_index: pdb::TypeIndex,
-    ) -> crate::Result<Option<FunctionSignature>> {
-        assert!(!type_index.is_cross_module());
-
-        let cache_method_name = {
-            let name = format!("{class_name}::{}", name.to_string());
-            let name = pdb::RawString::from(name.as_bytes());
-
-            formatter.emit_function_orig(&name, 0, type_index)?
-            // .replace("survarium::", "")
-        };
-
-        let mut signature = self.cache.get(&cache_method_name).cloned();
-        if let Some(signature) = &mut signature {
-            signature.fn_t.name = signature
-                .fn_t
-                .name
-                .strip_prefix(class_name)
-                .unwrap()
-                .strip_prefix("::")
-                .unwrap()
-                .to_string();
-        }
-
-        Ok(signature)
-    }
-}
-
 //
 // Writing to disk
 //
 
+/// # Arguments
+/// * `output_path` - Prefix for the full path to which source files should be written.
+/// * `source_path` - `full_path` = `output_path` + `source_path`
 impl<'a> Module<'a> {
     fn write(
         self,
-        output_path: &std::path::Path,
+        output_path: &mut std::path::PathBuf,
+        source_path: &mut std::path::PathBuf,
         engine_path: &str,
         flags: GenFlags,
+        files: &mut Files,
     ) -> crate::Result<()> {
+        let output_path_len = output_path.as_path().as_os_str().len();
+        let source_path_len = source_path.as_path().as_os_str().len();
+
         for (file, funs) in self.files {
             let Some(path_to_file) = file.strip_prefix(engine_path) else {
                 continue;
             };
 
-            let mut source_path = output_path.to_path_buf();
-            source_path.push(path_to_file);
+            {
+                let mut file: Box<dyn std::io::Write> = match flags.contains(GenFlags::TEST_RUN) {
+                    false => {
+                        let extension = match () {
+                            () if path_to_file.ends_with(".h") => ".h",
+                            () if path_to_file.ends_with(".cpp") => ".cpp",
+                            () => "",
+                        };
 
-            let mut file: Box<dyn std::io::Write> = match flags.contains(GenFlags::TEST_RUN) {
-                false => {
-                    std::fs::create_dir_all(source_path.parent().unwrap())?;
+                        source_path.push(path_to_file);
+                        let file =
+                            utils_fs::open_file(output_path, source_path, flags, files, extension)?;
 
-                    let file = std::fs::File::create(&source_path)?;
-                    let file = std::io::BufWriter::new(file);
+                        Box::new(file)
+                    }
+                    true => {
+                        println!("\nFile: {path_to_file:?}\n");
+                        Box::new(std::io::stdout())
+                    }
+                };
 
-                    Box::new(file)
+                //
+                //
+                //
+
+                write_header(&mut file, path_to_file)?;
+
+                for function in funs.into_values() {
+                    function.write(&mut file)?;
                 }
-                true => {
-                    println!("\nFile: {source_path:?}\n");
-                    Box::new(std::io::stdout())
+
+                if !self.typedefs.is_empty() {
+                    writeln!(file, "\t// TYPEDEFS")?;
+                    for (ty, name) in &self.typedefs {
+                        writeln!(file, "\ttypedef")?;
+                        writeln!(file, "\t\t{ty}")?;
+                        writeln!(file, "\t\t{name};")?;
+                        writeln!(file)?;
+                    }
+                    writeln!(file, "\t// ******\n")?;
                 }
-            };
 
-            write_header(&mut file, &source_path)?;
-
-            for function in funs.into_values() {
-                function.write(&mut file)?;
+                write_footer(&mut file, path_to_file)?;
             }
 
-            if !self.typedefs.is_empty() {
-                writeln!(file, "\t// TYPEDEFS")?;
-                for (ty, name) in &self.typedefs {
-                    writeln!(file, "\ttypedef")?;
-                    writeln!(file, "\t\t{ty}")?;
-                    writeln!(file, "\t\t{name};")?;
-                    writeln!(file)?;
-                }
-                writeln!(file, "\t// ******\n")?;
-            }
-
-            write_footer(&mut file, &source_path)?;
+            output_path.as_mut_os_string().truncate(output_path_len);
+            source_path.as_mut_os_string().truncate(source_path_len);
         }
 
         Ok(())
@@ -660,9 +597,7 @@ impl<'a> Function<'a> {
             false => writeln!(w, "// STATE[STUB]")?,
         }
         writeln!(w, "// {name_orig}")?;
-        utils::write_fmt(&mut w, |w| {
-            utils::write_fn_signature_with_args(&fn_t, &args, None, None, None, w)
-        })?;
+        utils::write_fn_signature_with_args(&fn_t, &args, None, None, None, &mut w)?;
 
         writeln!(w, "\n{{")?;
 
@@ -672,7 +607,7 @@ impl<'a> Function<'a> {
                 let local_prefix_len = "// ".len() + local_type.len() + " ".len();
 
                 write!(w, "\t// {local_type} ")?;
-                utils::write_fmt(&mut w, |w| utils::pad_spaces(w, local_prefix_len))?;
+                utils::pad_spaces(&mut w, local_prefix_len)?;
                 write!(w, "{local_name}")?;
 
                 if local_scope != 0 {
@@ -689,7 +624,7 @@ impl<'a> Function<'a> {
                 let const_prefix_len = "// const ".len() + const_type.len() + " ".len();
 
                 write!(w, "\t// const {const_type} ")?;
-                utils::write_fmt(&mut w, |w| utils::pad_spaces(w, const_prefix_len))?;
+                utils::pad_spaces(&mut w, const_prefix_len)?;
                 writeln!(w, "{const_name} = {const_value};")?;
             }
             writeln!(w, "\t// ******\n")?;
@@ -701,7 +636,7 @@ impl<'a> Function<'a> {
                 let static_prefix_len = "// static ".len() + static_type.len() + " ".len();
 
                 write!(w, "\t// static {static_type} ")?;
-                utils::write_fmt(&mut w, |w| utils::pad_spaces(w, static_prefix_len))?;
+                utils::pad_spaces(&mut w, static_prefix_len)?;
                 writeln!(
                     w,
                     "{static_name} = <{offset}>;",
@@ -861,7 +796,7 @@ impl<'a> Function<'a> {
     }
 }
 
-pub fn write_header(mut w: impl std::io::Write, path: &std::path::Path) -> crate::Result<()> {
+pub fn write_header(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
     use chrono::Local;
     let day = Local::now().format("%d.%m.%Y").to_string();
 
@@ -873,7 +808,7 @@ pub fn write_header(mut w: impl std::io::Write, path: &std::path::Path) -> crate
         writeln!(w)?;
     };
 
-    let file_name = path
+    let file_name = Path::new(path)
         .file_name()
         .expect("no filename")
         .to_string_lossy()
@@ -901,8 +836,8 @@ pub fn write_header(mut w: impl std::io::Write, path: &std::path::Path) -> crate
     Ok(())
 }
 
-pub fn write_footer(mut w: impl std::io::Write, path: &std::path::Path) -> crate::Result<()> {
-    let file_name = path
+pub fn write_footer(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
+    let file_name = Path::new(path)
         .file_name()
         .expect("no filename")
         .to_string_lossy()
