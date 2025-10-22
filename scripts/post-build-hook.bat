@@ -31,7 +31,7 @@ set     "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.exe"
 pushd "%VOSTOK_DIR%"
 
 echo Regenerating structure based on the compiled PDB file
-cargo run --release --bin pdb-parser -- --pdb-path "%PDB_FILE%" --output-path "%XRAY_STUB_DIR%" --engine-path "%ENGINE_DIR%" --as-base
+cargo run --release --bin pdb-parser -- --pdb-path "%PDB_FILE%" --output-path "%XRAY_STUB_DIR%" --engine-path "%ENGINE_DIR%" --as-base --skip_non_engine_headers
 
 popd
 
