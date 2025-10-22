@@ -1,4 +1,5 @@
 #![feature(str_as_str)]
+#![feature(os_string_truncate)]
 #![expect(clippy::len_without_is_empty)]
 
 //! Builds a project structure out of the provided PDB file.
@@ -19,12 +20,15 @@
 //! cargo run --bin pdb-parser --release
 //! ```
 
-// @TODO: `FILE_PREFIX_BASE` shouldn't be hardcoded.
-// @TODO: Would be nice to write breakpoints with the source code.
+// @TODO: Deal with naemspaces. Do not hardcode them.
+// @TODO: Add SAFE flag for deleting `source` and `header` folders
 
-pub mod addr2line;
+pub mod data;
+pub mod pdb_parser;
+
 pub mod error;
 pub mod utils;
+pub mod utils_fs;
 
 pub mod dump_pdb;
 pub mod gen_headers;
@@ -41,7 +45,6 @@ pub struct Cli {
         short,
         long,
         value_hint = clap::ValueHint::FilePath,
-        default_value = "D:\\Projects\\Survarium\\binaries\\win32\\survarium.pdb",
     )]
     pdb_path: std::path::PathBuf,
 
@@ -49,7 +52,6 @@ pub struct Cli {
         short,
         long,
         value_hint = clap::ValueHint::FilePath,
-        default_value = "..\\vostok-structure",
     )]
     output_path: std::path::PathBuf,
 
@@ -57,7 +59,6 @@ pub struct Cli {
         short,
         long,
         value_hint = clap::ValueHint::FilePath,
-        default_value = "c:\\survarium\\sources\\vostok\\",
     )]
     engine_path: String,
 
@@ -73,6 +74,9 @@ pub struct Cli {
 
     #[arg(long, action)]
     no_overwrites: bool,
+
+    #[arg(long, action)]
+    skip_non_engine_headers: bool,
 }
 
 bitflags::bitflags! {
@@ -80,24 +84,27 @@ bitflags::bitflags! {
     pub struct GenFlags: u32 {
         /// Do not generate file structure.
         /// Print to `stdout` source file for `TEST_MODULE` instead.
-        const TEST_RUN      = 0b0000_0001;
+        const TEST_RUN                = 0b0000_0001;
 
         /// Generating for `BASE`.
         /// i.e. the stub is generated for the `xray` code being modified
         /// as opposed to `TARGET`, to which the code is being matched.
         ///
         /// This will cause comments to be slightly different with another prefix used for files.
-        const AS_BASE       = 0b0000_0010;
+        const AS_BASE                 = 0b0000_0010;
 
         /// Do not use cache with names for generating member function declarations in headers.
         /// This is useful right now, since there are conflicts because of namespaces:
         /// `network_core::http_client::update` will conflict with `network::http_client::update`.
-        const NO_CACHE      = 0b0000_0100;
+        const NO_CACHE                = 0b0000_0100;
 
         /// Do not overwrite header files, instead append N to their names.
         /// While this is not useful in general, I've seen that there are legit overwrites and this
         /// needs to be investigated.
-        const NO_OVERWRITES = 0b0000_1000;
+        const NO_OVERWRITES           = 0b0000_1000;
+
+        ///
+        const SKIP_NON_ENGINE_HEADERS = 0b0001_0000;
     }
 }
 
@@ -112,6 +119,7 @@ fn main() {
         as_base,
         no_cache,
         no_overwrites,
+        skip_non_engine_headers,
     } = Cli::parse();
 
     let flags = {
@@ -120,6 +128,7 @@ fn main() {
         flags.set(GenFlags::AS_BASE, as_base);
         flags.set(GenFlags::NO_CACHE, no_cache);
         flags.set(GenFlags::NO_OVERWRITES, no_overwrites);
+        flags.set(GenFlags::SKIP_NON_ENGINE_HEADERS, skip_non_engine_headers);
         flags
     };
 

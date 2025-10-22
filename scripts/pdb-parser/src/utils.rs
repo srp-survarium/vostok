@@ -62,6 +62,7 @@ impl Type {
             // .replace("survarium::", "")
 
 
+            // TODO
             // Replacements for workspace inside `vostok` namespace
             .replace("vostok::network_core::", "")
             // .replace("vostok::physics::", "")
@@ -91,15 +92,20 @@ pub fn write_fn_signature_with_args(
     max_return_type_len: Option<usize>,
     max_method_name_len: Option<usize>,
     pad_args_len: Option<usize>,
-    w: &mut impl std::fmt::Write,
-) -> std::fmt::Result {
+    w: &mut impl std::io::Write,
+) -> std::io::Result<()> {
     let type_parser::Function {
         return_type, name, ..
     } = fn_t;
 
     write_return_type(return_type, max_return_type_len, w)?;
 
-    write!(w, "{name}")?;
+    // TODO
+    write!(
+        w,
+        "{name}",
+        name = name.replace("vostok::network_core::", "")
+    )?;
 
     if let Some(max_method_name_len) = max_method_name_len {
         pad_spaces_t(w, name.len(), max_method_name_len)?;
@@ -162,8 +168,8 @@ pub fn write_fn_signature_unnamed_args(
     max_return_type_len: Option<usize>,
     max_method_name_len: Option<usize>,
     pad_args_len: Option<usize>,
-    w: &mut impl std::fmt::Write,
-) -> std::fmt::Result {
+    w: &mut impl std::io::Write,
+) -> std::io::Result<()> {
     let args = fn_t
         .arg_types
         .iter()
@@ -184,8 +190,8 @@ pub fn write_fn_signature_unnamed_args(
 pub fn write_return_type(
     return_type: &type_parser::ReturnType,
     max_return_type_len: Option<usize>,
-    w: &mut impl std::fmt::Write,
-) -> std::fmt::Result {
+    w: &mut impl std::io::Write,
+) -> std::io::Result<()> {
     let return_type_len = match return_type {
         ReturnType::Constructor | ReturnType::Destructor => 0,
         ReturnType::Type(type_) => {
@@ -230,7 +236,7 @@ pub fn set_method_attributes(
 
 pub fn write_fmt(
     w: &mut impl std::io::Write,
-    cb: impl Fn(&mut String) -> std::fmt::Result,
+    cb: impl Fn(&mut String) -> std::io::Result<()>,
 ) -> std::io::Result<()> {
     let mut result = String::new();
     cb(&mut result).unwrap();
@@ -246,7 +252,7 @@ pub const MAX_PAD_SPACE: usize = MAX_PAD_TABS * 4;
 /// Pad a string given how much was already written
 ///
 /// Use this function if you don't care about the size of the total padding.
-pub fn pad_spaces(w: &mut impl std::fmt::Write, prefix_len: usize) -> std::fmt::Result {
+pub fn pad_spaces(w: &mut impl std::io::Write, prefix_len: usize) -> std::io::Result<()> {
     pad_spaces_t(w, prefix_len, MAX_PAD_SPACE)
 }
 
@@ -258,10 +264,10 @@ pub fn pad_spaces(w: &mut impl std::fmt::Write, prefix_len: usize) -> std::fmt::
 /// * `pad_space`  - Length of the paddding you want to achieve.
 ///         Note that it will be capped by `MAX_PAD_SPACE`.
 pub fn pad_spaces_t(
-    w: &mut impl std::fmt::Write,
+    w: &mut impl std::io::Write,
     prefix_len: usize,
     pad_space: usize,
-) -> std::fmt::Result {
+) -> std::io::Result<()> {
     for _ in 0..pad_times(prefix_len, pad_space.min(MAX_PAD_SPACE)) {
         write!(w, "\t")?;
     }
@@ -274,7 +280,7 @@ pub fn pad_spaces_t(
 ///
 /// * `pad_space`  - Length of the paddding you want to achieve.
 ///         Note that it will be capped by `MAX_PAD_SPACE`.
-pub fn pad_spaces_uncap(w: &mut impl std::fmt::Write, pad_space: usize) -> std::fmt::Result {
+pub fn pad_spaces_uncap(w: &mut impl std::io::Write, pad_space: usize) -> std::io::Result<()> {
     for _ in 0..pad_times(0, pad_space) {
         write!(w, "\t")?;
     }

@@ -1,28 +1,27 @@
 use std::collections::BTreeSet;
-use std::fmt;
-use std::fs;
-use std::io;
-use std::io::Write;
+use std::io::{self, BufWriter};
+use std::path::Path;
 
+use pdb::RawString;
 use pdb::{FallibleIterator, ItemIndex};
 use pdb_addr2line::type_parser;
 use pdb_addr2line::type_parser::AttributeFlags;
 use pdb_addr2line::type_parser::ReturnType;
 
-use crate::addr2line::Formatter;
-use crate::gen_sources;
-use crate::gen_sources::FunctionCache;
-use crate::gen_sources::FunctionSignature;
+use crate::data::{Files, FunctionCache, FunctionSignature};
+use crate::pdb_parser::Formatter;
 use crate::utils;
 use crate::utils::Type;
 use crate::GenFlags;
+use crate::{gen_sources, utils_fs};
 
 pub fn dump_headers(
     pdb: &mut pdb::PDB<std::fs::File>,
     formatter: &Formatter,
     cache: FunctionCache,
-    output_path: &std::path::Path,
+    output_path_prefix: &std::path::Path,
     flags: GenFlags,
+    files: &mut Files,
 ) -> crate::Result<()> {
     if flags.contains(GenFlags::TEST_RUN) {
         return Ok(());
@@ -39,18 +38,13 @@ pub fn dump_headers(
         type_finder
     };
 
-    let mut header_path = output_path.to_path_buf();
-    header_path.push("headers");
-    std::fs::create_dir_all(&header_path)?;
+    let mut output_path = output_path_prefix.to_path_buf();
+    let mut header_path = Path::new("headers").to_path_buf();
 
-    for path in ["vostok", "survarium", "others"] {
-        header_path.push(path);
-        std::fs::create_dir_all(&header_path)?;
-        header_path.pop();
-    }
+    let output_path_len = output_path.as_path().as_os_str().len();
+    let header_path_len = header_path.as_path().as_os_str().len();
 
     let type_information = pdb.type_information()?;
-
     let mut type_iter = type_information.iter();
     while let Some(type_index) = type_iter.next()? {
         let Ok(pdb::TypeData::Class(class)) = type_index.parse() else {
@@ -64,8 +58,15 @@ pub fn dump_headers(
             continue;
         };
 
-        let file = create_header_file(&class, header_path.clone(), flags)?;
-        write_header_file(&class, header, file)?;
+        if let Some(file) =
+            create_header_file(&class, &mut output_path, &mut header_path, flags, files)?
+        {
+            let mut file = BufWriter::new(file);
+            write_header_file(&class, header, &mut file)?;
+        }
+
+        output_path.as_mut_os_string().truncate(output_path_len);
+        header_path.as_mut_os_string().truncate(header_path_len);
     }
 
     Ok(())
@@ -369,7 +370,7 @@ impl<'p> Class<'p> {
 
         let fn_t = method.fn_t();
         let copy_arg = |postfix: &str| {
-            fn_t.arg_types[0].strip_suffix(postfix).unwrap_or_default() == &self.orig_name
+            fn_t.arg_types[0].strip_suffix(postfix).unwrap_or_default() == self.orig_name
         };
 
         match fn_t.name.as_str() {
@@ -550,8 +551,8 @@ pub fn update_referenced_types(
 // Display
 //
 
-impl fmt::Display for Data<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Data<'_> {
+    fn write(&self, f: &mut impl std::io::Write) -> io::Result<()> {
         if !self.forward_references.is_empty() {
             writeln!(f)?;
             writeln!(f, "//////////////////////////")?;
@@ -592,8 +593,8 @@ impl fmt::Display for Data<'_> {
     }
 }
 
-impl fmt::Display for Class<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Class<'_> {
+    fn fmt(&self, f: &mut impl std::io::Write) -> io::Result<()> {
         let kind = match self.kind {
             pdb::ClassKind::Class => "class",
             pdb::ClassKind::Struct => "struct",
@@ -713,11 +714,11 @@ impl Class<'_> {
 impl Method {
     fn fmt(
         &self,
-        f: &mut fmt::Formatter<'_>,
+        f: &mut impl std::io::Write,
         has_inline_methods: bool,
         max_return_type_len: usize,
         max_method_name_len: usize,
-    ) -> fmt::Result {
+    ) -> io::Result<()> {
         let attrs = self.attrs();
 
         let virtual_ = match attrs.contains(AttributeFlags::IS_VIRTUAL) {
@@ -780,7 +781,7 @@ impl Method {
             Method::FromSourceFile { fn_t, args } => {
                 utils::write_fn_signature_with_args(
                     fn_t,
-                    &args,
+                    args,
                     Some(max_return_type_len),
                     Some(max_method_name_len),
                     Some(pad_args_len),
@@ -805,8 +806,8 @@ impl Method {
     }
 }
 
-impl fmt::Display for Enum<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Enum<'_> {
+    fn fmt(&self, f: &mut impl std::io::Write) -> io::Result<()> {
         writeln!(
             f,
             "enum {} /* stored as {} */ {{",
@@ -837,8 +838,8 @@ impl fmt::Display for Enum<'_> {
     }
 }
 
-impl fmt::Display for ForwardReference {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl ForwardReference {
+    fn fmt(&self, f: &mut impl std::io::Write) -> io::Result<()> {
         writeln!(
             f,
             "{} {};",
@@ -858,13 +859,68 @@ impl fmt::Display for ForwardReference {
 
 fn create_header_file(
     class: &pdb::ClassType,
-    mut header_path: std::path::PathBuf,
+    output_path: &mut std::path::PathBuf,
+    header_path: &mut std::path::PathBuf,
     flags: GenFlags,
-) -> crate::Result<std::fs::File> {
+    files: &mut Files,
+) -> crate::Result<Option<std::fs::File>> {
+    let Some(header_name) = build_header_name(class.name, header_path, flags) else {
+        return Ok(None);
+    };
+
+    header_path.push(format!("{header_name}.h"));
+
+    utils_fs::open_file(output_path, header_path, flags, files, ".h").map(Some)
+}
+
+fn write_header_file(
+    class: &pdb::ClassType,
+    header: Data,
+    file: &mut impl std::io::Write,
+) -> crate::Result<()> {
+    let class_name = class.name.to_string();
+    let ifdef_name = {
+        let mut depth = 0;
+
+        let header_name = class_name.chars().filter(|c| match c {
+            '<' => {
+                depth += 1;
+                false
+            }
+            '>' => {
+                depth -= 1;
+                false
+            }
+            _ => depth == 0,
+        });
+
+        "ignore/"
+            .chars()
+            .chain(header_name)
+            .chain(".h".chars())
+            .collect::<String>()
+            .replace("survarium::", "")
+            .replace("vostok::", "")
+            .replace("::", "_")
+    };
+
+    gen_sources::write_header(file, &ifdef_name)?;
+    writeln!(file, "/* {class_name} */")?;
+    header.write(file)?;
+    gen_sources::write_footer(file, &ifdef_name)?;
+
+    Ok(())
+}
+
+fn build_header_name(
+    class_name: RawString,
+    header_path: &mut std::path::PathBuf,
+    flags: GenFlags,
+) -> Option<String> {
     const MAX_CLASS_LEN: usize = 140;
 
     let header_name = {
-        let mut class_name = class.name.to_string().to_string();
+        let mut class_name = class_name.to_string().to_string();
         class_name.truncate(MAX_CLASS_LEN);
         class_name
     };
@@ -876,6 +932,10 @@ fn create_header_file(
         header_path.push("survarium");
         class_name
     } else {
+        if flags.contains(GenFlags::SKIP_NON_ENGINE_HEADERS) {
+            return None;
+        }
+
         header_path.push("others");
         &header_name
     };
@@ -903,85 +963,10 @@ fn create_header_file(
         }
     };
 
-    std::fs::create_dir_all(&header_path)?;
-
-    let mut header_name = header_name
-        .replace(":", "∶")
-        .replace("*", "٭")
-        .replace("<", "＜")
-        .replace(">", "＞");
-    let prefix_pos = header_name.len();
-
-    if !flags.contains(GenFlags::NO_OVERWRITES) {
-        header_path.push(format!("{header_name}.h"));
-        let file = std::fs::File::create(&header_path)?;
-        return Ok(file);
-    }
-
-    let mut i = 0;
-    header_path.push("dummy"); // `set_file_name` cannot distinguish between file and folder names
-
-    loop {
-        if i != 0 {
-            use std::fmt::Write;
-
-            header_name.truncate(prefix_pos);
-            write!(&mut header_name, "_{i}").unwrap();
-        }
-
-        header_path.set_file_name(&header_name);
-        header_path.set_extension("h");
-
-        match fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&header_path)
-        {
-            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {
-                i += 1;
-            }
-            Ok(file) => return Ok(file),
-            Err(error) => return Err(error.into()),
-        }
-    }
-}
-
-fn write_header_file(
-    class: &pdb::ClassType,
-    header: Data,
-    mut file: std::fs::File,
-) -> crate::Result<()> {
-    let class_name = class.name.to_string();
-    let ifdef_name = {
-        let mut depth = 0;
-
-        let header_name = class_name.chars().filter(|c| match c {
-            '<' => {
-                depth += 1;
-                false
-            }
-            '>' => {
-                depth -= 1;
-                false
-            }
-            _ => depth == 0,
-        });
-
-        "ignore/"
-            .chars()
-            .chain(header_name)
-            .chain(".h".chars())
-            .collect::<String>()
-            .replace("survarium::", "")
-            .replace("vostok::", "")
-            .replace("::", "_")
-    };
-    let ifdef_name = std::path::Path::new(&ifdef_name);
-
-    gen_sources::write_header(&mut file, ifdef_name)?;
-    writeln!(&mut file, "/* {class_name} */")?;
-    write!(&mut file, "{header}")?;
-    gen_sources::write_footer(&mut file, ifdef_name)?;
-
-    Ok(())
+    let header_name = header_name
+        .replace(":", "_")
+        .replace("*", "+")
+        .replace("<", "_")
+        .replace(">", "_");
+    Some(header_name)
 }
