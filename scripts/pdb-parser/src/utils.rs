@@ -132,7 +132,7 @@ pub fn write_fn_signature_with_args(
             .max()
             .unwrap();
 
-        for (idx, (arg_name, arg_type)) in args.into_iter().enumerate() {
+        for (idx, (arg_name, arg_type)) in args.iter().enumerate() {
             let last = idx == len - 1;
 
             if let Some(pad_args_len) = pad_args_len {
@@ -195,7 +195,7 @@ pub fn write_return_type(
     let return_type_len = match return_type {
         ReturnType::Constructor | ReturnType::Destructor => 0,
         ReturnType::Type(type_) => {
-            let return_type = Type::new(&type_);
+            let return_type = Type::new(type_);
             write!(w, "{return_type}")?;
             return_type.len()
         }
@@ -262,7 +262,7 @@ pub fn pad_spaces(w: &mut impl std::io::Write, prefix_len: usize) -> std::io::Re
 ///
 /// * `prefix_len` - How much bytes were already written
 /// * `pad_space`  - Length of the paddding you want to achieve.
-///         Note that it will be capped by `MAX_PAD_SPACE`.
+///   Note that it will be capped by `MAX_PAD_SPACE`.
 pub fn pad_spaces_t(
     w: &mut impl std::io::Write,
     prefix_len: usize,
@@ -279,7 +279,7 @@ pub fn pad_spaces_t(
 /// # Arguments
 ///
 /// * `pad_space`  - Length of the paddding you want to achieve.
-///         Note that it will be capped by `MAX_PAD_SPACE`.
+///   Note that it will be capped by `MAX_PAD_SPACE`.
 pub fn pad_spaces_uncap(w: &mut impl std::io::Write, pad_space: usize) -> std::io::Result<()> {
     for _ in 0..pad_times(0, pad_space) {
         write!(w, "\t")?;
