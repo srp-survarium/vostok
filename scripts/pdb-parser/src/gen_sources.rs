@@ -628,7 +628,7 @@ impl<'a> Function<'a> {
             false => writeln!(w, "// STATE[STUB]")?,
         }
         writeln!(w, "// {name_orig}")?;
-        utils::write_fn_signature_with_args(&fn_t, &namespace, &args, None, None, None, &mut w)?;
+        utils::write_fn_signature_with_args(&fn_t, namespace, &args, None, None, None, &mut w)?;
 
         writeln!(w, "\n{{")?;
 
