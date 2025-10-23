@@ -4,6 +4,7 @@ generate_objdiff_config.py - Generate config consumed by `objdiff` for binary ma
 
 from pathlib import Path
 from typing import Optional
+import argparse
 import json
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -88,5 +89,12 @@ def main(skip_missing: bool, filter_prefix: Optional[str]):
         f.write("\n")
 
 if __name__ == "__main__":
-    # main(skip_missing=True, filter_prefix="vostok/network_core")
-    main(skip_missing=True, filter_prefix=None)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filter_prefix", nargs="?", default=None)
+    args = parser.parse_args()
+
+    filter_prefix = args.filter_prefix
+    if filter_prefix:
+        filter_prefix = filter_prefix.replace("::", "/")
+
+    main(skip_missing=True, filter_prefix=filter_prefix)
