@@ -54,7 +54,15 @@ pub fn dump_headers(
             continue;
         }
 
-        let Ok(header) = build_header(formatter, &cache, &type_finder, type_index.index()) else {
+        let namespace = utils::Namespace::get_from_class_name_impl(&class.name.to_string());
+
+        let Ok(header) = build_header(
+            formatter,
+            &cache,
+            &type_finder,
+            type_index.index(),
+            &namespace,
+        ) else {
             continue;
         };
 
@@ -78,9 +86,10 @@ fn build_header<'a>(
     type_finder: &pdb::TypeFinder<'a>,
 
     class: pdb::TypeIndex,
+    namespace: &'a utils::Namespace,
 ) -> crate::Result<Data<'a>> {
     let mut needed_types = TypeSet::new();
-    let mut data = Data::new();
+    let mut data = Data::new(namespace);
 
     data.add(formatter, cache, type_finder, class, &mut needed_types)?;
 
@@ -103,12 +112,14 @@ fn build_header<'a>(
 type TypeSet = BTreeSet<pdb::TypeIndex>;
 
 struct Data<'p> {
+    namespace: &'p utils::Namespace,
     forward_references: Vec<ForwardReference>,
     classes: Vec<Class<'p>>,
     enums: Vec<Enum<'p>>,
 }
 
 struct Class<'p> {
+    namespace: &'p utils::Namespace,
     kind: pdb::ClassKind,
     orig_name: String,
     name: Type,
@@ -164,8 +175,9 @@ struct ForwardReference {
 //
 
 impl<'p> Data<'p> {
-    fn new() -> Data<'p> {
+    fn new(namespace: &'p utils::Namespace) -> Data<'p> {
         Data {
+            namespace,
             forward_references: Vec::new(),
             classes: Vec::new(),
             enums: Vec::new(),
@@ -184,19 +196,24 @@ impl<'p> Data<'p> {
     ) -> crate::Result<()> {
         match type_finder.find(type_index)?.parse()? {
             pdb::TypeData::Class(data) => {
+                let orig_name = data.name.to_string().to_string();
+
+                let namespace = self.namespace;
+
                 if data.properties.forward_reference() {
                     self.forward_references.push(ForwardReference {
                         kind: data.kind,
-                        name: Type::new(&data.name.to_string()),
+                        name: Type::new(&data.name.to_string(), namespace),
                     });
 
                     return Ok(());
                 }
 
                 let mut class = Class {
+                    namespace,
                     kind: data.kind,
-                    name: Type::new(&data.name.to_string()),
-                    orig_name: data.name.to_string().to_string(),
+                    name: Type::new(&data.name.to_string(), namespace),
+                    orig_name,
                     size: data.size,
                     fields: Vec::new(),
                     base_classes: Vec::new(),
@@ -219,6 +236,7 @@ impl<'p> Data<'p> {
                         type_finder,
                         data.underlying_type,
                         needed_types,
+                        self.namespace,
                     )?,
                     values: Vec::new(),
                 };
@@ -280,9 +298,14 @@ impl<'p> Class<'p> {
     ) -> crate::Result<()> {
         match *field {
             pdb::TypeData::Member(ref data) => {
-                // TODO: attributes (static, virtual, etc.)
                 self.fields.push(Field {
-                    type_name: type_name(formatter, type_finder, data.field_type, needed_types)?,
+                    type_name: type_name(
+                        formatter,
+                        type_finder,
+                        data.field_type,
+                        needed_types,
+                        self.namespace,
+                    )?,
                     name: data.name,
                     offset: data.offset,
                 });
@@ -330,12 +353,24 @@ impl<'p> Class<'p> {
             }
 
             pdb::TypeData::BaseClass(ref data) => self.base_classes.push(BaseClass {
-                type_name: type_name(formatter, type_finder, data.base_class, needed_types)?,
+                type_name: type_name(
+                    formatter,
+                    type_finder,
+                    data.base_class,
+                    needed_types,
+                    self.namespace,
+                )?,
                 offset: data.offset,
             }),
 
             pdb::TypeData::VirtualBaseClass(ref data) => self.base_classes.push(BaseClass {
-                type_name: type_name(formatter, type_finder, data.base_class, needed_types)?,
+                type_name: type_name(
+                    formatter,
+                    type_finder,
+                    data.base_class,
+                    needed_types,
+                    self.namespace,
+                )?,
                 offset: data.base_pointer_offset,
             }),
 
@@ -502,13 +537,14 @@ pub fn type_name(
     type_finder: &pdb::TypeFinder<'_>,
     type_index: pdb::TypeIndex,
     needed_types: &mut TypeSet,
+    namespace: &utils::Namespace,
 ) -> crate::Result<Type> {
     update_referenced_types(type_finder, type_index, needed_types)?;
 
     // Make sure that index is not cross module.
     // That means it can be easily resolved.
     assert!(!type_index.is_cross_module());
-    formatter.emit_type(0, type_index)
+    formatter.emit_type(0, type_index, namespace)
 }
 
 pub fn update_referenced_types(
@@ -609,7 +645,7 @@ impl Class<'_> {
                     0 => ":",
                     _ => ",",
                 };
-                write!(f, " public {} {}", prefix, base.type_name)?;
+                write!(f, " {prefix} public {}", base.type_name)?;
             }
         }
 
@@ -628,6 +664,7 @@ impl Class<'_> {
             for method in &self.instance_methods {
                 method.fmt(
                     f,
+                    self.namespace,
                     has_inline_methods,
                     max_return_type_len,
                     max_method_name_len,
@@ -639,7 +676,13 @@ impl Class<'_> {
             writeln!(f)?;
 
             for method in &self.static_methods {
-                method.fmt(f, false, max_return_type_len, max_method_name_len)?;
+                method.fmt(
+                    f,
+                    self.namespace,
+                    false,
+                    max_return_type_len,
+                    max_method_name_len,
+                )?;
             }
         }
 
@@ -695,8 +738,8 @@ impl Class<'_> {
             .map(|method| match &method.fn_t().return_type {
                 ReturnType::Constructor => 0,
                 ReturnType::Destructor => 0,
-                // @TODO: This is stupid!
-                ReturnType::Type(type_) => Type::new(type_).len(),
+                // TODO: This is stupid!
+                ReturnType::Type(type_) => Type::new(type_, self.namespace).len(),
             })
             .max()
             .unwrap_or_default()
@@ -715,6 +758,7 @@ impl Method {
     fn fmt(
         &self,
         f: &mut impl std::io::Write,
+        namespace: &utils::Namespace,
         has_inline_methods: bool,
         max_return_type_len: usize,
         max_method_name_len: usize,
@@ -772,6 +816,7 @@ impl Method {
             Method::FromHeaderFile { fn_t } => {
                 utils::write_fn_signature_unnamed_args(
                     fn_t,
+                    namespace,
                     Some(max_return_type_len),
                     Some(max_method_name_len),
                     Some(pad_args_len),
@@ -781,6 +826,7 @@ impl Method {
             Method::FromSourceFile { fn_t, args } => {
                 utils::write_fn_signature_with_args(
                     fn_t,
+                    namespace,
                     args,
                     Some(max_return_type_len),
                     Some(max_method_name_len),
@@ -904,10 +950,10 @@ fn write_header_file(
             .replace("::", "_")
     };
 
-    gen_sources::write_header(file, &ifdef_name)?;
+    gen_sources::write_header(file, &ifdef_name, header.namespace)?;
     writeln!(file, "/* {class_name} */")?;
     header.write(file)?;
-    gen_sources::write_footer(file, &ifdef_name)?;
+    gen_sources::write_footer(file, &ifdef_name, header.namespace)?;
 
     Ok(())
 }
