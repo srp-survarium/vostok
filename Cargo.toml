@@ -10,4 +10,6 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.lints.clippy]
+manual_is_multiple_of = "allow"
 new_without_default = "allow"
+useless_format = "allow"

@@ -84,9 +84,9 @@ pub fn generate_vcproj(
     let file = fs::File::create(path)?;
     let mut file = io::BufWriter::new(file);
 
-    file.write(generate_project_header(vcproj_guid, name).as_bytes())?;
+    file.write_all(generate_project_header(vcproj_guid, name).as_bytes())?;
     generate_project_filters(files, &mut file)?;
-    file.write(generate_project_footer().as_bytes())?;
+    file.write_all(generate_project_footer().as_bytes())?;
 
     Ok(())
 }
