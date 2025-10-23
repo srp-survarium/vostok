@@ -24,14 +24,14 @@ impl Error {
 #[macro_export]
 macro_rules! bail {
     ($($arg:tt)*) =>  {
-        return crate::error!($($arg)*)
+        return $crate::error!($($arg)*)
     }
 }
 
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) =>  {
-        Err(crate::Error::new(format!($($arg)*)))
+        Err($crate::Error::new(format!($($arg)*)))
     };
 }
 

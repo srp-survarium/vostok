@@ -91,22 +91,20 @@ impl Namespace {
         let class = iter.next();
         let is_last = iter.next().is_none();
 
-        let namespace = match (root, class) {
-            (Some(root), _) if root == "survarium" => Self {
+        match (root, class) {
+            (Some("survarium"), _) => Self {
                 raw_root: Some("survarium::"),
                 raw_class: None,
             },
-            (Some(root), None) if root == "vostok" => Self {
+            (Some("vostok"), None) => Self {
                 raw_root: Some("vostok::"),
                 raw_class: None,
             },
-            (Some(root), Some(class)) if root == "vostok" && (is_last || class.contains('<')) => {
-                Self {
-                    raw_root: Some("vostok::"),
-                    raw_class: None,
-                }
-            }
-            (Some(root), Some(class)) if root == "vostok" => Self {
+            (Some("vostok"), Some(class)) if is_last || class.contains('<') => Self {
+                raw_root: Some("vostok::"),
+                raw_class: None,
+            },
+            (Some("vostok"), Some(class)) => Self {
                 raw_root: Some("vostok::"),
                 raw_class: Some(format!("vostok::{class}::")),
             },
@@ -114,8 +112,7 @@ impl Namespace {
                 raw_root: None,
                 raw_class: None,
             },
-        };
-        namespace
+        }
     }
 
     pub fn get_root(&self) -> Option<&'static str> {
@@ -198,7 +195,7 @@ pub fn write_fn_signature_with_args(
 
     write_return_type(return_type, namespace, max_return_type_len, w)?;
 
-    let name = namespace.strip(&name);
+    let name = namespace.strip(name);
     write!(w, "{name}")?;
 
     if let Some(max_method_name_len) = max_method_name_len {
