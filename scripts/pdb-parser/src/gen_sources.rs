@@ -30,6 +30,7 @@ pub struct Function<'a> {
 
     pub fn_t: pdb_addr2line::type_parser::Function,
     pub name_orig: String,
+    pub namespace: utils::Namespace,
 
     pub args: Vec<(pdb::RawString<'a>, Type)>,
     pub locals: Vec<(pdb::RawString<'a>, Type, usize)>,
@@ -139,12 +140,12 @@ impl<'a> Module<'a> {
         let mut symbols = module_info.symbols()?;
 
         let mut files: BTreeMap<String, BTreeMap<u32, Function>> = BTreeMap::new();
-
         let mut typedefs: BTreeSet<(Type, Type)> = BTreeSet::new();
 
-        let mut filename: String = String::new();
         let mut function: Function = Function::new(flags);
         let mut depth: i32 = 0;
+
+        let mut filename: String = String::new();
 
         while let Some(symbol) = symbols.next()? {
             match symbol.parse()? {
@@ -208,6 +209,8 @@ impl<'a> Module<'a> {
                     };
 
                     filename = file_name.to_string();
+                    // TODO: Skip creating function here. We already have a filename to know
+                    // whether it will be written to `structure` or not.
 
                     let name_orig =
                         formatter.emit_function_orig(&proc.name, module_id, proc.type_index)?;
@@ -219,6 +222,8 @@ impl<'a> Module<'a> {
                         type_index: proc.type_index,
                         //
                         name_orig,
+                        namespace: utils::Namespace::get_from_class_name(&fn_t),
+                        //
                         fn_t,
                         //
                         proc_start,
@@ -237,8 +242,7 @@ impl<'a> Module<'a> {
                     let mut take_function = Function::new(function.flags);
                     std::mem::swap(&mut take_function, &mut function);
 
-                    let args_count =
-                        formatter.args_count(take_function.module_id, take_function.type_index)?;
+                    let args_count = function.fn_t.arg_types.len();
 
                     let locals = take_function
                         .args
@@ -263,10 +267,12 @@ impl<'a> Module<'a> {
                     slot: _,
                 }) if depth >= 1 => {
                     let local_name = name;
-                    let local_type = formatter.emit_type(module_id, type_index)?;
+                    let local_type =
+                        formatter.emit_type(module_id, type_index, &function.namespace)?;
 
-                    // @TODO: This is incorrect in present of arguments passed by registers, which
-                    // we do have thanks to linker optimizations
+                    // @NOTE: This is an approximation and will sometimes be incorrect.
+                    // There is no simple way to get actual types from `pdb` thanks to LTCG
+                    // and other optimizations.
                     if function.locals.is_empty() && local_name.as_bytes() == b"this" {
                     } else if offset > 0 {
                         function.args.push((local_name, local_type));
@@ -291,7 +297,8 @@ impl<'a> Module<'a> {
                     slot: _,
                 }) if depth >= 1 => {
                     let local_name = name;
-                    let local_type = formatter.emit_type(module_id, type_index)?;
+                    let local_type =
+                        formatter.emit_type(module_id, type_index, &function.namespace)?;
 
                     if function.locals.is_empty() && local_name.as_bytes() == b"this" {
                     } else {
@@ -306,7 +313,8 @@ impl<'a> Module<'a> {
                     name,
                 }) if depth >= 1 => {
                     let const_name = name;
-                    let const_type = formatter.emit_type(module_id, type_index)?;
+                    let const_type =
+                        formatter.emit_type(module_id, type_index, &function.namespace)?;
                     let const_value = value;
 
                     function
@@ -322,7 +330,8 @@ impl<'a> Module<'a> {
                     name,
                 }) if depth >= 1 => {
                     let static_name = name;
-                    let static_type = formatter.emit_type(module_id, type_index)?;
+                    let static_type =
+                        formatter.emit_type(module_id, type_index, &function.namespace)?;
                     function.statics.push((
                         static_name,
                         static_type,
@@ -409,8 +418,9 @@ impl<'a> Module<'a> {
                     let c = name[0];
 
                     if depth != 0 {
-                        let udts_name = Type::new(&udts.name.to_string());
-                        let udts_type = formatter.emit_type(module_id, udts.type_index)?;
+                        let udts_name = Type::new(&udts.name.to_string(), &function.namespace);
+                        let udts_type =
+                            formatter.emit_type(module_id, udts.type_index, &function.namespace)?;
                         function.typedefs.push((udts_type, udts_name));
                     } else {
                         // Most of the typedefs are completely useless, since they come from templates
@@ -420,8 +430,12 @@ impl<'a> Module<'a> {
                             && c.is_ascii_lowercase()
                             && name.ends_with(b"_type")
                         {
-                            let udts_name = Type::new(&udts.name.to_string());
-                            let udts_type = formatter.emit_type(module_id, udts.type_index)?;
+                            let udts_name = Type::new(&udts.name.to_string(), &function.namespace);
+                            let udts_type = formatter.emit_type(
+                                module_id,
+                                udts.type_index,
+                                &function.namespace,
+                            )?;
 
                             typedefs.insert((udts_type, udts_name));
                         }
@@ -461,6 +475,8 @@ impl<'a> Function<'a> {
             type_index: Default::default(),
 
             name_orig: Default::default(),
+            namespace: Default::default(),
+
             fn_t: type_parser::Function {
                 return_type: type_parser::ReturnType::Constructor,
                 name: Default::default(),
@@ -534,24 +550,17 @@ impl<'a> Module<'a> {
                 //
                 //
 
-                write_header(&mut file, path_to_file)?;
+                let namespace = assume_namespace(&funs);
+
+                write_header(&mut file, path_to_file, &namespace)?;
 
                 for function in funs.into_values() {
-                    function.write(&mut file)?;
+                    function.write(&namespace, &mut file)?;
                 }
 
-                if !self.typedefs.is_empty() {
-                    writeln!(file, "\t// TYPEDEFS")?;
-                    for (ty, name) in &self.typedefs {
-                        writeln!(file, "\ttypedef")?;
-                        writeln!(file, "\t\t{ty}")?;
-                        writeln!(file, "\t\t{name};")?;
-                        writeln!(file)?;
-                    }
-                    writeln!(file, "\t// ******\n")?;
-                }
+                Self::write_typedefs(&self.typedefs, &mut file)?;
 
-                write_footer(&mut file, path_to_file)?;
+                write_footer(&mut file, path_to_file, &namespace)?;
             }
 
             output_path.as_mut_os_string().truncate(output_path_len);
@@ -560,10 +569,31 @@ impl<'a> Module<'a> {
 
         Ok(())
     }
+
+    fn write_typedefs(
+        typedefs: &BTreeSet<(Type, Type)>,
+        mut w: impl std::io::Write,
+    ) -> std::io::Result<()> {
+        if !typedefs.is_empty() {
+            writeln!(w, "\t// TYPEDEFS")?;
+            for (ty, name) in typedefs {
+                writeln!(w, "\ttypedef")?;
+                writeln!(w, "\t\t{ty}")?;
+                writeln!(w, "\t\t{name};")?;
+                writeln!(w)?;
+            }
+            writeln!(w, "\t// ******\n")?;
+        }
+        Ok(())
+    }
 }
 
 impl<'a> Function<'a> {
-    pub fn write(self, mut w: impl std::io::Write) -> std::io::Result<()> {
+    pub fn write(
+        self,
+        namespace: &utils::Namespace,
+        mut w: impl std::io::Write,
+    ) -> std::io::Result<()> {
         let Self {
             module_id: _,
             type_index: _,
@@ -572,6 +602,7 @@ impl<'a> Function<'a> {
             //
             fn_t,
             name_orig,
+            namespace: _,
             //
             args,
             locals,
@@ -597,7 +628,7 @@ impl<'a> Function<'a> {
             false => writeln!(w, "// STATE[STUB]")?,
         }
         writeln!(w, "// {name_orig}")?;
-        utils::write_fn_signature_with_args(&fn_t, &args, None, None, None, &mut w)?;
+        utils::write_fn_signature_with_args(&fn_t, &namespace, &args, None, None, None, &mut w)?;
 
         writeln!(w, "\n{{")?;
 
@@ -796,7 +827,11 @@ impl<'a> Function<'a> {
     }
 }
 
-pub fn write_header(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
+pub fn write_header(
+    w: &mut impl std::io::Write,
+    path: &str,
+    namespace: &utils::Namespace,
+) -> crate::Result<()> {
     use chrono::Local;
     let day = Local::now().format("%d.%m.%Y").to_string();
 
@@ -825,31 +860,23 @@ pub fn write_header(w: &mut impl std::io::Write, path: &str) -> crate::Result<()
         writeln!(w)?;
     }
 
-    #[rustfmt::skip]
-    {
-        writeln!(w, "namespace vostok {{")?;
-        writeln!(w, "namespace network_core {{")?;
+    namespace.start_namespace(w)?;
 
-        // writeln!(w, "namespace survarium {{")?;
-        writeln!(w)?;
-    };
     Ok(())
 }
 
-pub fn write_footer(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
+pub fn write_footer(
+    w: &mut impl std::io::Write,
+    path: &str,
+    namespace: &utils::Namespace,
+) -> crate::Result<()> {
     let file_name = Path::new(path)
         .file_name()
         .expect("no filename")
         .to_string_lossy()
         .to_string();
 
-    #[rustfmt::skip]
-    {
-        // writeln!(w, "}} // namespace survarium")?;
-
-        writeln!(w, "}} // namespace network_core")?;
-        writeln!(w, "}} // namespace vostok")?;
-    };
+    namespace.end_namespace(w)?;
 
     if let Some(module_name) = file_name.strip_suffix(".h") {
         writeln!(w)?;
@@ -859,4 +886,16 @@ pub fn write_footer(w: &mut impl std::io::Write, path: &str) -> crate::Result<()
         writeln!(w, "#endif // #ifndef {ifdef}")?;
     }
     Ok(())
+}
+
+fn assume_namespace(funs: &BTreeMap<u32, Function>) -> utils::Namespace {
+    let mut namespace = utils::Namespace::default();
+
+    for fun in funs.values() {
+        if fun.namespace != namespace {
+            namespace = fun.namespace.clone();
+        }
+    }
+
+    namespace
 }
