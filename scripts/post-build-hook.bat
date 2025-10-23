@@ -56,4 +56,7 @@ set "CLASS_FILTER=%REQUIRED_CLASS%"
 set "PROJECTS_DIR=%VOSTOK_DIR%\binaries\temp_ghidra_project_2"
 
 echo Regenerating COFF object files
-"%VOSTOK_DIR%\scripts\vostok-generate-coff.bat"
+call "%VOSTOK_DIR%\scripts\vostok-generate-coff.bat"
+
+echo Regenerating objdiff config
+py "%VOSTOK_DIR%\scripts\generate_objdiff_config.py"
