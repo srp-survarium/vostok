@@ -37,8 +37,19 @@ if not exist "%PROJECTS_DIR%" (
     mkdir "%PROJECTS_DIR%"
 )
 
-"%GHIDRA_HOME%\support\analyzeHeadless.bat" ^
-  "%PROJECTS_DIR%" vostok                   ^
-  %PROCESS_ARGS%                            ^
-  -scriptPath "%SCRIPTS_DIR%"               ^
-  -postScript DelinkProgram.java "%OUTPUT_DIR%" "%CLASS_FILTER%"
+"%GHIDRA_HOME%\support\analyzeHeadless.bat"                       ^
+  "%PROJECTS_DIR%" vostok                                         ^
+  %PROCESS_ARGS%                                                  ^
+  -scriptPath "%SCRIPTS_DIR%"                                     ^
+  -preScript  TurnOffNonCoffAnalyzers.java                        ^
+  -postScript DelinkProgram.java "%OUTPUT_DIR%" "%CLASS_FILTER%"  ^
+    | rg -v                                                       ^
+      -e "PDB issue dmangling type name:"                         ^
+      -e "reconstruction failed to align"                         ^
+      -e "No vfTable found for RTTICompleteObjectLocator"         ^
+      -e "Could not create Data"                                  ^
+      -e "Failed to create pointer"                               ^
+      -e "at java.base"                                           ^
+      -e "at ghidra.program"                                      ^
+      -e "at ghidra.app"
+
