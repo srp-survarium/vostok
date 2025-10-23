@@ -2,6 +2,7 @@ use std::fs;
 use std::io;
 use std::io::Write;
 use std::path;
+use std::path::Path;
 use std::str::FromStr;
 
 use pdb::PDB;
@@ -50,6 +51,23 @@ pub fn dump_pdb(
 
         Ok(())
     })?;
+
+    let p = |name| Path::new(name);
+
+    files
+        .folders
+        .get_mut(p("headers"))
+        .unwrap()
+        .folders
+        .get_mut(p("vostok"))
+        .unwrap()
+        .move_layer_up(p("__root"));
+
+    files
+        .folders
+        .get_mut(p("sources"))
+        .unwrap()
+        .move_layer_up(p("__root"));
 
     generate_vs_solution(output_path, flags, &files)
 }
