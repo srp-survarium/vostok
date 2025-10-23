@@ -35,6 +35,9 @@ if errorlevel 1 (
 tasklist /FI "IMAGENAME eq devenv.exe" | find /I "devenv.exe" >nul
 if errorlevel 1 (
     start "Vostok Engine" "%VS2008_PATH%" "%SOLUTION_PATH%"
+
+    start "Vostok Structure" "%VS2008_PATH%" "%VOSTOK_STUB_DIR%\vostok_structure.sln"
+    start "Xray Structure"   "%VS2008_PATH%"   "%XRAY_STUB_DIR%\xray_structure.sln"
 )
 
 tasklist /FI "IMAGENAME eq objdiff.exe" | find /I "objdiff.exe" >nul

@@ -1,6 +1,6 @@
+use std::collections::hash_map;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::hash_map;
 use std::path::Path;
 
 #[derive(Debug, Default)]
@@ -48,5 +48,16 @@ impl Files {
         }
 
         created_folder
+    }
+
+    pub fn move_layer_up(&mut self, path: &'static Path) {
+        let mut root_files = HashSet::new();
+        std::mem::swap(&mut root_files, &mut self.files);
+
+        let root_files = Files {
+            folders: HashMap::new(),
+            files: root_files,
+        };
+        self.folders.insert(path, root_files);
     }
 }
