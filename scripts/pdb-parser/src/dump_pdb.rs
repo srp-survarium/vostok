@@ -16,6 +16,26 @@ pub fn dump_pdb(
     engine_path: &str,
     flags: GenFlags,
 ) -> crate::Result<()> {
+    if output_path.as_os_str().as_encoded_bytes().is_empty() {
+        panic!("output_path cannot be empty")
+    }
+
+    {
+        let mut path = output_path.to_path_buf();
+        path.push("sources");
+        if path.exists() {
+            println!("Removing {}", path.to_string_lossy());
+            std::fs::remove_dir_all(&path)?;
+        }
+
+        path.pop();
+        path.push("headers");
+        if path.exists() {
+            println!("Removing {}", path.to_string_lossy());
+            std::fs::remove_dir_all(&path)?;
+        }
+    }
+
     let mut files = Files::default();
 
     Formatter::with(pdb_path, |fmt| {

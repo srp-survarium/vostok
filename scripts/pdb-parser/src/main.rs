@@ -21,7 +21,6 @@
 //! ```
 
 // @TODO: Deal with naemspaces. Do not hardcode them.
-// @TODO: Add SAFE flag for deleting `source` and `header` folders
 
 pub mod data;
 pub mod pdb_parser;
@@ -77,6 +76,9 @@ pub struct Cli {
 
     #[arg(long, action)]
     skip_non_engine_headers: bool,
+
+    #[arg(long, action)]
+    clear_structure: bool,
 }
 
 bitflags::bitflags! {
@@ -103,8 +105,8 @@ bitflags::bitflags! {
         /// needs to be investigated.
         const NO_OVERWRITES           = 0b0000_1000;
 
-        ///
         const SKIP_NON_ENGINE_HEADERS = 0b0001_0000;
+        const CLEAR_STRUCTURE         = 0b0010_0000;
     }
 }
 
@@ -120,6 +122,7 @@ fn main() {
         no_cache,
         no_overwrites,
         skip_non_engine_headers,
+        clear_structure,
     } = Cli::parse();
 
     let flags = {
@@ -129,6 +132,7 @@ fn main() {
         flags.set(GenFlags::NO_CACHE, no_cache);
         flags.set(GenFlags::NO_OVERWRITES, no_overwrites);
         flags.set(GenFlags::SKIP_NON_ENGINE_HEADERS, skip_non_engine_headers);
+        flags.set(GenFlags::CLEAR_STRUCTURE, clear_structure);
         flags
     };
 
