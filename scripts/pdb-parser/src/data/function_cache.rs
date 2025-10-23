@@ -51,18 +51,13 @@ impl FunctionCache {
             ..
         } = fun.clone();
 
-        // TODO
-        let cache_method_name = name_orig
-            // .replace("survarium::", "")
-            ;
-
         let args = args
             .into_iter()
             .map(|(t, n)| (t.to_string().to_string(), n))
             .collect::<Vec<_>>();
 
         self.cache
-            .insert(cache_method_name, FunctionSignature { fn_t, args });
+            .insert(name_orig, FunctionSignature { fn_t, args });
     }
 
     pub fn get_from_header(
@@ -78,9 +73,7 @@ impl FunctionCache {
             let name = format!("{class_name}::{}", name.to_string());
             let name = pdb::RawString::from(name.as_bytes());
 
-            // TODO
             formatter.emit_function_orig(&name, 0, type_index)?
-            // .replace("survarium::", "")
         };
 
         let mut signature = self.cache.get(&cache_method_name).cloned();

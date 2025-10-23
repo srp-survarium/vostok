@@ -12,12 +12,9 @@ impl std::fmt::Display for Type {
 }
 
 impl Type {
-    // TODO: Workspace replacements should be dynamic
-    // * This also affects namespace creation for headers and sources
-    // * This also affects dummy return types in sources
-    #[rustfmt::skip]
-    pub fn new(ty: &str) -> Self {
-        let ty = ty
+    pub fn new(ty: &str, namespace: &Namespace) -> Self {
+        #[rustfmt::skip]
+        let mut ty = ty
             //
             // Generic type replacements
             //
@@ -57,22 +54,16 @@ impl Type {
             .replace(" __cdecl(void)", "()")
             .replace(" __cdecl", "")
 
-
-            // Replacements for `survarium` workspace
-            // .replace("survarium::", "")
-
-
-            // TODO
-            // Replacements for workspace inside `vostok` namespace
-            .replace("vostok::network_core::", "")
-            // .replace("vostok::physics::", "")
-            // .replace("vostok::collision::", "")
-
-            // Replacements for `vostok` workspace
             .replace("vostok::math::", "")
-            .replace("vostok::",       "")
-
             ;
+
+        if let Some(ref raw_class) = namespace.raw_class {
+            ty = ty.replace(raw_class, "")
+        }
+
+        if let Some(ref raw_root) = namespace.raw_root {
+            ty = ty.replace(raw_root, "")
+        }
 
         Self(ty)
     }
@@ -82,12 +73,119 @@ impl Type {
     }
 }
 
+#[derive(Default, Clone, PartialEq)]
+pub struct Namespace {
+    pub raw_root: Option<&'static str>, // vostok::
+    pub raw_class: Option<String>,      // vostok::network_core::
+}
+
+impl Namespace {
+    pub fn get_from_class_name(fun: &type_parser::Function) -> Self {
+        Self::get_from_class_name_impl(&fun.name)
+    }
+
+    pub fn get_from_class_name_impl(p: &str) -> Self {
+        let mut iter = p.split("::");
+
+        let root = iter.next();
+        let class = iter.next();
+        let is_last = iter.next().is_none();
+
+        let namespace = match (root, class) {
+            (Some(root), _) if root == "survarium" => Self {
+                raw_root: Some("survarium::"),
+                raw_class: None,
+            },
+            (Some(root), None) if root == "vostok" => Self {
+                raw_root: Some("vostok::"),
+                raw_class: None,
+            },
+            (Some(root), Some(class)) if root == "vostok" && (is_last || class.contains('<')) => {
+                Self {
+                    raw_root: Some("vostok::"),
+                    raw_class: None,
+                }
+            }
+            (Some(root), Some(class)) if root == "vostok" => Self {
+                raw_root: Some("vostok::"),
+                raw_class: Some(format!("vostok::{class}::")),
+            },
+            _ => Self {
+                raw_root: None,
+                raw_class: None,
+            },
+        };
+        namespace
+    }
+
+    pub fn get_root(&self) -> Option<&'static str> {
+        let root = self.raw_root?;
+        let root = &root[0..root.len() - "::".len()];
+        Some(root)
+    }
+
+    pub fn get_class(&self) -> Option<&str> {
+        let root = self.raw_root?;
+        let class = self.raw_class.as_ref()?;
+
+        let class = &class[root.len()..class.len() - "::".len()];
+        Some(class)
+    }
+
+    pub fn start_namespace(&self, w: &mut impl std::io::Write) -> crate::Result<()> {
+        let mut new_line = false;
+        if let Some(root) = self.get_root() {
+            new_line = true;
+            writeln!(w, "namespace {root} {{")?;
+        }
+
+        if let Some(class) = self.get_class() {
+            new_line = true;
+            writeln!(w, "namespace {class} {{")?;
+        }
+
+        if new_line {
+            writeln!(w)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn end_namespace(&self, w: &mut impl std::io::Write) -> crate::Result<()> {
+        if let Some(class) = self.get_class() {
+            writeln!(w, "}} // namespace {class}")?;
+        }
+        if let Some(root) = self.get_root() {
+            writeln!(w, "}} // namespace {root}")?;
+        }
+
+        Ok(())
+    }
+
+    pub fn strip<'a>(&self, class_name: &'a str) -> &'a str {
+        if let Some(raw_class) = &self.raw_class {
+            if let Some(class_name) = class_name.strip_prefix(raw_class) {
+                return class_name;
+            }
+        }
+
+        if let Some(raw_root) = &self.raw_root {
+            if let Some(class_name) = class_name.strip_prefix(raw_root) {
+                return class_name;
+            }
+        }
+
+        class_name
+    }
+}
+
 //
 //
 //
 
 pub fn write_fn_signature_with_args(
     fn_t: &type_parser::Function,
+    namespace: &Namespace,
     args: &[(String, Type)],
     max_return_type_len: Option<usize>,
     max_method_name_len: Option<usize>,
@@ -98,14 +196,10 @@ pub fn write_fn_signature_with_args(
         return_type, name, ..
     } = fn_t;
 
-    write_return_type(return_type, max_return_type_len, w)?;
+    write_return_type(return_type, namespace, max_return_type_len, w)?;
 
-    // TODO
-    write!(
-        w,
-        "{name}",
-        name = name.replace("vostok::network_core::", "")
-    )?;
+    let name = namespace.strip(&name);
+    write!(w, "{name}")?;
 
     if let Some(max_method_name_len) = max_method_name_len {
         pad_spaces_t(w, name.len(), max_method_name_len)?;
@@ -165,6 +259,7 @@ pub fn write_fn_signature_with_args(
 
 pub fn write_fn_signature_unnamed_args(
     fn_t: &type_parser::Function,
+    namespace: &Namespace,
     max_return_type_len: Option<usize>,
     max_method_name_len: Option<usize>,
     pad_args_len: Option<usize>,
@@ -174,11 +269,12 @@ pub fn write_fn_signature_unnamed_args(
         .arg_types
         .iter()
         .enumerate()
-        .map(|(i, arg_type)| (format!("arg_{i}"), Type::new(arg_type)))
+        .map(|(i, arg_type)| (format!("arg_{i}"), Type::new(arg_type, namespace)))
         .collect::<Vec<_>>();
 
     write_fn_signature_with_args(
         fn_t,
+        namespace,
         &args,
         max_return_type_len,
         max_method_name_len,
@@ -189,13 +285,14 @@ pub fn write_fn_signature_unnamed_args(
 
 pub fn write_return_type(
     return_type: &type_parser::ReturnType,
+    namespace: &Namespace,
     max_return_type_len: Option<usize>,
     w: &mut impl std::io::Write,
 ) -> std::io::Result<()> {
     let return_type_len = match return_type {
-        ReturnType::Constructor | ReturnType::Destructor => 0,
+        ReturnType::Constructor | ReturnType::Destructor => return Ok(()),
         ReturnType::Type(type_) => {
-            let return_type = Type::new(type_);
+            let return_type = Type::new(type_, namespace);
             write!(w, "{return_type}")?;
             return_type.len()
         }
@@ -228,79 +325,6 @@ pub fn set_method_attributes(
         // was most likely inlined) and that the body wasn't generated by compiler
         fn_t.attrs.set(AttributeFlags::IS_INLINE,   !attrs.is_pure() && !found_body);
     };
-}
-
-//
-//
-//
-
-pub fn write_fmt(
-    w: &mut impl std::io::Write,
-    cb: impl Fn(&mut String) -> std::io::Result<()>,
-) -> std::io::Result<()> {
-    let mut result = String::new();
-    cb(&mut result).unwrap();
-    write!(w, "{result}")
-}
-
-/// Padding between a type and name. Used for arguments, constants & statics.
-///
-/// @TODO: Generate in format used by GSC.
-pub const MAX_PAD_TABS: usize = 8;
-pub const MAX_PAD_SPACE: usize = MAX_PAD_TABS * 4;
-
-/// Pad a string given how much was already written
-///
-/// Use this function if you don't care about the size of the total padding.
-pub fn pad_spaces(w: &mut impl std::io::Write, prefix_len: usize) -> std::io::Result<()> {
-    pad_spaces_t(w, prefix_len, MAX_PAD_SPACE)
-}
-
-/// Pad a string given how much was already written and how big the padding needs to be.
-///
-/// # Arguments
-///
-/// * `prefix_len` - How much bytes were already written
-/// * `pad_space`  - Length of the paddding you want to achieve.
-///   Note that it will be capped by `MAX_PAD_SPACE`.
-pub fn pad_spaces_t(
-    w: &mut impl std::io::Write,
-    prefix_len: usize,
-    pad_space: usize,
-) -> std::io::Result<()> {
-    for _ in 0..pad_times(prefix_len, pad_space.min(MAX_PAD_SPACE)) {
-        write!(w, "\t")?;
-    }
-    Ok(())
-}
-
-/// Pad a string to `pad_space` length.
-///
-/// # Arguments
-///
-/// * `pad_space`  - Length of the paddding you want to achieve.
-///   Note that it will be capped by `MAX_PAD_SPACE`.
-pub fn pad_spaces_uncap(w: &mut impl std::io::Write, pad_space: usize) -> std::io::Result<()> {
-    for _ in 0..pad_times(0, pad_space) {
-        write!(w, "\t")?;
-    }
-    Ok(())
-}
-
-pub fn pad_times(prefix_len: usize, pad_space: usize) -> usize {
-    //
-    // my_type
-    // <--><--><--><--><--><-
-    //    ^                 ^
-    //    already_tabbed    pad_space
-    //     <--><--><--><--><-->
-    //
-
-    let pad_tabs = (pad_space % 4 != 0) as usize + pad_space / 4;
-
-    let already_tabbed = prefix_len / 4;
-
-    pad_tabs.saturating_sub(already_tabbed)
 }
 
 mod method_attributes {
@@ -363,4 +387,75 @@ mod method_attributes {
 
         */
     }
+}
+
+//
+//
+//
+
+pub fn write_fmt(
+    w: &mut impl std::io::Write,
+    cb: impl Fn(&mut String) -> std::io::Result<()>,
+) -> std::io::Result<()> {
+    let mut result = String::new();
+    cb(&mut result).unwrap();
+    write!(w, "{result}")
+}
+
+/// Padding between a type and name. Used for arguments, constants & statics.
+pub const MAX_PAD_TABS: usize = 8;
+pub const MAX_PAD_SPACE: usize = MAX_PAD_TABS * 4;
+
+/// Pad a string given how much was already written
+///
+/// Use this function if you don't care about the size of the total padding.
+pub fn pad_spaces(w: &mut impl std::io::Write, prefix_len: usize) -> std::io::Result<()> {
+    pad_spaces_t(w, prefix_len, MAX_PAD_SPACE)
+}
+
+/// Pad a string given how much was already written and how big the padding needs to be.
+///
+/// # Arguments
+///
+/// * `prefix_len` - How much bytes were already written
+/// * `pad_space`  - Length of the paddding you want to achieve.
+///   Note that it will be capped by `MAX_PAD_SPACE`.
+pub fn pad_spaces_t(
+    w: &mut impl std::io::Write,
+    prefix_len: usize,
+    pad_space: usize,
+) -> std::io::Result<()> {
+    for _ in 0..pad_times(prefix_len, pad_space.min(MAX_PAD_SPACE)) {
+        write!(w, "\t")?;
+    }
+    Ok(())
+}
+
+/// Pad a string to `pad_space` length.
+///
+/// # Arguments
+///
+/// * `pad_space`  - Length of the paddding you want to achieve.
+///   Note that it will be capped by `MAX_PAD_SPACE`.
+pub fn pad_spaces_uncap(w: &mut impl std::io::Write, pad_space: usize) -> std::io::Result<()> {
+    for _ in 0..pad_times(0, pad_space) {
+        write!(w, "\t")?;
+    }
+    Ok(())
+}
+
+pub fn pad_times(prefix_len: usize, pad_space: usize) -> usize {
+    //
+    // my_type
+    // <--><--><--><--><--><-
+    //    ^                 ^
+    //    already_tabbed    pad_space
+    //     <--><--><--><--><-->
+    //
+
+    let pad_tabs = (pad_space % 4 != 0) as usize + pad_space / 4;
+
+    let already_tabbed = prefix_len / 4;
+
+    pad_tabs.saturating_sub(already_tabbed)
 }

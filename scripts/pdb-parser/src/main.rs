@@ -20,8 +20,6 @@
 //! cargo run --bin pdb-parser --release
 //! ```
 
-// @TODO: Deal with naemspaces. Do not hardcode them.
-
 pub mod data;
 pub mod pdb_parser;
 
