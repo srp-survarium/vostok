@@ -2,12 +2,14 @@ use std::fs;
 use std::io;
 use std::io::Write;
 use std::path;
+use std::str::FromStr;
 
 use pdb::PDB;
 
 use crate::data::Files;
 use crate::pdb_parser::Formatter;
 use crate::GenFlags;
+use crate::{bail, error};
 use crate::{gen_headers, gen_sources};
 
 pub fn dump_pdb(
@@ -61,11 +63,9 @@ pub fn generate_vs_solution(
         true => "xray_structure",
         false => "vostok_structure",
     };
-    let sln_guid = uuid::Uuid::new_v4();
-    let vcproj_guid = uuid::Uuid::new_v4();
 
+    let vcproj_guid = generate_sln(output_path, name)?;
     generate_vcproj(output_path, vcproj_guid, name, files)?;
-    generate_sln(output_path, sln_guid, vcproj_guid, name)?;
 
     Ok(())
 }
@@ -91,20 +91,61 @@ pub fn generate_vcproj(
     Ok(())
 }
 
-pub fn generate_sln(
-    output_path: &path::Path,
-    sln_guid: uuid::Uuid,
-    vcproj_guid: uuid::Uuid,
-    name: &str,
-) -> crate::Result<()> {
+pub fn generate_sln(output_path: &path::Path, name: &str) -> crate::Result<uuid::Uuid> {
     let mut path = output_path.to_path_buf();
     path.push(name);
     path.set_extension("sln");
-    println!("{}", path.to_string_lossy());
 
-    fs::write(path, generate_solution_source(sln_guid, vcproj_guid, name))?;
+    let result = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path);
 
-    Ok(())
+    match result {
+        Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {
+            // Small enough to the point I don't care
+            let file = std::fs::read_to_string(&path)?;
+
+            for line in file.lines() {
+                if line.starts_with("Project(") {
+                    let line = line.as_bytes();
+
+                    let mut quote_pos = None;
+
+                    for i in (0..line.len()).rev() {
+                        match line[i] {
+                            b'}' => match quote_pos {
+                                None => quote_pos = Some(i),
+                                Some(_) => bail!("Corrupted .sln file: {}", path.to_string_lossy()),
+                            },
+                            b'{' => match quote_pos {
+                                None => bail!("Corrupted .sln file: {}", path.to_string_lossy()),
+                                Some(j) => {
+                                    let vcproj_guid = String::from_utf8_lossy(&line[i + 1..j]);
+                                    let vcproj_guid = uuid::Uuid::from_str(&vcproj_guid)?;
+                                    return Ok(vcproj_guid);
+                                }
+                            },
+                            _ => (),
+                        }
+                    }
+                }
+            }
+
+            error!("Corrupted .sln file: {}", path.to_string_lossy())
+        }
+
+        Ok(mut file) => {
+            let sln_guid = uuid::Uuid::new_v4();
+            let vcproj_guid = uuid::Uuid::new_v4();
+
+            file.write_all(generate_solution_source(sln_guid, vcproj_guid, name).as_bytes())?;
+
+            Ok(vcproj_guid)
+        }
+
+        Err(error) => Err(error.into()),
+    }
 }
 
 //
