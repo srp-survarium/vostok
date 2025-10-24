@@ -67,7 +67,7 @@ math::aabb bt_animated_rigid_body::get_aabb( ) const
 }
 // STATE[DONE]
 float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
-{	
+{
 	btTransform& transform = m_shape->getChildTransform( index );	// <0x6bf730>|0x000|0x000:'69'
 	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
 }
@@ -78,7 +78,7 @@ static btCollisionShape* new_bt_primitive( collision::primitive_type type, float
 	{
 		case collision::primitive_sphere:
 		{
-			float radius = dimension.x; 
+			float radius = dimension.x;
 			return VOSTOK_NEW_IMPL( allocator, btSphereShape )( radius );
 		}
 		case collision::primitive_box:
@@ -106,7 +106,7 @@ static btCollisionShape* new_bt_primitive( collision::primitive_type type, float
 static btCompoundShape* new_bt_element_joint( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data )
 {
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
-	
+
 	collision::primitive_type type = (collision::primitive_type)(u32)target["type"];
 	float3 position = (float3)target["position"];
 	float3 rotation = (float3)target["rotation"];
@@ -119,7 +119,7 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	btTransform child_local_transform	= from_vostok( child_transform );
 
 	bt_shape->addChildShape( child_local_transform, shape );
-	
+
 	return bt_shape;
 }
 
@@ -130,7 +130,7 @@ btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_con
 	u32 hit_targets_count = 24 * targets_table.count / 24;
 
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
-	
+
 	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
 	{
 		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];
@@ -187,7 +187,7 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 // STATE[UNVERIFIED]: sushi@NOTE: What are label symbols, figure out.
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];  // <0x6bf777>|0x000|0x000:'201'
+	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
 	u32 hit_targets_count = 24 * targets_table.count / 24;						// <0x6bf783>|0x00c|0x00c:'202'
 
 	u32 result = 112 * hit_targets_count + 96;									// <0x6bf7a1>|0x02a|0x01e:'204'
@@ -228,7 +228,7 @@ collision::animated_object* new_animated_bt_hit_model(
 	configs::binary_config_value const& config,
 	animation::skeleton_ptr const&		model_skeleton,
 	memory::base_allocator*				allocator)
-{	
+{
 	memory::stack_allocator				stack_allocator; // sushi@NOTE: Why is this stack allocator? Aren't it in the heap
 	u32 const arena_size			=	calculate_bt_animated_body_size_from_hit_targets_config( config ) + 0x304;
 

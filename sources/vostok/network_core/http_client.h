@@ -17,28 +17,14 @@
 namespace vostok {
 namespace network_core {
 
-/*
-	typedef
-		boost::asio::const_buffers_1
-		const_buffers_type;
-
-	typedef
-		boost::asio::stream_socket_service<boost::asio::ip::tcp>
-		service_type;
-
-	typedef
-		boost::function<void __cdecl(void)>
-		on_content_downloaded_type;
-*/
-
 class http_client {
 public:
 									http_client				( boost::asio::io_service& io_service );
 
 			void					get						( pcstr server, pcstr path, boost::function<void()> const& callback );
+			void					set_on_error			( boost::function<void(boost::system::error_code)> const& callback ) { m_on_error = callback; }
 
-			void					set_on_error			( boost::function<void(boost::system::error_code)> const& callback ) {}
-
+private:
 	inline	std::string const&		result_content			( ) const { /* no source */ }
 
 			void					handle_resolve			( boost::system::error_code const& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator );

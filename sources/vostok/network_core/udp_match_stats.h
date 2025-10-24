@@ -69,6 +69,34 @@ public:
 
 STATIC_SIZE_ASSERT(udp_match_stats, 0x80);
 
+// STATE[STUB] inline?
+bool operator>=( udp_match_items_stats const& left, udp_match_items_stats const& right )
+{
+	return left.count >= right.count && left.bytes >= right.count;
+}
+
+// STATE[STUB]
+bool operator>=( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
+{
+												// 1
+	return left.packets >= right.packets		// 2
+		&& left.messages >= right.messages		// 3
+		&& left.data_bytes >= right.data_bytes;	// <0xeaac6>|0x000|0x000:'168'
+}
+
+// STATE[STUB]
+bool operator>=( udp_match_stats const& left, udp_match_stats const& right )
+{
+																	// 1
+	return left.sent >= right.sent									// 2
+		&& left.resent >= right.resent 								// 3
+		&& left.received >= right.received							// 4
+		&& left.received_duplicated >= right.received_duplicated	// 5
+		&& left.received_duplicated >= right.received_duplicated 	// 6
+		&& left.sent_low_level > right.sent_low_level				// 7
+		&& left.received_low_level > right.received_low_level;		// <0xeab76>|0x000|0x000:'180'
+}
+
 // STATE[STUB]
 inline	udp_match_stats	operator-( udp_match_stats const& left, udp_match_stats const& right )
 {
