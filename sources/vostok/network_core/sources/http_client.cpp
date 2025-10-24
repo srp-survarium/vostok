@@ -187,28 +187,19 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 	// ******
 }
 
-// STATE[STUB]
-// bool vostok::network_core::http_client::add_result_content()
+// STATE[DONE]
 bool http_client::add_result_content( )
 {
-	// LOCALS
-	// std::basic_string<char,std::char_traits<char>,std::allocator<char> > str
-	// std::basic_istream<char,std::char_traits<char> > response_stream
-	// ******
-
-	return false;
-	// FUNCTION BODY
-	// <0x789cb9>|0x000|0x000:'160'
-	// <0x789d0f>|0x056|0x056:'161'
-	// 1
-	// <0x789d31>|0x078|0x022:'163'
-	// 1
-	// <0x789dab>|0x0f2|0x07a:'165'
-	// 1
-	// <0x789ddc>|0x123|0x031:'167'
-	// 1
-	// <0x789de1>|0x128|0x005:'169'
-	// ******
+	std::istream response_stream( &m_response_buff );				// <0x789cb9>|0x000|0x000:'160'
+	std::string str;												// <0x789d0f>|0x056|0x056:'161'
+																	// 1
+	for ( ; std::getline( response_stream, str ) && str != "\r" ; )	// <0x789d31>|0x078|0x022:'163'
+	{																// 1
+		m_result_content.append( str );								// <0x789dab>|0x0f2|0x07a:'165'
+																	// 1
+	}																// <0x789ddc>|0x123|0x031:'167'
+																	// 1
+	return m_result_content.size( ) < 1024;							// <0x789de1>|0x128|0x005:'169'
 }
 
 // STATE[STUB]

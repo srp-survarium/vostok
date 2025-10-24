@@ -57,6 +57,8 @@ namespace vostok
 
 		boost::asio::streambuf buff;
 		network_core::read_lines_from_stream( "prefix", buff );
+
+		http_client.add_result_content( );
 	}
 
 	void use_static_rigid_body()

@@ -6,7 +6,7 @@
 :: The script current directory is: :/sources/vostok/survarium/pc/sources
 ::
 
-if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::collision"
+if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::network_core"
 
 if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
