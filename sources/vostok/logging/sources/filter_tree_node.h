@@ -17,16 +17,14 @@ namespace logging {
 
 class path_parts;
 
-namespace filter_tree {
-
-class node : public node_base, private boost::noncopyable 
+class node : public node_base, private boost::noncopyable
 {
 public:
 	inline	explicit	node			(pcstr name, int rule) : node_base(name), m_verbosity(rule), m_thread_id(u32(-1)) {}
 						~node			();
-			void		set				(pcstr						initiator_path, 
-										 int						verbosity, 
-										 u32						thread_id, 
+			void		set				(pcstr						initiator_path,
+										 int						verbosity,
+										 u32						thread_id,
 										 memory::base_allocator *	allocator,
 										 memory::base_allocator *	allocator_to_clean);
 
@@ -43,7 +41,6 @@ private:
 	u32									m_thread_id;
 }; // class node
 
-} // namespace filter_tree
 } // namespace logging
 } // namespace vostok
 
