@@ -93,24 +93,24 @@ extern doug_lea_allocator_type				g_log_allocator;
 
 } // namespace vostok
 
-void log_callback						( pcstr initiator, 
-										  bool	is_error_verbosity, 
-										  bool	log_only_user_string, 
+void log_callback						( pcstr initiator,
+										  bool	is_error_verbosity,
+										  bool	log_only_user_string,
 										  pcstr	message )
 {
 	using namespace vostok;
 
-	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ? 
+	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
 									logging::log_to_stderr : (logging::log_flags_enum)0;
 	if ( log_only_user_string )
 	{
-		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator, 
+		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator,
 			is_error_verbosity ? logging::error : logging::info)
 			(logging::format_message, log_flags, "%s", message);
 	}
 	else
 	{
-		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator, 
+		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator,
 			is_error_verbosity ? logging::error : logging::info)
 			(log_flags, "%s", message);
 	}
@@ -118,10 +118,10 @@ void log_callback						( pcstr initiator,
 	logging::flush_log_file			( );
 }
 
-void vostok::core::preinitialize		( core::engine *								engine, 
+void vostok::core::preinitialize		( core::engine *								engine,
 									  logging::log_file_usage const					log_file_usage,
-									  pcstr const									command_line, 
-									  command_line::contains_application_bool const	command_line_contains_application, 
+									  pcstr const									command_line,
+									  command_line::contains_application_bool const	command_line_contains_application,
 									  pcstr	const									application,
 									  pcstr	const									build_date
 									)
@@ -148,14 +148,14 @@ void vostok::core::preinitialize		( core::engine *								engine,
 	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true);
 	logging::initialize		( device, log_file_usage );
 	debug::set_log_callback	( & ::log_callback );
-	
-	logging::set_format		( logging::format_separator("{") + 
-							  logging::format_thread_id + 
-							  logging::format_time + 
+
+	logging::set_format		( logging::format_separator("{") +
+							  logging::format_thread_id +
+							  logging::format_time +
 							  logging::format_separator("} [") +
-							  logging::format_initiator + 
+							  logging::format_initiator +
 							  logging::format_separator("] <") +
-							  logging::format_verbosity + 
+							  logging::format_verbosity +
 							  logging::format_separator(">   ") +
 							  logging::format_message );
 }
@@ -177,14 +177,14 @@ static void push_logging_rules ( )
 		verbosity			= logging::warning;
 
 //	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;
-	logging::push_filter		( "", verbosity, & memory::g_mt_allocator );
+//	logging::push_filter		( "", verbosity, & memory::g_mt_allocator ); stick@TODO
 //	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );
 //	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );
 //	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );
 //	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );
 
 	fs_new::native_path_string	cfg_file_path;
-	if ( fs_new::convert_to_absolute_path(& cfg_file_path, 
+	if ( fs_new::convert_to_absolute_path(& cfg_file_path,
 										  fs_new::native_path_string::convert("../../user_data/user.cfg"),
 										  assert_on_fail_false) )
 	{
@@ -203,14 +203,14 @@ void vostok::core::initialize			(
 
 	if ( debug_initialization == perform_debug_initialization)
 		debug::postinitialize	( );
-	
-	// for language-dependent strings	
+
+	// for language-dependent strings
 	setlocale				( LC_CTYPE, "" );
 
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
-	
+
 	threading::initialize	( );
-	
+
 	push_logging_rules		( );
 
 	LOG_INFO				( "working directory: '%s'", fs_new::get_current_directory().c_str() );
@@ -250,7 +250,7 @@ void vostok::core::initialize			(
 	tasks::initialize		(	2 * threading::core_count(),	// tasks thread count
 								64,								// user thread count
 								threading::core_count(), //1,								// minimum active task thread count
-								tasks::execute_while_wait_for_children_true, 
+								tasks::execute_while_wait_for_children_true,
 								tasks::do_logging_false
 							);
 	threading::set_current_thread_affinity	( 0 );
@@ -320,7 +320,7 @@ void vostok::core::finalize			( )
 		fixed_string512		message;
 		message.assignf		("program exit code: %d", s_engine->get_exit_code());
 		debug::notify_xbox_debugger	(message.c_str());
-	}	
+	}
 }
 
 vostok::fs_new::synchronous_device_interface &	vostok::core::get_core_synchronous_device	( )

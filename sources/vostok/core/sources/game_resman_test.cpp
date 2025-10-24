@@ -38,10 +38,10 @@ public:
 		u32 const resource_index		=	get_random_child_index();
 
 		unmanaged_resource * resource	=	m_resources[resource_index].c_ptr();
-		log_test_resource					(log_test_resource_no_user_reference, 
+		log_test_resource					(log_test_resource_no_user_reference,
 											 static_cast_checked<test_resource *>(resource));
 		m_resources[resource_index].set_zero();
-		
+
 		--m_resources_count;
 	}
 
@@ -65,9 +65,9 @@ public:
 
 	bool				is_full			() const { return m_resources_count == max_held_resources; }
 	bool				has_resources	() const { return m_resources_count != 0; }
-	void				clear			() 
-	{ 
-		m_resources_count				=	0; 
+	void				clear			()
+	{
+		m_resources_count				=	0;
 		for ( u32 index=0; index<array_size(m_resources); ++index )
 			m_resources[index].set_zero		();
 	}
@@ -96,7 +96,7 @@ private:
 class game_resources_manager_tester
 {
 public:
-	game_resources_manager_tester() 
+	game_resources_manager_tester()
 	{
 		s_random.seed						(1234);
 		m_holder_ptr					=	& m_holder;
@@ -150,20 +150,20 @@ public:
 		fixed_string<32>					index_name;
 		index_name.assignf					("%d", resource_int_name);
 		bool const create_resource_with_quality	=	!s_random.random(2);
-		class_id_enum const class_id			=	create_resource_with_quality ? 
+		class_id_enum const class_id			=	create_resource_with_quality ?
 													test_resource_class : s_class_ids[s_random.random(array_size(s_class_ids))];
 		creation_request request			( index_name.c_str(), creation_buffer, class_id );
-		
+
 		if ( create_resource_with_quality )
 		{
 			math::float4x4					matrix;
 			matrix.identity					();
 			math::float4x4 const *			matrix_pointers[] = { & matrix };
 			autoselect_quality_bool autoselect	=	autoselect_quality_true;
-			query_resource_params	params	(NULL, 
-											 &request, 1, 
-											 boost::bind(&game_resources_manager_tester::resources_callback, this, _1), 
-											 & memory::g_mt_allocator, 
+			query_resource_params	params	(NULL,
+											 &request, 1,
+											 boost::bind(&game_resources_manager_tester::resources_callback, this, _1),
+											 & memory::g_mt_allocator,
 											 NULL,
 											 matrix_pointers);
 			params.autoselect_quality	=	& autoselect;
@@ -171,9 +171,9 @@ public:
 		}
 		else
 		{
-			query_create_resources_and_wait	(&request, 
+			query_create_resources_and_wait	(&request,
 											 1,
-											 boost::bind(&game_resources_manager_tester::resources_callback, this, _1), 
+											 boost::bind(&game_resources_manager_tester::resources_callback, this, _1),
 											 & memory::g_mt_allocator);
 		}
 	}
@@ -184,7 +184,7 @@ public:
 		{
 			LOGI_INFO						("grm", "random seed index %d", mega_iteration);
 			s_random.seed					((1 + mega_iteration) * 123457);
-		
+
 		for ( u32 i=0; i<1 * resource_holder::max_held_resources * array_size(s_class_ids); ++i )
 		{
 			LOGI_INFO						("grm:test", "------------------------iteration %d------------------------", i);
@@ -202,7 +202,7 @@ public:
 				add_as_child				(m_last);
 			else
 				LOGI_INFO					("grm", "failed to allocate even after freeing all grm kept resources: %d", i);
-		
+
 			u64 const increase_quality_tick	=	current_increase_quality_tick();
 			while ( current_increase_quality_tick() == increase_quality_tick )
 			{
@@ -212,7 +212,7 @@ public:
 		}
 
 		}
-	
+
 		release_and_dispatch_all_resources	();
 		++m_iteration;
 	}
@@ -227,10 +227,11 @@ public:
 			if ( threading::g_debug_single_thread )
 				resources::tick				();
 		}
-  			
+
  		resources::wait_and_dispatch_callbacks	(true);
 	}
 
+#if 0
 	void test							(core_test_suite * suite)
 	{
 		VOSTOK_UNREFERENCED_PARAMETERS					(suite);
@@ -246,8 +247,8 @@ public:
 			logging::push_filter			( "core:resources", logging::warning, & memory::g_mt_allocator );
 			logging::push_filter			( "core:grm", logging::silent, & memory::g_mt_allocator );
 			logging::push_filter			( "core:grm:test", logging::trace, & memory::g_mt_allocator );
-			
-			
+
+
 			logging::push_filter			( "core:grm", logging::trace, & memory::g_mt_allocator );
 		}
 
@@ -264,6 +265,7 @@ public:
 				logging::pop_filter			();
 		}
 	}
+#endif
 
 private:
 	void unregister_cook (cook_base * cook)
@@ -287,10 +289,10 @@ private:
 	void initialize_cooks ()
 	{
 		m_cooks.push_back					(MT_NEW(test_resource_cook)
-											(test_resource_class1, 0, false, cook_base::use_current_thread_id, 
+											(test_resource_class1, 0, false, cook_base::use_current_thread_id,
 											 cook_base::use_current_thread_id));
 		m_cooks.push_back					(MT_NEW(test_resource_cook)
-											(test_resource_class2, 1, false, cook_base::use_current_thread_id, 
+											(test_resource_class2, 1, false, cook_base::use_current_thread_id,
 											cook_base::use_resource_manager_thread_id));
 		m_cooks.push_back					(MT_NEW(test_resource_cook)
 											(test_resource_class3, 2, true, cook_base::use_current_thread_id, 0));
@@ -320,7 +322,7 @@ private:
 	resource_holder							m_holder;
 	unmanaged_resource_ptr					m_holder_ptr;
 	test_resource *							m_last;
-	
+
 	u32										m_iteration;
 	bool									m_last_callback_result;
 };

@@ -19,18 +19,18 @@
 #include "logging.h"
 #include "path_parts.h"
 
-using vostok::logging::filter_tree::node;
-using vostok::logging::filter_tree::node_base;
-using vostok::logging::filter_tree::compare_nodes;
+using vostok::logging::node;
+using vostok::logging::node_base;
+using vostok::logging::compare_nodes;
 using vostok::logging::path_parts;
 
 node::~node				()
 {
 }
 
-void node::set			(pcstr const							initiator_path, 
-						 int const								verbosity, 
-						 u32 const								thread_id, 
+void node::set			(pcstr const							initiator_path,
+						 int const								verbosity,
+						 u32 const								thread_id,
 						 vostok::memory::base_allocator * const	allocator,
 						 vostok::memory::base_allocator * const	allocator_to_clean)
 {
@@ -62,8 +62,8 @@ void node::set			(pcstr const							initiator_path,
  		child							=	VOSTOK_NEW_IMPL(allocator, node)(path_portion.c_str(), 0);
 		m_children.insert					(* child);
  	}
-	
-	child->set								(next_path_portion ? next_path_portion + 1 : NULL, 
+
+	child->set								(next_path_portion ? next_path_portion + 1 : NULL,
 											 verbosity, thread_id, allocator, allocator_to_clean);
 }
 
@@ -81,7 +81,7 @@ void node::clean						(vostok::memory::base_allocator * allocator)
 
 int node::get_verbosity					(path_parts * path, int inherited_verbosity)
 {
-	int verbosity = 
+	int verbosity =
 		(m_thread_id != u32(-1) && m_thread_id != threading::current_thread_id()) ?
 		silent :
 		(
@@ -94,16 +94,16 @@ int node::get_verbosity					(path_parts * path, int inherited_verbosity)
 	if ( !cur_part || cur_part[0] == NULL )
 	{
 		// last element in path
-		return								verbosity;		
+		return								verbosity;
 	}
 
  	nodes_tree_type::iterator const it	=	m_children.find(cur_part, m_children.key_comp());
- 
+
  	if ( it == m_children.end() ) // no special rule?
  		return								verbosity;
 
 	node * const child					=	static_cast<node *>(& * it);
- 
+
  	path->to_next_element					();
  	return									child->get_verbosity(path, verbosity);
 }
@@ -113,9 +113,9 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
 	using namespace	vostok::logging;
 	int ret								=	0;
 	// compare strings treating initiator_separator as zero
-	while ( !ret && *s2 && ( *s1 != initiator_separator ) && ( *s2 != initiator_separator ) ) 
+	while ( !ret && *s2 && ( *s1 != initiator_separator ) && ( *s2 != initiator_separator ) )
 	{
-		ret								=	*( u8* )s1 - *( u8* )s2;				
+		ret								=	*( u8* )s1 - *( u8* )s2;
 		++s1;
 		++s2;
 	}

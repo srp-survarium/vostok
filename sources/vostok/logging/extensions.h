@@ -55,13 +55,6 @@ VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
 VOSTOK_LOGGING_API	void			set_log_callback	( log_callback callback );
 VOSTOK_LOGGING_API	log_callback	get_log_callback	( );
 
-VOSTOK_LOGGING_API	void			push_filter			( pcstr							initiator, 
-														  int							verbosity, 
-														  memory::base_allocator *		allocator,
-														  u32 const						thread_id = u32(-1));
-
-VOSTOK_LOGGING_API	void			pop_filter			( );
-
 VOSTOK_LOGGING_API	void			set_format			( format_specifier const & format_expression );
 
 } // namespace logging
