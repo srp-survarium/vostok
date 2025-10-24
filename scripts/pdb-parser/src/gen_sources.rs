@@ -242,7 +242,7 @@ impl<'a> Module<'a> {
                     let mut take_function = Function::new(function.flags);
                     std::mem::swap(&mut take_function, &mut function);
 
-                    let args_count = function.fn_t.arg_types.len();
+                    let args_count = take_function.fn_t.arg_types.len();
 
                     let locals = take_function
                         .args
