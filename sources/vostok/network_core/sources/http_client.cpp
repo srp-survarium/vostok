@@ -17,7 +17,7 @@ void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 	ASSERT( prefix );												// <0x789e63>|0x000|0x000:'15'
 	std::istream response_stream( &buff );							// <0x789e88>|0x025|0x025:'16'
 	std::string str;												// <0x789ed6>|0x073|0x04e:'17'
-																	// 1
+
 	while ( std::getline( response_stream, str ) && str != "\r" )	// <0x789ef8>|0x095|0x022:'19'
 	{	// 1
 		// 2
@@ -36,34 +36,33 @@ http_client::http_client( boost::asio::io_service& io_service ) :
 {
 }
 
-// STATE[82%]
+// STATE[94%]: LTCG for copying `m_on_content_downloaded = callback`
 void http_client::get( pcstr server, pcstr path, boost::function<void()> const& callback )
 {
-	m_result_content = "";								// <0x78abcf>|0x000|0x000:'32' // seems like something is different there
-	m_on_content_downloaded = callback;					// <0x78abf8>|0x029|0x029:'33'
+	m_result_content = "";									// <0x78abcf>|0x000|0x000:'32' // seems like something is different there
+	m_on_content_downloaded = callback;						// <0x78abf8>|0x029|0x029:'33'
 	// 1
 	// 2
 	// 3
 	// 4
 	// 5
-	std::ostream request_stream ( &m_request_buff );	// <0x78ac0d>|0x03e|0x015:'39'
-	request_stream << "GET ";							// <0x78ac21>|0x052|0x014:'40'
-	request_stream << path;								// <0x78ac47>|0x078|0x026:'41'
-	request_stream << " HTTP/1.0\r\n";					// <0x78ac6d>|0x09e|0x026:'42'
-	request_stream << "Connection: close\r\n\r\n";		// <0x78ac7a>|0x0ab|0x00d:'43'
-	tcp::resolver::query query(						// 1
-		server,															// 2
-		"http",															// 3
-		tcp::resolver::query::address_configured );		// <0x78ac87>|0x0b8|0x00d:'47'
-																		// 1
-	m_resolver.async_resolve(											// 2
-		query,															// 3
-		boost::bind( &http_client::handle_resolve, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator )		// 4
-	);													// <0x78ad08>|0x139|0x081:'52'
-	// 1
+	std::ostream request_stream ( &m_request_buff );		// <0x78ac0d>|0x03e|0x015:'39'
+	request_stream << "GET " << path << " HTTP/1.0\r\n";	// <0x78ac21>|0x052|0x014:'40'
+	request_stream << "Host: " << server << "\r\n";			// <0x78ac47>|0x078|0x026:'41'
+	request_stream << "Accept: */*\r\n";					// <0x78ac6d>|0x09e|0x026:'42'
+	request_stream << "Connection: close\r\n\r\n";			// <0x78ac7a>|0x0ab|0x00d:'43'
+	tcp::resolver::query query(
+		server,
+		"http",
+		tcp::resolver::query::address_configured );			// <0x78ac87>|0x0b8|0x00d:'47'
+
+	m_resolver.async_resolve(
+		query,
+		boost::bind( &http_client::handle_resolve, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator )
+	);														// <0x78ad08>|0x139|0x081:'52'
 }
 
-// STATE[79%]
+// STATE[TODO: 79%]
 void http_client::on_error( boost::system::error_code const& err )
 {
 	LOG_ERROR( "http_client error: %s", err.message().c_str() );	// <0x78a127>|0x000|0x000:'58'
@@ -72,24 +71,25 @@ void http_client::on_error( boost::system::error_code const& err )
 		m_on_error( err );											// <0x78a211>|0x0ea|0x022:'61'
 }
 
-// STATE[84%]: Logic is incorrect
+// STATE[100%]
 void http_client::handle_resolve( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
-	if ( !err )																			// <0x78aa61>|0x000|0x000:'66'
-	{																					// 1
-																						// 2
-																						// 3
-		tcp::endpoint endpoint = *endpoint_iterator++;					// <0x78aa77>|0x016|0x016|[1]:'70'
-		m_socket.async_connect(															// 1
-			endpoint,																	// 2
-			boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, endpoint_iterator ) );	// <0x78aaab>|0x04a|0x034:'73'
-	}																					// <0x78ab7a>|0x119|0x0cf:'74'
-	else																				// 1
-		on_error( err );																// <0x78ab7c>|0x11b|0x002:'76'
-																						// 1
+	if ( !err )																											// <0x78aa61>|0x000|0x000:'66'
+	{
+
+
+		tcp::endpoint endpoint = *endpoint_iterator;																	// <0x78aa77>|0x016|0x016|[1]:'70'
+		m_socket.async_connect(
+			endpoint,
+			boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, ++endpoint_iterator ) );	// <0x78aaab>|0x04a|0x034:'73'
+	}
+	else // <0x78ab7a>|0x119|0x0cf:'74'
+	{
+		on_error( err );																								// <0x78ab7c>|0x11b|0x002:'76'
+	}
 }
 
-// STATE[98%]:
+// STATE[97%]:
 void http_client::handle_connect( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
 	if ( !err )																												// <0x78a831>|0x000|0x000:'82'
@@ -129,7 +129,7 @@ void http_client::handle_write_request( boost::system::error_code const& err )
 
 }
 
-// STATE[78%]: Lot's of stuff got inlined differently. Functionally feels the same but I am not sure
+// STATE[TODO: 78%]: Lot's of stuff got inlined differently. Functionally feels the same but I am not sure
 void http_client::handle_read_status_line( boost::system::error_code const& err )
 {
 	if ( !err )																									// <0x78a3fa>|0x000|0x000:'119'
@@ -169,13 +169,13 @@ bool http_client::add_result_content( )
 {
 	std::istream response_stream( &m_response_buff );				// <0x789cb9>|0x000|0x000:'160'
 	std::string str;												// <0x789d0f>|0x056|0x056:'161'
-																	// 1
+
 	for ( ; std::getline( response_stream, str ) && str != "\r" ; )	// <0x789d31>|0x078|0x022:'163'
-	{																// 1
+	{
 		m_result_content.append( str );								// <0x789dab>|0x0f2|0x07a:'165'
-																	// 1
+
 	}																// <0x789ddc>|0x123|0x031:'167'
-																	// 1
+
 	return m_result_content.size( ) < 1024;							// <0x789de1>|0x128|0x005:'169'
 }
 
@@ -192,7 +192,7 @@ void http_client::close_connection( )
 void http_client::handle_read_content( boost::system::error_code const& err )
 {
 	if ( !err )																								// <0x78a249>|0x000|0x000:'182'
-	{																		// 1
+	{
 		if ( add_result_content( ) )																		// <0x78a25f>|0x016|0x016:'184'
 		{
 			boost::asio::async_read(

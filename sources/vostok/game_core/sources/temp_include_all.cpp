@@ -48,7 +48,7 @@ namespace vostok
 	{
 		boost::asio::io_service io_service( 10 );
 		network_core::http_client http_client( io_service );
-		
+		http_client.set_on_error( boost::bind( use_network_core_http_client ) );
 		http_client.get( "server", "path", boost::bind(&example_callback, "hello" ) );
 
 		boost::asio::streambuf buff;
@@ -58,7 +58,7 @@ namespace vostok
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
-		
+
 		physics::bt_static_rigid_body body( shape, NULL );
 		body.get_rigid_body( );
 		body.get_triangle_material( 10, true );
@@ -99,7 +99,7 @@ namespace vostok
 		ghost.get_transform( );
 		ghost.get_collision_group( );
 		ghost.get_overlapping_objects_count( );
-		ghost.get_bt_collision_obect( );	
+		ghost.get_bt_collision_obect( );
 	}
 
 	void use_loose_oct_tree()
@@ -131,7 +131,7 @@ namespace vostok
 
 
 		float4x4 transform;
-		ao.draw_collision(scene, renderer, transform); 
+		ao.draw_collision(scene, renderer, transform);
 
 		ao.get_random_surface_point(10);
 		ao.get_head_bone_center();
@@ -170,7 +170,7 @@ namespace vostok
 			// calculate_bt_animated_body_size_from_hit_targets_config
 			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
 		}
-		
+
 		{
 			// sushi@NOTE: Called from animated_object::animated_object there game_material_id is set to 10 and linker hardcoded it here
 			// bt_animated_rigid_body*	new_animated_rigid_body		( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator );
@@ -215,7 +215,7 @@ IncludeAll::IncludeAll()
 	bdp->reduce_damage("__whatever", "hand", 100);
 
 	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
-	
+
 	//
 	// DAMAGE MODEL
 	//
@@ -255,7 +255,7 @@ IncludeAll::IncludeAll()
 		1);
 
 
-	
+
 	bpp->add_hit_type(NULL);
 	bpp->add_threshold(NULL);
 	bpp->hit_by_type("hit_type", 10, 10., 10., false, NULL);
