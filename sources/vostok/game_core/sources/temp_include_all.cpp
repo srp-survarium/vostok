@@ -49,16 +49,10 @@ namespace vostok
 		boost::asio::io_service io_service( 10 );
 		network_core::http_client http_client( io_service );
 		
-		
-		boost::system::error_code error( 10, boost::asio::error::get_addrinfo_category() );
-		http_client.handle_write_request( error );
-
 		http_client.get( "server", "path", boost::bind(&example_callback, "hello" ) );
 
 		boost::asio::streambuf buff;
 		network_core::read_lines_from_stream( "prefix", buff );
-
-		http_client.add_result_content( );
 	}
 
 	void use_static_rigid_body()
