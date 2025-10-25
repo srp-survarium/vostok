@@ -11,9 +11,12 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
 2. VS2008 SP1 Professional
     * Install VS2008 from here: https://archive.org/details/en_visual_studio_2008_professional_x86_dvd_x14-26326_202310
     * Install SP1 patch from here: https://www.microsoft.com/en-us/download/details.aspx?id=13276
+    * Install patch enabling macros: https://www.microsoft.com/en-US/download/details.aspx?id=42540
     * DirectX needs to be configured in VS2008:
         - Tools > Options > Projects and Solutions > VC++ Directories > Include files > C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include
         - Tools > Options > Projects and Solutions > VC++ Directories > Library files > C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86
+    * Load VS2008 macros:
+        - Tools > Macros > Load Macro Project... > {REPOSITORY}/scripts/vostok_vs_macro/vostok_vs_macro.vsmacros > Allow
 
 3. Ghidra 11.4.0
     * Used by VS build scripts to generate diffable `.obj` files.
