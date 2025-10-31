@@ -187,7 +187,7 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 // STATE[UNVERIFIED]: sushi@NOTE: What are label symbols, figure out.
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];  // <0x6bf777>|0x000|0x000:'201'
+	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
 	u32 hit_targets_count = 24 * targets_table.count / 24;						// <0x6bf783>|0x00c|0x00c:'202'
 
 	u32 result = 112 * hit_targets_count + 96;									// <0x6bf7a1>|0x02a|0x01e:'204'

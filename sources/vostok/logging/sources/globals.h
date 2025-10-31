@@ -17,8 +17,8 @@ namespace logging {
 struct globals_struct
 {
 	threading::reader_writer_lock				rules_lock;
-	uninitialized_reference<filter_tree::node>	root_rule;
-	filter_tree::node *							initiator_tree;
+	uninitialized_reference<node>				root_rule;
+	node *										initiator_tree;
 	memory::base_allocator *					tree_allocator;
 	filter_stack								filter_stack;
 	vostok::uninitialized_reference<fs_new::synchronous_device_interface>	synchronous_device;
