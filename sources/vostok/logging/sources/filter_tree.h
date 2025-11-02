@@ -29,14 +29,24 @@ public:
 			void	build_tree				( );
 
 
-private:
+public:
 	/* 0x0000 */	threading::reader_writer_lock		lock;
 	/* 0x0008 */	node*								initiator_tree;
 	/* 0x000c */	memory::base_allocator&				allocator;
 	/* 0x0010 */	filter_stack						filter_stack;
 }; // class filter_tree
 
-// STATIC_SIZE_ASSERT(filter_tree, 0x38);
+STATIC_SIZE_ASSERT(filter_tree, 0x38);
+
+VOSTOK_LOGGING_API filter_tree*	new_filter_tree		( memory::base_allocator& allocator );
+VOSTOK_LOGGING_API void			delete_filter_tree	( filter_tree*& filter_tree );
+VOSTOK_LOGGING_API void			push_filter			(
+									filter_tree&	tree,
+									pcstr			initiator,
+									verbosity		verbosity,
+									u32				thread_id
+								);
+VOSTOK_LOGGING_API bool			has_passed_filters	( filter_tree const& tree, pcstr initiator, verbosity verbosity );
 
 } // namespace logging
 } // namespace vostok

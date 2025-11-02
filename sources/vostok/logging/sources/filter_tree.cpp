@@ -11,6 +11,8 @@
 #include <vostok/threading_reader_writer_lock.h>
 #include <vostok/memory_writer.h>
 #include <vostok/console_command.h>
+#include <vostok/logging/api.h>
+#include <vostok/logging/logging_filters_console_command.h>
 #include "filter_tree_node.h"
 #include "globals.h"
 
@@ -33,45 +35,34 @@ filter_tree::~filter_tree( )
 	VOSTOK_DELETE_IMPL( allocator, initiator_tree );	// <0x65c3ab>|0x012|0x012:'27'
 }
 
-/*
+
 // STATE[STUB]
 bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) const
 {
-	path_parts path( initiator );														// <0x65c629>|0x000|0x000:'32'
-	threading::reader_writer_lock::mutex_raii raii( lock, threading::lock_type_read );	// <0x65c635>|0x00c|0x00c:'33'
-	verbosity allowed_verbosity = initiator_tree->get_verbosity( path, silent );		// <0x65c658>|0x02f|0x023:'34' sushi@NOTE: Most likely silent part was inlined
-	return allowed_verbosity > verbosity;												// <0x65c672>|0x049|0x01a:'35'
+	path_parts path( initiator );																						// <0x65c629>|0x000|0x000:'32'
+	threading::reader_writer_lock::mutex_raii raii( lock, threading::lock_type_read );									// <0x65c635>|0x00c|0x00c:'33'
+	vostok::logging::verbosity allowed_verbosity = (vostok::logging::verbosity)initiator_tree->get_verbosity( &path );	// <0x65c658>|0x02f|0x023:'34' sushi@NOTE: Incorrect verbosity type
+	return allowed_verbosity > verbosity;																				// <0x65c672>|0x049|0x01a:'35'
 }
-*/
+
 
 // STATE[STUB]
 void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_id )
 {
-	// LOCALS
-	// threading::reader_writer_lock::mutex_raii raii
-	// initiator_filter* 			filter
-	// ******
+	if ( !initiator )																								// <0x65c54a>|0x000|0x000:'40'
+		initiator = "";																								// <0x65c550>|0x006|0x006:'41'
 
-	if ( !initiator )
-		initiator = "";
+	initiator_filter * const filter			=	(initiator_filter *)VOSTOK_NEW_IMPL( allocator, initiator_filter );	// <0x65c557>|0x00d|0x007:'43'
 
+	filter->initiator						=	initiator;															// <0x65c5a9>|0x05f|0x052:'45'
+	filter->verbosity						=	verbosity;															// <0x65c5b7>|0x06d|0x00e:'46'
+	filter->thread_id						=	thread_id;															// <0x65c5c0>|0x076|0x009:'47'
 
-	// FUNCTION BODY
-	// <0x65c54a>|0x000|0x000:'40'
-	// <0x65c550>|0x006|0x006:'41'
-	// 1
-	// <0x65c557>|0x00d|0x007:'43'
-	// 1
-	// <0x65c5a9>|0x05f|0x052:'45'
-	// <0x65c5b7>|0x06d|0x00e:'46'
-	// <0x65c5c0>|0x076|0x009:'47'
-	// 1
-	// <0x65c5c9>|0x07f|0x009:'49'
-	// 1
-	// <0x65c5ec>|0x0a2|0x023:'51'
-	// 1
-	// <0x65c5fd>|0x0b3|0x011:'53'
-	// ******
+	threading::reader_writer_lock_raii	raii	(lock, threading::lock_type_write);									// <0x65c5c9>|0x07f|0x009:'49'
+
+	filter_stack.push_back					(filter);																// <0x65c5ec>|0x0a2|0x023:'51'
+
+	build_tree								();																		// <0x65c5fd>|0x0b3|0x011:'53'
 }
 
 // STATE[STUB]
@@ -92,122 +83,45 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 // STATE[STUB]
 void filter_tree::build_tree( )
 {
-	initiator_tree->clean( allocator );	// <0x65c319>|0x000|0x000:'85'
+	initiator_tree->clean( &allocator );																	// <0x65c319>|0x000|0x000:'85'
 
-	for ( initiator_filter *	it		=	filter_stack.front(); 									// <0x65c32b>|0x012|0x012|[1]:'87'
-								it		!=	NULL; 									// <0x65c334>|0x01b|0x009:'88'
-								it		=	filter_stack.get_next_of_object(it)	) 									// <0x65c336>|0x01d|0x002:'89'
+	for ( initiator_filter *	it		=	filter_stack.front();											// <0x65c32b>|0x012|0x012|[1]:'87'
+								it		!=	NULL;															// <0x65c334>|0x01b|0x009:'88'
+								it		=	filter_stack.get_next_of_object(it)	)							// <0x65c336>|0x01d|0x002:'89'
 	{
-		if ( !filter_is_overwritten( it ) ) 																// <0x65c344>|0x02b|0x00e:'91'
-			initiator_tree->set( it->initiator.c_str(), it->verbosity, it->thread_id, allocator, NULL );	// <0x65c357>|0x03e|0x013:'92'
+		if ( !filter_is_overwritten( it ) )																	// <0x65c344>|0x02b|0x00e:'91'
+			initiator_tree->set( it->initiator.c_str(), it->verbosity, it->thread_id, &allocator, NULL );	// <0x65c357>|0x03e|0x013:'92'
 	}																										// <0x65c385>|0x06c|0x02e:'93'
 }
 
-
-
-// TODO TO DELETE
-
-
-void initialize_filters					()
+// STATE[STUB]
+filter_tree* new_filter_tree( memory::base_allocator& allocator )
 {
-	ASSERT									(!globals->initiator_tree);
-	VOSTOK_CONSTRUCT_REFERENCE				(globals->root_rule, node) ("", trace);
-	globals->initiator_tree				=	globals->root_rule.c_ptr();
+	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );	// <0x65c4e6>|0x000|0x000:'109'
 }
 
-void   finalize_filters					()
+// STATE[STUB]
+void delete_filter_tree( filter_tree*& filter_tree )
 {
-	while ( !globals->filter_stack.empty() )
-		pop_filter							();
-
-	VOSTOK_DESTROY_REFERENCE					(globals->root_rule);
+	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );	// <0x65c4b6>|0x000|0x000:'114'
 }
 
-static bool rule_is_overwritten			(initiator_filter * const rule)
+// STATE[STUB]
+void push_filter(
+	filter_tree&	tree,
+	pcstr			initiator,
+	verbosity		verbosity,
+	u32				thread_id
+)
 {
-	for ( initiator_filter *	it		=	globals->filter_stack.get_next_of_object(rule);
-								it		!=	NULL;
-								it		=	globals->filter_stack.get_next_of_object(it) )
-	{
-		if ( rule->initiator.find(it->initiator.c_str()) == 0 )
-			return							true;
-	}
-
-	return									false;
+	tree.push_filter( initiator, verbosity, thread_id );	// <0x65c6c3>|0x000|0x000:'124'
 }
 
-static void build_tree					(memory::base_allocator * allocator)
+// STATE[STUB]
+bool has_passed_filters( filter_tree const& tree, pcstr initiator, verbosity verbosity )
 {
-	globals->initiator_tree->clean			(globals->tree_allocator);
-
-	globals->tree_allocator				=	allocator;
-
-	for ( initiator_filter *	it			=	globals->filter_stack.front();
-							it			!=	NULL;
-							it			=	globals->filter_stack.get_next_of_object(it) )
-	{
-		if ( !rule_is_overwritten(it) )
-			globals->initiator_tree->set	(it->initiator.c_str(), it->verbosity, it->thread_id, allocator, NULL);
-	}
+	return tree.has_passed_filters( initiator, verbosity );	// <0x65c6a3>|0x000|0x000:'134'
 }
-
-void push_filter						(pcstr 								initiator,
-										 int const							verbosity,
-										 memory::base_allocator *	const	allocator,
-										 u32 const							thread_id)
-{
-	debug_log_disable_raii					debug_log_disable;
-	if ( !initiator )
-		initiator						=	"";
-
-	initiator_filter * const rule			=	(initiator_filter *)VOSTOK_NEW_IMPL( allocator, initiator_filter );
-
-	rule->initiator						=	initiator;
-	rule->allocator						=	allocator;
-	rule->verbosity						=	verbosity;
-	rule->thread_id						=	thread_id;
-
-	threading::reader_writer_lock_raii	raii	(globals->rules_lock, threading::lock_type_write);
-
-	globals->filter_stack.push_back			(rule);
-
-	build_tree								(allocator);
-}
-
-void logging::pop_filter					()
-{
-	debug_log_disable_raii					debug_log_disable;
-
-	threading::reader_writer_lock_raii	raii	(globals->rules_lock, threading::lock_type_write);
-
-	if ( globals->filter_stack.empty( ) )
-		return;
-
-	initiator_filter * rule				=	globals->filter_stack.pop_back();
-
-	memory::base_allocator * const allocator	=	rule->allocator;
-	VOSTOK_FREE_IMPL							(allocator, rule);
-
-	build_tree								(globals->tree_allocator);
-}
-
-int get_tree_verbosity					(path_parts * const path)
-{
-	ASSERT									(globals->initiator_tree);
-
-	threading::reader_writer_lock_raii	raii	(globals->rules_lock, threading::lock_type_read);
-
-	return									globals->initiator_tree->get_verbosity(path);
-}
-
-class cc_logging_rule : public console_commands::console_command
-{
-	typedef console_commands::console_command	super;
-public:
-						cc_logging_rule			( pcstr name );
-	virtual void		execute					( pcstr args );
-	virtual void		save_to					( console_commands::save_storage& f, memory::base_allocator* a)	const;
-} g_cc_logging_rule("logging_rule");// class cc_logging_rule
 
 pcstr verbosity_to_str[] ={
 	"", // reserved
@@ -220,61 +134,35 @@ pcstr verbosity_to_str[] ={
 	NULL,
 };
 
-verbosity string_to_value				( pcstr item )
+// STATE[STUB]
+verbosity string_to_verbosity( pcstr in_verbosity )
 {
-	u32 idx = 1;
-	while( verbosity_to_str[idx] )
-	{
-		if(0==strings::compare(verbosity_to_str[idx], item))
-			return (verbosity)idx;
+	vostok::logging::verbosity verbosities[6] = { silent, error, warning, info, debug, trace };	// <0x65c026>|0x000|0x000:'139'
+	for ( u32 i = 0; i < 6; ++i	)																// <0x65c050>|0x02a|0x02a|[1]:'140'
+		if ( !strings::compare_insensitive( verbosity_to_str[verbosities[i]], in_verbosity ) )	// <0x65c068>|0x042|0x018:'141'
+			  return verbosities[i];															// <0x65c082>|0x05c|0x01a:'142'
 
-		++idx;
-	}
-	return invalid; // not found
+	return invalid;																				// <0x65c08b>|0x065|0x009:'144'
 }
 
-cc_logging_rule::cc_logging_rule( pcstr name )
-:super		( name, true, console_commands::command_type_user_specific, console_commands::execution_filter_early )
+// STATE[STUB]
+pcstr verbosity_to_string( verbosity verbosity )
 {
-	m_need_args = true;
+	switch ( verbosity )	// <0x65bfb4>|0x000|0x000:'149'
+	{
+	case silent:	return "silent";
+	case error:		return "ERROR";
+	case warning:	return "Warning";
+	case info:		return "info";
+	case debug:		return "debug";
+	case trace:		return "trace";
+	default:		NODEFAULT( );
+	}
 }
 
-void cc_logging_rule::execute			(pcstr args)
+struct filter_name_eq
 {
-	string512		initiator, verbosity;
-	pcstr s								=	strings::get_token( args, initiator, ' ' );
-
-	if ( s == NULL )
-	{
-		if ( strings::equal(initiator, "") )
- 		{
-			on_invalid_syntax				( args );
-			return;
- 		}
- 		else
-		{
-			strings::copy					( verbosity, initiator );
-			strings::copy					( initiator, "" );
-		}
-	}
-	else
-	{
-		strings::get_token					( s, verbosity, ' ' );
-	}
-
-	vostok::logging::verbosity t_verb		=	string_to_value(verbosity);
-	if ( t_verb == vostok::logging::invalid )
-	{
-		on_invalid_syntax					( args );
-		return;
-	}
-
-	push_filter								(initiator, t_verb, & memory::g_mt_allocator);
-}
-
-struct rule_name_eq
-{
-	rule_name_eq ( pcstr s ) : name(s)	{}
+	filter_name_eq ( pcstr s ) : name(s)	{}
 
 	bool operator ()					(initiator_filter const & item) const
 	{
@@ -285,47 +173,49 @@ private:
 	pcstr									name;
 };
 
-void cc_logging_rule::save_to			(console_commands::save_storage & f, memory::base_allocator * a) const
-{
-	typedef vectora<initiator_filter>		rules_vec;
-	rules_vec								uniq(a);
+STATIC_SIZE_ASSERT(filter_name_eq, 0x4);
 
-	for ( initiator_filter *	it		=	globals->filter_stack.front();
+// STATE[STUB]
+void logging_filters_console_command::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
+{
+	typedef vectora<initiator_filter>		filters_vec;
+	filters_vec								uniq(a);
+
+	for ( initiator_filter *	it		=	m_filter_tree.filter_stack.front();
 								it		!=	NULL;
-								it		=	globals->filter_stack.get_next_of_object(it) )
+								it		=	m_filter_tree.filter_stack.get_next_of_object(it) )
 	{
-		rules_vec::iterator found		=	std::find_if(uniq.begin(), uniq.end(), rule_name_eq(it->initiator.c_str()) );
+		filters_vec::iterator found		=	std::find_if(uniq.begin(), uniq.end(), filter_name_eq(it->initiator.c_str()) );
 		if ( found != uniq.end() )
 		{
-			initiator_filter & rule		=	* found;
-			rule.verbosity				=	it->verbosity;
+			initiator_filter & filter	=	* found;
+			filter.verbosity			=	it->verbosity;
 		}
 		else
 			uniq.push_back					(*it);
 	}
 
 	u32 max_length						=	0;
-	rules_vec::const_iterator uit_b		=	uniq.begin();
-	rules_vec::const_iterator uit_e		=	uniq.end();
-	for ( rules_vec::const_iterator uit =	uit_b; uit != uit_e; ++uit )
+	filters_vec::const_iterator uit_b	=	uniq.begin();
+	filters_vec::const_iterator uit_e	=	uniq.end();
+	for ( filters_vec::const_iterator uit =	uit_b; uit != uit_e; ++uit )
 	{
-		pcstr rule_str					=	(*uit).initiator.c_str();
+		pcstr filter_str				=	(*uit).initiator.c_str();
 		pcstr verbosity_str 			=	verbosity_to_str[(*uit).verbosity];
-		u32 const length_to_test		=	strings::length(rule_str) + strings::length(verbosity_str);
+		u32 const length_to_test		=	strings::length(filter_str) + strings::length(verbosity_str);
 		if ( length_to_test > max_length )
 			max_length					=	length_to_test;
 	}
 
 	u32 const buffer_size				=	(max_length + strings::length( name() ) + 3)*sizeof(char);
 	pstr const out_str					=	static_cast<pstr>( ALLOCA( buffer_size ) );
-	for ( rules_vec::const_iterator uit = uit_b; uit != uit_e; ++uit )
+	for ( filters_vec::const_iterator uit = uit_b; uit != uit_e; ++uit )
 	{
-		pcstr rule_str					=	(*uit).initiator.c_str();
+		pcstr filter_str				=	(*uit).initiator.c_str();
 		pcstr verbosity_str 			=	verbosity_to_str[(*uit).verbosity];
-		strings::join						( out_str, buffer_size, name(), " ", rule_str, " ", verbosity_str );
+		strings::join						( out_str, buffer_size, name(), " ", filter_str, " ", verbosity_str );
 		f.add_line							( out_str );
 	}
 }
-
 } // namespace logging
 } // namespace vostok

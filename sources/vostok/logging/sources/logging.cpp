@@ -13,7 +13,6 @@
 #include <vostok/core_entry_point.h>
 #include "logging.h"
 #include "filter_tree_node.h"
-#include "globals.h"
 #include <vostok/debug/debug.h>
 
 #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
@@ -33,11 +32,6 @@ static command_line::key	s_use_console		("console", "", "logging", "turns on con
 static command_line::key	s_log_to_stdout		("log_to_stdout", "", "logging", "turns on writing to stdout");
 
 static bool					s_initialized_logging	=	false;
-
-void initialize_filters					( );
-void finalize_filters					( );
-void preinitialize_globals				( );
-void finalize_globals					( );
 
 void   generate_log_file_name			(fs_new::native_path_string * out_result, pcstr extension)
 {
@@ -70,7 +64,7 @@ struct logging_preinitializer	{
 static logging_preinitializer	s_preinitializer VOSTOK_INIT_PRIORITY(1);
 
 
-void initialize							( fs_new::device_file_system_proxy	device, 
+void initialize							( fs_new::device_file_system_proxy	device,
 										  log_file_usage					log_file_usage )
 {
 	globals->log_file_usage				=	log_file_usage;
@@ -105,7 +99,7 @@ verbosity string_to_verbosity			( pcstr in_verbosity )
 	for ( u32 i=0; i<array_size(verbosities); ++i )
 		if ( strings::equal(verbosity_to_string(verbosities[i]), in_verbosity) )
 			return							verbosities[i];
-	
+
 	return									unset;
 }
 
@@ -163,7 +157,7 @@ void log_thread_unsafe					( logging::log_flags_enum const log_flags, pcstr mess
 	if ( s_initialized_logging && log_to_stderr )
 	{
 		initialize_stdstreams_if_needed		( );
-		write_to_stdstream					( stdstream_error, "%s", message );		
+		write_to_stdstream					( stdstream_error, "%s", message );
 	}
 
 	if ( s_initialized_logging && s_log_to_stdout && !logged_to_stdout )
@@ -201,7 +195,7 @@ void   write_exit_code_file				( int exit_code )
 	fs_new::native_path_string				file_name;
 	generate_log_file_name					(& file_name, "exit_code");
 
-	fs_new::file_type_pointer				file( file_name, * globals->synchronous_device.c_ptr(), 
+	fs_new::file_type_pointer				file( file_name, * globals->synchronous_device.c_ptr(),
 												  fs_new::file_mode::create_always, fs_new::file_access::write);
 	if ( !file )
 		return;

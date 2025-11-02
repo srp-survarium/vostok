@@ -23,6 +23,11 @@
 #	endif // #ifdef VOSTOK_STATIC_LIBRARIES
 #endif // #ifndef VOSTOK_LOGGING_API
 
+#ifndef STATIC_SIZE_ASSERT
+#define STATIC_SIZE_ASSERT(type, size) \
+	namespace { typedef char size_assert[(sizeof(type) == (size)) ? 1 : -1]; }
+#endif // #ifndef STATIC_SIZE_ASSERT
+
 #include <vostok/fs/device_file_system_proxy.h>
 
 namespace vostok {
@@ -42,7 +47,7 @@ enum verbosity {
 }; // enum verbosity
 
 VOSTOK_LOGGING_API	void				preinitialize			( );
-VOSTOK_LOGGING_API	void				initialize				( fs_new::device_file_system_proxy	device, 
+VOSTOK_LOGGING_API	void				initialize				( fs_new::device_file_system_proxy	device,
 																  log_file_usage					log_file_usage );
 VOSTOK_LOGGING_API	void				finalize				( );
 VOSTOK_LOGGING_API	pcstr				verbosity_to_string		( int verbosity );
