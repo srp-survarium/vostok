@@ -54,6 +54,8 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 
 	if ( !initiator )
 		initiator = "";
+
+
 	// FUNCTION BODY
 	// <0x65c54a>|0x000|0x000:'40'
 	// <0x65c550>|0x006|0x006:'41'
@@ -73,26 +75,37 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 }
 
 // STATE[STUB]
-// bool vostok::logging::filter_tree::filter_is_overwritten(vostok::logging::initiator_filter*) const
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
-	// LOCALS
-	// initiator_filter* 			it<1>
-	// ******
 
-	return false;
-	// FUNCTION BODY
-	// <0x65c0aa>|0x000|0x000|[1]:'72'
-	// <0x65c0b2>|0x008|0x008:'73'
-	// <0x65c0b4>|0x00a|0x002:'74'
-	// 1
-	// <0x65c0c2>|0x018|0x00e:'76'
-	// <0x65c0de>|0x034|0x01c:'77'
-	// <0x65c0e2>|0x038|0x004:'78'
-	// 1
-	// <0x65c0e4>|0x03a|0x002:'80'
-	// ******
+	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// <0x65c0aa>|0x000|0x000|[1]:'72' // sushi@TODO: Should be front?
+								it		!=	NULL;										// <0x65c0b2>|0x008|0x008:'73'
+								it		=	filter_stack.get_next_of_object(it) )		// <0x65c0b4>|0x00a|0x002:'74'
+	{
+		if ( filter->initiator.find(it->initiator.c_str()) == 0 )						// <0x65c0c2>|0x018|0x00e:'76'
+			return							true;										// <0x65c0de>|0x034|0x01c:'77'
+	}																					// <0x65c0e2>|0x038|0x004:'78'
+
+	return									false;										// <0x65c0e4>|0x03a|0x002:'80'
 }
+
+// STATE[STUB]
+void filter_tree::build_tree( )
+{
+	initiator_tree->clean( allocator );	// <0x65c319>|0x000|0x000:'85'
+
+	for ( initiator_filter *	it		=	filter_stack.front(); 									// <0x65c32b>|0x012|0x012|[1]:'87'
+								it		!=	NULL; 									// <0x65c334>|0x01b|0x009:'88'
+								it		=	filter_stack.get_next_of_object(it)	) 									// <0x65c336>|0x01d|0x002:'89'
+	{
+		if ( !filter_is_overwritten( it ) ) 																// <0x65c344>|0x02b|0x00e:'91'
+			initiator_tree->set( it->initiator.c_str(), it->verbosity, it->thread_id, allocator, NULL );	// <0x65c357>|0x03e|0x013:'92'
+	}																										// <0x65c385>|0x06c|0x02e:'93'
+}
+
+
+
+// TODO TO DELETE
 
 
 void initialize_filters					()
