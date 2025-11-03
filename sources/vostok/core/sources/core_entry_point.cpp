@@ -118,8 +118,8 @@ void log_callback						( pcstr initiator,
 	logging::flush_log_file			( );
 }
 
-void vostok::core::preinitialize		( core::engine *								engine,
-									  logging::log_file_usage const					log_file_usage,
+void vostok::core::preinitialize		( core::engine *							engine,
+									  logging::log_file_usage_enum const			log_file_usage,
 									  pcstr const									command_line,
 									  command_line::contains_application_bool const	command_line_contains_application,
 									  pcstr	const									application,
@@ -165,7 +165,7 @@ bool vostok::core::initialized ( )
 	return					s_initialized;
 }
 
-static void push_logging_rules ( )
+static void push_logging_rules ( ) // sushi@TODO: DELETE
 {
 	using namespace vostok;
 	logging::verbosity	verbosity	=	logging::trace;

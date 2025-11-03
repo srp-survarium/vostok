@@ -38,16 +38,6 @@ public:
 
 STATIC_SIZE_ASSERT(filter_tree, 0x38);
 
-VOSTOK_LOGGING_API filter_tree*	new_filter_tree		( memory::base_allocator& allocator );
-VOSTOK_LOGGING_API void			delete_filter_tree	( filter_tree*& filter_tree );
-VOSTOK_LOGGING_API void			push_filter			(
-									filter_tree&	tree,
-									pcstr			initiator,
-									verbosity		verbosity,
-									u32				thread_id
-								);
-VOSTOK_LOGGING_API bool			has_passed_filters	( filter_tree const& tree, pcstr initiator, verbosity verbosity );
-
 } // namespace logging
 } // namespace vostok
 

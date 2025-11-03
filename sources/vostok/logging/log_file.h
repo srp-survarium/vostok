@@ -18,9 +18,13 @@ namespace core {
 	enum log_file_usage;
 } // namespace core
 
+namespace memory {
+	class base_allocator;
+} // namespace memory
+
 namespace logging {
 
-enum log_file_usage
+enum log_file_usage_enum
 {
 	uninitialized_log,
 	create_log,
@@ -34,10 +38,11 @@ typedef fixed_vector< int, max_line_groups >	line_groups_type;
 template class VOSTOK_LOGGING_API uninitialized_reference<line_groups_type>;
 
 class VOSTOK_LOGGING_API log_file : private core::noncopyable {
-public:		
-						log_file				( log_file_usage log_file_usage, 
-												  pcstr file_name,
-												  fs_new::device_file_system_proxy device);
+public:
+						log_file				(	memory::base_allocator&				allocator,
+													log_file_usage_enum					log_file_usage,
+													pcstr								file_name,
+													fs_new::device_file_system_proxy	device);
 						~log_file				( );
 
     // writing data
@@ -49,7 +54,7 @@ public:
 			void		start_transaction		( );
 			void		end_transaction			( );
 			void		goto_line				( u32 line );
-	
+
 	template <int buffer_size>
 	inline	bool		read_next_line			( char (&buffer)[buffer_size]) { return read_next_line(buffer, buffer_size); }
 			bool		read_next_line			( pstr const buffer, const u32 buffer_size);
@@ -58,7 +63,9 @@ public:
 	inline	pcstr		file_name				( ) const { return m_file_name.c_str(); }
 	inline	bool		initialized				( ) const { return m_file != 0; }
 
-	void	on_terminate						( );
+			void		on_terminate			( );
+
+	inline	memory::base_allocator&		allocator				( ) const { return m_allocator; }
 private:
 	void				assert_transaction_in_current_thread	( ) const;
 
@@ -68,11 +75,15 @@ private:
 private:
 	threading::atomic_ptr<fs_new::file_type>::type	m_file;
 	fs_new::synchronous_device_interface			m_device;
-	fs_new::native_path_string	m_file_name;
+	fs_new::native_path_string						m_file_name;
 
-	char						m_file_pointer_storage[sizeof(fs_new::file_type) + fs_new::max_path_length];
+	char											m_file_pointer_storage[sizeof(fs_new::file_type) + fs_new::max_path_length];
 
 	uninitialized_reference<line_groups_type>		m_line_groups;	// m_line_groups[x] = group_size*x-th line pos
+
+	threading::mutex			m_log_mutex;
+	memory::base_allocator&		m_allocator;
+
 	u32							m_last_line;
 	u32							m_current_pos;
 	u32							m_file_size;
@@ -89,9 +100,22 @@ private:
 			bool		skip_next_line			( );
 }; // class log_file
 
-extern vostok::fs_new::native_path_string		g_log_file_name;
+STATIC_SIZE_ASSERT(log_file, 0x4680);
+
+extern vostok::fs_new::native_path_string		g_log_file_name; // sushi@TODO: Was it removed?
 
 VOSTOK_LOGGING_API log_file * get_log_file			( );
+
+
+VOSTOK_LOGGING_API	log_file*		new_log_file		(
+										memory::base_allocator&				allocator,
+										fs_new::device_file_system_proxy&	device,
+										pcstr								log_file_name,
+										log_file_usage_enum					log_file_usage
+									);
+
+VOSTOK_LOGGING_API	void			delete_log_file		( log_file*& log_file );
+
 
 } // namespace logging
 } // namespace vostok

@@ -811,7 +811,7 @@ impl<'a> Function<'a> {
 
                     None => {
                         empty_line_no += 1;
-                        writeln!(w, "\t// {empty_line_no}")?
+                        writeln!(w, "\t// <{empty_line_no}>")?
                     }
                 }
             }

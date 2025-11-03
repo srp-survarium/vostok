@@ -33,7 +33,8 @@
 namespace vostok {
 namespace logging {
 
-enum log_file_usage;
+class filter_tree;
+enum log_file_usage_enum;
 
 enum verbosity {
 	invalid		=	 0,	//	do not use it !!
@@ -46,9 +47,21 @@ enum verbosity {
 	unset		=	 1 << 31,
 }; // enum verbosity
 
+
+VOSTOK_LOGGING_API	filter_tree*	new_filter_tree		( memory::base_allocator& allocator );
+VOSTOK_LOGGING_API	void			delete_filter_tree	( filter_tree*& filter_tree );
+VOSTOK_LOGGING_API	void			push_filter			(
+										filter_tree&	tree,
+										pcstr			initiator,
+										verbosity		verbosity,
+										u32				thread_id
+									);
+VOSTOK_LOGGING_API	bool			has_passed_filters	( filter_tree const& tree, pcstr initiator, verbosity verbosity );
+
+// sushi@TODO: DELETE?
 VOSTOK_LOGGING_API	void				preinitialize			( );
 VOSTOK_LOGGING_API	void				initialize				( fs_new::device_file_system_proxy	device,
-																  log_file_usage					log_file_usage );
+																  log_file_usage_enum				log_file_usage );
 VOSTOK_LOGGING_API	void				finalize				( );
 VOSTOK_LOGGING_API	pcstr				verbosity_to_string		( int verbosity );
 VOSTOK_LOGGING_API	verbosity			string_to_verbosity 	( pcstr in_verbosity );

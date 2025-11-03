@@ -27,7 +27,7 @@
 
 namespace vostok {
 namespace logging {
-
+// sushi@NOTE: Was this moved to core?
 static command_line::key	s_use_console		("console", "", "logging", "turns on console output");
 static command_line::key	s_log_to_stdout		("log_to_stdout", "", "logging", "turns on writing to stdout");
 
@@ -65,7 +65,7 @@ static logging_preinitializer	s_preinitializer VOSTOK_INIT_PRIORITY(1);
 
 
 void initialize							( fs_new::device_file_system_proxy	device,
-										  log_file_usage					log_file_usage )
+										  log_file_usage_enum				log_file_usage )
 {
 	globals->log_file_usage				=	log_file_usage;
 	ASSERT									( !globals->log_file.initialized() );

@@ -3,54 +3,65 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-// #include "logging_extensions.h"
+#include "logging_extensions.h"
 
-#include "testing_impl.h"
-#include "core_entry_point.h"
-#include "testing_impl.h"
+#include <vostok/console_command.h>
+#include <vostok/console_command_processor.h>
+#include <vostok/debug/log_callback.h>
 #include <vostok/fs_path.h>
 #include <vostok/fs_utils.h>
-#include <vostok/console_command.h>
 #include <vostok/logging/api.h>
+#include <vostok/logging/extensions.h>
+#include <vostok/logging/log_file.h>
+#include <vostok/logging/logging_filters_console_command.h>
+#include "core_entry_point.h"
+#include "testing_impl.h"
 
+// sushi@TODO: Only exists on old VS builds and makes it platform dependant
 extern "C" FILE* __iob_func(void);
 
 namespace vostok {
+
+namespace logging {
+class filter_tree;
+class log_file;
+} // namespace logging
+
 namespace core {
 
-logging::filter_tree* g_log_filter_tree = NULL;
+typedef void (*log_callback_type)(pcstr, bool, bool, pcstr);
+typedef	void (*log_callback)(
+	pvoid,					// ???
+	pcstr,					// file
+	u32	 ,					// line
+	pcstr,					// function signature
+	pcstr,					// ???
+	logging::verbosity,		// verbosity
+	pcstr,					// log string
+	u32	 ,					// ???
+	logging::callback_flag  // first/last string
+);
+
+
+logging::filter_tree*	g_log_filter_tree	= NULL; // sushi@NOTE: `logging::filter_tree` is stored privately
+logging::log_file*		g_log_file			= NULL; // sushi@NOTE: `logging::log_file` is not included anywhere and is in the root
+logging::log_flags_enum g_log_flags			= logging::log_to_console;
+log_callback			g_log_callback		= NULL;
+
+static vostok::command_line::key	s_use_console				("console",       "", "logging", "turns on console output"   );
+static vostok::command_line::key	s_log_to_stdout				("log_to_stdout", "", "logging", "turns on writing to stdout");
+static vostok::command_line::key	s_log_verbosity				("log_verbosity", "", "logging", "one of: [trace|debug|info|warning|error|silent]");
+static vostok::command_line::key	s_write_errors_to_stderr	("write_errors_to_stderr", "", "logging", "");
+
+static bool													s_console_initialized			=	false;
+static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
+// static bool   s_tried_to_initialize_console	=	false;
 
 #if 0
-// STATE[STUB]
-// void vostok::core::`dynamic initializer for 's_logging_preinitializer''()
-void `dynamic initializer for 's_logging_preinitializer''( )
-{
-}
+// Statics with dynamic initializers
+s_logging_preinitializer
 
-// STATE[STUB]
-// void vostok::core::`dynamic initializer for 's_log_verbosity''()
-void `dynamic initializer for 's_log_verbosity''( )
-{
-}
-
-// STATE[STUB]
-// void vostok::core::`dynamic initializer for 's_write_errors_to_stderr''()
-void `dynamic initializer for 's_write_errors_to_stderr''( )
-{
-}
-
-// STATE[STUB]
-// void vostok::core::`dynamic initializer for 's_use_console''()
-void `dynamic initializer for 's_use_console''( )
-{
-}
-
-// STATE[STUB]
-// void vostok::core::`dynamic initializer for 's_log_to_stdout''()
-void `dynamic initializer for 's_log_to_stdout''( )
-{
-}
-
+void (__cdecl *s_logging_preinitializer_initializer_)();
 #endif
 
 // STATE[STUB]
@@ -58,7 +69,7 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 {
 	ASSERT									(extension);
 	ASSERT									(out_result);
-	* out_result						= 	fs_new::native_path_string::convert(core::user_data_directory());
+	* out_result							= 	fs_new::native_path_string::convert(core::user_data_directory());
 	out_result->append_path					(core::application_name());
 	fs_new::native_path_string user_name	=	core::user_name();
 	if ( user_name.length() )
@@ -68,7 +79,6 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 }
 
 // STATE[STUB]
-// _iobuf* vostok::core::get_stdstream_handle(vostok::core::stdstream_enum)
 _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: stdstream_enum moved to core
 {
 	if ( stream == logging::stdstream_out )
@@ -83,43 +93,34 @@ _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: st
 void write_to_stdstream( logging::stdstream_enum stream, pcstr format, ... )
 {
 	_iobuf* handle		=	get_stdstream_handle( stream );	// <0x671d90>|0x000|0x000:'78'
-	if ( !handle ) 	// <0x671dab>|0x01b|0x01b:'79'
-		return;	// 1
-	// 2
-	va_list					mark;	// 3
-	va_start				( mark, format );	// 4
-	// 5
-	vfprintf				( handle, format, mark );   // <0x671daf>|0x01f|0x004:'85'
-	// 1
-	va_end					( mark );
+	if ( !handle )											// <0x671dab>|0x01b|0x01b:'79'
+		return;												// <1>
+															// <2>
+	va_list					mark;							// <3>
+	va_start				( mark, format );				// <4>
+															// <5>
+	vfprintf				( handle, format, mark );		// <0x671daf>|0x01f|0x004:'85'
+															// <1>
+	va_end					( mark );						// <2>
 }
 
 // STATE[STUB]
 bool is_logging_initialized( )
 {
-	return g_log_filter_tree != NULL; // <0x671d60>|0x000|0x000:'92'
+	return g_log_filter_tree != NULL;	// <0x671d60>|0x000|0x000:'92'
 }
 
 // STATE[STUB]
-// bool vostok::core::use_console_for_logging()
 bool use_console_for_logging( )
 {
-	// STATICS
-	// static bool 					s_use_console_for_logging = <0x4c2b33c>;
-	// ******
-
-	return false;
-	// FUNCTION BODY
-	// <0x672611>|0x000|0x000:'97'
-	// <0x67261a>|0x009|0x009:'98'
-	// 1
-	// <0x67261f>|0x00e|0x005:'100'
-	// <0x672671>|0x060|0x052:'101'
-	// ******
+	if ( !g_log_filter_tree )																		// <0x672611>|0x000|0x000:'97'
+		return false;																				// <0x67261a>|0x009|0x009:'98'
+																									// <1>
+	static bool s_use_console_for_logging	=	testing::run_tests_command_line() || s_use_console;	// <0x67261f>|0x00e|0x005:'100'
+	return						s_use_console_for_logging;											// <0x672671>|0x060|0x052:'101'
 }
 
 // STATE[STUB]
-// void vostok::core::logging_callback(void* const, char const* const, const unsigned int, char const* const, char const* const, const vostok::logging::verbosity, char const* const, const unsigned int, const vostok::logging::callback_flag)
 void logging_callback(
 	void*						user_data,
 	pcstr						file,
@@ -221,7 +222,20 @@ void debug_log_callback(
 	// LOCALS
 	// log_flags_enum 				log_flags
 	// strings::detail::tuples 		STR_JOINA_tuples_unique_identifier
+
+//	pstr					key = 0;
+//	STR_JOINA				( key, "-", key_raw );
+
 	// ******
+
+	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
+									logging::log_to_stderr : (logging::log_flags_enum)0;
+
+	// STR_JOINA( initiator );
+	// THIS MOST LIKELY CALLS INTO LOG MACRO?
+
+	if ( g_log_file )
+		g_log_file->flush( NULL );
 
 	// FUNCTION BODY
 	// 1
@@ -258,41 +272,33 @@ void logging_preinitialize( )
 }
 
 // STATE[STUB]
-// void vostok::core::push_logging_filters()
 void push_logging_filters( )
 {
-	// LOCALS
-	// fs_new::native_path_string 	cfg_file_path
-	// fixed_string<512> 			verbosity_string
-	// ******
-
-	// FUNCTION BODY
-	// 1
-	// 2
-	// <0x6722c6>|0x000|0x000:'220'
-	// <0x6722e6>|0x020|0x020:'221'
-	// <0x67230b>|0x045|0x025:'222'
-	// <0x67230f>|0x049|0x004:'223'
-	// <0x672323>|0x05d|0x014:'224'
-	// 1
-	// 2
-	// 3
-	// <0x672331>|0x06b|0x00e:'228'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// <0x672345>|0x07f|0x014:'235'
-	// 1
-	// 2
-	// <0x672355>|0x08f|0x010:'238'
-	// 1
-	// <0x6723f2>|0x12c|0x09d:'240'
-	// 1
-	// 2
-	// ******
+	using namespace vostok;																									// <1>
+	logging::verbosity	verbosity		=	logging::trace;																	// <2>
+	fixed_string512		verbosity_string;																					// <0x6722c6>|0x000|0x000:'220'
+	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);							// <0x6722e6>|0x020|0x020:'221'
+	if ( log_verbosity_key_is_set )																							// <0x67230b>|0x045|0x025:'222'
+		verbosity						= logging::string_to_verbosity(verbosity_string.c_str());							// <0x67230f>|0x049|0x004:'223'
+	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )									// <0x672323>|0x05d|0x014:'224'
+		verbosity						= logging::warning;																	// <1>
+																															// <2>
+	//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;	// <3>
+	logging::push_filter			( *g_log_filter_tree, "", verbosity, u32(-1) );											// <0x672331>|0x06b|0x00e:'228'
+	//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );						// <1>
+	//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );				// <2>
+	//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );			// <3>
+	//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );	// <4>
+																															// <5>
+																															// <6> sushi@NOTE: New or empty line
+	fs_new::native_path_string	cfg_file_path;																				// <0x672345>|0x07f|0x014:'235'
+	if ( fs_new::convert_to_absolute_path(& cfg_file_path,																	// <1>
+										  fs_new::native_path_string::convert("../../user_data/user.cfg"),					// <2>
+										  assert_on_fail_false) )															// <0x672355>|0x08f|0x010:'238'
+	{																														// <1>
+		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );			// <0x6723f2>|0x12c|0x09d:'240'
+	}																														// <1>
+																															// <2>
 }
 
 // STATE[STUB]
@@ -331,33 +337,18 @@ void logging_initialize( )
 }
 
 // STATE[STUB]
-// void vostok::core::logging_finalize()
 void logging_finalize( )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660de3 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660dec }, type_index: TypeIndex(0x28da) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660df0 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660df3 }, type_index: TypeIndex(0x28da) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660df7 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660dfa }, type_index: TypeIndex(0x28da) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660dfc }, type_index: TypeIndex(0xc342) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660e30 }, type_index: TypeIndex(0x102b5) })
-	// ******
+	finalize_console( );									// <0x671dd0>|0x000|0x000:'275'
+	logging::delete_log_file( g_log_file );					// <0x671e03>|0x033|0x033:'276'
 
-	// FUNCTION BODY
-	// <0x671dd0>|0x000|0x000:'275'
-	// <0x671e03>|0x033|0x033:'276'
-	// 1
-	// <0x671e0d>|0x03d|0x00a:'278'
-	// 1
-	// <0x671e47>|0x077|0x03a:'280'
-	// <0x671e51>|0x081|0x00a:'281'
-	// ******
+	// VOSTOK_DELETE_IMPL( s_logging_console_command );	// <0x671e0d>|0x03d|0x00a:'278' // sushi@TODO: I am not sure which allocator (if any) is used here
+
+	logging::delete_filter_tree( g_log_filter_tree );		// <0x671e47>|0x077|0x03a:'280'
+	debug::set_log_callback( NULL );						// <0x671e51>|0x081|0x00a:'281'
 }
 
 // STATE[STUB]
-// bool vostok::core::initialize_console()
 bool initialize_console( )
 {
 	// OTHER SYMBOLS
@@ -421,16 +412,6 @@ bool initialize_console( )
 // void vostok::core::finalize_console()
 void finalize_console( )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d33 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d3c }, type_index: TypeIndex(0x28da) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d40 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d43 }, type_index: TypeIndex(0x28da) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d47 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d4a }, type_index: TypeIndex(0x28da) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660d4e }, type_index: TypeIndex(0xc342) })
-	// ******
-
 	// FUNCTION BODY
 	// <0x671d20>|0x000|0x000:'340'
 	// 1
@@ -441,13 +422,6 @@ void finalize_console( )
 	// 1
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	//	void ()(pcstr, bool, bool, pcstr
-	//	log_callback_type;
-
-	// ******
 
 } // namespace core
 } // namespace vostok
