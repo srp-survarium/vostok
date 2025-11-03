@@ -17,6 +17,9 @@
 #include "core_entry_point.h"
 #include "testing_impl.h"
 
+
+#include <vostok/os_include.h>
+
 // sushi@TODO: Only exists on old VS builds and makes it platform dependant
 extern "C" FILE* __iob_func(void);
 
@@ -55,7 +58,7 @@ static vostok::command_line::key	s_write_errors_to_stderr	("write_errors_to_stde
 
 static bool													s_console_initialized			=	false;
 static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
-// static bool   s_tried_to_initialize_console	=	false;
+static bool													s_tried_to_initialize_console	=	false;
 
 #if 0
 // Statics with dynamic initializers
@@ -64,7 +67,7 @@ s_logging_preinitializer
 void (__cdecl *s_logging_preinitializer_initializer_)();
 #endif
 
-// STATE[STUB]
+// STATE[STUB+]
 void generate_log_file_name( fs_new::native_path_string* out_result, pcstr extension )
 {
 	ASSERT									(extension);
@@ -78,7 +81,7 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 	out_result->appendf						(".%s", extension);														// <0x671fae>|0x148|0x00f:'57'
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: stdstream_enum moved to core
 {
 	if ( stream == logging::stdstream_out )			// <0x671d70>|0x000|0x000:'68'
@@ -89,7 +92,7 @@ _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: st
 	return					NULL;					// <0x671d8b>|0x01b|0x009:'73'
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 void write_to_stdstream( logging::stdstream_enum stream, pcstr format, ... )
 {
 	_iobuf* handle		=	get_stdstream_handle( stream );	// <0x671d90>|0x000|0x000:'78'
@@ -104,23 +107,23 @@ void write_to_stdstream( logging::stdstream_enum stream, pcstr format, ... )
 	va_end					( mark );						// <2>
 }
 
-// STATE[STUB]
+// STATE[STUB+] always is inlined
 bool is_logging_initialized( )
 {
 	return g_log_filter_tree != NULL;	// <0x671d60>|0x000|0x000:'92'
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 bool use_console_for_logging( )
 {
-	if ( !g_log_filter_tree )																		// <0x672611>|0x000|0x000:'97'
+	if ( is_logging_initialized( ) )																// <0x672611>|0x000|0x000:'97'
 		return false;																				// <0x67261a>|0x009|0x009:'98'
 																									// <1>
 	static bool s_use_console_for_logging	=	testing::run_tests_command_line() || s_use_console;	// <0x67261f>|0x00e|0x005:'100'
 	return						s_use_console_for_logging;											// <0x672671>|0x060|0x052:'101'
 }
 
-// STATE[STUB]
+// STATE[STUB???]
 void logging_callback(
 	void*						user_data,
 	pcstr						file,
@@ -133,6 +136,9 @@ void logging_callback(
 	logging::callback_flag		flag
 )
 {
+	initialize_console		( );
+	use_console_for_logging	( );
+	vostok::core::write_to_stdstream		( logging::stdstream_out, "%s", "hello" );
 	// LOCALS
 	// bool 						logged_to_stdout
 	// bool 						log_to_console_settings
@@ -210,7 +216,7 @@ void logging_callback(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB???]
 // void vostok::core::debug_log_callback(char const*, bool, bool, char const*)
 void debug_log_callback(
 	pcstr		initiator,
@@ -258,7 +264,7 @@ void debug_log_callback(
 	// ******
 }
 
-// STATE[STUB] sushi@NOTE: IDA decomp code doesn't match the structure
+// STATE[STUB???] sushi@NOTE: IDA decomp code doesn't match the structure
 void logging_preinitialize( )
 {
 	if ( !g_log_callback )
@@ -276,7 +282,7 @@ void logging_preinitialize( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 void push_logging_filters( )
 {
 	using namespace vostok;																									// <1>
@@ -306,7 +312,7 @@ void push_logging_filters( )
 																															// <2>
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 void logging_initialize( )
 {
 	// LOCALS
@@ -314,7 +320,9 @@ void logging_initialize( )
 	// fs_new::device_file_system_no_watcher_proxy device
 	// ******
 
-
+	fs_new::native_path_string out_result;
+	generate_log_file_name	( &out_result, "hpp" );
+	push_logging_filters	( ); // sushi@TODO:
 
 	// FUNCTION BODY
 	// 1
@@ -342,7 +350,7 @@ void logging_initialize( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 void logging_finalize( )
 {
 	finalize_console( );									// <0x671dd0>|0x000|0x000:'275'
@@ -354,19 +362,28 @@ void logging_finalize( )
 	debug::set_log_callback( NULL );						// <0x671e51>|0x081|0x00a:'281'
 }
 
-// STATE[STUB]
+// STATE[STUB+] logging_callback
 bool initialize_console( )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x660ffb }, type_index: TypeIndex(0x47cf7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x66100b }, type_index: TypeIndex(0x1271b) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x661019 }, type_index: TypeIndex(0xc342) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6610e3 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x661178 }, type_index: TypeIndex(0x28f7) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x661208 }, type_index: TypeIndex(0x28f7) })
+	// CALL SITE INFO
+	// <0x671ffb> -> HWND__* <unknown>()
+	// <0x67200b> -> int <unknown>(unsigned long)
+	// <0x672019> -> int <unknown>()
+	// <0x6720e3> -> void* <unknown>(unsigned long)
+	// <0x672178> -> void* <unknown>(unsigned long)
+	// <0x672208> -> void* <unknown>(unsigned long)
 	// ******
 
-	return false;
+
+	s_tried_to_initialize_console = true; // <0x671ff4>|0x00b|0x00b:'296'
+
+	if ( GetConsoleWindow( ) ) // <0x671ffb>|0x012|0x007:'298'
+	{
+		s_console_initialized = true;
+		return true;
+	}
+
+
 	// FUNCTION BODY
 	// 1
 	// <0x671fe9>|0x000|0x000:'294'
@@ -414,7 +431,7 @@ bool initialize_console( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB+]
 void finalize_console( )
 {
 	if ( s_console_initialized )							// <0x671d20>|0x000|0x000:'340'

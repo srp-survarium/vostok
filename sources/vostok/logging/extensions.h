@@ -17,7 +17,7 @@
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <vostok/logging/helper.h>
+#include <vostok/logging/logger.h>
 #include <vostok/logging/format_specifier.h>
 
 namespace vostok {

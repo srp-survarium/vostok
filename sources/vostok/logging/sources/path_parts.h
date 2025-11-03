@@ -8,6 +8,7 @@
 #define LOGGING_PATH_PARTS_H_INCLUDED
 
 #include <vostok/buffer_string.h>
+#include <vostok/logging/api.h>
 
 namespace vostok {
 namespace logging {
@@ -21,6 +22,7 @@ public:
 	inline	pcstr	get_current_element () { return m_current_element; }
 			void	add_part			(pcstr part);
 			void	to_next_element		();
+			void	concat2buffer		(Buffer512& buffer);
 			void	concat2buffer		(vostok::buffer_string& buffer);
 
 private:
@@ -31,6 +33,8 @@ private:
 	pcstr	m_current_element;
 	int		m_index;
 }; // class path_parts
+
+STATIC_SIZE_ASSERT(path_parts, 0x20);
 
 } // namespace logging
 } // namespace vostok

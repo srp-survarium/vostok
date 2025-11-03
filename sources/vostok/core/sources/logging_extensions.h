@@ -11,14 +11,12 @@
 namespace vostok {
 namespace core {
 
+// PUBLIC
+
+void		logging_initialize		( );
+void		logging_finalize		( );
+
 // sushi@TODO: Those all are private? Some of them no need to even export
-
-void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
-_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
-void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
-
-bool		is_logging_initialized	( );
-bool		use_console_for_logging	( );
 
 void		logging_callback		(
 										void*						user_data,
@@ -40,11 +38,23 @@ void		debug_log_callback		(
 									);
 
 void		logging_preinitialize	( );
-void		push_logging_filters	( );
-void		logging_initialize		( );
-void		logging_finalize		( );
+
+
+
+
+// PRIVATE
+
+void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
+void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
+_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
+
 bool		initialize_console		( );
 void		finalize_console		( );
+void		push_logging_filters	( );
+bool		use_console_for_logging	( );
+
+bool		is_logging_initialized	( );
+
 
 } // namespace core
 } // namespace vostok

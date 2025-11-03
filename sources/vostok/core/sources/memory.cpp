@@ -21,6 +21,7 @@
 #include "resources_allocators.h"
 #include <vostok/construction.h>
 #include <vostok/memory_doug_lea_mt_allocator.h>
+#include "logging_extensions.h"
 
 #if VOSTOK_DEBUG_ALLOCATOR
 vostok::memory::doug_lea_mt_allocator_type		vostok::debug::g_mt_allocator(
@@ -110,7 +111,7 @@ void vostok::memory::unlock_process_heap		( )
 void vostok::memory::preinitialize			( )
 {
 #if !VOSTOK_DISABLE_CRT_ALLOCATOR && !defined( VOSTOK_STATIC_LIBRARIES )
-	memory::g_crt_allocator						= &s_crt_allocator;	
+	memory::g_crt_allocator						= &s_crt_allocator;
 #else // #if !VOSTOK_DISABLE_CRT_ALLOCATOR && !defined( VOSTOK_STATIC_LIBRARIES )
 //	VOSTOK_UNREFERENCED_PARAMETER					( command_line );
 #endif // #if !VOSTOK_DISABLE_CRT_ALLOCATOR && !defined( VOSTOK_STATIC_LIBRARIES )
@@ -131,7 +132,7 @@ void vostok::memory::preinitialize			( )
 	g_fs_allocator.do_register					(		16*Mb  ,	"filesystem"			);
 
 	//vostok::particle::g_particles_allocator.do_register			(		 10*Mb  ,	"particle system"		);
-	
+
 	u32 mt_memory_amount						= 8*Mb;
 	if ( testing::run_tests_command_line () )
 		mt_memory_amount						+= 16*Mb;
@@ -241,12 +242,16 @@ void vostok::memory::initialize				( )
 
 	on_after_memory_initialized	( );
 
+	core::logging_initialize	( ); // sushi@TODO: next
+
 	memory::dump_statistics		( true );
 }
 
 void vostok::memory::finalize				( )
 {
 	ASSERT						( s_arena_size, "memory hasn't been preinitialized yet" );
+
+	core::logging_finalize		( ); // sushi@TODO: Just a structure of calls for now
 
 #if VOSTOK_USE_MEMORY_GUARD
 	guard::finalize				( );

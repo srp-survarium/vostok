@@ -6,11 +6,11 @@
 
 #include "pch.h"
 #include <vostok/logging/log_file.h>
+
 #include <vostok/fs/device_utils.h>
 #include <vostok/fs/file_type_pointer.h>
 #include <vostok/core/core.h>
-#include "logging.h"
-#include "globals.h"
+// sushi@TODO: #include "logging.h"
 
 static const int log_file_group_size = 256;
 
@@ -147,7 +147,7 @@ void log_file::append			( pcstr data, u32 const length )
 
 void log_file::start_transaction	( )
 {
-	globals->log_mutex.lock			( );
+	// sushi@TODO: globals->log_mutex.lock			( );
 	R_ASSERT						( m_transaction_thread_id == u32(-1),
 									"transaction was not ended or mutex was unlocked by "
 									"someone other then end_transaction");
@@ -166,7 +166,7 @@ void log_file::end_transaction		( )
 {
 	assert_transaction_in_current_thread	( );
 	m_transaction_thread_id		=	u32(-1);
-	globals->log_mutex.unlock			( );
+	// sushi@TODO: globals->log_mutex.unlock			( );
 }
 
 u32	log_file::get_lines_count		( ) const
@@ -250,6 +250,8 @@ struct processor {
 		++buffer_ptr;
 	}
 };
+
+STATIC_SIZE_ASSERT(processor, 0x4);
 
 bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 {

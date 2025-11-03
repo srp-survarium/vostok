@@ -16,7 +16,7 @@
 #endif // #ifdef SN_TARGET_PS3
 
 #include "filter_tree_node.h"
-#include "logging.h"
+// sushi@TODO: #include "logging.h"
 #include "path_parts.h"
 
 using vostok::logging::node;
@@ -36,10 +36,10 @@ void node::set			(pcstr const							initiator_path,
 {
 	if ( !initiator_path || !*initiator_path )
 	{
-		m_verbosity 					=	verbosity & ~recurse_0;
-		m_thread_id						=	thread_id;
-		if ( !(verbosity & recurse_0) )
-			clean							(allocator_to_clean);
+		// sushi@TODO: m_verbosity 					=	verbosity & ~recurse_0;
+		// sushi@TODO: m_thread_id						=	thread_id;
+		// sushi@TODO: if ( !(verbosity & recurse_0) )
+		// sushi@TODO: 	clean							(allocator_to_clean);
 		return;
 	}
 
@@ -106,6 +106,16 @@ int node::get_verbosity					(path_parts * path, int inherited_verbosity)
 
  	path->to_next_element					();
  	return									child->get_verbosity(path, verbosity);
+}
+
+// STATE[STUB]
+// bool is_terminal_character(const char)
+bool is_terminal_character( char character )
+{
+	return false;
+	// FUNCTION BODY
+	// <0x65ae44>|0x000|0x000:'117'
+	// ******
 }
 
 static bool   compare_parts				(pcstr s1, pcstr s2)

@@ -8,7 +8,8 @@
 #define LOGGING_RULE_TREE_NODE_H_INCLUDED
 
 #include <vostok/logging/extensions.h>
-#include "logging.h"
+#include <vostok/logging/api.h>
+
 #include "path_parts.h"
 #include "filter_tree_node_base.h"
 
@@ -40,6 +41,8 @@ private:
 	int									m_verbosity;
 	u32									m_thread_id;
 }; // class node
+
+STATIC_SIZE_ASSERT(node, 0x54);
 
 } // namespace logging
 } // namespace vostok

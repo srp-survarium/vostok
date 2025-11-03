@@ -7,14 +7,14 @@
 #include "pch.h"
 #include "filter_tree.h"
 
-#include <vostok/intrusive_double_linked_list.h>
-#include <vostok/threading_reader_writer_lock.h>
-#include <vostok/memory_writer.h>
+#include "filter_tree_node.h"
 #include <vostok/console_command.h>
+#include <vostok/intrusive_double_linked_list.h>
 #include <vostok/logging/api.h>
 #include <vostok/logging/logging_filters_console_command.h>
-#include "filter_tree_node.h"
-#include "globals.h"
+#include <vostok/memory_writer.h>
+#include <vostok/threading_reader_writer_lock.h>
+
 
 namespace vostok {
 namespace logging {
