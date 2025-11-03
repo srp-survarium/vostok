@@ -69,24 +69,24 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 {
 	ASSERT									(extension);
 	ASSERT									(out_result);
-	* out_result							= 	fs_new::native_path_string::convert(core::user_data_directory());
-	out_result->append_path					(core::application_name());
-	fs_new::native_path_string user_name	=	core::user_name();
-	if ( user_name.length() )
-		out_result->appendf					("_%s", user_name.c_str());
+	* out_result							= 	fs_new::native_path_string::convert(core::user_data_directory());	// <0x671e66>|0x000|0x000:'51'
+	out_result->append_path					(core::application_name());												// <0x671eea>|0x084|0x084:'52'
+	fs_new::native_path_string user_name	=	core::user_name();													// <0x671efe>|0x098|0x014:'53'
+	if ( user_name.length() )																						// <0x671f85>|0x11f|0x087:'54'
+		out_result->appendf					("_%s", user_name.c_str());												// <0x671f9f>|0x139|0x01a:'55'
 
-	out_result->appendf						(".%s", extension);
+	out_result->appendf						(".%s", extension);														// <0x671fae>|0x148|0x00f:'57'
 }
 
 // STATE[STUB]
 _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: stdstream_enum moved to core
 {
-	if ( stream == logging::stdstream_out )
-		return				&__iob_func()[1];
-	else if ( stream == logging::stdstream_error )
-		return				&__iob_func()[2];
+	if ( stream == logging::stdstream_out )			// <0x671d70>|0x000|0x000:'68'
+		return				&__iob_func()[1];		// <0x671d74>|0x004|0x004:'69'
+	else if ( stream == logging::stdstream_error )	// <0x671d7d>|0x00d|0x009:'70'
+		return				&__iob_func()[2];		// <0x671d82>|0x012|0x005:'71'
 
-	return					NULL;
+	return					NULL;					// <0x671d8b>|0x01b|0x009:'73'
 }
 
 // STATE[STUB]
@@ -258,10 +258,15 @@ void debug_log_callback(
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::core::logging_preinitialize()
+// STATE[STUB] sushi@NOTE: IDA decomp code doesn't match the structure
 void logging_preinitialize( )
 {
+	if ( !g_log_callback )
+	{
+		g_log_callback = logging_callback;
+		debug::set_log_callback( debug_log_callback );
+	}
+
 	// FUNCTION BODY
 	// <0x6728b0>|0x000|0x000:'209'
 	// 1
@@ -302,13 +307,14 @@ void push_logging_filters( )
 }
 
 // STATE[STUB]
-// void vostok::core::logging_initialize()
 void logging_initialize( )
 {
 	// LOCALS
 	// fs_new::native_path_string 	log_file_name
 	// fs_new::device_file_system_no_watcher_proxy device
 	// ******
+
+
 
 	// FUNCTION BODY
 	// 1
@@ -409,18 +415,15 @@ bool initialize_console( )
 }
 
 // STATE[STUB]
-// void vostok::core::finalize_console()
 void finalize_console( )
 {
-	// FUNCTION BODY
-	// <0x671d20>|0x000|0x000:'340'
-	// 1
-	// <0x671d2a>|0x00a|0x00a:'342'
-	// <0x671d3e>|0x01e|0x014:'343'
-	// <0x671d45>|0x025|0x007:'344'
-	// <0x671d4e>|0x02e|0x009:'345'
-	// 1
-	// ******
+	if ( s_console_initialized )							// <0x671d20>|0x000|0x000:'340'
+	{
+		CloseHandle( GetStdHandle( STD_INPUT_HANDLE ) );	// <0x671d2a>|0x00a|0x00a:'342'
+		CloseHandle( GetStdHandle( STD_OUTPUT_HANDLE ) );	// <0x671d3e>|0x01e|0x014:'343'
+		CloseHandle( GetStdHandle( STD_ERROR_HANDLE ) );	// <0x671d45>|0x025|0x007:'344'
+		FreeConsole( );										// <0x671d4e>|0x02e|0x009:'345'
+	}
 }
 
 } // namespace core
