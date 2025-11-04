@@ -16,7 +16,6 @@
 #endif // #ifdef SN_TARGET_PS3
 
 #include "filter_tree_node.h"
-// sushi@TODO: #include "logging.h"
 #include "path_parts.h"
 
 using vostok::logging::node;
@@ -32,6 +31,7 @@ enum verbosity_recursion
 	recurse_0	=	256,
 };
 
+// STATE[86%|DONE]: sushi@NOTE: LTCG for `set_member_hook`.
 node::~node				()
 {
 }
@@ -76,7 +76,7 @@ void node::set			(pcstr const							initiator_path,
 											 verbosity, thread_id, allocator, allocator_to_clean);
 }
 
-// STATE[STUB]
+// STATE[100%]
 void node::clean						(vostok::memory::base_allocator * allocator)
 {
 	while ( node * dying = static_cast<node *>(m_children.unlink_leftmost_without_rebalance()) )	// <0x65b169>|0x000|0x000|[1]:'76'
@@ -120,67 +120,43 @@ int node::get_verbosity					(path_parts * path, verbosity inherited_verbosity)
 }
 
 // STATE[STUB]
-static bool is_terminal_character( char character )
+static inline bool is_terminal_character( char character )
 {
-	return character == '\0' || character == initiator_separator;	// <0x65ae44>|0x000|0x000:'117'
+	return character == '\0' || character == vostok::logging::initiator_separator;	// <0x65ae44>|0x000|0x000:'117'
+}
+
+// STATE[STUB]: https://decomp.me/scratch/aXNEg
+static bool   compare_parts				(pcstr s1, pcstr s2)
+{
+    for ( ;; ++s1, ++s2 ) {						// <0x65ae76>|0x000|0x000:'123'
+    	if ( is_terminal_character(*s1) )		// <0x65ae8a>|0x014|0x014:'124'
+        	if ( is_terminal_character(*s2) )	// <0x65aebb>|0x045|0x031:'125'
+            	return false;					// <0x65aeec>|0x076|0x031:'126'
+		    else								// <0x65aef0>|0x07a|0x004:'127'
+            	return true;					// <0x65aef2>|0x07c|0x002:'128' // sushi@NOTE: While assembly matches, this structure doesn't
+												// <0x65aef6>|0x080|0x004:'129'
+        else if ( is_terminal_character(*s2) )	// <0x65aef8>|0x082|0x002:'130'
+			return false;						// <0x65af29>|0x0b3|0x031:'131'
+
+
+        if ( *s1 != *s2 )						// <0x65af2d>|0x0b7|0x004:'134'
+            return *s1 < *s2;					// <0x65af3d>|0x0c7|0x010:'135'
+    }											// <0x65af54>|0x0de|0x017:'136'
 }
 
 // STATE[STUB]
-static bool   compare_parts				(pcstr s1, pcstr s2)
-{
-	/*
-	using namespace	vostok::logging;
-	int ret								=	0;
-	// compare strings treating initiator_separator as zero
-	while ( !ret && *s2 && ( *s1 != initiator_separator ) && ( *s2 != initiator_separator ) )
-	{
-		ret								=	*( u8* )s1 - *( u8* )s2;
-		++s1;
-		++s2;
-	}
-
-	return									( ret < 0 );
-	*/
-
-	// <1>
-	// <0x65ae76>|0x000|0x000:'123'
-	// <0x65ae8a>|0x014|0x014:'124'
-	// <0x65aebb>|0x045|0x031:'125'
-	// <0x65aeec>|0x076|0x031:'126'
-	// <0x65aef0>|0x07a|0x004:'127'
-	// <0x65aef2>|0x07c|0x002:'128'
-	// <0x65aef6>|0x080|0x004:'129'
-	// <0x65aef8>|0x082|0x002:'130'
-	// <0x65af29>|0x0b3|0x031:'131'
-	// <1>
-	// <2>
-	// <0x65af2d>|0x0b7|0x004:'134'
-	// <0x65af3d>|0x0c7|0x010:'135'
-	// <0x65af54>|0x0de|0x017:'136'
-
-	while ( !is_terminal_character(*s1) )
-	{
-		if ( !is_terminal_character(*s2) )
-			return false;
-		if ( *s1 != *s2 )
-			return *s1 < *s2;
-		++s1;
-		++s2;
-	}
-	return !is_terminal_character(*s2);
-
-}
-
 bool   compare_nodes::operator ()		(node_base const & left, node_base const & right) const
 {
 	return									left.name < right.name;
 }
 
+// STATE[STUB]
 bool   compare_nodes::operator ()		(pcstr const left, node_base const & right) const
 {
 	return									compare_parts(left, right.name.c_str());
 }
 
+// STATE[STUB]
 bool   compare_nodes::operator ()		(node_base const & left, pcstr const right) const
 {
 	return									compare_parts(left.name.c_str(), right);

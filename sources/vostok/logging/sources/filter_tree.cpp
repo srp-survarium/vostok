@@ -27,7 +27,7 @@ filter_tree::filter_tree( memory::base_allocator& allocator ) :
 {
 }
 
-// STATE[STUB]
+// STATE[100%]
 filter_tree::~filter_tree( )
 {
 	initiator_tree->clean( &allocator );				// <0x65c399>|0x000|0x000:'26'
@@ -45,7 +45,7 @@ bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) con
 }
 
 
-// STATE[STUB]
+// STATE[87%|DONE]: sushi@NOTE: LTCG for `malloc` and `fixed_string` constructor.
 void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_id )
 {
 	if ( !initiator )																								// <0x65c54a>|0x000|0x000:'40'
@@ -64,11 +64,11 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 	build_tree								();																		// <0x65c5fd>|0x0b3|0x011:'53'
 }
 
-// STATE[STUB]
+// STATE[100%]
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
 
-	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// <0x65c0aa>|0x000|0x000|[1]:'72' // sushi@TODO: Should be front?
+	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// <0x65c0aa>|0x000|0x000|[1]:'72' // sushi@NOTE: Why is the first filter skipped, is this a bug?
 								it		!=	NULL;										// <0x65c0b2>|0x008|0x008:'73'
 								it		=	filter_stack.get_next_of_object(it) )		// <0x65c0b4>|0x00a|0x002:'74'
 	{
@@ -79,7 +79,7 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 	return									false;										// <0x65c0e4>|0x03a|0x002:'80'
 }
 
-// STATE[STUB]
+// STATE[100%]
 void filter_tree::build_tree( )
 {
 	initiator_tree->clean( &allocator );																	// <0x65c319>|0x000|0x000:'85'
