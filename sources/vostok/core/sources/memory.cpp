@@ -242,7 +242,7 @@ void vostok::memory::initialize				( )
 
 	on_after_memory_initialized	( );
 
-	core::logging_initialize	( ); // sushi@TODO: next
+	core::logging_initialize	( );
 
 	memory::dump_statistics		( true );
 }
@@ -251,7 +251,7 @@ void vostok::memory::finalize				( )
 {
 	ASSERT						( s_arena_size, "memory hasn't been preinitialized yet" );
 
-	core::logging_finalize		( ); // sushi@TODO: Just a structure of calls for now
+	core::logging_finalize		( );
 
 #if VOSTOK_USE_MEMORY_GUARD
 	guard::finalize				( );

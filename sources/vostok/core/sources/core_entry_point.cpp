@@ -6,7 +6,9 @@
 
 #include "pch.h"
 #include <vostok/core/core.h>
+
 #include <vostok/logging/api.h>
+#include <vostok/logging/format.h>
 #include <vostok/debug/debug.h>
 #include "resources_manager.h"
 #include "game_resman.h"
@@ -68,6 +70,9 @@ namespace debug {
 
 namespace core {
 	bool initialized	( );
+
+	logging::log_file_usage_enum	g_log_file_usage;	// sushi@TODO
+	logging::log_format				g_log_format;		// sushi@TODO
 } // namespace core
 
 #ifndef	MASTER_GOLD
@@ -93,33 +98,6 @@ extern doug_lea_allocator_type				g_log_allocator;
 
 } // namespace vostok
 
-void log_callback						( pcstr initiator,
-										  bool	is_error_verbosity,
-										  bool	log_only_user_string,
-										  pcstr	message )
-{
-#if 0
-	using namespace vostok;
-
-	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
-									logging::log_to_stderr : (logging::log_flags_enum)0;
-	if ( log_only_user_string )
-	{
-		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator,
-			is_error_verbosity ? logging::error : logging::info)
-			(logging::format_message, log_flags, "%s", message);
-	}
-	else
-	{
-		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator,
-			is_error_verbosity ? logging::error : logging::info)
-			(log_flags, "%s", message);
-	}
-
-	logging::flush_log_file			( );
-#endif
-}
-
 void vostok::core::preinitialize		( core::engine *							engine,
 									  logging::log_file_usage_enum const			log_file_usage,
 									  pcstr const									command_line,
@@ -128,6 +106,7 @@ void vostok::core::preinitialize		( core::engine *							engine,
 									  pcstr	const									build_date
 									)
 {
+	g_log_file_usage		= log_file_usage; // sushi@TODO: Might have been hidden with an inlined function
 	s_engine				= engine;
 	R_ASSERT				( !s_initialized, "you cannot preinitialize core when it has been initialized already" );
 
@@ -145,13 +124,11 @@ void vostok::core::preinitialize		( core::engine *							engine,
 								(get_core_device_file_system( ), fs_new::watcher_enabled_false);
 
 	memory::preinitialize	( );
-	build::preinitialize	( build_date );
+	build::preinitialize	( build_date ); // <0x6705d9>|0x092|0x013:'125'
 
-	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true);
-	// sushi@TODO: logging::initialize		( device, log_file_usage );
-	debug::set_log_callback	( & ::log_callback );
-#if 0 // sushi@TODO
-	logging::set_format		( logging::format_separator("{") +
+	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true); // sushi@NOTE: Deleted. This should be handled when `fs_new` or `core` is matched.
+
+	g_log_format.set( logging::format_separator("{") +
 							  logging::format_thread_id +
 							  logging::format_time +
 							  logging::format_separator("} [") +
@@ -160,41 +137,11 @@ void vostok::core::preinitialize		( core::engine *							engine,
 							  logging::format_verbosity +
 							  logging::format_separator(">   ") +
 							  logging::format_message );
-#endif
 }
 
 bool vostok::core::initialized ( )
 {
 	return					s_initialized;
-}
-
-static void push_logging_rules ( ) // sushi@TODO: DELETE
-{
-#if 0
-	using namespace vostok;
-	logging::verbosity	verbosity	=	logging::trace;
-	fixed_string512		verbosity_string;
-	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);
-	if ( log_verbosity_key_is_set )
-		verbosity			= logging::string_to_verbosity(verbosity_string.c_str());
-	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )
-		verbosity			= logging::warning;
-
-//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;
-//	logging::push_filter		( "", verbosity, & memory::g_mt_allocator ); stick@TODO
-//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );
-
-	fs_new::native_path_string	cfg_file_path;
-	if ( fs_new::convert_to_absolute_path(& cfg_file_path,
-										  fs_new::native_path_string::convert("../../user_data/user.cfg"),
-										  assert_on_fail_false) )
-	{
-		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );
-	}
-#endif
 }
 
 void vostok::core::initialize			(
@@ -214,8 +161,6 @@ void vostok::core::initialize			(
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
 
 	threading::initialize	( );
-
-	push_logging_rules		( );
 
 	LOG_INFO				( "working directory: '%s'", fs_new::get_current_directory().c_str() );
 	LOG_INFO				( "resources directory: '%s'", s_engine->get_resources_path() );
@@ -308,8 +253,6 @@ void vostok::core::finalize			( )
 	strings::finalize		( );
 //	build::finalize			( );
 //	timing::finalize		( );
-	debug::set_log_callback	( NULL );
-	// sushi@TODO: logging::finalize		( );
 	threading::finalize		( );
 	memory::finalize		( );
 
@@ -331,3 +274,31 @@ vostok::fs_new::synchronous_device_interface &	vostok::core::get_core_synchronou
 {
 	return									* s_core_synchronous_device.c_ptr( );
 }
+
+#if 0 // sushi@NOTE: Moved from `core_entry_point_win.cpp`. This should be handled when `core` is matched. Still don't understand why windows related stuff was just moved
+// STATE[STUB]
+void vostok::core::core_engine_flush( )
+{
+	// CALL SITE INFO
+	// <0x6704df> -> void <unknown>()
+	// ******
+
+	// FUNCTION BODY
+	// <0x6704d0>|0x000|0x000:'290'
+	// <0x6704da>|0x00a|0x00a:'291'
+	// ******
+}
+
+// STATE[STUB]
+pcstr vostok::core::user_data_directory( )
+{
+	// CALL SITE INFO
+	// <0x67050b> -> pcstr <unknown>() const
+	// ******
+
+	return NULL;
+	// FUNCTION BODY
+	// <1>
+	// ******
+}
+#endif

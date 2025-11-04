@@ -32,6 +32,19 @@ class log_file;
 
 namespace core {
 
+// Private functions to this source file
+void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
+void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
+_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
+
+bool		initialize_console		( );
+void		finalize_console		( );
+void		push_logging_filters	( );
+bool		use_console_for_logging	( );
+
+bool		is_logging_initialized	( );
+
+
 typedef void (*log_callback_type)(pcstr, bool, bool, pcstr);
 typedef	void (*log_callback)(
 	pvoid,					// ???
