@@ -16,12 +16,15 @@ format_specifier		format_time			(format_specifier_time);
 format_specifier		format_verbosity	(format_specifier_verbosity);
 format_specifier		format_message		(format_specifier_message); // sushi@NOTE: No dynamic initializer
 
+// STATE[100%]
 format_specifier::format_specifier		(format_specifier_enum specifier)
 	: m_specifier(specifier), m_left(NULL), m_right(NULL) {;}
 
+// STATE[100%]
 format_specifier::format_specifier		(format_specifier const & left, format_specifier const & right)
 	: m_left(& left), m_right(& right), m_specifier(format_specifier_unset) {;}
 
+// STATE[STUB]
 void   format_specifier::fill_specifier_list	(format_specifier_list & list, format_string_type * out_format_string) const
 {
 	if ( m_left )

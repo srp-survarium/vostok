@@ -36,7 +36,7 @@ node::~node				()
 {
 }
 
-// STATE[STUB]
+// STATE[92%|DONE]: sushi@NOTE: LTCG for `buffer_string::append`, `base_allocator::malloc_impl` and `fixed_string::fixed_string`.
 void node::set			(pcstr const							initiator_path,
 						 int const								verbosity,
 						 u32 const								thread_id,

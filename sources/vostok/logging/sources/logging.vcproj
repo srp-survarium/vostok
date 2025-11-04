@@ -699,6 +699,7 @@
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);"
 				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
+				GeneratePreprocessedFile="0"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -2391,6 +2392,14 @@
 			<File
 				RelativePath=".\log_file.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="2"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

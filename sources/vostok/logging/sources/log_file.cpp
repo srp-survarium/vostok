@@ -10,7 +10,6 @@
 #include <vostok/fs/device_utils.h>
 #include <vostok/fs/file_type_pointer.h>
 #include <vostok/core/core.h>
-// sushi@TODO: #include "logging.h"
 
 static const int log_file_group_size = 256;
 
@@ -21,6 +20,7 @@ namespace logging {
 
 using namespace fs_new;
 
+// STATE[STUB]
 log_file::log_file				(	memory::base_allocator&		allocator,
 									log_file_usage_enum			log_file_usage,
 									pcstr						file_name,
@@ -64,12 +64,14 @@ log_file::log_file				(	memory::base_allocator&		allocator,
 	m_current_pos		= 0;
 }
 
+// STATE[100%]
 log_file::~log_file				( )
 {
 	close				( );
 	VOSTOK_DESTROY_REFERENCE					(m_line_groups);
 }
 
+// STATE[STUB]
 void log_file::flush			( pcstr in_file_name )
 {
 	if ( !m_file )
@@ -105,6 +107,7 @@ void log_file::flush			( pcstr in_file_name )
 	}
 }
 
+// STATE[STUB]
 void log_file::append			( pcstr data, u32 const length )
 {
 	ASSERT				( data );
@@ -145,6 +148,7 @@ void log_file::append			( pcstr data, u32 const length )
 	}
 }
 
+// STATE[STUB]
 void log_file::start_transaction	( )
 {
 	// sushi@TODO: globals->log_mutex.lock			( );
@@ -154,6 +158,7 @@ void log_file::start_transaction	( )
 	m_transaction_thread_id		=	threading::current_thread_id();
 }
 
+// STATE[100%]
 void log_file::assert_transaction_in_current_thread	( ) const
 {
 	R_ASSERT						( m_transaction_thread_id != u32(-1),
@@ -162,6 +167,7 @@ void log_file::assert_transaction_in_current_thread	( ) const
 									 "transaction was started in another thread");
 }
 
+// STATE[STUB]
 void log_file::end_transaction		( )
 {
 	assert_transaction_in_current_thread	( );
@@ -169,12 +175,14 @@ void log_file::end_transaction		( )
 	// sushi@TODO: globals->log_mutex.unlock			( );
 }
 
+// STATE[100%]
 u32	log_file::get_lines_count		( ) const
 {
 	assert_transaction_in_current_thread	( );
 	return							m_last_line;
 }
 
+// STATE[100%]
 void log_file::goto_line		( u32 const line )
 {
 	assert_transaction_in_current_thread	( );
@@ -194,6 +202,7 @@ void log_file::goto_line		( u32 const line )
 		skip_next_line	( );
 }
 
+// STATE[100%]
 char log_file::read_next_char	( )
 {
 	int const cache_offs= m_current_pos - m_cache_start;
@@ -211,6 +220,7 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
+// STATE[100%]
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {
@@ -253,6 +263,7 @@ struct processor {
 
 STATIC_SIZE_ASSERT(processor, 0x4);
 
+// STATE[100%]
 bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 {
 	assert_transaction_in_current_thread	( );
@@ -260,6 +271,7 @@ bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 	return				( process_next_line( buffer_size, processor( buffer ) ) );
 }
 
+// STATE[100%]
 bool log_file::skip_next_line	( )
 {
 	struct processor {
@@ -277,6 +289,7 @@ bool log_file::skip_next_line	( )
 namespace vostok {
 namespace logging {
 
+// STATE[100%]
 void log_file::close		( )
 {
 	if ( !m_file )
@@ -291,6 +304,7 @@ void log_file::close		( )
 	m_device->close		( file );
 }
 
+// STATE[STUB]
 void log_file::on_terminate			( )
 {
 	close			( );
