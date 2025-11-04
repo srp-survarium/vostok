@@ -98,6 +98,7 @@ void log_callback						( pcstr initiator,
 										  bool	log_only_user_string,
 										  pcstr	message )
 {
+#if 0
 	using namespace vostok;
 
 	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
@@ -116,6 +117,7 @@ void log_callback						( pcstr initiator,
 	}
 
 	logging::flush_log_file			( );
+#endif
 }
 
 void vostok::core::preinitialize		( core::engine *							engine,
@@ -167,6 +169,7 @@ bool vostok::core::initialized ( )
 
 static void push_logging_rules ( ) // sushi@TODO: DELETE
 {
+#if 0
 	using namespace vostok;
 	logging::verbosity	verbosity	=	logging::trace;
 	fixed_string512		verbosity_string;
@@ -190,7 +193,7 @@ static void push_logging_rules ( ) // sushi@TODO: DELETE
 	{
 		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );
 	}
-
+#endif
 }
 
 void vostok::core::initialize			(

@@ -13,28 +13,40 @@
 namespace vostok {
 namespace logging {
 
+typedef boost::function<
+	void( void *, pcstr, u32, pcstr, pcstr, enum verbosity, pcstr, u32, enum callback_flag )
+> log_callback_type;
+
 class logger : public boost::noncopyable {
 public:
-	inline	logger		(
-						boost::function<void(void *,pcstr,u32,pcstr,pcstr,enum verbosity,pcstr,u32,enum callback_flag)> const&	arg_0,
-						void*								arg_1,
-						log_format const*					arg_2,
-						pcstr								arg_3,
-						u32									arg_4,
-						pcstr								arg_5,
-						pcstr								arg_6,
-						verbosity							arg_7
-					) : m_log_callback( arg_0 ) { /* no source */ }
+	inline			logger		(
+						log_callback_type const&			log_callback,
+						void*								user_data,
+						log_format const*					log_format_ptr,
+						pcstr								initiator, // sushi@TODO: Order of pcstr might be different
+						u32									line,
+						pcstr								file,
+						pcstr								function_signature,
+						verbosity							verbosity
+					) :
+					m_log_callback		( log_callback ),
+					m_log_format_ptr	( log_format_ptr ),
+					m_user_data			( user_data ),
+
+					m_initiator			( initiator ),
+					m_file				( file ),
+					m_function_signature( function_signature ),
+					m_line				( line ),
+					m_verbosity			( verbosity ) {}
 
 			void	operator()	( pcstr format, char* args );
 
-	inline	~logger		( ) { /* no source */ }
+	inline			~logger		( ) {}
 
 
 private:
-	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	log_format							m_log_format;
-	/* 0x0228 */	boost::function<void(void *,pcstr,u32,pcstr,pcstr,enum verbosity,pcstr,u32,enum callback_flag)> const&	m_log_callback;
+	/* 0x0228 */	log_callback_type const&			m_log_callback;
 	/* 0x022c */	log_format const*					m_log_format_ptr;
 	/* 0x0230 */	void*								m_user_data;
 
