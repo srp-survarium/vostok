@@ -23,8 +23,7 @@ struct log_format
 	void	set							(format_specifier const & format_expression);
 };
 
-// sushi@TODO:
-// STATIC_SIZE_ASSERT(log_format, 0x228);
+STATIC_SIZE_ASSERT(log_format, 0x228);
 
 #if 0
 // STATE[STUB]

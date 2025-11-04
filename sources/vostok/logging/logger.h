@@ -57,7 +57,7 @@ private:
 	/* 0x0244 */	verbosity							m_verbosity;
 }; // class logger
 
-// sushi@TODO: STATIC_SIZE_ASSERT(logger, 0x248);
+STATIC_SIZE_ASSERT(logger, 0x248);
 
 #if 0
 class VOSTOK_LOGGING_API helper_data : private core::noncopyable {

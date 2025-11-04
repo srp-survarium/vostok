@@ -30,20 +30,20 @@ void   format_specifier::fill_specifier_list	(format_specifier_list & list, form
 		m_left->fill_specifier_list			(list, & left_string);
 		format_string_type					right_string;
 		m_right->fill_specifier_list		(list, & right_string);
-		* out_format_string				=	left_string;
-		* out_format_string				+=	right_string;
+		// sushi@TODO: * out_format_string				=	left_string;
+		// sushi@TODO: * out_format_string				+=	right_string;
 	}
 	else
 	{
 		if ( m_specifier != format_specifier_separator )
 		{
 			list.push_back					(m_specifier);
-			* out_format_string			=	"%s";
+			// sushi@TODO: * out_format_string			=	"%s";
 		}
 		else
 		{
 			format_separator const * const this_ptr	=	static_cast<format_separator const *>(this);
-			* out_format_string			=	this_ptr->separator;
+			// sushi@TODO: * out_format_string			=	this_ptr->separator;
 		}
 	}
 }

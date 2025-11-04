@@ -98,8 +98,8 @@ static void fill_log_string				( vostok::buffer_string &					dest,
 
 	format_string_type	strings_storage		[format_specifier_count];
 	buffer_string *		strings				[format_specifier_count];
-	for ( int i=0; i<format_specifier_count; ++i )
-		strings[i]						=	& strings_storage[i];
+	for ( int i=0; i<format_specifier_count; ++i ) {}
+		// sushi@TODO: strings[i]						=	& strings_storage[i];
 
 	u32 const message_length			=	message_end - message_start;
 	buffer_string	message_string			((pstr)message_start, message_length + 1, message_length);
@@ -133,8 +133,8 @@ static void fill_log_string				( vostok::buffer_string &					dest,
 		* strings[format_specifier_verbosity]	=	verbosity_to_string(verbosity);
 	}
 
-	COMPILE_ASSERT							(format_specifier_count == 7, OMG_FIX_BELOW_THEN);
-	dest.assignf							(format.string.c_str(),
+	COMPILE_ASSERT							(format_specifier_count == 8, OMG_FIX_BELOW_THEN);
+	dest.assignf							(format.string, // sushi@TODO
  												(* strings[format.indexes[0]]).c_str(),
 												(* strings[format.indexes[1]]).c_str(),
  												(* strings[format.indexes[2]]).c_str(),
