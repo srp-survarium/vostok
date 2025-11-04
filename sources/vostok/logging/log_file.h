@@ -104,7 +104,7 @@ STATIC_SIZE_ASSERT(log_file, 0x4680);
 
 extern vostok::fs_new::native_path_string		g_log_file_name; // sushi@TODO: Was it removed?
 
-VOSTOK_LOGGING_API log_file * get_log_file			( );
+// VOSTOK_LOGGING_API log_file * get_log_file			( ); sushi@TODO
 
 
 VOSTOK_LOGGING_API	log_file*		new_log_file		(

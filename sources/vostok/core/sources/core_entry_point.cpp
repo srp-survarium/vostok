@@ -148,9 +148,9 @@ void vostok::core::preinitialize		( core::engine *							engine,
 	build::preinitialize	( build_date );
 
 	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true);
-	logging::initialize		( device, log_file_usage );
+	// sushi@TODO: logging::initialize		( device, log_file_usage );
 	debug::set_log_callback	( & ::log_callback );
-
+#if 0 // sushi@TODO
 	logging::set_format		( logging::format_separator("{") +
 							  logging::format_thread_id +
 							  logging::format_time +
@@ -160,6 +160,7 @@ void vostok::core::preinitialize		( core::engine *							engine,
 							  logging::format_verbosity +
 							  logging::format_separator(">   ") +
 							  logging::format_message );
+#endif
 }
 
 bool vostok::core::initialized ( )
@@ -308,7 +309,7 @@ void vostok::core::finalize			( )
 //	build::finalize			( );
 //	timing::finalize		( );
 	debug::set_log_callback	( NULL );
-	logging::finalize		( );
+	// sushi@TODO: logging::finalize		( );
 	threading::finalize		( );
 	memory::finalize		( );
 

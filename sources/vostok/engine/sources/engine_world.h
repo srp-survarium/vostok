@@ -38,7 +38,7 @@ namespace engine {
 
 typedef boost::function< void () >					logic_thread_callback_type;
 
-class engine_world : 
+class engine_world :
 	public core::engine,
 	public engine_user::engine,
 	public editor::engine,
@@ -159,7 +159,7 @@ private:
 			void			watcher_thread					( apc::threads_enum const apc_thread_id );
 #endif // #ifndef MASTER_GOLD
 
- 			void			initialize_file_system_devices	( );
+ 			void			initialize_file_system_devices	( );;
 			void			finalize_file_system_device		( fs_new::asynchronous_device_interface * const device );
 			void			finalize_file_system_devices	( );
  			void			file_system_devices_tick		( );
@@ -169,7 +169,7 @@ private:
  			template < typename TickFunctionType >
  			void			thread_function			( apc::threads_enum const apc_thread_id,  TickFunctionType const& functor );
 
-			logging::log_file_usage		log_file_usage ( ) const;
+			logging::log_file_usage_enum		log_file_usage ( ) const;
 
 private:
 	typedef memory::doug_lea_allocator_type			doug_lea_allocator_type;

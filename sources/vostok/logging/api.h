@@ -60,14 +60,18 @@ VOSTOK_LOGGING_API	void			push_filter			(
 									);
 VOSTOK_LOGGING_API	bool			has_passed_filters	( filter_tree const& tree, pcstr initiator, verbosity verbosity );
 
-// sushi@TODO: DELETE?
+#if 0 // sushi@TODO: DELETE?
 VOSTOK_LOGGING_API	void				preinitialize			( );
 VOSTOK_LOGGING_API	void				initialize				( fs_new::device_file_system_proxy	device,
 																  log_file_usage_enum				log_file_usage );
 VOSTOK_LOGGING_API	void				finalize				( );
+#endif
+
+// filter_tree.cpp
 VOSTOK_LOGGING_API	pcstr				verbosity_to_string		( int verbosity );
 VOSTOK_LOGGING_API	verbosity			string_to_verbosity 	( pcstr in_verbosity );
-VOSTOK_LOGGING_API	bool				use_console_for_logging ( );
+
+// sushi@TODO: VOSTOK_LOGGING_API	bool				use_console_for_logging ( );
 
 enum stdstream_enum { stdstream_out, stdstream_error };
 VOSTOK_LOGGING_API	void				write_to_stdstream		( stdstream_enum stream, pcstr format, ... );

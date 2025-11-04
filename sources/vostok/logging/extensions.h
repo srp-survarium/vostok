@@ -50,12 +50,12 @@ typedef	boost::function<
 	)
 >				log_callback;
 
-VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
+// sushi@TODO VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
 
-VOSTOK_LOGGING_API	void			set_log_callback	( log_callback callback );
-VOSTOK_LOGGING_API	log_callback	get_log_callback	( );
+// sushi@TODOVOSTOK_LOGGING_API	void			set_log_callback	( log_callback callback );
+// sushi@TODOVOSTOK_LOGGING_API	log_callback	get_log_callback	( );
 
-VOSTOK_LOGGING_API	void			set_format			( format_specifier const & format_expression );
+// VOSTOK_LOGGING_API	void			set_format			( format_specifier const & format_expression ); sushi@TODO: Maybe inlined :(
 
 } // namespace logging
 } // namespace vostok
