@@ -210,6 +210,7 @@ struct predicate : private vostok::logging::noncopyable
 		return								( true );
 	}
 }; // struct predicate
+#endif
 
 void	vostok::logging::log_format::set	(vostok::logging::format_specifier const & format_expression)
 {
@@ -228,6 +229,8 @@ void	vostok::logging::log_format::set	(vostok::logging::format_specifier const &
 	}
 }
 
+
+#if 0 // sushi@TODO:
 static void process				(
 		helper_data &									helper,
 		vostok::logging::format_specifier const *			log_format_specifier,

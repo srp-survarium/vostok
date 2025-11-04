@@ -15,7 +15,6 @@
 #include <vostok/memory_writer.h>
 #include <vostok/threading_reader_writer_lock.h>
 
-
 namespace vostok {
 namespace logging {
 

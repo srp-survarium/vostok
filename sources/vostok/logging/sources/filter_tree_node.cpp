@@ -23,11 +23,20 @@ using vostok::logging::node;
 using vostok::logging::node_base;
 using vostok::logging::compare_nodes;
 using vostok::logging::path_parts;
+using vostok::logging::verbosity;
+using vostok::logging::invalid;
+
+enum verbosity_recursion
+{
+	recurse_all	=	0,
+	recurse_0	=	256,
+};
 
 node::~node				()
 {
 }
 
+// STATE[STUB]
 void node::set			(pcstr const							initiator_path,
 						 int const								verbosity,
 						 u32 const								thread_id,
@@ -36,11 +45,11 @@ void node::set			(pcstr const							initiator_path,
 {
 	if ( !initiator_path || !*initiator_path )
 	{
-		// sushi@TODO: m_verbosity 					=	verbosity & ~recurse_0;
-		// sushi@TODO: m_thread_id						=	thread_id;
-		// sushi@TODO: if ( !(verbosity & recurse_0) )
-		// sushi@TODO: 	clean							(allocator_to_clean);
-		return;
+		m_verbosity 					=	(vostok::logging::verbosity)(verbosity & ~recurse_0);	// <0x65b1f0>|0x010|0x010:'43'
+		m_thread_id						=	thread_id;												// <0x65b202>|0x022|0x012:'44'
+		if ( !(verbosity & recurse_0) )																// <0x65b20e>|0x02e|0x00c:'45'
+			clean							(allocator_to_clean);									// <0x65b218>|0x038|0x00a:'46'
+		return;																						// <0x65b227>|0x047|0x00f:'47'
 	}
 
 	pcstr const next_path_portion		=	strchr(initiator_path, initiator_separator);
@@ -55,21 +64,22 @@ void node::set			(pcstr const							initiator_path,
  	node * child						=	NULL;
  	if ( it != m_children.end() )
  	{
- 		child							=	static_cast<node *>(& * it);
+ 		child							=	static_cast<node *>(& * it);										// <0x65b30e>|0x12e|0x03c:'62'
  	}
- 	else
+ 	else																										// <0x65b319>|0x139|0x00b:'64'
  	{
- 		child							=	VOSTOK_NEW_IMPL(allocator, node)(path_portion.c_str(), 0);
-		m_children.insert					(* child);
+ 		child							=	VOSTOK_NEW_IMPL(allocator, node)(path_portion.c_str(), invalid);	// <0x65b31b>|0x13b|0x002:'66'
+		m_children.insert					(* child);															// <0x65b384>|0x1a4|0x069:'67'
  	}
 
 	child->set								(next_path_portion ? next_path_portion + 1 : NULL,
 											 verbosity, thread_id, allocator, allocator_to_clean);
 }
 
+// STATE[STUB]
 void node::clean						(vostok::memory::base_allocator * allocator)
 {
-	while ( node * dying = static_cast<node *>(m_children.unlink_leftmost_without_rebalance()) )
+	while ( node * dying = static_cast<node *>(m_children.unlink_leftmost_without_rebalance()) )	// <0x65b169>|0x000|0x000|[1]:'76'
 	{
 		ASSERT								(allocator);
 		dying->clean						(allocator);
@@ -79,16 +89,17 @@ void node::clean						(vostok::memory::base_allocator * allocator)
 	m_children.clear						();
 }
 
-int node::get_verbosity					(path_parts * path, int inherited_verbosity)
+// STATE[STUB]
+int node::get_verbosity					(path_parts * path, verbosity inherited_verbosity)
 {
-	int verbosity =
+	vostok::logging::verbosity verbosity =
 		(m_thread_id != u32(-1) && m_thread_id != threading::current_thread_id()) ?
 		silent :
 		(
 			m_verbosity != 0 ?
 			m_verbosity :
 			inherited_verbosity
-		);
+		);																			// <0x65b009>|0x000|0x000:'95'
 
 	pcstr cur_part						=	path->get_current_element();
 	if ( !cur_part || cur_part[0] == NULL )
@@ -104,22 +115,20 @@ int node::get_verbosity					(path_parts * path, int inherited_verbosity)
 
 	node * const child					=	static_cast<node *>(& * it);
 
- 	path->to_next_element					();
- 	return									child->get_verbosity(path, verbosity);
+ 	path->to_next_element					();										// <0x65b105>|0x0fc|0x00b:'111'
+ 	return									child->get_verbosity(path, verbosity);	// <0x65b10d>|0x104|0x008:'112'
 }
 
 // STATE[STUB]
-// bool is_terminal_character(const char)
-bool is_terminal_character( char character )
+static bool is_terminal_character( char character )
 {
-	return false;
-	// FUNCTION BODY
-	// <0x65ae44>|0x000|0x000:'117'
-	// ******
+	return character == '\0' || character == initiator_separator;	// <0x65ae44>|0x000|0x000:'117'
 }
 
+// STATE[STUB]
 static bool   compare_parts				(pcstr s1, pcstr s2)
 {
+	/*
 	using namespace	vostok::logging;
 	int ret								=	0;
 	// compare strings treating initiator_separator as zero
@@ -131,6 +140,35 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
 	}
 
 	return									( ret < 0 );
+	*/
+
+	// <1>
+	// <0x65ae76>|0x000|0x000:'123'
+	// <0x65ae8a>|0x014|0x014:'124'
+	// <0x65aebb>|0x045|0x031:'125'
+	// <0x65aeec>|0x076|0x031:'126'
+	// <0x65aef0>|0x07a|0x004:'127'
+	// <0x65aef2>|0x07c|0x002:'128'
+	// <0x65aef6>|0x080|0x004:'129'
+	// <0x65aef8>|0x082|0x002:'130'
+	// <0x65af29>|0x0b3|0x031:'131'
+	// <1>
+	// <2>
+	// <0x65af2d>|0x0b7|0x004:'134'
+	// <0x65af3d>|0x0c7|0x010:'135'
+	// <0x65af54>|0x0de|0x017:'136'
+
+	while ( !is_terminal_character(*s1) )
+	{
+		if ( !is_terminal_character(*s2) )
+			return false;
+		if ( *s1 != *s2 )
+			return *s1 < *s2;
+		++s1;
+		++s2;
+	}
+	return !is_terminal_character(*s2);
+
 }
 
 bool   compare_nodes::operator ()		(node_base const & left, node_base const & right) const
