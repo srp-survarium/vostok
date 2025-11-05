@@ -13,6 +13,7 @@ namespace logging {
 format_specifier		format_thread_id	(format_specifier_thread_id);
 format_specifier		format_initiator	(format_specifier_initiator);
 format_specifier		format_time			(format_specifier_time);
+format_specifier		format_time_brief	(format_specifier_time_brief);
 format_specifier		format_verbosity	(format_specifier_verbosity);
 format_specifier		format_message		(format_specifier_message); // sushi@NOTE: No dynamic initializer
 

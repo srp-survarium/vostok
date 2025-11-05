@@ -79,7 +79,7 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 	return									false;										// <0x65c0e4>|0x03a|0x002:'80'
 }
 
-// STATE[100%]
+// STATE[100%]: sushi@NOTE: LTCG for `malloc`.
 void filter_tree::build_tree( )
 {
 	initiator_tree->clean( &allocator );																	// <0x65c319>|0x000|0x000:'85'
@@ -93,19 +93,19 @@ void filter_tree::build_tree( )
 	}																										// <0x65c385>|0x06c|0x02e:'93'
 }
 
-// STATE[STUB]
+// STATE[91%|DONE]
 filter_tree* new_filter_tree( memory::base_allocator& allocator )
 {
 	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );	// <0x65c4e6>|0x000|0x000:'109'
 }
 
-// STATE[STUB]
+// STATE[100%]
 void delete_filter_tree( filter_tree*& filter_tree )
 {
 	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );	// <0x65c4b6>|0x000|0x000:'114'
 }
 
-// STATE[STUB]
+// STATE[100%]
 void push_filter(
 	filter_tree&	tree,
 	pcstr			initiator,

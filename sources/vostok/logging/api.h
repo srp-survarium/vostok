@@ -33,8 +33,6 @@
 namespace vostok {
 namespace logging {
 
-typedef char Buffer512[512];
-
 class filter_tree;
 enum log_file_usage_enum;
 

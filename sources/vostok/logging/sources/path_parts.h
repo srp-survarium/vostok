@@ -9,6 +9,7 @@
 
 #include <vostok/buffer_string.h>
 #include <vostok/logging/api.h>
+#include <vostok/logging/format_specifier.h>
 
 namespace vostok {
 namespace logging {
@@ -22,8 +23,7 @@ public:
 	inline	pcstr	get_current_element () { return m_current_element; }
 			void	add_part			(pcstr part);
 			void	to_next_element		();
-			void	concat2buffer		(Buffer512& buffer);
-			void	concat2buffer		(vostok::buffer_string& buffer);
+			void	concat2buffer		(format_string_type& buffer);
 
 private:
 	typedef fixed_vector<pcstr, 4>		Parts;

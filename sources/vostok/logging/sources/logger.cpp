@@ -18,11 +18,12 @@
 #include <vostok/logging/log_file.h>
 
 
-// sushi@TODO: using vostok::logging::helper;
-// sushi@TODO: using vostok::logging::helper_data;
-// sushi@TODO: using vostok::logging::path_parts;
-// sushi@TODO: using vostok::logging::log_callback;
-// sushi@TODO: using vostok::logging::log_file;
+using vostok::logging::path_parts;
+using vostok::logging::verbosity;
+using vostok::logging::log_format;
+using vostok::logging::format_specifier;
+// using vostok::logging::log_file;
+
 
 #if 0
 static log_callback				s_log_callback	= 0;
@@ -30,70 +31,16 @@ static log_callback				s_log_callback	= 0;
 vostok::logging::log_file_usage	 get_log_file_usage ();
 #endif
 
-namespace vostok {
-namespace logging {
+void fill_local_time( format_string_type& dest, bool brief )
 
-void fill_local_time( vostok::buffer_string& dest );
-
-// sushi@TODO: Everything up to fill_log_string seems to be deleted
-void set_log_callback			(log_callback callback)
-{
-	ASSERT						(callback);
-	// sushi@TODO: s_log_callback				= callback;
-}
-
-log_callback get_log_callback	()
-{
-	// sushi@TODO: return						( s_log_callback );
-}
-
-int get_tree_verbosity			( path_parts* const path );
-
-/// void log_thread_unsafe			( log_flags_enum const log_flags, pcstr string, u32 string_length, logging::verbosity verbosity );
-
-} // namespace logging
-} // namespace vostok
-
-#if 0
-
-helper_data::helper_data		(
-		pcstr const file,
-		pcstr const function_signature,
-		int const line,
-		pcstr const initiator,
-		vostok::logging::verbosity const verbosity
-	) :
-	m_file					( file ),
-	m_function_signature	( function_signature ),
-	m_line					( line ),
-	m_verbosity				( verbosity ),
-	m_initiator				( initiator )
-{
-}
-
-logger::logger					(
-		pcstr const file,
-		pcstr const function_signature,
-		int const line,
-		pcstr const initiator,
-		vostok::logging::verbosity const verbosity
-	) :
-	helper_data				(
-		file,
-		function_signature,
-		line,
-		initiator,
-		verbosity
-	)
-{
-}
-#endif
-static void fill_log_string				( vostok::buffer_string &					dest,
-										  pcstr const							message_start,
-										  pcstr const							message_end,
-										  vostok::logging::path_parts &			path,
-										  int const								verbosity,
-										  vostok::logging::log_format const &		format )
+static void fill_log_string(
+	vostok::buffer_string&		dest,
+	pstr const					message_start,
+	pstr const					message_end,
+	path_parts&					path,
+	verbosity					verbosity,
+	log_format const&			format
+)
 {
 	using namespace vostok;
 	using namespace vostok::logging;
@@ -112,7 +59,7 @@ static void fill_log_string				( vostok::buffer_string &					dest,
 
 	if ( format.enabled[format_specifier_initiator] )
 	{
-		path.concat2buffer					(* strings[format_specifier_initiator]);
+		// sushi@TODO: path.concat2buffer					(* strings[format_specifier_initiator]);
 
 		for ( pstr	i	=	(* strings[format_specifier_initiator]).begin(),
 					end	=	(* strings[format_specifier_initiator]).end();
@@ -147,74 +94,7 @@ static void fill_log_string				( vostok::buffer_string &					dest,
 	* (pstr)message_end					=	saved_end_char;
 }
 
-// sushi@TODO: Everything related to predicate seems to be deleted
-#if 0
-struct predicate : private vostok::logging::noncopyable
-{
-	pcstr											m_file;
-	pcstr											m_function_signature;
-	int												m_line;
-	vostok::logging::verbosity						m_verbosity;
-	vostok::core::log_flags_enum const				m_log_flags;
-	vostok::logging::log_format const &				m_format;
-	vostok::logging::path_parts &						m_path;
-
-	inline		predicate		(
-			pcstr const 									file,
-			pcstr const 									function_signature,
-			int const										line,
-			vostok::logging::verbosity const					verbosity,
-			vostok::core::log_flags_enum const				log_flags,
-			vostok::logging::path_parts &						path,
-			vostok::logging::log_format const &				format
-		) :
-		m_file					( file ),
-		m_function_signature	( function_signature ),
-		m_line					( line ),
-		m_verbosity				( verbosity ),
-		m_log_flags				( log_flags ),
-		m_path					( path ),
-		m_format				( format )
-	{
-	}
-
-	inline bool	operator ( )	( u32 const index, pcstr string, u32 const length, bool const is_last ) const
-	{
-		char const	end_line[]			=	"\r\n";
-		u32 const	end_line_length		=	vostok::array_size(end_line) - 1; // counts trailing zero, so need to -1
-		u32 const	final_length		=	128 + length + end_line_length + 1;
-
-		vostok::buffer_string	final_string	((pstr)ALLOCA(final_length*sizeof(char)), final_length);
-
-		fill_log_string						(final_string, string, string+length,
-											 m_path, m_verbosity, m_format);
-
-		vostok::threading::mutex_raii	raii	(vostok::logging::globals->log_mutex);
-
-		final_string.append					( "\n" );
-		vostok::debug::output					( final_string.c_str() );
-		vostok::buffer_string::iterator const end	= final_string.begin() + final_string.length();
-		final_string.erase					( end - 1, end );
-		final_string.append					(end_line, end_line+end_line_length);
-		vostok::logging::log_thread_unsafe	(m_log_flags, final_string.c_str(), final_string.length(), m_verbosity);
-
-		if ( s_log_callback ) {
-			s_log_callback		(
-				m_file,
-				m_function_signature,
-				m_line,
-				m_verbosity,
-				string,
-				!index ? vostok::logging::first : ( is_last ? vostok::logging::last : vostok::logging::callback_flag( 0 ) )
-			);
-		}
-
-		return								( true );
-	}
-}; // struct predicate
-#endif
-
-void	vostok::logging::log_format::set	(vostok::logging::format_specifier const & format_expression)
+void vostok::logging::log_format::set( vostok::logging::format_specifier const & format_expression )
 {
 	format_specifier_list					specifiers;
 	format_expression.fill_specifier_list	(specifiers, & string);
@@ -230,107 +110,133 @@ void	vostok::logging::log_format::set	(vostok::logging::format_specifier const &
 		enabled[ specifiers[i] ]		=	true;
 	}
 }
-
-
-#if 0 // sushi@TODO:
-static void process				(
-		helper_data &									helper,
-		vostok::logging::format_specifier const *			log_format_specifier,
-		vostok::logging::log_format const *				log_format,
-		vostok::core::log_flags_enum const				log_flags,
-		pcstr const										format,
-		va_list const									args
-	)
+// STATE[STUB]
+// void vostok::logging::logger::operator()(char const* const, char* const)
+void vostok::logging::logger::operator()( pcstr format, char* args )
 {
-	using namespace vostok::logging;
+	// LOCALS
+	// char[4096] 					message_buffer
+	// path_parts 					path
+	// debug_log_disable_raii 		debug_log_disable
+	// ******
 
-	debug_log_disable_raii					debug_log_disable;
-
-	path_parts								path(helper.m_initiator);
-
-	vostok::logging::log_format				local_format;
-	if ( log_format_specifier )
-		local_format.set					(* log_format_specifier);
-
-	vostok::logging::log_format const * format_to_use	=	log_format_specifier ? & local_format : & globals->format;
-	if ( log_format )
-		format_to_use					=	log_format;
-
-	string4096								message_buffer;
-	vostok::vsnprintf							( message_buffer, sizeof( message_buffer ) - 1, format, args );
-
-	vostok::strings::iterate_items	(
-		message_buffer,
-		predicate (
-			helper.m_file,
-			helper.m_function_signature,
-			helper.m_line,
-			helper.m_verbosity,
-			log_flags,
-			path,
-			* format_to_use
-		),
-		'\n'
-	);
+	// FUNCTION BODY
+	// <1>
+	// <2>
+	// <0x5f033>|0x000|0x000:'175'
+	// <1>
+	// <2>
+	// <0x5f038>|0x005|0x005:'178'
+	// <1>
+	// <0x5f057>|0x024|0x01f:'180'
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <0x5f06c>|0x039|0x015:'189'
+	// ******
 }
 
-void logger::operator ( )	( pcstr const format, ... )
+// STATE[STUB]
+// bool vostok::logging::logger_predicate::operator()(const unsigned int, char*, const unsigned int, const bool) const
+bool vostok::logging::logger_predicate::operator()(
+	u32			index,
+	char*		string,
+	u32			length,
+	bool		is_last
+) const
 {
-	va_list	 				mark;
-	va_start 				( mark, format );
-	process	 				( *this, NULL, NULL, (log_flags_enum)0, format, mark );
-	va_end	 				( mark );
+	// LOCALS
+	// u32 							final_length
+	// buffer_string 				final_string
+	// ******
+
+	// CALL SITE INFO
+	// <0x5f2c2> -> <unknown>
+	// ******
+
+	return false;
+	// FUNCTION BODY
+	// <0x5f0cf>|0x000|0x000:'209'
+	// <1>
+	// <0x5f0da>|0x00b|0x00b:'211'
+	// <1>
+	// <2>
+	// <0x5f100>|0x031|0x026:'214'
+	// <1>
+	// <0x5f13a>|0x06b|0x03a:'216'
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x5f168>|0x099|0x02e:'227'
+	// <1>
+	// <2>
+	// <0x5f2c7>|0x1f8|0x15f:'230'
+	// ******
 }
 
-void logger::operator ( )	( vostok::core::log_flags_enum const log_flags, pcstr const format, ... )
+// STATE[STUB]
+// void vostok::logging::append(boost::function<void __cdecl(void *,char const *,unsigned int,char const *,char const *,enum vostok::logging::verbosity,char const *,unsigned int,enum vostok::logging::callback_flag)> const&, void* const, vostok::logging::log_format const*, char const*, unsigned int, char const*, char const*, vostok::logging::verbosity, char const*, <NoType>)
+void vostok::logging::append(
+	boost::function<void(void *,pcstr,u32,pcstr,pcstr,enum verbosity,pcstr,u32,enum callback_flag)> const&	log_callback,
+	void*								user_data,
+	log_format const*					log_format,
+	pcstr								file,
+	u32									line,
+	pcstr								function_signature,
+	pcstr								initiator,
+	verbosity							verbosity,
+	pcstr								format
+)
 {
-	va_list	 				mark;
-	va_start 				( mark, format );
-	process	 				( *this, NULL, NULL, log_flags, format, mark );
-	va_end	 				( mark );
+	// LOCALS
+	// char* 						mark
+	// ******
+
+	// FUNCTION BODY
+	// <1>
+	// <0x76d54f>|0x000|0x000:'247'
+	// <0x76d555>|0x006|0x006:'248'
+	// <0x76d5e1>|0x092|0x08c:'249'
+	// ******
 }
 
-void logger::operator ( )	( vostok::logging::format_specifier const & log_format, pcstr format, ... )
+// STATE[STUB]
+// void vostok::logging::append(boost::function<void __cdecl(void *,char const *,unsigned int,char const *,char const *,enum vostok::logging::verbosity,char const *,unsigned int,enum vostok::logging::callback_flag)> const&, void* const, vostok::logging::format_specifier const&, char const*, unsigned int, char const*, char const*, vostok::logging::verbosity, char const*, <NoType>)
+void vostok::logging::append(
+	boost::function<void(void *,pcstr,u32,pcstr,pcstr,enum verbosity,pcstr,u32,enum callback_flag)> const&	log_callback,
+	void*								user_data,
+	format_specifier const&				format_specifier,
+	pcstr								file,
+	u32									line,
+	pcstr								function_signature,
+	pcstr								initiator,
+	verbosity							verbosity,
+	pcstr								format
+)
 {
-	va_list	 				mark;
-	va_start 				( mark, format );
-	process	 				( *this, & log_format, NULL, (vostok::core::log_flags_enum)0, format, mark );
-	va_end	 				( mark );
+	// LOCALS
+	// char* 						mark
+	// log_format 					log_format
+	// ******
+
+	// FUNCTION BODY
+	// <0x76d45f>|0x000|0x000:'265'
+	// <1>
+	// <2>
+	// <0x76d46e>|0x00f|0x00f:'268'
+	// <0x76d477>|0x018|0x009:'269'
+	// <0x76d527>|0x0c8|0x0b0:'270'
+	// ******
 }
-
-void logger::operator ( )	( vostok::logging::format_specifier const &	log_format,
-							  int const	log_flags,
-							  pcstr format,
-							  ... )
-{
-	va_list	 				mark;
-	va_start 				( mark, format );
-	process	 				( *this, & log_format, NULL, (vostok::core::log_flags_enum)log_flags, format, mark );
-	va_end	 				( mark );
-}
-
-void logger::operator( )	( vostok::logging::log_format * const format_struct, int const log_flags, pcstr format, ... )
-{
-	va_list	 				mark;
-	va_start 				( mark, format );
-	process	 				( *this, NULL, format_struct, (vostok::core::log_flags_enum)log_flags, format, mark );
-	va_end	 				( mark );
-}
-
-
-
-// sushi@TODO: So much to do, check structure
-
-bool vostok::logging::check_verbosity (pcstr initiator, verbosity verbosity)
-{
-	debug_log_disable_raii					debug_log_disable;
-
-	path_parts								path(initiator);
-
-	int const allowed_verbosity			=	get_tree_verbosity( &path );
-	if ( verbosity > allowed_verbosity )
-		return								false;
-
-	return									true;
-}
-#endif

@@ -30,7 +30,7 @@ enum format_specifier_enum
 typedef	fixed_vector<format_specifier_enum, format_specifier_count>		format_specifier_list;
 typedef	int		format_index_container[format_specifier_count];
 typedef	bool	format_enabled_container[format_specifier_count];
-typedef char	format_string_type[512]; // sushi@NOTE: I liked when this was fixed_string more. Why would this be changed?
+typedef char	format_string_type[512];
 // this is node of a tree that represents an ordered list of format specifiers enums
 // that are used to format logging
 class format_specifier : private noncopyable
