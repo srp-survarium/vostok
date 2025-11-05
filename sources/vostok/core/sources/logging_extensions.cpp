@@ -17,7 +17,6 @@
 #include "core_entry_point.h"
 #include "testing_impl.h"
 
-
 #include <vostok/os_include.h>
 
 // sushi@TODO: Only exists on old VS builds and makes it platform dependant
@@ -32,34 +31,13 @@ namespace logging {
 
 namespace core {
 
-logging::filter_tree*	g_log_filter_tree	= NULL;
-log_callback_type		g_log_callback		= NULL;
-log_flags_enum			g_log_flags			= log_to_console;
-logging::log_format		g_log_format;
-
-logging::log_file*				g_log_file			= NULL;
-logging::log_file_usage_enum	g_log_file_usage;
-
-
-static bool													s_console_initialized			=	false;
-static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
-static bool													s_tried_to_initialize_console	=	false;
-
-#if 0 // sushi@TODO
-vostok::core::logging_preinitializer s_logging_preinitializer;
-#endif
-
-static vostok::command_line::key	s_use_console				("console",					"", "logging", "turns on console output"   );
-static vostok::command_line::key	s_log_to_stdout				("log_to_stdout",			"", "logging", "turns on writing to stdout");
-static vostok::command_line::key	s_log_verbosity				("log_verbosity",			"", "logging", "one of: [trace|debug|info|warning|error|silent]");
-static vostok::command_line::key	s_write_errors_to_stderr	("write_errors_to_stderr",	"", "logging", "");
-
-
 		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
 static	_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
 		void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
 static	bool		is_logging_initialized	( );
 		bool		use_console_for_logging	( );
+
+		void		logging_preinitialize	( ); // sushi@NOTE: Called in other modules (sometimes even in unrelated dependencies like vobris) near allocators. Might be public.
 
 static	void		push_logging_filters	( );
 static	bool		initialize_console		( );
@@ -86,6 +64,34 @@ static	void		logging_callback		(
 											);
 
 
+struct logging_preinitializer
+{
+	logging_preinitializer	( )
+	{
+		debug::preinitialize	( ); // Maybe `debug_preinitilizer` can be constructed instead?
+		logging_preinitialize	( );
+	}
+};
+
+static logging_preinitializer		s_logging_preinitializer;
+
+static vostok::command_line::key	s_log_verbosity				("log_verbosity",			"", "logging", "one of: [trace|debug|info|warning|error|silent]");
+static vostok::command_line::key	s_write_errors_to_stderr	("write_errors_to_stderr",	"", "logging", "");
+static vostok::command_line::key	s_use_console				("console",					"", "logging", "turns on console output"   );
+static vostok::command_line::key	s_log_to_stdout				("log_to_stdout",			"", "logging", "turns on writing to stdout");
+
+static bool													s_console_initialized			=	false;
+static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
+static bool													s_tried_to_initialize_console	=	false;
+
+
+logging::filter_tree*	g_log_filter_tree	= NULL;
+log_callback_type		g_log_callback		= NULL;
+log_flags_enum			g_log_flags			= log_to_console;
+logging::log_format		g_log_format;
+
+logging::log_file*				g_log_file			= NULL;
+logging::log_file_usage_enum	g_log_file_usage;
 
 // STATE[STUB+]
 void generate_log_file_name( fs_new::native_path_string* out_result, pcstr extension )

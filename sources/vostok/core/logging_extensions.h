@@ -44,9 +44,6 @@ extern logging::log_file_usage_enum g_log_file_usage;
 void	logging_initialize		( );
 void	logging_finalize		( );
 
-// sushi@TODO: Might be private
-void	logging_preinitialize	( );
-
 } // namespace core
 } // namespace vostok
 
