@@ -16,26 +16,26 @@ void		logging_finalize		( );
 
 // sushi@TODO: Those all are private? Some of them no need to even export
 
-void		logging_callback		(
-										void*						user_data,
-										pcstr						file,
-										u32							line,
-										pcstr						function_signature,
-										pcstr						initiator,
-										logging::verbosity			verbosity,
-										pcstr						log_string,
-										u32							log_string_length,
-										logging::callback_flag		flag
-									);
+static	void	logging_callback		(
+											void*						user_data,
+											pcstr						file,
+											u32							line,
+											pcstr						function_signature,
+											pcstr						initiator,
+											logging::verbosity			verbosity,
+											pcstr						log_string,
+											u32							log_string_length,
+											logging::callback_flag		flag
+										);
 
-void		debug_log_callback		(
-										pcstr		initiator,
-										bool		is_error_verbosity,
-										bool		log_only_user_string,
-										pcstr		message
-									);
+		void	debug_log_callback		(
+											pcstr		initiator,
+											bool		is_error_verbosity,
+											bool		log_only_user_string,
+											pcstr		message
+										);
 
-void		logging_preinitialize	( );
+		void	logging_preinitialize	( );
 
 } // namespace core
 } // namespace vostok

@@ -25961,6 +25961,14 @@
 				<File
 					RelativePath=".\logging_extensions.cpp"
 					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\logging_extensions.h"

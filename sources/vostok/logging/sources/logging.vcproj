@@ -2392,14 +2392,6 @@
 			<File
 				RelativePath=".\log_file.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						GeneratePreprocessedFile="2"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

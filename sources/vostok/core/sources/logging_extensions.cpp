@@ -33,16 +33,19 @@ class log_file;
 namespace core {
 
 // Private functions to this source file
-void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
-void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
-_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
+		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
+static	_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
+		void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
+static	bool		is_logging_initialized	( );
+		bool		use_console_for_logging	( );
 
-bool		initialize_console		( );
-void		finalize_console		( );
-void		push_logging_filters	( );
-bool		use_console_for_logging	( );
+static	void		push_logging_filters	( );
+static	bool		initialize_console		( );
+static	void		finalize_console		( );
 
-bool		is_logging_initialized	( );
+
+
+
 
 
 typedef void (*log_callback_type)(pcstr, bool, bool, pcstr);
@@ -95,7 +98,7 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 }
 
 // STATE[STUB+]
-_iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: stdstream_enum moved to core
+static _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: stdstream_enum moved to core
 {
 	if ( stream == logging::stdstream_out )			// <0x671d70>|0x000|0x000:'68'
 		return				&__iob_func()[1];		// <0x671d74>|0x004|0x004:'69'
@@ -121,7 +124,7 @@ void write_to_stdstream( logging::stdstream_enum stream, pcstr format, ... )
 }
 
 // STATE[STUB+] always is inlined
-bool is_logging_initialized( )
+static bool is_logging_initialized( )
 {
 	return g_log_filter_tree != NULL;	// <0x671d60>|0x000|0x000:'92'
 }
@@ -137,7 +140,7 @@ bool use_console_for_logging( )
 }
 
 // STATE[STUB???]
-void logging_callback(
+static void logging_callback(
 	void*						user_data,
 	pcstr						file,
 	u32							line,
@@ -296,7 +299,7 @@ void logging_preinitialize( )
 }
 
 // STATE[STUB+]
-void push_logging_filters( )
+static void push_logging_filters( )
 {
 	using namespace vostok;																									// <1>
 	logging::verbosity	verbosity		=	logging::trace;																	// <2>
@@ -326,7 +329,7 @@ void push_logging_filters( )
 }
 
 // STATE[STUB+]
-void logging_initialize( )
+static void logging_initialize( )
 {
 	// LOCALS
 	// fs_new::native_path_string 	log_file_name
@@ -445,7 +448,7 @@ bool initialize_console( )
 }
 
 // STATE[STUB+]
-void finalize_console( )
+static void finalize_console( )
 {
 	if ( s_console_initialized )							// <0x671d20>|0x000|0x000:'340'
 	{
