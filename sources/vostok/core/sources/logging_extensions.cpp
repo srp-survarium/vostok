@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "logging_extensions.h"
+#include <vostok/core/logging_extensions.h>
 
 #include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
@@ -32,7 +32,29 @@ namespace logging {
 
 namespace core {
 
-// Private functions to this source file
+logging::filter_tree*	g_log_filter_tree	= NULL;
+log_callback_type		g_log_callback		= NULL;
+log_flags_enum			g_log_flags			= log_to_console;
+logging::log_format		g_log_format;
+
+logging::log_file*				g_log_file			= NULL;
+logging::log_file_usage_enum	g_log_file_usage;
+
+
+static bool													s_console_initialized			=	false;
+static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
+static bool													s_tried_to_initialize_console	=	false;
+
+#if 0 // sushi@TODO
+vostok::core::logging_preinitializer s_logging_preinitializer;
+#endif
+
+static vostok::command_line::key	s_use_console				("console",					"", "logging", "turns on console output"   );
+static vostok::command_line::key	s_log_to_stdout				("log_to_stdout",			"", "logging", "turns on writing to stdout");
+static vostok::command_line::key	s_log_verbosity				("log_verbosity",			"", "logging", "one of: [trace|debug|info|warning|error|silent]");
+static vostok::command_line::key	s_write_errors_to_stderr	("write_errors_to_stderr",	"", "logging", "");
+
+
 		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
 static	_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
 		void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
@@ -44,41 +66,26 @@ static	bool		initialize_console		( );
 static	void		finalize_console		( );
 
 
-typedef void (*log_callback_type)(pcstr, bool, bool, pcstr);
-typedef	void (*log_callback)(
-	pvoid,					// ???
-	pcstr,					// file
-	u32	 ,					// line
-	pcstr,					// function signature
-	pcstr,					// ???
-	logging::verbosity,		// verbosity
-	pcstr,					// log string
-	u32	 ,					// ???
-	logging::callback_flag  // first/last string
-);
+static	void		logging_callback		(
+												void*						user_data,
+												pcstr						file,
+												u32							line,
+												pcstr						function_signature,
+												pcstr						initiator,
+												logging::verbosity			verbosity,
+												pcstr						log_string,
+												u32							log_string_length,
+												logging::callback_flag		flag
+											);
 
-extern logging::log_file_usage_enum g_log_file_usage;
+		void		debug_log_callback		(
+												pcstr		initiator,
+												bool		is_error_verbosity,
+												bool		log_only_user_string,
+												pcstr		message
+											);
 
-logging::filter_tree*	g_log_filter_tree	= NULL; // sushi@NOTE: `logging::filter_tree` is stored privately
-logging::log_file*		g_log_file			= NULL; // sushi@NOTE: `logging::log_file` is not included anywhere and is in the root
-logging::log_flags_enum g_log_flags			= logging::log_to_console;
-log_callback			g_log_callback		= NULL;
 
-static vostok::command_line::key	s_use_console				("console",       "", "logging", "turns on console output"   );
-static vostok::command_line::key	s_log_to_stdout				("log_to_stdout", "", "logging", "turns on writing to stdout");
-static vostok::command_line::key	s_log_verbosity				("log_verbosity", "", "logging", "one of: [trace|debug|info|warning|error|silent]");
-static vostok::command_line::key	s_write_errors_to_stderr	("write_errors_to_stderr", "", "logging", "");
-
-static bool													s_console_initialized			=	false;
-static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
-static bool													s_tried_to_initialize_console	=	false;
-
-#if 0
-// Statics with dynamic initializers
-s_logging_preinitializer
-
-void (__cdecl *s_logging_preinitializer_initializer_)();
-#endif
 
 // STATE[STUB+]
 void generate_log_file_name( fs_new::native_path_string* out_result, pcstr extension )
@@ -138,7 +145,7 @@ bool use_console_for_logging( )
 
 // STATE[STUB???]
 static void logging_callback(
-	void*						user_data,
+	void*						user_data, // g_log_flags somehow
 	pcstr						file,
 	u32							line,
 	pcstr						function_signature,
@@ -149,88 +156,68 @@ static void logging_callback(
 	logging::callback_flag		flag
 )
 {
-	initialize_console		( );
-	use_console_for_logging	( );
-	vostok::core::write_to_stdstream		( logging::stdstream_out, "%s", "hello" );
-	// LOCALS
-	// bool 						logged_to_stdout
-	// bool 						log_to_console_settings
-	// ******
+	static bool first_time						= true;
+	static bool s_tried_to_initialize_console	= false;
+	static bool s_initialized_console			= false;
 
-	// STATICS
-	// static bool 					first_time = <0xa72eac>;
-	// static bool 					s_tried_to_initialize_console = <0x4c26022>;
-	// static bool 					s_initialized_console = <0x4c26021>;
-	// ******
+	if ( debug::is_debugger_present( ) )												// <0x672759>|0x000|0x000:'121'
+	{
+		u32 const buffer_size = (log_string_length + 2);								// <0x672768>|0x00f|0x00f:'128'
+		pstr const buffer = static_cast<pstr>( ALLOCA( buffer_size ) );					// <0x67276b>|0x012|0x003:'129'
+		memory::copy( buffer, buffer_size, log_string, log_string_length );				// <0x672772>|0x019|0x007:'130'
+		buffer[log_string_length] = '\n';
+		buffer[log_string_length + 1] = '\0';
+		debug::output( buffer );														// <0x67277a>|0x021|0x008:'133'
+	}
 
-	// FUNCTION BODY
-	// 1
-	// 2
-	// <0x672759>|0x000|0x000:'121'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// <0x672768>|0x00f|0x00f:'128'
-	// <0x67276b>|0x012|0x003:'129'
-	// <0x672772>|0x019|0x007:'130'
-	// 1
-	// 2
-	// <0x67277a>|0x021|0x008:'133'
-	// 1
-	// 2
-	// 3
-	// <0x67278c>|0x033|0x012:'137'
-	// <0x67279f>|0x046|0x013:'138'
-	// <0x6727ac>|0x053|0x00d:'139'
-	// 1
-	// 2
-	// 3
-	// <0x6727be>|0x065|0x012:'143'
-	// <0x6727c8>|0x06f|0x00a:'144'
-	// 1
-	// <0x6727cd>|0x074|0x005:'146'
-	// <0x6727e0>|0x087|0x013:'147'
-	// 1
-	// 2
-	// <0x6727e7>|0x08e|0x007:'150'
-	// 1
-	// 2
-	// 3
-	// <0x6727ec>|0x093|0x005:'154'
-	// 1
-	// 2
-	// 3
-	// <0x6727fa>|0x0a1|0x00e:'158'
-	// 1
-	// <0x672803>|0x0aa|0x009:'160'
-	// <0x67280d>|0x0b4|0x00a:'161'
-	// 1
-	// 2
-	// <0x672814>|0x0bb|0x007:'164'
-	// 1
-	// <0x67281d>|0x0c4|0x009:'166'
-	// <0x67282d>|0x0d4|0x010:'167'
-	// 1
-	// 2
-	// 3
-	// <0x672831>|0x0d8|0x004:'171'
-	// 1
-	// <0x67283e>|0x0e5|0x00d:'173'
-	// 1
-	// 2
-	// <0x672851>|0x0f8|0x013:'176'
-	// 1
-	// <0x67288c>|0x133|0x03b:'178'
-	// 1
-	// 2
-	// ******
+
+	if ( g_log_file && g_log_file->initialized() ) {									// <0x67278c>|0x033|0x012:'137'
+		g_log_file->append( log_string, log_string_length );							// <0x67279f>|0x046|0x013:'138'
+		g_log_file->append( "\r\n", 2 );												// <0x6727ac>|0x053|0x00d:'139'
+	}
+
+
+	bool log_to_console_settings = (char)user_data & 1;									// <0x6727be>|0x065|0x012:'143'
+	bool should_use_console_for_logging = use_console_for_logging( );					// <0x6727c8>|0x06f|0x00a:'144'
+
+	if ( first_time && (log_to_console_settings || should_use_console_for_logging) )	// <0x6727cd>|0x074|0x005:'146'
+		first_time = false;																// <0x6727e0>|0x087|0x013:'147'
+
+	bool logged_to_stdout = false;
+	bool log_to_stderr_settings = (char)user_data & 2;									// <0x6727e7>|0x08e|0x007:'150'
+
+
+
+	if ( log_to_console_settings || should_use_console_for_logging )					// <0x6727ec>|0x093|0x005:'154'
+	{
+
+
+		if ( !s_tried_to_initialize_console )											// <0x6727fa>|0x0a1|0x00e:'158'
+		{
+			initialize_console( );														// <0x672803>|0x0aa|0x009:'160'
+			s_tried_to_initialize_console = true;										// <0x67280d>|0x0b4|0x00a:'161'
+		}
+
+		if ( s_initialized_console )													// <0x672814>|0x0bb|0x007:'164'
+		{
+			core::write_to_stdstream(	logging::stdstream_out, "%s\r\n", log_string );	// <0x67281d>|0x0c4|0x009:'166' // sushi@TODO: Remove logging::write_to_stdstream
+			logged_to_stdout = true;													// <0x67282d>|0x0d4|0x010:'167'
+		}
+	}
+
+	if ( g_log_filter_tree && !log_to_stderr_settings )									// <0x672831>|0x0d8|0x004:'171'
+	{
+			core::write_to_stdstream( logging::stdstream_error, "%s\r\n", log_string );	// <0x67283e>|0x0e5|0x00d:'173' // sushi@TODO: Remove logging::write_to_stdstream
+	}
+																						// <2>
+																						// <0x672851>|0x0f8|0x013:'176'
+																						// <1>
+																						// <0x67288c>|0x133|0x03b:'178'
+																						// <1>
+																						// <2>
 }
 
 // STATE[STUB???]
-// void vostok::core::debug_log_callback(char const*, bool, bool, char const*)
 void debug_log_callback(
 	pcstr		initiator,
 	bool		is_error_verbosity,
@@ -247,8 +234,8 @@ void debug_log_callback(
 
 	// ******
 
-	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
-									logging::log_to_stderr : (logging::log_flags_enum)0;
+	core::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
+									core::log_to_stderr : core::log_to_console;
 
 	// STR_JOINA( initiator );
 	// THIS MOST LIKELY CALLS INTO LOG MACRO?
@@ -333,7 +320,7 @@ void logging_initialize( )
 
 	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );												// <0x672687>|0x000|0x000:'252'
 
-	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(	// sushi@NOTE: I don't understand how this opened up into `pt3malloc`
+	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(	// sushi@NOTE: This opens up into `pt3malloc`
 		*g_log_filter_tree,
 		"logging_rule",
 		true,
@@ -355,76 +342,77 @@ void logging_initialize( )
 // STATE[STUB+]
 void logging_finalize( )
 {
-	finalize_console( );									// <0x671dd0>|0x000|0x000:'275'
-	logging::delete_log_file( g_log_file );					// <0x671e03>|0x033|0x033:'276'
+	finalize_console( );								// <0x671dd0>|0x000|0x000:'275'
+	logging::delete_log_file( g_log_file );				// <0x671e03>|0x033|0x033:'276'
 
-	// VOSTOK_DELETE_IMPL( s_logging_console_command );		// <0x671e0d>|0x03d|0x00a:'278' // sushi@TODO: I am not sure which allocator (if any) is used here
+	// VOSTOK_DELETE_IMPL( s_logging_console_command );	// <0x671e0d>|0x03d|0x00a:'278' // sushi@TODO: I am not sure which allocator (if any) is used here
 
-	logging::delete_filter_tree( g_log_filter_tree );		// <0x671e47>|0x077|0x03a:'280'
-	debug::set_log_callback( NULL );						// <0x671e51>|0x081|0x00a:'281'
+	logging::delete_filter_tree( g_log_filter_tree );	// <0x671e47>|0x077|0x03a:'280'
+	debug::set_log_callback( NULL );					// <0x671e51>|0x081|0x00a:'281'
 }
 
 // STATE[STUB+] logging_callback
 static bool initialize_console( )
 {
 	// CALL SITE INFO
-	// <0x671ffb> -> HWND__* <unknown>()
-	// <0x67200b> -> int <unknown>(unsigned long)
-	// <0x672019> -> int <unknown>()
-	// <0x6720e3> -> void* <unknown>(unsigned long)
-	// <0x672178> -> void* <unknown>(unsigned long)
-	// <0x672208> -> void* <unknown>(unsigned long)
+											// <0x671ffb> -> HWND__* <unknown>()
+											// <0x67200b> -> int <unknown>(unsigned long)
+											// <0x672019> -> int <unknown>()
+											// <0x6720e3> -> void* <unknown>(unsigned long)
+											// <0x672178> -> void* <unknown>(unsigned long)
+											// <0x672208> -> void* <unknown>(unsigned long)
 	// ******
 
 
-	s_tried_to_initialize_console = true; // <0x671ff4>|0x00b|0x00b:'296'
+	s_tried_to_initialize_console = true;	// <0x671ff4>|0x00b|0x00b:'296'
 
-	if ( GetConsoleWindow( ) ) // <0x671ffb>|0x012|0x007:'298'
+	if ( GetConsoleWindow( ) )				// <0x671ffb>|0x012|0x007:'298'
 	{
 		s_console_initialized = true;
 		return true;
 	}
 
 
+
 	// FUNCTION BODY
 	// 1
-	// <0x671fe9>|0x000|0x000:'294'
+											// <0x671fe9>|0x000|0x000:'294'
 	// 1
-	// <0x671ff4>|0x00b|0x00b:'296'
+											// <0x671ff4>|0x00b|0x00b:'296'
 	// 1
-	// <0x671ffb>|0x012|0x007:'298'
-	// <0x672009>|0x020|0x00e:'299'
-	// <0x672019>|0x030|0x010:'300'
-	// <0x671fda>|-0x00f|-0x03f:'301'
-	// <0x6720c7>|0x0de|0x0ed:'302'
-	// <0x6720ce>|0x0e5|0x007:'303'
-	// 1
-	// 2
-	// 3
-	// 4
-	// <0x6720d6>|0x0ed|0x008:'308'
-	// <0x6720ee>|0x105|0x018:'309'
-	// <0x6720f3>|0x10a|0x005:'310'
-	// <0x67214f>|0x166|0x05c:'311'
+											// <0x671ffb>|0x012|0x007:'298'
+											// <0x672009>|0x020|0x00e:'299'
+											// <0x672019>|0x030|0x010:'300'
+											// <0x671fda>|-0x00f|-0x03f:'301'
+											// <0x6720c7>|0x0de|0x0ed:'302'
+											// <0x6720ce>|0x0e5|0x007:'303'
 	// 1
 	// 2
 	// 3
 	// 4
-	// <0x672171>|0x188|0x022:'316'
-	// 1
-	// <0x672180>|0x197|0x00f:'318'
-	// <0x6721dc>|0x1f3|0x05c:'319'
-	// 1
-	// 2
-	// 3
-	// <0x672201>|0x218|0x025:'323'
-	// <0x672213>|0x22a|0x012:'324'
-	// <0x67221c>|0x233|0x009:'325'
-	// <0x672278>|0x28f|0x05c:'326'
+											// <0x6720d6>|0x0ed|0x008:'308'
+											// <0x6720ee>|0x105|0x018:'309'
+											// <0x6720f3>|0x10a|0x005:'310'
+											// <0x67214f>|0x166|0x05c:'311'
 	// 1
 	// 2
 	// 3
-	// <0x67229d>|0x2b4|0x025:'330'
+	// 4
+											// <0x672171>|0x188|0x022:'316'
+	// 1
+											// <0x672180>|0x197|0x00f:'318'
+											// <0x6721dc>|0x1f3|0x05c:'319'
+	// 1
+	// 2
+	// 3
+											// <0x672201>|0x218|0x025:'323'
+											// <0x672213>|0x22a|0x012:'324'
+											// <0x67221c>|0x233|0x009:'325'
+											// <0x672278>|0x28f|0x05c:'326'
+	// 1
+	// 2
+	// 3
+											// <0x67229d>|0x2b4|0x025:'330'
 	// 1
 	// 2
 	// 3

@@ -21,7 +21,6 @@
 #include "resources_allocators.h"
 #include <vostok/construction.h>
 #include <vostok/memory_doug_lea_mt_allocator.h>
-#include "logging_extensions.h"
 
 #if VOSTOK_DEBUG_ALLOCATOR
 vostok::memory::doug_lea_mt_allocator_type		vostok::debug::g_mt_allocator(

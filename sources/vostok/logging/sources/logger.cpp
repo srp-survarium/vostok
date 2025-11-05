@@ -48,12 +48,14 @@ log_callback get_log_callback	()
 }
 
 int get_tree_verbosity			( path_parts* const path );
-void log_thread_unsafe			( logging::log_flags_enum const log_flags, pcstr string, u32 string_length, logging::verbosity verbosity );
+
+/// void log_thread_unsafe			( log_flags_enum const log_flags, pcstr string, u32 string_length, logging::verbosity verbosity );
 
 } // namespace logging
 } // namespace vostok
 
 #if 0
+
 helper_data::helper_data		(
 		pcstr const file,
 		pcstr const function_signature,
@@ -153,7 +155,7 @@ struct predicate : private vostok::logging::noncopyable
 	pcstr											m_function_signature;
 	int												m_line;
 	vostok::logging::verbosity						m_verbosity;
-	vostok::logging::log_flags_enum const				m_log_flags;
+	vostok::core::log_flags_enum const				m_log_flags;
 	vostok::logging::log_format const &				m_format;
 	vostok::logging::path_parts &						m_path;
 
@@ -162,7 +164,7 @@ struct predicate : private vostok::logging::noncopyable
 			pcstr const 									function_signature,
 			int const										line,
 			vostok::logging::verbosity const					verbosity,
-			vostok::logging::log_flags_enum const				log_flags,
+			vostok::core::log_flags_enum const				log_flags,
 			vostok::logging::path_parts &						path,
 			vostok::logging::log_format const &				format
 		) :
@@ -235,7 +237,7 @@ static void process				(
 		helper_data &									helper,
 		vostok::logging::format_specifier const *			log_format_specifier,
 		vostok::logging::log_format const *				log_format,
-		vostok::logging::log_flags_enum const				log_flags,
+		vostok::core::log_flags_enum const				log_flags,
 		pcstr const										format,
 		va_list const									args
 	)
@@ -280,7 +282,7 @@ void logger::operator ( )	( pcstr const format, ... )
 	va_end	 				( mark );
 }
 
-void logger::operator ( )	( vostok::logging::log_flags_enum const log_flags, pcstr const format, ... )
+void logger::operator ( )	( vostok::core::log_flags_enum const log_flags, pcstr const format, ... )
 {
 	va_list	 				mark;
 	va_start 				( mark, format );
@@ -292,7 +294,7 @@ void logger::operator ( )	( vostok::logging::format_specifier const & log_format
 {
 	va_list	 				mark;
 	va_start 				( mark, format );
-	process	 				( *this, & log_format, NULL, (vostok::logging::log_flags_enum)0, format, mark );
+	process	 				( *this, & log_format, NULL, (vostok::core::log_flags_enum)0, format, mark );
 	va_end	 				( mark );
 }
 
@@ -303,7 +305,7 @@ void logger::operator ( )	( vostok::logging::format_specifier const &	log_format
 {
 	va_list	 				mark;
 	va_start 				( mark, format );
-	process	 				( *this, & log_format, NULL, (vostok::logging::log_flags_enum)log_flags, format, mark );
+	process	 				( *this, & log_format, NULL, (vostok::core::log_flags_enum)log_flags, format, mark );
 	va_end	 				( mark );
 }
 
@@ -311,7 +313,7 @@ void logger::operator( )	( vostok::logging::log_format * const format_struct, in
 {
 	va_list	 				mark;
 	va_start 				( mark, format );
-	process	 				( *this, NULL, format_struct, (vostok::logging::log_flags_enum)log_flags, format, mark );
+	process	 				( *this, NULL, format_struct, (vostok::core::log_flags_enum)log_flags, format, mark );
 	va_end	 				( mark );
 }
 

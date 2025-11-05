@@ -49,6 +49,7 @@
 #include <vostok/tasks_system.h>
 #include <vostok/configs.h>
 #include <vostok/resources.h>
+#include <vostok/core/logging_extensions.h>
 
 #if !VOSTOK_CORE_BUILDING
 	namespace vostok {

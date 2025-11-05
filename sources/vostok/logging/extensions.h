@@ -23,11 +23,6 @@
 namespace vostok {
 namespace logging {
 
-enum log_flags_enum {
-	log_to_console		=	1 << 0,
-	log_to_stderr		=	1 << 1,
-};
-
 extern format_specifier		format_thread_id;
 extern format_specifier		format_initiator;
 extern format_specifier		format_time;

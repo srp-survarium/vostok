@@ -25970,10 +25970,6 @@
 						/>
 					</FileConfiguration>
 				</File>
-				<File
-					RelativePath=".\logging_extensions.h"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -28507,6 +28503,10 @@
 					Name="VCCLX360CompilerTool"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\logging_extensions.h"
+			>
 		</File>
 	</Files>
 	<Globals>

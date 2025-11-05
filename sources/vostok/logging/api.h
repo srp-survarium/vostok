@@ -73,7 +73,7 @@ VOSTOK_LOGGING_API	verbosity			string_to_verbosity 	( pcstr in_verbosity );
 
 // sushi@TODO: VOSTOK_LOGGING_API	bool				use_console_for_logging ( );
 
-enum stdstream_enum { stdstream_out, stdstream_error };
+enum stdstream_enum { stdstream_out, stdstream_error }; // sushi@TODO: Moved to core
 VOSTOK_LOGGING_API	void				write_to_stdstream		( stdstream_enum stream, pcstr format, ... );
 
 } // namespace logging

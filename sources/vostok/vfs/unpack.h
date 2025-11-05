@@ -24,14 +24,14 @@ typedef	boost::function< bool (base_node<> * node) >
 
 struct unpack_arguments : public core::noncopyable
 {
-	unpack_arguments					(fs_new::virtual_path_string const &	source_path, 
-										 fs_new::native_path_string	const &		target_path, 
+	unpack_arguments					(fs_new::virtual_path_string const &	source_path,
+										 fs_new::native_path_string	const &		target_path,
 										 fs_new::synchronous_device_interface &	device,
 										 ppmd_compressor &						compressor,
 										 memory::base_allocator *				allocator,
 										 unpack_callback const &				callback,
 										 logging::log_format *					log_format	=	NULL,
-										 logging::log_flags_enum				log_flags	=	(logging::log_flags_enum)0,
+										 core::log_flags_enum				log_flags	=	(core::log_flags_enum)0,
 										 unpack_filter_callback const &			filter_callback = NULL)
 		:	source_path(source_path), target_path(target_path), callback(callback),
 			nodes_count(0), unpacked_nodes_count(0), device(device), log_format(log_format), log_flags(log_flags),
@@ -45,7 +45,7 @@ struct unpack_arguments : public core::noncopyable
 	unpack_callback						callback;
 	unpack_filter_callback				filter_callback;
 	logging::log_format *				log_format;
-	logging::log_flags_enum				log_flags;
+	core::log_flags_enum				log_flags;
 	u32									nodes_count;
 	u32									unpacked_nodes_count;
 };
@@ -54,8 +54,8 @@ class	virtual_file_system;
 
 bool   unpack							(virtual_file_system &	file_system, unpack_arguments & args);
 
-result_enum   decompress_node			(base_node<> *							node, 
-										 allocated_buffer *						uncompressed_data, 
+result_enum   decompress_node			(base_node<> *							node,
+										 allocated_buffer *						uncompressed_data,
 										 fs_new::synchronous_device_interface &	device,
 										 memory::base_allocator *				allocator,
 										 compressor *							compressor);

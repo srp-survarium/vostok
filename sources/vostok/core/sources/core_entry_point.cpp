@@ -9,7 +9,6 @@
 
 #include "build_extensions.h"
 #include "game_resman.h"
-#include "logging_extensions.h"
 #include "memory.h"
 #include "resources_manager.h"
 #include "strings_shared_manager.h"
@@ -58,9 +57,6 @@ using vostok::debug::bugtrap_usage;
 static bool	s_initialized				= false;
 static vostok::core::engine * s_engine	=	NULL;
 
-vostok::command_line::key	s_log_verbosity ("log_verbosity", "", "logging", "one of: [trace|debug|info|warning|error|silent]");
-vostok::command_line::key	s_write_errors_to_stderr ("write_errors_to_stderr", "", "logging", "");
-
 vostok::uninitialized_reference<vostok::fs_new::synchronous_device_interface>	s_core_synchronous_device;
 
 namespace vostok {
@@ -72,8 +68,7 @@ namespace debug {
 namespace core {
 	bool initialized	( );
 
-	logging::log_file_usage_enum	g_log_file_usage;
-	logging::log_format				g_log_format;		// sushi@TODO
+		// sushi@TODO
 } // namespace core
 
 #ifndef	MASTER_GOLD
