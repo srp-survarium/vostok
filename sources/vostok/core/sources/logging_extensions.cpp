@@ -26,8 +26,8 @@ extern "C" FILE* __iob_func(void);
 namespace vostok {
 
 namespace logging {
-class filter_tree;
-class log_file;
+	class filter_tree;
+	class log_file;
 } // namespace logging
 
 namespace core {
@@ -44,10 +44,6 @@ static	bool		initialize_console		( );
 static	void		finalize_console		( );
 
 
-
-
-
-
 typedef void (*log_callback_type)(pcstr, bool, bool, pcstr);
 typedef	void (*log_callback)(
 	pvoid,					// ???
@@ -61,6 +57,7 @@ typedef	void (*log_callback)(
 	logging::callback_flag  // first/last string
 );
 
+extern logging::log_file_usage_enum g_log_file_usage;
 
 logging::filter_tree*	g_log_filter_tree	= NULL; // sushi@NOTE: `logging::filter_tree` is stored privately
 logging::log_file*		g_log_file			= NULL; // sushi@NOTE: `logging::log_file` is not included anywhere and is in the root
@@ -329,41 +326,30 @@ static void push_logging_filters( )
 }
 
 // STATE[STUB+]
-static void logging_initialize( )
+void logging_initialize( )
 {
-	// LOCALS
-	// fs_new::native_path_string 	log_file_name
-	// fs_new::device_file_system_no_watcher_proxy device
-	// ******
 
-	fs_new::native_path_string out_result;
-	generate_log_file_name	( &out_result, "hpp" );
-	push_logging_filters	( ); // sushi@TODO:
 
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// <0x672687>|0x000|0x000:'252'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// <0x672699>|0x012|0x012:'260'
-	// 1
-	// <0x6726d1>|0x04a|0x038:'262'
-	// 1
-	// 2
-	// <0x6726d6>|0x04f|0x005:'265'
-	// <0x6726df>|0x058|0x009:'266'
-	// <0x6726ef>|0x068|0x010:'267'
-	// <0x6726fc>|0x075|0x00d:'268'
-	// <0x67271e>|0x097|0x022:'269'
-	// 1
-	// ******
+
+	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );												// <0x672687>|0x000|0x000:'252'
+
+	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(	// sushi@NOTE: I don't understand how this opened up into `pt3malloc`
+		*g_log_filter_tree,
+		"logging_rule",
+		true,
+		console_commands::command_type_user_specific,
+		console_commands::execution_filter_early
+	);																													// <0x672699>|0x012|0x012:'260'
+
+	push_logging_filters( );																							// <0x6726d1>|0x04a|0x038:'262': sushi@NOTE: Initialized in `vostok::core::preinitialize`
+
+
+	if ( g_log_file_usage ) {																							// <0x6726d6>|0x04f|0x005:'265'
+		fs_new::device_file_system_proxy	device( NULL, fs_new::watcher_enabled_true );								// <0x6726df>|0x058|0x009:'266': sushi@NOTE: `NULL` is `fs_new::s_hdd` in `core\sources\core_entry_point_win_xbox360.cpp`
+		fs_new::native_path_string 			log_file_name;																// <0x6726ef>|0x068|0x010:'267'
+		generate_log_file_name	( &log_file_name, "log" );																// <0x6726fc>|0x075|0x00d:'268'
+		g_log_file = logging::new_log_file( memory::g_mt_allocator, device, log_file_name.c_str( ), g_log_file_usage );	// <0x67271e>|0x097|0x022:'269'
+	}
 }
 
 // STATE[STUB+]
@@ -372,14 +358,14 @@ void logging_finalize( )
 	finalize_console( );									// <0x671dd0>|0x000|0x000:'275'
 	logging::delete_log_file( g_log_file );					// <0x671e03>|0x033|0x033:'276'
 
-	// VOSTOK_DELETE_IMPL( s_logging_console_command );	// <0x671e0d>|0x03d|0x00a:'278' // sushi@TODO: I am not sure which allocator (if any) is used here
+	// VOSTOK_DELETE_IMPL( s_logging_console_command );		// <0x671e0d>|0x03d|0x00a:'278' // sushi@TODO: I am not sure which allocator (if any) is used here
 
 	logging::delete_filter_tree( g_log_filter_tree );		// <0x671e47>|0x077|0x03a:'280'
 	debug::set_log_callback( NULL );						// <0x671e51>|0x081|0x00a:'281'
 }
 
 // STATE[STUB+] logging_callback
-bool initialize_console( )
+static bool initialize_console( )
 {
 	// CALL SITE INFO
 	// <0x671ffb> -> HWND__* <unknown>()

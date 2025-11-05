@@ -7,28 +7,29 @@
 #include "pch.h"
 #include <vostok/core/core.h>
 
-#include <vostok/logging/api.h>
-#include <vostok/logging/format.h>
-#include <vostok/debug/debug.h>
-#include "resources_manager.h"
-#include "game_resman.h"
-#include "unmanaged_allocation_cook.h"
-#include "strings_shared_manager.h"
 #include "build_extensions.h"
-#include <vostok/core_entry_point.h>
-#include "timing.h"
-#include <vostok/memory_base_allocator.h>
+#include "game_resman.h"
+#include "logging_extensions.h"
 #include "memory.h"
+#include "resources_manager.h"
+#include "strings_shared_manager.h"
+#include "timing.h"
+#include "unmanaged_allocation_cook.h"
 #include <locale.h>			// for setlocale
 #include <vostok/compressor_ppmd.h>
-#include <vostok/core_test_suite.h>
+#include <vostok/configs.h>
+#include <vostok/console_command.h>
+#include <vostok/console_command_processor.h>
 #include <vostok/core/engine.h>
+#include <vostok/core_entry_point.h>
+#include <vostok/core_test_suite.h>
+#include <vostok/debug/debug.h>
+#include <vostok/debug/log_callback.h>
 #include <vostok/fs/path_string_utils.h>
 #include <vostok/fs/synchronous_device_interface.h>
-#include <vostok/configs.h>
-#include <vostok/debug/log_callback.h>
-#include <vostok/console_command_processor.h>
-#include <vostok/console_command.h>
+#include <vostok/logging/api.h>
+#include <vostok/logging/format.h>
+#include <vostok/memory_base_allocator.h>
 
 #if VOSTOK_PLATFORM_PS3
 #	include <sys/paths.h>
@@ -71,7 +72,7 @@ namespace debug {
 namespace core {
 	bool initialized	( );
 
-	logging::log_file_usage_enum	g_log_file_usage;	// sushi@TODO
+	logging::log_file_usage_enum	g_log_file_usage;
 	logging::log_format				g_log_format;		// sushi@TODO
 } // namespace core
 
