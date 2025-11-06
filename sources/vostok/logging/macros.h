@@ -21,6 +21,35 @@
 #define LOG_ERROR( ... )
 #define LOG_WARNING( ... )
 #define LOG_INFO( ... )
+
+#if 0 // sushi@TODO
+#define __CHECK_VERBOSITY( level ) \
+	::vostok::core::is_logging_initialized() &&	\
+		::vostok::logging::has_passed_filters(	\
+			::vostok::core::g_log_filter_tree,	\
+			VOSTOK_LOG_MODULE_INITIATOR ":",	\
+			level )
+
+#define __LOG( level, ... )	__CHECK_VERBOSITY( level )	\
+		? ::vostok::logging::append(					\
+				NULL,									\
+				::vostok::core::g_log_flags,			\
+				&::vostok::core::g_log_format,			\
+				__FILE__,								\
+				__LINE__,								\
+				__FUNCSIG__,							\
+				VOSTOK_LOG_MODULE_INITIATOR ":",		\
+				level,									\
+				( ##__VA_ARGS__ ) )						\
+		: NULL
+
+
+#define LOG_ERROR( ... )	__LOG( ::vostok::logging::error )
+#define LOG_WARNING( ... )	__LOG( ::vostok::logging::warning )
+#define LOG_INFO( ... )		__LOG( ::vostok::logging::info )
+#endif // #if 0
+
+
 #if 0 // sushi@TODO
 #define LOG_ERROR( ... )				::vostok::logging::check_verbosity(VOSTOK_LOG_MODULE_INITIATOR ":" , ::vostok::logging::error) ? \
 										::vostok::logging::helper	( __FILE__, __FUNCSIG__, __LINE__, VOSTOK_LOG_MODULE_INITIATOR ":", ::vostok::logging::error	) ( ##__VA_ARGS__ ) : 0

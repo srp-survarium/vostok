@@ -41,8 +41,10 @@ extern logging::log_file*			g_log_file;
 extern logging::log_file_usage_enum g_log_file_usage;
 
 
-void	logging_initialize		( );
-void	logging_finalize		( );
+		void		logging_initialize		( );
+		void		logging_finalize		( );
+
+static	bool		is_logging_initialized	( );
 
 } // namespace core
 } // namespace vostok

@@ -18,8 +18,9 @@
 #include "testing_impl.h"
 
 #include <vostok/os_include.h>
+#include <fcntl.h>
 
-// sushi@TODO: Only exists on old VS builds and makes it platform dependant
+// sushi@NOTE: Only exists on old VS builds and makes this file platform dependant
 extern "C" FILE* __iob_func(void);
 
 namespace vostok {
@@ -31,10 +32,13 @@ namespace logging {
 
 namespace core {
 
+
+enum stdstream_enum { stdstream_out, stdstream_error };
+
 		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
-static	_iobuf*		get_stdstream_handle	( logging::stdstream_enum stream );
-		void		write_to_stdstream		( logging::stdstream_enum stream, pcstr format, ... );
-static	bool		is_logging_initialized	( );
+static	_iobuf*		get_stdstream_handle	( stdstream_enum stream );
+		void		write_to_stdstream		( stdstream_enum stream, pcstr format, ... );
+
 		bool		use_console_for_logging	( );
 
 		void		logging_preinitialize	( ); // sushi@NOTE: Called in other modules (sometimes even in unrelated dependencies like vobris) near allocators. Might be public.
@@ -93,7 +97,7 @@ logging::log_format		g_log_format;
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;
 
-// STATE[STUB+]
+// STATE[STUB]
 void generate_log_file_name( fs_new::native_path_string* out_result, pcstr extension )
 {
 	ASSERT									(extension);
@@ -107,19 +111,19 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 	out_result->appendf						(".%s", extension);														// <0x671fae>|0x148|0x00f:'57'
 }
 
-// STATE[STUB+]
-static _iobuf* get_stdstream_handle( logging::stdstream_enum stream ) // stick@TODO: stdstream_enum moved to core
+// STATE[STUB]
+static _iobuf* get_stdstream_handle( stdstream_enum stream )
 {
-	if ( stream == logging::stdstream_out )			// <0x671d70>|0x000|0x000:'68'
-		return				&__iob_func()[1];		// <0x671d74>|0x004|0x004:'69'
-	else if ( stream == logging::stdstream_error )	// <0x671d7d>|0x00d|0x009:'70'
-		return				&__iob_func()[2];		// <0x671d82>|0x012|0x005:'71'
+	if ( stream == stdstream_out )				// <0x671d70>|0x000|0x000:'68'
+		return				&__iob_func()[1];	// <0x671d74>|0x004|0x004:'69'
+	else if ( stream == stdstream_error )		// <0x671d7d>|0x00d|0x009:'70'
+		return				&__iob_func()[2];	// <0x671d82>|0x012|0x005:'71'
 
-	return					NULL;					// <0x671d8b>|0x01b|0x009:'73'
+	return					NULL;				// <0x671d8b>|0x01b|0x009:'73'
 }
 
-// STATE[STUB+]
-void write_to_stdstream( logging::stdstream_enum stream, pcstr format, ... )
+// STATE[STUB]
+void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 {
 	_iobuf* handle		=	get_stdstream_handle( stream );	// <0x671d90>|0x000|0x000:'78'
 	if ( !handle )											// <0x671dab>|0x01b|0x01b:'79'
@@ -133,25 +137,25 @@ void write_to_stdstream( logging::stdstream_enum stream, pcstr format, ... )
 	va_end					( mark );						// <2>
 }
 
-// STATE[STUB+] always is inlined
+// STATE[STUB]
 static bool is_logging_initialized( )
 {
 	return g_log_filter_tree != NULL;	// <0x671d60>|0x000|0x000:'92'
 }
 
-// STATE[STUB+]
+// STATE[STUB]
 bool use_console_for_logging( )
 {
-	if ( is_logging_initialized( ) )																// <0x672611>|0x000|0x000:'97'
-		return false;																				// <0x67261a>|0x009|0x009:'98'
-																									// <1>
-	static bool s_use_console_for_logging	=	testing::run_tests_command_line() || s_use_console;	// <0x67261f>|0x00e|0x005:'100'
-	return						s_use_console_for_logging;											// <0x672671>|0x060|0x052:'101'
+	if ( is_logging_initialized( ) )															// <0x672611>|0x000|0x000:'97'
+		return false;																			// <0x67261a>|0x009|0x009:'98'
+																								// <1>
+	static bool s_use_console_for_logging = testing::run_tests_command_line() || s_use_console;	// <0x67261f>|0x00e|0x005:'100'
+	return						s_use_console_for_logging;										// <0x672671>|0x060|0x052:'101'
 }
 
-// STATE[STUB???]
+// STATE[STUB]
 static void logging_callback(
-	void*						user_data, // g_log_flags somehow
+	void*						user_data,			// `g_log_flags` passes obscurely
 	pcstr						file,
 	u32							line,
 	pcstr						function_signature,
@@ -159,71 +163,77 @@ static void logging_callback(
 	logging::verbosity			verbosity,
 	pcstr						log_string,
 	u32							log_string_length,
-	logging::callback_flag		flag
+	logging::callback_flag		flag				// sushi@TODO: Linker removed this arg.
 )
 {
+	(void)file;	// sushi@NOTE: Unused arguments.
+	(void)line;
+	(void)function_signature;
+	(void)initiator;
+	(void)verbosity;
+
 	static bool first_time						= true;
-	static bool s_tried_to_initialize_console	= false;
+	static bool s_tried_to_initialize_console	= false; // sushi@NOTE: Conflicts with the one defined in the module
 	static bool s_initialized_console			= false;
 
-	if ( debug::is_debugger_present( ) )												// <0x672759>|0x000|0x000:'121'
+	if ( debug::is_debugger_present( ) )													// <0x672759>|0x000|0x000:'121'
 	{
-		u32 const buffer_size = (log_string_length + 2);								// <0x672768>|0x00f|0x00f:'128'
-		pstr const buffer = static_cast<pstr>( ALLOCA( buffer_size ) );					// <0x67276b>|0x012|0x003:'129'
-		memory::copy( buffer, buffer_size, log_string, log_string_length );				// <0x672772>|0x019|0x007:'130'
+		u32 const buffer_size = (log_string_length + 2);									// <0x672768>|0x00f|0x00f:'128'
+		pstr const buffer = static_cast<pstr>( ALLOCA( buffer_size ) );						// <0x67276b>|0x012|0x003:'129'
+		memory::copy( buffer, buffer_size, log_string, log_string_length );					// <0x672772>|0x019|0x007:'130'
 		buffer[log_string_length] = '\n';
 		buffer[log_string_length + 1] = '\0';
-		debug::output( buffer );														// <0x67277a>|0x021|0x008:'133'
+		debug::output( buffer );															// <0x67277a>|0x021|0x008:'133'
 	}
 
 
-	if ( g_log_file && g_log_file->initialized() ) {									// <0x67278c>|0x033|0x012:'137'
-		g_log_file->append( log_string, log_string_length );							// <0x67279f>|0x046|0x013:'138'
-		g_log_file->append( "\r\n", 2 );												// <0x6727ac>|0x053|0x00d:'139'
+	if ( g_log_file && g_log_file->initialized( ) ) {										// <0x67278c>|0x033|0x012:'137'
+		g_log_file->append( log_string, log_string_length );								// <0x67279f>|0x046|0x013:'138'
+		g_log_file->append( "\r\n", 2 );													// <0x6727ac>|0x053|0x00d:'139'
 	}
 
 
-	bool log_to_console_settings = (char)user_data & 1;									// <0x6727be>|0x065|0x012:'143'
-	bool should_use_console_for_logging = use_console_for_logging( );					// <0x6727c8>|0x06f|0x00a:'144'
+	bool log_to_console_settings = (log_flags_enum)(intptr_t)user_data == log_to_console;	// <0x6727be>|0x065|0x012:'143'
+	bool should_use_console_for_logging = use_console_for_logging( );						// <0x6727c8>|0x06f|0x00a:'144'
 
-	if ( first_time && (log_to_console_settings || should_use_console_for_logging) )	// <0x6727cd>|0x074|0x005:'146'
-		first_time = false;																// <0x6727e0>|0x087|0x013:'147'
+	if ( first_time && ( log_to_console_settings || should_use_console_for_logging ) )		// <0x6727cd>|0x074|0x005:'146'
+		first_time = false;																	// <0x6727e0>|0x087|0x013:'147'
 
 	bool logged_to_stdout = false;
-	bool log_to_stderr_settings = (char)user_data & 2;									// <0x6727e7>|0x08e|0x007:'150'
+	bool log_to_stderr_settings = (log_flags_enum)(intptr_t)user_data == log_to_stderr;		// <0x6727e7>|0x08e|0x007:'150'
 
 
 
-	if ( log_to_console_settings || should_use_console_for_logging )					// <0x6727ec>|0x093|0x005:'154'
+	if ( log_to_console_settings || should_use_console_for_logging )						// <0x6727ec>|0x093|0x005:'154'
 	{
 
 
-		if ( !s_tried_to_initialize_console )											// <0x6727fa>|0x0a1|0x00e:'158'
+		if ( !s_tried_to_initialize_console )												// <0x6727fa>|0x0a1|0x00e:'158'
 		{
-			initialize_console( );														// <0x672803>|0x0aa|0x009:'160'
-			s_tried_to_initialize_console = true;										// <0x67280d>|0x0b4|0x00a:'161'
+			s_initialized_console = initialize_console( );									// <0x672803>|0x0aa|0x009:'160'
+			s_tried_to_initialize_console = true;											// <0x67280d>|0x0b4|0x00a:'161'
 		}
 
-		if ( s_initialized_console )													// <0x672814>|0x0bb|0x007:'164'
+		if ( s_initialized_console )														// <0x672814>|0x0bb|0x007:'164'
 		{
-			core::write_to_stdstream(	logging::stdstream_out, "%s\r\n", log_string );	// <0x67281d>|0x0c4|0x009:'166' // sushi@TODO: Remove logging::write_to_stdstream
-			logged_to_stdout = true;													// <0x67282d>|0x0d4|0x010:'167'
+			write_to_stdstream( stdstream_out, "%s\r\n", log_string );						// <0x67281d>|0x0c4|0x009:'166'
+			logged_to_stdout = true;														// <0x67282d>|0x0d4|0x010:'167'
 		}
 	}
 
-	if ( g_log_filter_tree && !log_to_stderr_settings )									// <0x672831>|0x0d8|0x004:'171'
+	if ( g_log_filter_tree && !log_to_stderr_settings )										// <0x672831>|0x0d8|0x004:'171'
 	{
-			core::write_to_stdstream( logging::stdstream_error, "%s\r\n", log_string );	// <0x67283e>|0x0e5|0x00d:'173' // sushi@TODO: Remove logging::write_to_stdstream
-	}
-																						// <2>
-																						// <0x672851>|0x0f8|0x013:'176'
-																						// <1>
-																						// <0x67288c>|0x133|0x03b:'178'
-																						// <1>
-																						// <2>
+		write_to_stdstream( stdstream_error, "%s\r\n", log_string );						// <0x67283e>|0x0e5|0x00d:'173'
+
+
+		if ( g_log_filter_tree ) {															// <0x672851>|0x0f8|0x013:'176'
+			if ( s_log_to_stdout.is_set( ) && !logged_to_stdout )							// <1>
+				write_to_stdstream( stdstream_out, "%s\r\n", log_string );					// <0x67288c>|0x133|0x03b:'178'
+		}																					// <1>
+	}																						// <2>
 }
 
-// STATE[STUB???]
+// STATE[STUB]
 void debug_log_callback(
 	pcstr		initiator,
 	bool		is_error_verbosity,
@@ -231,46 +241,21 @@ void debug_log_callback(
 	pcstr		message
 )
 {
-	// LOCALS
-	// log_flags_enum 				log_flags
-	// strings::detail::tuples 		STR_JOINA_tuples_unique_identifier
+	core::log_flags_enum const log_flags = s_write_errors_to_stderr.is_set( ) ?
+									core::log_to_stderr : core::log_to_console;	// <0x672453>|0x000|0x000:'191'
+	pstr debug_log = NULL;
+	STR_JOINA( debug_log, initiator, ":" );										// <0x672482>|0x02f|0x02f:'193'
 
-//	pstr					key = 0;
-//	STR_JOINA				( key, "-", key_raw );
+	if ( log_only_user_string )													// <0x6724bc>|0x069|0x03a:'196'
+		LOG_DEBUG( debug_log );													// <0x672560>|0x10d|0x0a4:'198' sushi@TODO
+	else
+		LOG_ERROR( debug_log );													// <0x672565>|0x112|0x005:'200' sushi@TODO
 
-	// ******
-
-	core::log_flags_enum const log_flags	=	s_write_errors_to_stderr ?
-									core::log_to_stderr : core::log_to_console;
-
-	// STR_JOINA( initiator );
-	// THIS MOST LIKELY CALLS INTO LOG MACRO?
-
-	if ( g_log_file )
-		g_log_file->flush( NULL );
-
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// <0x672453>|0x000|0x000:'191'
-	// 1
-	// <0x672482>|0x02f|0x02f:'193'
-	// 1
-	// 2
-	// <0x6724bc>|0x069|0x03a:'196'
-	// 1
-	// <0x672560>|0x10d|0x0a4:'198'
-	// 1
-	// <0x672565>|0x112|0x005:'200'
-	// 1
-	// 2
-	// <0x6725eb>|0x198|0x086:'203'
-	// <0x6725f5>|0x1a2|0x00a:'204'
-	// ******
+	if ( g_log_file )															// <0x6725eb>|0x198|0x086:'203'
+		g_log_file->flush( NULL );												// <0x6725f5>|0x1a2|0x00a:'204'
 }
 
-// STATE[STUB???] sushi@NOTE: IDA decomp code doesn't match the structure
+// STATE[STUB]
 void logging_preinitialize( )
 {
 	if ( !g_log_callback )
@@ -288,7 +273,7 @@ void logging_preinitialize( )
 	// ******
 }
 
-// STATE[STUB+]
+// STATE[STUB]
 static void push_logging_filters( )
 {
 	using namespace vostok;																									// <1>
@@ -318,12 +303,9 @@ static void push_logging_filters( )
 																															// <2>
 }
 
-// STATE[STUB+]
+// STATE[STUB]
 void logging_initialize( )
 {
-
-
-
 	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );												// <0x672687>|0x000|0x000:'252'
 
 	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(	// sushi@NOTE: This opens up into `pt3malloc`
@@ -338,96 +320,75 @@ void logging_initialize( )
 
 
 	if ( g_log_file_usage ) {																							// <0x6726d6>|0x04f|0x005:'265'
-		fs_new::device_file_system_proxy	device( NULL, fs_new::watcher_enabled_true );								// <0x6726df>|0x058|0x009:'266': sushi@NOTE: `NULL` is `fs_new::s_hdd` in `core\sources\core_entry_point_win_xbox360.cpp`
+		fs_new::device_file_system_proxy	device( NULL, fs_new::watcher_enabled_true );								// <0x6726df>|0x058|0x009:'266': sushi@TODO: `NULL` is `fs_new::s_hdd` in `core\sources\core_entry_point_win_xbox360.cpp`
 		fs_new::native_path_string 			log_file_name;																// <0x6726ef>|0x068|0x010:'267'
 		generate_log_file_name	( &log_file_name, "log" );																// <0x6726fc>|0x075|0x00d:'268'
 		g_log_file = logging::new_log_file( memory::g_mt_allocator, device, log_file_name.c_str( ), g_log_file_usage );	// <0x67271e>|0x097|0x022:'269'
 	}
 }
 
-// STATE[STUB+]
+// STATE[STUB]
 void logging_finalize( )
 {
-	finalize_console( );								// <0x671dd0>|0x000|0x000:'275'
-	logging::delete_log_file( g_log_file );				// <0x671e03>|0x033|0x033:'276'
+	finalize_console( );														// <0x671dd0>|0x000|0x000:'275'
+	logging::delete_log_file( g_log_file );										// <0x671e03>|0x033|0x033:'276'
 
-	// VOSTOK_DELETE_IMPL( s_logging_console_command );	// <0x671e0d>|0x03d|0x00a:'278' // sushi@TODO: I am not sure which allocator (if any) is used here
+	VOSTOK_DELETE_IMPL( memory::g_mt_allocator, s_logging_console_command );	// <0x671e0d>|0x03d|0x00a:'278'
 
-	logging::delete_filter_tree( g_log_filter_tree );	// <0x671e47>|0x077|0x03a:'280'
-	debug::set_log_callback( NULL );					// <0x671e51>|0x081|0x00a:'281'
+	logging::delete_filter_tree( g_log_filter_tree );							// <0x671e47>|0x077|0x03a:'280'
+	debug::set_log_callback( NULL );											// <0x671e51>|0x081|0x00a:'281'
 }
 
-// STATE[STUB+] logging_callback
+// STATE[STUB]
 static bool initialize_console( )
 {
-	// CALL SITE INFO
-											// <0x671ffb> -> HWND__* <unknown>()
-											// <0x67200b> -> int <unknown>(unsigned long)
-											// <0x672019> -> int <unknown>()
-											// <0x6720e3> -> void* <unknown>(unsigned long)
-											// <0x672178> -> void* <unknown>(unsigned long)
-											// <0x672208> -> void* <unknown>(unsigned long)
-	// ******
+	if ( s_tried_to_initialize_console )
+		return s_console_initialized;
 
+	s_tried_to_initialize_console = true;
 
-	s_tried_to_initialize_console = true;	// <0x671ff4>|0x00b|0x00b:'296'
-
-	if ( GetConsoleWindow( ) )				// <0x671ffb>|0x012|0x007:'298'
+	if ( GetConsoleWindow( ) )
 	{
 		s_console_initialized = true;
 		return true;
 	}
 
+	if ( AttachConsole( ATTACH_PARENT_PROCESS ) || AllocConsole( ) )
+	{
+		HANDLE input_handle = GetStdHandle( STD_INPUT_HANDLE );
+		int os_input_handle = _open_osfhandle( (intptr_t)input_handle, _O_TEXT );
+		if ( os_input_handle != -1 ) {
+			FILE input_file = *_fdopen(os_input_handle, "rt");
+			__iob_func()[2] = input_file;				// sushi@NOTE: Bug in target? `add eax, 40h`
+			setvbuf(&__iob_func()[0], 0, _IONBF, 0);
+		}
 
+		HANDLE output_handle = GetStdHandle( STD_OUTPUT_HANDLE );
+		int os_output_handle = _open_osfhandle( (intptr_t)output_handle, _O_TEXT );
+		FILE output_file = *_fdopen(os_output_handle, "wt");
+		__iob_func()[1] = output_file;
+		setvbuf(&__iob_func()[1], 0, _IONBF, 0);
 
-	// FUNCTION BODY
-	// 1
-											// <0x671fe9>|0x000|0x000:'294'
-	// 1
-											// <0x671ff4>|0x00b|0x00b:'296'
-	// 1
-											// <0x671ffb>|0x012|0x007:'298'
-											// <0x672009>|0x020|0x00e:'299'
-											// <0x672019>|0x030|0x010:'300'
-											// <0x671fda>|-0x00f|-0x03f:'301'
-											// <0x6720c7>|0x0de|0x0ed:'302'
-											// <0x6720ce>|0x0e5|0x007:'303'
-	// 1
-	// 2
-	// 3
-	// 4
-											// <0x6720d6>|0x0ed|0x008:'308'
-											// <0x6720ee>|0x105|0x018:'309'
-											// <0x6720f3>|0x10a|0x005:'310'
-											// <0x67214f>|0x166|0x05c:'311'
-	// 1
-	// 2
-	// 3
-	// 4
-											// <0x672171>|0x188|0x022:'316'
-	// 1
-											// <0x672180>|0x197|0x00f:'318'
-											// <0x6721dc>|0x1f3|0x05c:'319'
-	// 1
-	// 2
-	// 3
-											// <0x672201>|0x218|0x025:'323'
-											// <0x672213>|0x22a|0x012:'324'
-											// <0x67221c>|0x233|0x009:'325'
-											// <0x672278>|0x28f|0x05c:'326'
-	// 1
-	// 2
-	// 3
-											// <0x67229d>|0x2b4|0x025:'330'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// ******
+		HANDLE error_handle = GetStdHandle( STD_ERROR_HANDLE );
+		int os_error_handle = _open_osfhandle( (intptr_t)error_handle, _O_TEXT );
+		if ( os_error_handle != -1 ) {
+			FILE error_file = *_fdopen(os_error_handle, "wt");
+			__iob_func()[2] = error_file;
+			setvbuf(&__iob_func()[2], 0, _IONBF, 0);
+		}
+
+		std::ios_base::sync_with_stdio( true );
+
+		s_console_initialized = true;
+		return true;
+	}
+
+	LOG_WARNING( "cannot neither attach parent console, nor create new" );
+	s_console_initialized = false;
+	return false;
 }
 
-// STATE[STUB+]
+// STATE[STUB]
 static void finalize_console( )
 {
 	if ( s_console_initialized )							// <0x671d20>|0x000|0x000:'340'
