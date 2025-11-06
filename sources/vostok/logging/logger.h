@@ -10,17 +10,15 @@
 #include <vostok/logging/api.h>
 #include <vostok/logging/format.h>
 
+#include <vostok/core/logging_extensions.h> // sushi@TODO: Move callback types definitions to this module
+
 namespace vostok {
 namespace logging {
-
-typedef boost::function<
-	void( void *, pcstr, u32, pcstr, pcstr, enum verbosity, pcstr, u32, enum callback_flag )
-> log_callback_type;
 
 class logger : public boost::noncopyable {
 public:
 	inline			logger		(
-						log_callback_type const&			log_callback,
+						boost::function<core::log_callback_type> const&			log_callback,
 						void*								user_data,
 						log_format const*					log_format_ptr,
 						pcstr								initiator, // sushi@TODO: Order of pcstr might be different
