@@ -2326,6 +2326,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>

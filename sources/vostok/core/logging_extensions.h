@@ -9,6 +9,7 @@ namespace vostok {
 
 namespace logging {
 	class log_file;
+	class filter_tree;
 }
 
 namespace core {
@@ -18,7 +19,12 @@ enum log_flags_enum {
 	log_to_stderr		=	1 << 1,
 };
 
-typedef void (*debug_log_callback_type)(pcstr, bool, bool, pcstr);
+typedef void (*debug_log_callback_type)( // sushi@TODO: DELETE
+	pcstr,
+	bool,
+	bool,
+	pcstr
+);
 typedef	void (*log_callback_type)(
 	pvoid,					// user_data (log_flags_enum)
 	pcstr,					// file

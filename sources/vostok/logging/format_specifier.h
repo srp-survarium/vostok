@@ -31,6 +31,7 @@ typedef	fixed_vector<format_specifier_enum, format_specifier_count>		format_spec
 typedef	int		format_index_container[format_specifier_count];
 typedef	bool	format_enabled_container[format_specifier_count];
 typedef char	format_string_type[512];
+
 // this is node of a tree that represents an ordered list of format specifiers enums
 // that are used to format logging
 class format_specifier : private noncopyable

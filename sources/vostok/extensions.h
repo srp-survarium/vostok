@@ -49,6 +49,8 @@
 #include <vostok/tasks_system.h>
 #include <vostok/configs.h>
 #include <vostok/resources.h>
+
+#include <vostok/logging/extensions.h>
 #include <vostok/core/logging_extensions.h>
 
 #if !VOSTOK_CORE_BUILDING

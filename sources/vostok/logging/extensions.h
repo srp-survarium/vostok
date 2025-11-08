@@ -17,8 +17,9 @@
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <vostok/logging/logger.h>
+#include <vostok/logging/api.h>
 #include <vostok/logging/format_specifier.h>
+#include <vostok/logging/format.h>
 
 namespace vostok {
 namespace logging {
@@ -34,6 +35,23 @@ enum callback_flag {
 	last	= 1 << 1,
 }; // enum callback_flag
 
+
+typedef void (*debug_log_callback_type)(pcstr, bool, bool, pcstr); // sushi@TODO: Also defined in <vostok/core/logging_extensions.h>
+typedef	void (*log_callback_type)(
+	pvoid,					// user_data (log_flags_enum)
+	pcstr,					// file
+	u32	 ,					// line
+	pcstr,					// function signature
+	pcstr,					// initiator
+	logging::verbosity,		// verbosity
+	pcstr,					// log string
+	u32	 ,					// log string length
+	logging::callback_flag  // first/last string
+);
+
+
+
+/*
 typedef	boost::function<
 	void (
 		pcstr,					// file
@@ -44,7 +62,7 @@ typedef	boost::function<
 		callback_flag   		// first/last string
 	)
 >				log_callback;
-
+*/
 // sushi@TODO VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
 
 // sushi@TODOVOSTOK_LOGGING_API	void			set_log_callback	( log_callback callback );
