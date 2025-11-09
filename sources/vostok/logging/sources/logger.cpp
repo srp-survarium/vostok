@@ -19,7 +19,7 @@
 #include <stdarg.h>						// for va_list
 
 // sushi@NOTE: This static is unused. They forgot to remove it.
-static vostok::logging::log_callback_boost	s_log_callback	= NULL;
+static vostok::logging::log_callback_boost	s_log_callback;
 
 namespace vostok {
 namespace logging {
@@ -155,7 +155,7 @@ void logger::operator()( pcstr const format, pstr const args )
 	);																			// <0x5f06c>|0x039|0x015:'189'
 }
 
-// STATE[95%|DONE]: LTCG for `buffer_string`
+// STATE[99%|DONE]: LTCG for `buffer_string`
 bool logger_predicate::operator()(
 	u32			index,
 	pstr		string,
@@ -163,7 +163,7 @@ bool logger_predicate::operator()(
 	bool		is_last
 ) const
 {
-	u32 final_length = length + 128 + 1;																			// <0x5f0cf>|0x000|0x000:'209' // sushi@TODO: 0x81? '\0'
+	u32 final_length = length + 128 + 1;																			// <0x5f0cf>|0x000|0x000:'209' // sushi@NOTE: Why 0x81? '\0'
 
 	buffer_string final_string( ( pstr )ALLOCA( final_length ), final_length );										// <0x5f0da>|0x00b|0x00b:'211'
 
@@ -180,7 +180,7 @@ bool logger_predicate::operator()(
 			m_helper.m_verbosity,
 			final_string.c_str( ),
 			final_string.length( ),
-			index == 0 ? first : ( is_last ? last: (callback_flag)0 )												// <0x5f168>|0x099|0x02e:'227' sushi@TODO
+			index == 0 ? first : ( is_last ? last: (callback_flag)0 )												// <0x5f168>|0x099|0x02e:'227'
 		);
 
 	return true;																									// <0x5f2c7>|0x1f8|0x15f:'230'
