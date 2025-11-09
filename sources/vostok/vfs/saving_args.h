@@ -37,7 +37,7 @@ struct save_archive_args : private core::noncopyable
 	u32										fat_part_max_size;
 	u32										archive_part_max_size;
 	save_archive_callback					callback;
-	logging::log_flags_enum					log_flags;
+	core::log_flags_enum					log_flags;
 	logging::log_format *					log_format;
 	virtual_file_system *					from_vfs;
 	fat_node_info *							from_vfs_info_tree;
@@ -59,7 +59,7 @@ struct save_archive_args : private core::noncopyable
 										 u32									archive_part_max_size,
 										 save_archive_callback					callback,
 										 logging::log_format *					log_format			=	NULL,
-										 logging::log_flags_enum				log_flags			=	(logging::log_flags_enum)0,
+										 core::log_flags_enum					log_flags			=	(core::log_flags_enum)0,
 										 virtual_file_system *					from_vfs			=	NULL,
 										 fat_node_info *						from_vfs_info_tree	=	NULL,
 										 virtual_file_system *					to_vfs				=	NULL,

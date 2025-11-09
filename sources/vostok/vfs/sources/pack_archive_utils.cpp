@@ -16,12 +16,12 @@ namespace vfs {
 using namespace		resources;
 using namespace		fs_new;
 
-void   db_callback						(u32								num_nodes, 
-										 u32								whole_nodes, 
-										 pcstr								name, 
-										 u32								flags, 
+void   db_callback						(u32								num_nodes,
+										 u32								whole_nodes,
+										 pcstr								name,
+										 u32								flags,
 										 logging::log_format *				log_format,
-										 logging::log_flags_enum			log_flags,										 	
+										 core::log_flags_enum			log_flags,
 										 debug_info_enum					debug_info)
 {
 	if ( debug_info == debug_info_detail )
@@ -35,14 +35,14 @@ void   db_callback						(u32								num_nodes,
 		if ( flags_string.length() )
 			flags_string.set_length	(flags_string.length() - 1);
 
-		LOGI_INFO							("pack", log_format, log_flags,  
+		LOGIFD_INFO							("pack", log_format, log_flags,
 											 "%d of %d files proceeded: %s %s", num_nodes, whole_nodes, name, flags_string.c_str());
 	}
 	else if ( debug_info == debug_info_normal )
 	{
 		if ( num_nodes == whole_nodes || !(num_nodes%25) )
 		{
-			LOGI_INFO						("pack",  log_format, log_flags,  
+			LOGIFD_INFO						("pack",  log_format, log_flags,
 											 "%d of %d files proceeded", num_nodes, whole_nodes);
 		}
 	}
@@ -54,12 +54,12 @@ static void   mount_callback			(mount_result result)
 }
 
 bool   mount_sources					(virtual_file_system &				vfs,
-										 synchronous_device_interface & 	synchronous_device, 
-										 sources_array &					sources, 
+										 synchronous_device_interface & 	synchronous_device,
+										 sources_array &					sources,
 										 mount_ptrs_array &					mount_ptrs,
 										 memory::base_allocator *			allocator,
 										 logging::log_format *				log_format,
-										 logging::log_flags_enum			log_flags)
+										 core::log_flags_enum			log_flags)
 {
 	for ( sources_array::iterator it	=	sources.begin();
 								  it	!=	sources.end();
@@ -70,25 +70,25 @@ bool   mount_sources					(virtual_file_system &				vfs,
 		physical_path_info const path_info	=	synchronous_device->get_physical_path_info(path);
 
 		query_mount_arguments	mount_args;
-		
+
 		if ( path_info.is_folder() )
 		{
 			LOGI_INFO						("pack", "mounting physical path: '%s'", path.c_str());
 			mount_args					=	query_mount_arguments::mount_physical_path
-												(allocator, 
+												(allocator,
 												"",
 												path,
 												"",
 												NULL,
 												& synchronous_device,
-												& mount_callback, 
+												& mount_callback,
 												recursive_true);
 		}
 		else if ( path_info.is_file() )
 		{
 			LOGI_INFO						("pack", "mounting archive: '%s'", path.c_str());
 			mount_args					=	query_mount_arguments::mount_archive
-												(allocator, 
+												(allocator,
 												"",
 												path,
 												path,
@@ -100,7 +100,7 @@ bool   mount_sources					(virtual_file_system &				vfs,
 		}
 		else
 		{
-			LOGI_ERROR						("pack", log_format, log_flags, "can't find anything to mount on path: '%s'", path.c_str());
+			LOGIFD_ERROR					("pack", log_format, log_flags, "can't find anything to mount on path: '%s'", path.c_str());
 			return							false;
 		}
 
