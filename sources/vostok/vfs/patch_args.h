@@ -17,7 +17,7 @@ struct patch_args : public pack_archive_args
 
 	patch_args	(fs_new::synchronous_device_interface &		synchronous_device,
 				 logging::log_format * const				log_format,
-				 logging::log_flags_enum const				log_flags)
+				 core::log_flags_enum const				log_flags)
 		:	pack_archive_args(synchronous_device, log_format, log_flags) {}
 };
 

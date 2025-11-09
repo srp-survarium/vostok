@@ -36,7 +36,7 @@ private:
 	vostok::uninitialized_reference< vostok::fs_new::simple_synchronous_interface >	m_fs_devices;
 
 	vostok::logging::log_format			m_log_format;
-	vostok::logging::log_flags_enum		m_log_flags;
+	vostok::core::log_flags_enum		m_log_flags;
 
 private:
 	HWND								m_splash_screen;

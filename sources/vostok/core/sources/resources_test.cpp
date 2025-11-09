@@ -311,7 +311,7 @@ public:
 
 	void create_db						()
 	{
-		vfs::pack_archive_args	args		(resources::get_synchronous_device(), NULL, (logging::log_flags_enum)0);
+		vfs::pack_archive_args	args		(resources::get_synchronous_device(), NULL, (core::log_flags_enum)0);
 		args.allocator					=	& memory::g_mt_allocator;
 		args.archive_part_max_size		=	4096;
 		args.fat_part_max_size			=	1024;

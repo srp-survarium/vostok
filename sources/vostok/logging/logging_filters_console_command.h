@@ -2,8 +2,6 @@
 //	Created 	: 02.11.2025
 ////////////////////////////////////////////////////////////////////////////
 
-// stick@TODO: most likely private
-
 #ifndef LOGGING_LOGGING_FILTERS_CONSOLE_COMMAND_H_INCLUDED
 #define LOGGING_LOGGING_FILTERS_CONSOLE_COMMAND_H_INCLUDED
 
@@ -19,7 +17,7 @@ class logging_filters_console_command : public console_commands::console_command
 public:
 			logging_filters_console_command	(
 						filter_tree&						filter_tree,
-						pcstr								name,
+						pcstr const							name,
 						bool								serializable,
 						console_commands::command_type		command_type,
 						console_commands::execution_filter	execution_filter

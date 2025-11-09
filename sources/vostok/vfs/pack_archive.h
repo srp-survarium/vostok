@@ -33,7 +33,7 @@ struct pack_archive_args : private core::noncopyable
 	fs_new::synchronous_device_interface &	synchronous_device;
 	debug_info_enum							debug_info;
 	memory::base_allocator *				allocator;
-	logging::log_flags_enum					log_flags;
+	core::log_flags_enum					log_flags;
 	logging::log_format *					log_format;
 	u32										fat_part_max_size;
 	u32										archive_part_max_size;
@@ -50,7 +50,7 @@ struct pack_archive_args : private core::noncopyable
 
 	pack_archive_args					(fs_new::synchronous_device_interface &		synchronous_device,
 										 logging::log_format * const				log_format,
-										 logging::log_flags_enum const				log_flags)
+										 core::log_flags_enum const				log_flags)
 		:	vfs								(NULL),
 			synchronous_device				(synchronous_device),
 			flags							((save_flags_enum)0),
@@ -82,14 +82,14 @@ bool   mount_sources					(virtual_file_system &					vfs,
 										 mount_ptrs_array &						mount_ptrs,
 										 memory::base_allocator *				allocator,
 										 logging::log_format *					log_format,
-										 logging::log_flags_enum				log_flags);
+										 core::log_flags_enum				log_flags);
 
 void   db_callback						(u32									num_nodes, 
 										 u32									whole_nodes, 
 										 pcstr									name, 
 										 u32									flags, 
 										 logging::log_format *					log_format,
-										 logging::log_flags_enum				log_flags,
+										 core::log_flags_enum				log_flags,
 										 debug_info_enum						debug_info);
 
 } // namespace vfs

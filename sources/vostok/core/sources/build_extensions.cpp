@@ -120,10 +120,10 @@ void vostok::build::initialize	( core::engine *  )
 
 	if ( s_print_build_id )
 	{
-		LOG_FORCED			(logging::info,
-							 logging::format_message, 
-							 logging::log_to_console,
-						     "%d", 
+		LOGFD_FORCED		(logging::info,
+							 logging::format_message,
+							 core::log_to_console,
+						     "%d",
 							 id);
 
 		debug::terminate	("");

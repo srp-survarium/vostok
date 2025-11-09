@@ -18,13 +18,13 @@ bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGho
 	m_shape			( shape ),
 	m_bt_object		( obj )
 {
-	obj->setUserPointer( this ); // <0x583e86>|0x000|0x000:'23'
+	obj->setUserPointer( this );	// <0x583e86>|0x000|0x000:'23'
 }
 
 // STATE[UNVERIFIED]
 bt_ghost_object::~bt_ghost_object( )
 {
-	m_bt_object->~btPairCachingGhostObject(); // <0x583d97>|0x000|0x000:'28'
+	m_bt_object->~btPairCachingGhostObject();	// <0x583d97>|0x000|0x000:'28'
 }
 
 // STATE[STUB]
@@ -50,14 +50,14 @@ void bt_ghost_object::get_overlapping_objects(
 // STATE[UNVERIFIED]
 u32 bt_ghost_object::get_overlapping_objects_count( ) const
 {
-	return m_bt_object->getNumOverlappingObjects(); // <0x583860>|0x000|0x000:'44'
+	return m_bt_object->getNumOverlappingObjects();	// <0x583860>|0x000|0x000:'44'
 }
 
 // STATE[UNVERIFIED]
 u16 bt_ghost_object::get_collision_group( ) const
 {
 	// ASSERT?
-	return m_bt_object->getBroadphaseHandle()->m_collisionFilterGroup; 	// <0x583740>|0x000|0x000:'50'
+	return m_bt_object->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x583740>|0x000|0x000:'50'
 }
 
 // STATE[STUB]
@@ -231,19 +231,19 @@ void bt_ghost_object::remove( world* w )
 // STATE[UNVERIFIED]
 btCollisionObject* bt_ghost_object::get_bt_collision_obect( )
 {
-	return m_bt_object; // <0x5836f0>|0x000|0x000:'174'
+	return m_bt_object;	// <0x5836f0>|0x000|0x000:'174'
 }
 
 // STATE[UNVERIFIED]
 void bt_ghost_object::set_transform( float4x4 const& transform )
 {
-	m_bt_object->setWorldTransform( from_vostok( transform ) ); // <0x583d6a>|0x000|0x000:'179'
+	m_bt_object->setWorldTransform( from_vostok( transform ) );	// <0x583d6a>|0x000|0x000:'179'
 }
 
 // STATE[UNVERIFIED]
 float4x4 bt_ghost_object::get_transform( ) const
 {
-	return from_bullet( m_bt_object->getWorldTransform() ); // <0x583d10>|0x000|0x000:'184'
+	return from_bullet( m_bt_object->getWorldTransform() );	// <0x583d10>|0x000|0x000:'184'
 }
 
 } // namespace physics

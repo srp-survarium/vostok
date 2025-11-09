@@ -24,13 +24,13 @@ boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet ) // STATE[STUB]
 	ASSERT( buffer_size < (u32(1) << 16) );
 	*(buffer - 1) = 0;
 	*static_cast<u16*>(static_cast<pvoid>(buffer - 3)) = static_cast<u16>( buffer_size );
-	return boost::asio::buffer( static_cast<pcbyte>(buffer - 3), buffer_size + 3 ); // <0x6e7975>|0x08f|0x00b:'27'
+	return boost::asio::buffer( static_cast<pcbyte>(buffer - 3), buffer_size + 3 );	// <0x6e7975>|0x08f|0x00b:'27'
 }
 
 boost::asio::mutable_buffers_1 buffer_to_receive_into( tcp_packet& packet ) // STATE[STUB]
 {
 	ASSERT( packet.buffer_size() );
-	return boost::asio::buffer( packet.buffer(), packet.buffer_size() );// <0x6e79b2>|0x00c|0x00c:'33'
+	return boost::asio::buffer( packet.buffer(), packet.buffer_size() );	// <0x6e79b2>|0x00c|0x00c:'33'
 }
 
 } // namespace network_core

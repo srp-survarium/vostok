@@ -37,7 +37,7 @@ static pcstr s_suppress_debug_window_on_crash_string	=	"suppress_debug_window_on
 
 static vostok::command_line::key	s_suppress_debug_window_on_crash (
 	s_suppress_debug_window_on_crash_string,
-	"", 
+	"",
 	"tests",
 	"application will not show debug window on crash",
 	"boolean"
@@ -57,31 +57,31 @@ bool   suppress_debug_window_on_crash ()
 	return											!!s_out_result;
 }
 
-static command_line::key	s_dont_check_multithreaded_safety("dont_check_multithreaded_safety", 
+static command_line::key	s_dont_check_multithreaded_safety("dont_check_multithreaded_safety",
 															  "",
 															  "threading",
 															  "turn off checks of parallel use of code that is not multithreaded");
 
 bool initialized		();
 
-bool	core_debug_engine::dont_check_multithreaded_safety		() const 
-{ 
+bool	core_debug_engine::dont_check_multithreaded_safety		() const
+{
 	return									s_dont_check_multithreaded_safety;
 }
 
-bool	core_debug_engine::terminate_on_error		() const 
-{ 
-	return									build::print_build_id_command_line() || 
+bool	core_debug_engine::terminate_on_error		() const
+{
+	return									build::print_build_id_command_line() ||
 											testing::run_tests_command_line() ||
-											suppress_debug_window_on_crash(); 
+											suppress_debug_window_on_crash();
 }
 
 void    core_debug_engine::on_terminate			() const
 {
-	logging::flush_log_file							();
-	logging::log_file * const log_file	=	logging::get_log_file();
-	if ( log_file )
-		log_file->on_terminate				();
+	// sushi@TODO:  logging::flush_log_file							();
+	// sushi@TODO:  logging::log_file * const log_file	=	logging::get_log_file();
+	// sushi@TODO:  if ( log_file )
+	// sushi@TODO:  	log_file->on_terminate				();
 }
 
 int		core_debug_engine::get_exit_code	() const
@@ -94,14 +94,14 @@ bool	core_debug_engine::core_initialized		() const
 	return									core::initialized();
 }
 
-u32		core_debug_engine::build_station_build_id	() const 
+u32		core_debug_engine::build_station_build_id	() const
 {
-	return									build::build_station_build_id(); 
+	return									build::build_station_build_id();
 }
 
 void	core_debug_engine::flush_log_file			(pcstr file_name) const
 {
-	logging::flush_log_file							(file_name);
+	// sushi@TODO: logging::flush_log_file							(file_name);
 }
 
 bool	core_debug_engine::is_testing				( ) const
@@ -109,8 +109,8 @@ bool	core_debug_engine::is_testing				( ) const
 	return									testing::is_testing();
 }
 
-void	core_debug_engine::on_testing_exception	( assert_enum			assert_type, 
- 										  pcstr					description, 
+void	core_debug_engine::on_testing_exception	( assert_enum			assert_type,
+ 										  pcstr					description,
 										 _EXCEPTION_POINTERS*	exception_information,
 										 bool					is_assertion) const
 {
@@ -125,10 +125,10 @@ pcstr	core_debug_engine::current_directory		( ) const
 bool	core_debug_engine::create_folder_r			( pcstr path, bool create_last ) const
 {
 	using namespace							fs_new;
-	
+
 	synchronous_device_interface const & device	=	get_core_synchronous_device( );
-	return									fs_new::create_folder_r(device, 
-																	native_path_string::convert(path), 
+	return									fs_new::create_folder_r(device,
+																	native_path_string::convert(path),
 																	create_last);
 }
 

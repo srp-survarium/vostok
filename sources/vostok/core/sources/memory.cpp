@@ -110,7 +110,7 @@ void vostok::memory::unlock_process_heap		( )
 void vostok::memory::preinitialize			( )
 {
 #if !VOSTOK_DISABLE_CRT_ALLOCATOR && !defined( VOSTOK_STATIC_LIBRARIES )
-	memory::g_crt_allocator						= &s_crt_allocator;	
+	memory::g_crt_allocator						= &s_crt_allocator;
 #else // #if !VOSTOK_DISABLE_CRT_ALLOCATOR && !defined( VOSTOK_STATIC_LIBRARIES )
 //	VOSTOK_UNREFERENCED_PARAMETER					( command_line );
 #endif // #if !VOSTOK_DISABLE_CRT_ALLOCATOR && !defined( VOSTOK_STATIC_LIBRARIES )
@@ -131,7 +131,7 @@ void vostok::memory::preinitialize			( )
 	g_fs_allocator.do_register					(		16*Mb  ,	"filesystem"			);
 
 	//vostok::particle::g_particles_allocator.do_register			(		 10*Mb  ,	"particle system"		);
-	
+
 	u32 mt_memory_amount						= 8*Mb;
 	if ( testing::run_tests_command_line () )
 		mt_memory_amount						+= 16*Mb;
@@ -241,12 +241,16 @@ void vostok::memory::initialize				( )
 
 	on_after_memory_initialized	( );
 
+	core::logging_initialize	( );
+
 	memory::dump_statistics		( true );
 }
 
 void vostok::memory::finalize				( )
 {
 	ASSERT						( s_arena_size, "memory hasn't been preinitialized yet" );
+
+	core::logging_finalize		( );
 
 #if VOSTOK_USE_MEMORY_GUARD
 	guard::finalize				( );
@@ -312,11 +316,11 @@ void vostok::memory::dump_statistics		( bool const dump_stats_for_empty_arenas_a
 
 	R_ASSERT_CMP				( allocated_size, >=, crt_allocated_size + process_allocated_size );
 	u64 const vostok_used			= allocated_size - (crt_allocated_size + process_allocated_size);
-	LOG_INFO					( logging::format_message, "---------------overall memory stats---------------" );
-	LOG_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10), total_size );
+	LOGF_INFO					( logging::format_message, "---------------overall memory stats---------------" );
+	LOGF_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10), total_size );
 }
 
 void vostok::memory::copy					( mutable_buffer const & destination, const_buffer const & source )
