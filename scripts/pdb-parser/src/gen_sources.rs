@@ -44,6 +44,7 @@ pub struct Function<'a> {
 
     pub blocks: Vec<(pdb::Rva, i32)>,
     pub typedefs: Vec<(Type, Type)>,
+    pub callsites: Vec<(pdb::Rva, Type)>,
     pub symbols: Vec<pdb::SymbolData<'a>>,
 }
 
@@ -442,6 +443,17 @@ impl<'a> Module<'a> {
                     }
                 }
 
+                SymbolData::CallSiteInfo(pdb::CallSiteInfoSymbol { offset, type_index }) => {
+                    let rva = offset.to_rva(address_map).expect("invalid rva");
+                    let noname = pdb::RawString::from("<unknown>");
+
+                    let maybe_fn = Type::new(
+                        &formatter.emit_function_orig(&noname, module_id, type_index)?,
+                        &function.namespace,
+                    );
+                    function.callsites.push((rva, maybe_fn))
+                }
+
                 // Keep everything that we missed but is inside functions
                 symbol if depth != 0 => {
                     function.symbols.push(symbol);
@@ -496,6 +508,7 @@ impl<'a> Function<'a> {
 
             blocks: Default::default(),
             typedefs: Default::default(),
+            callsites: Default::default(),
             symbols: Default::default(),
         }
     }
@@ -616,6 +629,7 @@ impl<'a> Function<'a> {
             //
             blocks,
             typedefs,
+            callsites,
             symbols,
         } = self;
 
@@ -679,12 +693,11 @@ impl<'a> Function<'a> {
 
         if !blocks.is_empty() {
             writeln!(w, "\t// SKIPPED BLOCKS")?;
-            for rva in blocks {
+            for (rva, depth) in blocks {
                 writeln!(
                     w,
                     "\t// <{offset}><{depth}>",
-                    offset = rva.0.saturating_add(GAME_IB),
-                    depth = rva.1,
+                    offset = rva.saturating_add(GAME_IB),
                 )?;
             }
             writeln!(w, "\t// ******\n")?;
@@ -697,6 +710,18 @@ impl<'a> Function<'a> {
                 writeln!(w, "\t// \t{ty}")?;
                 writeln!(w, "\t// \t{name};")?;
                 writeln!(w)?;
+            }
+            writeln!(w, "\t// ******\n")?;
+        }
+
+        if !callsites.is_empty() {
+            writeln!(w, "\t// CALL SITE INFO")?;
+            for (rva, ty) in callsites {
+                writeln!(
+                    w,
+                    "\t// <{offset}> -> {ty}",
+                    offset = rva.saturating_add(GAME_IB),
+                )?;
             }
             writeln!(w, "\t// ******\n")?;
         }
@@ -811,7 +836,7 @@ impl<'a> Function<'a> {
 
                     None => {
                         empty_line_no += 1;
-                        writeln!(w, "\t// {empty_line_no}")?
+                        writeln!(w, "\t// <{empty_line_no}>")?
                     }
                 }
             }

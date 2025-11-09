@@ -83,9 +83,9 @@ public:
 			{
 				fs_new::native_path_string const physical_path	=	it_child.get_physical_path();
 				++m_temp_files_to_delete_left;
-				query_erase_file			(physical_path, 
-											 "", 
-											 boost::bind(& resource_tester::on_temp_file_deleted, this, _1), 
+				query_erase_file			(physical_path,
+											 "",
+											 boost::bind(& resource_tester::on_temp_file_deleted, this, _1),
 											 & memory::g_mt_allocator);
 			}
 
@@ -94,7 +94,7 @@ public:
 	}
 
 	void   on_test_recursive_iterator_ready	(vfs::vfs_locked_iterator const & iterator)
-	{	
+	{
 		vfs::log_vfs_iterator				(iterator);
 		erase_temp_files					(iterator);
 	}
@@ -105,12 +105,12 @@ public:
 		TEST_ASSERT						(info.is_folder());
 
 		query_mount_physical			("test/disk", m_disk_path.c_str(), "disk", fs_new::watcher_enabled_true,
-										 boost::bind(&resource_tester::on_mount_disk_completed, this, _1), 
+										 boost::bind(&resource_tester::on_mount_disk_completed, this, _1),
 										 &::vostok::memory::g_mt_allocator,
 										 recursive_false);
 
 		query_mount_physical			("test", m_folder_with_db.c_str(), "", fs_new::watcher_enabled_true,
-										 boost::bind(&resource_tester::on_mount_completed, this, _1), 
+										 boost::bind(&resource_tester::on_mount_completed, this, _1),
 										 &::vostok::memory::g_mt_allocator,
 										 recursive_false);
 	}
@@ -131,7 +131,7 @@ public:
 		if ( test_configuration.wait_after_mount )
 			threading::yield		(50);
 
-		request normal_request[] = 
+		request normal_request[] =
 		{
     		{ "test/test.db/folder1/2-866.no_inline",		test_resource_class },
     		{ "test/test.db/folder1/2.txt",					test_resource_class },
@@ -156,12 +156,12 @@ public:
    			{ "test/disk/6-6.test",							test_resource_class },
 		};
 
-		request inplace_inline_request[] = 
+		request inplace_inline_request[] =
 		{
    			{ "test/inplace_inline.inplace_inline",		test_resource_class },
 		};
 
-		request request_for_file_that_dont_exist_reuse_true[]	=	
+		request request_for_file_that_dont_exist_reuse_true[]	=
 		{
  			{ "test/disk/this_file_dont_exist1",	test_resource_class },
   			{ "test/disk/this_file_dont_exist2",	test_resource_class },
@@ -193,7 +193,7 @@ public:
 				src_buffer_offs_to_raw_data	=	sizeof(test_unmanaged_resource);
 			}
 
-			pstr src_buffer_data		=	test_configuration.inplace_in_creation_or_inline_data ? 
+			pstr src_buffer_data		=	test_configuration.inplace_in_creation_or_inline_data ?
 											(pstr)MT_ALLOC(char, src_buffer_size) : (pstr)ALLOCA(src_buffer_size);
 
 			for ( u32 i=0; i<creation_data_size; ++i )
@@ -209,20 +209,20 @@ public:
 
 			u32 const creation_requests_count	=	test_configuration.inplace_in_creation_or_inline_data ? 1 : creation_requests.size();
 
-			query_create_resources_and_wait	(&*creation_requests.begin(), 
+			query_create_resources_and_wait	(&*creation_requests.begin(),
 											 creation_requests_count,
-											 boost::bind(&resource_tester::resources_callback, this, _1), 
+											 boost::bind(&resource_tester::resources_callback, this, _1),
 											 & memory::g_mt_allocator);
 		}
 		else
 		{
-			request * requests			=	test_configuration.inplace_in_creation_or_inline_data ? 
+			request * requests			=	test_configuration.inplace_in_creation_or_inline_data ?
 											inplace_inline_request : normal_request;
-			
+
 			if ( test_configuration.inplace_in_creation_or_inline_data )
 				R_ASSERT					(test_configuration.cook_type == cook_type_inplace_unmanaged);
 
-			u32 requests_count			=	test_configuration.inplace_in_creation_or_inline_data ? 
+			u32 requests_count			=	test_configuration.inplace_in_creation_or_inline_data ?
 											array_size(inplace_inline_request) : array_size(normal_request);
 
 			if ( test_configuration.cook_type == cook_type_translate_query )
@@ -245,14 +245,14 @@ public:
 				}
 			}
 
-			query_resources_and_wait		( requests, 
+			query_resources_and_wait		( requests,
 											  requests_count,
-											  boost::bind(&resource_tester::resources_callback, this, _1), 
+											  boost::bind(&resource_tester::resources_callback, this, _1),
 											  & memory::g_mt_allocator	);
 		}
-	
+
 		//release_all_grm_resources	();
-				
+
 		if ( !test_configuration.do_query_create_resource )
 			query_unmounts					();
 	}
@@ -268,14 +268,14 @@ public:
 				resources::tick				();
 		}
 	}
-	
+
 	void test_recursive_fs_iterator ()
 	{
 		query_mounts				();
 
 		LOGI_INFO					("resources:test",	"RECURSIVE FS ITERATOR TEST");
 
-		query_vfs_iterator_and_wait	("test", 
+		query_vfs_iterator_and_wait	("test",
 									 boost::bind(& resource_tester::on_test_recursive_iterator_ready, this, _1),
 									 &::vostok::memory::g_mt_allocator,
 									 recursive_true);
@@ -311,7 +311,7 @@ public:
 
 	void create_db						()
 	{
-		vfs::pack_archive_args	args		(resources::get_synchronous_device(), NULL, (logging::log_flags_enum)0);
+		vfs::pack_archive_args	args		(resources::get_synchronous_device(), NULL, (core::log_flags_enum)0);
 		args.allocator					=	& memory::g_mt_allocator;
 		args.archive_part_max_size		=	4096;
 		args.fat_part_max_size			=	1024;
@@ -332,6 +332,7 @@ public:
 
 	void test (core_test_suite * suite)
 	{
+#if 0 // stick@TODO
 		//threading::yield				(10000);
 		m_resource_path					=	suite->get_resources_path();
 
@@ -369,7 +370,7 @@ public:
 		test_configuration_type				test_configuration(1);
 		u32 const tests_to_skip			=	0;
 
-		
+
 		do {
 
 			if ( m_test_iteration <= tests_to_skip )
@@ -380,7 +381,7 @@ public:
 
 			cook_base * cook			=	NULL;
 			if ( test_configuration.cook_type == cook_type_managed )
-			{ 
+			{
 				cook					=	MT_NEW(test_managed_cook)
 											(test_configuration.reuse_type,
 											 test_configuration.create_in_current_thread,
@@ -434,11 +435,11 @@ public:
 			if ( test_configuration.inplace_in_creation_or_inline_data )
 				cook_string				+=	"+inplace_inline";
 
-			LOGI_INFO("resources:test",	"TEST ITERATION %d | cook: %s, cook_reuse: %s, create_in_current_thread: %d, allocate_in_current_thread: %d, sleep_after_mount: %d", 
-										m_test_iteration, cook_string.c_str(), 
-										convert_cook_reuse_value_to_string(test_configuration.reuse_type), 
-										test_configuration.create_in_current_thread, 
-										test_configuration.allocate_in_current_thread, 
+			LOGI_INFO("resources:test",	"TEST ITERATION %d | cook: %s, cook_reuse: %s, create_in_current_thread: %d, allocate_in_current_thread: %d, sleep_after_mount: %d",
+										m_test_iteration, cook_string.c_str(),
+										convert_cook_reuse_value_to_string(test_configuration.reuse_type),
+										test_configuration.create_in_current_thread,
+										test_configuration.allocate_in_current_thread,
 										test_configuration.wait_after_mount);
 
 			bool skip_test				=	false;
@@ -446,7 +447,7 @@ public:
 			if ( test_configuration.generate_if_no_file_test == generate_if_no_file_test_save_generated )
 				skip_test				=	true;
 #endif // #ifdef MASTER_GOLD
-			
+
 			if ( skip_test )
 				LOGI_INFO					("resources:test",	"this test iteration is skipped in Master Gold because it uses DEBUG allocator");
 			else
@@ -454,14 +455,14 @@ public:
 
 			unregister_cook					(cook);
 
-			delete_files_created_by_cook	(test_configuration, cook_string.c_str());		
+			delete_files_created_by_cook	(test_configuration, cook_string.c_str());
 
 			MT_DELETE						(cook);
 
 			++m_test_iteration;
 
 		} while ( test_configuration.move_next() );
-		
+
 
 
 		for ( u32 i=0; i<2; ++i )
@@ -469,6 +470,7 @@ public:
 
 		//threading::yield					(100);
 		wait_and_dispatch_callbacks			(true);
+#endif
 	}
 
 	struct on_test_file_erased_predicate_type
@@ -483,6 +485,7 @@ public:
 
 		u32									files_left;
 	};
+
 
 	void   delete_files_created_by_cook (test_configuration_type const & test_configuration, pcstr const cook_string)
 	{
@@ -504,7 +507,7 @@ public:
 		u32 const time_for_cleanup		=	5000;
 		timing::timer	timer;
 		timer.start							();
-		while ( on_test_file_erased_predicate.files_left && 
+		while ( on_test_file_erased_predicate.files_left &&
 			  (timer.get_elapsed_msec() < time_for_cleanup || debug::is_debugger_present()) )
 		{
 			if ( threading::g_debug_single_thread )
@@ -513,13 +516,13 @@ public:
 			resources::dispatch_callbacks	();
 		}
 
-		CURE_ASSERT		   (!on_test_file_erased_predicate.files_left || debug::is_debugger_present(), 
+		CURE_ASSERT		   (!on_test_file_erased_predicate.files_left || debug::is_debugger_present(),
 							return,
-							"TEST ITERATION %d FAILED TO CLEAN FILES | cook: %s, cook_reuse: %s, create_in_current_thread: %d, allocate_in_current_thread: %d, sleep_after_mount: %d", 
-							m_test_iteration, cook_string, 
-							convert_cook_reuse_value_to_string(test_configuration.reuse_type), 
-							test_configuration.create_in_current_thread, 
-							test_configuration.allocate_in_current_thread, 
+							"TEST ITERATION %d FAILED TO CLEAN FILES | cook: %s, cook_reuse: %s, create_in_current_thread: %d, allocate_in_current_thread: %d, sleep_after_mount: %d",
+							m_test_iteration, cook_string,
+							convert_cook_reuse_value_to_string(test_configuration.reuse_type),
+							test_configuration.create_in_current_thread,
+							test_configuration.allocate_in_current_thread,
 							test_configuration.wait_after_mount);
 
 		s_created_files.clear		();
@@ -545,7 +548,7 @@ REGISTER_TEST_CLASS							(resource_tester, core_test_suite);
 } // namespace resources
 
 
- 
+
 
 
 

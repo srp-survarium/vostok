@@ -50,25 +50,26 @@ engine_world::engine_world				(
 	m_application_activated				( false )
 {
 	core::preinitialize					(
-		this, 
+		this,
 		log_file_usage( ),
-		command_line, 
-		command_line::contains_application_true, 
+		command_line,
+		command_line::contains_application_true,
 		application,
 		build_date
 	);
 
+#if 0 // sushi@TODO
 	logging::set_format		(
 		logging::format_initiator +
 		logging::format_separator(" <") +
-		logging::format_verbosity + 
+		logging::format_verbosity +
 		logging::format_separator(">\t") +
 		logging::format_separator("[") +
 		logging::format_time +
 		logging::format_separator("]\t") +
 		logging::format_message
 	);
-
+#endif
 	g_allocator.do_register				(  64*Kb,	"engine"	);
 	m_render_allocator.do_register		( 128*Mb,	"render"	);
 	m_network_allocator.do_register		(  64*Kb,	"network"	);
@@ -90,11 +91,11 @@ engine_world::engine_world				(
 
 	memory::allocate_region				( additional_memory_size );
 }
-	
+
 engine_world::~engine_world		( )
 {
 	finalize							( );
-	
+
 	destroy_scaleform	( );
 	core::finalize						( );
 }
@@ -132,7 +133,7 @@ void engine_world::tick					( )
 		logic_tick						( );
 		build_tick						( );
 	}
-	
+
 	m_render_world->tick				( );
 }
 
@@ -167,7 +168,7 @@ bool engine_world::command_line_no_splash_screen	( )
 bool engine_world::command_line_editor_singlethread	( )
 {
 #ifndef VOSTOK_STATIC_LIBRARIES
-	static bool s_editor_single_thread	=	s_editor_st_key && 
+	static bool s_editor_single_thread	=	s_editor_st_key &&
 											threading::core_count() == 1;
 	return					s_editor_single_thread;
 #else // #ifndef VOSTOK_STATIC_LIBRARIES
@@ -243,7 +244,7 @@ void engine_world::enable_game_impl		( bool const value )
 {
 	if ( m_engine_user_world )
 	{
-		if ( command_line_editor_singlethread() ) 
+		if ( command_line_editor_singlethread() )
 		{
 			engine_user_world().enable		( value );
 		}

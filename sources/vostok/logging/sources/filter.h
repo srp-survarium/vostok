@@ -8,6 +8,7 @@
 #define RULE_H_INCLUDED
 
 #include <vostok/intrusive_double_linked_list.h>
+#include <vostok/logging/api.h>
 
 namespace vostok {
 namespace logging {
@@ -16,16 +17,17 @@ struct initiator_filter
 {
 	initiator_filter *						next;
 	initiator_filter *						prev;
-	memory::base_allocator *				allocator;
 	int										verbosity;
 	u32										thread_id;
 #pragma warning (push)
 #pragma warning (disable:4200)
-	fixed_string<128>						initiator;
+	fixed_string<32>						initiator;
 #pragma warning	(pop)
 };
 
-typedef intrusive_double_linked_list<initiator_filter, initiator_filter *, & initiator_filter::prev, & initiator_filter::next>	
+STATIC_SIZE_ASSERT(initiator_filter, 0x3C);
+
+typedef intrusive_double_linked_list<initiator_filter, initiator_filter *, & initiator_filter::prev, & initiator_filter::next>
 											filter_stack;
 
 

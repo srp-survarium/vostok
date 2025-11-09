@@ -376,7 +376,7 @@ MStatus solid_visual_exporter::doIt( const MArgList& arglist)
 		MString db_file_name		= m_file_name;
 		create_folder_r				( fs_device, db_file_name.asChar(), false );
 
-		vfs::pack_archive_args	pack_args	(fs_device, NULL, (logging::log_flags_enum)0);
+		vfs::pack_archive_args	pack_args	(fs_device, NULL, (core::log_flags_enum)0);
 		pack_args.flags				= (vfs::save_flags_enum)
 			(vfs::save_flag_forbid_folder_links | vfs::save_flag_forbid_empty_files);
 

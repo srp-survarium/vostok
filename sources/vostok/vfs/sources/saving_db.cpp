@@ -19,8 +19,8 @@ namespace vfs   {
 using namespace fs_new;
 
 template <platform_pointer_enum T>
-u32   get_max_fat_size_impl				(base_node<T> const *		node, 
-										 fat_inline_data const &	inline_data, 
+u32   get_max_fat_size_impl				(base_node<T> const *		node,
+										 fat_inline_data const &	inline_data,
 										 fat_node_info *			info,
 										 fat_node_info *			root_info,
 										 u32 *						out_nodes_count)
@@ -34,13 +34,13 @@ u32   get_max_fat_size_impl				(base_node<T> const *		node,
 	u32 const max_node_size				=	(u32)math::max(	math::max(	sizeof(archive_file_node<T>),
 																		sizeof(base_folder_node<T>) ),
 																		sizeof(archive_inline_compressed_file_node<T>)	);
-		
+
 	u32 size							=	max_node_size;
 	size								+=	strings::length(node->get_name()) + 1;
 	size								+=	sizeof(pvoid);
 
 	if ( !node->is_folder() )
-	{	
+	{
 		pcstr extension					=	extension_from_path(node->get_name());
 		fat_inline_data::item const * item	=	NULL;
 		if ( inline_data.find_by_extension(& item, extension) && (item->current_size == fat_inline_data::item::no_limit) )
@@ -63,8 +63,8 @@ u32   get_max_fat_size_impl				(base_node<T> const *		node,
 }
 
 template <platform_pointer_enum T>
-u32   get_max_fat_size					(base_node<T> const *		node, 
-										 fat_inline_data const &	inline_data, 
+u32   get_max_fat_size					(base_node<T> const *		node,
+										 fat_inline_data const &	inline_data,
 										 fat_node_info *			info,
 										 u32 *						out_nodes_count)
 {
@@ -77,8 +77,8 @@ u32   get_max_fat_size					(base_node<T> const *		node,
 	return									out_size + get_max_fat_size_impl(node, inline_data, info, info, out_nodes_count);
 }
 
-fat_node_info *   make_info_tree		(pvoid &						out_allocated_nodes_buffer, 
-										 base_node<> *					root_node, 
+fat_node_info *   make_info_tree		(pvoid &						out_allocated_nodes_buffer,
+										 base_node<> *					root_node,
 										 synchronous_device_interface &	device,
 										 memory::base_allocator *		allocator)
 {
@@ -92,7 +92,7 @@ fat_node_info *   make_info_tree		(pvoid &						out_allocated_nodes_buffer,
 	return									out_info_tree;
 }
 
-void   add_to_info_set					(fat_node_info_set * const	info_set, 
+void   add_to_info_set					(fat_node_info_set * const	info_set,
 										 fat_node_info * const		node,
 										 vfs_hashset *				from_hashset,
 										 vfs_hashset *				patch_hashset)
@@ -108,7 +108,7 @@ void   add_to_info_set					(fat_node_info_set * const	info_set,
 		info_set->insert					(node->hash, node);
 
 	node->set_color							(u32(-1));
-	
+
 	for ( fat_node_info *	it_child	=	node->first_child;
 							it_child	!=	NULL;
 							it_child	=	it_child->next	)
@@ -134,7 +134,7 @@ bool   archive_saver::save_db			()
 
 	fat_node_info * info_tree			=	m_env.info_root;
 	pvoid	info_buffer					=	NULL;
-	
+
 	m_root_save_db						=	!info_tree;
 	if ( m_root_save_db )
 	{
@@ -148,7 +148,7 @@ bool   archive_saver::save_db			()
 			R_ASSERT						(m_args.from_vfs_info_tree);
 			add_to_info_set					(& node_info_set, m_args.to_vfs_info_tree, & m_args.from_vfs->hashset, & m_hashset);
 		}
-	
+
 		m_args.inline_data.begin_fitting	();
 		calculate_sizes_for_info_tree		(m_env.save_root, info_tree, m_args.inline_data);
 		sort_info_tree						(m_env.save_root, info_tree);
@@ -171,7 +171,7 @@ bool   archive_saver::save_db			()
 
 	if ( fat_in_db )
 	{
-		u32 const buffer_size_aligned	=	math::align_up (max_buffer_size + (u32)sizeof(fat_header), 
+		u32 const buffer_size_aligned	=	math::align_up (max_buffer_size + (u32)sizeof(fat_header),
 															m_args.fat_alignment);
 		m_args.device->seek					(m_env.db_file, buffer_size_aligned, seek_file_current);
 	}
@@ -200,7 +200,7 @@ bool   archive_saver::save_db			()
 	header.num_nodes					=	num_nodes;
 	header.buffer_size					=	(u32)real_buffer_size;
 	m_env.result_fat_size				=	real_buffer_size + sizeof(fat_header);
-	
+
 	if ( is_big_endian_platform(m_args.archive_platform) )
 	{
 		header.reverse_bytes				();
@@ -208,7 +208,7 @@ bool   archive_saver::save_db			()
 	}
 	else
 		header.set_little_endian			();
-	
+
 	m_args.device->write					(m_env.fat_file, & header, sizeof(fat_header));
 	m_args.device->write					(m_env.fat_file, dest_buffer, (size_t)real_buffer_size);
 
@@ -226,7 +226,7 @@ bool   archive_saver::save_db			()
 	return									true;
 }
 
-bool	create_archive_files			(native_path_string const & 		archive_path, 
+bool	create_archive_files			(native_path_string const & 		archive_path,
 										 native_path_string const & 		fat_path,
 										 synchronous_device_interface	&	device,
 										 file_type * &						out_db_file,
@@ -238,7 +238,7 @@ void	close_archive_files				(synchronous_device_interface	&	device,
 
 void   archive_saver::save_archive_part	(native_path_string *	out_archive_part_path,
 										 u32 *					out_archive_fat_size,
-										 base_node<> *			node, 
+										 base_node<> *			node,
 										 fat_node_info *		node_info)
 {
 	native_path_string						directory;
@@ -246,17 +246,17 @@ void   archive_saver::save_archive_part	(native_path_string *	out_archive_part_p
 	native_path_string						file_name;
 	file_name_with_no_extension_from_path	(& file_name, m_args.fat_path.c_str());
 	native_path_string	const extension	=	extension_from_path(m_args.fat_path.c_str());
-	
-	out_archive_part_path->assignf			("%s.%d-%d.%s", file_name.c_str(), 
-											 m_env.next_archive_part, m_env.archive_parts_count, 
+
+	out_archive_part_path->assignf			("%s.%d-%d.%s", file_name.c_str(),
+											 m_env.next_archive_part, m_env.archive_parts_count,
 											 extension.c_str());
 	native_path_string	archive_part_path;
 	archive_part_path.assignf_with_conversion	("%s/%s", directory.c_str(), out_archive_part_path->c_str());
 
-	LOGI_INFO								("pack", m_args.log_format, m_args.log_flags, "saving archive part: '%s'", out_archive_part_path->c_str());
+	LOGIFD_INFO								("pack", m_args.log_format, m_args.log_flags, "saving archive part: '%s'", out_archive_part_path->c_str());
 
 	saving_environment	archive_part_env	(* m_env.device);
-	bool const create_result			=	create_archive_files(archive_part_path, archive_part_path, m_args.device, 
+	bool const create_result			=	create_archive_files(archive_part_path, archive_part_path, m_args.device,
 																 archive_part_env.db_file, archive_part_env.fat_file);
 	R_ASSERT_U								(create_result);
 
@@ -283,22 +283,22 @@ void   archive_saver::save_archive_part	(native_path_string *	out_archive_part_p
 
 void   archive_saver::save_sub_fat	    (native_path_string *	out_sub_fat_path,
 										 u32 *					out_sub_fat_size,
-										 base_node<> *			node, 
+										 base_node<> *			node,
 										 fat_node_info *		node_info)
 {
 	file_type *	sub_fat_file			=	NULL;
 
 	get_path_without_last_item				(out_sub_fat_path, m_args.fat_path.c_str());
 	out_sub_fat_path->appendf_with_conversion	("/~temp/temp_%d.fat", ++m_env.temp_name_index);
-	LOGI_INFO								("pack", m_args.log_format, m_args.log_flags, "starting sub-fat: '%s'", node->get_name());
+	LOGIFD_INFO								("pack", m_args.log_format, m_args.log_flags, "starting sub-fat: '%s'", node->get_name());
 
 	create_folder_r							(m_args.device, * out_sub_fat_path, false);
-	bool const open_result				=	m_args.device->open(& sub_fat_file, * out_sub_fat_path, 
+	bool const open_result				=	m_args.device->open(& sub_fat_file, * out_sub_fat_path,
 																file_mode::create_always, file_access::write);
 	R_ASSERT_U								(open_result);
 
 	saving_environment	sub_fat_env			(* m_env.device);
-	
+
 	sub_fat_env.save_root				=	node;
 	sub_fat_env.fat_file				=	sub_fat_file;
 	sub_fat_env.db_file					=	m_env.db_file;
@@ -318,8 +318,8 @@ void   archive_saver::save_sub_fat	    (native_path_string *	out_sub_fat_path,
 	m_env.temp_name_index				=	saver.env().temp_name_index;
 	m_env.node_index					=	saver.env().node_index;
 
-	LOGI_INFO								("pack", m_args.log_format, m_args.log_flags, "finished sub-fat: '%s'", node->get_name());
+	LOGIFD_INFO								("pack", m_args.log_format, m_args.log_flags, "finished sub-fat: '%s'", node->get_name());
 }
 
-} // namespace vfs 
-} // namespace vostok 
+} // namespace vfs
+} // namespace vostok

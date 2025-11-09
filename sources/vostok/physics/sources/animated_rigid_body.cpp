@@ -15,7 +15,7 @@
 namespace vostok {
 namespace physics {
 
-// STATE[PARTIAL:98%]: Linker removed `game_material_id`.
+// STATE[98%|PARTIAL]: Linker removed `game_material_id`.
 bt_animated_rigid_body::bt_animated_rigid_body(
 	btCompoundShape*                   shape,
 	btRigidBody*                       body,
@@ -24,57 +24,66 @@ bt_animated_rigid_body::bt_animated_rigid_body(
 	m_shape								(shape),
 	m_game_material_id					(game_material_id)
 {
-	body->setUserPointer(this); // <0x6bfe5a>|0x000|0x000:'25'
+	body->setUserPointer(this);	// <0x6bfe5a>|0x000|0x000:'25'
 }
-// STATE[DONE]
+
+// STATE[100%|DONE]
 btRigidBody* bt_animated_rigid_body::get_rigid_body( )
 {
-	return m_bt_body;											// <0x6bf410>|0x000|0x000:'30'
+	return m_bt_body;	// <0x6bf410>|0x000|0x000:'30'
 }
-// STATE[DONE]
+
+// STATE[100%|DONE]
 u16 bt_animated_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( triangle_id, is_shape_index );
-	return m_game_material_id;									// <0x6bf4b0>|0x000|0x000:'36'
+	return m_game_material_id;	// <0x6bf4b0>|0x000|0x000:'36'
 }
-// STATE[DONE]
+
+// STATE[100%|DONE]
 void bt_animated_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world)
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( impulse, point_in_world ); // sushi@NOTE: This function is empty
 }
-// STATE[PARTIAL: 66%]: Looks like linker optimizations
+
+// STATE[66%|PARTIAL]: Looks like linker optimizations
 void bt_animated_rigid_body::set_transform( float4x4 const& transform )
 {
 	m_bt_body->setWorldTransform( from_vostok( transform ) );	// <0x6bf95b>|0x000|0x000:'46'
 }
-// STATE[DONE]
+
+// STATE[100%|DONE]
 float4x4 bt_animated_rigid_body::get_transform( ) const
 {
-	return from_bullet( m_bt_body->getWorldTransform( ) );		// <0x6bf750>|0x000|0x000:'51'
+	return from_bullet( m_bt_body->getWorldTransform( ) );	// <0x6bf750>|0x000|0x000:'51'
 }
-// STATE[PARTIAL: 69%]: Looks like linker optimizations
+
+// STATE[69%|PARTIAL]: Looks like linker optimizations
 void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
 	btTransform new_child_transform = from_vostok( new_transform );					// <0x6bf92a>|0x000|0x000:'56'
 	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );	// <0x6bf933>|0x009|0x009:'57'
 }
-// STATE[DONE]
+
+// STATE[100%|DONE]
 math::aabb bt_animated_rigid_body::get_aabb( ) const
 {
 	btVector3 aabbMin, aabbMax;
-	m_bt_body->getAabb( aabbMin, aabbMax ); 												// <0x6bf4c9>|0x000|0x000:'63'
+	m_bt_body->getAabb( aabbMin, aabbMax );													// <0x6bf4c9>|0x000|0x000:'63'
 	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );	// <0x6bf4e8>|0x01f|0x01f:'64'
 }
-// STATE[DONE]
+
+// STATE[100%|DONE]
 float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
 {
 	btTransform& transform = m_shape->getChildTransform( index );	// <0x6bf730>|0x000|0x000:'69'
 	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
 }
+
 // STATE[UNVERIFIED]: sushi@TODO: Make it conform to structure
 static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
-	switch ( type ) // <0x6bf579>|0x000|0x000:'86'
+	switch ( type )	// <0x6bf579>|0x000|0x000:'86'
 	{
 		case collision::primitive_sphere:
 		{
@@ -187,7 +196,7 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 // STATE[UNVERIFIED]: sushi@NOTE: What are label symbols, figure out.
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];  // <0x6bf777>|0x000|0x000:'201'
+	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
 	u32 hit_targets_count = 24 * targets_table.count / 24;						// <0x6bf783>|0x00c|0x00c:'202'
 
 	u32 result = 112 * hit_targets_count + 96;									// <0x6bf7a1>|0x02a|0x01e:'204'
@@ -220,7 +229,7 @@ bt_animated_rigid_body* new_animated_rigid_body(
 // The target structure shows that there is only a single statement, however.
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
-	VOSTOK_DELETE_IMPL( allocator, body ); // <0x6bf475>|0x000|0x000:'227'
+	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'
 }
 
 // STATE[UNVERIFIED]
@@ -243,20 +252,20 @@ collision::animated_object* new_animated_bt_hit_model(
 	return object;
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 u16 bt_animated_rigid_body::get_collision_group( ) const
 {
-	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup; // <0x6bf460>|0x000|0x000:'252'
+	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x6bf460>|0x000|0x000:'252'
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 float3 const& bt_animated_rigid_body::center_of_mass_offset( ) const
 {
 	static float3 offset( 0.0f, 0.0f, 0.0f );	// <0x6bf420>|0x000|0x000:'257'
 	return offset;								// <0x6bf44e>|0x02e|0x02e:'258'
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 btCollisionObject* bt_animated_rigid_body::get_bt_collision_obect( )
 {
 	return m_bt_body;

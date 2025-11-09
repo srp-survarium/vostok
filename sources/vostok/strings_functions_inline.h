@@ -86,14 +86,14 @@ inline pstr vostok::strings::duplicate	( allocator_type& allocator, pcstr const 
 	return				( result );
 }
 
-template <typename predicate_type>
-inline bool	vostok::strings::iterate_items( pcstr string, u32 length, predicate_type const& predicate, char const separator )
+template <typename predicate_type, typename string_type>
+inline bool	vostok::strings::iterate_items( string_type string, u32 length, predicate_type const& predicate, char const separator )
 {
-	pcstr I				= string;
+	string_type I		= string;
 
 	pstr const			temp_string	= ( pstr )ALLOCA( ( length + 1 )*sizeof( char ) );
 	pstr i				= temp_string;
-	pstr j				= i;
+	string_type j		= i;
 
 	int					index = 0;
 
@@ -118,8 +118,8 @@ inline bool	vostok::strings::iterate_items( pcstr string, u32 length, predicate_
 	return				( predicate( index, j, int( i - j ), true ) );
 }
 
-template <typename predicate_type>
-inline bool	vostok::strings::iterate_items( pcstr string, predicate_type const& predicate, char const separator )
+template <typename predicate_type, typename string_type>
+inline bool	vostok::strings::iterate_items( string_type string, predicate_type const& predicate, char const separator )
 {
 	return				( iterate_items ( string, length( string ), predicate, separator ) );
 }

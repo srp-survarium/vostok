@@ -8,6 +8,11 @@
 #define VOSTOK_CONSOLE_COMMAND_H_INCLUDED
 
 namespace vostok {
+
+namespace memory {
+	class writer;
+} // namespace memory
+
 namespace console_commands {
 
 enum command_type {
@@ -73,7 +78,7 @@ public:
 protected:
 			void		on_invalid_syntax		( pcstr args );
 			void		on_changed				( pcstr args );
-			
+
 	console_command*	m_next;
 	console_command*	m_prev;
 	pcstr				m_name;
@@ -151,7 +156,7 @@ public:
 	virtual void		status					( status_str& dest )	const;
 	virtual void		info					( info_str& dest )		const;
 	virtual void		syntax					( syntax_str& des )		const;
-};//cc_float 
+};//cc_float
 
 class VOSTOK_CORE_API cc_u32 :public cc_value<u32>
 {

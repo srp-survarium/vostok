@@ -33,13 +33,15 @@
 #include <vostok/memory_debug_allocator.h>
 #include <vostok/strings_extensions.h>
 #include <vostok/debug/check_no_multithread.h>
-#include <vostok/logging/extensions.h>
 #include <vostok/pointer_extensions.h>
 #include <vostok/debug/debug_pointers.h>
 #include <vostok/containers_extensions.h>
 #include <vostok/math_extensions.h>
 #include <vostok/memory_chunk_reader.h>
 #include <vostok/memory_writer.h>
+
+#include <vostok/logging/extensions.h>
+#include <vostok/core/logging_extensions.h>
 
 #include "memory.h"
 

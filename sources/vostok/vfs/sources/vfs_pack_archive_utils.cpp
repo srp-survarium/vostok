@@ -21,7 +21,7 @@ void   db_callback						(u32								num_nodes,
 										 pcstr								name, 
 										 u32								flags, 
 										 logging::log_format *				log_format,
-										 logging::log_flags_enum			log_flags,										 	
+										 core::log_flags_enum			log_flags,										 	
 										 debug_info_enum					debug_info)
 {
 	if ( debug_info == debug_info_detail )
@@ -59,7 +59,7 @@ bool   mount_sources					(virtual_file_system &				vfs,
 										 mount_ptrs_array &					mount_ptrs,
 										 memory::base_allocator *			allocator,
 										 logging::log_format *				log_format,
-										 logging::log_flags_enum			log_flags)
+										 core::log_flags_enum			log_flags)
 {
 	for ( sources_array::iterator it	=	sources.begin();
 								  it	!=	sources.end();

@@ -92,7 +92,7 @@ public:
 
 void   create_from_db					()
 {
-	pack_archive_args	args				(m_synchronous_device, NULL, (logging::log_flags_enum)0);
+	pack_archive_args	args				(m_synchronous_device, NULL, (core::log_flags_enum)0);
 	args.allocator						=	m_allocator;
 	args.archive_part_max_size			=	s_archive_part_from;
 	args.fat_part_max_size				=	s_fat_part_from;
@@ -112,7 +112,7 @@ void   create_from_db					()
 
 void   create_to_db						()
 {
-	pack_archive_args	args				(m_synchronous_device, NULL, (logging::log_flags_enum)0);
+	pack_archive_args	args				(m_synchronous_device, NULL, (core::log_flags_enum)0);
 	args.allocator						=	m_allocator;
 	args.archive_part_max_size			=	s_archive_part_patch;
 	args.fat_part_max_size				=	s_fat_part_patch;
@@ -274,7 +274,7 @@ void   create_random_patch_resources	()
 
 void   create_test_patch				()
 {
-	patch_args								args(m_synchronous_device, NULL, (logging::log_flags_enum)0);
+	patch_args								args(m_synchronous_device, NULL, (core::log_flags_enum)0);
 	args.allocator						=	m_allocator;
 	args.archive_part_max_size			=	s_archive_part_patch;
 	args.fat_part_max_size				=	s_fat_part_patch;

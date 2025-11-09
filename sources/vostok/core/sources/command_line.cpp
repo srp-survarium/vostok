@@ -49,12 +49,12 @@ void   protected_key_construct (pvoid keyptr_)
 	keyptr->protected_construct ();
 }
 
-key::key (pcstr full_name, pcstr short_name, pcstr category, pcstr description, pcstr argument_description) : 
-																	m_full_name(full_name), 
-																	m_short_name(short_name), 
+key::key (pcstr full_name, pcstr short_name, pcstr category, pcstr description, pcstr argument_description) :
+																	m_full_name(full_name),
+																	m_short_name(short_name),
 																	m_category(category),
-																	m_type(type_uninitialized), 
-																	m_number_value(0.f), 
+																	m_type(type_uninitialized),
+																	m_number_value(0.f),
 																	m_description(description),
 																	m_argument_description(argument_description)
 {
@@ -91,8 +91,8 @@ void   key::protected_construct ()
 
 	if ( !s_command_line_keys )
 	{
-		bind_pointer_to_buffer_mt_safe	(	s_command_line_keys, 
-											s_command_line_keys_buffer, 
+		bind_pointer_to_buffer_mt_safe	(	s_command_line_keys,
+											s_command_line_keys_buffer,
 											s_command_line_keys_creation,
 											bind_pointer_to_buffer_mt_safe_placement_new_predicate() );
 	}
@@ -101,7 +101,7 @@ void   key::protected_construct ()
 	++s_command_line_keys_count;
 }
 
-bool   key::is_set () 
+bool   key::is_set ()
 {
 	if ( m_type == type_uninitialized )
 		initialize				();
@@ -186,7 +186,7 @@ void   iterate_keys (Predicate predicate)
 		if ( * current != '-' )
 		{
 			if ( !s_command_line_error.length() )
-				s_command_line_error.assignf	("expected '-' symbol and not %c at %s(%d)", 
+				s_command_line_error.assignf	("expected '-' symbol and not %c at %s(%d)",
 												 * current, command_line, current - command_line);
 			continue;
 		}
@@ -241,7 +241,7 @@ void   iterate_keys (Predicate predicate)
 		bool search_quote				=	false;
 		if ( * current == '"' )
 		{
-			search_quote				=	true;				
+			search_quote				=	true;
 			++ current;
 			key_value_start				=	current;
 		}
@@ -310,7 +310,7 @@ struct checker
 
 		if ( !command_line_key && !(key_name && * key_name == '.') )
 		{
-			LOG_INFO					(logging::format_message, logging::log_to_console,
+			LOGFD_INFO					(logging::format_message, core::log_to_console,
 										"\nkey with name '%s' is not registered, use -help to see list of available commands", key_name);
 
 			if ( debug::is_debugger_present() )
@@ -326,7 +326,7 @@ void   check_keys ()
 {
 	if ( s_command_line_error.length() )
 	{
-		LOG_INFO							(logging::format_message, logging::log_to_console,
+		LOGFD_INFO							(logging::format_message, core::log_to_console,
 											 "%s", s_command_line_error.c_str());
 		if ( debug::is_debugger_present() )
 			DEBUG_BREAK						();
@@ -428,11 +428,11 @@ void   show_help_and_exit ( )
 	std::sort							(keys.begin(), keys.end(), key_compare_predicate());
 
 	fixed_string512						format_string;
-	format_string.assignf				("    %%-%ds  %%s %%s", 
-										 adder_predicate.longest_short_key_name + 
+	format_string.assignf				("    %%-%ds  %%s %%s",
+										 adder_predicate.longest_short_key_name +
 										 adder_predicate.longest_full_key_name + 5);
 
-	LOG_INFO							(logging::format_message, logging::log_to_console,
+	LOGFD_INFO							(logging::format_message, core::log_to_console,
 										"               " VOSTOK_ENGINE_ID ", build %d, %s\n"
 										"                  Copyright(C) GSC Game World - 2009\n"
 										"      Finger print info: %s",
@@ -440,7 +440,7 @@ void   show_help_and_exit ( )
 
 	pcstr previous_category			=	"";
 
-	for ( keys_array::const_iterator	it	=	keys.begin(); 
+	for ( keys_array::const_iterator	it	=	keys.begin();
 										it	!=	keys.end();
 										++it )
 	{
@@ -453,7 +453,7 @@ void   show_help_and_exit ( )
 			first_char.make_uppercase	();
 			category[0]				=	first_char[0];
 
-			LOG_INFO					(logging::format_message, logging::log_to_console,
+			LOGFD_INFO					(logging::format_message, core::log_to_console,
 									     "\n%s options: ", category.c_str() );
 			previous_category		=	key->category();
 		}
@@ -461,16 +461,16 @@ void   show_help_and_exit ( )
 		fixed_string512 key_name;
 		if ( * key->short_name() && * key->full_name() )
 			key_name.assignf			("-%s [-%s]", key->full_name(), key->short_name());
-		else 
+		else
 			key_name.assignf			("-%s", * key->short_name() ? key->short_name() : key->full_name());
 
 		if ( * key->argument_description() )
 			key_name.appendf			(" = <%s>", key->argument_description());
 
-		LOG_INFO						(logging::format_message, logging::log_to_console,
-										 format_string.c_str(), 
-										 key_name.c_str(), 
-										 * key->description() ? ":" : "", 
+		LOGFD_INFO						(logging::format_message, core::log_to_console,
+										 format_string.c_str(),
+										 key_name.c_str(),
+										 * key->description() ? ":" : "",
 										 key->description());
 	}
 
@@ -531,7 +531,7 @@ bool key_is_set				( pcstr key_raw )
 }
 
 bool key_is_set_impl		( pcstr const command_line, pcstr const key_raw, pstr const buffer, u32 const buffer_size )
-{	
+{
 	ASSERT					( buffer );
 	ASSERT					( buffer_size );
 
@@ -593,7 +593,7 @@ bool key_is_set				( pcstr const key_raw, pstr const buffer, u32 const buffer_si
 namespace build {
 
 VOSTOK_CORE_API	u32	build_station_build_id	( );
-	
+
 u32	build_station_build_id	( )
 {
 	static bool initialized				= false;

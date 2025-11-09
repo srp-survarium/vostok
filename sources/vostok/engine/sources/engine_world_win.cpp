@@ -75,7 +75,7 @@ static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id,
 			//		while (	ShowCursor( FALSE ) >= 0 );
 
 			//	s_world->on_application_activate( );
-			//	
+			//
 			//	break;
 			//}
 
@@ -86,7 +86,7 @@ static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id,
 			break;
 		}
 	}
-	
+
 	return					( DefWindowProc( window_handle, message_id, w_param, l_param ) );
 }
 
@@ -98,7 +98,7 @@ HWND new_window			( )
 		CS_CLASSDC,
 		&message_processor,
 		0L,
-		0L, 
+		0L,
 		GetModuleHandle( 0 ),
 		NULL,
 		NULL,
@@ -122,7 +122,7 @@ HWND new_window			( )
 	u32 const window_sizes_x []	= { 1024, 800, 640 };
 	u32 const window_sizes_y []	= { 768, 600, 480 };
 	for ( u32 i=0; i<vostok::array_size(window_sizes_x); ++i ) {
-		if ( window_sizes_x[i] < screen_size_x && 
+		if ( window_sizes_x[i] < screen_size_x &&
 			 window_sizes_y[i] < screen_size_y )
 		{
 			window_size_x	= window_sizes_x[i];
@@ -136,7 +136,7 @@ HWND new_window			( )
 	RECT window_size		= { 0, 0, window_size_x, window_size_y };
 	AdjustWindowRect		( &window_size, window_style, false );
 
-	HWND const result		= 
+	HWND const result		=
 		CreateWindow (
 			s_window_class_id,
 			s_window_id,
@@ -154,7 +154,7 @@ HWND new_window			( )
 	return					result;
 }
 
-vostok::logging::log_file_usage	engine_world::log_file_usage ( ) const
+vostok::logging::log_file_usage_enum	engine_world::log_file_usage ( ) const
 {
 	return									logging::create_log;
 }

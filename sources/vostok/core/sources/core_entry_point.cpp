@@ -6,27 +6,29 @@
 
 #include "pch.h"
 #include <vostok/core/core.h>
-#include <vostok/logging/api.h>
-#include <vostok/debug/debug.h>
-#include "resources_manager.h"
-#include "game_resman.h"
-#include "unmanaged_allocation_cook.h"
-#include "strings_shared_manager.h"
+
 #include "build_extensions.h"
-#include <vostok/core_entry_point.h>
-#include "timing.h"
-#include <vostok/memory_base_allocator.h>
+#include "game_resman.h"
 #include "memory.h"
+#include "resources_manager.h"
+#include "strings_shared_manager.h"
+#include "timing.h"
+#include "unmanaged_allocation_cook.h"
 #include <locale.h>			// for setlocale
 #include <vostok/compressor_ppmd.h>
-#include <vostok/core_test_suite.h>
+#include <vostok/configs.h>
+#include <vostok/console_command.h>
+#include <vostok/console_command_processor.h>
 #include <vostok/core/engine.h>
+#include <vostok/core_entry_point.h>
+#include <vostok/core_test_suite.h>
+#include <vostok/debug/debug.h>
+#include <vostok/debug/log_callback.h>
 #include <vostok/fs/path_string_utils.h>
 #include <vostok/fs/synchronous_device_interface.h>
-#include <vostok/configs.h>
-#include <vostok/debug/log_callback.h>
-#include <vostok/console_command_processor.h>
-#include <vostok/console_command.h>
+#include <vostok/logging/api.h>
+#include <vostok/logging/format.h>
+#include <vostok/memory_base_allocator.h>
 
 #if VOSTOK_PLATFORM_PS3
 #	include <sys/paths.h>
@@ -55,9 +57,6 @@ using vostok::debug::bugtrap_usage;
 static bool	s_initialized				= false;
 static vostok::core::engine * s_engine	=	NULL;
 
-vostok::command_line::key	s_log_verbosity ("log_verbosity", "", "logging", "one of: [trace|debug|info|warning|error|silent]");
-vostok::command_line::key	s_write_errors_to_stderr ("write_errors_to_stderr", "", "logging", "");
-
 vostok::uninitialized_reference<vostok::fs_new::synchronous_device_interface>	s_core_synchronous_device;
 
 namespace vostok {
@@ -68,6 +67,8 @@ namespace debug {
 
 namespace core {
 	bool initialized	( );
+
+		// sushi@TODO
 } // namespace core
 
 #ifndef	MASTER_GOLD
@@ -93,39 +94,15 @@ extern doug_lea_allocator_type				g_log_allocator;
 
 } // namespace vostok
 
-void log_callback						( pcstr initiator, 
-										  bool	is_error_verbosity, 
-										  bool	log_only_user_string, 
-										  pcstr	message )
-{
-	using namespace vostok;
-
-	logging::log_flags_enum const log_flags	=	s_write_errors_to_stderr ? 
-									logging::log_to_stderr : (logging::log_flags_enum)0;
-	if ( log_only_user_string )
-	{
-		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator, 
-			is_error_verbosity ? logging::error : logging::info)
-			(logging::format_message, log_flags, "%s", message);
-	}
-	else
-	{
-		logging::helper				( __FILE__, __FUNCSIG__, __LINE__, initiator, 
-			is_error_verbosity ? logging::error : logging::info)
-			(log_flags, "%s", message);
-	}
-
-	logging::flush_log_file			( );
-}
-
-void vostok::core::preinitialize		( core::engine *								engine, 
-									  logging::log_file_usage const					log_file_usage,
-									  pcstr const									command_line, 
-									  command_line::contains_application_bool const	command_line_contains_application, 
+void vostok::core::preinitialize		( core::engine *							engine,
+									  logging::log_file_usage_enum const			log_file_usage,
+									  pcstr const									command_line,
+									  command_line::contains_application_bool const	command_line_contains_application,
 									  pcstr	const									application,
 									  pcstr	const									build_date
 									)
 {
+	g_log_file_usage		= log_file_usage; // sushi@TODO: Might have been hidden with an inlined function
 	s_engine				= engine;
 	R_ASSERT				( !s_initialized, "you cannot preinitialize core when it has been initialized already" );
 
@@ -143,19 +120,17 @@ void vostok::core::preinitialize		( core::engine *								engine,
 								(get_core_device_file_system( ), fs_new::watcher_enabled_false);
 
 	memory::preinitialize	( );
-	build::preinitialize	( build_date );
+	build::preinitialize	( build_date ); // <0x6705d9>|0x092|0x013:'125'
 
-	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true);
-	logging::initialize		( device, log_file_usage );
-	debug::set_log_callback	( & ::log_callback );
-	
-	logging::set_format		( logging::format_separator("{") + 
-							  logging::format_thread_id + 
-							  logging::format_time + 
+	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true); // sushi@NOTE: Deleted. This should be handled when `fs_new` or `core` is matched.
+
+	g_log_format.set( logging::format_separator("{") +
+							  logging::format_thread_id +
+							  logging::format_time +
 							  logging::format_separator("} [") +
-							  logging::format_initiator + 
+							  logging::format_initiator +
 							  logging::format_separator("] <") +
-							  logging::format_verbosity + 
+							  logging::format_verbosity +
 							  logging::format_separator(">   ") +
 							  logging::format_message );
 }
@@ -163,34 +138,6 @@ void vostok::core::preinitialize		( core::engine *								engine,
 bool vostok::core::initialized ( )
 {
 	return					s_initialized;
-}
-
-static void push_logging_rules ( )
-{
-	using namespace vostok;
-	logging::verbosity	verbosity	=	logging::trace;
-	fixed_string512		verbosity_string;
-	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);
-	if ( log_verbosity_key_is_set )
-		verbosity			= logging::string_to_verbosity(verbosity_string.c_str());
-	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )
-		verbosity			= logging::warning;
-
-//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;
-	logging::push_filter		( "", verbosity, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );
-//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );
-
-	fs_new::native_path_string	cfg_file_path;
-	if ( fs_new::convert_to_absolute_path(& cfg_file_path, 
-										  fs_new::native_path_string::convert("../../user_data/user.cfg"),
-										  assert_on_fail_false) )
-	{
-		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );
-	}
-
 }
 
 void vostok::core::initialize			(
@@ -203,15 +150,13 @@ void vostok::core::initialize			(
 
 	if ( debug_initialization == perform_debug_initialization)
 		debug::postinitialize	( );
-	
-	// for language-dependent strings	
+
+	// for language-dependent strings
 	setlocale				( LC_CTYPE, "" );
 
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
-	
+
 	threading::initialize	( );
-	
-	push_logging_rules		( );
 
 	LOG_INFO				( "working directory: '%s'", fs_new::get_current_directory().c_str() );
 	LOG_INFO				( "resources directory: '%s'", s_engine->get_resources_path() );
@@ -250,7 +195,7 @@ void vostok::core::initialize			(
 	tasks::initialize		(	2 * threading::core_count(),	// tasks thread count
 								64,								// user thread count
 								threading::core_count(), //1,								// minimum active task thread count
-								tasks::execute_while_wait_for_children_true, 
+								tasks::execute_while_wait_for_children_true,
 								tasks::do_logging_false
 							);
 	threading::set_current_thread_affinity	( 0 );
@@ -304,8 +249,6 @@ void vostok::core::finalize			( )
 	strings::finalize		( );
 //	build::finalize			( );
 //	timing::finalize		( );
-	debug::set_log_callback	( NULL );
-	logging::finalize		( );
 	threading::finalize		( );
 	memory::finalize		( );
 
@@ -320,10 +263,38 @@ void vostok::core::finalize			( )
 		fixed_string512		message;
 		message.assignf		("program exit code: %d", s_engine->get_exit_code());
 		debug::notify_xbox_debugger	(message.c_str());
-	}	
+	}
 }
 
 vostok::fs_new::synchronous_device_interface &	vostok::core::get_core_synchronous_device	( )
 {
 	return									* s_core_synchronous_device.c_ptr( );
 }
+
+#if 0 // sushi@NOTE: Moved from `core_entry_point_win.cpp`. This should be handled when `core` is matched. Still don't understand why windows related stuff was just moved
+// STATE[STUB]
+void vostok::core::core_engine_flush( )
+{
+	// CALL SITE INFO
+	// <0x6704df> -> void <unknown>()
+	// ******
+
+	// FUNCTION BODY
+	// <0x6704d0>|0x000|0x000:'290'
+	// <0x6704da>|0x00a|0x00a:'291'
+	// ******
+}
+
+// STATE[STUB]
+pcstr vostok::core::user_data_directory( )
+{
+	// CALL SITE INFO
+	// <0x67050b> -> pcstr <unknown>() const
+	// ******
+
+	return NULL;
+	// FUNCTION BODY
+	// <1>
+	// ******
+}
+#endif

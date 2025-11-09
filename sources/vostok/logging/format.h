@@ -8,18 +8,26 @@
 #define VOSTOK_LOGGING_FORMAT_H_INCLUDED
 
 #include <vostok/logging/format_specifier.h>
+#include <vostok/logging/api.h>
 
 namespace vostok {
 namespace logging {
 
 struct log_format
 {
-	format_string_type						string;
-	format_enabled_container				enabled;
-	format_index_container					indexes;
+	inline	log_format		( format_specifier const& format_expression ) { set( format_expression ); }
+	inline	log_format		( ) { }
 
-	void	set							(format_specifier const & format_expression);
+			void	set		( format_specifier const& format_expression );
+
+	format_string_type				string;
+	format_enabled_container		enabled;
+	format_index_container			indexes;
+
+
 };
+
+STATIC_SIZE_ASSERT(log_format, 0x228);
 
 } // namespace logging
 } // namespace vostok

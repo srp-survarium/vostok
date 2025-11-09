@@ -76,7 +76,7 @@ u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_in
 	}
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 void destroy_bt_shape( btCollisionShape* sh )
 {
 	s32 shape_type = sh->getShapeType();
@@ -154,7 +154,7 @@ btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 co
 	return result;
 }
 
-// STATE[PARTIAL: 96%]: `unamanged_resource` constructor got LTCG'd differently
+// STATE[96%|DONE]: LTCG for `unamanged_resource`.
 bt_collision_shape* create_primitive_shape( collision::primitive_type type, float3 const& dim, float3 const& local_scale )
 {
 	btCollisionShape* bt_shape = create_bt_primitive( type, dim, local_scale );						// <0x72ca3e>|0x000|0x000:'167'
