@@ -13,7 +13,7 @@
 
 using vostok::engine::engine_world;
 
-vostok::logging::log_file_usage	engine_world::log_file_usage ( ) const
+vostok::core::log_file_usage	engine_world::log_file_usage ( ) const
 {
 #ifndef DEBUG
 	return									logging::create_log;

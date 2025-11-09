@@ -29,6 +29,37 @@
 
 namespace vostok
 {
+	void use_log()
+	{
+		LOG_WARNING("ERROR %d", 10);
+		logging::append(
+			logging::log_callback_boost( core::g_log_callback ),
+			(void*)0,
+			logging::format_specifier( logging::format_specifier_time_brief ),
+			"file",
+			41,
+			"use_log",
+			"game_core:",
+			logging::warning,
+			"%s",
+			"Hello!"
+		);
+
+		logging::append(
+			logging::log_callback_boost( core::g_log_callback ),
+			(void*)0,
+			&logging::log_format( ),
+			"file",
+			41,
+			"use_log",
+			"game_core:",
+			logging::warning,
+			"%s",
+			"Hello!"
+		);
+
+	}
+
 	void example_callback(const char *name)
 	{
 		printf("%s\n", name);
@@ -196,6 +227,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_log();
 	vostok::use_network_core_http_client();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();

@@ -8,6 +8,7 @@
 #define RULE_TREE_NODE_BASE_H_INCLUDED
 
 #include <boost/intrusive/set.hpp>
+#include <vostok/logging/api.h>
 
 namespace vostok {
 namespace logging {
@@ -32,6 +33,8 @@ public:
 	nodes_member_hook						tree_hook;
 	node_name_type							name;
 };
+
+STATIC_SIZE_ASSERT(node_base, 0x3C);
 
 typedef boost::intrusive::member_hook	<	node_base, nodes_member_hook, & node_base::tree_hook	>
 						nodes_tree_option;

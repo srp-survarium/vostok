@@ -8,6 +8,7 @@
 #define RULE_H_INCLUDED
 
 #include <vostok/intrusive_double_linked_list.h>
+#include <vostok/logging/api.h>
 
 namespace vostok {
 namespace logging {

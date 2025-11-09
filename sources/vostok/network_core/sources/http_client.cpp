@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 12.10.2025
 ////////////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@ using boost::asio::ip::tcp;
 namespace vostok {
 namespace network_core {
 
-// STATE[88%]: ASSERT is completely different, functionally everything else is the same
+// STATE[88%|PARTIAL]: ASSERT is completely different, functionally everything else is the same
 void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 {
 	ASSERT( prefix );												// <0x789e63>|0x000|0x000:'15'
@@ -24,7 +24,7 @@ void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 	}																// <0x789f72>|0x10f|0x07a:'22'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 http_client::http_client( boost::asio::io_service& io_service ) :
 	m_resolver				( io_service ),
 	m_socket				( io_service ),
@@ -36,7 +36,7 @@ http_client::http_client( boost::asio::io_service& io_service ) :
 {
 }
 
-// STATE[94%]: LTCG for copying `m_on_content_downloaded = callback`
+// STATE[94%|DONE]: LTCG for copying `m_on_content_downloaded = callback`
 void http_client::get( pcstr server, pcstr path, boost::function<void()> const& callback )
 {
 	m_result_content = "";									// <0x78abcf>|0x000|0x000:'32' // seems like something is different there
@@ -62,7 +62,7 @@ void http_client::get( pcstr server, pcstr path, boost::function<void()> const& 
 	);														// <0x78ad08>|0x139|0x081:'52'
 }
 
-// STATE[TODO: 79%]
+// STATE[79%|PARTIAL]
 void http_client::on_error( boost::system::error_code const& err )
 {
 	LOG_ERROR( "http_client error: %s", err.message().c_str() );	// <0x78a127>|0x000|0x000:'58'
@@ -71,7 +71,7 @@ void http_client::on_error( boost::system::error_code const& err )
 		m_on_error( err );											// <0x78a211>|0x0ea|0x022:'61'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void http_client::handle_resolve( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
 	if ( !err )																											// <0x78aa61>|0x000|0x000:'66'
@@ -89,7 +89,7 @@ void http_client::handle_resolve( boost::system::error_code const& err, tcp::res
 	}
 }
 
-// STATE[97%]:
+// STATE[97%|PARTIAL]:
 void http_client::handle_connect( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
 	if ( !err )																												// <0x78a831>|0x000|0x000:'82'
@@ -114,7 +114,7 @@ void http_client::handle_connect( boost::system::error_code const& err, tcp::res
 	}
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void http_client::handle_write_request( boost::system::error_code const& err )
 {
 	if ( !err )																								// <0x78a789>|0x000|0x000:'105'
@@ -129,7 +129,7 @@ void http_client::handle_write_request( boost::system::error_code const& err )
 
 }
 
-// STATE[TODO: 78%]: Lot's of stuff got inlined differently. Functionally feels the same but I am not sure
+// STATE[78%|PARTIAL]: Lot's of stuff got inlined differently. Functionally feels the same but I am not sure
 void http_client::handle_read_status_line( boost::system::error_code const& err )
 {
 	if ( !err )																									// <0x78a3fa>|0x000|0x000:'119'
@@ -164,7 +164,7 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 		on_error( err );																						// <0x78a769>|0x36f|0x015:'154'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool http_client::add_result_content( )
 {
 	std::istream response_stream( &m_response_buff );				// <0x789cb9>|0x000|0x000:'160'
@@ -179,7 +179,7 @@ bool http_client::add_result_content( )
 	return m_result_content.size( ) < 1024;							// <0x789de1>|0x128|0x005:'169'
 }
 
-// STATE[99%]. Different register used once
+// STATE[99%|DONE]. Target used a different register.
 void http_client::close_connection( )
 {
 	if ( m_socket.is_open( ) )	// <0x789f9f>|0x000|0x000:'174'
@@ -188,7 +188,7 @@ void http_client::close_connection( )
 	m_on_content_downloaded( );	// <0x789fd4>|0x035|0x00e:'177'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void http_client::handle_read_content( boost::system::error_code const& err )
 {
 	if ( !err )																								// <0x78a249>|0x000|0x000:'182'

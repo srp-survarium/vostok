@@ -8,7 +8,8 @@
 #define LOGGING_RULE_TREE_NODE_H_INCLUDED
 
 #include <vostok/logging/extensions.h>
-#include "logging.h"
+#include <vostok/logging/api.h>
+
 #include "path_parts.h"
 #include "filter_tree_node_base.h"
 
@@ -20,26 +21,28 @@ class path_parts;
 class node : public node_base, private boost::noncopyable
 {
 public:
-	inline	explicit	node			(pcstr name, int rule) : node_base(name), m_verbosity(rule), m_thread_id(u32(-1)) {}
+	inline	explicit	node			(pcstr const name, verbosity filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
 						~node			();
 			void		set				(pcstr						initiator_path,
 										 int						verbosity,
 										 u32						thread_id,
 										 memory::base_allocator *	allocator,
 										 memory::base_allocator *	allocator_to_clean);
-
-	inline	int			get_verbosity	(path_parts* path) { return get_verbosity(path, silent); }
-			void		clean			(memory::base_allocator * allocator);
-
 private:
-			int			get_verbosity	(path_parts* path, int inherited_verbosity);
+			verbosity	get_verbosity	(path_parts* path, verbosity inherited_verbosity) const;
+
+public:
+	inline	verbosity	get_verbosity	(path_parts* path) const { return get_verbosity(path, silent); }
+			void		clean			(memory::base_allocator * allocator);
 
 private:
 	nodes_tree_type						m_children;
 
-	int									m_verbosity;
+	verbosity							m_verbosity;
 	u32									m_thread_id;
 }; // class node
+
+STATIC_SIZE_ASSERT(node, 0x54);
 
 } // namespace logging
 } // namespace vostok

@@ -22,12 +22,11 @@ public:
 			bool	has_passed_filters		( pcstr initiator, verbosity verbosity ) const;
 
 			void	push_filter				( pcstr initiator, verbosity verbosity, u32 thread_id );
-	inline	void	pop_filter				( ) { /* no source */ }
+			void	pop_filter				( ) { /* sushi@NOTE: Wasn't used in target executable, can be recovered if needed */ }
 
+private:
 			bool	filter_is_overwritten	( initiator_filter* filter ) const;
-
 			void	build_tree				( );
-
 
 public:
 	/* 0x0000 */	threading::reader_writer_lock		lock;
@@ -37,16 +36,6 @@ public:
 }; // class filter_tree
 
 STATIC_SIZE_ASSERT(filter_tree, 0x38);
-
-VOSTOK_LOGGING_API filter_tree*	new_filter_tree		( memory::base_allocator& allocator );
-VOSTOK_LOGGING_API void			delete_filter_tree	( filter_tree*& filter_tree );
-VOSTOK_LOGGING_API void			push_filter			(
-									filter_tree&	tree,
-									pcstr			initiator,
-									verbosity		verbosity,
-									u32				thread_id
-								);
-VOSTOK_LOGGING_API bool			has_passed_filters	( filter_tree const& tree, pcstr initiator, verbosity verbosity );
 
 } // namespace logging
 } // namespace vostok
