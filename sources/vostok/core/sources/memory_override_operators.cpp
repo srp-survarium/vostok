@@ -135,10 +135,10 @@ void initialize_crt_allocator			( )
 	R_ASSERT					( g_crt_allocations_are_enabled );
 	if ( !g_crt_allocator ) {
 		vostok::debug::preinitialize	( );
-		vostok::logging::preinitialize	( );
+		// sushi@TODO: vostok::logging::preinitialize	( );
 		vostok::bind_pointer_to_buffer_mt_safe	(
-			(vostok::memory::doug_lea_mt_allocator*&)g_crt_allocator, 
-			s_crt_allocator_buffer, 
+			(vostok::memory::doug_lea_mt_allocator*&)g_crt_allocator,
+			s_crt_allocator_buffer,
 			s_crt_allocator_creation,
 			inplace_constructor( )
 		);

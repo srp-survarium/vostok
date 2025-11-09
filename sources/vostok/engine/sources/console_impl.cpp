@@ -17,7 +17,7 @@ using vostok::console_commands::console_command;
 
 namespace vostok {
 
-console_impl::console_impl( ui::world& uw, vostok::memory::base_allocator& a ) 
+console_impl::console_impl( ui::world& uw, vostok::memory::base_allocator& a )
 :	m_ui_world			( uw ),
 	m_allocator			( a ),
 	m_last_item			( 0 ),
@@ -77,7 +77,7 @@ console_impl::console_impl( ui::world& uw, vostok::memory::base_allocator& a )
 	m_ui_tips_view->init_texture	("ui_rect");
 	//.m_ui_tips_view->set_color		(0xff353535);
 	m_ui_tips_view->set_color		(0x85353535);
-	
+
 	m_ui_tips_view->w()->set_position(edit_pos+float2(0, edit_size.y));
 	m_ui_tips_view->w()->set_size	(float2(100,100));
 	m_ui_tips_view->w()->set_visible(false);
@@ -86,7 +86,7 @@ console_impl::console_impl( ui::world& uw, vostok::memory::base_allocator& a )
 	m_ui_tips_view_hl				= m_ui_world.create_image();
 	m_ui_tips_view_hl->init_texture	("ui_rect");
 	m_ui_tips_view_hl->set_color	(0x7f200000);
-	
+
 	m_ui_tips_view_hl->w()->set_position(float2(0.0f, 0.0f));
 	m_ui_tips_view_hl->w()->set_size	(float2(100,100));
 	m_ui_tips_view_hl->w()->set_visible	(true);
@@ -99,7 +99,7 @@ console_impl::~console_impl( )
 
 	vectora<ui::text*>::iterator it		= m_text_items.begin();
 	vectora<ui::text*>::iterator it_e	= m_text_items.end();
-	
+
 	for(; it!=it_e; ++it)
 		m_ui_world.destroy_window		((*it)->w());
 
@@ -158,7 +158,7 @@ static u32 string_color(pcstr str)
 		return 0xffff7088;
 	if(strstr(str, "<ERROR>"))
 		return 0xffff0000;
-	
+
 	return 0xffffffff;
 }
 
@@ -176,7 +176,7 @@ struct dialog_guard :private boost::noncopyable
 		m_ui_window.tick();
 		m_ui_window.draw(m_ui_renderer, m_scene_view);
 	}
-private:	
+private:
 	ui::window&						m_ui_window;
 	render::ui::renderer&			m_ui_renderer;
 	render::scene_view_ptr const&	m_scene_view;
@@ -188,7 +188,7 @@ void console_impl::tick( render::scene_view_ptr const& scene_view )
 
 	float line_height					= 20.0f;
 	float line_width					= 1000.0f;
-	logging::log_file* l				= logging::get_log_file();
+	logging::log_file* l				= NULL; // sushi@TODO: logging::get_log_file();
 
 	logging_transaction		transaction		( l );
 	dialog_guard			dialog_updater	( *m_ui_dialog->w(), m_ui_world.get_renderer(), scene_view );
@@ -224,7 +224,7 @@ void console_impl::tick( render::scene_view_ptr const& scene_view )
 
 	m_ui_view->clear			();
 	m_last_item					= 0;
-	
+
 	float visible_height		= m_ui_view->w()->get_size().y;
 	u32 need_lines_count		= math::floor(visible_height/line_height);
 
@@ -234,12 +234,12 @@ void console_impl::tick( render::scene_view_ptr const& scene_view )
 	ui::text* txt				= get_item();
 	txt->w()->set_size			(float2(line_width, scroll_pos));
 	m_ui_view->add_item			(txt->w(), false);
-	
+
 	u32 log_pos					= math::floor(scroll_pos/line_height);
 	math::clamp<u32>			(need_lines_count, 0, log_cnt);
 
 	math::clamp<u32>			(log_pos, 0, log_cnt-need_lines_count);
-	
+
 	l->goto_line				(log_pos);
 
 	string1024					log_str_buffer;
@@ -269,7 +269,7 @@ void console_impl::tick( render::scene_view_ptr const& scene_view )
 		txt->set_color			( string_color(log_str_buffer) );
 		m_ui_view->add_item		( txt->w(), false );
 	}
-	
+
 	float len					= log_cnt*line_height;
 	float2 tail_size			( line_width, len-scroll_pos-visible_height );
 	if(tail_size.y>0.0f)
@@ -303,7 +303,7 @@ bool console_impl::on_text_commit(ui::window* w, int p1, int p2)
 
 	compare_pcstr_pred					pred(text);
 
-	
+
 	vectora<pcstr>::iterator it			= std::find_if(m_executed_history.begin(), m_executed_history.end(), pred);
 	if(it!=m_executed_history.end())
 	{
@@ -367,7 +367,7 @@ void console_impl::fill_tips_view()
 	float pos				= 0.0f;
 
 	m_ui_tips_view->w()->remove_all_childs();
-	
+
 	u32 tips_count			 = m_tips.size();
 
 	for (u32 idx=0; idx<tips_count; ++idx)

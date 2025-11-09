@@ -68,21 +68,21 @@ void `dynamic atexit destructor for 's_ph_debug_cmd02''( )
 // STATE[STUB]
 void* bullet_alloc( u32 size )
 {
-	return VOSTOK_MALLOC_IMPL( vostok::physics::g_ph_allocator, size, "bullet" ); // <0x6bc9e0>|0x000|0x000:'45'
+	return VOSTOK_MALLOC_IMPL( vostok::physics::g_ph_allocator, size, "bullet" );	// <0x6bc9e0>|0x000|0x000:'45'
 }
 
 // STATE[STUB]
 void bullet_free( void* memblock )
 {
-	return VOSTOK_FREE_IMPL( vostok::physics::g_ph_allocator, memblock ); // <0x6bc9c0>|0x000|0x000:'50'
+	return VOSTOK_FREE_IMPL( vostok::physics::g_ph_allocator, memblock );	// <0x6bc9c0>|0x000|0x000:'50'
 }
 
 // STATE[STUB]
 btTransform from_vostok( float4x4 const& m )
 {
-	math::quaternion q_vostok = math::quaternion(m);					// <0x6bd789>|0x000|0x000:'58'
-	btQuaternion q0		= from_vostok(q_vostok);	// <0x6bd794>|0x00b|0x00b:'59'
-	return btTransform(q0, from_vostok(m.c.xyz()) );// <0x6bd7a2>|0x019|0x00e:'60'
+	math::quaternion q_vostok = math::quaternion(m);	// <0x6bd789>|0x000|0x000:'58'
+	btQuaternion q0		= from_vostok(q_vostok);		// <0x6bd794>|0x00b|0x00b:'59'
+	return btTransform(q0, from_vostok(m.c.xyz()) );	// <0x6bd7a2>|0x019|0x00e:'60'
 }
 
 // STATE[STUB]
@@ -970,7 +970,7 @@ float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 
 	// ******
 }
-	
+
 struct contact_result_callback : btCollisionWorld::ContactResultCallback {
 public:
 	virtual btScalar addSingleResult(

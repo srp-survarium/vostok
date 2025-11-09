@@ -7,19 +7,18 @@
 #include "pch.h"
 #include "filter_tree.h"
 
-#include <vostok/intrusive_double_linked_list.h>
-#include <vostok/threading_reader_writer_lock.h>
-#include <vostok/memory_writer.h>
+#include "filter_tree_node.h"
 #include <vostok/console_command.h>
+#include <vostok/intrusive_double_linked_list.h>
 #include <vostok/logging/api.h>
 #include <vostok/logging/logging_filters_console_command.h>
-#include "filter_tree_node.h"
-#include "globals.h"
+#include <vostok/memory_writer.h>
+#include <vostok/threading_reader_writer_lock.h>
 
 namespace vostok {
 namespace logging {
 
-// STATE[STUB]
+// STATE[91%|DONE]: LTCG for `malloc_impl`.
 filter_tree::filter_tree( memory::base_allocator& allocator ) :
 	lock			( ),
 	initiator_tree	( VOSTOK_NEW_IMPL( allocator, node )( "", trace ) ),
@@ -28,7 +27,7 @@ filter_tree::filter_tree( memory::base_allocator& allocator ) :
 {
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 filter_tree::~filter_tree( )
 {
 	initiator_tree->clean( &allocator );				// <0x65c399>|0x000|0x000:'26'
@@ -36,17 +35,17 @@ filter_tree::~filter_tree( )
 }
 
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) const
 {
 	path_parts path( initiator );																						// <0x65c629>|0x000|0x000:'32'
 	threading::reader_writer_lock::mutex_raii raii( lock, threading::lock_type_read );									// <0x65c635>|0x00c|0x00c:'33'
-	vostok::logging::verbosity allowed_verbosity = (vostok::logging::verbosity)initiator_tree->get_verbosity( &path );	// <0x65c658>|0x02f|0x023:'34' sushi@NOTE: Incorrect verbosity type
-	return allowed_verbosity > verbosity;																				// <0x65c672>|0x049|0x01a:'35'
+	vostok::logging::verbosity allowed_verbosity = (vostok::logging::verbosity)initiator_tree->get_verbosity( &path );	// <0x65c658>|0x02f|0x023:'34'
+	return allowed_verbosity >= verbosity;																				// <0x65c672>|0x049|0x01a:'35'
 }
 
 
-// STATE[STUB]
+// STATE[87%|DONE]: LTCG for `malloc` and `fixed_string` constructor.
 void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_id )
 {
 	if ( !initiator )																								// <0x65c54a>|0x000|0x000:'40'
@@ -65,11 +64,11 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 	build_tree								();																		// <0x65c5fd>|0x0b3|0x011:'53'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
 
-	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// <0x65c0aa>|0x000|0x000|[1]:'72' // sushi@TODO: Should be front?
+	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// <0x65c0aa>|0x000|0x000|[1]:'72' // sushi@NOTE: Why is the first filter skipped, is this a bug?
 								it		!=	NULL;										// <0x65c0b2>|0x008|0x008:'73'
 								it		=	filter_stack.get_next_of_object(it) )		// <0x65c0b4>|0x00a|0x002:'74'
 	{
@@ -80,7 +79,7 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 	return									false;										// <0x65c0e4>|0x03a|0x002:'80'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: LTCG for `malloc`.
 void filter_tree::build_tree( )
 {
 	initiator_tree->clean( &allocator );																	// <0x65c319>|0x000|0x000:'85'
@@ -94,19 +93,19 @@ void filter_tree::build_tree( )
 	}																										// <0x65c385>|0x06c|0x02e:'93'
 }
 
-// STATE[STUB]
+// STATE[91%|DONE]
 filter_tree* new_filter_tree( memory::base_allocator& allocator )
 {
 	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );	// <0x65c4e6>|0x000|0x000:'109'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void delete_filter_tree( filter_tree*& filter_tree )
 {
 	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );	// <0x65c4b6>|0x000|0x000:'114'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void push_filter(
 	filter_tree&	tree,
 	pcstr			initiator,
@@ -117,7 +116,7 @@ void push_filter(
 	tree.push_filter( initiator, verbosity, thread_id );	// <0x65c6c3>|0x000|0x000:'124'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool has_passed_filters( filter_tree const& tree, pcstr initiator, verbosity verbosity )
 {
 	return tree.has_passed_filters( initiator, verbosity );	// <0x65c6a3>|0x000|0x000:'134'
@@ -134,7 +133,7 @@ pcstr verbosity_to_str[] ={
 	NULL,
 };
 
-// STATE[STUB]
+// STATE[99%|DONE]: Target allocated 4 more bytes.
 verbosity string_to_verbosity( pcstr in_verbosity )
 {
 	vostok::logging::verbosity verbosities[6] = { silent, error, warning, info, debug, trace };	// <0x65c026>|0x000|0x000:'139'
@@ -145,7 +144,7 @@ verbosity string_to_verbosity( pcstr in_verbosity )
 	return invalid;																				// <0x65c08b>|0x065|0x009:'144'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 pcstr verbosity_to_string( verbosity verbosity )
 {
 	switch ( verbosity )	// <0x65bfb4>|0x000|0x000:'149'
@@ -175,7 +174,7 @@ private:
 
 STATIC_SIZE_ASSERT(filter_name_eq, 0x4);
 
-// STATE[STUB]
+// STATE[99%|DONE]: Target allocated 4 more bytes
 void logging_filters_console_command::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
 {
 	typedef vectora<initiator_filter>		filters_vec;

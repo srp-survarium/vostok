@@ -34,7 +34,7 @@ void   on_inline_config_loaded			(queries_result & in_result, fat_inline_data * 
 		item.extension					=	(pcstr)it.key();
 		if ( !value.value_exists("total_size") )
 			R_ASSERT						("total_size is not set for value: '%s'", value.get_field_id());
-		
+
 		if ( value.value_exists("allow_compression_in_db") )
 		{
 			configs::lua_config_value const & allow_compression_in_db	=	value["allow_compression_in_db"];
@@ -59,7 +59,7 @@ void   on_inline_config_loaded			(queries_result & in_result, fat_inline_data * 
 			item.current_size = item.max_size =	(u32)total_size_value;
 		}
 		else FATAL							("total_size for value '%s' has wrong type, must be integer or 'no_limit'", value.get_field_id());
-				
+
 		if ( value.value_exists("compression_rate") )
 		{
 			configs::lua_config_value const & compression_rate_value	=	value["compression_rate"];
@@ -68,7 +68,7 @@ void   on_inline_config_loaded			(queries_result & in_result, fat_inline_data * 
 				item.compression_rate	=	(float)compression_rate_value;
 			else if ( compression_rate_value.get_type() == configs::t_integer )
 				item.compression_rate	=	(float)(u32)compression_rate_value;
-			else 
+			else
 				FATAL						("compression_rate for value '%s' must be float type", value.get_field_id());
 		}
 
@@ -91,9 +91,9 @@ bool   pack_archive						(pack_archive_args & args)
 
 		portable_path_string const	portable_path	=	portable_path_string::convert(query_path.c_str());
 
-		query_resource_and_wait				(portable_path.c_str(), 
-											 lua_config_class, 
-											 boost::bind(& on_inline_config_loaded, _1, & inline_data), 
+		query_resource_and_wait				(portable_path.c_str(),
+											 lua_config_class,
+											 boost::bind(& on_inline_config_loaded, _1, & inline_data),
 											 args.allocator);
 
 		wait_and_dispatch_callbacks			(true);
@@ -117,13 +117,13 @@ bool   pack_archive						(pack_archive_args & args)
 	R_ASSERT								(find_result == result_success);
 	R_ASSERT								(vfs_iterator);
 
-	LOGI_INFO								("pack", args.log_format, args.log_flags, "mounted nodes: %d", vfs_iterator.get_nodes_count());
-	LOGI_INFO								("pack", args.log_format, args.log_flags, "writing db..");
+	LOGIFD_INFO								("pack", args.log_format, args.log_flags, "mounted nodes: %d", vfs_iterator.get_nodes_count());
+	LOGIFD_INFO								("pack", args.log_format, args.log_flags, "writing db..");
 
 	compressor * compressor				=	NULL;
 	if ( args.compression_rate > 0 )
 	{
-		ppmd_compressor* const ppmd		=	VOSTOK_NEW_IMPL(args.allocator, ppmd_compressor) 
+		ppmd_compressor* const ppmd		=	VOSTOK_NEW_IMPL(args.allocator, ppmd_compressor)
 											(args.allocator, 32);
 		compressor						=	ppmd;
 	}
@@ -145,7 +145,7 @@ bool   pack_archive						(pack_archive_args & args)
 									 		 args.fat_part_max_size,
 											 args.archive_part_max_size,
 											 callback,
-											 args.log_format, 
+											 args.log_format,
 											 args.log_flags,
 											 args.from_vfs,
 											 args.from_vfs_info_tree,
@@ -155,15 +155,15 @@ bool   pack_archive						(pack_archive_args & args)
 	if ( vfs.save_archive(save_args) )
 	{
 		if ( args.target_db == args.target_fat )
-			LOGI_INFO						("pack", args.log_format, args.log_flags, "written db with fat into: %s\n", args.target_db.c_str());
+			LOGIFD_INFO						("pack", args.log_format, args.log_flags, "written db with fat into: %s\n", args.target_db.c_str());
 		else
 		{
-			LOGI_INFO						("pack", args.log_format, args.log_flags, "written db  to: %s\n", args.target_db.c_str());
-			LOGI_INFO						("pack", args.log_format, args.log_flags, "written fat to: %s\n", args.target_fat.c_str());
+			LOGIFD_INFO						("pack", args.log_format, args.log_flags, "written db  to: %s\n", args.target_db.c_str());
+			LOGIFD_INFO						("pack", args.log_format, args.log_flags, "written fat to: %s\n", args.target_fat.c_str());
 		}
 	}
 	else
-		LOGI_ERROR							("pack", args.log_format, args.log_flags, "error occured");
+		LOGIFD_ERROR							("pack", args.log_format, args.log_flags, "error occured");
 
 	if ( args.clean_temp_files )
 	{

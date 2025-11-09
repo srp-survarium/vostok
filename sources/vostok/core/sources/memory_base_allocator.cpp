@@ -60,16 +60,16 @@ void base_allocator::dump_statistics( ) const
 	u64 const total_size		= this->total_size( );
 	u64 const allocated_size	= this->allocated_size( );
 
-	LOG_INFO					( logging::format_message, "---------------memory stats for arena [%s]---------------", m_arena_id );
-	LOG_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, 
+	LOGF_INFO					( logging::format_message, "---------------memory stats for arena [%s]---------------", m_arena_id );
+	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message,
 		m_arena_start
 		?
 			"size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10)
 			", start address: 0x" VOSTOK_PRINTF_SPEC_LONG_LONG_HEX(09)
 			", end address: 0x" VOSTOK_PRINTF_SPEC_LONG_LONG_HEX(09)
-		: 
+		:
 			"size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10),
 		total_size,
 		(u64)*(size_t*)&m_arena_start,
@@ -129,7 +129,7 @@ void base_allocator::on_free		( pvoid& buffer, bool can_clear ) const
 	R_ASSERT_CMP_U				( buffer, <, m_arena_end );
 }
 
-size_t base_allocator::needed_size ( size_t const size ) const 
+size_t base_allocator::needed_size ( size_t const size ) const
 {
 	return
 		size
@@ -147,7 +147,7 @@ size_t base_allocator::needed_size ( size_t const size ) const
 
 #endif // #if VOSTOK_USE_MEMORY_TOOLS
 
-size_t base_allocator::usable_size ( pvoid pointer ) const 
+size_t base_allocator::usable_size ( pvoid pointer ) const
 {
 #if VOSTOK_USE_MEMORY_GUARD
 	pointer						= guard::get_real_pointer( pointer );

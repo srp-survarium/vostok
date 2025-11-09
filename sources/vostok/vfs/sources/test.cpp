@@ -47,22 +47,22 @@ void   vfs_test::test					(core_test_suite * suite)
 {
 	m_suite								=	suite;
 	fs_new::windows_hdd_file_system			device;
-	VOSTOK_CONSTRUCT_REFERENCE				(m_device, fs_new::asynchronous_device_interface) 
+	VOSTOK_CONSTRUCT_REFERENCE				(m_device, fs_new::asynchronous_device_interface)
 												(& device, fs_new::watcher_enabled_true);
 
 	threading::spawn						(boost::bind(device_thread, m_device.c_ptr()), "hdd", "hdd", 0, 0);
-
+#if 0 // sushi@TODO
     	logging::push_filter						("vfs", logging::warning, & memory::g_mt_allocator);
     	logging::push_filter						("fs", logging::warning, & memory::g_mt_allocator);
- 
+#endif
   	//test_mount_unmount						();
    	test_inside_mount						();
   	test_find								();
 	test_patch								();
 
-//	test_watcher							(); 
+//	test_watcher							();
 
-	threading::interlocked_exchange			(s_device_thread_exit, true); 
+	threading::interlocked_exchange			(s_device_thread_exit, true);
 	m_device->wakeup_thread					();
 	while ( !s_device_thread_exited ) ;
 	m_device->finalize_thread_usage			();
