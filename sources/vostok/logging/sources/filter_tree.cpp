@@ -27,7 +27,7 @@ filter_tree::filter_tree( memory::base_allocator& allocator ) :
 {
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 filter_tree::~filter_tree( )
 {
 	initiator_tree->clean( &allocator );				// <0x65c399>|0x000|0x000:'26'
@@ -35,7 +35,7 @@ filter_tree::~filter_tree( )
 }
 
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) const
 {
 	path_parts path( initiator );																						// <0x65c629>|0x000|0x000:'32'
@@ -64,7 +64,7 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 	build_tree								();																		// <0x65c5fd>|0x0b3|0x011:'53'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
 
@@ -79,7 +79,7 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 	return									false;										// <0x65c0e4>|0x03a|0x002:'80'
 }
 
-// STATE[100%]: LTCG for `malloc`.
+// STATE[100%|DONE]: LTCG for `malloc`.
 void filter_tree::build_tree( )
 {
 	initiator_tree->clean( &allocator );																	// <0x65c319>|0x000|0x000:'85'
@@ -99,13 +99,13 @@ filter_tree* new_filter_tree( memory::base_allocator& allocator )
 	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );	// <0x65c4e6>|0x000|0x000:'109'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void delete_filter_tree( filter_tree*& filter_tree )
 {
 	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );	// <0x65c4b6>|0x000|0x000:'114'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void push_filter(
 	filter_tree&	tree,
 	pcstr			initiator,
@@ -116,7 +116,7 @@ void push_filter(
 	tree.push_filter( initiator, verbosity, thread_id );	// <0x65c6c3>|0x000|0x000:'124'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool has_passed_filters( filter_tree const& tree, pcstr initiator, verbosity verbosity )
 {
 	return tree.has_passed_filters( initiator, verbosity );	// <0x65c6a3>|0x000|0x000:'134'
@@ -144,7 +144,7 @@ verbosity string_to_verbosity( pcstr in_verbosity )
 	return invalid;																				// <0x65c08b>|0x065|0x009:'144'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 pcstr verbosity_to_string( verbosity verbosity )
 {
 	switch ( verbosity )	// <0x65bfb4>|0x000|0x000:'149'

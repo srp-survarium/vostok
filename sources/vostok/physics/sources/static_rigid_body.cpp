@@ -11,7 +11,7 @@
 namespace vostok {
 namespace physics {
 
-// STATE[PARTIAL: 48%]
+// STATE[48%|PARTIAL]
 bt_static_rigid_body::bt_static_rigid_body( bt_collision_shape_ptr shape, btRigidBody* body ):
 	m_bt_body	( body ),
 	m_shape		( shape )
@@ -19,40 +19,40 @@ bt_static_rigid_body::bt_static_rigid_body( bt_collision_shape_ptr shape, btRigi
 	body->setUserPointer( this );	// <0x584294>|0x000|0x000:'41'
 }
 
-// STATE[DONE]: Same as `get_bt_collision_obect`
+// STATE[100%|DONE]: Same as `get_bt_collision_obect`
 btRigidBody* bt_static_rigid_body::get_rigid_body( ) {
 	return m_bt_body;	// <0x584000>|0x000|0x000:'51'
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 float4x4 bt_static_rigid_body::get_transform( ) const {
 	return from_bullet( m_bt_body->getWorldTransform() );	// <0x584130>|0x000|0x000:'70'
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 void bt_static_rigid_body::set_transform( float4x4 const& transform ) {
 	m_bt_body->setWorldTransform( from_vostok( transform ) );						// <0x58415b>|0x000|0x000:'79'
 	m_bt_body->setInterpolationWorldTransform( m_bt_body->getWorldTransform( ) );	// <0x584172>|0x017|0x017:'80'
 }
 
-// STATE[PARTIAL: 83%]: the asm looks the same, the rigsters were used slightly differently
+// STATE[83%|PARTIAL]: the asm looks the same, the rigsters were used slightly differently
 void bt_static_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world ) {
 	btVector3 rel_pos = from_vostok( point_in_world ) - m_bt_body->getWorldTransform().getOrigin();	// <0x584079>|0x000|0x000:'85'
 	m_bt_body->setActivationState( ACTIVE_TAG );													// <0x584097>|0x01e|0x01e:'86'
 	m_bt_body->applyImpulse( from_vostok( impulse ), rel_pos );										// <0x5840df>|0x066|0x048:'87'
 }
 
-// STATE[PARTIAL: 52%]: target didn't inline `->` for `resource_ptr`. Maybe it has different impl?
+// STATE[52%|PARTIAL]: target didn't inline `->` for `resource_ptr`. Maybe it has different impl?
 u16 bt_static_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const {
 	return m_shape->get_triangle_material( triangle_id, is_shape_index );
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 u16 bt_static_rigid_body::get_collision_group( ) const {
 	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x584040>|0x000|0x000:'97'
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 btCollisionObject* bt_static_rigid_body::get_bt_collision_obect( ) {
 	return m_bt_body;	// <0x583ff0>|0x000|0x000:'108'
 }
@@ -121,7 +121,7 @@ bt_static_rigid_body* create_static_rigid_body( bt_rigid_body_construction_info 
 	// ******
 }
 
-// STATE[PARTIAL: 45%]: target inlined parent constructors, base didn't
+// STATE[45%|PARTIAL]: target inlined parent constructors, base didn't
 bt_static_rigid_body::~bt_static_rigid_body( ) {
 	// ASSERT?
 	VOSTOK_DELETE_IMPL( g_ph_allocator, m_bt_body );	// <0x58419a>|0x000|0x000:'174'

@@ -94,7 +94,7 @@ static void fill_log_string(
 namespace vostok {
 namespace logging {
 
-// STATE[100%]
+// STATE[100%|DONE]
 void log_format::set( format_specifier const & format_expression )
 {
 	format_specifier_list					specifiers;

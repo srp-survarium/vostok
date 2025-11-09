@@ -10,7 +10,7 @@
 using vostok::logging::path_parts;
 using vostok::logging::format_string_type;
 
-// STATE[100%]
+// STATE[100%|DONE]
 path_parts::path_parts	(pcstr initiator) : m_index(0), m_current_element(0)
 {
 	ASSERT									( initiator );
@@ -19,7 +19,7 @@ path_parts::path_parts	(pcstr initiator) : m_index(0), m_current_element(0)
 	add_part								(0);
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void path_parts::add_part		( pcstr const part )
 {
 	ASSERT					( !part || *part );
@@ -29,7 +29,7 @@ void path_parts::add_part		( pcstr const part )
 	m_parts.push_back		( part );
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void path_parts::to_next_element()
 {
 	m_current_element		= strchr( m_current_element, initiator_separator );

@@ -76,7 +76,7 @@ void node::set			(pcstr const							initiator_path,
 											 verbosity, thread_id, allocator, allocator_to_clean);
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void node::clean						(vostok::memory::base_allocator * allocator)
 {
 	while ( node * dying = static_cast<node *>(m_children.unlink_leftmost_without_rebalance()) )	// <0x65b169>|0x000|0x000|[1]:'76'
@@ -89,7 +89,7 @@ void node::clean						(vostok::memory::base_allocator * allocator)
 	m_children.clear						();
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 verbosity node::get_verbosity					(path_parts * path, verbosity inherited_verbosity) const
 {
 	vostok::logging::verbosity verbosity =
@@ -149,13 +149,13 @@ bool   compare_nodes::operator ()		(node_base const & left, node_base const & ri
 	return									left.name < right.name;
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool   compare_nodes::operator ()		(pcstr const left, node_base const & right) const
 {
 	return									compare_parts(left, right.name.c_str());
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool   compare_nodes::operator ()		(node_base const & left, pcstr const right) const
 {
 	return									compare_parts(left.name.c_str(), right);

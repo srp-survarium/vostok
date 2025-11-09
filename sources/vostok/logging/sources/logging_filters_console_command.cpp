@@ -10,7 +10,7 @@
 namespace vostok {
 namespace logging {
 
-// STATE[100%]
+// STATE[100%|DONE]
 logging_filters_console_command::logging_filters_console_command(
 	filter_tree&						filter_tree,
 	pcstr const							name,

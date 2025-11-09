@@ -54,7 +54,7 @@ log_file::log_file				(	memory::base_allocator&		allocator,
 	m_current_pos		= 0;
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 log_file::~log_file				( )
 {
 	close				( );
@@ -97,7 +97,7 @@ void log_file::flush			( pcstr in_file_name )
 	}
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void log_file::append			( pcstr data, u32 const length )
 {
 	if ( length == 0 )	// <0x65b5c9>|0x000|0x000:'100'
@@ -150,7 +150,7 @@ void log_file::start_transaction	( )
 	m_transaction_thread_id		=	threading::current_thread_id();
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void log_file::assert_transaction_in_current_thread	( ) const
 {
 	R_ASSERT						( m_transaction_thread_id != u32(-1),
@@ -167,14 +167,14 @@ void log_file::end_transaction		( )
 	m_log_mutex.unlock( );
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 u32	log_file::get_lines_count		( ) const
 {
 	assert_transaction_in_current_thread	( );
 	return							m_last_line;
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void log_file::goto_line		( u32 const line )
 {
 	assert_transaction_in_current_thread	( );
@@ -194,7 +194,7 @@ void log_file::goto_line		( u32 const line )
 		skip_next_line	( );
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 char log_file::read_next_char	( )
 {
 	int const cache_offs= m_current_pos - m_cache_start;
@@ -212,7 +212,7 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {
@@ -255,7 +255,7 @@ struct processor {
 
 STATIC_SIZE_ASSERT(processor, 0x4);
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 {
 	assert_transaction_in_current_thread	( );
@@ -263,7 +263,7 @@ bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 	return				( process_next_line( buffer_size, processor( buffer ) ) );
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 bool log_file::skip_next_line	( )
 {
 	struct processor {
@@ -281,7 +281,7 @@ bool log_file::skip_next_line	( )
 namespace vostok {
 namespace logging {
 
-// STATE[100%]
+// STATE[100%|DONE]
 void log_file::close		( )
 {
 	if ( !m_file )
@@ -313,7 +313,7 @@ log_file* new_log_file(
 	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device ); 	// <0x65bcd6>|0x000|0x000:'297'
 }
 
-// STATE[100%]
+// STATE[100%|DONE]
 void delete_log_file( log_file*& log_file )
 {
 	if ( log_file )												// <0x65b9d6>|0x000|0x000:'302'

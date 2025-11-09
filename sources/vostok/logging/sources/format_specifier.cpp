@@ -17,11 +17,11 @@ format_specifier		format_time_brief	(format_specifier_time_brief);
 format_specifier		format_verbosity	(format_specifier_verbosity);
 format_specifier		format_message		(format_specifier_message); // sushi@NOTE: No dynamic initializer
 
-// STATE[100%]
+// STATE[100%|DONE]
 format_specifier::format_specifier		(format_specifier_enum specifier)
 	: m_specifier(specifier), m_left(NULL), m_right(NULL) {;}
 
-// STATE[100%]
+// STATE[100%|DONE]
 format_specifier::format_specifier		(format_specifier const & left, format_specifier const & right)
 	: m_left(& left), m_right(& right), m_specifier(format_specifier_unset) {;}
 
