@@ -14,9 +14,9 @@ namespace tasks {
 // spin count
 //-----------------------------------------------------------------------------------
 
-command_line::key static		s_spin_count_key	("spin_count", 
-													 "", 
-													 "task system", 
+command_line::key static		s_spin_count_key	("spin_count",
+													 "",
+													 "task system",
 													 "number of trylocks before task system is notified about long lock");
 
 u32 static const				default_spin_count	=	5;
@@ -34,14 +34,14 @@ u32  spin_count_before_notify_task_system ()
 //-----------------------------------------------------------------------------------
 
 
-thread_pool::thread_pool(u32 const								max_task_threads, 
+thread_pool::thread_pool(u32 const								max_task_threads,
 						 u32 const								max_user_threads,
 						 u32 const								min_permanent_working_threads,
 						 execute_while_wait_for_children_enum	execute_while_wait_for_children,
 						 do_logging_bool						do_logging) :
 								m_min_permanent_working_threads(min_permanent_working_threads),
 								m_execute_while_wait_for_children(execute_while_wait_for_children),
-								m_initialized(false), 
+								m_initialized(false),
 								m_thread_tls_key(0),
 								m_user_thread_index(0),
 								m_num_task_threads_exited(0),
@@ -93,9 +93,9 @@ void thread_pool::initialize					( )
 		tls.thread_name						=	thread_name_for_logging;
 
 		tls.thread_id						=	threading::spawn(	boost::bind(&tasks::thread_tls::thread_proc, &tls),
-																	thread_name_for_debugger.c_str(), 
-																	thread_name_for_logging.c_str(), 
-																	0, 
+																	thread_name_for_debugger.c_str(),
+																	thread_name_for_logging.c_str(),
+																	0,
 																	tls.hardware_thread,
 																	threading::tasks_aware
 																);
@@ -160,7 +160,7 @@ void   thread_pool::log_columns_header ()
 		output								+=	column_output;
 	}
 
-	LOGI_INFO									("tasks", logging::format_message, logging::log_to_console, "%s", output.c_str());
+	LOGIFD_INFO									("tasks", logging::format_message, core::log_to_console, "%s", output.c_str());
 }
 
 void   thread_pool::log (thread_tls * const tls, pcstr format, ...)
@@ -171,7 +171,7 @@ void   thread_pool::log (thread_tls * const tls, pcstr format, ...)
 	u32 const screen_width					=	80;
 	u32 const num_columns					=	(u32)m_task_thread_tls.size() + 1;
 	u32 const column_width					=	screen_width / num_columns;
-	
+
 	fixed_string512	output;
 	u32 const column						=	tls && tls->is_task_thread() ? (tls->thread_index+1)  : 0;
 	for ( u32 i=0; i<column*column_width; ++i )
@@ -182,7 +182,7 @@ void   thread_pool::log (thread_tls * const tls, pcstr format, ...)
 	output.appendf_va_list						(format, argptr);
 	va_end	 									(argptr);
 
-	LOGI_INFO									("tasks", logging::format_message, logging::log_to_console,
+	LOGIFD_INFO									("tasks", logging::format_message, core::log_to_console,
 												 "%s", output.c_str());
 }
 
@@ -247,7 +247,7 @@ void   thread_pool::pause_all_task_threads ()
 
 	m_all_task_threads_paused.set				(false);
 	threading::interlocked_exchange				(m_paused, true);
-	
+
 	for ( thread_tls_container::iterator	it	=	m_task_thread_tls.begin();
 											it	!=	m_task_thread_tls.end();
 											++it )
@@ -325,15 +325,15 @@ void   register_current_thread_as_core_user	()
 	s_thread_pool->register_current_thread_as_core_user	();
 }
 
-void   initialize (u32 const max_task_threads, 
-				   u32 const max_user_threads, 
+void   initialize (u32 const max_task_threads,
+				   u32 const max_user_threads,
 				   u32 const min_permanent_working_threads,
 				   execute_while_wait_for_children_enum execute_while_wait_for_children,
 				   do_logging_bool do_logging)
 {
-	VOSTOK_CONSTRUCT_REFERENCE					(s_thread_pool, thread_pool) (	max_task_threads, 
-																				max_user_threads, 
-																				min_permanent_working_threads, 
+	VOSTOK_CONSTRUCT_REFERENCE					(s_thread_pool, thread_pool) (	max_task_threads,
+																				max_user_threads,
+																				min_permanent_working_threads,
 																				execute_while_wait_for_children,
 																				do_logging	);
 	s_thread_pool->initialize					( );

@@ -43,7 +43,7 @@ pvoid pthreads3_allocator::malloc_impl		( size_t const size VOSTOK_CORE_DEBUG_PA
 	ASSERT							( initialized ( ) );
 	size_t const real_size			= needed_size( size );
 	pvoid const result				= pt3malloc( real_size );
-	return							
+	return
 		on_malloc(
 			result,
 			size,
@@ -59,7 +59,7 @@ pvoid pthreads3_allocator::realloc_impl		( pvoid pointer, size_t const new_size 
 		free_impl					( pointer VOSTOK_CORE_DEBUG_PARAMETERS );
 		return						( 0 );
 	}
-	
+
 	size_t const previous_size		= pointer ? usable_size( pointer ) : 0;
 	if ( pointer )
 		on_free						( pointer, false );
@@ -69,9 +69,9 @@ pvoid pthreads3_allocator::realloc_impl		( pvoid pointer, size_t const new_size 
 
 	return
 		on_malloc(
-			result, 
-			new_size, 
-			previous_size, 
+			result,
+			new_size,
+			previous_size,
 			VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_PARAMETER
 		);
 }

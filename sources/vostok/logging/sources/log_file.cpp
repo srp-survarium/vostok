@@ -6,51 +6,43 @@
 
 #include "pch.h"
 #include <vostok/logging/log_file.h>
+
 #include <vostok/fs/device_utils.h>
 #include <vostok/fs/file_type_pointer.h>
 #include <vostok/core/core.h>
-#include "logging.h"
-#include "globals.h"
 
 static const int log_file_group_size = 256;
-
-vostok::fs_new::native_path_string	vostok::logging::g_log_file_name;
 
 namespace vostok {
 namespace logging {
 
 using namespace fs_new;
 
-log_file::log_file				( log_file_usage			log_file_usage, 
-								  pcstr						file_name,
-								  device_file_system_proxy	device ) 
+// STATE[98%|DONE]: LTCG for `path_string`.
+log_file::log_file				(	memory::base_allocator&		allocator,
+									log_file_usage_enum			log_file_usage,
+									pcstr						file_name,
+									device_file_system_proxy	device )
 	:
-	m_transaction_thread_id (u32(-1)),
+	m_allocator				( allocator ),
+	m_transaction_thread_id ( u32(-1) ),
 	m_file					( 0 ),
 	m_device				( device )
 {
 	ASSERT					( file_name && *file_name );
 	m_file_name			=	file_name;
 
-	ASSERT					( !g_log_file_name.length() );
-
-	file_mode::mode_enum mode	=	( log_file_usage == logging::create_log ) ? 
+	file_mode::mode_enum mode	=	( log_file_usage == logging::create_log ) ?
 										file_mode::create_always : file_mode::append_or_create;
 
-	if ( log_file_usage != logging::no_log )
-	{
-		create_folder_r	(m_device, file_name, false);
+	create_folder_r	(m_device, file_name, false);
 
-		file_type *	file				=	(file_type *)& m_file_pointer_storage;
-		open_file_params	params			(mode, file_access::read_write, assert_on_fail_false);
-		params.file_type_allocated_by_user	=	true;
+	file_type *	file				=	(file_type *)& m_file_pointer_storage;
+	open_file_params	params			(mode, file_access::read_write, assert_on_fail_false);
+	params.file_type_allocated_by_user	=	true;
 
-		if ( m_device->open(& file, file_name, params) )
-			threading::interlocked_exchange_pointer	( m_file, file );
-	}
-
-	if ( m_file )
-		g_log_file_name					=	file_name;
+	if ( m_device->open(& file, file_name, params) )
+		threading::interlocked_exchange_pointer	( m_file, file );
 
 	VOSTOK_CONSTRUCT_REFERENCE				(m_line_groups, line_groups_type);
 	m_line_groups->push_back (0);
@@ -62,12 +54,14 @@ log_file::log_file				( log_file_usage			log_file_usage,
 	m_current_pos		= 0;
 }
 
+// STATE[100%|DONE]
 log_file::~log_file				( )
 {
 	close				( );
 	VOSTOK_DESTROY_REFERENCE					(m_line_groups);
 }
 
+// STATE[75%|DONE]: `native_path_string::convert` and `file_type_pointer` aligned differently. sushi@NOTE: Possibly implementation for them has changed.
 void log_file::flush			( pcstr in_file_name )
 {
 	if ( !m_file )
@@ -84,7 +78,7 @@ void log_file::flush			( pcstr in_file_name )
 	native_path_string	file_name		=	native_path_string::convert(in_file_name);
 	fs_new::create_folder_r					( m_device, file_name, false );
 
-	file_type_pointer file				(file_name, m_device, file_mode::create_always, 
+	file_type_pointer file				(file_name, m_device, file_mode::create_always,
 										 file_access::write, assert_on_fail_false, notify_watcher_false);
 
 	if ( !file )
@@ -103,23 +97,26 @@ void log_file::flush			( pcstr in_file_name )
 	}
 }
 
+// STATE[100%|DONE]
 void log_file::append			( pcstr data, u32 const length )
 {
-	ASSERT				( data );
+	if ( length == 0 )	// <0x65b5c9>|0x000|0x000:'100'
+		return;			// <0x65b5cf>|0x006|0x006:'101'
 	ASSERT				( length );
+	ASSERT				( data );
 	ASSERT				( m_file );
 	bool const seek_res	= m_device->seek(m_file, 0, seek_file_end);
 	ASSERT_U			( seek_res );
 
 	file_size_type pos	= m_device->tell( m_file );
-	
+
 	file_size_type const	num_written = m_device->write(m_file, data, length);
 	ASSERT				( num_written == length );
 
 	m_file_size			+= (int)num_written;
 
 	pcstr const			last_symbol = data + length;
-	while ( *data ) 
+	while ( *data )
 	{
 		pcstr const		next_line = strchr( data, '\n' );
 		size_t const 	line_length = next_line ? ( next_line-data+1 ) : ( last_symbol - data );
@@ -130,10 +127,10 @@ void log_file::append			( pcstr data, u32 const length )
 			++m_last_line;
 
 			u32 const line_groups_needed = (m_last_line / log_file_group_size) + 1;
-		
+
 			if ( m_line_groups->size() < line_groups_needed &&
 				 m_line_groups->size() < m_line_groups->max_size() &&
-				 !(m_last_line % log_file_group_size) ) 
+				 !(m_last_line % log_file_group_size) )
 			{
 				m_line_groups->push_back((int)pos);
 			}
@@ -143,36 +140,41 @@ void log_file::append			( pcstr data, u32 const length )
 	}
 }
 
+// STATE[92%|DONE]: LTCG for `mutex::lock`.
 void log_file::start_transaction	( )
 {
-	globals->log_mutex.lock			( );
+	m_log_mutex.lock( );
 	R_ASSERT						( m_transaction_thread_id == u32(-1),
 									"transaction was not ended or mutex was unlocked by "
 									"someone other then end_transaction");
 	m_transaction_thread_id		=	threading::current_thread_id();
 }
 
+// STATE[100%|DONE]
 void log_file::assert_transaction_in_current_thread	( ) const
 {
-	R_ASSERT						( m_transaction_thread_id != u32(-1), 
+	R_ASSERT						( m_transaction_thread_id != u32(-1),
 									 "you must call start_transaction first");
 	R_ASSERT						( m_transaction_thread_id == threading::current_thread_id(),
 									 "transaction was started in another thread");
 }
 
+// STATE[99%|DONE]: LTCG for `mutex::unlock`.
 void log_file::end_transaction		( )
 {
 	assert_transaction_in_current_thread	( );
 	m_transaction_thread_id		=	u32(-1);
-	globals->log_mutex.unlock			( );
+	m_log_mutex.unlock( );
 }
 
+// STATE[100%|DONE]
 u32	log_file::get_lines_count		( ) const
-{ 
+{
 	assert_transaction_in_current_thread	( );
-	return							m_last_line; 
+	return							m_last_line;
 }
 
+// STATE[100%|DONE]
 void log_file::goto_line		( u32 const line )
 {
 	assert_transaction_in_current_thread	( );
@@ -192,6 +194,7 @@ void log_file::goto_line		( u32 const line )
 		skip_next_line	( );
 }
 
+// STATE[100%|DONE]
 char log_file::read_next_char	( )
 {
 	int const cache_offs= m_current_pos - m_cache_start;
@@ -209,6 +212,7 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
+// STATE[100%|DONE]
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {
@@ -239,9 +243,9 @@ bool log_file::process_next_line ( u32 const buffer_size, processor_type const& 
 
 struct processor {
 	mutable pstr buffer_ptr;
-	
+
 	inline	processor		( pstr buffer ) : buffer_ptr(buffer) {}
-	
+
 	inline void operator( ) ( char const character ) const
 	{
 		*buffer_ptr = character;
@@ -249,6 +253,9 @@ struct processor {
 	}
 };
 
+STATIC_SIZE_ASSERT(processor, 0x4);
+
+// STATE[100%|DONE]
 bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 {
 	assert_transaction_in_current_thread	( );
@@ -256,6 +263,7 @@ bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 	return				( process_next_line( buffer_size, processor( buffer ) ) );
 }
 
+// STATE[100%|DONE]
 bool log_file::skip_next_line	( )
 {
 	struct processor {
@@ -273,11 +281,12 @@ bool log_file::skip_next_line	( )
 namespace vostok {
 namespace logging {
 
+// STATE[100%|DONE]
 void log_file::close		( )
 {
 	if ( !m_file )
 		return;
-	
+
 	file_type* file	= m_file;
 
 	threading::interlocked_exchange_pointer( m_file, (file_type*)0 );
@@ -287,9 +296,28 @@ void log_file::close		( )
 	m_device->close		( file );
 }
 
+// STATE[STUB]
 void log_file::on_terminate			( )
 {
 	close			( );
+}
+
+// STATE[92%|DONE]: LTCG for malloc
+log_file* new_log_file(
+	memory::base_allocator&				allocator,
+	fs_new::device_file_system_proxy&	device,
+	pcstr								log_file_name,
+	log_file_usage_enum					log_file_usage
+)
+{
+	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device ); 	// <0x65bcd6>|0x000|0x000:'297'
+}
+
+// STATE[100%|DONE]
+void delete_log_file( log_file*& log_file )
+{
+	if ( log_file )												// <0x65b9d6>|0x000|0x000:'302'
+		VOSTOK_DELETE_IMPL( log_file->allocator(), log_file );	// <0x65b9de>|0x008|0x008:'303'
 }
 
 } // namespace logging

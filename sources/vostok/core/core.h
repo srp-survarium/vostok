@@ -25,7 +25,7 @@ enum debug_initialization {
 
 VOSTOK_CORE_API	void	preinitialize	(
 							core::engine * engine,
-							logging::log_file_usage log_file_usage,
+							logging::log_file_usage_enum log_file_usage,
 							pcstr command_line,
 							command_line::contains_application_bool,
 							pcstr application,
