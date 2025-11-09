@@ -13,14 +13,12 @@
 
 static const int log_file_group_size = 256;
 
-vostok::fs_new::native_path_string	vostok::logging::g_log_file_name;
-
 namespace vostok {
 namespace logging {
 
 using namespace fs_new;
 
-// STATE[STUB]
+// STATE[98%|DONE]: LTCG for `path_string`.
 log_file::log_file				(	memory::base_allocator&		allocator,
 									log_file_usage_enum			log_file_usage,
 									pcstr						file_name,
@@ -34,25 +32,17 @@ log_file::log_file				(	memory::base_allocator&		allocator,
 	ASSERT					( file_name && *file_name );
 	m_file_name			=	file_name;
 
-	ASSERT					( !g_log_file_name.length() );
-
 	file_mode::mode_enum mode	=	( log_file_usage == logging::create_log ) ?
 										file_mode::create_always : file_mode::append_or_create;
 
-	if ( log_file_usage != logging::no_log )
-	{
-		create_folder_r	(m_device, file_name, false);
+	create_folder_r	(m_device, file_name, false);
 
-		file_type *	file				=	(file_type *)& m_file_pointer_storage;
-		open_file_params	params			(mode, file_access::read_write, assert_on_fail_false);
-		params.file_type_allocated_by_user	=	true;
+	file_type *	file				=	(file_type *)& m_file_pointer_storage;
+	open_file_params	params			(mode, file_access::read_write, assert_on_fail_false);
+	params.file_type_allocated_by_user	=	true;
 
-		if ( m_device->open(& file, file_name, params) )
-			threading::interlocked_exchange_pointer	( m_file, file );
-	}
-
-	if ( m_file )
-		g_log_file_name					=	file_name;
+	if ( m_device->open(& file, file_name, params) )
+		threading::interlocked_exchange_pointer	( m_file, file );
 
 	VOSTOK_CONSTRUCT_REFERENCE				(m_line_groups, line_groups_type);
 	m_line_groups->push_back (0);
@@ -71,7 +61,7 @@ log_file::~log_file				( )
 	VOSTOK_DESTROY_REFERENCE					(m_line_groups);
 }
 
-// STATE[STUB]
+// STATE[75%|DONE]: `native_path_string::convert` and `file_type_pointer` aligned differently. sushi@NOTE: Possibly implementation for them has changed.
 void log_file::flush			( pcstr in_file_name )
 {
 	if ( !m_file )
@@ -107,11 +97,13 @@ void log_file::flush			( pcstr in_file_name )
 	}
 }
 
-// STATE[STUB]
+// STATE[100%]
 void log_file::append			( pcstr data, u32 const length )
 {
-	ASSERT				( data );
+	if ( length == 0 )	// <0x65b5c9>|0x000|0x000:'100'
+		return;			// <0x65b5cf>|0x006|0x006:'101'
 	ASSERT				( length );
+	ASSERT				( data );
 	ASSERT				( m_file );
 	bool const seek_res	= m_device->seek(m_file, 0, seek_file_end);
 	ASSERT_U			( seek_res );
@@ -148,10 +140,10 @@ void log_file::append			( pcstr data, u32 const length )
 	}
 }
 
-// STATE[STUB]
+// STATE[92%|DONE]: LTCG for `mutex::lock`.
 void log_file::start_transaction	( )
 {
-	// sushi@TODO: globals->log_mutex.lock			( );
+	m_log_mutex.lock( );
 	R_ASSERT						( m_transaction_thread_id == u32(-1),
 									"transaction was not ended or mutex was unlocked by "
 									"someone other then end_transaction");
@@ -167,12 +159,12 @@ void log_file::assert_transaction_in_current_thread	( ) const
 									 "transaction was started in another thread");
 }
 
-// STATE[STUB]
+// STATE[99%|DONE]: LTCG for `mutex::unlock`.
 void log_file::end_transaction		( )
 {
 	assert_transaction_in_current_thread	( );
 	m_transaction_thread_id		=	u32(-1);
-	// sushi@TODO: globals->log_mutex.unlock			( );
+	m_log_mutex.unlock( );
 }
 
 // STATE[100%]
@@ -310,7 +302,7 @@ void log_file::on_terminate			( )
 	close			( );
 }
 
-// STATE[STUB]
+// STATE[92%|DONE]: LTCG for malloc
 log_file* new_log_file(
 	memory::base_allocator&				allocator,
 	fs_new::device_file_system_proxy&	device,
@@ -321,7 +313,7 @@ log_file* new_log_file(
 	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device ); 	// <0x65bcd6>|0x000|0x000:'297'
 }
 
-// STATE[STUB]
+// STATE[100%]
 void delete_log_file( log_file*& log_file )
 {
 	if ( log_file )												// <0x65b9d6>|0x000|0x000:'302'

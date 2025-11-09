@@ -19,38 +19,17 @@ enum log_flags_enum {
 	log_to_stderr		=	1 << 1,
 };
 
-typedef void (*debug_log_callback_type)( // sushi@TODO: DELETE
-	pcstr,
-	bool,
-	bool,
-	pcstr
-);
-typedef	void (*log_callback_type)(
-	pvoid,					// user_data (log_flags_enum)
-	pcstr,					// file
-	u32	 ,					// line
-	pcstr,					// function signature
-	pcstr,					// initiator
-	logging::verbosity,		// verbosity
-	pcstr,					// log string
-	u32	 ,					// log string length
-	logging::callback_flag  // first/last string
-);
-
-
 extern logging::filter_tree*		g_log_filter_tree;
-extern log_callback_type			g_log_callback;
+extern logging::log_callback_type	g_log_callback;
 extern log_flags_enum				g_log_flags;
 extern logging::log_format			g_log_format;
 
 extern logging::log_file*			g_log_file;
 extern logging::log_file_usage_enum g_log_file_usage;
 
-
+// sushi@TODO: Not sure those are needed here!
 		void		logging_initialize		( );
 		void		logging_finalize		( );
-
-static	bool		is_logging_initialized	( );
 
 } // namespace core
 } // namespace vostok

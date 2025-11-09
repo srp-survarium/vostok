@@ -13,7 +13,7 @@
 namespace vostok {
 namespace logging {
 
-// STATE[STUB]
+// STATE[100%]
 void fill_local_time( format_string_type& dest, bool brief )
 {
 	SYSTEMTIME date_time;

@@ -38,7 +38,7 @@ enum stdstream_enum { stdstream_out, stdstream_error };
 		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
 static	_iobuf*		get_stdstream_handle	( stdstream_enum stream );
 		void		write_to_stdstream		( stdstream_enum stream, pcstr format, ... );
-
+static	bool		is_logging_initialized	( );
 		bool		use_console_for_logging	( );
 
 		void		logging_preinitialize	( ); // sushi@NOTE: Called in other modules (sometimes even in unrelated dependencies like vobris) near allocators. Might be public.
@@ -89,10 +89,10 @@ static vostok::logging::logging_filters_console_command*	s_logging_console_comma
 static bool													s_tried_to_initialize_console	=	false;
 
 
-logging::filter_tree*	g_log_filter_tree	= NULL;
-log_callback_type		g_log_callback		= NULL;
-log_flags_enum			g_log_flags			= log_to_console;
-logging::log_format		g_log_format;
+logging::filter_tree*		g_log_filter_tree	= NULL;
+logging::log_callback_type	g_log_callback		= NULL;
+log_flags_enum				g_log_flags			= log_to_console;
+logging::log_format			g_log_format;
 
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;

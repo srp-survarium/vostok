@@ -21,19 +21,19 @@ class path_parts;
 class node : public node_base, private boost::noncopyable
 {
 public:
-	inline	explicit	node			(pcstr name, verbosity filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
+	inline	explicit	node			(pcstr const name, verbosity filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
 						~node			();
 			void		set				(pcstr						initiator_path,
 										 int						verbosity,
 										 u32						thread_id,
 										 memory::base_allocator *	allocator,
 										 memory::base_allocator *	allocator_to_clean);
-
-	inline	int			get_verbosity	(path_parts* path) { return get_verbosity(path, silent); }
-			void		clean			(memory::base_allocator * allocator);
-
 private:
-			int			get_verbosity	(path_parts* path, verbosity inherited_verbosity); // sushi@TODO: Seems like the order has changed and this function is now first
+			verbosity	get_verbosity	(path_parts* path, verbosity inherited_verbosity) const;
+
+public:
+	inline	verbosity	get_verbosity	(path_parts* path) const { return get_verbosity(path, silent); }
+			void		clean			(memory::base_allocator * allocator);
 
 private:
 	nodes_tree_type						m_children;

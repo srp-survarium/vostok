@@ -22,7 +22,7 @@ public:
 			bool	has_passed_filters		( pcstr initiator, verbosity verbosity ) const;
 
 			void	push_filter				( pcstr initiator, verbosity verbosity, u32 thread_id );
-			void	pop_filter				( ) { /* sushi@TODO: Wasn't used in target executable */ }
+			void	pop_filter				( ) { /* sushi@NOTE: Wasn't used in target executable, can be recovered if needed */ }
 
 private:
 			bool	filter_is_overwritten	( initiator_filter* filter ) const;

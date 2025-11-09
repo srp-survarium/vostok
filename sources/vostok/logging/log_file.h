@@ -102,18 +102,12 @@ private:
 
 STATIC_SIZE_ASSERT(log_file, 0x4680);
 
-extern vostok::fs_new::native_path_string		g_log_file_name; // sushi@TODO: Was it removed?
-
-// VOSTOK_LOGGING_API log_file * get_log_file			( ); sushi@TODO
-
-
 VOSTOK_LOGGING_API	log_file*		new_log_file		(
 										memory::base_allocator&				allocator,
 										fs_new::device_file_system_proxy&	device,
 										pcstr								log_file_name,
 										log_file_usage_enum					log_file_usage
 									);
-
 VOSTOK_LOGGING_API	void			delete_log_file		( log_file*& log_file );
 
 

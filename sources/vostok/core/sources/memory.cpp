@@ -316,11 +316,11 @@ void vostok::memory::dump_statistics		( bool const dump_stats_for_empty_arenas_a
 
 	R_ASSERT_CMP				( allocated_size, >=, crt_allocated_size + process_allocated_size );
 	u64 const vostok_used			= allocated_size - (crt_allocated_size + process_allocated_size);
-	LOG_INFO					( logging::format_message, "---------------overall memory stats---------------" );
-	LOG_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
-	LOG_INFO					( logging::format_message, "size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10), total_size );
+	LOGF_INFO					( logging::format_message, "---------------overall memory stats---------------" );
+	LOGF_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
+	LOGF_INFO					( logging::format_message, "size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10), total_size );
 }
 
 void vostok::memory::copy					( mutable_buffer const & destination, const_buffer const & source )

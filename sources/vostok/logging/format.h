@@ -15,24 +15,19 @@ namespace logging {
 
 struct log_format
 {
+	inline	log_format		( format_specifier const& format_expression ) { set( format_expression ); }
+	inline	log_format		( ) { }
 
-	format_string_type						string;
-	format_enabled_container				enabled;
-	format_index_container					indexes;
+			void	set		( format_specifier const& format_expression );
 
-	void	set							(format_specifier const & format_expression);
+	format_string_type				string;
+	format_enabled_container		enabled;
+	format_index_container			indexes;
+
+
 };
 
 STATIC_SIZE_ASSERT(log_format, 0x228);
-
-#if 0
-// STATE[STUB]
-// vostok::logging::log_format::log_format()
-log_format::log_format( )
-{
-}
-#endif
-
 
 } // namespace logging
 } // namespace vostok

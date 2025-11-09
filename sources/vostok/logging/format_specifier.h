@@ -57,6 +57,8 @@ struct format_separator : format_specifier
 	fixed_string<128>					separator;
 };
 
+STATIC_SIZE_ASSERT(format_separator, 0x98);
+
 inline
 format_specifier	operator +			(format_specifier const & left, format_specifier const & right)
 {

@@ -30,49 +30,13 @@ extern format_specifier		format_time;
 extern format_specifier		format_verbosity;
 extern format_specifier		format_message;
 
-enum callback_flag {
-	first	= 1 << 0,
-	last	= 1 << 1,
-}; // enum callback_flag
-
-
-typedef void (*debug_log_callback_type)(pcstr, bool, bool, pcstr); // sushi@TODO: Also defined in <vostok/core/logging_extensions.h>
-typedef	void (*log_callback_type)(
-	pvoid,					// user_data (log_flags_enum)
-	pcstr,					// file
-	u32	 ,					// line
-	pcstr,					// function signature
-	pcstr,					// initiator
-	logging::verbosity,		// verbosity
-	pcstr,					// log string
-	u32	 ,					// log string length
-	logging::callback_flag  // first/last string
-);
-
-
-
-/*
-typedef	boost::function<
-	void (
-		pcstr,					// file
-		pcstr,					// function signature
-		int	 ,					// line
-		int	 ,					// verbosity
-		pcstr,					// log string
-		callback_flag   		// first/last string
-	)
->				log_callback;
-*/
-// sushi@TODO VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
-
-// sushi@TODOVOSTOK_LOGGING_API	void			set_log_callback	( log_callback callback );
-// sushi@TODOVOSTOK_LOGGING_API	log_callback	get_log_callback	( );
-
-// VOSTOK_LOGGING_API	void			set_format			( format_specifier const & format_expression ); sushi@TODO: Maybe inlined :(
+// sushi@TODO: vostok::core::core_debug_engine::flush_log_file
+//	VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
 
 } // namespace logging
 } // namespace vostok
 
+#include <vostok/logging/logger.h>
 #include <vostok/logging/macros.h>
 
 #endif // #ifndef VOSTOK_LOGGING_EXTENSIONS_H_INCLUDED

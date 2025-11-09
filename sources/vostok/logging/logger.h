@@ -17,10 +17,10 @@ namespace logging {
 class logger : public boost::noncopyable {
 public:
 	inline			logger		(
-						boost::function<log_callback_type> const&			log_callback,
+						log_callback_boost const&			log_callback,
 						void*								user_data,
 						log_format const*					log_format_ptr,
-						pcstr								initiator, // sushi@TODO: Order of pcstr might be different
+						pcstr								initiator,
 						u32									line,
 						pcstr								file,
 						pcstr								function_signature,
@@ -34,16 +34,23 @@ public:
 					m_file				( file ),
 					m_function_signature( function_signature ),
 					m_line				( line ),
-					m_verbosity			( verbosity ) {}
+					m_verbosity			( verbosity )
+					{
+						if ( m_log_format_ptr )
+							m_log_format = *m_log_format_ptr;
+						else
+							m_log_format.set( format_message );
 
-			void	operator()	( pcstr format, char* args );
+					}
+
+			void	operator()	( pcstr const format, pstr const args );
 
 	inline			~logger		( ) {}
 
 
-private:
+public:
 	/* 0x0000 */	log_format							m_log_format;
-	/* 0x0228 */	boost::function<log_callback_type> const&		m_log_callback;
+	/* 0x0228 */	log_callback_boost const&			m_log_callback;
 	/* 0x022c */	log_format const*					m_log_format_ptr;
 	/* 0x0230 */	void*								m_user_data;
 
@@ -55,6 +62,32 @@ private:
 }; // class logger
 
 STATIC_SIZE_ASSERT(logger, 0x248);
+
+void VOSTOK_LOGGING_API append(
+	log_callback_boost const&	log_callback,
+	void* const					user_data,
+	log_format const*			log_format,
+	pcstr						file,
+	u32							line,
+	pcstr						function_signature,
+	pcstr						initiator,
+	verbosity					verbosity,
+	pcstr						format,
+	...
+);
+
+void VOSTOK_LOGGING_API append(
+	log_callback_boost const&	log_callback,
+	void* const					user_data,
+	format_specifier const&		format_specifier,
+	pcstr						file,
+	u32							line,
+	pcstr						function_signature,
+	pcstr						initiator,
+	verbosity					verbosity,
+	pcstr						format,
+	...
+);
 
 } // namespace logging
 } // namespace vostok

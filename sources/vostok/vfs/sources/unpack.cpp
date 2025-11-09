@@ -25,14 +25,14 @@ bool   unpack							(virtual_file_system & file_system, unpack_arguments & args)
 	file_system.hashset.find_and_lock_branch	(start_node, args.source_path.c_str(), lock_type_read);
 	if ( !start_node )
 	{
-		LOGI_ERROR							("unpack", args.log_format, args.log_flags, "nothing mounted on virtual path: '%s'", args.source_path.c_str());
+		LOGIFD_ERROR						("unpack", args.log_format, args.log_flags, "nothing mounted on virtual path: '%s'", args.source_path.c_str());
 		return								false;
 	}
 
 	native_path_string						absolute_path;
 	if ( !convert_to_absolute_path(& absolute_path, args.target_path, assert_on_fail_true) )
 	{
-		LOGI_ERROR							("unpack", args.log_format, args.log_flags, "cannot convert to absolute path: '%s'", args.target_path.c_str());
+		LOGIFD_ERROR						("unpack", args.log_format, args.log_flags, "cannot convert to absolute path: '%s'", args.target_path.c_str());
 		return								false;
 	}
 
@@ -40,7 +40,7 @@ bool   unpack							(virtual_file_system & file_system, unpack_arguments & args)
 
 	if ( !create_folder_r(args.device, args.target_path, true) )
 	{
-		LOGI_ERROR							("unpack", args.log_format, args.log_flags, "cannot create folder: '%s'", args.target_path.c_str());
+		LOGIFD_ERROR						("unpack", args.log_format, args.log_flags, "cannot create folder: '%s'", args.target_path.c_str());
 		return								false;
 	}
 
@@ -52,8 +52,8 @@ bool   unpack							(virtual_file_system & file_system, unpack_arguments & args)
 	return									result;
 }
 
-result_enum   decompress_node			(base_node<> *					node, 
-										 allocated_buffer *				uncompressed_data, 
+result_enum   decompress_node			(base_node<> *					node,
+										 allocated_buffer *				uncompressed_data,
 										 synchronous_device_interface &	device,
 										 memory::base_allocator *		allocator,
 										 compressor *					compressor)
@@ -71,7 +71,7 @@ result_enum   decompress_node			(base_node<> *					node,
 	uncompressed_data->assign				(uncompressed_file_size, allocator, "uncompressed_file_data");
 	if ( !* uncompressed_data )
 		return								result_out_of_memory;
-	
+
 	native_path_string const source_file_path	=	get_node_physical_path(node);
 
 	file_type_pointer	source_file			(source_file_path, device, file_mode::open_existing, file_access::read);
@@ -93,7 +93,7 @@ result_enum   decompress_node			(base_node<> *					node,
 bool   unpack_node						(base_node<> * node, virtual_file_system & file_system, unpack_arguments & args)
 {
 	u32 const saved_path_length			=	args.target_path.length();
-	
+
 	if ( strings::length(node->get_name()) != 0 )
 		args.target_path.appendf			("%c%s", native_path_string::separator, node->get_name());
 
@@ -105,7 +105,7 @@ bool   unpack_node						(base_node<> * node, virtual_file_system & file_system, 
 		if ( need_unpack )
 		if ( !create_folder_r(args.device, args.target_path, true) )
 		{
-			LOGI_ERROR						("unpack", args.log_format, args.log_flags, "cannot create folder: '%s'", args.target_path.c_str());
+			LOGIFD_ERROR					("unpack", args.log_format, args.log_flags, "cannot create folder: '%s'", args.target_path.c_str());
 			return							false;
 		}
 
@@ -122,21 +122,21 @@ bool   unpack_node						(base_node<> * node, virtual_file_system & file_system, 
 		args.device->erase					(args.target_path);
 		if ( !create_folder_r(args.device, args.target_path, false) )
 		{
-			LOGI_ERROR						("unpack", args.log_format, args.log_flags, "cannot create folder: '%s'", args.target_path.c_str());
+			LOGIFD_ERROR					("unpack", args.log_format, args.log_flags, "cannot create folder: '%s'", args.target_path.c_str());
 			return							false;
 		}
 
 		file_type_pointer	target_file		(args.target_path, args.device, file_mode::create_always, file_access::write);
 		if ( !target_file )
 		{
-			LOGI_ERROR						("unpack", args.log_format, args.log_flags, "cannot open target file: '%s'", args.target_path.c_str());
+			LOGIFD_ERROR					("unpack", args.log_format, args.log_flags, "cannot open target file: '%s'", args.target_path.c_str());
 			return							false;
 		}
 
 		if ( node->is_archive() && node->is_compressed() )
 		{
 			allocated_buffer				uncompressed_data;
-			result_enum const decompress_result	=	decompress_node	(node, & uncompressed_data, args.device, 
+			result_enum const decompress_result	=	decompress_node	(node, & uncompressed_data, args.device,
 																	 args.allocator, & args.compressor);
 			R_ASSERT_U						(decompress_result == result_success);
 
@@ -148,7 +148,7 @@ bool   unpack_node						(base_node<> * node, virtual_file_system & file_system, 
 			file_type_pointer	source_file	(source_file_path, args.device, file_mode::open_existing, file_access::read);
 			if ( !source_file )
 			{
-				LOGI_ERROR					("unpack", args.log_format, args.log_flags, "cannot open source file: '%s'", source_file_path.c_str());
+				LOGIFD_ERROR				("unpack", args.log_format, args.log_flags, "cannot open source file: '%s'", source_file_path.c_str());
 				return						false;
 			}
 
@@ -164,12 +164,12 @@ bool   unpack_node						(base_node<> * node, virtual_file_system & file_system, 
 	++args.unpacked_nodes_count;
 	if ( args.callback )
 	{
-		args.callback						(args.unpacked_nodes_count, args.nodes_count, 
+		args.callback						(args.unpacked_nodes_count, args.nodes_count,
 											 node->get_name(), node->get_flags());
 	}
 
 	return									out_result;
 }
 
-} // namespace vfs 
-} // namespace vostok 
+} // namespace vfs
+} // namespace vostok

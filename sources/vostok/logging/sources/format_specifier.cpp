@@ -25,7 +25,7 @@ format_specifier::format_specifier		(format_specifier_enum specifier)
 format_specifier::format_specifier		(format_specifier const & left, format_specifier const & right)
 	: m_left(& left), m_right(& right), m_specifier(format_specifier_unset) {;}
 
-// STATE[STUB]
+// STATE[99%|DONE]: Target allocated 12 more bytes on stack
 void   format_specifier::fill_specifier_list	(format_specifier_list & list, format_string_type * out_format_string) const
 {
 	if ( m_left )
@@ -34,20 +34,20 @@ void   format_specifier::fill_specifier_list	(format_specifier_list & list, form
 		m_left->fill_specifier_list			(list, & left_string);
 		format_string_type					right_string;
 		m_right->fill_specifier_list		(list, & right_string);
-		// sushi@TODO: * out_format_string				=	left_string;
-		// sushi@TODO: * out_format_string				+=	right_string;
+		strings::copy						(*out_format_string, left_string);
+		strings::append						(*out_format_string, right_string);
 	}
 	else
 	{
 		if ( m_specifier != format_specifier_separator )
 		{
 			list.push_back					(m_specifier);
-			// sushi@TODO: * out_format_string			=	"%s";
+			strings::copy					(*out_format_string, "%s");
 		}
 		else
 		{
 			format_separator const * const this_ptr	=	static_cast<format_separator const *>(this);
-			// sushi@TODO: * out_format_string			=	this_ptr->separator;
+			strings::copy					(*out_format_string, this_ptr->separator.c_str());
 		}
 	}
 }

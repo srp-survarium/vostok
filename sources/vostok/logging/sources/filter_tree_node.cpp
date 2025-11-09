@@ -31,12 +31,12 @@ enum verbosity_recursion
 	recurse_0	=	256,
 };
 
-// STATE[86%|DONE]: sushi@NOTE: LTCG for `set_member_hook`.
+// STATE[86%|DONE]: LTCG for `set_member_hook`.
 node::~node				()
 {
 }
 
-// STATE[92%|DONE]: sushi@NOTE: LTCG for `buffer_string::append`, `base_allocator::malloc_impl` and `fixed_string::fixed_string`.
+// STATE[92%|DONE]: LTCG for `buffer_string::append`, `base_allocator::malloc_impl` and `fixed_string::fixed_string`.
 void node::set			(pcstr const							initiator_path,
 						 int const								verbosity,
 						 u32 const								thread_id,
@@ -89,43 +89,42 @@ void node::clean						(vostok::memory::base_allocator * allocator)
 	m_children.clear						();
 }
 
-// STATE[STUB]
-int node::get_verbosity					(path_parts * path, verbosity inherited_verbosity)
+// STATE[100%]
+verbosity node::get_verbosity					(path_parts * path, verbosity inherited_verbosity) const
 {
 	vostok::logging::verbosity verbosity =
 		(m_thread_id != u32(-1) && m_thread_id != threading::current_thread_id()) ?
 		silent :
 		(
-			m_verbosity != 0 ?
+			m_verbosity != invalid ?
 			m_verbosity :
 			inherited_verbosity
-		);																			// <0x65b009>|0x000|0x000:'95'
+		);																								// <0x65b009>|0x000|0x000:'95'
 
-	pcstr cur_part						=	path->get_current_element();
-	if ( !cur_part || cur_part[0] == NULL )
+	pcstr cur_part						=	path->get_current_element();								// <0x65b04e>|0x045|0x045:'97'
+	if ( !cur_part || cur_part[0] == NULL )																// <0x65b05d>|0x054|0x00f:'98'
 	{
 		// last element in path
-		return								verbosity;
+		return								verbosity;													// <0x65b06d>|0x064|0x010:'101'
 	}
 
- 	nodes_tree_type::iterator const it	=	m_children.find(cur_part, m_children.key_comp());
+ 	nodes_tree_type::const_iterator const it	=	m_children.find(cur_part, m_children.key_comp());	// <0x65b075>|0x06c|0x008:'104'
 
- 	if ( it == m_children.end() ) // no special rule?
- 		return								verbosity;
+ 	if ( it == m_children.end() ) // no special rule?													// <0x65b0bb>|0x0b2|0x046:'106'
+ 		return								verbosity;													// <0x65b0f5>|0x0ec|0x03a:'107'
 
-	node * const child					=	static_cast<node *>(& * it);
+	const node * const child					=	static_cast<const node *>(& * it);					// <0x65b0fa>|0x0f1|0x005:'109'
 
- 	path->to_next_element					();										// <0x65b105>|0x0fc|0x00b:'111'
- 	return									child->get_verbosity(path, verbosity);	// <0x65b10d>|0x104|0x008:'112'
+ 	path->to_next_element					();															// <0x65b105>|0x0fc|0x00b:'111'
+ 	return									child->get_verbosity(path, verbosity);						// <0x65b10d>|0x104|0x008:'112'
 }
 
-// STATE[STUB]
 static inline bool is_terminal_character( char character )
 {
-	return character == '\0' || character == vostok::logging::initiator_separator;	// <0x65ae44>|0x000|0x000:'117'
+	return character == '\0' || character == vostok::logging::initiator_separator;				// <0x65ae44>|0x000|0x000:'117'
 }
 
-// STATE[STUB]: https://decomp.me/scratch/aXNEg
+// STATE[9x%|DONE]: sushi@TODO: Ghidra script does not handle static functions. https://decomp.me/scratch/aXNEg
 static bool   compare_parts				(pcstr s1, pcstr s2)
 {
     for ( ;; ++s1, ++s2 ) {						// <0x65ae76>|0x000|0x000:'123'
@@ -144,19 +143,19 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
     }											// <0x65af54>|0x0de|0x017:'136'
 }
 
-// STATE[STUB]
+// STATE[67%|DONE]: LTCG for compare and name access.
 bool   compare_nodes::operator ()		(node_base const & left, node_base const & right) const
 {
 	return									left.name < right.name;
 }
 
-// STATE[STUB]
+// STATE[100%]
 bool   compare_nodes::operator ()		(pcstr const left, node_base const & right) const
 {
 	return									compare_parts(left, right.name.c_str());
 }
 
-// STATE[STUB]
+// STATE[100%]
 bool   compare_nodes::operator ()		(node_base const & left, pcstr const right) const
 {
 	return									compare_parts(left.name.c_str(), right);

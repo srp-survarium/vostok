@@ -10,10 +10,10 @@
 namespace vostok {
 namespace logging {
 
-// STATE[STUB]
+// STATE[100%]
 logging_filters_console_command::logging_filters_console_command(
 	filter_tree&						filter_tree,
-	pcstr								name,
+	pcstr const							name,
 	bool								serializable,
 	console_commands::command_type		command_type,
 	console_commands::execution_filter	execution_filter
@@ -24,7 +24,7 @@ logging_filters_console_command::logging_filters_console_command(
 	m_need_args = true; // <0x76d06d>|0x000|0x000:'32'
 }
 
-// STATE[STUB]
+// STATE[99%|DONE]: Target allocated 16 more bytes
 void logging_filters_console_command::execute( pcstr args )
 {
 

@@ -42,6 +42,44 @@ enum verbosity {
 	unset		=	 1 << 31,
 }; // enum verbosity
 
+enum callback_flag {
+	first	= 1 << 0,
+	last	= 1 << 1,
+}; // enum callback_flag
+
+typedef void (*debug_log_callback_type)(
+	pcstr,
+	bool,
+	bool,
+	pcstr
+);
+
+typedef	void (*log_callback_type)(
+	pvoid,					// user_data (log_flags_enum)
+	pcstr,					// file
+	u32	 ,					// line
+	pcstr,					// function signature
+	pcstr,					// initiator
+	logging::verbosity,		// verbosity
+	pcstr,					// log string
+	u32	 ,					// log string length
+	logging::callback_flag  // first/last string
+);
+
+typedef	boost::function<
+	void (
+		pvoid,					// user_data (log_flags_enum)
+		pcstr,					// file
+		u32	 ,					// line
+		pcstr,					// function signature
+		pcstr,					// initiator
+		logging::verbosity,		// verbosity
+		pcstr,					// log string
+		u32	 ,					// log string length
+		logging::callback_flag  // first/last string
+	)
+>		log_callback_boost;
+
 
 VOSTOK_LOGGING_API	filter_tree*	new_filter_tree		( memory::base_allocator& allocator );
 VOSTOK_LOGGING_API	void			delete_filter_tree	( filter_tree*& filter_tree );
@@ -54,8 +92,8 @@ VOSTOK_LOGGING_API	void			push_filter			(
 VOSTOK_LOGGING_API	bool			has_passed_filters	( filter_tree const& tree, pcstr initiator, verbosity verbosity );
 
 // filter_tree.cpp
-VOSTOK_LOGGING_API	pcstr				verbosity_to_string		( int verbosity );
-VOSTOK_LOGGING_API	verbosity			string_to_verbosity 	( pcstr in_verbosity );
+VOSTOK_LOGGING_API	pcstr			verbosity_to_string	( verbosity verbosity );
+VOSTOK_LOGGING_API	verbosity		string_to_verbosity ( pcstr in_verbosity );
 
 } // namespace logging
 } // namespace vostok
