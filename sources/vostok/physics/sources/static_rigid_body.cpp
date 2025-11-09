@@ -11,22 +11,22 @@
 namespace vostok {
 namespace physics {
 
-// STATE[PARTIAL: 48%] 
+// STATE[PARTIAL: 48%]
 bt_static_rigid_body::bt_static_rigid_body( bt_collision_shape_ptr shape, btRigidBody* body ):
 	m_bt_body	( body ),
 	m_shape		( shape )
 {
-	body->setUserPointer( this ); // <0x584294>|0x000|0x000:'41'
+	body->setUserPointer( this );	// <0x584294>|0x000|0x000:'41'
 }
 
 // STATE[DONE]: Same as `get_bt_collision_obect`
 btRigidBody* bt_static_rigid_body::get_rigid_body( ) {
-	return m_bt_body; // <0x584000>|0x000|0x000:'51'
+	return m_bt_body;	// <0x584000>|0x000|0x000:'51'
 }
 
 // STATE[DONE]
 float4x4 bt_static_rigid_body::get_transform( ) const {
-	return from_bullet( m_bt_body->getWorldTransform() ); // <0x584130>|0x000|0x000:'70'
+	return from_bullet( m_bt_body->getWorldTransform() );	// <0x584130>|0x000|0x000:'70'
 }
 
 // STATE[DONE]
@@ -49,17 +49,17 @@ u16 bt_static_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_
 
 // STATE[DONE]
 u16 bt_static_rigid_body::get_collision_group( ) const {
-	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup; // <0x584040>|0x000|0x000:'97'
+	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x584040>|0x000|0x000:'97'
 }
 
 // STATE[DONE]
 btCollisionObject* bt_static_rigid_body::get_bt_collision_obect( ) {
-	return m_bt_body; // <0x583ff0>|0x000|0x000:'108'
+	return m_bt_body;	// <0x583ff0>|0x000|0x000:'108'
 }
 
 // STATE[STUB]
 void destroy_static_rigid_body( bt_static_rigid_body* body ) {
-	VOSTOK_DELETE_IMPL( g_ph_allocator, body ); // <0x584011>|0x000|0x000:'120'
+	VOSTOK_DELETE_IMPL( g_ph_allocator, body );	// <0x584011>|0x000|0x000:'120'
 }
 
 // STATE[STUB]
@@ -124,7 +124,7 @@ bt_static_rigid_body* create_static_rigid_body( bt_rigid_body_construction_info 
 // STATE[PARTIAL: 45%]: target inlined parent constructors, base didn't
 bt_static_rigid_body::~bt_static_rigid_body( ) {
 	// ASSERT?
-	VOSTOK_DELETE_IMPL( g_ph_allocator, m_bt_body );// <0x58419a>|0x000|0x000:'174'
+	VOSTOK_DELETE_IMPL( g_ph_allocator, m_bt_body );	// <0x58419a>|0x000|0x000:'174'
 }
 
 } // namespace physics
