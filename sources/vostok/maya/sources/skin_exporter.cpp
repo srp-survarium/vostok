@@ -232,7 +232,7 @@ MStatus skinned_visual_exporter::doIt( const MArgList& arglist )
 		vostok::fs_new::create_folder_r	( device, db_file_name.asChar(), false );
 		remove_file_or_directory	( m_folder_name );
 
-		vfs::pack_archive_args	pack_args	(device, NULL, (logging::log_flags_enum)0);
+		vfs::pack_archive_args	pack_args	(device, NULL, (core::log_flags_enum)0);
 		pack_args.flags				= (vfs::save_flags_enum)
 				(vfs::save_flag_forbid_folder_links | vfs::save_flag_forbid_empty_files);
 		pack_args.sources			= fs_new::native_path_string::convert(temp_path.asChar());

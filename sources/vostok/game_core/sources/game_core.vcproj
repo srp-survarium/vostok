@@ -343,6 +343,7 @@
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
+				GeneratePreprocessedFile="0"
 				StringPooling="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -952,6 +953,14 @@
 				<File
 					RelativePath=".\temp_include_all.cpp"
 					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\temp_include_all.h"

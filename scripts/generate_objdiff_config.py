@@ -70,7 +70,11 @@ def gather_units(skip_missing: bool, filter_prefix: Optional[str] = None):
         units.append({
             "name": unit,
             "target_path": target_path,
-            "base_path": base_path
+            "base_path": base_path,
+            "scratch": {
+                "platform": "win32",
+                "compiler": "msvc8.0",
+            },
         })
 
     return units

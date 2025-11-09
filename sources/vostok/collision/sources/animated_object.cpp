@@ -18,7 +18,7 @@
 namespace vostok {
 namespace collision {
 
-// STATE[PARTIAL: 92%]: Seems like the main problem is that linker removed id from `new_animated_rigid_body`.
+// STATE[92%|PARTIAL]: Seems like the main problem is that linker removed id from `new_animated_rigid_body`.
 animated_object::animated_object(
 		configs::binary_config_value const& config,
 		animation::skeleton_ptr const& model_skeleton,
@@ -52,13 +52,13 @@ animated_object::animated_object(
 	m_allocator.swap( allocator );
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 animated_object::~animated_object	( )
 {
 	physics::destroy_animated_rigid_body( m_body, &m_allocator );
 }
 
-// STATE[DONE]: sushi@NOTE: As I understand, destructors are not used to not store allocators inside objects
+// STATE[100%|DONE]: sushi@NOTE: As I understand, destructors are not used to not store allocators inside objects
 void animated_object::destroy		( memory::base_allocator* allocator )
 {
 	if ( !m_geometry )
@@ -87,7 +87,7 @@ void animated_object::destroy		( memory::base_allocator* allocator )
 }
 
 
-// STATE[PARTIAL: 76%]: structure is not matching, bones_matrices_end is not used
+// STATE[76%|PARTIAL]: structure is not matching, bones_matrices_end is not used
 // try (and all permutations of the above :3):
 // i on same line
 // remove iter
@@ -110,13 +110,13 @@ void animated_object::update	( float4x4 const* const bones_matrices_begin, float
 		}
 	}
 }
-// STATE[DONE]
+// STATE[100%|DONE]
 math::aabb animated_object::get_aabb	( ) const
 {
  	return m_geometry ? m_geometry->get_aabb( ) : m_body->get_aabb();
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 float3 animated_object::get_random_surface_point( u32 const current_time ) const
 {
 	if (!m_geometry) {
@@ -155,7 +155,7 @@ float3 animated_object::get_random_surface_point( u32 const current_time ) const
 	return									collision_coords * m_geometries_data[bone_index].bone_geometry_instance->get_matrix();
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 float3 animated_object::get_head_bone_center	( ) const
 {
 	R_ASSERT									( m_head_bone_index != u32(-1) );
@@ -171,7 +171,7 @@ float3 animated_object::get_head_bone_center	( ) const
 	}
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 float3 animated_object::get_eyes_direction( ) const
 {
 	R_ASSERT								( m_head_bone_index != u32(-1) );
@@ -208,7 +208,7 @@ void animated_object::draw_collision		(
 //	cg->get_geometry()->render				( scene, renderer, cg->get_matrix( ) * transform );
 }
 
-// STATE[DONE]
+// STATE[100%|DONE]
 pcstr animated_object::body_part_name(
 	u32                                bone_index) const
 {

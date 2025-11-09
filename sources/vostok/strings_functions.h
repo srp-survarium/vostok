@@ -41,11 +41,11 @@ inline pstr copy_n					( pstr const destination, size_t const destination_size, 
 template < typename allocator_type >
 inline pstr duplicate				( allocator_type& allocator, pcstr const string );
 
-template <typename predicate_type>
-inline bool	iterate_items			( pcstr string, u32 length, predicate_type const& predicate, char const separator = ',');
+template <typename predicate_type, typename string_type>
+inline bool	iterate_items			( string_type string, u32 length, predicate_type const& predicate, char const separator = ',');
 
-template <typename predicate_type>
-inline bool	iterate_items			( pcstr string, predicate_type const& predicate, char const separator = ',' );
+template <typename predicate_type, typename string_type>
+inline bool	iterate_items			( string_type string, predicate_type const& predicate, char const separator = ',' );
 
 inline pcstr get_token				( pcstr string, pstr result, u32 result_size, char const separator )
 {
@@ -58,7 +58,7 @@ inline pcstr get_token				( pcstr string, pstr result, u32 result_size, char con
 	R_ASSERT				( u32(found - string) < result_size );
 	memory::copy			( result, result_size-1, string, u32(found - string) );
 	result[found - string]	= 0;
-	
+
 	++found;
 	return					found;
 }
@@ -139,7 +139,7 @@ inline u32   common_prefix_length (pcstr first, pcstr second)
 		++ second;
 	}
 
-	return				out_common_length;		
+	return				out_common_length;
 }
 
 inline u32   count_of (pcstr string, char char_to_count)

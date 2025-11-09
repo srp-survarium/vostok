@@ -65,10 +65,10 @@ struct environment
 										num_failed_tests(0),
 										current_test_number(0),
 										num_top_callstack_frames_to_skip(0),
-										is_testing(false), 
+										is_testing(false),
 									  	exception_index(0),
-									  	current_test("undefined"), 
-									  	current_suite("undefined"), 
+									  	current_test("undefined"),
+									  	current_suite("undefined"),
 									  	awaited_exception(assert_untyped),
 									  	caught_awaited_exception(false) {}
 
@@ -88,7 +88,7 @@ void   test_watcher_thread_proc ()
 		bool const in_test						=	!!s_environment.is_testing;
 
 
-		s_environment.test_watcher_thread_must_exit.wait	( in_test ? max_time_allowed_for_one_test : 
+		s_environment.test_watcher_thread_must_exit.wait	( in_test ? max_time_allowed_for_one_test :
 															 			max_time_allowed_to_start_test);
 
 		if ( s_environment.num_suites_executed == (long)s_environment.num_suites_total )
@@ -103,9 +103,9 @@ void   test_watcher_thread_proc ()
 		else if ( in_test && s_environment.is_testing && s_environment.current_test_number == current_test_number )
 		{
 			if ( !debug::is_debugger_present() )
-				LOGI_ERROR							("test", "%.4f sec. passed and test %s (suite %s) is still executing", 
-													 max_time_allowed_to_start_test / 1000.f, 
-													 s_environment.current_test, 
+				LOGI_ERROR							("test", "%.4f sec. passed and test %s (suite %s) is still executing",
+													 max_time_allowed_to_start_test / 1000.f,
+													 s_environment.current_test,
 													 s_environment.current_suite);
 		}
 		else
@@ -114,8 +114,8 @@ void   test_watcher_thread_proc ()
 		if ( terminate && !debug::is_debugger_present() )
 		{
 			R_ASSERT								(s_environment.engine);
-			u32 const exit_code					=	s_environment.engine->get_exit_code() + 
-													s_environment.num_failed_tests + 
+			u32 const exit_code					=	s_environment.engine->get_exit_code() +
+													s_environment.num_failed_tests +
 													exit_code_tests_finished_by_test_watcher;
 			vostok::debug::terminate					(exit_code, "");
 		}
@@ -132,7 +132,7 @@ bool   run_tests_command_line ()
 		if ( command_line::initialized() )
 			s_out_result						=	g_run_tests || g_run_tests_and_exit;
 		else
-			s_out_result						=	command_line::key_is_set(s_run_tests_key_name) || 
+			s_out_result						=	command_line::key_is_set(s_run_tests_key_name) ||
 													command_line::key_is_set(s_run_tests_and_exit_key_name);
 	}
 
@@ -145,8 +145,8 @@ void   initialize (core::engine * const engine)
 
 	if ( run_tests_command_line() && !s_no_test_watch )
 	{
-		threading::spawn				( &test_watcher_thread_proc, 
-										 "test watcher", 
+		threading::spawn				( &test_watcher_thread_proc,
+										 "test watcher",
 										 "test-watcher",
 										 0,
 										 3 % threading::core_count(),
@@ -188,52 +188,52 @@ static inline u32 execute_handler_filter( ... )
 }
 #endif // #if !VOSTOK_PLATFORM_PS3
 
-void   on_exception (assert_enum			assert_type, 
-					 pcstr					description, 
+void   on_exception (assert_enum			assert_type,
+					 pcstr					description,
 					 _EXCEPTION_POINTERS*	exception_information,
 					 bool					is_assertion)
 {
 	if ( s_environment.awaited_exception != assert_untyped &&
 		 s_environment.awaited_exception == assert_type )
-	{							
+	{
 		s_environment.caught_awaited_exception	=	true;
 
 #if !VOSTOK_PLATFORM_PS3
 		RaiseException					(0xABCDEF, 0, 0, 0);
 #endif // #if !VOSTOK_PLATFORM_PS3
 		return;
-	}																	
+	}
 
 #if !VOSTOK_PLATFORM_PS3
 	__try {
 #endif // #if !VOSTOK_PLATFORM_PS3
 
 	fixed_string8192 description_string	=	*description == '\n' ? (description + 1) : description;
-	
+
 	u32 const description_size		=	description_string.length();
 
 	if ( description_size && description_string[description_size-1] != '\n' )
 	{
 		description_string			+=	'\n';
 	}
-
+#if 0 // sushi@TODO
 	logging::helper	(__FILE__, __FUNCSIG__, __LINE__, "test", logging::error)
 										("-------------------------------------------------------------\n"
 										 "EXCEPTION #%d in test '%s', suite '%s'\n"
 										 "-------------------------------------------------------------\n"
 										 "%s",
-										 s_environment.exception_index+1, 
-										 s_environment.current_test, 
-										 s_environment.current_suite, 
+										 s_environment.exception_index+1,
+										 s_environment.current_test,
+										 s_environment.current_suite,
 										 description_string.c_str());
-	
-	debug::dump_call_stack				("test", 
-										 true, 
-										 is_assertion ? 3 : 0, 
-										 s_environment.num_top_callstack_frames_to_skip, 
+#endif
+	debug::dump_call_stack				("test",
+										 true,
+										 is_assertion ? 3 : 0,
+										 s_environment.num_top_callstack_frames_to_skip,
 										 exception_information);
 #if !VOSTOK_PLATFORM_PS3
-	} 
+	}
 	__except ( execute_handler_filter( GetExceptionCode( ), GetExceptionInformation( ) ) ) {
 		(void)0;
 	}
@@ -296,23 +296,23 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 
 	if ( num_failed_tests )
 	{
-		result_string.appendf			("TEST SUITE '%s' : FAILED %d of %d tests", 
-										 suite_name, 
-										 num_failed_tests, 
+		result_string.appendf			("TEST SUITE '%s' : FAILED %d of %d tests",
+										 suite_name,
+										 num_failed_tests,
 										 num_tests);
 	}
 	else
 	{
 		result_string.appendf			("TEST SUITE '%s' : successfull %d tests", suite_name, num_tests);
 	}
-
+#if 0 // sushi@TODO
 	logging::helper						(__FILE__, __FUNCSIG__, __LINE__, "test", message_type)
 										(logging::format_message,
 										 "------------------------------------------------------------------------------\n"
 										 "%s (%d ms)\n"
 										 "------------------------------------------------------------------------------",
 										 result_string.c_str(), timer.get_elapsed_msec());
-
+#endif
 	s_environment.num_failed_tests	+=	num_failed_tests;
 	threading::interlocked_increment	(s_environment.num_suites_executed);
 
@@ -332,8 +332,8 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 
 			if ( s_environment.num_failed_tests != 0 && !debug::is_debugger_present() )
 			{
-				u32 const exit_code					=	s_environment.engine->get_exit_code() + 
-														s_environment.num_failed_tests + 
+				u32 const exit_code					=	s_environment.engine->get_exit_code() +
+														s_environment.num_failed_tests +
 														exit_code_tests_failed;
 				vostok::debug::terminate					(exit_code, "");
 			}
@@ -357,7 +357,7 @@ void   set_current_test (pcstr suite_name, pcstr test_name)
 assert_enum   set_awaited_exception (assert_enum awaited_exception)
 {
 	assert_enum previous_awaited_exception	=	s_environment.awaited_exception;
-		
+
 	s_environment.awaited_exception			=	awaited_exception;
 	s_environment.caught_awaited_exception	=	false;
 
