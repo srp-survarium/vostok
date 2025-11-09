@@ -16,20 +16,22 @@ namespace logging {
 
 enum format_specifier_enum
 {
-	format_specifier_unset,
-	format_specifier_thread_id,
-	format_specifier_initiator,
-	format_specifier_time,
-	format_specifier_verbosity,
-	format_specifier_message,
-	format_specifier_separator,
-	format_specifier_count,	
+	format_specifier_unset		=	 0,
+	format_specifier_thread_id	=	 1,
+	format_specifier_initiator	=	 2,
+	format_specifier_time		=	 3,
+	format_specifier_time_brief =	 4,
+	format_specifier_verbosity	=	 5,
+	format_specifier_message	=	 6,
+	format_specifier_separator	=	 7,
+	format_specifier_count		=	 8,
 };
 
 typedef	fixed_vector<format_specifier_enum, format_specifier_count>		format_specifier_list;
 typedef	int		format_index_container[format_specifier_count];
 typedef	bool	format_enabled_container[format_specifier_count];
-typedef fixed_string<512>												format_string_type;
+typedef char	format_string_type[512];
+
 // this is node of a tree that represents an ordered list of format specifiers enums
 // that are used to format logging
 class format_specifier : private noncopyable
@@ -49,11 +51,13 @@ private:
 
 struct format_separator : format_specifier
 {
-	format_separator					(pcstr separator) 
+	format_separator					(pcstr separator)
 		: format_specifier(format_specifier_separator), separator(separator) {}
-	
+
 	fixed_string<128>					separator;
 };
+
+STATIC_SIZE_ASSERT(format_separator, 0x98);
 
 inline
 format_specifier	operator +			(format_specifier const & left, format_specifier const & right)
