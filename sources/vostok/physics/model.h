@@ -19,13 +19,7 @@ struct animated_model_instance : resources::unmanaged_resource {
 	/* offset 0x0108 */ animation::skeleton_ptr m_skeleton;
 }; // struct animated_model_instance
 
-namespace {
-	typedef char size_assert[
-		sizeof(animated_model_instance) == 0x110 ? 1 : -1
-	];
-}
-
-
+STATIC_SIZE_ASSERT(animated_model_instance, 0x110);
 
 
 typedef	resources::resource_ptr<

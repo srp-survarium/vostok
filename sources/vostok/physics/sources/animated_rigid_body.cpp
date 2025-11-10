@@ -80,7 +80,7 @@ float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
 	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
 }
 
-// STATE[UNVERIFIED]: sushi@TODO: Make it conform to structure
+// STATE[STUB]: sushi@TODO: Make it conform to structure
 static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
 	switch ( type )	// <0x6bf579>|0x000|0x000:'86'
@@ -111,7 +111,7 @@ static btCollisionShape* new_bt_primitive( collision::primitive_type type, float
 	}
 }
 
-// STATE[UNVERIFIED]
+// STATE[90%|DONE]: LTCG is different for `binary_config_value::operator[]`, `new_bt_primitive`.
 static btCompoundShape* new_bt_element_joint( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data )
 {
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
@@ -153,7 +153,7 @@ btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_con
 	return bt_shape;
 }
 
-// STATE[UNVERIFIED]
+// STATE[100%|DONE]
 static u32 calculate_bt_hit_target_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];

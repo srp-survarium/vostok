@@ -28,23 +28,15 @@ bt_ghost_object::~bt_ghost_object( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_ghost_object::get_overlapping_objects(vostok::buffer_vector<vostok::physics::base_physics_object *>&) const
-void bt_ghost_object::get_overlapping_objects(
-	buffer_vector<base_physics_object *>& result) const
+void bt_ghost_object::get_overlapping_objects( buffer_vector<base_physics_object *>& result ) const
 {
-	// LOCALS
-	// base_physics_object*            user_ptr
-	// ******
+	u32 const size = m_bt_object->getNumOverlappingObjects( );																			// <0x583875>|0x000|0x000:'33'
 
-	// FUNCTION BODY
-	// <0x583875>|0x000|0x000:'33'
-
-	// <0x583885>|0x010|0x010:'35'
-
-	// <0x583890>|0x01b|0x00b:'37'
-	// <0x5838a2>|0x02d|0x012:'38'
-
-	// ******
+	for ( u32 i = 0 ; i < size ; ++i )																									// <0x583885>|0x010|0x010:'35'
+	{
+		base_physics_object* user_ptr = static_cast<base_physics_object*>(m_bt_object->getOverlappingObject( i )->getUserPointer( ));	// <0x583890>|0x01b|0x00b:'37'
+		result.push_back( user_ptr );																									// <0x5838a2>|0x02d|0x012:'38'
+	}
 }
 
 // STATE[UNVERIFIED]
