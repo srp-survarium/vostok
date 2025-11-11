@@ -133,6 +133,8 @@ namespace vostok
 		ghost.get_overlapping_objects_count( );
 		ghost.get_bt_collision_obect( );
 		ghost.get_overlapping_objects( result );
+
+		physics::destroy_ghost_object( physics::create_ghost_object( shape, math::float4x4() ) );
 	}
 
 	void use_loose_oct_tree()

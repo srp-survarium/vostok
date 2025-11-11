@@ -52,7 +52,7 @@ struct bt_rigid_body_construction_info  {
 public:
 	bt_rigid_body_construction_info( );
 
-	inline	bool	load						( configs::binary_config_value const& arg_0 ) { /* no source */ }
+	inline	bool	load						( configs::binary_config_value const& arg_0 ) { /* no source */ return true; }
 
 	/* 0x0000 */	float						m_mass;
 	/* 0x0004 */	bt_collision_shape_ptr		m_collisionShape;

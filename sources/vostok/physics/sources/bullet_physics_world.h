@@ -78,7 +78,7 @@ public:
 												u16								filter_mask
 											) override;
 
-	virtual	math::aabb						get_world_aabb				( ) const override { /* no source */ }
+	virtual	math::aabb						get_world_aabb				( ) const override { return m_world_aabb; }
 
 	virtual	void							on_before_reuse				( ) override;
 

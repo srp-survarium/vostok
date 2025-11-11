@@ -92,7 +92,7 @@ class character_move_test_callback : public btCollisionWorld::ClosestConvexResul
 public:
 						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot );
 
-	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& arg_0, bool arg_1 ) override { /* no source */ }
+	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& arg_0, bool arg_1 ) override { /* no source */ return 0.0f; }
 
 
 private:
@@ -846,6 +846,7 @@ void bullet_character_controller::remove( btDynamicsWorld* world )
 // btTransform vostok::physics::bullet_character_controller::get_transform()
 btTransform bullet_character_controller::get_transform( )
 {
+	return btTransform();
 	// FUNCTION BODY
 	// <0x5846a9>|0x000|0x000:'1178'
 	// <1>

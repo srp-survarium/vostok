@@ -53,36 +53,23 @@ u16 bt_ghost_object::get_collision_group( ) const
 	return m_bt_object->getBroadphaseHandle( )->m_collisionFilterGroup;	// <0x583740>|0x000|0x000:'50'
 }
 
-// STATE[STUB]
-bt_ghost_object* create_ghost_object( resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base> shape, float4x4 const& transform )
+// STATE[95%|DONE] LTCG for intrusive pointer
+bt_ghost_object* create_ghost_object( bt_collision_shape_ptr shape, float4x4 const& transform )
 {
-	// CALL SITE INFO
-	// <0x583f78> -> void <unknown>(btCollisionShape*)
-	// ******
+	btPairCachingGhostObject* ghost = VOSTOK_NEW_IMPL( *g_ph_allocator, btPairCachingGhostObject );	// <0x583f26>|0x000|0x000:'55'
 
-	return NULL;
-	// FUNCTION BODY
-	// <0x583f26>|0x000|0x000:'55'
-	// <1>
-	// <0x583f4f>|0x029|0x029:'57'
-	// <0x583f62>|0x03c|0x013:'58'
-	// <1>
-	// <0x583f7a>|0x054|0x018:'60'
-	// ******
+	ghost->setWorldTransform( from_vostok( transform ) );											// <0x583f4f>|0x029|0x029:'57'
+	ghost->setCollisionShape( shape->get_bt_shape( ) );												// <0x583f62>|0x03c|0x013:'58'
+
+	return VOSTOK_NEW_IMPL( *g_ph_allocator, bt_ghost_object )( shape, ghost );						// <0x583f7a>|0x054|0x018:'60'
 }
 
-// STATE[STUB]
-// void vostok::physics::destroy_ghost_object(vostok::physics::bt_ghost_object*)
+// STATE[100%|DONE]
 void destroy_ghost_object( bt_ghost_object* obj )
 {
-	// VOSTOK_DELETE_IMPL( vostok::physics::g_ph_allocator, obj );
-	VOSTOK_DELETE_IMPL( g_ph_allocator, obj );
-
-	// FUNCTION BODY
-
-	// <0x583ec1>|0x000|0x000:'66'
-	// <0x583ef3>|0x032|0x032:'67'
-	// ******
+	bt_collision_shape* shape = obj->m_shape.c_ptr(); // sushi@TODO: Understand and document why the object is destroyed outside of `resource_ptr`.
+	VOSTOK_DELETE_IMPL( *g_ph_allocator, shape );	// <0x583ec1>|0x000|0x000:'66'
+	VOSTOK_DELETE_IMPL( *g_ph_allocator, obj );		// <0x583ef3>|0x032|0x032:'67'
 }
 
 // STATE[STUB]

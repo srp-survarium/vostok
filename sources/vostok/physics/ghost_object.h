@@ -43,13 +43,16 @@ public:
 	virtual btCollisionObject*	get_bt_collision_obect	( )			override;
 	virtual u16					get_collision_group		( ) const	override;
 
-private:
+public: // cavenoji@TODO: `m_shape` is acccessed in `destroy_ghost_object`, which forced us to make those fields public. This is unlikely how this was in target.
 	/* 0x0000 */	/* base_physics_object */
 	/* 0x000c */	bt_collision_shape_ptr				m_shape;
 	/* 0x0010 */	btPairCachingGhostObject*			m_bt_object;
 }; // class bt_ghost_object
 
 STATIC_SIZE_ASSERT(bt_ghost_object, 0x14);
+
+VOSTOK_PHYSICS_API	bt_ghost_object*	create_ghost_object		( bt_collision_shape_ptr shape, float4x4 const& transform );
+VOSTOK_PHYSICS_API	void				destroy_ghost_object	( bt_ghost_object* obj );
 
 } // namespace physics
 } // namespace vostok

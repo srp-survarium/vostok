@@ -548,6 +548,7 @@ closest_ray_result bullet_physics_world::ray_test(
 	u16					filter_mask
 )
 {
+	return closest_ray_result();
 	// LOCALS
 	// closest_ray_result_callback 	cb
 	// btVector3 					from
