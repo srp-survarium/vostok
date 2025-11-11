@@ -24,13 +24,14 @@ bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGho
 // STATE[UNVERIFIED]
 bt_ghost_object::~bt_ghost_object( )
 {
-	m_bt_object->~btPairCachingGhostObject();	// <0x583d97>|0x000|0x000:'28'
+	m_bt_object->~btPairCachingGhostObject( );	// <0x583d97>|0x000|0x000:'28'
 }
 
-// STATE[STUB]
+// STATE[48%|DONE] For some reason `push_back` was not inlined in target, it also had asserts inside, which didn't compile out.
+// All of this doesn't make much sense, since this module is compiled with optimizations, and `push_back` is a header-only inline function.
 void bt_ghost_object::get_overlapping_objects( buffer_vector<base_physics_object *>& result ) const
 {
-	u32 const size = m_bt_object->getNumOverlappingObjects( );																			// <0x583875>|0x000|0x000:'33'
+	u32 const size = get_overlapping_objects_count( );																					// <0x583875>|0x000|0x000:'33'
 
 	for ( u32 i = 0 ; i < size ; ++i )																									// <0x583885>|0x010|0x010:'35'
 	{
@@ -39,37 +40,33 @@ void bt_ghost_object::get_overlapping_objects( buffer_vector<base_physics_object
 	}
 }
 
-// STATE[UNVERIFIED]
+// STATE[100%|DONE]
 u32 bt_ghost_object::get_overlapping_objects_count( ) const
 {
-	return m_bt_object->getNumOverlappingObjects();	// <0x583860>|0x000|0x000:'44'
+	return m_bt_object->getNumOverlappingObjects( );	// <0x583860>|0x000|0x000:'44'
 }
 
-// STATE[UNVERIFIED]
+// STATE[100%|DONE]
 u16 bt_ghost_object::get_collision_group( ) const
 {
-	// ASSERT?
-	return m_bt_object->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x583740>|0x000|0x000:'50'
+	// sushi@TODO: ASSERT?
+	return m_bt_object->getBroadphaseHandle( )->m_collisionFilterGroup;	// <0x583740>|0x000|0x000:'50'
 }
 
 // STATE[STUB]
-// vostok::physics::bt_ghost_object* vostok::physics::create_ghost_object(vostok::resources::resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>, vostok::math::float4x4 const&)
-bt_ghost_object* create_ghost_object(
-	resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base> shape,
-	float4x4 const&                    transform)
+bt_ghost_object* create_ghost_object( resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base> shape, float4x4 const& transform )
 {
-	return NULL;
-
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x572f78 }, type_index: TypeIndex(0x1397d) })
+	// CALL SITE INFO
+	// <0x583f78> -> void <unknown>(btCollisionShape*)
 	// ******
 
+	return NULL;
 	// FUNCTION BODY
 	// <0x583f26>|0x000|0x000:'55'
-
+	// <1>
 	// <0x583f4f>|0x029|0x029:'57'
 	// <0x583f62>|0x03c|0x013:'58'
-
+	// <1>
 	// <0x583f7a>|0x054|0x018:'60'
 	// ******
 }

@@ -709,6 +709,7 @@
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="0"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)/stlport&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/bullet&quot;"
@@ -2235,13 +2236,6 @@
 			<File
 				RelativePath=".\animated_model_instance_cook.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\animated_rigid_body.cpp"
@@ -2250,13 +2244,6 @@
 			<File
 				RelativePath=".\bullet_character_controller.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\bullet_physics_world.cpp"
@@ -2265,24 +2252,10 @@
 			<File
 				RelativePath=".\character_controller.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\collision_shape_cook.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\collision_shapes.cpp"
@@ -2295,24 +2268,10 @@
 			<File
 				RelativePath=".\rigid_body_construction_info.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\static_rigid_body.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
