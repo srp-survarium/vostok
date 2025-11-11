@@ -87,17 +87,14 @@ void destroy_ghost_object( bt_ghost_object* obj )
 
 // STATE[STUB]
 // void vostok::physics::bt_ghost_object::contact_test(vostok::physics::world*, vostok::physics::base_physics_object*, vostok::physics::contact_test_predicate&)
-void bt_ghost_object::contact_test(
-	world*                             world,
-	base_physics_object*               object,
-	contact_test_predicate&            predicate)
+void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x572cc9 }, type_index: TypeIndex(0x94b7) })
+	// CALL SITE INFO
+	// <0x583cc9> -> btCollisionObject* <unknown>()
 	// ******
 
 	// FUNCTION BODY
-
+	// <1>
 	// <0x583cc3>|0x000|0x000:'73'
 	// ******
 }
@@ -106,114 +103,111 @@ void bt_ghost_object::contact_test(
 // bool vostok::physics::bt_ghost_object::contact_test(vostok::physics::world*)
 bool bt_ghost_object::contact_test( world* world )
 {
-	return true;
-
 	// LOCALS
-	// s32                             pairs_count
-	// s32                             i
+	// s32 							pairs_count
+	// s32 							i
 	// btAlignedObjectArray<btPersistentManifold *> manifold_results
 	// ******
 
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x572765 }, type_index: TypeIndex(0x15030) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5727a4 }, type_index: TypeIndex(0x15012) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5727cf }, type_index: TypeIndex(0x1385b) })
+	// CALL SITE INFO
+	// <0x583765> -> btAlignedObjectArray<btBroadphasePair>& <unknown>()
+	// <0x5837a4> -> btBroadphasePair* <unknown>(btBroadphaseProxy*, btBroadphaseProxy*)
+	// <0x5837cf> -> void <unknown>(btAlignedObjectArray<btPersistentManifold *>&)
 	// ******
 
+	return false;
 	// FUNCTION BODY
-
+	// <1>
 	// <0x583753>|0x000|0x000:'79'
 	// <0x58375c>|0x009|0x009:'80'
-
+	// <1>
 	// <0x583769>|0x016|0x00d:'82'
 	// <0x58376c>|0x019|0x003:'83'
-
-
+	// <1>
+	// <2>
 	// <0x583780>|0x02d|0x014:'86'
 	// <0x5837a6>|0x053|0x026:'87'
-
-
+	// <1>
+	// <2>
 	// <0x5837aa>|0x057|0x004:'90'
-
-
+	// <1>
+	// <2>
 	// <0x5837af>|0x05c|0x005:'93'
 	// <0x5837d1>|0x07e|0x022:'94'
-
+	// <1>
 	// <0x5837e0>|0x08d|0x00f:'96'
 	// <0x58382c>|0x0d9|0x04c:'97'
-
+	// <1>
 	// <0x5837f0>|0x09d|-0x03c:'99'
-
+	// <1>
 	// <0x583823>|0x0d0|0x033:'101'
 	// ******
 }
 
 // STATE[STUB]
 // void vostok::physics::get_non_compound_shapes_centers(btCollisionShape*, btTransform const&, vostok::vectora<vostok::math::float3>&)
-void get_non_compound_shapes_centers(
-	btCollisionShape*                  shape,
-	btTransform const&                 transform,
-	vectora<float3>&                   centres_results)
+void get_non_compound_shapes_centers( btCollisionShape* shape, btTransform const& transform, vectora<float3>& centres_results )
 {
 	// LOCALS
-	// float3                          center
-	// btTransform                     shape_transform
+	// float3 						center
+	// btTransform 					shape_transform
 	// ******
 
 	// FUNCTION BODY
 	// <0x5838c6>|0x000|0x000:'134'
-
+	// <1>
 	// <0x5838d8>|0x012|0x012:'136'
 	// <0x5838e0>|0x01a|0x008:'137'
-
-
-
-
+	// <1>
+	// <2>
+	// <3>
+	// <4>
 	// <0x583940>|0x07a|0x060:'142'
 	// <0x583943>|0x07d|0x003:'143'
-
+	// <1>
 	// <0x58394b>|0x085|0x008:'145'
 	// <0x583c68>|0x3a2|0x31d:'146'
-
+	// <1>
 	// ******
 }
 
 // STATE[STUB]
 // void vostok::physics::bt_ghost_object::non_compound_shapes_centers(vostok::vectora<vostok::math::float3>&) const
-void bt_ghost_object::non_compound_shapes_centers(
-	vectora<float3>&                   centres_results)
+void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	// FUNCTION BODY
 	// <0x583d31>|0x000|0x000:'152'
 	// <0x583d34>|0x003|0x003:'153'
 	// <0x583d3f>|0x00e|0x00b:'154'
-
+	// <1>
 	// ******
 }
 
 // STATE[STUB]
+// void vostok::physics::bt_ghost_object::insert(vostok::physics::world*, unsigned short, unsigned short)
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x572733 }, type_index: TypeIndex(0x15eda) })
+	// CALL SITE INFO
+	// <0x583733> -> void <unknown>(btCollisionObject*, short, short)
 	// ******
 
 	// FUNCTION BODY
-
-
-
+	// <1>
+	// <2>
+	// <3>
 	// ******
 }
 
 // STATE[STUB]
+// void vostok::physics::bt_ghost_object::remove(vostok::physics::world*)
 void bt_ghost_object::remove( world* w )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x572713 }, type_index: TypeIndex(0x21009) })
+	// CALL SITE INFO
+	// <0x583713> -> void <unknown>(btCollisionObject*)
 	// ******
 
 	// FUNCTION BODY
-
+	// <1>
 	// ******
 }
 

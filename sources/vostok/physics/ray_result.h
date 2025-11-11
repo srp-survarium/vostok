@@ -11,21 +11,17 @@ namespace physics {
 class base_physics_object;
 
 struct closest_ray_result  {
-	closest_ray_result() {};
+					closest_ray_result	( ) { /* no source */ };
 
-	/* offset 0x0000 */ base_physics_object*                object;
-	/* offset 0x0004 */ float3                              hit_point_world;
-	/* offset 0x0010 */ float3                              hit_normal_world;
-	/* offset 0x001c */ s32                                 triangle_index;
-	/* offset 0x0020 */ bool                                is_shape_index;
-	/* offset 0x0024 */ float                               fraction;
+	/* 0x0000 */	base_physics_object*	object;
+	/* 0x0004 */	float3					hit_point_world;
+	/* 0x0010 */	float3					hit_normal_world;
+	/* 0x001c */	s32						triangle_index;
+	/* 0x0020 */	bool					is_shape_index;
+	/* 0x0024 */	float					fraction;
 }; // struct closest_ray_result
 
-namespace {
-	typedef char size_assert[
-		sizeof(closest_ray_result) == 0x28 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(closest_ray_result, 0x28);
 
 } // namespace physics
 } // namespace vostok

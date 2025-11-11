@@ -37,8 +37,8 @@ namespace physics {
 
 class bt_animated_rigid_body : public bt_rigid_body_base {
 public:
-	bt_animated_rigid_body								( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
-	virtual ~bt_animated_rigid_body						( ) {};
+								bt_animated_rigid_body	( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
+	virtual						~bt_animated_rigid_body	( ) {};
 
 	/* bt_rigid_body_base overrides */
 	virtual btRigidBody*		get_rigid_body			( )														override;
@@ -62,17 +62,13 @@ public:
 	float4x4	get_bone_transform	( u32 index )	const;
 
 private:
-	/* offset 0x0000 */ /* fields for physics::bt_rigid_body_base */
-	/* offset 0x000c */ btRigidBody*                        m_bt_body;
-	/* offset 0x0010 */ btCompoundShape*                    m_shape;
-	/* offset 0x0014 */ u16                                 m_game_material_id;
+	/* 0x0000 */ /* fields for physics::bt_rigid_body_base */
+	/* 0x000c */ btRigidBody*		m_bt_body;
+	/* 0x0010 */ btCompoundShape*	m_shape;
+	/* 0x0014 */ u16				m_game_material_id;
 }; // class bt_animated_rigid_body
 
-namespace {
-	typedef char size_assert[
-		sizeof(bt_animated_rigid_body) == 0x18 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bt_animated_rigid_body, 0x18);
 
 typedef buffer_vector<collision::bone_collision_data>										geometries_type;
 

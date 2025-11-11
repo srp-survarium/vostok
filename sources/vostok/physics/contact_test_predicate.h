@@ -10,30 +10,21 @@
 namespace vostok {
 namespace physics {
 
-/* vostok::physics::contact_test_predicate */
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
-
-struct contact_test_predicate  {
+// sushi@TODO: Primitive type moved from collision to physics
+struct contact_test_predicate {
 public:
-	virtual float add_single_result	(
-										void*,
-										collision::primitive_type,
-										float4x4 const&,
-										float3 const&,
-										collision::primitive_type,
-										float4x4 const&,
-										float3 const&)				= 0;
-
+	virtual	float		add_single_result		(
+							void*				arg_0,
+							collision::primitive_type		arg_1,
+							float4x4 const&		arg_2,
+							float3 const&		arg_3,
+							collision::primitive_type		arg_4,
+							float4x4 const&		arg_5,
+							float3 const&		arg_6
+						) = 0;
 }; // struct contact_test_predicate
 
-namespace {
-	typedef char size_assert[
-		sizeof(contact_test_predicate) == 0x4 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(contact_test_predicate, 0x4);
 
 } // namespace physics
 } // namespace vostok

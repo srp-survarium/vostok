@@ -14,7 +14,7 @@ class btPairCachingGhostObject;
 namespace vostok {
 namespace physics {
 
-typedef buffer_vector<base_physics_object *> base_physics_objects_type; // sushi@TODO: Find proper place for the typedef
+typedef buffer_vector<base_physics_object *> base_physics_objects_type; // sushi@TODO: Find proper place for the typedef. Obviously in  base_physics_object module
 
 class bt_ghost_object : base_physics_object {
 public:
@@ -38,23 +38,18 @@ public:
 	void		dbg_render								( world* world, math::color const& color ) const /* no source */;
 
 	u32			non_compound_shapes_count				( ) const /* no source */;
-	void		non_compound_shapes_centers				( vectora<float3>& centres_results );
-
+	void		non_compound_shapes_centers				( vectora<float3>& centres_results ) const;
 
 	virtual btCollisionObject*	get_bt_collision_obect	( )			override;
 	virtual u16					get_collision_group		( ) const	override;
 
 private:
-	/* offset 0x0000 */ /* fields for base_physics_object */
-	/* offset 0x000c */ bt_collision_shape_ptr              m_shape;
-	/* offset 0x0010 */ btPairCachingGhostObject*           m_bt_object;
+	/* 0x0000 */	/* base_physics_object */
+	/* 0x000c */	bt_collision_shape_ptr				m_shape;
+	/* 0x0010 */	btPairCachingGhostObject*			m_bt_object;
 }; // class bt_ghost_object
 
-namespace {
-	typedef char size_assert[
-		sizeof(bt_ghost_object) == 0x14 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bt_ghost_object, 0x14);
 
 } // namespace physics
 } // namespace vostok

@@ -14,39 +14,28 @@ class bt_collision_shape;
 
 class collision_shape_cook : resources::translate_query_cook {
 public:
-	collision_shape_cook( bool static_object );
+								collision_shape_cook		( bool static_object );
 
-	virtual void		translate_query				( resources::query_result_for_cook& parent ) override;
-	virtual void		delete_resource				( resources::resource_base* resource ) override;
-
-
+	virtual void				translate_query				( resources::query_result_for_cook& parent ) override;
+	virtual void				delete_resource				( resources::resource_base* resource ) override;
 
 	struct cook_data  {
-		/* offset 0x0000 */ resources::query_result_for_cook*   parent_query;
-		/* offset 0x0004 */ fs_new::virtual_path_string         model_path;
-		/* offset 0x0118 */ float3                              scale_;
+		/* 0x0000 */	resources::query_result_for_cook*	parent_query;
+		/* 0x0004 */	fs_new::virtual_path_string			model_path;
+		/* 0x0118 */	float3								scale_;
 	};
 
-	void				load_collision_resources	( collision_shape_cook::cook_data* ) /* no source */;
-	void				on_collision_sources_loaded	( resources::queries_result& data, collision_shape_cook::cook_data* cd );
-	bt_collision_shape* create_primitives_shape		( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd );
+	inline	void				load_collision_resources	( collision_shape_cook::cook_data* arg_0 ) { /* no source */ }
+			void				on_collision_sources_loaded	( resources::queries_result& data, collision_shape_cook::cook_data* cd );
+			bt_collision_shape*	create_primitives_shape		( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd );
 
 private:
-	/* offset 0x0000 */ /* fields for resources::translate_query_cook */
-	/* offset 0x0020 */ bool                                m_static_object;
+	/* 0x0000 */	/* resources::translate_query_cook */
+	/* 0x0020 */	bool	m_static_object;
 }; // class collision_shape_cook
 
-namespace {
-	typedef char size_assert[
-		sizeof(collision_shape_cook) == 0x24 ? 1 : -1
-	];
-}
-
-namespace {
-	typedef char size_assert[
-		sizeof(collision_shape_cook::cook_data) == 0x124 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(collision_shape_cook, 0x24);
+STATIC_SIZE_ASSERT(collision_shape_cook::cook_data, 0x124);
 
 } // namespace physics
 } // namespace vostok

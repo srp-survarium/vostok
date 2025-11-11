@@ -37,12 +37,7 @@ public:
 	u16*						m_shapes_face_data;
 }; // class collision_shape
 
-
-namespace {
-	typedef char size_assert[
-		sizeof(bt_collision_shape) == 0x118 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bt_collision_shape, 0x118);
 
 
 typedef resources::resource_ptr<

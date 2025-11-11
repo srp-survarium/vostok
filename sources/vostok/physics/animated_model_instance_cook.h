@@ -12,26 +12,24 @@ namespace physics {
 
 class animated_model_instance_cook : resources::translate_query_cook {
 public:
-	animated_model_instance_cook( );
+					animated_model_instance_cook	( );
 
-	virtual void	translate_request_path		( pcstr request, fs_new::virtual_path_string& new_request ) const override;
-	virtual void	translate_query				( resources::query_result_for_cook& parent ) override;
-	virtual void	delete_resource				( resources::resource_base* resource ) override;
+	virtual	void	translate_request_path			( pcstr request, fs_new::virtual_path_string& new_request ) const override;
+	virtual	void	translate_query					( resources::query_result_for_cook& parent ) override;
+	virtual	void	delete_resource					( resources::resource_base* resource ) override;
 
-	void			on_config_loaded			( resources::queries_result& data );
-	void			on_skeleton_config_loaded	( resources::queries_result& data );
-	void			on_subresources_loaded		( resources::queries_result& data );
+			void	on_config_loaded				( resources::queries_result& data );
+			void	on_skeleton_config_loaded		( resources::queries_result& data );
+			void	on_subresources_loaded			( resources::queries_result& data );
+
 
 private:
-	/* offset 0x0000 */ /* fields for resources::translate_query_cook */
-	/* offset 0x0020 */ memory::base_allocator*             m_allocator;
+	/* 0x0000 */	/* resources::translate_query_cook */
+	/* 0x0020 */	memory::base_allocator*		m_allocator;
 }; // class animated_model_instance_cook
 
-namespace {
-	typedef char size_assert[
-		sizeof(animated_model_instance_cook) == 0x24 ? 1 : -1
-	];
-}
+
+STATIC_SIZE_ASSERT(animated_model_instance_cook, 0x24);
 
 } // namespace physics
 } // namespace vostok

@@ -13,24 +13,22 @@ namespace physics {
 
 class btBvhTriangleMeshShapeResource : public btBvhTriangleMeshShape {
 public:
-	btBvhTriangleMeshShapeResource(
-		btStridingMeshInterface*           meshInterface,
-		u16*                               face_data,
-		geometry_resource_ptr const&       vertices_resource,
-		geometry_resource_ptr const&       indices_resource);
+			btBvhTriangleMeshShapeResource	(
+				btStridingMeshInterface*			meshInterface,
+				u16*								face_data,
+				geometry_resource_ptr const&		vertices_resource,
+				geometry_resource_ptr const&		indices_resource
+			);
 
 private:
-	/* offset 0x0000 */ /* fields for btBvhTriangleMeshShape */
-	/* offset 0x0060 */ u16*                   m_face_data;
-	/* offset 0x0064 */ geometry_resource_ptr  m_raw_vertices;
-	/* offset 0x0068 */ geometry_resource_ptr  m_raw_indices;
+	/* 0x0000 */	/* btBvhTriangleMeshShape */
+	/* 0x0060 */	u16*					m_face_data;
+	/* 0x0064 */	geometry_resource_ptr	m_raw_vertices;
+	/* 0x0068 */	geometry_resource_ptr	m_raw_indices;
 }; // class btBvhTriangleMeshShapeResource
 
-namespace {
-	typedef char size_assert[
-		sizeof(btBvhTriangleMeshShapeResource) == 0x70 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(btBvhTriangleMeshShapeResource, 0x70);
+
 
 // STATE[STUB]
 btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(

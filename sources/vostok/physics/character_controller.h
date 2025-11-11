@@ -36,19 +36,22 @@ public:
 	void					end_jump			( );
 	bool					has_updates			( ) const;
 
-	bool					adjust_foot_transform(
-		float3 const&                      half_size,
-		float3 const&                      start,
-		float3 const&                      finish,
-		float3&                            __unknown_1,
-		float3&                            __unknown_2) const /* no source */;
+	inline	bool			adjust_foot_transform	(
+								float3 const&		arg_0,
+								float3 const&		arg_1,
+								float3 const&		arg_2,
+								float3&				arg_3,
+								float3&				arg_4
+							) const { /* no source */ }
 
-	bool					adjust_foot_transform(
-		float3 const&                      half_size,
-		float3 const&                      start,
-		float3 const&                      finish,
-		float                              rotation_koef0,
-		float4x4&                          transform);
+			bool			adjust_foot_transform	(
+								float3 const&		half_size,
+								float3 const&		start,
+								float3 const&		finish,
+								float				rotation_koef0,
+								float				__formal,
+								float4x4&			transform
+							);
 
 	void					set_crouch			( bool crouch );
 	bool					can_prone			( ) const /* no source */;
@@ -56,16 +59,12 @@ public:
 	bool					can_stand			( ) const;
 
 private:
-	/* offset 0x0000 */ bullet_character_controller*        m_bt_controller;
-	/* offset 0x0004 */ bullet_physics_world*               m_bt_physics_world;
-	/* offset 0x0008 */ bool                                m_active;
+	/* 0x0000 */	bullet_character_controller*	m_bt_controller;
+	/* 0x0004 */	bullet_physics_world*			m_bt_physics_world;
+	/* 0x0008 */	bool							m_active;
 }; // class bt_character_controller
 
-namespace {
-	typedef char size_assert[
-		sizeof(bt_character_controller) == 0xC ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bt_character_controller, 0xC);
 
 VOSTOK_PHYSICS_API bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w );
 
