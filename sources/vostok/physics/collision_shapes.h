@@ -70,6 +70,12 @@ VOSTOK_PHYSICS_API bt_collision_shape*		create_static_triangle_mesh_shape		(
 																							float3 const&                      local_scale,
 																							geometry_resource_ptr const&       vertices_resource,
 																							geometry_resource_ptr const&       indices_resource);
+
+typedef	resources::resource_ptr<
+	bt_collision_shape,
+	resources::unmanaged_intrusive_base
+> bt_collision_shape_ptr;
+
 #if 0
 // sushi@TODO: Moved to cpp
 class btBvhTriangleMeshShapeResource : public btBvhTriangleMeshShape {
@@ -94,10 +100,7 @@ namespace {
 }
 #endif
 
-typedef	resources::resource_ptr<
-	bt_collision_shape,
-	resources::unmanaged_intrusive_base
-> bt_collision_shape_ptr;
+
 
 /*
 VOSTOK_PHYSICS_API bt_collision_shape* create_primitive_shape				( memory::base_allocator& allocator, vostok::collision::primitive_type type, float3 const& dim );

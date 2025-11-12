@@ -12,9 +12,7 @@
 namespace vostok {
 namespace physics {
 
-// survarium::collision_geometry::load
-// vostok::physics::create_ghost_object
-// STATE[UNVERIFIED]
+// STATE[98%|DONE]: Instructions are ordered slightly differently
 bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGhostObject* obj ):
 	m_shape			( shape ),
 	m_bt_object		( obj )
@@ -132,42 +130,36 @@ bool bt_ghost_object::contact_test( world* world )
 	// ******
 }
 
-// STATE[STUB]
-void get_non_compound_shapes_centers( btCollisionShape* shape, btTransform const& transform, vectora<float3>& centres_results )
+// STATE[100%|DONE]
+static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransform const& transform, vectora<float3>& centres_results )
 {
-	// LOCALS
-	// float3 						center
-	// btTransform 					shape_transform
-	// ******
-
-	// FUNCTION BODY
-	// <0x5838c6>|0x000|0x000:'134'
-	// <1>
-	// <0x5838d8>|0x012|0x012:'136'
-	// <0x5838e0>|0x01a|0x008:'137'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x583940>|0x07a|0x060:'142'
-	// <0x583943>|0x07d|0x003:'143'
-	// <1>
-	// <0x58394b>|0x085|0x008:'145'
-	// <0x583c68>|0x3a2|0x31d:'146'
-	// <1>
-	// ******
+	if ( shape->getShapeType( ) != COMPOUND_SHAPE_PROXYTYPE )													// <0x5838c6>|0x000|0x000:'134'
+	{																											// <1>
+		float3 center = from_bullet( transform.getOrigin( ) );														// <0x5838d8>|0x012|0x012:'136'
+		centres_results.push_back( center );																	// <0x5838e0>|0x01a|0x008:'137'
+	}																											// <1>
+	else																										// <2>
+	{																											// <3>
+		btCompoundShape* cshape = static_cast<btCompoundShape*>(shape);											// <4>
+		u32 size = cshape->getNumChildShapes( );																// <0x583940>|0x07a|0x060:'142'
+		for ( u32 i = 0 ; i < size ; ++i )																		// <0x583943>|0x07d|0x003:'143'
+		{																										// <1>
+			btTransform shape_transform = transform * cshape->getChildTransform( i );							// <0x58394b>|0x085|0x008:'145'
+			get_non_compound_shapes_centers( cshape->getChildShape( i ), shape_transform, centres_results );	// <0x583c68>|0x3a2|0x31d:'146'
+		}																										// <1>
+	}
 }
 
 // STATE[STUB]
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );								// <0x583d31>|0x000|0x000:'152'
-	bt_collision_shape* shape = m_shape.c_ptr( );											// <0x583d34>|0x003|0x003:'153' sushi@NOTE: Why not `m_shape->get_bt_shape( );`
-	get_non_compound_shapes_centers( shape->get_bt_shape( ), transform, centres_results );	// <0x583d3f>|0x00e|0x00b:'154'
+	// bt_collision_shape* shape = m_shape.c_ptr( );											// <0x583d34>|0x003|0x003:'153' sushi@NOTE: Why not `m_shape->get_bt_shape( );`
+	get_non_compound_shapes_centers( m_shape->get_bt_shape( ), transform, centres_results );	// <0x583d3f>|0x00e|0x00b:'154'
 																							// <1>
 }
 
-// STATE[100%|DONE]: sushi@NOTE: Doesn't match function body
+// STATE[100%|DONE]: sushi@NOTE: Doesn't match function body, also might be some other type of cast
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->addCollisionObject( m_bt_object, group, mask );
@@ -180,31 +172,28 @@ void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_ghost_object::remove(vostok::physics::world*)
 void bt_ghost_object::remove( world* w )
 {
-	// CALL SITE INFO
-	// <0x583713> -> void <unknown>(btCollisionObject*)
-	// ******
+	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->removeCollisionObject( m_bt_object );
 
 	// FUNCTION BODY
 	// <1>
 	// ******
 }
 
-// STATE[UNVERIFIED]
+// STATE[100%|DONE]
 btCollisionObject* bt_ghost_object::get_bt_collision_obect( )
 {
 	return m_bt_object;	// <0x5836f0>|0x000|0x000:'174'
 }
 
-// STATE[UNVERIFIED]
+// STATE[100%|DONE]
 void bt_ghost_object::set_transform( float4x4 const& transform )
 {
 	m_bt_object->setWorldTransform( from_vostok( transform ) );	// <0x583d6a>|0x000|0x000:'179'
 }
 
-// STATE[UNVERIFIED]
+// STATE[100%|DONE]
 float4x4 bt_ghost_object::get_transform( ) const
 {
 	return from_bullet( m_bt_object->getWorldTransform( ) );	// <0x583d10>|0x000|0x000:'184'

@@ -125,6 +125,7 @@ namespace vostok
 		physics::bt_collision_shape_ptr shape(NULL);
 		physics::bt_ghost_object ghost = physics::bt_ghost_object( shape, NULL );
 		physics::base_physics_objects_type result( NULL, 10 );
+		vectora<float3> centres_results( NULL );
 
 		ghost.get_overlapping_objects_count( );
 		ghost.set_transform( math::float4x4() );
@@ -135,6 +136,7 @@ namespace vostok
 		ghost.get_overlapping_objects( result );
 		ghost.insert( NULL, 10, 20 );
 		physics::destroy_ghost_object( physics::create_ghost_object( shape, math::float4x4() ) );
+		ghost.non_compound_shapes_centers( centres_results );
 	}
 
 	void use_loose_oct_tree()
