@@ -6,6 +6,7 @@
 #include <vostok/physics/ghost_object.h>
 
 #include "bullet_include.h"
+#include "bullet_physics_world.h"
 #include <vostok/physics/bullet_utils.h>
 
 namespace vostok {
@@ -132,7 +133,6 @@ bool bt_ghost_object::contact_test( world* world )
 }
 
 // STATE[STUB]
-// void vostok::physics::get_non_compound_shapes_centers(btCollisionShape*, btTransform const&, vostok::vectora<vostok::math::float3>&)
 void get_non_compound_shapes_centers( btCollisionShape* shape, btTransform const& transform, vectora<float3>& centres_results )
 {
 	// LOCALS
@@ -159,24 +159,18 @@ void get_non_compound_shapes_centers( btCollisionShape* shape, btTransform const
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_ghost_object::non_compound_shapes_centers(vostok::vectora<vostok::math::float3>&) const
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
-	// FUNCTION BODY
-	// <0x583d31>|0x000|0x000:'152'
-	// <0x583d34>|0x003|0x003:'153'
-	// <0x583d3f>|0x00e|0x00b:'154'
-	// <1>
-	// ******
+	btTransform& transform = m_bt_object->getWorldTransform( );								// <0x583d31>|0x000|0x000:'152'
+	bt_collision_shape* shape = m_shape.c_ptr( );											// <0x583d34>|0x003|0x003:'153' sushi@NOTE: Why not `m_shape->get_bt_shape( );`
+	get_non_compound_shapes_centers( shape->get_bt_shape( ), transform, centres_results );	// <0x583d3f>|0x00e|0x00b:'154'
+																							// <1>
 }
 
-// STATE[STUB]
-// void vostok::physics::bt_ghost_object::insert(vostok::physics::world*, unsigned short, unsigned short)
+// STATE[100%|DONE]: sushi@NOTE: Doesn't match function body
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
-	// CALL SITE INFO
-	// <0x583733> -> void <unknown>(btCollisionObject*, short, short)
-	// ******
+	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->addCollisionObject( m_bt_object, group, mask );
 
 	// FUNCTION BODY
 	// <1>
@@ -213,7 +207,7 @@ void bt_ghost_object::set_transform( float4x4 const& transform )
 // STATE[UNVERIFIED]
 float4x4 bt_ghost_object::get_transform( ) const
 {
-	return from_bullet( m_bt_object->getWorldTransform() );	// <0x583d10>|0x000|0x000:'184'
+	return from_bullet( m_bt_object->getWorldTransform( ) );	// <0x583d10>|0x000|0x000:'184'
 }
 
 } // namespace physics
