@@ -973,25 +973,6 @@ float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 	// ******
 }
 
-struct contact_result_callback : btCollisionWorld::ContactResultCallback {
-public:
-	virtual	btScalar	addSingleResult			(
-							btManifoldPoint&			__formal1,
-							btCollisionObject const*	colObj0,
-							s32							__formal2,
-							s32							__formal3,
-							btCollisionObject const*	colObj1,
-							s32							__formal4,
-							s32							__formal5
-						) override;
-
-public:
-	/* 0x0000 */	/* btCollisionWorld::ContactResultCallback */
-	/* 0x0008 */	contact_test_predicate*		m_predicate;
-}; // struct contact_result_callback
-
-STATIC_SIZE_ASSERT(contact_result_callback, 0xC);
-
 // STATE[STUB]
 // float vostok::physics::contact_result_callback::addSingleResult(btManifoldPoint&, btCollisionObject const*, int, int, btCollisionObject const*, int, int)
 float contact_result_callback::addSingleResult(

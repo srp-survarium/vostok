@@ -10,7 +10,7 @@
 #include <vostok/physics/soft_body.h>
 #include <vostok/physics/contact_test_predicate.h>
 
-#include "bullet_include.h" // sushi@NOTE: No?
+#include "bullet_include.h"
 
 namespace vostok {
 namespace physics {

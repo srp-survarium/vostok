@@ -6,10 +6,11 @@
 #define VOSTOK_PHYSICS_CONTACT_TEST_PREDICATE_H_INCLUDED
 
 #include <vostok/collision/primitives.h>
+#include <vostok/physics/sources/bullet_include.h>
 
 namespace vostok {
 namespace physics {
-
+// sushi@TODO: Should be a private header
 // sushi@TODO: Primitive type moved from collision to physics
 struct contact_test_predicate {
 public:
@@ -25,6 +26,29 @@ public:
 }; // struct contact_test_predicate
 
 STATIC_SIZE_ASSERT(contact_test_predicate, 0x4);
+
+
+struct contact_result_callback : btCollisionWorld::ContactResultCallback {
+public:
+	inline				contact_result_callback( contact_test_predicate* predicate ): m_predicate( predicate ) { }
+
+	// sushi@TODO: The impl is in `bullet_physics_world.cpp`
+	virtual	btScalar	addSingleResult			(
+							btManifoldPoint&			__formal1,
+							btCollisionObject const*	colObj0,
+							s32							__formal2,
+							s32							__formal3,
+							btCollisionObject const*	colObj1,
+							s32							__formal4,
+							s32							__formal5
+						) override;
+
+public:
+	/* 0x0000 */	/* btCollisionWorld::ContactResultCallback */
+	/* 0x0008 */	contact_test_predicate*		m_predicate;
+}; // struct contact_result_callback
+
+STATIC_SIZE_ASSERT(contact_result_callback, 0xC);
 
 } // namespace physics
 } // namespace vostok

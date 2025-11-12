@@ -8,6 +8,7 @@
 #include "bullet_include.h"
 #include "bullet_physics_world.h"
 #include <vostok/physics/bullet_utils.h>
+#include <vostok/physics/contact_test_predicate.h>
 
 namespace vostok {
 namespace physics {
@@ -72,12 +73,10 @@ void destroy_ghost_object( bt_ghost_object* obj )
 }
 
 // STATE[STUB]
-// void vostok::physics::bt_ghost_object::contact_test(vostok::physics::world*, vostok::physics::base_physics_object*, vostok::physics::contact_test_predicate&)
 void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )
 {
-	// CALL SITE INFO
-	// <0x583cc9> -> btCollisionObject* <unknown>()
-	// ******
+	btCollisionObject* bt_test_object = object->get_bt_collision_obect( );
+	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( bt_test_object, m_bt_object, contact_result_callback( &predicate ) );
 
 	// FUNCTION BODY
 	// <1>
@@ -86,7 +85,6 @@ void bt_ghost_object::contact_test( world* world, base_physics_object* object, c
 }
 
 // STATE[STUB]
-// bool vostok::physics::bt_ghost_object::contact_test(vostok::physics::world*)
 bool bt_ghost_object::contact_test( world* world )
 {
 	// LOCALS
@@ -150,7 +148,7 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 	}
 }
 
-// STATE[STUB]
+// STATE[36%|DONE]: sushi@NOTE: The problem with `operator->` somehow not being inlined on Master Gold with debug usage.
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );								// <0x583d31>|0x000|0x000:'152'

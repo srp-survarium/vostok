@@ -21,6 +21,7 @@
 #include <vostok/physics/ghost_object.h>
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/static_rigid_body.h>
+#include <vostok/physics/contact_test_predicate.h>
 
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
@@ -119,6 +120,18 @@ namespace vostok
 		physics::create_static_triangle_mesh_shape	( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
 	}
 
+	struct ghost_predicate : physics::contact_test_predicate {
+	virtual	float		add_single_result		(
+							void*				arg_0,
+							collision::primitive_type		arg_1,
+							float4x4 const&		arg_2,
+							float3 const&		arg_3,
+							collision::primitive_type		arg_4,
+							float4x4 const&		arg_5,
+							float3 const&		arg_6
+						) override { return 0.0;}
+	};
+
 
 	void use_ghost_object()
 	{
@@ -137,6 +150,9 @@ namespace vostok
 		ghost.insert( NULL, 10, 20 );
 		physics::destroy_ghost_object( physics::create_ghost_object( shape, math::float4x4() ) );
 		ghost.non_compound_shapes_centers( centres_results );
+
+		ghost_predicate predicate;
+		ghost.contact_test( NULL, NULL, predicate );
 	}
 
 	void use_loose_oct_tree()
