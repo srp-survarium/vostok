@@ -2244,6 +2244,14 @@
 			<File
 				RelativePath=".\bullet_character_controller.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\bullet_physics_world.cpp"

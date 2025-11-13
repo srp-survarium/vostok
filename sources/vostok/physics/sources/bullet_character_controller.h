@@ -76,7 +76,7 @@ public:
 												float				normalMag
 											);
 
-	inline	bool							in_crouch						( ) const { /* no source */ }
+	inline	bool							in_crouch						( ) const { return m_in_crouch; }
 	inline	void							prevent_step_bouncing			( ) { /* no source */ }
 	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ }
 	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ }
@@ -121,6 +121,13 @@ public:
 }; // class bullet_character_controller
 
 STATIC_SIZE_ASSERT(bullet_character_controller, 0x110);
+
+
+// sushi@TODO: SHould be private, this module is actually private
+VOSTOK_PHYSICS_API	btVector3	computeReflectionDirection	( btVector3 const& direction, btVector3 const& normal );
+VOSTOK_PHYSICS_API	btVector3	parallelComponent			( btVector3 const& direction, btVector3 const& normal );
+VOSTOK_PHYSICS_API	btVector3	perpindicularComponent		( btVector3 const& direction, btVector3 const& normal );
+VOSTOK_PHYSICS_API	void		setup_game_material_groups	( u16 const* game_material_groups, u16 game_materials_count );
 
 } // namespace physics
 } // namespace vostok

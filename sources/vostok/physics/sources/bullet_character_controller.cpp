@@ -37,55 +37,41 @@ void `dynamic atexit destructor for 's_step_height_command''( ) {
 }
 */
 
-// STATE[STUB]
-// btVector3 vostok::physics::getNormalizedVector(btVector3 const&)
-btVector3 getNormalizedVector( btVector3 const& v )
+u16 const*	g_game_material_groups;
+s32			g_game_materials_count;
+
+// STATE[100%|DONE]
+static btVector3 getNormalizedVector( btVector3 const& v )
 {
-	// FUNCTION BODY
-	// <0x584e69>|0x000|0x000:'61'
-	// <0x584ed2>|0x069|0x069:'62'
-	// <1>
-	// <2>
-	// <0x584f14>|0x0ab|0x042:'65'
-	// ******
+	btVector3 result = v.normalized( );		// <0x584e69>|0x000|0x000:'61'
+	if ( result.length( ) < SIMD_EPSILON )	// <0x584ed2>|0x069|0x069:'62'
+		result.setZero( );
+	return result;							// <0x584f14>|0x0ab|0x042:'65'
 }
 
-// STATE[STUB]
-// btVector3 vostok::physics::computeReflectionDirection(btVector3 const&, btVector3 const&)
+// STATE[100%|DONE]
 btVector3 computeReflectionDirection( btVector3 const& direction, btVector3 const& normal )
 {
-	// FUNCTION BODY
-	// <0x584ae6>|0x000|0x000:'75'
-	// ******
+	return direction - 2 * normal.dot( direction ) * normal;	// <0x584ae6>|0x000|0x000:'75'
 }
 
-// STATE[STUB]
-// btVector3 vostok::physics::parallelComponent(btVector3 const&, btVector3 const&)
+// STATE[100%|DONE]: Structure doesn't match
 btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal )
 {
-	// FUNCTION BODY
-	// <0x584640>|0x000|0x000:'83'
-	// <0x584674>|0x034|0x034:'84'
-	// ******
+	return direction.dot( normal ) * normal;
 }
 
-// STATE[STUB]
-// btVector3 vostok::physics::perpindicularComponent(btVector3 const&, btVector3 const&)
+// STATE[100%|DONE]
 btVector3 perpindicularComponent( btVector3 const& direction, btVector3 const& normal )
 {
-	// FUNCTION BODY
-	// <0x584a66>|0x000|0x000:'92'
-	// ******
+	return direction - normal.dot( direction ) * normal;	// <0x584a66>|0x000|0x000:'92'
 }
 
 // STATE[STUB]
-// void vostok::physics::setup_game_material_groups(unsigned short const*, const unsigned short)
 void setup_game_material_groups( u16 const* game_material_groups, u16 game_materials_count )
 {
-	// FUNCTION BODY
-	// <1>
-	// <0x584530>|0x000|0x000:'201'
-	// ******
+	g_game_material_groups = game_material_groups;
+	g_game_materials_count = game_materials_count;	// <0x584530>|0x000|0x000:'201'
 }
 
 class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
@@ -254,6 +240,7 @@ void bullet_character_controller::player_step( float dt )
 	// STATICS
 	// static bool 					use_shape_size = <0x10000>;
 	// ******
+
 
 	// FUNCTION BODY
 	// <0x58622d>|0x000|0x000:'374'
@@ -682,53 +669,35 @@ void bullet_character_controller::pre_step( float dt )
 	// ******
 }
 
-// STATE[STUB]
-// bool vostok::physics::bullet_character_controller::can_jump() const
+// STATE[100%|DONE]
 bool bullet_character_controller::can_jump( ) const
 {
-	return false;
-	// FUNCTION BODY
-	// <0x5845f1>|0x000|0x000:'1077'
-	// ******
+	return !in_crouch( ) && on_ground( ) && !m_on_steep_slope; // <0x5845f1>|0x000|0x000:'1077'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_character_controller::jump()
+// STATE[100%|DONE]
 void bullet_character_controller::jump( )
 {
-	// FUNCTION BODY
-	// <0x5849f1>|0x000|0x000:'1082'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x584a2c>|0x03b|0x03b:'1089'
-	// ******
+	if ( can_jump( ) ) // <0x5849f1>|0x000|0x000:'1082'
+	{
+		m_jumping = true;
+		m_positions.clear( ); // <0x584a2c>|0x03b|0x03b:'1089'
+	}
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_character_controller::end_jump()
+// STATE[100%|DONE]
 void bullet_character_controller::end_jump( )
 {
-	// FUNCTION BODY
-	// <0x584520>|0x000|0x000:'1094'
-	// ******
+	m_jumping = false; // <0x584520>|0x000|0x000:'1094'
 }
 
-// STATE[STUB]
-// bool vostok::physics::bullet_character_controller::on_ground() const
+// STATE[100%|DONE]
 bool bullet_character_controller::on_ground( ) const
 {
-	return false;
-	// FUNCTION BODY
-	// <0x5845b1>|0x000|0x000:'1105'
-	// ******
+	return math::abs( m_vertical_velocity ) < math::epsilon_3; // <0x5845b1>|0x000|0x000:'1105'
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::setup_shape_dim(vostok::math::float2 const&)
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 {
 	// FUNCTION BODY
@@ -835,17 +804,12 @@ void bullet_character_controller::remove( btDynamicsWorld* world )
 	// ******
 }
 
-// STATE[STUB]
-// btTransform vostok::physics::bullet_character_controller::get_transform()
+// STATE[100%|DONE]
 btTransform bullet_character_controller::get_transform( )
 {
-	return btTransform();
-	// FUNCTION BODY
-	// <0x5846a9>|0x000|0x000:'1178'
-	// <1>
-	// <0x584701>|0x058|0x058:'1180'
-	// <1>
-	// ******
+	btTransform transform = m_ghost_object->getWorldTransform( );	// <0x5846a9>|0x000|0x000:'1178'
+	transform.setOrigin( transform.getOrigin( ) - m_shape_offset );	// <0x584701>|0x058|0x058:'1180'
+	return transform;
 }
 
 // STATE[100%|DONE]
@@ -864,6 +828,9 @@ void bullet_character_controller::set_crouch( bool crouch )
 		m_positions.pop_back( );
 	}
 
+	// sushi@TODO: DELETE
+	getNormalizedVector( m_current_pos );
+
 	// FUNCTION BODY
 	// <0x584b6a>|0x000|0x000:'1192'
 	// <1>
@@ -880,39 +847,10 @@ void bullet_character_controller::set_crouch( bool crouch )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: The actual logic was commented out
 bool bullet_character_controller::can_stand( )
 {
 	return true; // <0x584510>|0x000|0x000:'1208'
-	// FUNCTION BODY
-	// <0x584510>|0x000|0x000:'1208'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// ******
 }
 
 } // namespace physics

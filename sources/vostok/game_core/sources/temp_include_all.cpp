@@ -67,6 +67,17 @@ namespace vostok
 		physics::bullet_character_controller controller( NULL, float2(), float2(), 10, 20 );
 		controller.set_transform( btTransform( ) );
 		controller.set_crouch( true );
+		controller.can_stand( );
+		controller.get_transform( );
+		controller.on_ground( );
+		controller.can_jump( );
+		controller.end_jump( );
+		controller.jump( );
+
+		physics::computeReflectionDirection( btVector3( ), btVector3( ) );
+		physics::perpindicularComponent( btVector3( ), btVector3( ) );
+		physics::parallelComponent( btVector3( ), btVector3( ) );
+		physics::setup_game_material_groups( NULL, 10 );
 	}
 
 	void example_callback(const char *name)
@@ -119,9 +130,9 @@ namespace vostok
 
 		configs::binary_config_value bcv = configs::binary_config_value();
 
-		physics::destroy_bt_shape			( NULL );
+		physics::destroy_bt_shape		( NULL );
 		physics::destroy_shape			( NULL );
-		physics::create_bt_primitive		( collision::primitive_box, float3(), float3() );
+		physics::create_bt_primitive	( collision::primitive_box, float3(), float3() );
 		physics::create_primitive_shape	( collision::primitive_box, float3(), float3() );
 		physics::create_compound_shape	( bcv, float3(), "model_path" );
 
