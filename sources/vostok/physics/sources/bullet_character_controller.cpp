@@ -219,7 +219,6 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::updateAction(btCollisionWorld*, float)
 void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld, float deltaTime )
 {
 	// FUNCTION BODY
@@ -245,7 +244,6 @@ void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::player_step(float)
 void bullet_character_controller::player_step( float dt )
 {
 	// LOCALS
@@ -313,7 +311,6 @@ void bullet_character_controller::player_step( float dt )
 }
 
 // STATE[STUB]
-// float vostok::physics::bullet_character_controller::recover_from_penetration()
 float bullet_character_controller::recover_from_penetration( )
 {
 	// LOCALS
@@ -400,7 +397,6 @@ float bullet_character_controller::recover_from_penetration( )
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::step_up(bool, btVector3&)
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
 	// FUNCTION BODY
@@ -463,7 +459,6 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::step_forward_and_strafe(btVector3 const&)
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
 	// LOCALS
@@ -528,7 +523,6 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::step_down(float, bool, btVector3 const&)
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
 	// LOCALS
@@ -643,7 +637,6 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::set_desired_walk_vector(btVector3 const&)
 void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk_vector )
 {
 	// FUNCTION BODY
@@ -855,20 +848,22 @@ btTransform bullet_character_controller::get_transform( )
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_character_controller::set_transform(btTransform const&)
+// STATE[100%|DONE]
 void bullet_character_controller::set_transform( btTransform const& transform )
 {
-	// FUNCTION BODY
-	// <0x584f4c>|0x000|0x000:'1186'
-	// <0x584fb7>|0x06b|0x06b:'1187'
-	// ******
+	m_ghost_object->setWorldTransform( btTransform( transform.getRotation( ), transform.getOrigin( ) + m_shape_offset ) );	// <0x584f4c>|0x000|0x000:'1186'
+	m_ghost_object->setInterpolationWorldTransform( m_ghost_object->getWorldTransform( ) );									// <0x584fb7>|0x06b|0x06b:'1187'
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::set_crouch(bool)
 void bullet_character_controller::set_crouch( bool crouch )
 {
+	if ( crouch != m_in_crouch ) // <0x584b6a>|0x000|0x000:'1192'
+	{
+		setup_crouch_state( crouch );
+		m_positions.pop_back( );
+	}
+
 	// FUNCTION BODY
 	// <0x584b6a>|0x000|0x000:'1192'
 	// <1>
@@ -886,10 +881,9 @@ void bullet_character_controller::set_crouch( bool crouch )
 }
 
 // STATE[STUB]
-// bool vostok::physics::bullet_character_controller::can_stand()
 bool bullet_character_controller::can_stand( )
 {
-	return false;
+	return true; // <0x584510>|0x000|0x000:'1208'
 	// FUNCTION BODY
 	// <0x584510>|0x000|0x000:'1208'
 	// <1>

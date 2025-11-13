@@ -22,6 +22,7 @@
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/static_rigid_body.h>
 #include <vostok/physics/contact_test_predicate.h>
+#include <vostok/physics/sources/bullet_character_controller.h>
 
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
@@ -59,6 +60,13 @@ namespace vostok
 			"Hello!"
 		);
 
+	}
+
+	void use_bullet_character_controller()
+	{
+		physics::bullet_character_controller controller( NULL, float2(), float2(), 10, 20 );
+		controller.set_transform( btTransform( ) );
+		controller.set_crouch( true );
 	}
 
 	void example_callback(const char *name)
@@ -261,6 +269,7 @@ IncludeAll::IncludeAll()
 	vostok::use_aabb_object();
 	vostok::use_ghost_object();
 	vostok::use_collision_shape();
+	vostok::use_bullet_character_controller();
 
 	//
 	// YEEET
