@@ -14,9 +14,9 @@
 * character_controller.cpp
 * collision_shape_cook.cpp
 * collision_shapes.cpp
-* rigid_body_construction_info.cpp
 * physics_entry_point.cpp
 
 ### Modules (Done)
 * ghost_object.cpp
+* rigid_body_construction_info.cpp
 * static_rigid_body.cpp
