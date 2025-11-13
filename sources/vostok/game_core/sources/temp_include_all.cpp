@@ -100,6 +100,8 @@ namespace vostok
 		body.get_collision_group( );
 		body.get_bt_collision_obect( );
 
+		physics::create_static_rigid_body( physics::bt_rigid_body_construction_info( ) );
+		physics::destroy_static_rigid_body( NULL );
 	}
 
 	void use_collision_shape()
@@ -153,6 +155,8 @@ namespace vostok
 
 		ghost_predicate predicate;
 		ghost.contact_test( NULL, NULL, predicate );
+		ghost.contact_test( NULL );
+		ghost.remove( NULL );
 	}
 
 	void use_loose_oct_tree()

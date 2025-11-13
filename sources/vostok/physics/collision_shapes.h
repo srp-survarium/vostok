@@ -101,7 +101,6 @@ namespace {
 #endif
 
 
-
 /*
 VOSTOK_PHYSICS_API bt_collision_shape* create_primitive_shape				( memory::base_allocator& allocator, vostok::collision::primitive_type type, float3 const& dim );
 VOSTOK_PHYSICS_API bt_collision_shape* create_compound_shape				( memory::base_allocator& allocator, configs::binary_config_value const& config );
