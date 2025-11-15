@@ -7,43 +7,28 @@
 
 #include "bullet_include.h"
 #include "LinearMath/btQuickProf.h"
+#include <vostok/console_command.h>
+
 
 namespace vostok {
 namespace physics {
 
-/*
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_step_height_command''()
-void `dynamic initializer for 's_step_height_command''( ) {
-}
+static float s_cc_max_allowed_penetration_value			= 0.04f;
+static console_commands::cc_float s_cc_max_allowed_penetration_cc			( "cc_max_allowed_penetration", s_cc_max_allowed_penetration_value, 0.0f, 1.0f, false, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_character_sliping_speed_multiplier_cc''()
-void `dynamic initializer for 's_character_sliping_speed_multiplier_cc''( ) {
-}
+static bool  s_cc_prevent_step_bouncing_value			= true;
+static console_commands::cc_bool  s_cc_prevent_step_bouncing_cc				( "cc_prevent_step_bouncing", s_cc_prevent_step_bouncing_value, false, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_cc_max_allowed_penetration_cc''()
-void `dynamic initializer for 's_cc_max_allowed_penetration_cc''( ) {
-}
+static float s_character_sliping_speed_multiplier_value = 20.0f;
+static console_commands::cc_float s_character_sliping_speed_multiplier_cc	( "cc_sliping_speed_multiplier", s_character_sliping_speed_multiplier_value, 0.01f, 100.0f, true, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_cc_prevent_step_bouncing_cc''()
-void `dynamic initializer for 's_cc_prevent_step_bouncing_cc''( ) {
-}
-
-// STATE[STUB]
-// void vostok::physics::`dynamic atexit destructor for 's_step_height_command''()
-void `dynamic atexit destructor for 's_step_height_command''( ) {
-}
-*/
+static float s_step_height								= 0.6f;
+static console_commands::cc_float s_step_height_command						( "character_controller_step_height", s_step_height, 0.0f, 2.0f, true, console_commands::command_type_engine_internal );
 
 u16 const*	g_game_material_groups;
 s32			g_game_materials_count;
 
-bool		logging = true;
-
-float		s_step_height = 0.6;
+static bool	logging	= false;
 
 
 // STATE[100%|DONE]
@@ -61,7 +46,7 @@ btVector3 computeReflectionDirection( btVector3 const& direction, btVector3 cons
 	return direction - 2 * normal.dot( direction ) * normal;	// <0x584ae6>|0x000|0x000:'75'
 }
 
-// STATE[100%|DONE]: Structure doesn't match
+// STATE[100%|DONE]: The structure doesn't match
 btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal )
 {
 	return direction.dot( normal ) * normal;
@@ -73,7 +58,7 @@ btVector3 perpindicularComponent( btVector3 const& direction, btVector3 const& n
 	return direction - normal.dot( direction ) * normal;	// <0x584a66>|0x000|0x000:'92'
 }
 
-// STATE[STUB]
+// STATE[STUB]: sushi@NOTE: This function is used in `survarium` module.
 void setup_game_material_groups( u16 const* game_material_groups, u16 game_materials_count )
 {
 	g_game_material_groups = game_material_groups;
@@ -84,7 +69,21 @@ class character_move_test_callback : public btCollisionWorld::ClosestConvexResul
 public:
 						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot );
 
-	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& arg_0, bool arg_1 ) override { /* no source */ return 0.0f; }
+	// sushi@NOTE: Understand this a bit better
+	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
+	{
+		if ( convexResult.m_hitCollisionObject == m_self )
+			return 2.0f;
+
+		btVector3 hit_normal = normalInWorldSpace
+			? convexResult.m_hitNormalLocal
+			: convexResult.m_hitCollisionObject->getWorldTransform( ) * convexResult.m_hitNormalLocal;
+
+		if ( m_minSlopeDot <= m_up_vector.dot( hit_normal ) )
+			return btCollisionWorld::ClosestConvexResultCallback::addSingleResult( convexResult, normalInWorldSpace );
+		else
+			return 0.0f;
+	}
 
 
 private:
@@ -99,8 +98,15 @@ STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
 
 // STATE[STUB]
-character_move_test_callback::character_move_test_callback( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ):
-	ClosestConvexResultCallback( from_vostok( float3() ), from_vostok( float3() ) )
+character_move_test_callback::character_move_test_callback(
+	btCollisionObject*	self,
+	btVector3 const&	up_vector,
+	float				minSlopeDot
+) :
+	ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_up_vector					( up_vector ),
+	m_self						( self ),
+	m_minSlopeDot				( minSlopeDot )
 {
 }
 
@@ -171,7 +177,7 @@ bullet_character_controller::bullet_character_controller(
 	m_collision_filter_mask		( 2 ), // collisionFilterMask ),	// LTCG'ed to 2
 	m_max_slope_in_radians		( math::pi_d3 ),
 	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
-	m_gravity					( 29.4f ),					// 29.400002
+	m_gravity					( 29.4f ),							// 29.400002
 	m_was_on_ground				( false ),
 	m_jumping					( false ),
 	m_useGhostObjectSweepTest	( true ),
@@ -184,7 +190,6 @@ bullet_character_controller::bullet_character_controller(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::~bullet_character_controller()
 bullet_character_controller::~bullet_character_controller( )
 {
 }
@@ -258,72 +263,43 @@ void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld
 // STATE[STUB]
 void bullet_character_controller::player_step( float dt )
 {
-	// LOCALS
-	// btTransform 					new_transform
-	// btVector3 					step_up_correction
-	// ******
+	// static bool use_shape_size = <0x10000>;
 
-	// STATICS
-	// static bool 					use_shape_size = <0x10000>;
-	// ******
+	BT_PROFILE("player_step");
 
+	m_has_updates = true;
+	m_was_on_ground = on_ground( );
+
+	if ( m_jumping )
+		m_vertical_velocity = m_walk_vector.y( ) / dt;
+	else
+	{  // sushi@NOTE: Why are we always falling
+		float fall_speed = m_vertical_velocity - m_gravity * dt;
+		if ( -m_max_fall_speed >= fall_speed )
+			m_vertical_velocity = -m_max_fall_speed;
+		else if ( m_jump_speed < fall_speed )
+			m_vertical_velocity = m_jump_speed;
+		else
+			m_vertical_velocity = fall_speed;
+	}
 
 	btVector3 step_up_correction;
-	step_up( true, step_up_correction );
+	step_up_correction.setZero( );
 
-	// FUNCTION BODY
-	// <0x58622d>|0x000|0x000:'374'
-	// <1>
-	// <2>
-	// <0x586263>|0x036|0x036:'377'
-	// <0x5862a3>|0x076|0x040:'378'
-	// <1>
-	// <2>
-	// <3>
-	// <0x5862fe>|0x0d1|0x05b:'382'
-	// <1>
-	// <0x586319>|0x0ec|0x01b:'384'
-	// <1>
-	// <0x58631d>|0x0f0|0x004:'386'
-	// <1>
-	// <2>
-	// <0x586328>|0x0fb|0x00b:'389'
-	// <1>
-	// <0x586331>|0x104|0x009:'391'
-	// <0x58633a>|0x10d|0x009:'392'
-	// <1>
-	// <2>
-	// <0x586341>|0x114|0x007:'395'
-	// <1>
-	// <0x58634a>|0x11d|0x009:'397'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x58635b>|0x12e|0x011:'404'
-	// <0x5863a3>|0x176|0x048:'405'
-	// <0x5863b3>|0x186|0x010:'406'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// ******
+	if ( !m_jumping )
+		step_up( true, step_up_correction );
+
+	if ( !m_walk_vector_applied ) {
+		step_forward_and_strafe( m_walk_vector );
+		m_walk_vector_applied = true;
+	}
+
+	if ( !m_jumping )
+		step_down( dt, true, step_up_correction );
+
+	btTransform new_transform = m_ghost_object->getWorldTransform( );
+	new_transform.setOrigin( m_current_pos );
+	m_ghost_object->setWorldTransform( new_transform );
 }
 
 // STATE[78%|STUB]
@@ -710,10 +686,10 @@ bool bullet_character_controller::can_jump( ) const
 // STATE[100%|DONE]
 void bullet_character_controller::jump( )
 {
-	if ( can_jump( ) ) // <0x5849f1>|0x000|0x000:'1082'
+	if ( can_jump( ) )			// <0x5849f1>|0x000|0x000:'1082'
 	{
 		m_jumping = true;
-		m_positions.clear( ); // <0x584a2c>|0x03b|0x03b:'1089'
+		m_positions.clear( );	// <0x584a2c>|0x03b|0x03b:'1089'
 	}
 }
 
@@ -729,7 +705,7 @@ bool bullet_character_controller::on_ground( ) const
 	return math::abs( m_vertical_velocity ) < math::epsilon_3; // <0x5845b1>|0x000|0x000:'1105'
 }
 
-// STATE[100%|DONE] TODO
+// STATE[100%|DONE]
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 {
 	m_shape.setImplicitShapeDimensions(
@@ -853,11 +829,8 @@ void bullet_character_controller::set_crouch( bool crouch )
 	if ( crouch != m_in_crouch ) // <0x584b6a>|0x000|0x000:'1192'
 	{
 		setup_crouch_state( crouch );
-		m_positions.pop_back( );
+		m_positions.clear( );
 	}
-
-	// sushi@TODO: DELETE
-	getNormalizedVector( m_current_pos );
 
 	// FUNCTION BODY
 	// <0x584b6a>|0x000|0x000:'1192'

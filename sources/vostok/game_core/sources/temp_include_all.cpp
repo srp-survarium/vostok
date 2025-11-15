@@ -78,7 +78,6 @@ namespace vostok
 		// controller.setup_shape_dim( float2( ) );
 		controller.insert( NULL );
 		controller.remove( NULL );
-		controller.step_up( true, btVector3( ) );
 		controller.updateAction( NULL, 10.0 );
 
 
@@ -179,7 +178,6 @@ namespace vostok
 		ghost.insert( NULL, 10, 20 );
 		physics::destroy_ghost_object( physics::create_ghost_object( shape, math::float4x4() ) );
 		ghost.non_compound_shapes_centers( centres_results );
-
 		ghost_predicate predicate;
 		ghost.contact_test( NULL, NULL, predicate );
 		ghost.contact_test( NULL );
