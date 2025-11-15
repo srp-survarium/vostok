@@ -88,6 +88,7 @@ public:
 	inline	u32								get_contacts_count				( ) { /* no source */ }
 
 			void							setup_crouch_state				( bool crouch );
+private:
 			void							setup_shape_dim					( float2 const& shape_dim );
 
 public:

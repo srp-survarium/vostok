@@ -74,6 +74,11 @@ namespace vostok
 		controller.end_jump( );
 		controller.jump( );
 		controller.pre_step( 0.0f );
+		controller.set_desired_walk_vector( btVector3( ) );
+		// controller.setup_shape_dim( float2( ) );
+		controller.insert( NULL );
+		controller.remove( NULL );
+
 
 		physics::computeReflectionDirection( btVector3( ), btVector3( ) );
 		physics::perpindicularComponent( btVector3( ), btVector3( ) );

@@ -148,7 +148,7 @@ bullet_character_controller::bullet_character_controller(
 	m_shape		( btCapsuleShape( 0.0f, 0.0f ) )
 {
 	// FUNCTION BODY
-	// <0x584e4b>|0x000|0x000:'310'
+	setup_crouch_state( false ); // <0x584e4b>|0x000|0x000:'310'
 	// ******
 }
 
@@ -332,18 +332,19 @@ float bullet_character_controller::recover_from_penetration( )
 			{
 				btManifoldPoint& contact = manifold->getContactPoint( k );
 
-				if ( contact.getDistance( ) < 0.0f && maxPen > contact.getDistance( ) )
+				if ( contact.getDistance( ) < 0.0f )
 				{
-					maxPen = contact.getDistance( );
-					btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
+					if ( maxPen > contact.getDistance( ) )
+					{
+						maxPen = contact.getDistance( );
+						btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
 
-					float weight = math::pow( ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y, 3 );
+						float weight = math::pow( ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y, 3 );
 
-					btVector3 displacement = contact.m_normalWorldOnB * normalSign * contact.getDistance( );
-
-					m_current_pos.setX( m_current_pos.x( ) + displacement.x( ) * weight );
-					m_current_pos.setY( m_current_pos.y( ) + displacement.y( ) * ( 1 - weight ) );
-					m_current_pos.setZ( m_current_pos.z( ) + displacement.z( ) * weight );
+						btVector3 displacement = contact.m_normalWorldOnB * normalSign * contact.getDistance( );
+						btVector3 weighedDisplacement = btVector3( displacement.x( ) * weight, displacement.y( ) * ( 1 - weight ) , displacement.z( ) * weight );
+						m_current_pos += weighedDisplacement;
+					}
 				}
 			}
 		}
@@ -364,7 +365,7 @@ float bullet_character_controller::recover_from_penetration( )
 	// <0x5850c5>|0x058|0x01f:'435' m_ghost_object->getWorldTransform( ).getOrigin( );
 	// <1>
 	// <2>
-	// <0x5850df>|0x072|0x01a:'438' ??? = 0.0
+	// <0x5850df>|0x072|0x01a:'438' float maxPen = 0.0f;
 	// <1>
 	// <0x5850e8>|0x07b|0x009:'440' float shape_y = m_shape_offset.y( );
 	// <1>
@@ -388,25 +389,25 @@ float bullet_character_controller::recover_from_penetration( )
 	// <1>
 	// <2>
 	// <3>
-	// <0x585230>|0x1c3|0x019:'462'
+	// <0x585230>|0x1c3|0x019:'462' ????
 	// <1>
-	// <0x585235>|0x1c8|0x005:'464'
+	// <0x585235>|0x1c8|0x005:'464' if ( contact.getDistance( ) < 0.0f && maxPen > contact.getDistance( ) )
 	// <1>
 	// <2>
 	// <3>
 	// <4>
-	// <0x585241>|0x1d4|0x00c:'469'
+	// <0x585241>|0x1d4|0x00c:'469' ????? maxPen > contact.getDistance( ) )
 	// <1>
-	// <0x585250>|0x1e3|0x00f:'471'
+	// <0x585250>|0x1e3|0x00f:'471' maxPen = curPen;
 	// <1>
-	// <0x585256>|0x1e9|0x006:'473'
+	// <0x585256>|0x1e9|0x006:'473' btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPoint
 	// <1>
 	// <2>
 	// <3>
-	// <0x585264>|0x1f7|0x00e:'477'
-	// <0x5852bd>|0x250|0x059:'478'
+	// <0x585264>|0x1f7|0x00e:'477' mov
+	// <0x5852bd>|0x250|0x059:'478' mul
 	// <1>
-	// <0x5852dc>|0x26f|0x01f:'480'
+	// <0x5852dc>|0x26f|0x01f:'480' m_current_pos += btVector3( displaceme
 	// <1>
 	// <2>
 	// <3>
@@ -659,18 +660,16 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk_vector )
 {
-	// FUNCTION BODY
-	// <0x584fde>|0x000|0x000:'728'
-	// <0x584fe5>|0x007|0x007:'729'
-	// <1>
-	// <0x584ffb>|0x01d|0x016:'731'
-	// <0x585027>|0x049|0x02c:'732'
-	// <1>
-	// <2>
-	// ******
+	m_has_updates = false;	// <0x584fde>|0x000|0x000:'728'
+	m_walk_vector = walk_vector;
+
+	if ( !m_walk_vector.isZero( ) )
+		m_normalizedDirection = getNormalizedVector( m_walk_vector );
+
+	m_walk_vector_applied = false;
 }
 
 // STATE[STUB]
@@ -739,13 +738,16 @@ bool bullet_character_controller::on_ground( ) const
 	return math::abs( m_vertical_velocity ) < math::epsilon_3; // <0x5845b1>|0x000|0x000:'1105'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 {
-	// FUNCTION BODY
-	// <1>
-	// <0x584549>|0x000|0x000:'1111'
-	// ******
+	m_shape.setImplicitShapeDimensions(
+		btVector3(
+			shape_dim.x * 0.5,
+			( shape_dim.y - shape_dim.x ) * 0.5,
+			shape_dim.x * 0.5
+		)
+	); // <0x584549>|0x000|0x000:'1111'
 }
 
 // STATE[STUB]
@@ -757,10 +759,6 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 	// btVector3 					orign
 	// ******
 
-	// CALL SITE INFO
-	// <0x5849bc> -> void <unknown>(btCollisionShape*)
-	// <0x5849e1> -> void <unknown>(btBroadphaseProxy*, btDispatcher*)
-	// ******
 
 	// FUNCTION BODY
 	// <1>
@@ -799,13 +797,13 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::insert(btDynamicsWorld*)
 void bullet_character_controller::insert( btDynamicsWorld* world )
 {
-	// CALL SITE INFO
-	// <0x584bde> -> void <unknown>(btCollisionObject*, short, short)
-	// <0x584be9> -> void <unknown>(btActionInterface*)
-	// ******
+	m_collision_world = world; // <0x584bb4>|0x000|0x000:'1152'
+	setup_crouch_state( false );
+	m_collision_world->addCollisionObject( m_ghost_object, m_collision_filter_group, m_collision_filter_mask );
+	m_collision_world->addAction( this );
+	m_positions.clear( );
 
 	// FUNCTION BODY
 	// <0x584bb4>|0x000|0x000:'1152'
@@ -819,31 +817,16 @@ void bullet_character_controller::insert( btDynamicsWorld* world )
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_character_controller::remove(btDynamicsWorld*)
+// STATE[100%|DONE]
 void bullet_character_controller::remove( btDynamicsWorld* world )
 {
-	// LOCALS
-	// btDynamicsWorld* 			world
-	// ******
+	// ASSERT( m_collision_world == world )? Why do we even need to pass world
+	m_collision_world->removeAction( this );					// <0x584766>|0x000|0x000:'1165'
+	m_collision_world->removeCollisionObject( m_ghost_object );	// <0x584773>|0x00d|0x00d:'1166'
+	m_positions.clear( );										// <0x584784>|0x01e|0x011:'1167'
 
-	// CALL SITE INFO
-	// <0x584771> -> void <unknown>(btActionInterface*)
-	// <0x584782> -> void <unknown>(btCollisionObject*)
-	// ******
-
-	// FUNCTION BODY
-	// <1>
-	// <0x584766>|0x000|0x000:'1165'
-	// <0x584773>|0x00d|0x00d:'1166'
-	// <0x584784>|0x01e|0x011:'1167'
-	// <1>
-	// <2>
-	// <3>
-	// <0x5847ac>|0x046|0x028:'1171'
-	// <1>
-	// <0x5847eb>|0x085|0x03f:'1173'
-	// ******
+	m_ghost_object->getOverlappingPairs( ).clear( );			// <0x5847ac>|0x046|0x028:'1171'
+	m_collision_world = NULL;									// <0x5847eb>|0x085|0x03f:'1173'
 }
 
 // STATE[100%|DONE]
