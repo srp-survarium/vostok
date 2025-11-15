@@ -41,6 +41,11 @@ void `dynamic atexit destructor for 's_step_height_command''( ) {
 u16 const*	g_game_material_groups;
 s32			g_game_materials_count;
 
+bool		logging = true;
+
+float		s_step_height = 0.6;
+
+
 // STATE[100%|DONE]
 static btVector3 getNormalizedVector( btVector3 const& v )
 {
@@ -144,12 +149,38 @@ bullet_character_controller::bullet_character_controller(
 	float2 const&				stand_shape_dim,
 	float2 const&				crouch_shape_dim,
 	s16							collisionFilterGroup,
-	s16							collisionFilterMask) :
-	m_shape		( btCapsuleShape( 0.0f, 0.0f ) )
+	s16							collisionFilterMask
+) :
+	m_collision_world			( NULL ),
+	m_walk_vector				( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_normalizedDirection		( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_current_pos				( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_pre_step_position			( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_current_step_offset		( 0.0f ),
+	m_current_shape_dim			( float2( math::SNaN, math::SNaN ) ),
+	m_stand_shape_dim			( stand_shape_dim ),
+	m_crouch_shape_dim			( crouch_shape_dim ),
+	m_ghost_object				( ghost_object ),
+
+	m_shape						( btCapsuleShape( 1.0f, 1.0f ) ),
+	m_vertical_velocity			( 0.0f ),
+	m_max_fall_speed			( 55.0f ),
+	m_jump_speed				( 10.0f ),
+	m_in_crouch					( false ),
+	m_collision_filter_group	( 4 ), // collisionFilterGroup ),	// LTCG'ed to 4
+	m_collision_filter_mask		( 2 ), // collisionFilterMask ),	// LTCG'ed to 2
+	m_max_slope_in_radians		( math::pi_d3 ),
+	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
+	m_gravity					( 29.4f ),					// 29.400002
+	m_was_on_ground				( false ),
+	m_jumping					( false ),
+	m_useGhostObjectSweepTest	( true ),
+	m_walk_vector_applied		( false ),
+	m_on_steep_slope			( false ),
+	m_has_updates				( false ),
+	m_positions					( )
 {
-	// FUNCTION BODY
 	setup_crouch_state( false ); // <0x584e4b>|0x000|0x000:'310'
-	// ******
 }
 
 // STATE[STUB]
@@ -167,6 +198,7 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	float				normalMag
 )
 {
+	return hitNormal;
 	// LOCALS
 	// float 						movement_length
 	// btVector3 					movementDirection
@@ -208,26 +240,19 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 // STATE[STUB]
 void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld, float deltaTime )
 {
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5863f9>|0x000|0x000:'356'
-	// <0x58643a>|0x041|0x041:'357'
-	// <1>
-	// <0x586446>|0x04d|0x00c:'359'
-	// <1>
-	// <2>
-	// <0x586534>|0x13b|0x0ee:'362'
-	// <0x586539>|0x140|0x005:'363'
-	// <0x586546>|0x14d|0x00d:'364'
-	// <1>
-	// <0x58663a>|0x241|0x0f4:'366'
-	// <0x586648>|0x24f|0x00e:'367'
-	// <0x586655>|0x25c|0x00d:'368'
-	// <0x58674e>|0x355|0x0f9:'369'
-	// ******
+	BT_PROFILE("updateAction1");																				// <0x5863f9>|0x000|0x000:'356'
+	if ( logging )																								// <0x58643a>|0x041|0x041:'357'
+		LOG_INFO( "updateAction Start  %f %f %f", m_current_pos.x( ), m_current_pos.y( ), m_current_pos.z( ) );	// <0x586446>|0x04d|0x00c:'359'
+
+	pre_step( deltaTime );																						// <0x586534>|0x13b|0x0ee:'362'
+	if ( logging )																								// <0x586539>|0x140|0x005:'363'
+		LOG_INFO( "updateAction Middle %f %f %f", m_current_pos.x( ), m_current_pos.y( ), m_current_pos.z( ) );	// <0x586546>|0x14d|0x00d:'364'
+
+	player_step( deltaTime );																					// <0x58663a>|0x241|0x0f4:'366'
+	if ( logging )																								// <0x586648>|0x24f|0x00e:'367'
+		LOG_INFO( "updateAction Finish %f %f %f", m_current_pos.x( ), m_current_pos.y( ), m_current_pos.z( ) );	// <0x586655>|0x25c|0x00d:'368'
+
+	m_walk_vector.setZero( );																					// <0x58674e>|0x355|0x0f9:'369'
 }
 
 // STATE[STUB]
@@ -242,6 +267,9 @@ void bullet_character_controller::player_step( float dt )
 	// static bool 					use_shape_size = <0x10000>;
 	// ******
 
+
+	btVector3 step_up_correction;
+	step_up( true, step_up_correction );
 
 	// FUNCTION BODY
 	// <0x58622d>|0x000|0x000:'374'
@@ -326,7 +354,7 @@ float bullet_character_controller::recover_from_penetration( )
 		{
 			btPersistentManifold* manifold = manifold_array[j];
 			bool isFirstBody = manifold->getBody0( ) == m_ghost_object;
-			float normalSign = isFirstBody ? -1.0 : 1.0;
+			float normalSign = isFirstBody ? -1.0f : 1.0f;
 
 			for ( s32 k = 0 ; k < manifold->getNumContacts( ) ; ++k )
 			{
@@ -423,63 +451,24 @@ float bullet_character_controller::recover_from_penetration( )
 // STATE[STUB]
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <0x585c06>|0x000|0x000:'496'
-	// <1>
-	// <2>
-	// <0x585c10>|0x00a|0x00a:'499'
-	// <1>
-	// <2>
-	// <0x585c32>|0x02c|0x022:'502'
-	// <1>
-	// <0x585c5e>|0x058|0x02c:'504'
-	// <1>
-	// <0x585ca0>|0x09a|0x042:'506'
-	// <0x585cc4>|0x0be|0x024:'507'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// ******
+	float radius = m_current_shape_dim.x;
+	float height = m_current_shape_dim.y;
+
+    float step_height = ( height - radius ) - s_step_height;
+    if ( step_height < 0.0f )
+        step_height = 0.0f;
+
+	// if ( change_shape_size )
+	setup_shape_dim( float2( radius, radius + step_height ) );
+
+
+	pos_up_correction = btVector3(
+		0.0f,
+		( height - ( radius + step_height ) ) * 0.5f,
+		0.0f
+	);
+	m_current_pos += pos_up_correction;
+	m_current_step_offset = pos_up_correction.y( );
 }
 
 // STATE[STUB]
@@ -678,11 +667,13 @@ void bullet_character_controller::pre_step( float dt )
 	BT_PROFILE("pre_step");														// <0x5856c0>|0x000|0x000:'739'
 	m_pre_step_position = m_ghost_object->getWorldTransform( ).getOrigin( );	// <0x5856f7>|0x037|0x037:'740'
 
-	for ( s32 i = 0 ; i < 3 ; ++i )
-	{
-		if ( recover_from_penetration( ) <= 0.05 )
-			break;
-	}
+	s32 i = 0;
+	if ( recover_from_penetration( ) > 0.05f )
+		for ( ; recover_from_penetration( ) > 0.05f ; )
+		{
+			if ( ++i > 3 )
+				break;
+		}
 
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );			// <0x58573c>|0x07c|0x015:'757'
 
@@ -738,30 +729,54 @@ bool bullet_character_controller::on_ground( ) const
 	return math::abs( m_vertical_velocity ) < math::epsilon_3; // <0x5845b1>|0x000|0x000:'1105'
 }
 
-// STATE[100%|DONE]
+// STATE[100%|DONE] TODO
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 {
 	m_shape.setImplicitShapeDimensions(
 		btVector3(
-			shape_dim.x * 0.5,
-			( shape_dim.y - shape_dim.x ) * 0.5,
-			shape_dim.x * 0.5
+			shape_dim.x * 0.5f,
+			( shape_dim.y - shape_dim.x ) * 0.5f,
+			shape_dim.x * 0.5f
 		)
 	); // <0x584549>|0x000|0x000:'1111'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_character_controller::setup_crouch_state(bool)
+// STATE[56%|PARTIAL]: Just cannot match it
 void bullet_character_controller::setup_crouch_state( bool crouch )
 {
-	// LOCALS
-	// btVector3 					prev_shape_offset
-	// btVector3 					orign
-	// ******
+	btVector3 prev_shape_offset = m_shape_offset;												// <0x584809>|0x000|0x000:'1122'
+	m_in_crouch = crouch;
+    float shape_y;
+    if ( crouch )
+    {
+    	m_current_shape_dim = m_crouch_shape_dim;
+        m_shape.setImplicitShapeDimensions( btVector3( m_current_shape_dim.x * 0.5, ( m_current_shape_dim.y - m_current_shape_dim.x ) * 0.5, m_current_shape_dim.x * 0.5 ) );
+        shape_y = m_crouch_shape_dim.y;
+    }
+    else
+    {
+        m_current_shape_dim = m_stand_shape_dim;
+        m_shape.setImplicitShapeDimensions( btVector3( m_current_shape_dim.x * 0.5, ( m_current_shape_dim.y - m_current_shape_dim.x ) * 0.5, m_current_shape_dim.x * 0.5 ) );
+        shape_y = m_stand_shape_dim.y;
+    }
 
+	m_shape_offset = btVector3( 0.0f, shape_y, 0.0f );
 
-	// FUNCTION BODY
-	// <1>
+	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( ) - ( prev_shape_offset - m_shape_offset );
+	m_ghost_object->getWorldTransform( ).setOrigin( orign );
+	m_ghost_object->setInterpolationWorldTransform(  m_ghost_object->getWorldTransform( ) );	// <0x58499c>|0x193|0x016:'1136'
+
+	m_ghost_object->setCollisionShape( &m_shape );												// <0x5849aa>|0x1a1|0x00e:'1138'
+
+	if ( m_collision_world )																	// <0x5849be>|0x1b5|0x014:'1140'
+		m_ghost_object->getOverlappingPairCache( )->cleanProxyFromPairs(
+			m_ghost_object->getBroadphaseHandle( ),
+			m_collision_world->getDispatcher( )													// <0x5849c5>|0x1bc|0x007:'1141'
+		);
+
+    /* Structure */
+
+    // <1>
 	// <2>
 	// <3>
 	// <4>
@@ -779,7 +794,7 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 	// <3>
 	// <4>
 	// <5>
-	// <0x58490f>|0x106|0x013:'1134'
+	// <0x58490f>|0x106|0x013:'1134' m_shape_offset = btVector3( 0.0f, shape_y, 0.0f );
 	// <0x584986>|0x17d|0x077:'1135'
 	// <0x58499c>|0x193|0x016:'1136'
 	// <1>
@@ -793,10 +808,9 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 	// <4>
 	// <5>
 	// <6>
-	// ******
 }
 
-// STATE[STUB]
+// STATE[94%|DONE]: Target also kept ecx
 void bullet_character_controller::insert( btDynamicsWorld* world )
 {
 	m_collision_world = world; // <0x584bb4>|0x000|0x000:'1152'
@@ -804,17 +818,6 @@ void bullet_character_controller::insert( btDynamicsWorld* world )
 	m_collision_world->addCollisionObject( m_ghost_object, m_collision_filter_group, m_collision_filter_mask );
 	m_collision_world->addAction( this );
 	m_positions.clear( );
-
-	// FUNCTION BODY
-	// <0x584bb4>|0x000|0x000:'1152'
-	// <0x584bb8>|0x004|0x004:'1153'
-	// <0x584bbf>|0x00b|0x007:'1154'
-	// <0x584be0>|0x02c|0x021:'1155'
-	// <0x584beb>|0x037|0x00b:'1156'
-	// <1>
-	// <2>
-	// <3>
-	// ******
 }
 
 // STATE[100%|DONE]

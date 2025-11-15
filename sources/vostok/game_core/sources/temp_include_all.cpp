@@ -78,6 +78,8 @@ namespace vostok
 		// controller.setup_shape_dim( float2( ) );
 		controller.insert( NULL );
 		controller.remove( NULL );
+		controller.step_up( true, btVector3( ) );
+		controller.updateAction( NULL, 10.0 );
 
 
 		physics::computeReflectionDirection( btVector3( ), btVector3( ) );

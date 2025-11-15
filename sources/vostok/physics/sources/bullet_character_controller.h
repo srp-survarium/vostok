@@ -87,8 +87,8 @@ public:
 
 	inline	u32								get_contacts_count				( ) { /* no source */ }
 
-			void							setup_crouch_state				( bool crouch );
 private:
+			void							setup_crouch_state				( bool crouch );
 			void							setup_shape_dim					( float2 const& shape_dim );
 
 public:
@@ -121,7 +121,7 @@ public:
 	/* 0x0103 */	bool								m_walk_vector_applied;
 	/* 0x0104 */	bool								m_on_steep_slope;
 	/* 0x0105 */	bool								m_has_updates;
-	/* 0x0108 */	std::list<btVector3,std::allocator<btVector3> >	m_positions;
+	/* 0x0108 */	std::list< btVector3 >				m_positions;
 }; // class bullet_character_controller
 
 STATIC_SIZE_ASSERT(bullet_character_controller, 0x110);
