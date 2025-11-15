@@ -6,6 +6,7 @@
 #include "bullet_character_controller.h"
 
 #include "bullet_include.h"
+#include "LinearMath/btQuickProf.h"
 
 namespace vostok {
 namespace physics {
@@ -297,58 +298,93 @@ void bullet_character_controller::player_step( float dt )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[78%|STUB]
 float bullet_character_controller::recover_from_penetration( )
 {
-	// LOCALS
-	// float 						shape_y
-	// float 						maxPen
-	// btAlignedObjectArray<btPersistentManifold *> manifold_array
-	// s32 							i
-	// s32 							j
-	// btVector3 					pos_on_shape
-	// ******
+	BT_PROFILE("recover_from_penetration");
+	m_collision_world->getDispatcher( )->dispatchAllCollisionPairs(
+		m_ghost_object->getOverlappingPairCache( ),
+		m_collision_world->getDispatchInfo( ),
+		m_collision_world->getDispatcher( )
+	);
 
-	// CALL SITE INFO
-	// <0x5850c3> -> void <unknown>(btOverlappingPairCache*, btDispatcherInfo const&, btDispatcher*)
-	// <0x585123> -> int <unknown>() const
-	// <0x5851a7> -> btAlignedObjectArray<btBroadphasePair>& <unknown>()
-	// <0x5851c4> -> void <unknown>(btAlignedObjectArray<btPersistentManifold *>&)
-	// <0x585350> -> int <unknown>() const
-	// ******
+	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
-	return 0.0f;
+	float maxPen = 0.0f;
+	float shape_y = m_shape_offset.y( );
+	btManifoldArray manifold_array;
+
+	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
+	{
+		manifold_array.clear( );
+		btBroadphasePair& pair = m_ghost_object->getOverlappingPairCache( )->getOverlappingPairArray( )[i];
+
+		if ( pair.m_algorithm )
+			pair.m_algorithm->getAllContactManifolds( manifold_array );
+
+		for ( s32 j = 0 ; j < manifold_array.size( ) ; ++j )
+		{
+			btPersistentManifold* manifold = manifold_array[j];
+			bool isFirstBody = manifold->getBody0( ) == m_ghost_object;
+			float normalSign = isFirstBody ? -1.0 : 1.0;
+
+			for ( s32 k = 0 ; k < manifold->getNumContacts( ) ; ++k )
+			{
+				btManifoldPoint& contact = manifold->getContactPoint( k );
+
+				if ( contact.getDistance( ) < 0.0f && maxPen > contact.getDistance( ) )
+				{
+					maxPen = contact.getDistance( );
+					btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
+
+					float weight = math::pow( ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y, 3 );
+
+					btVector3 displacement = contact.m_normalWorldOnB * normalSign * contact.getDistance( );
+
+					m_current_pos.setX( m_current_pos.x( ) + displacement.x( ) * weight );
+					m_current_pos.setY( m_current_pos.y( ) + displacement.y( ) * ( 1 - weight ) );
+					m_current_pos.setZ( m_current_pos.z( ) + displacement.z( ) * weight );
+				}
+			}
+		}
+	}
+
+	btTransform world = m_ghost_object->getWorldTransform( );
+	world.setOrigin( m_current_pos );
+	m_ghost_object->setWorldTransform( world );
+	return math::abs( maxPen );
+
 	// FUNCTION BODY
-	// <0x58506d>|0x000|0x000:'429'
+	// <0x58506d>|0x000|0x000:'429' BT_PROFILE("recover_from_penetration")
 	// <1>
 	// <2>
 	// <3>
-	// <0x5850a6>|0x039|0x039:'433'
+	// <0x5850a6>|0x039|0x039:'433' m_collision_world->getDispatcher( )->dispatchAllCollisionPairs(
 	// <1>
-	// <0x5850c5>|0x058|0x01f:'435'
-	// <1>
-	// <2>
-	// <0x5850df>|0x072|0x01a:'438'
-	// <1>
-	// <0x5850e8>|0x07b|0x009:'440'
-	// <1>
-	// <0x585108>|0x09b|0x020:'442'
-	// <1>
-	// <0x585131>|0x0c4|0x029:'444'
-	// <1>
-	// <0x585192>|0x125|0x061:'446'
-	// <1>
-	// <0x5851b0>|0x143|0x01e:'448'
-	// <0x5851b5>|0x148|0x005:'449'
+	// <0x5850c5>|0x058|0x01f:'435' m_ghost_object->getWorldTransform( ).getOrigin( );
 	// <1>
 	// <2>
-	// <0x5851c6>|0x159|0x011:'452'
+	// <0x5850df>|0x072|0x01a:'438' ??? = 0.0
 	// <1>
-	// <0x5851f0>|0x183|0x02a:'454'
-	// <0x5851f7>|0x18a|0x007:'455'
-	// <0x585206>|0x199|0x00f:'456'
+	// <0x5850e8>|0x07b|0x009:'440' float shape_y = m_shape_offset.y( );
 	// <1>
-	// <0x585217>|0x1aa|0x011:'458'
+	// <0x585108>|0x09b|0x020:'442' for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
+	// <1>
+	// <0x585131>|0x0c4|0x029:'444' manifold_array.clear( )
+	// <1>
+	// <0x585192>|0x125|0x061:'446' btBroadphasePair& pair = m_ghost_ob
+	// <1>
+	// <0x5851b0>|0x143|0x01e:'448' if ( pair.m_algorithm )
+	// <0x5851b5>|0x148|0x005:'449' pair.m_algorithm->getAllContactManifolds( manifold_array );
+	// <1>
+	// <2>
+	// <0x5851c6>|0x159|0x011:'452' for ( s32 j = 0 ; j < manifold_a
+	// <1>
+	// <0x5851f0>|0x183|0x02a:'454' 	btPersistentManifold* manifold = manifold_array[j];
+	// <0x5851f7>|0x18a|0x007:'455' void* body0 = manifold->getB
+	// <0x585206>|0x199|0x00f:'456' float sign = body0 == m_
+	// <1>
+	// <0x585217>|0x1aa|0x011:'458' for ( s32 k = 0 ; k < manifold->
 	// <1>
 	// <2>
 	// <3>
@@ -638,12 +674,18 @@ void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_character_controller::pre_step(float)
 void bullet_character_controller::pre_step( float dt )
 {
-	// LOCALS
-	// float 						__formal
-	// ******
+	BT_PROFILE("pre_step");														// <0x5856c0>|0x000|0x000:'739'
+	m_pre_step_position = m_ghost_object->getWorldTransform( ).getOrigin( );	// <0x5856f7>|0x037|0x037:'740'
+
+	for ( s32 i = 0 ; i < 3 ; ++i )
+	{
+		if ( recover_from_penetration( ) <= 0.05 )
+			break;
+	}
+
+	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );			// <0x58573c>|0x07c|0x015:'757'
 
 	// FUNCTION BODY
 	// <0x5856c0>|0x000|0x000:'739'

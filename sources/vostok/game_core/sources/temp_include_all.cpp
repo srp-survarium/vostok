@@ -73,6 +73,7 @@ namespace vostok
 		controller.can_jump( );
 		controller.end_jump( );
 		controller.jump( );
+		controller.pre_step( 0.0f );
 
 		physics::computeReflectionDirection( btVector3( ), btVector3( ) );
 		physics::perpindicularComponent( btVector3( ), btVector3( ) );

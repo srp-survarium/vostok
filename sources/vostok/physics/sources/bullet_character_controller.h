@@ -63,8 +63,11 @@ public:
 			void							pre_step						( float dt );
 
 	inline	void							prevent_max_slope_moving_prestep( float arg_0 ) { /* no source */ }
+
+private:
 			float							recover_from_penetration		( );
 
+public:
 			void							step_up							( bool change_shape_size, btVector3& pos_up_correction );
 			void							step_forward_and_strafe			( btVector3 const& walkMove );
 			void							step_down						( float dt, bool change_size_only, btVector3 const& pos_up_correction );
