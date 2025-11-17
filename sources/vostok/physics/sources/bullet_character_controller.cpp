@@ -67,8 +67,14 @@ void setup_game_material_groups( u16 const* game_material_groups, u16 game_mater
 
 class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
 public:
-						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot );
+	// STATE[STUB]
+						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ) :
+							ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
+							m_up_vector					( up_vector ),
+							m_self						( self ),
+							m_minSlopeDot				( minSlopeDot ) {}
 
+	// STATE[STUB]
 	// sushi@NOTE: Understand this a bit better
 	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 	{
@@ -83,6 +89,38 @@ public:
 			return btCollisionWorld::ClosestConvexResultCallback::addSingleResult( convexResult, normalInWorldSpace );
 		else
 			return 0.0f;
+
+		// FUNCTION BODY
+		// <0xde4c6>|0x000|0x000:'238'
+		// <0xde4d6>|0x010|0x010:'239'
+		// <1>
+		// <2>
+		// <0xde4e3>|0x01d|0x00d:'242'
+		// <1>
+		// <0xde4ea>|0x024|0x007:'244'
+		// <0xde4fa>|0x034|0x010:'245'
+		// <1>
+		// <2>
+		// <0xde4ff>|0x039|0x005:'248'
+		// <1>
+		// <2>
+		// <3>
+		// <4>
+		// <5>
+		// <6>
+		// <7>
+		// <8>
+		// <9>
+		// <10>
+		// <11>
+		// <12>
+		// <13>
+		// <0xde5a3>|0x0dd|0x0a4:'262'
+		// <0xde5ce>|0x108|0x02b:'263'
+		// <0xde5dc>|0x116|0x00e:'264'
+		// <1>
+		// <0xde5e5>|0x11f|0x009:'266'
+		// ******
 	}
 
 
@@ -96,59 +134,6 @@ private:
 
 STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
-
-// STATE[STUB]
-character_move_test_callback::character_move_test_callback(
-	btCollisionObject*	self,
-	btVector3 const&	up_vector,
-	float				minSlopeDot
-) :
-	ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
-	m_up_vector					( up_vector ),
-	m_self						( self ),
-	m_minSlopeDot				( minSlopeDot )
-{
-}
-
-/*
-// STATE[STUB]
-// void* vostok::physics::bullet_character_controller::`scalar deleting destructor'(unsigned int)
-void* bullet_character_controller::`scalar deleting destructor'( )
-{
-	return NULL;
-	// FUNCTION BODY
-	// <0xde4c6>|0x000|0x000:'238'
-	// <0xde4d6>|0x010|0x010:'239'
-	// <1>
-	// <2>
-	// <0xde4e3>|0x01d|0x00d:'242'
-	// <1>
-	// <0xde4ea>|0x024|0x007:'244'
-	// <0xde4fa>|0x034|0x010:'245'
-	// <1>
-	// <2>
-	// <0xde4ff>|0x039|0x005:'248'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0xde5a3>|0x0dd|0x0a4:'262'
-	// <0xde5ce>|0x108|0x02b:'263'
-	// <0xde5dc>|0x116|0x00e:'264'
-	// <1>
-	// <0xde5e5>|0x11f|0x009:'266'
-	// ******
-}
-*/
 // STATE[STUB]
 bullet_character_controller::bullet_character_controller(
 	btPairCachingGhostObject*	ghost_object,
@@ -292,7 +277,7 @@ void bullet_character_controller::player_step( float dt )
 // STATE[78%|STUB]
 float bullet_character_controller::recover_from_penetration( )
 {
-	BT_PROFILE("recover_from_penetration");
+	BT_PROFILE("recover_from_penetration"); // <0x58506d>|0x000|0x000:'429'
 	m_collision_world->getDispatcher( )->dispatchAllCollisionPairs(
 		m_ghost_object->getOverlappingPairCache( ),
 		m_collision_world->getDispatchInfo( ),
