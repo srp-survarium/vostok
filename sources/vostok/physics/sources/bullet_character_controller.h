@@ -71,7 +71,7 @@ private:
 			void							step_up							( bool change_shape_size, btVector3& pos_up_correction );
 			void							step_forward_and_strafe			( btVector3 const& walkMove );
 			void							step_down						( float dt, bool change_size_only, btVector3 const& pos_up_correction );
-public:
+
 			btVector3						updateTargetPositionBasedOnCollision(
 												btVector3 const&	hitNormal,
 												btVector3 const&	target_pos,
@@ -87,7 +87,6 @@ public:
 
 	inline	u32								get_contacts_count				( ) { /* no source */ }
 
-private:
 			void							setup_crouch_state				( bool crouch );
 			void							setup_shape_dim					( float2 const& shape_dim );
 

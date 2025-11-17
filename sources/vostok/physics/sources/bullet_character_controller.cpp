@@ -194,52 +194,39 @@ bullet_character_controller::~bullet_character_controller( )
 {
 }
 
-// STATE[STUB]
-// btVector3 vostok::physics::bullet_character_controller::updateTargetPositionBasedOnCollision(btVector3 const&, btVector3 const&, float, float)
+// STATE[99.80%|PARTIAL]
+// The implementation is based on `btKinematicCharacterController::updateTargetPositionBasedOnCollision`.
+// Further matches might come from updating `computeReflectionDirection`, possibly, even though it matches 100%, when inlined, it doesn't.
+// Can also be because of `normalMag` check that was compiled out by LTCG.
 btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	btVector3 const&	hitNormal,
 	btVector3 const&	target_pos,
-	float				__formal,
-	float				normalMag
+	float				tangentMag, // definitely unused
+	float				normalMag   // possibly used for compiled out check, see original bullet impl
 )
 {
-	return hitNormal;
-	// LOCALS
-	// float 						movement_length
-	// btVector3 					movementDirection
-	// btVector3 					reflectDir
-	// ******
+	BT_PROFILE("updateTargetPositionBasedOnCollision"); // <0x585470>|0x000|0x000:'319'
 
-	// FUNCTION BODY
-	// <0x585470>|0x000|0x000:'319'
-	// <0x5854ac>|0x03c|0x03c:'320'
-	// <0x5854b1>|0x041|0x005:'321'
-	// <0x5854dc>|0x06c|0x02b:'322'
-	// <1>
-	// <0x585526>|0x0b6|0x04a:'324'
-	// <1>
-	// <0x585539>|0x0c9|0x013:'326'
-	// <1>
-	// <0x585541>|0x0d1|0x008:'328'
-	// <0x5855b3>|0x143|0x072:'329'
-	// <1>
-	// <2>
-	// <0x585607>|0x197|0x054:'332'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x585659>|0x1e9|0x052:'342'
-	// <0x585677>|0x207|0x01e:'343'
-	// <1>
-	// <2>
-	// <0x58569f>|0x22f|0x028:'346'
-	// ******
+	btVector3 result = m_current_pos;
+	btVector3 movementDirection = target_pos - m_current_pos;
+
+	float movement_length = movementDirection.length( );
+	if ( movement_length > FLT_EPSILON )
+	{
+		movementDirection.normalize( ); // sushi@NOTE: As far as I understand, normalizing movement gives more precise math, but isn't required
+
+		btVector3 reflectDir = computeReflectionDirection( movementDirection, hitNormal );
+		reflectDir.normalize( );
+
+		btVector3 newMovementDirection = perpindicularComponent( reflectDir, hitNormal );
+
+		// <0x585677>|0x207|0x01e:'343' // sushi@NOTE: Based on the `vostok_structure` this makes more sense, but when I do that assembly breaks in other places.
+		// newMovementDirection *= movement_length;
+		// result += newMovementDirection;
+		result += newMovementDirection * movement_length;
+	}
+
+	return result;
 }
 
 // STATE[STUB]
@@ -450,6 +437,8 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 // STATE[STUB]
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
+
+	updateTargetPositionBasedOnCollision( walkMove, walkMove, 10, 10 );
 	// LOCALS
 	// btVector3 					target_pos
 	// btTransform 					start
@@ -823,29 +812,22 @@ void bullet_character_controller::set_transform( btTransform const& transform )
 	m_ghost_object->setInterpolationWorldTransform( m_ghost_object->getWorldTransform( ) );									// <0x584fb7>|0x06b|0x06b:'1187'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::set_crouch( bool crouch )
 {
-	if ( crouch != m_in_crouch ) // <0x584b6a>|0x000|0x000:'1192'
+	if ( crouch == m_in_crouch ) // <0x584b6a>|0x000|0x000:'1192'
+		return;
+
+	if ( crouch )
 	{
-		setup_crouch_state( crouch );
-		m_positions.clear( );
+		setup_crouch_state( true );
+	}
+	else
+	{
+		setup_crouch_state( false );
 	}
 
-	// FUNCTION BODY
-	// <0x584b6a>|0x000|0x000:'1192'
-	// <1>
-	// <2>
-	// <0x584b72>|0x008|0x008:'1195'
-	// <1>
-	// <0x584b76>|0x00c|0x004:'1197'
-	// <0x584b78>|0x00e|0x002:'1198'
-	// <1>
-	// <2>
-	// <0x584b7a>|0x010|0x002:'1201'
-	// <1>
-	// <0x584b81>|0x017|0x007:'1203'
-	// ******
+	m_positions.clear( );
 }
 
 // STATE[100%|DONE]: The actual logic was commented out
