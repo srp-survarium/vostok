@@ -30,6 +30,7 @@ s32			g_game_materials_count;
 
 static bool	logging	= false;
 
+const btVector3 bullet_character_controller::m_up_vector = btVector3( 0.0f, 1.0f, 0.0f );
 
 // STATE[100%|DONE]
 static btVector3 getNormalizedVector( btVector3 const& v )
@@ -67,14 +68,14 @@ void setup_game_material_groups( u16 const* game_material_groups, u16 game_mater
 
 class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
 public:
-	// STATE[STUB]
+	// STATE[86%|STUB]
 						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ) :
 							ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
 							m_up_vector					( up_vector ),
 							m_self						( self ),
 							m_minSlopeDot				( minSlopeDot ) {}
 
-	// STATE[STUB]
+	// STATE[71%|STUB]
 	// sushi@NOTE: Understand this a bit better
 	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 	{
@@ -498,11 +499,25 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	// <0x5861dc> -> float <unknown>() const
 	// ******
 
+	BT_PROFILE("step_down");
+
+	btTransform start( btMatrix3x3::getIdentity( ), m_current_pos );
+	float step_height = m_vertical_velocity >= 0 ? 0.0f : - m_vertical_velocity * dt;
+	if ( s_step_height > step_height && m_was_on_ground )
+		step_height = s_step_height;
+
+
+	character_move_test_callback callback( m_ghost_object, m_up_vector, m_max_slope_angle_cos );
+
+	btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
+	btTransform end( btMatrix3x3::getIdentity( ), finish_pos );
+	m_collision_world->convexSweepTest( &m_shape, start, end, callback );
+
 	// FUNCTION BODY
 	// <0x585cdc>|0x000|0x000:'627'
 	// <1>
 	// <2>
-	// <0x585d1c>|0x040|0x040:'630'
+	// <0x585d1c>|0x040|0x040:'630' xor, missed
 	// <0x585d1f>|0x043|0x003:'631'
 	// <1>
 	// <0x585d43>|0x067|0x024:'633'
@@ -611,45 +626,22 @@ void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk
 	m_walk_vector_applied = false;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::pre_step( float dt )
 {
 	BT_PROFILE("pre_step");														// <0x5856c0>|0x000|0x000:'739'
 	m_pre_step_position = m_ghost_object->getWorldTransform( ).getOrigin( );	// <0x5856f7>|0x037|0x037:'740'
 
-	s32 i = 0;
-	if ( recover_from_penetration( ) > 0.05f )
-		for ( ; recover_from_penetration( ) > 0.05f ; )
-		{
-			if ( ++i > 3 )
-				break;
-		}
+	for ( s32 i = 0 ; recover_from_penetration( ) > 0.05f ; )
+	{
+		if ( ++i > 3 )
+			break;
+	}
 
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );			// <0x58573c>|0x07c|0x015:'757'
-
-	// FUNCTION BODY
-	// <0x5856c0>|0x000|0x000:'739'
-	// <0x5856f7>|0x037|0x037:'740'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x58570f>|0x04f|0x018:'748'
-	// <1>
-	// <0x585726>|0x066|0x017:'750'
-	// <0x585727>|0x067|0x001:'751'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x58573c>|0x07c|0x015:'757'
-	// <1>
-	// ******
 }
+
+// sushi@NOTE: 300 empty lines
 
 // STATE[100%|DONE]
 bool bullet_character_controller::can_jump( ) const
@@ -691,7 +683,7 @@ void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 	); // <0x584549>|0x000|0x000:'1111'
 }
 
-// STATE[56%|PARTIAL]: Just cannot match it
+// STATE[92%|PARTIAL]: The closest I was able to get. The assembly is the same except for a few instructions reshuffled.
 void bullet_character_controller::setup_crouch_state( bool crouch )
 {
 	btVector3 prev_shape_offset = m_shape_offset;												// <0x584809>|0x000|0x000:'1122'
@@ -700,19 +692,20 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
     if ( crouch )
     {
     	m_current_shape_dim = m_crouch_shape_dim;
-        m_shape.setImplicitShapeDimensions( btVector3( m_current_shape_dim.x * 0.5, ( m_current_shape_dim.y - m_current_shape_dim.x ) * 0.5, m_current_shape_dim.x * 0.5 ) );
+		setup_shape_dim( m_current_shape_dim );		// up until this point no breakpoints in structure
         shape_y = m_crouch_shape_dim.y;
-    }
-    else
+    }												// this empty line is the most confusing, since it doesn't match structure
+    else											// while everything else (including this `else`) does
     {
         m_current_shape_dim = m_stand_shape_dim;
-        m_shape.setImplicitShapeDimensions( btVector3( m_current_shape_dim.x * 0.5, ( m_current_shape_dim.y - m_current_shape_dim.x ) * 0.5, m_current_shape_dim.x * 0.5 ) );
+		setup_shape_dim( m_current_shape_dim );
         shape_y = m_stand_shape_dim.y;
     }
+	m_shape_offset.setZero( ); // Creating a new btVector and assigning it results in new stack variables.`
+	m_shape_offset.setY( shape_y * 0.5f );
 
-	m_shape_offset = btVector3( 0.0f, shape_y, 0.0f );
-
-	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( ) - ( prev_shape_offset - m_shape_offset );
+	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( );
+	orign -= prev_shape_offset - m_shape_offset;
 	m_ghost_object->getWorldTransform( ).setOrigin( orign );
 	m_ghost_object->setInterpolationWorldTransform(  m_ghost_object->getWorldTransform( ) );	// <0x58499c>|0x193|0x016:'1136'
 
@@ -723,44 +716,9 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 			m_ghost_object->getBroadphaseHandle( ),
 			m_collision_world->getDispatcher( )													// <0x5849c5>|0x1bc|0x007:'1141'
 		);
-
-    /* Structure */
-
-    // <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x584809>|0x000|0x000:'1122'
-	// <0x584896>|0x08d|0x08d:'1123'
-	// <0x58489e>|0x095|0x008:'1124'
-	// <1>
-	// <0x5848a0>|0x097|0x002:'1126'
-	// <0x5848ac>|0x0a3|0x00c:'1127'
-	// <0x5848fc>|0x0f3|0x050:'1128'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x58490f>|0x106|0x013:'1134' m_shape_offset = btVector3( 0.0f, shape_y, 0.0f );
-	// <0x584986>|0x17d|0x077:'1135'
-	// <0x58499c>|0x193|0x016:'1136'
-	// <1>
-	// <0x5849aa>|0x1a1|0x00e:'1138'
-	// <1>
-	// <0x5849be>|0x1b5|0x014:'1140'
-	// <0x5849c5>|0x1bc|0x007:'1141'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
 }
 
-// STATE[94%|DONE]: Target also kept ecx
+// STATE[94%|PARTIAL]: Target preserves `ecx` by pushing it in prologue.
 void bullet_character_controller::insert( btDynamicsWorld* world )
 {
 	m_collision_world = world; // <0x584bb4>|0x000|0x000:'1152'

@@ -57,14 +57,14 @@ public:
 	inline	float							get_gravity						( ) const { /* no source */ }
 	inline	bool							is_inserted						( ) const { /* no source */ }
 
-	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { /* no source */ }
+	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { return m_ghost_object; }
 
+private:
 			void							player_step						( float dt );
 			void							pre_step						( float dt );
 
-	inline	void							prevent_max_slope_moving_prestep( float arg_0 ) { /* no source */ }
+	inline	void							prevent_max_slope_moving_prestep( float dt ) { /* no source */ }
 
-private:
 			float							recover_from_penetration		( );
 
 
@@ -90,7 +90,10 @@ private:
 			void							setup_crouch_state				( bool crouch );
 			void							setup_shape_dim					( float2 const& shape_dim );
 
+
 public:
+	static const	btVector3							m_up_vector;
+
 	/* 0x0000 */	/* btActionInterface */
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	btDynamicsWorld*					m_collision_world;
