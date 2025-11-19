@@ -215,7 +215,7 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	return result;
 }
 
-// STATE[STUB]
+// STATE[96%|DONE]: Logging is still not 100% matched
 void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld, float deltaTime )
 {
 	BT_PROFILE("updateAction1");																				// <0x5863f9>|0x000|0x000:'356'
@@ -275,7 +275,7 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
-// STATE[78%|STUB]
+// STATE[84%|STUB]
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration"); // <0x58506d>|0x000|0x000:'429'
@@ -423,6 +423,8 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 // STATE[STUB]
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
+	BT_PROFILE("step_forward_and_strafe");
+
 
 	updateTargetPositionBasedOnCollision( walkMove, walkMove, 10, 10 );
 	// LOCALS

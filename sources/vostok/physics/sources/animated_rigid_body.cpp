@@ -15,7 +15,7 @@
 namespace vostok {
 namespace physics {
 
-// STATE[98%|PARTIAL]: Linker removed `game_material_id`.
+// STATE[98%|PARTIAL]: LTCG for `game_material_id`.
 bt_animated_rigid_body::bt_animated_rigid_body(
 	btCompoundShape*                   shape,
 	btRigidBody*                       body,
@@ -46,7 +46,7 @@ void bt_animated_rigid_body::apply_impulse( float3 const& impulse, float3 const&
 	VOSTOK_UNREFERENCED_PARAMETERS ( impulse, point_in_world ); // sushi@NOTE: This function is empty
 }
 
-// STATE[66%|PARTIAL]: Looks like linker optimizations
+// STATE[100%|DONE]
 void bt_animated_rigid_body::set_transform( float4x4 const& transform )
 {
 	m_bt_body->setWorldTransform( from_vostok( transform ) );	// <0x6bf95b>|0x000|0x000:'46'
@@ -58,7 +58,7 @@ float4x4 bt_animated_rigid_body::get_transform( ) const
 	return from_bullet( m_bt_body->getWorldTransform( ) );	// <0x6bf750>|0x000|0x000:'51'
 }
 
-// STATE[69%|PARTIAL]: Looks like linker optimizations
+// STATE[100%|DONE]
 void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
 	btTransform new_child_transform = from_vostok( new_transform );					// <0x6bf92a>|0x000|0x000:'56'
@@ -161,13 +161,13 @@ static u32 calculate_bt_hit_target_size( configs::binary_config_value const& con
 	switch ( type )
 	{
 		case collision::primitive_sphere:
-			return sizeof(btSphereShape);
+			return sizeof( btSphereShape );
 		case collision::primitive_box:
-			return sizeof(btBoxShape);
+			return sizeof( btBoxShape );
 		case collision::primitive_cylinder:
-			return sizeof(btCylinderShape);
+			return sizeof( btCylinderShape );
 		case collision::primitive_capsule:
-			return sizeof(btCapsuleShape);
+			return sizeof( btCapsuleShape );
 		default:
 			NODEFAULT( );
 	}
@@ -224,9 +224,7 @@ bt_animated_rigid_body* new_animated_rigid_body(
 	return rigid_body;
 }
 
-// STATE[UNVERIFIED]: sushi@NOTE: It is used, but is being inlined in `animated_object` destructor.
-// sushi@TODO: What is concerning, however, is that there are two NEW calls in `new`, but only one DELETE here.
-// The target structure shows that there is only a single statement, however.
+// STATE[100%|DONE]: sushi@NOTE: There are two NEW calls in `new`, but only one DELETE here.
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
 	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'

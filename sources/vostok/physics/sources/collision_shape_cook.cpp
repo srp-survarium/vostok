@@ -10,15 +10,15 @@ namespace physics {
 
 // STATE[STUB]
 collision_shape_cook::collision_shape_cook( bool static_object ):
-	resources::translate_query_cook			( // dummy values
-		resources::single_animation_class,
+	resources::translate_query_cook			(
+		static_object ? resources::collision_bt_shape_class_static : resources::collision_bt_shape_class_dynamic,
 		reuse_true,
-		use_resource_manager_thread_id
-	)
+		thread_id_unset,
+		flag_last
+	),
+	m_static_object	( static_object )
 {
-	// FUNCTION BODY
-	// <0x72d2e5>|0x000|0x000:'29'
-	// ******
+	register_cook( this );	// <0x72d2e5>|0x000|0x000:'29'
 }
 
 // STATE[STUB]
@@ -273,10 +273,8 @@ void collision_shape_cook::on_collision_sources_loaded( resources::queries_resul
 // STATE[STUB]
 void collision_shape_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY
-
-	// <0x72d261>|0x000|0x000:'229'
-	// ******
+	// sushi@NOTE: ASSERT( resource )
+	VOSTOK_DELETE_IMPL( g_ph_allocator, resource ); // <0x72d261>|0x000|0x000:'229'
 }
 
 // STATE[STUB]

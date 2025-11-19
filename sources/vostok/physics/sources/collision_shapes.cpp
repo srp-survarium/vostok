@@ -43,7 +43,7 @@ btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 {
 }
 
-// STATE[STUB]
+// STATE[80%|DONE]: LTCG for unmanaged resource
 bt_collision_shape::bt_collision_shape( btCollisionShape* sh ):
 	m_tri_face_data		( NULL ),
 	m_shapes_face_data	( NULL ),
@@ -52,7 +52,7 @@ bt_collision_shape::bt_collision_shape( btCollisionShape* sh ):
 	sh->setUserPointer( this );	// <0x72c4e3>|0x000|0x000:'48'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bt_collision_shape::~bt_collision_shape( )
 {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, m_shapes_face_data );	// <0x72c459>|0x000|0x000:'53'
@@ -60,7 +60,7 @@ bt_collision_shape::~bt_collision_shape( )
 	destroy_bt_shape( m_bt_shape );								// <0x72c49d>|0x044|0x022:'55'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_index )
 {
 	if ( is_shape_index )						// <0x72c230>|0x000|0x000:'60'
@@ -98,7 +98,7 @@ void destroy_bt_shape( btCollisionShape* sh )
 	VOSTOK_DELETE_IMPL( g_ph_allocator, sh );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void destroy_shape( bt_collision_shape* shape )
 {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, shape );	// <0x72c201>|0x000|0x000:'115'

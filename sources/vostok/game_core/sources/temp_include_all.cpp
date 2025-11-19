@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "temp_include_all.h"
 
+#include <vostok/physics/sources/bullet_include.h>
+
 #include "../../collision/sources/loose_oct_tree.h"
 
 #include <vostok/ai/npc_statistics.h>
@@ -28,6 +30,8 @@
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
+
+
 
 namespace vostok
 {
@@ -242,14 +246,18 @@ namespace vostok
 			configs::binary_config_value config = configs::binary_config_value();
 			physics::geometries_type geometries( NULL, 10 );
 			physics::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
+
+			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
 		}
 
 		{
 			configs::binary_config_value config = configs::binary_config_value();
+			animation::skeleton_ptr skeleton_ptr( NULL );
 			// physics::calculate_bt_hit_target_size( config );
 
 			// calculate_bt_animated_body_size_from_hit_targets_config
 			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
+			physics::new_animated_bt_hit_model( config, skeleton_ptr, NULL );
 		}
 
 		{
@@ -261,6 +269,7 @@ namespace vostok
 			// void						destroy_animated_rigid_body	( bt_animated_rigid_body* body, memory::base_allocator* allocator );
 			physics::destroy_animated_rigid_body( NULL, NULL );
 		}
+
 	}
 
 }
