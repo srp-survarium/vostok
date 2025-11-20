@@ -6,6 +6,9 @@ If you got close in matching, but the loads of vectors are out of order, this mo
 
 ### Overview
 
+`btVector3::lerp` vs `btVector3::setInterpolate3` - The second one builds in-place and was used by VG.
+Their impl is also slightly different, so you can figure out which one is used based on that also.
+
 
 ### Modules
 * animated_model_instance_cook.cpp

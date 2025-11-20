@@ -488,17 +488,13 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	// ******
 }
 
-// STATE[91.55%|PARTIAL]: Failed to match this further.
-// I didn't compare the assembly yet and matched source code based on the logic in IDA decomp.
-// And the general logic so far seems correct.
-// I wonder:
-// * Why `convexSweepTest` passes `s_cc_max_allowed_penetration_value` only once.
-// * There were 44 commented out lines, possibly with some future logic`.
+// STATE[91.55%|PARTIAL]: Failed to match this further. See comments as to why.
+// * There were 44 commented out lines, possibly with some future logic.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
 	BT_PROFILE("step_down");
 
-	btTransform start; // btTransform start = btTransform( btMatrix3x3::getIdentity( ), m_current_pos );
+	btTransform start;
 	start.setIdentity( );
 	start.setOrigin( m_current_pos );
 
@@ -507,7 +503,7 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 		step_height = s_step_height;
 
 	btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
-	btTransform finish; // btTransform finish = btTransform( btMatrix3x3::getIdentity( ), finish_pos );
+	btTransform finish;
 	finish.setIdentity( );
 	finish.setOrigin( finish_pos );
 
@@ -525,12 +521,14 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 
 	if ( callback.m_closestHitFraction < 1.0f )
 	{
-		btTransform worldTransformInv = m_ghost_object->getWorldTransform( ).inverse( );  // Seems like the transform here is not needed. Since `ghost_object` isn't supposed to rotate anyway.
+		// sushi@NOTE: Even though target has it, seems like the transform here is not needed in general,
+		// since `ghost_object` isn't supposed to rotate anyway. So the same y coordinates can be used.
+		btTransform worldTransformInv = m_ghost_object->getWorldTransform( ).inverse( );
 		btVector3 hitPointLocal = worldTransformInv * callback.m_hitPointWorld;
 
 		if ( hitPointLocal.dot( m_up_vector ) <= s_step_height )
 		{
-			m_current_pos.setInterpolate3( start.getOrigin( ), finish.getOrigin( ), callback.m_closestHitFraction ); // There is also `lerp` method, which has different impl, but does the same thing. Using it will construct a temporary vector though.
+			m_current_pos.setInterpolate3( start.getOrigin( ), finish.getOrigin( ), callback.m_closestHitFraction );
 			m_vertical_velocity = 0.0f;
 			m_jumping = false;
 			m_on_steep_slope = false;
