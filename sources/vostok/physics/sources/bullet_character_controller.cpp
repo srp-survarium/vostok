@@ -275,7 +275,7 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
-// STATE[84%|STUB]
+// STATE[84%|STUB] TODO NEXT (document why matches do not work)
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration"); // <0x58506d>|0x000|0x000:'429'
@@ -397,7 +397,7 @@ float bullet_character_controller::recover_from_penetration( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB] TODO NEXT
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
 	float radius = m_current_shape_dim.x;
@@ -420,7 +420,7 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 	m_current_step_offset = pos_up_correction.y( );
 }
 
-// STATE[STUB]
+// STATE[STUB] TODO NEXT
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
 	BT_PROFILE("step_forward_and_strafe");
@@ -488,130 +488,121 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	// ******
 }
 
-// STATE[STUB]
+// STATE[91.55%|PARTIAL]: Failed to match this further.
+// I didn't compare the assembly yet and matched source code based on the logic in IDA decomp.
+// And the general logic so far seems correct.
+// I wonder:
+// * Why `convexSweepTest` passes `s_cc_max_allowed_penetration_value` only once.
+// * There were 44 commented out lines, possibly with some future logic`.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
-	// LOCALS
-	// character_move_test_callback callback
-	// btTransform 					start
-	// btTransform 					finish
-	// ******
-
-	// CALL SITE INFO
-	// <0x5861dc> -> float <unknown>() const
-	// ******
-
 	BT_PROFILE("step_down");
 
-	btTransform start( btMatrix3x3::getIdentity( ), m_current_pos );
-	float step_height = m_vertical_velocity >= 0 ? 0.0f : - m_vertical_velocity * dt;
+	btTransform start; // btTransform start = btTransform( btMatrix3x3::getIdentity( ), m_current_pos );
+	start.setIdentity( );
+	start.setOrigin( m_current_pos );
+
+	float step_height = m_vertical_velocity >= 0 ? 0.0f : - m_vertical_velocity * dt; // This is is reversed in target
 	if ( s_step_height > step_height && m_was_on_ground )
 		step_height = s_step_height;
 
+	btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
+	btTransform finish; // btTransform finish = btTransform( btMatrix3x3::getIdentity( ), finish_pos );
+	finish.setIdentity( );
+	finish.setOrigin( finish_pos );
 
 	character_move_test_callback callback( m_ghost_object, m_up_vector, m_max_slope_angle_cos );
+	callback.m_collisionFilterGroup = m_collision_filter_group;
+	callback.m_collisionFilterMask = m_collision_filter_mask;
 
-	btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
-	btTransform end( btMatrix3x3::getIdentity( ), finish_pos );
-	m_collision_world->convexSweepTest( &m_shape, start, end, callback );
+	if ( m_useGhostObjectSweepTest )
+	{
+		m_ghost_object->convexSweepTest( &m_shape, start, finish, callback, s_cc_max_allowed_penetration_value );
+	} else
+	{
+		m_collision_world->convexSweepTest( &m_shape, start, finish, callback, s_cc_max_allowed_penetration_value );
+	}
+
+	if ( callback.m_closestHitFraction < 1.0f )
+	{
+		btTransform worldTransformInv = m_ghost_object->getWorldTransform( ).inverse( );  // Seems like the transform here is not needed. Since `ghost_object` isn't supposed to rotate anyway.
+		btVector3 hitPointLocal = worldTransformInv * callback.m_hitPointWorld;
+
+		if ( hitPointLocal.dot( m_up_vector ) <= s_step_height )
+		{
+			m_current_pos.setInterpolate3( start.getOrigin( ), finish.getOrigin( ), callback.m_closestHitFraction ); // There is also `lerp` method, which has different impl, but does the same thing. Using it will construct a temporary vector though.
+			m_vertical_velocity = 0.0f;
+			m_jumping = false;
+			m_on_steep_slope = false;
+		} else
+		{
+			LOG_INFO( "dddd" );
+
+			// sushi@NOTE: There is no code here. Which means the player will be stuck in air when the fall is too high?
+		}
+	} else
+		m_current_pos = finish.getOrigin( );
+
+	m_current_pos += pos_up_correction;
+	m_current_pos.setY( m_current_pos.getY( ) + m_shape.getMargin( ) );
+	setup_crouch_state( m_in_crouch );
 
 	// FUNCTION BODY
-	// <0x585cdc>|0x000|0x000:'627'
+	// <0x585cdc>|0x000|0x000:'627' BT_PROFILE("step_down");
 	// <1>
 	// <2>
-	// <0x585d1c>|0x040|0x040:'630' xor, missed
-	// <0x585d1f>|0x043|0x003:'631'
+	// <0x585d1c>|0x040|0x040:'630' <xor>
+	// <0x585d1f>|0x043|0x003:'631' btTransform start( btMatrix3x3::getIdentity( ), m_current_pos );
 	// <1>
-	// <0x585d43>|0x067|0x024:'633'
+	// <0x585d43>|0x067|0x024:'633' float step_height = m_vertical_velocity >= 0 ? 0.0f : - m_vertical_velocity * dt;
 	// <1>
-	// <0x585dcd>|0x0f1|0x08a:'635'
-	// <0x585de3>|0x107|0x016:'636'
-	// <1>
-	// <2>
-	// <3>
-	// <0x585de6>|0x10a|0x003:'640'
+	// <0x585dcd>|0x0f1|0x08a:'635' if ( s_step_height > step_height && m_was_on_ground )
+	// <0x585de3>|0x107|0x016:'636'		step_height = s_step_height;
 	// <1>
 	// <2>
 	// <3>
-	// <0x585de9>|0x10d|0x003:'644'
+	// <0x585de6>|0x10a|0x003:'640' btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
 	// <1>
 	// <2>
 	// <3>
-	// <0x585eca>|0x1ee|0x0e1:'648'
-	// <1>
-	// <0x585eef>|0x213|0x025:'650'
-	// <0x585f19>|0x23d|0x02a:'651'
-	// <1>
-	// <0x585f1b>|0x23f|0x002:'653'
+	// <0x585de9>|0x10d|0x003:'644' character_move_test_callback callback( m_ghost_object, m_up_vector, m_max_slope_angle_cos );
 	// <1>
 	// <2>
-	// <0x585f44>|0x268|0x029:'656'
+	// <3>
+	// <0x585eca>|0x1ee|0x0e1:'648' if ( m_useGhostObjectSweepTest )
+	// <1>							{
+	// <0x585eef>|0x213|0x025:'650'		m_ghost_object->convexSweepTest( m_shape, start, end, callback );
+	// <0x585f19>|0x23d|0x02a:'651' } else
 	// <1>
-	// <0x585f5a>|0x27e|0x016:'658'
+	// <0x585f1b>|0x23f|0x002:'653'		m_collision_world->convexSweepTest( m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
+	// <1>
+	// <2>
+	// <0x585f44>|0x268|0x029:'656' if ( callback.m_closestHitFraction < 1.0f )
+	// <1>							{
+	// <0x585f5a>|0x27e|0x016:'658'		btTransform worldTransform = m_ghost_object->getWorldTransform( ).inverse( );
 	// <0x585f6c>|0x290|0x012:'659'
 	// <1>
-	// <0x585fc0>|0x2e4|0x054:'661'
+	// <0x585fc0>|0x2e4|0x054:'661'		if ( hitPointWorld.dot( s_step_height ) < s_step_height )
+	// <1>								{
+	// <0x586039>|0x35d|0x079:'663'			m_current_pos = ( 1.0f - callback.m_closestHitFraction ) * start.getOrigin( ) - end.getOrigin( );
+	// <0x5860ae>|0x3d2|0x075:'664'			m_vertical_velocity = 0.0;
+	// <0x5860c2>|0x3e6|0x014:'665'			m_jumping = 0;
+	// <0x5860c9>|0x3ed|0x007:'666'			m_on_steep_slope = 0;
+	// <0x5860d0>|0x3f4|0x007:'667'		} else
 	// <1>
-	// <0x586039>|0x35d|0x079:'663'
-	// <0x5860ae>|0x3d2|0x075:'664'
-	// <0x5860c2>|0x3e6|0x014:'665'
-	// <0x5860c9>|0x3ed|0x007:'666'
-	// <0x5860d0>|0x3f4|0x007:'667'
-	// <1>
-	// <0x5860d5>|0x3f9|0x005:'669'
+	// <0x5860d5>|0x3f9|0x005:'669'			LOG_INFO( "dddd" );
 	// <1>
 	// <2>
 	// <0x586188>|0x4ac|0x0b3:'672'
 	// <1>
-	// <2>
-	// <0x58618d>|0x4b1|0x005:'675'
+	// <2>							} else
+	// <0x58618d>|0x4b1|0x005:'675'		m_current_pos = end.getOrigin( );
 	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// <42>
-	// <43>
+
 	// <44>
-	// <0x5861a9>|0x4cd|0x01c:'720'
-	// <0x5861d5>|0x4f9|0x02c:'721'
-	// <0x5861e1>|0x505|0x00c:'722'
+	// <0x5861a9>|0x4cd|0x01c:'720' m_current_pos += pos_up_correction;
+	// <0x5861d5>|0x4f9|0x02c:'721' m_current_pos.getY( ) += m_shape.getMargin( );
+	// <0x5861e1>|0x505|0x00c:'722' setup_crouch_state( m_in_crouch );
 	// <1>
 	// ******
 }
