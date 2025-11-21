@@ -59,7 +59,7 @@ btVector3 perpindicularComponent( btVector3 const& direction, btVector3 const& n
 	return direction - normal.dot( direction ) * normal;	// <0x584a66>|0x000|0x000:'92'
 }
 
-// STATE[STUB]: sushi@NOTE: This function is used in `survarium` module.
+// STATE[100%|DONE]: sushi@NOTE: This function is used in `survarium` module.
 void setup_game_material_groups( u16 const* game_material_groups, u16 game_materials_count )
 {
 	g_game_material_groups = game_material_groups;
@@ -68,7 +68,7 @@ void setup_game_material_groups( u16 const* game_material_groups, u16 game_mater
 
 class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
 public:
-	// STATE[86%|STUB]
+	// STATE[100%|DONE]
 						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ) :
 							ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
 							m_up_vector					( up_vector ),
@@ -149,7 +149,7 @@ bullet_character_controller::bullet_character_controller(
 	setup_crouch_state( false ); // <0x584e4b>|0x000|0x000:'310'
 }
 
-// STATE[STUB]
+// STATE[83%|DONE]: LTCG for `this` in destructor.
 bullet_character_controller::~bullet_character_controller( )
 {
 }
@@ -161,8 +161,8 @@ bullet_character_controller::~bullet_character_controller( )
 btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	btVector3 const&	hitNormal,
 	btVector3 const&	target_pos,
-	float				tangentMag, // definitely unused
-	float				normalMag   // possibly used for compiled out check, see original bullet impl
+	float				tangentMag, // unused
+	float				normalMag
 )
 {
 	BT_PROFILE("updateTargetPositionBasedOnCollision"); // <0x585470>|0x000|0x000:'319'
@@ -175,17 +175,19 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	{
 		movementDirection.normalize( ); // sushi@NOTE: As far as I understand, normalizing movement gives more precise math, but isn't required
 
-		btVector3 reflectDir = computeReflectionDirection( movementDirection, hitNormal );
+		btVector3 reflectDir = computeReflectionDirection( movementDirection, hitNormal ); // reflection here is not needed
 		reflectDir.normalize( );
 
-		btVector3 newMovementDirection = perpindicularComponent( reflectDir, hitNormal );
+		btVector3 perpindicularDir  = perpindicularComponent( reflectDir, hitNormal );
+
+		// if (normalMag != 0.0) // sushi@NOTE: While LTCG should get rid of it, this reduces the match
+		{
+			// btVector3 perpComponent = perpindicularDir * btScalar ( normalMag * movement_length );
+			result +=  perpindicularDir * btScalar ( normalMag * movement_length );
+		}
 
 		// <0x585677>|0x207|0x01e:'343' // sushi@NOTE: Based on the `vostok_structure` this makes more sense, but when I do that assembly breaks in other places.
-		// newMovementDirection *= movement_length;
-		// result += newMovementDirection;
-		result += newMovementDirection * movement_length;
 	}
-
 	return result;
 }
 
@@ -244,7 +246,7 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
-// STATE[84%|STUB] TODO NEXT (document why matches do not work)
+// STATE[96.92%|PARTIAL]
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration"); // <0x58506d>|0x000|0x000:'429'
@@ -257,12 +259,12 @@ float bullet_character_controller::recover_from_penetration( )
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
 	float maxPen = 0.0f;
-	float shape_y = m_shape_offset.y( );
+	float shape_y = math::abs( m_shape_offset.y( ) );
 	btManifoldArray manifold_array;
 
 	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
 	{
-		manifold_array.clear( );
+		manifold_array.resize( 0 );
 		btBroadphasePair& pair = m_ghost_object->getOverlappingPairCache( )->getOverlappingPairArray( )[i];
 
 		if ( pair.m_algorithm )
@@ -272,23 +274,26 @@ float bullet_character_controller::recover_from_penetration( )
 		{
 			btPersistentManifold* manifold = manifold_array[j];
 			bool isFirstBody = manifold->getBody0( ) == m_ghost_object;
-			float normalSign = isFirstBody ? -1.0f : 1.0f;
+			float directionSign = isFirstBody ? -1.0f : 1.0f;
 
 			for ( s32 k = 0 ; k < manifold->getNumContacts( ) ; ++k )
 			{
 				btManifoldPoint& contact = manifold->getContactPoint( k );
 
-				if ( contact.getDistance( ) < 0.0f )
+				btScalar dist = contact.getDistance( );
+
+				if ( dist < 0.0f )
 				{
-					if ( maxPen > contact.getDistance( ) )
+					if ( dist < maxPen )
 					{
-						maxPen = contact.getDistance( );
+						maxPen = dist;
 						btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
 
-						float weight = math::pow( ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y, 3 );
+                        float pos_on_shape_y = ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y;
+						float weight = math::pow( pos_on_shape_y, 3 ); // on decomp.me the fix was to manually unroll `pow`. Sadly it didn't help here
 
-						btVector3 displacement = contact.m_normalWorldOnB * normalSign * contact.getDistance( );
-						btVector3 weighedDisplacement = btVector3( displacement.x( ) * weight, displacement.y( ) * ( 1 - weight ) , displacement.z( ) * weight );
+						btVector3 displacement = contact.m_normalWorldOnB * directionSign * dist;
+						btVector3 weighedDisplacement = displacement * btVector3( weight, 1.0f - weight, weight );
 						m_current_pos += weighedDisplacement;
 					}
 				}
@@ -296,85 +301,32 @@ float bullet_character_controller::recover_from_penetration( )
 		}
 	}
 
-	btTransform world = m_ghost_object->getWorldTransform( );
-	world.setOrigin( m_current_pos );
-	m_ghost_object->setWorldTransform( world );
+	btTransform newTrans = m_ghost_object->getWorldTransform( );
+	newTrans.setOrigin( m_current_pos );
+	m_ghost_object->setWorldTransform( newTrans );
 	return math::abs( maxPen );
-
-	// FUNCTION BODY
-	// <0x58506d>|0x000|0x000:'429' BT_PROFILE("recover_from_penetration")
-	// <1>
-	// <2>
-	// <3>
-	// <0x5850a6>|0x039|0x039:'433' m_collision_world->getDispatcher( )->dispatchAllCollisionPairs(
-	// <1>
-	// <0x5850c5>|0x058|0x01f:'435' m_ghost_object->getWorldTransform( ).getOrigin( );
-	// <1>
-	// <2>
-	// <0x5850df>|0x072|0x01a:'438' float maxPen = 0.0f;
-	// <1>
-	// <0x5850e8>|0x07b|0x009:'440' float shape_y = m_shape_offset.y( );
-	// <1>
-	// <0x585108>|0x09b|0x020:'442' for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
-	// <1>
-	// <0x585131>|0x0c4|0x029:'444' manifold_array.clear( )
-	// <1>
-	// <0x585192>|0x125|0x061:'446' btBroadphasePair& pair = m_ghost_ob
-	// <1>
-	// <0x5851b0>|0x143|0x01e:'448' if ( pair.m_algorithm )
-	// <0x5851b5>|0x148|0x005:'449' pair.m_algorithm->getAllContactManifolds( manifold_array );
-	// <1>
-	// <2>
-	// <0x5851c6>|0x159|0x011:'452' for ( s32 j = 0 ; j < manifold_a
-	// <1>
-	// <0x5851f0>|0x183|0x02a:'454' 	btPersistentManifold* manifold = manifold_array[j];
-	// <0x5851f7>|0x18a|0x007:'455' void* body0 = manifold->getB
-	// <0x585206>|0x199|0x00f:'456' float sign = body0 == m_
-	// <1>
-	// <0x585217>|0x1aa|0x011:'458' for ( s32 k = 0 ; k < manifold->
-	// <1>
-	// <2>
-	// <3>
-	// <0x585230>|0x1c3|0x019:'462' ????
-	// <1>
-	// <0x585235>|0x1c8|0x005:'464' if ( contact.getDistance( ) < 0.0f && maxPen > contact.getDistance( ) )
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x585241>|0x1d4|0x00c:'469' ????? maxPen > contact.getDistance( ) )
-	// <1>
-	// <0x585250>|0x1e3|0x00f:'471' maxPen = curPen;
-	// <1>
-	// <0x585256>|0x1e9|0x006:'473' btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPoint
-	// <1>
-	// <2>
-	// <3>
-	// <0x585264>|0x1f7|0x00e:'477' mov
-	// <0x5852bd>|0x250|0x059:'478' mul
-	// <1>
-	// <0x5852dc>|0x26f|0x01f:'480' m_current_pos += btVector3( displaceme
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x58535a>|0x2ed|0x07e:'486'
-	// <0x58537e>|0x311|0x024:'487'
-	// <0x585388>|0x31b|0x00a:'488'
-	// <0x58538d>|0x320|0x005:'489'
-	// ******
 }
 
-// STATE[92.30%|PARTIAL]
+// STATE[100%|DONE]
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
-    float diameter = m_current_shape_dim.x;
-	float full_height = m_current_shape_dim.y;
+	float new_cylinder_height = math::max( 0.0f, ( m_current_shape_dim.y - m_current_shape_dim.x ) - s_step_height );
 
-	float new_cylinder_height = ( full_height - diameter ) - s_step_height;
-	new_cylinder_height = math::max( 0.0f, new_cylinder_height ); // In target this does a mov into a different register, resulting in multiple useless instructions.
+	float new_full_height = m_current_shape_dim.x + new_cylinder_height;
+	setup_shape_dim( float2( m_current_shape_dim.x, new_full_height ) );
 
+	pos_up_correction.setValue( 0.0f, ( m_current_shape_dim.y - new_full_height ) * 0.5f, 0.0f );
+
+    m_current_pos += pos_up_correction;
+	m_current_step_offset = pos_up_correction.y( );
+
+	/* This one is way easier to read, but doesn't match exactly
+
+	// float diameter = m_current_shape_dim.x;
+	// float full_height = m_current_shape_dim.y;
+	// float new_cylinder_height = ( full_height - diameter ) - s_step_height;
+	// new_cylinder_height = math::max( 0.0f, new_cylinder_height );
+	
 	float new_full_height = diameter + new_cylinder_height;
 	setup_shape_dim( float2( diameter, new_full_height ) );
 
@@ -382,20 +334,10 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 
     m_current_pos += pos_up_correction;
 	m_current_step_offset = pos_up_correction.y( );
+	*/
 }
 
-// STATE[73.58%|STUB] TODO NEXT
-/*
-	* Take walkMove
-	* Compute a target_pos = current_pos + walkMove
-	* Sweep the character capsule (convexSweepTest) from current_pos to target_pos
-	* If there’s a hit, adjust the target using updateTargetPositionBasedOnCollision
-	* Possibly repeat the sweep a few times, shortening the remaining motion
-Stop when:
-	* movement is exhausted, or
-	* the new direction is too different from m_normalizedDirection, or
-	* iteration limit is reached
-*/
+// STATE[98.71%|DONE]: LTCG for s_cc_max_allowed_penetration_value
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
 	BT_PROFILE("step_forward_and_strafe");
@@ -409,19 +351,22 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	btScalar fraction = 1.0;
 	btScalar distance2 = (m_current_pos-target_pos).length2();
 
+	if ( distance2 < FLT_EPSILON ) // check is done in a different order
+		return;
+
 	int maxIter = 10;
 
 	while (fraction > btScalar(0.01) && maxIter-- > 0)
 	{
 		start.setOrigin (m_current_pos);
 		end.setOrigin (target_pos);
-		btVector3 sweepDirNegative(m_current_pos - target_pos); // m_up_vector
+		btVector3 sweepDirNegative(m_current_pos - target_pos);
 
-		character_move_test_callback callback( m_ghost_object, m_up_vector, 0.0 );
+		character_move_test_callback callback( m_ghost_object, sweepDirNegative, 0.0 );
 		callback.m_collisionFilterGroup = m_collision_filter_group;
 		callback.m_collisionFilterMask = m_collision_filter_mask;
 
-		if (m_useGhostObjectSweepTest)
+		if ( m_useGhostObjectSweepTest )
 		{
 			m_ghost_object->convexSweepTest (&m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
 		} else
@@ -431,13 +376,13 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 
 		fraction -= callback.m_closestHitFraction;
 
-		if (callback.hasHit())
+		if ( callback.hasHit( ) )
 		{
 			// we moved only a fraction
 			btScalar hitDistance;
 			hitDistance = (callback.m_hitPointWorld - m_current_pos).length();
 
-			updateTargetPositionBasedOnCollision (callback.m_hitNormalWorld, target_pos, 0.0f, 0.0f);
+			target_pos = updateTargetPositionBasedOnCollision( callback.m_hitNormalWorld, target_pos );
 			btVector3 currentDir = target_pos - m_current_pos;
 			distance2 = currentDir.length2();
 			if (distance2 > SIMD_EPSILON)
@@ -461,8 +406,9 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	}
 }
 
-// STATE[91.55%|PARTIAL]: Failed to match this further. See comments as to why.
+// STATE[93.50%|PARTIAL]: Failed to match this further. See comments as to why.
 // * There were 44 commented out lines, possibly with some future logic.
+// * btKinematicCharacterController has a slightly different order for transforms and `finish_pos`.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
 	BT_PROFILE("step_down");
@@ -471,7 +417,7 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	start.setIdentity( );
 	start.setOrigin( m_current_pos );
 
-	float step_height = m_vertical_velocity >= 0 ? 0.0f : - m_vertical_velocity * dt; // This is is reversed in target
+	float step_height = m_vertical_velocity < 0.f ? -m_vertical_velocity * dt : 0.f;
 	if ( s_step_height > step_height && m_was_on_ground )
 		step_height = s_step_height;
 
@@ -492,7 +438,7 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 		m_collision_world->convexSweepTest( &m_shape, start, finish, callback, s_cc_max_allowed_penetration_value );
 	}
 
-	if ( callback.m_closestHitFraction < 1.0f )
+	if ( callback.hasHit( ) )
 	{
 		// sushi@NOTE: Even though target has it, seems like the transform here is not needed in general,
 		// since `ghost_object` isn't supposed to rotate anyway. So the same y coordinates can be used.

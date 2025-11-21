@@ -77,8 +77,8 @@ private:
 			btVector3						updateTargetPositionBasedOnCollision(
 												btVector3 const&	hitNormal,
 												btVector3 const&	target_pos,
-												float				__formal,
-												float				normalMag
+												float				tangentMag = 0.0f,
+												float				normalMag = 1.0f
 											);
 	// All of those inline functions without source code are most likely used in `player_step`.
 	inline	bool							in_crouch						( ) const { return m_in_crouch; }
