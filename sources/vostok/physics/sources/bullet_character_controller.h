@@ -22,6 +22,8 @@ void* character_move_test_callback::`scalar deleting destructor'( )
 }
 */
 
+// sushi@NOTE: Based on `btKinematicCharacterController`.
+// Can be used to compare assembly.
 class bullet_character_controller : btActionInterface, boost::noncopyable {
 public:
 											bullet_character_controller		(
@@ -78,7 +80,7 @@ private:
 												float				__formal,
 												float				normalMag
 											);
-
+	// All of those inline functions without source code are most likely used in `player_step`.
 	inline	bool							in_crouch						( ) const { return m_in_crouch; }
 	inline	void							prevent_step_bouncing			( ) { /* no source */ }
 	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ }

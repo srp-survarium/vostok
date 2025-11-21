@@ -75,53 +75,27 @@ public:
 							m_self						( self ),
 							m_minSlopeDot				( minSlopeDot ) {}
 
-	// STATE[71%|STUB]
-	// sushi@NOTE: Understand this a bit better
+	// STATE[100%|DONE]
 	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 	{
 		if ( convexResult.m_hitCollisionObject == m_self )
-			return 2.0f;
+			return 2.0f; // sushi@NOTE: In bullet this was 1.0f. Why?
 
-		btVector3 hit_normal = normalInWorldSpace
-			? convexResult.m_hitNormalLocal
-			: convexResult.m_hitCollisionObject->getWorldTransform( ) * convexResult.m_hitNormalLocal;
+		btVector3 hitNormalWorld;
+		if (normalInWorldSpace)
+		{
+			hitNormalWorld = convexResult.m_hitNormalLocal;
+		} else
+		{	// sushi@NOTE: I did the transform with origin as well. Does this matter? Understand this better
+			///need to transform normal into worldspace
+			hitNormalWorld = convexResult.m_hitCollisionObject->getWorldTransform().getBasis()*convexResult.m_hitNormalLocal;
+		}
 
-		if ( m_minSlopeDot <= m_up_vector.dot( hit_normal ) )
-			return btCollisionWorld::ClosestConvexResultCallback::addSingleResult( convexResult, normalInWorldSpace );
-		else
-			return 0.0f;
-
-		// FUNCTION BODY
-		// <0xde4c6>|0x000|0x000:'238'
-		// <0xde4d6>|0x010|0x010:'239'
-		// <1>
-		// <2>
-		// <0xde4e3>|0x01d|0x00d:'242'
-		// <1>
-		// <0xde4ea>|0x024|0x007:'244'
-		// <0xde4fa>|0x034|0x010:'245'
-		// <1>
-		// <2>
-		// <0xde4ff>|0x039|0x005:'248'
-		// <1>
-		// <2>
-		// <3>
-		// <4>
-		// <5>
-		// <6>
-		// <7>
-		// <8>
-		// <9>
-		// <10>
-		// <11>
-		// <12>
-		// <13>
-		// <0xde5a3>|0x0dd|0x0a4:'262'
-		// <0xde5ce>|0x108|0x02b:'263'
-		// <0xde5dc>|0x116|0x00e:'264'
-		// <1>
-		// <0xde5e5>|0x11f|0x009:'266'
-		// ******
+		btScalar dotUp = m_up_vector.dot(hitNormalWorld);
+		if (dotUp < m_minSlopeDot) {
+			return btScalar(0.0);  // sushi@NOTE: In bullet this was 1.0f. Why?
+		}
+		return ClosestConvexResultCallback::addSingleResult (convexResult, normalInWorldSpace);
 	}
 
 
@@ -135,7 +109,7 @@ private:
 
 STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
-// STATE[STUB]
+// STATE[91.29%|DONE]: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
 bullet_character_controller::bullet_character_controller(
 	btPairCachingGhostObject*	ghost_object,
 	float2 const&				stand_shape_dim,
@@ -159,7 +133,7 @@ bullet_character_controller::bullet_character_controller(
 	m_max_fall_speed			( 55.0f ),
 	m_jump_speed				( 10.0f ),
 	m_in_crouch					( false ),
-	m_collision_filter_group	( 4 ), // collisionFilterGroup ),	// LTCG'ed to 4
+	m_collision_filter_group	( 4 ), // collisionFilterGroup ),	// LTCG'ed to 4 sushi@TODO, recover
 	m_collision_filter_mask		( 2 ), // collisionFilterMask ),	// LTCG'ed to 2
 	m_max_slope_in_radians		( math::pi_d3 ),
 	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
@@ -233,7 +207,7 @@ void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld
 	m_walk_vector.setZero( );																					// <0x58674e>|0x355|0x0f9:'369'
 }
 
-// STATE[STUB]
+// STATE[99%|DONE]: LTCG for `step_forward_and_strafe`. Might get fixed after it is implemented properly.
 void bullet_character_controller::player_step( float dt )
 {
 	// static bool use_shape_size = <0x10000>;
@@ -248,12 +222,7 @@ void bullet_character_controller::player_step( float dt )
 	else
 	{  // sushi@NOTE: Why are we always falling
 		float fall_speed = m_vertical_velocity - m_gravity * dt;
-		if ( -m_max_fall_speed >= fall_speed )
-			m_vertical_velocity = -m_max_fall_speed;
-		else if ( m_jump_speed < fall_speed )
-			m_vertical_velocity = m_jump_speed;
-		else
-			m_vertical_velocity = fall_speed;
+		m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
 	}
 
 	btVector3 step_up_correction;
@@ -397,95 +366,99 @@ float bullet_character_controller::recover_from_penetration( )
 	// ******
 }
 
-// STATE[STUB] TODO NEXT
+// STATE[92.30%|PARTIAL]
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
-	float radius = m_current_shape_dim.x;
-	float height = m_current_shape_dim.y;
+    float diameter = m_current_shape_dim.x;
+	float full_height = m_current_shape_dim.y;
 
-    float step_height = ( height - radius ) - s_step_height;
-    if ( step_height < 0.0f )
-        step_height = 0.0f;
+	float new_cylinder_height = ( full_height - diameter ) - s_step_height;
+	new_cylinder_height = math::max( 0.0f, new_cylinder_height ); // In target this does a mov into a different register, resulting in multiple useless instructions.
 
-	// if ( change_shape_size )
-	setup_shape_dim( float2( radius, radius + step_height ) );
+	float new_full_height = diameter + new_cylinder_height;
+	setup_shape_dim( float2( diameter, new_full_height ) );
 
+	pos_up_correction.setValue( 0.0f,  ( full_height - new_full_height ) * 0.5f, 0.0f );
 
-	pos_up_correction = btVector3(
-		0.0f,
-		( height - ( radius + step_height ) ) * 0.5f,
-		0.0f
-	);
-	m_current_pos += pos_up_correction;
+    m_current_pos += pos_up_correction;
 	m_current_step_offset = pos_up_correction.y( );
 }
 
-// STATE[STUB] TODO NEXT
+// STATE[73.58%|STUB] TODO NEXT
+/*
+	* Take walkMove
+	* Compute a target_pos = current_pos + walkMove
+	* Sweep the character capsule (convexSweepTest) from current_pos to target_pos
+	* If there’s a hit, adjust the target using updateTargetPositionBasedOnCollision
+	* Possibly repeat the sweep a few times, shortening the remaining motion
+Stop when:
+	* movement is exhausted, or
+	* the new direction is too different from m_normalizedDirection, or
+	* iteration limit is reached
+*/
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
 	BT_PROFILE("step_forward_and_strafe");
 
+	btTransform start, end;
+	btVector3 target_pos = m_current_pos + walkMove;
 
-	updateTargetPositionBasedOnCollision( walkMove, walkMove, 10, 10 );
-	// LOCALS
-	// btVector3 					target_pos
-	// btTransform 					start
-	// btTransform 					end
-	// float 						fraction
-	// character_move_test_callback callback
-	// btVector3 					sweepDirNegative
-	// btVector3 					currentDir
-	// ******
+	start.setIdentity ();
+	end.setIdentity ();
 
-	// FUNCTION BODY
-	// <0x585786>|0x000|0x000:'553'
-	// <1>
-	// <2>
-	// <0x5857c7>|0x041|0x041:'556'
-	// <1>
-	// <0x5857ca>|0x044|0x003:'558'
-	// <1>
-	// <2>
-	// <3>
-	// <0x5857dc>|0x056|0x012:'562'
-	// <0x585852>|0x0cc|0x076:'563'
-	// <0x585940>|0x1ba|0x0ee:'564'
-	// <1>
-	// <0x585946>|0x1c0|0x006:'566'
-	// <1>
-	// <0x585962>|0x1dc|0x01c:'568'
-	// <1>
-	// <0x58596d>|0x1e7|0x00b:'570'
-	// <1>
-	// <2>
-	// <3>
-	// <0x585972>|0x1ec|0x005:'574'
-	// <1>
-	// <2>
-	// <3>
-	// <0x5859f1>|0x26b|0x07f:'578'
-	// <1>
-	// <0x585a18>|0x292|0x027:'580'
-	// <0x585a40>|0x2ba|0x028:'581'
-	// <1>
-	// <0x585a42>|0x2bc|0x002:'583'
-	// <1>
-	// <2>
-	// <0x585a71>|0x2eb|0x02f:'586'
-	// <1>
-	// <0x585a8a>|0x304|0x019:'588'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x585a9b>|0x315|0x011:'593'
-	// <0x585ac5>|0x33f|0x02a:'594'
-	// <0x585aec>|0x366|0x027:'595'
-	// <0x585b12>|0x38c|0x026:'596'
-	// <1>
-	// <0x585b27>|0x3a1|0x015:'598'
-	// <1>
-	// ******
+	btScalar fraction = 1.0;
+	btScalar distance2 = (m_current_pos-target_pos).length2();
+
+	int maxIter = 10;
+
+	while (fraction > btScalar(0.01) && maxIter-- > 0)
+	{
+		start.setOrigin (m_current_pos);
+		end.setOrigin (target_pos);
+		btVector3 sweepDirNegative(m_current_pos - target_pos); // m_up_vector
+
+		character_move_test_callback callback( m_ghost_object, m_up_vector, 0.0 );
+		callback.m_collisionFilterGroup = m_collision_filter_group;
+		callback.m_collisionFilterMask = m_collision_filter_mask;
+
+		if (m_useGhostObjectSweepTest)
+		{
+			m_ghost_object->convexSweepTest (&m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
+		} else
+		{
+			m_collision_world->convexSweepTest (&m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
+		}
+
+		fraction -= callback.m_closestHitFraction;
+
+		if (callback.hasHit())
+		{
+			// we moved only a fraction
+			btScalar hitDistance;
+			hitDistance = (callback.m_hitPointWorld - m_current_pos).length();
+
+			updateTargetPositionBasedOnCollision (callback.m_hitNormalWorld, target_pos, 0.0f, 0.0f);
+			btVector3 currentDir = target_pos - m_current_pos;
+			distance2 = currentDir.length2();
+			if (distance2 > SIMD_EPSILON)
+			{
+				currentDir.normalize();
+				/* See Quake2: "If velocity is against original velocity, stop ead to avoid tiny oscilations in sloping corners." */
+				if (currentDir.dot(m_normalizedDirection) <= btScalar(0.0))
+				{
+					break;
+				}
+			} else
+			{
+//				printf("currentDir: don't normalize a zero vector\n");
+				break;
+			}
+
+		} else {
+			// we moved whole way
+			m_current_pos = target_pos;
+		}
+	}
 }
 
 // STATE[91.55%|PARTIAL]: Failed to match this further. See comments as to why.
@@ -663,6 +636,8 @@ bool bullet_character_controller::on_ground( ) const
 }
 
 // STATE[100%|DONE]
+// x = capsule diameter
+// y = full capsule height
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 {
 	m_shape.setImplicitShapeDimensions(
