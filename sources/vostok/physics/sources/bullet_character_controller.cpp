@@ -13,17 +13,18 @@
 namespace vostok {
 namespace physics {
 
+static float s_step_height								= 0.6f;
+static console_commands::cc_float s_step_height_command						( "character_controller_step_height", s_step_height, 0.0f, 2.0f, true, console_commands::command_type_engine_internal );
+
+static float s_character_sliping_speed_multiplier_value = 20.0f;
+static console_commands::cc_float s_character_sliping_speed_multiplier_cc	( "cc_sliping_speed_multiplier", s_character_sliping_speed_multiplier_value, 0.01f, 100.0f, true, console_commands::command_type_engine_internal );
+
 static float s_cc_max_allowed_penetration_value			= 0.04f;
 static console_commands::cc_float s_cc_max_allowed_penetration_cc			( "cc_max_allowed_penetration", s_cc_max_allowed_penetration_value, 0.0f, 1.0f, false, console_commands::command_type_engine_internal );
 
 static bool  s_cc_prevent_step_bouncing_value			= true;
 static console_commands::cc_bool  s_cc_prevent_step_bouncing_cc				( "cc_prevent_step_bouncing", s_cc_prevent_step_bouncing_value, false, console_commands::command_type_engine_internal );
 
-static float s_character_sliping_speed_multiplier_value = 20.0f;
-static console_commands::cc_float s_character_sliping_speed_multiplier_cc	( "cc_sliping_speed_multiplier", s_character_sliping_speed_multiplier_value, 0.01f, 100.0f, true, console_commands::command_type_engine_internal );
-
-static float s_step_height								= 0.6f;
-static console_commands::cc_float s_step_height_command						( "character_controller_step_height", s_step_height, 0.0f, 2.0f, true, console_commands::command_type_engine_internal );
 
 u16 const*	g_game_material_groups;
 s32			g_game_materials_count;
