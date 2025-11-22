@@ -327,7 +327,7 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 	// float full_height = m_current_shape_dim.y;
 	// float new_cylinder_height = ( full_height - diameter ) - s_step_height;
 	// new_cylinder_height = math::max( 0.0f, new_cylinder_height );
-	
+
 	float new_full_height = diameter + new_cylinder_height;
 	setup_shape_dim( float2( diameter, new_full_height ) );
 

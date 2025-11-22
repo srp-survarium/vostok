@@ -15,9 +15,6 @@
 namespace vostok {
 namespace physics {
 
-class base_physics_object;
-
-
 /*
 // STATE[STUB]
 // void vostok::resources::resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>::~resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>()
@@ -26,7 +23,7 @@ resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base>:
 }
 */
 
-class bullet_physics_world : world, boost::noncopyable {
+class bullet_physics_world : public world, boost::noncopyable {
 public:
 											bullet_physics_world		( memory::base_allocator& allocator, engine& engine );
 
@@ -90,8 +87,8 @@ public:
 												u16						filter_mask
 											) override;
 
-	virtual	void							subscribe_on_contact		( base_physics_object* object, boost::function<void(base_physics_object *,base_physics_object *,float3 const &)>* callback ) override;
-	virtual	void							unsubscribe_from_contact	( base_physics_object* object, boost::function<void(base_physics_object *,base_physics_object *,float3 const &)>* callback ) override;
+	virtual	void							subscribe_on_contact		( base_physics_object* object, callback_type* callback ) override;
+	virtual	void							unsubscribe_from_contact	( base_physics_object* object, callback_type* callback ) override;
 
 
 	inline	memory::base_allocator&			allocator					( ) { return m_allocator; }
@@ -109,20 +106,11 @@ public:
 												float				__formal,
 												float4x4&			transform
 											);
+
+private:
 			void							notify_about_contact		( );
 
 
-	typedef std::multimap<
-		base_physics_object *,
-		boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)> *,
-		std::less<base_physics_object *>,
-		std::allocator<
-			std::pair<
-				base_physics_object * const,
-				boost::function<void __cdecl(base_physics_object *,base_physics_object *,float3 const &)>
-			*>
-		>
-	> callbacks_type;
 private:
 	/* 0x0000 */	/* world */
 	/* 0x0004 */	/* boost::noncopyable */
@@ -140,7 +128,6 @@ private:
 	/* 0x0058 */	float								m_last_frame_time;
 	/* 0x005c */	float								m_last_frame_delta;
 }; // class bullet_physics_world
-
 
 STATIC_SIZE_ASSERT(bullet_physics_world, 0x60);
 

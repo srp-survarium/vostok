@@ -19,6 +19,8 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/debug_renderer.h>
 
+#include <vostok/physics/api.h>
+#include <vostok/physics/engine.h>
 #include <vostok/physics/animated_rigid_body.h>
 #include <vostok/physics/ghost_object.h>
 #include <vostok/physics/collision_shapes.h>
@@ -35,6 +37,14 @@
 
 namespace vostok
 {
+	void use_physics_api()
+	{
+		physics::engine engine;
+		physics::create_world_bt( NULL, engine );
+		physics::destroy_world( NULL, NULL );
+		physics::set_memory_allocator( NULL );
+	}
+
 	void use_log()
 	{
 		LOG_WARNING("ERROR %d", 10);

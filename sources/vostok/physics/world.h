@@ -19,6 +19,7 @@ namespace physics {
 class bt_rigid_body_base;
 class bt_soft_body_rope;
 class bt_collision_shape;
+class base_physics_object;
 
 class bt_constraint {
 public:
@@ -31,11 +32,7 @@ private:
 	/* offset 0x000c */ bt_rigid_body_base*                 m_body_b;
 };
 
-namespace {
-	typedef char size_assert[
-		sizeof(bt_constraint) == 0x10 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bt_constraint, 0x10);
 
 
 struct VOSTOK_NOVTABLE world {
@@ -96,20 +93,22 @@ public:
 										u16						filter_mask
 									) = 0;
 
-	virtual math::aabb				get_world_aabb			( ) const														= 0;
-	virtual void					on_before_reuse			( )																= 0;
+	virtual math::aabb				get_world_aabb			( ) const	= 0;
+	virtual void					on_before_reuse			( )			= 0;
 
-	typedef	boost::function<void __cdecl( base_physics_object *, base_physics_object *, float3 const & )> on_contact_callback;
-	virtual void				subscribe_on_contact		( base_physics_object* object, on_contact_callback* callback )	= 0;
-	virtual void				unsubscribe_from_contact	( base_physics_object* object, on_contact_callback* callback )	= 0;
-private:
+public:
+	typedef
+		boost::function<void ( base_physics_object *, base_physics_object *, float3 const & )>
+		callback_type;
+
+	typedef std::multimap< base_physics_object*, callback_type* >				callbacks_type;
+	typedef std::pair< callbacks_type::iterator, callbacks_type::iterator >		callbacks_begin_end_pair;
+
+	virtual void				subscribe_on_contact		( base_physics_object* object, callback_type* callback )	= 0;
+	virtual void				unsubscribe_from_contact	( base_physics_object* object, callback_type* callback )	= 0;
 }; // struct world
 
-namespace {
-	typedef char size_assert[
-		sizeof(world) == 0x4 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(world, 0x4);
 
 } // namespace physics
 } // namespace vostok

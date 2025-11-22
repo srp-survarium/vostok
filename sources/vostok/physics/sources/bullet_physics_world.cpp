@@ -4,66 +4,69 @@
 
 #include "pch.h"
 #include "bullet_physics_world.h"
+
+#include "bullet_include.h"
+#include <vostok/console_command.h>
 #include <vostok/physics/bullet_utils.h>
 #include <vostok/physics/collision_shapes.h>
-
 #include <vostok/physics/engine.h>
 
-namespace vostok {
-namespace physics {
+#include "LinearMath/btQuickProf.h"
 
-/*
+static u32 s_physics_max_substeps_value = 1;
+static console_commands::cc_u32 s_physics_max_substeps_cc (
+	"physics_max_substeps",
+	s_physics_max_substeps_value,
+	0, 100,
+	true,
+	console_commands::command_type_engine_internal
+);
+
+static bool s_debug_draw_walkable = true;
+static console_commands::cc_bool s_ph_debug_cmd01 (
+	"draw_physics_debug_walkable",
+	s_debug_draw_walkable,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_debug_draw_hittable = true;
+static console_commands::cc_bool s_ph_debug_cmd02 (
+	"draw_physics_debug_hittable",
+	s_debug_draw_hittable,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_debug_draw_sensor = true;
+static console_commands::cc_bool s_ph_debug_cmd03 (
+	"draw_physics_debug_sensor",
+	s_debug_draw_sensor,
+	false,
+	console_commands::command_type_user_specific
+);
+
 // STATE[STUB]
-// void `dynamic initializer for 's_physics_max_substeps_cc''()
-void `dynamic initializer for 's_physics_max_substeps_cc''( )
-{
-}
-
-// STATE[STUB]
-// void `dynamic initializer for 's_ph_debug_cmd01''()
-void `dynamic initializer for 's_ph_debug_cmd01''( )
-{
-}
-
-// STATE[STUB]
-// void `dynamic initializer for 's_ph_debug_cmd02''()
-void `dynamic initializer for 's_ph_debug_cmd02''( )
-{
-}
-
-// STATE[STUB]
-// void `dynamic initializer for 's_ph_debug_cmd03''()
-void `dynamic initializer for 's_ph_debug_cmd03''( )
-{
-}
-
-*/
-
-// STATE[STUB]
-// void dump_physics_profiler(char const*)
 void dump_physics_profiler( pcstr __formal )
 {
+	CProfileManager::dumpAll( );
 }
 
 // STATE[STUB]
-// void reset_physics_profiler(char const*)
 void reset_physics_profiler( pcstr __formal )
 {
+	CProfileManager::Reset();
 }
 
-/*
-// STATE[STUB]
-// void `dynamic initializer for 's_dump_statistics''()
-void `dynamic initializer for 's_dump_statistics''( )
-{
-}
+// sushi@NOTE: static name conflict. Could be renamed in the future.
+static console_commands::cc_delegate s_dump_statistics (
+	"dump_physics_profiler", &dump_physics_profiler, false
+);
 
-// STATE[STUB]
-// void `dynamic atexit destructor for 's_ph_debug_cmd02''()
-void `dynamic atexit destructor for 's_ph_debug_cmd02''( )
-{
-}
-*/
+static console_commands::cc_delegate s_reset_statistics (
+	"reset_physics_profiler", &reset_physics_profiler, false
+);
+
 
 // STATE[STUB]
 void* bullet_alloc( u32 size )
@@ -77,7 +80,10 @@ void bullet_free( void* memblock )
 	return VOSTOK_FREE_IMPL( vostok::physics::g_ph_allocator, memblock );	// <0x6bc9c0>|0x000|0x000:'50'
 }
 
-// STATE[STUB]
+namespace vostok {
+namespace physics {
+
+// STATE[100%|DONE]
 btTransform from_vostok( float4x4 const& m )
 {
 	math::quaternion q_vostok = math::quaternion(m);	// <0x6bd789>|0x000|0x000:'58'
@@ -85,7 +91,7 @@ btTransform from_vostok( float4x4 const& m )
 	return btTransform(q0, from_vostok(m.c.xyz()) );	// <0x6bd7a2>|0x019|0x00e:'60'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 float4x4 from_bullet( btTransform const& m )
 {
 	btQuaternion q_bullet	= m.getRotation();												// <0x6bd6df>|0x000|0x000:'65'
@@ -94,31 +100,28 @@ float4x4 from_bullet( btTransform const& m )
 }
 
 // STATE[STUB]
-// vostok::physics::bullet_physics_world::bullet_physics_world(vostok::memory::base_allocator&, vostok::physics::engine&)
 bullet_physics_world::bullet_physics_world( memory::base_allocator& allocator, engine& engine ):
 	m_allocator		( allocator ),
 	m_engine		( engine ),
-	m_world_aabb	( math::create_aabb_min_max( float3( ), float3( ) ) )
+	m_world_aabb	( math::create_aabb_min_max(
+		float3( math::infinity, math::infinity, math::infinity ),
+		float3( math::infinity, math::infinity, math::infinity )
+	))
 {
-	// LOCALS
-	// memory::base_allocator&         allocator
-	// ******
-
 }
 
 // STATE[STUB]
-// void vostok::physics::log_cb(char*)
 void log_cb( char* text )
 {
-	// FUNCTION BODY
-	// <0x6bf009>|0x000|0x000:'79'
-	// ******
+	LOG_INFO( text );
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::initialize()
 void bullet_physics_world::initialize( )
 {
+
+
+
 	// LOCALS
 	// btVector3 					worldMax
 	// btVector3 					worldMin
@@ -241,31 +244,23 @@ void bullet_physics_world::on_before_reuse( )
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::tick(const unsigned int)
+// STATE[100%|DONE]
 void bullet_physics_world::tick( u32 current_time_in_ms )
 {
-	// CALL SITE INFO
-	// <0x6bdef8> -> int <unknown>(float, int, float)
-	// ******
+	m_last_frame_delta =
+		( current_time_in_ms * math::epsilon_3 - m_last_frame_time ) * 0.1f
+		+ m_last_frame_delta * 0.9f;	// <0x6bde70>|0x000|0x000:'164'
+	m_last_frame_time = current_time_in_ms * math::epsilon_3;
 
-	// FUNCTION BODY
-	// <1>
-	// <0x6bde70>|0x000|0x000:'164'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bde8b>|0x01b|0x01b:'169'
-	// <1>
-	// <2>
-	// <0x6bded0>|0x060|0x045:'172'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bdefa>|0x08a|0x02a:'176'
-	// <1>
-	// ******
+	s32 max_substeps = math::floor( m_last_frame_delta * 60.0f + 0.5f );
+	if ( max_substeps > s_physics_max_substeps_value )
+		max_substeps = 1;
+
+	m_dynamicsWorld->stepSimulation( m_last_frame_delta, max_substeps );
+
+	notify_about_contact( );
+
+	m_softBodyWorldInfo->m_sparsesdf.GarbageCollect( );
 }
 
 // STATE[STUB]
@@ -446,37 +441,10 @@ void bullet_physics_world::remove( bt_constraint* constraint )
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::create_test_scene()
 void bullet_physics_world::create_test_scene( )
 {
-	// FUNCTION BODY
 	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
 	// <26>
-	// ******
 }
 
 struct closest_ray_result_callback : btCollisionWorld::RayResultCallback {
@@ -1101,95 +1069,69 @@ bool bullet_physics_world::adjust_foot_transform(
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::notify_about_contact()
+// STATE[95.83%|PARTIAL]
 void bullet_physics_world::notify_about_contact( )
 {
-	// LOCALS
-	// s32 							num_manifolds
-	// s32 							i
-	// base_physics_object* 		base_obj_a
-	// base_physics_object* 		base_obj_b
-	// ******
+	s32 num_manifold = m_dispatcher->getNumManifolds( );											// <0x6bdced>|0x000|0x000:'826'
+	for ( s32 i = 0; i < num_manifold ; ++i )
+	{
+		btPersistentManifold* manifold = m_dispatcher->getManifoldByIndexInternal( i );
+		s32 num_contacts = manifold->getNumContacts( );
+		for ( s32 j = 0 ; j < num_contacts ; ++j )													// <0x6bdd24>|0x037|0x006:'831'
+		{
+			btManifoldPoint& pt = manifold->getContactPoint( j );
+			if ( 0.0f <= pt.m_distance1 )															// <0x6bdd34>|0x047|0x010:'834' sushi@NOTE: comiss reversed
+				continue;
 
-	// CALL SITE INFO
-	// <0x6bdcfa> -> int <unknown>() const
-	// <0x6bdd1c> -> btPersistentManifold* <unknown>(int)
-	// <0x6bde3a> -> <unknown>
-	// ******
+			base_physics_object* base_obj_a = static_cast< base_physics_object* >(
+				static_cast< btPairCachingGhostObject* >( manifold->getBody0( ) )->getUserPointer( )
+			);																						// <0x6bdd4a>|0x05d|0x016:'839'
+			base_physics_object* base_obj_b = static_cast< base_physics_object* >(
+				static_cast< btPairCachingGhostObject* >( manifold->getBody1( ) )->getUserPointer( )
+			);																						// <0x6bdd50>|0x063|0x006:'840'
 
-	// FUNCTION BODY
-	// <0x6bdced>|0x000|0x000:'826'
-	// <0x6bdcfc>|0x00f|0x00f:'827'
-	// <1>
-	// <0x6bdd13>|0x026|0x017:'829'
-	// <0x6bdd1e>|0x031|0x00b:'830'
-	// <0x6bdd24>|0x037|0x006:'831'
-	// <1>
-	// <2>
-	// <0x6bdd34>|0x047|0x010:'834'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bdd4a>|0x05d|0x016:'839'
-	// <0x6bdd50>|0x063|0x006:'840'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bdd62>|0x075|0x012:'844'
-	// <1>
-	// <0x6bddb3>|0x0c6|0x051:'846'
-	// <0x6bddd4>|0x0e7|0x021:'847'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// ******
+			callbacks_begin_end_pair begin_end	= m_contact_callbacks.equal_range( base_obj_a );
+			callbacks_type::iterator it			= begin_end.first;
+			callbacks_type::iterator it_end		= begin_end.second;
+			for ( ; it != it_end; ++it )
+			{
+				(*it->second)( base_obj_a, base_obj_b, from_bullet( pt.getPositionWorldOnA( ) ) );	// <0x6bddd4>|0x0e7|0x021:'847' sushi@NOTE: slightly different asm order
+			}
+
+			break;
+		}
+	}
+}
+
+// STATE[88.74%|PARTIAL]: Seems like LTCG related issues, but couldn't match the structure also.
+void bullet_physics_world::subscribe_on_contact( base_physics_object* object, callback_type* callback )
+{
+	ASSERT( callback );
+	callbacks_begin_end_pair ret	= m_contact_callbacks.equal_range( object );
+	callbacks_type::iterator it		= ret.first;
+	callbacks_type::iterator it_end	= ret.second;
+
+	for ( ; it != it_end; ++it )
+		ASSERT( it->second != callback );
+
+	m_contact_callbacks.insert( callbacks_type::value_type(object, callback) );	// <0x6bcac2>|0x037|0x025:'864'
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::subscribe_on_contact(vostok::physics::base_physics_object*, boost::function<void __cdecl(vostok::physics::base_physics_object *,vostok::physics::base_physics_object *,vostok::math::float3 const &)>*)
-void bullet_physics_world::subscribe_on_contact( base_physics_object* object, boost::function<void(base_physics_object *,base_physics_object *,float3 const &)>* callback )
+void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object, callback_type* callback )
 {
-	// LOCALS
-	// std::pair<std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *> > >,std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *> > > > ret
-	// ******
+	ASSERT( callback );
+	callbacks_begin_end_pair ret	= m_contact_callbacks.equal_range( object );
 
-	// TYPEDEFS
-	// typedef
-	// 	std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *> > >
-	// 	callbacks_iterator;
+	callbacks_type::iterator it		= ret.first;
+	callbacks_type::iterator it_end	= ret.second;
+	for ( ; it != it_end; ++it )
+		if ( it->second == callback )
+			break;
 
-	// ******
+	ASSERT( it != it_end );
 
-	// FUNCTION BODY
-	// <1>
-	// <0x6bca8b>|0x000|0x000:'858'
-	// <1>
-	// <2>
-	// <0x6bca9d>|0x012|0x012:'861'
-	// <1>
-	// <2>
-	// <0x6bcac2>|0x037|0x025:'864'
-	// ******
-}
-
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::unsubscribe_from_contact(vostok::physics::base_physics_object*, boost::function<void __cdecl(vostok::physics::base_physics_object *,vostok::physics::base_physics_object *,vostok::math::float3 const &)>*)
-void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object, boost::function<void(base_physics_object *,base_physics_object *,float3 const &)>* callback )
-{
-	// LOCALS
-	// std::pair<std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *> > >,std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *> > > > ret
-	// ******
-
-	// TYPEDEFS
-	// typedef
-	// 	std::priv::_Rb_tree_iterator<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *>,std::priv::_MultimapTraitsT<std::pair<base_physics_object * const,boost::function<void(base_physics_object *,base_physics_object *,float3 const &)> *> > >
-	// 	callbacks_iterator;
-
-	// ******
+	m_contact_callbacks.erase( it ); // <0x6bca4f>|0x043|0x002:'883'
 
 	// FUNCTION BODY
 	// <1>
