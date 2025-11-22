@@ -1117,7 +1117,7 @@ void bullet_physics_world::subscribe_on_contact( base_physics_object* object, ca
 	m_contact_callbacks.insert( callbacks_type::value_type(object, callback) );	// <0x6bcac2>|0x037|0x025:'864'
 }
 
-// STATE[STUB]
+// STATE[77.04%|PARTIAL]: Possibly can be matched further, but I don't think it matters much.
 void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object, callback_type* callback )
 {
 	ASSERT( callback );
@@ -1132,24 +1132,6 @@ void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object
 	ASSERT( it != it_end );
 
 	m_contact_callbacks.erase( it ); // <0x6bca4f>|0x043|0x002:'883'
-
-	// FUNCTION BODY
-	// <1>
-	// <0x6bca0c>|0x000|0x000:'870'
-	// <1>
-	// <2>
-	// <0x6bca1e>|0x012|0x012:'873'
-	// <1>
-	// <0x6bca31>|0x025|0x013:'875'
-	// <1>
-	// <0x6bca4d>|0x041|0x01c:'877'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6bca4f>|0x043|0x002:'883'
-	// ******
 }
 
 } // namespace physics
