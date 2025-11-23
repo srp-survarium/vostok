@@ -164,6 +164,10 @@ public:
 
 	static void	dumpAll();
 
+	// sushi@TODO: They actually included vostok headers here (bad).
+	typedef void (*PhysicsLogFn)(char *);
+	static void	set_log_callback( PhysicsLogFn log_fn );
+
 private:
 	static	CProfileNode			Root;
 	static	CProfileNode *			CurrentNode;

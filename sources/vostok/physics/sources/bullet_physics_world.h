@@ -33,10 +33,8 @@ public:
 
 	virtual	void							create_test_scene			( ) override;
 
-	virtual	void							set_renderer				( btIDebugDraw* renderer ) override;
-
-	virtual	void							draw_object					( btCollisionShape* shape, btTransform const& transform, btVector3 const& color ) override;
-
+	virtual	void							set_renderer				( btIDebugDraw* const renderer ) override;
+	virtual	void							draw_object					( btCollisionShape* const shape, btTransform const& transform, btVector3 const& color ) override;
 	virtual	void							debug_draw_world			( ) override;
 
 	virtual	void							add							( bt_constraint* constraint ) override;
@@ -67,7 +65,7 @@ public:
 											) override;
 
 	virtual	void							object_query				(
-												bt_collision_shape*				shape,
+												bt_collision_shape*				const shape,
 												float4x4 const&					transform_from,
 												float4x4 const&					transform_to,
 												vectora<closest_ray_result>&	results,
@@ -80,7 +78,7 @@ public:
 	virtual	void							on_before_reuse				( ) override;
 
 	virtual	bool							recover_from_penetrations	(
-												bt_collision_shape*		shape,
+												bt_collision_shape*		const shape,
 												float4x4 const&			transform_initial,
 												float4x4&				transform_result,
 												u16						filter_group,

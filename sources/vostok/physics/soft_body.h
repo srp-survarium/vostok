@@ -13,7 +13,7 @@ namespace physics {
 // sushi@NOTE: OG soft_body has more info
 class bt_soft_body_rope {
 public:
-	inline	bt_soft_body_rope	( btSoftBody* arg_0 ) { /* no source */ }
+	explicit		bt_soft_body_rope	( btSoftBody* bt_body ) : m_bt_body( bt_body ) { }
 
 	inline	bool	is_active			( ) const { /* no source */ }
 
@@ -23,7 +23,7 @@ public:
 	inline	void	get_node			( u32 arg_0, float3& arg_1 ) const { /* no source */ }
 
 
-private:
+public:
 	/* 0x0000 */	btSoftBody*		m_bt_body;
 }; // class bt_soft_body_rope
 

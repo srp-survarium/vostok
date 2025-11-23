@@ -10,6 +10,7 @@
 #include <vostok/physics/bullet_utils.h>
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/engine.h>
+#include <vostok/physics/rigid_body_base.h>
 
 #include "LinearMath/btQuickProf.h"
 
@@ -99,7 +100,7 @@ float4x4 from_bullet( btTransform const& m )
 	return create_rotation(q_vostok) * create_translation( from_bullet(m.getOrigin()) );	// <0x6bd6f7>|0x018|0x00e:'67'
 }
 
-// STATE[STUB]
+// STATE[64%|STUB]
 bullet_physics_world::bullet_physics_world( memory::base_allocator& allocator, engine& engine ):
 	m_allocator		( allocator ),
 	m_engine		( engine ),
@@ -110,138 +111,91 @@ bullet_physics_world::bullet_physics_world( memory::base_allocator& allocator, e
 {
 }
 
-// STATE[STUB]
+// STATE[94%|PARTIAL]: Best function to fix logging based on
 void log_cb( char* text )
 {
 	LOG_INFO( text );
 }
 
-// STATE[STUB]
+// STATE[99.35%|DONE]
 void bullet_physics_world::initialize( )
 {
+	btAlignedAllocSetCustom		( bullet_alloc, bullet_free );
 
+	btVector3 worldMin			(-1000,-1000,-1000);
+	btVector3 worldMax			(1000,1000,1000);
 
+	//SoftDicsreteDynamicWorld
+	m_softBodyWorldInfo						= VOSTOK_NEW_IMPL( m_allocator, btSoftBodyWorldInfo );
+	m_softBodyWorldInfo->air_density		= (btScalar)1.2; // <0x6bf1d0>|0x0f6|0x0b0:'92'
+	m_softBodyWorldInfo->water_density		= 0;
+	m_softBodyWorldInfo->water_offset		= 0;
+	m_softBodyWorldInfo->water_normal		= btVector3(0,0,0);
+	m_softBodyWorldInfo->m_gravity.setValue	(0,-10,0); // <0x6bf217>|0x13d|0x033:'96'
 
-	// LOCALS
-	// btVector3 					worldMax
-	// btVector3 					worldMin
-	// ******
+	const int maxProxies = 32766;
+	m_collisionConfiguration	= VOSTOK_NEW_IMPL( m_allocator, btSoftBodyRigidBodyCollisionConfiguration )( );
+	m_dispatcher				= VOSTOK_NEW_IMPL( m_allocator, btCollisionDispatcher )( m_collisionConfiguration );
+	btGImpactCollisionAlgorithm::registerAlgorithm( m_dispatcher );
 
-	// CALL SITE INFO
-	// <0x6bf368> -> void <unknown>(btVector3 const&)
-	// <0x6bf3cd> -> btOverlappingPairCache* <unknown>()
-	// <0x6bf3da> -> void <unknown>(btOverlappingPairCallback*)
-	// ******
+	m_softBodyWorldInfo->m_dispatcher = m_dispatcher;
+	m_overlappingPairCache		= VOSTOK_NEW_IMPL( m_allocator, btAxisSweep3 )( worldMin, worldMax, maxProxies );
+	m_softBodyWorldInfo->m_broadphase = m_overlappingPairCache;
 
-	// FUNCTION BODY
-	// <0x6bf0da>|0x000|0x000:'84'
-	// <1>
-	// <0x6bf118>|0x03e|0x03e:'86'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bf120>|0x046|0x008:'91'
-	// <0x6bf1d0>|0x0f6|0x0b0:'92'
-	// <0x6bf1d4>|0x0fa|0x004:'93'
-	// <0x6bf1dc>|0x102|0x008:'94'
-	// <0x6bf1e4>|0x10a|0x008:'95'
-	// <0x6bf217>|0x13d|0x033:'96'
-	// <1>
-	// <2>
-	// <0x6bf230>|0x156|0x019:'99'
-	// <0x6bf279>|0x19f|0x049:'100'
-	// <0x6bf2a0>|0x1c6|0x027:'101'
-	// <1>
-	// <0x6bf2a5>|0x1cb|0x005:'103'
-	// <0x6bf2ae>|0x1d4|0x009:'104'
-	// <0x6bf2dd>|0x203|0x02f:'105'
-	// <1>
-	// <0x6bf2e6>|0x20c|0x009:'107'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bf302>|0x228|0x01c:'111'
-	// <1>
-	// <2>
-	// <0x6bf331>|0x257|0x02f:'114'
-	// <0x6bf36a>|0x290|0x039:'115'
-	// <0x6bf38e>|0x2b4|0x024:'116'
-	// <0x6bf399>|0x2bf|0x00b:'117'
-	// <1>
-	// <0x6bf3a5>|0x2cb|0x00c:'119'
-	// <0x6bf3c2>|0x2e8|0x01d:'120'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bf3dc>|0x302|0x01a:'124'
-	// <1>
-	// ******
+	m_constraintSolver			= VOSTOK_NEW_IMPL( m_allocator, btSequentialImpulseConstraintSolver )();
+	m_dynamicsWorld				= VOSTOK_NEW_IMPL( m_allocator, btSoftRigidDynamicsWorld )(m_dispatcher,
+																						m_overlappingPairCache,
+																						m_constraintSolver,
+																						m_collisionConfiguration );
+
+	m_dynamicsWorld->getDispatchInfo().m_enableSPU = false;//true; //? // <0x6bf331>|0x257|0x02f:'114'
+	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
+	m_softBodyWorldInfo->m_gravity.setValue(0,-10,0);
+	m_softBodyWorldInfo->m_sparsesdf.Initialize();
+	m_softBodyWorldInfo->m_sparsesdf.Reset();
+
+	m_ghost_pair_callback		= VOSTOK_NEW_IMPL( m_allocator, btGhostPairCallback );
+	m_dynamicsWorld->getBroadphase( )->getOverlappingPairCache( )->setInternalGhostPairCallback( m_ghost_pair_callback );
+
+	m_last_frame_delta = 0.0f; // sushi@TODO: Maybe on_before_reuse
+	m_last_frame_time = 0.0f;
+	CProfileManager::set_log_callback( log_cb );
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::destroy()
+// STATE[99.86%|DONE]: Target used registers slightly differently.
 void bullet_physics_world::destroy( )
 {
-	// CALL SITE INFO
-	// <0x6bce21> -> btOverlappingPairCache* <unknown>()
-	// <0x6bce2d> -> void <unknown>(btOverlappingPairCallback*)
-	// <0x6bce4c> -> void* <unknown>(u32)
-	// <0x6bce78> -> void* <unknown>(u32)
-	// <0x6bcea4> -> void* <unknown>(u32)
-	// <0x6bced0> -> void* <unknown>(u32)
-	// <0x6bcefc> -> void* <unknown>(u32)
-	// <0x6bcf28> -> void* <unknown>(u32)
-	// ******
+	m_dynamicsWorld->getBroadphase( )->getOverlappingPairCache( )->setInternalGhostPairCallback( NULL );
 
-	// FUNCTION BODY
-	// <1>
-	// <0x6bce15>|0x000|0x000:'131'
-	// <0x6bce2f>|0x01a|0x01a:'132'
-	// <0x6bce5b>|0x046|0x02c:'133'
-	// <0x6bce87>|0x072|0x02c:'134'
-	// <0x6bceb3>|0x09e|0x02c:'135'
-	// <0x6bcedf>|0x0ca|0x02c:'136'
-	// <0x6bcf0b>|0x0f6|0x02c:'137'
-	// <0x6bcf37>|0x122|0x02c:'138'
-	// <1>
-	// <2>
-	// <0x6bcf43>|0x12e|0x00c:'141'
-	// <0x6bcf4f>|0x13a|0x00c:'142'
-	// ******
+	VOSTOK_DELETE_IMPL( m_allocator, m_ghost_pair_callback );
+	VOSTOK_DELETE_IMPL( m_allocator, m_dynamicsWorld );
+	VOSTOK_DELETE_IMPL( m_allocator, m_constraintSolver );
+	VOSTOK_DELETE_IMPL( m_allocator, m_overlappingPairCache );
+	VOSTOK_DELETE_IMPL( m_allocator, m_dispatcher );
+	VOSTOK_DELETE_IMPL( m_allocator, m_collisionConfiguration );
+	VOSTOK_DELETE_IMPL( m_allocator, m_softBodyWorldInfo );
+
+	m_last_frame_delta = 0.0;
+	m_last_frame_time = 0.0;
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::set_renderer(btIDebugDraw* const)
-void bullet_physics_world::set_renderer( btIDebugDraw* renderer )
+// STATE[100%|DONE]
+void bullet_physics_world::set_renderer( btIDebugDraw* const renderer )
 {
-	// CALL SITE INFO
-	// <0x6bc8a8> -> void <unknown>(btIDebugDraw*)
-	// ******
-
+	m_dynamicsWorld->setDebugDrawer( renderer );
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::draw_object(btCollisionShape* const, btTransform const&, btVector3 const&)
-void bullet_physics_world::draw_object( btCollisionShape* shape, btTransform const& transform, btVector3 const& color )
+// STATE[100%|DONE]
+void bullet_physics_world::draw_object( btCollisionShape* const shape, btTransform const& transform, btVector3 const& color )
 {
-	// CALL SITE INFO
-	// <0x6bc897> -> void <unknown>(btTransform const&, btCollisionShape const*, btVector3 const&)
-	// ******
-
-	// FUNCTION BODY
-	// <0x6bc880>|0x000|0x000:'152'
-	// ******
+	m_dynamicsWorld->debugDrawObject( transform, shape, color );	// <0x6bc880>|0x000|0x000:'152'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::on_before_reuse()
+// STATE[100%|DONE]
 void bullet_physics_world::on_before_reuse( )
 {
-	// FUNCTION BODY
-	// <0x6bc870>|0x000|0x000:'157'
-	// <0x6bc878>|0x008|0x008:'158'
-	// ******
+	m_last_frame_delta = 0.0f; // <0x6bc870>|0x000|0x000:'157'
+	m_last_frame_time = 0.0f;
 }
 
 // STATE[100%|DONE]
@@ -263,187 +217,66 @@ void bullet_physics_world::tick( u32 current_time_in_ms )
 	m_softBodyWorldInfo->m_sparsesdf.GarbageCollect( );
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::debug_draw_world()
+// STATE[STUB] sushi@TODO: Shouldn't be needed for server logic.
 void bullet_physics_world::debug_draw_world( )
 {
-	// LOCALS
-	// btVector3[3] 				object_colors
-	// ******
-
-	// CALL SITE INFO
-	// <0x6bc993> -> void <unknown>(btTransform const&, btCollisionShape const*, btVector3 const&)
-	// ******
-
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x6bc8bd>|0x000|0x000:'195'
-	// <0x6bc8c4>|0x007|0x007:'196'
-	// <1>
-	// <0x6bc8e0>|0x023|0x01c:'198'
-	// <1>
-	// <2>
-	// <0x6bc8e6>|0x029|0x006:'201'
-	// <0x6bc8fe>|0x041|0x018:'202'
-	// <1>
-	// <0x6bc916>|0x059|0x018:'204'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <0x6bc92e>|0x071|0x018:'223'
-	// <1>
-	// <0x6bc938>|0x07b|0x00a:'225'
-	// <1>
-	// <2>
-	// <0x6bc93b>|0x07e|0x003:'228'
-	// <0x6bc949>|0x08c|0x00e:'229'
-	// <1>
-	// <0x6bc94b>|0x08e|0x002:'231'
-	// <0x6bc959>|0x09c|0x00e:'232'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bc95e>|0x0a1|0x005:'236'
-	// <0x6bc96c>|0x0af|0x00e:'237'
-	// <1>
-	// <0x6bc971>|0x0b4|0x005:'239'
-	// <1>
-	// <2>
-	// <0x6bc978>|0x0bb|0x007:'242'
-	// <1>
-	// <2>
-	// ******
+	NOT_IMPLEMENTED( );
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::add(vostok::physics::bt_rigid_body_base*, unsigned short, unsigned short)
+// STATE[100%|DONE]
 void bullet_physics_world::add( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask )
 {
-	// LOCALS
-	// btTransform 					trans
-	// btVector3 					minAabb
-	// btVector3 					maxAabb
-	// ******
+	m_dynamicsWorld->addRigidBody( body->get_rigid_body( ), filter_group, filter_mask);	// <0x6bd18b>|0x000|0x000:'249'
 
-	// CALL SITE INFO
-	// <0x6bd1a9> -> btRigidBody* <unknown>()
-	// <0x6bd1b3> -> void <unknown>(btRigidBody*, short, short)
-	// <0x6bd1bc> -> btRigidBody* <unknown>()
-	// <0x6bd220> -> btRigidBody* <unknown>()
-	// <0x6bd23c> -> void <unknown>(btTransform const&, btVector3&, btVector3&) const
-	// ******
+	btTransform trans = body->get_rigid_body( )->getWorldTransform( );					// <0x6bd1b5>|0x02a|0x02a:'251'
 
-	// FUNCTION BODY
-	// <0x6bd18b>|0x000|0x000:'249'
-	// <1>
-	// <0x6bd1b5>|0x02a|0x02a:'251'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bd213>|0x088|0x05e:'255'
-	// <0x6bd23e>|0x0b3|0x02b:'256'
-	// <0x6bd277>|0x0ec|0x039:'257'
-	// ******
+	btVector3 minAabb;
+	btVector3 maxAabb;
+	body->get_rigid_body( )->getCollisionShape( )->getAabb( trans, minAabb, maxAabb );	// <0x6bd213>|0x088|0x05e:'255'
+	m_world_aabb.modify( from_bullet( minAabb ) );										// <0x6bd23e>|0x0b3|0x02b:'256'
+	m_world_aabb.modify( from_bullet( maxAabb ) );										// <0x6bd277>|0x0ec|0x039:'257'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::remove(vostok::physics::bt_rigid_body_base*)
+// STATE[100%|DONE]
 void bullet_physics_world::remove( bt_rigid_body_base* body )
 {
-	// CALL SITE INFO
-	// <0x6bc852> -> btRigidBody* <unknown>()
-	// <0x6bc85b> -> void <unknown>(btRigidBody*)
-	// ******
-
-	// FUNCTION BODY
-	// <0x6bc843>|0x000|0x000:'262'
-	// ******
+	m_dynamicsWorld->removeRigidBody( body->get_rigid_body( ) );
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::move(vostok::physics::bt_rigid_body_base*, vostok::math::float4x4 const&)
+// STATE[100%|DONE]
 void bullet_physics_world::move( bt_rigid_body_base* body, float4x4 const& new_transform )
 {
-	// CALL SITE INFO
-	// <0x6bc82e> -> void <unknown>(float4x4 const&)
-	// ******
-
-	// FUNCTION BODY
-	// <0x6bc820>|0x000|0x000:'267'
-	// ******
+	body->set_transform( new_transform );
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::add(vostok::physics::bt_soft_body_rope*)
+// STATE[100%|DONE]: sushi@NOTE: Why filter_group with filter_mask is not passed here.
 void bullet_physics_world::add( bt_soft_body_rope* body )
 {
-	// FUNCTION BODY
-	// <0x6bd160>|0x000|0x000:'272'
-	// ******
+	m_dynamicsWorld->addSoftBody( body->m_bt_body ); // <0x6bd160>|0x000|0x000:'272'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::remove(vostok::physics::bt_soft_body_rope*)
+// STATE[100%|DONE]
 void bullet_physics_world::remove( bt_soft_body_rope* body )
 {
-	// FUNCTION BODY
-	// <0x6bcde0>|0x000|0x000:'277'
-	// ******
+	m_dynamicsWorld->removeSoftBody( body->m_bt_body ); // <0x6bcde0>|0x000|0x000:'277'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::add(vostok::physics::bt_constraint*)
+// STATE[100%|DONE]
 void bullet_physics_world::add( bt_constraint* constraint )
 {
-	// CALL SITE INFO
-	// <0x6bc812> -> void <unknown>(btTypedConstraint*, bool)
-	// ******
-
-	// FUNCTION BODY
-	// <0x6bc800>|0x000|0x000:'282'
-	// ******
+	m_dynamicsWorld->addConstraint( constraint->m_bt_typed_constraint ); // <0x6bc800>|0x000|0x000:'282'
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::remove(vostok::physics::bt_constraint*)
+// STATE[100%|DONE]
 void bullet_physics_world::remove( bt_constraint* constraint )
 {
-	// CALL SITE INFO
-	// <0x6bc7f3> -> void <unknown>(btTypedConstraint*)
-	// ******
-
+	m_dynamicsWorld->removeConstraint( constraint->m_bt_typed_constraint );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_physics_world::create_test_scene( )
 {
-	// <1>
+	// <1> this is ifdefed original xray impl
 	// <26>
 }
 
@@ -453,7 +286,7 @@ public:
 
 	virtual	float		addSingleResult				( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace ) override;
 
-private:
+public:
 	/* 0x0000 */	/* btCollisionWorld::RayResultCallback */
 	/* 0x0020 */	btVector3		m_rayFromWorld;
 	/* 0x0030 */	btVector3		m_rayToWorld;
@@ -466,48 +299,43 @@ private:
 STATIC_SIZE_ASSERT(closest_ray_result_callback, 0x70);
 
 // STATE[STUB]
-// vostok::physics::closest_ray_result_callback::closest_ray_result_callback(btVector3 const&, btVector3 const&)
-closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFromWorld, btVector3 const& rayToWorld )
+closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFromWorld, btVector3 const& rayToWorld ) :
+	m_rayFromWorld		( rayFromWorld ),
+	m_rayToWorld		( rayToWorld ),
+	m_triangleIndex		( -1 ),
+	m_is_shape_index	( false )
 {
 }
 
 // STATE[STUB]
-// float vostok::physics::closest_ray_result_callback::addSingleResult(btCollisionWorld::LocalRayResult&, bool)
 float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace )
 {
-	return 0.0f;
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <0x363e6>|0x000|0x000:'344'
-	// <0x363f2>|0x00c|0x00c:'345'
-	// <1>
-	// <0x363f7>|0x011|0x005:'347'
-	// <1>
-	// <0x363fd>|0x017|0x006:'349'
-	// <0x36406>|0x020|0x009:'350'
-	// <0x3640f>|0x029|0x009:'351'
-	// <1>
-	// <0x36411>|0x02b|0x002:'353'
-	// <0x36418>|0x032|0x007:'354'
-	// <1>
-	// <2>
-	// <0x3641c>|0x036|0x004:'357'
-	// <1>
-	// <0x36422>|0x03c|0x006:'359'
-	// <0x36431>|0x04b|0x00f:'360'
-	// <1>
-	// <2>
-	// <0x36436>|0x050|0x005:'363'
-	// <1>
-	// <0x364e2>|0x0fc|0x0ac:'365'
-	// <0x36543>|0x15d|0x061:'366'
-	// ******
+	m_closestHitFraction = rayResult.m_hitFraction;
+	m_collisionObject = rayResult.m_collisionObject;
+
+	if ( rayResult.m_localShapeInfo )
+	{
+		m_triangleIndex = rayResult.m_localShapeInfo->m_triangleIndex;
+		m_is_shape_index = rayResult.m_localShapeInfo->m_is_shape_index; // sushi@TODO: Bullet impl was changed, we need to match it as well
+	} else
+	{
+		m_triangleIndex = -1;
+		m_is_shape_index = false;	// <0x36418>|0x032|0x007:'354'
+	}
+
+	if ( normalInWorldSpace )		// <0x3641c>|0x036|0x004:'357'
+	{
+		m_hitNormalWorld = rayResult.m_hitNormalLocal;
+	} else
+	{
+		m_hitNormalWorld = m_collisionObject->getWorldTransform( ) * rayResult.m_hitNormalLocal;
+	}
+
+	m_hitPointWorld.setInterpolate3( m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction );
+	return rayResult.m_hitFraction;
 }
 
-// STATE[STUB]
-// vostok::physics::closest_ray_result vostok::physics::bullet_physics_world::ray_test(vostok::math::float3 const&, vostok::math::float3 const&, const float, unsigned short, unsigned short)
+// STATE[79.93%|PARTIAL]: sushi@NOTE: Lots of instructions reordered. Logic seems to be the same. Don't really care about getting this 100% correct for now.
 closest_ray_result bullet_physics_world::ray_test(
 	float3 const&		ray_from,
 	float3 const&		ray_dir,
@@ -516,48 +344,33 @@ closest_ray_result bullet_physics_world::ray_test(
 	u16					filter_mask
 )
 {
-	return closest_ray_result();
-	// LOCALS
-	// closest_ray_result_callback 	cb
-	// btVector3 					from
-	// btVector3 					to
-	// ******
+	btVector3 from = from_vostok( ray_from );
+	btVector3 to = from_vostok( ray_from + ray_dir * ray_length );
 
-	// CALL SITE INFO
-	// <0x6bcd05> -> void <unknown>(btVector3 const&, btVector3 const&, btCollisionWorld::RayResultCallback&) const
-	// ******
+	closest_ray_result_callback cb( from, to );
+	cb.m_collisionFilterGroup = filter_group;
+	cb.m_collisionFilterMask = filter_mask;
+	cb.m_flags |= 1 << 1;
 
-	// FUNCTION BODY
-	// <0x6bcc3c>|0x000|0x000:'372'
-	// <0x6bcc55>|0x019|0x019:'373'
-	// <1>
-	// <0x6bcc93>|0x057|0x03e:'375'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bccd7>|0x09b|0x044:'380'
-	// <1>
-	// <0x6bcce9>|0x0ad|0x012:'382'
-	// <1>
-	// <0x6bcd07>|0x0cb|0x01e:'384'
-	// <0x6bcd0a>|0x0ce|0x003:'385'
-	// <1>
-	// <0x6bcd2f>|0x0f3|0x025:'387'
-	// <0x6bcd41>|0x105|0x012:'388'
-	// <1>
-	// <2>
-	// <0x6bcd7c>|0x140|0x03b:'391'
-	// <0x6bcdc8>|0x18c|0x04c:'392'
-	// <1>
-	// <2>
-	// ******
+	m_dynamicsWorld->rayTest( from, to, cb );
+
+	closest_ray_result result;
+
+	if ( cb.m_collisionObject )
+	{
+		result.object = static_cast< base_physics_object* >( cb.m_collisionObject->getUserPointer( ) );
+		result.hit_point_world = from_bullet( cb.m_hitPointWorld );
+		result.hit_normal_world = from_bullet( cb.m_hitNormalWorld );
+		result.triangle_index = cb.m_triangleIndex;
+		result.is_shape_index = cb.m_is_shape_index;
+		result.fraction = cb.m_closestHitFraction;
+	}
+	return result;
 }
 
 // STATE[STUB]
-// bool vostok::physics::bullet_physics_world::recover_from_penetrations(vostok::physics::bt_collision_shape* const, vostok::math::float4x4 const&, vostok::math::float4x4&, unsigned short, unsigned short)
 bool bullet_physics_world::recover_from_penetrations(
-	bt_collision_shape*		shape,
+	bt_collision_shape*		const shape,
 	float4x4 const&			transform_initial,
 	float4x4&				transform_result,
 	u16						filter_group,
@@ -666,9 +479,8 @@ bool bullet_physics_world::recover_from_penetrations(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::object_query(vostok::physics::bt_collision_shape* const, vostok::math::float4x4 const&, vostok::math::float4x4 const&, vostok::vectora<vostok::physics::closest_ray_result>&, unsigned short, unsigned short)
 void bullet_physics_world::object_query(
-	bt_collision_shape*				shape,
+	bt_collision_shape*				const shape,
 	float4x4 const&					transform_from,
 	float4x4 const&					transform_to,
 	vectora<closest_ray_result>&	results,
@@ -676,67 +488,85 @@ void bullet_physics_world::object_query(
 	u16								filter_mask
 )
 {
-	// LOCALS
-	// bullet_physics_world::object_query::__l2::object_query_callback resultCallback
-	// btTransform 					t1
-	// btTransform 					t2
-	// ******
+	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , public boost::noncopyable {
+	public:
+		// STATE[STUB]
+		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 filter_group, u16 filter_mask ) :
+								m_results	( results )
+		{
+			m_collisionFilterGroup = filter_group;
+			m_collisionFilterMask = filter_mask;
+			m_modify_result_transform.setIdentity( ); // <0x6bd3b0>|0x000|0x000:'488'
+		}
 
-	// TYPEDEFS
-	// typedef
-	// 	bullet_physics_world::object_query::__l2::object_query_callback
-	// 	bullet_physics_world::object_query::__l2::object_query_callback;
+		// STATE[STUB]: sushi@TODO: Ghidra scripts cannot generate symbols for this function.
+		virtual	float		addSingleResult			( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
+		{
+			closest_ray_result query_result;
+			query_result.hit_point_world = from_bullet( m_modify_result_transform * convexResult.m_hitPointLocal );
 
-	// ******
+			btVector3 hitNormalWorld;
+			if ( normalInWorldSpace )
+			{
+				hitNormalWorld = convexResult.m_hitNormalLocal;
+			} else
+			{
+				hitNormalWorld = convexResult.m_hitCollisionObject->getWorldTransform( ) * convexResult.m_hitNormalLocal;
+			}
+			query_result.hit_normal_world = from_bullet( hitNormalWorld );
+
+			query_result.triangle_index = convexResult.m_localShapeInfo->m_triangleIndex;
+			query_result.is_shape_index = convexResult.m_localShapeInfo->m_is_shape_index;
+			query_result.fraction = convexResult.m_hitFraction;
+
+			m_results.push_back( query_result );
+
+			return convexResult.m_hitFraction;
+		}
+
+	public:
+		/* 0x000c */	vectora<closest_ray_result>&	m_results;
+		/* 0x0010 */	btTransform						m_modify_result_transform;
+	};
+
+	btTransform t1 = from_vostok( transform_from );
+	btTransform t2 = from_vostok( transform_to );
+	object_query_callback resultCallback( results, filter_group, filter_mask );
+
+	btConvexShape* cast_shape;
+
+	if ( shape->get_bt_shape( )->isConvex( ) )
+	{
+		cast_shape = static_cast< btConvexShape* >( shape->get_bt_shape( ) );
+	} else {
+		if ( shape->get_bt_shape( )->isCompound( ) )
+		{
+
+		}
+		else
+		{
+			LOG_ERROR( "Unsupported shape passed" );
+			return;
+		}
+	}
+	m_dynamicsWorld->convexSweepTest( cast_shape, t1, t2, resultCallback );
 
 	// FUNCTION BODY
 	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
+	// <..>
 	// <35>
-	// <0x6bdf1e>|0x000|0x000:'517'
-	// <0x6bdf3b>|0x01d|0x01d:'518'
-	// <0x6bdf47>|0x029|0x00c:'519'
+	// <0x6bdf1e>|0x000|0x000:'517' btTransform t1 = from_vostok( transform_from );
+	// <0x6bdf3b>|0x01d|0x01d:'518' btTransform t2 = from_vostok( transform_to );
+	// <0x6bdf47>|0x029|0x00c:'519' object_query_callback resultCallback( results, filter_group, filter_mask );
 	// <1>
 	// <0x6bdf64>|0x046|0x01d:'521'
 	// <1>
-	// <0x6be021>|0x103|0x0bd:'523'
-	// <1>
+	// <0x6be021>|0x103|0x0bd:'523' if ( shape->get_bt_shape( )->isConvex( ) )
+	// <1>							{
 	// <0x6be029>|0x10b|0x008:'525'
-	// <0x6be02b>|0x10d|0x002:'526'
-	// <0x6be030>|0x112|0x005:'527'
-	// <1>
+	// <0x6be02b>|0x10d|0x002:'526'	} else {
+	// <0x6be030>|0x112|0x005:'527'		if ( shape->get_bt_shape( )->isCompound( ) )
+	// <1>								{
 	// <2>
 	// <0x6be039>|0x11b|0x009:'530'
 	// <1>
@@ -746,59 +576,15 @@ void bullet_physics_world::object_query(
 	// <0x6be051>|0x133|0x012:'535'
 	// <0x6be443>|0x525|0x3f2:'536'
 	// <1>
-	// <2>
-	// <3>
-	// <0x6be864>|0x946|0x421:'540'
-	// <1>
-	// <2>
+	// <2>								} else
+	// <3>								{
+	// <0x6be864>|0x946|0x421:'540'			LOG_ERROR( "Unsupported shape passed" );
+	// <1>								}
+	// <2>							}
 	// <3>
 	// <0x6be82f>|0x911|-0x035:'544'
 	// ******
 }
-/*
-// STATE[STUB]
-// `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::object_query_callback(vostok::vectora<vostok::physics::closest_ray_result>&, const unsigned short, const unsigned short)
-`vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::object_query_callback( vostok::vectora<vostok::physics::closest_ray_result>& results, u16 group, u16 mask )
-{
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <0x6bd3b0>|0x000|0x000:'488'
-	// ******
-}
-
-// STATE[STUB]
-// float `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult(btCollisionWorld::LocalConvexResult&, bool)
-float `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace )
-{
-	// LOCALS
-	// btVector3 					hitNormalWorld
-	// vostok::physics::closest_ray_result query_result
-	// ******
-
-	return 0.0f;
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x6bcf69>|0x000|0x000:'503'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bd0e8>|0x17f|0x17f:'508'
-	// <1>
-	// <0x6bd14b>|0x1e2|0x063:'510'
-	// ******
-}
-*/
 
 // STATE[STUB]
 // void vostok::physics::bullet_physics_world::ray_query(vostok::math::float3 const&, vostok::math::float3 const&, const float, vostok::vectora<vostok::physics::closest_ray_result>&, unsigned short, unsigned short)
@@ -987,7 +773,6 @@ float contact_result_callback::addSingleResult(
 }
 
 // STATE[STUB]
-// void vostok::physics::bullet_physics_world::contact_pair_test(vostok::physics::contact_test_predicate&, btCollisionObject*, btCollisionObject*)
 void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object )
 {
 	// LOCALS

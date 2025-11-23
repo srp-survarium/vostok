@@ -26,10 +26,10 @@ public:
 	bt_constraint		( ) {}
 	virtual void load	( configs::binary_config_value const& ) {}
 
-private:
-	/* offset 0x0004 */ btTypedConstraint*                  m_bt_typed_constraint;
-	/* offset 0x0008 */ bt_rigid_body_base*                 m_body_a;
-	/* offset 0x000c */ bt_rigid_body_base*                 m_body_b;
+public:
+	/* 0x0004 */	btTypedConstraint*		m_bt_typed_constraint;
+	/* 0x0008 */	bt_rigid_body_base*		m_body_a;
+	/* 0x000c */	bt_rigid_body_base*		m_body_b;
 };
 
 STATIC_SIZE_ASSERT(bt_constraint, 0x10);
@@ -43,10 +43,9 @@ public:
 	virtual void					initialize			( )												= 0;
 	virtual void					destroy				( )												= 0;
 
-	virtual void					set_renderer		( btIDebugDraw* renderer )						= 0;
-
+	virtual void					set_renderer		( btIDebugDraw* const renderer )				= 0;
 	virtual void					debug_draw_world	( )												= 0;
-	virtual void					draw_object			( btCollisionShape* shape, btTransform const& transform, btVector3 const& color ) = 0;
+	virtual void					draw_object			( btCollisionShape* const shape, btTransform const& transform, btVector3 const& color ) = 0;
 	virtual void					create_test_scene	( )												= 0;
 
 	virtual void					add					( bt_constraint* constraint )									= 0;
@@ -77,7 +76,7 @@ public:
 									) = 0;
 
 	virtual	void					object_query				(
-										bt_collision_shape*				shape,
+										bt_collision_shape*				const shape,
 										float4x4 const&					transform_from,
 										float4x4 const&					transform_to,
 										vectora<closest_ray_result>&	results,
@@ -86,7 +85,7 @@ public:
 									) = 0;
 
 	virtual	bool					recover_from_penetrations	(
-										bt_collision_shape*		shape,
+										bt_collision_shape*		const shape,
 										float4x4 const&			transform_initial,
 										float4x4&				transform_result,
 										u16						filter_group,

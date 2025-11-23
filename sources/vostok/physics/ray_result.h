@@ -11,7 +11,11 @@ namespace physics {
 class base_physics_object;
 
 struct closest_ray_result  {
-					closest_ray_result	( ) { /* no source */ };
+					closest_ray_result	( ) :
+					object			( NULL ),
+					triangle_index	( -1 ),
+					is_shape_index	( false ),
+					fraction		( 0.0f ) {}
 
 	/* 0x0000 */	base_physics_object*	object;
 	/* 0x0004 */	float3					hit_point_world;
