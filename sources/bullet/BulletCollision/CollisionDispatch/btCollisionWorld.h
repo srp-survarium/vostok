@@ -201,6 +201,7 @@ public:
 		short int	m_collisionFilterMask;
       //@BP Mod - Custom flags, currently used to enable backface culling on tri-meshes, see btRaycastCallback
       unsigned int m_flags;
+		unsigned int m_shape_id; // sushi@TODO: A NEW FIELD WAS ADDED TO BULLET CALLBACK
 
 		virtual ~RayResultCallback()
 		{

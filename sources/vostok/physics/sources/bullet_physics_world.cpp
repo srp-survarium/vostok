@@ -11,6 +11,7 @@
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/engine.h>
 #include <vostok/physics/rigid_body_base.h>
+#include <vostok/physics/contact_test_predicate.h> // sushi@TODO: Should be private?
 
 #include "LinearMath/btQuickProf.h"
 
@@ -541,7 +542,7 @@ void bullet_physics_world::object_query(
 	} else {
 		if ( shape->get_bt_shape( )->isCompound( ) )
 		{
-
+			// sushi@TODO
 		}
 		else
 		{
@@ -586,8 +587,22 @@ void bullet_physics_world::object_query(
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::physics::bullet_physics_world::ray_query(vostok::math::float3 const&, vostok::math::float3 const&, const float, vostok::vectora<vostok::physics::closest_ray_result>&, unsigned short, unsigned short)
+struct distance_predicate {
+public:
+	explicit		distance_predicate	( float3 const& from ) : m_from( from ) { }
+
+	inline	bool	operator()			( closest_ray_result const& lhs, closest_ray_result const& rhs ) const
+	{
+		return ( lhs.hit_point_world - m_from ).squared_length( ) < ( rhs.hit_point_world - m_from ).squared_length( );
+	}
+
+public:
+	/* 0x0000 */	float3		m_from;
+}; // struct distance_predicate
+
+STATIC_SIZE_ASSERT(distance_predicate, 0xC);
+
+// STATE[100%|DONE]: sushi@TODO: Noticed that `m_shape_id` was added to bt ray callback
 void bullet_physics_world::ray_query(
 	float3 const&					ray_from,
 	float3 const&					ray_dir,
@@ -597,192 +612,134 @@ void bullet_physics_world::ray_query(
 	u16								filter_mask
 )
 {
-	// LOCALS
-	// btCollisionWorld::AllHitsRayResultCallback cb
-	// btVector3 					from
-	// btVector3 					to
-	// s32 							size
-	// closest_ray_result 			ray_result
-	// ******
+	btVector3 from = from_vostok( ray_from );
+	btVector3 to = from_vostok( ray_from + ray_dir * ray_length );
+	btCollisionWorld::AllHitsRayResultCallback cb( from, to );
+	cb.m_collisionFilterGroup = filter_group;
+	cb.m_collisionFilterMask = filter_mask;
+	cb.m_flags |= 1 << 1;
 
-	// CALL SITE INFO
-	// <0x6bd521> -> void <unknown>(btVector3 const&, btVector3 const&, btCollisionWorld::RayResultCallback&) const
-	// ******
+	m_dynamicsWorld->rayTest( from, to, cb ); // <0x6bd503>|0x0b2|0x010:'569'
 
-	// FUNCTION BODY
-	// <0x6bd451>|0x000|0x000:'560'
-	// <0x6bd44c>|-0x005|-0x005:'561'
-	// <0x6bd44f>|-0x002|0x003:'562'
-	// <0x6bd4eb>|0x09a|0x09c:'563'
-	// <0x6bd4ef>|0x09e|0x004:'564'
-	// <1>
-	// <2>
-	// <0x6bd4f3>|0x0a2|0x004:'567'
-	// <1>
-	// <0x6bd503>|0x0b2|0x010:'569'
-	// <1>
-	// <0x6bd523>|0x0d2|0x020:'571'
-	// <1>
-	// <0x6bd531>|0x0e0|0x00e:'573'
-	// <0x6bd538>|0x0e7|0x007:'574'
-	// <1>
-	// <2>
-	// <0x6bd561>|0x110|0x029:'577'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bd591>|0x140|0x030:'582'
-	// <0x6bd608>|0x1b7|0x077:'583'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bd693>|0x242|0x08b:'587'
-	// <1>
-	// ******
+	if ( cb.m_collisionObject )
+	{
+		s32 size = cb.m_collisionObjects.size( ); // <0x6bd531>|0x0e0|0x00e:'573'
+		for ( s32 i = 0 ; i < size ; ++i )
+		{
+			closest_ray_result ray_result; // sushi@NOTE: One day I will reorder those assignments to the declaration order.
+			ray_result.hit_point_world = from_bullet( cb.m_hitPointWorld[i] );
+			ray_result.object = static_cast< base_physics_object* >( cb.m_collisionObjects[i]->getUserPointer( ) );
+			ray_result.triangle_index = cb.m_triangleIndex[i];
+			ray_result.is_shape_index = cb.m_is_shape_index[i];
+			ray_result.hit_normal_world = from_bullet( cb.m_hitNormalWorld[i] );
+			ray_result.fraction = cb.m_closestHitFraction;
+			results.push_back( ray_result );
+		}
+
+		std::sort( results.begin( ), results.end( ), distance_predicate( ray_from ) );
+	}
 }
 
-// STATE[STUB]
-// vostok::physics::primitive_type vostok::physics::from_bullet_shape_type(int)
-collision::primitive_type from_bullet_shape_type( s32 type )
+//
+// sushi@NOTE: All of this is extremely confusing.
+// All functions actually have different static consts,
+//		which are also unnamed (compiler generated?).
+// All functions expect only 4 cases, while this table has 5
+//		(6, if you count 0xCC, which is its own share of problems).
+// Box, Sphere and Cylinder actually matched properly.
+// 0x04 is confusing since it matches many different types.
+// 0xCC is even more confusing, since there are 36 types,
+//		while they cover only 24.
+//
+
+static const u8 s_convert_from_bullet_type[] = {
+    0x00, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+    0x01, 0x04, 0x02, 0x04, 0x04, 0x03, 0xCC, 0xCC,
+    0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC
+};
+
+// STATE[STUB] Incorrect generation by Ghidra scripts
+static collision::primitive_type from_bullet_shape_type( s32 type )
 {
-	return collision::primitive_box;
-	// STATICS
-	// static <NoType> 				 = <0x6bc7b8>;
-	// static <NoType> 				 = <0x6bc7a4>;
-	// ******
-
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab78e }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab794 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab797 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6ab79d }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// ******
-
-	// FUNCTION BODY
-	// <0x6bc780>|0x000|0x000:'654'
-	// <1>
-	// <0x6bc78e>|0x00e|0x00e:'656'
-	// <0x6bc794>|0x014|0x006:'657'
-	// <0x6bc797>|0x017|0x003:'658'
-	// <0x6bc79d>|0x01d|0x006:'659'
-	// <1>
-	// <2>
-	// ******
+	switch ( s_convert_from_bullet_type[ type ] )
+	{
+		case 0:	return collision::primitive_box;
+		case 1:	return collision::primitive_sphere;
+		case 3:	return collision::primitive_cylinder;
+		case 2:	return collision::primitive_capsule;
+		default: NODEFAULT( );
+	}
 }
 
-// STATE[STUB]
-// vostok::math::float3 vostok::physics::dimensions_from_bullet_shape(btCollisionShape const*)
-float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
+// STATE[STUB] Incorrect generation by Ghidra scripts.
+// Possibly has `from_bullet_shape_type` call inlined?
+static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 {
-	// LOCALS
-	// float3 						half_extents
-	// float3 						radius
-	// float3 						half_extents
-	// float3 						dimensions
-	// ******
-
-	// STATICS
-	// static <NoType> 				 = <0x6bcc18>;
-	// static <NoType> 				 = <0x6bcc04>;
-	// ******
-
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6abb24 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6abb4a }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6abb7e }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6abbbb }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// ******
-
-	return vostok::math::float3(1., 1., 1.);
-	// FUNCTION BODY
-	// <0x6bcb10>|0x000|0x000:'667'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bcb24>|0x014|0x014:'672'
-	// <0x6bcb45>|0x035|0x021:'673'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bcb4a>|0x03a|0x005:'678'
-	// <0x6bcb62>|0x052|0x018:'679'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bcb7e>|0x06e|0x01c:'684'
-	// <0x6bcba5>|0x095|0x027:'685'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6bcbbb>|0x0ab|0x016:'690'
-	// <0x6bcb78>|0x068|-0x043:'691'
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	switch ( s_convert_from_bullet_type[ bullet_shape->getShapeType( ) ] )
+	{
+		case 0:
+		{
+			btBoxShape const* bt_shape = static_cast< btBoxShape const* >( bullet_shape );
+			float3 half_extents = from_bullet( bt_shape->getHalfExtentsWithoutMargin( ) );
+			return half_extents;
+		}
+		case 1:
+		{
+			btSphereShape const* bt_shape = static_cast< btSphereShape const* >( bullet_shape );
+			float3 radius( bt_shape->getRadius( ), bt_shape->getRadius( ), 0.0f );
+			return radius;
+		}
+		case 3:
+		{
+			btCylinderShape const* bt_shape = static_cast< btCylinderShape const* >( bullet_shape );
+			float3 half_extents = from_bullet( bt_shape->getHalfExtentsWithoutMargin( ) );
+			return half_extents;
+		}
+		case 2:
+		{
+			btCapsuleShape const* bt_shape = static_cast< btCapsuleShape const* >( bullet_shape );
+			float3 dimensions( bt_shape->getHalfHeight( ), bt_shape->getRadius( ), 0.0f );
+			return dimensions;
+		}
+		default: NODEFAULT( );
+	}
 }
 
-// STATE[STUB]
-// float vostok::physics::contact_result_callback::addSingleResult(btManifoldPoint&, btCollisionObject const*, int, int, btCollisionObject const*, int, int)
+// STATE[42.88%|STUB]: Problems in Ghidra scripts, `from_bullet_shape_type` got inlined also
 float contact_result_callback::addSingleResult(
-	btManifoldPoint&			__formal1,
+	btManifoldPoint&			cp,
 	btCollisionObject const*	colObj0,
-	s32							__formal2,
-	s32							__formal3,
+	s32							partId0,
+	s32							index0,
 	btCollisionObject const*	colObj1,
-	s32							__formal4,
-	s32							__formal5
+	s32							partId1,
+	s32							index1
 )
 {
-	// LOCALS
-	// float4x4 					shape_1_transform
-	// float3 						shape_0_dim
-	// float4x4 					shape_0_transform
-	// float3 						shape_1_dim
-	// ******
+	s32 shape_0_type = colObj0->getCollisionShape( )->getShapeType( );
+	float4x4 shape_0_transform = from_bullet( colObj0->getWorldTransform( ) );
+	float3 shape_0_dim = dimensions_from_bullet_shape( colObj0->getCollisionShape( ) );
 
-	// CALL SITE INFO
-	// <0x3661b> -> float <unknown>(void*, primitive_type, float4x4 const&, float3 const&, primitive_type, float4x4 const&, float3 const&)
-	// ******
+	s32 shape_1_type = colObj1->getCollisionShape( )->getShapeType( );
+	float4x4 shape_1_transform = from_bullet( colObj1->getWorldTransform( ) );
+	float3 shape_1_dim = dimensions_from_bullet_shape( colObj1->getCollisionShape( ) );
 
-	return 0.0f;
-	// FUNCTION BODY
-	// <0x3657d>|0x000|0x000:'707'
-	// <0x3658f>|0x012|0x012:'708'
-	// <0x3659f>|0x022|0x010:'709'
-	// <1>
-	// <0x365ae>|0x031|0x00f:'711'
-	// <0x365be>|0x041|0x010:'712'
-	// <0x365ca>|0x04d|0x00c:'713'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x365d9>|0x05c|0x00f:'723'
-	// ******
+	return m_predicate->add_single_result(
+		colObj0->getCollisionShape( )->getUserPointer( ),
+		from_bullet_shape_type( shape_0_type ),
+		shape_0_transform,
+		shape_0_dim,
+		from_bullet_shape_type( shape_1_type ),
+		shape_1_transform,
+		shape_1_dim
+	); // <0x365d9>|0x05c|0x00f:'723'
 }
 
 // STATE[STUB]
 void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object )
 {
-	// LOCALS
-	// contact_result_callback 		cb
-	// ******
-
-	// FUNCTION BODY
-	// <0x6bd373>|0x000|0x000:'732'
-	// <0x6bd380>|0x00d|0x00d:'733'
-	// ******
+	contact_result_callback cb( &predicate );	// <0x6bd373>|0x000|0x000:'732'
+	m_dynamicsWorld->contactPairTest( first_object, second_object, cb );
 }
 
 // STATE[STUB]
@@ -854,7 +811,7 @@ bool bullet_physics_world::adjust_foot_transform(
 	// ******
 }
 
-// STATE[95.83%|PARTIAL]
+// STATE[95.83%|PARTIAL]: Functionally complete. See comments inside the function for diffs.
 void bullet_physics_world::notify_about_contact( )
 {
 	s32 num_manifold = m_dispatcher->getNumManifolds( );											// <0x6bdced>|0x000|0x000:'826'

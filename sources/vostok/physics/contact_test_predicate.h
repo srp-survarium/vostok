@@ -30,17 +30,17 @@ STATIC_SIZE_ASSERT(contact_test_predicate, 0x4);
 
 struct contact_result_callback : btCollisionWorld::ContactResultCallback {
 public:
-	inline				contact_result_callback( contact_test_predicate* predicate ): m_predicate( predicate ) { }
+	inline				contact_result_callback( contact_test_predicate* predicate ) : m_predicate( predicate ) { }
 
 	// sushi@TODO: The impl is in `bullet_physics_world.cpp`
 	virtual	btScalar	addSingleResult			(
-							btManifoldPoint&			__formal1,
+							btManifoldPoint&			cp,
 							btCollisionObject const*	colObj0,
-							s32							__formal2,
-							s32							__formal3,
+							s32							partId0,
+							s32							index0,
 							btCollisionObject const*	colObj1,
-							s32							__formal4,
-							s32							__formal5
+							s32							partId1,
+							s32							index1
 						) override;
 
 public:
