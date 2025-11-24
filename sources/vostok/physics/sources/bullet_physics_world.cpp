@@ -479,7 +479,9 @@ bool bullet_physics_world::recover_from_penetrations(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[99.21%|DONE]: Logging is still not done properly
+// transfrom_from - starting position + starting rotation (local -> world)
+// transfrom_to   - ending position + ending rotation	  (local -> world)
 void bullet_physics_world::object_query(
 	bt_collision_shape*				const shape,
 	float4x4 const&					transform_from,
@@ -542,7 +544,12 @@ void bullet_physics_world::object_query(
 	} else {
 		if ( shape->get_bt_shape( )->isCompound( ) )
 		{
-			// sushi@TODO
+			btCompoundShape* comp_shape = static_cast< btCompoundShape* >( shape->get_bt_shape( ) );
+			cast_shape = static_cast< btConvexShape* >( comp_shape->getChildShape( 0 ) );
+			btTransform& child_transform = comp_shape->getChildTransform( 0 );
+			resultCallback.m_modify_result_transform = child_transform.inverse( );
+			t1 = t1 * child_transform;
+			t2 = t2 * child_transform;
 		}
 		else
 		{
@@ -743,7 +750,6 @@ void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate,
 }
 
 // STATE[STUB]
-// bool vostok::physics::bullet_physics_world::adjust_foot_transform(vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float3 const&, float, float, vostok::math::float4x4&)
 bool bullet_physics_world::adjust_foot_transform(
 	float3 const&		half_size,
 	float3 const&		start,
@@ -753,9 +759,17 @@ bool bullet_physics_world::adjust_foot_transform(
 	float4x4&			transform
 )
 {
+	static bool s_ik_change_foot_rotation_value = false; // sushi@TODO: Should it be false? <0x4c25f0b>;
+	static console_commands::cc_bool s_ik_change_foot_rotation_cc( "ik_change_foot_rotation", s_ik_change_foot_rotation_value, false, console_commands::command_type_engine_internal );
+
+	btCapsuleShape collision_shape( half_size.x, half_size.y );
+
+	btTransform from = from_vostok( transform );
+	btQuaternion q;
+	from.getBasis( ).getRotation( q );
+
 	// LOCALS
 	// btCollisionWorld::ClosestConvexResultCallback callback
-	// btCapsuleShape 				collision_shape
 	// btVector3 					result
 	// float3 						normal
 	// float 						angle
@@ -763,8 +777,7 @@ bool bullet_physics_world::adjust_foot_transform(
 	// ******
 
 	// STATICS
-	// static bool 					s_ik_change_foot_rotation_value = <0x4c25f0b>;
-	// static console_commands::cc_bool s_ik_change_foot_rotation_cc = <0x4c2b0e0>;
+
 	// ******
 
 	return false;
