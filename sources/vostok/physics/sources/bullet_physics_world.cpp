@@ -390,15 +390,29 @@ bool bullet_physics_world::recover_from_penetrations(
 	// s32 							j
 	// ******
 
-	// CALL SITE INFO
-	// <0x6be98e> -> void <unknown>(btCollisionObject*, short, short)
-	// <0x6be9b0> -> void <unknown>(btOverlappingPairCache*, btDispatcherInfo const&, btDispatcher*)
-	// <0x6be9e7> -> int <unknown>() const
-	// <0x6bea66> -> btAlignedObjectArray<btBroadphasePair>& <unknown>()
-	// <0x6bea82> -> void <unknown>(btAlignedObjectArray<btPersistentManifold *>&)
-	// <0x6beed1> -> int <unknown>() const
-	// <0x6bef82> -> void <unknown>(btCollisionObject*)
-	// ******
+
+	btPairCachingGhostObject test_ghost_object;
+	test_ghost_object.setCollisionShape( shape->get_bt_shape( ) );
+	test_ghost_object.setCollisionFlags( 16 );
+	test_ghost_object.setWorldTransform( from_vostok( transform_initial ) );
+
+	m_dynamicsWorld->addCollisionObject( &test_ghost_object, filter_group, filter_mask );
+
+	int maxIter = 3;
+
+	while ( maxIter-- > 0 )
+	{
+		m_dynamicsWorld->getDispatcher( )->dispatchAllCollisionPairs(
+			test_ghost_object.getOverlappingPairCache( ),
+			m_dynamicsWorld->getDispatchInfo( ),
+			m_dynamicsWorld->getDispatcher( )
+		);
+
+		while ( test_ghost_object.getOverlappingPairCache( )->getNumOverlappingPairs( ) > 0 )
+		{
+
+		}
+	}
 
 	return false;
 	// FUNCTION BODY
@@ -406,8 +420,6 @@ bool bullet_physics_world::recover_from_penetrations(
 	// <1>
 	// <0x6be92a>|0x00e|0x00e:'401'
 	// <1>
-	// <2>
-	// <3>
 	// <4>
 	// <0x6be942>|0x026|0x018:'406'
 	// <1>
@@ -419,8 +431,6 @@ bool bullet_physics_world::recover_from_penetrations(
 	// <3>
 	// <0x6be998>|0x07c|0x008:'414'
 	// <1>
-	// <2>
-	// <3>
 	// <4>
 	// <0x6be9b2>|0x096|0x01a:'419'
 	// <1>
@@ -452,12 +462,6 @@ bool bullet_physics_world::recover_from_penetrations(
 	// <2>
 	// <0x6beb09>|0x1ed|0x00f:'447'
 	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
 	// <8>
 	// <0x6becfd>|0x3e1|0x1f4:'456'
 	// <1>
@@ -558,40 +562,6 @@ void bullet_physics_world::object_query(
 		}
 	}
 	m_dynamicsWorld->convexSweepTest( cast_shape, t1, t2, resultCallback );
-
-	// FUNCTION BODY
-	// <1>
-	// <..>
-	// <35>
-	// <0x6bdf1e>|0x000|0x000:'517' btTransform t1 = from_vostok( transform_from );
-	// <0x6bdf3b>|0x01d|0x01d:'518' btTransform t2 = from_vostok( transform_to );
-	// <0x6bdf47>|0x029|0x00c:'519' object_query_callback resultCallback( results, filter_group, filter_mask );
-	// <1>
-	// <0x6bdf64>|0x046|0x01d:'521'
-	// <1>
-	// <0x6be021>|0x103|0x0bd:'523' if ( shape->get_bt_shape( )->isConvex( ) )
-	// <1>							{
-	// <0x6be029>|0x10b|0x008:'525'
-	// <0x6be02b>|0x10d|0x002:'526'	} else {
-	// <0x6be030>|0x112|0x005:'527'		if ( shape->get_bt_shape( )->isCompound( ) )
-	// <1>								{
-	// <2>
-	// <0x6be039>|0x11b|0x009:'530'
-	// <1>
-	// <2>
-	// <0x6be03f>|0x121|0x006:'533'
-	// <1>
-	// <0x6be051>|0x133|0x012:'535'
-	// <0x6be443>|0x525|0x3f2:'536'
-	// <1>
-	// <2>								} else
-	// <3>								{
-	// <0x6be864>|0x946|0x421:'540'			LOG_ERROR( "Unsupported shape passed" );
-	// <1>								}
-	// <2>							}
-	// <3>
-	// <0x6be82f>|0x911|-0x035:'544'
-	// ******
 }
 
 struct distance_predicate {

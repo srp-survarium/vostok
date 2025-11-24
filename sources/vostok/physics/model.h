@@ -14,19 +14,15 @@ namespace vostok {
 namespace physics {
 
 
-struct animated_model_instance : resources::unmanaged_resource {
-	/* offset 0x0000 */ /* fields for resources::unmanaged_resource */
-	/* offset 0x0108 */ animation::skeleton_ptr m_skeleton;
+struct animated_model_instance : public resources::unmanaged_resource {
+	/* 0x0108 */	animation::skeleton_ptr m_skeleton;
 }; // struct animated_model_instance
 
 STATIC_SIZE_ASSERT(animated_model_instance, 0x110);
 
 
-typedef	resources::resource_ptr<
-			animated_model_instance,
-			resources::unmanaged_intrusive_base >
+typedef	resources::resource_ptr< animated_model_instance, resources::unmanaged_intrusive_base >
 		animated_model_instance_ptr;
-
 
 } // namespace physics
 } // namespace vostok

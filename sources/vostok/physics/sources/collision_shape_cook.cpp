@@ -125,10 +125,10 @@ void collision_shape_cook::on_collision_sources_loaded( resources::queries_resul
 	// btTransform                     child_local_transform
 	// ******
 
-	// TYPEDEFS
-	// typedef
-	// 	collision_shape_cook::on_collision_sources_loaded::__l29::remap
-	// 	collision_shape_cook::on_collision_sources_loaded::__l29::remap;
+
+	struct remap {
+		u16		game_mtl;
+	};
 
 	// FUNCTION BODY
 	// <0x72d42f>|0x000|0x000:'88'
