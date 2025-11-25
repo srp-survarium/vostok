@@ -2286,10 +2286,6 @@
 			Name="public_api"
 			>
 			<File
-				RelativePath="..\animated_model_instance_cook.h"
-				>
-			</File>
-			<File
 				RelativePath="..\animated_rigid_body.h"
 				>
 			</File>
@@ -2303,10 +2299,6 @@
 			</File>
 			<File
 				RelativePath="..\character_controller.h"
-				>
-			</File>
-			<File
-				RelativePath="..\collision_shape_cook.h"
 				>
 			</File>
 			<File
@@ -2342,6 +2334,10 @@
 			Name="private_api"
 			>
 			<File
+				RelativePath=".\animated_model_instance_cook.h"
+				>
+			</File>
+			<File
 				RelativePath=".\bullet_character_controller.h"
 				>
 				<FileConfiguration
@@ -2366,6 +2362,10 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\collision_shape_cook.h"
+				>
 			</File>
 		</Filter>
 		<File

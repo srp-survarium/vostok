@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <vostok/physics/collision_shape_cook.h>
+#include "./collision_shape_cook.h"
 
 namespace vostok {
 namespace physics {
@@ -273,8 +273,11 @@ void collision_shape_cook::on_collision_sources_loaded( resources::queries_resul
 // STATE[STUB]
 void collision_shape_cook::delete_resource( resources::resource_base* resource )
 {
-	// sushi@NOTE: ASSERT( resource )
 	VOSTOK_DELETE_IMPL( g_ph_allocator, resource ); // <0x72d261>|0x000|0x000:'229'
+
+	// bt_collision_shape* s = static_cast_checked<bt_collision_shape*>(resource);
+	// destroy_shape			( *g_ph_allocator, s );
+
 }
 
 // STATE[STUB]

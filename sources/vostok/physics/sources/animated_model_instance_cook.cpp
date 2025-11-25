@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <vostok/physics/animated_model_instance_cook.h> // sushi@TODO: Should be private
+#include "./animated_model_instance_cook.h"
 
 #include <vostok/physics/model.h>
 #include <vostok/physics/world.h>
