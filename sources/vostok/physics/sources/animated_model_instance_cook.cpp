@@ -3,198 +3,145 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <vostok/physics/animated_model_instance_cook.h>
+#include <vostok/physics/animated_model_instance_cook.h> // sushi@TODO: Should be private
+
+#include <vostok/physics/model.h>
+#include <vostok/physics/world.h>
+
+// Match percentage is low, but almost nothing has changed from the XRAY implementation,
+// meaning most likely everything here is done.
 
 namespace vostok {
 namespace physics {
 
-// STATE[STUB]
-// vostok::physics::animated_model_instance_cook::animated_model_instance_cook()
+// STATE[49%|PARTIAL]
 animated_model_instance_cook::animated_model_instance_cook( ):
-	resources::translate_query_cook			( // dummy values
-		resources::single_animation_class,
-		reuse_true,
-		use_resource_manager_thread_id
-	)
+	resources::translate_query_cook	(
+		resources::physics_animated_model_instance_class,
+		reuse_false,
+		thread_id_unset
+	),
+	m_allocator						( g_ph_allocator )
 {
-	// FUNCTION BODY
-	// <0x72cd82>|0x000|0x000:'25'
-	// ******
+	register_cook( this );	// <0x72cd82>|0x000|0x000:'25'
 }
 
-// STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::translate_request_path(char const*, vostok::fs_new::virtual_path_string&) const
+// STATE[100%|DONE]
 void animated_model_instance_cook::translate_request_path( pcstr request, fs_new::virtual_path_string& new_request ) const
 {
-	// FUNCTION BODY
-	// <0x72cdb0>|0x000|0x000:'30'
-	// ******
+	new_request.assignf(
+		"resources/animated_model_instances/physics_animated_models/%s.physics_model",
+		request
+	); // <0x72cdb0>|0x000|0x000:'30'
 }
 
-// STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::translate_query(vostok::resources::query_result_for_cook&)
+// STATE[85%|PARTIAL]
 void animated_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x72d1cd>|0x000|0x000:'42'
-	// ******
+	resources::query_resource			(
+		parent.get_requested_path(),
+		resources::binary_config_class,
+		boost::bind( &animated_model_instance_cook::on_config_loaded, this, _1 ),
+		m_allocator,
+		0,
+		&parent
+	); // <0x72d1cd>|0x000|0x000:'42'
 }
 
-// STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::on_config_loaded(vostok::resources::queries_result&)
+// STATE[76%|PARTIAL]
 void animated_model_instance_cook::on_config_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// resources::query_result_for_cook* parent
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
-	// fs_new::virtual_path_string 	skeleton_config_path
-	// ******
+	resources::query_result_for_cook* const	parent		= data.get_parent_query();											// <0x72d05c>|0x000|0x000:'47'
+	if ( !data.is_successful() )
+	{
+		parent->finish_query							( result_error );
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x72d05c>|0x000|0x000:'47'
-	// <0x72d05f>|0x003|0x003:'48'
-	// <1>
-	// <0x72d073>|0x017|0x014:'50'
-	// <1>
-	// <2>
-	// <3>
-	// <0x72d089>|0x02d|0x016:'54'
-	// <0x72d0cb>|0x06f|0x042:'55'
-	// <0x72d0d5>|0x079|0x00a:'56'
-	// <1>
-	// <0x72d0df>|0x083|0x00a:'58'
-	// <0x72d0ed>|0x091|0x00e:'59'
-	// <0x72d0f3>|0x097|0x006:'60'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x72d125>|0x0c9|0x032:'69'
-	// ******
+	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
+	configs::binary_config_value const& config_value	= config->get_root();												// <0x72d0cb>|0x06f|0x042:'55'
+	configs::binary_config_value const& attributes		= config_value["attributes"];
+
+	pcstr skeleton_path									= attributes["skeleton"];
+	fs_new::virtual_path_string								skeleton_config_path;
+	skeleton_config_path.assignf						( "resources/models/%s.skinned_model/skeleton", skeleton_path );	// <0x72d0f3>|0x097|0x006:'60'
+
+	resources::query_resource							(
+		skeleton_config_path.c_str(),
+		resources::binary_config_class,
+		boost::bind( &animated_model_instance_cook::on_skeleton_config_loaded, this, _1 ),
+		m_allocator,
+		0,
+		parent
+	);																														// <0x72d125>|0x0c9|0x032:'69'
 }
 
-// STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::on_skeleton_config_loaded(vostok::resources::queries_result&)
+// STATE[76%|PARTIAL]
+// sushi@NOTE: Only skeleton config is left from xray, collision_config and ragdoll config were removed (as well with `config` argument)
 void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// resources::query_result_for_cook* parent
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> skeleton_config
-	// resources::request[1] 		requests
-	// ******
+	resources::query_result_for_cook* const	parent		= data.get_parent_query();
+	if ( !data.is_successful() )														// <0x72cf40>|0x007|0x007:'75'
+	{
+		parent->finish_query							( result_error );
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x72cf39>|0x000|0x000:'74'
-	// <0x72cf40>|0x007|0x007:'75'
-	// <1>
-	// <0x72cf50>|0x017|0x010:'77'
-	// <1>
-	// <2>
-	// <3>
-	// <0x72cf64>|0x02b|0x014:'81'
-	// <0x72cfa6>|0x06d|0x042:'82'
-	// <1>
-	// <2>
-	// <0x72cfb0>|0x077|0x00a:'85'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x72cfba>|0x081|0x00a:'101'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x72cfbc>|0x083|0x002:'113'
-	// ******
+	configs::binary_config_ptr skeleton_config			= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
+	configs::binary_config_value const& skeleton_value	= skeleton_config->get_root();	// <0x72cfa6>|0x06d|0x042:'82'
+
+	R_ASSERT											( skeleton_value.value_exists( "skeleton" ) );
+	pcstr skeleton_path									= skeleton_value["skeleton"];	// <0x72cfb0>|0x077|0x00a:'85'
+
+	resources::request requests[] =
+	{
+		{ skeleton_path, resources::skeleton_class }
+	};																					// <0x72cfba>|0x081|0x00a:'101'
+
+	query_resources										(
+		requests,
+		array_size( requests ),
+		boost::bind( &animated_model_instance_cook::on_subresources_loaded, this, _1 ),
+		m_allocator,
+		0,
+		parent
+	);																					// <0x72cfbc>|0x083|0x002:'113'
 }
 
-// STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::on_subresources_loaded(vostok::resources::queries_result&)
+// STATE[55%|PARTIAL]
 void animated_model_instance_cook::on_subresources_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// resources::query_result_for_cook* parent
-	// ******
+	resources::query_result_for_cook* const	parent	= data.get_parent_query();
+	if ( !data.is_successful() )
+	{
+		parent->finish_query						( result_error );											// <0x72cdf4>|0x01a|0x017:'121'
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x72cdda>|0x000|0x000:'118'
-	// <0x72cddd>|0x003|0x003:'119'
-	// <1>
-	// <0x72cdf4>|0x01a|0x017:'121'
-	// <1>
-	// <2>
-	// <3>
-	// <0x72ce0a>|0x030|0x016:'125'
-	// <0x72ce38>|0x05e|0x02e:'126'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <0x72cee1>|0x107|0x0a9:'148'
-	// <0x72cdfc>|0x022|-0x0e5:'149'
-	// ******
+	animated_model_instance* new_model_instance		= VOSTOK_NEW_IMPL( m_allocator, animated_model_instance );	// <0x72ce0a>|0x030|0x016:'125'
+	new_model_instance->m_skeleton					= static_cast_resource_ptr< animation::skeleton_ptr >( data[0].get_unmanaged_resource() );
+
+	R_ASSERT( parent );
+	resources::user_data_variant* user_data = parent->user_data();
+	R_ASSERT( user_data );
+	world *physics_world = 0;
+	bool res_user_data = user_data->try_get( physics_world );
+	R_ASSERT( res_user_data );
+	R_ASSERT( physics_world );
+
+	parent->set_unmanaged_resource					(
+				new_model_instance,
+				resources::memory_usage_type		( resources::nocache_memory, sizeof( animated_model_instance ) )
+			);																									// <0x72cee1>|0x107|0x0a9:'148'
+	parent->finish_query							( result_success );											// <0x72cdfc>|0x022|-0x0e5:'149'
 }
 
-// STATE[STUB]
-// void vostok::physics::animated_model_instance_cook::delete_resource(vostok::resources::resource_base*)
+// STATE[100%|DONE]
 void animated_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// CALL SITE INFO
-	// <0x72cd21> -> void* <unknown>(u32)
-	// ******
-
-	// FUNCTION BODY
 	// <1>
 	// <2>
-	// <0x72cd01>|0x000|0x000:'156'
-	// ******
+	VOSTOK_DELETE_IMPL( m_allocator, resource ); // <0x72cd01>|0x000|0x000:'156'
 }
 
 } // namespace physics
