@@ -32,14 +32,14 @@ float4x4 bt_static_rigid_body::get_transform( ) const {
 // STATE[100%|DONE]
 void bt_static_rigid_body::set_transform( float4x4 const& transform ) {
 	m_bt_body->setWorldTransform( from_vostok( transform ) );						// <0x58415b>|0x000|0x000:'79'
-	m_bt_body->setInterpolationWorldTransform( m_bt_body->getWorldTransform( ) );	// <0x584172>|0x017|0x017:'80'
+	m_bt_body->setInterpolationWorldTransform( m_bt_body->getWorldTransform( ) );
 }
 
-// STATE[83%|DONE]: First statement used registers slightly differntly to retrieve `point_in_world`.
+// STATE[83%|PARTIAL]: First statement used registers slightly differntly to retrieve `point_in_world`.
 void bt_static_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world ) {
-	btVector3 rel_pos = from_vostok( point_in_world ) - m_bt_body->getWorldTransform().getOrigin();	// <0x584079>|0x000|0x000:'85'
-	m_bt_body->setActivationState( ACTIVE_TAG );													// <0x584097>|0x01e|0x01e:'86'
-	m_bt_body->applyImpulse( from_vostok( impulse ), rel_pos );										// <0x5840df>|0x066|0x048:'87'
+	btVector3 rel_pos = from_vostok( point_in_world ) - m_bt_body->getWorldTransform().getOrigin();
+	m_bt_body->setActivationState( ACTIVE_TAG );
+	m_bt_body->applyImpulse( from_vostok( impulse ), rel_pos );
 }
 
 // STATE[52%|DONE]: `resource_ptr` problems.

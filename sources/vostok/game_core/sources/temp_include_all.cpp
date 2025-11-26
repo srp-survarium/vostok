@@ -27,6 +27,7 @@
 #include <vostok/physics/static_rigid_body.h>
 #include <vostok/physics/contact_test_predicate.h>
 #include <vostok/physics/sources/bullet_character_controller.h>
+#include <vostok/physics/character_controller.h>
 
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
@@ -74,6 +75,33 @@ namespace vostok
 			"Hello!"
 		);
 
+	}
+
+	void use_bt_character_controller()
+	{
+		memory::stack_allocator stack_allocator;
+		physics::bt_character_controller* cc2 = physics::create_character_controller( stack_allocator, NULL );
+
+		physics::bt_character_controller cc(NULL);
+		cc.allocator();
+		cc.initialize();
+
+		float4x4 t;
+		cc.activate(t);
+		cc.deactivate();
+		cc.get_transform();
+		cc.set_transform(t);
+		cc.set_walk_direction(float3());
+		cc.has_updates();
+		cc.jump();
+		cc.end_jump();
+		cc.adjust_foot_transform( float3(), float3(), float3(), 1.0, 1.0, t);
+		cc.update_action(10);
+		cc.can_jump();
+		cc.on_ground();
+		cc.set_crouch(true);
+		cc.can_crouch();
+		cc.can_stand();
 	}
 
 	void use_bullet_character_controller()
@@ -296,6 +324,8 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_bt_character_controller();
+	vostok::use_physics_api();
 	vostok::use_log();
 	vostok::use_network_core_http_client();
 	vostok::use_static_rigid_body();

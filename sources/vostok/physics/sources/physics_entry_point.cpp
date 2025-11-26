@@ -9,9 +9,10 @@
 
 #include <vostok/linkage_helper.h>
 #include <vostok/physics/world.h>
-#include <vostok/physics/animated_model_instance_cook.h>	// sushi@TODO: Should be private?
-#include <vostok/physics/collision_shape_cook.h>			// sushi@TODO: Should be private?
-#include "bullet_physics_world.h"
+
+#include "./animated_model_instance_cook.h"
+#include "./collision_shape_cook.h"
+#include "./bullet_physics_world.h"
 
 memory::base_allocator*	vostok::physics::g_ph_allocator = NULL;
 
@@ -20,7 +21,7 @@ VOSTOK_DECLARE_LINKAGE_ID(physics_entry_point)
 namespace vostok {
 namespace physics {
 
-// STATE[STUB]
+// STATE[91.54%|DONE]: LTCG for allocator: vostok::memory::pthreads3_allocator vostok::memory::g_mt_allocator
 vostok::physics::world* create_world_bt( vostok::memory::base_allocator* allocator, physics::engine& engine )
 {
 	return VOSTOK_NEW_IMPL( allocator, bullet_physics_world )( *allocator, engine ); // <0x72e5f0>|0x000|0x000:'24'
@@ -37,7 +38,7 @@ void set_memory_allocator( memory::base_allocator* allocator )
 	static animated_model_instance_cook animated_model_cook;
 }
 
-// STATE[STUB]
+// STATE[98%|DONE]: LTCG for allocator
 void destroy_world( vostok::memory::base_allocator* allocator, world* w )
 {
 	w->destroy( ); // <0x72e450>|0x000|0x000:'39'

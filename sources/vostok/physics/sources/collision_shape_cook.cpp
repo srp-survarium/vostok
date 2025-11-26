@@ -270,7 +270,7 @@ void collision_shape_cook::on_collision_sources_loaded( resources::queries_resul
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void collision_shape_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, resource ); // <0x72d261>|0x000|0x000:'229'

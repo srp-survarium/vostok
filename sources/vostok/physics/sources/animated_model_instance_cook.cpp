@@ -35,7 +35,7 @@ void animated_model_instance_cook::translate_request_path( pcstr request, fs_new
 	); // <0x72cdb0>|0x000|0x000:'30'
 }
 
-// STATE[85%|PARTIAL]
+// STATE[85%|DONE]
 void animated_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	resources::query_resource			(
@@ -48,7 +48,7 @@ void animated_model_instance_cook::translate_query( resources::query_result_for_
 	); // <0x72d1cd>|0x000|0x000:'42'
 }
 
-// STATE[76%|PARTIAL]
+// STATE[76%|DONE]
 void animated_model_instance_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();											// <0x72d05c>|0x000|0x000:'47'
@@ -76,7 +76,7 @@ void animated_model_instance_cook::on_config_loaded( resources::queries_result& 
 	);																														// <0x72d125>|0x0c9|0x032:'69'
 }
 
-// STATE[76%|PARTIAL]
+// STATE[76%|DONE]
 // sushi@NOTE: Only skeleton config is left from xray, collision_config and ragdoll config were removed (as well with `config` argument)
 void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries_result& data )
 {
@@ -108,7 +108,7 @@ void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries
 	);																					// <0x72cfbc>|0x083|0x002:'113'
 }
 
-// STATE[55%|PARTIAL]
+// STATE[55%|DONE]
 void animated_model_instance_cook::on_subresources_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent	= data.get_parent_query();
