@@ -30,7 +30,7 @@ private:
 STATIC_SIZE_ASSERT(btBvhTriangleMeshShapeResource, 0x70);
 
 
-// STATE[STUB]
+// STATE[0%|PARTIAL]
 btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 	btStridingMeshInterface*           meshInterface,
 	u16*                               face_data,
@@ -83,8 +83,8 @@ void destroy_bt_shape( btCollisionShape* sh )
 		btCompoundShape* shape = (btCompoundShape*)sh;
 		while ( shape->getNumChildShapes( ) )
 		{
-			btCollisionShape* child = shape->getChildList()->m_childShape;
-			shape->removeChildShapeByIndex(0);
+			btCollisionShape* child = shape->getChildList( )->m_childShape;
+			shape->removeChildShapeByIndex( 0 );
 			destroy_bt_shape( child );
 		}
 	}
@@ -104,7 +104,7 @@ void destroy_shape( bt_collision_shape* shape )
 	VOSTOK_DELETE_IMPL( g_ph_allocator, shape );	// <0x72c201>|0x000|0x000:'115'
 }
 
-// STATE[STUB]
+// STATE[??%|PARTIAL]: Based on IDA correct. sushi@TODO: switches are broken for objgen in Ghidra. Maybe enabling some options can fix this.
 btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 const& dim, float3 const& __formal )
 {
 	btCollisionShape*	result = NULL;														// <0x72c269>|0x000|0x000:'120'
@@ -113,40 +113,23 @@ btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 co
 	case collision::primitive_sphere :
 		{
 			btScalar radius = dim.x;														// <0x72c27c>|0x013|0x010:'125'
-
 			result = VOSTOK_NEW_IMPL( g_ph_allocator, btSphereShape )( radius );			// <0x72c280>|0x017|0x004:'127'
-			// ???
-			// ???
-			// ???
-			// ???
 		}break;
 	case collision::primitive_box :
 		{
 			btVector3 half_extents( dim.x, dim.y, dim.z );									// <0x72c2af>|0x046|0x02f:'135'
 			result = VOSTOK_NEW_IMPL( g_ph_allocator, btBoxShape )( half_extents );			// <0x72c2c9>|0x060|0x01a:'136'
-			// ???
-			// ???
-			// ???
-			// ???
 		}break;
 	case collision::primitive_cylinder :
 		{
 			btVector3 half_extents( dim.x, dim.y, dim.z );									// <0x72c2fd>|0x094|0x034:'144'
 			result = VOSTOK_NEW_IMPL( g_ph_allocator, btCylinderShape )( half_extents );	// <0x72c317>|0x0ae|0x01a:'145'
-			// ???
-			// ???
-			// ???
-			// ???
 		}break;
 	case collision::primitive_capsule :
 		{
 			btScalar radius = dim.x;														// <0x72c347>|0x0de|0x030:'153'
 			btScalar height = dim.y;														// <0x72c351>|0x0e8|0x00a:'154'
 			result = VOSTOK_NEW_IMPL( g_ph_allocator, btCapsuleShape )( radius, height );	// <0x72c356>|0x0ed|0x005:'155'
-			// ???
-			// ???
-			// ???
-			// ???
 		}break;
 	}
 	return result;
@@ -167,14 +150,14 @@ bt_collision_shape* create_primitive_shape( collision::primitive_type type, floa
 	return result;
 }
 
-// STATE[STUB]
+// STATE[90.99%|PARTIAL]: LTCG eax vs. ecx. Maybe something more.
 bt_collision_shape* create_compound_shape( configs::binary_config_value const& shapes_root, float3 const& local_scale, pcstr model_path )
 {
 	configs::binary_config_value::const_iterator it		= shapes_root.begin();
 	configs::binary_config_value::const_iterator it_e	= shapes_root.end();														// <0x72c501>|0x000|0x000:'182'
 
 	btCompoundShape* bt_shape							= VOSTOK_NEW_IMPL( g_ph_allocator, btCompoundShape )( );					// <0x72c511>|0x010|0x010:'184'
-	u32				 bt_shapes_len						= sizeof(u16) * 24 * shapes_root.count / 24;								// <0x72c539>|0x038|0x028:'185': sushi@NOTE: No idea why length is calculated like this. Happens in many places.
+	u32				 bt_shapes_len						= shapes_root.size( ) * sizeof( u16 );										// <0x72c539>|0x038|0x028:'185'
 
 	u16*			 face_data							= (u16*)VOSTOK_MALLOC_IMPL( g_ph_allocator, bt_shapes_len, "face_data" );	// <0x72c54d>|0x04c|0x014:'187'
 	memset( face_data, 0, bt_shapes_len );																							// <0x72c568>|0x067|0x01b:'188'
@@ -190,33 +173,14 @@ bt_collision_shape* create_compound_shape( configs::binary_config_value const& s
 		*face_data_it = it->value_exists("mtl") ? (u16)(*it)["mtl"] : 0;															// <0x72c62f>|0x12e|0x0b5:'198'
 		btCollisionShape* child_shape = create_bt_primitive( type, dim, dim );														// <0x72c638>|0x137|0x009:'199': sushi@NOTE: Note sure the last argument is needed.
 
-
-
 		float4x4 child_transform			= create_rotation(rotation) * create_translation(position);								// <0x72c646>|0x145|0x00e:'201'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		btTransform child_local_transform	= from_vostok( child_transform );														// <0x72c584>|0x083|-0x0c2:'220'
 		bt_shape->addChildShape				( child_local_transform, child_shape );													// <0x72c7f3>|0x2f2|0x26f:'221'
 		++face_data_it;																												// <0x72c949>|0x448|0x156:'222'
 	}
 
-	bt_shape->setLocalScaling( from_vostok( local_scale ) );																		// <0x72c95f>|0x45e|0x016:'225'
+	bt_shape->setLocalScaling( from_vostok_pos( local_scale ) );																	// <0x72c95f>|0x45e|0x016:'225'
 	bt_collision_shape* result		= VOSTOK_NEW_IMPL( g_ph_allocator, bt_collision_shape )( bt_shape );							// <0x72c99d>|0x49c|0x03e:'226'
 
 	result->m_shapes_face_data = face_data;																							// <0x72ca0f>|0x50e|0x072:'228'
@@ -224,7 +188,7 @@ bt_collision_shape* create_compound_shape( configs::binary_config_value const& s
 	return result;																													// <0x72ca15>|0x514|0x006:'230'
 }
 
-// STATE[STUB]
+// STATE[88.19%|PARTIAL]: LTCG
 btBvhTriangleMeshShape* create_btBvhTriangleMeshShape(
 	float3*                            vertices,
 	u32*                               indices,
@@ -256,8 +220,7 @@ btBvhTriangleMeshShape* create_btBvhTriangleMeshShape(
 	return result;
 }
 
-// STATE[STUB]
-// vostok::physics::bt_collision_shape* vostok::physics::create_static_triangle_mesh_shape(vostok::math::float3*, unsigned int*, unsigned int, unsigned int, unsigned short*, vostok::math::float3 const&, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const&, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const&)
+// STATE[81.36%|PARTIAL]: LTCG
 bt_collision_shape* create_static_triangle_mesh_shape(
 	float3*                            vertices,
 	u32*                               indices,

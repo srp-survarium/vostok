@@ -132,25 +132,26 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
-// STATE[UNVERIFIED]: sushi@NOTE: Verify. Fills in `geometries_data`?
+// STATE[99.54%]: sushi@TODO: Both reads and appends to `geometries_data`. Confusing. It just builds it, right?
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];
-	u32 hit_targets_count = 24 * targets_table.count / 24;
+	configs::binary_config_value const& targets_table = config["hit_targets"];										// <0x6bf98f>|0x000|0x000:'146'
+	u32 hit_targets_count = targets_table.size( );																	// <0x6bf99b>|0x00c|0x00c:'147'
+																													// <1>..<4>
+	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );										// <0x6bf9af>|0x020|0x014:'152'
 
-	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
-
-	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
+	for ( u32 i = 0 ; i < hit_targets_count ; ++i )																	// <0x6bf9e2>|0x053|0x033:'154'
 	{
-		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];
+		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];													// <0x6bfa0b>|0x07c|0x029:'156'
 		pcstr animation_bone = (pcstr)targets_table[i]["animation_bone"];
 
 		collision::bone_collision_data data( animation_bone, NULL, hit_param );
-		geometries_data[i] = data;
-		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &data ); // something got assigned to (3) zero + mov of hit_targets_count
-		bt_shape->addChildShape( from_vostok( float4x4().identity() ), element_joint );
+		geometries_data.push_back(data);
+		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &geometries_data[i] );	// <0x6bfb17>|0x188|0x036:'159'
+		btTransform joint_transform( from_vostok( float4x4().identity() ) );										// <0x6bf9ec>|0x05d|-0x12b:'160'
+		bt_shape->addChildShape( joint_transform, element_joint );													// <0x6bfc8c>|0x2fd|0x2a0:'161'
 	}
-	return bt_shape;
+	return bt_shape;																								// <0x6bfdfa>|0x46b|0x16e:'165'
 }
 
 // STATE[100%|DONE]
@@ -193,16 +194,16 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	}
 }
 
-// STATE[UNVERIFIED]: sushi@NOTE: What are label symbols, figure out.
+// STATE[98.38%|STUB]: sushi@NOTE: What are label symbols, figure out. TODO
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
-	u32 hit_targets_count = 24 * targets_table.count / 24;						// <0x6bf783>|0x00c|0x00c:'202'
+	u32 hit_targets_count = targets_table.size( );								// <0x6bf783>|0x00c|0x00c:'202'
 
-	u32 result = 112 * hit_targets_count + 96;									// <0x6bf7a1>|0x02a|0x01e:'204'
+	u32 result = 0x70 * hit_targets_count + 0x60;								// <0x6bf7a1>|0x02a|0x01e:'204'
 
 	for ( u32 i = 0 ; i < hit_targets_count ; ++i )								// <0x6bf7a6>|0x02f|0x005:'206'
-		result += calculate_bt_hit_target_size(targets_table[i]) + 96;			// <0x6bf7b3>|0x03c|0x00d:'207'
+		result += calculate_bt_hit_target_size(targets_table[i]) + 0x60;		// <0x6bf7b3>|0x03c|0x00d:'207'
 
 	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
 }
@@ -213,7 +214,7 @@ bt_animated_rigid_body* new_animated_rigid_body(
 	u16                                game_material_id,
 	memory::base_allocator*            allocator)
 {
-	btVector3	local_inertia(0.f, 0.f, 0.f); // xorps   xmm0, xmm0 ; right?
+	btVector3	local_inertia( 0.f, 0.f, 0.f ); // xorps   xmm0, xmm0 ; right?
 	shape->calculateLocalInertia( 0.f, local_inertia );
 
 	btRigidBody::btRigidBodyConstructionInfo info( 0.f, NULL, shape, local_inertia ); // sushi@NOTE: In target linker remove btMotionState* argument and sets NULL in the function instead
