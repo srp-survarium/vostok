@@ -5,6 +5,8 @@
 #include "pch.h"
 #include "./collision_shape_cook.h"
 
+#include <vostok/physics/collision_shapes.h>
+
 namespace vostok {
 namespace physics {
 
@@ -21,81 +23,79 @@ collision_shape_cook::collision_shape_cook( bool static_object ):
 	register_cook( this );	// <0x72d2e5>|0x000|0x000:'29'
 }
 
-// STATE[STUB]
+// STATE[93.03%|PARTIAL].
+// * `set_length` didn't inline.
+// * virtual_path vs path differences (possibly also inlining problems).
+// * LTCG for `query_resources`.
 void collision_shape_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// fs_new::virtual_path_string     model_config_path
-	// collision_shape_cook::cook_data* cd
-	// fs_new::virtual_path_string     req_path
-	// resources::request[5]           requests
-	// u32                             found
-	// float                           sz
-	// float                           sx
-	// float                           sy
-	// strings::detail::tuples         STR_JOINA_tuples_unique_identifier
-	// strings::detail::tuples         STR_JOINA_tuples_unique_identifier
-	// strings::detail::tuples         STR_JOINA_tuples_unique_identifier
-	// strings::detail::tuples         STR_JOINA_tuples_unique_identifier
-	// ******
+	fs_new::virtual_path_string req_path = parent.get_requested_path( );
+	u32 found = req_path.find( "#[" );
+	collision_shape_cook::cook_data* cd = VOSTOK_NEW_IMPL( g_ph_allocator, collision_shape_cook::cook_data );
+	cd->parent_query = &parent;																// <0x72e15b>|0x09f|0x046:'37'
 
-	// FUNCTION BODY
-	// <0x72e0bc>|0x000|0x000:'34'
-	// <0x72e0e6>|0x02a|0x02a:'35'
-	// <0x72e115>|0x059|0x02f:'36'
-	// <0x72e15b>|0x09f|0x046:'37'
+	if ( found != -1 )																		// <0x72e15d>|0x0a1|0x002:'39'
+	{
+		cd->model_path = req_path.substr( 0, found );										// <0x72e162>|0x0a6|0x005:'41'
+		float sx, sy, sz;
+		sscanf_s( req_path.begin( ) + found, "#[%f][%f][%f]", &sx, &sy, &sz );				// <0x72e17f>|0x0c3|0x01d:'43'
 
-	// <0x72e15d>|0x0a1|0x002:'39'
+		cd->scale_.set( sx, sy, sz );														// <0x72e1a1>|0x0e5|0x022:'45' !
+	} else																					// <0x72e1c3>|0x107|0x022:'46'
+	{
+		cd->model_path = req_path;															// <0x72e1c5>|0x109|0x002:'48'
+		cd->scale_.set( 1.0f, 1.0f, 1.0f );													// <0x72e1d6>|0x11a|0x011:'49' !
+	}
 
-	// <0x72e162>|0x0a6|0x005:'41'
+	pcstr exported_primitives_path = 0;
+	STR_JOINA( exported_primitives_path, cd->model_path.c_str(), "/exported_primitives" );	// <0x72e1f6>|0x13a|0x020:'53'
 
-	// <0x72e17f>|0x0c3|0x01d:'43'
+	fs_new::virtual_path_string model_config_path = cd->model_path;							// <0x72e229>|0x16d|0x033:'55'
 
-	// <0x72e1a1>|0x0e5|0x022:'45'
-	// <0x72e1c3>|0x107|0x022:'46'
+	fs_new::virtual_path_string::size_type pos = model_config_path.find( ".model" );		// <0x72e26c>|0x1b0|0x043:'57' !
+	model_config_path.set_length( pos + strlen(".model") );									// <0x72e297>|0x1db|0x02b:'58' ! `models\level\03\flora\gra_green_01.model\settings`
+	model_config_path.append("/settings");													// <0x72e2b5>|0x1f9|0x01e:'59' !
 
-	// <0x72e1c5>|0x109|0x002:'48'
-	// <0x72e1d6>|0x11a|0x011:'49'
+	pcstr verticies_path = 0;
+	pcstr indices_path = 0;
+	pcstr face_data_path = 0;
+	STR_JOINA( verticies_path, cd->model_path.c_str(), "/vertices" );						// <0x72e2e7>|0x22b|0x032:'64'
+	STR_JOINA( indices_path, cd->model_path.c_str(), "/indices" );							// <0x72e31a>|0x25e|0x033:'65'
+	STR_JOINA( face_data_path, cd->model_path.c_str(), "/face_data" );						// <0x72e34d>|0x291|0x033:'66'
 
+	resources::request const requests[] = {
+		{ exported_primitives_path,		resources::binary_config_class_impl },				// <0x72e37d>|0x2c1|0x030:'69'
+		{ model_config_path.c_str( ),	resources::binary_config_class_impl },				// <0x72e380>|0x2c4|0x003:'70'
+		{ verticies_path,				resources::raw_data_class },						// <0x72e389>|0x2cd|0x009:'71'
+		{ indices_path,					resources::raw_data_class },						// <0x72e394>|0x2d8|0x00b:'72'
+		{ face_data_path,				resources::raw_data_class }
+	};
 
-
-	// <0x72e1f6>|0x13a|0x020:'53'
-
-	// <0x72e229>|0x16d|0x033:'55'
-
-	// <0x72e26c>|0x1b0|0x043:'57'
-	// <0x72e297>|0x1db|0x02b:'58'
-	// <0x72e2b5>|0x1f9|0x01e:'59'
-
-
-
-
-	// <0x72e2e7>|0x22b|0x032:'64'
-	// <0x72e31a>|0x25e|0x033:'65'
-	// <0x72e34d>|0x291|0x033:'66'
-
-
-	// <0x72e37d>|0x2c1|0x030:'69'
-	// <0x72e380>|0x2c4|0x003:'70'
-	// <0x72e389>|0x2cd|0x009:'71'
-	// <0x72e394>|0x2d8|0x00b:'72'
-
-
-
-
-
-
-
-
-
-
-	// <0x72e3a5>|0x2e9|0x011:'83'
-	// ******
+	resources::query_resources			(
+		requests,
+		array_size( requests ),
+		boost::bind( &collision_shape_cook::on_collision_sources_loaded, this, _1, cd ),
+		g_ph_allocator,
+		0,
+		&parent
+	);																						// <0x72e3a5>|0x2e9|0x011:'83'
 }
 
 // STATE[STUB]
 void collision_shape_cook::on_collision_sources_loaded( resources::queries_result& data, collision_shape_cook::cook_data* cd )
 {
+	resources::query_result_for_cook* const	parent		= data.get_parent_query();			// <0x72d05c>|0x000|0x000:'47'
+	if ( !data.is_successful() )
+	{
+		parent->finish_query							( result_error );
+		return;
+	}
+
+	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
+	configs::binary_config_value const& config_value	= config->get_root();
+
+	create_primitives_shape( config_value, cd );
+
 	// LOCALS
 	// bt_collision_shape*             result
 	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> primitives_cfg
@@ -280,37 +280,26 @@ void collision_shape_cook::delete_resource( resources::resource_base* resource )
 
 }
 
-// STATE[STUB]
+// STATE[55.99%|PARTIAL]: `is_similar` shouldn't be inlined. Except for that .. seems fine.
 bt_collision_shape* collision_shape_cook::create_primitives_shape( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd )
 {
-	return NULL;
+	float3 p;
+	bool single_shape = primitives_t.size() == 1;
+	if(single_shape)
+	{
+		p = primitives_t[0]["position"];
+		single_shape = p.is_similar(float3(0,0,0));
+	}
 
-	// LOCALS
-	// float3                          p
-	// configs::binary_config_value    cfg
-	// ******
-
-	// FUNCTION BODY
-
-	// <0x72d319>|0x000|0x000:'235'
-	// <0x72d33d>|0x024|0x024:'236'
-
-	// <0x72d341>|0x028|0x004:'238'
-	// <0x72d34d>|0x034|0x00c:'239'
-
-
-	// <0x72d38d>|0x074|0x040:'242'
-
-	// <0x72d391>|0x078|0x004:'244'
-
-
-	// <0x72d3a8>|0x08f|0x017:'247'
-	// <0x72d3c4>|0x0ab|0x01c:'248'
-	// <0x72d39f>|0x086|-0x025:'249'
-
-
-
-	// ******
+	if(!single_shape)
+	{
+		return create_compound_shape( primitives_t, cd->scale_, cd->model_path.c_str() );
+	}else
+	{// single primitive shape
+		configs::binary_config_value cfg = primitives_t[0];
+		collision::primitive_type type = (collision::primitive_type)(int)cfg["type"];
+		return create_primitive_shape		( type, (float3)cfg["scale"], cd->scale_ );
+	}
 }
 
 } // namespace physics

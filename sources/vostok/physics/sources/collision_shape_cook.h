@@ -19,6 +19,7 @@ public:
 	virtual void				translate_query				( resources::query_result_for_cook& parent ) override;
 	virtual void				delete_resource				( resources::resource_base* resource ) override;
 
+private:
 	struct cook_data  {
 		/* 0x0000 */	resources::query_result_for_cook*	parent_query;
 		/* 0x0004 */	fs_new::virtual_path_string			model_path;
@@ -35,7 +36,6 @@ private:
 }; // class collision_shape_cook
 
 STATIC_SIZE_ASSERT(collision_shape_cook, 0x24);
-STATIC_SIZE_ASSERT(collision_shape_cook::cook_data, 0x124);
 
 } // namespace physics
 } // namespace vostok
