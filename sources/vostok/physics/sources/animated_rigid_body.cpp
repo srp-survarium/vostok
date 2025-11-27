@@ -132,7 +132,7 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
-// STATE[99.54%]: sushi@TODO: Both reads and appends to `geometries_data`. Confusing. It just builds it, right?
+// STATE[99.54%]
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];										// <0x6bf98f>|0x000|0x000:'146'
@@ -194,7 +194,8 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	}
 }
 
-// STATE[98.38%|STUB]: sushi@NOTE: What are label symbols, figure out. TODO
+// STATE[98.38%|STUB]: sushi@TODO: What are label symbols, figure out.
+// STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
@@ -208,24 +209,24 @@ u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_con
 	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
 }
 
-// STATE[UNVERIFIED]: sushi@NOTE: Does it take ownership of shape?
+// STATE[97.25%|DONE]: LTCG for game_material_id
 bt_animated_rigid_body* new_animated_rigid_body(
 	btCompoundShape*                   shape,
 	u16                                game_material_id,
 	memory::base_allocator*            allocator)
 {
-	btVector3	local_inertia( 0.f, 0.f, 0.f ); // xorps   xmm0, xmm0 ; right?
+	btVector3	local_inertia( 0.f, 0.f, 0.f );
 	shape->calculateLocalInertia( 0.f, local_inertia );
 
-	btRigidBody::btRigidBodyConstructionInfo info( 0.f, NULL, shape, local_inertia ); // sushi@NOTE: In target linker remove btMotionState* argument and sets NULL in the function instead
+	btRigidBody::btRigidBodyConstructionInfo info( 0.f, NULL, shape, local_inertia );
 
 	btRigidBody*			body		= VOSTOK_NEW_IMPL( allocator, btRigidBody )( info );
-	body->setCollisionFlags(game_material_id);
-	bt_animated_rigid_body* rigid_body	= VOSTOK_NEW_IMPL( allocator, bt_animated_rigid_body )( shape, body, 10 );
+	body->setCollisionFlags( 0x10 ); // sushi@TODO: Figure out proper constants
+	bt_animated_rigid_body* rigid_body	= VOSTOK_NEW_IMPL( allocator, bt_animated_rigid_body )( shape, body, game_material_id );
 	return rigid_body;
 }
 
-// STATE[100%|DONE]: sushi@NOTE: There are two NEW calls in `new`, but only one DELETE here.
+// STATE[100%|DONE]
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
 	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'
