@@ -47,12 +47,12 @@ void animation_collection_cook::translate_query ( resources::query_result_for_co
 		fs::path_string config_path;
 		config_path.assignf("%s%s%s", "resources/animations/collections/", parent.get_requested_path( ), collection_extention );
 		query_resource								(
-			config_path.c_str( ), 
+			config_path.c_str( ),
 			resources::binary_config_class,
 			boost::bind( &animation_collection_cook::collection_config_loaded, this, _1 ),
 			resources::unmanaged_allocator( ),
 			0,
-			&parent 
+			&parent
 		);
 	}
 }
@@ -65,14 +65,14 @@ void animation_collection_cook::collection_config_loaded ( resources::queries_re
 		parent->finish_query							( result_error );
 		return;
 	}
-	
+
 	configs::binary_config_ptr config_ptr				= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
-	
+
 	CURE_ASSERT	( config_ptr->get_root().value_exists( "collection" ), { parent->finish_query( result_error ); return; } );
 
 	configs::binary_config_value const& collection		= (*config_ptr)["collection"];
 	R_ASSERT( collection.value_exists( "collection_type" ) );
-	 
+
 	request_items										( config_ptr, collection, parent );
 }
 
@@ -102,7 +102,7 @@ void animation_collection_cook::request_items ( configs::binary_config_ptr confi
 		resources::request								request;
 		u32	class_id									= animation_value["type"];
 		request.id										= (resources::class_id_enum)class_id;
-		
+
 		if( request.id == resources::animation_collection_class && animation_value.value_exists( "name" ) )
 		{
 			request.path									= "integrated_collection";
@@ -112,7 +112,7 @@ void animation_collection_cook::request_items ( configs::binary_config_ptr confi
 			data.cfg_ptr									= config_ptr;
 
 			resources::user_data_variant ud;
-			ud.set											( data ); 
+			ud.set											( data );
 			user_data.push_back								( ud );
 			user_data_ptrs.push_back						( &*user_data.rbegin( ) );
 
@@ -131,14 +131,14 @@ void animation_collection_cook::request_items ( configs::binary_config_ptr confi
 	R_ASSERT											( collection_value.value_exists("collection_type") );
 
 	vostok::resources::query_resource_params params		(
-		requests.begin( ), 
-		creation_requests.begin( ), 
-		requests_count, 
-		boost::bind( &animation_collection_cook::sub_animations_loaded, this, _1, config_ptr, boost::cref(collection_value) ),  
-		resources::unmanaged_allocator( ), 
-		NULL, 
-		NULL, 
-		user_data_ptrs.begin( ), 
+		requests.begin( ),
+		creation_requests.begin( ),
+		requests_count,
+		boost::bind( &animation_collection_cook::sub_animations_loaded, this, _1, config_ptr, boost::cref(collection_value) ),
+		resources::unmanaged_allocator( ),
+		NULL,
+		NULL,
+		user_data_ptrs.begin( ),
 		parent
 	);
 
@@ -166,7 +166,7 @@ void animation_collection_cook::sub_animations_loaded ( resources::queries_resul
 		parent->finish_query						( result_out_of_memory );
 		return;
 	}
-	
+
 	for ( u32 i = 0, n = data.size( ); i < n; ++i )
 	{
 		animation_expression_emitter_ptr emitter	= static_cast_resource_ptr<animation_expression_emitter_ptr>( data[i].get_unmanaged_resource( ) );
@@ -184,7 +184,7 @@ animation_collection* animation_collection_cook::new_collection ( configs::binar
 														collection_playing_type_random : collection_playing_type_sequential;
 	bool can_repeat_successively						= collection["is_dont_repeat_previous"];
 	bool cyclic_repeating_index							= collection["is_cyclic_repeat"];
-	
+
 	u32 const animation_collection_size						= sizeof( animation_collection );
 	u32 animations_buffer_size								= 0;
 	if( collection.value_exists( "animation_items" ) )
@@ -199,7 +199,7 @@ animation_collection* animation_collection_cook::new_collection ( configs::binar
 															collection["animation_items"].size( ),
 															NULL //m_world.get_last_time()
 														);
-		
+
 	return new_collection;
 }
 
