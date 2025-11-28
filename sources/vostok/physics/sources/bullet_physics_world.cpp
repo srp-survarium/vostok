@@ -218,7 +218,7 @@ void bullet_physics_world::tick( u32 current_time_in_ms )
 	m_softBodyWorldInfo->m_sparsesdf.GarbageCollect( );
 }
 
-// STATE[STUB] sushi@TODO: Shouldn't be needed for server logic.
+// STATE[SKIPPED] sushi@TODO: Shouldn't be needed for server logic.
 void bullet_physics_world::debug_draw_world( )
 {
 	NOT_IMPLEMENTED( );
@@ -277,7 +277,7 @@ void bullet_physics_world::remove( bt_constraint* constraint )
 // STATE[100%|DONE]
 void bullet_physics_world::create_test_scene( )
 {
-	// <1> this is ifdefed original xray impl
+	// <1> sushi@NOTE: this is ifdefed original xray impl
 	// <26>
 }
 
@@ -299,7 +299,7 @@ public:
 
 STATIC_SIZE_ASSERT(closest_ray_result_callback, 0x70);
 
-// STATE[STUB]
+// STATE[100%|DONE]
 closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFromWorld, btVector3 const& rayToWorld ) :
 	m_rayFromWorld		( rayFromWorld ),
 	m_rayToWorld		( rayToWorld ),
@@ -308,7 +308,7 @@ closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFr
 {
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace )
 {
 	m_closestHitFraction = rayResult.m_hitFraction;
@@ -329,7 +329,7 @@ float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayRe
 		m_hitNormalWorld = rayResult.m_hitNormalLocal;
 	} else
 	{
-		m_hitNormalWorld = m_collisionObject->getWorldTransform( ) * rayResult.m_hitNormalLocal;
+		m_hitNormalWorld = m_collisionObject->getWorldTransform( ).getBasis( ) * rayResult.m_hitNormalLocal;
 	}
 
 	m_hitPointWorld.setInterpolate3( m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction );
@@ -369,7 +369,7 @@ closest_ray_result bullet_physics_world::ray_test(
 	return result;
 }
 
-// STATE[STUB]
+// STATE[93.31%|PARTIAL]
 bool bullet_physics_world::recover_from_penetrations(
 	bt_collision_shape*		const shape,
 	float4x4 const&			transform_initial,
@@ -378,29 +378,14 @@ bool bullet_physics_world::recover_from_penetrations(
 	u16						filter_mask
 )
 {
-	// LOCALS
-	// btPairCachingGhostObject 	test_ghost_object
-	// btVector3 					current_pos
-	// btAlignedObjectArray<btPersistentManifold *> manifold_array
-	// s32 							i
-	// btVector3 					touching_normal
-	// btVector3 					delta
-	// float 						maxPen
-	// float3 						delta_v
-	// s32 							j
-	// ******
-
-
 	btPairCachingGhostObject test_ghost_object;
 	test_ghost_object.setCollisionShape( shape->get_bt_shape( ) );
-	test_ghost_object.setCollisionFlags( 16 );
+	test_ghost_object.setCollisionFlags( btCollisionObject::CF_CHARACTER_OBJECT );
 	test_ghost_object.setWorldTransform( from_vostok( transform_initial ) );
 
 	m_dynamicsWorld->addCollisionObject( &test_ghost_object, filter_group, filter_mask );
 
-	int maxIter = 3;
-
-	while ( maxIter-- > 0 )
+	for ( int maxIter = 3 ; maxIter != 0 ; --maxIter )
 	{
 		m_dynamicsWorld->getDispatcher( )->dispatchAllCollisionPairs(
 			test_ghost_object.getOverlappingPairCache( ),
@@ -408,79 +393,69 @@ bool bullet_physics_world::recover_from_penetrations(
 			m_dynamicsWorld->getDispatcher( )
 		);
 
-		while ( test_ghost_object.getOverlappingPairCache( )->getNumOverlappingPairs( ) > 0 )
-		{
+		btVector3 current_pos = test_ghost_object.getWorldTransform( ).getOrigin( );
+		btManifoldArray manifold_array;
 
+		for ( s32 i = 0 ; i < test_ghost_object.getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
+		{
+			float maxPen = 0.0f;
+			btVector3 touching_normal; // sushi@NOTE: Should be initialized,but isn't in target
+
+			manifold_array.resize( 0 );
+
+			btBroadphasePair& pair = test_ghost_object.getOverlappingPairCache( )->getOverlappingPairArray( )[i];
+
+			if ( pair.m_algorithm )
+				pair.m_algorithm->getAllContactManifolds( manifold_array );
+
+			for ( s32 j = 0 ; j < manifold_array.size( ) ; ++j )
+			{
+				btPersistentManifold* manifold = manifold_array[j];
+				float directionSign = manifold->getBody0( ) == &test_ghost_object ? -1.0f : 1.0f;
+
+				for ( s32 k = 0 ; k < manifold->getNumContacts( ) ; ++k )
+				{
+					btManifoldPoint& contact = manifold->getContactPoint( k );
+					btScalar dist = contact.getDistance( );
+					if ( dist < 0.0f )
+					{
+						if ( dist < maxPen )
+						{
+							float y = contact.m_normalWorldOnB.y( );
+							if ( y > 0.0f ) // sushi@NOTE: They forgot direction sign?
+							{
+								maxPen = dist;
+								touching_normal = contact.m_normalWorldOnB * directionSign;
+							}
+						}
+					}
+				}
+			}
+
+			btVector3 delta = touching_normal * maxPen; // sushi@NOTE: This is slightly different
+			float3 delta_v = from_bullet( touching_normal * maxPen ) ;
+
+			LOG_INFO( // sushi@NOTE: If logging is fixed, hopefully everything else will be too.
+				"recover from %x:%x delta %.3f %.3f %.3f",
+				pair.m_pProxy0->m_clientObject,
+				pair.m_pProxy1->m_clientObject,
+				delta_v.x,
+				delta_v.y,
+				delta_v.z
+			);
+
+			current_pos += delta;
 		}
+		// sushi@NOTE: test_ghost_object.getWorldTransform( ).setOrigin( current_pos )
+		btTransform newTrans = test_ghost_object.getWorldTransform( );
+		newTrans.setOrigin( current_pos );
+		test_ghost_object.setWorldTransform( newTrans );
 	}
 
-	return false;
-	// FUNCTION BODY
-	// <0x6be91c>|0x000|0x000:'399'
-	// <1>
-	// <0x6be92a>|0x00e|0x00e:'401'
-	// <1>
-	// <4>
-	// <0x6be942>|0x026|0x018:'406'
-	// <1>
-	// <0x6be976>|0x05a|0x034:'408'
-	// <1>
-	// <0x6be990>|0x074|0x01a:'410'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6be998>|0x07c|0x008:'414'
-	// <1>
-	// <4>
-	// <0x6be9b2>|0x096|0x01a:'419'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6be9f5>|0x0d9|0x043:'423'
-	// <1>
-	// <0x6be9f1>|0x0d5|-0x004:'425'
-	// <1>
-	// <0x6bea6f>|0x153|0x07e:'427'
-	// <0x6bea75>|0x159|0x006:'428'
-	// <1>
-	// <2>
-	// <0x6bea84>|0x168|0x00f:'431'
-	// <1>
-	// <0x6beaad>|0x191|0x029:'433'
-	// <0x6beab4>|0x198|0x007:'434'
-	// <1>
-	// <0x6bead1>|0x1b5|0x01d:'436'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6beaf0>|0x1d4|0x01f:'440'
-	// <1>
-	// <0x6beaf5>|0x1d9|0x005:'442'
-	// <1>
-	// <0x6beafa>|0x1de|0x005:'444'
-	// <1>
-	// <2>
-	// <0x6beb09>|0x1ed|0x00f:'447'
-	// <1>
-	// <8>
-	// <0x6becfd>|0x3e1|0x1f4:'456'
-	// <1>
-	// <2>
-	// <3>
-	// <0x6bed03>|0x3e7|0x006:'460'
-	// <0x6bee6f>|0x553|0x16c:'461'
-	// <1>
-	// <2>
-	// <0x6beee1>|0x5c5|0x072:'464'
-	// <1>
-	// <2>
-	// <0x6beeea>|0x5ce|0x009:'467'
-	// <1>
-	// <0x6bef53>|0x637|0x069:'469'
-	// <1>
-	// <0x6bef72>|0x656|0x01f:'471'
-	// <0x6bef84>|0x668|0x012:'472'
-	// ******
+	transform_result = from_bullet( test_ghost_object.getWorldTransform( ) );
+
+	m_dynamicsWorld->removeCollisionObject( &test_ghost_object );
+	return true;
 }
 
 // STATE[99.21%|DONE]: Logging is still not done properly
@@ -497,7 +472,7 @@ void bullet_physics_world::object_query(
 {
 	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , public boost::noncopyable {
 	public:
-		// STATE[STUB]
+		// STATE[BLOCKED]
 		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 filter_group, u16 filter_mask ) :
 								m_results	( results )
 		{
@@ -506,7 +481,7 @@ void bullet_physics_world::object_query(
 			m_modify_result_transform.setIdentity( ); // <0x6bd3b0>|0x000|0x000:'488'
 		}
 
-		// STATE[STUB]: sushi@TODO: Ghidra scripts cannot generate symbols for this function.
+		// STATE[BLOCKED]: sushi@TODO: Ghidra scripts cannot generate symbols for this function.
 		virtual	float		addSingleResult			( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 		{
 			closest_ray_result query_result;
@@ -518,7 +493,7 @@ void bullet_physics_world::object_query(
 				hitNormalWorld = convexResult.m_hitNormalLocal;
 			} else
 			{
-				hitNormalWorld = convexResult.m_hitCollisionObject->getWorldTransform( ) * convexResult.m_hitNormalLocal;
+				hitNormalWorld = convexResult.m_hitCollisionObject->getWorldTransform( ).getBasis( ) * convexResult.m_hitNormalLocal;
 			}
 			query_result.hit_normal_world = from_bullet( hitNormalWorld );
 
@@ -635,7 +610,7 @@ static const u8 s_convert_from_bullet_type[] = {
     0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC
 };
 
-// STATE[STUB] Incorrect generation by Ghidra scripts
+// STATE[BLOCKED] Incorrect generation by Ghidra scripts
 static collision::primitive_type from_bullet_shape_type( s32 type )
 {
 	switch ( s_convert_from_bullet_type[ type ] )
@@ -648,7 +623,7 @@ static collision::primitive_type from_bullet_shape_type( s32 type )
 	}
 }
 
-// STATE[STUB] Incorrect generation by Ghidra scripts.
+// STATE[BLOCKED] Incorrect generation by Ghidra scripts.
 // Possibly has `from_bullet_shape_type` call inlined?
 static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 {
@@ -719,7 +694,7 @@ void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate,
 	m_dynamicsWorld->contactPairTest( first_object, second_object, cb );
 }
 
-// STATE[STUB]
+// STATE[67.42%|SKIPPED]: sushi@TODO: Need to play around with this function. Didn't match the variable names, though I did the structure (somewhat)
 bool bullet_physics_world::adjust_foot_transform(
 	float3 const&		half_size,
 	float3 const&		start,
@@ -729,69 +704,43 @@ bool bullet_physics_world::adjust_foot_transform(
 	float4x4&			transform
 )
 {
-	static bool s_ik_change_foot_rotation_value = false; // sushi@TODO: Should it be false? <0x4c25f0b>;
+	static bool s_ik_change_foot_rotation_value = false; // sushi@TODO: Should it be false? <0x4c25f0b>; sushi@NOTE: Constructor inlined
 	static console_commands::cc_bool s_ik_change_foot_rotation_cc( "ik_change_foot_rotation", s_ik_change_foot_rotation_value, false, console_commands::command_type_engine_internal );
 
 	btCapsuleShape collision_shape( half_size.x, half_size.y );
+	btQuaternion q = from_vostok( transform ).getRotation( );
+	btVector3 btStart = from_vostok( start );
+	btVector3 btEnd	= from_vostok( finish );
 
-	btTransform from = from_vostok( transform );
-	btQuaternion q;
-	from.getBasis( ).getRotation( q );
+	btCollisionWorld::ClosestConvexResultCallback callback( btStart, btEnd );
+	callback.m_collisionFilterGroup = 0x24;
+	callback.m_collisionFilterMask = 0x2;
+	m_dynamicsWorld->convexSweepTest( &collision_shape, btTransform( q, btStart ), btTransform( q, btEnd ), callback );
 
-	// LOCALS
-	// btCollisionWorld::ClosestConvexResultCallback callback
-	// btVector3 					result
-	// float3 						normal
-	// float 						angle
-	// float3 						rotation_axis
-	// ******
+	if ( callback.hasHit( ) )
+	{
+		if ( math::abs( callback.m_closestHitFraction ) >= math::epsilon_5 )
+		{
+			btVector3 result;
+			result.setInterpolate3( btStart, btEnd, callback.m_closestHitFraction );
 
-	// STATICS
-
-	// ******
-
-	return false;
-	// FUNCTION BODY
-	// <1>
-	// <0x6bd80c>|0x000|0x000:'784'
-	// <1>
-	// <0x6bd85c>|0x050|0x050:'786'
-	// <0x6bd886>|0x07a|0x02a:'787'
-	// <0x6bd8f7>|0x0eb|0x071:'788'
-	// <0x6bd928>|0x11c|0x031:'789'
-	// <1>
-	// <0x6bd94b>|0x13f|0x023:'791'
-	// <1>
-	// <0x6bd968>|0x15c|0x01d:'793'
-	// <0x6bd98f>|0x183|0x027:'794'
-	// <1>
-	// <0x6bda23>|0x217|0x094:'796'
-	// <1>
-	// <0x6bda3d>|0x231|0x01a:'798'
-	// <1>
-	// <2>
-	// <0x6bda64>|0x258|0x027:'801'
-	// <0x6bda70>|0x264|0x00c:'802'
-	// <0x6bdae2>|0x2d6|0x072:'803'
-	// <1>
-	// <0x6bdafb>|0x2ef|0x019:'805'
-	// <0x6bdb0c>|0x300|0x011:'806'
-	// <0x6bdb45>|0x339|0x039:'807'
-	// <0x6bdb73>|0x367|0x02e:'808'
-	// <0x6bdb83>|0x377|0x010:'809'
-	// <1>
-	// <0x6bdbae>|0x3a2|0x02b:'811'
-	// <0x6bdc2f>|0x423|0x081:'812'
-	// <0x6bdc46>|0x43a|0x017:'813'
-	// <1>
-	// <2>
-	// <0x6bdc87>|0x47b|0x041:'816'
-	// <1>
-	// <2>
-	// <0x6bdcb8>|0x4ac|0x031:'819'
-	// <1>
-	// <2>
-	// ******
+			if ( s_ik_change_foot_rotation_value )
+			{ // collision normal and the object’s forward direction
+				float3 normal = from_bullet( callback.m_hitNormalWorld );
+				float value = normal.dot_product( -transform.k.xyz( ) );
+				math::clamp( value, -1.0f, 1.0f );
+				float angle = math::acos( value ) * rotation_koef0;
+				if ( math::abs( angle ) >= math::epsilon_5 )
+				{
+					float3 axis = ( -transform.k.xyz( ) ).cross_product( normal ).normalize( );
+					float4x4 rotation = math::create_rotation( axis, angle );
+					transform = math::mul4x3( transform, rotation );
+				}
+			}
+			transform.c.xyz( ) = from_bullet( result );
+		}
+	}
+	return callback.hasHit( );
 }
 
 // STATE[95.83%|PARTIAL]: Functionally complete. See comments inside the function for diffs.

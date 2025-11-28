@@ -27,7 +27,7 @@ vostok::physics::world* create_world_bt( vostok::memory::base_allocator* allocat
 	return VOSTOK_NEW_IMPL( allocator, bullet_physics_world )( *allocator, engine ); // <0x72e5f0>|0x000|0x000:'24'
 }
 
-// STATE[STUB]
+// STATE[56.38%|STUB]:
 void set_memory_allocator( memory::base_allocator* allocator )
 {
 	ASSERT				( !g_ph_allocator || g_ph_allocator==allocator );

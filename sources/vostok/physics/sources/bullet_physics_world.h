@@ -15,14 +15,6 @@
 namespace vostok {
 namespace physics {
 
-/*
-// STATE[STUB]
-// void vostok::resources::resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>::~resource_ptr<vostok::physics::bt_collision_shape,vostok::resources::unmanaged_intrusive_base>()
-resources::resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base>::~resource_ptr<bt_collision_shape,resources::unmanaged_intrusive_base>( )
-{
-}
-*/
-
 class bullet_physics_world : public world, boost::noncopyable {
 public:
 											bullet_physics_world		( memory::base_allocator& allocator, engine& engine );

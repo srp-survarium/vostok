@@ -217,7 +217,8 @@ public:
 			m_collisionFilterGroup(btBroadphaseProxy::DefaultFilter),
 			m_collisionFilterMask(btBroadphaseProxy::AllFilter),
          //@BP Mod
-         m_flags(0)
+         m_flags(0),
+			m_shape_id(-1)
 		{
 		}
 
