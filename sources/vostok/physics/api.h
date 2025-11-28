@@ -38,8 +38,6 @@ namespace physics {
 struct engine;
 struct world;
 
-VOSTOK_PHYSICS_API	world*	create_world		( vostok::memory::base_allocator* allocator, engine& engine );
-
 VOSTOK_PHYSICS_API	world*	create_world_bt		( vostok::memory::base_allocator* allocator, engine& engine );
 VOSTOK_PHYSICS_API	void	destroy_world		( vostok::memory::base_allocator* allocator, world* w );
 
