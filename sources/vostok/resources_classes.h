@@ -41,9 +41,6 @@ enum class_id_enum
 	static_render_model_instance_class,		// static_render_model_instance
 	skeleton_render_model_instance_class,	// skeleton_render_model_instance
 
-	composite_render_model_class,									 // [-] // composite_render_model
-	composite_render_model_instance_class,				 // [-] // composite_render_model_instance
-
 	skeleton_combined_render_model_instance_class, // [+]
 
 	skeleton_combined_model_class,                 // [+]

@@ -10,7 +10,7 @@
 **
 ***************************************************************************************************/
 
-// Credits: The Clock class was inspired by the Timer classes in 
+// Credits: The Clock class was inspired by the Timer classes in
 // Ogre (www.ogre3d.org).
 
 #include "btQuickprof.h"
@@ -19,7 +19,7 @@
 
 
 static btClock gProfileClock;
-
+static CProfileManager::PhysicsLogFn physics_log_fn = NULL;
 
 #ifdef __CELLOS_LV2__
 #include <sys/sys_time.h>
@@ -27,8 +27,8 @@ static btClock gProfileClock;
 #include <stdio.h>
 #endif
 
-#if defined (SUNOS) || defined (__SUNOS__) 
-#include <stdio.h> 
+#if defined (SUNOS) || defined (__SUNOS__)
+#include <stdio.h>
 #endif
 
 #if defined(WIN32) || defined(_WIN32)
@@ -37,7 +37,7 @@ static btClock gProfileClock;
 #define WIN32_LEAN_AND_MEAN
 #define NOWINRES
 #define NOMCX
-#define NOIME 
+#define NOIME
 
 #ifdef _XBOX
 	#include <Xtl.h>
@@ -121,34 +121,34 @@ void btClock::reset()
 #endif
 }
 
-/// Returns the time in ms since the last call to reset or since 
+/// Returns the time in ms since the last call to reset or since
 /// the btClock was created.
 unsigned long int btClock::getTimeMilliseconds()
 {
 #ifdef BT_USE_WINDOWS_TIMERS
 	LARGE_INTEGER currentTime;
 	QueryPerformanceCounter(&currentTime);
-	LONGLONG elapsedTime = currentTime.QuadPart - 
+	LONGLONG elapsedTime = currentTime.QuadPart -
 		m_data->mStartTime.QuadPart;
 		// Compute the number of millisecond ticks elapsed.
-	unsigned long msecTicks = (unsigned long)(1000 * elapsedTime / 
+	unsigned long msecTicks = (unsigned long)(1000 * elapsedTime /
 		m_data->mClockFrequency.QuadPart);
-		// Check for unexpected leaps in the Win32 performance counter.  
-	// (This is caused by unexpected data across the PCI to ISA 
+		// Check for unexpected leaps in the Win32 performance counter.
+	// (This is caused by unexpected data across the PCI to ISA
 		// bridge, aka south bridge.  See Microsoft KB274323.)
 		unsigned long elapsedTicks = GetTickCount() - m_data->mStartTick;
 		signed long msecOff = (signed long)(msecTicks - elapsedTicks);
 		if (msecOff < -100 || msecOff > 100)
 		{
 			// Adjust the starting time forwards.
-			LONGLONG msecAdjustment = mymin(msecOff * 
-				m_data->mClockFrequency.QuadPart / 1000, elapsedTime - 
+			LONGLONG msecAdjustment = mymin(msecOff *
+				m_data->mClockFrequency.QuadPart / 1000, elapsedTime -
 				m_data->mPrevElapsedTime);
 			m_data->mStartTime.QuadPart += msecAdjustment;
 			elapsedTime -= msecAdjustment;
 
 			// Recompute the number of millisecond ticks elapsed.
-			msecTicks = (unsigned long)(1000 * elapsedTime / 
+			msecTicks = (unsigned long)(1000 * elapsedTime /
 				m_data->mClockFrequency.QuadPart);
 		}
 
@@ -171,36 +171,36 @@ unsigned long int btClock::getTimeMilliseconds()
 
 		struct timeval currentTime;
 		gettimeofday(&currentTime, 0);
-		return (currentTime.tv_sec - m_data->mStartTime.tv_sec) * 1000 + 
+		return (currentTime.tv_sec - m_data->mStartTime.tv_sec) * 1000 +
 			(currentTime.tv_usec - m_data->mStartTime.tv_usec) / 1000;
 #endif //__CELLOS_LV2__
 #endif
 }
 
-	/// Returns the time in us since the last call to reset or since 
+	/// Returns the time in us since the last call to reset or since
 	/// the Clock was created.
 unsigned long int btClock::getTimeMicroseconds()
 {
 #ifdef BT_USE_WINDOWS_TIMERS
 		LARGE_INTEGER currentTime;
 		QueryPerformanceCounter(&currentTime);
-		LONGLONG elapsedTime = currentTime.QuadPart - 
+		LONGLONG elapsedTime = currentTime.QuadPart -
 			m_data->mStartTime.QuadPart;
 
 		// Compute the number of millisecond ticks elapsed.
-		unsigned long msecTicks = (unsigned long)(1000 * elapsedTime / 
+		unsigned long msecTicks = (unsigned long)(1000 * elapsedTime /
 			m_data->mClockFrequency.QuadPart);
 
-		// Check for unexpected leaps in the Win32 performance counter.  
-		// (This is caused by unexpected data across the PCI to ISA 
+		// Check for unexpected leaps in the Win32 performance counter.
+		// (This is caused by unexpected data across the PCI to ISA
 		// bridge, aka south bridge.  See Microsoft KB274323.)
 		unsigned long elapsedTicks = GetTickCount() - m_data->mStartTick;
 		signed long msecOff = (signed long)(msecTicks - elapsedTicks);
 		if (msecOff < -100 || msecOff > 100)
 		{
 			// Adjust the starting time forwards.
-			LONGLONG msecAdjustment = mymin(msecOff * 
-				m_data->mClockFrequency.QuadPart / 1000, elapsedTime - 
+			LONGLONG msecAdjustment = mymin(msecOff *
+				m_data->mClockFrequency.QuadPart / 1000, elapsedTime -
 				m_data->mPrevElapsedTime);
 			m_data->mStartTime.QuadPart += msecAdjustment;
 			elapsedTime -= msecAdjustment;
@@ -210,7 +210,7 @@ unsigned long int btClock::getTimeMicroseconds()
 		m_data->mPrevElapsedTime = elapsedTime;
 
 		// Convert to microseconds.
-		unsigned long usecTicks = (unsigned long)(1000000 * elapsedTime / 
+		unsigned long usecTicks = (unsigned long)(1000000 * elapsedTime /
 			m_data->mClockFrequency.QuadPart);
 
 		return usecTicks;
@@ -229,10 +229,10 @@ unsigned long int btClock::getTimeMicroseconds()
 
 		struct timeval currentTime;
 		gettimeofday(&currentTime, 0);
-		return (currentTime.tv_sec - m_data->mStartTime.tv_sec) * 1000000 + 
+		return (currentTime.tv_sec - m_data->mStartTime.tv_sec) * 1000000 +
 			(currentTime.tv_usec - m_data->mStartTime.tv_usec);
 #endif//__CELLOS_LV2__
-#endif 
+#endif
 }
 
 
@@ -318,7 +318,7 @@ CProfileNode * CProfileNode::Get_Sub_Node( const char * name )
 	}
 
 	// We didn't find it, so add it
-	
+
 	CProfileNode * node = new CProfileNode( name, this );
 	node->Sibling = Child;
 	Child = node;
@@ -330,7 +330,7 @@ void	CProfileNode::Reset( void )
 {
 	TotalCalls = 0;
 	TotalTime = 0.0f;
-	
+
 
 	if ( Child ) {
 		Child->Reset();
@@ -352,7 +352,7 @@ void	CProfileNode::Call( void )
 
 bool	CProfileNode::Return( void )
 {
-	if ( --RecursionCounter == 0 && TotalCalls != 0 ) { 
+	if ( --RecursionCounter == 0 && TotalCalls != 0 ) {
 		unsigned long int time;
 		Profile_Get_Ticks(&time);
 		time-=StartTime;
@@ -445,8 +445,8 @@ void	CProfileManager::Start_Profile( const char * name )
 {
 	if (name != CurrentNode->Get_Name()) {
 		CurrentNode = CurrentNode->Get_Sub_Node( name );
-	} 
-	
+	}
+
 	CurrentNode->Call();
 }
 
@@ -470,7 +470,7 @@ void	CProfileManager::Stop_Profile( void )
  *    This resets everything except for the tree structure.  All of the timing data is reset.  *
  *=============================================================================================*/
 void	CProfileManager::Reset( void )
-{ 
+{
 	gProfileClock.reset();
 	Root.Reset();
     Root.Call();
@@ -503,6 +503,8 @@ float CProfileManager::Get_Time_Since_Reset( void )
 
 void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spacing)
 {
+	char buffer[1024];
+
 	profileIterator->First();
 	if (profileIterator->Is_Done())
 		return;
@@ -511,14 +513,16 @@ void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spaci
 	int i;
 	int frames_since_reset = CProfileManager::Get_Frame_Count_Since_Reset();
 	for (i=0;i<spacing;i++)	printf(".");
-	printf("----------------------------------\n");
+	sprintf(buffer, "----------------------------------\n");
+	physics_log_fn(buffer);
 	for (i=0;i<spacing;i++)	printf(".");
-	printf("Profiling: %s (total running time: %.3f ms) ---\n",	profileIterator->Get_Current_Parent_Name(), parent_time );
+	sprintf(buffer, "Profiling: %s (total running time: %.3f ms) ---\n",	profileIterator->Get_Current_Parent_Name(), parent_time );
+	physics_log_fn(buffer);
 	float totalTime = 0.f;
 
-	
+
 	int numChildren = 0;
-	
+
 	for (i = 0; !profileIterator->Is_Done(); i++,profileIterator->Next())
 	{
 		numChildren++;
@@ -528,7 +532,8 @@ void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spaci
 		{
 			int i;	for (i=0;i<spacing;i++)	printf(".");
 		}
-		printf("%d -- %s (%.2f %%) :: %.3f ms / frame (%d calls)\n",i, profileIterator->Get_Current_Name(), fraction,(current_total_time / (double)frames_since_reset),profileIterator->Get_Current_Total_Calls());
+		sprintf(buffer, "%d -- %s (%.2f %%) :: %.3f ms / frame (%d calls)\n",i, profileIterator->Get_Current_Name(), fraction,(current_total_time / (double)frames_since_reset),profileIterator->Get_Current_Total_Calls());
+		physics_log_fn(buffer);
 		totalTime += current_total_time;
 		//recurse into children
 	}
@@ -538,8 +543,9 @@ void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spaci
 		printf("what's wrong\n");
 	}
 	for (i=0;i<spacing;i++)	printf(".");
-	printf("%s (%.3f %%) :: %.3f ms\n", "Unaccounted:",parent_time > SIMD_EPSILON ? ((parent_time - accumulated_time) / parent_time) * 100 : 0.f, parent_time - accumulated_time);
-	
+	sprintf(buffer, "%s (%.3f %%) :: %.3f ms\n", "Unaccounted:",parent_time > SIMD_EPSILON ? ((parent_time - accumulated_time) / parent_time) * 100 : 0.f, parent_time - accumulated_time);
+	physics_log_fn(buffer);
+
 	for (i=0;i<numChildren;i++)
 	{
 		profileIterator->Enter_Child(i);
@@ -561,6 +567,9 @@ void	CProfileManager::dumpAll()
 }
 
 
-
+void	CProfileManager::set_log_callback( PhysicsLogFn log_fn )
+{
+	physics_log_fn = log_fn;
+}
 
 #endif //BT_NO_PROFILE

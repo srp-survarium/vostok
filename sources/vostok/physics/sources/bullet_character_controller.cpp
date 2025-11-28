@@ -6,876 +6,693 @@
 #include "bullet_character_controller.h"
 
 #include "bullet_include.h"
+#include "LinearMath/btQuickProf.h"
+#include <vostok/console_command.h>
+
+/* sushi@TODO
+ * There are still a lot of warnings in the code that need to be dealt with.
+ */
 
 namespace vostok {
 namespace physics {
 
-/*
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_step_height_command''()
-void `dynamic initializer for 's_step_height_command''( ) {
-}
+static float s_step_height								= 0.6f;
+static console_commands::cc_float s_step_height_command						( "character_controller_step_height", s_step_height, 0.0f, 2.0f, true, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_character_sliping_speed_multiplier_cc''()
-void `dynamic initializer for 's_character_sliping_speed_multiplier_cc''( ) {
-}
+static float s_character_sliping_speed_multiplier_value = 20.0f;
+static console_commands::cc_float s_character_sliping_speed_multiplier_cc	( "cc_sliping_speed_multiplier", s_character_sliping_speed_multiplier_value, 0.01f, 100.0f, true, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_cc_max_allowed_penetration_cc''()
-void `dynamic initializer for 's_cc_max_allowed_penetration_cc''( ) {
-}
+static float s_cc_max_allowed_penetration_value			= 0.04f;
+static console_commands::cc_float s_cc_max_allowed_penetration_cc			( "cc_max_allowed_penetration", s_cc_max_allowed_penetration_value, 0.0f, 1.0f, false, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic initializer for 's_cc_prevent_step_bouncing_cc''()
-void `dynamic initializer for 's_cc_prevent_step_bouncing_cc''( ) {
-}
+static bool  s_cc_prevent_step_bouncing_value			= true;
+static console_commands::cc_bool  s_cc_prevent_step_bouncing_cc				( "cc_prevent_step_bouncing", s_cc_prevent_step_bouncing_value, false, console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-// void vostok::physics::`dynamic atexit destructor for 's_step_height_command''()
-void `dynamic atexit destructor for 's_step_height_command''( ) {
-}
-*/
-// STATE[STUB]
-btVector3 getNormalizedVector( btVector3 const& v )
+
+u16 const*	g_game_material_groups;
+s32			g_game_materials_count;
+
+static bool	logging	= false;
+
+const btVector3 bullet_character_controller::m_up_vector = btVector3( 0.0f, 1.0f, 0.0f );
+
+// STATE[100%|DONE]
+static btVector3 getNormalizedVector( btVector3 const& v )
 {
-	// FUNCTION BODY
-	// <0x584e69>|0x000|0x000:'61'
-	// <0x584ed2>|0x069|0x069:'62'
-
-
-	// <0x584f14>|0x0ab|0x042:'65'
-	// ******
+	btVector3 result = v.normalized( );		// <0x584e69>|0x000|0x000:'61'
+	if ( result.length( ) < SIMD_EPSILON )	// <0x584ed2>|0x069|0x069:'62'
+		result.setZero( );
+	return result;							// <0x584f14>|0x0ab|0x042:'65'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 btVector3 computeReflectionDirection( btVector3 const& direction, btVector3 const& normal )
 {
-	// FUNCTION BODY
-	// <0x584ae6>|0x000|0x000:'75'
-	// ******
+	return direction - 2 * normal.dot( direction ) * normal;	// <0x584ae6>|0x000|0x000:'75'
 }
 
-// STATE[STUB]
-btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal ) {
-	// FUNCTION BODY
-	// <0x584640>|0x000|0x000:'83'
-	// <0x584674>|0x034|0x034:'84'
-	// ******
+// STATE[100%|DONE]: The structure doesn't match
+btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal )
+{
+	return direction.dot( normal ) * normal;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 btVector3 perpindicularComponent( btVector3 const& direction, btVector3 const& normal )
 {
-	// FUNCTION BODY
-	// <0x584a66>|0x000|0x000:'92'
-	// ******
+	return direction - normal.dot( direction ) * normal;	// <0x584a66>|0x000|0x000:'92'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: sushi@NOTE: This function is used in `survarium` module.
 void setup_game_material_groups( u16 const* game_material_groups, u16 game_materials_count )
 {
-	// FUNCTION BODY
-
-	// <0x584530>|0x000|0x000:'201'
-	// ******
+	g_game_material_groups = game_material_groups;
+	g_game_materials_count = game_materials_count;	// <0x584530>|0x000|0x000:'201'
 }
 
-class character_move_test_callback : btCollisionWorld::ClosestConvexResultCallback, boost::noncopyable {
+class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
 public:
-	character_move_test_callback( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot );
+	// STATE[100%|DONE]
+						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ) :
+							ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
+							m_up_vector					( up_vector ),
+							m_self						( self ),
+							m_minSlopeDot				( minSlopeDot ) {}
 
-	virtual float addSingleResult(btCollisionWorld::LocalConvexResult&, bool) override {}
+	// STATE[100%|DONE]
+	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
+	{
+		if ( convexResult.m_hitCollisionObject == m_self )
+			return 2.0f; // sushi@NOTE: In bullet this was 1.0f. Why?
 
-	virtual ~character_move_test_callback() {};
+		btVector3 hitNormalWorld;
+		if (normalInWorldSpace)
+		{
+			hitNormalWorld = convexResult.m_hitNormalLocal;
+		} else
+		{	// sushi@NOTE: I did the transform with origin as well. Does this matter? Understand this better
+			///need to transform normal into worldspace
+			hitNormalWorld = convexResult.m_hitCollisionObject->getWorldTransform().getBasis()*convexResult.m_hitNormalLocal;
+		}
+
+		btScalar dotUp = m_up_vector.dot(hitNormalWorld);
+		if (dotUp < m_minSlopeDot) {
+			return btScalar(0.0);  // sushi@NOTE: In bullet this was 1.0f. Why?
+		}
+		return ClosestConvexResultCallback::addSingleResult (convexResult, normalInWorldSpace);
+	}
+
 
 private:
-	/* offset 0x0000 */ /* fields for btCollisionWorld::ClosestConvexResultCallback */
-	/* offset 0x0060 */ /* fields for boost::noncopyable */
-	/* offset 0x0060 */ btVector3                           m_up_vector;
-	/* offset 0x0070 */ btCollisionObject*                  m_self;
-	/* offset 0x0074 */ float                               m_minSlopeDot;
+	/* 0x0000 */	/* btCollisionWorld::ClosestConvexResultCallback */
+	/* 0x0060 */	/* boost::noncopyable */
+	/* 0x0060 */	btVector3				m_up_vector;
+	/* 0x0070 */	btCollisionObject*		m_self;
+	/* 0x0074 */	float					m_minSlopeDot;
 }; // class character_move_test_callback
 
-namespace {
-	typedef char size_assert[
-		sizeof(character_move_test_callback) == 0x80 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
-// STATE[STUB]
-character_move_test_callback::character_move_test_callback( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ):
-	ClosestConvexResultCallback( from_vostok( float3() ), from_vostok( float3() ) )
+// STATE[91.29%|DONE]: sushi@NOTE: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
+bullet_character_controller::bullet_character_controller(
+	btPairCachingGhostObject*	ghost_object,
+	float2 const&				stand_shape_dim,
+	float2 const&				crouch_shape_dim,
+	s16							collisionFilterGroup,
+	s16							collisionFilterMask
+) :
+	m_collision_world			( NULL ),
+	m_walk_vector				( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_normalizedDirection		( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_current_pos				( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_pre_step_position			( btVector3( 0.0f, 0.0f, 0.0f ) ),
+	m_current_step_offset		( 0.0f ),
+	m_current_shape_dim			( float2( math::SNaN, math::SNaN ) ),
+	m_stand_shape_dim			( stand_shape_dim ),
+	m_crouch_shape_dim			( crouch_shape_dim ),
+	m_ghost_object				( ghost_object ),
+
+	m_shape						( btCapsuleShape( 1.0f, 1.0f ) ),
+	m_vertical_velocity			( 0.0f ),
+	m_max_fall_speed			( 55.0f ),
+	m_jump_speed				( 10.0f ),
+	m_in_crouch					( false ),
+	m_collision_filter_group	( collisionFilterGroup ),	// sushi@TODO: LTCG'ed to 4
+	m_collision_filter_mask		( collisionFilterMask ),	// sushi@TODO: LTCG'ed to 2
+	m_max_slope_in_radians		( math::pi_d3 ),
+	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
+	m_gravity					( 29.4f ),
+	m_was_on_ground				( false ),
+	m_jumping					( false ),
+	m_useGhostObjectSweepTest	( true ),
+	m_walk_vector_applied		( false ),
+	m_on_steep_slope			( false ),
+	m_has_updates				( false ),
+	m_positions					( )
 {
+	setup_crouch_state( false ); // <0x584e4b>|0x000|0x000:'310'
 }
 
-/*
-// STATE[STUB]
-// void* vostok::physics::bullet_character_controller::`scalar deleting destructor'(unsigned int)
-void* bullet_character_controller::`scalar deleting destructor'( )
-{
-	// FUNCTION BODY
-	// <0xde4c6>|0x000|0x000:'238'
-	// <0xde4d6>|0x010|0x010:'239'
-
-
-	// <0xde4e3>|0x01d|0x00d:'242'
-
-	// <0xde4ea>|0x024|0x007:'244'
-	// <0xde4fa>|0x034|0x010:'245'
-
-
-	// <0xde4ff>|0x039|0x005:'248'
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// <0xde5a3>|0x0dd|0x0a4:'262'
-	// <0xde5ce>|0x108|0x02b:'263'
-	// <0xde5dc>|0x116|0x00e:'264'
-
-	// <0xde5e5>|0x11f|0x009:'266'
-	// ******
-}
-*/
-// STATE[STUB]
-// vostok::physics::bullet_character_controller::bullet_character_controller(btPairCachingGhostObject*, vostok::math::float2 const&, vostok::math::float2 const&, short, short)
-bullet_character_controller::bullet_character_controller( btPairCachingGhostObject* ghost_object, float2 const& stand_shape_dim, float2 const& crouch_shape_dim ):
-	m_shape	( btCapsuleShape( 0.0f, 0.0f ) )
-{
-	// LOCALS
-	// s16                             collisionFilterGroup
-	// s16                             collisionFilterMask
-	// ******
-
-	// FUNCTION BODY
-	// <0x584e4b>|0x000|0x000:'310'
-	// ******
-}
-
-// STATE[STUB]
+// STATE[83%|DONE]: LTCG for `this` in destructor.
 bullet_character_controller::~bullet_character_controller( )
 {
 }
 
-// STATE[STUB]
-btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision( btVector3 const& hitNormal, btVector3 const& target_pos, float __formal, float normalMag )
+// STATE[99.80%|PARTIAL]
+// The implementation is based on `btKinematicCharacterController::updateTargetPositionBasedOnCollision`.
+// Further matches might come from updating `computeReflectionDirection`, possibly, even though it matches 100%, when inlined, it doesn't.
+// Can also be because of `normalMag` check that was compiled out by LTCG.
+btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
+	btVector3 const&	hitNormal,
+	btVector3 const&	target_pos,
+	float				tangentMag, // unused
+	float				normalMag
+)
 {
-	// LOCALS
-	// float                           movement_length
-	// btVector3                       movementDirection
-	// btVector3                       reflectDir
-	// ******
+	BT_PROFILE("updateTargetPositionBasedOnCollision"); // <0x585470>|0x000|0x000:'319'
 
-	// FUNCTION BODY
-	// <0x585470>|0x000|0x000:'319'
-	// <0x5854ac>|0x03c|0x03c:'320'
-	// <0x5854b1>|0x041|0x005:'321'
-	// <0x5854dc>|0x06c|0x02b:'322'
+	btVector3 result = m_current_pos;
+	btVector3 movementDirection = target_pos - m_current_pos;
 
-	// <0x585526>|0x0b6|0x04a:'324'
+	float movement_length = movementDirection.length( );
+	if ( movement_length > FLT_EPSILON )
+	{
+		movementDirection.normalize( ); // sushi@NOTE: As far as I understand, normalizing movement gives more precise math, but isn't required
 
-	// <0x585539>|0x0c9|0x013:'326'
+		btVector3 reflectDir = computeReflectionDirection( movementDirection, hitNormal ); // reflection here is not needed
+		reflectDir.normalize( );
 
-	// <0x585541>|0x0d1|0x008:'328'
-	// <0x5855b3>|0x143|0x072:'329'
+		btVector3 perpindicularDir  = perpindicularComponent( reflectDir, hitNormal );
 
+		// if (normalMag != 0.0) // sushi@NOTE: While LTCG should get rid of it, this reduces the match
+		{
+			// btVector3 perpComponent = perpindicularDir * btScalar ( normalMag * movement_length );
+			result +=  perpindicularDir * btScalar ( normalMag * movement_length );
+		}
 
-	// <0x585607>|0x197|0x054:'332'
-
-
-
-
-
-
-
-
-
-	// <0x585659>|0x1e9|0x052:'342'
-	// <0x585677>|0x207|0x01e:'343'
-
-
-	// <0x58569f>|0x22f|0x028:'346'
-	// ******
+		// <0x585677>|0x207|0x01e:'343' // sushi@NOTE: Based on the `vostok_structure` this makes more sense, but when I do that assembly breaks in other places.
+	}
+	return result;
 }
 
-// STATE[STUB]
+// STATE[96%|DONE]: Logging is still not 100% matched
 void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld, float deltaTime )
 {
-	// FUNCTION BODY
+	BT_PROFILE("updateAction1");																				// <0x5863f9>|0x000|0x000:'356'
+	if ( logging )																								// <0x58643a>|0x041|0x041:'357'
+		LOG_INFO( "updateAction Start  %f %f %f", m_current_pos.x( ), m_current_pos.y( ), m_current_pos.z( ) );	// <0x586446>|0x04d|0x00c:'359'
 
+	pre_step( deltaTime );																						// <0x586534>|0x13b|0x0ee:'362'
+	if ( logging )																								// <0x586539>|0x140|0x005:'363'
+		LOG_INFO( "updateAction Middle %f %f %f", m_current_pos.x( ), m_current_pos.y( ), m_current_pos.z( ) );	// <0x586546>|0x14d|0x00d:'364'
 
+	player_step( deltaTime );																					// <0x58663a>|0x241|0x0f4:'366'
+	if ( logging )																								// <0x586648>|0x24f|0x00e:'367'
+		LOG_INFO( "updateAction Finish %f %f %f", m_current_pos.x( ), m_current_pos.y( ), m_current_pos.z( ) );	// <0x586655>|0x25c|0x00d:'368'
 
-
-	// <0x5863f9>|0x000|0x000:'356'
-	// <0x58643a>|0x041|0x041:'357'
-
-	// <0x586446>|0x04d|0x00c:'359'
-
-
-	// <0x586534>|0x13b|0x0ee:'362'
-	// <0x586539>|0x140|0x005:'363'
-	// <0x586546>|0x14d|0x00d:'364'
-
-	// <0x58663a>|0x241|0x0f4:'366'
-	// <0x586648>|0x24f|0x00e:'367'
-	// <0x586655>|0x25c|0x00d:'368'
-	// <0x58674e>|0x355|0x0f9:'369'
-	// ******
+	m_walk_vector.setZero( );																					// <0x58674e>|0x355|0x0f9:'369'
 }
 
-// STATE[STUB]
+// STATE[99%|DONE]: LTCG for `step_forward_and_strafe`. Might get fixed after it is implemented properly.
 void bullet_character_controller::player_step( float dt )
 {
-	// LOCALS
-	// btTransform                     new_transform
-	// btVector3                       step_up_correction
-	// ******
+	// static bool use_shape_size = <0x10000>;
 
-	// STATICS
-	// static bool                     use_shape_size = <0x10000>;
-	// ******
+	BT_PROFILE("player_step");
 
-	// FUNCTION BODY
-	// <0x58622d>|0x000|0x000:'374'
+	m_has_updates = true;
+	m_was_on_ground = on_ground( );
 
+	if ( m_jumping )
+		m_vertical_velocity = m_walk_vector.y( ) / dt;
+	else
+	{  // sushi@NOTE: Why are we always falling
+		float fall_speed = m_vertical_velocity - m_gravity * dt;
+		m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
+	}
 
-	// <0x586263>|0x036|0x036:'377'
-	// <0x5862a3>|0x076|0x040:'378'
+	btVector3 step_up_correction;
+	step_up_correction.setZero( );
 
+	if ( !m_jumping )
+		step_up( true, step_up_correction );
 
+	if ( !m_walk_vector_applied ) {
+		step_forward_and_strafe( m_walk_vector );
+		m_walk_vector_applied = true;
+	}
 
-	// <0x5862fe>|0x0d1|0x05b:'382'
+	if ( !m_jumping )
+		step_down( dt, true, step_up_correction );
 
-	// <0x586319>|0x0ec|0x01b:'384'
-
-	// <0x58631d>|0x0f0|0x004:'386'
-
-
-	// <0x586328>|0x0fb|0x00b:'389'
-
-	// <0x586331>|0x104|0x009:'391'
-	// <0x58633a>|0x10d|0x009:'392'
-
-
-	// <0x586341>|0x114|0x007:'395'
-
-	// <0x58634a>|0x11d|0x009:'397'
-
-
-
-
-
-
-	// <0x58635b>|0x12e|0x011:'404'
-	// <0x5863a3>|0x176|0x048:'405'
-	// <0x5863b3>|0x186|0x010:'406'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// ******
+	btTransform new_transform = m_ghost_object->getWorldTransform( );
+	new_transform.setOrigin( m_current_pos );
+	m_ghost_object->setWorldTransform( new_transform );
 }
 
-// STATE[STUB]
+// STATE[96.92%|PARTIAL]
 float bullet_character_controller::recover_from_penetration( )
 {
-	// LOCALS
-	// float                           shape_y
-	// float                           maxPen
-	// btAlignedObjectArray<btPersistentManifold *> manifold_array
-	// s32                             i
-	// s32                             j
-	// btVector3                       pos_on_shape
-	// ******
+	BT_PROFILE("recover_from_penetration"); // <0x58506d>|0x000|0x000:'429'
+	m_collision_world->getDispatcher( )->dispatchAllCollisionPairs(
+		m_ghost_object->getOverlappingPairCache( ),
+		m_collision_world->getDispatchInfo( ),
+		m_collision_world->getDispatcher( )
+	);
 
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5740c3 }, type_index: TypeIndex(0x1386d) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x574123 }, type_index: TypeIndex(0x15032) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5741a7 }, type_index: TypeIndex(0x15030) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5741c4 }, type_index: TypeIndex(0x1385b) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x574350 }, type_index: TypeIndex(0x15032) })
-	// ******
+	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
-	// FUNCTION BODY
-	// <0x58506d>|0x000|0x000:'429'
+	float maxPen = 0.0f;
+	float shape_y = math::abs( m_shape_offset.y( ) );
+	btManifoldArray manifold_array;
 
+	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
+	{
+		manifold_array.resize( 0 );
+		btBroadphasePair& pair = m_ghost_object->getOverlappingPairCache( )->getOverlappingPairArray( )[i];
 
+		if ( pair.m_algorithm )
+			pair.m_algorithm->getAllContactManifolds( manifold_array );
 
-	// <0x5850a6>|0x039|0x039:'433'
+		for ( s32 j = 0 ; j < manifold_array.size( ) ; ++j )
+		{
+			btPersistentManifold* manifold = manifold_array[j];
+			bool isFirstBody = manifold->getBody0( ) == m_ghost_object;
+			float directionSign = isFirstBody ? -1.0f : 1.0f;
 
-	// <0x5850c5>|0x058|0x01f:'435'
+			for ( s32 k = 0 ; k < manifold->getNumContacts( ) ; ++k )
+			{
+				btManifoldPoint& contact = manifold->getContactPoint( k );
 
+				btScalar dist = contact.getDistance( );
 
-	// <0x5850df>|0x072|0x01a:'438'
+				if ( dist < 0.0f )
+				{
+					if ( dist < maxPen )
+					{
+						maxPen = dist;
+						btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
 
-	// <0x5850e8>|0x07b|0x009:'440'
+                        float pos_on_shape_y = ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y;
+						float weight = math::pow( pos_on_shape_y, 3 ); // on decomp.me the fix was to manually unroll `pow`. Sadly it didn't help here
 
-	// <0x585108>|0x09b|0x020:'442'
+						btVector3 displacement = contact.m_normalWorldOnB * directionSign * dist;
+						btVector3 weighedDisplacement = displacement * btVector3( weight, 1.0f - weight, weight );
+						m_current_pos += weighedDisplacement;
+					}
+				}
+			}
+		}
+	}
 
-	// <0x585131>|0x0c4|0x029:'444'
-
-	// <0x585192>|0x125|0x061:'446'
-
-	// <0x5851b0>|0x143|0x01e:'448'
-	// <0x5851b5>|0x148|0x005:'449'
-
-
-	// <0x5851c6>|0x159|0x011:'452'
-
-	// <0x5851f0>|0x183|0x02a:'454'
-	// <0x5851f7>|0x18a|0x007:'455'
-	// <0x585206>|0x199|0x00f:'456'
-
-	// <0x585217>|0x1aa|0x011:'458'
-
-
-
-	// <0x585230>|0x1c3|0x019:'462'
-
-	// <0x585235>|0x1c8|0x005:'464'
-
-
-
-
-	// <0x585241>|0x1d4|0x00c:'469'
-
-	// <0x585250>|0x1e3|0x00f:'471'
-
-	// <0x585256>|0x1e9|0x006:'473'
-
-
-
-	// <0x585264>|0x1f7|0x00e:'477'
-	// <0x5852bd>|0x250|0x059:'478'
-
-	// <0x5852dc>|0x26f|0x01f:'480'
-
-
-
-
-
-	// <0x58535a>|0x2ed|0x07e:'486'
-	// <0x58537e>|0x311|0x024:'487'
-	// <0x585388>|0x31b|0x00a:'488'
-	// <0x58538d>|0x320|0x005:'489'
-	// ******
+	btTransform newTrans = m_ghost_object->getWorldTransform( );
+	newTrans.setOrigin( m_current_pos );
+	m_ghost_object->setWorldTransform( newTrans );
+	return math::abs( maxPen );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
-	// FUNCTION BODY
+	float new_cylinder_height = math::max( 0.0f, ( m_current_shape_dim.y - m_current_shape_dim.x ) - s_step_height );
 
+	float new_full_height = m_current_shape_dim.x + new_cylinder_height;
+	setup_shape_dim( float2( m_current_shape_dim.x, new_full_height ) );
 
-	// <0x585c06>|0x000|0x000:'496'
+	pos_up_correction.setValue( 0.0f, ( m_current_shape_dim.y - new_full_height ) * 0.5f, 0.0f );
 
+    m_current_pos += pos_up_correction;
+	m_current_step_offset = pos_up_correction.y( );
 
-	// <0x585c10>|0x00a|0x00a:'499'
+	/* This one is way easier to read, but doesn't match exactly
 
+	// float diameter = m_current_shape_dim.x;
+	// float full_height = m_current_shape_dim.y;
+	// float new_cylinder_height = ( full_height - diameter ) - s_step_height;
+	// new_cylinder_height = math::max( 0.0f, new_cylinder_height );
 
-	// <0x585c32>|0x02c|0x022:'502'
+	float new_full_height = diameter + new_cylinder_height;
+	setup_shape_dim( float2( diameter, new_full_height ) );
 
-	// <0x585c5e>|0x058|0x02c:'504'
+	pos_up_correction.setValue( 0.0f,  ( full_height - new_full_height ) * 0.5f, 0.0f );
 
-	// <0x585ca0>|0x09a|0x042:'506'
-	// <0x585cc4>|0x0be|0x024:'507'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// ******
+    m_current_pos += pos_up_correction;
+	m_current_step_offset = pos_up_correction.y( );
+	*/
 }
 
-// STATE[STUB]
+// STATE[98.71%|DONE]: LTCG for s_cc_max_allowed_penetration_value
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
-	// LOCALS
-	// btVector3                       target_pos
-	// btTransform                     start
-	// btTransform                     end
-	// float                           fraction
-	// character_move_test_callback    callback
-	// btVector3                       sweepDirNegative
-	// btVector3                       currentDir
-	// ******
+	BT_PROFILE("step_forward_and_strafe");
 
-	// FUNCTION BODY
-	// <0x585786>|0x000|0x000:'553'
+	btTransform start, end;
+	btVector3 target_pos = m_current_pos + walkMove;
 
+	start.setIdentity ();
+	end.setIdentity ();
 
-	// <0x5857c7>|0x041|0x041:'556'
+	btScalar fraction = 1.0;
+	btScalar distance2 = (m_current_pos-target_pos).length2();
 
-	// <0x5857ca>|0x044|0x003:'558'
+	if ( distance2 < FLT_EPSILON ) // check is done in a different order
+		return;
 
+	int maxIter = 10;
 
+	while (fraction > btScalar(0.01) && maxIter-- > 0)
+	{
+		start.setOrigin (m_current_pos);
+		end.setOrigin (target_pos);
+		btVector3 sweepDirNegative(m_current_pos - target_pos);
 
-	// <0x5857dc>|0x056|0x012:'562'
-	// <0x585852>|0x0cc|0x076:'563'
-	// <0x585940>|0x1ba|0x0ee:'564'
+		character_move_test_callback callback( m_ghost_object, sweepDirNegative, 0.0 );
+		callback.m_collisionFilterGroup = m_collision_filter_group;
+		callback.m_collisionFilterMask = m_collision_filter_mask;
 
-	// <0x585946>|0x1c0|0x006:'566'
+		if ( m_useGhostObjectSweepTest )
+		{
+			m_ghost_object->convexSweepTest (&m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
+		} else
+		{
+			m_collision_world->convexSweepTest (&m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
+		}
 
-	// <0x585962>|0x1dc|0x01c:'568'
+		fraction -= callback.m_closestHitFraction;
 
-	// <0x58596d>|0x1e7|0x00b:'570'
+		if ( callback.hasHit( ) )
+		{
+			// we moved only a fraction
+			btScalar hitDistance;
+			hitDistance = (callback.m_hitPointWorld - m_current_pos).length();
 
+			target_pos = updateTargetPositionBasedOnCollision( callback.m_hitNormalWorld, target_pos );
+			btVector3 currentDir = target_pos - m_current_pos;
+			distance2 = currentDir.length2();
+			if (distance2 > SIMD_EPSILON)
+			{
+				currentDir.normalize();
+				/* See Quake2: "If velocity is against original velocity, stop ead to avoid tiny oscilations in sloping corners." */
+				if (currentDir.dot(m_normalizedDirection) <= btScalar(0.0))
+				{
+					break;
+				}
+			} else
+			{
+//				printf("currentDir: don't normalize a zero vector\n");
+				break;
+			}
 
-
-	// <0x585972>|0x1ec|0x005:'574'
-
-
-
-	// <0x5859f1>|0x26b|0x07f:'578'
-
-	// <0x585a18>|0x292|0x027:'580'
-	// <0x585a40>|0x2ba|0x028:'581'
-
-	// <0x585a42>|0x2bc|0x002:'583'
-
-
-	// <0x585a71>|0x2eb|0x02f:'586'
-
-	// <0x585a8a>|0x304|0x019:'588'
-
-
-
-
-	// <0x585a9b>|0x315|0x011:'593'
-	// <0x585ac5>|0x33f|0x02a:'594'
-	// <0x585aec>|0x366|0x027:'595'
-	// <0x585b12>|0x38c|0x026:'596'
-
-	// <0x585b27>|0x3a1|0x015:'598'
-
-	// ******
+		} else {
+			// we moved whole way
+			m_current_pos = target_pos;
+		}
+	}
 }
 
-// STATE[STUB]
+// STATE[93.50%|PARTIAL]: Failed to match this further. See comments as to why.
+// * There were 44 commented out lines, possibly with some future logic.
+// * btKinematicCharacterController has a slightly different order for transforms and `finish_pos`.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
-	// LOCALS
-	// character_move_test_callback    callback
-	// btTransform                     start
-	// btTransform                     finish
-	// ******
+	BT_PROFILE("step_down");
 
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5751dc }, type_index: TypeIndex(0x81ca) })
-	// ******
+	btTransform start;
+	start.setIdentity( );
+	start.setOrigin( m_current_pos );
+
+	float step_height = m_vertical_velocity < 0.f ? -m_vertical_velocity * dt : 0.f;
+	if ( s_step_height > step_height && m_was_on_ground )
+		step_height = s_step_height;
+
+	btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
+	btTransform finish;
+	finish.setIdentity( );
+	finish.setOrigin( finish_pos );
+
+	character_move_test_callback callback( m_ghost_object, m_up_vector, m_max_slope_angle_cos );
+	callback.m_collisionFilterGroup = m_collision_filter_group;
+	callback.m_collisionFilterMask = m_collision_filter_mask;
+
+	if ( m_useGhostObjectSweepTest )
+	{
+		m_ghost_object->convexSweepTest( &m_shape, start, finish, callback, s_cc_max_allowed_penetration_value );
+	} else
+	{
+		m_collision_world->convexSweepTest( &m_shape, start, finish, callback, s_cc_max_allowed_penetration_value );
+	}
+
+	if ( callback.hasHit( ) )
+	{
+		// sushi@NOTE: Even though target has it, seems like the transform here is not needed in general,
+		// since `ghost_object` isn't supposed to rotate anyway. So the same y coordinates can be used.
+		btTransform worldTransformInv = m_ghost_object->getWorldTransform( ).inverse( );
+		btVector3 hitPointLocal = worldTransformInv * callback.m_hitPointWorld;
+
+		if ( hitPointLocal.dot( m_up_vector ) <= s_step_height )
+		{
+			m_current_pos.setInterpolate3( start.getOrigin( ), finish.getOrigin( ), callback.m_closestHitFraction );
+			m_vertical_velocity = 0.0f;
+			m_jumping = false;
+			m_on_steep_slope = false;
+		} else
+		{
+			LOG_INFO( "dddd" );
+
+			// sushi@NOTE: There is no code here. Which means the player will be stuck in air when the fall is too high?
+		}
+	} else
+		m_current_pos = finish.getOrigin( );
+
+	m_current_pos += pos_up_correction;
+	m_current_pos.setY( m_current_pos.getY( ) + m_shape.getMargin( ) );
+	setup_crouch_state( m_in_crouch );
 
 	// FUNCTION BODY
-	// <0x585cdc>|0x000|0x000:'627'
-
-
-	// <0x585d1c>|0x040|0x040:'630'
-	// <0x585d1f>|0x043|0x003:'631'
-
-	// <0x585d43>|0x067|0x024:'633'
-
-	// <0x585dcd>|0x0f1|0x08a:'635'
-	// <0x585de3>|0x107|0x016:'636'
-
-
-
-	// <0x585de6>|0x10a|0x003:'640'
-
-
-
-	// <0x585de9>|0x10d|0x003:'644'
-
-
-
-	// <0x585eca>|0x1ee|0x0e1:'648'
-
-	// <0x585eef>|0x213|0x025:'650'
-	// <0x585f19>|0x23d|0x02a:'651'
-
-	// <0x585f1b>|0x23f|0x002:'653'
-
-
-	// <0x585f44>|0x268|0x029:'656'
-
-	// <0x585f5a>|0x27e|0x016:'658'
+	// <0x585cdc>|0x000|0x000:'627' BT_PROFILE("step_down");
+	// <1>
+	// <2>
+	// <0x585d1c>|0x040|0x040:'630' <xor>
+	// <0x585d1f>|0x043|0x003:'631' btTransform start( btMatrix3x3::getIdentity( ), m_current_pos );
+	// <1>
+	// <0x585d43>|0x067|0x024:'633' float step_height = m_vertical_velocity >= 0 ? 0.0f : - m_vertical_velocity * dt;
+	// <1>
+	// <0x585dcd>|0x0f1|0x08a:'635' if ( s_step_height > step_height && m_was_on_ground )
+	// <0x585de3>|0x107|0x016:'636'		step_height = s_step_height;
+	// <1>
+	// <2>
+	// <3>
+	// <0x585de6>|0x10a|0x003:'640' btVector3 finish_pos = m_current_pos - m_up_vector * ( m_current_step_offset + pos_up_correction.getY( ) + step_height );
+	// <1>
+	// <2>
+	// <3>
+	// <0x585de9>|0x10d|0x003:'644' character_move_test_callback callback( m_ghost_object, m_up_vector, m_max_slope_angle_cos );
+	// <1>
+	// <2>
+	// <3>
+	// <0x585eca>|0x1ee|0x0e1:'648' if ( m_useGhostObjectSweepTest )
+	// <1>							{
+	// <0x585eef>|0x213|0x025:'650'		m_ghost_object->convexSweepTest( m_shape, start, end, callback );
+	// <0x585f19>|0x23d|0x02a:'651' } else
+	// <1>
+	// <0x585f1b>|0x23f|0x002:'653'		m_collision_world->convexSweepTest( m_shape, start, end, callback, s_cc_max_allowed_penetration_value );
+	// <1>
+	// <2>
+	// <0x585f44>|0x268|0x029:'656' if ( callback.m_closestHitFraction < 1.0f )
+	// <1>							{
+	// <0x585f5a>|0x27e|0x016:'658'		btTransform worldTransform = m_ghost_object->getWorldTransform( ).inverse( );
 	// <0x585f6c>|0x290|0x012:'659'
-
-	// <0x585fc0>|0x2e4|0x054:'661'
-
-	// <0x586039>|0x35d|0x079:'663'
-	// <0x5860ae>|0x3d2|0x075:'664'
-	// <0x5860c2>|0x3e6|0x014:'665'
-	// <0x5860c9>|0x3ed|0x007:'666'
-	// <0x5860d0>|0x3f4|0x007:'667'
-
-	// <0x5860d5>|0x3f9|0x005:'669'
-
-
+	// <1>
+	// <0x585fc0>|0x2e4|0x054:'661'		if ( hitPointWorld.dot( s_step_height ) < s_step_height )
+	// <1>								{
+	// <0x586039>|0x35d|0x079:'663'			m_current_pos = ( 1.0f - callback.m_closestHitFraction ) * start.getOrigin( ) - end.getOrigin( );
+	// <0x5860ae>|0x3d2|0x075:'664'			m_vertical_velocity = 0.0;
+	// <0x5860c2>|0x3e6|0x014:'665'			m_jumping = 0;
+	// <0x5860c9>|0x3ed|0x007:'666'			m_on_steep_slope = 0;
+	// <0x5860d0>|0x3f4|0x007:'667'		} else
+	// <1>
+	// <0x5860d5>|0x3f9|0x005:'669'			LOG_INFO( "dddd" );
+	// <1>
+	// <2>
 	// <0x586188>|0x4ac|0x0b3:'672'
+	// <1>
+	// <2>							} else
+	// <0x58618d>|0x4b1|0x005:'675'		m_current_pos = end.getOrigin( );
+	// <1>
 
-
-	// <0x58618d>|0x4b1|0x005:'675'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// <0x5861a9>|0x4cd|0x01c:'720'
-	// <0x5861d5>|0x4f9|0x02c:'721'
-	// <0x5861e1>|0x505|0x00c:'722'
-
+	// <44>
+	// <0x5861a9>|0x4cd|0x01c:'720' m_current_pos += pos_up_correction;
+	// <0x5861d5>|0x4f9|0x02c:'721' m_current_pos.getY( ) += m_shape.getMargin( );
+	// <0x5861e1>|0x505|0x00c:'722' setup_crouch_state( m_in_crouch );
+	// <1>
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk_vector )
 {
-	// FUNCTION BODY
-	// <0x584fde>|0x000|0x000:'728'
-	// <0x584fe5>|0x007|0x007:'729'
+	m_has_updates = false;	// <0x584fde>|0x000|0x000:'728'
+	m_walk_vector = walk_vector;
 
-	// <0x584ffb>|0x01d|0x016:'731'
-	// <0x585027>|0x049|0x02c:'732'
+	if ( !m_walk_vector.isZero( ) )
+		m_normalizedDirection = getNormalizedVector( m_walk_vector );
 
-
-	// ******
+	m_walk_vector_applied = false;
 }
 
-// STATE[STUB]
-void bullet_character_controller::pre_step( float __formal )
+// STATE[100%|DONE]
+void bullet_character_controller::pre_step( float dt )
 {
-	// FUNCTION BODY
-	// <0x5856c0>|0x000|0x000:'739'
-	// <0x5856f7>|0x037|0x037:'740'
+	BT_PROFILE("pre_step");														// <0x5856c0>|0x000|0x000:'739'
+	m_pre_step_position = m_ghost_object->getWorldTransform( ).getOrigin( );	// <0x5856f7>|0x037|0x037:'740'
 
+	for ( s32 i = 0 ; recover_from_penetration( ) > 0.05f ; )
+	{
+		if ( ++i > 3 )
+			break;
+	}
 
-
-
-
-
-
-	// <0x58570f>|0x04f|0x018:'748'
-
-	// <0x585726>|0x066|0x017:'750'
-	// <0x585727>|0x067|0x001:'751'
-
-
-
-
-
-	// <0x58573c>|0x07c|0x015:'757'
-
-	// ******
+	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );			// <0x58573c>|0x07c|0x015:'757'
 }
 
-// STATE[STUB]
+// sushi@NOTE: 300 empty lines
+
+// STATE[100%|DONE]
 bool bullet_character_controller::can_jump( ) const
 {
-	// FUNCTION BODY
-	// <0x5845f1>|0x000|0x000:'1077'
-	// ******
+	return !in_crouch( ) && on_ground( ) && !m_on_steep_slope; // <0x5845f1>|0x000|0x000:'1077'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::jump( )
 {
-	// FUNCTION BODY
-	// <0x5849f1>|0x000|0x000:'1082'
-
-
-
-
-
-
-	// <0x584a2c>|0x03b|0x03b:'1089'
-	// ******
+	if ( can_jump( ) )			// <0x5849f1>|0x000|0x000:'1082'
+	{
+		m_jumping = true;
+		m_positions.clear( );	// <0x584a2c>|0x03b|0x03b:'1089'
+	}
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::end_jump( )
 {
-	// FUNCTION BODY
-	// <0x584520>|0x000|0x000:'1094'
-	// ******
+	m_jumping = false; // <0x584520>|0x000|0x000:'1094'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool bullet_character_controller::on_ground( ) const
 {
-	// FUNCTION BODY
-	// <0x5845b1>|0x000|0x000:'1105'
-	// ******
+	return math::abs( m_vertical_velocity ) < math::epsilon_3; // <0x5845b1>|0x000|0x000:'1105'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
+// x = capsule diameter
+// y = full capsule height
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 {
-	// FUNCTION BODY
-
-	// <0x584549>|0x000|0x000:'1111'
-	// ******
+	m_shape.setImplicitShapeDimensions(
+		btVector3(
+			shape_dim.x * 0.5f,
+			( shape_dim.y - shape_dim.x ) * 0.5f,
+			shape_dim.x * 0.5f
+		)
+	); // <0x584549>|0x000|0x000:'1111'
 }
 
-// STATE[STUB]
+// STATE[92%|PARTIAL]: The closest I was able to get. The assembly is the same except for a few instructions reshuffled.
 void bullet_character_controller::setup_crouch_state( bool crouch )
 {
-	// LOCALS
-	// btVector3                       prev_shape_offset
-	// btVector3                       orign
-	// ******
+	btVector3 prev_shape_offset = m_shape_offset;												// <0x584809>|0x000|0x000:'1122'
+	m_in_crouch = crouch;
+    float shape_y;
+    if ( crouch )
+    {
+    	m_current_shape_dim = m_crouch_shape_dim;
+		setup_shape_dim( m_current_shape_dim );		// up until this point no breakpoints in structure
+        shape_y = m_crouch_shape_dim.y;
+    }												// this empty line is the most confusing, since it doesn't match structure
+    else											// while everything else (including this `else`) does
+    {
+        m_current_shape_dim = m_stand_shape_dim;
+		setup_shape_dim( m_current_shape_dim );
+        shape_y = m_stand_shape_dim.y;
+    }
+	m_shape_offset.setZero( ); // Creating a new btVector and assigning it results in new stack variables.`
+	m_shape_offset.setY( shape_y * 0.5f );
 
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5739bc }, type_index: TypeIndex(0x1397d) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5739e1 }, type_index: TypeIndex(0x14fb0) })
-	// ******
+	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( );
+	orign -= prev_shape_offset - m_shape_offset;
+	m_ghost_object->getWorldTransform( ).setOrigin( orign );
+	m_ghost_object->setInterpolationWorldTransform(  m_ghost_object->getWorldTransform( ) );	// <0x58499c>|0x193|0x016:'1136'
 
-	// FUNCTION BODY
+	m_ghost_object->setCollisionShape( &m_shape );												// <0x5849aa>|0x1a1|0x00e:'1138'
 
-
-
-
-
-
-	// <0x584809>|0x000|0x000:'1122'
-	// <0x584896>|0x08d|0x08d:'1123'
-	// <0x58489e>|0x095|0x008:'1124'
-
-	// <0x5848a0>|0x097|0x002:'1126'
-	// <0x5848ac>|0x0a3|0x00c:'1127'
-	// <0x5848fc>|0x0f3|0x050:'1128'
-
-
-
-
-
-	// <0x58490f>|0x106|0x013:'1134'
-	// <0x584986>|0x17d|0x077:'1135'
-	// <0x58499c>|0x193|0x016:'1136'
-
-	// <0x5849aa>|0x1a1|0x00e:'1138'
-
-	// <0x5849be>|0x1b5|0x014:'1140'
-	// <0x5849c5>|0x1bc|0x007:'1141'
-
-
-
-
-
-
-	// ******
+	if ( m_collision_world )																	// <0x5849be>|0x1b5|0x014:'1140'
+		m_ghost_object->getOverlappingPairCache( )->cleanProxyFromPairs(
+			m_ghost_object->getBroadphaseHandle( ),
+			m_collision_world->getDispatcher( )													// <0x5849c5>|0x1bc|0x007:'1141'
+		);
 }
 
-// STATE[STUB]
+// STATE[94%|PARTIAL]: Target preserves `ecx` by pushing it in prologue.
 void bullet_character_controller::insert( btDynamicsWorld* world )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x573bde }, type_index: TypeIndex(0x162ec) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x573be9 }, type_index: TypeIndex(0x1604b) })
-	// ******
-
-	// FUNCTION BODY
-	// <0x584bb4>|0x000|0x000:'1152'
-	// <0x584bb8>|0x004|0x004:'1153'
-	// <0x584bbf>|0x00b|0x007:'1154'
-	// <0x584be0>|0x02c|0x021:'1155'
-	// <0x584beb>|0x037|0x00b:'1156'
-
-
-
-	// ******
+	m_collision_world = world; // <0x584bb4>|0x000|0x000:'1152'
+	setup_crouch_state( false );
+	m_collision_world->addCollisionObject( m_ghost_object, m_collision_filter_group, m_collision_filter_mask );
+	m_collision_world->addAction( this );
+	m_positions.clear( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::remove( btDynamicsWorld* world )
 {
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x573771 }, type_index: TypeIndex(0x1604b) })
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x573782 }, type_index: TypeIndex(0x162d0) })
-	// ******
+	// ASSERT( m_collision_world == world )? Why do we even need to pass world
+	m_collision_world->removeAction( this );					// <0x584766>|0x000|0x000:'1165'
+	m_collision_world->removeCollisionObject( m_ghost_object );	// <0x584773>|0x00d|0x00d:'1166'
+	m_positions.clear( );										// <0x584784>|0x01e|0x011:'1167'
 
-	// FUNCTION BODY
-
-	// <0x584766>|0x000|0x000:'1165'
-	// <0x584773>|0x00d|0x00d:'1166'
-	// <0x584784>|0x01e|0x011:'1167'
-
-
-
-	// <0x5847ac>|0x046|0x028:'1171'
-
-	// <0x5847eb>|0x085|0x03f:'1173'
-	// ******
+	m_ghost_object->getOverlappingPairs( ).clear( );			// <0x5847ac>|0x046|0x028:'1171'
+	m_collision_world = NULL;									// <0x5847eb>|0x085|0x03f:'1173'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 btTransform bullet_character_controller::get_transform( )
 {
-	// FUNCTION BODY
-	// <0x5846a9>|0x000|0x000:'1178'
-
-	// <0x584701>|0x058|0x058:'1180'
-
-	// ******
+	btTransform transform = m_ghost_object->getWorldTransform( );	// <0x5846a9>|0x000|0x000:'1178'
+	transform.setOrigin( transform.getOrigin( ) - m_shape_offset );	// <0x584701>|0x058|0x058:'1180'
+	return transform;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::set_transform( btTransform const& transform )
 {
-	// FUNCTION BODY
-	// <0x584f4c>|0x000|0x000:'1186'
-	// <0x584fb7>|0x06b|0x06b:'1187'
-	// ******
+	m_ghost_object->setWorldTransform( btTransform( transform.getRotation( ), transform.getOrigin( ) + m_shape_offset ) );	// <0x584f4c>|0x000|0x000:'1186'
+	m_ghost_object->setInterpolationWorldTransform( m_ghost_object->getWorldTransform( ) );									// <0x584fb7>|0x06b|0x06b:'1187'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void bullet_character_controller::set_crouch( bool crouch )
 {
-	// FUNCTION BODY
-	// <0x584b6a>|0x000|0x000:'1192'
+	if ( crouch == m_in_crouch ) // <0x584b6a>|0x000|0x000:'1192'
+		return;
 
+	if ( crouch )
+	{
+		setup_crouch_state( true );
+	}
+	else
+	{
+		setup_crouch_state( false );
+	}
 
-	// <0x584b72>|0x008|0x008:'1195'
-
-	// <0x584b76>|0x00c|0x004:'1197'
-	// <0x584b78>|0x00e|0x002:'1198'
-
-
-	// <0x584b7a>|0x010|0x002:'1201'
-
-	// <0x584b81>|0x017|0x007:'1203'
-	// ******
+	m_positions.clear( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: The actual logic was commented out
 bool bullet_character_controller::can_stand( )
 {
-	// FUNCTION BODY
-	// <0x584510>|0x000|0x000:'1208'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// ******
+	return true; // <0x584510>|0x000|0x000:'1208'
 }
 
 } // namespace physics
