@@ -2412,6 +2412,14 @@
 			<File
 				RelativePath=".\filter_tree.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\filter_tree.h"

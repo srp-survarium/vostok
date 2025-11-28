@@ -41,11 +41,7 @@ public:
 	geometry_instance*				bone_geometry_instance;
 };
 
-namespace {
-	typedef char size_assert[
-		sizeof(bone_collision_data) == 0x70 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 
 } // namespace collision
 } // namespace vostok

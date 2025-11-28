@@ -26,11 +26,7 @@ public:
 	virtual float4x4		get_transform			( ) const												= 0;
 }; // class bt_rigid_body_base
 
-namespace {
-	typedef char size_assert[
-		sizeof(bt_rigid_body_base) == 0xC ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(bt_rigid_body_base, 0xC);
 
 } // namespace physics
 } // namespace vostok

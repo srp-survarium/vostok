@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "temp_include_all.h"
 
+#include <vostok/physics/sources/bullet_include.h>
+
 #include "../../collision/sources/loose_oct_tree.h"
 
 #include <vostok/ai/npc_statistics.h>
@@ -17,18 +19,33 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/debug_renderer.h>
 
+#include <vostok/physics/api.h>
+#include <vostok/physics/engine.h>
 #include <vostok/physics/animated_rigid_body.h>
 #include <vostok/physics/ghost_object.h>
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/static_rigid_body.h>
+#include <vostok/physics/contact_test_predicate.h>
+#include <vostok/physics/sources/bullet_character_controller.h>
+#include <vostok/physics/character_controller.h>
 
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
 
+
+
 namespace vostok
 {
+	void use_physics_api()
+	{
+		physics::engine engine;
+		physics::create_world_bt( NULL, engine );
+		physics::destroy_world( NULL, NULL );
+		physics::set_memory_allocator( NULL );
+	}
+
 	void use_log()
 	{
 		LOG_WARNING("ERROR %d", 10);
@@ -58,6 +75,57 @@ namespace vostok
 			"Hello!"
 		);
 
+	}
+
+	void use_bt_character_controller()
+	{
+		memory::stack_allocator stack_allocator;
+		physics::bt_character_controller* cc2 = physics::create_character_controller( stack_allocator, NULL );
+
+		physics::bt_character_controller cc(NULL);
+		cc.allocator();
+		cc.initialize();
+
+		float4x4 t;
+		cc.activate(t);
+		cc.deactivate();
+		cc.get_transform();
+		cc.set_transform(t);
+		cc.set_walk_direction(float3());
+		cc.has_updates();
+		cc.jump();
+		cc.end_jump();
+		cc.adjust_foot_transform( float3(), float3(), float3(), 1.0, 1.0, t);
+		cc.update_action(10);
+		cc.can_jump();
+		cc.on_ground();
+		cc.set_crouch(true);
+		cc.can_crouch();
+		cc.can_stand();
+	}
+
+	void use_bullet_character_controller()
+	{
+		physics::bullet_character_controller controller( NULL, float2(), float2(), 10, 20 );
+		controller.set_transform( btTransform( ) );
+		controller.set_crouch( true );
+		controller.can_stand( );
+		controller.get_transform( );
+		controller.on_ground( );
+		controller.can_jump( );
+		controller.end_jump( );
+		controller.jump( );
+		controller.set_desired_walk_vector( btVector3( ) );
+		// controller.setup_shape_dim( float2( ) );
+		controller.insert( NULL );
+		controller.remove( NULL );
+		controller.updateAction( NULL, 10.0 );
+
+
+		physics::computeReflectionDirection( btVector3( ), btVector3( ) );
+		physics::perpindicularComponent( btVector3( ), btVector3( ) );
+		physics::parallelComponent( btVector3( ), btVector3( ) );
+		physics::setup_game_material_groups( NULL, 10 );
 	}
 
 	void example_callback(const char *name)
@@ -99,6 +167,8 @@ namespace vostok
 		body.get_collision_group( );
 		body.get_bt_collision_obect( );
 
+		physics::create_static_rigid_body( physics::bt_rigid_body_construction_info( ) );
+		physics::destroy_static_rigid_body( NULL );
 	}
 
 	void use_collision_shape()
@@ -108,9 +178,9 @@ namespace vostok
 
 		configs::binary_config_value bcv = configs::binary_config_value();
 
-		physics::destroy_bt_shape			( NULL );
+		physics::destroy_bt_shape		( NULL );
 		physics::destroy_shape			( NULL );
-		physics::create_bt_primitive		( collision::primitive_box, float3(), float3() );
+		physics::create_bt_primitive	( collision::primitive_box, float3(), float3() );
 		physics::create_primitive_shape	( collision::primitive_box, float3(), float3() );
 		physics::create_compound_shape	( bcv, float3(), "model_path" );
 
@@ -119,11 +189,25 @@ namespace vostok
 		physics::create_static_triangle_mesh_shape	( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
 	}
 
+	struct ghost_predicate : physics::contact_test_predicate {
+	virtual	float		add_single_result		(
+							void*				arg_0,
+							collision::primitive_type		arg_1,
+							float4x4 const&		arg_2,
+							float3 const&		arg_3,
+							collision::primitive_type		arg_4,
+							float4x4 const&		arg_5,
+							float3 const&		arg_6
+						) override { return 0.0;}
+	};
+
 
 	void use_ghost_object()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
 		physics::bt_ghost_object ghost = physics::bt_ghost_object( shape, NULL );
+		physics::base_physics_objects_type result( NULL, 10 );
+		vectora<float3> centres_results( NULL );
 
 		ghost.get_overlapping_objects_count( );
 		ghost.set_transform( math::float4x4() );
@@ -131,6 +215,14 @@ namespace vostok
 		ghost.get_collision_group( );
 		ghost.get_overlapping_objects_count( );
 		ghost.get_bt_collision_obect( );
+		ghost.get_overlapping_objects( result );
+		ghost.insert( NULL, 10, 20 );
+		physics::destroy_ghost_object( physics::create_ghost_object( shape, math::float4x4() ) );
+		ghost.non_compound_shapes_centers( centres_results );
+		ghost_predicate predicate;
+		ghost.contact_test( NULL, NULL, predicate );
+		ghost.contact_test( NULL );
+		ghost.remove( NULL );
 	}
 
 	void use_loose_oct_tree()
@@ -192,14 +284,18 @@ namespace vostok
 			configs::binary_config_value config = configs::binary_config_value();
 			physics::geometries_type geometries( NULL, 10 );
 			physics::new_compound_shape_from_hit_targets_config( config, geometries, NULL );
+
+			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
 		}
 
 		{
 			configs::binary_config_value config = configs::binary_config_value();
+			animation::skeleton_ptr skeleton_ptr( NULL );
 			// physics::calculate_bt_hit_target_size( config );
 
 			// calculate_bt_animated_body_size_from_hit_targets_config
 			physics::calculate_bt_animated_body_size_from_hit_targets_config( config );
+			physics::new_animated_bt_hit_model( config, skeleton_ptr, NULL );
 		}
 
 		{
@@ -211,6 +307,7 @@ namespace vostok
 			// void						destroy_animated_rigid_body	( bt_animated_rigid_body* body, memory::base_allocator* allocator );
 			physics::destroy_animated_rigid_body( NULL, NULL );
 		}
+
 	}
 
 }
@@ -227,6 +324,8 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_bt_character_controller();
+	vostok::use_physics_api();
 	vostok::use_log();
 	vostok::use_network_core_http_client();
 	vostok::use_static_rigid_body();
@@ -235,6 +334,7 @@ IncludeAll::IncludeAll()
 	vostok::use_aabb_object();
 	vostok::use_ghost_object();
 	vostok::use_collision_shape();
+	vostok::use_bullet_character_controller();
 
 	//
 	// YEEET

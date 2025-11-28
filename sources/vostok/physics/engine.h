@@ -8,23 +8,9 @@
 namespace vostok {
 namespace physics {
 
-/* vostok::physics::engine */
+struct engine  { };
 
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
-
-struct engine  {
-public:
-
-private:
-}; // struct engine
-
-namespace {
-	typedef char size_assert[
-		sizeof(engine) == 0x1 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(engine, 0x1);
 
 } // namespace physics
 } // namespace vostok

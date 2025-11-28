@@ -2411,6 +2411,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\hit_targets_creation_utils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\hit_targets_creation_utils_inline.h"
+				>
+			</File>
+			<File
 				RelativePath="..\library_linkage.h"
 				>
 			</File>
