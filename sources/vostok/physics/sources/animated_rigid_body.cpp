@@ -6,23 +6,32 @@
 #include <vostok/physics/animated_rigid_body.h>
 
 #include "bullet_include.h"
-#include <vostok/collision/primitives.h> // sushi@TODO: Should be imported in header only
+#include <vostok/collision/primitives.h>
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/collision/animated_object.h>
-#include <vostok/collision/shell_creation_utils.h>
 #include <vostok/physics/bullet_utils.h>
+#include <vostok/collision/hit_targets_creation_utils.h>
+
+/* sushi@TODO
+ * This module has problems with matching `switch` statements.
+ * The problem is that Ghidra considers them to be a function return.
+ * This can be solved by:
+ * - generating object files manually (tiresome)
+ * - possibly by activating more analyzers in Ghidra (increases iteration loops, but can be done in specific cases)
+ * - by not relying on delinker and Ghidra (needs be explored further)
+ *
+ * There are also problems with sizes being allocated. I see the constants but I don't know where they are coming from.
+ * This should be cleared from further usage
+ */
 
 namespace vostok {
 namespace physics {
 
 // STATE[98%|PARTIAL]: LTCG for `game_material_id`.
-bt_animated_rigid_body::bt_animated_rigid_body(
-	btCompoundShape*                   shape,
-	btRigidBody*                       body,
-	u16								   game_material_id) :
-	m_bt_body							(body),
-	m_shape								(shape),
-	m_game_material_id					(game_material_id)
+bt_animated_rigid_body::bt_animated_rigid_body( btCompoundShape* shape, btRigidBody* body, u16 game_material_id ) :
+	m_bt_body			( body ),
+	m_shape				( shape ),
+	m_game_material_id	( game_material_id )
 {
 	body->setUserPointer(this);	// <0x6bfe5a>|0x000|0x000:'25'
 }
@@ -80,7 +89,7 @@ float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
 	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
 }
 
-// STATE[STUB]: sushi@TODO: Make it conform to structure
+// STATE[BLOCKED]: sushi@TODO: switch statement problems
 static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
 	switch ( type )	// <0x6bf579>|0x000|0x000:'86'
@@ -132,7 +141,7 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
-// STATE[99.54%]
+// STATE[99.54%|DONE]: LTCG is different for `binary_config_value::operator[]`.
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];										// <0x6bf98f>|0x000|0x000:'146'
@@ -174,7 +183,7 @@ static u32 calculate_bt_hit_target_size( configs::binary_config_value const& con
 	}
 }
 
-// STATE[UNVERIFIED]: sushi@TODO: I don't know what those sizes are
+// STATE[BLOCKED]: sushi@TODO: This function doesn't have xrefs and got inlined in target, don't know where exactly. Also constants.
 static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -194,7 +203,7 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	}
 }
 
-// STATE[98.38%|STUB]: sushi@TODO: What are label symbols, figure out.
+// STATE[98.38%|PARTIAL]: sushi@TODO: Constants need to be converted to proper `sizeof` operations.
 // STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
@@ -209,11 +218,8 @@ u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_con
 	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
 }
 
-// STATE[97.25%|DONE]: LTCG for game_material_id
-bt_animated_rigid_body* new_animated_rigid_body(
-	btCompoundShape*                   shape,
-	u16                                game_material_id,
-	memory::base_allocator*            allocator)
+// STATE[97.25%|DONE]: LTCG for `game_material_id`.
+bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator )
 {
 	btVector3	local_inertia( 0.f, 0.f, 0.f );
 	shape->calculateLocalInertia( 0.f, local_inertia );
@@ -221,7 +227,7 @@ bt_animated_rigid_body* new_animated_rigid_body(
 	btRigidBody::btRigidBodyConstructionInfo info( 0.f, NULL, shape, local_inertia );
 
 	btRigidBody*			body		= VOSTOK_NEW_IMPL( allocator, btRigidBody )( info );
-	body->setCollisionFlags( 0x10 ); // sushi@TODO: Figure out proper constants
+	body->setCollisionFlags( btCollisionObject::CF_CHARACTER_OBJECT );
 	bt_animated_rigid_body* rigid_body	= VOSTOK_NEW_IMPL( allocator, bt_animated_rigid_body )( shape, body, game_material_id );
 	return rigid_body;
 }
@@ -232,21 +238,19 @@ void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_all
 	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'
 }
 
-// STATE[UNVERIFIED]
+// STATE[99.81%|DONE]: LTCG for `calculate_bt_animated_body_size_from_hit_targets_config` and `get_bones_count_from_hit_targets_config`.
 collision::animated_object* new_animated_bt_hit_model(
 	configs::binary_config_value const& config,
 	animation::skeleton_ptr const&		model_skeleton,
 	memory::base_allocator*				allocator)
 {
-	memory::stack_allocator				stack_allocator; // sushi@NOTE: Why is this stack allocator? Aren't it in the heap
-	u32 const arena_size			=	calculate_bt_animated_body_size_from_hit_targets_config( config ) + 0x304;
+	u32 const arena_size			=	calculate_bt_animated_body_size_from_hit_targets_config( config ) + 0x304; // sushi@TODO: Figure out where this constant is coming from
+	pvoid const arena_ptr			=	VOSTOK_MALLOC_IMPL( allocator, arena_size, "collision::animated_object memory" );
 
-	pvoid const arena				=	VOSTOK_MALLOC_IMPL( allocator, arena_size, "collision::animated_object memory" );
+	memory::stack_allocator				stack_allocator; // sushi@NOTE: Misnomer for bump allocator or arena?
+	stack_allocator.initialize			( arena_ptr, arena_size, "collision::animated_object memory" );
 
-
-	stack_allocator.initialize			( arena, arena_size, "collision::animated_object memory" );
-	// sushi@TODO: Incorrect method: get_bones_count_from_hit_targets_config
-	u32 bones_count = collision::get_bones_count_from_physics_shell_config<vostok::configs::binary_config_value>(config);
+	u32 bones_count = collision::get_bones_count_from_hit_targets_config<vostok::configs::binary_config_value>( config );
 	collision::animated_object* object = VOSTOK_NEW_IMPL( stack_allocator, collision::animated_object )( config, model_skeleton, bones_count, stack_allocator );
 
 	return object;

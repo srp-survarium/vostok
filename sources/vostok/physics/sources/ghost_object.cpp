@@ -29,7 +29,7 @@ bt_ghost_object::~bt_ghost_object( )
 
 // STATE[48%|DONE] For some reason `push_back` was not inlined in target, it also had asserts inside, which didn't compile out.
 // All of this doesn't make much sense, since this module is compiled with optimizations, and `push_back` is a header-only inline function.
-// There are more functions like this here.
+// There are more functions like this.
 void bt_ghost_object::get_overlapping_objects( buffer_vector<base_physics_object *>& result ) const
 {
 	u32 const size = get_overlapping_objects_count( );																					// <0x583875>|0x000|0x000:'33'
@@ -133,7 +133,7 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 	}
 }
 
-// STATE[36%|DONE]: sushi@NOTE: The problem with `operator->` somehow not being inlined on Master Gold with debug usage.
+// STATE[36%|DONE]: sushi@TODO: The problem with `operator->` somehow not being inlined on Master Gold with debug usage.
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );									// <0x583d31>|0x000|0x000:'152'

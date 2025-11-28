@@ -104,7 +104,7 @@ bt_static_rigid_body* create_static_rigid_body( bt_rigid_body_construction_info 
 	return static_rigid_body;																									// <0x5844d4>|0x1f8|0x047:'168'
 }
 
-// STATE[63%|DONE]: loose_ptr_base inline in target
+// STATE[63%|DONE]: `loose_ptr_base` inlined in target.
 bt_static_rigid_body::~bt_static_rigid_body( ) {
 	ASSERT( m_bt_body );
 	VOSTOK_DELETE_IMPL( g_ph_allocator, m_bt_body );	// <0x58419a>|0x000|0x000:'174'

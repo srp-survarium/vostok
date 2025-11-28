@@ -8,8 +8,13 @@
 #include <vostok/physics/model.h>
 #include <vostok/physics/world.h>
 
-// Match percentage is low, but almost nothing has changed from the XRAY implementation,
-// meaning most likely everything here is done.
+/*
+ * This is heavily based on the original xr2 source code.
+ * Match percentage is low, however.
+ * This is because of how differently `intrusive_ptr` was compiled.
+ * And I currently do not have fixes for this.
+ * Hopefully the problem will solve itself once overall matching percentage is better.
+ */
 
 namespace vostok {
 namespace physics {

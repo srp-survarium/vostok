@@ -48,13 +48,13 @@ static console_commands::cc_bool s_ph_debug_cmd03 (
 	console_commands::command_type_user_specific
 );
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void dump_physics_profiler( pcstr __formal )
 {
 	CProfileManager::dumpAll( );
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void reset_physics_profiler( pcstr __formal )
 {
 	CProfileManager::Reset();
@@ -70,13 +70,13 @@ static console_commands::cc_delegate s_reset_statistics (
 );
 
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void* bullet_alloc( u32 size )
 {
 	return VOSTOK_MALLOC_IMPL( vostok::physics::g_ph_allocator, size, "bullet" );	// <0x6bc9e0>|0x000|0x000:'45'
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void bullet_free( void* memblock )
 {
 	return VOSTOK_FREE_IMPL( vostok::physics::g_ph_allocator, memblock );	// <0x6bc9c0>|0x000|0x000:'50'

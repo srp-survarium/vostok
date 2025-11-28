@@ -9,6 +9,9 @@
 #include "LinearMath/btQuickProf.h"
 #include <vostok/console_command.h>
 
+/* sushi@TODO
+ * There are still a lot of warnings in the code that need to be dealt with.
+ */
 
 namespace vostok {
 namespace physics {
@@ -110,7 +113,7 @@ private:
 
 STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
-// STATE[91.29%|DONE]: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
+// STATE[91.29%|DONE]: sushi@NOTE: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
 bullet_character_controller::bullet_character_controller(
 	btPairCachingGhostObject*	ghost_object,
 	float2 const&				stand_shape_dim,
@@ -134,11 +137,11 @@ bullet_character_controller::bullet_character_controller(
 	m_max_fall_speed			( 55.0f ),
 	m_jump_speed				( 10.0f ),
 	m_in_crouch					( false ),
-	m_collision_filter_group	( 4 ), // collisionFilterGroup ),	// LTCG'ed to 4 sushi@TODO, recover
-	m_collision_filter_mask		( 2 ), // collisionFilterMask ),	// LTCG'ed to 2
+	m_collision_filter_group	( collisionFilterGroup ),	// sushi@TODO: LTCG'ed to 4
+	m_collision_filter_mask		( collisionFilterMask ),	// sushi@TODO: LTCG'ed to 2
 	m_max_slope_in_radians		( math::pi_d3 ),
 	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
-	m_gravity					( 29.4f ),							// 29.400002
+	m_gravity					( 29.4f ),
 	m_was_on_ground				( false ),
 	m_jumping					( false ),
 	m_useGhostObjectSweepTest	( true ),

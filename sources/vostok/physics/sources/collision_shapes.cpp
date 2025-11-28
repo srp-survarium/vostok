@@ -32,10 +32,11 @@ STATIC_SIZE_ASSERT(btBvhTriangleMeshShapeResource, 0x70);
 
 // STATE[0%|PARTIAL]
 btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
-	btStridingMeshInterface*           meshInterface,
-	u16*                               face_data,
-	geometry_resource_ptr const&       vertices_resource,
-	geometry_resource_ptr const&       indices_resource):
+	btStridingMeshInterface*			meshInterface,
+	u16*								face_data,
+	geometry_resource_ptr const&		vertices_resource,
+	geometry_resource_ptr const&		indices_resource
+) :
 	btBvhTriangleMeshShape	( meshInterface, true ),
 	m_face_data				( face_data ),
 	m_raw_vertices			( vertices_resource ),
@@ -104,7 +105,7 @@ void destroy_shape( bt_collision_shape* shape )
 	VOSTOK_DELETE_IMPL( g_ph_allocator, shape );	// <0x72c201>|0x000|0x000:'115'
 }
 
-// STATE[??%|PARTIAL]: Based on IDA correct. sushi@TODO: switches are broken for objgen in Ghidra. Maybe enabling some options can fix this.
+// STATE[BLOCKED]: Based on IDA correct. sushi@TODO: Analyzers in Ghidra break for functions with jump tables.
 btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 const& dim, float3 const& __formal )
 {
 	btCollisionShape*	result = NULL;														// <0x72c269>|0x000|0x000:'120'
@@ -144,7 +145,7 @@ bt_collision_shape* create_primitive_shape( collision::primitive_type type, floa
 
 	bt_collision_shape* result = VOSTOK_NEW_IMPL( g_ph_allocator, bt_collision_shape )( bt_shape );	// <0x72ca7c>|0x03e|0x039:'171'
 
-	// ASSERT? How exactly `m_shapes_face_data` is set?
+	// ASSERT? sushi@TODO: How exactly `m_shapes_face_data` is set?
 	result->m_shapes_face_data = VOSTOK_NEW_IMPL( g_ph_allocator, u16 );							// <0x72cac4>|0x086|0x048:'174'
 	*result->m_shapes_face_data = 0;																// <0x72cad9>|0x09b|0x015:'175'
 	return result;
