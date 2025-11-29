@@ -1,0 +1,19 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 03.11.2025
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef LINK_RESOLVER_H_INCLUDED
+#define LINK_RESOLVER_H_INCLUDED
+
+namespace survarium {
+
+class link_resolver { // sushi@TODO: NO_VTABLE?
+public:
+	virtual	void	resolve_links	( base_project* arg_0, vostok::configs::binary_config_value arg_1 ) = 0;
+}; // class link_resolver
+
+STATIC_SIZE_ASSERT(link_resolver, 0x4);
+
+} // namespace survarium
+
+#endif // #ifndef LINK_RESOLVER_H_INCLUDED
