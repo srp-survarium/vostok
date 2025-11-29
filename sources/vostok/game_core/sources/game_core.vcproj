@@ -991,10 +991,53 @@
 		<Filter
 			Name="public_api"
 			>
+			<File
+				RelativePath="..\base_game_object.h"
+				>
+			</File>
+			<File
+				RelativePath="..\base_project.h"
+				>
+			</File>
+			<File
+				RelativePath="..\link_resolver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_actions_subscriber.h"
+				>
+			</File>
+			<File
+				RelativePath="..\scheduler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\scheduler_inline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\static_collision.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="sources"
 			>
+			<File
+				RelativePath=".\base_project.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\scheduler.cpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

@@ -34,10 +34,21 @@
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
 
+#include <vostok/game_core/scheduler.h>
 
 
 namespace vostok
 {
+	void use_game_core_scheduler()
+	{
+		survarium::scheduler sc( NULL );
+		survarium::scheduler::callback callback;
+		sc.register_on_frame( NULL, callback, true );
+		sc.register_for_update( NULL, callback, true, 10, 10, 10 );
+		sc.on_frame( 10, 10 );
+		sc.unregister( NULL );
+	}
+
 	void use_physics_api()
 	{
 		physics::engine engine;
@@ -324,6 +335,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_core_scheduler();
 	vostok::use_bt_character_controller();
 	vostok::use_physics_api();
 	vostok::use_log();
