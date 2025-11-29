@@ -230,6 +230,9 @@ inline u32	assert_log_times_in_gold () { return 10; }
 #define NODEFAULT( ... )													VOSTOK_UNREACHABLE_CODE( "unintended default case accessed!", ##__VA_ARGS__ )
 #define NOT_IMPLEMENTED( ... )												VOSTOK_UNREACHABLE_CODE( "functionality has not been implemented yet!", ##__VA_ARGS__ )
 
+#define UNKNOWN_EXPRESSION													true
+#define UNKNOWN_EXPRESSION_T( expression )									( true ? true : !!expression )
+
 #define ASSERT( expression, ... )											ASSERT_T( ::vostok::assert_untyped, expression, ##__VA_ARGS__ )
 #define ASSERT_CMP( value1, operation, value2, ... )						ASSERT_CMP_T( value1, operation, value2, ::vostok::assert_untyped, ##__VA_ARGS__ )
 
