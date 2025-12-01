@@ -35,10 +35,50 @@
 #include <vostok/network_core/tcp_packet.h>
 
 #include <vostok/game_core/scheduler.h>
-
+#include <vostok/game_core/collision_geometry.h>
 
 namespace vostok
 {
+
+	struct ghost_predicate : physics::contact_test_predicate {
+	virtual	float		add_single_result		(
+							void*				arg_0,
+							collision::primitive_type		arg_1,
+							float4x4 const&		arg_2,
+							float3 const&		arg_3,
+							collision::primitive_type		arg_4,
+							float4x4 const&		arg_5,
+							float3 const&		arg_6
+						) override { return 0.0;}
+	};
+
+	void use_game_core_collision_geometry()
+	{
+		survarium::collision_geometry gm;
+		gm.destroy_ghost_object( );
+
+		configs::binary_config_value cfg;
+		gm.load( cfg );
+
+		gm.get_overlapping_objects_count( );
+
+		physics::base_physics_objects_type physics_objects( NULL, 10 );
+		gm.get_overlapping_objects( physics_objects );
+
+		ghost_predicate predicate;
+		gm.contact_test( NULL, predicate );
+		gm.contact_test( );
+
+		vostok::vectora<float3> centers_results( NULL );
+		gm.get_shapes_centers( centers_results ); 
+
+		gm.subscribe( NULL, NULL );
+		gm.unsubscribe( NULL );
+
+		gm.set_transform( float4x4() );
+		gm.get_transform( );
+	}
+
 	void use_game_core_scheduler()
 	{
 		survarium::scheduler sc( NULL );
@@ -200,42 +240,6 @@ namespace vostok
 		physics::create_static_triangle_mesh_shape	( NULL, NULL, 10, 10, NULL, float3(), resource_ptr, resource_ptr );
 	}
 
-	struct ghost_predicate : physics::contact_test_predicate {
-	virtual	float		add_single_result		(
-							void*				arg_0,
-							collision::primitive_type		arg_1,
-							float4x4 const&		arg_2,
-							float3 const&		arg_3,
-							collision::primitive_type		arg_4,
-							float4x4 const&		arg_5,
-							float3 const&		arg_6
-						) override { return 0.0;}
-	};
-
-
-	void use_ghost_object()
-	{
-		physics::bt_collision_shape_ptr shape(NULL);
-		physics::bt_ghost_object ghost = physics::bt_ghost_object( shape, NULL );
-		physics::base_physics_objects_type result( NULL, 10 );
-		vectora<float3> centres_results( NULL );
-
-		ghost.get_overlapping_objects_count( );
-		ghost.set_transform( math::float4x4() );
-		ghost.get_transform( );
-		ghost.get_collision_group( );
-		ghost.get_overlapping_objects_count( );
-		ghost.get_bt_collision_obect( );
-		ghost.get_overlapping_objects( result );
-		ghost.insert( NULL, 10, 20 );
-		physics::destroy_ghost_object( physics::create_ghost_object( shape, math::float4x4() ) );
-		ghost.non_compound_shapes_centers( centres_results );
-		ghost_predicate predicate;
-		ghost.contact_test( NULL, NULL, predicate );
-		ghost.contact_test( NULL );
-		ghost.remove( NULL );
-	}
-
 	void use_loose_oct_tree()
 	{
 		collision::loose_oct_tree tree(NULL, 100., 10);
@@ -335,6 +339,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
 	vostok::use_bt_character_controller();
 	vostok::use_physics_api();
@@ -344,7 +349,6 @@ IncludeAll::IncludeAll()
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
 	vostok::use_aabb_object();
-	vostok::use_ghost_object();
 	vostok::use_collision_shape();
 	vostok::use_bullet_character_controller();
 
