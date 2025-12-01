@@ -80,6 +80,14 @@ void collision_sensor::resolve_links( base_project* p, vostok::configs::binary_c
 	// ******
 }
 
+struct objects_filter_predicate { // sushi@NOTE: Might be in a different place
+	inline	explicit	objects_filter_predicate( collision_sensor const* sensor ) : m_sensor( sensor ) { }
+	inline	bool		operator()				( vostok::physics::base_physics_object* obj ) const { m_sensor->is_filter_passed( obj ); }
+
+public:
+	/* 0x0000 */	collision_sensor const*		m_sensor;
+}; // struct objects_filter_predicate
+
 // STATE[SKIPPED]
 bool remove_loosed_ptrs_predicate( vostok::physics::base_physics_object* object )
 {
@@ -261,7 +269,7 @@ void collision_sensor::notify_objects_inside( )
 {
 	buffer_vector<vostok::physics::base_physics_object *> objects_inside(  ALLOCA( m_old_objects.size( ) * sizeof( vostok::physics::base_physics_object * ) ), m_old_objects.size( ) );
 	objects_inside.assign( m_old_objects.begin( ), m_old_objects.end( ) );
-	on_inside( leaved ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
+	on_inside( objects_inside ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
 
 	// FUNCTION BODY
 	// <0x59a249>|0x000|0x000:'206'
@@ -270,9 +278,26 @@ void collision_sensor::notify_objects_inside( )
 	// ******
 }
 
-// STATE[STUB]
-void collision_sensor::filter_sensed_objects( vostok::buffer_vector<vostok::physics::base_physics_object *>& sensed_objects )
+// STATE[SKIPPED]
+void collision_sensor::filter_sensed_objects( buffer_vector<vostok::physics::base_physics_object *>& sensed_objects )
 {
+	sensed_objects.erase(
+		std::remove_if( 
+			sensed_objects.begin( ),
+			sensed_objects.end( ),
+			objects_filter_predicate( this )
+		),
+		sensed_objects.end( )
+	);
+
+	std::sort( sensed_objects.begin( ), sensed_objects.end( ) );
+
+	sensed_objects.erase(
+		std::unique( sensed_objects.begin( ), sensed_objects.end( ) ),
+		sensed_objects.end( )
+	);
+
+
 	// FUNCTION BODY
 	// <1>
 	// <2>
@@ -283,7 +308,7 @@ void collision_sensor::filter_sensed_objects( vostok::buffer_vector<vostok::phys
 	// <7>
 	// <0x59a31f>|0x000|0x000:'220'
 	// <1>
-	// <0x59a36f>|0x050|0x050:'222'
+	// <0x59a36f>|0x050|0x050:'222'	std::sort( sensed_objects.begin( ), sensed_objects.end( ) );
 	// <1>
 	// <2>
 	// <3>
