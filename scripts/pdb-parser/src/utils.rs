@@ -54,15 +54,23 @@ impl Type {
             .replace(" __cdecl(void)", "()")
             .replace(" __cdecl", "")
 
-            .replace("vostok::math::", "")
+            // See `extensions.h`.
+            .replace("vostok::math::float2",   "float2")
+            .replace("vostok::math::float3",   "float3")
+            .replace("vostok::math::float4",   "float4")
+            .replace("vostok::math::float4x4", "float4x4")
             ;
 
         if let Some(ref raw_class) = namespace.raw_class {
-            ty = ty.replace(raw_class, "")
+            ty = ty.replace(raw_class, "");
         }
 
         if let Some(ref raw_root) = namespace.raw_root {
-            ty = ty.replace(raw_root, "")
+            ty = ty.replace(raw_root, "");
+
+            if raw_root == &"survarium::" {
+                ty = ty.replace("vostok::", "");
+            }
         }
 
         Self(ty)

@@ -622,7 +622,7 @@ impl<'a> Function<'a> {
             //
             proc_start,
             proc_end,
-            statements,
+            mut statements,
             //
             constants,
             statics,
@@ -758,12 +758,12 @@ impl<'a> Function<'a> {
                 "vostok::math::float4x4"     => writeln!(w, "\treturn vostok::math::float4x4();")?,
 
                 // sad
-                "aabb"         => writeln!(w, "\treturn aabb();")?,
-                "color"        => writeln!(w, "\treturn color();")?,
-                "frustum"      => writeln!(w, "\treturn frustum();")?,
-                "intersection" => writeln!(w, "\treturn intersection();")?,
-                "plane"        => writeln!(w, "\treturn plane()")?,
-                "quaternion"   => writeln!(w, "\treturn quaternion()")?,
+                "math::aabb"         => writeln!(w, "\treturn math::aabb();")?,
+                "math::color"        => writeln!(w, "\treturn math::color();")?,
+                "math::frustum"      => writeln!(w, "\treturn math::frustum();")?,
+                "math::intersection" => writeln!(w, "\treturn math::intersection();")?,
+                "math::plane"        => writeln!(w, "\treturn math::plane()")?,
+                "math::quaternion"   => writeln!(w, "\treturn math::quaternion()")?,
 
                 "uint2"        => writeln!(w, "\treturn uint2(1, 1);")?,
 
@@ -774,7 +774,7 @@ impl<'a> Function<'a> {
                 "float3_pod"   => writeln!(w, "\treturn float3_pod();")?,
                 "float4_pod"   => writeln!(w, "\treturn float4_pod();")?,
                 "float4x4"     => writeln!(w, "\treturn float4x4();")?,
-                // sad
+                // sad end
 
 
                 "u8" | "u16" | "u32" => writeln!(w, "\treturn 0;")?,
@@ -791,54 +791,53 @@ impl<'a> Function<'a> {
         if proc_start + 1 < proc_end {
             writeln!(w, "\t// FUNCTION BODY")?;
 
-            let n = |num: i32| match num >= 0 {
-                true => format!("0x{num:03x}"),
-                false => format!("-0x{num:03x}", num = num.abs()),
+            let rva_diff = |lhs: pdb::Rva, rhs: pdb::Rva| -> i32 { lhs.0 as i32 - rhs.0 as i32 };
+            let print_rva_diff_start = |diff: i32| match diff >= 0 {
+                true => format!("0x{diff:03x}"),
+                false => format!("-0x{diff:03x}", diff = diff.abs()),
+            };
+            let print_rva_diff_next = |diff: Option<i32>| match diff {
+                None => "      ".to_string(),
+                Some(diff) => match diff >= 0 {
+                    true => format!("+0x{diff:03x}"),
+                    false => format!("-0x{diff:03x}", diff = diff.abs()),
+                },
             };
 
-            let mut first_statement_rva = None;
-            let mut prev_statement_rva = None;
-            let mut empty_line_no = 0;
+            let mut next_line = proc_start;
+            statements.sort_by_key(|statement| statement.line_start);
 
-            for i in proc_start + 1..proc_end {
-                match statements.iter().find(|bp| bp.line_start == i) {
-                    Some(Statement {
-                        rva,
-                        line_start,
-                        depth,
-                    }) => {
-                        empty_line_no = 0;
+            for i in 0..statements.len() {
+                let Statement {
+                    rva,
+                    line_start,
+                    depth,
+                } = statements[i];
 
-                        let prev_statement_rva = match prev_statement_rva {
-                            None => {
-                                first_statement_rva = Some(rva);
-                                prev_statement_rva = Some(rva);
-                                rva
-                            }
-                            Some(prev_rva) => {
-                                prev_statement_rva = Some(rva);
-                                prev_rva
-                            }
-                        };
-                        let first_statement_rva = first_statement_rva.unwrap();
-
-                        let offset = rva.saturating_add(GAME_IB);
-
-                        let diff_start = n(rva.0 as i32 - first_statement_rva.0 as i32);
-                        let diff_prev = n(rva.0 as i32 - prev_statement_rva.0 as i32);
-
-                        #[rustfmt::skip]
-                        match depth {
-                            0  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_prev}:'{line_start}'"),
-                            _  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_prev}|[{depth}]:'{line_start}'"),
-                        }?;
-                    }
-
-                    None => {
-                        empty_line_no += 1;
-                        writeln!(w, "\t// <{empty_line_no}>")?
-                    }
+                // There can be multiple statements on a single line
+                for empty_line_no in 0..line_start.saturating_sub(next_line) {
+                    writeln!(w, "\t// <{empty_line_no}>")?
                 }
+                next_line = line_start + 1;
+
+                let diff_start = rva_diff(rva, statements[0].rva);
+                let diff_next = statements
+                    .get(i + 1)
+                    .map(|statement| rva_diff(statement.rva, rva));
+                let offset = rva.saturating_add(GAME_IB);
+
+                let diff_start = print_rva_diff_start(diff_start);
+                let diff_next = print_rva_diff_next(diff_next);
+
+                #[rustfmt::skip]
+                match depth {
+                    0  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}:'{line_start}'"),
+                    _  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}|[{depth}]:'{line_start}'"),
+                }?;
+            }
+
+            for empty_line_no in 0..proc_end.saturating_sub(next_line) {
+                writeln!(w, "\t// <{empty_line_no}>")?
             }
 
             writeln!(w, "\t// ******")?;
