@@ -11,7 +11,8 @@ class base_project;
 
 class link_resolver { // sushi@TODO: NO_VTABLE?
 public:
-	virtual	void	resolve_links	( base_project* p, vostok::configs::binary_config_value cfg ) = 0;
+	inline	explicit	link_resolver	( ) {}
+	virtual	void		resolve_links	( base_project* p, vostok::configs::binary_config_value cfg ) = 0;
 }; // class link_resolver
 
 STATIC_SIZE_ASSERT(link_resolver, 0x4);

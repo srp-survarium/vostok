@@ -36,6 +36,7 @@
 
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/collision_geometry.h>
+#include <vostok/game_core/collision_sensor.h>
 
 namespace vostok
 {
@@ -51,6 +52,23 @@ namespace vostok
 							float3 const&		arg_6
 						) override { return 0.0;}
 	};
+
+
+	void use_game_core_collision_sensor()
+	{
+		survarium::collision_sensor sensor;
+		configs::binary_config_value cfg;
+		sensor.load( cfg );
+		sensor.resolve_links( NULL, cfg );
+		sensor.tick( 0, 0 );
+		sensor.is_filter_passed( NULL );
+		sensor.contact_test( NULL, ghost_predicate() );
+		sensor.contact_test( NULL );
+		sensor.insert( NULL );
+		sensor.remove( );
+		sensor.get_collision_geometry( 10 );
+	}
+
 
 	void use_game_core_collision_geometry()
 	{
@@ -339,6 +357,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
 	vostok::use_bt_character_controller();
