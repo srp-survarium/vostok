@@ -21,8 +21,8 @@ public:
 	typedef vector< base_project::resolve_link_object > resolve_link_objects_type;
 
 public:
-			base_project				( );
-	virtual	~base_project				( );
+									base_project				( );
+	virtual							~base_project				( );
 
 	virtual	base_game_object*		get_object_by_name			( pcstr name );
 

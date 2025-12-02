@@ -16,7 +16,7 @@ namespace physics {
 
 typedef buffer_vector<base_physics_object *> base_physics_objects_type; // sushi@TODO: Find proper place for the typedef. Obviously in  base_physics_object module
 
-class bt_ghost_object : base_physics_object {
+class bt_ghost_object : public base_physics_object {
 public:
 
 	bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGhostObject* obj );

@@ -1000,6 +1000,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\collision_geometry.h"
+				>
+			</File>
+			<File
+				RelativePath="..\collision_geometry_inline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\collision_geometry_subscriber.h"
+				>
+			</File>
+			<File
+				RelativePath="..\collision_sensor.h"
+				>
+			</File>
+			<File
 				RelativePath="..\link_resolver.h"
 				>
 			</File>
@@ -1026,13 +1042,14 @@
 			<File
 				RelativePath=".\base_project.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\collision_geometry.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\collision_sensor.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\scheduler.cpp"

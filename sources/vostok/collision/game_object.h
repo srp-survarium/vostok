@@ -7,25 +7,20 @@
 
 namespace survarium {
 	typedef void hit_receiver;			// sushi@TODO: Interesting that `vostok` now references `survarium`
-	typedef void collision_geometry;	// sushi@TODO
-	typedef void base_player;			// sushi@TODO
+	class collision_geometry;
+	typedef void base_player;			// sushi@TODO:
 }
 
 namespace vostok {
 namespace collision {
-
+// sushi@TODO: The whole thing needs to be moved to API
 struct game_object  {
-public:
-	virtual hit_receiver*		cast_to_hit_receiver()			= 0;
-	virtual collision_geometry* cast_to_collision_geometry()	= 0;
-	virtual base_player*		cast_to_base_player()			= 0;
+	virtual survarium::hit_receiver*		cast_to_hit_receiver		( ) { return NULL; }
+	virtual survarium::collision_geometry*	cast_to_collision_geometry	( ) { return NULL; }
+	virtual survarium::base_player*			cast_to_base_player			( )	{ return NULL; }
 }; // struct game_object
 
-namespace {
-	typedef char size_assert[
-		sizeof(game_object) == 0x4 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(game_object, 0x4);
 
 } // namespace collision
 } // namespace vostok
