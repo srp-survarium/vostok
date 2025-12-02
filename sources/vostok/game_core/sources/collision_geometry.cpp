@@ -45,10 +45,6 @@ void collision_geometry::destroy_ghost_object( )
 // STATE[82.66%|DONE]
 void collision_geometry::load( vostok::configs::binary_config_value const& cfg_val )
 {
-	// LOCALS
-	// vostok::physics::bt_collision_shape_ptr shape
-	// ******
-
 	m_name					= cfg_val["full_name"];
 	float3 const& scale		= cfg_val["scale"];			// sushi@NOTE: Can reuse `read_transform` in base_project.cpp
 	float3 const& rotation	= cfg_val["rotation"];
@@ -66,7 +62,7 @@ void collision_geometry::load( vostok::configs::binary_config_value const& cfg_v
 	vostok::configs::binary_config_value meshes		= cfg_val["meshes"];
 	vostok::physics::bt_collision_shape_ptr shape	= vostok::physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), m_name.c_str( ) );
 	m_ghost_object									= vostok::physics::create_ghost_object( shape, transform );
-	shape->set_no_delete( );	// sushi@NOTE: I don't know why this is used
+	shape->set_no_delete( );	// sushi@TODO: `unmanaged_intrusive_base::destroy` will not delete this resource. Understand for what reasons this was done.
 
 	m_group											= cfg_val["filter_group"];
 	m_mask											= cfg_val["filter_mask"];
@@ -174,8 +170,8 @@ void collision_geometry::insert( vostok::physics::world* world )
 // STATE[100%|DONE]
 void collision_geometry::remove( )
 {
-	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );	// sushi@NOTE: Might also be m_physics_world check
-	m_ghost_object->remove( m_physics_world );			// sushi@NOTE: user_data is not unset
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );	// sushi@NOTE: Might also be `m_physics_world` check.
+	m_ghost_object->remove( m_physics_world );			// sushi@NOTE: `user_data` was set in `insert`, but is not unset in `remove`.
 	m_physics_world = NULL;
 
 	// FUNCTION BODY

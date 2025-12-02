@@ -232,7 +232,6 @@ struct left_objects_predicate {
 				// ******
 			}
 
-
 public:
 	/* 0x0000 */	buffer_vector< base_physics_object* > const*	m_current_objects;
 	/* 0x0004 */	buffer_vector< base_physics_object* >*			m_objects_to_delete;
