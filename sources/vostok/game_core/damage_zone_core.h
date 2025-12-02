@@ -5,33 +5,33 @@
 #ifndef DAMAGE_ZONE_CORE_H_INCLUDED
 #define DAMAGE_ZONE_CORE_H_INCLUDED
 
-namespace survarium {
+#include <vostok/math_curve.h>
+#include <vostok/game_core/scheduler.h>
+#include <vostok/game_core/collision_sensor.h>
+#include <vostok/game_core/player_actions_subscriber.h>
+#include <vostok/game_core/hit_initiator.h>
 
-/* survarium::damage_zone_core */
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class vector<hit_receiver_info>;
-struct zone_group;
-class collision_sensor;
-class player_actions_subscriber;
-struct physics::world;
-class scheduler;
-struct scheduler::identifier;
-struct hit_initiator;
-struct math::curve_line_points<float,0>;
-
-enum survarium::apply_hit_type /* stored as s32 */ {
-	on_enter = 0x0000,
-	on_inside = 0x0001,
-	on_motion_inside = 0x0002,
+namespace vostok {
+namespace physics {
+	struct world;
+	class base_physics_object;
+}
 }
 
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
+namespace survarium {
+	struct hit_receiver_info;
+	struct zone_group;
+	class game_scene;
+}
+
+namespace survarium {
+
+enum apply_hit_type {
+	on_enter			= 0x0000,
+	on_inside			= 0x0001,
+	on_motion_inside	= 0x0002,
+};
+
 
 class damage_zone_core : public collision_sensor , public hit_initiator , public player_actions_subscriber {
 public:
@@ -80,13 +80,13 @@ private:
 	/* 0x0000 */	/* collision_sensor */
 	/* 0x0024 */	/* hit_initiator */
 	/* 0x0030 */	/* player_actions_subscriber */
-	/* 0x0038 */	math::curve_line_points<float,0>	m_hit_curve;
-	/* 0x0058 */	math::curve_line_points<float,0>	m_motion_on_bound_curve;
-	/* 0x0078 */	math::curve_line_points<float,0>	m_motion_on_center_curve;
+	/* 0x0038 */	math::curve_line_float				m_hit_curve;
+	/* 0x0058 */	math::curve_line_float				m_motion_on_bound_curve;
+	/* 0x0078 */	math::curve_line_float				m_motion_on_center_curve;
 	/* 0x0098 */	physics::world*						m_physics_world;
 	/* 0x009c */	zone_group*							m_owner;
-	/* 0x00a0 */	vector<hit_receiver_info>			m_receivers;
-	/* 0x00ac */	vector<fixed_string<16> >			m_body_parts_filter;
+	/* 0x00a0 */	vector< hit_receiver_info >			m_receivers;
+	/* 0x00ac */	vector< fixed_string<16> >			m_body_parts_filter;
 	/* 0x00b8 */	fixed_string<32>					m_damage_type;
 	/* 0x00e4 */	apply_hit_type						m_apply_hit_type;
 	/* 0x00e8 */	float								m_max_hit;

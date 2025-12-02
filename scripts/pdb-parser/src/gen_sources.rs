@@ -788,7 +788,8 @@ impl<'a> Function<'a> {
             };
         }
 
-        if proc_start + 1 < proc_end {
+        // if proc_start + 1 < proc_end {
+        {
             writeln!(w, "\t// FUNCTION BODY")?;
 
             let rva_diff = |lhs: pdb::Rva, rhs: pdb::Rva| -> i32 { lhs.0 as i32 - rhs.0 as i32 };
@@ -829,10 +830,18 @@ impl<'a> Function<'a> {
                 let diff_start = print_rva_diff_start(diff_start);
                 let diff_next = print_rva_diff_next(diff_next);
 
+                let suffix = if i == 0 {
+                    "\t{"
+                } else if i == statements.len() - 1 {
+                    "\t}"
+                } else {
+                    ""
+                };
+
                 #[rustfmt::skip]
                 match depth {
-                    0  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}:'{line_start}'"),
-                    _  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}|[{depth}]:'{line_start}'"),
+                    0  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}:'{line_start}'{suffix}"),
+                    _  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}|[{depth}]:'{line_start}'{suffix}"),
                 }?;
             }
 

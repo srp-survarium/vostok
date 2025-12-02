@@ -5,24 +5,20 @@
 #include "pch.h"
 #include <vostok/game_core/damage_zone_core.h>
 
+#include <vostok/collision/bone_collision_data.h>
+#include <vostok/physics/contact_test_predicate.h>
+#include <vostok/game_core/hit_receiver.h>
+#include <vostok/game_core/game_scene.h>
+
 namespace survarium {
-
-struct hit_receiver_info {
-			hit_receiver_info	( hit_receiver* receiver, physics::base_physics_object* rigid_body );
-
-	inline	bool	operator==			( hit_receiver const* arg_0 ) const { /* no source */ }
-			bool	operator==			( hit_receiver_info const& rhs ) const;
-
-public:
-	/* 0x0000 */	hit_receiver*						m_receiver;
-	/* 0x0004 */	physics::base_physics_object*		m_rigid_body;
-	/* 0x0008 */	bool								m_was_hit;
-}; // struct hit_receiver_info
 
 // STATE[STUB]
 // survarium::hit_receiver_info::hit_receiver_info(survarium::hit_receiver*, vostok::physics::base_physics_object*)
 hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_physics_object* rigid_body )
 {
+	// FUNCTION BODY
+	// <0x597db0>|0x000|      :'24'	{
+	// ******
 }
 
 // STATE[STUB]
@@ -31,22 +27,29 @@ bool hit_receiver_info::operator==( hit_receiver_info const& rhs ) const
 {
 	return false;
 	// FUNCTION BODY
-	// <0x597d80>|0x000|+0x007:'27'
+	// <0x597d80>|0x000|+0x007:'27'	{
 	// <0x597d87>|0x007|+0x01b:'28'
-	// <0x597da2>|0x022|      :'29'
+	// <0x597da2>|0x022|      :'29'	}
 	// ******
 }
 
 // STATE[STUB]
 // survarium::damage_zone_core::damage_zone_core()
-damage_zone_core::damage_zone_core( )
+damage_zone_core::damage_zone_core( ) :
+	hit_initiator( 0, false )
 {
+	// FUNCTION BODY
+	// <0x599380>|0x000|      :'43'	{
+	// ******
 }
 
 // STATE[STUB]
 // void survarium::damage_zone_core::~damage_zone_core()
 damage_zone_core::~damage_zone_core( )
 {
+	// FUNCTION BODY
+	// <0x5992d0>|0x000|      :'46'	{
+	// ******
 }
 
 // STATE[STUB]
@@ -60,7 +63,7 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	// ******
 
 	// FUNCTION BODY
-	// <0x5994d0>|0x000|+0x010:'49'
+	// <0x5994d0>|0x000|+0x010:'49'	{
 	// <0x5994e0>|0x010|+0x00f:'50'
 	// <0>
 	// <0x5994ef>|0x01f|+0x042:'52'
@@ -99,19 +102,19 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	// <0x5996cd>|0x1fd|+0x00b:'85'
 	// <0x5996d8>|0x208|+0x013:'86'
 	// <0x5996eb>|0x21b|+0x028:'87'
-	// <0x599713>|0x243|      :'88'
+	// <0x599713>|0x243|      :'88'	}
 	// ******
 }
 
 // STATE[STUB]
 // bool survarium::compare_bone_data_predicate(stlp_std::pair<vostok::collision::bone_collision_data *,float> const&, stlp_std::pair<vostok::collision::bone_collision_data *,float> const&)
-bool compare_bone_data_predicate( std::pair<collision::bone_collision_data *,float> const& lhs, std::pair<collision::bone_collision_data *,float> const& rhs )
+bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, float > const& lhs, std::pair< collision::bone_collision_data *, float > const& rhs )
 {
 	return false;
 	// FUNCTION BODY
-	// <0x597d60>|0x000|+0x003:'117'
+	// <0x597d60>|0x000|+0x003:'117'	{
 	// <0x597d63>|0x003|+0x017:'118'
-	// <0x597d7a>|0x01a|      :'119'
+	// <0x597d7a>|0x01a|      :'119'	}
 	// ******
 }
 
@@ -121,9 +124,9 @@ float distance_from_sphere_center_to_point_on_shape( float radius )
 {
 	return 0.0f;
 	// FUNCTION BODY
-	// <0x597d50>|0x000|+0x003:'122'
+	// <0x597d50>|0x000|+0x003:'122'	{
 	// <0x597d53>|0x003|+0x003:'123'
-	// <0x597d56>|0x006|      :'124'
+	// <0x597d56>|0x006|      :'124'	}
 	// ******
 }
 
@@ -146,7 +149,7 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 
 	return 0.0f;
 	// FUNCTION BODY
-	// <0x5984d0>|0x000|+0x006:'127'
+	// <0x5984d0>|0x000|+0x006:'127'	{
 	// <0x5984d6>|0x006|+0x01c:'128'
 	// <0x5984f2>|0x022|+0x01c:'129'
 	// <0x59850e>|0x03e|+0x014:'130'
@@ -166,7 +169,7 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 	// <0x5985f1>|0x121|+0x005:'144'
 	// <0>
 	// <0x5985f6>|0x126|+0x021:'146'
-	// <0x598617>|0x147|      :'147'
+	// <0x598617>|0x147|      :'147'	}
 	// ******
 }
 
@@ -197,7 +200,7 @@ float distance_from_capsule_center_to_point_on_shape(
 
 	return 0.0f;
 	// FUNCTION BODY
-	// <0x5982a0>|0x000|+0x009:'150'
+	// <0x5982a0>|0x000|+0x009:'150'	{
 	// <0x5982a9>|0x009|+0x01c:'151'
 	// <0x5982c5>|0x025|+0x01c:'152'
 	// <0x5982e1>|0x041|+0x023:'153'
@@ -214,7 +217,7 @@ float distance_from_capsule_center_to_point_on_shape(
 	// <1>
 	// <0x598426>|0x186|+0x045:'165'
 	// <0x59846b>|0x1cb|+0x05d:'166'
-	// <0x5984c8>|0x228|      :'167'
+	// <0x5984c8>|0x228|      :'167'	}
 	// ******
 }
 
@@ -248,7 +251,7 @@ float distance_from_cylinder_center_to_point_on_shape(
 
 	return 0.0f;
 	// FUNCTION BODY
-	// <0x598040>|0x000|+0x009:'170'
+	// <0x598040>|0x000|+0x009:'170'	{
 	// <0x598049>|0x009|+0x01c:'171'
 	// <0x598065>|0x025|+0x01c:'172'
 	// <0x598081>|0x041|+0x026:'173'
@@ -270,7 +273,7 @@ float distance_from_cylinder_center_to_point_on_shape(
 	// <0x598251>|0x211|+0x012:'189'
 	// <0>
 	// <0x598263>|0x223|+0x02e:'191'
-	// <0x598291>|0x251|      :'192'
+	// <0x598291>|0x251|      :'192'	}
 	// ******
 }
 
@@ -280,10 +283,10 @@ public:
 
 	virtual	float		add_single_result				(
 							void*						user_data,
-							physics::primitive_type		first_shape_type,
+							collision::primitive_type	first_shape_type,
 							float4x4 const&				first_shape_transform,
 							float3 const&				first_shape_dimension,
-							physics::primitive_type		second_shape_type,
+							collision::primitive_type	second_shape_type,
 							float4x4 const&				second_shape_transform,
 							float3 const&				second_shape_dimension
 						) override;
@@ -299,10 +302,10 @@ STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 // float survarium::dz_bone_data_contact_test_predicate::add_single_result(void*, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&)
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
-	physics::primitive_type		first_shape_type,
+	collision::primitive_type	first_shape_type,
 	float4x4 const&				first_shape_transform,
 	float3 const&				first_shape_dimension,
-	physics::primitive_type		second_shape_type,
+	collision::primitive_type	second_shape_type,
 	float4x4 const&				second_shape_transform,
 	float3 const&				second_shape_dimension
 )
@@ -326,7 +329,7 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 
 	return 0.0f;
 	// FUNCTION BODY
-	// <0xc7be0>|0x000|+0x00a:'221'
+	// <0xc7be0>|0x000|+0x00a:'221'	{
 	// <0xc7bea>|0x00a|+0x037:'222'
 	// <0xc7c21>|0x041|+0x014:'223'
 	// <0xc7c35>|0x055|+0x006:'224'
@@ -364,7 +367,7 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// <0xc7db2>|0x1d2|+0x00f:'256'
 	// <0xc7dc1>|0x1e1|+0x015:'257'
 	// <0xc7dd6>|0x1f6|+0x002:'258'
-	// <0xc7dd8>|0x1f8|      :'259'
+	// <0xc7dd8>|0x1f8|      :'259'	}
 	// ******
 }
 
@@ -373,9 +376,9 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	// FUNCTION BODY
-	// <0x597d40>|0x000|+0x007:'266'
+	// <0x597d40>|0x000|+0x007:'266'	{
 	// <0>
-	// <0x597d47>|0x007|      :'268'
+	// <0x597d47>|0x007|      :'268'	}
 	// ******
 }
 
@@ -396,7 +399,7 @@ void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> c
 	// ******
 
 	// FUNCTION BODY
-	// <0x597e30>|0x000|+0x009:'271'
+	// <0x597e30>|0x000|+0x009:'271'	{
 	// <0x597e39>|0x009|+0x008:'272'
 	// <0x597e41>|0x011|+0x009:'273'
 	// <0x597e4a>|0x01a|+0x017:'274'
@@ -417,7 +420,7 @@ void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> c
 	// <0x597f03>|0x0d3|+0x00c:'289'
 	// <0x597f0f>|0x0df|+0x04d:'290'
 	// <0x597f5c>|0x12c|+0x005:'291'
-	// <0x597f61>|0x131|      :'292'
+	// <0x597f61>|0x131|      :'292'	}
 	// ******
 }
 
@@ -438,7 +441,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 	// ******
 
 	// FUNCTION BODY
-	// <0x598760>|0x000|+0x009:'295'
+	// <0x598760>|0x000|+0x009:'295'	{
 	// <0x598769>|0x009|+0x008:'296'
 	// <0x598771>|0x011|+0x009:'297'
 	// <0x59877a>|0x01a|+0x017:'298'
@@ -458,7 +461,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 	// <0x598837>|0x0d7|+0x00c:'312'
 	// <0x598843>|0x0e3|+0x012:'313'
 	// <0x598855>|0x0f5|+0x005:'314'
-	// <0x59885a>|0x0fa|      :'315'
+	// <0x59885a>|0x0fa|      :'315'	}
 	// ******
 }
 
@@ -467,7 +470,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 {
 	// FUNCTION BODY
-	// <0x599250>|0x000|+0x009:'318'
+	// <0x599250>|0x000|+0x009:'318'	{
 	// <0x599259>|0x009|+0x010:'319'
 	// <0>
 	// <0x599269>|0x019|+0x01e:'321'
@@ -484,7 +487,7 @@ void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 	// <1>
 	// <2>
 	// <3>
-	// <0x5992bb>|0x06b|      :'335'
+	// <0x5992bb>|0x06b|      :'335'	}
 	// ******
 }
 
@@ -493,6 +496,9 @@ void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 bool remove_null_receivers_predicate( hit_receiver_info const& info )
 {
 	return false;
+	// FUNCTION BODY
+	// <0x597d20>|0x000|      :'338'	{
+	// ******
 }
 
 // STATE[STUB]
@@ -505,9 +511,9 @@ bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) 
 
 	return false;
 	// FUNCTION BODY
-	// <0x597cf0>|0x000|+0x007:'390'
+	// <0x597cf0>|0x000|+0x007:'390'	{
 	// <0x597cf7>|0x007|+0x018:'391'
-	// <0x597d0f>|0x01f|      :'392'
+	// <0x597d0f>|0x01f|      :'392'	}
 	// ******
 }
 
@@ -542,7 +548,7 @@ void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
 	// ******
 
 	// FUNCTION BODY
-	// <0x598f80>|0x000|+0x00f:'395'
+	// <0x598f80>|0x000|+0x00f:'395'	{
 	// <0x598f8f>|0x00f|+0x023:'396'
 	// <0>
 	// <0x598fb2>|0x032|+0x025:'398'
@@ -583,7 +589,7 @@ void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
 	// <0x5991ee>|0x26e|+0x01a:'433'
 	// <0x599208>|0x288|+0x02a:'434'
 	// <0x599232>|0x2b2|+0x015:'435'
-	// <0x599247>|0x2c7|      :'436'
+	// <0x599247>|0x2c7|      :'436'	}
 	// ******
 }
 
@@ -623,7 +629,7 @@ void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
 	// ******
 
 	// FUNCTION BODY
-	// <0x598bf0>|0x000|+0x00f:'439'
+	// <0x598bf0>|0x000|+0x00f:'439'	{
 	// <0>
 	// <1>
 	// <0x598bff>|0x00f|+0x01b:'442'
@@ -671,7 +677,7 @@ void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
 	// <0x598f4f>|0x35f|+0x015:'484'
 	// <0x598f64>|0x374|+0x010:'485'
 	// <0>
-	// <0x598f74>|0x384|      :'487'
+	// <0x598f74>|0x384|      :'487'	}
 	// ******
 }
 
@@ -712,7 +718,7 @@ void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 	// ******
 
 	// FUNCTION BODY
-	// <0x598860>|0x000|+0x00f:'490'
+	// <0x598860>|0x000|+0x00f:'490'	{
 	// <0x59886f>|0x00f|+0x023:'491'
 	// <0>
 	// <0x598892>|0x032|+0x025:'493'
@@ -753,7 +759,7 @@ void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 	// <0x598b84>|0x324|+0x01a:'528'
 	// <0x598b9e>|0x33e|+0x02a:'529'
 	// <0x598bc8>|0x368|+0x015:'530'
-	// <0x598bdd>|0x37d|      :'531'
+	// <0x598bdd>|0x37d|      :'531'	}
 	// ******
 }
 
@@ -762,14 +768,14 @@ void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 void damage_zone_core::activate( zone_group* owner, physics::world* p_world, scheduler& scheduler )
 {
 	// FUNCTION BODY
-	// <0x598620>|0x000|+0x010:'545'
+	// <0x598620>|0x000|+0x010:'545'	{
 	// <0x598630>|0x010|+0x00f:'546'
 	// <0x59863f>|0x01f|+0x00f:'547'
 	// <0x59864e>|0x02e|+0x00f:'548'
 	// <0x59865d>|0x03d|+0x010:'549'
 	// <0x59866d>|0x04d|+0x00f:'550'
 	// <0x59867c>|0x05c|+0x0d3:'551'
-	// <0x59874f>|0x12f|      :'552'
+	// <0x59874f>|0x12f|      :'552'	}
 	// ******
 }
 
@@ -787,7 +793,7 @@ void damage_zone_core::deactivate( )
 	// ******
 
 	// FUNCTION BODY
-	// <0x597f70>|0x000|+0x009:'555'
+	// <0x597f70>|0x000|+0x009:'555'	{
 	// <0x597f79>|0x009|+0x008:'556'
 	// <0x597f81>|0x011|+0x017:'557'
 	// <0>
@@ -802,7 +808,7 @@ void damage_zone_core::deactivate( )
 	// <0>
 	// <0x598017>|0x0a7|+0x00e:'568'
 	// <0x598025>|0x0b5|+0x00d:'569'
-	// <0x598032>|0x0c2|      :'570'
+	// <0x598032>|0x0c2|      :'570'	}
 	// ******
 }
 
@@ -815,9 +821,9 @@ void damage_zone_core::on_player_action( hit_receiver const* receiver, player_ac
 	// ******
 
 	// FUNCTION BODY
-	// <0x597de0>|0x000|+0x009:'573'
+	// <0x597de0>|0x000|+0x009:'573'	{
 	// <0x597de9>|0x009|+0x033:'574'
-	// <0x597e1c>|0x03c|      :'575'
+	// <0x597e1c>|0x03c|      :'575'	}
 	// ******
 }
 

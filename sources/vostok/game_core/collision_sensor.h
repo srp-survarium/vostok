@@ -11,7 +11,7 @@
 namespace vostok {
 namespace physics {
 	struct world;
-	class contact_test_predicate;
+	struct contact_test_predicate;
 	class base_physics_object;
 }
 }

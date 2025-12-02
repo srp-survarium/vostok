@@ -203,7 +203,7 @@ impl<'p> Data<'p> {
                 if data.properties.forward_reference() {
                     self.forward_references.push(ForwardReference {
                         kind: data.kind,
-                        name: Type::new(&data.name.to_string(), namespace),
+                        name: Type::new_forward_declare(&data.name.to_string()),
                     });
 
                     return Ok(());
@@ -596,7 +596,10 @@ impl Data<'_> {
             writeln!(f, "//////////////////////////")?;
             writeln!(f)?;
 
-            for e in &self.forward_references {
+            let mut forward_references = self.forward_references.clone();
+            forward_references.sort_by(|lhs, rhs| lhs.name.0.cmp(&rhs.name.0));
+
+            for e in forward_references {
                 e.fmt(f)?;
             }
         }
@@ -770,6 +773,7 @@ impl Method {
             false => "",
         };
         let (inline, body) = match attrs.contains(AttributeFlags::IS_INLINE) {
+            true if attrs.contains(AttributeFlags::IS_VIRTUAL) => ("", " { /* no source */ }"),
             true => ("inline\t", " { /* no source */ }"),
             false => ("", ";"),
         };

@@ -13,8 +13,30 @@ impl std::fmt::Display for Type {
 
 impl Type {
     pub fn new(ty: &str, namespace: &Namespace) -> Self {
-        #[rustfmt::skip]
-        let mut ty = ty
+        let mut ty = Self::new_impl(ty);
+
+        if let Some(ref raw_class) = namespace.raw_class {
+            ty = ty.replace(raw_class, "");
+        }
+
+        if let Some(ref raw_root) = namespace.raw_root {
+            ty = ty.replace(raw_root, "");
+
+            if raw_root == &"survarium::" {
+                ty = ty.replace("vostok::", "");
+            }
+        }
+
+        Self(ty)
+    }
+
+    pub fn new_forward_declare(ty: &str) -> Self {
+        Self(Self::new_impl(ty))
+    }
+
+    #[rustfmt::skip]
+    fn new_impl(ty: &str) -> String {
+        ty
             //
             // Generic type replacements
             //
@@ -59,21 +81,6 @@ impl Type {
             .replace("vostok::math::float3",   "float3")
             .replace("vostok::math::float4",   "float4")
             .replace("vostok::math::float4x4", "float4x4")
-            ;
-
-        if let Some(ref raw_class) = namespace.raw_class {
-            ty = ty.replace(raw_class, "");
-        }
-
-        if let Some(ref raw_root) = namespace.raw_root {
-            ty = ty.replace(raw_root, "");
-
-            if raw_root == &"survarium::" {
-                ty = ty.replace("vostok::", "");
-            }
-        }
-
-        Self(ty)
     }
 
     pub fn len(&self) -> usize {

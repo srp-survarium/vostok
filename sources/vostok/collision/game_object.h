@@ -5,16 +5,18 @@
 #ifndef VOSTOK_COLLISION_GAME_OBJECT_H_INCLUDED
 #define VOSTOK_COLLISION_GAME_OBJECT_H_INCLUDED
 
+// sushi@TODO: Interesting that `vostok` now references `survarium`
 namespace survarium {
-	typedef void hit_receiver;			// sushi@TODO: Interesting that `vostok` now references `survarium`
+	struct hit_receiver;
 	class collision_geometry;
+
 	typedef void base_player;			// sushi@TODO:
 }
 
 namespace vostok {
 namespace collision {
-// sushi@TODO: The whole thing needs to be moved to API
-struct game_object  {
+
+struct game_object  { // sushi@TODO: The whole thing needs to be moved to API
 	virtual survarium::hit_receiver*		cast_to_hit_receiver		( ) { return NULL; }
 	virtual survarium::collision_geometry*	cast_to_collision_geometry	( ) { return NULL; }
 	virtual survarium::base_player*			cast_to_base_player			( )	{ return NULL; }
