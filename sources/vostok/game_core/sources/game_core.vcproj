@@ -1008,6 +1008,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\base_player.h"
+				>
+			</File>
+			<File
 				RelativePath="..\base_project.h"
 				>
 			</File>
@@ -1036,7 +1040,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\dictionary_item.h"
+				>
+			</File>
+			<File
+				RelativePath="..\engine.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_scene.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_team_id.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_world_object.h"
 				>
 			</File>
 			<File
@@ -1060,7 +1080,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\inventory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\inventory_holder.h"
+				>
+			</File>
+			<File
 				RelativePath="..\inventory_item.h"
+				>
+			</File>
+			<File
+				RelativePath="..\inventory_item_props.h"
+				>
+			</File>
+			<File
+				RelativePath="..\inventory_slot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\items_dictionary.h"
 				>
 			</File>
 			<File
@@ -1080,11 +1120,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\player_profile.h"
+				>
+			</File>
+			<File
+				RelativePath="..\profile_slot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\profile_slot_enum.h"
+				>
+			</File>
+			<File
 				RelativePath="..\scheduler.h"
 				>
 			</File>
 			<File
 				RelativePath="..\scheduler_inline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\skill_booster.h"
 				>
 			</File>
 			<File
@@ -1100,6 +1156,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\victory_item_core.h"
+				>
+			</File>
+			<File
 				RelativePath="..\zone_group.h"
 				>
 			</File>
@@ -1109,6 +1169,10 @@
 			>
 			<File
 				RelativePath=".\artefact_container_core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\base_player.cpp"
 				>
 			</File>
 			<File
@@ -1136,6 +1200,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inventory.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\inventory_item.cpp"
 				>
 			</File>
@@ -1149,6 +1217,10 @@
 			</File>
 			<File
 				RelativePath=".\usable_object.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\victory_item_core.cpp"
 				>
 			</File>
 		</Filter>

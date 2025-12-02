@@ -6,37 +6,13 @@
 #define INVENTORY_ITEM_H_INCLUDED
 
 #include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/profile_slot_enum.h>
 
 namespace survarium {
 
-class inventory;			// sushi@TODO
-class inventory_item_props;	// sushi@TODO
+class inventory;
+struct inventory_item_props;
 class game_world_object;	// sushi@TODO
-
-// sushi@TODO: Move to a proper place
-enum profile_slot_enum {
-	helmet_slot        = 0x0000,
-	mask_slot          = 0x0001,
-	torso_slot         = 0x0002,
-	back_slot          = 0x0003,
-	pants_slot         = 0x0004,
-	gloves_slot        = 0x0005,
-	boots_slot         = 0x0006,
-	weapon1_slot       = 0x0007,
-	ammo1_weapon1_slot = 0x0008,
-	ammo2_weapon1_slot = 0x0009,
-	weapon2_slot       = 0x000a,
-	ammo1_weapon2_slot = 0x000b,
-	ammo2_weapon2_slot = 0x000c,
-	quick_slot1        = 0x000d,
-	quick_slot2        = 0x000e,
-	quick_slot3        = 0x000f,
-	quick_slot4        = 0x0010,
-	quick_slot5        = 0x0011,
-	quick_slot6        = 0x0012,
-	max_slots_count    = 0x0013,
-	invalid_slot       = 0x0013
-};
 
 class inventory_item : public interactive_object , public boost::noncopyable {
 public:
@@ -57,7 +33,6 @@ public:
 	inline	inventory_item::action_behaviour_type const&	get_action_behaviuor( ) const { /* no source */ }
 
 	virtual	void								action							( bool key_down );
-
 	virtual	void								remove							( ) { /* no source */ }
 
 	virtual	void								holder_assigned					( ) { /* no source */ }
@@ -91,6 +66,8 @@ private:
 }; // class inventory_item
 
 STATIC_SIZE_ASSERT(inventory_item, 0x118);
+
+typedef resources::resource_ptr< inventory_item, resources::unmanaged_intrusive_base > inventory_item_ptr;
 
 } // namespace survarium
 
