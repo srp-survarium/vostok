@@ -10,7 +10,7 @@
 
 namespace vostok {
 namespace physics {
-// sushi@TODO: Should be a private header
+// sushi@TODO: Should be a private header. Not really?
 // sushi@TODO: Primitive type moved from collision to physics
 struct contact_test_predicate {
 public:

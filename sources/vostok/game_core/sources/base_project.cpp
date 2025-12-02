@@ -64,6 +64,7 @@ void base_project::resolve_links( )
 }
 
 // STATE[SKIPPED]
+// sushi@NOTE: Used from `survarium::project_cooker_simple::create_game_objects`.
 void read_transform( vostok::configs::binary_config_value const& cfg, float4x4& result )
 {	// object_visual::load
 	float3 const& scale		= cfg["scale"];
