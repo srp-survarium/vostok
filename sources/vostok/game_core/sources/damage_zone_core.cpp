@@ -7,6 +7,18 @@
 
 namespace survarium {
 
+struct hit_receiver_info {
+			hit_receiver_info	( hit_receiver* receiver, physics::base_physics_object* rigid_body );
+
+	inline	bool	operator==			( hit_receiver const* arg_0 ) const { /* no source */ }
+			bool	operator==			( hit_receiver_info const& rhs ) const;
+
+public:
+	/* 0x0000 */	hit_receiver*						m_receiver;
+	/* 0x0004 */	physics::base_physics_object*		m_rigid_body;
+	/* 0x0008 */	bool								m_was_hit;
+}; // struct hit_receiver_info
+
 // STATE[STUB]
 // survarium::hit_receiver_info::hit_receiver_info(survarium::hit_receiver*, vostok::physics::base_physics_object*)
 hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_physics_object* rigid_body )
@@ -261,6 +273,27 @@ float distance_from_cylinder_center_to_point_on_shape(
 	// <0x598291>|0x251|      :'192'
 	// ******
 }
+
+struct dz_bone_data_contact_test_predicate : public physics::contact_test_predicate {
+public:
+	inline	dz_bone_data_contact_test_predicate( vectora<std::pair<collision::bone_collision_data *,float> >& arg_0, vector<fixed_string<16> > const* arg_1 ) { /* no source */ }
+
+	virtual	float		add_single_result				(
+							void*						user_data,
+							physics::primitive_type		first_shape_type,
+							float4x4 const&				first_shape_transform,
+							float3 const&				first_shape_dimension,
+							physics::primitive_type		second_shape_type,
+							float4x4 const&				second_shape_transform,
+							float3 const&				second_shape_dimension
+						) override;
+public:
+	/* 0x0000 */	/* physics::contact_test_predicate */
+	/* 0x0004 */	vectora<std::pair<collision::bone_collision_data *,float> >*	m_result;
+	/* 0x0008 */	vector<fixed_string<16> > const*	m_body_parts_filter;
+}; // struct dz_bone_data_contact_test_predicate
+
+STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
 // STATE[STUB]
 // float survarium::dz_bone_data_contact_test_predicate::add_single_result(void*, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&)
