@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-typedef void usable_object;
+class usable_object;
 class collision_sensor;
 
 class collision_geometry_subscriber : public base_game_object {

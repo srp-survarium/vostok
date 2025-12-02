@@ -85,11 +85,11 @@ private:
 	/* 0x006c */	bool								m_was_zone_trigger_event;
 	/* 0x006d */	bool								m_was_shoot_trigger_event;
 	/* 0x0070 */	physics::world*						m_physics_world;
-	/* 0x0074 */	survarium::scheduler				m_scheduler;
+	/* 0x0074 */	survarium::scheduler*				m_scheduler;
 	/* 0x0078 */	scheduler::identifier				m_scheduler_identifier;
 }; // class generic_anomaly_core
 
-// STATIC_SIZE_ASSERT(generic_anomaly_core, 0x7C); sushi@TODO
+STATIC_SIZE_ASSERT(generic_anomaly_core, 0x7C);
 
 } // namespace survarium
 

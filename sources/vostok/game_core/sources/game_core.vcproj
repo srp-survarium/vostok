@@ -996,6 +996,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\artefact_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\artefact_container_core.h"
+				>
+			</File>
+			<File
 				RelativePath="..\base_game_object.h"
 				>
 			</File>
@@ -1017,6 +1025,10 @@
 			</File>
 			<File
 				RelativePath="..\collision_sensor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\collision_user.h"
 				>
 			</File>
 			<File
@@ -1044,6 +1056,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\interactive_object.h"
+				>
+			</File>
+			<File
+				RelativePath="..\inventory_item.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ladder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\landing_point.h"
+				>
+			</File>
+			<File
 				RelativePath="..\link_resolver.h"
 				>
 			</File>
@@ -1064,6 +1092,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\usable_object.h"
+				>
+			</File>
+			<File
+				RelativePath="..\usable_object_user_data.h"
+				>
+			</File>
+			<File
 				RelativePath="..\zone_group.h"
 				>
 			</File>
@@ -1071,6 +1107,10 @@
 		<Filter
 			Name="sources"
 			>
+			<File
+				RelativePath=".\artefact_container_core.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\base_project.cpp"
 				>
@@ -1096,7 +1136,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inventory_item.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ladder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\scheduler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\usable_object.cpp"
 				>
 			</File>
 		</Filter>

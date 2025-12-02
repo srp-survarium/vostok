@@ -11,39 +11,42 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::generic_anomaly_core::generic_anomaly_core()
+// STATE[SKIPPED]
 generic_anomaly_core::generic_anomaly_core( ):
-	m_scheduler( NULL )
+	m_artefact_grab_time_ms		( 0 ),
+	m_current_state				( NULL ),
+	m_was_zone_trigger_event	( false ),
+	m_was_shoot_trigger_event	( false ),
+	m_physics_world				( NULL ),
+	m_scheduler					( NULL )
 {
-	// FUNCTION BODY
-	// <0x59d8d0>|0x000|      :'21'	{
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::generic_anomaly_core::~generic_anomaly_core()
+// STATE[SKIPPED]
 generic_anomaly_core::~generic_anomaly_core( )
 {
-	// FUNCTION BODY
-	// <0x59d880>|0x000|      :'24'	{
-	// ******
 }
 
 // STATE[STUB]
-// void survarium::generic_anomaly_core::activate(vostok::physics::world*, survarium::scheduler&)
 void generic_anomaly_core::activate( physics::world* world, survarium::scheduler& scheduler )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_physics_world = world;
+	m_scheduler = &scheduler;
+	m_scheduler->register_on_frame( &m_scheduler_identifier, boost::bind( &generic_anomaly_core::tick, this, _1, _2 ), true ); // sushi@TODO: The symbols in target are insane.
+
+	for ( u32 a = 0 ; a < m_artefact_containers.size( ) ; ++a )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		// m_artefact_containers[a]->
+	}
+
 	// LOCALS
 	// u32 							a<1>
 	// ******
 
-	// CALL SITE INFO
-	// <0x59dd82> -> void <unknown>(generic_anomaly_core*, physics::world*, scheduler&)
-	// ******
-
 	// FUNCTION BODY
-	// <0x59dc10>|0x000|+0x00a:'27'	{
 	// <0x59dc1a>|0x00a|+0x00c:'28'
 	// <0x59dc26>|0x016|+0x00c:'29'
 	// <0x59dc32>|0x022|+0x009:'30'
@@ -58,7 +61,6 @@ void generic_anomaly_core::activate( physics::world* world, survarium::scheduler
 	// <0x59dd86>|0x176|+0x007:'39'
 	// <0x59dd8d>|0x17d|+0x007:'40'
 	// <0x59dd94>|0x184|+0x008:'41'
-	// <0x59dd9c>|0x18c|      :'42'	}
 	// ******
 }
 
@@ -331,7 +333,6 @@ void zone_group::execute( u32 time_delta_ms, u32 current_time_ms )
 }
 
 // STATE[STUB]
-// void survarium::zone_group::finalize()
 void zone_group::finalize( )
 {
 	// LOCALS
@@ -357,7 +358,6 @@ void zone_group::finalize( )
 }
 
 // STATE[STUB]
-// void survarium::zone_group::recharge()
 void zone_group::recharge( )
 {
 	// LOCALS
