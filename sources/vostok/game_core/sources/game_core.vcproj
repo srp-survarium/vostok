@@ -1120,7 +1120,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\player_input.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_input_inline.h"
+				>
+			</File>
+			<File
 				RelativePath="..\player_profile.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_stamina.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_stamina_subscriber.h"
 				>
 			</File>
 			<File
@@ -1174,6 +1190,14 @@
 			<File
 				RelativePath=".\base_player.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\base_project.cpp"
@@ -1209,6 +1233,14 @@
 			</File>
 			<File
 				RelativePath=".\ladder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\player_input.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\player_stamina.cpp"
 				>
 			</File>
 			<File

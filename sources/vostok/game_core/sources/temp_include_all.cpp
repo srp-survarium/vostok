@@ -38,8 +38,19 @@
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_sensor.h>
 
+
+#include <vostok/game_core/player_input.h>
+
+
 namespace vostok
 {
+	void use_game_core_player_input()
+	{
+		survarium::player_input input;
+		input.is_sprinting();
+		input.is_empty();
+	}
+
 
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
@@ -357,6 +368,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_core_player_input();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();

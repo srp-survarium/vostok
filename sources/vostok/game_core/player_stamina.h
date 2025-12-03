@@ -1,0 +1,85 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef PLAYER_STAMINA_H_INCLUDED
+#define PLAYER_STAMINA_H_INCLUDED
+
+#include <vostok/game_core/player_stamina_subscriber.h>
+
+namespace vostok {
+namespace network_core {
+	class packet_reader;
+	class udp_match_packet;
+}
+}
+
+namespace survarium {
+
+class player_stamina : public boost::noncopyable {
+public:
+								player_stamina					( player_stamina const& other );
+								player_stamina					( );
+			player_stamina&		operator=						( player_stamina const& other );
+
+			void				deserialize						( network_core::packet_reader& packet );
+	inline	void				serialize						( network_core::udp_match_packet& arg_0, s32 arg_1 ) const { /* no source */ }
+
+			void				load							( configs::binary_config_value const& config );
+			void				reset							( );
+
+	inline	void				set_max_value					( float arg_0 ) { /* no source */ }
+	inline	void				set_spending_speed				( float arg_0 ) { /* no source */ }
+
+	inline	float				get_regeneration_speed			( ) { /* no source */ }
+			void				set_regeneration_speed			( float new_regeneration_speed );
+
+	inline	void				set_regeneration_threshold		( float arg_0 ) { /* no source */ }
+	inline	void				set_max_value_factor			( float arg_0 ) { /* no source */ }
+	inline	void				set_spending_speed_factor		( float arg_0 ) { /* no source */ }
+			void				set_regeneration_speed_factor	( float new_regeneration_speed_factor );
+
+			void				tick							( u32 current_time_in_ms, bool is_sprinting );
+
+			void				spend							( float amount );
+			bool				can_be_spent					( ) const;
+
+	inline	float				current_value					( ) const { /* no source */ }
+	inline	float				max_value						( ) const { /* no source */ }
+	inline	float				amount_to_jump					( ) const { /* no source */ }
+
+	inline	float				get_max_carried_weight			( ) const { /* no source */ }
+	inline	void				set_max_carried_weight			( float arg_0 ) { /* no source */ }
+
+			void				subscribe_on_depletion			( player_stamina_subscriber* subscriber );
+			void				unsubscribe_from_depletion		( player_stamina_subscriber* subscriber );
+
+			void				increase_value					( float amount );
+			void				decrease_value					( float amount );
+
+			void				regenerate						( u32 current_time_in_ms );
+			void				sprint							( u32 current_time_in_ms );
+
+private:
+	/* 0x0000 */	/* boost::noncopyable */
+	/* 0x0000 */	player_stamina_subscriber_list		m_subscribers;
+	/* 0x0030 */	float								m_max_value;
+	/* 0x0034 */	float								m_value;
+	/* 0x0038 */	float								m_regeneration_threshold;
+	/* 0x003c */	float								m_spending_threshold;
+	/* 0x0040 */	float								m_spending_speed;
+	/* 0x0044 */	float								m_regeneration_speed;
+	/* 0x0048 */	float								m_max_value_factor;
+	/* 0x004c */	float								m_spending_speed_factor;
+	/* 0x0050 */	float								m_regeneration_speed_factor;
+	/* 0x0054 */	u32									m_last_spending_time_in_ms;
+	/* 0x0058 */	u32									m_last_tick_time_in_ms;
+	/* 0x005c */	bool								m_lower_threshold_was_reached;
+	/* 0x0060 */	float								m_max_carried_weight;
+}; // class player_stamina
+
+STATIC_SIZE_ASSERT(player_stamina, 0x68);
+
+} // namespace survarium
+
+#endif // #ifndef PLAYER_STAMINA_H_INCLUDED

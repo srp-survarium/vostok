@@ -4,7 +4,7 @@
 
 #ifndef GAME_WORLD_OBJECT_H_INCLUDED
 #define GAME_WORLD_OBJECT_H_INCLUDED
-
+// sushi@TODO: SHOULD BE MOVED TO GAME FROM GAME_CORE
 namespace survarium {
 
 class inventory_item;

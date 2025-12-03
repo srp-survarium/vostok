@@ -10,21 +10,30 @@
 #include <vostok/game_core/hit_initiator.h>
 #include <vostok/game_core/hit_receiver.h>
 
+namespace vostok {
+namespace network_core {
+	class packet_reader;
+	class udp_match_packet; 
+}
+}
+
 namespace survarium {
+
+struct engine;
+class game_world_object;
+class player_stamina;
 
 /*
 animation::animation_callback_params 
 animation::animation_playback_state
 animation::animation_player 
 animation::callback_return_type_enum
-engine
 inventory_holder
-network_core::packet_reader
-network_core::udp_match_packet 
+
 physics::bt_character_controller
 player_death_subscriber
 player_input
-player_stamina
+
 struct survarium::breath_holding_params;
 struct survarium::character_dispersion_params;
 struct survarium::character_recoil_params;
