@@ -9,10 +9,8 @@ namespace survarium {
 
 struct player_stamina_subscriber {
 public:
-	inline	player_stamina_subscriber	( ) { /* no source */ }
+	inline	player_stamina_subscriber	( ) { }
 	inline	player_stamina_subscriber	( boost::function<void()> const& subscription_callback_ ) : subscription_callback( subscription_callback_ ) { }
-
-	inline	~player_stamina_subscriber	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	boost::function<void()>			subscription_callback;
@@ -28,7 +26,6 @@ typedef intrusive_list<
 	threading::mutex,
 	size_policy,
 	no_debug_policy> player_stamina_subscriber_list;
-
 
 } // namespace survarium
 

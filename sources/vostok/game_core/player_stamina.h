@@ -34,9 +34,9 @@ public:
 	inline	float				get_regeneration_speed			( ) { /* no source */ }
 			void				set_regeneration_speed			( float new_regeneration_speed );
 
-	inline	void				set_regeneration_threshold		( float arg_0 ) { /* no source */ }
-	inline	void				set_max_value_factor			( float arg_0 ) { /* no source */ }
-	inline	void				set_spending_speed_factor		( float arg_0 ) { /* no source */ }
+	inline	void				set_regeneration_threshold		( float new_regeneration_threshold )	{ m_regeneration_threshold	= new_regeneration_threshold; }	/* no source */
+	inline	void				set_max_value_factor			( float new_max_value_factor )			{ m_max_value_factor		= new_max_value_factor; }		/* no source */
+	inline	void				set_spending_speed_factor		( float new_spending_speed_factor )		{ m_spending_speed_factor	= new_spending_speed_factor; }	/* no source */
 			void				set_regeneration_speed_factor	( float new_regeneration_speed_factor );
 
 			void				tick							( u32 current_time_in_ms, bool is_sprinting );
@@ -51,9 +51,10 @@ public:
 	inline	float				get_max_carried_weight			( ) const { /* no source */ }
 	inline	void				set_max_carried_weight			( float arg_0 ) { /* no source */ }
 
-			void				subscribe_on_depletion			( player_stamina_subscriber* subscriber );
-			void				unsubscribe_from_depletion		( player_stamina_subscriber* subscriber );
+			void				subscribe_on_depletion			( player_stamina_subscriber* const subscriber );
+			void				unsubscribe_from_depletion		( player_stamina_subscriber* const subscriber );
 
+private:
 			void				increase_value					( float amount );
 			void				decrease_value					( float amount );
 

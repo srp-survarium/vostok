@@ -1242,6 +1242,14 @@
 			<File
 				RelativePath=".\player_stamina.cpp"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\scheduler.cpp"

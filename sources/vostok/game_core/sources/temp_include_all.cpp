@@ -40,10 +40,31 @@
 
 
 #include <vostok/game_core/player_input.h>
-
+#include <vostok/game_core/player_stamina.h>
 
 namespace vostok
 {
+
+	void use_game_core_player_stamina()
+	{
+		survarium::player_stamina stamina;
+
+		configs::binary_config_value cfg;
+		stamina.load( cfg );
+
+		stamina.reset( );
+		stamina.set_regeneration_speed( 10.0f );
+		stamina.set_regeneration_speed_factor( 10.0f );
+		stamina.tick( 10, true );
+		stamina.spend( 10.0f );
+		stamina.can_be_spent();
+		stamina.subscribe_on_depletion( NULL );
+		stamina.unsubscribe_from_depletion( NULL );
+
+		survarium::player_stamina stamina2( stamina );
+	}
+
+
 	void use_game_core_player_input()
 	{
 		survarium::player_input input;
@@ -99,7 +120,7 @@ namespace vostok
 		gm.contact_test( );
 
 		vostok::vectora<float3> centers_results( NULL );
-		gm.get_shapes_centers( centers_results ); 
+		gm.get_shapes_centers( centers_results );
 
 		gm.subscribe( NULL, NULL );
 		gm.unsubscribe( NULL );
@@ -368,6 +389,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_core_player_stamina();
 	vostok::use_game_core_player_input();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
