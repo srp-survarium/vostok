@@ -29,7 +29,7 @@ public:
 	virtual	bool								use_initialize			( usable_object_user_data* user ) override;
 	virtual	bool								use_execute				( usable_object_user_data* user ) override;
 	virtual	bool								use_finalize			( usable_object_user_data* user ) override;
-	virtual	pcstr								use_info				( usable_object_user_data* user ) override;
+	virtual	pcstr								use_info				( usable_object_user_data* user ) override { return "st_use_ladder"; }
 
 	virtual	void								load					( configs::binary_config_value const& cfg_val ) override;
 	virtual	void								resolve_links			( base_project* p, configs::binary_config_value cfg ) override;

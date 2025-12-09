@@ -25,7 +25,7 @@ public:
 								usable_object				( );
 	virtual						~usable_object				( );
 
-	virtual	usable_object*		cast_to_usable				( ) override;
+	virtual	usable_object*		cast_to_usable				( ) override { return this; }
 
 	virtual	void				load						( configs::binary_config_value const& cfg );
 	virtual	void				resolve_links				( base_project* p, configs::binary_config_value cfg ) override;
