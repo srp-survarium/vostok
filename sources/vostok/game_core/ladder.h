@@ -10,7 +10,7 @@
 
 namespace vostok {
 namespace physics {
-	class world;
+	struct world;
 }
 }
 
@@ -43,15 +43,15 @@ public:
 	inline	landing_point const*				select_landing_point	( float3 const& arg_0, bool arg_1 ) const { /* no source */ }
 	inline	landing_point const*				select_attachment_point	( float3 const& arg_0 ) const { /* no source */ }
 
-	inline	resources::managed_resource_ptr		get_animation			( ) const { /* no source */ }
+	inline	resources::managed_resource_ptr		get_animation			( ) const { return m_main_animation; }
 
 private:
 	class ladder_occluder : public usable_object {
 	public:
-		virtual	bool		use_initialize				( usable_object_user_data* user ) override;
-		virtual	bool		use_execute					( usable_object_user_data* user ) override { /* no source */ }
-		virtual	bool		use_finalize				( usable_object_user_data* user ) override { /* no source */ }
-		virtual	pcstr		use_info					( usable_object_user_data* user ) override { /* no source */ }
+		virtual	bool		use_initialize				( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
+		virtual	bool		use_execute					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
+		virtual	bool		use_finalize				( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
+		virtual	pcstr		use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return "st_do_not_use_ladder_from_this_side"; }
 	}; // class ladder_occluder
 
 private:

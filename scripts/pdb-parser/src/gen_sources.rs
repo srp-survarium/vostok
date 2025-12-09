@@ -736,59 +736,62 @@ impl<'a> Function<'a> {
 
         if let type_parser::ReturnType::Type(type_) = &fn_t.return_type {
             #[rustfmt::skip]
-            match type_.as_str() {
-                _ if type_.ends_with('*')    => writeln!(w, "\treturn NULL;")?,
-                "pcstr"                      => writeln!(w, "\treturn NULL;")?,
+            let return_value = match type_.as_str() {
+                _ if type_.ends_with('*')    => "NULL",
+                "pcstr"                      => "NULL",
 
-                "vostok::math::aabb"         => writeln!(w, "\treturn vostok::math::aabb();")?,
-                "vostok::math::color"        => writeln!(w, "\treturn vostok::math::color();")?,
-                "vostok::math::frustum"      => writeln!(w, "\treturn vostok::math::frustum();")?,
-                "vostok::math::intersection" => writeln!(w, "\treturn vostok::math::intersection();")?,
-                "vostok::math::plane"        => writeln!(w, "\treturn vostok::math::plane()")?,
-                "vostok::math::quaternion"   => writeln!(w, "\treturn vostok::math::quaternion()")?,
+                "vostok::math::aabb"         => "vostok::math::aabb()",
+                "vostok::math::color"        => "vostok::math::color()",
+                "vostok::math::frustum"      => "vostok::math::frustum()",
+                "vostok::math::intersection" => "vostok::math::intersection()",
+                "vostok::math::plane"        => "vostok::math::plane()",
+                "vostok::math::quaternion"   => "vostok::math::quaternion()",
 
-                "vostok::math::uint2"        => writeln!(w, "\treturn vostok::math::uint2(1, 1);")?,
+                "vostok::math::uint2"        => "vostok::math::uint2(1, 1)",
 
-                "vostok::math::float2"       => writeln!(w, "\treturn vostok::math::float2(1., 1.);")?,
-                "vostok::math::float3"       => writeln!(w, "\treturn vostok::math::float3(1., 1., 1.);")?,
-                "vostok::math::float4"       => writeln!(w, "\treturn vostok::math::float4(1., 1., 1., 1.);")?,
+                "vostok::math::float2"       => "vostok::math::float2(1., 1.)",
+                "vostok::math::float3"       => "vostok::math::float3(1., 1., 1.)",
+                "vostok::math::float4"       => "vostok::math::float4(1., 1., 1., 1.)",
 
-                "vostok::math::float3_pod"   => writeln!(w, "\treturn vostok::math::float3_pod();")?,
-                "vostok::math::float4_pod"   => writeln!(w, "\treturn vostok::math::float4_pod();")?,
-                "vostok::math::float4x4"     => writeln!(w, "\treturn vostok::math::float4x4();")?,
+                "vostok::math::float3_pod"   => "vostok::math::float3_pod()",
+                "vostok::math::float4_pod"   => "vostok::math::float4_pod()",
+                "vostok::math::float4x4"     => "vostok::math::float4x4()",
 
                 // sad
-                "math::aabb"         => writeln!(w, "\treturn math::aabb();")?,
-                "math::color"        => writeln!(w, "\treturn math::color();")?,
-                "math::frustum"      => writeln!(w, "\treturn math::frustum();")?,
-                "math::intersection" => writeln!(w, "\treturn math::intersection();")?,
-                "math::plane"        => writeln!(w, "\treturn math::plane()")?,
-                "math::quaternion"   => writeln!(w, "\treturn math::quaternion()")?,
+                "math::aabb"         => "math::aabb()",
+                "math::color"        => "math::color()",
+                "math::frustum"      => "math::frustum()",
+                "math::intersection" => "math::intersection()",
+                "math::plane"        => "math::plane()",
+                "math::quaternion"   => "math::quaternion()",
 
-                "uint2"        => writeln!(w, "\treturn uint2(1, 1);")?,
+                "uint2"        => "uint2(1, 1)",
 
-                "float2"       => writeln!(w, "\treturn float2(1., 1.);")?,
-                "float3"       => writeln!(w, "\treturn float3(1., 1., 1.);")?,
-                "float4"       => writeln!(w, "\treturn float4(1., 1., 1., 1.);")?,
+                "float2"       => "float2(1., 1.)",
+                "float3"       => "float3(1., 1., 1.)",
+                "float4"       => "float4(1., 1., 1., 1.)",
 
-                "float3_pod"   => writeln!(w, "\treturn float3_pod();")?,
-                "float4_pod"   => writeln!(w, "\treturn float4_pod();")?,
-                "float4x4"     => writeln!(w, "\treturn float4x4();")?,
+                "float3_pod"   => "float3_pod()",
+                "float4_pod"   => "float4_pod()",
+                "float4x4"     => "float4x4()",
                 // sad end
 
 
-                "u8" | "u16" | "u32" => writeln!(w, "\treturn 0;")?,
-                "s8" | "s16" | "s32" => writeln!(w, "\treturn 0;")?,
-                "float" | "double"   => writeln!(w, "\treturn 0.0f;")?,
-                "bool"               => writeln!(w, "\treturn false;")?,
-                "char"               => writeln!(w, "\treturn 'a';")?,
+                "u8" | "u16" | "u32" => "0",
+                "s8" | "s16" | "s32" => "0",
+                "float" | "double"   => "0.0f",
+                "bool"               => "false",
+                "char"               => "'a'",
 
-                "void" => (),
-                _      => (),
+                "void" => "",
+                _      => "",
             };
+
+            if !return_value.is_empty() {
+                writeln!(w, "\treturn {return_value};\n")?;
+            }
         }
 
-        // if proc_start + 1 < proc_end {
         {
             writeln!(w, "\t// FUNCTION BODY")?;
 
@@ -804,6 +807,8 @@ impl<'a> Function<'a> {
                     false => format!("-0x{diff:03x}", diff = diff.abs()),
                 },
             };
+
+            let non_empty_body = statements.len() > 2;
 
             let mut next_line = proc_start;
             statements.sort_by_key(|statement| statement.line_start);
@@ -837,6 +842,10 @@ impl<'a> Function<'a> {
                 } else {
                     ""
                 };
+
+                if !suffix.is_empty() && non_empty_body {
+                    continue;
+                }
 
                 #[rustfmt::skip]
                 match depth {

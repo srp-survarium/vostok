@@ -8,7 +8,6 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::inventory_item::inventory_item(survarium::inventory_item::action_behaviour_type)
 inventory_item::inventory_item( inventory_item::action_behaviour_type type )
 {
 	// FUNCTION BODY
@@ -17,7 +16,6 @@ inventory_item::inventory_item( inventory_item::action_behaviour_type type )
 }
 
 // STATE[STUB]
-// bool survarium::inventory_item::get_item_props(survarium::inventory_item_props&)
 bool inventory_item::get_item_props( inventory_item_props& props )
 {
 	return false;
@@ -31,7 +29,6 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 }
 
 // STATE[STUB]
-// void survarium::inventory_item::serialize(vostok::network_core::udp_match_packet&, unsigned int) const
 void inventory_item::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
 	// FUNCTION BODY
@@ -43,7 +40,6 @@ void inventory_item::serialize( network_core::udp_match_packet& packet, u32 clie
 }
 
 // STATE[STUB]
-// void survarium::inventory_item::deserialize(vostok::network_core::packet_reader&)
 void inventory_item::deserialize( network_core::packet_reader& reader )
 {
 	// FUNCTION BODY

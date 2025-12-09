@@ -981,6 +981,14 @@
 				<File
 					RelativePath=".\damage_model.cpp"
 					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\hit_type_parameters.cpp"
@@ -1105,6 +1113,10 @@
 			</File>
 			<File
 				RelativePath="..\ladder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ladder_cook.h"
 				>
 			</File>
 			<File
@@ -1233,6 +1245,10 @@
 			</File>
 			<File
 				RelativePath=".\ladder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ladder_cook.cpp"
 				>
 			</File>
 			<File

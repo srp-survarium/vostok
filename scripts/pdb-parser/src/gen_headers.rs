@@ -766,7 +766,9 @@ impl Method {
         max_return_type_len: usize,
         max_method_name_len: usize,
     ) -> io::Result<()> {
-        let attrs = self.attrs();
+        let type_parser::Function {
+            attrs, return_type, ..
+        } = self.fn_t();
 
         let virtual_ = match attrs.contains(AttributeFlags::IS_VIRTUAL) {
             true => "virtual\t",
@@ -792,8 +794,8 @@ impl Method {
         };
 
         let override_ = match attrs.contains(AttributeFlags::IS_OVERRIDE) {
-            true => " override",
-            false => "",
+            true if !matches!(return_type, ReturnType::Destructor) => " override",
+            _ => "",
         };
         let pure = match attrs.contains(AttributeFlags::IS_PURE) {
             true => " = 0",

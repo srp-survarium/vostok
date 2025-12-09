@@ -23,6 +23,7 @@ typedef vectora< ray_triangle_result >	ray_triangles_type;
 namespace survarium {
 
 class	bullet_manager;
+class	body_part_parameters;
 enum	collision_result;
 enum	triangle_orientation;
 
@@ -45,7 +46,7 @@ public:
 
 	void				tick							( bullet_manager& bullet_manager, float elapsed_game_seconds );
 	bool				is_finish_flying				( ) const;
-	
+
 	float3 const&		get_start_position				( ) const;
 	float3 const&		get_start_velocity				( ) const;
 
@@ -53,11 +54,14 @@ public:
 	float3 const&		get_velocity					( ) const;
 
 	float				pick_next_permissible_time		( float low_time, float high_time, float3 const& gravity );
-	
+
 #ifndef MASTER_GOLD
 	float3				evaluate_position				( float time, float& fall_down_time, float3 const& gravity );
 	float				get_max_time					( float3 const& gravity );
 #endif // #ifndef MASTER_GOLD
+
+	inline	void					last_hitted_body_part	( body_part_parameters* body_part ) { m_last_hitted_body_part = body_part; }
+	inline	body_part_parameters*	last_hitted_body_part	( ) const { return m_last_hitted_body_part; }
 
 private:
 	float3				compute_parabolic_velocity		( float time, float3 const& gravity );
@@ -123,7 +127,7 @@ private:
 															float collision_time,
 															float3& start_position,
 															float& start_time,
-															float& current_time																
+															float& current_time
 														);
 	void				change_trajectory				(	bullet_manager& bullet_manager,
 															float3 const& new_position,
@@ -141,9 +145,11 @@ private:
 	float3				m_start_position;
 	float3				m_start_velocity;
 	float3				m_enter_collision_point;
-	
+
 private:
 	object const*		m_inside_collision_object;
+
+	body_part_parameters*	m_last_hitted_body_part;
 
 	float				m_born_time;
 	float				m_life_time;

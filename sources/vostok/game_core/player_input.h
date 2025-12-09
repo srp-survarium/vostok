@@ -8,7 +8,7 @@
 namespace vostok {
 namespace network_core {
 	class packet_reader;
-	class udp_match_packet; 
+	class udp_match_packet;
 }
 }
 

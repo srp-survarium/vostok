@@ -5,18 +5,19 @@
 #ifndef COLLISION_USER_H_INCLUDED
 #define COLLISION_USER_H_INCLUDED
 
+#include <vostok/game_core/usable_object_user_data.h>
+
 namespace survarium {
 
-// sushi@TODO
 class ladder;
+
+// sushi@TODO
 class victory_item_core;
 class victory_items_container_core;
 class inventory_holder;
 // sushi@TODO
 
 class base_player;
-
-#include <vostok/game_core/usable_object_user_data.h>
 
 class collision_user : public boost::noncopyable {
 public:
@@ -45,7 +46,7 @@ public:
 
 private:
 	/* 0x0004 */	/* boost::noncopyable */
-	/* 0x0004 */	usable_object_user_data		m_usable_object_user_data;
+	/* 0x0004 */	survarium::usable_object_user_data		m_usable_object_user_data;
 }; // class collision_user
 
 STATIC_SIZE_ASSERT(collision_user, 0x24);

@@ -5,195 +5,148 @@
 #ifndef DAMAGE_MODEL_H_INCLUDED
 #define DAMAGE_MODEL_H_INCLUDED
 
-#include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
 #include <boost/array.hpp>
 
-#include <vostok/unmanaged_allocation_resource.h>
-#include <vostok/intrusive_list.h>
-#include <vostok/threading_policies.h>
-
-#include "damage_protector.h"
-#include "body_part_parameters.h"
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
+#include <vostok/game_core/damage_protector.h>
+#include <vostok/game_core/body_part_parameters.h>
+#include <vostok/game_core/hit_affects_type_enum.h>
+#include <vostok/game_core/affect_event_type_enum.h>
 
 namespace survarium {
 	enum affects_applying_type_enum;
 	class bullet;
+	class damage_info_type; // sushi@TODO
 }
 
 namespace vostok {
-	namespace ai {
-		struct npc_statistics;
-	}
+namespace ai {
+	struct npc_statistics;
 }
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
+namespace network_core {
+	class packet_reader;
+	class udp_match_packet;
+}
+}
 
 namespace survarium {
 
 struct affect_subscriber: public boost::noncopyable {
 public:
-	typedef boost::function<void ( char const *,
-		enum hit_affects_type_enum,
-		enum affect_event_type_enum )> subscription_functor;
+	typedef boost::function<void (
+		char const *,
+		hit_affects_type_enum,
+		affect_event_type_enum
+	)> subscription_functor;
+
+public:
+	inline	affect_subscriber	( ) { }
+	inline	affect_subscriber	( subscription_functor const& subscription_callback ) : subscription_callback( subscription_callback ) { }
+	//		~affect_subscriber	( ); sushi@TODO: Where is the definition coming from
 
 public:
 	subscription_functor	subscription_callback;
 	affect_subscriber*		next;
 };
 
+STATIC_SIZE_ASSERT(affect_subscriber, 0x28);
 
-struct booster_damage_protector: public damage_protector {
+struct booster_damage_protector : public damage_protector {
 public:
-	booster_damage_protector(
-		pcstr									damage_type,
-		float									reduce,
-		float									absorb);
-	
-	float reduce_damage(
-		pcstr									__formal,
-		pcstr									damage_type,
-		float									amount);
+	// STATE[99.87%|DONE]: Stack size is different
+	explicit			booster_damage_protector	( pcstr damage_type, float reduce, float absorb ) :
+							m_reduce	( reduce ),
+							m_absorb	( absorb )
+	{
+		reduce_damage_functor = boost::bind( &booster_damage_protector::reduce_damage, this, _1, _2, _3, _4 );	// <0xbb247>|0x047|+0x0ac:'56'
+		strings::copy( (pstr)&m_hit_type, 16, damage_type ); // sushi@TODO: damage_type can be less then 16, is this safe?
+	}
+
+	// STATE[99.50%|DONE]
+	inline	float		reduce_damage				(
+							pcstr		arg_0,
+							pcstr		damage_type,
+							float		amount,
+							float		arg_3
+						)
+	{
+		return strings::equal( damage_type, m_hit_type ) ? math::max( 0.0f, amount * m_reduce - m_absorb ) : amount;
+	}
 
 
-	char						m_hit_type[16];
-	float						m_reduce;
-	float						m_absorb;
-	booster_damage_protector*	next;
-};
+public:
+	/* 0x0000 */	/* damage_protector */
+	/* 0x0050 */	char						m_hit_type[16];
+	/* 0x0060 */	float						m_reduce;
+	/* 0x0064 */	float						m_absorb;
+	/* 0x0068 */	booster_damage_protector*	next;
+}; // struct booster_damage_protector
 
-//////////////////////////
-//     DAMAGE_MODEL     //
-//////////////////////////
+STATIC_SIZE_ASSERT(booster_damage_protector, 0x70);
+
 
 class damage_model : public resources::unmanaged_resource, public boost::noncopyable {
 public:
-	damage_model(
-		affects_applying_type_enum         affects_applying_type);
+									damage_model					( affects_applying_type_enum affects_applying_type );
+	virtual							~damage_model					( );
 
-	virtual ~damage_model( );
+			void					add_body_part					( body_part_parameters* const new_body_part );
+			bool					hit_body_part					(
+										u8			initiator,
+										pcstr		part_name,
+										pcstr		damage_type,
+										float		amount,
+										float		armor_piercing,
+										u32			time_in_ms,
+										bullet*		const bullet
+									);
 
-	void add_body_part(
-		body_part_parameters*              new_body_part);
+			void					apply_med_kit					( pcstr part_name, float amount );
 
-	bool hit_body_part(
-		u8                                 initiator,
-		pcstr                              part_name,
-		pcstr                              damage_type,
-		float                              amount,
-		float                              armor_piercing,
-		u32                                time_in_ms,
-		bullet*                            bullet);
+			void					tick							( u32 time_delta_ms, u32 current_time_in_ms );
 
-	void apply_med_kit(
-		pcstr                              part_name,
-		float                              amount);
+	inline	void					fill_stats						( damage_info_type& arg_0, u32 arg_1 ) const { /* no source */ }
+			void					fill_stats						( ai::npc_statistics& stats, u32 current_time_in_ms ) const;
+			void					dump_stats						( boost::function<void( u32, float, float, pcstr )> callback );
 
-	void tick(
-		u32                                time_delta_ms,
-		u32                                current_time_in_ms);
+	inline	bool					is_healthy						( ) const { /* no source */ }
 
-	// sushi@TODO
-	// void fill_stats(damage_info_type&, u32) const /* no source */;
+			void					reset							( );
 
-	void fill_stats(
-		vostok::ai::npc_statistics&          stats,
-		u32                                current_time_in_ms);
+			void					apply_affect					( pcstr part_name, hit_affects_type_enum affect, affect_event_type_enum event_type );
+			void					cancel_affect					( pcstr part_name, hit_affects_type_enum affect );
 
-	void dump_stats(
-		boost::function<void __cdecl(u32,float,float,pcstr)> callback);
+			void					subscribe_on_affect				( hit_affects_type_enum affect_type, affect_subscriber* const subscriber );
+			void					unsubscribe_from_affect			( hit_affects_type_enum affect_type, affect_subscriber* const subscriber );
 
-	// sushi@TODO
-	// bool is_healthy() const /* no source */;
+			void					notify_on_affect_event			( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type );
+			void					add_damage_protector			( pcstr damage_type, float reduce, float absorb );
 
-	void reset( );
+			void					register_body_part_damage_protector		( pcstr part_name, damage_protector* protector );
+			void					unregister_body_part_damage_protector	( pcstr part_name, damage_protector* protector );
 
-	void apply_affect(
-		pcstr                              part_name,
-		hit_affects_type_enum              affect,
-		affect_event_type_enum             event_type);
+	inline	u8						broken_legs_count				( ) const { /* no source */ }
+	inline	u8						broken_hands_count				( ) const { /* no source */ }
+	inline	u32						get_parts_count					( ) const { /* no source */ }
+	inline	u8						get_last_aggressor_id			( ) const { /* no source */ }
 
-	void cancel_affect(
-		pcstr                              part_name,
-		hit_affects_type_enum              affect);
+	inline	affects_applying_type_enum		get_affects_applying_type	( ) const { return m_affects_applying_type; }
 
-	void subscribe_on_affect(
-		hit_affects_type_enum              affect_type,
-		affect_subscriber*                 subscriber);
+			body_part_parameters*	get_body_part					( pcstr part_name ) const;
+	inline	u8						get_body_part_index				( pcstr arg_0 )		const { /* no source */ }
+	inline	pcstr					get_body_part_name				( u8 arg_0 )		const { /* no source */ }
 
-	void unsubscribe_from_affect(
-		hit_affects_type_enum              affect_type,
-		affect_subscriber*                 subscriber);
+			body_part_parameters*	pop_body_part					( );
 
-	void notify_on_affect_event(
-		pcstr                              body_part_name,
-		hit_affects_type_enum              affect_type,
-		affect_event_type_enum             event_type);
+			u8						get_total_health				( );
 
-	void add_damage_protector(
-		pcstr                              damage_type,
-		float                              reduce,
-		float                              absorb);
+	inline	body_part_parameters*	get_body_part_with_min_health	( ) const { /* no source */ }
 
-	void register_body_part_damage_protector(
-		pcstr                              part_name,
-		damage_protector*                  protector);
-
-	void unregister_body_part_damage_protector(
-		pcstr                              part_name,
-		damage_protector*                  protector);
-
-	// sushi@TODO
-	// u8 broken_legs_count() const /* no source */;
-
-	// sushi@TODO
-	// u8 broken_hands_count() const /* no source */;
-
-	// sushi@TODO
-	// u32 get_parts_count() const /* no source */;
-
-	// sushi@TODO
-	// u8 get_last_aggressor_id() const /* no source */;
-
-	affects_applying_type_enum get_affects_applying_type() const {
-		return m_affects_applying_type;
-	}
-
-	body_part_parameters* get_body_part(
-		pcstr                              part_name) const;
-
-	// sushi@TODO
-	// u8 get_body_part_index(pcstr) const /* no source */;
-
-	// sushi@TODO
-	// pcstr get_body_part_name(u8) const /* no source */;
-
-	body_part_parameters* pop_body_part( );
-
-	u8 get_total_health( );
-
-	// sushi@TODO
-	// body_part_parameters* get_body_part_with_min_health() const /* no source */;
-
-	// sushi@TODO: Networking
-#if 0 
-	void serialize(vostok::network_core::udp_match_packet&, s32) const /* no source */;
-
-	void deserialize(
-	 	vostok::network_core::packet_reader& reader);
-#endif
+			void					serialize				( network_core::udp_match_packet&, s32 ) const { /* no source */ }
+			void					deserialize				( network_core::packet_reader& reader );
 
 private:
-	void on_broken_limb_affect(
-		pcstr                              bodypart,
-		hit_affects_type_enum              affect,
-		affect_event_type_enum             type);
+			void					on_broken_limb_affect	( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type );
+
 
 public:
 	typedef vostok::intrusive_list< body_part_parameters,
@@ -201,48 +154,39 @@ public:
 		&body_part_parameters::next,
 		vostok::threading::single_threading_policy,
 		vostok::size_policy,
-		vostok::no_debug_policy > body_parts;
+		vostok::no_debug_policy > body_parts_list;
 
 	typedef vostok::intrusive_list< affect_subscriber,
 		affect_subscriber *,
 		&affect_subscriber::next,
 		vostok::threading::mutex,
 		vostok::size_policy,
-		vostok::no_debug_policy > affect_subscriptions;
+		vostok::no_debug_policy > affect_subscriptions_list;
 
 	typedef vostok::intrusive_list< booster_damage_protector,
 		booster_damage_protector *,
 		&booster_damage_protector::next,
 		vostok::threading::single_threading_policy,
 		vostok::size_policy,
-		vostok::no_debug_policy > damage_protectors;
+		vostok::no_debug_policy > damage_protectors_list;
+
+	typedef boost::array< affect_subscriptions_list, affect_types_count > affect_subscrptions_lists_type;
 
 public:
-	// STATE_M[UNVERIFIED]
-	/* offset 0x0000 */ /* fields for resources::unmanaged_resource */
-	/* offset 0x0108 */ /* fields for boost::noncopyable */
-	/* offset 0x0108 */ body_parts							m_body_parts;
-	/* offset 0x0118 */ boost::array< 
-							affect_subscriptions,
-							affect_types_count>				m_affect_subscriptions;
-	/* offset 0x02c8 */ affects_applying_type_enum          m_affects_applying_type;
-	/* offset 0x02cc */ damage_protectors					m_damage_protectors;
-
-	/* offset 0x02dc */ u32                                 m_last_tick_time_in_ms;
-	/* offset 0x02e0 */ u8                                  m_last_hit_initiator;
-	/* offset 0x02e8 */ affect_subscriber                   m_leg_damaged_subscriber;
-	/* offset 0x0310 */ affect_subscriber                   m_hand_damaged_subscriber;
-	/* offset 0x0338 */ u8									m_broken_legs_count[2];
-	/* offset 0x033a */ u8									m_broken_hands_count[2];
-
+	/* 0x0108 */	body_parts_list					m_body_parts;
+	/* 0x0118 */	affect_subscrptions_lists_type	m_affect_subscriptions;
+	/* 0x02c8 */	affects_applying_type_enum		m_affects_applying_type;
+	/* 0x02cc */	damage_protectors_list			m_damage_protectors;
+	/* 0x02dc */	u32								m_last_tick_time_in_ms;
+	/* 0x02e0 */	u8								m_last_hit_initiator;
+	/* 0x02e8 */	affect_subscriber				m_leg_damaged_subscriber;
+	/* 0x0310 */	affect_subscriber				m_hand_damaged_subscriber;
+	/* 0x0338 */	u8								m_broken_legs_count[2];
+	/* 0x033a */	u8								m_broken_hands_count[2];
 
 }; // class damage_model
 
-namespace { 
-	typedef char size_assert[
-		sizeof(damage_model) == 0x340 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(damage_model, 0x340);
 
 } // namespace survarium
 

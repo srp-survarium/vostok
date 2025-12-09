@@ -38,12 +38,29 @@
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_sensor.h>
 
+#include <vostok/game_core/affects_threshold.h>
 
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/player_stamina.h>
 
+#include <vostok/game_core/player_stamina.h>
+#include <vostok/game_core/ladder.h>
+
 namespace vostok
 {
+	void use_ladder( survarium::ladder* ladder )
+	{
+		ladder->activate( NULL );
+		ladder->deactivate( );
+
+		ladder->add_landing_point( NULL );
+		ladder->pop_landing_point( );
+	}
+
+	void use_game_core_affects_threshold()
+	{
+		survarium::affects_threshold( 10.0f, 10, NULL );
+	}
 
 	void use_game_core_player_stamina()
 	{
@@ -389,6 +406,8 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_ladder( NULL );
+	vostok::use_game_core_affects_threshold();
 	vostok::use_game_core_player_stamina();
 	vostok::use_game_core_player_input();
 	vostok::use_game_core_collision_sensor();
@@ -413,7 +432,7 @@ IncludeAll::IncludeAll()
 	htp->set_parameters(10., 20., 30.);
 
 	booster_damage_protector* bdp = new booster_damage_protector("hand", 0.5, 1.);
-	bdp->reduce_damage("__whatever", "hand", 100);
+	bdp->reduce_damage("__whatever", "hand", 100, 10);
 
 	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
 
@@ -480,10 +499,6 @@ IncludeAll::IncludeAll()
 	bpp->is_affect_applied(affects_type_blindness);
 	bpp->get_hit_parameters("hit_params");
 	bpp->set_parameters(10.f, 20.f);
-
-	bpp->check_affects(10);
-	bpp->update_affects(20);
-	bpp->apply_affects(NULL, 30);
 
 	Callback1 cb1;
 	Callback2 cb2;

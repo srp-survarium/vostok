@@ -13,7 +13,7 @@
 namespace vostok {
 namespace network_core {
 	class packet_reader;
-	class udp_match_packet; 
+	class udp_match_packet;
 }
 }
 
@@ -22,17 +22,17 @@ namespace survarium {
 struct engine;
 class game_world_object;
 class player_stamina;
+struct player_input;
 
 /*
-animation::animation_callback_params 
+animation::animation_callback_params
 animation::animation_playback_state
-animation::animation_player 
+animation::animation_player
 animation::callback_return_type_enum
 inventory_holder
 
 physics::bt_character_controller
 player_death_subscriber
-player_input
 
 struct survarium::breath_holding_params;
 struct survarium::character_dispersion_params;
@@ -42,12 +42,12 @@ survarium::game_world_object
 survarium::interactive_object
 survarium::player_death_subscriber
 
-# include 
+# include
 
 animation::reserved_channel_ids_enum
 game_team_id
 base_player_creation_params const
-animation::skeleton 
+animation::skeleton
 */
 
 struct survarium::breath_holding_params;
