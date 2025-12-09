@@ -19,6 +19,7 @@ public:
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource				( resources::resource_base* resource ) override;
 
+private:
 			void	on_animations_loaded		( resources::queries_result& data, configs::binary_config_value const& config );
 }; // class ladder_cook
 

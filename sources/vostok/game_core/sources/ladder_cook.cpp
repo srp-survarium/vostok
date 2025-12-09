@@ -10,18 +10,17 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[65.21%|DONE]: LTCG for `translate_query_cook`.
 ladder_cook::ladder_cook( ) : resources::translate_query_cook( resources::ladder_class, reuse_false, use_current_thread_id )
 {
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 ladder_cook::~ladder_cook( )
 {
 }
 
-// STATE[STUB]
-// void survarium::ladder_cook::translate_query(vostok::resources::query_result_for_cook&)
+// STATE[71.21%|PARTIAL]
 void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	variant<32>* user_data = parent.user_data( );
@@ -40,12 +39,11 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 		return;
 	}
 
-	resources::request r = { config["main_animation"], resources::animation_class };
-	requests.push_back( r ); // sushi@TODO: I don't know how to do that on a single line without naming variable
+	requests.push_back( resources::create_request( config["main_animation"], resources::animation_class ) ); // sushi@TODO: I don't know how to do that on a single line without naming variable
 
 	ASSERT( UNKNOWN_EXPRESSION_T( config.value_exists( "landing_points" ) ) );
 
-	configs::binary_config_value const& points = config["landing_points"];
+	configs::binary_config_value const& points			= config["landing_points"];
 	configs::binary_config_value const* it_point		= points.begin( );
 	configs::binary_config_value const* it_point_end	= points.end( );
 
@@ -57,17 +55,11 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 
 		pcstr start_animation = point["start_animation"];
 		if ( !strings::equal( start_animation, "" ) )
-		{
-			resources::request r = { start_animation, resources::animation_class };
-			requests.push_back( r );
-		}
+			requests.push_back( resources::create_request( start_animation, resources::animation_class ) ); // target doesn't store those on stack
 
 		pcstr end_animation = point["end_animation"];
 		if ( !strings::equal( end_animation, "" ) )
-		{
-			resources::request r = { end_animation, resources::animation_class };
-			requests.push_back( r );
-		}
+			requests.push_back( resources::create_request( end_animation, resources::animation_class ) );
 	}
 
 	if ( requests.size( ) == 1 )
@@ -103,7 +95,7 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 	// <0x701710>|0x100|+0x00d:'38'		return;
 	// <0>
 	// <1>
-	// <0x70171d>|0x10d|+0x02d:'41'
+	// <0x70171d>|0x10d|+0x02d:'41'	requests.push_back( resources::create_request( config["main_animation"], resources::animation_class ) );
 	// <0>
 	// <0x70174a>|0x13a|+0x00c:'43'	ASSERT( UNKNOWN_EXPRESSION_T( config.value_exists( "landing_points" ) ) );
 	// <0>
@@ -144,7 +136,7 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[72.07%|PARTIAL]
 void ladder_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_value const& config )
 {
 	resources::query_result_for_cook* const	parent = data.get_parent_query();
@@ -159,7 +151,7 @@ void ladder_cook::on_animations_loaded( resources::queries_result& data, configs
 	u32					resource_index		= 0;
 	float4x4 const&		ladder_transform	= math::create_rotation( config["rotation"] ) * math::create_translation( config["position"] );
 	math::plane const& 	ladder_plane		= math::create_plane_normalized( ladder_transform.k.xyz( ), ladder_transform.c.xyz( ) );
-	ladder*				new_ladder			= VOSTOK_NEW_IMPL( g_allocator, ladder )( data[resource_index++].get_managed_resource( ), ladder_plane );
+	ladder*				new_ladder			= VOSTOK_NEW_IMPL( g_allocator, ladder )( data[resource_index++].get_managed_resource( ), ladder_plane ); // Missing `or 2` from target
 	new_ladder->load( config );
 	configs::binary_config_value const&	points			= config["landing_points"];
 	configs::binary_config_value const* it_point		= points.begin( );
@@ -169,17 +161,17 @@ void ladder_cook::on_animations_loaded( resources::queries_result& data, configs
 	{
 		configs::binary_config_value const& point = *it_point;
 		float4x4 const&	point_tansform = math::create_rotation( point["rotation"] ) * math::create_translation( point["position"] ) * ladder_transform;
-		landing_point* new_point = VOSTOK_NEW_IMPL( g_allocator, landing_point )( point_tansform.c.xyz( ), point_tansform.get_angles_xyz( ) );
+		landing_point* new_point = VOSTOK_NEW_IMPL( g_allocator, landing_point )( point_tansform.c.xyz( ), point_tansform.get_angles_xyz( ) ); // `landing_point` constructor inlined in target
 
 		pcstr start_animation = point["start_animation"];
 		if ( !strings::equal( start_animation, "" ) )
-			new_point->set_start_animation( data[resource_index++].get_managed_resource( ) );
+			new_point->set_start_animation( static_cast_resource_ptr< resources::managed_resource_ptr >( data[resource_index++].get_managed_resource( ) ) );
 
 		pcstr end_animation = point["end_animation"];
 		if ( !strings::equal( end_animation, "" ) )
-			new_point->set_end_animation( data[resource_index++].get_managed_resource( ) );
+			new_point->set_end_animation( static_cast_resource_ptr< resources::managed_resource_ptr >( data[resource_index++].get_managed_resource( ) ) );
 
-		if ( !new_point->get_start_animation( ).c_ptr( ) && !new_point->get_end_animation( ).c_ptr( ) )
+		if ( !new_point->get_start_animation( ) && !new_point->get_end_animation( ) )	// This is done somehow differently
 		{
 			LOG_WARNING( "landing point has no start/end animation, it's useless, hence won't be created" );
 			DEBUG_BREAK( );
@@ -241,7 +233,7 @@ void ladder_cook::on_animations_loaded( resources::queries_result& data, configs
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void ladder_cook::delete_resource( resources::resource_base* resource )
 {
 	ladder* ladder_res = static_cast<ladder*>( resource );

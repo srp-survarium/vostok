@@ -29,6 +29,7 @@ public:
 	virtual	bool								use_initialize			( usable_object_user_data* user ) override;
 	virtual	bool								use_execute				( usable_object_user_data* user ) override;
 	virtual	bool								use_finalize			( usable_object_user_data* user ) override;
+	// STATE[100%|DONE]
 	virtual	pcstr								use_info				( usable_object_user_data* user ) override { return "st_use_ladder"; }
 
 	virtual	void								load					( configs::binary_config_value const& cfg_val ) override;
@@ -37,7 +38,7 @@ public:
 	virtual	void								activate				( physics::world* world );
 	virtual	void								deactivate				( );
 
-			void								add_landing_point		( landing_point* new_point );
+			void								add_landing_point		( landing_point* const new_point );
 			landing_point*						pop_landing_point		( );
 
 	inline	landing_point const*				select_landing_point	( float3 const& arg_0, bool arg_1 ) const { /* no source */ }
@@ -47,7 +48,7 @@ public:
 
 private:
 	class ladder_occluder : public usable_object {
-	public:
+	private:
 		virtual	bool		use_initialize				( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
 		virtual	bool		use_execute					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
 		virtual	bool		use_finalize				( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }

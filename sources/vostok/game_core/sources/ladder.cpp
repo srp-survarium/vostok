@@ -11,7 +11,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[89.26%|DONE]: LTCG for `resources::managed_resource`.
 ladder::ladder( resources::managed_resource_ptr const& main_animation, math::plane const& p ) :
 	m_main_animation	( main_animation ),
 	m_plane				( p ),
@@ -19,7 +19,7 @@ ladder::ladder( resources::managed_resource_ptr const& main_animation, math::pla
 {
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 ladder::~ladder( )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, m_occluder );
@@ -29,7 +29,7 @@ ladder::~ladder( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[87.95%|DONE]: LTCG for `binary_config_value::value_exists` and `malloc`.
 void ladder::load( configs::binary_config_value const& cfg_val )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); // sushi@NOTE: Checks that this class wasn't loaded before? We can see how other `load` functions in engine are implemented
@@ -51,7 +51,7 @@ void ladder::load( configs::binary_config_value const& cfg_val )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void ladder::resolve_links( base_project* p, configs::binary_config_value cfg )
 {
 	usable_object::resolve_links( p, cfg );
@@ -65,8 +65,8 @@ void ladder::resolve_links( base_project* p, configs::binary_config_value cfg )
 	// ******
 }
 
-// STATE[STUB]
-void ladder::add_landing_point( landing_point* new_point )
+// STATE[99.77%|DONE]: Target allocated less space on stack
+void ladder::add_landing_point( landing_point* const new_point )
 {
 	m_landing_points.push_back( new_point );
 
@@ -75,7 +75,7 @@ void ladder::add_landing_point( landing_point* new_point )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[99.70%|DONE]: Target allocated less space on stack
 landing_point* ladder::pop_landing_point( )
 {
 	return m_landing_points.pop_front( );
@@ -85,7 +85,7 @@ landing_point* ladder::pop_landing_point( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool ladder::use_initialize( usable_object_user_data* user )
 {
 	user->owner->use_ladder( this );
@@ -97,7 +97,7 @@ bool ladder::use_initialize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool ladder::use_execute( usable_object_user_data* user )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( user );
@@ -109,7 +109,7 @@ bool ladder::use_execute( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool ladder::use_finalize( usable_object_user_data* user )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( user );
@@ -121,7 +121,7 @@ bool ladder::use_finalize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void ladder::activate( physics::world* world )
 {
 	usable_object::insert( world );
@@ -131,7 +131,7 @@ void ladder::activate( physics::world* world )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void ladder::deactivate( )
 {
 	usable_object::remove( );

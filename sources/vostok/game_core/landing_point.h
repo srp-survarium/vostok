@@ -9,7 +9,7 @@ namespace survarium {
 
 class landing_point : public boost::noncopyable {
 public:
-	explicit									landing_point		( float3 const& position, float3 const& rotation ) : m_position( position ), m_rotation ( rotation ) { }
+	inline	explicit							landing_point		( float3 const& position, float3 const& rotation ) : m_position( position ), m_rotation ( rotation ) { }
 
 	inline	void								set_start_animation	( resources::managed_resource_ptr const& start_animation )	{ m_start_animation = start_animation; }
 	inline	void								set_end_animation	( resources::managed_resource_ptr const& end_animation )	{ m_end_animation = end_animation; }
