@@ -10,7 +10,7 @@ namespace survarium {
 	struct hit_receiver;
 	class collision_geometry;
 
-	typedef void base_player;			// sushi@TODO:
+	struct base_player;
 }
 
 namespace vostok {

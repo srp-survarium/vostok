@@ -332,30 +332,27 @@ void inventory::unload_to_profile( player_profile& profile, items_dictionary con
 }
 
 // STATE[STUB]
-// void survarium::call_item_remove(survarium::inventory_slot&)
-void call_item_remove( inventory_slot& slot )
+static void call_item_remove( inventory_slot& slot )
 {
-	// CALL SITE INFO
-	// <0x700398> -> void <unknown>()
-	// ******
+	if ( slot.item )
+		slot.item->remove( );
 
 	// FUNCTION BODY
-	// <0x700370>|0x000|+0x006:'230'	{
 	// <0x700376>|0x006|+0x00c:'231'
 	// <0x700382>|0x012|+0x018:'232'
-	// <0x70039a>|0x02a|      :'233'	}
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::inventory::remove()
 void inventory::remove( )
 {
+	for ( inventory_slot* slot = m_slots; slot != m_slots + max_slots_count; ++slot )
+		call_item_remove( *slot );
+	m_active_slot = max_slots_count;
+
 	// FUNCTION BODY
-	// <0x700530>|0x000|+0x009:'236'	{
 	// <0x700539>|0x009|+0x032:'237'
 	// <0x70056b>|0x03b|+0x00d:'238'
-	// <0x700578>|0x048|      :'239'	}
 	// ******
 }
 
@@ -407,14 +404,11 @@ void call_item_deserialize( inventory_slot& slot, network_core::packet_reader& r
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::inventory::deserialize(vostok::network_core::packet_reader&)
+// STATE[BLOCKED]
 void inventory::deserialize( network_core::packet_reader& reader )
 {
 	// FUNCTION BODY
-	// <0x7004a0>|0x000|+0x009:'275'	{
 	// <0x7004a9>|0x009|+0x075:'276'
-	// <0x70051e>|0x07e|      :'277'	}
 	// ******
 }
 

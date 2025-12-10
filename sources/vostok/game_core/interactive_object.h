@@ -20,7 +20,7 @@ namespace network_core {
 
 namespace survarium {
 
-class base_player;		// sushi@TODO
+struct base_player;		// sushi@TODO
 struct engine;
 class weapon_core;		// sushi@TODO
 class game_world_ui;	// sushi@TODO

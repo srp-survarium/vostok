@@ -12,10 +12,14 @@ struct inventory_item_props {
 
 public:
 	/* 0x0000 */	u16		m_dict_id;
-	/* 0x0002 */	u8		cooldown;
-	/* 0x0002 */	u8		use_in_percents;
-	/* 0x0004 */	u16		m_amount;
-	/* 0x0004 */	u32		m_amount_ms;
+	/* 0x0002 */	union {
+						u8		cooldown;
+						u8		use_in_percents;
+					};
+	/* 0x0004 */	union {
+						u16		m_amount;
+						u32		m_amount_ms;
+					};
 }; // struct inventory_item_props
 
 STATIC_SIZE_ASSERT(inventory_item_props, 0x8);

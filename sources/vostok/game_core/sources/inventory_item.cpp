@@ -5,6 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/inventory_item.h>
 
+#include <vostok/game_core/inventory_item_props.h>
+
 namespace survarium {
 
 // STATE[STUB]
@@ -20,8 +22,8 @@ inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 // STATE[STUB]
 bool inventory_item::get_item_props( inventory_item_props& props )
 {
-	props->m_dict_id = m_dict_id;
-	props->m_amount = m_amount;
+	props.m_dict_id = m_dict_id;
+	props.m_amount = m_amount;
 	return false;
 
 	// FUNCTION BODY
