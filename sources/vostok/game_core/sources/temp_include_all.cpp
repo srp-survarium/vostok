@@ -45,9 +45,17 @@
 
 #include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/ladder.h>
+#include <vostok/game_core/damage_model_cook.h>
+
 
 namespace vostok
 {
+	void use_damage_model_cook( )
+	{
+		survarium::damage_model_cook cook;
+		cook.delete_resource( NULL );
+	}
+
 	void use_ladder( survarium::ladder* ladder )
 	{
 		ladder->activate( NULL );
@@ -406,6 +414,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_damage_model_cook( );
 	vostok::use_ladder( NULL );
 	vostok::use_game_core_affects_threshold();
 	vostok::use_game_core_player_stamina();

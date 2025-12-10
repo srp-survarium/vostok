@@ -69,7 +69,7 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 		return;
 	}
 
-	resources::query_resources			(
+	resources::query_resources(
 		requests.begin( ),
 		requests.size( ),
 		boost::bind( &ladder_cook::on_animations_loaded, this, _1, config ),

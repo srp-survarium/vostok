@@ -5,20 +5,10 @@
 #ifndef HIT_TYPE_PARAMETERS_H_INCLUDED
 #define HIT_TYPE_PARAMETERS_H_INCLUDED
 
-#include <vostok/fixed_string.h>
-#include <boost/noncopyable.hpp>
-
 namespace survarium {
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
 
 class body_part_parameters;
 
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class hit_type_parameters : public boost::noncopyable {
 public:
