@@ -49,7 +49,7 @@ public:
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* boost::noncopyable */
-	/* 0x0108 */	inventory_slot			m_slots[19]; // sushi@TODO: Enum_MAX
+	/* 0x0108 */	inventory_slot			m_slots[max_slots_count];
 	/* 0x0154 */	profile_slot_enum		m_active_slot;
 	/* 0x0158 */	inventory_holder*		m_holder;
 	/* 0x015c */	victory_item_core*		m_victory_item;

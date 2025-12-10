@@ -8,13 +8,11 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::inventory::inventory()
-inventory::inventory( )
+inventory::inventory( ) :
+	m_active_slot	( max_slots_count ),
+	m_holder		( NULL ),
+	m_victory_item	( NULL )
 {
-	// FUNCTION BODY
-	// <0x700580>|0x000|+0x067:'23'	{
-	// <0x7005e7>|0x067|      :'24'	}
-	// ******
 }
 
 // STATE[STUB]

@@ -15,7 +15,7 @@ player_input::player_input( ) :
 {
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void player_input::serialize( network_core::udp_match_packet& packet ) const
 {
 	// FUNCTION BODY
@@ -27,7 +27,7 @@ void player_input::serialize( network_core::udp_match_packet& packet ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void player_input::deserialize( network_core::packet_reader& reader )
 {
 	// FUNCTION BODY

@@ -5,119 +5,97 @@
 #include "pch.h"
 #include <vostok/game_core/usable_object.h>
 
+#include <vostok/game_core/collision_geometry.h>
+#include <vostok/game_core/base_project.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::usable_object::usable_object()
-usable_object::usable_object( )
+// STATE[84.24%|PARTIAL]: Problems with `link_resolver` constructor
+usable_object::usable_object( ) :
+	m_collision_geometries		( NULL ),
+	m_collision_geometries_count( 0 )
 {
-	// FUNCTION BODY
-	// <0x5a0960>|0x000|+0x085:'17'	{
-	// <0x5a09e5>|0x085|      :'18'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::usable_object::~usable_object()
+// STATE[100%|DONE]
 usable_object::~usable_object( )
 {
+	VOSTOK_FREE_IMPL( g_allocator, m_collision_geometries );
+
 	// FUNCTION BODY
-	// <0x5a0b00>|0x000|+0x01c:'21'	{
 	// <0x5a0b1c>|0x01c|+0x03d:'22'
-	// <0x5a0b59>|0x059|      :'23'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::usable_object::load(vostok::configs::binary_config_value const&)
+// STATE[94.15%|DONE]: LTCG for `binary_config`.
 void usable_object::load( configs::binary_config_value const& cfg )
 {
-	// LOCALS
-	// configs::binary_config_value collision_table
-	// ******
+	configs::binary_config_value collision_table = cfg["collision_geometries"];
+	m_collision_geometries_count = collision_table.size( );
+	ASSERT( UNKNOWN_EXPRESSION ); // sushi@TODO: Compare with other `load` functions.
+
+	m_collision_geometries = (collision_geometry**)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( collision_geometry* ) * m_collision_geometries_count );
 
 	// FUNCTION BODY
-	// <0x5a0b80>|0x000|+0x00a:'26'	{
 	// <0x5a0b8a>|0x00a|+0x030:'27'
 	// <0x5a0bba>|0x03a|+0x00e:'28'
 	// <0x5a0bc8>|0x048|+0x00c:'29'
 	// <0>
 	// <0x5a0bd4>|0x054|+0x022:'31'
-	// <0x5a0bf6>|0x076|      :'32'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::usable_object::resolve_links(survarium::base_project*, vostok::configs::binary_config_value)
+// STATE[98.15%|DONE]
 void usable_object::resolve_links( base_project* p, configs::binary_config_value cfg )
 {
-	// LOCALS
-	// configs::binary_config_value collision_table
-	// u32 							i<1>
-	// pcstr 						geom_name<2>
-	// ******
-
-	// CALL SITE INFO
-	// <0x5a0ac4> -> base_game_object* <unknown>(pcstr)
-	// ******
+	configs::binary_config_value collision_table = cfg["collision_geometries"];
+	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i ) // sushi@TODO: Disasm says it is `i < m_collision_geometries`. Why?
+	{
+		pcstr geom_name = collision_table[i]["name"];
+		m_collision_geometries[i] = static_cast<collision_geometry*>( p->get_object_by_name( geom_name ) );
+	}
 
 	// FUNCTION BODY
-	// <0x5a0a40>|0x000|+0x009:'35'	{
 	// <0x5a0a49>|0x009|+0x030:'36'
 	// <0x5a0a79>|0x039|+0x01d|[1]:'37'
 	// <0>
 	// <0x5a0a96>|0x056|+0x01f|[2]:'39'
 	// <0x5a0ab5>|0x075|+0x03d:'40'
 	// <0>
-	// <0x5a0af2>|0x0b2|      :'42'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::usable_object::insert(vostok::physics::world*)
+// STATE[100%|DONE]
 void usable_object::insert( physics::world* world )
 {
-	// LOCALS
-	// u32 							i<1>
-	// ******
+	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
+		m_collision_geometries[i]->subscribe( world, this );
 
 	// FUNCTION BODY
-	// <0x5a09f0>|0x000|+0x009:'45'	{
 	// <0x5a09f9>|0x009|+0x01d|[1]:'46'
 	// <0x5a0a16>|0x026|+0x01b:'47'
-	// <0x5a0a31>|0x041|      :'48'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::usable_object::remove()
+// STATE[100%|DONE]
 void usable_object::remove( )
 {
-	// LOCALS
-	// u32 							i<1>
-	// ******
+	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
+		m_collision_geometries[i]->unsubscribe( this );
 
 	// FUNCTION BODY
-	// <0x5a0910>|0x000|+0x009:'51'	{
 	// <0x5a0919>|0x009|+0x01d|[1]:'52'
 	// <0x5a0936>|0x026|+0x017:'53'
-	// <0x5a094d>|0x03d|      :'54'	}
 	// ******
 }
 
-// STATE[STUB]
-// vostok::math::float4x4 survarium::usable_object::get_transform()
+// STATE[BLOCKED] Called from `survarium::game_world_ui::update_minimap_objects`
 float4x4 usable_object::get_transform( )
 {
-	// CALL SITE INFO
-	// <0x5a0900> -> float4x4 <unknown>()
-	// ******
+	return m_collision_geometries[0]->get_transform( );
 
-	return vostok::math::float4x4();
 	// FUNCTION BODY
-	// <0x5a08e0>|0x000|+0x007:'57'	{
 	// <0x5a08e7>|0x007|+0x01e:'58'
-	// <0x5a0905>|0x025|      :'59'	}
 	// ******
 }
 
