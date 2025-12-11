@@ -1148,6 +1148,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\inventory_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\inventory_cooker_data.h"
+				>
+			</File>
+			<File
 				RelativePath="..\inventory_holder.h"
 				>
 			</File>
@@ -1164,7 +1172,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\item_types_enum.h"
+				>
+			</File>
+			<File
+				RelativePath="..\items_cook.h"
+				>
+			</File>
+			<File
 				RelativePath="..\items_dictionary.h"
+				>
+			</File>
+			<File
+				RelativePath="..\items_dictionary_cook.h"
 				>
 			</File>
 			<File
@@ -1268,6 +1288,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\victory_item_core_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\victory_items_container_core.h"
+				>
+			</File>
+			<File
 				RelativePath="..\zone_group.h"
 				>
 			</File>
@@ -1360,7 +1388,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inventory_cook.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\inventory_item.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\items_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\items_dictionary_cook.cpp"
 				>
 			</File>
 			<File
@@ -1469,6 +1509,14 @@
 			</File>
 			<File
 				RelativePath=".\victory_item_core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\victory_item_core_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\victory_items_container_core.cpp"
 				>
 			</File>
 		</Filter>

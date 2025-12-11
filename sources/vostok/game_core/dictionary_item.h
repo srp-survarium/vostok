@@ -8,7 +8,15 @@
 namespace survarium {
 
 struct dictionary_item {
-			bool	is_ammo			( );
+	// STATE[STUB]: Defined in `items_dictionary_cook.h`.
+			bool	is_ammo			( )
+	{
+		return item_category == 9 // sushi@TODO: There should be an enum for that
+			|| item_category == 18
+			|| item_category == 19
+			|| item_category == 20
+			|| item_category == 21;
+	}
 
 	inline			dictionary_item	( ) { /* no source */ }
 	inline			~dictionary_item( ) { /* no source */ }

@@ -25,17 +25,21 @@ public:
 
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
-			inventory_holder&					holder						( );
+	// STATE[STUB]
+			inventory_holder&					holder						( ) { return *m_holder; }
 
-			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot );
-	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { /* no source */ }
+	// STATE[STUB]
+			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot ) { return m_slots[slot].item; }
+	// STATE[STUB]
+	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { return m_slots[slot].item; }
 
 			void								set_victory_item			( victory_item_core* item );
 	inline	victory_item_core*					get_victory_item			( ) { /* no source */ }
 
 			bool								action						( profile_slot_enum slot_id, bool key_down );
 
-			profile_slot_enum					get_active_slot				( ) const;
+	// STATE[STUB]
+			profile_slot_enum					get_active_slot				( ) const { return m_active_slot; }
 
 			void								setup_from_profile			( player_profile& profile, items_dictionary const& dict );
 			void								setup_demo_profile			( );

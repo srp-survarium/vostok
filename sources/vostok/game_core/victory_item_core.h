@@ -28,7 +28,9 @@ public:
 	virtual	bool			use_initialize				( usable_object_user_data* user ) override;
 	virtual	bool			use_execute					( usable_object_user_data* user ) override;
 	virtual	bool			use_finalize				( usable_object_user_data* user ) override;
-	virtual	pcstr			use_info					( usable_object_user_data* user ) override { /* no source */ }
+
+	// STATE[STUB]
+	virtual	pcstr			use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return ""; }
 
 	virtual	void			put							( physics::world* world, float4x4 const& transform );
 	virtual	void			take						( );

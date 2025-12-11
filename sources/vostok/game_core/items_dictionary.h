@@ -11,7 +11,8 @@ namespace survarium {
 
 class items_dictionary : public resources::unmanaged_resource , public boost::noncopyable {
 public:
-	inline	dictionary_item const&				item_by_id					( u32 id ) const { /* no source */ }
+	// STATE[STUB]: Defined in `items_dictionary_cook.h`.
+	inline	dictionary_item const&				item_by_id					( u32 id ) const { return m_items_dict[id]; }
 	inline	void								add_item_desc				( dictionary_item const& item ) { /* no source */ }
 	inline	map< u32, dictionary_item > const&	get_dictionary				( ) const { /* no source */ }
 

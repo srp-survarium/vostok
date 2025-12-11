@@ -1,0 +1,45 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 06.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef VICTORY_ITEMS_CONTAINER_CORE_H_INCLUDED
+#define VICTORY_ITEMS_CONTAINER_CORE_H_INCLUDED
+
+#include <vostok/game_core/game_team_id.h>
+#include <vostok/game_core/usable_object.h>
+
+namespace survarium {
+
+class victory_item_core;
+
+class victory_items_container_core : public usable_object {
+public:
+	explicit						victory_items_container_core	( );
+
+	virtual	void					load							( configs::binary_config_value const& cfg ) override;
+
+	virtual	bool					use_initialize					( usable_object_user_data* user ) override;
+	virtual	bool					use_execute						( usable_object_user_data* user ) override;
+	virtual	bool					use_finalize					( usable_object_user_data* user ) override;
+	virtual	pcstr					use_info						( usable_object_user_data* user ) override;
+
+	virtual	void					put_item						( victory_item_core* item );
+	virtual	victory_item_core*		take_item						( );
+
+	virtual	game_team_id			team							( ) { return m_owner_team; }
+	inline	bool					empty							( ) { /* no source */ }
+
+	inline	u8						id								( ) { /* no source */ }
+
+private:
+	/* 0x0000 */	/* usable_object */
+	/* 0x0020 */	vectora<victory_item_core *>	m_victory_items;
+	/* 0x0030 */	game_team_id					m_owner_team;
+	/* 0x0034 */	u8								m_container_id;
+}; // class victory_items_container_core
+
+STATIC_SIZE_ASSERT(victory_items_container_core, 0x38);
+
+} // namespace survarium
+
+#endif // #ifndef VICTORY_ITEMS_CONTAINER_CORE_H_INCLUDED
