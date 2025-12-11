@@ -22,6 +22,9 @@ struct anomaly_state;
 class artefact_container_core;
 class damage_zone_core;
 
+// sushi@TODO
+// <0x4f210>|0x000|      :'104'	{
+
 class generic_anomaly_core : public base_game_object , public link_resolver , public player_actions_subscriber {
 public:
 								generic_anomaly_core		( );

@@ -5,6 +5,13 @@
 #ifndef GAME_WORLD_OBJECT_H_INCLUDED
 #define GAME_WORLD_OBJECT_H_INCLUDED
 
+namespace vostok {
+namespace network_core {
+	class udp_match_packet;
+	class packet_reader;
+}
+}
+
 namespace survarium {
 
 class inventory_item;

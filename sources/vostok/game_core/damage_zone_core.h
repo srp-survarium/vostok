@@ -102,6 +102,8 @@ private:
 
 STATIC_SIZE_ASSERT(damage_zone_core, 0x110);
 
+typedef resources::resource_ptr< damage_zone_core, resources::unmanaged_intrusive_base > damage_zone_core_ptr;
+
 } // namespace survarium
 
 #endif // #ifndef DAMAGE_ZONE_CORE_H_INCLUDED

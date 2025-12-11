@@ -1012,15 +1012,51 @@
 				>
 			</File>
 			<File
+				RelativePath="..\artefact_lifebone_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\artefact_spores_core.h"
+				>
+			</File>
+			<File
 				RelativePath="..\base_game_object.h"
 				>
 			</File>
 			<File
 				RelativePath="..\base_player.h"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\base_project.h"
+				>
+			</File>
+			<File
+				RelativePath="..\booby_trap_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\booby_trap_core_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\booby_trap_set_cook_data.h"
+				>
+			</File>
+			<File
+				RelativePath="..\booby_trap_set_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\booby_trap_set_core_cook.h"
 				>
 			</File>
 			<File
@@ -1088,6 +1124,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\hittable_object.h"
+				>
+			</File>
+			<File
 				RelativePath="..\interactive_object.h"
 				>
 			</File>
@@ -1136,6 +1176,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\oxygen_tank.h"
+				>
+			</File>
+			<File
 				RelativePath="..\player_actions_subscriber.h"
 				>
 			</File>
@@ -1146,6 +1190,18 @@
 			<File
 				RelativePath="..\player_input_inline.h"
 				>
+			</File>
+			<File
+				RelativePath="..\player_logic_base_state.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\player_profile.h"
@@ -1208,6 +1264,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\artefact_lifebone_core.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\base_player.cpp"
 				>
 				<FileConfiguration
@@ -1221,6 +1281,22 @@
 			</File>
 			<File
 				RelativePath=".\base_project.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\booby_trap_core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\booby_trap_core_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\booby_trap_set_core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\booby_trap_set_core_cook.cpp"
 				>
 			</File>
 			<File
@@ -1248,6 +1324,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hittable_object.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\inventory.cpp"
 				>
 			</File>
@@ -1268,8 +1348,72 @@
 				>
 			</File>
 			<File
+				RelativePath=".\oxygen_tank.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\player_input.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\player_logic_base_state.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_crouch_state.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_jump_state.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_sprint_state.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_stand_state.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\player_stamina.cpp"
@@ -1294,6 +1438,58 @@
 			<File
 				RelativePath=".\victory_item_core.cpp"
 				>
+			</File>
+		</Filter>
+		<Filter
+			Name="private_api"
+			>
+			<File
+				RelativePath=".\player_logic_crouch_state.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_jump_state.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_sprint_state.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_logic_stand_state.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>
