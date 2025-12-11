@@ -20,8 +20,10 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/collision/collision_object.h>
 
-namespace survarium {
+#include <vostok/game_core/game_material.h>
 
+namespace survarium {
+/*
 ///////////////////////				A D D I T I O N A L   D A T A 				    ///////////////////////////////////////
 struct game_material
 {
@@ -37,6 +39,7 @@ struct game_material
 	float			bullet_reflection_epsilon;
 	float			bullet_reflection_speed_down;
 };
+*/
 static game_material m_collided_material;
 
 ///////////////////////			F O R W A R D   D E C L A R A T I O N S				///////////////////////////////////////
@@ -127,7 +130,7 @@ void bullet::tick ( bullet_manager& bullet_manager, float elapsed_game_seconds )
 			m_start_velocity = zero_velocity;
 			return;
 		}
-		
+
 		if( low_time == high_time )
 			return;
 
@@ -148,7 +151,7 @@ void bullet::tick ( bullet_manager& bullet_manager, float elapsed_game_seconds )
 			low_time	= m_life_time;
 			high_time	-= time;
 			time		= m_life_time;
-		}	
+		}
 		if	( time != 0 )
 			if ( !update_bullet_position( time, gravity ) )
 			{
@@ -247,7 +250,7 @@ float3 bullet::compute_parabolic_position ( float time, float3 const& gravity )
 		return				m_start_position + m_start_velocity * time + gravity * ( math::sqr( time ) * .5f );
 
 	float const sqr_t_div_2	= math::sqr( time ) * .5f;
-	return m_start_position + m_start_velocity * time 
+	return m_start_position + m_start_velocity * time
 		+ m_start_velocity * -m_current_resistance * sqr_t_div_2
 		+ gravity * sqr_t_div_2;
 }
@@ -290,7 +293,7 @@ float bullet::pick_next_permissible_time ( float const low_time, float high_time
 	while ( !math::is_similar( low, high_time, math::epsilon_5 ) )
 	{
 		float				distance = compute_max_error( low_time, check_time, gravity );
-		
+
 		if ( distance < epsilon )
 			low				= check_time;
 		else
@@ -298,7 +301,7 @@ float bullet::pick_next_permissible_time ( float const low_time, float high_time
 
 		check_time			= ( low + high_time ) * .5f;
 	}
-	
+
 	R_ASSERT				( low <= start_high_time, "low[%f], high[%f]", low, start_high_time );
 	return					( low );
 }
@@ -391,7 +394,7 @@ float bullet::get_check_time ( float const start_low, float high, float3 const& 
 float bullet::compute_max_error ( float const low, float const high, float3 const& gravity )
 {
 	float					max_error_time = get_max_error_time( low, high );
-	
+
 	float3 const start		= compute_trajectory_position( low, gravity );
 	float3 const target		= compute_trajectory_position( high, gravity );
 	float3 const max_error	= compute_trajectory_position( max_error_time, gravity );
@@ -431,7 +434,7 @@ collision_result bullet::check_collision (	bullet_manager& bullet_manager,
 			return						collision_result_no_collision;
 
 		direction						*= 1.f / distance;
-		
+
 		collision::ray_triangles_type triangles				= collision::ray_triangles_type( g_allocator );
 #if 0
 		collision::space_partitioning_tree * const tree		= bullet_manager.get_game_world().get_collision_tree();
@@ -487,7 +490,7 @@ bool bullet::process_ray_query (	bullet_manager& bullet_manager,
 		float3		triangle_normal	= get_triangle_normal ( triangles[i] );
 		float3		collide_point	= start_position + direction * triangles[i].distance;
 		float		collision_time	= start_time + triangles[i].distance / distance * ( current_time - start_time );
-		
+
 		float		cos_alpha		= ( triangle_normal | direction );
 
 		if( cos_alpha == 0 )
@@ -510,13 +513,13 @@ bool bullet::process_ray_query (	bullet_manager& bullet_manager,
 		direction				= compute_trajectory_velocity( collision_time, bullet_manager.get_gravity( ) );
 		float speed				= direction.length( );
 		direction				/= speed;
-		
+
 		if( orientation == triangle_orientation_front_face )
 		{
 			if( m_inside_collision_object != NULL )
 				continue;
 
-			if ( cos_alpha >= - m_collided_material.bullet_reflection_epsilon )
+			// sushi@TODO if ( cos_alpha >= - m_collided_material.bullet_reflection_epsilon )
 			{
 				if( try_reflect	( bullet_manager, collide_point, direction, triangle_normal, speed, collision_time, start_position, start_time, current_time, cos_alpha ) )
 				{
@@ -542,7 +545,7 @@ bool bullet::process_ray_query (	bullet_manager& bullet_manager,
 			//m_bullet_manager.add_collision_point( collide_point, math::color( 255, 0, 255, 128 ) );
 			continue;
 		}
-		
+
 		if( triangles[i].object != m_inside_collision_object )
 			continue;
 
@@ -593,7 +596,7 @@ void bullet::fix_collision_point_and_time (		float3& collide_point,
 #ifndef MASTER_GOLD
 	float3		dbg_new_collide_point	= compute_trajectory_position( start_time, gravity );
 	float		dbg_delta				= ( ( dbg_new_collide_point - collide_point ) | triangle_normal );
-	R_ASSERT	( ( orientation == triangle_orientation_front_face && dbg_delta >= 0 ) || 
+	R_ASSERT	( ( orientation == triangle_orientation_front_face && dbg_delta >= 0 ) ||
 					( orientation == triangle_orientation_back_face && dbg_delta <= 0 ) );
 #endif // #ifndef MASTER_GOLD
 
@@ -607,7 +610,7 @@ void bullet::fix_collision_point_and_time (		float3& collide_point,
 
 		while ( !math::is_zero( delta ) )
 		{
-			if (	( orientation == triangle_orientation_front_face && delta < 0 ) || 
+			if (	( orientation == triangle_orientation_front_face && delta < 0 ) ||
 					( orientation == triangle_orientation_back_face && delta > 0 ) )
 				high_time			= collision_time;
 			else
@@ -637,7 +640,7 @@ void bullet::collide_front_face (	bullet_manager& bullet_manager,
 	bullet_manager.add_decal	( collide_point, direction, triangle_normal, true );
 
 	change_trajectory			( bullet_manager, collide_point, direction * speed, collision_time );
-	m_current_resistance		= m_collided_material.material_resistance;
+	// sushi@TODO m_current_resistance		= m_collided_material.material_resistance;
 	m_inside_collision_object	= triangle.object;
 	m_enter_collision_point		= collide_point;
 
@@ -662,7 +665,7 @@ bool bullet::try_reflect (	bullet_manager& bullet_manager,
 							float& current_time,
 							float const cos_alpha )
 {
-	speed					-=  m_collided_material.bullet_reflection_speed_down * -cos_alpha;
+	// sushi@TODO speed					-=  m_collided_material.bullet_reflection_speed_down * -cos_alpha;
 	if( speed < 0 )
 	{
 #ifndef MASTER_GOLD
@@ -704,15 +707,15 @@ bool bullet::try_to_pierce (	bullet_manager& bullet_manager,
 	m_enter_collision_point		= float3( );
 	m_inside_collision_object	= NULL;
 
-	speed					-= m_collided_material.material_strength_coefficient * material_width;
+	// sushi@TODO speed					-= m_collided_material.material_strength_coefficient * material_width;
 	if( speed < 0 )
 		return false;
-	
+
 	//barrier has pierced
 	change_trajectory							( bullet_manager, collide_point, direction * speed, collision_time );
 
 #ifndef MASTER_GOLD
-	
+
 	bullet_manager.store_bullet_trajectory	( this );
 
 #endif // #ifndef MASTER_GOLD
@@ -742,7 +745,7 @@ bool bullet::update_bullet_position	( float const time, float3 const& gravity )
 	m_fly_distance				+= ( new_position - m_position ).length( );
 
 	if ( m_fly_distance >= m_max_distance )
-	{	
+	{
 		m_fly_distance =		m_max_distance;
 		return					false;
 	}

@@ -1096,6 +1096,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_material.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_material_manager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_material_manager_cook.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_scene.h"
 				>
 			</File>
@@ -1169,6 +1181,10 @@
 			</File>
 			<File
 				RelativePath="..\link_resolver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\material_pair.h"
 				>
 			</File>
 			<File
@@ -1316,6 +1332,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\game_material.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\game_material_manager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\game_material_manager_cook.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\generic_anomaly_core.cpp"
 				>
 			</File>
@@ -1341,6 +1369,10 @@
 			</File>
 			<File
 				RelativePath=".\ladder_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\material_pair.cpp"
 				>
 			</File>
 			<File
