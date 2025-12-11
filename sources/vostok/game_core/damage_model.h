@@ -63,10 +63,10 @@ public:
 
 	// STATE[99.50%|DONE]
 	inline	float		reduce_damage				(
-							pcstr		arg_0,
+							pcstr		body_part_name,
 							pcstr		damage_type,
 							float		amount,
-							float		arg_3
+							float		armor_piercing
 						)
 	{
 		return strings::equal( damage_type, m_hit_type ) ? math::max( 0.0f, amount * m_reduce - m_absorb ) : amount;
@@ -187,6 +187,9 @@ public:
 }; // class damage_model
 
 STATIC_SIZE_ASSERT(damage_model, 0x340);
+
+
+typedef resources::resource_ptr< damage_model, resources::unmanaged_intrusive_base > damage_model_ptr;
 
 } // namespace survarium
 

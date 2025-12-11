@@ -16,7 +16,9 @@ class collision_geometry_subscriber : public base_game_object {
 public:
 									~collision_geometry_subscriber	( ) {}
 
+	// STATE[STUB]
 	virtual	usable_object*			cast_to_usable	( ) { return NULL; }
+	// STATE[STUB]
 	virtual	collision_sensor*		cast_to_sensor	( ) { return NULL; }
 }; // class collision_geometry_subscriber
 

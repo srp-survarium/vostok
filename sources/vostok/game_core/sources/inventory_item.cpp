@@ -19,7 +19,7 @@ inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 {
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool inventory_item::get_item_props( inventory_item_props& props )
 {
 	props.m_dict_id = m_dict_id;

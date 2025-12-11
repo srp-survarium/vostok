@@ -12,7 +12,10 @@ namespace survarium {
 
 class inventory;
 struct inventory_item_props;
-class game_world_object;	// sushi@TODO
+class game_world_object;
+
+// STATE[STUB] // sushi@TODO
+// player_logic_base_state::~player_logic_base_state( ) { /* <0x4f210>|0x000:'58' */ }
 
 class inventory_item : public interactive_object , public boost::noncopyable {
 public:
@@ -24,36 +27,43 @@ public:
 
 public:
 												inventory_item					( inventory_item::action_behaviour_type type );
-
-	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot );
-			inventory&							get_inventory					( ) const;
-
-			profile_slot_enum					profile_slot_id					( ) const;
-
-	inline	inventory_item::action_behaviour_type const&	get_action_behaviuor( ) const { /* no source */ }
-
-	virtual	void								action							( bool key_down );
+	// STATE[STUB]
+	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) { m_inventory = inv; m_slot_id = slot; }
+	// STATE[STUB]
+			inventory&							get_inventory					( ) const { return *m_inventory; }
+	// STATE[STUB]
+			profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }
+	// STATE[STUB]
+	inline	inventory_item::action_behaviour_type const&
+												get_action_behaviuor			( ) const { return m_action_behaviuor; }
+	// STATE[STUB]: sushi@NOTE: Actual impl is at `player_logic_base_state.h`.
+	virtual	void								action							( bool key_down ) { VOSTOK_UNREFERENCED_PARAMETER( key_down ); }
 	virtual	void								remove							( ) { /* no source */ }
 
 	virtual	void								holder_assigned					( ) { /* no source */ }
 	virtual	void								holder_removed					( ) { /* no source */ }
 
-			void								set_amount						( u16 value );
-			u16									amount							( ) const;
+	// STATE[STUB]
+			void								set_amount						( u16 value ) { m_amount = value; }
+	// STATE[STUB]
+			u16									amount							( ) const { return m_amount; }
 
 	inline	void								set_dict_id						( u16 arg_0 ) { /* no source */ }
 	inline	u16									get_dict_id						( ) { /* no source */ }
 
 	virtual	bool								get_item_props					( inventory_item_props& props );
 
-	virtual	weapon_core const*					cast_weapon_core				( ) const override { /* no source */ }
-	virtual	weapon_core*						cast_weapon_core				( ) override;
+	virtual	weapon_core const*					cast_weapon_core				( ) const override { return NULL; }
+	// STATE[STUB]
+	virtual	weapon_core*						cast_weapon_core				( ) override { return NULL; }
 
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
-	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const;
-	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader );
+	// STATE[BLOCKED]
+	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { /* <0x969f0>|0x000:'77' */ }
+	// STATE[BLOCKED]
+	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { /* <0xab250>|0x000:'78' */ }
 
 private:
 	/* 0x0000 */	/* interactive_object */

@@ -49,14 +49,20 @@
 #include <vostok/game_core/inventory.h>
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
+#include <vostok/game_core/medkit.h>
+
 namespace vostok
 {
-	void use_inventory( survarium::inventory_item* item )
+	void use_inventory( )
 	{
-		survarium::inventory_item_props props;
-		item->get_item_props( props );
+		survarium::medkit item;
 
-		item->remove( );
+		survarium::inventory_item_props props;
+		item.get_item_props( props );
+
+		item.remove( );
+
+		item.reduce_damage( NULL, NULL, 0.0f, 0.0f );
 	}
 
 	void use_damage_model_cook( )
@@ -423,7 +429,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
-	vostok::use_inventory( NULL );
+	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );
 	vostok::use_ladder( NULL );
 	vostok::use_game_core_affects_threshold();

@@ -1132,6 +1132,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\medkit.h"
+				>
+			</File>
+			<File
 				RelativePath="..\player_actions_subscriber.h"
 				>
 			</File>
@@ -1257,6 +1261,10 @@
 			</File>
 			<File
 				RelativePath=".\ladder_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\medkit.cpp"
 				>
 			</File>
 			<File

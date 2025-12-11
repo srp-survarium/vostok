@@ -9,7 +9,7 @@ namespace survarium {
 
 // STATE[STUB]
 inline bool player_input::is_sprinting( ) const
-{
+{	// sushi@TODO: Mask constants
 	 return ( actions_mask & 0x200 ) != 0
 		&& ( actions_mask & 0x001 ) != 0
 		&& ( actions_mask & 0x16E ) == 0;

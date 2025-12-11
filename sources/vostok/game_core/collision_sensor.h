@@ -45,10 +45,12 @@ public:
 			collision_geometry*		get_collision_geometry			( u32 index );
 	inline	u32						collision_geometries_count		( ) const { return m_collision_geometries_count; }
 
-	virtual	void					on_inside						( buffer_vector<physics::base_physics_object *> const& objects )	{ }
-	virtual	void					on_leave						( buffer_vector<physics::base_physics_object *> const& objects )	{ }
-	virtual	void					on_enter						( buffer_vector<physics::base_physics_object *> const& objects )	{ }
-	virtual	void					on_objetcs_loosed				( vector<physics::base_physics_object *> const& objects )			{ }
+	// STATE[STUB]
+	virtual	void					on_inside						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	virtual	void					on_leave						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	// STATE[STUB]
+	virtual	void					on_enter						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	virtual	void					on_objetcs_loosed				( vector<physics::base_physics_object *> const& objects )			{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 
 protected:
 			void					get_shapes_centers				( vectora<float3>& centers ) const;

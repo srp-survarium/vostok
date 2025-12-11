@@ -30,7 +30,7 @@ class collision_geometry_subscriber;
 
 class collision_geometry : public base_game_object , public vostok::collision::game_object {
 public:
-	enum collision_geometry_mode 
+	enum collision_geometry_mode
 	{
 		collision_geometry_mode_mesh_containment	= 0x0000,
 		collision_geometry_mode_mesh_intersection	= 0x0001,
@@ -42,6 +42,7 @@ public:
 
 			void						load							( configs::binary_config_value const& cfg_val );
 
+	// STATE[STUB]
 	virtual	collision_geometry*			cast_to_collision_geometry		( ) override { return this; };
 
 			void						subscribe						( physics::world* world, collision_geometry_subscriber* subscriber );

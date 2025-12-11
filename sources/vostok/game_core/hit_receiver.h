@@ -14,9 +14,10 @@ class bullet;
 
 struct hit_receiver : public collision::game_object , public loose_ptr_base {
 public:
-	virtual						~hit_receiver				( ) { /* no source */ }
+	// STATE[STUB]
+	virtual						~hit_receiver				( ) { }
 
-	virtual	void				hit							(
+	virtual	void				hit							( // sushi@TODO
 									hit_initiator const*					arg_0,
 									collision::bone_collision_data const&	arg_1,
 									pcstr									arg_2,
@@ -25,7 +26,7 @@ public:
 									bullet*									arg_5
 								) = 0;
 
-	virtual	void				hit							(
+	virtual	void				hit							( // sushi@TODO
 									hit_initiator const*	arg_0,
 									u32						arg_1,
 									pcstr					arg_2,
@@ -36,10 +37,10 @@ public:
 
 	virtual	float				get_speed					( ) const = 0;
 
-	virtual	hit_receiver*		cast_to_hit_receiver		( ) override;
+	virtual	hit_receiver*		cast_to_hit_receiver		( ) override { return this; }
 
-	virtual	void				subscribe_on_actions		( player_actions_subscriber* arg_0 ) { /* no source */ }
-	virtual	void				unsubscribe_from_actions	( player_actions_subscriber* arg_0 ) { /* no source */ }
+	virtual	void				subscribe_on_actions		( player_actions_subscriber* arg_0 ) { /* no source */ } // sushi@TODO
+	virtual	void				unsubscribe_from_actions	( player_actions_subscriber* arg_0 ) { /* no source */ } // sushi@TODO
 
 	inline	void				on_enter_damage_zone		( resources::resource_ptr<damage_zone_core,resources::unmanaged_intrusive_base> const& arg_0 ) { /* no source */ }
 	inline	void				on_leave_damage_zone		( resources::resource_ptr<damage_zone_core,resources::unmanaged_intrusive_base> const& arg_0 ) { /* no source */ }
