@@ -1034,6 +1034,14 @@
 			<File
 				RelativePath="..\artefact_spores_core.h"
 				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\base_game_object.h"
@@ -1080,10 +1088,6 @@
 			</File>
 			<File
 				RelativePath="..\booby_trap_set_core_cook.h"
-				>
-			</File>
-			<File
-				RelativePath="..\boosters_enum.h"
 				>
 			</File>
 			<File
@@ -1231,10 +1235,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\item_types_enum.h"
-				>
-			</File>
-			<File
 				RelativePath="..\items_cook.h"
 				>
 			</File>
@@ -1244,6 +1244,10 @@
 			</File>
 			<File
 				RelativePath="..\items_dictionary_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\jump_logic.h"
 				>
 			</File>
 			<File
@@ -1277,6 +1281,18 @@
 			<File
 				RelativePath="..\medkit.h"
 				>
+			</File>
+			<File
+				RelativePath="..\missile_weapon_core.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\oxygen_tank.h"
@@ -1351,6 +1367,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\respawn_point_core.h"
+				>
+			</File>
+			<File
 				RelativePath="..\scheduler.h"
 				>
 			</File>
@@ -1387,9 +1407,29 @@
 				>
 			</File>
 			<File
+				RelativePath="..\weapon_animation_parameters.h"
+				>
+			</File>
+			<File
 				RelativePath="..\zone_group.h"
 				>
 			</File>
+			<Filter
+				Name="enums"
+				>
+				<File
+					RelativePath="..\boosters_enum.h"
+					>
+				</File>
+				<File
+					RelativePath="..\item_types_enum.h"
+					>
+				</File>
+				<File
+					RelativePath="..\move_direction_enum.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="sources"
@@ -1483,6 +1523,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\generic_anomaly_core_construct.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\generic_anomaly_core_events.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\hit_initiator.cpp"
 				>
 			</File>
@@ -1509,6 +1557,46 @@
 			<File
 				RelativePath=".\items_dictionary_cook.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\jump_logic.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\jump_logic_state_inactive.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\jump_logic_state_landing.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\jump_logic_state_start.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ladder.cpp"
@@ -1619,6 +1707,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\respawn_point.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\scheduler.cpp"
 				>
 			</File>
@@ -1642,6 +1734,54 @@
 		<Filter
 			Name="private_api"
 			>
+			<File
+				RelativePath=".\jump_logic_base_state.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\jump_logic_state_inactive.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\jump_logic_state_landing.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\jump_logic_state_start.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath=".\player_logic_crouch_state.h"
 				>

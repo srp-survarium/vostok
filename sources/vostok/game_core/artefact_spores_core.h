@@ -5,22 +5,19 @@
 #ifndef ARTEFACT_SPORES_CORE_H_INCLUDED
 #define ARTEFACT_SPORES_CORE_H_INCLUDED
 
+#include <vostok/game_core/artefact_base.h>
+#include <vostok/game_core/missile_weapon_core.h>
+
+namespace vostok {
+namespace physics {
+	class bt_ghost_object;
+}
+}
+
 namespace survarium {
 
-/* survarium::artefact_spores_core */
+struct hit_initiator;
 
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class survarium::artefact_base;
-struct survarium::hit_initiator;
-class survarium::missile_weapon_core;
-class vostok::physics::bt_ghost_object;
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class artefact_spores_core : public missile_weapon_core , public artefact_base {
 public:
@@ -28,7 +25,6 @@ public:
 	virtual			~artefact_spores_core	( ) { /* no source */ }
 
 	inline	void	load					( configs::binary_config_value const& arg_0 ) { /* no source */ }
-
 	inline	void	set_owner				( hit_initiator* arg_0 ) { /* no source */ }
 
 	virtual	void	tick					( u32 arg_0, float4x4 const& arg_1 ) override { /* no source */ }
@@ -37,8 +33,8 @@ public:
 	virtual	void	on_contact_callback		( physics::base_physics_object* arg_0, physics::base_physics_object* arg_1, float3 const& arg_2 ) override { /* no source */ }
 
 	virtual	void	cloud_destroyed			( ) { /* no source */ }
-	inline	void	infect_objects_in_cloud	( ) { /* no source */ }
 
+	inline	void	infect_objects_in_cloud	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* missile_weapon_core */
