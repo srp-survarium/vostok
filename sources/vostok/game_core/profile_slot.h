@@ -5,10 +5,9 @@
 #ifndef PROFILE_SLOT_H_INCLUDED
 #define PROFILE_SLOT_H_INCLUDED
 
-namespace survarium {
+#include <vostok/game_core/inventory_item_instance.h>
 
-struct inventory_item_instance {}; // sushi@TODO
-enum slot_serialize_mode_enum {};  // sushi@TODO
+namespace survarium {
 
 struct profile_slot {
 public:

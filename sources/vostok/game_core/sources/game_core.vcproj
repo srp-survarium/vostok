@@ -1059,6 +1059,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\body_part_parameters_modifyer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\booby_trap_core.h"
 				>
 			</File>
@@ -1076,6 +1080,10 @@
 			</File>
 			<File
 				RelativePath="..\booby_trap_set_core_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\boosters_enum.h"
 				>
 			</File>
 			<File
@@ -1179,6 +1187,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\hit_type_parameters_modifyer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\hittable_object.h"
 				>
 			</File>
@@ -1204,6 +1216,10 @@
 			</File>
 			<File
 				RelativePath="..\inventory_item.h"
+				>
+			</File>
+			<File
+				RelativePath="..\inventory_item_instance.h"
 				>
 			</File>
 			<File
@@ -1275,6 +1291,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\player_initial_info.h"
+				>
+			</File>
+			<File
 				RelativePath="..\player_input.h"
 				>
 			</File>
@@ -1295,6 +1315,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\player_parameters_modifyer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_parameters_modifyer_cook.h"
+				>
+			</File>
+			<File
 				RelativePath="..\player_profile.h"
 				>
 			</File>
@@ -1304,6 +1332,14 @@
 			</File>
 			<File
 				RelativePath="..\player_stamina_subscriber.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_state.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_stealth.h"
 				>
 			</File>
 			<File
@@ -1381,13 +1417,6 @@
 			<File
 				RelativePath=".\base_player.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\base_project.cpp"
@@ -1566,6 +1595,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\player_parameters_cook.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\player_stamina.cpp"
 				>
 				<FileConfiguration
@@ -1576,6 +1609,14 @@
 						GeneratePreprocessedFile="0"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\player_state.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\player_stealth.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\scheduler.cpp"

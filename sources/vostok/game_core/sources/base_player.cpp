@@ -5,12 +5,17 @@
 #include "pch.h"
 #include <vostok/game_core/base_player.h>
 
+#include <vostok/game_core/base_player_creation_params.h>
+#include <vostok/game_core/player_profile.h>
+#include <vostok/game_core/scheduler.h>
+
 namespace survarium {
 
 // STATE[STUB]
-// survarium::base_player::base_player(survarium::base_player_creation_params const&, survarium::scheduler&)
 base_player::base_player( base_player_creation_params const& params, survarium::scheduler& the_scheduler ) :
-	inventory_holder( the_scheduler, params.inventory )
+	inventory_holder	( the_scheduler, params.inventory ),
+	hit_initiator		( params.initial_info.id, params.initial_info.profile->is_local ),
+	m_recoil_params		( params.recoil_params )
 {
 	// FUNCTION BODY
 	// <0x73f0b0>|0x000|+0x1da:'31'	{
@@ -19,7 +24,6 @@ base_player::base_player( base_player_creation_params const& params, survarium::
 }
 
 // STATE[STUB]
-// void survarium::base_player::~base_player()
 base_player::~base_player( )
 {
 	// FUNCTION BODY

@@ -36,7 +36,7 @@ namespace animation {
 	class skeleton;
 
 	class animation_callback_params;
-	class animation_playback_state;
+	class animation_playback_state {}; // sushi@TODO
 }
 }
 
@@ -46,7 +46,9 @@ struct engine;
 class game_world_object;
 class player_stamina;
 struct player_input;
-struct base_player_creation_params; // sushi@TODO
+struct base_player_creation_params;
+
+// sushi@TODO: <0x122e20>|0x000:'149'
 
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
@@ -84,13 +86,16 @@ public:
 	inline	void								set_movement_speed_factor		( float arg_0 ) { /* no source */ }
 	inline	float								get_movement_speed_factor		( ) const { /* no source */ }
 
-			bool								is_alive						( ) const;
+	// STATE[STUB]
+			bool								is_alive						( ) const { return m_is_alive; }
 
 	virtual	base_player*						cast_to_base_player				( ) override { /* no source */ }
-	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { /* no source */ }
-	virtual	inventory_holder*					cast_to_inventory_holder		( ) override;
+	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { return this; }
+	// STATE[STUB] return ( this - 12 );
+	virtual	inventory_holder*					cast_to_inventory_holder		( ) override { return this; }
 
-			void								force_animation_selection		( );
+	// STATE[STUB]
+			void								force_animation_selection		( ) { m_force_animation_selection = true; }
 
 	inline	bool								has_been_inserted				( ) const { /* no source */ }
 
@@ -124,10 +129,13 @@ public:
 
 	virtual	u32									local_time						( u32 arg_0 ) const = 0;
 
-	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const;
+	// STATE[STUB]
+	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }
 
-	virtual	void								insert_game_world_object		( game_world_object& object ) override;
-	virtual	void								remove_game_world_object		( game_world_object& object ) override;
+	// STATE[STUB]
+	virtual	void								insert_game_world_object		( game_world_object& object ) override { m_game_world_objects.push_back( &object ); }
+	// STATE[STUB]
+	virtual	void								remove_game_world_object		( game_world_object& object ) override { m_game_world_objects.erase( &object ); }
 
 			void								subscribe_on_player_death		( player_death_subscriber* subscriber );
 			void								unsubscribe_from_player_death	( player_death_subscriber* subscriber );

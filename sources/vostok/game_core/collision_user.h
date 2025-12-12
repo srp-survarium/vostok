@@ -10,15 +10,9 @@
 namespace survarium {
 
 class ladder;
-
-// sushi@TODO
 class victory_item_core;
 class victory_items_container_core;
 class inventory_holder;
-// sushi@TODO
-
-// sushi@TODO
-// <0x22c50>|0x000|      :'50'	{
 
 class base_player;
 
