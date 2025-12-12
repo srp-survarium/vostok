@@ -13,7 +13,7 @@ namespace survarium {
 
 class inventory_holder;
 
-class player_profile;		// sushi@TODO
+class player_profile;
 class items_dictionary;
 class victory_item_core;
 

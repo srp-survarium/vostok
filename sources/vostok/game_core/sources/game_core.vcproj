@@ -1000,6 +1000,22 @@
 			Name="public_api"
 			>
 			<File
+				RelativePath="..\animation_analysis_result.h"
+				>
+			</File>
+			<File
+				RelativePath="..\animation_analysis_result_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\animation_analysis_result_cook_user_data.h"
+				>
+			</File>
+			<File
+				RelativePath="..\animation_analyzer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\anomaly_state.h"
 				>
 			</File>
@@ -1028,12 +1044,15 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\base_player_creation_params.h"
+				>
 			</File>
 			<File
 				RelativePath="..\base_project.h"
@@ -1057,6 +1076,30 @@
 			</File>
 			<File
 				RelativePath="..\booby_trap_set_core_cook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\breath_holding_params.h"
+				>
+			</File>
+			<File
+				RelativePath="..\breath_vibration_calculator.h"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\character_dispersion_params.h"
+				>
+			</File>
+			<File
+				RelativePath="..\character_recoil_params.h"
 				>
 			</File>
 			<File
@@ -1200,6 +1243,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\leg_info.h"
+				>
+			</File>
+			<File
+				RelativePath="..\leg_key_times.h"
+				>
+			</File>
+			<File
 				RelativePath="..\link_resolver.h"
 				>
 			</File>
@@ -1217,6 +1268,10 @@
 			</File>
 			<File
 				RelativePath="..\player_actions_subscriber.h"
+				>
+			</File>
+			<File
+				RelativePath="..\player_death_subscriber.h"
 				>
 			</File>
 			<File
@@ -1304,6 +1359,18 @@
 			Name="sources"
 			>
 			<File
+				RelativePath=".\animation_analysis_result.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\animation_analysis_result_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\animation_analyzer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\artefact_container_core.cpp"
 				>
 			</File>
@@ -1316,7 +1383,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1342,6 +1408,18 @@
 			<File
 				RelativePath=".\booby_trap_set_core_cook.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\breath_vibration_calculator.cpp"
+				>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\collision_geometry.cpp"

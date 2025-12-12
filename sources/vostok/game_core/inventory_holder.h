@@ -8,12 +8,15 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/damage_model.h>
+#include <vostok/game_core/inventory.h>
+
+namespace vostok {
+namespace physics {
+	struct world;
+}
+}
 
 namespace survarium {
-
-// sushi@TODO: Move to inventory
-class inventory;
-typedef resources::resource_ptr< inventory, resources::unmanaged_intrusive_base > inventory_ptr;
 
 class game_world_object;
 
@@ -31,8 +34,10 @@ public:
 
 	virtual	physics::world*						get_physics_world		( ) = 0;
 
-	inline	inventory const&					inventory				( ) const { return m_inventory; }
-	inline	inventory&							inventory				( ) { return m_inventory; }
+	// STATE[STUB]
+	inline	survarium::inventory const&				inventory				( ) const { return *m_inventory; }
+	// STATE[STUB]
+	inline	survarium::inventory&					inventory				( ) { return *m_inventory; }
 
 	// STATE[STUB]
 			scheduler&							scheduler				( ) { return m_scheduler; }
@@ -43,8 +48,8 @@ public:
 
 private:
 	/* 0x0004 */	/* boost::noncopyable */
-	/* 0x0004 */	scheduler&				m_scheduler;
-	/* 0x0008 */	inventory_ptr			m_inventory;
+	/* 0x0004 */	survarium::scheduler&		m_scheduler;
+	/* 0x0008 */	inventory_ptr				m_inventory;
 }; // class inventory_holder
 
 STATIC_SIZE_ASSERT(inventory_holder, 0xC);

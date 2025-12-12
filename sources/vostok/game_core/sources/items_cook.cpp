@@ -18,7 +18,6 @@ items_cook::items_cook( ) : resources::translate_query_cook( resources::item_cla
 }
 
 // STATE[STUB]
-// void survarium::items_cook::translate_query(vostok::resources::query_result_for_cook&)
 void items_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// LOCALS
@@ -41,7 +40,6 @@ void items_cook::translate_query( resources::query_result_for_cook& parent )
 }
 
 // STATE[STUB]
-// void survarium::items_cook::delete_resource(vostok::resources::resource_base*)
 void items_cook::delete_resource( resources::resource_base* resource )
 {
 	// FUNCTION BODY
@@ -50,7 +48,6 @@ void items_cook::delete_resource( resources::resource_base* resource )
 }
 
 // STATE[STUB]
-// void survarium::items_cook::on_config_ready(vostok::resources::queries_result&, vostok::resources::query_result_for_cook*)
 void items_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	// LOCALS
@@ -70,8 +67,7 @@ void items_cook::on_config_ready( resources::queries_result& data, resources::qu
 }
 
 // STATE[STUB]
-// void survarium::items_cook::create_item_and_finish_query(survarium::item_types_enum, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, vostok::resources::query_result_for_cook*)
-void items_cook::create_item_and_finish_query( item_types_enum item_type, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config, resources::query_result_for_cook* parent )
+void items_cook::create_item_and_finish_query( item_types_enum item_type, configs::binary_config_ptr config, resources::query_result_for_cook* parent )
 {
 	// LOCALS
 	// resources::cook_base::result_enum result

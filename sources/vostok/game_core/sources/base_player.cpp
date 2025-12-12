@@ -9,7 +9,8 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::base_player::base_player(survarium::base_player_creation_params const&, survarium::scheduler&)
-base_player::base_player( base_player_creation_params const& params, scheduler& the_scheduler )
+base_player::base_player( base_player_creation_params const& params, survarium::scheduler& the_scheduler ) :
+	inventory_holder( the_scheduler, params.inventory )
 {
 	// FUNCTION BODY
 	// <0x73f0b0>|0x000|+0x1da:'31'	{

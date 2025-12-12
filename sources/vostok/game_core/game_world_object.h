@@ -27,12 +27,20 @@ public:
 	virtual	void						serialize					( network_core::udp_match_packet& packet ) const	= 0;
 	virtual	void						deserialize					( network_core::packet_reader& reader )				= 0;
 
-private:
+public:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	game_world_object_ptr	next;
 }; // class game_world_object
 
 STATIC_SIZE_ASSERT(game_world_object, 0x110);
+
+typedef intrusive_list<
+	game_world_object,
+	game_world_object_ptr,
+	&game_world_object::next,
+	threading::single_threading_policy,
+	no_size_policy,
+	no_debug_policy > game_world_object_list;
 
 } // namespace survarium
 

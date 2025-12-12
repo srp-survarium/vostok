@@ -66,6 +66,8 @@ public:
 
 STATIC_SIZE_ASSERT(interactive_object, 0x108);
 
+typedef resources::resource_ptr< interactive_object, resources::unmanaged_intrusive_base > interactive_object_ptr;
+
 } // namespace survarium
 
 #endif // #ifndef INTERACTIVE_OBJECT_H_INCLUDED
