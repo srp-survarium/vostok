@@ -9,8 +9,8 @@ namespace survarium {
 
 struct character_recoil_params {
 public:
-	// sushi@TODO: Might move it to where defintion is
-	character_recoil_params	( );
+	// sushi@TODO: Might move it to where defintion is (where?)
+			character_recoil_params	( );
 
 	// sushi@TODO: Might move it to where defintion is
 	void	load					( configs::binary_config_value const& cfg );
