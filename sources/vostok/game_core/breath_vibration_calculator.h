@@ -5,21 +5,17 @@
 #ifndef BREATH_VIBRATION_CALCULATOR_H_INCLUDED
 #define BREATH_VIBRATION_CALCULATOR_H_INCLUDED
 
-// #include <vostok/ai/fsm.h>
+#include <vostok/ai/fsm.h>
 
 namespace survarium {
 
 struct base_player;
 struct breath_holding_params;
 
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class breath_vibration_calculator : public boost::noncopyable {
 public:
-						breath_vibration_calculator	( );
-
+	explicit			breath_vibration_calculator	( );
 						~breath_vibration_calculator( );
 
 			void		set_breath_holding_params	( breath_holding_params const* params );

@@ -9,7 +9,8 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::player_logic_crouch_state::player_logic_crouch_state(survarium::weapon_user_animations_selector&)
-player_logic_crouch_state::player_logic_crouch_state( weapon_user_animations_selector& owner )
+player_logic_crouch_state::player_logic_crouch_state( weapon_user_animations_selector& owner ) :
+	player_logic_base_state	( owner, type_crouch )
 {
 	// FUNCTION BODY
 	// <0x58ed20>|0x000|+0x01e:'32'	{

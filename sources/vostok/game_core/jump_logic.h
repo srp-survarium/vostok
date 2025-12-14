@@ -19,7 +19,7 @@ namespace ai {
 namespace survarium {
 
 class weapon_user_animations_selector;	// sushi@TODO
-struct weapon_animation_parameters;		// sushi@TODO
+struct weapon_animation_parameters;
 
 struct base_player;
 

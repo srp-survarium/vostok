@@ -3,13 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "player_logic_base_state.h"
+#include <vostok/game_core/player_logic_base_state.h>
 
 namespace survarium {
 
 // STATE[STUB]
 // survarium::player_logic_base_state::player_logic_base_state(survarium::weapon_user_animations_selector&, const survarium::weapon_user_state_enum)
-player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id )
+player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id ) :
+	m_owner		( owner )
 {
 	// FUNCTION BODY
 	// <0x59c220>|0x000|+0x052:'24'	{

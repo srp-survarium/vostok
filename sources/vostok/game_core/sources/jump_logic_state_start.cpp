@@ -9,7 +9,7 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::jump_logic_state_start::jump_logic_state_start(survarium::jump_logic&)
-jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
+jump_logic_state_start::jump_logic_state_start( jump_logic& owner ) : jump_logic_base_state( owner )
 {
 	// FUNCTION BODY
 	// <0x6f8bd0>|0x000|+0x037:'29'	{

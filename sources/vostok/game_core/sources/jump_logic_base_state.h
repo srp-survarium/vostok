@@ -8,7 +8,23 @@
 #include <vostok/game_core/jump_logic.h>
 
 #include <vostok/animation/animation_player.h>
-#include <vostok/ai/fsm_state.h> // sushi@TODO
+#include <vostok/ai/fsm_state.h>
+
+namespace vostok {
+namespace animation {
+	// sushi@TODO
+	enum body_part_masks_enum {
+		body_part_whole_body				= -1,
+		body_part_hands_only				= 0x0002,
+		body_part_whole_body_but_hands		= -3,
+		bone_mask_whole_weapon				= -1,
+		bone_mask_offset_only				= 0x0002,
+		bone_mask_whole_weapon_but_offset	= -3,
+	};
+
+	class animation_callback_params;
+}
+}
 
 namespace survarium {
 
@@ -18,22 +34,22 @@ class jump_logic_base_state : public ai::fsm_state {
 public:
 	virtual				~jump_logic_base_state	( ) { /* no source */ }
 
-	virtual	void		set_user				( base_player& user );
+	// STATE[STUB]
+	virtual	void		set_user				( base_player& user ) { m_user = &user; }
 
 
 	typedef fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > animation_delegate;
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations		(
-													mutable_buffer&						buffer,
-													bool								is_third_view,
-													animation_delegate const&			look_calculator,
-													weapon_animation_parameters const&	weapon_parameters
-												) = 0;
+							mutable_buffer&						buffer,
+							bool								is_third_view,
+							animation_delegate const&			look_calculator,
+							weapon_animation_parameters const&	weapon_parameters
+						) = 0;
 
 	inline	bool		is_jump_finished		( ) const { /* no source */ }
-
-	explicit			jump_logic_base_state	( jump_logic& owner );
-
+	// STATE[STUB]
+	explicit			jump_logic_base_state	( jump_logic& owner ) : m_jump_logic( owner ) {}
 
 private:
 	/* 0x0000 */	/* ai::fsm_state */
@@ -45,25 +61,6 @@ private:
 }; // class jump_logic_base_state
 
 STATIC_SIZE_ASSERT(jump_logic_base_state, 0x28);
-
-
-// STATE[STUB]
-// void survarium::jump_logic_base_state::set_user(survarium::base_player&)
-void jump_logic_base_state::set_user( base_player& user )
-{
-	// FUNCTION BODY
-	// <0xcd210>|0x000|      :'45'	{
-	// ******
-}
-
-// STATE[STUB]
-// survarium::jump_logic_base_state::jump_logic_base_state(survarium::jump_logic&)
-jump_logic_base_state::jump_logic_base_state( jump_logic& owner )
-{
-	// FUNCTION BODY
-	// <0xcd230>|0x000|      :'61'	{
-	// ******
-}
 
 } // namespace survarium
 

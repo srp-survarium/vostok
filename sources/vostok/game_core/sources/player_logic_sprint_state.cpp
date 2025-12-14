@@ -9,7 +9,8 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::player_logic_sprint_state::player_logic_sprint_state(survarium::weapon_user_animations_selector&)
-player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_selector& owner )
+player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_selector& owner ) :
+	player_logic_base_state	( owner, type_sprint )
 {
 	// FUNCTION BODY
 	// <0x6f9563>|0x053|+0x055:'31'

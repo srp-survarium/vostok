@@ -11,31 +11,33 @@ namespace survarium {
 
 class jump_logic_state_start : public jump_logic_base_state {
 public:
-						jump_logic_state_start	( jump_logic& owner );
+	explicit			jump_logic_state_start	( jump_logic& owner );
 
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations		(
-													mutable_buffer&						buffer,
-													bool								is_third_view,
-													animation_delegate const&			look_calculator,
-													weapon_animation_parameters const&	weapon_parameters
-												) override;
+							mutable_buffer&						buffer,
+							bool								is_third_view,
+							animation_delegate const&			look_calculator,
+							weapon_animation_parameters const&	weapon_parameters
+						) override;
 
 	virtual	void		initialize				( ) override;
 	virtual	void		finalize				( ) override;
-	virtual	void		execute					( ) override;
-	virtual	bool		is_ready_for_transition	( ) const override;
+	// STATE[STUB]
+	virtual	void		execute					( ) override { /* <0x2a800>:'34' */ }
+	// STATE[STUB]
+	virtual	bool		is_ready_for_transition	( ) const override {/* <0xcd480>:'35' */ }
 
 			animation::mixing::animation_lexeme
 						get_main_lexeme			( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask );
 
 			animation::mixing::animation_lexeme
 						get_look_lexeme			(
-													mutable_buffer&							buffer,
-													bool									is_third_view,
-													animation_delegate const&				look_calculator,
-													animation::mixing::animation_lexeme&	weight_driving_animation
-												);
+							mutable_buffer&							buffer,
+							bool									is_third_view,
+							animation_delegate const&				look_calculator,
+							animation::mixing::animation_lexeme&	weight_driving_animation
+						);
 
 			animation::callback_return_type_enum
 						on_interval_end			( animation::animation_callback_params& params );
@@ -52,27 +54,6 @@ private:
 }; // class jump_logic_state_start
 
 STATIC_SIZE_ASSERT(jump_logic_state_start, 0x30);
-
-
-// STATE[STUB]
-// void survarium::jump_logic_state_start::execute()
-void jump_logic_state_start::execute( )
-{
-	// FUNCTION BODY
-	// <0x2a800>|0x000|      :'34'	{
-	// ******
-}
-
-// STATE[STUB]
-// bool survarium::jump_logic_state_start::is_ready_for_transition() const
-bool jump_logic_state_start::is_ready_for_transition( ) const
-{
-	return false;
-
-	// FUNCTION BODY
-	// <0xcd480>|0x000|      :'35'	{
-	// ******
-}
 
 } // namespace survarium
 

@@ -1,0 +1,85 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 06.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef WEAPON_CORE_BASE_STATE_H_INCLUDED
+#define WEAPON_CORE_BASE_STATE_H_INCLUDED
+
+#include <vostok/ai/fsm_state.h>
+#include <vostok/animation/mixing_animation_lexeme.h>
+
+#include <vostok/game_core/weapon_user_state_enum.h>
+
+namespace vostok {
+namespace animation {
+	// sushi@TODO
+	enum body_part_masks_enum {
+		body_part_whole_body				= -1,
+		body_part_hands_only				= 0x0002,
+		body_part_whole_body_but_hands		= -3,
+		bone_mask_whole_weapon				= -1,
+		bone_mask_offset_only				= 0x0002,
+		bone_mask_whole_weapon_but_offset	= -3,
+	};
+	// sushi@TODO
+	class animation_playback_state {};
+}
+namespace network_core {
+	class udp_match_packet;
+	class packet_reader;
+}
+}
+
+namespace survarium {
+
+class weapon_core;
+
+
+class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , public boost::noncopyable {
+public:
+	explicit			weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
+
+public:
+	inline	bool								is_ready_to_be_deactivated	( ) const { /* no source */ }
+	inline	animation::body_part_masks_enum		get_body_part_mask_for_user	( ) const { /* no source */ }
+			bool								has_animation_ended			( ) const { return m_animation_has_been_ended; }
+
+public:
+	virtual	void		initialize					( ) override {}
+	virtual	void		finalize					( ) override { /* 0xc40c0 */ } // sushi@TODO
+	virtual	void		execute						( ) override { /* 0x97f80 */ } // sushi@TODO
+	virtual	bool		is_ready_for_transition		( ) const override { return true; }
+
+	virtual	void		serialize					( network_core::udp_match_packet& packet ) const;
+	virtual	void		deserialize					( network_core::packet_reader& reader );
+
+	virtual	animation::mixing::expression
+						weapon_and_hands_expression	(
+							mutable_buffer&							arg_0,
+							bool									arg_1,
+							weapon_user_state_enum					arg_2,
+							animation::mixing::animation_lexeme&	arg_3
+						) const = 0;
+
+	inline	void		set_is_firing_ptr			( bool* arg_0 ) { /* no source */ }
+	inline	void		set_is_firing				( bool arg_0 ) { /* no source */ }
+
+			bool		deserializing				( ) const;
+
+private:
+	/* 0x0000 */	/* ai::fsm_state */
+	/* 0x0018 */	/* resources::unmanaged_resource */
+	/* 0x0120 */	animation::animation_playback_state	m_animation_playback_state;
+	/* 0x0128 */	weapon_core&						m_weapon;
+	/* 0x012c */	bool*								m_is_firing_ptr;
+	/* 0x0130 */	animation::body_part_masks_enum		m_body_part_mask_for_user;
+	/* 0x0134 */	bool								m_is_ready_to_be_deactivated;
+	/* 0x0135 */	bool								m_animation_has_been_ended;
+	/* 0x0136 */	bool								m_serialize_animation_state;
+}; // class weapon_core_base_state
+
+STATIC_SIZE_ASSERT(weapon_core_base_state, 0x138);
+
+} // namespace survarium
+
+#endif // #ifndef WEAPON_CORE_BASE_STATE_H_INCLUDED

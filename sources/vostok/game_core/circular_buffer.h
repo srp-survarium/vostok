@@ -14,7 +14,7 @@ public:
 	typedef value_type*	pointer_type;
 
 public:
-	inline	explicit	circular_buffer		( memory::base_allocator& arg_0, u32 arg_1 ) { /* no source */ }
+	inline	explicit	circular_buffer		( memory::base_allocator& allocator, u32 arg_1 ) { /* no source */ }
 	inline				~circular_buffer	( );
 
 public:

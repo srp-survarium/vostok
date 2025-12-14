@@ -9,7 +9,9 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::player_logic_jump_state::player_logic_jump_state(survarium::weapon_user_animations_selector&)
-player_logic_jump_state::player_logic_jump_state( weapon_user_animations_selector& owner )
+player_logic_jump_state::player_logic_jump_state( weapon_user_animations_selector& owner ) :
+	player_logic_base_state	( owner, type_jump ),
+	m_logic					( owner )
 {
 	// FUNCTION BODY
 	// <0x6f9470>|0x000|+0x02d:'25'	{

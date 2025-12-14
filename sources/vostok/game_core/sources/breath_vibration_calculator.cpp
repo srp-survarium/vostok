@@ -3,10 +3,10 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "breath_vibration_calculator.h"
+#include <vostok/game_core/breath_vibration_calculator.h>
 
 namespace survarium {
-
+/*
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_enable_breath_vibration_cc''()
 void `dynamic initializer for 's_enable_breath_vibration_cc''( )
@@ -15,7 +15,7 @@ void `dynamic initializer for 's_enable_breath_vibration_cc''( )
 	// <0x7db2f0>|0x000|      :'15'	{
 	// ******
 }
-
+*/
 // STATE[STUB]
 // survarium::breath_vibration_calculator::breath_vibration_calculator()
 breath_vibration_calculator::breath_vibration_calculator( )

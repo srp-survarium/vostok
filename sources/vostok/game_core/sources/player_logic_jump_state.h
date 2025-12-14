@@ -5,25 +5,29 @@
 #ifndef PLAYER_LOGIC_JUMP_STATE_H_INCLUDED
 #define PLAYER_LOGIC_JUMP_STATE_H_INCLUDED
 
-namespace survarium {
+#include <vostok/game_core/player_logic_base_state.h>
+#include <vostok/game_core/jump_logic.h>
 
-class survarium::jump_logic;
-class survarium::player_logic_base_state;
+namespace survarium {
 
 class player_logic_jump_state : public player_logic_base_state {
 public:
-			player_logic_jump_state	( weapon_user_animations_selector& owner );
+	explicit				player_logic_jump_state	( weapon_user_animations_selector& owner );
 
-	virtual	void								initialize				( ) override;
-	virtual	void								finalize				( ) override;
-	virtual	void								execute					( ) override;
+	virtual	void			initialize				( ) override;
+	virtual	void			finalize				( ) override;
+	virtual	void			execute					( ) override;
 
-	virtual	bool								is_ready_for_transition	( ) const override;
+	virtual	bool			is_ready_for_transition	( ) const override;
 
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
-												selected_animations		( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const override;
+							selected_animations		(
+								mutable_buffer&						buffer,
+								weapon_animation_parameters const&	weapon_parameters,
+								bool								is_third_view
+							) const override;
 
-	virtual	void								set_user				( base_player& user ) override;
+	virtual	void			set_user				( base_player& user ) override;
 
 private:
 	/* 0x0000 */	/* player_logic_base_state */
