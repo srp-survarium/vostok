@@ -1134,6 +1134,22 @@
 					RelativePath="..\weapon_recoil_params.h"
 					>
 				</File>
+				<File
+					RelativePath="..\weapon_user_animations_container.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_user_animations_container_cook.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_user_animations_container_inline.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_user_animations_selector.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="_etc"
@@ -1863,6 +1879,14 @@
 				</File>
 				<File
 					RelativePath=".\weapon_recoil_params.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_user_animations_container_cook.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_user_animations_selector.cpp"
 					>
 				</File>
 			</Filter>

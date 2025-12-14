@@ -8,7 +8,8 @@
 namespace survarium {
 
 // STATE[STUB]
-animation_analysis_result_cook::animation_analysis_result_cook( ) : resources::translate_query_cook( resources::animation_analysis_result_class, reuse_false, use_current_thread_id )
+animation_analysis_result_cook::animation_analysis_result_cook( )
+	: resources::translate_query_cook( resources::animation_analysis_result_class, reuse_false, use_current_thread_id )
 {
 }
 
