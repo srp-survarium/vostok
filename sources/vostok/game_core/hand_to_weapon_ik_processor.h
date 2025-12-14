@@ -43,7 +43,14 @@ public:
 
 public:
 			struct hand {
-				explicit	hand( );
+				// STATE[STUB]
+				explicit	hand( )
+				{
+					// FUNCTION BODY
+					// <0xcaf50>|0x000|+0x035:'51'	{
+					// <0xcaf85>|0x035|      :'52'	}
+					// ******
+				}
 
 				/* 0x0000 */	u32		start_transition_time_in_ms;
 				/* 0x0004 */	u32		hand_bone_index;

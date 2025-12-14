@@ -26071,6 +26071,18 @@
 							>
 						</File>
 					</Filter>
+					<Filter
+						Name="intrusive_mpmc_stack"
+						>
+						<File
+							RelativePath="..\..\intrusive_mpmc_stack.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\intrusive_mpmc_stack_inline.h"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="thread_unsafety"

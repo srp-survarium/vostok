@@ -9,11 +9,8 @@ namespace survarium {
 
 struct character_dispersion_params {
 public:
-	// sushi@TODO: Might move it to where defintion is
-	character_dispersion_params	( );
-	// sushi@TODO: Might move it to where defintion is
-	void	load						( configs::binary_config_value const& cfg );
-
+	explicit	character_dispersion_params	( );
+	void		load						( configs::binary_config_value const& cfg );
 
 public:
 	/* 0x0000 */	float		idle_multiplier;

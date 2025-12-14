@@ -894,6 +894,10 @@
 					RelativePath="..\bullet_manager.h"
 					>
 				</File>
+				<File
+					RelativePath="..\bullet_manager_engine.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="damage_model"
@@ -929,6 +933,13 @@
 				<File
 					RelativePath=".\bullet.cpp"
 					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\bullet_manager.cpp"
@@ -1083,6 +1094,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\character_dispersion_calculator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\character_dispersion_params.h"
 				>
 			</File>
@@ -1092,6 +1107,18 @@
 			</File>
 			<File
 				RelativePath="..\character_recoil_params.h"
+				>
+			</File>
+			<File
+				RelativePath="..\circular_buffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\circular_buffer_inline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\client_player_update.h"
 				>
 			</File>
 			<File
@@ -1124,6 +1151,10 @@
 			</File>
 			<File
 				RelativePath="..\dictionary_item.h"
+				>
+			</File>
+			<File
+				RelativePath="..\dispersion_calculator.h"
 				>
 			</File>
 			<File
@@ -1403,7 +1434,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\weapon_ammunition.h"
+				>
+			</File>
+			<File
+				RelativePath="..\weapon_ammunition_cook.h"
+				>
+			</File>
+			<File
 				RelativePath="..\weapon_animation_parameters.h"
+				>
+			</File>
+			<File
+				RelativePath="..\weapon_dispersion_calculator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\weapon_dispersion_params.h"
 				>
 			</File>
 			<File
@@ -1421,6 +1468,10 @@
 			<Filter
 				Name="enums"
 				>
+				<File
+					RelativePath="..\ammo_type_enum.h"
+					>
+				</File>
 				<File
 					RelativePath="..\boosters_enum.h"
 					>
@@ -1447,6 +1498,10 @@
 				</File>
 				<File
 					RelativePath="..\ik_processor.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ik_utils.h"
 					>
 				</File>
 				<File
@@ -1547,11 +1602,23 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\character_dispersion_calculator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\character_dispersion_params.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\character_recoil_calculator.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\character_recoil_params.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\client_player_update.cpp"
 				>
 			</File>
 			<File
@@ -1568,6 +1635,14 @@
 			</File>
 			<File
 				RelativePath=".\damage_zone_core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dispersion_calculator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\entry_point.cpp"
 				>
 			</File>
 			<File
@@ -1800,6 +1875,22 @@
 			</File>
 			<File
 				RelativePath=".\victory_items_container_core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\weapon_ammunition.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\weapon_ammunition_cook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\weapon_dispersion_calculator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\weapon_dispersion_params.cpp"
 				>
 			</File>
 			<File

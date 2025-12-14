@@ -5,24 +5,16 @@
 #ifndef CHARACTER_DISPERSION_CALCULATOR_H_INCLUDED
 #define CHARACTER_DISPERSION_CALCULATOR_H_INCLUDED
 
+#include <vostok/game_core/weapon_user_state_enum.h>
+
 namespace survarium {
 
-/* survarium::character_dispersion_calculator */
+struct character_dispersion_params;
 
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-struct survarium::character_dispersion_params;
-class vostok::core::noncopyable;
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class character_dispersion_calculator : public core::noncopyable {
 public:
-			character_dispersion_calculator	( );
+			explicit	character_dispersion_calculator	( );
 
 			void		set_character_dispersion_params	( character_dispersion_params const* character_params );
 
@@ -38,15 +30,10 @@ public:
 	inline	void		reset							( ) { /* no source */ }
 
 	inline	float		get_value						( ) const { /* no source */ }
-
 	inline	void		set_aiming_speed				( float arg_0 ) { /* no source */ }
 
 			float		get_target_koef					( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const;
-
 			float		get_broken_hands_penalty		( u8 broken_hands_count, bool using_double_handed_weapon ) const;
-
-	inline	~character_dispersion_calculator( ) { /* no source */ }
-
 
 private:
 	/* 0x0000 */	/* core::noncopyable */

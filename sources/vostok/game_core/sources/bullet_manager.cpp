@@ -1,456 +1,627 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 20.07.2011
-//	Author		: Evgeniy Obertyukh
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include <vostok/game_core/bullet_manager.h>
 
-#if 0
-#include "game_world.h"
-#endif
-
-#include "temp_include_all.h"
-
-#include <vostok/tasks_system.h>
-#include <vostok/buffer_vector.h>
-#include <vostok/console_command.h>
-#include <vostok/render/facade/game_renderer.h>
-#include <vostok/render/facade/scene_renderer.h>
-#include <vostok/render/facade/decal_properties.h>
-#include <vostok/render/facade/material_effects_instance_cook_data.h>
-#include <vostok/render/facade/vertex_input_type.h>
-
-#ifndef MASTER_GOLD
-
-#include <vostok/collision/common_types.h>
-#include <vostok/collision/space_partitioning_tree.h>
-#include "collision_object_types.h"
-
-#endif // #ifndef MASTER_GOLD
-
 namespace survarium {
 
-bullet_manager::bullet_manager ( /* game_world& w */ ) 
-:	m_bullets					( NULL, 0 ),
-	m_gravity					( float3( 0, -9.81f, 0 ) ),
-#if 0
-	m_game_world				( w ),
-#endif
-	m_task_type					( tasks::create_new_task_type( "bullet", tasks::task_type_flags_no_self_parallelization_hint ) ),
-	m_max_bullets_count			( 0 ),
-	m_max_bullets_decals_count	( 64 ),
-	m_current_decal_id			( 0 ),
-	m_bullet_time_factor		( 1.0f ),
-	m_air_resistance_epsilon	( 0.1f ),
-	m_current_air_resistance	( 1.0f )
-
-#ifndef MASTER_GOLD	
-	,
-	m_is_draw_debug				( true ),
-	m_is_draw_trajectories		( true ),
-	m_is_draw_collision_trajectories( false ),
-	m_is_draw_decals_data		( true ),
-	m_is_draw_collision_points	( true ),
-	m_bullet_trajectories_points( vectora< render::vertex_colored >( g_allocator ) )
-
-#endif // #ifndef MASTER_GOLD
+// STATE[STUB]
+// survarium::bullet_manager::bullet_manager(survarium::game_material_manager*, vostok::physics::world*, survarium::bullet_manager_engine*)
+bullet_manager::bullet_manager( game_material_manager* material_manager, physics::world* physics_world, bullet_manager_engine* engine ) :
+	m_bullets				( NULL, 10 ),
+	m_mt_stack_allocator	( NULL, 10 )
 {
-	initialize					( );
-	register_console_commands	( );
-
-	// static bullet_manager_input_handler	input_handler( *this );
-
-	IncludeAll __include_all; // sushi@TODO: Hacky way to build related classes
+	// FUNCTION BODY
+	// <0x5a29f3>|0x123|+0x008:'45'
+	// <0x5a29fb>|0x12b|+0x008:'46'
+	// <0>
+	// <1>
+	// ******
 }
 
-bullet_manager::~bullet_manager ( )
+// STATE[STUB]
+// void survarium::bullet_manager::~bullet_manager()
+bullet_manager::~bullet_manager( )
 {
-	if( m_bullets_allocator_ref.initialized( ) )
-		VOSTOK_DESTROY_REFERENCE		( m_bullets_allocator_ref );
+	// FUNCTION BODY
+	// <0x5a2529>|0x009|+0x014:'53'
+	// <0x5a253d>|0x01d|+0x00b:'54'
+	// ******
 }
 
-void bullet_manager::initialize ( )
+// STATE[STUB]
+// void survarium::bullet_manager::initialize()
+void bullet_manager::initialize( )
 {
-	allocate_bullets_memory			( 32 );
-
-	request_bullet_decal_material	( );
+	// FUNCTION BODY
+	// <0x5a28b7>|0x007|+0x00d:'59'
+	// <0>
+	// ******
 }
 
-void bullet_manager::register_console_commands ( )
+// STATE[STUB]
+// void survarium::bullet_manager::register_console_commands()
+void bullet_manager::register_console_commands( )
 {
-	static vostok::console_commands::cc_delegate	displace_all_bullets_cc				( "bullets_manager_displace_all_bullets",		boost::bind( &bullet_manager::displace_all_bullets, this, _1 ), true );
-	static vostok::console_commands::cc_delegate	set_max_bullets_cc					( "bullets_manager_set_max_bullets",			boost::bind( &bullet_manager::set_max_bullets, this, _1 ), true );
-	static vostok::console_commands::cc_float		set_time_factor_cc					( "bullets_manager_set_time_factor",			m_bullet_time_factor, 0.0f, 10.0f, true, vostok::console_commands::command_type_user_specific );
+	// STATICS
+	// static console_commands::cc_delegate set_max_bullets_cc = <0x4c2b670>;
+	// static console_commands::cc_delegate displace_all_bullets_cc = <0x4c2b6d0>;
+	// ******
 
-#ifndef MASTER_GOLD
-
-	static vostok::console_commands::cc_bool		is_draw_debug_cc					( "bullets_manager_draw_debug",					m_is_draw_debug, true, vostok::console_commands::command_type_user_specific );
-	static vostok::console_commands::cc_bool		is_draw_trajectories_cc				( "bullets_manager_draw_trajectories",			m_is_draw_trajectories, true, vostok::console_commands::command_type_user_specific );
-	static vostok::console_commands::cc_bool		is_draw_collision_trajectories_cc	( "bullets_manager_draw_collision_trajectories",m_is_draw_collision_trajectories, true, vostok::console_commands::command_type_user_specific );
-	static vostok::console_commands::cc_bool		is_draw_decal_data_cc				( "bullets_manager_draw_decals_data",			m_is_draw_decals_data, true, vostok::console_commands::command_type_user_specific );
-	static vostok::console_commands::cc_bool		is_draw_collision_points_cc			( "bullets_manager_draw_collision_points",		m_is_draw_collision_points, true, vostok::console_commands::command_type_user_specific );
-	static vostok::console_commands::cc_float		set_air_ersistance_cc				( "bullets_manager_air_resistance",				m_current_air_resistance, 0.01f, 20.0f, true, vostok::console_commands::command_type_user_specific );
-
-#endif // #ifndef MASTER_GOLD
-
+	// FUNCTION BODY
+	// <0x5a275e>|0x00e|+0x085:'73'
+	// <0x5a27e3>|0x093|+0x0bf:'74'
+	// ******
 }
 
-struct redundant_bullet_predicate
-{
+struct redundant_bullet_predicate {
+	inline	explicit	redundant_bullet_predicate	( bullet_manager& bullet_manager_ ) : bullet_manager( &bullet_manager_ ) { }
+
+			bool		operator()					( bullet* bullet )
+	{
+		return false;
+
+		// FUNCTION BODY
+		// <0xbe619>|0x009|+0x02e:'86'
+		// <0xbe647>|0x037|+0x004:'87'
+		// <0>
+		// <0xbe64b>|0x03b|+0x00e:'89'
+		// <0xbe659>|0x049|+0x002:'90'
+		// ******
+	}
+
 public:
-	bool operator ()( bullet* bullet )
-	{
-		return bullet->is_finish_flying( );
-	}
-};
+	/* 0x0000 */	survarium::bullet_manager*		bullet_manager;
+}; // struct redundant_bullet_predicate
 
-void bullet_manager::tick ( float elapsed_game_seconds )
+// STATE[STUB]
+// void survarium::bullet_manager::free_bullet(survarium::bullet*)
+void bullet_manager::free_bullet( bullet* bullet )
 {
-	u32 const bullets_count		= m_bullets.size();
-	if ( bullets_count ) {
-		u32 const granularity	= 16;
-		u32 const n				= bullets_count/granularity;
-		for ( u32 i = 0; i < n; ++i )
-			tasks::spawn_task	( boost::bind( &bullet_manager::tick_bullets, this, i*16, (i + 1)*16 , elapsed_game_seconds ), m_task_type );
+	// CALL SITE INFO
+	// <0x5a1426> -> bool <unknown>(bullet*)
+	// ******
 
-		u32 const start_index	= n * granularity;
-		tick_bullets			( start_index, start_index + bullets_count % granularity, elapsed_game_seconds );
-
-		tasks::wait_for_all_children	( );
-
-		m_bullets.erase			(
-			std::remove_if(
-				m_bullets.begin( ),
-				m_bullets.end( ),
-				redundant_bullet_predicate( )
-			),
-			m_bullets.end( )
-		);
-	}
-
-#ifndef MASTER_GOLD
-#if 0
-	if( m_is_draw_debug )
-		render_debug			( m_game_world.renderer().debug(), m_game_world.get_render_scene() );
-#endif
-#endif // #ifndef MASTER_GOLD
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5a13f9>|0x009|+0x018:'103'
+	// <0x5a1411>|0x021|+0x017:'104'
+	// <0>
+	// <0x5a1428>|0x038|+0x025:'106'
+	// ******
 }
 
-
-float3 const& bullet_manager::get_gravity( ) const
+// STATE[STUB]
+// void survarium::bullet_manager::tick(unsigned int)
+void bullet_manager::tick( u32 current_time_in_ms )
 {
-	return m_gravity;
+	// LOCALS
+	// u32 							bullets_count
+	// u32 							granularity<1>
+	// u32 							start_index<1>
+	// u32 							n<1>
+	// u32 							i<2>
+	// bullet_manager::bullet_functor* functor<2>
+	// ******
+
+	// FUNCTION BODY
+	// <0x5a1d8f>|0x00f|+0x017:'111'
+	// <0x5a1da6>|0x026|+0x00a:'112'
+	// <0>
+	// <0x5a1db0>|0x030|+0x007|[1]:'114'
+	// <0x5a1db7>|0x037|+0x009:'115'
+	// <0x5a1dc0>|0x040|+0x00d:'116'
+	// <0x5a1dcd>|0x04d|+0x01e|[2]:'117'
+	// <0x5a1deb>|0x06b|+0x0a0:'118'
+	// <0>
+	// <0x5a1e8b>|0x10b|+0x009:'120'
+	// <0x5a1e94>|0x114|+0x023:'121'
+	// <0>
+	// <0x5a1eb7>|0x137|+0x005:'123'
+	// <0>
+	// <0x5a1ebc>|0x13c|+0x016:'125'
+	// <0>
+	// <0x5a1ed2>|0x152|+0x011|[2]:'127'
+	// <0x5a1ee3>|0x163|+0x00c:'128'
+	// <0x5a1eef>|0x16f|+0x008:'129'
+	// <0x5a1ef7>|0x177|+0x025:'130'
+	// <0x5a1f1c>|0x19c|+0x002:'131'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x5a1f1e>|0x19e|+0x06e:'140'
+	// <0>
+	// ******
 }
 
-void bullet_manager::fire ( float3 position, float3 direction )
+// STATE[STUB]
+// void survarium::bullet_manager::fire(vostok::math::float3 const&, vostok::math::float3 const&, vostok::resources::resource_ptr<survarium::weapon_ammunition,vostok::resources::unmanaged_intrusive_base> const&, survarium::weapon_core const&, unsigned int, survarium::hit_initiator const* const, survarium::hit_receiver const* const, bool)
+void bullet_manager::fire(
+	float3 const&						position,
+	float3 const&						velocity,
+	resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const&	wa,
+	weapon_core const&					wc,
+	u32									current_time_in_ms,
+	hit_initiator const*				initiator,
+	hit_receiver const*					ignorable_object,
+	bool								tracer
+)
 {
-	emit_bullet( position, direction, m_current_air_resistance );
+	// FUNCTION BODY
+	// <0x5a1d39>|0x009|+0x00c:'146'
+	// <0x5a1d45>|0x015|+0x033:'147'
+	// ******
 }
 
-float bullet_manager::get_bullet_time_factor ( )
+// STATE[STUB]
+// void survarium::bullet_manager::add_decal(vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const&, float, vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float3 const&, bool)
+void bullet_manager::add_decal(
+	resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&	decal,
+	float								size,
+	float3 const&						position,
+	float3 const&						direction,
+	float3 const&						normal,
+	bool								is_front_face
+)
 {
-	return m_bullet_time_factor;
-}
-void bullet_manager::add_decal ( float3 const& position, float3 const& direction, float3 const& normal, bool is_front_face )
-{
-	vostok::render::decal_properties				properties;
-	float4x4	transform						= vostok::math::create_rotation( -normal, ( direction ^ normal ).normalize( ) );
+	// LOCALS
+	// bullet_manager::bullet_functor* functor<1>
+	// ******
 
-	float decal_depth							= .1f;
-	transform.c.xyz( )							= position + normal * decal_depth / 2;
+	// SKIPPED BLOCKS
+	// <0x5a19aa><1>
+	// ******
 
-#ifndef MASTER_GOLD
-
-	m_decals.push_back( decal_data( position, direction, normal, decal_depth ) );
-	if( m_decals.size( ) > 20 )
-		m_decals.clear( );
-
-#endif // #ifndef MASTER_GOLD
-
-	properties.material							= ( is_front_face ) ? m_material_ptr : m_material_ptr_out;
-	properties.transform						= transform;
-	properties.transform.set_scale				( float3( 1.0f, 1.0f, 1.0f ) );
-	properties.projection_on_static_geometry	= true;
-	properties.projection_on_skeleton_geometry	= true;
-	properties.projection_on_terrain_geometry	= true;
-	properties.projection_on_speedtree_geometry	= true;
-	properties.projection_on_particle_geometry	= true;
-	properties.width_height_far_distance		= 0.5f * float3( .2f, .2f, decal_depth );
-	properties.alpha_angle						= 0.0f;
-	properties.clip_angle						= -90.0f;
-	
-#if 0
-	m_game_world.renderer().scene().update_decal( m_game_world.get_render_scene(), m_current_decal_id++, properties );
-#endif
-	if( m_current_decal_id == m_max_bullets_decals_count )
-		m_current_decal_id = 0;
+	// FUNCTION BODY
+	// <0x5a1990>|0x010|+0x020:'152'
+	// <0>
+	// <0x5a19b0>|0x030|+0x04d:'154'
+	// <0>
+	// <0x5a19fd>|0x07d|+0x00f:'156'
+	// <0x5a1a0c>|0x08c|+0x019:'157'
+	// <0x5a1a25>|0x0a5|+0x019:'158'
+	// <0x5a1a3e>|0x0be|+0x019:'159'
+	// <0x5a1a57>|0x0d7|+0x00d:'160'
+	// <0x5a1a64>|0x0e4|+0x009:'161'
+	// <0x5a1a6d>|0x0ed|+0x067:'162'
+	// <0x5a1ad4>|0x154|+0x0b6:'163'
+	// <0>
+	// ******
 }
 
-/////////////////////////////		   D E B U G   M E T H O D S			///////////////////////////////////////
-
-#ifndef MASTER_GOLD
-
-void bullet_manager::store_bullet_trajectory ( bullet* bullet )
+// STATE[STUB]
+// void survarium::bullet_manager::add_decal_impl(survarium::bullet_manager::bullet_functor* const)
+void bullet_manager::add_decal_impl( bullet_manager::bullet_functor* functor )
 {
-	if( m_bullet_sequences_sizes.size( ) > 10 )
-	{
-		m_bullet_sequences_sizes.clear		( );
-		m_bullet_trajectories_points.clear	( );
-	}
-
-	math::color	path_color		= math::color( 255, 0, 255 );
-	math::color	fall_down_color	= math::color( 0, 0, 255 );
-	m_bullet_trajectories_points.push_back		( render::vertex_colored( bullet->get_start_position( ), path_color ) );
-
-	bool	just_fall_down = true;
-	u32		senquence_size = 1;
-
-	for( u16 i = 1; i <= 400; ++i ) 
-	{
-		float fall_down			= 0;
-		float3 position			= bullet->evaluate_position( i / 100.0f, fall_down, m_gravity );
-		if( fall_down < 0 )
-		{
-			m_bullet_trajectories_points.push_back		( render::vertex_colored( position, path_color ) );
-			++senquence_size;
-		}
-		else
-		{
-			if( just_fall_down )
-			{
-				m_bullet_trajectories_points.push_back		( render::vertex_colored( position, path_color ) );
-				++senquence_size;
-				just_fall_down			= false;
-			}
-
-			m_bullet_trajectories_points.push_back		( render::vertex_colored( position, fall_down_color ) );
-			++senquence_size;
-		}
-	}
-	m_bullet_sequences_sizes.push_back( senquence_size );
+	// FUNCTION BODY
+	// <0x5a1277>|0x007|+0x036:'178'
+	// ******
 }
 
-void bullet_manager::add_collision_point ( float3 const& point, math::color const& color )
+// STATE[STUB]
+// void survarium::bullet_manager::add_decal_impl(vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const&, float, vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float3 const&, bool)
+void bullet_manager::add_decal_impl(
+	resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&	decal,
+	float								size,
+	float3 const&						position,
+	float3 const&						direction,
+	float3 const&						normal,
+	bool								is_front_face
+)
 {
-	if( m_collision_points.size( ) > 20 )
-	{
-		m_collision_points.clear( );
-		m_collision_point_colors.clear( );
-	}
+	// LOCALS
+	// float 						depth
+	// ******
 
-	m_collision_points.push_back( point );
-	m_collision_point_colors.push_back( color );
+	// CALL SITE INFO
+	// <0x5a1246> -> void <unknown>(resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&, u32, float, float, float3 const&, float3 const&, float3 const&, bool)
+	// ******
+
+	// FUNCTION BODY
+	// <0x5a11e9>|0x009|+0x00d:'183'
+	// <0>
+	// <0x5a11f6>|0x016|+0x052:'185'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x5a1248>|0x068|+0x00e:'193'
+	// <0x5a1256>|0x076|+0x00a:'194'
+	// ******
 }
 
-
-#endif // #ifndef MASTER_GOLD
-
-/////////////////////////////		  P R I V A T E   M E T H O D S			///////////////////////////////////////
-
-void bullet_manager::tick_bullets ( u32 start_index, u32 end_index, float elapsed_game_seconds )
+// STATE[STUB]
+// void survarium::bullet_manager::play_sound_impl(vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const&, vostok::math::float3 const&)
+void bullet_manager::play_sound_impl( resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const& sound, float3 const& position )
 {
-	bullets_type::iterator			current = m_bullets.begin( ) + start_index;
-	bullets_type::iterator const	end		= m_bullets.begin( ) + end_index;
+	// CALL SITE INFO
+	// <0x5a11cf> -> void <unknown>(resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&, float3 const&)
+	// ******
 
-	for ( ; current != end; ++current )
-		(*current)->tick( *this, elapsed_game_seconds );
-}
-void bullet_manager::displace_all_bullets ( pcstr args )
-{
-	VOSTOK_UNREFERENCED_PARAMETER( args );
-	for( ; !m_bullets.empty( ); )
-	{
-		bullets_type::iterator iter = m_bullets.end( );
-		destroy_bullet( iter );
-	}
-}
-void bullet_manager::set_max_bullets ( pcstr args )
-{
-	int new_bullets_count;
-	if( VOSTOK_SSCANF( args, "%d", &new_bullets_count ) == EOF )
-		return;
-
-	allocate_bullets_memory			( new_bullets_count );
+	// FUNCTION BODY
+	// <0x5a11b7>|0x007|+0x01a:'212'
+	// ******
 }
 
-void bullet_manager::allocate_bullets_memory ( u32 new_max_bullets_count )
+// STATE[STUB]
+// void survarium::bullet_manager::play_particle(vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const&, vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float3 const&)
+void bullet_manager::play_particle(
+	resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&	sound,
+	float3 const&						position,
+	float3 const&						direction,
+	float3 const&						normal
+)
 {
-	m_max_bullets_count				= new_max_bullets_count;
+	// LOCALS
+	// bullet_manager::bullet_functor* functor<1>
+	// ******
 
-	resources::creation_request request	(
-		"bullets_memory",
-		m_max_bullets_count * ( sizeof( bullet ) + sizeof( bullet* ) ),
-		resources::unmanaged_allocation_class
-	);
-
-	if( m_bullets_allocator_ref.initialized( ) )
-	{
-		resources::query_create_resources			(
-			&request, 
-			1,
-			boost::bind( &bullet_manager::bullets_memory_allocated, this, _1 ), 
-			g_allocator
-		);
-	}
-	else
-	{
-		resources::query_create_resources_and_wait	(
-			&request, 
-			1,
-			boost::bind( &bullet_manager::bullets_memory_allocated, this, _1 ), 
-			g_allocator
-		);
-	}
+	// FUNCTION BODY
+	// <0x5a16f0>|0x010|+0x010:'217'
+	// <0>
+	// <0x5a1700>|0x020|+0x049|[1]:'219'
+	// <0>
+	// <0x5a1749>|0x069|+0x00f:'221'
+	// <0x5a1758>|0x078|+0x019:'222'
+	// <0x5a1771>|0x091|+0x019:'223'
+	// <0x5a178a>|0x0aa|+0x00b:'224'
+	// <0x5a1795>|0x0b5|+0x019:'225'
+	// <0x5a17ae>|0x0ce|+0x00b:'226'
+	// <0x5a17b9>|0x0d9|+0x103:'227'
+	// <0x5a18bc>|0x1dc|+0x0bc:'228'
+	// <0>
+	// ******
 }
 
-void bullet_manager::bullets_memory_allocated ( resources::queries_result& queries )
+// STATE[STUB]
+// void survarium::bullet_manager::play_particle_impl(vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const&, vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float3 const&)
+void bullet_manager::play_particle_impl(
+	resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&	particle,
+	float3 const&						position,
+	float3 const&						direction,
+	float3 const&						normal
+)
 {
-	R_ASSERT						( queries[0].is_successful( ) );
-	unmanaged_allocation_resource_ptr new_bullets_memory_ptr = static_cast_resource_ptr<unmanaged_allocation_resource_ptr>( queries[0].get_unmanaged_resource() );
-	bullets_type new_bullets_list		( new_bullets_memory_ptr->buffer + m_max_bullets_count * sizeof( bullet ), m_max_bullets_count );
+	// CALL SITE INFO
+	// <0x5a11a8> -> void <unknown>(resources::resource_ptr<resources::unmanaged_resource,resources::unmanaged_intrusive_base> const&, float3 const&, float3 const&, float3 const&)
+	// ******
 
-	bool is_realocation = m_bullets_allocator_ref.initialized( ) && m_bullets_allocator_ref->allocated_size( ) > 0;
-	if ( is_realocation )
-	{
-		for ( u32 i = m_bullets_allocator_ref->allocated_size( ) / ( sizeof( bullet ) + sizeof( bullet* ) ); i > m_max_bullets_count; --i )
-			displace_one_bullet			( );
-
-		bullets_allocator new_bullets_allocator		= bullets_allocator( new_bullets_memory_ptr->buffer, m_max_bullets_count * sizeof( bullet ) );
-
-		while ( !m_bullets.empty( ) ) {
-			bullet*  old_bullet			= m_bullets[0];
-			new_bullets_list.push_back	( VOSTOK_NEW_IMPL( new_bullets_allocator, bullet ) ( *old_bullet ) );
-			VOSTOK_DELETE_IMPL			( *m_bullets_allocator_ref, old_bullet );
-		}
-
-		new_bullets_allocator.swap		( *m_bullets_allocator_ref );
-	}
-	else
-	{
-		if( m_bullets_allocator_ref.initialized( ) )
-			VOSTOK_DESTROY_REFERENCE		( m_bullets_allocator_ref );
-
-		VOSTOK_CONSTRUCT_REFERENCE		( m_bullets_allocator_ref, bullets_allocator )( new_bullets_memory_ptr->buffer, m_max_bullets_count * sizeof( bullet ) );
-	}
-	m_bullets.swap				( new_bullets_list );
-	m_bullets_memory_ptr			= new_bullets_memory_ptr;
+	// FUNCTION BODY
+	// <0x5a1187>|0x007|+0x023:'234'
+	// ******
 }
 
-void bullet_manager::request_bullet_decal_material( )
+// STATE[STUB]
+// void survarium::bullet_manager::update_tracer(survarium::bullet*, vostok::math::float3 const&, vostok::math::float3 const&, const float)
+void bullet_manager::update_tracer(
+	bullet*				bullet,
+	float3 const&		position,
+	float3 const&		direction,
+	float				length
+)
 {
-	vostok::render::material_effects_instance_cook_data* cook_data = 
-		NEW(vostok::render::material_effects_instance_cook_data)(vostok::render::decal_vertex_input_type, NULL, false);
+	// LOCALS
+	// bullet_manager::bullet_functor* functor<1>
+	// ******
 
-	vostok::render::material_effects_instance_cook_data* cook_data_out = 
-		NEW(vostok::render::material_effects_instance_cook_data)(vostok::render::decal_vertex_input_type, NULL, false);
-	
-	resources::user_data_variant		user_data;
-	user_data.set					( cook_data );
+	// SKIPPED BLOCKS
+	// <0x5a14ba><1>
+	// ******
 
-	resources::user_data_variant		user_data_out;
-	user_data_out.set				( cook_data_out );
-
-	query_resource										(
-		"decals/bullet_hit_concrete",
-		resources::material_effects_instance_class,
-		boost::bind( &bullet_manager::material_ready, this, _1, cook_data ),
-		g_allocator,
-		&user_data
-	);
-
-	query_resource										(
-		"decals/bullet_hit_concrete_out",
-		resources::material_effects_instance_class,
-		boost::bind( &bullet_manager::material_ready_out, this, _1, cook_data_out ),
-		g_allocator,
-		&user_data_out
-	);
-}
-void bullet_manager::material_ready ( resources::queries_result& data, vostok::render::material_effects_instance_cook_data* cook_data )
-{
-	DELETE											( cook_data );
-
-	if( data.is_successful( ) )
-	{
-		m_material_ptr								= data[0].get_unmanaged_resource( );
-	}
-}
-void bullet_manager::material_ready_out ( resources::queries_result& data, vostok::render::material_effects_instance_cook_data* cook_data )
-{
-	DELETE											( cook_data );
-	
-	if( data.is_successful( ) )
-	{
-		m_material_ptr_out							= data[0].get_unmanaged_resource( );
-	}
+	// FUNCTION BODY
+	// <0x5a14b0>|0x010|+0x010:'239'
+	// <0>
+	// <0x5a14c0>|0x020|+0x04d:'241'
+	// <0>
+	// <1>
+	// <0x5a150d>|0x06d|+0x019:'244'
+	// <0x5a1526>|0x086|+0x019:'245'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5a153f>|0x09f|+0x0da:'251'
+	// <0x5a1619>|0x179|+0x0bc:'252'
+	// <0>
+	// ******
 }
 
-void bullet_manager::emit_bullet ( float3 position, float3 velocity, float air_resistance )
+// STATE[STUB]
+// void survarium::bullet_manager::update_tracer_impl(const unsigned short, vostok::math::float3 const&, vostok::math::float3 const&, const float)
+void bullet_manager::update_tracer_impl(
+	u16					tracer_idx,
+	float3 const&		position,
+	float3 const&		direction,
+	float				length
+)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( position, velocity, air_resistance );
+	// CALL SITE INFO
+	// <0x5a116e> -> void <unknown>(const u16, float3 const&, float3 const&, const float)
+	// ******
 
-	if ( m_bullets_allocator_ref->total_size( ) == m_bullets_allocator_ref->allocated_size( ) )
-		displace_one_bullet		( );
-
-#if 0
-	bullet* new_bullet			= VOSTOK_NEW_IMPL	( m_bullets_allocator_ref.c_ptr( ), bullet )( position, velocity, m_game_world.game_time_sec( ), air_resistance ); 
-	m_bullets.push_back	( new_bullet );
-#endif
-
-#ifndef MASTER_GOLD
-	store_bullet_trajectory		( new_bullet );
-#endif // #ifndef MASTER_GOLD
+	// FUNCTION BODY
+	// <0x5a1147>|0x007|+0x029:'258'
+	// ******
 }
 
-void bullet_manager::destroy_bullet ( bullets_type::iterator& destroying_bullet_iterator )
+// STATE[STUB]
+// void survarium::bullet_manager::tick_bullets(unsigned int, unsigned int, unsigned int)
+void bullet_manager::tick_bullets( u32 start_index, u32 end_index, u32 current_time_in_ms )
 {
-	bullet*	destroying_bullet			= *destroying_bullet_iterator;							
-	m_bullets.erase				( destroying_bullet_iterator );
-	VOSTOK_DELETE_IMPL					( *m_bullets_allocator_ref, destroying_bullet );
-	
-#ifndef MASTER_GOLD
+	// LOCALS
+	// bullet** 					end
+	// bullet** 					current
+	// ******
 
-	bullets_type::iterator	current = m_bullets.begin	( );
-	bullets_type::iterator	end		= m_bullets.end	( );
-
-	for ( ; current != end; ++current )
-		R_ASSERT( *current != NULL );
-
-#endif // #ifndef MASTER_GOLD
-
+	// FUNCTION BODY
+	// <0x5a1cd9>|0x009|+0x014:'325'
+	// <0x5a1ced>|0x01d|+0x014:'326'
+	// <0>
+	// <0x5a1d01>|0x031|+0x013:'328'
+	// <0x5a1d14>|0x044|+0x010:'329'
+	// ******
 }
 
-void bullet_manager::displace_one_bullet ( )
+// STATE[STUB]
+// void survarium::bullet_manager::destroy_all_bullets(char const*)
+void bullet_manager::destroy_all_bullets( pcstr args )
 {
+	// FUNCTION BODY
+	// <0>
+	// <0x5a13a9>|0x009|+0x017:'335'
+	// <0x5a13c0>|0x020|+0x01c:'336'
+	// ******
+}
 
-	// removed dependency from active camera ( temp solution )
-	if(!m_bullets.empty())
-	{
-		bullets_type::iterator farthest_bullet	= m_bullets.begin( );
-		destroy_bullet			( farthest_bullet );
-	}
-//	float3 const&		camera_position			= m_game_world.get_camera_director()->get_active_camera()->get_inverted_view_matrix().c.xyz();
-//
-//#pragma message( VOSTOK_TODO("jes to all: this may be a bottleneck in some circumstances") )
-//
-//	float	farthest_distance_square		= 0;
-//	bullets_type::iterator farthest_bullet	= NULL;
-//
-//	bullets_type::iterator	current = m_bullets.begin( );
-//	bullets_type::iterator	end		= m_bullets.end( );
-//
-//	for ( ; current != end; ++current )
-//	{
-//		float	distance_square			= ( (*current)->get_position() - camera_position ).squared_length( );	
-//		if( distance_square > farthest_distance_square )
-//		{
-//			farthest_bullet				= current;
-//			farthest_distance_square	= distance_square;
-//		}
-//	}
-//	destroy_bullet			( farthest_bullet );
+// STATE[STUB]
+// void survarium::bullet_manager::set_max_bullets(char const*)
+void bullet_manager::set_max_bullets( pcstr args )
+{
+	// LOCALS
+	// s32 							new_bullets_count
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <0x5a2719>|0x009|+0x01a:'342'
+	// <0x5a2733>|0x023|+0x002:'343'
+	// <0>
+	// <0x5a2735>|0x025|+0x00c:'345'
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::bullet_manager::allocate_bullets_memory(unsigned int)
+void bullet_manager::allocate_bullets_memory( u32 new_max_bullets_count )
+{
+	// LOCALS
+	// resources::creation_request 	request
+	// ******
+
+	// FUNCTION BODY
+	// <0x5a259f>|0x00f|+0x00c:'352'
+	// <0>
+	// <0x5a25ab>|0x01b|+0x01f:'354'
+	// <0>
+	// <0x5a25ca>|0x03a|+0x017:'356'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5a25e1>|0x051|+0x06b:'363'
+	// <0>
+	// <0x5a264c>|0x0bc|+0x005:'365'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5a2651>|0x0c1|+0x0ab:'372'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::bullet_manager::bullets_memory_allocated(vostok::resources::queries_result&)
+void bullet_manager::bullets_memory_allocated( resources::queries_result& queries )
+{
+	// LOCALS
+	// resources::resource_ptr<resources::unmanaged_allocation_resource,resources::unmanaged_intrusive_base> new_bullets_memory_ptr
+	// bullet_manager::bullet_functor_mt_allocator new_mt_allocator<1>
+	// bool 						is_realocation<1>
+	// pbyte 						pointer<1>
+	// memory::single_size_buffer_allocator<128,threading::simple_lock> new_bullets_allocator<2>
+	// buffer_vector<bullet *> 		new_bullets_list<2>
+	// u32 							i<3>
+	// bullet* 						old_bullet<4>
+	// buffer_vector<bullet *> 		new_bullets_list<2>
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <0x5a1fb0>|0x010|+0x00c:'379'
+	// <0x5a1fbc>|0x01c|+0x034:'380'
+	// <0>
+	// <0x5a1ff0>|0x050|+0x017|[1]:'382'
+	// <0>
+	// <0x5a2007>|0x067|+0x055:'384'
+	// <0x5a205c>|0x0bc|+0x00c:'385'
+	// <0>
+	// <0x5a2068>|0x0c8|+0x046|[3]:'387'
+	// <0x5a20ae>|0x10e|+0x00d:'388'
+	// <0>
+	// <0x5a20bb>|0x11b|+0x019:'390'
+	// <0>
+	// <0x5a20d4>|0x134|+0x012:'392'
+	// <0x5a20e6>|0x146|+0x032:'393'
+	// <0>
+	// <0x5a2118>|0x178|+0x021:'395'
+	// <0>
+	// <0x5a2139>|0x199|+0x025|[4]:'397'
+	// <0x5a215e>|0x1be|+0x082:'398'
+	// <0x5a21e0>|0x240|+0x043:'399'
+	// <0x5a2223>|0x283|+0x005:'400'
+	// <0>
+	// <0x5a2228>|0x288|+0x030:'402'
+	// <0x5a2258>|0x2b8|+0x066:'403'
+	// <0x5a22be>|0x31e|+0x035:'404'
+	// <0x5a22f3>|0x353|+0x005:'405'
+	// <0>
+	// <0x5a22f8>|0x358|+0x017|[2]:'407'
+	// <0x5a230f>|0x36f|+0x00e:'408'
+	// <0>
+	// <0x5a231d>|0x37d|+0x09a:'410'
+	// <0>
+	// <0x5a23b7>|0x417|+0x012:'412'
+	// <0x5a23c9>|0x429|+0x032:'413'
+	// <0x5a23fb>|0x45b|+0x066:'414'
+	// <0x5a2461>|0x4c1|+0x02d:'415'
+	// <0>
+	// <0x5a248e>|0x4ee|+0x012:'417'
+	// <0x5a24a0>|0x500|+0x01c:'418'
+	// <0x5a24bc>|0x51c|+0x033:'419'
+	// <0x5a24ef>|0x54f|+0x008:'420'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5a24f7>|0x557|+0x012:'424'
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::bullet_manager::emit_bullet(vostok::math::float3 const&, vostok::math::float3 const&, float, vostok::resources::resource_ptr<survarium::weapon_ammunition,vostok::resources::unmanaged_intrusive_base> const&, survarium::weapon_core const&, unsigned int, survarium::hit_initiator const* const, survarium::hit_receiver const* const, bool)
+void bullet_manager::emit_bullet(
+	float3 const&						position,
+	float3 const&						velocity,
+	float								air_resistance,
+	resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const&	wa,
+	weapon_core const&					wc,
+	u32									current_time_in_ms,
+	hit_initiator const*				initiator,
+	hit_receiver const*					ignorable_object,
+	bool								tracer
+)
+{
+	// LOCALS
+	// bullet* 						new_bullet
+	// ******
+
+	// CALL SITE INFO
+	// <0x5a1ca2> -> bool <unknown>(bullet*)
+	// ******
+
+	// FUNCTION BODY
+	// <0x5a1ba9>|0x009|+0x044:'488'
+	// <0x5a1bed>|0x04d|+0x008:'489'
+	// <0>
+	// <0x5a1bf5>|0x055|+0x079:'491'
+	// <0x5a1c6e>|0x0ce|+0x00c:'492'
+	// <0>
+	// <0x5a1c7a>|0x0da|+0x011:'494'
+	// <0x5a1c8b>|0x0eb|+0x019:'495'
+	// <0>
+	// <0x5a1ca4>|0x104|+0x00c:'497'
+	// <0x5a1cb0>|0x110|+0x00c:'498'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::bullet_manager::destroy_bullet(survarium::bullet** const&)
+void bullet_manager::destroy_bullet( bullet**& destroying_bullet_iterator )
+{
+	// LOCALS
+	// bullet* 						destroying_bullet
+	// ******
+
+	// FUNCTION BODY
+	// <0x5a1339>|0x009|+0x00a:'509'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5a1343>|0x013|+0x01b:'516'
+	// <0x5a135e>|0x02e|+0x02e:'517'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::bullet_manager::destroy_one_bullet()
+void bullet_manager::destroy_one_bullet( )
+{
+	// FUNCTION BODY
+	// <0x5a1469>|0x009|+0x017:'530'
+	// <0x5a1480>|0x020|+0x01a:'531'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// ******
+}
+
+// STATE[STUB]
+// bool survarium::bullet_manager::is_inside_collision_db(vostok::math::float3 const&) const
+bool bullet_manager::is_inside_collision_db( float3 const& position ) const
+{
+	// CALL SITE INFO
+	// <0x5a12de> -> math::aabb <unknown>() const
+	// ******
+
+	return false;
+
+	// FUNCTION BODY
+	// <0x5a12c9>|0x009|+0x054:'557'
+	// ******
 }
 
 } // namespace survarium

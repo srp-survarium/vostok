@@ -1,0 +1,75 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 06.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include <vostok/game_core/weapon_ammunition_cook.h>
+
+namespace survarium {
+
+// STATE[STUB]
+weapon_ammunition_cook::weapon_ammunition_cook( ) : resources::translate_query_cook( resources::weapon_ammunition_class, reuse_false, use_current_thread_id )
+{
+	resources::register_cook( this );
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x760585>|0x035|+0x00c:'36'
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::weapon_ammunition_cook::translate_query(vostok::resources::query_result_for_cook&)
+void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& parent )
+{
+	// LOCALS
+	// fs_new::virtual_path_string 	config_name
+	// ******
+
+	// FUNCTION BODY
+	// <0x7606df>|0x00f|+0x00b:'41'
+	// <0x7606ea>|0x01a|+0x01d:'42'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x760707>|0x037|+0x122:'51'
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::weapon_ammunition_cook::delete_resource(vostok::resources::resource_base*)
+void weapon_ammunition_cook::delete_resource( resources::resource_base* resource )
+{
+	// FUNCTION BODY
+	// <0x7605a9>|0x009|+0x017:'56'
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::weapon_ammunition_cook::on_config_ready(vostok::resources::queries_result&, vostok::resources::query_result_for_cook*)
+void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
+{
+	// LOCALS
+	// weapon_ammunition* 			wa
+	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
+	// ******
+
+	// FUNCTION BODY
+	// <0x7605da>|0x00a|+0x00c:'61'
+	// <0x7605e6>|0x016|+0x022:'62'
+	// <0x760608>|0x038|+0x051:'63'
+	// <0x760659>|0x089|+0x022:'64'
+	// <0>
+	// <0x76067b>|0x0ab|+0x02d:'66'
+	// <0x7606a8>|0x0d8|+0x00c:'67'
+	// ******
+}
+
+} // namespace survarium
