@@ -38,7 +38,7 @@ class weapon_core;
 
 class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , public boost::noncopyable {
 public:
-	explicit			weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
+	explicit									weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
 
 public:
 	inline	bool								is_ready_to_be_deactivated	( ) const { /* no source */ }

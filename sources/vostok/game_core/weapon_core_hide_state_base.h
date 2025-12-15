@@ -5,34 +5,20 @@
 #ifndef WEAPON_CORE_HIDE_STATE_BASE_H_INCLUDED
 #define WEAPON_CORE_HIDE_STATE_BASE_H_INCLUDED
 
+#include <vostok/game_core/weapon_core_animation_end_aware_state.h>
+
 namespace survarium {
-
-/* survarium::weapon_core_hide_state_base */
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class survarium::weapon_core_animation_end_aware_state;
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class weapon_core_hide_state_base : public weapon_core_animation_end_aware_state {
 public:
-			weapon_core_hide_state_base	( weapon_core& weapon, bool& is_shown );
+	explicit		weapon_core_hide_state_base	( weapon_core& weapon, bool& is_shown );
 
 	virtual	void	initialize					( ) override;
-
 	virtual	void	finalize					( ) override;
-
 	virtual	bool	is_ready_for_transition		( ) const override { /* no source */ }
 
+private:
 	virtual	void	on_animation_end_impl		( bool& animation_player_tick_result ) override;
-
-	virtual	~weapon_core_hide_state_base( ) { /* no source */ }
-
 
 private:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
