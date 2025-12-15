@@ -20,7 +20,7 @@ struct usable_object_user_data;
 
 class victory_item_core : public usable_object , public resources::unmanaged_resource {
 public:
-							victory_item_core			( );
+			explicit		victory_item_core			( );
 	virtual					~victory_item_core			( );
 
 	virtual	void			load						( configs::binary_config_value const& cfg ) override;

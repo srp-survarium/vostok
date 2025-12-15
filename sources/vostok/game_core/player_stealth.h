@@ -12,8 +12,8 @@ struct player_input;
 
 class player_stealth {
 public:
-								player_stealth				( player_stealth const& other );
-								player_stealth				( );
+			explicit			player_stealth				( player_stealth const& other );
+			explicit			player_stealth				( );
 
 			player_stealth&		operator=					( player_stealth const& other );
 

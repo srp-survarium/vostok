@@ -13,14 +13,13 @@ struct zone_group;
 
 struct anomaly_state {
 public:
-	inline			anomaly_state	( generic_anomaly_core* arg_0 ) { /* no source */ }
+	inline	explicit	anomaly_state	( generic_anomaly_core* arg_0 ) { /* no source */ }
 
-	inline	void	on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
+	inline	void		on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
 
-			void	initialize		( );
-			void	execute			( u32 time_delta_ms, u32 current_time_ms );
-			void	finalize		( );
-
+			void		initialize		( );
+			void		execute			( u32 time_delta_ms, u32 current_time_ms );
+			void		finalize		( );
 
 public:
 	/* 0x0000 */	bool						enabled;

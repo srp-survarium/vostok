@@ -9,8 +9,8 @@ namespace survarium {
 
 struct player_stamina_subscriber {
 public:
-	inline	player_stamina_subscriber	( ) { }
-	inline	player_stamina_subscriber	( boost::function<void()> const& subscription_callback_ ) : subscription_callback( subscription_callback_ ) { }
+	inline	explicit	player_stamina_subscriber	( ) { }
+	inline	explicit	player_stamina_subscriber	( boost::function<void()> const& subscription_callback_ ) : subscription_callback( subscription_callback_ ) { }
 
 public:
 	/* 0x0000 */	boost::function<void()>			subscription_callback;

@@ -18,7 +18,7 @@ class weapon_core;				// sushi@TODO
 
 class recoil_calculator {
 public:
-						recoil_calculator			( );
+			explicit	recoil_calculator			( );
 
 	inline	void		set_character_recoil_params	( character_recoil_params const* arg_0 ) { /* no source */ }
 

@@ -14,7 +14,7 @@ class victory_item_core;
 
 class victory_items_container_core : public usable_object {
 public:
-	explicit						victory_items_container_core	( );
+			explicit				victory_items_container_core	( );
 
 	virtual	void					load							( configs::binary_config_value const& cfg ) override;
 

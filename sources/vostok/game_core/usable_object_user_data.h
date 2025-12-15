@@ -13,10 +13,9 @@ struct usable_object_user_data;
 
 struct usable_object_user_data {
 	inline	explicit	usable_object_user_data	( ) :
-		current_progress					( -1 ),
-		booster_artcont_time_factor			( 1.0f ),
-		booster_engineer_use_time_factor	( 1.0f )
-	{ /* <0xbaa80> */ }
+							current_progress					( -1 ),
+							booster_artcont_time_factor			( 1.0f ),
+							booster_engineer_use_time_factor	( 1.0f ) { /* <0xbaa80> */ }
 
 	/* 0x0000 */	collision_user*				owner;
 	/* 0x0004 */	usable_object*				current_object;

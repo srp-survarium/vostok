@@ -10,11 +10,11 @@ namespace survarium {
 // STATE[STUB]
 // survarium::weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(survarium::weapon_core&, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
 weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
-	weapon_core&						weapon,
+	weapon_core&								weapon,
 	weapon_core_shotgun_reload_base_substate*	reload_start,
 	weapon_core_shotgun_reload_base_substate*	reload_one_round,
 	weapon_core_shotgun_reload_base_substate*	reload_finish
-)
+) : weapon_core_base_state( weapon, true )
 {
 	// FUNCTION BODY
 	// <0x599d7f>|0x03f|+0x00d:'27'

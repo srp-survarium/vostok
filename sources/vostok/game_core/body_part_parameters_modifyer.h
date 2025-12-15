@@ -10,8 +10,8 @@
 namespace survarium {
 
 struct body_part_parameters_modifyer {
-	inline	body_part_parameters_modifyer	( ) { /* no source */ }
-	inline	~body_part_parameters_modifyer	( ) { /* no source */ }
+	inline	explicit	body_part_parameters_modifyer	( ) { /* no source */ }
+	inline				~body_part_parameters_modifyer	( ) { /* no source */ }
 
 
 public:

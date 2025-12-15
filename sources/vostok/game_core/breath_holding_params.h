@@ -8,9 +8,9 @@
 namespace survarium {
 
 struct breath_holding_params {
-	inline			breath_holding_params	( ) { }
+	inline	explicit	breath_holding_params	( ) { }
 
-			void	load					( configs::binary_config_value const& cfg )
+			void		load					( configs::binary_config_value const& cfg )
 	{
 		// FUNCTION BODY
 		// <0x90c86>|0x006|+0x015:'41'

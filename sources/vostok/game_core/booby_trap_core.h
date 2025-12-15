@@ -36,7 +36,7 @@ enum booby_trap_state {
 
 class booby_trap_core : public game_world_object , public hittable_object , public collision_sensor , public usable_object {
 public:
-											booby_trap_core				( );
+	explicit								booby_trap_core				( );
 
 	virtual									~booby_trap_core			( );
 

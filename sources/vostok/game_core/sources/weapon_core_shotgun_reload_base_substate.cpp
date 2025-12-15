@@ -10,17 +10,17 @@ namespace survarium {
 // STATE[STUB]
 // survarium::weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(survarium::weapon_core&, const float, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int, const vostok::animation::mixing::playback_enum, const unsigned int, char const*, char const*, char const*, char const*)
 weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(
-	weapon_core&						weapon,
-	float								animation_time_scale,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
-	u32									animations_count,
-	animation::mixing::playback_enum	playback_type,
-	u32									time_synchronization_group,
-	pcstr								animation_id,
-	pcstr								hands_stand_animation_id,
-	pcstr								hands_crouch_animation_id,
-	pcstr								hands_jump_animation_id
-)
+	weapon_core&							weapon,
+	float									animation_time_scale,
+	resources::managed_resource_ptr const*	animations,
+	u32										animations_count,
+	animation::mixing::playback_enum		playback_type,
+	u32										time_synchronization_group,
+	pcstr									animation_id,
+	pcstr									hands_stand_animation_id,
+	pcstr									hands_crouch_animation_id,
+	pcstr									hands_jump_animation_id
+) : m_weapon( weapon )
 {
 	// LOCALS
 	// u32 							animation_index

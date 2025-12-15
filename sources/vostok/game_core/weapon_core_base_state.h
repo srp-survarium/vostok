@@ -7,6 +7,7 @@
 
 #include <vostok/ai/fsm_state.h>
 #include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_expression.h>
 
 #include <vostok/game_core/weapon_user_state_enum.h>
 

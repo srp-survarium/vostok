@@ -15,7 +15,7 @@ struct breath_holding_params;
 
 class breath_vibration_calculator : public boost::noncopyable {
 public:
-	explicit			breath_vibration_calculator	( );
+			explicit	breath_vibration_calculator	( );
 						~breath_vibration_calculator( );
 
 			void		set_breath_holding_params	( breath_holding_params const* params );

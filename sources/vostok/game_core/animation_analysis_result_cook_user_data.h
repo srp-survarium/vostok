@@ -16,8 +16,8 @@ namespace survarium {
 struct leg_info;
 
 struct animation_analysis_result_cook_user_data {
-	inline	animation_analysis_result_cook_user_data( ) { /* no source */ }
-	inline	~animation_analysis_result_cook_user_data( ) { /* no source */ }
+	inline	explicit	animation_analysis_result_cook_user_data	( ) { /* no source */ }
+	inline				~animation_analysis_result_cook_user_data	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	u32									legs_count;

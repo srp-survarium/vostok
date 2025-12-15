@@ -12,7 +12,7 @@ namespace survarium {
 
 class booby_trap_core_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
-								booby_trap_core_cook		( );
+			explicit			booby_trap_core_cook		( );
 
 	virtual	void				translate_query				( resources::query_result_for_cook& parent ) override;
 	// STATE[STUB]

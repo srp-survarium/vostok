@@ -13,7 +13,7 @@ struct anomaly_state;
 
 struct zone_group {
 public:
-	inline								zone_group	( anomaly_state* arg_0 ) { /* no source */ }
+	inline	explicit					zone_group	( anomaly_state* owner ) : owner( owner ) { /* no source */ }
 
 	inline	generic_anomaly_core*		core		( ) { /* no source */ }
 

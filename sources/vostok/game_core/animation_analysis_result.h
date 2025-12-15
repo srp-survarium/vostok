@@ -11,11 +11,12 @@ namespace survarium {
 
 class animation_analysis_result : public resources::unmanaged_resource {
 public:
-												animation_analysis_result	( u32 legs_count );
-	virtual										~animation_analysis_result	( );
+	explicit	animation_analysis_result	( u32 legs_count );
+	virtual		~animation_analysis_result	( );
 
-	inline	buffer_vector<leg_key_times>&		key_times					( ) { /* no source */ }
-
+public:
+	inline	buffer_vector<leg_key_times>&
+				key_times	( ) { return m_leg_key_times; }
 
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */

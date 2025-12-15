@@ -18,8 +18,8 @@ namespace survarium {
 
 class player_stamina : public boost::noncopyable {
 public:
-								player_stamina					( player_stamina const& other );
-								player_stamina					( );
+			explicit			player_stamina					( player_stamina const& other );
+			explicit			player_stamina					( );
 			player_stamina&		operator=						( player_stamina const& other );
 
 			void				deserialize						( network_core::packet_reader& packet );

@@ -8,13 +8,22 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_substate(survarium::weapon_core&, const float, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
 weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_substate(
-	weapon_core&						weapon,
-	float								animation_time_scale,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
-	u32									animations_count
-)
+	weapon_core&							weapon,
+	float									animation_time_scale,
+	resources::managed_resource_ptr const*	animations,
+	u32										animations_count
+) : weapon_core_shotgun_reload_base_substate(
+		weapon, animation_time_scale,
+		animations,
+		animations_count,
+		animation::mixing::play_once_and_remove_at_end,
+		10,
+		"animation_id",
+		"hands_stand_animation_id",
+		"hands_crouch_animation_id",
+		"hands_jump_animation_id"
+	)
 {
 	// FUNCTION BODY
 	// <0x59e620>|0x000|+0x04d:'20'	{

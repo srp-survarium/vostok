@@ -53,7 +53,7 @@ struct base_player_creation_params;
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
 public:
-												base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
+	explicit									base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
 	virtual										~base_player					( );
 
 	inline	interactive_object_ptr				get_current_active_object		( ) { /* no source */ }

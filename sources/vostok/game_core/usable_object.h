@@ -22,7 +22,7 @@ class collision_geometry;
 
 class usable_object : public collision_geometry_subscriber , public link_resolver {
 public:
-								usable_object				( );
+			explicit			usable_object				( );
 	virtual						~usable_object				( );
 
 	virtual	usable_object*		cast_to_usable				( ) override { return this; }

@@ -11,9 +11,9 @@ namespace survarium {
 
 struct respawn_point_core {
 public:
-	explicit		respawn_point_core	( );
+			explicit	respawn_point_core	( );
 
-	virtual	void	load				( configs::binary_config_value const& config );
+	virtual	void		load				( configs::binary_config_value const& config );
 
 public:
 	/* 0x0004 */	u32				point_id;

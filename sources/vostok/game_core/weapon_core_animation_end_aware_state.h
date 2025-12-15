@@ -29,7 +29,7 @@ public:
 public:
 			animation::callback_return_type_enum
 							on_animation_end				( animation::animation_callback_params& params );
-	virtual	void			on_animation_end_impl			( bool& arg_0 ) = 0;
+	virtual	void			on_animation_end_impl			( bool& animation_player_tick_result ) = 0;
 
 private:
 	/* 0x0000 */	/* weapon_core_base_state */

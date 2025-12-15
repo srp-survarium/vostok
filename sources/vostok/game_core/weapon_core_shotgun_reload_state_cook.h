@@ -5,38 +5,30 @@
 #ifndef WEAPON_CORE_SHOTGUN_RELOAD_STATE_COOK_H_INCLUDED
 #define WEAPON_CORE_SHOTGUN_RELOAD_STATE_COOK_H_INCLUDED
 
+#include <vostok/resources_cook_classes.h>
+
 namespace survarium {
 
-/* survarium::weapon_core_shotgun_reload_state_cook */
+struct weapon_state_creation_params;
 
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class vostok::resources::unmanaged_cook;
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class weapon_core_shotgun_reload_state_cook : public resources::unmanaged_cook {
 public:
-	inline	weapon_core_shotgun_reload_state_cook( ) { /* no source */ }
+	// sushi@TODO
+	inline	explicit	weapon_core_shotgun_reload_state_cook	( ) :
+							resources::unmanaged_cook	( resources::weapon_shotgun_reload_state_class, reuse_true, use_current_thread_id ){ /* no source */ }
 
-	virtual	~weapon_core_shotgun_reload_state_cook( );
+	virtual				~weapon_core_shotgun_reload_state_cook	( );
 
-	virtual	mutable_buffer		allocate_resource				( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist ) override;
+public:
+	virtual	mutable_buffer	allocate_resource				( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist ) override;
+	virtual	void			deallocate_resource				( void* buffer ) override;
 
-	virtual	void				deallocate_resource				( void* buffer ) override;
+	virtual	void			create_resource					( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer ) override;
+	virtual	void			destroy_resource				( resources::unmanaged_resource* resource ) override;
 
-	virtual	void				create_resource					( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer ) override;
-
-	virtual	void				destroy_resource				( resources::unmanaged_resource* resource ) override;
-
-			void				on_subresources_ready			( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
-
-	inline	void				__local_vftable_ctor_closure	( ) { /* no source */ }
-
+public:
+			void			on_subresources_ready			( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
 
 private:
 	/* 0x0000 */	/* resources::unmanaged_cook */

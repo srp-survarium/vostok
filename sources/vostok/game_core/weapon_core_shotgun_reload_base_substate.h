@@ -7,48 +7,63 @@
 
 #include <vostok/ai/fsm_state.h>
 
-namespace survarium {
+#include <vostok/animation/mixing.h>
+#include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_expression.h>
+#include <vostok/animation/animation_callback.h>
 
-class survarium::weapon_core;
-struct vostok::animation::animation_playback_state;
-enum vostok::animation::mixing::playback_enum /* stored as s32 */ {
-	play_cyclically = 0x0000,
-	play_once_and_freeze_at_end = 0x0001,
-	play_once_and_remove_at_end = 0x0002,
+#include <vostok/game_core/weapon_user_state_enum.h>
+#include <vostok/game_core/weapon_lexeme_pair.h>
+
+namespace vostok {
+namespace animation {
+	class animation_playback_state;
+	struct animation_callback_params;
+}
 }
 
+namespace survarium {
+
+class weapon_core;
 
 class weapon_core_shotgun_reload_base_substate : public ai::fsm_state , public resources::unmanaged_resource {
 public:
-	explicit									weapon_core_shotgun_reload_base_substate(
-													weapon_core&							weapon,
-													float									animation_time_scale,
-													resources::managed_resource_ptr const*	animations,
-													u32										animations_count,
-													animation::mixing::playback_enum		playback_type,
-													u32										time_synchronization_group,
-													pcstr									animation_id,
-													pcstr									hands_stand_animation_id,
-													pcstr									hands_crouch_animation_id,
-													pcstr									hands_jump_animation_id
-												);
+	explicit			weapon_core_shotgun_reload_base_substate(
+							weapon_core&							weapon,
+							float									animation_time_scale,
+							resources::managed_resource_ptr const*	animations,
+							u32										animations_count,
+							animation::mixing::playback_enum		playback_type,
+							u32										time_synchronization_group,
+							pcstr									animation_id,
+							pcstr									hands_stand_animation_id,
+							pcstr									hands_crouch_animation_id,
+							pcstr									hands_jump_animation_id
+						);
 
-	virtual	void								initialize						( ) override;
-	virtual	void								execute							( ) override;
-	virtual	void								finalize						( ) override { /* no source */ }
+	// STATE[STUB]
+	virtual	void		initialize						( ) override { /* <0x2a800> */ }
+	// STATE[STUB]
+	virtual	void		execute							( ) override { /* <0x98860> */ }
+	// STATE[STUB]
+	virtual	void		finalize						( ) override { /* <0xc47d0> */ }
 
-			animation::mixing::expression		weapon_and_hands_expression		(
-													mutable_buffer&						buffer,
-													bool								is_third_view,
-													weapon_user_state_enum				user_state_id,
-													animation::mixing::animation_lexeme&	weight_driving_animation
-												) const;
+public:
+			animation::mixing::expression
+					weapon_and_hands_expression			(
+						mutable_buffer&							buffer,
+						bool									is_third_view,
+						weapon_user_state_enum					user_state_id,
+						animation::mixing::animation_lexeme&	weight_driving_animation
+					) const;
 
-	inline	void								set_animation_playback_state_ptr( animation::animation_playback_state* arg_0 ) { /* no source */ }
+	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* arg_0 ) { /* no source */ }
 
-	inline	bool								deserializing					( ) const { /* no source */ }
+	inline	bool	deserializing						( ) const { /* no source */ }
 
-			weapon_lexeme_pair					get_weapon_lexeme_pair			( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
+public:
+			weapon_lexeme_pair
+					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
 
 private:
 	/* 0x0000 */	/* ai::fsm_state */

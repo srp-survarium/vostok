@@ -13,10 +13,10 @@ namespace survarium {
 
 struct player_profile {
 public:
-					player_profile	( );
+			explicit	player_profile	( );
 
-	inline	void	serialize		( network_core::udp_match_packet& packet ) const { /* no source */ }
-			void	deserialize		( network_core::packet_reader& reader );
+	inline	void		serialize		( network_core::udp_match_packet& packet ) const { /* no source */ }
+			void		deserialize		( network_core::packet_reader& reader );
 
 public:
 	/* 0x0000 */	u32						account_id;
