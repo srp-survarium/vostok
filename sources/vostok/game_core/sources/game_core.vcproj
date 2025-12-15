@@ -1107,6 +1107,30 @@
 					>
 				</File>
 				<File
+					RelativePath="..\weapon_core_shotgun_reload_base_substate.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_core_shotgun_reload_finish_substate.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_core_shotgun_reload_one_round_substate.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_core_shotgun_reload_start_substate.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_core_shotgun_reload_state.h"
+					>
+				</File>
+				<File
+					RelativePath="..\weapon_core_shotgun_reload_state_cook.h"
+					>
+				</File>
+				<File
 					RelativePath="..\weapon_core_show_state.h"
 					>
 				</File>
@@ -1851,6 +1875,30 @@
 				</File>
 				<File
 					RelativePath=".\weapon_core_base_state.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_core_shotgun_reload_base_substate.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_core_shotgun_reload_finish_substate.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_core_shotgun_reload_one_round_substate.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_core_shotgun_reload_start_substate.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_core_shotgun_reload_state.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_core_shotgun_reload_state_cook.cpp"
 					>
 				</File>
 				<File
