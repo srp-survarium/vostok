@@ -42,6 +42,10 @@ struct subscribed_channel {
 	animation_callback*			first_callback;
 }; // struct subscribed_channel
 
+struct animation_callback_params {
+	// sushi@TODO
+};
+
 } // namespace animation
 } // namespace vostok
 

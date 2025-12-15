@@ -19,6 +19,12 @@ enum animation_types_enum {
 	animation_type_additive,
 }; // enum animation_types_enum
 
+enum playback_enum {
+	play_cyclically				= 0x0000,
+	play_once_and_freeze_at_end = 0x0001,
+	play_once_and_remove_at_end = 0x0002,
+}; // enum playback_enum
+
 }  // namespace animation
 }  // namespace vostok
 

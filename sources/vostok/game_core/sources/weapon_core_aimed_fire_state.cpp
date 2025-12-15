@@ -5,16 +5,17 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_aimed_fire_state.h>
 
+#include <vostok/game_core/weapon_core_state_cook_template.h>
+
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_core_aimed_fire_state::weapon_core_aimed_fire_state(survarium::weapon_core&, float, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
 weapon_core_aimed_fire_state::weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
 	float									animation_timescale,
 	resources::managed_resource_ptr const*	animations,
 	u32										animations_count
-)
+) : weapon_core_aimed_fire_state_base( weapon, animation_timescale )
 {
 	// LOCALS
 	// u32 							animation_index
@@ -134,11 +135,11 @@ animation::mixing::expression weapon_core_aimed_fire_state::get_user_hands_expre
 
 // STATE[STUB]
 // survarium::weapon_core_aimed_fire_state* survarium::weapon_core_state_cook_template<survarium::weapon_core_aimed_fire_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
-weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::weapon_core_aimed_fire_state>::new_object(
-	mutable_buffer						buffer,
-	weapon_state_creation_params const*	params,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
-	u32									animations_count
+weapon_core_aimed_fire_state* weapon_core_state_cook_template< weapon_core_aimed_fire_state >::new_object(
+	mutable_buffer							buffer,
+	weapon_state_creation_params const*		params,
+	resources::managed_resource_ptr const*	animations,
+	u32										animations_count
 )
 {
 	return NULL;

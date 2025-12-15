@@ -3,50 +3,18 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "weapon_core_cook.h"
+#include <vostok/game_core/weapon_core_cook.h>
 
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_core_cook::weapon_core_cook()
-weapon_core_cook::weapon_core_cook( )
+weapon_core_cook::weapon_core_cook( ) :
+	resources::translate_query_cook( resources::weapon_class, reuse_false, use_current_thread_id )
 {
+	resources::register_cook( this );
+
 	// FUNCTION BODY
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
 	// <35>
 	// <0x59f105>|0x035|+0x00c:'118'
 	// ******

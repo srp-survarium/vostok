@@ -9,7 +9,7 @@ namespace survarium {
 
 // STATE[STUB]
 template < typename T >
-weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
+inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
 {
 	// FUNCTION BODY
 	// <0x9acb8>|0x038|+0x026:'16'
@@ -18,7 +18,7 @@ weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
 
 // STATE[STUB]
 template < typename T >
-mutable_buffer weapon_core_state_cook_template<T>::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
+inline mutable_buffer weapon_core_state_cook_template<T>::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
 	// FUNCTION BODY
 	// <0>
@@ -26,9 +26,16 @@ mutable_buffer weapon_core_state_cook_template<T>::allocate_resource( resources:
 	// ******
 }
 
+template < typename T >
+inline void weapon_core_state_cook_template<T>::deallocate_resource( void* arg_0 )
+{
+	// sushi@TODO
+}
+
+
 // STATE[STUB]
 template < typename T >
-void weapon_core_state_cook_template<T>::create_resource( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer )
+inline void weapon_core_state_cook_template<T>::create_resource( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer )
 {
 	// LOCALS
 	// configs::binary_config_value cfg
@@ -87,7 +94,7 @@ void weapon_core_state_cook_template<T>::create_resource( resources::query_resul
 
 // STATE[STUB]
 template < typename T >
-void weapon_core_state_cook_template<T>::on_subresources_ready( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params )
+inline void weapon_core_state_cook_template<T>::on_subresources_ready( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params )
 {
 	// LOCALS
 	// fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,4> animations
@@ -117,7 +124,7 @@ void weapon_core_state_cook_template<T>::on_subresources_ready( resources::queri
 
 // STATE[STUB]
 template < typename T >
-void weapon_core_state_cook_template<T>::destroy_resource( resources::unmanaged_resource* resource )
+inline void weapon_core_state_cook_template<T>::destroy_resource( resources::unmanaged_resource* resource )
 {
 	// CALL SITE INFO
 	// <0x9d47b> -> void* <unknown>(u32)

@@ -8,13 +8,12 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_core_fire_state::weapon_core_fire_state(survarium::weapon_core&, float, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
 weapon_core_fire_state::weapon_core_fire_state(
 	weapon_core&						weapon,
 	float								animation_timescale,
 	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
 	u32									animations_count
-)
+) :
 {
 	// LOCALS
 	// u32 							animation_index

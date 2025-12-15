@@ -6,14 +6,10 @@
 #define WEAPON_CORE_ANIMATION_END_AWARE_STATE_H_INCLUDED
 
 #include <vostok/game_core/weapon_core_base_state.h>
+#include <vostok/game_core/weapon_lexeme_pair.h>
 
+#include <vostok/animation/api.h>
 #include <vostok/animation/animation_callback.h>
-
-namespace vostok {
-namespace animation {
-	class animation_callback_params; // sushi@TODO
-}
-}
 
 namespace survarium {
 

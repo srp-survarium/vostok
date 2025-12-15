@@ -5,42 +5,25 @@
 #ifndef WEAPON_CORE_FIRE_STATE_BASE_H_INCLUDED
 #define WEAPON_CORE_FIRE_STATE_BASE_H_INCLUDED
 
+#include <vostok/game_core/weapon_core_animation_end_aware_state.h>
+
+#include <vostok/animation/api.h>
+#include <vostok/animation/mixing.h>
+
 namespace survarium {
-
-/* survarium::weapon_core_fire_state_base */
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class survarium::weapon_core_animation_end_aware_state;
-
-enum vostok::animation::mixing::playback_enum /* stored as s32 */ {
-	play_cyclically = 0x0000,
-	play_once_and_freeze_at_end = 0x0001,
-	play_once_and_remove_at_end = 0x0002,
-}
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class weapon_core_fire_state_base : public weapon_core_animation_end_aware_state {
 public:
-			weapon_core_fire_state_base	( weapon_core& weapon, float animation_timescale );
+			explicit		weapon_core_fire_state_base	( weapon_core& weapon, float animation_timescale );
 
-	virtual	void								initialize					( ) override;
+	virtual	void			initialize					( ) override;
+	virtual	void			execute						( ) override;
+	virtual	void			finalize					( ) override;
 
-	virtual	void								execute						( ) override;
+	virtual	void			on_animation_end_impl		( bool& animation_player_tick_result ) override;
 
-	virtual	void								finalize					( ) override;
-
-	virtual	void								on_animation_end_impl		( bool& animation_player_tick_result ) override;
-
-	virtual	animation::callback_return_type_enum	on_shot_event				( animation::animation_callback_params& params );
-
-	virtual	~weapon_core_fire_state_base( ) { /* no source */ }
-
+	virtual	animation::callback_return_type_enum
+							on_shot_event				( animation::animation_callback_params& params );
 
 private:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */

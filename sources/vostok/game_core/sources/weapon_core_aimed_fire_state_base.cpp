@@ -3,13 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "weapon_core_aimed_fire_state_base.h"
+#include <vostok/game_core/weapon_core_aimed_fire_state_base.h>
 
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base(survarium::weapon_core&, float)
-weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_core& weapon, float animation_timescale )
+weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_core& weapon, float animation_timescale ) :
+	weapon_core_animation_end_aware_state( weapon, false )
 {
 	// FUNCTION BODY
 	// <0x59e7b0>|0x000|+0x059:'21'	{

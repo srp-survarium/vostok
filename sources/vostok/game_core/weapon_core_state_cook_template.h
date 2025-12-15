@@ -9,20 +9,22 @@
 
 namespace survarium {
 
+struct weapon_state_creation_params;
+
 template < typename T >
-class weapon_core_state_cook_template<T> : public resources::unmanaged_cook {
+class weapon_core_state_cook_template : public resources::unmanaged_cook {
 public:
-	inline	explicit	weapon_core_state_cook_template		( ) { /* no source */ }
-	virtual				~weapon_core_state_cook_template	( ) { /* no source */ }
+	inline	explicit	weapon_core_state_cook_template		( );
+	virtual				~weapon_core_state_cook_template	( );
 
 public:
-	virtual	mutable_buffer	allocate_resource		( resources::query_result_for_cook& arg_0, const_buffer arg_1, bool arg_2 ) override { /* no source */ }
-	virtual	void			deallocate_resource		( void* arg_0 ) override { /* no source */ }
+	virtual	mutable_buffer	allocate_resource		( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist ) override;
+	virtual	void			deallocate_resource		( void* arg_0 ) override;
 
-	virtual	void			create_resource			( resources::query_result_for_cook& arg_0, const_buffer arg_1, mutable_buffer arg_2 ) override { /* no source */ }
-	virtual	void			destroy_resource		( resources::unmanaged_resource* arg_0 ) override { /* no source */ }
+	virtual	void			create_resource			( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer ) override;
+	virtual	void			destroy_resource		( resources::unmanaged_resource* resource ) override;
 
-	inline	void			on_subresources_ready	( resources::queries_result& arg_0, mutable_buffer arg_1, weapon_state_creation_params const* arg_2 ) { /* no source */ }
+	inline	void			on_subresources_ready	( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
 
 			T*				new_object				(
 								mutable_buffer							buffer,
@@ -31,8 +33,6 @@ public:
 								u32										animations_count
 							);
 }; // class weapon_core_state_cook_template
-
-STATIC_SIZE_ASSERT(weapon_core_state_cook_template<T>, 0x20);
 
 } // namespace survarium
 

@@ -10,6 +10,7 @@
 namespace survarium {
 
 class weapon_core;
+class weapon_state_creation_params;
 
 class weapon_core_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:

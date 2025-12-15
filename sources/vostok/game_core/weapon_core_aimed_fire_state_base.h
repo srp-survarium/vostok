@@ -7,13 +7,9 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
-enum vostok::animation::mixing::playback_enum {
-	play_cyclically				= 0x0000,
-	play_once_and_freeze_at_end = 0x0001,
-	play_once_and_remove_at_end = 0x0002,
-};
-
 namespace survarium {
+
+class weapon_core;
 
 class weapon_core_aimed_fire_state_base : public weapon_core_animation_end_aware_state {
 public:
