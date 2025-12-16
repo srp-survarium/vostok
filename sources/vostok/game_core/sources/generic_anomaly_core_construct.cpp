@@ -1,0 +1,164 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 06.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include <vostok/game_core/generic_anomaly_core.h>
+
+namespace survarium {
+
+// STATE[STUB]
+// void survarium::generic_anomaly_core::load(vostok::configs::binary_config_value const&)
+void generic_anomaly_core::load( configs::binary_config_value const& config )
+{
+	// LOCALS
+	// u32 							states_count
+	// u32 							artefact_containers_count<1>
+	// u32 							s<1>
+	// anomaly_state* 				state<2>
+	// configs::binary_config_value current_state<2>
+	// u32 							groups_count<2>
+	// u32 							g<3>
+	// zone_group* 					group<4>
+	// u32 							zones_count<4>
+	// configs::binary_config_value current_group<4>
+	// ******
+
+	// SKIPPED BLOCKS
+	// <0x59ca2f><1>
+	// <0x59cc21><2>
+	// <0x59ce22><4>
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <0x59c9d0>|0x010|+0x01d:'18'
+	// <0x59c9ed>|0x02d|+0x01b:'19'
+	// <0x59ca08>|0x048|+0x01b:'20'
+	// <0x59ca23>|0x063|+0x00e:'21'
+	// <0>
+	// <0x59ca31>|0x071|+0x017:'23'
+	// <0x59ca48>|0x088|+0x022:'24'
+	// <0x59ca6a>|0x0aa|+0x01a:'25'
+	// <0>
+	// <1>
+	// <2>
+	// <0x59ca84>|0x0c4|+0x01d:'29'
+	// <0x59caa1>|0x0e1|+0x01d:'30'
+	// <0x59cabe>|0x0fe|+0x01b:'31'
+	// <0x59cad9>|0x119|+0x01b:'32'
+	// <0x59caf4>|0x134|+0x01b:'33'
+	// <0x59cb0f>|0x14f|+0x01b:'34'
+	// <0x59cb2a>|0x16a|+0x01b:'35'
+	// <0x59cb45>|0x185|+0x01b:'36'
+	// <0x59cb60>|0x1a0|+0x01b:'37'
+	// <0x59cb7b>|0x1bb|+0x01b:'38'
+	// <0x59cb96>|0x1d6|+0x01b:'39'
+	// <0x59cbb1>|0x1f1|+0x01b:'40'
+	// <0>
+	// <1>
+	// <0x59cbcc>|0x20c|+0x017:'43'
+	// <0x59cbe3>|0x223|+0x026:'44'
+	// <0x59cc09>|0x249|+0x01e|[1]:'45'
+	// <0>
+	// <0x59cc27>|0x267|+0x03a:'47'
+	// <0x59cc61>|0x2a1|+0x079:'48'
+	// <0x59ccda>|0x31a|+0x040:'49'
+	// <0x59cd1a>|0x35a|+0x009:'50'
+	// <0x59cd23>|0x363|+0x019:'51'
+	// <0x59cd3c>|0x37c|+0x018:'52'
+	// <0x59cd54>|0x394|+0x01a:'53'
+	// <0x59cd6e>|0x3ae|+0x01a:'54'
+	// <0x59cd88>|0x3c8|+0x018:'55'
+	// <0x59cda0>|0x3e0|+0x018:'56'
+	// <0x59cdb8>|0x3f8|+0x018:'57'
+	// <0>
+	// <0x59cdd0>|0x410|+0x017:'59'
+	// <0x59cde7>|0x427|+0x023:'60'
+	// <0x59ce0a>|0x44a|+0x01e|[3]:'61'
+	// <0>
+	// <0x59ce28>|0x468|+0x03a:'63'
+	// <0x59ce62>|0x4a2|+0x082:'64'
+	// <0x59cee4>|0x524|+0x03d:'65'
+	// <0x59cf21>|0x561|+0x019:'66'
+	// <0x59cf3a>|0x57a|+0x018:'67'
+	// <0x59cf52>|0x592|+0x018:'68'
+	// <0>
+	// <0x59cf6a>|0x5aa|+0x017:'70'
+	// <0x59cf81>|0x5c1|+0x01b:'71'
+	// <0x59cf9c>|0x5dc|+0x010:'72'
+	// <0x59cfac>|0x5ec|+0x005:'73'
+	// <0x59cfb1>|0x5f1|+0x005:'74'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+// bool survarium::state_prio(survarium::anomaly_state*, survarium::anomaly_state*)
+bool state_prio( anomaly_state* s1, anomaly_state* s2 )
+{
+	return false;
+
+	// FUNCTION BODY
+	// <0x59c634>|0x004|+0x010:'80'
+	// <0>
+	// <1>
+	// <2>
+	// <0x59c644>|0x014|+0x03b:'84'
+	// <0x59c67f>|0x04f|+0x002:'85'
+	// <0x59c681>|0x051|+0x023:'86'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+// void survarium::generic_anomaly_core::resolve_links(survarium::base_project*, vostok::configs::binary_config_value)
+void generic_anomaly_core::resolve_links( base_project* p, configs::binary_config_value config )
+{
+	// LOCALS
+	// u32 							artefact_containers_count
+	// u32 							states_count
+	// u32 							a<1>
+	// pcstr 						full_path_name<2>
+	// u32 							s<2>
+	// anomaly_state* 				state<3>
+	// u32 							g<4>
+	// zone_group* 					group<5>
+	// u32 							z<6>
+	// pcstr 						full_path_name<7>
+	// ******
+
+	// CALL SITE INFO
+	// <0x59c71e> -> base_game_object* <unknown>(pcstr)
+	// <0x59c8c7> -> base_game_object* <unknown>(pcstr)
+	// ******
+
+	// FUNCTION BODY
+	// <0x59c6bf>|0x00f|+0x011:'92'
+	// <0x59c6d0>|0x020|+0x01e|[1]:'93'
+	// <0>
+	// <0x59c6ee>|0x03e|+0x021|[2]:'95'
+	// <0x59c70f>|0x05f|+0x069:'96'
+	// <0x59c778>|0x0c8|+0x005:'97'
+	// <0>
+	// <0x59c77d>|0x0cd|+0x011:'99'
+	// <0x59c78e>|0x0de|+0x01e|[2]:'100'
+	// <0>
+	// <0x59c7ac>|0x0fc|+0x034|[3]:'102'
+	// <0x59c7e0>|0x130|+0x026|[4]:'103'
+	// <0>
+	// <0x59c806>|0x156|+0x031|[5]:'105'
+	// <0x59c837>|0x187|+0x032|[6]:'106'
+	// <0>
+	// <0x59c869>|0x1b9|+0x04f|[7]:'108'
+	// <0x59c8b8>|0x208|+0x056:'109'
+	// <0x59c90e>|0x25e|+0x037:'110'
+	// <0x59c945>|0x295|+0x005:'111'
+	// <0x59c94a>|0x29a|+0x005:'112'
+	// <0x59c94f>|0x29f|+0x005:'113'
+	// <0>
+	// <0x59c954>|0x2a4|+0x061:'115'
+	// ******
+}
+
+} // namespace survarium

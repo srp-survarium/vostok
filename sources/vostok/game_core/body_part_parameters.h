@@ -5,152 +5,104 @@
 #ifndef BODY_PART_PARAMETERS_H_INCLUDED
 #define BODY_PART_PARAMETERS_H_INCLUDED
 
-#include "hit_affects_type_enum.h"
-#include "affect_event_type_enum.h"
-
-#include "hit_type_parameters.h" // intrusive_list
-#include "affects_threshold.h"	 // intrusive_list
-#include "damage_protector.h"	 // intrusive_list
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
+#include <vostok/game_core/hit_affects_type_enum.h>
+#include <vostok/game_core/affect_event_type_enum.h>
+#include <vostok/game_core/hit_type_parameters.h>
+#include <vostok/game_core/affects_threshold.h>
+#include <vostok/game_core/damage_protector.h>
 
 namespace survarium {
 	class damage_model;
+	struct damage_info_type; // sushi@TODO
 }
 
 namespace vostok {
-	namespace ai {
-		struct npc_statistics;
-	}
+namespace ai {
+	struct npc_statistics;
 }
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
+namespace network_core {
+	class packet_reader;
+	class udp_match_packet;
+}
+}
 
 namespace survarium {
 
 class body_part_parameters : public boost::noncopyable {
 public:
-	body_part_parameters(
-		pcstr                              name,
-		float                              health,
-		float                              regeneration_speed,
-		float                              regeneration_timeout,
-		bool                               can_be_assigned,
-		damage_model&                      owner,
-		u8                                 damage_group);
+									body_part_parameters	(
+										pcstr				name,
+										float				health,
+										float				regeneration_speed,
+										float				regeneration_timeout,
+										bool				can_be_assigned,
+										damage_model&		owner,
+										u8					damage_group
+									);
 
-	void add_hit_type(
-		hit_type_parameters*		       new_hit_type);
+			void					add_hit_type			( hit_type_parameters* const new_hit_type );
+			void					add_threshold			( affects_threshold* const new_threshold );
 
-	void add_threshold(
-		affects_threshold*                 new_threshold);
+			void					hit_by_type				(
+										pcstr					hit_type,
+										u32						time_in_ms,
+										float					amount,
+										float					armor_piercing,
+										bool					__formal,
+										damage_protector*		prot
+									);
 
-	void hit_by_type(
-		pcstr                              hit_type,
-		u32                                time_in_ms,
-		float                              amount,
-		float                              armor_piercing,
-		bool                               __formal,
-		damage_protector*                  prot);
+			void					increase_health			( float amount );
+			void					decrease_health			( float amount );
 
-	void increase_health(
-		float                              amount);
+			void					regenerate				( u32 time_delta_ms, u32 current_time_in_ms );
 
-	void decrease_health(
-		float                              amount);
+			void					dump_state				( boost::function<void(u32,float,float,pcstr)> callback, u32 index ) const;
+	inline	void					dump_state				( damage_info_type& arg_0, u32 arg_1 ) const { /* no source */ }
+			void					dump_state				( ai::npc_statistics& stats, u32 current_time_in_ms ) const;
 
-	void regenerate(
-		u32                                time_delta_ms,
-		u32                                current_time_in_ms);
+	inline	void					remove_edges			( body_part_parameters* arg_0 ) { /* no source */ }
 
-	void dump_state(
-		boost::function<void __cdecl(u32,float,float,pcstr)> callback,
-		u32                                index) const;
-#if 0
-	void dump_state(damage_info_type&, u32) const /* no source */;
-#endif
-	void dump_state(
-		vostok::ai::npc_statistics&          stats,
-		u32                                current_time_in_ms) const;
-#if 0
-	void remove_edges(body_part_parameters*) /* no source */;
-#endif
-	void reset( );
+			void					reset					( );
 
-	void apply_affect_by_force(
-		hit_affects_type_enum              affect,
-		affect_event_type_enum             event_type,
-		u32                                current_time_in_ms);
+			void					apply_affect_by_force	( hit_affects_type_enum affect, affect_event_type_enum event_type, u32 current_time_in_ms );
 
-	bool can_affect_death( );
+			bool					can_affect_death		( );
+			bool					has_affect_protector	( hit_affects_type_enum affect );
+			u8						get_health_in_percentage( );
+			void					cancel_affect_by_force	( hit_affects_type_enum affect );
 
-	bool has_affect_protector(
-		hit_affects_type_enum              affect);
+			void					add_damage_protector	( damage_protector* protector );
+			void					remove_damage_protector	( damage_protector* protector );
 
-	u8 get_health_in_percentage( );
+	inline	pcstr					get_name				( ) const { return m_name.c_str( ); }
 
-	void cancel_affect_by_force(
-		hit_affects_type_enum              affect);
+	inline	bool					is_healthy				( ) const { return m_health == m_max_health; } // sushi@TODO: This is an assumption before we find actual usage
+	inline	float					relative_health			( ) const { return m_health; }
+	inline	float					get_max_health			( ) const { return m_max_health; }
 
-	void add_damage_protector(
-		damage_protector*                  protector);
+	inline	u8						damage_group			( ) const { return m_damage_group; }
 
-	void remove_damage_protector(
-		damage_protector*                  protector);
+	inline	float					get_regeneration_speed	( ) const { return m_regeneration_speed; }
 
-	pcstr get_name() const { return m_name.c_str(); } /* sushi@TODO: Is this impl buggy for cases where name is 16 chars? */
+			hit_type_parameters*	pop_hit_type			( );
+			affects_threshold*		pop_threshold			( );
 
+	inline	math::color				get_health_level_color	( ) const { /* no source */ }
 
-	bool is_healthy() const { return m_health == m_max_health; } /* sushi@TODO: Maybe? Try to find usage, since this is inlined */
+			bool					is_affect_applied		( hit_affects_type_enum affect );
 
-	float relative_health() const { return m_health; } /* sushi@TODO: I don't know what this might mean */;
+			hit_type_parameters*	get_hit_parameters		( pcstr hit_type ) const;
+			void					set_parameters			( float max_health, float regeneration_speed );
 
-	float get_max_health() const { return m_max_health; }
+			void					serialize				( network_core::udp_match_packet& packet, s32 client_offset ) const;
+			void					deserialize				( network_core::packet_reader& reader );
 
-	u8 damage_group() const { return m_damage_group; }
+private:
+			void					check_affects			( u32 current_time_in_ms );
+			void					update_affects			( u32 current_time_in_ms );
+			void					apply_affects			( affects_threshold const* threshold_reached, u32 current_time_in_ms );
 
-	float get_regeneration_speed() const { return m_regeneration_speed; }
-
-	hit_type_parameters* pop_hit_type( );
-
-	affects_threshold* pop_threshold( );
-
-	// color get_health_level_color() const /* sushi@TODO: Checkout color */;
-
-	bool is_affect_applied(
-		hit_affects_type_enum              affect);
-
-	hit_type_parameters* get_hit_parameters(
-		pcstr                              hit_type) const;
-
-	void set_parameters(
-		float                              max_health,
-		float                              regeneration_speed);
-
-	/* sushi@TODO: Serialization is skipped for now
-	void serialize(
-		vostok::network_core::udp_match_packet& packet,
-		s32                                client_offset);
-
-	void deserialize(
-		vostok::network_core::packet_reader& reader);
-	*/
-
-public: // sushi@TODO: Should mark private
-	void check_affects(
-		u32                                current_time_in_ms);
-
-	void update_affects(
-		u32                                current_time_in_ms);
-
-
-	void apply_affects(
-		affects_threshold const*           threshold_reached,
-		u32                                current_time_in_ms);
 
 public:
 	typedef vostok::intrusive_list<
@@ -159,7 +111,7 @@ public:
 		&hit_type_parameters::next,
 		vostok::threading::single_threading_policy,
 		vostok::size_policy,
-		vostok::no_debug_policy >  hit_type_parameters_type;
+		vostok::no_debug_policy >  hit_type_parameters_list;
 
 	typedef vostok::intrusive_list<
 		affects_threshold,
@@ -167,11 +119,11 @@ public:
 		&affects_threshold::next,
 		vostok::threading::single_threading_policy,
 		vostok::size_policy,
-		vostok::no_debug_policy >  affects_threshold_type;
+		vostok::no_debug_policy >  affects_thresholds_list;
 
 	typedef vostok::fixed_vector<
 		std::pair< hit_affects_type_enum, u32 >,
-		8 >											hit_affects_types;
+		8 >							hit_affects_types_type;
 
 	typedef vostok::intrusive_list<
 		damage_protector,
@@ -179,33 +131,27 @@ public:
 		&damage_protector::next,
 		vostok::threading::single_threading_policy,
 		vostok::size_policy,
-		vostok::no_debug_policy >  damage_protector_type;
+		vostok::no_debug_policy >  damage_protectors_list;
 
 public:
-	// STATE_M[VERIFIED]
-	body_part_parameters*				next;
-	hit_type_parameters_type			m_hit_types;
-	affects_threshold_type				m_thresholds;
-	hit_affects_types					m_affects;
-	damage_model&                       m_damage_model;
-	vostok::fixed_string<16>			m_name;
-	float                               m_max_health;
-	float                               m_health;
-	float                               m_regeneration_speed;	/* health per second */
-	u32                                 m_regeneration_timeout;
-	u32                                 m_last_hit_time;
-	float                               m_last_hit_health;
-	bool                                m_assignable;
-	u8									m_damage_group;
-	damage_protector_type				m_damage_protectors;
-
+	/* 0x0000 */	body_part_parameters*			next;
+	/* 0x0004 */	hit_type_parameters_list		m_hit_types;
+	/* 0x0014 */	affects_thresholds_list			m_thresholds;
+	/* 0x0024 */	hit_affects_types_type			m_affects;
+	/* 0x006c */	damage_model&					m_damage_model;
+	/* 0x0070 */	fixed_string<16>				m_name;
+	/* 0x008c */	float							m_max_health;
+	/* 0x0090 */	float							m_health;
+	/* 0x0094 */	float							m_regeneration_speed; /* health per second */
+	/* 0x0098 */	u32								m_regeneration_timeout;
+	/* 0x009c */	u32								m_last_hit_time;
+	/* 0x00a0 */	float							m_last_hit_health;
+	/* 0x00a4 */	bool							m_assignable;
+	/* 0x00a5 */	u8								m_damage_group;
+	/* 0x00a8 */	damage_protectors_list			m_damage_protectors;
 }; // class body_part_parameters
 
-namespace {
-	typedef char size_assert[
-		sizeof(body_part_parameters) == 0xB8 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(body_part_parameters, 0xB8);
 
 } // namespace survarium
 

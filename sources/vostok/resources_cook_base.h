@@ -19,29 +19,29 @@ class query_result_for_cook;
 class unmanaged_cook;
 class managed_cook;
 class inplace_unmanaged_cook;
-class inplace_managed_cook;	
-class translate_query_cook;	
+class inplace_managed_cook;
+class translate_query_cook;
 
 class VOSTOK_CORE_API cook_base
 {
 public:
-	enum flags_enum					{ 	flag_destroy_in_any_thread					=	1 << 0,	
-										flag_create_allocates_destroy_deallocates	=	1 << 1,		
-										flag_no_deallocate							=	1 << 2,		
+	enum flags_enum					{ 	flag_destroy_in_any_thread					=	1 << 0,
+										flag_create_allocates_destroy_deallocates	=	1 << 1,
+										flag_no_deallocate							=	1 << 2,
 										flag_last									=	1 << 3, };
 public:
 	static u32  const					thread_id_unset					=	(u32)-1;
 	static u32	const 					use_cook_thread_id				=	(u32)-2;
-	static u32	const 					use_current_thread_id			=	(u32)-3;
+	static u32	const 					use_current_thread_id			=	(u32)-3; // 0xFFFFFFFD
 	static u32	const 					use_resource_manager_thread_id	=	(u32)-4;
 	static u32	const 					use_any_thread_id				=	(u32)-5;
 
 	enum reuse_enum					{	reuse_false, reuse_true, reuse_raw	};
 
 	enum result_enum				{	result_undefined,	// do not return this from cook
-										result_error, 
+										result_error,
 										result_postponed,
-										result_success, 
+										result_success,
 										result_requery,
 										result_out_of_memory	};
 
@@ -52,7 +52,7 @@ protected:
 									};
 
 public:
-			cook_base					(class_id_enum				resource_class, 
+			cook_base					(class_id_enum				resource_class,
 										 reuse_enum					reuse_type,
 										 enum_flags<flags_enum>		flags,
 										 u32 						creation_thread_id,
@@ -75,7 +75,7 @@ public:
 			inplace_unmanaged_cook *	cast_inplace_unmanaged_cook	();
 			inplace_managed_cook *		cast_inplace_managed_cook	();
 			translate_query_cook *		cast_translate_query_cook	();
-	
+
 	static	cook_base *					find_cook					(class_id_enum);
 	static	unmanaged_cook *			find_unmanaged_cook			(class_id_enum);
 	static	managed_cook *				find_managed_cook			(class_id_enum);
@@ -102,7 +102,7 @@ public:
 	static	bool						destroy_in_any_thread		(class_id_enum);
 
 			bool						does_deallocate				() const;
-	
+
 			reuse_enum					reuse_type					() const;
 	static	reuse_enum					reuse_type					(class_id_enum);
 

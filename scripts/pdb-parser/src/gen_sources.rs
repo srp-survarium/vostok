@@ -622,7 +622,7 @@ impl<'a> Function<'a> {
             //
             proc_start,
             proc_end,
-            statements,
+            mut statements,
             //
             constants,
             statics,
@@ -736,109 +736,126 @@ impl<'a> Function<'a> {
 
         if let type_parser::ReturnType::Type(type_) = &fn_t.return_type {
             #[rustfmt::skip]
-            match type_.as_str() {
-                _ if type_.ends_with('*')    => writeln!(w, "\treturn NULL;")?,
-                "pcstr"                      => writeln!(w, "\treturn NULL;")?,
+            let return_value = match type_.as_str() {
+                _ if type_.ends_with('*')    => "NULL",
+                "pcstr"                      => "NULL",
 
-                "vostok::math::aabb"         => writeln!(w, "\treturn vostok::math::aabb();")?,
-                "vostok::math::color"        => writeln!(w, "\treturn vostok::math::color();")?,
-                "vostok::math::frustum"      => writeln!(w, "\treturn vostok::math::frustum();")?,
-                "vostok::math::intersection" => writeln!(w, "\treturn vostok::math::intersection();")?,
-                "vostok::math::plane"        => writeln!(w, "\treturn vostok::math::plane()")?,
-                "vostok::math::quaternion"   => writeln!(w, "\treturn vostok::math::quaternion()")?,
+                "vostok::math::aabb"         => "vostok::math::aabb()",
+                "vostok::math::color"        => "vostok::math::color()",
+                "vostok::math::frustum"      => "vostok::math::frustum()",
+                "vostok::math::intersection" => "vostok::math::intersection()",
+                "vostok::math::plane"        => "vostok::math::plane()",
+                "vostok::math::quaternion"   => "vostok::math::quaternion()",
 
-                "vostok::math::uint2"        => writeln!(w, "\treturn vostok::math::uint2(1, 1);")?,
+                "vostok::math::uint2"        => "vostok::math::uint2(1, 1)",
 
-                "vostok::math::float2"       => writeln!(w, "\treturn vostok::math::float2(1., 1.);")?,
-                "vostok::math::float3"       => writeln!(w, "\treturn vostok::math::float3(1., 1., 1.);")?,
-                "vostok::math::float4"       => writeln!(w, "\treturn vostok::math::float4(1., 1., 1., 1.);")?,
+                "vostok::math::float2"       => "vostok::math::float2(1., 1.)",
+                "vostok::math::float3"       => "vostok::math::float3(1., 1., 1.)",
+                "vostok::math::float4"       => "vostok::math::float4(1., 1., 1., 1.)",
 
-                "vostok::math::float3_pod"   => writeln!(w, "\treturn vostok::math::float3_pod();")?,
-                "vostok::math::float4_pod"   => writeln!(w, "\treturn vostok::math::float4_pod();")?,
-                "vostok::math::float4x4"     => writeln!(w, "\treturn vostok::math::float4x4();")?,
+                "vostok::math::float3_pod"   => "vostok::math::float3_pod()",
+                "vostok::math::float4_pod"   => "vostok::math::float4_pod()",
+                "vostok::math::float4x4"     => "vostok::math::float4x4()",
 
                 // sad
-                "aabb"         => writeln!(w, "\treturn aabb();")?,
-                "color"        => writeln!(w, "\treturn color();")?,
-                "frustum"      => writeln!(w, "\treturn frustum();")?,
-                "intersection" => writeln!(w, "\treturn intersection();")?,
-                "plane"        => writeln!(w, "\treturn plane()")?,
-                "quaternion"   => writeln!(w, "\treturn quaternion()")?,
+                "math::aabb"         => "math::aabb()",
+                "math::color"        => "math::color()",
+                "math::frustum"      => "math::frustum()",
+                "math::intersection" => "math::intersection()",
+                "math::plane"        => "math::plane()",
+                "math::quaternion"   => "math::quaternion()",
 
-                "uint2"        => writeln!(w, "\treturn uint2(1, 1);")?,
+                "uint2"        => "uint2(1, 1)",
 
-                "float2"       => writeln!(w, "\treturn float2(1., 1.);")?,
-                "float3"       => writeln!(w, "\treturn float3(1., 1., 1.);")?,
-                "float4"       => writeln!(w, "\treturn float4(1., 1., 1., 1.);")?,
+                "float2"       => "float2(1., 1.)",
+                "float3"       => "float3(1., 1., 1.)",
+                "float4"       => "float4(1., 1., 1., 1.)",
 
-                "float3_pod"   => writeln!(w, "\treturn float3_pod();")?,
-                "float4_pod"   => writeln!(w, "\treturn float4_pod();")?,
-                "float4x4"     => writeln!(w, "\treturn float4x4();")?,
-                // sad
+                "float3_pod"   => "float3_pod()",
+                "float4_pod"   => "float4_pod()",
+                "float4x4"     => "float4x4()",
+                // sad end
 
 
-                "u8" | "u16" | "u32" => writeln!(w, "\treturn 0;")?,
-                "s8" | "s16" | "s32" => writeln!(w, "\treturn 0;")?,
-                "float" | "double"   => writeln!(w, "\treturn 0.0f;")?,
-                "bool"               => writeln!(w, "\treturn false;")?,
-                "char"               => writeln!(w, "\treturn 'a';")?,
+                "u8" | "u16" | "u32" => "0",
+                "s8" | "s16" | "s32" => "0",
+                "float" | "double"   => "0.0f",
+                "bool"               => "false",
+                "char"               => "'a'",
 
-                "void" => (),
-                _      => (),
+                "void" => "",
+                _      => "",
             };
+
+            if !return_value.is_empty() {
+                writeln!(w, "\treturn {return_value};\n")?;
+            }
         }
 
-        if proc_start + 1 < proc_end {
+        {
             writeln!(w, "\t// FUNCTION BODY")?;
 
-            let n = |num: i32| match num >= 0 {
-                true => format!("0x{num:03x}"),
-                false => format!("-0x{num:03x}", num = num.abs()),
+            let rva_diff = |lhs: pdb::Rva, rhs: pdb::Rva| -> i32 { lhs.0 as i32 - rhs.0 as i32 };
+            let print_rva_diff_start = |diff: i32| match diff >= 0 {
+                true => format!("0x{diff:03x}"),
+                false => format!("-0x{diff:03x}", diff = diff.abs()),
+            };
+            let print_rva_diff_next = |diff: Option<i32>| match diff {
+                None => "      ".to_string(),
+                Some(diff) => match diff >= 0 {
+                    true => format!("+0x{diff:03x}"),
+                    false => format!("-0x{diff:03x}", diff = diff.abs()),
+                },
             };
 
-            let mut first_statement_rva = None;
-            let mut prev_statement_rva = None;
-            let mut empty_line_no = 0;
+            let non_empty_body = statements.len() > 2;
 
-            for i in proc_start + 1..proc_end {
-                match statements.iter().find(|bp| bp.line_start == i) {
-                    Some(Statement {
-                        rva,
-                        line_start,
-                        depth,
-                    }) => {
-                        empty_line_no = 0;
+            let mut next_line = proc_start;
+            statements.sort_by_key(|statement| statement.line_start);
 
-                        let prev_statement_rva = match prev_statement_rva {
-                            None => {
-                                first_statement_rva = Some(rva);
-                                prev_statement_rva = Some(rva);
-                                rva
-                            }
-                            Some(prev_rva) => {
-                                prev_statement_rva = Some(rva);
-                                prev_rva
-                            }
-                        };
-                        let first_statement_rva = first_statement_rva.unwrap();
+            for i in 0..statements.len() {
+                let Statement {
+                    rva,
+                    line_start,
+                    depth,
+                } = statements[i];
 
-                        let offset = rva.saturating_add(GAME_IB);
-
-                        let diff_start = n(rva.0 as i32 - first_statement_rva.0 as i32);
-                        let diff_prev = n(rva.0 as i32 - prev_statement_rva.0 as i32);
-
-                        #[rustfmt::skip]
-                        match depth {
-                            0  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_prev}:'{line_start}'"),
-                            _  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_prev}|[{depth}]:'{line_start}'"),
-                        }?;
-                    }
-
-                    None => {
-                        empty_line_no += 1;
-                        writeln!(w, "\t// <{empty_line_no}>")?
-                    }
+                // There can be multiple statements on a single line
+                for empty_line_no in 0..line_start.saturating_sub(next_line) {
+                    writeln!(w, "\t// <{empty_line_no}>")?
                 }
+                next_line = line_start + 1;
+
+                let diff_start = rva_diff(rva, statements[0].rva);
+                let diff_next = statements
+                    .get(i + 1)
+                    .map(|statement| rva_diff(statement.rva, rva));
+                let offset = rva.saturating_add(GAME_IB);
+
+                let diff_start = print_rva_diff_start(diff_start);
+                let diff_next = print_rva_diff_next(diff_next);
+
+                let suffix = if i == 0 {
+                    "\t{"
+                } else if i == statements.len() - 1 {
+                    "\t}"
+                } else {
+                    ""
+                };
+
+                if !suffix.is_empty() && non_empty_body {
+                    continue;
+                }
+
+                #[rustfmt::skip]
+                match depth {
+                    0  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}:'{line_start}'{suffix}"),
+                    _  => writeln!(w, "\t// <{offset}>|{diff_start}|{diff_next}|[{depth}]:'{line_start}'{suffix}"),
+                }?;
+            }
+
+            for empty_line_no in 0..proc_end.saturating_sub(next_line) {
+                writeln!(w, "\t// <{empty_line_no}>")?
             }
 
             writeln!(w, "\t// ******")?;

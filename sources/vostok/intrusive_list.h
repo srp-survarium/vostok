@@ -13,10 +13,10 @@
 
 namespace vostok {
 
-template <	typename BaseWithMember, 
-			typename PointerType, 
-			PointerType BaseWithMember::*MemberNext, 
-			typename ThreadingPolicy	=	threading::mutex, 
+template <	typename BaseWithMember,
+			typename PointerType,
+			PointerType BaseWithMember::*MemberNext,
+			typename ThreadingPolicy	=	threading::mutex,
 			typename SizePolicy			=	size_policy,
 			typename DebugPolicy		=	debug_policy>
 class intrusive_list : public SizePolicy, public ThreadingPolicy, public DebugPolicy {
@@ -46,13 +46,15 @@ public:
 	inline	bool		contains_one_element() const { return m_first && m_first == m_last; }
 
 	inline	bool		erase				(PointerType object);
+	inline	PointerType find				(PointerType object);
+
 
 	template <class Predicate>
 	inline	void		for_each			(Predicate const & pred) const;
 
 	template <class Predicate>
 	inline	void		for_each			(Predicate & pred) const;
-	
+
 	template <class Predicate>
 	inline	void		for_each			(Predicate & pred);
 
@@ -61,10 +63,10 @@ public:
 
 	template <class Predicate>
 	inline	PointerType	remove_if			(Predicate & pred);
-	
+
 	template <class Predicate>
 	inline	PointerType	find_if				(Predicate const & pred) const;
-	
+
 	template <class Predicate>
 	inline	PointerType	find_if				(Predicate & pred);
 
@@ -72,7 +74,7 @@ public:
 	static	void		set_next_of_object	(PointerType object, PointerType next) { const_cast< typename boost::remove_cv<PointerType>::type &>( (* object).*MemberNext ) = next; }
 
 	inline	bool		contains_object		(PointerType object);
-private:	
+private:
 	inline	bool		contains_object_thread_unsafe	(PointerType object);
 
 	template <class Predicate>
@@ -100,7 +102,7 @@ private:
 } // namespace vostok
 
 template <typename BaseWithMember, typename PointerType, PointerType BaseWithMember::*MemberNext, typename ThreadingPolicy>
-inline	void			swap			(vostok::intrusive_list<BaseWithMember, PointerType, MemberNext, ThreadingPolicy>& left, 
+inline	void			swap			(vostok::intrusive_list<BaseWithMember, PointerType, MemberNext, ThreadingPolicy>& left,
 										 vostok::intrusive_list<BaseWithMember, PointerType, MemberNext, ThreadingPolicy>& right);
 
 inline	void			swap			(vostok::size_policy & left, vostok::size_policy & right);

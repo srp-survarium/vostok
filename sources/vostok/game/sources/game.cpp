@@ -52,6 +52,8 @@
 #include "lobby_menu.h"
 #include "key_binder.h"
 
+#include <vostok/game_core/ladder_cook.h>
+
 #ifdef VOSTOK_STATIC_LIBRARIES
 #include <GFx.h>
 #include "flash_factory.h"
@@ -107,13 +109,13 @@ namespace survarium {
 // {
 // 	static vostok::math::random32 randomizer(100);
 // 	static u32 const random_max = 65535;
-// 
+//
 // 	float random_float(float min_value, float max_value)
 // 	{
 // 		float alpha = float(randomizer.random(random_max)) / float(random_max);
 // 		return min_value * (1.0f - alpha) + max_value * alpha;
 // 	}
-// 
+//
 // 	float3 random_float3(float3 const& min_value, float3 const& max_value)
 // 	{
 // 		return float3(random_float(min_value.x, max_value.x),
@@ -126,26 +128,26 @@ namespace survarium {
 // {
 // 	if (!data.is_successful())
 // 		return;
-// 	
+//
 // 	using namespace vostok::math;
-// 	
+//
 // 	float4x4 transform = create_translation( temp::random_float3(float3(-400, 0, -400), float3(400, 0, 400)));
-// 	
+//
 // 	vostok::render::speedtree_instance_ptr st_instance_ptr = static_cast_resource_ptr<vostok::render::speedtree_instance_ptr>(data[0].get_unmanaged_resource());
 // 	r->add_speedtree_instance(st_instance_ptr, transform);
 // }
-// 
+//
 // static void load_speedtree(vostok::render::game::renderer* r)
 // {
 // 	if (is_speedtree_loaded || !s_speedtree_key.is_set())
 // 		return;
-// 	
+//
 // 	for (u32 i=0; i<5000; i++)
 // 	{
 // 		pcstr					tree_name = "acacia";
 // 		if (i>5*333 && i<5*666)		tree_name = "white_birch"; // live_oak
 // 		else if (i>=5*666)		tree_name = "banana_plant";
-// 		
+//
 // 		resources::query_resource(
 // 			tree_name,
 // 			resources::speedtree_instance_class,
@@ -153,7 +155,7 @@ namespace survarium {
 // 			g_allocator
 // 		);
 // 	}
-// 	
+//
 // 	is_speedtree_loaded = true;
 // }
 
@@ -163,7 +165,7 @@ namespace survarium {
 game::game(		vostok::engine_user::engine& engine,
 				vostok::render::world& render_world,
 				vostok::sound::world& sound,
-				vostok::network::world& network ) 
+				vostok::network::world& network )
 :	m_engine				( engine ),
 	m_render_world			( render_world ),
 	m_renderer				( render_world.game_renderer() ),
@@ -177,7 +179,7 @@ game::game(		vostok::engine_user::engine& engine,
 	m_animation_world		( 0 ),
 //	m_rtp_world				( 0 ),
 //	m_ai_navigation_world	( 0 ),
-	
+
 //	m_ai_world				( 0 ),
 //	m_spatial_tree			( 0 ),
 	m_sound_test_allowed	( s_run_sound_tests.is_set() ),
@@ -198,14 +200,14 @@ game::game(		vostok::engine_user::engine& engine,
 	m_debug_window			( NULL )
 {
 	query_render_scene		( );
-	
+
 	static vostok::console_commands::cc_delegate s_reload_shaders(
 		"reload_shaders",
 		boost::bind( &vostok::render::scene_renderer::reload_shaders, &m_renderer.scene() ),
 		false
 	);
 	m_timer.start			( );
-	
+
 	static vostok::console_commands::cc_delegate s_reload_modified_textures(
 		"reload_modified_textures",
 		boost::bind( &vostok::render::scene_renderer::reload_modified_textures, &m_renderer.scene() ),
@@ -219,7 +221,7 @@ game::game(		vostok::engine_user::engine& engine,
 }
 
 game::~game( )
-{	
+{
 	console_commands::save		( 0, vostok::console_commands::command_type_engine_internal, *g_allocator );
 	console_commands::save		( 0, vostok::console_commands::command_type_user_specific, *g_allocator );
 
@@ -252,14 +254,14 @@ void game::on_render_scene_created( vostok::resources::queries_result& data )
 	m_render_output_window		= static_cast_resource_ptr< vostok::render::render_output_window_ptr >( data[0].get_unmanaged_resource() );
 
 	m_timer.start				( );
-	
+
 //	query_npc_dictionary		( );
 
 	initialize_modules			( );
 	register_cooks				( );
 
 	m_initialized				= true;
-	
+
 	m_game_world				= NEW( game_world )( *this );
 	static object_cooker s_object_cook( *m_game_world );
 	static object_scene_cooker s_object_scene_cook( *m_game_world );
@@ -290,7 +292,7 @@ void game::on_render_scene_created( vostok::resources::queries_result& data )
 
 	fixed_string512				project_path;
 	bool const load_level		= s_level_key.is_set_as_string( &project_path );
-	
+
 	if ( load_level && !m_engine.command_line_editor() )
 		load					( project_path.c_str() );
 	else
@@ -298,7 +300,7 @@ void game::on_render_scene_created( vostok::resources::queries_result& data )
 
 //	R_ASSERT					( m_rtp_world );
 //	rtp().set_scene				( m_scene );
-	
+
 	R_ASSERT					( m_animation_world );
 //	animation_world().set_test_scene( m_scene );
 
@@ -319,13 +321,13 @@ void game::query_render_scene( )
 
 	resources::user_data_variant window_data;
 	window_data.set				( window_configuration );
-	
+
 	resources::user_data_variant output_window_data;
 
 	vostok::resources::user_data_variant const* data[] = { /*&scene_data, 0,*/ &window_data };
 
 	vostok::const_buffer			temp_buffer( "", 1 );
-	vostok::resources::creation_request requests[] = 
+	vostok::resources::creation_request requests[] =
 	{
 //		vostok::resources::creation_request( "game_scene", temp_buffer, resources::scene_class ),
 //		vostok::resources::creation_request( "game_scene_view", temp_buffer, resources::scene_view_class ),
@@ -352,7 +354,7 @@ void game::enable( bool value )
 
 		// select active scene
 		game_scene* scene_to_activate = /*m_lobby_menu;*/m_game_world;
-#if 0		
+#if 0
 		if( m_game_world->empty() )
 			scene_to_activate		= m_main_menu;
 #endif
@@ -371,22 +373,22 @@ void game::enable( bool value )
  		LOG_ERROR					( "config file loading FAILED" );
  		return;
  	}
- 
+
  	resources::pinned_ptr_const<u8> pinned_data( data[0].get_managed_resource() );
  	memory::reader F				( pinned_data.c_ptr(), pinned_data.size() );
 	console_commands::load			( F, console_commands::execution_filter_general );
  }
- 
+
  void load_config_query				( pcstr cfg_name )
  {
  	resources::query_resource		(
  		cfg_name,
  		vostok::resources::raw_data_class,
  		boost::bind( &on_config_loaded, _1 ),
- 		g_allocator, 
-		0, 
-		0, 
-		assert_on_fail_false		
+ 		g_allocator,
+		0,
+		0,
+		assert_on_fail_false
  	);
  }
 
@@ -394,7 +396,7 @@ void game::register_console_commands( )
 {
 	static exit_handler				game_exit_handler( *this );
 //	static npc_manipulation_handler npc_management_handler( *this );
-	
+
 	m_input_world->add_handler		( game_exit_handler );
 //	m_input_world->add_handler		( npc_management_handler );
 
@@ -414,7 +416,7 @@ void game::switch_to_scene( game_scene* scene )
 
 	if( m_active_scene )
 		m_active_scene->on_deactivate( );
-	
+
 	m_active_scene	= scene;
 	m_active_scene->on_activate		( );
 
@@ -446,7 +448,7 @@ void game::toggle_console			( )
 void game::exit( pcstr str )
 {
 	unload							( str, true );
-	
+
 	if ( m_engine.command_line_editor() )
 		m_engine.enter_editor_mode	( );
 	else
@@ -472,7 +474,7 @@ void game::tick( u32 const current_frame_id )
 	if ( m_active_scene )
 	{
  		m_input_world->tick			( );
-		m_active_scene->tick		( );	
+		m_active_scene->tick		( );
 	}
 
 
@@ -510,10 +512,10 @@ void game::tick( u32 const current_frame_id )
 	if ( (m_debug_window_type != debug_window_none) && !m_console->get_active() )
 		draw_debug_window			( );
 
-	renderer().draw_scene( 
-							get_active_scene(), 
-							get_active_scene_view(), 
-							render_output_window(), 
+	renderer().draw_scene(
+							get_active_scene(),
+							get_active_scene_view(),
+							render_output_window(),
 							viewport() );
 
 	m_renderer.end_frame			( );
@@ -544,7 +546,7 @@ void game::update_stats				( u32 const current_frame_id )
 	//	m_rtp_world->get_controllers_dump( s );
 	//	m_stats->set_rtp_controllers_dump( s );
 	//}
-		
+
 	static bool draw_fps_graph	= false;
 	static console_commands::cc_bool	fps_graph( "draw_fps_graph", draw_fps_graph, false, console_commands::command_type_user_specific );
 
@@ -612,7 +614,7 @@ void game::unload_cmd					( pcstr s )
 void game::load( pcstr project_resource_name, pcstr project_resource_path )
 {
 	m_game_world->load		( project_resource_name, project_resource_path );
-	
+
 	//m_ai_navigation_world->load_navmesh( project_resource_path ? project_resource_path : project_resource_name );
 
 	switch_to_scene			( m_game_world );
@@ -623,7 +625,7 @@ void game::unload( pcstr , bool destroying )
 	ASSERT								( m_game_world );
 
 	m_game_world->unload				( );
-	
+
 	//for ( human_npc_ptr it_npc = m_npcs.front(); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
 	//{
 	//	kill_npc( it_npc );
@@ -657,9 +659,17 @@ void game::scene_close_query( )
 
 void game::register_cooks( )
 {
+//	static animation_analysis_result_cook			s_animation_analysis_result_cook = <0x4c2789c>;
+//	static game_material_manager_cook				s_material_manager_cook = <0x4c278bc>;
+//	static animated_model_instance_cook				s_animated_model_instance_cook = <0x4c277b0>;
+	static ladder_cook 								s_ladder_cook;
+//	static weapon_user_animations_container_cook	s_animation_container_cook = <0x4c2785c>;
+//	static project_cooker_simple					s_simple_project_cook = <0x4c2778c>;
+//	static victory_item_cook 						s_victory_item_cook = <0x4c27768>;
+
 	static project_cooker			s_project_cook( engine().command_line_editor() );
 	static project_cooker_simple	s_simple_project_cook( engine().command_line_editor() );
-	static cell_cooker s_cell_cook;
+	static cell_cooker				s_cell_cook;
 
 //	static sound_player_cook			s_logic_sound_player_cook		( m_sound_scene, &m_sound_world, m_input_world, resources::sound_player_logic_class );
 //	static sound_player_cook			s_editor_sound_player_cook		( m_sound_scene, &m_sound_world, m_input_world, resources::sound_player_editor_class );
@@ -667,9 +677,14 @@ void game::register_cooks( )
 //	static animated_model_instance_cook	s_animated_model_instance_cook;
 	static weapon_cook					s_weapon_cook					( *this );
 
+	register_cook						( &s_ladder_cook );
+
 	register_cook						( &s_project_cook );
 	register_cook						( &s_simple_project_cook );
 	register_cook						( &s_cell_cook );
+
+
+
 	//register_cook						( &s_logic_sound_player_cook );
 	//register_cook						( &s_editor_sound_player_cook );
 	//register_cook						( &s_human_npc_cook );
@@ -842,7 +857,7 @@ void game::on_application_deactivate	( )
 //		visibility_value			-= ( 1.f - ( requested_object_was_found ? 1.f : transparency ) );
 //		if ( requested_object_was_found || visibility_value <= transparency_threshold || transparency == 0 )
 //			return					true;
-//		
+//
 //		return						false;
 //	}
 //
@@ -903,7 +918,7 @@ void game::draw_debug_window			()
 
 	m_debug_window->remove_all_childs	();
 
-	ui::text_tree_draw_helper_params	params;	
+	ui::text_tree_draw_helper_params	params;
 	params.color1						= math::color( 177, 109, 243 ).m_value;
 	params.color2						= math::color( 191, 192, 247 ).m_value;
 	params.is_multipaged				= false;

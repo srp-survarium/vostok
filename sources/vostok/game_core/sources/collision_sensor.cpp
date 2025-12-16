@@ -5,11 +5,11 @@
 #include "pch.h"
 #include <vostok/game_core/collision_sensor.h>
 
+#include <vostok/game_core/base_project.h>
+#include <vostok/game_core/collision_geometry.h>
 #include <vostok/physics/base_physics_object.h>
 #include <vostok/physics/contact_test_predicate.h>
 #include <vostok/physics/world.h>
-#include <vostok/game_core/base_project.h>
-#include <vostok/game_core/collision_geometry.h>
 
 using physics::base_physics_object;
 using configs::binary_config_value;
@@ -105,7 +105,7 @@ void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 	u32 old_objects_count = m_old_objects.size( );
 
 	m_old_objects.erase(
-		std::remove_if( 
+		std::remove_if(
 			m_old_objects.begin( ),
 			m_old_objects.end( ),
 			remove_loosed_ptrs_predicate
@@ -205,7 +205,7 @@ bool collision_sensor::is_filter_passed( base_physics_object* object ) const
 }
 
 struct left_objects_predicate {
-	inline explicit	left_objects_predicate	( 
+	inline explicit	left_objects_predicate	(
 						buffer_vector<base_physics_object* > const&	current_objects,
 						buffer_vector<base_physics_object *>&		objects_to_delete
 					) :
@@ -245,7 +245,7 @@ void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics
 	buffer_vector<base_physics_object *> objects_to_delete(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object * ) ), m_old_objects.size( ) );
 
 	m_old_objects.erase(
-		std::remove_if( 
+		std::remove_if(
 			m_old_objects.begin( ),
 			m_old_objects.end( ),
 			left_objects_predicate( sensed_objects, objects_to_delete )
@@ -278,7 +278,7 @@ void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics
 // Target also this behaviour in `notify_and_erase_left_objects`.
 // Possibly they used `VOSTOK_ALLOCA_IMPL` directly, or `fill_uninitialized` got LTCG'ed. They never really use `VOSTOK_ALLOCA_IMPL` directly though.
 void collision_sensor::notify_and_add_incoming_objects( buffer_vector<base_physics_object *>& sensed_objects )
-{	
+{
 	buffer_vector<base_physics_object *> incoming_objects( ALLOCA( sensed_objects.size( ) * sizeof( base_physics_object * ) ), sensed_objects.size( ) );
 	base_physics_object** inc_it	= sensed_objects.begin( );
 	base_physics_object** inc_end	= sensed_objects.end( );
@@ -298,7 +298,7 @@ void collision_sensor::notify_and_add_incoming_objects( buffer_vector<base_physi
 	// FUNCTION BODY
 	// <0x59aa09>|0x000|0x000:'187' buffer_vector<base_physics_object *> incoming_objects(
 	// <0x59aa50>|0x047|0x047:'188' base_physics_object** inc_it	= sensed_objects.begin( );
-	// <0x59aa58>|0x04f|0x008:'189' base_physics_object** inc_end	= sensed_objects.end( ); 
+	// <0x59aa58>|0x04f|0x008:'189' base_physics_object** inc_end	= sensed_objects.end( );
 	// <1>
 	// <0x59aaf4>|0x0eb|0x00c:'194'	if ( incoming_objects.size( ) )
 	// <0x59ab06>|0x0fd|0x012:'195'		on_enter( incoming_objects );
@@ -329,7 +329,7 @@ void collision_sensor::notify_objects_inside( )
 void collision_sensor::filter_sensed_objects( buffer_vector<base_physics_object *>& sensed_objects )
 {
 	sensed_objects.erase(
-		std::remove_if( 
+		std::remove_if(
 			sensed_objects.begin( ),
 			sensed_objects.end( ),
 			objects_filter_predicate( this )
@@ -401,7 +401,7 @@ void collision_sensor::get_shapes_centers( vectora<float3>& centers ) const
 {
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->get_shapes_centers( centers );
-	
+
 	// FUNCTION BODY
 	// <0x59a9b9>|0x000|0x000|[1]:'254'
 	// <0x59a9d6>|0x01d|0x01d:'255'
@@ -439,7 +439,7 @@ void collision_sensor::remove( )
 		return;
 
 	m_old_objects.erase(
-		std::remove_if( 
+		std::remove_if(
 			m_old_objects.begin( ),
 			m_old_objects.end( ),
 			remove_loosed_ptrs_predicate

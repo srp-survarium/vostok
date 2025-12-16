@@ -10,24 +10,25 @@
 
 namespace vostok {
 namespace physics {
-// sushi@TODO: Should be a private header. Not really?
+
+// sushi@TODO: Might be stored in a different module
 // sushi@TODO: Primitive type moved from collision to physics
 struct contact_test_predicate {
 public:
 	virtual	float		add_single_result		(
-							void*				arg_0,
-							collision::primitive_type		arg_1,
-							float4x4 const&		arg_2,
-							float3 const&		arg_3,
-							collision::primitive_type		arg_4,
-							float4x4 const&		arg_5,
-							float3 const&		arg_6
+							void*						user_data,
+							collision::primitive_type	first_shape_type,
+							float4x4 const&				first_shape_transform,
+							float3 const&				first_shape_dimension,
+							collision::primitive_type	second_shape_type,
+							float4x4 const&				second_shape_transform,
+							float3 const&				second_shape_dimension
 						) = 0;
 }; // struct contact_test_predicate
 
 STATIC_SIZE_ASSERT(contact_test_predicate, 0x4);
 
-
+// sushi@TODO: Might be private
 struct contact_result_callback : btCollisionWorld::ContactResultCallback {
 public:
 	inline				contact_result_callback( contact_test_predicate* predicate ) : m_predicate( predicate ) { }

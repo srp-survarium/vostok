@@ -1,0 +1,88 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 06.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef JUMP_LOGIC_H_INCLUDED
+#define JUMP_LOGIC_H_INCLUDED
+
+#include <vostok/game_core/move_direction_enum.h>
+
+#include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_expression.h>
+
+namespace vostok {
+namespace ai {
+	struct fsm;
+}
+}
+
+namespace survarium {
+
+class weapon_user_animations_selector;	// sushi@TODO
+struct weapon_animation_parameters;
+
+struct base_player;
+
+enum jump_animation_parts {
+	jump_animations_part_start			= 0x0000,
+	jump_animations_part_start_look		= 0x0001,
+	jump_animations_part_land			= 0x0002,
+	jump_animations_part_land_look		= 0x0003,
+	jump_animations_part_land_run		= 0x0004,
+	jump_animations_part_land_run_look	= 0x0005,
+	jump_animation_parts_count			= 0x0006,
+};
+
+class jump_logic : public core::noncopyable {
+public:
+			explicit							jump_logic				( weapon_user_animations_selector& owner );
+												~jump_logic				( );
+
+	inline	move_direction_enum					get_jump_direction		( ) const { /* no source */ }
+	inline	bool								is_jump_from_right_leg	( ) const { /* no source */ }
+
+	inline	weapon_user_animations_selector&	owner					( ) const { /* no source */ }
+
+			std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+												selected_animations		( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const;
+
+			void								tick					( );
+
+			void								set_user				( base_player& user );
+
+			resources::managed_resource_ptr		get_animation			( jump_animation_parts anim_part, bool is_third_view ) const;
+			pcstr								get_animation_caption	( jump_animation_parts anim_part ) const;
+
+			resources::managed_resource_ptr		get_move_animation		( bool is_third_view ) const;
+			resources::managed_resource_ptr		get_move_look_animation	( bool is_third_view ) const;
+
+			pcstr								get_move_look_caption	( ) const;
+			bool								does_need_land_and_run	( ) const;
+
+	inline	pcvoid								get_animated_object		( ) const { /* no source */ }
+
+			void								activate				( );
+			void								deactivate				( );
+
+			bool								is_jump_finished		( ) const;
+			float								look_time_factor		( ) const;
+			bool								landing_predicate		( ) const;
+
+			void								initialize_logic		( );
+
+
+private:
+	/* 0x0000 */	/* core::noncopyable */
+	/* 0x0000 */	weapon_user_animations_selector&	m_owner;
+	/* 0x0004 */	base_player*						m_user;
+	/* 0x0008 */	ai::fsm*							m_logic;
+	/* 0x000c */	pcvoid								m_animated_object;
+	/* 0x0010 */	move_direction_enum					m_jumping_direction;
+	/* 0x0014 */	bool								m_is_jump_from_right_leg;
+}; // class jump_logic
+
+STATIC_SIZE_ASSERT(jump_logic, 0x18);
+
+} // namespace survarium
+
+#endif // #ifndef JUMP_LOGIC_H_INCLUDED

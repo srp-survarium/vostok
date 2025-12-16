@@ -7,16 +7,13 @@
 
 namespace survarium {
 
-// STATE[UNVERIFIED]
-affects_threshold::affects_threshold(
-	float                              value,
-	u32                                affects_count,
-	body_part_parameters*              bodypart) :
-	next(NULL),
-	m_value(value),
-	m_affects_count(affects_count),
-	m_bodypart(bodypart)
+// STATE[100%|DONE]
+affects_threshold::affects_threshold( float value, u32 affects_count, body_part_parameters* const bodypart ) :
+	next			( NULL ),
+	m_value			( value ),
+	m_affects_count	( affects_count ),
+	m_bodypart		( bodypart )
 {
 }
 
-} // namespace survarium 
+} // namespace survarium

@@ -81,7 +81,7 @@ void collision_shape_cook::translate_query( resources::query_result_for_cook& pa
 	);																						// <0x72e3a5>|0x2e9|0x011:'83'
 }
 
-// STATE[INPROGRESS]
+// STATE[SKIPPED]
 void collision_shape_cook::on_collision_sources_loaded( resources::queries_result& data, collision_shape_cook::cook_data* cd )
 {
 	configs::binary_config_ptr primitives_cfg = static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
