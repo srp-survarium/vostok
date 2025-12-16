@@ -657,7 +657,7 @@ static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape
 	}
 }
 
-// STATE[42.88%|STUB]: Problems in Ghidra scripts, `from_bullet_shape_type` got inlined also
+// STATE[42.88%|BLOCKED]: Problems in Ghidra scripts, `from_bullet_shape_type` got inlined also
 float contact_result_callback::addSingleResult(
 	btManifoldPoint&			cp,
 	btCollisionObject const*	colObj0,

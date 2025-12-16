@@ -1,0 +1,53 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.12.2025
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef COLLISION_USER_H_INCLUDED
+#define COLLISION_USER_H_INCLUDED
+
+#include <vostok/game_core/usable_object_user_data.h>
+
+namespace survarium {
+
+class ladder;
+class victory_item_core;
+class victory_items_container_core;
+class inventory_holder;
+
+class base_player;
+
+class collision_user : public boost::noncopyable {
+public:
+	virtual								~collision_user				( ) { /* no source */ }
+
+	virtual	float4x4 const&				get_transform				( ) const = 0;
+
+	virtual	void						use_ladder					( ladder* arg_0 ) = 0;
+
+	virtual	void						use_victory_item			( victory_item_core* arg_0 ) { /* no source */ }
+	virtual	void						use_victory_items_container	( victory_items_container_core* arg_0 ) { /* no source */ }
+
+	inline	usable_object_user_data*	usable_object_user_data		( ) { /* no source */ }
+
+	virtual	inventory_holder const*		cast_to_inventory_holder	( ) const { return NULL; }
+	virtual	inventory_holder*			cast_to_inventory_holder	( ) { return NULL; }
+
+	virtual	base_player const*			cast_to_base_player			( ) const { return NULL; }
+	virtual	base_player*				cast_to_base_player			( ) { return NULL; }
+
+	inline	void						set_artcontainer_time_factor( float arg_0 ) { /* no source */ }
+	inline	float						get_artcontainer_time_factor( ) const { /* no source */ }
+
+	inline	void						set_engineer_use_time_factor( float arg_0 ) { /* no source */ }
+	inline	float						get_engineer_use_time_factor( ) const { /* no source */ }
+
+private:
+	/* 0x0004 */	/* boost::noncopyable */
+	/* 0x0004 */	survarium::usable_object_user_data		m_usable_object_user_data;
+}; // class collision_user
+
+STATIC_SIZE_ASSERT(collision_user, 0x24);
+
+} // namespace survarium
+
+#endif // #ifndef COLLISION_USER_H_INCLUDED
