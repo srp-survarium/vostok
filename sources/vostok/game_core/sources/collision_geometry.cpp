@@ -35,7 +35,7 @@ collision_geometry::~collision_geometry( )
 // STATE[100%|DONE]
 void collision_geometry::destroy_ghost_object( )
 {
-	vostok::physics::destroy_ghost_object( m_ghost_object );
+	physics::destroy_ghost_object( m_ghost_object );
 
 	// FUNCTION BODY
 	// <0x6ff167>|0x000|0x000:'32'
@@ -43,7 +43,7 @@ void collision_geometry::destroy_ghost_object( )
 }
 
 // STATE[82.66%|DONE]
-void collision_geometry::load( vostok::configs::binary_config_value const& cfg_val )
+void collision_geometry::load( configs::binary_config_value const& cfg_val )
 {
 	m_name					= cfg_val["full_name"];
 	float3 const& scale		= cfg_val["scale"];			// sushi@NOTE: Can reuse `read_transform` in base_project.cpp
@@ -58,14 +58,14 @@ void collision_geometry::load( vostok::configs::binary_config_value const& cfg_v
 	}
 	
 
-	m_mode											= (collision_geometry::collision_geometry_mode)(u32)cfg_val["mode"];
-	vostok::configs::binary_config_value meshes		= cfg_val["meshes"];
-	vostok::physics::bt_collision_shape_ptr shape	= vostok::physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), m_name.c_str( ) );
-	m_ghost_object									= vostok::physics::create_ghost_object( shape, transform );
+	m_mode									= (collision_geometry::collision_geometry_mode)(u32)cfg_val["mode"];
+	configs::binary_config_value meshes		= cfg_val["meshes"];
+	physics::bt_collision_shape_ptr shape	= physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), m_name.c_str( ) );
+	m_ghost_object							= physics::create_ghost_object( shape, transform );
 	shape->set_no_delete( );	// sushi@TODO: `unmanaged_intrusive_base::destroy` will not delete this resource. Understand for what reasons this was done.
 
-	m_group											= cfg_val["filter_group"];
-	m_mask											= cfg_val["filter_mask"];
+	m_group									= cfg_val["filter_group"];
+	m_mask									= cfg_val["filter_mask"];
 
 	// FUNCTION BODY
 	// <0x6feefb>|0x000|0x000:'37'
@@ -81,9 +81,9 @@ void collision_geometry::load( vostok::configs::binary_config_value const& cfg_v
 	// <1>
 	// <2>
 	// <0x6ff04e>|0x153|0x005:'49'	m_mode
-	// <0x6ff06c>|0x171|0x01e:'50'	vostok::configs::binary_config_value meshes		= cfg_val["meshes"]
-	// <0x6ff09c>|0x1a1|0x030:'51'	vostok::physics::bt_collision_shape_ptr shape	= 
-	// <0x6ff0dc>|0x1e1|0x040:'52'	m_ghost_object									= vostok::physics::create_ghost_object( shape, transform );
+	// <0x6ff06c>|0x171|0x01e:'50'	configs::binary_config_value meshes		= cfg_val["meshes"]
+	// <0x6ff09c>|0x1a1|0x030:'51'	physics::bt_collision_shape_ptr shape	= 
+	// <0x6ff0dc>|0x1e1|0x040:'52'	m_ghost_object									= physics::create_ghost_object( shape, transform );
 	// <0x6ff100>|0x205|0x024:'53'
 	// <1>
 	// <0x6ff10f>|0x214|0x00f:'55'
@@ -104,7 +104,7 @@ u32 collision_geometry::get_overlapping_objects_count( ) const
 }
 
 // STATE[74.69%|DONE]
-void collision_geometry::get_overlapping_objects(vostok::physics::base_physics_objects_type& result ) const
+void collision_geometry::get_overlapping_objects(physics::base_physics_objects_type& result ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->get_overlapping_objects( result );
@@ -116,7 +116,7 @@ void collision_geometry::get_overlapping_objects(vostok::physics::base_physics_o
 }
 
 // STATE[100%|DONE]
-void collision_geometry::contact_test( vostok::physics::base_physics_object* object, vostok::physics::contact_test_predicate& predicate )
+void collision_geometry::contact_test( physics::base_physics_object* object, physics::contact_test_predicate& predicate )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->contact_test( m_physics_world, object, predicate );
@@ -140,7 +140,7 @@ bool collision_geometry::contact_test( )
 }
 
 // STATE[93.33%|DONE]
-void collision_geometry::get_shapes_centers( vostok::vectora<float3>& centers_results ) const
+void collision_geometry::get_shapes_centers( vectora<float3>& centers_results ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->non_compound_shapes_centers( centers_results );
@@ -152,7 +152,7 @@ void collision_geometry::get_shapes_centers( vostok::vectora<float3>& centers_re
 }
 
 // STATE[100%|DONE]
-void collision_geometry::insert( vostok::physics::world* world )
+void collision_geometry::insert( physics::world* world )
 {
 	m_physics_world = world;
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
@@ -182,7 +182,7 @@ void collision_geometry::remove( )
 }
 
 // STATE[100%|DONE]
-void collision_geometry::subscribe( vostok::physics::world* world, collision_geometry_subscriber* subscriber )
+void collision_geometry::subscribe( physics::world* world, collision_geometry_subscriber* subscriber )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	

@@ -5,25 +5,16 @@
 #ifndef DAMAGE_PROTECTOR_H_INCLUDED
 #define DAMAGE_PROTECTOR_H_INCLUDED
 
-#include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
+#include <vostok/game_core/hit_affects_type_enum.h>
 
 namespace survarium {
 
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-enum hit_affects_type_enum;
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
-
 struct damage_protector : public boost::noncopyable {
 public:
-    damage_protector( ): next(NULL) {}
-	virtual ~damage_protector( ) {};
+	// STATE[STUB]
+			damage_protector	( ) : next( NULL ) {}
+	// STATE[STUB]
+	virtual ~damage_protector	( ) {}
 
 public:
 	boost::function< float ( pcstr, pcstr, float, float ) > reduce_damage_functor;
@@ -31,11 +22,7 @@ public:
 	damage_protector* next;
 }; // class damage_protector
 
-namespace { 
-	typedef char size_assert[
-		sizeof(damage_protector) == 0x50 ? 1 : -1
-	];
-}
+STATIC_SIZE_ASSERT(damage_protector, 0x50);
 
 } // namespace survarium
 

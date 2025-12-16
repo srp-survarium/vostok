@@ -14,18 +14,20 @@ namespace mixing {
 enum playing_type_enum {
 	// play cyclic animation infinitely
 	// on animation end just rewind to the start
-	play_cyclically,		
-	
+	play_cyclically,
+
 	// play single animation;
 	// on animation end set time scale for animation to 0
 	// as a consequence animation will stay at the last frame infinitely
 	play_once_and_freeze_at_end,
-	
+
 	// play single animation;
 	// on animation end instantly remove animation
 	// as a consequence animation will be removed immediately after its end
 	play_once_and_remove_at_end,
 }; // enum playing_type_enum
+
+typedef playing_type_enum playback_enum; // sushi@TODO
 
 } // namespace mixing
 } // namespace animation

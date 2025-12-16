@@ -38,8 +38,80 @@
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_sensor.h>
 
+#include <vostok/game_core/affects_threshold.h>
+
+#include <vostok/game_core/player_input.h>
+#include <vostok/game_core/player_stamina.h>
+
+#include <vostok/game_core/player_stamina.h>
+#include <vostok/game_core/ladder.h>
+#include <vostok/game_core/damage_model_cook.h>
+#include <vostok/game_core/inventory.h>
+#include <vostok/game_core/inventory_item.h>
+#include <vostok/game_core/inventory_item_props.h>
+#include <vostok/game_core/medkit.h>
+
 namespace vostok
 {
+	void use_inventory( )
+	{
+		survarium::medkit item;
+
+		survarium::inventory_item_props props;
+		item.get_item_props( props );
+
+		item.remove( );
+
+		item.reduce_damage( NULL, NULL, 0.0f, 0.0f );
+	}
+
+	void use_damage_model_cook( )
+	{
+		survarium::damage_model_cook cook;
+		cook.delete_resource( NULL );
+	}
+
+	void use_ladder( survarium::ladder* ladder )
+	{
+		ladder->activate( NULL );
+		ladder->deactivate( );
+
+		ladder->add_landing_point( NULL );
+		ladder->pop_landing_point( );
+	}
+
+	void use_game_core_affects_threshold()
+	{
+		survarium::affects_threshold( 10.0f, 10, NULL );
+	}
+
+	void use_game_core_player_stamina()
+	{
+		survarium::player_stamina stamina;
+
+		configs::binary_config_value cfg;
+		stamina.load( cfg );
+
+		stamina.reset( );
+		stamina.set_regeneration_speed( 10.0f );
+		stamina.set_regeneration_speed_factor( 10.0f );
+		stamina.tick( 10, true );
+		stamina.spend( 10.0f );
+		stamina.can_be_spent();
+		stamina.subscribe_on_depletion( NULL );
+		stamina.unsubscribe_from_depletion( NULL );
+
+		survarium::player_stamina stamina2( stamina );
+	}
+
+
+	void use_game_core_player_input()
+	{
+		survarium::player_input input;
+		input.is_sprinting();
+		input.is_empty();
+	}
+
 
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
@@ -88,7 +160,7 @@ namespace vostok
 		gm.contact_test( );
 
 		vostok::vectora<float3> centers_results( NULL );
-		gm.get_shapes_centers( centers_results ); 
+		gm.get_shapes_centers( centers_results );
 
 		gm.subscribe( NULL, NULL );
 		gm.unsubscribe( NULL );
@@ -357,6 +429,12 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_inventory( );
+	vostok::use_damage_model_cook( );
+	vostok::use_ladder( NULL );
+	vostok::use_game_core_affects_threshold();
+	vostok::use_game_core_player_stamina();
+	vostok::use_game_core_player_input();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
@@ -379,7 +457,7 @@ IncludeAll::IncludeAll()
 	htp->set_parameters(10., 20., 30.);
 
 	booster_damage_protector* bdp = new booster_damage_protector("hand", 0.5, 1.);
-	bdp->reduce_damage("__whatever", "hand", 100);
+	bdp->reduce_damage("__whatever", "hand", 100, 10);
 
 	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
 
@@ -446,10 +524,6 @@ IncludeAll::IncludeAll()
 	bpp->is_affect_applied(affects_type_blindness);
 	bpp->get_hit_parameters("hit_params");
 	bpp->set_parameters(10.f, 20.f);
-
-	bpp->check_affects(10);
-	bpp->update_affects(20);
-	bpp->apply_affects(NULL, 30);
 
 	Callback1 cb1;
 	Callback2 cb2;
