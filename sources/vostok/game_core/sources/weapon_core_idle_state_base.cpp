@@ -3,13 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "weapon_core_idle_state_base.h"
+#include <vostok/game_core/weapon_core_idle_state_base.h>
 
 namespace survarium {
 
 // STATE[STUB]
 // survarium::weapon_core_idle_state_base::weapon_core_idle_state_base(survarium::weapon_core&)
-weapon_core_idle_state_base::weapon_core_idle_state_base( weapon_core& weapon )
+weapon_core_idle_state_base::weapon_core_idle_state_base( weapon_core& weapon ) :
+	weapon_core_base_state( weapon, false )
 {
 	// FUNCTION BODY
 	// <0x6fa680>|0x000|+0x028:'15'	{

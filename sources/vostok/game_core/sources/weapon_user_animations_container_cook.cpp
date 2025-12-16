@@ -73,7 +73,7 @@ void weapon_user_animations_container_cook::on_config_loaded( resources::queries
 	// LOCALS
 	// configs::binary_config_value const& root
 	// buffer_vector<resources::request> requests
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
+	// configs::binary_config_ptr config
 	// ******
 
 	// FUNCTION BODY
@@ -133,12 +133,12 @@ void weapon_user_animations_container_cook::on_config_loaded( resources::queries
 }
 /*
 // STATE[STUB]
-// void survarium::get_animations_from_request_results<27>(vostok::resources::queries_result const&, const unsigned int, unsigned int&, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base>[27]&)
+// void survarium::get_animations_from_request_results<27>(vostok::resources::queries_result const&, const unsigned int, unsigned int&, vostok::resources::managed_resource_ptr[27]&)
 void get_animations_from_request_results<27>(
 	resources::queries_result const&	data,
 	u32									animations_count,
 	u32&								resource_index,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>[27]&	result
+	resources::managed_resource_ptr[27]&	result
 )
 {
 	// LOCALS

@@ -48,7 +48,7 @@ void weapon_core_cook::translate_query( resources::query_result_for_cook& parent
 void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config_ptr
+	// configs::binary_config_ptr config_ptr
 	// weapon_core* 				object_to_cook
 	// resources::query_result_for_cook* parent
 	// ******
@@ -66,7 +66,7 @@ void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data 
 
 // STATE[STUB]
 // void survarium::weapon_core_cook::load_weapon_parameters(vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, survarium::weapon_core*)
-void weapon_core_cook::load_weapon_parameters( resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config_ptr, weapon_core* object_to_cook )
+void weapon_core_cook::load_weapon_parameters( configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
 	// LOCALS
 	// configs::binary_config_value const& weapon_fire_queue_types_cfg
@@ -124,7 +124,7 @@ void weapon_core_cook::load_weapon_parameters( resources::resource_ptr<configs::
 
 // STATE[STUB]
 // void survarium::weapon_core_cook::process_loading_weapon_core(vostok::resources::query_result_for_cook* const, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, survarium::weapon_core*)
-void weapon_core_cook::process_loading_weapon_core( resources::query_result_for_cook* parent, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config_ptr, weapon_core* object_to_cook )
+void weapon_core_cook::process_loading_weapon_core( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
 	// LOCALS
 	// fs_new::virtual_path_string 	skeleton_path
@@ -155,7 +155,7 @@ void weapon_core_cook::process_loading_weapon_core( resources::query_result_for_
 
 // STATE[STUB]
 // void survarium::weapon_core_cook::on_core_subresources_ready(vostok::resources::queries_result&, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, survarium::weapon_core*)
-void weapon_core_cook::on_core_subresources_ready( resources::queries_result& data, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config_ptr, weapon_core* object_to_cook )
+void weapon_core_cook::on_core_subresources_ready( resources::queries_result& data, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
 	// LOCALS
 	// resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> weapon_skeleton
@@ -190,7 +190,7 @@ void weapon_core_cook::delete_resource( resources::resource_base* resource )
 
 // STATE[STUB]
 // void survarium::weapon_core_cook::query_weapon_states(vostok::resources::query_result_for_cook* const, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, survarium::weapon_core*)
-void weapon_core_cook::query_weapon_states( resources::query_result_for_cook* parent, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config_ptr, weapon_core* object_to_cook )
+void weapon_core_cook::query_weapon_states( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
 	// LOCALS
 	// u32 							requests_count

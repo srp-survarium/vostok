@@ -22,6 +22,7 @@
 
 #include <vostok/game_core/scheduler.h>
 
+#include <vostok/animation/api.h>
 #include <vostok/animation/animation_player.h>
 
 namespace vostok {
@@ -34,9 +35,7 @@ namespace physics {
 }
 namespace animation {
 	class skeleton;
-
 	class animation_callback_params;
-	class animation_playback_state {}; // sushi@TODO
 }
 }
 

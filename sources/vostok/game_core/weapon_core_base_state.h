@@ -6,25 +6,14 @@
 #define WEAPON_CORE_BASE_STATE_H_INCLUDED
 
 #include <vostok/ai/fsm_state.h>
+#include <vostok/animation/api.h>
 #include <vostok/animation/mixing_animation_lexeme.h>
 #include <vostok/animation/mixing_expression.h>
 
 #include <vostok/game_core/weapon_user_state_enum.h>
+#include <vostok/game_core/weapon_lexeme_pair.h>
 
 namespace vostok {
-namespace animation {
-	// sushi@TODO
-	enum body_part_masks_enum {
-		body_part_whole_body				= -1,
-		body_part_hands_only				= 0x0002,
-		body_part_whole_body_but_hands		= -3,
-		bone_mask_whole_weapon				= -1,
-		bone_mask_offset_only				= 0x0002,
-		bone_mask_whole_weapon_but_offset	= -3,
-	};
-	// sushi@TODO
-	class animation_playback_state {};
-}
 namespace network_core {
 	class udp_match_packet;
 	class packet_reader;
@@ -34,7 +23,6 @@ namespace network_core {
 namespace survarium {
 
 class weapon_core;
-
 
 class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , public boost::noncopyable {
 public:
@@ -67,7 +55,7 @@ public:
 
 			bool		deserializing				( ) const;
 
-private:
+protected:
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	/* resources::unmanaged_resource */
 	/* 0x0120 */	animation::animation_playback_state	m_animation_playback_state;
@@ -80,6 +68,8 @@ private:
 }; // class weapon_core_base_state
 
 STATIC_SIZE_ASSERT(weapon_core_base_state, 0x138);
+
+typedef resources::resource_ptr< weapon_core_base_state, resources::unmanaged_intrusive_base > weapon_core_base_state_ptr;
 
 } // namespace survarium
 

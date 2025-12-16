@@ -3,13 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "weapon_core_chamber_a_round_aimed_state_base.h"
+#include <vostok/game_core/weapon_core_chamber_a_round_aimed_state_base.h>
 
 namespace survarium {
 
 // STATE[STUB]
 // survarium::weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base(survarium::weapon_core&, const float)
-weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale )
+weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale ) :
+	weapon_core_animation_end_aware_state( weapon, true )
 {
 	// FUNCTION BODY
 	// <0x73e419>|0x059|+0x00d:'22'

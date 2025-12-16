@@ -5,36 +5,21 @@
 #ifndef WEAPON_CORE_CHAMBER_A_ROUND_AIMED_STATE_BASE_H_INCLUDED
 #define WEAPON_CORE_CHAMBER_A_ROUND_AIMED_STATE_BASE_H_INCLUDED
 
+#include <vostok/game_core/weapon_core_animation_end_aware_state.h>
+
 namespace survarium {
-
-/* survarium::weapon_core_chamber_a_round_aimed_state_base */
-
-//////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class survarium::weapon_core_animation_end_aware_state;
-
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
 
 class weapon_core_chamber_a_round_aimed_state_base : public weapon_core_animation_end_aware_state {
 public:
-			weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale );
+			explicit	weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale );
 
-	virtual	void	initialize						( ) override;
+	virtual	void		initialize						( ) override;
+	virtual	void		finalize						( ) override;
 
-	virtual	void	finalize						( ) override;
+	virtual	void		serialize						( network_core::udp_match_packet& packet ) const override;
+	virtual	void		deserialize						( network_core::packet_reader& reader ) override;
 
-	virtual	void	serialize						( network_core::udp_match_packet& packet ) const override;
-
-	virtual	void	deserialize						( network_core::packet_reader& reader ) override;
-
-	virtual	void	on_animation_end_impl			( bool& animation_player_tick_result ) override;
-
-	virtual	~weapon_core_chamber_a_round_aimed_state_base( ) { /* no source */ }
-
+	virtual	void		on_animation_end_impl			( bool& animation_player_tick_result ) override;
 
 private:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */

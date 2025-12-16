@@ -7,21 +7,12 @@
 
 #include <vostok/game_core/jump_logic.h>
 
+#include <vostok/animation/api.h>
 #include <vostok/animation/animation_player.h>
 #include <vostok/ai/fsm_state.h>
 
 namespace vostok {
 namespace animation {
-	// sushi@TODO
-	enum body_part_masks_enum {
-		body_part_whole_body				= -1,
-		body_part_hands_only				= 0x0002,
-		body_part_whole_body_but_hands		= -3,
-		bone_mask_whole_weapon				= -1,
-		bone_mask_offset_only				= 0x0002,
-		bone_mask_whole_weapon_but_offset	= -3,
-	};
-
 	class animation_callback_params;
 }
 }

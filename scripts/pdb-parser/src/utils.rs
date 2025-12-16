@@ -83,6 +83,7 @@ impl Type {
             .replace("vostok::math::float4x4", "float4x4")
 
             .replace("vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base>", "vostok::resources::managed_resource_ptr")
+            .replace("vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>",    "vostok::configs::binary_config_ptr")
     }
 
     pub fn len(&self) -> usize {

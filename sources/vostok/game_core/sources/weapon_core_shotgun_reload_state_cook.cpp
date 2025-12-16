@@ -160,12 +160,12 @@ void weapon_core_shotgun_reload_state_cook::create_resource( resources::query_re
 void weapon_core_shotgun_reload_state_cook::on_subresources_ready( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params )
 {
 	// LOCALS
-	// fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,8> start_animations
+	// fixed_vector<resources::managed_resource_ptr,8> start_animations
 	// weapon_core_shotgun_reload_state* object_to_cook
 	// float 						animations_timescale
 	// u32 							resource_index
-	// fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,8> finish_animations
-	// fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,8> reload_one_animations
+	// fixed_vector<resources::managed_resource_ptr,8> finish_animations
+	// fixed_vector<resources::managed_resource_ptr,8> reload_one_animations
 	// weapon_core_shotgun_reload_start_substate* reload_start
 	// weapon_core_shotgun_reload_one_round_substate* reload_one_round
 	// weapon_core_shotgun_reload_finish_substate* reload_finish
@@ -176,15 +176,15 @@ void weapon_core_shotgun_reload_state_cook::on_subresources_ready( resources::qu
 
 	// TYPEDEFS
 	// typedef
-	// 	fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,8>
+	// 	fixed_vector<resources::managed_resource_ptr,8>
 	// 	start_animations_fixed_type;
 
 	// typedef
-	// 	fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,8>
+	// 	fixed_vector<resources::managed_resource_ptr,8>
 	// 	finish_animations_fixed_type;
 
 	// typedef
-	// 	fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,8>
+	// 	fixed_vector<resources::managed_resource_ptr,8>
 	// 	reload_one_animations_fixed_type;
 
 	// ******

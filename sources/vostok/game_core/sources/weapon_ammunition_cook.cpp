@@ -58,7 +58,7 @@ void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, r
 {
 	// LOCALS
 	// weapon_ammunition* 			wa
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
+	// configs::binary_config_ptr config
 	// ******
 
 	// FUNCTION BODY

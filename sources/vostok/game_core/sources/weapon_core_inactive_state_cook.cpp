@@ -9,8 +9,11 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::weapon_core_inactive_state_cook::weapon_core_inactive_state_cook()
-weapon_core_inactive_state_cook::weapon_core_inactive_state_cook( )
+weapon_core_inactive_state_cook::weapon_core_inactive_state_cook( ) :
+	resources::unmanaged_cook( resources::weapon_inactive_state_class, reuse_false, use_current_thread_id )
 {
+	resources::register_cook( this );
+
 	// FUNCTION BODY
 	// <0x59ef17>|0x037|+0x00c:'18'
 	// ******

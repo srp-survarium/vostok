@@ -97,12 +97,12 @@ template < typename T >
 inline void weapon_core_state_cook_template<T>::on_subresources_ready( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params )
 {
 	// LOCALS
-	// fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,4> animations
+	// fixed_vector<resources::managed_resource_ptr,4> animations
 	// ******
 
 	// TYPEDEFS
 	// typedef
-	// 	fixed_vector<resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base>,4>
+	// 	fixed_vector<resources::managed_resource_ptr,4>
 	// 	skeleton_animations_fixed_type;
 
 	// ******

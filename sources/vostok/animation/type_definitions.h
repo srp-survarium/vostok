@@ -23,7 +23,19 @@ enum playback_enum {
 	play_cyclically				= 0x0000,
 	play_once_and_freeze_at_end = 0x0001,
 	play_once_and_remove_at_end = 0x0002,
-}; // enum playback_enum
+}; // enum playback_enum // sushi@TODO
+
+enum body_part_masks_enum {
+	body_part_whole_body				= -1,
+	body_part_hands_only				= 0x0002,
+	body_part_whole_body_but_hands		= -3,
+	bone_mask_whole_weapon				= -1,
+	bone_mask_offset_only				= 0x0002,
+	bone_mask_whole_weapon_but_offset	= -3,
+}; // enum body_part_masks_enum // sushi@TODO
+
+// sushi@TODO
+class animation_playback_state {};
 
 }  // namespace animation
 }  // namespace vostok

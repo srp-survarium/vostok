@@ -9,8 +9,11 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::weapon_core_reload_state_base::weapon_core_reload_state_base(survarium::weapon_core&, const float)
-weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, float animation_time_scale )
+weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, float animation_time_scale ) :
+	weapon_core_animation_end_aware_state( weapon, true )
 {
+	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
+
 	// FUNCTION BODY
 	// <0x776709>|0x059|+0x00d:'22'
 	// ******

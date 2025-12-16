@@ -77,7 +77,7 @@ animation::mixing::expression player_logic_stand_state::get_recoil_animation_lex
 	// animation::mixing::animation_lexeme lexeme
 	// float 						start_animation_interval_time
 	// pcstr 						additive_animation_id
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> additive_animation
+	// resources::managed_resource_ptr additive_animation
 	// ******
 
 	// FUNCTION BODY
@@ -120,7 +120,7 @@ animation::mixing::expression player_logic_stand_state::look_expression(
 	// animation::mixing::animation_lexeme_parameters look_lexeme_parameters
 	// float 						start_animation_interval_time
 	// animation::mixing::animation_lexeme look_lexeme
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> look_animation
+	// resources::managed_resource_ptr look_animation
 	// animation::linear_interpolator l_interpolator
 	// animation_type_enum 			animation_type
 	// animation::mixing::expression expression<1>

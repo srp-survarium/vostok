@@ -44,7 +44,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( m
 {
 	// LOCALS
 	// pcstr 						caption
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> move_animation<1>
+	// resources::managed_resource_ptr move_animation<1>
 	// fixed_vector<animation::mixing::animation_interval,2> intervals<1>
 	// bool 						landing_to_left_leg<1>
 	// ******
@@ -114,7 +114,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
 	// pcstr 						look_animation_id
 	// animation::mixing::animation_lexeme_parameters parameters
 	// float 						start_animation_interval_time
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> look_animation
+	// resources::managed_resource_ptr look_animation
 	// ******
 
 	// FUNCTION BODY

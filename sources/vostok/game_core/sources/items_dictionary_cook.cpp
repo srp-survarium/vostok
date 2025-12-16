@@ -134,7 +134,7 @@ void items_dictionary_cook::on_subresources_loaded( resources::queries_result& d
 	// LOCALS
 	// resources::query_result_for_cook* parent
 	// u32 							i<1>
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> item_cfg<2>
+	// configs::binary_config_ptr item_cfg<2>
 	// dictionary_item& 			current_item<2>
 	// u32 							clip_size<3>
 	// float 						clip_weight<3>

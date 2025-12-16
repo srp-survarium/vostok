@@ -222,8 +222,8 @@ u32 get_jump_animation_index( move_direction_enum move_direction, bool jump_from
 }
 
 // STATE[STUB]
-// vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> survarium::jump_logic::get_animation(const survarium::jump_animation_parts, const bool) const
-resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> jump_logic::get_animation( jump_animation_parts anim_part, bool is_third_view ) const
+// vostok::resources::managed_resource_ptr survarium::jump_logic::get_animation(const survarium::jump_animation_parts, const bool) const
+resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts anim_part, bool is_third_view ) const
 {
 	// FUNCTION BODY
 	// <0x58df39>|0x009|+0x079:'162'
@@ -242,8 +242,8 @@ pcstr jump_logic::get_animation_caption( jump_animation_parts anim_part ) const
 }
 
 // STATE[STUB]
-// vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> survarium::jump_logic::get_move_animation(const bool) const
-resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> jump_logic::get_move_animation( bool is_third_view ) const
+// vostok::resources::managed_resource_ptr survarium::jump_logic::get_move_animation(const bool) const
+resources::managed_resource_ptr jump_logic::get_move_animation( bool is_third_view ) const
 {
 	// FUNCTION BODY
 	// <0x58dee9>|0x009|+0x03d:'172'
@@ -251,8 +251,8 @@ resources::resource_ptr<resources::managed_resource,resources::managed_intrusive
 }
 
 // STATE[STUB]
-// vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> survarium::jump_logic::get_move_look_animation(const bool) const
-resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> jump_logic::get_move_look_animation( bool is_third_view ) const
+// vostok::resources::managed_resource_ptr survarium::jump_logic::get_move_look_animation(const bool) const
+resources::managed_resource_ptr jump_logic::get_move_look_animation( bool is_third_view ) const
 {
 	// FUNCTION BODY
 	// <0x58de99>|0x009|+0x040:'177'

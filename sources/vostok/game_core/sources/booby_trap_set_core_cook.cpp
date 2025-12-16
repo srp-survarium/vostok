@@ -68,7 +68,7 @@ void booby_trap_set_core_cook::on_config_ready( resources::queries_result& data,
 	// buffer_vector<variant<32> const *> user_data
 	// configs::binary_config_value data_root
 	// booby_trap_set_core* 		resource
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
+	// configs::binary_config_ptr config
 	// buffer_vector<resources::request> requests
 	// u8 							i
 	// ******
@@ -123,7 +123,7 @@ void booby_trap_set_core_cook::on_subresources_loaded(
 	resources::queries_result&			data,
 	booby_trap_set_core*				resource,
 	booby_trap_set_cook_data			cook_data,
-	resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base>	config
+	configs::binary_config_ptr	config
 )
 {
 	// LOCALS
@@ -132,7 +132,7 @@ void booby_trap_set_core_cook::on_subresources_loaded(
 	// ******
 
 	// CALL SITE INFO
-	// <0x7624ae> -> void <unknown>(resources::query_result_for_cook*, booby_trap_set_core*, booby_trap_set_cook_data const&, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base>)
+	// <0x7624ae> -> void <unknown>(resources::query_result_for_cook*, booby_trap_set_core*, booby_trap_set_cook_data const&, configs::binary_config_ptr)
 	// ******
 
 	// FUNCTION BODY

@@ -24,7 +24,7 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 {
 	// LOCALS
 	// pcstr 						model
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
+	// configs::binary_config_ptr config
 	// resources::request[1] 		requests
 	// fixed_string<260> 			aabb_path
 	// ******
@@ -61,17 +61,17 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 
 // STATE[STUB]
 // void survarium::booby_trap_core_cook::on_subresources_loaded(vostok::resources::queries_result&, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>)
-void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config )
+void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	// LOCALS
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> aabb
+	// configs::binary_config_ptr aabb
 	// booby_trap_core* 			resource
 	// ******
 
 	// CALL SITE INFO
 	// <0x761e4f> -> booby_trap_core* <unknown>()
 	// <0x761e83> -> void <unknown>(configs::binary_config_value const&)
-	// <0x761ebf> -> void <unknown>(resources::query_result_for_cook*, booby_trap_core*, resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base>)
+	// <0x761ebf> -> void <unknown>(resources::query_result_for_cook*, booby_trap_core*, configs::binary_config_ptr)
 	// ******
 
 	// FUNCTION BODY

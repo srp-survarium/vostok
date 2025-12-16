@@ -28,8 +28,8 @@ void weapon_core_animation_end_aware_state::finalize( )
 }
 
 // STATE[STUB]
-// void survarium::weapon_core_animation_end_aware_state::set_animation_to_wait(vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const&) const
-void weapon_core_animation_end_aware_state::set_animation_to_wait( resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& animation ) const
+// void survarium::weapon_core_animation_end_aware_state::set_animation_to_wait(vostok::resources::managed_resource_ptr const&) const
+void weapon_core_animation_end_aware_state::set_animation_to_wait( resources::managed_resource_ptr const& animation ) const
 {
 	// CALL SITE INFO
 	// <0x6fd105> -> bool <unknown>() const

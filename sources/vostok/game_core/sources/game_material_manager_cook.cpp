@@ -67,8 +67,8 @@ void game_material_manager_cook::on_configs_loaded( resources::queries_result& d
 {
 	// LOCALS
 	// game_material_manager* 		manager
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> mtrl_cfg
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> pairs_cfg
+	// configs::binary_config_ptr mtrl_cfg
+	// configs::binary_config_ptr pairs_cfg
 	// ******
 
 	// FUNCTION BODY

@@ -9,7 +9,9 @@ namespace survarium {
 
 // STATE[STUB]
 // survarium::weapon_core_hide_state_base::weapon_core_hide_state_base(survarium::weapon_core&, bool&)
-weapon_core_hide_state_base::weapon_core_hide_state_base( weapon_core& weapon, bool& is_shown )
+weapon_core_hide_state_base::weapon_core_hide_state_base( weapon_core& weapon, bool& is_shown ) :
+	weapon_core_animation_end_aware_state	( weapon, true ),
+	m_is_shown								( is_shown )
 {
 	// FUNCTION BODY
 	// <0x6fd2d5>|0x055|+0x00d:'21'

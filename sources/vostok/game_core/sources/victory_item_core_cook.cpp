@@ -51,7 +51,7 @@ void victory_item_core_cook::translate_query( resources::query_result_for_cook& 
 void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> cfg
+	// configs::binary_config_ptr cfg
 	// victory_item_core* 			object_to_cook
 	// resources::query_result_for_cook* parent
 	// ******

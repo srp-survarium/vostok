@@ -5,11 +5,14 @@
 #include "pch.h"
 #include <vostok/game_core/pistol_weapon_core_aimed_idle_state.h>
 
+#include <vostok/game_core/weapon_core_state_cook_template.h>
+
 namespace survarium {
 
 // STATE[STUB]
-// survarium::pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state(survarium::weapon_core&, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
-pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state( weapon_core& weapon, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const* animations, u32 animations_count )
+// survarium::pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state(survarium::weapon_core&, vostok::resources::managed_resource_ptr const*, const unsigned int)
+pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
+	weapon_core_aimed_state_base( weapon )
 {
 	// LOCALS
 	// u32 							animation_index
@@ -58,7 +61,7 @@ weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( 
 {
 	// LOCALS
 	// pcstr[2] 					weapon_animation_captions
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& selected_animation
+	// resources::managed_resource_ptr const& selected_animation
 	// u32 							animation_index
 	// pcstr 						animation_identifier
 	// ******
@@ -76,11 +79,11 @@ weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( 
 }
 
 // STATE[STUB]
-// survarium::pistol_weapon_core_aimed_idle_state* survarium::weapon_core_state_cook_template<survarium::pistol_weapon_core_aimed_idle_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
+// survarium::pistol_weapon_core_aimed_idle_state* survarium::weapon_core_state_cook_template<survarium::pistol_weapon_core_aimed_idle_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
 pistol_weapon_core_aimed_idle_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_aimed_idle_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
+	resources::managed_resource_ptr const*	animations,
 	u32									animations_count
 )
 {

@@ -7,9 +7,11 @@
 
 #include <vostok/game_core/weapon_core_base_state.h>
 #include <vostok/game_core/weapon_lexeme_pair.h>
+#include <vostok/game_core/weapon_user_state_enum.h>
 
 #include <vostok/animation/api.h>
 #include <vostok/animation/animation_callback.h>
+#include <vostok/animation/mixing.h>
 
 namespace survarium {
 

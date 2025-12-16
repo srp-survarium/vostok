@@ -6,10 +6,8 @@
 #define WEAPON_CORE_FIRE_STATE_H_INCLUDED
 
 #include <vostok/game_core/weapon_core_fire_state_base.h>
-#include <vostok/game_core/weapon_user_state_enum.h>
 
 namespace survarium {
-
 
 class weapon_core_fire_state : public weapon_core_fire_state_base {
 public:

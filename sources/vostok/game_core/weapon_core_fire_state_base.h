@@ -7,9 +7,6 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
-#include <vostok/animation/api.h>
-#include <vostok/animation/mixing.h>
-
 namespace survarium {
 
 class weapon_core_fire_state_base : public weapon_core_animation_end_aware_state {

@@ -27,7 +27,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	// animation::mixing::animation_lexeme_parameters look_lexeme_parameters
 	// float 						start_animation_interval_time
 	// animation::mixing::animation_lexeme look_lexeme
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> look_animation
+	// resources::managed_resource_ptr look_animation
 	// animation::mixing::animation_lexeme movement_lexeme
 	// animation::linear_interpolator l_interpolator
 	// ******

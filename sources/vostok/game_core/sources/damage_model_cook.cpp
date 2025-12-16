@@ -449,7 +449,7 @@ void damage_model_cook::on_hit_params_received( resources::queries_result& data 
 	// u32 							model_buffer_size
 	// affects_applying_type_enum 	affects_applying_type
 	// configs::binary_config_value const& config_value
-	// resources::resource_ptr<configs::binary_config,resources::unmanaged_intrusive_base> config
+	// configs::binary_config_ptr config
 	// memory::stack_allocator 		stack_allocator
 	// configs::binary_config_value const& damage_groups
 	// configs::binary_config_value const& hit_types<1>

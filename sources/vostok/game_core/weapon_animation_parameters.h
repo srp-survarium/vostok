@@ -5,19 +5,8 @@
 #ifndef WEAPON_ANIMATION_PARAMETERS_H_INCLUDED
 #define WEAPON_ANIMATION_PARAMETERS_H_INCLUDED
 
-namespace vostok {
-namespace animation {
-	// sushi@TODO: Match animations! Also strange values
-	enum body_part_masks_enum {
-		body_part_whole_body				= -1,
-		body_part_hands_only				= 0x0002,
-		body_part_whole_body_but_hands		= -3,
-		bone_mask_whole_weapon				= -1,
-		bone_mask_offset_only				= 0x0002,
-		bone_mask_whole_weapon_but_offset	= -3,
-	};
-}
-}
+#include <vostok/animation/api.h> // sushi@TODO: for body_part_masks_enum
+
 
 namespace survarium {
 

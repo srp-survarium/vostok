@@ -5,16 +5,17 @@
 #include "pch.h"
 #include <vostok/game_core/double_barreled_weapon_core_aimed_fire_state.h>
 
+#include <vostok/game_core/weapon_core_state_cook_template.h>
+
 namespace survarium {
 
 // STATE[STUB]
-// survarium::double_barreled_weapon_core_aimed_fire_state::double_barreled_weapon_core_aimed_fire_state(survarium::weapon_core&, const float, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
 double_barreled_weapon_core_aimed_fire_state::double_barreled_weapon_core_aimed_fire_state(
-	weapon_core&						weapon,
-	float								animation_time_scale,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
-	u32									animations_count
-)
+	weapon_core&							weapon,
+	float									animation_time_scale,
+	resources::managed_resource_ptr const*	animations,
+	u32										animations_count
+) : weapon_core_aimed_fire_state_base( weapon, animation_time_scale )
 {
 	// LOCALS
 	// u32 							animation_index
@@ -91,7 +92,7 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 {
 	// LOCALS
 	// pcstr[2] 					weapon_animation_captions
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& selected_animation
+	// resources::managed_resource_ptr const& selected_animation
 	// pcstr 						animation_identifier
 	// ******
 
@@ -124,7 +125,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 	// animation::mixing::animation_lexeme override_lexeme
 	// u32 							user_animation_index
 	// animation::linear_interpolator interpolator
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& selected_animation
+	// resources::managed_resource_ptr const& selected_animation
 	// pcstr[2] 					user_animation_captions
 	// ******
 
@@ -158,11 +159,11 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 }
 
 // STATE[STUB]
-// survarium::double_barreled_weapon_core_aimed_fire_state* survarium::weapon_core_state_cook_template<survarium::double_barreled_weapon_core_aimed_fire_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
+// survarium::double_barreled_weapon_core_aimed_fire_state* survarium::weapon_core_state_cook_template<survarium::double_barreled_weapon_core_aimed_fire_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
 double_barreled_weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::double_barreled_weapon_core_aimed_fire_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
+	resources::managed_resource_ptr const*	animations,
 	u32									animations_count
 )
 {

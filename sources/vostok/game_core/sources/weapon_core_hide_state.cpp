@@ -5,17 +5,19 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_hide_state.h>
 
+#include <vostok/game_core/weapon_core_state_cook_template.h>
+
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_core_hide_state::weapon_core_hide_state(survarium::weapon_core&, const float, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int, bool&)
+// survarium::weapon_core_hide_state::weapon_core_hide_state(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int, bool&)
 weapon_core_hide_state::weapon_core_hide_state(
 	weapon_core&						weapon,
 	float								animation_timescale,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
+	resources::managed_resource_ptr const*	animations,
 	u32									animations_count,
 	bool&								is_shown
-)
+) : weapon_core_hide_state_base( weapon, is_shown )
 {
 	// LOCALS
 	// u32 							animation_index
@@ -75,7 +77,7 @@ animation::mixing::expression weapon_core_hide_state::weapon_and_hands_expressio
 weapon_lexeme_pair weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	// LOCALS
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& selected_animation
+	// resources::managed_resource_ptr const& selected_animation
 	// pcstr 						animation_identifier
 	// ******
 
@@ -134,11 +136,11 @@ animation::mixing::expression weapon_core_hide_state::get_user_hands_expression(
 }
 
 // STATE[STUB]
-// survarium::weapon_core_hide_state* survarium::weapon_core_state_cook_template<survarium::weapon_core_hide_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const*, const unsigned int)
+// survarium::weapon_core_hide_state* survarium::weapon_core_state_cook_template<survarium::weapon_core_hide_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
 weapon_core_hide_state* weapon_core_state_cook_template<survarium::weapon_core_hide_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
-	resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const*	animations,
+	resources::managed_resource_ptr const*	animations,
 	u32									animations_count
 )
 {

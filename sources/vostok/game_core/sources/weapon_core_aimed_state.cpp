@@ -54,7 +54,7 @@ animation::mixing::expression weapon_core_aimed_state::weapon_and_hands_expressi
 weapon_lexeme_pair weapon_core_aimed_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	// LOCALS
-	// resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const& selected_animation
+	// resources::managed_resource_ptr const& selected_animation
 	// pcstr 						animation_identifier
 	// ******
 

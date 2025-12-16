@@ -9,7 +9,7 @@ namespace survarium {
 
 /*
 // STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::get_weapon_lexeme_pair_impl(vostok::mutable_buffer&, char const*, vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base> const&, void const*, vostok::animation::animation_playback_state const&, const unsigned int, const float, const vostok::animation::mixing::playback_enum, vostok::animation::base_interpolator const&)
+// survarium::weapon_lexeme_pair survarium::get_weapon_lexeme_pair_impl(vostok::mutable_buffer&, char const*, vostok::resources::managed_resource_ptr const&, void const*, vostok::animation::animation_playback_state const&, const unsigned int, const float, const vostok::animation::mixing::playback_enum, vostok::animation::base_interpolator const&)
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
 	pcstr										identifier,
