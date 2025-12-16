@@ -11,7 +11,7 @@
 #define INTRUSIVE_LIST		vostok::intrusive_list<BaseWithMember, PointerType, MemberNext, ThreadingPolicy, SizePolicy, DebugPolicy>
 
 TEMPLATE_SIGNATURE
-inline INTRUSIVE_LIST::intrusive_list	() 
+inline INTRUSIVE_LIST::intrusive_list	()
 	: m_first(NULL), m_last(NULL)
 {
 }
@@ -28,7 +28,7 @@ inline void INTRUSIVE_LIST::swap		(intrusive_list & other)
 {
 	ThreadingPolicy::lock					();
 	other.lock								();
-	
+
 	std::swap								(m_first, other.m_first);
 	std::swap								(m_last,  other.m_last);
 	std::swap								((SizePolicy &) * this, (SizePolicy &) other);
@@ -60,7 +60,7 @@ inline void INTRUSIVE_LIST::push_back	(PointerType const object, bool * out_push
 	if ( out_pushed_first )
 		* out_pushed_first				=	!m_first;
 
-	if ( !m_first ) 
+	if ( !m_first )
 	{
 		m_first							=	object;
 		m_last							=	object;
@@ -83,7 +83,7 @@ inline void INTRUSIVE_LIST::push_front	(PointerType const object, bool * out_pus
 	if ( out_pushed_first )
 		* out_pushed_first				=	!m_first;
 
-	if ( !m_first ) 
+	if ( !m_first )
 	{
 		set_next_of_object					(object, NULL);
 		m_first							=	 object;
@@ -250,6 +250,26 @@ PointerType   INTRUSIVE_LIST::find_if	(Predicate & pred)
 }
 
 TEMPLATE_SIGNATURE
+PointerType   INTRUSIVE_LIST::find		(PointerType object)
+{
+	if ( empty() )
+		return								NULL;
+
+	typename ThreadingPolicy::mutex_raii	raii(*this);
+	for ( PointerType	current	=	m_first;
+						current;	)
+	{
+		PointerType const next			=	get_next_of_object(current);
+		if ( current == object )
+			return							current;
+		current							=	next;
+	}
+
+	return									NULL;
+}
+
+
+TEMPLATE_SIGNATURE
 template <class Predicate>
 PointerType   INTRUSIVE_LIST::remove_if	(Predicate const & predicate)
 {
@@ -264,7 +284,7 @@ PointerType   INTRUSIVE_LIST::remove_if	(Predicate const & predicate)
 	while ( current )
 	{
 		PointerType const next			=	get_next_of_object(current);
-		if ( !predicate(& * current) ) 
+		if ( !predicate(& * current) )
 		{
 			previous					=	current;
 			current						=	next;

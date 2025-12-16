@@ -16,9 +16,9 @@
 namespace survarium {
 
 class scheduler : public boost::noncopyable {
-public:		
+public:
 	typedef boost::function< void( u32, u32 ) >	callback;
-	
+
 	struct identifier {
 		u32		m_id	: 31;
 		u32		m_active: 1;
@@ -33,7 +33,7 @@ public:
 		u32		m_update_delta	: 31;	/// periodic interval
 		u32		m_type			: 1;	/// 0/1: per-frame/periodic
 		u32		m_max_update_count;		/// upper bound in case of overshoot
-		u32		m_last_update_time;		/// misnomer, next time the task should be fired 
+		u32		m_last_update_time;		/// misnomer, next time the task should be fired
 	};
 
 	struct record : public scheduler::callback_record, public scheduler::scheduler_record { };
@@ -51,7 +51,6 @@ private:
 
 public:
 	inline explicit						scheduler			( vostok::memory::base_allocator* allocator );
-
 										~scheduler			( );
 
 			void						register_on_frame	( scheduler::identifier* identifier, scheduler::callback const& callback, bool active );
