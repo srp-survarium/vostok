@@ -65,7 +65,7 @@ public:
 	inline	u8							get_initiator_id			( ) const { /* no source */ }
 
 	inline	void						last_hitted_body_part		( body_part_parameters* arg_0 ) { /* no source */ }
-	inline	body_part_parameters*		last_hitted_body_part		( ) const { /* no source */ }
+	inline	body_part_parameters*		last_hitted_body_part		( ) const { return m_last_hitted_body_part; /* no source */ }
 
 			float3						compute_parabolic_velocity	( float time, float3 const& gravity );
 			float3						compute_trajectory_velocity	( float time, float3 const& gravity );

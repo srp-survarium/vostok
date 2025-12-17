@@ -23,7 +23,7 @@ resources::managed_resource_ptr weapon_user_animations_container::get_animation_
 */
 
 // STATE[STUB]
-resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( bool aimed, u32 index, bool is_third_view ) const
+inline resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( bool aimed, u32 index, bool is_third_view ) const
 {
 	// FUNCTION BODY
 	// <0>

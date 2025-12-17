@@ -78,7 +78,7 @@ m_client				( game.get_network_world() )
 #ifndef MASTER_GOLD
 	m_dbg_name							= "Game World";
 #endif //#ifndef MASTER_GOLD
-	m_bullet_manager					= NEW(bullet_manager)( );
+	m_bullet_manager					= NEW(bullet_manager)( NULL, NULL, NULL ); // sushi@TODO
 	m_camera_director					= NEW(camera_director)( *this );
 	m_camera_director->set_no_delete	( );
 	m_actor_input_controller			= NEW(actor_input_controller)( *this );
@@ -105,7 +105,7 @@ game_world::~game_world( )
 	DELETE				( m_local_actor );
 	DELETE				( m_actor_input_controller );
 
-	camera_director* cd = m_camera_director.c_ptr(); 
+	camera_director* cd = m_camera_director.c_ptr();
 	m_camera_director	= NULL;
 	DELETE				( cd );
 //	DELETE				( m_test_anim_object );
@@ -142,8 +142,8 @@ void game_world::tick( )
 	{
 		m_local_actor->tick				( );
 		m_actor_input_controller->inverted_view_matrix() = m_local_actor->character_head_transform();
-		//m_actor_input_controller->update_camera_matrix(	float2( m_frame_events.m_onframe_turn_x, m_frame_events.m_onframe_turn_y ), 
-		//										m_frame_events.m_onframe_move_fwd, 
+		//m_actor_input_controller->update_camera_matrix(	float2( m_frame_events.m_onframe_turn_x, m_frame_events.m_onframe_turn_y ),
+		//										m_frame_events.m_onframe_move_fwd,
 		//										m_frame_events.m_onframe_move_right,
 		//										m_inverted_view_matrix );
 
@@ -262,7 +262,7 @@ void game_world::on_activate( )
 {
 	super::on_activate			( );
 	m_camera_director->on_focus	( true );
-	
+
 	if(get_sound_scene())
 		get_game().get_sound_world().get_logic_world_user().set_active_sound_scene( get_sound_scene(), 0, 0 );
 }
@@ -297,7 +297,7 @@ void game_world::start_game( )
 
 	camera_director_ptr object_ptr			= get_camera_director();
 	m_cell_manager->m_named_registry["camera_director"]		= object_ptr.c_ptr();
-	
+
 	//configs::binary_config_value scenes_to_start = (*m_game_project->m_config)["start"]["scenes_to_start"];
 	//for ( u32 i = 0; i < scenes_to_start.size(); i++ )
 	//{
@@ -328,16 +328,16 @@ void game_world::query_resources( )
 	scene_configuration.m_create_speedtree_world	= true;
 	scene_configuration.m_create_grass_world		= true;
 	scene_configuration.m_sky_enabled				= true;
-	
+
 	resources::user_data_variant					scene_data;
 	scene_data.set									( scene_configuration );
 
-	
+
 	vostok::resources::user_data_variant const* data[] = { &scene_data, 0, 0  };
 
 	vostok::const_buffer			temp_buffer( "", 1 );
 
-	vostok::resources::creation_request requests[] = 
+	vostok::resources::creation_request requests[] =
 	{
 		vostok::resources::creation_request( "game_scene", temp_buffer, resources::scene_class ),
 		vostok::resources::creation_request( "game_scene_view", temp_buffer, resources::scene_view_class ),
@@ -359,7 +359,7 @@ void game_world::on_resources_ready( resources::queries_result& data )
 	m_scene_view		= static_cast_resource_ptr< vostok::render::scene_view_ptr >( data[1].get_unmanaged_resource() );
 
 	m_sound_scene		= static_cast_resource_ptr< vostok::sound::sound_scene_ptr >( data[2].get_unmanaged_resource() );
-	
+
 	if(is_active())
 		get_game().get_sound_world().get_logic_world_user().set_active_sound_scene( get_sound_scene(), 1000, 0 );
 }

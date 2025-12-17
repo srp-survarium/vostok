@@ -132,9 +132,9 @@ public:
 	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }
 
 	// STATE[STUB]
-	virtual	void								insert_game_world_object		( game_world_object& object ) override { m_game_world_objects.push_back( &object ); }
+	virtual	void								insert_game_world_object		( game_world_object& object ) override { /* m_game_world_objects.push_back( &object ); */ }
 	// STATE[STUB]
-	virtual	void								remove_game_world_object		( game_world_object& object ) override { m_game_world_objects.erase( &object ); }
+	virtual	void								remove_game_world_object		( game_world_object& object ) override { /* m_game_world_objects.erase( &object ); */ }
 
 			void								subscribe_on_player_death		( player_death_subscriber* subscriber );
 			void								unsubscribe_from_player_death	( player_death_subscriber* subscriber );

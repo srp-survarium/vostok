@@ -24,9 +24,9 @@ typedef	intrusive_ptr<
 > object_scene_ptr;
 
 
-class object_scene : public game_world_object
+class object_scene : public game_world_object_old
 {
-	typedef game_world_object super;
+	typedef game_world_object_old super;
 public:
 					object_scene			( game_world& w );
 	virtual			~object_scene			( );
@@ -50,7 +50,7 @@ private:
 	event_manager						m_event_manager;
 }; // class object_scene
 
-class object_scene_job : private boost::noncopyable 
+class object_scene_job : private boost::noncopyable
 {
 public:
 					object_scene_job		( object_scene* owner, configs::binary_config_value const& data );
@@ -62,15 +62,15 @@ object_behaviour*	get_behaviour			( pcstr name ) const;
 			void	tick					( );
 	game_world&		get_game_world			( );
 			void	switch_to_behaviour		( object_behaviour* b );
-	inline	pcstr	name					( ) const { return m_name; }	
+	inline	pcstr	name					( ) const { return m_name; }
 	event_manager*	get_event_manager		( ) const;
 	inline	game_object_ptr_	job_resource( ) const { return m_job_resource; }
 private:
 	object_scene*						m_owner;
-	
+
 	typedef vector<object_behaviour*>	behaviours_list;
 	behaviours_list						m_behaviours;
-	
+
 	configs::binary_config_value const&	m_data;
 	object_behaviour*					m_active_behaviour;
 	game_object_ptr_					m_job_resource;

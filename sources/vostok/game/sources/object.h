@@ -12,7 +12,7 @@ class game_scene;
 class game_world;
 
 class game_object_ :	public resources::unmanaged_resource,
-						private boost::noncopyable 
+						private boost::noncopyable
 {
 public:
 					game_object_			( game_scene& s );
@@ -31,11 +31,11 @@ protected:
 	game_scene&		m_game_scene;
 };
 
-class game_world_object :	public game_object_
+class game_world_object_old :	public game_object_
 {
 	typedef game_object_ super;
 public:
-					game_world_object		( game_world& w );
+					game_world_object_old		( game_world& w );
 	game_world&		get_game_world			( ) { return m_game_world; }
 protected:
 	game_world&		m_game_world;

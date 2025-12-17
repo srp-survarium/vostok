@@ -69,7 +69,7 @@ breath_vibration_calculator::~breath_vibration_calculator( )
 // bool survarium::true_predicate()
 bool true_predicate( )
 {
-	return false;
+	return true;
 
 	// FUNCTION BODY
 	// <0xcb5c3>|0x003|+0x002:'54'

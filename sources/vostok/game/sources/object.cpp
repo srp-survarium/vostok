@@ -18,7 +18,7 @@ m_loaded_cnt	( 0 )
 void game_object_::load( configs::binary_config_value const& )
 {
 }
-game_world_object::game_world_object( game_world& w )
+game_world_object_old::game_world_object_old( game_world& w )
 :super(w),
 m_game_world(w)
 {};
