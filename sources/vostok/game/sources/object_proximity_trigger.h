@@ -25,9 +25,9 @@ namespace survarium
 		proximity_trigger_testee_status_outside
 	};
 
-	class object_proximity_trigger: public game_world_object, public object_controlled
+	class object_proximity_trigger: public game_world_object_old, public object_controlled
 	{
-		typedef game_world_object									super;
+		typedef game_world_object_old									super;
 		typedef buffer_vector< collision::geometry_instance* >		instances_vector;
 	public:
 						object_proximity_trigger	( game_world& w );
@@ -49,7 +49,7 @@ namespace survarium
 	private:
 		instances_vector							m_inside_objects;
 		object_collision_geometry*					m_collision_geometry;
-		
+
 	}; // class object_proximity_trigger
 
 } // namespace survarium

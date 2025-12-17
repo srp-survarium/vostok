@@ -132,7 +132,7 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 
 // STATE[STUB]
 // bool survarium::true_predicate()
-bool true_predicate( )
+static bool true_predicate( )
 {
 	return false;
 

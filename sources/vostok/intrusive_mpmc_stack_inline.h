@@ -7,6 +7,25 @@
 
 namespace vostok {
 
+template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
+inline	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::intrusive_mpmc_stack(  )
+{
+	// sushi@TODO
+}
+
+template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
+inline	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::~intrusive_mpmc_stack( )
+{
+	// sushi@TODO
+}
+
+
+template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
+inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
+{
+	// sushi@TODO
+}
+
 // STATE[STUB]
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
 inline	T*	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::try_pop( )
@@ -38,6 +57,18 @@ inline	T*	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::try_pop( )
 	// <0>
 	// <0xbe781>|0x071|+0x003:'63'
 	// ******
+}
+
+template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
+inline	bool	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::empty( ) const
+{
+	// sushi@TODO
+}
+
+template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
+inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::swap( T& value )
+{
+	// sushi@TODO
 }
 
 } // namespace vostok
