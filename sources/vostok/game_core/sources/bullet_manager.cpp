@@ -5,6 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/bullet_manager.h>
 
+#include <vostok/game_core/sources/temp_include_all.h>
+
 namespace survarium {
 
 // STATE[STUB]
@@ -13,6 +15,7 @@ bullet_manager::bullet_manager( game_material_manager* material_manager, physics
 	m_bullets				( NULL, 10 ),
 	m_mt_stack_allocator	( NULL, 10 )
 {
+	IncludeAll all;
 	// FUNCTION BODY
 	// <0x5a29f3>|0x123|+0x008:'45'
 	// <0x5a29fb>|0x12b|+0x008:'46'
