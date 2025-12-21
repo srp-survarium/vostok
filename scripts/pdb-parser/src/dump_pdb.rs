@@ -178,7 +178,7 @@ pub fn generate_project_header(vcproj_guid: uuid::Uuid, name: &str) -> String {
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="vostok_structure"
+	Name="{name}"
 	ProjectGUID="{{{vcproj_guid}}}"
 	RootNamespace="{name}"
 	TargetFrameworkVersion="196613"

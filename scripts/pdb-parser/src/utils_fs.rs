@@ -1,13 +1,10 @@
-use std::fs::File;
 use std::io;
 
 use crate::data::Files;
-use crate::GenFlags;
 
 pub fn open_file(
     output_path: &mut std::path::PathBuf,
     source_path: &mut std::path::PathBuf,
-    flags: GenFlags,
     files: &mut Files,
     extension: &'static str,
 ) -> crate::Result<std::fs::File> {
@@ -17,11 +14,6 @@ pub fn open_file(
 
     if should_create_dir {
         std::fs::create_dir_all(output_path.parent().unwrap())?;
-    }
-
-    if !flags.contains(GenFlags::NO_OVERWRITES) {
-        let file = File::create(output_path)?;
-        return Ok(file);
     }
 
     let source_path_len = source_path.as_mut_os_string().len() - extension.len();

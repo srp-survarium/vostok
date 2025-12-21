@@ -8,6 +8,7 @@
 #include <vostok/animation/instant_interpolator.h>
 #include "interpolator_comparer.h"
 #include <vostok/animation/interpolator_visitor.h>
+#include "mixing_n_ary_tree_transition_tree_constructor.h"
 
 using vostok::animation::instant_interpolator;
 using vostok::animation::interpolator_comparer;
@@ -29,6 +30,11 @@ float instant_interpolator::transition_time			( ) const
 instant_interpolator* instant_interpolator::clone	( vostok::mutable_buffer& buffer ) const
 {
 	return				clone_impl< instant_interpolator >( buffer );
+}
+
+instant_interpolator* instant_interpolator::clone	( mixing::n_ary_tree_transition_tree_constructor& constructor ) const
+{
+	return				clone_impl< instant_interpolator >(
 }
 
 void instant_interpolator::accept					( interpolator_visitor& visitor ) const

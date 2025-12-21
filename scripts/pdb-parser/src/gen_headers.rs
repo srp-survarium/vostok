@@ -1,8 +1,7 @@
-use std::collections::BTreeSet;
+use std::collections::{btree_map, BTreeMap, BTreeSet, HashMap};
 use std::io::{self, BufWriter};
 use std::path::Path;
 
-use pdb::RawString;
 use pdb::{FallibleIterator, ItemIndex};
 use pdb_addr2line::type_parser;
 use pdb_addr2line::type_parser::AttributeFlags;
@@ -23,10 +22,6 @@ pub fn dump_headers(
     flags: GenFlags,
     files: &mut Files,
 ) -> crate::Result<()> {
-    if flags.contains(GenFlags::TEST_RUN) {
-        return Ok(());
-    }
-
     let type_information = pdb.type_information()?;
     let type_finder = {
         let mut type_finder = type_information.finder();
@@ -46,6 +41,13 @@ pub fn dump_headers(
 
     let type_information = pdb.type_information()?;
     let mut type_iter = type_information.iter();
+
+    // Extract all enums out of the classes in which they are defined and then create headers for them.
+    //
+    // Note that sometimes the same enum can be specified with and without fields in headers.
+    // When this happens, fieldless enum will be replaced.
+    let mut enums = BTreeMap::new();
+
     while let Some(type_index) = type_iter.next()? {
         let Ok(pdb::TypeData::Class(class)) = type_index.parse() else {
             continue;
@@ -62,15 +64,43 @@ pub fn dump_headers(
             &type_finder,
             type_index.index(),
             &namespace,
+            &mut enums,
         ) else {
             continue;
         };
 
-        if let Some(file) =
-            create_header_file(&class, &mut output_path, &mut header_path, flags, files)?
-        {
+        if let Some(file) = create_header_file(
+            &class.name,
+            &namespace,
+            HeaderType::Class,
+            &mut output_path,
+            &mut header_path,
+            flags,
+            files,
+        )? {
             let mut file = BufWriter::new(file);
-            write_header_file(&class, header, &mut file)?;
+            header.write_to_header_file(&class.name.to_string(), &mut file)?;
+        }
+
+        output_path.as_mut_os_string().truncate(output_path_len);
+        header_path.as_mut_os_string().truncate(header_path_len);
+    }
+
+    for e in enums.values() {
+        let enum_name = &e.name.to_string();
+        let namespace = utils::Namespace::get_from_class_name_impl(enum_name);
+
+        if let Some(file) = create_header_file(
+            &e.name,
+            &namespace,
+            HeaderType::Enum,
+            &mut output_path,
+            &mut header_path,
+            flags,
+            files,
+        )? {
+            let mut file = BufWriter::new(file);
+            e.write_to_header_file(enum_name, &namespace, &mut file)?;
         }
 
         output_path.as_mut_os_string().truncate(output_path_len);
@@ -80,18 +110,27 @@ pub fn dump_headers(
     Ok(())
 }
 
-fn build_header<'a>(
+fn build_header<'pdb>(
     formatter: &Formatter,
     cache: &FunctionCache,
-    type_finder: &pdb::TypeFinder<'a>,
+    type_finder: &pdb::TypeFinder<'pdb>,
 
     class: pdb::TypeIndex,
-    namespace: &'a utils::Namespace,
-) -> crate::Result<Data<'a>> {
-    let mut needed_types = TypeSet::new();
-    let mut data = Data::new(namespace);
+    namespace: &utils::Namespace,
 
-    data.add(formatter, cache, type_finder, class, &mut needed_types)?;
+    enums: &mut BTreeMap<pdb::RawString<'pdb>, Enum<'pdb>>,
+) -> crate::Result<Data<'pdb>> {
+    let mut needed_types = TypeSet::new();
+    let mut data = Data::new(namespace.clone());
+
+    data.add(
+        formatter,
+        cache,
+        type_finder,
+        class,
+        &mut needed_types,
+        enums,
+    )?;
 
     // add all the needed types iteratively until we're done
     while let Some(type_index) = needed_types.iter().next_back().copied() {
@@ -99,7 +138,14 @@ fn build_header<'a>(
         needed_types.remove(&type_index);
 
         // add the type
-        data.add(formatter, cache, type_finder, type_index, &mut needed_types)?;
+        data.add(
+            formatter,
+            cache,
+            type_finder,
+            type_index,
+            &mut needed_types,
+            enums,
+        )?;
     }
 
     Ok(data)
@@ -112,14 +158,14 @@ fn build_header<'a>(
 type TypeSet = BTreeSet<pdb::TypeIndex>;
 
 struct Data<'p> {
-    namespace: &'p utils::Namespace,
-    forward_references: Vec<ForwardReference>,
+    namespace: utils::Namespace,
+    forward_references: HashMap<String, ForwardReference>,
     classes: Vec<Class<'p>>,
     enums: Vec<Enum<'p>>,
 }
 
 struct Class<'p> {
-    namespace: &'p utils::Namespace,
+    namespace: utils::Namespace,
     kind: pdb::ClassKind,
     orig_name: String,
     name: Type,
@@ -138,6 +184,7 @@ struct BaseClass {
 struct Field<'p> {
     type_name: Type,
     name: pdb::RawString<'p>,
+    array: String,
     offset: u64,
 }
 
@@ -166,19 +213,34 @@ struct EnumValue<'p> {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ForwardReference {
-    kind: pdb::ClassKind,
-    name: Type,
+    kind: ForwardReferenceKind,
+    usage: ForwardReferenceUsage,
+    name: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum ForwardReferenceKind {
+    Class,
+    Struct,
+    Enum,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum ForwardReferenceUsage {
+    ByValue,
+    ByReference,
 }
 
 //
 //
 //
 
-impl<'p> Data<'p> {
-    fn new(namespace: &'p utils::Namespace) -> Data<'p> {
+impl<'pdb> Data<'pdb> {
+    fn new(namespace: utils::Namespace) -> Data<'pdb> {
         Data {
             namespace,
-            forward_references: Vec::new(),
+            forward_references: HashMap::new(),
             classes: Vec::new(),
             enums: Vec::new(),
         }
@@ -189,28 +251,41 @@ impl<'p> Data<'p> {
 
         formatter: &Formatter,
         cache: &FunctionCache,
-        type_finder: &pdb::TypeFinder<'p>,
+        type_finder: &pdb::TypeFinder<'pdb>,
 
         type_index: pdb::TypeIndex,
         needed_types: &mut TypeSet,
+
+        enums: &mut BTreeMap<pdb::RawString<'pdb>, Enum<'pdb>>,
     ) -> crate::Result<()> {
         match type_finder.find(type_index)?.parse()? {
             pdb::TypeData::Class(data) => {
                 let orig_name = data.name.to_string().to_string();
 
-                let namespace = self.namespace;
+                let namespace = &self.namespace;
 
                 if data.properties.forward_reference() {
-                    self.forward_references.push(ForwardReference {
-                        kind: data.kind,
-                        name: Type::new_forward_declare(&data.name.to_string()),
-                    });
+                    let name = data.name.to_string();
+                    if let Some(name) = skip_default_environment(&name) {
+                        let name = extract_forward_reference_from_template(name)
+                            .map(|x| x.to_string())
+                            .unwrap_or_else(|| name.to_string());
+
+                        self.forward_references.insert(
+                            name.to_string(),
+                            ForwardReference {
+                                kind: ForwardReferenceKind::from_class_kind(data.kind),
+                                usage: ForwardReferenceUsage::ByValue,
+                                name,
+                            },
+                        );
+                    }
 
                     return Ok(());
                 }
 
                 let mut class = Class {
-                    namespace,
+                    namespace: namespace.clone(),
                     kind: data.kind,
                     name: Type::new(&data.name.to_string(), namespace),
                     orig_name,
@@ -222,7 +297,14 @@ impl<'p> Data<'p> {
                 };
 
                 if let Some(fields) = data.fields {
-                    class.add_fields(formatter, cache, type_finder, fields, needed_types)?;
+                    class.add_fields(
+                        formatter,
+                        cache,
+                        type_finder,
+                        fields,
+                        needed_types,
+                        &mut self.forward_references,
+                    )?;
                 }
 
                 self.classes.insert(0, class);
@@ -236,14 +318,26 @@ impl<'p> Data<'p> {
                         type_finder,
                         data.underlying_type,
                         needed_types,
-                        self.namespace,
+                        &self.namespace,
                     )?,
                     values: Vec::new(),
                 };
 
                 e.add_fields(type_finder, data.fields, needed_types)?;
 
-                self.enums.insert(0, e);
+                self.enums.insert(0, e.clone());
+                match enums.entry(e.name) {
+                    btree_map::Entry::Vacant(entry) => _ = entry.insert(e),
+                    btree_map::Entry::Occupied(mut entry) => {
+                        match (entry.get().values.len(), e.values.len()) {
+                            (lhs, rhs) if lhs == rhs => (),
+                            (_, 0) => (),
+                            (0, _) => _ = entry.insert(e),
+                            _ if e.name.as_bytes() == b"ARG_TYPE" => (),
+                            _ => unreachable!("Enums cannot be of different length"),
+                        }
+                    }
+                }
             }
 
             pdb::TypeData::Union(_) => (/* TODO */),
@@ -265,16 +359,31 @@ impl<'p> Class<'p> {
 
         type_index: pdb::TypeIndex,
         needed_types: &mut TypeSet,
+        forward_references: &mut HashMap<String, ForwardReference>,
     ) -> crate::Result<()> {
         match type_finder.find(type_index)?.parse()? {
             pdb::TypeData::FieldList(data) => {
                 for field in &data.fields {
-                    self.add_field(formatter, cache, type_finder, field, needed_types)?;
+                    self.add_field(
+                        formatter,
+                        cache,
+                        type_finder,
+                        field,
+                        needed_types,
+                        forward_references,
+                    )?;
                 }
 
                 if let Some(continuation) = data.continuation {
                     // recurse
-                    self.add_fields(formatter, cache, type_finder, continuation, needed_types)?;
+                    self.add_fields(
+                        formatter,
+                        cache,
+                        type_finder,
+                        continuation,
+                        needed_types,
+                        forward_references,
+                    )?;
                 }
             }
             other => {
@@ -295,20 +404,21 @@ impl<'p> Class<'p> {
 
         field: &pdb::TypeData<'p>,
         needed_types: &mut TypeSet,
+        forward_references: &mut HashMap<String, ForwardReference>,
     ) -> crate::Result<()> {
         match *field {
             pdb::TypeData::Member(ref data) => {
-                self.fields.push(Field {
-                    type_name: type_name(
+                self.fields.push(Field::build(
+                    type_name(
                         formatter,
                         type_finder,
                         data.field_type,
                         needed_types,
-                        self.namespace,
+                        &self.namespace,
                     )?,
-                    name: data.name,
-                    offset: data.offset,
-                });
+                    data.name,
+                    data.offset,
+                ));
             }
 
             pdb::TypeData::Method(ref data) => self.add_method(
@@ -318,6 +428,7 @@ impl<'p> Class<'p> {
                 data.name,
                 data.attributes,
                 data.method_type,
+                forward_references,
             )?,
 
             pdb::TypeData::OverloadedMethod(ref data) => {
@@ -339,6 +450,7 @@ impl<'p> Class<'p> {
                                 data.name,
                                 attributes,
                                 method_type,
+                                forward_references,
                             )?;
                         }
                     }
@@ -358,7 +470,7 @@ impl<'p> Class<'p> {
                     type_finder,
                     data.base_class,
                     needed_types,
-                    self.namespace,
+                    &self.namespace,
                 )?,
                 offset: data.offset,
             }),
@@ -369,7 +481,7 @@ impl<'p> Class<'p> {
                     type_finder,
                     data.base_class,
                     needed_types,
-                    self.namespace,
+                    &self.namespace,
                 )?,
                 offset: data.base_pointer_offset,
             }),
@@ -392,6 +504,8 @@ impl<'p> Class<'p> {
         data_name: pdb::RawString,
         data_attributes: pdb::FieldAttributes,
         data_method_type: pdb::TypeIndex,
+
+        forward_references: &mut HashMap<String, ForwardReference>,
     ) -> crate::Result<()> {
         let method = Method::find(
             formatter,
@@ -427,7 +541,29 @@ impl<'p> Class<'p> {
                 return Ok(());
             }
 
+            "__local_vftable_ctor_closure" => return Ok(()),
+            "__dflt_ctor_closure" => return Ok(()),
+
             _ => (),
+        }
+
+        for arg_ty in &fn_t.arg_types {
+            if let Some(forward_reference) =
+                find_forward_reference(arg_ty, &self.name, &self.namespace)
+            {
+                forward_references
+                    .entry(forward_reference.name.clone())
+                    .or_insert(forward_reference);
+            }
+        }
+        if let ReturnType::Type(ret_ty) = &fn_t.return_type {
+            if let Some(forward_reference) =
+                find_forward_reference(&ret_ty, &self.name, &self.namespace)
+            {
+                forward_references
+                    .entry(forward_reference.name.clone())
+                    .or_insert(forward_reference);
+            }
         }
 
         if data_attributes.is_static() {
@@ -528,6 +664,23 @@ impl<'p> Enum<'p> {
     }
 }
 
+impl<'p> Field<'p> {
+    pub fn build(mut type_name: Type, name: pdb::RawString<'p>, offset: u64) -> Self {
+        let mut array = String::new();
+        if let Some(pos) = type_name.0.find('[') {
+            array = type_name.0.split_at(pos).1.to_string();
+            type_name.0.truncate(pos);
+        }
+
+        Self {
+            type_name,
+            name,
+            array,
+            offset,
+        }
+    }
+}
+
 //
 //
 //
@@ -584,47 +737,155 @@ pub fn update_referenced_types(
 }
 
 //
+//
+//
+
+impl Data<'_> {
+    fn write_to_header_file(
+        &self,
+        class_name: &str,
+        f: &mut impl std::io::Write,
+    ) -> crate::Result<()> {
+        let ifdef_name = get_ifdef_name(&class_name);
+
+        gen_sources::write_header(f, &ifdef_name)?;
+
+        if !self.forward_references.is_empty() {
+            let mut by_value = self
+                .forward_references
+                .values()
+                .filter(|r| r.usage == ForwardReferenceUsage::ByValue)
+                .collect::<Vec<_>>();
+
+            let mut by_reference = self
+                .forward_references
+                .values()
+                .filter(|r| r.usage == ForwardReferenceUsage::ByReference)
+                .collect::<Vec<_>>();
+
+            let sort = |lhs: &&ForwardReference, rhs: &&ForwardReference| {
+                use core::cmp::Ordering;
+
+                let engine_name =
+                    |name: &str| name.starts_with("vostok") || name.starts_with("survarium");
+
+                match (engine_name(&lhs.name), engine_name(&rhs.name)) {
+                    (false, true) => return Ordering::Less,
+                    (true, false) => return Ordering::Greater,
+                    _ => (),
+                }
+
+                if lhs.kind != rhs.kind {
+                    return lhs.kind.cmp(&rhs.kind);
+                }
+
+                if lhs.name.starts_with("vostok") && rhs.name.starts_with("survarium") {
+                    return Ordering::Less;
+                }
+
+                if lhs.name.starts_with("survarium") && rhs.name.starts_with("vostok") {
+                    return Ordering::Greater;
+                }
+
+                lhs.name.cmp(&rhs.name)
+            };
+
+            by_value.sort_by(sort);
+            by_reference.sort_by(sort);
+
+            if !by_value.is_empty() {
+                writeln!(f, "/* INCLUDES */")?;
+
+                for e in by_value {
+                    e.fmt(f)?;
+                }
+
+                if !by_reference.is_empty() {
+                    writeln!(f)?
+                }
+            }
+
+            if !by_reference.is_empty() {
+                writeln!(f, "/* FORWARD REFS */")?;
+
+                for e in by_reference {
+                    e.fmt(f)?;
+                }
+            }
+
+            writeln!(f)?;
+        }
+
+        self.namespace.start_namespace(f)?;
+        self.write(f)?;
+        self.namespace.end_namespace(f)?;
+
+        gen_sources::write_footer(f, &ifdef_name)?;
+
+        Ok(())
+    }
+}
+
+impl Enum<'_> {
+    fn write_to_header_file(
+        &self,
+        enum_name: &str,
+        namespace: &utils::Namespace,
+        f: &mut impl std::io::Write,
+    ) -> crate::Result<()> {
+        let ifdef_name = get_ifdef_name(enum_name);
+
+        gen_sources::write_header(f, &ifdef_name)?;
+        namespace.start_namespace(f)?;
+        self.fmt(Name::RemoveNamespace(namespace), f)?;
+        writeln!(f, "")?;
+        namespace.end_namespace(f)?;
+        gen_sources::write_footer(f, &ifdef_name)?;
+
+        Ok(())
+    }
+}
+
+fn get_ifdef_name(name: &str) -> String {
+    let mut depth = 0;
+
+    let header_name = name.chars().filter(|c| match c {
+        '<' => {
+            depth += 1;
+            false
+        }
+        '>' => {
+            depth -= 1;
+            false
+        }
+        _ => depth == 0,
+    });
+
+    "ignore/"
+        .chars()
+        .chain(header_name)
+        .chain(".h".chars())
+        .collect::<String>()
+        .replace("survarium::", "")
+        .replace("vostok::", "")
+        .replace("::", "_")
+}
+
+//
 // Display
 //
 
 impl Data<'_> {
     fn write(&self, f: &mut impl std::io::Write) -> io::Result<()> {
-        if !self.forward_references.is_empty() {
-            writeln!(f)?;
-            writeln!(f, "//////////////////////////")?;
-            writeln!(f, "// FORWARD DECLARATIONS //")?;
-            writeln!(f, "//////////////////////////")?;
-            writeln!(f)?;
-
-            let mut forward_references = self.forward_references.clone();
-            forward_references.sort_by(|lhs, rhs| lhs.name.0.cmp(&rhs.name.0));
-
-            for e in forward_references {
-                e.fmt(f)?;
-            }
-        }
-
-        if self.classes.is_empty() {
-            writeln!(f)?;
-            writeln!(f, "//////////////////////////")?;
-            writeln!(f, "//     DEFINITIONS      //")?;
-            writeln!(f, "//////////////////////////")?;
-        }
-
         for e in &self.enums {
-            writeln!(f)?;
-            e.fmt(f)?;
+            e.fmt(Name::Full, f)?;
         }
 
-        if !self.classes.is_empty() {
+        if !self.enums.is_empty() {
             writeln!(f)?;
-            writeln!(f, "//////////////////////////")?;
-            writeln!(f, "//     DEFINITIONS      //")?;
-            writeln!(f, "//////////////////////////")?;
         }
 
         for class in &self.classes {
-            writeln!(f)?;
             class.fmt(f)?;
         }
 
@@ -657,64 +918,95 @@ impl Class<'_> {
         //
         // All methods are considered public
         //
-        writeln!(f, "public:")?;
+        if !self.instance_methods.is_empty() || !self.static_methods.is_empty() {
+            if !matches!(self.kind, pdb::ClassKind::Struct) {
+                writeln!(f, "public:")?;
+            }
 
-        let max_return_type_len = self.max_return_type_len();
-        let max_method_name_len = self.max_method_name_len();
+            let max_return_type_len = self.max_return_type_len();
+            let max_method_name_len = self.max_method_name_len();
 
-        if !self.instance_methods.is_empty() {
-            let has_inline_methods = self.has_inline_methods();
-            for method in &self.instance_methods {
-                method.fmt(
-                    f,
-                    self.namespace,
-                    has_inline_methods,
-                    max_return_type_len,
-                    max_method_name_len,
-                )?;
+            if !self.instance_methods.is_empty() {
+                let mut prev_name = "";
+
+                for method in &self.instance_methods {
+                    let name = method.fn_t().name.as_str();
+                    #[rustfmt::skip]
+                    match (prev_name, name) {
+                        ("", _) => (),
+                        // Overloads should be grouped
+                        (lhs, rhs) if lhs == rhs => (),
+                        // Constructor and destructor should be grouped
+                        (lhs, rhs) if lhs == &rhs[1..] => (),
+                        // get_, on_, register_, unregister_, etc.
+                        (lhs, rhs) if starts_with_equal_group(lhs, rhs) => (),
+                        // _subscriber, _affect, _callback
+                        (lhs, rhs) if ends_with_equal_group(lhs, rhs) => (),
+
+                        // Known pairs to be grouped
+                        ("serialize",  "deserialize") => (),
+                        ("initialize", "finalize") => (),
+                        ("insert",     "remove") => (),
+                        ("subscribe",  "unsubscribe") => (),
+
+                        _ => writeln!(f)?,
+                    };
+
+                    method.fmt(
+                        f,
+                        &self.namespace,
+                        self.has_inline_methods(),
+                        max_return_type_len,
+                        max_method_name_len,
+                    )?;
+
+                    prev_name = name;
+                }
+            }
+
+            if !self.static_methods.is_empty() {
+                writeln!(f)?;
+
+                for method in &self.static_methods {
+                    method.fmt(
+                        f,
+                        &self.namespace,
+                        false,
+                        max_return_type_len,
+                        max_method_name_len,
+                    )?;
+                }
             }
         }
 
-        if !self.static_methods.is_empty() {
+        if !self.fields.is_empty() {
             writeln!(f)?;
 
-            for method in &self.static_methods {
-                method.fmt(
-                    f,
-                    self.namespace,
-                    false,
-                    max_return_type_len,
-                    max_method_name_len,
-                )?;
+            //
+            // All fields are considered public unless this is a struct
+            //
+            match self.kind {
+                pdb::ClassKind::Class => writeln!(f, "private:")?,
+                pdb::ClassKind::Interface => writeln!(f, "private:")?,
+                pdb::ClassKind::Struct => writeln!(f, "public:")?,
             }
-        }
 
-        writeln!(f)?;
+            for base in &self.base_classes {
+                writeln!(f, "\t/* 0x{:04x} */\t/* {} */", base.offset, base.type_name)?;
+            }
 
-        //
-        // All fields are considered public unless this is a struct
-        //
-        match self.kind {
-            pdb::ClassKind::Class => writeln!(f, "private:")?,
-            pdb::ClassKind::Interface => writeln!(f, "private:")?,
-            pdb::ClassKind::Struct => writeln!(f, "public:")?,
-        }
-
-        for base in &self.base_classes {
-            writeln!(f, "\t/* 0x{:04x} */\t/* {} */", base.offset, base.type_name)?;
-        }
-
-        let max_type_name_len = self
-            .fields
-            .iter()
-            .map(|field| field.type_name.len())
-            .max()
-            .unwrap_or(0);
-
-        for field in &self.fields {
-            write!(f, "\t/* 0x{:04x} */\t{}", field.offset, field.type_name)?;
-            utils::pad_spaces_t(f, field.type_name.len(), max_type_name_len)?;
-            writeln!(f, "\t{};", field.name.to_string())?;
+            let max_type_name_len = self.max_type_name_len();
+            for Field {
+                type_name,
+                name,
+                array,
+                offset,
+            } in &self.fields
+            {
+                write!(f, "\t/* 0x{offset:04x} */\t{type_name}")?;
+                utils::pad_spaces_t(f, type_name.len(), max_type_name_len)?;
+                writeln!(f, "\t{}{};", name.to_string(), array)?;
+            }
         }
 
         writeln!(f, "}}; // {kind} {name}")?;
@@ -730,30 +1022,29 @@ impl Class<'_> {
 
 impl Class<'_> {
     fn has_inline_methods(&self) -> bool {
-        self.instance_methods
-            .iter()
-            .any(|method| method.attrs().contains(AttributeFlags::IS_INLINE))
+        self.instance_methods.iter().any(|method| {
+            method.attrs().contains(AttributeFlags::IS_INLINE)
+                | method.attrs().contains(AttributeFlags::IS_VIRTUAL)
+        })
+    }
+
+    fn max_type_name_len(&self) -> usize {
+        utils::get_max_length(&self.fields, |field| field.type_name.len())
     }
 
     fn max_return_type_len(&self) -> usize {
-        self.instance_methods
-            .iter()
-            .map(|method| match &method.fn_t().return_type {
-                ReturnType::Constructor => 0,
-                ReturnType::Destructor => 0,
-                // TODO: This is stupid!
-                ReturnType::Type(type_) => Type::new(type_, self.namespace).len(),
-            })
-            .max()
-            .unwrap_or_default()
+        utils::get_max_length(&self.instance_methods, |method| {
+            utils::get_return_type(
+                &method.fn_t().return_type,
+                method.fn_t().arg_types.len(),
+                &self.namespace,
+            )
+            .len()
+        })
     }
 
     fn max_method_name_len(&self) -> usize {
-        self.instance_methods
-            .iter()
-            .map(|method| method.fn_t().name.len())
-            .max()
-            .unwrap_or_default()
+        utils::get_max_length(&self.instance_methods, |method| method.fn_t().name.len())
     }
 }
 
@@ -841,7 +1132,7 @@ impl Method {
                 )?;
             }
         }
-        writeln!(f, "{override_}{pure}{final_}{body}\n")?;
+        writeln!(f, "{override_}{pure}{final_}{body}")?;
 
         Ok(())
     }
@@ -858,35 +1149,80 @@ impl Method {
     }
 }
 
+enum Name<'a> {
+    Full,
+    RemoveNamespace(&'a utils::Namespace),
+}
+
 impl Enum<'_> {
-    fn fmt(&self, f: &mut impl std::io::Write) -> io::Result<()> {
-        writeln!(
-            f,
-            "enum {} /* stored as {} */ {{",
-            self.name.to_string(),
-            self.underlying_type_name
-        )?;
+    fn fmt(&self, name: Name, f: &mut impl std::io::Write) -> io::Result<()> {
+        let max_name_len = self.max_name_len();
+        let max_value_len = self.max_value_len();
+
+        match name {
+            Name::Full => {
+                writeln!(f, "enum {}\n{{", self.name.to_string())?;
+            }
+            Name::RemoveNamespace(ns) => {
+                writeln!(f, "enum {}\n{{", ns.strip(&self.name.to_string()))?;
+            }
+        }
 
         for value in &self.values {
-            writeln!(
-                f,
-                "\t{} = {},",
-                value.name.to_string(),
-                match value.value {
-                    pdb::Variant::U8(v) => format!("0x{v:02x}"),
-                    pdb::Variant::U16(v) => format!("0x{v:04x}"),
-                    pdb::Variant::U32(v) => format!("0x{v:08x}"),
-                    pdb::Variant::U64(v) => format!("0x{v:16x}"),
-                    pdb::Variant::I8(v) => format!("{v}"),
-                    pdb::Variant::I16(v) => format!("{v}"),
-                    pdb::Variant::I32(v) => format!("{v}"),
-                    pdb::Variant::I64(v) => format!("{v}"),
-                }
-            )?;
+            write!(f, "\t{}", value.name.to_string())?;
+            utils::pad_spaces_t(f, value.name.len(), max_name_len)?;
+
+            let value = match value.value {
+                pdb::Variant::U8(v) => v as i64,
+                pdb::Variant::U16(v) => v as i64,
+                pdb::Variant::U32(v) => v as i64,
+                pdb::Variant::U64(v) => v as i64,
+                pdb::Variant::I8(v) => v as i64,
+                pdb::Variant::I16(v) => v as i64,
+                pdb::Variant::I32(v) => v as i64,
+                pdb::Variant::I64(v) => v as i64,
+            };
+
+            write!(f, "\t= ")?;
+
+            match (max_value_len, value >= 0) {
+                (0, true) => write!(f, "0x{value:01x}")?,
+                (1, true) => write!(f, "0x{value:02x}")?,
+                (2, true) => write!(f, "0x{value:03x}")?,
+                (_, true) => write!(f, "0x{value:04x}")?,
+                (0, false) => write!(f, "-0x{value:01x}", value = value.abs())?,
+                (1, false) => write!(f, "-0x{value:02x}", value = value.abs())?,
+                (2, false) => write!(f, "-0x{value:03x}", value = value.abs())?,
+                (_, false) => write!(f, "-0x{value:04x}", value = value.abs())?,
+            }
+
+            writeln!(f, ",")?;
         }
-        writeln!(f, "}}")?;
+
+        writeln!(f, "}};")?;
 
         Ok(())
+    }
+
+    fn max_name_len(&self) -> usize {
+        utils::get_max_length(&self.values, |value| value.name.len())
+    }
+
+    fn max_value_len(&self) -> u32 {
+        let mut max_value_len = 0;
+        for value in &self.values {
+            max_value_len = max_value_len.max(match value.value {
+                pdb::Variant::U8(v) => v as u64,
+                pdb::Variant::U16(v) => v as u64,
+                pdb::Variant::U32(v) => v as u64,
+                pdb::Variant::U64(v) => v as u64,
+                pdb::Variant::I8(v) => v.abs() as u64,
+                pdb::Variant::I16(v) => v.abs() as u64,
+                pdb::Variant::I32(v) => v.abs() as u64,
+                pdb::Variant::I64(v) => v.abs() as u64,
+            });
+        }
+        max_value_len.max(1).ilog2() / 4
     }
 }
 
@@ -896,9 +1232,10 @@ impl ForwardReference {
             f,
             "{} {};",
             match self.kind {
-                pdb::ClassKind::Class => "class",
-                pdb::ClassKind::Struct => "struct",
-                pdb::ClassKind::Interface => "interface", // when can this happen?
+                ForwardReferenceKind::Class => "class",
+                ForwardReferenceKind::Struct => "struct",
+                ForwardReferenceKind::Enum => "enum",
+                ForwardReferenceKind::Unknown => "class",
             },
             self.name,
         )
@@ -906,119 +1243,205 @@ impl ForwardReference {
 }
 
 //
-// Helpers
+// fs helpers
 //
 
+enum HeaderType {
+    Enum,
+    Class,
+}
+
 fn create_header_file(
-    class: &pdb::ClassType,
+    resident_type_name: &pdb::RawString,
+    namespace: &utils::Namespace,
+    header_type: HeaderType,
     output_path: &mut std::path::PathBuf,
     header_path: &mut std::path::PathBuf,
     flags: GenFlags,
     files: &mut Files,
 ) -> crate::Result<Option<std::fs::File>> {
-    let Some(header_name) = build_header_name(class.name, header_path, flags) else {
+    let Some(header_name) = build_header_name(
+        resident_type_name,
+        namespace,
+        header_type,
+        header_path,
+        flags,
+    ) else {
         return Ok(None);
     };
 
     header_path.push(format!("{header_name}.h"));
 
-    utils_fs::open_file(output_path, header_path, flags, files, ".h").map(Some)
-}
-
-fn write_header_file(
-    class: &pdb::ClassType,
-    header: Data,
-    file: &mut impl std::io::Write,
-) -> crate::Result<()> {
-    let class_name = class.name.to_string();
-    let ifdef_name = {
-        let mut depth = 0;
-
-        let header_name = class_name.chars().filter(|c| match c {
-            '<' => {
-                depth += 1;
-                false
-            }
-            '>' => {
-                depth -= 1;
-                false
-            }
-            _ => depth == 0,
-        });
-
-        "ignore/"
-            .chars()
-            .chain(header_name)
-            .chain(".h".chars())
-            .collect::<String>()
-            .replace("survarium::", "")
-            .replace("vostok::", "")
-            .replace("::", "_")
-    };
-
-    gen_sources::write_header(file, &ifdef_name, header.namespace)?;
-    writeln!(file, "/* {class_name} */")?;
-    header.write(file)?;
-    gen_sources::write_footer(file, &ifdef_name, header.namespace)?;
-
-    Ok(())
+    utils_fs::open_file(output_path, header_path, files, ".h").map(Some)
 }
 
 fn build_header_name(
-    class_name: RawString,
+    resident_type_name: &pdb::RawString,
+    namespace: &utils::Namespace,
+    header_type: HeaderType,
     header_path: &mut std::path::PathBuf,
     flags: GenFlags,
 ) -> Option<String> {
     const MAX_CLASS_LEN: usize = 140;
 
-    let header_name = {
-        let mut class_name = class_name.to_string().to_string();
-        class_name.truncate(MAX_CLASS_LEN);
-        class_name
+    let root_name = match namespace.get_root() {
+        Some(root_name) => root_name,
+        None if flags.contains(GenFlags::SKIP_NON_ENGINE_HEADERS) => return None,
+        None => "others",
     };
 
-    let header_name = if let Some(class_name) = header_name.strip_prefix("vostok::") {
-        header_path.push("vostok");
-        class_name
-    } else if let Some(class_name) = header_name.strip_prefix("survarium::") {
-        header_path.push("survarium");
-        class_name
-    } else {
-        if flags.contains(GenFlags::SKIP_NON_ENGINE_HEADERS) {
-            return None;
-        }
+    header_path.push(root_name);
+    if let Some(class_name) = namespace.get_class() {
+        header_path.push(class_name);
+    }
+    if let Some(subclass_name) = namespace.get_subclass() {
+        header_path.push(subclass_name);
+    }
 
-        header_path.push("others");
-        &header_name
-    };
+    match header_type {
+        HeaderType::Enum => header_path.push("enums"),
+        HeaderType::Class => (),
+    }
 
-    let header_name = match header_name.find("::") {
-        None => header_name,
-        Some(pos) => {
-            let namespace = header_name.split_at(pos).0;
-
-            match namespace.contains('<') {
-                // That means the namespace is actually part of the name.
-                // We don't want to split that.
-                // ```
-                //  network_core<survarium::udp_packet>
-                //              ^         ^
-                // ```
-                true => header_name,
-                false => {
-                    let header_name = header_name.split_at(pos + "::".len()).1;
-
-                    header_path.push(namespace);
-                    header_name
-                }
-            }
-        }
-    };
-
+    let header_name = resident_type_name.to_string();
+    let header_name = namespace.strip(&header_name);
+    let header_name = &header_name[0..header_name.len().min(MAX_CLASS_LEN)];
     let header_name = header_name
         .replace(":", "_")
         .replace("*", "+")
         .replace("<", "_")
         .replace(">", "_");
     Some(header_name)
+}
+
+fn starts_with_equal_group(lhs: &str, rhs: &str) -> bool {
+    let mut result = false;
+
+    for (i, (lhc, rhc)) in lhs.chars().zip(rhs.chars()).enumerate() {
+        if lhc != rhc {
+            break;
+        }
+        if lhc == '_' && rhc == '_' && i > 1 {
+            result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+fn ends_with_equal_group(lhs: &str, rhs: &str) -> bool {
+    let mut result = false;
+
+    for (i, (lhc, rhc)) in lhs.chars().rev().zip(rhs.chars().rev()).enumerate() {
+        if lhc != rhc {
+            break;
+        }
+        if lhc == '_' && rhc == '_' && i > 1 {
+            result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+impl ForwardReferenceKind {
+    pub fn from_class_kind(kind: pdb::ClassKind) -> Self {
+        match kind {
+            pdb::ClassKind::Class => Self::Class,
+            pdb::ClassKind::Struct => Self::Struct,
+            pdb::ClassKind::Interface => unreachable!(),
+        }
+    }
+}
+
+fn extract_forward_reference_from_template(mut name: &str) -> Option<&str> {
+    let mut found = false;
+    let prefix = "vostok::resources::resource_ptr<";
+    if let Some(targ) = utils::find_extract_template_arg(name, prefix) {
+        found = true;
+        name = targ
+    }
+    let prefix = "vostok::intrusive_list<";
+    if let Some(targ) = utils::find_extract_template_arg(name, prefix) {
+        found = true;
+        name = targ
+    }
+    let prefix = "stlp_std::vector<";
+    if let Some(targ) = utils::find_extract_template_arg(name, prefix) {
+        found = true;
+        name = targ
+    }
+
+    match found {
+        true => Some(name),
+        false => None,
+    }
+}
+
+fn find_forward_reference(
+    ty: &str,
+    this: &Type,
+    ns: &utils::Namespace,
+) -> Option<ForwardReference> {
+    let ty = skip_default_environment(ty)?;
+
+    if !ty.contains("vostok") && !ty.contains("survarium") {
+        return None;
+    }
+
+    let mut ty = ty.as_str();
+    let mut kind = ForwardReferenceKind::Unknown;
+    let mut usage = ForwardReferenceUsage::ByValue;
+
+    if ty.ends_with('*') || ty.ends_with('&') {
+        usage = ForwardReferenceUsage::ByReference;
+        ty = ty
+            .trim_suffix("const&")
+            .trim_suffix("const*")
+            .trim_suffix("&")
+            .trim_suffix("*")
+            .trim_end()
+    }
+
+    if &Type::new(ty, ns) == this {
+        return None;
+    }
+
+    if let Some(targ) = extract_forward_reference_from_template(ty) {
+        usage = ForwardReferenceUsage::ByValue;
+        ty = targ;
+    }
+
+    let name = ty.to_string();
+
+    if name.ends_with("_enum") {
+        // sushi@TODO: We can actually do better here, because we are parsing enums also.
+        // The only problem is that we doing it while building those structs.
+        // To fix this we would need to split parsing into two stages or first parse, then
+        // fix forward references and only then write to the filesystem
+        kind = ForwardReferenceKind::Enum;
+    }
+
+    Some(ForwardReference { kind, usage, name })
+}
+
+fn skip_default_environment(ty: &str) -> Option<&str> {
+    const DEFAULT_ENVIRONMENT: &[&str] = &[
+        "boost::noncopyable",
+        "vostok::mutable_buffer",
+        "vostok::resources::managed_resource",
+        "vostok::math::float2",
+        "vostok::math::float3",
+        "vostok::math::float4",
+        "vostok::math::float4x4",
+    ];
+
+    for skipped_ty in DEFAULT_ENVIRONMENT {
+        if ty.starts_with(skipped_ty) {
+            return None;
+        }
+    }
+    return Some(ty);
 }

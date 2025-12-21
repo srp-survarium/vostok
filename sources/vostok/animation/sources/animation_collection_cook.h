@@ -15,7 +15,7 @@ namespace vostok
 	{
 		class animation_collection;
 
-		class animation_collection_cook : public resources::translate_query_cook, public boost::noncopyable 
+		class animation_collection_cook : public resources::translate_query_cook, public boost::noncopyable
 		{
 			typedef resources::translate_query_cook	super;
 
@@ -28,10 +28,10 @@ namespace vostok
 
 		private:
 
-			void					request_items				( configs::binary_config_ptr config_ptr, configs::binary_config_value const& collection, resources::query_result_for_cook* const parent );
+			void					request_items				( configs::binary_config_ptr config_ptr, configs::binary_config_value const& collection_value, resources::query_result_for_cook* const parent );
 			void					collection_config_loaded	( resources::queries_result& data );
 			animation_collection*	new_collection				( configs::binary_config_value const& collection );
-			void					sub_animations_loaded		( resources::queries_result& data, configs::binary_config_ptr config_ptr, configs::binary_config_value const& collection );
+			void					sub_animations_loaded		( resources::queries_result& data, configs::binary_config_ptr config_ptr, configs::binary_config_value const& collection_value );
 
 		}; // class animation_collection_cook
 

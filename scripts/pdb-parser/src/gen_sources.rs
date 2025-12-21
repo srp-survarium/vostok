@@ -10,14 +10,15 @@ use pdb::RegisterRelativeSymbol;
 use pdb::RegisterVariableSymbol;
 use pdb::{BasePointerRelativeSymbol, BlockSymbol, FallibleIterator, SymbolData};
 use pdb_addr2line::type_parser;
+use pdb_addr2line::type_parser::AttributeFlags;
 
+use crate::data::FunctionLocation;
 use crate::data::{Files, FunctionCache};
 use crate::pdb_parser::Formatter;
 use crate::utils;
 use crate::utils::Type;
 use crate::utils_fs;
 use crate::GenFlags;
-use crate::TEST_MODULE;
 
 const GAME_IB: u32 = 0x10000;
 
@@ -82,10 +83,6 @@ pub fn dump_sources(
     while let Some(module) = modules.next()? {
         module_id = module_id.wrapping_add(1);
 
-        if flags.contains(GenFlags::TEST_RUN) && !module.module_name().ends_with(TEST_MODULE) {
-            continue;
-        }
-
         if module.module_name().contains("\\scaleform\\") {
             continue;
         }
@@ -104,13 +101,7 @@ pub fn dump_sources(
         )?;
 
         module.update_cache(&mut cache, flags);
-        module.write(
-            &mut output_path,
-            &mut source_path,
-            engine_path,
-            flags,
-            files,
-        )?;
+        module.write(&mut output_path, &mut source_path, engine_path, files)?;
     }
 
     Ok(cache)
@@ -216,7 +207,12 @@ impl<'a> Module<'a> {
                     let name_orig =
                         formatter.emit_function_orig(&proc.name, module_id, proc.type_index)?;
 
-                    let fn_t = formatter.parse_function(&proc.name, module_id, proc.type_index)?;
+                    let mut fn_t =
+                        formatter.parse_function(&proc.name, module_id, proc.type_index)?;
+                    let location = FunctionLocation::get(&filename);
+                    if matches!(location, FunctionLocation::Header) {
+                        fn_t.attrs.insert(AttributeFlags::IS_INLINE);
+                    }
 
                     function = Function {
                         module_id,
@@ -469,7 +465,7 @@ impl<'a> Module<'a> {
 
     fn update_cache(&self, cache: &mut FunctionCache, flags: GenFlags) {
         if !flags.contains(GenFlags::NO_CACHE) {
-            for funs in self.files.values() {
+            for (_, funs) in &self.files {
                 for fun in funs.values() {
                     cache.insert_from_source(fun);
                 }
@@ -527,7 +523,6 @@ impl<'a> Module<'a> {
         output_path: &mut std::path::PathBuf,
         source_path: &mut std::path::PathBuf,
         engine_path: &str,
-        flags: GenFlags,
         files: &mut Files,
     ) -> crate::Result<()> {
         let output_path_len = output_path.as_path().as_os_str().len();
@@ -538,43 +533,32 @@ impl<'a> Module<'a> {
                 continue;
             };
 
-            {
-                let mut file: Box<dyn std::io::Write> = match flags.contains(GenFlags::TEST_RUN) {
-                    false => {
-                        let extension = match () {
-                            () if path_to_file.ends_with(".h") => ".h",
-                            () if path_to_file.ends_with(".cpp") => ".cpp",
-                            () => "",
-                        };
+            let extension = match () {
+                () if path_to_file.ends_with(".h") => ".h",
+                () if path_to_file.ends_with(".cpp") => ".cpp",
+                () => "",
+            };
 
-                        source_path.push(path_to_file);
-                        let file =
-                            utils_fs::open_file(output_path, source_path, flags, files, extension)?;
+            source_path.push(path_to_file);
+            let mut file = utils_fs::open_file(output_path, source_path, files, extension)?;
 
-                        Box::new(file)
-                    }
-                    true => {
-                        println!("\nFile: {path_to_file:?}\n");
-                        Box::new(std::io::stdout())
-                    }
-                };
+            //
+            //
+            //
 
-                //
-                //
-                //
+            let namespace = assume_namespace(&funs);
 
-                let namespace = assume_namespace(&funs);
+            write_header(&mut file, path_to_file)?;
+            namespace.start_namespace(&mut file)?;
 
-                write_header(&mut file, path_to_file, &namespace)?;
-
-                for function in funs.into_values() {
-                    function.write(&namespace, &mut file)?;
-                }
-
-                Self::write_typedefs(&self.typedefs, &mut file)?;
-
-                write_footer(&mut file, path_to_file, &namespace)?;
+            for function in funs.into_values() {
+                function.write(&namespace, &mut file)?;
             }
+
+            Self::write_typedefs(&self.typedefs, &mut file)?;
+
+            namespace.end_namespace(&mut file)?;
+            write_footer(&mut file, path_to_file)?;
 
             output_path.as_mut_os_string().truncate(output_path_len);
             source_path.as_mut_os_string().truncate(source_path_len);
@@ -590,9 +574,9 @@ impl<'a> Module<'a> {
         if !typedefs.is_empty() {
             writeln!(w, "\t// TYPEDEFS")?;
             for (ty, name) in typedefs {
-                writeln!(w, "\ttypedef")?;
-                writeln!(w, "\t\t{ty}")?;
-                writeln!(w, "\t\t{name};")?;
+                writeln!(w, "\t// typedef")?;
+                writeln!(w, "\t// \t{ty}")?;
+                writeln!(w, "\t// \t{name};")?;
                 writeln!(w)?;
             }
             writeln!(w, "\t// ******\n")?;
@@ -642,6 +626,22 @@ impl<'a> Function<'a> {
             false => writeln!(w, "// STATE[STUB]")?,
         }
         writeln!(w, "// {name_orig}")?;
+
+        // sushi@TODO: Might need to be part of `write_fn_signature_with_args`.
+        // Cannot right now, since `inline` logic is different for headers
+        if fn_t.attrs.contains(AttributeFlags::IS_INLINE)
+        // && !fn_t.attrs.contains(AttributeFlags::IS_VIRTUAL)
+        {
+            write!(w, "inline ")?;
+        }
+        // sushi@TODO: This always returns `false`, since we can only learn whether the function is
+        // `static` from the header info.
+        // Even if we do that, this is still not useful, since there are many static functions,
+        // which are not part of the class.
+        if fn_t.attrs.contains(AttributeFlags::IS_STATIC) {
+            write!(w, "static ")?;
+        }
+
         utils::write_fn_signature_with_args(&fn_t, namespace, &args, None, None, None, &mut w)?;
 
         writeln!(w, "\n{{")?;
@@ -869,11 +869,7 @@ impl<'a> Function<'a> {
     }
 }
 
-pub fn write_header(
-    w: &mut impl std::io::Write,
-    path: &str,
-    namespace: &utils::Namespace,
-) -> crate::Result<()> {
+pub fn write_header(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
     use chrono::Local;
     let day = Local::now().format("%d.%m.%Y").to_string();
 
@@ -902,23 +898,15 @@ pub fn write_header(
         writeln!(w)?;
     }
 
-    namespace.start_namespace(w)?;
-
     Ok(())
 }
 
-pub fn write_footer(
-    w: &mut impl std::io::Write,
-    path: &str,
-    namespace: &utils::Namespace,
-) -> crate::Result<()> {
+pub fn write_footer(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
     let file_name = Path::new(path)
         .file_name()
         .expect("no filename")
         .to_string_lossy()
         .to_string();
-
-    namespace.end_namespace(w)?;
 
     if let Some(module_name) = file_name.strip_suffix(".h") {
         writeln!(w)?;

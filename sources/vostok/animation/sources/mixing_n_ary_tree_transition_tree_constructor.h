@@ -26,52 +26,69 @@ enum interpolation_direction;
 
 class n_ary_tree_transition_tree_constructor : private boost::noncopyable {
 public:
-				n_ary_tree_transition_tree_constructor					(
-						mutable_buffer& buffer,
-						n_ary_tree const& from,
-						n_ary_tree const& to,
-						u32 const animations_count,
-						u32 const current_time_in_ms,
-						subscribed_channel*& channels_head
-					);
-	n_ary_tree	computed_tree											( n_ary_tree const& previous_tree );
+	typedef boost::function<float4x4(pcvoid)> transform_functor_type;
+				n_ary_tree_transition_tree_constructor		(
+						mutable_buffer&					buffer,
+						n_ary_tree const&				from,
+						n_ary_tree const&				to,
+						u32	const						animations_count,
+						u32	const						animated_objects_count,
+						u32	const						current_time_in_ms,
+						subscribed_channel*&			channels_head,
+						transform_functor_type const&	get_transform_functor
+				);
+
+	n_ary_tree	computed_tree								( );
 
 private:
-	n_ary_tree_animation_node* add_animation_node						(
+	n_ary_tree_animation_node* add_animation_node			(
+						n_ary_tree_animation_node&		new_animation,
+						animation_state const*			previous_animation_state,
+						u32								animation_interval_id,
+						float							animation_interval_time,
+						bool							is_new_animation
+					);
+
+	/* sushi@TODO: Removed
+	n_ary_tree_animation_node* add_animation_node			(
 						n_ary_tree_animation_node& new_animation,
 						animation_state const* previous_animation_state,
-						u32 animation_interval_id,
-						float animation_interval_time,
 						bool is_new_animation
 					);
-	n_ary_tree_animation_node* add_animation_node						(
-						n_ary_tree_animation_node& new_animation,
-						animation_state const* previous_animation_state,
-						bool is_new_animation
+	*/
+	n_ary_tree_animation_node*	new_animation				(
+						n_ary_tree_animation_node&		to,
+						n_ary_tree_animation_node&		from,
+						n_ary_tree_animation_node*		weight_driving_animation,
+						u32								weight_operands_count,
+						u32&							time_scale_operands_count,
+						u32&							operands_offset,
+						u32&							animation_interval_id,
+						float&							animation_interval_time,
+						bool							is_transitting_to_zero,
+						bool							can_be_time_driving_animation
 					);
-	n_ary_tree_animation_node* new_animation							(
-					n_ary_tree_animation_node& animation,
-					n_ary_tree_animation_node* driving_animation,
-					u32 operands_count,
-					bool is_transitting_to_zero
-				);
-	n_ary_tree_base_node* new_time_scale_transition	(
-					n_ary_tree_animation_node& from_animation,
-					n_ary_tree_base_node& from,
-					n_ary_tree_base_node& to,
-					base_interpolator const& to_interpolator
-				);
-	n_ary_tree_base_node* new_time_scale_transition	(
-					n_ary_tree_animation_node& from_animation,
-					n_ary_tree_base_node& from,
-					float to
-				);
-	n_ary_tree_base_node* new_time_scale_transition	(
-					float const animation_time,
-					float from,
-					n_ary_tree_base_node& to,
-					base_interpolator const& to_interpolator
-				);
+
+	n_ary_tree_base_node* new_time_scale					(
+						n_ary_tree_animation_node&		new_time_driving_animation,
+						u32&							animation_interval_id,
+						float&							animation_interval_time
+					);
+
+	n_ary_tree_base_node* new_time_scale_transition			(
+						float							animation_time,
+						n_ary_tree_base_node&			to
+					);
+	n_ary_tree_base_node* new_time_scale_transition			(
+						n_ary_tree_animation_node& from_animation,
+						n_ary_tree_base_node& from
+					);
+	n_ary_tree_base_node* new_time_scale_transition			(
+						n_ary_tree_animation_node&		from_animation,
+						n_ary_tree_animation_node&		to_animation,
+						n_ary_tree_base_node&			from,
+						n_ary_tree_base_node&			to
+					);
 
 	n_ary_tree_base_node* new_weight_transition			(
 					base_interpolator const& interpolator,

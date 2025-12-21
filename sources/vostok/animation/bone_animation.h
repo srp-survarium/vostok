@@ -21,7 +21,7 @@ typedef poly_curve< poly_curve_order3_domain<float,1> > animation_curve_type;
  {
 	 inline	current_frame_position()
 	{
-			
+
 			std::fill_n( &m_current_domains[0], u32( channel_max ), 0 );
 	}
 
@@ -54,11 +54,13 @@ inline		void					get_frame				( float time, frame &f, current_frame_position &fr
 inline		void					get_end_frame_position	( current_frame_position &frame_pos)const;
 			void					bone_matrix				( float time, const float3 &parent_scale, float4x4 &matrix, float3 &scale, current_frame_position &frame_pos )const;
 			frame					bone_frame				( float const time, current_frame_position &frame_position ) const;
-			
+
 private:
 	animation_curve_type	m_channels[channel_max];
 
 }; // class bone_animation
+
+STATIC_SIZE_ASSERT(bone_animation, 0x48);
 
 } // namespace animation
 } // namespace vostok
