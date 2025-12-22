@@ -43,22 +43,36 @@ impl Type {
     fn new_impl(ty: &str) -> String {
         let ty = Cow::Borrowed(ty);
 
-        let resource_ptr = "vostok::resources::resource_ptr<";
-        let ty = match replace_by_first_template_arg(&ty, resource_ptr, "_ptr") {
-            None => ty,
-            Some(ty) => Cow::Owned(ty),
+        let ty = {
+            let resource_ptr = "vostok::resources::resource_ptr<";
+            match replace_by_first_template_arg(&ty, resource_ptr, "_ptr") {
+                None => ty,
+                Some(ty) => Cow::Owned(ty),
+            }
         };
 
-        let intrusive_list = "vostok::intrusive_list<";
-        let ty = match replace_by_first_template_arg(&ty, intrusive_list, "_list") {
-            None => ty,
-            Some(ty) => Cow::Owned(ty),
+        let ty = {
+            let intrusive_ptr = "vostok::intrusive_ptr<";
+            match replace_by_first_template_arg(&ty, intrusive_ptr, "_ptr") {
+                None => ty,
+                Some(ty) => Cow::Owned(ty),
+            }
         };
 
-        let vector = "stlp_std::vector<";
-        let ty = match extract_template_arg(&ty, vector) {
-            None => ty,
-            Some(ty) => Cow::Owned(format!("{vector}{ty} >")),
+        let ty = {
+            let intrusive_list = "vostok::intrusive_list<";
+            match replace_by_first_template_arg(&ty, intrusive_list, "_list") {
+                None => ty,
+                Some(ty) => Cow::Owned(ty),
+            }
+        };
+
+        let ty = {
+            let vector = "stlp_std::vector<";
+            match extract_template_arg(&ty, vector) {
+                None => ty,
+                Some(ty) => Cow::Owned(format!("{vector}{ty} >")),
+            }
         };
 
         #[rustfmt::skip]

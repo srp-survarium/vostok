@@ -946,8 +946,10 @@ impl Class<'_> {
                         // Known pairs to be grouped
                         ("serialize",  "deserialize") => (),
                         ("initialize", "finalize") => (),
+                        ("initialize", "destroy") => (),
                         ("insert",     "remove") => (),
                         ("subscribe",  "unsubscribe") => (),
+                        ("from",        "to") => (),
 
                         _ => writeln!(f)?,
                     };
@@ -1309,6 +1311,7 @@ fn build_header_name(
     let header_name = header_name
         .replace(":", "_")
         .replace("*", "+")
+        .replace("&", "+")
         .replace("<", "_")
         .replace(">", "_");
     Some(header_name)
