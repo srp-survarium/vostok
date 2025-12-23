@@ -7,8 +7,8 @@ use std::str::FromStr;
 
 use pdb::PDB;
 
-use crate::data::Files;
-use crate::pdb_parser::Formatter;
+use crate::helpers::Files;
+use crate::pdb_parser::PdbParser;
 use crate::GenFlags;
 use crate::{bail, error};
 use crate::{gen_headers, gen_sources};
@@ -41,7 +41,7 @@ pub fn dump_pdb(
 
     let mut files = Files::default();
 
-    Formatter::with(pdb_path, |fmt| {
+    PdbParser::with(pdb_path, |fmt| {
         let file = fs::File::open(pdb_path)?;
         let mut pdb = PDB::open(file)?;
 

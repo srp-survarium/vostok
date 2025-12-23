@@ -7,16 +7,16 @@ use pdb_addr2line::type_parser;
 use pdb_addr2line::type_parser::AttributeFlags;
 use pdb_addr2line::type_parser::ReturnType;
 
-use crate::data::{Files, FunctionCache, FunctionSignature};
-use crate::pdb_parser::Formatter;
-use crate::utils;
-use crate::utils::Type;
+use crate::helpers::{Files, FunctionCache, FunctionSignature};
+use crate::pdb_parser::PdbParser;
 use crate::GenFlags;
-use crate::{gen_sources, utils_fs};
+use crate::{Namespace, Type};
+
+use crate::{formatter, gen_sources, pdb_parser, type_builder, utils_fs};
 
 pub fn dump_headers(
     pdb: &mut pdb::PDB<std::fs::File>,
-    formatter: &Formatter,
+    formatter: &PdbParser,
     cache: FunctionCache,
     output_path_prefix: &std::path::Path,
     flags: GenFlags,
@@ -56,7 +56,7 @@ pub fn dump_headers(
             continue;
         }
 
-        let namespace = utils::Namespace::get_from_class_name_impl(&class.name.to_string());
+        let namespace = Namespace::get_from_class_name_impl(&class.name.to_string());
 
         let Ok(header) = build_header(
             formatter,
@@ -88,7 +88,7 @@ pub fn dump_headers(
 
     for e in enums.values() {
         let enum_name = &e.name.to_string();
-        let namespace = utils::Namespace::get_from_class_name_impl(enum_name);
+        let namespace = Namespace::get_from_class_name_impl(enum_name);
 
         if let Some(file) = create_header_file(
             &e.name,
@@ -111,12 +111,12 @@ pub fn dump_headers(
 }
 
 fn build_header<'pdb>(
-    formatter: &Formatter,
+    formatter: &PdbParser,
     cache: &FunctionCache,
     type_finder: &pdb::TypeFinder<'pdb>,
 
     class: pdb::TypeIndex,
-    namespace: &utils::Namespace,
+    namespace: &Namespace,
 
     enums: &mut BTreeMap<pdb::RawString<'pdb>, Enum<'pdb>>,
 ) -> crate::Result<Data<'pdb>> {
@@ -158,14 +158,14 @@ fn build_header<'pdb>(
 type TypeSet = BTreeSet<pdb::TypeIndex>;
 
 struct Data<'p> {
-    namespace: utils::Namespace,
+    namespace: Namespace,
     forward_references: HashMap<String, ForwardReference>,
     classes: Vec<Class<'p>>,
     enums: Vec<Enum<'p>>,
 }
 
 struct Class<'p> {
-    namespace: utils::Namespace,
+    namespace: Namespace,
     kind: pdb::ClassKind,
     orig_name: String,
     name: Type,
@@ -194,7 +194,7 @@ enum Method {
     },
     FromSourceFile {
         fn_t: type_parser::Function,
-        args: Vec<(String, Type)>,
+        margs: Vec<(String, Type)>,
     },
 }
 
@@ -224,6 +224,8 @@ enum ForwardReferenceKind {
     Struct,
     Enum,
     Unknown,
+    Typedef,
+    TypedefInner,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -237,7 +239,7 @@ enum ForwardReferenceUsage {
 //
 
 impl<'pdb> Data<'pdb> {
-    fn new(namespace: utils::Namespace) -> Data<'pdb> {
+    fn new(namespace: Namespace) -> Data<'pdb> {
         Data {
             namespace,
             forward_references: HashMap::new(),
@@ -249,7 +251,7 @@ impl<'pdb> Data<'pdb> {
     fn add(
         &mut self,
 
-        formatter: &Formatter,
+        formatter: &PdbParser,
         cache: &FunctionCache,
         type_finder: &pdb::TypeFinder<'pdb>,
 
@@ -266,19 +268,57 @@ impl<'pdb> Data<'pdb> {
 
                 if data.properties.forward_reference() {
                     let name = data.name.to_string();
-                    if let Some(name) = skip_default_environment(&name) {
-                        let name = extract_forward_reference_from_template(name)
-                            .map(|x| x.to_string())
-                            .unwrap_or_else(|| name.to_string());
 
-                        self.forward_references.insert(
-                            name.to_string(),
-                            ForwardReference {
-                                kind: ForwardReferenceKind::from_class_kind(data.kind),
-                                usage: ForwardReferenceUsage::ByValue,
-                                name,
-                            },
-                        );
+                    // Skip forward references which are always present through `pch.h`.
+                    let Some(name) = skip_default_environment(&name) else {
+                        return Ok(());
+                    };
+
+                    match type_builder::extract_forward_reference_from_template(name) {
+                        None => {
+                            _ = self.forward_references.insert(
+                                name.to_string(),
+                                ForwardReference {
+                                    kind: ForwardReferenceKind::from_class_kind(data.kind),
+                                    usage: ForwardReferenceUsage::ByValue,
+                                    name: name.to_string(),
+                                },
+                            )
+                        }
+                        Some(targ) => {
+                            self.forward_references.insert(
+                                targ.to_string(),
+                                ForwardReference {
+                                    kind: ForwardReferenceKind::TypedefInner,
+                                    usage: ForwardReferenceUsage::ByValue,
+                                    name: targ.to_string(),
+                                },
+                            );
+
+                            match type_builder::typedef_template(name) {
+                                Some(typedef) => {
+                                    let name = format!("{name}\n\t{typedef}");
+                                    _ = self.forward_references.insert(
+                                        name.to_string(),
+                                        ForwardReference {
+                                            kind: ForwardReferenceKind::Typedef,
+                                            usage: ForwardReferenceUsage::ByValue,
+                                            name: name.to_string(),
+                                        },
+                                    )
+                                }
+                                None => {
+                                    _ = self.forward_references.insert(
+                                        name.to_string(),
+                                        ForwardReference {
+                                            kind: ForwardReferenceKind::TypedefInner,
+                                            usage: ForwardReferenceUsage::ByValue,
+                                            name: name.to_string(),
+                                        },
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     return Ok(());
@@ -353,7 +393,7 @@ impl<'pdb> Data<'pdb> {
 impl<'p> Class<'p> {
     fn add_fields(
         &mut self,
-        formatter: &Formatter,
+        formatter: &PdbParser,
         cache: &FunctionCache,
         type_finder: &pdb::TypeFinder<'p>,
 
@@ -398,7 +438,7 @@ impl<'p> Class<'p> {
     fn add_field(
         &mut self,
 
-        formatter: &Formatter,
+        formatter: &PdbParser,
         cache: &FunctionCache,
         type_finder: &pdb::TypeFinder<'p>,
 
@@ -497,7 +537,7 @@ impl<'p> Class<'p> {
     fn add_method(
         &mut self,
 
-        formatter: &Formatter,
+        formatter: &PdbParser,
         cache: &FunctionCache,
         type_finder: &pdb::TypeFinder<'p>,
 
@@ -578,7 +618,7 @@ impl<'p> Class<'p> {
 
 impl Method {
     fn find(
-        formatter: &Formatter,
+        formatter: &PdbParser,
         cache: &FunctionCache,
         type_finder: &pdb::TypeFinder,
 
@@ -591,14 +631,15 @@ impl Method {
             pdb::TypeData::MemberFunction(_) => {
                 assert!(!type_index.is_cross_module());
 
-                let mut method = match cache
-                    .get_from_header(class_name, &name, formatter, type_index)?
-                {
-                    None => Method::FromHeaderFile {
-                        fn_t: formatter.parse_function(&name, 0, type_index)?,
-                    },
-                    Some(FunctionSignature { fn_t, args }) => Method::FromSourceFile { fn_t, args },
-                };
+                let mut method =
+                    match cache.get_from_header(class_name, &name, formatter, type_index)? {
+                        None => Method::FromHeaderFile {
+                            fn_t: formatter.parse_function(&name, 0, type_index)?,
+                        },
+                        Some(FunctionSignature { fn_t, margs }) => {
+                            Method::FromSourceFile { fn_t, margs }
+                        }
+                    };
 
                 method.set_method_attributes(attributes);
 
@@ -614,8 +655,10 @@ impl Method {
 
     fn set_method_attributes(&mut self, attrs: pdb::FieldAttributes) {
         match self {
-            Self::FromHeaderFile { fn_t } => utils::set_method_attributes(fn_t, attrs, false),
-            Self::FromSourceFile { fn_t, .. } => utils::set_method_attributes(fn_t, attrs, true),
+            Self::FromHeaderFile { fn_t } => pdb_parser::set_method_attributes(fn_t, attrs, false),
+            Self::FromSourceFile { fn_t, .. } => {
+                pdb_parser::set_method_attributes(fn_t, attrs, true)
+            }
         }
     }
 }
@@ -686,11 +729,11 @@ impl<'p> Field<'p> {
 //
 
 pub fn type_name(
-    formatter: &Formatter,
+    formatter: &PdbParser,
     type_finder: &pdb::TypeFinder<'_>,
     type_index: pdb::TypeIndex,
     needed_types: &mut TypeSet,
-    namespace: &utils::Namespace,
+    namespace: &Namespace,
 ) -> crate::Result<Type> {
     update_referenced_types(type_finder, type_index, needed_types)?;
 
@@ -830,7 +873,7 @@ impl Enum<'_> {
     fn write_to_header_file(
         &self,
         enum_name: &str,
-        namespace: &utils::Namespace,
+        namespace: &Namespace,
         f: &mut impl std::io::Write,
     ) -> crate::Result<()> {
         let ifdef_name = get_ifdef_name(enum_name);
@@ -1006,7 +1049,7 @@ impl Class<'_> {
             } in &self.fields
             {
                 write!(f, "\t/* 0x{offset:04x} */\t{type_name}")?;
-                utils::pad_spaces_t(f, type_name.len(), max_type_name_len)?;
+                formatter::pad_spaces_t(f, type_name.len(), max_type_name_len)?;
                 writeln!(f, "\t{}{};", name.to_string(), array)?;
             }
         }
@@ -1031,12 +1074,12 @@ impl Class<'_> {
     }
 
     fn max_type_name_len(&self) -> usize {
-        utils::get_max_length(&self.fields, |field| field.type_name.len())
+        formatter::get_max_length(&self.fields, |field| field.type_name.len())
     }
 
     fn max_return_type_len(&self) -> usize {
-        utils::get_max_length(&self.instance_methods, |method| {
-            utils::get_return_type(
+        formatter::get_max_length(&self.instance_methods, |method| {
+            formatter::get_return_type(
                 &method.fn_t().return_type,
                 method.fn_t().arg_types.len(),
                 &self.namespace,
@@ -1046,7 +1089,7 @@ impl Class<'_> {
     }
 
     fn max_method_name_len(&self) -> usize {
-        utils::get_max_length(&self.instance_methods, |method| method.fn_t().name.len())
+        formatter::get_max_length(&self.instance_methods, |method| method.fn_t().name.len())
     }
 }
 
@@ -1054,7 +1097,7 @@ impl Method {
     fn fmt(
         &self,
         f: &mut impl std::io::Write,
-        namespace: &utils::Namespace,
+        namespace: &Namespace,
         has_inline_methods: bool,
         max_return_type_len: usize,
         max_method_name_len: usize,
@@ -1099,6 +1142,7 @@ impl Method {
             false => "",
         };
 
+        // sushi@TODO: This possibly should be moved inside formatter
         let mut pad_args_len = 4; // \t
         if !(virtual_.is_empty()
             && inline.is_empty()
@@ -1107,31 +1151,24 @@ impl Method {
         {
             pad_args_len += 8; // \t\t
         }
-        pad_args_len += utils::pad_times(0, max_return_type_len) * 4 + 4;
+        pad_args_len += formatter::pad_times(0, max_return_type_len) * 4 + 4;
         // pad_args_len += utils::pad_times(0, max_method_name_len) * 4;
 
         write!(f, "\t{virtual_}{static_}{inline}{tab_prefix}")?;
+
+        let header_formatter = formatter::HeaderFormatter {
+            max_return_type_len,
+            max_method_name_len,
+            pad_args_len,
+        };
+
         match self {
             Method::FromHeaderFile { fn_t } => {
-                utils::write_fn_signature_unnamed_args(
-                    fn_t,
-                    namespace,
-                    Some(max_return_type_len),
-                    Some(max_method_name_len),
-                    Some(pad_args_len),
-                    f,
-                )?;
+                header_formatter.write_fn_signature_unnamed_args(fn_t, namespace, f)?;
             }
-            Method::FromSourceFile { fn_t, args } => {
-                utils::write_fn_signature_with_args(
-                    fn_t,
-                    namespace,
-                    args,
-                    Some(max_return_type_len),
-                    Some(max_method_name_len),
-                    Some(pad_args_len),
-                    f,
-                )?;
+            Method::FromSourceFile { fn_t, margs } => {
+                formatter::Formatter::Header(header_formatter)
+                    .write_fn_signature_with_args(fn_t, namespace, margs, f)?;
             }
         }
         writeln!(f, "{override_}{pure}{final_}{body}")?;
@@ -1153,7 +1190,7 @@ impl Method {
 
 enum Name<'a> {
     Full,
-    RemoveNamespace(&'a utils::Namespace),
+    RemoveNamespace(&'a Namespace),
 }
 
 impl Enum<'_> {
@@ -1172,7 +1209,7 @@ impl Enum<'_> {
 
         for value in &self.values {
             write!(f, "\t{}", value.name.to_string())?;
-            utils::pad_spaces_t(f, value.name.len(), max_name_len)?;
+            formatter::pad_spaces_t(f, value.name.len(), max_name_len)?;
 
             let value = match value.value {
                 pdb::Variant::U8(v) => v as i64,
@@ -1207,7 +1244,7 @@ impl Enum<'_> {
     }
 
     fn max_name_len(&self) -> usize {
-        utils::get_max_length(&self.values, |value| value.name.len())
+        formatter::get_max_length(&self.values, |value| value.name.len())
     }
 
     fn max_value_len(&self) -> u32 {
@@ -1238,6 +1275,8 @@ impl ForwardReference {
                 ForwardReferenceKind::Struct => "struct",
                 ForwardReferenceKind::Enum => "enum",
                 ForwardReferenceKind::Unknown => "class",
+                ForwardReferenceKind::Typedef => "typedef",
+                ForwardReferenceKind::TypedefInner => "class",
             },
             self.name,
         )
@@ -1255,7 +1294,7 @@ enum HeaderType {
 
 fn create_header_file(
     resident_type_name: &pdb::RawString,
-    namespace: &utils::Namespace,
+    namespace: &Namespace,
     header_type: HeaderType,
     output_path: &mut std::path::PathBuf,
     header_path: &mut std::path::PathBuf,
@@ -1279,7 +1318,7 @@ fn create_header_file(
 
 fn build_header_name(
     resident_type_name: &pdb::RawString,
-    namespace: &utils::Namespace,
+    namespace: &Namespace,
     header_type: HeaderType,
     header_path: &mut std::path::PathBuf,
     flags: GenFlags,
@@ -1359,35 +1398,7 @@ impl ForwardReferenceKind {
     }
 }
 
-fn extract_forward_reference_from_template(mut name: &str) -> Option<&str> {
-    let mut found = false;
-    let prefix = "vostok::resources::resource_ptr<";
-    if let Some(targ) = utils::find_extract_template_arg(name, prefix) {
-        found = true;
-        name = targ
-    }
-    let prefix = "vostok::intrusive_list<";
-    if let Some(targ) = utils::find_extract_template_arg(name, prefix) {
-        found = true;
-        name = targ
-    }
-    let prefix = "stlp_std::vector<";
-    if let Some(targ) = utils::find_extract_template_arg(name, prefix) {
-        found = true;
-        name = targ
-    }
-
-    match found {
-        true => Some(name),
-        false => None,
-    }
-}
-
-fn find_forward_reference(
-    ty: &str,
-    this: &Type,
-    ns: &utils::Namespace,
-) -> Option<ForwardReference> {
+fn find_forward_reference(ty: &str, this: &Type, ns: &Namespace) -> Option<ForwardReference> {
     let ty = skip_default_environment(ty)?;
 
     if !ty.contains("vostok") && !ty.contains("survarium") {
@@ -1400,11 +1411,17 @@ fn find_forward_reference(
 
     if ty.ends_with('*') || ty.ends_with('&') {
         usage = ForwardReferenceUsage::ByReference;
+        // sushi@NOTE: Not the best way to remove all possible `const *&` at the end
         ty = ty
-            .trim_suffix("const&")
-            .trim_suffix("const*")
+            .trim_suffix("*")
+            .trim_suffix("*")
+            .trim_suffix("&")
             .trim_suffix("&")
             .trim_suffix("*")
+            .trim_suffix("*")
+            .trim_suffix("&")
+            .trim_suffix("&")
+            .trim_suffix("const")
             .trim_end()
     }
 
@@ -1412,7 +1429,7 @@ fn find_forward_reference(
         return None;
     }
 
-    if let Some(targ) = extract_forward_reference_from_template(ty) {
+    if let Some(targ) = type_builder::extract_forward_reference_from_template(ty) {
         usage = ForwardReferenceUsage::ByValue;
         ty = targ;
     }

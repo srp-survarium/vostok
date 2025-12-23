@@ -21,19 +21,20 @@
 //! cargo run --bin pdb-parser --release
 //! ```
 
-pub mod data;
-pub mod pdb_parser;
-
-pub mod error;
-pub mod utils;
-pub mod utils_fs;
-
 pub mod dump_pdb;
 pub mod gen_headers;
 pub mod gen_sources;
 
+pub mod formatter;
+pub mod helpers;
+pub mod pdb_parser;
+pub mod type_builder;
+
+pub mod error;
+pub mod utils_fs;
+
 pub use error::{Error, Result};
-pub use utils::Type;
+pub use type_builder::{Namespace, Type};
 
 use clap::Parser;
 
