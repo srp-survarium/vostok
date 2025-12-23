@@ -474,7 +474,7 @@ impl<'a> Module<'a> {
 
     fn update_cache(&self, cache: &mut FunctionCache, flags: GenFlags) {
         if !flags.contains(GenFlags::NO_CACHE) {
-            for (_, funs) in &self.files {
+            for funs in self.files.values() {
                 for fun in funs.values() {
                     cache.insert_from_source(fun);
                 }

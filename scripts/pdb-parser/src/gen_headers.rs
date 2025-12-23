@@ -534,6 +534,7 @@ impl<'p> Class<'p> {
         Ok(())
     }
 
+    #[expect(clippy::too_many_arguments)]
     fn add_method(
         &mut self,
 
@@ -598,7 +599,7 @@ impl<'p> Class<'p> {
         }
         if let ReturnType::Type(ret_ty) = &fn_t.return_type {
             if let Some(forward_reference) =
-                find_forward_reference(&ret_ty, &self.name, &self.namespace)
+                find_forward_reference(ret_ty, &self.name, &self.namespace)
             {
                 forward_references
                     .entry(forward_reference.name.clone())
@@ -789,7 +790,7 @@ impl Data<'_> {
         class_name: &str,
         f: &mut impl std::io::Write,
     ) -> crate::Result<()> {
-        let ifdef_name = get_ifdef_name(&class_name);
+        let ifdef_name = get_ifdef_name(class_name);
 
         gen_sources::write_header(f, &ifdef_name)?;
 
@@ -881,7 +882,7 @@ impl Enum<'_> {
         gen_sources::write_header(f, &ifdef_name)?;
         namespace.start_namespace(f)?;
         self.fmt(Name::RemoveNamespace(namespace), f)?;
-        writeln!(f, "")?;
+        writeln!(f)?;
         namespace.end_namespace(f)?;
         gen_sources::write_footer(f, &ifdef_name)?;
 
@@ -1211,6 +1212,7 @@ impl Enum<'_> {
             write!(f, "\t{}", value.name.to_string())?;
             formatter::pad_spaces_t(f, value.name.len(), max_name_len)?;
 
+            #[expect(clippy::unnecessary_cast)]
             let value = match value.value {
                 pdb::Variant::U8(v) => v as i64,
                 pdb::Variant::U16(v) => v as i64,
@@ -1247,6 +1249,8 @@ impl Enum<'_> {
         formatter::get_max_length(&self.values, |value| value.name.len())
     }
 
+    #[expect(clippy::unnecessary_cast)]
+    #[expect(clippy::cast_abs_to_unsigned)]
     fn max_value_len(&self) -> u32 {
         let mut max_value_len = 0;
         for value in &self.values {
@@ -1369,7 +1373,7 @@ fn starts_with_equal_group(lhs: &str, rhs: &str) -> bool {
         }
     }
 
-    return result;
+    result
 }
 
 fn ends_with_equal_group(lhs: &str, rhs: &str) -> bool {
@@ -1385,7 +1389,7 @@ fn ends_with_equal_group(lhs: &str, rhs: &str) -> bool {
         }
     }
 
-    return result;
+    result
 }
 
 impl ForwardReferenceKind {
@@ -1463,5 +1467,5 @@ fn skip_default_environment(ty: &str) -> Option<&str> {
             return None;
         }
     }
-    return Some(ty);
+    Some(ty)
 }
