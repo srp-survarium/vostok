@@ -2968,10 +2968,26 @@
 					<File
 						RelativePath=".\bi_spline_skeleton_animation.cpp"
 						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\bi_spline_skeleton_animation.h"
 						>
+						<FileConfiguration
+							Name="Master Gold|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<Filter
 						Name="check"
@@ -3127,10 +3143,26 @@
 						<File
 							RelativePath=".\bi_spline_bone_animation.cpp"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\bi_spline_bone_animation.h"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCustomBuildTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<Filter
 							Name="data"
@@ -4166,6 +4198,78 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="public_api"
+			>
+			<File
+				RelativePath="..\animation_states_dumper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\mixing_animated_object_holder.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="private_api"
+			>
+			<File
+				RelativePath=".\bi_spline_bone_animation_baked.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bi_spline_channel_animation_baked.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bi_spline_event_channel_baked.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bi_spline_skeleton_animation_baked.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bi_spline_skeleton_animation_baked_cook.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bi_spline_skeleton_animation_baked_impl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bi_spline_skeleton_animation_impl_cook.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mixing_binary_tree_initializer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mixing_n_ary_tree_null_weight_detector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mixing_time_scale_transition_debug.h"
+				>
+			</File>
+			<Filter
+				Name="sources"
+				>
+				<File
+					RelativePath=".\bi_spline_skeleton_animation_baked.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bi_spline_skeleton_animation_baked_cook.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bi_spline_skeleton_animation_impl_cook.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<File

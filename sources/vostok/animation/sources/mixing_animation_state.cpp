@@ -11,30 +11,36 @@
 using vostok::animation::mixing::animation_state;
 using vostok::animation::mixing::n_ary_tree_animation_node;
 using vostok::animation::skeleton_animation_ptr;
+using vostok::animation::subscribed_channel;
 
+// STATE[45.40%|STUB]: Sad
 animation_state::animation_state	(
-		n_ary_tree_animation_node& animation_node,
-		u32 const time_in_ms,
-		u32 const initial_event_types,
-		u32 const animation_interval_id,
-		float const animation_interval_time,
-		float const weight,
-		vostok::animation::subscribed_channel*& channels_head
+	n_ary_tree_animation_node&		animation_node,
+	const u32						time_in_ms,
+	const u16						initial_event_types,
+	const u32						animation_interval_id,
+	const u32						previous_animation_interval_id,
+	const float						animation_interval_time,
+	const float						animation_time_threshold,
+	const float						weight,
+	subscribed_channel*&			channels_head,
+	const bool						is_freezed
 	) :
-	animation_interval_id	( animation_interval_id ),
-	animation_interval_time	( animation_interval_time ),
-	animation_time			( animation_node.animation_intervals()[ animation_interval_id ].start_time() + animation_interval_time ),
-	event_iterator			( get_this(), animation_node, time_in_ms, initial_event_types, channels_head ),
-	weight					( weight ),
-	are_there_any_weight_transitions( false )
+	animation_interval_id			( animation_interval_id ),
+	previous_animation_interval_id	( previous_animation_interval_id ),
+	animation_interval_time			( animation_interval_time ),
+	animation_time					( animation_node.animation_intervals()[ animation_interval_id ].start_time() + animation_interval_time ),
+	animation_time_threshold		( animation_time_threshold ),
+	event_iterator					( get_this(), animation_node, time_in_ms, initial_event_types, channels_head ),
+	weight							( weight ),
+	are_there_any_weight_transitions( false ),
+	is_freezed						( is_freezed )
 {
 	float const animation_length	= cubic_spline_skeleton_animation_pinned(animation_node.animation_intervals()[ animation_interval_id ].animation())->length_in_frames()/default_fps;
-	if ( animation_time >= animation_length ) {
+	if ( animation_node.playback_type( ) == vostok::animation::play_cyclically && animation_time >= animation_length ) {
 		animation_time				-= animation_length;
-		animation_time_threshold	= animation_length;
+		this->animation_time_threshold	= animation_length;
 	}
-	else
-		animation_time_threshold	= 0.f;
 
 #ifndef MASTER_GOLD
 	if ( !animation_node.driving_animation() )

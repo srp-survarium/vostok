@@ -29,7 +29,7 @@ event_channel	const	&animation_event_channels::channel( u32 id ) const
 struct find_predicate
 {
 	find_predicate( pcstr name ): m_name( name ){}
-	
+
 	bool operator () ( const event_channel &channel )
 	{
 		return strings::equal( channel.name(), m_name );
@@ -38,14 +38,16 @@ struct find_predicate
 	pcstr m_name;
 };
 
-u32			animation_event_channels::get_channel_id( pcstr name ) const 
+STATIC_SIZE_ASSERT(find_predicate, 0x4);
+
+u32			animation_event_channels::get_channel_id( pcstr name ) const
 {
 	if ( m_channels_count == u32(-1) || m_channels_count == 0 )
 		return u32(-1);
-	
+
 	const event_channel  *begin = &channel( 0 ), *end = ( &channel(m_channels_count-1) + 1 );
 
-	find_predicate p( name ); 
+	find_predicate p( name );
 
 	const event_channel  * r = std::find_if ( begin, end,  p );
 
@@ -75,10 +77,10 @@ animation_event_channels::~animation_event_channels()
 
 size_t	animation_event_channels::internal_memory_size()const
 {
-	
+
 	if ( m_channels_count == u32(-1) )
 		return 0;
-	
+
 	u32 mem_size = channels_self_memory_size ( m_channels_count );
 
 	for ( u32 i = 0 ; i < m_channels_count ; ++i )

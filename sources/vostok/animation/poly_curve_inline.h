@@ -31,7 +31,7 @@ inline void	write( const poly_curve_order3_domain< Point_type, Dimension > &d, v
 		write( d[i] )
 }
 
-template< class Point_type, u32 Dimension  > 
+template< class Point_type, u32 Dimension  >
 inline void dump( const poly_curve_order3_domain< Point_type, Dimension > &d )
 {
 	for ( u8 i = 0; i <  poly_curve_order3_domain< Point_type, Dimension >::coeff_number; ++i )
@@ -45,7 +45,7 @@ inline void dump( const poly_curve_order3_domain< Point_type, Dimension > &d )
 //
 //	{
 //		R_ASSERT( config["domains"].size() + 1 ==  config["knots"].size() );
-//		
+//
 //		domains().resize( config["domains"].size() );
 //
 //		vector<DomainType>::iterator i,  b = domains().begin( ), e = domains().end() ;
@@ -72,14 +72,14 @@ inline void	poly_curve< DomainType >::dump( ) const
 {
 	{
 		vector<DomainType>::const_iterator i , b = domains().begin( ), e = domains().end() ;
-		
+
 		for ( i = b ; i!= e; ++i )
 			animation::dump ( *i );
 	}
 
 	{
 		vector<float>::const_iterator i , b = knots().begin( ), e = knots().end() ;
-		
+
 		for ( i = b ; i!= e; ++i )
 			LOG_INFO( " %f ", *i );
 	}
@@ -117,13 +117,13 @@ inline	bool	poly_curve< DomainType >::is_cyclic( point_type const &epsilon )cons
 
 
 template<class DomainType >
-typename DomainType::point_type poly_curve< DomainType >::value( float t ) const 
-{ 
-	point_type p; 
+typename DomainType::point_type poly_curve< DomainType >::value( float t ) const
+{
+	point_type p;
 	evaluate( t, p, 0 );
 	return  p;
 }
-
+/* sushi@TODO
 template< typename Point_type, int Dimension >
 inline Point_type point( u32 index, const bi_spline_data< Point_type > &cv )
 {
@@ -172,8 +172,8 @@ void get_spline_params	( const bi_spline_data< Point_type > &cv, u32 index, Poin
 	factors[3]							= float4(  0, k20*(dT[j+1]*math::sqr(dT[j])), k10*(math::sqr(dT[j+1])*(dT[j-1] + dT[j])) + k11*(dT[j+1]*dT[j]*(dT[j+1] + dT[j+2])), k0*dT[j+1]*math::sqr(dT[j+1]) );
 	float const (&elements)[4][4]		= factors_matrix.elements;
 
-	Point_type	p_j3 = point< Point_type, Dimension >( index-3, cv ), 
-				p_j2 = point< Point_type, Dimension >( index-2, cv ), 
+	Point_type	p_j3 = point< Point_type, Dimension >( index-3, cv ),
+				p_j2 = point< Point_type, Dimension >( index-2, cv ),
 				p_j1 = point< Point_type, Dimension >( index-1, cv ),
 				p_j0 = point< Point_type, Dimension >( index, cv   );
 
@@ -208,10 +208,10 @@ u32 poly_knots_count( const bi_spline_data< typename DomainType::point_type > &c
 template< class DomainType >
 inline size_t poly_curve< DomainType >::count_internal_memory_size	( bi_spline_data<point_type> const &cv )
 {
-	
+
 	u32 knots_cnt = poly_knots_count< DomainType >( cv );
-	
-	return time_channel<DomainType>::count_internal_memory_size( knots_cnt ); 
+
+	return time_channel<DomainType>::count_internal_memory_size( knots_cnt );
 
 	//return sizeof(DomainType) * ( knots_cnt - 1 ) + sizeof( float ) * knots_cnt;
 }
@@ -222,12 +222,12 @@ inline size_t poly_curve< DomainType >::count_internal_memory_size	( bi_spline_d
 template< class DomainType >
 void poly_curve< DomainType >::create_in_place_internals( const bi_spline_data<point_type> &cv, void* memory_buff )
 {
-	
+
 	m_time_channel.create_in_place( memory_buff, poly_knots_count< DomainType >( cv ) );
 	//m_internal_memory_position = size_t ( pbyte( memory_buff ) - pbyte( this ) );
 
 	//m_knots_count = poly_knots_count< DomainType >( cv );
-	
+
 	//ASSERT( cv->cuopen );
 	//ASSERT( cv.idim == DomainType::dimension );
 	//ASSERT( cv.ikind == 1 );
@@ -260,7 +260,7 @@ void poly_curve< DomainType >::create_in_place_internals( const bi_spline_data<p
 	m_time_channel.knot( knots_cnt ) = ( cv.knot( cv.points_number()-1 ) );
 	R_ASSERT( m_time_channel.knot(  m_time_channel.knots_count() -1 ) > m_time_channel.knot( 0 ) );
 }
-
+*/
 } // namespace animation
 } // namespace vostok
 

@@ -6,8 +6,8 @@
 
 #include "pch.h"
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
-#include "bi_spline_skeleton_animation.h"
-#include "bi_spline_bone_animation.h"
+// #include "bi_spline_skeleton_animation.h"	sushi@TODO
+// #include "bi_spline_bone_animation.h"		sushi@TODO
 #include <vostok/animation/skeleton.h>
 
 using vostok::animation::skeleton;
@@ -16,23 +16,24 @@ using vostok::animation::skeleton_bone;
 namespace vostok {
 namespace animation {
 
-cubic_spline_skeleton_animation::cubic_spline_skeleton_animation	( bi_spline_skeleton_animation const& animation	) :
+cubic_spline_skeleton_animation::cubic_spline_skeleton_animation	( /* bi_spline_skeleton_animation const& animation */	) // :
 #ifndef MASTER_GOLD
 	m_allocator		( 0 ),
 #endif // #ifndef MASTER_GOLD
-	m_animation_type( animation.animation_type() )
+	// sushi@TODO: m_animation_type( animation.animation_type() )
 {
+/* // sushi@TODO:
 	m_bone_count = animation.bones_count();
 
 	pvoid mem_ptr	= this;
 	mem_ptr			= static_cast<pbyte>(mem_ptr) + sizeof( *this );
-	
+
 	m_bone_names.create_internals_in_place(  animation.bone_names(), mem_ptr );
 
 	mem_ptr	= get_shift_ptr( mem_ptr, bone_names::count_internal_memory_size( m_bone_count ) );
-	
+
 	m_internal_memory_position = bytes_dist( mem_ptr, this );
-	
+
 	mem_ptr	= get_shift_ptr( mem_ptr, m_bone_count * sizeof( bone_animation ) );
 
 	for ( u32 bone = 0; bone < m_bone_count; ++bone )
@@ -42,13 +43,14 @@ cubic_spline_skeleton_animation::cubic_spline_skeleton_animation	( bi_spline_ske
 		bone_data()[ bone ].create_internals_in_place( bd, mem_ptr );
 		mem_ptr	= get_shift_ptr( mem_ptr, bone_animation::count_internal_memory_size( bd ) );
 	}
-	
+
 	if ( animation.event_channels()	)
 		m_event_channels.create_in_place_internals( *animation.event_channels(), mem_ptr );
 
 #ifndef MASTER_GOLD
 	m_editable_event_channels	= VOSTOK_NEW_IMPL(debug::g_mt_allocator, editable_animation_event_channels )( m_event_channels );
 #endif // #ifndef MASTER_GOLD
+	*/
 }
 
 cubic_spline_skeleton_animation::~cubic_spline_skeleton_animation	( )
@@ -63,12 +65,12 @@ cubic_spline_skeleton_animation::~cubic_spline_skeleton_animation	( )
 	VOSTOK_DELETE_IMPL			( debug::g_mt_allocator, m_editable_event_channels );
 #endif // #ifndef MASTER_GOLD
 }
-
+/* sushi@TODO
 u32 cubic_spline_skeleton_animation::count_memory_size ( bi_spline_skeleton_animation const& animation )
 {
 	size_t size = 0;
 	size += sizeof( cubic_spline_skeleton_animation );
-	
+
 	u32 bones_count = animation.bones_count();
 
 	size += bone_names::count_internal_memory_size( bones_count );
@@ -89,11 +91,11 @@ cubic_spline_skeleton_animation* cubic_spline_skeleton_animation::new_animation	
 {
 	return									new ( buffer_for_animation ) cubic_spline_skeleton_animation( animation );
 }
-
+*/
 #ifndef MASTER_GOLD
 cubic_spline_skeleton_animation* cubic_spline_skeleton_animation::new_animation	( memory::base_allocator& allocator, bi_spline_skeleton_animation const& animation )
 {
-	cubic_spline_skeleton_animation* const result = 
+	cubic_spline_skeleton_animation* const result =
 		new (
 			VOSTOK_MALLOC_IMPL( allocator, cubic_spline_skeleton_animation::count_memory_size(animation), "cubic_spline_skeleton_animation" )
 		) cubic_spline_skeleton_animation	( animation );

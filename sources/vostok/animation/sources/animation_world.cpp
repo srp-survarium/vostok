@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "animation_world.h"
-#include "bi_spline_skeleton_animation.h"
+// sushi@TODO:#include "bi_spline_skeleton_animation.h"
 #include <vostok/animation/skeleton_animation.h>
 #include <vostok/animation/skeleton.h>
 #include <vostok/animation/bone_names.h>
@@ -80,14 +80,17 @@ void animation_world::tick( )
 
 bi_spline_skeleton_animation *animation_world::create_skeleton_animation_data( u32 bones_count )
 {
+		/* sushi@TODO
 	bi_spline_skeleton_animation * ret = NEW(bi_spline_skeleton_animation)( );
 	ret->set_num_bones( bones_count );
 	return ret;
+	*/
+return NULL;
 }
 
 void	animation_world::destroy( bi_spline_skeleton_animation	* &p )
 {
-	DELETE( p );
+		/* sushi@TODO	DELETE( p ); */
 }
 
 void animation_world::clear_resources	( )

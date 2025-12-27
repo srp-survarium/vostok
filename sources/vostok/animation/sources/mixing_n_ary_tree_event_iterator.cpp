@@ -18,10 +18,10 @@ n_ary_tree_event_iterator::n_ary_tree_event_iterator	(
 		u32 const initial_event_types,
 		vostok::animation::subscribed_channel*& channels_head
 	) :
-	m_animation_event_iterator		( animation, animation_node, start_time_in_ms, initial_event_types & time_event_animation_lexeme_started, channels_head ),
+	m_animation_event_iterator		( animation, animation_node, start_time_in_ms, initial_event_types & time_event_animation_lexeme_started, 0, channels_head ),
 	m_weight_event_iterator			( animation_node, start_time_in_ms, initial_event_types & time_event_weight_transitions_started ),
 	m_animation_node				( &animation_node ),
-	m_value							( u32(-1), 0 )
+	m_value							( u32(-1), 0, 0 )
 {
 	select_state					( );
 }
@@ -66,17 +66,17 @@ bool n_ary_tree_event_iterator::is_less								( n_ary_tree_event_iterator const
 		return					false;
 
 	// at the second, we compare by synchronization_group_id
-	if ( animation().synchronization_group_id() < other.animation().synchronization_group_id() )
+	if ( animation().time_synchronization_group_id() < other.animation().time_synchronization_group_id() ) // sushi@TODO
 		return					true;
 
-	if ( animation().synchronization_group_id() > other.animation().synchronization_group_id() )
+	if ( animation().time_synchronization_group_id() > other.animation().time_synchronization_group_id() ) // sushi@TODO
 		return					false;
 
 	// at the third, we make driving animation first inside synchronization group
-	if ( animation().driving_animation() < other.animation().driving_animation() )
+	if ( animation().time_driving_animation() < other.animation().time_driving_animation() ) // sushi@TODO
 		return					true;
 
-	if ( animation().driving_animation() > other.animation().driving_animation() )
+	if ( animation().time_driving_animation() > other.animation().time_driving_animation() ) // sushi@TODO
 		return					false;
 
 	// at the last, we just compare events
