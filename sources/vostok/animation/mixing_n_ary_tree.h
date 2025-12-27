@@ -21,13 +21,15 @@ class bone_mixer;
 class skeleton_bone;
 class skeleton;
 struct editor_animation_state;
-struct callback_generator_info;
 struct subscribed_channel;
+class animation_states_dumper;
 
 namespace mixing {
 
+struct callback_generator_info;
 class n_ary_tree_animation_node;
 struct animation_state;
+class animated_object_holder;
 
 template class VOSTOK_ANIMATION_API intrusive_ptr <
 	n_ary_tree_intrusive_base,
@@ -44,51 +46,90 @@ public:
 			>						n_ary_tree_ptr;
 
 public:
-	inline	explicit	n_ary_tree					( float4x4 const& object_transform );
-						n_ary_tree					(
-							n_ary_tree_animation_node* const root,
-							base_interpolator const** const interpolators,
-							animation_state* const animation_states,
-							animation_state** const animation_events,
-							n_ary_tree_intrusive_base* const reference_counter,
-							u32 const animations_count,
-							u32 const interpolators_count,
-							u32 const target_time_in_ms,
-							n_ary_tree const& previous_tree
-						);
-						n_ary_tree					(
-							n_ary_tree_animation_node* const root,
-							base_interpolator const** const interpolators,
-							animation_state* const animation_states,
-							animation_state** const animation_events,
-							n_ary_tree_intrusive_base* const reference_counter,
-							u32 const animations_count,
-							u32 const interpolators_count,
-							u32 const target_time_in_ms,
-							float4x4 const& object_transform
-						);
-						~n_ary_tree					( );
-			void		tick						(
-							u32 target_time_in_ms,
-							subscribed_channel*& channels_head,
-							bool& callbacks_are_actual
-						);
-			void		set_object_transform		( float4x4 const& transform );
-			float4x4	get_object_transform		( ) const;
-			void		compute_bones_matrices		( skeleton const& skeleton, float4x4* const begin, float4x4* const end ) const;
-			float4x4	computed_bone_matrix		( skeleton_bone const& bone ) const;
+	inline									n_ary_tree							( );
+											n_ary_tree							(
+												n_ary_tree_animation_node*		weight_root,
+												n_ary_tree_animation_node*		time_root,
+												base_interpolator const**		interpolators,
+												animation_state*				animation_states,
+												animation_state**				animation_events,
+												animated_object_holder*			animated_objects,
+												n_ary_tree_intrusive_base*		reference_counter,
+												u32								animations_count,
+												u32								animated_objects_count,
+												u32								interpolators_count,
+												u32								current_time_in_ms
+											);
+											~n_ary_tree							( );
+
+			n_ary_tree&						operator=							( n_ary_tree const& other );
+
+public:
+			bool							tick								(
+												u32						target_time_in_ms,
+												subscribed_channel*&	channels_head,
+												bool&					callbacks_are_actual
+											);
+	inline	void							tick_to_nearest_event				( subscribed_channel*& arg_0, bool& arg_1 ) { /* no source */ }
+			u32								nearest_event_time_in_ms			( ) const;
+
+
 #ifndef MASTER_GOLD
-			void		dump_animation_states		( u32 const target_time_in_ms ) const;
-			void		dump_tree					( u32 const target_time_in_ms ) const;
+			void							dump_animation_states				( u32 const target_time_in_ms ) const;
+			void							dump_tree							( u32 const target_time_in_ms ) const;
 #endif // #ifndef MASTER_GOLD
 
-	inline	bool		are_there_any_animations	( ) const { return m_animations_count > 0; }
-	inline	u32			interpolators_count			( ) const { return m_interpolators_count; }
-	inline	base_interpolator const** interpolators	( ) const { return m_interpolators; }
-	inline	n_ary_tree_animation_node* root			( ) const { return m_root; }
+
+			void							set_object_transform				( pcvoid animated_object, float4x4 const& object_transform );
+			void							set_object_transform				( n_ary_tree_animation_node& animation_node );
+			float4x4						get_object_transform				( pcvoid animated_object ) const;
+
+	inline	bool							has_object							( pcvoid const arg_0 ) const { /* no source */ }
+
+			void							compute_bones_matrices				(
+												pcvoid				animated_object,
+												skeleton const&		skeleton,
+												float4x4* const		begin,
+												float4x4* const		end,
+												u32*				bones_masks
+											) const;
+			void							compute_bones_local_matrices		(
+												pcvoid				animated_object,
+												skeleton const&		skeleton,
+												float4x4* const		begin,
+												float4x4* const		end,
+												u32*				bones_masks
+											) const;
+			void							convert_to_object_matrices			(
+												pcvoid				animated_object,
+												skeleton const&		skeleton,
+												float4x4* const		begin,
+												float4x4* const		end
+											) const;
+
+	inline	bool							is_consistent						( ) const {  return false; /* no source */ }
+
+	inline	void							dump_animation_states				( animation_states_dumper& arg_0 ) const { /* no source */ }
+
+	inline	bool							are_there_any_animations			( ) const { return false; /* no source */ }
+
+	inline	u32								interpolators_count					( ) const { return 10; /* no source */ }
+
+	inline	base_interpolator const**		interpolators						( ) const { return  NULL;/* no source */ }
+
+	inline	n_ary_tree_animation_node*		weight_root							( ) const { return  NULL;/* no source */ }
+	inline	n_ary_tree_animation_node*		time_root							( ) const { return  NULL;/* no source */ }
+
+	inline	animated_object_holder*			animated_objects					( ) const { return  NULL;/* no source */ }
+
+	inline	u32								animations_count					( ) const { return 10;/* no source */ }
+	inline	u32								animated_objects_count				( ) const { return 10;/* no source */ }
+
+	inline	u32								tree_actual_time_in_ms				( ) const { return 10;/* no source */ }
+
 
 #ifndef MASTER_GOLD
-			void		fill_animation_states		( vectora< animation::editor_animation_state >& result );
+			void							fill_animation_states				( vectora< animation::editor_animation_state >& result );
 #endif // #ifndef MASTER_GOLD
 
 private:
@@ -98,91 +139,114 @@ private:
 	}; // enum process_event_result_enum
 
 private:
-			void		initialize					( );
-			void		destroy						( );
+			void							initialize							( );
+			void							destroy								( );
 
-			float4x4	computed_local_bone_matrix	( skeleton_bone const& bone ) const;
-			void		compute_skeleton_branch		( skeleton_bone const& bone, float4x4* const result, float4x4 const& parent ) const;
+	inline	float4x4						computed_local_bone_matrix			( skeleton_bone const& arg_0 ) const { /* no source */ }
 
-			void	update_animation_interval_time	(
-							n_ary_tree_animation_node& animation,
-							u32 const start_time_in_ms,
-							u32 const target_time_in_ms
-						);
+	inline	void							compute_skeleton_branch				( skeleton_bone const& arg_0, float4x4* const arg_1, float4x4 const& arg_2 ) const { /* no source */ }
 
-			void		accumulate_object_movement	(
-							n_ary_tree_animation_node& animation_node,
-							float const animation_time,
-							u32 const time_in_ms
-						);
-			void		accumulate_object_movement	(
-							n_ary_tree_animation_node& animation,
-							u32 start_time_in_ms,
-							float start_animation_time,
-							u32 target_time_in_ms
-						);
+	inline	void							update_animation_interval_time		( n_ary_tree_animation_node& arg_0, const u32 arg_1, const u32 arg_2 ) { /* no source */ }
 
-			void		update_animation_state		(
-							n_ary_tree_animation_node& animation_node,
-							u32 const start_time_in_ms,
-							u32 target_time_in_ms
-						);
+			void							accumulate_object_movement			(
+												n_ary_tree_animation_node&		animation_node,
+												const float						animation_interval_time,
+												const u32						time_in_ms
+											);
+	inline	void							accumulate_object_movement			(
+												n_ary_tree_animation_node&		arg_0,
+												u32								arg_1,
+												float							arg_2,
+												u32								arg_3
+											) { /* no source */ }
 
-			void	update_synchronization_group_using_integration	(
-							n_ary_tree_animation_node& animation_node,
-							u32 const start_time_in_ms,
-							u32 const target_time_in_ms
-						);
-			void		update_synchronization_group(
-							n_ary_tree_animation_node& animation_node,
-							u32 const start_time_in_ms,
-							u32 const target_time_in_ms
-						);
-			void		update_animation_states		( u32 start_time_in_ms, u32 target_time_in_ms );
-			bool		need_new_transform			( u32 const target_time_in_ms ) const;
+			void							update_animation_state				(
+												n_ary_tree_animation_node&		animation_node,
+												const u32						start_time_in_ms,
+												u32								target_time_in_ms
+											);
+			void							update_synchronization_group_using_integration(
+												n_ary_tree_animation_node&		animation_node,
+												const u32						start_time_in_ms,
+												const u32						target_time_in_ms
+											);
+			void							update_time_synchronization_group	(
+												n_ary_tree_animation_node&		animation_node,
+												const u32						start_time_in_ms,
+												const u32						target_time_in_ms
+											);
+			void							update_animation_states				( u32 start_time_in_ms, u32 target_time_in_ms );
 
-			void		dispatch_callbacks			( u32 const target_time_in_ms ) const;
+			bool							need_new_transform					( const u32 target_time_in_ms ) const;
 
-			void		remove_animation			(
-							n_ary_tree_animation_node*& i,
-							n_ary_tree_animation_node* j
-						);
-			void		set_object_transform		( n_ary_tree_animation_node& animation_node );
-			process_event_result_enum process_event	(
-							n_ary_tree_animation_node*& current_animation_node,
-							n_ary_tree_animation_node* previous_animation_node,
-							u32 event_types
-						);
-			void		process_events				( u32 target_time_in_ms, u32 event_types );
-			void		update_event_iterators		( u32 target_time_in_ms );
-			void		dispatch_callbacks			(
-							callback_generator_info const* const callback_generators_head,
-							subscribed_channel*& channels_head,
-							u32 const current_time_in_ms,
-							bool& callbacks_are_actual
-						);
-			void update_event_iterators_and_dispatch_callbacks	(
-							u32 const target_time_in_ms,
-							subscribed_channel*& channels_head,
-							bool& callbacks_are_actual
-						);
-	static	void		update_animation_time		( animation_state& animation_state );
+			void							remove_animation					( n_ary_tree_animation_node*& i, n_ary_tree_animation_node* j );
+
+			void							process_event						( n_ary_tree_animation_node& current_animation_node, u32 event_types );
+			void							process_events						( u32 target_time_in_ms, u32 event_types );
+
+			void							update_event_iterators				( u32 target_time_in_ms );
+			bool							update_event_iterators_and_dispatch_callbacks(
+												const u32				target_time_in_ms,
+												subscribed_channel*&	channels_head,
+												bool&					callbacks_are_actual
+											);
+	inline	void							update_weight						( n_ary_tree_animation_node& arg_0, u32 arg_1, u32 arg_2 ) { /* no source */ }
+
+	inline	float							computed_animation_time				(
+												n_ary_tree_animation_node&		arg_0,
+												const float						arg_1,
+												const u32						arg_2,
+												const u32						arg_3,
+												const u32						arg_4,
+												const float						arg_5
+											) const { /* no source */ }
+
+			void							remove_animations					( const u32 target_time_in_ms );
+			void							set_objects_transform				( );
+
 
 #ifdef VOSTOK_NORMALIZE_ANIMATIONS_WEIGHTS
-			void		normalize_weights			( );
+			void							normalize_weights					( );
 #endif // #ifdef VOSTOK_NORMALIZE_ANIMATIONS_WEIGHTS
 
+
+			void							adjust_animation_events_times		( n_ary_tree const& other );
+
+	static	bool							dispatch_callbacks					(
+												callback_generator_info const*		callback_generators_head,
+												subscribed_channel*&				channels_head,
+												u32									current_time_in_ms,
+												bool&								callbacks_are_actual
+											);
+
+	static	void							update_animation_time				( animation_state& animation_state );
+
+	static	callback_generator_info*		generate_animation_lexeme_end_events(
+												n_ary_tree const&			previous_tree,
+												n_ary_tree const&			new_tree,
+												callback_generator_info*	callback_generators_buffer_begin,
+												callback_generator_info*	callback_generators_buffer_end,
+												subscribed_channel*			channels_head
+											);
+
+
+
 private:
-	float4x4					m_object_transform;
-	n_ary_tree_ptr				m_reference_counter;
-	n_ary_tree_animation_node*	m_root;
-	base_interpolator const**	m_interpolators;
-	animation_state*			m_animation_states;
-	animation_state**			m_animation_events;
-	u32							m_animations_count;
-	u32							m_interpolators_count;
-	u32							m_tree_actual_time_in_ms;
+	/* 0x0000 */	n_ary_tree_ptr						m_reference_counter;
+	/* 0x0004 */	n_ary_tree_animation_node*			m_weight_root;
+	/* 0x0008 */	n_ary_tree_animation_node*			m_time_root;
+	/* 0x000c */	base_interpolator const**			m_interpolators;
+	/* 0x0010 */	animation_state*					m_animation_states;
+	/* 0x0014 */	animation_state**					m_animation_events;
+	/* 0x0018 */	animated_object_holder*				m_animated_objects;
+	/* 0x001c */	u32									m_animations_count;
+	/* 0x0020 */	u32									m_animated_objects_count;
+	/* 0x0024 */	u32									m_interpolators_count;
+	/* 0x0028 */	u32									m_tree_actual_time_in_ms;
+	/* 0x002c */	bool								m_is_logging_enabled;
 }; // class n_ary_tree
+
+STATIC_SIZE_ASSERT(n_ary_tree, 0x30);
 
 } // namespace mixing
 } // namespace animation

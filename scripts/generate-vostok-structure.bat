@@ -16,8 +16,6 @@ pushd "%VOSTOK_DIR%"
 cargo run --release --bin pdb-parser --             ^
     --output-path   "%VOSTOK_STUB_DIR%"             ^
     --pdb-path      "%SURVARIUM_BIN%\survarium.pdb" ^
-    --engine-path   c:\survarium\sources\vostok\    ^
-    --clear-structure                               ^
-    --no-overwrites
+    --engine-path   c:\survarium\sources\vostok\
 
 popd

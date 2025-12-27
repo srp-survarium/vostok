@@ -26,6 +26,8 @@ private:
 	typedef resources::translate_query_cook	super;
 }; // class skeleton_cook
 
+STATIC_SIZE_ASSERT(skeleton_cook, 0x20);
+
 } // namespace animation
 } // namespace vostok
 

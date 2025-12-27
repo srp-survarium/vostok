@@ -18,13 +18,14 @@ namespace mixing {
 
 struct n_ary_tree_base_node;
 class n_ary_tree;
+class n_ary_tree_transition_tree_constructor;
 
 class n_ary_tree_cloner :
 	private n_ary_tree_visitor,
 	private boost::noncopyable
 {
 public:
-	explicit		n_ary_tree_cloner	( mutable_buffer& buffer, u32 start_time_in_ms );
+	explicit		n_ary_tree_cloner	( n_ary_tree_transition_tree_constructor& constructor, u32 start_time_in_ms );
 			void	initialize			(
 						n_ary_tree const& from,
 						n_ary_tree const& to
@@ -63,15 +64,18 @@ private:
 	inline	void	process				( T& left, T& right );
 
 private:
-	n_ary_tree_base_node*				m_result;
-	mutable_buffer&						m_buffer;
-	base_interpolator const*			m_animation_interpolator;
-	base_interpolator const**			m_interpolators;
-	float const*						m_animation_interval_time;
-	u32 const							m_start_time_in_ms;
-	u32									m_interpolators_count;
-	float								m_time_scale_factor;
+	n_ary_tree_base_node*					m_result;
+	n_ary_tree_transition_tree_constructor&	m_constructor;
+	base_interpolator const*				m_animation_interpolator;
+	base_interpolator const**				m_interpolators;
+	float const*							m_animation_interval_time;
+	u32 const								m_start_time_in_ms;
+	u32										m_interpolators_count;
+	float									m_time_scale_factor;
 }; // class mixing_n_ary_tree_cloner
+
+
+STATIC_SIZE_ASSERT(n_ary_tree_cloner, 0x24);
 
 } // namespace mixing
 } // namespace animation

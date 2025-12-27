@@ -113,6 +113,7 @@ private:
 	u32		m_event_type;
 }; // class n_ary_tree_weight_transition_end_time_calculator
 
+STATIC_SIZE_ASSERT(n_ary_tree_weight_transition_end_time_calculator, 0x10);
 
 n_ary_tree_weight_event_iterator::n_ary_tree_weight_event_iterator(
 		n_ary_tree_animation_node& animation,

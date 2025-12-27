@@ -30,6 +30,8 @@ private:
 	float							m_length;
 }; // class animation_interval
 
+STATIC_SIZE_ASSERT(animation_interval, 0xC);
+
 	inline	bool					operator ==			( animation_interval const& left, animation_interval const& right )
 	{
 		return

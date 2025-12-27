@@ -40,6 +40,7 @@ struct VOSTOK_NOVTABLE n_ary_tree_base_node {
 
 	virtual	bool	is_time_scale			( ) { return false; }
 	virtual	bool	is_weight				( ) { return false; }
+	virtual bool	is_transition			( ) { return false; }
 
 	virtual void	visit					( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_animation_node& node ) = 0;
 	virtual void	visit					( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_weight_node& node ) = 0;

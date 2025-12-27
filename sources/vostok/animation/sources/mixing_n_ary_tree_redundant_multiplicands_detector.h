@@ -37,6 +37,8 @@ private:
 	bool						m_result;
 }; // class n_ary_tree_redundant_multiplicands_detector
 
+STATIC_SIZE_ASSERT(n_ary_tree_redundant_multiplicands_detector, 0xC);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

@@ -12,6 +12,14 @@
 namespace vostok {
 namespace animation {
 
+// sushi@TODO: Move to where it is needed?
+enum channel_type_enum
+{
+	channel_type_intervals		= 0x0,
+	channel_type_partitions		= 0x1,
+	channel_type_events			= 0x2,
+};
+
 class event_channel {
 public:
 	struct domain_data {
@@ -21,9 +29,12 @@ public:
 public:
 	template < class ConfigValueType >
 	static inline u32			count_internal_memory_size	( ConfigValueType const& config  );
+	// static	inline	u32		count_internal_memory_size	( bi_spline_event_channel_baked const& arg_0 ) { /* no source */ }
+	// static	inline	u32		count_internal_memory_size	( event_channel const& arg_0 ) { /* no source */ }
 
 	template < class ConfigValueType >
 	inline	void				create_in_place_internals	( ConfigValueType const& config, void* memory_buff );
+	// inline	void			create_in_place_internals	( bi_spline_event_channel_baked const& channel, void* memory_buff ) { /* no source */ }
 
 #ifndef	MASTER_GOLD
 public:
@@ -41,13 +52,13 @@ public:
 	inline	u32					knots_count					( )	const								{ return m_time_channel.knots_count( ); }
 
 	inline	pcstr				name						( ) const								{ return m_name; }
-
+	inline	channel_type_enum	type						( ) const								{ return m_type; }
 private:
 	typedef time_channel< domain_data >	time_channel_type;
-	
-	string16					m_name;
+
+	string32					m_name;
 	time_channel<domain_data>	m_time_channel;
-	u8							m_type;
+	channel_type_enum			m_type;
 }; // class event_channel
 
 } // namespace animation

@@ -29,6 +29,8 @@ protected:
 	using binary_operation_lexeme::cloned_in_buffer;
 }; // class multiplication_lexeme
 
+STATIC_SIZE_ASSERT(multiplication_lexeme, 0x24);
+
 	template < typename T1, typename T2 >
 	inline	multiplication_lexeme&	operator *		( T1& left, T2& right );
 

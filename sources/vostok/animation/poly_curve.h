@@ -7,7 +7,7 @@
 #ifndef VOSTOK_ANIMATION_POLY_CURVE_H_INCLUDED
 #define VOSTOK_ANIMATION_POLY_CURVE_H_INCLUDED
 
-#include <vostok/animation/bi_spline_data.h>
+// #include <vostok/animation/bi_spline_data.h> sushi@TODO
 #include <vostok/animation/time_channel.h>
 
 namespace vostok {
@@ -48,8 +48,8 @@ class poly_curve
 
 public:
 
-static	size_t				count_internal_memory_size	( bi_spline_data<point_type> const &cv );
-		void				create_in_place_internals	( bi_spline_data<point_type> const &cv, void* memory_buff );
+// static	size_t				count_internal_memory_size	( bi_spline_data<point_type> const &cv ); sushi@TODO
+//		void				create_in_place_internals	( bi_spline_data<point_type> const &cv, void* memory_buff );
 
 
 public:
@@ -57,7 +57,7 @@ inline	void				evaluate 			( float t, point_type &p, u32 &current_domain )const;
 inline	point_type			value				( float t ) const ;
 
 private:
-		
+
 public:
 		void				dump				() const;
 

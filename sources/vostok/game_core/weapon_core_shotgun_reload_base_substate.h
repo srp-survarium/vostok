@@ -17,7 +17,7 @@
 
 namespace vostok {
 namespace animation {
-	class animation_playback_state;
+	struct animation_playback_state;
 	struct animation_callback_params;
 }
 }
