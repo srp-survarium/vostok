@@ -57,6 +57,8 @@ private:
 	u32							m_interpolators_count;
 }; // class n_ary_tree_weaver
 
+STATIC_SIZE_ASSERT(n_ary_tree_weaver, 0x20);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

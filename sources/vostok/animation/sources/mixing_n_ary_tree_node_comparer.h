@@ -108,6 +108,8 @@ public:
 	enum_result		result;
 }; // class n_ary_tree_node_comparer
 
+STATIC_SIZE_ASSERT(n_ary_tree_node_comparer, 0x8);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

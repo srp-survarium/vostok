@@ -12,17 +12,24 @@
 namespace vostok {
 namespace animation {
 
+namespace mixing {
+	class n_ary_tree_comparer;
+}
+
 class interpolator_size_calculator : public interpolator_visitor {
 public:
-	inline	interpolator_size_calculator( ) : m_size( 0 ) { }
+	inline	interpolator_size_calculator( mixing::n_ary_tree_comparer* const comparer ) : m_comparer( comparer ), m_size( 0 ) { }
 	inline	u32		calculated_size		( ) const { return m_size; }
 	virtual	void	visit				( instant_interpolator const& interpolator );
 	virtual	void	visit				( linear_interpolator const& interpolator );
 	virtual	void	visit				( fermi_interpolator const& interpolator );
 
 private:
-	mutable u32		m_size;
+	mixing::n_ary_tree_comparer*	m_comparer;
+	mutable u32						m_size;
 }; // class interpolator_size_calculator
+
+STATIC_SIZE_ASSERT(interpolator_size_calculator, 0xC);
 
 } // namespace animation
 } // namespace vostok

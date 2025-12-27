@@ -38,7 +38,7 @@ expression single_animation::emit	( mutable_buffer& buffer, bool& is_last_animat
 	mixing::animation_lexeme_parameters parameters (
 		buffer,
 		request_path(),
-		m_animation
+		m_animation, NULL, NULL
 	);
 	animation_lexeme				lexeme( parameters );
 	return							expression( lexeme );
@@ -51,7 +51,7 @@ expression single_animation::emit	( mutable_buffer& buffer, animation_lexeme& dr
 		buffer,
 		request_path(),
 		m_animation,
-		driving_animation
+		&driving_animation, NULL
 	);
 	animation_lexeme				lexeme( parameters );
 	return							expression( lexeme );

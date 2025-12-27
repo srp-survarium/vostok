@@ -36,6 +36,8 @@ public:
 	comparison_result_enum	result;
 }; // class interpolator_comparer
 
+STATIC_SIZE_ASSERT(interpolator_comparer, 0x4);
+
 } // namespace animation
 } // namespace vostok
 

@@ -8,8 +8,8 @@
 #define ANIMTION_WORLD_H_INCLUDED
 
 #include <vostok/animation/world.h>
-#include <vostok/animation/bi_spline_data.h>
-#include "bi_spline_skeleton_animation.h"
+// #include <vostok/animation/bi_spline_data.h> sushi@TODO
+// #include "bi_spline_skeleton_animation.h" sushi@TODO
 #include <vostok/animation/skeleton_animation.h>
 
 namespace vostok {

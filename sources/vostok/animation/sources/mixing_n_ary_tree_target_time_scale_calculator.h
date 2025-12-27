@@ -35,6 +35,8 @@ private:
 	float			m_result;
 }; // struct n_ary_tree_target_time_scale_calculator
 
+STATIC_SIZE_ASSERT(n_ary_tree_target_time_scale_calculator, 0x8);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

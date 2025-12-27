@@ -19,6 +19,7 @@ struct base_interpolator;
 namespace mixing {
 
 class n_ary_tree_animation_node;
+class animated_object_holder;
 
 class n_ary_tree {
 public:
@@ -55,17 +56,31 @@ private:
 	inline	void					assign					( n_ary_tree const& other );
 			void					destroy					( );
 
+
+	// Moved reference_counter to the beginning
+	// Split root into weight and time
+	// Added animation events
+	// Added animation objjects
+	// Removed m_significant_animations_count
+	// Removed m_transitions_count
+	// Added m_tree_actual_time_in_ms
+	// Added m_is_logging_enabled
 private:
-	n_ary_tree_animation_node*		m_root;
-	memory::base_allocator*			m_allocator;
-	base_interpolator const**		m_interpolators;
-	animation_state*				m_animation_states;
-	n_ary_tree_ptr					m_reference_counter;
-	u32								m_animations_count;
-	u32								m_significant_animations_count;
-	u32								m_interpolators_count;
-	u32								m_transitions_count;
+	/* 0x0000 */	n_ary_tree_intrusive_base_ptr		m_reference_counter;
+	/* 0x0004 */	n_ary_tree_animation_node*			m_weight_root;
+	/* 0x0008 */	n_ary_tree_animation_node*			m_time_root;
+	/* 0x000c */	base_interpolator const**			m_interpolators;
+	/* 0x0010 */	animation_state*					m_animation_states;
+	/* 0x0014 */	animation_state**					m_animation_events;
+	/* 0x0018 */	animated_object_holder*				m_animated_objects;
+	/* 0x001c */	u32									m_animations_count;
+	/* 0x0020 */	u32									m_animated_objects_count;
+	/* 0x0024 */	u32									m_interpolators_count;
+	/* 0x0028 */	u32									m_tree_actual_time_in_ms;
+	/* 0x002c */	bool								m_is_logging_enabled;
 }; // class n_ary_tree
+
+STATIC_SIZE_ASSERT(n_ary_tree, 0x30);
 
 } // namespace mixing
 } // namespace animation

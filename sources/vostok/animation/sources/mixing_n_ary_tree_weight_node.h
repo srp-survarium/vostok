@@ -46,6 +46,8 @@ private:
 	float const					m_weight;
 }; // class n_ary_tree_weight_node
 
+STATIC_SIZE_ASSERT(n_ary_tree_weight_node, 0xC);
+
 			bool	operator <						(
 						n_ary_tree_weight_node const& left,
 						n_ary_tree_weight_node const& right

@@ -15,18 +15,22 @@ namespace mixing {
 
 class n_ary_tree_n_ary_operation_node : public n_ary_tree_base_node {
 public:
-	inline	n_ary_tree_n_ary_operation_node		( u32 const operands_count );
-	inline	n_ary_tree_n_ary_operation_node		( n_ary_tree_n_ary_operation_node const& other );
-	inline	u32				operands_count		( ) const;
-	inline	void		decrement_operands_count( );
-	inline	n_ary_tree_base_node** operands		( u32 const size );
+	inline	explicit						n_ary_tree_n_ary_operation_node	( u32 const operands_count );
+	inline	explicit						n_ary_tree_n_ary_operation_node	( n_ary_tree_n_ary_operation_node const& other );
 
+	inline	u32								operands_count					( ) const;
+	inline	void							decrement_operands_count		( );
+
+	inline	n_ary_tree_base_node**			operands						( u32 const size );
+	inline	n_ary_tree_base_node* const*	operands						( u32 const size ) const; // sushi@TODO
 private:
-	n_ary_tree_n_ary_operation_node& operator=	( n_ary_tree_n_ary_operation_node const& other);
+	n_ary_tree_n_ary_operation_node&		operator=						( n_ary_tree_n_ary_operation_node const& other);
 
 private:
 	u32		m_operands_count;
 }; // class n_ary_tree_n_ary_operation_node
+
+STATIC_SIZE_ASSERT(n_ary_tree_n_ary_operation_node, 0x8);
 
 } // namespace mixing
 } // namespace animation

@@ -24,11 +24,12 @@ class channel_event_callback_base;
 class VOSTOK_ANIMATION_API n_ary_tree_animation_event_iterator {
 public:
 			n_ary_tree_animation_event_iterator		(
-								animation_state& animation_state,
-								n_ary_tree_animation_node& animation_node,
-								u32 start_time_in_ms,
-								u32 initial_event_types,
-								subscribed_channel*& channels_head
+								animation_state&				animation_state,
+								n_ary_tree_animation_node&		animation_node,
+								u32								start_time_in_ms,
+								u16								event_types,
+								u8								channel_ids,
+								subscribed_channel*&			channels_head
 							);
 	inline	n_ary_tree_animation_event_iterator		( );
 	n_ary_tree_animation_event_iterator& operator ++( );
@@ -44,25 +45,33 @@ private:
 								animation_interval const& interval,
 								float target_time
 							) const;
+
 			u32				get_time_in_ms			(
 								u32 start_time_in_ms,
 								float time_from_interval_start,
 								float& event_time,
-								u32& event_type
+								u16& event_type
 							);
 			float	get_nearest_animation_interval_event_time (
-								animation_interval const& interval,
-								float start_time,
-								float target_time,
-								u32& event_type
+								animation_interval const&		interval,
+								float							start_time,
+								float							target_time,
+								u16&							event_type,
+								u8&								channel_ids,
+								u8&								domain_data,
+								bool							start_time_may_be_used
 							);
-			void			advance					( u32 initial_event_types );
+
+
+			void			advance					( u16 initial_event_types );
 
 private:
 	animation_event				m_value;
 	n_ary_tree_animation_node*	m_animation;
 	subscribed_channel**		m_channels_head;
 }; // struct n_ary_tree_animation_event_iterator
+
+STATIC_SIZE_ASSERT(n_ary_tree_animation_event_iterator, 0x18);
 
 	inline	bool			operator ==			( n_ary_tree_animation_event_iterator const& left, n_ary_tree_animation_event_iterator const& right );
 	inline	bool			operator !=			( n_ary_tree_animation_event_iterator const& left, n_ary_tree_animation_event_iterator const& right );

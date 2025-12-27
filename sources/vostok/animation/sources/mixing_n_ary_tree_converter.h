@@ -17,6 +17,7 @@ class expression;
 class n_ary_tree_animation_node;
 class binary_tree_animation_node;
 struct binary_tree_base_node;
+class animated_object_holder;
 
 typedef intrusive_ptr<
 			binary_tree_base_node,
@@ -46,20 +47,25 @@ private:
 		void	simplify_weights		( );
 		void	compute_buffer_size		( );
 		void	process_interpolators	( binary_tree_base_node* const interpolators_root, u32 const interpolators_count, vostok::mutable_buffer& buffer );
+		void	fix_weight_driving_animations_with_null_weights ( expression const& expression );
 
-private:
-	binary_tree_base_node_ptr			m_root;
-	binary_tree_animation_node*			m_animations_root;
-	base_interpolator const**			m_binary_interpolators;
-	base_interpolator const**			m_interpolators;
-	animation_state*					m_animation_states;
-	animation_state**					m_animation_events;
-	n_ary_tree_intrusive_base*			m_reference_counter;
-	binary_tree_base_node*				m_nodes_to_destroy_manually;
-	u32									m_animations_count;
-	u32									m_interpolators_count;
-	u32									m_buffer_size;
+private: // sushi@NOTE: Added m_animated_objects_count
+	/* 0x0000 */	binary_tree_base_node_ptr		m_root;
+	/* 0x0004 */	binary_tree_animation_node*		m_animations_root;
+	/* 0x0008 */	base_interpolator const**		m_binary_interpolators;
+	/* 0x000c */	base_interpolator const**		m_interpolators;
+	/* 0x0010 */	animation_state*				m_animation_states;
+	/* 0x0014 */	animation_state**				m_animation_events;
+	/* 0x0018 */	animated_object_holder*			m_animated_objects;
+	/* 0x001c */	n_ary_tree_intrusive_base*		m_reference_counter;
+	/* 0x0020 */	binary_tree_base_node*			m_nodes_to_destroy_manually;
+	/* 0x0024 */	u32								m_animations_count;
+	/* 0x0028 */	u32								m_animated_objects_count;
+	/* 0x002c */	u32								m_interpolators_count;
+	/* 0x0030 */	u32								m_buffer_size;
 }; // struct n_ary_tree_converter
+
+STATIC_SIZE_ASSERT(n_ary_tree_converter, 0x34);
 
 } // namespace mixing
 } // namespace animation

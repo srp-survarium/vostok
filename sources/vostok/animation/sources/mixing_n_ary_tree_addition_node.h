@@ -31,6 +31,8 @@ private:
 	virtual void	visit				( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_time_scale_transition_node& node );
 }; // class n_ary_tree_addition_node
 
+STATIC_SIZE_ASSERT(n_ary_tree_addition_node, 0x8);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

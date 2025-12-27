@@ -40,9 +40,21 @@ private:
 	virtual	void	visit							( n_ary_tree_subtraction_node& node );
 	virtual	void	visit							( n_ary_tree_multiplication_node& node );
 
+			void	fill_time						(
+						float		time_scale,
+						float		animation_time_before_scale_starts,
+						u32			time_scale_start_time_in_ms
+					);
+			float	computed_animation_time			(
+						const float		animation_time_before_scale_starts,
+						const u32		time_scale_start_time_in_ms,
+						const u32		current_time_in_ms,
+						const u32		target_time_in_ms,
+						const float		time_scale
+					);
+
 private:
 	n_ary_tree_animation_node& m_animation;
-	n_ary_tree_base_node* m_new_time_scale_node;
 	u32	const		m_start_time_in_ms;
 	float const		m_start_animation_time;
 	u32 const		m_target_time_in_ms;
@@ -50,6 +62,8 @@ private:
 	float const		m_animation_interval_length;
 	bool const		m_is_read_only;
 }; // class n_ary_tree_animation_time_calculator
+
+STATIC_SIZE_ASSERT(n_ary_tree_animation_time_calculator, 0x20);
 
 } // namespace mixing
 } // namespace animation

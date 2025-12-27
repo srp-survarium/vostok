@@ -18,6 +18,8 @@ struct animation_collection_cook_user_data
 	configs::binary_config_ptr							cfg_ptr;
 };
 
+STATIC_SIZE_ASSERT(animation_collection_cook_user_data, 0x8);
+
 animation_collection_cook::animation_collection_cook	( ) :
 	super												(
 		resources::animation_collection_class,

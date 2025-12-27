@@ -6,39 +6,43 @@
 
 #include "pch.h"
 #include "cubic_spline_skeleton_animation_cook.h"
-#include "bi_spline_skeleton_animation.h"
+// sushi@TODO: #include "bi_spline_skeleton_animation.h"
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
 
 using vostok::animation::cubic_spline_skeleton_animation_cook;
 
 cubic_spline_skeleton_animation_cook::cubic_spline_skeleton_animation_cook	( ) :
-	super								( 
+	super								(
 		resources::cubic_spline_skeleton_animation_class,
 		reuse_true,
-		use_resource_manager_thread_id 
+		use_resource_manager_thread_id
 	)
 {
 	register_cook	( this );
 }
-	
+
 u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::const_buffer bi_spline_skeleton_animation_buffer, bool const file_exist )
 {
 	R_ASSERT_U							( file_exist );
+	return 0;
+	/* sushi@TODO
 	return
 		cubic_spline_skeleton_animation::count_memory_size(
 			*static_cast_checked< bi_spline_skeleton_animation const* >(
 				bi_spline_skeleton_animation_buffer.c_ptr()
 			)
 		);
+	*/
 }
 
 void cubic_spline_skeleton_animation_cook::create_resource					(
-		vostok::resources::query_result_for_cook& in_out_query, 
+		vostok::resources::query_result_for_cook& in_out_query,
 		vostok::const_buffer bi_spline_skeleton_animation_buffer,
 		vostok::resources::managed_resource_ptr out_resource
 	)
-{ 
+{
 	resources::pinned_ptr_mutable< cubic_spline_skeleton_animation > const& pinned_ptr	= pin_for_write< cubic_spline_skeleton_animation >( out_resource );
+	/* sushi@TODO
 	cubic_spline_skeleton_animation* const animation	=
 		cubic_spline_skeleton_animation::new_animation(
 			pinned_ptr.c_ptr(),
@@ -52,11 +56,12 @@ void cubic_spline_skeleton_animation_cook::create_resource					(
 #else // #ifndef	MASTER_GOLD
 	VOSTOK_UNREFERENCED_PARAMETER			( animation );
 #endif // #ifndef	MASTER_GOLD
-	
+
 	in_out_query.finish_query			( result_success );
+	*/
 }
 
-void cubic_spline_skeleton_animation_cook::destroy_resource					( vostok::resources::managed_resource* const dying_resource ) 
+void cubic_spline_skeleton_animation_cook::destroy_resource					( vostok::resources::managed_resource* const dying_resource )
 {
 	resources::pinned_ptr_mutable<cubic_spline_skeleton_animation> pinned_animation = pin_for_write< cubic_spline_skeleton_animation >( dying_resource );
 	cubic_spline_skeleton_animation const* instance		= &*pinned_animation;
