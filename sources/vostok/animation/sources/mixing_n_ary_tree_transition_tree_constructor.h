@@ -21,6 +21,7 @@ class n_ary_tree;
 class n_ary_tree_intrusive_base;
 struct animation_state;
 class animation_clip;
+class animated_object_holder;
 
 enum interpolation_direction;
 
@@ -64,19 +65,19 @@ public:
 											);
 
 			n_ary_tree_base_node*			new_time_scale						( n_ary_tree_animation_node& new_time_driving_animation, u32& animation_interval_id, float& animation_interval_time );
-			n_ary_tree_base_node*			new_time_scale_transition			( float animation_time, n_ary_tree_base_node& to );
-			n_ary_tree_base_node*			new_time_scale_transition			( n_ary_tree_animation_node& from_animation, n_ary_tree_base_node& from );
 			n_ary_tree_base_node*			new_time_scale_transition			(
 												n_ary_tree_animation_node&		from_animation,
 												n_ary_tree_animation_node&		to_animation,
 												n_ary_tree_base_node&			from,
 												n_ary_tree_base_node&			to
 											);
+			n_ary_tree_base_node*			new_time_scale_transition			( n_ary_tree_animation_node& from_animation, n_ary_tree_base_node& from, float to );
+			n_ary_tree_base_node*			new_time_scale_transition			( float animation_time, float from, n_ary_tree_base_node& to );
 
-			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& to_animation_interpolator, n_ary_tree_base_node& to );
-			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& from_animation_interpolator, n_ary_tree_base_node& from );
+			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& interpolator, float from, float to );
 			n_ary_tree_base_node*			new_weight_transition				( n_ary_tree_base_node& from, n_ary_tree_base_node& to );
-			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& interpolator );
+			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& from_animation_interpolator, n_ary_tree_base_node& from, float to );
+			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& to_animation_interpolator, float from, n_ary_tree_base_node& to );
 
 			void							add_operands						(
 												n_ary_tree_animation_node&		from,
@@ -95,7 +96,12 @@ public:
 												bool							is_new_driving_animation
 											);
 
-			void							merge_weight_asynchronous_groups	( n_ary_tree_animation_node* from_begin, n_ary_tree_animation_node* to_begin );
+			void							merge_weight_asynchronous_groups	(
+												n_ary_tree_animation_node*		from_begin,
+												n_ary_tree_animation_node*		from_end,
+												n_ary_tree_animation_node*		to_begin,
+												n_ary_tree_animation_node*		to_end
+											);
 			void							merge_weight_synchronization_groups	(
 												n_ary_tree_animation_node*		from_begin,
 												n_ary_tree_animation_node*		from_end,
@@ -105,8 +111,8 @@ public:
 												bool							is_new_driving_animation
 											);
 
-			n_ary_tree_animation_node*		new_weight_driving_animation		( n_ary_tree_animation_node& new_weight_driving_animation, n_ary_tree_animation_node& new_driving_animation_in_previous_target );
 			n_ary_tree_animation_node*		new_weight_driving_animation		( n_ary_tree_animation_node& animation );
+			n_ary_tree_animation_node*		new_weight_driving_animation		( n_ary_tree_animation_node& new_weight_driving_animation, n_ary_tree_animation_node& new_driving_animation_in_previous_target );
 
 			void							add_weight_synchronization_group	( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end );
 			void							remove_weight_synchronization_group	( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end );
@@ -120,9 +126,9 @@ public:
 			n_ary_tree_animation_node*		get_time_driving_animation			( u32 time_synchronization_group_id ) const;
 
 			void							merge_trees							( n_ary_tree const& from, n_ary_tree const& to );
+	inline	void							advance_buffer						( u32 size ) { m_buffer += size; }
 
-	inline	void							advance_buffer						( u32 arg_0 ) { /* no source */ }
-public:
+public: // sushi@NOTE: Made public to access `m_buffer`
 	/* 0x0000 */	transform_functor_type			m_get_transform_functor;
 	/* 0x0020 */	n_ary_tree_cloner				m_cloner;
 	/* 0x0044 */	mutable_buffer&					m_buffer;

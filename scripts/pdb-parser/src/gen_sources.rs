@@ -210,6 +210,7 @@ impl<'a> Module<'a> {
 
                     let mut fn_t =
                         formatter.parse_function(&proc.name, module_id, proc.type_index)?;
+
                     let location = FunctionLocation::get(&filename);
                     if matches!(location, FunctionLocation::Header) {
                         fn_t.attrs.insert(AttributeFlags::IS_INLINE);
@@ -603,7 +604,7 @@ impl<'a> Function<'a> {
             flags,
             //
             fn_t,
-            name_orig,
+            name_orig: _,
             namespace: _,
             //
             margs,
@@ -630,7 +631,6 @@ impl<'a> Function<'a> {
             true => writeln!(w, "// STUB GENERATED FOR BASE CODE")?,
             false => writeln!(w, "// STATE[STUB]")?,
         }
-        writeln!(w, "// {name_orig}")?;
 
         // sushi@TODO: The information on whether the function is virtual or not is stored in the
         // class definitions, which are parsed in `gen_hearders.rs`.
@@ -820,11 +820,24 @@ impl<'a> Function<'a> {
                 },
             };
 
-            let non_empty_body = statements.len() > 2;
-
-            let mut next_line = proc_start;
             statements.sort_by_key(|statement| statement.line_start);
 
+            let mut non_empty_body = statements.len() > 2;
+
+            // Sometimes there are multiple statements for the end `}` line.
+            // When this happens, do not hide brackets
+            if non_empty_body {
+                let len = statements.len();
+                if statements[len - 2].line_start == statements[len - 1].line_start {
+                    non_empty_body = false;
+                }
+
+                if statements[0].line_start == statements[1].line_start {
+                    non_empty_body = false;
+                }
+            }
+
+            let mut next_line = proc_start;
             for i in 0..statements.len() {
                 let Statement {
                     rva,

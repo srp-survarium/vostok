@@ -476,11 +476,14 @@ impl<'p> Class<'p> {
                 // find the method list
                 match type_finder.find(data.method_list)?.parse()? {
                     pdb::TypeData::MethodList(method_list) => {
+                        // let mut methods = method_list.methods.clone();
+                        // methods.sort_by_key(|method| method.vtable_offset);
+
                         for pdb::MethodListEntry {
                             attributes,
                             method_type,
                             ..
-                        } in method_list.methods
+                        } in method_list.methods.into_iter().rev()
                         {
                             // hooray
                             self.add_method(

@@ -37,6 +37,7 @@ private:
 
 private:
 	virtual	bool	is_weight						( ) { return true; }
+	virtual	bool	is_transition					( ) { return true; } // sushi@NOTE: Verified in vtable
 
 	virtual void	accept							( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_base_node& node );
 
@@ -58,6 +59,8 @@ private:
 	base_interpolator const&	m_interpolator;
 	u32 const					m_start_time_in_ms;
 }; // class n_ary_tree_weight_transition_node
+
+STATIC_SIZE_ASSERT(n_ary_tree_weight_transition_node, 0x14);
 
 } // namespace mixing
 } // namespace animation

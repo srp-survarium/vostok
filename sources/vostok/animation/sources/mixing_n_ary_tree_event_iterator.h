@@ -20,7 +20,7 @@ class n_ary_tree_animation_node;
 
 class VOSTOK_ANIMATION_API n_ary_tree_event_iterator {
 public:
-						n_ary_tree_event_iterator	(	
+						n_ary_tree_event_iterator	(
 											animation_state& animation,
 											n_ary_tree_animation_node& animation_node,
 											u32 start_time_in_ms,
@@ -28,7 +28,9 @@ public:
 											subscribed_channel*& channels_head
 										);
 	inline				n_ary_tree_event_iterator	( );
+
 			n_ary_tree_event_iterator&	operator ++	( );
+			void						invert_times( u32 time_in_ms ); // sushi@TODO
 	inline	animation_event				operator *	( ) const;
 	inline	animation_event*			operator ->	( );
 	inline	animation_event const*		operator ->	( ) const;
@@ -54,6 +56,8 @@ private:
 	n_ary_tree_animation_node*				m_animation_node;
 	u32										m_state;
 }; // class n_ary_tree_event_iterator
+
+STATIC_SIZE_ASSERT(n_ary_tree_event_iterator, 0x3C);
 
 	inline	bool						operator == ( n_ary_tree_event_iterator const& left, n_ary_tree_event_iterator const& right );
 	inline	bool						operator != ( n_ary_tree_event_iterator const& left, n_ary_tree_event_iterator const& right );

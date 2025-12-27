@@ -12,7 +12,7 @@ namespace animation {
 
 inline animation_player::animation_player			( ) :
 	m_current_buffer			( &m_tree_buffers[1] ),
-	m_mixing_tree				( float4x4() ),
+	m_mixing_tree				( ),
 	m_callbacks_buffer			( m_callbacks_buffer_raw, sizeof(m_callbacks_buffer_raw) ),
 	m_first_subscribed_channel	( 0 ),
 	m_in_tick					( 0 ),

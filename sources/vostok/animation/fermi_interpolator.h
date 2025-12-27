@@ -19,6 +19,7 @@ public:
 	virtual	float	transition_time		( ) const;
 	inline	float	epsilon				( ) const { return m_epsilon; }
 
+	virtual	fermi_interpolator*	clone	( mixing::n_ary_tree_transition_tree_constructor& constructor ) const;
 	virtual	fermi_interpolator* clone	( mutable_buffer& buffer ) const;
 
 	virtual void	accept				( interpolator_visitor& visitor ) const;

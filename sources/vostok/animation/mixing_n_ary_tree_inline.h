@@ -11,16 +11,19 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-inline n_ary_tree::n_ary_tree									( float4x4 const& object_transform ) :
-	m_root							( 0 ),
+inline n_ary_tree::n_ary_tree									( ) :
+	m_reference_counter				( 0 ),
+	m_weight_root					( 0 ),
+	m_time_root						( 0 ),
 	m_interpolators					( 0 ),
 	m_animation_states				( 0 ),
 	m_animation_events				( 0 ),
-	m_reference_counter				( 0 ),
+	m_animated_objects				( 0 ),
 	m_animations_count				( 0 ),
+	m_animated_objects_count		( 0 ),
 	m_interpolators_count			( 0 ),
 	m_tree_actual_time_in_ms		( 0 ),
-	m_object_transform				( object_transform )
+	m_is_logging_enabled			( false )
 {
 }
 

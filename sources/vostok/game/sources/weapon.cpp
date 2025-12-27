@@ -93,7 +93,7 @@ void weapon_part_visual::hide( )
 	}
 }
 
-bool weapon_part_visual::calculate_locator( render::model_locator_item const& locator, 
+bool weapon_part_visual::calculate_locator( render::model_locator_item const& locator,
 										   float4x4& result )
 {
 	result = locator.m_offset * m_transform;
@@ -191,8 +191,8 @@ void weapon_part_skinned_visual::tick( animation::animation_player*& animation_p
 {
 	u32 const non_root_bones_count	= m_model->m_skeleton->get_non_root_bones_count( );
 
-	animation_player->compute_bones_matrices ( *m_model->m_skeleton, 
-												m_matrices, 
+	animation_player->compute_bones_matrices ( *m_model->m_skeleton,
+												m_matrices,
 												m_matrices + non_root_bones_count );
 
 	render::game::renderer& r		= m_parent->get_game_world().get_game().renderer();
@@ -266,15 +266,16 @@ vostok::animation::mixing::animation_lexeme weapon_part_skinned_visual::select_a
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			"some animation",
-			animation
+			animation, NULL, NULL
 			)
-			.synchronization_group_id(999)
+			.time_synchronization_group_id(999)
+			.weight_synchronization_group_id(999)
 			.additivity_priority(1)
 	);
 	return lexeme;
 }
 
-bool weapon_part_skinned_visual::calculate_locator( render::model_locator_item const& locator, 
+bool weapon_part_skinned_visual::calculate_locator( render::model_locator_item const& locator,
 										   float4x4& result )
 {
 	if( locator.m_bone==u16(-1) )

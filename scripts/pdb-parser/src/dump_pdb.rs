@@ -69,7 +69,9 @@ pub fn dump_pdb(
         .unwrap()
         .move_layer_up(p("__root"));
 
-    generate_vs_solution(output_path, flags, &files)
+    // generate_vs_solution(output_path, flags, &files)?;
+
+    Ok(())
 }
 
 pub fn generate_vs_solution(
@@ -121,7 +123,6 @@ pub fn generate_sln(output_path: &path::Path, name: &str) -> crate::Result<uuid:
 
     match result {
         Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {
-            // Small enough to the point I don't care
             let file = std::fs::read_to_string(&path)?;
 
             for line in file.lines() {

@@ -19,7 +19,7 @@ class n_ary_tree_weight_calculator :
 	private boost::noncopyable
 {
 public:
-	inline	n_ary_tree_weight_calculator( u32 const current_time_in_ms );
+	inline	n_ary_tree_weight_calculator( u32 const current_time_in_ms, n_ary_tree_animation_node* const animation );
 	inline	float	weight				( ) const;
 	inline	bool	null_weight_found	( ) const;
 	inline	u32		weight_transition_ended_time_in_ms	( ) const;
@@ -34,12 +34,19 @@ public:
 	virtual	void	visit				( n_ary_tree_multiplication_node& node );
 
 private:
-	n_ary_tree_base_node*	m_result;
-	u32						m_current_time_in_ms;
-	float					m_weight;
-	bool					m_null_weight_found;
-	u32						m_weight_transition_ended_time_in_ms;
+			void	remove_transition	( n_ary_tree_weight_transition_node& node );
+
+private:
+	/* 0x0004 */	n_ary_tree_animation_node* const	m_animation;
+	/* 0x0008 */	n_ary_tree_base_node*				m_result;
+	/* 0x000c */	u32									m_recursion_level;
+	/* 0x0010 */	u32									m_current_time_in_ms;
+	/* 0x0014 */	float								m_weight;
+	/* 0x0018 */	u32									m_weight_transition_ended_time_in_ms;
+	/* 0x001c */	bool								m_null_weight_found;
 }; // class n_ary_tree_weight_calculator
+
+STATIC_SIZE_ASSERT(n_ary_tree_weight_calculator, 0x20);
 
 } // namespace mixing
 } // namespace animation

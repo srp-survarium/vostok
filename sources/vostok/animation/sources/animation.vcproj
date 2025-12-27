@@ -4168,6 +4168,30 @@
 				</Filter>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="public_api"
+			>
+			<File
+				RelativePath="..\mixing_animated_object_holder.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="private_api"
+			>
+			<File
+				RelativePath=".\mixing_binary_tree_initializer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mixing_n_ary_tree_null_weight_detector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mixing_time_scale_transition_debug.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\animation_entry_point.cpp"
 			>

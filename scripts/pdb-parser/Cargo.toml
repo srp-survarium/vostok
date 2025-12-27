@@ -7,7 +7,7 @@ edition.workspace = true
 clap = { version = "4.5.41", features = ["derive", "env"] }
 
 pdb = { package = "pdb2", git = "https://github.com/afranchuk/pdb", rev = "384c165" }
-pdb-addr2line = { git = "https://github.com/srp-survarium/pdb-addr2line", rev = "9fbc537159d8dc5828e3fceaebd2a1c65988b45d" }
+pdb-addr2line = { git = "https://github.com/srp-survarium/pdb-addr2line", rev = "43e07e59bccf72ef5a128a1f0995258b93a4c3fc" }
 pdb-addr2line-orig = { package = "pdb-addr2line", version = "0.11.2" }
 
 bitflags = "2.9.2"

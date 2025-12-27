@@ -72,6 +72,8 @@ struct bone_transform {
 	bool			visibility;
 }; // struct bone_transform
 
+STATIC_SIZE_ASSERT(bone_transform, 0x2C);
+
 } // namespace animation
 } // namespace vostok
 

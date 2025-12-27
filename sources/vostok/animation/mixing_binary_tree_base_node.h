@@ -60,6 +60,8 @@ private:
 	u32						m_reference_count;
 }; // struct binary_tree_base_node
 
+STATIC_SIZE_ASSERT(binary_tree_base_node, 0x14);
+
 } // namespace mixing
 } // namespace animation
 

@@ -28,6 +28,7 @@ public:
 	inline	binary_tree_base_node& node			( ) const;
 	inline	base_lexeme&		lexeme			( ) const;
 	inline	base_lexeme*		cloned_in_buffer( ) const;
+	inline	bool				is_empty		( ) const { return false; /* no source */ }
 
 	template < typename T >
 	inline	expression&			operator +=		( T& other );

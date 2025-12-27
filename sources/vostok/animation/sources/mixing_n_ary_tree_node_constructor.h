@@ -48,6 +48,8 @@ private:
 
 }; // class n_ary_tree_node_constructor
 
+STATIC_SIZE_ASSERT(n_ary_tree_node_constructor, 0x14);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

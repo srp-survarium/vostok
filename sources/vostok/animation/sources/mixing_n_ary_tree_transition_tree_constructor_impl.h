@@ -14,11 +14,11 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-u32 computed_operands_count									( n_ary_tree_animation_node& from_animation, n_ary_tree_animation_node& to_animation, bool skip_time_scale_node );
+std::pair< u32, u32 > computed_operands_count				( n_ary_tree_animation_node& from, n_ary_tree_animation_node& to );
 
 inline bool is_asynchronous_animation						( n_ary_tree_animation_node& animation )
 {
-	return										animation.synchronization_group_id() == u32( -1 );
+	return										animation.time_synchronization_group_id() == u32( -1 ); // sushi@TODO
 }
 
 inline n_ary_tree_animation_node* find_animation			(
@@ -27,7 +27,7 @@ inline n_ary_tree_animation_node* find_animation			(
 		n_ary_tree_animation_node& animation_to_find
 	)
 {
-	for ( n_ary_tree_animation_node* i = begin; i != end; i = i->m_next_animation ) {
+	for ( n_ary_tree_animation_node* i = begin; i != end; i = i->m_next_weight_animation ) { // sushi@TODO
 		if ( (*i).animation_intervals_count() != animation_to_find.animation_intervals_count() )
 			continue;
 
@@ -63,8 +63,8 @@ inline n_ary_tree_animation_node* synchronization_group_end	( n_ary_tree_animati
 {
 	R_ASSERT									( driving_animation );
 	n_ary_tree_animation_node* i			= driving_animation;
-	u32 const current_synchronization_group_id	= driving_animation->synchronization_group_id();
-	for (; i && (*i).synchronization_group_id() == current_synchronization_group_id; i = i->m_next_animation ) ;
+	u32 const current_synchronization_group_id	= driving_animation->time_synchronization_group_id(); // sushi@TODO
+	for (; i && (*i).time_synchronization_group_id() == current_synchronization_group_id; i = i->m_next_time_animation ) ; // sushi@TODO
 	return										i;
 }
 

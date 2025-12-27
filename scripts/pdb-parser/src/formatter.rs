@@ -62,6 +62,7 @@ struct FormatterInner {
     max_return_type_len: Option<usize>,
     max_method_name_len: Option<usize>,
     pad_args_len: Option<usize>,
+    in_header: bool,
 }
 
 impl Formatter {
@@ -76,6 +77,7 @@ impl Formatter {
             max_return_type_len,
             max_method_name_len,
             pad_args_len,
+            in_header,
         } = self.get_inner();
 
         let type_parser::Function {
@@ -84,6 +86,7 @@ impl Formatter {
 
         // sushi@TODO: Should be in a different place, since this is still "parsing"
         let mut should_split = false;
+        let mut total_length = 0;
         let args = {
             let mut args = vec![];
             for i in 0..fn_t.arg_types.len() {
@@ -91,8 +94,21 @@ impl Formatter {
 
                 match margs.get(i) {
                     None => args.push((format!("arg_{i}"), arg_type)),
-                    Some((marg_name, marg_type)) if marg_type == &arg_type => {
-                        args.push((marg_name.clone(), arg_type));
+                    // Sometimes in headers arguments are defined as non-const,
+                    // while in sources they are const by value
+                    Some((marg_name, marg_type))
+                        if marg_type == &arg_type
+                            || marg_type.0.trim_prefix("const ").trim_suffix(" const")
+                                == &arg_type.0 =>
+                    {
+                        args.push((
+                            marg_name.clone(),
+                            if in_header {
+                                arg_type
+                            } else {
+                                marg_type.clone()
+                            },
+                        ));
                     }
                     // We didn't get the right type, the name is incorrect
                     Some((marg_name, marg_type)) => {
@@ -100,9 +116,12 @@ impl Formatter {
                         args.push((format!("arg_{i} /* {marg_type} {marg_name} */"), arg_type));
                     }
                 }
+                total_length += args[i].0.len() + args[i].1.len() + 2;
             }
             args
         };
+        should_split |= total_length > 80;
+        should_split |= args.len() >= 4;
 
         write_return_type(return_type, args.len(), namespace, max_return_type_len, w)?;
 
@@ -114,7 +133,7 @@ impl Formatter {
         }
 
         write!(w, "(")?;
-        if args.len() < 4 && !should_split {
+        if !should_split {
             for (idx, (arg_name, arg_type)) in args.iter().enumerate() {
                 let first = idx == 0;
 
@@ -165,6 +184,7 @@ impl Formatter {
                 max_return_type_len: None,
                 max_method_name_len: None,
                 pad_args_len: None,
+                in_header: false,
             },
             Self::Header(HeaderFormatter {
                 max_return_type_len,
@@ -174,6 +194,7 @@ impl Formatter {
                 max_return_type_len: Some(max_return_type_len),
                 max_method_name_len: Some(max_method_name_len),
                 pad_args_len: Some(pad_args_len),
+                in_header: true,
             },
         }
     }
