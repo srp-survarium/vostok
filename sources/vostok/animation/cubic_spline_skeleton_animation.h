@@ -21,15 +21,15 @@ namespace vostok {
 namespace animation {
 
 class skeleton;
-class bi_spline_skeleton_animation;
+// sushi@TODO: class bi_spline_skeleton_animation;
 
 class VOSTOK_ANIMATION_API cubic_spline_skeleton_animation {
 public:
-	static	u32								count_memory_size	( const bi_spline_skeleton_animation &data );
+// sushi@TODO:	static	u32								count_memory_size	( const bi_spline_skeleton_animation &data );
 #ifndef MASTER_GOLD
 	static	cubic_spline_skeleton_animation* new_animation		( memory::base_allocator& allocator, bi_spline_skeleton_animation const& animation );
 #endif // #ifndef MASTER_GOLD
-	static	cubic_spline_skeleton_animation* new_animation		( pvoid buffer_for_animation, bi_spline_skeleton_animation const& animation );
+	// sushi@TODO: static	cubic_spline_skeleton_animation* new_animation		( pvoid buffer_for_animation, bi_spline_skeleton_animation const& animation );
 	static	void							 delete_animation	( cubic_spline_skeleton_animation const*& animation_to_delete );
 
 public:
@@ -56,9 +56,9 @@ public:
 	inline	animation_event_channels const& event_channels		( ) const;
 
 private:
-						cubic_spline_skeleton_animation	( bi_spline_skeleton_animation const& animation );
+						cubic_spline_skeleton_animation	( /* // sushi@TODO: bi_spline_skeleton_animation const& animation */ );
 						~cubic_spline_skeleton_animation( );
-			void			create_in_place_internals	( const bi_spline_skeleton_animation &data, void *memory );
+			void			create_in_place_internals	( /* const bi_spline_skeleton_animation &data, */ void *memory );
 			bone_animation*			bone_data			( )			{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 			bone_animation const*	bone_data			( ) const	{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 

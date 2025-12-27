@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "skeleton_animation_cook.h"
-#include "bi_spline_skeleton_animation.h"
+// sushi@TODO: #include "bi_spline_skeleton_animation.h"
 #include "check_animation_data.h"
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
 

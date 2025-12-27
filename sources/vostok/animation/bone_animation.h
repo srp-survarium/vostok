@@ -36,13 +36,13 @@ typedef poly_curve< poly_curve_order3_domain<float,1> > animation_curve_type;
 
 STATIC_SIZE_ASSERT(current_frame_position, 0x24);
 
-class bi_spline_bone_animation;
+// sushi@TODO:class bi_spline_bone_animation;
 
 class bone_animation {
 
 public:
-	static					u32		count_internal_memory_size			( const bi_spline_bone_animation	& bd );
-							void	create_internals_in_place			( const bi_spline_bone_animation	& bd, void* memory );
+	// sushi@TODO:static					u32		count_internal_memory_size			( const bi_spline_bone_animation	& bd );
+	// sushi@TODO:						void	create_internals_in_place			( const bi_spline_bone_animation	& bd, void* memory );
 
 
 public:

@@ -62,7 +62,7 @@ public:
 			void			write			( stream &file )const;
 
 public:
-			void			create_index	( const skeleton &skel, vector< bone_index_type > &index )const; // sushi@NOTE: I don't see
+		//	void			create_index	( const skeleton &skel, vector< bone_index_type > &index )const; // sushi@NOTE: I don't see
 
 public:
 			bone_index_type	bone_index		( pcstr name )const;
