@@ -37,7 +37,10 @@ class VOSTOK_ANIMATION_API bone_names:
 	private core::noncopyable
 {
 public:
-
+	struct crc_compare_predicate {
+		inline	bool	operator()	( bone_name_index const& lhs, bone_name_index const& rhs ) const { return true; /* sushi@TODO */ }
+	}; // struct bone_names
+public:
 				bone_names( );
 
 static		u32	count_internal_memory_size	( u32 m_bone_count );

@@ -34,6 +34,8 @@ typedef poly_curve< poly_curve_order3_domain<float,1> > animation_curve_type;
 
  }; //  struct current_frame_position
 
+STATIC_SIZE_ASSERT(current_frame_position, 0x24);
+
 class bi_spline_bone_animation;
 
 class bone_animation {

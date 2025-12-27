@@ -52,8 +52,8 @@ public:
 
 public:
 			bone_names const&		get_bone_names		( ) const { return m_bone_names; }
-	
-	inline	animation_event_channels const& event_channels		( ) const;		
+
+	inline	animation_event_channels const& event_channels		( ) const;
 
 private:
 						cubic_spline_skeleton_animation	( bi_spline_skeleton_animation const& animation );
@@ -82,6 +82,8 @@ private:
 #endif // #ifndef MASTER_GOLD
 
 }; // class cubic_spline_skeleton_animation
+
+STATIC_SIZE_ASSERT(cubic_spline_skeleton_animation, 0x1C);
 
 } // namespace animation
 

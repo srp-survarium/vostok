@@ -37,6 +37,8 @@ private:
 	float const		m_epsilon;
 }; // class fermi_interpolator
 
+STATIC_SIZE_ASSERT(fermi_interpolator, 0xC);
+
 } // namespace animation
 } // namespace vostok
 

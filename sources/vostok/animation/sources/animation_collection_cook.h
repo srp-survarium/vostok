@@ -35,6 +35,8 @@ namespace vostok
 
 		}; // class animation_collection_cook
 
+		STATIC_SIZE_ASSERT(animation_collection_cook, 0x20);
+
 	} // namespace animation
 } // namespace vostok
 

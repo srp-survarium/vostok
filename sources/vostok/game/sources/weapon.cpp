@@ -190,11 +190,11 @@ weapon_part_skinned_visual::~weapon_part_skinned_visual( )
 void weapon_part_skinned_visual::tick( animation::animation_player*& animation_player )
 {
 	u32 const non_root_bones_count	= m_model->m_skeleton->get_non_root_bones_count( );
-
+	/* sushi@TODO
 	animation_player->compute_bones_matrices ( *m_model->m_skeleton,
 												m_matrices,
 												m_matrices + non_root_bones_count );
-
+	*/
 	render::game::renderer& r		= m_parent->get_game_world().get_game().renderer();
 
 	r.scene().update_skeleton	(	m_model->m_render_model,

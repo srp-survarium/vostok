@@ -31,6 +31,8 @@ protected:
 
 }; // class animation_emitter
 
+STATIC_SIZE_ASSERT(animation_expression_emitter, 0x108);
+
 typedef resources::resource_ptr < animation_expression_emitter, resources::unmanaged_intrusive_base > animation_expression_emitter_ptr;
 
 } // namespace animation

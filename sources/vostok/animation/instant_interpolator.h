@@ -31,6 +31,8 @@ public:
 	virtual void	visit				( interpolator_comparer& dispatcher, fermi_interpolator const& interpolator ) const;
 }; // class instant_interpolator
 
+STATIC_SIZE_ASSERT(instant_interpolator, 0x4);
+
 } // namespace animation
 } // namespace vostok
 

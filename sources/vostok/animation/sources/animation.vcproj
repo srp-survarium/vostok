@@ -4172,6 +4172,10 @@
 			Name="public_api"
 			>
 			<File
+				RelativePath="..\animation_states_dumper.h"
+				>
+			</File>
+			<File
 				RelativePath="..\mixing_animated_object_holder.h"
 				>
 			</File>

@@ -32,6 +32,8 @@ private:
 	float	m_total_transition_time;
 }; // class linear_interpolator
 
+STATIC_SIZE_ASSERT(linear_interpolator, 0x8);
+
 } // namespace animation
 } // namespace vostok
 

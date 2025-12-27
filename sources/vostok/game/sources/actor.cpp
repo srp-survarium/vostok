@@ -34,7 +34,7 @@ m_tmp_is_active		( false ),
 m_game_world		( w )
 {
 	m_animation_player			= NEW(animation::animation_player)( );
-	m_animation_player->set_no_delete();// ??
+	// sushi@TODO m_animation_player->set_no_delete();// ??
 
 	m_actor_physics_controller	= vostok::physics::create_character_controller(*g_allocator, m_game_world.get_physics_world() );
 	m_actor_physics_controller->initialize( );
@@ -124,7 +124,7 @@ void actor::activate( math::float4x4 const& initial_matrix )
 	m_weapon->action				( 1 );//shoot
 
 	m_actor_physics_controller->activate		( m_character_transform );
-	m_animation_player->set_object_transform	( m_character_transform );
+	m_animation_player->set_object_transform	( m_character_transform, NULL /* sushi@TODO */ );
 	add_models_to_scene				( );
 	m_tmp_is_active					= true;
 }
@@ -213,12 +213,14 @@ void actor::update_animations( )
 
 	animation::mixing::animation_lexeme weapon_target = m_weapon->select_animation( buffer );
 
+	// sushi@TODO
+	/*
 	m_animation_player->set_target_and_tick	(
 						current_idle_lexeme
 						+ current_additive_lexeme
 						+ weapon_target
 						,current_time );
-
+	*/
 }
 
 void actor::tick( )
@@ -243,7 +245,7 @@ void actor::tick( )
 
 	u32 const non_root_bones_count	= m_character_model->m_skeleton->get_non_root_bones_count( );
 	float4x4* const matrices		= static_cast<float4x4*>( ALLOCA(non_root_bones_count*sizeof(float4x4)) );
-	m_animation_player->compute_bones_matrices( *m_character_model->m_skeleton, matrices, matrices + non_root_bones_count );
+	m_animation_player->compute_bones_matrices( *m_character_model->m_skeleton, matrices, matrices + non_root_bones_count, NULL, NULL ); // sushi@TODO
 
 	r.scene().update_skeleton		( m_character_model->m_render_model, matrices, non_root_bones_count );
 
