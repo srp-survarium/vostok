@@ -25,6 +25,9 @@ private:
 	u32		m_reference_count;
 }; // class n_ary_tree_intrusive_base
 
+typedef intrusive_ptr< n_ary_tree_intrusive_base, n_ary_tree_intrusive_base, threading::single_threading_policy >
+	n_ary_tree_intrusive_base_ptr;
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

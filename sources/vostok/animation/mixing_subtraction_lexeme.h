@@ -29,6 +29,8 @@ protected:
 	using binary_operation_lexeme::cloned_in_buffer;
 }; // class subtraction_lexeme
 
+STATIC_SIZE_ASSERT(subtraction_lexeme, 0x24);
+
 	template < typename T1, typename T2 >
 	inline subtraction_lexeme& operator -				( T1& left, T2& right );
 

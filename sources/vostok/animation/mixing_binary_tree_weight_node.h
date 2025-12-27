@@ -37,6 +37,8 @@ public:
 	float						m_simplified_weight;
 }; // class binary_tree_weight_node
 
+STATIC_SIZE_ASSERT(binary_tree_weight_node, 0x20);
+
 typedef intrusive_ptr<
 	binary_tree_weight_node,
 	binary_tree_base_node,

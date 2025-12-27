@@ -3,6 +3,11 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 
+/// Internal cache with information on already created folders/files.
+///
+/// This struct is used to build `.vsproject` configuration.
+///
+/// It also helps to not call `std::fs::create_dir_all` for every single file.
 #[derive(Debug, Default)]
 pub struct Files {
     pub folders: HashMap<&'static Path, Files>,

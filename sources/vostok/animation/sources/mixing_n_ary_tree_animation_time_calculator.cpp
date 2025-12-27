@@ -67,7 +67,7 @@ void n_ary_tree_animation_time_calculator::visit		( n_ary_tree_time_scale_node& 
 {
 	R_ASSERT_CMP							( m_target_time_in_ms, >=, node.time_scale_start_time_in_ms() );
 	m_animation_time						=
-		node.animation_time_before_scale_starts() + 
+		node.animation_time_before_scale_starts() +
 		(m_target_time_in_ms - node.time_scale_start_time_in_ms())*node.time_scale()/1000.f;
 	m_animation_time						= math::min( math::max( m_animation_time, 0.f ), m_animation_interval_length);
 	R_ASSERT_CMP							( m_animation_time, >=, 0.f );
@@ -90,14 +90,14 @@ void n_ary_tree_animation_time_calculator::visit		( n_ary_tree_time_scale_transi
 			start_interval_time_in_ms,
 			m_animation_time,
 			target_interval_time_in_ms,
-			m_is_read_only ? n_ary_tree_time_scale_calculator::forbid_transitions_destroying : n_ary_tree_time_scale_calculator::permit_transitions_destroying,
+			// sushi@TODO m_is_read_only ? n_ary_tree_time_scale_calculator::forbid_transitions_destroying : n_ary_tree_time_scale_calculator::permit_transitions_destroying,
 			&m_animation
 		);
 		time_scale_node->accept				( time_scale_calculator );
 		if ( time_scale_node != time_scale_calculator.result() ) {
 			R_ASSERT						( time_scale_calculator.result() );
 			time_scale_node					= time_scale_calculator.result();
-			m_new_time_scale_node			= time_scale_node;
+			// sushi@TODO m_new_time_scale_node			= time_scale_node;
 		}
 
 		float const interval_portion		= (i < full_intervals_count ? 1.f : float((m_target_time_in_ms - m_start_time_in_ms)%integration_interval_length_in_ms)/float(integration_interval_length_in_ms)) * time_scale_calculator.time_scale() * integration_interval_length;
@@ -122,9 +122,9 @@ n_ary_tree_animation_time_calculator::n_ary_tree_animation_time_calculator	(
 	m_animation_interval_length				( (animation.animation_intervals() + animation.animation_state().animation_interval_id)->length() ),
 	m_is_read_only							( is_read_only )
 {
-	m_new_time_scale_node					= *animation.operands( sizeof(n_ary_tree_animation_node) );
-	m_new_time_scale_node->accept			( *this );
-	*animation.operands( sizeof(n_ary_tree_animation_node) )	= m_new_time_scale_node;
+	// sushi@TODOm_new_time_scale_node					= *animation.operands( sizeof(n_ary_tree_animation_node) );
+	// sushi@TODOm_new_time_scale_node->accept			( *this );
+	// sushi@TODO*animation.operands( sizeof(n_ary_tree_animation_node) )	= m_new_time_scale_node;
 	R_ASSERT_CMP							( m_animation_time, >=, 0.f );
 	R_ASSERT_CMP							( m_animation_time, <=, m_animation_interval_length );
 }

@@ -20,7 +20,7 @@ inline n_ary_tree_weight_event_iterator::n_ary_tree_weight_event_iterator				( )
 
 inline animation_event n_ary_tree_weight_event_iterator::operator *						( )
 {
-	return				animation_event( m_time_in_ms, m_event_type);
+	return				animation_event( m_time_in_ms, m_event_type, 0 );
 }
 
 inline bool n_ary_tree_weight_event_iterator::is_equal									(

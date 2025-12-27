@@ -27,6 +27,7 @@ public:
 	inline	u32					get_root_bones_count( ) const;
 	inline	u32				get_non_root_bones_count( ) const;
 	inline	skeleton_bone const&	get_bone		( bone_index_type index ) const;
+	inline	skeleton_bone const&	get_bone_by_name( pcstr name ) const;
 	inline	skeleton_bone const&	get_root		( ) const;
 	inline	skeleton_bone const&	get_root_bone	( ) const;
 	inline	bool					is_root_bone	( bone_index_type index ) const;
@@ -34,10 +35,11 @@ public:
 private:
 	inline	skeleton_bone&			get_root		( );
 
-
 private:
 	bone_index_type					m_bones_count;
 }; // class skeleton
+
+STATIC_SIZE_ASSERT(skeleton, 0x110);
 
 typedef	resources::resource_ptr<
 	skeleton,

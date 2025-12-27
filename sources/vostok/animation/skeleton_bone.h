@@ -23,14 +23,17 @@ public:
 	inline	skeleton_bone const*	parent			( ) const { return m_parent; }
 	inline	skeleton_bone const*	children_begin	( ) const { return m_children_begin; }
 	inline	skeleton_bone const*	children_end	( ) const { return m_children_end; }
+	inline	u32						mask			( ) const { return m_mask; }
 
 private:
 	pcstr const						m_id;
 	skeleton_bone const* const		m_parent;
 	skeleton_bone const* const		m_children_begin;
 	skeleton_bone const* const		m_children_end;
-	u32								m_mask; // sushi@TODO: Added, but not implemented anything related
+	u32								m_mask;
 }; // class skeleton_bone
+
+STATIC_SIZE_ASSERT(skeleton_bone, 0x14);
 
 } // namespace animation
 } // namespace vostok

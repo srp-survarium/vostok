@@ -34,8 +34,17 @@ enum body_part_masks_enum {
 	bone_mask_whole_weapon_but_offset	= -3,
 }; // enum body_part_masks_enum // sushi@TODO
 
-// sushi@TODO
-class animation_playback_state {};
+// sushi@TODO: Should be moved to a different place?
+struct animation_playback_state {
+	inline			animation_playback_state( ) { /* no source */ }
+	inline	void	reset					( ) { /* no source */ }
+
+public:
+	/* 0x0000 */	u32			interval_id;
+	/* 0x0004 */	float		interval_time;
+}; // struct animation_playback_state
+
+STATIC_SIZE_ASSERT(animation_playback_state, 0x8);
 
 }  // namespace animation
 }  // namespace vostok

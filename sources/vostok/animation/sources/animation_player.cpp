@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include <vostok/animation/animation_player.h>
+
 #include <vostok/animation/mixing_expression.h>
 #include <vostok/animation/base_interpolator.h>
 #include "mixing_n_ary_tree_converter.h"
@@ -13,367 +14,1080 @@
 #include "mixing_n_ary_tree_animation_node.h"
 #include "mixing_n_ary_tree_node_comparer.h"
 #include "mixing_n_ary_tree_transition_tree_constructor.h"
+#include "mixing_n_ary_tree_visitor.h"
 #include <vostok/linkage_helper.h>
 
 VOSTOK_DECLARE_LINKAGE_ID( animation_player_linkage_id );
 
-using vostok::animation::animation_player;
-using vostok::animation::mixing::expression;
-using vostok::animation::mixing::n_ary_tree_animation_node;
-using vostok::animation::mixing::n_ary_tree_node_comparer;
-using vostok::animation::mixing::n_ary_tree;
-using vostok::animation::skeleton;
-using vostok::animation::callback_type;
-using vostok::animation::reserved_channel_ids_enum;
+namespace vostok {
+namespace animation {
 
-inline pvoid animation_player::get_next_buffer	( u32 const buffer_size )
+// sushi@TODO: Missing somehow in headers.
+struct transform_getter : boost::noncopyable
 {
-	R_ASSERT_CMP_U			( buffer_size, <=, sizeof(m_tree_buffers[0]) );
-	m_current_buffer		= (&m_tree_buffers[0] == m_current_buffer) ? &m_tree_buffers[1] : &m_tree_buffers[0];
-	return					&(*m_current_buffer)[0];
+public:
+	float4x4 get_transform( pcvoid const animated_object ) const;
+
+private:
+  animation_player&							animation_player;
+  boost::function< float4x4 ( pcvoid )>&	functor;
+};
+
+// STATE[STUB]
+float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
+{
+	// LOCALS
+	// float4x4 						transform
+	// ******
+
+	return vostok::math::float4x4();
+
+	// FUNCTION BODY
+	// <0x11d090>|0x000|+0x00b:'43'	{
+	// <0>
+	// <0x11d09b>|0x00b|+0x017:'45'
+	// <0x11d0b2>|0x022|+0x018:'46'
+	// <0>
+	// <0x11d0ca>|0x03a|-0x008:'48'
+	// <0x11d0c2>|0x032|+0x017:'49'
+	// <0x11d0d9>|0x049|      :'49'	}
+	// ******
+}
+/*
+// STATE[STUB]
+void* n_ary_tree_time_inverter::`scalar deleting destructor'( u32 arg_0 )
+{
+	return NULL;
+
+	// FUNCTION BODY
+	// <0x122e20>|0x000|      :'67'	{
+	// ******
+}
+*/
+
+// sushi@TODO: Missing somehow in headers.
+class n_ary_tree_time_inverter : mixing::n_ary_tree_visitor, boost::noncopyable
+{
+public:
+	virtual	void	visit		( mixing::n_ary_tree_animation_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_weight_transition_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_time_scale_transition_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_weight_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_time_scale_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_addition_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_subtraction_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_multiplication_node& node );
+
+private:
+  u32 m_current_time_in_ms;
+};
+
+
+// STATE[STUB]
+void n_ary_tree_time_inverter::visit(
+	mixing::n_ary_tree_weight_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_weight_node& node */
+)
+{
+	// FUNCTION BODY
+	// <0x22c50>|0x000|+0x000:'73'	{
+	// <0>
+	// <0x22c50>|0x000|      :'75'	}
+	// ******
 }
 
-bool animation_player::set_target	 ( expression const& expression, u32 const current_time_in_ms )
+// STATE[STUB]
+void n_ary_tree_time_inverter::visit(
+	mixing::n_ary_tree_time_scale_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_time_scale_node& node */
+)
 {
-	mixing::n_ary_tree_converter	builder( expression );
-	u32 const buffer_size		= builder.needed_buffer_size( );
-
-	bool const first_time		= !m_mixing_tree.are_there_any_animations();
-	pvoid const buffer_raw		=
-		!first_time ?
-		ALLOCA(buffer_size) :
-		get_next_buffer( buffer_size );
-
-	mutable_buffer buffer( buffer_raw, buffer_size );
-	n_ary_tree const target_tree =
-		builder.constructed_n_ary_tree(
-			buffer,
-			!m_mixing_tree.are_there_any_animations(),
-			current_time_in_ms,
-			first_time ? m_mixing_tree.get_object_transform() : float4x4(),
-			m_first_subscribed_channel
-		);
-	R_ASSERT					( !buffer.size(), "buffer calculation failed: %d bytes left", buffer.size() );
-
-	if ( first_time ) {
-		m_mixing_tree			= target_tree;
-		return					true;
-	}
-	
-	mixing::n_ary_tree_comparer	comparer( m_mixing_tree, target_tree, current_time_in_ms );
-	if ( comparer.equal() )
-		return					false;
-
-	u32 const mixing_buffer_size = comparer.needed_buffer_size( );
-	ASSERT						( mixing_buffer_size );
-	mutable_buffer mixing_buffer(
-		get_next_buffer( mixing_buffer_size ),
-		mixing_buffer_size
-	);
-
-	#ifndef MASTER_GOLD
-	m_mixing_tree.dump_tree		( current_time_in_ms );
-	#endif // #ifndef MASTER_GOLD
-
-	mixing::n_ary_tree temp		= 
-		mixing::n_ary_tree_transition_tree_constructor(
-			mixing_buffer,
-			m_mixing_tree,
-			target_tree,
-			comparer.animations_count(),
-			current_time_in_ms,
-			m_first_subscribed_channel
-		).computed_tree( m_mixing_tree );
-	#ifndef MASTER_GOLD
-	temp.dump_tree				( current_time_in_ms );
-	#endif // #ifndef MASTER_GOLD
-
-	R_ASSERT					( !mixing_buffer.size(), "buffer calculation failed: %d bytes left", mixing_buffer.size() );
-	m_mixing_tree				= temp;
-	return						true;
+	// FUNCTION BODY
+	// <0>
+	// <0x11d0f0>|0x000|+0x00d:'80'
+	// ******
 }
 
-bool animation_player::set_target_and_tick		( expression const& expression, u32 const current_time_in_ms )
+// STATE[STUB]
+void n_ary_tree_time_inverter::visit(
+	mixing::n_ary_tree_addition_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_addition_node& node */
+)
 {
-#ifndef MASTER_GOLD
-	if ( m_controller_callback )
-		m_controller_callback	( expression, current_time_in_ms );
-#endif //#ifndef MASTER_GOLD
+	// CALL SITE INFO
+	// <0x11d11e> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
+	// ******
 
-	if ( m_mixing_tree.are_there_any_animations() )
-		tick					( current_time_in_ms );
-
-	bool const is_new_target	= set_target( expression, current_time_in_ms );
-	VOSTOK_UNREFERENCED_PARAMETER	( is_new_target );
-
-	tick						( current_time_in_ms );
-
-	#ifndef MASTER_GOLD
-	if ( is_new_target )
-		m_mixing_tree.dump_tree	( current_time_in_ms );
-	#endif // #ifndef MASTER_GOLD
-
-	return						is_new_target;
+	// FUNCTION BODY
+	// <0x11d100>|0x000|+0x016:'85'
+	// <0x11d116>|0x016|+0x014:'86'
+	// ******
 }
 
-void animation_player::tick						( u32 const current_time_in_ms )
+// STATE[STUB]
+void n_ary_tree_time_inverter::visit(
+	mixing::n_ary_tree_weight_transition_node&	arg_0 /* vostok::animation::mixing::n_ary_tree_weight_transition_node& node */
+)
 {
-	R_ASSERT					( m_in_tick || m_callbacks_are_actual );
+	// CALL SITE INFO
+	// <0x11d14a> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
+	// <0x11d155> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
+	// ******
 
-	++m_in_tick;
-	m_mixing_tree.tick			( current_time_in_ms, m_first_subscribed_channel, m_callbacks_are_actual );
-	--m_in_tick;
-
-	if ( !m_in_tick && !m_callbacks_are_actual )
-		compact_callbacks		( );
+	// FUNCTION BODY
+	// <0>
+	// <0x11d133>|0x003|+0x00b:'104'
+	// <0x11d13e>|0x00e|+0x00e:'105'
+	// <0x11d14c>|0x01c|+0x00d:'106'
+	// ******
 }
 
-void animation_player::set_object_transform		( vostok::math::float4x4 const& object_transform )
+// STATE[STUB]
+animation_player::~animation_player( )
 {
-	m_mixing_tree.set_object_transform	( object_transform );
+	// FUNCTION BODY
+	// <0x56fee3>|0x003|+0x008:'126'
+	// ******
 }
 
-vostok::math::float4x4 animation_player::get_object_transform	( ) const
+// STATE[STUB]
+void* animation_player::get_next_buffer( const u32 buffer_size )
 {
-	return						m_mixing_tree.get_object_transform( );
+	return NULL;
+
+	// FUNCTION BODY
+	// <0x11d160>|0x000|+0x000:'130'	{
+	// <0>
+	// <0x11d160>|0x000|+0x017:'132'
+	// <0x11d177>|0x017|-0x003:'132'
+	// <0x11d174>|0x014|+0x002:'133'
+	// <0x11d176>|0x016|+0x007:'134'
+	// <0x11d17d>|0x01d|      :'134'	}
+	// ******
 }
 
-void animation_player::compute_bones_matrices	( skeleton const& skeleton, vostok::math::float4x4* const begin, vostok::math::float4x4* const end ) const
+// STATE[STUB]
+bool animation_player::try_get_transform( pcvoid const animated_object, float4x4& result ) const
 {
-	R_ASSERT_CMP				( end - begin, >=, skeleton.get_non_root_bones_count( ) );
-	m_mixing_tree.compute_bones_matrices	( skeleton, begin, end );
+	return false;
+
+	// FUNCTION BODY
+	// <0x56fdb0>|0x000|+0x006:'137'	{
+	// <0x56fdb6>|0x006|+0x020:'138'
+	// <0x56fdd6>|0x026|+0x015:'139'
+	// <0x56fdeb>|0x03b|+0x010:'140'
+	// <0x56fdfb>|0x04b|+0x009:'141'
+	// <0>
+	// <1>
+	// <0x56fe04>|0x054|-0x006:'144'
+	// <0x56fdfe>|0x04e|+0x009:'145'
+	// <0x56fe07>|0x057|      :'145'	}
+	// ******
 }
 
-#ifndef MASTER_GOLD
-void animation_player::set_controller_callback	( boost::function<void (vostok::animation::mixing::expression const&, u32)> const& callback )
+// STATE[STUB]
+bool animation_player::set_target(
+	mixing::expression const&		expression,
+	const u32						current_time_in_ms,
+	boost::function< float4x4( pcvoid ) > const&	get_transform_functor
+)
 {
-	m_controller_callback		= callback;
+	// LOCALS
+	// mutable_buffer 					buffer
+	// mixing::n_ary_tree 				target_tree
+	// mixing::n_ary_tree_converter 	builder
+	// mutable_buffer 					mixing_buffer
+	// mixing::n_ary_tree 				transition_tree
+	// transform_getter 				transform_getter_instance
+	// mixing::n_ary_tree_comparer 		comparer
+	// const bool 						first_time
+	// mixing::animated_object_holder* 	i
+	// mixing::callback_generator_info* const generators_head
+	// ******
+
+	return false;
+
+	// FUNCTION BODY
+	// <0x570b10>|0x000|+0x00f:'173'	{
+	// <0>
+	// <0x570b1f>|0x00f|+0x00c:'175'
+	// <0>
+	// <1>
+	// <0x570b2b>|0x01b|+0x015:'178'
+	// <0x570b40>|0x030|+0x025:'179'
+	// <0>
+	// <0x570b65>|0x055|+0x00a:'181'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x570b6f>|0x05f|+0x01f:'189'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x570b8e>|0x07e|+0x00a:'197'
+	// <0>
+	// <0x570b98>|0x088|+0x006:'199'
+	// <0x570b9e>|0x08e|+0x00e:'200'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x570bac>|0x09c|+0x027:'206'
+	// <0x570bd3>|0x0c3|+0x02e:'207'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x570c01>|0x0f1|+0x042:'216'
+	// <0>
+	// <1>
+	// <2>
+	// <0x570c43>|0x133|+0x013:'220'
+	// <0x570c56>|0x146|+0x006:'221'
+	// <0x570c5c>|0x14c|+0x039:'222'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x570c95>|0x185|+0x014:'227'
+	// <0>
+	// <1>
+	// <2>
+	// <0x570ca9>|0x199|+0x009:'231'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <0x570cb2>|0x1a2|+0x017:'246'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <0x570cc9>|0x1b9|+0x00c:'257'
+	// <0>
+	// <0x570cd5>|0x1c5|+0x003:'259'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x570cd8>|0x1c8|+0x071:'271'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <0x570d49>|0x239|+0x01c:'296'
+	// <0>
+	// <0x570d65>|0x255|+0x014:'298'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x570d79>|0x269|+0x007:'304'
+	// <0>
+	// <0x570d80>|0x270|+0x01f:'306'
+	// <0x570d9f>|0x28f|+0x016:'307'
+	// <0>
+	// <0x570db5>|0x2a5|+0x009:'309'
+	// <0x570dbe>|0x2ae|+0x006:'310'
+	// <0>
+	// <1>
+	// <0x570dc4>|0x2b4|+0x002:'313'
+	// <0x570dc6>|0x2b6|+0x003:'314'
+	// <0x570dc9>|0x2b9|+0x009:'315'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x570dd2>|0x2c2|+0x017:'320'
+	// <0x570de9>|0x2d9|-0x1b7:'321'
+	// <0x570c32>|0x122|+0x1e0:'322'
+	// <0x570e12>|0x302|-0x1de:'322'
+	// <0x570c34>|0x124|+0x052:'323'
+	// <0x570c86>|0x176|+0x18e:'323'
+	// <0x570e14>|0x304|      :'323'	}
+	// ******
 }
 
-void animation_player::reset					( bool const clear_callbacks )
+// STATE[STUB]
+void animation_player::skip_time_if_needed( const u32 current_time_in_ms )
 {
-	m_mixing_tree				= n_ary_tree( float4x4().identity() );
-
-	if ( clear_callbacks ) {
-		destroy_subscriptions					( m_first_subscribed_channel );
-		m_first_subscribed_channel				= 0;
-		m_callbacks_buffer.~mutable_buffer		( );
-		new (&m_callbacks_buffer) mutable_buffer( m_callbacks_buffer_raw, sizeof(m_callbacks_buffer_raw) );
-	}
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <0x5709c6>|0x006|+0x03b:'329'
+	// <0x570a01>|0x041|+0x004:'330'
+	// <0x570a05>|0x045|+0x0c4:'331'
+	// <0>
+	// <0x570ac9>|0x109|+0x00c:'333'
+	// <0>
+	// <0x570ad5>|0x115|+0x00d:'335'
+	// <0>
+	// <0x570ae2>|0x122|+0x00a:'337'
+	// <0>
+	// <0x570aec>|0x12c|+0x018:'339'
+	// <0>
+	// <1>
+	// <2>
+	// ******
 }
 
-void animation_player::fill_animation_states	( vostok::vectora<vostok::animation::editor_animation_state>& result )
+// STATE[STUB]
+bool animation_player::tick( const u32 current_time_in_ms )
 {
-	m_mixing_tree.fill_animation_states	( result );
-}
-#endif // #ifndef MASTER_GOLD
+	return false;
 
-void animation_player::subscribe				( pcstr const channel_id, callback_type const& callback, u8 const callback_id )
-{
-	R_ASSERT									( callback, "empty callback specified for the animation player" );
-
-	subscribed_channel* i						= m_first_subscribed_channel;
-	subscribed_channel* previous				= 0;
-	for ( ; i; previous = i, i = i->next ) {
-		if ( !strings::equal( (*i).channel_id, channel_id ) )
-			continue;
-
-		animation_callback* const new_callback	= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr() );
-		m_callbacks_buffer						+= sizeof( animation_callback );
-		new ( new_callback ) animation_callback	( callback, callback_id );
-		R_ASSERT								( (*i).first_callback );
-		for ( animation_callback* j = (*i).first_callback; ; j = j->next ) {
-			R_ASSERT							( (*j).callback_id != callback_id );
-			if ( !j->next ) {
-				j->next							= new_callback;
-				break;
-			}
-		}
-
-		return;
-	}
-
-	subscribed_channel* const new_channel		= static_cast<subscribed_channel*>( m_callbacks_buffer.c_ptr() );
-	m_callbacks_buffer							+= sizeof( subscribed_channel );
-	memory::detail::call_constructor			( new_channel );
-	new_channel->next							= 0;
-
-	u32 const buffer_size						= (strings::length( channel_id ) + 1) * sizeof(char);
-	memory::copy								( m_callbacks_buffer.c_ptr(), buffer_size, channel_id, buffer_size );
-	new_channel->channel_id						= static_cast<pstr>( m_callbacks_buffer.c_ptr() );
-	m_callbacks_buffer							+= math::align_up(buffer_size, u32(4));
-	
-	animation_callback* const new_callback		= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr() );
-	m_callbacks_buffer							+= sizeof( animation_callback );
-	new ( new_callback ) animation_callback		( callback, callback_id );
-	new_channel->first_callback					= new_callback;
-
-	if ( previous )
-		previous->next							= new_channel;
-	else
-		m_first_subscribed_channel				= new_channel;
-
-	++m_subscribed_channels_count;
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x570e3a>|0x00a|+0x006:'353'
+	// <0>
+	// <0x570e40>|0x010|+0x007:'355'
+	// <0>
+	// <0x570e47>|0x017|+0x01b:'357'
+	// <0>
+	// <0x570e62>|0x032|+0x015:'359'
+	// <0>
+	// <1>
+	// <2>
+	// <0x570e77>|0x047|+0x009:'363'
+	// <0x570e80>|0x050|+0x006:'364'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// ******
 }
 
-void animation_player::subscribe				( reserved_channel_ids_enum const channel_id, callback_type const& callback, u8 const callback_id )
+// STATE[STUB]
+bool animation_player::tick_to_nearest_user_handled_callback( const u32 current_time_in_ms )
 {
-	char channel_id_string[]					= { u8(channel_id), 0 };
-	subscribe									( channel_id_string, callback, callback_id );
+	return false;
+
+	// FUNCTION BODY
+	// <0x570eda>|0x00a|+0x006:'373'
+	// <0>
+	// <1>
+	// <0x570ee0>|0x010|+0x01f:'376'
+	// <0x570eff>|0x02f|+0x010:'377'
+	// <0x570f0f>|0x03f|+0x04a:'378'
+	// <0x570f59>|0x089|+0x00c:'379'
+	// <0>
+	// <1>
+	// ******
 }
 
-void animation_player::destroy_subscriptions	( vostok::animation::subscribed_channel const* const channels_head )
+// STATE[STUB]
+bool animation_player::set_target_and_tick(
+	mixing::expression const&		expression,
+	const u32						current_time_in_ms,
+	boost::function< float4x4( pcvoid ) > const&	get_transform_functor
+)
 {
-	for (subscribed_channel const* i = channels_head; i; ) {
-		for ( animation_callback* j = (*i).first_callback; j; ) {
-			animation_callback* const temp		= j;
-			j									= j->next;
-			temp->~animation_callback			( );
-		}
+	return false;
 
-		subscribed_channel const* const temp	= i;
-		VOSTOK_UNREFERENCED_PARAMETER				( temp );
-		i										= i->next;
-		temp->~subscribed_channel				( );
-	}
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <0x570e90>|0x000|+0x00a:'388'
+	// <0>
+	// <1>
+	// <2>
+	// <0x570e9a>|0x00a|+0x008:'392'
+	// <0>
+	// <1>
+	// <0x570ea2>|0x012|+0x012:'395'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x570eb4>|0x024|+0x008:'404'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x570ebc>|0x02c|+0x002:'412'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// ******
 }
 
-void animation_player::compact_callbacks		( )
+// STATE[STUB]
+float4x4 single_object_get_transform( float4x4 const& transform, pcvoid const animated_object )
 {
-	R_ASSERT									( !m_callbacks_are_actual );
-	m_callbacks_are_actual						= true;
-	// clone current enabled callbacks to stack
-	subscribed_channel const* i					= m_first_subscribed_channel;
-	subscribed_channel const* first_cloned_channel	= 0;
-	subscribed_channel* previous_channel		= 0;
-	for ( ; i; i = i->next ) {
-		subscribed_channel* const new_channel	= static_cast<subscribed_channel*>( ALLOCA( sizeof(subscribed_channel) ) );
-		if ( !first_cloned_channel )
-			first_cloned_channel				= new_channel;
-		else
-			previous_channel->next				= new_channel;
+	return vostok::math::float4x4();
 
-		memory::detail::call_constructor		( new_channel );
-		pstr temp;
-		STR_DUPLICATEA							( temp, (*i).channel_id );
-		new_channel->channel_id					= (*i).channel_id;
-		new_channel->first_callback				= 0;
-		new_channel->next						= 0;
-
-		R_ASSERT								( (*i).first_callback );
-		for ( animation_callback* j = (*i).first_callback, *k = 0; j; k = j, j = j->next ) {
-			if ( !(*j).enabled )
-				continue;
-
-			animation_callback* const new_callback	= static_cast<animation_callback*>( ALLOCA( sizeof(animation_callback) ) );
-			R_ASSERT							( (*j).callback );
-			new ( new_callback ) animation_callback	( (*j).callback, (*j).callback_id );
-			if ( k )
-				k->next							= new_callback;
-			else
-				new_channel->first_callback		= new_callback;
-		}
-		
-		if ( !new_channel->first_callback ) {
-			if ( previous_channel )
-				previous_channel->next			= 0;
-			else {
-				R_ASSERT						( first_cloned_channel );
-				first_cloned_channel			= 0;
-			}
-		}
-		else
-			previous_channel					= new_channel;
-	}
-
-	destroy_subscriptions						( m_first_subscribed_channel );
-
-	m_first_subscribed_channel					= 0;
-
-	m_callbacks_buffer.~mutable_buffer			( );
-	new (&m_callbacks_buffer) mutable_buffer	( m_callbacks_buffer_raw, sizeof(m_callbacks_buffer_raw) );
-	// clone callbacks from stack
-	u32 channels_count							= 0;
-	for ( i = first_cloned_channel; i; i = i->next ) {
-		R_ASSERT								( i->first_callback );
-		++channels_count;
-		subscribed_channel* const new_channel	= static_cast<subscribed_channel*>( m_callbacks_buffer.c_ptr() );
-		m_callbacks_buffer						+= sizeof( subscribed_channel );
-		if ( !m_first_subscribed_channel )
-			m_first_subscribed_channel			= new_channel;
-		else
-			previous_channel->next				= new_channel;
-
-		memory::detail::call_constructor		( new_channel );
-		
-		u32 const buffer_size					= (strings::length( (*i).channel_id ) + 1) * sizeof(char);
-		memory::copy							( m_callbacks_buffer.c_ptr(), buffer_size, (*i).channel_id, buffer_size );
-		new_channel->channel_id					= static_cast<pstr>( m_callbacks_buffer.c_ptr() );
-		m_callbacks_buffer						+= math::align_up( buffer_size, u32(4) );
-		new_channel->next						= 0;
-
-		R_ASSERT								( (*i).first_callback );
-		for ( animation_callback* j = (*i).first_callback, *k = 0; j; k = j, j = j->next ) {
-			R_ASSERT							( (*j).enabled );
-			animation_callback* const new_callback	= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr() );
-			m_callbacks_buffer					+= sizeof( animation_callback );
-			R_ASSERT							( (*j).callback );
-			new ( new_callback ) animation_callback	( (*j).callback, (*j).callback_id );
-			if ( k )
-				k->next							= new_callback;
-			else
-				new_channel->first_callback		= new_callback;
-		}
-
-		previous_channel						= new_channel;
-	}
-
-	destroy_subscriptions						( first_cloned_channel );
-
-	if ( !channels_count )
-		m_first_subscribed_channel				= 0;
-
-#ifndef MASTER_GOLD
-	for ( subscribed_channel const* i = m_first_subscribed_channel; i; i = i->next ) {
-		R_ASSERT								( (*i).first_callback );
-		for ( animation_callback* j = (*i).first_callback; j; j = j->next )
-			R_ASSERT							( (*j).enabled );
-	}
-#endif // #ifndef MASTER_GOLD
+	// FUNCTION BODY
+	// <0>
+	// <0x56fcb0>|0x000|+0x015:'422'
+	// ******
 }
 
-void animation_player::unsubscribe				( pcstr const channel_id, u8 const callback_id )
+// STATE[STUB]
+bool animation_player::set_target_and_tick(
+	mixing::expression const&		expression,
+	const u32						current_time_in_ms,
+	float4x4 const&					transform_in_case_of_a_single_object_usage
+)
 {
-	R_ASSERT									( m_callbacks_are_actual );
+	return false;
 
-	subscribed_channel const* i					= m_first_subscribed_channel;
-	for ( ; i; i = i->next ) {
-		if ( !strings::equal( (*i).channel_id, channel_id ) )
-			continue;
-
-		R_ASSERT								( (*i).first_callback );
-		for ( animation_callback* j = (*i).first_callback; ; j = j->next ) {
-			if ( (*j).callback_id == callback_id ) {
-				(*j).callback					= callback_type();
-				(*j).enabled					= false;
-				m_callbacks_are_actual			= false;
-				break;
-			}
-		}
-
-		R_ASSERT								( !m_callbacks_are_actual, "Cannot find callback[%d], being subscribed on channel %s", callback_id, channel_id );
-
-		if ( !m_in_tick )
-			compact_callbacks					( );
-
-		return;
-	}
-
-	NODEFAULT									( );
+	// FUNCTION BODY
+	// <0x570f7e>|0x00e|+0x06c:'427'
+	// ******
 }
 
-void animation_player::unsubscribe				( reserved_channel_ids_enum const channel_id, u8 const callback_id )
+// STATE[STUB]
+void animation_player::set_object_transform( float4x4 const& object_transform, pcvoid const animated_object )
 {
-	char channel_id_string[]					= { u8(channel_id), 0 };
-	unsubscribe									( channel_id_string, callback_id );
+	// FUNCTION BODY
+	// <0x5706e0>|0x000|+0x010:'432'
+	// ******
 }
+
+// STATE[STUB]
+float4x4 animation_player::get_object_transform( pcvoid const animated_object ) const
+{
+	return vostok::math::float4x4();
+
+	// FUNCTION BODY
+	// <0x5706c1>|0x001|+0x011:'437'
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::compute_bones_matrices(
+	skeleton const&		skeleton,
+	float4x4* const		begin,
+	float4x4* const		end,
+	pcvoid const		animated_object,
+	u32* const			bones_masks
+) const
+{
+	// FUNCTION BODY
+	// <0>
+	// <0x5706a0>|0x000|+0x01a:'448'
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::compute_bones_local_matrices(
+	skeleton const&		skeleton,
+	float4x4*			begin,
+	float4x4*			end,
+	pcvoid const		animated_object,
+	u32* const			bones_masks
+) const
+{
+	// FUNCTION BODY
+	// <0>
+	// <0x570680>|0x000|+0x01a:'454'
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::convert_to_object_matrices(
+	skeleton const&		skeleton,
+	float4x4*			local_begin,
+	float4x4*			local_end,
+	pcvoid const		animated_object
+) const
+{
+	// FUNCTION BODY
+	// <0>
+	// <0x570660>|0x000|+0x015:'460'
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::reset( const bool clear_callbacks )
+{
+	// FUNCTION BODY
+	// <0x56fe3a>|0x00a|+0x057:'465'
+	// <0x56fe91>|0x061|+0x009:'466'
+	// <0>
+	// <0x56fe9a>|0x06a|+0x005:'468'
+	// <0>
+	// <0x56fe9f>|0x06f|+0x00b:'470'
+	// <0>
+	// <1>
+	// <0x56feaa>|0x07a|+0x021:'473'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::subscribe(
+	pcstr const		channel_id,
+	boost::function< enum callback_return_type_enum( animation_callback_params& ) > const&	callback,
+	pcvoid const	callback_uid,
+	resources::managed_resource_ptr const&	animation,
+	const u8		event_type,
+	pcvoid const	animated_object
+)
+{
+	// CALL SITE INFO
+	// <0x570448> -> < unknown >
+	// ******
+
+	// FUNCTION BODY
+	// <0x5702a0>|0x000|+0x007:'492'	{
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5702a7>|0x007|+0x006:'497'
+	// <0x5702ad>|0x00d|+0x002:'498'
+	// <0x5702af>|0x00f|+0x004:'499'
+	// <0>
+	// <0x5702b3>|0x013|+0x110:'501'
+	// <0>
+	// <1>
+	// <0x5703c3>|0x123|+0x006:'504'
+	// <0x5703c9>|0x129|+0x00e:'505'
+	// <0x5703d7>|0x137|+0x049:'506'
+	// <0>
+	// <0x570420>|0x180|+0x00a:'508'
+	// <0x57042a>|0x18a|-0x007:'508'
+	// <0>
+	// <1>
+	// <0x570423>|0x183|+0x00b:'511'
+	// <0>
+	// <0x57042e>|0x18e|-0x138:'513'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5702f6>|0x056|+0x006:'520'
+	// <0x5702fc>|0x05c|+0x00e:'521'
+	// <0x57030a>|0x06a|+0x006:'522'
+	// <0>
+	// <1>
+	// <0x570310>|0x070|+0x01a:'525'
+	// <0x57032a>|0x08a|+0x015:'526'
+	// <0x57033f>|0x09f|+0x009:'527'
+	// <0x570348>|0x0a8|+0x01b:'528'
+	// <0>
+	// <0x570363>|0x0c3|+0x006:'530'
+	// <0x570369>|0x0c9|+0x00e:'531'
+	// <0x570377>|0x0d7|+0x0c2:'532'
+	// <0x570439>|0x199|+0x056:'532'
+	// <0x57048f>|0x1ef|+0x003:'533'
+	// <0>
+	// <0x570492>|0x1f2|+0x004:'535'
+	// <0x570496>|0x1f6|+0x00b:'536'
+	// <0>
+	// <0x5704a1>|0x201|-0x070:'538'
+	// <0x570431>|0x191|+0x068:'539'
+	// <0x570499>|0x1f9|+0x00e:'539'
+	// <0x5704a7>|0x207|      :'539'	}
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::subscribe(
+	reserved_channel_ids_enum		channel_id,
+	boost::function< enum callback_return_type_enum( animation_callback_params& ) > const&	callback,
+	pcvoid const					callback_uid,
+	resources::managed_resource_ptr const&	animation,
+	pcvoid const					animated_object
+)
+{
+	// LOCALS
+	// char[2] 							channel_id_string
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <0x570601>|0x001|+0x02d:'550'
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::destroy_subscriptions( subscribed_channel const* const channels_head )
+{
+	// FUNCTION BODY
+	// <0x56fd51>|0x001|+0x00f:'555'
+	// <0>
+	// <0x56fd60>|0x010|+0x039:'557'
+	// <0x56fd99>|0x049|-0x032:'557'
+	// <0>
+	// <0x56fd67>|0x017|+0x002:'559'
+	// <0x56fd69>|0x019|+0x003:'560'
+	// <0x56fd6c>|0x01c|+0x031:'561'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x56fd9d>|0x04d|+0x00a:'566'
+	// <0>
+	// <1>
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::compact_callbacks( )
+{
+	// LOCALS
+	// u32 								channels_count
+	// subscribed_channel const* 		first_cloned_channel
+	// subscribed_channel* 				previous_channel
+	// subscribed_channel const* 		i
+	// animation_callback* 				k
+	// subscribed_channel* const 		new_channel
+	// animation_callback* 				k
+	// ******
+
+	// CALL SITE INFO
+	// <0x57003e> -> < unknown >
+	// <0x5701f8> -> < unknown >
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <0x56ff39>|0x009|+0x003:'574'
+	// <0>
+	// <0x56ff3c>|0x00c|+0x006:'576'
+	// <0x56ff42>|0x012|+0x00f:'577'
+	// <0x56ff51>|0x021|+0x003:'578'
+	// <0x56ff54>|0x024|+0x163:'579'
+	// <0x5700b7>|0x187|-0x154:'579'
+	// <0>
+	// <0x56ff63>|0x033|+0x00f:'581'
+	// <0x56ff72>|0x042|+0x004:'582'
+	// <0x56ff76>|0x046|+0x003:'583'
+	// <0x56ff79>|0x049|+0x002:'584'
+	// <0x56ff7b>|0x04b|+0x006:'585'
+	// <0>
+	// <0x56ff81>|0x051|+0x006:'587'
+	// <0>
+	// <0x56ff87>|0x057|+0x027:'589'
+	// <0x56ffae>|0x07e|+0x003:'590'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x56ffb1>|0x081|+0x01f:'595'
+	// <0>
+	// <0x56ffd0>|0x0a0|+0x00a:'597'
+	// <0>
+	// <1>
+	// <0x56ffda>|0x0aa|+0x00c:'600'
+	// <0>
+	// <0x56ffe6>|0x0b6|+0x099:'602'
+	// <0x57007f>|0x14f|+0x007:'603'
+	// <0x570086>|0x156|+0x003:'604'
+	// <0x570089>|0x159|+0x002:'605'
+	// <0x57008b>|0x15b|+0x003:'606'
+	// <0x57008e>|0x15e|+0x010:'607'
+	// <0>
+	// <1>
+	// <0x57009e>|0x16e|+0x005:'610'
+	// <0>
+	// <0x5700a3>|0x173|+0x007:'612'
+	// <0x5700aa>|0x17a|+0x003:'613'
+	// <0x5700ad>|0x17d|+0x002:'614'
+	// <0>
+	// <1>
+	// <0x5700af>|0x17f|+0x003:'617'
+	// <0>
+	// <1>
+	// <0x5700b2>|0x182|+0x002:'620'
+	// <0x5700b4>|0x184|+0x01a:'621'
+	// <0>
+	// <1>
+	// <0x5700ce>|0x19e|+0x00b:'624'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5700d9>|0x1a9|+0x027:'629'
+	// <0>
+	// <0x570100>|0x1d0|+0x007:'631'
+	// <0x570107>|0x1d7|+0x155:'632'
+	// <0x57025c>|0x32c|+0x017:'632'
+	// <0x570273>|0x343|-0x161:'632'
+	// <0>
+	// <1>
+	// <2>
+	// <0x570112>|0x1e2|+0x005:'636'
+	// <0x570117>|0x1e7|+0x007:'637'
+	// <0x57011e>|0x1ee|+0x00c:'638'
+	// <0x57012a>|0x1fa|+0x006:'639'
+	// <0x570130>|0x200|+0x002:'640'
+	// <0x570132>|0x202|+0x006:'641'
+	// <0>
+	// <0x570138>|0x208|+0x006:'643'
+	// <0>
+	// <0x57013e>|0x20e|+0x01e:'645'
+	// <0x57015c>|0x22c|+0x00a:'646'
+	// <0x570166>|0x236|+0x002:'647'
+	// <0x570168>|0x238|+0x016:'648'
+	// <0>
+	// <1>
+	// <2>
+	// <0x57017e>|0x24e|+0x0db:'652'
+	// <0x570259>|0x329|-0x0c5:'652'
+	// <0>
+	// <1>
+	// <0x570194>|0x264|+0x002:'655'
+	// <0x570196>|0x266|+0x007:'656'
+	// <0>
+	// <0x57019d>|0x26d|+0x09c:'658'
+	// <0x570239>|0x309|+0x007:'659'
+	// <0x570240>|0x310|+0x003:'660'
+	// <0x570243>|0x313|+0x002:'661'
+	// <0x570245>|0x315|+0x009:'662'
+	// <0x57024e>|0x31e|+0x017:'663'
+	// <0>
+	// <1>
+	// <0x570265>|0x335|+0x011:'666'
+	// <0>
+	// <1>
+	// <0x570276>|0x346|+0x007:'669'
+	// <0>
+	// <0x57027d>|0x34d|+0x006:'671'
+	// <0x570283>|0x353|+0x00a:'672'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::unsubscribe( pcstr const channel_id, pcvoid const callback_uid )
+{
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5704be>|0x00e|+0x03f:'690'
+	// <0x5704fd>|0x04d|-0x02d:'691'
+	// <0>
+	// <0x5704d0>|0x020|+0x032:'693'
+	// <0>
+	// <1>
+	// <2>
+	// <0x570502>|0x052|+0x00e:'697'
+	// <0>
+	// <0x570510>|0x060|+0x014:'699'
+	// <0>
+	// <0x570524>|0x074|+0x0a5:'701'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5705c9>|0x119|+0x00f:'705'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5705d8>|0x128|+0x00c:'712'
+	// <0x5705e4>|0x134|+0x006:'713'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::unsubscribe( reserved_channel_ids_enum channel_id, pcvoid const callback_uid )
+{
+	// LOCALS
+	// char[2] 							channel_id_string
+	// ******
+
+	// FUNCTION BODY
+	// <0x570640>|0x000|+0x004:'723'
+	// <0x570644>|0x004|+0x014:'724'
+	// ******
+}
+
+// STATE[STUB]
+u32 animation_player::get_state_buffer_size( ) const
+{
+	return 0;
+
+	// FUNCTION BODY
+	// <0x56fc90>|0x000|+0x005:'729'
+	// ******
+}
+
+// STATE[STUB]
+void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const u32 time_in_ms )
+{
+	// LOCALS
+	// n_ary_tree_time_inverter 		time_inverter
+	// ******
+
+	// CALL SITE INFO
+	// <0x56fd04> -> void < unknown >( mixing::n_ary_tree_visitor& )
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <0x56fcd8>|0x008|+0x020:'735'
+	// <0x56fcf8>|0x028|+0x015:'736'
+	// <0>
+	// <0x56fd0d>|0x03d|+0x031:'738'
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::invert_times(
+	mixing::n_ary_tree&		tree,
+	const u32				time_in_ms,
+	const bool				check_before,
+	const bool				check_after
+)
+{
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x56fe11>|0x001|+0x007:'748'
+	// <0x56fe18>|0x008|+0x011:'749'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::serialize_state( void* buffer, const u32 buffer_size )
+{
+	// LOCALS
+	// mutable_buffer 					tree_buffer
+	// ******
+
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x5708b5>|0x015|+0x00a:'840'
+	// <0>
+	// <1>
+	// <0x5708bf>|0x01f|+0x00b:'843'
+	// <0>
+	// <1>
+	// <0x5708ca>|0x02a|+0x009:'846'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <0x5708d3>|0x033|+0x089:'861'
+	// <0>
+	// <0x57095c>|0x0bc|+0x004:'863'
+	// <0x570960>|0x0c0|+0x027:'864'
+	// <0>
+	// <1>
+	// <0x570987>|0x0e7|+0x00c:'867'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x570993>|0x0f3|+0x01e:'872'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
+{
+	// LOCALS
+	// mutable_buffer 					mixing_buffer
+	// ******
+
+	// FUNCTION BODY
+	// <0x570700>|0x000|+0x009:'880'	{
+	// <0>
+	// <1>
+	// <2>
+	// <0x570709>|0x009|+0x006:'884'
+	// <0>
+	// <0x57070f>|0x00f|+0x002:'886'
+	// <0x570711>|0x011|+0x003:'887'
+	// <0>
+	// <1>
+	// <0x570714>|0x014|+0x00d:'890'
+	// <0>
+	// <0x570721>|0x021|+0x015:'892'
+	// <0x570736>|0x036|+0x038:'893'
+	// <0>
+	// <1>
+	// <2>
+	// <0x57076e>|0x06e|+0x01f:'897'
+	// <0>
+	// <1>
+	// <0x57078d>|0x08d|+0x00a:'900'
+	// <0>
+	// <0x570797>|0x097|+0x025:'902'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <0x5707bc>|0x0bc|+0x0a9:'921'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x570865>|0x165|+0x008:'927'
+	// <0>
+	// <1>
+	// <2>
+	// <0x57086d>|0x16d|-0x10c:'931'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x570761>|0x061|+0x12f:'938'
+	// <0x570890>|0x190|      :'938'	}
+	// ******
+}
+
+// STATE[STUB]
+void animation_player::destroy_state( void* buffer )
+{
+	// FUNCTION BODY
+	// <0>
+	// <1>
+	// <0x56ff13>|0x003|+0x006:'944'
+	// <0x56ff19>|0x009|+0x003:'945'
+	// <0>
+	// <0x56ff1c>|0x00c|+0x010:'947'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+u32 animation_player::last_tick_time_in_ms( ) const
+{
+	return 0;
+
+	// FUNCTION BODY
+	// <0x56fca0>|0x000|+0x006:'953'
+	// ******
+}
+
+} // namespace animation
+} // namespace vostok

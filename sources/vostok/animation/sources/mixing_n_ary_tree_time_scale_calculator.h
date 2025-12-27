@@ -29,13 +29,14 @@ public:
 						u32 current_time_in_ms,
 						float previous_animation_time,
 						u32 previous_time_in_ms,
-						transitions_destroying_enum transitions_destroying,
 						n_ary_tree_animation_node const* animation = 0
 					);
-	inline	float	time_scale						( ) const;
-	inline	bool	mixed_time_direction_nodes_found( ) const { return m_forward_time_scale_nodes_count && m_backward_time_scale_nodes_count; }
-	inline	n_ary_tree_base_node*	result			( ) const;
-	inline	base_interpolator const* interpolator	( ) const;
+
+
+	inline	n_ary_tree_base_node*		result				( ) const;
+	inline	float						time_scale			( ) const;
+	inline	u32							transitions_count	( ) const;
+	inline	base_interpolator const*	interpolator		( ) const;
 
 	virtual	void	visit							( n_ary_tree_animation_node& node );
 	virtual	void	visit							( n_ary_tree_weight_transition_node& node );
@@ -46,6 +47,9 @@ public:
 	virtual	void	visit							( n_ary_tree_subtraction_node& node );
 	virtual	void	visit							( n_ary_tree_multiplication_node& node );
 
+
+			void	remove_transition				( n_ary_tree_time_scale_transition_node& node );
+
 private:
 	n_ary_tree_animation_node const* const	m_animation;
 	n_ary_tree_base_node*				m_result;
@@ -54,10 +58,11 @@ private:
 	float const							m_previous_animation_time;
 	u32 const							m_previous_time_in_ms;
 	float								m_time_scale;
-	transitions_destroying_enum const	m_transitions_destroying;
-	u32									m_forward_time_scale_nodes_count;
-	u32									m_backward_time_scale_nodes_count;
+	u32									m_transitions_count;
+	u32									m_recursion_level;
 }; // class n_ary_tree_time_scale_calculator
+
+STATIC_SIZE_ASSERT(n_ary_tree_time_scale_calculator, 0x28);
 
 } // namespace mixing
 } // namespace animation

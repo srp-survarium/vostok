@@ -32,7 +32,7 @@ enum time_event_types_enum {
 		time_event_weight_transitions_ended,
 
 	time_event_all_events								=
-		time_event_animation_lexeme_started | 
+		time_event_animation_lexeme_started |
 		time_event_animation_lexeme_ended |
 		time_event_animation_interval_ended |
 		time_event_animation_ended_in_positive_direction |
@@ -44,32 +44,45 @@ enum time_event_types_enum {
 }; // time_event_types_enum
 
 struct VOSTOK_ANIMATION_API animation_event {
-	inline	animation_event( u32 const event_time_in_ms, u32 const event_type ) :
+	inline	animation_event(
+			u32 const	event_time_in_ms,
+			u16 const	event_type,
+			u8 const	channel_ids // sushi@TODO: Might be domain_data
+		) :
 		animation_interval_id	( u32(-1) ),
 		animation_interval_time	( vostok::memory::uninitialized_value<float>() ),
 		event_time_in_ms		( event_time_in_ms ),
-		event_type				( event_type )
+		event_type				( event_type ),
+		channel_ids				( channel_ids )
 	{
 	}
 
 	inline	animation_event(
-			u32 const animation_interval_id,
+			u8 const	domain_data,
+			u32 const	animation_interval_id,
 			float const animation_interval_time,
-			u32 const event_time_in_ms,
-			u32 const event_type
+			u32 const	event_time_in_ms,
+			u16 const	event_type,
+			u8 const	channel_ids
 		) :
 		animation_interval_id	( animation_interval_id ),
 		animation_interval_time ( animation_interval_time ),
 		event_time_in_ms		( event_time_in_ms ),
-		event_type				( event_type )
+		event_type				( event_type ),
+		channel_ids				( channel_ids ),
+		domain_data				( domain_data )
 	{
 	}
 
 	u32							animation_interval_id;
 	float						animation_interval_time;
 	u32							event_time_in_ms;
-	u32							event_type;
+	u16							event_type;
+	u8							channel_ids;
+	u8							domain_data;
 }; // struct animation_event
+
+STATIC_SIZE_ASSERT(animation_event, 0x10);
 
 inline bool operator == ( animation_event const& left, animation_event const& right )
 {

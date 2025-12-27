@@ -23,10 +23,10 @@ public:
 						u32 start_time_in_ms,
 						float start_animation_time,
 						float target_animation_time,
-						u32 event_type
+						u16 event_type
 					);
 	inline	u32		time_in_ms						( ) const { return m_time_in_ms; }
-	inline	u32		event_type						( ) const { return m_event_type; }
+	inline	u16		event_type						( ) const { return m_event_type; }
 	inline	float	event_time						( ) const { return m_event_time; }
 
 public:
@@ -44,9 +44,11 @@ private:
 	float		m_start_animation_time;
 	float		m_event_time;
 	u32			m_time_in_ms;
-	u32			m_event_type;
+	u16			m_event_type;
 	u32	const	m_start_time_in_ms;
 }; // class n_ary_tree_time_in_ms_calculator
+
+STATIC_SIZE_ASSERT(n_ary_tree_time_in_ms_calculator, 0x1C);
 
 } // namespace mixing
 } // namespace animation

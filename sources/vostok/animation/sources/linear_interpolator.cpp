@@ -7,6 +7,7 @@
 #include "pch.h"
 #include <vostok/animation/linear_interpolator.h>
 #include "interpolator_comparer.h"
+#include "mixing_n_ary_tree_transition_tree_constructor.h"
 #include <vostok/animation/interpolator_visitor.h>
 
 using vostok::animation::linear_interpolator;
@@ -29,6 +30,11 @@ float linear_interpolator::transition_time		( ) const
 linear_interpolator* linear_interpolator::clone	( vostok::mutable_buffer& buffer ) const
 {
 	return				clone_impl< linear_interpolator >( buffer );
+}
+// STATE[STUB]
+linear_interpolator* linear_interpolator::clone( vostok::animation::mixing::n_ary_tree_transition_tree_constructor& constructor ) const
+{
+	return				clone_impl< linear_interpolator >( constructor.m_buffer );
 }
 
 void linear_interpolator::accept				( interpolator_visitor& visitor ) const

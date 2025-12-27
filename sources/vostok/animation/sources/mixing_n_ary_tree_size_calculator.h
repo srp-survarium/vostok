@@ -16,13 +16,14 @@ namespace mixing {
 
 class animation_interval;
 class binary_tree_binary_operation_node;
+class n_ary_tree_comparer;
 
 class n_ary_tree_size_calculator :
 	public binary_tree_visitor,
 	public n_ary_tree_visitor
 {
 public:
-		n_ary_tree_size_calculator	( );
+	explicit		n_ary_tree_size_calculator	( n_ary_tree_comparer* comparer );
 	inline	u32		calculated_size	( ) const { return m_size; }
 
 private:
@@ -47,9 +48,15 @@ private:
 	template < typename T >
 	inline	void	propagate		( T& node );
 
+
+	inline	void	advance_buffer	( const u32 size ) { /* no source */ }
+
 private:
-	u32				m_size;
+	/* 0x0008 */	n_ary_tree_comparer*	m_comparer;
+	/* 0x000c */	u32						m_size;
 }; // class n_ary_tree_size_calculator
+
+STATIC_SIZE_ASSERT(n_ary_tree_size_calculator, 0x10);
 
 } // namespace mixing
 } // namespace animation

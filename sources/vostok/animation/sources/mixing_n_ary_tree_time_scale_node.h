@@ -48,6 +48,8 @@ private:
 
 }; // class n_ary_tree_time_scale_node
 
+STATIC_SIZE_ASSERT(n_ary_tree_time_scale_node, 0x14);
+
 	inline	bool	operator <						(
 						n_ary_tree_time_scale_node const& left,
 						n_ary_tree_time_scale_node const& right

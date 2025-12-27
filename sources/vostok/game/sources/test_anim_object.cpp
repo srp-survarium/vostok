@@ -24,8 +24,8 @@ float3 test_object_position(27,2,40);
 void test_anim_object::load( )
 {
 	m_test_animation_player		= NEW(animation::animation_player)( );
-	m_test_animation_player->set_no_delete();// ??
-	m_test_animation_player->set_object_transform(math::create_translation(test_object_position));
+	// m_test_animation_player->set_no_delete();// ?? sushi@TODO
+	m_test_animation_player->set_object_transform(math::create_translation(test_object_position), NULL ); // sushi@TODO
 	m_test_timer.start			( );
 
 	resources::query_resource(
@@ -67,7 +67,7 @@ void test_anim_object::on_weapon_loaded( resources::queries_result& data )
 	m_weapon = static_cast_resource_ptr<weapon_ptr>(data[0].get_unmanaged_resource());
 	m_weapon->m_game_world	= &m_game_world;
 	m_weapon->show			( math::create_translation(test_object_position) );
-	
+
 	m_weapon->action		( 1 );// shoot
 }
 
@@ -96,7 +96,7 @@ void test_anim_object::tick()
 	{
 		mutable_buffer buffer				( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 		vostok::animation::mixing::animation_lexeme target = m_weapon->select_animation( buffer );
-		m_test_animation_player->set_target_and_tick( target, m_test_timer.get_elapsed_msec() );
+		// sushi@TODO m_test_animation_player->set_target_and_tick( target, m_test_timer.get_elapsed_msec() );
 	}
 //.		m_test_animation_player->tick(m_test_timer.get_elapsed_msec());
 
@@ -108,7 +108,7 @@ void test_anim_object::tick()
 
 	//animation::mixing::animation_lexeme	test_idle_lexeme(
 	//	animation::mixing::animation_lexeme_parameters(
-	//		buffer, 
+	//		buffer,
 	//		"test base",
 	//		m_test_base
 	//	)
@@ -116,9 +116,9 @@ void test_anim_object::tick()
 
 	//static bool first_time = true;
 
-	//animation::mixing::animation_lexeme	test_additive_lexeme( 
+	//animation::mixing::animation_lexeme	test_additive_lexeme(
 	//	animation::mixing::animation_lexeme_parameters(
-	//		buffer, 
+	//		buffer,
 	//		"test additive",
 	//		m_test_add
 	//	)

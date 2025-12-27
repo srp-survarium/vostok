@@ -7,8 +7,8 @@ use std::str::FromStr;
 
 use pdb::PDB;
 
-use crate::data::Files;
-use crate::pdb_parser::Formatter;
+use crate::helpers::Files;
+use crate::pdb_parser::PdbParser;
 use crate::GenFlags;
 use crate::{bail, error};
 use crate::{gen_headers, gen_sources};
@@ -41,7 +41,7 @@ pub fn dump_pdb(
 
     let mut files = Files::default();
 
-    Formatter::with(pdb_path, |fmt| {
+    PdbParser::with(pdb_path, |fmt| {
         let file = fs::File::open(pdb_path)?;
         let mut pdb = PDB::open(file)?;
 
@@ -69,7 +69,9 @@ pub fn dump_pdb(
         .unwrap()
         .move_layer_up(p("__root"));
 
-    generate_vs_solution(output_path, flags, &files)
+    // generate_vs_solution(output_path, flags, &files)?;
+
+    Ok(())
 }
 
 pub fn generate_vs_solution(
@@ -121,7 +123,6 @@ pub fn generate_sln(output_path: &path::Path, name: &str) -> crate::Result<uuid:
 
     match result {
         Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {
-            // Small enough to the point I don't care
             let file = std::fs::read_to_string(&path)?;
 
             for line in file.lines() {
@@ -178,7 +179,7 @@ pub fn generate_project_header(vcproj_guid: uuid::Uuid, name: &str) -> String {
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="vostok_structure"
+	Name="{name}"
 	ProjectGUID="{{{vcproj_guid}}}"
 	RootNamespace="{name}"
 	TargetFrameworkVersion="196613"

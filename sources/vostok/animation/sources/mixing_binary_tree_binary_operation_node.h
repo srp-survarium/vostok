@@ -27,6 +27,8 @@ private:
 	binary_tree_base_node_ptr	m_right;
 }; // class binary_tree_binary_operation_node
 
+STATIC_SIZE_ASSERT(binary_tree_binary_operation_node, 0x1C);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

@@ -33,6 +33,8 @@ private:
 	bool	m_result;
 }; // class binary_tree_null_weight_searcher
 
+STATIC_SIZE_ASSERT(binary_tree_null_weight_searcher, 0x8);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

@@ -28,19 +28,19 @@ m_internal_memory_position ( size_t(-1) )
 
 u32	bone_names::count_internal_memory_size	( u32 bones_count )
 {
-	return bones_count * sizeof( bone_name_index ); //excluding self memory 
+	return bones_count * sizeof( bone_name_index ); //excluding self memory
 }
 
 void bone_names::create_internals_in_place(u32 bones_count, void* memory  )
 {
 	R_ASSERT( memory );
-	
+
 	m_internal_memory_position = size_t ( pbyte( memory ) - pbyte( this ) );
 
 	m_bone_count = bones_count;
 
 	//*( (bone_names*)memory ) = *this;
-	
+
 	//bone_names_idx() = (bone_name_index*) memory;
 
 	for ( u32 i = 0; i < bones_count; ++i )
@@ -141,7 +141,7 @@ bone_index_type	bone_names::bone_index( pcstr name )const
 	vector<bone_name_index>::const_iterator r = std::lower_bound( bone_names_idx(), bone_names_idx() + m_bone_count, temp, crc_cmp );
 
 	if ( temp.crc == r->crc &&
-		name[ 0 ] == r->name[0] 
+		name[ 0 ] == r->name[0]
 		)
 		return r->index;
 
@@ -164,7 +164,7 @@ pcstr bone_names::bone_name		( bone_index_type index )const
 	return NULL;
 //	return bone_names_idx()[index].name.c_str();
 }
-
+/* sushi@TODO
 void bone_names::create_index	( const skeleton &skel, vector< bone_index_type > &index )const
 {
 	const bone_index_type sz = skel.get_bones_count();
@@ -177,6 +177,6 @@ void bone_names::create_index	( const skeleton &skel, vector< bone_index_type > 
 		index[i] = bone_index( skel.get_bone( i ).id() );
 
 }
-
+*/
 } // namespace animation
 } // namespace vostok

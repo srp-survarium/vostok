@@ -20,12 +20,12 @@ template	<class ConfigValueType>
 inline void	event_channel::create_in_place_internals ( ConfigValueType const& config, void* memory_buff )
 {
 	const u32 cnt = config["knots"].size();
-	
+
 	m_time_channel.create_in_place( memory_buff, cnt );
 
 	strings::copy( m_name, static_cast<pcstr>( config["name"] ) );
 
-	m_type		= config["type"];
+	m_type		= (channel_type_enum)(u32)config["type"]; // sushi@TODO
 
 	for ( u32 i = 0; i < cnt ; ++i )
 		m_time_channel.knot( i ) = config["knots"][i];
@@ -54,7 +54,7 @@ inline void	event_channel::write( configs::lua_config_value	&cfg )const
 
 	for ( u32 i = 0; i< cnt; ++i )
 		cfg["knots"][i] = m_time_channel.knot( i );
-	
+
 	const u32 domains_count	= m_time_channel.domains_count( );
 	for ( u32 i = 0; i < domains_count ; ++i )
 		cfg["domains"][i] = m_time_channel.domain( i ).data;

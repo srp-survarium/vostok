@@ -14,6 +14,7 @@
 #include "mixing_n_ary_tree_multiplication_node.h"
 #include "mixing_n_ary_tree_weight_transition_node.h"
 #include "mixing_n_ary_tree_time_scale_transition_node.h"
+#include "mixing_n_ary_tree_transition_tree_constructor.h"
 #include <vostok/animation/mixing_n_ary_tree.h>
 #include <vostok/animation/mixing_animation_interval.h>
 
@@ -27,16 +28,17 @@ using vostok::animation::mixing::n_ary_tree_subtraction_node;
 using vostok::animation::mixing::n_ary_tree_multiplication_node;
 using vostok::animation::mixing::n_ary_tree_weight_transition_node;
 using vostok::animation::mixing::n_ary_tree_time_scale_transition_node;
+using vostok::animation::mixing::n_ary_tree_transition_tree_constructor;
 using vostok::animation::mixing::n_ary_tree;
 using vostok::mutable_buffer;
 using vostok::animation::base_interpolator;
 
 n_ary_tree_cloner::n_ary_tree_cloner							(
-		mutable_buffer& buffer,
+		n_ary_tree_transition_tree_constructor& constructor,
 		u32 const start_time_in_ms
 	) :
 	m_result					( 0 ),
-	m_buffer					( buffer ),
+	m_constructor				( constructor ),
 	m_animation_interpolator	( 0 ),
 	m_interpolators				( 0 ),
 	m_interpolators_count		( 0 ),
@@ -73,11 +75,11 @@ void n_ary_tree_cloner::initialize								(
 		);
 	m_interpolators_count		= u32(interpolators_end - interpolators_begin);
 
-	m_interpolators				= static_cast<base_interpolator const**>( m_buffer.c_ptr() );
-	m_buffer					+= m_interpolators_count*sizeof( base_interpolator* );
+	m_interpolators				= static_cast<base_interpolator const**>( m_constructor.m_buffer.c_ptr() );
+	m_constructor.advance_buffer( m_interpolators_count*sizeof( base_interpolator* ) );
 
 	for ( base_interpolator const** i = interpolators_begin, **j = m_interpolators; i != interpolators_end; ++i, ++j )
-		*j						= (*i)->clone( m_buffer );
+		*j						= (*i)->clone( m_constructor.m_buffer );
 }
 
 n_ary_tree_base_node* n_ary_tree_cloner::clone				(
@@ -134,8 +136,8 @@ n_ary_tree_base_node* n_ary_tree_cloner::clone				(
 template < typename T >
 inline T* n_ary_tree_cloner::new_constructed					( T& node )
 {
-	T* const result				= new ( m_buffer.c_ptr() ) T ( node );
-	m_buffer					+= sizeof( T );
+	T* const result				= new ( m_constructor.m_buffer.c_ptr() ) T ( node );
+	m_constructor.advance_buffer( sizeof( T ) );
 	return						result;
 }
 
@@ -166,8 +168,8 @@ base_interpolator const* n_ary_tree_cloner::clone				( base_interpolator const& 
 
 void n_ary_tree_cloner::visit	( n_ary_tree_weight_transition_node& node )
 {
-	n_ary_tree_weight_transition_node* const result	= (n_ary_tree_weight_transition_node*)m_buffer.c_ptr();
-	m_buffer					+= sizeof(n_ary_tree_weight_transition_node);
+	n_ary_tree_weight_transition_node* const result	= (n_ary_tree_weight_transition_node*)m_constructor.m_buffer.c_ptr();
+	m_constructor.advance_buffer( sizeof(n_ary_tree_weight_transition_node) );
 
 	node.from().accept			( *this );
 	n_ary_tree_base_node* const from = m_result;
@@ -195,8 +197,8 @@ void n_ary_tree_cloner::visit	( n_ary_tree_weight_transition_node& node )
 
 void n_ary_tree_cloner::visit( n_ary_tree_time_scale_transition_node& node )
 {
-	n_ary_tree_time_scale_transition_node* const result	= (n_ary_tree_time_scale_transition_node*)m_buffer.c_ptr();
-	m_buffer					+= sizeof(n_ary_tree_time_scale_transition_node);
+	n_ary_tree_time_scale_transition_node* const result	= (n_ary_tree_time_scale_transition_node*)m_constructor.m_buffer.c_ptr();
+	m_constructor.advance_buffer( sizeof(n_ary_tree_time_scale_transition_node) );
 
 	node.from().accept			( *this );
 	n_ary_tree_base_node* const from = m_result;
@@ -208,9 +210,7 @@ void n_ary_tree_cloner::visit( n_ary_tree_time_scale_transition_node& node )
 		*from,
 		*to,
 		*clone( node.interpolator() ),
-		m_animation_interval_time ? m_start_time_in_ms : node.start_time_in_ms(),
-		m_animation_interval_time ? 0 : node.last_integration_interval_id(),
-		m_animation_interval_time ? *m_animation_interval_time : node.last_integration_interval_value()
+		m_animation_interval_time ? m_start_time_in_ms : node.start_time_in_ms()
 	);
 
 	m_result				= result;
@@ -227,23 +227,23 @@ void n_ary_tree_cloner::visit( n_ary_tree_weight_node& node )
 	}
 
 	m_result					=
-		new ( m_buffer.c_ptr() ) n_ary_tree_weight_node(
+		new ( m_constructor.m_buffer.c_ptr() ) n_ary_tree_weight_node(
 			*cloned_interpolator,
 			node.weight()
 		);
-	m_buffer					+= sizeof( n_ary_tree_weight_node );
+	m_constructor.advance_buffer( sizeof( n_ary_tree_weight_node ) );
 }
 
 void n_ary_tree_cloner::visit( n_ary_tree_time_scale_node& node )
 {
 	m_result				=
-		new ( m_buffer.c_ptr() ) n_ary_tree_time_scale_node(
+		new ( m_constructor.m_buffer.c_ptr() ) n_ary_tree_time_scale_node(
 			*clone( node.interpolator() ),
 			node.time_scale() * m_time_scale_factor,
 			m_animation_interval_time ? *m_animation_interval_time : node.animation_time_before_scale_starts(),
 			m_animation_interval_time ? m_start_time_in_ms : node.time_scale_start_time_in_ms()
 		);
-	m_buffer					+= sizeof( n_ary_tree_time_scale_node );
+	m_constructor.advance_buffer( sizeof( n_ary_tree_time_scale_node ) );
 }
 
 void n_ary_tree_cloner::visit( n_ary_tree_addition_node& node )
@@ -267,7 +267,7 @@ void n_ary_tree_cloner::propagate			( T& node )
 	T* const result				= new_constructed( node );
 
 	u32 const operands_count	= node.operands_count( );
-	m_buffer					+= operands_count*sizeof( n_ary_tree_base_node*);
+	m_constructor.advance_buffer( operands_count*sizeof( n_ary_tree_base_node*) );
 
 	n_ary_tree_base_node* const* i			= node.operands( sizeof(T) );
 	n_ary_tree_base_node* const* const e	= i + operands_count;

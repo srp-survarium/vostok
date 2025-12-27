@@ -44,7 +44,7 @@ public:
 	virtual void					deserialize				( memory::reader& r );
 
 			void					add_animation			( animation_expression_emitter_ptr emitter );
-		
+
 private:
 			mixing::expression		emit_impl				( mutable_buffer& buffer, mixing::animation_lexeme* const driving_animation, bool& is_last_animation ) const;
 
@@ -60,6 +60,8 @@ private:
 	bool							m_can_repeat_successively;
 	mutable bool					m_is_child_last_animation;
 }; // class animation_collection
+
+STATIC_SIZE_ASSERT(animation_collection, 0x120);
 
 } // namespace animation
 } // namespace vostok

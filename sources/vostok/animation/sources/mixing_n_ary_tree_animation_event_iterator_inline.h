@@ -13,7 +13,7 @@ namespace mixing {
 
 inline n_ary_tree_animation_event_iterator::n_ary_tree_animation_event_iterator	( ) :
 	m_animation					( 0 ),
-	m_value						( u32(-1), 0 ),
+	m_value						( u32(-1), 0, 0 ),
 	m_channels_head				( 0 )
 {
 }

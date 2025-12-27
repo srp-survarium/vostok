@@ -5,7 +5,7 @@ use pdb_addr2line::type_parser;
 
 use crate::gen_sources;
 use crate::pdb_parser;
-use crate::utils::Type;
+use crate::Type;
 
 /// Iterating through modules gives me names of the arguments.
 /// But the class name IS NOT removed from the function name,
@@ -33,7 +33,7 @@ pub struct FunctionCache {
 #[derive(Debug, Clone)]
 pub struct FunctionSignature {
     pub fn_t: type_parser::Function,
-    pub args: Vec<(String, Type)>,
+    pub margs: Vec<(String, Type)>,
 }
 
 impl FunctionCache {
@@ -47,24 +47,24 @@ impl FunctionCache {
         let gen_sources::Function {
             name_orig,
             fn_t,
-            args,
+            margs,
             ..
         } = fun.clone();
 
-        let args = args
+        let margs = margs
             .into_iter()
             .map(|(t, n)| (t.to_string().to_string(), n))
             .collect::<Vec<_>>();
 
         self.cache
-            .insert(name_orig, FunctionSignature { fn_t, args });
+            .insert(name_orig, FunctionSignature { fn_t, margs });
     }
 
     pub fn get_from_header(
         &self,
         class_name: &str,
         name: &pdb::RawString,
-        formatter: &pdb_parser::Formatter,
+        formatter: &pdb_parser::PdbParser,
         type_index: pdb::TypeIndex,
     ) -> crate::Result<Option<FunctionSignature>> {
         assert!(!type_index.is_cross_module());

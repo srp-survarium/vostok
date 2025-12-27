@@ -17,18 +17,21 @@ class cubic_spline_skeleton_animation_cook :
 	private boost::noncopyable
 {
 public:
-		cubic_spline_skeleton_animation_cook( );
+					cubic_spline_skeleton_animation_cook( );
+
 	virtual	u32		calculate_resource_size	( const_buffer in_raw_file_data, bool file_exist );
 	virtual void	create_resource			(
-						resources::query_result_for_cook& in_out_query, 
-						const_buffer raw_file_data,
-						resources::managed_resource_ptr	out_resource
+						resources::query_result_for_cook&	in_out_query,
+						const_buffer						bi_spline_skeleton_animation_buffer,
+						resources::managed_resource_ptr		out_resource
 					);
 	virtual	void	destroy_resource		( resources::managed_resource* dying_resource ) ;
 
 private:
 	typedef resources::managed_cook			super;
 }; // class cubic_spline_skeleton_animation_cook
+
+STATIC_SIZE_ASSERT(cubic_spline_skeleton_animation_cook, 0x20);
 
 } // namespace animation
 } // namespace vostok

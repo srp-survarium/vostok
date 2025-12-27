@@ -6,7 +6,7 @@
 :: The script current directory is: :/sources/vostok/survarium/pc/sources
 ::
 
-if not defined REQUIRED_CLASS set "REQUIRED_CLASS=survarium"
+if not defined REQUIRED_CLASS set "REQUIRED_CLASS=vostok::animation"
 
 if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
@@ -36,9 +36,7 @@ cargo run --release --bin pdb-parser -- ^
     --pdb-path      "%PDB_FILE%"        ^
     --engine-path   "%ENGINE_DIR%"      ^
     --as-base                           ^
-    --skip-non-engine-headers           ^
-    --clear-structure                   ^
-    --no-overwrites
+    --skip-non-engine-headers
 
 popd
 

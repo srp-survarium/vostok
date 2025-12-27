@@ -31,7 +31,7 @@ protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( camera_follower_interface )
 }; // struct camera_follower_interface
 
-class  VOSTOK_ANIMATION_API camera_follower :public vostok::camera_effector 
+class  VOSTOK_ANIMATION_API camera_follower :public vostok::camera_effector
 {
 public:
 					camera_follower	( );
@@ -54,6 +54,8 @@ private:
 	float3			m_focus_point_position;
 	float const		factor;
 }; // class camera_follower
+
+STATIC_SIZE_ASSERT(camera_follower, 0x20);
 
 } // namespace animation
 } // namespace vostok

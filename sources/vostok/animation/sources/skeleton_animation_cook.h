@@ -12,6 +12,15 @@
 namespace vostok {
 namespace animation {
 
+// sushi@TODO: Remove
+// bi_spline_data renamed?
+class bi_spline_skeleton_animation_baked : public resources::unmanaged_resource {
+  resources::resource_ptr< configs::binary_config, unmanaged_intrusive_base > m_bones_names;
+};
+
+typedef resources::resource_ptr< bi_spline_skeleton_animation_baked, resources::unmanaged_intrusive_base >
+	bi_spline_skeleton_animation_baked_ptr;
+
 class skeleton_animation_cook :
 	public resources::translate_query_cook,
 	private boost::noncopyable
@@ -23,10 +32,14 @@ private:
 	typedef translate_query_cook					super;
 
 private:
-			void		on_bi_spline_data_arrived	( resources::queries_result& result );
-			void		on_cubic_spline_animation_cooked( resources::queries_result& data, resources::unmanaged_resource_ptr check_data );
-	virtual	void		translate_query				( resources::query_result_for_cook& parent );
-	virtual void		delete_resource				( resources::resource_base* resource );
+	virtual	void	translate_query					( resources::query_result_for_cook& parent );
+	virtual void	delete_resource					( resources::resource_base* resource );
+
+	static	void	on_cubic_spline_animation_cooked(
+						resources::queries_result&				data,
+						bi_spline_skeleton_animation_baked_ptr	bi_spline_animation
+					);
+	static	void	on_bi_spline_animation_arrived	( resources::queries_result& result );
 
 private:
 	animation::world&	m_world;

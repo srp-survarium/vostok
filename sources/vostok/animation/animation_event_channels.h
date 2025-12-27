@@ -41,16 +41,18 @@ public:
 		void				copy_internals			( void* mem_buff )const;
 
 public:
-inline	u32						channels_count		( )	const		{ return m_channels_count; }		
+inline	u32						channels_count		( )	const		{ return m_channels_count; }
 		event_channel			&channel			( u32 id )	;
 		event_channel	const	&channel			( u32 id ) const ;
 		u32						get_channel_id		( pcstr name ) const ;
-		
+
 private:
 	u32					m_channels_count;
 	u32					m_internal_memory_position;
 
 }; // class animation_event_channels
+
+STATIC_SIZE_ASSERT(animation_event_channels, 0x8);
 
 } // namespace animation
 } // namespace vostok

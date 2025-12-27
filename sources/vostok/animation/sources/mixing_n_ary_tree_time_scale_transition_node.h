@@ -19,19 +19,8 @@ public:
 						n_ary_tree_base_node& from,
 						n_ary_tree_base_node& to,
 						base_interpolator const& interpolator,
-						u32 const current_time_in_ms,
-						u32 const last_integration_interval_id,
-						float const animation_time_on_transition_start
+						u32 const current_time_in_ms
 					);
-
-	inline	float	last_integration_interval_value				( ) const;
-	inline	void	set_last_integration_interval_value			( float const last_integration_interval_value );
-
-	inline	u32		last_integration_interval_id				( ) const;
-	inline	void	set_last_integration_interval_id			( u32 const last_integration_interval_id );
-
-	inline	void	set_last_integration_interval_cycles_count	( int const last_integration_interval_cycles_count );
-	inline	int		last_integration_interval_cycles_count		( ) const;
 
 	virtual	void	accept										( n_ary_tree_visitor& visitor );
 
@@ -42,6 +31,7 @@ private:
 private:
 	virtual	bool	is_time_scale								( ) { return true; }
 	virtual	bool	is_weight									( ) { return false; }
+	virtual bool	is_transition								( ) { return true; }
 
 	virtual void	accept										( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_base_node& node );
 
@@ -55,13 +45,13 @@ private:
 	virtual void	visit										( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_time_scale_transition_node& node );
 
 private:
-	typedef n_ary_tree_weight_transition_node	super;
+			void	check_consistency							( );
 
 private:
-	float			m_last_integration_interval_value;
-	u32				m_last_integration_interval_id;
-	int				m_last_integration_interval_cycles_count;
+	typedef n_ary_tree_weight_transition_node	super;
 }; // class n_ary_tree_time_scale_transition_node
+
+STATIC_SIZE_ASSERT(n_ary_tree_time_scale_transition_node, 0x14);
 
 } // namespace mixing
 } // namespace animation

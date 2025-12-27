@@ -41,6 +41,8 @@ private:
 	float const		m_animation_interval_time;
 }; // class n_ary_tree_time_scale_start_time_modifier
 
+STATIC_SIZE_ASSERT(n_ary_tree_time_scale_start_time_modifier, 0xC);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

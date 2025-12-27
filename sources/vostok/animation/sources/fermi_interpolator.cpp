@@ -7,6 +7,7 @@
 #include "pch.h"
 #include <vostok/animation/fermi_interpolator.h>
 #include "interpolator_comparer.h"
+#include "mixing_n_ary_tree_transition_tree_constructor.h"
 #include <vostok/animation/interpolator_visitor.h>
 
 using vostok::animation::fermi_interpolator;
@@ -41,6 +42,18 @@ float fermi_interpolator::transition_time				( ) const
 fermi_interpolator* fermi_interpolator::clone	( vostok::mutable_buffer& buffer ) const
 {
 	return					clone_impl< fermi_interpolator >( buffer );
+}
+
+// STATE[STUB]
+fermi_interpolator* fermi_interpolator::clone( vostok::animation::mixing::n_ary_tree_transition_tree_constructor& constructor ) const
+{
+	return NULL;
+
+	// FUNCTION BODY
+	// <0x56f540>|0x000|+0x02c:'49'
+	// <0x56f56c>|0x02c|-0x003:'49'
+	// <0x56f569>|0x029|+0x00f:'50'
+	// ******
 }
 
 void fermi_interpolator::accept						( interpolator_visitor& visitor ) const

@@ -27,6 +27,8 @@ private:
 	virtual	void	accept						( binary_tree_visitor& visitor );
 }; // class binary_tree_addition_node
 
+STATIC_SIZE_ASSERT(binary_tree_addition_node, 0x1C);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

@@ -23,6 +23,9 @@ public:
 							u32 const initial_event_types
 						);
 	inline				n_ary_tree_weight_event_iterator	( );
+
+			void		invert_times						( u32 time_in_ms );
+
 			n_ary_tree_weight_event_iterator&	operator ++	( );
 	inline	animation_event						operator *	( );
 	inline	bool								is_equal	( n_ary_tree_weight_event_iterator const& other ) const;
@@ -30,8 +33,10 @@ public:
 private:
 	n_ary_tree_animation_node*	m_animation;
 	u32							m_time_in_ms;
-	u32							m_event_type;
+	u16							m_event_type;
 }; // class n_ary_tree_weight_event_iterator
+
+STATIC_SIZE_ASSERT(n_ary_tree_weight_event_iterator, 0xC);
 
 	inline	bool								operator ==	( n_ary_tree_weight_event_iterator const& left, n_ary_tree_weight_event_iterator const& right );
 	inline	bool								operator !=	( n_ary_tree_weight_event_iterator const& left, n_ary_tree_weight_event_iterator const& right );

@@ -107,8 +107,8 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_transition
 	n_ary_tree_time_scale_calculator time_scale_calculator(
 		m_start_time_in_ms,
 		accumulated_animation_time,
-		transition_start_time_in_ms + (start_integration_interval_id ? 2*start_integration_interval_id-1 : 0)*integration_interval_length_in_ms/2,
-		n_ary_tree_time_scale_calculator::forbid_transitions_destroying
+		transition_start_time_in_ms + (start_integration_interval_id ? 2*start_integration_interval_id-1 : 0)*integration_interval_length_in_ms/2
+		// sushi@TODO: n_ary_tree_time_scale_calculator::forbid_transitions_destroying
 	);
 	time_scale_calculator.visit				( node );
 	float current_time_direction			= math::sign( time_scale_calculator.time_scale() );
@@ -117,8 +117,8 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_transition
 		n_ary_tree_time_scale_calculator time_scale_calculator(
 			transition_start_time_in_ms + (2*i+1)*integration_interval_length_in_ms/2,
 			accumulated_animation_time,
-			transition_start_time_in_ms + (i ? 2*i-1 : 0)*integration_interval_length_in_ms/2,
-			n_ary_tree_time_scale_calculator::forbid_transitions_destroying
+			transition_start_time_in_ms + (i ? 2*i-1 : 0)*integration_interval_length_in_ms/2
+			// sushi@TODO: n_ary_tree_time_scale_calculator::forbid_transitions_destroying
 		);
 		time_scale_calculator.visit			( node );
 		R_ASSERT							( &node == time_scale_calculator.result() );
@@ -168,7 +168,7 @@ n_ary_tree_time_in_ms_calculator::n_ary_tree_time_in_ms_calculator	(
 		u32 const start_time_in_ms,
 		float const start_animation_time,
 		float const target_animation_time,
-		u32 const event_type
+		u16 const event_type
 	) :
 	m_start_time_in_ms( start_time_in_ms ),
 	m_start_animation_time( start_animation_time ),

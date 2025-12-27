@@ -10,6 +10,7 @@
 #include "interpolator_comparer.h"
 #include <vostok/animation/mixing_animation_lexeme.h>
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/mixing.h>
 
 using vostok::animation::mixing::binary_tree_animation_node;
 using vostok::animation::mixing::binary_tree_visitor;
@@ -26,9 +27,6 @@ binary_tree_animation_node::binary_tree_animation_node			( vostok::animation::mi
 	m_start_animation_interval_id		( parameters.start_animation_interval_id() ),
 	m_start_animation_interval_time		( parameters.start_animation_interval_time() ),
 	m_start_cycle_animation_interval_id	( parameters.start_cycle_animation_interval_id() ),
-	m_next_animation					( 0 ),
-	m_driving_animation					( parameters.driving_animation() ),
-	m_n_ary_driving_animation			( 0 ),
 	m_unique_weights_count				( 0 ),
 	m_weight_interpolator				(
 		parameters.weight_interpolator() ?
@@ -37,17 +35,25 @@ binary_tree_animation_node::binary_tree_animation_node			( vostok::animation::mi
 	),
 	m_time_scale						( parameters.time_scale() ),
 	m_time_scale_interpolator			(
-		parameters.driving_animation() ?
-		0 :
-		(
-			parameters.time_scale_interpolator() ?
-			parameters.time_scale_interpolator()->clone( parameters.buffer() ) :
-			instant_interpolator().clone( parameters.buffer() )
-		)
+		// parameters.driving_animation() ?
+		0 //:
+		//(
+		//	parameters.time_scale_interpolator() ?
+		//	parameters.time_scale_interpolator()->clone( parameters.buffer() ) :
+		//	instant_interpolator().clone( parameters.buffer() )
+		// )
 	),
+	// sushi@TODO:
+	m_animated_object					( NULL ),
+	m_playback_type						( vostok::animation::mixing::play_cyclically ),
+	m_time_synchronization_group_id		( 0 ),
+	m_weight_synchronization_group_id	( 0 ),
+	m_bones_mask						( 0 ),
+	m_unique_animation_id				( 0 ),
+	m_is_positive_event_direction		( false ),
+	m_can_generate_user_defined_events	( false ),
+
 	m_null_weight_found					( false ),
-	m_playing_type						( parameters.playing_type() ),
-	m_synchronization_group_id			( parameters.synchronization_group_id() ),
 	m_override_existing_animation		( parameters.override_existing_animation() ),
 	m_additivity_priority				( parameters.additivity_priority() )
 {

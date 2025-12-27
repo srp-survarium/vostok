@@ -15,7 +15,7 @@ namespace vostok
 	{
 		class single_animation;
 
-		class single_animation_cook : public resources::translate_query_cook, public boost::noncopyable 
+		class single_animation_cook : public resources::translate_query_cook, public boost::noncopyable
 		{
 			typedef resources::translate_query_cook	super;
 
@@ -32,6 +32,8 @@ namespace vostok
 			void					on_animations_loaded		( resources::queries_result& data, configs::binary_config_ptr config_ptr, configs::binary_config_value const& collection );
 
 		}; // class single_animation_cook
+
+		STATIC_SIZE_ASSERT(single_animation_cook, 0x20);
 
 	} // namespace animation
 } // namespace vostok

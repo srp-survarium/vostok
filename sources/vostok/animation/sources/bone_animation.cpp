@@ -6,13 +6,13 @@
 
 #include "pch.h"
 #include <vostok/animation/bone_animation.h>
-#include "bi_spline_bone_animation.h"
+// sushi@TODO: #include "bi_spline_bone_animation.h"
 
 using namespace vostok::math;
 
 namespace vostok {
 namespace animation {
-
+/*
 u32		bone_animation::count_internal_memory_size( const bi_spline_bone_animation	&bd )
 {
 	u32 size = 0;
@@ -20,7 +20,7 @@ u32		bone_animation::count_internal_memory_size( const bi_spline_bone_animation	
 	for ( u32  ch = channel_translation_x; ch < channel_max; ++ch )
 	{
 		bi_spline_bone_animation::animation_channel_data const& channel = bd.channel( enum_channel_id ( ch ) );
-		
+
 		size += animation_curve_type::count_internal_memory_size( channel );
 	}
 	return size;
@@ -29,20 +29,20 @@ u32		bone_animation::count_internal_memory_size( const bi_spline_bone_animation	
 void	bone_animation::create_internals_in_place( const bi_spline_bone_animation	&bd, void* memory )
 {
 					////const bi_spline_data< float > &b_spline = data.bone( idx[bone] ).channel( enum_channel_id (ch) ).bi_spline();
-	
+
 	for ( u32 ch = channel_translation_x; ch < channel_max; ++ch )
 	{
 		////const bi_spline_data< float > &b_spline = data.bone( idx[bone] ).channel( enum_channel_id (ch) ).bi_spline();
 
 		const bi_spline_data< float > &b_spline = bd.channel( enum_channel_id (ch) );
-		
+
 		channel( enum_channel_id (ch) ).create_in_place_internals( b_spline, memory );
 
 		memory = get_shift_ptr ( memory, animation_curve_type::count_internal_memory_size( b_spline ) );
 	}
 
 }
-
+*/
 frame	bone_animation::bone_frame	( float const time, current_frame_position &frame_position ) const
 {
 	frame					result;

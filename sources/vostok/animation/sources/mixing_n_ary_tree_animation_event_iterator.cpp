@@ -20,19 +20,23 @@ using vostok::animation::mixing::channel_event_callback_base;
 using vostok::animation::subscribed_channel;
 
 n_ary_tree_animation_event_iterator::n_ary_tree_animation_event_iterator	(
-		animation_state& animation_state,
-		n_ary_tree_animation_node& animation_node,
-		u32 const start_time_in_ms,
-		u32 const event_types,
-		subscribed_channel*& channels_head
+		animation_state&				animation_state, // sushi@TODO
+		n_ary_tree_animation_node&		animation_node,
+		u32								start_time_in_ms,
+		u16								event_types,
+		u8								channel_ids,
+		subscribed_channel*&			channels_head
+
 	) :
 	m_animation							( &animation_node ),
 	m_channels_head						( &channels_head ),
 	m_value								(
+		0,
 		animation_state.animation_interval_id,
 		animation_state.animation_interval_time,
 		start_time_in_ms,
-		event_types
+		event_types,
+		0
 	)
 {
 	advance								( event_types );
@@ -42,7 +46,10 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		animation_interval const& interval,
 		float const start_time,
 		float target_time,
-		u32& event_type
+		u16& event_type,
+		u8&								channel_ids, // sushi@TODO
+		u8&								domain_data,
+		bool							start_time_may_be_used
 	)
 {
 	int const time_direction			= start_time <= target_time ? 1 : -1;
@@ -101,11 +108,11 @@ u32 n_ary_tree_animation_event_iterator::get_time_in_ms				(
 		u32 const start_time_in_ms,
 		float const time_from_interval_start,
 		float& event_time,
-		u32& event_type
+		u16& event_type
 	)
 {
 	vostok::animation::mixing::n_ary_tree_time_in_ms_calculator time_in_ms_calculator(
-		*(m_animation->driving_animation() ? m_animation->driving_animation() : m_animation),
+		*(m_animation->time_driving_animation() ? m_animation->time_driving_animation() : m_animation), // sushi@TODO
 		start_time_in_ms,
 		time_from_interval_start,
 		event_time,
@@ -118,7 +125,7 @@ u32 n_ary_tree_animation_event_iterator::get_time_in_ms				(
 	return								result;
 }
 
-void n_ary_tree_animation_event_iterator::advance					( u32 const initial_event_types )
+void n_ary_tree_animation_event_iterator::advance					( u16 const initial_event_types )
 {
 	animation_interval const* current_interval	= m_animation->animation_intervals() + m_value.animation_interval_id;
 	R_ASSERT_CMP						( (*current_interval).length(), >=, m_value.animation_interval_time );
@@ -126,10 +133,10 @@ void n_ary_tree_animation_event_iterator::advance					( u32 const initial_event_
 	vostok::animation::mixing::n_ary_tree_time_scale_calculator time_scale_calculator(
 		m_value.event_time_in_ms,
 		m_value.animation_interval_time,
-		m_value.event_time_in_ms,
-		vostok::animation::mixing::n_ary_tree_time_scale_calculator::forbid_transitions_destroying
+		m_value.event_time_in_ms
+	// sushi@TODO:	vostok::animation::mixing::n_ary_tree_time_scale_calculator::forbid_transitions_destroying
 	);
-	n_ary_tree_animation_node& driving_animation = *(m_animation->driving_animation() ? m_animation->driving_animation() : m_animation);
+	n_ary_tree_animation_node& driving_animation = *(m_animation->time_driving_animation() ? m_animation->time_driving_animation() : m_animation); // sushi@TODO
 	R_ASSERT							( !driving_animation.driving_animation() );
 	(*driving_animation.operands( sizeof(n_ary_tree_animation_node) ))->accept	( time_scale_calculator );
 	float time_scale					= time_scale_calculator.time_scale();
@@ -140,8 +147,8 @@ void n_ary_tree_animation_event_iterator::advance					( u32 const initial_event_
 		vostok::animation::mixing::n_ary_tree_time_scale_calculator time_scale_calculator(
 			m_value.event_time_in_ms + 1,
 			m_value.animation_interval_time,
-			m_value.event_time_in_ms + 1,
-			vostok::animation::mixing::n_ary_tree_time_scale_calculator::forbid_transitions_destroying
+			m_value.event_time_in_ms + 1
+		// sushi@TODO:	vostok::animation::mixing::n_ary_tree_time_scale_calculator::forbid_transitions_destroying
 		);
 		(*driving_animation.operands( sizeof(n_ary_tree_animation_node) ))->accept	( time_scale_calculator );
 		time_scale						= time_scale_calculator.time_scale();
@@ -149,17 +156,18 @@ void n_ary_tree_animation_event_iterator::advance					( u32 const initial_event_
 
 	if ( !initial_event_types && (time_scale == 0.f) ) {
 		m_animation						= 0;
-		m_value							= animation_event( u32(-1), 0 );
+		m_value							= animation_event( u32(-1), 0, 0 );
 		return;
 	}
 
 	// here we assume, that driving and driven animations must have the same interval ids and interval cycles
-	animation_interval const* current_driving_interval	= (m_animation->driving_animation() ? m_animation->driving_animation() : m_animation )->animation_intervals() + m_value.animation_interval_id;
+	animation_interval const* current_driving_interval	= (m_animation->time_driving_animation() ? m_animation->time_driving_animation() : m_animation )->animation_intervals() + m_value.animation_interval_id; // sushi@TODO
 	float const driving_animation_factor = current_driving_interval->length() / current_interval->length();
 	m_value.event_type					= initial_event_types;
-	u32 event_type;
+	u16 event_type;
 	if ( time_scale >= 0.f ) {
-		float const channel_event_time	= get_nearest_animation_interval_event_time( *current_interval, m_value.animation_interval_time, (*current_interval).length(), event_type );
+		u8 temp = 10;
+		float const channel_event_time	= get_nearest_animation_interval_event_time( *current_interval, m_value.animation_interval_time, (*current_interval).length(), event_type, temp, temp, true ); // sushi@TODO
 		R_ASSERT_CMP					( channel_event_time, <=, (*current_interval).length() );
 		float const event_time			= channel_event_time;//? vostok::math::min( channel_event_time, (*current_interval).length() );
 		float new_event_time			= event_time*driving_animation_factor;
@@ -181,7 +189,8 @@ void n_ary_tree_animation_event_iterator::advance					( u32 const initial_event_
 		}
 	}
 	else {
-		float const channel_event_time	= get_nearest_animation_interval_event_time( *current_interval, m_value.animation_interval_time, 0.f, event_type );
+		u8 temp = 10;
+		float const channel_event_time	= get_nearest_animation_interval_event_time( *current_interval, m_value.animation_interval_time, 0.f, event_type, temp, temp, true ); // sushi@TODO
 		R_ASSERT_CMP					( channel_event_time, >=, 0.f );
 		float const event_time			= channel_event_time;//? vostok::math::max( channel_event_time, 0.f );
 		float new_event_time			= event_time*driving_animation_factor;

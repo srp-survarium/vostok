@@ -59,6 +59,8 @@ private:
 	binary_tree_weight_node_ptr		m_result_weight;
 }; // class binary_tree_expression_simplifier
 
+STATIC_SIZE_ASSERT(binary_tree_expression_simplifier, 0x10);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

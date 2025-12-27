@@ -31,32 +31,38 @@ struct bone_name_index {
 	u32 index;
 };
 
+STATIC_SIZE_ASSERT(bone_name_index, 0x48);
+
 class VOSTOK_ANIMATION_API bone_names:
 	private core::noncopyable
 {
 public:
-	
+	struct crc_compare_predicate {
+		inline	bool	operator()	( bone_name_index const& lhs, bone_name_index const& rhs ) const { return true; /* sushi@TODO */ }
+	}; // struct bone_names
+public:
 				bone_names( );
 
 static		u32	count_internal_memory_size	( u32 m_bone_count );
 
 public:
+			void			create_internals_in_place	( configs::binary_config_ptr const& names, void* memory );
 			void			create_internals_in_place	( u32 bones_count, void* memory );
 			void			create_internals_in_place	( const bone_names &names, void* memory );
-			
+
 			u32				bones_number	( ) const { return m_bone_count; }
 
 
 			void			set_name		( bone_index_type bone_index, pcstr name );
 
-public:	
+public:
 			void			read			( vostok::configs::binary_config_value const &cfg );
-			void			write			( vostok::configs::lua_config_value		&cfg )const;
+			void			write			( vostok::configs::lua_config_value		&cfg )const; // sushi@NOTE: I don't see read and another write
 
 			void			write			( stream &file )const;
 
 public:
-			void			create_index	( const skeleton &skel, vector< bone_index_type > &index )const;
+		//	void			create_index	( const skeleton &skel, vector< bone_index_type > &index )const; // sushi@NOTE: I don't see
 
 public:
 			bone_index_type	bone_index		( pcstr name )const;
@@ -67,11 +73,13 @@ private:
 
 public:
 	bone_name_index	const	*bone_names_idx() const  {  return  static_cast<bone_name_index*> ( pvoid(pbyte( this ) + m_internal_memory_position) ); }
-	
+
 private:
 	size_t					m_internal_memory_position;
 	u32						m_bone_count;
 }; // class bone_names
+
+STATIC_SIZE_ASSERT(bone_names, 0x8);
 
 } // namespace animation
 } // namespace vostok

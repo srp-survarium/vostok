@@ -54,6 +54,8 @@ private:
 	animation_lexeme_ptr	m_cloned_instance;
 }; // class animation_lexeme
 
+STATIC_SIZE_ASSERT(animation_lexeme, 0x84);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

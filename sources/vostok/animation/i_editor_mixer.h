@@ -20,12 +20,12 @@ namespace debug { class renderer; }
 } // namespace render
 
 namespace animation {
-	namespace mixing { 
+	namespace mixing {
 		class expression;
 		class n_ary_tree_animation_node;
 		class animation_lexeme;
 	} // namespace mixing
-	
+
 	class	camera_follower;
 
 	struct editor_animation_state
@@ -43,7 +43,7 @@ namespace animation {
 
 	struct editor_animations_event
 	{
-		enum event_type 
+		enum event_type
 		{
 			new_animation = 0,
 			start_animation = 1,
@@ -63,6 +63,22 @@ namespace animation {
 		u32			additional_data;
 	}; // struct editor_animation_state
 
+	STATIC_SIZE_ASSERT(editor_animations_event, 0x10);
+
+	struct fixed_joint_camera_effector : public camera_effector , public core::noncopyable {
+		inline	explicit	fixed_joint_camera_effector	( float4x4 const& joint_matrix ) : m_joint_matrix( joint_matrix ) { }
+
+		virtual	void		process_camera				( float4x4& view_inverted ) override { /* no source */ }
+		virtual	void		on_attach					( ) override { /* no source */ }
+
+	private:
+		/* 0x0000 */	/* camera_effector */
+		/* 0x0004 */	/* core::noncopyable */
+		/* 0x0004 */	float4x4 const&		m_joint_matrix;
+	}; // class fixed_joint_camera_effector
+
+	STATIC_SIZE_ASSERT(fixed_joint_camera_effector, 0x8);
+
 	class i_editor_mixer: public camera_follower_interface
 	{
 	public:
@@ -70,15 +86,25 @@ namespace animation {
 										render::scene_ptr const& scene,
 										render::scene_renderer& scene_renderer,
 										render::debug::renderer& debug_renderer,
-										render::skeleton_model_ptr model
+										render::skeleton_model_ptr model,
+										bool todo_get_name
 									) = 0;
-		virtual 			void	set_target_and_tick			(mixing::expression const& expression, u32 const current_time_in_ms) = 0;
+		virtual 			void	set_target_and_tick			(
+										mixing::expression const& expression,
+										u32 const current_time_in_ms,
+										float4x4 const& arg_2
+									) = 0;
 		virtual 			void	tick						(u32 const current_time_in_ms) = 0;
+
 		virtual 			void	push_expression				(mixing::expression const& expression) = 0;
 		virtual 			void	push_expression_time		(u32 const expression_time) = 0;
+
 		virtual 			void	calculate_animations_events	(vectora<editor_animations_event>& events) = 0;
+
 		virtual 			void	get_current_anim_states		(vectora<editor_animation_state>& cur_anim_states, u32 current_time_in_ms) = 0;
-		virtual	camera_follower&	get_camera_follower			() = 0;	
+		virtual	camera_follower&	get_camera_follower			() = 0;
+		virtual	fixed_joint_camera_effector& get_hud_camera		() = 0;
+
 		virtual				void	subscribe_footsteps			(mixing::animation_lexeme& anim) = 0;
 		virtual				void	reset						() = 0;
 		virtual				void	set_model_transform			(float4x4& m) = 0;

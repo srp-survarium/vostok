@@ -10,14 +10,16 @@ use pdb::RegisterRelativeSymbol;
 use pdb::RegisterVariableSymbol;
 use pdb::{BasePointerRelativeSymbol, BlockSymbol, FallibleIterator, SymbolData};
 use pdb_addr2line::type_parser;
+use pdb_addr2line::type_parser::AttributeFlags;
 
-use crate::data::{Files, FunctionCache};
-use crate::pdb_parser::Formatter;
-use crate::utils;
-use crate::utils::Type;
-use crate::utils_fs;
+use crate::helpers::FunctionLocation;
+use crate::helpers::{Files, FunctionCache};
+use crate::pdb_parser::PdbParser;
 use crate::GenFlags;
-use crate::TEST_MODULE;
+use crate::{Namespace, Type};
+
+use crate::formatter;
+use crate::utils_fs;
 
 const GAME_IB: u32 = 0x10000;
 
@@ -30,9 +32,9 @@ pub struct Function<'a> {
 
     pub fn_t: pdb_addr2line::type_parser::Function,
     pub name_orig: String,
-    pub namespace: utils::Namespace,
+    pub namespace: Namespace,
 
-    pub args: Vec<(pdb::RawString<'a>, Type)>,
+    pub margs: Vec<(pdb::RawString<'a>, Type)>,
     pub locals: Vec<(pdb::RawString<'a>, Type, usize)>,
 
     pub proc_start: u32,
@@ -61,7 +63,7 @@ pub struct Statement {
 
 pub fn dump_sources(
     pdb: &mut pdb::PDB<std::fs::File>,
-    formatter: &Formatter,
+    formatter: &PdbParser,
     output_path: &std::path::Path,
     engine_path: &str,
     flags: GenFlags,
@@ -82,10 +84,6 @@ pub fn dump_sources(
     while let Some(module) = modules.next()? {
         module_id = module_id.wrapping_add(1);
 
-        if flags.contains(GenFlags::TEST_RUN) && !module.module_name().ends_with(TEST_MODULE) {
-            continue;
-        }
-
         if module.module_name().contains("\\scaleform\\") {
             continue;
         }
@@ -104,13 +102,7 @@ pub fn dump_sources(
         )?;
 
         module.update_cache(&mut cache, flags);
-        module.write(
-            &mut output_path,
-            &mut source_path,
-            engine_path,
-            flags,
-            files,
-        )?;
+        module.write(&mut output_path, &mut source_path, engine_path, files)?;
     }
 
     Ok(cache)
@@ -131,7 +123,7 @@ impl<'a> Module<'a> {
         module_info: &'a pdb::ModuleInfo,
         module_id: usize,
 
-        formatter: &Formatter,
+        formatter: &PdbParser,
         address_map: &pdb::AddressMap,
         string_table: &pdb::StringTable,
 
@@ -216,14 +208,20 @@ impl<'a> Module<'a> {
                     let name_orig =
                         formatter.emit_function_orig(&proc.name, module_id, proc.type_index)?;
 
-                    let fn_t = formatter.parse_function(&proc.name, module_id, proc.type_index)?;
+                    let mut fn_t =
+                        formatter.parse_function(&proc.name, module_id, proc.type_index)?;
+
+                    let location = FunctionLocation::get(&filename);
+                    if matches!(location, FunctionLocation::Header) {
+                        fn_t.attrs.insert(AttributeFlags::IS_INLINE);
+                    }
 
                     function = Function {
                         module_id,
                         type_index: proc.type_index,
                         //
                         name_orig,
-                        namespace: utils::Namespace::get_from_class_name(&fn_t),
+                        namespace: Namespace::get_from_class_name(&fn_t),
                         //
                         fn_t,
                         //
@@ -246,10 +244,11 @@ impl<'a> Module<'a> {
                     let args_count = take_function.fn_t.arg_types.len();
 
                     let locals = take_function
-                        .args
-                        .split_off(args_count.min(take_function.args.len()))
+                        .margs
+                        .split_off(args_count.min(take_function.margs.len()))
                         .into_iter()
                         .map(|(local_name, local_type)| (local_name, local_type, 0));
+                    // This deals with there being too many args
                     take_function.locals.extend(locals);
 
                     files
@@ -261,6 +260,10 @@ impl<'a> Module<'a> {
                 }
 
                 // Arguments & Locals
+                //
+                // @NOTE: This is an approximation and will sometimes be incorrect.
+                // There is no simple way to get actual types from `pdb` thanks to LTCG
+                // and other optimizations.
                 SymbolData::BasePointerRelative(BasePointerRelativeSymbol {
                     offset,
                     type_index,
@@ -271,12 +274,10 @@ impl<'a> Module<'a> {
                     let local_type =
                         formatter.emit_type(module_id, type_index, &function.namespace)?;
 
-                    // @NOTE: This is an approximation and will sometimes be incorrect.
-                    // There is no simple way to get actual types from `pdb` thanks to LTCG
-                    // and other optimizations.
                     if function.locals.is_empty() && local_name.as_bytes() == b"this" {
-                    } else if offset > 0 {
-                        function.args.push((local_name, local_type));
+                        // Skip `this` since it is an implicit argument.
+                    } else if offset >= 0 {
+                        function.margs.push((local_name, local_type));
                     } else {
                         function
                             .locals
@@ -284,6 +285,11 @@ impl<'a> Module<'a> {
                     }
                 }
 
+                // Arguments & Locals
+                //
+                // @NOTE: This is an approximation and will sometimes be incorrect.
+                // There is no simple way to get actual types from `pdb` thanks to LTCG
+                // and other optimizations.
                 SymbolData::RegisterRelative(RegisterRelativeSymbol {
                     offset: _,
                     type_index,
@@ -303,7 +309,7 @@ impl<'a> Module<'a> {
 
                     if function.locals.is_empty() && local_name.as_bytes() == b"this" {
                     } else {
-                        function.args.push((local_name, local_type));
+                        function.margs.push((local_name, local_type));
                     }
                 }
 
@@ -496,7 +502,7 @@ impl<'a> Function<'a> {
                 attrs: type_parser::AttributeFlags::empty(),
             },
 
-            args: Default::default(),
+            margs: Default::default(),
             locals: Default::default(),
 
             proc_start: Default::default(),
@@ -527,7 +533,6 @@ impl<'a> Module<'a> {
         output_path: &mut std::path::PathBuf,
         source_path: &mut std::path::PathBuf,
         engine_path: &str,
-        flags: GenFlags,
         files: &mut Files,
     ) -> crate::Result<()> {
         let output_path_len = output_path.as_path().as_os_str().len();
@@ -538,43 +543,32 @@ impl<'a> Module<'a> {
                 continue;
             };
 
-            {
-                let mut file: Box<dyn std::io::Write> = match flags.contains(GenFlags::TEST_RUN) {
-                    false => {
-                        let extension = match () {
-                            () if path_to_file.ends_with(".h") => ".h",
-                            () if path_to_file.ends_with(".cpp") => ".cpp",
-                            () => "",
-                        };
+            let extension = match () {
+                () if path_to_file.ends_with(".h") => ".h",
+                () if path_to_file.ends_with(".cpp") => ".cpp",
+                () => "",
+            };
 
-                        source_path.push(path_to_file);
-                        let file =
-                            utils_fs::open_file(output_path, source_path, flags, files, extension)?;
+            source_path.push(path_to_file);
+            let mut file = utils_fs::open_file(output_path, source_path, files, extension)?;
 
-                        Box::new(file)
-                    }
-                    true => {
-                        println!("\nFile: {path_to_file:?}\n");
-                        Box::new(std::io::stdout())
-                    }
-                };
+            //
+            //
+            //
 
-                //
-                //
-                //
+            let namespace = assume_namespace(&funs);
 
-                let namespace = assume_namespace(&funs);
+            write_header(&mut file, path_to_file)?;
+            namespace.start_namespace(&mut file)?;
 
-                write_header(&mut file, path_to_file, &namespace)?;
-
-                for function in funs.into_values() {
-                    function.write(&namespace, &mut file)?;
-                }
-
-                Self::write_typedefs(&self.typedefs, &mut file)?;
-
-                write_footer(&mut file, path_to_file, &namespace)?;
+            for function in funs.into_values() {
+                function.write(&namespace, &mut file)?;
             }
+
+            Self::write_typedefs(&self.typedefs, &mut file)?;
+
+            namespace.end_namespace(&mut file)?;
+            write_footer(&mut file, path_to_file)?;
 
             output_path.as_mut_os_string().truncate(output_path_len);
             source_path.as_mut_os_string().truncate(source_path_len);
@@ -590,9 +584,9 @@ impl<'a> Module<'a> {
         if !typedefs.is_empty() {
             writeln!(w, "\t// TYPEDEFS")?;
             for (ty, name) in typedefs {
-                writeln!(w, "\ttypedef")?;
-                writeln!(w, "\t\t{ty}")?;
-                writeln!(w, "\t\t{name};")?;
+                writeln!(w, "\t// typedef")?;
+                writeln!(w, "\t// \t{ty}")?;
+                writeln!(w, "\t// \t{name};")?;
                 writeln!(w)?;
             }
             writeln!(w, "\t// ******\n")?;
@@ -602,11 +596,7 @@ impl<'a> Module<'a> {
 }
 
 impl<'a> Function<'a> {
-    pub fn write(
-        self,
-        namespace: &utils::Namespace,
-        mut w: impl std::io::Write,
-    ) -> std::io::Result<()> {
+    pub fn write(self, namespace: &Namespace, mut w: impl std::io::Write) -> std::io::Result<()> {
         let Self {
             module_id: _,
             type_index: _,
@@ -614,10 +604,10 @@ impl<'a> Function<'a> {
             flags,
             //
             fn_t,
-            name_orig,
+            name_orig: _,
             namespace: _,
             //
-            args,
+            margs,
             locals,
             //
             proc_start,
@@ -633,7 +623,7 @@ impl<'a> Function<'a> {
             symbols,
         } = self;
 
-        let args = args
+        let margs = margs
             .into_iter()
             .map(|(name, type_)| (name.to_string().to_string(), type_))
             .collect::<Vec<_>>();
@@ -641,8 +631,30 @@ impl<'a> Function<'a> {
             true => writeln!(w, "// STUB GENERATED FOR BASE CODE")?,
             false => writeln!(w, "// STATE[STUB]")?,
         }
-        writeln!(w, "// {name_orig}")?;
-        utils::write_fn_signature_with_args(&fn_t, namespace, &args, None, None, None, &mut w)?;
+
+        // sushi@TODO: The information on whether the function is virtual or not is stored in the
+        // class definitions, which are parsed in `gen_hearders.rs`.
+        //
+        // Since we write functions as we parse them, we don't have this information yet.
+        // The proper fix would split parsing and writing into two stages.
+        if fn_t.attrs.contains(AttributeFlags::IS_INLINE)
+        // && !fn_t.attrs.contains(AttributeFlags::IS_VIRTUAL)
+        {
+            write!(w, "inline ")?;
+        }
+
+        // sushi@TODO: Same as above. `static` is only known from header files.
+        // Even worse, we only can set it for member functions. While there are a lot of static
+        // functions without a class associated with them.
+        //
+        // There should still be a way to do that, since static functions do not have mangled
+        // symbols and this information we should be able to extract from pdb files.
+        if fn_t.attrs.contains(AttributeFlags::IS_STATIC) {
+            write!(w, "static ")?;
+        }
+
+        formatter::Formatter::Source
+            .write_fn_signature_with_args(&fn_t, namespace, &margs, &mut w)?;
 
         writeln!(w, "\n{{")?;
 
@@ -652,7 +664,7 @@ impl<'a> Function<'a> {
                 let local_prefix_len = "// ".len() + local_type.len() + " ".len();
 
                 write!(w, "\t// {local_type} ")?;
-                utils::pad_spaces(&mut w, local_prefix_len)?;
+                formatter::pad_spaces(&mut w, local_prefix_len)?;
                 write!(w, "{local_name}")?;
 
                 if local_scope != 0 {
@@ -669,7 +681,7 @@ impl<'a> Function<'a> {
                 let const_prefix_len = "// const ".len() + const_type.len() + " ".len();
 
                 write!(w, "\t// const {const_type} ")?;
-                utils::pad_spaces(&mut w, const_prefix_len)?;
+                formatter::pad_spaces(&mut w, const_prefix_len)?;
                 writeln!(w, "{const_name} = {const_value};")?;
             }
             writeln!(w, "\t// ******\n")?;
@@ -681,7 +693,7 @@ impl<'a> Function<'a> {
                 let static_prefix_len = "// static ".len() + static_type.len() + " ".len();
 
                 write!(w, "\t// static {static_type} ")?;
-                utils::pad_spaces(&mut w, static_prefix_len)?;
+                formatter::pad_spaces(&mut w, static_prefix_len)?;
                 writeln!(
                     w,
                     "{static_name} = <{offset}>;",
@@ -808,11 +820,24 @@ impl<'a> Function<'a> {
                 },
             };
 
-            let non_empty_body = statements.len() > 2;
-
-            let mut next_line = proc_start;
             statements.sort_by_key(|statement| statement.line_start);
 
+            let mut non_empty_body = statements.len() > 2;
+
+            // Sometimes there are multiple statements for the end `}` line.
+            // When this happens, do not hide brackets
+            if non_empty_body {
+                let len = statements.len();
+                if statements[len - 2].line_start == statements[len - 1].line_start {
+                    non_empty_body = false;
+                }
+
+                if statements[0].line_start == statements[1].line_start {
+                    non_empty_body = false;
+                }
+            }
+
+            let mut next_line = proc_start;
             for i in 0..statements.len() {
                 let Statement {
                     rva,
@@ -869,11 +894,7 @@ impl<'a> Function<'a> {
     }
 }
 
-pub fn write_header(
-    w: &mut impl std::io::Write,
-    path: &str,
-    namespace: &utils::Namespace,
-) -> crate::Result<()> {
+pub fn write_header(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
     use chrono::Local;
     let day = Local::now().format("%d.%m.%Y").to_string();
 
@@ -902,23 +923,15 @@ pub fn write_header(
         writeln!(w)?;
     }
 
-    namespace.start_namespace(w)?;
-
     Ok(())
 }
 
-pub fn write_footer(
-    w: &mut impl std::io::Write,
-    path: &str,
-    namespace: &utils::Namespace,
-) -> crate::Result<()> {
+pub fn write_footer(w: &mut impl std::io::Write, path: &str) -> crate::Result<()> {
     let file_name = Path::new(path)
         .file_name()
         .expect("no filename")
         .to_string_lossy()
         .to_string();
-
-    namespace.end_namespace(w)?;
 
     if let Some(module_name) = file_name.strip_suffix(".h") {
         writeln!(w)?;
@@ -930,11 +943,11 @@ pub fn write_footer(
     Ok(())
 }
 
-fn assume_namespace(funs: &BTreeMap<u32, Function>) -> utils::Namespace {
-    let mut namespace = utils::Namespace::default();
+fn assume_namespace(funs: &BTreeMap<u32, Function>) -> Namespace {
+    let mut namespace = Namespace::default();
 
     for fun in funs.values() {
-        if fun.namespace != namespace {
+        if fun.namespace != namespace && fun.namespace.depth() > namespace.depth() {
             namespace = fun.namespace.clone();
         }
     }

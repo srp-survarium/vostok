@@ -35,6 +35,8 @@ private:
 	base_interpolator const*	m_result;
 }; // class n_ary_tree_interpolator_selector
 
+STATIC_SIZE_ASSERT(n_ary_tree_interpolator_selector, 0x8);
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

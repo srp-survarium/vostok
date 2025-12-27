@@ -14,7 +14,7 @@ namespace mixing {
 inline n_ary_tree_event_iterator::n_ary_tree_event_iterator				( ) :
 	m_animation_node			( 0 ),
 	m_state						( target_time_reached_state ),
-	m_value						( u32(-1), 0 )
+	m_value						( 0, u32(-1), 0.0f, 0, 0, 0 )
 {
 }
 

@@ -37,8 +37,10 @@ using vostok::animation::mixing::n_ary_tree_time_scale_node;
 using vostok::animation::mixing::n_ary_tree_addition_node;
 using vostok::animation::mixing::n_ary_tree_multiplication_node;
 using vostok::animation::mixing::n_ary_tree_subtraction_node;
+using vostok::animation::mixing::n_ary_tree_comparer;
 
-n_ary_tree_size_calculator::n_ary_tree_size_calculator	( ) :
+n_ary_tree_size_calculator::n_ary_tree_size_calculator	( n_ary_tree_comparer* comparer ) :
+	m_comparer					( comparer ),
 	m_size						( 0 )
 {
 }

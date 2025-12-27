@@ -23,7 +23,7 @@ class n_ary_tree_dumper :
 {
 public:
 	inline	n_ary_tree_dumper	( u32 const current_time_in_ms ) : m_offset(0), m_current_time_in_ms(current_time_in_ms) { }
-	
+
 private:
 	virtual	void	visit		( n_ary_tree_animation_node& node );
 	virtual	void	visit		( n_ary_tree_weight_node& node );
@@ -44,9 +44,12 @@ private:
 	inline	void	propagate	( T& node );
 
 private:
-	u32				m_offset;
-	u32 const		m_current_time_in_ms;
+	u32						m_offset;
+	u32 const				m_current_time_in_ms;
+	logging::verbosity		m_verbosity; // sushi@TODO: Add const
 }; // class n_ary_tree_dumper
+
+STATIC_SIZE_ASSERT(n_ary_tree_dumper, 0x14);
 
 } // namespace mixing
 } // namespace animation

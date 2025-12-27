@@ -37,6 +37,8 @@ private:
 	base_interpolator*				m_interpolator;
 }; // class single_animation
 
+STATIC_SIZE_ASSERT(single_animation, 0x110);
+
 } // namespace animation
 } // namespace vostok
 

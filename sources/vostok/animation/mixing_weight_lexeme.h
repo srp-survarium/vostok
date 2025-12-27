@@ -39,6 +39,8 @@ private:
 							);
 }; // class weight_lexeme
 
+STATIC_SIZE_ASSERT(weight_lexeme, 0x28);
+
 	inline	weight_lexeme&	operator +		( float const left, weight_lexeme const& right );
 	inline	weight_lexeme&	operator +		( weight_lexeme const& left, float const right );
 
