@@ -184,8 +184,8 @@ bool animation_player::try_get_transform( pcvoid const animated_object, float4x4
 
 // STATE[STUB]
 bool animation_player::set_target(
-	mixing::expression const&		expression,
-	const u32						current_time_in_ms,
+	mixing::expression const&						expression,
+	const u32										current_time_in_ms,
 	boost::function< float4x4( pcvoid ) > const&	get_transform_functor
 )
 {

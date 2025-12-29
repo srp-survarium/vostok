@@ -23,6 +23,9 @@ void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_s
 
 	// ******
 
+	mutable_buffer buffer( raw_buffer, buffer_size );
+	buffer += 4;
+
 	// FUNCTION BODY
 	// <0x73b3f7>|0x007|+0x00b:'119'
 	// <0x73b402>|0x012|+0x004:'120'
