@@ -23,6 +23,7 @@ class skeleton;
 struct editor_animation_state;
 struct subscribed_channel;
 class animation_states_dumper;
+class animation_player;
 
 namespace mixing {
 
@@ -234,6 +235,8 @@ private:
 	/* 0x0024 */	u32									m_interpolators_count;
 	/* 0x0028 */	u32									m_tree_actual_time_in_ms;
 	/* 0x002c */	bool								m_is_logging_enabled;
+private:
+	friend class animation_player;
 }; // class n_ary_tree
 
 STATIC_SIZE_ASSERT(n_ary_tree, 0x30);
