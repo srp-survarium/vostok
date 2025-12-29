@@ -23,6 +23,7 @@ class skeleton;
 struct editor_animation_state;
 struct subscribed_channel;
 class animation_states_dumper;
+class animation_player;
 
 namespace mixing {
 
@@ -108,25 +109,17 @@ public:
 											) const;
 
 	inline	bool							is_consistent						( ) const {  return false; /* no source */ }
-
 	inline	void							dump_animation_states				( animation_states_dumper& arg_0 ) const { /* no source */ }
-
 	inline	bool							are_there_any_animations			( ) const { return false; /* no source */ }
 
-	inline	u32								interpolators_count					( ) const { return 10; /* no source */ }
-
-	inline	base_interpolator const**		interpolators						( ) const { return  NULL;/* no source */ }
-
-	inline	n_ary_tree_animation_node*		weight_root							( ) const { return  NULL;/* no source */ }
-	inline	n_ary_tree_animation_node*		time_root							( ) const { return  NULL;/* no source */ }
-
-	inline	animated_object_holder*			animated_objects					( ) const { return  NULL;/* no source */ }
-
-	inline	u32								animations_count					( ) const { return 10;/* no source */ }
-	inline	u32								animated_objects_count				( ) const { return 10;/* no source */ }
-
-	inline	u32								tree_actual_time_in_ms				( ) const { return 10;/* no source */ }
-
+	inline	u32								interpolators_count					( ) const { return m_interpolators_count	; }
+	inline	base_interpolator const**		interpolators						( ) const { return m_interpolators			; }
+	inline	n_ary_tree_animation_node*		weight_root							( ) const { return m_weight_root			; }
+	inline	n_ary_tree_animation_node*		time_root							( ) const { return m_time_root				; }
+	inline	animated_object_holder*			animated_objects					( ) const { return m_animated_objects		; }
+	inline	u32								animations_count					( ) const { return m_animations_count		; }
+	inline	u32								animated_objects_count				( ) const { return m_animated_objects_count	; }
+	inline	u32								tree_actual_time_in_ms				( ) const { return m_tree_actual_time_in_ms	; }
 
 #ifndef MASTER_GOLD
 			void							fill_animation_states				( vectora< animation::editor_animation_state >& result );
@@ -229,8 +222,6 @@ private:
 												subscribed_channel*			channels_head
 											);
 
-
-
 private:
 	/* 0x0000 */	n_ary_tree_ptr						m_reference_counter;
 	/* 0x0004 */	n_ary_tree_animation_node*			m_weight_root;
@@ -244,6 +235,8 @@ private:
 	/* 0x0024 */	u32									m_interpolators_count;
 	/* 0x0028 */	u32									m_tree_actual_time_in_ms;
 	/* 0x002c */	bool								m_is_logging_enabled;
+private:
+	friend class animation_player;
 }; // class n_ary_tree
 
 STATIC_SIZE_ASSERT(n_ary_tree, 0x30);

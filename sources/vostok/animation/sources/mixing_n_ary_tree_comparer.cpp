@@ -20,20 +20,17 @@
 #include "mixing_n_ary_tree_transition_tree_constructor_impl.h"
 #include "mixing_n_ary_tree_target_time_scale_calculator.h"
 
+#include <vostok/animation/mixing_animated_object_holder.h>
+
 namespace vostok {
 namespace animation {
 namespace mixing {
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 {
-	// LOCALS
-	// n_ary_tree_size_calculator 		calculator
-	// ******
-
-	// CALL SITE INFO
-	// <0x56d8a9> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	n_ary_tree_size_calculator	calculator( this );
+	node.accept					( calculator );
 
 	// FUNCTION BODY
 	// <0>
@@ -41,10 +38,10 @@ void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 bool n_ary_tree_comparer::equal( ) const
 {
-	return false;
+	return						m_equal;
 
 	// FUNCTION BODY
 	// <0x56d860>|0x000|+0x003:'63'
@@ -54,7 +51,7 @@ bool n_ary_tree_comparer::equal( ) const
 // STATE[STUB]
 u32 n_ary_tree_comparer::needed_buffer_size( ) const
 {
-	return 0;
+	return						m_needed_buffer_size;
 
 	// FUNCTION BODY
 	// <0x56d850>|0x000|+0x003:'68'
@@ -62,7 +59,10 @@ u32 n_ary_tree_comparer::needed_buffer_size( ) const
 }
 
 // STATE[STUB]
-comparison_result_enum animation_comparer_predicate::operator()( n_ary_tree_animation_node const& left, n_ary_tree_animation_node const& right ) const
+comparison_result_enum animation_comparer_predicate::operator()(
+	n_ary_tree_animation_node const& left,
+	n_ary_tree_animation_node const& right
+) const
 {
 	// FUNCTION BODY
 	// <0x56e2e2>|0x002|+0x013:'76'
@@ -1357,22 +1357,54 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const& to )
 {
-	// LOCALS
-	// n_ary_tree_animation_node* 		i_begin
-	// n_ary_tree_animation_node* 		i_end
-	// ******
+	n_ary_tree_animation_node* i_begin		= from.weight_root();
+	n_ary_tree_animation_node* i_end		= synchronization_group_end( i_begin );
+	n_ary_tree_animation_node* j_begin		= to.weight_root();
+	n_ary_tree_animation_node* j_end		= synchronization_group_end( j_begin );
+	while ( i_begin && j_begin ) {
+		if ( (*i_begin).weight_synchronization_group_id() < (*j_begin).weight_synchronization_group_id() ) {
+			m_equal							= false;
+			remove_weight_synchronization_group	( i_begin, i_end );
+			get_next_synchronization_group		( i_begin, i_end );
+			continue;
+		}
+
+		if ( (*i_begin).weight_synchronization_group_id() > (*j_begin).weight_synchronization_group_id() ) {
+			m_equal							= false;
+			add_weight_synchronization_group	( j_begin, j_end );
+			get_next_synchronization_group		( j_begin, j_end );
+			continue;
+		}
+
+		change_weight_synchronization_group	( i_begin, i_end, j_begin, j_end );
+		get_next_synchronization_group		( i_begin, i_end );
+		get_next_synchronization_group		( j_begin, j_end );
+	}
+
+	while ( i_begin ) {
+		m_equal								= false;
+		remove_weight_synchronization_group	( i_begin, i_end );
+		get_next_synchronization_group		( i_begin, i_end );
+	}
+
+	while ( j_begin ) {
+		m_equal								= false;
+		add_weight_synchronization_group	( j_begin, j_end );
+		get_next_synchronization_group		( j_begin, j_end );
+	}
+
 
 	// FUNCTION BODY
 	// <0x56f233>|0x003|+0x003:'1078'
 	// <0x56f236>|0x006|+0x019:'1079'
 	// <0x56f24f>|0x01f|+0x007:'1080'
-	// <0x56f256>|0x026|+0x01a:'1081'
-	// <0x56f270>|0x040|+0x048:'1082'
+	// <0x56f256>|0x026|+0x01a:'1081'	synchronization_group_end( j_begin );
+	// <0x56f270>|0x040|+0x048:'1082'	while
 	// <0x56f2b8>|0x088|-0x040:'1082'
-	// <0x56f278>|0x048|+0x00e:'1083'
+	// <0x56f278>|0x048|+0x00e:'1083'		if ( (*i_begin).weight_synchroni
 	// <0x56f286>|0x056|+0x00b:'1084'
 	// <0x56f291>|0x061|+0x01b:'1085'
 	// <0x56f2ac>|0x07c|+0x067:'1086'
@@ -1405,12 +1437,26 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	// ******
 }
 
-// STATE[STUB]
+// STATE[UNCHECKED]
  n_ary_tree_comparer::n_ary_tree_comparer( n_ary_tree const& from, n_ary_tree const& to, u32 current_time_in_ms ) :
+	m_animations_count		( 0 ),
+	m_animated_objects_count( 0 ),
+	m_current_time_in_ms	( current_time_in_ms ),
 	m_from					( from ),
 	m_to					( to ),
-	m_current_time_in_ms	( current_time_in_ms )
+	m_equal					( true ),
+	m_needed_buffer_size	( 4 ) // sushi@TODO
 {
+
+	process_interpolators( from, to );
+
+	m_animated_objects = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( to.animated_objects_count() + from.animated_objects_count() ) );
+	m_animated_objects_end = m_animated_objects;
+	merge_trees( from, to );
+	m_animated_objects_count = m_animated_objects_end - m_animated_objects;
+
+	m_needed_buffer_size += m_animations_count * sizeof( animation_state );
+
 	// FUNCTION BODY
 	// <0>
 	// <1>

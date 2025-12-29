@@ -124,8 +124,8 @@ public:
 
 private:
 			bool		set_target					(
-							mixing::expression const&		expression,
-							const u32						current_time_in_ms,
+							mixing::expression const&						expression,
+							const u32										current_time_in_ms,
 							boost::function< float4x4( pcvoid ) > const&	get_transform_functor
 						);
 	inline	pvoid		get_next_buffer				( u32 buffer_size );

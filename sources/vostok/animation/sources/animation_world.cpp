@@ -6,7 +6,6 @@
 
 #include "pch.h"
 #include "animation_world.h"
-// sushi@TODO:#include "bi_spline_skeleton_animation.h"
 #include <vostok/animation/skeleton_animation.h>
 #include <vostok/animation/skeleton.h>
 #include <vostok/animation/bone_names.h>
@@ -17,6 +16,9 @@
 #include <vostok/resources_fs.h>
 #include <vostok/animation/engine.h>
 #include <vostok/fs_utils.h>
+
+#include "bi_spline_skeleton_animation_impl_cook.h"
+#include "bi_spline_skeleton_animation_baked_cook.h"
 
 #if	VOSTOK_USE_MAYA_ANIMATION
 #	include <vostok/maya_animation/engine.h>
@@ -58,6 +60,10 @@ animation_world::animation_world(
 	static skeleton_cook s_skeleton_cook;
 	static single_animation_cook s_single_animation_cook;
 	static animation_collection_cook s_animation_collection_cook;
+
+
+	static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
+	static bi_spline_skeleton_animation_baked_cook s_bi_spline_skeleton_animation_baked_cook;
 
 #if VOSTOK_USE_MAYA_ANIMATION
 	if ( check_animation_b_spline_approximation )
