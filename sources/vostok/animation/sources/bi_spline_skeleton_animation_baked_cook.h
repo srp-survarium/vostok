@@ -14,6 +14,7 @@ class bi_spline_skeleton_animation_baked_cook : public resources::inplace_unmana
 public:
 								bi_spline_skeleton_animation_baked_cook( );
 
+private:
 	virtual	mutable_buffer		allocate_resource		(
 									resources::query_result_for_cook&		in_query,
 									u32										file_size,
@@ -26,13 +27,23 @@ public:
 									resources::query_result_for_cook&		in_out_query,
 									mutable_buffer							in_out_unmanaged_resource_buffer
 								) override;
-	virtual	void				destroy_resource		( resources::unmanaged_resource* arg_0 ) override { /* no source */ }
+	virtual	void				destroy_resource		( resources::unmanaged_resource* resource ) override;
 
 	typedef fastdelegate::FastDelegate< void( resources::query_result_for_cook&, mutable_buffer ) > resource_delegate;
 	virtual	resource_delegate	get_create_resource_inplace_in_inline_fat_delegate( ) override;
-	virtual	resource_delegate	get_create_resource_inplace_in_creation_data_delegate( ) override { /* no source */ }
+	virtual	resource_delegate	get_create_resource_inplace_in_creation_data_delegate( ) override;
 
-	inline	void				create_resource_inplace	( resources::query_result_for_cook& arg_0, mutable_buffer arg_1 ) { /* no source */ }
+private:
+	// sushi@NOTE: This function is missing and I don't exactly understand its point.
+	// Maybe it will do something ~eventually~, but for now I just made this stub implementation.
+	inline	void				create_resource_inplace	(
+									resources::query_result_for_cook&		in_out_query,
+									mutable_buffer							in_out_unmanaged_resource_buffer
+								)
+								{
+									create_resource( in_out_query, in_out_unmanaged_resource_buffer );
+								}
+
 }; // class bi_spline_skeleton_animation_baked_cook
 
 STATIC_SIZE_ASSERT(bi_spline_skeleton_animation_baked_cook, 0x20);
