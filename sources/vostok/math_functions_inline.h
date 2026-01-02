@@ -36,6 +36,13 @@ inline T min			( T const& left, T const& right )
 	return		( left < right ? left : right );
 }
 
+inline float min( const float left, const float right )
+{
+	R_ASSERT	( valid(left) );
+	R_ASSERT	( valid(right) );
+	return		( left < right ? left : right );	// <0x239e0>|0x000|+0x008:'41'
+}
+
 template < typename T >
 inline T min			( T const& value1, T const& value2, T const& value3 )
 {

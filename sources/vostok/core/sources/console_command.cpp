@@ -13,10 +13,10 @@ namespace console_commands{
 console_command* s_console_command_root = NULL;
 
 console_command::console_command( pcstr name, bool serializable, command_type const command_type, execution_filter const execution_filter )
-:m_name				( name ), 
-m_prev				( s_console_command_root ), 
-m_next				( NULL ), 
-m_need_args			( false ), 
+:m_name				( name ),
+m_prev				( s_console_command_root ),
+m_next				( NULL ),
+m_need_args			( false ),
 m_serializable		( serializable ),
 m_command_type		( command_type ),
 m_execution_type	( execution_filter )
@@ -55,7 +55,7 @@ void console_command::syntax( syntax_str& dest ) const
 
 void console_command::on_invalid_syntax( pcstr args )
 {
-	syntax_str	buff; 
+	syntax_str	buff;
 	syntax		(buff);
 	LOG_WARNING	("Invalid syntax in call [%s %s]", name(), args);
 	LOG_WARNING	("Valid arguments: %s", buff);
@@ -73,8 +73,8 @@ void console_command::save_to( console_commands::save_storage& f, memory::base_a
 }
 
 //--delegate
-cc_delegate::cc_delegate( pcstr name, functor_type const& functor, bool need_args ) 
-:	super		( name, true, command_type_user_specific, execution_filter_general ), 
+cc_delegate::cc_delegate( pcstr name, functor_type const& functor, bool need_args, command_type const command_type )
+:	super		( name, true, command_type, execution_filter_general ),
 	m_functor	( functor )
 {
 	m_need_args = need_args;
@@ -93,8 +93,8 @@ void cc_delegate::execute( pcstr args )
 
 //--string
 cc_string::cc_string( pcstr name, pstr value, u32 size, bool serializable, command_type const command_type, execution_filter const execution_filter )
-:super		( name, serializable, command_type, execution_filter ), 
-m_value		( value ), 
+:super		( name, serializable, command_type, execution_filter ),
+m_value		( value ),
 m_size		( size )
 {
 	m_need_args		= true;
@@ -123,7 +123,7 @@ void cc_string::info( info_str& dest ) const
 
 //--bool
 cc_bool::cc_bool( pcstr name, bool& value, bool serializable, command_type const command_type, execution_filter const execution_filter )
-:super		( name, serializable, command_type, execution_filter ), 
+:super		( name, serializable, command_type, execution_filter ),
 m_value		( value )
 {
 	m_need_args		= true;
@@ -257,7 +257,7 @@ cc_float2::cc_float2( pcstr name, math::float2& value, math::float2 const min, m
 void cc_float2::execute( pcstr args )
 {
 	math::float2 v;
-	if( 2!=VOSTOK_SSCANF(args, "%f,%f", &v.x, &v.y) || 
+	if( 2!=VOSTOK_SSCANF(args, "%f,%f", &v.x, &v.y) ||
 		(v.x<m_min.x || v.y<m_min.y || v.x>m_max.x || v.y>m_max.y) )
 	{
 		on_invalid_syntax	( args );
@@ -293,7 +293,7 @@ cc_float3::cc_float3( pcstr name, math::float3& value, math::float3 const min, m
 void cc_float3::execute( pcstr args )
 {
 	math::float3 v;
-	if( 3!=VOSTOK_SSCANF(args, "%f,%f,%f", &v.x, &v.y, &v.z) || 
+	if( 3!=VOSTOK_SSCANF(args, "%f,%f,%f", &v.x, &v.y, &v.z) ||
 		(v.x<m_min.x || v.y<m_min.y || v.z<m_min.z || v.x>m_max.x || v.y>m_max.y || v.y>m_max.z) )
 	{
 		on_invalid_syntax( args );
@@ -326,15 +326,15 @@ cc_token::cc_token( pcstr name, u32 &value, const command_token commands[ ], u32
 :super(	name, serializable, command_type, execution_filter ),
 m_commands( commands ),
 m_num_commands( size ),
-m_value( value ) 
+m_value( value )
 {
-} 
+}
 
 u32 cc_token::find_id( pcstr args )const
 {
 	if ( !args )
 		return u32(-1);
-	
+
 	u32 size  = num_commands	();
 
 	for( u32 it = 0; it < size; ++it )
@@ -357,9 +357,9 @@ pcstr cc_token::find_name( u32 id )const
 
 void cc_token::all_methods_names ( string512 names )const
 {
-	
+
 	names[0] = '\0';
-	
+
 	u32 size = num_commands();
 
 	for( u32 it = 0; it < size; ++it )
@@ -369,7 +369,7 @@ void cc_token::all_methods_names ( string512 names )const
 void cc_token::execute( pcstr args )
 {
 	u32 id = find_id( args );
-	
+
 	if( id == u32(-1) )
 	{
 		on_invalid_syntax( args );
@@ -388,7 +388,7 @@ void cc_token::status( status_str& dest ) const
 			return;
 
 	strings::copy( dest, name );
-} 
+}
 
 void cc_token::info( info_str& dest ) const
 {
@@ -415,7 +415,7 @@ class cc_help :public console_command
 public:
 						cc_help					(pcstr name):console_command(name, false, command_type_user_specific, execution_filter_general){}
 	virtual void		execute					(pcstr args);
-	virtual void		info					(info_str& dest) const 
+	virtual void		info					(info_str& dest) const
 	{
 		vostok::strings::copy(dest, "[command] - displays help information on that command.");
 	}
