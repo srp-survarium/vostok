@@ -19,40 +19,50 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/debug_renderer.h>
 
-#include <vostok/physics/api.h>
-#include <vostok/physics/engine.h>
 #include <vostok/physics/animated_rigid_body.h>
-#include <vostok/physics/ghost_object.h>
-#include <vostok/physics/collision_shapes.h>
-#include <vostok/physics/static_rigid_body.h>
-#include <vostok/physics/contact_test_predicate.h>
-#include <vostok/physics/sources/bullet_character_controller.h>
+#include <vostok/physics/api.h>
 #include <vostok/physics/character_controller.h>
+#include <vostok/physics/collision_shapes.h>
+#include <vostok/physics/contact_test_predicate.h>
+#include <vostok/physics/engine.h>
+#include <vostok/physics/ghost_object.h>
+#include <vostok/physics/sources/bullet_character_controller.h>
+#include <vostok/physics/static_rigid_body.h>
 
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
 
-#include <vostok/game_core/scheduler.h>
+#include <vostok/game_core/affects_threshold.h>
+#include <vostok/game_core/bullet.h>
+#include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_sensor.h>
-
-#include <vostok/game_core/affects_threshold.h>
-
-#include <vostok/game_core/player_input.h>
-#include <vostok/game_core/player_stamina.h>
-
-#include <vostok/game_core/player_stamina.h>
-#include <vostok/game_core/ladder.h>
 #include <vostok/game_core/damage_model_cook.h>
 #include <vostok/game_core/inventory.h>
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
+#include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
+#include <vostok/game_core/player_input.h>
+#include <vostok/game_core/player_stamina.h>
+#include <vostok/game_core/scheduler.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace vostok
 {
+	void use_bullet( )
+	{
+		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
+		survarium::weapon_ammunition_ptr	wa( NULL );
+		survarium::weapon_core				wc;
+		survarium::bullet					bullet( bullet_manager, float3( ), float3( ), 0, 0.0f, wa, wc, NULL, NULL );
+		survarium::bullet					copy_bullet( bullet );
+		bullet.tick( 10 );
+	}
+
+
 	void use_inventory( )
 	{
 		survarium::medkit item;
@@ -429,6 +439,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );
 	vostok::use_ladder( NULL );

@@ -20,7 +20,7 @@ namespace network_core {
 	class packet_reader;
 }
 namespace animation {
-	class animation_callback_params;
+	struct animation_callback_params;
 }
 }
 

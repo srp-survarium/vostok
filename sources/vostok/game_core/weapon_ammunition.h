@@ -14,24 +14,24 @@
 namespace survarium {
 
 struct inventory_item_instance;
-class base_player;
+struct base_player;
 struct engine;
 
 class weapon_ammunition : public inventory_item {
 public:
 	explicit			weapon_ammunition			( );
 
-	inline	float		distance					( ) const { /* no source */ }
-	inline	float		dispersion					( ) const { /* no source */ }
-	inline	float		ricochet_angle				( ) const { /* no source */ }
-	inline	float		damage						( ) const { /* no source */ }
-	inline	float		impulse						( ) const { /* no source */ }
-	inline	float		pierce						( ) const { /* no source */ }
-	inline	float		air_resistance				( ) const { /* no source */ }
-	inline	float		muzzle_speed				( ) const { /* no source */ }
-	inline	u16			buck_shot					( ) const { /* no source */ }
-	inline	u16			game_material_id			( ) const { /* no source */ }
-	inline	bool		tracer						( ) const { /* no source */ }
+	inline	float		distance					( ) const { return m_distance; }
+	inline	float		dispersion					( ) const { return m_dispersion; }
+	inline	float		ricochet_angle				( ) const { return m_ricochet_angle; }
+	inline	float		damage						( ) const { return m_damage; }
+	inline	float		impulse						( ) const { return m_impulse; }
+	inline	float		pierce						( ) const { return m_pierce; }
+	inline	float		air_resistance				( ) const { return m_air_resistance; }
+	inline	float		muzzle_speed				( ) const { return m_muzzle_speed; }
+	inline	u16			buck_shot					( ) const { return m_buck_shot; }
+	inline	u16			game_material_id			( ) const { return m_game_material_id; }
+	inline	bool		tracer						( ) const { return m_tracer; }
 
 			void		load						( configs::binary_config_value const& cfg );
 	// STATE[STUB]

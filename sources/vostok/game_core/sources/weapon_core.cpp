@@ -5,6 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core.h>
 
+#include <vostok/animation/sources/mixing_base_lexeme.h>
+
 namespace survarium {
 /*
 // STATE[STUB]
@@ -378,6 +380,9 @@ float weapon_core::vertical_recoil_value( ) const
 // vostok::animation::mixing::expression survarium::weapon_core::selected_animations(vostok::mutable_buffer&, const bool) const
 animation::mixing::expression weapon_core::selected_animations( mutable_buffer& buffer, bool is_third_view ) const
 {
+
+	VOSTOK_UNREACHABLE_CODE( );
+
 	// LOCALS
 	// animation::mixing::expression const& expression_for_weapon_and_hands
 	// std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> result

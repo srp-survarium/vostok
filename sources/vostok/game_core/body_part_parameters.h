@@ -13,7 +13,7 @@
 
 namespace survarium {
 	class damage_model;
-	struct damage_info_type; // sushi@TODO
+	struct damage_info_type;
 }
 
 namespace vostok {
