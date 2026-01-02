@@ -59,6 +59,7 @@ void material_pair::add_particle( resources::unmanaged_resource_ptr particle )
 // vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const& survarium::material_pair::particle() const
 resources::unmanaged_resource_ptr const& material_pair::particle( ) const
 {
+	return resources::unmanaged_resource_ptr( );
 	// FUNCTION BODY
 	// <0x6fd429>|0x009|+0x00c:'40'
 	// <0x6fd435>|0x015|+0x016:'41'

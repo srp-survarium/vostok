@@ -15,7 +15,7 @@
 namespace survarium {
 	enum affects_applying_type_enum;
 	class bullet;
-	class damage_info_type; // sushi@TODO
+	struct damage_info_type;
 }
 
 namespace vostok {

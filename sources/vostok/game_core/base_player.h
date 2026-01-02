@@ -35,7 +35,7 @@ namespace physics {
 }
 namespace animation {
 	class skeleton;
-	class animation_callback_params;
+	struct animation_callback_params;
 }
 }
 
@@ -48,7 +48,6 @@ struct player_input;
 struct base_player_creation_params;
 
 // sushi@TODO: <0x122e20>|0x000:'149'
-
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
 public:

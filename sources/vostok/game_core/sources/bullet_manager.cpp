@@ -5,17 +5,20 @@
 #include "pch.h"
 #include <vostok/game_core/bullet_manager.h>
 
-#include <vostok/game_core/sources/temp_include_all.h>
+#include <vostok/game_core/bullet_manager_engine.h>
+#include <vostok/physics/world.h>
+#include <vostok/console_command.h>
+
+// #include <vostok/game_core/sources/temp_include_all.h>
 
 namespace survarium {
 
 // STATE[STUB]
-// survarium::bullet_manager::bullet_manager(survarium::game_material_manager*, vostok::physics::world*, survarium::bullet_manager_engine*)
 bullet_manager::bullet_manager( game_material_manager* material_manager, physics::world* physics_world, bullet_manager_engine* engine ) :
 	m_bullets				( NULL, 10 ),
 	m_mt_stack_allocator	( NULL, 10 )
 {
-	IncludeAll all;
+	// IncludeAll all;
 	// FUNCTION BODY
 	// <0x5a29f3>|0x123|+0x008:'45'
 	// <0x5a29fb>|0x12b|+0x008:'46'
@@ -25,7 +28,6 @@ bullet_manager::bullet_manager( game_material_manager* material_manager, physics
 }
 
 // STATE[STUB]
-// void survarium::bullet_manager::~bullet_manager()
 bullet_manager::~bullet_manager( )
 {
 	// FUNCTION BODY
@@ -44,14 +46,11 @@ void bullet_manager::initialize( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::bullet_manager::register_console_commands()
+// STATE[UNCHECKED]
 void bullet_manager::register_console_commands( )
 {
-	// STATICS
-	// static console_commands::cc_delegate set_max_bullets_cc = <0x4c2b670>;
-	// static console_commands::cc_delegate displace_all_bullets_cc = <0x4c2b6d0>;
-	// ******
+	static vostok::console_commands::cc_delegate	displace_all_bullets_cc	( "bullets_manager_displace_all_bullets",	boost::bind( &bullet_manager::destroy_all_bullets, this, _1 ),	true );
+	static vostok::console_commands::cc_delegate	set_max_bullets_cc		( "bullets_manager_set_max_bullets",		boost::bind( &bullet_manager::set_max_bullets, this, _1 ),		true );
 
 	// FUNCTION BODY
 	// <0x5a275e>|0x00e|+0x085:'73'
@@ -80,7 +79,6 @@ public:
 }; // struct redundant_bullet_predicate
 
 // STATE[STUB]
-// void survarium::bullet_manager::free_bullet(survarium::bullet*)
 void bullet_manager::free_bullet( bullet* bullet )
 {
 	// CALL SITE INFO
@@ -101,7 +99,6 @@ void bullet_manager::free_bullet( bullet* bullet )
 }
 
 // STATE[STUB]
-// void survarium::bullet_manager::tick(unsigned int)
 void bullet_manager::tick( u32 current_time_in_ms )
 {
 	// LOCALS
@@ -391,21 +388,15 @@ void bullet_manager::destroy_all_bullets( pcstr args )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 // void survarium::bullet_manager::set_max_bullets(char const*)
 void bullet_manager::set_max_bullets( pcstr args )
 {
-	// LOCALS
-	// s32 							new_bullets_count
-	// ******
+	int new_bullets_count;
+	if( VOSTOK_SSCANF( args, "%d", &new_bullets_count ) == EOF )
+		return;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x5a2719>|0x009|+0x01a:'342'
-	// <0x5a2733>|0x023|+0x002:'343'
-	// <0>
-	// <0x5a2735>|0x025|+0x00c:'345'
-	// ******
+	allocate_bullets_memory			( new_bullets_count );
 }
 
 // STATE[STUB]
@@ -443,22 +434,21 @@ void bullet_manager::allocate_bullets_memory( u32 new_max_bullets_count )
 }
 
 // STATE[STUB]
-// void survarium::bullet_manager::bullets_memory_allocated(vostok::resources::queries_result&)
 void bullet_manager::bullets_memory_allocated( resources::queries_result& queries )
 {
 	// LOCALS
-	// resources::resource_ptr<resources::unmanaged_allocation_resource,resources::unmanaged_intrusive_base> new_bullets_memory_ptr
+	// resources::unmanaged_allocation_resource_ptr new_bullets_memory_ptr
 	// bullet_manager::bullet_functor_mt_allocator new_mt_allocator<1>
-	// bool 						is_realocation<1>
-	// pbyte 						pointer<1>
-	// memory::single_size_buffer_allocator<128,threading::simple_lock> new_bullets_allocator<2>
-	// buffer_vector<bullet *> 		new_bullets_list<2>
-	// u32 							i<3>
-	// bullet* 						old_bullet<4>
-	// buffer_vector<bullet *> 		new_bullets_list<2>
+	// const bool 						is_realocation<1>
+	// pbyte 							pointer<1>
+	// memory::single_size_buffer_allocator< 128, threading::simple_lock > new_bullets_allocator<2>
+	// buffer_vector< bullet* > 		new_bullets_list<2>
+	// u32 								i<3>
+	// bullet* 							old_bullet<4>
+	// buffer_vector< bullet* > 		new_bullets_list<2>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY: 47
 	// <0>
 	// <0x5a1fb0>|0x010|+0x00c:'379'
 	// <0x5a1fbc>|0x01c|+0x034:'380'
@@ -507,31 +497,39 @@ void bullet_manager::bullets_memory_allocated( resources::queries_result& querie
 	// <2>
 	// <0x5a24f7>|0x557|+0x012:'424'
 	// ******
+
 }
 
-// STATE[STUB]
-// void survarium::bullet_manager::emit_bullet(vostok::math::float3 const&, vostok::math::float3 const&, float, vostok::resources::resource_ptr<survarium::weapon_ammunition,vostok::resources::unmanaged_intrusive_base> const&, survarium::weapon_core const&, unsigned int, survarium::hit_initiator const* const, survarium::hit_receiver const* const, bool)
+// STATE[UNCHECKED]
 void bullet_manager::emit_bullet(
-	float3 const&						position,
-	float3 const&						velocity,
-	float								air_resistance,
-	resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const&	wa,
-	weapon_core const&					wc,
-	u32									current_time_in_ms,
-	hit_initiator const*				initiator,
-	hit_receiver const*					ignorable_object,
-	bool								tracer
+	float3 const&					position,
+	float3 const&					velocity,
+	const float						air_resistance,
+	weapon_ammunition_ptr const&	wa,
+	weapon_core const&				wc,
+	const u32						current_time_in_ms,
+	hit_initiator const* const		initiator,
+	hit_receiver const* const		ignorable_object,
+	bool							tracer
 )
 {
-	// LOCALS
-	// bullet* 						new_bullet
-	// ******
+	if ( m_bullets_allocator_ref->total_size( ) == m_bullets_allocator_ref->allocated_size( ) )
+		destroy_one_bullet( ); // sushi@NOTE: This will copy the whole array
 
-	// CALL SITE INFO
-	// <0x5a1ca2> -> bool <unknown>(bullet*)
-	// ******
+	bullet* new_bullet = VOSTOK_NEW_IMPL( m_bullets_allocator_ref.c_ptr( ), bullet )( *this, position, velocity, current_time_in_ms, air_resistance, wa, wc, initiator, ignorable_object );
 
-	// FUNCTION BODY
+	if ( tracer && m_engine )
+		m_engine->attach_tracer( new_bullet );
+
+	m_bullets.push_back( new_bullet );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+#ifndef MASTER_GOLD
+	store_bullet_trajectory		( new_bullet );
+#endif // #ifndef MASTER_GOLD
+
+	// FUNCTION BODY: 17
 	// <0x5a1ba9>|0x009|+0x044:'488'
 	// <0x5a1bed>|0x04d|+0x008:'489'
 	// <0>
@@ -544,18 +542,18 @@ void bullet_manager::emit_bullet(
 	// <0x5a1ca4>|0x104|+0x00c:'497'
 	// <0x5a1cb0>|0x110|+0x00c:'498'
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
 	// <5>
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::bullet_manager::destroy_bullet(survarium::bullet** const&)
-void bullet_manager::destroy_bullet( bullet**& destroying_bullet_iterator )
+// STATE[UNCHECKED]
+void bullet_manager::destroy_bullet( buffer_vector<bullet*>::iterator& destroying_bullet_iterator )
 {
+	bullet* destroying_bullet = *destroying_bullet_iterator;
+
+	m_bullets.erase( destroying_bullet_iterator );
+	VOSTOK_DELETE_IMPL( *m_bullets_allocator_ref, destroying_bullet );
+
 	// LOCALS
 	// bullet* 						destroying_bullet
 	// ******
@@ -563,68 +561,32 @@ void bullet_manager::destroy_bullet( bullet**& destroying_bullet_iterator )
 	// FUNCTION BODY
 	// <0x5a1339>|0x009|+0x00a:'509'
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
 	// <5>
 	// <0x5a1343>|0x013|+0x01b:'516'
 	// <0x5a135e>|0x02e|+0x02e:'517'
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
 	// <7>
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::bullet_manager::destroy_one_bullet()
 void bullet_manager::destroy_one_bullet( )
 {
+	if ( !m_bullets.empty( ) )
+		{} // destroy_bullet( m_bullets.front( ) );
+
 	// FUNCTION BODY
 	// <0x5a1469>|0x009|+0x017:'530'
 	// <0x5a1480>|0x020|+0x01a:'531'
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
 	// <20>
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::bullet_manager::is_inside_collision_db(vostok::math::float3 const&) const
+// STATE[UNCHECKED]
 bool bullet_manager::is_inside_collision_db( float3 const& position ) const
 {
-	// CALL SITE INFO
-	// <0x5a12de> -> math::aabb <unknown>() const
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a12c9>|0x009|+0x054:'557'
-	// ******
+	return m_physics_world->get_world_aabb( ).contains( position );
 }
 
 } // namespace survarium

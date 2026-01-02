@@ -151,17 +151,15 @@ public:
 			void								load_magazine					( );
 			void								chamber_a_round					( );
 
-	inline	void								set_bullet_damage				( float arg_0 ) { /* no source */ }
-	inline	float								get_bullet_damage				( ) const { /* no source */ }
+	inline	void								set_bullet_damage				( float bullet_damage ) { m_bullet_damage = bullet_damage; }
+	inline	void								set_bullet_pierce				( float bullet_pierce ) { m_bullet_pierce = bullet_pierce; }
+	inline	void								set_aim_fov_factor				( float aim_fov_factor ) { m_aim_fov_factor = aim_fov_factor; }
+	inline	void								set_aim_near_plane_factor		( float aim_near_plane_factor ) { m_aim_near_plane_factor = aim_near_plane_factor; }
 
-	inline	void								set_bullet_pierce				( float arg_0 ) { /* no source */ }
-	inline	float								get_bullet_pierce				( ) const { /* no source */ }
-
-	inline	void								set_aim_fov_factor				( float arg_0 ) { /* no source */ }
-	inline	float								aim_fov_factor					( ) const { /* no source */ }
-
-	inline	void								set_aim_near_plane_factor		( float arg_0 ) { /* no source */ }
-	inline	float								aim_near_plane_factor			( ) const { /* no source */ }
+	inline	float								get_bullet_damage				( ) const { return m_bullet_damage; }
+	inline	float								get_bullet_pierce				( ) const { return m_bullet_pierce; }
+	inline	float								aim_fov_factor					( ) const { return m_aim_fov_factor; }
+	inline	float								aim_near_plane_factor			( ) const { return m_aim_near_plane_factor; }
 
 			profile_slot_enum					ammo_slot						( ) { return m_ammo_slot; }					// STATE[STUB]
 
