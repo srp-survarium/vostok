@@ -46,34 +46,33 @@ public:
 											float							air_resistance,
 											weapon_ammunition_ptr const&	wa,
 											weapon_core const&				wc,
-											hit_initiator const*			initiator,
-											hit_receiver const*				ignorable_object
+											hit_initiator const* const		initiator,
+											hit_receiver const*	const		ignorable_object
 										);
 										~bullet						( );
 
 			void						tick						( u32 current_time_in_ms );
+			bool						is_finish_flying			( ) const;
 
-	inline	bool						is_finish_flying			( ) const { /* no source */ }
-
-	inline	float3 const&				get_start_position			( ) const { /* no source */ }
-	inline	float3 const&				get_start_velocity			( ) const { /* no source */ }
-	inline	float3 const&				get_position				( ) const { /* no source */ }
-	inline	float3 const&				get_velocity				( ) const { /* no source */ }
+			float3 const&				get_start_position			( ) const;
+			float3 const&				get_start_velocity			( ) const;
+			float3 const&				get_position				( ) const;
+			float3 const&				get_velocity				( ) const;
 
 			float						pick_next_permissible_time	( float low_time, float high_time, float3 const& gravity );
 
-	inline	u8							get_initiator_id			( ) const { /* no source */ }
+	inline	u8							get_initiator_id			( ) const { return m_initiator->id; }
 
-	inline	void						last_hitted_body_part		( body_part_parameters* arg_0 ) { /* no source */ }
-	inline	body_part_parameters*		last_hitted_body_part		( ) const { return m_last_hitted_body_part; /* no source */ }
+	inline	void						last_hitted_body_part		( body_part_parameters* last_hitted_body_part ) { m_last_hitted_body_part = last_hitted_body_part; }
+	inline	body_part_parameters*		last_hitted_body_part		( ) const { return m_last_hitted_body_part; }
 
+private:
 			float3						compute_parabolic_velocity	( float time, float3 const& gravity );
 			float3						compute_trajectory_velocity	( float time, float3 const& gravity );
 			float3						compute_parabolic_position	( float time, float3 const& gravity );
 			float3						compute_trajectory_position	( float time, float3 const& gravity );
 
 			float						get_parabolic_time			( );
-
 			bool						pick_permissible_range		(
 											float&				result,
 											float				low_time,

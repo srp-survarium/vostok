@@ -99,7 +99,6 @@ game_material const* game_material_manager::get_material( u16 id ) const
 }
 
 // STATE[STUB]
-// survarium::material_pair const* survarium::game_material_manager::get_pair(unsigned short, unsigned short) const
 material_pair const* game_material_manager::get_pair( u16 first_mtrl_id, u16 second_mtrl_id ) const
 {
 	// LOCALS

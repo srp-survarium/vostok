@@ -21,7 +21,7 @@ namespace physics {
 namespace survarium {
 
 class bullet;
-class hit_initiator;
+struct hit_initiator;
 class player_actions_subscriber;
 
 struct hit_receiver : public collision::game_object , public loose_ptr_base {
@@ -29,22 +29,22 @@ public:
 	// STATE[STUB]
 	virtual						~hit_receiver				( ) { }
 
-	virtual	void				hit							( // sushi@TODO
-									hit_initiator const*					arg_0,
-									collision::bone_collision_data const&	arg_1,
-									pcstr									arg_2,
-									float									arg_3,
-									float									arg_4,
-									bullet*									arg_5
+	virtual	void				hit							(
+									hit_initiator const*					initiator,
+									collision::bone_collision_data const&	bone_data,
+									pcstr									damage_type,
+									float									amount,
+									float									armor_piercing,
+									bullet*									bullet
 								) = 0;
 
-	virtual	void				hit							( // sushi@TODO
-									hit_initiator const*	arg_0,
-									u32						arg_1,
-									pcstr					arg_2,
-									float					arg_3,
-									float					arg_4,
-									bullet*					arg_5
+	virtual	void				hit							(
+									hit_initiator const*	initiator,
+									u32						bone_index,
+									pcstr					damage_type,
+									float					amount,
+									float					armor_piercing,
+									bullet*					bullet
 								) = 0;
 
 	virtual	float				get_speed					( ) const = 0;
@@ -56,10 +56,6 @@ public:
 
 	inline	void				on_enter_damage_zone		( damage_zone_core_ptr const& arg_0 ) { /* no source */ }
 	inline	void				on_leave_damage_zone		( damage_zone_core_ptr const& arg_0 ) { /* no source */ }
-
-public:
-	/* 0x0000 */	/* collision::game_object */
-	/* 0x0004 */	/* loose_ptr_base */
 }; // struct hit_receiver
 
 STATIC_SIZE_ASSERT(hit_receiver, 0x8);

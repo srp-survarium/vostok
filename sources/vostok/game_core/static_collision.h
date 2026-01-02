@@ -9,7 +9,7 @@
 
 namespace vostok {
 namespace physics {
-	class world;
+	struct world;
 	class bt_static_rigid_body;
 }
 }

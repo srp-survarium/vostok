@@ -10,13 +10,13 @@
 
 namespace vostok {
 namespace physics {
-	class world;
+	struct world;
 }
 }
 
 namespace survarium {
 
-class inventory_holder; // sushi@TODO
+class inventory_holder;
 
 class generic_anomaly_core;
 class scheduler;

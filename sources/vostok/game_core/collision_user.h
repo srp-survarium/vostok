@@ -14,7 +14,7 @@ class victory_item_core;
 class victory_items_container_core;
 class inventory_holder;
 
-class base_player;
+struct base_player;
 
 class collision_user : public boost::noncopyable {
 public:

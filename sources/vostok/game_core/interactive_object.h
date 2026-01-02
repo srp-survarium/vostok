@@ -21,9 +21,9 @@ namespace network_core {
 
 namespace survarium {
 
-struct base_player;		// sushi@TODO
+struct base_player;
 struct engine;
-class weapon_core;		// sushi@TODO
+class weapon_core;
 class game_world_ui;	// sushi@TODO
 
 class interactive_object : public resources::unmanaged_resource {

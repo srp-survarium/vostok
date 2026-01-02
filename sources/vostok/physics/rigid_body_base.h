@@ -12,7 +12,7 @@ class btRigidBody;
 namespace vostok {
 namespace physics {
 
-/* VOSTOK_PHYSICS_API was causing problems here */
+/* VOSTOK_PHYSICS_API was causing problems here. sushi@TODO: Which? */
 class  bt_rigid_body_base : public base_physics_object
 {
 public:

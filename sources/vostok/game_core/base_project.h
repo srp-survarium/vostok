@@ -9,8 +9,8 @@
 namespace survarium {
 
 struct static_collision;
-struct link_resolver;
-struct base_game_object;
+class link_resolver;
+class base_game_object;
 
 class base_project : public boost::noncopyable {
 public:

@@ -67,11 +67,20 @@ impl<'a, 's> PdbParser<'a, 's> {
         type_index: pdb::TypeIndex,
         namespace: &Namespace,
     ) -> crate::Result<Type> {
+        self.emit_type_impl(module_id, type_index)
+            .map(|ty| Type::new(&ty, namespace))
+    }
+
+    pub fn emit_type_impl(
+        &self,
+        module_id: usize,
+        type_index: pdb::TypeIndex,
+    ) -> crate::Result<String> {
         let mut type_name = String::new();
         self.formatter.for_module(module_id, |tf| {
             tf.emit_type_index(&mut type_name, ti(type_index))
         })?;
-        Ok(Type::new(&type_name, namespace))
+        Ok(type_name)
     }
 
     pub fn emit_function_orig(

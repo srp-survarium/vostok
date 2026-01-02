@@ -356,7 +356,7 @@
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4481"
+				DisableSpecificWarnings="4481;4100"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -1009,6 +1009,10 @@
 			</File>
 			<File
 				RelativePath=".\breath_holding_states_inline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\damage_info_type.h"
 				>
 			</File>
 			<File
@@ -2112,46 +2116,18 @@
 					<File
 						RelativePath=".\weapon_core_chamber_a_round_aimed_state.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_chamber_a_round_aimed_state_base.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_chamber_a_round_state.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_chamber_a_round_state_base.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_cook.cpp"
@@ -2168,79 +2144,30 @@
 					<File
 						RelativePath=".\weapon_core_hide_state.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_hide_state_base.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_idle_state.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_idle_state_base.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_inactive_state_cook.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_reload_state.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_reload_state_base.cpp"
 						>
-						<FileConfiguration
-							Name="Master Gold|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\weapon_core_shotgun_reload_base_substate.cpp"
@@ -2280,79 +2207,30 @@
 						<File
 							RelativePath=".\pistol_weapon_core_aimed_fire_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\pistol_weapon_core_aimed_idle_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\pistol_weapon_core_fire_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\pistol_weapon_core_hide_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\pistol_weapon_core_idle_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\pistol_weapon_core_reload_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\pistol_weapon_core_show_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 					</Filter>
 					<Filter
@@ -2361,79 +2239,30 @@
 						<File
 							RelativePath=".\double_barreled_weapon_core_aimed_fire_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\double_barreled_weapon_core_aimed_idle_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\double_barreled_weapon_core_fire_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\double_barreled_weapon_core_hide_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\double_barreled_weapon_core_idle_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\double_barreled_weapon_core_reload_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
 							RelativePath=".\double_barreled_weapon_core_show_state.cpp"
 							>
-							<FileConfiguration
-								Name="Master Gold|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 					</Filter>
 				</Filter>
@@ -2570,10 +2399,6 @@
 					</FileConfiguration>
 				</File>
 			</Filter>
-		</Filter>
-		<Filter
-			Name="private_api"
-			>
 		</Filter>
 	</Files>
 	<Globals>
