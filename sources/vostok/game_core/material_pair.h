@@ -17,29 +17,22 @@ public:
 
 			void										load_from_config( game_material_manager const& manager, configs::binary_config_value const& val );
 
-	inline	game_material const*						first_material	( ) const { /* no source */ }
-	inline	game_material const*						second_material	( ) const { /* no source */ }
+	inline	game_material const*						first_material	( ) const { return m_first_material; }
+	inline	game_material const*						second_material	( ) const { return m_second_material; }
+	inline	resources::unmanaged_resource_ptr const&	sound			( ) const { return m_sound_emitter; }
+	inline	resources::unmanaged_resource_ptr const&	decal1			( ) const { return m_decal1; }
+	inline	float										decal1_size		( ) const { return m_decal1_size; }
+	inline	resources::unmanaged_resource_ptr const&	decal2			( ) const { return m_decal2; }
+	inline	float										decal2_size		( ) const { return m_decal2_size; }
 
-	inline	resources::unmanaged_resource_ptr const&	sound			( ) const { /* no source */ }
-
-	// STATE[STUB]
-			resources::unmanaged_resource_ptr const&	decal1			( ) const { return m_decal1; }
-	// STATE[STUB]
-			float										decal1_size		( ) const { return m_decal1_size; }
-
-	inline	resources::unmanaged_resource_ptr const&	decal2			( ) const { /* no source */ }
-	inline	float										decal2_size		( ) const { /* no source */ }
-	// STATE[STUB]
-			bool										has_particle	( ) const { return !m_particles.empty( ); }
+	inline	bool										has_particle	( ) const { return !m_particles.empty( ); }
 			resources::unmanaged_resource_ptr const&	particle		( ) const;
 
-	inline	void										set_decal1		( resources::unmanaged_resource_ptr decal ) { /* no source */ }
-	inline	void										set_decal2		( resources::unmanaged_resource_ptr decal ) { /* no source */ }
-
-	inline	void										set_sound		( resources::unmanaged_resource_ptr sound ) { /* no source */ }
+	inline	void										set_decal1		( resources::unmanaged_resource_ptr decal ) { m_decal1 = decal; }
+	inline	void										set_decal2		( resources::unmanaged_resource_ptr decal ) { m_decal2 = decal; }
+	inline	void										set_sound		( resources::unmanaged_resource_ptr sound ) { m_sound_emitter = sound; }
 
 			void										add_particle	( resources::unmanaged_resource_ptr particle );
-
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */

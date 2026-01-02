@@ -27,8 +27,8 @@ class weapon_core;
 
 class bullet_manager_engine;
 class game_material_manager;
-class hit_initiator;
-class hit_receiver;
+struct hit_initiator;
+struct hit_receiver;
 
 
 class bullet_manager {
@@ -85,12 +85,12 @@ public:
 
 	inline	void							clear_decals				( ) { /* no source */ }
 
-	inline	game_material_manager const&	get_material_manager		( ) const { /* no source */ }
-	inline	physics::world&					get_physics_world			( ) const { /* no source */ }
-	inline	float3 const&					get_gravity					( ) const { /* no source */ }
-	inline	float							get_bullet_time_factor		( ) const { /* no source */ }
+	inline	game_material_manager const&	get_material_manager		( ) const { return *m_game_material_manager; }
+	inline	physics::world&					get_physics_world			( ) const { return *m_physics_world; }
+	inline	float3 const&					get_gravity					( ) const { return m_gravity; }
+	inline	float							get_bullet_time_factor		( ) const { return m_bullet_time_factor; }
 
-public:
+private:
 	struct bullet_functor {
 		inline	explicit	bullet_functor	( ) { /* no source */ }
 		inline				~bullet_functor	( ) { /* no source */ }
@@ -115,8 +115,6 @@ public:
 												bool										is_front_face
 											);
 			void							add_decal_impl				( bullet_manager::bullet_functor* functor );
-
-public:
 			void							play_sound_impl				( resources::unmanaged_resource_ptr const& sound, float3 const& position );
 			void							play_particle_impl			(
 												resources::unmanaged_resource_ptr const&	particle,
@@ -124,7 +122,6 @@ public:
 												float3 const&								direction,
 												float3 const&								normal
 											);
-
 	inline	bool							attach_tracer_impl			( bullet* arg_0 ) { /* no source */ }
 	inline	bool							detach_tracer_impl			( bullet* arg_0 ) { /* no source */ }
 			void							update_tracer_impl			(
@@ -136,12 +133,9 @@ public:
 
 			void							tick_bullets				( u32 start_index, u32 end_index, u32 current_time_in_ms );
 			void							destroy_all_bullets			( pcstr args );
-
 			void							set_max_bullets				( pcstr args );
-
 			void							allocate_bullets_memory		( u32 new_max_bullets_count );
 			void							bullets_memory_allocated	( resources::queries_result& queries );
-
 			void							emit_bullet					(
 												float3 const&						position,
 												float3 const&						velocity,
@@ -154,17 +148,13 @@ public:
 												bool								tracer
 											);
 
-			void							destroy_bullet				( bullet**& destroying_bullet_iterator );
+			void							destroy_bullet				( buffer_vector<bullet*>::iterator& destroying_bullet_iterator );
 	inline	void							destroy_redundant_bullets	( ) { /* no source */ }
 			void							destroy_one_bullet			( );
 
 private:
 	typedef intrusive_mpmc_stack< bullet_manager::bullet_functor, bullet_manager::bullet_functor, &bullet_manager::bullet_functor::next > bullet_functor_mpmc_stack;
 	typedef memory::single_size_buffer_allocator< sizeof( bullet ), threading::simple_lock > bullets_allocator;
-
-private:
-	/* 0x0000 */	buffer_vector<bullet *>				m_bullets;
-	/* 0x0008 */	float3								m_gravity;
 
 private:
 	class bullet_functor_mt_allocator : public boost::noncopyable {
@@ -216,6 +206,9 @@ private:
 		/* 0x0008 */	void*						m_buffer;
 	}; // class bullet_functor_mt_allocator
 
+private:
+	/* 0x0000 */	buffer_vector<bullet *>							m_bullets;
+	/* 0x0008 */	float3											m_gravity;
 	/* 0x0018 */	bullet_manager::bullet_functor_mt_allocator		m_mt_stack_allocator;
 
 private:
@@ -233,6 +226,9 @@ private:
 	/* 0x0070 */	u32									m_current_decal_id;
 	/* 0x0074 */	float								m_bullet_time_factor;
 	/* 0x0078 */	float								m_air_resistance_epsilon;
+
+private:
+	friend class bullet;
 }; // class bullet_manager
 
 STATIC_SIZE_ASSERT(bullet_manager, 0x80);

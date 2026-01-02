@@ -27,10 +27,10 @@ const GAME_IB: u32 = 0x10000;
 pub struct Function<'a> {
     pub module_id: usize,
     pub type_index: pdb::TypeIndex,
-
     pub flags: GenFlags,
 
     pub fn_t: pdb_addr2line::type_parser::Function,
+    pub offset: pdb::Rva,
     pub name_orig: String,
     pub namespace: Namespace,
 
@@ -76,6 +76,7 @@ pub fn dump_sources(
     let mut source_path = Path::new("sources").to_path_buf();
 
     let dbi = pdb.debug_information()?;
+
     let mut modules = dbi.modules()?;
     let mut module_id: usize = usize::MAX;
 
@@ -88,6 +89,7 @@ pub fn dump_sources(
             continue;
         }
 
+        // private symbols
         let Some(module_info) = pdb.module_info(&module)? else {
             continue;
         };
@@ -130,6 +132,7 @@ impl<'a> Module<'a> {
         flags: GenFlags,
     ) -> crate::Result<Self> {
         let program = module_info.line_program()?;
+
         let mut symbols = module_info.symbols()?;
 
         let mut files: BTreeMap<String, BTreeMap<u32, Function>> = BTreeMap::new();
@@ -205,6 +208,7 @@ impl<'a> Module<'a> {
                     // TODO: Skip creating function here. We already have a filename to know
                     // whether it will be written to `structure` or not.
 
+                    let offset = proc.offset.to_rva(address_map).expect("invalid rva");
                     let name_orig =
                         formatter.emit_function_orig(&proc.name, module_id, proc.type_index)?;
 
@@ -219,17 +223,28 @@ impl<'a> Module<'a> {
                     function = Function {
                         module_id,
                         type_index: proc.type_index,
+                        flags: function.flags,
                         //
                         name_orig,
                         namespace: Namespace::get_from_class_name(&fn_t),
                         //
                         fn_t,
+                        offset,
                         //
                         proc_start,
                         proc_end,
                         statements: breakpoints,
                         //
-                        ..function
+                        margs: Default::default(),
+                        locals: Default::default(),
+                        //
+                        constants: Default::default(),
+                        statics: Default::default(),
+                        //
+                        blocks: Default::default(),
+                        typedefs: Default::default(),
+                        callsites: Default::default(),
+                        symbols: Default::default(),
                     };
                 }
 
@@ -487,10 +502,9 @@ impl<'a> Module<'a> {
 impl<'a> Function<'a> {
     pub fn new(flags: GenFlags) -> Self {
         Self {
-            flags,
-
             module_id: Default::default(),
             type_index: Default::default(),
+            flags,
 
             name_orig: Default::default(),
             namespace: Default::default(),
@@ -501,6 +515,7 @@ impl<'a> Function<'a> {
                 arg_types: Default::default(),
                 attrs: type_parser::AttributeFlags::empty(),
             },
+            offset: Default::default(),
 
             margs: Default::default(),
             locals: Default::default(),
@@ -602,6 +617,7 @@ impl<'a> Function<'a> {
             type_index: _,
             //
             flags,
+            offset,
             //
             fn_t,
             name_orig: _,
@@ -632,6 +648,8 @@ impl<'a> Function<'a> {
             false => writeln!(w, "// STATE[STUB]")?,
         }
 
+        writeln!(w, "// OFFSET[{}]", offset.saturating_add(GAME_IB))?;
+
         // sushi@TODO: The information on whether the function is virtual or not is stored in the
         // class definitions, which are parsed in `gen_hearders.rs`.
         //
@@ -641,16 +659,6 @@ impl<'a> Function<'a> {
         // && !fn_t.attrs.contains(AttributeFlags::IS_VIRTUAL)
         {
             write!(w, "inline ")?;
-        }
-
-        // sushi@TODO: Same as above. `static` is only known from header files.
-        // Even worse, we only can set it for member functions. While there are a lot of static
-        // functions without a class associated with them.
-        //
-        // There should still be a way to do that, since static functions do not have mangled
-        // symbols and this information we should be able to extract from pdb files.
-        if fn_t.attrs.contains(AttributeFlags::IS_STATIC) {
-            write!(w, "static ")?;
         }
 
         formatter::Formatter::Source
@@ -805,7 +813,20 @@ impl<'a> Function<'a> {
         }
 
         {
-            writeln!(w, "\t// FUNCTION BODY")?;
+            statements.sort_by_key(|statement| statement.line_start);
+            let floc = match statements.len() < 2 {
+                true => None,
+                false => Some(
+                    statements.last().unwrap().line_start as i32
+                        - statements.first().unwrap().line_start as i32
+                        - 1,
+                ),
+            };
+
+            match floc {
+                None => writeln!(w, "\t// FUNCTION BODY")?,
+                Some(loc) => writeln!(w, "\t// FUNCTION BODY: {loc}")?,
+            }
 
             let rva_diff = |lhs: pdb::Rva, rhs: pdb::Rva| -> i32 { lhs.0 as i32 - rhs.0 as i32 };
             let print_rva_diff_start = |diff: i32| match diff >= 0 {
@@ -819,8 +840,6 @@ impl<'a> Function<'a> {
                     false => format!("-0x{diff:03x}", diff = diff.abs()),
                 },
             };
-
-            statements.sort_by_key(|statement| statement.line_start);
 
             let mut non_empty_body = statements.len() > 2;
 

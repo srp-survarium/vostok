@@ -13,7 +13,7 @@ struct usable_object_user_data;
 
 struct usable_object_user_data {
 	inline	explicit	usable_object_user_data	( ) :
-							current_progress					( -1 ),
+							current_progress					( u32(-1) ),
 							booster_artcont_time_factor			( 1.0f ),
 							booster_engineer_use_time_factor	( 1.0f ) { /* <0xbaa80> */ }
 

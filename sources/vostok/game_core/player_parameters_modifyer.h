@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-class base_player;
+struct base_player;
 
 struct player_parameters_modifyer : public resources::unmanaged_resource , public boost::noncopyable {
 public:
