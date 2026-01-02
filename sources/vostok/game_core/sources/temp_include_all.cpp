@@ -231,7 +231,7 @@ namespace vostok
 	{
 		memory::stack_allocator stack_allocator;
 		physics::bt_character_controller* cc2 = physics::create_character_controller( stack_allocator, NULL );
-
+		(void)cc2;
 		physics::bt_character_controller cc(NULL);
 		cc.allocator();
 		cc.initialize();

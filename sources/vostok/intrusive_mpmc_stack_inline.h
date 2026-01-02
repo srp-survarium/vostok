@@ -25,10 +25,12 @@ inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
 {
 	pointer_and_counter	old_head;
 	pointer_and_counter new_head;
+	new_head.m_pointer = value;
 	do
 	{
 		old_head							= m_top;
 		new_head.pointer( )->*MemberNext	= old_head.pointer( );
+		new_head.counter					= old_head.counter;
 	}
 	while ( threading::interlocked_compare_exchange	(
 			m_top.whole,

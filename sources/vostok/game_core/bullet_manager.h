@@ -90,10 +90,11 @@ public:
 	inline	game_material_manager const&	get_material_manager		( ) const { return *m_game_material_manager; }
 	inline	physics::world&					get_physics_world			( ) const { return *m_physics_world; }
 	inline	float3 const&					get_gravity					( ) const { return m_gravity; }
-	inline	float							get_bullet_time_factor		( ) const { return m_bullet_time_factor; }
+			float							get_bullet_time_factor		( ) const;
 
 private:
 	struct bullet_functor {
+		// STATE[99.55%|DONE]: LTCG for resource constructor.
 		inline	explicit	bullet_functor	( ) { }
 		inline				~bullet_functor	( ) { }
 
@@ -174,10 +175,9 @@ private:
 		// STATE[INLINED]
 		explicit				bullet_functor_mt_allocator	( void* const buffer, u32 buffer_size ) : m_buffer( buffer )
 		{
-			bullet_functor* i = static_cast<bullet_functor*>( buffer );
-			bullet_functor* e = i + buffer_size / sizeof( bullet_functor );
-			while ( i != e )
-				free_impl( i++ );
+			ASSERT( UNKNOWN_EXPRESSION );
+			for ( bullet_functor *i = static_cast<bullet_functor*>( buffer ), *e = i + buffer_size / sizeof( bullet_functor ) ; i != e ; ++i )
+				free_impl( i );
 
 			// FUNCTION BODY
 			// <0xbe481>|0x031|+0x00c:'161'

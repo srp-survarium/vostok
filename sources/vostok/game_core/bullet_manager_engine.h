@@ -17,7 +17,7 @@ public:
 						resources::unmanaged_resource_ptr const&	decal,
 						u32											decal_id,
 						float										size,
-						float										arg_3, // sushi@TODO: 0.1 in bullet_manager
+						float										depth,
 						float3 const&								position,
 						float3 const&								direction,
 						float3 const&								normal,
