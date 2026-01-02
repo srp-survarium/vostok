@@ -5,36 +5,32 @@
 #include "pch.h"
 #include <vostok/game_core/material_pair.h>
 
+#include <vostok/game_core/game_material_manager.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::material_pair::material_pair()
-material_pair::material_pair( ) : m_particles( g_allocator )
+// STATE[UNCHECKED]
+material_pair::material_pair( ) :
+	m_particles				( g_allocator ),
+	m_current_particle_idx	( 0 )
 {
-	// FUNCTION BODY
-	// <0x6fd5a0>|0x000|+0x088:'16'	{
-	// <0>
-	// <0x6fd628>|0x088|      :'18'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::material_pair::~material_pair()
+// STATE[UNCHECKED]
 material_pair::~material_pair( )
 {
-	// FUNCTION BODY
-	// <0x6fd560>|0x000|      :'21'	{
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::material_pair::load_from_config(survarium::game_material_manager const&, vostok::configs::binary_config_value const&)
+// STATE[UNCHECKED]
 void material_pair::load_from_config( game_material_manager const& manager, configs::binary_config_value const& val )
 {
-	// LOCALS
-	// u16 							first_mtrl_id
-	// u16 							second_mtrl_id
-	// ******
+	u16 first_mtrl_id		= (u16)val["mtrl_1_id"];
+	u16 second_mtrl_id		= (u16)val["mtrl_2_id"];
+	m_decal1_size			= (float)val["decal1_size"];
+	m_decal2_size			= (float)val["decal2_size"];
+	m_first_material		= manager.get_material( first_mtrl_id );
+	m_second_material		= manager.get_material( second_mtrl_id );
+
 
 	// FUNCTION BODY
 	// <0x6fd499>|0x009|+0x016:'25'
@@ -46,20 +42,25 @@ void material_pair::load_from_config( game_material_manager const& manager, conf
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::material_pair::add_particle(vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base>)
+// STATE[UNCHECKED]
 void material_pair::add_particle( resources::unmanaged_resource_ptr particle )
 {
+	m_particles.push_back( particle );
+
 	// FUNCTION BODY
 	// <0x6fd539>|0x009|+0x011:'35'
 	// ******
 }
 
-// STATE[STUB]
-// vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> const& survarium::material_pair::particle() const
+// STATE[UNCHECKED]
 resources::unmanaged_resource_ptr const& material_pair::particle( ) const
 {
-	return resources::unmanaged_resource_ptr( );
+	ASSERT( UNKNOWN_EXPRESSION_T( !m_particles.empty( ) ) );
+	if ( m_current_particle_idx == m_particles.size( ) )
+		m_current_particle_idx = 0;
+
+	return m_particles[m_current_particle_idx++];
+
 	// FUNCTION BODY
 	// <0x6fd429>|0x009|+0x00c:'40'
 	// <0x6fd435>|0x015|+0x016:'41'

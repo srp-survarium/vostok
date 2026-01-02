@@ -46,7 +46,7 @@ private:
 	/* 0x0020 */	float											m_decal2_size;
 	/* 0x0024 */	game_material const*							m_first_material;
 	/* 0x0028 */	game_material const*							m_second_material;
-	/* 0x002c */	u32												m_current_particle_idx;
+	/* 0x002c */	mutable u32										m_current_particle_idx;
 }; // class material_pair
 
 STATIC_SIZE_ASSERT(material_pair, 0x30);
