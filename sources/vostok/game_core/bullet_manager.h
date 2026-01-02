@@ -254,9 +254,6 @@ private:
 	/* 0x0070 */	u32												m_current_decal_id;
 	/* 0x0074 */	float											m_bullet_time_factor;
 	/* 0x0078 */	float											m_air_resistance_epsilon;
-
-private:
-	friend class bullet;
 }; // class bullet_manager
 
 STATIC_SIZE_ASSERT(bullet_manager, 0x80);

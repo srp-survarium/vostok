@@ -179,7 +179,7 @@ void bullet_manager::fire(
 	emit_bullet( position, velocity, s_bm_current_air_resistance, wa, wc, current_time_in_ms, initiator, ignorable_object, tracer );
 }
 
-// STATE[UNCHECKED]
+// STATE[94.92%|DONE]
 void bullet_manager::add_decal(
 	resources::unmanaged_resource_ptr const&	decal,
 	float										size,
@@ -200,7 +200,7 @@ void bullet_manager::add_decal(
 		functor->size			= size;
 		functor->is_front_face	= is_front_face;
 		functor->functor		= boost::bind( &bullet_manager::add_decal_impl, this, functor );
-		m_functors.push( functor );
+		m_functors.push( functor );	// sushi@MATCH: Seems the same!
 	}
 
 	// FUNCTION BODY
@@ -279,7 +279,7 @@ void bullet_manager::play_sound_impl( resources::unmanaged_resource_ptr const& s
 	m_engine->play_sound( sound, position );
 }
 
-// STATE[UNCHECKED]
+// STATE[67.87%|PARTIAL]: bind problems
 void bullet_manager::play_particle(
 	resources::unmanaged_resource_ptr const&	sound,
 	float3 const&								position,

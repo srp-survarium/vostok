@@ -12,6 +12,7 @@ namespace vostok {
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
 inline	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::intrusive_mpmc_stack(  )
 {
+	m_top.whole = 0;
 }
 
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
@@ -29,7 +30,7 @@ inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
 	do
 	{
 		old_head							= m_top;
-		new_head.pointer( )->*MemberNext	= old_head.pointer( );
+		new_head.m_pointer->*MemberNext		= old_head.m_pointer;
 		new_head.counter					= old_head.counter;
 	}
 	while ( threading::interlocked_compare_exchange	(

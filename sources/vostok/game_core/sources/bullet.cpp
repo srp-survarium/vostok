@@ -531,7 +531,7 @@ void bullet::fix_collision_point_and_time(
 	}
 }
 
-// STATE[UNCHECKED]
+// STATE[94.28%|PARTIAL]
 collision_result bullet::collide_front_face(
 	float3 const&						collide_point,
 	float3 const&						bullet_direction,
@@ -552,15 +552,15 @@ collision_result bullet::collide_front_face(
 		material_pair const* mtl_pair = m_bullet_manager->get_material_manager( ).get_pair( m_bullet_material->id( ), m_collided_material->id( ) );
 		if ( mtl_pair )
 		{
-			if ( mtl_pair->decal1( ) )	// sushi@MATCH: decal1 & decal1_size didn't inline
+			if ( mtl_pair->decal1( ) )	// sushi@MATCH: decal1 & decal1_size didn't inline normally
 				m_bullet_manager->add_decal( mtl_pair->decal1( ), mtl_pair->decal1_size( ), collide_point, bullet_direction, triangle_normal, true );
 
 			if ( mtl_pair->has_particle( ) )
 				m_bullet_manager->play_particle( mtl_pair->particle( ), collide_point, bullet_direction, triangle_normal );
 		}
 		else
-		{
-			LOG_WARNING( "material pair not exists [%s]-[%s]", m_bullet_material, m_collided_material );
+		{	// sushi@MATCH: Some kind of jump here.
+			LOG_WARNING( "material pair not exists [%s]-[%s]", m_bullet_material->name( ), m_collided_material->name( ) );
 		}
 	}
 
@@ -574,7 +574,7 @@ collision_result bullet::collide_front_face(
 
 	if ( m_collided_material->resistance( ) > m_weapon_bullet_pierce * m_pierce_factor )
 		return collision_result_collide;
-
+	// sushi@MATCH: min and max in incorrect order
 	float new_speed = math::min(	// sushi@NOTE: Use clamp instead
 		math::max( 0.0, m_weapon_bullet_pierce * m_pierce_factor / m_collided_material->resistance( ) - 1.0f ),
 		1.0f
