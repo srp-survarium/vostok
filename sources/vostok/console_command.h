@@ -94,9 +94,9 @@ protected:
 class VOSTOK_CORE_API cc_delegate : public console_command
 {
 public:
-						cc_delegate				(pcstr name, functor_type const& functor, bool need_args);
-	virtual void		execute					(pcstr args);
-	virtual void		info					(info_str& dest) const;
+						cc_delegate				( pcstr name, functor_type const& functor, bool need_args, command_type const command_type = command_type_user_specific );
+	virtual void		execute					( pcstr args );
+	virtual void		info					( info_str& dest ) const;
 	virtual void		save_to					( console_commands::save_storage& , memory::base_allocator* )	const {};
 
 protected:
