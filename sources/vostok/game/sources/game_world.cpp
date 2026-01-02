@@ -9,6 +9,7 @@
 #include "game.h"
 #include "cell_manager.h"
 #include <vostok/game_core/bullet_manager.h>
+#include <vostok/game_core/sources/temp_include_all.h> // sushi@TODO: Final remove :)
 #include "event_manager.h"
 #include "object_scene.h"
 #include "actor.h"
@@ -94,6 +95,8 @@ m_client				( game.get_network_world() )
 	m_client.set_on_packet_received	( boost::bind( &client_on_packet_received, boost::ref(m_client), _1) );
 	m_client.set_on_connected		( boost::bind( &client_on_connected, boost::ref(m_client)) );
 	m_client.connect				( "localhost", port );
+
+	IncludeAll all;
 }
 
 

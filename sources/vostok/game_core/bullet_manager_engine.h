@@ -9,43 +9,36 @@ namespace survarium {
 
 class bullet_manager_engine {
 public:
-	virtual	void	play_sound				( resources::unmanaged_resource_ptr const& arg_0, float3 const& arg_1 ) = 0;
-
+	virtual	void	play_sound				(
+						resources::unmanaged_resource_ptr const&	sound,
+						float3 const&								position
+					) = 0;
 	virtual	void	add_decal				(
-						resources::unmanaged_resource_ptr const&	arg_0,
-						u32									arg_1,
-						float								arg_2,
-						float								arg_3,
-						float3 const&						arg_4,
-						float3 const&						arg_5,
-						float3 const&						arg_6,
-						bool								arg_7
+						resources::unmanaged_resource_ptr const&	decal,
+						u32											decal_id,
+						float										size,
+						float										arg_3, // sushi@TODO: 0.1 in bullet_manager
+						float3 const&								position,
+						float3 const&								direction,
+						float3 const&								normal,
+						bool										is_front_face
 					) = 0;
-
 	virtual	void	play_particle			(
-						resources::unmanaged_resource_ptr const&	arg_0,
-						float3 const&						arg_1,
-						float3 const&						arg_2,
-						float3 const&						arg_3
+						resources::unmanaged_resource_ptr const&	particle,
+						float3 const&								position,
+						float3 const&								direction,
+						float3 const&								normal
 					) = 0;
+	virtual	void	remove_decal			( u32 decal_id ) = 0;
 
-	virtual	void	remove_decal			( u32 arg_0 ) = 0;
-
-	virtual	bool	attach_tracer			( bullet* arg_0 ) = 0;
-
-	virtual	bool	detach_tracer			( bullet* arg_0 ) = 0;
-
+	virtual	bool	attach_tracer			( bullet* bullet ) = 0;
+	virtual	bool	detach_tracer			( bullet* bullet ) = 0;
 	virtual	void	update_tracer			(
-						u16					arg_0,
-						float3 const&		arg_1,
-						float3 const&		arg_2,
-						float				arg_3
+						u16					tracer_idx,
+						float3 const&		position,
+						float3 const&		direction,
+						float				length
 					) = 0;
-
-	inline	bullet_manager_engine	( ) { /* no source */ }
-
-
-private:
 }; // class bullet_manager_engine
 
 STATIC_SIZE_ASSERT(bullet_manager_engine, 0x4);

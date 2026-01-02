@@ -161,6 +161,8 @@ private:
 	/* 0x0078 */	u32							m_change_trajectory_count;
 	/* 0x007c */	u8							m_ricochet_count;
 	/* 0x007e */	u16							m_tracer_idx;
+private:
+	friend class bullet_manager; // sushi@NOTE: For `m_tracer_idx;`.
 }; // class bullet
 
 STATIC_SIZE_ASSERT(bullet, 0x80);

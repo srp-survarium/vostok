@@ -57,9 +57,8 @@ namespace vostok
 		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
 		survarium::weapon_ammunition_ptr	wa( NULL );
 		survarium::weapon_core				wc;
-		survarium::bullet					bullet( bullet_manager, float3( ), float3( ), 0, 0.0f, wa, wc, NULL, NULL );
-		survarium::bullet					copy_bullet( bullet );
-		bullet.tick( 10 );
+
+		bullet_manager.fire( float3(), float3(), wa, wc, 10, NULL, NULL, true );
 	}
 
 
