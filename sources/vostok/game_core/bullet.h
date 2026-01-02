@@ -54,10 +54,10 @@ public:
 			void						tick						( u32 current_time_in_ms );
 			bool						is_finish_flying			( ) const;
 
-			float3 const&				get_start_position			( ) const;
-			float3 const&				get_start_velocity			( ) const;
-			float3 const&				get_position				( ) const;
-			float3 const&				get_velocity				( ) const;
+	inline	float3 const&				get_start_position			( ) const { return m_start_position;	}
+	inline	float3 const&				get_start_velocity			( ) const { return m_start_velocity;	}
+	inline	float3 const&				get_position				( ) const { return m_position;			}
+	inline	float3 const&				get_velocity				( ) const { return m_velocity;			}
 
 			float						pick_next_permissible_time	( float low_time, float high_time, float3 const& gravity );
 
@@ -160,6 +160,7 @@ private:
 	/* 0x0074 */	float						m_weapon_bullet_pierce;
 	/* 0x0078 */	u32							m_change_trajectory_count;
 	/* 0x007c */	u8							m_ricochet_count;
+public:
 	/* 0x007e */	u16							m_tracer_idx;
 }; // class bullet
 

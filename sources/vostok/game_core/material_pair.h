@@ -20,11 +20,13 @@ public:
 	inline	game_material const*						first_material	( ) const { return m_first_material; }
 	inline	game_material const*						second_material	( ) const { return m_second_material; }
 	inline	resources::unmanaged_resource_ptr const&	sound			( ) const { return m_sound_emitter; }
+	__declspec(noinline)
 	inline	resources::unmanaged_resource_ptr const&	decal1			( ) const { return m_decal1; }
+	__declspec(noinline)
 	inline	float										decal1_size		( ) const { return m_decal1_size; }
 	inline	resources::unmanaged_resource_ptr const&	decal2			( ) const { return m_decal2; }
 	inline	float										decal2_size		( ) const { return m_decal2_size; }
-
+	__declspec(noinline)
 	inline	bool										has_particle	( ) const { return !m_particles.empty( ); }
 			resources::unmanaged_resource_ptr const&	particle		( ) const;
 
