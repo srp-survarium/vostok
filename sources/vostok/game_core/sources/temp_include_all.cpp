@@ -50,8 +50,16 @@
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
 
+#include <vostok/game_core/game_material_manager.h>
+
 namespace vostok
 {
+	void use_game_material_manager( )
+	{
+		survarium::game_material_manager manager;
+		manager.clear_resources( ); // game_world::clear_resources
+	}
+
 	void use_bullet( )
 	{
 		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
@@ -438,6 +446,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_material_manager( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );

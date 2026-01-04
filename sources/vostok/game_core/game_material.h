@@ -7,6 +7,8 @@
 
 namespace survarium {
 
+extern u16 g_material_physics_group[64];
+
 class game_material : public boost::noncopyable {
 public:
 						game_material			( );

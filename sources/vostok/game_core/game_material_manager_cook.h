@@ -9,7 +9,7 @@
 
 namespace vostok {
 namespace render {
-	class material_effects_instance_cook_data;
+	struct material_effects_instance_cook_data;
 }
 }
 
@@ -25,8 +25,7 @@ public:
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource				( resources::resource_base* res ) override;
 
-			void	on_configs_loaded			( resources::queries_result& data );
-
+private:
 	struct query_ext_data {
 		enum res_type {
 			decal1		= 0x0000,
@@ -35,19 +34,24 @@ public:
 			particle	= 0x0003,
 		};
 
-		/* 0x0000 */	material_pair*									pair;
-		/* 0x0004 */	game_material_manager_cook::res_type			type;
-		/* 0x0008 */	render::material_effects_instance_cook_data*	cd;
+		/* 0x0000 */	material_pair*	pair;
+		/* 0x0004 */	res_type		type;
+		/* 0x0008 */	vostok::render::material_effects_instance_cook_data*	cd;
 	}; // struct query_ext_data
 
-			void	on_decals_loaded			( resources::queries_result& data, vector< game_material_manager_cook::query_ext_data >* ext_data );
+			void	on_configs_loaded			( resources::queries_result& data );
+			void	on_decals_loaded			( resources::queries_result& data, vector< query_ext_data >* ext_data );
 
-			void	create_game_materials		( game_material_manager* manager, configs::binary_config_value const& materials_root );
-			void	create_game_material_pairs	( resources::query_result_for_cook& parent_query, game_material_manager* manager, configs::binary_config_value const& pairs_root );
-
+			void	create_game_materials		(
+						game_material_manager* const			manager,
+						configs::binary_config_value const&		materials_root
+					);
+			void	create_game_material_pairs	(
+						resources::query_result_for_cook&		parent_query,
+						game_material_manager* const			manager,
+						configs::binary_config_value const&		pairs_root
+					);
 private:
-	/* 0x0000 */	/* resources::translate_query_cook */
-	/* 0x0020 */	/* boost::noncopyable */
 	/* 0x0020 */	bool	m_server_usage;
 }; // class game_material_manager_cook
 

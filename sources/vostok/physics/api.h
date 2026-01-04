@@ -38,10 +38,12 @@ namespace physics {
 struct engine;
 struct world;
 
-VOSTOK_PHYSICS_API	world*	create_world_bt		( vostok::memory::base_allocator* allocator, engine& engine );
-VOSTOK_PHYSICS_API	void	destroy_world		( vostok::memory::base_allocator* allocator, world* w );
+VOSTOK_PHYSICS_API	world*	create_world_bt				( vostok::memory::base_allocator* allocator, engine& engine );
+VOSTOK_PHYSICS_API	void	destroy_world				( vostok::memory::base_allocator* allocator, world* w );
 
-VOSTOK_PHYSICS_API	void	set_memory_allocator( vostok::memory::base_allocator* allocator );
+VOSTOK_PHYSICS_API	void	set_memory_allocator		( vostok::memory::base_allocator* allocator );
+VOSTOK_PHYSICS_API	void	setup_game_material_groups	( u16 const* game_material_groups, u16 game_materials_count );
+
 
 } // namespace physics
 } // namespace vostok

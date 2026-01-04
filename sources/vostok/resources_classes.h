@@ -54,7 +54,6 @@ enum class_id_enum
 
 	material_class,
 	binary_config_class_impl,                      // [+]
-	config_class,                                  // [-]
 	ltx_config_class,
 	lua_config_class,
 
@@ -75,7 +74,6 @@ enum class_id_enum
 	ogg_converter_class,
 	ogg_options_converter_class,
 	sound_spl_class,
-	spl_class,                                     // [-]
 
 	audibility_graph_class,                        // [+]
 	sound_environment_class,                       // [+]
@@ -85,7 +83,6 @@ enum class_id_enum
 	bi_spline_skeleton_animation_class,
 	cubic_spline_skeleton_animation_class,
 	animation_class,
-	animation_controller_class,                    // [-]
 
 	texture_options_lua_class,
 	texture_options_binary_class,
@@ -99,17 +96,11 @@ enum class_id_enum
 	preview_particle_system_class,
 	particle_system_instance_class,
 	sound_class,
-	sound_stream_class,                            // [-]
 	ogg_raw_file,
 
 	dialog_class,
 	game_dialog_class,
 
-	game_project_class,                            // [-]
-	game_project_simple_class,                     // [-]
-	game_cell_class,                               // [-]
-	game_object_class,                             // [-]
-	game_object_scene_class,                       // [-]
 
 	client_game_project_class,                     // [+]
 	server_game_project_class,                     // [+]
@@ -128,8 +119,6 @@ enum class_id_enum
 	booby_trap_class,                              // [+]
 	rifle_scope_class,                             // [+]
 
-	sound_player_logic_class,                      // [-]
-	sound_player_editor_class,                     // [-]
 	sound_player_class,                            // [+]
 
 	unmanaged_allocation_class,
@@ -212,6 +201,19 @@ enum class_id_enum
 	converted_model_class,
 	binary_config_class,
 	inherits_binary_config_class,                  // [+]
+
+	// sushi@TODO: Deleted/renamed classes. Put them at the end to not mess up ids for matching
+	config_class,                                  // [-]
+	spl_class,                                     // [-]
+	animation_controller_class,                    // [-]
+	sound_stream_class,                            // [-]
+	game_project_class,                            // [-]
+	game_project_simple_class,                     // [-]
+	game_cell_class,                               // [-]
+	game_object_class,                             // [-]
+	game_object_scene_class,                       // [-]
+	sound_player_logic_class,                      // [-]
+	sound_player_editor_class,                     // [-]
 };
 
 

@@ -8,6 +8,7 @@
 namespace survarium {
 
 class game_material;
+class game_material_manager_cook;
 class material_pair;
 
 class game_material_manager : public resources::unmanaged_resource , public boost::noncopyable {
@@ -28,8 +29,9 @@ public:
 
 			void					clear_resources				( );
 
-			void					add_game_material			( game_material const* mtrl );
-			void					add_pair					( material_pair const* pair );
+private:
+			void					add_game_material			( game_material const* const mtrl );
+			void					add_pair					( material_pair const* const pair );
 
 			void					delete_pairs				( );
 			void					delete_materials			( );
@@ -40,6 +42,8 @@ private:
 	/* 0x0108 */	map< u16, game_material const * >				m_materials;
 	/* 0x0120 */	map< u16, map< u16, material_pair const * > >	m_pairs;
 	/* 0x0138 */	u16												m_default_material_id;
+private:
+	friend class game_material_manager_cook; // sushi@TODO: For `m_default_material_id`, though maybe this comes from some inlined function.
 }; // class game_material_manager
 
 STATIC_SIZE_ASSERT(game_material_manager, 0x140);

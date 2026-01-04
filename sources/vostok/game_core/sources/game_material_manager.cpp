@@ -5,48 +5,55 @@
 #include "pch.h"
 #include <vostok/game_core/game_material_manager.h>
 
+#include <vostok/game_core/game_material.h>
+#include <vostok/game_core/material_pair.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::game_material_manager::game_material_manager()
+// STATE[90.00%|DONE]: LTCG for unmanaged_resource
 game_material_manager::game_material_manager( )
 {
-	// FUNCTION BODY
-	// <0x73e9f0>|0x000|+0x052:'15'	{
-	// <0x73ea42>|0x052|      :'16'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::game_material_manager::clear_resources()
+// STATE[100%|DONE]
 void game_material_manager::clear_resources( )
 {
+	delete_pairs( );
+	delete_materials( );
+
 	// FUNCTION BODY
 	// <0x73e8f7>|0x007|+0x008:'20'
 	// <0x73e8ff>|0x00f|+0x008:'21'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::game_material_manager::~game_material_manager()
+// STATE[100%|DONE]
 game_material_manager::~game_material_manager( )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	// FUNCTION BODY
 	// <0x73e9a2>|0x012|+0x00c:'26'
 	// <0x73e9ae>|0x01e|+0x00c:'27'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::game_material_manager::delete_pairs()
+// STATE[98.24%|DONE]
 void game_material_manager::delete_pairs( )
 {
-	// LOCALS
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,map<u16,material_pair const *,std::less<u16> > >,std::priv::_MapTraitsT<std::pair<u16 const ,map<u16,material_pair const *,std::less<u16> > > > > end
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,map<u16,material_pair const *,std::less<u16> > >,std::priv::_MapTraitsT<std::pair<u16 const ,map<u16,material_pair const *,std::less<u16> > > > > it
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,material_pair const *>,std::priv::_MapTraitsT<std::pair<u16 const ,material_pair const *> > > internail_it<1>
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,material_pair const *>,std::priv::_MapTraitsT<std::pair<u16 const ,material_pair const *> > > internail_end<1>
-	// ******
+	map< u16, map< u16, material_pair const* > >::iterator it	= m_pairs.begin( );
+	map< u16, map< u16, material_pair const* > >::iterator end	= m_pairs.end( );
+
+	for ( ; it != end ; ++it )
+	{
+		map< u16, material_pair const* >::iterator internail_it		= it->second.begin( );
+		map< u16, material_pair const* >::iterator internail_end	= it->second.end( );
+
+		for ( ; internail_it != internail_end ; ++internail_it )
+			VOSTOK_DELETE_IMPL( g_allocator, internail_it->second );
+	}
+	m_pairs.clear( );
 
 	// FUNCTION BODY
 	// <0x73e7d9>|0x009|+0x017:'32'
@@ -64,14 +71,14 @@ void game_material_manager::delete_pairs( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::game_material_manager::delete_materials()
+// STATE[97.14%|DONE]
 void game_material_manager::delete_materials( )
 {
-	// LOCALS
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,game_material const *>,std::priv::_MapTraitsT<std::pair<u16 const ,game_material const *> > > end
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,game_material const *>,std::priv::_MapTraitsT<std::pair<u16 const ,game_material const *> > > it
-	// ******
+	map< u16, game_material const* >::iterator it = m_materials.begin( );
+	map< u16, game_material const* >::iterator end = m_materials.end( );
+	for ( ; it != end ; ++it )
+		VOSTOK_DELETE_IMPL( g_allocator, it->second );
+	m_materials.clear( );
 
 	// FUNCTION BODY
 	// <0x73e6e9>|0x009|+0x017:'48'
@@ -82,15 +89,11 @@ void game_material_manager::delete_materials( )
 	// ******
 }
 
-// STATE[STUB]
-// survarium::game_material const* survarium::game_material_manager::get_material(unsigned short) const
+// STATE[100%|DONE]
 game_material const* game_material_manager::get_material( u16 id ) const
 {
-	// LOCALS
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,game_material const *>,std::priv::_ConstMapTraitsT<std::pair<u16 const ,game_material const *> > > it
-	// ******
-
-	return NULL;
+	map< u16, game_material const* >::const_iterator it = m_materials.find( id );
+	return it != m_materials.end( ) ? it->second : get_material( m_default_material_id );
 
 	// FUNCTION BODY
 	// <0x73e669>|0x009|+0x020:'58'
@@ -98,17 +101,28 @@ game_material const* game_material_manager::get_material( u16 id ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 material_pair const* game_material_manager::get_pair( u16 first_mtrl_id, u16 second_mtrl_id ) const
 {
-	// LOCALS
-	// u16 							second_material
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,material_pair const *>,std::priv::_ConstMapTraitsT<std::pair<u16 const ,material_pair const *> > > second_it
-	// u16 							first_material
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,map<u16,material_pair const *,std::less<u16> > >,std::priv::_ConstMapTraitsT<std::pair<u16 const ,map<u16,material_pair const *,std::less<u16> > > > > first_it
-	// ******
+	u16 first_material	= material_exist( first_mtrl_id ) ? first_mtrl_id : m_default_material_id;
+	u16 second_material = material_exist( second_mtrl_id ) ? second_mtrl_id : m_default_material_id;
 
-	return NULL;
+	map< u16, map< u16, material_pair const * > >::const_iterator first_it = m_pairs.find( first_material );
+	if ( first_it == m_pairs.end( ) ) {
+		first_material = m_default_material_id;
+		first_it = m_pairs.find( first_material );
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION_T( first_it != m_pairs.end( ) ) );
+
+	map< u16, material_pair const * >::const_iterator second_it = first_it->second.find( second_material );
+	if ( second_it == first_it->second.end( ) ) {
+		second_material = m_default_material_id;
+		second_it = first_it->second.find( second_material );
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION_T( second_it != first_it->second.end( ) ) );
+	return second_it->second;
 
 	// FUNCTION BODY
 	// <0x73e4c9>|0x009|+0x034:'64'
@@ -131,34 +145,32 @@ material_pair const* game_material_manager::get_pair( u16 first_mtrl_id, u16 sec
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::game_material_manager::material_exist(unsigned short) const
+// STATE[100%|DONE]
 bool game_material_manager::material_exist( u16 id ) const
 {
-	return false;
+	return m_materials.find( id ) != m_materials.end( );
 
 	// FUNCTION BODY
 	// <0x73e479>|0x009|+0x03c:'102'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::game_material_manager::add_game_material(survarium::game_material const* const)
-void game_material_manager::add_game_material( game_material const* mtrl )
+// STATE[100%|DONE]
+void game_material_manager::add_game_material( game_material const* const mtrl )
 {
+	m_materials[mtrl->id( )] = mtrl;
+
 	// FUNCTION BODY
 	// <0x73e7a0>|0x010|+0x02a:'131'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::game_material_manager::add_pair(survarium::material_pair const* const)
-void game_material_manager::add_pair( material_pair const* pair )
+// STATE[100%|DONE]
+void game_material_manager::add_pair( material_pair const* const pair )
 {
-	// LOCALS
-	// u16 							first_mtrl_id
-	// u16 							second_mtrl_id
-	// ******
+	u16 first_mtrl_id	= pair->first_material( )->id( );
+	u16 second_mtrl_id	= pair->second_material( )->id( );
+	m_pairs[first_mtrl_id][second_mtrl_id] = pair;
 
 	// FUNCTION BODY
 	// <0x73e926>|0x016|+0x01c:'136'
