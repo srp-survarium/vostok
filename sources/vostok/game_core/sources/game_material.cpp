@@ -25,11 +25,11 @@ game_material::game_material( )	:
 {
 }
 
-// STATE[88.10%]: LTCG for binary_config_value access, also buffer_string
+// STATE[88.10%|PARTIAL]: LTCG for binary_config_value access, also buffer_string
 void game_material::load_from_config( configs::binary_config_value const& val )
 {
 	m_id							= (u16)val["id"];
-	m_name							= (pcstr)val["name"];	// sushi@MATCH: Uses stack for whatever reason
+	m_name							= (pcstr)val["name"];	// sushi@MATCH: Target uses stack for whatever reason
 	m_material_resistance			= (float)val["physic"]["resistance"];
 	m_bullet_reflection_speed_down	= (float)val["physic"]["reflection_speed_down"];
 	m_width							= (float)val["physic"]["width"];

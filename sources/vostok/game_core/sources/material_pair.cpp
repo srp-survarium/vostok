@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[99.29%|DONE]
 material_pair::material_pair( ) :
 	m_particles				( g_allocator ),
 	m_current_particle_idx	( 0 )
@@ -21,7 +21,7 @@ material_pair::~material_pair( )
 {
 }
 
-// STATE[UNCHECKED]
+// STATE[99.51%|DONE]
 void material_pair::load_from_config( game_material_manager const& manager, configs::binary_config_value const& val )
 {
 	u16 first_mtrl_id		= (u16)val["mtrl_1_id"];
@@ -42,7 +42,7 @@ void material_pair::load_from_config( game_material_manager const& manager, conf
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void material_pair::add_particle( resources::unmanaged_resource_ptr particle )
 {
 	m_particles.push_back( particle );
@@ -52,14 +52,14 @@ void material_pair::add_particle( resources::unmanaged_resource_ptr particle )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[97.14%|PARTIAL]
 resources::unmanaged_resource_ptr const& material_pair::particle( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_particles.empty( ) ) );
 	if ( m_current_particle_idx == m_particles.size( ) )
 		m_current_particle_idx = 0;
 
-	return m_particles[m_current_particle_idx++];
+	return m_particles[m_current_particle_idx++]; // sushi@MATCH: Has some useless call at the end. Maybe 'at' artifact?
 
 	// FUNCTION BODY
 	// <0x6fd429>|0x009|+0x00c:'40'

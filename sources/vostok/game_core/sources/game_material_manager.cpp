@@ -10,12 +10,12 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[90.00%|DONE]: LTCG for unmanaged_resource
 game_material_manager::game_material_manager( )
 {
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void game_material_manager::clear_resources( )
 {
 	delete_pairs( );
@@ -27,7 +27,7 @@ void game_material_manager::clear_resources( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 game_material_manager::~game_material_manager( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -39,18 +39,18 @@ game_material_manager::~game_material_manager( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[98.24%|DONE]
 void game_material_manager::delete_pairs( )
 {
 	map< u16, map< u16, material_pair const* > >::iterator it	= m_pairs.begin( );
 	map< u16, map< u16, material_pair const* > >::iterator end	= m_pairs.end( );
 
-	for ( ; it != end ; it++ )
+	for ( ; it != end ; ++it )
 	{
 		map< u16, material_pair const* >::iterator internail_it		= it->second.begin( );
 		map< u16, material_pair const* >::iterator internail_end	= it->second.end( );
 
-		for ( ; internail_it != internail_end ; internail_it++ )
+		for ( ; internail_it != internail_end ; ++internail_it )
 			VOSTOK_DELETE_IMPL( g_allocator, internail_it->second );
 	}
 	m_pairs.clear( );
@@ -71,12 +71,12 @@ void game_material_manager::delete_pairs( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[97.14%|DONE]
 void game_material_manager::delete_materials( )
 {
 	map< u16, game_material const* >::iterator it = m_materials.begin( );
 	map< u16, game_material const* >::iterator end = m_materials.end( );
-	for ( ; it != end ; it++ )
+	for ( ; it != end ; ++it )
 		VOSTOK_DELETE_IMPL( g_allocator, it->second );
 	m_materials.clear( );
 
@@ -103,7 +103,7 @@ game_material const* game_material_manager::get_material( u16 id ) const
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 material_pair const* game_material_manager::get_pair( u16 first_mtrl_id, u16 second_mtrl_id ) const
 {
 	u16 first_material	= material_exist( first_mtrl_id ) ? first_mtrl_id : m_default_material_id;
@@ -147,7 +147,7 @@ material_pair const* game_material_manager::get_pair( u16 first_mtrl_id, u16 sec
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 bool game_material_manager::material_exist( u16 id ) const
 {
 	return m_materials.find( id ) != m_materials.end( );
@@ -157,7 +157,7 @@ bool game_material_manager::material_exist( u16 id ) const
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void game_material_manager::add_game_material( game_material const* const mtrl )
 {
 	m_materials[mtrl->id( )] = mtrl;
@@ -167,7 +167,7 @@ void game_material_manager::add_game_material( game_material const* const mtrl )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void game_material_manager::add_pair( material_pair const* const pair )
 {
 	u16 first_mtrl_id	= pair->first_material( )->id( );
