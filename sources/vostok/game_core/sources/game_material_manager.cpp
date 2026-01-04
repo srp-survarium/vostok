@@ -95,8 +95,6 @@ game_material const* game_material_manager::get_material( u16 id ) const
 	map< u16, game_material const* >::const_iterator it = m_materials.find( id );
 	return it != m_materials.end( ) ? it->second : get_material( m_default_material_id );
 
-	// std::priv::_Rb_tree_iterator<std::pair<u16 const ,game_material const *>,std::priv::_MapTraitsT<std::pair<u16 const ,game_material const *> > > it
-
 	// FUNCTION BODY
 	// <0x73e669>|0x009|+0x020:'58'
 	// <0x73e689>|0x029|+0x047:'59'

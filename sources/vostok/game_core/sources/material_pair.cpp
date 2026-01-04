@@ -16,7 +16,7 @@ material_pair::material_pair( ) :
 {
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 material_pair::~material_pair( )
 {
 }
