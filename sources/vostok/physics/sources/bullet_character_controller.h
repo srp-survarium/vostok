@@ -130,12 +130,9 @@ public:
 
 STATIC_SIZE_ASSERT(bullet_character_controller, 0x110);
 
-
-// sushi@TODO: SHould be private, this module is actually private
-VOSTOK_PHYSICS_API	btVector3	computeReflectionDirection	( btVector3 const& direction, btVector3 const& normal );
-VOSTOK_PHYSICS_API	btVector3	parallelComponent			( btVector3 const& direction, btVector3 const& normal );
-VOSTOK_PHYSICS_API	btVector3	perpindicularComponent		( btVector3 const& direction, btVector3 const& normal );
-VOSTOK_PHYSICS_API	void		setup_game_material_groups	( u16 const* game_material_groups, u16 game_materials_count );
+btVector3	computeReflectionDirection	( btVector3 const& direction, btVector3 const& normal );
+btVector3	parallelComponent			( btVector3 const& direction, btVector3 const& normal );
+btVector3	perpindicularComponent		( btVector3 const& direction, btVector3 const& normal );
 
 } // namespace physics
 } // namespace vostok

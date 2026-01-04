@@ -53,6 +53,7 @@
 #include "key_binder.h"
 
 #include <vostok/game_core/ladder_cook.h>
+#include <vostok/game_core/game_material_manager_cook.h>
 
 #ifdef VOSTOK_STATIC_LIBRARIES
 #include <GFx.h>
@@ -660,7 +661,7 @@ void game::scene_close_query( )
 void game::register_cooks( )
 {
 //	static animation_analysis_result_cook			s_animation_analysis_result_cook = <0x4c2789c>;
-//	static game_material_manager_cook				s_material_manager_cook = <0x4c278bc>;
+	static game_material_manager_cook				s_material_manager_cook( false );
 //	static animated_model_instance_cook				s_animated_model_instance_cook = <0x4c277b0>;
 	static ladder_cook 								s_ladder_cook;
 //	static weapon_user_animations_container_cook	s_animation_container_cook = <0x4c2785c>;
@@ -677,6 +678,7 @@ void game::register_cooks( )
 //	static animated_model_instance_cook	s_animated_model_instance_cook;
 	static weapon_cook					s_weapon_cook					( *this );
 
+	register_cook						( &s_material_manager_cook );
 	register_cook						( &s_ladder_cook );
 
 	register_cook						( &s_project_cook );
