@@ -12,9 +12,7 @@
 namespace survarium {
 
 struct character_recoil_params;
-class weapon_core;				// sushi@TODO
-
-
+class weapon_core;
 
 class recoil_calculator {
 public:

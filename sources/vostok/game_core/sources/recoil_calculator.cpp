@@ -8,7 +8,6 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::recoil_calculator::recoil_calculator()
 recoil_calculator::recoil_calculator( )
 {
 	// FUNCTION BODY
@@ -51,12 +50,11 @@ float recoil_calculator::get_back_coeff( ) const
 }
 
 // STATE[STUB]
-// void survarium::recoil_calculator::tick(const survarium::weapon_user_state_enum, const bool, const unsigned int, const float)
 void recoil_calculator::tick(
-	weapon_user_state_enum		character_state,
-	bool						is_aiming,
-	u32							current_time_in_ms,
-	float						time_scale
+	const weapon_user_state_enum	character_state,
+	const bool						is_aiming,
+	const u32						current_time_in_ms,
+	const float						time_scale
 )
 {
 	// FUNCTION BODY

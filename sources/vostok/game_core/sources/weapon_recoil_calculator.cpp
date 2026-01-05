@@ -5,6 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_recoil_calculator.h>
 
+#include <vostok/game_core/weapon_core.h>
+
 namespace survarium {
 
 /*
@@ -19,17 +21,17 @@ void `dynamic initializer for 's_recoil_use_pseudo_random_cc''( )
 */
 
 // STATE[STUB]
-// float survarium::pseudo_random::random_f(const float)
-float pseudo_random::random_f( float range )
+float pseudo_random::random_f( const float range )
 {
 	// LOCALS
-	// float 						t
 	// float 						result
-	// float 						k
-	// float 						pi_x24
 	// ******
 
-	return 0.0f;
+	float pi_x24	= math::pi * 24.0f;
+	float t			= fmod( m_time, pi_x24 );
+	// float k			=
+	//math::pow( math::sin( ( t - math::pi_d2 ) / 12.0f ), 5 );
+	// return 0.0f;
 
 	// FUNCTION BODY
 	// <0x58e429>|0x009|+0x015:'22'
@@ -41,7 +43,6 @@ float pseudo_random::random_f( float range )
 }
 
 // STATE[STUB]
-// survarium::weapon_recoil_calculator::weapon_recoil_calculator()
 weapon_recoil_calculator::weapon_recoil_calculator( ) : m_pseudo_random( 0.0f ), m_interpolator( 0.0f )
 {
 	// FUNCTION BODY
@@ -193,10 +194,18 @@ void weapon_recoil_calculator::fire( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_recoil_calculator::reset()
+// STATE[UNCHECKED]
 void weapon_recoil_calculator::reset( )
 {
+	m_time_since_last_dispersion_change	= 0.0f;
+	m_time_since_shoot					= 0.0f;
+	m_additive_recoil_timer 			= 0.0f;
+	m_target_vertical_koef				= 0.0f;
+	m_target_horizontal_koef 			= 0.0f;
+	m_target_vertical_koef 				= 0.0f;
+	m_target_horizontal_koef 			= 0.0f;
+
+
 	// FUNCTION BODY
 	// <0x58dfe7>|0x007|+0x010:'151'
 	// <0x58dff7>|0x017|+0x010:'152'
@@ -208,27 +217,28 @@ void weapon_recoil_calculator::reset( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_recoil_calculator::reload()
+// STATE[UNCHECKED]
 void weapon_recoil_calculator::reload( )
 {
+	reset( );
+
 	// FUNCTION BODY
 	// <0x58e087>|0x007|+0x008:'162'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_recoil_calculator::chamber_a_round()
+// STATE[UNCHECKED]
 void weapon_recoil_calculator::chamber_a_round( )
 {
+	reset( );
+
 	// FUNCTION BODY
 	// <0x58e067>|0x007|+0x008:'167'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_recoil_calculator::process_compensation(const float)
-void weapon_recoil_calculator::process_compensation( float dt_sec )
+// STATE[UNCHECKED]
+void weapon_recoil_calculator::process_compensation( const float dt_sec )
 {
 	// LOCALS
 	// weapon_recoil_params const& 	weapon_params
@@ -237,6 +247,8 @@ void weapon_recoil_calculator::process_compensation( float dt_sec )
 	// float 						recoil_compensation_amount
 	// float 						additive_recoil_compensation_speed
 	// ******
+
+	weapon_recoil_params const& weapon_params = m_weapon->get_recoil_params( );
 
 	// FUNCTION BODY
 	// <0x58e159>|0x009|+0x00f:'172'
@@ -275,8 +287,7 @@ float weapon_recoil_calculator::get_random_angle( float range )
 }
 
 // STATE[STUB]
-// float survarium::weapon_recoil_calculator::get_random_amount(const float)
-float weapon_recoil_calculator::get_random_amount( float range )
+float weapon_recoil_calculator::get_random_amount( const float range )
 {
 	// LOCALS
 	// float 						k
@@ -296,10 +307,11 @@ float weapon_recoil_calculator::get_random_amount( float range )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_recoil_calculator::set_weapon(survarium::weapon_core*)
+// STATE[UNCHECKED]
 void weapon_recoil_calculator::set_weapon( weapon_core* weapon )
 {
+	m_weapon = weapon;
+
 	// FUNCTION BODY
 	// <0x58dfc7>|0x007|+0x009:'205'
 	// ******
