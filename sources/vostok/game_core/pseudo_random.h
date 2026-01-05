@@ -9,12 +9,11 @@ namespace survarium {
 
 class pseudo_random {
 public:
-	inline	explicit	pseudo_random	( float arg_0 ) { /* no source */ }
+	inline	explicit	pseudo_random	( float time ) : m_time( time ) { }
 
 	// \sources\weapon_recoil_calculator.cpp
 			float		random_f		( float range );
-	inline	void		set_time		( float arg_0 ) { /* no source */ }
-
+	inline	void		set_time		( float time ) { m_time = time; }
 
 private:
 	/* 0x0000 */	float		m_time;

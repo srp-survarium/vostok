@@ -8,7 +8,7 @@
 #define VOSTOK_MAYA_ANIMATION_RAW_BI_SPLINE_H_INCLUDED
 
 #include <vostok/maya_animation/api.h>
-#include <vostok/animation/bi_spline_data.h>
+// #include <vostok/animation/bi_spline_data.h>
 
 struct SISLCurve;
 
@@ -19,10 +19,10 @@ template < typename Point_type, int Dimension >
 class raw_bi_spline {
 public:
 	inline			raw_bi_spline		( ) : m_curve( 0 ) { }
-					~raw_bi_spline		( );	
+					~raw_bi_spline		( );
 public:
 			void	evaluate			( float time, Point_type &point )const								;
-			void	get_data			( animation::bi_spline_data<Point_type> &data )const				;
+			// void	get_data			( animation::bi_spline_data<Point_type> &data )const				;
 			void	build_approximation	( const float* points, u32 number, const Point_type &max_epsilon  )	;
 
 private:
