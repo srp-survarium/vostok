@@ -31,7 +31,7 @@ void character_recoil_calculator::set_character_recoil_params( character_recoil_
 	// ******
 }
 
-// STATE[69.65%|BLOCKED]: switch statements are not matched properly. Ghidra didn't select them. From cursory view in IDA logic is the same though!
+// STATE[99.63%|DONE]: target allocated 4 more bytes on the stack and used different offsets for local variables
 void character_recoil_calculator::tick(
 	const weapon_user_state_enum	character_state,
 	const bool						is_aiming,
