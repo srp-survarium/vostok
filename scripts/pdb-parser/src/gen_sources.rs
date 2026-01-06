@@ -481,7 +481,7 @@ impl<'a> Module<'a> {
                 }
 
                 // Ignore everything outside function scope
-                _symbol => println!("{_symbol:?}"),
+                _symbol => (),
             }
         }
 

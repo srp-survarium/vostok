@@ -22,7 +22,7 @@ public:
 
 			void		set_weapon							( weapon_core* weapon );
 	inline	void		set_interpolation_time				( float arg_0 ) { /* no source */ }
-	inline	void		set_character_multiplier			( float arg_0 ) { /* no source */ }
+	inline	void		set_character_multiplier			( float character_multiplier ) { m_player_recoil_multiplier = character_multiplier; }
 	inline	void		set_player_compensation_multiplier	( float player_compensation_multiplier ) { m_player_compensation_multiplier = player_compensation_multiplier; }
 
 			void		tick							( u32 current_time_in_ms, float time_scale );

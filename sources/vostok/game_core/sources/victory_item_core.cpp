@@ -5,12 +5,20 @@
 #include "pch.h"
 #include <vostok/game_core/victory_item_core.h>
 
+#include <vostok/game_core/collision_geometry.h>
+#include <vostok/game_core/collision_user.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::victory_item_core::victory_item_core()
-victory_item_core::victory_item_core( )
+// STATE[UNCHECKED]
+victory_item_core::victory_item_core( ) :
+	id				( u8(-1) ),
+	m_is_inserted	( false ),
+	m_spoted_to_team( team_undefined ),
+	m_carrier_id	( u8(-1) )
 {
+	m_transform.identity( );
+
 	// FUNCTION BODY
 	// <0x59c450>|0x000|+0x074:'20'	{
 	// <0x59c4c4>|0x074|+0x00e:'21'
@@ -18,21 +26,21 @@ victory_item_core::victory_item_core( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core::~victory_item_core()
+// STATE[UNCHECKED]
 victory_item_core::~victory_item_core( )
 {
+	VOSTOK_DELETE_IMPL( g_allocator, m_collision_geometries ); // sushi@TODO: Why is this called from this destructor and not the one in `usabe_object`
+
 	// FUNCTION BODY
-	// <0x59c3f0>|0x000|+0x027:'25'	{
 	// <0x59c417>|0x027|+0x019:'26'
-	// <0x59c430>|0x040|      :'27'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core::unload()
+// STATE[UNCHECKED]
 void victory_item_core::unload( )
 {
+	remove( );
+
 	// FUNCTION BODY
 	// <0x59c390>|0x000|+0x007:'30'	{
 	// <0x59c397>|0x007|+0x008:'31'
@@ -40,10 +48,14 @@ void victory_item_core::unload( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core::load(vostok::configs::binary_config_value const&)
+// STATE[UNCHECKED]
 void victory_item_core::load( configs::binary_config_value const& cfg )
 {
+	load( cfg );
+
+	*m_collision_geometries = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
+	m_collision_geometries[0]->load( cfg["collision_geometries"][0] );
+
 	// FUNCTION BODY
 	// <0x59c4e0>|0x000|+0x009:'35'	{
 	// <0x59c4e9>|0x009|+0x00c:'36'
@@ -54,15 +66,16 @@ void victory_item_core::load( configs::binary_config_value const& cfg )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::victory_item_core::use_initialize(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 bool victory_item_core::use_initialize( usable_object_user_data* user )
 {
-	// CALL SITE INFO
-	// <0x59c361> -> void <unknown>(victory_item_core*)
-	// ******
+	if ( !m_usable_object_users.empty( ) )
+		return false;
 
-	return false;
+	user->owner->use_victory_item( this );
+
+	return true;
+
 	// FUNCTION BODY
 	// <0x59c330>|0x000|+0x007:'43'	{
 	// <0x59c337>|0x007|+0x013:'44'
@@ -75,11 +88,12 @@ bool victory_item_core::use_initialize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::victory_item_core::use_execute(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 bool victory_item_core::use_execute( usable_object_user_data* user )
 {
-	return false;
+	VOSTOK_UNREFERENCED_PARAMETER( user );
+	return true;
+
 	// FUNCTION BODY
 	// <0x59c310>|0x000|+0x009:'53'	{
 	// <0x59c319>|0x009|+0x00c:'54'
@@ -88,11 +102,12 @@ bool victory_item_core::use_execute( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::victory_item_core::use_finalize(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 bool victory_item_core::use_finalize( usable_object_user_data* user )
 {
-	return false;
+	VOSTOK_UNREFERENCED_PARAMETER( user );
+	return true;
+
 	// FUNCTION BODY
 	// <0x59c2f0>|0x000|+0x009:'59'	{
 	// <0x59c2f9>|0x009|+0x00c:'60'
@@ -101,13 +116,12 @@ bool victory_item_core::use_finalize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core::put(vostok::physics::world*, vostok::math::float4x4 const&)
+// STATE[UNCHECKED]
 void victory_item_core::put( physics::world* world, float4x4 const& transform )
 {
-	// CALL SITE INFO
-	// <0x59c3d2> -> void <unknown>(float4x4 const&)
-	// ******
+	insert( world );
+	set_transform( transform );
+	m_is_inserted = true;
 
 	// FUNCTION BODY
 	// <0x59c3b0>|0x000|+0x007:'65'	{
@@ -118,10 +132,12 @@ void victory_item_core::put( physics::world* world, float4x4 const& transform )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core::take()
+// STATE[UNCHECKED]
 void victory_item_core::take( )
 {
+	remove( );
+	m_is_inserted = false;
+
 	// FUNCTION BODY
 	// <0x59c370>|0x000|+0x007:'72'	{
 	// <0x59c377>|0x007|+0x008:'73'
@@ -130,13 +146,11 @@ void victory_item_core::take( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core::set_transform(vostok::math::float4x4 const&)
+// STATE[UNCHECKED]
 void victory_item_core::set_transform( float4x4 const& transform )
 {
-	// CALL SITE INFO
-	// <0x59c2e5> -> void <unknown>(float4x4 const&)
-	// ******
+	m_transform = transform;
+	m_collision_geometries[0]->set_transform( transform );
 
 	// FUNCTION BODY
 	// <0x59c2b0>|0x000|+0x009:'78'	{
@@ -146,11 +160,11 @@ void victory_item_core::set_transform( float4x4 const& transform )
 	// ******
 }
 
-// STATE[STUB]
-// vostok::math::float4x4 survarium::victory_item_core::get_transform()
+// STATE[UNCHECKED]
 float4x4 victory_item_core::get_transform( )
 {
-	return vostok::math::float4x4();
+	return m_transform;
+
 	// FUNCTION BODY
 	// <0x59c280>|0x000|+0x009:'83'	{
 	// <0x59c289>|0x009|+0x016:'84'

@@ -10,7 +10,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 character_recoil_calculator::character_recoil_calculator( ) :
 	m_params		( NULL ),
 	m_target_value	( 0.0f ),
@@ -19,10 +19,6 @@ character_recoil_calculator::character_recoil_calculator( ) :
 	m_decrease_speed( 1.0f ),
 	m_current_time	( 0 )
 {
-	// FUNCTION BODY
-	// <0x596200>|0x000|+0x05a:'22'	{
-	// <0x59625a>|0x05a|      :'23'	}
-	// ******
 }
 
 // STATE[UNCHECKED]
@@ -35,7 +31,7 @@ void character_recoil_calculator::set_character_recoil_params( character_recoil_
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[69.65%|BLOCKED]: switch statements are not matched properly. Ghidra didn't select them. From cursory view in IDA logic is the same though!
 void character_recoil_calculator::tick(
 	const weapon_user_state_enum	character_state,
 	const bool						is_aiming,
@@ -43,15 +39,6 @@ void character_recoil_calculator::tick(
 	const float						time_scale
 )
 {
-	// LOCALS
-	// float 						dt
-	// ******
-
-	// STATICS
-	// static <NoType> 				 = <0x5963e0>;
-	// ******
-
-
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 	switch ( character_state )
 	{
@@ -60,13 +47,16 @@ void character_recoil_calculator::tick(
 		case type_jump:
 		case type_preview:
 			m_target_value = is_aiming ?  m_params->aimed_stand_multiplier : m_params->stand_multiplier;
-			break;
+		break;
 		case type_crouch:
 			m_target_value = is_aiming ?  m_params->aimed_crouch_multiplier : m_params->crouch_multiplier;
-			break;
+		break;
 	}
 
-	float dt = current_time_in_ms < m_current_time ? 0.0f : ( current_time_in_ms - m_current_time ) * 0.001f * time_scale; // sushi@TODO: What is the point of time_scale
+	float dt = current_time_in_ms > m_current_time
+		? ( current_time_in_ms - m_current_time ) * 0.001f * time_scale // sushi@TODO: What is the point of time_scale
+		: 0.0f;
+
 	m_current_time = current_time_in_ms;
 
 	if ( m_current_value != m_target_value )
@@ -76,6 +66,7 @@ void character_recoil_calculator::tick(
 		else
 			m_current_value = math::min( m_current_value + ( m_increase_speed * dt ), m_target_value );
 	}
+
 	// FUNCTION BODY
 	// <0x596279>|0x009|+0x00c:'32'
 	// <0x596285>|0x015|+0x016:'33'
@@ -83,18 +74,18 @@ void character_recoil_calculator::tick(
 	// <1>
 	// <2>
 	// <3>
-	// <0x59629b>|0x02b|+0x035:'38'
+	// <0x59629b>|0x02b|+0x035:'38'	m_target_value = is_aiming ?  m_params->aimed_stand_multiplier : m_params->stand_multiplier;
 	// <0x5962d0>|0x060|+0x002:'39'
 	// <0>
-	// <0x5962d2>|0x062|+0x034:'41'
+	// <0x5962d2>|0x062|+0x034:'41'	m_target_value = is_aiming ?  m_params->aimed_crouch_multiplier : m_params->crouch_multiplier;
 	// <0>
 	// <1>
 	// <2>
-	// <0x596306>|0x096|+0x046:'45'
-	// <0x59634c>|0x0dc|+0x009:'46'
-	// <0x596355>|0x0e5|+0x015:'47'
+	// <0x596306>|0x096|+0x046:'45'	float dt = current_time_in_ms > m_current_time
+	// <0x59634c>|0x0dc|+0x009:'46'	m_current_time = current_time_in_ms;
+	// <0x596355>|0x0e5|+0x015:'47'	if ( m_current_value != m_target_value )
 	// <0>
-	// <0x59636a>|0x0fa|+0x011:'49' if ( m_target_value < m_current_value )
+	// <0x59636a>|0x0fa|+0x011:'49'		if ( m_target_value < m_current_value )
 	// <0x59637b>|0x10b|+0x032:'50'
 	// <0x5963ad>|0x13d|+0x002:'51'
 	// <0x5963af>|0x13f|+0x02a:'52'

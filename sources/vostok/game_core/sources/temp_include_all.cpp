@@ -51,9 +51,26 @@
 #include <vostok/game_core/weapon_core.h>
 
 #include <vostok/game_core/game_material_manager.h>
+#include <vostok/game_core/recoil_calculator.h>
 
 namespace vostok
 {
+	void use_recoil_calculator( )
+	{
+		survarium::recoil_calculator calc;
+		calc.get_horizontal_coeff( );
+		calc.get_vertical_coeff( );
+		calc.get_back_coeff( );
+
+		calc.tick( survarium::type_stand, true, 10, 10.f );
+
+		calc.set_weapon( NULL );
+
+		calc.reload( );
+		calc.chamber_a_round( );
+		calc.fire( );
+	}
+
 	void use_game_material_manager( )
 	{
 		survarium::game_material_manager manager;
@@ -446,6 +463,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_recoil_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );

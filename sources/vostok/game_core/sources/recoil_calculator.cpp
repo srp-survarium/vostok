@@ -7,49 +7,30 @@
 
 namespace survarium {
 
-// STATE[STUB]
-recoil_calculator::recoil_calculator( )
+// STATE[100%|DONE]
+recoil_calculator::recoil_calculator( ) : m_weapon( NULL )
 {
-	// FUNCTION BODY
-	// <0x593da0>|0x000|+0x024:'16'	{
-	// <0x593dc4>|0x024|      :'17'	}
-	// ******
 }
 
-// STATE[STUB]
-// float survarium::recoil_calculator::get_horizontal_coeff() const
+// STATE[100%|DONE]
 float recoil_calculator::get_horizontal_coeff( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x593d09>|0x009|+0x010:'21'
-	// ******
+	return m_weapon_calculator.get_horizontal_koef( );
 }
 
-// STATE[STUB]
-// float survarium::recoil_calculator::get_vertical_coeff() const
+// STATE[100%|DONE]
 float recoil_calculator::get_vertical_coeff( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x593ce9>|0x009|+0x010:'26'
-	// ******
+	return m_weapon_calculator.get_vertical_koef( );
 }
 
-// STATE[STUB]
-// float survarium::recoil_calculator::get_back_coeff() const
+// STATE[100%|DONE]
 float recoil_calculator::get_back_coeff( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x593cc9>|0x009|+0x010:'31'
-	// ******
+	return m_weapon_calculator.get_back_koef( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void recoil_calculator::tick(
 	const weapon_user_state_enum	character_state,
 	const bool						is_aiming,
@@ -57,48 +38,34 @@ void recoil_calculator::tick(
 	const float						time_scale
 )
 {
-	// FUNCTION BODY
-	// <0x593d49>|0x009|+0x01f:'36'
-	// <0x593d68>|0x028|+0x013:'37'
-	// <0x593d7b>|0x03b|+0x01a:'38'
-	// ******
+	m_character_calculator.tick( character_state, is_aiming, current_time_in_ms, time_scale );
+	m_weapon_calculator.tick( current_time_in_ms, time_scale );
+	m_weapon_calculator.set_character_multiplier( m_character_calculator.get_value( ) );
 }
 
-// STATE[STUB]
-// void survarium::recoil_calculator::set_weapon(survarium::weapon_core*)
+// STATE[100%|DONE]
 void recoil_calculator::set_weapon( weapon_core* weapon )
 {
-	// FUNCTION BODY
-	// <0x593c57>|0x007|+0x009:'43'
-	// <0x593c60>|0x010|+0x00c:'44'
-	// ******
+	m_weapon = weapon;
+	m_weapon_calculator.set_weapon( weapon );
 }
 
-// STATE[STUB]
-// void survarium::recoil_calculator::reload()
+// STATE[100%|DONE]
 void recoil_calculator::reload( )
 {
-	// FUNCTION BODY
-	// <0x593ca7>|0x007|+0x008:'49'
-	// ******
+	m_weapon_calculator.reload( );
 }
 
-// STATE[STUB]
-// void survarium::recoil_calculator::chamber_a_round()
+// STATE[100%|DONE]
 void recoil_calculator::chamber_a_round( )
 {
-	// FUNCTION BODY
-	// <0x593c87>|0x007|+0x008:'54'
-	// ******
+	m_weapon_calculator.chamber_a_round( );
 }
 
-// STATE[STUB]
-// void survarium::recoil_calculator::fire()
+// STATE[100%|DONE]
 void recoil_calculator::fire( )
 {
-	// FUNCTION BODY
-	// <0x593d27>|0x007|+0x008:'59'
-	// ******
+	m_weapon_calculator.fire( );
 }
 
 } // namespace survarium

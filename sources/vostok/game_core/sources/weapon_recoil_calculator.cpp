@@ -276,7 +276,7 @@ void weapon_recoil_calculator::reload( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[UNCHECKED]: sushi@TODO: What does that mean
 void weapon_recoil_calculator::chamber_a_round( )
 {
 	reset( );
