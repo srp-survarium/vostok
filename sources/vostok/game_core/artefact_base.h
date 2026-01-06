@@ -11,13 +11,13 @@ namespace survarium {
 
 class artefact_base : public inventory_item {
 public:
-	inline			artefact_base				( ): inventory_item( inventory_item::disabled ) { /* no source */ } // sushi@TODO
-	virtual			~artefact_base				( ) { /* no source */ }
+	inline			artefact_base	( ) : inventory_item( inventory_item::use_silent ) { }
+	virtual			~artefact_base	( ) { }
 }; // class artefact_base
 
 STATIC_SIZE_ASSERT(artefact_base, 0x118);
 
-typedef resources::resource_ptr< artefact_base, vostok::resources::unmanaged_intrusive_base> artefact_base_ptr;
+typedef resources::resource_ptr< artefact_base, resources::unmanaged_intrusive_base > artefact_base_ptr;
 
 } // namespace survarium
 

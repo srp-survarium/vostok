@@ -65,7 +65,7 @@ public:
 	// STATE[BLOCKED]
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { /* <0xab250>|0x000:'78' */ }
 
-private:
+protected:
 	/* 0x0000 */	/* interactive_object */
 	/* 0x0108 */	/* boost::noncopyable */
 	/* 0x0108 */	inventory_item::action_behaviour_type	m_action_behaviuor;

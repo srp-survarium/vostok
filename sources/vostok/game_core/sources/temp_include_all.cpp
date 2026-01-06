@@ -55,9 +55,54 @@
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
+#include <vostok/game_core/artefact_lifebone_core.h>
+#include <vostok/game_core/hit_affects_type_enum.h>
+#include <vostok/game_core/artefact_container_core.h>
+#include <vostok/game_core/generic_anomaly_core.h>
+
 
 namespace vostok
 {
+	void use_generic_anomaly_core( )
+	{
+		survarium::generic_anomaly_core core;
+		core.on_player_action( NULL, survarium::player_actions_subscriber::walk, 10.0f );
+		core.on_artefact_container_use( NULL );
+		core.on_zone_act( NULL, NULL );
+		core.on_hit_receiver_enter( NULL, NULL );
+		core.on_hit_receiver_leave( NULL, NULL );
+	}
+
+	void use_artefact_container_core( )
+	{
+		survarium::artefact_container_core core;
+
+		configs::binary_config_value config;
+		core.load( config );
+		core.use_initialize( NULL );
+		core.use_execute( NULL );
+		core.use_finalize( NULL );
+		core.use_info( NULL );
+
+		survarium::scheduler scheduler( NULL );
+		core.activate		( NULL, NULL, scheduler );
+		core.deactivate		( );
+		core.has_artefact	( );
+		core.spawn_artefact	( );
+	}
+
+	void use_artefact_lifebone_core( )
+	{
+		survarium::artefact_lifebone_core lifebone;
+		lifebone.holder_assigned( );
+		lifebone.holder_removed( );
+		lifebone.action( true );
+		lifebone.reduce_damage( "body_part_name", "damage_type",  10.0f, 10.0f );
+
+		configs::binary_config_value config;
+		lifebone.load_core( config );
+	}
+
 	void use_victory_item_core( )
 	{
 		static survarium::victory_item_core_cook s_victory_item_core_cook;
@@ -177,7 +222,9 @@ namespace vostok
 		sensor.resolve_links( NULL, cfg );
 		sensor.tick( 0, 0 );
 		sensor.is_filter_passed( NULL );
-		sensor.contact_test( NULL, ghost_predicate() );
+
+		ghost_predicate gp;
+		sensor.contact_test( NULL, gp );
 		sensor.contact_test( NULL );
 		sensor.insert( NULL );
 		sensor.remove( );
@@ -246,10 +293,12 @@ namespace vostok
 			"Hello!"
 		);
 
+		logging::log_format lf;
+
 		logging::append(
 			logging::log_callback_boost( core::g_log_callback ),
 			(void*)0,
-			&logging::log_format( ),
+			&lf,
 			"file",
 			41,
 			"use_log",
@@ -472,6 +521,9 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_generic_anomaly_core( );
+	vostok::use_artefact_container_core( );
+	vostok::use_artefact_lifebone_core( );
 	vostok::use_victory_item_core( );
 	vostok::use_recoil_calculator( );
 	vostok::use_game_material_manager( );

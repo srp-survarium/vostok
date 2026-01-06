@@ -38,8 +38,11 @@ public:
 	virtual	void		activate					( generic_anomaly_core* owner, physics::world* world, scheduler& __formal );
 	virtual	void		deactivate					( );
 
-	inline	bool		has_artefact				( ) const { /* no source */ }
+public:
+	inline	bool		has_artefact				( ) const { return m_artefact; }
 			void		spawn_artefact				( );
+
+protected:
 			void		transfer_artefact			( inventory_holder* holder );
 			void		artefact_spawned			( resources::queries_result& data );
 

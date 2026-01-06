@@ -29,15 +29,13 @@ public:
 	virtual	void								take_inventory_item		( inventory_item_ptr const& arg_0 ) = 0;
 
 	virtual	damage_model_ptr const&				damage_model			( ) const = 0;
-
 	virtual	base_player*						cast_to_base_player		( ) = 0;
-
 	virtual	physics::world*						get_physics_world		( ) = 0;
 
 	// STATE[STUB]
-	inline	survarium::inventory const&				inventory				( ) const { return *m_inventory; }
+	inline	survarium::inventory const&			inventory				( ) const { return *m_inventory; }
 	// STATE[STUB]
-	inline	survarium::inventory&					inventory				( ) { return *m_inventory; }
+	inline	survarium::inventory&				inventory				( ) { return *m_inventory; }
 
 	// STATE[STUB]
 			scheduler&							scheduler				( ) { return m_scheduler; }

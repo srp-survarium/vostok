@@ -218,7 +218,7 @@ public:
 			m_collisionFilterMask(btBroadphaseProxy::AllFilter),
          //@BP Mod
          m_flags(0),
-			m_shape_id(-1)
+			m_shape_id((unsigned int)(-1))
 		{
 		}
 

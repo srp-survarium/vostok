@@ -29,11 +29,11 @@ public:
 
 	inline	usable_object_user_data*	usable_object_user_data		( ) { /* no source */ }
 
-	virtual	inventory_holder const*		cast_to_inventory_holder	( ) const { return NULL; }
 	virtual	inventory_holder*			cast_to_inventory_holder	( ) { return NULL; }
+	virtual	inventory_holder const*		cast_to_inventory_holder	( ) const { return NULL; }
 
-	virtual	base_player const*			cast_to_base_player			( ) const { return NULL; }
 	virtual	base_player*				cast_to_base_player			( ) { return NULL; }
+	virtual	base_player const*			cast_to_base_player			( ) const { return NULL; }
 
 	inline	void						set_artcontainer_time_factor( float arg_0 ) { /* no source */ }
 	inline	float						get_artcontainer_time_factor( ) const { /* no source */ }
