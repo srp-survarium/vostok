@@ -16,23 +16,21 @@ public:
 	virtual										~artefact_lifebone_core		( );
 
 	virtual	void								action						( bool key_down ) override;
-
 	virtual	void								holder_assigned				( ) override;
 	virtual	void								holder_removed				( ) override;
-
 	virtual	float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
 													float		amount,
 													float		armor_piercing
 												);
-
 			void								load_core					( configs::binary_config_value config );
 
+protected:
 			void								switch_passive_mode_impl	( bool switch_on );
 			void								activate_impl				( );
-
 			bool								protect_affect				( pcstr __formal, hit_affects_type_enum affect );
+public:
 	// STATE[STUB]
 	virtual	void								activate					( base_player& user, engine& engine ) override { }
 	// STATE[STUB]
@@ -43,7 +41,7 @@ public:
 
 	virtual	void								tick						( ) override { /* no source */ }
 
-	virtual	bool								is_ready_to_be_deactivated	( ) const override { /* no source */ }
+	virtual	bool								is_ready_to_be_deactivated	( ) const override { return true; /* no source */ }
 
 	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
@@ -65,12 +63,14 @@ public:
 	virtual	void								serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void								deserialize					( network_core::packet_reader& arg_0 ) override { /* no source */ }
 
-	virtual	bool								is_sprinting				( ) const override { /* no source */ }
+	virtual	bool								is_sprinting				( ) const override { return true; /* no source */ }
+public:
+	enum { DAMAGE_PROTECTORS = 4 };
 
 private:
 	/* 0x0000 */	/* artefact_base */
 	/* 0x0120 */	/* damage_protector */
-	/* 0x0170 */	damage_protector		m_damage_protectors[4];
+	/* 0x0170 */	damage_protector		m_damage_protectors[DAMAGE_PROTECTORS];
 	/* 0x02b0 */	bool					m_unlimited;
 	/* 0x02b1 */	bool					m_passive_mode;
 	/* 0x02b4 */	u32						m_cooldown_ms;
