@@ -5,10 +5,13 @@
 #include "pch.h"
 #include <vostok/game_core/victory_item_core_cook.h>
 
+#include <vostok/game_core/victory_item_core.h>
+
 namespace survarium {
 
-// STATE[STUB]
-victory_item_core_cook::victory_item_core_cook( ) : resources::translate_query_cook( resources::victory_item_class, reuse_false, use_current_thread_id )
+// STATE[66.69%|PARTIAL]: LTCG for translate_query_cook
+victory_item_core_cook::victory_item_core_cook( ) :
+	resources::translate_query_cook( resources::victory_item_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 
@@ -17,49 +20,53 @@ victory_item_core_cook::victory_item_core_cook( ) : resources::translate_query_c
 	// ******
 }
 
-// STATE[STUB]
-// survarium::victory_item_core* survarium::victory_item_core_cook::create_resource()
+// STATE[83.57%|DONE]: LTCG for malloc
 victory_item_core* victory_item_core_cook::create_resource( )
 {
-	return NULL;
+	return VOSTOK_NEW_IMPL( g_allocator, victory_item_core );
 
 	// FUNCTION BODY
 	// <0x7620f9>|0x009|+0x04e:'20'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core_cook::translate_query(vostok::resources::query_result_for_cook&)
+// STATE[95.53%|DONE]: LTCG for query_resource
 void victory_item_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	resources::query_resource(
+		"resources/gameplay/victory_items/default.lua",
+		resources::binary_config_class_impl,
+		boost::bind( &victory_item_core_cook::on_config_loaded, this, _1 ),
+		g_allocator,
+		NULL,
+		&parent
+	);
+
 	// FUNCTION BODY
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
 	// <7>
 	// <0x76222c>|0x00c|+0x0d0:'33'
 	// <0>
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core_cook::on_config_loaded(vostok::resources::queries_result&)
+// STATE[79.67%|DONE]: LTCG for finish_query
 void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// configs::binary_config_ptr cfg
-	// victory_item_core* 			object_to_cook
-	// resources::query_result_for_cook* parent
-	// ******
+	resources::query_result_for_cook* parent = data.get_parent_query( );
 
-	// CALL SITE INFO
-	// <0x762192> -> victory_item_core* <unknown>()
-	// <0x7621b0> -> void <unknown>(configs::binary_config_value const&)
-	// ******
+	configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) ); // sushi@MATCH: operator[] inlined in target
+
+	victory_item_core* object_to_cook = create_resource( );
+	object_to_cook->load( cfg->get_root( ) );
+
+	parent->set_unmanaged_resource(
+		object_to_cook,
+		resources::memory_usage_type( resources::nocache_memory, sizeof( victory_item_core ) )
+	);
+
+	parent->finish_query( result_success );
+
 
 	// FUNCTION BODY
 	// <0x76215a>|0x00a|+0x00b:'39'
@@ -75,10 +82,11 @@ void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_item_core_cook::delete_resource(vostok::resources::resource_base*)
+// STATE[33.38%|PARTIAL]: In base some random call and LTCG for delete_helper
 void victory_item_core_cook::delete_resource( resources::resource_base* resource )
 {
+	VOSTOK_DELETE_IMPL( g_allocator, resource );
+
 	// FUNCTION BODY
 	// <0x7620c9>|0x009|+0x013:'53'
 	// ******

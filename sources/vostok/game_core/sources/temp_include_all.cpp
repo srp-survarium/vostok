@@ -53,8 +53,17 @@
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
 
+#include <vostok/game_core/victory_item_core_cook.h>
+#include <vostok/game_core/victory_item_core.h>
+
 namespace vostok
 {
+	void use_victory_item_core( )
+	{
+		static survarium::victory_item_core_cook s_victory_item_core_cook;
+		vostok::resources::register_cook( &s_victory_item_core_cook );
+	}
+
 	void use_recoil_calculator( )
 	{
 		survarium::recoil_calculator calc;
@@ -463,6 +472,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_victory_item_core( );
 	vostok::use_recoil_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_bullet( );

@@ -31,7 +31,7 @@ float pseudo_random::random_f( const float range )
 	// ******
 }
 
-// STATE[BLOCKED]: Ghidra script didn't generate anything for `weapon_recoil_calculator`.
+// STATE[BLOCKED]: Ghidra script didn't generate anything for `weapon_recoil_calculator`. Error is not returned at all.
 weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	m_random							( 0 ),
 	m_pseudo_random						( 0 ),
