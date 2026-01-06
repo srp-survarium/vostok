@@ -13,7 +13,7 @@ namespace survarium {
 static bool s_recoil_use_pseudo_random_value = true; // <0x7db780>
 static console_commands::cc_bool s_recoil_use_pseudo_random_cc( "recoil_use_pseudo_random", s_recoil_use_pseudo_random_value, false, console_commands::command_type_engine_internal );
 
-// STATE[UNCHECKED]
+// STATE[60.74%|PARTIAL]: pow inlined in base, after that is fixed further things need to be verified
 float pseudo_random::random_f( const float range )
 {
 	float pi_x24	= math::pi * 24.0f;
@@ -31,7 +31,7 @@ float pseudo_random::random_f( const float range )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]: Ghidra script didn't generate anything for `weapon_recoil_calculator`.
 weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	m_random							( 0 ),
 	m_pseudo_random						( 0 ),
@@ -57,7 +57,7 @@ weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float time_scale )
 {
 	if ( !m_last_time_in_ms )
@@ -184,7 +184,7 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 	// ******
 }
 
-// STATE[UNCHECKED]: sushi@TODO: Why two recoil types? m_target_vertical_koef & m_target_horizontal_koef vs. m_target_recoil_koef
+// STATE[BLOCKED]: sushi@TODO: Why two recoil types? m_target_vertical_koef & m_target_horizontal_koef vs. m_target_recoil_koef
 void weapon_recoil_calculator::fire( )
 {
 	weapon_recoil_params const& weapon_params = m_weapon->get_recoil_params( );
@@ -243,7 +243,7 @@ void weapon_recoil_calculator::fire( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 void weapon_recoil_calculator::reset( )
 {
 	m_time_since_last_dispersion_change	= 0.0f;
@@ -266,7 +266,7 @@ void weapon_recoil_calculator::reset( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 void weapon_recoil_calculator::reload( )
 {
 	reset( );
@@ -276,7 +276,7 @@ void weapon_recoil_calculator::reload( )
 	// ******
 }
 
-// STATE[UNCHECKED]: sushi@TODO: What does that mean
+// STATE[BLOCKED]: sushi@TODO: What does that mean
 void weapon_recoil_calculator::chamber_a_round( )
 {
 	reset( );
@@ -286,7 +286,7 @@ void weapon_recoil_calculator::chamber_a_round( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 void weapon_recoil_calculator::process_compensation( const float dt_sec )
 {
 	weapon_recoil_params const& weapon_params = m_weapon->get_recoil_params( );
@@ -320,7 +320,7 @@ void weapon_recoil_calculator::process_compensation( const float dt_sec )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 float weapon_recoil_calculator::get_random_angle( const float range )
 {
 	if ( s_recoil_use_pseudo_random_value )
@@ -346,7 +346,7 @@ float weapon_recoil_calculator::get_random_angle( const float range )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 float weapon_recoil_calculator::get_random_amount( const float range )
 {
 	float k = s_recoil_use_pseudo_random_value
@@ -362,7 +362,7 @@ float weapon_recoil_calculator::get_random_amount( const float range )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 void weapon_recoil_calculator::set_weapon( weapon_core* weapon )
 {
 	m_weapon = weapon;

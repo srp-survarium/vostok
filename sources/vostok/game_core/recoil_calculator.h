@@ -18,7 +18,7 @@ class recoil_calculator {
 public:
 			explicit	recoil_calculator			( );
 
-	inline	void		set_character_recoil_params	( character_recoil_params const* params ) { /* no source */ }
+	inline	void		set_character_recoil_params	( character_recoil_params const* params ) { m_character_calculator.set_character_recoil_params( params ); }
 
 			float		get_horizontal_coeff		( ) const;
 			float		get_vertical_coeff			( ) const;
