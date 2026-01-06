@@ -102,7 +102,7 @@ bool victory_item_core::use_finalize( usable_object_user_data* user )
 // STATE[100%|DONE]
 void victory_item_core::put( physics::world* world, float4x4 const& transform )
 {
-	insert( world );
+	usable_object::insert( world );
 	set_transform( transform );
 	m_is_inserted = true;
 }
@@ -110,7 +110,7 @@ void victory_item_core::put( physics::world* world, float4x4 const& transform )
 // STATE[100%|DONE]
 void victory_item_core::take( )
 {
-	remove( );
+	usable_object::remove( );
 	m_is_inserted = false;
 }
 
