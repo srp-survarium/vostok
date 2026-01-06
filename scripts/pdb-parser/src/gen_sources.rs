@@ -648,8 +648,6 @@ impl<'a> Function<'a> {
             false => writeln!(w, "// STATE[STUB]")?,
         }
 
-        writeln!(w, "// OFFSET[{}]", offset.saturating_add(GAME_IB))?;
-
         // sushi@TODO: The information on whether the function is virtual or not is stored in the
         // class definitions, which are parsed in `gen_hearders.rs`.
         //
@@ -823,9 +821,10 @@ impl<'a> Function<'a> {
                 ),
             };
 
+            let offset = offset.saturating_add(GAME_IB);
             match floc {
-                None => writeln!(w, "\t// FUNCTION BODY")?,
-                Some(loc) => writeln!(w, "\t// FUNCTION BODY: {loc}")?,
+                None => writeln!(w, "\t// FUNCTION BODY[{offset}]")?,
+                Some(loc) => writeln!(w, "\t// FUNCTION BODY[{offset}]: {loc}")?,
             }
 
             let rva_diff = |lhs: pdb::Rva, rhs: pdb::Rva| -> i32 { lhs.0 as i32 - rhs.0 as i32 };

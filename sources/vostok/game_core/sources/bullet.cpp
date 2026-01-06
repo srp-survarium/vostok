@@ -531,7 +531,7 @@ void bullet::fix_collision_point_and_time(
 	}
 }
 
-// STATE[94.28%|PARTIAL]
+// STATE[94.67%|PARTIAL]
 collision_result bullet::collide_front_face(
 	float3 const&						collide_point,
 	float3 const&						bullet_direction,
@@ -586,6 +586,7 @@ collision_result bullet::collide_front_face(
 	start_position	= m_start_position;
 	start_time		= m_life_time;
 	current_time	-= collision_time;
+	return collision_result_pierced;
 }
 
 // STATE[95.43%|PARTIAL]

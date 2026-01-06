@@ -40,7 +40,7 @@ public:
 			void				insert						( physics::world* world );
 			void				remove						( );
 
-private:
+protected:
 	/* 0x0000 */	/* collision_geometry_subscriber */
 	/* 0x0004 */	/* link_resolver */
 	/* 0x0008 */	usable_object_user_data_list	m_usable_object_users;

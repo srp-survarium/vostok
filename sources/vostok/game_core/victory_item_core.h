@@ -29,7 +29,7 @@ public:
 	virtual	bool			use_execute					( usable_object_user_data* user ) override;
 	virtual	bool			use_finalize				( usable_object_user_data* user ) override;
 
-	// STATE[STUB]
+	// STATE[100%|DONE]
 	virtual	pcstr			use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return ""; }
 
 	virtual	void			put							( physics::world* world, float4x4 const& transform );
@@ -40,13 +40,13 @@ public:
 
 	virtual	void			unload						( );
 
-	inline	void			set_spotted_to_team			( game_team_id arg_0 ) { /* no source */ }
-	inline	game_team_id	get_spotted_to_team			( ) { /* no source */ }
+	inline	void			set_spotted_to_team			( game_team_id spoted_to_team ) { m_spoted_to_team = spoted_to_team; }
+	inline	game_team_id	get_spotted_to_team			( ) { return m_spoted_to_team; }
 
-	inline	void			set_carrier_id				( u8 arg_0 ) { /* no source */ }
-	inline	u8				get_carrier_id				( ) { /* no source */ }
+	inline	void			set_carrier_id				( u8 carrier_id ) { m_carrier_id = carrier_id; }
+	inline	u8				get_carrier_id				( ) { return m_carrier_id; }
 
-	inline	bool			is_inserted					( ) { /* no source */ }
+	inline	bool			is_inserted					( ) { return m_is_inserted; }
 
 private:
 	/* 0x0000 */	/* usable_object */

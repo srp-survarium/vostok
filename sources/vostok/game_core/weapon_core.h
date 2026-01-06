@@ -50,8 +50,8 @@ public:
 
 			void								set_skeleton					( animation::skeleton_ptr const& skeleton );
 
-	inline	void								set_recoil_params				( weapon_recoil_params const& arg_0 ) { /* no source */ }
-	inline	weapon_recoil_params const&			get_recoil_params				( ) const { /* no source */ }
+	inline	void								set_recoil_params				( weapon_recoil_params const& recoil_params ) { m_recoil_params = recoil_params; }
+	inline	weapon_recoil_params const&			get_recoil_params				( ) const { return m_recoil_params; }
 
 	inline	void								set_dispersion_params			( weapon_dispersion_params const& arg_0 ) { /* no source */ }
 	inline	weapon_dispersion_params const&		get_dispersion_params			( ) const { /* no source */ }

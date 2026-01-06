@@ -666,7 +666,14 @@ void game::register_cooks( )
 	static ladder_cook 								s_ladder_cook;
 //	static weapon_user_animations_container_cook	s_animation_container_cook = <0x4c2785c>;
 //	static project_cooker_simple					s_simple_project_cook = <0x4c2778c>;
-//	static victory_item_cook 						s_victory_item_cook = <0x4c27768>;
+//	static victory_item_cook 						s_victory_item_cook( );
+
+	register_cook						( &s_material_manager_cook );
+	register_cook						( &s_ladder_cook );
+
+//
+// outdated
+//
 
 	static project_cooker			s_project_cook( engine().command_line_editor() );
 	static project_cooker_simple	s_simple_project_cook( engine().command_line_editor() );
@@ -678,14 +685,10 @@ void game::register_cooks( )
 //	static animated_model_instance_cook	s_animated_model_instance_cook;
 	static weapon_cook					s_weapon_cook					( *this );
 
-	register_cook						( &s_material_manager_cook );
-	register_cook						( &s_ladder_cook );
 
 	register_cook						( &s_project_cook );
 	register_cook						( &s_simple_project_cook );
 	register_cook						( &s_cell_cook );
-
-
 
 	//register_cook						( &s_logic_sound_player_cook );
 	//register_cook						( &s_editor_sound_player_cook );

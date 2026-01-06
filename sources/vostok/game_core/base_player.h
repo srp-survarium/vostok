@@ -125,7 +125,7 @@ public:
 	virtual	void								serialize						( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void								deserialize						( network_core::packet_reader& arg_0 ) { /* no source */ }
 
-	virtual	u32									local_time						( u32 arg_0 ) const = 0;
+	virtual	u32									local_time						( u32 arg_0 ) const = 0; // sushi@TODO
 
 	// STATE[STUB]
 	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }

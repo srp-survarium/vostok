@@ -173,7 +173,7 @@ void to_array( const Point_type &p, sisl_double double_array[  ] )
 	//sisl_double double_array[ Dimension ];
 	for( u32 i =0 ; i < Dimension ; ++i)
 		double_array[i] = p[i];
-	
+
 }
 
 template<>
@@ -195,13 +195,13 @@ void raw_bi_spline< Point_type, Dimension >::evaluate( float time, Point_type &p
 {
 		const int der = 0;
 		sisl_double derive[(der + 1) * Dimension];
-		int stat = -1; 
+		int stat = -1;
 		int leftknot = -1;
 		s1227(m_curve, der, sisl_double( time  ), &leftknot, derive, &stat);
 		point_ = point<Point_type,Dimension>( derive );
 #pragma message( VOSTOK_TODO( "check stat" ) )
 }
-
+/*
 template< typename Point_type, int Dimension >
 void raw_bi_spline< Point_type, Dimension >::get_data	( animation::bi_spline_data<Point_type> &data ) const
 {
@@ -218,25 +218,25 @@ void raw_bi_spline< Point_type, Dimension >::get_data	( animation::bi_spline_dat
 		data.add_point( p );
 	;
 }
-
+*/
 template< typename Point_type, int Dimension >
 void raw_bi_spline< Point_type, Dimension >::build_approximation( const float* points, u32 number, const Point_type &max_epsilon  )
 {
 	ASSERT( number > 0 );
-	int 		im		= number;//30;//sz	
-	int 		idim	= Dimension;	
+	int 		im		= number;//30;//sz
+	int 		idim	= Dimension;
 	int 		ipar	= 2;//2:uniform;//3 : Parametrization given by epar.
 	sisl_double	epar[]	= { 0 };//10
 
 	sisl_double		eeps[Dimension]	; //to_array( max_epsilon ); //{ 0.0005, 0.0005, 0.0005 };
 	to_array<Point_type,Dimension>( max_epsilon, eeps );
 
-	int			ilend	=0;		
-	int			irend	=0;	
+	int			ilend	=0;
+	int			irend	=0;
 	int			iopen	=1;//-1;//0;//1
 	sisl_double	afctol	=sisl_double(0.01);
-	int			itmax	=1000000000;		
-	int			ik		=4;//bi_spline order; poly order = ik-1	
+	int			itmax	=1000000000;
+	int			ik		=4;//bi_spline order; poly order = ik-1
 
 	//Output Arguments
 
