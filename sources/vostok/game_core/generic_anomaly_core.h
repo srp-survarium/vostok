@@ -25,7 +25,7 @@ class damage_zone_core;
 // sushi@TODO
 // <0x4f210>|0x000|      :'104'	{
 
-class generic_anomaly_core : public base_game_object , public link_resolver , public player_actions_subscriber {
+class generic_anomaly_core : public link_resolver , public player_actions_subscriber, public base_game_object {
 public:
 								generic_anomaly_core		( );
 	virtual						~generic_anomaly_core		( );
@@ -37,8 +37,8 @@ public:
 	virtual	void				deactivate					( );
 	virtual	void				tick						( u32 time_delta_ms, u32 current_time_ms );
 
-	inline	physics::world*		physics_world				( ) { /* no source */ }
-	inline	scheduler&			scheduler					( ) { /* no source */ }
+	inline	physics::world*		physics_world				( ) { return m_physics_world; }
+	inline	scheduler&			scheduler					( ) { return *m_scheduler; }
 
 	virtual	void				on_player_action			( hit_receiver const* receiver, player_actions_subscriber::action action, float param ) override;
 
@@ -49,10 +49,11 @@ public:
 			void				on_hit_receiver_leave		( hit_receiver* receiver, damage_zone_core* zone );
 			void				on_artefact_container_use	( artefact_container_core* container );
 
-	inline	u32					current_time				( ) const { /* no source */ }
-	inline	float				current_energy				( ) const { /* no source */ }
+	inline	u32					current_time				( ) const { return m_current_time; /* no source */ }
+	inline	float				current_energy				( ) const { return m_energy_current; /* no source */ }
 	inline	void				set_current_energy			( float arg_0 ) { /* no source */ }
 
+protected:
 	virtual	void				state_changed				( ) { /* no source */ }
 			anomaly_state*		select_state				( );
 
