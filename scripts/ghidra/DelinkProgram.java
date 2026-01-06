@@ -165,9 +165,20 @@ public class DelinkProgram extends HeadlessScript {
 				}
 
 				var symbol = engineClass.getSymbol();
-				println(namespace + " ---> " + symbol.getName());
+				if (symbol.getName().startsWith("map<")
+						|| symbol.getName().startsWith("std_allocator<")
+						|| symbol.getName().startsWith("vector<")
+				) {
+					continue;
+				}
+
+				if (engineClass.getBody().isEmpty()) {
+					continue;
+				}
 
 				var addressSet = new AddressSet();
+
+				println(namespace + " ---> " + symbol.getName());
 				addressSet.add(engineClass.getBody());
 
 				//

@@ -20,19 +20,19 @@ class weapon_recoil_calculator {
 public:
 			explicit	weapon_recoil_calculator		( );
 
-			void		set_weapon						( weapon_core* weapon );
-	inline	void		set_interpolation_time			( float arg_0 ) { /* no source */ }
-	inline	void		set_character_multiplier		( float arg_0 ) { /* no source */ }
-	inline	void		set_player_compensation_multiplier( float arg_0 ) { /* no source */ }
+			void		set_weapon							( weapon_core* weapon );
+	inline	void		set_interpolation_time				( float arg_0 ) { /* no source */ }
+	inline	void		set_character_multiplier			( float character_multiplier ) { m_player_recoil_multiplier = character_multiplier; }
+	inline	void		set_player_compensation_multiplier	( float player_compensation_multiplier ) { m_player_compensation_multiplier = player_compensation_multiplier; }
 
 			void		tick							( u32 current_time_in_ms, float time_scale );
 			void		fire							( );
 			void		reload							( );
 			void		chamber_a_round					( );
 
-	inline	float		get_vertical_koef				( ) const { /* no source */ }
-	inline	float		get_horizontal_koef				( ) const { /* no source */ }
-	inline	float		get_back_koef					( ) const { /* no source */ }
+	inline	float		get_vertical_koef				( ) const { return m_vertical_koef;		}
+	inline	float		get_horizontal_koef				( ) const { return m_horizontal_koef;	}
+	inline	float		get_back_koef					( ) const { return m_back_koef;			}
 
 			void		process_compensation			( float dt_sec );
 

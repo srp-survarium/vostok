@@ -14,19 +14,16 @@ struct character_recoil_params;
 
 class character_recoil_calculator {
 public:
-			character_recoil_calculator	( );
+						character_recoil_calculator	( );
 
 			void		set_character_recoil_params	( character_recoil_params const* params );
-
 			void		tick						(
 							weapon_user_state_enum		character_state,
 							bool						is_aiming,
 							u32							current_time_in_ms,
 							float						time_scale
 						);
-
-	inline	float		get_value					( ) const { /* no source */ }
-
+	inline	float		get_value					( ) const { return m_current_value; }
 
 private:
 	/* 0x0000 */	character_recoil_params const*		m_params;
