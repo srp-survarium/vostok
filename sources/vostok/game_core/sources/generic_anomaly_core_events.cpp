@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[BLOCKED]: For target function wasn't generated properly by delinker
+// STATE[BLOCKED]: Ghidra fails to parse functions with NODEFAULT, even with "Decompiler Switch Analysis" analyzer enabled! I compared manually in IDA and match seems to be correct.
 void generic_anomaly_core::on_player_action( hit_receiver const* receiver, player_actions_subscriber::action action, float param )
 {
 	switch ( action )
