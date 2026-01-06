@@ -5,15 +5,33 @@
 #include "pch.h"
 #include <vostok/game_core/artefact_lifebone_core.h>
 
+#include <vostok/game_core/inventory.h>
+#include <vostok/game_core/inventory_holder.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::artefact_lifebone_core::artefact_lifebone_core()
-artefact_lifebone_core::artefact_lifebone_core( )
+static hit_affects_type_enum protected_affects[artefact_lifebone_core::DAMAGE_PROTECTORS] = {
+	affects_type_hand_damage, affects_type_hand_damage,
+	affects_type_leg_damage,  affects_type_leg_damage
+};
+
+static pcstr protected_body_patrs[artefact_lifebone_core::DAMAGE_PROTECTORS] = {
+	"left_hand", "right_hand",
+	"left_leg", "right_leg"
+};
+
+// STATE[99.81%|DONE]: Stack differences
+artefact_lifebone_core::artefact_lifebone_core( ) :
+	m_unlimited			( true ),
+	m_passive_mode		( false ),
+	m_cooldown_ms		( 0 ),
+	m_last_used_time_ms	( 0 )
 {
-	// LOCALS
-	// u32 							i<1>
-	// ******
+	for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+	{
+		m_damage_protectors[i].protect_affect_functor	= boost::bind( &artefact_lifebone_core::protect_affect, this, _1, _2 );
+		m_damage_protectors[i].reduce_damage_functor	= boost::bind( &artefact_lifebone_core::reduce_damage, this, _1, _2, _3, _4 );
+	}
 
 	// FUNCTION BODY
 	// <0x58fcb9>|0x0a9|+0x01c|[1]:'33'
@@ -24,49 +42,55 @@ artefact_lifebone_core::artefact_lifebone_core( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::~artefact_lifebone_core()
+// STATE[92.12%|PARTIAL]: target has vtable, because there is also `artefact_lifebone` class. I think
 artefact_lifebone_core::~artefact_lifebone_core( )
 {
-	// FUNCTION BODY
-	// <0x58fbb0>|0x000|+0x01f:'41'	{
-	// <0x58fbcf>|0x01f|      :'42'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::holder_assigned()
+// STATE[100%|DONE]
 void artefact_lifebone_core::holder_assigned( )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+	switch_passive_mode_impl( true );
+
 	// FUNCTION BODY
 	// <0x590059>|0x009|+0x00c:'46'
 	// <0x590065>|0x015|+0x00a:'47'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::holder_removed()
+// STATE[100%|DONE]
 void artefact_lifebone_core::holder_removed( )
 {
+	if ( m_passive_mode )
+		switch_passive_mode_impl( false );
+
 	// FUNCTION BODY
 	// <0x590027>|0x007|+0x00e:'52'
 	// <0x590035>|0x015|+0x00a:'53'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::switch_passive_mode_impl(bool)
+// STATE[46.30%|PARTIAL]: Almost nothing inlined in target!
 void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 {
-	// LOCALS
-	// resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> dm
-	// u32 							i<1>
-	// u32 							i<1>
-	// ******
+	damage_model_ptr dm = m_inventory->holder( ).damage_model( );
 
-	// CALL SITE INFO
-	// <0x58ff35> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
+	if ( switch_on )
+	{
+		for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+		{
+			dm->cancel_affect( protected_body_patrs[i], protected_affects[i] );
+			dm->register_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
+		}
+	}
+	else
+	{
+		for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+			dm->unregister_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
+	}
+
+	m_passive_mode = switch_on;
 
 	// FUNCTION BODY
 	// <0x58ff19>|0x009|+0x02c:'58'
@@ -87,19 +111,15 @@ void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::activate_impl()
+// STATE[12.38%|PARTIAL]
 void artefact_lifebone_core::activate_impl( )
 {
-	// LOCALS
-	// resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> dm
-	// u32 							i<1>
-	// body_part_parameters* 		bp<2>
-	// ******
-
-	// CALL SITE INFO
-	// <0x58feb5> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
+	damage_model_ptr dm = m_inventory->holder( ).damage_model( );	// sushi@MATCH: This part didn't inline at all in target
+	for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+	{
+		body_part_parameters* bp = dm->get_body_part( protected_body_patrs[i] );
+		bp->reset( );
+	}
 
 	// FUNCTION BODY
 	// <0x58fe99>|0x009|+0x02c:'77'
@@ -111,10 +131,24 @@ void artefact_lifebone_core::activate_impl( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::action(bool)
+// STATE[75.57%|PARTIAL]
 void artefact_lifebone_core::action( bool key_down )
 {
+	if ( !key_down )
+		return;
+
+	if ( m_unlimited || inventory_item::amount( ) > 0 )
+	{
+		artefact_lifebone_core::activate_impl( );
+		if ( !m_unlimited )
+			inventory_item::set_amount( inventory_item::amount( ) - 1 );
+	}
+
+	if ( !m_unlimited && inventory_item::amount( ) == 0 )
+	{
+		artefact_lifebone_core::switch_passive_mode_impl( false );
+	}
+
 	// FUNCTION BODY
 	// <0x590087>|0x007|+0x008:'87'
 	// <0x59008f>|0x00f|+0x002:'88'
@@ -134,11 +168,11 @@ void artefact_lifebone_core::action( bool key_down )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::artefact_lifebone_core::protect_affect(char const*, survarium::hit_affects_type_enum)
+// STATE[SKIPPED]: This is written somehow with 4 statements!
 bool artefact_lifebone_core::protect_affect( pcstr __formal, hit_affects_type_enum affect )
 {
-	return false;
+	return affect >= affects_type_hand_damage && affect <= affects_type_leg_damage;
+
 
 	// FUNCTION BODY
 	// <0x58fad9>|0x009|+0x014:'106'
@@ -153,16 +187,16 @@ bool artefact_lifebone_core::protect_affect( pcstr __formal, hit_affects_type_en
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::artefact_lifebone_core::reduce_damage(char const*, char const*, const float, const float)
+// STATE[100%|DONE]
 float artefact_lifebone_core::reduce_damage(
 	pcstr		body_part_name,
 	pcstr		damage_type,
-	float		amount,
-	float		armor_piercing
+	const float	amount,
+	const float	armor_piercing
 )
 {
-	return 0.0f;
+	VOSTOK_UNREFERENCED_PARAMETERS( body_part_name, damage_type, amount, armor_piercing );
+	return amount;
 
 	// FUNCTION BODY
 	// <0x58fb09>|0x009|+0x03d:'122'
@@ -170,13 +204,13 @@ float artefact_lifebone_core::reduce_damage(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::artefact_lifebone_core::load_core(vostok::configs::binary_config_value)
+// STATE[95%|PARTIAL]: `set_amount` didn't inline
 void artefact_lifebone_core::load_core( configs::binary_config_value config )
 {
-	// LOCALS
-	// s32 							amount
-	// ******
+	s32 amount		= (s32)config["amount"];
+	inventory_item::set_amount( (u16)amount ); // sushi@TODO: HUH
+	m_unlimited		= amount == -1;
+	m_cooldown_ms	= (u32)config["cooldown_ms"];
 
 	// FUNCTION BODY
 	// <0x58fb59>|0x009|+0x015:'128'
