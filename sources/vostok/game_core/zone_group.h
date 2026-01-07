@@ -13,7 +13,8 @@ struct anomaly_state;
 
 struct zone_group {
 public:
-	inline	explicit					zone_group	( anomaly_state* owner ) : owner( owner ) { /* no source */ }
+	// sushi@NOTE: Inlined in `generic_anomaly_core::load`
+	inline	explicit					zone_group	( anomaly_state* owner ) : owner( owner ) { }
 
 	inline	generic_anomaly_core*		core		( ) { /* no source */ }
 
@@ -34,7 +35,7 @@ public:
 	/* 0x0000 */	bool								enabled;
 	/* 0x0004 */	u32									max_charged_count;
 	/* 0x0008 */	u32									recharge_time_sec;
-	/* 0x000c */	vector<zone_group::zone_wrapper>	zones;
+	/* 0x000c */	vector< zone_group::zone_wrapper >	zones;
 	/* 0x0018 */	anomaly_state*						owner;
 	/* 0x001c */	u32									charged_count;
 	/* 0x0020 */	u32									next_recharge_time;

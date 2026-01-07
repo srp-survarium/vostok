@@ -71,6 +71,11 @@ namespace vostok
 		core.on_zone_act( NULL, NULL );
 		core.on_hit_receiver_enter( NULL, NULL );
 		core.on_hit_receiver_leave( NULL, NULL );
+
+		configs::binary_config_value config;
+		core.load( config );
+
+		core.resolve_links( NULL, config );
 	}
 
 	void use_artefact_container_core( )
