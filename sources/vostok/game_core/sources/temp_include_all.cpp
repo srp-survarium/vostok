@@ -64,9 +64,18 @@
 #include <vostok/game_core/damage_zone_core.h>
 #include <vostok/game_core/hit_receiver.h>
 
+#include <vostok/game_core/respawn_point_core.h>
 
 namespace vostok
 {
+	void use_respawn_point_core( )
+	{
+		survarium::respawn_point_core	respawn_point_core;
+		configs::binary_config_value	config;
+
+		respawn_point_core.load( config );
+	}
+
 	void use_damage_zone_core( )
 	{
 		survarium::damage_zone_core		damage_zone;
@@ -547,6 +556,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_respawn_point_core( );
 	vostok::use_damage_zone_core( );
 	vostok::use_generic_anomaly_core( );
 	vostok::use_artefact_container_core( );
