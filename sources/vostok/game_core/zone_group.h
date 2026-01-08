@@ -5,6 +5,8 @@
 #ifndef ZONE_GROUP_H_INCLUDED
 #define ZONE_GROUP_H_INCLUDED
 
+#include <vostok/game_core/anomaly_state.h>
+
 namespace survarium {
 
 class damage_zone_core;
@@ -16,7 +18,7 @@ public:
 	// sushi@NOTE: Inlined in `generic_anomaly_core::load`
 	inline	explicit					zone_group	( anomaly_state* owner ) : owner( owner ) { }
 
-	inline	generic_anomaly_core*		core		( ) { /* no source */ }
+	inline	generic_anomaly_core*		core		( ) { return owner->owner; }
 
 			void						on_zone_act	( damage_zone_core* zone, hit_receiver* receiver );
 			void						recharge	( );

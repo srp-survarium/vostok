@@ -59,6 +59,8 @@
 #include <vostok/game_core/hit_affects_type_enum.h>
 #include <vostok/game_core/artefact_container_core.h>
 #include <vostok/game_core/generic_anomaly_core.h>
+#include <vostok/game_core/anomaly_state.h>
+#include <vostok/game_core/zone_group.h>
 
 
 namespace vostok
@@ -66,16 +68,22 @@ namespace vostok
 	void use_generic_anomaly_core( )
 	{
 		survarium::generic_anomaly_core core;
+		survarium::scheduler			scheduler( NULL );
+		configs::binary_config_value	config;
+
+		core.load( config );
+		core.resolve_links( NULL, config );
+
+		core.activate( NULL, scheduler );
+		core.deactivate( );
+		core.tick( 0, 0 );
+
 		core.on_player_action( NULL, survarium::player_actions_subscriber::walk, 10.0f );
-		core.on_artefact_container_use( NULL );
+
 		core.on_zone_act( NULL, NULL );
 		core.on_hit_receiver_enter( NULL, NULL );
 		core.on_hit_receiver_leave( NULL, NULL );
-
-		configs::binary_config_value config;
-		core.load( config );
-
-		core.resolve_links( NULL, config );
+		core.on_artefact_container_use( NULL );
 	}
 
 	void use_artefact_container_core( )
