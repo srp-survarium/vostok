@@ -61,10 +61,23 @@
 #include <vostok/game_core/generic_anomaly_core.h>
 #include <vostok/game_core/anomaly_state.h>
 #include <vostok/game_core/zone_group.h>
+#include <vostok/game_core/damage_zone_core.h>
+#include <vostok/game_core/hit_receiver.h>
 
 
 namespace vostok
 {
+	void use_damage_zone_core( )
+	{
+		survarium::damage_zone_core		damage_zone;
+		configs::binary_config_value	config;
+
+		damage_zone.load( config );
+
+		survarium::hit_receiver_info hit_receiver_info( NULL, NULL );
+		hit_receiver_info == hit_receiver_info;
+	}
+
 	void use_generic_anomaly_core( )
 	{
 		survarium::generic_anomaly_core core;
@@ -534,6 +547,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_damage_zone_core( );
 	vostok::use_generic_anomaly_core( );
 	vostok::use_artefact_container_core( );
 	vostok::use_artefact_lifebone_core( );
