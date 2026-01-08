@@ -49,9 +49,9 @@ public:
 			void				on_hit_receiver_leave		( hit_receiver* receiver, damage_zone_core* zone );
 			void				on_artefact_container_use	( artefact_container_core* container );
 
-	inline	u32					current_time				( ) const { return m_current_time; /* no source */ }
-	inline	float				current_energy				( ) const { return m_energy_current; /* no source */ }
-	inline	void				set_current_energy			( float arg_0 ) { /* no source */ }
+	inline	u32					current_time				( ) const { return m_current_time; }
+	inline	float				current_energy				( ) const { return m_energy_current; }
+	inline	void				set_current_energy			( float energy ) { m_energy_current = energy; }
 
 protected:
 	virtual	void				state_changed				( ) { /* no source */ }

@@ -52,7 +52,7 @@ private:
 public:
 	inline explicit						scheduler			( vostok::memory::base_allocator* allocator );
 										~scheduler			( );
-
+	__declspec(noinline) // sushi@TODO: Once more usages are implemented, possibly this can be removed
 			void						register_on_frame	( scheduler::identifier* identifier, scheduler::callback const& callback, bool active );
 			void						register_for_update	(
 											scheduler::identifier*		identifier,

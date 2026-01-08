@@ -51,8 +51,8 @@ public:
 
 	inline	void			set_resources				( resources::queries_result& arg_0, u32 arg_1 ) { /* no source */ }
 
-	inline	void			set_standalone				( bool arg_0 ) { /* no source */ }
-	inline	bool			is_standalone				( ) const { /* no source */ }
+	inline	void			set_standalone				( bool standalone ) { m_standalone = standalone; }
+	inline	bool			is_standalone				( ) const { return m_standalone; }
 
 	inline	zone_group*		owner						( ) { /* no source */ }
 
