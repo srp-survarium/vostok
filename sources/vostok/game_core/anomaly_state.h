@@ -13,7 +13,8 @@ struct zone_group;
 
 struct anomaly_state {
 public:
-	inline	explicit	anomaly_state	( generic_anomaly_core* arg_0 ) { /* no source */ }
+	// sushi@NOTE: Inlined in `generic_anomaly_core::load`
+	inline	explicit	anomaly_state	( generic_anomaly_core* owner ) : owner	( owner ) { }
 
 	inline	void		on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
 
