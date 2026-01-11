@@ -30,8 +30,7 @@ public:
 		/* 0x0024 */	float		armor_piercing;
 	}; // struct apply_damage
 
-	inline	buffer_vector< booby_trap_set_core::apply_damage > const&
-												damage_parameters				( ) const { /* no source */ }
+	inline buffer_vector< apply_damage > const& damage_parameters				( ) const { return m_damage_parameters; }
 
 public:
 	struct config_params {
@@ -114,10 +113,10 @@ public:
 
 private:
 	/* 0x0000 */	/* inventory_item */
-	/* 0x0118 */	buffer_vector< booby_trap_core_ptr >				m_traps;
-	/* 0x0120 */	buffer_vector< booby_trap_set_core::apply_damage >	m_damage_parameters;
-	/* 0x0128 */	booby_trap_set_core::config_params					m_config;
-	/* 0x0144 */	booby_trap_core_ptr*								m_traps_buffer;
+	/* 0x0118 */	buffer_vector< booby_trap_core_ptr >	m_traps;
+	/* 0x0120 */	buffer_vector< apply_damage >			m_damage_parameters;
+	/* 0x0128 */	booby_trap_set_core::config_params		m_config;
+	/* 0x0144 */	booby_trap_core_ptr*					m_traps_buffer;
 }; // class booby_trap_set_core
 
 STATIC_SIZE_ASSERT(booby_trap_set_core, 0x148);

@@ -25,6 +25,8 @@ namespace collision{
 
 namespace survarium {
 
+class booby_trap_core_cook;
+
 enum booby_trap_state {
 	booby_trap_state_removed	= 0x0000,
 	booby_trap_state_armed		= 0x0001,
@@ -35,26 +37,25 @@ enum booby_trap_state {
 
 
 class booby_trap_core : public game_world_object , public hittable_object , public collision_sensor , public usable_object {
-public:
+protected:
 	explicit								booby_trap_core				( );
-
 	virtual									~booby_trap_core			( );
 
 	virtual	void							load						( configs::binary_config_value const& config ) override;
 	inline	void							load_collision				( configs::binary_config_value const& config ) { /* no source */ }
 			void							load_aabb					( configs::binary_config_value const& config );
 
+public:
 	virtual	void							set_transform				( float4x4 const& transform );
 
 	virtual	void							insert						( physics::world* world, float4x4 const& transform, scheduler& scheduler );
 	virtual	void							remove						( scheduler& scheduler );
 
 	inline	float4x4 const&					transform					( ) const { /* no source */ }
-
 	inline	void							set_owner					( booby_trap_set_core* arg_0 ) { /* no source */ }
-
 	inline	bool							is_active					( ) const { /* no source */ }
 
+private:
 	virtual	booby_trap_set_core*			owner						( ) override;
 	virtual	booby_trap_set_core const*		owner						( ) const override;
 
@@ -69,7 +70,6 @@ public:
 												float									armor_piercing,
 												bullet*									bullet
 											) override;
-
 	virtual	void							hit							(
 												hit_initiator const*	initiator,
 												u32						bone_index,
@@ -81,11 +81,10 @@ public:
 
 	// STATE[STUB]
 	virtual	float							get_speed					( ) const override { return 0.0f; }
-
 	virtual	void							on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
-
 	virtual	void							tick						( u32 time_delta_ms, u32 current_time_ms ) override;
 
+protected:
 	virtual	bool							use_initialize				( usable_object_user_data* user ) override;
 	virtual	bool							use_execute					( usable_object_user_data* user ) override;
 	virtual	bool							use_finalize				( usable_object_user_data* user ) override;
@@ -97,10 +96,9 @@ public:
 	virtual	void							register_tick				( scheduler& scheduler );
 	virtual	void							unregister_tick				( scheduler& scheduler );
 
-			void							apply_damage				( hit_initiator const* initiator, hit_receiver* receiver );
-
+private:
+			void							apply_damage				( hit_initiator const* const initiator, hit_receiver* const receiver );
 			bool							can_defuse					( base_player const* user ) const;
-
 			void							on_state_timer_finished		( );
 
 private:
@@ -113,6 +111,8 @@ private:
 	/* 0x0170 */	booby_trap_state			m_trap_state;
 	/* 0x0174 */	float4x4					m_transform;
 	/* 0x01b4 */	u32							m_state_timer;
+private:
+	friend class booby_trap_core_cook;
 }; // class booby_trap_core
 
 STATIC_SIZE_ASSERT(booby_trap_core, 0x1B8);
