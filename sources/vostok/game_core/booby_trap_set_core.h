@@ -19,8 +19,8 @@ public:
 	virtual	void								insert_trap						( booby_trap_core& trap, float4x4 const& transform );
 	virtual	void								remove_trap						( booby_trap_core& trap );
 
-	virtual	void								on_trap_fired					( booby_trap_core& arg_0 ) { /* no source */ }
-	virtual	void								on_trap_disarmed				( booby_trap_core& arg_0 ) { /* no source */ }
+	virtual	void								on_trap_fired					( booby_trap_core& trap ) { /* no source */ }
+	virtual	void								on_trap_disarmed				( booby_trap_core& trap ) { /* no source */ }
 
 public:
 	struct apply_damage {
@@ -34,8 +34,8 @@ public:
 
 public:
 	struct config_params {
-	// STATE[STUB]
-	inline	explicit	config_params	( ) { }
+		// STATE[STUB]
+		inline	explicit	config_params	( ) { }
 
 		/* 0x0000 */	float		max_slope_cos;
 		/* 0x0004 */	float		max_distance;
@@ -51,12 +51,11 @@ public:
 	// STATE[STUB]
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
-
-public:
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) override;
 	virtual	void								remove							( ) override;
 	virtual	void								serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const;
 
+private:
 	// STATE[STUB]
 	virtual	void								activate						( base_player& user, engine& engine ) override { VOSTOK_UNREACHABLE_CODE( ); }
 	// STATE[STUB]
@@ -86,6 +85,7 @@ public:
 	virtual	bool								is_sprinting					( ) const override { /* no source */ }
 
 
+protected:
 												booby_trap_set_core				( );
 	virtual										~booby_trap_set_core			( );
 
@@ -108,6 +108,7 @@ public:
 
 	inline	void								append_inactive_trap_index_to_packet( booby_trap_core_ptr const& arg_0, network_core::udp_match_packet& arg_1 ) const { /* no source */ }
 
+private:
 			void								remove_trap_impl				( booby_trap_core& trap );
 			void								remove_trap_if_active			( booby_trap_core_ptr& trap );
 

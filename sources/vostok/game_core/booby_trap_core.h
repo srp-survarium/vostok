@@ -53,7 +53,7 @@ public:
 
 	inline	float4x4 const&					transform					( ) const { /* no source */ }
 	inline	void							set_owner					( booby_trap_set_core* arg_0 ) { /* no source */ }
-	inline	bool							is_active					( ) const { /* no source */ }
+	inline	bool							is_active					( ) const { return m_trap_state != booby_trap_state_removed; }
 
 private:
 	virtual	booby_trap_set_core*			owner						( ) override;

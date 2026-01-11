@@ -79,7 +79,7 @@ public:
 
 	virtual	game_team_id						team							( ) const = 0;
 
-	inline	float4x4 const&						get_head_transform				( ) { /* no source */ }
+	inline	float4x4 const&						get_head_transform				( ) { return m_character_head_transform; }
 
 	inline	void								set_movement_speed_factor		( float arg_0 ) { /* no source */ }
 	inline	float								get_movement_speed_factor		( ) const { /* no source */ }
