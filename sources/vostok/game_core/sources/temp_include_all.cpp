@@ -65,9 +65,20 @@
 #include <vostok/game_core/hit_receiver.h>
 
 #include <vostok/game_core/respawn_point_core.h>
+#include <vostok/game_core/booby_trap_core.h>
 
 namespace vostok
 {
+	void use_hittable_object( survarium::hittable_object* hittable_object )
+	{
+		configs::binary_config_value	config;
+
+		hittable_object->load( config );
+		hittable_object->set_transform( float4x4( ) ),
+		hittable_object->insert( NULL );
+		hittable_object->remove( );
+	}
+
 	void use_respawn_point_core( )
 	{
 		survarium::respawn_point_core	respawn_point_core;
@@ -556,6 +567,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_hittable_object( NULL );
 	vostok::use_respawn_point_core( );
 	vostok::use_damage_zone_core( );
 	vostok::use_generic_anomaly_core( );

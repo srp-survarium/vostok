@@ -8,8 +8,8 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::booby_trap_core_cook::booby_trap_core_cook()
-booby_trap_core_cook::booby_trap_core_cook( ) : resources::translate_query_cook( resources::booby_trap_class, reuse_false, use_current_thread_id )
+booby_trap_core_cook::booby_trap_core_cook( ) :
+	resources::translate_query_cook( resources::booby_trap_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 
@@ -19,17 +19,16 @@ booby_trap_core_cook::booby_trap_core_cook( ) : resources::translate_query_cook(
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_core_cook::translate_query(vostok::resources::query_result_for_cook&)
 void booby_trap_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// LOCALS
-	// pcstr 						model
-	// configs::binary_config_ptr config
-	// resources::request[1] 		requests
-	// fixed_string<260> 			aabb_path
+	// pcstr 							model
+	// configs::binary_config_ptr 		config
+	// resources::request[1] 			requests
+	// fixed_string< 260 > 				aabb_path
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761ee0]: 26
 	// <0x761ef0>|0x010|+0x00b:'22'
 	// <0x761efb>|0x01b|+0x01b:'23'
 	// <0>
@@ -60,21 +59,20 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_core_cook::on_subresources_loaded(vostok::resources::queries_result&, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>)
 void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	// LOCALS
-	// configs::binary_config_ptr aabb
-	// booby_trap_core* 			resource
+	// configs::binary_config_ptr 		aabb
+	// booby_trap_core* 				resource
 	// ******
 
 	// CALL SITE INFO
-	// <0x761e4f> -> booby_trap_core* <unknown>()
-	// <0x761e83> -> void <unknown>(configs::binary_config_value const&)
-	// <0x761ebf> -> void <unknown>(resources::query_result_for_cook*, booby_trap_core*, configs::binary_config_ptr)
+	// <0x761e4f> -> booby_trap_core* < unknown >()
+	// <0x761e83> -> void < unknown >( configs::binary_config_value const& )
+	// <0x761ebf> -> void < unknown >( resources::query_result_for_cook*, booby_trap_core*, configs::binary_config_ptr )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761e00]: 12
 	// <0x761e0a>|0x00a|+0x00c:'52'
 	// <0x761e16>|0x016|+0x00c:'53'
 	// <0>
@@ -91,14 +89,13 @@ void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& da
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_core_cook::finish_query(vostok::resources::query_result_for_cook*, survarium::booby_trap_core*)
 void booby_trap_core_cook::finish_query( resources::query_result_for_cook* parent, booby_trap_core* resource )
 {
 	// CALL SITE INFO
-	// <0x761db4> -> u32 <unknown>()
+	// <0x761db4> -> u32 < unknown >()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761da0]: 2
 	// <0x761da9>|0x009|+0x036:'68'
 	// <0x761ddf>|0x03f|+0x00c:'69'
 	// ******

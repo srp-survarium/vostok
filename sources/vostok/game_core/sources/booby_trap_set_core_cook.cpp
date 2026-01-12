@@ -7,9 +7,9 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::booby_trap_set_core_cook::booby_trap_set_core_cook()
-booby_trap_set_core_cook::booby_trap_set_core_cook( ) : resources::translate_query_cook( resources::booby_trap_set_class, reuse_false, use_current_thread_id )
+// STATE[UNCHECKED] sushi@TODO:
+booby_trap_set_core_cook::booby_trap_set_core_cook( ) :
+	resources::translate_query_cook( resources::booby_trap_set_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 
@@ -19,15 +19,14 @@ booby_trap_set_core_cook::booby_trap_set_core_cook( ) : resources::translate_que
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_set_core_cook::translate_query(vostok::resources::query_result_for_cook&)
 void booby_trap_set_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// LOCALS
-	// booby_trap_set_cook_data 	cook_data
-	// fs_new::virtual_path_string 	config_name
+	// booby_trap_set_cook_data 		cook_data
+	// fs_new::virtual_path_string 		config_name
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762750]: 28
 	// <0x76275f>|0x00f|+0x00b:'23'
 	// <0x76276a>|0x01a|+0x01d:'24'
 	// <0>
@@ -60,24 +59,23 @@ void booby_trap_set_core_cook::translate_query( resources::query_result_for_cook
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_set_core_cook::on_config_ready(vostok::resources::queries_result&, survarium::booby_trap_set_cook_data)
 void booby_trap_set_core_cook::on_config_ready( resources::queries_result& data, booby_trap_set_cook_data cook_data )
 {
 	// LOCALS
-	// variant<32> 					udv
-	// buffer_vector<variant<32> const *> user_data
-	// configs::binary_config_value data_root
-	// booby_trap_set_core* 		resource
-	// configs::binary_config_ptr config
-	// buffer_vector<resources::request> requests
-	// u8 							i
+	// variant< 32 > 					udv
+	// buffer_vector< variant< 32 > const* > user_data
+	// configs::binary_config_value 	data_root
+	// booby_trap_set_core* const 		resource
+	// configs::binary_config_ptr 		config
+	// buffer_vector< resources::request > requests
+	// u8 								i
 	// ******
 
 	// CALL SITE INFO
-	// <0x76256d> -> booby_trap_set_core* <unknown>()
+	// <0x76256d> -> booby_trap_set_core* < unknown >()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7624c0]: 36
 	// <0x7624e0>|0x020|+0x00c:'55'
 	// <0x7624ec>|0x02c|+0x022:'56'
 	// <0x76250e>|0x04e|+0x00c:'57'
@@ -118,24 +116,23 @@ void booby_trap_set_core_cook::on_config_ready( resources::queries_result& data,
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_set_core_cook::on_subresources_loaded(vostok::resources::queries_result&, survarium::booby_trap_set_core*, survarium::booby_trap_set_cook_data, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>)
 void booby_trap_set_core_cook::on_subresources_loaded(
-	resources::queries_result&			data,
-	booby_trap_set_core*				resource,
-	booby_trap_set_cook_data			cook_data,
-	configs::binary_config_ptr	config
+	resources::queries_result&		data,
+	booby_trap_set_core*			resource,
+	booby_trap_set_cook_data		cook_data,
+	configs::binary_config_ptr		config
 )
 {
 	// LOCALS
-	// u8 							i<1>
-	// resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base> trap<2>
+	// u8 								i<1>
+	// booby_trap_core_ptr 				trap<2>
 	// ******
 
 	// CALL SITE INFO
-	// <0x7624ae> -> void <unknown>(resources::query_result_for_cook*, booby_trap_set_core*, booby_trap_set_cook_data const&, configs::binary_config_ptr)
+	// <0x7624ae> -> void < unknown >( resources::query_result_for_cook*, booby_trap_set_core*, booby_trap_set_cook_data const&, configs::binary_config_ptr )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7623c0]: 11
 	// <0x7623ca>|0x00a|+0x00c:'98'
 	// <0>
 	// <0x7623d6>|0x016|+0x023|[1]:'100'
@@ -151,14 +148,13 @@ void booby_trap_set_core_cook::on_subresources_loaded(
 }
 
 // STATE[STUB]
-// void survarium::booby_trap_set_core_cook::finish_query(vostok::resources::query_result_for_cook*, survarium::booby_trap_set_core*)
 void booby_trap_set_core_cook::finish_query( resources::query_result_for_cook* parent, booby_trap_set_core* resource )
 {
 	// CALL SITE INFO
-	// <0x762374> -> u32 <unknown>()
+	// <0x762374> -> u32 < unknown >()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762360]: 2
 	// <0x762369>|0x009|+0x036:'113'
 	// <0x76239f>|0x03f|+0x00c:'114'
 	// ******
