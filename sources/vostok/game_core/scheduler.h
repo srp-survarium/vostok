@@ -17,6 +17,7 @@ namespace survarium {
 
 class scheduler : public boost::noncopyable {
 public:
+	// u32 const time_delta_ms, u32 const current_time_ms
 	typedef boost::function< void( u32, u32 ) >	callback;
 
 	struct identifier {

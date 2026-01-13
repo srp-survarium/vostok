@@ -10,57 +10,63 @@
 #include <vostok/game_core/hit_receiver.h>
 #include <vostok/game_core/game_scene.h>
 
+// sushi@TODO: Everything is skipped, since v0.100b is not using anomalies at all.
+// Will come back to this if/when this will be needed.
+// Might be to improve matching, might be because something from here is actually used.
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::hit_receiver_info::hit_receiver_info(survarium::hit_receiver*, vostok::physics::base_physics_object*)
-hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_physics_object* rigid_body )
+// STATE[100%|DONE]
+hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_physics_object* rigid_body ) :
+	m_receiver		( receiver ),
+	m_rigid_body	( rigid_body ),
+	m_was_hit		( false )
 {
-	// FUNCTION BODY
-	// <0x597db0>|0x000|      :'24'	{
-	// ******
 }
 
-// STATE[STUB]
-// bool survarium::hit_receiver_info::operator==(survarium::hit_receiver_info const&) const
+// STATE[100%|DONE]: sushi@TODO: Think about this a bit more.
 bool hit_receiver_info::operator==( hit_receiver_info const& rhs ) const
 {
-	return false;
-	// FUNCTION BODY
-	// <0x597d80>|0x000|+0x007:'27'	{
-	// <0x597d87>|0x007|+0x01b:'28'
-	// <0x597da2>|0x022|      :'29'	}
-	// ******
+	return m_receiver->m_pointer->m_pointer == rhs.m_receiver->m_pointer->m_pointer;
 }
 
-// STATE[STUB]
-// survarium::damage_zone_core::damage_zone_core()
+// STATE[99.39%|DONE]
 damage_zone_core::damage_zone_core( ) :
-	hit_initiator( 0, false )
+	hit_initiator				( u8(-1), true ),
+	m_physics_world				( NULL ),
+	m_owner						( NULL ),
+	m_accumulated_hit_time_ms	( 0 ),
+	m_standalone				( true )
 {
-	// FUNCTION BODY
-	// <0x599380>|0x000|      :'43'	{
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::~damage_zone_core()
+// STATE[94.65%|DONE]
 damage_zone_core::~damage_zone_core( )
 {
-	// FUNCTION BODY
-	// <0x5992d0>|0x000|      :'46'	{
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::load(vostok::configs::binary_config_value const&)
+// STATE[UNCHECKED]
 void damage_zone_core::load( configs::binary_config_value const& t )
 {
-	// LOCALS
-	// configs::binary_config_value const* end
-	// configs::binary_config_value bone_parts_filter
-	// configs::binary_config_value const* it
-	// ******
+	collision_sensor::load( t );
+
+	m_hit_curve.load( t["hit_curve"] );
+	m_motion_on_bound_curve.load( t["on_bound_motion_curve"] );
+	m_motion_on_center_curve.load( t["on_center_motion_curve"] );
+
+	m_apply_hit_type		= (apply_hit_type)(u8)t["apply_hit_type"];
+	m_max_hit				= (float)t["max_hit"];
+	m_min_hit				= (float)t["min_hit"];
+	m_max_armor_piercing	= (float)t["max_armor_piercing"];
+	m_min_armor_piercing	= (float)t["min_armor_piercing"];
+	m_hit_interval_ms		= (u32)t["interval_in_msec"];
+	m_damage_type			= (pcstr)t["damage_type"];
+
+	configs::binary_config_value bone_parts_filter	= t["hit_parts_filter"];
+	configs::binary_config_value const* it	= bone_parts_filter.begin( );
+	configs::binary_config_value const* end	= bone_parts_filter.end( );
+	for ( ; it != end ; ++it )
+		m_body_parts_filter.push_back((pcstr)it);
 
 	// FUNCTION BODY
 	// <0x5994d0>|0x000|+0x010:'49'	{
@@ -70,23 +76,6 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	// <0x599531>|0x061|+0x042:'53'
 	// <0x599573>|0x0a3|+0x042:'54'
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
 	// <18>
 	// <0x5995b5>|0x0e5|+0x021:'74'
 	// <0x5995d6>|0x106|+0x020:'75'
@@ -106,31 +95,27 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::compare_bone_data_predicate(stlp_std::pair<vostok::collision::bone_collision_data *,float> const&, stlp_std::pair<vostok::collision::bone_collision_data *,float> const&)
+// STATE[SKIPPED]
 bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, float > const& lhs, std::pair< collision::bone_collision_data *, float > const& rhs )
 {
-	return false;
+	return lhs.first->skeleton_bone_index == rhs.first->skeleton_bone_index;
+
 	// FUNCTION BODY
-	// <0x597d60>|0x000|+0x003:'117'	{
 	// <0x597d63>|0x003|+0x017:'118'
-	// <0x597d7a>|0x01a|      :'119'	}
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::distance_from_sphere_center_to_point_on_shape(float)
+// STATE[SKIPPED]
 float distance_from_sphere_center_to_point_on_shape( float radius )
 {
-	return 0.0f;
+	return radius;
+
 	// FUNCTION BODY
-	// <0x597d50>|0x000|+0x003:'122'	{
 	// <0x597d53>|0x003|+0x003:'123'
-	// <0x597d56>|0x006|      :'124'	}
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // float survarium::distance_from_box_center_to_point_on_shape(vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const&)
 float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
 {
@@ -173,7 +158,7 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // float survarium::distance_from_capsule_center_to_point_on_shape(vostok::math::float4x4 const&, float, float, vostok::math::float3 const&)
 float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
@@ -221,7 +206,7 @@ float distance_from_capsule_center_to_point_on_shape(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // float survarium::distance_from_cylinder_center_to_point_on_shape(vostok::math::float4x4 const&, float, float, vostok::math::float3 const&)
 float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
@@ -298,7 +283,7 @@ public:
 
 STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // float survarium::dz_bone_data_contact_test_predicate::add_single_result(void*, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&)
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
@@ -371,10 +356,11 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::on_inside(vostok::buffer_vector<vostok::physics::base_physics_object *> const&)
+// STATE[UNCHECKED]
 void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> const& objects )
 {
+	VOSTOK_UNREFERENCED_PARAMETER( objects );
+
 	// FUNCTION BODY
 	// <0x597d40>|0x000|+0x007:'266'	{
 	// <0>
@@ -382,8 +368,7 @@ void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> 
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::on_leave(vostok::buffer_vector<vostok::physics::base_physics_object *> const&)
+// STATE[SKIPPED]
 void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	// LOCALS
@@ -424,7 +409,7 @@ void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> c
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // void survarium::damage_zone_core::on_enter(vostok::buffer_vector<vostok::physics::base_physics_object *> const&)
 void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> const& objects )
 {
@@ -465,7 +450,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // void survarium::damage_zone_core::tick(const unsigned int, const unsigned int)
 void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 {
@@ -491,17 +476,19 @@ void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::remove_null_receivers_predicate(survarium::hit_receiver_info const&)
+// STATE[UNCHECKED]
 bool remove_null_receivers_predicate( hit_receiver_info const& info )
 {
-	return false;
+	return info.m_receiver == NULL;
+
 	// FUNCTION BODY
 	// <0x597d20>|0x000|      :'338'	{
 	// ******
 }
 
-// STATE[STUB]
+// sushi@TODO: Big skip
+
+// STATE[SKIPPED]
 // bool survarium::damage_zone_core::is_filter_passed(vostok::physics::base_physics_object*) const
 bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) const
 {
@@ -517,7 +504,7 @@ bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) 
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // void survarium::damage_zone_core::hit_on_enter(const unsigned int, const unsigned int)
 void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
 {
@@ -593,7 +580,7 @@ void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // void survarium::damage_zone_core::hit_on_inside(const unsigned int, const unsigned int)
 void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
 {
@@ -681,7 +668,7 @@ void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[SKIPPED]
 // void survarium::damage_zone_core::hit_on_motion_inside(const unsigned int, const unsigned int)
 void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 {
@@ -763,57 +750,63 @@ void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::activate(survarium::zone_group*, vostok::physics::world*, survarium::scheduler&)
+// STATE[UNCHECKED]
 void damage_zone_core::activate( zone_group* owner, physics::world* p_world, scheduler& scheduler )
 {
+	m_physics_world = p_world;
+	collision_sensor::insert( p_world );
+	m_owner = owner;
+	m_accumulated_hit_time_ms = 0;
+	m_scheduler = &scheduler;
+	scheduler.register_on_frame( &m_scheduler_identifier, boost::bind( &damage_zone_core::tick, this, _1, _2 ), true );
+
 	// FUNCTION BODY
-	// <0x598620>|0x000|+0x010:'545'	{
 	// <0x598630>|0x010|+0x00f:'546'
 	// <0x59863f>|0x01f|+0x00f:'547'
 	// <0x59864e>|0x02e|+0x00f:'548'
 	// <0x59865d>|0x03d|+0x010:'549'
 	// <0x59866d>|0x04d|+0x00f:'550'
 	// <0x59867c>|0x05c|+0x0d3:'551'
-	// <0x59874f>|0x12f|      :'552'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::deactivate()
+// STATE[SKIPPED]
 void damage_zone_core::deactivate( )
 {
-	// LOCALS
-	// hit_receiver_info* 			end<1>
-	// hit_receiver_info* 			it<1>
-	// ******
+	collision_sensor::remove( );
+	m_scheduler->unregister( &m_scheduler_identifier );
 
-	// CALL SITE INFO
-	// <0x598013> -> void <unknown>(player_actions_subscriber*)
-	// ******
+	m_scheduler = NULL;
+
+	if ( m_owner )
+	{
+		hit_receiver_info* it	= m_receivers.begin( );
+		hit_receiver_info* end	= m_receivers.end( );
+		for ( ; it != end ; ++it )
+			if ( this ) {} else {} // sushi@TODO: HUH? mMost likely something inlined
+	}
+	m_receivers.clear( );
+	m_owner = NULL;
 
 	// FUNCTION BODY
-	// <0x597f70>|0x000|+0x009:'555'	{
 	// <0x597f79>|0x009|+0x008:'556'
 	// <0x597f81>|0x011|+0x017:'557'
 	// <0>
 	// <0x597f98>|0x028|+0x00d:'559'
 	// <0>
-	// <0x597fa5>|0x035|+0x00c:'561'
-	// <0>
-	// <0x597fb1>|0x041|+0x012|[1]:'563'
+	// <0x597fa5>|0x035|+0x00c:'561'		if ( m_owner )
+	// <0>									{
+	// <0x597fb1>|0x041|+0x012|[1]:'563'		hit_receiver_info* it	= m_receivers.begin( );
 	// <0x597fc3>|0x053|+0x012:'564'
-	// <0x597fd5>|0x065|+0x013:'565'
-	// <0x597fe8>|0x078|+0x02f:'566'
-	// <0>
+	// <0x597fd5>|0x065|+0x013:'565'			for ( ; it != end ; ++it )
+	// <0x597fe8>|0x078|+0x02f:'566'				if ( this )
+	// <0>									}
 	// <0x598017>|0x0a7|+0x00e:'568'
 	// <0x598025>|0x0b5|+0x00d:'569'
-	// <0x598032>|0x0c2|      :'570'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::damage_zone_core::on_player_action(survarium::hit_receiver const*, survarium::player_actions_subscriber::action, float)
+// STATE[BLOCKED]: sushi@TODO: I don't understand what is going on here. Also v0.100b didn't have anomalies anyway.
 void damage_zone_core::on_player_action( hit_receiver const* receiver, player_actions_subscriber::action action, float param )
 {
 	// CALL SITE INFO
@@ -821,9 +814,7 @@ void damage_zone_core::on_player_action( hit_receiver const* receiver, player_ac
 	// ******
 
 	// FUNCTION BODY
-	// <0x597de0>|0x000|+0x009:'573'	{
 	// <0x597de9>|0x009|+0x033:'574'
-	// <0x597e1c>|0x03c|      :'575'	}
 	// ******
 }
 

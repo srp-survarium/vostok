@@ -19,7 +19,8 @@ public:
 	virtual	booby_trap_set_core*	new_derived_resource		( ) = 0;
 	virtual	u32						get_derived_resource_size	( ) = 0;
 
-	// STATE[STUB]
+private:
+	// STATE[100%|DONE]
 	virtual	void					query_for_derived_resources	(
 										resources::query_result_for_cook*	parent,
 										booby_trap_set_core*				resource,
@@ -27,17 +28,18 @@ public:
 										configs::binary_config_ptr			config
 									) { VOSTOK_UNREFERENCED_PARAMETERS( cook_data, config ); finish_query( parent, resource ); }
 
-public:
+protected:
 									booby_trap_set_core_cook	( );
 
 			void					finish_query				( resources::query_result_for_cook* parent, booby_trap_set_core* resource );
-			void					on_config_ready				( resources::queries_result& data, booby_trap_set_cook_data cook_data );
 
+private:
+			void					on_config_ready				( resources::queries_result& data, booby_trap_set_cook_data cook_data );
 			void					on_subresources_loaded		(
-										resources::queries_result&			data,
-										booby_trap_set_core*				resource,
-										booby_trap_set_cook_data			cook_data,
-										configs::binary_config_ptr			config
+										resources::queries_result&		data,
+										booby_trap_set_core*			resource,
+										booby_trap_set_cook_data		cook_data,
+										configs::binary_config_ptr		config
 									);
 }; // class booby_trap_set_core_cook
 

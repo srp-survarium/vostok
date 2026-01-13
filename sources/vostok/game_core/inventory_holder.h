@@ -38,6 +38,7 @@ public:
 	inline	survarium::inventory&				inventory				( ) { return *m_inventory; }
 
 	// STATE[STUB]
+	__declspec( noinline )
 			scheduler&							scheduler				( ) { return m_scheduler; }
 
 	virtual	void								insert_game_world_object( game_world_object& arg_0 ) = 0;

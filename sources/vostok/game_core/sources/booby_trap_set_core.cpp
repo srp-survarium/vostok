@@ -3,33 +3,46 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include  <vostok/game_core/booby_trap_set_core.h>
+#include <vostok/game_core/booby_trap_set_core.h>
 
-#include  <vostok/game_core/booby_trap_core.h>
+#include <vostok/game_core/booby_trap_core.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/inventory_holder.h>
+#include <vostok/game_core/game_material.h>
+#include <vostok/game_core/game_material_manager.h>
+#include <vostok/game_core/collision_geometry.h>
+
+#include <vostok/animation/animation_player.h>
+#include <vostok/physics/world.h>
+#include <vostok/physics/ray_result.h>
+#include <vostok/physics/base_physics_object.h>
+#include <vostok/physics/rigid_body_base.h>
+#include <vostok/physics/ghost_object.h>
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 booby_trap_set_core::booby_trap_set_core( ) :
+	inventory_item		( use_silent ),
 	m_traps				( NULL, 0 ),
-	m_damage_parameters	( NULL, 0 ),
-	inventory_item		( use_silent )
+	m_damage_parameters	( NULL, 0 )
 {
 	// FUNCTION BODY
 	// <0x6fe380>|0x000|+0x08e:'28'	{
 	// <0x6fe40e>|0x08e|      :'29'	}
 	// ******
 }
-
-// STATE[STUB]
-// void survarium::booby_trap_set_core::~booby_trap_set_core()
-booby_trap_set_core::~booby_trap_set_core( )
+// STATE[77.75%|PARTIAL]
+ booby_trap_set_core::~booby_trap_set_core( )
 {
-	// LOCALS
-	// pcvoid 						damage_parms_buffer
-	// ******
+	pcvoid damage_parms_buffer = m_damage_parameters.begin( );
+	m_damage_parameters.clear( );
+	VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );
 
-	// FUNCTION BODY
+	m_traps.clear( );
+	VOSTOK_FREE_IMPL( g_allocator, m_traps_buffer );
+
+	// FUNCTION BODY[0x6fe250]: 6
 	// <0x6fe263>|0x013|+0x01e:'33'
 	// <0x6fe281>|0x031|+0x037:'34'
 	// <0x6fe2b8>|0x068|+0x014:'35'
@@ -39,34 +52,79 @@ booby_trap_set_core::~booby_trap_set_core( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::load(vostok::configs::binary_config_value const&)
+// STATE[UNCHECKED]
 void booby_trap_set_core::load( configs::binary_config_value const& config )
 {
-	// LOCALS
-	// float 						defuse_time
-	// configs::binary_config_value const& apply_dmg
-	// float 						disarmed_life_time
-	// float 						fired_life_time
-	// float 						armed_life_time
-	// u32 							count
-	// u32 							i<1>
-	// configs::binary_config_value const& conf_entry<2>
-	// booby_trap_set_core::apply_damage& ad<2>
-	// ******
+	m_traps.clear( );
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// SKIPPED BLOCKS
-	// <0x6fe0ae><2>
-	// ******
+	m_traps_buffer = (booby_trap_core_ptr*)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( booby_trap_core_ptr* ) * amount( ), "traps_buffer" );
+	m_traps = buffer_vector< booby_trap_core_ptr >( m_traps_buffer, amount( ) );
 
-	// TYPEDEFS
-	// typedef
-	// 	configs::binary_config_value const&
-	// 	conf_val_const_ref;
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	m_config.max_distance		= (float)config["max_deploy_distance"];
+	m_config.max_slope_cos		= math::cos( math::deg2rad( (float)config["max_slope_angle"] ) );
+
+	const float armed_life_time		= (float)config["armed_life_time"];
+	m_config.armed_life_time		= math::floor( armed_life_time * 1000.0f );
+	const float fired_life_time		= (float)config["fired_life_time"];
+	m_config.fired_life_time		= math::floor( fired_life_time * 1000.0f );
+	const float disarmed_life_time	= (float)config["disarmed_life_time"];
+	m_config.disarmed_life_time		= math::floor( disarmed_life_time * 1000.0f );
+	const float defuse_time			= (float)config["defuse_time"];
+	m_config.defuse_time			= math::floor( defuse_time * 1000.0f );
+	m_config.defuse_by_hit			= (bool)config["defuse_by_hit"];
+
+	m_config.material_can_place_test	= (bool)config["material_can_place_test"];
+	m_config.material_can_stick_test	= (bool)config["material_can_stick_test"];
+
+	configs::binary_config_value const&	apply_dmg	= config["damage_parameters"];
+
+	const u32 							count		= apply_dmg.size( );
+	m_damage_parameters.clear( );	// sushi@NOTE: Interesting how we didn't free the previous one.
+	m_damage_parameters	= buffer_vector< apply_damage >( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( apply_damage ) * count, "damage_parameters" ), count );
+
+	for ( u32 i = 0 ; i < count ; ++i )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		ASSERT( UNKNOWN_EXPRESSION );
+		ASSERT( UNKNOWN_EXPRESSION );
+		ASSERT( UNKNOWN_EXPRESSION );
+
+		configs::binary_config_value const& conf_entry = apply_dmg[i];
+		m_damage_parameters.push_back( apply_damage( ) );
+		booby_trap_set_core::apply_damage& ad = m_damage_parameters.back( );
+
+		strings::copy(ad.body_part, 16, (pcstr)conf_entry["body_part"]);
+		strings::copy(ad.hit_type,  16, (pcstr)conf_entry["hit_type"]);
+		ad.amount			= (float)conf_entry["amount"];
+		ad.armor_piercing	= (float)conf_entry["armor_piercing"];
+
+		ASSERT( UNKNOWN_EXPRESSION );
+		ASSERT( UNKNOWN_EXPRESSION );
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	// FUNCTION BODY[0x6fdc50]: 74
 	// <0>
 	// <1>
 	// <0x6fdc60>|0x010|+0x029:'45'
@@ -91,7 +149,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	// <0>
 	// <1>
 	// <2>
-	// <0x6fdde3>|0x193|+0x020:'67'
+	// <0x6fdde3>|0x193|+0x020:'67'		m_config.max_distance = (float)config["max_deploy_distance"];
 	// <0x6fde03>|0x1b3|+0x031:'68'
 	// <0>
 	// <0x6fde34>|0x1e4|+0x017:'70'
@@ -101,7 +159,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	// <0x6fdeb0>|0x260|+0x017:'74'
 	// <0x6fdec7>|0x277|+0x027:'75'
 	// <0x6fdeee>|0x29e|+0x017:'76'
-	// <0x6fdf05>|0x2b5|+0x027:'77'
+	// <0x6fdf05>|0x2b5|+0x027:'77'		m_config.defuse_time = math::floor( (float)config["defuse_time"] * 1000.0f );
 	// <0x6fdf2c>|0x2dc|+0x020:'78'
 	// <0>
 	// <0x6fdf4c>|0x2fc|+0x020:'80'
@@ -113,7 +171,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	// <0x6fdfa7>|0x357|+0x06b:'86'
 	// <0x6fe012>|0x3c2|+0x084:'87'
 	// <0>
-	// <0x6fe096>|0x446|+0x01e|[1]:'89'
+	// <0x6fe096>|0x446|+0x01e|[1]:'89' for ( u32 i = 0 ; i < count ; ++i )
 	// <0>
 	// <0x6fe0b4>|0x464|+0x00c:'91'
 	// <0x6fe0c0>|0x470|+0x00c:'92'
@@ -121,7 +179,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	// <0x6fe0d8>|0x488|+0x00c:'94'
 	// <0>
 	// <0x6fe0e4>|0x494|+0x00e:'96'
-	// <0x6fe0f2>|0x4a2|+0x035:'97'
+	// <0x6fe0f2>|0x4a2|+0x035:'97'		m_damage_parameters.push_back( apply_damage( ) );
 	// <0x6fe127>|0x4d7|+0x024:'98'
 	// <0>
 	// <0x6fe14b>|0x4fb|+0x02b:'100'
@@ -144,42 +202,43 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::find_free_trap_predicate(vostok::resources::resource_ptr<survarium::booby_trap_core,vostok::resources::unmanaged_intrusive_base>)
-bool find_free_trap_predicate( resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base> trap )
+// STATE[UNCHECKED]
+bool find_free_trap_predicate( booby_trap_core_ptr trap )
 {
-	return false;
+	return !trap->is_active( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fdc00]: 1
 	// <0x6fdc06>|0x006|+0x039:'121'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::remove_trap(survarium::booby_trap_core&)
+// STATE[100%|DONE]
 void booby_trap_set_core::remove_trap( booby_trap_core& trap )
 {
-	// FUNCTION BODY
-	// <0x6fd807>|0x007|+0x00c:'126'
-	// ******
+	remove_trap_impl( trap );
 }
 
-// STATE[STUB]
-// vostok::resources::resource_ptr<survarium::booby_trap_core,vostok::resources::unmanaged_intrusive_base>* survarium::booby_trap_set_core::try_place_trap()
-resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base>* booby_trap_set_core::try_place_trap( )
+// STATE[UNCHECKED]
+booby_trap_core_ptr* booby_trap_set_core::try_place_trap( )
 {
-	// LOCALS
-	// resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base>* trap_iter
-	// float4x4 					place_transform
-	// ******
+	if ( amount( ) == 0 )
+		return m_traps.end( );
 
-	// CALL SITE INFO
-	// <0x6fe9c9> -> void <unknown>(booby_trap_core&, float4x4 const&)
-	// ******
+	float4x4 place_transform;
+	if ( !get_visible_place_transform( place_transform ) )
+		return m_traps.end( );
 
-	return NULL;
+	booby_trap_core_ptr* trap_iter = std::find_if( m_traps.begin( ), m_traps.end( ), find_free_trap_predicate );
 
-	// FUNCTION BODY
+	if ( trap_iter == m_traps.end( ) )
+		return trap_iter; // sushi@TODO
+
+	insert_trap( **trap_iter, place_transform );
+	set_amount( amount( ) - 1 );
+
+	return trap_iter;
+
+	// FUNCTION BODY[0x6fe910]: 17
 	// <0x6fe919>|0x009|+0x00f:'131'
 	// <0x6fe928>|0x018|+0x014:'132'
 	// <0>
@@ -189,7 +248,7 @@ resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base>* bo
 	// <0>
 	// <0x6fe968>|0x058|+0x030:'138'
 	// <0>
-	// <0x6fe998>|0x088|+0x014:'140'
+	// <0x6fe998>|0x088|+0x014:'140'	if ( trap_iter == m_traps.end( ) )
 	// <0x6fe9ac>|0x09c|+0x005:'141'
 	// <0>
 	// <0x6fe9b1>|0x0a1|+0x01a:'143'
@@ -200,11 +259,15 @@ resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base>* bo
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::remove_trap_if_active(vostok::resources::resource_ptr<survarium::booby_trap_core,vostok::resources::unmanaged_intrusive_base>&)
-void booby_trap_set_core::remove_trap_if_active( resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base>& trap )
+// STATE[79.71%|PARTIAL]
+void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 {
-	// FUNCTION BODY
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	if ( trap->is_active( ) )
+		remove_trap_impl( *trap );
+
+	// FUNCTION BODY[0x6fd850]: 4
 	// <0x6fd859>|0x009|+0x00c:'152'
 	// <0>
 	// <0x6fd865>|0x015|+0x02a:'154'
@@ -212,58 +275,63 @@ void booby_trap_set_core::remove_trap_if_active( resources::resource_ptr<booby_t
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::remove()
+// STATE[100%|DONE]
 void booby_trap_set_core::remove( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6fd8b9>|0x009|+0x09c:'164'
-	// ******
+	std::for_each(
+		m_traps.begin( ),
+		m_traps.end( ),
+		boost::bind( &booby_trap_set_core::remove_trap_if_active, this, _1 )
+	);
 }
 
-// STATE[STUB]
-// vostok::math::float4x4 survarium::create_place_matrix_for_looking_point(vostok::math::float3 const&, vostok::math::float3 const&, vostok::math::float4x4 const&)
-float4x4 create_place_matrix_for_looking_point( float3 const& hit_point, float3 const& normal, float4x4 const& head_transform )
+// STATE[BLOCKED]: sushi@TODO: Understand what it does exactly
+float4x4 create_place_matrix_for_looking_point(
+	float3 const&	hit_point,
+	float3 const&	normal,
+	float4x4 const& head_transform
+)
 {
-	// LOCALS
-	// float4x4 					result
-	// float3 const& 				right_candidate
-	// float3 const& 				head_forward
-	// float3 const& 				right<1>
-	// float3 const& 				forward<1>
-	// float3 const& 				up<1>
-	// float3 const& 				right<1>
-	// float3 const& 				forward<1>
-	// float3 const& 				forward_candidate<1>
-	// float3 const& 				up<1>
-	// float3 const& 				head_right<1>
-	// ******
+	float4x4 result					= math::create_translation( hit_point );
 
-	// SKIPPED BLOCKS
-	// <0x6fda65><1>
-	// ******
+	float3 const& head_forward		= head_transform.k.xyz( );
+	float3 const& right_candidate	= normal ^ head_forward;
 
-	return vostok::math::float4x4();
+	if ( right_candidate.length( ) > math::epsilon_3 ) {
+		float3 const& right				= math::normalize( right_candidate );
+		float3 const& up				= normal;
+		float3 const& forward			= math::normalize( right ^ up );
+		result.i.xyz( ) = right;
+		result.j.xyz( ) = up;
+		result.k.xyz( ) = forward;
+	} else {
+		float3 const& head_right		= head_transform.i.xyz( );
+		float3 const& forward_candidate	= head_right ^ normal;
+		float3 const& forward			= math::normalize( forward_candidate );
+		float3 const& up				= normal;
+		float3 const& right				= math::normalize( up ^ forward );
+		result.i.xyz( ) = right;
+		result.j.xyz( ) = up;
+		result.k.xyz( ) = forward;
+	}
 
-	// FUNCTION BODY
+	return result;
+
+	// FUNCTION BODY[0x6fda10]: 26
 	// <0x6fda1b>|0x00b|+0x010:'169'
 	// <0>
 	// <0x6fda2b>|0x01b|+0x00e:'171'
 	// <0x6fda39>|0x029|+0x018:'172'
 	// <0>
-	// <0x6fda51>|0x041|+0x01a:'174'
-	// <0x6fda6b>|0x05b|+0x011:'175'
-	// <0x6fda7c>|0x06c|+0x006:'176'
-	// <0x6fda82>|0x072|+0x025:'177'
+	// <0x6fda51>|0x041|+0x01a:'174'	if ( right_candidate > math::epsilon_3 )
+	// <0x6fda6b>|0x05b|+0x011:'175'		float3 const& right				= math::normalize( right_candidate );
+	// <0x6fda7c>|0x06c|+0x006:'176'		float3 const& up				= normal;
+	// <0x6fda82>|0x072|+0x025:'177'		float3 const& forward			= math::normalize( right ^ up );
 	// <0x6fdaa7>|0x097|+0x01b:'178'
 	// <0x6fdac2>|0x0b2|+0x01b:'179'
 	// <0x6fdadd>|0x0cd|+0x01b:'180'
-	// <0>
-	// <0x6fdaf8>|0x0e8|+0x005:'182'
+	// <0>								}
+	// <0x6fdaf8>|0x0e8|+0x005:'182'	else {
 	// <0x6fdafd>|0x0ed|+0x00b|[1]:'183'
 	// <0x6fdb08>|0x0f8|+0x021:'184'
 	// <0x6fdb29>|0x119|+0x012:'185'
@@ -279,45 +347,91 @@ float4x4 create_place_matrix_for_looking_point( float3 const& hit_point, float3 
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::booby_trap_set_core::get_visible_place_transform(vostok::math::float4x4&)
+// STATE[UNCHECKED]
 bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 {
-	// LOCALS
-	// float3 						dir_to_head
-	// float3 						ray_dir
-	// game_material const* 		material
-	// float4x4 					matrix_b
-	// physics::bt_ghost_object* 	ghost
-	// float 						slope_cos
-	// physics::bt_rigid_body_base* body
-	// physics::closest_ray_result 	ray_result
-	// float3 						ray_from
-	// float4x4 					looking_point_matrix
-	// float4x4 					matrix_a
-	// physics::world* 				world
-	// float 						ray_length
-	// u16 							group
-	// u16 							mask
-	// float4x4 const& 				head_transform
-	// resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base> arbitrary_trap
-	// base_player* 				player
-	// u16 							game_material_id
-	// ******
+	physics::world* world = get_inventory( ).holder( ).get_physics_world( );
+	ASSERT( UNKNOWN_EXPRESSION_T( world ) );
 
-	// CALL SITE INFO
-	// <0x6fe458> -> physics::world* <unknown>()
-	// <0x6fe496> -> base_player* <unknown>()
-	// <0x6fe558> -> physics::closest_ray_result <unknown>(float3 const&, float3 const&, const float, u16, u16)
-	// <0x6fe635> -> u16 <unknown>() const
-	// <0x6fe689> -> u16 <unknown>(const int, const bool) const
-	// <0x6fe6a8> -> game_material_manager const& <unknown>()
-	// <0x6fe8b1> -> bool <unknown>(physics::bt_collision_shape* const, float4x4 const&, float4x4&, u16, u16)
-	// ******
+	base_player* player = get_inventory( ).holder( ).cast_to_base_player( );
+	ASSERT( UNKNOWN_EXPRESSION_T( player ) );
 
-	return false;
+	float4x4 const& head_transform = player->get_head_transform( );
 
-	// FUNCTION BODY
+
+	float3		ray_from	= head_transform.c.xyz( );
+	float3		ray_dir		= head_transform.k.xyz( );
+	const float	ray_length	= config( ).max_distance;
+
+	u16			group		= 1028;
+	u16			mask		= 514;
+	physics::closest_ray_result ray_result = world->ray_test( ray_from, ray_dir, ray_length, group, mask );
+
+	if ( ray_result.object == NULL )
+	{
+		result = create_place_matrix_for_looking_point(
+			ray_from + ( ray_dir * ray_length ),
+			head_transform.j.xyz( ),
+			head_transform
+		);
+		return false;
+	}
+
+	float4x4 looking_point_matrix = create_place_matrix_for_looking_point(
+		ray_result.hit_point_world,
+		ray_result.hit_normal_world,
+		head_transform
+	);
+	const float slope_cos = ray_result.hit_normal_world.y;
+
+	if ( slope_cos >= config( ).max_slope_cos )
+	{
+		result = looking_point_matrix;
+		return false;
+	}
+
+	if ( ray_result.object->get_collision_group( ) & mask == 0 )
+	{
+		result = looking_point_matrix;
+		return false;
+	}
+
+	physics::bt_rigid_body_base* body = static_cast_checked< physics::bt_rigid_body_base* >( ray_result.object );
+	u16 game_material_id = body->get_triangle_material( ray_result.triangle_index, ray_result.is_shape_index );
+
+	game_material const* material = get_game_material_manager( ).get_material( game_material_id );
+
+	if ( !config( ).material_can_place_test || material->can_place_mine( ) )
+	{
+		result = looking_point_matrix;
+		return false;
+	}
+
+	if ( !config( ).material_can_stick_test || material->can_stick_mine( ) )
+	{
+		result = looking_point_matrix;
+		return false;
+	}
+
+	float4x4 matrix_a	= looking_point_matrix * math::create_translation( ( -ray_dir ) * 0.005f );
+	float3 dir_to_head	= -ray_dir;
+	dir_to_head.set_length( 0.5f );
+	float4x4 matrix_b	= looking_point_matrix * math::create_translation( dir_to_head );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	booby_trap_core_ptr arbitrary_trap = traps( )[0];
+
+	physics::bt_ghost_object* ghost = arbitrary_trap->get_collision_geometry( 0 )->ghost_object( );
+
+	if ( !world->recover_from_penetrations( ghost->m_shape.c_ptr( ), matrix_a, result, group, mask ) )
+	{
+		result = looking_point_matrix;
+		return false;
+	} else {
+		return true;
+	}
+
+	// FUNCTION BODY[0x6fe420]: 155
 	// <0x6fe431>|0x011|+0x02c:'219'
 	// <0x6fe45d>|0x03d|+0x012:'220'
 	// <0>
@@ -326,7 +440,7 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// <0>
 	// <1>
 	// <2>
-	// <0x6fe4ad>|0x08d|+0x009:'227'
+	// <0x6fe4ad>|0x08d|+0x009:'227'	float4x4 const& head_transform = player->get_head_transform( );
 	// <0>
 	// <0x6fe4b6>|0x096|+0x025:'229'
 	// <0x6fe4db>|0x0bb|+0x025:'230'
@@ -336,9 +450,9 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// <2>
 	// <3>
 	// <4>
-	// <0x6fe515>|0x0f5|+0x009:'237'
-	// <0x6fe51e>|0x0fe|+0x009:'238'
-	// <0x6fe527>|0x107|+0x033:'239'
+	// <0x6fe515>|0x0f5|+0x009:'237'	u16			group		= 1028;
+	// <0x6fe51e>|0x0fe|+0x009:'238'	u16			mask		= 514;
+	// <0x6fe527>|0x107|+0x033:'239'	physics::closest_ray_result ray_result = world->ray_test( ray_from, ray_dir, ray_length, group, mask );
 	// <0>
 	// <1>
 	// <2>
@@ -347,49 +461,49 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// <5>
 	// <6>
 	// <7>
-	// <0x6fe55a>|0x13a|+0x009:'248'
+	// <0x6fe55a>|0x13a|+0x009:'248'	if ( ray_result.object == NULL )
 	// <0>
 	// <1>
 	// <0x6fe563>|0x143|+0x05b:'251'
-	// <0x6fe5be>|0x19e|+0x007:'252'
+	// <0x6fe5be>|0x19e|+0x007:'252'		return false;
 	// <0>
 	// <1>
 	// <0x6fe5c5>|0x1a5|+0x021:'255'
 	// <0>
-	// <0x6fe5e6>|0x1c6|+0x010:'257'
+	// <0x6fe5e6>|0x1c6|+0x010:'257'	const float slope_cos = ray_result.hit_normal_world.y;
 	// <0>
-	// <0x6fe5f6>|0x1d6|+0x018:'259'
+	// <0x6fe5f6>|0x1d6|+0x018:'259'	if ( slope_cos >= config( ).max_slope_cos )
 	// <0>
+	// <1>								{
+	// <0x6fe60e>|0x1ee|+0x010:'262'		result = looking_point_matrix;
+	// <0x6fe61e>|0x1fe|+0x007:'263'		return false;
+	// <0>								}
 	// <1>
-	// <0x6fe60e>|0x1ee|+0x010:'262'
-	// <0x6fe61e>|0x1fe|+0x007:'263'
-	// <0>
-	// <1>
-	// <0x6fe625>|0x205|+0x01c:'266'
+	// <0x6fe625>|0x205|+0x01c:'266'	if ( ray_result.object->get_collision_group( ) & mask == 0 )
 	// <0>
 	// <1>
 	// <0x6fe641>|0x221|+0x010:'269'
-	// <0x6fe651>|0x231|+0x007:'270'
-	// <0>
+	// <0x6fe651>|0x231|+0x007:'270'		return false;
+	// <0>								}
 	// <1>
-	// <0x6fe658>|0x238|+0x011:'273'
+	// <0x6fe658>|0x238|+0x011:'273'	physics::bt_rigid_body_base* body = static_cast_checked< physics::bt_rigid_body_base* >( ray_result.object );
 	// <0x6fe669>|0x249|+0x026:'274'
 	// <0>
-	// <0x6fe68f>|0x26f|+0x028:'276'
+	// <0x6fe68f>|0x26f|+0x028:'276'	game_material const* material = get_game_material_manager( ).get_material( game_material_id );
 	// <0>
 	// <1>
 	// <0x6fe6b7>|0x297|+0x02d:'279'
 	// <0>
 	// <1>
-	// <0x6fe6e4>|0x2c4|+0x010:'282'
-	// <0x6fe6f4>|0x2d4|+0x007:'283'
+	// <0x6fe6e4>|0x2c4|+0x010:'282'		result = looking_point_matrix;
+	// <0x6fe6f4>|0x2d4|+0x007:'283'		return false;
 	// <0>
 	// <1>
-	// <0x6fe6fb>|0x2db|+0x02d:'286'
+	// <0x6fe6fb>|0x2db|+0x02d:'286'	if ( !config( ).material_can_stick_test || material->can_stick_mine( ) )
 	// <0>
 	// <1>
-	// <0x6fe728>|0x308|+0x010:'289'
-	// <0x6fe738>|0x318|+0x007:'290'
+	// <0x6fe728>|0x308|+0x010:'289'		// qmemcpy(result, &looking_point_matrix, sizeof(matrix4x4));
+	// <0x6fe738>|0x318|+0x007:'290'		return false;
 	// <0>
 	// <1>
 	// <0x6fe73f>|0x31f|+0x05c:'293'
@@ -397,12 +511,12 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// <0x6fe7ac>|0x38c|+0x015:'295'
 	// <0x6fe7c1>|0x3a1|+0x02d:'296'
 	// <0>
-	// <0x6fe7ee>|0x3ce|+0x012:'298'
-	// <0x6fe800>|0x3e0|+0x03f:'299'
+	// <0x6fe7ee>|0x3ce|+0x012:'298'	ASSERT( UNKNOWN_EXPRESSION );
+	// <0x6fe800>|0x3e0|+0x03f:'299'	booby_trap_core_ptr arbitrary_trap = traps( )[0];
 	// <0>
-	// <0x6fe83f>|0x41f|+0x046:'301'
+	// <0x6fe83f>|0x41f|+0x046:'301'	physics::bt_ghost_object* ghost = arbitrary_trap->get_collision_geometry( 0 )->ghost_object( );
 	// <0>
-	// <0x6fe885>|0x465|+0x035:'303'
+	// <0x6fe885>|0x465|+0x035:'303'	if ( world->recover_from_penetrations( ghost->m_shape, matrix_a, result, group, mask ) )
 	// <0>
 	// <0x6fe8ba>|0x49a|+0x010:'305'
 	// <0x6fe8ca>|0x4aa|+0x017:'306'
@@ -410,134 +524,72 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// <0>
 	// <0x6fe8e3>|0x4c3|+0x017:'309'
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// <42>
-	// <43>
-	// <44>
-	// <45>
-	// <46>
-	// <47>
-	// <48>
-	// <49>
-	// <50>
-	// <51>
-	// <52>
-	// <53>
-	// <54>
-	// <55>
-	// <56>
-	// <57>
-	// <58>
-	// <59>
-	// <60>
-	// <61>
-	// <62>
 	// <63>
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::update_bones_matrices(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&, vostok::math::float4x4* const, const unsigned int, const unsigned int, vostok::math::float4x4&, vostok::math::float4x4&, vostok::animation::animation_player const&)
+// STATE[100%|DONE]
 void booby_trap_set_core::update_bones_matrices(
-	resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const&	user_skeleton,
-	float4x4*							user_matrices,
-	u32									user_matrices_count,
-	u32									current_time_in_ms,
-	float4x4&							character_head_transform,
-	float4x4&							character_transform,
-	animation::animation_player const&	animation_player
+	animation::skeleton_ptr const&			user_skeleton,
+	float4x4* const							user_matrices,
+	const u32								user_matrices_count,
+	const u32								current_time_in_ms,
+	float4x4&								character_head_transform,
+	float4x4&								character_transform,
+	animation::animation_player const&		animation_player
 )
 {
-	// FUNCTION BODY
+	VOSTOK_UNREFERENCED_PARAMETERS(
+		user_skeleton,
+		user_matrices,
+		user_matrices_count,
+		current_time_in_ms,
+		character_head_transform,
+		character_transform,
+		&animation_player
+	);
+
+	// FUNCTION BODY[0x6fd790]: 9
 	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
 	// <7>
 	// <0x6fd79b>|0x00b|+0x052:'394'
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::trap_is_active(vostok::resources::resource_ptr<survarium::booby_trap_core,vostok::resources::unmanaged_intrusive_base> const&)
-bool trap_is_active( resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base> const& trap )
+// STATE[UNCHECKED]
+bool trap_is_active( booby_trap_core_ptr const& trap )
 {
-	return false;
+	return trap->is_active( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd820]: 1
 	// <0x6fd826>|0x006|+0x025:'399'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::serialize_game_world_object_header(survarium::booby_trap_core const&, vostok::network_core::udp_match_packet&) const
+// STATE[BLOCKED]
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd9d0]: 3
 	// <0x6fd9d9>|0x009|+0x00c:'409'
 	// <0>
 	// <0x6fd9e5>|0x015|+0x018:'411'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::deserialize_game_world_object(vostok::network_core::packet_reader&)
+// STATE[BLOCKED]
 void booby_trap_set_core::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	// LOCALS
-	// game_world_object& 			object
-	// booby_trap_core& 			trap
-	// u8 							trap_index
+	// game_world_object& 				object
+	// booby_trap_core& 				trap
+	// const u8 						trap_index
 	// ******
 
 	// CALL SITE INFO
-	// <0x6fd9bd> -> void <unknown>(network_core::packet_reader&)
+	// <0x6fd9bd> -> void < unknown >( network_core::packet_reader& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd960]: 9
 	// <0x6fd96a>|0x00a|+0x00b:'416'
 	// <0>
 	// <0x6fd975>|0x015|+0x00c:'418'
@@ -550,17 +602,15 @@ void booby_trap_set_core::deserialize_game_world_object( network_core::packet_re
 	// ******
 }
 
-// STATE[STUB]
-// unsigned char survarium::booby_trap_set_core::trap_index(survarium::booby_trap_core const&) const
+// STATE[UNCHECKED]
 u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 {
-	// LOCALS
-	// resources::resource_ptr<booby_trap_core,resources::unmanaged_intrusive_base> const* trap_iter
-	// ******
+	booby_trap_core_ptr const* trap_iter = std::find( m_traps.begin( ), m_traps.end( ), &trap );
+	ASSERT( UNKNOWN_EXPRESSION_T( trap_iter != m_traps.end( ) ) );
 
-	return 0;
+	return u8(trap_iter - m_traps.begin( ));
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd710]: 4
 	// <0x6fd719>|0x009|+0x035:'429'
 	// <0x6fd74e>|0x03e|+0x00c:'430'
 	// <0>
@@ -568,20 +618,16 @@ u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::remove_trap_impl(survarium::booby_trap_core&)
+// STATE[96.21%|DONE]
 void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 {
-	// LOCALS
-	// inventory_holder& 			holder
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// CALL SITE INFO
-	// <0x6fd6e4> -> void <unknown>(game_world_object&)
-	// <0x6fd6fa> -> void <unknown>(scheduler&)
-	// ******
+	inventory_holder& holder = get_inventory( ).holder( );
+	holder.remove_game_world_object( trap );
+	trap.remove( holder.scheduler( ) );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd6b0]: 5
 	// <0x6fd6b9>|0x009|+0x00c:'437'
 	// <0>
 	// <0x6fd6c5>|0x015|+0x010:'439'
@@ -590,22 +636,20 @@ void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_set_core::insert_trap(survarium::booby_trap_core&, vostok::math::float4x4 const&)
+// STATE[97.38%|DONE]
 void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& transform )
 {
-	// LOCALS
-	// physics::world* 				world
-	// inventory_holder& 			holder
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// CALL SITE INFO
-	// <0x6fd660> -> physics::world* <unknown>()
-	// <0x6fd68d> -> void <unknown>(physics::world*, float4x4 const&, scheduler&)
-	// <0x6fd69e> -> void <unknown>(game_world_object&)
-	// ******
+	inventory_holder& holder = get_inventory( ).holder( );
 
-	// FUNCTION BODY
+	physics::world* world = holder.get_physics_world( );
+	ASSERT( UNKNOWN_EXPRESSION_T( world ) );
+
+	trap.insert( world, transform, holder.scheduler( ) );
+	holder.insert_game_world_object( trap );
+
+	// FUNCTION BODY[0x6fd630]: 9
 	// <0x6fd639>|0x009|+0x00c:'446'
 	// <0>
 	// <0x6fd645>|0x015|+0x010:'448'
