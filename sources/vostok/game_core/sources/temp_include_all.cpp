@@ -68,12 +68,22 @@
 #include <vostok/game_core/booby_trap_core.h>
 #include <vostok/game_core/booby_trap_core_cook.h>
 #include <vostok/game_core/booby_trap_set_core_cook.h>
+#include <vostok/game_core/victory_items_container_core.h>
 
 namespace vostok
 {
-	void use_booby_trap_core( survarium::booby_trap_core* booby_trap_core )
+	void use_victory_items_container_core( survarium::victory_items_container_core* victory_items_container_core )
 	{
+		configs::binary_config_value	config;
 
+		victory_items_container_core->load( config );
+		victory_items_container_core->use_initialize( NULL );
+		victory_items_container_core->use_execute( NULL );
+		victory_items_container_core->use_finalize( NULL );
+		victory_items_container_core->use_info( NULL );
+
+		victory_items_container_core->put_item( NULL );
+		victory_items_container_core->take_item( );
 	}
 
 	void use_booby_trap_cook( )
@@ -597,6 +607,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
 	vostok::use_hittable_object( NULL );
 	vostok::use_respawn_point_core( );
