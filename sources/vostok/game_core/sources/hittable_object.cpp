@@ -23,7 +23,7 @@ namespace survarium {
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[69.59%|PARTIAL]: Manual statements matched. Destructor of hit_receiver inlined in base.
  hittable_object::~hittable_object( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -39,7 +39,7 @@ namespace survarium {
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[86.74%|PARTIAL]: LTCG for linear math ops.
 void hittable_object::load( configs::binary_config_value const& cfg_val )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( cfg_val.value_exists( "full_name" ) ) );
@@ -51,10 +51,10 @@ void hittable_object::load( configs::binary_config_value const& cfg_val )
 	ASSERT( UNKNOWN_EXPRESSION_T( cfg_val.value_exists( "filter_mask" ) ) );
 
 	pcstr const 	name		= (pcstr)cfg_val["full_name"];
-	float3 const& 	scale		= (float3)cfg_val["scale"];
-	float3 const& 	rotation	= (float3)cfg_val["rotation"];
-	float3 const& 	position	= (float3)cfg_val["position"];
-	float4x4 transform = math::create_scale( scale ) * math::create_rotation( rotation ) * math::create_translation( position );
+	float3 const& 	scale		= cfg_val["scale"];
+	float3 const& 	rotation	= cfg_val["rotation"];
+	float3 const& 	position	= cfg_val["position"];
+	float4x4 transform = math::create_scale( scale ) * math::create_rotation( rotation ) * math::create_translation( position ); // sush@MATCH. Specifically here
 
 	configs::binary_config_value meshes = cfg_val["meshes"];
 	physics::bt_collision_shape_ptr shape = physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), name ); // sushi@TODO: model_path is unused
@@ -107,7 +107,7 @@ void hittable_object::load( configs::binary_config_value const& cfg_val )
 
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void hittable_object::set_transform( float4x4 const& transform )
 {
 	m_rigid_body->set_transform( transform );
@@ -123,7 +123,7 @@ float4x4 hittable_object::get_transform( )
 	return m_rigid_body->get_transform( );
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void hittable_object::insert( physics::world* world )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_physics_world ));
@@ -143,7 +143,7 @@ void hittable_object::insert( physics::world* world )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void hittable_object::remove( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_physics_world ));

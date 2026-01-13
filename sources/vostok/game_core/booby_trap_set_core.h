@@ -10,6 +10,7 @@
 namespace survarium {
 
 class booby_trap_core;
+class booby_trap_set_core_cook;
 typedef resources::resource_ptr< booby_trap_core, resources::unmanaged_intrusive_base > booby_trap_core_ptr;
 
 class game_material_manager;
@@ -52,8 +53,15 @@ public:
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) override;
+
+protected:
 	virtual	void								remove							( ) override;
-	virtual	void								serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const;
+
+public:
+	virtual	void								serialize_game_world_object_header(
+													booby_trap_core const&				trap,
+													network_core::udp_match_packet&		packet
+												) const;
 
 private:
 	// STATE[STUB]
@@ -64,7 +72,7 @@ private:
 	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								tick							( ) override { /* no source */ }
-	virtual	bool								is_ready_to_be_deactivated		( ) const override { /* no source */ }
+	virtual	bool								is_ready_to_be_deactivated		( ) const override { return true; /* sushi@TODO no source */ }
 
 	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override  { VOSTOK_UNREACHABLE_CODE( ); }
@@ -73,16 +81,16 @@ private:
 	virtual	void								on_player_model_removed			( ) override { /* no source */ }
 
 	virtual	void								update_bones_matrices			(
-																					animation::skeleton_ptr const&		user_skeleton,
-																					float4x4*							user_matrices,
-																					u32									user_matrices_count,
-																					u32									current_time_in_ms,
-																					float4x4&							character_head_transform,
-																					float4x4&							character_transform,
-																					animation::animation_player const&	animation_player
-																				) override;
+													animation::skeleton_ptr const&		user_skeleton,
+													float4x4* const						user_matrices,
+													u32									user_matrices_count,
+													u32									current_time_in_ms,
+													float4x4&							character_head_transform,
+													float4x4&							character_transform,
+													animation::animation_player const&	animation_player
+												) override;
 
-	virtual	bool								is_sprinting					( ) const override { /* no source */ }
+	virtual	bool								is_sprinting					( ) const override { return true; /* sushi@TODO no source */ }
 
 
 protected:
@@ -106,7 +114,10 @@ protected:
 
 	inline	u8									count_active_traps				( ) const { /* no source */ }
 
-	inline	void								append_inactive_trap_index_to_packet( booby_trap_core_ptr const& arg_0, network_core::udp_match_packet& arg_1 ) const { /* no source */ }
+	inline	void								append_inactive_trap_index_to_packet(
+													booby_trap_core_ptr const&			arg_0,
+													network_core::udp_match_packet&		arg_1
+												) const { /* no source */ }
 
 private:
 			void								remove_trap_impl				( booby_trap_core& trap );
@@ -118,6 +129,8 @@ private:
 	/* 0x0120 */	buffer_vector< apply_damage >			m_damage_parameters;
 	/* 0x0128 */	booby_trap_set_core::config_params		m_config;
 	/* 0x0144 */	booby_trap_core_ptr*					m_traps_buffer;
+private:
+	friend class booby_trap_set_core_cook;
 }; // class booby_trap_set_core
 
 STATIC_SIZE_ASSERT(booby_trap_set_core, 0x148);

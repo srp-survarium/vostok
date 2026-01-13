@@ -8,45 +8,48 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::hit_info::hit_info()
-hit_info::hit_info( )
+// STATE[UNCHECKED]
+ hit_info::hit_info( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ea50]: 0
 	// <0x73ea50>|0x000|+0x01c:'20'	{
 	// <0x73ea6c>|0x01c|      :'21'	}
 	// ******
 }
 
-// STATE[STUB]
-// survarium::hit_info::hit_info(const unsigned char, const unsigned char, char const* const, char const* const, const float, const float, survarium::bullet* const)
-hit_info::hit_info(
-	u8					hit_initiator,
-	u8					being_hit,
-	pcstr				body_part_name,
-	pcstr				damage_type,
-	float				amount,
-	float				armor_piercing,
-	survarium::bullet*	bullet
-)
+// STATE[UNCHECKED]
+ hit_info::hit_info(
+	const u8					hit_initiator,
+	const u8					being_hit,
+	pcstr const					body_part_name,
+	pcstr const					damage_type,
+	const float					amount,
+	const float					armor_piercing,
+	survarium::bullet* const	bullet
+) :
+	body_part_name	( body_part_name ),
+	damage_type		( damage_type ),
+	bullet			( bullet ),
+	amount			( amount ),
+	armor_piercing	( armor_piercing ),
+	hit_initiator	( hit_initiator ),
+	being_hit		( being_hit )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ea80]: 0
 	// <0x73ea80>|0x000|+0x059:'39'	{
 	// <0x73ead9>|0x059|      :'40'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::hit_info::deserialize(vostok::network_core::packet_reader&)
+// STATE[BLOCKED]
 void hit_info::deserialize( network_core::packet_reader& packet )
 {
 	// LOCALS
-	// char[16] 					damage_type_info
-	// char[16] 					c_body_part_name
+	// char[16] 						damage_type_info
+	// char[16] 						c_body_part_name
 	// ******
 
-	// FUNCTION BODY
-	// <0x73eaf0>|0x000|+0x00a:'43'	{
+	// FUNCTION BODY[0x73eaf0]: 15
 	// <0x73eafa>|0x00a|+0x00e:'44'
 	// <0x73eb08>|0x018|+0x00e:'45'
 	// <0>
@@ -62,8 +65,8 @@ void hit_info::deserialize( network_core::packet_reader& packet )
 	// <0x73eb57>|0x067|+0x010:'56'
 	// <0>
 	// <0x73eb67>|0x077|+0x00a:'58'
-	// <0x73eb71>|0x081|      :'59'	}
 	// ******
 }
+
 
 } // namespace survarium

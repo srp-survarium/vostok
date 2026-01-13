@@ -32,7 +32,7 @@ booby_trap_set_core::booby_trap_set_core( ) :
 	// <0x6fe40e>|0x08e|      :'29'	}
 	// ******
 }
-// STATE[UNCHECKED]
+// STATE[77.75%|PARTIAL]
  booby_trap_set_core::~booby_trap_set_core( )
 {
 	pcvoid damage_parms_buffer = m_damage_parameters.begin( );
@@ -212,14 +212,10 @@ bool find_free_trap_predicate( booby_trap_core_ptr trap )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_set_core::remove_trap( booby_trap_core& trap )
 {
 	remove_trap_impl( trap );
-
-	// FUNCTION BODY[0x6fd800]: 1
-	// <0x6fd807>|0x007|+0x00c:'126'
-	// ******
 }
 
 // STATE[UNCHECKED]
@@ -263,7 +259,7 @@ booby_trap_core_ptr* booby_trap_set_core::try_place_trap( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[79.71%|PARTIAL]
 void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -279,7 +275,7 @@ void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_set_core::remove( )
 {
 	std::for_each(
@@ -287,14 +283,6 @@ void booby_trap_set_core::remove( )
 		m_traps.end( ),
 		boost::bind( &booby_trap_set_core::remove_trap_if_active, this, _1 )
 	);
-
-	// FUNCTION BODY[0x6fd8b0]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6fd8b9>|0x009|+0x09c:'164'
-	// ******
 }
 
 // STATE[BLOCKED]: sushi@TODO: Understand what it does exactly
@@ -540,7 +528,7 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_set_core::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,
@@ -558,7 +546,7 @@ void booby_trap_set_core::update_bones_matrices(
 		current_time_in_ms,
 		character_head_transform,
 		character_transform,
-		animation_player
+		&animation_player
 	);
 
 	// FUNCTION BODY[0x6fd790]: 9
@@ -630,7 +618,7 @@ u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[96.21%|DONE]
 void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -648,21 +636,9 @@ void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[97.38%|DONE]
 void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& transform )
 {
-	// LOCALS
-	// physics::world* 					world
-	// inventory_holder& 				holder
-	// ******
-
-	// CALL SITE INFO
-	// <0x6fd660> -> physics::world* < unknown >()
-	// <0x6fd68d> -> void < unknown >( physics::world*, float4x4 const&, scheduler& )
-	// <0x6fd69e> -> void < unknown >( game_world_object& )
-	// ******
-
-
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	inventory_holder& holder = get_inventory( ).holder( );

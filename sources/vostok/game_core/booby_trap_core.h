@@ -51,8 +51,8 @@ public:
 	virtual	void							insert						( physics::world* world, float4x4 const& transform, scheduler& scheduler );
 	virtual	void							remove						( scheduler& scheduler );
 
-	inline	float4x4 const&					transform					( ) const { /* no source */ }
-	inline	void							set_owner					( booby_trap_set_core* arg_0 ) { /* no source */ }
+	inline	float4x4 const&					transform					( ) const { return m_transform; }
+	inline	void							set_owner					( booby_trap_set_core* owner ) { m_owner = owner; }
 	inline	bool							is_active					( ) const { return m_trap_state != booby_trap_state_removed; }
 
 private:
@@ -63,20 +63,20 @@ private:
 	virtual	void							deserialize					( network_core::packet_reader& reader ) override;
 
 	virtual	void							hit							(
-												hit_initiator const*					initiator,
-												collision::bone_collision_data const&	bone_data,
-												pcstr									damage_type,
-												float									amount,
-												float									armor_piercing,
-												bullet*									bullet
+												hit_initiator const* const	initiator,
+												u32	const					bone_index,
+												pcstr						damage_type,
+												float const					amount,
+												float const					armor_piercing,
+												bullet*	const				bullet
 											) override;
 	virtual	void							hit							(
-												hit_initiator const*	initiator,
-												u32						bone_index,
-												pcstr					damage_type,
-												float					amount,
-												float					armor_piercing,
-												bullet*					bullet
+												hit_initiator const* const				initiator,
+												collision::bone_collision_data const&	bone_data,
+												pcstr									damage_type,
+												float const								amount,
+												float const								armor_piercing,
+												bullet*	const							bullet
 											) override;
 
 	// STATE[STUB]

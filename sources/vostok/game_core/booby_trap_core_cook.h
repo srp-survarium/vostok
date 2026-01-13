@@ -16,17 +16,23 @@ public:
 
 	virtual	void				translate_query				( resources::query_result_for_cook& parent ) override;
 	// STATE[STUB]
-	virtual	void				delete_resource				( resources::resource_base* resource ) override { VOSTOK_DELETE_IMPL( g_allocator, resource ); }
+	virtual	void				delete_resource				( resources::resource_base* resource ) override {
+		VOSTOK_DELETE_IMPL( g_allocator, resource );
+	}
 
 			void				on_subresources_loaded		( resources::queries_result& data, configs::binary_config_ptr config );
 
-	// STATE[STUB]
+private:
+	// STATE[83.57%|DONE]
 	virtual	booby_trap_core*	new_derived_resource		( ) { return VOSTOK_NEW_IMPL( g_allocator, booby_trap_core ); }
-	// STATE[STUB]
+	// STATE[100%|DONE]
 	virtual	u32					get_derived_resource_size	( ) { return sizeof( booby_trap_core ); }
-	// STATE[STUB]
-	virtual	void				query_for_derived_resources	( resources::query_result_for_cook* parent, booby_trap_core* resource, configs::binary_config_ptr config ) { VOSTOK_UNREFERENCED_PARAMETER( config ); finish_query( parent, resource ); }
+	// STATE[100%|DONE]
+	virtual	void				query_for_derived_resources	( resources::query_result_for_cook* parent, booby_trap_core* resource, configs::binary_config_ptr config ) {
+		VOSTOK_UNREFERENCED_PARAMETER( config ); finish_query( parent, resource );
+	}
 
+protected:
 			void				finish_query				( resources::query_result_for_cook* parent, booby_trap_core* resource );
 }; // class booby_trap_core_cook
 

@@ -87,9 +87,9 @@ public:
 	// STATE[STUB]
 			bool								is_alive						( ) const { return m_is_alive; }
 
-	virtual	base_player*						cast_to_base_player				( ) override { /* no source */ }
+	virtual	base_player*						cast_to_base_player				( ) override { return this; }
 	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { return this; }
-	// STATE[STUB] return ( this - 12 );
+	// STATE[STUB]
 	virtual	inventory_holder*					cast_to_inventory_holder		( ) override { return this; }
 
 	// STATE[STUB]
@@ -101,21 +101,21 @@ public:
 	typedef boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > animation_callback;
 
 	virtual	void								subscribe_animation_player		(
-																					animation::reserved_channel_ids_enum	arg_0,
-																					animation_callback const&				arg_1,
-																					pcvoid									arg_2,
-																					resources::managed_resource_ptr const&	arg_3,
-																					pcvoid									arg_4
-																				) = 0;
+													animation::reserved_channel_ids_enum	arg_0,
+													animation_callback const&				arg_1,
+													pcvoid									arg_2,
+													resources::managed_resource_ptr const&	arg_3,
+													pcvoid									arg_4
+												) = 0;
 
 	virtual	void								subscribe_animation_player		(
-																					pcstr									arg_0,
-																					animation_callback const&				arg_1,
-																					pcvoid									arg_2,
-																					resources::managed_resource_ptr const&	arg_3,
-																					u8										arg_4,
-																					pcvoid									arg_5
-																				) = 0;
+													pcstr									arg_0,
+													animation_callback const&				arg_1,
+													pcvoid									arg_2,
+													resources::managed_resource_ptr const&	arg_3,
+													u8										arg_4,
+													pcvoid									arg_5
+												) = 0;
 
 	virtual	void								unsubscribe_animation_player	( animation::reserved_channel_ids_enum arg_0, pcvoid arg_1 ) = 0;
 	virtual	void								unsubscribe_animation_player	( pcstr arg_0, pcvoid arg_1 ) = 0;
@@ -142,9 +142,9 @@ public:
 	inline	void								set_force_animation_selection	( bool arg_0 ) { /* no source */ }
 
 	inline	void								send_game_world_objects			(
-																					boost::function< network_core::udp_match_packet& ( ) > const&		arg_0,
-																					boost::function< void ( network_core::udp_match_packet& ) > const&	arg_1
-																				) const { /* no source */ }
+													boost::function< network_core::udp_match_packet& ( ) > const&		arg_0,
+													boost::function< void ( network_core::udp_match_packet& ) > const&	arg_1
+												) const { /* no source */ }
 
 			void								deserialize_game_world_object	( network_core::packet_reader& reader );
 
@@ -155,10 +155,10 @@ public:
 
 			void								on_player_death					( );
 			void								send_game_world_object			(
-																					game_world_object const*											object,
-																					boost::function< network_core::udp_match_packet& ( ) > const&		reciver_packet_allocator,
-																					boost::function< void( network_core::udp_match_packet& ) > const&	reciver_enqueuer
-																				) const;
+													game_world_object const*											object,
+													boost::function< network_core::udp_match_packet& ( ) > const&		reciver_packet_allocator,
+													boost::function< void( network_core::udp_match_packet& ) > const&	reciver_enqueuer
+												) const;
 
 	virtual	animation::animation_player const&	animation_player				( ) const = 0;
 	virtual	animation::animation_player&		animation_player				( ) = 0;

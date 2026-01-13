@@ -16,8 +16,11 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
-booby_trap_core::booby_trap_core( )
+// STATE[94.90%|DONE]
+booby_trap_core::booby_trap_core( ) :
+	m_owner			( NULL ),
+	m_trap_state	( booby_trap_state_removed ),
+	m_state_timer	( 0 )
 {
 	m_transform.identity( );
 
@@ -26,10 +29,10 @@ booby_trap_core::booby_trap_core( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[14.86%|PARTIAL]
 booby_trap_core::~booby_trap_core( )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries );
+	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries ); // sushi@MATCH: Deleter helper inlined
 	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
 
 	// FUNCTION BODY
@@ -38,7 +41,7 @@ booby_trap_core::~booby_trap_core( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[84.87%|PARTIAL]
 void booby_trap_core::load( configs::binary_config_value const& config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -52,7 +55,7 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 	collision_sensor::m_collision_geometries[0]->load( config["collision_sensor"]["collision_geometries"][0] );
 
 	usable_object::load( config["usable_object"] );
-	usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
+	usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry ); // sushi@MATCH: Inlined one layer deeper in base
 	usable_object::m_collision_geometries[0]->load( config["usable_object"]["collision_geometries"][0] );
 
 	if ( config.value_exists("hittable_object") )
@@ -82,17 +85,12 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_core::load_aabb( configs::binary_config_value const& __formal )
 {
-	// FUNCTION BODY
-	// <0x59b110>|0x000|+0x007:'63'	{
-	// <0>
-	// <0x59b117>|0x007|      :'65'	}
-	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[97.38%|DONE]
 void booby_trap_core::set_transform( float4x4 const& transform )
 {
 	m_transform = transform;
@@ -103,11 +101,6 @@ void booby_trap_core::set_transform( float4x4 const& transform )
 	ASSERT( UNKNOWN_EXPRESSION );
 	if ( m_owner->config( ).defuse_by_hit )
 		hittable_object::set_transform( transform );
-
-	// CALL SITE INFO
-	// <0x59b3fd> -> void <unknown>(float4x4 const&)
-	// <0x59b41e> -> void <unknown>(float4x4 const&)
-	// ******
 
 	// FUNCTION BODY
 	// <0x59b3cb>|0x00b|+0x013:'69'
@@ -121,7 +114,7 @@ void booby_trap_core::set_transform( float4x4 const& transform )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[99.85%|DONE]
 void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_receiver* const receiver )
 {
 	buffer_vector< booby_trap_set_core::apply_damage > const& damage_parameters = m_owner->damage_parameters( );
@@ -149,7 +142,7 @@ void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_re
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[98.75%|DONE]
 void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -160,7 +153,7 @@ void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> co
 	for ( ; it != end ; ++it )
 	{
 		hit_initiator const*	initiator	= m_owner->get_inventory( ).holder( ).cast_to_base_player( );
-		hit_receiver*			receiver	= (*it)->user_data->cast_to_hit_receiver( );
+		hit_receiver*			receiver	= it[0]->user_data->cast_to_hit_receiver( );
 
 		ASSERT( UNKNOWN_EXPRESSION_T( initiator ) );
 		ASSERT( UNKNOWN_EXPRESSION_T( receiver ) );
@@ -168,7 +161,7 @@ void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> co
 		apply_damage( initiator, receiver );
 	}
 
-	if ( m_trap_state != booby_trap_state_removed )
+	if ( is_active( ) )
 		switch_to_state( booby_trap_state_fired );
 
 	// FUNCTION BODY
@@ -193,20 +186,20 @@ void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> co
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_core::tick( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	if ( m_state_timer )
 	{
-		if ( m_state_timer > time_delta_ms )
+		if ( m_state_timer <= time_delta_ms )
 		{
-			m_state_timer -= time_delta_ms;
+			on_state_timer_finished( );
 		}
 		else
 		{
-			on_state_timer_finished( );
+			m_state_timer -= time_delta_ms;
 		}
 	}
 
@@ -214,30 +207,9 @@ void booby_trap_core::tick( u32 const time_delta_ms, u32 const current_time_ms )
 	{
 		collision_sensor::tick( time_delta_ms, current_time_ms );
 	}
-
-	// FUNCTION BODY
-	// <0x59bd19>|0x009|+0x00c:'129'	ASSERT( UNKNOWN_EXPRESSION );
-	// <0>
-	// <0x59bd25>|0x015|+0x00c:'131'	if ( m_state_timer > time_delta_ms )
-	// <0>
-	// <0x59bd31>|0x021|+0x00e:'133'		if ( m_state_timer > time_delta_ms )
-	// <0>
-	// <0x59bd3f>|0x02f|+0x00e:'135'			m_state_timer -= time_delta_ms;
-	// <0>
-	// <0x59bd4d>|0x03d|+0x002:'137'		else
-	// <0>
-	// <0x59bd4f>|0x03f|+0x015:'139'			on_state_timer_finished( );
-	// <0>
-	// <1>
-	// <2>
-	// <0x59bd64>|0x054|+0x009:'143'
-	// <0>
-	// <0x59bd6d>|0x05d|+0x010:'145'
-	// <0>
-	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[97.44%|DONE]
 void booby_trap_core::insert( physics::world* world, float4x4 const& transform, scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -273,7 +245,7 @@ void booby_trap_core::insert( physics::world* world, float4x4 const& transform, 
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_core::remove( scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -296,7 +268,7 @@ void booby_trap_core::remove( scheduler& scheduler )
 	// ******
 }
 
-// STATE[UNCHECKED] sushi@TODO: What does this function do
+// STATE[99.84%|DONE] sushi@TODO: What does this function do
 bool booby_trap_core::use_initialize( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -338,7 +310,7 @@ bool booby_trap_core::use_initialize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[97.35%|DONE]
 bool booby_trap_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -349,7 +321,7 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 
 	u32 passed_ms = user->current_time_ms - user->start_using_time_ms;
 	float engineer_factor = user->owner->usable_object_user_data( )->booster_engineer_use_time_factor;
-	u32 config_defuse_time = m_owner->config( ).defuse_time;
+	u32 config_defuse_time = m_owner->config( ).defuse_time; // sushi@MATCH: config didn't inline in target
 	u32 defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
 
 	user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, u32(100) ) : 100;
@@ -387,7 +359,7 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 bool booby_trap_core::use_finalize( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -401,23 +373,9 @@ bool booby_trap_core::use_finalize( usable_object_user_data* user )
 	user->current_progress = u32(-1);
 	m_usable_object_users.erase( user );
 	return true;
-
-	// FUNCTION BODY
-	// <0x59b559>|0x009|+0x00c:'224'
-	// <0x59b565>|0x015|+0x00c:'225'
-	// <0>
-	// <1>
-	// <0x59b571>|0x021|+0x00c:'228'
-	// <0>
-	// <0x59b57d>|0x02d|+0x00c:'230'
-	// <0x59b589>|0x039|+0x00a:'231'
-	// <0x59b593>|0x043|+0x00a:'232'
-	// <0x59b59d>|0x04d|+0x00f:'233'
-	// <0x59b5ac>|0x05c|+0x002:'234'
-	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 pcstr booby_trap_core::use_info( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -426,46 +384,33 @@ pcstr booby_trap_core::use_info( usable_object_user_data* user )
 	ASSERT( UNKNOWN_EXPRESSION_T( user_player ) );
 
 	return can_defuse( user_player ) ? "st_defuse_trap" : "";
-
-	// FUNCTION BODY
-	// <0x59b319>|0x009|+0x00c:'239'
-	// <0>
-	// <0x59b325>|0x015|+0x014:'241'
-	// <0x59b339>|0x029|+0x00c:'242'
-	// <0>
-	// <0x59b345>|0x035|+0x02c:'244'
-	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[95.27%|PARTIAL]
 bool booby_trap_core::can_defuse( base_player const* user ) const
 {
-	// CALL SITE INFO
-	// <0x59b2b3> -> base_player* <unknown>()
-	// <0x59b2d7> -> game_team_id <unknown>() const
-	// <0x59b2e6> -> game_team_id <unknown>() const
-	// ******
-
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	base_player const* owner = m_owner->get_inventory( ).holder( ).cast_to_base_player( );
 	ASSERT( UNKNOWN_EXPRESSION_T( owner ) );
 
-	return user == owner ? true : user->team( ) != owner->team( );
+	return user != owner // sushi@MATCH: This is written somehow differently
+		? user->team( ) != owner->team( )
+		: true;
 
 	// FUNCTION BODY
 	// <0x59b27a>|0x00a|+0x00c:'249'
 	// <0x59b286>|0x016|+0x00c:'250'
 	// <0>
 	// <0x59b292>|0x022|+0x026:'252'
-	// <0x59b2b8>|0x048|+0x00c:'253'
+	// <0x59b2b8>|0x048|+0x00c:'253' 0x56
 	// <0>
 	// <0x59b2c4>|0x054|+0x03b:'255'
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void booby_trap_core::defuse_completed( )
 {
 	switch_to_state( booby_trap_state_disarmed );
@@ -475,11 +420,11 @@ void booby_trap_core::defuse_completed( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[86.20%|PARTIAL]
 void booby_trap_core::on_state_timer_finished( )
 {
-	if ( m_trap_state == booby_trap_state_armed
-		|| m_trap_state > booby_trap_state_disarmed // sushi@TODO: This should never hit
+	if ( m_trap_state == booby_trap_state_armed		// sushi@MATCH: Maybe some inlined function
+		|| m_trap_state > booby_trap_state_disarmed // sushi@MATCH: This should never hit
 	)
 		switch_to_state( booby_trap_state_disarmed );
 	else
@@ -500,7 +445,7 @@ void booby_trap_core::on_state_timer_finished( )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED] switch
 void booby_trap_core::switch_to_state( booby_trap_state new_state )
 {
 	if ( m_trap_state == booby_trap_state_armed )
@@ -620,7 +565,7 @@ void booby_trap_core::switch_to_state( booby_trap_state new_state )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[87.85%|PARTIAL]: register_on_frame LTCG
 void booby_trap_core::register_tick( scheduler& scheduler )
 {
 	scheduler.register_on_frame(
@@ -634,7 +579,7 @@ void booby_trap_core::register_tick( scheduler& scheduler )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[99.75%|DONE]
 void booby_trap_core::unregister_tick( scheduler& scheduler )
 {
 	scheduler.unregister( &m_scheduler_identifier );
@@ -668,11 +613,6 @@ void booby_trap_core::deserialize( network_core::packet_reader& reader )
 	// float3 						position
 	// ******
 
-	// CALL SITE INFO
-	// <0x59b727> -> void <unknown>(booby_trap_core&, float4x4 const&)
-	// <0x59b744> -> void <unknown>(booby_trap_state)
-	// ******
-
 	// FUNCTION BODY
 	// <0>
 	// <1>
@@ -691,31 +631,21 @@ void booby_trap_core::deserialize( network_core::packet_reader& reader )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 booby_trap_set_core const* booby_trap_core::owner( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_owner ) );
 	return m_owner;
-
-	// FUNCTION BODY
-	// <0x59b249>|0x009|+0x00c:'386'
-	// <0x59b255>|0x015|+0x009:'387'
-	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 booby_trap_set_core* booby_trap_core::owner( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_owner ) );
 	return m_owner;
-
-	// FUNCTION BODY
-	// <0x59b219>|0x009|+0x00c:'392'
-	// <0x59b225>|0x015|+0x009:'393'
-	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 void booby_trap_core::hit(
 	hit_initiator const* const	initiator,
 	u32	const					bone_index,
@@ -726,21 +656,10 @@ void booby_trap_core::hit(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( initiator, bone_index, damage_type, amount, armor_piercing, bullet );
-
-	// CALL SITE INFO: sushi@TODO: Maybe I can get function name here somehow!
-	// <0x59b203> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <6>
-	// <0x59b1a9>|0x009|+0x045:'412'
-	// <0>
-	// <0x59b1ee>|0x04e|+0x017:'414'
-	// ******
+	defuse_completed( );
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 void booby_trap_core::hit(
 	hit_initiator const* const				initiator,
 	collision::bone_collision_data const&	bone_data,
@@ -751,16 +670,7 @@ void booby_trap_core::hit(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( initiator, bone_data, damage_type, amount, armor_piercing, bullet );
-	// void (__thiscall *)(vostok::vfs::base_node<1> **)
-
-
-	// FUNCTION BODY
-	// <0>
-	// <6>
-	// <0x59b12b>|0x00b|+0x053:'433'
-	// <0>
-	// <0x59b17e>|0x05e|+0x017:'435'
-	// ******
+	defuse_completed( );
 }
 
 } // namespace survarium
