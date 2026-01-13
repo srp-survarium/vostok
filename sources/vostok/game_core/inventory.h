@@ -26,6 +26,7 @@ public:
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
 	// STATE[STUB]
+	__declspec( noinline )
 			inventory_holder&					holder						( ) { return *m_holder; }
 
 	// STATE[STUB]

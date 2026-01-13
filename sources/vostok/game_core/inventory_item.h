@@ -30,6 +30,7 @@ public:
 	// STATE[STUB]
 	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) { m_inventory = inv; m_slot_id = slot; }
 	// STATE[STUB]
+	__declspec( noinline )
 			inventory&							get_inventory					( ) const { return *m_inventory; }
 	// STATE[STUB]
 			profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }

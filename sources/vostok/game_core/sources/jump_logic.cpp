@@ -10,17 +10,16 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::move_direction_enum survarium::get_move_direction(survarium::player_input const&)
 move_direction_enum get_move_direction( player_input const& input )
 {
 	// LOCALS
-	// bool 						move_bwd_pressed
-	// bool 						move_right_pressed
-	// bool 						move_fwd_pressed
-	// bool 						move_left_pressed
+	// bool 							move_bwd_pressed
+	// bool 							move_right_pressed
+	// bool 							move_fwd_pressed
+	// bool 							move_left_pressed
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d500]: 41
 	// <0x58d504>|0x004|+0x012:'25'
 	// <0x58d516>|0x016|+0x012:'26'
 	// <0x58d528>|0x028|+0x012:'27'
@@ -66,28 +65,21 @@ move_direction_enum get_move_direction( player_input const& input )
 }
 
 // STATE[STUB]
-// survarium::jump_logic::jump_logic(survarium::weapon_user_animations_selector&)
-jump_logic::jump_logic( weapon_user_animations_selector& owner ) :
-	m_owner						( owner ),
-	m_jumping_direction			( move_direction_on_site ),
-	m_is_jump_from_right_leg	( true )
+jump_logic::jump_logic( weapon_user_animations_selector& owner ) : m_owner( owner )
 {
-	initialize_logic( );
-
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58de30]: 1
 	// <0x58de76>|0x046|+0x008:'76'
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::jump_logic::~jump_logic()
-jump_logic::~jump_logic( )
+ jump_logic::~jump_logic( )
 {
 	// LOCALS
-	// ai::fsm_state* 				state<1>
+	// ai::fsm_state* 					state<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58da30]: 4
 	// <0x58da39>|0x009|+0x00b:'81'
 	// <0x58da44>|0x014|+0x014|[1]:'82'
 	// <0x58da58>|0x028|+0x028:'83'
@@ -96,16 +88,15 @@ jump_logic::~jump_logic( )
 }
 
 // STATE[STUB]
-// void survarium::jump_logic::initialize_logic()
 void jump_logic::initialize_logic( )
 {
 	// LOCALS
-	// jump_logic_base_state* 		start
-	// jump_logic_base_state* 		landing
-	// jump_logic_base_state* 		inactive
+	// jump_logic_base_state* 			start
+	// jump_logic_base_state* 			landing
+	// jump_logic_base_state* 			inactive
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58dae0]: 11
 	// <0x58daf0>|0x010|+0x05a:'94'
 	// <0x58db4a>|0x06a|+0x067:'95'
 	// <0x58dbb1>|0x0d1|+0x067:'96'
@@ -121,42 +112,44 @@ void jump_logic::initialize_logic( )
 }
 
 // STATE[STUB]
-// void survarium::jump_logic::tick()
 void jump_logic::tick( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58dac0]: 1
 	// <0x58dac7>|0x007|+0x00b:'109'
 	// ******
 }
 
 // STATE[STUB]
-// unsigned int survarium::get_jump_animation_index(const survarium::move_direction_enum, const bool, const survarium::jump_animation_parts)
-u32 get_jump_animation_index( move_direction_enum move_direction, bool jump_from_right_leg, jump_animation_parts animation_part )
+u32 get_jump_animation_index(
+	const move_direction_enum		arg_0 /* move_direction_enum move_direction */,
+	const bool						jump_from_right_leg,
+	const jump_animation_parts		arg_2 /* jump_animation_parts animation_part */
+)
 {
 	// CONSTANTS
-	// const get_jump_animation_index::__l2::<unnamed-tag> on_site_jump = 0;
-	// const get_jump_animation_index::__l2::<unnamed-tag> right_from_left_leg = 34;
-	// const get_jump_animation_index::__l2::<unnamed-tag> backward_from_left_leg = 58;
-	// const get_jump_animation_index::__l2::<unnamed-tag> backward_left_from_right_leg = 64;
-	// const get_jump_animation_index::__l2::<unnamed-tag> left_from_left_leg = 82;
-	// const get_jump_animation_index::__l2::<unnamed-tag> forward_from_right_leg = 4;
-	// const get_jump_animation_index::__l2::<unnamed-tag> backward_left_from_left_leg = 70;
-	// const get_jump_animation_index::__l2::<unnamed-tag> left_forward_from_right_leg = 88;
-	// const get_jump_animation_index::__l2::<unnamed-tag> left_from_right_leg = 76;
-	// const get_jump_animation_index::__l2::<unnamed-tag> left_forward_from_left_leg = 94;
-	// const get_jump_animation_index::__l2::<unnamed-tag> backward_from_right_leg = 52;
-	// const get_jump_animation_index::__l2::<unnamed-tag> right_from_right_leg = 28;
-	// const get_jump_animation_index::__l2::<unnamed-tag> animations_per_two_legged_jump_direction = 6;
-	// const get_jump_animation_index::__l2::<unnamed-tag> backward_right_from_right_leg = 40;
-	// const get_jump_animation_index::__l2::<unnamed-tag> forward_right_from_left_leg = 22;
-	// const get_jump_animation_index::__l2::<unnamed-tag> backward_right_from_left_leg = 46;
-	// const get_jump_animation_index::__l2::<unnamed-tag> animations_per_simple_jump_direction = 4;
-	// const get_jump_animation_index::__l2::<unnamed-tag> forward_right_from_right_leg = 16;
-	// const get_jump_animation_index::__l2::<unnamed-tag> forward_from_left_leg = 10;
+	// const get_jump_animation_index::__l2::< unnamed-tag > on_site_jump = 0;
+	// const get_jump_animation_index::__l2::< unnamed-tag > right_from_left_leg = 34;
+	// const get_jump_animation_index::__l2::< unnamed-tag > backward_from_left_leg = 58;
+	// const get_jump_animation_index::__l2::< unnamed-tag > backward_left_from_right_leg = 64;
+	// const get_jump_animation_index::__l2::< unnamed-tag > left_from_left_leg = 82;
+	// const get_jump_animation_index::__l2::< unnamed-tag > forward_from_right_leg = 4;
+	// const get_jump_animation_index::__l2::< unnamed-tag > backward_left_from_left_leg = 70;
+	// const get_jump_animation_index::__l2::< unnamed-tag > left_forward_from_right_leg = 88;
+	// const get_jump_animation_index::__l2::< unnamed-tag > left_from_right_leg = 76;
+	// const get_jump_animation_index::__l2::< unnamed-tag > left_forward_from_left_leg = 94;
+	// const get_jump_animation_index::__l2::< unnamed-tag > backward_from_right_leg = 52;
+	// const get_jump_animation_index::__l2::< unnamed-tag > right_from_right_leg = 28;
+	// const get_jump_animation_index::__l2::< unnamed-tag > animations_per_two_legged_jump_direction = 6;
+	// const get_jump_animation_index::__l2::< unnamed-tag > backward_right_from_right_leg = 40;
+	// const get_jump_animation_index::__l2::< unnamed-tag > forward_right_from_left_leg = 22;
+	// const get_jump_animation_index::__l2::< unnamed-tag > backward_right_from_left_leg = 46;
+	// const get_jump_animation_index::__l2::< unnamed-tag > animations_per_simple_jump_direction = 4;
+	// const get_jump_animation_index::__l2::< unnamed-tag > forward_right_from_right_leg = 16;
+	// const get_jump_animation_index::__l2::< unnamed-tag > forward_from_left_leg = 10;
 	// ******
 
 	// STATICS
-	// static <NoType> 				 = <0xcd33c>;
+	// static < NoType > 				 = <0xcd33c>;
 	// ******
 
 	// OTHER SYMBOLS
@@ -173,7 +166,7 @@ u32 get_jump_animation_index( move_direction_enum move_direction, bool jump_from
 
 	return 0;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xcd280]: 44
 	// <0>
 	// <1>
 	// <2>
@@ -222,90 +215,87 @@ u32 get_jump_animation_index( move_direction_enum move_direction, bool jump_from
 }
 
 // STATE[STUB]
-// vostok::resources::managed_resource_ptr survarium::jump_logic::get_animation(const survarium::jump_animation_parts, const bool) const
-resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts anim_part, bool is_third_view ) const
+resources::managed_resource_ptr jump_logic::get_animation(
+	const jump_animation_parts		arg_0 /* jump_animation_parts anim_part */,
+	const bool						is_third_view
+) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58df30]: 1
 	// <0x58df39>|0x009|+0x079:'162'
 	// ******
 }
 
 // STATE[STUB]
-// char const* survarium::jump_logic::get_animation_caption(const survarium::jump_animation_parts) const
-pcstr jump_logic::get_animation_caption( jump_animation_parts anim_part ) const
+pcstr jump_logic::get_animation_caption(
+	const jump_animation_parts		arg_0 /* jump_animation_parts anim_part */
+) const
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d930]: 1
 	// <0x58d939>|0x009|+0x063:'167'
 	// ******
 }
 
 // STATE[STUB]
-// vostok::resources::managed_resource_ptr survarium::jump_logic::get_move_animation(const bool) const
-resources::managed_resource_ptr jump_logic::get_move_animation( bool is_third_view ) const
+resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_third_view ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58dee0]: 1
 	// <0x58dee9>|0x009|+0x03d:'172'
 	// ******
 }
 
 // STATE[STUB]
-// vostok::resources::managed_resource_ptr survarium::jump_logic::get_move_look_animation(const bool) const
-resources::managed_resource_ptr jump_logic::get_move_look_animation( bool is_third_view ) const
+resources::managed_resource_ptr jump_logic::get_move_look_animation( const bool is_third_view ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58de90]: 1
 	// <0x58de99>|0x009|+0x040:'177'
 	// ******
 }
 
 // STATE[STUB]
-// char const* survarium::jump_logic::get_move_look_caption() const
 pcstr jump_logic::get_move_look_caption( ) const
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d8d0]: 1
 	// <0x58d8d9>|0x009|+0x048:'181'
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::jump_logic::activate()
 void jump_logic::activate( )
 {
 	// CALL SITE INFO
-	// <0x58d89c> -> player_input const& <unknown>() const
+	// <0x58d89c> -> player_input const& < unknown >() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d880]: 2
 	// <0x58d889>|0x009|+0x024:'186'
 	// <0x58d8ad>|0x02d|+0x01c:'187'
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::jump_logic::deactivate()
 void jump_logic::deactivate( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d850]: 1
 	// <0x58d857>|0x007|+0x01c:'192'
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::jump_logic::set_user(survarium::base_player&)
 void jump_logic::set_user( base_player& user )
 {
 	// LOCALS
-	// ai::fsm_state* 				i<1>
+	// ai::fsm_state* 					i<1>
 	// ******
 
 	// CALL SITE INFO
-	// <0x58d83b> -> void <unknown>(base_player&)
+	// <0x58d83b> -> void < unknown >( base_player& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d7f0]: 4
 	// <0x58d7f9>|0x009|+0x009:'197'
 	// <0>
 	// <0x58d802>|0x012|+0x024|[1]:'199'
@@ -314,54 +304,54 @@ void jump_logic::set_user( base_player& user )
 }
 
 // STATE[STUB]
-// bool survarium::jump_logic::landing_predicate() const
 bool jump_logic::landing_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d4f0]: 1
 	// <0x58d4f7>|0x007|+0x002:'205'
 	// ******
 }
 
 // STATE[STUB]
-// stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::jump_logic::selected_animations(vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, const bool) const
-std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
+std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > jump_logic::selected_animations(
+	mutable_buffer&							buffer,
+	weapon_animation_parameters const&		weapon_parameters,
+	const bool								is_third_view
+) const
 {
 	// CALL SITE INFO
-	// <0x58da16> -> std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> <unknown>(mutable_buffer&, const bool, fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&, weapon_animation_parameters const&)
+	// <0x58da16> -> std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > < unknown >( mutable_buffer&, const bool, fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > const&, weapon_animation_parameters const& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d9d0]: 1
 	// <0x58d9d9>|0x009|+0x042:'210'
 	// ******
 }
 
 // STATE[STUB]
-// float survarium::jump_logic::look_time_factor() const
 float jump_logic::look_time_factor( ) const
 {
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d9b0]: 1
 	// <0x58d9b7>|0x007|+0x00a:'215'
 	// ******
 }
 
 // STATE[STUB]
-// bool survarium::jump_logic::does_need_land_and_run() const
 bool jump_logic::does_need_land_and_run( ) const
 {
 	// LOCALS
-	// move_direction_enum 			landing_direction
+	// move_direction_enum 				landing_direction
 	// ******
 
 	// STATICS
-	// static <NoType> 				 = <0x58d7cc>;
+	// static < NoType > 				 = <0x58d7cc>;
 	// ******
 
 	// CALL SITE INFO
-	// <0x58d65c> -> player_input const& <unknown>() const
+	// <0x58d65c> -> player_input const& < unknown >() const
 	// ******
 
 	// OTHER SYMBOLS
@@ -378,7 +368,7 @@ bool jump_logic::does_need_land_and_run( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d640]: 39
 	// <0x58d649>|0x009|+0x021:'220'
 	// <0x58d66a>|0x02a|+0x013:'221'
 	// <0>
@@ -422,12 +412,11 @@ bool jump_logic::does_need_land_and_run( ) const
 }
 
 // STATE[STUB]
-// bool survarium::jump_logic::is_jump_finished() const
 bool jump_logic::is_jump_finished( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d610]: 1
 	// <0x58d619>|0x009|+0x018:'263'
 	// ******
 }

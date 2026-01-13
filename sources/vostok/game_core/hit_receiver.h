@@ -30,21 +30,21 @@ public:
 	virtual						~hit_receiver				( ) { }
 
 	virtual	void				hit							(
-									hit_initiator const*					initiator,
-									collision::bone_collision_data const&	bone_data,
-									pcstr									damage_type,
-									float									amount,
-									float									armor_piercing,
-									bullet*									bullet
+									hit_initiator const* const	initiator,
+									u32	const					bone_index,
+									pcstr						damage_type,
+									float const					amount,
+									float const					armor_piercing,
+									bullet* const				bullet
 								) = 0;
 
 	virtual	void				hit							(
-									hit_initiator const*	initiator,
-									u32						bone_index,
-									pcstr					damage_type,
-									float					amount,
-									float					armor_piercing,
-									bullet*					bullet
+									hit_initiator const* const				initiator,
+									collision::bone_collision_data const&	bone_data,
+									pcstr									damage_type,
+									float const								amount,
+									float const								armor_piercing,
+									bullet*	const							bullet
 								) = 0;
 
 	virtual	float				get_speed					( ) const = 0;

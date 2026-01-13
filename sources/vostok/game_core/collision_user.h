@@ -27,7 +27,7 @@ public:
 	virtual	void						use_victory_item			( victory_item_core* arg_0 ) { /* no source */ }
 	virtual	void						use_victory_items_container	( victory_items_container_core* arg_0 ) { /* no source */ }
 
-	inline	usable_object_user_data*	usable_object_user_data		( ) { /* no source */ }
+	inline	usable_object_user_data*	usable_object_user_data		( ) { return &m_usable_object_user_data; }
 
 	virtual	inventory_holder*			cast_to_inventory_holder	( ) { return NULL; }
 	virtual	inventory_holder const*		cast_to_inventory_holder	( ) const { return NULL; }

@@ -23,7 +23,7 @@ base_project::base_project( ) :
 base_project::~base_project( )
 {
 	if ( m_static_collision_objects )
-		VOSTOK_DELETE_ARRAY_IMPL( g_allocator, m_static_collision_objects ); 
+		VOSTOK_DELETE_ARRAY_IMPL( g_allocator, m_static_collision_objects );
 
 	// FUNCTION BODY
 	// <0x6ff432>|0x000|0x000:'24'
@@ -49,8 +49,8 @@ void base_project::resolve_links( )
 	base_project::resolve_link_object* it = m_objects_to_resolve.begin( );
 	base_project::resolve_link_object* end = m_objects_to_resolve.end( );
 	for ( ; it != end ; ++it )
-		it->object->resolve_links( this, it->config ); 
-	
+		it->object->resolve_links( this, it->config );
+
 	m_objects_registry.clear( );
 
 	// FUNCTION BODY

@@ -13,10 +13,6 @@ class btRigidBody;
 namespace vostok {
 namespace physics {
 
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
-
 class bt_static_rigid_body : public bt_rigid_body_base {
 public:
 
