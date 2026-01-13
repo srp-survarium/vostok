@@ -48,13 +48,13 @@ public:
 	virtual void					draw_object			( btCollisionShape* const shape, btTransform const& transform, btVector3 const& color ) = 0;
 	virtual void					create_test_scene	( )												= 0;
 
-	virtual void					add					( bt_constraint* constraint )									= 0;
-	virtual void					add					( bt_soft_body_rope* body )										= 0;
 	virtual void					add					( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask ) = 0;
+	virtual void					add					( bt_soft_body_rope* body )										= 0;
+	virtual void					add					( bt_constraint* constraint )									= 0;
 
-	virtual void					remove				( bt_constraint* constraint )									= 0;
-	virtual void					remove				( bt_soft_body_rope* body )										= 0;
 	virtual void					remove				( bt_rigid_body_base* body )									= 0;
+	virtual void					remove				( bt_soft_body_rope* body )										= 0;
+	virtual void					remove				( bt_constraint* constraint )									= 0;
 
 	virtual void					move				( bt_rigid_body_base* body, float4x4 const& new_transform )		= 0;
 
