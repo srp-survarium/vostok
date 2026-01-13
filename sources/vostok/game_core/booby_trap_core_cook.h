@@ -29,7 +29,8 @@ private:
 	virtual	u32					get_derived_resource_size	( ) { return sizeof( booby_trap_core ); }
 	// STATE[100%|DONE]
 	virtual	void				query_for_derived_resources	( resources::query_result_for_cook* parent, booby_trap_core* resource, configs::binary_config_ptr config ) {
-		VOSTOK_UNREFERENCED_PARAMETER( config ); finish_query( parent, resource );
+		VOSTOK_UNREFERENCED_PARAMETER( config );
+		finish_query( parent, resource );
 	}
 
 protected:

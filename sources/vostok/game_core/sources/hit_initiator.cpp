@@ -68,5 +68,4 @@ void hit_info::deserialize( network_core::packet_reader& packet )
 	// ******
 }
 
-
 } // namespace survarium

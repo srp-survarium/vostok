@@ -111,10 +111,6 @@ void hittable_object::load( configs::binary_config_value const& cfg_val )
 void hittable_object::set_transform( float4x4 const& transform )
 {
 	m_rigid_body->set_transform( transform );
-
-	// FUNCTION BODY[0x599e00]: 1
-	// <0x599e07>|0x007|+0x017:'66'
-	// ******
 }
 
 // STATE[MISSING]
@@ -132,15 +128,6 @@ void hittable_object::insert( physics::world* world )
 	m_physics_world = world;
 	m_rigid_body->user_data = this;
 	world->add( m_rigid_body, m_group, m_mask );
-
-	// FUNCTION BODY[0x599e80]: 6
-	// <0x599e89>|0x009|+0x00c:'76'
-	// <0x599e95>|0x015|+0x00c:'77'
-	// <0>
-	// <0x599ea1>|0x021|+0x009:'79'
-	// <0x599eaa>|0x02a|+0x00c:'80'
-	// <0x599eb6>|0x036|+0x024:'81'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -151,15 +138,6 @@ void hittable_object::remove( )
 
 	m_physics_world->remove( m_rigid_body );
 	m_physics_world = NULL;
-
-
-	// FUNCTION BODY[0x599e30]: 5
-	// <0x599e39>|0x009|+0x00c:'86'
-	// <0x599e45>|0x015|+0x00c:'87'
-	// <0>
-	// <0x599e51>|0x021|+0x01a:'89'
-	// <0x599e6b>|0x03b|+0x00a:'90'
-	// ******
 }
 
 } // namespace survarium
