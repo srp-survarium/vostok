@@ -51,7 +51,6 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 }
 
 // STATE[STUB]
-// void survarium::breath_vibration_calculator::~breath_vibration_calculator()
 breath_vibration_calculator::~breath_vibration_calculator( )
 {
 	// LOCALS
@@ -65,8 +64,7 @@ breath_vibration_calculator::~breath_vibration_calculator( )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::true_predicate()
+// STATE[UNCHECKED]
 bool true_predicate( )
 {
 	return true;
@@ -77,7 +75,6 @@ bool true_predicate( )
 }
 
 // STATE[STUB]
-// void survarium::breath_vibration_calculator::initialize_logic()
 void breath_vibration_calculator::initialize_logic( )
 {
 	// LOCALS
@@ -104,8 +101,7 @@ void breath_vibration_calculator::initialize_logic( )
 }
 
 // STATE[STUB]
-// void survarium::breath_vibration_calculator::tick(const unsigned int, const float)
-void breath_vibration_calculator::tick( u32 current_time_in_ms, float time_scale )
+void breath_vibration_calculator::tick( u32 const current_time_in_ms, float const time_scale )
 {
 	// LOCALS
 	// float 						dt
@@ -143,10 +139,14 @@ void breath_vibration_calculator::tick( u32 current_time_in_ms, float time_scale
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::breath_vibration_calculator::hold_breath(bool)
+// STATE[UNCHECKED]
 void breath_vibration_calculator::hold_breath( bool value )
 {
+	if ( value != m_is_breath_holded )
+	{
+		m_is_breath_holded = value;
+	}
+
 	// FUNCTION BODY
 	// <0x5934a7>|0x007|+0x00f:'101'
 	// <0>

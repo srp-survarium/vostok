@@ -24,7 +24,7 @@ public:
 			void		load						( configs::binary_config_value const& cfg_val );
 
 			void		set_transform				( float4x4 const& transform );
-	inline	float4x4	get_transform				( ) { /* no source */ }
+			float4x4	get_transform				( );
 
 			void		insert						( physics::world* world );
 			void		remove						( );

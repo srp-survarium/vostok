@@ -58,7 +58,7 @@ public:
 
 			void						get_shapes_centers				( vectora<float3>& centers_results ) const;
 
-	inline	physics::bt_ghost_object*	ghost_object					( ) { /* no source */ }
+	inline	physics::bt_ghost_object*	ghost_object					( ) { return m_ghost_object; }
 			void						destroy_ghost_object			( );
 
 	virtual	void						set_transform					( float4x4 const& transform );

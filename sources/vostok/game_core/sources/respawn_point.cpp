@@ -7,19 +7,26 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::respawn_point_core::respawn_point_core()
-respawn_point_core::respawn_point_core( )
+// STATE[UNCHECKED]
+respawn_point_core::respawn_point_core( ) :
+	point_id				( u32(-1) ),
+	orientation				( 0.0f ),
+	point_priority			( 0 ),
+	team_owner				( team_1 ),
+	selected_for_respawn	( 0 )
 {
-	// FUNCTION BODY
-	// <0x6fe9f0>|0x000|      :'19'	{
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::respawn_point_core::load(vostok::configs::binary_config_value const&)
+// STATE[99.60%|DONE]
 void respawn_point_core::load( configs::binary_config_value const& config )
 {
+	point_id		= (u32)config["point_id"];
+	point_priority	= (u32)config["priority"];
+	position		= config["position"];
+	orientation		= math::create_rotation( (float3)config["rotation"] ).get_angles( math::rotation_zxy ).y;;
+	team_owner		= (game_team_id)(u32)config["team"];
+
+
 	// FUNCTION BODY
 	// <0x6fea71>|0x011|+0x01b:'23'
 	// <0x6fea8c>|0x02c|+0x01b:'24'

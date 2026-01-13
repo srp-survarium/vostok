@@ -3,13 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include  <vostok/game_core/booby_trap_core_cook.h>
+#include <vostok/game_core/booby_trap_core_cook.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::booby_trap_core_cook::booby_trap_core_cook()
-booby_trap_core_cook::booby_trap_core_cook( ) : resources::translate_query_cook( resources::booby_trap_class, reuse_false, use_current_thread_id )
+// STATE[66.69%|DONE]
+booby_trap_core_cook::booby_trap_core_cook( ) :
+	resources::translate_query_cook( resources::booby_trap_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 
@@ -18,18 +18,37 @@ booby_trap_core_cook::booby_trap_core_cook( ) : resources::translate_query_cook(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_core_cook::translate_query(vostok::resources::query_result_for_cook&)
+// STATE[73.88%|PARTIAL]
 void booby_trap_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// pcstr 						model
-	// configs::binary_config_ptr config
-	// resources::request[1] 		requests
-	// fixed_string<260> 			aabb_path
-	// ******
+	configs::binary_config_ptr config;
+	if ( !parent.user_data( )->try_get( config ) )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		parent.finish_query( result_error );
+		return;
+	}
 
-	// FUNCTION BODY
+	ASSERT( UNKNOWN_EXPRESSION );
+	pcstr model = (pcstr)config->get_root( )["data"]["model_armed"];
+
+	fixed_string< 260 > aabb_path;
+	aabb_path.assignf( "resources/models/%s.model/render/export_properties", model );
+
+	resources::request requests[1] = {
+		{ aabb_path.c_str( ), resources::binary_config_class_impl },
+	};
+
+	resources::query_resources(
+		requests,
+		boost::bind( &booby_trap_core_cook::on_subresources_loaded, this, _1, config ),
+		g_allocator,
+		NULL,
+		&parent,
+		assert_on_fail_true
+	);
+
+	// FUNCTION BODY[0x761ee0]: 26
 	// <0x761ef0>|0x010|+0x00b:'22'
 	// <0x761efb>|0x01b|+0x01b:'23'
 	// <0>
@@ -59,22 +78,22 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_core_cook::on_subresources_loaded(vostok::resources::queries_result&, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>)
+// STATE[87.99%|DONE]
 void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
-	// LOCALS
-	// configs::binary_config_ptr aabb
-	// booby_trap_core* 			resource
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// CALL SITE INFO
-	// <0x761e4f> -> booby_trap_core* <unknown>()
-	// <0x761e83> -> void <unknown>(configs::binary_config_value const&)
-	// <0x761ebf> -> void <unknown>(resources::query_result_for_cook*, booby_trap_core*, configs::binary_config_ptr)
-	// ******
+	configs::binary_config_ptr aabb = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
 
-	// FUNCTION BODY
+	booby_trap_core* resource = new_derived_resource( );
+	resource->load( config->get_root( )["data"] ); // sushi@TODO: Understand;
+	resource->load_aabb( aabb->get_root( ) );
+
+	query_for_derived_resources( data.get_parent_query( ), resource, config );
+
+
+	// FUNCTION BODY[0x761e00]: 12
 	// <0x761e0a>|0x00a|+0x00c:'52'
 	// <0x761e16>|0x016|+0x00c:'53'
 	// <0>
@@ -90,15 +109,16 @@ void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& da
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::booby_trap_core_cook::finish_query(vostok::resources::query_result_for_cook*, survarium::booby_trap_core*)
+// STATE[74.00%|DONE]
 void booby_trap_core_cook::finish_query( resources::query_result_for_cook* parent, booby_trap_core* resource )
 {
-	// CALL SITE INFO
-	// <0x761db4> -> u32 <unknown>()
-	// ******
+	parent->set_unmanaged_resource(
+		resources::unmanaged_resource_ptr( resource ),
+		resources::memory_usage_type( resources::nocache_memory, get_derived_resource_size( ) )
+	);
+	parent->finish_query( result_success );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761da0]: 2
 	// <0x761da9>|0x009|+0x036:'68'
 	// <0x761ddf>|0x03f|+0x00c:'69'
 	// ******
