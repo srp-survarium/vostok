@@ -69,9 +69,32 @@
 #include <vostok/game_core/booby_trap_core_cook.h>
 #include <vostok/game_core/booby_trap_set_core_cook.h>
 #include <vostok/game_core/victory_items_container_core.h>
+#include <vostok/game_core/inventory.h>
+#include <vostok/game_core/player_profile.h>
+#include <vostok/game_core/items_dictionary.h>
 
 namespace vostok
 {
+	void use_inventory_2( )
+	{
+		survarium::inventory inventory;
+		survarium::player_profile profile;
+		survarium::items_dictionary items_dictionary;
+		survarium::inventory_item_ptr item_ptr( NULL );
+
+		inventory.set_holder( NULL );
+		inventory.unset_holder( );
+		inventory.set_item( survarium::quick_slot1, item_ptr );
+		inventory.action( survarium::helmet_slot, false );
+
+		inventory.setup_demo_profile( );
+		inventory.setup_from_profile( profile, items_dictionary );
+		inventory.unload_to_profile( profile, items_dictionary );
+
+		inventory.remove( );
+		inventory.set_victory_item( NULL );
+	}
+
 	void use_victory_items_container_core( survarium::victory_items_container_core* victory_items_container_core )
 	{
 		configs::binary_config_value	config;
@@ -607,6 +630,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
 	vostok::use_hittable_object( NULL );

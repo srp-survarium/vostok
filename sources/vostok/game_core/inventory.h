@@ -30,12 +30,14 @@ public:
 			inventory_holder&					holder						( ) { return *m_holder; }
 
 	// STATE[STUB]
+	__declspec( noinline )
 			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot ) { return m_slots[slot].item; }
 	// STATE[STUB]
+	__declspec( noinline )
 	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { return m_slots[slot].item; }
 
 			void								set_victory_item			( victory_item_core* item );
-	inline	victory_item_core*					get_victory_item			( ) { /* no source */ }
+	inline	victory_item_core*					get_victory_item			( ) { return m_victory_item; }
 
 			bool								action						( profile_slot_enum slot_id, bool key_down );
 
