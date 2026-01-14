@@ -187,7 +187,7 @@ public:
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
 			bool								round_is_chambered				( ) const { return m_is_round_chambered; }	// STATE[STUB]
 	inline	bool								chamber_a_round_on_reload		( ) const { /* no source */ }
-	inline	void								load_ammo_on_next_activate		( ) { /* no source */ }
+	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 
 	inline	bool								deserializing					( ) const { /* no source */ }
 	inline	bool								is_active						( ) const { /* no source */ }
@@ -375,6 +375,8 @@ private:
 }; // class weapon_core
 
 STATIC_SIZE_ASSERT(weapon_core, 0x498);
+
+typedef resources::resource_ptr< weapon_core, resources::unmanaged_intrusive_base > weapon_core_ptr;
 
 } // namespace survarium
 
