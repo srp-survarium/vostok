@@ -28,16 +28,19 @@ public:
 public:
 												inventory_item					( inventory_item::action_behaviour_type type );
 	// STATE[STUB]
+	__declspec( noinline )
 	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) { m_inventory = inv; m_slot_id = slot; }
 	// STATE[STUB]
 	__declspec( noinline )
 			inventory&							get_inventory					( ) const { return *m_inventory; }
 	// STATE[STUB]
+	__declspec( noinline )
 			profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }
 	// STATE[STUB]
 	inline	inventory_item::action_behaviour_type const&
 												get_action_behaviuor			( ) const { return m_action_behaviuor; }
 	// STATE[STUB]: sushi@NOTE: Actual impl is at `player_logic_base_state.h`.
+	__declspec( noinline )
 	virtual	void								action							( bool key_down ) { VOSTOK_UNREFERENCED_PARAMETER( key_down ); }
 	virtual	void								remove							( ) { /* no source */ }
 
@@ -45,7 +48,9 @@ public:
 	virtual	void								holder_removed					( ) { /* no source */ }
 
 	// STATE[STUB]
+	__declspec( noinline )
 			void								set_amount						( u16 value ) { m_amount = value; }
+	__declspec( noinline )
 	// STATE[STUB]
 			u16									amount							( ) const { return m_amount; }
 
@@ -56,6 +61,7 @@ public:
 
 	virtual	weapon_core const*					cast_weapon_core				( ) const override { return NULL; }
 	// STATE[STUB]
+	__declspec( noinline )
 	virtual	weapon_core*						cast_weapon_core				( ) override { return NULL; }
 
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
