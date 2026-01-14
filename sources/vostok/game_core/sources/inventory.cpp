@@ -181,14 +181,14 @@ profile_slot_enum item_slots[ITEM_COUNT] = {
 	quick_slot6,
 };
 
-// STATE[UNCHECKED]
+// STATE[36.41%|PARTIAL]
 void inventory::setup_demo_profile( )
 {
 	for ( u32 i = 0 ; i < WEAPON_COUNT ; ++i )
 	{
 		profile_slot_enum current = weapon_slots[i];
 		weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) ); // sushi@MATCH: Problems start here
-		if ( weapon )
+		if ( weapon ) // sushi@MATCH: This check is correct (matches against c_ptr)
 		{
 			weapon->set_amount( 100 );
 			weapon->load_ammo_on_next_activate( );
@@ -199,7 +199,7 @@ void inventory::setup_demo_profile( )
 	{
 		profile_slot_enum current = ammunition_slots[i];
 		inventory_item_ptr& iitem = item_in_slot( current );
-		if ( iitem )
+		if ( iitem ) // sushi@MATCH: This check isn't.
 			iitem->set_amount( 100 );
 	}
 
@@ -237,7 +237,7 @@ void inventory::setup_demo_profile( )
 	// <0x700b25>|0x115|+0x018|[3]:'109'	for ( u32 i = 0 ; i < ITEM_COUNT ; ++i )
 	// <0>
 	// <0x700b3d>|0x12d|+0x00d|[4]:'111'		profile_slot_enum current = ammunition_slots[i];
-	// <0x700b4a>|0x13a|+0x00e:'112'			slot = &profile.slots[current];
+	// <0x700b4a>|0x13a|+0x00e:'112'			inventory_item_ptr& iitem = item_in_slot( current );
 	// <0>
 	// <0x700b58>|0x148|+0x00c:'114'
 	// <0x700b64>|0x154|+0x012:'115'
@@ -356,7 +356,7 @@ void inventory::setup_from_profile( player_profile& profile, items_dictionary co
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[65.84%|PARTIAL]
 void inventory::unload_to_profile( player_profile& profile, items_dictionary const& dict )
 {
 	profile_slot* slot;
