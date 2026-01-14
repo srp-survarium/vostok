@@ -5,10 +5,14 @@
 #include "pch.h"
 #include <vostok/game_core/victory_items_container_core.h>
 
+#include <vostok/game_core/collision_user.h>
+
 namespace survarium {
 
-// STATE[STUB]
-victory_items_container_core::victory_items_container_core( ) : m_victory_items( g_allocator )
+// STATE[UNCHECKED]
+victory_items_container_core::victory_items_container_core( ) :
+	m_victory_items		( g_allocator ),
+	m_owner_team		( team_undefined )
 {
 	// FUNCTION BODY
 	// <0x59dee0>|0x000|+0x06f:'21'	{
@@ -17,10 +21,13 @@ victory_items_container_core::victory_items_container_core( ) : m_victory_items(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_items_container_core::load(vostok::configs::binary_config_value const&)
+// STATE[UNCHECKED]
 void victory_items_container_core::load( configs::binary_config_value const& cfg )
 {
+	usable_object::load( cfg );
+	m_owner_team	= (game_team_id)(u32)cfg["team"];
+	m_container_id	= (u8)cfg["id"];
+
 	// FUNCTION BODY
 	// <0x59df69>|0x009|+0x00c:'27'
 	// <0x59df75>|0x015|+0x01b:'28'
@@ -28,15 +35,14 @@ void victory_items_container_core::load( configs::binary_config_value const& cfg
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::victory_items_container_core::use_initialize(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 bool victory_items_container_core::use_initialize( usable_object_user_data* user )
 {
-	// CALL SITE INFO
-	// <0x59de11> -> void <unknown>(victory_items_container_core*)
-	// ******
+	if ( !m_usable_object_users.empty( ) )
+		return false;
 
-	return false;
+	user->owner->use_victory_items_container( this );
+	return true;
 
 	// FUNCTION BODY
 	// <0x59dde7>|0x007|+0x013:'34'
@@ -48,22 +54,23 @@ bool victory_items_container_core::use_initialize( usable_object_user_data* user
 	// ******
 }
 
-// STATE[STUB]
-// char const* survarium::victory_items_container_core::use_info(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 pcstr victory_items_container_core::use_info( usable_object_user_data* __formal )
 {
-	return NULL;
+	return "";
 
 	// FUNCTION BODY
 	// <0x59ddc7>|0x007|+0x005:'44'
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::victory_items_container_core::use_execute(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 bool victory_items_container_core::use_execute( usable_object_user_data* user )
 {
-	return false;
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	return true;
 
 	// FUNCTION BODY
 	// <0x59de89>|0x009|+0x00c:'49'
@@ -74,35 +81,31 @@ bool victory_items_container_core::use_execute( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::victory_items_container_core::use_finalize(survarium::usable_object_user_data*)
+// STATE[UNCHECKED]
 bool victory_items_container_core::use_finalize( usable_object_user_data* __formal )
 {
-	return false;
+	return true;
 
 	// FUNCTION BODY
 	// <0x59ddb7>|0x007|+0x002:'58'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::victory_items_container_core::put_item(survarium::victory_item_core*)
+// STATE[UNCHECKED]
 void victory_items_container_core::put_item( victory_item_core* item )
 {
+	m_victory_items.push_back( item );
 	// FUNCTION BODY
 	// <0x59deb9>|0x009|+0x01b:'63'
 	// ******
 }
 
-// STATE[STUB]
-// survarium::victory_item_core* survarium::victory_items_container_core::take_item()
+// STATE[UNCHECKED]
 victory_item_core* victory_items_container_core::take_item( )
 {
-	// LOCALS
-	// victory_item_core* 			last_item
-	// ******
-
-	return NULL;
+	victory_item_core* last_item = m_victory_items.back( );
+	m_victory_items.pop_back( );
+	return last_item;
 
 	// FUNCTION BODY
 	// <0x59de29>|0x009|+0x022:'67'

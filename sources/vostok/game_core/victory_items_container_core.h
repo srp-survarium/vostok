@@ -27,9 +27,8 @@ public:
 	virtual	victory_item_core*		take_item						( );
 
 	virtual	game_team_id			team							( ) { return m_owner_team; }
-	inline	bool					empty							( ) { /* no source */ }
-
-	inline	u8						id								( ) { /* no source */ }
+	inline	bool					empty							( ) { return m_victory_items.empty( ); }
+	inline	u8						id								( ) { return m_container_id; }
 
 private:
 	/* 0x0000 */	/* usable_object */
