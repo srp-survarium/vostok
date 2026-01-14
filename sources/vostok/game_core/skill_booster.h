@@ -8,7 +8,7 @@
 namespace survarium {
 
 struct skill_booster {
-	explicit	skill_booster	( );
+	explicit	skill_booster	( ) : id ( 0 ), value ( 0 ) {}
 
 	/* 0x0000 */	u8			id;
 	/* 0x0004 */	float		value;

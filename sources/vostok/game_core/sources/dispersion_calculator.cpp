@@ -19,8 +19,10 @@ void `dynamic atexit destructor for 's_dispersion_enabled_cc''( )
 */
 
 // STATE[STUB]
-// survarium::dispersion_calculator::dispersion_calculator()
-dispersion_calculator::dispersion_calculator( )
+dispersion_calculator::dispersion_calculator( ) :
+	m_weapon				( NULL ),
+	m_shooting_skill_coeff	( 1.0f ),
+	m_aiming_speed_coeff	( 1.0f )
 {
 	// FUNCTION BODY
 	// <0x596920>|0x000|+0x044:'22'	{
@@ -56,19 +58,22 @@ float dispersion_calculator::get_dispersion( ) const
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::dispersion_calculator::set_shooting_skill_coeff(const float)
-void dispersion_calculator::set_shooting_skill_coeff( float shooting_skill_coef )
+// STATE[UNCHECKED]
+void dispersion_calculator::set_shooting_skill_coeff( float const shooting_skill_coef )
 {
+	m_shooting_skill_coeff = shooting_skill_coef;
+
 	// FUNCTION BODY
 	// <0x596787>|0x007|+0x00d:'70'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::dispersion_calculator::set_aiming_speed_coeff(const float)
-void dispersion_calculator::set_aiming_speed_coeff( float aiming_speed_coeff )
+// STATE[UNCHECKED]
+void dispersion_calculator::set_aiming_speed_coeff( float const aiming_speed_coeff )
 {
+	m_aiming_speed_coeff = aiming_speed_coeff;
+	apply_aim_speed( );
+
 	// FUNCTION BODY
 	// <0x596817>|0x007|+0x00d:'75'
 	// <0x596824>|0x014|+0x008:'76'
@@ -76,7 +81,6 @@ void dispersion_calculator::set_aiming_speed_coeff( float aiming_speed_coeff )
 }
 
 // STATE[STUB]
-// void survarium::dispersion_calculator::apply_aim_speed()
 void dispersion_calculator::apply_aim_speed( )
 {
 	// LOCALS
@@ -91,7 +95,6 @@ void dispersion_calculator::apply_aim_speed( )
 }
 
 // STATE[STUB]
-// void survarium::dispersion_calculator::set_weapon(survarium::weapon_core*)
 void dispersion_calculator::set_weapon( weapon_core* weapon )
 {
 	// FUNCTION BODY
@@ -105,36 +108,40 @@ void dispersion_calculator::set_weapon( weapon_core* weapon )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::dispersion_calculator::tick(const survarium::weapon_user_state_enum, const bool, const bool, const unsigned char, const bool, const unsigned int)
+// STATE[UNCHECKED]
 void dispersion_calculator::tick(
-	weapon_user_state_enum		character_state,
-	bool						is_moving,
-	bool						is_aiming,
-	u8							broken_hands_count,
-	bool						using_double_handed_weapon,
-	u32							current_time_in_ms
+	weapon_user_state_enum const	character_state,
+	bool const						is_moving,
+	bool const						is_aiming,
+	u8 const						broken_hands_count,
+	bool const						using_double_handed_weapon,
+	u32	const						current_time_in_ms
 )
 {
+	m_weapon_calculator.tick( current_time_in_ms );
+	m_character_calculator.tick( character_state, is_moving, is_aiming, broken_hands_count, using_double_handed_weapon, current_time_in_ms );
+
 	// FUNCTION BODY
 	// <0x596887>|0x007|+0x00c:'100'
 	// <0x596893>|0x013|+0x027:'101'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::dispersion_calculator::reload()
+// STATE[UNCHECKED]
 void dispersion_calculator::reload( )
 {
+	m_weapon_calculator.reload( );
+
 	// FUNCTION BODY
 	// <0x596867>|0x007|+0x008:'106'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::dispersion_calculator::fire()
+// STATE[UNCHECKED]
 void dispersion_calculator::fire( )
 {
+	m_weapon_calculator.fire( );
+
 	// FUNCTION BODY
 	// <0x596847>|0x007|+0x008:'111'
 	// ******
