@@ -21,30 +21,30 @@ namespace survarium {
 
 struct base_player;
 struct engine;
+class items_cook;
 
 class medkit : public inventory_item {
 public:
 	virtual	void								action						( bool key_down ) override;
 
+private:
 												medkit						( );
 	virtual										~medkit						( );
 
 			void								load						( configs::binary_config_value config );
 
+protected:
 			void								active_tick					( u32 frame_time_ms );
-
 			void								set_active					( bool bactive );
-
 	inline	bool								empty						( ) const { /* no source sushi@TODO */ return false; }
-
 			void								remove_affects				( );
-
 			float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
 													float		amount,
 													float		armor_piercing
 												);
+private:
 	// STATE[STUB]
 	virtual	void								activate					( base_player& user, engine& engine ) override { /* VOSTOK_UNREFERENCED_PARAMETERS( user, engine ); */ }
 	// STATE[STUB]
@@ -81,7 +81,7 @@ public:
 
 	virtual	bool								is_sprinting				( ) const override { /* no source sushi@TODO */ return false; }
 
-public:
+protected:
 	struct affect {
 		/* 0x0000 */	char					body_part_name[16];
 		/* 0x0010 */	hit_affects_type_enum	type;
@@ -103,24 +103,26 @@ public:
 		/* 0x0010 */	float					health_amount;
 	}; // struct item_influence
 
-
+protected:
 			medkit::damage_protection const*	find_damage_protection		( pcstr body_part_name, pcstr hit_type );
 
 private:
 	/* 0x0000 */	/* inventory_item */
-	/* 0x0118 */	medkit::item_influence*			m_influences;
-	/* 0x011c */	u8								m_influences_count;
-	/* 0x0120 */	medkit::affect*					m_affects;
-	/* 0x0124 */	u8								m_affects_count;
-	/* 0x0128 */	medkit::damage_protection*		m_damage_protect;
-	/* 0x012c */	u8								m_damage_protect_count;
-	/* 0x0130 */	u32								m_config_activity_time_ms;
-	/* 0x0134 */	u32								m_config_delay_ms;
-	/* 0x0138 */	scheduler::identifier			m_scheduler_identifier;
-	/* 0x013c */	u32								m_activity_time_ms;
-	/* 0x0140 */	u32								m_delay_ms;
-	/* 0x0144 */	bool							m_active;
-	/* 0x0148 */	float							m_add_stamina_regen;
+	/* 0x0118 */	item_influence*			m_influences;
+	/* 0x011c */	u8						m_influences_count;
+	/* 0x0120 */	affect*					m_affects;
+	/* 0x0124 */	u8						m_affects_count;
+	/* 0x0128 */	damage_protection*		m_damage_protect;
+	/* 0x012c */	u8						m_damage_protect_count;
+	/* 0x0130 */	u32						m_config_activity_time_ms;
+	/* 0x0134 */	u32						m_config_delay_ms;
+	/* 0x0138 */	scheduler::identifier	m_scheduler_identifier;
+	/* 0x013c */	u32						m_activity_time_ms;
+	/* 0x0140 */	u32						m_delay_ms;
+	/* 0x0144 */	bool					m_active;
+	/* 0x0148 */	float					m_add_stamina_regen;
+private:
+	friend class items_cook;
 }; // class medkit
 
 STATIC_SIZE_ASSERT(medkit, 0x150);
