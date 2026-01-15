@@ -6,6 +6,8 @@
 #include <vostok/game_core/items_cook.h>
 
 #include <vostok/game_core/medkit.h>
+#include <vostok/game_core/oxygen_tank.h>
+#include <vostok/game_core/artefact_lifebone_core.h>
 
 namespace survarium {
 
@@ -104,21 +106,49 @@ void items_cook::create_item_and_finish_query( item_types_enum item_type, config
 		}
 
 		case item_type_oxygen_tank:
-	// oxygen_tank* 				resource<1>
-		break;
+		{
+			oxygen_tank* resource = VOSTOK_NEW_IMPL( g_allocator, oxygen_tank );
+			resource->load( config->get_root( )["data"] );
+			parent->set_unmanaged_resource( resource, resources::memory_usage_type( resources::nocache_memory, sizeof( oxygen_tank ) ) );
+			result = result_success;
+			break;
+		}
+
 		case item_type_base_trap:
-		break;
+		{
+			ASSERT( UNKNOWN_EXPRESSION );
+			result = result_error;
+			break;
+		}
+
 		case item_type_artefact_lifebone:
-	// artefact_lifebone_core* 		resource<1>
-		break;
+		{
+			artefact_lifebone_core* resource = VOSTOK_NEW_IMPL( g_allocator, artefact_lifebone_core );
+			resource->load_core( config->get_root( )["data"] );
+			if ( item_dict_id )
+				resource->set_dict_id( item_dict_id );
+
+			parent->set_unmanaged_resource( resource, resources::memory_usage_type( resources::nocache_memory, sizeof( artefact_lifebone_core ) ) );
+			result = result_success;
+			break;
+		}
+
 		case item_type_foo:
+			result = result_error;
 		break;
-		default:
-		break;
+
+		default: NODEFAULT( );
 	}
 
 	parent->finish_query( result );
 
+	// FUNCTION BODY
+	// <0x7616fc>|0x00c|+0x007:'54'
+	// <0>
+	// <0x761703>|0x013|+0x006:'56'
+	// <0x761709>|0x019|+0x00c:'57'
+	// <0x761715>|0x025|+0x013:'58'
+	// <0>
 	// <0x761728>|0x038|+0x01a:'60'	switch ( item_type )
 	// <0>							{
 	// <1>								case item_type_base_medkit:
@@ -133,45 +163,36 @@ void items_cook::create_item_and_finish_query( item_types_enum item_type, config
 	// <0x76182d>|0x13d|+0x005:'71'
 	// <0>
 	// <1>
-	// <2>
-	// <0x761832>|0x142|+0x05a|[1]:'75'
-	// <0x76188c>|0x19c|+0x048:'76'
-	// <0x7618d4>|0x1e4|+0x033:'77'
-	// <0x761907>|0x217|+0x007:'78'
-	// <0x76190e>|0x21e|+0x005:'79'
-	// <0>
+	// <2>							{
+	// <0x761832>|0x142|+0x05a|[1]:'75'	oxygen_tank* resource = VOSTOK_NEW_IMPL( g_allocator, oxygen_tank );
+	// <0x76188c>|0x19c|+0x048:'76'		resource->load( config->get_root( )["data"] );
+	// <0x7618d4>|0x1e4|+0x033:'77'		parent->set_unmanaged_resource( resource, re
+	// <0x761907>|0x217|+0x007:'78'		result = result_success;
+	// <0x76190e>|0x21e|+0x005:'79'		break;
+	// <0>							}
 	// <1>
 	// <2>
-	// <0x761913>|0x223|+0x00c:'83'
+	// <0x761913>|0x223|+0x00c:'83'		ASSERT( UNKNOWN_EXPRESSION );
 	// <0x76191f>|0x22f|+0x007:'84'
-	// <0x761926>|0x236|+0x005:'85'
+	// <0x761926>|0x236|+0x005:'85'		break;
 	// <0>
 	// <1>
-	// <0x76192b>|0x23b|+0x05a|[1]:'88'
-	// <0x761985>|0x295|+0x048:'89'
-	// <0x7619cd>|0x2dd|+0x008:'90'
-	// <0x7619d5>|0x2e5|+0x016:'91'
+	// <0x76192b>|0x23b|+0x05a|[1]:'88'	artefact_lifebone_core* resource = VOSTO
+	// <0x761985>|0x295|+0x048:'89'		resource->load( config->get_root( )["data"] );
+	// <0x7619cd>|0x2dd|+0x008:'90'		if ( item_dict_id )
+	// <0x7619d5>|0x2e5|+0x016:'91'			resource->set_dict_id( item_dict_id );
 	// <0>
-	// <0x7619eb>|0x2fb|+0x033:'93'
-	// <0x761a1e>|0x32e|+0x007:'94'
-	// <0x761a25>|0x335|+0x002:'95'
+	// <0x7619eb>|0x2fb|+0x033:'93'		parent->set_unmanaged_resource( resource,
+	// <0x761a1e>|0x32e|+0x007:'94'		result = result_success;
+	// <0x761a25>|0x335|+0x002:'95'		break;
 	// <0>
 	// <1>
 	// <0x761a27>|0x337|+0x007:'98'
 	// <0>
-	// <1>
+	// <1>							}
 	// <0x761a2e>|0x33e|+0x00e:'101'
 	// <0>
 	// ******
-
-
-	// FUNCTION BODY
-	// <0x7616fc>|0x00c|+0x007:'54'
-	// <0>
-	// <0x761703>|0x013|+0x006:'56'
-	// <0x761709>|0x019|+0x00c:'57'
-	// <0x761715>|0x025|+0x013:'58'
-	// <0>
 }
 
 } // namespace survarium

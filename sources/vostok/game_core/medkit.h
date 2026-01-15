@@ -121,6 +121,7 @@ private:
 	/* 0x0140 */	u32						m_delay_ms;
 	/* 0x0144 */	bool					m_active;
 	/* 0x0148 */	float					m_add_stamina_regen;
+
 private:
 	friend class items_cook;
 }; // class medkit

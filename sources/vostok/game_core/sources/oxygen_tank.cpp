@@ -7,8 +7,13 @@
 
 namespace survarium {
 
-// STATE[STUB]
-oxygen_tank::oxygen_tank( ) : inventory_item( use_silent )
+// STATE[UNCHECKED]
+oxygen_tank::oxygen_tank( ) :
+	inventory_item	( use_silent ),
+	m_active		( false ),
+	m_amount_ms		( 0 ),
+	m_max_amount	( 0 ),
+	m_influences	( NULL ) // sushi@NOTE: Target forgot m_influences_count
 {
 }
 

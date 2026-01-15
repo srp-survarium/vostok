@@ -11,8 +11,10 @@
 
 namespace survarium {
 
+class items_cook;
+
 class oxygen_tank : public inventory_item {
-public:
+private:
 	virtual	void								action						( bool key_down ) override;
 	virtual	bool								get_item_props				( inventory_item_props& props ) override;
 
@@ -23,10 +25,9 @@ public:
 
 	inline	bool								empty						( ) const { /* no source */ }
 
+protected:
 			void								set_active					( bool bactive );
-
 			void								active_tick					( u32 frame_time_ms );
-
 			float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
@@ -34,6 +35,7 @@ public:
 													float		armor_piercing
 												);
 
+private:
 	// STATE[STUB]
 	virtual	void								activate					( base_player& user, engine& engine ) override { }
 	// STATE[STUB]
@@ -43,7 +45,7 @@ public:
 
 	virtual	void								tick						( ) override { /* no source */ }
 
-	virtual	bool								is_ready_to_be_deactivated	( ) const override { /* no source */ }
+	virtual	bool								is_ready_to_be_deactivated	( ) const override { return false; /* no source */ }
 	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
@@ -64,23 +66,19 @@ public:
 	// STATE[STUB]
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override { /* <0xccdb0> */ }
 
-	virtual	bool								is_sprinting				( ) const override { /* no source */ }
+	virtual	bool								is_sprinting				( ) const override { return false; /* no source */ }
 
-private:
+protected:
 	struct item_influence {
-	public:
 		inline	item_influence	( ) { /* no source */ }
 		inline	~item_influence	( ) { /* no source */ }
 
-
-	public:
 		/* 0x0000 */	damage_protector	protector;
 		/* 0x0050 */	char				body_part_name[16];
 		/* 0x0060 */	char				hit_type[16];
 		/* 0x0070 */	float				hit_coeff;
 		/* 0x0074 */	float				threshold;
 	}; // struct oxygen_tank::item_influence
-
 
 			oxygen_tank::item_influence const*	find_influence				( pcstr body_part_name, pcstr hit_type );
 
@@ -92,6 +90,9 @@ private:
 	/* 0x0124 */	u32								m_max_amount;
 	/* 0x0128 */	oxygen_tank::item_influence*	m_influences;
 	/* 0x012c */	u8								m_influences_count;
+
+private:
+	friend class items_cook;
 }; // class oxygen_tank
 
 STATIC_SIZE_ASSERT(oxygen_tank, 0x130);
