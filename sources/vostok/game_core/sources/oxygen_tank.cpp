@@ -13,19 +13,18 @@ oxygen_tank::oxygen_tank( ) : inventory_item( use_silent )
 }
 
 // STATE[STUB]
-// void survarium::oxygen_tank::~oxygen_tank()
-oxygen_tank::~oxygen_tank( )
+ oxygen_tank::~oxygen_tank( )
 {
 	// LOCALS
-	// u32 							i<1>
-	// oxygen_tank::item_influence& infl<2>
+	// u32 								i<1>
+	// oxygen_tank::item_influence& 	infl<2>
 	// ******
 
 	// CALL SITE INFO
-	// <0x6fa4d1> -> void* <unknown>(u32)
+	// <0x6fa4d1> -> void* < unknown >( u32 )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa480]: 6
 	// <0x6fa492>|0x012|+0x021|[1]:'24'
 	// <0>
 	// <0x6fa4b3>|0x033|+0x012|[2]:'26'
@@ -36,20 +35,19 @@ oxygen_tank::~oxygen_tank( )
 }
 
 // STATE[STUB]
-// void survarium::oxygen_tank::load(vostok::configs::binary_config_value)
 void oxygen_tank::load( configs::binary_config_value config )
 {
 	// LOCALS
-	// configs::binary_config_value influences
-	// u32 							i<1>
-	// oxygen_tank::item_influence& infl<2>
+	// configs::binary_config_value 	influences
+	// u32 								i<1>
+	// oxygen_tank::item_influence& 	infl<2>
 	// ******
 
 	// SKIPPED BLOCKS
 	// <0x6fa2b1><2>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa1c0]: 21
 	// <0x6fa1d0>|0x010|+0x034:'34'
 	// <0>
 	// <0x6fa204>|0x044|+0x018:'36'
@@ -75,10 +73,9 @@ void oxygen_tank::load( configs::binary_config_value config )
 }
 
 // STATE[STUB]
-// void survarium::oxygen_tank::action(bool)
 void oxygen_tank::action( bool key_down )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa080]: 5
 	// <0x6fa087>|0x007|+0x008:'59'
 	// <0x6fa08f>|0x00f|+0x002:'60'
 	// <0>
@@ -88,20 +85,19 @@ void oxygen_tank::action( bool key_down )
 }
 
 // STATE[STUB]
-// void survarium::oxygen_tank::set_active(bool)
 void oxygen_tank::set_active( bool bactive )
 {
 	// LOCALS
-	// u32 							i<1>
+	// u32 								i<1>
 	// oxygen_tank::item_influence const& infl<2>
 	// ******
 
 	// CALL SITE INFO
-	// <0x6f9f60> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// <0x6f9fb2> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
+	// <0x6f9f60> -> damage_model_ptr const& < unknown >() const
+	// <0x6f9fb2> -> damage_model_ptr const& < unknown >() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9dc0]: 17
 	// <0x6f9dd7>|0x017|+0x00f:'68'
 	// <0>
 	// <0x6f9de6>|0x026|+0x015:'70'
@@ -123,10 +119,9 @@ void oxygen_tank::set_active( bool bactive )
 }
 
 // STATE[STUB]
-// void survarium::oxygen_tank::active_tick(const unsigned int)
-void oxygen_tank::active_tick( u32 frame_time_ms )
+void oxygen_tank::active_tick( const u32 frame_time_ms )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa0d0]: 7
 	// <0x6fa0e1>|0x011|+0x00c:'89'
 	// <0>
 	// <0x6fa0ed>|0x01d|+0x025:'91'
@@ -138,17 +133,16 @@ void oxygen_tank::active_tick( u32 frame_time_ms )
 }
 
 // STATE[STUB]
-// survarium::oxygen_tank::item_influence const* survarium::oxygen_tank::find_influence(char const*, char const*)
 oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_name, pcstr hit_type )
 {
 	// LOCALS
-	// u32 							i<1>
+	// u32 								i<1>
 	// oxygen_tank::item_influence const& infl<2>
 	// ******
 
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9cf0]: 8
 	// <0x6f9cf9>|0x009|+0x021|[1]:'100'
 	// <0>
 	// <0x6f9d1a>|0x02a|+0x012|[2]:'102'
@@ -161,12 +155,11 @@ oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_
 }
 
 // STATE[STUB]
-// float survarium::oxygen_tank::reduce_damage(char const*, char const*, const float, const float)
 float oxygen_tank::reduce_damage(
-	pcstr		body_part_name,
-	pcstr		damage_type,
-	float		amount,
-	float		armor_piercing
+	pcstr			body_part_name,
+	pcstr			damage_type,
+	const float		amount,
+	const float		armor_piercing
 )
 {
 	// LOCALS
@@ -175,7 +168,7 @@ float oxygen_tank::reduce_damage(
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9d70]: 11
 	// <0>
 	// <1>
 	// <0x6f9d79>|0x009|+0x013:'117'
@@ -191,12 +184,11 @@ float oxygen_tank::reduce_damage(
 }
 
 // STATE[STUB]
-// bool survarium::oxygen_tank::get_item_props(survarium::inventory_item_props&)
 bool oxygen_tank::get_item_props( inventory_item_props& props )
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9c60]: 7
 	// <0x6f9c69>|0x009|+0x00c:'130'
 	// <0>
 	// <0x6f9c75>|0x015|+0x00f:'132'
@@ -206,5 +198,12 @@ bool oxygen_tank::get_item_props( inventory_item_props& props )
 	// <0x6f9cd9>|0x079|+0x009:'136'
 	// ******
 }
+
+	// TYPEDEFS
+	// typedef
+	// 	survarium::scheduler::record*
+	// 	iterator_type;
+
+	// ******
 
 } // namespace survarium
