@@ -14,16 +14,17 @@ namespace survarium {
 class items_cook;
 
 class oxygen_tank : public inventory_item {
-private:
+public:
 	virtual	void								action						( bool key_down ) override;
 	virtual	bool								get_item_props				( inventory_item_props& props ) override;
 
+private:
 												oxygen_tank					( );
 	virtual										~oxygen_tank				( );
 
 			void								load						( configs::binary_config_value config );
 
-	inline	bool								empty						( ) const { /* no source */ }
+	inline	bool								empty						( ) const { return !m_amount_ms; }
 
 protected:
 			void								set_active					( bool bactive );
@@ -84,12 +85,12 @@ protected:
 
 private:
 	/* 0x0000 */	/* inventory_item */
-	/* 0x0118 */	bool							m_active;
-	/* 0x011c */	scheduler::identifier			m_scheduler_identifier;
-	/* 0x0120 */	u32								m_amount_ms;
-	/* 0x0124 */	u32								m_max_amount;
-	/* 0x0128 */	oxygen_tank::item_influence*	m_influences;
-	/* 0x012c */	u8								m_influences_count;
+	/* 0x0118 */	bool					m_active;
+	/* 0x011c */	scheduler::identifier	m_scheduler_identifier;
+	/* 0x0120 */	u32						m_amount_ms;
+	/* 0x0124 */	u32						m_max_amount;
+	/* 0x0128 */	item_influence*			m_influences;
+	/* 0x012c */	u8						m_influences_count;
 
 private:
 	friend class items_cook;

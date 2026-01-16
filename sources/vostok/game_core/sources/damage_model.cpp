@@ -13,15 +13,13 @@
 
 namespace survarium {
 
-// STATE[UNVERIFIED]
+// STATE[97.55%|DONE]
 damage_model::damage_model( affects_applying_type_enum affects_applying_type ) :
-	vostok::resources::unmanaged_resource	( 1 ),
-	m_affect_subscriptions					( ),
 	m_affects_applying_type					( affects_applying_type ),
 	m_last_tick_time_in_ms					( 0 ),
 	m_last_hit_initiator					( 255 )
 {
-	m_broken_legs_count[0] = 0;	// <0x6ffff4>|0x144|+0x00d:'22'
+	m_broken_legs_count[0] = 0;
 	m_broken_legs_count[1] = 0;
 
 	m_broken_hands_count[0] = 0;
@@ -34,10 +32,10 @@ damage_model::damage_model( affects_applying_type_enum affects_applying_type ) :
 	subscribe_on_affect( affects_type_hand_damage, &m_hand_damaged_subscriber );
 }
 
-// STATE[UNVERIFIED]
+// STATE[83.38%|DONE]: Difference in compiler generated code.
 damage_model::~damage_model( )
 {
-	while ( booster_damage_protector* p = m_damage_protectors.pop_front( ) )	// <0x6ffde3>|0x013|+0x017|[1]:'37'
+	while ( booster_damage_protector* p = m_damage_protectors.pop_front( ) )
 		VOSTOK_DELETE_IMPL( g_allocator, p );
 
 	unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
@@ -163,7 +161,7 @@ bool damage_model::hit_body_part(
 // STATE[100%|DONE]
 void damage_model::apply_med_kit( pcstr part_name, float amount )
 {
-	body_part_parameters* part = get_body_part( part_name );	// <0x6ff8e9>|0x009|+0x00f:'169'
+	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->increase_health( amount );
 }
@@ -266,7 +264,7 @@ public:
 // STATE[100%|DONE]
 void damage_model::reset( )
 {
-	m_last_hit_initiator = u8(-1);	// <0x6ff589>|0x009|+0x00a:'322'
+	m_last_hit_initiator = u8(-1);
 
 	m_broken_legs_count[0] = 0;
 	m_broken_legs_count[1] = 0;
@@ -280,7 +278,7 @@ void damage_model::reset( )
 // STATE[100%|DONE]
 void damage_model::apply_affect( pcstr part_name, hit_affects_type_enum affect, affect_event_type_enum event_type )
 {
-	body_part_parameters* part = get_body_part( part_name );	// <0x6ffaa9>|0x009|+0x00f:'335'
+	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->apply_affect_by_force( affect, event_type, m_last_tick_time_in_ms );
 }
@@ -288,7 +286,7 @@ void damage_model::apply_affect( pcstr part_name, hit_affects_type_enum affect, 
 // STATE[100%|DONE]
 u8 damage_model::get_total_health( )
 {
-	u8 result_value = 100;	// <0x6ff529>|0x009|+0x004:'342'
+	u8 result_value = 100;
 
 	for ( body_part_parameters* it_body_part = m_body_parts.front( ) ; it_body_part ; it_body_part = m_body_parts.get_next_of_object( it_body_part ) )
 	{
@@ -301,7 +299,7 @@ u8 damage_model::get_total_health( )
 // STATE[100%|DONE]
 void damage_model::cancel_affect( pcstr part_name, hit_affects_type_enum affect )
 {
-	body_part_parameters* part = get_body_part( part_name );	// <0x6ffa69>|0x009|+0x00f:'354'
+	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->cancel_affect_by_force( affect );
 }
@@ -309,7 +307,7 @@ void damage_model::cancel_affect( pcstr part_name, hit_affects_type_enum affect 
 // STATE[100%|DONE]
 void damage_model::register_body_part_damage_protector( pcstr part_name, damage_protector* protector )
 {
-	body_part_parameters* part = get_body_part( part_name );	// <0x6ff7b9>|0x009|+0x00f:'375'
+	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->add_damage_protector( protector );
 }
@@ -317,7 +315,7 @@ void damage_model::register_body_part_damage_protector( pcstr part_name, damage_
 // STATE[100%|DONE]
 void damage_model::unregister_body_part_damage_protector( pcstr part_name, damage_protector* protector )
 {
-	body_part_parameters* part = get_body_part( part_name );	// <0x6ff779>|0x009|+0x00f:'382'
+	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->remove_damage_protector( protector );
 }
@@ -325,7 +323,7 @@ void damage_model::unregister_body_part_damage_protector( pcstr part_name, damag
 // STATE[92.21%|DONE]
 void damage_model::add_damage_protector( pcstr damage_type, float reduce, float absorb )
 {
-	booster_damage_protector* protector = m_damage_protectors.find_if(	// <0x6ffcf0>|0x010|+0x028:'389'
+	booster_damage_protector* protector = m_damage_protectors.find_if(
 		find_by_damage_type_predicate( damage_type ) );
 	if ( protector )
 	{
@@ -333,7 +331,7 @@ void damage_model::add_damage_protector( pcstr damage_type, float reduce, float 
 		protector->m_absorb += absorb;
 	}
 	else
-	{	// Maybe different alloc is needed? vostok::memory::doug_lea_allocator::malloc_impl(survarium::g_allocator)
+	{
 		protector = VOSTOK_NEW_IMPL( g_allocator, booster_damage_protector )( damage_type, reduce, absorb );
 		m_damage_protectors.push_back( protector );
 	}
@@ -342,7 +340,7 @@ void damage_model::add_damage_protector( pcstr damage_type, float reduce, float 
 // STATE[98.95%|DONE]
 void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
 {
-	if ( affect == affects_type_leg_damage && strings::equal( "left_leg", bodypart ) )	// <0x6ff669>|0x009|+0x01a:'405'
+	if ( affect == affects_type_leg_damage && strings::equal( "left_leg", bodypart ) )
 	{
 		m_broken_legs_count[0] = ( type == affect_applying ) ? 1 : 0;
 	}

@@ -5,9 +5,12 @@
 #include "pch.h"
 #include <vostok/game_core/oxygen_tank.h>
 
+#include <vostok/game_core/inventory_item_props.h>
+#include <vostok/game_core/inventory_holder.h>
+
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 oxygen_tank::oxygen_tank( ) :
 	inventory_item	( use_silent ),
 	m_active		( false ),
@@ -17,17 +20,15 @@ oxygen_tank::oxygen_tank( ) :
 {
 }
 
-// STATE[STUB]
+// STATE[UNCHECKED]
  oxygen_tank::~oxygen_tank( )
-{
-	// LOCALS
-	// u32 								i<1>
-	// oxygen_tank::item_influence& 	infl<2>
-	// ******
-
-	// CALL SITE INFO
-	// <0x6fa4d1> -> void* < unknown >( u32 )
-	// ******
+{	// sushi@NOTE: No check that it wasn't initialized, but this is fine
+	for ( u32 i = 0 ; i < m_influences_count ; ++i )
+	{
+		item_influence& infl = m_influences[i];
+		infl.~item_influence( );
+	}
+	VOSTOK_DELETE_IMPL( g_allocator, m_influences );
 
 	// FUNCTION BODY[0x6fa480]: 6
 	// <0x6fa492>|0x012|+0x021|[1]:'24'
@@ -39,36 +40,46 @@ oxygen_tank::oxygen_tank( ) :
 	// ******
 }
 
-// STATE[STUB]
+// STATE[91.94%|DONE]: Registers differ because of LTCG. Seems like that's it
 void oxygen_tank::load( configs::binary_config_value config )
 {
-	// LOCALS
-	// configs::binary_config_value 	influences
-	// u32 								i<1>
-	// oxygen_tank::item_influence& 	infl<2>
-	// ******
+	m_amount_ms = math::floor( (float)config["amount_time_sec"] * 1000.f );
 
-	// SKIPPED BLOCKS
-	// <0x6fa2b1><2>
-	// ******
+	m_max_amount = m_amount_ms;
+
+	configs::binary_config_value influences = config["influences"];
+
+	m_influences_count = (u8)influences.size( );
+	m_influences = (item_influence*)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( item_influence ) * m_influences_count, "oxygen_tank_influences" );
+
+	for ( u32 i = 0 ; i < m_influences_count ; ++i )
+	{
+		item_influence& infl = m_influences[i];
+		new ( &infl ) damage_protector( );
+		infl.protector.reduce_damage_functor = boost::bind( &oxygen_tank::reduce_damage, this, _1, _2, _3, _4 );
+		strings::copy( infl.body_part_name, 0x10, influences[i]["body_part"] );
+		strings::copy( infl.hit_type,		0x10, influences[i]["hit_type"] );
+		infl.hit_coeff = (float)influences[i]["hit_coeff"];
+		infl.threshold = (float)influences[i]["threshold"];
+	}
 
 	// FUNCTION BODY[0x6fa1c0]: 21
 	// <0x6fa1d0>|0x010|+0x034:'34'
 	// <0>
 	// <0x6fa204>|0x044|+0x018:'36'
 	// <0>
-	// <0x6fa21c>|0x05c|+0x030:'38'
+	// <0x6fa21c>|0x05c|+0x030:'38'	configs::binary_config_value influences
 	// <0>
 	// <0x6fa24c>|0x08c|+0x014:'40'
-	// <0x6fa260>|0x0a0|+0x02f:'41'
+	// <0x6fa260>|0x0a0|+0x02f:'41'	m_influences = VOSTOK_M
 	// <0>
 	// <1>
 	// <0x6fa28f>|0x0cf|+0x028|[1]:'44'
 	// <0>
-	// <0x6fa2b7>|0x0f7|+0x015:'46'
+	// <0x6fa2b7>|0x0f7|+0x015:'46'		item_influence& infl = m_influences[i];
 	// <0x6fa2cc>|0x10c|+0x031:'47'
-	// <0x6fa2fd>|0x13d|+0x0bb:'48'
-	// <0x6fa3b8>|0x1f8|+0x038:'49'
+	// <0x6fa2fd>|0x13d|+0x0bb:'48'		infl.protector.reduce_damage_functor
+	// <0x6fa3b8>|0x1f8|+0x038:'49'		strings::copy
 	// <0x6fa3f0>|0x230|+0x038:'50'
 	// <0x6fa428>|0x268|+0x024:'51'
 	// <0x6fa44c>|0x28c|+0x029:'52'
@@ -77,30 +88,49 @@ void oxygen_tank::load( configs::binary_config_value config )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void oxygen_tank::action( bool key_down )
 {
-	// FUNCTION BODY[0x6fa080]: 5
-	// <0x6fa087>|0x007|+0x008:'59'
-	// <0x6fa08f>|0x00f|+0x002:'60'
-	// <0>
-	// <0x6fa091>|0x011|+0x016:'62'
-	// <0x6fa0a7>|0x027|+0x01b:'63'
-	// ******
+	if ( !key_down )
+		return;
+
+	if ( !empty( ) )
+		set_active( !m_active );
 }
 
-// STATE[STUB]
+// STATE[50.42%|PARTIAL]. holder( ).scheduler( )
 void oxygen_tank::set_active( bool bactive )
 {
-	// LOCALS
-	// u32 								i<1>
-	// oxygen_tank::item_influence const& infl<2>
-	// ******
+	m_active = bactive;
 
-	// CALL SITE INFO
-	// <0x6f9f60> -> damage_model_ptr const& < unknown >() const
-	// <0x6f9fb2> -> damage_model_ptr const& < unknown >() const
-	// ******
+	if ( m_active )
+		m_inventory->holder( ).scheduler( ).register_for_update(
+			&m_scheduler_identifier,
+			boost::bind( &oxygen_tank::active_tick, this, _1 ),
+			true,
+			100,
+			1,
+			0
+		);
+	else
+		m_inventory->holder( ).scheduler( ).unregister( &m_scheduler_identifier );
+
+	for ( u32 i = 0 ; i < m_influences_count ; ++i )
+	{
+		item_influence /*const*/& infl = m_influences[i]; // sushi@TODO
+		if ( m_active )
+			m_inventory->holder( ).damage_model( )->register_body_part_damage_protector(
+				infl.body_part_name,
+				&infl.protector
+			);
+		else
+			m_inventory->holder( ).damage_model( )->unregister_body_part_damage_protector(
+				infl.body_part_name,
+				&infl.protector
+			);
+	}
+
+	LOG_INFO( "Oxygen Tank switched to [%s]. amount= %dms" );
 
 	// FUNCTION BODY[0x6f9dc0]: 17
 	// <0x6f9dd7>|0x017|+0x00f:'68'
@@ -114,18 +144,26 @@ void oxygen_tank::set_active( bool bactive )
 	// <0>
 	// <0x6f9ef8>|0x138|+0x015|[2]:'77'
 	// <0x6f9f0d>|0x14d|+0x011:'78'
-	// <0x6f9f1e>|0x15e|+0x050:'79'
-	// <0x6f9f6e>|0x1ae|+0x002:'80'
-	// <0x6f9f70>|0x1b0|+0x050:'81'
+	// <0x6f9f1e>|0x15e|+0x050:'79'			m_inventory->h
+	// <0x6f9f6e>|0x1ae|+0x002:'80'		else
+	// <0x6f9f70>|0x1b0|+0x050:'81'			m_inventory->h
 	// <0x6f9fc0>|0x200|+0x005:'82'
 	// <0>
 	// <0x6f9fc5>|0x205|+0x0a8:'84'
 	// ******
 }
 
-// STATE[STUB]
+// STATE[92.30%|PARTIAL]: Logging, as always
 void oxygen_tank::active_tick( const u32 frame_time_ms )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	m_amount_ms -= math::min( m_amount_ms, frame_time_ms );
+	LOG_INFO( "amount is: %dms", m_amount_ms );
+
+	if ( empty( ) )
+		set_active( false );
+
 	// FUNCTION BODY[0x6fa0d0]: 7
 	// <0x6fa0e1>|0x011|+0x00c:'89'
 	// <0>
@@ -137,13 +175,16 @@ void oxygen_tank::active_tick( const u32 frame_time_ms )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[99.90%|DONE]
 oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_name, pcstr hit_type )
 {
-	// LOCALS
-	// u32 								i<1>
-	// oxygen_tank::item_influence const& infl<2>
-	// ******
+	for ( u32 i = 0 ; i < m_influences_count ; ++i )
+	{
+		item_influence const& infl = m_influences[i];
+		if ( strings::equal( infl.body_part_name, body_part_name )
+			&& strings::equal( infl.hit_type, hit_type ) )
+			return &infl;
+	}
 
 	return NULL;
 
@@ -159,7 +200,7 @@ oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 float oxygen_tank::reduce_damage(
 	pcstr			body_part_name,
 	pcstr			damage_type,
@@ -167,48 +208,27 @@ float oxygen_tank::reduce_damage(
 	const float		armor_piercing
 )
 {
-	// LOCALS
-	// oxygen_tank::item_influence const* infl
-	// ******
+	item_influence const* infl = find_influence( body_part_name, damage_type );
 
-	return 0.0f;
+	if ( !infl )
+		return amount;
 
-	// FUNCTION BODY[0x6f9d70]: 11
-	// <0>
-	// <1>
-	// <0x6f9d79>|0x009|+0x013:'117'
-	// <0>
-	// <0x6f9d8c>|0x01c|+0x006:'119'
-	// <0x6f9d92>|0x022|+0x005:'120'
-	// <0>
-	// <0x6f9d97>|0x027|+0x00e:'122'
-	// <0x6f9da5>|0x035|+0x004:'123'
-	// <0>
-	// <0x6f9da9>|0x039|+0x00f:'125'
-	// ******
+	if ( infl->threshold > amount )
+		return 0.0f;
+
+	return ( amount - infl->threshold ) * infl->hit_coeff;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool oxygen_tank::get_item_props( inventory_item_props& props )
 {
-	return false;
+	inventory_item::get_item_props( props );
 
-	// FUNCTION BODY[0x6f9c60]: 7
-	// <0x6f9c69>|0x009|+0x00c:'130'
-	// <0>
-	// <0x6f9c75>|0x015|+0x00f:'132'
-	// <0>
-	// <0x6f9c84>|0x024|+0x055:'134'
-	// <0>
-	// <0x6f9cd9>|0x079|+0x009:'136'
-	// ******
+	props.m_amount_ms = m_amount_ms;
+
+	props.cooldown = (u8)( (float)m_amount_ms / m_max_amount * 100.0f );
+
+	return m_active;
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

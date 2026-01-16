@@ -11,7 +11,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[66.69%|DONE]
 items_cook::items_cook( ) :
 	resources::translate_query_cook( resources::item_class, reuse_false, use_current_thread_id )
 {
@@ -22,7 +22,7 @@ items_cook::items_cook( ) :
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[94.84%|DONE]
 void items_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -52,7 +52,7 @@ void items_cook::translate_query( resources::query_result_for_cook& parent )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[31.00%|DONE]
 void items_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
@@ -62,7 +62,7 @@ void items_cook::delete_resource( resources::resource_base* resource )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[84.63%|DONE]
 void items_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -82,7 +82,7 @@ void items_cook::on_config_ready( resources::queries_result& data, resources::qu
 
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]
 void items_cook::create_item_and_finish_query( item_types_enum item_type, configs::binary_config_ptr config, resources::query_result_for_cook* parent )
 {
 	result_enum result	= result_undefined;
