@@ -39,6 +39,7 @@ public:
 
 public:
 	/* 0x0000 */	hit_type_parameters*	next;
+private:
 	/* 0x0004 */	fixed_string<16>		m_type;
 	/* 0x0020 */	float					m_absorption_amount;
 	/* 0x0024 */	float					m_armor;

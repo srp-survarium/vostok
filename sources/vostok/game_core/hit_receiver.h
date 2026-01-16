@@ -26,8 +26,8 @@ class player_actions_subscriber;
 
 struct hit_receiver : public collision::game_object , public loose_ptr_base {
 public:
-	// STATE[STUB]
-	virtual						~hit_receiver				( ) { }
+								hit_receiver				( ) {}
+	virtual						~hit_receiver				( ) {}
 
 	virtual	void				hit							(
 									hit_initiator const* const	initiator,

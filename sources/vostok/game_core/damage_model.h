@@ -33,14 +33,14 @@ namespace survarium {
 struct affect_subscriber: public boost::noncopyable {
 public:
 	typedef boost::function<void (
-		char const *,
+		pcstr,
 		hit_affects_type_enum,
 		affect_event_type_enum
 	)> subscription_functor;
 
 public:
-	inline	affect_subscriber	( ) { }
-	inline	affect_subscriber	( subscription_functor const& subscription_callback ) : subscription_callback( subscription_callback ) { }
+	inline	affect_subscriber	( ) : next( NULL ) { }
+	inline	affect_subscriber	( subscription_functor const& subscription_callback ) : subscription_callback( subscription_callback ), next( NULL ) { }
 	//		~affect_subscriber	( ); sushi@TODO: Where is the definition coming from
 
 public:
