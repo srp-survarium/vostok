@@ -8,13 +8,13 @@
 #include <vostok/game_core/player_parameters_modifyer.h>
 #include <vostok/game_core/player_parameters_modifyer_cook.h>
 
-
-#include <vostok/game_core/boosters_enum.h>
+#include <vostok/game_core/base_player.h>
 #include <vostok/game_core/body_part_parameters_modifyer.h>
-#include <vostok/game_core/player_profile.h>
-#include <vostok/game_core/items_dictionary.h>
-#include <vostok/game_core/profile_slot_enum.h>
+#include <vostok/game_core/boosters_enum.h>
 #include <vostok/game_core/dictionary_item.h>
+#include <vostok/game_core/items_dictionary.h>
+#include <vostok/game_core/player_profile.h>
+#include <vostok/game_core/profile_slot_enum.h>
 
 
 namespace survarium {
@@ -37,7 +37,7 @@ void player_parameters_modifyer::apply( base_player* player )
 	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , body_part_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , body_part_parameters_modifyer > > > body_part_it
 	// body_part_parameters* 			bp
 	// bodypart_health_regen_scale_predicate hr_predicate
-	// damage_model_ptr 				damage_model
+	//
 	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer > > > hit_type_it<1>
 	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer > > > hit_type_it_e<1>
 	// fixed_string< 16 > 				body_part_name<1>
@@ -75,6 +75,8 @@ void player_parameters_modifyer::apply( base_player* player )
 	// <0x5ac011> -> player_stamina& < unknown >()
 	// <0x5ac2d9> -> damage_model_ptr const& < unknown >() const
 	// ******
+
+	damage_model_ptr damage_model = player->damage_model( );
 
 	// FUNCTION BODY[0x5abc10]: 109
 	// <0x5abc2a>|0x01a|+0x021:'40'
@@ -220,7 +222,7 @@ player_parameters_modifyer_cook::player_parameters_modifyer_cook( ) :
 	// ******
 }
 
-// STATE[UNCHECKED] sushi@TODO: Why don't we need to request for data here? Why is everything already in cooker_data?
+// STATE[89.62%|PARTIAL] sushi@TODO: Why don't we need to request for data here? Why is everything already in cooker_data?
 void player_parameters_modifyer_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	player_parameters_cooker_data* cooker_data = NULL;
@@ -246,7 +248,7 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 		profile_slot const* slot		= &cooker_data->profile->slots[current_slot];
 		if ( slot->item.id )
 		{
-			dictionary_item curr_item								= cooker_data->dictionary->item_by_id( slot->item.dict_id );
+			dictionary_item curr_item								= cooker_data->dictionary->item_by_id( slot->item.dict_id ); // sushi@MATCH: item_by_id didn't inline in target.
 			configs::binary_config_value const& current_item_config	= curr_item.item_cfg->get_root( );
 
 			if ( current_item_config.value_exists( "parameters" ) )
@@ -288,7 +290,7 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 						cooked_resource->body_part_parameters_modifyers[body_part_name].health_regeneration += body_part_modifyer_from_cfg.health_regeneration;
 					}
 					else
-						cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg;
+						cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg; // sushi@MATCH: LTCG for map_assign as third member in class.
 
 					body_part_parameters_modifyer& current_body_part_modifyer = cooked_resource->body_part_parameters_modifyers[body_part_name];
 
@@ -311,12 +313,12 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 							// sushi@TODO: They meant hit_type_name lookup, xd
 							if ( cooked_resource->body_part_parameters_modifyers.find( body_part_name ) != cooked_resource->body_part_parameters_modifyers.end( ) )
 							{
-								current_body_part_modifyer.hit_type_modifyers["hit_type_name"].armor		+= hit_type_modifyer_from_cfg.armor;
-								current_body_part_modifyer.hit_type_modifyers["hit_type_name"].absorption	+= hit_type_modifyer_from_cfg.absorption;
-								current_body_part_modifyer.hit_type_modifyers["hit_type_name"].reduce		+= hit_type_modifyer_from_cfg.reduce;
+								current_body_part_modifyer.hit_type_modifyers[hit_type_name].armor		+= hit_type_modifyer_from_cfg.armor;
+								current_body_part_modifyer.hit_type_modifyers[hit_type_name].absorption	+= hit_type_modifyer_from_cfg.absorption;
+								current_body_part_modifyer.hit_type_modifyers[hit_type_name].reduce		+= hit_type_modifyer_from_cfg.reduce;
 							}
 							else
-								current_body_part_modifyer.hit_type_modifyers["hit_type_name"]				= hit_type_modifyer_from_cfg;
+								current_body_part_modifyer.hit_type_modifyers[hit_type_name]			= hit_type_modifyer_from_cfg;
 						}
 					}
 				}
@@ -353,7 +355,7 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 	// <0x5ab539>|0x1d9|+0x015:'192'
 	// <0x5ab54e>|0x1ee|+0x00d:'193'			if ( slot->item.id )
 	// <0>
-	// <0x5ab55b>|0x1fb|+0x01f:'195'				dictionary_item curr_item = cooker
+	// <0x5ab55b>|0x1fb|+0x01f:'195'				dictionary_item curr_item								= cooker_data->dictionary->item_by_id( slot->item.dict_id );
 	// <0x5ab57a>|0x21a|+0x013:'196'				configs::binary_config_value const& current_item_config	= curr_item.item_cfg->get_root( );
 	// <0>
 	// <0x5ab58d>|0x22d|+0x014:'198'				if ( current_item_config.value_exists( "parameters" ) )
