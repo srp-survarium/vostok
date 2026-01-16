@@ -56,6 +56,7 @@
 #include <vostok/game_core/game_material_manager_cook.h>
 #include <vostok/game_core/inventory_cook.h>
 #include <vostok/game_core/items_dictionary_cook.h>
+#include <vostok/game_core/player_parameters_modifyer_cook.h>
 
 #ifdef VOSTOK_STATIC_LIBRARIES
 #include <GFx.h>
@@ -221,8 +222,9 @@ game::game(		vostok::engine_user::engine& engine,
 	LOG_INFO("survarium::game() gfx heap is %x", Scaleform::Memory::GetGlobalHeap());
 #endif #ifdef VOSTOK_STATIC_LIBRARIES
 
-	inventory_cook			inv_cook;
-	items_dictionary_cook	id_cook;
+	inventory_cook					inv_cook;
+	items_dictionary_cook			id_cook;
+	player_parameters_modifyer_cook	pp_cook;
 }
 
 game::~game( )

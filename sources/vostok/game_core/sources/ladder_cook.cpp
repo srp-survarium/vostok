@@ -29,6 +29,7 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 	configs::binary_config_value config;
 	bool result = user_data->try_get( config );
 	ASSERT( UNKNOWN_EXPRESSION_T( result ) );
+	VOSTOK_UNREFERENCED_PARAMETER( result ); // sushi@TODO:
 
 	vectora<resources::request> requests( g_allocator ); // sushi@NOTE: Either LTCG for `g_allocator`, or this is wrapped into something
 

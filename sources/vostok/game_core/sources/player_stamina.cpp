@@ -200,7 +200,7 @@ void player_stamina::decrease_value( float amount )
 	// ******
 }
 
-// STATE[100%|DONE]
+// STATE[100%|DONE] sushi@TODO
 void player_stamina::tick( u32 current_time_in_ms, bool is_sprinting )
 {
 	if ( is_sprinting )
@@ -208,7 +208,7 @@ void player_stamina::tick( u32 current_time_in_ms, bool is_sprinting )
 
 	u32 regeneration_interval_in_ms = 1000;
 	if ( m_max_value * m_max_value_factor > m_value
-		&& ( m_value == 0.0f || m_last_spending_time_in_ms && m_last_spending_time_in_ms + 1000 < current_time_in_ms ) )
+		&& ( m_value == 0.0f || m_last_spending_time_in_ms && m_last_spending_time_in_ms + regeneration_interval_in_ms < current_time_in_ms ) )
 		regenerate( current_time_in_ms );
 
 	m_last_tick_time_in_ms = current_time_in_ms;

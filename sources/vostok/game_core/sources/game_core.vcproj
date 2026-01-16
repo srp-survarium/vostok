@@ -883,6 +883,10 @@
 				RelativePath="..\library_linkage.h"
 				>
 			</File>
+			<File
+				RelativePath="..\player_parameters_cook.h"
+				>
+			</File>
 			<Filter
 				Name="bullet_manager"
 				>

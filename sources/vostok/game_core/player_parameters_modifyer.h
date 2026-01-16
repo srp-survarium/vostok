@@ -14,13 +14,13 @@ struct base_player;
 struct player_parameters_modifyer : public resources::unmanaged_resource , public boost::noncopyable {
 public:
 	// STATE[STUB]: player_parameters_cook.h
-	explicit		player_parameters_modifyer	( ) {}
+	explicit		player_parameters_modifyer	( );
 
 			void	apply						( base_player* player );
 
 public:
 	/* 0x0000 */	/* resources::unmanaged_resource */
-	/* 0x0108 */	/* boost::noncopyable */
+	/* 0x0108 */	/* boost::noncopyable */ // sushi@TODO: fixed_string is a body_part_name
 	/* 0x0108 */	map< fixed_string<16>, body_part_parameters_modifyer >	body_part_parameters_modifyers;
 	/* 0x0120 */	float			speed_modifyer;
 	/* 0x0124 */	float			total_items_weight;
