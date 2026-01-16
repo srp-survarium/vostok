@@ -7,8 +7,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// void survarium::server_player_update::deserialize(vostok::network_core::packet_reader&)
+// STATE[BLOCKED]
 void server_player_update::deserialize( network_core::packet_reader& packet )
 {
 	// FUNCTION BODY

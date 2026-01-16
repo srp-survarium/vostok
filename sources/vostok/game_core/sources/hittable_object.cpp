@@ -10,7 +10,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[72.88%|PARTIAL]: target didn't inline constructor for hit_receiver
  hittable_object::hittable_object( ) :
 	m_rigid_body	( NULL ),
 	m_physics_world	( NULL ),
