@@ -46,10 +46,6 @@ void material_pair::load_from_config( game_material_manager const& manager, conf
 void material_pair::add_particle( resources::unmanaged_resource_ptr particle )
 {
 	m_particles.push_back( particle );
-
-	// FUNCTION BODY
-	// <0x6fd539>|0x009|+0x011:'35'
-	// ******
 }
 
 // STATE[97.14%|PARTIAL]
