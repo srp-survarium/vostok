@@ -17,6 +17,7 @@ public:
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource				( resources::resource_base* resource ) override;
 
+private:
 			void	create_item_and_finish_query( item_types_enum item_type, configs::binary_config_ptr config, resources::query_result_for_cook* parent );
 			void	on_config_ready				( resources::queries_result& data, resources::query_result_for_cook* parent );
 

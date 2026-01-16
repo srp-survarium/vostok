@@ -21,7 +21,6 @@ struct dictionary_item {
 	inline			dictionary_item	( ) { /* no source */ }
 	inline			~dictionary_item( ) { /* no source */ }
 
-
 public:
 	/* 0x0000 */	u32								item_id;
 	/* 0x0004 */	configs::binary_config_ptr		item_cfg;

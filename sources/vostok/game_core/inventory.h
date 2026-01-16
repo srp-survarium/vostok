@@ -26,14 +26,11 @@ public:
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
 	// STATE[STUB]
-	__declspec( noinline )
 			inventory_holder&					holder						( ) { return *m_holder; }
 
 	// STATE[STUB]
-	__declspec( noinline )
 			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot ) { return m_slots[slot].item; }
 	// STATE[STUB]
-	__declspec( noinline )
 	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { return m_slots[slot].item; }
 
 			void								set_victory_item			( victory_item_core* item );

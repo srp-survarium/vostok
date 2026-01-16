@@ -50,12 +50,13 @@ public:
 	// STATE[STUB]
 	__declspec( noinline )
 			void								set_amount						( u16 value ) { m_amount = value; }
-	__declspec( noinline )
 	// STATE[STUB]
+	__declspec( noinline )
+
 			u16									amount							( ) const { return m_amount; }
 
-	inline	void								set_dict_id						( u16 arg_0 ) { /* no source */ }
-	inline	u16									get_dict_id						( ) { /* no source */ }
+	inline	void								set_dict_id						( u16 item_dict_id ) { m_dict_id = item_dict_id; }
+	inline	u16									get_dict_id						( ) { return m_dict_id; }
 
 	virtual	bool								get_item_props					( inventory_item_props& props );
 

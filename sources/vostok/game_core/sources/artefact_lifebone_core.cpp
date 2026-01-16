@@ -52,11 +52,6 @@ void artefact_lifebone_core::holder_assigned( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	switch_passive_mode_impl( true );
-
-	// FUNCTION BODY
-	// <0x590059>|0x009|+0x00c:'46'
-	// <0x590065>|0x015|+0x00a:'47'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -64,11 +59,6 @@ void artefact_lifebone_core::holder_removed( )
 {
 	if ( m_passive_mode )
 		switch_passive_mode_impl( false );
-
-	// FUNCTION BODY
-	// <0x590027>|0x007|+0x00e:'52'
-	// <0x590035>|0x015|+0x00a:'53'
-	// ******
 }
 
 // STATE[46.30%|PARTIAL]: Almost nothing inlined in target!
@@ -168,7 +158,7 @@ void artefact_lifebone_core::action( bool key_down )
 	// ******
 }
 
-// STATE[SKIPPED]: This is written somehow with 4 statements!
+// STATE[SKIPPED]: This is written somehow with 4 statements! sushi@TODO: Multiple returns?
 bool artefact_lifebone_core::protect_affect( pcstr __formal, hit_affects_type_enum affect )
 {
 	return affect >= affects_type_hand_damage && affect <= affects_type_leg_damage;
@@ -197,11 +187,6 @@ float artefact_lifebone_core::reduce_damage(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( body_part_name, damage_type, amount, armor_piercing );
 	return amount;
-
-	// FUNCTION BODY
-	// <0x58fb09>|0x009|+0x03d:'122'
-	// <0x58fb46>|0x046|+0x003:'123'
-	// ******
 }
 
 // STATE[95%|PARTIAL]: `set_amount` didn't inline

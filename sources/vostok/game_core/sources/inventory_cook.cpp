@@ -5,15 +5,20 @@
 #include "pch.h"
 #include <vostok/game_core/inventory_cook.h>
 
+#include <vostok/game_core/items_cook.h>
+
 namespace survarium {
 
 // STATE[STUB]
-inventory_cook::inventory_cook( ) : resources::translate_query_cook( resources::inventory_class, reuse_false, use_any_thread_id )
+inventory_cook::inventory_cook( ) :
+	resources::translate_query_cook( resources::inventory_class, reuse_false, use_any_thread_id )
 {
+	resources::register_cook( this );
+
 	// STATICS
 	// static damage_model_cook 	s_damage_model_cook = <0x4c27230>;
 	// static weapon_ammunition_cook s_weapon_ammunition_cook = <0x4c27210>;
-	// static items_cook 			s_items_cook = <0x4c27250>;
+	static items_cook s_items_cook;
 	// ******
 
 	// FUNCTION BODY

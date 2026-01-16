@@ -28,15 +28,15 @@ public:
 			void				load							( configs::binary_config_value const& config );
 			void				reset							( );
 
-	inline	void				set_max_value					( float arg_0 ) { /* no source */ }
-	inline	void				set_spending_speed				( float arg_0 ) { /* no source */ }
+	inline	void				set_max_value					( float max_value )						{ m_max_value				= max_value;					}
+	inline	void				set_spending_speed				( float spending_speed )				{ m_spending_speed			= spending_speed;				}
 
-	inline	float				get_regeneration_speed			( ) { /* no source */ }
+	inline	float				get_regeneration_speed			( ) { return m_regeneration_speed; }
 			void				set_regeneration_speed			( float new_regeneration_speed );
 
-	inline	void				set_regeneration_threshold		( float new_regeneration_threshold )	{ m_regeneration_threshold	= new_regeneration_threshold; }	/* no source */
-	inline	void				set_max_value_factor			( float new_max_value_factor )			{ m_max_value_factor		= new_max_value_factor; }		/* no source */
-	inline	void				set_spending_speed_factor		( float new_spending_speed_factor )		{ m_spending_speed_factor	= new_spending_speed_factor; }	/* no source */
+	inline	void				set_regeneration_threshold		( float new_regeneration_threshold )	{ m_regeneration_threshold	= new_regeneration_threshold;	}
+	inline	void				set_max_value_factor			( float new_max_value_factor )			{ m_max_value_factor		= new_max_value_factor;			}
+	inline	void				set_spending_speed_factor		( float new_spending_speed_factor )		{ m_spending_speed_factor	= new_spending_speed_factor;	}
 			void				set_regeneration_speed_factor	( float new_regeneration_speed_factor );
 
 			void				tick							( u32 current_time_in_ms, bool is_sprinting );
@@ -44,12 +44,12 @@ public:
 			void				spend							( float amount );
 			bool				can_be_spent					( ) const;
 
-	inline	float				current_value					( ) const { /* no source */ }
-	inline	float				max_value						( ) const { /* no source */ }
+	inline	float				current_value					( ) const { return m_value; }
+	inline	float				max_value						( ) const { return m_max_value; }
 	inline	float				amount_to_jump					( ) const { /* no source */ }
 
-	inline	float				get_max_carried_weight			( ) const { /* no source */ }
-	inline	void				set_max_carried_weight			( float arg_0 ) { /* no source */ }
+	inline	float				get_max_carried_weight			( ) const { return m_max_carried_weight; }
+	inline	void				set_max_carried_weight			( float max_carried_weight ) { m_max_carried_weight = max_carried_weight; }
 
 			void				subscribe_on_depletion			( player_stamina_subscriber* const subscriber );
 			void				unsubscribe_from_depletion		( player_stamina_subscriber* const subscriber );

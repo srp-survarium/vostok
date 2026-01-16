@@ -18,6 +18,7 @@ public:
 	virtual	void	translate_query						( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource						( resources::resource_base* resource ) override;
 
+private:
 			void	on_items_dictionary_config_loaded	( resources::queries_result& data );
 			void	on_subresources_loaded				( resources::queries_result& data, items_dictionary* cooked_resource, u32* item_dict_ids );
 }; // class items_dictionary_cook

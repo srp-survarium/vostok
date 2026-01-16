@@ -75,6 +75,11 @@
 
 namespace vostok
 {
+	void use_medkit( )
+	{
+		// survarium::medkit medkit;
+	}
+
 	void use_inventory_2( )
 	{
 		survarium::inventory inventory;
@@ -252,6 +257,7 @@ namespace vostok
 
 	void use_inventory( )
 	{
+	/*
 		survarium::medkit item;
 
 		survarium::inventory_item_props props;
@@ -260,6 +266,7 @@ namespace vostok
 		item.remove( );
 
 		item.reduce_damage( NULL, NULL, 0.0f, 0.0f );
+	*/
 	}
 
 	void use_damage_model_cook( )

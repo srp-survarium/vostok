@@ -25,7 +25,7 @@
 			VOSTOK_LOG_MODULE_INITIATOR ":",							\
 			level )
 
-#define __LOG( level, format, data, initiator, ... )	__CHECK_VERBOSITY( level )				\
+#define __LOG( level, format, data, initiator, ... )	__CHECK_VERBOSITY( level )			\
 		? ::vostok::logging::append(														\
 				::vostok::logging::log_callback_boost( ::vostok::core::g_log_callback ),	\
 				(void*)data,																\
