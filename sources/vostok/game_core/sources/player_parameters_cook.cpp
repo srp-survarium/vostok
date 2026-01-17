@@ -33,16 +33,12 @@ void player_parameters_modifyer::apply( base_player* player )
 	// LOCALS
 	// inventory& 						invent
 	// player_stamina& 					stamn
-	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , body_part_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , body_part_parameters_modifyer > > > body_part_it_e
-	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , body_part_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , body_part_parameters_modifyer > > > body_part_it
 	// body_part_parameters* 			bp
 	// bodypart_health_regen_scale_predicate hr_predicate
-	//
-	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer > > > hit_type_it<1>
-	// std::priv::_Rb_tree_iterator< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer >, std::priv::_ConstMapTraitsT< std::pair< fixed_string< 16 > const , hit_type_parameters_modifyer > > > hit_type_it_e<1>
-	// fixed_string< 16 > 				body_part_name<1>
-	// body_part_parameters* 			current_body_part_parameters<1>
-	// body_part_parameters_modifyer& 	current_body_part_modifyer<1>
+
+
+	// <1>
+	// <1>
 	// fixed_string< 16 > 				hit_type_name<2>
 	// hit_type_parameters* 			current_hit_type_parameters<2>
 	// hit_type_parameters_modifyer& 	current_hit_type_modifyer<2>
@@ -60,45 +56,53 @@ void player_parameters_modifyer::apply( base_player* player )
 	// static pcstr[4] 					anomaly_damage_types = <0xa8ade8>;
 	// ******
 
-	// SKIPPED BLOCKS
-	// <0x5abcc2><1>
-	// <0x5abdcd><2>
-	// <0x5abe5e><2>
-	// <0x5ac09b><2>
-	// <0x5ac25c><2>
-	// ******
-
-	// CALL SITE INFO
-	// <0x5abc35> -> damage_model_ptr const& < unknown >() const
-	// <0x5abe3e> -> inventory_holder* < unknown >()
-	// <0x5abeb8> -> weapon_core* < unknown >()
-	// <0x5ac011> -> player_stamina& < unknown >()
-	// <0x5ac2d9> -> damage_model_ptr const& < unknown >() const
-	// ******
-
 	damage_model_ptr damage_model = player->damage_model( );
 
+	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_it	= body_part_parameters_modifyers.begin( );
+	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_end	= body_part_parameters_modifyers.begin( );
+
+	for ( ; body_part_it != body_part_end ; ++body_part_it )
+	{
+		fixed_string<16> body_part_name = body_part_it->first;
+
+		body_part_parameters*			current_body_part_parameters	= damage_model->get_body_part( body_part_name.c_str( ) );
+		body_part_parameters_modifyer& 	current_body_part_modifyer		= body_part_parameters_modifyers[body_part_name]; // sushi@NOTE: Why not just body_part_it->second
+
+		current_body_part_parameters->set_parameters(
+			current_body_part_parameters->get_max_health( )			+ current_body_part_modifyer.health,
+			current_body_part_parameters->get_regeneration_speed( ) + current_body_part_modifyer.health_regeneration
+		);
+
+		std::map< fixed_string<16>, hit_type_parameters_modifyer >::const_iterator hit_type_it		= current_body_part_modifyer.hit_type_modifyers.begin( );
+		std::map< fixed_string<16>, hit_type_parameters_modifyer >::const_iterator hit_type_it_e	= current_body_part_modifyer.hit_type_modifyers.end( );
+
+		for ( ; hit_type_it != hit_type_it_e ; ++hit_type_it )
+		{
+			// sigh, I am tired
+		}
+	}
+
 	// FUNCTION BODY[0x5abc10]: 109
-	// <0x5abc2a>|0x01a|+0x021:'40'
+	// <0x5abc2a>|0x01a|+0x021:'40'	damage_model_ptr damage_model = player->damage_model( );
 	// <0>
-	// <0x5abc4b>|0x03b|+0x031:'42'
-	// <0x5abc7c>|0x06c|+0x025:'43'
+	// <0x5abc4b>|0x03b|+0x031:'42'	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_it	= body_part_parameters_modifyers.begin( );
+	// <0x5abc7c>|0x06c|+0x025:'43'	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_end	= body_part_parameters_modifyers.begin( );
 	// <0>
-	// <0x5abca1>|0x091|+0x027:'45'
+	// <0x5abca1>|0x091|+0x027:'45'	for ( ; body_part_it != body_part_end ; ++body_part_it )
 	// <0>
-	// <0x5abcc8>|0x0b8|+0x00e:'47'
+	// <0x5abcc8>|0x0b8|+0x00e:'47'		fixed_string<16> body_part_name = body_part_it->first;
 	// <0>
-	// <0x5abcd6>|0x0c6|+0x01b:'49'
+	// <0x5abcd6>|0x0c6|+0x01b:'49'		body_part_parameters* current_body_part_parameters =
 	// <0>
-	// <0x5abcf1>|0x0e1|+0x018:'51'
+	// <0x5abcf1>|0x0e1|+0x018:'51'		body_part_parameters_modifyer& 	current_body_part_modifyer		= body_part_parameters_modifyers[body_part_name];
 	// <0>
 	// <1>
-	// <0x5abd09>|0x0f9|+0x059:'54'
+	// <0x5abd09>|0x0f9|+0x059:'54'		current_body_part_parameters->set_parameters(
 	// <0>
-	// <0x5abd62>|0x152|+0x02b:'56'
-	// <0x5abd8d>|0x17d|+0x01f:'57'
+	// <0x5abd62>|0x152|+0x02b:'56'		std::map< fixed_string<16>,
+	// <0x5abd8d>|0x17d|+0x01f:'57'		std::map< fixed_string<16>,
 	// <0>
-	// <0x5abdac>|0x19c|+0x023:'59'
+	// <0x5abdac>|0x19c|+0x023:'59'		for ( ; hit_type_it != hit_type_it_e ; ++hit_type_it )
 	// <0>
 	// <0x5abdcf>|0x1bf|+0x00e:'61'
 	// <0>

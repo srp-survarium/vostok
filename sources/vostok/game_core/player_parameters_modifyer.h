@@ -13,7 +13,6 @@ struct base_player;
 
 struct player_parameters_modifyer : public resources::unmanaged_resource , public boost::noncopyable {
 public:
-	// STATE[STUB]: player_parameters_cook.h
 	explicit		player_parameters_modifyer	( );
 
 			void	apply						( base_player* player );

@@ -6,20 +6,19 @@
 #include <vostok/game_core/inventory_cook.h>
 
 #include <vostok/game_core/items_cook.h>
+#include <vostok/game_core/damage_model_cook.h>
+#include <vostok/game_core/weapon_ammunition_cook.h>
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 inventory_cook::inventory_cook( ) :
 	resources::translate_query_cook( resources::inventory_class, reuse_false, use_any_thread_id )
 {
 	resources::register_cook( this );
-
-	// STATICS
-	// static damage_model_cook 	s_damage_model_cook = <0x4c27230>;
-	// static weapon_ammunition_cook s_weapon_ammunition_cook = <0x4c27210>;
-	static items_cook s_items_cook;
-	// ******
+	static items_cook				s_items_cook;
+	static damage_model_cook 		s_damage_model_cook;
+	static weapon_ammunition_cook	s_weapon_ammunition_cook;;
 
 	// FUNCTION BODY
 	// <0x764e45>|0x035|+0x00c:'29'
@@ -30,29 +29,28 @@ inventory_cook::inventory_cook( ) :
 }
 
 // STATE[STUB]
-// void survarium::inventory_cook::translate_query(vostok::resources::query_result_for_cook&)
 void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// LOCALS
-	// inventory_cooker_data* 		cooker_data
-	// profile_slot* 				slot
-	// buffer_vector<variant<32> const *> user_data
-	// pcstr 						resource_name
-	// buffer_vector<resources::request> requests
-	// variant<32>[19] 				v
-	// u32 							i
-	// profile_slot_enum 			current
-	// u32 							i
-	// profile_slot_enum 			current
-	// u32 							i
-	// profile_slot_enum 			current
-	// item_types_enum 				item_type
-	// dictionary_item const& 		desc
-	// resources::class_id_enum 	class_id
-	// booby_trap_set_cook_data 	booby_trap_set_data
+	// inventory_cooker_data* 			cooker_data
+	// profile_slot* 					slot
+	// buffer_vector< variant< 32 > const* > user_data
+	// pcstr 							resource_name
+	// buffer_vector< resources::request > requests
+	// variant< 32 >[19] 				v
+	// u32 								i
+	// profile_slot_enum 				current
+	// u32 								i
+	// profile_slot_enum 				current
+	// u32 								i
+	// profile_slot_enum 				current
+	// item_types_enum 					item_type
+	// dictionary_item const& 			desc
+	// resources::class_id_enum 		class_id
+	// booby_trap_set_cook_data 		booby_trap_set_data
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x765330]: 100
 	// <0>
 	// <0x765350>|0x020|+0x013:'38'
 	// <0x765363>|0x033|+0x00c:'39'
@@ -157,27 +155,26 @@ void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 }
 
 // STATE[STUB]
-// void survarium::inventory_cook::on_subresources_loaded(vostok::resources::queries_result&, survarium::inventory_cooker_data*)
 void inventory_cook::on_subresources_loaded( resources::queries_result& data, inventory_cooker_data* cooker_data )
 {
 	// LOCALS
-	// inventory* 					result
-	// profile_slot* 				slot
+	// inventory* 						result
+	// profile_slot* 					slot
 	// resources::query_result_for_cook* parent
-	// u32 							result_index
-	// u32 							i<1>
-	// profile_slot_enum 			current<2>
-	// resources::resource_ptr<weapon_core,resources::unmanaged_intrusive_base> wpn<3>
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> iitem<3>
-	// u32 							i<2>
-	// profile_slot_enum 			current<3>
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> iitem<4>
-	// u32 							i<3>
-	// profile_slot_enum 			current<4>
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> iitem<5>
+	// u32 								result_index
+	// u32 								i<1>
+	// profile_slot_enum 				current<2>
+	// weapon_core_ptr 					wpn<3>
+	// inventory_item_ptr 				iitem<3>
+	// u32 								i<2>
+	// profile_slot_enum 				current<3>
+	// inventory_item_ptr 				iitem<4>
+	// u32 								i<3>
+	// profile_slot_enum 				current<4>
+	// inventory_item_ptr 				iitem<5>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x764f30]: 62
 	// <0x764f40>|0x010|+0x00c:'141'
 	// <0x764f4c>|0x01c|+0x05a:'142'
 	// <0x764fa6>|0x076|+0x007:'143'
@@ -244,14 +241,13 @@ void inventory_cook::on_subresources_loaded( resources::queries_result& data, in
 }
 
 // STATE[STUB]
-// void survarium::inventory_cook::delete_resource(vostok::resources::resource_base*)
 void inventory_cook::delete_resource( resources::resource_base* resource )
 {
 	// LOCALS
-	// inventory* 					inventory
+	// inventory* 						inventory
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x764ef0]: 2
 	// <0x764ef9>|0x009|+0x006:'207'
 	// <0x764eff>|0x00f|+0x026:'208'
 	// ******

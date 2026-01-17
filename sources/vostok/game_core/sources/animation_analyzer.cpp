@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 animation_analyzer::animation_analyzer( leg_info const* legs_info, u32 legs_count, animation::skeleton const& skeleton ) :
 	m_legs_info		( legs_info ),
 	m_legs_count	( legs_count ),
@@ -20,7 +20,7 @@ animation_analyzer::animation_analyzer( leg_info const* legs_info, u32 legs_coun
 	// ******
 }
 
-// STATE[STUB]
+// STATE[UNCHECKED]
 animation_analyzer::~animation_analyzer( )
 {
 }

@@ -60,7 +60,7 @@ public:
 	inline	breath_holding_params const&		get_breath_holding_params		( ) const { return m_breath_holding_params; }
 
 	inline	interactive_object_ptr				target_active_object			( ) const { return m_target_active_object; }
-	inline	interactive_object_ptr				current_active_object			( ) const { return m_current_active_object; }
+	inline	interactive_object_ptr				current_active_object			( ) const { return m_current_active_object; }	// sushi@NOTE: There is also `get_current_active_object`.
 
 	virtual	damage_model_ptr const&				damage_model					( ) const override { return m_damage_model; }
 
