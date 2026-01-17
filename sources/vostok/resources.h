@@ -107,10 +107,10 @@ struct VOSTOK_CORE_API query_resource_params
 								 assert_on_fail_bool		assert_on_fail	=	assert_on_fail_true);
 };
 
-VOSTOK_CORE_API	long   	query_resources			( query_resource_params const & params );
+VOSTOK_CORE_API	u32   	query_resources			( query_resource_params const & params );
 VOSTOK_CORE_API	void   	query_resources_and_wait( query_resource_params const & params );
 
-VOSTOK_CORE_API	long   	query_resources_autoselect_quality
+VOSTOK_CORE_API	u32   	query_resources_autoselect_quality
 												( request const 			requests[],
 												  u32						count,
 												  query_callback const &	,
@@ -119,7 +119,7 @@ VOSTOK_CORE_API	long   	query_resources_autoselect_quality
 												  user_data_variant const *	user_data[] = 	NULL,
 												  query_result_for_cook *	parent		= 	NULL );
 
-VOSTOK_CORE_API	long   	query_resources			( request const 			requests[],
+VOSTOK_CORE_API	u32   	query_resources			( request const 			requests[],
 												  u32						count,
 												  query_callback const &	,
 												  memory::base_allocator *	,
@@ -127,7 +127,7 @@ VOSTOK_CORE_API	long   	query_resources			( request const 			requests[],
 												  query_result_for_cook *	parent		=	NULL,
 												  assert_on_fail_bool		assert_on_fail	=	assert_on_fail_true);
 
-VOSTOK_CORE_API	long   	query_resource			( pcstr						request_path,
+VOSTOK_CORE_API	u32   	query_resource			( pcstr						request_path,
 												  class_id_enum				class_id,
 												  query_callback const &	,
 												  memory::base_allocator *	,
@@ -151,7 +151,7 @@ VOSTOK_CORE_API	void   	query_resource_and_wait	( pcstr						request_path,
 												  query_result_for_cook *	parent		=	NULL,
 												  assert_on_fail_bool		assert_on_fail	=	assert_on_fail_true);
 
-VOSTOK_CORE_API	long   	query_create_resources	( creation_request const *  requests,
+VOSTOK_CORE_API	u32   	query_create_resources	( creation_request const *  requests,
 											 	  u32						count,
 											 	  query_callback const &	,
 											 	  memory::base_allocator *	,
@@ -168,7 +168,7 @@ VOSTOK_CORE_API	void   	query_create_resources_and_wait
 											 	  query_result_for_cook *	parent		=	NULL,
 												  assert_on_fail_bool const	assert_on_fail	= assert_on_fail_true);
 
-VOSTOK_CORE_API	long   	query_create_resource	( pcstr						request_name,
+VOSTOK_CORE_API	u32   	query_create_resource	( pcstr						request_name,
 												  const_buffer				src_data,
 											 	  class_id_enum				class_id,
 											 	  query_callback const &	,
@@ -213,7 +213,7 @@ VOSTOK_CORE_API	u32		pending_queries_count		( );
 VOSTOK_CORE_API	void	fill_stats					( strings::text_tree_item & stats );
 
 template < int count >
-inline			long   	query_resources		( request const				(& requests)[ count ],
+inline			u32   	query_resources		( request const				(& requests)[ count ],
 											  query_callback const &	callback,
 											  memory::base_allocator *	allocator,
 											  user_data_variant const *	user_data[] =	NULL,
@@ -225,7 +225,7 @@ inline			long   	query_resources		( request const				(& requests)[ count ],
 }
 
 template < int count >
-inline			long   	query_create_resources		( creation_request const	(& requests)[ count ],
+inline			u32   	query_create_resources		( creation_request const	(& requests)[ count ],
 													  query_callback const &	callback,
 													  memory::base_allocator *	allocator,
 													  user_data_variant	const *	user_data[]	=	NULL,

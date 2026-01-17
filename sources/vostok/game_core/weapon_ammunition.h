@@ -52,6 +52,7 @@ public:
 	virtual	void		on_player_model_added		( ) override { /* no source */ }
 	virtual	void		on_player_model_removed		( ) override { /* no source */ }
 
+private:
 	virtual	void		update_bones_matrices		(
 							animation::skeleton_ptr const&		user_skeleton,
 							float4x4* const						user_matrices,

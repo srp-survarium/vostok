@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 weapon_ammunition::weapon_ammunition( ) :
 	inventory_item	( inventory_item::disabled ),
 	m_source		( NULL )
@@ -17,7 +17,7 @@ weapon_ammunition::weapon_ammunition( ) :
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[99.29%|DONE]
 void weapon_ammunition::load( configs::binary_config_value const& cfg )
 {
 	m_distance         = (float)cfg["distance_coef"];
@@ -61,7 +61,7 @@ void weapon_ammunition::update_bones_matrices(
 	animation::animation_player const&		animation_player
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, animation_player );
+	VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, animation_player );
 
 	// FUNCTION BODY
 	// <0x6f9a00>|0x000|      :'43'	{

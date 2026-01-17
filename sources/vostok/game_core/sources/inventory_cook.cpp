@@ -11,7 +11,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[84.05%|DONE]
 inventory_cook::inventory_cook( ) :
 	resources::translate_query_cook( resources::inventory_class, reuse_false, use_any_thread_id )
 {

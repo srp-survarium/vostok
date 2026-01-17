@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[66.69%|PARTIAL]
 weapon_ammunition_cook::weapon_ammunition_cook( ) :
 	resources::translate_query_cook( resources::weapon_ammunition_class, reuse_false, use_current_thread_id )
 {
@@ -24,7 +24,7 @@ weapon_ammunition_cook::weapon_ammunition_cook( ) :
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[95.62%|DONE]: LTCG for query_resource.
 void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -54,7 +54,7 @@ void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& 
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[31.00%|PARTIAL]
 void weapon_ammunition_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );

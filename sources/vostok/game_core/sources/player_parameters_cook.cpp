@@ -12,61 +12,41 @@
 #include <vostok/game_core/body_part_parameters_modifyer.h>
 #include <vostok/game_core/boosters_enum.h>
 #include <vostok/game_core/dictionary_item.h>
+#include <vostok/game_core/dispersion_calculator.h>
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/player_profile.h>
+#include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/profile_slot_enum.h>
-
+#include <vostok/game_core/profile_slots.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace survarium {
 
-struct player_parameters_cooker_data {
-	/* 0x0000 */	player_profile const*		profile;
-	/* 0x0004 */	items_dictionary*			dictionary;
-}; // struct player_parameters_cooker_data
+struct bodypart_health_regen_scale_predicate {
+	inline	explicit	bodypart_health_regen_scale_predicate( float coeff ) : m_coeff( coeff ) { }
+	inline	void		operator()	( body_part_parameters* const params ) const
+	{
+		params->set_parameters( params->get_max_health( ), params->get_regeneration_speed( ) * m_coeff );
+	}
 
-STATIC_SIZE_ASSERT(player_parameters_cooker_data, 0x8);
+public:
+	/* 0x0000 */	float		m_coeff;
+}; // struct bodypart_health_regen_scale_predicate
 
-
-// STATE[STUB]
+// STATE[83.11%|PARTIAL]
 void player_parameters_modifyer::apply( base_player* player )
 {
-	// LOCALS
-	// inventory& 						invent
-	// player_stamina& 					stamn
-	// body_part_parameters* 			bp
-	// bodypart_health_regen_scale_predicate hr_predicate
-
-
-	// <1>
-	// <1>
-	// fixed_string< 16 > 				hit_type_name<2>
-	// hit_type_parameters* 			current_hit_type_parameters<2>
-	// hit_type_parameters_modifyer& 	current_hit_type_modifyer<2>
-	// u32 								i<1>
-	// inventory_item_ptr 				item<2>
-	// weapon_core* 					wc<2>
-	// dispersion_calculator& 			dc<2>
-	// const float 						health<2>
-	// const float 						regen<2>
-	// const float 						anomaly_scale<2>
-	// u32 								i<3>
-	// ******
-
-	// STATICS
-	// static pcstr[4] 					anomaly_damage_types = <0xa8ade8>;
-	// ******
-
 	damage_model_ptr damage_model = player->damage_model( );
 
-	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_it	= body_part_parameters_modifyers.begin( );
-	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_end	= body_part_parameters_modifyers.begin( );
+	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_it	= this->body_part_parameters_modifyers.begin( );
+	std::map< fixed_string<16>, body_part_parameters_modifyer >::const_iterator body_part_end	= this->body_part_parameters_modifyers.end( );
 
 	for ( ; body_part_it != body_part_end ; ++body_part_it )
 	{
 		fixed_string<16> body_part_name = body_part_it->first;
 
 		body_part_parameters*			current_body_part_parameters	= damage_model->get_body_part( body_part_name.c_str( ) );
-		body_part_parameters_modifyer& 	current_body_part_modifyer		= body_part_parameters_modifyers[body_part_name]; // sushi@NOTE: Why not just body_part_it->second
+		body_part_parameters_modifyer& 	current_body_part_modifyer		= this->body_part_parameters_modifyers[body_part_name]; // sushi@NOTE: Why not just body_part_it->second
 
 		current_body_part_parameters->set_parameters(
 			current_body_part_parameters->get_max_health( )			+ current_body_part_modifyer.health,
@@ -78,9 +58,76 @@ void player_parameters_modifyer::apply( base_player* player )
 
 		for ( ; hit_type_it != hit_type_it_e ; ++hit_type_it )
 		{
-			// sigh, I am tired
+			fixed_string<16>				hit_type_name				= hit_type_it->first;
+			hit_type_parameters* 			current_hit_type_parameters = current_body_part_parameters->get_hit_parameters( hit_type_name.c_str( ) );
+			hit_type_parameters_modifyer&	current_hit_type_modifyer	= current_body_part_modifyer.hit_type_modifyers[hit_type_name];
+
+			current_hit_type_parameters->set_parameters(
+				current_hit_type_modifyer.armor,
+				current_hit_type_modifyer.reduce,
+				current_hit_type_modifyer.absorption
+			);
 		}
 	}
+
+	inventory& invent = player->cast_to_inventory_holder( )->inventory( );
+
+	for ( u32 i = 0; i < WEAPON_COUNT ; ++i )
+	{
+		inventory_item_ptr item = invent.item_in_slot( weapon_slots[i] );
+		if ( !item )
+			continue;
+
+		weapon_core* wc = item->cast_weapon_core( );
+		if ( !wc )
+		{
+			LOG_WARNING( "non-weapon item in weapon slot" );
+			continue;
+		}
+
+		dispersion_calculator& dc = wc->get_dispersion_calculator( );
+		dc.set_shooting_skill_coeff	( 1.0f + this->dispersion_correction_perc / 100.0f );
+		dc.set_aiming_speed_coeff	( 1.0f + this->aiming_speed_correction_perc / 100.0f );
+	}
+
+	player->set_movement_speed_factor( 1.0f + movement_speed_correction_perc / 100.0f );
+
+	player_stamina& stamn = player->stamina( );
+	stamn.set_max_carried_weight		( stamn.get_max_carried_weight( ) + this->additional_max_weight );
+	stamn.set_regeneration_speed_factor	(  1.0f + this->stamina_regen_correction_perc / 100.0f );
+
+	body_part_parameters* bp = damage_model->get_body_part( "pain" );
+	if ( bp )
+	{
+		const float health	= ( 1.0f + ( this->pain_healt_correction_perc / 100.0f ) ) * bp->get_max_health( );
+		const float regen	= bp->get_regeneration_speed( );
+		bp->set_parameters( health, regen );
+	}
+	else
+		LOG_WARNING( "there's no 'pain' bodypart, pain health will not be scaled" );
+
+	bodypart_health_regen_scale_predicate hr_predicate( 1.0f + this->health_regen_correction_perc / 100.0f );
+	damage_model->m_body_parts.for_each( hr_predicate );
+
+	player->usable_object_user_data( )->booster_artcont_time_factor = 1.0f + this->artcontainer_time_corr_perc / 100.0f;
+
+	if ( this->anomaly_damage_corr_perc != 0.0f )
+	{
+		const float anomaly_scale = 1.0f + ( this->anomaly_damage_corr_perc / 100.0f );
+
+		static pcstr anomaly_damage_types[4] = {
+			"irradiation",
+			"ambustion",
+			"intoxication",
+			"electric_shock",
+		};
+		for ( u32 i = 0 ; i != array_size( anomaly_damage_types ) ; ++i )
+		{
+			player->damage_model( )->add_damage_protector( anomaly_damage_types[i], anomaly_scale, 0.0f ); // sushi@MATCH: The biggest diff is here. The order of things is different.
+		}
+	}
+
+	player->usable_object_user_data( )->booster_engineer_use_time_factor = 1.0f + this->engineer_use_time_corr_perc / 100.0f;
 
 	// FUNCTION BODY[0x5abc10]: 109
 	// <0x5abc2a>|0x01a|+0x021:'40'	damage_model_ptr damage_model = player->damage_model( );
@@ -104,75 +151,75 @@ void player_parameters_modifyer::apply( base_player* player )
 	// <0>
 	// <0x5abdac>|0x19c|+0x023:'59'		for ( ; hit_type_it != hit_type_it_e ; ++hit_type_it )
 	// <0>
-	// <0x5abdcf>|0x1bf|+0x00e:'61'
+	// <0x5abdcf>|0x1bf|+0x00e:'61'		fixed_string<16> hit_type_name = hit_type_it->first;
 	// <0>
-	// <0x5abddd>|0x1cd|+0x014:'63'
+	// <0x5abddd>|0x1cd|+0x014:'63'		hit_type_parameters* 			current_hit_type_parameters = current_body_part_parameters->get_hit_parameters( hit_type_name.c_str( ) );
 	// <0>
-	// <0x5abdf1>|0x1e1|+0x012:'65'
+	// <0x5abdf1>|0x1e1|+0x012:'65'		hit_type_parameters_modifyer&	current_hit_type_modifyer	= current_body_part_modifyer.hit_type_modifyers[hit_type_name];
 	// <0>
 	// <0x5abe03>|0x1f3|+0x025:'67'
-	// <0x5abe28>|0x218|+0x002:'68'
-	// <0x5abe2a>|0x21a|+0x005:'69'
+	// <0x5abe28>|0x218|+0x002:'68'		}
+	// <0x5abe2a>|0x21a|+0x005:'69'	}
 	// <0>
 	// <1>
-	// <0x5abe2f>|0x21f|+0x019:'72'
+	// <0x5abe2f>|0x21f|+0x019:'72'		inventory& invent = player->cast_to_inventory_holder( );
 	// <0>
-	// <0x5abe48>|0x238|+0x01c|[1]:'74'
+	// <0x5abe48>|0x238|+0x01c|[1]:'74'	for ( u32 i = 0; i < 2 ; ++i )
 	// <0>
-	// <0x5abe64>|0x254|+0x01c:'76'
+	// <0x5abe64>|0x254|+0x01c:'76'			inventory_item_ptr item = invent.item_in_slot( weapon_slots[2] );
 	// <0>
-	// <0x5abe80>|0x270|+0x00f:'78'
-	// <0x5abe8f>|0x27f|+0x00a:'79'
+	// <0x5abe80>|0x270|+0x00f:'78'			if ( !item )
+	// <0x5abe8f>|0x27f|+0x00a:'79'				continue;
 	// <0>
-	// <0x5abe99>|0x289|+0x024:'81'
+	// <0x5abe99>|0x289|+0x024:'81'			weapon_core* wc = item->cast_weapon_core( );
 	// <0>
-	// <0x5abebd>|0x2ad|+0x00a:'83'
+	// <0x5abebd>|0x2ad|+0x00a:'83'			if ( !wc )
 	// <0>
 	// <0x5abec7>|0x2b7|+0x089:'85'
-	// <0x5abf50>|0x340|+0x00d:'86'
+	// <0x5abf50>|0x340|+0x00d:'86'				continue;
 	// <0>
 	// <1>
 	// <0x5abf5d>|0x34d|+0x00b:'89'
 	// <0>
-	// <0x5abf68>|0x358|+0x02c:'91'
-	// <0x5abf94>|0x384|+0x02c:'92'
-	// <0x5abfc0>|0x3b0|+0x00d:'93'
+	// <0x5abf68>|0x358|+0x02c:'91'		dc.set_shooting_skill_coeff	( 1.0f + dispersion_correction_perc / 100.0f );
+	// <0x5abf94>|0x384|+0x02c:'92'		dc.set_aiming_speed_coeff	( 1.0f + aiming_speed_correction_perc / 100.0f );
+	// <0x5abfc0>|0x3b0|+0x00d:'93'	}
 	// <0>
 	// <1>
-	// <0x5abfcd>|0x3bd|+0x039:'96'
+	// <0x5abfcd>|0x3bd|+0x039:'96'		player->set_movement_speed_factor( 1.0f + movement_speed_correction_perc / 100.0f );
 	// <0>
 	// <1>
-	// <0x5ac006>|0x3f6|+0x010:'99'
+	// <0x5ac006>|0x3f6|+0x010:'99'		player_stamina& stamn = player->stamina( );
 	// <0>
 	// <1>
-	// <0x5ac016>|0x406|+0x03e:'102'
+	// <0x5ac016>|0x406|+0x03e:'102'	stamn.set_max_carried_weight( stamn.get_max_carried_weight( ) + this->additional_max_weight );
 	// <0>
 	// <1>
-	// <0x5ac054>|0x444|+0x02c:'105'
+	// <0x5ac054>|0x444|+0x02c:'105'	stamn.set_regeneration_speed_factor	(  1.0f + this->stamina_regen_correction_perc / 100.0f );
 	// <0>
 	// <1>
-	// <0x5ac080>|0x470|+0x017:'108'
-	// <0x5ac097>|0x487|+0x006:'109'
+	// <0x5ac080>|0x470|+0x017:'108'	body_part_parameters* bp = damage_model->get_body_part["pain"];
+	// <0x5ac097>|0x487|+0x006:'109'	if ( bp )
+	// <0>								{
+	// <0x5ac09d>|0x48d|+0x041:'111'		const float health	= ( 1.0f + ( this->p
+	// <0x5ac0de>|0x4ce|+0x010:'112'		const float regen	= bp->get_regeneration_speed( );
 	// <0>
-	// <0x5ac09d>|0x48d|+0x041:'111'
-	// <0x5ac0de>|0x4ce|+0x010:'112'
-	// <0>
-	// <0x5ac0ee>|0x4de|+0x019:'114'
-	// <0>
-	// <0x5ac107>|0x4f7|+0x005:'116'
-	// <0x5ac10c>|0x4fc|+0x089:'117'
-	// <0>
-	// <1>
-	// <0x5ac195>|0x585|+0x033:'120'
-	// <0x5ac1c8>|0x5b8|+0x045:'121'
+	// <0x5ac0ee>|0x4de|+0x019:'114'		bp->set_parameters( health, regen );
+	// <0>								}
+	// <0x5ac107>|0x4f7|+0x005:'116'	else
+	// <0x5ac10c>|0x4fc|+0x089:'117'		LOG_WARNING( "there's no 'pain' bodypart, pain health will not be scaled" );
 	// <0>
 	// <1>
-	// <0x5ac20d>|0x5fd|+0x036:'124'
+	// <0x5ac195>|0x585|+0x033:'120'	bodypart_health_regen_scale_predicate	hr_predicate( 1.0f + this->health_regen_correction_perc / 100.0f );
+	// <0x5ac1c8>|0x5b8|+0x045:'121'	damage_model->m_body_parts.for_each( hr_predicate );
 	// <0>
 	// <1>
-	// <0x5ac243>|0x633|+0x01f:'127'
+	// <0x5ac20d>|0x5fd|+0x036:'124'	player->usable_object_user_data( )->booster_artcont_time_factor = 1.0f + this->artcontainer_time_corr_perc / 100.0f );
 	// <0>
-	// <0x5ac262>|0x652|+0x026:'129'
+	// <1>
+	// <0x5ac243>|0x633|+0x01f:'127'	if ( this->anomaly_damage_corr_perc != 0.0f )
+	// <0>
+	// <0x5ac262>|0x652|+0x026:'129'		const float anomaly_scale = 1.0f + ( this->anomaly_damage_corr_perc / 100.0f );
 	// <0>
 	// <1>
 	// <2>
@@ -181,10 +228,10 @@ void player_parameters_modifyer::apply( base_player* player )
 	// <5>
 	// <6>
 	// <7>
-	// <0x5ac288>|0x678|+0x028|[3]:'138'
+	// <0x5ac288>|0x678|+0x028|[3]:'138'	for ( u32 i = 0 ; i != array_size( anomaly_damage_types ) ; ++i )
 	// <0>
-	// <0x5ac2b0>|0x6a0|+0x037:'140'
-	// <0x5ac2e7>|0x6d7|+0x002:'141'
+	// <0x5ac2b0>|0x6a0|+0x037:'140'			player->damage_model( )->add_damage_protector( anomaly_damage_types[i], anomaly_scale, 0.0f );
+	// <0x5ac2e7>|0x6d7|+0x002:'141'		}
 	// <0>
 	// <1>
 	// <2>
@@ -195,7 +242,7 @@ void player_parameters_modifyer::apply( base_player* player )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[BLOCKED]
 float get_booster_value( boosters_enum booster_id, player_profile const& profile )
 {
 	for ( u8 i = 0 ; i < 11 ; ++i ) // sushi@TODO: Shouldn't be hardcoded like this. Instead there should be something like boosters_no constant, or something. Do that at some point.
@@ -214,6 +261,17 @@ float get_booster_value( boosters_enum booster_id, player_profile const& profile
 	// <0x5ab2cb>|0x03b|+0x002:'158'
 	// ******
 }
+
+struct player_parameters_cooker_data {
+	/* 0x0000 */	player_profile const*		profile;
+	/* 0x0004 */	items_dictionary*			dictionary;
+}; // struct player_parameters_cooker_data
+
+STATIC_SIZE_ASSERT(player_parameters_cooker_data, 0x8);
+
+//
+// player_parameters_modifyer_cook
+//
 
 // STATE[66.69%|PARTIAL]
 player_parameters_modifyer_cook::player_parameters_modifyer_cook( ) :
