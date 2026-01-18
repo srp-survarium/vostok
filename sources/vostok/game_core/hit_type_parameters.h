@@ -9,33 +9,33 @@ namespace survarium {
 
 class body_part_parameters;
 
+typedef std::pair< body_part_parameters*, float > bdb_coeff;
 
 class hit_type_parameters : public boost::noncopyable {
 public:
-										hit_type_parameters	(
-											pcstr		type,
-											float		absorption,
-											float		armor,
-											float		reduce,
-											u32			bdb_count
-										);
+						hit_type_parameters	(
+							pcstr		type,
+							float		absorption,
+							float		armor,
+							float		reduce,
+							u32			bdb_count
+						);
 
 
-			std::pair<body_part_parameters *,float>*
-										get_bdb_coefficients( )
+			bdb_coeff*	get_bdb_coefficients( )
 			{
-				return pointer_cast< std::pair<body_part_parameters*, float> * >( pointer_cast< pbyte >( this ) + sizeof( *this ) );
+				return pointer_cast< bdb_coeff* >( pointer_cast< pbyte >( this ) + sizeof( *this ) );
 			}
 
-	inline	pcstr						get_type			( ) const { return m_type.c_str(); }
-	inline	float						get_armor			( ) const { return m_armor; }
-	inline	float						get_reduce			( ) const { return m_reduce; }
-	inline	float						get_absorption		( ) const { return m_absorption_amount; }
-	inline	u32							get_bdb_coeffs_count( ) const { return m_bdb_count; }
+	inline	pcstr		get_type			( ) const { return m_type.c_str(); }
+	inline	float		get_armor			( ) const { return m_armor; }
+	inline	float		get_reduce			( ) const { return m_reduce; }
+	inline	float		get_absorption		( ) const { return m_absorption_amount; }
+	inline	u32			get_bdb_coeffs_count( ) const { return m_bdb_count; }
 
-			void						apply_damage		( float delta, u32 time_in_ms );
-	inline	void						remove_vertex		( body_part_parameters* arg_0 ) { /* no source */ }
-			void						set_parameters		( float armor, float reduce, float absorbtion );
+			void		apply_damage		( float delta, u32 time_in_ms );
+	inline	void		remove_vertex		( body_part_parameters* arg_0 ) { /* no source */ }
+			void		set_parameters		( float armor, float reduce, float absorbtion );
 
 public:
 	/* 0x0000 */	hit_type_parameters*	next;
