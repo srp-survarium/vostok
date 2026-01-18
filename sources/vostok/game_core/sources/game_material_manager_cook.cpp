@@ -75,7 +75,7 @@ void game_material_manager_cook::delete_resource( resources::resource_base* res 
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[75.71%|PARTIAL]
 void game_material_manager_cook::on_configs_loaded( resources::queries_result& data )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( data.is_successful( ) ) );
@@ -408,7 +408,7 @@ void game_material_manager_cook::create_game_material_pairs(
 	// ******
 }
 
-// STATE[80.12%|DONE]: LTCG for logging and resource_ptr methods.
+// STATE[81.23%|DONE]: LTCG for logging and resource_ptr methods.
 void game_material_manager_cook::on_decals_loaded( resources::queries_result& data, vector< query_ext_data >* ext_data )
 {
 	if ( !data.is_successful( ) ) // sushi@TODO: I think this is the first place where multiple queries are processed?

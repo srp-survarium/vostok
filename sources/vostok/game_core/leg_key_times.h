@@ -8,9 +8,6 @@
 namespace survarium {
 
 struct leg_key_times {
-public:
-
-public:
 	/* 0x0000 */	float		pre_land_time;
 	/* 0x0004 */	float		strike_time;
 	/* 0x0008 */	float		land_time;

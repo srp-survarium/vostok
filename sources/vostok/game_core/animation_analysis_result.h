@@ -21,7 +21,7 @@ public:
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	void*							m_buffer;
-	/* 0x010c */	buffer_vector<leg_key_times>	m_leg_key_times;
+	/* 0x010c */	buffer_vector< leg_key_times >	m_leg_key_times;
 }; // class animation_analysis_result
 
 STATIC_SIZE_ASSERT(animation_analysis_result, 0x118);
