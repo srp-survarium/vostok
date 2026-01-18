@@ -64,7 +64,7 @@ void weapon_ammunition_cook::delete_resource( resources::resource_base* resource
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[75.81%|PARTIAL]: LTCG everywhere
 void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	ASSERT( UNKNOWN_EXPRESSION );

@@ -33,7 +33,7 @@ public:
 	/* 0x0000 */	float		m_coeff;
 }; // struct bodypart_health_regen_scale_predicate
 
-// STATE[83.11%|PARTIAL]
+// STATE[84.21%|PARTIAL]
 void player_parameters_modifyer::apply( base_player* player )
 {
 	damage_model_ptr damage_model = player->damage_model( );

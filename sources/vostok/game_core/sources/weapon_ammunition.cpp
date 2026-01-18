@@ -50,7 +50,7 @@ void weapon_ammunition::load( configs::binary_config_value const& cfg )
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void weapon_ammunition::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,
@@ -61,7 +61,7 @@ void weapon_ammunition::update_bones_matrices(
 	animation::animation_player const&		animation_player
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, animation_player );
+	VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, &animation_player );
 
 	// FUNCTION BODY
 	// <0x6f9a00>|0x000|      :'43'	{
