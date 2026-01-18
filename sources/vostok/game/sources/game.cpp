@@ -56,6 +56,8 @@
 #include <vostok/game_core/game_material_manager_cook.h>
 #include <vostok/game_core/inventory_cook.h>
 #include <vostok/game_core/items_dictionary_cook.h>
+#include <vostok/game_core/player_parameters_modifyer_cook.h>
+#include <vostok/game_core/animation_analysis_result_cook.h>
 
 #ifdef VOSTOK_STATIC_LIBRARIES
 #include <GFx.h>
@@ -221,8 +223,9 @@ game::game(		vostok::engine_user::engine& engine,
 	LOG_INFO("survarium::game() gfx heap is %x", Scaleform::Memory::GetGlobalHeap());
 #endif #ifdef VOSTOK_STATIC_LIBRARIES
 
-	inventory_cook			inv_cook;
-	items_dictionary_cook	id_cook;
+	inventory_cook					inv_cook;
+	items_dictionary_cook			id_cook;
+	player_parameters_modifyer_cook	pp_cook;
 }
 
 game::~game( )
@@ -664,7 +667,7 @@ void game::scene_close_query( )
 
 void game::register_cooks( )
 {
-//	static animation_analysis_result_cook			s_animation_analysis_result_cook = <0x4c2789c>;
+	static animation_analysis_result_cook			s_animation_analysis_result_cook;
 	static game_material_manager_cook				s_material_manager_cook( false );
 //	static animated_model_instance_cook				s_animated_model_instance_cook = <0x4c277b0>;
 	static ladder_cook 								s_ladder_cook;
@@ -672,6 +675,7 @@ void game::register_cooks( )
 //	static project_cooker_simple					s_simple_project_cook = <0x4c2778c>;
 //	static victory_item_cook 						s_victory_item_cook( );
 
+	register_cook						( &s_animation_analysis_result_cook );
 	register_cook						( &s_material_manager_cook );
 	register_cook						( &s_ladder_cook );
 
