@@ -10,11 +10,6 @@
 namespace survarium {
 
 struct body_part_parameters_modifyer {
-	inline	explicit	body_part_parameters_modifyer	( ) { /* no source */ }
-	inline				~body_part_parameters_modifyer	( ) { /* no source */ }
-
-
-public:
 	/* 0x0000 */	float			health;
 	/* 0x0004 */	float			health_regeneration;
 	/* 0x0008 */	map< fixed_string<16>, hit_type_parameters_modifyer >	hit_type_modifyers;

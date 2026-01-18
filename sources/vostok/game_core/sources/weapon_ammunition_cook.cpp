@@ -5,12 +5,16 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_ammunition_cook.h>
 
+#include <vostok/game_core/weapon_ammunition.h>
+
 namespace survarium {
 
-// STATE[STUB]
-weapon_ammunition_cook::weapon_ammunition_cook( ) : resources::translate_query_cook( resources::weapon_ammunition_class, reuse_false, use_current_thread_id )
+// STATE[66.69%|PARTIAL]
+weapon_ammunition_cook::weapon_ammunition_cook( ) :
+	resources::translate_query_cook( resources::weapon_ammunition_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
+
 	// FUNCTION BODY
 	// <0>
 	// <1>
@@ -20,13 +24,20 @@ weapon_ammunition_cook::weapon_ammunition_cook( ) : resources::translate_query_c
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_ammunition_cook::translate_query(vostok::resources::query_result_for_cook&)
+// STATE[95.62%|DONE]: LTCG for query_resource.
 void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// fs_new::virtual_path_string 	config_name
-	// ******
+	fs_new::virtual_path_string config_name;
+	config_name.assignf( "resources/%s", parent.get_requested_path( ) );
+
+	resources::query_resource(
+		config_name.c_str( ),
+		resources::binary_config_class_impl,
+		boost::bind( &weapon_ammunition_cook::on_config_ready, this, _1, &parent ),
+		g_allocator,
+		NULL,
+		&parent
+	);
 
 	// FUNCTION BODY
 	// <0x7606df>|0x00f|+0x00b:'41'
@@ -43,23 +54,26 @@ void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& 
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_ammunition_cook::delete_resource(vostok::resources::resource_base*)
+// STATE[31.00%|PARTIAL]
 void weapon_ammunition_cook::delete_resource( resources::resource_base* resource )
 {
+	VOSTOK_DELETE_IMPL( g_allocator, resource );
+
 	// FUNCTION BODY
 	// <0x7605a9>|0x009|+0x017:'56'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_ammunition_cook::on_config_ready(vostok::resources::queries_result&, vostok::resources::query_result_for_cook*)
+// STATE[75.81%|PARTIAL]: LTCG everywhere
 void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
-	// LOCALS
-	// weapon_ammunition* 			wa
-	// configs::binary_config_ptr config
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	configs::binary_config_ptr	config	= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+	weapon_ammunition*			wa		= VOSTOK_NEW_IMPL( g_allocator, weapon_ammunition );
+	wa->load( config->get_root( )["data"] );
+
+	parent->set_unmanaged_resource( wa, resources::memory_usage_type( resources::nocache_memory, sizeof( weapon_ammunition ) ) );
+	parent->finish_query( result_success );
 
 	// FUNCTION BODY
 	// <0x7605da>|0x00a|+0x00c:'61'

@@ -43,7 +43,7 @@ public:
 
 	virtual	void		tick						( ) override { /* no source */ }
 
-	virtual	bool		is_ready_to_be_deactivated	( ) const override { /* no source */ }
+	virtual	bool		is_ready_to_be_deactivated	( ) const override { return true; /* sushi@TODO no source */ }
 
 	// STATE[STUB]
 	virtual	animation::mixing::expression
@@ -52,9 +52,10 @@ public:
 	virtual	void		on_player_model_added		( ) override { /* no source */ }
 	virtual	void		on_player_model_removed		( ) override { /* no source */ }
 
+private:
 	virtual	void		update_bones_matrices		(
 							animation::skeleton_ptr const&		user_skeleton,
-							float4x4*							user_matrices,
+							float4x4* const						user_matrices,
 							u32									user_matrices_count,
 							u32									current_time_in_ms,
 							float4x4&							character_head_transform,
@@ -67,7 +68,7 @@ public:
 	// STATE[STUB]
 	virtual	void		deserialize					( network_core::packet_reader& reader ) override {}
 
-	virtual	bool		is_sprinting				( ) const override { /* no source */ }
+	virtual	bool		is_sprinting				( ) const override { return false; /* sushi@TODO no source */ }
 
 private:
 	/* 0x0000 */	/* inventory_item */
