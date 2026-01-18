@@ -12,10 +12,9 @@
 
 namespace survarium {
 
-/*
-static fixed_vector< console_commands::command_token, 12 >	damage_model_cook::m_hit_types;
-static fixed_vector< fixed_string<24>, 12 >					damage_model_cook::m_hit_types_strings;
-*/
+fixed_vector< console_commands::command_token, 12 >	damage_model_cook::m_hit_types;			// sushi@TODO: Might need some initializers
+fixed_vector< fixed_string<24>, 12 >				damage_model_cook::m_hit_types_strings;
+u32 g_current_hit_type;
 
 // STATE[62.35%|DONE]
 damage_model_cook::damage_model_cook( ) :
@@ -386,7 +385,7 @@ static body_part_parameters* create_body_part_parameters(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]
 static void fill_damage_model(
 	damage_model* const						model,
 	memory::stack_allocator*				allocator,
@@ -394,59 +393,70 @@ static void fill_damage_model(
 	configs::binary_config_value const&		damage_groups
 )
 {
-	// LOCALS
-	// configs::binary_config_value const* it_model
-	// configs::binary_config_value const* it_model_end
-	// u8 								damage_group<1>
-	// configs::binary_config_value const& part_value<1>
-	// body_part_parameters* 			new_body_part<1>
-	// u8 								i<2>
-	// configs::binary_config_value const* it_part<3>
-	// configs::binary_config_value const* it_part_end<3>
-	// configs::binary_config_value const& part_value<1>
-	// body_part_parameters* 			body_part<1>
-	// ******
+	configs::binary_config_value const* it_model		= model_value.begin( );
+	configs::binary_config_value const* it_model_end	= model_value.end( );
 
-	// TYPEDEFS
-	// typedef
-	// 	configs::binary_config_value const*
-	// 	config_iterator;
+	for ( ; it_model != it_model_end ; ++it_model )
+	{
+		configs::binary_config_value const& part_value	 = *it_model;
+		u8 									damage_group = u8(-1);
 
-	// ******
+		typedef configs::binary_config_value const* config_iterator;
+		ASSERT( UNKNOWN_EXPRESSION );
+		for ( u8 i = 0 ; i != damage_groups.size( ) ; ++i )
+			for ( config_iterator it_part = damage_groups[i].begin( ), it_part_end = damage_groups[i].end( ) ; it_part != it_part_end ; ++it_part )
+				if ( strings::equal( part_value["name"], *it_part ) )
+				{
+					damage_group = i;
+					break;
+				}
+
+ 		body_part_parameters* new_body_part = create_body_part_parameters( allocator, part_value, *model, damage_group );
+		model->add_body_part( new_body_part );
+	}
+
+	it_model = model_value.begin( );
+	for ( ; it_model != it_model_end ; ++it_model )
+	{
+		configs::binary_config_value const& part_value	= *it_model;
+		body_part_parameters* 				body_part	= model->get_body_part( part_value["name"] );
+		ASSERT( UNKNOWN_EXPRESSION_T( body_part ) );
+		fill_body_part_parameters( body_part, model, allocator, part_value );
+	}
 
 	// FUNCTION BODY[0x760f20]: 68
 	// <0x760f27>|0x007|+0x00b:'419'
 	// <0x760f32>|0x012|+0x00b:'420'
 	// <0>
 	// <7>
-	// <0x760f3d>|0x01d|+0x017:'429'
+	// <0x760f3d>|0x01d|+0x017:'429'	for ( ; it_model != it_model_end ; ++it_model )
 	// <0>
-	// <0x760f54>|0x034|+0x006|[1]:'431'
-	// <0x760f5a>|0x03a|+0x004:'432'
-	// <0>
+	// <0x760f54>|0x034|+0x006|[1]:'431'	configs::binary_config_value const& part_value	 = *it_model;
+	// <0x760f5a>|0x03a|+0x004:'432'		u8 									damage_group = u8(-1);
+	// <0>								{
 	// <1>
-	// <0x760f5e>|0x03e|+0x00c:'435'
-	// <0x760f6a>|0x04a|+0x01f|[2]:'436'
-	// <0x760f89>|0x069|+0x03f|[3]:'437'
-	// <0x760fc8>|0x0a8|+0x02a:'438'
-	// <0>
+	// <0x760f5e>|0x03e|+0x00c:'435'		ASSERT( UNKNOWN_EXPRESSION );
+	// <0x760f6a>|0x04a|+0x01f|[2]:'436'	for ( u8 i = 0 ; i != damage_groups.size( ) ; ++i )
+	// <0x760f89>|0x069|+0x03f|[3]:'437'		for ( configs::binary_config_value const* it_part = damag
+	// <0x760fc8>|0x0a8|+0x02a:'438'				if ( strings::equal( part_value["name"], *it_part )
+	// <0>											{
 	// <0x760ff2>|0x0d2|+0x006:'440'
 	// <0x760ff8>|0x0d8|+0x002:'441'
-	// <0x760ffa>|0x0da|+0x002:'442'
+	// <0x760ffa>|0x0da|+0x002:'442'				}
 	// <0>
 	// <1>
-	// <0x760ffc>|0x0dc|+0x021:'445'
-	// <0x76101d>|0x0fd|+0x00c:'446'
+	// <0x760ffc>|0x0dc|+0x021:'445'		body_part_parameters* new_body_part = create_body_part_parameters( allocator, part_value, *model, damage_group );
+	// <0x76101d>|0x0fd|+0x00c:'446'		model->add_body_part( new_body_part );
 	// <0>
 	// <4>
-	// <0x761029>|0x109|+0x005:'452'
+	// <0x761029>|0x109|+0x005:'452'	}
 	// <0>
 	// <1>
 	// <2>
-	// <0x76102e>|0x10e|+0x00b:'456'
+	// <0x76102e>|0x10e|+0x00b:'456'	it_model = model_value.begin( );
 	// <0>
 	// <6>
-	// <0x761039>|0x119|+0x013:'464'
+	// <0x761039>|0x119|+0x013:'464'	for ( ; it_model != it_model_end ; ++it_model )
 	// <0>
 	// <0x76104c>|0x12c|+0x006|[1]:'466'
 	// <0>
@@ -456,34 +466,71 @@ static void fill_damage_model(
 	// <0>
 	// <15>
 	// ******
+
+
 }
 
-// STATE[STUB]
+// STATE[81.11%|PARTIAL]: Didn't check it thorougly. I also don't know what command_tokens do.
 void damage_model_cook::on_hit_params_received( resources::queries_result& data )
 {
-	// LOCALS
-	// variant< 32 >* 					ud
-	// configs::binary_config_value const& params_value
-	// pcstr 							description
-	// void* 							model_buffer
-	// damage_model* const 				new_model
-	// resources::query_result_for_cook* const parent
-	// const u32 						model_buffer_size
-	// affects_applying_type_enum 		affects_applying_type
-	// configs::binary_config_value const& config_value
-	// configs::binary_config_ptr 		config
-	// memory::stack_allocator 			stack_allocator
-	// configs::binary_config_value const& damage_groups
-	// configs::binary_config_value const& hit_types<1>
-	// configs::binary_config_value const* it_hit_end<1>
-	// configs::binary_config_value const* it_hit<1>
-	// u32 								i<2>
-	// console_commands::command_token 	new_command<3>
-	// ******
+	resources::query_result_for_cook* const parent = data.get_parent_query( );
+	if ( !data.is_successful( ) )
+	{
+		ASSERT( UNKNOWN_EXPRESSION ); // sushi@TODO: There are more similar cases. Possibly there are example to match this better.
+		parent->finish_query( result_error );
+		return;
+	}
 
-	// STATICS
-	// static bool 						hit_types_initialized = <0x4c26671>;
-	// ******
+	static bool	hit_types_initialized = false;
+
+	configs::binary_config_ptr config = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+	configs::binary_config_value const& config_value	= config->get_root( );
+	configs::binary_config_value const& params_value	= config_value["hit_params"];
+	configs::binary_config_value const& damage_groups	= config_value["damage_groups"];
+
+	if ( !hit_types_initialized )
+	{
+		configs::binary_config_value const& hit_types = config_value["hit_types_available"];
+
+		configs::binary_config_value const* it_hit		= hit_types.begin( );
+		configs::binary_config_value const* it_hit_end	= hit_types.end( );
+
+		for ( u32 i = 0 ; it_hit != it_hit_end ; ++it_hit, ++i )
+		{
+			m_hit_types_strings.push_back( fixed_string<24>( (pcstr)*it_hit, (u32)24 ) );	// sushi@TODO: Do better with the constants. // sushi@MATCH: This is different
+			console_commands::command_token new_command = { i, m_hit_types_strings.back( ).c_str( ) };
+			m_hit_types.push_back( new_command );
+		}
+		VOSTOK_NEW_IMPL( g_allocator, console_commands::cc_token )(	// sushi@MATCH
+			"hit_type",
+			g_current_hit_type,
+			m_hit_types.begin( ),
+			m_hit_types.size( ),
+			false,
+			console_commands::command_type_user_specific,
+			console_commands::execution_filter_general
+		);
+		hit_types_initialized = true;
+	}
+
+	const u32 model_buffer_size = calculate_model_size( params_value );
+	pcstr description			= "damage_model_memory";
+	void* model_buffer			= VOSTOK_MALLOC_IMPL( g_allocator, model_buffer_size, description );
+
+	memory::stack_allocator stack_allocator;
+	stack_allocator.initialize( model_buffer, model_buffer_size, description );
+
+	affects_applying_type_enum affects_applying_type;
+	variant< 32 >* ud			= parent->user_data( );
+	ASSERT( UNKNOWN_EXPRESSION_T( ud && ud->try_get( affects_applying_type ) ) );
+	ud->try_get( affects_applying_type );
+
+	damage_model* const new_model = VOSTOK_NEW_IMPL( stack_allocator, damage_model )( affects_applying_type );
+	fill_damage_model( new_model, &stack_allocator, params_value, damage_groups );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	parent->set_unmanaged_resource( new_model, resources::memory_usage_type( resources::nocache_memory, sizeof( damage_model ) ) );
+	parent->finish_query( result_success );
 
 	// FUNCTION BODY[0x7611f0]: 56
 	// <0x761200>|0x010|+0x00b:'491'
@@ -496,46 +543,46 @@ void damage_model_cook::on_hit_params_received( resources::queries_result& data 
 	// <1>
 	// <2>
 	// <3>
-	// <0x761237>|0x047|+0x022:'501'
+	// <0x761237>|0x047|+0x022:'501'	configs::binary_config_ptr config = static_cast_r
 	// <0x761259>|0x069|+0x010:'502'
 	// <0x761269>|0x079|+0x010:'503'
-	// <0x761279>|0x089|+0x010:'504'
+	// <0x761279>|0x089|+0x010:'504'	configs::binary_config_value const& damage_groups	= config_value["damage_groups"];
 	// <0>
-	// <0x761289>|0x099|+0x00f:'506'
+	// <0x761289>|0x099|+0x00f:'506'	if ( !hit_types_initialized )
 	// <0>
-	// <0x761298>|0x0a8|+0x010|[1]:'508'
+	// <0x761298>|0x0a8|+0x010|[1]:'508'	configs::binary_config_value const& hit_types = config_value["hit_types_available"];
 	// <0>
 	// <1>
 	// <2>
 	// <0x7612a8>|0x0b8|+0x00b:'512'
-	// <0x7612b3>|0x0c3|+0x00b:'513'
+	// <0x7612b3>|0x0c3|+0x00b:'513'		configs::binary_config_value const* it_hit_end	= hit_types.end( );
 	// <0>
-	// <0x7612be>|0x0ce|+0x027|[2]:'515'
-	// <0>
-	// <0x7612e5>|0x0f5|+0x046|[3]:'517'
-	// <0x76132b>|0x13b|+0x034:'518'
-	// <0x76135f>|0x16f|+0x00e:'519'
-	// <0x76136d>|0x17d|+0x005:'520'
+	// <0x7612be>|0x0ce|+0x027|[2]:'515'		for ( u32 i = 0 ; it_hit != it_hit_end ; ++it_hit, ++i )
+	// <0>										{
+	// <0x7612e5>|0x0f5|+0x046|[3]:'517'			m_hit_types_strings.push_back( fixed_string<24>( (pcstr)*it_hit, (u32)24 ) );
+	// <0x76132b>|0x13b|+0x034:'518'				console_commands::command_token new_command = { i, m_hit_types_strings.back( ).c_str( ) };
+	// <0x76135f>|0x16f|+0x00e:'519'				m_hit_types.push_back( new_command );
+	// <0x76136d>|0x17d|+0x005:'520'			}
 	// <0x761372>|0x182|+0x0bc:'521'
-	// <0x76142e>|0x23e|+0x007:'522'
+	// <0x76142e>|0x23e|+0x007:'522'			hit_types_initialized = true;
 	// <0>
 	// <1>
-	// <0x761435>|0x245|+0x00f:'525'
-	// <0x761444>|0x254|+0x007:'526'
+	// <0x761435>|0x245|+0x00f:'525'	const u32 model_buffer_size = calculate_model_size( params_value );
+	// <0x761444>|0x254|+0x007:'526'	pcstr description			= "damage_model_memory";
 	// <0>
-	// <0x76144b>|0x25b|+0x01d:'528'
+	// <0x76144b>|0x25b|+0x01d:'528'	void* model_buffer			= VOSTOK_MALLOC_IMPL( g_allocator, model_buffer_size, description );
 	// <0>
-	// <0x761468>|0x278|+0x008:'530'
-	// <0x761470>|0x280|+0x017:'531'
+	// <0x761468>|0x278|+0x008:'530'	memory::stack_allocator stack_allocator;
+	// <0x761470>|0x280|+0x017:'531'	stack_allocator.initialize( model_buffer, model_buffer_size, description );
 	// <0>
 	// <1>
-	// <0x761487>|0x297|+0x00b:'534'
-	// <0x761492>|0x2a2|+0x012:'535'
-	// <0x7614a4>|0x2b4|+0x00c:'536'
+	// <0x761487>|0x297|+0x00b:'534'	variant< 32 >* ud			= parent->user_data( );
+	// <0x761492>|0x2a2|+0x012:'535'	ASSERT( UNKNOWN_EXPRESSION_T( ud ) );
+	// <0x7614a4>|0x2b4|+0x00c:'536'	ud->try_get( affects_applying_type );
 	// <0>
-	// <0x7614b0>|0x2c0|+0x071:'538'
-	// <0x761521>|0x331|+0x018:'539'
-	// <0x761539>|0x349|+0x012:'540'
+	// <0x7614b0>|0x2c0|+0x071:'538'	damage_model* const new_model = VOSTOK_NEW_IMPL( stack_allocator, damage_model )( affects_applying_type );
+	// <0x761521>|0x331|+0x018:'539'	fill_damage_model( new_model, stack_allocator, params_value, damage_groups );
+	// <0x761539>|0x349|+0x012:'540'	parent->set_unmanaged_resource( new_model, resources::memory_usage_type( resources::nocache_memory, sizeof( damage_model ) );
 	// <0>
 	// <1>
 	// <2>
