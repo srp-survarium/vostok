@@ -158,8 +158,7 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 	// ******
 }
 
-// STATE[SKIPPED]
-// float survarium::distance_from_capsule_center_to_point_on_shape(vostok::math::float4x4 const&, float, float, vostok::math::float3 const&)
+// STATE[STUB]
 float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				half_length,
@@ -168,15 +167,15 @@ float distance_from_capsule_center_to_point_on_shape(
 )
 {
 	// LOCALS
-	// float 						proj_to_y_axis
-	// float3 						bottom_surface_center
-	// float3 						y_axis
-	// float3 						surface_center
-	// float3 						top_surface_center
-	// float3 						height_vector
-	// float3 						center
-	// float3 						dir<1>
-	// float3 						height_vector_proj_point<1>
+	// const float 						proj_to_y_axis
+	// float3 							bottom_surface_center
+	// float3 							y_axis
+	// float3 							surface_center
+	// float3 							top_surface_center
+	// float3 							height_vector
+	// float3 							center
+	// float3 							dir<1>
+	// float3 							height_vector_proj_point<1>
 	// ******
 
 	// SKIPPED BLOCKS
@@ -184,8 +183,8 @@ float distance_from_capsule_center_to_point_on_shape(
 	// ******
 
 	return 0.0f;
-	// FUNCTION BODY
-	// <0x5982a0>|0x000|+0x009:'150'	{
+
+	// FUNCTION BODY[0x5982a0]: 16
 	// <0x5982a9>|0x009|+0x01c:'151'
 	// <0x5982c5>|0x025|+0x01c:'152'
 	// <0x5982e1>|0x041|+0x023:'153'
@@ -202,12 +201,10 @@ float distance_from_capsule_center_to_point_on_shape(
 	// <1>
 	// <0x598426>|0x186|+0x045:'165'
 	// <0x59846b>|0x1cb|+0x05d:'166'
-	// <0x5984c8>|0x228|      :'167'	}
 	// ******
 }
 
-// STATE[SKIPPED]
-// float survarium::distance_from_cylinder_center_to_point_on_shape(vostok::math::float4x4 const&, float, float, vostok::math::float3 const&)
+// STATE[STUB]
 float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				radius,
@@ -216,18 +213,18 @@ float distance_from_cylinder_center_to_point_on_shape(
 )
 {
 	// LOCALS
-	// float 						proj_to_y_axis
-	// float3 						circle_point_dir
-	// float3 						bottom_surface_center
-	// float3 						circle_proj_vec
-	// float3 						proj
-	// float3 						y_axis
-	// float3 						surface_center
-	// float3 						top_surface_center
-	// float3 						height_vector
-	// float3 						center
-	// float3 						dir<1>
-	// float3 						height_vector_proj_point<1>
+	// const float 						proj_to_y_axis
+	// float3 							circle_point_dir
+	// float3 							bottom_surface_center
+	// float3 							circle_proj_vec
+	// float3 							proj
+	// float3 							y_axis
+	// float3 							surface_center
+	// float3 							top_surface_center
+	// float3 							height_vector
+	// float3 							center
+	// float3 							dir<1>
+	// float3 							height_vector_proj_point<1>
 	// ******
 
 	// SKIPPED BLOCKS
@@ -235,8 +232,8 @@ float distance_from_cylinder_center_to_point_on_shape(
 	// ******
 
 	return 0.0f;
-	// FUNCTION BODY
-	// <0x598040>|0x000|+0x009:'170'	{
+
+	// FUNCTION BODY[0x598040]: 21
 	// <0x598049>|0x009|+0x01c:'171'
 	// <0x598065>|0x025|+0x01c:'172'
 	// <0x598081>|0x041|+0x026:'173'
@@ -258,7 +255,6 @@ float distance_from_cylinder_center_to_point_on_shape(
 	// <0x598251>|0x211|+0x012:'189'
 	// <0>
 	// <0x598263>|0x223|+0x02e:'191'
-	// <0x598291>|0x251|      :'192'	}
 	// ******
 }
 
@@ -283,8 +279,7 @@ public:
 
 STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
-// STATE[SKIPPED]
-// float survarium::dz_bone_data_contact_test_predicate::add_single_result(void*, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::physics::primitive_type, vostok::math::float4x4 const&, vostok::math::float3 const&)
+// STATE[STUB]
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
 	collision::primitive_type	first_shape_type,
@@ -296,13 +291,13 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 )
 {
 	// LOCALS
-	// std::pair<collision::bone_collision_data *,float> result
-	// float 						d_1
-	// float 						max_distance
+	// std::pair< collision::bone_collision_data*, float > result
+	// const float 						d_1
+	// float 							max_distance
 	// ******
 
 	// STATICS
-	// static <NoType> 				 = <0xc7de0>;
+	// static < NoType > 				 = <0xc7de0>;
 	// ******
 
 	// OTHER SYMBOLS
@@ -313,8 +308,8 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// ******
 
 	return 0.0f;
-	// FUNCTION BODY
-	// <0xc7be0>|0x000|+0x00a:'221'	{
+
+	// FUNCTION BODY[0xc7be0]: 37
 	// <0xc7bea>|0x00a|+0x037:'222'
 	// <0xc7c21>|0x041|+0x014:'223'
 	// <0xc7c35>|0x055|+0x006:'224'
@@ -352,7 +347,6 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// <0xc7db2>|0x1d2|+0x00f:'256'
 	// <0xc7dc1>|0x1e1|+0x015:'257'
 	// <0xc7dd6>|0x1f6|+0x002:'258'
-	// <0xc7dd8>|0x1f8|      :'259'	}
 	// ******
 }
 
@@ -504,19 +498,18 @@ bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) 
 	// ******
 }
 
-// STATE[SKIPPED]
-// void survarium::damage_zone_core::hit_on_enter(const unsigned int, const unsigned int)
-void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
+// STATE[STUB]
+void damage_zone_core::hit_on_enter( const u32 frame_delta, const u32 current_time )
 {
 	// LOCALS
-	// hit_receiver_info* 			end
-	// hit_receiver_info* 			it
-	// std::pair<collision::bone_collision_data *,float> const* ub_it<1>
-	// vectora<std::pair<collision::bone_collision_data *,float> > unique_bones<1>
+	// hit_receiver_info* 				end
+	// hit_receiver_info* 				it
+	// std::pair< collision::bone_collision_data*, float > const* ub_it<1>
+	// vectora< std::pair< collision::bone_collision_data*, float > > unique_bones<1>
 	// dz_bone_data_contact_test_predicate predicate<1>
-	// std::insert_iterator<vectora<std::pair<collision::bone_collision_data *,float> > > insert_it<1>
-	// std::pair<collision::bone_collision_data *,float> const* ub_end<1>
-	// vectora<std::pair<collision::bone_collision_data *,float> > results<1>
+	// std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > > insert_it<1>
+	// std::pair< collision::bone_collision_data*, float > const* ub_end<1>
+	// vectora< std::pair< collision::bone_collision_data*, float > > results<1>
 	// ******
 
 	// SKIPPED BLOCKS
@@ -525,17 +518,16 @@ void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
 
 	// TYPEDEFS
 	// typedef
-	// 	vectora<std::pair<collision::bone_collision_data *,float> >
+	// 	vectora< std::pair< collision::bone_collision_data*, float > >
 	// 	bone_data_container;
 
 	// ******
 
 	// CALL SITE INFO
-	// <0x5991d4> -> void <unknown>(hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const)
+	// <0x5991d4> -> void < unknown >( hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const )
 	// ******
 
-	// FUNCTION BODY
-	// <0x598f80>|0x000|+0x00f:'395'	{
+	// FUNCTION BODY[0x598f80]: 40
 	// <0x598f8f>|0x00f|+0x023:'396'
 	// <0>
 	// <0x598fb2>|0x032|+0x025:'398'
@@ -576,26 +568,24 @@ void damage_zone_core::hit_on_enter( u32 frame_delta, u32 current_time )
 	// <0x5991ee>|0x26e|+0x01a:'433'
 	// <0x599208>|0x288|+0x02a:'434'
 	// <0x599232>|0x2b2|+0x015:'435'
-	// <0x599247>|0x2c7|      :'436'	}
 	// ******
 }
 
-// STATE[SKIPPED]
-// void survarium::damage_zone_core::hit_on_inside(const unsigned int, const unsigned int)
-void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
+// STATE[STUB]
+void damage_zone_core::hit_on_inside( const u32 frame_delta, const u32 current_time )
 {
 	// LOCALS
-	// hit_receiver_info* 			end<1>
-	// hit_receiver_info* 			it<1>
-	// std::pair<collision::bone_collision_data *,float> const* ub_it<2>
-	// vectora<std::pair<collision::bone_collision_data *,float> > unique_bones<2>
+	// hit_receiver_info* 				end<1>
+	// hit_receiver_info* 				it<1>
+	// std::pair< collision::bone_collision_data*, float > const* ub_it<2>
+	// vectora< std::pair< collision::bone_collision_data*, float > > unique_bones<2>
 	// dz_bone_data_contact_test_predicate predicate<2>
-	// std::insert_iterator<vectora<std::pair<collision::bone_collision_data *,float> > > insert_it<2>
-	// std::pair<collision::bone_collision_data *,float> const* ub_end<2>
-	// vectora<std::pair<collision::bone_collision_data *,float> > results<2>
-	// float 						hit_value<3>
-	// float 						armor_piercing_value<3>
-	// float 						hit_coeff<3>
+	// std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > > insert_it<2>
+	// std::pair< collision::bone_collision_data*, float > const* ub_end<2>
+	// vectora< std::pair< collision::bone_collision_data*, float > > results<2>
+	// const float 						hit_value<3>
+	// const float 						armor_piercing_value<3>
+	// float 							hit_coeff<3>
 	// ******
 
 	// SKIPPED BLOCKS
@@ -606,17 +596,16 @@ void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
 
 	// TYPEDEFS
 	// typedef
-	// 	vectora<std::pair<collision::bone_collision_data *,float> >
+	// 	vectora< std::pair< collision::bone_collision_data*, float > >
 	// 	bone_data_container;
 
 	// ******
 
 	// CALL SITE INFO
-	// <0x598ef1> -> void <unknown>(hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const)
+	// <0x598ef1> -> void < unknown >( hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const )
 	// ******
 
-	// FUNCTION BODY
-	// <0x598bf0>|0x000|+0x00f:'439'	{
+	// FUNCTION BODY[0x598bf0]: 47
 	// <0>
 	// <1>
 	// <0x598bff>|0x00f|+0x01b:'442'
@@ -664,26 +653,24 @@ void damage_zone_core::hit_on_inside( u32 frame_delta, u32 current_time )
 	// <0x598f4f>|0x35f|+0x015:'484'
 	// <0x598f64>|0x374|+0x010:'485'
 	// <0>
-	// <0x598f74>|0x384|      :'487'	}
 	// ******
 }
 
-// STATE[SKIPPED]
-// void survarium::damage_zone_core::hit_on_motion_inside(const unsigned int, const unsigned int)
-void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
+// STATE[STUB]
+void damage_zone_core::hit_on_motion_inside( const u32 frame_delta, const u32 current_time )
 {
 	// LOCALS
-	// hit_receiver_info* 			end
-	// hit_receiver_info* 			it
-	// std::pair<collision::bone_collision_data *,float> const* ub_it<1>
-	// vectora<std::pair<collision::bone_collision_data *,float> > unique_bones<1>
+	// hit_receiver_info* 				end
+	// hit_receiver_info* 				it
+	// std::pair< collision::bone_collision_data*, float > const* ub_it<1>
+	// vectora< std::pair< collision::bone_collision_data*, float > > unique_bones<1>
 	// dz_bone_data_contact_test_predicate predicate<1>
-	// std::insert_iterator<vectora<std::pair<collision::bone_collision_data *,float> > > insert_it<1>
-	// std::pair<collision::bone_collision_data *,float> const* ub_end<1>
-	// vectora<std::pair<collision::bone_collision_data *,float> > results<1>
-	// float 						on_bound_hit<2>
-	// float 						hit_val<2>
-	// float 						on_center_hit<2>
+	// std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > > insert_it<1>
+	// std::pair< collision::bone_collision_data*, float > const* ub_end<1>
+	// vectora< std::pair< collision::bone_collision_data*, float > > results<1>
+	// float 							on_bound_hit<2>
+	// const float 						hit_val<2>
+	// float 							on_center_hit<2>
 	// ******
 
 	// SKIPPED BLOCKS
@@ -693,19 +680,18 @@ void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 
 	// TYPEDEFS
 	// typedef
-	// 	vectora<std::pair<collision::bone_collision_data *,float> >
+	// 	vectora< std::pair< collision::bone_collision_data*, float > >
 	// 	bone_data_container;
 
 	// ******
 
 	// CALL SITE INFO
-	// <0x598a71> -> float <unknown>() const
-	// <0x598aab> -> float <unknown>() const
-	// <0x598b6a> -> void <unknown>(hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const)
+	// <0x598a71> -> float < unknown >() const
+	// <0x598aab> -> float < unknown >() const
+	// <0x598b6a> -> void < unknown >( hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const )
 	// ******
 
-	// FUNCTION BODY
-	// <0x598860>|0x000|+0x00f:'490'	{
+	// FUNCTION BODY[0x598860]: 40
 	// <0x59886f>|0x00f|+0x023:'491'
 	// <0>
 	// <0x598892>|0x032|+0x025:'493'
@@ -746,7 +732,6 @@ void damage_zone_core::hit_on_motion_inside( u32 frame_delta, u32 current_time )
 	// <0x598b84>|0x324|+0x01a:'528'
 	// <0x598b9e>|0x33e|+0x02a:'529'
 	// <0x598bc8>|0x368|+0x015:'530'
-	// <0x598bdd>|0x37d|      :'531'	}
 	// ******
 }
 
@@ -807,7 +792,11 @@ void damage_zone_core::deactivate( )
 }
 
 // STATE[BLOCKED]: sushi@TODO: I don't understand what is going on here. Also v0.100b didn't have anomalies anyway.
-void damage_zone_core::on_player_action( hit_receiver const* receiver, player_actions_subscriber::action action, float param )
+void damage_zone_core::on_player_action(
+	hit_receiver const*						receiver,
+	player_actions_subscriber::action		action,
+	float									param
+)
 {
 	// CALL SITE INFO
 	// <0x597e1a> -> void <unknown>(hit_receiver const*, player_actions_subscriber::action, float)

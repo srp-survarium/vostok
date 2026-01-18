@@ -17,8 +17,9 @@ static fixed_vector< console_commands::command_token, 12 >	damage_model_cook::m_
 static fixed_vector< fixed_string<24>, 12 >					damage_model_cook::m_hit_types_strings;
 */
 
-// STATE[STUB]: Called from `invetory_cook`.
-damage_model_cook::damage_model_cook( ) : resources::translate_query_cook( resources::damage_model_class, reuse_false, use_current_thread_id )
+// STATE[62.35%|DONE]
+damage_model_cook::damage_model_cook( ) :
+	resources::translate_query_cook( resources::damage_model_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }

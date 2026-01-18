@@ -74,7 +74,7 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 		u32 time_delta_in_ms = current_time_in_ms - m_last_time_in_ms;
 		m_last_time_in_ms = current_time_in_ms;
 
-		float dt_sec = time_delta_in_ms * 0.001 * time_scale;
+		float dt_sec = time_delta_in_ms * 0.001f * time_scale;
 		m_time_since_shoot += dt_sec;
 		m_time_since_last_dispersion_change += dt_sec;
 		m_time_since_last_dispersion_change = std::min( m_time_since_last_dispersion_change, m_interpolator.transition_time( ) );

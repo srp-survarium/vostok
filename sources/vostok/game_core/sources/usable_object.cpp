@@ -34,7 +34,7 @@ void usable_object::load( configs::binary_config_value const& cfg )
 	m_collision_geometries_count = collision_table.size( );
 	ASSERT( UNKNOWN_EXPRESSION ); // sushi@TODO: Compare with other `load` functions.
 
-	m_collision_geometries = (collision_geometry**)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( collision_geometry* ) * m_collision_geometries_count );
+	m_collision_geometries = (collision_geometry**)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( collision_geometry* ) * m_collision_geometries_count, "usable_object_collision_geometry" );
 
 	// FUNCTION BODY
 	// <0x5a0b8a>|0x00a|+0x030:'27'

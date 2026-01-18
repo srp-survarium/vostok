@@ -44,7 +44,7 @@ void items_dictionary_cook::translate_query( resources::query_result_for_cook& p
 	// ******
 }
 
-// STATE[31.00%|PARTIAL]
+// STATE[31.00%|PARTIAL] sushi@TODO
 void items_dictionary_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
