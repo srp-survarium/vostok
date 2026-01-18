@@ -43,12 +43,12 @@ class		thread_local_data;
 class resources_manager
 {
 public:
-								resources_manager					(fs_new::asynchronous_device_interface &	hdd,																	 
+								resources_manager					(fs_new::asynchronous_device_interface &	hdd,
 																	 fs_new::asynchronous_device_interface &	dvd,
 																	 enable_fs_watcher_bool						enable_fs_watcher);
 
 								~resources_manager					();
-								
+
 	void						on_resources_thread_started			();
 	void						resources_thread_tick				();
 	void						resources_thread_yield				(u32 thread_sleep_period);
@@ -101,7 +101,7 @@ public:
 																	 bool			create_if_not_exist);
 
 	void						finalize_thread_usage				(bool 			call_from_main_thread);
-	void						wait_and_dispatch_callbacks			(bool 			call_from_main_thread, 
+	void						wait_and_dispatch_callbacks			(bool 			call_from_main_thread,
 																	 bool 			finalizing_thread);
 
 	void						register_cook						(cook_base *	cook);
@@ -124,7 +124,7 @@ public:
 	void						mount_mounts_path					(pcstr mount_path);
 
 	void						set_query_finished_callback			(query_finished_callback callback) { m_query_finished_callback  = callback; }
-		
+
 	pvoid						allocate_unmanaged_memory			(u32 size, pcstr type_name);
 	managed_resource *			allocate_managed_resource			(u32 size, class_id_enum class_id);
 	void						free_managed_resource				(managed_resource * );
@@ -139,7 +139,7 @@ public:
 	void						dispatch_devices					();
 	debug_state *				debug								() { return & m_debug; }
 	allocate_functionality *	allocate							() { return & m_allocate_functionality; }
-	
+
 #if VOSTOK_FS_NEW_WATCHER_ENABLED
 	watcher *					get_watcher							() { return m_watcher.c_ptr(); }
 #endif
@@ -155,10 +155,10 @@ private:
 	void						remove_from_generate_if_no_file_queue	(query_result &	query);
 
 	void						push_to_device_manager				(query_result &		query);
-	void						dispatch_query_callbacks			(queries_result *	ready_query_list, 
+	void						dispatch_query_callbacks			(queries_result *	ready_query_list,
 																	 bool const			finalizing_thread);
 
-	void						dispatch_fs_tasks_callbacks			(fs_task *			ready_fs_tasks, 
+	void						dispatch_fs_tasks_callbacks			(fs_task *			ready_fs_tasks,
 																	 bool const			finalizing_thread);
 
 	bool						thread_can_exit						();
@@ -224,7 +224,7 @@ private:
 	// misc
 	//----------------------------------------------------------
 	void						dump_unmanaged_resource_leaks			();
-	
+
 	//----------------------------------------------------------
 	// mounts
 	//----------------------------------------------------------
@@ -238,17 +238,17 @@ private:
 	void						on_allocated_raw_resource			(query_result * query);
 	void						dispatch_allocated_raw_resources	();
 	allocate_functionality											m_allocate_functionality;
-	
+
 	debug_state					m_debug;
 
-	//----------------------------------------------------------	
-	// name_registry	
-	//----------------------------------------------------------	
-	typedef hash_multiset<	name_registry_entry, 
-							name_registry_entry *, 
-							& name_registry_entry::next_in_hashset, 
-							vostok::detail::fixed_size_policy<1024*32>, 
-							detail::name_registry_hash, 
+	//----------------------------------------------------------
+	// name_registry
+	//----------------------------------------------------------
+	typedef hash_multiset<	name_registry_entry,
+							name_registry_entry *,
+							& name_registry_entry::next_in_hashset,
+							vostok::detail::fixed_size_policy<1024*32>,
+							detail::name_registry_hash,
 							detail::name_registry_equal	> name_registry_type;
 
 	name_registry_type												m_name_registry;
@@ -264,33 +264,33 @@ private:
 	void						delete_name_registry_entries		();
 	void						finalize_name_registry				();
 
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	// global callbacks
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	void						on_query_finished_callback			(resource_base * resource);
 
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	// init new queries
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	void   						init_new_autoselect_quality_queries	();
 	void   						init_new_autoselect_quality_query	(query_result * query);
 
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	// pending operations counters
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	void						change_count_of_pending_mount_operations		(long change);
-	void						change_count_of_pending_helper_query_for_mount	(long change);	
+	void						change_count_of_pending_helper_query_for_mount	(long change);
 
 	threading::atomic32_type	m_pending_mount_operations_count;
 	threading::atomic32_type	m_pending_mount_helper_query_count;
-	
+
 	threading::atomic32_type	m_count_of_pending_query_with_fat_it;
 	void						change_count_of_pending_query_with_fat_it		(long change);
 
 
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 	// fs watcher notifications
-	//----------------------------------------------------------	
+	//----------------------------------------------------------
 
 	void						push_to_call_tasks_finished_callback	(query_result * query);
 	void						dispatch_tasks_finished_callback		(query_result * query, bool finalizing_thread);
@@ -299,12 +299,12 @@ private:
 
 private:
 	threading::mutex												m_ready_queries_mutex;
-	typedef intrusive_double_linked_list<query_result, 
-										 query_result *, 
-										 & query_result::m_prev_in_generate_if_no_file_queue, 
+	typedef intrusive_double_linked_list<query_result,
+										 query_result *,
+										 & query_result::m_prev_in_generate_if_no_file_queue,
 										 & query_result::m_next_in_generate_if_no_file_queue,
 										 threading::mutex>	generate_if_no_file_queue;
-								 
+
 	generate_if_no_file_queue										m_generate_if_no_file_queue;
 
 	typedef	vector<device_manager*>									device_managers;
@@ -325,7 +325,7 @@ private:
 	new_queries_list												m_new_autoselect_quality_queries;
 
 	intrusive_list<managed_resource, managed_resource *, &managed_resource::m_next_delay_delete>	m_delayed_delete_managed_resources;
-	intrusive_list<unmanaged_resource, unmanaged_resource *, &unmanaged_resource::m_next_delay_delete>	
+	intrusive_list<unmanaged_resource, unmanaged_resource *, &unmanaged_resource::m_next_delay_delete>
 																	m_delayed_delete_unmanaged_resources;
 	threading::atomic32_type										m_delay_delete_unmanaged_resources_count;
 
@@ -333,7 +333,7 @@ private:
 	// "function 'vostok::intrusive_list<BaseWithMember,PointerType,MemberNext>::intrusive_list(void)' already has a body"
 	// intrusive_list<query_result, query_result *, &query_result::m_next_to_allocate_raw_resource>	m_queries_with_allocated_raw_resources;
 	intrusive_list<query_result, query_result *, &query_result::m_union_nexts>	m_queries_with_allocated_raw_resources;
-	
+
 	threading::reader_writer_lock									m_thread_local_data_lock;
 	thread_local_data_tree											m_thread_local_data;
 	u32																m_tls_key_thread_local_data;

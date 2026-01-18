@@ -1757,10 +1757,11 @@ fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::ve
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_inventory(survarium::inventory*, survarium::profile_slot_enum)
+// STATE[UNCHECKED]
 void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 {
+	inventory_item::set_inventory( inv, slot );
+
 	// FUNCTION BODY
 	// <0x5a2e27>|0x007|+0x010:'1256'
 	// ******

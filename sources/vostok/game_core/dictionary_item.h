@@ -18,10 +18,6 @@ struct dictionary_item {
 			|| item_category == 21;
 	}
 
-	inline			dictionary_item	( ) { /* no source */ }
-	inline			~dictionary_item( ) { /* no source */ }
-
-public:
 	/* 0x0000 */	u32								item_id;
 	/* 0x0004 */	configs::binary_config_ptr		item_cfg;
 	/* 0x0008 */	fixed_string<260>				item_cfg_name;

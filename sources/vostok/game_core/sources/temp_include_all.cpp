@@ -72,11 +72,14 @@
 #include <vostok/game_core/inventory.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
+#include <vostok/game_core/player_parameters_modifyer.h>
 
 namespace vostok
 {
 	void use_medkit( )
 	{
+		survarium::player_parameters_modifyer ppm;
+		ppm.apply( NULL );
 		// survarium::medkit medkit;
 	}
 
@@ -637,6 +640,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_medkit( );
 	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );

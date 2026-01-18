@@ -50,33 +50,33 @@ public:
 
 			void								set_skeleton					( animation::skeleton_ptr const& skeleton );
 
-	inline	void								set_recoil_params				( weapon_recoil_params const& recoil_params ) { m_recoil_params = recoil_params; }
-	inline	weapon_recoil_params const&			get_recoil_params				( ) const { return m_recoil_params; }
+	inline	void								set_recoil_params				( weapon_recoil_params const& recoil_params )	{ m_recoil_params = recoil_params;	}
+	inline	weapon_recoil_params const&			get_recoil_params				( ) const										{ return m_recoil_params;			}
 
-	inline	void								set_dispersion_params			( weapon_dispersion_params const& arg_0 ) { /* no source */ }
-	inline	weapon_dispersion_params const&		get_dispersion_params			( ) const { /* no source */ }
+	inline	void								set_dispersion_params			( weapon_dispersion_params const& params )		{ m_dispersion_params = params;		}
+	inline	weapon_dispersion_params const&		get_dispersion_params			( ) const										{ return m_dispersion_params;		}
 
-	inline	dispersion_calculator const&		get_dispersion_calculator		( ) const { /* no source */ }
-	inline	dispersion_calculator&				get_dispersion_calculator		( ) { /* no source */ }
+	inline	dispersion_calculator const&		get_dispersion_calculator		( ) const										{ return m_dispersion_calculator;	}
+	inline	dispersion_calculator&				get_dispersion_calculator		( )												{ return m_dispersion_calculator;	}
 
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const { return m_magazine_capacity; }							// STATE[STUB]
+			u16									get_magazine_capacity			( ) const										{ return m_magazine_capacity;		}	// STATE[STUB]
 
-	inline	weapon_ammunition_ptr				ammunition						( ) const { /* no source */ }
+	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
-			u16									ammo_in_magazine				( ) const { return m_ammo_in_magazine; }							// STATE[STUB]
-	inline	u16									ammo_in_weapon					( ) const { /* no source */ }
+			u16									ammo_in_magazine				( ) const										{ return m_ammo_in_magazine;		}	// STATE[STUB]
+	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
 
 			u16									maximum_ammo_in_weapon			( ) const;
 
 	inline	bool								ready_to_fire					( ) const { /* no source */ }
 
 			bool								is_ready_to_shoot				( ) const;
-	inline	bool								is_firing						( ) const { /* no source */ }
-	inline	bool								is_toggling						( ) const { /* no source */ }
+	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
+	inline	bool								is_toggling						( ) const { return m_is_toggling; /* no source */ }
 
 			bool								ready_to_reload					( ) const { return true; /* sushi@TODO: A LOT OF LOGIC */ }			// STATE[STUB]
 
@@ -216,7 +216,7 @@ public:
 
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
-													float4x4*							user_matrices,
+													float4x4* const						user_matrices,
 													u32									user_matrices_count,
 													u32									current_time_in_ms,
 													float4x4&							character_head_transform,

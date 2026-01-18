@@ -8,7 +8,6 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_user_animations_container_cook::weapon_user_animations_container_cook()
 weapon_user_animations_container_cook::weapon_user_animations_container_cook( )
 	: resources::translate_query_cook( resources::animation_container_class, reuse_true, use_current_thread_id )
 {
@@ -19,23 +18,21 @@ weapon_user_animations_container_cook::weapon_user_animations_container_cook( )
 }
 
 // STATE[STUB]
-// void survarium::weapon_user_animations_container_cook::delete_resource(vostok::resources::resource_base*)
 void weapon_user_animations_container_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7629b0]: 1
 	// <0x7629b9>|0x009|+0x013:'20'
 	// ******
 }
 
 // STATE[STUB]
-// void survarium::weapon_user_animations_container_cook::translate_query(vostok::resources::query_result_for_cook&)
 void weapon_user_animations_container_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// LOCALS
-	// fs_new::virtual_path_string 	config_name
+	// fs_new::virtual_path_string 		config_name
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7632e0]: 10
 	// <0x7632ef>|0x00f|+0x00b:'25'
 	// <0x7632fa>|0x01a|+0x01d:'26'
 	// <0>
@@ -50,14 +47,17 @@ void weapon_user_animations_container_cook::translate_query( resources::query_re
 }
 
 // STATE[STUB]
-// void survarium::create_requests_for_animations(vostok::configs::binary_config_value const&, const unsigned int, vostok::buffer_vector<vostok::resources::request>&)
-void create_requests_for_animations( configs::binary_config_value const& cfg, u32 requests_count, buffer_vector<resources::request>& requests )
+void create_requests_for_animations(
+	configs::binary_config_value const&		cfg,
+	const u32								requests_count,
+	buffer_vector< resources::request >&	requests
+)
 {
 	// LOCALS
-	// u32 							i<1>
+	// u32 								i<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762950]: 5
 	// <0x762956>|0x006|+0x00c:'41'
 	// <0x762962>|0x012|+0x01a|[1]:'42'
 	// <0>
@@ -67,16 +67,15 @@ void create_requests_for_animations( configs::binary_config_value const& cfg, u3
 }
 
 // STATE[STUB]
-// void survarium::weapon_user_animations_container_cook::on_config_loaded(vostok::resources::queries_result&)
 void weapon_user_animations_container_cook::on_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
 	// configs::binary_config_value const& root
-	// buffer_vector<resources::request> requests
-	// configs::binary_config_ptr config
+	// buffer_vector< resources::request > requests
+	// configs::binary_config_ptr 		config
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762f50]: 52
 	// <0x762f60>|0x010|+0x00f:'50'
 	// <0>
 	// <0x762f6f>|0x01f|+0x00c:'52'
@@ -133,19 +132,18 @@ void weapon_user_animations_container_cook::on_config_loaded( resources::queries
 }
 /*
 // STATE[STUB]
-// void survarium::get_animations_from_request_results<27>(vostok::resources::queries_result const&, const unsigned int, unsigned int&, vostok::resources::managed_resource_ptr[27]&)
 void get_animations_from_request_results<27>(
 	resources::queries_result const&	data,
-	u32									animations_count,
+	const u32							animations_count,
 	u32&								resource_index,
 	resources::managed_resource_ptr[27]&	result
 )
 {
 	// LOCALS
-	// u32 							i<1>
+	// u32 								i<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762b90]: 3
 	// <0x762b97>|0x007|+0x00c:'107'
 	// <0x762ba3>|0x013|+0x01a|[1]:'108'
 	// <0x762bbd>|0x02d|+0x054:'109'
@@ -153,15 +151,14 @@ void get_animations_from_request_results<27>(
 }
 */
 // STATE[STUB]
-// void survarium::weapon_user_animations_container_cook::on_animations_loaded(vostok::resources::queries_result&)
 void weapon_user_animations_container_cook::on_animations_loaded( resources::queries_result& data )
 {
 	// LOCALS
-	// u32 							resource_index
+	// u32 								resource_index
 	// weapon_user_animations_container* container
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762c20]: 43
 	// <0x762c2c>|0x00c|+0x00f:'114'
 	// <0>
 	// <0x762c3b>|0x01b|+0x00c:'116'

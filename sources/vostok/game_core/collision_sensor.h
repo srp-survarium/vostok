@@ -63,7 +63,7 @@ private:
 			void					filter_sensed_objects			( buffer_vector<physics::base_physics_object *>& sensed_objects );
 
 protected:
-	/* 0x0008 */	vector<physics::base_physics_object *>	m_old_objects;
+	/* 0x0008 */	vector< physics::base_physics_object* >	m_old_objects;
 	/* 0x0014 */	collision_geometry**					m_collision_geometries;
 	/* 0x0018 */	u32										m_collision_geometries_count;
 	/* 0x001c */	bool									m_is_active;

@@ -8,6 +8,7 @@
 #include <vostok/game_core/game_team_id.h>
 #include <vostok/game_core/profile_slot.h>
 #include <vostok/game_core/skill_booster.h>
+#include <vostok/game_core/profile_slot_enum.h>
 
 namespace survarium {
 
@@ -27,7 +28,7 @@ public:
 	/* 0x0004 */	u32						profile_id;
 	/* 0x0008 */	char					profile_name[32];
 	/* 0x0028 */	skill_booster			boosters[11];
-	/* 0x0080 */	profile_slot			slots[19];
+	/* 0x0080 */	profile_slot			slots[max_slots_count];
 	/* 0x01b0 */	game_team_id			team;
 	/* 0x01b4 */	bool					is_local;
 }; // struct player_profile

@@ -20,7 +20,7 @@ void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 curren
 		record.m_callback( frame_delta, current_time );
 		return;
 	}
-	
+
 	ASSERT( UNKNOWN_EXPRESSION_T( record.m_update_delta != 0 ) );
 	u32 update_delta = record.m_update_delta;
 	if ( current_time < update_delta + last_update_time )
@@ -73,8 +73,8 @@ void scheduler::on_frame( u32 frame_delta, u32 current_time )
 	for ( m_current_index = 0 ; m_current_index < m_inactive_objects.size( ) ; ++m_current_index )
 		on_frame( m_active_objects[m_current_index], frame_delta, current_time );
 
-	m_current_index = -1;
- 
+	m_current_index = u32(-1);
+
 	// FUNCTION BODY
 	// <1>
 	// <2>

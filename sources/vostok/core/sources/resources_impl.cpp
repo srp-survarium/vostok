@@ -14,10 +14,10 @@ namespace resources {
 static out_of_memory_callback	s_out_of_memory_callback;
 static resource_freed_callback	s_resource_freed_callback;
 
-query_resource_params::query_resource_params	(request const 				requests[], 
-												 creation_request const 	requests_create[], 
-												 u32						count, 
-												 query_callback const &		callback, 
+query_resource_params::query_resource_params	(request const 				requests[],
+												 creation_request const 	requests_create[],
+												 u32						count,
+												 query_callback const &		callback,
 												 memory::base_allocator *	allocator,
 												 float *					target_satisfactions,
 												 math::float4x4 const *		transforms[],
@@ -30,10 +30,10 @@ query_resource_params::query_resource_params	(request const 				requests[],
 												 query_type_enum			query_type,
 												 u32 *						out_queries_id,
 												 autoselect_quality_bool *	autoselect_quality,
-												 assert_on_fail_bool		assert_on_fail) 
+												 assert_on_fail_bool		assert_on_fail)
 :	requests(requests), requests_create(requests_create), requests_count(count),
-	callback(callback), allocator(allocator), target_satisfactions(target_satisfactions), transforms(transforms), 
-	user_data(user_data), parent(parent), disable_cache(disable_cache), quality_indexes(quality_indexes), 
+	callback(callback), allocator(allocator), target_satisfactions(target_satisfactions), transforms(transforms),
+	user_data(user_data), parent(parent), disable_cache(disable_cache), quality_indexes(quality_indexes),
 	request_mask(request_mask), flags(flags), query_type(query_type), out_queries_id(out_queries_id), autoselect_quality(autoselect_quality),
 	assert_on_fail(assert_on_fail)
 {
@@ -54,7 +54,7 @@ creation_request::creation_request	( pcstr name, u32 buffer_size, class_id_enum 
 {
 }
 
-void   initialize (fs_new::asynchronous_device_interface & hdd, 
+void   initialize (fs_new::asynchronous_device_interface & hdd,
 				   fs_new::asynchronous_device_interface & dvd,
 				   enable_fs_watcher_bool				   enable_fs_watcher)
 {
@@ -112,14 +112,14 @@ void   end_query_might_destroy_this_transaction ()
 	g_resources_manager->end_query_might_destroy_this_transaction	();
 }
 
-long   query_resources (query_resource_params const & params)
+u32   query_resources (query_resource_params const & params)
 {
 	return						g_resources_manager->query_resources_impl (params);
 }
 
-long   query_resources_autoselect_quality (request const 				requests[], 
-										   u32							count, 
-										   query_callback const &		callback, 
+u32   query_resources_autoselect_quality (request const 				requests[],
+										   u32							count,
+										   query_callback const &		callback,
 										   memory::base_allocator *		allocator,
 										   math::float4x4 const *		transform[],
 										   user_data_variant const *	user_data[],
@@ -133,10 +133,10 @@ long   query_resources_autoselect_quality (request const 				requests[],
  	return						g_resources_manager->query_resources_impl (params);
 }
 
-long   query_resource (pcstr const						request_path, 
-					   class_id_enum const				class_id, 
-					   query_callback const &			callback, 
-					   memory::base_allocator * const	allocator, 
+u32   query_resource (pcstr const						request_path,
+					   class_id_enum const				class_id,
+					   query_callback const &			callback,
+					   memory::base_allocator * const	allocator,
 					   user_data_variant const *		user_data,
 					   query_result_for_cook * const	parent,
 					   assert_on_fail_bool				assert_on_fail)
@@ -146,9 +146,9 @@ long   query_resource (pcstr const						request_path,
 	return query_resources		(&request, 1, callback, allocator, user_data_array, parent, assert_on_fail);
 }
 
-long   query_resources (request const *					requests, 
-					    u32 const						request_count, 
-					    query_callback const &			callback, 
+u32   query_resources (request const *					requests,
+					    u32 const						request_count,
+					    query_callback const &			callback,
 					    memory::base_allocator * const	allocator,
 						user_data_variant const *		user_data[],
 						query_result_for_cook * const	parent,
@@ -191,9 +191,9 @@ void   query_resources_and_wait	(query_resource_params const & in_params)
 	}
 }
 
-void   query_resources_and_wait	(request const *				requests, 
-					    		 u32 const						request_count, 
-					    		 query_callback const &			callback, 
+void   query_resources_and_wait	(request const *				requests,
+					    		 u32 const						request_count,
+					    		 query_callback const &			callback,
 					    		 memory::base_allocator * const	allocator,
 								 user_data_variant const *		user_data[],
 								 query_result_for_cook * const	parent,
@@ -204,10 +204,10 @@ void   query_resources_and_wait	(request const *				requests,
 	query_resources_and_wait		(params);
 }
 
-void   query_resource_and_wait (pcstr const						request_path, 
-					  			class_id_enum const				class_id, 
-					  			query_callback const&			callback, 
-					  			memory::base_allocator* const	allocator, 
+void   query_resource_and_wait (pcstr const						request_path,
+					  			class_id_enum const				class_id,
+					  			query_callback const&			callback,
+					  			memory::base_allocator* const	allocator,
 								user_data_variant const *		user_data,
 					  			query_result_for_cook* const	parent,
 								assert_on_fail_bool				assert_on_fail)
@@ -217,11 +217,11 @@ void   query_resource_and_wait (pcstr const						request_path,
 	query_resources_and_wait	(&request, 1, callback, allocator, user_data_array, parent, assert_on_fail);
 }
 
-long   query_create_resource  (pcstr							request_name,
-							   const_buffer 					src_data, 
-							   class_id_enum const				class_id, 
-							   query_callback const &			callback, 
-							   memory::base_allocator * const	allocator, 
+u32   query_create_resource  (pcstr							request_name,
+							   const_buffer 					src_data,
+							   class_id_enum const				class_id,
+							   query_callback const &			callback,
+							   memory::base_allocator * const	allocator,
 							   user_data_variant const *		user_data,
 							   query_result_for_cook * const	parent,
 							   assert_on_fail_bool const		assert_on_fail)
@@ -231,9 +231,9 @@ long   query_create_resource  (pcstr							request_name,
 	return query_create_resources		(& request, 1, callback, allocator, user_data_array, parent, assert_on_fail);
 }
 
-long   query_create_resources  (creation_request const *		requests, 
-								u32 const						request_count, 
-								query_callback const &			callback, 
+u32   query_create_resources  (creation_request const *		requests,
+								u32 const						request_count,
+								query_callback const &			callback,
 								memory::base_allocator * const	allocator,
 								user_data_variant const *		user_data[],
 								query_result_for_cook * const	parent,
@@ -260,9 +260,9 @@ private:
 	query_callback				callback_;
 };
 
-void   query_create_resources_and_wait  (creation_request const *		requests, 
-										 u32 const						request_count, 
-										 query_callback const &			callback, 
+void   query_create_resources_and_wait  (creation_request const *		requests,
+										 u32 const						request_count,
+										 query_callback const &			callback,
 										 memory::base_allocator * const	allocator,
 										 user_data_variant const *		user_data[],
 										 query_result_for_cook * const	parent,
@@ -273,9 +273,9 @@ void   query_create_resources_and_wait  (creation_request const *		requests,
 	query_resources_and_wait				(params);
 }
 
-void   query_resources_by_mask (pcstr const						request_mask, 
-								class_id_enum const				class_id, 
-								query_callback const &			callback, 
+void   query_resources_by_mask (pcstr const						request_mask,
+								class_id_enum const				class_id,
+								query_callback const &			callback,
 								memory::base_allocator * const	allocator,
 					    		query_flag_enum const			flags,
 								query_result_for_cook * const	parent)
@@ -395,10 +395,10 @@ resource_freed_callback   get_resource_freed_callback ()
 }
 
 u32   pending_queries_count ()
-{ 
+{
 	if ( !g_resources_manager.initialized() )
 		return								0;
-	return									g_resources_manager->pending_queries_count(); 
+	return									g_resources_manager->pending_queries_count();
 }
 
 void	fill_stats						(strings::text_tree_item & stats)
@@ -419,7 +419,7 @@ static void resources_thread ()
 	on_resources_thread_started				();
 	threading::interlocked_exchange			(s_resources_thread_started, true);
 
-	for (;;) 
+	for (;;)
 	{
 		if ( s_resources_thread_exit )
 			break;
@@ -427,7 +427,7 @@ static void resources_thread ()
 		resources::resources_thread_yield	( 300 );
 		resources::resources_thread_tick	( );
 	}
-	
+
 	on_resources_thread_ending				();
 	threading::interlocked_exchange			(s_resources_thread_finished, true);
 }
@@ -435,7 +435,7 @@ static void resources_thread ()
 static void cooker_thread ()
 {
 	threading::interlocked_exchange			(s_cooker_thread_started, true);
-	for (;;) 
+	for (;;)
 	{
 		if ( s_cooker_thread_exit )
 			break;
@@ -443,7 +443,7 @@ static void cooker_thread ()
 		resources::cooker_thread_yield	( 300 );
 		resources::cooker_thread_tick	( );
 	}
-	
+
 	finalize_thread_usage					(false);
 	threading::interlocked_exchange			(s_cooker_thread_finished, true);
 }
@@ -451,9 +451,9 @@ static void cooker_thread ()
 void   start_resources_threads			()
 {
 	threading::spawn					(
-		& resources_thread, 
-		"resources manager", 
-		"res_man", 
+		& resources_thread,
+		"resources manager",
+		"res_man",
 		0,
 		2 % threading::core_count(),
 		threading::tasks_aware
@@ -463,14 +463,14 @@ void   start_resources_threads			()
 		threading::yield					();
 
 	threading::spawn					(
-		& cooker_thread, 
-		"resources cooker", 
-		"res_cook", 
+		& cooker_thread,
+		"resources cooker",
+		"res_cook",
 		0,
 		2 % threading::core_count(),
 		threading::tasks_aware
 	);
-	
+
 	while ( !s_cooker_thread_started )
 		threading::yield					();
 }

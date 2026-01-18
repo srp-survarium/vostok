@@ -390,7 +390,7 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 		return false;
 	}
 
-	if ( ray_result.object->get_collision_group( ) & mask == 0 )
+	if ( ( ray_result.object->get_collision_group( ) & mask ) == 0 )
 	{
 		result = looking_point_matrix;
 		return false;

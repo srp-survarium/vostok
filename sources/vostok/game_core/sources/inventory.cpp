@@ -13,8 +13,36 @@
 #include <vostok/game_core/profile_slot.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/profile_slots.h>
 
 namespace survarium {
+
+// sushi@TODO: Maybe move somewhere else.
+profile_slot_enum weapon_slots[WEAPON_COUNT] = {
+	weapon1_slot,
+	weapon2_slot,
+};
+profile_slot_enum ammunition_slots[AMMO_COUNT] = {
+	ammo1_weapon1_slot,
+	ammo1_weapon2_slot,
+	ammo2_weapon1_slot,
+	ammo2_weapon2_slot,
+};
+profile_slot_enum item_slots[ITEM_COUNT] = {
+	helmet_slot,
+	mask_slot,
+	torso_slot,
+	back_slot,
+	pants_slot,
+	gloves_slot,
+	boots_slot,
+	quick_slot1,
+	quick_slot2,
+	quick_slot3,
+	quick_slot4,
+	quick_slot5,
+	quick_slot6,
+};
 
 // STATE[91.03%|DONE]
 inventory::inventory( ) :
@@ -151,35 +179,7 @@ bool inventory::action(
 	// ******
 }
 
-#define WEAPON_COUNT	2
-#define AMMO_COUNT		4
-#define ITEM_COUNT		13
 
-profile_slot_enum weapon_slots[WEAPON_COUNT] = {
-	weapon1_slot,
-	weapon2_slot,
-};
-profile_slot_enum ammunition_slots[AMMO_COUNT] = {
-	ammo1_weapon1_slot,
-	ammo1_weapon2_slot,
-	ammo2_weapon1_slot,
-	ammo2_weapon2_slot,
-};
-profile_slot_enum item_slots[ITEM_COUNT] = {
-	helmet_slot,
-	mask_slot,
-	torso_slot,
-	back_slot,
-	pants_slot,
-	gloves_slot,
-	boots_slot,
-	quick_slot1,
-	quick_slot2,
-	quick_slot3,
-	quick_slot4,
-	quick_slot5,
-	quick_slot6,
-};
 
 // STATE[36.41%|PARTIAL]
 void inventory::setup_demo_profile( )

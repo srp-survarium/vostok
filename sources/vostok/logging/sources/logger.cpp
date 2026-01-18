@@ -191,12 +191,12 @@ void append(
 	log_callback_boost const&	log_callback,
 	void* const					user_data,
 	log_format const*			log_format,
-	pcstr						file,
-	u32							line,
-	pcstr						function_signature,
-	pcstr						initiator,
+	pcstr const					file,
+	u32	const					line,
+	pcstr const					function_signature,
+	pcstr const					initiator,
 	verbosity					verbosity,
-	pcstr						format,
+	pcstr const					format,
 	...
 )
 {
@@ -211,12 +211,12 @@ void append(
 	log_callback_boost const&	log_callback,
 	void* const					user_data,
 	format_specifier const&		format_specifier,
-	pcstr						file,
-	u32							line,
-	pcstr						function_signature,
-	pcstr						initiator,
+	pcstr const					file,
+	u32	const					line,
+	pcstr const					function_signature,
+	pcstr const					initiator,
 	verbosity					verbosity,
-	pcstr						format,
+	pcstr const					format,
 	...
 )
 {

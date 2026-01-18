@@ -54,15 +54,15 @@ public:
 	explicit									base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
 	virtual										~base_player					( );
 
-	inline	interactive_object_ptr				get_current_active_object		( ) { /* no source */ }
-	inline	character_recoil_params const&		get_recoil_params				( ) const { /* no source */ }
-	inline	character_dispersion_params const&	get_dispersion_params			( ) const { /* no source */ }
-	inline	breath_holding_params const&		get_breath_holding_params		( ) const { /* no source */ }
+	inline	interactive_object_ptr				get_current_active_object		( ) { return m_current_active_object; }
+	inline	character_recoil_params const&		get_recoil_params				( ) const { return m_recoil_params; }
+	inline	character_dispersion_params const&	get_dispersion_params			( ) const { return m_dispersion_params; }
+	inline	breath_holding_params const&		get_breath_holding_params		( ) const { return m_breath_holding_params; }
 
-	inline	interactive_object_ptr				target_active_object			( ) const { /* no source */ }
-	inline	interactive_object_ptr				current_active_object			( ) const { /* no source */ }
+	inline	interactive_object_ptr				target_active_object			( ) const { return m_target_active_object; }
+	inline	interactive_object_ptr				current_active_object			( ) const { return m_current_active_object; }	// sushi@NOTE: There is also `get_current_active_object`.
 
-	virtual	damage_model_ptr const&				damage_model					( ) const override { /* no source */ }
+	virtual	damage_model_ptr const&				damage_model					( ) const override { return m_damage_model; }
 
 	virtual	animation::skeleton const&			skeleton						( ) const = 0;
 	virtual	player_input const&					input							( ) const = 0;
@@ -81,8 +81,8 @@ public:
 
 	inline	float4x4 const&						get_head_transform				( ) { return m_character_head_transform; }
 
-	inline	void								set_movement_speed_factor		( float arg_0 ) { /* no source */ }
-	inline	float								get_movement_speed_factor		( ) const { /* no source */ }
+	inline	void								set_movement_speed_factor		( float movement_speed_factor ) { m_movement_speed_factor = movement_speed_factor; }
+	inline	float								get_movement_speed_factor		( ) const { return m_movement_speed_factor; }
 
 	// STATE[STUB]
 			bool								is_alive						( ) const { return m_is_alive; }
@@ -95,7 +95,7 @@ public:
 	// STATE[STUB]
 			void								force_animation_selection		( ) { m_force_animation_selection = true; }
 
-	inline	bool								has_been_inserted				( ) const { /* no source */ }
+	inline	bool								has_been_inserted				( ) const { return m_has_been_inserted; }
 
 public:
 	typedef boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > animation_callback;
@@ -123,7 +123,7 @@ public:
 	virtual	bool								is_replaying_history			( ) const = 0;
 
 	virtual	void								serialize						( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
-	virtual	void								deserialize						( network_core::packet_reader& arg_0 ) { /* no source */ }
+	virtual	void								deserialize						( network_core::packet_reader& arg_0 )			{ /* no source */ }
 
 	virtual	u32									local_time						( u32 arg_0 ) const = 0; // sushi@TODO
 
@@ -131,27 +131,27 @@ public:
 	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }
 
 	// STATE[STUB]
-	virtual	void								insert_game_world_object		( game_world_object& object ) override { /* m_game_world_objects.push_back( &object ); */ }
+	virtual	void								insert_game_world_object		( game_world_object& object ) override { m_game_world_objects.push_back( &object ); }
 	// STATE[STUB]
-	virtual	void								remove_game_world_object		( game_world_object& object ) override { /* m_game_world_objects.erase( &object ); */ }
+	virtual	void								remove_game_world_object		( game_world_object& object ) override { m_game_world_objects.erase( &object ); }
 
 			void								subscribe_on_player_death		( player_death_subscriber* subscriber );
 			void								unsubscribe_from_player_death	( player_death_subscriber* subscriber );
 
-	inline	bool								animation_selection_is_forced	( ) const { /* no source */ }
-	inline	void								set_force_animation_selection	( bool arg_0 ) { /* no source */ }
+	inline	bool								animation_selection_is_forced	( ) const							{ return m_force_animation_selection; }
+	inline	void								set_force_animation_selection	( bool force_animation_selection )	{ m_force_animation_selection = force_animation_selection; } // sushi@TODO: Repeat
 
 	inline	void								send_game_world_objects			(
 													boost::function< network_core::udp_match_packet& ( ) > const&		arg_0,
 													boost::function< void ( network_core::udp_match_packet& ) > const&	arg_1
-												) const { /* no source */ }
+												) const { /* no source */ } // sushi@TODO: There is `send_game_world_object`
 
 			void								deserialize_game_world_object	( network_core::packet_reader& reader );
 
 	virtual	engine&								get_engine						( ) = 0;
 			void								tick_active_object				( );
 
-	inline	game_world_object_list const&		game_world_objects				( ) const { /* no source */ }
+	inline	game_world_object_list const&		game_world_objects				( ) const { return m_game_world_objects; }
 
 			void								on_player_death					( );
 			void								send_game_world_object			(
@@ -164,7 +164,6 @@ public:
 	virtual	animation::animation_player&		animation_player				( ) = 0;
 
 	virtual	void								on_before_active_object_changed	( interactive_object_ptr const& arg_0, interactive_object_ptr const& arg_1 ) const { /* no source */ }
-
 
 public:
 	/* 0x0000 */	/* inventory_holder */

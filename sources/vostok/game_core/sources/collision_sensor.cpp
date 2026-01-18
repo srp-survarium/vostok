@@ -63,14 +63,14 @@ void collision_sensor::load( binary_config_value const& cfg )
 	// ******
 }
 
-// STATE[BLOCKED] sushi@TODO: I don't understand -4 in `get_object_by_name`. cast?
+// STATE[98.25%|DONE]
 void collision_sensor::resolve_links( base_project* p, binary_config_value cfg )
 {
 	binary_config_value collision_table = cfg["collision_geometries"];
-	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i ) // sushi@TODO: NOT COUNT
+	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 	{
 		pcstr geom_name = collision_table[i]["name"];
-		// m_old_objects[i] = p->get_object_by_name( geom_name );
+		m_collision_geometries[i] = static_cast_checked<collision_geometry*>( p->get_object_by_name( geom_name ) );
 	}
 
 	// FUNCTION BODY
@@ -198,10 +198,6 @@ void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 bool collision_sensor::is_filter_passed( base_physics_object* object ) const
 {
 	return object != NULL;
-
-	// FUNCTION BODY
-	// <0x59a1e7>|0x000|0x000:'143'
-	// ******
 }
 
 struct left_objects_predicate {
@@ -255,21 +251,6 @@ void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics
 
 	if ( !objects_to_delete.empty( ) )
 		 on_leave( objects_to_delete );
-
-	// FUNCTION BODY
-	// <0x59a6a0>|0x000|0x000:'171'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x59a709>|0x069|0x069:'179'
-	// <1>
-	// <0x59a7d8>|0x138|0x0cf:'181'
-	// <0x59a7ea>|0x14a|0x012:'182'
-	// ******
 }
 
 // STATE[92.62%|PARTIAL]
@@ -343,25 +324,6 @@ void collision_sensor::filter_sensed_objects( buffer_vector<base_physics_object 
 		std::unique( sensed_objects.begin( ), sensed_objects.end( ) ),
 		sensed_objects.end( )
 	);
-
-
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x59a31f>|0x000|0x000:'220'
-	// <1>
-	// <0x59a36f>|0x050|0x050:'222'	std::sort( sensed_objects.begin( ), sensed_objects.end( ) );
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x59a390>|0x071|0x021:'227'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -369,11 +331,6 @@ void collision_sensor::contact_test( base_physics_object* object, physics::conta
 {
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->contact_test( object, predicate );
-
-	// FUNCTION BODY
-	// <0x59a969>|0x000|0x000|[1]:'232'
-	// <0x59a986>|0x01d|0x01d:'233'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -385,15 +342,6 @@ bool collision_sensor::contact_test( base_physics_object* object )
 			return true;
 	}
 	return false;
-
-	// FUNCTION BODY
-	// <0x59a649>|0x000|0x000|[1]:'238'
-	// <1>
-	// <0x59a666>|0x01d|0x01d:'240'
-	// <0x59a67e>|0x035|0x018:'241'
-	// <0x59a682>|0x039|0x004:'242'
-	// <0x59a684>|0x03b|0x002:'243'
-	// ******
 }
 
 // STATE[BLOCKED]: sushi@TODO: protected method, will be checked when children are implemented
@@ -416,14 +364,6 @@ void collision_sensor::insert( physics::world* world )
 
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->subscribe( world, this );
-
-	// FUNCTION BODY
-	// <0x59a849>|0x000|0x000:'260'
-	// <0x59a855>|0x00c|0x00c:'261'
-	// <1>
-	// <0x59a85c>|0x013|0x007|[1]:'263'
-	// <0x59a879>|0x030|0x01d:'264'
-	// ******
 }
 
 // STATE[94.32%|DONE]: `vector::empty` didn't inline.
@@ -484,11 +424,6 @@ collision_geometry* collision_sensor::get_collision_geometry( u32 index )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_collision_geometries ) );
 	return m_collision_geometries[index];
-
-	// FUNCTION BODY
-	// <0x59a219>|0x000|0x000:'296'
-	// <0x59a225>|0x00c|0x00c:'297'
-	// ******
 }
 
 } // namespace survarium

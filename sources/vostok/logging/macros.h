@@ -19,7 +19,7 @@
 
 
 #define __CHECK_VERBOSITY( level ) 										\
-	::vostok::core::g_log_filter_tree != NULL &&						\
+	::vostok::core::g_log_filter_tree == NULL ||						\
 		::vostok::logging::has_passed_filters(							\
 			*::vostok::core::g_log_filter_tree,							\
 			VOSTOK_LOG_MODULE_INITIATOR ":",							\
