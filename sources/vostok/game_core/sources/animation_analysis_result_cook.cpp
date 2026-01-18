@@ -11,13 +11,13 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
+// STATE[65.21%|DONE]
 animation_analysis_result_cook::animation_analysis_result_cook( )
 	: resources::translate_query_cook( resources::animation_analysis_result_class, reuse_false, use_current_thread_id )
 {
 }
 
-// STATE[UNCHECKED]
+// STATE[87.15%|PARTIAL]: Logging issues
 void animation_analysis_result_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	animation_analysis_result_cook_user_data ud;
@@ -49,10 +49,10 @@ void animation_analysis_result_cook::translate_query( resources::query_result_fo
 	// ******
 }
 
-// STATE[UNCHECKED]
+// STATE[31.00%|DONE]
 void animation_analysis_result_cook::delete_resource( resources::resource_base* resource )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, resource );
+	VOSTOK_DELETE_IMPL( *g_allocator, resource );
 
 	// FUNCTION BODY
 	// <0x763489>|0x009|+0x017:'40'
