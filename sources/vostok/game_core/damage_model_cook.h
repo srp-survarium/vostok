@@ -6,6 +6,7 @@
 #define DAMAGE_MODEL_COOK_H_INCLUDED
 
 #include <vostok/resources_cook_classes.h>
+#include <vostok/console_command.h>
 
 namespace survarium {
 
@@ -19,9 +20,11 @@ public:
 private:
 			void	on_hit_params_received		( resources::queries_result& data );
 
-
+private:
 	static	pcstr	get_current_hit_type		( ) { /* no source */ }
 
+	static fixed_vector< console_commands::command_token, 12 >	m_hit_types;
+	static fixed_vector< fixed_string<24>, 12 >					m_hit_types_strings;
 
 }; // class damage_model_cook
 
