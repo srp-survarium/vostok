@@ -20,12 +20,6 @@ m_max		( max )
 	m_need_args		= true;
 }
 
-inline command_token create_command_token(u32 id, pcstr name)
-{
-	command_token t = { id, name };
-	return t;
-}
-
 } // namespace console_commands
 } // namespace vostok
 

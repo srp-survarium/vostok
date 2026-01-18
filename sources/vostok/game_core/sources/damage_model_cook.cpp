@@ -12,9 +12,9 @@
 
 namespace survarium {
 
-fixed_vector< console_commands::command_token, 12 >	damage_model_cook::m_hit_types;			// sushi@TODO: Might need some initializers
+fixed_vector< console_commands::command_token, 12 >	damage_model_cook::m_hit_types;
 fixed_vector< fixed_string<24>, 12 >				damage_model_cook::m_hit_types_strings;
-u32 g_current_hit_type;
+u32 g_current_hit_type;	// sushi@TODO: There is `get_current_hit_type` function, which possibly relies on this. I didn't find any references to it though, so skipping for now.
 
 // STATE[62.35%|DONE]
 damage_model_cook::damage_model_cook( ) :

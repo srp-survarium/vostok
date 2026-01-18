@@ -198,8 +198,6 @@ struct command_token
 
 } ; // command_token
 
-inline command_token create_command_token(u32 id, pcstr name);
-
 class VOSTOK_CORE_API cc_token :public console_commands::console_command
 {
 

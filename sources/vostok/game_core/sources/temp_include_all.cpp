@@ -73,6 +73,7 @@
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/player_parameters_modifyer.h>
+
 namespace vostok
 {
 	void use_medkit( )
