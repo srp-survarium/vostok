@@ -364,7 +364,7 @@ float weapon_core::vertical_recoil_value( ) const
 	// float 						total_vertical_coeff
 	// ******
 
-	return 0.0f;
+	return 1.0f;
 
 	// FUNCTION BODY
 	// <0>
