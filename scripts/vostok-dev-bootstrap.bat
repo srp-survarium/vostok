@@ -11,7 +11,6 @@
 if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
-if not defined COFF_DIR        set        "COFF_DIR=%ROOT_DIR%\vostok-coff-delinker"
 if not defined VOSTOK_DIR      set      "VOSTOK_DIR=%ROOT_DIR%\vostok"
 if not defined XRAY_STUB_DIR   set   "XRAY_STUB_DIR=%ROOT_DIR%\xray-structure"
 if not defined VOSTOK_STUB_DIR set "VOSTOK_STUB_DIR=%ROOT_DIR%\vostok-structure"
@@ -51,5 +50,4 @@ new-tab -d "%VOSTOK_DIR%"      --title "cargo build"  powershell -NoExit -Comman
 new-tab -d "%VOSTOK_SRC_DIR%"  --title "vostok"       powershell -NoExit -Command "ls"                         ; ^
 new-tab -d "%VOSTOK_STUB_DIR%" --title "vostok stubs" powershell -NoExit -Command "ls"                         ; ^
 new-tab -d "%XRAY_STUB_DIR%"   --title "xray stubs"   powershell -NoExit -Command "ls"                         ; ^
-new-tab -d "%COFF_DIR%"        --title "delinker"     powershell -NoExit -Command "ls"                         ; ^
 focus-tab -t 0
