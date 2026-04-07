@@ -6,23 +6,28 @@
 :: The script current directory is: :/sources/vostok/survarium/pc/sources
 ::
 
-if not defined REQUIRED_CLASS set "REQUIRED_CLASS=survarium"
-
 if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
-if not defined VOSTOK_DIR    set    "VOSTOK_DIR=%ROOT_DIR%\vostok"
-if not defined COFF_DIR      set      "COFF_DIR=%ROOT_DIR%\vostok-coff-delinker"
-if not defined XRAY_STUB_DIR set "XRAY_STUB_DIR=%ROOT_DIR%\xray-structure"
+if not defined VOSTOK_DIR           set          "VOSTOK_DIR=%ROOT_DIR%\vostok"
+if not defined XRAY_STUB_DIR        set       "XRAY_STUB_DIR=%ROOT_DIR%\xray-structure"
+if not defined VOSTOK_DELINKER_DIR  set "VOSTOK_DELINKER_DIR=%ROOT_DIR%\vostok-delinker"
 
 :: Normalize paths in environment variables
-for %%I in ("%VOSTOK_DIR%")     do set "VOSTOK_DIR=%%~fI"
-for %%I in ("%COFF_DIR%")       do set "COFF_DIR=%%~fI"
-for %%I in ("%XRAY_STUB_DIR%")  do set "XRAY_STUB_DIR=%%~fI"
+for %%I in ("%VOSTOK_DIR%")          do set "VOSTOK_DIR=%%~fI"
+for %%I in ("%XRAY_STUB_DIR%")       do set "XRAY_STUB_DIR=%%~fI"
+for %%I in ("%VOSTOK_DELINKER_DIR%") do set "VOSTOK_DELINKER_DIR=%%~fI"
 
 set   "ENGINE_DIR=%VOSTOK_DIR%\sources\vostok"
 set     "PDB_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.pdb"
 set     "EXE_FILE=%VOSTOK_DIR%\binaries\Win32\survarium-dx11-win32-gold.exe"
+
+::
+:: Generate COFF files for a newly built executable
+::
+
+echo Regenerating COFF object files
+call "%VOSTOK_DELINKER_DIR%\build_base.bat"
 
 ::
 :: Rerun pdb-parser script
@@ -39,22 +44,3 @@ cargo run --release --bin pdb-parser -- ^
     --skip-non-engine-headers
 
 popd
-
-::
-:: Generate COFF files for a newly built executable
-::
-
-
-:: `-import`        - will import an executable into the project.
-:: `-overwrite`     - will ensure that a new project is always created.
-:: `-deleteproject` - will create temporary project, which will be delted after the analysis finished.
-set "PROCESS_ARGS=-import %EXE_FILE% -overwrite -deleteproject"
-set "OUTPUT_DIR=%COFF_DIR%\base"
-set "CLASS_FILTER=%REQUIRED_CLASS%"
-set "PROJECTS_DIR=%VOSTOK_DIR%\binaries\temp_ghidra_project_2"
-
-echo Regenerating COFF object files
-call "%VOSTOK_DIR%\scripts\vostok-generate-coff.bat"
-
-echo Regenerating objdiff config
-py "%VOSTOK_DIR%\scripts\generate_objdiff_config.py"
