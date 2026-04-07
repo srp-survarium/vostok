@@ -113,8 +113,8 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("filter_prefix", nargs="?", default=None)
-    parser.add_argument("objdiff_dir", nargs="?", default=OBJDIFF_DIR, type=Path)
+    parser.add_argument("--filter-prefix", default=None)
+    parser.add_argument("--objdiff-dir", default=OBJDIFF_DIR, type=Path)
     args = parser.parse_args()
 
     filter_prefix = args.filter_prefix

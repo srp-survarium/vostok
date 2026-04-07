@@ -18,19 +18,13 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
     * Load VS2008 macros:
         - Tools > Macros > Load Macro Project... > {REPOSITORY}/scripts/vostok_vs_macro/vostok_vs_macro.vsmacros > Allow
 
-3. Ghidra 11.4.0
-    * Used by VS build scripts to generate diffable `.obj` files.
-    * Requires OpenJDK to be installed also.  (Just install the newest one)
-    * Install from here: https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_11.4_build
-    * Install Delinker Extension from here: https://github.com/boricj/ghidra-delinker-extension/releases
-
-4. Tooling
+3. Tooling
     * `objdiff` - Install newest version from here: https://github.com/encounter/objdiff
     * `python` - Install newest version from here: https://www.python.org/downloads/
     * `rustc` - Install nightly Rust toolchain like so: `rustup default nightly`
     * `IDA Free` - Install from here (requires getting free license): https://hex-rays.com/ida-free
 
-5. Git projects
+4. Git projects
     * Other projects need to be cloned at the same level this project is cloned.
     * Before you do that, make sure long paths on Windows are enabled
         - In Registry (requires administrator privileges):
@@ -45,7 +39,7 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
         ```
         git clone git@github.com:srp-survarium/vostok.git
         git clone git@github.com:srp-survarium/vostok-structure.git
-        git clone git@github.com:srp-survarium/vostok-coff-delinker.git
+        git clone git@github.com:srp-survarium/vostok-delinker.git
         git clone git@github.com:srp-survarium/xray-structure.git
         ```
     * Download proprietary libraries and unpack them at the root level: https://drive.google.com/file/d/1ShmDiJArDcOiuPA0DyswEzhXHeRa0Psx/view?usp=sharing
@@ -61,7 +55,6 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
 
 7. Environment variables
     * Environment variables should be set up for a local user for scripts to work correctly. Otherwise you can install required tooling to the default paths.
-    * `GHIDRA_HOME` - Path to installed Ghidra. Default value: `GHIDRA_HOME=C:\Program Files\ghidra_11.4_PUBLIC`.
     * `IDA_HOME` - Path to installed IDA. Default value: `IDA_HOME=C:\Program Files\IDA Free 9.1`.
     * `OBJDIFF_HOME` - Path to installed objdiff. Default value: `OBJDIFF_HOME=C:\Program Files\scripts`.
     * `SURVARIUM_BIN` - Path to the game executable. Default value: `D:\Projects\Survarium\binaries\win32`.
