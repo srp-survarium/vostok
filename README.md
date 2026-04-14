@@ -65,16 +65,10 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
 
 ## Setting up
 
-1. Build `survarium - PC - DirectX 11` solution in VS2008 in `Debug` (not `Debug(static)`) configuration for `Win32`. It will fail, but this is fine, we only need `zlibn` to be built.
-    * TODO: This step should be removed and be set as a dependency in `survarium - PC - DirectX 11`.
-2. Build `survarium - PC - DirectX 11` solution in VS2008 in `Master Gold` configuration for `Win32`. Build should succeed.
+1. Build `survarium - PC - DirectX 11` solution in VS2008 in `Master Gold` configuration for `Win32`. Build should succeed.
 
-3. Setup `objdiff`:
-    * Open Project `Settings`.
-    * Set project directory to cloned `vostok-coff-delinker` project.
-    * Set target build directory to `target`.
-    * Set base build directory to `base`.
-    * Disable relocation diffs: Diff Options > Function relocation diffs > None.
+2. Setup `objdiff`:
+    * Run `.\build_target.bat` placed in `vostok-delinker` repository.
     * Now you can choose any object file (e.g. `vostok\collision\box_geometry_instance.obj`) and start matching assembly!
 
 
