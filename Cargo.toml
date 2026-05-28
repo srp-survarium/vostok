@@ -1,7 +1,5 @@
 [workspace]
-members = [
-  "scripts/pdb-parser",             # Parser for available `.pdb` files
-]
+members = []
 exclude = []
 resolver = "3"
 
