@@ -12,17 +12,19 @@
 # Then configures the local Wine prefix so cl.exe finds everything.
 #
 # Run once after `nix develop` and after building the installer downloads:
-#   nix build .#vs2008-iso     --out-link result-vs2008-iso
-#   nix build .#vs2008-sp1-iso --out-link result-vs2008-sp1-iso
-#   nix build .#dxsdk          --out-link result-dxsdk
-#   nix build .#ninja-win      --out-link result-ninja-win
+#   nix build .#vs2008-iso        --out-link binaries/result-vs2008-iso
+#   nix build .#vs2008-sp1-iso    --out-link binaries/result-vs2008-sp1-iso
+#   nix build .#dxsdk             --out-link binaries/result-dxsdk
+#   nix build .#ninja-win         --out-link binaries/result-ninja-win
+#
+# For game binaries (survarium.exe + .pdb) — handled separately by Nix:
+#   nix build .#survarium-game    --out-link binaries/result-survarium-game
 #
 # Required env vars (set automatically by flake.nix devShell):
 #   VS2008_ISO      — path to the VS2008 Pro DVD ISO in the Nix store
 #   VS2008_SP1_ISO  — path to the VS2008 SP1 ISO in the Nix store
 #   DXSDK_EXE           — path to DXSDK_Jun10.exe in the Nix store
 #   NINJA_WIN_ZIP       — path to ninja-win.zip in the Nix store
-#   SURVARIUM_GAME_EXE  — path to survarium_setup_v0100b.exe in the Nix store
 #   MSVC_DIR        — destination for the portable MSVC toolchain
 #   WINSDK_DIR      — destination for the Windows SDK
 #   DXSDK_DIR       — destination for the extracted DirectX SDK
@@ -48,10 +50,6 @@ VOSTOK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 : "${WINEPREFIX:="$VOSTOK_DIR/binaries/.wineprefix"}"
 : "${VOSTOK_LIBS_DIR:="$(cd "$VOSTOK_DIR/.." && pwd)/vostok-libs"}"
 : "${SKIP_LIBS:=0}"
-: "${SURVARIUM_BIN:="$VOSTOK_DIR/binaries/game"}"
-# Path to survarium_setup_v0100b.exe — set by flake shellHook via result-survarium-game symlink.
-: "${SURVARIUM_GAME_EXE:=""}"
-: "${SKIP_GAME:=0}"
 
 CLEAN=0
 for arg in "$@"; do
@@ -59,8 +57,8 @@ for arg in "$@"; do
 done
 
 if [[ $CLEAN -eq 1 ]]; then
-  echo "[setup] --clean: removing $MSVC_DIR, $WINSDK_DIR, $DXSDK_DIR, $NINJA_DIR, $SURVARIUM_BIN"
-  rm -rf "$MSVC_DIR" "$WINSDK_DIR" "$DXSDK_DIR" "$NINJA_DIR" "$SURVARIUM_BIN"
+  echo "[setup] --clean: removing $MSVC_DIR, $WINSDK_DIR, $DXSDK_DIR, $NINJA_DIR"
+  rm -rf "$MSVC_DIR" "$WINSDK_DIR" "$DXSDK_DIR" "$NINJA_DIR"
 fi
 
 # ---------------------------------------------------------------------------
@@ -125,54 +123,6 @@ _find_msiextract() {
   command -v msiextract 2>/dev/null || \
     find /nix/store -maxdepth 4 -name "msiextract" 2>/dev/null | head -1
 }
-
-# ---------------------------------------------------------------------------
-# 0b. Extract Survarium game binaries (survarium.exe + .pdb)
-# ---------------------------------------------------------------------------
-# The game installer is an NSIS exe. 7z can extract NSIS installers directly.
-# We need survarium.exe and survarium.pdb for vostok-delinker (build_target.bat).
-# SURVARIUM_BIN is set in flake shellHook to vostok/binaries/game/.
-
-if [[ "$SKIP_GAME" == "1" ]]; then
-  echo "[setup] SKIP_GAME=1: skipping game extraction."
-elif [[ -f "$SURVARIUM_BIN/survarium.exe" ]]; then
-  echo "[setup] Game binaries already present at $SURVARIUM_BIN, skipping."
-else
-  if [[ -z "$SURVARIUM_GAME_EXE" ]] || [[ ! -f "$SURVARIUM_GAME_EXE" ]]; then
-    echo "[setup] WARNING: SURVARIUM_GAME_EXE not set or not found."
-    echo "  Run: nix build .#survarium-game --out-link result-survarium-game"
-    echo "  Or set SKIP_GAME=1 to skip."
-  else
-    echo "[setup] Extracting Survarium game binaries from installer ..."
-    mkdir -p "$WORK_DIR/game-extract"
-
-    # NSIS installers can be extracted with 7z.
-    7z x "$SURVARIUM_GAME_EXE" -o"$WORK_DIR/game-extract" -y > /dev/null
-
-    # Find survarium.exe inside the extraction (may be nested under $INSTDIR paths).
-    _surv_exe="$(find "$WORK_DIR/game-extract" -iname "survarium.exe" ! -path "*uninstall*" \
-      -printf "%s %p\n" | sort -rn | head -1 | awk '{print $2}')"
-    _surv_pdb="$(find "$WORK_DIR/game-extract" -iname "survarium.pdb" \
-      -printf "%s %p\n" | sort -rn | head -1 | awk '{print $2}')"
-
-    if [[ -z "$_surv_exe" ]]; then
-      echo "[setup] ERROR: survarium.exe not found after extraction."
-      find "$WORK_DIR/game-extract" -maxdepth 3 -type f -name "*.exe" | head -10
-      exit 1
-    fi
-
-    echo "[setup] Found: $_surv_exe"
-    [[ -n "$_surv_pdb" ]] && echo "[setup] Found: $_surv_pdb"
-
-    # Copy the entire binaries directory alongside the exe (DLLs etc. needed at runtime).
-    _game_dir="$(dirname "$_surv_exe")"
-    mkdir -p "$SURVARIUM_BIN"
-    cp -r "$_game_dir"/. "$SURVARIUM_BIN/"
-
-    echo "[setup] Game binaries extracted to $SURVARIUM_BIN."
-    echo "  $(ls "$SURVARIUM_BIN" | wc -l) files, including: survarium.exe$([ -n "$_surv_pdb" ] && echo ', survarium.pdb')"
-  fi
-fi
 
 # ---------------------------------------------------------------------------
 # 0. Initialise Wine prefix
