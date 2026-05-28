@@ -4,10 +4,10 @@
 #
 # Extracts the MSVC 8.0 (VS2008) compiler, Windows SDK v6.0A, DirectX SDK
 # June 2010, and ninja.exe into a self-contained portable toolchain at:
-#   toolchain/msvc/   — cl.exe, lib.exe, link.exe, headers, libs
-#   toolchain/winsdk/ — Windows SDK headers + x86 libs
-#   toolchain/dxsdk/  — DirectX SDK headers + x86 libs
-#   toolchain/ninja/  — ninja.exe
+#   binaries/toolchain/msvc/   — cl.exe, lib.exe, link.exe, headers, libs
+#   binaries/toolchain/winsdk/ — Windows SDK headers + x86 libs
+#   binaries/toolchain/dxsdk/  — DirectX SDK headers + x86 libs
+#   binaries/toolchain/ninja/  — ninja.exe
 #
 # Then configures the local Wine prefix so cl.exe finds everything.
 #
@@ -41,11 +41,11 @@ VOSTOK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 : "${VS2008_SP1_ISO:?VS2008_SP1_ISO not set}"
 : "${DXSDK_EXE:?DXSDK_EXE not set}"
 : "${NINJA_WIN_ZIP:?NINJA_WIN_ZIP not set}"
-: "${MSVC_DIR:="$VOSTOK_DIR/toolchain/msvc"}"
-: "${WINSDK_DIR:="$VOSTOK_DIR/toolchain/winsdk"}"
-: "${DXSDK_DIR:="$VOSTOK_DIR/toolchain/dxsdk"}"
-: "${NINJA_DIR:="$VOSTOK_DIR/toolchain/ninja"}"
-: "${WINEPREFIX:="$VOSTOK_DIR/.wineprefix"}"
+: "${MSVC_DIR:="$VOSTOK_DIR/binaries/toolchain/msvc"}"
+: "${WINSDK_DIR:="$VOSTOK_DIR/binaries/toolchain/winsdk"}"
+: "${DXSDK_DIR:="$VOSTOK_DIR/binaries/toolchain/dxsdk"}"
+: "${NINJA_DIR:="$VOSTOK_DIR/binaries/toolchain/ninja"}"
+: "${WINEPREFIX:="$VOSTOK_DIR/binaries/.wineprefix"}"
 : "${VOSTOK_LIBS_DIR:="$(cd "$VOSTOK_DIR/.." && pwd)/vostok-libs"}"
 : "${SKIP_LIBS:=0}"
 : "${SURVARIUM_BIN:="$VOSTOK_DIR/binaries/game"}"
@@ -116,6 +116,8 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 
 export WINEPREFIX
 export WINEDEBUG=-all
+# Suppress Wine Mono / Gecko installation pop-up dialogs.
+export WINEDLLOVERRIDES="mscoree,mshtml="
 
 # Find msiextract: in PATH (inside nix develop) or search nix store.
 _find_msiextract() {
