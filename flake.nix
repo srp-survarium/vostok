@@ -127,19 +127,19 @@
 
           # Resolve installer paths from result symlinks if present.
           _resolve() { [ -e "$1" ] && readlink -f "$1" || echo ""; }
-          export VS2008_ISO="$(_resolve result-vs2008-iso)"
-          export VS2008_SP1_ISO="$(_resolve result-vs2008-sp1-iso)"
-          export DXSDK_EXE="$(_resolve result-dxsdk)"
-          export NINJA_WIN_ZIP="$(_resolve result-ninja-win)"
-          export SURVARIUM_GAME_EXE="$(_resolve result-survarium-game)"
+          export VS2008_ISO="$(_resolve binaries/result-vs2008-iso)"
+          export VS2008_SP1_ISO="$(_resolve binaries/result-vs2008-sp1-iso)"
+          export DXSDK_EXE="$(_resolve binaries/result-dxsdk)"
+          export NINJA_WIN_ZIP="$(_resolve binaries/result-ninja-win)"
+          export SURVARIUM_GAME_EXE="$(_resolve binaries/result-survarium-game)"
 
           if [ ! -d "$MSVC_DIR/VC/bin" ] || [ ! -d "$WINSDK_DIR/Include" ]; then
             echo "[surv-decomp] Toolchain not set up. Steps:"
-            echo "  nix build .#vs2008-iso        --out-link result-vs2008-iso        # 3.3 GB"
-            echo "  nix build .#vs2008-sp1-iso    --out-link result-vs2008-sp1-iso    # 831 MB"
-            echo "  nix build .#dxsdk             --out-link result-dxsdk             # 572 MB"
-            echo "  nix build .#ninja-win         --out-link result-ninja-win         #   1 MB"
-            echo "  nix build .#survarium-game    --out-link result-survarium-game    # 920 MB"
+            echo "  nix build .#vs2008-iso        --out-link binaries/result-vs2008-iso        # 3.3 GB"
+            echo "  nix build .#vs2008-sp1-iso    --out-link binaries/result-vs2008-sp1-iso    # 831 MB"
+            echo "  nix build .#dxsdk             --out-link binaries/result-dxsdk             # 572 MB"
+            echo "  nix build .#ninja-win         --out-link binaries/result-ninja-win         #   1 MB"
+            echo "  nix build .#survarium-game    --out-link binaries/result-survarium-game    # 920 MB"
             echo "  bash scripts/setup-toolchain.sh"
           fi
         '';
