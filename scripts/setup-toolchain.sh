@@ -111,7 +111,8 @@ else
 fi
 
 # Work dir on /home (not tmpfs /) — extraction needs several GB of space.
-WORK_DIR="$(mktemp -d "$VOSTOK_DIR/.setup-work-XXXXXX")"
+mkdir -p "$VOSTOK_DIR/binaries"
+WORK_DIR="$(mktemp -d "$VOSTOK_DIR/binaries/.setup-work-XXXXXX")"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 export WINEPREFIX
