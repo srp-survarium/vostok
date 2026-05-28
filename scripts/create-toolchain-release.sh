@@ -23,7 +23,7 @@
 #     try: Xvfb :99 -screen 0 1024x768x24 & export DISPLAY=:99
 #
 # Output:
-#   binaries/vostok-toolchain.tar.xz
+#   binaries/vostok-toolchain-v0.100b.tar.xz
 #     msvc/VC/   — VS2008 SP1 compiler (cl.exe, headers, x86 libs)
 #     winsdk/    — Windows SDK 6.0A headers + x86 libs
 #     dxsdk/     — DirectX SDK June 2010 headers + libs
@@ -44,7 +44,7 @@ VOSTOK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 : "${NINJA_WIN_ZIP:?NINJA_WIN_ZIP not set}"
 
 # --- Output + work dirs ---
-OUTPUT="$VOSTOK_DIR/binaries/vostok-toolchain.tar.xz"
+OUTPUT="$VOSTOK_DIR/binaries/vostok-toolchain-v0.100b.tar.xz"
 WORK_DIR="${WORK_DIR:-$VOSTOK_DIR/binaries/.release-work}"
 STAGE_DIR="$WORK_DIR/stage"      # final layout staged here before tar
 
@@ -218,7 +218,7 @@ echo "[release] Packaging → $OUTPUT ..."
 mkdir -p "$(dirname "$OUTPUT")"
 # Strip STAGE_DIR prefix so the tarball extracts to vostok-toolchain/.
 tar -C "$WORK_DIR/stage" \
-  --transform "s|^\.|vostok-toolchain|" \
+  --transform "s|^\.|vostok-toolchain-v0.100b|" \
   -cJf "$OUTPUT" .
 
 SHA256=$(sha256sum "$OUTPUT" | cut -d' ' -f1)
@@ -230,14 +230,14 @@ echo "  Output: $OUTPUT  ($SIZE)"
 echo "  SHA256: $SHA256"
 echo ""
 echo "Next steps:"
-echo "  1. Create a GitHub release in this repo (e.g., tag toolchain-v1.0)."
+echo "  1. Create a GitHub release in this repo (e.g., tag toolchain-v0.100b)."
 echo "  2. Upload $OUTPUT as a release asset."
 echo "  3. In flake.nix, replace the vs2008-toolchain derivation with:"
 echo ""
 echo "     vs2008-toolchain = pkgs.runCommandNoCC \"vs2008-toolchain\" {"
 echo "       src = pkgs.fetchurl {"
-echo "         name = \"vostok-toolchain.tar.xz\";"
-echo "         url  = \"https://github.com/<org>/vostok/releases/download/toolchain-v1.0/vostok-toolchain.tar.xz\";"
+echo "         name = \"vostok-toolchain-v0.100b.tar.xz\";"
+echo "         url  = \"https://github.com/<org>/vostok/releases/download/toolchain-v0.100b/vostok-toolchain-v0.100b.tar.xz\";"
 echo "         sha256 = \"$SHA256\";"
 echo "       };"
 echo "       nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];"
