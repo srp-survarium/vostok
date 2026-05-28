@@ -1,6 +1,6 @@
 @echo off
 
-if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
+if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
 if not defined VOSTOK_STUB_DIR set "VOSTOK_STUB_DIR=%ROOT_DIR%\vostok-structure"
