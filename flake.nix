@@ -20,16 +20,15 @@
       };
 
       # Nightly Rust toolchain for vostok-delinker, vcproj2ninja, pdb-parser.
+      # Includes the Windows GNU target for cross-compiling vcproj2ninja.exe.
       rust = pkgs.rust-bin.nightly.latest.default.override {
         extensions = [ "rust-src" "rustfmt" "clippy" ];
+        targets = [ "x86_64-pc-windows-gnu" ];
       };
 
       #
-      # Windows installers — large downloads exposed as named packages.
-      # Fetch with:  nix build .#vs2008-iso    --out-link result-vs2008-iso
-      #              nix build .#vs2008-sp1-iso --out-link result-vs2008-sp1-iso
-      #              nix build .#dxsdk          --out-link result-dxsdk
-      #              nix build .#ninja-win       --out-link result-ninja-win
+      # Large downloads exposed as named Nix packages.
+      # Fetch with:  nix build .#<name> --out-link result-<name>
       # Then run:    bash scripts/setup-toolchain.sh
       #
 
@@ -58,15 +57,24 @@
       };
 
       # ninja.exe (Windows, run under Wine) — drives the build.
+      # v1.12.1: minimum version for implicit outputs (| output syntax), needed by vcproj2ninja.
       ninja-win = pkgs.fetchurl {
         name = "ninja-win.zip";
-        url = "https://github.com/ninja-build/ninja/releases/download/v1.6.0/ninja-win.zip";
-        sha256 = "18f55bc5de27c20092e86ace8ef3dd3311662dc6193157e3b65c6bc94ce006d5";
+        url = "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip";
+        sha256 = "0yj6128i5fyw793blsldcy8pd8vp4963fg6vy9cgzmmn0p3zwl7m";
+      };
+
+      # Survarium v0.100b game installer — contains survarium.exe + survarium.pdb.
+      # setup-toolchain.sh extracts them to binaries/game/ and SURVARIUM_BIN points there.
+      survarium-game = pkgs.fetchurl {
+        name = "survarium_setup_v0100b.exe";
+        url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
+        sha256 = "16aassxvbbhqx9czfvsl3zynl41n2xa7xf9n0l1aip07qgfz2l24";
       };
 
     in {
       packages.${system} = {
-        inherit vs2008-iso vs2008-sp1-iso dxsdk ninja-win;
+        inherit vs2008-iso vs2008-sp1-iso dxsdk ninja-win survarium-game;
       };
 
       devShells.${system}.default = pkgs.mkShell {
@@ -76,11 +84,17 @@
           # Nightly Rust for cargo builds of vostok-delinker, vcproj2ninja, pdb-parser
           rust
 
-          # Wine — runs cl.exe / lib.exe / link.exe / ninja.exe (32-bit support)
+          # Wine — runs cl.exe / lib.exe / link.exe / ninja.exe / vcproj2ninja.exe
           pkgs.wineWow64Packages.stable
+
+          # MinGW cross-compiler for building vcproj2ninja.exe (Windows target)
+          pkgs.pkgsCross.mingwW64.buildPackages.gcc
 
           # Scripts
           pkgs.python3
+
+          # Google Drive downloads (for vostok-libs)
+          pkgs.gdown
 
           # Searching across repos
           pkgs.ripgrep
@@ -96,13 +110,17 @@
         ];
 
         shellHook = ''
-          VOSTOK_DIR="$(cd "$(dirname "''${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$PWD")"
+          VOSTOK_DIR="$PWD"
 
           export WINEPREFIX="$VOSTOK_DIR/.wineprefix"
-          export WINEARCH=win32
           export MSVC_DIR="$VOSTOK_DIR/toolchain/msvc"
+          export WINSDK_DIR="$VOSTOK_DIR/toolchain/winsdk"
           export DXSDK_DIR="$VOSTOK_DIR/toolchain/dxsdk"
           export NINJA_DIR="$VOSTOK_DIR/toolchain/ninja"
+
+          # Game binaries: extracted by setup-toolchain.sh, or set manually.
+          # vostok-delinker reads SURVARIUM_BIN for survarium.exe + .pdb.
+          export SURVARIUM_BIN="$VOSTOK_DIR/binaries/game"
 
           # Resolve installer paths from result symlinks if present.
           _resolve() { [ -e "$1" ] && readlink -f "$1" || echo ""; }
@@ -110,13 +128,15 @@
           export VS2008_SP1_ISO="$(_resolve result-vs2008-sp1-iso)"
           export DXSDK_EXE="$(_resolve result-dxsdk)"
           export NINJA_WIN_ZIP="$(_resolve result-ninja-win)"
+          export SURVARIUM_GAME_EXE="$(_resolve result-survarium-game)"
 
-          if [ ! -d "$MSVC_DIR/VC/bin" ]; then
+          if [ ! -d "$MSVC_DIR/VC/bin" ] || [ ! -d "$WINSDK_DIR/Include" ]; then
             echo "[surv-decomp] Toolchain not set up. Steps:"
-            echo "  nix build .#vs2008-iso    --out-link result-vs2008-iso    # 3.3 GB"
-            echo "  nix build .#vs2008-sp1-iso --out-link result-vs2008-sp1-iso  # 831 MB"
-            echo "  nix build .#dxsdk          --out-link result-dxsdk           # 572 MB"
-            echo "  nix build .#ninja-win       --out-link result-ninja-win       #   1 MB"
+            echo "  nix build .#vs2008-iso        --out-link result-vs2008-iso        # 3.3 GB"
+            echo "  nix build .#vs2008-sp1-iso    --out-link result-vs2008-sp1-iso    # 831 MB"
+            echo "  nix build .#dxsdk             --out-link result-dxsdk             # 572 MB"
+            echo "  nix build .#ninja-win         --out-link result-ninja-win         #   1 MB"
+            echo "  nix build .#survarium-game    --out-link result-survarium-game    # 920 MB"
             echo "  bash scripts/setup-toolchain.sh"
           fi
         '';
