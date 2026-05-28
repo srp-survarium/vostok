@@ -23,7 +23,11 @@
 #     try: Xvfb :99 -screen 0 1024x768x24 & export DISPLAY=:99
 #
 # Output:
-#   binaries/vostok-toolchain-sp1.tar.xz
+#   binaries/vostok-toolchain.tar.xz
+#     msvc/VC/   — VS2008 SP1 compiler (cl.exe, headers, x86 libs)
+#     winsdk/    — Windows SDK 6.0A headers + x86 libs
+#     dxsdk/     — DirectX SDK June 2010 headers + libs
+#     ninja/     — ninja.exe v1.12.1
 #
 # After running, create a GitHub release and upload the tarball, then update
 # flake.nix: replace vs2008-toolchain with a fetchurl pointing to the release.
@@ -40,7 +44,7 @@ VOSTOK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 : "${NINJA_WIN_ZIP:?NINJA_WIN_ZIP not set}"
 
 # --- Output + work dirs ---
-OUTPUT="$VOSTOK_DIR/binaries/vostok-toolchain-sp1.tar.xz"
+OUTPUT="$VOSTOK_DIR/binaries/vostok-toolchain.tar.xz"
 WORK_DIR="${WORK_DIR:-$VOSTOK_DIR/binaries/.release-work}"
 STAGE_DIR="$WORK_DIR/stage"      # final layout staged here before tar
 
@@ -226,14 +230,14 @@ echo "  Output: $OUTPUT  ($SIZE)"
 echo "  SHA256: $SHA256"
 echo ""
 echo "Next steps:"
-echo "  1. Create a GitHub release (e.g., tag v1.0) on the vostok-toolchain repo."
+echo "  1. Create a GitHub release in this repo (e.g., tag toolchain-v1.0)."
 echo "  2. Upload $OUTPUT as a release asset."
 echo "  3. In flake.nix, replace the vs2008-toolchain derivation with:"
 echo ""
 echo "     vs2008-toolchain = pkgs.runCommandNoCC \"vs2008-toolchain\" {"
 echo "       src = pkgs.fetchurl {"
-echo "         name = \"vostok-toolchain-sp1.tar.xz\";"
-echo "         url  = \"https://github.com/<org>/vostok-toolchain/releases/download/v1.0/vostok-toolchain-sp1.tar.xz\";"
+echo "         name = \"vostok-toolchain.tar.xz\";"
+echo "         url  = \"https://github.com/<org>/vostok/releases/download/toolchain-v1.0/vostok-toolchain.tar.xz\";"
 echo "         sha256 = \"$SHA256\";"
 echo "       };"
 echo "       nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];"
