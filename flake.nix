@@ -64,13 +64,30 @@
         sha256 = "0yj6128i5fyw793blsldcy8pd8vp4963fg6vy9cgzmmn0p3zwl7m";
       };
 
-      # Survarium v0.100b game installer — contains survarium.exe + survarium.pdb.
-      # setup-toolchain.sh extracts them to binaries/game/ and SURVARIUM_BIN points there.
-      survarium-game = pkgs.fetchurl {
-        name = "survarium_setup_v0100b.exe";
-        url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
-        sha256 = "16aassxvbbhqx9czfvsl3zynl41n2xa7xf9n0l1aip07qgfz2l24";
-      };
+      # Survarium v0.100b — extracted game directory (survarium.exe, survarium.pdb, DLLs).
+      # Build with:  nix build .#survarium-game --out-link binaries/result-survarium-game
+      # SURVARIUM_BIN in the devShell points to this output (or binaries/game as fallback).
+      survarium-game = pkgs.runCommandNoCC "survarium-game" {
+        src = pkgs.fetchurl {
+          name = "survarium_setup_v0100b.exe";
+          url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
+          sha256 = "16aassxvbbhqx9czfvsl3zynl41n2xa7xf9n0l1aip07qgfz2l24";
+        };
+        nativeBuildInputs = [ pkgs.p7zip ];
+      } ''
+        mkdir extract
+        7z x "$src" -o"extract" -y > /dev/null
+        surv_exe=$(find extract -iname "survarium.exe" ! -path "*uninstall*" \
+          -printf "%s %p\n" | sort -rn | head -1 | awk '{print $2}')
+        if [ -z "$surv_exe" ]; then
+          echo "ERROR: survarium.exe not found in extracted installer"
+          find extract -maxdepth 3 -name "*.exe" | head -10
+          exit 1
+        fi
+        game_dir=$(dirname "$surv_exe")
+        mkdir -p "$out"
+        cp -r "$game_dir"/. "$out/"
+      '';
 
     in {
       packages.${system} = {
@@ -121,17 +138,16 @@
           # Suppress Wine Mono / Gecko installation pop-up dialogs.
           export WINEDLLOVERRIDES="mscoree,mshtml="
 
-          # Game binaries: extracted by setup-toolchain.sh, or set manually.
-          # vostok-delinker reads SURVARIUM_BIN for survarium.exe + .pdb.
-          export SURVARIUM_BIN="$VOSTOK_DIR/binaries/game"
-
-          # Resolve installer paths from result symlinks if present.
+          # Resolve Nix store paths from result symlinks.
           _resolve() { [ -e "$1" ] && readlink -f "$1" || echo ""; }
           export VS2008_ISO="$(_resolve binaries/result-vs2008-iso)"
           export VS2008_SP1_ISO="$(_resolve binaries/result-vs2008-sp1-iso)"
           export DXSDK_EXE="$(_resolve binaries/result-dxsdk)"
           export NINJA_WIN_ZIP="$(_resolve binaries/result-ninja-win)"
-          export SURVARIUM_GAME_EXE="$(_resolve binaries/result-survarium-game)"
+
+          # SURVARIUM_BIN: Nix-extracted game dir (nix build .#survarium-game), else binaries/game.
+          _surv="$(_resolve binaries/result-survarium-game)"
+          export SURVARIUM_BIN="${_surv:-$VOSTOK_DIR/binaries/game}"
 
           if [ ! -d "$MSVC_DIR/VC/bin" ] || [ ! -d "$WINSDK_DIR/Include" ]; then
             echo "[surv-decomp] Toolchain not set up. Steps:"
@@ -139,8 +155,11 @@
             echo "  nix build .#vs2008-sp1-iso    --out-link binaries/result-vs2008-sp1-iso    # 831 MB"
             echo "  nix build .#dxsdk             --out-link binaries/result-dxsdk             # 572 MB"
             echo "  nix build .#ninja-win         --out-link binaries/result-ninja-win         #   1 MB"
-            echo "  nix build .#survarium-game    --out-link binaries/result-survarium-game    # 920 MB"
             echo "  bash scripts/setup-toolchain.sh"
+          fi
+          if [ ! -f "$SURVARIUM_BIN/survarium.exe" ]; then
+            echo "[surv-decomp] Game binaries not found. Build with:"
+            echo "  nix build .#survarium-game    --out-link binaries/result-survarium-game    # 920 MB"
           fi
         '';
       };
