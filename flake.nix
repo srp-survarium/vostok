@@ -112,11 +112,14 @@
         shellHook = ''
           VOSTOK_DIR="$PWD"
 
-          export WINEPREFIX="$VOSTOK_DIR/.wineprefix"
-          export MSVC_DIR="$VOSTOK_DIR/toolchain/msvc"
-          export WINSDK_DIR="$VOSTOK_DIR/toolchain/winsdk"
-          export DXSDK_DIR="$VOSTOK_DIR/toolchain/dxsdk"
-          export NINJA_DIR="$VOSTOK_DIR/toolchain/ninja"
+          export WINEPREFIX="$VOSTOK_DIR/binaries/.wineprefix"
+          export MSVC_DIR="$VOSTOK_DIR/binaries/toolchain/msvc"
+          export WINSDK_DIR="$VOSTOK_DIR/binaries/toolchain/winsdk"
+          export DXSDK_DIR="$VOSTOK_DIR/binaries/toolchain/dxsdk"
+          export NINJA_DIR="$VOSTOK_DIR/binaries/toolchain/ninja"
+
+          # Suppress Wine Mono / Gecko installation pop-up dialogs.
+          export WINEDLLOVERRIDES="mscoree,mshtml="
 
           # Game binaries: extracted by setup-toolchain.sh, or set manually.
           # vostok-delinker reads SURVARIUM_BIN for survarium.exe + .pdb.
