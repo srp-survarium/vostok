@@ -403,8 +403,11 @@ if [[ ! -f "$ENV_STAMP" ]] || [[ "$MSVC_DIR/VC/bin/cl.exe" -nt "$ENV_STAMP" ]]; 
   WINE_DXSDK_INC="$(winepath -w "$DXSDK_DIR/Include")"
   WINE_DXSDK_LIB="$(winepath -w "$DXSDK_DIR/Lib/x86")"
 
-  WINE_INCLUDE_VAL="$WINE_VC_INC;$WINE_WINSDK_INC;$WINE_DXSDK_INC"
-  WINE_LIB_VAL="$WINE_VC_LIB;$WINE_WINSDK_LIB;$WINE_DXSDK_LIB"
+  # DXSDK must precede WinSDK: d3d9types.h in WinSDK 6.0A is an older version
+  # without DX9Ex types (D3DAUTHENTICATEDCHANNELTYPE etc.); same include guard
+  # would shadow the DXSDK version if WinSDK comes first.
+  WINE_INCLUDE_VAL="$WINE_VC_INC;$WINE_DXSDK_INC;$WINE_WINSDK_INC"
+  WINE_LIB_VAL="$WINE_VC_LIB;$WINE_DXSDK_LIB;$WINE_WINSDK_LIB"
 
   _REG_ENV="HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"
 
