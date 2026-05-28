@@ -32,23 +32,35 @@
       # Build with:  nix build .#<name> --out-link binaries/result-<name>
       #
 
-      # Internal: raw VS2008 ISO download — not exposed as a user package.
+      # Internal fetches — not exposed as user packages.
       _vs2008-iso-src = pkgs.fetchurl {
         name = "en_visual_studio_2008_professional_x86_dvd_x14-26326.iso";
         url = "https://archive.org/download/en_visual_studio_2008_professional_x86_dvd_x14-26326_202310/en_visual_studio_2008_professional_x86_dvd_x14-26326.iso";
         sha256 = "52ebf5731b75ccc460384ce3fd25bc984fb2d828ae51501ebaf0cadc27a33ee9";
       };
 
-      # VS2008 base compiler (cl.exe, headers, x86 libs) + Windows SDK 6.0A.
-      # Extracted from the 3.3 GB ISO using msitools (no Wine needed).
+      _vs2008-sp1-iso-src = pkgs.fetchurl {
+        name = "VS2008SP1ENUX1512962.iso";
+        urls = [
+          "https://download.microsoft.com/download/a/3/7/a371b6d1-fc5e-44f7-914c-cb452b4043a9/VS2008SP1ENUX1512962.iso"
+          "https://archive.org/download/vs90sp1-all-langs/SP1/VS2008SP1ENUX1512962.iso"
+        ];
+        sha256 = "580f717269faa10cf668140ef0a1a264cec194e20a0083cb0d0004a897cc675e";
+      };
+
+      # VS2008 compiler (cl.exe, headers, x86 libs) + Windows SDK 6.0A.
+      # Base extracted with msitools; SP1 attempted via CAB extraction from the MSP.
+      # SP1 overlay succeeds only if the MSP stores full PE replacements (not MSDELTA
+      # binary deltas). If the `file` check below shows MSDELTA blobs instead of PE32
+      # executables, run scripts/create-toolchain-release.sh to produce a properly
+      # SP1-applied toolchain and publish it as a GitHub release, then replace this
+      # derivation with a fetchurl pointing to that release.
       # Output: $out/VC/      — compiler, headers, libs
       #         $out/WinSDK/  — Windows SDK headers + x86 libs
-      # Note: VS2008 SP1 cannot be applied here (requires wine msiexec on a registered
-      # product, which our msitools-extracted layout doesn't support). Base compiler is
-      # sufficient for the build; SP1 delta is a TODO.
       vs2008-toolchain = pkgs.runCommandNoCC "vs2008-toolchain" {
-        src = _vs2008-iso-src;
-        nativeBuildInputs = [ pkgs.p7zip pkgs.msitools ];
+        src    = _vs2008-iso-src;
+        sp1src = _vs2008-sp1-iso-src;
+        nativeBuildInputs = [ pkgs.p7zip pkgs.msitools pkgs.file ];
       } ''
         BUILD_DIR="$PWD"
         mkdir work
@@ -82,6 +94,59 @@
         for f in mspdb80.dll mspdbcore.dll mspdbsrv.exe msobj80.dll; do
           [ -f "$_ide_dir/$f" ] && cp "$_ide_dir/$f" "$out/VC/bin/"
         done
+
+        # --- VS2008 SP1 overlay (opportunistic) ---
+        # The MSP may store updated binaries as full PE replacements in its CABs.
+        # If it uses MSDELTA binary deltas instead, the PE32 check below will fail
+        # and we keep the base compiler with a warning. In that case, build a proper
+        # SP1 toolchain with scripts/create-toolchain-release.sh and publish as a
+        # GitHub release, then replace this derivation with a fetchurl.
+        echo "[sp1] Extracting SP1 ISO ..."
+        mkdir sp1-iso
+        7z x "$sp1src" -tUDF -o"sp1-iso" -y > /dev/null || true
+
+        _sp1_msp=""
+        for candidate in \
+            sp1-iso/vs90sp1/VS90sp1-KB945140-X86-ENU.msp \
+            sp1-iso/VS90sp1-KB945140-X86-ENU.msp; do
+          [ -f "$candidate" ] && _sp1_msp="$candidate" && break
+        done
+
+        if [ -n "$_sp1_msp" ]; then
+          echo "[sp1] Extracting CABs from MSP ..."
+          mkdir msp-streams msp-cabs
+          7z x "$_sp1_msp" -o"msp-streams" -y > /dev/null 2>&1 || true
+          find msp-streams -name "*.cab" | while read cab; do
+            7z x "$cab" -o"msp-cabs" -y > /dev/null 2>&1 || true
+          done
+
+          # Find updated cl.exe: must be a PE32 executable (not a MSDELTA delta blob).
+          _sp1_cl=$(find msp-cabs -type f ! -path "*/amd64/*" ! -path "*/x86_amd64/*" \
+            ! -path "*/ce/*" | while read f; do
+              file -b "$f" | grep -q "PE32 executable" && echo "$f" && break
+            done)
+
+          if [ -n "$_sp1_cl" ]; then
+            echo "[sp1] Found SP1 PE32 executables in MSP — overlaying onto base VC ..."
+            # Overlay all PE32 files from the MSP that match files already in VC/bin/.
+            find msp-cabs -type f | while read f; do
+              if file -b "$f" | grep -q "PE32\|DLL\|PE32+"; then
+                fname=$(basename "$f")
+                target="$out/VC/bin/$fname"
+                if [ -f "$target" ]; then
+                  cp "$f" "$target"
+                  echo "[sp1]   updated $fname"
+                fi
+              fi
+            done
+          else
+            echo "[sp1] WARNING: cl.exe not found as PE32 in MSP CABs (likely MSDELTA deltas)."
+            echo "[sp1]   Base VS2008 compiler will be used — binary matching may diverge."
+            echo "[sp1]   Run scripts/create-toolchain-release.sh to produce a correct SP1 build."
+          fi
+        else
+          echo "[sp1] WARNING: SP1 MSP not found in ISO. Base compiler only."
+        fi
 
         # --- Windows SDK 6.0A ---
         _sdk_exe="work/WCU/WinSDK/WinSDK_Build.exe"
