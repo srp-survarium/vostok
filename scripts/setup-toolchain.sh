@@ -270,6 +270,43 @@ export WINE_INCLUDE="\$WINE_VC_INC;\$WINE_DXSDK_INC"
 export WINE_LIB_PATH="\$WINE_VC_LIB;\$WINE_DXSDK_LIB"
 EOF
 
+# ---------------------------------------------------------------------------
+# 6. Set INCLUDE, LIB, PATH in the Wine environment registry
+#    so that cl.exe finds headers/libs when invoked via cmd.exe from ninja.exe.
+# ---------------------------------------------------------------------------
+ENV_STAMP="$MSVC_DIR/.wine-env-set"
+if [[ ! -f "$ENV_STAMP" ]]; then
+  echo "[setup] Configuring Wine environment (INCLUDE, LIB, PATH) ..."
+
+  WINE_VC_BIN="$(winepath -w "$MSVC_DIR/VC/bin")"
+  WINE_VC_INC="$(winepath -w "$MSVC_DIR/VC/include")"
+  WINE_VC_LIB="$(winepath -w "$MSVC_DIR/VC/lib")"
+  WINE_DXSDK_INC="$(winepath -w "$DXSDK_DIR/Include")"
+  WINE_DXSDK_LIB="$(winepath -w "$DXSDK_DIR/Lib/x86")"
+
+  WINE_INCLUDE_VAL="$WINE_VC_INC;$WINE_DXSDK_INC"
+  WINE_LIB_VAL="$WINE_VC_LIB;$WINE_DXSDK_LIB"
+
+  _REG_ENV="HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"
+
+  # Add VC/bin to the system PATH
+  _CURRENT_PATH="$(wine reg query "$_REG_ENV" /v PATH 2>/dev/null | grep -i "REG_" | awk '{print $NF}')"
+  if [[ -n "$_CURRENT_PATH" && "$_CURRENT_PATH" != *"$WINE_VC_BIN"* ]]; then
+    wine reg add "$_REG_ENV" /v PATH /t REG_EXPAND_SZ /d "$WINE_VC_BIN;$_CURRENT_PATH" /f > /dev/null 2>&1
+  fi
+
+  wine reg add "$_REG_ENV" /v INCLUDE /t REG_SZ /d "$WINE_INCLUDE_VAL" /f > /dev/null 2>&1
+  wine reg add "$_REG_ENV" /v LIB /t REG_SZ /d "$WINE_LIB_VAL" /f > /dev/null 2>&1
+
+  touch "$ENV_STAMP"
+  echo "[setup] Wine environment configured."
+  echo "  PATH+=   $WINE_VC_BIN"
+  echo "  INCLUDE= $WINE_INCLUDE_VAL"
+  echo "  LIB=     $WINE_LIB_VAL"
+else
+  echo "[setup] Wine environment already configured."
+fi
+
 echo ""
 echo "[setup] Done. Toolchain layout:"
 echo "  MSVC:   $MSVC_DIR/VC/"
