@@ -67,26 +67,13 @@ source). On wine-10.0, RPC is broken — every run logs
 **never spawned** and cl can't reach the PDB manager → it reports the failure
 as a "manager mismatch" (C1902). It is *not* a version mismatch.
 
-**Fix:** use **`wineWowPackages.staging`** (wine-staging 10.20), which starts
-RpcSs and spawns `mspdbsrv.exe` correctly. Verified end-to-end: the full `zlib`
-target compiles (13 `.obj`s) and links (`zlib.lib`) under staging, with
-`mspdbsrv.exe` visibly running. The flake's devShell pins this.
+**Fix:** use **`wineWowPackages.staging`** (wine-staging ≥ 10.20; nixpkgs
+currently provides 11.8), which starts RpcSs and spawns `mspdbsrv.exe`
+correctly. The flake's devShell pins this.
 
-### What did *not* fix it (ruled out before finding the wine-version cause)
-
-- **Toolchain completeness/versions** — not the issue. cl/c1/c2 `15.00.30729`
-  and all `mspdb*`/`msobj*` `9.00.30729` are the same SP1 build and matched;
-  the correct `mspdb80.dll` loads (`+loaddll` confirms `native`, no stray copy).
-- **RTM vs SP1** — both fail identically under wine-10.0.
-- **mspdb source dir** — the `Common7/IDE` copy and the
-  `Common Files/.../VSA/9.0/VsaEnv` copy are byte-identical (`md5` equal); the
-  location only matters for the runtime *presence* fix (above), not C1902.
-- **Prefix arch** — fresh `wow64` and fresh `WINEARCH=win32` prefixes both fail.
-- **Wine flavor at 10.0** — `wineWow64Packages.stable` (merged wow64) *and*
-  `wineWowPackages.stable` (traditional multilib) both fail at 10.0, so it's the
-  wine *version*, not wow64-vs-multilib.
-- **Manually pre-starting `rpcss.exe`** — doesn't help; the standalone process
-  exits and isn't the SCM-managed service cl's RPC needs.
-
-So: complete + correct toolchain, but wine-10.0's RPC/`mspdbsrv` path is broken;
-staging is required.
+Ruled out before finding the wine-version cause: toolchain completeness and
+versions (cl/`mspdb*`/`msobj*` are all the matched SP1 `…30729` build, correct
+`mspdb80.dll` loads), RTM vs SP1, the `mspdb` source dir (the `Common7/IDE` and
+`VSA/9.0/VsaEnv` copies are byte-identical), prefix arch (`wow64` and `win32`
+both fail), and wow64-vs-multilib (both `stable` flavors fail at 10.0). It is
+purely the wine *version*: 10.0's RPC/`mspdbsrv` path is broken, staging fixes it.

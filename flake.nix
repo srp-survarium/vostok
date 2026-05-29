@@ -186,7 +186,7 @@
           # server) over RPC, and wine-10.0 stable fails to start RpcSs so
           # mspdbsrv never spawns → "fatal error C1902: Program database manager
           # mismatch". wine-staging 10.20 spawns mspdbsrv correctly. See
-          # docs/toolchain-build.md.
+          # docs/build/toolchain-build.md.
           pkgs.wineWowPackages.staging
 
           # MinGW cross-compiler (needed if building vcproj2ninja outside Nix)
