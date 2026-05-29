@@ -16,6 +16,13 @@ Output:
     winsdk/    — Windows SDK 6.0A headers + x86 libs
     dxsdk/     — DirectX SDK June 2010 headers + libs
     ninja/     — ninja.exe v1.12.1
+
+Headless Wine:
+  wineboot and `msiexec /a` create windows (the "updating Wine configuration"
+  dialog, installer progress) via Wine's default X11 graphics driver — even
+  though the build is non-interactive (/qn). On a desktop those pop up on
+  screen. xvfb_prefix() runs them under a throwaway virtual X server (xvfb-run)
+  so they render invisibly. See xvfb_prefix() below.
 """
 
 import hashlib
@@ -46,8 +53,14 @@ def winepath_w(p: Path) -> str:
 
 
 def xvfb_prefix() -> list[str]:
-    """Return [xvfb-run, -a] when no display is available, else empty."""
-    return ["xvfb-run", "-a"] if not os.environ.get("DISPLAY") else []
+    """Always run Wine GUI steps under a throwaway virtual X server (xvfb-run -a).
+
+    The toolchain build is fully unattended (msiexec /qn), so Wine needs no real
+    display. Forcing xvfb even when DISPLAY is set keeps the "updating the Wine
+    configuration" / prefix-creation dialog off the user's screen. xvfb-run is
+    provided by create-toolchain-release.nix.
+    """
+    return ["xvfb-run", "-a"]
 
 
 # ---------------------------------------------------------------------------
