@@ -21,7 +21,7 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
         - Tools > Options > Projects and Solutions > VC++ Directories > Include files > C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include
         - Tools > Options > Projects and Solutions > VC++ Directories > Library files > C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86
     * Load VS2008 macros:
-        - Tools > Macros > Load Macro Project... > {REPOSITORY}/scripts/vs/vostok_vs_macro/vostok_vs_macro.vsmacros > Allow
+        - Tools > Macros > Load Macro Project... > {REPOSITORY}/scripts/vs/macro/macro.vsmacros > Allow
 
 3. Tooling
     * `objdiff` - Install newest version from here: https://github.com/encounter/objdiff
