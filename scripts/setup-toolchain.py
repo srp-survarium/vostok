@@ -9,9 +9,12 @@ in binaries/ninja/ can build the project. Steps:
   2. Initialise the Wine prefix
   3. Set PATH, INCLUDE, LIB in the Wine registry
   4. Run vcproj2ninja.exe under Wine to (re)generate binaries/ninja/build.ninja
+  5. Generate the target-side diff inputs once (binaries/{objdiff,structure}/target)
+     from the original game — these don't change between recompiles.
 
-Does not run ninja itself. Subsequent runs short-circuit if every input still
-hashes to the previously recorded fingerprint AND all expected outputs exist.
+Does not run ninja itself. Steps 1-4 short-circuit if every input still hashes to
+the previously recorded fingerprint AND all expected outputs exist; step 5 is
+independently idempotent (skips whatever target output already exists).
 
 Run from inside `nix develop` after all Nix packages are built:
   nix build .#vostok-toolchain --out-link binaries/result-vostok-toolchain
@@ -143,6 +146,39 @@ def compute_fingerprint(
     return "\n".join(lines) + "\n"
 
 
+def _nonempty_dir(p: Path) -> bool:
+    return p.is_dir() and any(p.iterdir())
+
+
+def ensure_target_side() -> None:
+    """Generate the target-side diff inputs once (the original game never changes):
+    binaries/objdiff/target (COFF) and binaries/structure/target (pdb-parser stubs).
+
+    Idempotent — skips whichever output already exists, so this is cheap to call on
+    every `nix develop`. Non-fatal: a failure here is logged but does not abort shell
+    setup (the base build path still works without the target side present).
+    """
+    import delink              # local imports: same scripts/ dir, only needed here
+    import generate_structure
+
+    objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"
+    structure_target = VOSTOK_DIR / "binaries" / "structure" / "target"
+    if _nonempty_dir(objdiff_target) and _nonempty_dir(structure_target):
+        return  # already generated
+
+    log("Generating target diff inputs (one-time: original game COFF + structure) ...")
+    try:
+        if not _nonempty_dir(objdiff_target):
+            delink.delink("target")
+        if not _nonempty_dir(structure_target):
+            generate_structure.generate("target")
+        log("Target diff inputs ready.")
+    except (RuntimeError, subprocess.CalledProcessError) as e:
+        log(f"WARNING: could not generate target diff inputs: {e}")
+        log("  Generate later with: python3 scripts/delink.py target && "
+            "python3 scripts/generate_structure.py target")
+
+
 def main() -> None:
     msvc_dir   = Path(require_env("MSVC_DIR"))
     winsdk_dir = Path(require_env("WINSDK_DIR"))
@@ -195,7 +231,8 @@ def main() -> None:
         and SETUP_STAMP.read_text() == fingerprint
         and all(p.exists() for p in outputs)
     ):
-        log("Setup already complete; nothing to do.")
+        log("Wine/ninja setup already complete.")
+        ensure_target_side()
         return
 
     # ----- Step 1: copy vostok-libs into sources/ -----
@@ -241,6 +278,8 @@ def main() -> None:
     # All steps succeeded — record fingerprint to skip next time.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
     SETUP_STAMP.write_text(fingerprint)
+
+    ensure_target_side()
 
     log("")
     log("Toolchain layout:")
