@@ -8,7 +8,7 @@
 :: Repository paths can be overwritten in case they are defined in unrelated locations
 ::
 
-if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
+if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
 if not defined VOSTOK_DIR      set      "VOSTOK_DIR=%ROOT_DIR%\vostok"
