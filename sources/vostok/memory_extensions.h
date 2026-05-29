@@ -12,15 +12,7 @@
 #include <vostok/debug/extensions.h>
 #include <vostok/memory_pthreads3_allocator.h>
 
-#if VOSTOK_PLATFORM_WINDOWS
 #	define VOSTOK_MAX_CACHE_LINE_SIZE				64
-#elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
-#	define VOSTOK_MAX_CACHE_LINE_SIZE				128
-#elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
-#	define VOSTOK_MAX_CACHE_LINE_SIZE				128
-#else // #elif VOSTOK_PLATFORM_PS3
-#	error please define your platform!
-#endif // #if VOSTOK_PLATFORM_WINDOWS
 
 #define VOSTOK_MAX_CACHE_LINE_PAD					char VOSTOK_STRING_CONCAT(m_cache_line_pad_$, __LINE__) [VOSTOK_MAX_CACHE_LINE_SIZE]
 

@@ -30,9 +30,7 @@ class	vfs_sub_fat_resource;
 typedef resource_ptr					<vfs_sub_fat_resource, unmanaged_intrusive_base>	vfs_sub_fat_resource_ptr;
 typedef	child_resource_ptr				<vfs_sub_fat_resource, unmanaged_intrusive_base>	vfs_sub_fat_child_resource_ptr;
 
-#if !VOSTOK_PLATFORM_PS3
 template class VOSTOK_CORE_API			child_resource_ptr<	vfs_sub_fat_resource, unmanaged_intrusive_base >;
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 class					queries_result;
 typedef					boost::function< void ( queries_result & data ) >	query_callback;

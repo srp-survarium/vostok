@@ -33,9 +33,7 @@ typedef intrusive_ptr<	sound_instance_proxy,
 						sound_instance_proxy,
 						threading::single_threading_policy > sound_instance_proxy_ptr;
 
-#ifndef SN_TARGET_PS3
 template class VOSTOK_SOUND_API boost::function< void ( ) >;
-#endif // #ifndef SN_TARGET_PS3
 
 struct source_params
 {

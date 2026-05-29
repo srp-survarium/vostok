@@ -31,43 +31,15 @@ namespace bugtrap {
 	void setup_unhandled_exception_handler	( );
 } // namespace bugtrap
 
-#if VOSTOK_PLATFORM_WINDOWS
 
 #	define OUTPUT_DEBUG_STRING				OutputDebugString
 
-#elif VOSTOK_PLATFORM_XBOX_360				// #if VOSTOK_PLATFORM_WINDOWS
-
-#	ifdef DEBUG
-#		pragma warning ( push )
-#		pragma warning ( disable : 4005 )		// because of the DELETE macro
-#		include			<xtl.h>
-#		pragma warning ( pop )
-
-#		include			<xbdm.h>
-#		pragma comment	( lib, "xbdm.lib" )
-#		define	OUTPUT_DEBUG_STRING			OutputDebugString
-#	else // #ifdef DEBUG
-#		define	OUTPUT_DEBUG_STRING( a )
-#	endif // #ifdef DEBUG
-
-#elif VOSTOK_PLATFORM_PS3						// #if VOSTOK_PLATFORM_PS3
-#	define OUTPUT_DEBUG_STRING( a )			::printf("%s",(a));
-#else // #elif VOSTOK_PLATFORM_PS3
-
-#	error please define your platform
-
-#endif // #elif VOSTOK_PLATFORM_PS3
 
 inline pstr strings_copy			( pstr destination, u32 destination_size, pcstr source )
 {
 #ifdef _MSC_VER
 	errno_t const error	= strcpy_s( destination, destination_size, source );
 	VOSTOK_UNREFERENCED_PARAMETER	( error );
-#elif defined(__GCC__) // #ifdef _MSC_VER
-	strlcpy			( destination, source, destination_size );
-#elif defined(__SNC__) // #ifdef _MSC_VER
-	VOSTOK_UNREFERENCED_PARAMETER	( destination_size );
-	strcpy			( destination, source );
 #else // #elif defined(__SNC__)
 #	error define strings::copy for your platform here
 #endif // #ifdef _MSC_VER
@@ -79,11 +51,6 @@ inline pstr strings_concat			( pstr destination, u32 destination_size, pcstr sou
 #ifdef _MSC_VER
 	errno_t const error	= strcat_s( destination, destination_size, source );
 	VOSTOK_UNREFERENCED_PARAMETER	( error );
-#elif defined(__GCC__) // #ifdef _MSC_VER
-	strlcat			( destination, source, destination_size );
-#elif defined(__SNC__) // #ifdef _MSC_VER
-	VOSTOK_UNREFERENCED_PARAMETER	( destination_size );
-	strcat			( destination, source );
 #else // #elif defined(__SNC__)
 #	error define strings::copy for your platform here
 #endif // #ifdef _MSC_VER

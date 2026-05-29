@@ -12,10 +12,6 @@
 namespace vostok {
 namespace fs_new {
 
-#if VOSTOK_PLATFORM_PS3
-const char native_path_string::separator;
-const char portable_path_string::separator;
-#endif // #if VOSTOK_PLATFORM_PS3
 
 native_path_string::native_path_string (portable_path_string const & other) : path_string_impl(separator)
 {

@@ -13,13 +13,8 @@ namespace sound {
 
 voice_factory::voice_factory( u8* buffer, u32 buffer_size, sound_world const& world, pool_parametrs const& params ) :
 	m_pool_params				( params ),
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	m_min_frequency_ratio		( XAUDIO2_MIN_FREQ_RATIO ),
 	m_max_frequency_ratio		( XAUDIO2_DEFAULT_FREQ_RATIO ),
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	m_min_frequency_ratio		( 1.0f ),
-	m_max_frequency_ratio		( 1.0f ),
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	m_voices_allocator			( buffer, buffer_size )
 {
 
@@ -31,24 +26,16 @@ voice_factory::voice_factory( u8* buffer, u32 buffer_size, sound_world const& wo
 
 	for (u32 i = 0; i < params.mono_voices_count; ++i)
 	{
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 		voice_bridge* new_voice	= VOSTOK_NEW_IMPL( m_voices_allocator, voice_bridge)( voice_params );
 		m_voices[mono].push_back( new_voice );
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED ( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	}
 
 	voice_params.type					= stereo;
 
 	for (u32 i = 0; i < params.stereo_voices_count; ++i)
 	{
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 		voice_bridge* new_voice	= VOSTOK_NEW_IMPL( m_voices_allocator, voice_bridge)( voice_params );
 		m_voices[stereo].push_back( new_voice );
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED ( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	}
 }
 

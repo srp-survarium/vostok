@@ -44,12 +44,7 @@ public:
 			u32				get_length_in_pcm		( ) const;
 	inline	XAUDIO2_BUFFER*	get_xaudio_buffer		( )
 			{
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 				return &m_xaudio_buffer;
-#else  //#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-				NOT_IMPLEMENTED ( );
-				return 0;
-#endif //#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 			}
 			sound_buffer*	m_next;
@@ -66,9 +61,7 @@ private:
 			void			increment				( ) { ++m_reference_count; }
 			void			decrement				( ) { --m_reference_count; }
 private:
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	XAUDIO2_BUFFER			m_xaudio_buffer;
-#endif //#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	encoded_sound_ptr		m_encoded_sound;
 	u32						m_cached_offset;
 	u32						m_cached_offset_after_decompress;

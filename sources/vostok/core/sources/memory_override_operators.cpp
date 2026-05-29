@@ -17,7 +17,6 @@
 
 pvoid __cdecl operator new		( size_t buffer_size )
 {
-#if !VOSTOK_PLATFORM_PS3
 #	if VOSTOK_ENABLE_CRT_ALLOCATOR
 		R_ASSERT					( ::vostok::memory::g_crt_allocator, "CRT allocation detected. do not use CRT allocations or setup crt allocator (the last doesn't work in MASTER_GOLD configuration)" );
 #		ifdef DEBUG
@@ -29,16 +28,6 @@ pvoid __cdecl operator new		( size_t buffer_size )
 		VOSTOK_UNREFERENCED_PARAMETER	( buffer_size );
 		UNREACHABLE_CODE			( return 0 );
 #	endif // #if VOSTOK_DISABLE_CRT_ALLOCATOR
-#else // #if !VOSTOK_PLATFORM_PS3
-	// for boost::function functionality only!
-	// if you don't see boost::function stuff in the call stack,
-	// please report Dmitriy Iassenev ASAP
-#	ifdef DEBUG
-		return					::vostok::memory::g_crt_allocator->malloc_impl( buffer_size, "new for boost::function", __FUNCTION__, __FILE__, __LINE__ );
-#	else // #ifdef DEBUG
-		return					::vostok::memory::g_crt_allocator->malloc_impl( buffer_size );
-#	endif // #ifdef DEBUG
-#endif // #if !VOSTOK_PLATFORM_PS3
 }
 
 pvoid __cdecl operator new[]		( size_t buffer_size )
@@ -58,7 +47,6 @@ pvoid __cdecl operator new[]		( size_t buffer_size )
 
 void __cdecl operator delete		( pvoid pointer )
 {
-#if !VOSTOK_PLATFORM_PS3
 #	if VOSTOK_ENABLE_CRT_ALLOCATOR
 		R_ASSERT					( ::vostok::memory::g_crt_allocator, "CRT allocation detected. do not use CRT allocations or setup crt allocator (the last doesn't work in MASTER_GOLD configuration)" );
 		::vostok::memory::g_crt_allocator->free_impl( pointer
@@ -70,16 +58,6 @@ void __cdecl operator delete		( pvoid pointer )
 		VOSTOK_UNREFERENCED_PARAMETER	( pointer );
 		UNREACHABLE_CODE			( );
 #	endif // #if VOSTOK_DISABLE_CRT_ALLOCATOR
-#else // #if !VOSTOK_PLATFORM_PS3
-	// for boost::function functionality only!
-	// if you don't see boost::function stuff in the call stack,
-	// please report Dmitriy Iassenev ASAP
-#	ifdef DEBUG
-		::vostok::memory::g_crt_allocator->free_impl( pointer, __FUNCTION__, __FILE__, __LINE__ );
-#	else // #ifdef DEBUG
-		::vostok::memory::g_crt_allocator->free_impl( pointer );
-#	endif // #ifdef DEBUG
-#endif // #if !VOSTOK_PLATFORM_PS3
 }
 
 void __cdecl operator delete[]	( pvoid pointer ) throw ( )
@@ -110,10 +88,6 @@ static vostok::threading::atomic32_type	s_crt_allocator_creation	=	0;
 	static char s_CRT_arena[ 2*1024*1024 ];
 #elif VOSTOK_PLATFORM_WINDOWS_64 // #if VOSTOK_PLATFORM_WINDOWS_32
 	static char s_CRT_arena[ 128*1024 ];
-#elif VOSTOK_PLATFORM_XBOX_360 // #elif VOSTOK_PLATFORM_WINDOWS_64
-	static char s_CRT_arena[ 4*1024 ];
-#elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
-	static char s_CRT_arena[ 4*1024 ];
 #else // #elif VOSTOK_PLATFORM_PS3
 #	error please define your platform!
 #endif // #elif VOSTOK_PLATFORM_WINDOWS_64

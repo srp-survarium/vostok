@@ -153,11 +153,9 @@ private:
 	void				test							();
 	void				test_speed						();
 	void				remove_test_resource			(u32 index);
-#if !VOSTOK_PLATFORM_PS3
 	void				test_unmovable_init				(u32 start_ms);
 	void				test_unmovable_unlock_expired	(u32 cur_ms);
 	void				test_unmovables_list_valid		() const;
-#endif // #if !VOSTOK_PLATFORM_PS3
 	void				log_test_resources				() const;
 
 

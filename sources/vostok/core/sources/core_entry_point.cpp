@@ -30,9 +30,6 @@
 #include <vostok/logging/format.h>
 #include <vostok/memory_base_allocator.h>
 
-#if VOSTOK_PLATFORM_PS3
-#	include <sys/paths.h>
-#endif // #if VOSTOK_PLATFORM_PS3
 
 #ifdef _MSC_VER
 #	pragma warning( push )
@@ -172,17 +169,9 @@ void vostok::core::initialize			(
 	strings::initialize		( );
 
 
-#if VOSTOK_PLATFORM_WINDOWS
 	fs_new::native_path_string replication_folder_string = core::user_data_directory( );
 	replication_folder_string.append_with_conversion( "/replication" );
 	pcstr const replication_folder	= replication_folder_string.c_str();
-#elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
-	pcstr const replication_folder	= "cache:/replication";
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_WINDOWS
-	pcstr const replication_folder	= SYS_DEV_HDD0 "/replication";
-#else
-#	error define your platform
-#endif // #if VOSTOK_PLATFORM_WINDOWS
 
 	VOSTOK_UNREFERENCED_PARAMETER				(replication_folder);
 

@@ -7,12 +7,6 @@
 #ifndef VOSTOK_THREADING_FUNCTIONS_H_INCLUDED
 #define VOSTOK_THREADING_FUNCTIONS_H_INCLUDED
 
-#if VOSTOK_PLATFORM_XBOX_360
-#	include <PPCIntrinsics.h>
-#	ifdef NDEBUG
-#		include <vostok/os_include.h>
-#	endif // #ifdef NDEBUG
-#endif // #if VOSTOK_PLATFORM_XBOX_360 
 
 #if defined(__GNUC__)
 #	include <xtls.h>
@@ -25,23 +19,12 @@
 namespace vostok {
 namespace threading {
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	typedef long							atomic32_value_type;
 	typedef atomic32_value_type volatile	atomic32_type;
 	typedef s64								atomic64_value_type;
 	typedef atomic64_value_type volatile	atomic64_type;
 	typedef pvoid							atomic_ptr_value_type;
 	typedef atomic_ptr_value_type volatile	atomic_ptr_type;
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	typedef u32								atomic32_value_type;
-	typedef atomic32_value_type				atomic32_type;
-	typedef u64								atomic64_value_type;
-	typedef atomic64_value_type				atomic64_type;
-	typedef pvoid							atomic_ptr_value_type;
-	typedef atomic_ptr_value_type			atomic_ptr_type;
-#else // #elif VOSTOK_PLATFORM_PS3
-#	error define atomic type for your platform here
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 template < typename T, bool is_volatile >
 struct atomic_type_helper {
@@ -65,13 +48,7 @@ enum tasks_awareness {
 	tasks_unaware,
 }; // enum tasks_awareness
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	typedef u32				thread_id_type;
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	typedef u64				thread_id_type;
-#else // #elif VOSTOK_PLATFORM_PS3
-#	error define thread_id_type for your platform here
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 VOSTOK_CORE_API	thread_id_type	spawn						(
 							thread_function_type const& function_to_call,
@@ -138,33 +115,14 @@ VOSTOK_CORE_API	tls_key_id_type	tls_get_invalid_key			( );
 } // namespace vostok
 
 // CPU+compiler reorder preventing macro:
-#if VOSTOK_PLATFORM_WINDOWS
 #	define VOSTOK_MEMORY_BARRIER_EXCEPT_READS_BEFORE_WRITES	MemoryBarrier
 #	define VOSTOK_MEMORY_BARRIER_FULL							MemoryBarrier
-#elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
-#	define VOSTOK_MEMORY_BARRIER_EXCEPT_READS_BEFORE_WRITES	__lwsync
-#	define VOSTOK_MEMORY_BARRIER_FULL							__sync
-#elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
-#	include <ppu_intrinsics.h>
-#	define VOSTOK_MEMORY_BARRIER_EXCEPT_READS_BEFORE_WRITES	__lwsync
-#	define VOSTOK_MEMORY_BARRIER_FULL							__sync
-#else
-#	error please define VOSTOK_MEMORY_BARRIER_FULL for your platform
-#endif // #if VOSTOK_PLATFORM_WINDOWS
 
 #include <vostok/threading_functions_guard.h>
 
 #ifdef NDEBUG
 #	define	VOSTOK_THREADING_INLINE	inline
-#	if VOSTOK_PLATFORM_WINDOWS
 #		include <vostok/threading_functions_win_inline.h>
-#	elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
-#		include <vostok/threading_functions_xbox_inline.h>
-#	elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
-#		include <vostok/threading_functions_ps3_inline.h>
-#	else // #elif VOSTOK_PLATFORM_PS3
-#		error "create an implementation of threading functions for your platform"
-#	endif // #ifdef VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #	undef	VOSTOK_THREADING_INLINE
 #endif // #ifdef NDEBUG
 

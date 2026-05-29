@@ -6,11 +6,7 @@
 
 #include <vostok/macro_platform.h>
 
-#if !VOSTOK_PLATFORM_PS3
 #	include <malloc.h>
-#else // #if !VOSTOK_PLATFORM_PS3
-#	include <stdlib.h>
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 void test_allocation()
 {

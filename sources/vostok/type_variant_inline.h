@@ -66,7 +66,6 @@ public:
 		((T*)buffer)->~T();
 	}
 
-#ifndef __SNC__
 	template < bool is_pod_type >
 	struct helper {
 		static inline void placement_new		( pvoid const buffer )
@@ -82,16 +81,11 @@ public:
 			VOSTOK_UNREFERENCED_PARAMETER		(buffer);
 		}
 	};
-#endif // #ifndef __SNC__
 
 	virtual void copy					(mutable_buffer dest_buffer, const_buffer src_buffer)
 	{
 		R_ASSERT						(dest_buffer.size() >= sizeof(T) && src_buffer.size() >= sizeof(T));
-#ifdef __SNC__
-		new ( dest_buffer.c_ptr() )	T	( );
-#else // #ifdef __SNC__
 		helper< boost::is_pod<T>::value >::placement_new( dest_buffer.c_ptr() );
-#endif // #ifdef __SNC__
 		* (T *)dest_buffer.c_ptr()	=	* (T *)src_buffer.c_ptr();
 	}
 

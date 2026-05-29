@@ -13,9 +13,6 @@ namespace engine {
 
 void engine_world::initialize_file_system_devices	( )
 {
-#if VOSTOK_PLATFORM_PS3
-	NOT_IMPLEMENTED							( );
-#else // #if VOSTOK_PLATFORM_PS3
 	VOSTOK_CONSTRUCT_REFERENCE				(m_hdd_async_interface, fs_new::asynchronous_device_interface) 
 												(& m_hdd_device, fs_new::watcher_enabled_true);
 	VOSTOK_CONSTRUCT_REFERENCE				(m_dvd_async_interface, fs_new::asynchronous_device_interface) 
@@ -23,7 +20,6 @@ void engine_world::initialize_file_system_devices	( )
 
 	initialize_file_system_device			(* m_hdd_async_interface.c_ptr(), apc::hdd, "hdd");
 	initialize_file_system_device			(* m_dvd_async_interface.c_ptr(), apc::dvd, "dvd");
-#endif // #if VOSTOK_PLATFORM_PS3
 }
 
 class device_ticker {

@@ -42,7 +42,6 @@ enum
 	precalculation_time_for_propagators_in_msec			= 10,
 };
 
-#if !VOSTOK_PLATFORM_PS3
 static void role_to_string ( XAUDIO2_DEVICE_ROLE const role, fixed_string2048& dest )
 {
 	if ( role == NotDefaultDevice )
@@ -65,7 +64,6 @@ static void role_to_string ( XAUDIO2_DEVICE_ROLE const role, fixed_string2048& d
 			dest += "GlobalDefaultDevice ";
 	}
 }
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 sound_world::sound_world	(
 		vostok::sound::engine& engine,
@@ -121,13 +119,9 @@ sound_world::sound_world	(
 	m_xaudio_callback_orders.set_pop_thread_id	( );
 	m_xaudio_callback_orders.push_null_node		( MT_NEW( sound_order )() );
 
-#if VOSTOK_PLATFORM_WINDOWS
 	CoInitializeEx								( 0, COINIT_APARTMENTTHREADED );
-#endif // #if VOSTOK_PLATFORM_WINDOWS
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	m_is_audio_device_exist						= initialize_xaudio	( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	pool_parametrs params;
 	if ( m_is_audio_device_exist )
@@ -199,7 +193,6 @@ sound_world::sound_world	(
 	m_timer.start					( );
 }
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 bool sound_world::initialize_xaudio		( )
 {
 	LOG_INFO									( "Sound initialization..." );
@@ -283,7 +276,6 @@ bool sound_world::initialize_xaudio		( )
 	return true;
 }
 
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 void sound_world::on_unmanaged_resources_allocated	( resources::queries_result& queries )
 {
@@ -303,11 +295,9 @@ sound_world::~sound_world		( )
 	R_ASSERT					( m_voices_to_delete.empty( ) );
 	DELETE						( m_voice_factory );
 	DELETE						( m_sound_buffer_factory );
-#if !VOSTOK_PLATFORM_PS3
 	if ( m_master_voice )
 		m_master_voice->DestroyVoice( );
 	m_xaudio->Release			( );
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 	sound_order* order			= m_xaudio_callback_orders.pop_null_node();
 	VOSTOK_DELETE_IMPL			( memory::g_mt_allocator, order );
@@ -315,7 +305,6 @@ sound_world::~sound_world		( )
 
 channels_type sound_world::master_channel_type ( ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	XAUDIO2_VOICE_DETAILS voice_details;
 	m_master_voice->GetVoiceDetails( &voice_details );
 	switch ( voice_details.InputChannels )
@@ -326,9 +315,6 @@ channels_type sound_world::master_channel_type ( ) const
 		case 6:		return stereo;
 		default:	NODEFAULT( return channels_type_count );
 	}
-#else //  VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED ( return channels_type_count );
-#endif //  VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 }
 
 struct erase_unaudible_predicate
@@ -373,7 +359,6 @@ void sound_world::tick			( )
 
 IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	if ( m_is_audio_device_exist )
 	{
 		XAUDIO2_VOICE_DETAILS voice_details;
@@ -387,20 +372,13 @@ IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
 		ASSERT				( !FAILED( res ) );
 		return submix_voice;
 	}
-#else	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED			( );
-#endif	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	return 0;
 }
 
 void sound_world::free_submix_voice	( IXAudio2SubmixVoice* voice ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	if ( voice )
 		voice->DestroyVoice		( );
-#else	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED			( );
-#endif	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 }
 
 void sound_world::hdr_audio_test	( u32 time_delta_in_msec )
@@ -459,9 +437,7 @@ void sound_world::hdr_audio_test	( u32 time_delta_in_msec )
 voice_bridge* sound_world::get_voice ( voice_callback_handler* callback_handler, IXAudio2SubmixVoice* submix_voice, channels_type type, u32 sample_rate  )
 {
 	voice_bridge* voice		= m_voice_factory->new_voice	( callback_handler, type, sample_rate );
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	voice->set_output_voice	( submix_voice );
-#endif	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	
 	return voice;
 }

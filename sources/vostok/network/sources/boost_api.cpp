@@ -6,7 +6,6 @@
 
 #include "pch.h"
 
-#if !VOSTOK_PLATFORM_PS3
 #include "boost_api.h"
 
 namespace boost
@@ -27,5 +26,4 @@ namespace boost
 
 
 
-#endif // #if !VOSTOK_PLATFORM_PS3
 

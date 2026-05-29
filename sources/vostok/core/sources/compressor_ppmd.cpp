@@ -13,7 +13,6 @@
 
 #pragma message( VOSTOK_TODO("PS3: PPMD compressor") )
 
-#if !VOSTOK_PLATFORM_PS3
 
 #pragma warning (push)
 #pragma warning (disable: 4244)
@@ -1443,33 +1442,3 @@ public:
 *****************************************************************************/
 
 #pragma warning (pop)
-
-#else // #if !VOSTOK_PLATFORM_PS3
-
-namespace vostok {
-
-ppmd_compressor::ppmd_compressor (memory::base_allocator* const		allocator, 
-								  u32	const						sub_allocator_size_mb,
-								  model_restoration_enum const		model_restoration)
-{
-	m_model_restoration	=	model_restoration;
-	m_allocator			=	allocator;
-}
-
-ppmd_compressor::~ppmd_compressor ()
-{
-}
-
-signalling_bool   ppmd_compressor::compress (const_buffer src, mutable_buffer dest, u32& out_size)
-{
-	return					true;
-}
-
-signalling_bool   ppmd_compressor::decompress (const_buffer src, mutable_buffer dest, u32& out_size)
-{
-	return					true;
-}
-
-} // namespace vostok
-
-#endif // #if !VOSTOK_PLATFORM_PS3

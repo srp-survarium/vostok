@@ -18,7 +18,6 @@
 using vostok::non_null;
 using vostok::raw;
 
-#if !VOSTOK_PLATFORM_PS3
 namespace boost
 {
 #ifndef VOSTOK_STATIC_LIBRARIES
@@ -33,7 +32,6 @@ namespace boost
 		FATAL("boost exception caught: %s", e.what());
 	}
 } // namespace boost
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 
 static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type >	s_input_allocator;

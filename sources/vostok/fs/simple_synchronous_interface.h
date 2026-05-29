@@ -13,7 +13,6 @@
 namespace vostok {
 namespace fs_new {
 
-#if !VOSTOK_PLATFORM_PS3
 
 class simple_synchronous_interface
 {
@@ -33,7 +32,6 @@ public:
 
 }; // class simple_synchronous_interface
 
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 } // namespace fs_new
 } // namespace vostok

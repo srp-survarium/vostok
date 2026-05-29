@@ -12,9 +12,6 @@
 
 #ifdef _MSC_VER
 #	include <io.h>
-#elif defined(__SNC__) // #ifdef _MSC_VER
-#	include <ctype.h>
-#	include <unistd.h>
 #endif // #ifdef _MSC_VER
 
 namespace vostok {
@@ -62,14 +59,6 @@ inline int unlink		( pcstr const file_name );
 #	define VOSTOK_SCANF( format, ... )					scanf_s( format, ##__VA_ARGS__ )
 #	define VOSTOK_SSCANF( string, format, ... )			sscanf_s( string, format, ##__VA_ARGS__ )
 #	define VOSTOK_SCANF_STRING( string, buffer_size )		(string), (buffer_size)
-#elif defined(__SNC__) // #if defined(_MSC_VER)
-#	define VOSTOK_SCANF( format, ... )					scanf( format, ##__VA_ARGS__ )
-#	define VOSTOK_SSCANF( string, format, ... )			sscanf( string, format, ##__VA_ARGS__ )
-#	define VOSTOK_SCANF_STRING( string, buffer_size )		(string)
-#elif defined(__GCC__) // #if defined(_MSC_VER)
-#	define VOSTOK_SCANF( format, ... )					scanf( format, ##__VA_ARGS__ )
-#	define VOSTOK_SSCANF( string, format, ... )			sscanf( string, format, ##__VA_ARGS__ )
-#	define VOSTOK_SCANF_STRING( string, buffer_size )		(string)
 #else // #elif defined(SN_TARGET_PS3)
 #	error define VOSTOK_SCANF, VOSTOK_SSCANF and VOSTOK_SCANF_STRING macros for your platform here
 #endif // #if defined(_MSC_VER)

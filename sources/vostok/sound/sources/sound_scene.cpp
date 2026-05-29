@@ -1125,10 +1125,8 @@ void sound_scene::process_fade	( sound_world& world, u64 time_delta )
 			m_volume		= 1.0f;
 			m_fade_state	= none;
 		}
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 		if ( m_submix_voice )
 			m_submix_voice->SetVolume( m_volume );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	}
 	else if ( m_fade_state == fade_out_state )
 	{
@@ -1144,10 +1142,8 @@ void sound_scene::process_fade	( sound_world& world, u64 time_delta )
 			m_is_active								= false;
 		}
 		LOG_DEBUG								( "volume: %f", m_volume );
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 		if ( m_submix_voice )
 			m_submix_voice->SetVolume( m_volume );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	}
 }
 
@@ -1211,7 +1207,6 @@ void sound_scene::enable_debug_stream_writing	( )
 	R_ASSERT			( m_is_debug_stream_writing_enabled == false );
 	R_ASSERT			( m_debug_snapshot == 0 );
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	XAPO_REGISTRATION_PROPERTIES props;
 	props.MajorVersion					= VOSTOK_ENGINE_VERSION;
 	props.MinorVersion					= VOSTOK_ENGINE_SUBVERSION;
@@ -1235,16 +1230,12 @@ void sound_scene::enable_debug_stream_writing	( )
 
 	R_ASSERT							( m_submix_voice );
 	m_submix_voice->SetEffectChain		( &chain );
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED						( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	threading::interlocked_exchange		( m_is_debug_stream_writing_enabled, 1 );
 }
 
 void sound_scene::disable_debug_stream_writing	( )
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	R_ASSERT							( m_submix_voice );
 	m_submix_voice->SetEffectChain		( 0 );
@@ -1253,15 +1244,11 @@ void sound_scene::disable_debug_stream_writing	( )
 	R_ASSERT							( m_debug_snapshot != 0 );
 	VOSTOK_DELETE_IMPL					( g_allocator, m_debug_snapshot );
 
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED						( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	m_debug_snapshot					= 0;
 	threading::interlocked_exchange		( m_is_debug_stream_writing_enabled, 0 );
 }
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 static void fill_path_name			( fs::path_string& dest, pcstr extention )
 {
@@ -1278,12 +1265,10 @@ static void fill_path_name			( fs::path_string& dest, pcstr extention )
 									extention
 								 );
 }
-#endif // #ifdef VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 
 void sound_scene::dump_debug_stream_writing	( ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	R_ASSERT							( m_is_debug_stream_writing_enabled );
 	R_ASSERT							( m_debug_snapshot );
 	memory::writer writer				( &debug::g_mt_allocator );
@@ -1315,9 +1300,6 @@ void sound_scene::dump_debug_stream_writing	( ) const
 	}
 	cfg->save							( configs::target_sources );
 
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	NOT_IMPLEMENTED						( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 }
 

@@ -24,30 +24,6 @@ typedef	unsigned	int			u32;
 	typedef	unsigned long long	u64;
 #endif // #if defined(_MSC_VER)
 
-#if VOSTOK_PLATFORM_PS3
-	// since stlport defines macro std, it doesn't compile if we don't include
-	// any file with std namespace before we start using std namespace
-#	ifdef __SNC__
-#		include <assert.h>
-#	endif // #ifdef __SNC__
-
-	namespace std {
-		typedef u8				uint8_t;
-		typedef s8				int8_t;
-
-		typedef u16				uint16_t;
-		typedef s16				int16_t;
-
-		typedef u32				uint32_t;
-		typedef s32				int32_t;
-
-		typedef u64				uint64_t;
-		typedef s64				int64_t;
-
-		typedef s64				_Longlong;
-		typedef u64				_ULonglong;
-	} // namespace std
-#endif // #if VOSTOK_PLATFORM_PS3
 
 typedef float					f32;
 typedef double					f64;

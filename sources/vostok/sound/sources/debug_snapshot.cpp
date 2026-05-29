@@ -11,7 +11,6 @@
 namespace vostok {
 namespace sound {
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 debug_snapshot::debug_snapshot					( XAPO_REGISTRATION_PROPERTIES const& reg_props ) :
 	CXAPOBase				( &reg_props ),
@@ -129,7 +128,6 @@ void debug_snapshot::dump						( memory::writer& writer )
 	writer.write						( m_buffer, m_buffer_offset );
 }
 
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 } // namespace sound
 } // namespace vostok

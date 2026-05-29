@@ -6,14 +6,7 @@
 
 #include "pch.h"
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #	define VOSTOK_COPY_SIGN	_copysign
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX360
-#	include <SnMathLibPPU.h>
-#	define VOSTOK_COPY_SIGN	copysign
-#else // #elif VOSTOK_PLATFORM_PS3
-#	error define VOSTOK_COPY_SIGN for your platform here
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX360
 
 using vostok::math::float3;
 

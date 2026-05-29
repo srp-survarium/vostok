@@ -7,11 +7,6 @@
 #ifndef VOSTOK_INPUT_HANDLER_H_INCLUDED
 #define VOSTOK_INPUT_HANDLER_H_INCLUDED
 
-#ifdef __SNC__
-#	include <vostok/input/gamepad.h>
-#	include <vostok/input/mouse.h>
-#	include <vostok/input/keyboard.h>
-#endif // #ifdef __SNC__
 
 namespace vostok {
 namespace input {

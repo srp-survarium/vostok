@@ -190,10 +190,8 @@ private:
 	vostok::engine_user::module_proxy& m_engine_user_module_proxy;
 	vostok::engine_user::world*		 m_engine_user_world;
 
-#if !VOSTOK_PLATFORM_PS3
 	fs_new::windows_hdd_file_system			m_hdd_device;
 	fs_new::windows_hdd_file_system			m_dvd_device;
-#endif // !if VOSTOK_PLATFORM_PS3
 
 	uninitialized_reference<fs_new::asynchronous_device_interface>	m_hdd_async_interface;
 	uninitialized_reference<fs_new::asynchronous_device_interface>	m_dvd_async_interface;

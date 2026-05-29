@@ -22,7 +22,6 @@ ogg_encoded_sound_interface::ogg_encoded_sound_interface		(resources::managed_re
 
 	ASSERT						(ovi, "Invalid source info");
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	memory::zero				(&m_wfx, sizeof(m_wfx));
 
 	m_wfx.nSamplesPerSec		= (ovi->rate);
@@ -32,7 +31,6 @@ ogg_encoded_sound_interface::ogg_encoded_sound_interface		(resources::managed_re
 
 	m_wfx.nBlockAlign			= (m_wfx.nChannels * m_wfx.wBitsPerSample) / 8;
 	m_wfx.nAvgBytesPerSec		= m_wfx.nSamplesPerSec * m_wfx.nBlockAlign;
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	m_bytes_per_sample			= 16 >> 3;
 	m_length_in_pcm				= ov_pcm_total(&m_ovf, -1);

@@ -26,7 +26,6 @@ ogg_file_contents::ogg_file_contents(resources::managed_resource_ptr raw_file)
 
 	ASSERT						(ovi, "Invalid source info");
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	m_wfx.nSamplesPerSec		= (ovi->rate);
 	m_wfx.wFormatTag			= WAVE_FORMAT_PCM;
 	m_wfx.nChannels				= u16(ovi->channels);
@@ -34,7 +33,6 @@ ogg_file_contents::ogg_file_contents(resources::managed_resource_ptr raw_file)
 
 	m_wfx.nBlockAlign			= (m_wfx.nChannels * m_wfx.wBitsPerSample) / 8;
 	m_wfx.nAvgBytesPerSec		= m_wfx.nSamplesPerSec * m_wfx.nBlockAlign;
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	m_pcm_total					= (u32)ov_pcm_total(&m_ovf, -1);
 }
@@ -58,27 +56,16 @@ u32 ogg_file_contents::get_length_in_pcm ( ) const
 
 u32 ogg_file_contents::get_length_in_msec ( ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	return (m_pcm_total * 1000) / m_wfx.nSamplesPerSec;
-#else
-	NOT_IMPLEMENTED( );
-	return 0;
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 }
 
 u32  ogg_file_contents::get_samples_per_sec	( ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	return m_wfx.nSamplesPerSec;
-#else
-	NOT_IMPLEMENTED( );
-	return 0;
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 }
 
 channels_type ogg_file_contents::get_channels_type ( ) const
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	switch (m_wfx.nChannels)
 	{
 	case 1:	 return mono;
@@ -86,10 +73,6 @@ channels_type ogg_file_contents::get_channels_type ( ) const
 	default: NODEFAULT();
 	}
 	return channels_type_count;
-#else
-	NOT_IMPLEMENTED( );
-	return channels_type_count;
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 }
 

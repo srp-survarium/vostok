@@ -7,9 +7,6 @@
 #ifndef VOSTOK_DEBUG_H_INCLUDED
 #define VOSTOK_DEBUG_H_INCLUDED
 
-#ifdef __GCC__
-#	include <vostok/core/core.h>
-#endif // #ifdef __GCC__
 
 struct _exception;
 struct _EXCEPTION_POINTERS;

@@ -23,13 +23,7 @@
 #	error please do not define FATAL, UNREACHABLE_CODE, NODEFAULT, NOT_IMPLEMENTED, CHECK_AND_CONTINUE and CHECK_OR_EXIT macros
 #endif // #if defined (FATAL) || defined (UNREACHABLE_CODE) || defined (NODEFAULT) || defined (NOT_IMPLEMENTED) || defined (CHECK_AND_CORRECT) || defined (CHECK_OR_EXIT)
 
-#if VOSTOK_PLATFORM_WINDOWS
 #	define DEBUG_BREAK						__debugbreak
-#elif VOSTOK_PLATFORM_XBOX_360	// #if VOSTOK_PLATFORM_WINDOWS
-#	define DEBUG_BREAK						__debugbreak
-#elif VOSTOK_PLATFORM_PS3			// #elif VOSTOK_PLATFORM_XBOX_360
-#	define DEBUG_BREAK						__builtin_trap
-#endif // #if VOSTOK_PLATFORM_WINDOWS
 
 ////////////////////////////////////////////////////////////////////////////
 // macros helpers
@@ -200,11 +194,7 @@ inline u32	assert_log_times_in_gold () { return 10; }
 
 #	define ASSERT_T_U														VOSTOK_EMPTY_EXPRESSION_U_VA_ARGS
 #	define ASSERT_CMP_T_U( value1, operation, value2, assert_type, ... )	if ( ::vostok::identity(false) ) { ::vostok::debug::detail::expression_eater(value1, value2, assert_type, ##__VA_ARGS__); } else (void)0
-#	ifndef __SNC__
 #		define VOSTOK_UNREACHABLE_CODE( ... )									__assume(0)
-#	else // #ifndef __SNC__
-#		define VOSTOK_UNREACHABLE_CODE( description, ... )					__VA_ARGS__
-#	endif // #ifndef __SNC__
 #endif // #ifdef DEBUG
 
 #define UNREACHABLE_CODE( ... )												VOSTOK_UNREACHABLE_CODE( "unreachable code accessed!", ##__VA_ARGS__ )

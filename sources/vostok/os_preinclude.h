@@ -10,7 +10,6 @@
 #include <vostok/macro_extensions.h>
 #include <vostok/os_extensions.h>
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #	include <crtdefs.h>	// for ptrdiff_t
 
 	enum {
@@ -26,9 +25,7 @@
 #	undef			APIENTRY
 #	undef			BOOL
 #	undef			HWND
-#endif // #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 
-#if VOSTOK_PLATFORM_WINDOWS
 #	define			WIN32_LEAN_AND_MEAN
 #	define			VC_EXTRALEAN				// useful only for MFC projects (http://support.microsoft.com/default.aspx?scid=kb;en-us;166474)
 #	define			NOGDICAPMASKS     			// CC_*, LC_*, PC_*, CP_*, TC_*, RC_
@@ -74,14 +71,5 @@
 //#	ifndef _WIN32_WINNT
 //#		define		_WIN32_WINNT				0x0500
 //#	endif // ifndef _WIN32_WINNT
-#elif VOSTOK_PLATFORM_XBOX_360					// #if VOSTOK_PLATFORM_WINDOWS
-#	define			NOD3D
-#	define			NONET
-#	define			NOMINMAX          			// Macros min(a,b) and max(a,b)
-#	define			STRICT
-#elif VOSTOK_PLATFORM_PS3							// #ifdef VOSTOK_PLATFORM_PS3
-#else // #elif VOSTOK_PLATFORM_PS3
-#	error please define your platform
-#endif // #elif VOSTOK_PLATFORM_PS3
 
 #endif // #ifndef VOSTOK_OS_PREINCLUDE_H_INCLUDED

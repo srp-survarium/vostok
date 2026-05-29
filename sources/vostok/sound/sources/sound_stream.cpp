@@ -26,7 +26,6 @@ sound_stream::sound_stream( resources::managed_resource_ptr raw_file/*, resource
 
 	ASSERT						(ovi, "Invalid source info");
 
-#if !VOSTOK_PLATFORM_PS3
 	m_wfx.nSamplesPerSec		= (ovi->rate);
 	m_wfx.wFormatTag			= WAVE_FORMAT_PCM;
 	m_wfx.nChannels				= u16(ovi->channels);
@@ -34,7 +33,6 @@ sound_stream::sound_stream( resources::managed_resource_ptr raw_file/*, resource
 
 	m_wfx.nBlockAlign			= (m_wfx.nChannels * m_wfx.wBitsPerSample) / 8;
 	m_wfx.nAvgBytesPerSec		= m_wfx.nSamplesPerSec * m_wfx.nBlockAlign;
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 	m_pcm_total					= (u32)ov_pcm_total(&m_ovf, -1);
 }

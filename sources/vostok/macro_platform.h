@@ -53,15 +53,7 @@
 #	error do not define VOSTOK_PLATFORM_XBOX_360 macro
 #endif // #ifdef VOSTOK_PLATFORM_XBOX_360
 
-#ifdef _XBOX
-#	if _XBOX_VER < 200 
-#		error engine doesn't support XBox versions earlier to XBox 360
-#	endif // #if _XBOX_VER < 200 
-#	define VOSTOK_PLATFORM_XBOX_360	1
-#	define VOSTOK_STATIC_LIBRARIES	1
-#else // #ifdef _XBOX
 #	define VOSTOK_PLATFORM_XBOX_360	0
-#endif // #ifdef _XBOX
 
 ////////////////////////////////////////////////////////////////////////////
 // VOSTOK_PLATFORM_PS3
@@ -70,11 +62,7 @@
 #	error do not define VOSTOK_PLATFORM_PS3 macro
 #endif // #ifdef VOSTOK_PLATFORM_PS3
 
-#ifdef SN_TARGET_PS3
-#	define VOSTOK_PLATFORM_PS3		1
-#else // #ifdef SN_TARGET_PS3
 #	define VOSTOK_PLATFORM_PS3		0
-#endif // #ifdef SN_TARGET_PS3
 
 ////////////////////////////////////////////////////////////////////////////
 // VOSTOK_LITTLE_ENDIAN / VOSTOK_BIG_ENDIAN

@@ -515,34 +515,10 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Xbox 360"
-					>
-					<Tool
-						Name="VCCLX360CompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Xbox 360"
-					>
-					<Tool
-						Name="VCCLX360CompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release(static)|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release(static)|Xbox 360"
-					>
-					<Tool
-						Name="VCCLX360CompilerTool"
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
@@ -563,14 +539,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug(static)|Xbox 360"
-					>
-					<Tool
-						Name="VCCLX360CompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Debug(static)|x64"
 					>
 					<Tool
@@ -583,14 +551,6 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Master Gold|Xbox 360"
-					>
-					<Tool
-						Name="VCCLX360CompilerTool"
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
