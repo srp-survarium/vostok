@@ -1,0 +1,249 @@
+{
+  description = "Vostok Engine decompilation - Linux build environment";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
+    # so they can't be used as derivation sources in sandboxed builds).
+    vostok-pdb-parser-src = {
+      url = "github:srp-survarium/vostok-pdb-parser";
+      flake = false;
+    };
+    vcproj2ninja-src = {
+      url = "github:srp-survarium/vcproj2ninja";
+      flake = false;
+    };
+  };
+
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src }:
+    let
+      system = "x86_64-linux";
+
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ rust-overlay.overlays.default ];
+      };
+
+      # Nightly Rust toolchain for all Rust tools.
+      # Includes the Windows GNU target for cross-compiling vcproj2ninja.exe.
+      rust = pkgs.rust-bin.nightly.latest.default.override {
+        extensions = [ "rust-src" "rustfmt" "clippy" ];
+        targets = [ "x86_64-pc-windows-gnu" ];
+      };
+
+      # rustPlatform backed by our nightly toolchain.
+      nightly-rustPlatform = pkgs.makeRustPlatform {
+        cargo = rust;
+        rustc = rust;
+      };
+
+      mingw = pkgs.pkgsCross.mingwW64;
+
+      # ---------------------------------------------------------------------------
+      # vostok-pdb-parser — Linux binary, generates C++ stubs from PDB files.
+      # Run: vostok-pdb-parser --pdb-path survarium.pdb --output-path ../vostok-structure
+      #
+      # cargoHash: update by running `nix build .#vostok-pdb-parser` after bumping
+      # the input (nix flake update vostok-pdb-parser-src) — Nix reports the new hash.
+      # ---------------------------------------------------------------------------
+      vostok-pdb-parser = nightly-rustPlatform.buildRustPackage {
+        pname = "vostok-pdb-parser";
+        version = "0.1.0";
+        src = vostok-pdb-parser-src;
+        cargoHash = "sha256-sNWVj0UWfLzr5KqXoZK+bv3aokjdyK12sxjLNpxP1uI=";
+      };
+
+      # ---------------------------------------------------------------------------
+      # vcproj2ninja — Windows .exe, cross-compiled with MinGW.
+      # Converts VS2008 .vcproj/.sln to Ninja build files, run under Wine.
+      # Run: wine $VCPROJ2NINJA_EXE <args>
+      #
+      # cargoHash: update by running `nix build .#vcproj2ninja` after bumping the input.
+      # ---------------------------------------------------------------------------
+      vcproj2ninja = nightly-rustPlatform.buildRustPackage {
+        pname = "vcproj2ninja";
+        version = "0.1.0";
+        src = vcproj2ninja-src;
+        cargoHash = "sha256-SKEVJ/2wEmEfevCJe8WtVief3BL25K2OmsYjWv9SSC4=";
+
+        CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER =
+          "${mingw.stdenv.cc}/bin/${mingw.stdenv.cc.targetPrefix}cc";
+
+        nativeBuildInputs = [ mingw.stdenv.cc ];
+
+        # Two library tests fail on Linux due to Windows path-separator assumptions.
+        # The cross-compiled .exe is the deliverable; host tests aren't relevant.
+        doCheck = false;
+
+        # buildRustPackage's cargoBuildHook hard-codes `--target <host>`, which
+        # overrides CARGO_BUILD_TARGET and produces a native Linux ELF (renamed
+        # .exe) — Wine then runs it natively, so std::path uses Unix semantics and
+        # mangles the vcproj's backslash paths. We must emit a genuine Windows PE.
+        # So we keep cargoSetupHook (vendoring via cargoHash) but replace the
+        # build/install phases with an explicit cross-build to the Windows target.
+        #
+        # nightly's x86_64-pc-windows-gnu std links `-l:libpthread.a` (mcfgthread);
+        # shim a libpthread.a -> libmcfgthread.a so the MinGW linker finds it.
+        buildPhase = ''
+          runHook preBuild
+          shim="$(mktemp -d)"
+          ln -s ${mingw.windows.mcfgthreads}/lib/libmcfgthread.a "$shim/libpthread.a"
+          export RUSTFLAGS="-L $shim ''${RUSTFLAGS:-}"
+          cargo build --release --offline --target x86_64-pc-windows-gnu --bin vcproj2ninja
+          runHook postBuild
+        '';
+
+        installPhase = ''
+          runHook preInstall
+          install -Dm755 \
+            target/x86_64-pc-windows-gnu/release/vcproj2ninja.exe \
+            "$out/bin/vcproj2ninja.exe"
+          runHook postInstall
+        '';
+      };
+
+      # ---------------------------------------------------------------------------
+      # vostok-toolchain — VS2008 SP1 + WinSDK 6.0A + DXSDK Jun2010 + ninja.exe.
+      # Produced by: nix-shell scripts/create-toolchain-release.nix
+      # Uploaded to: gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz --repo srp-survarium/vostok-build-env
+      # Replace sha256 with the value printed by create-toolchain-release.py.
+      # ---------------------------------------------------------------------------
+      vostok-toolchain = pkgs.runCommand "vostok-toolchain" {
+        src = pkgs.fetchurl {
+          name = "vostok-toolchain-v0.100b.tar.xz";
+          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-toolchain-v0.100b.tar.xz";
+          sha256 = "c1400f2352ae57782b3e5204024d35ae23fae984e091b5163590d923af79e51d";
+        };
+        nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];
+      } ''
+        mkdir -p "$out"
+        tar xf "$src" -C "$out" --strip-components=1
+      '';
+
+      # ---------------------------------------------------------------------------
+      # vostok-libs — proprietary third-party DLLs and import libraries.
+      # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
+      # is stripped on unpack so $out exposes `sources/...` directly.
+      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b.zip --repo srp-survarium/vostok-build-env
+      # ---------------------------------------------------------------------------
+      vostok-libs = pkgs.runCommand "vostok-libs" {
+        src = pkgs.fetchurl {
+          name = "vostok-libs-v0.100b.zip";
+          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b.zip";
+          sha256 = "0rr63ifgv0mkpwy2acm6zrn7ni4qk3ls5gy52fmizf02yr8jivb2";
+        };
+        nativeBuildInputs = [ pkgs.unzip ];
+      } ''
+        mkdir -p "$out" unpacked
+        unzip -q "$src" -d unpacked
+        mv unpacked/vostok-libs/* "$out"/
+      '';
+
+      # Survarium v0.100b — extracted game directory (survarium.exe, survarium.pdb, DLLs).
+      # The installer is InnoSetup; innoextract places files under app/ in the output dir.
+      survarium-game = pkgs.runCommand "survarium-game" {
+        src = pkgs.fetchurl {
+          name = "survarium_setup_v0100b.exe";
+          url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
+          sha256 = "16aassxvbbhqx9czfvsl3zynl41n2xa7xf9n0l1aip07qgfz2l24";
+        };
+        nativeBuildInputs = [ pkgs.innoextract ];
+      } ''
+        mkdir extract
+        innoextract -d extract "$src"
+        surv_exe=$(find extract -iname "survarium.exe" ! -path "*uninstall*" \
+          -printf "%s %p\n" | sort -rn | head -1 | awk '{print $2}')
+        if [ -z "$surv_exe" ]; then
+          echo "ERROR: survarium.exe not found in extracted installer"
+          find extract -maxdepth 4 -name "*.exe" | head -10
+          exit 1
+        fi
+        game_dir=$(dirname "$surv_exe")
+        mkdir -p "$out"
+        cp -r "$game_dir"/. "$out/"
+      '';
+
+    in {
+      packages.${system} = {
+        inherit vostok-pdb-parser vcproj2ninja vostok-toolchain vostok-libs survarium-game;
+      };
+
+      devShells.${system}.default = pkgs.mkShell {
+        name = "surv-decomp";
+
+        packages = [
+          # Nightly Rust (for manual cargo builds of vostok-delinker etc.)
+          rust
+
+          # Wine — runs cl.exe / link.exe / ninja.exe / vcproj2ninja.exe.
+          # MUST be staging (>= 10.20): cl /Zi spawns mspdbsrv.exe (the PDB
+          # server) over RPC, and wine-10.0 stable fails to start RpcSs so
+          # mspdbsrv never spawns → "fatal error C1902: Program database manager
+          # mismatch". wine-staging 10.20 spawns mspdbsrv correctly. See
+          # docs/toolchain-build.md.
+          pkgs.wineWowPackages.staging
+
+          # MinGW cross-compiler (needed if building vcproj2ninja outside Nix)
+          mingw.buildPackages.gcc
+
+          # Scripts + downloads
+          pkgs.python3
+          pkgs.gdown
+          pkgs.ripgrep
+          pkgs.p7zip
+          pkgs.msitools
+          pkgs.file
+
+          # Nix-built tools and assets — all evaluated when entering the shell.
+          vostok-pdb-parser
+          vcproj2ninja
+          vostok-toolchain
+          vostok-libs
+          survarium-game
+        ];
+
+        shellHook = ''
+          export VOSTOK_DIR="$PWD"
+          export WINEPREFIX="$VOSTOK_DIR/binaries/.wineprefix"
+          export WINEDLLOVERRIDES="mscoree,mshtml="
+          # Silence Wine's unactionable debug spam during builds: all fixme
+          # stubs (e.g. RtlSetHeapInformation HEAP_INFORMATION_CLASS) and the
+          # kerberos err channel (no Kerberos support — expected). Genuine
+          # err/warn from other channels stay visible.
+          export WINEDEBUG="fixme-all,err-kerberos"
+
+          export VOSTOK_TOOLCHAIN="${vostok-toolchain}"
+          export MSVC_DIR="${vostok-toolchain}/msvc"
+          export WINSDK_DIR="${vostok-toolchain}/winsdk"
+          export DXSDK_DIR="${vostok-toolchain}/dxsdk"
+          export NINJA_DIR="${vostok-toolchain}/ninja"
+          export VOSTOK_LIBS_DIR="${vostok-libs}"
+          export VCPROJ2NINJA_EXE="${vcproj2ninja}/bin/vcproj2ninja.exe"
+          export SURVARIUM_BIN="${survarium-game}"
+
+          # Pin large fetched packages with indirect gcroots so `nix-store --gc`
+          # doesn't delete them between dev shells.
+          mkdir -p "$VOSTOK_DIR/binaries"
+          for pair in \
+              "vostok-toolchain:${vostok-toolchain}" \
+              "vostok-libs:${vostok-libs}" \
+              "vcproj2ninja:${vcproj2ninja}" \
+              "survarium-game:${survarium-game}"; do
+            name="''${pair%%:*}"
+            path="''${pair#*:}"
+            nix-store -r "$path" \
+              --add-root "$VOSTOK_DIR/binaries/result-$name" \
+              --indirect >/dev/null
+          done
+
+          python3 "$VOSTOK_DIR/scripts/setup-toolchain.py"
+        '';
+      };
+    };
+}
