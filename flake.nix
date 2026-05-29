@@ -110,15 +110,17 @@
 
       # ---------------------------------------------------------------------------
       # vostok-toolchain — VS2008 SP1 + WinSDK 6.0A + DXSDK Jun2010 + ninja.exe.
-      # Produced by: nix-shell scripts/create-toolchain-release.nix
-      # Uploaded to: gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz --repo srp-survarium/vostok-build-env
+      # Produced by: nix-shell scripts/create-toolchain-release.nix  (reproducible —
+      # a fresh rebuild yields a byte-identical tarball).
+      # Uploaded to: gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz \
+      #                --repo srp-survarium/vostok-build-env --clobber
       # Replace sha256 with the value printed by create-toolchain-release.py.
       # ---------------------------------------------------------------------------
       vostok-toolchain = pkgs.runCommand "vostok-toolchain" {
         src = pkgs.fetchurl {
           name = "vostok-toolchain-v0.100b.tar.xz";
           url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-toolchain-v0.100b.tar.xz";
-          sha256 = "c1400f2352ae57782b3e5204024d35ae23fae984e091b5163590d923af79e51d";
+          sha256 = "f9ededea66519df4f28feec11d19ca082ddc96592107648418ac14116a547587";
         };
         nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];
       } ''
