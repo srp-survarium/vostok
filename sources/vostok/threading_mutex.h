@@ -39,10 +39,6 @@ private:
 	mutable u64			m_mutex[3]; // sizeof(CRITICAL_SECTION);
 #elif VOSTOK_PLATFORM_WINDOWS_64 // #if VOSTOK_PLATFORM_WINDOWS_32
 	mutable u64			m_mutex[5]; // sizeof(CRITICAL_SECTION);
-#elif VOSTOK_PLATFORM_XBOX_360 // #elif VOSTOK_PLATFORM_WINDOWS_64
-	mutable u64			m_mutex[4]; // sizeof(CRITICAL_SECTION);
-#elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
-	mutable u64			m_mutex[3]; // sizeof(sys_lwmutex_t);
 #endif // #elif VOSTOK_PLATFORM_XBOX_360
 }; // class mutex_tasks_unaware
 

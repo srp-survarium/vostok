@@ -10,7 +10,6 @@
 namespace vostok {
 namespace sound {
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 class debug_snapshot : public CXAPOBase
 {
@@ -41,10 +40,6 @@ private:
 	u8					m_bytes_per_sample;
 };
 
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-class debug_snapshot
-{};
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 } // namespace sound
 } // namespace vostok

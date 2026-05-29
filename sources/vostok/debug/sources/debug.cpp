@@ -227,15 +227,11 @@ static void terminate_impl	( u32 exit_code, pcstr message )
 {
 	using namespace			vostok;
 
-#if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 	__try {
-#endif // #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 	
 		debug::debug_engine()->on_terminate	( );
 
-#if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 	} __except (EXCEPTION_EXECUTE_HANDLER) {}
-#endif // #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 
 	debug::platform::terminate		( message, exit_code );
 }

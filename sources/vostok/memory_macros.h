@@ -55,13 +55,8 @@
 
 #endif // #ifdef DEBUG
 
-#if VOSTOK_PLATFORM_PS3
-#	define VOSTOK_ALLOC_IMPL( allocator, type, count )						\
-				( ( type* )VOSTOK_MALLOC_IMPL( allocator, sizeof( type )*( count ), typeid( type ).name( ) ) )
-#else // #if VOSTOK_PLATFORM_PS3
 #	define VOSTOK_ALLOC_IMPL( allocator, type, count )						\
 				( ( type* )VOSTOK_MALLOC_IMPL( allocator, sizeof( type )*( count ), typeid( type ).raw_name( ) ) )
-#endif // #if VOSTOK_PLATFORM_PS3
 
 #define VOSTOK_NEW_WITH_CHECK_IMPL(allocator, out_pointer, type)	(((out_pointer) = (type*)VOSTOK_ALLOC_IMPL(allocator, type, 1)) == 0) ? 0 : new (out_pointer) type
 

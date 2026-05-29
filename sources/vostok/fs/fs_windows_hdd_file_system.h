@@ -10,7 +10,6 @@
 #include <vostok/fs/fs_device_file_system_proxy.h>
 #include <vostok/fs/fs_file_type.h>
 
-#if !VOSTOK_PLATFORM_PS3
 
 namespace vostok {
 namespace fs_new {
@@ -48,6 +47,5 @@ public:
 } // namespace fs_new
 } // namespace vostok
 
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 #endif // #ifndef WINDOWS_HDD_FILE_SYSTEM_H_INCLUDED

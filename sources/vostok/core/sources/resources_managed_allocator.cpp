@@ -13,9 +13,7 @@
 
 #define DO_RESOURCE_LOGGING			0
 
-#if !VOSTOK_PLATFORM_PS3
 #	define TEST_UNMOVABLES			1
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 namespace vostok		{
 namespace resources {
@@ -312,9 +310,7 @@ void   managed_resource_allocator::log_defragmenter_state () const
 
 	m_temp_arena.check_consistency			();
 	check_consistency						();
-#if !VOSTOK_PLATFORM_PS3
 	test_unmovables_list_valid				();
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 	++m_log_iteration;
 }

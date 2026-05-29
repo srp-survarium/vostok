@@ -24,11 +24,7 @@ public:
 	pvoid				get_handle			( ) const;
 
 private:
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	char VOSTOK_DEFAULT_ALIGN	m_event[sizeof(pvoid)]; // sizeof(CRITICAL_SECTION);
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	char VOSTOK_DEFAULT_ALIGN	m_event[4];				// sizeof(sys_event_flag_t);
-#endif // #elif VOSTOK_PLATFORM_XBOX_360
 }; // class event_tasks_unaware
 
 class VOSTOK_CORE_API event : private core::noncopyable {
