@@ -19,7 +19,6 @@
 #include <vostok/render/world.h>
 #include <vostok/debug/debug.h>
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #	include <vostok/os_preinclude.h>
 #	undef NOUSER
 #	undef NOMSG
@@ -31,13 +30,11 @@
 	static vostok::editor::create_world_ptr		s_create_world = 0;
 	static vostok::editor::destroy_world_ptr		s_destroy_world = 0;
 	static vostok::editor::memory_allocator_ptr	s_memory_allocator = 0;
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 using vostok::engine::engine_world;
 
 void engine_world::try_load_editor			( )
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #	if defined(DEBUG) && VOSTOK_PLATFORM_32_BIT
 		vostok::debug::enable_fpe	( false );
 #	endif
@@ -85,14 +82,10 @@ void engine_world::try_load_editor			( )
 	R_ASSERT			( m_main_window_handle );
 
 	m_editor->load		( );
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	UNREACHABLE_CODE	( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 }
 
 void engine_world::unload_editor			( )
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	ASSERT				( m_editor );
 
 	ASSERT				( s_destroy_world );
@@ -105,9 +98,6 @@ void engine_world::unload_editor			( )
 
 	s_destroy_world		= 0;
 	s_create_world		= 0;
-#else // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	UNREACHABLE_CODE	( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 }
 
 void engine_world::initialize_editor		( )
@@ -135,9 +125,7 @@ void engine_world::initialize_editor		( )
 
 void engine_world::editor				( )
 {
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 	CoInitializeEx			( 0, COINIT_APARTMENTTHREADED );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 	R_ASSERT_U				( !_controlfp_s( 0, _PC_53, MCW_PC ) );
 

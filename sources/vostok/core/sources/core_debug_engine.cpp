@@ -16,15 +16,10 @@
 #include <vostok/fs/device_utils.h>
 #include <vostok/logging/log_file.h>
 
-#if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 #	pragma warning( push )
 #	pragma warning( disable : 4074 )
 #	pragma init_seg( compiler )
 #	pragma warning( pop )
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
-#else // #elseif VOSTOK_PLATFORM_PS3
-#	error please define your platform
-#endif // #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 
 namespace vostok {
 namespace command_line	{
@@ -132,7 +127,6 @@ bool	core_debug_engine::create_folder_r			( pcstr path, bool create_last ) const
 																	create_last);
 }
 
-#if !VOSTOK_PLATFORM_PS3
 
 void	core_debug_engine::generate_debug_file_name	(string_path &				file_name,
 											 _SYSTEMTIME const * const	date_time,
@@ -159,17 +153,6 @@ void	core_debug_engine::generate_debug_file_name	(string_path &				file_name,
 		extension
 	);
 }
-#else
-
-void	core_debug_engine::generate_debug_file_name	(string_path &				file_name,
-											 _SYSTEMTIME const * const	date_time,
-											 pcstr const				report_id,
-											 pcstr const				extension) const
-{
-	VOSTOK_UNREFERENCED_PARAMETERS			(file_name, date_time, report_id, extension);
-}
-
-#endif // #if 0
 
 pcstr	core_debug_engine::bugtrap_application_name () const
 {

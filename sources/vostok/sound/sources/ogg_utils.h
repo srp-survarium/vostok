@@ -30,14 +30,12 @@ void	encode_sound_file	(	fs_new::native_path_string const& input_file_path,
 							);
 
 #ifndef MASTER_GOLD
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 int ogg_encode_impl(fs_new::file_type* input_file,
 					fs_new::file_type* output_file,
 					fs_new::synchronous_device_interface const & device,
 					u16 channels,
 					int new_rate,
 					int new_bitrate);
-#endif //#ifdef VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #endif // ##ifndef MASTER_GOLD
 
 }; // namespace ogg_utils

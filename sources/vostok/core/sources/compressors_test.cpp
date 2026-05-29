@@ -8,7 +8,6 @@ VOSTOK_DECLARE_LINKAGE_ID(compressor_test)
 
 #pragma message( VOSTOK_TODO("PS3: PPMD compressor test") )
 
-#if !VOSTOK_PLATFORM_PS3
 
 namespace vostok {
 
@@ -67,5 +66,3 @@ public:
 //REGISTER_TEST_CLASS(compressor_test, core_test_suite)
 
 } // namespace vostok
-
-#endif // #if !VOSTOK_PLATFORM_PS3

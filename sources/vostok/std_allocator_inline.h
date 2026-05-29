@@ -49,11 +49,7 @@ TEMPLATE_SIGNATURE
 inline typename STD_ALLOCATOR::pointer STD_ALLOCATOR::allocate		( size_type const n, void* p ) const
 {
 #ifdef DEBUG
-#	if VOSTOK_PLATFORM_PS3
-		return					( (pointer)( USER_ALLOCATOR ).realloc_impl( p, (u32)std::max( (u32)n, (u32)size_t(1) )*sizeof(T), typeid(T).name(), __FUNCTION__, __FILE__, __LINE__ ) );
-#	else //#if VOSTOK_PLATFORM_PS3
 		return					( (pointer)( USER_ALLOCATOR ).realloc_impl( p, (u32)std::max( (u32)n, (u32)size_t(1) )*sizeof(T), typeid(T).raw_name(), __FUNCTION__, __FILE__, __LINE__ ) );
-#	endif  //#if VOSTOK_PLATFORM_PS3
 #else // #ifdef DEBUG
 	return						( (pointer)( USER_ALLOCATOR ).realloc_impl( p, (u32)std::max( (u32)n, (u32)size_t(1) )*sizeof(T) ) );
 #endif // #ifdef DEBUG

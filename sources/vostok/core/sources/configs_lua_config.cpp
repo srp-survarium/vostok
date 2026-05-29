@@ -3500,11 +3500,7 @@ static void export_classes						( )
 		static pcstr platform_id( )
 		{
 			return
-#if VOSTOK_PLATFORM_XBOX_360
-				"xbox360"
-#elif VOSTOK_PLATFORM_PS3 // #if VOSTOK_PLATFORM_XBOX_360
-				"ps3"
-#elif VOSTOK_PLATFORM_WINDOWS_32 // #elif VOSTOK_PLATFORM_PS3
+#if VOSTOK_PLATFORM_WINDOWS_32
 				"win32"
 #elif VOSTOK_PLATFORM_WINDOWS_64 // #elif VOSTOK_PLATFORM_WINDOWS_32
 				"win64"

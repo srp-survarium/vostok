@@ -7,14 +7,6 @@
 #ifndef VOSTOK_EXTENSIONS_H_INCLUDED
 #define VOSTOK_EXTENSIONS_H_INCLUDED
 
-#ifdef SN_TARGET_PS3
-	namespace scestd = std;
-	#include <assert.h>
-	namespace std {
-		void _SCE_Assert(const char *first, const char *second);
-		void _Assert(const char *first, const char *second);
-	} // namespace std
-#endif // #ifdef SN_TARGET_PS3
 
 #define BOOST_NO_EXCEPTIONS
 #include <boost/noncopyable.hpp>
