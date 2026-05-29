@@ -14,7 +14,6 @@ namespace sound {
 namespace ogg_utils 
 {
 
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 enum
 {
@@ -992,7 +991,6 @@ int ogg_encode_impl(fs_new::file_type* input_file,
 	return 0;
 }
 
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 
 }; // namespace ogg_utils
 

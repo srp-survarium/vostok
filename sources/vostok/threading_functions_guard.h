@@ -60,14 +60,12 @@ inline	atomic32_value_type	interlocked_exchange			( T & , T )
 	return			atomic32_value_type(-1);
 }
 
-#if !VOSTOK_PLATFORM_PS3
 template <class T>
 inline	pvoid	interlocked_exchange_pointer				( T & , T )
 {
 	COMPILE_ASSERT	( false, do_not_pass_NON_VOLATILE_values_to_INTERLOCKED_functions );
 	return			0;
 }
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 template <class T>
 inline	atomic32_value_type	interlocked_compare_exchange	( atomic32_value_type & , T , T )

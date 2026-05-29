@@ -181,12 +181,10 @@ u32   tests_failed_so_far ()
 
 void   run_protected_test (test_base*);
 
-#if !VOSTOK_PLATFORM_PS3
 static inline u32 execute_handler_filter( ... )
 {
 	return						EXCEPTION_EXECUTE_HANDLER;
 }
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 void   on_exception (assert_enum			assert_type,
 					 pcstr					description,
@@ -198,15 +196,11 @@ void   on_exception (assert_enum			assert_type,
 	{
 		s_environment.caught_awaited_exception	=	true;
 
-#if !VOSTOK_PLATFORM_PS3
 		RaiseException					(0xABCDEF, 0, 0, 0);
-#endif // #if !VOSTOK_PLATFORM_PS3
 		return;
 	}
 
-#if !VOSTOK_PLATFORM_PS3
 	__try {
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 	fixed_string8192 description_string	=	*description == '\n' ? (description + 1) : description;
 
@@ -232,12 +226,10 @@ void   on_exception (assert_enum			assert_type,
 										 is_assertion ? 3 : 0,
 										 s_environment.num_top_callstack_frames_to_skip,
 										 exception_information);
-#if !VOSTOK_PLATFORM_PS3
 	}
 	__except ( execute_handler_filter( GetExceptionCode( ), GetExceptionInformation( ) ) ) {
 		(void)0;
 	}
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 	++s_environment.exception_index;
 }
@@ -322,9 +314,6 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 		if ( s_environment.engine )
 			new_exit_code			+=	s_environment.engine->get_exit_code();
 
-#if VOSTOK_PLATFORM_XBOX_360
-		logging::write_exit_code_file	(new_exit_code);
-#endif // #if VOSTOK_PLATFORM_XBOX_360
 
 		if ( g_run_tests_and_exit )
 		{
@@ -378,10 +367,8 @@ void   check_awaited_exception (assert_enum previous_awaited_exception)
 
 } // namespace detail
 
-#if !VOSTOK_PLATFORM_PS3
 COMPILE_ASSERT	(VOSTOK_EXCEPTION_EXECUTE_HANDLER == EXCEPTION_EXECUTE_HANDLER,
 				 please_define_VOSTOK_EXCEPTION_EXECUTE_HANDLER_to_be_equal_EXCEPTION_EXECUTE_HANDLER);
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 } // namespace testing
 } // namespace vostok

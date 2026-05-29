@@ -28,9 +28,7 @@ typedef	child_resource_ptr	<vfs_sub_fat_resource, resources::unmanaged_intrusive
 
 vfs_sub_fat_resource_ptr	get_sub_fat_resource (vfs::vfs_mount_ptr mount_ptr);
 
-#if !VOSTOK_PLATFORM_PS3
 template class VOSTOK_CORE_API	child_resource_ptr	<vfs_sub_fat_resource, resources::unmanaged_intrusive_base>;
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 } // namespace resources
 } // namespace vostok

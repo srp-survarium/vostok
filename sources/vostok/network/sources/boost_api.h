@@ -25,11 +25,8 @@ namespace boost
 #define BOOST_ASIO_DISABLE_SERIAL_PORT 1
 #define BOOST_ASIO_ENABLE_CANCELIO 1
 
-#ifdef VOSTOK_PLATFORM_XBOX_360
 #	define BOOST_ASIO_DISABLE_IOCP 1
 
-#else // #ifdef VOSTOK_PLATFORM_XBOX_360
-#endif // #ifdef VOSTOK_PLATFORM_XBOX_360
 
 #include <boost/asio.hpp>		// warning: includes window.h
 

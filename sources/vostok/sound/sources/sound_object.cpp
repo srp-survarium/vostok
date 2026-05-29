@@ -31,7 +31,6 @@ sound_object_impl::~sound_object_impl( )
 
 void sound_object_impl::refill_buffers( )
 {
-#if !VOSTOK_PLATFORM_PS3
 	R_ASSERT				(m_playing);
 	ASSERT					( m_stream );
 	HRESULT					res;
@@ -56,7 +55,6 @@ void sound_object_impl::refill_buffers( )
 		ASSERT					( !FAILED(res) );
 		++vstate.BuffersQueued;
 	}
-#endif // #if !VOSTOK_PLATFORM_PS3
 }
 
 void sound_object_impl::on_end_stream( )
@@ -102,7 +100,6 @@ void sound_object_impl::play_impl( )
 
 	if(!m_source_voice)
 	{
-#if !VOSTOK_PLATFORM_PS3
 		HRESULT res = g_sound_world->xaudio_engine()->CreateSourceVoice( 
 											&m_source_voice,
 											&m_stream->wave_format(), 
@@ -114,14 +111,11 @@ void sound_object_impl::play_impl( )
 											);
 
 		R_ASSERT_U					(!FAILED(res));
-#endif // #if !VOSTOK_PLATFORM_PS3
 	}
 	m_playing				= true;
 	refill_buffers			( );
-#if !VOSTOK_PLATFORM_PS3
 	HRESULT res				= m_source_voice->Start( );
 	R_ASSERT_U					( !FAILED(res) );
-#endif // #if !VOSTOK_PLATFORM_PS3
 
 	g_sound_world->on_voice_started( this );
 }
@@ -135,12 +129,10 @@ void sound_object_impl::set_position_impl( float3 const& position )
 void sound_object_impl::stop_impl( )
 {
 	m_playing						= false;
-#if !VOSTOK_PLATFORM_PS3
 	m_source_voice->Stop			( );
 	m_source_voice->FlushSourceBuffers( );
 	m_source_voice->DestroyVoice	( );
 	m_source_voice					= NULL;
-#endif // #if !VOSTOK_PLATFORM_PS3
 	g_sound_world->on_voice_stopped	( this );
 }
 
