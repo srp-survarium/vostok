@@ -28,6 +28,10 @@ from pathlib import Path
 # Fallback for manual invocations where the script is run from its own directory.
 VOSTOK_DIR = Path(os.environ.get("VOSTOK_DIR", str(Path(__file__).resolve().parent.parent)))
 
+# Fixed mtime stamped on every tar entry for reproducible packaging.
+# Survarium v0.100b release date: 2013-05-09 12:00:00 UTC.
+RELEASE_EPOCH = 1368100800
+
 
 def log(msg: str) -> None:
     print(f"[release] {msg}", flush=True)
@@ -284,9 +288,26 @@ def step4_ninja(work: Path, stage: Path) -> None:
 def step5_package(work: Path, stage: Path, output: Path) -> None:
     log(f"Packaging → {output} ...")
     output.parent.mkdir(parents=True, exist_ok=True)
+    # Reproducibility: the staged file *contents* are already deterministic — a
+    # fresh rebuild yields byte-identical files (verified file-by-file by sha256
+    # against the published release). The only nondeterminism is tar metadata,
+    # so normalise all of it:
+    #   --sort=name       stable entry order, independent of filesystem readdir
+    #   --mtime=@...      fix every entry's timestamp to RELEASE_EPOCH instead of
+    #                     build time / extraction time (msiextract and created
+    #                     directories otherwise stamp "now")
+    #   --owner/--group/--numeric-owner  drop the building user's identity
+    #   --format=gnu      avoid pax atime/ctime extended headers
+    # With these, the same media + pinned tooling produce a byte-identical
+    # tarball on any machine.
     run([
-        "tar", "-C", str(stage),
+        "tar",
+        "--sort=name",
+        "--format=gnu",
+        "--owner=0", "--group=0", "--numeric-owner",
+        f"--mtime=@{RELEASE_EPOCH}",
         "--transform", r"s|^\.|vostok-toolchain-v0.100b|",
+        "-C", str(stage),
         "-cJf", str(output), ".",
     ])
 
