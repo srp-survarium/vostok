@@ -228,8 +228,9 @@
           export SURVARIUM_BIN="${survarium-game}"
 
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
-          # doesn't delete them between dev shells.
-          mkdir -p "$VOSTOK_DIR/binaries"
+          # doesn't delete them between dev shells. Symlinks live in
+          # binaries/nix-store/<name> (e.g. binaries/nix-store/survarium-game).
+          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
           for pair in \
               "vostok-toolchain:${vostok-toolchain}" \
               "vostok-libs:${vostok-libs}" \
@@ -238,7 +239,7 @@
             name="''${pair%%:*}"
             path="''${pair#*:}"
             nix-store -r "$path" \
-              --add-root "$VOSTOK_DIR/binaries/result-$name" \
+              --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
               --indirect >/dev/null
           done
 

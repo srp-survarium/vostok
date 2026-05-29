@@ -17,8 +17,8 @@ the previously recorded fingerprint AND all expected outputs exist; step 5 is
 independently idempotent (skips whatever target output already exists).
 
 Run from inside `nix develop` after all Nix packages are built:
-  nix build .#vostok-toolchain --out-link binaries/result-vostok-toolchain
-  nix build .#vostok-libs      --out-link binaries/result-vostok-libs
+  nix build .#vostok-toolchain --out-link binaries/nix-store/vostok-toolchain
+  nix build .#vostok-libs      --out-link binaries/nix-store/vostok-libs
   python3 scripts/setup-toolchain.py
 
 Required env vars (set automatically by flake.nix devShell):
@@ -200,19 +200,19 @@ def main() -> None:
     if not (msvc_dir / "VC" / "bin" / "cl.exe").exists():
         die(
             f"cl.exe not found under {msvc_dir}/VC/bin",
-            "Build it: nix build .#vostok-toolchain --out-link binaries/result-vostok-toolchain",
+            "Build it: nix build .#vostok-toolchain --out-link binaries/nix-store/vostok-toolchain",
         )
     if not (libs_dir / "sources").is_dir():
         die(
             f"vostok-libs not found at {libs_dir}",
-            "Build it: nix build .#vostok-libs --out-link binaries/result-vostok-libs",
+            "Build it: nix build .#vostok-libs --out-link binaries/nix-store/vostok-libs",
         )
 
     vcproj_exe_env = os.environ.get("VCPROJ2NINJA_EXE")
     if not vcproj_exe_env:
         die(
             "VCPROJ2NINJA_EXE not set",
-            "Build it: nix build .#vcproj2ninja --out-link binaries/result-vcproj2ninja",
+            "Build it: nix build .#vcproj2ninja --out-link binaries/nix-store/vcproj2ninja",
         )
     vcproj_exe = Path(vcproj_exe_env)
 
