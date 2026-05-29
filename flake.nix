@@ -145,18 +145,31 @@
         mv unpacked/vostok-libs/* "$out"/
       '';
 
-      # Survarium v0.100b — extracted game directory (survarium.exe, survarium.pdb, DLLs).
-      # The installer is InnoSetup; innoextract places files under app/ in the output dir.
-      survarium-game = pkgs.runCommand "survarium-game" {
-        src = pkgs.fetchurl {
-          name = "survarium_setup_v0100b.exe";
-          url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
-          sha256 = "16aassxvbbhqx9czfvsl3zynl41n2xa7xf9n0l1aip07qgfz2l24";
-        };
+      # Survarium v0.100b InnoSetup installer, shared by the game/resources/keys
+      # derivations below. innoextract places everything under app/:
+      #   binaries/win32/{survarium.exe,survarium.pdb,bugtrap.dll}
+      #   resources.db    — packed game data (~1.5 GiB)
+      #   resources/ssl/* — lobby/login server certificates + private keys
+      survarium-installer = pkgs.fetchurl {
+        name = "survarium_setup_v0100b.exe";
+        url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
+        sha256 = "16aassxvbbhqx9czfvsl3zynl41n2xa7xf9n0l1aip07qgfz2l24";
+      };
+
+      # Survarium v0.100b, extracted once from the installer into three outputs.
+      # The single innoextract pass already unpacks everything, so resources and
+      # keys cost no extra download or extraction beyond getting the exe/pdb:
+      #   out       — game binaries: survarium.exe, survarium.pdb, DLLs (SURVARIUM_BIN)
+      #   resources — resources.db + resources/ tree (packed game data, ~1.5 GiB)
+      #   keys      — lobby/login server SSL certificates + private keys
+      survarium = pkgs.runCommand "survarium" {
+        src = survarium-installer;
+        outputs = [ "out" "resources" "keys" ];
         nativeBuildInputs = [ pkgs.innoextract ];
       } ''
         mkdir extract
         innoextract -d extract "$src"
+
         surv_exe=$(find extract -iname "survarium.exe" ! -path "*uninstall*" \
           -printf "%s %p\n" | sort -rn | head -1 | awk '{print $2}')
         if [ -z "$surv_exe" ]; then
@@ -164,14 +177,21 @@
           find extract -maxdepth 4 -name "*.exe" | head -10
           exit 1
         fi
-        game_dir=$(dirname "$surv_exe")
-        mkdir -p "$out"
-        cp -r "$game_dir"/. "$out/"
+
+        mkdir -p "$out" "$resources" "$keys"
+        cp -r "$(dirname "$surv_exe")"/.            "$out"/
+        cp -r extract/app/resources.db extract/app/resources "$resources"/
+        cp -r extract/app/resources/ssl/.           "$keys"/
       '';
 
     in {
       packages.${system} = {
-        inherit vostok-pdb-parser vcproj2ninja vostok-toolchain vostok-libs survarium-game;
+        inherit vostok-pdb-parser vcproj2ninja vostok-toolchain vostok-libs survarium;
+        # Convenience aliases for the individual survarium outputs:
+        #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
+        survarium-game = survarium;            # default `out` = game binaries
+        survarium-resources = survarium.resources;
+        survarium-keys = survarium.keys;
       };
 
       devShells.${system}.default = pkgs.mkShell {
@@ -205,7 +225,7 @@
           vcproj2ninja
           vostok-toolchain
           vostok-libs
-          survarium-game
+          survarium
         ];
 
         shellHook = ''
@@ -225,17 +245,21 @@
           export NINJA_DIR="${vostok-toolchain}/ninja"
           export VOSTOK_LIBS_DIR="${vostok-libs}"
           export VCPROJ2NINJA_EXE="${vcproj2ninja}/bin/vcproj2ninja.exe"
-          export SURVARIUM_BIN="${survarium-game}"
+          export SURVARIUM_BIN="${survarium}"
 
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
           # doesn't delete them between dev shells. Symlinks live in
           # binaries/nix-store/<name> (e.g. binaries/nix-store/survarium-game).
+          # The survarium outputs all come from one build, so pinning resources
+          # and keys here costs nothing beyond getting the game binaries.
           mkdir -p "$VOSTOK_DIR/binaries/nix-store"
           for pair in \
               "vostok-toolchain:${vostok-toolchain}" \
               "vostok-libs:${vostok-libs}" \
               "vcproj2ninja:${vcproj2ninja}" \
-              "survarium-game:${survarium-game}"; do
+              "survarium-game:${survarium}" \
+              "survarium-resources:${survarium.resources}" \
+              "survarium-keys:${survarium.keys}"; do
             name="''${pair%%:*}"
             path="''${pair#*:}"
             nix-store -r "$path" \

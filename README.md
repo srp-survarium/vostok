@@ -56,6 +56,20 @@ python3 scripts/delink.py {base|target}        # COFF split for one side
 python3 scripts/generate_structure.py {base|target}   # pdb-parser stubs for one side
 ```
 
+## Game data
+
+The single installer extraction also exposes the rest of the game as separate
+Nix outputs (no extra download — it all comes from the same unpack as the
+binaries):
+
+```sh
+nix build .#survarium-resources   # resources.db + resources/ (packed game data)
+nix build .#survarium-keys         # lobby/login server SSL certs + private keys
+```
+
+`nix develop` pins all three under `binaries/nix-store/` (`survarium-game`,
+`survarium-resources`, `survarium-keys`).
+
 ## Docs
 
 - [Matching guide](https://gist.github.com/sushi-shi/8bf16f82c3b1c65fd357d73ecfda909e) — how to actually match assembly.
