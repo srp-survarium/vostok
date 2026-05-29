@@ -23,9 +23,6 @@
 #	endif // #ifdef VOSTOK_STATIC_LIBRARIES
 #endif // #ifndef VOSTOK_RENDER_API
 
-#if VOSTOK_PLATFORM_PS3
-	typedef pvoid	HWND;
-#endif // #if VOSTOK_PLATFORM_PS3
 
 namespace vostok {
 namespace particle {

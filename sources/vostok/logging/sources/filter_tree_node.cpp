@@ -6,14 +6,6 @@
 
 #include "pch.h"
 
-#ifdef SN_TARGET_PS3
-	namespace scestd = std;
-	#include <assert.h>
-	namespace std {
-		void _SCE_Assert(const char *first, const char *second);
-		void _Assert(const char *first, const char *second);
-	} // namespace std
-#endif // #ifdef SN_TARGET_PS3
 
 #include "filter_tree_node.h"
 #include "path_parts.h"

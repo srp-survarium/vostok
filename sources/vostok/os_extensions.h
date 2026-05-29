@@ -10,7 +10,6 @@
 #include <vostok/macro_platform.h>
 #include <vostok/type_extensions.h>
 
-#if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 #	define LPVOID					pvoid
 #	define HANDLE					pvoid
 #	define INVALID_HANDLE_VALUE		((HANDLE)((u64)(-1)))
@@ -29,7 +28,6 @@
 	struct HWND__;
 #	define	HWND					HWND__*
 
-#endif // #if VOSTOK_PLATFORM_WINDOWS || VOSTOK_PLATFORM_XBOX_360
 
 #include <vostok/os_functions.h>
 

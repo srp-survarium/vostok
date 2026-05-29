@@ -57,13 +57,7 @@
 			)\
 		)
 #else // #ifdef _MSC_VER
-#	if defined(__SNC__)
-#		define VOSTOK_COMPILER_ID	-snc
-#	elif defined(__GCC__) // #if defined(__SNC__)
-#		define VOSTOK_COMPILER_ID	-gcc
-#	else // #elif defined(__GCC__)
 #		error define your VOSTOK_COMPILER_ID here
-#	endif // #if defined(__SNC__)
 
 #	define VOSTOK_LIBRARY_NAME(library, extension)	\
 		VOSTOK_MAKE_STRING(\

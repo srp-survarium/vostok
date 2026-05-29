@@ -172,9 +172,7 @@ private:
 			void	free_sound_instance_proxy		( sound_instance_proxy* proxy );
 
 			void	hdr_audio_test					( u32 time_delta_in_msec );
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 			bool	initialize_xaudio				( );
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 			void	try_delete_stoping_voices		( );
 
 private:

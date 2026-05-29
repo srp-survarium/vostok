@@ -7,9 +7,6 @@
 #ifndef VOSTOK_STRINGS_FUNCTIONS_INLINE_H_INCLUDED
 #define VOSTOK_STRINGS_FUNCTIONS_INLINE_H_INCLUDED
 
-#if defined(__SNC__) || defined(__GCC__)
-	#include <ctype.h>
-#endif // #if defined(__SNC__) || defined(__GCC__)
 
 inline u32 vostok::strings::length		( pcstr string )
 {
@@ -25,19 +22,6 @@ inline int vostok::strings::compare_insensitive	( pcstr left, pcstr right )
 {
 #if defined(_MSC_VER)
 	return				( _stricmp( left, right ) );
-#elif defined(__SNC__) || defined(__GCC__) // #if defined(_MSC_VER)
-	pcstr i = left, j = right;
-	for ( ; *i && *j; ++i, ++j ) {
-		int const lower_i	= tolower(*i);
-		int const lower_j	= tolower(*j);
-		if ( lower_i < lower_j )
-			return		-1;
-
-		if ( lower_i > lower_j )
-			return		1;
-	}
-
-	return				(*i < *j) ? -1 : ((*i > *j) ? 1 : 0);
 #else // #elif defined(__SNC__) || defined(__GCC__)
 #	error define here implementation of stricmp for your platform
 #endif // #ifdef _MSC_VER
@@ -48,11 +32,6 @@ inline pstr vostok::strings::copy			( pstr destination, u32 destination_size, pc
 #ifdef _MSC_VER
 	errno_t const error	= strcpy_s( destination, destination_size, source );
 	VOSTOK_UNREFERENCED_PARAMETER	( error );
-#elif defined(__GCC__) // #ifdef _MSC_VER
-	strlcpy			( destination, source, destination_size );
-#elif defined(__SNC__) // #ifdef _MSC_VER
-	VOSTOK_UNREFERENCED_PARAMETER	( destination_size );
-	strcpy			( destination, source );
 #else // #elif defined(__SNC__)
 #	error define strings::copy for your platform here
 #endif // #ifdef _MSC_VER

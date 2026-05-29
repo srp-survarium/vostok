@@ -23,15 +23,7 @@ inline bool	big_endian		( )
 
 inline pcstr platform_name ( )
 {
-#if VOSTOK_PLATFORM_PS3
-	return			"ps3";
-#elif VOSTOK_PLATFORM_XBOX_360
-	return			"xbox360";
-#elif VOSTOK_PLATFORM_WINDOWS
 	return			"pc_dx11";
-#else
-	#error			"Platform macro is not defined!"
-#endif
 }
 
 } // namespace platform

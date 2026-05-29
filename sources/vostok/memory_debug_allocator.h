@@ -7,27 +7,11 @@
 #ifndef VOSTOK_MEMORY_DEBUG_ALLOCATOR_H_INCLUDED
 #define VOSTOK_MEMORY_DEBUG_ALLOCATOR_H_INCLUDED
 
-#if VOSTOK_PLATFORM_WINDOWS
 #	ifndef MASTER_GOLD
 #		define VOSTOK_DEBUG_ALLOCATOR				1
 #	else // #ifndef MASTER_GOLD
 #		define VOSTOK_DEBUG_ALLOCATOR				0
 #	endif // #ifndef MASTER_GOLD
-#elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
-#	ifndef MASTER_GOLD
-#		define VOSTOK_DEBUG_ALLOCATOR				1
-#	else // #ifndef MASTER_GOLD
-#		define VOSTOK_DEBUG_ALLOCATOR				0
-#	endif // #ifndef MASTER_GOLD
-#elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
-#	ifndef MASTER_GOLD
-#		define VOSTOK_DEBUG_ALLOCATOR				1
-#	else // #ifndef MASTER_GOLD
-#		define VOSTOK_DEBUG_ALLOCATOR				0
-#	endif // #ifndef MASTER_GOLD
-#else // #elif VOSTOK_PLATFORM_PS3
-#	error please define your platform!
-#endif // #if VOSTOK_PLATFORM_WINDOWS
 
 #if VOSTOK_DEBUG_ALLOCATOR
 #	include <vostok/memory_doug_lea_mt_allocator.h>

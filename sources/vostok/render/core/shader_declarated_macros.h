@@ -75,7 +75,6 @@ inline bool found_shader_declarated_macroses(pcstr shader_source_code, shader_de
 		  defines_pos	= strstr(shader_source_code, defines_key),
 		  defines_end   = 0;
 	
-#if !VOSTOK_PLATFORM_PS3
 //#pragma message (VOSTOK_TODO("Lain 2 IronNick: no strtok_s on PS3, please fix"))
 
 	if (defines_pos && cut_defines(shader_source_code, defines_pos, defines_end) && defines_end)
@@ -103,7 +102,6 @@ inline bool found_shader_declarated_macroses(pcstr shader_source_code, shader_de
 	else
 		return false;
 
-#endif // #if !VOSTOK_PLATFORM_PS3
 }
 } // namespace render
 } // namespace vostok

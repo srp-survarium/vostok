@@ -17,7 +17,6 @@
 
 #include <vostok/os_include.h>
 
-#if !VOSTOK_PLATFORM_PS3
 
 VOSTOK_DECLARE_LINKAGE_ID(vfs_test);
 
@@ -71,5 +70,3 @@ void   vfs_test::test					(core_test_suite * suite)
 }
 
 } // namespace vostok
-
-#endif // #if !VOSTOK_PLATFORM_PS3
