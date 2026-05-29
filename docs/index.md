@@ -1,5 +1,8 @@
 ## Index
 
+### Build
+* [toolchain-build.md](toolchain-build.md) — building the vostok-toolchain on Linux/Wine (mspdb DLLs, SP1 via `PATCH=`) and why Wine must be **staging** (cl `/Zi` → C1902 on wine-10.0 stable).
+
 ### Matching dept
 
 * `static` functions are not delinked by the ghidra script.
