@@ -17,6 +17,16 @@ VOSTOK_DIR  = ROOT_DIR / "vostok"
 OBJDIFF_DIR = ROOT_DIR / "vostok" / "binaries" / "objdiff"
 
 
+VOSTOK_PRESET = [
+    "vostok/collision",
+    "vostok/game",
+    "vostok/game_core",
+    "vostok/logging",
+    "vostok/network",
+    "vostok/network_core",
+    "vostok/physics",
+]
+
 def write_dummy(path: Path):
     symbol_table_offset = 20 + 40  # header + 1 section header
 
@@ -55,9 +65,8 @@ def write_dummy(path: Path):
 
 
 def gather_units(
-    skip_missing: bool,
     objdiff_dir: Path,
-    filter_prefix: Optional[str]
+    use_preset_config: bool,
 ):
     units = []
     for file in sorted((objdiff_dir / "target").rglob("*.obj")):
@@ -71,13 +80,13 @@ def gather_units(
 
         unit = file.as_posix().removeprefix(objdiff_dir.as_posix()).removeprefix("/target/").removesuffix(".obj")
 
-        if filter_prefix and filter_prefix not in unit:
+        if use_preset_config and not any(path in unit for path in VOSTOK_PRESET):
             continue
 
         target_path = f"./target/{unit}.obj"
         base_path   = f"./base/{unit}.obj"
 
-        if skip_missing and not (objdiff_dir / base_path).exists():
+        if not (objdiff_dir / base_path).exists():
             base_path = f"./dummy.obj"
 
         units.append({
@@ -94,14 +103,13 @@ def gather_units(
 
 
 def main(
-    skip_missing: bool,
     objdiff_dir: Path,
-    filter_prefix: Optional[str]
+    use_preset_config: bool
 ):
     obj = {
         "build_base": False,
         "build_target": False,
-        "units": gather_units(skip_missing, objdiff_dir, filter_prefix),
+        "units": gather_units(objdiff_dir, use_preset_config),
     }
 
     write_dummy(objdiff_dir / "dummy.obj");
@@ -113,17 +121,11 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--filter-prefix", default=None)
+    parser.add_argument("--use-preset-config", action="store_true", default=False)
     parser.add_argument("--objdiff-dir", default=OBJDIFF_DIR, type=Path)
     args = parser.parse_args()
 
-    filter_prefix = args.filter_prefix
-    if filter_prefix:
-        filter_prefix = filter_prefix.replace("::", "/")
-
-
     main(
-        skip_missing=True,
         objdiff_dir=args.objdiff_dir,
-        filter_prefix=filter_prefix
+        use_preset_config=args.use_preset_config,
     )
