@@ -19,6 +19,14 @@ commit messages, and PR descriptions. Do not use Unicode punctuation. Replace:
 - check marks with `OK`
 - "smart" / curly quotes with straight `'` and `"`
 
+## Comments
+
+Comments are still wanted - just keep them lean. Don't restate what the code
+plainly shows; reserve a comment for non-obvious *why* (a workaround, a quirk
+being matched, an ordering that matters). When deeper rationale or context would
+bloat the code, surface it in chat or record it in `CLAUDE-WORK.md` instead of a
+long inline comment.
+
 ## Python scripts
 
 After editing anything under `scripts/`, lint it with ruff (provided by the
