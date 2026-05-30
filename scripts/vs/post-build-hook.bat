@@ -2,11 +2,11 @@
 :: Post-build hook for VS2008
 ::
 :: Hooks run from this directory  : :/binaries/Win32/intermediates/Master Gold/survarium - PC - Windows/
-:: The hook path is set to        : ../../../../../scripts/post-build-hook.bat
+:: The hook path is set to        : ../../../../../scripts/vs/post-build-hook.bat
 :: The script current directory is: :/sources/vostok/survarium/pc/sources
 ::
 
-if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\.."
+if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\..\.."
 for %%I in ("%ROOT_DIR%")  do set "ROOT_DIR=%%~fI"
 
 if not defined VOSTOK_DIR           set          "VOSTOK_DIR=%ROOT_DIR%\vostok"

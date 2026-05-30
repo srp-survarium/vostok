@@ -1,0 +1,82 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1779560665,
+        "narHash": "sha256-tpyBcxPpcQb8ukyNF7DoCwfSY3VPsxHoYwj00Cayv5o=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "64c08a7ca051951c8eae34e3e3cb1e202fe36786",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "rust-overlay": "rust-overlay",
+        "vcproj2ninja-src": "vcproj2ninja-src",
+        "vostok-pdb-parser-src": "vostok-pdb-parser-src"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779851998,
+        "narHash": "sha256-UkkMh3bX9QW4Luqkm98nUaOqKWrU6i65mUnph3WeSSw=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "6cddd512fa2bf7231f098d3a2f92f6e4cff71e0a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "vcproj2ninja-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1780074888,
+        "narHash": "sha256-3loFS+ODa2MMMC2zWeUgWjTVyReiprfAhc81grKw43U=",
+        "owner": "srp-survarium",
+        "repo": "vcproj2ninja",
+        "rev": "5578683d8018fcb037249fd9e49e3fd8f0e8e4d2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "repo": "vcproj2ninja",
+        "type": "github"
+      }
+    },
+    "vostok-pdb-parser-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779990258,
+        "narHash": "sha256-YUgUufBpCXaItnIWElGg38oXOYlKYPRqY8QigyGvGG0=",
+        "owner": "srp-survarium",
+        "repo": "vostok-pdb-parser",
+        "rev": "ccee34406d88ab306687be285d573aa16fa9873e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "repo": "vostok-pdb-parser",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
