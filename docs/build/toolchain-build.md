@@ -49,6 +49,37 @@ msiexec /a vs_setup.msi TARGETDIR=… PATCH=VS90sp1-KB945140-X86-ENU.msp /qn
 
 The script verifies afterward that `cl.exe` reports `15.00.30729`.
 
+### 2b. PATCH= does *not* update the static CRT — overlay it from the MSP
+
+`PATCH=` bumps the **versioned** compiler PE files (`cl`/`c1`/`c2`/`mspdb`) to
+SP1, but Wine's `msiexec` does **not** lay down the patched, **unversioned**
+static CRT. The result is a toolchain whose compiler is SP1 yet whose
+`VC/lib/libcmt.lib`, `libcpmt.lib` (and the `*d`/`msvcrt*` variants) and CRT
+headers stay at **RTM `9.0.21022`**. This shipped silently for a while because
+the only check was on `cl.exe`. Consequences (see
+[compiler-sp1-rtm.md](compiler-sp1-rtm.md)):
+
+* the linked static-CRT objects are RTM and never byte-match the game's SP1 CRT;
+* `VC/include/crtassem.h` (`_CRT_ASSEMBLY_VERSION "9.0.21022.8"`) is inlined into
+  **every** object we compile as its manifest dependency — an embedded RTM-vs-SP1
+  difference in our own engine objects.
+
+The script now fixes this in `step1_vs2008`:
+
+* **`overlay_sp1_crt()`** unpacks the SP1 MSP payload (7z; the MSP is an OLE
+  compound file with embedded cab(s)), maps File-table keys to real names with
+  `msiinfo export … File`, and copies the SP1-verified `libcmt.lib` etc. and
+  `crtassem.h` over the RTM ones in the staged `VC/`.
+* **`verify_crt_sp1(fatal=True)`** then reads `@comp.id` from `libcmt.lib` (low
+  16 bits = build: `30729` SP1 vs `21022` RTM) and the `crtassem.h` version, and
+  **aborts the build** if the CRT is still RTM — so a wrong-CRT toolchain can no
+  longer ship unnoticed.
+
+> The `@comp.id`/`crtassem.h` checks are pure-Python (no Wine) and are unit-safe;
+> the MSP-payload extraction depends on the real SP1 media and must be confirmed
+> by a full toolchain rebuild. If `verify_crt_sp1` aborts, the MSP File-key
+> mapping likely needs adjusting for the media at hand.
+
 ## Wine must be staging (≥ 10.20) — the `cl /Zi` → C1902 saga
 
 Compiling with `/Zi` (separate `.pdb` debug info — what the game uses) fails
