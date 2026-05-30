@@ -19,9 +19,13 @@
       url = "github:srp-survarium/vcproj2ninja";
       flake = false;
     };
+    vostok-delinker-src = {
+      url = "github:srp-survarium/vostok-delinker";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src }:
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src }:
     let
       system = "x86_64-linux";
 
@@ -57,6 +61,20 @@
         version = "0.1.0";
         src = vostok-pdb-parser-src;
         cargoHash = "sha256-sNWVj0UWfLzr5KqXoZK+bv3aokjdyK12sxjLNpxP1uI=";
+      };
+
+      # ---------------------------------------------------------------------------
+      # vostok-delinker — Linux binary, splits an EXE into per-unit COFF .obj files
+      # for objdiff. Run natively (no Wine): vostok-delinker --pdb-path … --exe-path …
+      #
+      # cargoHash: update by running `nix build .#vostok-delinker` after bumping
+      # the input (nix flake update vostok-delinker-src) — Nix reports the new hash.
+      # ---------------------------------------------------------------------------
+      vostok-delinker = nightly-rustPlatform.buildRustPackage {
+        pname = "vostok-delinker";
+        version = "0.1.0";
+        src = vostok-delinker-src;
+        cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
       };
 
       # ---------------------------------------------------------------------------
@@ -188,7 +206,7 @@
 
     in {
       packages.${system} = {
-        inherit vostok-pdb-parser vcproj2ninja vostok-toolchain vostok-libs survarium;
+        inherit vostok-pdb-parser vostok-delinker vcproj2ninja vostok-toolchain vostok-libs survarium;
         # Convenience aliases for the individual survarium outputs:
         #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
         survarium-game = survarium;            # default `out` = game binaries
@@ -211,19 +229,16 @@
           # docs/build/toolchain-build.md.
           pkgs.wineWowPackages.staging
 
-          # MinGW cross-compiler (needed if building vcproj2ninja outside Nix)
-          mingw.buildPackages.gcc
-
-          # Scripts + downloads
+          # Scripts + handy tools
           pkgs.python3
-          pkgs.gdown
           pkgs.ripgrep
-          pkgs.p7zip
-          pkgs.msitools
           pkgs.file
+          pkgs.xxd
+          pkgs.jq
 
           # Nix-built tools and assets — all evaluated when entering the shell.
           vostok-pdb-parser
+          vostok-delinker
           vcproj2ninja
           vostok-toolchain
           vostok-libs

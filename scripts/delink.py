@@ -43,8 +43,8 @@ def log(msg: str) -> None:
     print(f"[delink] {msg}", flush=True)
 
 
-def _delinker_dir() -> Path:
-    return Path(os.environ.get("VOSTOK_DELINKER_DIR", ROOT_DIR / "vostok-delinker"))
+def _delinker_bin() -> str:
+    return os.environ.get("VOSTOK_DELINKER", "vostok-delinker")
 
 
 def delink(side: str) -> None:
@@ -53,11 +53,7 @@ def delink(side: str) -> None:
     Raises RuntimeError if inputs are missing and CalledProcessError if the
     delinker / config generator fail — callers handle/report these.
     """
-    delinker = _delinker_dir()
-    if not (delinker / "Cargo.toml").is_file():
-        raise RuntimeError(
-            f"vostok-delinker not found at {delinker} (set VOSTOK_DELINKER_DIR)"
-        )
+    delinker = _delinker_bin()
 
     if side == "base":
         exe = WIN32_DIR / "survarium-dx11-win32-gold.exe"
@@ -79,10 +75,13 @@ def delink(side: str) -> None:
         if not f.is_file():
             raise RuntimeError(f"{f} not found — {hint}")
 
-    # Check the toolchain is present before wiping the output directory, so a
-    # missing cargo can't destroy a previously-good delink.
-    if shutil.which("cargo") is None:
-        raise RuntimeError("cargo not found on PATH — run inside `nix develop`")
+    # Check the delinker is present before wiping the output directory, so a
+    # missing binary can't destroy a previously-good delink.
+    if shutil.which(delinker) is None:
+        raise RuntimeError(
+            f"{delinker!r} not found on PATH — run inside `nix develop` "
+            "(provides vostok-delinker), or set VOSTOK_DELINKER"
+        )
 
     out = OBJDIFF_DIR / side
     if out.exists():
@@ -90,20 +89,16 @@ def delink(side: str) -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     log(f"Delinking {side} ({exe.name}) -> {out}")
-    try:
-        subprocess.run(
-            [
-                "cargo", "run", "--manifest-path", str(delinker / "Cargo.toml"),
-                "--release", "--",
-                "--pdb-path",    str(pdb),
-                "--exe-path",    str(exe),
-                "--output-path", str(out),
-                *engine,
-            ],
-            check=True,
-        )
-    except FileNotFoundError:
-        raise RuntimeError("cargo not found on PATH — run inside `nix develop`")
+    subprocess.run(
+        [
+            delinker,
+            "--pdb-path",    str(pdb),
+            "--exe-path",    str(exe),
+            "--output-path", str(out),
+            *engine,
+        ],
+        check=True,
+    )
 
     log("Refreshing objdiff config ...")
     subprocess.run(

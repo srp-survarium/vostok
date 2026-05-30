@@ -21,6 +21,7 @@
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay",
         "vcproj2ninja-src": "vcproj2ninja-src",
+        "vostok-delinker-src": "vostok-delinker-src",
         "vostok-pdb-parser-src": "vostok-pdb-parser-src"
       }
     },
@@ -57,6 +58,22 @@
       "original": {
         "owner": "srp-survarium",
         "repo": "vcproj2ninja",
+        "type": "github"
+      }
+    },
+    "vostok-delinker-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775596111,
+        "narHash": "sha256-eCiEMORayi8+2hv2w+fx4TMOyo3CTwiaqVPJFCMY21w=",
+        "owner": "srp-survarium",
+        "repo": "vostok-delinker",
+        "rev": "935d8c53066aabe0d23d7d249e564ecc817aac11",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "repo": "vostok-delinker",
         "type": "github"
       }
     },
