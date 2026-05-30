@@ -4,6 +4,7 @@
 * [../README.md](../README.md) — Nix/Linux quickstart (the supported workflow).
 * [build/toolchain-build.md](build/toolchain-build.md) — how the vostok-toolchain is built on Linux/Wine (mspdb DLLs, SP1 via `PATCH=`) and why Wine must be **staging** (cl `/Zi` → C1902 on wine-10.0 stable).
 * [windows-setup.md](windows-setup.md) — legacy manual Windows/VS2008 setup.
+* [build-flags.md](build-flags.md) — per-project compiler-flag comparison (target vs. base) recovered from the PDBs, and which vcproj were built with/without optimizations.
 
 ### Module matching notes
 * [matching/logging.md](matching/logging.md)
