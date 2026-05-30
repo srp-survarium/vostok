@@ -205,9 +205,13 @@
       '';
 
       # ---------------------------------------------------------------------------
-      # objdiff — upstream's prebuilt Linux binaries (not in nixpkgs, no flake),
-      # patched to run under Nix. `objdiff` is the GUI (interactive matching),
-      # `objdiff-cli` the command-line differ.
+      # objdiff — upstream's prebuilt Linux binaries (not in nixpkgs, no flake).
+      # These are foreign ELF binaries built for a normal FHS distro: their ELF
+      # interpreter (/lib64/ld-linux-*) and library search paths don't exist on
+      # Nix, so autoPatchelfHook rewrites the interpreter + RPATH to point into the
+      # store. buildInputs below is just the *pool of libraries* autoPatchelf links
+      # against — not a compile step (the binaries are already built).
+      # `objdiff` is the GUI (interactive matching), `objdiff-cli` the CLI differ.
       # ---------------------------------------------------------------------------
       objdiffVersion = "3.7.1";
       objdiffUrl = name:
@@ -217,6 +221,8 @@
         xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr xorg.libxcb
       ];
 
+      # CLI: autoPatchelf + the C++ runtime is enough — it dlopen's nothing, so no
+      # LD_LIBRARY_PATH wrapper (and hence no makeWrapper) is needed.
       objdiff-cli = pkgs.stdenv.mkDerivation {
         pname = "objdiff-cli";
         version = objdiffVersion;
@@ -224,9 +230,9 @@
           url = objdiffUrl "objdiff-cli-linux-x86_64";
           hash = "sha256-QNhW2gHgpnbA8zr1NOVi8JjNUORey2Tzs0ZBjHsmSuY=";
         };
-        dontUnpack = true;
+        dontUnpack = true; # a bare binary; nothing to unpack
         nativeBuildInputs = [ pkgs.autoPatchelfHook ];
-        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
+        buildInputs = [ pkgs.stdenv.cc.cc.lib ]; # libstdc++ / libgcc_s (its DT_NEEDED deps)
         installPhase = "install -Dm755 $src $out/bin/objdiff-cli";
       };
 
@@ -237,13 +243,18 @@
           url = objdiffUrl "objdiff-linux-x86_64";
           hash = "sha256-LpBPYyWPzuX5jm02WUovzqJQyqz+l8SbRURHDWgFqq8=";
         };
-        dontUnpack = true;
+        dontUnpack = true; # a bare binary; nothing to unpack
+        # autoPatchelfHook: fix the foreign binary's interpreter + RPATH so it runs
+        # on Nix. makeWrapper: provides the wrapProgram used in installPhase.
         nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.makeWrapper ];
+        # Libraries autoPatchelf rewrites the RPATH against: the C++ runtime plus
+        # the X/GL/Wayland libs that appear in the binary's DT_NEEDED list.
         buildInputs = [ pkgs.stdenv.cc.cc.lib ] ++ objdiffGuiLibs;
         installPhase = ''
           install -Dm755 $src $out/bin/objdiff
-          # The GUI dlopen's GL/Wayland/X at runtime (not in NEEDED), so put them
-          # on LD_LIBRARY_PATH in addition to the autoPatchelf'd direct deps.
+          # The GUI *also* dlopen's GL/Wayland/X lazily at runtime; those are NOT in
+          # DT_NEEDED, so autoPatchelf can't see them. Expose them on LD_LIBRARY_PATH
+          # so the runtime dlopen()s resolve.
           wrapProgram $out/bin/objdiff \
             --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath objdiffGuiLibs}"
         '';
