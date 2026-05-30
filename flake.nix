@@ -159,8 +159,6 @@
         src = pkgs.fetchurl {
           name = "vostok-toolchain-v0.100b.tar.xz";
           url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-toolchain-v0.100b.tar.xz";
-          # Rebuilt with the SP1 static CRT overlaid (libcmt/libcpmt/crtassem.h
-          # now 9.0.30729, matching the game) - see scripts/create-toolchain-release.py.
           sha256 = "c9c5c17a51739472e11e9071b0274c3278930ddda0a8478858d81612bf895d99";
         };
         nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];
