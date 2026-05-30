@@ -7,7 +7,6 @@ import json
 import struct
 
 from pathlib import Path
-from typing import Optional
 
 
 # Derive paths from this script's own location so the tool works from any
@@ -75,7 +74,7 @@ def gather_units(
             continue
 
         try:
-            size = file.stat().st_size
+            file.stat()  # guard: skip files that can't be stat'd
         except OSError:
             continue
 
@@ -88,7 +87,7 @@ def gather_units(
         base_path   = f"./base/{unit}.obj"
 
         if not (objdiff_dir / base_path).exists():
-            base_path = f"./dummy.obj"
+            base_path = "./dummy.obj"
 
         units.append({
             "name": unit,
@@ -113,7 +112,7 @@ def main(
         "units": gather_units(objdiff_dir, use_preset_config),
     }
 
-    write_dummy(objdiff_dir / "dummy.obj");
+    write_dummy(objdiff_dir / "dummy.obj")
 
     with (objdiff_dir / "objdiff.json").open("w", encoding="utf-8") as f:
         json.dump(obj, f, indent=2)
