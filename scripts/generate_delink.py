@@ -25,6 +25,7 @@ Env vars (set automatically by flake.nix devShell):
 """
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -52,6 +53,41 @@ def _wine_path(p: Path) -> str:
     e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
     """
     return "z:" + str(p).replace("/", "\\").lower()
+
+
+def _nonempty_dir(p: Path) -> bool:
+    return p.is_dir() and any(p.iterdir())
+
+
+def _generate_report() -> None:
+    """Write the objdiff match report (base vs target) to binaries/objdiff/report.json.
+
+    Skips quietly if objdiff-cli is unavailable or either side has not been
+    delinked yet (e.g. during the one-time target setup, before any base build).
+    """
+    objdiff_cli = os.environ.get("OBJDIFF_CLI", "objdiff-cli")
+    if shutil.which(objdiff_cli) is None:
+        log(f"objdiff-cli not found ({objdiff_cli!r}); skipping report")
+        return
+    if not (_nonempty_dir(OBJDIFF_DIR / "base") and _nonempty_dir(OBJDIFF_DIR / "target")):
+        log("Report skipped (base and target not both delinked yet).")
+        return
+
+    report = OBJDIFF_DIR / "report.json"
+    log("Generating objdiff report ...")
+    subprocess.run(
+        [objdiff_cli, "report", "generate", "-p", str(OBJDIFF_DIR), "-o", str(report)],
+        check=True,
+    )
+    try:
+        m = json.loads(report.read_text()).get("measures", {})
+        log("Match: code {:.2f}% / functions {:.2f}%".format(
+            m.get("matched_code_percent", 0.0),
+            m.get("matched_functions_percent", 0.0),
+        ))
+    except (OSError, ValueError):
+        pass
+    log(f"Report: {report}")
 
 
 def generate(side: str) -> None:
@@ -118,6 +154,7 @@ def generate(side: str) -> None:
         check=True,
     )
     log(f"Done: {out}")
+    _generate_report()
 
 
 def main() -> None:
