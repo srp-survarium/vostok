@@ -51,7 +51,9 @@ the **base-side** diff inputs in parallel:
 | C++ stubs (pdb-parser) | `binaries/structure/base` | `binaries/structure/target` |
 
 Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
-`binaries/objdiff/objdiff.json`) and match `base` against `target`.
+`binaries/objdiff/objdiff.json`) and match `base` against `target`. The rebuild
+also writes an overall match summary to `binaries/objdiff/report.json` and logs
+the code / function match percentages.
 
 Useful individual scripts (all run inside `nix develop`):
 

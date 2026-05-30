@@ -55,3 +55,10 @@ game PDB instead uses `c:/survarium/sources`.
 A full engine build under Wine takes ~20 minutes; run it in the background. The
 objdiff config is `binaries/objdiff/objdiff.json`; a match report is
 `objdiff-cli report generate -p binaries/objdiff`.
+
+## Keep the README current
+
+README.md documents this Nix/Linux workflow and goes stale easily. Whenever you
+change something fundamental - the build/diff flow, script names or locations,
+devShell tools, generated artifacts, or paths - check README.md and update it in
+the same change.
