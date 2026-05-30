@@ -218,7 +218,7 @@
         "https://github.com/encounter/objdiff/releases/download/v${objdiffVersion}/${name}";
       objdiffGuiLibs = with pkgs; [
         libGL libxkbcommon wayland fontconfig freetype
-        xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr xorg.libxcb
+        libx11 libxcursor libxi libxrandr libxcb
       ];
 
       # CLI: autoPatchelf + the C++ runtime is enough — it dlopen's nothing, so no
@@ -284,7 +284,9 @@
           # mspdbsrv never spawns → "fatal error C1902: Program database manager
           # mismatch". wine-staging 10.20 spawns mspdbsrv correctly. See
           # docs/build/toolchain-build.md.
-          pkgs.wineWowPackages.staging
+          # (wineWowPackages was renamed to wineWow64Packages; same WoW64 staging
+          # build — the back-to-back build below confirms mspdbsrv still works.)
+          pkgs.wineWow64Packages.staging
 
           # Scripts + handy tools
           pkgs.python3
