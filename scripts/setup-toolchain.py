@@ -157,7 +157,7 @@ def ensure_target_side() -> None:
     Idempotent - skips whichever output already exists, so this is cheap to call on
     every `nix develop`. Fatal: a failure here aborts setup so it doesn't go unnoticed.
     """
-    import generate_delink     # local imports: same scripts/ dir, only needed here
+    import generate_delink
     import generate_structure
 
     objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"

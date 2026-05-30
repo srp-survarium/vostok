@@ -8,9 +8,6 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 VOSTOK_DIR = SCRIPT_DIR.parent
-
-# The annotated structure carcass is now generated locally (generate_structure.py),
-# replacing the old sibling vostok-structure/ clone.
 BREAKPOINTS_DIR = VOSTOK_DIR / "binaries" / "structure" / "target" / "sources"
 
 
