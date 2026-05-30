@@ -5,7 +5,7 @@ Binary-matching decompilation of the **Vostok Engine** used by Survarium
 (MSVC 8.0 / VS2008 SP1), produce byte-identical objects to `survarium.exe`.
 
 This README covers the **Nix / Linux** workflow, which builds the exact VS2008
-toolchain under Wine for you — no Windows install required. For the original
+toolchain under Wine for you - no Windows install required. For the original
 manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 ## Requirements
@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 - Linux (x86_64) with [Nix](https://nixos.org/download) and flakes enabled
   (`experimental-features = nix-command flakes`).
 
-That's it — everything else (the VS2008 SP1 compiler, Windows/DirectX SDKs,
+That's it - everything else (the VS2008 SP1 compiler, Windows/DirectX SDKs,
 Wine, ninja, and the Rust tools) is provided by the flake.
 
 ## Quickstart
@@ -23,7 +23,7 @@ nix develop
 ```
 
 > **Disk space:** the first `nix develop` realizes **~16 GiB** into the Nix store
-> — the VS2008 toolchain, Wine, the Rust toolchain, the game install (incl. the
+> - the VS2008 toolchain, Wine, the Rust toolchain, the game install (incl. the
 > ~1.5 GiB resources), and the third-party libs (~6 GiB). Later entries reuse it
 > and are near-instant.
 
@@ -56,7 +56,7 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 Useful individual scripts (all run inside `nix develop`):
 
 ```sh
-python3 scripts/ninja_build.py [target]          # build only (verbose, keep-going)
+python3 scripts/ninja_build.py [target]              # build only (verbose, keep-going)
 python3 scripts/generate_delink.py {base|target}     # COFF split for one side
 python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one side
 ```
@@ -65,18 +65,18 @@ python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one 
 
 The whole game comes from one installer extraction, split into three outputs of
 the `survarium` derivation. `nix develop` realizes and pins **all three** under
-`binaries/nix-store/` by default — no extra step:
+`binaries/nix-store/` by default - no extra step:
 
-- `survarium-game` — `survarium.exe`, `survarium.pdb`, DLLs (also `SURVARIUM_BIN`)
-- `survarium-resources` — `resources.db` + `resources/` (packed game data, ~1.5 GiB)
-- `survarium-keys` — lobby/login server SSL certs + private keys
+- `survarium-game` - `survarium.exe`, `survarium.pdb`, DLLs (also `SURVARIUM_BIN`)
+- `survarium-resources` - `resources.db` + `resources/` (packed game data, ~1.5 GiB)
+- `survarium-keys` - lobby/login server SSL certs + private keys
 
 To build any one standalone (e.g. outside the shell): `nix build .#survarium-resources`,
 `.#survarium-keys`, `.#survarium-game`.
 
 ## Docs
 
-- [Matching guide](https://gist.github.com/sushi-shi/8bf16f82c3b1c65fd357d73ecfda909e) — how to actually match assembly.
-- [docs/index.md](docs/index.md) — index of build and per-module matching notes.
-- [docs/build/toolchain-build.md](docs/build/toolchain-build.md) — how the VS2008 toolchain is built under Wine (and why Wine must be staging).
-- [docs/windows-setup.md](docs/windows-setup.md) — the legacy manual Windows/VS2008 workflow.
+- [Matching guide](https://gist.github.com/sushi-shi/8bf16f82c3b1c65fd357d73ecfda909e) - how to actually match assembly.
+- [docs/index.md](docs/index.md) - index of build and per-module matching notes.
+- [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain is built under Wine (and why Wine must be staging).
+- [docs/windows-setup.md](docs/windows-setup.md) - the legacy manual Windows/VS2008 workflow.
