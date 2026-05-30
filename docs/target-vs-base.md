@@ -76,11 +76,15 @@ SP1. Worth pinning down which compilands come out as 21022.
 **Same:** 58 projects present on both sides; the vast majority have **identical
 flag sets** (CRT model `/MT`, exception/RTTI/security settings, opt level).
 
-**Different (actionable):**
+**Different (actionable) — now FIXED on this branch:**
 * `vostok_sound` — target built **`/Od`, non-LTCG**; base built **`/Ox` + LTCG**.
-  The repo `sound.vcproj` does not reflect the shipped build.
-* `zlib` — target `-O2` non-LTCG; base LTCG.
-* `libcmt` / `libgfx` — nominal only (debug-format split, file-count), prebuilt CRT/GFx.
+  Fixed: `sound.vcproj` `Master Gold|Win32` → `Optimization=0`, `WholeProgramOptimization=0`.
+* `zlib` — target `-O2` non-LTCG (built in its `Release` config); base LTCG.
+  Fixed: `zlib.vcproj` `Release|Win32` → `WholeProgramOptimization=0` (the `.sln`
+  maps `Master Gold|Win32`→`Release|Win32` for zlib; `Optimization` was already `2`).
+  *Both fixes change how the base builds; the numbers below predate a rebuild —
+  rebuild + re-`compare` to confirm `MATCH`.*
+* `libcmt` / `libgfx` — nominal only (debug-format split, file-count), prebuilt CRT/GFx; not touched.
 
 **Different (not bugs):** project grouping (`libjpeg`/`libpng`/`zlib` standalone
 in target vs folded into `libgfx_*` in base) and per-library source counts
@@ -159,9 +163,10 @@ faithful **for whichever PDB you feed**, which is the input to all matching work
 
 **What is different**, ranked by how actionable it is for matching:
 
-1. **Config bugs (fix now).** `vostok_sound` (and `zlib`) are built with the
-   wrong optimization/LTCG settings vs the shipped game — the `.vcproj` does not
-   match. Surfaced by §2.
+1. **Config bugs — FIXED on this branch.** `vostok_sound` and `zlib` were built
+   with the wrong optimization/LTCG settings vs the shipped game. Corrected in
+   the `.vcproj` (sound → `/Od` non-LTCG; zlib → non-LTCG); rebuild the base to
+   confirm. Surfaced by §2.
 2. **Toolchain drift (investigate).** Base mixes VS2008 **RTM (21022)** objects
    where the target is uniformly **SP1 (30729)**. RTM-compiled objects can't
    byte-match. Surfaced by §1 (Rich header).
