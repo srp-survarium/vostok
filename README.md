@@ -22,6 +22,11 @@ Wine, ninja, and the Rust tools) is provided by the flake.
 nix develop
 ```
 
+> **Disk space:** the first `nix develop` realizes **~16 GiB** into the Nix store
+> — the VS2008 toolchain, Wine, the Rust toolchain, the game install (incl. the
+> ~1.5 GiB resources), and the third-party libs (~6 GiB). Later entries reuse it
+> and are near-instant.
+
 The first entry fetches/builds everything and runs `scripts/setup-toolchain.py`,
 which:
 
@@ -58,17 +63,16 @@ python3 scripts/generate_structure.py {base|target}   # pdb-parser stubs for one
 
 ## Game data
 
-The single installer extraction also exposes the rest of the game as separate
-Nix outputs (no extra download — it all comes from the same unpack as the
-binaries):
+The whole game comes from one installer extraction, split into three outputs of
+the `survarium` derivation. `nix develop` realizes and pins **all three** under
+`binaries/nix-store/` by default — no extra step:
 
-```sh
-nix build .#survarium-resources   # resources.db + resources/ (packed game data)
-nix build .#survarium-keys         # lobby/login server SSL certs + private keys
-```
+- `survarium-game` — `survarium.exe`, `survarium.pdb`, DLLs (also `SURVARIUM_BIN`)
+- `survarium-resources` — `resources.db` + `resources/` (packed game data, ~1.5 GiB)
+- `survarium-keys` — lobby/login server SSL certs + private keys
 
-`nix develop` pins all three under `binaries/nix-store/` (`survarium-game`,
-`survarium-resources`, `survarium-keys`).
+To build any one standalone (e.g. outside the shell): `nix build .#survarium-resources`,
+`.#survarium-keys`, `.#survarium-game`.
 
 ## Docs
 

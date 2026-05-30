@@ -93,6 +93,7 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     log("Extracting VS2008 ISO ...")
     iso_dir = work / "vs2008-iso"
     iso_dir.mkdir(parents=True, exist_ok=True)
+    # -tUDF: the .iso is a UDF (DVD) filesystem image.
     run(["7z", "x", str(vs2008_iso), "-tUDF", f"-o{iso_dir}", "-y"],
         stdout=subprocess.DEVNULL, check=False)
 
@@ -103,11 +104,6 @@ def step1_vs2008(work: Path, stage: Path) -> None:
             break
     if not vs_msi:
         raise SystemExit("ERROR: vs_setup.msi not found in VS2008 ISO")
-
-    log("Initialising Wine prefix ...")
-    Path(os.environ["WINEPREFIX"]).mkdir(parents=True, exist_ok=True)
-    run(xvfb_prefix() + ["wineboot", "--init"])
-    run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
 
     # VS2008 SP1: wine's msiexec cannot patch an administrative image after the
     # fact (`/p msp /a msi` returns ERROR_CALL_NOT_IMPLEMENTED=120). The supported
@@ -129,6 +125,14 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     if not sp1_msp:
         log("WARNING: SP1 MSP not found — packaging base VS2008 (RTM) without SP1.")
 
+    # Both ISOs are extracted; wine is only needed from here on (the admin install).
+    log("Initialising Wine prefix ...")
+    Path(os.environ["WINEPREFIX"]).mkdir(parents=True, exist_ok=True)
+    run(xvfb_prefix() + ["wineboot", "--init"])
+    run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
+
+    # Not a real install: `msiexec /a` just unpacks the MSI files (with SP1 folded
+    # in via PATCH=) into TARGETDIR — no registry/system changes.
     log("Running VS2008 administrative install (this may take a while) ...")
     admin_dir = work / "vs-admin"
     admin_dir.mkdir(parents=True, exist_ok=True)
@@ -224,6 +228,7 @@ def step2_winsdk(work: Path, stage: Path) -> None:
     sfx_dir.mkdir(parents=True, exist_ok=True)
     sdk_extracted.mkdir(parents=True, exist_ok=True)
 
+    # WinSDK_Build.exe is a self-extracting archive; 7z unpacks it to the inner MSI.
     run(["7z", "x", str(sdk_build), f"-o{sfx_dir}", "-y"],
         stdout=subprocess.DEVNULL)
 

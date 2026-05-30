@@ -155,8 +155,7 @@ def ensure_target_side() -> None:
     binaries/objdiff/target (COFF) and binaries/structure/target (pdb-parser stubs).
 
     Idempotent — skips whichever output already exists, so this is cheap to call on
-    every `nix develop`. Non-fatal: a failure here is logged but does not abort shell
-    setup (the base build path still works without the target side present).
+    every `nix develop`. Fatal: a failure here aborts setup so it doesn't go unnoticed.
     """
     import delink              # local imports: same scripts/ dir, only needed here
     import generate_structure
@@ -172,11 +171,9 @@ def ensure_target_side() -> None:
             delink.delink("target")
         if not _nonempty_dir(structure_target):
             generate_structure.generate("target")
-        log("Target diff inputs ready.")
     except (RuntimeError, subprocess.CalledProcessError) as e:
-        log(f"WARNING: could not generate target diff inputs: {e}")
-        log("  Generate later with: python3 scripts/delink.py target && "
-            "python3 scripts/generate_structure.py target")
+        die(f"could not generate target diff inputs: {e}")
+    log("Target diff inputs ready.")
 
 
 def main() -> None:
