@@ -7,9 +7,8 @@ import subprocess
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
-
-BREAKPOINTS_DIR = ROOT_DIR / "vostok-structure" / "sources"
+VOSTOK_DIR = SCRIPT_DIR.parent
+BREAKPOINTS_DIR = VOSTOK_DIR / "binaries" / "structure" / "target" / "sources"
 
 
 def main():
@@ -39,7 +38,7 @@ def main():
                 elif inside_function:
                     start = line.find('0x')
                     if start == -1:
-                        continue;
+                        continue
                     end = line.find('>', start)
                     breakpoints.append(line[start:end])
                 else:
@@ -49,11 +48,11 @@ def main():
             found_function = False
             for line in file:
                 if found_function and '}' in line:
-                    break;
+                    break
                 elif found_function:
                     start = line.find('0x')
                     if start == -1:
-                        continue;
+                        continue
                     end = line.find('>', start)
                     breakpoints.append(line[start:end])
                 else:
