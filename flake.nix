@@ -204,9 +204,55 @@
         cp -r extract/app/resources/ssl/.           "$keys"/
       '';
 
+      # ---------------------------------------------------------------------------
+      # objdiff — upstream's prebuilt Linux binaries (not in nixpkgs, no flake),
+      # patched to run under Nix. `objdiff` is the GUI (interactive matching),
+      # `objdiff-cli` the command-line differ.
+      # ---------------------------------------------------------------------------
+      objdiffVersion = "3.7.1";
+      objdiffUrl = name:
+        "https://github.com/encounter/objdiff/releases/download/v${objdiffVersion}/${name}";
+      objdiffGuiLibs = with pkgs; [
+        libGL libxkbcommon wayland fontconfig freetype
+        xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr xorg.libxcb
+      ];
+
+      objdiff-cli = pkgs.stdenv.mkDerivation {
+        pname = "objdiff-cli";
+        version = objdiffVersion;
+        src = pkgs.fetchurl {
+          url = objdiffUrl "objdiff-cli-linux-x86_64";
+          hash = "sha256-QNhW2gHgpnbA8zr1NOVi8JjNUORey2Tzs0ZBjHsmSuY=";
+        };
+        dontUnpack = true;
+        nativeBuildInputs = [ pkgs.autoPatchelfHook ];
+        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
+        installPhase = "install -Dm755 $src $out/bin/objdiff-cli";
+      };
+
+      objdiff = pkgs.stdenv.mkDerivation {
+        pname = "objdiff";
+        version = objdiffVersion;
+        src = pkgs.fetchurl {
+          url = objdiffUrl "objdiff-linux-x86_64";
+          hash = "sha256-LpBPYyWPzuX5jm02WUovzqJQyqz+l8SbRURHDWgFqq8=";
+        };
+        dontUnpack = true;
+        nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.makeWrapper ];
+        buildInputs = [ pkgs.stdenv.cc.cc.lib ] ++ objdiffGuiLibs;
+        installPhase = ''
+          install -Dm755 $src $out/bin/objdiff
+          # The GUI dlopen's GL/Wayland/X at runtime (not in NEEDED), so put them
+          # on LD_LIBRARY_PATH in addition to the autoPatchelf'd direct deps.
+          wrapProgram $out/bin/objdiff \
+            --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath objdiffGuiLibs}"
+        '';
+      };
+
     in {
       packages.${system} = {
-        inherit vostok-pdb-parser vostok-delinker vcproj2ninja vostok-toolchain vostok-libs survarium;
+        inherit vostok-pdb-parser vostok-delinker vcproj2ninja vostok-toolchain vostok-libs survarium
+          objdiff objdiff-cli;
         # Convenience aliases for the individual survarium outputs:
         #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
         survarium-game = survarium;            # default `out` = game binaries
@@ -235,6 +281,10 @@
           pkgs.file
           pkgs.xxd
           pkgs.jq
+
+          # objdiff — GUI + CLI for comparing base vs target objects
+          objdiff
+          objdiff-cli
 
           # Nix-built tools and assets — all evaluated when entering the shell.
           vostok-pdb-parser
