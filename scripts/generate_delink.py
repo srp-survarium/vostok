@@ -25,6 +25,7 @@ Env vars (set automatically by flake.nix devShell):
 """
 
 import argparse
+import datetime
 import json
 import os
 import shutil
@@ -62,8 +63,11 @@ def _nonempty_dir(p: Path) -> bool:
 def _generate_report() -> None:
     """Write the objdiff match report (base vs target) to binaries/objdiff/report.json.
 
-    Skips quietly if objdiff-cli is unavailable or either side has not been
-    delinked yet (e.g. during the one-time target setup, before any base build).
+    If a previous report exists it is archived (timestamped) under
+    binaries/objdiff/reports/ and diffed against the new one (see _report_changes),
+    so improvements and regressions between builds are visible. Skips quietly if
+    objdiff-cli is unavailable or either side has not been delinked yet (e.g.
+    during the one-time target setup, before any base build).
     """
     objdiff_cli = os.environ.get("OBJDIFF_CLI", "objdiff-cli")
     if shutil.which(objdiff_cli) is None:
@@ -74,6 +78,17 @@ def _generate_report() -> None:
         return
 
     report = OBJDIFF_DIR / "report.json"
+
+    # Keep history: archive the existing report (timestamped) before regenerating,
+    # so we can diff the new one against it instead of overwriting it.
+    previous = None
+    if report.exists():
+        archive_dir = OBJDIFF_DIR / "reports"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        previous = archive_dir / f"report-{ts}.json"
+        report.rename(previous)
+
     log("Generating objdiff report ...")
     subprocess.run(
         [objdiff_cli, "report", "generate", "-p", str(OBJDIFF_DIR), "-o", str(report)],
@@ -88,6 +103,79 @@ def _generate_report() -> None:
     except (OSError, ValueError):
         pass
     log(f"Report: {report}")
+
+    if previous is not None:
+        _report_changes(previous, report)
+
+
+def _report_changes(previous: Path, current: Path) -> None:
+    """Log the net deltas plus the per-function regressions and improvements
+    between the previous and current reports.
+
+    The per-function diff is computed directly from the two reports, keyed by
+    (unit, function) - which is precise. objdiff-cli's own `report changes`
+    matches functions by name across the whole archive and adds a lot of noise
+    (phantom entries, same-name/different-size mismatches). A clean per-function
+    list is written to binaries/objdiff/report-changes.json.
+    """
+    try:
+        prev = json.loads(previous.read_text())
+        cur = json.loads(current.read_text())
+    except (OSError, ValueError):
+        return
+
+    def fuzzy_by_function(report):
+        out = {}
+        for unit in report.get("units", []):
+            for fn in unit.get("functions", []):
+                name = fn.get("metadata", {}).get("demangled_name") or fn.get("name", "?")
+                out[(unit.get("name"), fn.get("name"))] = (fn.get("fuzzy_match_percent", 0.0), name)
+        return out
+
+    before, after = fuzzy_by_function(prev), fuzzy_by_function(cur)
+    regressed, improved = [], []
+    for key in before.keys() & after.keys():
+        was, name = before[key]
+        now, _ = after[key]
+        if now < was - 1e-6:
+            regressed.append((was, now, name))
+        elif now > was + 1e-6:
+            improved.append((was, now, name))
+
+    pm, cm = prev.get("measures", {}), cur.get("measures", {})
+
+    def code(m):
+        return m.get("matched_code_percent", 0.0)
+
+    def matched(m):
+        return int(m.get("matched_functions", 0))
+
+    total = int(cm.get("total_functions", 0))
+    log("Changes vs previous: code {:.2f}% -> {:.2f}% ({:+.2f}), "
+        "functions {}/{} -> {}/{} ({:+d})".format(
+            code(pm), code(cm), code(cm) - code(pm),
+            matched(pm), total, matched(cm), total, matched(cm) - matched(pm),
+        ))
+
+    regressed.sort(key=lambda r: r[1] - r[0])  # worst (most negative) first
+    improved.sort(key=lambda r: r[0] - r[1])   # biggest gain first
+    log(f"  {len(regressed)} function(s) regressed, {len(improved)} improved")
+    limit = 10
+    for was, now, name in regressed[:limit]:
+        log(f"  regressed {was:6.2f}% -> {now:6.2f}%  {name}")
+    if len(regressed) > limit:
+        log(f"  ... and {len(regressed) - limit} more regressed")
+    for was, now, name in improved[:limit]:
+        log(f"  improved  {was:6.2f}% -> {now:6.2f}%  {name}")
+    if len(improved) > limit:
+        log(f"  ... and {len(improved) - limit} more improved")
+
+    changes = OBJDIFF_DIR / "report-changes.json"
+    changes.write_text(json.dumps({
+        "regressed": [{"function": n, "from": a, "to": b} for a, b, n in regressed],
+        "improved": [{"function": n, "from": a, "to": b} for a, b, n in improved],
+    }, indent=2) + "\n")
+    log(f"Changes: {changes} (previous report kept at {previous})")
 
 
 def generate(side: str) -> None:
