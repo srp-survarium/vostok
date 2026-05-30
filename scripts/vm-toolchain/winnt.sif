@@ -1,0 +1,45 @@
+; Windows XP fully-unattended answer file for the vostok toolchain build VM.
+; The driver substitutes @PRODUCT_KEY@ (from $WINDOWS_PRODUCT_KEY) and writes this
+; to A:\winnt.sif on a FAT12 floppy, CRLF line endings. XP setup auto-reads it.
+;
+; The install is hands-free: whole-disk partition, NTFS, blank-password auto-logon
+; once, and [GuiRunOnce] kicks off orchestrate.cmd from the data disk at first
+; logon. orchestrate.cmd then runs the SDK installers and powers the VM off.
+
+[Data]
+AutoPartition=1
+MsDosInitiated="0"
+UnattendedInstall="Yes"
+
+[Unattended]
+UnattendMode=FullUnattended
+OemSkipEula=Yes
+OemPreinstall=No
+Repartition=Yes
+FileSystem=ConvertNTFS
+WaitForReboot=No
+TargetPath=\WINDOWS
+
+[GuiUnattended]
+AdminPassword=*
+EncryptedAdminPassword=NO
+OEMSkipRegional=1
+TimeZone=85
+OemSkipWelcome=1
+AutoLogon=Yes
+AutoLogonCount=1
+
+[UserData]
+ProductKey=@PRODUCT_KEY@
+FullName="vostok"
+OrgName="vostok"
+ComputerName=VOSTOKBUILD
+
+[Identification]
+JoinWorkgroup=WORKGROUP
+
+[Networking]
+InstallDefaultComponents=Yes
+
+[GuiRunOnce]
+Command0="cmd /c for %d in (D E F G H I) do if exist %d:\vostok\orchestrate.cmd %d:\vostok\orchestrate.cmd"
