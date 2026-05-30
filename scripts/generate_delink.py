@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-delink.py — run vostok-delinker to split an EXE into per-unit COFF .obj files
+generate_delink.py — run vostok-delinker to split an EXE into per-unit COFF .obj files
 for objdiff comparison, for one side:
 
   base    the freshly compiled game
@@ -16,8 +16,8 @@ generate_objdiff_config.py. This mirrors vostok-delinker/build_{base,target}.sh
 but is driven from Python so the whole build/diff loop stays in this repo.
 
 Usage:
-  python3 scripts/delink.py base
-  python3 scripts/delink.py target
+  python3 scripts/generate_delink.py base
+  python3 scripts/generate_delink.py target
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN       — directory with the original survarium.{exe,pdb} (target side)
@@ -47,7 +47,7 @@ def _delinker_bin() -> str:
     return os.environ.get("VOSTOK_DELINKER", "vostok-delinker")
 
 
-def delink(side: str) -> None:
+def generate(side: str) -> None:
     """Delink <side> into binaries/objdiff/<side> and refresh objdiff.json.
 
     Raises RuntimeError if inputs are missing and CalledProcessError if the
@@ -119,7 +119,7 @@ def main() -> None:
     )
     ap.add_argument("side", choices=["base", "target"])
     try:
-        delink(ap.parse_args().side)
+        generate(ap.parse_args().side)
     except (RuntimeError, subprocess.CalledProcessError) as e:
         print(f"[delink] ERROR: {e}", file=sys.stderr)
         sys.exit(1)

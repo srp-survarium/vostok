@@ -5,7 +5,7 @@ rebuild.py — full base-side refresh after editing sources.
   1. Build survarium via ninja under Wine (scripts/ninja_build.py).
   2. In parallel (both IO-bound, disjoint outputs):
        a. binaries/structure/base  — pdb-parser --as-base  (generate_structure.py)
-       b. binaries/objdiff/base     — vostok-delinker COFF   (delink.py)
+       b. binaries/objdiff/base     — vostok-delinker COFF   (generate_delink.py)
           + refreshed objdiff.json
 
 The target side (binaries/structure/target, binaries/objdiff/target) is the
@@ -22,7 +22,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import delink
+import generate_delink
 import generate_structure
 
 
@@ -51,7 +51,7 @@ def main() -> None:
     log("Build OK. Regenerating base structure + COFF in parallel ...")
     steps = {
         "base structure": lambda: generate_structure.generate("base"),
-        "base COFF":       lambda: delink.delink("base"),
+        "base COFF":       lambda: generate_delink.generate("base"),
     }
     failures = []
     with ThreadPoolExecutor(max_workers=len(steps)) as ex:

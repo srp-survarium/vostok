@@ -157,7 +157,7 @@ def ensure_target_side() -> None:
     Idempotent — skips whichever output already exists, so this is cheap to call on
     every `nix develop`. Fatal: a failure here aborts setup so it doesn't go unnoticed.
     """
-    import delink              # local imports: same scripts/ dir, only needed here
+    import generate_delink     # local imports: same scripts/ dir, only needed here
     import generate_structure
 
     objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"
@@ -168,7 +168,7 @@ def ensure_target_side() -> None:
     log("Generating target diff inputs (one-time: original game COFF + structure) ...")
     try:
         if not _nonempty_dir(objdiff_target):
-            delink.delink("target")
+            generate_delink.generate("target")
         if not _nonempty_dir(structure_target):
             generate_structure.generate("target")
     except (RuntimeError, subprocess.CalledProcessError) as e:

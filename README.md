@@ -56,9 +56,9 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 Useful individual scripts (all run inside `nix develop`):
 
 ```sh
-python3 scripts/ninja_build.py [target]        # build only (verbose, keep-going)
-python3 scripts/delink.py {base|target}        # COFF split for one side
-python3 scripts/generate_structure.py {base|target}   # pdb-parser stubs for one side
+python3 scripts/ninja_build.py [target]          # build only (verbose, keep-going)
+python3 scripts/generate_delink.py {base|target}     # COFF split for one side
+python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one side
 ```
 
 ## Game data
