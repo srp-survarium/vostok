@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ninja_build.py — Run ninja.exe under Wine to build a Vostok target.
+ninja_build.py - Run ninja.exe under Wine to build a Vostok target.
 
 Default target is the game project: survarium_-_PC_-_DirectX_11
 Runs with -v (verbose: full command lines) and -k 0 (keep going: report
@@ -14,8 +14,8 @@ Usage:
   python3 scripts/ninja_build.py -k 1             # stop at first failure
 
 Required env vars (set by flake.nix devShell):
-  NINJA_DIR  — directory containing ninja.exe
-  WINEPREFIX — wine prefix initialised by setup-toolchain.py
+  NINJA_DIR  - directory containing ninja.exe
+  WINEPREFIX - wine prefix initialised by setup-toolchain.py
 """
 
 import os
@@ -41,7 +41,7 @@ def die(msg: str, *hints: str) -> None:
 def main() -> None:
     ninja_dir = os.environ.get("NINJA_DIR")
     if not ninja_dir:
-        die("NINJA_DIR not set — run from `nix develop`")
+        die("NINJA_DIR not set - run from `nix develop`")
 
     ninja_exe = Path(ninja_dir) / "ninja.exe"
     if not ninja_exe.exists():
@@ -58,8 +58,8 @@ def main() -> None:
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
 
     # Defaults for the matching workflow:
-    #   -v      verbose — print the full cl.exe/link.exe command lines
-    #   -k 0    keep going on errors — compile every TU and report all
+    #   -v      verbose - print the full cl.exe/link.exe command lines
+    #   -k 0    keep going on errors - compile every TU and report all
     #           failures in one pass instead of stopping at the first
     # Both come before the user's args, so a later -k/-j on the command line
     # still wins (ninja takes the last occurrence).

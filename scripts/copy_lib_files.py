@@ -3,16 +3,18 @@ copy_lib_files.py - Copy 3rd party libraries ('.dll's and '.lib's) into the proj
 """
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 
 EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
+VOSTOK_DIR = SCRIPT_DIR.parent
 
-LIBS_DIR   = ROOT_DIR / "vostok-libs"
-VOSTOK_DIR = ROOT_DIR / "vostok"
+# Lib source defaults to the vostok-libs Nix package (VOSTOK_LIBS_DIR inside
+# `nix develop`), falling back to a sibling checkout for standalone use.
+LIBS_DIR    = Path(os.environ.get("VOSTOK_LIBS_DIR", str(VOSTOK_DIR.parent / "vostok-libs")))
 
 SRC         = LIBS_DIR   / "sources"
 DEST        = VOSTOK_DIR / "sources"
@@ -51,7 +53,7 @@ def main():
 
             # Prior copies came from /nix/store (read-only). Atomically remove any
             # existing one (unlink needs write on the dir, not the file), then copy
-            # contents only — copyfile gives the new file a default writable mode,
+            # contents only - copyfile gives the new file a default writable mode,
             # unlike copy2 which would preserve the read-only source mode.
             target.unlink(missing_ok=True)
             shutil.copyfile(file, target)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate_structure.py — run pdb-parser to (re)generate the annotated C++ "structure"
+generate_structure.py - run pdb-parser to (re)generate the annotated C++ "structure"
 stubs used for objdiff/IDA comparison, for one side:
 
   base    from the freshly compiled PDB
@@ -19,8 +19,8 @@ Usage:
   python3 scripts/generate_structure.py target
 
 Env vars (set automatically by flake.nix devShell):
-  SURVARIUM_BIN — directory containing the original survarium.pdb (target side)
-  PDB_PARSER    — pdb-parser binary to invoke (default: pdb_parser on PATH)
+  SURVARIUM_BIN - directory containing the original survarium.pdb (target side)
+  PDB_PARSER    - pdb-parser binary to invoke (default: pdb_parser on PATH)
 """
 
 import argparse
@@ -45,21 +45,35 @@ def _pdb_parser() -> str:
     return os.environ.get("PDB_PARSER", "pdb_parser")
 
 
+def _wine_path(p: Path) -> str:
+    r"""Render a native absolute path the way MSVC-under-Wine records it in a PDB:
+    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
+    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
+    """
+    return "z:" + str(p).replace("/", "\\").lower()
+
+
 def generate(side: str) -> None:
     """Regenerate binaries/structure/<side> from the matching PDB.
 
     Raises RuntimeError if the source PDB is missing and CalledProcessError if
-    pdb-parser fails — callers (e.g. rebuild.py) handle/report these.
+    pdb-parser fails - callers (e.g. rebuild.py) handle/report these.
     """
     out = STRUCTURE_DIR / side
 
     if side == "base":
         pdb = BASE_PDB
-        engine = str(ENGINE_DIR)
+        # pdb-parser strips this prefix from every source path recorded in the
+        # PDB. The base PDB is MSVC-built under Wine, so those paths look like
+        #   z:\home\...\vostok\sources\vostok\<module>\...   (lowercased, `\`-separated)
+        # Pass the Wine form of <repo>/sources - the dir CONTAINING the engine
+        # `vostok` folder, mirroring the target's `c:/survarium/sources` - with a
+        # trailing separator so the remaining tree is rooted at `vostok\...`.
+        engine = _wine_path(ENGINE_DIR.parent) + "\\"
         extra = ["--as-base", "--skip-non-engine-headers"]
         if not pdb.is_file():
             raise RuntimeError(
-                f"compiled PDB not found: {pdb} — build first "
+                f"compiled PDB not found: {pdb} - build first "
                 "(python3 scripts/rebuild.py, or scripts/ninja_build.py)"
             )
     elif side == "target":
@@ -71,10 +85,10 @@ def generate(side: str) -> None:
         extra = []
         if not pdb.is_file():
             raise RuntimeError(
-                f"original survarium.pdb not found at {survarium_bin} — set "
+                f"original survarium.pdb not found at {survarium_bin} - set "
                 "SURVARIUM_BIN or run inside `nix develop` (provides survarium-game)"
             )
-    else:  # pragma: no cover — argparse restricts choices
+    else:  # pragma: no cover - argparse restricts choices
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
 
     out.mkdir(parents=True, exist_ok=True)
@@ -92,7 +106,7 @@ def generate(side: str) -> None:
         )
     except FileNotFoundError:
         raise RuntimeError(
-            f"pdb-parser binary {_pdb_parser()!r} not found on PATH — run inside "
+            f"pdb-parser binary {_pdb_parser()!r} not found on PATH - run inside "
             "`nix develop`, or set PDB_PARSER"
         )
     log(f"Done: {out}")

@@ -12,14 +12,14 @@ Entry point:
 
 Output:
   binaries/vostok-toolchain-v0.100b.tar.xz
-    msvc/VC/   — VS2008 SP1 compiler (cl.exe, headers, x86 libs)
-    winsdk/    — Windows SDK 6.0A headers + x86 libs
-    dxsdk/     — DirectX SDK June 2010 headers + libs
-    ninja/     — ninja.exe v1.12.1
+    msvc/VC/   - VS2008 SP1 compiler (cl.exe, headers, x86 libs)
+    winsdk/    - Windows SDK 6.0A headers + x86 libs
+    dxsdk/     - DirectX SDK June 2010 headers + libs
+    ninja/     - ninja.exe v1.12.1
 
 Headless Wine:
   wineboot and `msiexec /a` create windows (the "updating Wine configuration"
-  dialog, installer progress) via Wine's default X11 graphics driver — even
+  dialog, installer progress) via Wine's default X11 graphics driver - even
   though the build is non-interactive (/qn). On a desktop those pop up on
   screen. xvfb_prefix() runs them under a throwaway virtual X server (xvfb-run)
   so they render invisibly. See xvfb_prefix() below.
@@ -123,7 +123,7 @@ def step1_vs2008(work: Path, stage: Path) -> None:
         None,
     )
     if not sp1_msp:
-        log("WARNING: SP1 MSP not found — packaging base VS2008 (RTM) without SP1.")
+        log("WARNING: SP1 MSP not found - packaging base VS2008 (RTM) without SP1.")
 
     # Both ISOs are extracted; wine is only needed from here on (the admin install).
     log("Initialising Wine prefix ...")
@@ -132,7 +132,7 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
 
     # Not a real install: `msiexec /a` just unpacks the MSI files (with SP1 folded
-    # in via PATCH=) into TARGETDIR — no registry/system changes.
+    # in via PATCH=) into TARGETDIR - no registry/system changes.
     log("Running VS2008 administrative install (this may take a while) ...")
     admin_dir = work / "vs-admin"
     admin_dir.mkdir(parents=True, exist_ok=True)
@@ -167,12 +167,12 @@ def step1_vs2008(work: Path, stage: Path) -> None:
         capture_output=True, text=True, check=False,
     ).stdout
     if "15.00.30729" in cl_ver:
-        log("cl.exe is SP1 (15.00.30729) ✓")
+        log("cl.exe is SP1 (15.00.30729) OK")
     elif sp1_msp:
         log("WARNING: SP1 requested via PATCH= but cl.exe is still RTM "
-            "(15.00.21022) — the patch did not apply.")
+            "(15.00.21022) - the patch did not apply.")
     else:
-        log("cl.exe is RTM (15.00.21022) — built without SP1.")
+        log("cl.exe is RTM (15.00.21022) - built without SP1.")
 
     stage_vc = stage / "msvc" / "VC"
     stage_vc.mkdir(parents=True, exist_ok=True)
@@ -199,7 +199,7 @@ def step1_vs2008(work: Path, stage: Path) -> None:
                     helpers.setdefault(src.name.lower(), src)  # first (IDE) wins
     if not helpers:
         log(f"WARNING: no mspdb*/msobj* helpers found under {admin_dir} "
-            "— cl.exe will fail to load")
+            "- cl.exe will fail to load")
     for src in sorted(helpers.values()):
         shutil.copy2(str(src), str(stage_vc / "bin" / src.name))
         log(f"  bundled {src.name} from {src}")
@@ -304,9 +304,9 @@ def step4_ninja(work: Path, stage: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def step5_package(work: Path, stage: Path, output: Path) -> None:
-    log(f"Packaging → {output} ...")
+    log(f"Packaging -> {output} ...")
     output.parent.mkdir(parents=True, exist_ok=True)
-    # Reproducibility: the staged file *contents* are already deterministic — a
+    # Reproducibility: the staged file *contents* are already deterministic - a
     # fresh rebuild yields byte-identical files (verified file-by-file by sha256
     # against the published release). The only nondeterminism is tar metadata,
     # so normalise all of it:

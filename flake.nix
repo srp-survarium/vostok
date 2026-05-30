@@ -50,11 +50,11 @@
       mingw = pkgs.pkgsCross.mingwW64;
 
       # ---------------------------------------------------------------------------
-      # vostok-pdb-parser — Linux binary, generates C++ stubs from PDB files.
+      # vostok-pdb-parser - Linux binary, generates C++ stubs from PDB files.
       # Run: vostok-pdb-parser --pdb-path survarium.pdb --output-path ../vostok-structure
       #
       # cargoHash: update by running `nix build .#vostok-pdb-parser` after bumping
-      # the input (nix flake update vostok-pdb-parser-src) — Nix reports the new hash.
+      # the input (nix flake update vostok-pdb-parser-src) - Nix reports the new hash.
       # ---------------------------------------------------------------------------
       vostok-pdb-parser = nightly-rustPlatform.buildRustPackage {
         pname = "vostok-pdb-parser";
@@ -64,11 +64,11 @@
       };
 
       # ---------------------------------------------------------------------------
-      # vostok-delinker — Linux binary, splits an EXE into per-unit COFF .obj files
-      # for objdiff. Run natively (no Wine): vostok-delinker --pdb-path … --exe-path …
+      # vostok-delinker - Linux binary, splits an EXE into per-unit COFF .obj files
+      # for objdiff. Run natively (no Wine): vostok-delinker --pdb-path ... --exe-path ...
       #
       # cargoHash: update by running `nix build .#vostok-delinker` after bumping
-      # the input (nix flake update vostok-delinker-src) — Nix reports the new hash.
+      # the input (nix flake update vostok-delinker-src) - Nix reports the new hash.
       # ---------------------------------------------------------------------------
       vostok-delinker = nightly-rustPlatform.buildRustPackage {
         pname = "vostok-delinker";
@@ -78,7 +78,7 @@
       };
 
       # ---------------------------------------------------------------------------
-      # vcproj2ninja — Windows .exe, cross-compiled with MinGW.
+      # vcproj2ninja - Windows .exe, cross-compiled with MinGW.
       # Converts VS2008 .vcproj/.sln to Ninja build files, run under Wine.
       # Run: wine $VCPROJ2NINJA_EXE <args>
       #
@@ -101,7 +101,7 @@
 
         # buildRustPackage's cargoBuildHook hard-codes `--target <host>`, which
         # overrides CARGO_BUILD_TARGET and produces a native Linux ELF (renamed
-        # .exe) — Wine then runs it natively, so std::path uses Unix semantics and
+        # .exe) - Wine then runs it natively, so std::path uses Unix semantics and
         # mangles the vcproj's backslash paths. We must emit a genuine Windows PE.
         # So we keep cargoSetupHook (vendoring via cargoHash) but replace the
         # build/install phases with an explicit cross-build to the Windows target.
@@ -127,8 +127,8 @@
       };
 
       # ---------------------------------------------------------------------------
-      # vostok-toolchain — VS2008 SP1 + WinSDK 6.0A + DXSDK Jun2010 + ninja.exe.
-      # Produced by: nix-shell scripts/create-toolchain-release.nix  (reproducible —
+      # vostok-toolchain - VS2008 SP1 + WinSDK 6.0A + DXSDK Jun2010 + ninja.exe.
+      # Produced by: nix-shell scripts/create-toolchain-release.nix  (reproducible -
       # a fresh rebuild yields a byte-identical tarball).
       # Uploaded to: gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz \
       #                --repo srp-survarium/vostok-build-env --clobber
@@ -147,7 +147,7 @@
       '';
 
       # ---------------------------------------------------------------------------
-      # vostok-libs — proprietary third-party DLLs and import libraries.
+      # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
       # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b.zip --repo srp-survarium/vostok-build-env
@@ -168,8 +168,8 @@
       # Survarium v0.100b InnoSetup installer, shared by the game/resources/keys
       # derivations below. innoextract places everything under app/:
       #   binaries/win32/{survarium.exe,survarium.pdb,bugtrap.dll}
-      #   resources.db    — packed game data (~1.5 GiB)
-      #   resources/ssl/* — lobby/login server certificates + private keys
+      #   resources.db    - packed game data (~1.5 GiB)
+      #   resources/ssl/* - lobby/login server certificates + private keys
       survarium-installer = pkgs.fetchurl {
         name = "survarium_setup_v0100b.exe";
         url = "https://archive.org/download/vostok_engine_v0.1_build_802_internal_id_489_may_9_2013/survarium_setup_v0100b.exe";
@@ -179,9 +179,9 @@
       # Survarium v0.100b, extracted once from the installer into three outputs.
       # The single innoextract pass already unpacks everything, so resources and
       # keys cost no extra download or extraction beyond getting the exe/pdb:
-      #   out       — game binaries: survarium.exe, survarium.pdb, DLLs (SURVARIUM_BIN)
-      #   resources — resources.db + resources/ tree (packed game data, ~1.5 GiB)
-      #   keys      — lobby/login server SSL certificates + private keys
+      #   out       - game binaries: survarium.exe, survarium.pdb, DLLs (SURVARIUM_BIN)
+      #   resources - resources.db + resources/ tree (packed game data, ~1.5 GiB)
+      #   keys      - lobby/login server SSL certificates + private keys
       survarium = pkgs.runCommand "survarium" {
         src = survarium-installer;
         outputs = [ "out" "resources" "keys" ];
@@ -205,12 +205,12 @@
       '';
 
       # ---------------------------------------------------------------------------
-      # objdiff — upstream's prebuilt Linux binaries (not in nixpkgs, no flake).
+      # objdiff - upstream's prebuilt Linux binaries (not in nixpkgs, no flake).
       # These are foreign ELF binaries built for a normal FHS distro: their ELF
       # interpreter (/lib64/ld-linux-*) and library search paths don't exist on
       # Nix, so autoPatchelfHook rewrites the interpreter + RPATH to point into the
       # store. buildInputs below is just the *pool of libraries* autoPatchelf links
-      # against — not a compile step (the binaries are already built).
+      # against - not a compile step (the binaries are already built).
       # `objdiff` is the GUI (interactive matching), `objdiff-cli` the CLI differ.
       # ---------------------------------------------------------------------------
       objdiffVersion = "3.7.1";
@@ -218,10 +218,10 @@
         "https://github.com/encounter/objdiff/releases/download/v${objdiffVersion}/${name}";
       objdiffGuiLibs = with pkgs; [
         libGL libxkbcommon wayland fontconfig freetype
-        xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr xorg.libxcb
+        libx11 libxcursor libxi libxrandr libxcb
       ];
 
-      # CLI: autoPatchelf + the C++ runtime is enough — it dlopen's nothing, so no
+      # CLI: autoPatchelf + the C++ runtime is enough - it dlopen's nothing, so no
       # LD_LIBRARY_PATH wrapper (and hence no makeWrapper) is needed.
       objdiff-cli = pkgs.stdenv.mkDerivation {
         pname = "objdiff-cli";
@@ -278,26 +278,27 @@
           # Nightly Rust (for manual cargo builds of vostok-delinker etc.)
           rust
 
-          # Wine — runs cl.exe / link.exe / ninja.exe / vcproj2ninja.exe.
+          # Wine - runs cl.exe / link.exe / ninja.exe / vcproj2ninja.exe.
           # MUST be staging (>= 10.20): cl /Zi spawns mspdbsrv.exe (the PDB
           # server) over RPC, and wine-10.0 stable fails to start RpcSs so
-          # mspdbsrv never spawns → "fatal error C1902: Program database manager
+          # mspdbsrv never spawns -> "fatal error C1902: Program database manager
           # mismatch". wine-staging 10.20 spawns mspdbsrv correctly. See
           # docs/build/toolchain-build.md.
-          pkgs.wineWowPackages.staging
+          pkgs.wineWow64Packages.staging
 
           # Scripts + handy tools
           pkgs.python3
+          pkgs.ruff
           pkgs.ripgrep
           pkgs.file
           pkgs.xxd
           pkgs.jq
 
-          # objdiff — GUI + CLI for comparing base vs target objects
+          # objdiff - GUI + CLI for comparing base vs target objects
           objdiff
           objdiff-cli
 
-          # Nix-built tools and assets — all evaluated when entering the shell.
+          # Nix-built tools and assets - all evaluated when entering the shell.
           vostok-pdb-parser
           vostok-delinker
           vcproj2ninja
@@ -312,7 +313,7 @@
           export WINEDLLOVERRIDES="mscoree,mshtml="
           # Silence Wine's unactionable debug spam during builds: all fixme
           # stubs (e.g. RtlSetHeapInformation HEAP_INFORMATION_CLASS) and the
-          # kerberos err channel (no Kerberos support — expected). Genuine
+          # kerberos err channel (no Kerberos support - expected). Genuine
           # err/warn from other channels stay visible.
           export WINEDEBUG="fixme-all,err-kerberos"
 

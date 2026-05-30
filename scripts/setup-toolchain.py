@@ -10,7 +10,7 @@ in binaries/ninja/ can build the project. Steps:
   3. Set PATH, INCLUDE, LIB in the Wine registry
   4. Run vcproj2ninja.exe under Wine to (re)generate binaries/ninja/build.ninja
   5. Generate the target-side diff inputs once (binaries/{objdiff,structure}/target)
-     from the original game — these don't change between recompiles.
+     from the original game - these don't change between recompiles.
 
 Does not run ninja itself. Steps 1-4 short-circuit if every input still hashes to
 the previously recorded fingerprint AND all expected outputs exist; step 5 is
@@ -22,13 +22,13 @@ Run from inside `nix develop` after all Nix packages are built:
   python3 scripts/setup-toolchain.py
 
 Required env vars (set automatically by flake.nix devShell):
-  MSVC_DIR         — VC compiler directory (has VC/bin/cl.exe)
-  WINSDK_DIR       — Windows SDK directory (has Include/ and Lib/)
-  DXSDK_DIR        — DirectX SDK directory (has Include/ and Lib/)
-  NINJA_DIR        — directory containing ninja.exe
-  WINEPREFIX       — Wine prefix directory
-  VOSTOK_LIBS_DIR  — path to extracted vostok-libs Nix package
-  VCPROJ2NINJA_EXE — path to vcproj2ninja.exe (run under Wine)
+  MSVC_DIR         - VC compiler directory (has VC/bin/cl.exe)
+  WINSDK_DIR       - Windows SDK directory (has Include/ and Lib/)
+  DXSDK_DIR        - DirectX SDK directory (has Include/ and Lib/)
+  NINJA_DIR        - directory containing ninja.exe
+  WINEPREFIX       - Wine prefix directory
+  VOSTOK_LIBS_DIR  - path to extracted vostok-libs Nix package
+  VCPROJ2NINJA_EXE - path to vcproj2ninja.exe (run under Wine)
 """
 
 import os
@@ -59,7 +59,7 @@ def die(msg: str, *hints: str) -> None:
 def require_env(name: str) -> str:
     v = os.environ.get(name)
     if not v:
-        die(f"{name} not set — run this from inside `nix develop`")
+        die(f"{name} not set - run this from inside `nix develop`")
     return v
 
 
@@ -154,10 +154,10 @@ def ensure_target_side() -> None:
     """Generate the target-side diff inputs once (the original game never changes):
     binaries/objdiff/target (COFF) and binaries/structure/target (pdb-parser stubs).
 
-    Idempotent — skips whichever output already exists, so this is cheap to call on
+    Idempotent - skips whichever output already exists, so this is cheap to call on
     every `nix develop`. Fatal: a failure here aborts setup so it doesn't go unnoticed.
     """
-    import delink              # local imports: same scripts/ dir, only needed here
+    import generate_delink
     import generate_structure
 
     objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"
@@ -168,7 +168,7 @@ def ensure_target_side() -> None:
     log("Generating target diff inputs (one-time: original game COFF + structure) ...")
     try:
         if not _nonempty_dir(objdiff_target):
-            delink.delink("target")
+            generate_delink.generate("target")
         if not _nonempty_dir(structure_target):
             generate_structure.generate("target")
     except (RuntimeError, subprocess.CalledProcessError) as e:
@@ -233,7 +233,7 @@ def main() -> None:
         return
 
     # ----- Step 1: copy vostok-libs into sources/ -----
-    log("Copying vostok-libs → sources/ ...")
+    log("Copying vostok-libs -> sources/ ...")
     subprocess.check_call([
         sys.executable, str(SCRIPT_DIR / "copy_lib_files.py"),
         str(libs_dir / "sources"), str(VOSTOK_DIR / "sources"),
@@ -272,7 +272,7 @@ def main() -> None:
         die(f"vcproj2ninja did not produce {BUILD_DIR}/build.ninja")
     log("Ninja files generated.")
 
-    # All steps succeeded — record fingerprint to skip next time.
+    # All steps succeeded - record fingerprint to skip next time.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
     SETUP_STAMP.write_text(fingerprint)
 
