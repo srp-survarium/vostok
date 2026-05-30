@@ -52,9 +52,19 @@ set DXDIR=C:\Program Files\Microsoft DirectX SDK (June 2010)
 if exist "%DXDIR%\Include" xcopy /e /i /y /q "%DXDIR%\Include" "%DATA%\out\dxsdk\Include" >> "%LOG%" 2>&1
 if exist "%DXDIR%\Lib" xcopy /e /i /y /q "%DXDIR%\Lib" "%DATA%\out\dxsdk\Lib" >> "%LOG%" 2>&1
 
-rem TODO(winsdk): the full Windows SDK 6.0A is a separate install (the Wine path
-rem pulls it from the VS2008 ISO's WCU\WinSDK\WinSDK_Build.exe). Add it here once
-rem the VC path is confirmed; the CRT (the point of this experiment) is in VC.
+rem --- WinSDK 6.0A (best-effort): the admin install may drop the SDK headers
+rem     somewhere under C:\vsout. If so, copy Include+Lib; if SDKINC stays empty
+rem     the first run's log tells us we must instead run the DVD's
+rem     WCU\WinSDK\WinSDK_Build.exe explicitly. The CRT (the point) is in VC.
+set SDKINC=
+for /d /r C:\vsout %%S in (Include) do if exist "%%S\windows.h" set SDKINC=%%S
+echo   SDKINC=%SDKINC%>> "%LOG%"
+if "%SDKINC%"=="" goto :nowinsdk
+for %%R in ("%SDKINC%\..") do set SDKROOT=%%~fR
+echo   SDKROOT=%SDKROOT%>> "%LOG%"
+if exist "%SDKROOT%\Include" xcopy /e /i /y /q "%SDKROOT%\Include" "%DATA%\out\winsdk\Include" >> "%LOG%" 2>&1
+if exist "%SDKROOT%\Lib" xcopy /e /i /y /q "%SDKROOT%\Lib" "%DATA%\out\winsdk\Lib" >> "%LOG%" 2>&1
+:nowinsdk
 
 echo DONE> "%DATA%\out\DONE"
 echo === finished ===>> "%LOG%"

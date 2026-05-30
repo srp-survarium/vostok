@@ -20,6 +20,7 @@ Env (the .nix wrapper sets all but the first two):
   VM_TIMEOUT_MIN       hard cap on the VM run (default: 90)
 """
 
+import hashlib
 import os
 import shutil
 import subprocess
@@ -35,6 +36,9 @@ OUT_TARBALL = VOSTOK_DIR / "binaries" / "vostok-toolchain-v0.100b.tar.xz"
 RELEASE_EPOCH = 1368100800
 
 SP1_MSP_NAME = "VS90sp1-KB945140-X86-ENU.msp"
+
+SP1_BUILD = 30729
+RTM_BUILD = 21022
 
 
 def log(msg: str) -> None:
@@ -163,7 +167,8 @@ def run_vm(system: Path, data: Path, win_iso: Path, vs_iso: Path) -> None:
         "-drive", f"file={data},if=ide,index=1,media=disk,format=raw",
         "-drive", f"file={win_iso},if=ide,index=2,media=cdrom",
         "-drive", f"file={vs_iso},if=ide,index=3,media=cdrom",
-        "-fda", str(WORK / "unattend.flp"),
+        # explicit raw avoids qemu's "format not specified" floppy warning
+        "-drive", f"file={WORK / 'unattend.flp'},if=floppy,index=0,format=raw",
         # boot CD first; on the post-install reboots the "press any key" prompt
         # times out and control falls through to the now-installed HDD. (No
         # -no-reboot: XP reboots between text-mode and GUI setup.)
@@ -202,6 +207,78 @@ def extract_output(data: Path, work: Path) -> Path:
     return got
 
 
+def _comp_id_builds(data: bytes) -> set:
+    """@comp.id build numbers (low 16 bits) in a COFF/.lib blob. 30729=SP1."""
+    builds = set()
+    i = data.find(b"@comp.id")
+    while i != -1:
+        if i + 12 <= len(data):
+            builds.add(int.from_bytes(data[i + 8:i + 12], "little") & 0xFFFF)
+        i = data.find(b"@comp.id", i + 1)
+    return builds
+
+
+def verify_libcmt_sp1(stage: Path) -> None:
+    """The whole point: confirm the VM's static CRT is SP1, not RTM."""
+    libcmt = stage / "msvc" / "VC" / "lib" / "libcmt.lib"
+    if not libcmt.is_file():
+        log(f"CRT CHECK: libcmt.lib missing at {libcmt}")
+        return
+    builds = _comp_id_builds(libcmt.read_bytes())
+    if SP1_BUILD in builds and RTM_BUILD not in builds:
+        log(f"CRT CHECK: libcmt.lib is SP1 ({SP1_BUILD}) OK - no overlay needed")
+    else:
+        log(f"CRT CHECK: libcmt.lib NOT SP1 (@comp.id builds={sorted(builds)}) - "
+            "real-Windows admin-install+PATCH did not patch the CRT; a full "
+            "install (not admin install) is likely required.")
+
+
+def stage_outputs(out: Path, work: Path) -> Path:
+    """Lay the guest output + ninja into the toolchain shape (msvc/winsdk/dxsdk/ninja)."""
+    stage = work / "stage"
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+
+    for sub in ("msvc", "winsdk", "dxsdk"):
+        src = out / sub
+        if src.is_dir():
+            shutil.copytree(src, stage / sub)
+        else:
+            log(f"NOTE: guest produced no {sub}/ (expected for winsdk until the "
+                "orchestrator stages WinSDK 6.0A)")
+
+    ninja_zip = os.environ.get("NINJA_WIN_ZIP", "").strip()
+    if ninja_zip:
+        (stage / "ninja").mkdir()
+        run(["7z", "e", ninja_zip, "ninja.exe", f"-o{stage / 'ninja'}", "-y"],
+            stdout=subprocess.DEVNULL)
+    return stage
+
+
+def package(stage: Path, output: Path) -> None:
+    """Reproducible tar.xz, same metadata normalisation as the Wine path."""
+    log(f"Packaging -> {output} ...")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    run([
+        "tar", "--sort=name", "--format=gnu",
+        "--owner=0", "--group=0", "--numeric-owner",
+        f"--mtime=@{RELEASE_EPOCH}",
+        "--transform", r"s|^\.|vostok-toolchain-v0.100b|",
+        "-C", stage, "-cJf", output, ".",
+    ])
+    h = hashlib.sha256()
+    with output.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    digest = h.hexdigest()
+    size_gb = output.stat().st_size / (1024 ** 3)
+    print()
+    log("Done!")
+    print(f"  Output: {output}  ({size_gb:.2f} GB)")
+    print(f"  SHA256: {digest}")
+
+
 def main() -> None:
     win_iso = Path(need("WINDOWS_ISO"))
     product_key = need("WINDOWS_PRODUCT_KEY")
@@ -221,10 +298,11 @@ def main() -> None:
     run_vm(system, data, win_iso, vs_iso)
 
     out = extract_output(data, WORK)
-    log(f"guest output staged at {out}")
-    # TODO(package): assemble msvc/winsdk/dxsdk/ninja from `out`, normalise mtimes
-    # to RELEASE_EPOCH, tar.xz -> OUT_TARBALL, print sha256 + verify libcmt SP1.
-    log("Next: package + verify libcmt.lib is SP1 30729 (not yet implemented).")
+    log(f"guest output at {out}")
+
+    stage = stage_outputs(out, WORK)
+    verify_libcmt_sp1(stage)
+    package(stage, OUT_TARBALL)
 
 
 if __name__ == "__main__":
