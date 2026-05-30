@@ -66,19 +66,27 @@ the only check was on `cl.exe`. Consequences (see
 
 The script now fixes this in `step1_vs2008`:
 
-* **`overlay_sp1_crt()`** unpacks the SP1 MSP payload (7z; the MSP is an OLE
-  compound file with embedded cab(s)), maps File-table keys to real names with
-  `msiinfo export … File`, and copies the SP1-verified `libcmt.lib` etc. and
-  `crtassem.h` over the RTM ones in the staged `VC/`.
+* **`find_crt_msps()`** locates the patch that actually carries the static CRT.
+  It is **not** the umbrella `VS90sp1-KB945140` IDE MSP that `PATCH=` consumes
+  (that one bumps the compiler, not the CRT) — the CRT ships in the **Visual C++**
+  patch `VC90sp1-*-x86-*.msp` (e.g. `VC90sp1-KB947888-x86-enu.msp`). Reading the
+  wrong MSP is exactly why the first cut of the overlay replaced **0** files.
+* **`overlay_sp1_crt()`** 7z-unpacks the VC MSP (the members come straight out as
+  whole files keyed by their MSI File-table name, e.g.
+  `FL_libcmt_lib_7051_x86_ln.<GUID>` → `libcmt.lib`), matches each CRT target by
+  its `FL_<stem>_<ext>_` key prefix, confirms the member is genuinely SP1
+  (`@comp.id` 30729, no 21022), and copies it over the RTM file in the staged
+  `VC/`. (No `msiinfo`/File-table lookup is needed — the key prefix is the name.)
 * **`verify_crt_sp1(fatal=True)`** then reads `@comp.id` from `libcmt.lib` (low
   16 bits = build: `30729` SP1 vs `21022` RTM) and the `crtassem.h` version, and
   **aborts the build** if the CRT is still RTM — so a wrong-CRT toolchain can no
   longer ship unnoticed.
 
-> The `@comp.id`/`crtassem.h` checks are pure-Python (no Wine) and are unit-safe;
-> the MSP-payload extraction depends on the real SP1 media and must be confirmed
-> by a full toolchain rebuild. If `verify_crt_sp1` aborts, the MSP File-key
-> mapping likely needs adjusting for the media at hand.
+> The `@comp.id`/`crtassem.h` checks are pure-Python (no Wine) and are unit-safe.
+> The matcher was validated against the real `VC90sp1-KB947888-x86-enu.msp`
+> payload: all 12 CRT libs + `crtassem.h` resolve and verify SP1. If
+> `verify_crt_sp1` aborts on other media, check that `find_crt_msps` matched a VC
+> patch and that the `FL_<stem>_<ext>_` member keys follow the same convention.
 
 ## Wine must be staging (≥ 10.20) — the `cl /Zi` → C1902 saga
 
