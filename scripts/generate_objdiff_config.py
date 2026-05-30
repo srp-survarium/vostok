@@ -10,11 +10,12 @@ from pathlib import Path
 from typing import Optional
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
-
-VOSTOK_DIR  = ROOT_DIR / "vostok"
-OBJDIFF_DIR = ROOT_DIR / "vostok" / "binaries" / "objdiff"
+# Derive paths from this script's own location so the tool works from any
+# checkout/worktree (not just one literally named "vostok"), matching the other
+# generate_*.py scripts.
+SCRIPT_DIR  = Path(__file__).resolve().parent
+VOSTOK_DIR  = SCRIPT_DIR.parent
+OBJDIFF_DIR = VOSTOK_DIR / "binaries" / "objdiff"
 
 
 VOSTOK_PRESET = [
