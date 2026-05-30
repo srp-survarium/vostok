@@ -109,8 +109,10 @@ def _generate_report() -> None:
 
 
 def _report_changes(previous: Path, current: Path) -> None:
-    """Log the net deltas plus the per-function regressions and improvements
-    between the previous and current reports.
+    """Log the net deltas plus the per-function changes between the previous and
+    current reports: regressions, improvements, and functions that disappeared
+    (removed) or appeared (added) - e.g. a signature change drops the old mangled
+    name and adds a new one.
 
     The per-function diff is computed directly from the two reports, keyed by
     (unit, function) - which is precise. objdiff-cli's own `report changes`
@@ -142,6 +144,12 @@ def _report_changes(previous: Path, current: Path) -> None:
         elif now > was + 1e-6:
             improved.append((was, now, name))
 
+    # Keys in only one report (signature change, inlining, deletion). A matched
+    # function that vanished is effectively a regression; a new low-match one
+    # drags the score down.
+    removed = sorted((before[k] for k in before.keys() - after.keys()), reverse=True)
+    added = sorted(after[k] for k in after.keys() - before.keys())
+
     pm, cm = prev.get("measures", {}), cur.get("measures", {})
 
     def code(m):
@@ -159,7 +167,8 @@ def _report_changes(previous: Path, current: Path) -> None:
 
     regressed.sort(key=lambda r: r[1] - r[0])  # worst (most negative) first
     improved.sort(key=lambda r: r[0] - r[1])   # biggest gain first
-    log(f"  {len(regressed)} function(s) regressed, {len(improved)} improved")
+    log("  {} regressed, {} improved, {} removed, {} added".format(
+        len(regressed), len(improved), len(removed), len(added)))
     limit = 10
     for was, now, name in regressed[:limit]:
         log(f"  regressed {was:6.2f}% -> {now:6.2f}%  {name}")
@@ -169,11 +178,21 @@ def _report_changes(previous: Path, current: Path) -> None:
         log(f"  improved  {was:6.2f}% -> {now:6.2f}%  {name}")
     if len(improved) > limit:
         log(f"  ... and {len(improved) - limit} more improved")
+    for pct, name in removed[:limit]:
+        log(f"  removed   (was {pct:6.2f}%)  {name}")
+    if len(removed) > limit:
+        log(f"  ... and {len(removed) - limit} more removed")
+    for pct, name in added[:limit]:
+        log(f"  added     (now {pct:6.2f}%)  {name}")
+    if len(added) > limit:
+        log(f"  ... and {len(added) - limit} more added")
 
     changes = OBJDIFF_DIR / "report-changes.json"
     changes.write_text(json.dumps({
         "regressed": [{"function": n, "from": a, "to": b} for a, b, n in regressed],
         "improved": [{"function": n, "from": a, "to": b} for a, b, n in improved],
+        "removed": [{"function": n, "from": p} for p, n in removed],
+        "added": [{"function": n, "to": p} for p, n in added],
     }, indent=2) + "\n")
     log(f"Changes: {changes} (previous report kept at {previous})")
 
