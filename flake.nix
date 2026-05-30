@@ -23,9 +23,13 @@
       url = "github:srp-survarium/vostok-delinker";
       flake = false;
     };
+    vostok-resources-db-src = {
+      url = "github:srp-survarium/vostok-resources-db";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src }:
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src }:
     let
       system = "x86_64-linux";
 
@@ -75,6 +79,23 @@
         version = "0.1.0";
         src = vostok-delinker-src;
         cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
+      };
+
+      # ---------------------------------------------------------------------------
+      # vostok-resources-db - Linux binary, packs/unpacks the engine's resources.db
+      # VFS archive (the "FAT" pack format). Run natively (no Wine):
+      #   resources-db extract <resources.db> <out_dir>
+      #   resources-db list    <resources.db>
+      # Used below by survarium-resources-unpacked.
+      #
+      # cargoHash: update by running `nix build .#vostok-resources-db` after bumping
+      # the input (nix flake update vostok-resources-db-src) - Nix reports the new hash.
+      # ---------------------------------------------------------------------------
+      vostok-resources-db = nightly-rustPlatform.buildRustPackage {
+        pname = "vostok-resources-db";
+        version = "0.1.0";
+        src = vostok-resources-db-src;
+        cargoHash = "sha256-+UUfJJxuiMsB6JIia1MGvp7/sbzWMsOTvrB6AtTJlu4=";
       };
 
       # ---------------------------------------------------------------------------
@@ -205,6 +226,20 @@
       '';
 
       # ---------------------------------------------------------------------------
+      # Unpacked game resources: the packed resources.db (from survarium.resources)
+      # expanded into its file tree with the vostok-resources-db unpacker. ~12.5k
+      # files; useful for inspecting/diffing game assets without the engine. The
+      # extractor preserves the archive's raw byte paths verbatim.
+      #   nix build .#survarium-resources-unpacked
+      # ---------------------------------------------------------------------------
+      survarium-resources-unpacked = pkgs.runCommand "survarium-resources-unpacked" {
+        nativeBuildInputs = [ vostok-resources-db ];
+      } ''
+        mkdir -p "$out"
+        resources-db extract "${survarium.resources}/resources.db" "$out"
+      '';
+
+      # ---------------------------------------------------------------------------
       # objdiff - upstream's prebuilt Linux binaries (not in nixpkgs, no flake).
       # These are foreign ELF binaries built for a normal FHS distro: their ELF
       # interpreter (/lib64/ld-linux-*) and library search paths don't exist on
@@ -262,7 +297,8 @@
 
     in {
       packages.${system} = {
-        inherit vostok-pdb-parser vostok-delinker vcproj2ninja vostok-toolchain vostok-libs survarium
+        inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
+          vostok-toolchain vostok-libs survarium survarium-resources-unpacked
           objdiff objdiff-cli;
         # Convenience aliases for the individual survarium outputs:
         #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
@@ -301,6 +337,7 @@
           # Nix-built tools and assets - all evaluated when entering the shell.
           vostok-pdb-parser
           vostok-delinker
+          vostok-resources-db
           vcproj2ninja
           vostok-toolchain
           vostok-libs
@@ -331,6 +368,8 @@
           # binaries/nix-store/<name> (e.g. binaries/nix-store/survarium-game).
           # The survarium outputs all come from one build, so pinning resources
           # and keys here costs nothing beyond getting the game binaries.
+          # survarium-resources-unpacked is the resources.db expanded into its
+          # file tree (built once with vostok-resources-db), pinned the same way.
           mkdir -p "$VOSTOK_DIR/binaries/nix-store"
           for pair in \
               "vostok-toolchain:${vostok-toolchain}" \
@@ -338,6 +377,7 @@
               "vcproj2ninja:${vcproj2ninja}" \
               "survarium-game:${survarium}" \
               "survarium-resources:${survarium.resources}" \
+              "survarium-resources-unpacked:${survarium-resources-unpacked}" \
               "survarium-keys:${survarium.keys}"; do
             name="''${pair%%:*}"
             path="''${pair#*:}"
