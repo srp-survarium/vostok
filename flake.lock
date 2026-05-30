@@ -22,7 +22,8 @@
         "rust-overlay": "rust-overlay",
         "vcproj2ninja-src": "vcproj2ninja-src",
         "vostok-delinker-src": "vostok-delinker-src",
-        "vostok-pdb-parser-src": "vostok-pdb-parser-src"
+        "vostok-pdb-parser-src": "vostok-pdb-parser-src",
+        "vostok-resources-db-src": "vostok-resources-db-src"
       }
     },
     "rust-overlay": {
@@ -90,6 +91,22 @@
       "original": {
         "owner": "srp-survarium",
         "repo": "vostok-pdb-parser",
+        "type": "github"
+      }
+    },
+    "vostok-resources-db-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1780108844,
+        "narHash": "sha256-L9QM4hKQro4Hx11twnbRcXlO4khQcil4v/lIZZJuqeM=",
+        "owner": "srp-survarium",
+        "repo": "vostok-resources-db",
+        "rev": "9498aca14014ef74460429f51eb41a6af333522c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "repo": "vostok-resources-db",
         "type": "github"
       }
     }

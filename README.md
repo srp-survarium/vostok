@@ -22,10 +22,10 @@ Wine, ninja, and the Rust tools) is provided by the flake.
 nix develop
 ```
 
-> **Disk space:** the first `nix develop` realizes **~16 GiB** into the Nix store
+> **Disk space:** the first `nix develop` realizes **~18 GiB** into the Nix store
 > - the VS2008 toolchain, Wine, the Rust toolchain, the game install (incl. the
-> ~1.5 GiB resources), and the third-party libs (~6 GiB). Later entries reuse it
-> and are near-instant.
+> ~1.5 GiB packed resources plus the ~1.6 GiB unpacked resource tree), and the
+> third-party libs (~6 GiB). Later entries reuse it and are near-instant.
 
 The first entry fetches/builds everything and runs `scripts/setup-toolchain.py`,
 which:
@@ -73,8 +73,14 @@ the `survarium` derivation. `nix develop` realizes and pins **all three** under
 - `survarium-resources` - `resources.db` + `resources/` (packed game data, ~1.5 GiB)
 - `survarium-keys` - lobby/login server SSL certs + private keys
 
+Plus a fourth, derived output pinned the same way:
+
+- `survarium-resources-unpacked` - `resources.db` expanded into its file tree
+  (~1.6 GiB, 12557 files) by [`vostok-resources-db`](https://github.com/srp-survarium/vostok-resources-db),
+  for inspecting/diffing game assets directly.
+
 To build any one standalone (e.g. outside the shell): `nix build .#survarium-resources`,
-`.#survarium-keys`, `.#survarium-game`.
+`.#survarium-resources-unpacked`, `.#survarium-keys`, `.#survarium-game`.
 
 ## Docs
 
