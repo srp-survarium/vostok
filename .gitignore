@@ -390,6 +390,13 @@ OpenCover/
 # Azure Stream Analytics local run output
 ASALocalRun/
 
+# Claude Code local state
+.claude/
+
+# LGPL license files staged from vostok-libs into the cell SDK tree
+sources/cell/host-win32/ppu/COPYING.LIB
+sources/cell/host-win32/spu/COPYING.LIB
+
 # MSBuild Binary and Structured Log
 *.binlog
 MSBuild_Logs/

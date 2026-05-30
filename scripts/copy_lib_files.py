@@ -3,7 +3,9 @@ copy_lib_files.py - Copy 3rd party libraries ('.dll's and '.lib's) into the proj
 """
 
 import argparse
+import os
 import shutil
+import stat
 from pathlib import Path
 
 EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
@@ -37,7 +39,13 @@ def main():
             target = dest / rel_path
             target.parent.mkdir(parents=True, exist_ok=True)
 
+            # Sources may come from /nix/store (read-only); previous copies
+            # inherit that mode, so re-runs would EACCES on shutil.copy2.
+            if target.exists():
+                target.chmod(target.stat().st_mode | stat.S_IWUSR)
+                target.unlink()
             shutil.copy2(file, target)
+            target.chmod(target.stat().st_mode | stat.S_IWUSR)
             print(f"COPIED: {file} -> {target}")
 
             copied += 1
