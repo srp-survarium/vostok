@@ -10,9 +10,7 @@ import os
 import sys
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT_DIR   = (SCRIPT_DIR / ".." / "..").resolve()
-
-VOSTOK_DIR = ROOT_DIR / "vostok"
+VOSTOK_DIR = SCRIPT_DIR.parent
 SRC        = VOSTOK_DIR / "sources"
 
 
@@ -20,7 +18,8 @@ SRC        = VOSTOK_DIR / "sources"
 
 
 def humanize(n):
-    if n < 1024: return f"{n}B"
+    if n < 1024:
+        return f"{n}B"
     units = ["K","M","G","T","P","E","Z","Y"]
     i = int(log(n, 1024))
     i = min(i, len(units))
