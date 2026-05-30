@@ -19,11 +19,22 @@ VOSTOK_DIR = ROOT_DIR / "vostok"
 SRC         = LIBS_DIR   / "sources"
 DEST        = VOSTOK_DIR / "sources"
 
+
+def human_size(n: int) -> str:
+    size = float(n)
+    for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+        if size < 1024 or unit == "TiB":
+            return f"{size:.1f} {unit}" if unit != "B" else f"{int(size)} B"
+        size /= 1024
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("src", nargs="?", type=Path, default=SRC)
     parser.add_argument("dest", nargs="?", type=Path, default=DEST)
     parser.add_argument("--reverse", action="store_true", help="Swap src and dest")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Print every copied file (default: summary only)")
     args = parser.parse_args()
 
     src = args.src.resolve()
@@ -32,6 +43,7 @@ def main():
         src, dest = dest, src
 
     copied = 0
+    total_bytes = 0
 
     for file in src.rglob("*"):
         if file.is_file() and file.suffix.lower() in EXTS:
@@ -46,11 +58,13 @@ def main():
                 target.unlink()
             shutil.copy2(file, target)
             target.chmod(target.stat().st_mode | stat.S_IWUSR)
-            print(f"COPIED: {file} -> {target}")
+            if args.verbose:
+                print(f"COPIED: {file} -> {target}")
 
             copied += 1
+            total_bytes += file.stat().st_size
 
-    print(f"Total files copied: {copied}")
+    print(f"Copied {copied} files ({human_size(total_bytes)}) -> {dest}")
 
 if __name__ == "__main__":
     main()
