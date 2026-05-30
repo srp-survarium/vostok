@@ -45,6 +45,14 @@ def _pdb_parser() -> str:
     return os.environ.get("PDB_PARSER", "pdb_parser")
 
 
+def _wine_path(p: Path) -> str:
+    r"""Render a native absolute path the way MSVC-under-Wine records it in a PDB:
+    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
+    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
+    """
+    return "z:" + str(p).replace("/", "\\").lower()
+
+
 def generate(side: str) -> None:
     """Regenerate binaries/structure/<side> from the matching PDB.
 
@@ -55,7 +63,13 @@ def generate(side: str) -> None:
 
     if side == "base":
         pdb = BASE_PDB
-        engine = str(ENGINE_DIR)
+        # pdb-parser strips this prefix from every source path recorded in the
+        # PDB. The base PDB is MSVC-built under Wine, so those paths look like
+        #   z:\home\…\vostok\sources\vostok\<module>\…   (lowercased, `\`-separated)
+        # Pass the Wine form of <repo>/sources — the dir CONTAINING the engine
+        # `vostok` folder, mirroring the target's `c:/survarium/sources` — with a
+        # trailing separator so the remaining tree is rooted at `vostok\…`.
+        engine = _wine_path(ENGINE_DIR.parent) + "\\"
         extra = ["--as-base", "--skip-non-engine-headers"]
         if not pdb.is_file():
             raise RuntimeError(

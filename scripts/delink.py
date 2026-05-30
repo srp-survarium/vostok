@@ -58,7 +58,12 @@ def delink(side: str) -> None:
     if side == "base":
         exe = WIN32_DIR / "survarium-dx11-win32-gold.exe"
         pdb = WIN32_DIR / "survarium-dx11-win32-gold.pdb"
-        engine = ["--engine-path", str(VOSTOK_DIR / "sources")]
+        # The base PDB is MSVC-built under Wine: its recorded source paths live on
+        # the Z: drive (Wine maps `/` -> Z:), e.g. z:\home\…\vostok\sources\…. The
+        # delinker lowercases the engine path, switches `/`->`\`, and appends a
+        # trailing `\`, so we only need to prepend the Z: drive here (mirroring how
+        # target passes the bare `c:/survarium/sources`).
+        engine = ["--engine-path", "Z:" + str(VOSTOK_DIR / "sources")]
         hint = "build first (python3 scripts/rebuild.py)"
     elif side == "target":
         survarium_bin = Path(
