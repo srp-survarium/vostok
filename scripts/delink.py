@@ -62,7 +62,7 @@ def delink(side: str) -> None:
         hint = "build first (python3 scripts/rebuild.py)"
     elif side == "target":
         survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "game")
+            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
         )
         exe = survarium_bin / "survarium.exe"
         pdb = survarium_bin / "survarium.pdb"

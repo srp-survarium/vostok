@@ -64,7 +64,7 @@ def generate(side: str) -> None:
             )
     elif side == "target":
         survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "game")
+            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
         )
         pdb = survarium_bin / "survarium.pdb"
         engine = "c:/survarium/sources"
