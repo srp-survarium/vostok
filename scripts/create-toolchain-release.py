@@ -64,6 +64,188 @@ def xvfb_prefix() -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# SP1 CRT overlay
+#
+# The PATCH= admin install bumps the *versioned* compiler PE files (cl/c1/c2/
+# mspdb) to SP1, but Wine's msiexec does not lay down the patched, *unversioned*
+# static CRT (libcmt.lib etc.) or the CRT headers - they stay at RTM 9.0.21022.
+# The shipped game linked the SP1 (9.0.30729) CRT, so an RTM CRT will never
+# byte-match; worse, RTM crtassem.h stamps every one of our SP1-compiled objects
+# with a 9.0.21022 manifest dependency. So we overlay the SP1 CRT straight out
+# of the SP1 MSP payload and then verify it. See docs/build/compiler-sp1-rtm.md.
+# ---------------------------------------------------------------------------
+
+SP1_BUILD = 30729
+RTM_BUILD = 21022
+
+# Static-link CRT archives that SP1 updates and that we may pull in via /MT(d).
+CRT_LIBS = [
+    "libcmt.lib", "libcmtd.lib", "libcpmt.lib", "libcpmtd.lib",
+    "msvcrt.lib", "msvcrtd.lib", "msvcprt.lib", "msvcprtd.lib",
+    "msvcmrt.lib", "msvcmrtd.lib", "msvcurt.lib", "msvcurtd.lib",
+]
+
+
+def comp_id_builds(data: bytes) -> set[int]:
+    """Every @comp.id build number (low 16 bits) embedded in an obj/.lib blob.
+
+    Scans for the literal "@comp.id" symbol name and reads the 4-byte Value that
+    follows it: this works for plain COFF and for LTCG "anonymous object" files
+    alike, without parsing the (format-specific) COFF symbol table. The low 16
+    bits are the compiler build: 30729 = SP1, 21022 = RTM.
+    """
+    builds: set[int] = set()
+    i = data.find(b"@comp.id")
+    while i != -1:
+        if i + 12 <= len(data):
+            builds.add(int.from_bytes(data[i + 8:i + 12], "little") & 0xFFFF)
+        i = data.find(b"@comp.id", i + 1)
+    return builds
+
+
+def lib_is_sp1(path: Path) -> bool:
+    """True if a .lib archive's objects are SP1 (30729) and carry no RTM (21022)."""
+    try:
+        builds = comp_id_builds(path.read_bytes())
+    except OSError:
+        return False
+    return SP1_BUILD in builds and RTM_BUILD not in builds
+
+
+def msi_file_names(vs_msi: Path) -> dict[str, str]:
+    """File-table key -> destination basename, via msitools `msiinfo`.
+
+    MSI cabs (the SP1 MSP payload included) store members under their File-table
+    key, which is not always the real filename; this map recovers it. Header rows
+    of the exported idt table are filtered out by the "has an extension" check.
+    """
+    names: dict[str, str] = {}
+    try:
+        txt = subprocess.check_output(
+            ["msiinfo", "export", str(vs_msi), "File"],
+            text=True, stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return names
+    for line in txt.splitlines():
+        cols = line.split("\t")
+        if len(cols) < 3:
+            continue
+        base = cols[2].split("|")[-1].strip().lower()
+        if "." in base:
+            names[cols[0]] = base
+    return names
+
+
+def _extract_archive(src: Path, dst: Path) -> None:
+    dst.mkdir(parents=True, exist_ok=True)
+    run(["7z", "x", "-y", f"-o{dst}", str(src)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+
+
+def overlay_sp1_crt(sp1_msp: Path, vs_msi: Path, stage_vc: Path, work: Path) -> int:
+    """Overlay the SP1 CRT (static libs + crtassem.h) out of the SP1 MSP payload.
+
+    The MSP is an OLE compound file whose payloads live in embedded cab(s); we
+    unpack it, unpack any cab inside, then copy SP1-verified CRT files over the
+    RTM ones already staged in VC/. Returns the number of files replaced.
+    """
+    log("Overlaying SP1 CRT from the SP1 MSP ...")
+    payload = work / "sp1-crt"
+    if payload.exists():
+        shutil.rmtree(payload, ignore_errors=True)
+    _extract_archive(sp1_msp, payload)
+    # MSP streams include one or more cabs; unpack every nested archive once.
+    for f in list(payload.iterdir()):
+        if f.is_file():
+            _extract_archive(f, payload / "files")
+    files = [p for p in payload.rglob("*") if p.is_file()]
+
+    key_names = msi_file_names(vs_msi)
+
+    def dest_basename(p: Path) -> str:
+        # the extracted name is either the real filename or an MSI File key
+        return key_names.get(p.name, p.name).lower()
+
+    replaced = 0
+
+    # 1) static CRT libs -> VC/lib (only replace ones we actually staged)
+    lib_dir = stage_vc / "lib"
+    for target in CRT_LIBS:
+        staged = lib_dir / target
+        if not staged.exists():
+            continue
+        cand = next(
+            (p for p in files if dest_basename(p) == target and lib_is_sp1(p)),
+            None,
+        )
+        if cand:
+            shutil.copy2(str(cand), str(staged))
+            replaced += 1
+            log(f"  CRT lib  {target}  <- SP1")
+
+    # 2) crtassem.h carries _CRT_ASSEMBLY_VERSION, which the compiler embeds into
+    #    every object as a manifest dependency (RTM 9.0.21022.8 vs SP1 9.0.30729).
+    for staged in (stage_vc / "include" / "crtassem.h",
+                   stage_vc / "crt" / "src" / "crtassem.h"):
+        if not staged.exists():
+            continue
+        cand = next(
+            (p for p in files
+             if dest_basename(p) == "crtassem.h" and b"9.0.30729" in p.read_bytes()),
+            None,
+        )
+        if cand:
+            shutil.copy2(str(cand), str(staged))
+            replaced += 1
+            log(f"  CRT hdr  crtassem.h ({staged.parent.name})  <- SP1")
+
+    log(f"SP1 CRT overlay: replaced {replaced} file(s).")
+    return replaced
+
+
+def verify_crt_sp1(stage_vc: Path, *, fatal: bool) -> None:
+    """Check the staged static CRT (and crtassem.h) are SP1, not RTM.
+
+    This is the gate that would have caught the RTM CRT silently shipping: the
+    old script only checked cl.exe. Run after overlay_sp1_crt().
+
+    The static `libcmt.lib` is the hard requirement (its objects link straight
+    into the EXE), so a still-RTM lib aborts when `fatal`. `crtassem.h` only ever
+    reaches our objects via the manifest-dependency pragma (which `/MT` static
+    linking suppresses), so a still-RTM header is a warning, not a failure.
+    """
+    libcmt = stage_vc / "lib" / "libcmt.lib"
+    lib_ok = False
+    if libcmt.exists():
+        builds = comp_id_builds(libcmt.read_bytes())
+        lib_ok = SP1_BUILD in builds and RTM_BUILD not in builds
+        if lib_ok:
+            log("libcmt.lib is SP1 (30729) OK")
+        else:
+            log(f"CRT CHECK: libcmt.lib is not SP1 (@comp.id builds={sorted(builds)})")
+    else:
+        log("CRT CHECK: libcmt.lib missing from staged VC/lib")
+
+    crtassem = stage_vc / "include" / "crtassem.h"
+    if crtassem.exists():
+        ver = crtassem.read_text(errors="ignore")
+        if "9.0.30729" in ver:
+            log("crtassem.h is SP1 (9.0.30729) OK")
+        elif "9.0.21022" in ver:
+            log("CRT CHECK: crtassem.h still RTM (9.0.21022.8) - warning only "
+                "(suppressed by /MT, but inlined CRT code may still differ)")
+
+    if not lib_ok and fatal:
+        raise SystemExit(
+            "Toolchain static CRT is RTM, not SP1 - the SP1 overlay did not take. "
+            "libcmt.lib must be 9.0.30729 to match the game; see "
+            "docs/build/compiler-sp1-rtm.md. Aborting rather than ship a "
+            "toolchain that links the wrong CRT."
+        )
+
+
+# ---------------------------------------------------------------------------
 # Step 1 helpers
 # ---------------------------------------------------------------------------
 
@@ -203,6 +385,15 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     for src in sorted(helpers.values()):
         shutil.copy2(str(src), str(stage_vc / "bin" / src.name))
         log(f"  bundled {src.name} from {src}")
+
+    # SP1 patched cl/c1/c2 above, but Wine's msiexec left the static CRT and its
+    # headers at RTM. Overlay the SP1 CRT from the MSP, then verify (the old
+    # script only checked cl.exe, so an RTM CRT shipped silently).
+    if sp1_msp:
+        overlay_sp1_crt(sp1_msp, vs_msi, stage_vc, work)
+        verify_crt_sp1(stage_vc, fatal=True)
+    else:
+        verify_crt_sp1(stage_vc, fatal=False)
 
 
 # ---------------------------------------------------------------------------
