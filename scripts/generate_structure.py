@@ -55,6 +55,7 @@ def generate(side: str) -> None:
 
     if side == "base":
         pdb = BASE_PDB
+        engine = str(ENGINE_DIR)
         extra = ["--as-base", "--skip-non-engine-headers"]
         if not pdb.is_file():
             raise RuntimeError(
@@ -66,6 +67,7 @@ def generate(side: str) -> None:
             os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "game")
         )
         pdb = survarium_bin / "survarium.pdb"
+        engine = "c:/survarium/sources"
         extra = []
         if not pdb.is_file():
             raise RuntimeError(
@@ -83,7 +85,7 @@ def generate(side: str) -> None:
                 _pdb_parser(),
                 "--output-path", str(out),
                 "--pdb-path",     str(pdb),
-                "--engine-path",  str(ENGINE_DIR),
+                "--engine-path",  engine,
                 *extra,
             ],
             check=True,

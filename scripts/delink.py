@@ -70,7 +70,7 @@ def delink(side: str) -> None:
         )
         exe = survarium_bin / "survarium.exe"
         pdb = survarium_bin / "survarium.pdb"
-        engine = []  # build_target.sh passes no --engine-path for the target
+        engine = ["--engine-path", "c:/survarium/sources"]
         hint = "set SURVARIUM_BIN or run inside `nix develop` (provides survarium-game)"
     else:  # pragma: no cover — argparse restricts choices
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
