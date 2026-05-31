@@ -63,6 +63,25 @@ def xvfb_prefix() -> list[str]:
     return ["xvfb-run", "-a"]
 
 
+def wineserver_settle(timeout: int = 120) -> None:
+    """Wait for Wine activity to drain, then guarantee an idle prefix.
+
+    `wineserver --wait` blocks until *every* process in the prefix exits, but
+    wineboot leaves persistent services (winedevice.exe) running that never exit
+    on their own under wine-wow64 10.0 - so a bare --wait deadlocks (it hung the
+    build at "Initialising Wine prefix" indefinitely). Cap the wait and force the
+    server down on timeout: the prefix is already initialised on disk and any
+    msiexec /a has already returned, so killing the idle server is safe and the
+    next `wine` call just starts a fresh one.
+    """
+    try:
+        run(["wineserver", "--wait"], check=False,
+            stderr=subprocess.DEVNULL, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        log(f"wineserver --wait exceeded {timeout}s; forcing the server down (-k)")
+        run(["wineserver", "-k"], check=False, stderr=subprocess.DEVNULL)
+
+
 # ---------------------------------------------------------------------------
 # SP1 CRT overlay
 #
@@ -112,77 +131,72 @@ def lib_is_sp1(path: Path) -> bool:
     return SP1_BUILD in builds and RTM_BUILD not in builds
 
 
-def msi_file_names(vs_msi: Path) -> dict[str, str]:
-    """File-table key -> destination basename, via msitools `msiinfo`.
-
-    MSI cabs (the SP1 MSP payload included) store members under their File-table
-    key, which is not always the real filename; this map recovers it. Header rows
-    of the exported idt table are filtered out by the "has an extension" check.
-    """
-    names: dict[str, str] = {}
-    try:
-        txt = subprocess.check_output(
-            ["msiinfo", "export", str(vs_msi), "File"],
-            text=True, stderr=subprocess.DEVNULL,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return names
-    for line in txt.splitlines():
-        cols = line.split("\t")
-        if len(cols) < 3:
-            continue
-        base = cols[2].split("|")[-1].strip().lower()
-        if "." in base:
-            names[cols[0]] = base
-    return names
-
-
 def _extract_archive(src: Path, dst: Path) -> None:
     dst.mkdir(parents=True, exist_ok=True)
     run(["7z", "x", "-y", f"-o{dst}", str(src)],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
 
-def overlay_sp1_crt(sp1_msp: Path, vs_msi: Path, stage_vc: Path, work: Path) -> int:
-    """Overlay the SP1 CRT (static libs + crtassem.h) out of the SP1 MSP payload.
+def find_crt_msps(sp1_dir: Path) -> list[Path]:
+    """SP1 MSP(s) that carry the x86 static CRT (libcmt.lib etc.).
 
-    The MSP is an OLE compound file whose payloads live in embedded cab(s); we
-    unpack it, unpack any cab inside, then copy SP1-verified CRT files over the
-    RTM ones already staged in VC/. Returns the number of files replaced.
+    The static CRT ships - as *whole files* - in the Visual C++ SP1 patch,
+    VC90sp1-*-x86-*.msp, NOT the umbrella VS90sp1 IDE MSP that PATCH= consumes.
+    (The first cut of this overlay read VS90sp1 and so replaced nothing.) Glob
+    rather than hardcode the KB number, and prefer the focused English x86 VC
+    patch so we don't unpack the much larger x86_x64 / x86_IA64 cross MSPs.
     """
-    log("Overlaying SP1 CRT from the SP1 MSP ...")
+    msps = sorted(
+        p for p in sp1_dir.rglob("VC90sp1-*.msp") if "x86" in p.name.lower()
+    )
+    enu = [p for p in msps if "x86-enu" in p.name.lower()]
+    return enu or msps
+
+
+def overlay_sp1_crt(crt_msps: list[Path], stage_vc: Path, work: Path) -> int:
+    """Overlay the SP1 static CRT (libs + crtassem.h) from the VC SP1 MSP(s).
+
+    Wine's `msiexec /a PATCH=` updates the versioned compiler but leaves the
+    static CRT at RTM. The SP1 CRT ships as whole files in the VC SP1 MSP, stored
+    under their MSI File-table key, e.g. `FL_libcmt_lib_7051_x86_ln.<GUID>` ->
+    libcmt.lib (the key is the name with '.' -> '_'). 7z unpacks the members
+    straight out; we match each CRT target by its `FL_<stem>_<ext>_` key prefix,
+    confirm the member is genuinely SP1 (@comp.id 30729, no 21022), and copy it
+    over the RTM file staged in VC/. Returns the number of files replaced.
+    """
+    log("Overlaying SP1 CRT from the VC SP1 MSP(s) ...")
     payload = work / "sp1-crt"
     if payload.exists():
         shutil.rmtree(payload, ignore_errors=True)
-    _extract_archive(sp1_msp, payload)
-    # MSP streams include one or more cabs; unpack every nested archive once.
-    for f in list(payload.iterdir()):
-        if f.is_file():
-            _extract_archive(f, payload / "files")
+    for msp in crt_msps:
+        out = payload / msp.stem
+        _extract_archive(msp, out)
+        # Most media expose the files directly; some nest them in a patch.cab.
+        # Unpack any cab we find so both layouts work.
+        for f in list(out.iterdir()):
+            if f.is_file() and f.suffix.lower() == ".cab":
+                _extract_archive(f, out / "cab")
     files = [p for p in payload.rglob("*") if p.is_file()]
-
-    key_names = msi_file_names(vs_msi)
-
-    def dest_basename(p: Path) -> str:
-        # the extracted name is either the real filename or an MSI File key
-        return key_names.get(p.name, p.name).lower()
 
     replaced = 0
 
-    # 1) static CRT libs -> VC/lib (only replace ones we actually staged)
+    # 1) static CRT libs -> VC/lib (only replace ones we actually staged).
     lib_dir = stage_vc / "lib"
     for target in CRT_LIBS:
         staged = lib_dir / target
         if not staged.exists():
             continue
+        stem, ext = target.rsplit(".", 1)
+        prefix = f"fl_{stem}_{ext}_"
         cand = next(
-            (p for p in files if dest_basename(p) == target and lib_is_sp1(p)),
+            (p for p in files
+             if p.name.lower().startswith(prefix) and lib_is_sp1(p)),
             None,
         )
         if cand:
             shutil.copy2(str(cand), str(staged))
             replaced += 1
-            log(f"  CRT lib  {target}  <- SP1")
+            log(f"  CRT lib  {target}  <- SP1  ({cand.name})")
 
     # 2) crtassem.h carries _CRT_ASSEMBLY_VERSION, which the compiler embeds into
     #    every object as a manifest dependency (RTM 9.0.21022.8 vs SP1 9.0.30729).
@@ -192,7 +206,9 @@ def overlay_sp1_crt(sp1_msp: Path, vs_msi: Path, stage_vc: Path, work: Path) -> 
             continue
         cand = next(
             (p for p in files
-             if dest_basename(p) == "crtassem.h" and b"9.0.30729" in p.read_bytes()),
+             if p.name.lower().startswith("fl_crtassem_h_")
+             and "_x86_" in p.name.lower()
+             and b"9.0.30729" in p.read_bytes()),
             None,
         )
         if cand:
@@ -307,11 +323,19 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     if not sp1_msp:
         log("WARNING: SP1 MSP not found - packaging base VS2008 (RTM) without SP1.")
 
+    # The static CRT lives in a *different* MSP (the VC patch) than the umbrella
+    # VS90sp1 IDE MSP used for PATCH= above; locate it for the post-install CRT
+    # overlay (PATCH= bumps the compiler but not the unversioned CRT under wine).
+    crt_msps = find_crt_msps(sp1_dir)
+    if not crt_msps:
+        log("WARNING: VC SP1 MSP (VC90sp1-*-x86-*.msp) not found - "
+            "static CRT overlay will be skipped (CRT stays RTM).")
+
     # Both ISOs are extracted; wine is only needed from here on (the admin install).
     log("Initialising Wine prefix ...")
     Path(os.environ["WINEPREFIX"]).mkdir(parents=True, exist_ok=True)
     run(xvfb_prefix() + ["wineboot", "--init"])
-    run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
+    wineserver_settle()
 
     # Not a real install: `msiexec /a` just unpacks the MSI files (with SP1 folded
     # in via PATCH=) into TARGETDIR - no registry/system changes.
@@ -328,7 +352,7 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     result = run(xvfb_prefix() + cmd, stderr=subprocess.DEVNULL, check=False)
     if result.returncode != 0:
         log("WARNING: msiexec /a exited non-zero. Checking for files ...")
-    run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
+    wineserver_settle()
 
     vc_bin_dir = find_vc_bin(admin_dir)
     if not vc_bin_dir:
@@ -389,8 +413,8 @@ def step1_vs2008(work: Path, stage: Path) -> None:
     # SP1 patched cl/c1/c2 above, but Wine's msiexec left the static CRT and its
     # headers at RTM. Overlay the SP1 CRT from the MSP, then verify (the old
     # script only checked cl.exe, so an RTM CRT shipped silently).
-    if sp1_msp:
-        overlay_sp1_crt(sp1_msp, vs_msi, stage_vc, work)
+    if crt_msps:
+        overlay_sp1_crt(crt_msps, stage_vc, work)
         verify_crt_sp1(stage_vc, fatal=True)
     else:
         verify_crt_sp1(stage_vc, fatal=False)
