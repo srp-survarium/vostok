@@ -13,6 +13,74 @@ installer, then runs `scripts/create-toolchain-release.py`, which does a Wine
 `binaries/vostok-toolchain-v0.100b.tar.xz`. To publish: `gh release upload` the
 tarball and update the `vostok-toolchain` `sha256` in `flake.nix`.
 
+## What goes into the tarball (and what doesn't)
+
+Three media are unpacked; only the **x86 native-build** pieces are kept. Final
+layout: `msvc/VC/`, `winsdk/`, `dxsdk/`, `ninja/`.
+
+### 1. VS2008 Professional ISO (`en_visual_studio_2008_professional_x86_dvd`)
+
+```
+Setup/vs_setup.msi          -> admin install (msiexec /a, with PATCH= below)
+    VC/  (bin, lib, include, atlmfc, ...)   KEPT  -> whole VC/ tree -> msvc/VC/
+    Common7/IDE/mspdb*.*, msobj*.dll        KEPT  -> copied next to cl.exe
+    the IDE, .NET, samples, redist          SKIP  (not copied)
+WCU/WinSDK/WinSDK_Build.exe (self-extracting)
+    VistaClientHeadersLibs-x86.msi
+        Include + Lib (x86)                 KEPT  -> winsdk/
+        Lib x64                             SKIP
+```
+
+Note: the *entire* `VC/` tree is copied, so the unused amd64 / x86_amd64 cross
+bins+libs ride along; only the x86 `cl.exe` is verified and used.
+
+### 2. VS2008 SP1 ISO (`VS2008SP1ENUX1512962.iso`) - 13 `.msp` patches
+
+Two patches contribute; the other eleven are skipped.
+
+```
+VS90sp1-KB945140-X86-ENU.msp    APPLIED as PATCH= during the admin install.
+                                Bumps the compiler PE files (cl/c1/c2/mspdb)
+                                RTM 15.00.21022 -> SP1 15.00.30729.
+                                Does NOT update the static CRT -> hence the overlay.
+
+VC90sp1-KB947888-x86-enu.msp    OVERLAID, but ONLY these whole-file members
+                                (matched by their FL_<name>_<ext>_ MSI File key):
+                                  libcmt.lib  libcmtd.lib  libcpmt.lib  libcpmtd.lib
+                                  msvcrt.lib  msvcrtd.lib  msvcprt.lib  msvcprtd.lib
+                                  msvcmrt.lib msvcmrtd.lib msvcurt.lib msvcurtd.lib
+                                  crtassem.h   (-> _CRT_ASSEMBLY_VERSION 9.0.30729)
+                                Everything else in this patch is SKIPPED:
+                                  mfc90*.lib / atl*.lib + their headers/sources,
+                                  the other CRT/MFC/ATL headers, redist DLLs.
+
+SKIPPED entirely:
+  VS90sp1-KB945140-{X64,IA64}-ENU.msp    other-arch compiler/IDE
+  VC90sp1-KB948484-x86_x64-enu.msp       x64 VC
+  VC90sp1-KB948560-x86_IA64-enu.msp      IA64 VC
+  WinSDK-KB946729 / KB946733 / KB950424  WinSDK SP1 (our WinSDK stays 6.0A base)
+  WebDesignerCore_KB945140 / KB950278    web designer
+  vstor30sp1-KB949258-x86                VS Tools for Office runtime
+  DTE90SP1-KB950425-ENU                  DTE / automation
+```
+
+### 3. DirectX SDK June 2010 (`DXSDK_Jun10.exe`)
+
+```
+Include + Lib   KEPT  -> dxsdk/
+docs, samples, utilities, redist   SKIP  (not extracted)
+```
+
+### Deliberate SP1 gaps
+
+Only the **static CRT libs** and **`crtassem.h`** are taken from the SP1 VC
+patch. The other CRT headers (`crtdefs.h`, ...), MFC, and ATL therefore stay at
+the RTM state the admin install produced. This has not affected matching (engine
+objects link `/MT`, which suppresses the `crtassem` manifest, and objdiff does
+not score the CRT - see [compiler-sp1-rtm.md](compiler-sp1-rtm.md)); if an
+inlined CRT header or MFC/ATL ever needs to match, it would be overlaid the same
+way as the CRT libs.
+
 ## Two non-obvious requirements (both handled by the script)
 
 ### 1. The PDB-writer DLLs must sit next to `cl.exe`
