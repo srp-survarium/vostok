@@ -64,7 +64,7 @@
         pname = "vostok-pdb-parser";
         version = "0.1.0";
         src = vostok-pdb-parser-src;
-        cargoHash = "sha256-sNWVj0UWfLzr5KqXoZK+bv3aokjdyK12sxjLNpxP1uI=";
+        cargoHash = "sha256-XUF9ca0D1k5NhR6tZth2/yactZ1NyWc8W9voWNRXcDI=";
       };
 
       # ---------------------------------------------------------------------------
