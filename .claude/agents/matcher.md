@@ -37,7 +37,6 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   do not spin.
 
 ## Invariants
-- **ASCII only** (see `vostok/CLAUDE.md`).
 - **LTCG is uncontrollable.** Register / `[ebp-XX]` slot / frame-size / cross-module
   inlining differences are expected non-matches: leave a `claude@NOTE:`, do not
   contort the source to chase them. `DONE` when only arg-passing/slots differ,
