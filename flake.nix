@@ -159,7 +159,7 @@
         src = pkgs.fetchurl {
           name = "vostok-toolchain-v0.100b.tar.xz";
           url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-toolchain-v0.100b.tar.xz";
-          sha256 = "f9ededea66519df4f28feec11d19ca082ddc96592107648418ac14116a547587";
+          sha256 = "c9c5c17a51739472e11e9071b0274c3278930ddda0a8478858d81612bf895d99";
         };
         nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];
       } ''
