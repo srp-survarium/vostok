@@ -246,3 +246,19 @@ _(Append new findings below this line.)_
   `friend void ::ns::use_*();` in the class. Set the access specifier to match the
   target's storage-class char in the SAME pass (read it from the target COFF symbol:
   C=private, K=protected, S=public static) or objdiff scores None.
+- **A target callee kept OUT-OF-LINE (`call X`) that our /GL LTCG INLINES at the caller is
+  unsteerable - and the header decl/def split does NOT help.** `weapon_core_aimed_state_base::finalize`
+  calls `animation_playback_state::reset()`; the target keeps reset standalone (@0x087f60, `call reset`)
+  but our base has NO standalone reset (`pdb_rich_query base --function reset` -> "no function matched")
+  because LTCG folds its tiny body into every caller whole-program. I burned 2 rebuilds trying to
+  force a call: (a) filling reset's body IN-CLASS in the shared header -> /Od inlined it into finalize
+  (54%, wrong frame); (b) splitting decl (in type_definitions.h) from an out-of-class `inline` def in a
+  new header included only by temp_include_all.cpp -> /Od per-TU inline stopped, but `/GL` LTCG still
+  inlined at LINK time (54%), AND an `inline` fn is only emitted by a TU that ODR-USES it, so I also hit
+  LNK2001 until the anchor actually CALLED reset. NET: the decl/def split is useless against LTCG. Pick
+  whichever CALLEE body makes the CALLER match best and stop: here the original empty `{}` stub ELIDES
+  the no-op call (finalize 83%, the only diff is the 3 missing call instrs, frame correct) which beats
+  the real-body inline (54%). Mark the caller PARTIAL [LTCG inline-vs-call], leave the callee stub
+  untouched. Recognize this pattern from the asm BEFORE editing the shared header - a 0x97f60-class tiny
+  member-zeroing reset called once is a textbook LTCG fold; verify with `pdb_rich_query base` (no standalone
+  symbol) and stop at the empty-stub 83% in ONE rebuild.
