@@ -146,6 +146,15 @@ _(Append new findings below this line.)_
   stores are observed. Got all three `weapon_dispersion_calculator` setters to 100%
   in a single rebuild this way. (A reader that touches the *same* members would also
   work, but these members had no getter.)
+- **A POD-struct `operator=` (member-wise scalar/byte copy) + its empty default ctor
+  both hit 100% in ONE rebuild from a single anchor.** For a 3-`u8` `struct
+  weapon_state` (no copy ctor), the anchor `weapon_state a, b; b = a; example_callback(&a);
+  example_callback(&b);` landed `operator=` AND the empty default ctor at 100% in one
+  build. Two notes: (1) read the member order straight from the `mov [eax+0xNN], dl`
+  byte copies and match declaration order; (2) reproduce EXACTLY - this target had **no**
+  `if (this != &other)` self-guard (the carcass FUNCTION BODY starts with the copies at
+  line 27, no `if` line), unlike `player_stamina`/`player_stealth` which did guard. Don't
+  add the guard by reflex; the asm decides.
 - **A trivial copy ctor + operator= pair (member-wise scalar copy) needs ONE rebuild
   if you (a) copy the existing 100% sibling's shape (`player_stamina`: ctor `*this =
   other;`, operator= self-guard + decl-order member copies + `return *this`) and (b)

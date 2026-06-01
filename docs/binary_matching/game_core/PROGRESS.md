@@ -33,6 +33,10 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
 
 - game_core::player_stealth::{player_stealth(const&),operator=} -> STATE[100%|DONE] -> PR #114 (regressions: none)
   - GROUPED unit on a fresh independent class (no chain): copy ctor + assignment, both 100% in one rebuild.
+- game_core::weapon_state::operator= -> STATE[100%|DONE] -> PR #115 (regressions: none)
+  - 100%. BONUS: weapon_state::weapon_state() default ctor incidentally hit 100% via operator='s observed
+    anchor -> proves a constant-only ctor matches when its instance is OBSERVED. RETRY #107 (weapon_recoil
+    18%) with the opaque-sink escape anchor; README rule revised.
 
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
