@@ -189,6 +189,12 @@ the `.cpp` should see matched code, not a narration.
   fact. Do NOT narrate routine mechanics (anchors, "empty body", ICF/linker folding)
   inline - and never state something you have not verified (e.g. "no symbol / not
   scorable": empty functions DO get a standalone symbol and appear in objdiff).
+- **Strip unnecessary logs.** Remove any logging / diagnostic statement (`LOG_*`,
+  `LOGF_*`, `printf`, `OutputDebugString`, a trace call) or commented-out debug/log
+  line that was added while matching and that the TARGET does not actually emit - it is
+  not part of the byte-match and only clutters the source. (A log the target's bytes
+  genuinely contain stays.) Any diagnostic you needed belongs in the `.md` trail, never
+  as a leftover log line in the `.cpp`.
 
 
 ## Comment tags (where matching knowledge lives - keep them)

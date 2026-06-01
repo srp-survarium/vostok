@@ -115,7 +115,10 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   `// <full signature>` line (it is only a type reference). A clean `100%|DONE` keeps
   ONLY its `// STATE[100%|DONE]` line - no explanation block, no narrating routine
   mechanics. ALL detail/rationale/attempts go in the per-function `.md` (be verbose
-  THERE, not in the `.cpp`); never write an unverified claim inline.
+  THERE, not in the `.cpp`); never write an unverified claim inline. **Strip
+  unnecessary logs too:** delete any logging/diagnostic line (`LOG_*`, `printf`,
+  `OutputDebugString`, trace) or commented-out debug/log you added that the target does
+  not actually emit - it is not part of the byte-match.
 - Append any genuinely new asm -> source mapping you find to `assembly_patterns.md`.
 - Append any genuinely new *time-saving* learning - a way to need fewer rebuilds,
   a step that was unnecessary, a cheaper way to the same signal - to
@@ -128,6 +131,12 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   the resulting match % from `report.json`, and what the next `--view diff` then
   showed. A reviewer must be able to replay your run from this file. Template in
   agentic_loop.md section 7.
+- **Never force-push or rewrite a branch once it is pushed (no `git push --force`, no
+  `--amend` after the first push).** Force-push clobbers concurrent work and orphans
+  every PR stacked above you, and it destroys the before/after history a reviewer reads.
+  Pre-first-push squashing of your own WIP is fine; after that, revise only by adding a
+  NEW commit + plain `git push`. Cleanup/squash happens at merge time (gh squash-merge),
+  never by rewriting a pushed branch.
 
 ## Finish - STACKED PRs: one unit = one branch + one commit + one PR, each stacked on the previous (section 9)
 PRs are **stacked**: the orchestrator leaves the current **stack tip** checked out
