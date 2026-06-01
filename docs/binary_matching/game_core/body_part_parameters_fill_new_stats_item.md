@@ -110,6 +110,15 @@ Left the source as `fixed_string<46>("none")` (rule #1: don't contort a correct 
 NO source change was made on resumption -> no extra rebuild needed; 91.78% is final.
 
 ## Outcome
-STATE[91.78%|PARTIAL]. Body is a structural match; sole residual is LTCG inline-vs-call of the
+STATE[91.78%|PARTIAL]. Body is a structural match; sole residual is the inline-vs-call of the
 fixed_string<46>("none") ctor plus the frame/slot/register differences it forces. rebuild.py: clean
 build, report-changes.json = 0 regressed / 0 improved / 0 removed / 0 added.
+
+## Review note (new guidelines)
+The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and lists inline-vs-call
+as a matching problem. The "LTCG" framing for this 91.78% residual is therefore downgraded: keep it
+PARTIAL, but the fixed_string<46>(const char*) inline-vs-call should be re-diffed against source on a
+future rebuild (the rich-index proof above shows the target has no out-of-line const-char* ctor while
+base keeps one - the documented unsteerable-COMDAT class - re-confirm before banking). The FUNCTION
+BODY carcass has been restored in the .cpp (the function is PARTIAL, not 100%). This review did NOT
+rebuild; the body shape is unchanged.
