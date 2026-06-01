@@ -135,25 +135,35 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 	}
 }
 
-// STATE[STUB]
+// STATE[82.89%|PARTIAL]: switch body byte-exact (case 0/default -> fld1; cases 1/2
+// are ternaries reading m_params->injury_penalty_*). Capped by the same `empty_stub`
+// inlined/stripped-call prologue as get_target_koef (`mov byte[ebp-1],0;
+// lea eax,[ebp-1]; call empty_stub`), which bumps the frame 10h->14h and shifts
+// every [ebp-N] slot by 4 - an LTCG artifact not reproducible from source.
 // float survarium::character_dispersion_calculator::get_broken_hands_penalty(const unsigned char, const bool) const
+//
+// claude@NOTE: switch over broken_hands_count. case 0 returns 1.0f via `fld1`; the
+//   implicit default returns 1.0f too and MSVC folds the two identical returns into
+//   ONE `fld1` reached by both the je-0 and the fall-through. case 1's 1.0f arm is a
+//   const load (target .data `clear_value` = 1.0f). Offsets verified vs
+//   character_dispersion_params: injury_penalty_for_double_handed@0x30,
+//   injury_penalty_for_one_handed@0x34.
+// claude@MATCH: `case 0: return 1.0f;` (NOT `case 0: break;`) is required - `break`
+//   folds case 0 into the default path and drops the explicit `cmp 0` the target has
+//   (and left objdiff unable to score the function, reporting None).
 float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands_count, bool using_double_handed_weapon ) const
 {
-	return 0.0f;
+	switch ( broken_hands_count )
+	{
+	case 0:
+		return 1.0f;
+	case 1:
+		return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : 1.0f;
+	case 2:
+		return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;
+	}
 
-	// FUNCTION BODY
-	// <0x595e59>|0x009|+0x00c:'130'
-	// <0x595e65>|0x015|+0x018:'131'
-	// <0>
-	// <0x595e7d>|0x02d|+0x004:'133'
-	// <0>
-	// <0x595e81>|0x031|+0x02b:'135'
-	// <0>
-	// <0x595eac>|0x05c|+0x02b:'137'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	return 1.0f;
 }
 
 } // namespace survarium
