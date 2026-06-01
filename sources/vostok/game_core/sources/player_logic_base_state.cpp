@@ -28,14 +28,9 @@ void player_logic_base_state::set_user( base_player& user )
 	// ******
 }
 
-// STATE[100%|DONE]: byte-identical (91/91); flat early-returns match the single-jump epilogue
-// static unsigned int survarium::player_logic_base_state::movement_animation_index(survarium::player_input const&)
+// STATE[100%|DONE]
 u32 player_logic_base_state::movement_animation_index( player_input const& input )
 {
-	// claude@NOTE: bit masks read straight from the target asm (actions_mask @ +0x10);
-	// the `!= 0` form matches is_sprinting()'s style and emits the and/neg/sbb/neg
-	// boolean-normalize. Slot order [ebp-2],[ebp-4],[ebp-1],[ebp-3] is /Od slot
-	// packing, not declaration order - declared fwd,bwd,left,right per carcass lines 34-37.
 	bool	move_fwd_pressed	= ( input.actions_mask & 0x1 ) != 0;
 	bool	move_bwd_pressed	= ( input.actions_mask & 0x2 ) != 0;
 	bool	move_left_pressed	= ( input.actions_mask & 0x4 ) != 0;
@@ -53,9 +48,8 @@ u32 player_logic_base_state::movement_animation_index( player_input const& input
 		move_right_pressed	= false;
 	}
 
-	// claude@MATCH: flat early-returns (no `else`) - each leaf jumps once to the single
-	// epilogue, matching the target. An if/else-if/else chain emits an extra join `jmp`
-	// per nesting level (the double-jmp diff).
+	// claude@MATCH: flat early-returns (no `else`) - an if/else-if chain would emit an
+	// extra join `jmp` per level; flat returns each jump once to the single epilogue.
 	if ( move_fwd_pressed )
 	{
 		if ( move_left_pressed )
