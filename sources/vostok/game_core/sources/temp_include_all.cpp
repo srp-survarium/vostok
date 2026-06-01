@@ -48,6 +48,7 @@
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/player_stamina.h>
+#include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
 
@@ -361,6 +362,20 @@ namespace vostok
 		stamina.unsubscribe_from_depletion( NULL );
 
 		survarium::player_stamina stamina2( stamina );
+	}
+
+
+	void use_game_core_player_stealth()
+	{
+		survarium::player_stealth stealth;
+
+		// copy ctor (delegates to operator=) + direct operator= call
+		survarium::player_stealth stealth2( stealth );
+		stealth2 = stealth;
+
+		// escape both objects so LTCG keeps the member stores observable
+		example_callback( reinterpret_cast< pcstr >( &stealth ) );
+		example_callback( reinterpret_cast< pcstr >( &stealth2 ) );
 	}
 
 
@@ -721,6 +736,7 @@ IncludeAll::IncludeAll()
 	vostok::use_ladder( NULL );
 	vostok::use_game_core_affects_threshold();
 	vostok::use_game_core_player_stamina();
+	vostok::use_game_core_player_stealth();
 	vostok::use_game_core_player_input();
 	vostok::use_client_player_update( NULL );
 	vostok::use_game_core_collision_sensor();

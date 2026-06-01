@@ -31,3 +31,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::weapon_dispersion_calculator::{set_reload_dispersion_amount,set_one_shoot_dispersion_amount,set_aiming_speed} -> STATE[100%|DONE] -> PR #113 (regressions: none)
   - GROUPED unit (first use of accessor-grouping): all 3 setters 100% in one rebuild. Based on #112's branch.
   - key: anchor must ESCAPE &calc/&table through an opaque sink so LTCG doesn't DSE the stores (see loop_performance).
+- game_core::player_stealth::{player_stealth(const&),operator=} -> STATE[100%|DONE] -> PR #114 (regressions: none)
+  - GROUPED unit on a fresh independent class (no chain): copy ctor + assignment, both 100% in one rebuild.
