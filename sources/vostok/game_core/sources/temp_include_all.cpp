@@ -37,6 +37,7 @@
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
+#include <vostok/game_core/client_player_update.h>
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_sensor.h>
 #include <vostok/game_core/damage_model_cook.h>
@@ -326,6 +327,12 @@ namespace vostok
 		survarium::player_input input;
 		input.is_sprinting();
 		input.is_empty();
+	}
+
+	void use_client_player_update( network_core::udp_match_packet* packet )
+	{
+		survarium::client_player_update update;
+		update.serialize( *packet );
 	}
 
 
@@ -670,6 +677,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_affects_threshold();
 	vostok::use_game_core_player_stamina();
 	vostok::use_game_core_player_input();
+	vostok::use_client_player_update( NULL );
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
