@@ -195,15 +195,18 @@ default(4)->0x103(=fld1, 1.0f). A `case X: return cond ? a : b;` lowers each lea
 to `movss xmm0,[m_params+off]; movss [tmp],xmm0; ... ; fld [tmp]; jmp end` and
 matches byte-for-byte modulo register/slot.
 
-### `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` prologue = stripped/inlined call
-SYMPTOM: a const getter opens (right after `mov [ebp-8],ecx`) with a zeroed byte
-local whose address is passed to a `call` the delinker resolves to `empty_stub`
-(or misnames as `finalize_impl`). It bumps the frame (`sub esp,1Ch` vs the `18h`
-your source produces) and shifts every `[ebp-N]` slot by 4. NOT reproducible from
-the function's own source - it is a call to a helper stripped from the target obj
-(an inlined/LTCG cross-module artifact). Match the observable body; the prologue +
-slot shift is the residual. Seen in BOTH
-`character_dispersion_calculator::get_target_koef` and `::get_broken_hands_penalty`.
+### `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` = a compiled-out ASSERT (RECOVER it)
+SYMPTOM: a zeroed byte local whose address is passed to a `call` the delinker
+resolves to `empty_stub` (or misnames `finalize_impl`), ~`0x0c` bytes, which bumps
+the frame and shifts the `[ebp-N]` slots. This is **NOT** an unsteerable stripped/
+LTCG call - it is a **compiled-out `ASSERT`**: Master Gold drops the condition but
+keeps the call. FIX: place `ASSERT( UNKNOWN_EXPRESSION )` (guess the condition via
+`_T`) at that statement; it reproduces the `empty_stub` bytes and the frame/slot
+shift resolves with it. Established house style - see `booby_trap_core.cpp`,
+`inventory_cook.cpp` (their carcasses map `ASSERT( UNKNOWN_EXPRESSION );` to a `+0x0c`
+slot). [CORRECTION: `get_target_koef` / `get_broken_hands_penalty` and the
+weapon_core_*_state finalize/on_animation "residuals" were wrongly left unmatched -
+they must recover the ASSERT.]
 
 ### `and X,mask; neg; sbb X,X; neg` = `bool b = (val & mask) != 0` (/Od bool-normalize)
 ASM:

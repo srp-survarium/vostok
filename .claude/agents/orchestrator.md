@@ -53,9 +53,18 @@ workers' concern, not yours; do not load them.
 - You hold only the ledger: one line per function. No asm, no diffs, no source.
 - Do not edit sources, run `rebuild.py`, or open PRs yourself - that is the
   worker's job. You only sequence workers and read back their one-line results.
-- Optionally persist the ledger to `docs/binary_matching/<module>/PROGRESS.md` so
-  the human (and a later orchestrator) can see status. That is the only file you
-  write.
+- The per-function ledger line lives in that function's own PR commit (the worker
+  appends it to `docs/binary_matching/<module>/PROGRESS.md`), not in a separate
+  orchestrator commit.
+
+## The base branch is PR-only - never commit to it directly
+The integration branch (`feature/agentic-matching-loop-2`) is updated **only by
+merging PRs**, never by a direct commit. So:
+- Guideline / doc updates also go through a PR (an agent PR based on its work), not
+  a direct edit to the base.
+- The base advances one PR at a time on merge; to keep the stack clean you only
+  re-parent the **next** PR onto the base after each merge (O(n)) - never re-cascade
+  the whole stack (O(n^2)).
 
 ## Dispatch hygiene
 - Hand each worker exactly one function plus a locating hint (`file:line` or `rva`
