@@ -99,3 +99,7 @@ ipch/
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/
+
+# Nix build result symlinks
+/result
+/result-*

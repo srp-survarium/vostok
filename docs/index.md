@@ -1,7 +1,7 @@
 ## Index
 
 ### Writing matched code
-* [binary_matching/MATCHING.md](binary_matching/MATCHING.md) - conventions for the source we generate (naming, alignment, asserts, the `UNKNOWN_EXPRESSION` placeholder, STATE markers, carcass comments, `sushi@`/`claude@` `MATCH/NOTE/TODO` tags). Scoped to the non-optimized `/Od` + LTCG modules: `game_core`, `network_core`, `logging`.
+* [binary_matching/MATCHING.md](binary_matching/MATCHING.md) - conventions for the source we generate (naming, alignment, asserts, the `UNKNOWN_EXPRESSION` placeholder, STATE markers, carcass comments, `sushi@`/`claude@` `MATCH/NOTE/TODO` tags). Scoped to the non-optimized `/Od` modules (per target codegen): `game_core`, `network_core`, `logging` active, plus `sound`, `network`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug` matchable.
 * [binary_matching/agentic_loop.md](binary_matching/agentic_loop.md) - the per-function matching loop (queue, rebuild/diff, compile wiring, missing types, inlining, one commit + PR per function).
 * [binary_matching/agentic_loop_example.md](binary_matching/agentic_loop_example.md) - a concrete dry run of the loop on one PARTIAL function (illustrative outputs).
 * [binary_matching/assembly_patterns.md](binary_matching/assembly_patterns.md) - shared asm -> source mappings; every run appends to it.
@@ -20,7 +20,9 @@ Each matched module has its own folder under `binary_matching/` (module notes in
 * [network_core](binary_matching/network_core/README.md)
 * [logging](binary_matching/logging/README.md)
 
-Not yet being matched (parked under `next_binary_matching/`):
+Matchable (`/Od` in the target) but not started — no folder yet: `sound`, `network`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
+
+Parked — optimized, not 1:1-matchable (under `next_binary_matching/`):
 * [physics](next_binary_matching/physics.md)
 
 ### Matching dept (general)

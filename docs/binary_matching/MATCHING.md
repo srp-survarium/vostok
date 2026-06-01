@@ -8,13 +8,26 @@ Your goal is to match `base` as close to `target` as possible. This doc is the
 *shape of the code*; the *process* (queue, rebuild/diff, commit-per-function) is
 in [agentic_loop.md](agentic_loop.md).
 
-The current modules being matched are:
+The modules we match are the ones the shipped `Master Gold` build compiled with
+optimizations **disabled** (`/Od`). That means the binary is very close to the
+original source and the `.pdb` carries a lot of useful info: every statement
+location, local definition and function argument. The `/Od` set is read from the
+**target** codegen (a `/Od` function keeps the `push ebp; mov ebp, esp` frame,
+which optimized/FPO code drops) — *not* from the `.vcproj`, which is base config
+and can differ (e.g. `network`'s vcproj says `/Oy` omit-frame-pointer, but the
+target kept the frame).
+
+Actively being matched now:
     * `game_core`       lives in `namespace survarium`.
     * `network_core`    lives in `namespace vostok { namespace network_core {`.
     * `logging`         lives in `namespace vostok { namespace logging {`.
 
+Matchable too (also `/Od` in the target), not started yet:
+    * `sound`, `network`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
 
-All of those modules were compiled with optimizations disabled (specifically `/Od` flag) in the shipped `Master Gold` build. That means binary is very close to the original source code and .pdb contain a lot of useful information: all statement location, local definitions and function arguments.
+Everything else (`physics`, `collision`, `game`, `render`, `core`, `engine`,
+`animation`, `ui`, `input`, `scaleform`, `survarium`/EXE) was built **optimized**
+and does **not** map 1:1 — out of scope for this approach.
 
 When unsure, copy the nearest reversed file - good references are
 `game_core/sources/{player_stamina,collision_sensor,damage_model}.cpp` and

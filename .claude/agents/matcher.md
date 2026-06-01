@@ -15,7 +15,8 @@ the summary line.
 1. `docs/binary_matching/MATCHING.md`          - how matched source must look.
 2. `docs/binary_matching/agentic_loop.md`      - the per-function loop you run (sections 1-9).
 3. `docs/binary_matching/assembly_patterns.md` - asm -> source patterns learned so far.
-4. `docs/binary_matching/<module>/README.md`   - notes for your function's module.
+4. `docs/binary_matching/loop_performance.md`   - how to need fewer rebuilds (the loop is rebuild-bound).
+5. `docs/binary_matching/<module>/README.md`   - notes for your function's module.
 A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
 
 ## The loop, in brief (full detail in agentic_loop.md)
@@ -45,6 +46,10 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   `claude@TODO:` (the existing `sushi@...` notes are the prior author's - keep them).
 - Update the function's `// STATE[NN%|TAG]: reason` marker to the final result.
 - Append any genuinely new asm -> source mapping you find to `assembly_patterns.md`.
+- Append any genuinely new *time-saving* learning - a way to need fewer rebuilds,
+  a step that was unnecessary, a cheaper way to the same signal - to
+  `loop_performance.md`. `rebuild.py` is the dominant cost (~fixed per call), so
+  finding ways to call it fewer times is how the loop gets faster for everyone.
 - If the function took real effort, write `docs/binary_matching/<module>/<function>.md`
   (attempts + outcome; template in agentic_loop.md section 7).
 
