@@ -9,7 +9,6 @@
 namespace survarium {
 
 // STATE[100%|DONE]
-// survarium::weapon_core_base_state::weapon_core_base_state(survarium::weapon_core&, bool)
 weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serialize_animation_state ) : m_weapon( weapon )
 {
 	m_is_firing_ptr				= NULL;
@@ -17,22 +16,12 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 	m_is_ready_to_be_deactivated	= false;
 	m_animation_has_been_ended	= false;
 	m_serialize_animation_state	= serialize_animation_state;
-
-	// FUNCTION BODY
-	// <0x6fcf90>|0x000|+0x0aa:'23'	{
-	// <0x6fd03a>|0x0aa|      :'24'	}
-	// ******
 }
 
 // STATE[100%|DONE]
-// bool survarium::weapon_core_base_state::deserializing() const
 bool weapon_core_base_state::deserializing( ) const
 {
 	return m_weapon.deserializing( );
-
-	// FUNCTION BODY
-	// <0x6fce69>|0x009|+0x015:'28'
-	// ******
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
