@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[100%|DONE]: empty body matches 0x5a0c40; incidentally anchored by the operator= unit
 // survarium::weapon_state::weapon_state()
 weapon_state::weapon_state( )
 {
@@ -17,10 +17,17 @@ weapon_state::weapon_state( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: plain member-wise byte copy, no self-guard (matches 0x590c00 exactly)
 // survarium::weapon_state& survarium::weapon_state::operator=(survarium::weapon_state const&)
 weapon_state& weapon_state::operator=( weapon_state const& other )
 {
+	// claude@NOTE: target does a plain member-wise copy with NO self-guard
+	// (asm 0x590c00: three byte copies then `ret 4`, no `if (this != &other)`).
+	slot_id			= other.slot_id;
+	ammo_slot_id	= other.ammo_slot_id;
+	state			= other.state;
+	return *this;
+
 	// FUNCTION BODY
 	// <0x5a0c07>|0x007|+0x00a:'27'
 	// <0x5a0c11>|0x011|+0x00c:'28'

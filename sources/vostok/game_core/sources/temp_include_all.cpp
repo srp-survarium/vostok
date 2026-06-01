@@ -51,6 +51,7 @@
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_state.h>
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
@@ -390,6 +391,17 @@ namespace vostok
 	{
 		survarium::client_player_update update;
 		update.serialize( *packet );
+	void use_game_core_weapon_state()
+	{
+		// Anchor weapon_state::operator= so its member stores are OBSERVED
+		// (escape both objects through the opaque sink) and LTCG cannot DSE them.
+		survarium::weapon_state a;
+		survarium::weapon_state b;
+
+		b = a;
+
+		example_callback( reinterpret_cast< pcstr >( &a ) );
+		example_callback( reinterpret_cast< pcstr >( &b ) );
 	}
 
 
@@ -739,6 +751,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_player_stealth();
 	vostok::use_game_core_player_input();
 	vostok::use_client_player_update( NULL );
+	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
