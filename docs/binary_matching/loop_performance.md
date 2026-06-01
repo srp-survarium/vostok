@@ -44,3 +44,12 @@ _(Append new findings below this line.)_
   expect a standalone-compile blocker and budget for it (or park BLOCKED) instead
   of spending a rebuild discovering it. Cost me one rebuild on
   `client_player_update::serialize`.
+
+- **A correct pre-existing STUB body needs zero rebuilds.** If the function's symbol
+  is already in `binaries/rich/base/index.jsonl` (the STUB compiled and is reachable)
+  and `--view diff` shows the body is already byte-exact (remaining `~` rows are only
+  register / stack-slot LTCG noise, or a cross-function inlining diff you can't steer
+  from this function's source), the score in `report.json` is already final. Updating
+  the STATE marker / adding a `claude@NOTE:` is a comment-only edit that cannot change
+  compiled bytes, so don't rebuild to "confirm" - the existing number stands. Saved a
+  full rebuild on `inventory_item::inventory_item`.
