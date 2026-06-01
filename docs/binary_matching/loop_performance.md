@@ -125,6 +125,17 @@ _(Append new findings below this line.)_
   If both say no, it's a stale-baseline artifact, not your regression. (Saw 4
   `character_dispersion_calculator` fns drop 88/82/25/22 -> 0 on a fresh build of a branch
   where they are all STUBs; my change only touched `weapon_dispersion_calculator`.)
+- **A trivial setter (`m_x = arg;`) needs its store OBSERVED or LTCG DSE's it - one
+  rebuild if you anchor it right the first time.** Calling `calc.set_x(v)` in the
+  anchor is NOT enough: LTCG can inline the setter into the anchor and then prove the
+  object dead and delete the store (same elision as the constant-only ctor). Anchor
+  that lands the setters at 100% on the first build: (1) put the setters' member-fn
+  addresses in a local table and escape `&table` through an opaque sink
+  (`example_callback`) so the standalone bodies are kept un-inlined; (2) call the
+  setters on a local `calc`, then escape `&calc` through the same opaque sink so the
+  stores are observed. Got all three `weapon_dispersion_calculator` setters to 100%
+  in a single rebuild this way. (A reader that touches the *same* members would also
+  work, but these members had no getter.)
 - **A trivial member getter with NO callees needs exactly one rebuild.** Read the
   `fld dword ptr [eax+0xNN]` offset, map it to the `/* 0xNN */` member, write
   `return m_member;`, anchor it (instantiate + call) in temp_include_all, rebuild once
