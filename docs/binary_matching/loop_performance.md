@@ -146,3 +146,11 @@ _(Append new findings below this line.)_
   stores are observed. Got all three `weapon_dispersion_calculator` setters to 100%
   in a single rebuild this way. (A reader that touches the *same* members would also
   work, but these members had no getter.)
+- **A trivial copy ctor + operator= pair (member-wise scalar copy) needs ONE rebuild
+  if you (a) copy the existing 100% sibling's shape (`player_stamina`: ctor `*this =
+  other;`, operator= self-guard + decl-order member copies + `return *this`) and (b)
+  anchor with default-construct + copy-construct + direct `b = a` + escape `&a`/`&b`
+  through the `example_callback` opaque sink.** Both `player_stealth` members hit 100%
+  first try, no `--view diff` round trip. Bonus: anchoring also pulled the (empty)
+  default ctor to 100% for free. Read the member offsets straight from the operator='s
+  `fld/fstp [reg+0xNN]` and map to the header `/* 0xNN */` comments in the first pass.

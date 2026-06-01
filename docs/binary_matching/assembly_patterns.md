@@ -232,3 +232,36 @@ exactly and is present in the base obj. CAUSE (besides access-specifier, above):
 diverges structurally enough (e.g. a whole missing compare/branch block) that objdiff's symbol
 diff bails without a number. Before assuming unreachable/mangling: byte-compare the two `.text`
 regions; if the symbol is present with the right name, fix the body shape, not the header.
+
+---
+
+## Hand-written copy ctor delegating to operator= + member-wise scalar operator=
+(`survarium::player_stealth::{player_stealth(const&), operator=}`, PR pending)
+
+COPY CTOR shape (`push ebp;...;mov [ebp-4],ecx` then):
+```
+mov eax,[ebp+8]    ; other
+push eax
+mov ecx,[ebp-4]    ; this
+call operator=
+mov eax,[ebp-4]    ; ctor returns this in eax
+ret 4
+```
+=> SOURCE: ctor body is exactly `*this = other;`. The trailing `mov eax,[ebp-4]` is
+the standard MSVC ctor `return this`, not part of your source.
+
+OPERATOR= shape: self-assignment guard then one fld/fstp pair per float member in
+declaration/offset order:
+```
+mov eax,[ebp-4]; cmp eax,[ebp+8]; je .end   ; if ( this != &other )
+  fld dword [src+0xNN]; fstp dword [dst+0xNN]   ; one per member, 0x00,0x04,...
+.end:
+mov eax,[ebp-4]   ; return *this
+ret 4
+```
+=> SOURCE: `if ( this != &other ) { m_a = other.m_a; ... } return *this;` with members
+in DECLARATION order (each `[reg+0xNN]` maps to the `/* 0xNN */` member). Identical
+shape to the already-100% `player_stamina` pair. ANCHOR (game_core): default-construct,
+copy-construct + a direct `b = a`, then escape `&a`/`&b` through the opaque
+`example_callback` sink so LTCG does not DSE the member stores. Landed both at 100% on
+the first rebuild.
