@@ -252,6 +252,8 @@ namespace vostok
 		survarium::character_dispersion_calculator calc;
 		calc.set_character_dispersion_params( NULL );
 		calc.tick( survarium::type_stand, true, false, 0, false, 0 );
+	}
+
 	void use_game_core_weapon_recoil_params( )
 	{
 		// Anchor the default ctor so its constant member stores are OBSERVED
