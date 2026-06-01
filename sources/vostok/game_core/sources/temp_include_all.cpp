@@ -274,7 +274,28 @@ namespace vostok
 	void use_weapon_dispersion_calculator( )
 	{
 		survarium::weapon_dispersion_calculator calc;
+
+		// The setters write members that get_value() does not read, so the
+		// object must escape or LTCG dead-store-eliminates each store (the
+		// same elision that empties the constant-only ctor - see README).
+		// Take each setter's address to force its standalone body to be kept,
+		// then escape &calc through the opaque example_callback so the stores
+		// it performs are observed.
+		typedef void ( survarium::weapon_dispersion_calculator::*setter_t )( const float );
+		setter_t setters[ 3 ] =
+		{
+			&survarium::weapon_dispersion_calculator::set_reload_dispersion_amount,
+			&survarium::weapon_dispersion_calculator::set_one_shoot_dispersion_amount,
+			&survarium::weapon_dispersion_calculator::set_aiming_speed,
+		};
+		example_callback( reinterpret_cast< pcstr >( &setters ) );
+
+		calc.set_reload_dispersion_amount( 10.0f );
+		calc.set_one_shoot_dispersion_amount( 20.0f );
+		calc.set_aiming_speed( 30.0f );
 		calc.get_value( );
+
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
 	}
 
 	void use_bullet( )
