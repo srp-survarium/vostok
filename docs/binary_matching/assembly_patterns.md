@@ -466,3 +466,22 @@ NOTES: this is how the carcass reveals where braces were. A `case`/`if` showing 
 brace-less. Do NOT decide braces from "has a local" alone (we mis-braced
 `get_target_koef` and earlier switches that way; prior switch matches should be
 re-checked against this).
+
+### virtual call on a member reference through its OWN vtable (m_ref.virtual_method())
+ASM:
+```
+mov eax,[ebp-4]; mov ecx,[eax+128h]   ; load m_weapon (a weapon_core& @ 0x128)
+mov edx,[ebp-4]; mov eax,[edx+128h]   ; (the slot is loaded twice under /Od)
+mov edx,[ecx]                         ; vtable of *m_weapon
+mov ecx,eax                           ; ecx = this for the callee
+mov eax,[edx+8Ch]; call eax           ; indirect call, vtable slot 0x8c
+```
+=> SOURCE: `m_weapon.instant_aim_start();` where `m_weapon` is a `weapon_core&` and
+`instant_aim_start` is declared `virtual` ON weapon_core. Calling a virtual through a
+reference of the declaring class dispatches via the vtable (the `[vtbl+0xNN]; call`).
+NOTES: contrast with a NON-virtual member of the same class, which compiles to a direct
+`call survarium::weapon_core::method` (no `[vtbl]` indirection). Same source shape
+(`m_weapon.foo()`), the asm differs ONLY by foo's virtual-ness. Caught on
+`weapon_core_aimed_state_base::{initialize,finalize}` (virtual instant_aim_start/end @
+slots 0x8c/0x90) vs `..._idle_state_base` (non-virtual instant_idle_start/end, direct
+call). Read the `.h` `virtual` keyword to decide which the source needs.
