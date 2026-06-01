@@ -7,34 +7,19 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]: empty body matches 0x5a0c40; incidentally anchored by the operator= unit
-// survarium::weapon_state::weapon_state()
+// STATE[100%|DONE]
 weapon_state::weapon_state( )
 {
-	// FUNCTION BODY
-	// <0x5a0c40>|0x000|+0x007:'15'	{
-	// <0x5a0c47>|0x007|      :'16'	}
-	// ******
 }
 
-// STATE[100%|DONE]: plain member-wise byte copy, no self-guard (matches 0x590c00 exactly)
-// survarium::weapon_state& survarium::weapon_state::operator=(survarium::weapon_state const&)
+// STATE[100%|DONE]
 weapon_state& weapon_state::operator=( weapon_state const& other )
 {
-	// claude@NOTE: target does a plain member-wise copy with NO self-guard
-	// (asm 0x590c00: three byte copies then `ret 4`, no `if (this != &other)`).
+	// claude@NOTE: target does a plain member-wise copy with NO self-guard.
 	slot_id			= other.slot_id;
 	ammo_slot_id	= other.ammo_slot_id;
 	state			= other.state;
 	return *this;
-
-	// FUNCTION BODY
-	// <0x5a0c07>|0x007|+0x00a:'27'
-	// <0x5a0c11>|0x011|+0x00c:'28'
-	// <0x5a0c1d>|0x01d|+0x00c:'29'
-	// <0>
-	// <0x5a0c29>|0x029|+0x003:'31'
-	// ******
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
