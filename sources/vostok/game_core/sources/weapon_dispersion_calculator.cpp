@@ -78,10 +78,13 @@ void weapon_dispersion_calculator::reload( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: movss [this+0x4],xmm0 -> m_reload_dispersion_amount.
 // void survarium::weapon_dispersion_calculator::set_reload_dispersion_amount(const float)
-void weapon_dispersion_calculator::set_reload_dispersion_amount( float reload_dispersion_amount )
+void weapon_dispersion_calculator::set_reload_dispersion_amount( const float reload_dispersion_amount )
 {
+	// asm: movss [this+0x4], xmm0 -> m_reload_dispersion_amount
+	m_reload_dispersion_amount = reload_dispersion_amount;
+
 	// FUNCTION BODY
 	// <0>
 	// <0x58f867>|0x007|+0x00d:'72'
@@ -89,10 +92,13 @@ void weapon_dispersion_calculator::set_reload_dispersion_amount( float reload_di
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: movss [this+0x0],xmm0 -> m_one_shoot_dispersion_amount.
 // void survarium::weapon_dispersion_calculator::set_one_shoot_dispersion_amount(const float)
-void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( float one_shoot_dispersion_amount )
+void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( const float one_shoot_dispersion_amount )
 {
+	// asm: movss [this+0x0], xmm0 -> m_one_shoot_dispersion_amount
+	m_one_shoot_dispersion_amount = one_shoot_dispersion_amount;
+
 	// FUNCTION BODY
 	// <0>
 	// <0x58f847>|0x007|+0x00c:'79'
@@ -112,10 +118,13 @@ float weapon_dispersion_calculator::get_value( ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: movss [this+0xC],xmm0 -> m_aiming_speed.
 // void survarium::weapon_dispersion_calculator::set_aiming_speed(const float)
-void weapon_dispersion_calculator::set_aiming_speed( float aiming_speed )
+void weapon_dispersion_calculator::set_aiming_speed( const float aiming_speed )
 {
+	// asm: movss [this+0xC], xmm0 -> m_aiming_speed
+	m_aiming_speed = aiming_speed;
+
 	// FUNCTION BODY
 	// <0x58f807>|0x007|+0x00d:'90'
 	// ******
