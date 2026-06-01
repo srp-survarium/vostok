@@ -98,3 +98,17 @@ _(Append new findings below this line.)_
   filled in (`{ return m_x; }`) or the member read won't compile to the right offset.** Fix it
   in the same edit pass as the body (here `character_dispersion_calculator::get_value`); it's a
   header change but costs no extra rebuild if batched.
+- **`fuzzy_match_percent: None` in report.json = mangled-name mismatch, usually
+  access specifier.** Before assuming the function is unreachable, dump the target
+  obj symbol table and compare the mangled name to base: a `QBE` (public) vs `ABE`
+  (private) leading-letter difference makes objdiff unable to pair them and it
+  reports `None`. Fix the access specifier in the header to match the target's
+  mangling and the score appears. Caught on `get_target_koef` (cost one rebuild,
+  but the COFF symbol dump would have caught it pre-build: read the target obj's
+  `?fn@...@@` prefix in the same first pass you read the float constants).
+- **`pdb_fetch --view diff` silently refuses ("needs both indexes") when the
+  `--function` substring matches >1 index entry** - notably it also matches a
+  *caller* whose `callees` field contains your function name (e.g. `get_target_koef`
+  also matches `tick`). Workaround: byte-diff the two COFF `.text` regions directly
+  with the COFF parser (locate the fn symbol's `.text` offset on each side, slice
+  and `.hex()` compare). The score/report-changes remain authoritative for the number.

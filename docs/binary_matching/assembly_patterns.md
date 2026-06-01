@@ -178,3 +178,39 @@ as `mov al, [obj+0x488]` (direct read of m_aimed). Identical class to the
 inline member is emitted-and-called or inlined is a whole-program/linker decision,
 not steerable from the caller. Match the member access; mark PARTIAL. Confirmed in
 `game_core/dispersion_calculator::get_dispersion`.
+
+### switch over a small enum (jump table) -> read case order from the obj's own .text relocs
+SYMPTOM: `jmp dword ptr [edx*4 + <table>]` with the table inside the function's
+`.text` (the trailing "garbage" after `ret` in `--view target`, e.g.
+`add eax, 6B00595Fh`). The rich/objdiff view masks the per-case targets.
+RECOVER: the N table entries are N dwords of `.text` with type-20 (REL32) relocs
+back to the function symbol; the stored dword is the case target as a
+*function-relative* offset. Parse the COFF: find the function's `.text` offset
+from the symbol table, read the table dwords, subtract nothing (the raw value IS
+the fn-relative target). Cross-reference each target block's leaf `movss
+xmm0,[reg+off]` against the struct layout to label the case. Confirmed in
+`game_core/character_dispersion_calculator::get_target_koef`: cases
+type_stand(0)->0x25, type_crouch(1)->0x8b, type_sprint(2)->0xef, type_jump(3)->0xf9,
+default(4)->0x103(=fld1, 1.0f). A `case X: return cond ? a : b;` lowers each leaf
+to `movss xmm0,[m_params+off]; movss [tmp],xmm0; ... ; fld [tmp]; jmp end` and
+matches byte-for-byte modulo register/slot.
+
+### `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` prologue = stripped/inlined call
+SYMPTOM: a const getter opens (right after `mov [ebp-8],ecx`) with a zeroed byte
+local whose address is passed to a `call` the delinker resolves to `empty_stub`
+(or misnames as `finalize_impl`). It bumps the frame (`sub esp,1Ch` vs the `18h`
+your source produces) and shifts every `[ebp-N]` slot by 4. NOT reproducible from
+the function's own source - it is a call to a helper stripped from the target obj
+(an inlined/LTCG cross-module artifact). Match the observable body; the prologue +
+slot shift is the residual. Seen in BOTH
+`character_dispersion_calculator::get_target_koef` and `::get_broken_hands_penalty`.
+
+### private member function -> mangled `ABE`, not `QBE` (objdiff scores `None` if wrong)
+SYMPTOM: report.json `fuzzy_match_percent = None` for a function that clearly
+compiled and is in the base obj. CAUSE: the base/target mangled names differ only
+in access (`?fn@...@@QBE...` public vs `?fn@...@@ABE...` private/`AAE` etc.), so
+objdiff cannot pair them. FIX: read the exact mangled name from the target obj
+symbol table and set the declaration's access specifier (public/private/protected)
+to match the leading letter (Q=public, A=private, I=protected; the 2nd letter A=
+non-const-this, B=const-this). Confirmed: `get_target_koef`/`get_broken_hands_penalty`
+are `ABE` (private const) - moving them to `private:` flipped them from `None` to scored.
