@@ -103,6 +103,9 @@ private:
 			void					update_affects			( u32 current_time_in_ms );
 			void					apply_affects			( affects_threshold const* threshold_reached, u32 current_time_in_ms );
 
+			template < class stats_item_type >
+			void					fill_new_stats_item		( stats_item_type& new_stats_item, const u32 current_time_in_ms ) const;
+
 
 public:
 	typedef vostok::intrusive_list<

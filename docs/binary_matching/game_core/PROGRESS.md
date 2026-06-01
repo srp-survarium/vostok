@@ -42,3 +42,8 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% PARTIAL] -> PR #117 (regressions: none)
   - GROUPED. ctor+dtor 100% (observed-escape anchor). setter PARTIAL: LTCG inlines trivial accessors
     (states()/front()/current_state()) that the target calls out-of-line. Added breath_state.h for the vtable cast.
+- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[91.78%|PARTIAL] -> PR #119 (regressions: none)
+  - SALVAGED: worker #15 crashed mid-run; finisher (#16) resumed from the WIP branch (branch-handoff -
+    agent-context reuse / SendMessage is not available in this harness). Body was already a structural match.
+    The "fixed_string<46>("none") needs the 3-arg ctor" hypothesis was MOOT: the 1-arg fixed_string(const char*)
+    ctor IS that 3-arg buffer_string call inlined; residual is unsteerable LTCG inline-vs-call. asm pattern corrected.

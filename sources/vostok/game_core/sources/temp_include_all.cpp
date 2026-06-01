@@ -875,6 +875,8 @@ IncludeAll::IncludeAll()
 	bpp->is_affect_applied(affects_type_blindness);
 	bpp->get_hit_parameters("hit_params");
 	bpp->set_parameters(10.f, 20.f);
+	// fill_new_stats_item (private template member) is kept alive transitively by
+	// dump_state(stats, 10) above, which now calls it.
 
 	Callback1 cb1;
 	Callback2 cb2;
