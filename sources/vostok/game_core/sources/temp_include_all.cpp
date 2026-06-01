@@ -58,6 +58,7 @@
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/game_core/weapon_state.h>
 #include <vostok/game_core/weapon_core_base_state.h>
+#include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 #include <vostok/game_core/weapon_core_idle_state_base.h>
 #include <vostok/game_core/weapon_core_aimed_state_base.h>
 #include <vostok/game_core/weapon_core_show_state_base.h>
@@ -412,6 +413,47 @@ namespace vostok
 
 		// Escape &state so LTCG observes the ctor's member stores (loop_performance.md).
 		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_weapon_core_animation_end_aware_state( )
+	{
+		// weapon_core_animation_end_aware_state is abstract (pure
+		// weapon_and_hands_expression from the base + pure on_animation_end_impl);
+		// a concrete derived stub overriding both gives a constructible instance.
+		struct concrete_aware_state : survarium::weapon_core_animation_end_aware_state
+		{
+			concrete_aware_state( survarium::weapon_core& weapon )
+				: survarium::weapon_core_animation_end_aware_state( weapon, true ) {}
+
+			virtual animation::mixing::expression weapon_and_hands_expression(
+				mutable_buffer&,
+				bool,
+				survarium::weapon_user_state_enum,
+				animation::mixing::animation_lexeme& ) const override
+			{
+				VOSTOK_UNREACHABLE_CODE( );
+			}
+
+			virtual void on_animation_end_impl( bool& ) override { }
+		};
+
+		survarium::weapon_core						weapon;
+		concrete_aware_state						state( weapon );
+		vostok::resources::managed_resource_ptr		anim;
+		vostok::animation::animation_callback_params
+			params( NULL, anim, NULL, 0, 0, 0, 0 );
+
+		// Qualified, non-virtual calls keep the out-of-line symbols (not the stub
+		// vtable slots) for initialize/finalize/set_animation_to_wait/on_animation_end.
+		state.survarium::weapon_core_animation_end_aware_state::initialize( );
+		state.survarium::weapon_core_animation_end_aware_state::finalize( );
+		state.survarium::weapon_core_animation_end_aware_state::set_animation_to_wait( anim );
+		state.survarium::weapon_core_animation_end_aware_state::on_animation_end( params );
+
+		// Escape pointers so LTCG observes the stores.
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+		example_callback( reinterpret_cast< pcstr >( &anim ) );
+		example_callback( reinterpret_cast< pcstr >( &params ) );
 	}
 
 	void use_game_core_weapon_core_idle_state_base( )
@@ -1006,6 +1048,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_material_manager( );
 	vostok::use_weapon_dispersion_calculator( );
 	vostok::use_game_core_weapon_core_base_state( );
+	vostok::use_game_core_weapon_core_animation_end_aware_state( );
 	vostok::use_game_core_weapon_core_idle_state_base( );
 	vostok::use_game_core_weapon_core_aimed_state_base( );
 	vostok::use_game_core_weapon_core_show_state_base( );
