@@ -262,3 +262,15 @@ _(Append new findings below this line.)_
   untouched. Recognize this pattern from the asm BEFORE editing the shared header - a 0x97f60-class tiny
   member-zeroing reset called once is a textbook LTCG fold; verify with `pdb_rich_query base` (no standalone
   symbol) and stop at the empty-stub 83% in ONE rebuild.
+- **The inherited stack tip's `temp_include_all.cpp` may not even COMPILE - brace-balance-check it
+  BEFORE your first rebuild (zero cost).** On `weapon_core_hide_state_base` the tip branch
+  (`match/game_core-weapon_core_show_state_base`) had FIVE anchor functions each missing their closing
+  `}` (use_dispersion_calculator, use_character_dispersion_calculator, use_weapon_dispersion_calculator,
+  use_client_player_update, use_game_core_weapon_state) - `void use_X(){...` ran straight into
+  `void use_Y(){`, so MSVC failed with `C2601 local function definitions are illegal` + `C1075 EOF`. The
+  prior report.json was therefore generated on a DIFFERENT (older, compiling) tree, which makes nearly
+  every `100->0` row in report-changes a stale-baseline artifact, not your regression. Catch it for free
+  before building: `python3 -c "s=open('.../temp_include_all.cpp').read(); d=0; [exec('global d')]"` - or
+  just iterate chars counting `{`/`}` and assert final depth 0, min depth never negative. Fixing the
+  braces is safe (the anchor TU emits no matched bytes) and re-enabled ~89 dead-stripped anchors. Cost me
+  one wasted ~20-min rebuild discovering it.
