@@ -85,7 +85,9 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     ctor reproduces the inherited-member overwrite m_body_part_mask_for_user = body_part_whole_body_but_hands
     ([this+130h]=0xFFFFFFFD).
   - STACK TIP = match/game_core-weapon_core_show_state_base. New matches stack on this.
-- game_core::weapon_core_hide_state_base::{ctor,initialize,finalize,on_animation_end_impl} -> STATE[ctor 100%, finalize 100%, initialize 75.13%, on_animation_end_impl 69.93%|PARTIAL] -> PR #126 (regressions: none)
-  - STACKED on #125. Mirrors show_state_base; hide's on_animation_end_impl sets m_is_shown=false. Also fixed a
-    brace breakage in temp_include_all.cpp inherited from #125 (5 anchors missing `}`) -> #125 alone may not
-    compile; the stack tip does (flag when reviewing #125 standalone).
+- game_core::weapon_core_hide_state_base::{ctor,initialize,finalize,on_animation_end_impl} -> STATE[100%|DONE] -> PR #126 (regressions: none)
+  - STACKED on #125. ALL FOUR at 100%. Mirrors show_state_base; hide's on_animation_end_impl sets m_is_shown=false.
+    The earlier "initialize 75.13% / on_animation_end_impl 69.93% PARTIAL, unreproducible LTCG" diagnosis was WRONG:
+    the empty out-of-line call was a compiled-out ASSERT; recovering it (ASSERT( UNKNOWN_EXPRESSION )) closed both to
+    100%. Also fixed a brace breakage in temp_include_all.cpp inherited from #125 (5 anchors missing `}`) -> #125
+    alone may not compile; the stack tip does (flag when reviewing #125 standalone).
