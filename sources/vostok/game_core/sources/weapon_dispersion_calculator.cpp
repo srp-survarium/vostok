@@ -78,26 +78,16 @@ void weapon_dispersion_calculator::reload( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::set_reload_dispersion_amount(const float)
-void weapon_dispersion_calculator::set_reload_dispersion_amount( float reload_dispersion_amount )
+// STATE[100%|DONE]
+void weapon_dispersion_calculator::set_reload_dispersion_amount( const float reload_dispersion_amount )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f867>|0x007|+0x00d:'72'
-	// <0>
-	// ******
+	m_reload_dispersion_amount = reload_dispersion_amount;
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::set_one_shoot_dispersion_amount(const float)
-void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( float one_shoot_dispersion_amount )
+// STATE[100%|DONE]
+void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( const float one_shoot_dispersion_amount )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f847>|0x007|+0x00c:'79'
-	// <0>
-	// ******
+	m_one_shoot_dispersion_amount = one_shoot_dispersion_amount;
 }
 
 // STATE[100%|DONE]
@@ -106,13 +96,10 @@ float weapon_dispersion_calculator::get_value( ) const
 	return m_current_coeff;
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::set_aiming_speed(const float)
-void weapon_dispersion_calculator::set_aiming_speed( float aiming_speed )
+// STATE[100%|DONE]
+void weapon_dispersion_calculator::set_aiming_speed( const float aiming_speed )
 {
-	// FUNCTION BODY
-	// <0x58f807>|0x007|+0x00d:'90'
-	// ******
+	m_aiming_speed = aiming_speed;
 }
 
 } // namespace survarium
