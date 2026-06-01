@@ -8,8 +8,7 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]: empty body, matches push ebp/mov ebp,esp/pop ebp/ret exactly
-// void survarium::game_core_initialize()
+// STATE[100%|DONE]
 void game_core_initialize( )
 {
 }

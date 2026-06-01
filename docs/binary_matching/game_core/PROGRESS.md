@@ -8,3 +8,5 @@ One line per matched function, added in that function's OWN commit (not here on 
 infra base): `module::function -> STATE -> PR (regressions)`.
 
 <!-- Each match commit appends its line below. -->
+- game_core::game_core_initialize -> STATE[100%|DONE] -> PR #104 (regressions: none)
+  - empty body == target's 5 bytes; it DOES get its own symbol (visible in objdiff), not ICF-unscorable.

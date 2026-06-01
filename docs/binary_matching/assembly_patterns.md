@@ -388,3 +388,15 @@ shape to the already-100% `player_stamina` pair. ANCHOR (game_core): default-con
 copy-construct + a direct `b = a`, then escape `&a`/`&b` through the opaque
 `example_callback` sink so LTCG does not DSE the member stores. Landed both at 100% on
 the first rebuild.
+### empty function body
+ASM:
+    push  ebp
+    mov   ebp, esp
+    pop   ebp
+    ret
+SOURCE: an empty body `void f( ) { }` - the bare `/Od` frame, 5 bytes, byte-identical
+for every empty `__cdecl` function. It DOES get its own standalone symbol and appears
+as its own unit in objdiff/report (confirmed: `game_core/sources/entry_point.cpp`
+`survarium::game_core_initialize`, symbol `?game_core_initialize@survarium@@YAXXZ`).
+`/OPT:ICF` may fold byte-identical functions, but the symbol still resolves - do not
+assume an empty function is "unscorable".
