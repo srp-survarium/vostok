@@ -91,12 +91,12 @@ Inserted the five missing `}`. This is the non-target anchor TU, so it cannot re
 any matched object's bytes; it only lets the file compile so the anchors work. Brace
 balance verified 0 (never negative) after the fix. Rebuilt.
 
-## Results (rebuild 2, after brace fix)
-report.json fuzzy_match_percent:
+## Results (FINAL, after ASSERT recovery)
+report.json fuzzy_match_percent - ALL FOUR 100% DONE:
 - ctor                  100.0    DONE
 - finalize              100.0    DONE
-- initialize            75.13    PARTIAL  (see CORRECTION below)
-- on_animation_end_impl 69.93    PARTIAL  (see CORRECTION below)
+- initialize            100.0    DONE   (was 75.13 pre-ASSERT; recovered, see CORRECTION + SWEEP below)
+- on_animation_end_impl 100.0    DONE   (was 69.93 pre-ASSERT; recovered, see CORRECTION + SWEEP below)
 
 CORRECTION (new guidelines): the `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub`
 (delinker-misnamed `finalize_impl`) in initialize (between base init() and
