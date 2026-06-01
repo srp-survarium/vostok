@@ -37,3 +37,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - 100%. BONUS: weapon_state::weapon_state() default ctor incidentally hit 100% via operator='s observed
     anchor -> proves a constant-only ctor matches when its instance is OBSERVED. RETRY #107 (weapon_recoil
     18%) with the opaque-sink escape anchor; README rule revised.
+- game_core::weapon_recoil_params::weapon_recoil_params() [RETRY of #107] -> STATE[100%|DONE] -> PR #116 (regressions: none)
+  - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
