@@ -54,6 +54,29 @@ mov [ebp-4],ecx ; this -> reload ; fld member). No inlining, no callees.
    ctor under /Od+LTCG, expected low PARTIAL; left STUB, not this unit's work).
    DIFF:  n/a - already 100%, no diff needed.
 
+## Review (post-#112, updated guidelines)
+Re-verified WITHOUT rebuilding:
+- report.json: `?get_value@weapon_dispersion_calculator@survarium@@QBEMXZ` ->
+  `fuzzy_match_percent: 100.0`, size 17, demangled
+  `public: float __thiscall survarium::weapon_dispersion_calculator::get_value(void) const`.
+- `pdb_fetch --view target` (rva 0x57f820) is unchanged: trivial getter
+  `fld dword ptr [eax+18h]; ret`, member 0x18 = `m_current_coeff`. No switch,
+  no `empty_stub`/ASSERT, no callees, no inlining. The only "argument" is the
+  implicit `this`, so there is NOTHING for the LTCG-argument exception to touch.
+  The 100% DONE claim is genuine; this is NOT an LTCG-residual case.
+- No `// LOCALS` block exists for this function (nothing to declare); body is the
+  single `return m_current_coeff;` statement.
+
+Applied updated guidelines (comment/STATE only, no logic change, no rebuild):
+- Reduced the `.cpp` to a clean 100% DONE: kept ONLY `// STATE[100%|DONE]`,
+  deleted the carcass `// <full signature>` line, the inline `// asm:` comment,
+  and the `// FUNCTION BODY` block (justified: confirmed clean 100%).
+- The "Regressions caused" note below pre-dates the rule that "LTCG" applies
+  ONLY to dropped/register-passed function arguments. It uses "LTCG" to describe
+  whole-EXE relink address-reshuffle churn in *unrelated* functions, not a
+  residual on get_value itself, so it is not a STATE mislabel; left as historical
+  context. get_value's own match has no residual to mis-attribute.
+
 ## Outcome
 STATE[100%|DONE]: `return m_current_coeff;` (member @ this+0x18) matches the target
 `fld dword ptr [eax+18h]` getter byte-for-byte. No callees, no inlining.
