@@ -67,10 +67,22 @@ void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 curren
 	// ******
 }
 
-// STATE[STUB]
+// STATE[46.39%|PARTIAL]: body source-correct; residual diff is LTCG inlining.
+// claude@MATCH: loop iterates over m_active_objects (offset 0x10), not
+// m_inactive_objects (offset 0x00) - target's size()/operator[] both read
+// &m_active_objects. The prior STUB had the wrong container in the condition
+// (it read m_inactive_objects, offset 0x00); fixing it dropped the fuzzy %
+// (52->46) only because the now-correct offsets are reached via the inlined
+// body while target out-of-lines the calls (see NOTE below).
+// claude@NOTE: target keeps vectora<record>::size (0x083010) and
+// vector<record>::operator[] (0x082ed0) out-of-line and *calls* them; our base
+// (still /Od) inlines both (idiv/imul 0x38), and base has no out-of-line
+// vectora<record>::size at all. This emit-and-call vs inline of a trivial COMDAT
+// template method is an LTCG decision we cannot steer from this function's
+// source - the body, loop, member access and call args otherwise match. PARTIAL.
 void scheduler::on_frame( u32 frame_delta, u32 current_time )
 {   // sushi@NOTE: `size` didn't inline in target
-	for ( m_current_index = 0 ; m_current_index < m_inactive_objects.size( ) ; ++m_current_index )
+	for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )
 		on_frame( m_active_objects[m_current_index], frame_delta, current_time );
 
 	m_current_index = u32(-1);
