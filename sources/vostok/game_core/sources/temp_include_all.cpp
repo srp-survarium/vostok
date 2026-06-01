@@ -392,6 +392,8 @@ namespace vostok
 	{
 		survarium::client_player_update update;
 		update.serialize( *packet );
+	}
+
 	void use_game_core_weapon_state()
 	{
 		// Anchor weapon_state::operator= so its member stores are OBSERVED
