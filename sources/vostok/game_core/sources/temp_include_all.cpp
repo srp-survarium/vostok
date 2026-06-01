@@ -61,6 +61,7 @@
 #include <vostok/game_core/weapon_core_idle_state_base.h>
 #include <vostok/game_core/weapon_core_aimed_state_base.h>
 #include <vostok/game_core/weapon_core_show_state_base.h>
+#include <vostok/game_core/weapon_core_hide_state_base.h>
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
@@ -308,6 +309,8 @@ namespace vostok
 	{
 		survarium::dispersion_calculator calc;
 		calc.get_dispersion( );
+	}
+
 	void use_character_dispersion_calculator( )
 	{
 		survarium::character_dispersion_calculator calc;
@@ -315,6 +318,8 @@ namespace vostok
 		// get_target_koef / get_broken_hands_penalty are private; tick() calls
 		// them, so anchoring tick keeps them alive transitively.
 		calc.tick( survarium::type_stand, true, false, 0, false, 0 );
+	}
+
 	void use_game_core_weapon_recoil_params( )
 	{
 		// Anchor the default ctor so its constant member stores are OBSERVED
@@ -372,6 +377,8 @@ namespace vostok
 		calc.get_value( );
 
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
+	}
+
 	void use_game_core_weapon_core_base_state( )
 	{
 		// weapon_core_base_state is abstract (pure weapon_and_hands_expression) and its
@@ -508,6 +515,43 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
 	}
 
+	void use_game_core_weapon_core_hide_state_base( )
+	{
+		// weapon_core_hide_state_base does not override the pure
+		// weapon_and_hands_expression, so it is still abstract; a concrete derived
+		// stub gives a constructible instance whose ctor observes the stores.
+		struct concrete_hide_state : survarium::weapon_core_hide_state_base
+		{
+			concrete_hide_state( survarium::weapon_core& weapon, bool& is_shown )
+				: survarium::weapon_core_hide_state_base( weapon, is_shown ) {}
+
+			virtual animation::mixing::expression weapon_and_hands_expression(
+				mutable_buffer&,
+				bool,
+				survarium::weapon_user_state_enum,
+				animation::mixing::animation_lexeme& ) const override
+			{
+				VOSTOK_UNREACHABLE_CODE( );
+			}
+		};
+
+		survarium::weapon_core		weapon;
+		bool						is_shown	= false;
+		concrete_hide_state			state( weapon, is_shown );
+		bool						tick_result	= false;
+
+		// Qualified, non-virtual calls keep the hide-base out-of-line
+		// initialize()/finalize()/on_animation_end_impl() symbols.
+		state.survarium::weapon_core_hide_state_base::initialize( );
+		state.survarium::weapon_core_hide_state_base::finalize( );
+		state.survarium::weapon_core_hide_state_base::on_animation_end_impl( tick_result );
+
+		// Escape &state / &is_shown so LTCG observes the stores.
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+		example_callback( reinterpret_cast< pcstr >( &is_shown ) );
+		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
+	}
+
 	void use_bullet( )
 	{
 		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
@@ -597,6 +641,8 @@ namespace vostok
 	{
 		survarium::client_player_update update;
 		update.serialize( *packet );
+	}
+
 	void use_game_core_weapon_state()
 	{
 		// Anchor weapon_state::operator= so its member stores are OBSERVED
@@ -608,6 +654,8 @@ namespace vostok
 
 		example_callback( reinterpret_cast< pcstr >( &a ) );
 		example_callback( reinterpret_cast< pcstr >( &b ) );
+	}
+
 	void use_game_core_player_logic_base_state()
 	{
 		survarium::player_input input;
@@ -961,6 +1009,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_idle_state_base( );
 	vostok::use_game_core_weapon_core_aimed_state_base( );
 	vostok::use_game_core_weapon_core_show_state_base( );
+	vostok::use_game_core_weapon_core_hide_state_base( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );
