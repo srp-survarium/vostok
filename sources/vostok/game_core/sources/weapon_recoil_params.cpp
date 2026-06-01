@@ -7,15 +7,31 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[18.18%|PARTIAL]: body matches target 1:1; LTCG elides the member stores
+// in base (no real consumer -> whole-program dead-store elimination leaves an
+// empty ctor; target keeps all 12 movss). Source is as close as it can be.
 // survarium::weapon_recoil_params::weapon_recoil_params()
-weapon_recoil_params::weapon_recoil_params( )
+// claude@MATCH: member-init list in declaration order; additive_back_recoil
+// (offset 0x20) is deliberately omitted - the target never stores it (no movss
+// [this+20h] in the asm). additive_recoil_time gets math::epsilon_3 (the only
+// non-zero constant; delinker resolved the rdata symbol as epsilon_3 = .001f).
+// claude@NOTE: base ctor compiles empty under /Od+/GL because the only caller is
+// the synthetic temp_include_all anchor, which LTCG sees through. Matched ctors
+// like animation_analysis_result survive only via a real reachable caller.
+weapon_recoil_params::weapon_recoil_params( ) :
+	first_shoot_side_recoil		( 0.0f ),
+	shoot_side_recoil		( 0.0f ),
+	first_shoot_back_recoil		( 0.0f ),
+	shoot_back_recoil		( 0.0f ),
+	shoot_recoil_min_angle		( 0.0f ),
+	shoot_recoil_angle_range	( 0.0f ),
+	additive_recoil_time		( math::epsilon_3 ),
+	additive_side_recoil		( 0.0f ),
+	additive_recoil_min_angle	( 0.0f ),
+	additive_recoil_angle_range	( 0.0f ),
+	side_compensation_speed		( 0.0f ),
+	back_compensation_speed		( 0.0f )
 {
-	// FUNCTION BODY
-	// <0x5930c0>|0x000|+0x0c6:'25'	{
-	// <0>
-	// <0x593186>|0x0c6|      :'27'	}
-	// ******
 }
 
 // STATE[STUB]

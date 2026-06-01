@@ -52,6 +52,7 @@
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
+#include <vostok/game_core/weapon_recoil_params.h>
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
@@ -260,6 +261,19 @@ namespace vostok
 	{
 		survarium::game_material_manager manager;
 		manager.clear_resources( ); // game_world::clear_resources
+	}
+
+	void use_weapon_recoil_params( )
+	{
+		// claude@NOTE: keeps the standalone default ctor symbol reachable.
+		// The body matches the target 1:1 (see weapon_recoil_params.cpp), but
+		// LTCG elides its member stores here because no *real* consumer observes
+		// the object - a synthetic anchor (escaped pointer, %s-printf, etc.)
+		// does not force the float stores past whole-program dead-store
+		// elimination. So the base ctor is empty vs the target's 12 movss. This
+		// is an LTCG artifact, not a source bug.
+		survarium::weapon_recoil_params params;
+		example_callback( reinterpret_cast< pcstr >( &params ) );
 	}
 
 	void use_bullet( )
@@ -668,6 +682,7 @@ IncludeAll::IncludeAll()
 	vostok::use_victory_item_core( );
 	vostok::use_recoil_calculator( );
 	vostok::use_game_material_manager( );
+	vostok::use_weapon_recoil_params( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );

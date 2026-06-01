@@ -81,3 +81,45 @@ from the derived ctor's source - it requires adding/removing an out-of-line ctor
 base (a separate function + wide blast radius). Confirmed in
 `game_core/inventory_item::inventory_item` (base `interactive_object` has out-of-line
 ctor at target rva 0x9ccb0; base build inlines `unmanaged_resource(1)` instead).
+
+### scalar default ctor: sequential `movss [this+off], const` from the constant pool
+ASM (target, /Od default ctor of a float-only POD struct):
+    mov   eax, [ebp-4]          ; this
+    movss xmm0, [rdata_slot]    ; each /Od float literal gets its OWN rdata slot
+    movss [eax], xmm0           ; member at offset 0
+    mov   ecx, [ebp-4]
+    movss xmm0, [rdata_slot]
+    movss [ecx+4], xmm0         ; member at offset 4
+    ...
+SOURCE: a member-initializer list of scalar float constants. Maps 1:1, in
+**declaration order** (MSVC ignores init-list order). A member with NO store
+(gap in the offset sequence, e.g. [this+1Ch] then [this+24h] skipping 0x20) is
+simply **absent from the init list** - leave it out.
+NOTES: read the actual constants from the obj's `.rdata` + `.text` relocations
+(objdiff/rich masks them as `[0]`/`[offset]`). A named symbol on the reloc (the
+delinker resolves it, e.g. `epsilon_3`) means the literal is a named engine
+constant: `epsilon_3 = .001f` is `vostok::math::epsilon_3` from `math_constants.h`.
+COFF-parse recipe (binaries/objdiff/target/<unit>.obj): walk section headers, dump
+`.rdata` as f32, then walk `.text` relocations (type 20 = DIR32) - each
+`movss xmm0,[offset]` site's reloc gives `symsec/symval` into `.rdata`.
+Confirmed in `game_core/weapon_recoil_params::weapon_recoil_params()` (default ctor,
+target rva 0x5830c0).
+
+### LTCG dead-store elimination: a /Od+/GL ctor with no real caller compiles EMPTY
+ASM (base, the same correct ctor source as above) for a function only reachable
+via a synthetic `temp_include_all` anchor:
+    push ebp; mov ebp,esp; push ecx; mov [ebp-4],ecx; mov eax,[ebp-4]; leave; ret
+    ; i.e. NO member stores at all - the whole init list is gone.
+CAUSE: Master Gold game_core is `Optimization=0` (/Od) **plus**
+`WholeProgramOptimization=1` (/GL = LTCG). The obj holds IL, and the linker does
+whole-program codegen: if the constructed object is never *observed* by a real
+consumer, LTCG proves every member store dead and emits an empty ctor body.
+NOT steerable from the anchor: escaping `&params` to an opaque external
+(`example_callback` -> `printf("%s")`) does NOT count as observing the float
+members, so the stores still vanish. Real matched value-struct ctors (e.g.
+`animation_analysis_result::animation_analysis_result`, 85.98% DONE) are NOT
+anchored in temp_include_all at all - they survive only because a real reachable
+game caller observes them. So: a constant-only default ctor whose only caller is
+the anchor is a PARTIAL until its real callers are matched - the body is right,
+but the base bytes are LTCG-emptied. Confirmed in
+`game_core/weapon_recoil_params::weapon_recoil_params()` (18.18%).
