@@ -115,6 +115,16 @@ documented "LTCG out-of-line-call vs inline of a trivial COMDAT template method"
 pattern (assembly_patterns.md) — a whole-program/linker decision, not steerable
 from this function's source. => setter left PARTIAL at 76.80%; ctor/dtor DONE 100%.
 
-No second rebuild: the only remaining setter diff is uncontrollable inline-vs-call;
-re-running would not change bytes.
+No second rebuild here: the remaining setter diff is the trivial-accessor
+inline-vs-call shape above.
+
+### Review note (new guidelines)
+The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and
+explicitly lists inline-vs-call as a matching problem to solve from source. The
+prior "uncontrollable LTCG" framing for this 76.80% residual is therefore downgraded:
+keep it PARTIAL, but the inline-vs-call of `fsm::states()`/`front()`/`current_state()`/
+`breath_state::get_multiplier()` should be re-diffed against the source on a future
+rebuild (confirm via both rich indexes whether the target out-of-lines these COMDAT
+accessors while base inlines them - the documented unsteerable-COMDAT class - before
+banking it). This review did NOT rebuild; the body shape is unchanged.
 </content>

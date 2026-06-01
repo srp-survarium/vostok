@@ -44,5 +44,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::weapon_recoil_params::weapon_recoil_params() [RETRY of #107] -> STATE[100%|DONE] -> PR #116 (regressions: none)
   - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
 - game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% PARTIAL] -> PR #117 (regressions: none)
-  - GROUPED. ctor+dtor 100% (observed-escape anchor). setter PARTIAL: LTCG inlines trivial accessors
-    (states()/front()/current_state()) that the target calls out-of-line. Added breath_state.h for the vtable cast.
+  - GROUPED. ctor+dtor 100% (observed-escape anchor). setter PARTIAL (76.8%): residual is the
+    trivial-accessor inline-vs-call shape (target calls states()/front()/current_state()/get_multiplier()
+    out-of-line; base inlines). New guidelines: re-diff against source, do NOT bank as LTCG. Added
+    breath_state.h for the vtable cast.
