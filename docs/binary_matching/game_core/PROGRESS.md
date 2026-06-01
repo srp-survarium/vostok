@@ -73,7 +73,8 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     fsm_state stopgap). Finding (on stack): mangled access codes U=public/M=protected/E=private virtual
     (initialize/finalize were private-virtual EAEXXZ, ctor protected IAE) - read them from target COFF up front.
 - game_core::weapon_core_aimed_state_base::{ctor,initialize,finalize} -> STATE[ctor 100%, initialize 100%, finalize 83.33%|PARTIAL] -> PR #124 (regressions: none)
-  - STACKED on #123. ctor+initialize 100%; finalize PARTIAL (LTCG inline-vs-call of animation_playback_state::reset).
+  - STACKED on #123. ctor+initialize 100%; finalize PARTIAL: residual is the inline-vs-call of
+    animation_playback_state::reset (real out-of-line fn, not an ASSERT). New guidelines: re-diff, do NOT bank as LTCG.
     Correction (on stack): initialize/finalize are PROTECTED virtual (MAE), dispatch instant_aim_start/end via
     weapon_core vtable 0x8c/0x90 - unlike idle's non-virtual pair.
   - STACK TIP was match/game_core-weapon_core_aimed_state_base.

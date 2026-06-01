@@ -128,10 +128,18 @@ is VIRTUAL (line 127). reset() is an out-of-line call (own function, not my unit
           artifact scalar-deleting-dtor churn from the rotating prior-branch baseline).
 
 ## Outcome
-STATE: ctor 100% DONE, initialize 100% DONE, finalize 83.33% PARTIAL (LTCG inline-vs-call
-of animation_playback_state::reset - target keeps it out-of-line @0x087f60 and emits
-`call reset`; our /GL LTCG inlines/elides it, unsteerable from this function's source).
-Regressions caused: none.
+STATE: ctor 100% DONE, initialize 100% DONE, finalize 83.33% PARTIAL (inline-vs-call of
+animation_playback_state::reset - target keeps it out-of-line @0x087f60 and emits `call reset`;
+base inlines/elides it). Regressions caused: none.
+
+## Review note (new guidelines)
+The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and lists
+inline-vs-call as a matching problem. The "LTCG" framing for this finalize residual is therefore
+downgraded: keep it PARTIAL, but the reset() inline-vs-call should be re-diffed against source on a
+future rebuild. Note this is verified to be a REAL out-of-line function (target rva 0x087f60), NOT a
+compiled-out ASSERT/empty_stub - so the assembly_patterns CORRECTION about ASSERT-recovery does not
+apply here; the 5-iteration analysis above (empty reset elides -> 83%, real reset body inlines ->
+54%) stands. This review did NOT rebuild; the body shape is unchanged.
 
 Key learnings (also added to loop_performance.md / assembly_patterns.md):
 - Access chars from the target COFF: aimed's initialize/finalize are PROTECTED virtual
