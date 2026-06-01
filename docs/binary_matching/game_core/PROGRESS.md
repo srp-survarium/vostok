@@ -60,3 +60,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     char-const* ctor, base keeps one @0x030ae0); body/control-structure are otherwise an exact match.
     Like #117's fsm, this is BLOCKED on the fixed_string<46> type's emission, not a banked LTCG residual.
     Also refreshed the stale FUNCTION BODY carcass to the authoritative target --view structure (0x0ba3c0).
+- game_core::{get_bone_matrix_in_object_space, get_bone_matrix_in_object_space_impl} -> STATE[100%|DONE] -> PR #120 (regressions: none)
+  - free-function pair (wrapper+impl), float4x4 matrix math, both 100% in one rebuild. Fresh independent.
