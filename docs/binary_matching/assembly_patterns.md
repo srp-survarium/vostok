@@ -240,6 +240,30 @@ static, `S`=public static (then `A`=__cdecl-ish, return-type, args). FIX: set th
 access specifier to match the target char. Confirmed: `movement_animation_index` is `K`
 (protected static) - public gave `S`, private gave `C`, both scored None; `protected:` -> `KAI`
 == target -> 100%.
+### VIRTUAL member access codes: public=`U`, protected=`M`, private=`E` (after `@@`)
+SYMPTOM: report.json `fuzzy_match_percent: None` for a virtual override that compiled and is in
+the base obj; the COFF symbol differs from the target only in the access/virtual char right after
+`@@`. For VIRTUALS the char encodes access AND virtual-ness: `U`=public virtual, `M`=protected
+virtual, `E`=private virtual (then `AE`=__thiscall). Same pairing-failure class as the non-virtual
+`Q`/`A`/`I` and the static `S`/`K`/`C` entries. FIX: set the override's access specifier to match.
+A virtual override may legally be `private:` (virtual dispatch ignores access); the target often
+makes the overrides private even when the base declares them public. Confirmed:
+`weapon_core_idle_state_base::{initialize,finalize}` are `EAEXXZ` (private virtual) - declaring them
+`private:` flipped both from None to 100%. The non-virtual ctor in the same class was `IAE`
+(protected); `protected:` -> 100%. (To anchor private virtuals non-virtually from a free `use_*`,
+befriend the anchor in the class - free decls/friends emit no bytes.)
+
+### derived state ctor: base-ctor delegation + N compiler-emitted vtable stores, empty body
+ASM (target, `weapon_core_idle_state_base` ctor, multiple-inheritance state class):
+    push 0; mov eax,[ebp+8]; push eax; mov ecx,[ebp-4]
+    call survarium::weapon_core_base_state::weapon_core_base_state   ; (weapon, false)
+    mov [ecx],    ??_7...@6Bfsm_state@ai@vostok@@           ; primary vtable @0x00
+    mov [edx+18h],??_7...@6Bunmanaged_resource@...@         ; secondary vtable @0x18
+SOURCE: ctor with ONLY an init-list base delegation (`: weapon_core_base_state( weapon, false )`)
+and an EMPTY body. The two `mov [this+off], ??_7...` are the compiler-emitted vtable pointer
+stores for each base subobject of a multiply-inherited class (fsm_state @0x00, unmanaged_resource
+@0x18) - never write them, MSVC emits them after the base ctor returns. Matches 100% with an empty
+`{}` body. Confirmed in `game_core/weapon_core_idle_state_base::weapon_core_idle_state_base`.
 
 ### private member function -> mangled `ABE`, not `QBE` (objdiff scores `None` if wrong)
 SYMPTOM: report.json `fuzzy_match_percent = None` for a function that clearly
