@@ -81,14 +81,9 @@ namespace survarium
 
 namespace vostok
 {
-	void example_callback( const char* name );
-
 	void use_game_core_initialize( )
 	{
-		// Take the address so the linker keeps the standalone body
-		// (a direct call to the empty function gets inlined away).
-		void ( *fn )( ) = &survarium::game_core_initialize;
-		example_callback( reinterpret_cast< pcstr >( fn ) );
+		survarium::game_core_initialize( );
 	}
 
 	void use_medkit( )
