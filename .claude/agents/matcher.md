@@ -128,6 +128,12 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   the resulting match % from `report.json`, and what the next `--view diff` then
   showed. A reviewer must be able to replay your run from this file. Template in
   agentic_loop.md section 7.
+- **Never force-push or rewrite a branch once it is pushed (no `git push --force`, no
+  `--amend` after the first push).** Force-push clobbers concurrent work and orphans
+  every PR stacked above you, and it destroys the before/after history a reviewer reads.
+  Pre-first-push squashing of your own WIP is fine; after that, revise only by adding a
+  NEW commit + plain `git push`. Cleanup/squash happens at merge time (gh squash-merge),
+  never by rewriting a pushed branch.
 
 ## Finish - STACKED PRs: one unit = one branch + one commit + one PR, each stacked on the previous (section 9)
 PRs are **stacked**: the orchestrator leaves the current **stack tip** checked out

@@ -62,9 +62,20 @@ The integration branch (`feature/agentic-matching-loop-2`) is updated **only by
 merging PRs**, never by a direct commit. So:
 - Guideline / doc updates also go through a PR (an agent PR based on its work), not
   a direct edit to the base.
-- The base advances one PR at a time on merge; to keep the stack clean you only
-  re-parent the **next** PR onto the base after each merge (O(n)) - never re-cascade
-  the whole stack (O(n^2)).
+- The base advances one PR at a time on merge. **Never rebase + force-push to
+  re-parent** - force-push orphans every PR stacked above and erases review history. To
+  refresh the next PR onto the advanced base, MERGE the base into it (`git merge <base>`,
+  resolve, plain push) - a merge commit, never a force-push. Process strictly in order:
+  a stacked PR can only show *just* its own diff once the PRs below it are merged.
+
+## Reviewing a matcher's work - the `reviewer` agent
+After a matcher finishes a unit (or before you merge its PR), you may dispatch a
+`reviewer` worker to audit it: it checks that target/base were not confused, the lean
+comment policy was followed, the match % is correct everywhere (vs `report.json`), and
+no residual was wrongly banked as "LTCG". The reviewer pushes ONE additional commit (no
+`--amend`, no force-push) so the human sees before/after, and flags real logic bugs for
+a faster machine instead of fixing them. It never rebuilds or merges. See
+`.claude/agents/reviewer.md`.
 
 ## Dispatch hygiene
 - Hand each worker exactly one function plus a locating hint (`file:line` or `rva`
