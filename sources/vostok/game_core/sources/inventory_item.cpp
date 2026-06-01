@@ -9,7 +9,15 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[78.8%|PARTIAL]: member-init body byte-exact; only divergence is the
+// interactive_object base ctor - target emits `call interactive_object::interactive_object()`
+// (an out-of-line base ctor), base inlines unmanaged_resource(1)+vtable instead.
+// claude@NOTE: target ctor calls interactive_object::interactive_object() (rva 0x9ccb0),
+// proving interactive_object has a user-declared out-of-line default ctor. base has no
+// declared ctor so the trivial base init is inlined here (push 1 / mov [eax],0). Fixing
+// this requires giving interactive_object an out-of-line ctor (separate function, wide
+// blast radius across every interactive_object-derived class) - out of scope for this
+// leaf. The remaining `~` rows are pure ecx/eax/edx register + push/pop esi LTCG noise.
 inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_action_behaviuor	( type ),
 	m_inventory			( NULL ),
