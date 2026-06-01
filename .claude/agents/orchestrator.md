@@ -25,6 +25,7 @@ workers' concern, not yours; do not load them.
    ```
    Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry. Order them
    leaf/small-first (easiest wins first).
+   - **Skip known-BLOCKED clusters.** Before dispatching, consult the module `README.md` for clusters already marked `BLOCKED` (e.g. the `udp_match_packet`/`packet_reader` serialize/deserialize cluster - never-compiled header). Those functions carry `// STATE[BLOCKED]` so the `rg STATE\[STUB\]` queue already excludes them; do NOT dispatch a matcher for them until the blocking header cluster is built.
 2. **STACKED PRs.** Every match is stacked on the previous one - each worker
    branches off the prior worker's branch (the **stack tip**), and its PR targets
    that branch. This means matchers inherit each other's source, anchors, and notes

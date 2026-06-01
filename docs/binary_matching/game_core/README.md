@@ -42,7 +42,10 @@ deps) are never-compiled stubs - no built `.cpp` `#include`s them, so the first
 include breaks the whole game_core build. The bodies are matchable 1:1 from asm
 (see PR #105), but cannot compile or be scored until that header cluster is built
 out. **Do not dispatch these until the cluster is built** - park `BLOCKED` cheaply
-(keep the verified body as a comment), don't burn rebuilds rediscovering it.
+(keep the verified body as a comment), don't burn rebuilds rediscovering it. These
+functions are now marked `// STATE[BLOCKED]` in source so the orchestrator queue
+(`rg STATE\[STUB\]`) skips them; do not dispatch until the `udp_match_packet` /
+`packet_reader` header cluster is built.
 
 Affected (as of the queue scan): `client_player_update::serialize` (PR #105),
 `player_state::{serialize,deserialize}`, `weapon_state::deserialize`,
@@ -51,6 +54,7 @@ Affected (as of the queue scan): `client_player_update::serialize` (PR #105),
 `weapon_core_chamber_a_round_state_base::{serialize,deserialize}`,
 `weapon_core_chamber_a_round_aimed_state_base::{serialize,deserialize}`,
 `weapon_core_shotgun_reload_state::{serialize,deserialize}`,
+`weapon_user_animations_selector::{serialize,deserialize}`,
 `hand_to_weapon_ik_processor::{serialize,deserialize}`,
 `base_player::{send_game_world_object,deserialize_game_world_object}`.
 Unblocking task: build out the `udp_match_packet` / `packet_reader` header cluster

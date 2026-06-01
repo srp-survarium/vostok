@@ -37,7 +37,7 @@ weapon_state& weapon_state::operator=( weapon_state const& other )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::weapon_state::deserialize(vostok::network_core::packet_reader&)
 void weapon_state::deserialize( network_core::packet_reader& packet )
 {
