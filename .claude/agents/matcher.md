@@ -40,6 +40,15 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   --view structure/target/callees/info` (all under `nix develop`, indexes in
   `binaries/rich/`).
 - **Write** a first approximation in the `.cpp`, following `MATCHING.md`.
+- **Match the SHAPE the asm dictates BEFORE building** (these are source-steerable,
+  not LTCG - fixing them up front avoids wasted rebuilds):
+  - **Visibility:** read the target symbol's mangled access char (public `QAE`/`UAE`,
+    protected `IAE`/`MAE`, private `AAE`/`ABE`/`EAE`; statics `C`=private/`K`=protected)
+    and set the header's access specifier to match, or objdiff scores `None`.
+  - **Asserts:** a `call empty_stub` (delinker may misname `finalize_impl`) is a
+    compiled-out `ASSERT` - put `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` at that
+    statement; it reproduces the bytes (MATCHING.md). Do NOT leave it as "residual".
+  - **Switch:** give a `case` body that has a local/assert its own `{ }` scope.
 - **Reachability:** reference the function from `temp_include_all.cpp` so the
   linker keeps it - unless an already-anchored function calls it (section 3).
 - **Build + score:** `python3 scripts/rebuild.py` with **NO module arg** - a bare
