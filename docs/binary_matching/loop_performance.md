@@ -62,6 +62,21 @@ _(Append new findings below this line.)_
   callers are matched. Write the (correct) body once, anchor it once to confirm
   the symbol survives + the score, then STOP - don't iterate the anchor.
   Cost me 2 wasted rebuilds chasing it on `weapon_recoil_params::weapon_recoil_params()`.
+- **`rebuild.py <module>` does NOT relink the EXE - it only builds that ninja
+  sub-target (the module's `.lib`).** `rebuild.py` forwards its args to
+  `ninja_build.py`, which passes them through as ninja *targets*; with no arg it
+  builds the full game (`survarium_-_PC_-_DirectX_11`) and relinks the EXE. The
+  delinker/rich index read the linked **EXE**, so if you pass a module name the
+  EXE is stale and your source change does not show up in `--view diff` or the
+  score (build finishes in ~1 min instead of ~20, and `report-changes.json` shows
+  `+0.00 / 0 changed` - the tell). Run **`python3 scripts/rebuild.py`** with no
+  module arg so the EXE actually relinks. Cost me one wasted rebuild on
+  `scheduler::on_frame`. (Note: the per-function loop doc's `rebuild.py <module>`
+  is misleading on this point.)
+- **MSVC LTCG objects are ANONYMOUS OBJECTs (IL, not machine code).** `dumpbin
+  /DISASM` on `binaries/Win32/intermediates/.../*.obj` prints nothing useful -
+  codegen happens at link. The only post-codegen disassembly is the delinked
+  base obj / `binaries/rich/base`, which requires the full EXE relink (above).
 - **Read the actual float/struct constants straight out of the target `.obj`**
   instead of guessing - rich/objdiff mask rdata operands as `[0]`/`[offset]`.
   A ~30-line Python COFF parser (section headers -> dump `.rdata` as f32 ->

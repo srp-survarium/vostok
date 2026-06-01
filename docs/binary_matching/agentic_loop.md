@@ -200,7 +200,7 @@ Target asm: <pdb-parser output, or the key fragment>
 ## Commands run (verbatim, in order)
 - pdb_rich_query --index ... --function ... --list
 - pdb_fetch --target-index ... --function ... --view structure
-- python3 scripts/rebuild.py <module>
+- python3 scripts/rebuild.py        # NO module arg - bare name skips the EXE relink (stale score)
 - pdb_fetch ... --view diff ...
 - ...
 

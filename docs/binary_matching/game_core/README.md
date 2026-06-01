@@ -36,6 +36,16 @@ Affected (as of the queue scan): `client_player_update::serialize` (PR #105),
 Unblocking task: build out the `udp_match_packet` / `packet_reader` header cluster
 (its own work item, likely shared with the `network_core` module).
 
+### Deprioritize constant-only default ctors
+A default ctor that only stores constants, reachable solely via the
+`temp_include_all` anchor, compiles **empty** under `/Od`+`/GL` - LTCG
+dead-store-eliminates every member store because no real consumer observes the
+object. So it caps at a low PARTIAL (~18% on `weapon_recoil_params::weapon_recoil_params()`,
+PR #107) until its real game callers are matched. Write the correct body once,
+anchor once to confirm the symbol + score, then STOP - don't iterate. Prefer
+functions with observable side effects / real consumers; come back to these
+ctors after their callers exist.
+
 ## Per-function logs
 One `<function>.md` in this folder per function that needed real effort (see
 [../agentic_loop.md](../agentic_loop.md) section 7). Live status is in the

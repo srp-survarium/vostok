@@ -11,5 +11,8 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
   - body matched 1:1 from asm but parked: udp_match_packet.h cluster is never-compiled stubs.
 - game_core::inventory_item::inventory_item(action_behaviour_type) -> STATE[78.8%|PARTIAL] -> PR #106 (regressions: none)
 - game_core::weapon_recoil_params::weapon_recoil_params() -> STATE[18.18%|PARTIAL] -> PR #107 (regressions: none)
-  - low %: default ctor, likely inlined member constructors / layout not reproduced. Worth a revisit.
+  - low % is expected: constant-only default ctor, LTCG dead-store-elim'd until callers matched (see README).
+- game_core::scheduler::on_frame(u32,u32) -> STATE[46.39%|PARTIAL] -> PR #108 (regressions: none)
+  - fixed a real source bug (m_inactive_objects -> m_active_objects); residual is unsteerable LTCG (target
+    out-of-lines vectora::size/operator[], base inlines). % chose correctness over the metric.
 

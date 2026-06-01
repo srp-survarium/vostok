@@ -123,3 +123,22 @@ game caller observes them. So: a constant-only default ctor whose only caller is
 the anchor is a PARTIAL until its real callers are matched - the body is right,
 but the base bytes are LTCG-emptied. Confirmed in
 `game_core/weapon_recoil_params::weapon_recoil_params()` (18.18%).
+
+### LTCG out-of-line-call vs inline of a trivial COMDAT template method
+SYMPTOM: for `container.size()` / `container[i]` on a `vostok::vectora<T>` (thin
+`std::vector` wrapper), TARGET emits a real `call` to e.g.
+`vostok::vectora<T>::size` / `stlp_std::vector<T,...>::operator[]`, while BASE
+(same `/Od` source) **inlines** them - `size()` becomes `[+4]-[+0]; cdq; idiv 0x38`
+and `operator[]` becomes `imul edx,0x38; add edx,base`.
+TELL it is LTCG, not a source bug: query both rich indexes -
+`pdb_rich_query --index .../target/index.jsonl --function "vectora<T>::size" --list`
+shows the wrapper exists out-of-line in TARGET, but the same query on
+`.../base/index.jsonl` returns nothing (the COMDAT was inlined everywhere in base).
+Under `/Od`+`/GL` whether a trivial `inline` COMDAT template method is emitted-and-
+called or inlined is a whole-program/linker decision you cannot force from the
+calling function's source. Leave it; match the member access + control flow and
+mark PARTIAL. Confirmed in `game_core/scheduler::on_frame(u32,u32)` (target rva
+0x77de80, 46.39% PARTIAL): the only residual diff is this size()/operator[]
+inline-vs-call. Corollary: a "wrong member but shorter inlined form" can score
+*higher* fuzzy % than the correct member - don't chase the metric, match the
+offset the target reads (here m_active_objects @0x10, not m_inactive @0x00).

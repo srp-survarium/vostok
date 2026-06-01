@@ -33,7 +33,11 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
 - **Write** a first approximation in the `.cpp`, following `MATCHING.md`.
 - **Reachability:** reference the function from `temp_include_all.cpp` so the
   linker keeps it - unless an already-anchored function calls it (section 3).
-- **Build + score:** `python3 scripts/rebuild.py <module>`, then take the
+- **Build + score:** `python3 scripts/rebuild.py` with **NO module arg** - a bare
+  module name (`rebuild.py game_core`) builds only that `.lib` and does NOT relink
+  the EXE, so the delinker/rich index/score stay STALE and your change won't show
+  (`report-changes.json` reads `+0.00 / 0 changed` - the tell). The no-arg run
+  relinks the EXE (~20 min; the module-only build is ~1 min). Then take the
   function's `fuzzy_match_percent` from `binaries/objdiff/report.json` (that is
   the `STATE` number) and check `report-changes.json` for regressions.
 - **Diff:** `pdb_fetch --view diff` shows *where* base and target differ; iterate.
