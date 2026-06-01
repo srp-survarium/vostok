@@ -100,7 +100,10 @@ git commit -m "<module>: match <function> (NN% TAG[, LTCG])"   # name grouped/in
 git push -u origin match/<module>-<function>
 gh pr create --fill --base <base-branch>        # target the tip you branched from, NOT xray
 ```
-Your pushed branch becomes the new tip for the next worker.
+**Exactly ONE commit per PR** (so the stack merges without conflicts). If you ended
+up with WIP/fixup commits, squash them before pushing: `git reset --soft
+<base-branch>` then a single `git commit`. Your pushed branch becomes the new tip
+for the next worker.
 
 Then return **one line** to the orchestrator and nothing else (name any
 inlined-together functions you also matched):
