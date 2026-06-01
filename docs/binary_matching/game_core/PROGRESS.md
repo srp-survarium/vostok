@@ -10,4 +10,6 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
 - game_core::client_player_update::serialize -> STATE[BLOCKED] -> PR #105 (regressions: none)
   - body matched 1:1 from asm but parked: udp_match_packet.h cluster is never-compiled stubs.
 - game_core::inventory_item::inventory_item(action_behaviour_type) -> STATE[78.8%|PARTIAL] -> PR #106 (regressions: none)
+- game_core::weapon_recoil_params::weapon_recoil_params() -> STATE[18.18%|PARTIAL] -> PR #107 (regressions: none)
+  - low %: default ctor, likely inlined member constructors / layout not reproduced. Worth a revisit.
 

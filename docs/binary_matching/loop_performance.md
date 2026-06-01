@@ -53,3 +53,18 @@ _(Append new findings below this line.)_
   the STATE marker / adding a `claude@NOTE:` is a comment-only edit that cannot change
   compiled bytes, so don't rebuild to "confirm" - the existing number stands. Saved a
   full rebuild on `inventory_item::inventory_item`.
+
+- **A constant-only default ctor reachable only via the temp_include_all anchor
+  will compile EMPTY under /Od+/GL** - LTCG dead-store-eliminates every member
+  store because no real consumer observes the object (an anchor that discards or
+  even escapes `&obj` to an opaque external does not count). Before spending
+  rebuilds trying to defeat it: such a ctor is a PARTIAL until its real game
+  callers are matched. Write the (correct) body once, anchor it once to confirm
+  the symbol survives + the score, then STOP - don't iterate the anchor.
+  Cost me 2 wasted rebuilds chasing it on `weapon_recoil_params::weapon_recoil_params()`.
+- **Read the actual float/struct constants straight out of the target `.obj`**
+  instead of guessing - rich/objdiff mask rdata operands as `[0]`/`[offset]`.
+  A ~30-line Python COFF parser (section headers -> dump `.rdata` as f32 ->
+  walk `.text` type-20 relocations for each `movss xmm0,[offset]` site) gives you
+  every constant *and* the member->value map with **zero rebuilds**. Do this in
+  the first pass so the very first body you write already has the right literals.
