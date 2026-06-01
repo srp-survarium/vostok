@@ -296,6 +296,7 @@ namespace vostok
 		calc.get_value( );
 
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
+		calc.get_value( );
 	}
 
 	void use_bullet( )

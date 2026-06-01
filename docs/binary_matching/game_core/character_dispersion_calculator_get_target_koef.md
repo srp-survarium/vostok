@@ -1,5 +1,29 @@
 # game_core::character_dispersion_calculator::get_target_koef
 
+> **STATUS: INPROGRESS (verified; fix deferred to a faster machine).** The dispatch
+> differs, and the divergence is in OUR base, NOT the target (verified 2026-06-01 by
+> disassembling both - target rva 0x585ee0, base rva 0x44c040):
+> - TARGET: `mov edx,[ebp-0Ch]; jmp [edx*4+table]` - a direct, contiguous 5-entry jump
+>   table over values 0..4, **no bounds check**. `type_jump`(3) is a plain table entry;
+>   `type_preview`(4) maps to the `fld1` (=1.0f) body.
+> - BASE (ours): `cmp [ebp-0Ch],3; ja default; jmp [edx*4+table]` - an extra bounds
+>   check + a 4-entry table, because our `switch` stops at `type_jump`(3) and uses
+>   `default: return 1.0f;`, so MSVC bounds the table at 3.
+>
+> FIX (faster machine), two parts, then rebuild + re-diff:
+> 1. **Dispatch:** add `case type_preview: return 1.0f;` and change
+>    `default: return 1.0f;` -> `default: NODEFAULT();` (NODEFAULT = `__assume(0)` in
+>    Master Gold, `sources/vostok/debug_macros.h`). `__assume(0)` tells MSVC the default
+>    is unreachable, so it drops the `cmp 3; ja` and emits the contiguous [0..4] table.
+> 2. **Braces:** the carcass shows a `+0x002` step (a 2-byte `jmp short` = a closing
+>    `}`) at body offset 0x5d (src line 108) and 0xc0 (src line 114) - the `type_stand`
+>    and `type_crouch` blocks were `{ }`-brace-scoped. Add the braces; a brace changes
+>    the codegen/structure (MATCHING.md "switch"). The single-`return` cases
+>    (`sprint`/`jump`) show no `+0x002` and stay brace-less.
+>
+> NOT an LTCG residual - a source-structure problem. The per-case float bodies + the
+> recovered ASSERT already match; the dispatch + braces are what is open.
+
 `float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const`
 Target rva: 0x585ee0 (obj `.text` offset 0xd4 in character_dispersion_calculator.cpp.obj).
 
@@ -71,12 +95,18 @@ Logic:
             `cmp [ebp-N],3; ja default; jmp [eax*4+table]` (extra range check).
 
 ## Outcome
-STATE[88%|PARTIAL]: switch logic + all leaf m_params reads matched byte-for-byte
-in shape. CORRECTION (new guidelines): the prologue `mov byte[ebp-1],0;
-lea eax,[ebp-1]; call empty_stub` (delinker misnames it `finalize_impl`) is a
-COMPILED-OUT ASSERT, not an LTCG artifact - recovered with
-`ASSERT( UNKNOWN_EXPRESSION_T( m_params ) )` as the first statement, which emits
-the `+0x0c` bytes and resolves the frame-size 18h->1Ch / [ebp-N] slot shift.
-Remaining residual: switch dispatch range check (target `jmp [edx*4+table]`
-direct vs base `cmp/ja default`). Cases stay brace-less (no per-case local/ASSERT).
+STATE[95.74%|INPROGRESS]: switch case BODIES + all leaf m_params reads match
+byte-for-byte; the recovered ASSERT fixed the prologue. The one remaining divergence
+is the dispatch, and it is in OUR base (verified by disassembling both):
+- ASSERT recovery (88% -> 95.74%): the prologue `mov byte[ebp-1],0;
+  lea eax,[ebp-1]; call empty_stub` (delinker misnames it `finalize_impl`) is a
+  COMPILED-OUT ASSERT - recovered with `ASSERT( UNKNOWN_EXPRESSION_T( m_params ) )`
+  as the first statement, which emits the `+0x0c` bytes and resolves the frame-size
+  18h->1Ch / [ebp-N] slot shift.
+- Open (faster machine): BASE emits `cmp [ebp-0Ch],3; ja default` + a 4-entry table;
+  TARGET has NO bounds check and a contiguous 5-entry table. Cause: our `switch` ends
+  at `type_jump`(3) + `default: return 1.0f;`. Fix: add `case type_preview: return 1.0f;`
+  and `default: NODEFAULT();` (`__assume(0)`, debug_macros.h) so MSVC drops the bounds
+  check and emits the contiguous [0..4] table. NOT an LTCG residual - a source-structure
+  problem. Cases stay brace-less (no per-case local/ASSERT).
 Regressions caused: none.

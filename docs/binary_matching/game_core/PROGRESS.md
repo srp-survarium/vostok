@@ -20,14 +20,18 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::dispersion_calculator::get_dispersion() const -> STATE[87.49%|PARTIAL] -> PR #109 (regressions: none)
   - body matches instruction-for-instruction; residual entirely LTCG (frame/slots, is_aimed inlined,
     safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
-- game_core::character_dispersion_calculator::get_target_koef(...) const -> STATE[88%|PARTIAL] -> PR #110 (regressions: none)
-  - switch body + m_params reads match byte-for-byte in shape; capped by LTCG empty_stub prologue artifact.
-- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[82.89%|PARTIAL] -> PR #111 (regressions: none)
-  - switch body + m_params reads match instruction-for-instruction; same empty_stub LTCG cap as #110.
-  - PR CHAIN: #111 is based on #110's branch (shares the class scaffolding: private-getter mangling,
-    params include, tick-stub anchor). Merge #110 before #111. Same-file functions chain like this.
+- game_core::character_dispersion_calculator::get_target_koef(...) const -> STATE[95.74%|INPROGRESS] -> PR #110 (regressions: none)
+  - switch case bodies + m_params reads match; recovered the empty_stub ASSERT (88% -> 95.74%).
+    OPEN (faster machine): OUR base emits an extra `cmp 3; ja default` bounds check the target lacks
+    (target has a contiguous jump table). Fix: `case type_preview: return 1.0f;` + `default: NODEFAULT();`.
+    NOT LTCG - a source-structure problem. (NOTE: #110 was merged into feature-2 before review.)
+- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[93.33%|PARTIAL] -> PR #111 (regressions: none)
+  - switch body + m_params reads match instruction-for-instruction; recovered the empty_stub ASSERT
+    (82.89% -> 93.33%). Residual not re-diffed after recovery; not LTCG. See the per-function .md.
+  - PR CHAIN: #111 branched off #110 (shares the class scaffolding: private-getter mangling,
+    params include, tick-stub anchor). Same-file functions chain like this.
 - game_core::weapon_dispersion_calculator::get_value() const -> STATE[100%|DONE] -> PR #112 (regressions: none)
   - first non-trivial 100%: clean getter, no empty_stub prologue to cap it. Independent off feature.
 - game_core::weapon_dispersion_calculator::{set_reload_dispersion_amount,set_one_shoot_dispersion_amount,set_aiming_speed} -> STATE[100%|DONE] -> PR #113 (regressions: none)
-  - GROUPED unit (first use of accessor-grouping): all 3 setters 100% in one rebuild. Based on #112's branch.
+  - GROUPED unit (first use of accessor-grouping): all 3 setters 100% in one rebuild.
   - key: anchor must ESCAPE &calc/&table through an opaque sink so LTCG doesn't DSE the stores (see loop_performance).

@@ -5,30 +5,32 @@ Signature: `float survarium::character_dispersion_calculator::get_broken_hands_p
 Mangled: `?get_broken_hands_penalty@character_dispersion_calculator@survarium@@ABEME_N@Z` (ABE = private const __thiscall).
 
 ## Dependency / base branch
-This function is the sibling of `get_target_koef` (PR #110, branch
-`match/game_core-character_dispersion_calculator_get_target_koef`). PR #110 built
-ALL the shared scaffolding this function needs and is still OPEN (not on
-`feature/agentic-matching-loop`, which only has the forward-ported ledger/docs):
+This function is the sibling of `get_target_koef` (PR #110). #110 built ALL the shared
+scaffolding this function needs and has since been merged into the integration branch
+`feature/agentic-matching-loop-2`:
 - moved both getters to `private:` (so base mangles `ABE`, matching the target;
   `public`/`QBE` makes objdiff score `None`),
 - added `#include <vostok/game_core/character_dispersion_params.h>`,
 - made `tick`'s STUB body call BOTH getters (the getters are private, so `tick` is
   their sole caller - this is what keeps them link-reachable),
 - added `use_character_dispersion_calculator()` anchor in `temp_include_all.cpp`.
+PR #111 is now based on `feature/agentic-matching-loop-2` (which already carries #110's
+scaffolding) and adds only the get_broken_hands_penalty body.
 
-I first tried this on `feature/agentic-matching-loop` directly: the rebuild dropped
-ALL FOUR functions from the base obj (278-byte obj, only the ctor) -> score `None`,
-because that branch lacks the tick-anchor + temp_include_all anchor, so the private
-getters were dead-stripped. Lesson: this unit cannot stand alone on the bare
-branch; I rebased my work onto PR #110's branch (commit 40e514d0) so the
-scaffolding exists, and add only the get_broken_hands_penalty body here.
+HISTORY (the command log / iterations below predate the feature-2 restructure and name
+the older `feature/agentic-matching-loop` branch and an old #110 commit): a first attempt
+on the bare integration branch - without #110's scaffolding - dropped ALL FOUR functions
+from the base obj (278-byte obj, only the ctor) -> score `None`, because the private
+getters were dead-stripped with no tick/anchor wiring. Lesson: this unit cannot stand
+alone without that scaffolding.
 
 ## Target asm (pdb_fetch --view target)
 
 ```
 prologue: push ebp; mov ebp,esp; sub esp,14h; mov [ebp-8],ecx(this)
 0x09: mov byte ptr [ebp-1],0; lea eax,[ebp-1]; call <empty_stub/finalize_impl>
-        ^ LTCG inlined/stripped no-op call (delinker-misnamed). NOT in source.
+        ^ COMPILED-OUT ASSERT (delinker-misnamed empty_stub/finalize_impl); recovered
+          with ASSERT( UNKNOWN_EXPRESSION_T( m_params ) ) as the first statement.
 0x15: mov cl,[ebp+8]; mov [ebp-0Ch],cl        ; broken_hands_count -> local
       cmp [ebp-0Ch],0 / je .1
       cmp [ebp-0Ch],1 / je .2
@@ -86,22 +88,23 @@ target obj `binaries/objdiff/target/vostok/game_core/sources/character_dispersio
      base : 558bec 83ec10 894dfc 8a4508 8845f8 807df800 740e 807df801 740c 807df802 7431 eb5c d9e8 ...
      tgt  : 558bec 83ec14 894df8 c645ff00 8d45ff e8.. 8a4d08 884df4 807df400 740c 807df401 740a 807df402 742f d9e8 ...
    Both: cmp0/cmp1/cmp2 + single fld1, two ternaries reading [m_params+0x30]/[+0x34],
-   case-1 1.0f const load `f30f1005...`. Residual = the empty_stub prologue + frame
-   10h vs 14h + 4-byte [ebp-N] slot shift only. Same LTCG cap as get_target_koef (88%).
+   case-1 1.0f const load `f30f1005...`. Residual (pre-ASSERT) = the empty_stub prologue
+   + frame 10h vs 14h + 4-byte [ebp-N] slot shift. Same prologue/ASSERT as get_target_koef.
 
 ## Outcome
-STATE[82.89%|PARTIAL]: observable switch body matches instruction-for-instruction.
-CORRECTION (new guidelines): the prologue `mov byte[ebp-1],0; lea eax,[ebp-1];
+STATE[93.33%|PARTIAL]: observable switch body matches instruction-for-instruction.
+ASSERT recovery (82.89% -> 93.33%): the prologue `mov byte[ebp-1],0; lea eax,[ebp-1];
 call empty_stub` (delinker misnames it `finalize_impl`) is a COMPILED-OUT ASSERT,
 not an LTCG artifact - recovered with `ASSERT( UNKNOWN_EXPRESSION_T( m_params ) )`
 as the first statement (the `+0x0c` slot at body offset 0x009), which resolves the
 frame 10h->14h / [ebp-N] slot shift. Same prologue/fix as get_target_koef. Cases
 stay brace-less (ternary result temps are anonymous, no source local/ASSERT in any
-case).
+case). The remaining residual (the dispatch here is a sequential cmp0/cmp1/cmp2
+chain - NOT a jump table, so no range-check mismatch like get_target_koef) was not
+re-diffed in detail after the ASSERT recovery; revisit if pushing for 100%.
 Regressions caused: none (final rebuild: 0 regressed, 1 improved, 0 removed/added).
 Key learning: `case 0: break;` (folds case 0 into default, drops `cmp 0`) scored
 None; `case 0: return 1.0f;` (distinct labeled block, two identical returns folded
 by MSVC) scored 82.89%. The `None` was NOT a mangling/strip issue - the symbol was
 present with the right ABE name; objdiff just omits fuzzy_match_percent when the
 base body diverges too much structurally (missing the whole `cmp 0` block).
-</content>
