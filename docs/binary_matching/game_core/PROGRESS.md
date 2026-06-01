@@ -93,3 +93,16 @@ stack. Backups: backup/* and backup-squash/* tags. Doc ownership to keep it clea
 assembly_patterns.md are STACK-owned (never edit on feature); PROGRESS.md/README.md/MATCHING.md/agent-defs
 are orchestrator/feature-owned (stack never touches them). New matches stack on the tip.
 
+## Stack continued (post-linearization)
+- game_core::weapon_core_hide_state_base::{ctor,initialize,finalize,on_animation_end_impl} -> STATE[ctor 100%, finalize 100%, initialize 75.13%, on_animation_end_impl 69.93%|PARTIAL] -> PR #126 (regressions: none)
+  - STACKED on #125. Mirrors show_state_base; hide's on_animation_end_impl sets m_is_shown=false. Also fixed a
+    brace breakage in temp_include_all.cpp inherited from #125 (5 anchors missing `}`) -> #125 alone may not
+    compile; the stack tip does (flag when reviewing #125 standalone).
+- game_core::weapon_core_animation_end_aware_state::{initialize,finalize,set_animation_to_wait,on_animation_end} -> STATE[initialize 100%, finalize 100%, set_animation_to_wait 77.33%, on_animation_end 78.03%|PARTIAL] -> PR #127 (regressions: none)
+  - STACKED on #126. initialize/finalize 100%; two PARTIAL (LTCG inline-vs-call / stripped empty call).
+    Findings: a `const` method assigning a member needs the member `mutable` (mangles @@?BE); access-specifier
+    must match target COFF mangling (members moved to protected to get MAE/IAE/IBE, not public UAE).
+
+STACK TIP = match/game_core-weapon_core_animation_end_aware_state (PR #127).
+STATUS: matching PAUSED at 24 units (PRs #104-#127, #107 closed) to focus on REVIEW. Resume with /match game_core.
+
