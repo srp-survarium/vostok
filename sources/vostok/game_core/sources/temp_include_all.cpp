@@ -74,8 +74,23 @@
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/player_parameters_modifyer.h>
 
+namespace survarium
+{
+	void game_core_initialize( );
+}
+
 namespace vostok
 {
+	void example_callback( const char* name );
+
+	void use_game_core_initialize( )
+	{
+		// Take the address so the linker keeps the standalone body
+		// (a direct call to the empty function gets inlined away).
+		void ( *fn )( ) = &survarium::game_core_initialize;
+		example_callback( reinterpret_cast< pcstr >( fn ) );
+	}
+
 	void use_medkit( )
 	{
 		survarium::player_parameters_modifyer ppm;
@@ -639,6 +654,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	//
+	vostok::use_game_core_initialize( );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );

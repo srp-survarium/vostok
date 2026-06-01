@@ -8,17 +8,6 @@ against the original game's "target" objects.
 
 These are the repo-local working agreements, auto-loaded when working in `vostok/`.
 
-## ASCII only
-
-Write plain ASCII everywhere: source, comments, docstrings, printed/log strings,
-commit messages, and PR descriptions. Do not use Unicode punctuation. Replace:
-
-- em / en dashes with `-` (or `--`)
-- the ellipsis character with `...`
-- the rightwards arrow with `->`
-- check marks with `OK`
-- "smart" / curly quotes with straight `'` and `"`
-
 ## Comments
 
 Comments are still wanted - just keep them lean. Don't restate what the code
