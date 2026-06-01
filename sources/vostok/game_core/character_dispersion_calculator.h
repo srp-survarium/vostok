@@ -32,10 +32,12 @@ public:
 	inline	float		get_value						( ) const { return m_value; }	// claude@MATCH: reads m_value (+0x0c); get_dispersion inlines it as [this+0x2C]
 	inline	void		set_aiming_speed				( float arg_0 ) { /* no source */ }
 
+private:
+	// claude@MATCH: private (mangled `ABE`), not public - the target obj
+	// symbol is `?get_target_koef@...@@ABE...` / `?get_broken_hands_penalty@...@@ABE...`.
 			float		get_target_koef					( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const;
 			float		get_broken_hands_penalty		( u8 broken_hands_count, bool using_double_handed_weapon ) const;
 
-private:
 	/* 0x0000 */	/* core::noncopyable */
 	/* 0x0000 */	character_dispersion_params const*	m_params;
 	/* 0x0004 */	float								m_target_value;
