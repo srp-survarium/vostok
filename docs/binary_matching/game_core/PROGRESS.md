@@ -47,3 +47,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     agent-context reuse / SendMessage is not available in this harness). Body was already a structural match.
     The "fixed_string<46>("none") needs the 3-arg ctor" hypothesis was MOOT: the 1-arg fixed_string(const char*)
     ctor IS that 3-arg buffer_string call inlined; residual is unsteerable LTCG inline-vs-call. asm pattern corrected.
+- game_core::{get_bone_matrix_in_object_space, get_bone_matrix_in_object_space_impl} -> STATE[100%|DONE] -> PR #120 (regressions: none)
+  - free-function pair (wrapper+impl), float4x4 matrix math, both 100% in one rebuild. Fresh independent.
