@@ -74,6 +74,11 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
 - **Non-100% match -> keep the target structure inline** (the `// FUNCTION BODY`
   block + the diverging `--view target` asm as a comment) so the divergence context
   lives in the source; only a clean 100% DONE may delete the carcass. (MATCHING.md.)
+- **Comment hygiene (MATCHING.md):** once the signature is confirmed, DELETE the
+  carcass `// <full signature>` line (it is only a type reference for matching). A
+  clean `100%|DONE` keeps ONLY its `// STATE[100%|DONE]` line - no explanation block,
+  no narrating routine mechanics inline. Verbose rationale belongs in the `.md`, and
+  never write an unverified claim inline.
 - Append any genuinely new asm -> source mapping you find to `assembly_patterns.md`.
 - Append any genuinely new *time-saving* learning - a way to need fewer rebuilds,
   a step that was unnecessary, a cheaper way to the same signal - to
