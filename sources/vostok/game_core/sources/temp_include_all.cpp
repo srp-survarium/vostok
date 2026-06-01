@@ -236,6 +236,12 @@ namespace vostok
 		vostok::resources::register_cook( &s_victory_item_core_cook );
 	}
 
+	void use_dispersion_calculator( )
+	{
+		survarium::dispersion_calculator calc;
+		calc.get_dispersion( );
+	}
+
 	void use_recoil_calculator( )
 	{
 		survarium::recoil_calculator calc;
@@ -669,6 +675,7 @@ IncludeAll::IncludeAll()
 	vostok::use_artefact_lifebone_core( );
 	vostok::use_victory_item_core( );
 	vostok::use_recoil_calculator( );
+	vostok::use_dispersion_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );

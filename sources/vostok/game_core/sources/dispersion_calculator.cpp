@@ -5,7 +5,14 @@
 #include "pch.h"
 #include <vostok/game_core/dispersion_calculator.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_ammunition.h>
+#include <vostok/console_command.h>
+
 namespace survarium {
+
+static bool s_dispersion_enabled_value = true; // <0x7db?>
+static console_commands::cc_bool s_dispersion_enabled_cc( "dispersion_enabled", s_dispersion_enabled_value, false, console_commands::command_type_engine_internal );
 
 /*
 // STATE[STUB]
@@ -30,32 +37,25 @@ dispersion_calculator::dispersion_calculator( ) :
 	// ******
 }
 
-// STATE[STUB]
+// STATE[87.49%|PARTIAL]: body/offsets/order all match; residual diff is LTCG only -
+// claude@NOTE: bigger base frame (sub esp,58h vs 4Ch) -> [ebp-XX] slot reassignment;
+// claude@NOTE: target calls weapon_core::is_aimed() out-of-line, base inlines it as
+//   [this+0x488] (m_aimed) - the inline-vs-call COMDAT decision, not steerable here;
+// claude@NOTE: the m_weapon->ammunition() safe-bool test (operator unspecified_bool_type)
+//   lowers via an extra bool slot in base vs a direct cmp/sete in target - LTCG materialization.
 // float survarium::dispersion_calculator::get_dispersion() const
 float dispersion_calculator::get_dispersion( ) const
 {
-	// LOCALS
-	// weapon_dispersion_params const& weapon_params
-	// ******
+	if ( !( m_weapon && m_weapon->ammunition( ) && s_dispersion_enabled_value ) )
+		return 0.0f;
 
-	return 0.0f;
+	weapon_dispersion_params const& weapon_params = m_weapon->get_dispersion_params( );
+	float aim_or_hip_multiplier = m_weapon->is_aimed( )
+		? weapon_params.aim_multiplier
+		: weapon_params.from_the_hip_multiplier;
 
-	// FUNCTION BODY
-	// <0x596980>|0x010|+0x07b:'27'
-	// <0x5969fb>|0x08b|+0x007:'28'
-	// <0x596a02>|0x092|+0x00f:'29'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x596a11>|0x0a1|+0x0ef:'40'
-	// ******
+	return weapon_params.base_dispersion * m_weapon->ammunition( )->dispersion( ) * aim_or_hip_multiplier
+		+ ( m_weapon_calculator.get_value( ) + m_character_calculator.get_value( ) ) * m_shooting_skill_coeff;
 }
 
 // STATE[UNCHECKED]

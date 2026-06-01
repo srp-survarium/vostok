@@ -17,3 +17,6 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - NOT a "bug fix": the target asm reads m_active_objects (off 0x10), so the source must too (the STUB's
     m_inactive_objects was wrong vs target). Matching the target, not correcting logic. Residual is
     unsteerable LTCG (target out-of-lines vectora::size/operator[], base inlines).
+- game_core::dispersion_calculator::get_dispersion() const -> STATE[87.49%|PARTIAL] -> PR #109 (regressions: none)
+  - body matches instruction-for-instruction; residual entirely LTCG (frame/slots, is_aimed inlined,
+    safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
