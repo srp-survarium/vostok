@@ -34,6 +34,13 @@ workers' concern, not yours; do not load them.
    stack). Before each dispatch, `git checkout <tip>` so the worker branches off it,
    and **name `<tip>` in the prompt as the PR base**. The returned branch is the new
    tip.
+   - **Landing / refreshing a stacked PR: cherry-pick, never merge-in.** When a stacked
+     PR has to sit on the advanced integration branch (the one below it merged, or the
+     stack's base moved), DON'T `git merge` the base into it - that drags in every
+     inherited file and its 3-way mangles `PROGRESS.md` / `temp_include_all.cpp`.
+     Instead cherry-pick that PR's OWN commits onto a fresh checkout of the base, which
+     applies only its diff (usually nothing to resolve). Full recipe + the brace/PROGRESS
+     verification in "The base branch is PR-only" below.
 3. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
      `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
