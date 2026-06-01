@@ -35,3 +35,12 @@ concrete and actionable.
   wiring, not the body — fix the `temp_include_all.cpp` wiring and rebuild once.
 
 _(Append new findings below this line.)_
+
+- **Check the callee headers compile before the first rebuild.** A `*::serialize`
+  taking `udp_match_packet&` looks trivial, but `network_core/udp_match_packet.h`
+  (and its `sequence_number` / `boost::array` / `base_packet` deps) are
+  never-compiled stubs that only break when a `.cpp` first `#include`s them. Grep
+  `rg -l "<the type's header>" sources/` first: if *no* built `.cpp` includes it,
+  expect a standalone-compile blocker and budget for it (or park BLOCKED) instead
+  of spending a rebuild discovering it. Cost me one rebuild on
+  `client_player_update::serialize`.

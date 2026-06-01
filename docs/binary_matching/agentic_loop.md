@@ -187,21 +187,32 @@ goes in the per-function log (section 7), not inline.
 
 Each module has its own folder under `docs/binary_matching/` so its material does
 not mix with the general docs: `README.md` holds module-wide notes (gotchas,
-shared types, asm quirks for the whole module), and one `<function>.md` per
-function you spent real effort on. Suggested shape for a function log:
+shared types, asm quirks for the whole module), and **one `<function>.md` per
+function, always** - it is the debugging trail, written *as you go*, not
+reconstructed at the end. A reviewer must be able to replay your whole run from
+it: every command verbatim, every source variant, every resulting score. Shape:
 
 ```
 # <module>::<function>
 
 Target asm: <pdb-parser output, or the key fragment>
 
-## Attempts
-1. <one-line description>  ->  <match %>  ->  <what differed / why it failed>
+## Commands run (verbatim, in order)
+- pdb_rich_query --index ... --function ... --list
+- pdb_fetch --target-index ... --function ... --view structure
+- python3 scripts/rebuild.py <module>
+- pdb_fetch ... --view diff ...
+- ...
+
+## Iterations (one block per source variant you tried)
+1. INPUT: <what you wrote/changed in the .cpp>
+   BUILD: <match % from report.json>   (regressions: <...>)
+   DIFF:  <what `--view diff` then showed - the diverging rows>
 2. ...
 
 ## Outcome
 STATE[..]: <final status>. Blocker: <...>. Regressions caused: <unit/fn, or none>.
-Inlining: <blocks that inlined differently>.
+Inlining: <blocks that inlined differently; cluster members matched together>.
 ```
 
 ## 8. Assembly patterns -> `assembly_patterns.md`
