@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[78.8%|PARTIAL]: body byte-exact; LTCG base-ctor inline. See inventory_item_ctor.md.
 inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_action_behaviuor	( type ),
 	m_inventory			( NULL ),

@@ -12,3 +12,4 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - empty body == target's 5 bytes; it DOES get its own symbol (visible in objdiff), not ICF-unscorable.
 - game_core::client_player_update::serialize -> STATE[BLOCKED] -> PR #105 (regressions: none)
   - body matched 1:1 from asm but parked: udp_match_packet.h cluster is never-compiled stubs.
+- game_core::inventory_item::inventory_item(action_behaviour_type) -> STATE[78.8%|PARTIAL] -> PR #106 (regressions: none)
