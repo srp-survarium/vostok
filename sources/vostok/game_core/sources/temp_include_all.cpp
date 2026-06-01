@@ -53,6 +53,7 @@
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
+#include <vostok/game_core/character_dispersion_calculator.h>
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
@@ -240,6 +241,11 @@ namespace vostok
 	{
 		survarium::dispersion_calculator calc;
 		calc.get_dispersion( );
+	void use_character_dispersion_calculator( )
+	{
+		survarium::character_dispersion_calculator calc;
+		calc.set_character_dispersion_params( NULL );
+		calc.tick( survarium::type_stand, true, false, 0, false, 0 );
 	}
 
 	void use_recoil_calculator( )
@@ -676,6 +682,7 @@ IncludeAll::IncludeAll()
 	vostok::use_victory_item_core( );
 	vostok::use_recoil_calculator( );
 	vostok::use_dispersion_calculator( );
+	vostok::use_character_dispersion_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );

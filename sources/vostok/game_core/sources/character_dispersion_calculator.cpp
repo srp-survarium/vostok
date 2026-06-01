@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include <vostok/game_core/character_dispersion_calculator.h>
+#include <vostok/game_core/character_dispersion_params.h>
 
 namespace survarium {
 
@@ -42,6 +43,12 @@ void character_dispersion_calculator::tick(
 	u32							current_time_in_ms
 )
 {
+	// claude@NOTE: STUB - only references the two private getters so the linker
+	// keeps them alive (tick is the sole caller of get_target_koef /
+	// get_broken_hands_penalty). Real tick body is not matched here.
+	m_target_value = get_target_koef( character_state, is_moving, is_aiming )
+		+ get_broken_hands_penalty( broken_hands_count, using_double_handed_weapon );
+
 	// LOCALS
 	// float 						dt
 	// ******
@@ -85,62 +92,47 @@ void character_dispersion_calculator::tick(
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const
+// STATE[95.74%|INPROGRESS]: dispatch shape wrong - target short-circuits type_jump(0x3) outside the switch + uses a direct 5-entry jump table; revisit on a faster machine. See character_dispersion_calculator_get_target_koef.md
 float character_dispersion_calculator::get_target_koef( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const
 {
-	// STATICS
-	// static <NoType> 				 = <0x595ff0>;
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x584f05 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN10") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x584f6b }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x584fcf }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x584fd9 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x584fe3 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// ******
+	switch ( character_state )
+	{
+		case type_stand:
+			if ( is_moving )
+				return is_aiming ? m_params->walk_aim_multiplier : m_params->walk_multiplier;
+			else
+				return is_aiming ? m_params->idle_aim_multiplier : m_params->idle_multiplier;
 
-	return 0.0f;
+		case type_crouch:
+			if ( is_moving )
+				return is_aiming ? m_params->crouch_walk_aim_multiplier : m_params->crouch_walk_multiplier;
+			else
+				return is_aiming ? m_params->crouch_aim_multiplier : m_params->crouch_multiplier;
 
-	// FUNCTION BODY
-	// <0x595ee9>|0x009|+0x00c:'89'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x595ef5>|0x015|+0x010:'104'
-	// <0>
-	// <0x595f05>|0x025|+0x008:'106'
-	// <0x595f0d>|0x02d|+0x030:'107'
-	// <0x595f3d>|0x05d|+0x002:'108'
-	// <0x595f3f>|0x05f|+0x02c:'109'
-	// <0>
-	// <1>
-	// <0x595f6b>|0x08b|+0x008:'112'
-	// <0x595f73>|0x093|+0x02d:'113'
-	// <0x595fa0>|0x0c0|+0x002:'114'
-	// <0x595fa2>|0x0c2|+0x02d:'115'
-	// <0>
-	// <1>
-	// <0x595fcf>|0x0ef|+0x00a:'118'
-	// <0>
-	// <0x595fd9>|0x0f9|+0x00a:'120'
-	// <0>
-	// <0x595fe3>|0x103|+0x004:'122'
-	// <0>
-	// <1>
-	// <2>
+		case type_sprint:
+			return m_params->run_multiplier;
+
+		case type_jump:
+			return m_params->jump_multiplier;
+
+		default:
+			return 1.0f;
+	}
+
+	// FUNCTION BODY[0x595ee0]
+	// <0x595ee9>|0x009|+0x00c:'89'	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
+	// <0x595ef5>|0x015|+0x010		switch ( character_state ) {
+	// <0x595f05>|0x025			case type_stand: if ( is_moving )
+	// <0x595f0d>|0x02d				return is_aiming ? walk_aim : walk;
+	// <0x595f3f>|0x05f				else return is_aiming ? idle_aim : idle;
+	// <0x595f6b>|0x08b			case type_crouch: if ( is_moving )
+	// <0x595f73>|0x093				return is_aiming ? crouch_walk_aim : crouch_walk;
+	// <0x595fa2>|0x0c2				else return is_aiming ? crouch_aim : crouch;
+	// <0x595fcf>|0x0ef			case type_sprint: return run;
+	// <0x595fd9>|0x0f9			case type_jump:   return jump;
+	// <0x595fe3>|0x103			default:          return 1.0f;
 	// ******
 }
 

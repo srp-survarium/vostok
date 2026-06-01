@@ -20,3 +20,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::dispersion_calculator::get_dispersion() const -> STATE[87.49%|PARTIAL] -> PR #109 (regressions: none)
   - body matches instruction-for-instruction; residual entirely LTCG (frame/slots, is_aimed inlined,
     safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
+- game_core::character_dispersion_calculator::get_target_koef(...) const -> STATE[88%|PARTIAL] -> PR #110 (regressions: none)
+  - switch body + m_params reads match byte-for-byte in shape; capped by LTCG empty_stub prologue artifact.
