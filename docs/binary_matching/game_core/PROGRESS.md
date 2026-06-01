@@ -50,3 +50,8 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     would show as a <n> line that is ABSENT -> likely an early `return` guard (no braces). Restructure +
     re-diff on a faster machine. Secondary (after bracing): fsm::states()/front() out-of-line in target
     @0x03f210/0x082cd0 but inlined in base -> blocked on the ai fsm type. Added breath_state.h for the cast.
+- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[91.78%|PARTIAL] -> PR #119 (regressions: none)
+  - SALVAGED: worker #15 crashed mid-run; finisher (#16) resumed from the WIP branch (branch-handoff -
+    agent-context reuse / SendMessage is not available in this harness). Body was already a structural match.
+    The "fixed_string<46>("none") needs the 3-arg ctor" hypothesis was MOOT: the 1-arg fixed_string(const char*)
+    ctor IS that 3-arg buffer_string call inlined; residual is unsteerable LTCG inline-vs-call. asm pattern corrected.
