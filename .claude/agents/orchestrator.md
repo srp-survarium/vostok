@@ -34,6 +34,13 @@ workers' concern, not yours; do not load them.
    stack). Before each dispatch, `git checkout <tip>` so the worker branches off it,
    and **name `<tip>` in the prompt as the PR base**. The returned branch is the new
    tip.
+   - **Landing / refreshing a stacked PR: cherry-pick, never merge-in.** When a stacked
+     PR has to sit on the advanced integration branch (the one below it merged, or the
+     stack's base moved), DON'T `git merge` the base into it - that drags in every
+     inherited file and its 3-way mangles `PROGRESS.md` / `temp_include_all.cpp`.
+     Instead cherry-pick that PR's OWN commits onto a fresh checkout of the base, which
+     applies only its diff (usually nothing to resolve). Full recipe + the brace/PROGRESS
+     verification in "The base branch is PR-only" below.
 3. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
      `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
@@ -62,11 +69,26 @@ The integration branch (`feature/agentic-matching-loop-2`) is updated **only by
 merging PRs**, never by a direct commit. So:
 - Guideline / doc updates also go through a PR (an agent PR based on its work), not
   a direct edit to the base.
-- The base advances one PR at a time on merge. **Never rebase + force-push to
-  re-parent** - force-push orphans every PR stacked above and erases review history. To
-  refresh the next PR onto the advanced base, MERGE the base into it (`git merge <base>`,
-  resolve, plain push) - a merge commit, never a force-push. Process strictly in order:
-  a stacked PR can only show *just* its own diff once the PRs below it are merged.
+- The base advances one PR at a time on merge. To land/refresh the next PR onto the
+  advanced base, **cherry-pick that PR's OWN commits onto a fresh checkout of the base**:
+  ```
+  git checkout -B <pr-branch> origin/<base> && git tag -f backup/<pr> <old-pr-tip>
+  git reset --hard origin/<base>
+  git cherry-pick <the PR's own match + review commits>   # NOT the whole stacked history
+  ```
+  This applies ONLY the PR's own diff, so there is usually **nothing to resolve**. Do NOT
+  merge the base into the PR (`git merge` drags in every inherited file and its 3-way can
+  mangle `PROGRESS.md` / `temp_include_all.cpp`), and do NOT rebase the whole stack.
+  After cherry-picking:
+  - verify `temp_include_all.cpp` braces balance (`{` count == `}` count) and `PROGRESS.md`
+    has no duplicated ledger line - an older matcher commit sometimes inserted a new
+    anchor *before* a function's closing `}` (nesting it); add the one missing `}` if so;
+  - `git push --force-with-lease` THIS one branch and repoint its PR base to the
+    integration branch, then squash-merge it.
+  This per-PR force-push is safe **only done strictly in order**: each PR is re-created
+  from the base in its turn, so nothing downstream relies on the old branch. (Contrast
+  the matcher rule - a *matcher* never force-pushes its in-progress branch, which would
+  orphan the live stack mid-work; this is the orchestrator's controlled, in-order landing.)
 
 ## Reviewing a matcher's work - the `reviewer` agent
 After a matcher finishes a unit (or before you merge its PR), you may dispatch a
