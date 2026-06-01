@@ -136,8 +136,15 @@ block above the function).
 Stubs arrive with `// FUNCTION BODY` / `// LOCALS` / `// TYPEDEFS` blocks. A body
 line is `<absoluteVA>|offset|+delta:'srcline'`: paste the VA into IDA (`G`);
 `<N>` = no address (inlined/comment); a large `+delta` = something inlined
-between. Use these as scratch while matching and delete them as you account for
-each statement.
+between. Use these as scratch while matching.
+
+**Keep the target structure inline when the match is NOT 100%.** If a function
+ends `PARTIAL` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY` block (and,
+for the diverging region, the relevant `pdb_fetch --view target` asm as a comment)
+in the source above/inside it, so the next reader has the full divergence context
+in place - not buried in a PR or a log. This is the existing house style; see
+`collision_sensor.cpp`, `player_stamina.cpp`, `damage_model.cpp`. Only a clean
+**100% DONE** match may delete the carcass for tidiness.
 
 **A multi-line statement carries its `<VA>` only on its LAST line.** The structure
 / carcass annotates by statement, not by physical source line, and the address is

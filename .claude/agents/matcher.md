@@ -71,6 +71,9 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
 - Tag your own deliberate match-shaping with `claude@MATCH:` / `claude@NOTE:` /
   `claude@TODO:` (the existing `sushi@...` notes are the prior author's - keep them).
 - Update the function's `// STATE[NN%|TAG]: reason` marker to the final result.
+- **Non-100% match -> keep the target structure inline** (the `// FUNCTION BODY`
+  block + the diverging `--view target` asm as a comment) so the divergence context
+  lives in the source; only a clean 100% DONE may delete the carcass. (MATCHING.md.)
 - Append any genuinely new asm -> source mapping you find to `assembly_patterns.md`.
 - Append any genuinely new *time-saving* learning - a way to need fewer rebuilds,
   a step that was unnecessary, a cheaper way to the same signal - to
