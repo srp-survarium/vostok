@@ -20,4 +20,8 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
     safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
 - game_core::character_dispersion_calculator::get_target_koef(...) const -> STATE[88%|PARTIAL] -> PR #110 (regressions: none)
   - switch body + m_params reads match byte-for-byte in shape; capped by LTCG empty_stub prologue artifact.
+- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[82.89%|PARTIAL] -> PR #111 (regressions: none)
+  - switch body + m_params reads match instruction-for-instruction; same empty_stub LTCG cap as #110.
+  - PR CHAIN: #111 is based on #110's branch (shares the class scaffolding: private-getter mangling,
+    params include, tick-stub anchor). Merge #110 before #111. Same-file functions chain like this.
 

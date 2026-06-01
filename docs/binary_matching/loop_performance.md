@@ -106,6 +106,15 @@ _(Append new findings below this line.)_
   mangling and the score appears. Caught on `get_target_koef` (cost one rebuild,
   but the COFF symbol dump would have caught it pre-build: read the target obj's
   `?fn@...@@` prefix in the same first pass you read the float constants).
+- **A sibling getter's whole SCAFFOLDING may live in an OPEN, unmerged PR - check
+  before your first rebuild.** `get_broken_hands_penalty` needed the private-move +
+  `#include params.h` + `tick`-stub-calls-the-getters anchor + `temp_include_all`
+  anchor that PR #110 (`get_target_koef`) built. The orchestrator forward-ported only
+  the *ledger/docs* to the main branch; the *source* sat on PR #110's branch (OPEN).
+  Building on the bare branch dead-stripped all four functions (278-byte obj, score
+  None) - one wasted rebuild. FIX: `git branch -a | grep <sibling-fn>`; if its PR is
+  open, `git checkout -b match/<yours> match/<sibling-branch>` so the scaffolding
+  exists, then add only your body. Cost me one rebuild before I found PR #110.
 - **`pdb_fetch --view diff` silently refuses ("needs both indexes") when the
   `--function` substring matches >1 index entry** - notably it also matches a
   *caller* whose `callees` field contains your function name (e.g. `get_target_koef`

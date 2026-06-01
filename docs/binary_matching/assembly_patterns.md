@@ -214,3 +214,21 @@ symbol table and set the declaration's access specifier (public/private/protecte
 to match the leading letter (Q=public, A=private, I=protected; the 2nd letter A=
 non-const-this, B=const-this). Confirmed: `get_target_koef`/`get_broken_hands_penalty`
 are `ABE` (private const) - moving them to `private:` flipped them from `None` to scored.
+
+### switch with `case 0` whose body equals the default -> `case 0: return X;`, NOT `case 0: break;`
+SYMPTOM: target has an explicit `cmp [v],0 / je <block>` and that block is the SAME
+`fld1`/return reached by the no-default fall-through (one shared block, two predecessors).
+WRONG: `case 0: break; ... return X;` - MSVC folds case 0 into the default path and emits
+NO `cmp 0` at all (only `cmp 1 / cmp 2 ...`), so the base loses the whole comparison and
+objdiff reports `fuzzy_match_percent: None` (too divergent to score - NOT a mangling/strip
+issue; the symbol is present). RIGHT: `case 0: return X;` as a distinct labeled block plus a
+tail `return X;` (the default); MSVC /Od emits `cmp 0/je` and FOLDS the two identical return
+blocks into one `fld1` reached by both - matching the target. Confirmed on
+`character_dispersion_calculator::get_broken_hands_penalty`: `break` -> None, `return 1.0f` -> 82.89%.
+
+### `objdiff fuzzy_match_percent: None` can mean "body too divergent", not only bad mangling
+SYMPTOM: report.json omits the percent for a function whose mangled name matches the target's
+exactly and is present in the base obj. CAUSE (besides access-specifier, above): the base body
+diverges structurally enough (e.g. a whole missing compare/branch block) that objdiff's symbol
+diff bails without a number. Before assuming unreachable/mangling: byte-compare the two `.text`
+regions; if the symbol is present with the right name, fix the body shape, not the header.
