@@ -7,17 +7,9 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]: body matches target 1:1 (12 movss stores, offsets
-// 0x00-0x1C then 0x24-0x30, offset 0x20 never stored); the #107 18% was an
-// inadequate anchor that let LTCG dead-store-eliminate the member stores. The
-// retry (PR this branch) escapes an OBSERVED instance through the opaque sink
-// in temp_include_all (use_game_core_weapon_recoil_params), so the stores are
-// kept -> 100%.
-// survarium::weapon_recoil_params::weapon_recoil_params()
-// claude@MATCH: member-init list in declaration order; additive_back_recoil
-// (offset 0x20) is deliberately omitted - the target never stores it (no movss
-// [this+20h] in the asm). additive_recoil_time gets math::epsilon_3 (the only
-// non-zero constant; delinker resolved the rdata symbol as epsilon_3 = .001f).
+// STATE[100%|DONE]
+// claude@MATCH: additive_back_recoil (offset 0x20) is omitted - the target never
+// stores it (no movss [this+20h]); additive_recoil_time is math::epsilon_3 (.001f).
 weapon_recoil_params::weapon_recoil_params( ) :
 	first_shoot_side_recoil		( 0.0f ),
 	shoot_side_recoil		( 0.0f ),
