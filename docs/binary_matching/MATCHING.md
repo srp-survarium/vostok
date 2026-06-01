@@ -54,21 +54,34 @@ When unsure, copy the nearest reversed file - good references are
 `network_core/sources/http_client.cpp`. The existing code wins over this doc.
 
 
-## LTCG (link-time codegen you cannot control)
-All three modules are built with LTCG (`/GL`): some codegen is deferred to link
-time with whole-program info, and you cannot steer it from source. Known effects:
-arguments passed in different registers / stack slots (or dropped when proven
-constant call-site-wide), a different **frame layout** (`[ebp-XX]` slot
-assignment), and **inlining** chosen across module boundaries - plus other
-effects we have not fully enumerated. It does not reorder the body.
+## LTCG is an excuse ONLY for function arguments - everything else is a matching problem
+Every module we match is built with LTCG (`/GL`) - the active set (game_core,
+network_core, logging) and the rest of the `/Od` set listed above (sound, network,
+vfs, particle, ai, ai_navigation, fs, debug). It is tempting to wave off any leftover
+diff as "uncontrollable LTCG"; that is almost always wrong and has hidden real,
+source-steerable bugs. **The ONLY differences you may attribute to LTCG and
+stop on are at the call boundary:**
+- an **argument dropped** because the optimizer proved it constant call-site-wide, or
+- an **argument passed in a register** instead of its stack slot (a custom calling
+  convention chosen at link time).
 
-When base and target differ only by these, it is an LTCG artifact, not a source
-bug: recognize it, leave a `claude@NOTE:`, and do not contort the source to chase
-it. A diff that is only register / `[ebp-XX]` slot differences is a **match** -
-mark `DONE`; when inlining or the frame diverges and the body is as close as
-source can make it, mark `PARTIAL`. Trust the operand-aware match %
-(`agentic_loop.md` section 2a) over a raw instruction-difference count. e.g.
-`// STATE[97%|DONE]: LTCG arg passing`, `// STATE[88%|PARTIAL]: LTCG inlined get_x()`.
+**EVERYTHING ELSE IS A PROBLEM IN MATCHING - solve it from source.** Register choice,
+`[ebp-XX]` slot assignment, frame size (`sub esp,N`), switch-dispatch shape, an extra
+`cmp/ja` bounds check, a stray `fld1`, inline-vs-call of a real function, statement
+order - none of these are "LTCG noise". Each has a concrete source cause:
+- a frame-size / slot shift is usually a **missing `ASSERT`** (the `empty_stub` call,
+  below) or a missing local;
+- a switch bounds check (`cmp max; ja default`) is usually a **missing `case` plus a
+  `default: NODEFAULT();`** (`__assume(0)`) - see the switch section;
+- a `fld1` / const reached via the `default` may belong to an **explicit `case`**.
+
+Keep digging until the ONLY remaining difference is argument passing; mark `DONE`
+only then (e.g. `// STATE[97%|DONE]: LTCG arg passing`). If you cannot finish on this
+machine, mark `INPROGRESS` with the concrete next step - do **not** bank it as a
+matched `PARTIAL` and call the residual "LTCG". (History: `empty_stub` calls and a
+switch bounds check were both wrongly written off as "LTCG" and were in fact a
+recoverable ASSERT and a missing `default: NODEFAULT()`.) Trust the operand-aware
+match % (`agentic_loop.md` section 2a) over a raw instruction-difference count.
 
 
 ## Scope
@@ -112,17 +125,36 @@ When you see the `empty_stub` sequence at a statement, place an `ASSERT(...)` th
 struct to pin its PDB size.
 
 ## Switch statements - case-body braces change codegen
-The bracket style around a `case` body affects codegen/structure, so match the
-target's shape:
-- A `case` whose body **declares a local, or holds an `ASSERT`/temporary, gets its
-  own `{ }` scope** - the braces are a real scope (they control where temporaries
-  are built/destroyed and the `[ebp-N]` layout); without them the codegen differs.
-  See `inventory_cook.cpp`, `items_cook.cpp`, `booby_trap_core.cpp`
-  (`case X: { ...; ASSERT( UNKNOWN_EXPRESSION ); ...; break; }`).
-- A plain / fall-through `case` (a statement or two, no locals) takes **no braces**:
-  `case X: stmt; break;`, stacked `case A: case B: ...`. See
+The bracket style around a `case` body changes codegen/structure. **Read the carcass
+to decide braces - not "does it have a local":**
+- **A `+0x002` step (a 2-byte `jmp short` = a closing brace `}`) in the
+  `// FUNCTION BODY` carcass marks a braced block.** Under `/Od` the `}` of a braced
+  `case` (or a braced `if` inside one) emits that `jmp`. If the structure shows a
+  `+0x002`/`jmp` for a case, brace it - whether or not it has a local; a case with no
+  `+0x002` entry is brace-less. (We mis-handled this on `get_target_koef` and earlier
+  switches by reading "no local -> no braces" instead of the structure; revisit prior
+  switch matches against this.)
+- The `{ }` is a real scope (it controls where temporaries are built/destroyed and the
+  `[ebp-N]` layout). A case that declares a local or holds an `ASSERT`/temporary will
+  show the `}` jmp and needs the braces - but the carcass is the signal, not a guess.
+  Braced: `inventory_cook.cpp`, `items_cook.cpp`, `booby_trap_core.cpp`
+  (`case X: { ...; ASSERT( UNKNOWN_EXPRESSION ); ...; break; }`); brace-less:
   `character_recoil_calculator.cpp`, `inventory.cpp`.
 If a switch won't match, the case-brace scoping is a prime suspect.
+
+**The `default:` shape controls the dispatch (bounds check vs none).** Compare the
+jump-table dispatch:
+- TARGET `jmp dword ptr [reg*4+table]` with **no** preceding `cmp max; ja default` =
+  a contiguous jump table with **no bounds check**. MSVC emits this only when the
+  source covers the full contiguous case range AND the `default:` is provably
+  unreachable - i.e. `default: NODEFAULT();` (`NODEFAULT` = `__assume(0)` in Master
+  Gold, `sources/vostok/debug_macros.h`; `NODEFAULT( return x );` / `UNREACHABLE_CODE`
+  for the value-returning form).
+- A bare `default: return X;` (a reachable default) makes MSVC emit `cmp max; ja
+  default` and bound the table at the highest explicit `case` - an **extra** check the
+  target won't have. If your base has a `cmp/ja` the target lacks, you are missing the
+  top `case`(s) and a `default: NODEFAULT();`. A value the target reaches *through* the
+  table (e.g. a final `fld1`) is an explicit terminal `case`, not the `default`.
 
 ## STATE markers
 One per function, line above it: `// STATE[<percent>%|<tag>]: short reason`.
@@ -177,13 +209,43 @@ line is `<absoluteVA>|offset|+delta:'srcline'`: paste the VA into IDA (`G`);
 `<N>` = no address (inlined/comment); a large `+delta` = something inlined
 between. Use these as scratch while matching.
 
+**`+delta` reads structure - and `+0x002` is almost always a closing brace `}`.** A
+2-byte step is a `jmp short` (EB xx); inside a switch that `jmp` is the `break` /
+scope-exit emitted for a `}`, so a carcass entry with `+0x002` marks where a braced
+block closed. /Od emits it even when the block's last statement `return`s (dead, but
+not removed). **So the carcass tells you where the braces were:** a `case` (or an
+`if` inside one) that shows a `+0x002`/`jmp` entry was `{ }`-scoped, and your source
+must brace it to match - do NOT decide braces from "has a local" alone, read the
+structure. (Conversely, a `case` with no `+0x002` entry was brace-less - e.g.
+`get_broken_hands_penalty`, whose cases show `+0x004`/`+0x2b` and no `}` jmp, matched
+without braces.)
+
 **Keep the target structure inline when the match is NOT 100%.** If a function
-ends `PARTIAL` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY` block (and,
-for the diverging region, the relevant `pdb_fetch --view target` asm as a comment)
-in the source above/inside it, so the next reader has the full divergence context
-in place - not buried in a PR or a log. This is the existing house style; see
+ends `PARTIAL` / `INPROGRESS` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY`
+block (and, for the diverging region, the relevant `pdb_fetch --view target` asm as
+a comment) in the source above/inside it, so the next reader has the full divergence
+context in place - not buried in a PR or a log. This is the existing house style; see
 `collision_sensor.cpp`, `player_stamina.cpp`, `damage_model.cpp`. Only a clean
 **100% DONE** match may delete the carcass for tidiness.
+
+**When the match is NOT 100%, PRESERVE the `// FUNCTION BODY` block verbatim -
+including its `<0> <1> <2>` marker lines. Never strip them** (a clean 100% DONE deletes
+the carcass entirely, per the rule just above). A `<N>` (no address) line is a statement/sub-expression
+the compiler set no breakpoint on (inlined, optimized out, or a continuation); its
+count and grouping between two addressed lines are a *structural clue* (an inlined
+call, a nested scope, a fall-through `jmp` thunk). When you record which statement a
+carcass line matched, write that annotation to the **RIGHT** of the line and leave the
+addressed and marker lines intact - e.g.
+`// <0x...>|0x025|+0x008:'106'\tcase type_stand: if ( is_moving )`. Of the generated
+blocks, keep only `// FUNCTION BODY`; the `// STATICS` / `// OTHER SYMBOLS` /
+`// LOCALS` / `// TYPEDEFS` comment blocks are scratch and may be dropped - but mine
+`// LOCALS` for the rule below first.
+
+**Every `// LOCALS` entry is a real source local - declare and use ALL of them.** If
+the PDB recorded a variable as a local of the function, it WAS in the target source,
+so your match must declare it. Under `/Od` every local is allocated a stack slot, so a
+recorded local always shows up - a missing local is a missing statement; never drop one
+because it "looks unused". (Slot number / ordering is still allocation noise - below.)
 
 **A multi-line statement carries its `<VA>` only on its LAST line.** The structure
 / carcass annotates by statement, not by physical source line, and the address is
