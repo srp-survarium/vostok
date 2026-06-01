@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include <vostok/game_core/breath_vibration_calculator.h>
+#include <vostok/game_core/breath_state.h>
+#include <vostok/game_core/breath_holding_params.h>
 
 namespace survarium {
 /*
@@ -16,25 +18,52 @@ void `dynamic initializer for 's_enable_breath_vibration_cc''( )
 	// ******
 }
 */
-// STATE[STUB]
+// STATE[100%|DONE]: ctor matches byte-exact (member-init-list in decl order + initialize_logic()).
 // survarium::breath_vibration_calculator::breath_vibration_calculator()
 breath_vibration_calculator::breath_vibration_calculator( )
+	:	m_user						( 0 ),
+		m_params					( 0 ),
+		m_last_time_in_ms			( 0 ),
+		m_current_multiplier		( 0.0f ),
+		m_target_multiplier			( 0.0f ),
+		m_vertical_value			( 0.0f ),
+		m_horizontal_value			( 0.0f ),
+		m_character_multiplier		( 0.0f ),
+		m_breath_holding_reserve	( 0.0f ),
+		m_is_breath_holded			( false )
 {
+	initialize_logic( );
+
 	// FUNCTION BODY
 	// <0x593c3c>|0x09c|+0x008:'29'
 	// ******
 }
 
-// STATE[STUB]
+// STATE[76.80%|PARTIAL]: body is logically exact (members, control flow, ordering all match).
+// claude@NOTE: remaining 23% is the documented LTCG inline-vs-call divergence
+// (assembly_patterns.md "out-of-line-call vs inline of a trivial COMDAT template method"):
+// the target emits real calls to the trivial accessors fsm::states()/intrusive_list::front()/
+// fsm::current_state()/breath_state::get_multiplier(), while our /Od+/GL base inlines them to
+// direct member reads. That also shrinks the frame (sub esp,14h vs 1Ch) by dropping the
+// call-result temps. This is a whole-program/linker decision, not steerable from this source.
 // void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*)
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
+	m_params = params;
+
+	for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )
+		static_cast< breath_state* >( it )->set_breath_holding_params( params );
+
+	if ( m_params )
+	{
+		m_breath_holding_reserve	= m_params->max_breath_holding_time;
+		m_logic.set_initial_state( m_logic.states( ).front( ) );
+		m_target_multiplier			= static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
+		m_current_multiplier		= m_target_multiplier;
+	}
+
 	// LOCALS
 	// ai::fsm_state* 				it<1>
-	// ******
-
-	// CALL SITE INFO
-	// <0x593518> -> void <unknown>(breath_holding_params const*)
 	// ******
 
 	// FUNCTION BODY
@@ -50,9 +79,12 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: dtor matches byte-exact (pop_state loop + DELETE + implicit ai::fsm dtor).
 breath_vibration_calculator::~breath_vibration_calculator( )
 {
+	while ( ai::fsm_state* state = m_logic.pop_state( ) )
+		VOSTOK_DELETE_IMPL( g_allocator, state );
+
 	// LOCALS
 	// ai::fsm_state* 				state<1>
 	// ******
