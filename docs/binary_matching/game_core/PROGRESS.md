@@ -52,3 +52,6 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::weapon_core_base_state::{ctor,deserializing} -> STATE[100%|DONE] -> PR #121 (regressions: none)
   - GROUPED, 100%. Foundational state base. Surfaced: ai::fsm_state::~fsm_state has NO body in our sources
     (target rva 0x3f210); state classes need a local stopgap dtor to anchor (README). Consider matching it.
+- game_core::player_logic_base_state::movement_animation_index(player_input const&) [static] -> STATE[100%|DONE] -> PR #122 (regressions: none)
+  - static fn, real u32 logic, 100%. Notes: carcass <VA> = base build (not target --list rva); /Od slot
+    ordering is NOT declaration-order (allocation noise) - both now in MATCHING.md.
