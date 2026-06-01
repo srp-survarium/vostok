@@ -49,3 +49,6 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     ctor IS that 3-arg buffer_string call inlined; residual is unsteerable LTCG inline-vs-call. asm pattern corrected.
 - game_core::{get_bone_matrix_in_object_space, get_bone_matrix_in_object_space_impl} -> STATE[100%|DONE] -> PR #120 (regressions: none)
   - free-function pair (wrapper+impl), float4x4 matrix math, both 100% in one rebuild. Fresh independent.
+- game_core::weapon_core_base_state::{ctor,deserializing} -> STATE[100%|DONE] -> PR #121 (regressions: none)
+  - GROUPED, 100%. Foundational state base. Surfaced: ai::fsm_state::~fsm_state has NO body in our sources
+    (target rva 0x3f210); state classes need a local stopgap dtor to anchor (README). Consider matching it.
