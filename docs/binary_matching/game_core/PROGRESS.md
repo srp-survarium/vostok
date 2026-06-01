@@ -100,3 +100,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     the empty out-of-line call was a compiled-out ASSERT; recovering it (ASSERT( UNKNOWN_EXPRESSION )) closed both to
     100%. Also fixed a brace breakage in temp_include_all.cpp inherited from #125 (5 anchors missing `}`) -> #125
     alone may not compile; the stack tip does (flag when reviewing #125 standalone).
+- game_core::weapon_core_animation_end_aware_state::{initialize,finalize,set_animation_to_wait,on_animation_end} -> STATE[initialize 100%, finalize 100%, set_animation_to_wait 77.33%, on_animation_end 78.03%|PARTIAL] -> PR #127 (regressions: none)
+  - STACKED on #126. initialize/finalize 100%; two PARTIAL (LTCG inline-vs-call / stripped empty call).
+    Findings: a `const` method assigning a member needs the member `mutable` (mangles @@?BE); access-specifier
+    must match target COFF mangling (members moved to protected to get MAE/IAE/IBE, not public UAE).

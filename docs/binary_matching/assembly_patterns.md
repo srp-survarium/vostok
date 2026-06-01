@@ -548,3 +548,26 @@ shape is the EMPTY-stub callee, which lets `/Od` cleanly ELIDE the call (caller 
 is the N call instrs). This is a genuine inline-vs-call LTCG residual (the narrowed MATCHING.md rule
 allows stopping here - it is codegen, not a wrong member/branch in source; the `member.reset()` call
 IS written, only its inline-vs-call lowering differs).
+### a const member function that ASSIGNS to a class member -> the member is `mutable`
+SYMPTOM: a `... method() const` whose target asm takes the *address of a member* and
+calls a mutating op on it (e.g. `mov ecx,[this+offset]; add ecx,0xNN; call
+intrusive_ptr::operator=`, or `mov byte[this+0xNN], ...`). Writing the assignment
+`m_x = arg;` in a const method fails to compile: `error C2678: binary '=' : no operator
+found which takes a left-hand operand of type 'const T'`. FIX: declare that member
+`mutable` in the header (a const "setter" caching/storing into a member). Do NOT drop
+the `const` from the method - the target's mangled name carries `B` (const) and objdiff
+pairs by mangled name, so removing const would mis-mangle and score None. Caught on
+`weapon_core_animation_end_aware_state::set_animation_to_wait(...) const` (mangles `@@IBE`)
+assigning `m_animation_to_wait_for` (@0x138) -> `mutable resources::managed_resource_ptr`.
+
+### const setter/getter that calls a TRIVIAL inline accessor is the get_user() inline-vs-call class
+A `m_ref.get_x()` where `get_x` is a one-line header accessor (`{ return m_member; }`)
+compiles in the TARGET to an out-of-line `call get_x` (the accessor kept standalone), but
+our `/GL` LTCG inlines it whole-program to a direct `mov eax,[m_ref+offset_of_m_member]`
+(no standalone symbol in base; `pdb_rich_query base --function ...::get_x` -> "no function
+matched"). The inline also adds a frame temp, so the surrounding `[ebp-XX]` slots shift -
+all unsteerable from the caller's source. Same class as the documented trivial-accessor
+inline-vs-call; recognize it (target standalone getter at a real rva + base has none) and
+stop at PARTIAL, do not rewrite. Caught on
+`weapon_core_animation_end_aware_state::set_animation_to_wait` (target `call
+weapon_core::get_user` @0x9b330; base inlined `mov eax,[m_weapon+44Ch]` -> 77.33%).
