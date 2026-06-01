@@ -11,7 +11,7 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
   - body matched 1:1 from asm but parked: udp_match_packet.h cluster is never-compiled stubs.
 - game_core::inventory_item::inventory_item(action_behaviour_type) -> STATE[78.8%|PARTIAL] -> PR #106 (regressions: none)
 - game_core::weapon_recoil_params::weapon_recoil_params() -> STATE[18.18%|PARTIAL] -> PR #107 (regressions: none)
-  - low % is expected: constant-only default ctor, LTCG dead-store-elim'd until callers matched (see README).
+  - SUPERSEDED by #116: the 18% was an inadequate anchor, not a hard cap. Close #107 in favor of #116.
 - game_core::scheduler::on_frame(u32,u32) -> STATE[46.39%|PARTIAL] -> PR #108 (regressions: none)
   - NOT a "bug fix": the target asm reads m_active_objects (off 0x10), so the source must too (the STUB's
     m_inactive_objects was wrong vs target). Matching the target, not correcting logic. Residual is
@@ -37,6 +37,9 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
   - 100%. BONUS: weapon_state::weapon_state() default ctor incidentally hit 100% via operator='s observed
     anchor -> proves a constant-only ctor matches when its instance is OBSERVED. RETRY #107 (weapon_recoil
     18%) with the opaque-sink escape anchor; README rule revised.
+
+- game_core::weapon_recoil_params::weapon_recoil_params() [RETRY of #107] -> STATE[100%|DONE] -> PR #116 (regressions: none)
+  - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
 
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).

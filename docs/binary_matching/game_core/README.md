@@ -46,10 +46,12 @@ default ctor hit 100% for free once `operator=`'s anchor (PR #115) escaped a
 `weapon_state` instance.
 
 So the earlier "constant-only ctor caps at ~18%" (`weapon_recoil_params`, PR #107)
-was an **inadequate anchor**, not a hard limit. **RETRY #107** with the
-escape-through-opaque-sink anchor - it should reach 100%. General rule: anchor
-every accessor/ctor with a properly *observed* instance (the same escape), don't
-just instantiate-and-discard.
+was an **inadequate anchor**, not a hard limit. **CONFIRMED**: the #107 retry
+re-anchored `weapon_recoil_params` default ctor via `use_game_core_weapon_recoil_params`
+(construct, then `example_callback( reinterpret_cast< pcstr >( &params ) )`) and it
+jumped 18% -> **100%** with the body untouched. General rule: anchor every
+accessor/ctor with a properly *observed* instance (the same escape), don't just
+instantiate-and-discard.
 
 ## Per-function logs
 One `<function>.md` in this folder per function that needed real effort (see
