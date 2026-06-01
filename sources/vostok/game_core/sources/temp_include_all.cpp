@@ -243,6 +243,8 @@ namespace vostok
 	{
 		survarium::dispersion_calculator calc;
 		calc.get_dispersion( );
+	}
+
 	void use_character_dispersion_calculator( )
 	{
 		survarium::character_dispersion_calculator calc;
