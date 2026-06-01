@@ -13,8 +13,9 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
 - game_core::weapon_recoil_params::weapon_recoil_params() -> STATE[18.18%|PARTIAL] -> PR #107 (regressions: none)
   - low % is expected: constant-only default ctor, LTCG dead-store-elim'd until callers matched (see README).
 - game_core::scheduler::on_frame(u32,u32) -> STATE[46.39%|PARTIAL] -> PR #108 (regressions: none)
-  - fixed a real source bug (m_inactive_objects -> m_active_objects); residual is unsteerable LTCG (target
-    out-of-lines vectora::size/operator[], base inlines). % chose correctness over the metric.
+  - NOT a "bug fix": the target asm reads m_active_objects (off 0x10), so the source must too (the STUB's
+    m_inactive_objects was wrong vs target). Matching the target, not correcting logic. Residual is
+    unsteerable LTCG (target out-of-lines vectora::size/operator[], base inlines).
 - game_core::dispersion_calculator::get_dispersion() const -> STATE[87.49%|PARTIAL] -> PR #109 (regressions: none)
   - body matches instruction-for-instruction; residual entirely LTCG (frame/slots, is_aimed inlined,
     safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
@@ -24,4 +25,9 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
   - switch body + m_params reads match instruction-for-instruction; same empty_stub LTCG cap as #110.
   - PR CHAIN: #111 is based on #110's branch (shares the class scaffolding: private-getter mangling,
     params include, tick-stub anchor). Merge #110 before #111. Same-file functions chain like this.
+- game_core::weapon_dispersion_calculator::get_value() const -> STATE[100%|DONE] -> PR #112 (regressions: none)
+  - first non-trivial 100%: clean getter, no empty_stub prologue to cap it. Independent off feature.
+
+CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
+(MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
 

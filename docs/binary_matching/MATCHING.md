@@ -8,6 +8,26 @@ Your goal is to match `base` as close to `target` as possible. This doc is the
 *shape of the code*; the *process* (queue, rebuild/diff, commit-per-function) is
 in [agentic_loop.md](agentic_loop.md).
 
+## Reproduce the target EXACTLY - never "fix" anything (the #1 rule)
+The `target` binary is the **only ground truth**. Your job is to write source that
+reproduces *its* instructions byte-for-byte - **including bugs, dead code, odd
+logic, off-by-ones, and anything that looks wrong.** You are NOT improving the
+code; you are recreating it.
+
+- **Never fix a bug.** If the target does something that looks broken, the original
+  source did that, so your source must do it too. "Correcting" it makes your bytes
+  diverge from the target - that is a *worse* match, not a better one.
+- **The disassembly decides, not your judgment.** If the target reads member
+  `m_foo` (a wrong-looking field), reproduce `m_foo`. Pick the source that emits
+  the target's actual instructions; never pick source because it reads "more
+  correct" or because it nudges the fuzzy % when the asm says otherwise.
+- **Exactness beats every other consideration** - readability, idiom, perceived
+  correctness. A faithful reproduction of a buggy original is the goal.
+
+Do not describe your work as "fixing" - you are *matching*. (Caught on
+`scheduler::on_frame`: a worker called a member-selection change a "bug fix"; the
+correct framing is that the target's asm reads that member, so the source must.)
+
 The modules we match are the ones the shipped `Master Gold` build compiled with
 optimizations **disabled** (`/Od`). That means the binary is very close to the
 original source and the `.pdb` carries a lot of useful info: every statement

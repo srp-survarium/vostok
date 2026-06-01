@@ -115,6 +115,20 @@ _(Append new findings below this line.)_
   None) - one wasted rebuild. FIX: `git branch -a | grep <sibling-fn>`; if its PR is
   open, `git checkout -b match/<yours> match/<sibling-branch>` so the scaffolding
   exists, then add only your body. Cost me one rebuild before I found PR #110.
+- **Distinguish real regressions from baseline-artifact regressions in
+  `report-changes.json`.** `report.json` is overwritten by every rebuild regardless
+  of which branch produced it. If the previous report was generated on a tree that had
+  *other* open-PR branches' scaffolding merged in, a clean rebuild on your bare branch
+  will show those other functions dropping to 0.0 - they were never reachable on YOUR
+  branch's committed source. Triage: (1) does your `git diff` touch that function or its
+  reachability? (2) `git show HEAD:<that file>` - is it still a `STATE[STUB]`/unanchored?
+  If both say no, it's a stale-baseline artifact, not your regression. (Saw 4
+  `character_dispersion_calculator` fns drop 88/82/25/22 -> 0 on a fresh build of a branch
+  where they are all STUBs; my change only touched `weapon_dispersion_calculator`.)
+- **A trivial member getter with NO callees needs exactly one rebuild.** Read the
+  `fld dword ptr [eax+0xNN]` offset, map it to the `/* 0xNN */` member, write
+  `return m_member;`, anchor it (instantiate + call) in temp_include_all, rebuild once
+  -> 100%. No `--view diff` round trip needed (`get_value` @ 0x18 = m_current_coeff).
 - **`pdb_fetch --view diff` silently refuses ("needs both indexes") when the
   `--function` substring matches >1 index entry** - notably it also matches a
   *caller* whose `callees` field contains your function name (e.g. `get_target_koef`

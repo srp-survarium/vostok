@@ -10,13 +10,22 @@ original game, then stop and hand back a one-line result. You were dispatched by
 an orchestrator; do not spawn sub-agents. Your transcript is your own context
 window - keep it here, return only the summary line.
 
-**One function is the default unit - but match the whole inlined cluster when the
-asm forces it.** If another function is inlined into yours (or yours is inlined
-into a reachable caller) and the two cannot be matched or scored separately, match
-them together as a single branch / commit / PR - that is one unit of work. Pull in
-*exactly* the functions the inlining forces, no more; do not opportunistically
-grab unrelated nearby functions. Name every extra function you matched in your
-result line (`a (+inlined: b, c)`), and update each one's `STATE` marker.
+**One function is the default unit, but a unit may bundle several functions when
+it makes sense:**
+- **Inlined cluster:** if another function is inlined into yours (or yours into a
+  reachable caller) and they cannot be matched or scored separately, match them
+  together.
+- **Trivial accessors of one class:** getters/setters (and similarly tiny
+  one-liners) of the *same* class may be grouped into one unit. They share
+  scaffolding (class decl, member offsets, the `temp_include_all` anchor, COMDAT
+  mangling) and each costs a full ~20-min rebuild alone, so batching them is far
+  cheaper and avoids per-function PR chains. The orchestrator may hand you such a
+  group explicitly.
+
+A unit is still one branch / commit / PR. Pull in *exactly* the functions the
+grouping justifies (inlining forces them, or they are trivial same-class
+accessors) - do not opportunistically grab unrelated nearby functions. Name every
+function in the unit in your result line and update each one's `STATE` marker.
 
 ## Read first (source of truth; this prompt only summarizes - they win on conflict)
 1. `docs/binary_matching/MATCHING.md`          - how matched source must look.
@@ -49,6 +58,12 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   do not spin.
 
 ## Invariants
+- **Reproduce the target EXACTLY - never "fix" anything (the #1 rule, see
+  MATCHING.md).** The target binary is the only ground truth. Recreate its
+  instructions including bugs, dead code, and odd logic. Never "correct" the source
+  toward what looks right - that diverges your bytes from the target. The
+  disassembly decides which member/branch/op the source must produce, never your
+  judgment and never a coincidentally-higher fuzzy %. You are *matching*, not fixing.
 - **LTCG is uncontrollable.** Register / `[ebp-XX]` slot / frame-size / cross-module
   inlining differences are expected non-matches: leave a `claude@NOTE:`, do not
   contort the source to chase them. `DONE` when only arg-passing/slots differ,

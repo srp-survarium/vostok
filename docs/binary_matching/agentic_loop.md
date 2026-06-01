@@ -9,9 +9,16 @@ source must look), this file (the process), and
 [`assembly_patterns.md`](assembly_patterns.md) (asm -> source mappings learned so
 far). Read all three first.
 
-**Unit of work:** one function = one branch = one commit = one PR. Exception: if
-function A is inlined into B and cannot be separated, match the cluster together
-in a single commit. Each PR is for a human to review before the next starts.
+**Unit of work:** one function = one branch = one commit = one PR. A unit may
+bundle several functions when justified: (a) an *inlined cluster* (A inlined into
+B, cannot be separated), or (b) a group of *trivial same-class accessors*
+(getters/setters/one-liners) that share scaffolding and would otherwise each cost
+a full rebuild and spawn a PR chain. Don't grab unrelated nearby functions. Each
+PR is for a human to review before the next starts.
+
+**Above all, reproduce the target exactly - never "fix" bugs or odd logic** (see
+MATCHING.md, rule #1). The target binary is ground truth; matching its bytes,
+warts and all, beats any notion of "correct".
 
 A concrete dry run of the whole loop on one function is in
 [`agentic_loop_example.md`](agentic_loop_example.md).

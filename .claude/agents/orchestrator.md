@@ -25,9 +25,13 @@ workers' concern, not yours; do not load them.
    ```
    Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry. Order them
    leaf/small-first (easiest wins first).
-2. **For each function, in order:**
+2. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
      `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line or rva hint from the queue>")`
+   - You may bundle **trivial same-class accessors** (getters/setters/one-liners)
+     into a single dispatch - they share scaffolding, so one worker matching the
+     group avoids redundant ~20-min rebuilds and per-function PR chains. Hand the
+     worker the explicit list. (Inlined clusters the worker bundles on its own.)
    - Wait for it to return its one-line result
      (`module::function -> STATE[NN%|TAG] -> PR #n  (regressions: ...)`).
    - Append that line to your ledger. Do NOT pull the worker's transcript,
