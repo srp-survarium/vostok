@@ -74,5 +74,3 @@ hand-matched source function. In particular `weapon_state::operator=` and
 score `None` in report.json); their "100 -> 0" is the demangled name re-binding
 to a different unit, not a real source regression. Net is +0.03% code, +18
 functions, and my target +81.8 pp. No matched source dropped.
-</content>
-</invoke>
