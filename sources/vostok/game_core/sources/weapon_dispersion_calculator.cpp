@@ -100,15 +100,10 @@ void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( float one_sh
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::weapon_dispersion_calculator::get_value() const
+// STATE[100%|DONE]
 float weapon_dispersion_calculator::get_value( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x58f827>|0x007|+0x006:'85'
-	// ******
+	return m_current_coeff;
 }
 
 // STATE[STUB]
