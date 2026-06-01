@@ -27,6 +27,9 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
     params include, tick-stub anchor). Merge #110 before #111. Same-file functions chain like this.
 - game_core::weapon_dispersion_calculator::get_value() const -> STATE[100%|DONE] -> PR #112 (regressions: none)
   - first non-trivial 100%: clean getter, no empty_stub prologue to cap it. Independent off feature.
+- game_core::weapon_dispersion_calculator::{set_reload_dispersion_amount,set_one_shoot_dispersion_amount,set_aiming_speed} -> STATE[100%|DONE] -> PR #113 (regressions: none)
+  - GROUPED unit (first use of accessor-grouping): all 3 setters 100% in one rebuild. Based on #112's branch.
+  - key: anchor must ESCAPE &calc/&table through an opaque sink so LTCG doesn't DSE the stores (see loop_performance).
 
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
