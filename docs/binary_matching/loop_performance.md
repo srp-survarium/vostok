@@ -155,6 +155,19 @@ _(Append new findings below this line.)_
   `if (this != &other)` self-guard (the carcass FUNCTION BODY starts with the copies at
   line 27, no `if` line), unlike `player_stamina`/`player_stealth` which did guard. Don't
   add the guard by reflex; the asm decides.
+- **A 3-member ctor/setter/dtor group landed in ONE rebuild (2x 100%, 1x PARTIAL) by
+  reading the target asm + COFF constants up front and writing all three + the anchor
+  before the first build.** Notes that saved rebuilds: (1) the ctor's "trivial" carcass
+  (one source line at 0x9c) is a *member-init-list* + `initialize_logic()` call - write
+  the init list in declaration order, NOT body assignments, or the store sequence won't
+  match. (2) The dtor's two trailing masked `finalize_impl` calls are the *implicit*
+  `ai::fsm` destructor - don't write them, the compiler emits them. (3) The setter
+  iterated the fsm and called a virtual at `[vtbl+0x14]` on each state, which forces
+  pulling in the derived type (`breath_state`, layout from `structure/target`) so the
+  `static_cast` reaches the right vtable slot - create that header in the SAME edit pass.
+  (4) The setter's residual diff was 100% the documented inline-vs-call of trivial COMDAT
+  accessors (`states()/front()/current_state()/get_multiplier()`) - recognized it from
+  assembly_patterns.md and stopped at PARTIAL with no second rebuild.
 - **A trivial copy ctor + operator= pair (member-wise scalar copy) needs ONE rebuild
   if you (a) copy the existing 100% sibling's shape (`player_stamina`: ctor `*this =
   other;`, operator= self-guard + decl-order member copies + `return *this`) and (b)

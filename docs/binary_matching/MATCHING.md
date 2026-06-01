@@ -131,3 +131,11 @@ line is `<absoluteVA>|offset|+delta:'srcline'`: paste the VA into IDA (`G`);
 `<N>` = no address (inlined/comment); a large `+delta` = something inlined
 between. Use these as scratch while matching and delete them as you account for
 each statement.
+
+**A multi-line statement carries its `<VA>` only on its LAST line.** The structure
+/ carcass annotates by statement, not by physical source line, and the address is
+attached to the statement's *final* line. So a `<>`-less line is not necessarily
+inlined-away or a comment - it may just be the head of a multi-line statement
+(a wrapped call, a multi-line `if (...)`, a member-init list) whose address sits a
+few lines below. Read the whole statement before concluding a line was optimized
+out.
