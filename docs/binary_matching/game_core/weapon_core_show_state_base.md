@@ -99,8 +99,9 @@ the exact residual, then decide reproduce-vs-PARTIAL.
    functions are byte-exact for every other statement.
 
 ## Outcome
-STATE: ctor 100% DONE, finalize 100% DONE, initialize 75.13% PARTIAL,
-on_animation_end_impl 69.93% PARTIAL.
+STATE: ctor 100% DONE, finalize 100% DONE, initialize 100% DONE, on_animation_end_impl 100% DONE
+(all four 100% in report.json). The 75.13%/69.93% figures below are the PRE-ASSERT-recovery scores,
+kept here as the iteration trail - the recovered ASSERT closed both to 100% (see SWEEP RESULT).
 
 CORRECTION (new guidelines): the line-28/line-42 statement
 `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` (delinker misnames it
