@@ -29,7 +29,7 @@ public:
 
 	inline	void		reset							( ) { /* no source */ }
 
-	inline	float		get_value						( ) const { /* no source */ }
+	inline	float		get_value						( ) const { return m_value; }	// claude@MATCH: reads m_value (+0x0c); get_dispersion inlines it as [this+0x2C]
 	inline	void		set_aiming_speed				( float arg_0 ) { /* no source */ }
 
 			float		get_target_koef					( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const;
