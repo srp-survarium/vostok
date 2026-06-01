@@ -14,6 +14,26 @@
 Shared types, recurring gotchas, and asm quirks that span functions - add as you
 find them.
 
+### Foundational gap: `vostok::ai::fsm_state::~fsm_state` has no body in our sources
+The whole game_core state hierarchy (weapon_core_*_state, jump_logic_state_*,
+player_logic_*_state, ...) derives from `vostok::ai::fsm_state`, whose destructor
+is declared pure-virtual (`= 0`) with **no definition anywhere in our sources**
+(`sushi/v0.100b/match-fsm` matches only the `fsm` container, not `fsm_state`;
+target defines the dtor @ rva 0x3f210). So you cannot construct/anchor any
+concrete fsm_state-derived state without a dtor body to link against.
+**Workaround (use it, it doesn't regress any matched obj):** define a local empty
+`vostok::ai::fsm_state::~fsm_state() {}` in the non-target `temp_include_all.cpp`
+TU alongside your anchor (as PR #121 did). It is not a matched object, just a
+link stopgap. *Proper fix:* match `fsm_state::~fsm_state` as a foundational unit
+(it lives in the `ai` module, out of the game_core lane) and drop the stopgaps.
+
+### Suspected BLOCKED cluster: config (`vostok::configs::binary_config_value`)
+`load(binary_config_value const&)` methods and `(binary_config_value const&)`
+ctors (the params structs: weapon_dispersion_params, character_dispersion_params,
+weapon_recoil_params, ...) likely hit the same never-compiled-header wall as the
+packet cluster - no compiled `.cpp` references `binary_config_value`. Grep before
+dispatching; if its header doesn't compile standalone, defer them BLOCKED.
+
 ### BLOCKED cluster: packet serialize/deserialize (`udp_match_packet` / `packet_reader`)
 Every `serialize(network_core::udp_match_packet&)` / `deserialize(network_core::packet_reader&)`
 function in game_core is **blocked on the same root cause**: `network_core/udp_match_packet.h`

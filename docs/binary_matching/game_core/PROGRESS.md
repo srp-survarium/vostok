@@ -56,6 +56,10 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
 - NOTE: config/binary_config_value functions (load(), config ctors) are a suspected BLOCKED cluster -
   no compiled .cpp references binary_config_value; treat like the packet cluster, defer.
 
+- game_core::weapon_core_base_state::{ctor,deserializing} -> STATE[100%|DONE] -> PR #121 (regressions: none)
+  - GROUPED, 100%. Foundational state base. Surfaced: ai::fsm_state::~fsm_state has NO body in our sources
+    (target rva 0x3f210); state classes need a local stopgap dtor to anchor (README). Consider matching it.
+
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
 

@@ -303,6 +303,23 @@ as the `empty_stub`/`finalize_impl` misnames). Don't take the symbol literally -
 the `lea &slot; call <ctor>; mov ecx,eax; call identity` shape IS `float4x4().identity()`.
 Confirmed in `game_core/get_bone_matrix_in_object_space_impl` (the parent==NULL leaf).
 
+### derived ctor: member of struct-with-ctor is `call <ctor>` THEN explicit member stores in same TU
+ASM (target, weapon_core_base_state ctor at +0x120 member):
+    add ecx,120h; call <float4()>          ; (delinker MISNAME of the member's default ctor)
+    ...vtable stores...
+    add edx,120h; mov [ebp-8],edx          ; &member -> slot
+    mov eax,[ebp-8]; mov dword [eax],0     ; member.field0 = 0
+    mov ecx,[ebp-8]; movss [ecx+4],const   ; member.field1 = const
+SOURCE: a value member (here `animation_playback_state m_animation_playback_state`) whose own
+default ctor has a member-init list (`: interval_id(0), interval_time(0.0f) {}`). MSVC /Od emits the
+member's empty/base sub-object ctor as a `call` (often delinker-misnamed, e.g. `float4()`), then
+INLINES that ctor's member-init stores into the enclosing ctor right after. So fill the member
+struct's own ctor body to produce the explicit stores; the misnamed `call` is the sub-object init.
+Confirmed in `game_core/weapon_core_base_state::weapon_core_base_state` (100%): the `float4()` reloc
+was actually `animation_playback_state`'s default ctor; rdata slot for the movss = 0.0f.
+NOTES: a `member.reset()` would look identical (`&member->slot; store; store`) - decide by whether the
+carcass body has a statement line vs the stores being in init-list (decl-order before later members).
+
 ---
 
 ## Hand-written copy ctor delegating to operator= + member-wise scalar operator=

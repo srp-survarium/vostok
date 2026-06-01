@@ -186,6 +186,18 @@ _(Append new findings below this line.)_
   first try, no `--view diff` round trip. Bonus: anchoring also pulled the (empty)
   default ctor to 100% for free. Read the member offsets straight from the operator='s
   `fld/fstp [reg+0xNN]` and map to the header `/* 0xNN */` comments in the first pass.
+- **Anchoring an ABSTRACT, fsm_state-derived class costs a wasted link unless you provide the
+  pure-virtual base dtor body.** To observe a protected ctor + a getter of an abstract class you
+  need a concrete derived stub in temp_include_all (override the pure virtual with
+  `VOSTOK_UNREACHABLE_CODE();` - no return value needed, it's `[[noreturn]]`-like). But constructing
+  ANY fsm_state-derived instance pulls `??1fsm_state@ai@vostok@@UAE@XZ` into the vtable, and
+  `~fsm_state()` is declared pure (`= 0`) with NO body in sources (and none on origin/.../match-fsm
+  either) -> LNK2001. FIX in the SAME edit pass: define `vostok::ai::fsm_state::~fsm_state(){}` in
+  temp_include_all.cpp (a non-target TU, so it can't regress a matched obj). A protected base getter
+  also needs a public `call_x()` forwarder on the derived stub (free-fn anchor can't reach protected).
+  Cost me one link failure on `weapon_core_base_state::{ctor,deserializing}`. Read the ctor/getter
+  mangled access letters up front (IAE/IBE = protected) and set the decl's access specifier BEFORE
+  the first build (else objdiff scores None - cost a 2nd rebuild here).
 - **A free-function pair that returns a by-value struct (float4x4) hit 100% for BOTH
   in ONE rebuild** by reading the full target asm up front (pointer-diff index,
   operator* push order, the misnamed `float4x4()` ctor, member offsets) and writing
