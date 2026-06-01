@@ -205,6 +205,42 @@ the function's own source - it is a call to a helper stripped from the target ob
 slot shift is the residual. Seen in BOTH
 `character_dispersion_calculator::get_target_koef` and `::get_broken_hands_penalty`.
 
+### `and X,mask; neg; sbb X,X; neg` = `bool b = (val & mask) != 0` (/Od bool-normalize)
+ASM:
+    mov ecx, [eax+10h]   ; val
+    and ecx, 1           ; val & mask
+    neg ecx
+    sbb ecx, ecx
+    neg ecx              ; -> 0 or 1
+    mov [ebp-2], cl      ; store the bool
+SOURCE: `bool b = ( val & MASK ) != 0;` (the explicit `!= 0` form). MSVC /Od emits the
+`neg/sbb/neg` to normalize any-nonzero to exactly 1. The mask literal is read straight
+from the `and` operand. Confirmed in `game_core/player_logic_base_state::movement_animation_index`
+(actions_mask @ player_input+0x10, masks 1/2/4/8).
+
+### nested if/else-if/else emits an extra join `jmp` per level -> flatten to early returns
+SYMPTOM (text-diff fallback, body otherwise byte-identical): base emits a DOUBLE jump at
+each return leaf (`jmp .13; jmp .5`) jumping to an intermediate join then to the epilogue,
+while target does a SINGLE `jmp .end` per leaf to one shared epilogue. objdiff scored `None`
+(too divergent to pair) until the jumps matched.
+SOURCE: an `if (a) { ... } else if (b) { ... } else { ... }` chain whose branches all
+`return` creates a join point (the `else` block's end) before the function end, so MSVC /Od
+emits a jmp-to-join then jmp-to-end. The target was written as FLAT early returns:
+`if (a) { ...; return; } if (b) { ...; return; } return;` (no `else`), so each leaf jumps
+once directly to the single epilogue. Confirmed 100% in
+`game_core/player_logic_base_state::movement_animation_index`. Rule: when the diff is only
+redundant intermediate `jmp`s, drop the `else` keywords and use early returns.
+
+### static member-function access codes: private=`C`, protected=`K`, public=`S` (after `@@`)
+SYMPTOM: report.json `fuzzy_match_percent: None` for a static member that compiled and is in
+the base obj; the COFF symbol differs from the target only in the storage-class char right
+after `@@` (e.g. base `?fn@@CAI...` vs target `?fn@@KAI...`). Same pairing-failure class as the
+instance-member `ABE`/`QBE` entry below, but for STATICS: `C`=private static, `K`=protected
+static, `S`=public static (then `A`=__cdecl-ish, return-type, args). FIX: set the declaration's
+access specifier to match the target char. Confirmed: `movement_animation_index` is `K`
+(protected static) - public gave `S`, private gave `C`, both scored None; `protected:` -> `KAI`
+== target -> 100%.
+
 ### private member function -> mangled `ABE`, not `QBE` (objdiff scores `None` if wrong)
 SYMPTOM: report.json `fuzzy_match_percent = None` for a function that clearly
 compiled and is in the base obj. CAUSE: the base/target mangled names differ only

@@ -25,22 +25,28 @@ workers' concern, not yours; do not load them.
    ```
    Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry. Order them
    leaf/small-first (easiest wins first).
-2. **For each function (or bundle), in order:**
+2. **STACKED PRs.** Every match is stacked on the previous one - each worker
+   branches off the prior worker's branch (the **stack tip**), and its PR targets
+   that branch. This means matchers inherit each other's source, anchors, and notes
+   automatically (no manual forward-porting), `temp_include_all.cpp` edits never
+   conflict, and the human reviews the stack one PR at a time, in order. Track the
+   current tip (start: the latest match branch, or `feature/...` to root a fresh
+   stack). Before each dispatch, `git checkout <tip>` so the worker branches off it,
+   and **name `<tip>` in the prompt as the PR base**. The returned branch is the new
+   tip.
+3. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
-     `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line or rva hint from the queue>")`
+     `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
    - You may bundle **trivial same-class accessors** (getters/setters/one-liners)
-     into a single dispatch - they share scaffolding, so one worker matching the
-     group avoids redundant ~20-min rebuilds and per-function PR chains. Hand the
-     worker the explicit list. (Inlined clusters the worker bundles on its own.)
-   - Wait for it to return its one-line result
-     (`module::function -> STATE[NN%|TAG] -> PR #n  (regressions: ...)`).
-   - Append that line to your ledger. Do NOT pull the worker's transcript,
-     disassembly, or diffs into your context.
+     into a single dispatch - one worker, one rebuild, one PR. Hand the worker the
+     explicit list. (Inlined clusters the worker bundles on its own.)
+   - Wait for its one-line result, append to your ledger, set the new stack tip. Do
+     NOT pull the worker's transcript, disassembly, or diffs into your context.
    - If the worker reports a regression, decide: queue a follow-up fix or flag it
      for the human - do not silently move on.
-3. **One worker at a time.** Never dispatch the next until the current returns -
+4. **One worker at a time.** Never dispatch the next until the current returns -
    workers share the base build and `report.json`, so parallel runs race.
-4. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
+5. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
    `SKIPPED`) with a reason. Report: counts + the full ledger.
 
 ## Keep your context small (this is the whole point)

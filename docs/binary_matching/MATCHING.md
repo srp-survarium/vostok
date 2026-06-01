@@ -81,7 +81,14 @@ If a function exists in target but its matching source file is not provided in b
 - Function brace on its own line; single-statement bodies brace-less. (Brace style is free.)
 - Engine typedefs only: `u8/u16/u32/u64`, `s8..s64`, `f32/f64`, `pstr/pcstr`, `pbyte/pcbyte`, `pvoid/pcvoid`, `float3/float4x4`. `NULL`, not `nullptr` (VS2008 / C++03).
 - Casts: `static_cast<>`, `static_cast_checked<T>()`, `static_cast_resource_ptr<>`; C-style only where the target did one (e.g. `(float)config["x"]`).
-- Names: members `m_snake`, everything else `snake_case`; enum types end `_enum`; functor helpers `<verb>_predicate : boost::noncopyable`; globals `g_`, file statics `s_`.
+- Names - **everything is `snake_case`, all-lowercase. NO CamelCase / PascalCase anywhere** (not types, not functions, not variables, not enum values). Agents get this wrong - it's a hard rule, verified against matched code:
+    - **Types** (class / struct / enum / typedef): `snake_case`, e.g. `weapon_dispersion_calculator`, `udp_match_packet`, `ik_processor`, `bt_character_controller`, `body_part_parameters`. Never `WeaponDispersionCalculator`.
+    - **Acronyms / initialisms are lowercased and treated as ordinary words**: `udp`, `ik`, `id`, `ai`, `bt`, `http`, `2d`/`3d`, `cc` (console command), `perc` (percent). So `udp_match_packet`, `get_initiator_id`, `ammo_id_enum` - never `UDP`, `IK`, `ID`.
+    - **Members** `m_` + snake_case (`m_air_resistance`); **globals** `g_` (`g_allocator`); **file statics** `s_` (`s_aim_transition_time`), console-command statics `s_<name>_cc` (`s_dispersion_enabled_cc`).
+    - **Functions / methods / locals / params**: snake_case (`time_delta_in_sec`, `get_target_koef`).
+    - **Enum types** end `_enum` (`weapon_user_state_enum`); enum **values** are snake_case.
+    - Functor helpers `<verb>_predicate : boost::noncopyable`.
+  When unsure, copy the exact spelling from the target PDB symbol / the nearest matched file - do not invent a casing.
 - Memory: `VOSTOK_NEW_IMPL( g_allocator, T )( args )`, `VOSTOK_DELETE_IMPL`, `VOSTOK_MALLOC_IMPL( g_allocator, n, "tag" )`, `VOSTOK_FREE_IMPL`. Stack vectors: `buffer_vector<T> v( ALLOCA( n * sizeof( T ) ), n )`.
 - Prefer the STL the target used (`erase( remove_if(...), end() )`, `std::find/sort/unique`) over a hand loop.
 
@@ -139,3 +146,14 @@ inlined-away or a comment - it may just be the head of a multi-line statement
 (a wrapped call, a multi-line `if (...)`, a member-init list) whose address sits a
 few lines below. Read the whole statement before concluding a line was optimized
 out.
+
+**Carcass `<VA>` addresses are from the BASE build, not the target.** They differ
+from the target rvas that `pdb_rich_query --list` / `--rva` report (two different
+binaries; often off by ~0x10000). Pasting a carcass address into the *target*
+index will miss. Use the carcass addresses only as scratch for the base build;
+get the target asm by function name / target rva via `pdb_fetch --view target`.
+
+**Local `[ebp-N]` slot *numbers and ordering* are allocation noise** - MSVC `/Od`
+does NOT assign slots in declaration order (observed e.g. four bools at
+`[ebp-2],[ebp-4],[ebp-1],[ebp-3]`). Match the source *statement order* (which is
+reliable); never reorder declarations to chase a slot number.

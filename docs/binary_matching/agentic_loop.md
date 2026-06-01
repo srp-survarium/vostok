@@ -13,8 +13,12 @@ far). Read all three first.
 bundle several functions when justified: (a) an *inlined cluster* (A inlined into
 B, cannot be separated), or (b) a group of *trivial same-class accessors*
 (getters/setters/one-liners) that share scaffolding and would otherwise each cost
-a full rebuild and spawn a PR chain. Don't grab unrelated nearby functions. Each
-PR is for a human to review before the next starts.
+a full rebuild and spawn a PR chain. Don't grab unrelated nearby functions.
+
+**PRs are stacked.** Each match branches off the previous match's branch (the
+stack tip) and its PR targets that branch, not xray/feature. So every worker
+inherits all prior matched source, anchors, and notes; `temp_include_all.cpp`
+edits never conflict; and the human reviews the stack one PR at a time, in order.
 
 **Above all, reproduce the target exactly - never "fix" bugs or odd logic** (see
 MATCHING.md, rule #1). The target binary is ground truth; matching its bytes,

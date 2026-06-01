@@ -210,3 +210,28 @@ _(Append new findings below this line.)_
   observed body from being DSE'd. No `--view diff` round trip needed. Confirmed on
   `get_bone_matrix_in_object_space{,_impl}`. (The inline helper accessors it calls -
   `skeleton::get_root`, `get_root_bones_count` - also went 0->100 for free.)
+- **A header-only edit may NOT retrigger .obj recompiles under this ninja setup -
+  touch the dependent .cpp.** After fixing an inline body in a header, `rebuild.py`
+  ran `[1/1]` (link only) and the LTCG codegen kept failing on the STALE obj IL
+  (the obj's depfile didn't list the header). The error even reported the *new*
+  source line while using the old IL. FIX: `touch` every .cpp that emits the
+  affected symbol (here the vtable-emitting TUs) so ninja recompiles them with the
+  fixed header. Cost 1 wasted rebuild on `movement_animation_index`'s
+  `get_attachment_transform` stub.
+- **Anchoring a STATIC member of an fsm_state-derived class pulls the WHOLE vtable
+  chain - budget the stopgaps + a valid get_attachment_transform up front.** Even a
+  pure static (no instance) anchor keeps the class's .obj, whose ctor emits the
+  abstract vtable -> needs `vostok::ai::fsm_state::~fsm_state(){}` AND the class's own
+  `~<derived>(){}` (both undefined in sources -> LNK2001), AND every inline virtual in
+  the vtable with a non-void return must actually return (the `{ /* no source */ }`
+  stub for `get_attachment_transform` -> C4716/LNK1257 at codegen). Write all three
+  stopgaps in the SAME first edit pass (dtors in the non-target temp_include_all TU,
+  the virtual's return in the header). Cost 2 rebuilds discovering them one at a time
+  on `player_logic_base_state::movement_animation_index`.
+- **A private STATIC member can't be anchored by a free `use_*` - befriend the anchor
+  (free decls/friends don't change bytes).** When the target wants the static
+  private/protected (mangling `C`/`K`), the temp_include_all anchor can't call it.
+  Forward-declare the anchor in its namespace before the class and add
+  `friend void ::ns::use_*();` in the class. Set the access specifier to match the
+  target's storage-class char in the SAME pass (read it from the target COFF symbol:
+  C=private, K=protected, S=public static) or objdiff scores None.

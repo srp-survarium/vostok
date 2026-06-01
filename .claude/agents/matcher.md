@@ -84,14 +84,20 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   showed. A reviewer must be able to replay your run from this file. Template in
   agentic_loop.md section 7.
 
-## Finish - one unit of work = one branch + one commit + one PR (section 9)
+## Finish - STACKED PRs: one unit = one branch + one commit + one PR, each stacked on the previous (section 9)
+PRs are **stacked**: the orchestrator leaves the current **stack tip** checked out
+and names it (`<base-branch>`) in your prompt. Branch off it - do NOT reset to
+feature/xray - so you inherit every prior match's source, anchors, and notes (this
+is how matchers see each other's work and `temp_include_all.cpp` edits never
+conflict).
 ```
-git checkout -b match/<module>-<function>
+git checkout -b match/<module>-<function>      # off the current tip you were handed
 git add <the .cpp(s)> <per-function log> <temp_include_all.cpp / pattern edits>
-git commit -m "<module>: match <function> (NN% TAG[, LTCG])"   # name inlined cluster members too
+git commit -m "<module>: match <function> (NN% TAG[, LTCG])"   # name grouped/inlined members too
 git push -u origin match/<module>-<function>
-gh pr create --fill --base <repo main matching branch>   # currently xray-2.0-prog-v0.100b
+gh pr create --fill --base <base-branch>        # target the tip you branched from, NOT xray
 ```
+Your pushed branch becomes the new tip for the next worker.
 
 Then return **one line** to the orchestrator and nothing else (name any
 inlined-together functions you also matched):

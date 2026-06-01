@@ -60,6 +60,18 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
   - GROUPED, 100%. Foundational state base. Surfaced: ai::fsm_state::~fsm_state has NO body in our sources
     (target rva 0x3f210); state classes need a local stopgap dtor to anchor (README). Consider matching it.
 
+- game_core::player_logic_base_state::movement_animation_index(player_input const&) [static] -> STATE[100%|DONE] -> PR #122 (regressions: none)
+  - static fn, real u32 logic, 100%. Notes: carcass <VA> = base build (not target --list rva); /Od slot
+    ordering is NOT declaration-order (allocation noise) - both now in MATCHING.md.
+
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
-(MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
+(MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md);
+(3) STACKED PRs - each match branches off the previous (stack tip), PR targets it, so matchers inherit
+each other's source+notes and temp_include_all never conflicts; (4) tightened case conventions
+(all snake_case, acronyms lowercased - MATCHING.md). Forward-porting retired in favor of stacking.
+
+STACK STATE: PRs #104-#122 were the pre-stacking PARALLEL batch (mostly off feature; chains: #110<-#111,
+#112<-#113, #116, #119). NEW matches (#123+) form a STACK rooted at feature/agentic-matching-loop.
+NOTE for human: the 19 parallel PRs all edit temp_include_all.cpp independently -> they will conflict on
+merge; consider merging/rebasing them in a deliberate order. The new stack avoids this going forward.
 
