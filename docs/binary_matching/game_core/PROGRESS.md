@@ -30,3 +30,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     (82.89% -> 93.33%). Residual not re-diffed after recovery; not LTCG. See the per-function .md.
   - PR CHAIN: #111 branched off #110 (shares the class scaffolding: private-getter mangling,
     params include, tick-stub anchor). Same-file functions chain like this.
+- game_core::weapon_dispersion_calculator::get_value() const -> STATE[100%|DONE] -> PR #112 (regressions: none)
+  - first non-trivial 100%: clean getter, no empty_stub prologue to cap it. Independent off feature.
