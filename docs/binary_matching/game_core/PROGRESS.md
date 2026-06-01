@@ -63,6 +63,11 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
 - game_core::player_logic_base_state::movement_animation_index(player_input const&) [static] -> STATE[100%|DONE] -> PR #122 (regressions: none)
   - static fn, real u32 logic, 100%. Notes: carcass <VA> = base build (not target --list rva); /Od slot
     ordering is NOT declaration-order (allocation noise) - both now in MATCHING.md.
+- game_core::weapon_core_idle_state_base::{ctor,initialize,finalize} -> STATE[100%|DONE] -> PR #123 (regressions: none)
+  - GROUPED, all 3 at 100%. FIRST stacked PR: stacked on #121 (needed weapon_core_base_state scaffolding +
+    fsm_state stopgap). Finding (on stack): mangled access codes U=public/M=protected/E=private virtual
+    (initialize/finalize were private-virtual EAEXXZ, ctor protected IAE) - read them from target COFF up front.
+  - STACK TIP = match/game_core-weapon_core_idle_state_base. New matches stack on this.
 
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md);
