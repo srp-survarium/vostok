@@ -41,8 +41,11 @@ content, other functions, or the guideline docs themselves.
    verbatim INCLUDING its `<0> <1>` marker lines, with matched-statement annotations to
    the RIGHT; the `// <signature>` line is deleted once arg types match. All
    rationale/attempts live in the per-function `.md`, not inline (only terse
-   `claude@MATCH:`/`claude@NOTE:` for genuinely non-obvious shaping). Fix violations:
-   strip noise from a clean 100%; restore a stripped carcass on a non-100%.
+   `claude@MATCH:`/`claude@NOTE:` for genuinely non-obvious shaping). Also **strip
+   unnecessary logs** - any logging/diagnostic statement (`LOG_*`, `printf`,
+   `OutputDebugString`, trace) or commented-out debug/log line the matcher added that
+   the target does not actually emit (it is not part of the byte-match). Fix violations:
+   strip noise/logs from a clean 100%; restore a stripped carcass on a non-100%.
 3. **Percentages correct EVERYWHERE.** The `.cpp` `// STATE[NN%|TAG]`, the per-function
    `.md` headline/outcome, and the `PROGRESS.md` ledger line must agree with EACH OTHER
    and with `binaries/objdiff/report.json`'s `fuzzy_match_percent` for that symbol. READ

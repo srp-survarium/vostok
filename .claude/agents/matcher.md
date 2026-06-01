@@ -115,7 +115,10 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   `// <full signature>` line (it is only a type reference). A clean `100%|DONE` keeps
   ONLY its `// STATE[100%|DONE]` line - no explanation block, no narrating routine
   mechanics. ALL detail/rationale/attempts go in the per-function `.md` (be verbose
-  THERE, not in the `.cpp`); never write an unverified claim inline.
+  THERE, not in the `.cpp`); never write an unverified claim inline. **Strip
+  unnecessary logs too:** delete any logging/diagnostic line (`LOG_*`, `printf`,
+  `OutputDebugString`, trace) or commented-out debug/log you added that the target does
+  not actually emit - it is not part of the byte-match.
 - Append any genuinely new asm -> source mapping you find to `assembly_patterns.md`.
 - Append any genuinely new *time-saving* learning - a way to need fewer rebuilds,
   a step that was unnecessary, a cheaper way to the same signal - to
