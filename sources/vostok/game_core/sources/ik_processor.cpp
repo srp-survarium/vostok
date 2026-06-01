@@ -29,12 +29,7 @@ void ik_processor::activate( animation::skeleton const& skeleton )
 	// ******
 }
 
-// STATE[100%|DONE]: full match
-// vostok::math::float4x4 survarium::get_bone_matrix_in_object_space_impl(vostok::animation::skeleton_bone const&, vostok::math::float4x4 const*, vostok::animation::skeleton_bone const*)
-// claude@MATCH: matrix_index is a pointer subtraction; the recursion walks up the
-// parent chain. The `: float4x4( ).identity( )` term is the parent==NULL leaf
-// (default ctor + identity); operator*'s left operand is matrices[matrix_index]
-// (push order in target asm), right operand is the recursive result.
+// STATE[100%|DONE]
 float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& bone, float4x4 const* matrices, animation::skeleton_bone const* first_non_root_bone )
 {
 	u32 const matrix_index	= u32( &bone - first_non_root_bone );
@@ -43,8 +38,7 @@ float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& b
 		float4x4( ).identity( );
 }
 
-// STATE[100%|DONE]: full match
-// vostok::math::float4x4 survarium::get_bone_matrix_in_object_space(vostok::animation::skeleton_bone const&, vostok::animation::skeleton const&, vostok::math::float4x4 const*)
+// STATE[100%|DONE]
 float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices )
 {
 	animation::skeleton_bone const* const first_non_root_bone	= &skeleton.get_root( ) + skeleton.get_root_bones_count( );
