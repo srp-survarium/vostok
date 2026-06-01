@@ -78,56 +78,28 @@ void weapon_dispersion_calculator::reload( )
 	// ******
 }
 
-// STATE[100%|DONE]: movss [this+0x4],xmm0 -> m_reload_dispersion_amount.
-// void survarium::weapon_dispersion_calculator::set_reload_dispersion_amount(const float)
+// STATE[100%|DONE]
 void weapon_dispersion_calculator::set_reload_dispersion_amount( const float reload_dispersion_amount )
 {
-	// asm: movss [this+0x4], xmm0 -> m_reload_dispersion_amount
 	m_reload_dispersion_amount = reload_dispersion_amount;
-
-	// FUNCTION BODY
-	// <0>
-	// <0x58f867>|0x007|+0x00d:'72'
-	// <0>
-	// ******
 }
 
-// STATE[100%|DONE]: movss [this+0x0],xmm0 -> m_one_shoot_dispersion_amount.
-// void survarium::weapon_dispersion_calculator::set_one_shoot_dispersion_amount(const float)
+// STATE[100%|DONE]
 void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( const float one_shoot_dispersion_amount )
 {
-	// asm: movss [this+0x0], xmm0 -> m_one_shoot_dispersion_amount
 	m_one_shoot_dispersion_amount = one_shoot_dispersion_amount;
-
-	// FUNCTION BODY
-	// <0>
-	// <0x58f847>|0x007|+0x00c:'79'
-	// <0>
-	// ******
 }
 
-// STATE[100%|DONE]: matches target getter (fld dword ptr [this+0x18]).
-// float survarium::weapon_dispersion_calculator::get_value() const
+// STATE[100%|DONE]
 float weapon_dispersion_calculator::get_value( ) const
 {
-	// asm: fld dword ptr [this+0x18] -> m_current_coeff
 	return m_current_coeff;
-
-	// FUNCTION BODY
-	// <0x58f827>|0x007|+0x006:'85'
-	// ******
 }
 
-// STATE[100%|DONE]: movss [this+0xC],xmm0 -> m_aiming_speed.
-// void survarium::weapon_dispersion_calculator::set_aiming_speed(const float)
+// STATE[100%|DONE]
 void weapon_dispersion_calculator::set_aiming_speed( const float aiming_speed )
 {
-	// asm: movss [this+0xC], xmm0 -> m_aiming_speed
 	m_aiming_speed = aiming_speed;
-
-	// FUNCTION BODY
-	// <0x58f807>|0x007|+0x00d:'90'
-	// ******
 }
 
 } // namespace survarium
