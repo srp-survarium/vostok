@@ -16,8 +16,10 @@ debug/
 *.a
 *.lib
 
-# Claude Code local state
-.claude/
+# Claude Code local state (keep shared agents + commands, ignore the rest)
+.claude/*
+!.claude/agents/
+!.claude/commands/
 
 # LGPL license files staged from vostok-libs into the cell SDK tree
 sources/cell/host-win32/ppu/COPYING.LIB
@@ -97,3 +99,7 @@ ipch/
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/
+
+# Nix build result symlinks
+/result
+/result-*

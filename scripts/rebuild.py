@@ -3,14 +3,16 @@
 rebuild.py - full base-side refresh after editing sources.
 
   1. Build survarium via ninja under Wine (scripts/ninja_build.py).
-  2. In parallel (both IO-bound, disjoint outputs):
+  2. In parallel (all IO-bound, disjoint outputs):
        a. binaries/structure/base  - pdb-parser --as-base   (generate_structure.py)
        b. binaries/objdiff/base    - vostok-delinker COFF   (generate_delink.py)
           + refreshed objdiff.json
+       c. binaries/rich/base       - pdb_rich_context index (generate_rich.py),
+          the backing store for `pdb_fetch` (target asm + instruction diff).
 
-The target side (binaries/structure/target, binaries/objdiff/target) is the
-original game and does not change between recompiles; it is generated once on
-first `nix develop` (see setup-toolchain.py).
+The target side (binaries/structure/target, binaries/objdiff/target,
+binaries/rich/target) is the original game and does not change between
+recompiles; it is generated once on first `nix develop` (see setup-toolchain.py).
 
 Any extra args are forwarded to ninja_build.py:
   python3 scripts/rebuild.py            # build the game, then refresh base diff inputs
@@ -23,6 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import generate_delink
+import generate_rich
 import generate_structure
 
 
@@ -48,10 +51,11 @@ def main() -> None:
     except subprocess.CalledProcessError as e:
         die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
 
-    log("Build OK. Regenerating base structure + COFF in parallel ...")
+    log("Build OK. Regenerating base structure + COFF + rich index in parallel ...")
     steps = {
-        "base structure": lambda: generate_structure.generate("base"),
-        "base COFF":      lambda: generate_delink.generate("base"),
+        "base structure":  lambda: generate_structure.generate("base"),
+        "base COFF":       lambda: generate_delink.generate("base"),
+        "base rich index": lambda: generate_rich.generate("base"),
     }
     failures = []
     with ThreadPoolExecutor(max_workers=len(steps)) as ex:
