@@ -194,7 +194,7 @@ bool weapon_user_animations_selector::is_sprinting( ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::weapon_user_animations_selector::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_user_animations_selector::serialize( network_core::udp_match_packet& packet ) const
 {
@@ -227,7 +227,7 @@ void weapon_user_animations_selector::serialize( network_core::udp_match_packet&
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::weapon_user_animations_selector::deserialize(vostok::network_core::packet_reader&)
 void weapon_user_animations_selector::deserialize( network_core::packet_reader& reader )
 {
