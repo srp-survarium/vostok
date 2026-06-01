@@ -10,12 +10,14 @@ Baseline for these modules (`/Od`, no optimization, plus LTCG):
   reordering.
 - every local and parameter has a stack slot, addressed `ebp`-relative; standard
   `push ebp / mov ebp, esp` frame.
-- LTCG / the linker can change how values cross a `call` boundary (which registers
-  / how much stack) **and how the frame is laid out** (stack-slot assignment) - but
-  it does not reorder the body. A body that is implementation-identical but differs
-  only in register / `[ebp-XX]` stack-slot allocation is a **match** (see
-  `MATCHING.md` - LTCG). Other linker effects exist and are not fully enumerated,
-  so trust the operand-aware match % over a raw instruction-difference count.
+- LTCG / the linker can change how values cross a `call` boundary (which registers /
+  how much stack, or drop an argument proven constant). **That call-boundary argument
+  passing is the ONLY thing you may write off as LTCG** (see `MATCHING.md`). Frame size,
+  `[ebp-XX]` slot assignment, switch-dispatch shape, an extra `cmp/ja`, a stray `fld1`
+  are NOT LTCG; they are source-steerable and each has a cause (a missing ASSERT, a
+  missing `case`, a `default: NODEFAULT()`). The body is never reordered. Trust the
+  operand-aware match % over a raw instruction-difference count, but do not let it lull
+  you into banking a non-argument diff as "LTCG".
 
 ## Entry format
 
@@ -403,3 +405,40 @@ as its own unit in objdiff/report (confirmed: `game_core/sources/entry_point.cpp
 `survarium::game_core_initialize`, symbol `?game_core_initialize@survarium@@YAXXZ`).
 `/OPT:ICF` may fold byte-identical functions, but the symbol still resolves - do not
 assume an empty function is "unscorable".
+
+### switch dispatch: bounds check (`cmp/ja`) vs contiguous jump table - the `default:` shape
+ASM (TARGET - no bounds check, contiguous table):
+    mov   edx, [ebp-0Ch]            ; the switch value
+    jmp   dword ptr [edx*4+table]   ; straight to the jump table, values 0..N
+ASM (BASE - extra bounds check, table bounded at the top explicit case):
+    cmp   dword ptr [ebp-0Ch], 3    ; <- the highest explicit `case`
+    ja    default
+    mov   edx, [ebp-0Ch]
+    jmp   dword ptr [edx*4+table]   ; only values 0..3
+SOURCE: the difference is the `default:`.
+- No bounds check  => source covers the FULL contiguous case range and ends
+  `default: NODEFAULT();` (`NODEFAULT` = `__assume(0)` in Master Gold,
+  `sources/vostok/debug_macros.h`). `__assume(0)` tells MSVC the default is
+  unreachable, so it drops the range check and emits a tight `[0..N]` table.
+- `cmp max; ja default` => source has a reachable `default: return X;` (or stops
+  short of the top enum value), so MSVC bounds the table at the highest `case`.
+NOTES: if BASE has a `cmp/ja` the TARGET lacks, you are missing the top `case`(s)
+plus a `default: NODEFAULT();` - NOT an LTCG artifact. A terminal value the target
+reaches THROUGH the table (e.g. a final `fld1` for the highest enum value) is an
+explicit `case`, not the `default`. Found on
+`game_core/sources/character_dispersion_calculator.cpp::get_target_koef`
+(enum 0..4; ours stopped at `type_jump`(3) + `default: return 1.0f;`, target had
+`case type_preview: return 1.0f; default: NODEFAULT();`).
+
+### `jmp short` (2 bytes) inside a switch = a closing brace `}`
+ASM:
+    eb xx           ; jmp short <end-of-switch / next>  (2 bytes)
+CARCASS: shows as a `+0x002` step (a body line whose `+delta` from the previous is 2).
+SOURCE: the `break` / scope-exit of a braced block - a `{ }`-scoped `case` (or a
+braced `if` inside one). /Od emits the `jmp` for the `}` even when the block's last
+statement `return`s (dead, not removed).
+NOTES: this is how the carcass reveals where braces were. A `case`/`if` showing a
+`+0x002`/`jmp` was braced - brace it in source. A `case` with no such entry was
+brace-less. Do NOT decide braces from "has a local" alone (we mis-braced
+`get_target_koef` and earlier switches that way; prior switch matches should be
+re-checked against this).

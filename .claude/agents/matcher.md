@@ -48,7 +48,19 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   - **Asserts:** a `call empty_stub` (delinker may misname `finalize_impl`) is a
     compiled-out `ASSERT` - put `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` at that
     statement; it reproduces the bytes (MATCHING.md). Do NOT leave it as "residual".
-  - **Switch:** give a `case` body that has a local/assert its own `{ }` scope.
+  - **Locals:** declare and use EVERY `// LOCALS` entry - a PDB-recorded local was
+    definitely in the target source (under `/Od` every local gets a stack slot). A
+    dropped local is a dropped statement; never omit one as "unused".
+  - **Switch braces - read the carcass.** Under `/Od` a closing brace `}` emits a
+    2-byte `jmp short`, so a `+0x002` step in the `// FUNCTION BODY` carcass marks a
+    braced block: brace that `case` (or the `if` inside it) to match - whether or not
+    it has a local. A `case` with no `+0x002` entry is brace-less.
+  - **Switch default / dispatch:** a target jump table with NO bounds check
+    (`jmp [reg*4+table]`, no preceding `cmp max; ja default`) means the source covered
+    the full *contiguous* case range and ended `default: NODEFAULT();` (`__assume(0)`,
+    `debug_macros.h`); a bare `default: return X;` keeps the bounds check and bounds the
+    table at the top case. Match the default. A `fld1`/const the target reaches THROUGH
+    the jump table is an explicit `case`, not the `default`.
 - **Reachability:** reference the function from `temp_include_all.cpp` so the
   linker keeps it - unless an already-anchored function calls it (section 3).
 - **Build + score:** `python3 scripts/rebuild.py` with **NO module arg** - a bare
@@ -73,16 +85,31 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   toward what looks right - that diverges your bytes from the target. The
   disassembly decides which member/branch/op the source must produce, never your
   judgment and never a coincidentally-higher fuzzy %. You are *matching*, not fixing.
-- **LTCG is uncontrollable.** Register / `[ebp-XX]` slot / frame-size / cross-module
-  inlining differences are expected non-matches: leave a `claude@NOTE:`, do not
-  contort the source to chase them. `DONE` when only arg-passing/slots differ,
-  `PARTIAL` when inlining/frame diverges and the body is as close as source allows.
+- **LTCG is an excuse ONLY for function ARGUMENTS - everything else is a matching
+  problem.** The only differences you may attribute to LTCG and stop on are at the
+  call boundary: an argument dropped (proven constant call-site-wide) or passed in a
+  register instead of its stack slot. EVERYTHING ELSE you must solve from source -
+  register choice, `[ebp-XX]` slot, frame size, switch-dispatch shape, an extra
+  `cmp/ja` bounds check, a stray `fld1`, statement order. Each has a concrete source
+  cause (a missing `ASSERT`, a missing `case`, a `default: NODEFAULT()`, a different
+  shape); find it, do NOT bank it as a "PARTIAL, LTCG residual". If you cannot finish
+  it on this machine, mark `INPROGRESS` with the exact next step. (History: `empty_stub`
+  calls and a switch bounds check were both wrongly written off as LTCG and were in
+  fact a recoverable ASSERT and a missing `default: NODEFAULT()`.) `DONE` only when the
+  sole remaining difference is argument passing.
 - Tag your own deliberate match-shaping with `claude@MATCH:` / `claude@NOTE:` /
   `claude@TODO:` (the existing `sushi@...` notes are the prior author's - keep them).
 - Update the function's `// STATE[NN%|TAG]: reason` marker to the final result.
 - **Non-100% match -> keep the target structure inline** (the `// FUNCTION BODY`
   block + the diverging `--view target` asm as a comment) so the divergence context
   lives in the source; only a clean 100% DONE may delete the carcass. (MATCHING.md.)
+- **When the match is NOT 100%, PRESERVE the `// FUNCTION BODY` block verbatim,
+  including its `<0> <1> <2>` marker lines - never strip them.** Their count and
+  grouping are a structural clue (inlined calls, nested scopes, fall-through thunks).
+  When you annotate which statement a line matched, write the annotation to the RIGHT
+  of the carcass line and leave every marker line in place. (Keep only the
+  `// FUNCTION BODY` block - drop the generated `// STATICS` / `// OTHER SYMBOLS`
+  blocks.) A clean **100% DONE** deletes the carcass entirely (the invariant above).
 - **Comment hygiene - lean code, verbose `.md` (MATCHING.md):** don't be noisy in
   source. Once the function's argument types match the target, DELETE the carcass
   `// <full signature>` line (it is only a type reference). A clean `100%|DONE` keeps
