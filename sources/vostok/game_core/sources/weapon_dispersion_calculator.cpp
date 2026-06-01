@@ -100,11 +100,12 @@ void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( float one_sh
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: matches target getter (fld dword ptr [this+0x18]).
 // float survarium::weapon_dispersion_calculator::get_value() const
 float weapon_dispersion_calculator::get_value( ) const
 {
-	return 0.0f;
+	// asm: fld dword ptr [this+0x18] -> m_current_coeff
+	return m_current_coeff;
 
 	// FUNCTION BODY
 	// <0x58f827>|0x007|+0x006:'85'

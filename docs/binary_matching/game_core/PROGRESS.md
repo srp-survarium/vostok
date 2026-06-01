@@ -26,3 +26,5 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - switch body + m_params reads match instruction-for-instruction; same empty_stub LTCG cap as #110.
   - PR CHAIN: #111 is based on #110's branch (shares the class scaffolding: private-getter mangling,
     params include, tick-stub anchor). Merge #110 before #111. Same-file functions chain like this.
+- game_core::weapon_dispersion_calculator::get_value() const -> STATE[100%|DONE] -> PR #112 (regressions: none)
+  - first non-trivial 100%: clean getter, no empty_stub prologue to cap it. Independent off feature.
