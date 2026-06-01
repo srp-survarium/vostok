@@ -17,15 +17,13 @@ player_stealth::player_stealth( )
 	// ******
 }
 
-// STATE[100%|DONE]: delegates to operator= (same shape as player_stamina copy ctor)
-// survarium::player_stealth::player_stealth(survarium::player_stealth const&)
+// STATE[100%|DONE]
 player_stealth::player_stealth( player_stealth const& other )
 {
 	*this = other;
 }
 
-// STATE[100%|DONE]: self-guard + member-wise float copy in decl order
-// survarium::player_stealth& survarium::player_stealth::operator=(survarium::player_stealth const&)
+// STATE[100%|DONE]
 player_stealth& player_stealth::operator=( player_stealth const& other )
 {
 	if ( this != &other )
