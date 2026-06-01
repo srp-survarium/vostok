@@ -84,8 +84,12 @@ CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exac
 each other's source+notes and temp_include_all never conflicts; (4) tightened case conventions
 (all snake_case, acronyms lowercased - MATCHING.md). Forward-porting retired in favor of stacking.
 
-STACK STATE: PRs #104-#122 were the pre-stacking PARALLEL batch (mostly off feature; chains: #110<-#111,
-#112<-#113, #116, #119). NEW matches (#123+) form a STACK rooted at feature/agentic-matching-loop.
-NOTE for human: the 19 parallel PRs all edit temp_include_all.cpp independently -> they will conflict on
-merge; consider merging/rebasing them in a deliberate order. The new stack avoids this going forward.
+STACK STATE (LINEARIZED): all PRs are now ONE linear single-commit stack:
+feature -> 104 -> 105 -> 106 -> 108 -> 109 -> 110 -> 111 -> 112 -> 113 -> 114 -> 115 -> 116 -> 117 ->
+119 -> 120 -> 121 -> 122 -> 123 -> 124 -> 125 (tip = match/game_core-weapon_core_show_state_base).
+Each PR's base = its predecessor; each is exactly ONE commit (#119's WIP squashed). #107 closed (superseded
+by #116). Merges are CONFLICT-FREE: verified zero file overlap between feature's post-root commits and the
+stack. Backups: backup/* and backup-squash/* tags. Doc ownership to keep it clean: loop_performance.md +
+assembly_patterns.md are STACK-owned (never edit on feature); PROGRESS.md/README.md/MATCHING.md/agent-defs
+are orchestrator/feature-owned (stack never touches them). New matches stack on the tip.
 
