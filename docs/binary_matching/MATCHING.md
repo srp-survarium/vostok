@@ -120,13 +120,15 @@ One per function, line above it: `// STATE[<percent>%|<tag>]: short reason`.
 e.g. `// STATE[94.32%|DONE]: LTCG for mutex`, `// STATE[97.67%|PARTIAL]: target didn't xor after std::find`.
 
 
-## Comment hygiene - keep matched code lean
-In-code comments are minimal; verbose rationale lives in the per-function `.md`
-(section 7), never inline.
-- **The carcass `// <full signature>` line is a TYPE reference**, kept while matching
-  because vostok-structure's generated argument *names* can be wrong while the
-  *types* are right. Once you have confirmed the signature, **delete it** - a
-  confirmed match does not keep it.
+## Comment hygiene - lean code, verbose `.md`
+**Code is not the place to be noisy.** Keep inline comments minimal. ALL the
+explanation, exploration, attempts, and rationale belong in the per-function `.md`
+(section 7) - be as detailed as you like *there*, never in the source. A reader of
+the `.cpp` should see matched code, not a narration.
+- **The carcass `// <full signature>` line is only a TYPE reference**, kept while
+  matching because vostok-structure's generated argument *names* can be wrong while
+  the *types* are right. **Once the arguments/types match the target, DELETE it** - a
+  confirmed match does not keep the signature line.
 - **A clean `100%|DONE` keeps ONLY its `// STATE[100%|DONE]` line** - no explanation
   block above the function (the why-it-matched detail goes in the `.md`). The single
   exception is the non-100% carcass-structure rule below (keep structure inline).
