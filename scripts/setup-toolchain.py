@@ -163,26 +163,36 @@ def _nonempty_dir(p: Path) -> bool:
 
 def ensure_target_side(force: bool = False) -> None:
     """Generate the target-side diff inputs (the original game never changes):
-    binaries/objdiff/target (COFF) and binaries/structure/target (pdb-parser stubs).
+    binaries/objdiff/target (COFF), binaries/structure/target (pdb-parser stubs),
+    and binaries/rich/target (pdb_rich_context index for `pdb_fetch`).
 
     Idempotent - skips whichever output already exists (unless `force`), so this is
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
     doesn't go unnoticed.
     """
     import generate_delink
+    import generate_rich
     import generate_structure
 
     objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"
     structure_target = VOSTOK_DIR / "binaries" / "structure" / "target"
-    if not force and _nonempty_dir(objdiff_target) and _nonempty_dir(structure_target):
+    rich_target      = VOSTOK_DIR / "binaries" / "rich" / "target"
+    if (
+        not force
+        and _nonempty_dir(objdiff_target)
+        and _nonempty_dir(structure_target)
+        and _nonempty_dir(rich_target)
+    ):
         return  # already generated
 
-    log("Generating target diff inputs (original game COFF + structure) ...")
+    log("Generating target diff inputs (original game COFF + structure + rich index) ...")
     try:
         if force or not _nonempty_dir(objdiff_target):
             generate_delink.generate("target")
         if force or not _nonempty_dir(structure_target):
             generate_structure.generate("target")
+        if force or not _nonempty_dir(rich_target):
+            generate_rich.generate("target")
     except (RuntimeError, subprocess.CalledProcessError) as e:
         die(f"could not generate target diff inputs: {e}")
     log("Target diff inputs ready.")
