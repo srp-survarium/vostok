@@ -6,3 +6,5 @@ and 55 SKIPPED. Workers dispatched one-per-function, leaf/small-first.
 ## Ledger
 One line per dispatched function: `module::function -> STATE -> PR (regressions)`.
 
+- game_core::game_core_initialize -> STATE[100%|DONE] -> PR #104 (regressions: none)
+
