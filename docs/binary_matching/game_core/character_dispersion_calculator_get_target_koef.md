@@ -1,20 +1,28 @@
 # game_core::character_dispersion_calculator::get_target_koef
 
-> **STATUS: INPROGRESS (dispatch shape wrong).** Review against objdiff found the
-> **switch dispatch at the head does not match** - so the 95.74% fuzzy is misleading.
-> Two structural differences (deferred to a faster machine; do NOT chase the % here):
-> - The target **short-circuits `type_jump` (0x3) OUTSIDE the switch** - a leading
->   conditional handles value 3 before/around the jump-table dispatch; our source has
->   it as an in-switch `case type_jump`, which is wrong.
-> - Our switch has no explicit `type_preview` (4) case (it falls into `default`), so our
->   compiler emits a range check `cmp 3; ja default` + 4-entry table, whereas the target
->   emits a **direct 5-entry jump table** (`jmp [edx*4+table]`, values 0-4) with no range
->   check.
+> **STATUS: INPROGRESS (verified; fix deferred to a faster machine).** The dispatch
+> differs, and the divergence is in OUR base, NOT the target (verified 2026-06-01 by
+> disassembling both - target rva 0x585ee0, base rva 0x44c040):
+> - TARGET: `mov edx,[ebp-0Ch]; jmp [edx*4+table]` - a direct, contiguous 5-entry jump
+>   table over values 0..4, **no bounds check**. `type_jump`(3) is a plain table entry;
+>   `type_preview`(4) maps to the `fld1` (=1.0f) body.
+> - BASE (ours): `cmp [ebp-0Ch],3; ja default; jmp [edx*4+table]` - an extra bounds
+>   check + a 4-entry table, because our `switch` stops at `type_jump`(3) and uses
+>   `default: return 1.0f;`, so MSVC bounds the table at 3.
 >
-> TO FIX (faster machine): restructure the head - pull `type_jump` out as a leading
-> short-circuit and/or add the explicit `type_preview` case - to reproduce the direct
-> jump table, then re-diff/rebuild. The per-case float BODIES + the recovered ASSERT
-> below are believed correct; only the dispatch shape is open.
+> FIX (faster machine), two parts, then rebuild + re-diff:
+> 1. **Dispatch:** add `case type_preview: return 1.0f;` and change
+>    `default: return 1.0f;` -> `default: NODEFAULT();` (NODEFAULT = `__assume(0)` in
+>    Master Gold, `sources/vostok/debug_macros.h`). `__assume(0)` tells MSVC the default
+>    is unreachable, so it drops the `cmp 3; ja` and emits the contiguous [0..4] table.
+> 2. **Braces:** the carcass shows a `+0x002` step (a 2-byte `jmp short` = a closing
+>    `}`) at body offset 0x5d (src line 108) and 0xc0 (src line 114) - the `type_stand`
+>    and `type_crouch` blocks were `{ }`-brace-scoped. Add the braces; a brace changes
+>    the codegen/structure (MATCHING.md "switch"). The single-`return` cases
+>    (`sprint`/`jump`) show no `+0x002` and stay brace-less.
+>
+> NOT an LTCG residual - a source-structure problem. The per-case float bodies + the
+> recovered ASSERT already match; the dispatch + braces are what is open.
 
 `float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const`
 Target rva: 0x585ee0 (obj `.text` offset 0xd4 in character_dispersion_calculator.cpp.obj).
@@ -88,17 +96,17 @@ Logic:
 
 ## Outcome
 STATE[95.74%|INPROGRESS]: switch case BODIES + all leaf m_params reads match
-byte-for-byte in shape; the recovered ASSERT fixed the prologue. The remaining
-divergence is the **dispatch shape at the head** (see STATUS at top), now understood
-as a structural source bug, not an LTCG residual:
+byte-for-byte; the recovered ASSERT fixed the prologue. The one remaining divergence
+is the dispatch, and it is in OUR base (verified by disassembling both):
 - ASSERT recovery (88% -> 95.74%): the prologue `mov byte[ebp-1],0;
   lea eax,[ebp-1]; call empty_stub` (delinker misnames it `finalize_impl`) is a
   COMPILED-OUT ASSERT - recovered with `ASSERT( UNKNOWN_EXPRESSION_T( m_params ) )`
   as the first statement, which emits the `+0x0c` bytes and resolves the frame-size
   18h->1Ch / [ebp-N] slot shift.
-- Open (faster machine): target emits a direct 5-entry jump table
-  (`jmp [edx*4+table]`, values 0-4) and short-circuits `type_jump` (0x3) OUTSIDE the
-  switch; our source emits `cmp 3; ja default` + 4-entry table, treats `type_jump` as
-  an in-switch case, and has no explicit `type_preview` (4) case. Restructure the head
-  to match (STATUS). Cases stay brace-less (no per-case local/ASSERT).
+- Open (faster machine): BASE emits `cmp [ebp-0Ch],3; ja default` + a 4-entry table;
+  TARGET has NO bounds check and a contiguous 5-entry table. Cause: our `switch` ends
+  at `type_jump`(3) + `default: return 1.0f;`. Fix: add `case type_preview: return 1.0f;`
+  and `default: NODEFAULT();` (`__assume(0)`, debug_macros.h) so MSVC drops the bounds
+  check and emits the contiguous [0..4] table. NOT an LTCG residual - a source-structure
+  problem. Cases stay brace-less (no per-case local/ASSERT).
 Regressions caused: none.
