@@ -226,6 +226,32 @@ tail `return X;` (the default); MSVC /Od emits `cmp 0/je` and FOLDS the two iden
 blocks into one `fld1` reached by both - matching the target. Confirmed on
 `character_dispersion_calculator::get_broken_hands_penalty`: `break` -> None, `return 1.0f` -> 82.89%.
 
+### `fixed_string<N>("literal")` - which ctor overload, and inline-vs-call is LTCG (not steerable)
+SYMPTOM: a `vostok::fixed_string<N>("literal")` temporary. TARGET emits, inline at the call site:
+    mov   dword ptr [ebp-XXh], <N>     ; capacity temp = N (e.g. 0x2E = 46), materialized to a SLOT
+    push  ??_C@...@literal             ; src
+    lea   ecx, [ebp-XXh]; push ecx     ; &capacity  (the ctor takes `size_type const&` -> by ADDRESS)
+    lea   edx, [this+0Ch]; push edx    ; &m_buffer  (buffer_string base is 12 bytes; m_buffer @ this+0xC)
+    lea   ecx, [this]                  ; the fixed_string temp
+    call  vostok::buffer_string::buffer_string   ; the 3-arg (char*, u32 const&, char const*) overload
+BASE (same source) instead emits: `push "literal"; lea ecx,[this]; call fixed_string<N>::fixed_string<N>`
+i.e. a `call` to the OUT-OF-LINE `fixed_string<N>(char const*)` ctor.
+WHY: `fixed_string<N>(value_type const* src) : buffer_string(m_buffer, Size, src) {}` - its whole body
+IS that one 3-arg buffer_string call (the capacity-N-by-reference materialization included). The
+source `fixed_string<N>("literal")` is therefore ALREADY correct; the only difference is whether the
+compiler inlines this 5-instruction wrapper ctor at the call site or emits a `call` to it.
+TELL it is LTCG, not source: query both rich indexes for `fixed_string<N>::fixed_string<N>` - TARGET
+has NO out-of-line `(char const*)` symbol (inlined whole-program) while BASE keeps it (a real rva).
+The default `fixed_string<N>()` ctor can simultaneously be CALLED out-of-line in BOTH within the same
+target function - so the inline decision is per-ctor whole-program, NOT per-call-site-steerable under
+/Od+/GL. Same class as the `vectora::size()`/`is_aimed()` inline-vs-call entries. Confirm by
+disassembling the base out-of-line ctor: its body == the target's inlined sequence => leave the source
+as `fixed_string<N>("literal")` and mark PARTIAL; the cascading +0x10 frame-size delta and reg/slot
+renaming all follow from the single inline. Confirmed in
+`game_core/body_part_parameters::fill_new_stats_item<statistics_item<46,16>>` (target rva 0x0ba3c0,
+91.78% PARTIAL): base out-of-line `fixed_string<46>(char const*)` @ base rva 0x030b00 is exactly
+`mov [ebp-4],2Eh; push src; add eax,0Ch; lea ecx,[ebp-4]; call buffer_string::buffer_string`.
+
 ### `objdiff fuzzy_match_percent: None` can mean "body too divergent", not only bad mangling
 SYMPTOM: report.json omits the percent for a function whose mangled name matches the target's
 exactly and is present in the base obj. CAUSE (besides access-specifier, above): the base body
@@ -265,18 +291,3 @@ shape to the already-100% `player_stamina` pair. ANCHOR (game_core): default-con
 copy-construct + a direct `b = a`, then escape `&a`/`&b` through the opaque
 `example_callback` sink so LTCG does not DSE the member stores. Landed both at 100% on
 the first rebuild.
-
-### fixed_string<N>("literal") - which ctor overload (call-shape tells you)
-ASM (target, the 3-arg path):
-    mov   dword ptr [ebp-CCh], 2Eh   ; capacity N (here 46 = 0x2e) into a stack temp
-    push  0                           ; the string literal (masked operand)
-    lea   ecx, [ebp-CCh] ; push ecx   ; &capacity
-    lea   edx, [ebp-74h]              ; &buffer
-    call  buffer_string::buffer_string(char*, unsigned int const&, char const*)
-SOURCE: the 3-arg `buffer_string( buffer, capacity, "literal" )` form, NOT the
-1-arg `fixed_string<N>( "literal" )`. The 1-arg ctor pushes only the string
-(`push 0`) and constructs in place; the 3-arg form first materializes the
-capacity as a stack temp and passes `&capacity` + `&buffer`. So: count the args
-pushed before the ctor call - a capacity-into-stack-temp + `&capacity` + `&buffer`
-means the target used the explicit 3-arg buffer_string ctor. Seen in
-`game_core/body_part_parameters::fill_new_stats_item` ("none" temporary).

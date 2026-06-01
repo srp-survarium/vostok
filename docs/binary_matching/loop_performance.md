@@ -168,6 +168,16 @@ _(Append new findings below this line.)_
   (4) The setter's residual diff was 100% the documented inline-vs-call of trivial COMDAT
   accessors (`states()/front()/current_state()/get_multiplier()`) - recognized it from
   assembly_patterns.md and stopped at PARTIAL with no second rebuild.
+- **Before changing a correct body to chase a `call X` -> `inline of X` diff, DISASSEMBLE the
+  base out-of-line `X` (zero rebuilds) and confirm its body == the target's inlined sequence.**
+  If a WIP handoff says "the residual is the N-arg form of ctor X, rewrite the source to that form",
+  first check: does the source's chosen overload ALREADY delegate to X? Query both rich indexes for
+  X's symbol - if TARGET has no out-of-line X (inlined whole-program) but BASE keeps it at a real rva,
+  it is the unsteerable LTCG inline-vs-call class. Then `pdb_fetch --view target --rva <base X rva>`:
+  if base-X's body is exactly the target's inlined instructions, the source is already correct and NO
+  rewrite/rebuild can help -> mark PARTIAL. Saved a wasted rebuild on
+  `fill_new_stats_item`'s `fixed_string<46>("none")` (the const-char* ctor already delegates to the
+  3-arg `buffer_string::buffer_string`; the "rewrite to 3-arg" handoff hint was moot).
 - **A trivial copy ctor + operator= pair (member-wise scalar copy) needs ONE rebuild
   if you (a) copy the existing 100% sibling's shape (`player_stamina`: ctor `*this =
   other;`, operator= self-guard + decl-order member copies + `return *this`) and (b)
