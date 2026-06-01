@@ -93,16 +93,36 @@ If a function exists in target but its matching source file is not provided in b
 - Prefer the STL the target used (`erase( remove_if(...), end() )`, `std::find/sort/unique`) over a hand loop.
 
 
-## Asserts (compiled out in Master Gold)
-`Master Gold` is a release config, so `ASSERT` / `NODEFAULT` / `UNREACHABLE_CODE`
-/ `VOSTOK_UNREFERENCED_PARAMETERS` expand to nothing - the argument is never
-parsed and never affects bytes. The original assert conditions are gone, hence:
-- `ASSERT( UNKNOWN_EXPRESSION )` - a condition was here but you don't know it.
-- `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` - the `_T` form holds your *guess* (risk-free, it is discarded).
+## Asserts (Master Gold drops the condition, but a CALL remains)
+`Master Gold` never evaluates the assert *condition* - but `ASSERT` does NOT vanish.
+It emits a real `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` sequence
+(~`0x0c` bytes). **So a `call empty_stub` in the target asm IS a compiled-out
+`ASSERT` - recover it, do NOT write it off as an inlined/stripped/LTCG call.**
+(The delinker may misname `empty_stub` as `finalize_impl` etc. - don't take it
+literally.) Confirmed house style: `booby_trap_core.cpp` / `inventory_cook.cpp` map
+`ASSERT( UNKNOWN_EXPRESSION );` to a real `+0x0c` slot.
+- `ASSERT( UNKNOWN_EXPRESSION )` - a condition was here but you don't know it; this
+  alone reproduces the `call empty_stub` bytes (the condition is discarded).
+- `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` - prefer this: the `_T` form holds
+  your *guess* of the condition (risk-free, discarded). Guess what was asserted.
+When you see the `empty_stub` sequence at a statement, place an `ASSERT(...)` there.
 
 `UNKNOWN_EXPRESSION` / `_T` are intentionally **undefined** - never define or
 "fix" them. Add `STATIC_SIZE_ASSERT( type, 0xNN )` after each reconstructed
 struct to pin its PDB size.
+
+## Switch statements - case-body braces change codegen
+The bracket style around a `case` body affects codegen/structure, so match the
+target's shape:
+- A `case` whose body **declares a local, or holds an `ASSERT`/temporary, gets its
+  own `{ }` scope** - the braces are a real scope (they control where temporaries
+  are built/destroyed and the `[ebp-N]` layout); without them the codegen differs.
+  See `inventory_cook.cpp`, `items_cook.cpp`, `booby_trap_core.cpp`
+  (`case X: { ...; ASSERT( UNKNOWN_EXPRESSION ); ...; break; }`).
+- A plain / fall-through `case` (a statement or two, no locals) takes **no braces**:
+  `case X: stmt; break;`, stacked `case A: case B: ...`. See
+  `character_recoil_calculator.cpp`, `inventory.cpp`.
+If a switch won't match, the case-brace scoping is a prime suspect.
 
 ## STATE markers
 One per function, line above it: `// STATE[<percent>%|<tag>]: short reason`.
