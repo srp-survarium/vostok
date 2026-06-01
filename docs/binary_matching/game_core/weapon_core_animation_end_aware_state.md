@@ -124,11 +124,18 @@ escape &state / &anim / &params through example_callback. Add include + IncludeA
    lea eax,[ebp-1]; call <empty/finalize_impl>`, assembly_patterns.md line 462 - same
    artifact as show/hide), plus register/[ebp-XX] slot noise. Not reproducible. STOP.
 
-## Outcome
+## Outcome (FINAL, after ASSERT recovery)
 - initialize            100%   DONE
 - finalize              100%   DONE
-- set_animation_to_wait 77.33% PARTIAL  (LTCG inline-vs-call of trivial get_user())
-- on_animation_end      78.03% PARTIAL  (LTCG-folded empty out-of-line call, line 38)
+- set_animation_to_wait 77.33% PARTIAL  (inline-vs-call of trivial get_user(); re-diff, see review note)
+- on_animation_end      90.92% PARTIAL  (was 78.03 pre-ASSERT; recovered -> residual is inline-vs-call frame shape)
+
+## Review note (new guidelines)
+The updated MATCHING.md narrows the LTCG excuse to *function arguments only*. The two PARTIAL
+residuals here (set_animation_to_wait's get_user() inline-vs-call; on_animation_end's post-ASSERT
+inline-vs-call frame shape) are therefore downgraded from "LTCG" to matching problems to re-diff
+against source on a future rebuild. on_animation_end's empty_stub WAS correctly recovered as an
+ASSERT (78.03 -> 90.92). This review did NOT rebuild; the body shape is unchanged.
 Regressions caused: NONE. report-changes lists 59 "regressed" 100->0 entries, all of the
 empty-function ICF / strip visibility-flip stale-baseline class (scalar deleting destructors,
 interlocked_inc/dec, empty_stub, size_policy, intrusive_ptr/CRT/Scaleform/bullet/ai symbols)
