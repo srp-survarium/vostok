@@ -259,6 +259,50 @@ diverges structurally enough (e.g. a whole missing compare/branch block) that ob
 diff bails without a number. Before assuming unreachable/mangling: byte-compare the two `.text`
 regions; if the symbol is present with the right name, fix the body shape, not the header.
 
+### pointer subtraction of typed pointers -> `sub; cdq; idiv sizeof`
+ASM:
+    mov eax,[ebp+0Ch]      ; p (e.g. &bone, a skeleton_bone const*)
+    sub eax,[ebp+14h]      ; p - q  (byte difference)
+    cdq
+    mov ecx, 14h           ; sizeof(*p)  (skeleton_bone = 0x14)
+    idiv ecx               ; (byte diff) / sizeof -> element count
+SOURCE: `p - q` where both are `T const*` (the compiler does the byte-diff /
+sizeof division itself). The result is `ptrdiff_t`; a surrounding `u32(...)` cast
+just narrows it. So `u32 const matrix_index = u32( &bone - first_non_root_bone );`.
+NOTES: `idiv` (signed) because pointer difference is signed. The divisor is the
+element size - read it to confirm which type's array you are indexing. Confirmed in
+`game_core/get_bone_matrix_in_object_space_impl`.
+
+### by-value `float4x4 operator*(float4x4 const&, float4x4 const&)` arg order from push order
+ASM:
+    push eax               ; (1st push) = RIGHTMOST arg = `right`
+    ... compute &left ...
+    push ecx               ; (2nd push) = `left`
+    lea  edx,[ebp-XX]      ; &hidden_return (struct return by value)
+    push edx               ; (last push) = hidden return ptr (conceptual 1st param)
+    call vostok::math::operator*
+    add  esp, 0Ch
+SOURCE: `left * right`. For a `__cdecl` free function returning a struct by value,
+args are pushed right-to-left and the hidden return pointer is pushed LAST. So the
+FIRST thing pushed is the rightmost source operand. Map: first-push -> right,
+second-push -> left. Confirmed in `game_core/get_bone_matrix_in_object_space_impl`
+(`matrices[matrix_index] * recursive_result`: first push = recursive_result =
+right operand).
+
+### `lea ecx,[slot]; call <misnamed allocator<char>>; mov ecx,eax; call float4x4::identity`
+ASM:
+    lea ecx,[ebp-0C8h]
+    call stlp_std::allocator<char>::allocator<char>   ; delinker MISNAME for float4x4()
+    mov ecx, eax
+    call vostok::math::float4x4::identity
+SOURCE: `float4x4( ).identity( )` - a default-constructed temporary on which
+`identity()` is called (`identity()` returns `float4x4&`, eax = this). The first
+`call` is the trivial/empty default `float4x4()` ctor; the delinker resolves its
+symbol to an unrelated `allocator<char>` ctor (a COMDAT-folding misname, same class
+as the `empty_stub`/`finalize_impl` misnames). Don't take the symbol literally -
+the `lea &slot; call <ctor>; mov ecx,eax; call identity` shape IS `float4x4().identity()`.
+Confirmed in `game_core/get_bone_matrix_in_object_space_impl` (the parent==NULL leaf).
+
 ---
 
 ## Hand-written copy ctor delegating to operator= + member-wise scalar operator=

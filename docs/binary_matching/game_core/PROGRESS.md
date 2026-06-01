@@ -51,6 +51,11 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
     The "fixed_string<46>("none") needs the 3-arg ctor" hypothesis was MOOT: the 1-arg fixed_string(const char*)
     ctor IS that 3-arg buffer_string call inlined; residual is unsteerable LTCG inline-vs-call. asm pattern corrected.
 
+- game_core::{get_bone_matrix_in_object_space, get_bone_matrix_in_object_space_impl} -> STATE[100%|DONE] -> PR #120 (regressions: none)
+  - free-function pair (wrapper+impl), float4x4 matrix math, both 100% in one rebuild. Fresh independent.
+- NOTE: config/binary_config_value functions (load(), config ctors) are a suspected BLOCKED cluster -
+  no compiled .cpp references binary_config_value; treat like the packet cluster, defer.
+
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
 

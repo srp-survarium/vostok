@@ -186,3 +186,15 @@ _(Append new findings below this line.)_
   first try, no `--view diff` round trip. Bonus: anchoring also pulled the (empty)
   default ctor to 100% for free. Read the member offsets straight from the operator='s
   `fld/fstp [reg+0xNN]` and map to the header `/* 0xNN */` comments in the first pass.
+- **A free-function pair that returns a by-value struct (float4x4) hit 100% for BOTH
+  in ONE rebuild** by reading the full target asm up front (pointer-diff index,
+  operator* push order, the misnamed `float4x4()` ctor, member offsets) and writing
+  both bodies + one anchor before the first build. Anchor that worked first try for a
+  file-local `survarium` free function: forward-declare both fns in temp_include_all.cpp,
+  add a `use_*` that (a) CALLS the wrapper on `*bone`/`*skeleton`/matrices and escapes
+  the returned `float4x4` via `example_callback( reinterpret_cast<pcstr>(&result) )`,
+  and (b) takes the impl's function-pointer and escapes that too. The wrapper's real
+  `call` keeps the impl alive transitively, and escaping the by-value result keeps the
+  observed body from being DSE'd. No `--view diff` round trip needed. Confirmed on
+  `get_bone_matrix_in_object_space{,_impl}`. (The inline helper accessors it calls -
+  `skeleton::get_root`, `get_root_bones_count` - also went 0->100 for free.)
