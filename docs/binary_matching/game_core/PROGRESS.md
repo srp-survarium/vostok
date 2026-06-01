@@ -45,6 +45,12 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
   - GROUPED. ctor+dtor 100% (observed-escape anchor). setter PARTIAL: LTCG inlines trivial accessors
     (states()/front()/current_state()) that the target calls out-of-line. Added breath_state.h for the vtable cast.
 
+- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[UNVERIFIED] -> (no PR; WIP on branch match/game_core-fill_new_stats_item)
+  - Worker #15 crashed (API socket error) before committing. Body is a byte-for-byte structural match per
+    its trail; only source-steerable remaining diff = fixed_string<46>("none") must use the 3-arg
+    buffer_string(char*,unsigned int const&,char const*) ctor (target) not the 1-arg one (base). WIP
+    committed + pushed to that branch. RE-DISPATCH to apply the fix, rebuild/score, commit, open PR.
+
 CONTRACT UPDATES (this run): (1) reproduce target EXACTLY, never fix bugs - exactness > correctness
 (MATCHING.md rule #1); (2) trivial same-class accessors may be grouped into one unit/PR (matcher.md).
 

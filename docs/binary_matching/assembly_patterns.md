@@ -265,3 +265,18 @@ shape to the already-100% `player_stamina` pair. ANCHOR (game_core): default-con
 copy-construct + a direct `b = a`, then escape `&a`/`&b` through the opaque
 `example_callback` sink so LTCG does not DSE the member stores. Landed both at 100% on
 the first rebuild.
+
+### fixed_string<N>("literal") - which ctor overload (call-shape tells you)
+ASM (target, the 3-arg path):
+    mov   dword ptr [ebp-CCh], 2Eh   ; capacity N (here 46 = 0x2e) into a stack temp
+    push  0                           ; the string literal (masked operand)
+    lea   ecx, [ebp-CCh] ; push ecx   ; &capacity
+    lea   edx, [ebp-74h]              ; &buffer
+    call  buffer_string::buffer_string(char*, unsigned int const&, char const*)
+SOURCE: the 3-arg `buffer_string( buffer, capacity, "literal" )` form, NOT the
+1-arg `fixed_string<N>( "literal" )`. The 1-arg ctor pushes only the string
+(`push 0`) and constructs in place; the 3-arg form first materializes the
+capacity as a stack temp and passes `&capacity` + `&buffer`. So: count the args
+pushed before the ctor call - a capacity-into-stack-temp + `&capacity` + `&buffer`
+means the target used the explicit 3-arg buffer_string ctor. Seen in
+`game_core/body_part_parameters::fill_new_stats_item` ("none" temporary).
