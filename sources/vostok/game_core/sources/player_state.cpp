@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::player_state::deserialize(vostok::network_core::packet_reader&)
 void player_state::deserialize( network_core::packet_reader& packet )
 {
@@ -30,7 +30,7 @@ void player_state::deserialize( network_core::packet_reader& packet )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::player_state::serialize(vostok::network_core::udp_match_packet&) const
 void player_state::serialize( network_core::udp_match_packet& packet ) const
 {

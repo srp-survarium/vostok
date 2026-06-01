@@ -12,6 +12,12 @@
 namespace vostok {
 namespace network_core {
 
+// claude@NOTE: target structure declares this `public packet<...>` (the private
+// base here hides append()). Left as-is for now: making this header compile
+// standalone also needs a primary `sequence_number` template, an
+// `udp_match_client_session` fwd-decl, <boost/array.hpp>, and a base_packet
+// buffer-access fix - none of which exist yet, which is why every *::serialize
+// taking a udp_match_packet& is still BLOCKED.
 class udp_match_packet : packet<udp_match_packet> {
 public:
 	inline	explicit	udp_match_packet	( ); // where is source?

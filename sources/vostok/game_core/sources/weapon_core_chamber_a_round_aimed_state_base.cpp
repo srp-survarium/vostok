@@ -58,7 +58,7 @@ void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& 
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::weapon_core_chamber_a_round_aimed_state_base::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
@@ -67,7 +67,7 @@ void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::weapon_core_chamber_a_round_aimed_state_base::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_chamber_a_round_aimed_state_base::deserialize( network_core::packet_reader& reader )
 {

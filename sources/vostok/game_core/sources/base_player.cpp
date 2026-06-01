@@ -97,7 +97,7 @@ void base_player::tick_active_object( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::base_player::send_game_world_object(survarium::game_world_object const*, boost::function<vostok::network_core::udp_match_packet & __cdecl(void)> const&, boost::function<void __cdecl(vostok::network_core::udp_match_packet &)> const&) const
 void base_player::send_game_world_object( game_world_object const* object, boost::function<network_core::udp_match_packet &()> const& reciver_packet_allocator, boost::function<void(network_core::udp_match_packet &)> const& reciver_enqueuer ) const
 {
@@ -131,7 +131,7 @@ void base_player::send_game_world_object( game_world_object const* object, boost
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::base_player::deserialize_game_world_object(vostok::network_core::packet_reader&)
 void base_player::deserialize_game_world_object( network_core::packet_reader& reader )
 {

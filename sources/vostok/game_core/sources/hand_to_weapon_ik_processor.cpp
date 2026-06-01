@@ -263,7 +263,7 @@ float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_proce
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::hand_to_weapon_ik_processor::serialize(vostok::network_core::udp_match_packet&, unsigned int) const
 void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
@@ -279,7 +279,7 @@ void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& pac
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
 // void survarium::hand_to_weapon_ik_processor::deserialize(vostok::network_core::packet_reader&)
 void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& reader )
 {
