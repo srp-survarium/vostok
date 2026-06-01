@@ -37,6 +37,12 @@ enum body_part_masks_enum {
 // sushi@TODO: Should be moved to a different place?
 struct animation_playback_state {
 	inline			animation_playback_state( ) : interval_id( 0 ), interval_time( 0.0f ) { }
+	// claude@MATCH: kept as the empty stub. reset() really zeros both members (target @
+	// 0x087f60), but in the target build the linker keeps it OUT-OF-LINE and finalize
+	// emits `call reset`. Our /GL LTCG instead inlines (real body) or elides (empty body)
+	// reset at the finalize call site - an uncontrollable cross-module inline-vs-call.
+	// Empty {} elides the call (finalize 83% - only the 3 call instrs differ), which is the
+	// closer, cleaner match than the real body (which LTCG fully inlines -> 54%).
 	inline	void	reset					( ) { /* no source */ }
 
 public:
