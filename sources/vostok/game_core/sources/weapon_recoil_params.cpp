@@ -7,15 +7,23 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_recoil_params::weapon_recoil_params()
-weapon_recoil_params::weapon_recoil_params( )
+// STATE[100%|DONE]
+// claude@MATCH: additive_back_recoil (offset 0x20) is omitted - the target never
+// stores it (no movss [this+20h]); additive_recoil_time is math::epsilon_3 (.001f).
+weapon_recoil_params::weapon_recoil_params( ) :
+	first_shoot_side_recoil		( 0.0f ),
+	shoot_side_recoil		( 0.0f ),
+	first_shoot_back_recoil		( 0.0f ),
+	shoot_back_recoil		( 0.0f ),
+	shoot_recoil_min_angle		( 0.0f ),
+	shoot_recoil_angle_range	( 0.0f ),
+	additive_recoil_time		( math::epsilon_3 ),
+	additive_side_recoil		( 0.0f ),
+	additive_recoil_min_angle	( 0.0f ),
+	additive_recoil_angle_range	( 0.0f ),
+	side_compensation_speed		( 0.0f ),
+	back_compensation_speed		( 0.0f )
 {
-	// FUNCTION BODY
-	// <0x5930c0>|0x000|+0x0c6:'25'	{
-	// <0>
-	// <0x593186>|0x0c6|      :'27'	}
-	// ******
 }
 
 // STATE[STUB]
