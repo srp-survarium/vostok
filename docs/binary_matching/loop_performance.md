@@ -83,3 +83,18 @@ _(Append new findings below this line.)_
   walk `.text` type-20 relocations for each `movss xmm0,[offset]` site) gives you
   every constant *and* the member->value map with **zero rebuilds**. Do this in
   the first pass so the very first body you write already has the right literals.
+- **A getter whose carcass shows `return 0.0f` + a collapsed FUNCTION BODY can still be a
+  big function.** The base-build STUB compiled tiny, so its carcass addresses/source-lines
+  are sparse (`<0> <1> ...` placeholders) and look trivial. Always pull the *target* asm
+  (`pdb_fetch --view target --rva <target rva>`) - the `--list` rva (target) differs from the
+  carcass addresses (base build). `get_dispersion`'s carcass implied ~3 statements; the target
+  was a 0x194-byte function with a smart-ptr temp, a ternary, and a 5-term FPU expression.
+- **Read ALL member offsets straight from the target asm before writing - one pass, zero
+  re-rebuilds.** Cross-reference each `[reg+off]` against the relevant `*.h` member layout
+  comments (`/* 0xNN */`). Getting every offset right up front (base_dispersion@0, aim@8,
+  m_dispersion@0x11c, m_value@0x2C, m_shooting_skill_coeff@0x44) made the first rebuild land
+  at 87.49% with nothing left but LTCG noise - no second rebuild needed.
+- **An empty-body inline getter (`{ /* no source */ }`) used by your target expr must be
+  filled in (`{ return m_x; }`) or the member read won't compile to the right offset.** Fix it
+  in the same edit pass as the body (here `character_dispersion_calculator::get_value`); it's a
+  header change but costs no extra rebuild if batched.

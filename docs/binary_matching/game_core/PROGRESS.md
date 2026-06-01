@@ -15,4 +15,7 @@ One line per dispatched function: `module::function -> STATE -> PR (regressions)
 - game_core::scheduler::on_frame(u32,u32) -> STATE[46.39%|PARTIAL] -> PR #108 (regressions: none)
   - fixed a real source bug (m_inactive_objects -> m_active_objects); residual is unsteerable LTCG (target
     out-of-lines vectora::size/operator[], base inlines). % chose correctness over the metric.
+- game_core::dispersion_calculator::get_dispersion() const -> STATE[87.49%|PARTIAL] -> PR #109 (regressions: none)
+  - body matches instruction-for-instruction; residual entirely LTCG (frame/slots, is_aimed inlined,
+    safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
 

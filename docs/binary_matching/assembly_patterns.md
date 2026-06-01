@@ -142,3 +142,39 @@ mark PARTIAL. Confirmed in `game_core/scheduler::on_frame(u32,u32)` (target rva
 inline-vs-call. Corollary: a "wrong member but shorter inlined form" can score
 *higher* fuzzy % than the correct member - don't chase the metric, match the
 offset the target reads (here m_active_objects @0x10, not m_inactive @0x00).
+
+### intrusive_ptr-by-value in a `&&` chain: temp construct + safe-bool test + dtor
+ASM (target, `if ( ptr_holder->smart_ptr_getter() && ... )` where the getter returns
+a `resource_ptr`/`intrusive_ptr` BY VALUE):
+    mov dword ptr [ebp-18h], 0          ; EH guard word for the temp
+    ...
+    or  dword ptr [ebp-18h], 1          ; mark "temp needs destruction"
+    lea ecx, [ebp-0Ch]                  ; &temp
+    push <&source_ptr_member>
+    call intrusive_ptr<...>::set         ; construct temp = copy of the member ptr
+    xor ecx, ecx
+    cmp dword ptr [ebp-0Ch], 0           ; temp.m_object == 0 ?
+    sete cl                              ; -> bool
+    ...
+    and dword ptr [ebp-18h], 0FFFFFFFEh  ; clear guard
+    lea ecx, [ebp-0Ch]
+    call intrusive_ptr<...>::dec          ; destroy temp
+SOURCE: `getter()` returns a smart-ptr by value and is used in boolean context
+(`a && getter() && b`); the temporary is materialized, tested via
+`operator unspecified_bool_type` / `operator!`, and destroyed before the next term.
+NOTES: the temp's whole construct/test/destroy is one term of the `&&`. Base (LTCG)
+may lower the safe-bool conversion through an EXTRA intermediate bool stack slot
+(`mov [slot],0; jmp; mov [slot],0; cmp [slot],0`) instead of the target's direct
+`cmp/sete` - a materialization difference you cannot steer from source. Match the
+control flow and the by-value getter call; leave the bool-slot shape. Confirmed in
+`game_core/dispersion_calculator::get_dispersion` (target rva 0x586970, 87.49% PARTIAL),
+where `m_weapon->ammunition()` returns `weapon_ammunition_ptr` by value.
+
+### inline-vs-call of a trivial bool getter (is_aimed) - same LTCG class
+SYMPTOM: `obj->is_aimed()` (an `inline bool is_aimed() const { return m_aimed; }`)
+emits a real `call survarium::weapon_core::is_aimed` in TARGET but is INLINED in BASE
+as `mov al, [obj+0x488]` (direct read of m_aimed). Identical class to the
+`vectora::size()`/`operator[]` inline-vs-call entry above: whether a trivial COMDAT
+inline member is emitted-and-called or inlined is a whole-program/linker decision,
+not steerable from the caller. Match the member access; mark PARTIAL. Confirmed in
+`game_core/dispersion_calculator::get_dispersion`.
