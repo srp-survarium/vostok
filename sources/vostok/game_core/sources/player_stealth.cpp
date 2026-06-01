@@ -17,37 +17,32 @@ player_stealth::player_stealth( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: delegates to operator= (same shape as player_stamina copy ctor)
 // survarium::player_stealth::player_stealth(survarium::player_stealth const&)
 player_stealth::player_stealth( player_stealth const& other )
 {
-	// FUNCTION BODY
-	// <0x5aaab7>|0x007|+0x00c:'20'
-	// ******
+	*this = other;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: self-guard + member-wise float copy in decl order
 // survarium::player_stealth& survarium::player_stealth::operator=(survarium::player_stealth const&)
 player_stealth& player_stealth::operator=( player_stealth const& other )
 {
-	// FUNCTION BODY
-	// <0x5aaa17>|0x007|+0x00c:'25'
-	// <0>
-	// <0x5aaa23>|0x013|+0x00a:'27'
-	// <0x5aaa2d>|0x01d|+0x00c:'28'
-	// <0x5aaa39>|0x029|+0x00c:'29'
-	// <0x5aaa45>|0x035|+0x00c:'30'
-	// <0x5aaa51>|0x041|+0x00c:'31'
-	// <0x5aaa5d>|0x04d|+0x00c:'32'
-	// <0x5aaa69>|0x059|+0x00c:'33'
-	// <0x5aaa75>|0x065|+0x00c:'34'
-	// <0x5aaa81>|0x071|+0x00c:'35'
-	// <0x5aaa8d>|0x07d|+0x00c:'36'
-	// <0x5aaa99>|0x089|+0x00c:'37'
-	// <0>
-	// <1>
-	// <0x5aaaa5>|0x095|+0x003:'40'
-	// ******
+	if ( this != &other )
+	{
+		m_default_value				= other.m_default_value;
+		m_default_sound_value		= other.m_default_sound_value;
+		m_stand_factor				= other.m_stand_factor;
+		m_crouch_factor				= other.m_crouch_factor;
+		m_crouch_sound_factor		= other.m_crouch_sound_factor;
+		m_walk_factor				= other.m_walk_factor;
+		m_walk_sound_factor			= other.m_walk_sound_factor;
+		m_sprint_factor				= other.m_sprint_factor;
+		m_sprint_sound_factor		= other.m_sprint_sound_factor;
+		m_detection_level			= other.m_detection_level;
+		m_always_visible_distance	= other.m_always_visible_distance;
+	}
+	return *this;
 }
 
 // STATE[STUB]
