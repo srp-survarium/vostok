@@ -565,3 +565,16 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - Regressions: none. report-changes shows 11 regressed / 15 improved, all 100<->0 trivial ICF/COMDAT-fold churn
     (empty_stub, float3::float3(void), booby_trap thunks, trivial dtors) - the standard net-neutral relink shuffle;
     NO legs_ik_processor (or any matched game_core) function regressed.
+
+- legs_ik_drawer: 5-function same-class cluster (thin debug-draw forwarders over
+  render::debug::renderer). One rebuild (incremental, 1m32s compile+link / 5s delink).
+    draw_cross          100%   DONE
+    draw_line_capsule   100%   DONE
+    draw_solid_capsule  79.43% PARTIAL  (LTCG call-boundary reg-vs-stack int-arg assignment)
+    draw_leg            73.36% PARTIAL  (LTCG draw_origin float pass xmm0 vs fld/fstp x4)
+    draw_origin         62.88% PARTIAL  (LTCG draw_origin float pass xmm0 vs fld/fstp)
+  Source is correct & minimal for all five (the two 100% siblings use the identical
+  forward pattern); the three partials' sole residual is the callee's whole-program
+  float/int arg-passing convention, not steerable from the drawer. float4_pod::xyz() shows
+  in target as a COMDAT-folded `...::finalize_impl` thunk (delinker misname) = matrix.c.xyz().
+  Regressions: none (only unrelated delinker COMDAT-fold churn; no matched game_core fn moved).
