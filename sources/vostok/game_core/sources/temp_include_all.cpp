@@ -151,6 +151,7 @@ namespace vostok
 		survarium::breath_holding_params		params;
 
 		calc.set_breath_holding_params( &params );
+		calc.tick( 0, 0.0f );
 
 		// Escape &calc so LTCG observes the ctor's member stores
 		// (otherwise the constant-only stores are dead-store-eliminated).
