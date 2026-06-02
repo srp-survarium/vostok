@@ -786,3 +786,30 @@ it in the header and define it in the .cpp. This is NOT just one instruction - t
 the frame (`sub esp` differs by ~4) and clobbers a different register than a `call` would, cascading the
 WHOLE function's register allocation. Confirmed: moving `weapon_core::ammo_in_magazine()` out-of-line
 took `pistol_/double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair` from 77/92% to 99.92%.
+
+### `push 0; mov r,val; sub r,-1; neg r; sbb r,r; lea x,&obj; and r,x` = `val != u32(-1) ? &obj : NULL`
+ASM (target, materializing a conditional pointer arg):
+    push 0                       ; (an unrelated arg pushed first)
+    mov  edx, [ebp+20h]          ; val (a u32)
+    sub  edx, 0FFFFFFFFh         ; edx - (-1) == edx + 1
+    neg  edx                     ; CF set iff edx+1 != 0  (i.e. val != -1)
+    sbb  edx, edx                ; edx = (val != -1) ? 0xFFFFFFFF : 0
+    lea  eax, [ebp-0E0h]         ; &obj
+    and  edx, eax                ; (val != -1) ? &obj : NULL
+    push edx
+SOURCE: `val != u32(-1) ? &obj : NULL` (a pointer-or-NULL select on an unsigned `!= -1` test).
+Write the idiom in source (a ternary), do NOT hand-roll the asm. MSVC /Od lowers the
+`!= u32(-1)` compare to `sub r,-1; neg; sbb r,r` (mask = all-ones iff non-equal) and ANDs it
+with the address to pick `&obj` or 0. Reproduces byte-for-byte. Confirmed in
+`game_core/get_weapon_lexeme_pair_impl` (the offset lexeme's `time_driving_animation` arg =
+`time_synchronization_group != u32(-1) ? &main_lexeme : NULL`).
+
+### a lone 4-byte `mov byte[ebp-N],0` standalone statement (no lea/call) = an unused `bool b = false;`, NOT an ASSERT
+A carcass/structure statement of size `<0x4>` whose only instruction is `mov byte ptr [ebp-N], 0`
+with NO following `lea eax,[ebp-N]; call <empty_stub>` is a plain unused `bool` local initialized
+to false (`bool b = false;`), kept as a dead store under /Od (no DCE). DISTINGUISH from a
+compiled-out `ASSERT`, which is `<0xc>` (the byte-store PLUS `lea eax; call empty_stub`). Writing
+an `ASSERT(UNKNOWN_EXPRESSION)` for such a `<0x4>` slot OVER-produces the lea+call. The disp size
+(4 vs 7 bytes) only reflects whether MSVC put the slot at a small or large `[ebp-N]` offset -
+allocation noise, not a mismatch. Confirmed in `game_core/get_weapon_lexeme_pair_impl` (L40,
+target `<0x4>` `mov byte[ebp-5],0`).
