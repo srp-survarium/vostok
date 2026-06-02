@@ -205,3 +205,16 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     constructing noncopyable weapon_user_animations_selector. report-changes: only symmetric COMDAT/dtor/
     CRT 100<->0 delinker re-slice churn (39 scalar-deleting-dtor, float3/float4/float4x4 ctors,
     empty_stub, boost/bt/resource_ptr); no matched unit regressed.
+- game_core::ik_processor::{ctor, activate} -> STATE[INPROGRESS, UNBUILT] -> PR #142 (regressions: none possible - no build)
+  - STACKED on #141. GROUPED (same trivial class). ctor (rva 0x57eba0, `IAE` protected): member-init list
+    m_skeleton(NULL)@0x0, m_last_time_in_ms(0)@0x4; the pre-store `call ...finalize_impl` is the COMDAT-folded
+    core::noncopyable base ctor (noncopyable::noncopyable, finalize_impl AND fsm_state::~fsm_state all fold to
+    rva 0x03f210) - NOT an ASSERT (an ASSERT would emit `mov byte[ebp-N],0; lea eax; call`). activate
+    (rva 0x57eb80, `IAE` protected): `m_skeleton = &skeleton;`. Header: both public -> protected (IAE).
+    Anchor: concrete_ik_processor : ik_processor subclass in use_game_core_ik_processor (construct -> protected
+    ctor; do_activate -> protected activate; &proc escaped).
+  - NOT VERIFIED: /nix store was 100% full (`125G used / 0 avail`), so `scripts/rebuild.py` failed with
+    `No space left on device` and `nix develop` could not instantiate; `nix-collect-garbage` was DENIED
+    (shared-infra). NEXT (one rebuild): free /nix, `python3 scripts/rebuild.py` (no module arg), score both
+    symbols from report.json, check report-changes.json, finalize STATE (100%|DONE expected - both bodies
+    fully accounted for). Carcass kept inline.
