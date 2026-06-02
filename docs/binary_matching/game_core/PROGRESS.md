@@ -187,3 +187,16 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     (target call @0x5d). No new anchor (already reachable via matched set_weapon). First-try 100%;
     report-changes 0->100 for apply_aim_speed, cluster unchanged, the 55/56 regressed/improved churn is
     delinker non-determinism (none in the dispersion/weapon/character cluster).
+- game_core::player_stealth::{player_stealth(), load} -> STATE[100%|DONE] -> PR #140 (regressions: none)
+  - STACKED on #139. Small class player_stealth (copy ctor + operator= already matched #114, member
+    layout reused). Default ctor (rva 0x59aad0): EMPTY body - target stores no members (unlike
+    character_dispersion_params whose ctor stored 14x 1.0f); already 100% from #114's anchor. load
+    (rva 0x59aae0): 11 unconditional `m_x = (float)config["x"];` in member/offset order, NO
+    value_exists guard (simpler than character_dispersion_params::load #135). Strings/offsets:
+    default_value@0 default_sound_value@4 stand_factor@8 crouch_factor@0xc crouch_sound_factor@0x10
+    walk_factor@0x14 walk_sound_factor@0x18 sprint_factor@0x1c sprint_sound_factor@0x20
+    detection_level@0x24 always_visible_distance@0x28. Both `QAE` (public), header unchanged.
+    Anchor: added `stealth.load(cfg)` to existing use_game_core_player_stealth(). First-try 100%
+    for both; --view diff clean (ctor 8/8 equal, load no -/+ lines). report-changes 49 reg / 58+ imp
+    all relink ICF/vcall-thunk/boost-storage churn (none in this unit; the 2 game_core-named hits are
+    a collision_sensor scalar-deleting-dtor thunk and a BLOCKED inventory_item packet stub).
