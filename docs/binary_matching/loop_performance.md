@@ -1,15 +1,20 @@
 # Loop performance log
 
-Shared, append-only notes on **making the match loop faster** — so each run waits
-less than the last. This is the process/time analogue of
+Shared, append-only notes on **avoiding wasted rebuilds** — getting the body and
+its wiring right the first time so a rebuild cycle is never spent on a reachability
+or compile bug. This is the process analogue of
 [`assembly_patterns.md`](assembly_patterns.md) (which is for asm→source mappings).
 
 When a worker discovers anything that lets a future match converge in **fewer
 iterations** or with less wasted work — a wiring trick, a step that turned out
 unnecessary, a cheaper way to get the same signal — it appends a one- to three-line
 entry here. Keep it concrete and actionable.
+When a worker discovers anything that lets a future match need **fewer rebuilds** —
+a wiring trick, a step that turned out unnecessary, a cheaper way to get the same
+signal — it appends a one- to three-line entry here. Keep it concrete and
+actionable.
 
-## What costs the time
+## What a rebuild does
 
 - The dominant cost is now **token consumption** (agent context re-read on each
   iteration), NOT the rebuild. A full `rebuild.py` (recompile the changed module
@@ -21,6 +26,13 @@ entry here. Keep it concrete and actionable.
   target asm, writing the body, diffing are all cheap; a wasted *iteration* is the
   expensive part. (The tips below still apply: they were written as "saves a rebuild"
   but the real win is saving an iteration.)
+- **`rebuild.py` is the dominant cost, and it is ~fixed per call** regardless of
+  how small the function is. One invocation recompiles the whole changed module
+  under Wine *and* reruns the delinker over the entire EXE to regenerate
+  `binaries/objdiff/base` + `binaries/rich/base`.
+- Still worth **minimizing wasted `rebuild.py` calls** — a cycle spent on a
+  reachability or compile bug teaches nothing. Everything else (reading target asm,
+  writing the body, diffing) is cheap by comparison.
 
 ## How to converge in fewer iterations
 
@@ -73,6 +85,7 @@ _(Append new findings below this line.)_
   delinker/rich index read the linked **EXE**, so if you pass a module name the
   EXE is stale and your source change does not show up in `--view diff` or the
   score (build finishes in ~1 min instead of ~10, and `report-changes.json` shows
+  score (the build finishes fast but does NOT relink, and `report-changes.json` shows
   `+0.00 / 0 changed` - the tell). Run **`python3 scripts/rebuild.py`** with no
   module arg so the EXE actually relinks. Cost me one wasted rebuild on
   `scheduler::on_frame`. (Note: the per-function loop doc's `rebuild.py <module>`
@@ -305,6 +318,7 @@ _(Append new findings below this line.)_
   (`&Class::method`), NEVER construct an instance: instantiating an fsm_state-derived class
   emits its vtable and forces codegen of any still-STUB non-void virtual (e.g.
   `selected_animations`) -> C4716/LNK1257 link failure (cost me one full ~10-min relink).
+  `selected_animations`) -> C4716/LNK1257 link failure (cost me one full relink).
   Whole unit (2 trivial overrides) done in effectively one productive rebuild this way.
 - **The inherited stack tip's `temp_include_all.cpp` may not even COMPILE - brace-balance-check it
   BEFORE your first rebuild (zero cost).** On `weapon_core_hide_state_base` the tip branch
@@ -321,6 +335,10 @@ _(Append new findings below this line.)_
 - **For trivial virtual overrides, read the access char from the delinked TARGET `.h`-unit's OWN
   recovered symbol (report.json), not the ICF fold representative's rich-index mangling - and anchor with
   a QUALIFIED CALL, never address-of.** Two facts each cost a ~10-min rebuild on the
+  one wasted rebuild discovering it.
+- **For trivial virtual overrides, read the access char from the delinked TARGET `.h`-unit's OWN
+  recovered symbol (report.json), not the ICF fold representative's rich-index mangling - and anchor with
+  a QUALIFIED CALL, never address-of.** Two facts each cost a rebuild on the
   jump_logic_state_{landing,start} overrides: (1) `landing::is_ready_for_transition`'s rich-index fold
   rep was `UBE` (public) but its OWN recovered symbol in report.json is `EBE` (private) - I declared it
   public, scored None, rebuilt. Read `report.json`'s function list for the unit FIRST. (2) Address-of a
@@ -337,11 +355,11 @@ template, AND (c) CALLED from the dispatcher aggregator (`temp_include_all.cpp` 
 the function that lists `vostok::use_game_core_...();`). If you only do (a)+(b) but forget (c),
 nothing references the anchor, so the linker folds away your target functions; they vanish from
 the base side and `report.json` scores them 0 (shown as `fuzzy_match_percent: null` AND missing
-from the diff `right`/base side). That costs a full ~20-min relink to discover. Grep the
+from the diff `right`/base side). That costs a full relink to discover. Grep the
 dispatcher for an existing sibling anchor call and add yours right next to it BEFORE the first
 build. (Hit while matching pistol_/double_barreled_weapon_core_idle_state - build #1 wasted.)
 
-## New .cpp: `git status` it before the ~20-min rebuild (verify the path)
+## New .cpp: `git status` it before the rebuild (verify the path)
 A cpp belongs under `sources/vostok/<module>/SOURCES/`, the header under `sources/vostok/<module>/`.
 If a `Write` drops the `/sources` segment it silently creates the cpp NEXT TO the header; ninja
 then compiles the UNTOUCHED stub in `sources/` and the whole relink is against stubs (looks like
@@ -356,7 +374,7 @@ or add a member) but do not also edit/touch the dependent `.cpp`, `rebuild.py` p
 `ninja: no work to do.` and the score/report.json are STALE - it looks like the change
 had no effect (objdiff still shows the old mangling / `None`). Fix: `touch` the affected
 `.cpp`(s) before `rebuild.py`. The tell is `ninja: no work to do.` in the rebuild log and
-an empty `report-changes.json`. (Cost one full ~20-min relink on initialize_weapon_logic
+an empty `report-changes.json`. (Cost one full relink on initialize_weapon_logic
 after making it private in the header only.)
 
 ## A function scores `fuzzy: None` (unpaired) when its access-mangling differs
