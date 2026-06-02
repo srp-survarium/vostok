@@ -495,3 +495,21 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     Reworded the STATE line + .md to name the missing-brace cause and the concrete next step (brace 205/231/245,
     re-diff); added this ledger line (#157 shipped without one). No logic change; report.json unchanged (no rebuild).
     FLAGGED for a faster machine: brace the three IK stages so the <1> locals are block-scoped.
+
+- game_core::legs_ik_processor (ALL remaining functions, one unit) -> see per-fn STATE below -> PR (base chore/remove-slow-machine-notes)
+  - First pass implementing + anchoring every remaining STUB in legs_ik_processor.cpp in one branch/commit/PR.
+  - s_ik_legs_debug_draw_cc / s_ik_foot_capsule_radius_cc / s_ik_legs_rot_axis_cc / s_ik_adjust_hip_position_cc
+    (the last NOT in the dispatch list; found referenced by process()) -> console_commands::cc_bool/cc_float
+    static initializers (l-equivalent: console_command.h). objdiff scores all `dynamic initializer`/`atexit
+    destructor` thunks 0% (name-pairing artifact, same as the accepted dispersion/bullet cc inits); cc_float
+    byte-identical to target, cc_bool differs only by register-vs-stack ctor arg passing (LTCG). Effectively DONE.
+  - leg_params::leg_params -> 100%  | leg_params::activate -> 100%  | leg_params::tick -> 97.42% (1 extra LTCG frame slot)
+  - legs_ik_processor::legs_ik_processor -> 100% (key: transition_time_calculator() default m_value=0.1f)
+  - legs_ik_processor::activate -> 100%  | legs_ik_processor::tick -> 100%
+  - ~legs_ik_processor -> 85.71% (ICF-folded member-dtor this-ptr setup; DELETE(m_drawer) is the only real source)
+  - process -> 90% (full structure; residual = per-call get_skeleton() temp-spill 0xC frame shift + R_ASSERT report half)
+  - get_additional_length -> 65.38% PARTIAL unchanged (documented operator| inline-vs-call LTCG; re-verified, stays)
+  - ik_processor.h: m_last_time_in_ms private->protected (no bytes). legs_ik_processor.h: transition_time_calculator
+    ctor/tick, leg_params::is_on_ground filled in. temp_include_all.cpp: anchored activate/process/tick (both classes).
+  - FLAGGED for the deeper second pass: process()/dtor capped by anchor-observation + LTCG codegen (get_skeleton spill,
+    ICF dtor fold); revisit once private-method temp_include anchors are removed so real callers observe the objects.
