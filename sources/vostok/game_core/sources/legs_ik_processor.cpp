@@ -7,6 +7,7 @@
 #include <vostok/animation/skeleton.h>
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
+#include <vostok/game_core/ik_utils.h>
 #include <vostok/physics/api.h>
 #include <vostok/physics/character_controller.h>
 
@@ -27,6 +28,35 @@ inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 c
 	}
 
 	return original_matrix * inverted_parent_matrix;
+}
+
+// claude@NOTE: get_rotation_matrix / change_matrix_orientation are inline math
+// helpers (math_float4x4_inline_2.h on target) absent from our headers; process_leg
+// calls them OUT-OF-LINE (not inlined), so a self-contained definition here resolves
+// the link without affecting process_leg's scored bytes (they are separate objects).
+float4x4 get_rotation_matrix( float3 const& original_dir, float3 const& target_dir )
+{
+	float3 const&	axis	= original_dir ^ target_dir;
+	float			axis_len	= axis.length( );
+	float			cos_angle	= original_dir | target_dir;
+
+	clamp( axis_len, -1.0f, 1.0f );
+	clamp( cos_angle, -1.0f, 1.0f );
+
+	float			angle	= atan2( axis_len, cos_angle );
+	if ( is_zero( angle, epsilon_5 ) )
+		return float4x4( ).identity( );
+
+	float3 const&	normalized_axis	= normalize( axis );
+	return create_rotation( normalized_axis, -angle );
+}
+
+void change_matrix_orientation( float4x4 const& rotation, float4x4& matrix )
+{
+	float3 const	position	= matrix.c.xyz( );
+	matrix.c.xyz( )	= float3( 0.0f, 0.0f, 0.0f );
+	matrix			= matrix * rotation;
+	matrix.c.xyz( )	= position;
 }
 
 } // namespace math
@@ -266,8 +296,22 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::process_leg(survarium::legs_ik_processor::leg_params&, vostok::math::float4x4 const&, vostok::math::float4x4 const&, vostok::math::float4x4*, vostok::math::float4x4 const&)
+// STATE[78.82%|PARTIAL]: large two-bone IK math, full structure matched (all 58
+// statements, the 4-row is_similar early-out + return, both debug-draw blocks with
+// draw_leg/draw_cross/draw_origin, the alpha-angle chain
+// get_additional_length/get_angle/create_rotation/transform_direction/get_rotation_matrix/
+// change_matrix_orientation rebuilding up_leg/knee/leg orientations, and the
+// get_relative_matrix writeback tail with foot-row save/restore). All IK operands
+// verified against the asm (up_leg_to_foot_len has NO normalize and uses target_foot;
+// additive_len's two dir args ARE normalized; get_angle = (leg_len+add, up_leg_to_foot_len,
+// knee_len+add); params.rotation_axis (leg_params+0x1C) is the rotation axis, not a
+// matrix row; toe debug uses params.foot_bone_index). Residual is the LTCG/slot class:
+// (a) the dominant 447 register/[ebp-N] slot renames - my local-declaration order yields
+// a different /Od stack layout than the target's PDB order (reordering to match is the
+// unconverged deep tail); (b) call-boundary arg passing (is_similar epsilon/ptr,
+// operator*/-/^ temps) and a few xyz-fold inline-vs-call. The get_skeleton()->
+// get_root_bones_count temp-roundtrip is the same artifact sibling get_foot_fixed_transform
+// (84%) shows. Full trail in process_leg.md.
 void legs_ik_processor::process_leg(
 	legs_ik_processor::leg_params&		params,
 	float4x4 const&						target_foot_obj_matrix,
@@ -276,6 +320,107 @@ void legs_ik_processor::process_leg(
 	float4x4 const&						transform
 )
 {
+	u32 const				toe_matrix_index	= params.toe_bone_index    - get_skeleton( ).get_root_bones_count( );
+	u32 const				foot_matrix_index	= params.foot_bone_index   - get_skeleton( ).get_root_bones_count( );
+	u32 const				leg_matrix_index	= params.leg_bone_index    - get_skeleton( ).get_root_bones_count( );
+	u32 const				knee_matrix_index	= params.knee_bone_index   - get_skeleton( ).get_root_bones_count( );
+	u32 const				up_leg_matrix_index	= params.up_leg_bone_index - get_skeleton( ).get_root_bones_count( );
+
+	float const				leg_len				= matrices[knee_matrix_index].c.xyz( ).length( );
+	float const				up_leg_len			= matrices[leg_matrix_index].c.xyz( ).length( );
+	float const				knee_len			= matrices[foot_matrix_index].c.xyz( ).length( );
+
+	float4x4				up_leg_obj_matrix	= matrices[up_leg_matrix_index] * hip_obj_matrix;
+	float4x4				knee_obj_matrix		= matrices[knee_matrix_index] * up_leg_obj_matrix;
+	float4x4				leg_obj_matrix		= matrices[leg_matrix_index] * knee_obj_matrix;
+	float4x4				foot_obj_matrix		= matrices[foot_matrix_index] * leg_obj_matrix;
+	float4x4				toe_obj_matrix		= matrices[toe_matrix_index] * foot_obj_matrix;
+
+	if ( math::is_similar( target_foot_obj_matrix.i.xyz( ), foot_obj_matrix.i.xyz( ), math::epsilon_3 ) &&
+		 math::is_similar( target_foot_obj_matrix.j.xyz( ), foot_obj_matrix.j.xyz( ), math::epsilon_3 ) &&
+		 math::is_similar( target_foot_obj_matrix.k.xyz( ), foot_obj_matrix.k.xyz( ), math::epsilon_3 ) &&
+		 math::is_similar( target_foot_obj_matrix.c.xyz( ), foot_obj_matrix.c.xyz( ), math::epsilon_3 ) )
+		return;
+
+	if ( s_ik_legs_debug_draw_value && m_drawer )
+		m_drawer->draw_leg(
+			up_leg_obj_matrix * transform,
+			knee_obj_matrix * transform,
+			leg_obj_matrix * transform,
+			foot_obj_matrix * transform,
+			math::color( 0x64u, 0x64u, 0x64u ),
+			math::color( 0x64u, 0x00u, 0x00u ),
+			math::color( 0x00u, 0x00u, 0x64u ),
+			math::color( 0x00u, 0x64u, 0x00u ),
+			0.0f );
+
+	float3 const&			target_up_leg_to_foot_dir		= math::normalize( up_leg_obj_matrix.c.xyz( ) - target_foot_obj_matrix.c.xyz( ) );
+	float const				up_leg_to_foot_len				= ( up_leg_obj_matrix.c.xyz( ) - target_foot_obj_matrix.c.xyz( ) ).length( );
+
+	float const				additive_len					= get_additional_length( math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) ), math::normalize( leg_obj_matrix.c.xyz( ) - foot_obj_matrix.c.xyz( ) ), knee_len );
+	float const				up_leg_alpha_angle				= get_angle( leg_len + additive_len, up_leg_to_foot_len, knee_len + additive_len );
+
+	float3 const&			original_up_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
+	float3 const&			target_up_leg_dir				= math::normalize( target_foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
+
+	if ( !math::is_similar( target_up_leg_dir, original_up_leg_dir, math::epsilon_3 ) )
+		params.rotation_axis	= math::normalize( target_up_leg_dir ^ original_up_leg_dir );
+
+	float4x4 const&			alpha_rotation_matrix			= math::create_rotation( params.rotation_axis, up_leg_alpha_angle );
+	float3 const&			rotated_dir						= alpha_rotation_matrix.transform_direction( target_up_leg_to_foot_dir );
+	float4x4 const&			rotation_matrix					= math::get_rotation_matrix( original_up_leg_dir, rotated_dir );
+	math::change_matrix_orientation( rotation_matrix, up_leg_obj_matrix );
+	knee_obj_matrix		= matrices[knee_matrix_index] * up_leg_obj_matrix;
+
+	float3 const&			original_knee_dir				= math::normalize( leg_obj_matrix.c.xyz( ) - knee_obj_matrix.c.xyz( ) );
+	float4x4 const&			rotation_matrix2				= math::get_rotation_matrix( original_knee_dir, target_up_leg_to_foot_dir );
+	math::change_matrix_orientation( rotation_matrix2, knee_obj_matrix );
+	leg_obj_matrix		= matrices[leg_matrix_index] * knee_obj_matrix;
+	foot_obj_matrix		= matrices[foot_matrix_index] * leg_obj_matrix;
+
+	float3 const&			original_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );
+	float3 const&			target_leg_dir					= math::normalize( target_foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );
+	float4x4 const&			rotation_matrix3				= math::get_rotation_matrix( original_leg_dir, target_leg_dir );
+	math::change_matrix_orientation( rotation_matrix3, leg_obj_matrix );
+	foot_obj_matrix		= target_foot_obj_matrix;
+
+	if ( s_ik_legs_debug_draw_value && m_drawer )
+	{
+		m_drawer->draw_leg(
+			up_leg_obj_matrix * transform,
+			knee_obj_matrix * transform,
+			leg_obj_matrix * transform,
+			foot_obj_matrix * transform,
+			math::color( 0x96u, 0x96u, 0x96u ),
+			math::color( 0xFFu, 0x00u, 0x00u ),
+			math::color( 0x00u, 0x00u, 0xFFu ),
+			math::color( 0x00u, 0xFFu, 0x00u ),
+			0.0f );
+
+		if ( params.is_heel_on_ground( ) )
+		{
+			float3 const&	foot_pos	= transform.transform_position( target_foot_obj_matrix.c.xyz( ) );
+			m_drawer->draw_cross( foot_pos, s_ik_foot_capsule_radius_value, math::color( 0x00u, 0xFFu, 0x00u, 0x00u ), false );
+		}
+
+		if ( params.is_toe_on_ground( ) )
+		{
+			u32 const		toe_matrix_index	= get_skeleton( ).get_bone_index( get_skeleton( ).get_bone( params.foot_bone_index ) ) - get_skeleton( ).get_root_bones_count( );
+			float3 const&	toe_pos	= transform.transform_position( ( matrices[toe_matrix_index] * target_foot_obj_matrix ).c.xyz( ) );
+			m_drawer->draw_origin( math::create_translation( toe_pos ), s_ik_foot_capsule_radius_value, false );
+		}
+	}
+
+	matrices[up_leg_matrix_index]	= math::get_relative_matrix( up_leg_obj_matrix, hip_obj_matrix );
+	matrices[knee_matrix_index]		= math::get_relative_matrix( knee_obj_matrix, up_leg_obj_matrix );
+	matrices[leg_matrix_index]		= math::get_relative_matrix( leg_obj_matrix, knee_obj_matrix );
+
+	float3 const			foot_pos	= matrices[foot_matrix_index].c.xyz( );
+	matrices[foot_matrix_index]		= math::get_relative_matrix( foot_obj_matrix, target_foot_obj_matrix );
+	matrices[foot_matrix_index].c.xyz( )	= foot_pos;
+
+	return;
+
 	// LOCALS
 	// float4x4 					up_leg_obj_matrix
 	// float4x4 					foot_obj_matrix

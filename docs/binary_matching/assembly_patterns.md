@@ -813,3 +813,30 @@ an `ASSERT(UNKNOWN_EXPRESSION)` for such a `<0x4>` slot OVER-produces the lea+ca
 (4 vs 7 bytes) only reflects whether MSVC put the slot at a small or large `[ebp-N]` offset -
 allocation noise, not a mismatch. Confirmed in `game_core/get_weapon_lexeme_pair_impl` (L40,
 target `<0x4>` `mov byte[ebp-5],0`).
+
+### forward-kinematics chain: `mat = matrices[idx] * parent_obj` and the `operator*(out,A,B)` push order
+A run of `operator*` calls each `rep movsd 0x10` into a fresh 0x40-byte `[ebp-N]` slot, where
+each result is consumed as an operand of the NEXT call, is a forward-kinematics object-space
+chain: `up_leg_obj = matrices[up_leg_idx] * hip; knee_obj = matrices[knee_idx] * up_leg_obj;
+leg_obj = matrices[leg_idx] * knee_obj; ...`. PUSH ORDER for `operator*(float4x4 const& A,
+float4x4 const& B)` (cdecl, hidden return ptr): right-to-left = `push B; push A; push out`, so
+`result = A * B` = `(2nd-pushed) * (1st-pushed)`. Same convention for `operator-`/`operator^`
+(float3): `operator-(out, ecx=A, edx=B)` -> `result = A - B`. Decode the subtraction ORDER
+from which operand lands in ecx (A) vs edx (B) - getting it backwards negates the float3 and
+diverges downstream.
+
+### `.i.xyz()`/`.c.xyz()` fold = delinker-misnamed `finalize_impl` call, with/without `add eax,30h`
+The trivial `float4_pod::xyz()` (and `float3_pod` identity/length) folds are emitted as a `call`
+the delinker misnames `fixed_size_allocator<...>::finalize_impl`. `lea eax,[mat]; call finalize_impl`
+= `mat.i.xyz()` (row .i at +0). `add eax,30h; call finalize_impl` = `mat.c.xyz()` (the .c position
+row at +0x30). `add eax,10h`/`+0x20` = `.j`/`.k`. A separate `call float3_pod::length` after it =
+`.xyz().length()`.
+
+### a write/read at `[ebp+arg]+0xNN` is a MEMBER of an argument struct, not a local
+When asm writes `mov eax,[ebp+8]; add eax,0x1C; ...` (storing a normalize/operator result there),
+[ebp+8] is the by-ref struct ARG and +0x1C is a member offset - it is `arg.member = ...`, NOT a
+local. Confirmed in `game_core/legs_ik_processor::process_leg`: `params.rotation_axis` (leg_params
++0x1C, a public float3) is the IK rotation axis written via `params.rotation_axis = normalize(a^b)`
+and re-read by `create_rotation(params.rotation_axis, angle)` - originally mis-decoded as a
+`up_leg_obj_matrix.i.xyz()` matrix-row write, which over-produced the `.i.xyz()` lvalue xyz-fold.
+Writing the member directly avoids that fold and matches.

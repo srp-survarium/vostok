@@ -222,6 +222,19 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &result ) );
 	}
 
+	// process_leg is a private method; befriended by legs_ik_processor (header), so
+	// reach it directly on a fabricated instance. The anchor never runs.
+	void use_game_core_legs_ik_processor_process_leg( )
+	{
+		survarium::legs_ik_processor&			processor	= *reinterpret_cast< survarium::legs_ik_processor* >( NULL );
+		survarium::legs_ik_processor::leg_params&	params	= *reinterpret_cast< survarium::legs_ik_processor::leg_params* >( NULL );
+		float4x4 const&							matrix		= *reinterpret_cast< float4x4 const* >( NULL );
+		float4x4*								matrices	= reinterpret_cast< float4x4* >( NULL );
+
+		processor.process_leg( params, matrix, matrix, matrices, matrix );
+		example_callback( reinterpret_cast< pcstr >( &processor ) );
+	}
+
 	// get_additional_length is a free function; process_leg (its only real caller)
 	// is still a STUB, so anchor it directly and escape its float result so LTCG
 	// keeps the body.
@@ -1383,6 +1396,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_legs_ik_processor_leg_params( );
 	vostok::use_game_core_legs_ik_processor( );
 	vostok::use_game_core_legs_ik_processor_get_foot_fixed_transform( );
+	vostok::use_game_core_legs_ik_processor_process_leg( );
 	vostok::use_game_core_get_additional_length( NULL, NULL );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
