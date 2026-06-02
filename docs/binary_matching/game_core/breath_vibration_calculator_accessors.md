@@ -122,23 +122,21 @@ materialization that follows from the `sub esp,1Ch` vs `14h` frame the two real
 Consequence: the member set, control flow, virtual dispatch (`[vtbl+0x14]`),
 `m_breath_holding_reserve = m_params->max_breath_holding_time` (`fld [eax]; fstp
 [+34h]`), the `set_initial_state` call, and the `m_target_multiplier`/
-`m_current_multiplier` stores all line up. The `states()`/`front()` inline-vs-call is
-the only residual. => setter **BLOCKED** at 76.80% on the ai fsm machinery (below);
-ctor/dtor DONE 100%.
+`m_current_multiplier` stores appear to line up. BUT the control structure is NOT
+verified (see the OPEN note below) - the post-loop stores may be an early-return guard,
+not a braced `if`. => setter **INPROGRESS** at 76.80%; ctor/dtor DONE 100%.
 
-No second rebuild here: the remaining setter diff is the `states()`/`front()`
-inline-vs-call shape above plus its cascading frame/slot shift.
+### OPEN (INPROGRESS) - control structure not verified vs the target
+The FUNCTION BODY structure shows the post-loop stores ('38'-'41') as four plain
+function-scope statements with NO block-open marker, yet this source wraps them in
+`if ( m_params ) { ... }`. That `{` would show as a `<n>` (no-address) line in the
+structure - it is ABSENT - so the braces are likely wrong; the target is probably an
+early `return` guard (`if ( !m_params ) return;`, no braces). NOT verified exact;
+restructure + re-diff on a faster machine. (Lesson: compare the base vs target STRUCTURE,
+not just the %; see MATCHING.md "Match the base/target structure".)
 
-### Review note (new guidelines) - BLOCKED on the ai fsm type
-The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and lists
-inline-vs-call as a matching problem to solve from source. The setter's body is exact;
-its only residual is that `fsm::states()` + `intrusive_list::front()` are out-of-line
-calls in the TARGET but inlined in our base. Verified via BOTH rich indexes:
-`pdb_rich_query --index .../target --function "fsm::states"` returns
-`vostok::ai::fsm::states()` (0x03f210) and `--function "front"` returns
-`intrusive_list<fsm_state,...>::front() const` (0x082cd0); the same queries on the base
-index return NEITHER (inlined whole-program). Whether those one-liners are emitted
-out-of-line is decided by the `ai` fsm / intrusive_list machinery, NOT this source - so
-this is not an unsteerable residual to bank: it is **BLOCKED** on the `ai` fsm type being
-matched (once `fsm::states()`/`front()` have out-of-line bodies, the calls appear and the
-setter should close). This review did NOT rebuild; the body shape is unchanged.
+Secondary residual (only after the bracing is settled): `fsm::states()` +
+`intrusive_list::front()` are out-of-line in the TARGET (`pdb_rich_query` target:
+`fsm::states()` 0x03f210, `front()` 0x082cd0) but inlined in our base (absent in the base
+index) - that part is blocked on the `ai` fsm type being matched, not an unsteerable LTCG
+residual. This review did NOT rebuild; the body shape is unchanged.

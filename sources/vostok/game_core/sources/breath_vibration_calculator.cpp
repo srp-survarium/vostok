@@ -34,12 +34,14 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
-// STATE[76.80%|BLOCKED]: body logically exact (members, control flow, virtual
-// dispatch, ordering all match). The ONLY residual is fsm::states() +
-// intrusive_list::front() being out-of-line calls in the TARGET (@0x03f210/0x082cd0)
-// but inlined in our base (absent there) - whether those one-liners out-of-line is
-// decided by the ai fsm / intrusive_list machinery, NOT this source. BLOCKED on the
-// ai fsm type being matched. See breath_vibration_calculator_accessors.md.
+// STATE[76.80%|INPROGRESS]: NOT verified exact - the bracing is unconfirmed. The
+// FUNCTION BODY structure (below) shows '38'-'41' as four plain statements at function
+// scope with NO block-open marker, yet this source wraps them in `if ( m_params ) { ... }`
+// - that `{` would appear as a `<n>` (no-address) line in the structure, which is ABSENT.
+// Likely an early `return` guard (`if ( !m_params ) return;`, no braces) instead. Needs
+// independent verification + re-diff on a faster machine; do NOT trust the 76.80% as
+// "matched body". (Separately, fsm::states()/front() are inlined in base vs out-of-line
+// in target - that residual is blocked on the ai fsm type.) See ...accessors.md.
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;
