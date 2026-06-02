@@ -44,9 +44,16 @@ workers' concern, not yours; do not load them.
 3. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
      `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
-   - You may bundle **trivial same-class accessors** (getters/setters/one-liners)
-     into a single dispatch - one worker, one rebuild, one PR. Hand the worker the
-     explicit list. (Inlined clusters the worker bundles on its own.)
+   - **Batch several small functions per dispatch** - the ~20-min rebuild is the
+     dominant cost and is paid ONCE per worker, so amortize it. Rule of thumb:
+     **3-4 small multi-line functions** per unit, **up to ~10 if they are
+     one-liners**, and **fewer (down to 1) the larger/harder they are**. Prefer a
+     related cluster - the same class, or sibling classes with identical shape
+     (e.g. the `weapon_core_*_idle_state` variants all being {ctor,
+     `weapon_and_hands_expression`, `get_weapon_lexeme_pair`, `cook_template::new_object`})
+     - so the worker's scaffolding and reasoning carry across the batch. Hand the
+     worker the explicit list and tell it to mark any member that turns out hard as
+     INPROGRESS rather than spinning. (Inlined clusters the worker bundles on its own.)
    - Wait for its one-line result, append to your ledger, set the new stack tip. Do
      NOT pull the worker's transcript, disassembly, or diffs into your context.
    - If the worker reports a regression, decide: queue a follow-up fix or flag it
