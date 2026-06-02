@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include <vostok/game_core/breath_vibration_calculator.h>
+#include <vostok/game_core/breath_state.h>
+#include <vostok/game_core/breath_holding_params.h>
 
 namespace survarium {
 /*
@@ -16,26 +18,44 @@ void `dynamic initializer for 's_enable_breath_vibration_cc''( )
 	// ******
 }
 */
-// STATE[STUB]
-// survarium::breath_vibration_calculator::breath_vibration_calculator()
+// STATE[100%|DONE]
 breath_vibration_calculator::breath_vibration_calculator( )
+	:	m_user						( 0 ),
+		m_params					( 0 ),
+		m_last_time_in_ms			( 0 ),
+		m_current_multiplier		( 0.0f ),
+		m_target_multiplier			( 0.0f ),
+		m_vertical_value			( 0.0f ),
+		m_horizontal_value			( 0.0f ),
+		m_character_multiplier		( 0.0f ),
+		m_breath_holding_reserve	( 0.0f ),
+		m_is_breath_holded			( false )
 {
-	// FUNCTION BODY
-	// <0x593c3c>|0x09c|+0x008:'29'
-	// ******
+	initialize_logic( );
 }
 
-// STATE[STUB]
-// void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*)
+// STATE[76.80%|INPROGRESS]: NOT verified exact - the bracing is unconfirmed. The
+// FUNCTION BODY structure (below) shows '38'-'41' as four plain statements at function
+// scope with NO block-open marker, yet this source wraps them in `if ( m_params ) { ... }`
+// - that `{` would appear as a `<n>` (no-address) line in the structure, which is ABSENT.
+// Likely an early `return` guard (`if ( !m_params ) return;`, no braces) instead. Needs
+// independent verification + re-diff on a faster machine; do NOT trust the 76.80% as
+// "matched body". (Separately, fsm::states()/front() are inlined in base vs out-of-line
+// in target - that residual is blocked on the ai fsm type.) See ...accessors.md.
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
-	// LOCALS
-	// ai::fsm_state* 				it<1>
-	// ******
+	m_params = params;
 
-	// CALL SITE INFO
-	// <0x593518> -> void <unknown>(breath_holding_params const*)
-	// ******
+	for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )
+		static_cast< breath_state* >( it )->set_breath_holding_params( params );
+
+	if ( m_params )
+	{
+		m_breath_holding_reserve	= m_params->max_breath_holding_time;
+		m_logic.set_initial_state( m_logic.states( ).front( ) );
+		m_target_multiplier			= static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
+		m_current_multiplier		= m_target_multiplier;
+	}
 
 	// FUNCTION BODY
 	// <0x5934d9>|0x009|+0x009:'34'
@@ -50,18 +70,11 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 breath_vibration_calculator::~breath_vibration_calculator( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x593599>|0x009|+0x011|[1]:'47'
-	// <0x5935aa>|0x01a|+0x026:'48'
-	// <0x5935d0>|0x040|+0x002:'49'
-	// ******
+	while ( ai::fsm_state* state = m_logic.pop_state( ) )
+		VOSTOK_DELETE_IMPL( g_allocator, state );
 }
 
 // STATE[UNCHECKED]
