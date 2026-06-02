@@ -37,9 +37,10 @@ public:
 
 			void		reload							( );
 			void		fire							( );
-			void		apply_aim_speed					( );
 
 private:
+			void		apply_aim_speed					( );	// ?apply_aim_speed@..@@AAEXXZ (private)
+
 	/* 0x0000 */	weapon_dispersion_calculator		m_weapon_calculator;
 	/* 0x0020 */	character_dispersion_calculator		m_character_calculator;
 	/* 0x0040 */	weapon_core*						m_weapon;
