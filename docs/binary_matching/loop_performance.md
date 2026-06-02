@@ -343,3 +343,13 @@ _(Append new findings below this line.)_
   check them before the first full relink. (Note: under /GL the qualified call still gets LTCG-inlined into
   the anchor so the standalone never reaches the EXE - the override stays ICF/LTCG-unscorable like #148;
   prove byte-correctness by disassembling the anchor, and mark DONE.)
+
+## temp_include_all anchors: DEFINE *and* DISPATCH, or the rebuild is wasted
+A new `use_game_core_<x>()` anchor must be (a) defined, (b) befriended on the class/cook
+template, AND (c) CALLED from the dispatcher aggregator (`temp_include_all.cpp` ~line 1359,
+the function that lists `vostok::use_game_core_...();`). If you only do (a)+(b) but forget (c),
+nothing references the anchor, so the linker folds away your target functions; they vanish from
+the base side and `report.json` scores them 0 (shown as `fuzzy_match_percent: null` AND missing
+from the diff `right`/base side). That costs a full ~20-min relink to discover. Grep the
+dispatcher for an existing sibling anchor call and add yours right next to it BEFORE the first
+build. (Hit while matching pistol_/double_barreled_weapon_core_idle_state - build #1 wasted.)
