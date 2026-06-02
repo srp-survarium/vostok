@@ -90,6 +90,22 @@ merging PRs**, never by a direct commit. So:
   the matcher rule - a *matcher* never force-pushes its in-progress branch, which would
   orphan the live stack mid-work; this is the orchestrator's controlled, in-order landing.)
 
+## Keep the README match score current (the human's no-run regression tracker)
+README.md carries an auto-generated score block (`<!-- match-score:start/end -->`):
+the overall fuzzy % plus a per-module **functions-exact / code-matched** table,
+produced by `python3 scripts/match_score.py --write-readme` from
+`binaries/objdiff/report.json`. It is **report-derived, NOT `// STATE`-based**, so it
+stays honest even where a function has no `STATE` marker - this is how the human tracks
+progress and spots regressions *without running anything*, by diffing the block across
+commits. `report.json` is refreshed by every base delink (each matcher's rebuild), so
+the numbers are always on hand.
+- **Rule:** refresh + commit the block whenever `report.json` has moved - at minimum at
+  run start (a baseline) and before you hand back for review. After a delinker/toolchain
+  change that shifts many symbols (e.g. folded-symbol reconciliation), regenerate it in
+  the *same* change so the recorded numbers match the new ground truth.
+- Commit it as its own small housekeeping commit/PR (it is generated bookkeeping, not a
+  source match) so it never muddies a match PR's one-commit shape.
+
 ## Reviewing a matcher's work - the `reviewer` agent
 After a matcher finishes a unit (or before you merge its PR), you may dispatch a
 `reviewer` worker to audit it: it checks that target/base were not confused, the lean
