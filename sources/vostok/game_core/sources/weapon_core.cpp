@@ -260,34 +260,8 @@ void weapon_core::initialize_weapon_logic(
 		m_logic->add_transition( chamber_a_round_aimed, chamber_a_round, boost::bind( &weapon_core::is_not_trying_to_aim_predicate, this ) );
 	}
 }
-/*
-void weapon_core::initialize_weapon_logic(
-	weapon_core_base_state_ptr const&	inactive_state,
-	weapon_core_base_state_ptr const&	show_state,
-	weapon_core_base_state_ptr const&	hide_state,
-	weapon_core_base_state_ptr const&	idle_state,
-	weapon_core_base_state_ptr const&	reload_state,
-	weapon_core_base_state_ptr const&	fire_state,
-	weapon_core_base_state_ptr const&	aim_state,
-	weapon_core_base_state_ptr const&	aim_fire_state,
-	weapon_core_base_state_ptr const&	chamber_a_round_state,
-	weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
-)
-{
-	// LOCALS
-	// weapon_core_base_state* 		idle
-	// weapon_core_base_state* 		aim_fire
-	// weapon_core_base_state* 		reload
-	// weapon_core_base_state* 		hide
-	// weapon_core_base_state* 		fire
-	// weapon_core_base_state* 		aim
-	// weapon_core_base_state* 		chamber_a_round
-	// weapon_core_base_state* 		inactive
-	// weapon_core_base_state* 		show
-	// weapon_core_base_state* 		chamber_a_round_aimed
-	// ******
 
-	// FUNCTION BODY
+// FUNCTION BODY (target carcass, kept inline per MATCHING.md - non-100%; <N> = no-address)
 	// <0>
 	// <0x5a7034>|0x014|+0x023:'128'
 	// <0x5a7057>|0x037|+0x00c:'129'
@@ -434,8 +408,6 @@ void weapon_core::initialize_weapon_logic(
 	// <0x5aa6b8>|0x3698|+0x085:'270'
 	// <0>
 	// ******
-}
-*/
 
 // STATE[STUB]
 // void survarium::weapon_core::set_skeleton(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&)
