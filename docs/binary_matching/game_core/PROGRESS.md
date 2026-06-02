@@ -436,3 +436,32 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     mirroring the #153 review); reworded both getter STATE lines to name the verified eax-vs-ecx custom-calling-
     convention cause instead of bare "__thiscall register-allocation choice"; added this PROGRESS line (#154 shipped
     without one, like #148/#149/#151/#153). No logic change; report.json unchanged (no rebuild).
+- game_core::survarium::get_weapon_lexeme_pair_impl (free fn, target rva 0x7a13e0) ->
+  STATE[None|PARTIAL] -> PR (stacked on #154 / match/game_core-pistol-double-barreled-aimed-idle-state)
+  (regressions: none)
+  - The big idle/aimed-idle lexeme builder, until now a link-only STUB. Full 1:1 body reconstructed: builds
+    MAIN animation_lexeme_parameters ([ebp-58h]) via resource_ptr ctor + setter chain (.animated_object,
+    .playback_type, .bones_mask(2), .weight_synchronization_group_id(offset_only=0x80), .weight_interpolator,
+    .time_scale, .time_synchronization_group_id), constructs the main animation_lexeme ([ebp-0E0h]); then the
+    OFFSET animation_lexeme_parameters ([ebp-138h]) whose 4th (time_driving) arg is the target's
+    `group != u32(-1) ? &main_lexeme : NULL` select (the `sub edx,-1; neg; sbb edx,edx; and edx,&main` idiom -
+    reproduced from source, byte-identical), chain (.start_animation_interval_id/_time from playback_state,
+    .bones_mask(body_part_whole_body_but_hands=-3), .weight_synchronization_group_id(all_but_offset=0x100)),
+    a `if ( ! offset_params.time_driving_animation() ) { ASSERT; .time_scale(time_scale); }` guard, the offset
+    animation_lexeme ([ebp-1C0h] local), and `return weapon_lexeme_pair( offset_lexeme, main_lexeme )` (copies
+    offset->pair@0x00, main->pair@0x84 - verified from the two copy-ctor calls + reverse-order dtors).
+  - The two named local enum constants (all_but_offset=256, offset_only=128) declared as a local `enum` and used
+    where the 0x100/0x80 immediates appear. body_part_whole_body_but_hands = -3 for the offset bones_mask.
+  - L40 is a lone 4-byte `mov byte[ebp-N],0` dead store (target <0x4>, NO lea/call) = an unused `bool`, NOT an
+    ASSERT (an ASSERT emits lea+call = <0xc>; first build's ASSERT over-produced - swapped to `bool dummy=false`).
+  - Residual is whole-program inline-vs-call of the trivial inline-in-class animation_lexeme_parameters setters:
+    TARGET keeps animated_object/playback_type/bones_mask/weight_interpolator/start_animation_interval_id
+    out-of-line (rvas 0x098d90/0x09b390/0x09ce50/0x09cc90/...); our /GL LTCG inlines ~6 of them, shifting the
+    whole [ebp-XX] layout and shortening the body (base ~415 vs target 503 bytes), so objdiff cannot pair it ->
+    None. Same unsteerable class as scheduler::on_frame / operator| / fixed_string; the setters live in the
+    out-of-scope `animation` module headers as inline COMDATs, so the "move out-of-line" lever is engine-wide.
+  - All callees (animation_lexeme_parameters::*, animation_lexeme::*) are in the already-compiled `animation`
+    module - only decls needed (mixing_animation_lexeme_parameters.h). NO game_core STUB callee blocked it.
+  - Anchored transitively (weapon_core_idle_state::get_weapon_lexeme_pair, already anchored, calls it).
+  - 53 regressed / 58 improved in report-changes = the documented relink ICF/vcall-fold churn (vector-deleting
+    dtors, thunks, btXxx, stlp_std); none are this fn or its callers.
