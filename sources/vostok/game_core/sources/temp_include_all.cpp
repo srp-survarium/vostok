@@ -35,6 +35,8 @@
 #include <vostok/network_core/tcp_packet.h>
 
 #include <vostok/game_core/affects_threshold.h>
+#include <vostok/game_core/breath_vibration_calculator.h>
+#include <vostok/game_core/breath_holding_params.h>
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/client_player_update.h>
@@ -87,6 +89,27 @@ namespace survarium
 
 namespace vostok
 {
+	// claude@NOTE: game_core_initialize has an empty body (push ebp; mov ebp,esp;
+	// pop ebp; ret - byte-identical to target). The LTCG linker ICF-folds this
+	// 5-byte empty function into another identical one, so no standalone symbol
+	// survives into the base EXE for the delinker to score - it stays on the
+	// dummy.obj base regardless of how it is referenced (direct call, address
+	// taken, or volatile global pointer were all tried). Body is correct; the
+	// gap is purely linker ICF visibility, not a source mismatch.
+	void example_callback( const char* name );
+
+	void use_game_core_breath_vibration_calculator( )
+	{
+		survarium::breath_vibration_calculator	calc;
+		survarium::breath_holding_params		params;
+
+		calc.set_breath_holding_params( &params );
+
+		// Escape &calc so LTCG observes the ctor's member stores
+		// (otherwise the constant-only stores are dead-store-eliminated).
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
+	}
+
 	void use_game_core_initialize( )
 	{
 		survarium::game_core_initialize( );
@@ -740,6 +763,7 @@ IncludeAll::IncludeAll()
 	//
 	//
 	vostok::use_game_core_initialize( );
+	vostok::use_game_core_breath_vibration_calculator( );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );
