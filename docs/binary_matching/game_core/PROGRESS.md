@@ -302,3 +302,23 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - Anchor: extended use_game_core_weapon_recoil_params to construct + escape the config-ctor instance.
   - Stacked on #145 (get_foot_fixed_transform). 55 report-changes regressions are all unrelated COMDAT/template
     relink churn (deleting dtors, btXxx, boost::asio, stlp_std, intrusive_ptr<...>); no matched source regressed.
+- game_core::{pistol_weapon_core_aimed_idle_state, double_barreled_weapon_core_aimed_idle_state}::{ctor,
+  weapon_and_hands_expression, get_weapon_lexeme_pair, weapon_core_state_cook_template<T>::new_object} ->
+  STATE[ctors+new_objects 100% DONE, get_weapon_lexeme_pair 99.92% DONE, weapon_and_hands_expression 85.65% PARTIAL]
+  -> PR #154 (regressions: none)
+  - STACKED on #153 (the idle-state siblings). GROUPED: 8 fns, aimed-idle counterparts and byte-for-byte structural
+    twins of the idle classes (#153) - only the string captions, the ammo-index expression (pistol `==0`, dbl
+    direct), the weapon_state loop bound (2 vs 3) and the class size (0x158 vs 0x168) differ; base class is
+    weapon_core_aimed_state_base (m_weapon_animations @0x138). Verified vs report.json: pistol ctor/new_object 100.0,
+    get_weapon_lexeme_pair 99.91803, weapon_and_hands 85.64815; dbl ctor/new_object 100.0, get_weapon_lexeme_pair
+    99.92063, weapon_and_hands 85.64815. Both get_weapon_lexeme_pair DONE residual VERIFIED genuine LTCG arg passing:
+    weapon_core::ammo_in_magazine is standalone in BOTH indexes (target @0x9b270 takes `this` in eax via a link-time
+    custom calling convention), so the one residual instr is `mov eax,[..+128h]` (target) vs `mov ecx,[..+128h]`
+    (base) at offset 0x1a - the permitted call-boundary arg-passing class, NOT register-allocation noise (confirmed
+    by diffing both --view base/target: everything else byte-identical incl. the ICF-folded trailing empty-fn call).
+    Both weapon_and_hands PARTIAL residual = whole-program inline-vs-call of operator+<animation_lexeme,animation_lexeme>
+    (standalone in BOTH indexes: target 0xb42f0, base 0x8b900; base keeps the call, target inlines) - same class as #151/#153.
+  - REVIEW: restored BOTH get_weapon_lexeme_pair carcasses (a non-100% DONE keeps the FUNCTION BODY per house style,
+    mirroring the #153 review); reworded both getter STATE lines to name the verified eax-vs-ecx custom-calling-
+    convention cause instead of bare "__thiscall register-allocation choice"; added this PROGRESS line (#154 shipped
+    without one, like #148/#149/#151/#153). No logic change; report.json unchanged (no rebuild).
