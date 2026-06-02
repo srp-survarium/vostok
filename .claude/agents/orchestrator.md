@@ -44,7 +44,7 @@ workers' concern, not yours; do not load them.
 3. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
      `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
-   - **Batch several small functions per dispatch** - the ~20-min rebuild is the
+   - **Batch several small functions per dispatch** - a rebuild is the
      dominant cost and is paid ONCE per worker, so amortize it. Rule of thumb:
      **3-4 small multi-line functions** per unit, **up to ~10 if they are
      one-liners**, and **fewer (down to 1) the larger/harder they are**. Prefer a

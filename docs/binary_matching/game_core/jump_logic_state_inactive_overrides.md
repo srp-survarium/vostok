@@ -82,7 +82,7 @@ Cause: the anchor sits inside `namespace vostok { ... }`, so unqualified
 `jump_logic_state_inactive` resolved to `vostok::` (the class is in `survarium::`).
 Fix: fully-qualify everything in the anchor as `survarium::jump_logic_state_inactive`
 / `survarium::jump_logic`. (Caught early with a fast `rebuild.py game_core` module
-build - ~1 min - rather than burning the full ~20 min relink on the typo.)
+build - rather than burning the full relink on the typo.)
 
 Rebuild 2 (full, no-arg): ninja compiled temp_include_all but LINK FAILED:
   jump_logic_state_inactive.cpp(28): error C4716:
