@@ -70,7 +70,7 @@ public:
 
 		inline	bool	is_heel_on_ground		( ) const { return m_heel_on_ground; }
 		inline	bool	is_toe_on_ground		( ) const { return m_toe_on_ground; }
-		inline	bool	is_on_ground			( ) const { /* no source */ }
+		inline	bool	is_on_ground			( ) const { return is_heel_on_ground( ) || is_toe_on_ground( ); }
 		inline	bool	is_full_on_ground		( ) const { return is_heel_on_ground( ) && is_toe_on_ground( ); }
 
 		inline	bool	is_more_supporting_then	( legs_ik_processor::leg_params const& arg_0 ) const { /* no source */ }
@@ -124,10 +124,10 @@ private:
 private:
 	class transition_time_calculator {
 	public:
-		inline	explicit	transition_time_calculator	( ) { /* no source */ }
+		inline	explicit	transition_time_calculator	( ) : m_value( 0.1f ) { }
 
 		inline	void		reset						( ) { m_value = 0.0f; }
-		inline	void		tick						( float arg_0 ) { /* no source */ }
+		inline	void		tick						( float arg_0 ) { m_value += arg_0; }
 		inline	float		get_value					( ) const { return m_value; }
 
 	private:

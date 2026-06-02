@@ -840,3 +840,33 @@ local. Confirmed in `game_core/legs_ik_processor::process_leg`: `params.rotation
 and re-read by `create_rotation(params.rotation_axis, angle)` - originally mis-decoded as a
 `up_leg_obj_matrix.i.xyz()` matrix-row write, which over-produced the `.i.xyz()` lvalue xyz-fold.
 Writing the member directly avoids that fold and matches.
+
+### console-variable static initializer (`cc_bool`/`cc_float`/...) - `dynamic initializer for 's_*_cc'`
+A `void survarium::`dynamic initializer for 's_NAME_cc''()` whose body is
+`push <serializable>; push &s_NAME_value; push ??_C@...NAME; mov esi,&s_NAME_cc; call cc_TYPE::cc_TYPE;
+push <atexit-dtor>; call atexit` is a file-static console command. Reproduce it as a single
+`static console_commands::cc_TYPE s_NAME_cc( "NAME", s_NAME_value, ... );` (header
+`<vostok/console_command.h>`; see dispersion_calculator.cpp / bullet.cpp). cc_bool args =
+`(name, bool& value, bool serializable, command_type, execution_filter=general)`; cc_float =
+`(name, float& value, float min, float max, bool serializable, command_type, execution_filter=general)`.
+The string name is in the `??_C@_0..@..@NAME?$AA@` operand. min arrives in `xmm0`, max via
+`fld [const]; fstp [esp]`. NOTE: objdiff scores EVERY `dynamic initializer`/`dynamic atexit destructor`
+thunk 0% - it does not pair the base `??__E.../??__F...` mangled names with the demangled target names.
+The emitted bytes still match (cc_float byte-identical; cc_bool's only diff is the ctor passing
+command_type/execution_filter in registers under LTCG vs on the stack in base). Treat as DONE.
+
+### compiler-generated dtor: missing member-dtor `this`-pointer setup is ICF folding
+A destructor where the target sets `mov ecx,[this]; add ecx,0xNN` before each trivial member
+`~T()` call but the base omits those `add ecx` setups (still issuing the calls) is ICF/codegen
+folding the identical member-dtor `this` adjustments - not source-steerable. The only real source is
+the explicit body (e.g. `DELETE(m_drawer)`); the member-dtor epilogue is auto-emitted.
+(game_core/legs_ik_processor::~legs_ik_processor, 85.71%.)
+
+### per-call `get_skeleton()`/reference-return spill = uniform `[ebp-N]` shift, not a brace bug
+When `f(*ptr, accessor_returning_ref(), ...)` is called repeatedly and the BASE spills the
+ref-returning accessor into a fresh stack temp per call while the TARGET inlines the deref
+(`mov ecx,[this]; mov edx,[ecx]; push edx`), the base frame grows by 4 bytes per spilled site and
+EVERY later `[ebp-N]` slot shifts by that total - a uniform slot-rename storm with NO `[n]`
+block-open / `+`/`-` control-flow divergence. Distinguish from the genuine brace-scope storm
+(§2a): if the diff has zero target-only/base-only rows and the slot deltas are all the SAME
+constant, it is a temp-spill/LTCG artifact, not a missing brace. (game_core/legs_ik_processor::process.)
