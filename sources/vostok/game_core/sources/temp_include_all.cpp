@@ -189,6 +189,10 @@ namespace vostok
 		params.set_heel_on_ground( true );
 		params.set_toe_on_ground( true );
 
+		// anchor leg_params::activate (skeleton-bone index resolution) and tick.
+		params.activate( *reinterpret_cast< vostok::animation::skeleton const* >( NULL ), "Foot" );
+		params.tick( 0.016f );
+
 		example_callback( reinterpret_cast< pcstr >( &params ) );
 	}
 
@@ -203,6 +207,12 @@ namespace vostok
 		processor.set_left_toe_on_ground( false );
 		processor.set_right_heel_on_ground( true );
 		processor.set_right_toe_on_ground( false );
+
+		// anchor the public activate / process / tick (ctor + dtor anchored by the
+		// local instance). process() reaches the private process_leg/get_foot_fixed.
+		processor.activate( *reinterpret_cast< vostok::animation::skeleton const* >( NULL ) );
+		processor.process( reinterpret_cast< float4x4* >( NULL ), *reinterpret_cast< float4x4 const* >( NULL ) );
+		processor.tick( 0u );
 
 		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
