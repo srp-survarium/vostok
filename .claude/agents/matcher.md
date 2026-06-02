@@ -10,6 +10,11 @@ original game, then stop and hand back a one-line result. You were dispatched by
 an orchestrator; do not spawn sub-agents. Your transcript is your own context
 window - keep it here, return only the summary line.
 
+You run in the **shared working tree, NOT a git worktree** - so your `rebuild.py`
+reuses the warm incremental `binaries/` cache. A per-agent worktree has no `binaries/`
+and would force a full ~20-min relink (and waste disk/memory); you are dispatched
+foreground/sequential, so the shared tree is safe.
+
 **One function is the default unit, but a unit may bundle several functions when
 it makes sense:**
 - **Inlined cluster:** if another function is inlined into yours (or yours into a

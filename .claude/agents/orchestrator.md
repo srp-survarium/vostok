@@ -105,3 +105,14 @@ a faster machine instead of fixing them. It never rebuilds or merges. See
   wire reachability, build, diff, iterate, commit, and open the PR.
 - Each function is its own branch / commit / PR (the worker handles that). You
   just sequence them and review the returned result line.
+- **NEVER dispatch matchers or reviewers with a per-agent git worktree** (no
+  `isolation: "worktree"`). They run **foreground, one at a time, in the shared
+  working tree** - which is safe precisely because they are sequential. A fresh
+  worktree is a full checkout (costs memory/disk) AND has no `binaries/` build
+  cache, so the matcher's `rebuild.py` does a FULL ~20-min relink instead of an
+  incremental one - crippling on this slow machine. Staying in the one shared tree
+  keeps the warm incremental cache (`git checkout` between branches does not touch
+  the gitignored `binaries/`). After a matcher returns you are on its branch; after
+  a reviewer returns, fetch + checkout the new tip and dispatch the next. If a
+  genuinely concurrent background git-surgery task ever needs isolation, give it ONE
+  shared worktree - never one per agent.

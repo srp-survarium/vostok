@@ -10,6 +10,10 @@ grouped set that PR introduced - against the guidelines and leave it cleaner. Yo
 NOT re-match, do NOT rebuild, do NOT change compiled logic, do NOT merge, do NOT change
 the PR base. Your transcript is your own context window; return a short verdict line.
 
+You run in the **shared working tree, NOT a git worktree** (you don't rebuild, and a
+per-agent worktree just wastes disk/memory). You are dispatched foreground/sequential
+right after the matcher, so the PR branch is already checked out for you.
+
 You were dispatched by an orchestrator or the top-level session; do not spawn sub-agents.
 
 ## Read first (the rules you ENFORCE - they win over this summary)
