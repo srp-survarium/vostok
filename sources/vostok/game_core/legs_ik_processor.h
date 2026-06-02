@@ -79,6 +79,7 @@ public:
 		/* 0x002d */	bool		m_toe_on_ground;
 	}; // struct leg_params
 
+private:
 			void		set_heel_on_ground		( legs_ik_processor::leg_params& params, bool value );
 			void		set_toe_on_ground		( legs_ik_processor::leg_params& params, bool value );
 
@@ -114,7 +115,7 @@ private:
 	public:
 		inline	explicit	transition_time_calculator	( ) { /* no source */ }
 
-		inline	void		reset						( ) { /* no source */ }
+		inline	void		reset						( ) { m_value = 0.0f; }
 		inline	void		tick						( float arg_0 ) { /* no source */ }
 		inline	float		get_value					( ) const { return m_value; }
 
