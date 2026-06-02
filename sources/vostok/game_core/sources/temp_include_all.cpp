@@ -179,6 +179,21 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &params ) );
 	}
 
+	// The four public on_ground setters delegate to the private
+	// set_heel_on_ground/set_toe_on_ground(leg_params&, bool) helpers; calling them
+	// on a live instance keeps all six bodies (the private helpers survive
+	// transitively). Escape &processor so LTCG observes the member stores.
+	void use_game_core_legs_ik_processor( )
+	{
+		survarium::legs_ik_processor processor;
+		processor.set_left_heel_on_ground( true );
+		processor.set_left_toe_on_ground( false );
+		processor.set_right_heel_on_ground( true );
+		processor.set_right_toe_on_ground( false );
+
+		example_callback( reinterpret_cast< pcstr >( &processor ) );
+	}
+
 	// ik_processor's ctor + activate are protected, so reach them through a
 	// trivial concrete subclass; escape the object so LTCG keeps the member stores.
 	struct concrete_ik_processor : survarium::ik_processor
@@ -1144,6 +1159,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_initialize( );
 	vostok::use_game_core_breath_vibration_calculator( );
 	vostok::use_game_core_legs_ik_processor_leg_params( );
+	vostok::use_game_core_legs_ik_processor( );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
