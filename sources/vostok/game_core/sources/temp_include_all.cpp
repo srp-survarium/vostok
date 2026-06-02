@@ -360,6 +360,8 @@ namespace vostok
 
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
 		calc.get_value( );
+	}
+
 	void use_game_core_weapon_core_base_state( )
 	{
 		// weapon_core_base_state is abstract (pure weapon_and_hands_expression) and its
