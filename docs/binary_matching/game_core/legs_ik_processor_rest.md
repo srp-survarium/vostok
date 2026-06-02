@@ -47,7 +47,7 @@ Branch off `chore/remove-slow-machine-notes`.
    locally), try_invert on const (had transform.try_invert(inverted); correct is inverted.try_invert(transform)).
 2. INPUT: fixed both.
    BUILD: leg_params ctor 100, leg_params::activate 100, legs_ik::activate 100, legs_ik::tick 100,
-   leg_params::tick 97.42, legs_ik ctor 78.79, dtor 85.71, process 86.43. cc inits 0% (pairing artifact).
+   leg_params::tick 97.42, legs_ik ctor 78.79, dtor 85.71, process 86.43. cc inits unscored (report.json None; pairing artifact).
    DIFF(ctor): target writes m_*_transition_time_calculator.m_value right after the interpolators; my empty
    calculator ctor skipped it. DIFF(process): ASSERT block entirely target-only (ASSERT(success) compiled out -
    warning C4189 'success unreferenced'); matrices->c.xyz().y emitted an out-of-line xyz() call + temp.
@@ -62,6 +62,6 @@ Branch off `chore/remove-slow-machine-notes`.
 ## Outcome
 All remaining functions implemented + anchored. 100%: leg_params ctor/activate, legs_ik ctor/activate/tick.
 97.42% leg_params::tick (extra LTCG frame slot). 85.71% dtor (ICF-folded member-dtor this-setup).
-90% process (get_skeleton temp-spill 0xC frame shift + R_ASSERT report half). cc inits effectively DONE (0% pairing
-artifact). get_additional_length stays 65.38% (operator| inline-vs-call). Regressions: layout churn on unrelated
+90% process (get_skeleton temp-spill 0xC frame shift + R_ASSERT report half). cc inits effectively DONE (report.json
+None - universal cc dynamic-init/atexit name-pairing artifact, not 0%). get_additional_length stays 65.38% (operator| inline-vs-call). Regressions: layout churn on unrelated
 symbols from added statics (objdiff name-pairing), not code regressions; report-changes.json clean on final rebuild.
