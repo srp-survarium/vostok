@@ -98,7 +98,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     shape. New guidelines: re-diff both residuals against source, do NOT bank as LTCG. Findings: a `const`
     method assigning a member needs the member `mutable` (mangles @@?BE); access-specifier must match target
     COFF mangling (members moved to protected to get MAE/IAE/IBE, not public UAE).
-- game_core::legs_ik_processor::leg_params::{set_heel_transition_time,set_toe_transition_time,set_heel_on_ground,set_toe_on_ground} -> STATE[set_heel_on_ground 100%, set_toe_on_ground 100%, set_heel_transition_time 83.69%, set_toe_transition_time 83.69%|DONE] -> PR #128 (regressions: none)
+- game_core::legs_ik_processor::leg_params::{set_heel_transition_time,set_toe_transition_time,set_heel_on_ground,set_toe_on_ground} -> STATE[set_heel_on_ground 100%, set_toe_on_ground 100%, set_heel_transition_time 83.69%, set_toe_transition_time 83.69%|DONE] -> PR #134 (regressions: none)
   - GROUPED unit (4 trivial nested-struct setters), STACKED on #127. bool setters 100%; transition setters
     83.69% DONE (LTCG arg passing). Findings (no banking as LTCG): (1) the bool setters' `if` materializes a
     THIRD bool temp [ebp-0Ch] for the && RESULT - it is the inlined `is_full_on_ground()` whose body is

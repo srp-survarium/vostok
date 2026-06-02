@@ -93,29 +93,17 @@ void legs_ik_processor::leg_params::tick( float dt )
 	// ******
 }
 
-// STATE[83.69%|DONE]: LTCG arg passing - target loads tr_time->xmm0, heel->xmm1
-// (arg-position order); base loads heel->xmm0, tr_time->xmm1 (the link-time
-// custom register convention for the min call). Same instrs/frame/store; the
-// only divergence is which xmm each arg lands in. Source order is correct.
+// STATE[83.69%|DONE]: residual is LTCG call-boundary arg passing - the two min()
+// float args land in swapped xmm registers (target tr_time->xmm0, member->xmm1).
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 {
 	heel_transition_time = math::min( tr_time, heel_transition_time );
-
-	// FUNCTION BODY
-	// <0x6fa939>|0x009|+0x01a:'71'
-	// ******
-	// target arg load (the only diff): movss xmm0,[ebp+8] (tr_time); mov eax,[ebp-8];
-	//   movss xmm1,[eax+14h] (heel)  ->  base: movss xmm0,heel; movss xmm1,tr_time
 }
 
-// STATE[83.69%|DONE]: LTCG arg passing - see set_heel_transition_time.
+// STATE[83.69%|DONE]: LTCG call-boundary arg passing - see set_heel_transition_time.
 void legs_ik_processor::leg_params::set_toe_transition_time( float tr_time )
 {
 	toe_transition_time = math::min( tr_time, toe_transition_time );
-
-	// FUNCTION BODY
-	// <0x6fa909>|0x009|+0x01a:'76'
-	// ******
 }
 
 // STATE[100%|DONE]
