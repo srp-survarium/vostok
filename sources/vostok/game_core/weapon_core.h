@@ -32,6 +32,9 @@ namespace vostok {
 namespace ai {
 	class fsm;
 }
+	// claude@NOTE: temp_include_all anchor; friended below so it can call the
+	// private initialize_weapon_logic (target mangles it AAE).
+	void use_game_core_weapon_core_initialize_weapon_logic( );
 }
 
 namespace survarium {
@@ -259,19 +262,6 @@ public:
 
 			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
 
-			void								initialize_weapon_logic			(
-													weapon_core_base_state_ptr const&	inactive_state,
-													weapon_core_base_state_ptr const&	show_state,
-													weapon_core_base_state_ptr const&	hide_state,
-													weapon_core_base_state_ptr const&	idle_state,
-													weapon_core_base_state_ptr const&	reload_state,
-													weapon_core_base_state_ptr const&	fire_state,
-													weapon_core_base_state_ptr const&	aim_state,
-													weapon_core_base_state_ptr const&	aim_fire_state,
-													weapon_core_base_state_ptr const&	chamber_a_round_state,
-													weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
-												);
-
 	inline	weapon_core_base_state&				current_base_state				( ) const { /* no source */ }
 
 			float								computed_backward_recoil_time	(
@@ -319,6 +309,23 @@ public:
 	virtual	void								on_user_sprint					( bool user_is_sprinting );
 
 private:
+	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it
+	// in a private section. The temp_include_all anchor is a friend so it can call it.
+			void								initialize_weapon_logic			(
+													weapon_core_base_state_ptr const&	inactive_state,
+													weapon_core_base_state_ptr const&	show_state,
+													weapon_core_base_state_ptr const&	hide_state,
+													weapon_core_base_state_ptr const&	idle_state,
+													weapon_core_base_state_ptr const&	reload_state,
+													weapon_core_base_state_ptr const&	fire_state,
+													weapon_core_base_state_ptr const&	aim_state,
+													weapon_core_base_state_ptr const&	aim_fire_state,
+													weapon_core_base_state_ptr const&	chamber_a_round_state,
+													weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
+												);
+
+	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:
 	/* 0x0000 */	/* inventory_item */
