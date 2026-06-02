@@ -774,6 +774,39 @@ namespace vostok
 		// Escape the computed index so LTCG does not elide the static body.
 		u32 index = survarium::player_logic_base_state::movement_animation_index( input );
 		example_callback( reinterpret_cast< pcstr >( &index ) );
+
+		// player_logic_base_state is abstract (pure selected_animations); a concrete
+		// derived stub gives a constructible instance whose ctor observes the member
+		// stores. The anchor never runs, so fabricated references are fine.
+		struct concrete_logic_state : survarium::player_logic_base_state
+		{
+			concrete_logic_state( survarium::weapon_user_animations_selector& owner )
+				: survarium::player_logic_base_state( owner, survarium::type_stand ) {}
+
+			// player_logic_base_state leaves fsm_state's initialize/execute/finalize
+			// pure; override them all so the stub is concrete.
+			virtual void initialize( ) override { }
+			virtual void execute( ) override { }
+			virtual void finalize( ) override { }
+
+			virtual std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+				selected_animations(
+					mutable_buffer&,
+					survarium::weapon_animation_parameters const&,
+					bool ) const override
+			{
+				VOSTOK_UNREACHABLE_CODE( );
+			}
+		};
+
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+		survarium::base_player&						user	= *reinterpret_cast< survarium::base_player* >( NULL );
+
+		concrete_logic_state	state( owner );
+		state.survarium::player_logic_base_state::set_user( user );
+
+		// Escape &state so LTCG observes the ctor's member stores.
+		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
 
