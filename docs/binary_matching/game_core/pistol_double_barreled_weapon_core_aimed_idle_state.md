@@ -52,13 +52,13 @@ temp_include_all anchors + the cook template (mirror #153). Otherwise objdiff sc
 ## Commands run
 - pdb_rich_query --index binaries/rich/target/index.jsonl --list   (RVAs + mangled chars)
 - pdb_fetch --target-index ... --rva <rva> --view target            (per-fn asm, all 8)
-- python3 scripts/rebuild.py   (NO module arg; relinks EXE ~20 min)
+- python3 scripts/rebuild.py   (NO module arg; relinks EXE)
 
 ## INCIDENT: first rebuild wasted - cpp written to wrong dir
 The cpp lives at `sources/vostok/game_core/SOURCES/<file>.cpp` (note the `/sources/`); the .h
 lives at `sources/vostok/game_core/<file>.h`. First Write dropped the `/sources` segment and
 created the cpp next to the header, so ninja compiled the UNTOUCHED stub cpps and the first
-~20-min relink was against stubs. Killed it, `mv`'d the files into `sources/`, restarted.
+full relink was against stubs. Killed it, `mv`'d the files into `sources/`, restarted.
 LESSON: after writing a NEW .cpp, `git status` it - a `??` under the header dir (not under
 `.../sources/`) means it is misplaced; the build silently uses the old stub. Also: the trailing
 getter `call empty_stub` is the existing get_weapon_lexeme_pair_impl temporary cleanup (present
@@ -98,7 +98,7 @@ get_weapon_lexeme_pair_impl) are all clean. This is the documented relink-churn 
    getters that matched 99.92% with NO trailing ASSERT in source. Adding a trailing ASSERT would
    inject an EXTRA `mov byte,0; lea; call` the target does not have. Only the ctors have a real
    trailing-ASSERT eater (the `mov byte,0; lea; call` shape).
-3. (time-saver) After Write-ing a NEW .cpp, `git status` it before kicking off the ~20-min
+3. (time-saver) After Write-ing a NEW .cpp, `git status` it before kicking off the full
    rebuild: a cpp belongs under `.../game_core/sources/`, the header under `.../game_core/`. A
    `??` entry directly under the header dir means the path dropped its `/sources` segment and the
    build will silently compile the OLD stub - a wasted full relink. (Cost me one here.)
