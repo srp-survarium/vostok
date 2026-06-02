@@ -511,6 +511,8 @@ namespace vostok
 
 		example_callback( reinterpret_cast< pcstr >( &a ) );
 		example_callback( reinterpret_cast< pcstr >( &b ) );
+	}
+
 	void use_game_core_player_logic_base_state()
 	{
 		survarium::player_input input;
