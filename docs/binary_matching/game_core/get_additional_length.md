@@ -84,3 +84,19 @@ all constants, and the ternary control flow are byte-exact.
 Regressions caused: none (report-changes shows only `basic_streambuf::imbue` 100->0, an
 unrelated CRT/STL streambuf function I did not touch - a build-ordering report flake).
 Inlining: the single `operator|` call site (whole-program, unsteerable).
+
+## Deep pass (anchor-removal, match/game_core-legs_ik_processor-deep)
+Hypothesis: the direct fake-observation anchor `use_game_core_get_additional_length`
+(NULL args, escaped float result) might have forced the `operator|` inline. process_leg
+(its real caller) is now anchored transitively via the real `processor` instance in
+`use_game_core_legs_ik_processor`, so the direct anchor + its IncludeAll dispatch line
+were removed (temp_include_all.cpp).
+- COMMAND: python3 scripts/rebuild.py (no module arg); python3 scripts/legs_scores.py;
+  pdb_fetch --base-index binaries/rich/base/index.jsonl --target-index binaries/rich/target/index.jsonl --function get_additional_length --view diff
+- RESULT: 65.38% UNCHANGED. The diff is byte-identical to the PR #159 baseline - base still
+  inlines the one `operator|` call site, target still emits `call vostok::math::operator|`,
+  same `sub esp,24h` vs `20h` cascade. Function still SCORES (not dead-stripped) - reached
+  transitively through process_leg.
+- CONCLUSION: the residual is GENUINE per-call-site whole-program LTCG inline-vs-call, NOT an
+  anchor-observation artifact. The fake anchor was redundant clutter (correctly removed) but
+  was never the cap. Stays 65.38% PARTIAL.

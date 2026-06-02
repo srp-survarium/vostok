@@ -113,3 +113,19 @@ nix develop --command pdb_fetch --target-index binaries/rich/target/index.jsonl 
 # byte-diff via COFF parser on binaries/objdiff/{target,base}/.../legs_ik_processor.cpp.obj
 # scores read from binaries/objdiff/report.json (fuzzy_match_percent per mangled symbol).
 ```
+
+## Deep pass (anchor-removal, match/game_core-legs_ik_processor-deep)
+The entire `use_game_core_legs_ik_processor_leg_params` direct anchor was removed (it
+escaped a fake live leg_params and took the setters' addresses). Every leg_params member is
+reached transitively through the real `processor` instance in `use_game_core_legs_ik_processor`:
+- ctor                         <- legs_ik_processor ctor
+- set_*_transition_time        <- private set_*_on_ground(leg_params&,bool) helpers <- public processor setters
+- leg_params::set_heel/toe_on_ground(bool) <- same private helpers
+- leg_params::activate         <- legs_ik_processor::activate
+- leg_params::tick             <- legs_ik_processor::tick
+- COMMAND: python3 scripts/rebuild.py; python3 scripts/legs_scores.py
+- VERIFIED: every leg_params fn still SCORES in report.json (none dead-stripped):
+  ctor 100, set_heel/toe_on_ground(bool) 100, set_*_transition_time 83.69, activate 100,
+  tick 97.42 - all UNCHANGED vs PR #159. So the prior fake-observation anchor was redundant
+  and was NOT the cap; the set_*_transition_time 83.69 residual stays the call-boundary LTCG
+  arg-passing already documented for these.
