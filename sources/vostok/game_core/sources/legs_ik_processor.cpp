@@ -10,7 +10,7 @@
 #include <vostok/physics/api.h>
 #include <vostok/physics/character_controller.h>
 
-// claude@NOTE: get_relative_matrix is an inline math helper (target rva 0xcb050,
+// claude@NOTE: get_relative_matrix is an inline math helper (target rva 0xbb050,
 // math_float4x4_inline_2.h) not present in our headers; defined here so
 // get_foot_fixed_transform's out-of-line `call vostok::math::get_relative_matrix`
 // resolves. Reconstructed from binaries/structure/target.
