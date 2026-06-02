@@ -80,15 +80,16 @@ float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, 
 // asm (cc_bool for debug_draw/rot_axis/adjust_hip, cc_float for foot_capsule). See
 // dispersion_calculator.cpp / bullet.cpp for the identical-shape reference inits.
 //
-// claude@NOTE: objdiff scores every `dynamic initializer`/`dynamic atexit
-// destructor` thunk 0% because it does not pair the base `??__E.../??__F...`
-// mangled names with the target's demangled "dynamic initializer/destructor"
-// names - the SAME 0% the already-accepted dispersion/bullet cc inits report. The
+// claude@NOTE: report.json leaves every `dynamic initializer`/`dynamic atexit
+// destructor` thunk UNSCORED (fuzzy_match_percent: None) - objdiff does not pair the
+// base `??__E.../??__F...` mangled names with the target's demangled "dynamic
+// initializer/destructor" names. This is the SAME None every cc init in the codebase
+// reports (dispersion/bullet/etc.), a universal name-pairing artifact, not 0%. The
 // emitted base bytes match: cc_float's init is byte-identical to target; cc_bool's
 // init differs only in that the target passes the cc_bool ctor's command_type/
 // execution_filter args in registers (whole-program LTCG fastcall) where base
 // passes them on the stack - a call-boundary arg-passing artifact, not a source
-// divergence. So these are effectively DONE (capped only by the 0% pairing
+// divergence. So these are effectively DONE (capped only by the None pairing
 // artifact); the deeper second pass need not revisit them.
 static bool		s_ik_legs_debug_draw_value		= false;
 static float	s_ik_foot_capsule_radius_value	= 0.0f;
@@ -111,9 +112,7 @@ legs_ik_processor::leg_params::leg_params( ) :
 {
 }
 
-// STATE[100%|DONE]: bone indices resolved by walking the parent chain
-// (foot->leg->knee->up_leg) + children_begin for the toe; each index is
-// skeleton::get_bone_index(bone).
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleton, pcstr foot_bone_name )
 {
 	animation::skeleton_bone const&	foot_bone	= skeleton.get_bone( skeleton.get_bone_index( foot_bone_name ) );
@@ -185,8 +184,7 @@ void legs_ik_processor::leg_params::set_toe_on_ground( bool value )
 		m_time_since_stance = 0.0f;
 }
 
-// STATE[100%|DONE]: m_*_transition_time_calculator default (m_value=0.1f) was the
-// key - the calculator member ctors write that const right after the interpolators.
+// STATE[100%|DONE]
 legs_ik_processor::legs_ik_processor( ) :
 	m_drawer				( NULL ),
 	m_character_controller	( NULL ),
