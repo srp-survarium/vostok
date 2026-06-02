@@ -7,9 +7,10 @@
 
 namespace survarium {
 
-/*
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::get_weapon_lexeme_pair_impl(vostok::mutable_buffer&, char const*, vostok::resources::managed_resource_ptr const&, void const*, vostok::animation::animation_playback_state const&, const unsigned int, const float, const vostok::animation::mixing::playback_enum, vostok::animation::base_interpolator const&)
+// STATE[STUB]: body still the carcass; only declared/defined so the weapon_core_*_state
+// get_weapon_lexeme_pair callers link and can be scored (orchestrator note for PR matching
+// the two state classes). The real body is matchable 1:1 from asm (rva 0x7b13e0) - see the
+// carcass below - but is out of scope for this unit.
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
 	pcstr										identifier,
@@ -73,6 +74,11 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	// <1>
 	// <0x7b156c>|0x18c|+0x065:'61'
 	// ******
+
+	return weapon_lexeme_pair(
+		*reinterpret_cast< animation::mixing::animation_lexeme const* >( NULL ),
+		*reinterpret_cast< animation::mixing::animation_lexeme const* >( NULL )
+	);
 }
-*/
+
 } // namespace survarium
