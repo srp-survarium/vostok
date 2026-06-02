@@ -6,18 +6,20 @@
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_state.h>
 #include <vostok/game_core/breath_holding_params.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/console_command.h>
 
 namespace survarium {
-/*
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_enable_breath_vibration_cc''()
-void `dynamic initializer for 's_enable_breath_vibration_cc''( )
-{
-	// FUNCTION BODY
-	// <0x7db2f0>|0x000|      :'15'	{
-	// ******
-}
-*/
+
+// STATE[None|DONE]: `dynamic initializer for 's_enable_breath_vibration_cc'`. The
+// dynamic initializer is the static construction of s_enable_breath_vibration_cc
+// below. Like dispersion_calculator's s_dispersion_enabled_cc it is objdiff-
+// unscorable (None) - the file-static cc_bool's init/atexit thunks are LTCG/ICF
+// folded so no standalone symbol re-attaches. asm: push 1 (serializable), value
+// ref, "breath_vibration_enable", command_type_user_specific (eax=1), default
+// execution_filter (ecx=0).
+static bool s_enable_breath_vibration_value = true;
+static console_commands::cc_bool s_enable_breath_vibration_cc( "breath_vibration_enable", s_enable_breath_vibration_value, true, console_commands::command_type_user_specific );
 // STATE[100%|DONE]
 breath_vibration_calculator::breath_vibration_calculator( )
 	:	m_user						( 0 ),
@@ -93,7 +95,20 @@ bool true_predicate( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB|INPROGRESS]: NOT matched this unit (large, ~0x3bc bytes). Reconstructed
+// shape (verified from 0x5837e0 asm, see _tick.md): new three breath_state subclasses
+// (normal/holding/shortbreathing) via VOSTOK_NEW_IMPL(g_allocator, ...), add_state x3,
+// then five add_transition( from, to, pred ) calls:
+//   (normal,        holding,        boost::bind(&hold_button_state_equals_to,this,true))
+//   (holding,       normal,         boost::bind(&hold_button_state_equals_to,this,false))
+//   (holding,       shortbreathing, boost::bind(&insufficient_breath,this))
+//   (shortbreathing,normal,         true_predicate)
+//   (shortbreathing,holding,        true_predicate)
+// NEXT STEP to match: switch this cpp's #include from breath_state.h to
+// breath_holding_states.{h,inline} (the duplicate breath_state defn conflict must be
+// resolved first - the subclass ctors/vtables live there), make initialize_logic
+// private in the header (target mangles AAE; currently public -> scores None), write
+// the body above, and anchor by calling it transitively (the ctor already calls it).
 void breath_vibration_calculator::initialize_logic( )
 {
 	// LOCALS
@@ -119,41 +134,60 @@ void breath_vibration_calculator::initialize_logic( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[94.23%|PARTIAL]: body, control flow, member offsets, virtual dispatch and FPU
+// math all match the target structure 1:1 (see _tick.md). The residual is /Od frame-slot
+// churn: target frames sub esp,38h vs base 30h, so the saved `this` slot is [ebp-24h]
+// (target) vs [ebp-1Ch] (base) and the two m_user loads at the local_time vcall site swap
+// registers. Not source-steerable (no missing local/brace/ASSERT - LOCALS dt/current_state/
+// current_phase all present, statements identical). math::max/min/sin stay out-of-line as
+// in the target.
 void breath_vibration_calculator::tick( u32 const current_time_in_ms, float const time_scale )
 {
-	// LOCALS
-	// float 						dt
-	// breath_state* 				current_state
-	// float 						current_phase
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) );
 
-	// CALL SITE INFO
-	// <0x59366f> -> void <unknown>(const float)
-	// <0x59371c> -> u32 <unknown>(const u32) const
-	// ******
+	if ( current_time_in_ms < m_last_time_in_ms )
+		return;
+
+	float const dt = ( current_time_in_ms - m_last_time_in_ms ) * math::epsilon_3 * time_scale;
+
+	m_last_time_in_ms = current_time_in_ms;
+	m_logic.tick( );
+	breath_state* const current_state = static_cast< breath_state* >( m_logic.current_state( ) );
+
+	current_state->tick( dt );
+	m_target_multiplier = current_state->get_multiplier( );
+
+	m_current_multiplier = m_current_multiplier > m_target_multiplier
+		? math::max( m_current_multiplier - m_params->multiplier_decrease_speed * dt, m_target_multiplier )
+		: math::min( m_current_multiplier + m_params->multiplier_increase_speed * dt, m_target_multiplier );
+
+	float const current_phase = m_user->local_time( current_time_in_ms ) * math::epsilon_3 * math::pi_x2 * time_scale;
+	m_horizontal_value	= math::sin( current_phase / m_params->horizontal_peroid ) * m_params->horizontal_amplitude * m_character_multiplier * m_current_multiplier;
+	m_vertical_value	= math::sin( current_phase / m_params->vertical_peroid ) * m_params->vertical_amplitude * m_character_multiplier * m_current_multiplier;
+	if ( !s_enable_breath_vibration_value )
+		m_horizontal_value = m_vertical_value = 0.0f;
 
 	// FUNCTION BODY
-	// <0x5935f9>|0x009|+0x00c:'76'
-	// <0x593605>|0x015|+0x00b:'77'
-	// <0x593610>|0x020|+0x005:'78'
+	// <0x5935f9>|0x009|+0x00c:'76'	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) )
+	// <0x593605>|0x015|+0x00b:'77'	if ( current_time_in_ms < m_last_time_in_ms ) return
+	// <0x593610>|0x020|+0x005:'78'	float const dt = ...
 	// <0>
-	// <0x593615>|0x025|+0x022:'80'
-	// <0x593637>|0x047|+0x009:'81'
-	// <0x593640>|0x050|+0x008:'82'
+	// <0x593615>|0x025|+0x022:'80'	m_last_time_in_ms = current_time_in_ms
+	// <0x593637>|0x047|+0x009:'81'	m_logic.tick()
+	// <0x593640>|0x050|+0x008:'82'	current_state = static_cast<breath_state*>( m_logic.current_state() )
 	// <0>
-	// <0x593648>|0x058|+0x015:'84'
-	// <0x59365d>|0x06d|+0x014:'85'
+	// <0x593648>|0x058|+0x015:'84'	current_state->tick( dt )
+	// <0x59365d>|0x06d|+0x014:'85'	m_target_multiplier = current_state->get_multiplier()
 	// <0x593671>|0x081|+0x01a:'86'
 	// <0>
 	// <1>
-	// <0x59368b>|0x09b|+0x07c:'89'
+	// <0x59368b>|0x09b|+0x07c:'89'	m_current_multiplier = cond ? max(...) : min(...)
 	// <0>
-	// <0x593707>|0x117|+0x036:'91'
-	// <0x59373d>|0x14d|+0x039:'92'
-	// <0x593776>|0x186|+0x039:'93'
-	// <0x5937af>|0x1bf|+0x00b:'94'
-	// <0x5937ba>|0x1ca|+0x020:'95'
+	// <0x593707>|0x117|+0x036:'91'	float const current_phase = ...
+	// <0x59373d>|0x14d|+0x039:'92'	m_horizontal_value = ...
+	// <0x593776>|0x186|+0x039:'93'	m_vertical_value = ...
+	// <0x5937af>|0x1bf|+0x00b:'94'	if ( !s_enable_breath_vibration_value )
+	// <0x5937ba>|0x1ca|+0x020:'95'	m_horizontal_value = m_vertical_value = 0.0f
 	// <0>
 	// ******
 }
