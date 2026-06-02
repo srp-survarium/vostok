@@ -111,3 +111,18 @@ and our base PDB, checked at the raw CodeView-kind level with 0 parse errors. Th
 debug info only appears in later toolchains. So clusters cannot be derived from the
 PDB; infer inlining reactively from the diff (a missing/extra `call` plus a large
 statement-offset delta), per section 5.
+
+### Reconstruct the full carcass (VAs/+delta/[n]/<n>) from `--view structure`  [open]
+WANT: a reliable way to regenerate the STANDARD `// FUNCTION BODY` carcass
+(`<absVA>|offset|+delta[|[n]]:'srcline'` + the no-address `<n>` empty lines) for a
+function whose generated structure file is missing (e.g. a template member like
+`body_part_parameters::fill_new_stats_item<statistics_item<46,16>>`, #119).
+PROBLEM: `pdb_fetch --view structure` lists only the addressed statements in a
+non-standard `offset <size> Lline` form - it DROPS the empty/no-address `<n>` lines
+and is not the `<VA>|offset|+delta:'srcline'` carcass format. For #119 we converted by
+hand (absVA = rva + offset, +delta = <size>) and re-inserted the `<n>` markers by
+inferring them from the GAPS in the source line numbers (288/292/296/298/304 absent =
+no-address lines). That hand method is fragile; the `<n>` placement is a guess.
+OPEN: should `pdb_fetch` emit the standard carcass (incl. empty lines) directly, so
+matchers/reviewers don't reconstruct it by hand? Until then, treat a `--view structure`
+carcass as approximate.
