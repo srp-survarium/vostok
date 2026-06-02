@@ -203,3 +203,20 @@ block, NOT a function-scope statement between blocks.
 4. **Call-boundary temps.** is_similar epsilon passed as the lone stack arg (`add esp,4`) while
    base also pushes a ptr (`add esp,8`); operator*/-/^ temp materialization. Permitted LTCG/
    call-boundary class.
+
+## REVIEW (claude, no rebuild) - verified 80.96% PARTIAL, structure confirmed, one residual under-attributed
+- report.json `fuzzy_match_percent` for `?process_leg@legs_ik_processor@survarium@@AAEX...` = **80.9602** -
+  the `.cpp` STATE, this `.md`, and PROGRESS.md all agree. PARTIAL tag correct (not 100%).
+- §2a STRUCTURE check PASSES: TARGET structure (binaries/structure/target/.../legs_ik_processor.cpp)
+  shows the three `[1]:'205'` / `[1]:'231'` / `[1]:'245'` block-opens; BASE structure now shows exactly
+  three `[1]` block-opens (base srclines 383/401/410, the dump's first-in-block lines; was ZERO before the
+  restructure). The brace restructure is real and faithful.
+- The DUPLICATE `leg_obj = matrices[leg]*knee` (block 2 srcline 232 AND block 3 srcline 245) is NOT a
+  reviewer logic bug: the target structure emits the recompute at BOTH 232 and 245. Reproducing it is
+  correct (MATCHING.md #1). No base/target confusion - get_angle is genuinely a STUB in base (ik_utils.h)
+  so base inlines / target calls out-of-line, the direction in STATE is correct.
+- CAVEAT on residual (1): the target LOCALS dump declares an extra block-1 `original_up_leg_to_foot_dir<1>`
+  (a `float3 const&`) that the source does NOT declare; the `[ebp-150h]` working-slot residual is plausibly
+  that missing in-block dir local, i.e. a RECOVERABLE matching item (declare the extra block-1 normalize
+  local, route the dir reads through it), not purely an unsteerable compiler copy. Flagged for a faster
+  machine as the concrete next step before banking it as non-reproducible. STATE stays PARTIAL (honest).
