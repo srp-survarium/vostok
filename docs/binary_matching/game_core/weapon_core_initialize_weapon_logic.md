@@ -107,3 +107,29 @@ two original idioms (named function0 local + assign vs direct temporary) and spl
 the body to match both regions; OR accept the ~one-form residual as a documented
 template-instantiation-shape limit. The carcass should be restored (non-100%) —
 flagged for the reviewer.
+
+## Reviewer audit (claude, no rebuild — review-only)
+Re-ran the five checks against `--view target`/`--view diff` and report.json
+(95.69019 → 95.69%, confirmed in `.cpp` STATE, here, and PROGRESS).
+- **Form A / Form B residual diagnosis HELD UP.** Counted in the target asm:
+  exactly **56** `behaviour_cook_params`(folded function0 default ctor) + 56
+  `assign_to` (Form A, transitions 0-55) and **16** `boost::function<bool(void)>::
+  function<bind_t>` converting ctors (Form B, transitions 56-71), 56+16 = 72.
+  `add esp` tally: 41×`14h` + 15×`10h` (Form A) vs 11×`4` (Form B). The `--view
+  diff` tail shows BASE emitting Form A (`add esp,14h` + function-ctor + `assign_to`)
+  where TARGET emits Form B (`add esp,4` + converting ctor) — base/target the right
+  way round. The residual is the boost::function instantiation shape, NOT a wrong
+  predicate / missing-extra transition / wrong enum / missing ASSERT.
+- **72 add_transition / 10 add_state verified.** Extracted the target's ordered
+  (predicate, enum) sequence for all 72 transitions and diffed it against the source:
+  ZERO mismatches once the Form-B `push 0`(bind int arg) is excluded from the enum
+  read. Enum map confirmed from the target pushes: idle=0, fire=1, aim=2, aim_fire=3,
+  reload=4, inactive=5. Predicate counts match (30 target_predicate, 22
+  target_and_animation_ended, etc.). `finalize_impl` ASSERT recovered correctly
+  (`mov byte[ebp-29h],0; lea eax,[ebp-29h]; call ...finalize_impl`).
+- **Carcass restored** from the matcher's malformed `/* ... */` duplicate-signature
+  + LOCALS scratch block to a proper inline `// FUNCTION BODY` comment block (all
+  `<0>`/`<1>` marker lines verbatim), per MATCHING.md non-100% rule. Comment-only.
+- PROGRESS rva corrected (was the base-region `0x5a3130`; target rva is `0x597020`).
+- No stray logs; the chamber-a-round flag guards (`byte[+48Dh]`, `cmp [ebp-4],0`,
+  nested `m_chamber_a_round_on_reload`) match the target's branch structure.
