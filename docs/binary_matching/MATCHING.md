@@ -239,7 +239,11 @@ more nuanced than this, but this is the working approximation.)
 your function has its OWN structure in `binaries/structure/base/<unit>` (the base PDB's
 statement/block layout); the target's is the `// FUNCTION BODY` carcass (the original
 source's shape). COMPARE the two: the same set of `'srcline'` statements, the same `[n]`
-block-opens, and the same `<n>` (no-address) lines should appear on BOTH sides. A block the
+block-opens, and the same `<n>` (no-address) lines should appear on BOTH sides.
+**Compare each statement's SIZE too:** the per-statement `+delta` (bytes to the next
+statement) should roughly agree between base and target - a statement whose `+delta`
+differs is exactly where the codegen diverged, a fast way to localize the mismatch before
+a byte diff. A block the
 base has that the target lacks - a `[n]`/`<n>` from braces you added, a missing early
 `return`, a different loop/`if` shape - means your CONTROL STRUCTURE diverges, even when the
 fuzzy % is high. **A high % over the wrong structure is not a match;** fix the source's shape

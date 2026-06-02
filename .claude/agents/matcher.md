@@ -75,10 +75,12 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   secondary fuzzy %); use the diff for the *location*.
 - **Compare STRUCTURE, not just the %:** diff your function's layout in
   `binaries/structure/base/<unit>` against the target `// FUNCTION BODY` carcass - same
-  `'srcline'` statements, same `[n]` block-opens, same `<n>` (no-address) lines on BOTH
-  sides. An extra/missing block (braces you added, an `if`-vs-early-`return`, a loop-shape
-  diff) is a real control-structure mismatch even at a high %; fix the source to the
-  target's structure - a high % over the wrong structure is not a match. (MATCHING.md.)
+  `'srcline'` statements, same `[n]` block-opens, same `<n>` (no-address) lines, and roughly
+  the same per-statement `+delta` SIZE on BOTH sides (a statement whose `+delta` differs is
+  where codegen diverged - a fast localizer). An extra/missing block (braces you added, an
+  `if`-vs-early-`return`, a loop-shape diff) is a real control-structure mismatch even at a
+  high %; fix the source to the target's structure - a high % over the wrong structure is
+  not a match. (MATCHING.md.)
 - **Missing type?** Pull its declaration from `binaries/structure/target` and
   declare it near the use (section 4).
 - **Stop** when matched, or when only LTCG/inlining artifacts remain. You decide;
