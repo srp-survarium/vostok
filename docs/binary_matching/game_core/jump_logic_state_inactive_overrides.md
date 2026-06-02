@@ -65,10 +65,11 @@ COMDAT-folded `breath_state*` symbols mapped onto it.
 1. `jump_logic_state_inactive.h`: `initialize() { }`, `is_ready_for_transition()
    const { return true; }`; STATE markers -> `100%|DONE`.
 2. `temp_include_all.cpp`: `#include "jump_logic_state_inactive.h"` + new
-   `use_game_core_jump_logic_state_inactive()` anchor (address-of both members to
-   force standalone out-of-line symbols, construct an instance with a fabricated
-   `jump_logic&` owner, qualified non-virtual calls, escape via `example_callback`),
-   wired into `IncludeAll::IncludeAll()`.
+   `use_game_core_jump_logic_state_inactive()` anchor (member-fn address-of ONLY:
+   `&...::initialize` / `&...::is_ready_for_transition`, escaped via `example_callback`,
+   to force a standalone out-of-line body for each). It deliberately does NOT construct
+   an instance - see "Anchor (final)" below for why (an earlier construct-an-instance
+   variant failed with C4716/LNK1257). Wired into `IncludeAll::IncludeAll()`.
 
 ## Rebuild / score
 
