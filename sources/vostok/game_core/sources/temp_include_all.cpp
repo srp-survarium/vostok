@@ -71,6 +71,7 @@
 #include <vostok/game_core/weapon_dispersion_calculator.h>
 #include <vostok/game_core/weapon_recoil_params.h>
 #include <vostok/game_core/character_dispersion_params.h>
+#include <vostok/game_core/weapon_dispersion_params.h>
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
@@ -372,6 +373,20 @@ namespace vostok
 		params.load( cfg );
 
 		example_callback( reinterpret_cast< pcstr >( &params ) );
+	}
+
+	void use_game_core_weapon_dispersion_params( )
+	{
+		// Both ctors store constants; escape &obj through the opaque sink so
+		// LTCG observes the stores (else they are dead-store-eliminated and the
+		// ctor compiles empty - the #107 18% trap).
+		configs::binary_config_value cfg;
+
+		survarium::weapon_dispersion_params default_params;
+		survarium::weapon_dispersion_params config_params( cfg );
+
+		example_callback( reinterpret_cast< pcstr >( &default_params ) );
+		example_callback( reinterpret_cast< pcstr >( &config_params ) );
 	}
 
 	void use_recoil_calculator( )
@@ -1088,6 +1103,7 @@ IncludeAll::IncludeAll()
 	vostok::use_victory_item_core( );
 	vostok::use_game_core_weapon_recoil_params( );
 	vostok::use_game_core_character_dispersion_params( );
+	vostok::use_game_core_weapon_dispersion_params( );
 	vostok::use_recoil_calculator( );
 	vostok::use_dispersion_calculator( );
 	vostok::use_character_dispersion_calculator( );
