@@ -351,3 +351,20 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - Anchored transitively (weapon_core_idle_state::get_weapon_lexeme_pair, already anchored, calls it).
   - 53 regressed / 58 improved in report-changes = the documented relink ICF/vcall-fold churn (vector-deleting
     dtors, thunks, btXxx, stlp_std); none are this fn or its callers.
+
+- game_core::weapon_core::initialize_weapon_logic (target rva 0x5a3130) -> STATE[95.69%|INPROGRESS] -> PR #156
+  (regressions: none)
+  - STRESS-TEST unit (the "how hard can it go" experiment). The weapon-logic FSM builder: ~10 `m_logic->add_state`
+    + 72 `m_logic->add_transition( from, to, boost::bind( &weapon_core::<predicate>, this[, weapon_target_enum] ) )`,
+    plus the chamber-a-round states/transitions guarded by the conditional weapon flags. The single
+    `fixed_size_allocator::finalize_impl` is the compiled-out ASSERT. Full structurally-faithful body written and
+    it scores 95.69% on the first rebuild - a strong result for a 122-statement boost::bind-heavy function whose
+    callees (`ai::fsm`, `boost::bind`/`boost::function`) are in-scope/template, so unlike #155 it DOES score.
+  - Residual (the ~4.3%): the per-transition `boost::function` construction has two instantiation SHAPES in the
+    target ("Form A" = named function0 local + assign_to vs "Form B" = converting temporary ctor); one source
+    idiom emits only one form, so a block of transitions mismatches on the function0 ctor/assign shape. This is a
+    template-instantiation-shape limit, NOT LTCG-arg-passing -> correctly INPROGRESS, not a banked DONE. Next step:
+    identify the two original idioms and split the body into the two regions.
+  - The matcher process died on a transient API ConnectionRefused right after the rebuild, before reading the %,
+    restoring the carcass, or committing. The orchestrator finalized STATE/.md/this ledger line from report.json
+    (no rebuild; body unchanged). Carcass restoration on this non-100% function flagged for the reviewer.
