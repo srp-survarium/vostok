@@ -382,3 +382,19 @@ objdiff reports `fuzzy: None` (NOT 0%) even though the body may be byte-identica
 size matches. Read the target's mangled access char (`grep -o '<name>@...@@[A-Z]AE'
 binaries/rich/target/index.jsonl`) and set the header's access specifier to match BEFORE
 the first build. (initialize_weapon_logic: target `AAE`, declared public -> `None`.)
+
+## A fake-observation direct anchor is RARELY the cap on a private method's %
+A private method kept alive by a DIRECT `temp_include_all` anchor that observes a fabricated
+object (`*reinterpret_cast<T*>(NULL)`, escaped result, address-taken setters) does NOT
+generally distort that method's own scored bytes. Codegen for the method body is driven by the
+method's own source, not by what its anchor does at the call site - so the anchor's fake
+observation changes the *anchor* function's bytes, not the matched method's. Verified on the
+`legs_ik_processor` deep pass: removing the fake-observation anchors for `get_foot_fixed_transform`
+/ `process_leg` / `get_additional_length` / `leg_params::*` (so the real `process()` call chain
+keeps them alive transitively) left every % byte-for-byte UNCHANGED (`--view diff` identical).
+LESSON: do NOT spend a rebuild "removing fake observation to flip LTCG" hoping a capped private
+method jumps - the cap is almost always genuine (a missing brace/structure, an inline-vs-call
+COMDAT, a call-boundary arg). Removing redundant anchors is worthwhile for source HYGIENE (the
+private method should be reached transitively, not fake-observed), but budget it as cleanup, not
+as a %-recovery move. If you DO remove an anchor, the one thing to re-verify is that every fn
+still SCORES in report.json (not dead-stripped) - that is the only real risk.

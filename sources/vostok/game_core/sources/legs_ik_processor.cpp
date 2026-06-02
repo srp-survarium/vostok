@@ -187,9 +187,16 @@ void legs_ik_processor::activate( animation::skeleton const& skeleton )
 	m_hip_bone	= &skeleton.get_bone( skeleton.get_bone_index( "Hip" ) );
 }
 
-// STATE[65.38%|PARTIAL]: sole residual is the dot-product - operator| did NOT inline in
-// the target (out-of-line call) but our /Ob2 build inlines it; not steerable from the
-// caller. Trail: docs/binary_matching/game_core/get_additional_length.md.
+// STATE[65.38%|PARTIAL]: only residual is the dot product `operator|` being INLINED
+// in base while the target emits a `call vostok::math::operator|` - a per-call-site
+// whole-program LTCG inline-vs-call of a trivial COMDAT (both binaries keep the
+// standalone operator|; base just inlined this site). Not steerable from this
+// function's source. The cascading frame shift (sub esp,24h vs 20h) and the extra
+// [ebp-18h] temp all follow from that one inline. Every other statement, all
+// constants (1.0f/0.5f/epsilon_5) and the ternary control flow are byte-exact.
+// claude@NOTE: confirmed GENUINE LTCG (not an anchor artifact). The fake-observation
+// direct anchor was removed (now reached only via process_leg/process); rebuilt and the
+// diff is byte-identical to before (still the one inlined operator|). 65.38% unchanged.
 float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len )
 {
 	float const knee_angle_cos	= upleg_dir | -leg_dir;
@@ -313,6 +320,9 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 // re-diff. The smaller residual IS the permitted call-boundary class (is_similar epsilon/ptr,
 // operator*/-/^ temps, a few xyz-fold inline-vs-call, the get_root_bones_count temp-roundtrip
 // sibling get_foot_fixed_transform (84%) also shows). Full trail in process_leg.md.
+// claude@NOTE: the fake-observation direct anchor (NULL-cast processor/params) was removed -
+// process_leg is now reached only via the real process() anchor. Rebuilt: 78.81% (unchanged),
+// the residual is genuine (the three-block bracing above), NOT the anchor distortion.
 void legs_ik_processor::process_leg(
 	legs_ik_processor::leg_params&		params,
 	float4x4 const&						target_foot_obj_matrix,
@@ -596,7 +606,10 @@ void legs_ik_processor::process_leg(
 // temp-materialization at the many math call boundaries (operator -+^* / normalize /
 // create_rotation / transform_position / is_similar / length / get_root_bones_count /
 // interpolated_value / adjust_foot_transform) and a couple of trivial-COMDAT
-// inline-vs-call decisions. Full trail in get_foot_fixed_transform.md.
+// inline-vs-call decisions. One unresolved statement: the else-branch single-byte
+// original_color write (0x64) - see @TODO. Full trail in get_foot_fixed_transform.md.
+// claude@NOTE: fake-observation direct anchor removed (now reached only via process());
+// rebuilt 84.23% (unchanged) - residual is genuine, not the anchor distortion.
 float4x4 legs_ik_processor::get_foot_fixed_transform(
 	legs_ik_processor::leg_params const&	params,
 	float4x4 const&						hip_world_matrix,
