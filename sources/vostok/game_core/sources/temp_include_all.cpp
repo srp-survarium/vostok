@@ -414,12 +414,16 @@ namespace vostok
 
 	void use_game_core_weapon_recoil_params( )
 	{
-		// Anchor the default ctor so its constant member stores are OBSERVED
-		// (escape &obj through the opaque sink); otherwise LTCG dead-store-
-		// eliminates them and the ctor compiles empty (the #107 18% trap).
+		// Anchor both ctors so their member stores are OBSERVED (escape &obj
+		// through the opaque sink); otherwise LTCG dead-store-eliminates them
+		// and the ctor compiles empty (the #107 18% trap).
 		survarium::weapon_recoil_params params;
 
+		configs::binary_config_value cfg;
+		survarium::weapon_recoil_params config_params( cfg );
+
 		example_callback( reinterpret_cast< pcstr >( &params ) );
+		example_callback( reinterpret_cast< pcstr >( &config_params ) );
 	}
 
 	void use_game_core_character_dispersion_params( )
