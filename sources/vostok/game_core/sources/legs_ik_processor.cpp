@@ -194,9 +194,6 @@ void legs_ik_processor::activate( animation::skeleton const& skeleton )
 // function's source. The cascading frame shift (sub esp,24h vs 20h) and the extra
 // [ebp-18h] temp all follow from that one inline. Every other statement, all
 // constants (1.0f/0.5f/epsilon_5) and the ternary control flow are byte-exact.
-// claude@NOTE: confirmed GENUINE LTCG (not an anchor artifact). The fake-observation
-// direct anchor was removed (now reached only via process_leg/process); rebuilt and the
-// diff is byte-identical to before (still the one inlined operator|). 65.38% unchanged.
 float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len )
 {
 	float const knee_angle_cos	= upleg_dir | -leg_dir;
@@ -312,7 +309,7 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// ******
 }
 
-// STATE[78.82%|PARTIAL]: two-bone IK math, all 58 statements / operands matched, but a
+// STATE[78.81%|PARTIAL]: two-bone IK math, all 58 statements / operands matched, but a
 // CONTROL-STRUCTURE divergence remains: the target carcass shows three [1] braced blocks
 // (at srclines 205/231/245 - the up_leg/knee/leg orientation stages) whose locals are PDB-
 // tagged <1> (original_*_dir, additive_len, up_leg_alpha_angle, rotation_matrix*, ...); my
@@ -324,9 +321,6 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 // re-diff. The smaller residual IS the permitted call-boundary class (is_similar epsilon/ptr,
 // operator*/-/^ temps, a few xyz-fold inline-vs-call, the get_root_bones_count temp-roundtrip
 // sibling get_foot_fixed_transform (84%) also shows). Full trail in process_leg.md.
-// claude@NOTE: the fake-observation direct anchor (NULL-cast processor/params) was removed -
-// process_leg is now reached only via the real process() anchor. Rebuilt: 78.81% (unchanged),
-// the residual is genuine (the three-block bracing above), NOT the anchor distortion.
 void legs_ik_processor::process_leg(
 	legs_ik_processor::leg_params&		params,
 	float4x4 const&						target_foot_obj_matrix,
@@ -604,7 +598,7 @@ void legs_ik_processor::process_leg(
 	// ******
 }
 
-// STATE[84.66%|PARTIAL]: large float4x4 IK math, full structure matched (all 64
+// STATE[84.23%|PARTIAL]: large float4x4 IK math, full structure matched (all 64
 // statements, the is_similar early-out, the 4-way ground if-chain, lengths, blend,
 // return). Residuals are register/[ebp-N] slot renaming plus the LTCG arg-passing /
 // temp-materialization at the many math call boundaries (operator -+^* / normalize /
@@ -612,8 +606,6 @@ void legs_ik_processor::process_leg(
 // interpolated_value / adjust_foot_transform) and a couple of trivial-COMDAT
 // inline-vs-call decisions. One unresolved statement: the else-branch single-byte
 // original_color write (0x64) - see @TODO. Full trail in get_foot_fixed_transform.md.
-// claude@NOTE: fake-observation direct anchor removed (now reached only via process());
-// rebuilt 84.23% (unchanged) - residual is genuine, not the anchor distortion.
 float4x4 legs_ik_processor::get_foot_fixed_transform(
 	legs_ik_processor::leg_params const&	params,
 	float4x4 const&						hip_world_matrix,
