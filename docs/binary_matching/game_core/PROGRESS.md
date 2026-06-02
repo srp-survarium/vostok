@@ -335,3 +335,12 @@ infra base): `module::function -> STATE -> PR (regressions)`.
         original*inverted;}` reproduced the double `jmp .2` (return-jmp + if-`}`-jmp). 97.5->100. 40/40 equal.
   - get_foot_fixed_transform (the only caller) unchanged at 84.158% - it inlines a debug-draw guard around
     this call but the out-of-line body match does not affect its score. No regressions in report-changes.
+- game_core::weapon_recoil_params::weapon_recoil_params(binary_config_value const&) -> STATE[100%|DONE] -> PR #147 (regressions: none)
+  - config ctor, same family as weapon_dispersion_params #136 / character_dispersion_params::load #135:
+    partial 9-member init list (0.0f except additive_recoil_time=epsilon_3; omits 0x08/0x0c/0x20/0x30) +
+    value_exists-guarded (float)cfg["name"] reads in member order. The two min/max-angle members use a nested
+    `&&` guard: `if ( value_exists(min) && value_exists(max) ) { min=...; range=(float)cfg[max]-min; }`.
+    Base structure byte-identical to target (26 statements, 0x306 bytes). No unconditional override (unlike #136).
+  - Anchor: extended use_game_core_weapon_recoil_params to construct + escape the config-ctor instance.
+  - Stacked on #145 (get_foot_fixed_transform). 55 report-changes regressions are all unrelated COMDAT/template
+    relink churn (deleting dtors, btXxx, boost::asio, stlp_std, intrusive_ptr<...>); no matched source regressed.
