@@ -83,6 +83,27 @@ from the derived ctor's source - it requires adding/removing an out-of-line ctor
 base (a separate function + wide blast radius). Confirmed in
 `game_core/inventory_item::inventory_item` (base `interactive_object` has out-of-line
 ctor at target rva 0x9ccb0; base build inlines `unmanaged_resource(1)` instead).
+COROLLARY (it can ALSO come out a matched `call`): when the base class has NO user-declared
+ctor but DOES declare a virtual (so an implicit ctor exists that stores the vtable), MSVC may
+emit the implicit base ctor as a folded out-of-line symbol that BOTH binaries `call` - in which
+case the derived ctor's `call BaseClass::BaseClass` matches with no source change. Confirmed in
+`game_core/player_logic_base_state::player_logic_base_state` (100%): base `ai::fsm_state` has
+only a pure-virtual dtor (no declared ctor); its implicit ctor is a folded out-of-line symbol
+(absent from both rich indexes as a named fn, but `call vostok::ai::fsm_state::fsm_state` appears
+identically in target AND base). So a base-ctor `call` is NOT automatically a divergence - check
+the base index before banking BLOCKED.
+
+### anchoring an abstract fsm_state subclass: override EVERY inherited pure virtual
+A `concrete_state : survarium::<state>` anchor stub (the temp_include_all pattern for abstract
+state classes) must override ALL still-pure virtuals or it stays abstract -> C2259. The whole
+hierarchy derives from `ai::fsm_state` whose `initialize`/`execute`/`finalize`/
+`is_ready_for_transition` are pure. A mid-hierarchy class often re-declares only SOME of them:
+`player_logic_base_state` overrides only `is_ready_for_transition` (+ adds its own pure
+`selected_animations`), leaving `initialize`/`execute`/`finalize` PURE. The stub needs `virtual
+void initialize/execute/finalize() override {}` AND the class's own pure(s). Check the .h chain
+for which pures the class did NOT re-declare. References for the ctor/setter args can be
+fabricated from `*reinterpret_cast<T*>(NULL)` (the anchor never runs) to avoid constructing a
+noncopyable owner type. Confirmed in `use_game_core_player_logic_base_state`.
 
 ### scalar default ctor: sequential `movss [this+off], const` from the constant pool
 ASM (target, /Od default ctor of a float-only POD struct):
