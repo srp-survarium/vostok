@@ -226,6 +226,15 @@ structure. (Conversely, a `case` with no `+0x002` entry was brace-less - e.g.
 `get_broken_hands_penalty`, whose cases show `+0x004`/`+0x2b` and no `}` jmp, matched
 without braces.)
 
+**`[n]` marks the start of lexical block `n`; a local tagged `<n>` lives in that block.**
+A body line can carry a trailing `|[n]:` field (e.g. `<0x5934e2>|0x012|+0x021|[1]:'35'`) -
+the `[n]` marks the statement that OPENS block `n`: a `for` / `while` / `if` / braced scope
+(so that example is a loop opening at src line 35). Correspondingly, a `// LOCALS` entry
+tagged `<n>` (e.g. `// ai::fsm_state*   state<1>`) is a local **declared inside block `n`**
+- here `state` lives in that loop, not at function scope; declare it there, not at the top.
+This block/scope mapping is reliable only in the non-optimized (`/Od`) target. (The rule is
+more nuanced than this, but this is the working approximation.)
+
 **Keep the target structure inline when the match is NOT 100%.** If a function
 ends `PARTIAL` / `INPROGRESS` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY`
 block (and, for the diverging region, the relevant `pdb_fetch --view target` asm as
