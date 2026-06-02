@@ -340,3 +340,11 @@ the base side and `report.json` scores them 0 (shown as `fuzzy_match_percent: nu
 from the diff `right`/base side). That costs a full ~20-min relink to discover. Grep the
 dispatcher for an existing sibling anchor call and add yours right next to it BEFORE the first
 build. (Hit while matching pistol_/double_barreled_weapon_core_idle_state - build #1 wasted.)
+
+## New .cpp: `git status` it before the ~20-min rebuild (verify the path)
+A cpp belongs under `sources/vostok/<module>/SOURCES/`, the header under `sources/vostok/<module>/`.
+If a `Write` drops the `/sources` segment it silently creates the cpp NEXT TO the header; ninja
+then compiles the UNTOUCHED stub in `sources/` and the whole relink is against stubs (looks like
+"my change didn't show"). One `git status` catches it: a `??` cpp directly under the header dir
+(not under `.../sources/`) is misplaced - `mv` it before building. (Cost one full relink while
+matching pistol_/double_barreled_weapon_core_aimed_idle_state.)
