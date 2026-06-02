@@ -10,6 +10,10 @@
 #include <vostok/game_core/ik_utils.h>
 #include <vostok/physics/api.h>
 #include <vostok/physics/character_controller.h>
+#include <vostok/console_command.h>
+
+// game_core's DELETE macro (game_core_memory.h has it commented out).
+#define DELETE( pointer )	VOSTOK_DELETE_IMPL( *::survarium::g_allocator, pointer )
 
 // claude@NOTE: get_rotation_matrix / change_matrix_orientation are inline math
 // helpers (math_float4x4_inline_2.h on target) absent from our headers; process_leg
@@ -48,92 +52,87 @@ void change_matrix_orientation( float4x4 const& rotation, float4x4& matrix )
 
 namespace survarium {
 
-// claude@NOTE: the s_ik_*_cc console-command machinery is still STUB; the dynamic
-// initializers above name s_ik_*_cc. get_foot_fixed_transform only READS the backing
-// values, so declare them as plain file statics to reproduce the byte/float loads.
-// (The cc-registration bytes are a separate, unmatched concern.)
+// claude@NOTE: defined out-of-line in ik_processor.cpp (same module); process()
+// calls it to build the hip object-space matrix.
+float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
+
+// claude@MATCH: the s_ik_*_cc console-command static initializers. Each `static
+// console_commands::cc_*` emits the `dynamic initializer for 's_ik_*_cc'` (ctor +
+// atexit) and a matching `dynamic atexit destructor`. Backing value statics are
+// bound by reference; get_foot_fixed_transform / process read them. Names taken from
+// the mangled ??_C@ string constants; cc kinds/args from each initializer's target
+// asm (cc_bool for debug_draw/rot_axis/adjust_hip, cc_float for foot_capsule). See
+// dispersion_calculator.cpp / bullet.cpp for the identical-shape reference inits.
+//
+// claude@NOTE: objdiff scores every `dynamic initializer`/`dynamic atexit
+// destructor` thunk 0% because it does not pair the base `??__E.../??__F...`
+// mangled names with the target's demangled "dynamic initializer/destructor"
+// names - the SAME 0% the already-accepted dispersion/bullet cc inits report. The
+// emitted base bytes match: cc_float's init is byte-identical to target; cc_bool's
+// init differs only in that the target passes the cc_bool ctor's command_type/
+// execution_filter args in registers (whole-program LTCG fastcall) where base
+// passes them on the stack - a call-boundary arg-passing artifact, not a source
+// divergence. So these are effectively DONE (capped only by the 0% pairing
+// artifact); the deeper second pass need not revisit them.
 static bool		s_ik_legs_debug_draw_value		= false;
 static float	s_ik_foot_capsule_radius_value	= 0.0f;
+static bool		s_ik_legs_rot_axis_value		= false;
+static bool		s_ik_adjust_hip_position_value	= false;
 
-/*
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_legs_debug_draw_cc''()
-void `dynamic initializer for 's_ik_legs_debug_draw_cc''( )
+static console_commands::cc_bool	s_ik_legs_debug_draw_cc		( "ik_legs_debug_draw", s_ik_legs_debug_draw_value, false, console_commands::command_type_engine_internal );
+static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule_radius", s_ik_foot_capsule_radius_value, 0.01f, 0.2f, true, console_commands::command_type_engine_internal );
+static console_commands::cc_bool	s_ik_legs_rot_axis_cc		( "ik_legs_rot_axis", s_ik_legs_rot_axis_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
+static console_commands::cc_bool	s_ik_adjust_hip_position_cc	( "ik_adjust_hip_position", s_ik_adjust_hip_position_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
+
+// STATE[100%|DONE]
+legs_ik_processor::leg_params::leg_params( ) :
+	heel_transition_time	( 0.0f ),
+	toe_transition_time		( 0.0f ),
+	rotation_axis			( 1.0f, 0.0f, 0.0f ),
+	m_time_since_stance		( 0.0f ),
+	m_heel_on_ground		( false ),
+	m_toe_on_ground			( false )
 {
-	// FUNCTION BODY
-	// <0x7db1c0>|0x000|      :'20'	{
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_foot_capsule_radius_cc''()
-void `dynamic initializer for 's_ik_foot_capsule_radius_cc''( )
-{
-	// FUNCTION BODY
-	// <0x7db200>|0x000|      :'23'	{
-	// ******
-}
-
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_legs_rot_axis_cc''()
-void `dynamic initializer for 's_ik_legs_rot_axis_cc''( )
-{
-	// FUNCTION BODY
-	// <0x7db250>|0x000|      :'26'	{
-	// ******
-}
-
-// STATE[STUB]
-// void survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''()
-void `dynamic atexit destructor for 's_ik_legs_debug_draw_cc''( )
-{
-	// FUNCTION BODY
-	// <0x7db290>|0x000|      :'29'	{
-	// ******
-}
-*/
-
-// STATE[STUB]
-// survarium::legs_ik_processor::leg_params::leg_params()
-legs_ik_processor::leg_params::leg_params( )
-{
-	// FUNCTION BODY
-	// <0x6fa6c0>|0x000|+0x062:'38'	{
-	// <0x6fa722>|0x062|      :'39'	}
-	// ******
-}
-
-// STATE[STUB]
-// void survarium::legs_ik_processor::leg_params::activate(vostok::animation::skeleton const&, char const*)
+// STATE[100%|DONE]: bone indices resolved by walking the parent chain
+// (foot->leg->knee->up_leg) + children_begin for the toe; each index is
+// skeleton::get_bone_index(bone).
 void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleton, pcstr foot_bone_name )
 {
-	// LOCALS
-	// animation::skeleton_bone const& foot_bone
-	// ******
+	animation::skeleton_bone const&	foot_bone	= skeleton.get_bone( skeleton.get_bone_index( foot_bone_name ) );
 
-	// FUNCTION BODY
-	// <0x6fad89>|0x009|+0x016:'43'
-	// <0x6fad9f>|0x01f|+0x02e:'44'
-	// <0x6fadcd>|0x04d|+0x03a:'45'
-	// <0x6fae07>|0x087|+0x038:'46'
-	// <0x6fae3f>|0x0bf|+0x041:'47'
-	// <0x6fae80>|0x100|+0x04a:'48'
-	// ******
+	foot_bone_index		= skeleton.get_bone_index( foot_bone );
+	toe_bone_index		= skeleton.get_bone_index( *foot_bone.children_begin( ) );
+	leg_bone_index		= skeleton.get_bone_index( *foot_bone.parent( ) );
+	knee_bone_index		= skeleton.get_bone_index( *foot_bone.parent( )->parent( ) );
+	up_leg_bone_index	= skeleton.get_bone_index( *foot_bone.parent( )->parent( )->parent( ) );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::~legs_ik_processor()
+// STATE[85.71%|PARTIAL]: only `DELETE( m_drawer )` is real source; the residual is
+// the compiler-generated member-destructor epilogue - the target sets `this+0x7c`
+// (m_toe_interpolator) and `this+0x70` (m_heel_interpolator) before each
+// ~fermi_interpolator call, base ICF-folds those `this`-pointer setups away. An
+// ICF/codegen artifact in the auto-emitted dtor tail, not source-steerable.
 legs_ik_processor::~legs_ik_processor( )
 {
+	DELETE( m_drawer );
+
 	// FUNCTION BODY
 	// <0x6faf49>|0x009|+0x029:'53'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::leg_params::tick(float)
+// STATE[97.42%|DONE]: residual is a single extra 4-byte frame slot (target sub
+// esp,8 / this at [ebp-8]; base push ecx / this at [ebp-4]) - an LTCG frame-layout
+// artifact (a phantom temp at the math::max call boundary, same family as the
+// swapped-xmm set_*_transition_time residual). Every statement/operand byte-exact.
 void legs_ik_processor::leg_params::tick( float dt )
 {
+	heel_transition_time	= math::max( heel_transition_time - dt, 0.0f );
+	toe_transition_time		= math::max( toe_transition_time - dt, 0.0f );
+	m_time_since_stance		+= dt;
+
 	// FUNCTION BODY
 	// <0x6fa969>|0x009|+0x022:'64'
 	// <0x6fa98b>|0x02b|+0x022:'65'
@@ -169,33 +168,25 @@ void legs_ik_processor::leg_params::set_toe_on_ground( bool value )
 		m_time_since_stance = 0.0f;
 }
 
-// STATE[STUB]
-// survarium::legs_ik_processor::legs_ik_processor()
-// this->m_heel_transition_time = this->m_heel_interpolator.transition_time(&this->m_heel_interpolator);
-// this->m_toe_transition_time = this->m_toe_interpolator.transition_time(&this->m_toe_interpolator);
-legs_ik_processor::legs_ik_processor( ) : m_heel_interpolator( 0.1f ), m_toe_interpolator( 0.1f )
+// STATE[100%|DONE]: m_*_transition_time_calculator default (m_value=0.1f) was the
+// key - the calculator member ctors write that const right after the interpolators.
+legs_ik_processor::legs_ik_processor( ) :
+	m_drawer				( NULL ),
+	m_character_controller	( NULL ),
+	m_heel_interpolator		( 0.1f ),
+	m_toe_interpolator		( 0.1f )
 {
-	// CALL SITE INFO
-	// <0x6fa7ea> -> float <unknown>() const
-	// <0x6fa804> -> float <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x6fa730>|0x000|+0x0df:'100'	{
-	// <0x6fa80f>|0x0df|      :'101'	}
-	// ******
+	m_heel_transition_time	= m_heel_interpolator.transition_time( );
+	m_toe_transition_time	= m_toe_interpolator.transition_time( );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::activate(vostok::animation::skeleton const&)
+// STATE[100%|DONE]
 void legs_ik_processor::activate( animation::skeleton const& skeleton )
 {
-	// FUNCTION BODY
-	// <0x6faed9>|0x009|+0x00c:'105'
-	// <0x6faee5>|0x015|+0x014:'106'
-	// <0x6faef9>|0x029|+0x014:'107'
-	// <0x6faf0d>|0x03d|+0x01e:'108'
-	// ******
+	ik_processor::activate( skeleton );
+	m_left_leg_params.activate( skeleton, "LeftFoot" );
+	m_right_leg_params.activate( skeleton, "RightFoot" );
+	m_hip_bone	= &skeleton.get_bone( skeleton.get_bone_index( "Hip" ) );
 }
 
 // STATE[65.38%|PARTIAL]: sole residual is the dot-product - operator| did NOT inline in
@@ -214,20 +205,57 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::process(vostok::math::float4x4*, vostok::math::float4x4 const&)
+// STATE[90%|PARTIAL]: full control structure matched (hip_world build, two
+// get_foot_fixed_transform calls, the inverted_transform + R_ASSERT(success), and
+// the four-way s_ik_adjust_hip_position if/else ladder with its three "process both
+// legs" blocks + final ground-state check). Two residuals, both call-boundary /
+// codegen, not source-steerable here:
+//   1) base materializes get_skeleton() (*m_skeleton) into a per-call stack temp at
+//      each get_bone_matrix_in_object_space site where the target inlines [m_skeleton]
+//      directly - that 0xC of extra frame shifts every later [ebp-N] slot by 0xC
+//      (a uniform slot-rename storm in the diff, no control-structure divergence).
+//   2) R_ASSERT(success): base emits only the assert-enabled predicate; the target
+//      additionally evaluates+reports `success` (push success; push 0; call) - an
+//      assert-macro-variant difference. The deeper pass (real callers observing the
+//      object) may settle the get_skeleton() spill. Full trail in
+//      legs_ik_processor_rest.md.
 void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 {
-	// LOCALS
-	// float4x4 					inverted_transform
-	// float 						right_delta_len
-	// float 						left_delta_len
-	// float4x4 					hip_obj_matrix
-	// float4x4 const& 				right_foot_fixed_transform
-	// float4x4 const& 				hip_world_matrix
-	// bool 						success
-	// float4x4 const& 				left_foot_fixed_transform
-	// ******
+	float4x4				hip_obj_matrix				= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );
+	float4x4 const&			hip_world_matrix			= hip_obj_matrix * transform;
+
+	float					right_delta_len				= 0.0f;
+	float4x4 const&			right_foot_fixed_transform	= get_foot_fixed_transform( m_right_leg_params, hip_world_matrix, matrices, right_delta_len );
+	float					left_delta_len				= 0.0f;
+	float4x4 const&			left_foot_fixed_transform	= get_foot_fixed_transform( m_left_leg_params, hip_world_matrix, matrices, left_delta_len );
+
+	float4x4				inverted_transform;
+	bool const				success						= inverted_transform.try_invert( transform );
+	R_ASSERT( success );
+
+	if ( !s_ik_adjust_hip_position_value || ( right_delta_len >= 0.0f && left_delta_len >= 0.0f ) )
+	{
+		process_leg( m_left_leg_params, right_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
+		process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
+	}
+	else if ( m_left_leg_params.is_on_ground( ) && right_delta_len > 0.0f && 0.0f > left_delta_len )
+	{
+		matrices->c.y			+= right_delta_len;
+		hip_obj_matrix			= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );
+		process_leg( m_left_leg_params, right_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
+		process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
+	}
+	else if ( m_right_leg_params.is_on_ground( ) && right_delta_len > 0.0f && 0.0f > left_delta_len )
+	{
+		matrices->c.y			+= left_delta_len;
+		hip_obj_matrix			= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );
+		process_leg( m_left_leg_params, right_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
+		process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
+	}
+	else if ( m_left_leg_params.is_on_ground( ) )
+	{
+		m_right_leg_params.is_on_ground( );
+	}
 
 	// FUNCTION BODY
 	// <0x6fc651>|0x011|+0x029:'119'
@@ -896,29 +924,19 @@ void legs_ik_processor::set_toe_on_ground( legs_ik_processor::leg_params& params
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::tick(const unsigned int)
+// STATE[100%|DONE]
 void legs_ik_processor::tick( u32 current_time_in_ms )
 {
-	// LOCALS
-	// float 						dt_sec<1>
-	// ******
+	if ( m_last_time_in_ms != 0 )
+	{
+		float const		dt_sec	= ( current_time_in_ms - m_last_time_in_ms ) * math::epsilon_3;
+		m_left_leg_params.tick( dt_sec );
+		m_right_leg_params.tick( dt_sec );
+		m_heel_transition_time_calculator.tick( dt_sec );
+		m_toe_transition_time_calculator.tick( dt_sec );
+	}
 
-	// SKIPPED BLOCKS
-	// <0x6fa9e0><1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x6fa9d9>|0x009|+0x009:'462'
-	// <0>
-	// <0x6fa9e2>|0x012|+0x01f:'464'
-	// <0x6faa01>|0x031|+0x012:'465'
-	// <0x6faa13>|0x043|+0x012:'466'
-	// <0x6faa25>|0x055|+0x01e:'467'
-	// <0x6faa43>|0x073|+0x01e:'468'
-	// <0>
-	// <0x6faa61>|0x091|+0x009:'470'
-	// ******
+	m_last_time_in_ms	= current_time_in_ms;
 }
 
 } // namespace survarium
