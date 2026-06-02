@@ -43,3 +43,10 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     18%) with the opaque-sink escape anchor; README rule revised.
 - game_core::weapon_recoil_params::weapon_recoil_params() [RETRY of #107] -> STATE[100%|DONE] -> PR #116 (regressions: none)
   - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
+- game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% INPROGRESS] -> PR #117 (regressions: none)
+  - GROUPED. ctor+dtor 100% (observed-escape anchor). setter INPROGRESS (76.8%): control structure NOT
+    verified - the FUNCTION BODY structure shows the post-loop stores ('38'-'41') as plain function-scope
+    statements with NO block-open marker, but the source wraps them in `if ( m_params ) { ... }`; the `{`
+    would show as a <n> line that is ABSENT -> likely an early `return` guard (no braces). Restructure +
+    re-diff on a faster machine. Secondary (after bracing): fsm::states()/front() out-of-line in target
+    @0x03f210/0x082cd0 but inlined in base -> blocked on the ai fsm type. Added breath_state.h for the cast.

@@ -61,6 +61,16 @@ content, other functions, or the guideline docs themselves.
    as "LTCG": rephrase to the real cause (or "residual not yet diffed"), and if it is not
    a true argument-passing diff the TAG must be PARTIAL/INPROGRESS with the concrete next
    step, not a banked DONE.
+5. **Base vs target STRUCTURE agree (not just the %).** Compare the function's layout in
+   `binaries/structure/base/<unit>` against the target `// FUNCTION BODY` carcass: same
+   `'srcline'` statements, same `[n]` block-opens, same `<n>` (no-address) lines, and
+   roughly the same per-statement `+delta` SIZE on BOTH sides (a statement whose `+delta`
+   differs is where codegen diverged - a fast localizer). A block the base has that the target lacks - a `[n]`/`<n>` from braces, a missing
+   early `return`, a different loop/`if` shape - is a CONTROL-STRUCTURE divergence the % can
+   hide; a high-% match over the wrong structure is NOT exact. If you find one, do not bank
+   it: set STATE to INPROGRESS with the concrete restructure (e.g. "early `return` guard, no
+   braces") and flag it. (Caught on `set_breath_holding_params`: an `if ( p ) { ... }`
+   block-open absent from the target structure - really an early `if ( !p ) return;`.)
 
 ## How you work
 - Verify with the rich indexes (`pdb_fetch`, `pdb_rich_query`; indexes in
