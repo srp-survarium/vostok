@@ -73,8 +73,9 @@ refs and calls all five draw_* (never run), and a call to it from IncludeAll::In
    DIFF:
    - draw_origin: base passes `half_size` via `fld [ebp+0Ch]; fstp [esp]` (stack);
      target passes via `movss xmm0,[ebp+0Ch]` (register). Everything else identical.
-   - draw_solid_capsule: base keeps `size` in eax + pushes renderer-deref; target keeps
-     renderer-deref in eax + pushes m_scene. Register-vs-stack arg assignment only.
+   - draw_solid_capsule: base keeps `size` in eax + pushes the renderer-deref as a stack
+     arg; target receives the renderer as the __thiscall `this` in ecx (mov ecx,[edx]) and
+     pushes `size`. Register-vs-stack arg assignment only.
    - draw_leg: structure exact (4 draw_origin + 4 draw_line, all `.c.xyz()` endpoints and
      colors resolved); residual is the same draw_origin xmm0-vs-stack float pass x4.
 
