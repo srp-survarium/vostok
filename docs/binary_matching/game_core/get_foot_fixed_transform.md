@@ -3,7 +3,7 @@
 Target: `vostok::math::float4x4 survarium::legs_ik_processor::get_foot_fixed_transform(
 leg_params const&, float4x4 const&, float4x4 const*, float&) const`
 - target rva 0x6ebae0, base file `legs_ik_processor.cpp` (~line 415).
-- Mangled access: private member `AAE` (declared `private:` in header already).
+- Mangled access: private const member `ABE` (B = const-this; declared `private:` in header already).
 - Large IK math function: ~0xb5a bytes, 64 statements, source lines L294-L400.
   Expected to end PARTIAL: lots of inline-vs-call of trivial math COMDATs
   (`xyz()`, `operator-/+/^/*`, `get_root_bones_count`, `float4x4()`, `is_similar`,
@@ -75,7 +75,7 @@ mov edx,params; mov edx,[edx+BONEOFF]; sub edx,eax; shl edx,6; add edx,matrices`
 overview; exact branch bodies refined while iterating.)
 
 ## Setup needed to compile
-- get_relative_matrix (target rva 0xcb050) is an inline math helper absent from our
+- get_relative_matrix (target rva 0xbb050) is an inline math helper absent from our
   headers. First tried declaring in math_float4x4.h + defining in math_float4x4_inline.h;
   that FAILED to compile ("get_relative_matrix is not a member of vostok::math") because
   those headers are inside the precompiled pch and the PCH did NOT pick up the edit (PCH
@@ -140,7 +140,7 @@ math-operator/helper call boundaries (the permitted call-boundary class) + a few
 trivial-COMDAT inline-vs-call decisions. One genuinely-unresolved statement: the
 else-branch single-byte original_color write (mov byte[tmp],64h; mov [original_color],cl)
 - I wrote a full color ctor instead; exact source form (a channel setter?) unknown -> @TODO.
-Regressions caused: none. Inlining: get_relative_matrix (target rva 0xcb050) defined in
+Regressions caused: none. Inlining: get_relative_matrix (target rva 0xbb050) defined in
 this TU; knee_world_matrix is a declared-but-unused local in BOTH binaries (the C4189
 warning matches the target - keep it).
 
