@@ -90,10 +90,10 @@ void legs_ik_drawer::draw_line_capsule(
 
 // STATE[79.43%|PARTIAL]: single forwarder, source identical in shape to
 // draw_line_capsule (which matched 100%). Residual is purely call-boundary register
-// allocation: the target keeps the renderer-deref in eax and pushes m_scene, while the
-// base keeps `size` in eax and pushes the renderer-deref - i.e. which arg ends in the
-// register vs on the stack at the call. LTCG arg-passing choice dictated by the (unmatched)
-// callee; not influenceable from the drawer source. See .md.
+// allocation: the target receives the renderer as the __thiscall `this` in ecx and
+// pushes `size`, while the base pushes the renderer as a stack arg and keeps `size` in
+// eax - i.e. which arg ends in the register vs on the stack at the call. LTCG arg-passing
+// choice dictated by the (unmatched) callee; not influenceable from the drawer source. See .md.
 void legs_ik_drawer::draw_solid_capsule(
 	float4x4 const&			matrix,
 	float3 const&			size,
@@ -104,8 +104,9 @@ void legs_ik_drawer::draw_solid_capsule(
 	// FUNCTION BODY
 	// <0x7b1ec7>|0x007|+0x022:'56'  m_renderer.draw_solid_capsule( m_scene, matrix, size, color, use_depth );
 	// ******
-	// Residual: target push order ..., size, matrix, scene(push), renderer(eax);
-	// base ..., size, matrix, scene(push), size(eax)/renderer(push). Reg-vs-stack only.
+	// Residual: target passes the renderer as the __thiscall `this` in ecx (mov ecx,[edx])
+	// and pushes `size`; base pushes the renderer as a stack arg and keeps `size` in eax.
+	// Reg-vs-stack call-boundary arg passing only.
 	m_renderer.draw_solid_capsule( m_scene, matrix, size, color, use_depth );
 }
 
