@@ -179,8 +179,19 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &params ) );
 	}
 
+	// ik_processor's ctor + activate are protected, so reach them through a
+	// trivial concrete subclass; escape the object so LTCG keeps the member stores.
+	struct concrete_ik_processor : survarium::ik_processor
+	{
+		void do_activate( animation::skeleton const& skeleton ) { activate( skeleton ); }
+	};
+
 	void use_game_core_ik_processor( animation::skeleton const* skeleton, animation::skeleton_bone const* bone, float4x4 const* matrices )
 	{
+		concrete_ik_processor proc;
+		proc.do_activate( *skeleton );
+		example_callback( reinterpret_cast< pcstr >( &proc ) );
+
 		// escape the returned float4x4 so LTCG keeps the (observed) body
 		float4x4 result	= survarium::get_bone_matrix_in_object_space( *bone, *skeleton, matrices );
 		example_callback( reinterpret_cast< pcstr >( &result ) );
