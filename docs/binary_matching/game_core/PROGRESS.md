@@ -43,9 +43,10 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     18%) with the opaque-sink escape anchor; README rule revised.
 - game_core::weapon_recoil_params::weapon_recoil_params() [RETRY of #107] -> STATE[100%|DONE] -> PR #116 (regressions: none)
   - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
-- game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% PARTIAL] -> PR #117 (regressions: none)
-  - GROUPED. ctor+dtor 100% (observed-escape anchor). setter PARTIAL (76.8%): residual is the
-    trivial-accessor inline-vs-call shape - target out-of-lines fsm::states()/front() ONLY (verified in
-    both rich indexes: present in target, absent in base), base inlines; current_state()/get_multiplier()
-    are inlined on BOTH sides (the tail diff is just the cascading frame/slot shift). New guidelines:
-    re-diff against source, do NOT bank as LTCG. Added breath_state.h for the vtable cast.
+- game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% BLOCKED] -> PR #117 (regressions: none)
+  - GROUPED. ctor+dtor 100% (observed-escape anchor). setter BLOCKED (76.8%): body is exact; the only
+    residual is fsm::states()/front() being out-of-line calls in target but inlined in base (verified in
+    both rich indexes: present in target @0x03f210/0x082cd0, absent in base). Whether those one-liners
+    out-of-line is decided by the ai fsm/intrusive_list machinery, not this source -> BLOCKED on the ai
+    fsm type being matched (NOT a banked LTCG residual). current_state()/get_multiplier() are inlined on
+    BOTH sides (the tail diff is just the cascading frame/slot shift). Added breath_state.h for the vtable cast.

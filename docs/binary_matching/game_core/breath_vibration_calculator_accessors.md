@@ -122,25 +122,23 @@ materialization that follows from the `sub esp,1Ch` vs `14h` frame the two real
 Consequence: the member set, control flow, virtual dispatch (`[vtbl+0x14]`),
 `m_breath_holding_reserve = m_params->max_breath_holding_time` (`fld [eax]; fstp
 [+34h]`), the `set_initial_state` call, and the `m_target_multiplier`/
-`m_current_multiplier` stores all line up. The `states()`/`front()` inline-vs-call
-is the documented "LTCG out-of-line-call vs inline of a trivial COMDAT template
-method" class (assembly_patterns.md). => setter left PARTIAL at 76.80%; ctor/dtor
-DONE 100%.
+`m_current_multiplier` stores all line up. The `states()`/`front()` inline-vs-call is
+the only residual. => setter **BLOCKED** at 76.80% on the ai fsm machinery (below);
+ctor/dtor DONE 100%.
 
 No second rebuild here: the remaining setter diff is the `states()`/`front()`
 inline-vs-call shape above plus its cascading frame/slot shift.
 
-### Review note (new guidelines)
-The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and
-explicitly lists inline-vs-call as a matching problem to solve from source. The
-prior "uncontrollable LTCG" framing for this 76.80% residual is therefore downgraded:
-keep it PARTIAL. Reviewer verified via BOTH rich indexes that the target out-of-lines
-the two COMDAT accessors while base inlines them: `pdb_rich_query --index .../target
---function "fsm::states"` returns `vostok::ai::fsm::states()` (0x03f210) and
-`--function "front"` returns the `intrusive_list<fsm_state,...>::front() const`
-(0x082cd0), while the same queries on the base index return NEITHER (inlined
-whole-program in base). That is the documented unsteerable-COMDAT class - the residual
-is understood, not a source bug, and stays PARTIAL pending those COMDATs being emitted
-out-of-line in base (a whole-program/linker decision, not steerable from this source).
-This review did NOT rebuild; the body shape is unchanged.
-</content>
+### Review note (new guidelines) - BLOCKED on the ai fsm type
+The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and lists
+inline-vs-call as a matching problem to solve from source. The setter's body is exact;
+its only residual is that `fsm::states()` + `intrusive_list::front()` are out-of-line
+calls in the TARGET but inlined in our base. Verified via BOTH rich indexes:
+`pdb_rich_query --index .../target --function "fsm::states"` returns
+`vostok::ai::fsm::states()` (0x03f210) and `--function "front"` returns
+`intrusive_list<fsm_state,...>::front() const` (0x082cd0); the same queries on the base
+index return NEITHER (inlined whole-program). Whether those one-liners are emitted
+out-of-line is decided by the `ai` fsm / intrusive_list machinery, NOT this source - so
+this is not an unsteerable residual to bank: it is **BLOCKED** on the `ai` fsm type being
+matched (once `fsm::states()`/`front()` have out-of-line bodies, the calls appear and the
+setter should close). This review did NOT rebuild; the body shape is unchanged.
