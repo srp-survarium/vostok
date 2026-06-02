@@ -704,3 +704,64 @@ single biggest fix was un-hoisting root_count (81.55 -> 84.16). A `float4x4 cons
 address (`lea;mov [ebp-N],addr`); a recorded ref local that is only stored-then-reloaded-once
 (no later use) is a declared-but-unused source local present in BOTH binaries - keep it (the
 C4189 "initialized but not referenced" warning matches the target), do not delete it.
+
+### `if(identity(false)){ ... call empty-fn(args) }` = a Master-Gold ASSERT_*_U (the eater shape)
+ASM:
+    mov byte[ebp-N],0; lea eax,[ebp-N]; call <folded-empty>   ; if ( ::vostok::identity(false) )
+    movzx eax,byte[eax]; test eax,eax; je .skip
+    push <v2>; push <v1>; ...; call <folded-empty>; add esp,M ; expression_eater( args )
+  .skip:
+SOURCE: a compiled-out `ASSERT_CMP_U( v1, op, v2 )` / `ASSERT_U( expr )`. Master Gold defines the
+`_U` asserts as `if (::vostok::identity(false)) { ::vostok::debug::detail::expression_eater(...); }`
+(`debug_macros.h`); the eater is `void expression_eater(...) {}` (varargs, folded empty). So the
+discarded args get pushed C-style and the call is a folded-empty (delinker misnames it
+`finalize_impl`/`empty_stub`/0x3f210). DISTINGUISH from the plain non-`_U` `ASSERT(...)` which is
+`VOSTOK_EMPTY_EXPRESSION` = just `if(identity(false)){}` (NO eater, NO arg pushes). So a guard
+FOLLOWED BY arg pushes + a folded call = a `_U` assert; recover the args from the pushes:
+- `ASSERT_CMP_U(v1,==,4)` -> `expression_eater(v1, 4, assert_untyped)` -> `push 0; push 4; push v1`.
+- `ASSERT_U(expr)` -> `expression_eater(assert_untyped, expr)` -> pushes expr then `push 0`.
+NOTE the order: `assert_untyped`(=0) is pushed LAST (it is an early macro arg) for `_U`, FIRST/last
+varies by form - read the push sequence. A class-typed arg (e.g. an `animation_lexeme`, 0x84) is
+copied by value (`sub esp,0x84; rep movsd`). CAVEAT: if the target's eater receives ONLY the
+expression with NO `assert_untyped push 0`, no standard macro reproduces it exactly (ASSERT_U adds
+the `push 0`); that lone `push 0` is the closest-macro residual. Confirmed in
+`weapon_core_idle_state::weapon_core_idle_state` (ctor line 21 = `ASSERT_CMP_U(animations_count,==,4)`,
+100%) and `weapon_core_idle_state::weapon_and_hands_expression` (line 32 `ASSERT_U(weight_driving_animation)`).
+
+### `/Od` counted loop with `je` (not `jae`) exit = source `for(...; i != N; ...)` not `i < N`
+ASM (target): `cmp [i], N; je .end` (loop exits on equality). SOURCE: `for ( u32 i = 0 ; i != N ; ++i )`.
+If your base emits `cmp [i], N; jae .end` instead, your source wrote `i < N` (unsigned `<` lowers to
+`jae`-exit). MSVC /Od preserves the exact comparator: `!=`->`jne`/`je`-exit, `<`->`jb`/`jae`-exit.
+Match the operator the target used (the original counted loops here were written `i != 2`). Confirmed
+100% in `weapon_core_idle_state`/`weapon_core_aimed_state` ctors (two nested `for(... != 2 ...)`).
+
+### `movzx; neg; sbb X,X; neg` on a bool array index = `arr[ b != false ]`, NOT `arr[ b ]`
+A bare `arr[bool_param]` index lowers to just `movzx eax, byte[param]` (the bool is already 0/1). If
+the target instead emits the full `movzx; neg; sbb eax,eax; neg` normalize before the index scale,
+the source wrote an explicit `!= 0` / `!= false` comparison: `arr[ is_third_view != false ]`. Same
+`neg/sbb/neg` idiom as the `(val & mask) != 0` entry above, here applied to a plain bool used as an
+index. Confirmed 100% in `weapon_core_idle_state::get_weapon_lexeme_pair`
+(`m_weapon_animations[ is_third_view != false ][ user_state_id == type_crouch ]`; the 2nd index is a
+plain `== type_crouch` -> `cmp 1; sete`).
+
+### placement `new ( buffer ) T(...)` on a `mutable_buffer` -> `new ( buffer.c_ptr() ) T(...)`
+`mutable_buffer` has NO conversion to `void*` (only `operator bool`), so `new ( buffer ) T` fails
+C2665 (operator new overloads are only `(size_t,nothrow_t&)` and `(size_t,void*)`). The standard
+placement form is `new ( buffer.c_ptr() ) T(...)`. ASM: `lea &buffer; call <c_ptr, misnamed
+operator*>; push; push sizeof(T); call operator new; <null-check> je; <T ctor>`. The `call operator*`
+is `mutable_buffer::c_ptr()` kept out-of-line (LTCG inline-vs-call) - do not read it literally. The
+post-`operator new` `cmp [p],0; je` is the standard placement-new null guard (skip the ctor if null).
+Confirmed 100% in `weapon_core_state_cook_template<weapon_core_idle_state>::new_object`
+(`return new ( buffer.c_ptr() ) weapon_core_idle_state( params->weapon, animations, animations_count );`).
+
+### expression( lexeme_a + lexeme_b ) -> operator+ then expression ctor (each does a cloned_in_buffer)
+`animation::mixing::expression( a + b )` where a,b are `animation_lexeme&`: `operator+<L,L>` builds an
+`addition_lexeme(a,b)` temp, calls `.cloned_in_buffer()`, destroys the temp, returns the clone as
+`addition_lexeme&`; then `expression::expression<addition_lexeme>(ref)` (an implicit template ctor)
+does ANOTHER `cloned_in_buffer()` internally. The idiomatic source `expression( a + b )` is correct;
+do NOT hand-expand it to `expression( *addition_lexeme(a,b).cloned_in_buffer() )` - that scores LOWER
+(introduces extra `~expression` temps and inlines `base_lexeme::cloned_in_buffer<>` instead of the
+target's out-of-line `addition_lexeme::cloned_in_buffer()`). Whether operator+ is inlined or kept a
+`call` at the site is per-call-site LTCG (operator+ is standalone in BOTH indexes), same class as the
+operator| entry. Confirmed in `weapon_core_idle_state::weapon_and_hands_expression` (85.65%, residual =
+that operator+ inline-vs-call): `main + offset` scored 85.65 vs the hand-expansion's 80.30.
