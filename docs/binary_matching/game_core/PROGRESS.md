@@ -564,3 +564,22 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   float/int arg-passing convention, not steerable from the drawer. float4_pod::xyz() shows
   in target as a COMDAT-folded `...::finalize_impl` thunk (delinker misname) = matrix.c.xyz().
   Regressions: none (only unrelated delinker COMDAT-fold churn; no matched game_core fn moved).
+
+- breath_vibration_calculator: 3 remaining STUBs (the ctor/setter/dtor were a prior unit).
+  One rebuild.
+    tick                          94.23% PARTIAL  (/Od frame-slot reg-alloc churn at the
+                                                   m_user->local_time vcall; structure 1:1)
+    `dynamic initializer for
+     's_enable_breath_vibration_cc'` None  DONE    (file-static cc_bool init/atexit ICF-
+                                                   folded, no standalone symbol; body correct,
+                                                   mirrors dispersion's s_dispersion_enabled_cc)
+    initialize_logic              STUB   INPROGRESS (large ~0x3bc; needs breath_state
+                                                   SUBCLASSES + boost::bind/function machinery +
+                                                   header move to private (target AAE) +
+                                                   resolving the duplicate breath_state defn.
+                                                   Full reconstructed body in the cpp STATE
+                                                   comment + _tick.md.)
+  Added the tick body (FPU vibration math, fsm tick, breath_state vtable dispatch, max/min
+  clamp) + the s_enable_breath_vibration_cc static (the dynamic initializer) + a `calc.tick(...)`
+  reachability call to the existing breath anchor. Regressions: none (only unrelated ICF-fold
+  representative churn; no matched game_core fn regressed).
