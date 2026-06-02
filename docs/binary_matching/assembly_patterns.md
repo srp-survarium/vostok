@@ -632,3 +632,22 @@ and scored 83.69% with the two `movss` operands in swapped registers; the target
 `arg->xmm0, member->xmm1`, i.e. member-first source. Swapping to `math::min( member, arg )`
 took them 83.69% -> 100%. Lesson: never bank an xmm-operand-order diff as LTCG - swap and
 rebuild.
+
+### rva 0x03f210 is the universal empty-function fold target - a `call` there is whatever empty fn the source needs
+SYMPTOM: a ctor/function `call`s a symbol the delinker names
+`fixed_size_allocator<task_type,mutex_tasks_unaware>::finalize_impl` (or `empty_stub`,
+`float4()`, etc.). Querying `pdb_rich_query --function <name>` for SEVERAL unrelated empty
+functions all return the SAME rva **0x03f210**: confirmed there are at least
+`vostok::core::noncopyable::noncopyable()`, `...::finalize_impl()`, and
+`vostok::ai::fsm_state::~fsm_state()`. MSVC `/OPT:ICF` folds every byte-identical empty
+`{ }` body to one address; the delinker prints whichever name it picked, NOT the real callee.
+RULE: do NOT take a `call ...finalize_impl` (or any 0x03f210 call) literally. Identify the
+empty function the SOURCE at that spot actually needs - usually the **out-of-line base ctor**
+(e.g. deriving `core::noncopyable`, whose declared `noncopyable()` is out-of-line) or a base
+dtor. The ASSERT-class `empty_stub` (its own entry above) is DISTINGUISHED by its byte prefix:
+an ASSERT is `mov byte[ebp-N],0; lea eax,[ebp-N]; call` (consumes a byte slot, ~0x0c bytes); a
+bare base-ctor fold is just `mov eax,[ebp-4]; call` (this, no byte local). Read the prefix to
+tell ASSERT vs base-ctor-fold. Found on `game_core::ik_processor::ik_processor()`: pre-store
+`call ...finalize_impl` @0x0a = the folded `core::noncopyable` base ctor, source is a plain
+member-init-list ctor deriving noncopyable. Same class as the player_logic_base_state
+folded-base-ctor corollary.
