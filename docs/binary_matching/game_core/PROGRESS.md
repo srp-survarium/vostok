@@ -368,3 +368,17 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - The matcher process died on a transient API ConnectionRefused right after the rebuild, before reading the %,
     restoring the carcass, or committing. The orchestrator finalized STATE/.md/this ledger line from report.json
     (no rebuild; body unchanged). Carcass restoration on this non-100% function flagged for the reviewer.
+- game_core::legs_ik_processor::process_leg (target rva 0x6eafa0) -> STATE[78.82%|PARTIAL] -> PR #157
+  (regressions: none)
+  - Stacked on #156. Full two-bone IK math: all 58 statements / control flow / IK operands verified against asm
+    (is_similar early-out, both debug-draw blocks, the alpha-angle chain, the get_relative_matrix writeback tail).
+    get_rotation_matrix/change_matrix_orientation defined locally (out-of-line callees); anchored via friend
+    use_game_core_legs_ik_processor_process_leg. Verified vs report.json: 78.822136.
+  - REVIEW (claude, no rebuild): the matcher banked the dominant 447 [ebp-N] slot renames as "LTCG/slot class /
+    declaration-reorder tail". That is wrong: the target carcass has THREE [1] braced IK-stage blocks (srclines
+    205/231/245) whose locals are PDB-tagged <1>, while the base structure has ZERO [n] block-opens - the three
+    stages were written FLAT. That missing bracing is the SOURCE cause of the slot renames (function-scope vs
+    block-scope allocation) = MATCHING.md check-5 structure divergence, a recoverable matching problem, NOT LTCG.
+    Reworded the STATE line + .md to name the missing-brace cause and the concrete next step (brace 205/231/245,
+    re-diff); added this ledger line (#157 shipped without one). No logic change; report.json unchanged (no rebuild).
+    FLAGGED for a faster machine: brace the three IK stages so the <1> locals are block-scoped.
