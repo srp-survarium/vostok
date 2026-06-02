@@ -109,3 +109,15 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     register convention, the permitted call-boundary arg-passing class. Source order is correct.
     (3) the 59 report-changes "regressions" are all dtor/thunk/empty_stub ICF churn in optimized modules
     (bullet/boost/scaleform/engine/particle) - none touch legs_ik_processor or this unit.
+- game_core::character_dispersion_params::{ctor,load} -> STATE[100%|DONE] -> PR #135 (regressions: none)
+  - STACKED on #134. Small config-params struct, both functions 100% first try (no iteration).
+    ctor: member-init list, all 14 multipliers = 1.0f (decoded target .obj .data = 14x 0x3f800000;
+    delinker names the block `clear_value`. Verified vs target character_recoil_params.cpp.obj whose
+    4-member `member(1.0f)` list compiled to 4x 1.0f in .data - same shape, not a reused .rdata literal).
+    load: 14 brace-less `if ( cfg.value_exists("name") ) name = (float)cfg["name"];` in member order
+    (each block has a `je short` over the body, no `+0x002` brace jmp) - identical shape to the
+    character_recoil_params::load reference. Anchored via use_game_core_character_dispersion_params in
+    temp_include_all.cpp: construct + load + escape &params through example_callback (observed-escape so
+    LTCG does not DSE the constant ctor stores - the #107 18% trap). The 52 report-changes "regressions"
+    are dtor/vcall-thunk/empty_stub/boost ICF churn in optimized modules (bullet/scaleform/stlp/sound/ai/
+    particle/ui/physics) that flip 100%<->0% per relink (49 symmetric improved) - none touch this unit.
