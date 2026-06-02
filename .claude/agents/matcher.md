@@ -51,6 +51,9 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   - **Asserts:** a `call empty_stub` (delinker may misname `finalize_impl`) is a
     compiled-out `ASSERT` - put `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` at that
     statement; it reproduces the bytes (MATCHING.md). Do NOT leave it as "residual".
+    Headers (pch-provided, no include, don't redefine): `ASSERT`/`ASSERT_U`/`NODEFAULT`
+    are in `vostok/debug_macros.h`; `UNKNOWN_EXPRESSION`/`_T` are in `vostok/debug/macros.h`
+    (different file - `UNKNOWN_EXPRESSION_T(e)` = `( true ? true : !!e )`).
   - **Locals:** declare and use EVERY `// LOCALS` entry - a PDB-recorded local was
     definitely in the target source (under `/Od` every local gets a stack slot). A
     dropped local is a dropped statement; never omit one as "unused".
