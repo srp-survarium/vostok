@@ -121,3 +121,15 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     LTCG does not DSE the constant ctor stores - the #107 18% trap). The 52 report-changes "regressions"
     are dtor/vcall-thunk/empty_stub/boost ICF churn in optimized modules (bullet/scaleform/stlp/sound/ai/
     particle/ui/physics) that flip 100%<->0% per relink (49 symmetric improved) - none touch this unit.
+- game_core::weapon_dispersion_params::{ctor,config-ctor} -> STATE[100%|DONE] -> PR #136 (regressions: none)
+  - STACKED on #135. Small weapon-params struct (8 floats, size 0x20), both ctors 100% first try.
+    Decoded constants by hand-parsing the target .obj COFF (.data/.rdata floats + .text relocs):
+    default ctor = member-init list base_dispersion(0.0f), from_the_hip..growth_speed(1.0f x6),
+    max_dispersion(2.0f) - the six 1.0f live in the delinker `clear_value` .data pool, 0.0f/2.0f in .rdata.
+    config ctor = the SAME init list, then 8 brace-less `if ( cfg.value_exists("name") ) name=(float)cfg["name"];`
+    in member order, then a TRAILING unconditional `one_shoot_dispersion_amount = 0.0f;` (matched verbatim -
+    the ctor clears it after the reads, discarding any config value; movss from .rdata 0.0f). Anchored via
+    use_game_core_weapon_dispersion_params: construct both + escape &obj through example_callback (observed-
+    escape so LTCG doesn't DSE the constant stores - the #107 trap). The 61 report-changes "regressions" are
+    dtor/vcall-thunk/empty_stub/boost-storage/math-ctor ICF churn in optimized modules (69 symmetric improved)
+    - none touch this unit or any matched game_core fn.
