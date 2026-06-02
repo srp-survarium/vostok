@@ -101,23 +101,37 @@ operator*(out,A,B) push order (right-to-left): push B; push A; push out -> resul
    DIFF: 447 `~` (register/[ebp-N] slot renames - dominant), 67 base-only `-`,
    44 target-only `+`. The `+`/`-` are the call-boundary class (is_similar epsilon
    passed as the lone stack arg `add esp,4` while base pushes a ptr too; operator*/-/^
-   temp materialization; xyz-fold inline-vs-call). The `~` are slot renames: my local
-   DECLARATION order yields a different /Od stack layout than the target's PDB order
-   (e.g. up_leg_obj mine -308h / target -180h; foot_obj -2C8h/-140h; the index locals
-   -108h/-5Ch etc). The target's obj-matrix slots (up_leg -180,foot -140,knee -F0,
-   toe -B0,leg -48) follow the PDB declaration order up_leg,foot,knee,toe,leg, which
-   differs from my up_leg,knee,leg,foot,toe. Converging the exact /Od slot layout via
-   declaration reorder is the deep unconverged tail (also requires uninit-then-assign
-   which changes codegen) - not pursued; structure is fully matched.
+   temp materialization; xyz-fold inline-vs-call). The `~` are slot renames whose ROOT
+   CAUSE is a control-structure divergence, NOT just declaration order / LTCG: see the
+   REVIEW note below.
+
+## REVIEW (claude, no rebuild): the dominant residual is a missing-brace structure bug, not LTCG
+Re-reading the target carcass against `binaries/structure/base/.../legs_ik_processor.cpp`:
+- TARGET process_leg has THREE `[1]` block-opens at srclines 205, 231, 245 (the up_leg /
+  knee / leg orientation stages), and the PDB tags the stage locals `<1>`
+  (`original_up_leg_to_foot_dir`, `additive_len`, `up_leg_alpha_angle`, `up_leg_to_foot_len`,
+  `original_up_leg_dir`, `target_up_leg_dir`, `rotation_matrix`(x3), `alpha_rotation_matrix`,
+  `original_knee_dir`, `target_leg_dir`, `original_leg_dir`) = declared INSIDE those braced
+  scopes.
+- BASE structure has ZERO `[n]` block-opens in process_leg: my source wrote the three IK
+  stages FLAT at function scope, so every `<1>` local got a function-scope slot.
+- That block-scoped-vs-function-scoped allocation IS the source of the "447 slot renames"
+  (MATCHING.md check 5: base/target STRUCTURE must agree, not just the %). So it is a
+  RECOVERABLE matching problem, NOT the LTCG/slot-noise class. The original "declaration
+  reorder is the unconverged tail / not pursued" framing under-stated this. NEXT STEP (a
+  faster machine): brace the three IK stages (205/231/245) so the `<1>` locals are
+  block-scoped, then re-diff. No source change made here (a re-match needs a rebuild, out of
+  a reviewer's scope).
 
 ## Outcome
-STATE[78.82%|PARTIAL]. All 58 statements / control flow / IK operands match (verified
-against asm). Residual is the LTCG/slot-rename class: the dominant 447 register/[ebp-N]
-slot renames from a different /Od stack layout (local declaration order vs target PDB
-order), plus call-boundary arg passing (is_similar/operator temps) and a few xyz-fold
-inline-vs-call decisions, plus the get_skeleton()->get_root_bones_count temp-roundtrip
-that sibling get_foot_fixed_transform (84%) also shows. Regressions caused: none (the
-18 100->0 entries are net-neutral ICF fold churn, balanced by 30 0->100).
+STATE[78.82%|PARTIAL]. All 58 statements / IK operands match (verified against asm), but
+the CONTROL STRUCTURE does not yet: the three target `[1]` braced IK-stage blocks
+(205/231/245) are written flat in the base, which is the source of the dominant `[ebp-N]`
+slot renames (see REVIEW above) - a recoverable matching problem, not LTCG. The smaller
+remaining residual is the permitted call-boundary class (is_similar/operator temps), a few
+xyz-fold inline-vs-call decisions, and the get_skeleton()->get_root_bones_count temp-
+roundtrip that sibling get_foot_fixed_transform (84%) also shows. Regressions caused: none
+(the 18 100->0 entries are net-neutral ICF fold churn, balanced by 30 0->100).
 Setup: get_rotation_matrix/change_matrix_orientation defined locally in this TU (called
 out-of-line by process_leg; their own bodies are separate objects). Anchored via friend
 use_game_core_legs_ik_processor_process_leg.

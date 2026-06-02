@@ -275,22 +275,18 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// ******
 }
 
-// STATE[78.82%|PARTIAL]: large two-bone IK math, full structure matched (all 58
-// statements, the 4-row is_similar early-out + return, both debug-draw blocks with
-// draw_leg/draw_cross/draw_origin, the alpha-angle chain
-// get_additional_length/get_angle/create_rotation/transform_direction/get_rotation_matrix/
-// change_matrix_orientation rebuilding up_leg/knee/leg orientations, and the
-// get_relative_matrix writeback tail with foot-row save/restore). All IK operands
-// verified against the asm (up_leg_to_foot_len has NO normalize and uses target_foot;
-// additive_len's two dir args ARE normalized; get_angle = (leg_len+add, up_leg_to_foot_len,
-// knee_len+add); params.rotation_axis (leg_params+0x1C) is the rotation axis, not a
-// matrix row; toe debug uses params.foot_bone_index). Residual is the LTCG/slot class:
-// (a) the dominant 447 register/[ebp-N] slot renames - my local-declaration order yields
-// a different /Od stack layout than the target's PDB order (reordering to match is the
-// unconverged deep tail); (b) call-boundary arg passing (is_similar epsilon/ptr,
-// operator*/-/^ temps) and a few xyz-fold inline-vs-call. The get_skeleton()->
-// get_root_bones_count temp-roundtrip is the same artifact sibling get_foot_fixed_transform
-// (84%) shows. Full trail in process_leg.md.
+// STATE[78.82%|PARTIAL]: two-bone IK math, all 58 statements / operands matched, but a
+// CONTROL-STRUCTURE divergence remains: the target carcass shows three [1] braced blocks
+// (at srclines 205/231/245 - the up_leg/knee/leg orientation stages) whose locals are PDB-
+// tagged <1> (original_*_dir, additive_len, up_leg_alpha_angle, rotation_matrix*, ...); my
+// source wrote those three stages FLAT at function scope (no { }), so the base structure has
+// ZERO [n] block-opens where the target has three. That missing bracing is the SOURCE cause
+// of the dominant [ebp-N] slot renames (the <1> locals get function-scope slots instead of
+// block-scoped ones) - it is a recoverable matching problem, NOT LTCG/slot noise. Next step
+// (a faster machine): brace the three IK stages so the <1> locals are block-scoped, then
+// re-diff. The smaller residual IS the permitted call-boundary class (is_similar epsilon/ptr,
+// operator*/-/^ temps, a few xyz-fold inline-vs-call, the get_root_bones_count temp-roundtrip
+// sibling get_foot_fixed_transform (84%) also shows). Full trail in process_leg.md.
 void legs_ik_processor::process_leg(
 	legs_ik_processor::leg_params&		params,
 	float4x4 const&						target_foot_obj_matrix,
