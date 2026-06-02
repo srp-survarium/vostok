@@ -728,6 +728,10 @@ namespace vostok
 	{
 		survarium::player_stealth stealth;
 
+		// load() reads config into the members (keeps the load body reachable)
+		configs::binary_config_value cfg;
+		stealth.load( cfg );
+
 		// copy ctor (delegates to operator=) + direct operator= call
 		survarium::player_stealth stealth2( stealth );
 		stealth2 = stealth;
