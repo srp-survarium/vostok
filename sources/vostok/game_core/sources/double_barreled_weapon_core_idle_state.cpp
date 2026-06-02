@@ -73,11 +73,13 @@ animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and
 	// ******
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this`
-// loaded into eax (target) vs ecx (base) - an argument-passing register choice - plus the
-// `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum` typedef-alias in
-// the get_weapon_lexeme_pair_impl callee mangling; those last two are byte-identical to the
-// reference weapon_core_idle_state::get_weapon_lexeme_pair which #151 accepted as 100% DONE.
+// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` call boundary - the
+// callee is LTCG-optimized to take `this` in eax (target `weapon_core::ammo_in_magazine` @0x9b270
+// is `mov ax,[eax+47Ah]; ret`), so the caller loads m_weapon into eax (target) vs ecx (base): a
+// link-time custom calling convention, the permitted arg-passing class. Plus the
+// `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum` typedef-alias in the
+// get_weapon_lexeme_pair_impl callee mangling; those two are byte-identical to the reference
+// weapon_core_idle_state::get_weapon_lexeme_pair (#151), which scores 100% lacking only this nit.
 // Leading ASSERT is the compiled-out lone eater at srcline 44.
 weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
