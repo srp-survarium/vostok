@@ -10,32 +10,17 @@
 
 namespace survarium {
 
-// STATE[INPROGRESS]: written, NOT diffed - /nix store was 100% full, rebuild blocked.
-// Next: free /nix and `python3 scripts/rebuild.py`, then score from report.json.
-// claude@MATCH: the target's pre-store `call ...finalize_impl` (rva 0x03f210) is the
-// COMDAT-folded core::noncopyable base ctor (noncopyable::noncopyable is ALSO 0x03f210),
-// emitted out-of-line because noncopyable declares its own ctor - NOT an ASSERT (an
-// ASSERT would emit `mov byte[ebp-N],0; lea eax; call`, which the target lacks).
-// survarium::ik_processor::ik_processor()
+// STATE[100%|DONE]
 ik_processor::ik_processor( )
 	: m_skeleton		( NULL )
 	, m_last_time_in_ms	( 0 )
 {
-	// FUNCTION BODY
-	// <0x58eba0>|0x000|+0x022:'16'	{	: m_skeleton(0)/m_last_time_in_ms(0) (after base ctor)
-	// <0x58ebc2>|0x022|      :'17'	}
-	// ******
 }
 
-// STATE[INPROGRESS]: written, NOT diffed - /nix store was 100% full, rebuild blocked.
-// Next: free /nix and `python3 scripts/rebuild.py`, then score from report.json.
+// STATE[100%|DONE]
 void ik_processor::activate( animation::skeleton const& skeleton )
 {
 	m_skeleton = &skeleton;
-
-	// FUNCTION BODY
-	// <0x58eb87>|0x007|+0x008:'21'	m_skeleton = &skeleton;
-	// ******
 }
 
 // STATE[100%|DONE]

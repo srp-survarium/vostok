@@ -78,23 +78,29 @@ noncopyable has its own ctor symbol (folded). Same class as the assembly_pattern
    Header: both methods moved to `protected:`.
    Anchor: `concrete_ik_processor : ik_processor` in use_game_core_ik_processor;
    construct it (keeps protected ctor), call activate via derived do_activate, escape &proc.
-   BUILD: BLOCKED - `python3 scripts/rebuild.py` failed with
-   `error: writing to file: No space left on device`. `/nix` store is 100% full
-   (df: /dev/mapper/lvmroot-root 125G used, 0 avail on /nix); `nix develop` itself can no
-   longer instantiate. `nix-collect-garbage` was DENIED (shared-infra destructive action).
-   So this could not be built or scored on this machine.
-   DIFF:  (could not run - no fresh base index)
+   BUILD (first attempt): BLOCKED - `python3 scripts/rebuild.py` failed with
+   `error: writing to file: No space left on device`. `/nix` store was 100% full.
+   So this could not be built or scored on the first attempt.
+3. INPUT: unchanged from iter 2 (the source/header/anchor were already correct).
+   BUILD: /nix freed (83G avail). `python3 scripts/rebuild.py` (NO module arg) ran to
+   completion (exit 0, full EXE relink + base structure/COFF/rich refresh).
+   SCORE (binaries/objdiff/report.json, fuzzy_match_percent):
+     - `??0ik_processor@survarium@@IAE@XZ`                                   -> 100.0
+     - `?activate@ik_processor@survarium@@IAEXABVskeleton@animation@vostok@@@Z` -> 100.0
+   report-changes.json: BOTH symbols appear in `improved` (0.0 -> 100.0); neither in
+   `regressed`. The ctor's folded `core::noncopyable` base call reproduced exactly - no
+   ASSERT needed, confirming the iter-1 analysis.
 
 ## Outcome
-STATE[INPROGRESS]: source/header/anchor written with high confidence but NOT verified -
-the build environment's /nix store is 100% full and a rebuild/score is impossible until
-it is freed. NEXT STEP (one rebuild): free /nix (e.g. `nix-collect-garbage -d` once the
-user permits), then `python3 scripts/rebuild.py` (NO module arg), read
-`fuzzy_match_percent` for both symbols from binaries/objdiff/report.json, check
-report-changes.json for regressions, and finalize STATE.
-Expectation if it builds: ctor and activate are both trivial /Od bodies whose every
-instruction is accounted for (base-ctor fold + 2 zero stores for the ctor; one store for
-activate), so a 100%|DONE on both is likely, modulo the usual base-ctor-fold caveat.
-Regressions caused: none possible (no build produced).
+STATE[100%|DONE] for BOTH ctor and activate. Verified by a full relink:
+report.json fuzzy_match_percent = 100.0 for each, and both show as improved
+(0.0 -> 100.0) in report-changes.json.
+Regressions caused: NONE on any matched unit. The 53 `regressed` entries are entirely
+the known symmetric delinker re-slice churn that flips COMDAT-folded helpers 100<->0
+when the EXE is relinked (28 scalar-deleting-dtors, 6 thunk/vcall, 4 resource_ptr,
+3 dtors, bullet/boost/empty_stub, plus intrusive_ptr/interlocked/speedtree_data ctor/dtor
+and an unmatched buffer_string::operator=); they are balanced by 65 improved and none is
+an ik_processor / get_bone_matrix / legs_ik / player_logic / player_stealth function.
 Inlining: none. Cluster: ctor + activate matched together (same class, trivial).
-Carcass kept inline (not 100% verified).
+Carcass deleted (clean 100% DONE on both); source kept only the two `// STATE[100%|DONE]`
+lines + member-init list / single store.
