@@ -100,6 +100,8 @@ namespace survarium
 
 	float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
 	float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& bone, float4x4 const* matrices, animation::skeleton_bone const* first_non_root_bone );
+
+	float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len );
 }
 
 // fsm_state has a pure-virtual dtor (= 0) with no body in our sources; the
@@ -192,6 +194,15 @@ namespace vostok
 		processor.set_right_toe_on_ground( false );
 
 		example_callback( reinterpret_cast< pcstr >( &processor ) );
+	}
+
+	// get_additional_length is a free function; process_leg (its only real caller)
+	// is still a STUB, so anchor it directly and escape its float result so LTCG
+	// keeps the body.
+	void use_game_core_get_additional_length( float3 const* upleg_dir, float3 const* leg_dir )
+	{
+		float result	= survarium::get_additional_length( *upleg_dir, *leg_dir, 1.0f );
+		example_callback( reinterpret_cast< pcstr >( &result ) );
 	}
 
 	// ik_processor's ctor + activate are protected, so reach them through a
@@ -1160,6 +1171,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_breath_vibration_calculator( );
 	vostok::use_game_core_legs_ik_processor_leg_params( );
 	vostok::use_game_core_legs_ik_processor( );
+	vostok::use_game_core_get_additional_length( NULL, NULL );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
