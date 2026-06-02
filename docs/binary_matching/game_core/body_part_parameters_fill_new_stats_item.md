@@ -90,10 +90,10 @@ BASE "none" branch (current 91.78% source): push "none"; lea ecx,[ebp-80h];
 ### Symbol presence (decisive)
 - TARGET index has NO out-of-line `fixed_string<46>::fixed_string<46>(char const*)` symbol at all
   (it was inlined whole-program); it DOES keep the default ctor out-of-line (0x0ba7c0) and CALLS it.
-- BASE index HAS the out-of-line `fixed_string<46>::fixed_string<46>(char const*)` at 0x030b00.
+- BASE index HAS the out-of-line `fixed_string<46>::fixed_string<46>(char const*)` at 0x030ae0.
 - The 3-arg `buffer_string::buffer_string(char*,u32 const&,char const*)` exists out-of-line in BOTH
   (target 0x001040, base 0x001140).
-- I disassembled the BASE out-of-line const-char* ctor (rva 0x030b00): its body is EXACTLY
+- I disassembled the BASE out-of-line const-char* ctor (rva 0x030ae0): its body is EXACTLY
     mov [ebp-4],2Eh; push src; add eax,0Ch (this+0xC=m_buffer); lea ecx,[ebp-4]; call buffer_string::buffer_string
   i.e. the very 3-arg buffer_string call the target inlines. So the source
   `fixed_string<46>("none")` already produces the correct code; the only difference is that
@@ -103,22 +103,35 @@ BASE "none" branch (current 91.78% source): push "none"; lea ecx,[ebp-80h];
 The WIP worker's hypothesis ("change source to the 3-arg buffer_string form") is moot: the
 const-char* fixed_string ctor ALREADY delegates to that exact 3-arg buffer_string ctor. There is no
 source expression that yields a `fixed_string<46>` temp with its own internal buffer other than the
-const-char* ctor, and no per-call-site way to force MSVC to inline a COMDAT under /Od+/GL. This is
-the documented LTCG out-of-line-call-vs-inline-of-a-trivial-COMDAT class (assembly_patterns.md).
+const-char* ctor, and no per-call-site way to force MSVC to inline a COMDAT under /Od+/GL. This is the
+documented out-of-line-call-vs-inline-of-a-trivial-COMDAT class (assembly_patterns.md) - a MATCHING
+problem on the fixed_string<46> type, NOT an LTCG-argument excuse (see the 2nd-pass review note below
+for the PARTIAL -> BLOCKED reclassification under the updated guidelines).
 The +0x10 frame-size delta (E8h vs D8h) and all the reg/slot renaming cascade from this one inline.
-Left the source as `fixed_string<46>("none")` (rule #1: don't contort a correct match to chase LTCG).
-NO source change was made on resumption -> no extra rebuild needed; 91.78% is final.
+Left the source as `fixed_string<46>("none")` (rule #1: don't contort a correct match to chase the %).
+NO source change was made on resumption -> no extra rebuild needed; 91.78% holds.
 
 ## Outcome
-STATE[91.78%|PARTIAL]. Body is a structural match; sole residual is the inline-vs-call of the
-fixed_string<46>("none") ctor plus the frame/slot/register differences it forces. rebuild.py: clean
-build, report-changes.json = 0 regressed / 0 improved / 0 removed / 0 added.
+STATE[91.78%|BLOCKED] (report.json fuzzy_match_percent = 91.78519, confirmed). Body and control
+structure are an exact statement-for-statement match. Sole residual: the inline-vs-call of the
+fixed_string<46>(char const*) ctor at the "none" leaf, plus the frame/slot/register cascade it forces.
+rebuild.py: clean build, report-changes.json = 0 regressed / 0 improved / 0 removed / 0 added.
 
-## Review note (new guidelines)
+## Review note (second pass - reclassify PARTIAL -> BLOCKED; refresh carcass)
 The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and lists inline-vs-call
-as a matching problem. The "LTCG" framing for this 91.78% residual is therefore downgraded: keep it
-PARTIAL, but the fixed_string<46>(const char*) inline-vs-call should be re-diffed against source on a
-future rebuild (the rich-index proof above shows the target has no out-of-line const-char* ctor while
-base keeps one - the documented unsteerable-COMDAT class - re-confirm before banking). The FUNCTION
-BODY carcass has been restored in the .cpp (the function is PARTIAL, not 100%). This review did NOT
-rebuild; the body shape is unchanged.
+as a matching problem, so "LTCG" is the wrong frame here. Re-verified against BOTH rich indexes:
+- TARGET has the default ctor (0x0ba7c0) and copy ctor (0x0ac1e0) out-of-line but NO out-of-line
+  `fixed_string<46>(char const*)` ctor at all (inlined whole-program).
+- BASE keeps `fixed_string<46>(char const*)` out-of-line @ 0x030ae0 (the prior note said 0x030b00 - a
+  stale rva; the body is unchanged: `mov [ebp-4],2Eh; push src; add eax,0Ch; lea ecx,[ebp-4];
+  call buffer_string::buffer_string`, i.e. exactly the 3-arg buffer_string call the target inlines).
+This inline decision is per-ctor whole-program on the `fixed_string<46>` type and is NOT steerable
+from `fill_new_stats_item`'s source (the `--view diff` confirms the bodies are otherwise identical:
+same statements, same calls, same control flow; the +0x10 frame delta and every reg/slot rename
+cascade from that single inline). Because it depends on how the `fixed_string<46>` COMDAT ctors are
+emitted whole-program - a TYPE dependency, exactly like #117's fsm being BLOCKED on the ai fsm type -
+the honest tag is **BLOCKED on fixed_string<46>**, not a banked PARTIAL. STATE/.md/PROGRESS synced to
+91.78%|BLOCKED. The `// FUNCTION BODY` carcass in the .cpp was STALE (old base-build 0xca3d0.. addrs);
+it has been replaced with the authoritative target `--view structure` (rva 0x0ba3c0, 18 statements,
+L285-L307) annotated per house style. The fdiv `__real@447a0000` (=1000.0) confirms `/ 1000.0f` is
+correct. NO source/logic change and NO rebuild in this review; the body shape is unchanged.

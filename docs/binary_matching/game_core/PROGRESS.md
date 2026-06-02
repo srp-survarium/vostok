@@ -50,9 +50,13 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     would show as a <n> line that is ABSENT -> likely an early `return` guard (no braces). Restructure +
     re-diff on a faster machine. Secondary (after bracing): fsm::states()/front() out-of-line in target
     @0x03f210/0x082cd0 but inlined in base -> blocked on the ai fsm type. Added breath_state.h for the cast.
-- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[91.78%|PARTIAL] -> PR #119 (regressions: none)
+- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[91.78%|BLOCKED] -> PR #119 (regressions: none)
   - SALVAGED: worker #15 crashed mid-run; finisher (#16) resumed from the WIP branch (branch-handoff -
     agent-context reuse / SendMessage is not available in this harness). Body was already a structural match.
     The "fixed_string<46>("none") needs the 3-arg ctor" hypothesis was MOOT: the 1-arg fixed_string(const char*)
-    ctor IS that 3-arg buffer_string call inlined; residual is the fixed_string inline-vs-call shape. asm pattern
-    corrected. New guidelines: re-diff this inline-vs-call against source, do NOT bank as LTCG.
+    ctor IS that 3-arg buffer_string call inlined; residual is the fixed_string inline-vs-call shape.
+  - REVIEW (2nd pass): reclassified PARTIAL -> BLOCKED. The inline-vs-call is unsteerable from this
+    function's source (a whole-program COMDAT decision on fixed_string<46>: target has no out-of-line
+    char-const* ctor, base keeps one @0x030ae0); body/control-structure are otherwise an exact match.
+    Like #117's fsm, this is BLOCKED on the fixed_string<46> type's emission, not a banked LTCG residual.
+    Also refreshed the stale FUNCTION BODY carcass to the authoritative target --view structure (0x0ba3c0).
