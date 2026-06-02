@@ -7,12 +7,20 @@
 
 #include <vostok/resources_cook_classes.h>
 
+namespace vostok {
+	void use_game_core_weapon_core_idle_state( );
+	void use_game_core_weapon_core_aimed_state( );
+}
+
 namespace survarium {
 
 struct weapon_state_creation_params;
 
 template < typename T >
 class weapon_core_state_cook_template : public resources::unmanaged_cook {
+	// temp_include_all.cpp anchors reach the private new_object directly.
+	friend void ::vostok::use_game_core_weapon_core_idle_state( );
+	friend void ::vostok::use_game_core_weapon_core_aimed_state( );
 public:
 	inline	explicit	weapon_core_state_cook_template		( );
 	virtual				~weapon_core_state_cook_template	( );
@@ -26,6 +34,8 @@ public:
 
 	inline	void			on_subresources_ready	( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
 
+private:
+	// new_object mangles ?new_object@...@@AAE... -> private (objdiff pairs by mangled name)
 			T*				new_object				(
 								mutable_buffer							buffer,
 								weapon_state_creation_params const*		params,
