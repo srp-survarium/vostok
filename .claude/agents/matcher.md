@@ -15,7 +15,7 @@ it makes sense:**
 - **Inlined cluster:** if another function is inlined into yours (or yours into a
   reachable caller) and they cannot be matched or scored separately, match them
   together.
-- **A batch of small functions:** the ~20-min rebuild is the dominant cost and is
+- **A batch of small functions:** a rebuild is the dominant cost and is
   paid ONCE for the whole unit, so a unit normally bundles **several small
   functions** - ~3-4 small multi-line ones, up to ~10 one-liners, fewer the
   larger/harder they are. They share scaffolding (class decl, member offsets, the
@@ -34,7 +34,7 @@ function in the unit in your result line and update each one's `STATE` marker.
 1. `docs/binary_matching/MATCHING.md`          - how matched source must look.
 2. `docs/binary_matching/agentic_loop.md`      - the per-function loop you run (sections 1-9).
 3. `docs/binary_matching/assembly_patterns.md` - asm -> source patterns learned so far.
-4. `docs/binary_matching/loop_performance.md`   - how to need fewer rebuilds (the loop is rebuild-bound).
+4. `docs/binary_matching/loop_performance.md`   - how to avoid wasted rebuilds.
 5. `docs/binary_matching/<module>/README.md`   - notes for your function's module.
 A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
 
@@ -70,7 +70,7 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   module name (`rebuild.py game_core`) builds only that `.lib` and does NOT relink
   the EXE, so the delinker/rich index/score stay STALE and your change won't show
   (`report-changes.json` reads `+0.00 / 0 changed` - the tell). The no-arg run
-  relinks the EXE (~20 min; the module-only build is ~1 min). Then take the
+  relinks the EXE (the module-only build skips the relink). Then take the
   function's `fuzzy_match_percent` from `binaries/objdiff/report.json` (that is
   the `STATE` number) and check `report-changes.json` for regressions.
 - **Diff:** `pdb_fetch --view diff` shows *where* base and target differ; iterate.
