@@ -21,12 +21,12 @@ public:
 							weapon_animation_parameters const&	weapon_parameters	// sushi@NOTE: unused
 						) override;
 
-	// STATE[STUB]
-	virtual	void		initialize					( ) override { /* <0x2a800>:'24' */ }
+	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
+	virtual	void		initialize					( ) override { }
 	virtual	void		finalize					( ) override { /* no source */ }
 	virtual	void		execute						( ) override { /* no source */ }
-	// STATE[STUB]
-	virtual	bool		is_ready_for_transition		( ) const override { /* <0xe23e0>:'27' */ }
+	// STATE[100%|DONE]: return true; bytes == target fold @0xd23e0 (ICF-unscorable, see .md)
+	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 
 private:
 	/* 0x0000 */	/* jump_logic_base_state */

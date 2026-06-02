@@ -279,6 +279,25 @@ _(Append new findings below this line.)_
   and calls a mutating op (`operator=`/byte store), declare the member `mutable` in the SAME
   edit pass as the body; otherwise the first rebuild is wasted on the compile error. Cost me
   one rebuild on `set_animation_to_wait` (the body was right, just needed `mutable`).
+- **A trivial fsm_state-style virtual override (empty `{}` / `{ return true; }`) is
+  BYTE-CORRECT but objdiff-UNSCORABLE - confirm it in ONE rebuild and stop, don't chase
+  the `None`.** These header one-liners get `/OPT:ICF`-folded whole-program: the surviving
+  representative symbol at the folded address differs build-to-build and side-to-side, so
+  neither delinker re-attaches the body to `your_class::method` - the `.h` unit reads
+  `fuzzy: None` with stray *other-class* fold-siblings (e.g. `breath_state*`) listed, and
+  `binaries/rich/base/index.jsonl` has no standalone symbol for your function (same class as
+  the documented `game_core_initialize` gap). PROVE the bytes instead of chasing a symbol:
+  read the target fold body (`pdb_rich_query target --rva`), then scan
+  `binaries/rich/base/index.jsonl` for functions whose `instructions` are byte-identical -
+  if the empty-thiscall fold (push ebp;mov ebp,esp;push ecx;mov [ebp-4],ecx;mov esp,ebp;pop
+  ebp;ret) and the return-true fold (...mov al,1...) both have a populated family (~100 / ~30
+  members on game_core), your bytes are emitted and correct. Mark 100%|DONE. The 50-ish
+  100<->0 rows in report-changes are symmetric fold-representative churn (dtors/thunks/refcount
+  trivials), NOT regressions - none touch your source. ANCHOR via member-fn ADDRESS-OF only
+  (`&Class::method`), NEVER construct an instance: instantiating an fsm_state-derived class
+  emits its vtable and forces codegen of any still-STUB non-void virtual (e.g.
+  `selected_animations`) -> C4716/LNK1257 link failure (cost me one full ~20-min relink).
+  Whole unit (2 trivial overrides) done in effectively one productive rebuild this way.
 - **The inherited stack tip's `temp_include_all.cpp` may not even COMPILE - brace-balance-check it
   BEFORE your first rebuild (zero cost).** On `weapon_core_hide_state_base` the tip branch
   (`match/game_core-weapon_core_show_state_base`) had FIVE anchor functions each missing their closing
