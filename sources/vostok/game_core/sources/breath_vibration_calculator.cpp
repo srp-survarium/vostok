@@ -34,10 +34,18 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
-// STATE[76.80%|PARTIAL]: body logically exact; residual is the trivial-accessor
-// inline-vs-call divergence (target calls fsm::states()/front()/current_state()/
-// breath_state::get_multiplier(); base inlines them) - per the new guidelines this
-// must be re-diffed against source, not banked as LTCG. See the .md for the asm.
+// STATE[76.80%|PARTIAL]: body logically exact (members, control flow, virtual
+// dispatch, ordering all match). Residual is the inline-vs-call of fsm::states()
+// and intrusive_list::front() ONLY: the TARGET emits real out-of-line calls to
+// them (delinker misnames them finalize_impl / list3::operator[]), our /Od+/GL
+// base inlines them to a direct [+8] read; that adds the target's call-result
+// temps so its frame is sub esp,1Ch vs our 14h and the [ebp-N] slots shift.
+// current_state() and get_multiplier() are inlined on BOTH sides (NOT a call
+// divergence) - the only diff in that tail is the cascading extra-temp/slot
+// materialization. Per the new guidelines this is re-diffed against source, not
+// banked as LTCG: verified via both rich indexes (fsm::states/front exist
+// out-of-line in target, absent in base - the documented unsteerable-COMDAT
+// class). See the .md for the asm.
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;

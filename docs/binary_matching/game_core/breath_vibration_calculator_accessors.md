@@ -102,29 +102,45 @@ loop_performance.md (prior report.json was generated on a different branch's tre
 ### Setter diff (`pdb_fetch --view diff --rva 0x5834d0`, no rebuild)
 
 `24/92 instructions equal (26.1%)` per the diff header (report.json fuzzy = 76.80%).
-Every diff hunk has ONE root cause: the target emits real CALLs to the trivial
-accessors `fsm::states()`, `intrusive_list::front()` (x2), `fsm::current_state()`,
-`breath_state::get_multiplier()`; our /Od+/GL base INLINES them to direct member
-reads (`mov eax,[edx+8]` for front, `[ecx+24h]` for get_multiplier). Consequence:
-target needs extra stack temps for the call results, so its frame is `sub esp,1Ch`
-vs our `sub esp,14h`, and the body offsets shift. The member set, control flow,
-virtual dispatch (`[vtbl+0x14]`), `m_breath_holding_reserve = m_params->
-max_breath_holding_time` (`fld [eax]; fstp [+34h]`), `set_initial_state` call, and
-the `m_target_multiplier`/`m_current_multiplier` stores all line up. This is the
-documented "LTCG out-of-line-call vs inline of a trivial COMDAT template method"
-pattern (assembly_patterns.md) — a whole-program/linker decision, not steerable
-from this function's source. => setter left PARTIAL at 76.80%; ctor/dtor DONE 100%.
+The ONLY inline-vs-call divergence is `fsm::states()` and `intrusive_list::front()`
+(x2): the TARGET emits real out-of-line CALLs to them - delinker misnames them
+`...finalize_impl` / `boost::_bi::list3<...>::operator[]` at target 0x15/0x1a and
+0x66/0x6b - while our /Od+/GL base INLINES them to a direct `mov eax,[edx+8]` read.
 
-No second rebuild here: the remaining setter diff is the trivial-accessor
-inline-vs-call shape above.
+CORRECTION (reviewer, 2026-06-01): `fsm::current_state()` and
+`breath_state::get_multiplier()` are NOT a target-call divergence - the
+`pdb_fetch --view target` asm shows them INLINED on the target too
+(`mov eax,[edx+10h]` reads m_current_state @0x10 directly; `movss xmm0,[eax+24h]`
+reads m_multiplier @0x24 directly), and the base inlines them identically. The
+earlier "the target emits real CALLs to ... current_state()/get_multiplier()"
+wording was a divergence misattribution and has been removed. The residual in that
+tail (target 0x79-0xb1 vs base 0x6b-0x97) is the cascading EXTRA-temp/slot
+materialization that follows from the `sub esp,1Ch` vs `14h` frame the two real
+`states()/front()` calls forced (the target bounces the inlined value through
+`[ebp-0Ch]->[ebp-8]->[ebp-10h]` extra slots), not a separate call.
+
+Consequence: the member set, control flow, virtual dispatch (`[vtbl+0x14]`),
+`m_breath_holding_reserve = m_params->max_breath_holding_time` (`fld [eax]; fstp
+[+34h]`), the `set_initial_state` call, and the `m_target_multiplier`/
+`m_current_multiplier` stores all line up. The `states()`/`front()` inline-vs-call
+is the documented "LTCG out-of-line-call vs inline of a trivial COMDAT template
+method" class (assembly_patterns.md). => setter left PARTIAL at 76.80%; ctor/dtor
+DONE 100%.
+
+No second rebuild here: the remaining setter diff is the `states()`/`front()`
+inline-vs-call shape above plus its cascading frame/slot shift.
 
 ### Review note (new guidelines)
 The updated MATCHING.md narrows the LTCG excuse to *function arguments only* and
 explicitly lists inline-vs-call as a matching problem to solve from source. The
 prior "uncontrollable LTCG" framing for this 76.80% residual is therefore downgraded:
-keep it PARTIAL, but the inline-vs-call of `fsm::states()`/`front()`/`current_state()`/
-`breath_state::get_multiplier()` should be re-diffed against the source on a future
-rebuild (confirm via both rich indexes whether the target out-of-lines these COMDAT
-accessors while base inlines them - the documented unsteerable-COMDAT class - before
-banking it). This review did NOT rebuild; the body shape is unchanged.
+keep it PARTIAL. Reviewer verified via BOTH rich indexes that the target out-of-lines
+the two COMDAT accessors while base inlines them: `pdb_rich_query --index .../target
+--function "fsm::states"` returns `vostok::ai::fsm::states()` (0x03f210) and
+`--function "front"` returns the `intrusive_list<fsm_state,...>::front() const`
+(0x082cd0), while the same queries on the base index return NEITHER (inlined
+whole-program in base). That is the documented unsteerable-COMDAT class - the residual
+is understood, not a source bug, and stays PARTIAL pending those COMDATs being emitted
+out-of-line in base (a whole-program/linker decision, not steerable from this source).
+This review did NOT rebuild; the body shape is unchanged.
 </content>

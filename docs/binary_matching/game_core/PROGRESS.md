@@ -45,6 +45,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
 - game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% PARTIAL] -> PR #117 (regressions: none)
   - GROUPED. ctor+dtor 100% (observed-escape anchor). setter PARTIAL (76.8%): residual is the
-    trivial-accessor inline-vs-call shape (target calls states()/front()/current_state()/get_multiplier()
-    out-of-line; base inlines). New guidelines: re-diff against source, do NOT bank as LTCG. Added
-    breath_state.h for the vtable cast.
+    trivial-accessor inline-vs-call shape - target out-of-lines fsm::states()/front() ONLY (verified in
+    both rich indexes: present in target, absent in base), base inlines; current_state()/get_multiplier()
+    are inlined on BOTH sides (the tail diff is just the cascading frame/slot shift). New guidelines:
+    re-diff against source, do NOT bank as LTCG. Added breath_state.h for the vtable cast.
