@@ -14,8 +14,8 @@ Base (stack tip): `match/game_core-ik_processor-ctor-activate` (#142).
 - `set_left_toe_on_ground(bool)`    rva 0x6fad20 ; `QAE` public
 - `set_right_heel_on_ground(bool)`  rva 0x6facf0 ; `QAE` public
 - `set_right_toe_on_ground(bool)`   rva 0x6facc0 ; `QAE` public
-- `set_heel_on_ground(leg_params&, bool)`  rva 0x6eab70 ; `AAE` PRIVATE
-- `set_toe_on_ground(leg_params&, bool)`   rva 0x6eaa70 ; `AAE` PRIVATE
+- `set_heel_on_ground(leg_params&, bool)`  rva 0x6fab70 ; `AAE` PRIVATE
+- `set_toe_on_ground(leg_params&, bool)`   rva 0x6faa70 ; `AAE` PRIVATE
 
 Header change: added `private:` before the two `(leg_params&, bool)` helpers
 (they were under the trailing `public:`); `get_foot_fixed_transform`/`process_leg`
@@ -31,11 +31,11 @@ pdb_fetch --target-index binaries/rich/target/index.jsonl --function set_right_h
 pdb_fetch --target-index binaries/rich/target/index.jsonl --function set_right_toe_on_ground --view target
 pdb_rich_query --index binaries/rich/target/index.jsonl --function set_heel_on_ground --list
 pdb_rich_query --index binaries/rich/target/index.jsonl --function set_toe_on_ground --list
-pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6eab70 --view target   # heel helper
-pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6eaa70 --view target   # toe helper
-pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6eab70 --view structure
-pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6eaa70 --view structure
-pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6eab70 --view callees
+pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6fab70 --view target   # heel helper
+pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6faa70 --view target   # toe helper
+pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6fab70 --view structure
+pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6faa70 --view structure
+pdb_fetch --target-index binaries/rich/target/index.jsonl --rva 0x6fab70 --view callees
 # COFF parse of binaries/objdiff/target/.../legs_ik_processor.cpp.obj for consts:
 #   L431/L441 movss source = 0.0f  (m_*_transition_time_calculator.reset -> m_value=0)
 #   clamp consts: half=0.5, epsilon_3=0.001, fermi epsilon __real@3ba3d70a=0.005f
@@ -49,7 +49,7 @@ All four are identical-shaped: `mov ecx,[ebp-4]; add ecx, <off>; push; call <hel
 - set_right_toe_on_ground  -> add 0x40,                      set_toe_on_ground(params,value)
 m_left_leg_params @0x10, m_right_leg_params @0x40 (header). Verified, not assumed.
 
-## Heel helper set_heel_on_ground(leg_params& params, bool value) (rva 0x6eab70)
+## Heel helper set_heel_on_ground(leg_params& params, bool value) (rva 0x6fab70)
 this=[ebp-24h], params=[ebp+8], value=[ebp+0Ch]. 16 statements L423..L443.
 ```
 L424  read params.m_heel_on_ground(0x2c) into temp, cmp value   -> if ( params.is_heel_on_ground() == value )
@@ -73,7 +73,7 @@ members. Odd but faithful (rule #1). The L439 fermi rebuild copies only the two
 float fields (+4 m_total_transition_time, +8 m_epsilon), leaving the vtable at +0;
 finalize_impl is the COMDAT-folded temp dtor (see #142 / leg_params PROGRESS).
 
-## Toe helper set_toe_on_ground(leg_params& params, bool value) (rva 0x6eaa70)
+## Toe helper set_toe_on_ground(leg_params& params, bool value) (rva 0x6faa70)
 11 statements L446..L458. SAME prologue, but the value==true branch is EMPTY:
 ```
 L447  if ( params.is_toe_on_ground() == value )
@@ -166,6 +166,6 @@ PY
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
   --base-index binaries/rich/base/index.jsonl \
   --objdiff-base-dir binaries/objdiff/base --objdiff-target-dir binaries/objdiff/target \
-  --rva 0x6eab70 --view diff      # heel helper
-  --rva 0x6eaa70 --view diff      # toe helper
+  --rva 0x6fab70 --view diff      # heel helper
+  --rva 0x6faa70 --view diff      # toe helper
 ```
