@@ -67,7 +67,7 @@ public:
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
-			u16									ammo_in_magazine				( ) const										{ return m_ammo_in_magazine;		}	// STATE[STUB]
+			u16									ammo_in_magazine				( ) const;	// STATE[STUB] target keeps this out-of-line (called, not inlined, from the idle-state getters)
 	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
 
 			u16									maximum_ammo_in_weapon			( ) const;
