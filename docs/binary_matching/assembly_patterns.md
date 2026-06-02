@@ -841,3 +841,24 @@ target's out-of-line `addition_lexeme::cloned_in_buffer()`). Whether operator+ i
 `call` at the site is per-call-site LTCG (operator+ is standalone in BOTH indexes), same class as the
 operator| entry. Confirmed in `weapon_core_idle_state::weapon_and_hands_expression` (85.65%, residual =
 that operator+ inline-vs-call): `main + offset` scored 85.65 vs the hand-expansion's 80.30.
+
+### Lone assert eater (no branch) = compiled-out NON-_U `ASSERT( ... )`
+A standalone `mov byte ptr [ebp-XX], 0 ; lea eax, [ebp-XX] ; call empty_stub` with NO following
+`movzx/test/je` and NO arg pushes is a compiled-out plain `ASSERT( expr )` (= `VOSTOK_EMPTY_EXPRESSION`
+= `if(::vostok::identity(false)){}else(void)0`; debug_macros.h). Under /Od the empty-`if` body lets MSVC
+drop the branch, leaving just the `identity(false)` guard call (the delinker misnames it
+`empty_stub`/`finalize_impl`). SOURCE: `ASSERT( UNKNOWN_EXPRESSION )`. DISTINGUISH from the `_U` asserts
+(`ASSERT_U`/`ASSERT_CMP_U`) which ALSO emit `movzx;test;je; push..; call expression_eater; add esp` (the
+eater body) - using a `_U` form for a lone eater over-produces those bytes. Confirmed in
+`pistol_/double_barreled_weapon_core_idle_state` ctors (trailing ASSERT after the fill loop) and the
+double-barreled getter (leading ASSERT). The double-barreled ctor has a leading lone `ASSERT` then an
+`ASSERT_CMP_U(count,==,12)` -> two byte-stores, only the second tested.
+
+### Inline class-body accessor inlined by base but called by target -> move it out-of-line
+When the target diff shows `call ?accessor@class@@...` but base shows the inlined member read
+(e.g. `mov ax,[reg+off]; mov [ebp-XX],ax; movzx`), the cause is a trivial accessor defined IN the
+class body (implicitly inline) that the target's build kept out-of-line at the call site. FIX: declare
+it in the header and define it in the .cpp. This is NOT just one instruction - the inlined temp grows
+the frame (`sub esp` differs by ~4) and clobbers a different register than a `call` would, cascading the
+WHOLE function's register allocation. Confirmed: moving `weapon_core::ammo_in_magazine()` out-of-line
+took `pistol_/double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair` from 77/92% to 99.92%.
