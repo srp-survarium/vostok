@@ -69,11 +69,13 @@ animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_ex
 	// ******
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this`
-// loaded into eax (target) vs ecx (base) - an argument-passing register choice - plus the
-// `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum` typedef-alias in
-// the get_weapon_lexeme_pair_impl callee mangling; those last two are byte-identical to the
-// reference weapon_core_idle_state::get_weapon_lexeme_pair which #151 accepted as 100% DONE.
+// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` call boundary - the
+// callee is LTCG-optimized to take `this` in eax (target `weapon_core::ammo_in_magazine` @0x9b270
+// is `mov ax,[eax+47Ah]; ret`), so the caller loads m_weapon into eax (target) vs ecx (base): a
+// link-time custom calling convention, the permitted arg-passing class. Plus the
+// `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum` typedef-alias in the
+// get_weapon_lexeme_pair_impl callee mangling; those two are byte-identical to the reference
+// weapon_core_idle_state::get_weapon_lexeme_pair (#151), which scores 100% lacking only this nit.
 weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "pistol-idle", "pistol-idle_empty" };
@@ -95,6 +97,16 @@ weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutabl
 		animation::mixing::play_cyclically,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
+
+	// FUNCTION BODY
+	// <0x79bc10>|0x000|+0x009:'41'	pcstr weapon_animation_captions[2] = { "pistol-idle", "pistol-idle_empty" };
+	// <0x79bc19>|0x009|+0x007:'43'	weapon_animation_captions[0] = "pistol-idle";
+	// <0x79bc20>|0x010|+0x007:'44'	weapon_animation_captions[1] = "pistol-idle_empty";
+	// <0x79bc27>|0x017|+0x01b:'46'	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
+	// <0x79bc42>|0x032|+0x00a:'47'	pcstr animation_identifier = weapon_animation_captions[animation_index];
+	// <0x79bc4c>|0x03c|+0x02c:'48'	selected_animation = m_weapon_animations[...];
+	// <0x79bc78>|0x068|+0x04f:'49'	return get_weapon_lexeme_pair_impl( ... );
+	// ******
 }
 
 // STATE[100%|DONE]
