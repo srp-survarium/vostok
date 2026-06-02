@@ -571,84 +571,109 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::set_left_heel_on_ground(bool)
+// STATE[100%|DONE]
 void legs_ik_processor::set_left_heel_on_ground( bool value )
 {
-	// FUNCTION BODY
-	// <0x6fad57>|0x007|+0x014:'404'
-	// ******
+	set_heel_on_ground( m_left_leg_params, value );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::set_left_toe_on_ground(bool)
+// STATE[100%|DONE]
 void legs_ik_processor::set_left_toe_on_ground( bool value )
 {
-	// FUNCTION BODY
-	// <0x6fad27>|0x007|+0x014:'409'
-	// ******
+	set_toe_on_ground( m_left_leg_params, value );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::set_right_heel_on_ground(bool)
+// STATE[100%|DONE]
 void legs_ik_processor::set_right_heel_on_ground( bool value )
 {
-	// FUNCTION BODY
-	// <0x6facf7>|0x007|+0x014:'414'
-	// ******
+	set_heel_on_ground( m_right_leg_params, value );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::set_right_toe_on_ground(bool)
+// STATE[100%|DONE]
 void legs_ik_processor::set_right_toe_on_ground( bool value )
 {
-	// FUNCTION BODY
-	// <0x6facc7>|0x007|+0x014:'419'
-	// ******
+	set_toe_on_ground( m_right_leg_params, value );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::set_heel_on_ground(survarium::legs_ik_processor::leg_params&, bool)
+// STATE[98.84%|DONE]: residual is a single `lea ecx,[ebp-0Ch]` (the `this` arg
+// of the COMDAT-folded trivial ~fermi_interpolator temp dtor) the target emits
+// before the dtor call and base omits - an ICF/LTCG call-boundary arg-passing
+// artifact; every statement, the control structure and all consts match.
 void legs_ik_processor::set_heel_on_ground( legs_ik_processor::leg_params& params, bool value )
 {
+	if ( params.is_heel_on_ground( ) == value )
+		return;
+
+	params.set_heel_on_ground( value );
+
+	if ( value )
+	{
+		params.heel_transition_time = m_heel_transition_time;
+		m_heel_transition_time_calculator.reset( );
+	}
+	else
+	{
+		m_heel_transition_time = m_heel_transition_time_calculator.get_value( );
+		math::clamp( m_heel_transition_time, 0.001f, 0.5f );
+		m_left_leg_params.set_heel_transition_time( m_heel_transition_time );
+		m_right_leg_params.set_heel_transition_time( m_heel_transition_time );
+		m_heel_interpolator = animation::fermi_interpolator( m_heel_transition_time );
+		params.toe_transition_time = m_toe_transition_time;
+		m_toe_transition_time_calculator.reset( );
+	}
+
 	// FUNCTION BODY
-	// <0x6fab79>|0x009|+0x015:'424'
-	// <0x6fab8e>|0x01e|+0x005:'425'
-	// <0x6fab93>|0x023|+0x00d:'426'
+	// <0x6fab79>|0x009|+0x015:'424'	if ( params.is_heel_on_ground() == value )
+	// <0x6fab8e>|0x01e|+0x005:'425'	    return;
+	// <0x6fab93>|0x023|+0x00d:'426'	params.set_heel_on_ground( value );
 	// <0>
-	// <0x6faba0>|0x030|+0x008:'428'
+	// <0x6faba0>|0x030|+0x008:'428'	if ( value )
 	// <0>
-	// <0x6faba8>|0x038|+0x00f:'430'
-	// <0x6fabb7>|0x047|+0x013:'431'
+	// <0x6faba8>|0x038|+0x00f:'430'	    params.heel_transition_time = m_heel_transition_time;
+	// <0x6fabb7>|0x047|+0x013:'431'	    m_heel_transition_time_calculator.reset();
 	// <0>
-	// <0x6fabca>|0x05a|+0x005:'433'
+	// <0x6fabca>|0x05a|+0x005:'433'	} (jmp = brace)
 	// <0>
-	// <0x6fabcf>|0x05f|+0x020:'435'
-	// <0x6fabef>|0x07f|+0x022:'436'
-	// <0x6fac11>|0x0a1|+0x018:'437'
-	// <0x6fac29>|0x0b9|+0x018:'438'
-	// <0x6fac41>|0x0d1|+0x049:'439'
-	// <0x6fac8a>|0x11a|+0x00f:'440'
-	// <0x6fac99>|0x129|+0x013:'441'
+	// <0x6fabcf>|0x05f|+0x020:'435'	else { m_heel_transition_time = m_heel_transition_time_calculator.get_value();
+	// <0x6fabef>|0x07f|+0x022:'436'	    math::clamp( m_heel_transition_time, 0.001f, 0.5f );
+	// <0x6fac11>|0x0a1|+0x018:'437'	    m_left_leg_params.set_heel_transition_time( m_heel_transition_time );
+	// <0x6fac29>|0x0b9|+0x018:'438'	    m_right_leg_params.set_heel_transition_time( m_heel_transition_time );
+	// <0x6fac41>|0x0d1|+0x049:'439'	    m_heel_interpolator = fermi_interpolator( m_heel_transition_time );  // +lea ecx residual
+	// <0x6fac8a>|0x11a|+0x00f:'440'	    params.toe_transition_time = m_toe_transition_time;
+	// <0x6fac99>|0x129|+0x013:'441'	    m_toe_transition_time_calculator.reset(); }
 	// <0>
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::set_toe_on_ground(survarium::legs_ik_processor::leg_params&, bool)
+// STATE[98.59%|DONE]: same ICF/LTCG residual as set_heel_on_ground - the lone
+// `lea ecx,[ebp-0Ch]` (this arg of the folded ~fermi_interpolator temp dtor).
 void legs_ik_processor::set_toe_on_ground( legs_ik_processor::leg_params& params, bool value )
 {
+	if ( params.is_toe_on_ground( ) == value )
+		return;
+
+	params.set_toe_on_ground( value );
+
+	if ( !value )
+	{
+		m_toe_transition_time = m_toe_transition_time_calculator.get_value( );
+		math::clamp( m_toe_transition_time, 0.001f, 0.5f );
+		m_left_leg_params.set_toe_transition_time( m_toe_transition_time );
+		m_right_leg_params.set_toe_transition_time( m_toe_transition_time );
+		m_toe_interpolator = animation::fermi_interpolator( m_toe_transition_time );
+	}
+
 	// FUNCTION BODY
-	// <0x6faa79>|0x009|+0x015:'447'
-	// <0x6faa8e>|0x01e|+0x005:'448'
-	// <0x6faa93>|0x023|+0x00d:'449'
-	// <0x6faaa0>|0x030|+0x00c:'450'
+	// <0x6faa79>|0x009|+0x015:'447'	if ( params.is_toe_on_ground() == value )
+	// <0x6faa8e>|0x01e|+0x005:'448'	    return;
+	// <0x6faa93>|0x023|+0x00d:'449'	params.set_toe_on_ground( value );
+	// <0x6faaa0>|0x030|+0x00c:'450'	if ( !value )
 	// <0>
-	// <0x6faaac>|0x03c|+0x020:'452'
-	// <0x6faacc>|0x05c|+0x022:'453'
-	// <0x6faaee>|0x07e|+0x018:'454'
-	// <0x6fab06>|0x096|+0x018:'455'
-	// <0x6fab1e>|0x0ae|+0x049:'456'
+	// <0x6faaac>|0x03c|+0x020:'452'	{ m_toe_transition_time = m_toe_transition_time_calculator.get_value();
+	// <0x6faacc>|0x05c|+0x022:'453'	    math::clamp( m_toe_transition_time, 0.001f, 0.5f );
+	// <0x6faaee>|0x07e|+0x018:'454'	    m_left_leg_params.set_toe_transition_time( m_toe_transition_time );
+	// <0x6fab06>|0x096|+0x018:'455'	    m_right_leg_params.set_toe_transition_time( m_toe_transition_time );
+	// <0x6fab1e>|0x0ae|+0x049:'456'	    m_toe_interpolator = fermi_interpolator( m_toe_transition_time ); }  // +lea ecx residual
 	// <0>
 	// ******
 }

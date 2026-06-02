@@ -626,3 +626,23 @@ arg-passing class (register-instead-of-slot / link-time convention); no source c
 `min( arg, member )` steers it without altering semantics. Mark DONE at the resulting %
 (~84%), not PARTIAL. Caught on `legs_ik_processor::leg_params::set_{heel,toe}_transition_time`
 (83.69%).
+
+### `member = T( args )` (assign a temporary class object) = copy data members + temp dtor; residual is the dtor's `this` (ICF call boundary)
+Assigning a freshly-built temporary into a class-type member, `m_x = T( args );`, emits, under
+/Od: (1) construct the temp at a stack slot `[ebp-N]` (`lea eax,[ebp-N]; call T::T`), (2)
+memberwise-COPY the temp's data members into `m_x` (only the data, e.g. `fld[temp+4];
+fstp[m_x+4]; fld[temp+8]; fstp[m_x+8]` - the vtable at +0 is NOT touched, the assignment is
+the implicit `operator=`), then (3) destroy the temp (`lea ecx,[ebp-N]; call <dtor>`). The dtor
+of a trivial class is COMDAT-folded, so its symbol NAME differs base vs target (target may show
+`...finalize_impl`, base `boost::function1<...>::dummy::nonnull` - same folded empty function).
+Residual to expect: the target may keep `lea ecx,[ebp-N]` (setting `this` for the folded
+__thiscall dtor) while base omits it (this already in a register) or vice-versa - a 3-byte
+delta. That `lea ecx` is the dtor's `this` ARGUMENT at the call boundary => permitted ICF/LTCG
+arg-passing class, mark DONE (~98-99%), not PARTIAL. Two requirements to even compile the
+assignment: the member-class needs NON-const data members AND an accessible (implicit) operator=
+- if the reconstructed header has `float const` members or a private `operator=`, the assign is
+illegal (C2248); check the PDB-ground-truth structure header (`binaries/structure/target/
+headers/...`) for the real const-ness/access and fix the working header to match. Caught on
+`legs_ik_processor::set_{heel,toe}_on_ground(leg_params&,bool)` (98.84/98.59%): `m_*_interpolator
+= fermi_interpolator( time );` - the working fermi_interpolator.h wrongly had const members +
+private op=; the structure-target header showed plain non-const floats and no op=.

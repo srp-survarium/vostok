@@ -220,3 +220,26 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     deleted (clean 100% DONE). report-changes: 53 regressed are all symmetric COMDAT/dtor/CRT delinker
     re-slice churn (scalar-deleting-dtor, thunk/vcall, resource_ptr, intrusive_ptr/interlocked, buffer_string
     operator=), balanced by 65 improved; no matched game_core unit regressed.
+- game_core::legs_ik_processor::{set_left_heel_on_ground, set_left_toe_on_ground, set_right_heel_on_ground,
+  set_right_toe_on_ground, set_heel_on_ground(leg_params&,bool), set_toe_on_ground(leg_params&,bool)} ->
+  STATE[4x 100%, helpers 98.84%/98.59% | DONE] -> PR #143 (regressions: none)
+  - STACKED on #142. GROUPED: the 4 public left/right setters (QAE) are trivial one-liners that delegate
+    to the 2 private (AAE) leg_params& helpers, pulled into the same unit. m_left_leg_params@0x10,
+    m_right_leg_params@0x40. Helpers reuse the leg_params setters matched in #134 (set_heel_on_ground(bool)
+    etc.) + math::clamp(t,0.001f,0.5f) + transition_time_calculator::reset()(=m_value=0.0f) + two
+    set_*_transition_time delegations + `m_*_interpolator = fermi_interpolator(time)`. Header: added
+    `private:` before the two helpers; gave transition_time_calculator::reset() a `{m_value=0.0f;}` body.
+  - SHARED HEADER FIX (in this PR): fermi_interpolator.h had `float const` members + a private operator=,
+    which makes `m_*_interpolator = fermi_interpolator(...)` illegal (C2248). The PDB ground-truth structure
+    header shows plain non-const floats and NO operator= (compiler-implicit memberwise op=, copies +4/+8 and
+    skips the vtable - exactly the target bytes). Fixed working header to match the PDB. Only fermi consumer
+    that assigns; game/animation only construct it, no matched codegen changes.
+  - Helpers' lone residual: `+ lea ecx,[ebp-0Ch]` (target-only) before the temp ~fermi_interpolator dtor
+    call - the dtor's `this` arg at the ICF/LTCG-folded call boundary (target dtor symbol finalize_impl, base
+    boost::function1::dummy::nonnull - same folded empty fn). Permitted call-boundary arg class; every
+    statement, control structure, and const matches. New assembly_patterns.md entry: "member = T(args)".
+  - Anchor: use_game_core_legs_ik_processor() constructs a legs_ik_processor, calls all four public setters
+    (helpers survive transitively), escapes &processor. report-changes: 68 regressed all symmetric COMDAT/
+    dtor/CRT delinker re-slice churn (empty_stub, scalar-deleting-dtors, float3/4/4x4 ctors, boost _bi,
+    bt*/Scaleform/ai/particle/render dtors, noncopyable, interlocked), balanced by 49 improved (incl. all 6
+    of this unit, 0.0 -> final); no matched game_core unit regressed.
