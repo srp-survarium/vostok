@@ -30,6 +30,10 @@ WHY: a correct (EXE-relinking) `rebuild.py` is ~10 minutes - the ~1-minute
 figure is the module-only build (`rebuild.py <module>`), which skips the link and
 gives a STALE score, so it cannot substitute. A per-TU rebuild would tighten the
 loop over hundreds of functions.
+WHY: a correct (EXE-relinking) `rebuild.py` does a full whole-EXE relink - the
+module-only build (`rebuild.py <module>`) skips the link and gives a STALE score,
+so it cannot substitute. A per-TU rebuild would tighten the loop over hundreds of
+functions.
 IDEA: compile one `.obj` under Wine and run `objdiff-cli` on that unit only;
 cache everything else.
 CAVEAT: rarely viable - a single-TU compile does not run LTCG (a whole-program,
@@ -39,6 +43,8 @@ LTCG artifacts to diverge.
 STATUS: nice-to-have, LOWER priority now - the rebuild (~10 min, backgrounded) is no
 longer the loop bottleneck; agent token cost is, and a faster per-TU relink does not
 save tokens. Worth it only if it also cuts an iteration.
+STATUS: nice-to-have - the real loop cost is the full EXE relink, not the
+module-only build, so anything that avoids a full relink per function helps.
 
 ### Type/declaration lookup in the target structure
 WANT: "give me the declaration of `class foo`" from `binaries/structure/target`
