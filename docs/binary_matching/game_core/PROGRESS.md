@@ -436,7 +436,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     convention cause instead of bare "__thiscall register-allocation choice"; added this PROGRESS line (#154 shipped
     without one, like #148/#149/#151/#153). No logic change; report.json unchanged (no rebuild).
 - game_core::survarium::get_weapon_lexeme_pair_impl (free fn, target rva 0x7a13e0) ->
-  STATE[None|PARTIAL] -> PR (stacked on #154 / match/game_core-pistol-double-barreled-aimed-idle-state)
+  STATE[None|PARTIAL] -> PR #155 (stacked on #154 / match/game_core-pistol-double-barreled-aimed-idle-state)
   (regressions: none)
   - The big idle/aimed-idle lexeme builder, until now a link-only STUB. Full 1:1 body reconstructed: builds
     MAIN animation_lexeme_parameters ([ebp-58h]) via resource_ptr ctor + setter chain (.animated_object,
