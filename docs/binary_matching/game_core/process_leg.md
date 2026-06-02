@@ -135,3 +135,17 @@ roundtrip that sibling get_foot_fixed_transform (84%) also shows. Regressions ca
 Setup: get_rotation_matrix/change_matrix_orientation defined locally in this TU (called
 out-of-line by process_leg; their own bodies are separate objects). Anchored via friend
 use_game_core_legs_ik_processor_process_leg.
+
+## Deep pass (anchor-removal, match/game_core-legs_ik_processor-deep)
+Removed the fake-observation direct anchor `use_game_core_legs_ik_processor_process_leg`
+(NULL-cast processor/params) + its IncludeAll dispatch line. process_leg is now kept alive
+ONLY transitively through the real `processor` instance in `use_game_core_legs_ik_processor`
+(process() -> process_leg). Hypothesis: fake observation might distort LTCG/DSE.
+- COMMAND: python3 scripts/rebuild.py (no module arg); python3 scripts/legs_scores.py
+- RESULT: 78.81% UNCHANGED (vs PR #159 78.82). Function still SCORES (reached transitively).
+- CONCLUSION: anchor observation was NOT the cap. The real residual is the documented
+  three-block bracing (the [1] blocks at srclines 205/231/245 written flat in our source) -
+  a recoverable control-structure matching problem, plus the call-boundary LTCG class. NOT
+  pursued in this pass (the brace work is a multi-iteration restructure: the target also
+  declares an extra `original_up_leg_to_foot_dir<1>` inside the up_leg block that our source
+  lacks, so it needs the in-block local set matched, not just `{ }` added). Stays 78.81% PARTIAL.
