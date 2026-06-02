@@ -280,3 +280,37 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     LTCG: per-site inline-vs-call AND the target's operator| being an LTCG calling-convention-promoted COMDAT
     (__fastcall ecx/eax, xmm0 return) that our base never produces (base operator| is plain __cdecl x87). STATE
     stays 65.38% PARTIAL with the correct source. Full trail: docs/.../game_core/get_additional_length.md.
+- game_core::legs_ik_processor::get_foot_fixed_transform -> STATE[84.16%|PARTIAL] -> PR #145 (regressions: none)
+  - STACKED on #144. Private const member (mangled ABE), target rva 0x6ebae0, ~0xb5a bytes, 64 statements
+    (src L294-L400). Large float4x4 IK math; the full control structure is matched: 5 bone world matrices
+    `matrices[<bone>_index - get_skeleton().get_root_bones_count()] * hip_world_matrix`, the
+    `is_similar(foot.c.xyz,toe.c.xyz)||is_similar(foot.c.xyz,leg.c.xyz)` early-return-foot, 3 normalized dirs
+    (foot_to_leg/foot_to_toe/left), an identity+i/j/k matrix built then `create_rotation(left_dir,deg2rad(30))
+    *result`, 3 ASSERTs, result.c=foot pos then =transform_position(up_dir), capsule_size/colors, a 4-way
+    ground-state if-chain (is_full_on_ground / is_heel_on_ground / is_toe_on_ground / else) computing
+    start/finish + rotation_interpolation_koef (1-interpolated_value for heel branches, raw for toe),
+    get_relative_matrix(foot_world,result), two `s_ik_legs_debug_draw && m_drawer` debug-draw guards,
+    m_character_controller->adjust_foot_transform, foot_center_transform = foot_to_center_rel*result, three
+    bone lengths (leg/up_leg/knee_len) + `delta_len = sum - up_leg_to_fixed_foot_dist`, the
+    `sqr(dist)>orig_sqr && heel_transition_time!=0` blend, and `return foot_center_transform`.
+  - BIGGEST FIX: un-hoisted root_count - the target RE-CALLS get_skeleton().get_root_bones_count() fresh at
+    every matrix site (7x), the index helper inlined each time; caching it in one local dropped the repeated
+    `mov eax,[m_skeleton]; call get_root_bones_count` (81.55 -> 84.16). New assembly_patterns.md entry.
+    Also: the two up_leg distances use the cached `up_leg_world_matrix` ref (hip-multiplied), not fresh
+    matrices[]. knee_world_matrix is a declared-but-unused local in BOTH binaries (C4189 matches target;
+    kept). else-branch is `finish = start`.
+  - Setup: get_relative_matrix (inline math helper, target rva 0xcb050) absent from our headers -> defined
+    vostok::math::get_relative_matrix directly in the .cpp (a header edit was a no-op due to PCH staleness).
+    #include physics/api.h before character_controller.h (VOSTOK_PHYSICS_API). Added protected inline
+    ik_processor::get_skeleton() to read the private base m_skeleton. s_ik_legs_debug_draw_value(bool)/
+    s_ik_foot_capsule_radius_value(float) declared as file statics (the cc machinery is STUB). Anchored via a
+    friend free fn use_game_core_legs_ik_processor_get_foot_fixed_transform (friend decl = no bytes), called
+    from IncludeAll, escapes the returned float4x4.
+  - Residual: register/[ebp-N] slot renaming + LTCG arg-passing/temp-materialization at the many math
+    operator/helper call boundaries (operator -+^*, normalize, create_rotation, transform_position,
+    is_similar, length, get_root_bones_count, interpolated_value, adjust_foot_transform) + a few
+    trivial-COMDAT inline-vs-call decisions. All statement byte sizes (`; <0xNN>`) agree with the carcass, so
+    the divergence is sub-statement arg passing, not structure. One genuinely-unresolved statement (@TODO):
+    the else-branch single-byte original_color write (mov byte[tmp],64h; mov [original_color],cl) - written as
+    a full color ctor; exact source form (a channel setter?) unknown. report-changes vs prior build: only the
+    single 81.55->84.16 self-improvement, no regressions.
