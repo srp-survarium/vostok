@@ -7,14 +7,9 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::player_stealth::player_stealth()
+// STATE[100%|DONE]
 player_stealth::player_stealth( )
 {
-	// FUNCTION BODY
-	// <0x5aaad0>|0x000|+0x007:'15'	{
-	// <0x5aaad7>|0x007|      :'16'	}
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -43,23 +38,20 @@ player_stealth& player_stealth::operator=( player_stealth const& other )
 	return *this;
 }
 
-// STATE[STUB]
-// void survarium::player_stealth::load(vostok::configs::binary_config_value const&)
+// STATE[100%|DONE]
 void player_stealth::load( configs::binary_config_value const& config )
 {
-	// FUNCTION BODY
-	// <0x5aaae9>|0x009|+0x019:'45'
-	// <0x5aab02>|0x022|+0x01a:'46'
-	// <0x5aab1c>|0x03c|+0x01a:'47'
-	// <0x5aab36>|0x056|+0x01a:'48'
-	// <0x5aab50>|0x070|+0x01a:'49'
-	// <0x5aab6a>|0x08a|+0x01a:'50'
-	// <0x5aab84>|0x0a4|+0x01a:'51'
-	// <0x5aab9e>|0x0be|+0x01a:'52'
-	// <0x5aabb8>|0x0d8|+0x01a:'53'
-	// <0x5aabd2>|0x0f2|+0x01a:'54'
-	// <0x5aabec>|0x10c|+0x01a:'55'
-	// ******
+	m_default_value				= (float)config["default_value"];
+	m_default_sound_value		= (float)config["default_sound_value"];
+	m_stand_factor				= (float)config["stand_factor"];
+	m_crouch_factor				= (float)config["crouch_factor"];
+	m_crouch_sound_factor		= (float)config["crouch_sound_factor"];
+	m_walk_factor				= (float)config["walk_factor"];
+	m_walk_sound_factor			= (float)config["walk_sound_factor"];
+	m_sprint_factor				= (float)config["sprint_factor"];
+	m_sprint_sound_factor		= (float)config["sprint_sound_factor"];
+	m_detection_level			= (float)config["detection_level"];
+	m_always_visible_distance	= (float)config["always_visible_distance"];
 }
 
 } // namespace survarium
