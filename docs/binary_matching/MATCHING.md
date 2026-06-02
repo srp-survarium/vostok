@@ -226,6 +226,32 @@ structure. (Conversely, a `case` with no `+0x002` entry was brace-less - e.g.
 `get_broken_hands_penalty`, whose cases show `+0x004`/`+0x2b` and no `}` jmp, matched
 without braces.)
 
+**`[n]` marks the start of lexical block `n`; a local tagged `<n>` lives in that block.**
+A body line can carry a trailing `|[n]:` field (e.g. `<0x5934e2>|0x012|+0x021|[1]:'35'`) -
+the `[n]` marks the statement that OPENS block `n`: a `for` / `while` / `if` / braced scope
+(so that example is a loop opening at src line 35). Correspondingly, a `// LOCALS` entry
+tagged `<n>` (e.g. `// ai::fsm_state*   state<1>`) is a local **declared inside block `n`**
+- here `state` lives in that loop, not at function scope; declare it there, not at the top.
+This block/scope mapping is reliable only in the non-optimized (`/Od`) target. (The rule is
+more nuanced than this, but this is the working approximation.)
+
+**Match the base structure to the target structure - not just the byte %.** After a build,
+your function has its OWN structure in `binaries/structure/base/<unit>` (the base PDB's
+statement/block layout); the target's is the `// FUNCTION BODY` carcass (the original
+source's shape). COMPARE the two: the same set of `'srcline'` statements, the same `[n]`
+block-opens, and the same `<n>` (no-address) lines should appear on BOTH sides.
+**Compare each statement's SIZE too:** the per-statement `+delta` (bytes to the next
+statement) should roughly agree between base and target - a statement whose `+delta`
+differs is exactly where the codegen diverged, a fast way to localize the mismatch before
+a byte diff. A block the
+base has that the target lacks - a `[n]`/`<n>` from braces you added, a missing early
+`return`, a different loop/`if` shape - means your CONTROL STRUCTURE diverges, even when the
+fuzzy % is high. **A high % over the wrong structure is not a match;** fix the source's shape
+to the target's. (Caught on `set_breath_holding_params`: an `if ( p ) { ...4 stores... }`
+emitted a block-open the target structure lacked - the target was an early `if ( !p )
+return;` guard, no braces - and the 76.80% hid it. The fix is a source restructure, not a %
+to bank.)
+
 **Keep the target structure inline when the match is NOT 100%.** If a function
 ends `PARTIAL` / `INPROGRESS` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY`
 block (and, for the diverging region, the relevant `pdb_fetch --view target` asm as
