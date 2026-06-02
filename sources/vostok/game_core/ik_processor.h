@@ -18,6 +18,10 @@ protected:
 			explicit	ik_processor	( );
 			void		activate		( animation::skeleton const& skeleton );
 
+	// claude@NOTE: legs_ik_processor::get_foot_fixed_transform reads m_skeleton
+	// (private base member) through this inline accessor.
+	inline animation::skeleton const& get_skeleton( ) const { return *m_skeleton; }
+
 private:
 	/* 0x0000 */	/* core::noncopyable */
 	/* 0x0000 */	animation::skeleton const*		m_skeleton;

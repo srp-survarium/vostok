@@ -658,3 +658,28 @@ headers/...`) for the real const-ness/access and fix the working header to match
 `legs_ik_processor::set_{heel,toe}_on_ground(leg_params&,bool)` (98.84/98.59%): `m_*_interpolator
 = fermi_interpolator( time );` - the working fermi_interpolator.h wrongly had const members +
 private op=; the structure-target header showed plain non-const floats and no op=.
+
+### bone-object-space matrix index: `matrices[bone_index - skeleton.get_root_bones_count()]`, re-called per use (do NOT hoist)
+ASM (repeated per matrix in a function that builds several bone matrices):
+    mov ecx, [this]                  ; this
+    mov eax, [ecx]                   ; m_skeleton (a private base member, read via inline accessor)
+    call vostok::animation::skeleton::get_root_bones_count   ; leaf, `this`(m_skeleton) passed in EAX (LTCG)
+    mov edx, [params]; mov edx, [edx+BONEOFF]   ; params.<bone>_bone_index
+    sub edx, eax                     ; index - root_count
+    shl edx, 6                       ; * sizeof(float4x4)=0x40
+    add edx, [matrices_arg]          ; &matrices[index - root_count]
+SOURCE: `matrices[params.<bone>_bone_index - get_skeleton().get_root_bones_count()]`.
+NOTES: the original source calls `get_root_bones_count()` FRESH at every matrix site (the
+index helper is inlined each time) - **do NOT hoist it into one `u32 root_count` local**. A
+hoisted local caches `m_skeleton->get_root_bones_count()` once (`mov [ebp-N],eax` then reuse),
+which DROPS the repeated `mov eax,[m_skeleton]; call get_root_bones_count` the target keeps at
+every site (objdiff shows `+ call`/`+ mov` insertions per matrix). `add eax,0x30` after such an
+address = `.c.xyz()` (the float4x4 position row @ +0x30; the `xyz()` accessor folds to the
+0x3f210 empty-fn / delinker `finalize_impl`). A private base member (`ik_processor::m_skeleton`)
+is reached via a protected inline `get_skeleton()` accessor added to the base (no byte change).
+Confirmed in `legs_ik_processor::get_foot_fixed_transform` (84.16%, target rva 0x6ebae0): the
+single biggest fix was un-hoisting root_count (81.55 -> 84.16). A `float4x4 const&` ref bound to
+`matrices[...] * hip_world_matrix` materializes the product into a stack slot and stores its
+address (`lea;mov [ebp-N],addr`); a recorded ref local that is only stored-then-reloaded-once
+(no later use) is a declared-but-unused source local present in BOTH binaries - keep it (the
+C4189 "initialized but not referenced" warning matches the target), do not delete it.

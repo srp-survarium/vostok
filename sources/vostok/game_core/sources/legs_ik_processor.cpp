@@ -3,9 +3,43 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/animation/skeleton.h>
 #include <vostok/game_core/legs_ik_processor.h>
+#include <vostok/game_core/legs_ik_drawer.h>
+#include <vostok/physics/api.h>
+#include <vostok/physics/character_controller.h>
+
+// claude@NOTE: get_relative_matrix is an inline math helper (target rva 0xcb050,
+// math_float4x4_inline_2.h) not present in our headers; defined here so
+// get_foot_fixed_transform's out-of-line `call vostok::math::get_relative_matrix`
+// resolves. Reconstructed from binaries/structure/target.
+namespace vostok {
+namespace math {
+
+inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 const& parent_matrix )
+{
+	float4x4 inverted_parent_matrix;
+	if ( !inverted_parent_matrix.try_invert( parent_matrix ) )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		return float4x4( ).identity( );
+	}
+
+	return original_matrix * inverted_parent_matrix;
+}
+
+} // namespace math
+} // namespace vostok
 
 namespace survarium {
+
+// claude@NOTE: the s_ik_*_cc console-command machinery is still STUB; the dynamic
+// initializers above name s_ik_*_cc. get_foot_fixed_transform only READS the backing
+// values, so declare them as plain file statics to reproduce the byte/float loads.
+// (The cc-registration bytes are a separate, unmatched concern.)
+static bool		s_ik_legs_debug_draw_value		= false;
+static float	s_ik_foot_capsule_radius_value	= 0.0f;
 
 /*
 // STATE[STUB]
@@ -410,8 +444,14 @@ void legs_ik_processor::process_leg(
 	// ******
 }
 
-// STATE[STUB]
-// vostok::math::float4x4 survarium::legs_ik_processor::get_foot_fixed_transform(survarium::legs_ik_processor::leg_params const&, vostok::math::float4x4 const&, vostok::math::float4x4 const*, float&) const
+// STATE[84.16%|PARTIAL]: large float4x4 IK math, full structure matched (all 64
+// statements, the is_similar early-out, the 4-way ground if-chain, lengths, blend,
+// return). Residuals are register/[ebp-N] slot renaming plus the LTCG arg-passing /
+// temp-materialization at the many math call boundaries (operator -+^* / normalize /
+// create_rotation / transform_position / is_similar / length / get_root_bones_count /
+// interpolated_value / adjust_foot_transform) and a couple of trivial-COMDAT
+// inline-vs-call decisions. One unresolved statement: the else-branch single-byte
+// original_color write (0x64) - see @TODO. Full trail in get_foot_fixed_transform.md.
 float4x4 legs_ik_processor::get_foot_fixed_transform(
 	legs_ik_processor::leg_params const&	params,
 	float4x4 const&						hip_world_matrix,
@@ -419,52 +459,108 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	float&								delta_len
 ) const
 {
-	// LOCALS
-	// float4x4 const& 				leg_world_matrix
-	// float3 const& 				foot_to_toe_dir
-	// float3 const& 				foot_to_leg_dir
-	// float4x4 					result
-	// float 						rotation_angle
-	// float3 						foot_to_cube_center_offset
-	// float3 						capsule_size
-	// float4x4 const& 				foot_to_center_rel
-	// float3 						start
-	// math::color 					original_color
-	// float 						leg_len
-	// math::color 					fixed_color
-	// float 						up_leg_to_original_foot_dist_sqr
-	// float 						rotation_interpolation_koef
-	// float 						up_leg_len
-	// float4x4 const& 				knee_world_matrix
-	// float3 						up_dir
-	// float 						up_leg_to_fixed_foot_dist
-	// float4x4 const& 				foot_world_matrix
-	// float4x4 const& 				toe_world_matrix
-	// float3 const& 				left_dir
-	// float3 						finish
-	// float 						knee_len
-	// float4x4 const& 				up_leg_world_matrix
-	// float4x4 					foot_center_transform
-	// float 						position_iterpolation_koef<1>
-	// float3 const& 				position<1>
-	// ******
+	static float const		dist_to_test					= 0.082f; // s_ik_foot_capsule_radius_value-region const
 
-	// STATICS
-	// static float 				dist_to_test = <0xa8e368>;
-	// ******
+	// claude@MATCH: get_root_bones_count() is re-called per matrix in the target
+	// (the index helper is inlined fresh each time), not hoisted into one local.
+	float4x4 const&			up_leg_world_matrix				= matrices[params.up_leg_bone_index - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;
+	float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;
+	float4x4 const&			leg_world_matrix				= matrices[params.leg_bone_index    - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;
+	float4x4 const&			foot_world_matrix				= matrices[params.foot_bone_index   - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;
+	float4x4 const&			toe_world_matrix				= matrices[params.toe_bone_index    - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;
 
-	// SKIPPED BLOCKS
-	// <0x6fc554><1>
-	// ******
+	if ( math::is_similar( foot_world_matrix.c.xyz( ), toe_world_matrix.c.xyz( ) ) ||
+		 math::is_similar( foot_world_matrix.c.xyz( ), leg_world_matrix.c.xyz( ) ) )
+		return foot_world_matrix;
 
-	// CALL SITE INFO
-	// <0x6fc0b7> -> float <unknown>(float) const
-	// <0x6fc1a1> -> float <unknown>(float) const
-	// <0x6fc28b> -> float <unknown>(float) const
-	// <0x6fc578> -> float <unknown>(float) const
-	// ******
+	float3 const&			foot_to_leg_dir					= math::normalize( leg_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );
+	float3 const&			foot_to_toe_dir					= math::normalize( toe_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );
+	float3 const&			left_dir						= math::normalize( foot_to_leg_dir ^ foot_to_toe_dir );
 
-	return vostok::math::float4x4();
+	float4x4				result;
+	result.identity( );
+	result.i.xyz( )		= left_dir;
+	result.j.xyz( )		= foot_to_leg_dir;
+	result.k.xyz( )		= math::normalize( foot_to_leg_dir ^ left_dir );
+
+	float const				rotation_angle					= math::deg2rad( 30.0f );
+	result				= math::create_rotation( left_dir, rotation_angle ) * result;
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	result.c.xyz( )		= foot_world_matrix.c.xyz( );
+
+	float3					up_dir( 0.0f, 0.082f, 0.005f );
+	result.c.xyz( )		= result.transform_position( up_dir );
+
+	float3					capsule_size( s_ik_foot_capsule_radius_value, 0.12f, s_ik_foot_capsule_radius_value );
+	float3					foot_to_cube_center_offset( 0.0f, 1.0f, 0.0f );
+
+	float3					start;
+	float3					finish;
+	math::color				original_color( 0x80u, 0xc8u, 0x00u, 0x00u );
+	math::color				fixed_color( 0x80u, 0x00u, 0xc8u, 0x00u );
+	float					rotation_interpolation_koef		= 0.0f;
+
+	if ( params.is_full_on_ground( ) )
+	{
+		start			= foot_to_cube_center_offset * dist_to_test + finish;
+		finish			= foot_to_cube_center_offset * dist_to_test - finish;
+		rotation_interpolation_koef	= 1.0f - m_heel_interpolator.interpolated_value( params.heel_transition_time );
+	}
+	else if ( params.is_heel_on_ground( ) )
+	{
+		start			= foot_to_cube_center_offset * dist_to_test + finish;
+		finish			= foot_to_cube_center_offset * dist_to_test - finish;
+		rotation_interpolation_koef	= 1.0f - m_heel_interpolator.interpolated_value( params.heel_transition_time );
+	}
+	else if ( params.is_toe_on_ground( ) )
+	{
+		start			= foot_to_cube_center_offset * dist_to_test + finish;
+		finish			= foot_to_cube_center_offset * dist_to_test - finish;
+		rotation_interpolation_koef	= m_toe_interpolator.interpolated_value( params.toe_transition_time );
+	}
+	else
+	{
+		start			= foot_to_cube_center_offset * dist_to_test + finish;
+		finish			= start;
+		// claude@TODO: target writes a single low byte (0x64=100) into original_color
+		// here (mov byte[tmp],64h; mov [original_color],cl), not a full color ctor -
+		// the exact source form (a channel setter?) is unresolved; this ctor diverges.
+		original_color	= math::color( 0x64u, 0x00u, 0x00u );
+	}
+
+	float4x4 const&			foot_to_center_rel				= math::get_relative_matrix( foot_world_matrix, result );
+
+	if ( s_ik_legs_debug_draw_value && m_drawer )
+		m_drawer->draw_line_capsule( result, capsule_size, original_color, false );
+
+	m_character_controller->adjust_foot_transform( capsule_size, start, finish, rotation_interpolation_koef, params.heel_transition_time, result );
+
+	if ( s_ik_legs_debug_draw_value && m_drawer )
+		m_drawer->draw_solid_capsule( result, capsule_size, fixed_color, true );
+
+	float4x4				foot_center_transform			= foot_to_center_rel * result;
+
+	float const				leg_len							= matrices[params.knee_bone_index   - get_skeleton( ).get_root_bones_count( )].c.xyz( ).length( );
+	float const				up_leg_len						= matrices[params.leg_bone_index    - get_skeleton( ).get_root_bones_count( )].c.xyz( ).length( );
+	float const				knee_len						= matrices[params.foot_bone_index   - get_skeleton( ).get_root_bones_count( )].c.xyz( ).length( );
+
+	float const				up_leg_to_fixed_foot_dist		= ( up_leg_world_matrix.c.xyz( ) - foot_center_transform.c.xyz( ) ).length( );
+	delta_len			= leg_len + up_leg_len + knee_len - up_leg_to_fixed_foot_dist;
+
+	float const				up_leg_to_original_foot_dist_sqr	= ( up_leg_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) ).squared_length( );
+
+	if ( math::sqr( up_leg_to_fixed_foot_dist ) > up_leg_to_original_foot_dist_sqr && params.heel_transition_time != 0.0f )
+	{
+		float const			position_iterpolation_koef		= 1.0f - m_heel_interpolator.interpolated_value( params.heel_transition_time );
+		float3 const&		position						= foot_world_matrix.c.xyz( ) * position_iterpolation_koef + foot_center_transform.c.xyz( ) * ( 1.0f - position_iterpolation_koef );
+		foot_center_transform.c.xyz( )	= position;
+	}
+
+	return foot_center_transform;
 
 	// FUNCTION BODY
 	// <0x6fbaf1>|0x011|+0x03b:'295'
