@@ -149,3 +149,57 @@ ONLY transitively through the real `processor` instance in `use_game_core_legs_i
   pursued in this pass (the brace work is a multi-iteration restructure: the target also
   declares an extra `original_up_leg_to_foot_dir<1>` inside the up_leg block that our source
   lacks, so it needs the in-block local set matched, not just `{ }` added). Stays 78.81% PARTIAL.
+
+## Restructure pass (match/game_core-legs_ik_processor-process_leg-restructure)
+Goal: brace the three IK stages so the <1> locals become block-scoped (collapse the slot-rename storm).
+
+### Decode of the three target blocks (from `--view target` byte offsets + carcass `[1]` marks)
+Matrix obj slots (from srclines 176-180): up_leg=[ebp-180h], knee=[ebp-0F0h], leg=[ebp-48h],
+foot=[ebp-140h], toe=[ebp-0B0h]. Block boundaries and statement ORDER read off the asm:
+- 203 (FUNCTION scope): target_up_leg_to_foot_dir = normalize(up_leg.c.xyz - target_foot.c.xyz)
+- BLOCK 1 (up_leg, opens 205): up_leg_to_foot_len; additive_len; up_leg_alpha_angle;
+  original_up_leg_dir; target_up_leg_dir; if(!is_similar) rotation_axis=...; alpha_rotation_matrix;
+  rotated_dir; rotation_matrix; change_matrix_orientation(rotation_matrix, up_leg_obj).
+- BLOCK 2 (knee, opens 231): knee_obj = m[knee]*up_leg (231, FIRST stmt INSIDE block);
+  leg_obj = m[leg]*knee (232); original_knee_dir; rotation_matrix2 =
+  get_rotation_matrix(original_knee_dir, target_up_leg_to_foot_dir);
+  change_matrix_orientation(rotation_matrix2, knee_obj).
+- BLOCK 3 (leg, opens 245): leg_obj = m[leg]*knee (245, FIRST stmt INSIDE block);
+  foot_obj = m[foot]*leg (246); original_leg_dir; target_leg_dir; rotation_matrix3;
+  change_matrix_orientation(rotation_matrix3, leg_obj); foot_obj = target_foot_obj_matrix.
+KEY ORDERING FIX vs the old flat source: the old source computed original_knee_dir BEFORE
+the leg recompute (using stale leg_obj); the target recomputes leg FIRST (232) then takes
+original_knee_dir from it. The knee/leg recompute is the FIRST statement INSIDE the next
+block, NOT a function-scope statement between blocks.
+
+### Iterations
+1. INPUT: wrapped the three stages in `{ }`, moved the knee recompute into block 2 and the
+   leg recompute into block 3 (each as the first in-block statement), reordered block 2 to
+   knee,leg,orig_knee_dir,rot,change.
+   COMMAND: nix develop --command python3 scripts/rebuild.py (no module arg).
+   RESULT: report.json 78.81% -> **80.96%** (`0 regressed, 1 improved`). Base structure dump now
+   shows exactly THREE `[1]` block-opens at base-srclines 382/400/409 (= target 205/231/245);
+   the former ZERO. The slot-rename storm collapsed.
+   DIFF (--view diff, header fuzzy 68.86 - secondary metric): remaining residual is now the
+   non-bracing class, see Final residual below.
+
+### Final residual (80.96% PARTIAL - not bracing, not pursued further)
+1. **[ebp-150h] working slot.** Every up_leg_obj_matrix READ in the dir math (srclines
+   203/205/210/214/215) targets [ebp-150h], while change_matrix_orientation (222) and draw_leg
+   mutate/read [ebp-180h] (the slot srcline 176 actually writes). [ebp-150h] is never written in
+   the IK region and is NOT a named float4x4 in the carcass LOCALS - it is a compiler in/out
+   lowering copy of up_leg_obj that the target keeps for the dir math while the real local is
+   mutated. Also shows as an operand-EVALUATION-order swap at srcline 203 (target evaluates the
+   up_leg xyz() first, base evaluates target_foot first) and a target-only `lea [ebp-150h];call`
+   trailing srcline 203. Not reproducible from a single source variable.
+2. **get_angle inline-vs-call.** get_angle is a STUB here (base inlines `return 0`); the target
+   calls it out-of-line, so target srcline 212 (+0x03e) inlines the `leg_len+additive_len` /
+   `knee_len+additive_len` adds into the call (`addss xmm0,[ebp-1F0h]; push; movss [esp]`),
+   which base (+0x010) does not. Separate-fn inline-vs-call class.
+3. **get_skeleton()->get_root_bones_count temp-roundtrip.** Base spills *m_skeleton into a
+   per-call [ebp-8XXh] temp (`mov ecx,[eax]; mov [ebp-870h],ecx; mov eax,[ebp-870h]`) where the
+   target does `mov eax,[eax]` direct - the inline-accessor-returns-reference materialization
+   under /Od. Sibling get_foot_fixed_transform (84%) shows the same.
+4. **Call-boundary temps.** is_similar epsilon passed as the lone stack arg (`add esp,4`) while
+   base also pushes a ptr (`add esp,8`); operator*/-/^ temp materialization. Permitted LTCG/
+   call-boundary class.
