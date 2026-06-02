@@ -438,6 +438,18 @@ shape to the already-100% `player_stamina` pair. ANCHOR (game_core): default-con
 copy-construct + a direct `b = a`, then escape `&a`/`&b` through the opaque
 `example_callback` sink so LTCG does not DSE the member stores. Landed both at 100% on
 the first rebuild.
+### per-call-site inline-vs-call of `operator|` (float3 dot) - same LTCG class, both keep the standalone
+SYMPTOM: `a | b` (float3 dot, `float vostok::math::operator|(float3_pod const&, float3_pod const&)`)
+emits a real `call vostok::math::operator|` in TARGET but is INLINED at the call site in BASE
+(`mov [tmp],eax; movss xmm,[a+8]; mulss [b+8]; ...; addss; addss`). Querying BOTH rich indexes
+shows operator| present out-of-line in EACH (target rva 0x8160, base rva 0x371e0) - so it is NOT
+"inlined everywhere in base"; the divergence is a PER-CALL-SITE whole-program LTCG inline decision,
+not steerable from the caller's source. The inlined dot also adds a frame temp + bumps `sub esp,N`
+(0x24 vs 0x20) and shifts the trailing `[ebp-N]` result slot, all CASCADING from the one inline.
+Same class as `vectora::size()`/`is_aimed()`/`fixed_string` ctor inline-vs-call. Source `a | b` is
+already correct; mark PARTIAL. Confirmed in `game_core/survarium::get_additional_length` (target rva
+0x0bb1f0, 65.38% PARTIAL): the lone diff is the inlined `upleg_dir | -leg_dir` dot.
+
 ### empty function body
 ASM:
     push  ebp

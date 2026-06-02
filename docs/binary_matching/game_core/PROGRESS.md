@@ -254,3 +254,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     dtor/CRT delinker re-slice churn (empty_stub, scalar-deleting-dtors, float3/4/4x4 ctors, boost _bi,
     bt*/Scaleform/ai/particle/render dtors, noncopyable, interlocked), balanced by 49 improved (incl. all 6
     of this unit, 0.0 -> final); no matched game_core unit regressed.
+- game_core::get_additional_length -> STATE[65.38%|PARTIAL] -> PR #144 (regressions: none)
+  - STACKED on #143. Free function in namespace survarium (legs_ik_processor.cpp), target rva 0x0bb1f0.
+    Body: `float const cos = upleg_dir | -leg_dir; return is_similar(cos,1.0f,epsilon_5) ? knee_len*0.5f :
+    sqrt(sqr(knee_len)*0.5f/(1.0f-cos));` - a single ternary return (4 statements per structure). Constants
+    read from the target obj .text relocs: clear_value=1.0f (.data, bare literal), half=0.5f, epsilon_5 =
+    vostok::math::epsilon_5. operator- = unary float3 negate, operator| = dot product.
+  - Residual (the ONLY diff): the `operator|` dot is INLINED in base but the target emits `call
+    vostok::math::operator|`. pdb_rich_query shows operator| present out-of-line in BOTH indexes (target
+    0x8160, base 0x371e0) => per-call-site whole-program LTCG inline-vs-call of a trivial COMDAT, not
+    steerable from this function's source. The frame shift (sub esp,24h vs 20h) + [ebp-18h] temp + [ebp-24h]
+    vs [ebp-20h] result slot all cascade from that one inline. Every other statement, all constants, and the
+    ternary control flow are byte-exact (objdiff fuzzy 88.43%). New assembly_patterns.md entry added.
+  - Anchor: use_game_core_get_additional_length(float3 const*, float3 const*) - calls the free fn (NULL
+    args, never runs) and escapes the float result; forward-declared in the survarium decl block; called from
+    IncludeAll. process_leg (its real caller) is still STUB. report-changes: only basic_streambuf::imbue
+    100->0 (an unrelated CRT/STL streambuf method, build-ordering report flake; no game_core source touched).

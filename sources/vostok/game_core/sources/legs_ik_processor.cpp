@@ -150,19 +150,23 @@ void legs_ik_processor::activate( animation::skeleton const& skeleton )
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::get_additional_length(vostok::math::float3 const&, vostok::math::float3 const&, float)
+// STATE[65.38%|PARTIAL]: only residual is the dot product `operator|` being INLINED
+// in base while the target emits a `call vostok::math::operator|` - a per-call-site
+// whole-program LTCG inline-vs-call of a trivial COMDAT (both binaries keep the
+// standalone operator|; base just inlined this site). Not steerable from this
+// function's source. The cascading frame shift (sub esp,24h vs 20h) and the extra
+// [ebp-18h] temp all follow from that one inline. Every other statement, all
+// constants (1.0f/0.5f/epsilon_5) and the ternary control flow are byte-exact.
 float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len )
 {
-	// LOCALS
-	// float 						knee_angle_cos
-	// ******
-
-	return 0.0f;
+	float const knee_angle_cos	= upleg_dir | -leg_dir;
+	return math::is_similar( knee_angle_cos, 1.0f, math::epsilon_5 )
+		? knee_len * 0.5f
+		: math::sqrt( math::sqr( knee_len ) * 0.5f / ( 1.0f - knee_angle_cos ) );
 
 	// FUNCTION BODY
-	// <0xcb1f6>|0x006|+0x018:'113'
-	// <0xcb20e>|0x01e|+0x075:'114'
+	// <0xcb1f6>|0x006|+0x018:'113'	float const knee_angle_cos = upleg_dir | -leg_dir;  // operator| INLINED in base, target calls it
+	// <0xcb20e>|0x01e|+0x075:'114'	return is_similar(cos,1.0f,epsilon_5) ? knee_len*0.5f : sqrt(sqr(knee_len)*0.5f/(1.0f-cos));
 	// ******
 }
 
