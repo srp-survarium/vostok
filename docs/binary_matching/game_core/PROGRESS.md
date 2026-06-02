@@ -466,7 +466,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - 53 regressed / 58 improved in report-changes = the documented relink ICF/vcall-fold churn (vector-deleting
     dtors, thunks, btXxx, stlp_std); none are this fn or its callers.
 
-- game_core::weapon_core::initialize_weapon_logic (target rva 0x5a3130) -> STATE[95.69%|INPROGRESS] -> PR #156
+- game_core::weapon_core::initialize_weapon_logic (target rva 0x597020) -> STATE[95.69%|INPROGRESS] -> PR #156
   (regressions: none)
   - STRESS-TEST unit (the "how hard can it go" experiment). The weapon-logic FSM builder: ~10 `m_logic->add_state`
     + 72 `m_logic->add_transition( from, to, boost::bind( &weapon_core::<predicate>, this[, weapon_target_enum] ) )`,
