@@ -60,4 +60,18 @@ Registered in the `IncludeAll` driver after `use_game_core_weapon_recoil_params`
 Added `#include <vostok/game_core/character_dispersion_params.h>`.
 
 ## Results
-(to be filled after rebuild)
+`python3 scripts/rebuild.py` (no module arg, full relink). report.json:
+- `??0character_dispersion_params@survarium@@QAE@XZ`  -> 100.00%
+- `?load@character_dispersion_params@survarium@@QAEXABVbinary_config_value...@Z` -> 100.00%
+
+`pdb_fetch --view diff` for both: no `-`/`+` divergence lines (clean byte match).
+Both functions matched first try; no iteration needed.
+
+report-changes: code 27.19% -> 27.20% (+0.01), functions +11 net. 52 regressed /
+49 improved - ALL of them `scalar deleting destructor` / `vcall` thunk /
+`empty_stub` / boost storage ICF churn in optimized modules (bullet, scaleform,
+stlp, sound, ai, particle, ui, physics) that flip 100%<->0% on every relink. None
+touch character_dispersion_params or any function in this unit. Not a real
+regression (the symmetric improved list is the same churn classes).
+
+STATE: ctor 100% DONE, load 100% DONE. Carcass deleted (clean 100%).
