@@ -883,3 +883,25 @@ statement INSIDE the next block (e.g. `knee_obj = m[knee]*up_leg` opens block 2;
 m[leg]*knee` opens block 3). Also re-read intra-block statement ORDER from the asm - the target
 may recompute a matrix earlier than the flat source did, so a dependent `normalize(a.c - b.c)`
 reads the fresh value, not a stale one. (game_core/legs_ik_processor::process_leg, 78.81->80.96%.)
+
+### `add reg,0x30; call <X>::finalize_impl; mov esi/ecx,eax` feeding a `float3 const&` = `matrix.c.xyz()`
+On a `float4x4` (size 0x40, members i@0/j@0x10/k@0x20/c@0x30, each a `float4_pod`), an
+`add reg, 0x30` computes `&matrix.c`, and the following `call <some_class>::finalize_impl`
+returning `eax` is the COMDAT-folded `float4_pod::xyz()` (returns `float3 const&` = first 12
+bytes of `c`). The delinker misnames the folded thunk after whatever symbol ICF kept (commonly
+`vostok::memory::fixed_size_allocator<...>::finalize_impl`). When the returned `eax` is then
+pushed/moved as a `float3 const&` argument, the source is `matrix.c.xyz()` - NOT an allocator
+call and NOT a compiled-out ASSERT/`empty_stub`. (Confirmed: sibling legs_ik_processor.cpp uses
+`.c.xyz()` throughout; game_core/legs_ik_drawer::draw_leg.)
+
+### thin forwarder `m_renderer.draw_X(m_scene, ...)`: float/int arg passed in xmm0/eax vs spilled to stack = LTCG call-boundary residual, NOT a source bug
+A one-line debug-draw forwarder `member_ref.method( other_member_ref, a, b, c )` (member_ref at
+this+0, scene_ptr at this+4 via `add ecx,4`) can match 100% for some overloads and stall at
+60-80% for sibling overloads with the SAME forwarding shape. The divergence is purely at the
+call boundary: e.g. the TARGET passes a `const float` arg in `movss xmm0,[ebp+..]` (register)
+while the BASE passes it on the stack (`fld [ebp+..]; fstp [esp]`), or which integer arg ends in
+`eax` vs gets pushed differs. This is whole-program LTCG calling-convention specialization
+dictated by the (possibly unmatched) callee; it cannot be steered from the forwarder's source -
+the two 100%-matching siblings prove the source is right. Stop at PARTIAL and name the cause; do
+NOT chase it. (game_core/legs_ik_drawer: draw_cross/draw_line_capsule 100%, draw_origin 62.88%,
+draw_solid_capsule 79.43%, draw_leg 73.36% - same draw_origin xmm0-vs-fld/fstp residual x4.)
