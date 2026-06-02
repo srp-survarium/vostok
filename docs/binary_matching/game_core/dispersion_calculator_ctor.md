@@ -75,5 +75,3 @@ and never reads the coeffs, so LTCG DSEs the coeff stores. Added
 Final: STATE[100%|DONE]. Carcass stripped (clean 100% keeps only the STATE line).
 set_weapon / apply_aim_speed are NOT inlined into the ctor (separate out-of-line
 `call`s); left as separate units, untouched.
-</content>
-</invoke>
