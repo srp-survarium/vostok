@@ -69,12 +69,15 @@ animation::mixing::expression pistol_weapon_core_aimed_idle_state::weapon_and_ha
 	// ******
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this`
-// register-allocation choice plus the `s_aim_transition_time` reloc and the
+// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` call boundary - the
+// callee is LTCG-optimized to take `this` in eax (target `weapon_core::ammo_in_magazine` @0x9b270),
+// so the caller loads m_weapon into eax (target `mov eax,[eax+128h]`) vs ecx (base `mov ecx,...`)
+// at offset 0x1a: a link-time custom calling convention, the permitted call-boundary arg-passing
+// class - NOT a body register choice. Plus the `s_aim_transition_time` reloc and the
 // `playback_enum`/`playing_type_enum` typedef-alias in the get_weapon_lexeme_pair_impl callee
-// mangling; identical to weapon_core_idle_state::get_weapon_lexeme_pair (#151, 100% DONE) and
-// the idle siblings (#153). (The trailing `call empty_stub` is the existing get_weapon_lexeme_pair_impl
-// temporary cleanup - same as the idle getters - NOT a separate ASSERT.)
+// mangling; identical to weapon_core_idle_state::get_weapon_lexeme_pair (#151, 100% DONE) and the
+// idle siblings (#153). (The trailing `call empty_stub` @0xaf is the existing impl-call temporary
+// cleanup - an ICF-folded empty fn that BOTH binaries call - NOT a separate ASSERT.)
 weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "pistol-aimed_idle", "pistol-empty_aimed_idle" };
@@ -96,6 +99,17 @@ weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( 
 		animation::mixing::play_cyclically,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
+
+	// FUNCTION BODY
+	// <0x79b910>|0x000|+0x009:'41'	pcstr weapon_animation_captions[2] = { "pistol-aimed_idle", "pistol-empty_aimed_idle" };
+	// <0x79b919>|0x009|+0x007:'43'	weapon_animation_captions[0] = "pistol-aimed_idle";
+	// <0x79b920>|0x010|+0x007:'44'	weapon_animation_captions[1] = "pistol-empty_aimed_idle";
+	// <0x79b927>|0x017|+0x01b:'46'	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;  (target this->eax, base ecx @0x1a)
+	// <0x79b942>|0x032|+0x00a:'47'	pcstr animation_identifier = weapon_animation_captions[animation_index];
+	// <0x79b94c>|0x03c|+0x02c:'48'	selected_animation = m_weapon_animations[...];
+	// <0x79b978>|0x068|+0x04f:'49'	return get_weapon_lexeme_pair_impl( ... );
+	// <0x79b9c7>|0x0b7|+0x006:'50'	}
+	// ******
 }
 
 // STATE[100%|DONE]
