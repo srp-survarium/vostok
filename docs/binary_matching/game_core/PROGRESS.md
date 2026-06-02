@@ -147,7 +147,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     constant stores - the #107 trap). The ctor was in fact already 100% in the prior report (construct +
     get_dispersion was enough to keep stores observed); the &calc escape is belt-and-suspenders and caused
     0 regressed / 0 improved across all 1995 units.
-- game_core::dispersion_calculator::set_weapon(weapon_core*) -> STATE[100%|DONE] -> PR #PLACEHOLDER (regressions: none)
+- game_core::dispersion_calculator::set_weapon(weapon_core*) -> STATE[100%|DONE] -> PR #138 (regressions: none)
   - STACKED on #137. set_weapon only (apply_aim_speed / set_one_shoot_dispersion_amount /
     set_reload_dispersion_amount are out-of-line `call`s, NOT inlined - separate units, untouched).
     Body: `m_weapon = weapon; if ( m_weapon ) { m_weapon_calculator.set_one_shoot_dispersion_amount(
