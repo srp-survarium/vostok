@@ -54,6 +54,8 @@
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/player_logic_base_state.h>
 #include "jump_logic_state_inactive.h"
+#include "jump_logic_state_landing.h"
+#include "jump_logic_state_start.h"
 #include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
@@ -882,6 +884,31 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &ready ) );
 	}
 
+	void use_game_core_jump_logic_state_landing( )
+	{
+		// These are VIRTUAL header inline overrides. Address-of a virtual member yields
+		// a vtable thunk, NOT the body, so it does not ODR-use the body. Use a QUALIFIED
+		// (devirtualized, non-virtual) call on a fabricated pointer: that ODR-uses the
+		// exact body WITHOUT constructing an instance, so the vtable is never emitted and
+		// the still-STUB selected_animations is never codegen'd (the #148 C4716 trap).
+		// is_ready_for_transition is PRIVATE (target ?...@@EBE_NXZ) -> anchor befriended.
+		survarium::jump_logic_state_landing&	s	= *reinterpret_cast< survarium::jump_logic_state_landing* >( NULL );
+		s.survarium::jump_logic_state_landing::execute( );
+		bool r = s.survarium::jump_logic_state_landing::is_ready_for_transition( );
+		example_callback( reinterpret_cast< pcstr >( &r ) );
+	}
+
+	void use_game_core_jump_logic_state_start( )
+	{
+		// Qualified devirtualized calls on a fabricated pointer (see landing above):
+		// ODR-use execute()/is_ready_for_transition() bodies without emitting the vtable.
+		// is_ready_for_transition is PRIVATE (target ?...@@EBE_NXZ) -> anchor befriended.
+		survarium::jump_logic_state_start&	s	= *reinterpret_cast< survarium::jump_logic_state_start* >( NULL );
+		s.survarium::jump_logic_state_start::execute( );
+		bool r = s.survarium::jump_logic_state_start::is_ready_for_transition( );
+		example_callback( reinterpret_cast< pcstr >( &r ) );
+	}
+
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
 							void*				arg_0,
@@ -1246,6 +1273,8 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
 	vostok::use_game_core_jump_logic_state_inactive();
+	vostok::use_game_core_jump_logic_state_landing();
+	vostok::use_game_core_jump_logic_state_start();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();

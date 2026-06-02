@@ -331,3 +331,15 @@ _(Append new findings below this line.)_
   just iterate chars counting `{`/`}` and assert final depth 0, min depth never negative. Fixing the
   braces is safe (the anchor TU emits no matched bytes) and re-enabled ~89 dead-stripped anchors. Cost me
   one wasted ~20-min rebuild discovering it.
+- **For trivial virtual overrides, read the access char from the delinked TARGET `.h`-unit's OWN
+  recovered symbol (report.json), not the ICF fold representative's rich-index mangling - and anchor with
+  a QUALIFIED CALL, never address-of.** Two facts each cost a ~20-min rebuild on the
+  jump_logic_state_{landing,start} overrides: (1) `landing::is_ready_for_transition`'s rich-index fold
+  rep was `UBE` (public) but its OWN recovered symbol in report.json is `EBE` (private) - I declared it
+  public, scored None, rebuilt. Read `report.json`'s function list for the unit FIRST. (2) Address-of a
+  VIRTUAL member is a vtable thunk - it emits NO body (obj had zero member symbols). Use
+  `Class& s=*(Class*)NULL; s.Class::member();` (qualified devirtualized call) to emit the body without the
+  vtable. Both fixable up-front from the obj symbol dump + report.json with ZERO extra rebuilds if you
+  check them before the first full relink. (Note: under /GL the qualified call still gets LTCG-inlined into
+  the anchor so the standalone never reaches the EXE - the override stays ICF/LTCG-unscorable like #148;
+  prove byte-correctness by disassembling the anchor, and mark DONE.)
