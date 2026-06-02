@@ -870,3 +870,16 @@ EVERY later `[ebp-N]` slot shifts by that total - a uniform slot-rename storm wi
 block-open / `+`/`-` control-flow divergence. Distinguish from the genuine brace-scope storm
 (§2a): if the diff has zero target-only/base-only rows and the slot deltas are all the SAME
 constant, it is a temp-spill/LTCG artifact, not a missing brace. (game_core/legs_ik_processor::process.)
+
+### three sequential `[1]` block-opens = three separate braced `{ }` scopes (not nesting)
+When a `/Od` carcass shows N `[1]` block-opens (depth resets to 1 each time, never `[2]`) at
+distinct srclines with no enclosing `[1]` between them, they are N SEPARATE sibling braced
+blocks `{ ... }`, each opening and closing before the next - NOT one nested scope. Brace each
+stage; the block-scoped locals then REUSE stack slots across blocks (the target's slot
+overlap), which is what collapses a `[ebp-N]` slot-rename storm that flat-at-function-scope
+source produced. Read the FIRST statement after each `[1]` from the asm: a recompute/assignment
+that the flat source wrote at function scope BETWEEN stages actually belongs as the first
+statement INSIDE the next block (e.g. `knee_obj = m[knee]*up_leg` opens block 2; `leg_obj =
+m[leg]*knee` opens block 3). Also re-read intra-block statement ORDER from the asm - the target
+may recompute a matrix earlier than the flat source did, so a dependent `normalize(a.c - b.c)`
+reads the fresh value, not a stale one. (game_core/legs_ik_processor::process_leg, 78.81->80.96%.)

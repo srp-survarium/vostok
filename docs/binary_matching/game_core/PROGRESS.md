@@ -383,6 +383,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     re-diff); added this ledger line (#157 shipped without one). No logic change; report.json unchanged (no rebuild).
     FLAGGED for a faster machine: brace the three IK stages so the <1> locals are block-scoped.
 
+- game_core::legs_ik_processor::process_leg (RESTRUCTURE) -> STATE[78.81% -> 80.96%|PARTIAL] -> PR (base match/game_core-legs_ik_processor-deep)
+  - Stacked on match/game_core-legs_ik_processor-deep. Executed the flagged brace work: wrapped the three IK
+    stages in `{ }` at srclines 205/231/245 so the <1> locals are block-scoped, moved the knee/leg recompute to
+    be the FIRST statement INSIDE the next block, and reordered block 2 to knee,leg,orig_knee_dir,rot,change
+    (the old flat source took original_knee_dir before the leg recompute, using a stale leg_obj). Base structure
+    dump now shows exactly THREE [1] block-opens (was ZERO); the [ebp-N] slot-rename storm collapsed.
+    rebuild.py (no module arg): report.json 78.81% -> 80.96%, `0 regressed, 1 improved`. No surrounding regression.
+  - Final residual (NOT bracing, not pursued): (1) up_leg_obj dir-math reads a separate [ebp-150h] working slot
+    the target keeps while change_matrix_orientation mutates [ebp-180h] - a compiler in/out lowering copy, not a
+    named local (no second float4x4 in carcass LOCALS); (2) get_angle inline-vs-call (STUB vs out-of-line);
+    (3) the get_skeleton()->get_root_bones_count temp-roundtrip sibling get_foot_fixed_transform (84%) also shows;
+    (4) is_similar epsilon/ptr + operator*/-/^ call-boundary temps. Trail in process_leg.md (Restructure pass).
+
 - game_core::legs_ik_processor (ALL remaining functions, one unit) -> see per-fn STATE below -> PR (base chore/remove-slow-machine-notes)
   - First pass implementing + anchoring every remaining STUB in legs_ik_processor.cpp in one branch/commit/PR.
   - s_ik_legs_debug_draw_cc / s_ik_foot_capsule_radius_cc / s_ik_legs_rot_axis_cc / s_ik_adjust_hip_position_cc

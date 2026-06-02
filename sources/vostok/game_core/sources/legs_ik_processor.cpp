@@ -322,18 +322,19 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// ******
 }
 
-// STATE[78.81%|PARTIAL]: two-bone IK math, all 58 statements / operands matched, but a
-// CONTROL-STRUCTURE divergence remains: the target carcass shows three [1] braced blocks
-// (at srclines 205/231/245 - the up_leg/knee/leg orientation stages) whose locals are PDB-
-// tagged <1> (original_*_dir, additive_len, up_leg_alpha_angle, rotation_matrix*, ...); my
-// source wrote those three stages FLAT at function scope (no { }), so the base structure has
-// ZERO [n] block-opens where the target has three. That missing bracing is the SOURCE cause
-// of the dominant [ebp-N] slot renames (the <1> locals get function-scope slots instead of
-// block-scoped ones) - it is a recoverable matching problem, NOT LTCG/slot noise. Next step
-// (a faster machine): brace the three IK stages so the <1> locals are block-scoped, then
-// re-diff. The smaller residual IS the permitted call-boundary class (is_similar epsilon/ptr,
-// operator*/-/^ temps, a few xyz-fold inline-vs-call, the get_root_bones_count temp-roundtrip
-// sibling get_foot_fixed_transform (84%) also shows). Full trail in process_leg.md.
+// STATE[80.96%|PARTIAL]: two-bone IK math, all 58 statements / operands matched AND the
+// control structure now matches: the three target [1] braced IK-stage blocks (srclines
+// 205/231/245 - up_leg/knee/leg orientation) are braced here, the knee/leg recompute lands
+// as the first statement INSIDE the next block, and the block-scoped <1> locals collapse the
+// former [ebp-N] slot-rename storm (78.81 -> 80.96, three [1] block-opens now present in the
+// base structure dump). The remaining residual is the permitted non-bracing class: (1) the
+// up_leg_obj_matrix dir-math reads a separate [ebp-150h] working slot the target keeps while
+// change_matrix_orientation mutates [ebp-180h] - a compiler in/out lowering copy not visible
+// as a named local (no second float4x4 in the carcass LOCALS); (2) get_angle inline-vs-call
+// (STUB here, the target calls it out-of-line, so the leg_len+additive_len adds inline into
+// the call); (3) the get_skeleton()->get_root_bones_count temp-roundtrip sibling
+// get_foot_fixed_transform also shows; (4) is_similar epsilon/ptr + operator*/-/^ temps.
+// Full trail in process_leg.md.
 void legs_ik_processor::process_leg(
 	legs_ik_processor::leg_params&		params,
 	float4x4 const&						target_foot_obj_matrix,
@@ -377,34 +378,44 @@ void legs_ik_processor::process_leg(
 			0.0f );
 
 	float3 const&			target_up_leg_to_foot_dir		= math::normalize( up_leg_obj_matrix.c.xyz( ) - target_foot_obj_matrix.c.xyz( ) );
-	float const				up_leg_to_foot_len				= ( up_leg_obj_matrix.c.xyz( ) - target_foot_obj_matrix.c.xyz( ) ).length( );
 
-	float const				additive_len					= get_additional_length( math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) ), math::normalize( leg_obj_matrix.c.xyz( ) - foot_obj_matrix.c.xyz( ) ), knee_len );
-	float const				up_leg_alpha_angle				= get_angle( leg_len + additive_len, up_leg_to_foot_len, knee_len + additive_len );
+	{
+		float const				up_leg_to_foot_len				= ( up_leg_obj_matrix.c.xyz( ) - target_foot_obj_matrix.c.xyz( ) ).length( );
 
-	float3 const&			original_up_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
-	float3 const&			target_up_leg_dir				= math::normalize( target_foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
+		float const				additive_len					= get_additional_length( math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) ), math::normalize( leg_obj_matrix.c.xyz( ) - foot_obj_matrix.c.xyz( ) ), knee_len );
+		float const				up_leg_alpha_angle				= get_angle( leg_len + additive_len, up_leg_to_foot_len, knee_len + additive_len );
 
-	if ( !math::is_similar( target_up_leg_dir, original_up_leg_dir, math::epsilon_3 ) )
-		params.rotation_axis	= math::normalize( target_up_leg_dir ^ original_up_leg_dir );
+		float3 const&			original_up_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
+		float3 const&			target_up_leg_dir				= math::normalize( target_foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
 
-	float4x4 const&			alpha_rotation_matrix			= math::create_rotation( params.rotation_axis, up_leg_alpha_angle );
-	float3 const&			rotated_dir						= alpha_rotation_matrix.transform_direction( target_up_leg_to_foot_dir );
-	float4x4 const&			rotation_matrix					= math::get_rotation_matrix( original_up_leg_dir, rotated_dir );
-	math::change_matrix_orientation( rotation_matrix, up_leg_obj_matrix );
-	knee_obj_matrix		= matrices[knee_matrix_index] * up_leg_obj_matrix;
+		if ( !math::is_similar( target_up_leg_dir, original_up_leg_dir, math::epsilon_3 ) )
+			params.rotation_axis	= math::normalize( target_up_leg_dir ^ original_up_leg_dir );
 
-	float3 const&			original_knee_dir				= math::normalize( leg_obj_matrix.c.xyz( ) - knee_obj_matrix.c.xyz( ) );
-	float4x4 const&			rotation_matrix2				= math::get_rotation_matrix( original_knee_dir, target_up_leg_to_foot_dir );
-	math::change_matrix_orientation( rotation_matrix2, knee_obj_matrix );
-	leg_obj_matrix		= matrices[leg_matrix_index] * knee_obj_matrix;
-	foot_obj_matrix		= matrices[foot_matrix_index] * leg_obj_matrix;
+		float4x4 const&			alpha_rotation_matrix			= math::create_rotation( params.rotation_axis, up_leg_alpha_angle );
+		float3 const&			rotated_dir						= alpha_rotation_matrix.transform_direction( target_up_leg_to_foot_dir );
+		float4x4 const&			rotation_matrix					= math::get_rotation_matrix( original_up_leg_dir, rotated_dir );
+		math::change_matrix_orientation( rotation_matrix, up_leg_obj_matrix );
+	}
 
-	float3 const&			original_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );
-	float3 const&			target_leg_dir					= math::normalize( target_foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );
-	float4x4 const&			rotation_matrix3				= math::get_rotation_matrix( original_leg_dir, target_leg_dir );
-	math::change_matrix_orientation( rotation_matrix3, leg_obj_matrix );
-	foot_obj_matrix		= target_foot_obj_matrix;
+	{
+		knee_obj_matrix		= matrices[knee_matrix_index] * up_leg_obj_matrix;
+		leg_obj_matrix		= matrices[leg_matrix_index] * knee_obj_matrix;
+
+		float3 const&			original_knee_dir				= math::normalize( leg_obj_matrix.c.xyz( ) - knee_obj_matrix.c.xyz( ) );
+		float4x4 const&			rotation_matrix2				= math::get_rotation_matrix( original_knee_dir, target_up_leg_to_foot_dir );
+		math::change_matrix_orientation( rotation_matrix2, knee_obj_matrix );
+	}
+
+	{
+		leg_obj_matrix		= matrices[leg_matrix_index] * knee_obj_matrix;
+		foot_obj_matrix		= matrices[foot_matrix_index] * leg_obj_matrix;
+
+		float3 const&			original_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );
+		float3 const&			target_leg_dir					= math::normalize( target_foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );
+		float4x4 const&			rotation_matrix3				= math::get_rotation_matrix( original_leg_dir, target_leg_dir );
+		math::change_matrix_orientation( rotation_matrix3, leg_obj_matrix );
+		foot_obj_matrix		= target_foot_obj_matrix;
+	}
 
 	if ( s_ik_legs_debug_draw_value && m_drawer )
 	{
