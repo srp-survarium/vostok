@@ -133,3 +133,17 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     escape so LTCG doesn't DSE the constant stores - the #107 trap). The 61 report-changes "regressions" are
     dtor/vcall-thunk/empty_stub/boost-storage/math-ctor ICF churn in optimized modules (69 symmetric improved)
     - none touch this unit or any matched game_core fn.
+- game_core::dispersion_calculator::dispersion_calculator() (default ctor) -> STATE[100%|DONE] -> PR #137 (regressions: none)
+  - STACKED on #136. ctor only (set_weapon/apply_aim_speed are separate units, NOT inlined - both are
+    real out-of-line `call`s). Member-init list `m_weapon(NULL), m_shooting_skill_coeff(1.0f),
+    m_aiming_speed_coeff(1.0f)` was already drafted; verified the constants against survarium.exe
+    directly (movss operand disp -> rva -> f32): BOTH coeffs = 1.0f and BOTH movss reference the SAME
+    pooled rdata slot 0xa7b6c4 (MSVC pooled the two identical 1.0f literals; the delinker's `clear_value`
+    placeholder rdata read 0.0 and is misleading - read the real EXE bytes). Target asm = 2 sub-object
+    ctor calls (weapon_dispersion_calculator @0x00, character_dispersion_calculator @0x20 via `add ecx,20h`),
+    `mov [eax+40h],0`, two `movss [.+44h]/[.+48h]`. Structure: 2 statements (L22 `{` 0x44, L23 `}` 0x7).
+    Mangled `QAE` (public) matches the header. Anchored via use_dispersion_calculator: construct +
+    get_dispersion() + escape &calc through example_callback (observed-escape so LTCG cannot DSE the
+    constant stores - the #107 trap). The ctor was in fact already 100% in the prior report (construct +
+    get_dispersion was enough to keep stores observed); the &calc escape is belt-and-suspenders and caused
+    0 regressed / 0 improved across all 1995 units.
