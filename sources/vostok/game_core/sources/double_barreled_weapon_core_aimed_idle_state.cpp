@@ -73,12 +73,15 @@ animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weap
 	// ******
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this`
-// register-allocation choice plus the `s_aim_transition_time` reloc and the
-// `playback_enum`/`playing_type_enum` typedef-alias in the get_weapon_lexeme_pair_impl callee
-// mangling; identical to weapon_core_idle_state::get_weapon_lexeme_pair (#151, 100% DONE) and
-// the idle siblings (#153). Leading ASSERT is the compiled-out lone eater at the top; the
-// trailing `call empty_stub` is the existing impl-call temporary cleanup, NOT a separate ASSERT.
+// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` call boundary - the
+// callee is LTCG-optimized to take `this` in eax (target `weapon_core::ammo_in_magazine` @0x9b270),
+// so the caller loads m_weapon into eax (target) vs ecx (base) at the ammo-call site: a link-time
+// custom calling convention, the permitted call-boundary arg-passing class - NOT a body register
+// choice. Plus the `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum`
+// typedef-alias in the get_weapon_lexeme_pair_impl callee mangling; identical to
+// weapon_core_idle_state::get_weapon_lexeme_pair (#151, 100% DONE) and the idle siblings (#153).
+// Leading ASSERT is the compiled-out lone eater at the top; the trailing `call empty_stub` is the
+// existing impl-call temporary cleanup (an ICF-folded empty fn both binaries call), NOT a separate ASSERT.
 weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -102,6 +105,19 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexe
 		animation::mixing::play_cyclically,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
+
+	// FUNCTION BODY
+	// <0x79ca90>|0x000|+0x009:'43'	ASSERT( UNKNOWN_EXPRESSION );
+	// <0x79ca99>|0x009|+0x00c:'44'	pcstr weapon_animation_captions[3] = { "aimed_both_barrels_empty", ... };
+	// <0x79caa5>|0x015|+0x007:'46'	weapon_animation_captions[0] = "aimed_both_barrels_empty";
+	// <0x79caac>|0x01c|+0x007:'47'	weapon_animation_captions[1] = "aimed_one_barrel_loaded";
+	// <0x79cab3>|0x023|+0x007:'48'	weapon_animation_captions[2] = "aimed_two_barrels_loaded";
+	// <0x79caba>|0x02a|+0x014:'50'	u32 animation_index = m_weapon.ammo_in_magazine( );  (target this->eax, base ecx)
+	// <0x79cace>|0x03e|+0x00a:'51'	pcstr animation_identifier = weapon_animation_captions[animation_index];
+	// <0x79cad8>|0x048|+0x02e:'52'	selected_animation = m_weapon_animations[...];
+	// <0x79cb06>|0x076|+0x04f:'53'	return get_weapon_lexeme_pair_impl( ... );
+	// <0x79cb55>|0x0c5|+0x006:'54'	}
+	// ******
 }
 
 // STATE[100%|DONE]
