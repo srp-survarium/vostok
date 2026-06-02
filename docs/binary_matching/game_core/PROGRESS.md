@@ -344,3 +344,14 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - Anchor: extended use_game_core_weapon_recoil_params to construct + escape the config-ctor instance.
   - Stacked on #145 (get_foot_fixed_transform). 55 report-changes regressions are all unrelated COMDAT/template
     relink churn (deleting dtors, btXxx, boost::asio, stlp_std, intrusive_ptr<...>); no matched source regressed.
+- game_core::jump_logic_state_inactive::{initialize,is_ready_for_transition} -> STATE[100%|DONE] -> PR #148 (regressions: none)
+  - two trivial fsm_state-style header virtual overrides: initialize() empty `{ }` (target rva 0x1a800, 11
+    bytes, empty __thiscall frame) and is_ready_for_transition() const `{ return true; }` (target rva 0xd23e0,
+    13 bytes, `mov al,1`). Both bodies byte-correct vs the target disasm.
+  - objdiff/report.json reads the `.h` unit `fuzzy: None` (post-delinker-upgrade rebuild still None): /OPT:ICF
+    folds both trivial bodies whole-program, so neither side keeps a standalone `jump_logic_state_inactive::*`
+    symbol to pair (target rich index lists them but they alias fold representatives - nonnull@dummy@function1
+    and particle_action_orbit::is_update_modifier; base rich index has only the anchor). Same documented
+    empty-function ICF gap as game_core_initialize - not LTCG, not a source mismatch.
+  - Anchor: member-fn ADDRESS-OF only (no instance construction, which emits the vtable and forces codegen of
+    the still-STUB selected_animations -> C4716/LNK1257). Stacked on #147.
