@@ -165,3 +165,11 @@ not structure. Regressions caused: none (in-scope). Inlining: get_relative_matri
 rva 0xbb050) defined in this TU; knee_world_matrix is a declared-but-unused local in BOTH
 binaries (the C4189 warning matches the target - keep it).
 
+
+## Deep pass (anchor-removal, match/game_core-legs_ik_processor-deep)
+Removed the fake-observation direct anchor `use_game_core_legs_ik_processor_get_foot_fixed_transform`
+(NULL-cast processor/params, escaped result) + its IncludeAll dispatch line. Now reached only
+transitively via the real `processor` instance (process() -> get_foot_fixed_transform).
+- COMMAND: python3 scripts/rebuild.py (no module arg); python3 scripts/legs_scores.py
+- RESULT: 84.23% UNCHANGED. Function still SCORES. Residual is genuine (the documented
+  call-boundary LTCG / slot-rename class), NOT the anchor-observation distortion.
