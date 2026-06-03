@@ -440,3 +440,18 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+## Don't anchor a function whose callee is a value-returning STUB (LNK1257 trap)
+Implementing a delegating function `f() { return m_x.g(...); }` and anchoring it forces
+its callee `g` to codegen. If `g` is still a STUB with an empty body and a non-void
+return type, MSVC raises **C4716 "must return a value"** which LTCG escalates to a fatal
+**LNK1257 "code generation failed"** - and the captured rebuild log shows only the
+LNK1257, not the underlying C4716, so it looks mysterious (grep the FULL log for `C4716`
+to find the real culprit/file). Same trap for a value-returning *override* you anchor by
+constructing the class: the emitted vtable force-instantiates every virtual, so an empty
+pair/struct-returning override fails C4716 even if never called. SAVE the rebuild: before
+implementing a delegation, check the callee's STATE - if it's a value-returning STUB,
+either match the callee first or leave your function INPROGRESS with a compilable
+placeholder (`VOSTOK_UNREACHABLE_CODE();` returns "a value" for any type, as the
+player_logic_base_state concrete-stub anchor already does) and do NOT call it from the
+anchor. (player_logic_jump_state::selected_animations -> jump_logic::selected_animations stub.)
