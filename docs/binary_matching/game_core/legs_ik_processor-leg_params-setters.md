@@ -69,10 +69,8 @@ Included `<vostok/game_core/legs_ik_processor.h>`; called from `IncludeAll::Incl
     `movss` operands swap which arg goes to xmm0 vs xmm1.
     target: `movss xmm0,[ebp+8] (tr_time); mov eax,[ebp-8]; movss xmm1,[eax+14h] (heel)`
     base:   `mov eax,[ebp-8]; movss xmm0,[eax+14h] (heel); movss xmm1,[ebp+8] (tr_time)`
-    Source `math::min( tr_time, heel_transition_time )` is correct (matches target's
-    `min(left=tr_time, right=heel)`); the swap is the LTCG custom register convention
-    assigning args xmm0/xmm1 at link time - the permitted call-boundary arg-passing
-    class. Not source-steerable.
+    ORIGINALLY (wrongly) banked as LTCG arg passing / not source-steerable. That was a
+    MISDIAGNOSIS - see v4.
   - bool setters diff (byte-level): target frame `sub esp,0Ch` with three temps
     `[ebp-1]`,`[ebp-2]`,`[ebp-0Ch]`; my direct `m_heel_on_ground && m_toe_on_ground`
     compiled to a leaner `sub esp,4`, `movzx;test` directly off members (no temp
@@ -94,15 +92,26 @@ Included `<vostok/game_core/legs_ik_processor.h>`; called from `IncludeAll::Incl
   - bool setters: 78.19% -> 100.00%. transition setters unchanged 83.69%.
   - The third bool temp [ebp-0Ch] (the && RESULT) is the inlined is_full_on_ground()
     return-value slot; testing IT in the `if` reproduces the target frame `sub esp,0Ch`.
+- v4 (transition setters: SWAP min operands to member-first): rebuild.
+  - transition setters: 83.69% -> 100.00% (both heel and toe).
+  - The xmm0/xmm1 operand assignment is NOT an LTCG link-time convention - it follows
+    SOURCE OPERAND ORDER and is source-steerable. The v1 source `math::min( tr_time,
+    heel_transition_time )` (arg first) produced base `member->xmm0, arg->xmm1`; the
+    target wanted `arg->xmm0, member->xmm1`, i.e. MEMBER-FIRST source. Swapping to
+    `math::min( heel_transition_time, tr_time )` (and the toe analog) matched exactly.
+  - PROOF the rule (not coincidence): `generic_anomaly_core::dec_energy` is
+    `m_energy_current -= math::min( m_energy_current, amount )` (member first) and its
+    base compiles to `arg->xmm0, member->xmm1` at 100% - the same shape as the legs
+    target. min/max are commutative so the swap is semantics-preserving.
+  - report-changes.json: improved set_{heel,toe}_transition_time 83.69 -> 100; no
+    regressed entries.
 
 ## Final
 - set_heel_on_ground   100% DONE
 - set_toe_on_ground    100% DONE
-- set_heel_transition_time  83.69% DONE (LTCG arg passing - xmm0/xmm1 register
-  assignment for the min call, link-time custom convention; source correct)
-- set_toe_transition_time   83.69% DONE (same)
-- regressions: none (the 59 report-changes entries are dtor/thunk/empty_stub ICF
-  churn in optimized modules; none touch this unit).
+- set_heel_transition_time  100% DONE (operand-order fix: member-first `math::min`)
+- set_toe_transition_time   100% DONE (same)
+- regressions: none.
 
 ## Verification commands
 ```

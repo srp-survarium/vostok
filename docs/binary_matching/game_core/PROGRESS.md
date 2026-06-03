@@ -107,14 +107,16 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     shape. New guidelines: re-diff both residuals against source, do NOT bank as LTCG. Findings: a `const`
     method assigning a member needs the member `mutable` (mangles @@?BE); access-specifier must match target
     COFF mangling (members moved to protected to get MAE/IAE/IBE, not public UAE).
-- game_core::legs_ik_processor::leg_params::{set_heel_transition_time,set_toe_transition_time,set_heel_on_ground,set_toe_on_ground} -> STATE[set_heel_on_ground 100%, set_toe_on_ground 100%, set_heel_transition_time 83.69%, set_toe_transition_time 83.69%|DONE] -> PR #134 (regressions: none)
-  - GROUPED unit (4 trivial nested-struct setters), STACKED on #127. bool setters 100%; transition setters
-    83.69% DONE (LTCG arg passing). Findings (no banking as LTCG): (1) the bool setters' `if` materializes a
-    THIRD bool temp [ebp-0Ch] for the && RESULT - it is the inlined `is_full_on_ground()` whose body is
-    `return is_heel_on_ground() && is_toe_on_ground();`; filling those three inline getters + `if ( is_full_on_ground() )`
-    closed 59.90 -> 78.19 -> 100. A bare `m_heel && m_toe` short-circuits directly (no temp) -> wrong frame.
-    (2) transition setters: `member = math::min( tr_time, member )`; the ONLY residual is which xmm each min
-    arg lands in (target arg-position order tr->xmm0/member->xmm1; base reversed) - the link-time custom
-    register convention, the permitted call-boundary arg-passing class. Source order is correct.
-    (3) the 59 report-changes "regressions" are all dtor/thunk/empty_stub ICF churn in optimized modules
-    (bullet/boost/scaleform/engine/particle) - none touch legs_ik_processor or this unit.
+- game_core::legs_ik_processor::leg_params::{set_heel_transition_time,set_toe_transition_time,set_heel_on_ground,set_toe_on_ground} -> STATE[all 100%|DONE] -> PR #134 (regressions: none)
+  - GROUPED unit (4 trivial nested-struct setters), STACKED on #127. All 100%. Findings: (1) the bool
+    setters' `if` materializes a THIRD bool temp [ebp-0Ch] for the && RESULT - it is the inlined
+    `is_full_on_ground()` whose body is `return is_heel_on_ground() && is_toe_on_ground();`; filling those
+    three inline getters + `if ( is_full_on_ground() )` closed 59.90 -> 78.19 -> 100. A bare `m_heel && m_toe`
+    short-circuits directly (no temp) -> wrong frame.
+    (2) transition setters: `member = math::min( member, tr_time )`. Originally written `min( tr_time, member )`
+    (arg first) and WRONGLY banked at 83.69% as "LTCG arg passing". That was a misdiagnosis: the xmm0/xmm1
+    operand assignment FOLLOWS SOURCE OPERAND ORDER and is steerable. Target wanted arg->xmm0/member->xmm1
+    (= member-first source, cf. clean `generic_anomaly_core::dec_energy` which is member-first and 100%);
+    swapping to `math::min( member, tr_time )` took both 83.69 -> 100. min/max commutative, semantics intact.
+    assembly_patterns.md note corrected (steerable operand order, never bank as LTCG).
+    (3) report-changes.json: only improved entries (both setters 83.69 -> 100); no regressions.

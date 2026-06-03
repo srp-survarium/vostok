@@ -93,17 +93,16 @@ void legs_ik_processor::leg_params::tick( float dt )
 	// ******
 }
 
-// STATE[83.69%|DONE]: residual is LTCG call-boundary arg passing - the two min()
-// float args land in swapped xmm registers (target tr_time->xmm0, member->xmm1).
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 {
-	heel_transition_time = math::min( tr_time, heel_transition_time );
+	heel_transition_time = math::min( heel_transition_time, tr_time );
 }
 
-// STATE[83.69%|DONE]: LTCG call-boundary arg passing - see set_heel_transition_time.
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_toe_transition_time( float tr_time )
 {
-	toe_transition_time = math::min( tr_time, toe_transition_time );
+	toe_transition_time = math::min( toe_transition_time, tr_time );
 }
 
 // STATE[100%|DONE]

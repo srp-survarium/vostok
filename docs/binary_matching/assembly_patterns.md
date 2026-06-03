@@ -594,14 +594,20 @@ the third temp and gives the wrong (smaller) frame. The per-member `mov al,[..];
 `legs_ik_processor::leg_params::set_{heel,toe}_on_ground` (59.90 -> 78.19 with leaf getters,
 -> 100 once the condition went through is_full_on_ground; frame 0x0C matched).
 
-### `member = math::min( arg, member )` residual = which xmm each arg lands in (LTCG arg passing)
-A trivial setter `m_x = vostok::math::min( arg, m_x );` emits `movss xmm0,arg; movss
-xmm1,[this+off]; call min; movss [this+off],xmm0`. Under our LTCG the out-of-line `float
-min(const float,const float)` gets a custom register convention chosen at LINK time: the
-TARGET assigns args by position (arg0->xmm0, arg1->xmm1) and loads arg0 first; our BASE may
-reverse it (member->xmm0, arg->xmm1, member loaded first). Same instrs, same frame, same
-store - ONLY the two `movss` operands swap registers. This is the permitted call-boundary
-arg-passing class (register-instead-of-slot / link-time convention); no source change to
-`min( arg, member )` steers it without altering semantics. Mark DONE at the resulting %
-(~84%), not PARTIAL. Caught on `legs_ik_processor::leg_params::set_{heel,toe}_transition_time`
-(83.69%).
+### `member = math::min( x, member )` xmm operand order is STEERABLE via source operand order (NOT LTCG)
+A setter `m_x = vostok::math::min( a, b );` emits `movss xmm0,<op>; movss xmm1,<op>; call min;
+movss [this+off],xmm0`. WHICH operand lands in xmm0 vs xmm1 is decided by the SOURCE operand
+order, not by any link-time convention - so it is a source-steerable matching problem, NOT a
+bankable "call-boundary arg passing" LTCG residual. If your base puts the operands in the
+wrong xmm registers vs the target (3 instrs differ, ~84%), SWAP the two operands in source.
+`min`/`max` are commutative, so the swap is semantics-preserving and is the correct fix.
+
+Empirically, writing the MEMBER operand FIRST (`math::min( member, arg )`) makes the base load
+`arg->xmm0, member->xmm1`. Reference (clean, 100%): `generic_anomaly_core::dec_energy` is
+`m_energy_current -= math::min( m_energy_current, amount )` (member first) and its base emits
+`arg->xmm0, member->xmm1`, matching the target. The `legs_ik_processor::leg_params::
+set_{heel,toe}_transition_time` setters were wrongly written `min( arg, member )` (arg first)
+and scored 83.69% with the two `movss` operands in swapped registers; the target wanted
+`arg->xmm0, member->xmm1`, i.e. member-first source. Swapping to `math::min( member, arg )`
+took them 83.69% -> 100%. Lesson: never bank an xmm-operand-order diff as LTCG - swap and
+rebuild.
