@@ -485,3 +485,23 @@ NOTES: contrast with a NON-virtual member of the same class, which compiles to a
 `weapon_core_aimed_state_base::{initialize,finalize}` (virtual instant_aim_start/end @
 slots 0x8c/0x90) vs `..._idle_state_base` (non-virtual instant_idle_start/end, direct
 call). Read the `.h` `virtual` keyword to decide which the source needs.
+
+### LTCG custom `this`-in-EAX convention = proof the target callee is out-of-line (don't escape its address)
+SYMPTOM: a member call the source writes as `member.reset()` appears in the target as
+`add eax,120h; call reset` (object pointer in **EAX**, no `lea ecx,...`), and the callee
+`reset` itself has NO `push ebp` frame and reads `[eax]/[eax+4]`:
+    xorps xmm0,xmm0; mov dword[eax],0; movss [eax+4],xmm0; ret
+This non-`__thiscall` (this-in-EAX, frameless) convention is an LTCG optimization MSVC applies
+ONLY to functions it decided to keep OUT-OF-LINE whole-program. So seeing EAX-this is itself the
+tell that the TARGET kept the callee standalone - and that our build, which instead INLINES the
+tiny body at every caller (`add eax,120h; mov [ebp-4],eax; mov [ecx],0; movss...`, frame grows from
+`push ecx`/`[ebp-4]` to `sub esp,8`/`[ebp-8]`), is fighting the LTCG inliner.
+WHAT DOES NOT WORK (verified, PR #124, `weapon_core_aimed_state_base::finalize` -> `animation_playback_state::reset`):
+decl/def split into the class's own header-TU; `__declspec(noinline)`; multiple real same-module
+callers. CRITICAL: do NOT try to force the out-of-line call by escaping `&callee` (member-fn-ptr)
+through an opaque sink - taking the address FORCES the standard `__thiscall` ECX convention with a
+full frame, which diverges from the target's EAX form AND still gets inlined. The closest reproducible
+shape is the EMPTY-stub callee, which lets `/Od` cleanly ELIDE the call (caller PARTIAL, the only diff
+is the N call instrs). This is a genuine inline-vs-call LTCG residual (the narrowed MATCHING.md rule
+allows stopping here - it is codegen, not a wrong member/branch in source; the `member.reset()` call
+IS written, only its inline-vs-call lowering differs).
