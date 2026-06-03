@@ -597,3 +597,42 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   clamp) + the s_enable_breath_vibration_cc static (the dynamic initializer) + a `calc.tick(...)`
   reachability call to the existing breath anchor. Regressions: none (only unrelated ICF-fold
   representative churn; no matched game_core fn regressed).
+
+- game_core::oneliners-batch1 (18 trivial one-liners across 10 headers) -> PR #TBD (regressions: none)
+  One rebuild (706s / ~11.8min wall, exit 0, no post-build stall). Results:
+    damage_protector::damage_protector()           100%  DONE     (already matched; marker fixed)
+    damage_protector::~damage_protector()          100%  DONE     (already matched; marker fixed)
+    artefact_container_core::use_info               None  PARTIAL  (standalone in EXE, but TARGET
+                                                                    is FRAMELESS `mov eax,lit;ret 4`
+                                                                    vs our /Od framed body - build-
+                                                                    flag frame omission for this
+                                                                    `this`-unused leaf, not source-
+                                                                    steerable; literal/ret correct)
+    booby_trap_core::get_speed                      None  PARTIAL  (same frameless-vs-/Od-framed:
+                                                                    target `fldz;ret`, ours framed)
+    inventory_holder::inventory() [non-const]       None  PARTIAL  (trivial-accessor LTCG inline-
+                                                                    vs-call; verified inlined into
+                                                                    anchor as mov[this+8], correct)
+    inventory_holder::inventory() const             None  DONE     (ICF-folds w/ non-const)
+    inventory_holder::scheduler()                   None  PARTIAL  (LTCG inline-vs-call, mov[this+4])
+    weapon_user_animations_selector::set_animations None  PARTIAL  (LTCG inline-vs-call setter)
+    base_project::register_named_object             None  PARTIAL  (LTCG inline-vs-call; verified
+                                                                    inlined as map::operator[]+store)
+    base_project::register_object_to_resolve        None  PARTIAL  (LTCG inline-vs-call; inlined
+                                                                    vector push_back fast-path)
+    collision_geometry::cast_to_collision_geometry  None  DONE     (ICF-fold `return this`)
+    player_logic_base_state::is_ready_for_transition None DONE     (ICF-fold `return true`)
+    collision_sensor::on_inside                     None  DONE     (ICF-fold empty; moved to
+                                                                    protected: to match `MAE`)
+    collision_sensor::on_leave                      None  DONE     (ICF-fold empty; protected `MAE`)
+    collision_sensor::on_enter                      None  DONE     (ICF-fold empty; protected `MAE`)
+    collision_sensor::on_objetcs_loosed             None  DONE     (ICF-fold empty; protected `MAE`)
+    interactive_object::assign_game_ui              None  DONE     (ICF-fold empty `ret 4`)
+    interactive_object::cast_weapon_core (×2)       None  DONE     (ICF-fold `xor eax,eax;ret`)
+  Fold families proven populated in base index (mov al,1;ret=25, ret 4=68, xor eax,eax;ret=16,
+  empty this-frame=100), so the None|DONE bodies ARE emitted/byte-correct. Anchors added/extended
+  in temp_include_all.cpp: use_game_core_{inventory_holder,weapon_user_animations_selector,
+  base_project,booby_trap_core_get_speed}; use_info via a qualified call in use_artefact_container_core.
+  collision_sensor's 4 overrides moved public->protected to match the `MAE` mangling.
+  Regressions: none (15 report-changes "regressed" are all ICF fold-rep churn - boost storage,
+  dtors, thunks, empty_stub; none touch this batch's 10 units).
