@@ -45,11 +45,19 @@ public:
 			collision_geometry*		get_collision_geometry			( u32 index );
 	inline	u32						collision_geometries_count		( ) const { return m_collision_geometries_count; }
 
-	// STATE[STUB]
+protected:
+	// claude@MATCH: target mangles these four overrides `MAE` (protected virtual),
+	// not `UAE` - they must live under protected: or objdiff cannot pair them. All
+	// four are trivial empty bodies that /OPT:ICF folds (on_inside/on_leave/
+	// on_objetcs_loosed -> the `ret 4` empty fold @0x12c50, on_enter -> @0xd2070),
+	// so the unit reads None while the bytes are emitted and correct.
+	// STATE[None|DONE]
 	virtual	void					on_inside						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	// STATE[None|DONE]
 	virtual	void					on_leave						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
-	// STATE[STUB]
+	// STATE[None|DONE]
 	virtual	void					on_enter						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	// STATE[None|DONE]
 	virtual	void					on_objetcs_loosed				( vector<physics::base_physics_object *> const& objects )			{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 
 protected:
