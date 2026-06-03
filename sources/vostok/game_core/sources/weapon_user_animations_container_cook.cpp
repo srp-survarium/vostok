@@ -7,21 +7,23 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[100%|DONE]
 weapon_user_animations_container_cook::weapon_user_animations_container_cook( )
 	: resources::translate_query_cook( resources::animation_container_class, reuse_true, use_current_thread_id )
 {
-	// FUNCTION BODY
-	// <0x762910>|0x000|+0x035:'15'	{
-	// <0x762945>|0x035|      :'16'	}
-	// ******
 }
 
-// STATE[STUB]
+// STATE[33.38%|PARTIAL]: same delete_helper inline-shape wall as weapon_core_cook /
+// victory_item_core_cook / weapon_ammunition_cook - target out-of-lines delete_helper
+// <doug_lea_allocator,resource_base> with 2 cdecl args + `mov ecx,[g_allocator]`, base
+// inlines strip_pointer and passes &resource in a register. Source is the canonical
+// VOSTOK_DELETE_IMPL( g_allocator, resource ); divergence is pure LTCG inline choice.
 void weapon_user_animations_container_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x7629b0]: 1
-	// <0x7629b9>|0x009|+0x013:'20'
+	VOSTOK_DELETE_IMPL( g_allocator, resource );
+
+	// FUNCTION BODY
+	// <0x7629b9>|0x009|+0x013:'20'	VOSTOK_DELETE_IMPL( g_allocator, resource )
 	// ******
 }
 
@@ -46,23 +48,27 @@ void weapon_user_animations_container_cook::translate_query( resources::query_re
 	// ******
 }
 
-// STATE[STUB]
+// STATE[None|INPROGRESS]: body written + verified by analysis (ASSERT; for-loop;
+// requests.push_back( create_request( cfg[i], animation_class ) ), animation_class==0x3d,
+// create_request delinker-misnamed finalize_impl). Reads None: it is a .cpp-local free
+// function whose only caller (on_config_loaded) is still a stub, and taking its address via
+// a fn-pointer anchor does NOT force EXE emission under LTCG (and caused an interlocked_decrement
+// ICF regression, so the anchor was removed). NEXT STEP: match on_config_loaded so the
+// `create_requests_for_animations(...)` call sites keep it, then score + finalize.
 void create_requests_for_animations(
 	configs::binary_config_value const&		cfg,
 	const u32								requests_count,
 	buffer_vector< resources::request >&	requests
 )
 {
-	// LOCALS
-	// u32 								i<1>
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( requests_count ) );
+	for ( u32 i = 0; i < requests_count; ++i )
+		requests.push_back( resources::create_request( cfg[i], resources::animation_class ) );
 
-	// FUNCTION BODY[0x762950]: 5
-	// <0x762956>|0x006|+0x00c:'41'
-	// <0x762962>|0x012|+0x01a|[1]:'42'
-	// <0>
-	// <0x76297c>|0x02c|+0x02d:'44'
-	// <0>
+	// FUNCTION BODY
+	// <0x762956>|0x006|+0x00c:'41'	ASSERT( ... )
+	// <0x762962>|0x012|+0x01a|[1]:'42'	for ( u32 i = 0; i < requests_count; ++i )
+	// <0x76297c>|0x02c|+0x02d:'44'	requests.push_back( create_request( cfg[i], animation_class ) )
 	// ******
 }
 

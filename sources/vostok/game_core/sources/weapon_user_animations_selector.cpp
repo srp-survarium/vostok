@@ -5,8 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/player_logic_base_state.h>
-
-#include <vostok/game_core/player_logic_base_state.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/player_input.h>
 
 namespace survarium {
 
@@ -68,26 +68,28 @@ weapon_user_animations_selector::~weapon_user_animations_selector( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::tick()
+// STATE[53.98%|PARTIAL]: control flow + all field reads match. Two divergences are
+// compiler-inlining decisions (not source-steerable): (1) target inlines the first
+// condition as `is_trying_to_sprint()` => `(actions_mask & 0x200) != 0` with a bool
+// materialization (neg/sbb/neg); is_trying_to_sprint() is `/* no source */` in
+// player_input.h (out of this unit's files), so we can't reproduce the bool round-trip
+// without editing it. (2) target out-of-lines the `input().is_sprinting()` call while
+// our base inlines the inline accessor (the inverse choice). See selector_remaining.md.
 void weapon_user_animations_selector::tick( )
 {
-	// CALL SITE INFO
-	// <0x59549a> -> player_input const& <unknown>() const
-	// <0x5954d2> -> player_input const& <unknown>() const
-	// ******
+	if ( !( m_user->input( ).actions_mask & 0x200 ) )
+		m_forced_not_to_sprint = false;
+	else if ( !( m_user->input( ).is_sprinting( ) && is_weapon_in_idle( ) ) && current_state( ).id( ) == type_sprint )
+		m_forced_not_to_sprint = true;
+
+	m_logic.tick( );
 
 	// FUNCTION BODY
-	// <0x595489>|0x009|+0x02f:'66'
-	// <0>
-	// <0x5954b8>|0x038|+0x007:'68'
-	// <0>
-	// <0x5954bf>|0x03f|+0x04c:'70'
-	// <0>
-	// <0x59550b>|0x08b|+0x007:'72'
-	// <0>
-	// <0x595512>|0x092|+0x008:'74'
-	// <0>
+	// <0x595489>|0x009|+0x02f:'66'	if ( !( m_user->input().actions_mask & 0x200 ) )
+	// <0x5954b8>|0x038|+0x007:'68'	m_forced_not_to_sprint = false;
+	// <0x5954bf>|0x03f|+0x04c:'70'	else if ( ... && current_state().id() == type_sprint )
+	// <0x59550b>|0x08b|+0x007:'72'	m_forced_not_to_sprint = true;
+	// <0x595512>|0x092|+0x008:'74'	m_logic.tick();
 	// ******
 }
 
@@ -116,22 +118,10 @@ player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 	// 0x2f: mov eax,[ebp-4]; ret
 }
 
-// STATE[STUB]
-// stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::weapon_user_animations_selector::selected_animations(vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, const bool) const
+// STATE[100%|DONE]
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> weapon_user_animations_selector::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
-	// CALL SITE INFO
-	// <0x594e80> -> std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> <unknown>(mutable_buffer&, weapon_animation_parameters const&, const bool) const
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x594e59>|0x009|+0x02c:'96'
-	// ******
+	return current_state( ).selected_animations( buffer, weapon_parameters, is_third_view );
 }
 
 // STATE[STUB]
@@ -168,20 +158,25 @@ void weapon_user_animations_selector::activate( base_player& user, boost::functi
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::deactivate()
+// STATE[34.88%|PARTIAL]: set_initial_state(NULL) + the unsubscribe args/structure match.
+// Two divergences: (1) L122 unsubscribe_animation_player resolves to base_player vtable
+// +58h in base vs +54h in target - a one-slot delta from MSVC overloaded-virtual ordering
+// (the CALL SITE INFO confirms the (reserved_channel_ids_enum, pcvoid) overload; the slot
+// would need base_player.h's two unsubscribe_animation_player overloads reordered, which is
+// out of this unit's files). (2) L124 target materializes m_user->damage_model() into a temp,
+// runs the resource_ptr::operator* ASSERT (empty_stub), then derefs - our static `(*...)`
+// collapses to a different operator* fold without the temp/ASSERT (same deref-idiom wall as
+// current_state(), see weapon_user_animations_selector_state_accessors.md).
 void weapon_user_animations_selector::deactivate( )
 {
-	// CALL SITE INFO
-	// <0x594eba> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// <0x594ed6> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
+	m_logic.set_initial_state( NULL );
+	m_user->unsubscribe_animation_player( animation::channel_id_on_animation_interval_end, this );
+	( *m_user->damage_model( ) ).unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
 
 	// FUNCTION BODY
-	// <0x594e99>|0x009|+0x00a:'121'
-	// <0x594ea3>|0x013|+0x019:'122'
-	// <0>
-	// <0x594ebc>|0x02c|+0x028:'124'
+	// <0x584e99>|0x009|+0x00a:'121'	m_logic.set_initial_state( NULL )
+	// <0x584ea3>|0x013|+0x019:'122'	m_user->unsubscribe_animation_player( ..., this )   [base vtable+58 vs target+54]
+	// <0x584ebc>|0x02c|+0x028:'124'	(*m_user->damage_model()).unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber )
 	// ******
 }
 
