@@ -115,6 +115,7 @@
 #include <vostok/game_core/booby_trap_core_cook.h>
 #include <vostok/game_core/booby_trap_set_core_cook.h>
 #include <vostok/game_core/weapon_core_shotgun_reload_state_cook.h>
+#include <vostok/game_core/weapon_core_inactive_state_cook.h>
 #include <vostok/game_core/victory_items_container_core.h>
 #include <vostok/game_core/inventory.h>
 #include <vostok/game_core/player_profile.h>
@@ -418,6 +419,12 @@ namespace vostok
 	{
 		static survarium::weapon_core_shotgun_reload_state_cook s_weapon_core_shotgun_reload_state_cook;
 		vostok::resources::register_cook( &s_weapon_core_shotgun_reload_state_cook );
+	}
+
+	void use_weapon_core_inactive_state_cook( )
+	{
+		static survarium::weapon_core_inactive_state_cook s_weapon_core_inactive_state_cook;
+		vostok::resources::register_cook( &s_weapon_core_inactive_state_cook );
 	}
 
 	void use_dispersion_calculator( )
@@ -1058,10 +1065,11 @@ namespace vostok
 	void use_game_core_weapon_core_shotgun_reload_state( )
 	{
 		// claude@NOTE: anchor the matched methods. We construct an instance (ctor + dtor
-		// reachable) AND escape it through the opaque sink. This works only because this
-		// class's weapon_and_hands_expression override is currently a VOSTOK_UNREACHABLE_CODE
-		// placeholder: its real body would reference the still-STUB base_substate override
-		// (no return -> C4716 -> LNK1257). The qualified calls also keep the non-virtual paths.
+		// reachable) AND escape it through the opaque sink. weapon_and_hands_expression is
+		// now matched (its real body calls the base_substate override, which is matched too),
+		// so the qualified call anchors the whole reachable chain (shotgun_reload_state ->
+		// weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression ->
+		// get_weapon_lexeme_pair -> get_weapon_lexeme_pair_impl).
 		typedef survarium::weapon_core_shotgun_reload_state state_t;
 
 		survarium::weapon_core	weapon;
@@ -1070,6 +1078,17 @@ namespace vostok
 		state.state_t::execute( );
 		state.state_t::initialize( );
 		state.state_t::finalize( );
+
+		// Anchor weapon_and_hands_expression (and, transitively, the base_substate override +
+		// get_weapon_lexeme_pair it calls) via a member-function pointer escaped through the
+		// opaque sink - this keeps it without having to construct an animation_lexeme arg.
+		vostok::animation::mixing::expression ( state_t::*waahe )(
+			vostok::mutable_buffer&,
+			bool,
+			survarium::weapon_user_state_enum,
+			vostok::animation::mixing::animation_lexeme&
+		) const = &state_t::weapon_and_hands_expression;
+		example_callback( reinterpret_cast< pcstr >( &waahe ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
@@ -1854,6 +1873,7 @@ IncludeAll::IncludeAll()
 	vostok::use_victory_item_core( );
 	vostok::use_weapon_core_cook( );
 	vostok::use_weapon_core_shotgun_reload_state_cook( );
+	vostok::use_weapon_core_inactive_state_cook( );
 	vostok::use_game_core_weapon_recoil_params( );
 	vostok::use_game_core_character_dispersion_params( );
 	vostok::use_game_core_weapon_dispersion_params( );

@@ -33,7 +33,7 @@ Worktree: /home/sheep/Projects/surv/vostok_2 ; base commit fc3aadf9.
 - ctor       100%   DONE       byte-exact; objdiff pairs `call initialize_logic` by symbol name (report.json: 100.0), so it scores DONE even while initialize_logic's body is a STUB.
 - finalize    78.57% PARTIAL   LTCG elides animation_playback_state::reset() (header-inline stub); 3 reset instrs missing. Documented unsteerable inline-vs-call (animation/type_definitions.h:40).
 - initialize  50.88% PARTIAL   LTCG inlines fsm_state_list::front(); target keeps states()/front() out-of-line (1 local vs our 3). Unsteerable inline-vs-call.
-- weapon_and_hands_expression  INPROGRESS  real body kept as comment; placeholder is VOSTOK_UNREACHABLE_CODE because the real body references the no-return base_substate STUB (C4716->LNK1257). Restore + anchor once base_substate override is matched.
+- weapon_and_hands_expression  100% DONE (objdiff `None`, see below)  byte-identical to target 0x589db0.
 - true_predicate    INPROGRESS  `return true;` correct; removed as unreferenced (C4505) until initialize_logic references it.
 - initialize_logic  INPROGRESS (STUB)  heavy: operator new fsm, add_state x3, two add_transition with boost::bind(true_predicate)/(&finish_reload_predicate,this), behaviour_cook_params, function0/1 assign_to.
 - finish_reload_predicate  INPROGRESS (STUB)  ammo vs capacity, intrusive_ptr/inventory amount(), get_target() checks.
@@ -76,6 +76,48 @@ Worktree: /home/sheep/Projects/surv/vostok_2 ; base commit fc3aadf9.
   Link-bait only, never executed.
 - ctor: no function-pointer exists for ctors and a real construction hits the vtable/substate
   wall, so it stays INPROGRESS until the substate override is matched.
-- weapon_and_hands_expression: its own body calls the broken substate stub -> INPROGRESS.
 - true_predicate: only referenced by initialize_logic (STUB) -> removed as unreferenced
   (C4505) until initialize_logic is matched -> INPROGRESS.
+
+## weapon_and_hands_expression - re-match (PR #188 review FIX 1)
+
+The override is now UNBLOCKED (the base_substate override is matched, so the real body
+links). The override body was 41%/single-slot; the target 0x589db0 materializes the
+downcast into TWO stack slots within one statement:
+
+```
+sub esp,0Ch
+mov [ebp-0Ch],ecx            ; this
+mov eax,[ebp-0Ch]
+mov ecx,[eax+138h]           ; m_logic
+mov edx,[ecx+10h]            ; current_state() (m_current_state @ fsm+0x10, inlined)
+mov [ebp-8],edx              ; SLOT A: the current_state() result (a named local)
+mov eax,[ebp-8]
+mov [ebp-4],eax              ; SLOT B: the downcast `current`
+...
+mov ecx,[ebp-4]
+call weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression
+```
+
+The two slots are TWO distinct named locals, NOT a static_cast-to-reference temp:
+
+```cpp
+ai::fsm_state* state = m_logic->current_state( );
+weapon_core_shotgun_reload_base_substate* current = static_cast< ... >( state );
+return current->weapon_and_hands_expression( ... );
+```
+
+Attempts (each + rebuild + rich-index byte compare):
+1. `current = static_cast<...>( m_logic->current_state() )` (single statement, named ptr):
+   `sub esp,8`, single slot `mov [ebp-4],edx` - the static_cast folds current_state() into
+   the cast operand. WRONG (one slot).
+2. `static_cast<substate&>( *m_logic->current_state() ).method(...)` (reference cast):
+   still `sub esp,8`, single slot. WRONG.
+3. `fsm_state* state = current_state(); substate* current = static_cast<...>(state);`:
+   `sub esp,0Ch`, `mov [ebp-8],edx; mov eax,[ebp-8]; mov [ebp-4],eax` - EXACT.
+   The separate `state` local forces the extra slot; the static_cast is then a no-op copy.
+
+Result: base RVA 0x44eba0, size 68 = target size 68, 26/26 instructions byte-identical.
+objdiff report.json lists `fuzzy_match_percent: None` for this symbol - the delinked
+target obj has no COMDAT for it to pair against, so objdiff cannot score it. Verified
+100% by direct rich-index instruction comparison (base == target). Marked 100%|DONE.
