@@ -199,13 +199,17 @@ public:
 	inline	bool								is_active						( ) const { /* no source */ }
 
 			bool								target_predicate						( weapon_targets target ) const { return m_target == target; } // STATE[STUB]
+private:
 			bool								target_and_animation_ended_predicate	( weapon_targets target ) const;
+public:
 			bool								instant_idle_predicate					( ) const;
 
+private:
 			bool								must_chamber_a_round_predicate							( ) const;
 			bool								must_chamber_a_round_aimed_predicate					( ) const;
 			bool								must_chamber_a_round_and_animation_ended_predicate		( ) const;
 			bool								must_chamber_a_round_aimed_and_animation_ended_predicate( ) const;
+public:
 
 			float3								get_dispersed_bullet_dir		( );
 
@@ -215,8 +219,10 @@ public:
 			animation::callback_return_type_enum	on_sprint_animation_ended		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	fake_callback					( animation::animation_callback_params& params ) { return animation::callback_return_type_call_me_again; } // STATE[STUB]
 
+private:
 	virtual	void								on_player_model_added			( ) override;
 	virtual	void								on_player_model_removed			( ) override;
+public:
 
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
@@ -261,6 +267,8 @@ public:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
+			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
+
 	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
@@ -294,18 +302,22 @@ public:
 			float								horizontal_recoil_value			( ) const;
 			float								vertical_recoil_value			( ) const;
 
+private:
 			bool								is_trying_to_aim				( ) const;
 			bool								is_not_trying_to_aim_predicate	( ) const;
+public:
 
 			bool								can_and_must_reload_predicate	( ) const;
 			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
 
 			void								load_ammo						( );
 
+private:
 			animation::callback_return_type_enum
 												on_hand_ik_event				( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand );
-
+protected:
 	virtual	void								on_user_sprint					( bool user_is_sprinting );
+public:
 
 private:
 	// claude@MATCH: target mangles these AAE/ABE (private), not QAE/QBE.

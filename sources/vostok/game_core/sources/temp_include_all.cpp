@@ -1001,6 +1001,19 @@ namespace vostok
 
 		wc.initialize_weapon_logic( s, s, s, s, s, s, s, s, s, s );
 
+		// Anchor weapon_core's public/private members defined in weapon_core.cpp so
+		// they are emitted and scored (this fn is friended; reaches privates).
+		volatile bool b = wc.is_ready_to_shoot( );
+		b = wc.maximum_ammo_in_weapon( ) != 0;
+		survarium::weapon_ammunition_ptr		ammo( NULL );
+		wc.set_ammunition( ammo );
+		wc.unload_chambered_round( );
+		vostok::resources::managed_resource_ptr	anim;
+		vostok::animation::animation_callback_params
+			params( NULL, anim, NULL, 0, 0, 0, 0 );
+		b = wc.on_hand_ik_event( params, survarium::hand_to_weapon_ik_processor::left ) == 0;
+
+		example_callback( reinterpret_cast< pcstr >( const_cast< bool* >( &b ) ) );
 		example_callback( reinterpret_cast< pcstr >( &wc ) );
 	}
 
