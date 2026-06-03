@@ -68,7 +68,9 @@ void create_requests_for_animations(
 	// FUNCTION BODY
 	// <0x762956>|0x006|+0x00c:'41'	ASSERT( ... )
 	// <0x762962>|0x012|+0x01a|[1]:'42'	for ( u32 i = 0; i < requests_count; ++i )
+	// <0>
 	// <0x76297c>|0x02c|+0x02d:'44'	requests.push_back( create_request( cfg[i], animation_class ) )
+	// <0>
 	// ******
 }
 
