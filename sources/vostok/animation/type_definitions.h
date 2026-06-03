@@ -36,7 +36,7 @@ enum body_part_masks_enum {
 
 // sushi@TODO: Should be moved to a different place?
 struct animation_playback_state {
-	inline			animation_playback_state( ) { /* no source */ }
+	inline			animation_playback_state( ) : interval_id( 0 ), interval_time( 0.0f ) { }
 	inline	void	reset					( ) { /* no source */ }
 
 public:

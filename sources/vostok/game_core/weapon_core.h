@@ -189,7 +189,7 @@ public:
 	inline	bool								chamber_a_round_on_reload		( ) const { /* no source */ }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 
-	inline	bool								deserializing					( ) const { /* no source */ }
+	inline	bool								deserializing					( ) const { return m_deserializing; }
 	inline	bool								is_active						( ) const { /* no source */ }
 
 			bool								target_predicate						( weapon_targets target ) const { return m_target == target; } // STATE[STUB]

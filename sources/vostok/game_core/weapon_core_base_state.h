@@ -25,7 +25,8 @@ namespace survarium {
 class weapon_core;
 
 class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , public boost::noncopyable {
-public:
+protected:
+	// ctor mangles ?? 0...@@IAE@... -> protected, non-const (objdiff pairs by mangled name)
 	explicit									weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
 
 public:
@@ -53,6 +54,8 @@ public:
 	inline	void		set_is_firing_ptr			( bool* arg_0 ) { /* no source */ }
 	inline	void		set_is_firing				( bool arg_0 ) { /* no source */ }
 
+protected:
+	// mangles ?deserializing@...@@IBE_NXZ -> protected, const (objdiff pairs by mangled name)
 			bool		deserializing				( ) const;
 
 protected:

@@ -4,28 +4,24 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_base_state.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.deserializing() inlines a member read
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_base_state::weapon_core_base_state(survarium::weapon_core&, bool)
+// STATE[100%|DONE]
 weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serialize_animation_state ) : m_weapon( weapon )
 {
-	// FUNCTION BODY
-	// <0x6fcf90>|0x000|+0x0aa:'23'	{
-	// <0x6fd03a>|0x0aa|      :'24'	}
-	// ******
+	m_is_firing_ptr				= NULL;
+	m_body_part_mask_for_user	= animation::body_part_whole_body;	// -1
+	m_is_ready_to_be_deactivated	= false;
+	m_animation_has_been_ended	= false;
+	m_serialize_animation_state	= serialize_animation_state;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_base_state::deserializing() const
+// STATE[100%|DONE]
 bool weapon_core_base_state::deserializing( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x6fce69>|0x009|+0x015:'28'
-	// ******
+	return m_weapon.deserializing( );
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
