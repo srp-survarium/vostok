@@ -549,6 +549,15 @@ namespace vostok
 
 		// Escape &state so LTCG observes the ctor's member stores (loop_performance.md).
 		example_callback( reinterpret_cast< pcstr >( &state ) );
+
+		// claude@NOTE: anchor the non-virtual recoil-time-calculator getters so the
+		// linker keeps their out-of-line bodies for scoring.
+		survarium::weapon_core::calculator_functor bc = weapon.backward_recoil_time_calculator( );
+		survarium::weapon_core::calculator_functor hc = weapon.horizontal_recoil_time_calculator( );
+		survarium::weapon_core::calculator_functor vc = weapon.vertical_recoil_time_calculator( );
+		example_callback( reinterpret_cast< pcstr >( &bc ) );
+		example_callback( reinterpret_cast< pcstr >( &hc ) );
+		example_callback( reinterpret_cast< pcstr >( &vc ) );
 	}
 
 	void use_game_core_weapon_core_animation_end_aware_state( )
