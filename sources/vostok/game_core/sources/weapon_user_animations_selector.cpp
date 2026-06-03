@@ -6,6 +6,8 @@
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/player_logic_base_state.h>
 
+#include <vostok/game_core/player_logic_base_state.h>
+
 namespace survarium {
 
 // STATE[STUB]

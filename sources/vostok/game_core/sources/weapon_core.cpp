@@ -7,6 +7,9 @@
 
 #include <vostok/animation/sources/mixing_base_lexeme.h>
 
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/player_input.h>
+
 #include <vostok/ai/fsm.h>
 #include <boost/bind.hpp>
 
@@ -411,11 +414,12 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 	m_skeleton = skeleton;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::target_and_animation_ended_predicate(const survarium::weapon_targets) const
+// STATE[85.68%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of trivial
+// weapon_core_base_state::has_animation_ended() (target /Od `call`, our /GL inlines the [+135h]
+// read). Same class as must_chamber_a_round_and_animation_ended_predicate.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
-	return false;
+	return m_target == target && current_base_state( ).has_animation_ended( );
 
 	// FUNCTION BODY
 	// <0xbc609>|0x009|+0x04b:'286'
@@ -1100,13 +1104,10 @@ void weapon_core::set_next_ammo_type( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_ammunition(vostok::resources::resource_ptr<survarium::weapon_ammunition,vostok::resources::unmanaged_intrusive_base> const&)
+// STATE[100%|DONE]
 void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const& ammunition_to_set )
 {
-	// FUNCTION BODY
-	// <0x5a4739>|0x009|+0x017:'727'
-	// ******
+	m_ammunition = ammunition_to_set;
 }
 
 // STATE[STUB]
@@ -1138,14 +1139,9 @@ void weapon_core::load_ammo( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_reload_started()
+// STATE[100%|DONE]
 void weapon_core::on_reload_started( )
 {
-	// FUNCTION BODY
-	// <0x5a2ba0>|0x000|+0x007:'756'	{
-	// <0x5a2ba7>|0x007|      :'757'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -1393,33 +1389,29 @@ void weapon_core::deactivate( )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_ready_to_be_deactivated() const
+// STATE[84.77%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of the two
+// trivial getters (weapon_user_animations_selector::is_ready_to_be_deactivated returns false
+// standalone in target; current_base_state ref-copy shape). Same inline-decision class as the
+// has_animation_ended predicates.
 bool weapon_core::is_ready_to_be_deactivated( ) const
 {
-	return false;
+	return current_base_state( ).is_ready_to_be_deactivated( ) && m_user_animations_selector.is_ready_to_be_deactivated( );
 
 	// FUNCTION BODY
 	// <0x5a32e9>|0x009|+0x057:'920'
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_player_model_added()
+// STATE[100%|DONE]
 void weapon_core::on_player_model_added( )
 {
-	// FUNCTION BODY
-	// <0x5a2f27>|0x007|+0x008:'925'
-	// ******
+	instant_show( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_player_model_removed()
+// STATE[100%|DONE]
 void weapon_core::on_player_model_removed( )
 {
-	// FUNCTION BODY
-	// <0x5a2f07>|0x007|+0x008:'930'
-	// ******
+	instant_hide( );
 }
 
 // STATE[STUB]
@@ -1928,34 +1920,27 @@ void weapon_core::get_ammo_info( weapon_ammo_info& info )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a31a9>|0x009|+0x00c:'1290'
-	// <0x5a31b5>|0x015|+0x044:'1291'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	return !m_is_round_chambered && m_ammo_in_magazine != 0 && !m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_aimed_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_aimed_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a35b9>|0x009|+0x031:'1296'
-	// ******
+	return must_chamber_a_round_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_and_animation_ended_predicate() const
+// STATE[87.47%|PARTIAL]: ASSERT + control-flow byte-identical; residual = LTCG inline-vs-call
+// of trivial weapon_core_base_state::has_animation_ended() (header inline; target /Od emits
+// `call has_animation_ended` @0x42 + 3 current_base_state ref copies, our /GL inlines the
+// `mov al,[+135h]` read). Same class as is_trying_to_aim / round_is_chambered.
 bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 {
-	return false;
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	return must_chamber_a_round_predicate( ) && current_base_state( ).has_animation_ended( );
 
 	// FUNCTION BODY
 	// <0x5a3549>|0x009|+0x00c:'1301'
@@ -1963,42 +1948,31 @@ bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a37d9>|0x009|+0x031:'1307'
-	// ******
+	return must_chamber_a_round_and_animation_ended_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_ready_to_shoot() const
+// STATE[100%|DONE]
 bool weapon_core::is_ready_to_shoot( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a2ac9>|0x009|+0x066:'1312'
-	// ******
+	return ( m_is_there_chamber_a_round_state ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && m_ready_for_fire;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_trying_to_aim() const
+// STATE[66.75%|PARTIAL]: every member access/mask/order byte-identical; sole diff = LTCG
+// inline-vs-call of trivial player_input::is_sprinting() - target keeps it standalone
+// (`call player_input::is_sprinting` @0x60), our /GL inlines its (&0x200 && &0x1 && &0x16E==0)
+// body. Same inline-decision class as reload_state_base::initialize round_is_chambered.
 bool weapon_core::is_trying_to_aim( ) const
 {
-	// LOCALS
-	// player_input const& 			input
-	// u32 							just_toggled
-	// ******
+	player_input const&	input			= m_user->input( );
+	u32					just_toggled	= ~m_old_actions_mask & input.actions_mask;
 
-	// CALL SITE INFO
-	// <0x5a34b2> -> player_input const& <unknown>() const
-	// ******
-
-	return false;
+	return could_be_aimed( *get_user( ) )
+		&& ( input.actions_mask & 0x80 ) != 0	// sushi@TODO: aim action bit
+		&& !( input.is_sprinting( ) && ( just_toggled & 0x200 ) != 0 )	// sushi@TODO: sprint action bit
+		&& m_user_animations_selector.get_current_state_id( ) != type_jump;
 
 	// FUNCTION BODY
 	// <0x5a3499>|0x009|+0x01e:'1317'
@@ -2011,15 +1985,10 @@ bool weapon_core::is_trying_to_aim( ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_not_trying_to_aim_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::is_not_trying_to_aim_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a37b7>|0x007|+0x012:'1328'
-	// ******
+	return !is_trying_to_aim( );
 }
 
 // STATE[STUB]
@@ -2046,35 +2015,26 @@ bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::unload_chambered_round()
+// STATE[100%|DONE]
 void weapon_core::unload_chambered_round( )
 {
-	// CALL SITE INFO
-	// <0x5a2dbd> -> void <unknown>()
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
 
-	// FUNCTION BODY
-	// <0x5a2d69>|0x009|+0x00c:'1345'
-	// <0x5a2d75>|0x015|+0x00c:'1346'
-	// <0x5a2d81>|0x021|+0x00c:'1347'
-	// <0>
-	// <0x5a2d8d>|0x02d|+0x018:'1349'
-	// <0x5a2da5>|0x045|+0x00a:'1350'
-	// <0>
-	// <0x5a2daf>|0x04f|+0x010:'1352'
-	// ******
+	++m_ammo_in_magazine;
+	m_is_round_chambered = false;
+	on_unload_chambered_round( );
 }
 
-// STATE[STUB]
-// unsigned short survarium::weapon_core::maximum_ammo_in_weapon() const
+// STATE[88.41%|PARTIAL]: members/branches byte-identical; residual = bool->int codegen: target
+// stores the && into a BYTE temp and normalizes it (neg;sbb;neg, the (val!=0) shape) before
+// `add eax,ecx`, our base stores a DWORD temp and adds directly (no normalize). Source-shape
+// residual (NOT LTCG/arg-passing), not yet diffed to a clean cause.
 u16 weapon_core::maximum_ammo_in_weapon( ) const
 {
-	// LOCALS
-	// bool 						chamber_a_round_but_not_on_reload
-	// ******
-
-	return 0;
+	bool chamber_a_round_but_not_on_reload = m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload;
+	return m_magazine_capacity + chamber_a_round_but_not_on_reload;
 
 	// FUNCTION BODY
 	// <0x5a2a79>|0x009|+0x02c:'1357'
@@ -2082,13 +2042,18 @@ u16 weapon_core::maximum_ammo_in_weapon( ) const
 	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core::on_hand_ik_event(vostok::animation::animation_callback_params&, const survarium::hand_to_weapon_ik_processor::hands_enum)
+// STATE[96.55%|PARTIAL]: ASSERTs/activate_hand args/return byte-identical; sole diff = `==9`
+// comparison codegen - target `cmp eax,9; sete cl`, our base emits an extra `xor ecx,ecx`
+// before the cmp. Not the LTCG inline class; an open source-shape residual, not yet diffed
+// to a clean cause (register-zeroing is usually source-steerable).
 animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand )
 {
-	// LOCALS
-	// bool 						active
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( params.domain_data ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( params.callback_time_in_ms ) );
+
+	bool active = params.domain_data == 9;
+	m_hand_ik_processor.activate_hand( hand, active, params.callback_time_in_ms );
+	return animation::callback_return_type_call_me_again;
 
 	// FUNCTION BODY
 	// <0x5a2d09>|0x009|+0x00c:'1363'
@@ -2099,13 +2064,13 @@ animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::a
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_user_sprint(bool)
+// STATE[89.72%|PARTIAL]: control-flow/args byte-identical; residual = LTCG inline-vs-call of
+// trivial weapon_core::is_double_handed() (header inline; target /Od `call is_double_handed`,
+// our /GL inlines the `mov cl,[+48Ah]` read). Same inline-decision class as is_trying_to_aim.
 void weapon_core::on_user_sprint( bool user_is_sprinting )
 {
-	// LOCALS
-	// bool 						left_hand_ik_is_active
-	// ******
+	bool left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;
+	m_hand_ik_processor.activate_hand( hand_to_weapon_ik_processor::left, left_hand_ik_is_active, m_last_tick_time_in_ms );
 
 	// FUNCTION BODY
 	// <0x5a2ca9>|0x009|+0x027:'1372'
