@@ -25,16 +25,12 @@ void `dynamic atexit destructor for 's_dispersion_enabled_cc''( )
 }
 */
 
-// STATE[STUB]
+// STATE[100%|DONE]
 dispersion_calculator::dispersion_calculator( ) :
 	m_weapon				( NULL ),
 	m_shooting_skill_coeff	( 1.0f ),
 	m_aiming_speed_coeff	( 1.0f )
 {
-	// FUNCTION BODY
-	// <0x596920>|0x000|+0x044:'22'	{
-	// <0x596964>|0x044|      :'23'	}
-	// ******
 }
 
 // STATE[87.49%|PARTIAL]: body/offsets/order all match; residual diff is LTCG only -
