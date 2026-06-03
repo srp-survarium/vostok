@@ -93,7 +93,8 @@ void weapon_user_animations_selector::tick( )
 // field reads in consumers) but the target materializes the cast result through an
 // extra `call <operator*>` (ICF-folds to `vec_begin`, `mov eax,[ecx]; ret`) taking
 // `&(fsm_state* temp)` at L80 - a smart-pointer/deref idiom not yet identified, so our
-// static_cast collapses it to a plain store. See docs/binary_matching/game_core/current_state.md.
+// static_cast collapses it to a plain store. See
+// docs/binary_matching/game_core/weapon_user_animations_selector_state_accessors.md.
 player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 {
 	player_logic_base_state* const result = static_cast< player_logic_base_state* >( m_logic.current_state( ) );
