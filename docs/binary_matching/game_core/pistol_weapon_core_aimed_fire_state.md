@@ -29,10 +29,14 @@ Base class init `weapon_core_aimed_fire_state_base( weapon, animation_time_scale
 0x6b mov byte/call empty_stub = ASSERT_CMP_U; 0x182 mov byte/call empty_stub = trailing ASSERT.
 
 ### initialize (0x79b0e0)
-Identical to fire-state initialize (92.62% PARTIAL): calls base initialize, computes
-last_shot from get_bullets_in_queue ? (ammo==1) : (ammo==0), stores into
-m_weapon_animation_index. Residuals: __thiscall this in eax vs ecx (LTCG arg passing)
-+ bool boolize on the final store. Same as sibling.
+Calls base initialize, computes last_shot from get_bullets_in_queue ? (ammo==1) : (ammo==0),
+stores into m_weapon_animation_index. Two residuals:
+- 0x30 `mov eax,[ecx+128h]` (target) vs `mov ecx,...` (base) before call ammo_in_magazine =
+  LTCG this-register at the call boundary (legit LTCG).
+- final store: target re-boolizes last_shot (neg;sbb;neg) into the u32 member; base stores raw
+  movzx. This is a SOURCE-SHAPE residual, NOT LTCG (do not bank as LTCG) - try
+  `m_weapon_animation_index = last_shot ? 1u : 0u;`.
+PARTIAL. Not in report.json (access UAE->MAE owed); 92.62% was a pdb_fetch text estimate.
 
 ### get_weapon_lexeme_pair (0x79af30)
 Identical to fire-state (100%) but captions "pistol-aimed_shot" / "pistol-aimed_last_shot"
@@ -47,21 +51,42 @@ ret xmm0). Same as sibling.
 INPROGRESS - large addition_lexeme/operator+ machinery, same as fire-state sibling
 (both INPROGRESS there). Carry the stub + carcass forward.
 
-## Verified results (after the build was finally made to produce a fresh PDB)
-- new_object              92.08%  (objdiff report.json - exact, == fire-state sibling)
-- initialize              92.62%  (PARTIAL; pdb_fetch text diff "37/44 instructions equal";
-                                   residuals = 2x LTCG this-in-eax-vs-ecx for ammo_in_magazine
-                                   + /Od bool boolize neg;sbb;neg on final store; == sibling)
-- ctor                    100%    (asm identical to target @0x79abc0; mirror of 100% sibling)
-- get_weapon_lexeme_pair  100%    (asm identical to target @0x79af30 w/ aimed captions)
-- weapon_and_hands_expression  INPROGRESS (stub return)
-- get_user_hands_expression    INPROGRESS (stub return)
+## Verified results (review cross-checked vs binaries/objdiff/report.json + pdb_fetch)
+- new_object              92.08%  PARTIAL  (report.json - pairs; LTCG calling-conv of
+                                            computed_shooting_animation_time_scale, verified)
+- ctor                    100%    DONE     (140/140 instrs == target @0x79abc0; NOT in report.json
+                                            until access QAE->IAE fix - byte-verified by pdb_fetch)
+- get_weapon_lexeme_pair  100%    DONE     (62/62 instrs == target @0x79af30 w/ aimed captions;
+                                            NOT in report.json until access QBE->ABE fix)
+- initialize              PARTIAL          (1 LTCG this-reg + 1 source-shape boolize residual; NOT
+                                            in report.json until access UAE->MAE fix; 92.62% est.)
+- weapon_and_hands_expression  INPROGRESS  (stub return; access UBE->EBE owed)
+- get_user_hands_expression    INPROGRESS  (stub return; access QBE->ABE owed)
 
-NOTE on report.json 0%: ctor/initialize/get_weapon_lexeme_pair show 0% in report.json
-because objdiff's delinked .obj pairing folds them by ICF with the fire/double_barreled
-siblings (identical or near-identical code) and cannot pair them as standalone symbols;
-`pdb_fetch --view diff` (text fallback) confirms the instructions match. new_object is
-unique so it pairs and scores cleanly (92.08%).
+WHY report.json shows NO entry for ctor/initialize/get_weapon_lexeme_pair/get_user_hands_
+expression/weapon_and_hands_expression (CORRECTED by review - the earlier "ICF fold" note
+was WRONG): these symbols ARE present standalone in the base obj (base index has 9 rows for
+this unit, each at a real rva, byte-identical to target via pdb_fetch). They are absent from
+report.json because objdiff cannot PAIR them - the base mangles them with the wrong ACCESS
+specifier vs the target (the documented Q/A/I and U/M/E pairing-failure class). The sibling
+`pistol_weapon_core_fire_state` is not even compiled into this branch's base (its base class
+lives on a different branch), so there is nothing for these to ICF-fold against.
+
+ACCESS FIXES OWED (read from target mangling - the .h declares all of these `public:`):
+- ctor                          target ??0...@@IAE  -> declare `protected:`  (base now QAE)
+- initialize                    target ...@@MAE     -> `protected:` virtual  (base now UAE)
+- weapon_and_hands_expression   target ...@@EBE     -> `private:` virtual     (base now UBE)
+- get_weapon_lexeme_pair        target ...@@ABE     -> `private:`             (base now QBE)
+- get_user_hands_expression     target ...@@ABE     -> `private:`             (base now QBE)
+The sibling weapon_core_fire_state_base PR (#174, PROGRESS ledger) made exactly these access
+fixes to score its functions; this PR did not. Once the .h is corrected the byte-identical
+ctor + get_weapon_lexeme_pair pair at 100%, initialize pairs at its real %. NOT done here
+(review does not rebuild) - flagged for the next builder. Note virtual overrides may legally
+be private; the cook-template friend/anchor reaches them regardless.
+
+new_object (??...@@AAE) already pairs (mangling matches) and scores 92.08% cleanly - its sole
+residual is the verified call-boundary calling-convention of computed_shooting_animation_time_scale
+(arg in reg + ret xmm0 in target; cdecl push + st0/fstp in our STUB callee) = legitimate LTCG.
 
 ## Scaffolding required by this unit (outside the .cpp's own functions)
 - weapon_core_aimed_fire_state_base.h: m_animation_timescale / m_playback_type private -> protected

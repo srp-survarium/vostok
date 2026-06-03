@@ -34,9 +34,13 @@ float computed_shooting_animation_time_scale( resources::managed_resource_ptr co
 #include <vostok/game_core/weapon_animations_timescale_inline.h>
 namespace survarium {
 
-// STATE[100%|DONE]: mirror of pistol_weapon_core_fire_state::ctor (100% in PR #174); asm
-// identical to target @0x79abc0. (objdiff report.json reports 0% via an ICF-folding pairing
-// artifact in the delinked objs - the pdb_fetch diff confirms the instructions match. See .md.)
+// STATE[100%|DONE]: instructions byte-identical to target @0x79abc0 (140/140 lines equal; the
+// only deltas are delinker COMDAT-fold misnames of empty helpers - res_effect/base_scene
+// resource_ptr ctor, dummy::nonnull/finalize_impl ASSERT stub). report.json shows NO entry for
+// this ctor because base mangles ??0...@@QAE (public) while target is ??0...@@IAE (protected), so
+// objdiff cannot pair them - this is the documented access-specifier pairing failure (Q->I), NOT
+// an ICF fold. FIX OWED: set the ctor protected in the .h (sibling fire-state did exactly this);
+// will then pair at 100%. See .md.
 pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -60,10 +64,15 @@ pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[92.62%|PARTIAL]: every branch matches (pdb_fetch diff: 37/44 instructions equal, the
-// remaining 7 are the two LTCG `this`-in-eax-vs-ecx loads for ammo_in_magazine() plus the /Od
-// bool boolize neg;sbb;neg on the final store). Identical to the byte-verified
-// pistol_weapon_core_fire_state::initialize sibling (PR #174, 92.62% PARTIAL). target @0x79b0e0.
+// STATE[PARTIAL]: target @0x79b0e0. NOT in report.json (base mangles @@UAE public-virtual vs
+// target @@MAE protected-virtual -> objdiff can't pair; the 92.62% was a pdb_fetch text diff, not
+// a report.json number). Two residuals over the otherwise-identical body:
+//  - 0x30 target `mov eax,[ecx+128h]` vs base `mov ecx,...` before call ammo_in_magazine: LTCG
+//    this-register at the call boundary (legit LTCG).
+//  - final store (0x6e..): target boolizes last_shot (neg;sbb;neg) into m_weapon_animation_index;
+//    base stores the raw movzx. This is a SOURCE-SHAPE residual (the assignment re-normalizes the
+//    bool), NOT LTCG - next step: try `m_weapon_animation_index = last_shot ? 1u : 0u;` shape.
+// FIX OWED FIRST: declare initialize protected-virtual in the .h so it pairs in report.json.
 void pistol_weapon_core_aimed_fire_state::initialize( )
 {
 	weapon_core_aimed_fire_state_base::initialize( );
@@ -106,10 +115,12 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_ha
 	// ******
 }
 
-// STATE[100%|DONE]: mirror of pistol_weapon_core_fire_state::get_weapon_lexeme_pair (100% in
-// PR #174); asm identical to target @0x79af30 with captions "pistol-aimed_shot" /
+// STATE[100%|DONE]: instructions byte-identical to target @0x79af30 (62/62 lines equal; lone delta
+// is the dummy::nonnull/finalize_impl empty-stub fold misname) with captions "pistol-aimed_shot" /
 // "pistol-aimed_last_shot" (target strings pistol?9aimed_shot / pistol?9aimed_last_shot).
-// (report.json 0% is the ICF-folding pairing artifact - see .md.)
+// report.json shows NO entry because base mangles @@QBE (public) while target is @@ABE (private):
+// the documented access-specifier pairing failure (Q->A), NOT an ICF fold. FIX OWED: declare
+// get_weapon_lexeme_pair private in the .h; will then pair at 100%. See .md.
 weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "pistol-aimed_shot", "pistol-aimed_last_shot" };
