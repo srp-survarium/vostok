@@ -85,7 +85,7 @@ animation::mixing::expression weapon_core_hide_state::weapon_and_hands_expressio
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 weapon_lexeme_pair weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-hide";
