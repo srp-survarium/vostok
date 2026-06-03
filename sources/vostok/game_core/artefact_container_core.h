@@ -32,13 +32,8 @@ public:
 	virtual	bool		use_initialize				( usable_object_user_data* user ) override;
 	virtual	bool		use_execute					( usable_object_user_data* user ) override;
 	virtual	bool		use_finalize				( usable_object_user_data* user ) override;
-	// claude@MATCH: body is `return "st_use_artefact_container"`. The TARGET obj
-	// emits this FRAMELESS (`mov eax,<lit>; ret 4` - 5 bytes; the original build
-	// omitted the ebp frame for this `this`-unused leaf), while our /Od build always
-	// emits the standard frame (`push ebp; ...; mov [ebp-4],ecx; ...`). The byte/size
-	// gap is too large for objdiff to pair -> None. Not source-steerable under /Od
-	// (frame omission is a build flag, not source). The literal + ret 4 are correct.
-	// STATE[None|PARTIAL]: frameless-target vs /Od-framed-base (build-flag codegen).
+	// claude@MATCH: target is FRAMELESS for this `this`-unused leaf (`mov eax,lit;ret 4`); /Od always frames -> unpairable. Literal correct.
+	// STATE[None|PARTIAL]: frameless-target vs /Od-framed-base (see oneliners_batch1.md).
 	virtual	pcstr		use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return "st_use_artefact_container"; }
 
 	virtual	void		activate					( generic_anomaly_core* owner, physics::world* world, scheduler& __formal );
