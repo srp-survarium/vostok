@@ -416,3 +416,20 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+## Enabling an ExcludedFromBuild .cpp without a cascade rebuild - `scripts/regen_ninja.py`
+Most of `network_core` (and stray TUs elsewhere) are `ExcludedFromBuild="true"` in their `.vcproj`, so
+they have ZERO base symbols and can't be matched until added to the build. The ORCHESTRATOR (not the
+matcher) enables one: (1) remove that file's `<FileConfiguration ... ExcludedFromBuild="true">` block in
+the `.vcproj` (make it look like a built sibling), then (2) run `python3 scripts/regen_ninja.py`. Do NOT
+re-run the full vcproj2ninja regen directly: it is **non-deterministic** (shuffles each module's sources
+across `<module>_cl_*.rsp` batches and embeds the `--output-dir` in the `.ninja`), so a naive regen
+rewrites every file and ninja cascade-rebuilds the whole engine. `regen_ninja.py` regenerates into a temp
+dir and merges at **module granularity** - it compares the UNION of each module's sources and only
+rewrites the `.ninja`+rsps of a module whose source SET actually changed, leaving the other ~51 modules
+byte-identical. So enabling one TU touches only that module's `.ninja`/`.rsp` and rebuilds just it + the
+relink (`--dry-run` previews the delta first). The `binaries/ninja/*` edits are gitignored (local); the
+tracked change is the `.vcproj`. **The TU's headers must be stood up so it actually COMPILES in the same
+change** - an enabled-but-uncompilable TU breaks the whole base build (no EXE -> no delink -> stale
+report.json for everyone). If the header cascade is too deep to compile, re-exclude it and keep the
+build green.
