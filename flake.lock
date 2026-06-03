@@ -81,17 +81,18 @@
     "vostok-pdb-parser-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1780268441,
-        "narHash": "sha256-CgfncYh4NlIE35AveLzHvifuiYj2rCCnym51nUMbqtQ=",
-        "owner": "srp-survarium",
-        "repo": "vostok-pdb-parser",
-        "rev": "f7a68171c2f8ec373fff80d4faefa0a632cebc70",
-        "type": "github"
+        "lastModified": 1780504569,
+        "narHash": "sha256-IXQRfvq8ZnQWN2hkVevWiD9oh9T/6tX8jCBdiI59tmo=",
+        "ref": "feature/empty-function-body-carcass",
+        "rev": "6fa3cc62add8a37356cff21f7032e4da65e9ad0b",
+        "revCount": 31,
+        "type": "git",
+        "url": "file:///home/sheep/Projects/surv/vostok-pdb-parser"
       },
       "original": {
-        "owner": "srp-survarium",
-        "repo": "vostok-pdb-parser",
-        "type": "github"
+        "ref": "feature/empty-function-body-carcass",
+        "type": "git",
+        "url": "file:///home/sheep/Projects/surv/vostok-pdb-parser"
       }
     },
     "vostok-resources-db-src": {
