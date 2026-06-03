@@ -571,3 +571,43 @@ inline-vs-call; recognize it (target standalone getter at a real rva + base has 
 stop at PARTIAL, do not rewrite. Caught on
 `weapon_core_animation_end_aware_state::set_animation_to_wait` (target `call
 weapon_core::get_user` @0x9b330; base inlined `mov eax,[m_weapon+44Ch]` -> 77.33%).
+
+### `if ( a && b )` materializing a THIRD bool temp = inlined predicate, not a bare `&&`
+A `/Od` `if ( x && y )` where x,y are member-bool reads short-circuits DIRECTLY into the
+`if` body: `movzx ecx,member; test ecx,ecx; je past_body; ...second test...; <body>`. No
+intermediate result slot. But if the carcass/target instead computes the `&&` into a
+SEPARATE bool temp first and then re-tests THAT temp:
+```
+mov al,[this+2Ch]; mov [ebp-1],al; movzx ecx,[ebp-1]; test; je .else   ; x -> temp
+mov al,[this+2Dh]; mov [ebp-2],al; movzx ecx,[ebp-2]; test; je .else   ; y -> temp
+mov [ebp-0Ch],1; jmp .end                                              ; && = 1
+.else: mov [ebp-0Ch],0                                                 ; && = 0
+.end: movzx edx,[ebp-0Ch]; test edx,edx; je .skip                      ; if ( && result )
+```
+the extra slot `[ebp-0Ch]` (and the bigger frame, e.g. `sub esp,0Ch` vs `sub esp,08`) is
+the RETURN-VALUE temp of an inlined predicate whose body IS the `&&`. Source is
+`if ( is_full_on_ground() )` with `inline bool is_full_on_ground() const { return
+is_heel_on_ground() && is_toe_on_ground(); }` (and the leaf getters return their members).
+Writing the bare `if ( is_heel_on_ground() && is_toe_on_ground() )` short-circuits without
+the third temp and gives the wrong (smaller) frame. The per-member `mov al,[..]; mov
+[ebp-N],al` round-trip is itself the inlined leaf getter's return temp. Caught on
+`legs_ik_processor::leg_params::set_{heel,toe}_on_ground` (59.90 -> 78.19 with leaf getters,
+-> 100 once the condition went through is_full_on_ground; frame 0x0C matched).
+
+### `member = math::min( x, member )` xmm operand order is STEERABLE via source operand order (NOT LTCG)
+A setter `m_x = vostok::math::min( a, b );` emits `movss xmm0,<op>; movss xmm1,<op>; call min;
+movss [this+off],xmm0`. WHICH operand lands in xmm0 vs xmm1 is decided by the SOURCE operand
+order, not by any link-time convention - so it is a source-steerable matching problem, NOT a
+bankable "call-boundary arg passing" LTCG residual. If your base puts the operands in the
+wrong xmm registers vs the target (3 instrs differ, ~84%), SWAP the two operands in source.
+`min`/`max` are commutative, so the swap is semantics-preserving and is the correct fix.
+
+Empirically, writing the MEMBER operand FIRST (`math::min( member, arg )`) makes the base load
+`arg->xmm0, member->xmm1`. Reference (clean, 100%): `generic_anomaly_core::dec_energy` is
+`m_energy_current -= math::min( m_energy_current, amount )` (member first) and its base emits
+`arg->xmm0, member->xmm1`, matching the target. The `legs_ik_processor::leg_params::
+set_{heel,toe}_transition_time` setters were wrongly written `min( arg, member )` (arg first)
+and scored 83.69% with the two `movss` operands in swapped registers; the target wanted
+`arg->xmm0, member->xmm1`, i.e. member-first source. Swapping to `math::min( member, arg )`
+took them 83.69% -> 100%. Lesson: never bank an xmm-operand-order diff as LTCG - swap and
+rebuild.

@@ -51,6 +51,7 @@
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/player_logic_base_state.h>
 #include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/player_stealth.h>
@@ -143,6 +144,37 @@ namespace vostok
 	void use_game_core_initialize( )
 	{
 		survarium::game_core_initialize( );
+	}
+
+	void use_game_core_legs_ik_processor_leg_params( )
+	{
+		// The leg_params setters write members no reachable code reads, so LTCG
+		// dead-store-eliminates each store unless the object escapes. Take each
+		// setter's address to keep its standalone body un-inlined, then escape
+		// &params through the opaque sink so the stores are observed.
+		typedef void ( survarium::legs_ik_processor::leg_params::*float_setter_t )( float );
+		typedef void ( survarium::legs_ik_processor::leg_params::*bool_setter_t )( bool );
+
+		float_setter_t float_setters[ 2 ] =
+		{
+			&survarium::legs_ik_processor::leg_params::set_heel_transition_time,
+			&survarium::legs_ik_processor::leg_params::set_toe_transition_time,
+		};
+		bool_setter_t bool_setters[ 2 ] =
+		{
+			&survarium::legs_ik_processor::leg_params::set_heel_on_ground,
+			&survarium::legs_ik_processor::leg_params::set_toe_on_ground,
+		};
+		example_callback( reinterpret_cast< pcstr >( &float_setters ) );
+		example_callback( reinterpret_cast< pcstr >( &bool_setters ) );
+
+		survarium::legs_ik_processor::leg_params params;
+		params.set_heel_transition_time( 10.0f );
+		params.set_toe_transition_time( 20.0f );
+		params.set_heel_on_ground( true );
+		params.set_toe_on_ground( true );
+
+		example_callback( reinterpret_cast< pcstr >( &params ) );
 	}
 
 	void use_game_core_ik_processor( animation::skeleton const* skeleton, animation::skeleton_bone const* bone, float4x4 const* matrices )
@@ -1028,6 +1060,7 @@ IncludeAll::IncludeAll()
 	//
 	vostok::use_game_core_initialize( );
 	vostok::use_game_core_breath_vibration_calculator( );
+	vostok::use_game_core_legs_ik_processor_leg_params( );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
