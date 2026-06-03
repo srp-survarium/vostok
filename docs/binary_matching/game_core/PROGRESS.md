@@ -663,3 +663,23 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   Access fixes (read from target mangling): ctor IAE->protected; initialize/execute/finalize/on_animation_end_impl/on_shot_event all MAE->protected (header had them public). Filled inline getter weapon_core::get_bullets_in_queue() = m_bullets_in_queue (@0x47C). New anchor use_game_core_weapon_core_fire_state_base (concrete_fire_state derived stub overriding pure weapon_and_hands_expression) + include + friend decl + dispatcher call in temp_include_all.cpp.
   on_shot_event boost::bind ICF-folds onto the weapon_core_animation_end_aware_state bind<> rep (delinker names that symbol) but assign_to<> + vcall'{36}' are on weapon_core_fire_state_base - source binds &weapon_core_fire_state_base::on_shot_event (virtual, hence vcall thunk).
   Regressions: none (21 report-changes "regressed"/21 "improved" are symmetric ICF fold-rep churn - empty_stub, dtors, thunks, resource_ptr/buffer_string/interlocked trivials; none touch this unit's source).
+
+- jump_logic.cpp batch3 (8 fns, parallel non-stacked off fc3aadf9):
+    survarium::get_move_direction                100%   DONE     (4 mask-bit bools fwd/bwd/left/right; two cancel-ifs; nested dispatch tree; objdiff 99/99=100%, report.json shows 0 only due to "local default" symbol-map artifact)
+    survarium::get_jump_animation_index          100%   DONE     (no-bounds jump table -> contiguous switch 0..8 + default:NODEFAULT(); on_site = on_site_jump+anim_part; others = (jump_from_right_leg ? X_right : X_left)+anim_part; anon enum of 19 named consts)
+    jump_logic::does_need_land_and_run           100%   DONE     (landing_direction=get_move_direction(m_user->input()); switch(m_jumping_direction) no-bounds 0..8 + NODEFAULT; each case 3-way OR self/prev-wrap/next-wrap)
+    jump_logic::set_user                         76.55% PARTIAL  (m_user=&user; for(fsm_state* i=states().front();i;i=i->next) static_cast<jump_logic_base_state*>(i)->set_user(user); residual = ai-fsm wall: target out-of-lines states()/front(), base folds inline -> frame slot shift)
+    jump_logic::deactivate                       45.13% PARTIAL  (m_logic->set_initial_state(m_logic->states().front()); SAME ai-fsm out-of-line-vs-inline wall, blocked on ai fsm type)
+    jump_logic::jump_logic (ctor)                BLOCKED          (body verified; anchoring constructs jump_logic -> initialize_logic builds the 3 state subclasses -> their STUB selected_animations force C4716/LNK1257; unblock via PR #181 selected_animations)
+    jump_logic::~jump_logic (dtor)               BLOCKED          (body verified, same shape as breath ~; same C4716 trap as ctor)
+    jump_logic::initialize_logic                 BLOCKED          (full body reconstructed + compiles; constructing jump_logic_state_* emits vtables -> STUB selected_animations C4716; unblock via PR #181)
+  Anchor: new use_game_core_jump_logic in temp_include_all.cpp - free fns get_move_direction/
+  get_jump_animation_index called; set_user/deactivate/does_need_land_and_run ODR-used via
+  member-fn-ptr address-of (NO instance constructed, avoids the C4716 trap).
+  Header: jump_logic.h gained free-fn decls get_move_direction + get_jump_animation_index.
+  jump_logic.cpp gained includes jump_logic_base_state.h / base_player.h / ai/fsm.h.
+  Regressions: none (report-changes only "improved" entries for this batch's symbols; 0 regressed).
+  NOTE: not done in this PR per orchestrator (other PRs): tick, look_time_factor,
+  is_jump_finished, landing_predicate, selected_animations, get_animation, activate.
+  SKIPPED: get_move_animation, get_move_look_animation (container::get_stand_animation LNK1257).
+  Deferred: get_animation_caption, get_move_look_caption (need caption global decls + STUB animations()).

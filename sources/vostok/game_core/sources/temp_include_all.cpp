@@ -1164,6 +1164,29 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &r ) );
 	}
 
+	void use_game_core_jump_logic( )
+	{
+		// claude@NOTE: anchor the matched free fns + non-virtual members only. Do NOT
+		// construct a jump_logic: its ctor calls initialize_logic, which builds the
+		// jump_logic_state_* subclasses and force-codegens their STUB selected_animations
+		// (no return) -> C4716/LNK1257. So ctor/dtor/initialize_logic stay BLOCKED here.
+		survarium::player_input const& input = *reinterpret_cast< survarium::player_input const* >( NULL );
+		survarium::move_direction_enum d = survarium::get_move_direction( input );
+		example_callback( reinterpret_cast< pcstr >( &d ) );
+
+		u32 idx = survarium::get_jump_animation_index( d, true, survarium::jump_animations_part_start );
+		example_callback( reinterpret_cast< pcstr >( &idx ) );
+
+		// Address-of non-virtual members to ODR-use their bodies WITHOUT constructing a
+		// jump_logic (which would emit the vtable and force still-STUB members to codegen).
+		void ( survarium::jump_logic::*su )( survarium::base_player& ) = &survarium::jump_logic::set_user;
+		void ( survarium::jump_logic::*de )( )                         = &survarium::jump_logic::deactivate;
+		bool ( survarium::jump_logic::*dn )( ) const                   = &survarium::jump_logic::does_need_land_and_run;
+		example_callback( reinterpret_cast< pcstr >( &su ) );
+		example_callback( reinterpret_cast< pcstr >( &de ) );
+		example_callback( reinterpret_cast< pcstr >( &dn ) );
+	}
+
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
 							void*				arg_0,
@@ -1620,6 +1643,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_jump_logic_state_landing();
 	vostok::use_game_core_jump_logic_state_start();
+	vostok::use_game_core_jump_logic();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
