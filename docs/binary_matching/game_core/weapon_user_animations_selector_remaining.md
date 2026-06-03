@@ -47,3 +47,23 @@ vs the int target index (0x58xxxx / 0x75xxxx). Use the index RVAs above with pdb
 ## Iterations
 1. base_player was only fwd-declared in selector.cpp -> tick/deactivate failed C2027.
    FIX: #include <vostok/game_core/base_player.h>.
+
+## Re-match (PR #187 review): deactivate vtable slot
+Reviewer corrected the earlier "hard wall" framing for deactivate's L122 call: the
+slot delta was SOURCE-STEERABLE. base_player.h declared its two overloaded virtuals
+`unsubscribe_animation_player(reserved_channel_ids_enum, pcvoid)` then
+`unsubscribe_animation_player(pcstr, pcvoid)`. MSVC assigns vtable slots to a group of
+overloaded virtuals in reverse declaration order, so the (enum, pcvoid) overload landed
+at +58h while the target uses +54h.
+- FIX: swapped the two declaration lines (pcstr overload first, enum overload second) in
+  sources/vostok/game_core/base_player.h. Touched weapon_user_animations_selector.cpp
+  (header-edit gotcha) and ran `python3 scripts/rebuild.py` (no module arg).
+- RESULT: deactivate now emits `mov edx,[ecx+44h]; mov edx,[edx]; mov eax,[edx+54h]; call eax`
+  matching the target exactly. report.json top-level fuzzy_match_percent 34.88% -> 34.91%.
+  report-changes.json: 0 regressed, 1 improved.
+- The small overall % bump is expected: the slot fix is one statement; the dominant
+  remaining divergence is the L124 deref idiom (target derefs an
+  `intrusive_ptr<booby_trap_core,...>::operator*` after pushing the args, frame `sub esp,8`;
+  base derefs first via a `dummy::nonnull` fold, frame `sub esp,10h`). That is the same
+  deref-idiom / arg-eval-order wall as current_state() and is out of scope for this fix.
+- base_player.h is shared; the overload-order edit is minimal and reconciles at land.

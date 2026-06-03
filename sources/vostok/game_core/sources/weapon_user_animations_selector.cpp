@@ -158,15 +158,14 @@ void weapon_user_animations_selector::activate( base_player& user, boost::functi
 	// ******
 }
 
-// STATE[34.88%|PARTIAL]: set_initial_state(NULL) + the unsubscribe args/structure match.
-// Two divergences: (1) L122 unsubscribe_animation_player resolves to base_player vtable
-// +58h in base vs +54h in target - a one-slot delta from MSVC overloaded-virtual ordering.
-// The CALL SITE INFO confirms the (reserved_channel_ids_enum, pcvoid) overload; this is a
-// SOURCE-STEERABLE re-match opportunity - reordering base_player.h's two
-// unsubscribe_animation_player overload declarations would shift the slot (it just lives in
-// another header). (2) L124: target evaluates the unsubscribe_from_affect args (push 4,
-// &m_leg_damaged_subscriber@0x18) THEN derefs via `call intrusive_ptr<...>::operator*`,
-// while our base derefs first and resolves operator* to a different fold (`dummy::nonnull`).
+// STATE[34.91%|PARTIAL]: set_initial_state(NULL) + the unsubscribe_animation_player call now
+// match. The L122 vtable-slot delta is FIXED: reordering base_player.h's two
+// unsubscribe_animation_player overload declarations moved the (reserved_channel_ids_enum,
+// pcvoid) overload to vtable slot +54h, so base now emits `mov eax,[edx+54h]; call eax` like
+// the target (was +58h). Remaining (separate) divergence is L124: target evaluates the
+// unsubscribe_from_affect args (push 4, &m_leg_damaged_subscriber@0x18) THEN derefs via
+// `call intrusive_ptr<booby_trap_core,...>::operator*` (frame `sub esp,8`), while base derefs
+// first and resolves operator* to a different fold (`dummy::nonnull`, frame `sub esp,10h`).
 // Same deref-idiom/arg-eval-order wall as current_state(); see
 // weapon_user_animations_selector_state_accessors.md.
 void weapon_user_animations_selector::deactivate( )
@@ -177,7 +176,7 @@ void weapon_user_animations_selector::deactivate( )
 
 	// FUNCTION BODY
 	// <0x594e99>|0x009|+0x00a:'121'	m_logic.set_initial_state( NULL )
-	// <0x594ea3>|0x013|+0x019:'122'	m_user->unsubscribe_animation_player( ..., this )   [base vtable+58 vs target+54]
+	// <0x594ea3>|0x013|+0x019:'122'	m_user->unsubscribe_animation_player( ..., this )   [now matches: vtable+54]
 	// <0>
 	// <0x594ebc>|0x02c|+0x028:'124'	(*m_user->damage_model()).unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber )
 	// ******
