@@ -12,10 +12,7 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      # Local checkout carrying the empty-FUNCTION-BODY rendering for body-less
-      # functions (branch feature/empty-function-body-carcass). Repoint at the
-      # upstream github: url once that branch is pushed/merged.
-      url = "git+file:///home/sheep/Projects/surv/vostok-pdb-parser?ref=feature/empty-function-body-carcass";
+      url = "github:srp-survarium/vostok-pdb-parser";
       flake = false;
     };
     vcproj2ninja-src = {
