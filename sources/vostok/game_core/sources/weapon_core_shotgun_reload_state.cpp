@@ -133,12 +133,15 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	// ******
 }
 
-// STATE[100%|DONE]: UNBLOCKED. Was a VOSTOK_UNREACHABLE_CODE placeholder (its real body referenced
-// the no-return base_substate STUB -> LNK1257); now that the base_substate override is matched the
-// real body is restored. Base asm (0x44eba0) is instruction-for-instruction identical to target
-// 0x589db0 (3 stmts, 0x44 bytes - the cast+call must be ONE return statement to keep the target's
-// extra current_state() temp). objdiff lists no score yet (newly emitted, absent from the delink
-// unit's function list), but the asm matches. See md.
+// STATE[INPROGRESS]: UNBLOCKED (was a VOSTOK_UNREACHABLE_CODE placeholder referencing the no-return
+// base_substate STUB -> LNK1257; real body restored now that the override is matched). objdiff lists
+// no score yet (newly emitted, absent from the delink unit's function list). NOT byte-identical: the
+// target (0x589db0) materializes the current_state() downcast into TWO slots before the call
+// (`mov [ebp-8],edx; mov eax,[ebp-8]; mov [ebp-4],eax`, sub esp,0Ch) while our single-expression form
+// emits ONE slot (`mov [ebp-4],edx`, sub esp,8). That extra slot is a NAMED `current` local in the
+// target, NOT an /Od scratch temp - declare `weapon_core_shotgun_reload_base_substate* current =
+// static_cast<...>( m_logic->current_state() ); return current->weapon_and_hands_expression(...);` and
+// re-diff. See md.
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -148,6 +151,14 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 {
 	return static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) )
 		->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
+
+	// FUNCTION BODY
+	// <0x589db0+0x00>|+0x009:'87'
+	// <0x589db0+0x09>|+0x035:'89'	return static_cast<base_substate*>( current_state() )->weapon_and_hands_expression(...);
+	// <0x589db0+0x3e>|+0x006:'90'
+	// ******
+	// TARGET @0x09: mov [ebp-8],edx; mov eax,[ebp-8]; mov [ebp-4],eax  (current local materialized to 2 slots, sub esp,0Ch)
+	// BASE   @0x09: mov [ebp-4],edx                                    (single expression, sub esp,8) - MISSING the `current` local
 }
 
 // STATE[INPROGRESS]: body is `return true;` (asm @0x589720: mov al,1). Only referenced by initialize_logic

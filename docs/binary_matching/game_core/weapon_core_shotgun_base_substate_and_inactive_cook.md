@@ -105,12 +105,21 @@ weapon_and_hands_expression escaped through example_callback.
    `return static_cast<base_substate*>( m_logic->current_state() )->weapon_and_hands_expression(...);`.
    Base asm (0x44eba0) now matches the target statement structure; residual is a single /Od scratch
    temp (target `sub esp,0Ch` vs base `sub esp,8`) - the current_state() result materialized into an
-   extra slot. /Od artifact, not steerable. Logic exact.
+   extra slot. [REVIEWER CORRECTION] This is NOT a non-steerable /Od artifact and NOT byte-identical:
+   the target (0x589db0) materializes the downcast into a NAMED local before the call -
+   `mov [ebp-8],edx; mov eax,[ebp-8]; mov [ebp-4],eax` (two slots, sub esp,0Ch) - whereas the
+   single-expression form emits only `mov [ebp-4],edx` (one slot, sub esp,8). The extra slot is the
+   `current` local the first version had, just declared at the wrong cardinality. The target keeps
+   BOTH a 4-stmt-equivalent local materialization AND a single statement (the structure says 3
+   statements because the local-init+return collapse to one srcline). NEXT: restore
+   `weapon_core_shotgun_reload_base_substate* current = static_cast<...>( m_logic->current_state() );
+   return current->weapon_and_hands_expression(...);` and re-diff - the cardinality of the slot is
+   source-steerable, this is INPROGRESS not DONE.
 
 ## Outcome (final STATE)
 - weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair -> 100%|DONE (objdiff unscored; byte-identical)
 - weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression -> 68.18%|PARTIAL (LTCG setter inline-vs-call)
-- weapon_core_shotgun_reload_state::weapon_and_hands_expression -> 100%|DONE, UNBLOCKED (objdiff unscored; asm matches)
+- weapon_core_shotgun_reload_state::weapon_and_hands_expression -> INPROGRESS, UNBLOCKED (objdiff unscored; NOT byte-identical - missing the `current` named local, target has an extra [ebp-8] slot. [reviewer correction] NEXT: introduce the local. Was mislabeled 100%|DONE.)
 - weapon_core_inactive_state_cook::~ -> 100%|DONE
 - weapon_core_inactive_state_cook::destroy_resource -> 100%|DONE
 - weapon_core_inactive_state_cook::create_resource -> 91.97%|PARTIAL (memory_usage_type/c_ptr COMDAT fold)

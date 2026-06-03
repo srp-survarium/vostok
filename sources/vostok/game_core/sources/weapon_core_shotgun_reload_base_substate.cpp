@@ -76,10 +76,8 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 	// ******
 }
 
-// STATE[100%|DONE]: byte-identical to target 0x798790 (0xb0 bytes, same instructions through the
-// get_weapon_lexeme_pair_impl call + the trailing ICF-folded empty-stub). objdiff does not list a
-// score yet because the function is newly emitted and absent from the delink unit's function list,
-// but the base asm (0x449160) matches the target instruction-for-instruction. See md.
+// STATE[100%|DONE]: objdiff-unscored (newly emitted, absent from the delink unit's function list) but
+// base 0x449160 is byte-identical to target 0x798790 (0xb0 bytes). See md.
 weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	m_animation_to_wait_for = m_weapon_animations[is_third_view != false][user_state_id == type_crouch];
