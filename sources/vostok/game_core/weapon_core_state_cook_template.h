@@ -14,6 +14,7 @@ namespace vostok {
 	void use_game_core_double_barreled_weapon_core_idle_state( );
 	void use_game_core_pistol_weapon_core_aimed_idle_state( );
 	void use_game_core_double_barreled_weapon_core_aimed_idle_state( );
+	void use_game_core_pistol_weapon_core_aimed_fire_state( );
 }
 
 namespace survarium {
@@ -29,6 +30,7 @@ class weapon_core_state_cook_template : public resources::unmanaged_cook {
 	friend void ::vostok::use_game_core_double_barreled_weapon_core_idle_state( );
 	friend void ::vostok::use_game_core_pistol_weapon_core_aimed_idle_state( );
 	friend void ::vostok::use_game_core_double_barreled_weapon_core_aimed_idle_state( );
+	friend void ::vostok::use_game_core_pistol_weapon_core_aimed_fire_state( );
 public:
 	inline	explicit	weapon_core_state_cook_template		( );
 	virtual				~weapon_core_state_cook_template	( );
