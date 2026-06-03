@@ -109,6 +109,7 @@
 #include <vostok/game_core/booby_trap_core.h>
 #include <vostok/game_core/booby_trap_core_cook.h>
 #include <vostok/game_core/booby_trap_set_core_cook.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_state_cook.h>
 #include <vostok/game_core/victory_items_container_core.h>
 #include <vostok/game_core/inventory.h>
 #include <vostok/game_core/player_profile.h>
@@ -406,6 +407,12 @@ namespace vostok
 	{
 		static survarium::weapon_core_cook s_weapon_core_cook;
 		vostok::resources::register_cook( &s_weapon_core_cook );
+	}
+
+	void use_weapon_core_shotgun_reload_state_cook( )
+	{
+		static survarium::weapon_core_shotgun_reload_state_cook s_weapon_core_shotgun_reload_state_cook;
+		vostok::resources::register_cook( &s_weapon_core_shotgun_reload_state_cook );
 	}
 
 	void use_dispersion_calculator( )
@@ -1650,6 +1657,7 @@ IncludeAll::IncludeAll()
 	vostok::use_artefact_lifebone_core( );
 	vostok::use_victory_item_core( );
 	vostok::use_weapon_core_cook( );
+	vostok::use_weapon_core_shotgun_reload_state_cook( );
 	vostok::use_game_core_weapon_recoil_params( );
 	vostok::use_game_core_character_dispersion_params( );
 	vostok::use_game_core_weapon_dispersion_params( );
