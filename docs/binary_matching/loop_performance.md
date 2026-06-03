@@ -416,3 +416,17 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+## A `.cpp` can be in the vcproj but `ExcludedFromBuild` - it never reaches the base side, check FIRST (zero rebuilds)
+Before ANY work on a STUB-filled `.cpp`, confirm the base build actually compiles it:
+`grep -c "<class>" binaries/rich/base/index.jsonl` (0 = not on the base side) and
+`grep -i "<file>.cpp" binaries/ninja/<module>.ninja` (absent = no build edge). If the cpp
+is in the `.vcproj` but missing from ninja, grep the vcproj for it: a
+`<FileConfiguration Name="Master Gold|Win32" ExcludedFromBuild="true">` block means it was
+deliberately parked. `async_connector.cpp` (network_core) is exactly this - the orchestrator
+even handed it to me as "match these 6 STUBs". To score it you must (a) drop the
+`ExcludedFromBuild`, (b) re-run vcproj2ninja OR hand-edit `<module>.ninja` (add the obj to the
+cl build-edge outputs+inputs AND the `lib` edge) + the matching `rsp/<module>_cl_N.rsp`, AND
+(c) stand up its never-compiled PDB-stub headers (here `async_connector.h` + `handler_allocator.h`
++ a real `client_error_codes_enum`) before the bodies will even compile. That whole chain is the
+"deep cascade -> mark BLOCKED, don't burn rebuilds" case. Two greps catch it in the first pass.

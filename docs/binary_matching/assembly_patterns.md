@@ -1004,3 +1004,19 @@ shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` an
 `Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
 `&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
 wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
+
+### a member-init-list ctor: delinker misnames folded `boost::function<>` default ctors and the handler_allocator ctor
+SYMPTOM (`async_connector::async_connector()` @0x544ff0): the ctor zeroes member
+slots inline (`mov [eax+0],0` etc. for the iterator member m_host, `mov [eax+458h],0`
+for m_socket=NULL, `mov [eax+45Ch],0` for the enum m_connection_state) and emits
+`call vostok::ai::behaviour_cook_params::behaviour_cook_params` for EACH
+`boost::function<...>` member (m_on_connected@0x10, m_on_error@0x30) plus a
+`call ...fixed_size_allocator<...>::finalize_impl` + `mov byte [edx+400h],0` for the
+`handler_allocator` member (m_allocator@0x50, in_use_@0x400). These call names are
+/OPT:ICF fold artifacts - the empty `boost::function` default ctor folds onto
+`behaviour_cook_params::behaviour_cook_params` and the trivial allocator ctor folds onto
+`finalize_impl`; both are byte-identical empty/zeroing bodies. SOURCE is a plain
+member-init-list in declaration order (`m_host(), m_on_connected(), m_on_error(),
+m_allocator(), m_socket(NULL), m_connection_state(host_name_is_unresolved)`) - do NOT
+chase the misleading callee names. (Recorded from async_connector target asm; unit
+itself parked BLOCKED, see network_core/async_connector.md.)

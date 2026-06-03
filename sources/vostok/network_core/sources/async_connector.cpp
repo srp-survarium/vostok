@@ -8,13 +8,22 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// vostok::network_core::async_connector::async_connector()
+// claude@NOTE: whole async_connector unit is BLOCKED — this .cpp is
+// ExcludedFromBuild="true" in network_core.vcproj (so absent from
+// network_core.ninja and from the base side entirely), and compiling it requires
+// standing up the never-compiled PDB-stub headers async_connector.h /
+// handler_allocator.h plus a real client_error_codes_enum, then the
+// base_allocator/delete_helper/tcp_packet/logging/asio template chain. Deep
+// cascade — parked, not rebuilt. Full analysis + reconstructed bodies:
+// docs/binary_matching/network_core/async_connector.md
+
+// STATE[BLOCKED]: .cpp ExcludedFromBuild + never-compiled header cascade (see .md)
+// vostok::network_core::async_connector::async_connector()  @ target 0x544ff0 QAE
 async_connector::async_connector( )
 {
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: .cpp ExcludedFromBuild + never-compiled header cascade (see .md) @ target 0x545070 AAE
 // void vostok::network_core::async_connector::on_connected(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)
 void async_connector::on_connected( boost::system::error_code const& error_code, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> iterator )
 {
@@ -36,7 +45,7 @@ void async_connector::on_connected( boost::system::error_code const& error_code,
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: .cpp ExcludedFromBuild + never-compiled header cascade (see .md) @ target 0x5451f0 AAE
 // void vostok::network_core::async_connector::connect(boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> const&)
 void async_connector::connect( boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> const& iterator )
 {
@@ -55,7 +64,7 @@ void async_connector::connect( boost::asio::ip::basic_resolver_iterator<boost::a
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: .cpp ExcludedFromBuild + never-compiled header cascade (see .md) @ target 0x5452b0 AAE
 // void vostok::network_core::async_connector::on_resolved(boost::asio::ip::basic_resolver<boost::asio::ip::tcp,boost::asio::ip::resolver_service<boost::asio::ip::tcp> >* const, boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)
 void async_connector::on_resolved( boost::asio::ip::basic_resolver<boost::asio::ip::tcp,boost::asio::ip::resolver_service<boost::asio::ip::tcp> >* resolver, boost::system::error_code const& error_code, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> iterator )
 {
@@ -97,7 +106,7 @@ void async_connector::on_resolved( boost::asio::ip::basic_resolver<boost::asio::
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: .cpp ExcludedFromBuild + never-compiled header cascade (see .md) @ target 0x5458a0 QAE
 // void vostok::network_core::async_connector::connect(boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> >&, char const*, unsigned short, boost::function<void __cdecl(void)> const&, boost::function<void __cdecl(enum vostok::network_core::client_error_codes_enum,boost::system::error_code)> const&)
 void async_connector::connect(
 	boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> >&	socket,
@@ -142,7 +151,7 @@ void async_connector::connect(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: .cpp ExcludedFromBuild + never-compiled header cascade (see .md) @ target 0x544fd0 QAE
 // void vostok::network_core::async_connector::reset()
 void async_connector::reset( )
 {

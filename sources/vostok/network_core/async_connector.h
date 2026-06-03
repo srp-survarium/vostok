@@ -32,6 +32,11 @@ enum vostok::network_core::async_connector::connection_state_enum /* stored as s
 //     DEFINITIONS      //
 //////////////////////////
 
+// claude@NOTE: this header is a non-compilable PDB stub; async_connector.cpp is
+// ExcludedFromBuild in the vcproj, so the unit is BLOCKED (see
+// docs/binary_matching/network_core/async_connector.md). Verified target access
+// mangling for the future deep pass: reset/ctor/connect(socket,...) = QAE (public);
+// on_connected/on_resolved/connect(iterator const&) = AAE (private).
 class async_connector {
 public:
 					async_connector				( );
