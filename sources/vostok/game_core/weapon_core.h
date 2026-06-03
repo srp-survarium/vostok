@@ -35,6 +35,9 @@ namespace ai {
 	// claude@NOTE: temp_include_all anchor; friended below so it can call the
 	// private initialize_weapon_logic (target mangles it AAE).
 	void use_game_core_weapon_core_initialize_weapon_logic( );
+	// claude@NOTE: anchor for the private update_recoil/update_breath_vibration/
+	// get_body_part_mask_for_user (target mangles them AAE/ABE).
+	void use_game_core_weapon_core_small_setters( );
 }
 
 namespace survarium {
@@ -206,9 +209,7 @@ public:
 
 			float3								get_dispersed_bullet_dir		( );
 
-			void								update_recoil					( u32 current_time_in_ms, float time_scale );
 			void								update_dispersion				( bool is_moving, u32 current_time_in_ms );
-			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
 
 			animation::callback_return_type_enum	on_animation_ik_interval		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	on_sprint_animation_ended		( animation::animation_callback_params& params );
@@ -260,9 +261,7 @@ public:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
-			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
-
-	inline	weapon_core_base_state&				current_base_state				( ) const { /* no source */ }
+	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
 													float		animation_length,
@@ -309,6 +308,11 @@ public:
 	virtual	void								on_user_sprint					( bool user_is_sprinting );
 
 private:
+	// claude@MATCH: target mangles these AAE/ABE (private), not QAE/QBE.
+			void								update_recoil					( u32 current_time_in_ms, float time_scale );
+			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
+			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
+
 	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it
 	// in a private section. The temp_include_all anchor is a friend so it can call it.
 			void								initialize_weapon_logic			(
@@ -325,6 +329,7 @@ private:
 												);
 
 	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	friend void ::vostok::use_game_core_weapon_core_small_setters( );
 
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:
