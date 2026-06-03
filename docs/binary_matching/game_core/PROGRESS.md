@@ -643,3 +643,13 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     character_dispersion_calculator::tick                           99.67%  PARTIAL  (every instr/offset/call/const byte-identical; sole diff = target sub esp,1Ch vs base 18h - one unused /Od frame slot; frame-slot churn class, like breath_vibration_calculator::tick)
   Anchor: use_character_dispersion_calculator extended to escape &calc (constant-ctor DSE observe).
   report-changes: 0 regressed, 3 improved (30.32->100 / 22.86->100 / 25.26->99.67), 0 removed/added.
+
+- weapon_core_reload_state_base + weapon_core_chamber_a_round_state_base (6 fns, ONE rebuild, 103s, watchdog not engaged):
+    weapon_core_reload_state_base::weapon_core_reload_state_base           100%  DONE
+    weapon_core_reload_state_base::initialize                              92%   PARTIAL  (LTCG inline-vs-call of trivial round_is_chambered(): target keeps it standalone @0x09b360 `call`, our /GL inlines `mov cl,[+48Eh]`; every other instr/offset/&&-short-circuit byte-identical; chamber_a_round_on_reload inlined on BOTH sides so it matches)
+    weapon_core_reload_state_base::on_animation_end_impl                   100%  DONE     (m_weapon.instant_reload(); result=true)
+    weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base  100%  DONE
+    weapon_core_chamber_a_round_state_base::initialize                     100%  DONE     (base::initialize() only)
+    weapon_core_chamber_a_round_state_base::on_animation_end_impl          100%  DONE     (m_weapon.instant_chamber_a_round(); result=true)
+  Both ctors: : weapon_core_animation_end_aware_state(weapon,true) + body m_animation_timescale=arg (@0x140, BEFORE) then m_body_part_mask_for_user=body_part_whole_body_but_hands (-3, @0x130). Filled inline getter weapon_core::chamber_a_round_on_reload() = m_chamber_a_round_on_reload (@0x48F). Access fixes: ctor IAE->protected, initialize MAE->protected, serialize/deserialize/on_animation_end_impl EAE/EBE->private. Two new anchors (concrete_{reload,chamber}_state derived stubs overriding pure weapon_and_hands_expression) + friend decls + dispatcher calls in temp_include_all.cpp.
+  Regressions: none (10 report-changes "regressed" are ICF fold-rep churn - boost storage, float3/size_policy ctors, scaleform dtor, interlocked_decrement, sun_cascade, vcall thunks; none touch this unit's source).
