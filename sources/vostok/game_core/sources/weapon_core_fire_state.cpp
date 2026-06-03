@@ -61,12 +61,14 @@ weapon_core_fire_state::weapon_core_fire_state(
 }
 
 // STATE[82.52%|PARTIAL]: every statement, branch, lexeme operand and the addition-tree shape
-// match. Sole residual is the per-call-site LTCG inline-vs-call of operator+<...> (mixing
-// addition_lexeme): the target keeps the first `main + expression(offset)` operator+ OUT-OF-LINE,
-// our /GL build inlines it (addition_lexeme ctor + cloned_in_buffer at this site), shifting the
-// [ebp-XX] layout. Same unsteerable operator+ inline class as weapon_core_idle_state (85.65%);
-// operator+ is a standalone COMDAT in both rich indexes, so the inline choice is whole-program,
-// not source. weight_driving_animation is unreferenced in the target too (see .md).
+// match. Sole residual is the operator+<...> divergence on the first `main + expression(offset)`:
+// the target selects operator+<animation_lexeme> and keeps it OUT-OF-LINE, while our /GL build
+// builds addition_lexeme<animation_lexeme,expression> INLINE (addition_lexeme ctor + cloned_in_buffer
+// at this site), shifting the [ebp-XX] layout. This is the SAME operator+ template-selection /
+// inline residual under active investigation on PR #192 (target operator+<animation_lexeme> vs base
+// operator+<expression,animation_lexeme>) and on weapon_core_idle_state (85.65%) - if #192 lands a
+// source fix it replicates here; do not re-derive it in this unit. weight_driving_animation is
+// unreferenced in the target too (see .md).
 animation::mixing::expression weapon_core_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,

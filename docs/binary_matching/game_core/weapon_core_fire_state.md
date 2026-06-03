@@ -88,8 +88,10 @@ Target asm @0x799df0 decoded (pdb_fetch --view target --rva 0x799df0):
 First guess `expression(main+offset+hands)` -> 63.78. The expr ctor in the target is built
 from the OFFSET lexeme alone, so the tree is `main + expression(offset) + hands` -> 82.52.
 Residual: target keeps the first operator+ out-of-line, our /GL build inlines it
-(addition_lexeme ctor + cloned_in_buffer). Whole-program inline decision (operator+ is a
-standalone COMDAT in both indexes). Same class as weapon_core_idle_state 85.65%.
+(addition_lexeme ctor + cloned_in_buffer). This is the SAME operator+ template-selection
+residual under active investigation on PR #192 (target operator+<animation_lexeme> vs base
+operator+<expression,animation_lexeme>) and on weapon_core_idle_state 85.65%; if #192 finds a
+source fix it replicates here - not re-derived in this unit.
 
 ### get_user_hands_expression (13.77 -> 73.51)
 Target asm @0x799bc0 decoded; reconstructed body:
