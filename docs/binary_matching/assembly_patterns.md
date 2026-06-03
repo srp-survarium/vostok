@@ -980,3 +980,27 @@ resulting %. Confirmed on `game_core/weapon_core_reload_state_base::initialize` 
 `!deserializing() && chamber_a_round_on_reload() && round_is_chambered()`, chamber_a_round_on_reload
 (@0x48F) inlined on both sides (matches), round_is_chambered (standalone target @0x09b360, base
 inlines `mov cl,[+48Eh]`) is the residual.
+
+### empty base virtual called via qualified `Base::method()` - LTCG inlines the empty body at the call site (PARTIAL)
+SYMPTOM: a derived override calls the EMPTY base implementation, `Base::execute();` (base decl is
+`virtual void execute() override { /* no source */ }`). TARGET emits `mov ecx,[ebp-4]; call
+Base::execute` (the empty body kept out-of-line @ its rva). BASE (/GL LTCG) INLINES the empty `{}` at
+this call site - the `call` simply vanishes, so the diff shows `+ call <addr>` present only on the
+target side and the following member store with a different scratch reg. Both rich indexes STILL list
+a standalone `Base::execute` (base @0x012c20, target @0x087f80), so it is NOT "inlined everywhere in
+base" - it is the documented PER-CALL-SITE whole-program inline decision (same class as
+animation_playback_state::reset() in weapon_core_aimed_state_base::finalize). Filling the empty body
+would make /Od inline REAL bytes (worse); the empty stub elides one no-op call cleanly. Leave it,
+mark PARTIAL [LTCG empty-callee inline-vs-call]. Confirmed on
+`game_core/weapon_core_fire_state_base::execute` (80.91%): only the `call execute` (3 bytes) differs.
+
+### a `boost::bind(&Derived::virtual_method, this, _1)` ICF-folds onto a SIBLING class's bind<> rep - don't be misled by the delinker name
+SYMPTOM: `set_animation_callback("ch", this, boost::bind(&weapon_core_fire_state_base::on_shot_event,
+this, _1))` - the `call boost::bind<...>` at the bind site is delinker-named with a DIFFERENT class
+(`...weapon_core_animation_end_aware_state...`) than the actual bound method. The `boost::bind<>`
+helper packs only {member-fn-ptr, this, arg} and is byte-identical across sibling state classes, so
+/OPT:ICF folds them and the delinker prints whichever fold representative it picked. The TRUE class
+shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` and the
+`Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
+`&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
+wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
