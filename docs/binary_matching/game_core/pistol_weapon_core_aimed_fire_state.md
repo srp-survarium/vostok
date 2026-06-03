@@ -30,13 +30,16 @@ Base class init `weapon_core_aimed_fire_state_base( weapon, animation_time_scale
 
 ### initialize (0x79b0e0)
 Calls base initialize, computes last_shot from get_bullets_in_queue ? (ammo==1) : (ammo==0),
-stores into m_weapon_animation_index. Two residuals:
-- 0x30 `mov eax,[ecx+128h]` (target) vs `mov ecx,...` (base) before call ammo_in_magazine =
-  LTCG this-register at the call boundary (legit LTCG).
-- final store: target re-boolizes last_shot (neg;sbb;neg) into the u32 member; base stores raw
-  movzx. This is a SOURCE-SHAPE residual, NOT LTCG (do not bank as LTCG) - try
-  `m_weapon_animation_index = last_shot ? 1u : 0u;`.
-PARTIAL. Not in report.json (access UAE->MAE owed); 92.62% was a pdb_fetch text estimate.
+stores into m_weapon_animation_index. Now 99.76% in report.json (after access UAE->MAE fix).
+RESOLVED: the final-store boolize residual - rewriting `m_weapon_animation_index = last_shot`
+as `m_weapon_animation_index = last_shot ? 1u : 0u` reproduces the target's `movzx;neg;sbb;neg`
+final store byte-for-byte (verified: the 0x6e..0x7b block matches on both sides in pdb_fetch
+--view diff). The ternary was the correct source shape, not LTCG.
+SOLE REMAINING residual: 0x30/0x50 target `mov eax,[ecx+128h]` vs base `mov ecx,...` before
+the ammo_in_magazine() call = LTCG this-register placement at the call boundary (the STUB
+callee uses default thiscall ecx; the target's LTCG passes the m_weapon pointer in eax).
+This is argument passing at the call boundary, not source-steerable until ammo_in_magazine is
+matched. STATE[99.76%|PARTIAL].
 
 ### get_weapon_lexeme_pair (0x79af30)
 Identical to fire-state (100%) but captions "pistol-aimed_shot" / "pistol-aimed_last_shot"
@@ -51,38 +54,37 @@ ret xmm0). Same as sibling.
 INPROGRESS - large addition_lexeme/operator+ machinery, same as fire-state sibling
 (both INPROGRESS there). Carry the stub + carcass forward.
 
-## Verified results (review cross-checked vs binaries/objdiff/report.json + pdb_fetch)
-- new_object              92.08%  PARTIAL  (report.json - pairs; LTCG calling-conv of
+## Verified results (re-match: rebuilt + read from binaries/objdiff/report.json)
+- new_object              92.08%  PARTIAL  (pairs; LTCG calling-conv of
                                             computed_shooting_animation_time_scale, verified)
-- ctor                    100%    DONE     (140/140 instrs == target @0x79abc0; NOT in report.json
-                                            until access QAE->IAE fix - byte-verified by pdb_fetch)
-- get_weapon_lexeme_pair  100%    DONE     (62/62 instrs == target @0x79af30 w/ aimed captions;
-                                            NOT in report.json until access QBE->ABE fix)
-- initialize              PARTIAL          (1 LTCG this-reg + 1 source-shape boolize residual; NOT
-                                            in report.json until access UAE->MAE fix; 92.62% est.)
-- weapon_and_hands_expression  INPROGRESS  (stub return; access UBE->EBE owed)
-- get_user_hands_expression    INPROGRESS  (stub return; access QBE->ABE owed)
+- ctor                    100%    DONE     (now pairs in report.json after access QAE->IAE fix)
+- get_weapon_lexeme_pair  100%    DONE     (now pairs in report.json after access QBE->ABE fix)
+- initialize              99.76%  PARTIAL  (now pairs after UAE->MAE; ternary fixed the boolize
+                                            residual; sole residual = LTCG this-reg at the
+                                            ammo_in_magazine() call boundary)
+- weapon_and_hands_expression  INPROGRESS  (stub return; access UBE->EBE fix applied, pairs at 21.43%)
+- get_user_hands_expression    INPROGRESS  (stub return; access QBE->ABE fix applied, pairs at 12.78%)
 
-WHY report.json shows NO entry for ctor/initialize/get_weapon_lexeme_pair/get_user_hands_
-expression/weapon_and_hands_expression (CORRECTED by review - the earlier "ICF fold" note
-was WRONG): these symbols ARE present standalone in the base obj (base index has 9 rows for
-this unit, each at a real rva, byte-identical to target via pdb_fetch). They are absent from
-report.json because objdiff cannot PAIR them - the base mangles them with the wrong ACCESS
-specifier vs the target (the documented Q/A/I and U/M/E pairing-failure class). The sibling
-`pistol_weapon_core_fire_state` is not even compiled into this branch's base (its base class
-lives on a different branch), so there is nothing for these to ICF-fold against.
+## ACCESS FIXES APPLIED (re-match, this PR update)
+Verified each against the target mangled access char via pdb_rich_query/index grep, then set the
+matching C++ access specifier in the .h:
+- ctor                          target ??0...@@IAE  -> `protected:`        (was QAE)
+- initialize                    target ...@@MAE     -> `protected:` virtual (was UAE)
+- weapon_and_hands_expression   target ...@@EBE     -> `private:` virtual   (was UBE)
+- get_weapon_lexeme_pair        target ...@@ABE     -> `private:` const     (was QBE)
+- get_user_hands_expression     target ...@@ABE     -> `private:` const     (was QBE)
+Because the ctor/initialize became protected and the lexeme virtuals private, the
+temp_include_all.cpp anchor `use_game_core_pistol_weapon_core_aimed_fire_state()` could no longer
+reach them; added the sibling-idle pattern to the .h: a `namespace vostok { void
+use_game_core_pistol_weapon_core_aimed_fire_state(); }` forward-decl plus two friend declarations
+(`template<typename T> friend class weapon_core_state_cook_template;` and
+`friend void ::vostok::use_game_core_pistol_weapon_core_aimed_fire_state();`). After the header
+edit, `touch`ed the .cpp and ran `rebuild.py` (no module arg). report-changes.json: 0 regressed,
+5 improved (the two lexeme INPROGRESS fns went 0->21/12 because they now pair).
 
-ACCESS FIXES OWED (read from target mangling - the .h declares all of these `public:`):
-- ctor                          target ??0...@@IAE  -> declare `protected:`  (base now QAE)
-- initialize                    target ...@@MAE     -> `protected:` virtual  (base now UAE)
-- weapon_and_hands_expression   target ...@@EBE     -> `private:` virtual     (base now UBE)
-- get_weapon_lexeme_pair        target ...@@ABE     -> `private:`             (base now QBE)
-- get_user_hands_expression     target ...@@ABE     -> `private:`             (base now QBE)
-The sibling weapon_core_fire_state_base PR (#174, PROGRESS ledger) made exactly these access
-fixes to score its functions; this PR did not. Once the .h is corrected the byte-identical
-ctor + get_weapon_lexeme_pair pair at 100%, initialize pairs at its real %. NOT done here
-(review does not rebuild) - flagged for the next builder. Note virtual overrides may legally
-be private; the cook-template friend/anchor reaches them regardless.
+new_object (??...@@AAE) already paired and stays 92.08% - sole residual is the verified call-boundary
+calling-convention of computed_shooting_animation_time_scale (arg in reg + ret xmm0 in target;
+cdecl push + st0/fstp in our STUB callee) = legitimate LTCG.
 
 new_object (??...@@AAE) already pairs (mangling matches) and scores 92.08% cleanly - its sole
 residual is the verified call-boundary calling-convention of computed_shooting_animation_time_scale
