@@ -19,7 +19,7 @@ m_jumped@0x1c (bool). Class derives `core::noncopyable`. Size 0x20.
 - `... --rva 0x586090 --view target/structure/info/callees`
 - EXE-constant reader (PE parse, movss disp32 -> rdata f32) over the ctor bytes
 - `python3 scripts/rebuild.py` (NO module arg, full EXE relink) — 701s, watchdog did NOT engage
-- `pdb_fetch --target-index binaries/rich/base/index.jsonl --rva 0x453c10 --view target` (base tick disasm for the residual)
+- `pdb_fetch --base-index binaries/rich/base/index.jsonl --rva 0x454000 --view base` (base tick disasm for the residual)
 
 ## ctor (0x586010) -> 100% DONE
 asm: prologue, then `mov eax,[ebp-4]; call ...finalize_impl` (the folded
@@ -74,8 +74,11 @@ m_target_value(+4), m_current_value(+8), m_value(+0xc). All three `fld [ecx]` re
 - L80   `m_value = math::min( m_current_value, m_value + m_value_smoothing_speed * dt );`
 - math::max/min stay out-of-line (const float, const float overloads).
 
-Residual: base `--view target` (rva 0x453c10) is byte-for-byte IDENTICAL to the
-target in EVERY instruction, member offset, call, and constant. The SOLE diff:
+Residual: base `--view base` (rva 0x454000) is byte-for-byte IDENTICAL to the
+target in EVERY instruction, member offset, call, and constant (the lone normalized
+diff is the ICF-fold misname of the ASSERT empty-stub call — `finalize_impl` in
+target vs `call_constructor_helper<..>::call` in base, same 0x3f210 fold). The SOLE
+real diff:
 - target: `sub esp, 1Ch`, `this` at `[ebp-10h]`, slots -10h/-14h/-18h/-1Ch
 - base:   `sub esp, 18h`, `this` at `[ebp-0Ch]`, slots -0Ch/-10h/-14h/-18h
 
