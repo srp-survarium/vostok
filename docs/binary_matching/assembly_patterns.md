@@ -964,3 +964,19 @@ The PDB local set maps, the carcass statement structure matches 1:1. Non-steerab
 Mark PARTIAL at the resulting % (here 99.67%), not chase. Same class as
 `breath_vibration_calculator::tick` (94%, frame-slot churn). Confirmed in
 `game_core/character_dispersion_calculator::tick` (16 stmts, only diff = sub esp 1Ch vs 18h).
+
+### two trivial accessors in ONE `&&` can split inline-vs-call (one matches, one is the residual)
+A `if ( a() && getter_x() && getter_y() )` where BOTH `getter_x`/`getter_y` are one-line
+header accessors (`{ return m_member; }`) can lower DIFFERENTLY under /GL: the linker keeps
+ONE of them out-of-line (the TARGET emits `call ...getter_x`, standalone symbol present in the
+target rich index) while INLINING the other (`mov al,[this+off]`, no standalone in either index).
+Our /GL LTCG inlines BOTH, so the inlined-on-both-sides one matches byte-for-byte and the
+target-kept-standalone one is the lone residual (`call` vs inlined member read), shifting the
+trailing `[ebp-N]` slot/frame by the one inline. This is the same unsteerable trivial-accessor
+inline-vs-call class as is_aimed()/get_user() - it is a per-method whole-program decision, NOT
+steerable from the caller's source. Confirm which is the residual by querying BOTH rich indexes
+per accessor (target standalone + base absent = the diverging one). Mark the caller PARTIAL at the
+resulting %. Confirmed on `game_core/weapon_core_reload_state_base::initialize` (92%): in
+`!deserializing() && chamber_a_round_on_reload() && round_is_chambered()`, chamber_a_round_on_reload
+(@0x48F) inlined on both sides (matches), round_is_chambered (standalone target @0x09b360, base
+inlines `mov cl,[+48Eh]`) is the residual.
