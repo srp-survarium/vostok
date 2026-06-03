@@ -22,8 +22,8 @@ weapon_core_aimed_state sibling).
 - ctor: ASSERT_CMP_U(count,==,8) at 0x5e; two double for-loops over [view][user_state]
   sharing a single `animation_index` ([ebp-4]); trailing bare `ASSERT(UNKNOWN_EXPRESSION)`
   at 0x152 (byte=0, finalize_impl, no branch).
-- get_weapon_lexeme_pair: loads `s_aim_transition_time` (0x3f) - SAME static symbol as
-  aimed_state, value 0.3f. time_synchronization_group push=2, time_scale=m_animation_timescale
+- get_weapon_lexeme_pair: loads `s_reload_transition_time` (0x3f), a file static value 0.3f
+  defined in this TU. time_synchronization_group push=2, time_scale=m_animation_timescale
   ([eax+140h]), playback=play_once_and_freeze_at_end(1). Trailing finalize_impl assert at 0x8d.
 - get_user_hands_expression: early `if (user_state_id==type_sprint(2)) return weapon_lexeme;`
   via simple_lock copy; then a BARE `ASSERT(UNKNOWN_EXPRESSION)` at 0x27 (byte=0, finalize_impl,
@@ -78,10 +78,16 @@ whole-program decision (the documented residual class; see weapon_core_aimed_sta
   other units).
 - weapon_and_hands_expression 83.52: 3 statements; first two (+0x01f, +0x02a) match the target
   byte-for-byte. The `return hands + main + offset` statement differs (target +0x07a vs base
-  +0x053): target builds an extra `expression(animation_lexeme)` temporary + 3 binary_tree
-  intrusive_ptr dtors -> a different expression-template instantiation/inline set, same
-  whole-program class. Left-assoc source matches the structure; the divergence is codegen, not
-  shape.
+  +0x053). The two sides pick DIFFERENT operator+/expression template instantiations:
+    TARGET: expression::expression<animation_lexeme> (build a temp from [ebp-84h]) ->
+            operator+<animation_lexeme> -> operator+ -> 3 ~intrusive_ptr<binary_tree...> dtors.
+    BASE:   operator+<expression,animation_lexeme> -> operator+<addition_lexeme,animation_lexeme>
+            -> expression::expression<addition_lexeme>.
+  This is NOT confirmed call-arg LTCG and NOT confirmed pure /GL inline noise - it is a
+  different template selection for the return expression. The exact operand grouping/types the
+  target source used are not yet diffed to a source cause; this is a RE-MATCH OPPORTUNITY (try
+  alternative parenthesizations / explicit `expression(...)` wrapping of the first operand) for a
+  faster machine, not a banked residual. Carcass preserved.
 
 ## Iterations
 - build1 (prior worker bodies, before access fix): FAILED - anchor C2248 private new_object.

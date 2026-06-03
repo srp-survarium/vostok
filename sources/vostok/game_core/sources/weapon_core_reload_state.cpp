@@ -53,9 +53,12 @@ weapon_core_reload_state::weapon_core_reload_state(
 }
 
 // STATE[83.52%|PARTIAL]: first two statements match byte-for-byte; the return
-// `hands + main + offset` is a different expression-template instantiation/inline set
-// (target builds an extra expression() temp + 3 binary_tree dtors) - whole-program /Ob2 /GL
-// inline decision, not a source bug. See the .md.
+// `hands + main + offset` selects a DIFFERENT operator+ / expression template instantiation
+// than the target (target: operator+<animation_lexeme> then operator+ with 3 binary_tree
+// intrusive_ptr dtors; base: operator+<expression,animation_lexeme> then
+// operator+<addition_lexeme,animation_lexeme> + expression<addition_lexeme>). The exact
+// operand grouping/types of the return expression are not yet diffed to a source cause -
+// likely source-steerable (re-match opportunity), NOT confirmed pure /GL noise. See the .md.
 animation::mixing::expression weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&							buffer,
 	bool									is_third_view,
