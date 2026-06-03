@@ -83,13 +83,8 @@ private:
 												bullet*	const							bullet
 											) override;
 
-	// claude@MATCH: body is `return 0.0f`. The TARGET obj emits this FRAMELESS
-	// (`fldz; ret` - 3 bytes; the original build omitted the ebp frame for this
-	// `this`-unused leaf) while our /Od build always emits the standard frame
-	// (`push ebp; ...; mov [ebp-4],ecx; fldz; ...`). The size gap is too large for
-	// objdiff to pair -> None. Not source-steerable under /Od (frame omission is a
-	// build flag, not source). The fldz/return value is correct. Private virtual `EBE`.
-	// STATE[None|PARTIAL]: frameless-target vs /Od-framed-base (build-flag codegen).
+	// claude@MATCH: target is FRAMELESS for this `this`-unused leaf (`fldz;ret`); /Od always frames -> unpairable. fldz correct. Private virtual `EBE`.
+	// STATE[None|PARTIAL]: frameless-target vs /Od-framed-base (see oneliners_batch1.md).
 	virtual	float							get_speed					( ) const override { return 0.0f; }
 	virtual	void							on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 	virtual	void							tick						( u32 time_delta_ms, u32 current_time_ms ) override;
