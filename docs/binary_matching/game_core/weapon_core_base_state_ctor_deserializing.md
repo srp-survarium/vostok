@@ -70,8 +70,28 @@ ret
    BUILD #3: ctor 100.0%, deserializing 100.0%. report-changes: 0 regressed, 1 improved
      (deserializing 0->100), 0 removed/added.
 
+## Post-merge correction (folded into PR #122): ctor STRUCTURE does not match
+report.json scores the ctor at 100% (instruction + relocation level), so it was banked `100%|DONE`,
+but the SOURCE STRUCTURE diverges - the classic "high-% over the wrong structure" (reviewer check #5):
+
+    pdb_fetch --view structure, target rva 0x6ecf90:   2 statements   (0x00 <0xaa> L23 ; 0xaa <0x9> L24)
+    pdb_fetch --view structure, base   rva 0x4594d0:   7 statements   ({ ; 5 member assigns ; })
+
+The target attributes the entire init region (0x00-0xaa) to a SINGLE source line (L23) = a full
+member-initializer list, with an empty body on L24. Our base initializes only `m_weapon` in the list
+and writes the other 5 members as body assignments, producing a `{`-statement + 5 assignment lines + `}`
+(7 statements). The bytes coincide (member-init vs body-assign of POD members emit the same stores in
+declaration order), which is why report.json reads 100% and the divergence stayed hidden.
+
+Concrete fix (needs a rebuild - a matcher's job, not done here): move all 5 assignments into the
+member-initializer list so the source collapses to the target's 2-statement layout, e.g.
+`: m_weapon(weapon), m_is_firing_ptr(NULL), m_body_part_mask_for_user(animation::body_part_whole_body),
+m_is_ready_to_be_deactivated(false), m_animation_has_been_ended(false),
+m_serialize_animation_state(serialize_animation_state) {}`. Verify report.json stays 100% AND
+`--view structure` base becomes 2 statements. STATE downgraded ctor -> INPROGRESS; deserializing stays DONE.
+
 ## Outcome
-STATE: ctor DONE 100%, deserializing DONE 100%. Regressions caused: none.
+STATE: ctor INPROGRESS (bytes 100% but structure mismatch, see correction above), deserializing DONE 100%. Regressions caused: none.
 Files: sources/.../weapon_core_base_state.cpp (bodies + STATE), weapon_core_base_state.h (ctor +
 deserializing -> protected to match IAE/IBE mangling), weapon_core.h (deserializing() inline ->
 return m_deserializing), animation/type_definitions.h (animation_playback_state ctor interval_id(0)/

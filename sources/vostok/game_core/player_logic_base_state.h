@@ -19,6 +19,10 @@ namespace network_core {
 }
 }
 
+// claude@NOTE: matching anchor in temp_include_all.cpp needs to reach the private
+// static movement_animation_index; befriend it (friend decls don't affect bytes).
+namespace vostok { void use_game_core_player_logic_base_state( ); }
+
 namespace survarium {
 
 struct base_player;
@@ -41,7 +45,9 @@ public:
 											bool								is_third_view
 										) const = 0;
 
-	virtual	float4x4					get_attachment_transform	( ) const { /* no source */ }
+	// claude@NOTE: stub body must return a value or the abstract vtable fails LTCG
+	// codegen (C4716/LNK1257) once an obj carrying this vtable is kept. Not matched.
+	virtual	float4x4					get_attachment_transform	( ) const { return float4x4( ); }
 
 	virtual	void						serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void						deserialize					( network_core::packet_reader& arg_0 ) { /* no source */ }
@@ -57,10 +63,16 @@ public:
 
 	virtual								~player_logic_base_state	( );
 
+
+protected:
+	// claude@MATCH: protected static -> mangled `K` (target). private would be `C`,
+	// public `S`; either mismatches the target's symbol so objdiff can't pair it.
 	static	u32							movement_animation_index	( player_input const& input );
 
 
 private:
+	friend void ::vostok::use_game_core_player_logic_base_state( );
+
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	weapon_user_animations_selector&	m_owner;
 	/* 0x001c */	base_player*						m_user;
