@@ -1241,6 +1241,21 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &jf ) );
 	}
 
+	void use_game_core_jump_logic( )
+	{
+		// ODR-use the out-of-line jump_logic method bodies via member-fn pointers so
+		// the linker keeps them (no instance constructed -> no vtable/STUB codegen).
+		std::pair< vostok::animation::mixing::expression, vostok::animation::mixing::animation_lexeme >
+			( survarium::jump_logic::*sel )( vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, bool ) const
+				= &survarium::jump_logic::selected_animations;
+		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*get_anim )( survarium::jump_animation_parts, bool ) const
+			= &survarium::jump_logic::get_animation;
+		void ( survarium::jump_logic::*act )( ) = &survarium::jump_logic::activate;
+		example_callback( reinterpret_cast< pcstr >( &sel ) );
+		example_callback( reinterpret_cast< pcstr >( &get_anim ) );
+		example_callback( reinterpret_cast< pcstr >( &act ) );
+	}
+
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
 							void*				arg_0,

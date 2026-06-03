@@ -39,7 +39,7 @@ public:
 	// STATE[None|PARTIAL]: trivial-setter LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			void			set_animations					( weapon_user_animations_container_ptr const& value ) { m_animations = value; }
 	inline	weapon_user_animations_container const&
-							animations						( ) const { /* no source */ }
+							animations						( ) const { return *m_animations; }
 
 public:
 	typedef boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> animation_functor;
@@ -91,7 +91,7 @@ public:
 
 	inline	ai::fsm&							logic							( ) { /* no source */ }
 
-	inline	bool			is_right_leg_supporting			( ) const { /* no source */ }
+	inline	bool			is_right_leg_supporting			( ) const { return m_right_leg_is_supporting; }
 
 	inline	void			set_player_logic_initial_state	( player_logic_base_state* arg_0 ) { /* no source */ }
 	inline	void			set_forced_not_to_sprint		( bool arg_0 ) { /* no source */ }

@@ -38,10 +38,10 @@ public:
 			explicit							jump_logic				( weapon_user_animations_selector& owner );
 												~jump_logic				( );
 
-	inline	move_direction_enum					get_jump_direction		( ) const { /* no source */ }
-	inline	bool								is_jump_from_right_leg	( ) const { /* no source */ }
+	inline	move_direction_enum					get_jump_direction		( ) const { return m_jumping_direction; }
+	inline	bool								is_jump_from_right_leg	( ) const { return m_is_jump_from_right_leg; }
 
-	inline	weapon_user_animations_selector&	owner					( ) const { /* no source */ }
+	inline	weapon_user_animations_selector&	owner					( ) const { return m_owner; }
 
 			std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 												selected_animations		( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const;
