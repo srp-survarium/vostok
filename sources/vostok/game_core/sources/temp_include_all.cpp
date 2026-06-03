@@ -344,6 +344,12 @@ namespace vostok
 	{
 		survarium::dispersion_calculator calc;
 		calc.get_dispersion( );
+
+		// Escape &calc so LTCG observes the ctor's constant member stores
+		// (m_weapon=NULL, m_shooting_skill_coeff=1.0f, m_aiming_speed_coeff=1.0f);
+		// get_dispersion() returns early on m_weapon==NULL and never reads the
+		// coeffs, so without this the stores are dead-store-eliminated.
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
 	}
 
 	void use_character_dispersion_calculator( )
