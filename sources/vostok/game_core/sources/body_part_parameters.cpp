@@ -462,7 +462,7 @@ void body_part_parameters::dump_state( boost::function<void(u32, float, float, p
 	}
 	callback( index, m_health, m_max_health, affects_str.c_str( ) ); // sushi@MATCH: Callback execution is inlined, which is not true in target
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5972f0]: 5
 	// <0x597300>|0x010|+0x00b:'326'
 	// <0x59730b>|0x01b|+0x046|[1]:'327'
 	// <0x597351>|0x061|+0x03f:'328'

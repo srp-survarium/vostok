@@ -43,7 +43,7 @@ STATIC_SIZE_ASSERT(player_logic_sprint_state, 0x90);
 // void survarium::player_logic_sprint_state::execute()
 void player_logic_sprint_state::execute( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x2a800]
 	// <0x2a800>|0x000|      :'36'	{
 	// ******
 }

@@ -13,7 +13,7 @@ namespace network_core {
 s32 operator-<u16>( sequence_number<u16> const& left, sequence_number<u16> const& right )
 {
 	return 0;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x137b20]: 4
 	// <0x137b23>|0x000|0x000:'122'
 	// <0x137b36>|0x013|0x013:'123'
 	// 1

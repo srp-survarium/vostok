@@ -32,7 +32,7 @@ void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 	n_ary_tree_size_calculator	calculator( this );
 	node.accept					( calculator );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d880]: 2
 	// <0>
 	// <0x56d883>|0x003|+0x028:'51'
 	// ******
@@ -43,7 +43,7 @@ bool n_ary_tree_comparer::equal( ) const
 {
 	return						m_equal;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d860]: 1
 	// <0x56d860>|0x000|+0x003:'63'
 	// ******
 }
@@ -53,7 +53,7 @@ u32 n_ary_tree_comparer::needed_buffer_size( ) const
 {
 	return						m_needed_buffer_size;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d850]: 1
 	// <0x56d850>|0x000|+0x003:'68'
 	// ******
 }
@@ -64,7 +64,7 @@ comparison_result_enum animation_comparer_predicate::operator()(
 	n_ary_tree_animation_node const& right
 ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56e2e0]: 78
 	// <0x56e2e2>|0x002|+0x013:'76'
 	// <0x56e2f5>|0x015|+0x006:'77'
 	// <0>
@@ -161,7 +161,7 @@ void n_ary_tree_comparer::process_interpolators( n_ary_tree const& from, n_ary_t
 	// <0x56e022> -> void < unknown >( interpolator_visitor& ) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56df70]: 29
 	// <0x56df76>|0x006|+0x004:'161'
 	// <0>
 	// <0x56df7a>|0x00a|+0x008:'163'
@@ -220,7 +220,7 @@ bool n_ary_tree_comparer::new_time_scale( n_ary_tree_animation_node& new_time_dr
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56dc60]: 92
 	// <0>
 	// <1>
 	// <2>
@@ -335,7 +335,7 @@ void n_ary_tree_comparer::new_animation(
 	u32&							operands_offset
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56e250]: 19
 	// <0>
 	// <0x56e25a>|0x00a|+0x016:'295'
 	// <0x56e270>|0x020|+0x00b:'296'
@@ -361,7 +361,7 @@ void n_ary_tree_comparer::new_animation(
 // STATE[STUB]
 void n_ary_tree_comparer::new_weight_transition( float from, float to )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d870]: 6
 	// <0>
 	// <1>
 	// <2>
@@ -400,7 +400,7 @@ void n_ary_tree_comparer::remove_animation(
 	// <0x56ee81> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56ebf0]: 88
 	// <0x56ebf5>|0x005|+0x011:'331'
 	// <0x56ec06>|0x016|+0x01b:'332'
 	// <0>
@@ -505,7 +505,7 @@ void n_ary_tree_comparer::remove_weight_synchronization_group( n_ary_tree_animat
 	// <0x56f143> -> float < unknown >() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f130]: 13
 	// <0x56f137>|0x007|+0x01c:'426'
 	// <0x56f153>|0x023|+0x00c:'427'
 	// <0>
@@ -541,7 +541,7 @@ void n_ary_tree_comparer::add_animation(
 	// <0x56ebc9> -> float < unknown >() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56eaf0]: 21
 	// <0>
 	// <0x56eaf8>|0x008|+0x004:'447'
 	// <0>
@@ -569,7 +569,7 @@ void n_ary_tree_comparer::add_animation(
 // STATE[STUB]
 void n_ary_tree_comparer::add_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f0f0]: 5
 	// <0x56f0ff>|0x00f|+0x004:'474'
 	// <0>
 	// <0x56f103>|0x013|+0x00a:'476'
@@ -598,7 +598,7 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 	// <0x56ead6> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56e950]: 39
 	// <0x56e959>|0x009|+0x004:'483'
 	// <0>
 	// <1>
@@ -654,7 +654,7 @@ void n_ary_tree_comparer::new_time_scale_transition( n_ary_tree_base_node& from,
 	// <0x56dc43> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56db70]: 16
 	// <0x56db79>|0x009|+0x024:'529'
 	// <0x56db9d>|0x02d|+0x02f:'530'
 	// <0>
@@ -689,7 +689,7 @@ void n_ary_tree_comparer::new_time_scale_transition( n_ary_tree_base_node& from,
 	// <0x56db5d> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56daf0]: 15
 	// <0>
 	// <0x56daf3>|0x003|+0x01d:'553'
 	// <0x56db10>|0x020|+0x019:'554'
@@ -718,7 +718,7 @@ void n_ary_tree_comparer::new_time_scale_transition( float from, n_ary_tree_base
 	// <0x56dae6> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56da90]: 13
 	// <0>
 	// <1>
 	// <0x56da93>|0x003|+0x004:'576'
@@ -746,7 +746,7 @@ void n_ary_tree_comparer::new_weight_transition( n_ary_tree_base_node& from, n_a
 	// <0x56da82> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56da00]: 10
 	// <0x56da04>|0x004|+0x005:'594'
 	// <0>
 	// <0x56da09>|0x009|+0x013:'596'
@@ -777,7 +777,7 @@ void n_ary_tree_comparer::new_weight_transition(
 	// <0x56d9a7> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d950]: 14
 	// <0x56d958>|0x008|+0x018:'612'
 	// <0>
 	// <0x56d970>|0x020|+0x00f:'614'
@@ -812,7 +812,7 @@ void n_ary_tree_comparer::new_weight_transition(
 	// <0x56d92e> -> float < unknown >() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d8b0]: 12
 	// <0x56d8b3>|0x003|+0x02a:'634'
 	// <0x56d8dd>|0x02d|+0x00c:'635'
 	// <0x56d8e9>|0x039|+0x037:'636'
@@ -851,7 +851,7 @@ void n_ary_tree_comparer::add_operands(
 	// <0x56e197> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56e050]: 86
 	// <0>
 	// <0x56e053>|0x003|+0x009:'655'
 	// <0>
@@ -958,7 +958,7 @@ void n_ary_tree_comparer::new_weight_driving_animation(
 	// <0x56e8a2> -> void < unknown >( interpolator_comparer&, base_interpolator const& ) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56e860]: 31
 	// <0x56e868>|0x008|+0x006:'747'
 	// <0x56e86e>|0x00e|+0x004:'748'
 	// <0>
@@ -1036,7 +1036,7 @@ void n_ary_tree_comparer::change_animation(
 	// <0x56e7b9> -> void < unknown >( interpolator_comparer&, base_interpolator const& ) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56e3e0]: 153
 	// <0x56e3ed>|0x00d|+0x026:'786'
 	// <0>
 	// <1>
@@ -1215,7 +1215,7 @@ void n_ary_tree_comparer::merge_weight_synchronization_groups(
 	// n_ary_tree_animation_node** 		i
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56ef70]: 51
 	// <0>
 	// <0x56ef73>|0x003|+0x12c:'951'
 	// <0x56f09f>|0x12f|-0x118:'951'
@@ -1285,7 +1285,7 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 	// n_ary_tree_node_comparer 		comparer
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56eeb0]: 33
 	// <0>
 	// <1>
 	// <2>
@@ -1332,7 +1332,7 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		to_end
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f1b0]: 19
 	// <0x56f1b7>|0x007|+0x008:'1052'
 	// <0x56f1bf>|0x00f|+0x016:'1053'
 	// <0>
@@ -1397,7 +1397,7 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	}
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f230]: 33
 	// <0x56f233>|0x003|+0x003:'1078'
 	// <0x56f236>|0x006|+0x019:'1079'
 	// <0x56f24f>|0x01f|+0x007:'1080'
@@ -1457,7 +1457,7 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 
 	m_needed_buffer_size += m_animations_count * sizeof( animation_state );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f410]: 14
 	// <0>
 	// <1>
 	// <0x56f426>|0x016|+0x01b:'1134'

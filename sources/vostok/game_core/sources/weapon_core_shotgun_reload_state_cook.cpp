@@ -11,7 +11,7 @@ namespace survarium {
 // void survarium::weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook()
 weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x590150]: 1
 	// ******
 }
 
@@ -19,7 +19,7 @@ weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 // vostok::mutable_buffer survarium::weapon_core_shotgun_reload_state_cook::allocate_resource(vostok::resources::query_result_for_cook&, vostok::const_buffer, bool)
 mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5901a0]: 2
 	// <0x5901ab>|0x00b|+0x03d:'35'
 	// <0x5901e8>|0x048|+0x02e:'36'
 	// ******
@@ -29,7 +29,7 @@ mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resourc
 // void survarium::weapon_core_shotgun_reload_state_cook::deallocate_resource(void*)
 void weapon_core_shotgun_reload_state_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x590170]: 1
 	// <0x590178>|0x008|+0x014:'41'
 	// ******
 }
@@ -69,7 +69,7 @@ void weapon_core_shotgun_reload_state_cook::create_resource( resources::query_re
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5906f0]: 79
 	// <0x590701>|0x011|+0x009:'50'
 	// <0x59070a>|0x01a|+0x00b:'51'
 	// <0x590715>|0x025|+0x01c:'52'
@@ -186,7 +186,7 @@ void weapon_core_shotgun_reload_state_cook::on_subresources_ready( resources::qu
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x590220]: 44
 	// <0x590231>|0x011|+0x012:'133'
 	// <0>
 	// <0x590243>|0x023|+0x007:'135'
@@ -246,7 +246,7 @@ void weapon_core_shotgun_reload_state_cook::destroy_resource( resources::unmanag
 	// <0x590143> -> void* <unknown>(u32)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x590110]: 2
 	// <0x590119>|0x009|+0x01e:'181'
 	// <0x590137>|0x027|+0x00e:'182'
 	// ******

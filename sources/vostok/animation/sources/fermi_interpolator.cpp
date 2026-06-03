@@ -49,7 +49,7 @@ fermi_interpolator* fermi_interpolator::clone( vostok::animation::mixing::n_ary_
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f540]: 1
 	// <0x56f540>|0x000|+0x02c:'49'
 	// <0x56f56c>|0x02c|-0x003:'49'
 	// <0x56f569>|0x029|+0x00f:'50'

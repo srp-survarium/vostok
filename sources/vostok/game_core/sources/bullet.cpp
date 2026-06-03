@@ -65,7 +65,7 @@ bullet::bullet(
 	m_bullet_material = m_bullet_manager->get_material_manager( ).get_material( wa->game_material_id( ) );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5914b0]: 4
 	// <0x5916fa>|0x24a|+0x00c:'85'
 	// <0x591706>|0x256|+0x00c:'86'
 	// <0x591712>|0x262|+0x041:'87'

@@ -24,7 +24,7 @@ booby_trap_core::booby_trap_core( ) :
 {
 	m_transform.identity( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59bd90]: 1
 	// <0x59be6a>|0x0da|+0x00e:'26'
 	// ******
 }
@@ -35,7 +35,7 @@ booby_trap_core::~booby_trap_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries ); // sushi@MATCH: Deleter helper inlined
 	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59be80]: 2
 	// <0x59bed4>|0x054|+0x01c:'31'
 	// <0x59bef0>|0x070|+0x01c:'32'
 	// ******
@@ -63,7 +63,7 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 		hittable_object::load( config["hittable_object"] );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59bf60]: 18
 	// <0x59bf69>|0x009|+0x00c:'37'
 	// <0x59bf75>|0x015|+0x00c:'38'
 	// <0x59bf81>|0x021|+0x00c:'39'
@@ -102,7 +102,7 @@ void booby_trap_core::set_transform( float4x4 const& transform )
 	if ( m_owner->config( ).defuse_by_hit )
 		hittable_object::set_transform( transform );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b3c0]: 8
 	// <0x59b3cb>|0x00b|+0x013:'69'
 	// <0>
 	// <0x59b3de>|0x01e|+0x021:'71'
@@ -126,7 +126,7 @@ void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_re
 		receiver->hit( initiator, bcd, it->hit_type, it->amount, it->armor_piercing, NULL );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b9c0]: 19
 	// <0>
 	// <1>
 	// <0x59b9d0>|0x010|+0x015:'86'
@@ -164,7 +164,7 @@ void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> co
 	if ( is_active( ) )
 		switch_to_state( booby_trap_state_fired );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59bb10]: 18
 	// <0x59bb19>|0x009|+0x00c:'107'
 	// <0x59bb25>|0x015|+0x00c:'108'
 	// <0>
@@ -227,7 +227,7 @@ void booby_trap_core::insert( physics::world* world, float4x4 const& transform, 
 
 	switch_to_state( booby_trap_state_armed );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ba60]: 14
 	// <0x59ba69>|0x009|+0x00c:'151'
 	// <0x59ba75>|0x015|+0x00c:'152'
 	// <0>
@@ -259,7 +259,7 @@ void booby_trap_core::remove( scheduler& scheduler )
 	// <0x59b3b3> -> void <unknown>(booby_trap_state)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b380]: 5
 	// <0x59b389>|0x009|+0x00c:'169'
 	// <0>
 	// <0x59b395>|0x015|+0x011:'171'
@@ -289,7 +289,7 @@ bool booby_trap_core::use_initialize( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b5c0]: 17
 	// <0x59b5c9>|0x009|+0x00c:'178'
 	// <0x59b5d5>|0x015|+0x00c:'179'
 	// <0>
@@ -334,7 +334,7 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b460]: 21
 	// <0x59b469>|0x009|+0x00c:'199'
 	// <0x59b475>|0x015|+0x00c:'200'
 	// <0>
@@ -399,7 +399,7 @@ bool booby_trap_core::can_defuse( base_player const* user ) const
 		? user->team( ) != owner->team( )
 		: true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b270]: 7
 	// <0x59b27a>|0x00a|+0x00c:'249'
 	// <0x59b286>|0x016|+0x00c:'250'
 	// <0>
@@ -415,7 +415,7 @@ void booby_trap_core::defuse_completed( )
 {
 	switch_to_state( booby_trap_state_disarmed );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b0f0]: 1
 	// <0x59b0f7>|0x007|+0x00f:'260'
 	// ******
 }
@@ -430,7 +430,7 @@ void booby_trap_core::on_state_timer_finished( )
 	else
 		m_owner->remove_trap( *this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b090]: 17
 	// <0x59b099>|0x009|+0x018:'265'
 	// <0>
 	// <1>
@@ -504,7 +504,7 @@ void booby_trap_core::switch_to_state( booby_trap_state new_state )
 
 	m_trap_state = new_state;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b800]: 57
 	// <0x59b809>|0x009|+0x00c:'286'
 	// <0>
 	// <0x59b815>|0x015|+0x00c:'288'
@@ -574,7 +574,7 @@ void booby_trap_core::register_tick( scheduler& scheduler )
 		true
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59bc20]: 1
 	// <0x59bc30>|0x010|+0x0d4:'347'
 	// ******
 }
@@ -584,7 +584,7 @@ void booby_trap_core::unregister_tick( scheduler& scheduler )
 {
 	scheduler.unregister( &m_scheduler_identifier );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b7e0]: 1
 	// <0x59b7e9>|0x009|+0x011:'352'
 	// ******
 }
@@ -592,7 +592,7 @@ void booby_trap_core::unregister_tick( scheduler& scheduler )
 // STATE[BLOCKED]
 void booby_trap_core::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b750]: 7
 	// <0>
 	// <0x59b75b>|0x00b|+0x00c:'358'
 	// <0x59b767>|0x017|+0x026:'359'
@@ -613,7 +613,7 @@ void booby_trap_core::deserialize( network_core::packet_reader& reader )
 	// float3 						position
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b680]: 14
 	// <0>
 	// <1>
 	// <0x59b68f>|0x00f|+0x00e:'370'

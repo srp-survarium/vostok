@@ -22,7 +22,7 @@ usable_object::~usable_object( )
 {
 	VOSTOK_FREE_IMPL( g_allocator, m_collision_geometries );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0b00]: 1
 	// <0x5a0b1c>|0x01c|+0x03d:'22'
 	// ******
 }
@@ -36,7 +36,7 @@ void usable_object::load( configs::binary_config_value const& cfg )
 
 	m_collision_geometries = (collision_geometry**)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( collision_geometry* ) * m_collision_geometries_count, "usable_object_collision_geometry" );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0b80]: 5
 	// <0x5a0b8a>|0x00a|+0x030:'27'
 	// <0x5a0bba>|0x03a|+0x00e:'28'
 	// <0x5a0bc8>|0x048|+0x00c:'29'
@@ -55,7 +55,7 @@ void usable_object::resolve_links( base_project* p, configs::binary_config_value
 		m_collision_geometries[i] = static_cast<collision_geometry*>( p->get_object_by_name( geom_name ) );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0a40]: 6
 	// <0x5a0a49>|0x009|+0x030:'36'
 	// <0x5a0a79>|0x039|+0x01d|[1]:'37'
 	// <0>
@@ -71,7 +71,7 @@ void usable_object::insert( physics::world* world )
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->subscribe( world, this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a09f0]: 2
 	// <0x5a09f9>|0x009|+0x01d|[1]:'46'
 	// <0x5a0a16>|0x026|+0x01b:'47'
 	// ******
@@ -83,7 +83,7 @@ void usable_object::remove( )
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->unsubscribe( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0910]: 2
 	// <0x5a0919>|0x009|+0x01d|[1]:'52'
 	// <0x5a0936>|0x026|+0x017:'53'
 	// ******
@@ -94,7 +94,7 @@ float4x4 usable_object::get_transform( )
 {
 	return m_collision_geometries[0]->get_transform( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a08e0]: 1
 	// <0x5a08e7>|0x007|+0x01e:'58'
 	// ******
 }

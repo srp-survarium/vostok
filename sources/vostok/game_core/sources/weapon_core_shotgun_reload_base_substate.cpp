@@ -35,7 +35,7 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 	// <0x7a8725><3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a85a0]: 17
 	// <0x7a865c>|0x0bc|+0x00c:'36'
 	// <0x7a8668>|0x0c8|+0x00c:'37'
 	// <0x7a8674>|0x0d4|+0x00c:'38'
@@ -60,7 +60,7 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 // survarium::weapon_lexeme_pair survarium::weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
 weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a8790]: 4
 	// <0x7a8799>|0x009|+0x02f:'57'
 	// <0>
 	// <1>
@@ -83,7 +83,7 @@ animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_a
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a8840]: 16
 	// <0x7a8851>|0x011|+0x01f:'69'
 	// <0>
 	// <0x7a8870>|0x030|+0x00f:'71'

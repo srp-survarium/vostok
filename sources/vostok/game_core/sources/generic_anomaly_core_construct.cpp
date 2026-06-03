@@ -74,7 +74,7 @@ void generic_anomaly_core::load( configs::binary_config_value const& config )
 		}
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c9c0]: 59
 	// <0>
 	// <0x59c9d0>|0x010|+0x01d:'18'
 	// <0x59c9ed>|0x02d|+0x01b:'19'
@@ -147,7 +147,7 @@ bool state_prio( anomaly_state* s1, anomaly_state* s2 )
 	else
 		return !s1->enabled < !s2->enabled; // s1->enabled && !s2->enabled
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c630]: 8
 	// <0x59c634>|0x004|+0x010:'80'
 	// <0>
 	// <1>
@@ -187,7 +187,7 @@ void generic_anomaly_core::resolve_links( base_project* p, configs::binary_confi
 
 	std::sort( m_states.begin( ), m_states.end( ), state_prio );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c6b0]: 24
 	// <0x59c6bf>|0x00f|+0x011:'92'
 	// <0x59c6d0>|0x020|+0x01e|[1]:'93'		for ( u32 a = 0 ; a < artefact_containers_count ; ++a )
 	// <0>									{

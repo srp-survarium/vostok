@@ -26,7 +26,7 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 	props.m_amount = m_amount;
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a07e0]: 3
 	// <0x5a07e7>|0x007|+0x010:'22'
 	// <0x5a07f7>|0x017|+0x011:'23'
 	// <0x5a0808>|0x028|+0x002:'24'
@@ -36,7 +36,7 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 // STATE[BLOCKED]
 void inventory_item::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0840]: 2
 	// <0>
 	// <0x5a0849>|0x009|+0x013:'30'
 	// ******
@@ -45,7 +45,7 @@ void inventory_item::serialize( network_core::udp_match_packet& packet, u32 clie
 // STATE[BLOCKED]
 void inventory_item::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0810]: 1
 	// <0x5a0819>|0x009|+0x012:'35'
 	// ******
 }

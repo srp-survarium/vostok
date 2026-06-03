@@ -27,7 +27,7 @@ void respawn_point_core::load( configs::binary_config_value const& config )
 	team_owner		= (game_team_id)(u32)config["team"];
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fea60]: 5
 	// <0x6fea71>|0x011|+0x01b:'23'
 	// <0x6fea8c>|0x02c|+0x01b:'24'
 	// <0x6feaa7>|0x047|+0x02b:'25'

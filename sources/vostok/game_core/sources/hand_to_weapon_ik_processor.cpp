@@ -11,7 +11,7 @@ namespace survarium {
 // void survarium::`dynamic atexit destructor for 's_ik_hands_debug_draw_cc''()
 void `dynamic atexit destructor for 's_ik_hands_debug_draw_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7f0cc0]
 	// <0x7db180>|0x000|      :'21'	{
 	// ******
 }
@@ -20,7 +20,7 @@ void `dynamic atexit destructor for 's_ik_hands_debug_draw_cc''( )
 // survarium::hand_to_weapon_ik_processor::hand_to_weapon_ik_processor()
 hand_to_weapon_ik_processor::hand_to_weapon_ik_processor( ) : m_interpolator( 0.0f /* s_aim_transition_time */ ), m_active( true )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593f70]: 0
 	// ******
 }
 
@@ -28,7 +28,7 @@ hand_to_weapon_ik_processor::hand_to_weapon_ik_processor( ) : m_interpolator( 0.
 // void survarium::hand_to_weapon_ik_processor::activate(vostok::animation::skeleton const&, vostok::animation::skeleton const&)
 void hand_to_weapon_ik_processor::activate( animation::skeleton const& user_skeleton, animation::skeleton const& weapon_skeleton )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594690]: 12
 	// <0x59469a>|0x00a|+0x009:'53'
 	// <0x5946a3>|0x013|+0x013:'54'
 	// <0>
@@ -48,7 +48,7 @@ void hand_to_weapon_ik_processor::activate( animation::skeleton const& user_skel
 // void survarium::hand_to_weapon_ik_processor::activate_hand(const survarium::hand_to_weapon_ik_processor::hands_enum, const bool, const unsigned int)
 void hand_to_weapon_ik_processor::activate_hand( hand_to_weapon_ik_processor::hands_enum hand, bool active, u32 current_time_in_ms )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593f00]: 5
 	// <0x593f09>|0x009|+0x016:'69'
 	// <0x593f1f>|0x01f|+0x010:'70'
 	// <0x593f2f>|0x02f|+0x022:'71'
@@ -63,7 +63,7 @@ bool hand_to_weapon_ik_processor::hand_need_correction( hand_to_weapon_ik_proces
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593e30]: 1
 	// <0x593e34>|0x004|+0x035:'78'
 	// ******
 }
@@ -74,7 +74,7 @@ bool hand_to_weapon_ik_processor::hand_need_interpolation( hand_to_weapon_ik_pro
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593e10]: 1
 	// <0x593e13>|0x003|+0x012:'83'
 	// ******
 }
@@ -89,7 +89,7 @@ u32 hand_to_weapon_ik_processor::get_hand_new_start_transition_time( hand_to_wea
 
 	return 0;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593dd0]: 4
 	// <0x593dd6>|0x006|+0x00b:'88'
 	// <0>
 	// <1>
@@ -114,7 +114,7 @@ void hand_to_weapon_ik_processor::process( u32 current_time_in_ms, float4x4 cons
 	// <0x5947e8><2>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594760]: 15
 	// <0x59476f>|0x00f|+0x01a:'96'
 	// <0x594789>|0x029|+0x024:'97'
 	// <0>
@@ -164,7 +164,7 @@ void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::han
 	// float3 const& 				rotation_axis
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5940a0]: 67
 	// <0x5940b1>|0x011|+0x01a:'115'
 	// <0x5940cb>|0x02b|+0x00c:'116'
 	// <0x5940d7>|0x037|+0x00c:'117'
@@ -251,7 +251,7 @@ float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_proce
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593e70]: 6
 	// <0x593e79>|0x009|+0x00c:'186'
 	// <0x593e85>|0x015|+0x01e:'187'
 	// <0>
@@ -269,7 +269,7 @@ void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& pac
 	// u8 							active_hands
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594040]: 4
 	// <0x594049>|0x009|+0x020:'196'
 	// <0x594069>|0x029|+0x00d:'197'
 	// <0x594076>|0x036|+0x011:'198'
@@ -285,7 +285,7 @@ void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& read
 	// u8 							active_hands
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593fd0]: 7
 	// <0x593fd9>|0x009|+0x00b:'204'
 	// <0x593fe4>|0x014|+0x00d:'205'
 	// <0x593ff1>|0x021|+0x00e:'206'

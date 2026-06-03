@@ -33,7 +33,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	// const get_weapon_lexeme_pair_impl::__l2::<unnamed-tag> offset_only_weight_synchronization_group_id = 128;
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7b13e0]: 38
 	// <0>
 	// <1>
 	// <2>

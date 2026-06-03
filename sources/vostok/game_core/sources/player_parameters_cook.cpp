@@ -252,7 +252,7 @@ float get_booster_value( boosters_enum booster_id, player_profile const& profile
 	}
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5ab290]: 6
 	// <0x5ab294>|0x004|+0x017|[1]:'153'
 	// <0>
 	// <0x5ab2ab>|0x01b|+0x011:'155'
@@ -279,7 +279,7 @@ player_parameters_modifyer_cook::player_parameters_modifyer_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5ab2e0]: 1
 	// <0x5ab315>|0x035|+0x00c:'165'
 	// ******
 }
@@ -504,7 +504,7 @@ void player_parameters_modifyer_cook::delete_resource( resources::resource_base*
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5ab330]: 1
 	// <0x5ab339>|0x009|+0x017:'279'
 	// ******
 }

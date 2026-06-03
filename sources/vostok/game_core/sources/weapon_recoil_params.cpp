@@ -30,7 +30,7 @@ weapon_recoil_params::weapon_recoil_params( ) :
 // survarium::weapon_recoil_params::weapon_recoil_params(vostok::configs::binary_config_value const&)
 weapon_recoil_params::weapon_recoil_params( configs::binary_config_value const& cfg )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x593190]: 39
 	// <0x593228>|0x098|+0x014:'40'
 	// <0x59323c>|0x0ac|+0x019:'41'
 	// <0>

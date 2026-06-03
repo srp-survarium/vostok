@@ -27,7 +27,7 @@ booby_trap_set_core::booby_trap_set_core( ) :
 	m_traps				( NULL, 0 ),
 	m_damage_parameters	( NULL, 0 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fe380]: 0
 	// ******
 }
 // STATE[77.75%|PARTIAL]

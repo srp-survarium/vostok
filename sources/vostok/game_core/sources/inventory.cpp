@@ -462,7 +462,7 @@ static void call_item_remove( inventory_slot& slot )
 	if ( slot.item )
 		slot.item->remove( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x700370]: 2
 	// <0x700376>|0x006|+0x00c:'231'
 	// <0x700382>|0x012|+0x018:'232'
 	// ******

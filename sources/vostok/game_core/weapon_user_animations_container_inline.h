@@ -15,7 +15,7 @@ resources::managed_resource_ptr weapon_user_animations_container::get_animation_
 	u32 index
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0xccf90]: 2
 	// <0xccf96>|0x006|+0x00c:'19'
 	// <0xccfa2>|0x012|+0x036:'20'
 	// ******
@@ -25,7 +25,7 @@ resources::managed_resource_ptr weapon_user_animations_container::get_animation_
 // STATE[STUB]
 inline resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( bool aimed, u32 index, bool is_third_view ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0xccee0]: 6
 	// <0>
 	// <1>
 	// <2>

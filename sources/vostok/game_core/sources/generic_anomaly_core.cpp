@@ -48,7 +48,7 @@ void generic_anomaly_core::activate( physics::world* world, survarium::scheduler
 	m_was_shoot_trigger_event = false;
 	spawn_artefacts( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59dc10]: 14
 	// <0x59dc1a>|0x00a|+0x00c:'28'
 	// <0x59dc26>|0x016|+0x00c:'29'
 	// <0x59dc32>|0x022|+0x009:'30'
@@ -81,7 +81,7 @@ void generic_anomaly_core::deactivate( )
 
 	m_scheduler = NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59d7c0]: 11
 	// <0x59d7c0>|0x000|+0x009:'45'	{
 	// <0x59d7c9>|0x009|+0x00c:'46'
 	// <0x59d7d5>|0x015|+0x012:'47'

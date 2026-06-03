@@ -13,7 +13,7 @@ booby_trap_core_cook::booby_trap_core_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761d50]: 1
 	// <0x761d85>|0x035|+0x00c:'17'
 	// ******
 }

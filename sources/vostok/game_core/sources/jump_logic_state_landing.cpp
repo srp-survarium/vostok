@@ -11,7 +11,7 @@ namespace survarium {
 // survarium::jump_logic_state_landing::jump_logic_state_landing(survarium::jump_logic&)
 jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner ) : jump_logic_base_state( owner )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58cef0]: 0
 	// ******
 }
 
@@ -29,7 +29,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	// animation::mixing::animation_lexeme look_lexeme
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d3e0]: 3
 	// <0x58d3f1>|0x011|+0x045:'34'
 	// <0x58d436>|0x056|+0x026:'35'
 	// <0x58d45c>|0x07c|+0x088:'36'
@@ -58,7 +58,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( m
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d110]: 37
 	// <0x58d121>|0x011|+0x038:'43'
 	// <0x58d159>|0x049|+0x01b:'44'
 	// <0>
@@ -115,7 +115,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
 	// resources::managed_resource_ptr look_animation
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58d020]: 18
 	// <0x58d030>|0x010|+0x019:'87'
 	// <0x58d049>|0x029|+0x013:'88'
 	// <0>
@@ -145,7 +145,7 @@ void jump_logic_state_landing::initialize( )
 	// <0x58cf4d> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58cf30]: 5
 	// <0>
 	// <0x58cf3a>|0x00a|+0x015:'110'
 	// <0x58cf4f>|0x01f|+0x0a0:'111'
@@ -158,7 +158,7 @@ void jump_logic_state_landing::initialize( )
 // void survarium::jump_logic_state_landing::finalize()
 void jump_logic_state_landing::finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ce40]: 1
 	// ******
 }
 
@@ -166,7 +166,7 @@ void jump_logic_state_landing::finalize( )
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_landing::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_landing::on_interval_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ce50]: 13
 	// <0>
 	// <1>
 	// <2>

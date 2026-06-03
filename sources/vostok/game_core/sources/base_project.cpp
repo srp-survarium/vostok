@@ -25,7 +25,7 @@ base_project::~base_project( )
 	if ( m_static_collision_objects )
 		VOSTOK_DELETE_ARRAY_IMPL( g_allocator, m_static_collision_objects );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff420]: 2
 	// <0x6ff432>|0x000|0x000:'24'
 	// <0x6ff43b>|0x009|0x009:'25'
 	// ******
@@ -37,7 +37,7 @@ base_game_object* base_project::get_object_by_name( pcstr name )
 	ASSERT( UNKNOWN_EXPRESSION_T( m_objects_registry.find( name ) != m_objects_registry.end( )  ) );
 	return m_objects_registry[name];
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff3e0]: 2
 	// <0x6ff3f9>|0x000|0x000:'30'
 	// <0x6ff405>|0x00c|0x00c:'31'
 	// ******
@@ -53,7 +53,7 @@ void base_project::resolve_links( )
 
 	m_objects_registry.clear( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff2c0]: 6
 	// <0x6ff2c9>|0x000|0x000:'36'
 	// <0x6ff2dd>|0x014|0x014:'37'
 	// <0x6ff2f1>|0x028|0x014:'38'
@@ -72,7 +72,7 @@ void read_transform( vostok::configs::binary_config_value const& cfg, float4x4& 
 	float3 const& position	= cfg["position"];
 	result = create_scale( scale ) * create_rotation( rotation ) * create_translation( position );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff210]: 4
 	// <0x6ff21b>|0x000|0x000:'46'
 	// <0x6ff230>|0x015|0x015:'47'
 	// <0x6ff245>|0x02a|0x015:'48'
@@ -92,7 +92,7 @@ void static_collision::insert( vostok::physics::world* w )
 
 	w->add( physics_rigid_body_, filter_group_, filter_mask_ );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff490]: 11
 	// <0x6ff499>|0x000|0x000:'109'
 	// <0x6ff4a1>|0x008|0x008:'110'
 	// <0x6ff4b0>|0x017|0x00f:'111'
@@ -114,7 +114,7 @@ void static_collision::remove( vostok::physics::world* w )
 	vostok::physics::destroy_static_rigid_body( physics_rigid_body_ );
 	physics_rigid_body_ = NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff1d0]: 3
 	// <0x6ff1d8>|0x000|0x000:'124'
 	// <0x6ff1ec>|0x014|0x014:'125'
 	// <0x6ff1f7>|0x01f|0x00b:'126'

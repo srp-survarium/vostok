@@ -16,7 +16,7 @@ udp_match_client::udp_match_client(
 	udp_match_packets_orderer&			packets_orderer,
 	udp_network_flow_emulator*			network_flow_emulator)
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758370]: 1
 	// <0x75851e>|0x000|0x000:'40'
 	// ******
 }
@@ -25,7 +25,7 @@ udp_match_client::udp_match_client(
 // void vostok::network_core::udp_match_client::on_error(const vostok::network_core::client_error_codes_enum, const boost::system::error_code)
 void udp_match_client::on_error( client_error_codes_enum __formal, boost::system::error_code __formal )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7582c0]: 2
 	// 1
 	// <0x7582c7>|0x000|0x000:'49'
 	// ******
@@ -35,7 +35,7 @@ void udp_match_client::on_error( client_error_codes_enum __formal, boost::system
 // void vostok::network_core::udp_match_client::process_incoming_packet(vostok::network_core::packet_reader&, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&)
 void udp_match_client::process_incoming_packet( packet_reader& reader, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const& endpoint )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758670]: 6
 	// <0x75867f>|0x000|0x000:'78'
 	// <0x7586b9>|0x03a|0x03a:'79'
 	// <0x7586e1>|0x062|0x028:'80'
@@ -53,7 +53,7 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 	// packet_reader 				reader<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758730]: 38
 	// <0x75874a>|0x000|0x000:'88'
 	// 1
 	// <0x758755>|0x00b|0x00b:'90'
@@ -99,7 +99,7 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 // void vostok::network_core::udp_match_client::start_receiving()
 void udp_match_client::start_receiving( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758bf0]: 11
 	// <0x758bff>|0x000|0x000:'130'
 	// <0x758c0b>|0x00c|0x00c:'131'
 	// 1
@@ -122,7 +122,7 @@ void udp_match_client::connect(
 	udp_match_packet*		packet,
 	u32						current_time_in_ms)
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758cf0]: 14
 	// <0x758d01>|0x000|0x000:'145'
 	// <0x758d2a>|0x029|0x029:'146'
 	// <0x758d3b>|0x03a|0x011:'147'
@@ -144,7 +144,7 @@ void udp_match_client::connect(
 // void vostok::network_core::udp_match_client::disconnect()
 void udp_match_client::disconnect( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7582e0]: 1
 	// <0x7582e7>|0x000|0x000:'163'
 	// ******
 }
@@ -153,7 +153,7 @@ void udp_match_client::disconnect( )
 // void vostok::network_core::udp_match_client::enqueue(vostok::network_core::udp_match_packet*)
 void udp_match_client::enqueue( udp_match_packet* packet )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758590]: 8
 	// <0x7585a1>|0x000|0x000:'168'
 	// <0x7585b7>|0x016|0x016:'169'
 	// 1
@@ -169,7 +169,7 @@ void udp_match_client::enqueue( udp_match_packet* packet )
 // void vostok::network_core::udp_match_client::send_queued_packets(unsigned int)
 void udp_match_client::send_queued_packets( u32 current_time_in_ms )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758af0]: 10
 	// <0x758af9>|0x000|0x000:'180'
 	// <0x758b09>|0x010|0x010:'181'
 	// <0x758baa>|0x0b1|0x0a1:'182'
@@ -192,7 +192,7 @@ void udp_match_client::check_consistency( ) const
 	// u32 							allocated_count
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758240]: 3
 	// <0x758249>|0x000|0x000:'194'
 	// <0x758267>|0x01e|0x01e:'195'
 	// <0x7582a7>|0x05e|0x040:'196'
@@ -203,7 +203,7 @@ void udp_match_client::check_consistency( ) const
 // void vostok::network_core::udp_match_client::on_disconnect(const vostok::network_core::disconnect_event_types_enum)
 void udp_match_client::on_disconnect( disconnect_event_types_enum disconnect_type )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x758300]: 6
 	// <0x75830f>|0x000|0x000:'201'
 	// <0x758320>|0x011|0x011:'202'
 	// 1

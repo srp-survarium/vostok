@@ -268,7 +268,7 @@ void vostok::core::core_engine_flush( )
 	// <0x6704df> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6704d0]: 2
 	// <0x6704d0>|0x000|0x000:'290'
 	// <0x6704da>|0x00a|0x00a:'291'
 	// ******
@@ -282,7 +282,7 @@ pcstr vostok::core::user_data_directory( )
 	// ******
 
 	return NULL;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x670500]: 1
 	// <1>
 	// ******
 }

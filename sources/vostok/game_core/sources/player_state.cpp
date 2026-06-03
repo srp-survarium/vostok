@@ -16,7 +16,7 @@ void player_state::deserialize( network_core::packet_reader& packet )
 	// float3 const& 				position
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7765d0]: 10
 	// <0>
 	// <1>
 	// <2>
@@ -34,7 +34,7 @@ void player_state::deserialize( network_core::packet_reader& packet )
 // void survarium::player_state::serialize(vostok::network_core::udp_match_packet&) const
 void player_state::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x776570]: 8
 	// <0>
 	// <1>
 	// <2>

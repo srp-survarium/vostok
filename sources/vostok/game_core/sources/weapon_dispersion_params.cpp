@@ -11,7 +11,7 @@ namespace survarium {
 // survarium::weapon_dispersion_params::weapon_dispersion_params()
 weapon_dispersion_params::weapon_dispersion_params( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x592de0]: 0
 	// ******
 }
 
@@ -19,7 +19,7 @@ weapon_dispersion_params::weapon_dispersion_params( )
 // survarium::weapon_dispersion_params::weapon_dispersion_params(vostok::configs::binary_config_value const&)
 weapon_dispersion_params::weapon_dispersion_params( configs::binary_config_value const& cfg )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x592e70]: 19
 	// <0x592f16>|0x0a6|+0x014:'34'
 	// <0x592f2a>|0x0ba|+0x01c:'35'
 	// <0x592f46>|0x0d6|+0x014:'36'

@@ -16,7 +16,7 @@ void packet_reader::r( void* destination, u32 size )
 	// u32 							destination_size
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x8e5a0]: 6
 	// 1
 	// 2
 	// 3
@@ -31,7 +31,7 @@ void packet_reader::r( void* destination, u32 size )
 u8 packet_reader::r<u8>( )
 {
 	return 0;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x8e950]: 3
 	// 1
 	// <0x8e950>|0x000|0x000:'33'
 	// 1

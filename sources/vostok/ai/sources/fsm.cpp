@@ -12,7 +12,7 @@ namespace ai {
 // vostok::ai::fsm::fsm()
 fsm::fsm( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x579460]: 0
 	// ******
 }
 
@@ -20,7 +20,7 @@ fsm::fsm( )
 // void vostok::ai::fsm::add_state(vostok::ai::fsm_state*)
 void fsm::add_state( fsm_state* state )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x579430]: 2
 	// <0x57943a>|0x00a|+0x00c:'23'
 	// <0x579446>|0x016|+0x00d:'24'
 	// ******
@@ -34,7 +34,7 @@ void fsm::add_transition( fsm_state* from, fsm_state* to, boost::function<bool()
 	// fsm_state_transition* 		transition
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5795c0]: 4
 	// <0x5795ca>|0x00a|+0x04e:'35'
 	// <0x579618>|0x058|+0x028:'36'
 	// <0x579640>|0x080|+0x009:'37'
@@ -51,7 +51,7 @@ void fsm::set_initial_state( fsm_state* initial_state )
 	// <0x579405> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5793b0]: 12
 	// <0x5793b7>|0x007|+0x00b:'63'
 	// <0x5793c2>|0x012|+0x002:'64'
 	// <0>
@@ -82,7 +82,7 @@ void fsm::tick( )
 	// <0x5795b6> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5794f0]: 17
 	// <0x5794ff>|0x00f|+0x00c:'79'
 	// <0>
 	// <0x57950b>|0x01b|+0x020:'81'
@@ -112,7 +112,7 @@ void fsm::clear_transitions( )
 	// fsm_state_transition* 		i<2>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x579480]: 3
 	// <0x579489>|0x009|+0x01e|[1]:'100'
 	// <0x5794a7>|0x027|+0x014|[2]:'101'
 	// <0x5794bb>|0x03b|+0x02a:'102'
@@ -125,7 +125,7 @@ fsm_state* fsm::pop_state( )
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x579410]: 1
 	// <0x579419>|0x009|+0x008:'107'
 	// ******
 }

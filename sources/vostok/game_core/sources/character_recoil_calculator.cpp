@@ -26,7 +26,7 @@ void character_recoil_calculator::set_character_recoil_params( character_recoil_
 {
 	m_params = params;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5961e0]: 1
 	// <0x5961e7>|0x007|+0x008:'27'
 	// ******
 }
@@ -67,7 +67,7 @@ void character_recoil_calculator::tick(
 			m_current_value = math::min( m_current_value + ( m_increase_speed * dt ), m_target_value );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596270]: 23
 	// <0x596279>|0x009|+0x00c:'32'
 	// <0x596285>|0x015|+0x016:'33'
 	// <0>

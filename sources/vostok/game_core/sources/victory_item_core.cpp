@@ -19,7 +19,7 @@ victory_item_core::victory_item_core( ) :
 {
 	m_transform.identity( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c450]: 1
 	// <0x59c450>|0x000|+0x074:'20'	{
 	// <0x59c4c4>|0x074|+0x00e:'21'
 	// <0x59c4d2>|0x082|      :'22'	}
@@ -31,7 +31,7 @@ victory_item_core::~victory_item_core( )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, m_collision_geometries[0] ); // sushi@TODO: Why is this called from this destructor and not the one in `usabe_object`
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c3f0]: 1
 	// <0x59c417>|0x027|+0x019:'26'
 	// ******
 }
@@ -50,7 +50,7 @@ void victory_item_core::load( configs::binary_config_value const& cfg )
 	*m_collision_geometries = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
 	m_collision_geometries[0]->load( cfg["collision_geometries"][0] );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c4e0]: 4
 	// <0x59c4e0>|0x000|+0x009:'35'	{
 	// <0x59c4e9>|0x009|+0x00c:'36'
 	// <0>
@@ -77,7 +77,7 @@ bool victory_item_core::use_execute( usable_object_user_data* user )
 	ASSERT( user ); VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c310]: 2
 	// <0x59c310>|0x000|+0x009:'53'	{
 	// <0x59c319>|0x009|+0x00c:'54'
 	// <0x59c325>|0x015|+0x002:'55'
@@ -91,7 +91,7 @@ bool victory_item_core::use_finalize( usable_object_user_data* user )
 	ASSERT( user ); VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c2f0]: 2
 	// <0x59c2f0>|0x000|+0x009:'59'	{
 	// <0x59c2f9>|0x009|+0x00c:'60'
 	// <0x59c305>|0x015|+0x002:'61'

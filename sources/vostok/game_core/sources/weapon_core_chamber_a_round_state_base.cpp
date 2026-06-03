@@ -12,7 +12,7 @@ namespace survarium {
 weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base( weapon_core& weapon, float animation_time_scale ) :
 	weapon_core_animation_end_aware_state( weapon, true )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761cc0]: 1
 	// <0x761d19>|0x059|+0x00d:'22'
 	// ******
 }
@@ -21,7 +21,7 @@ weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base( 
 // void survarium::weapon_core_chamber_a_round_state_base::initialize()
 void weapon_core_chamber_a_round_state_base::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761d30]: 2
 	// <0x761d37>|0x007|+0x008:'27'
 	// <0>
 	// ******
@@ -31,7 +31,7 @@ void weapon_core_chamber_a_round_state_base::initialize( )
 // void survarium::weapon_core_chamber_a_round_state_base::on_animation_end_impl(bool&)
 void weapon_core_chamber_a_round_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761c40]: 3
 	// <0>
 	// <0x761c47>|0x007|+0x00e:'34'
 	// <0x761c55>|0x015|+0x006:'35'
@@ -42,7 +42,7 @@ void weapon_core_chamber_a_round_state_base::on_animation_end_impl( bool& animat
 // void survarium::weapon_core_chamber_a_round_state_base::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_core_chamber_a_round_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761c90]: 1
 	// <0x761c99>|0x009|+0x013:'40'
 	// ******
 }
@@ -51,7 +51,7 @@ void weapon_core_chamber_a_round_state_base::serialize( network_core::udp_match_
 // void survarium::weapon_core_chamber_a_round_state_base::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_chamber_a_round_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761c70]: 1
 	// <0x761c79>|0x009|+0x011:'45'
 	// ******
 }

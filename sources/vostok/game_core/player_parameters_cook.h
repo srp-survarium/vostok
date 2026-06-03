@@ -27,7 +27,7 @@ player_parameters_modifyer::player_parameters_modifyer( ) :
 	additional_artefact_slots      ( 0 ),
 	additional_devices_slots       ( 0 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0xb5b40]: 0
 	// <0xb5b40>|0x000|+0x149:'79'	{
 	// <0xb5c89>|0x149|      :'80'	}
 	// ******

@@ -24,7 +24,7 @@ inline void collision_geometry::query_objects_by_type<object_type>(
 	// <0x8f13e> -> <unknown>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x8f120]: 6
 	// <0x8f125>|0x000|0x000:'15'
 	// <1>
 	// <0x8f134>|0x00f|0x00f:'17'

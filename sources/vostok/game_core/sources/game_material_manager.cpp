@@ -21,7 +21,7 @@ void game_material_manager::clear_resources( )
 	delete_pairs( );
 	delete_materials( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e8f0]: 2
 	// <0x73e8f7>|0x007|+0x008:'20'
 	// <0x73e8ff>|0x00f|+0x008:'21'
 	// ******
@@ -33,7 +33,7 @@ game_material_manager::~game_material_manager( )
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e990]: 2
 	// <0x73e9a2>|0x012|+0x00c:'26'
 	// <0x73e9ae>|0x01e|+0x00c:'27'
 	// ******
@@ -55,7 +55,7 @@ void game_material_manager::delete_pairs( )
 	}
 	m_pairs.clear( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e7d0]: 12
 	// <0x73e7d9>|0x009|+0x017:'32'
 	// <0x73e7f0>|0x020|+0x011:'33'
 	// <0>
@@ -80,7 +80,7 @@ void game_material_manager::delete_materials( )
 		VOSTOK_DELETE_IMPL( g_allocator, it->second );
 	m_materials.clear( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e6e0]: 5
 	// <0x73e6e9>|0x009|+0x017:'48'
 	// <0x73e700>|0x020|+0x011:'49'
 	// <0x73e711>|0x031|+0x038:'50'
@@ -95,7 +95,7 @@ game_material const* game_material_manager::get_material( u16 id ) const
 	map< u16, game_material const* >::const_iterator it = m_materials.find( id );
 	return it != m_materials.end( ) ? it->second : get_material( m_default_material_id );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e660]: 2
 	// <0x73e669>|0x009|+0x020:'58'
 	// <0x73e689>|0x029|+0x047:'59'
 	// ******
@@ -124,7 +124,7 @@ material_pair const* game_material_manager::get_pair( u16 first_mtrl_id, u16 sec
 	ASSERT( UNKNOWN_EXPRESSION_T( second_it != first_it->second.end( ) ) );
 	return second_it->second;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e4c0]: 17
 	// <0x73e4c9>|0x009|+0x034:'64'
 	// <0x73e4fd>|0x03d|+0x034:'65'
 	// <0>
@@ -150,7 +150,7 @@ bool game_material_manager::material_exist( u16 id ) const
 {
 	return m_materials.find( id ) != m_materials.end( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e470]: 1
 	// <0x73e479>|0x009|+0x03c:'102'
 	// ******
 }
@@ -160,7 +160,7 @@ void game_material_manager::add_game_material( game_material const* const mtrl )
 {
 	m_materials[mtrl->id( )] = mtrl;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e790]: 1
 	// <0x73e7a0>|0x010|+0x02a:'131'
 	// ******
 }
@@ -172,7 +172,7 @@ void game_material_manager::add_pair( material_pair const* const pair )
 	u16 second_mtrl_id	= pair->second_material( )->id( );
 	m_pairs[first_mtrl_id][second_mtrl_id] = pair;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e910]: 3
 	// <0x73e926>|0x016|+0x01c:'136'
 	// <0x73e942>|0x032|+0x01c:'137'
 	// <0x73e95e>|0x04e|+0x025:'138'

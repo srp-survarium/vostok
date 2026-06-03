@@ -47,7 +47,7 @@ bullet_manager::bullet_manager(
 	initialize( );
 	register_console_commands( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a28d0]: 4
 	// <0x5a29f3>|0x123|+0x008:'45'
 	// <0x5a29fb>|0x12b|+0x008:'46'
 	// <0>
@@ -93,7 +93,7 @@ struct redundant_bullet_predicate {
 		bullet_manager->free_bullet( bullet );
 		return true;
 
-		// FUNCTION BODY
+		// FUNCTION BODY[0xbe610]: 5
 		// <0xbe619>|0x009|+0x02e:'86'
 		// <0xbe647>|0x037|+0x004:'87'
 		// <0>
@@ -114,7 +114,7 @@ void bullet_manager::free_bullet( bullet* bullet )
 
 	VOSTOK_DELETE_IMPL( *m_bullets_allocator_ref, bullet );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a13f0]: 9
 	// <0>
 	// <1>
 	// <2>
@@ -203,7 +203,7 @@ void bullet_manager::add_decal(
 		m_functors.push( functor );	// sushi@MATCH: Seems the same!
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a1980]: 13
 	// <0x5a1990>|0x010|+0x020:'152'
 	// <0>
 	// <0x5a19b0>|0x030|+0x04d:'154'
@@ -309,7 +309,7 @@ void bullet_manager::play_particle(
 		m_functors.push( functor );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a16e0]: 13
 	// <0x5a16f0>|0x010|+0x010:'217'
 	// <0>
 	// <0x5a1700>|0x020|+0x049|[1]:'219'
@@ -361,7 +361,7 @@ void bullet_manager::update_tracer(
 		m_functors.push( functor );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a14a0]: 15
 	// <0x5a14b0>|0x010|+0x010:'239'
 	// <0>
 	// < >|0x020|+0x04d:'241'

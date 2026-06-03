@@ -79,7 +79,7 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 		&parent
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x701610]: 54
 	// <0x70162b>|0x01b|+0x00b:'25'
 	// <0x701636>|0x026|+0x00c:'26'
 	// <0>
@@ -185,7 +185,7 @@ void ladder_cook::on_animations_loaded( resources::queries_result& data, configs
 	parent->set_unmanaged_resource( new_ladder, resources::nocache_memory, sizeof( ladder ) );
 	parent->finish_query( result_success );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x700f90]: 45
 	// <0x700fab>|0x01b|+0x00b:'83'
 	// <0x700fb6>|0x026|+0x012:'84'
 	// <0x700fc8>|0x038|+0x00f:'85'
@@ -244,7 +244,7 @@ void ladder_cook::delete_resource( resources::resource_base* resource )
 
 	VOSTOK_DELETE_IMPL( g_allocator, ladder_res );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x700f20]: 6
 	// <0x700f29>|0x009|+0x006:'132'
 	// <0>
 	// <0x700f2f>|0x00f|+0x011|[1]:'134'

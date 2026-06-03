@@ -15,7 +15,7 @@ items_dictionary_cook::items_dictionary_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7645b0]: 1
 	// <0x7645e5>|0x035|+0x00c:'17'
 	// ******
 }

@@ -13,7 +13,7 @@ namespace survarium {
 player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id ) :
 	m_owner		( owner )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c220]: 0
 	// ******
 }
 
@@ -21,7 +21,7 @@ player_logic_base_state::player_logic_base_state( weapon_user_animations_selecto
 // void survarium::player_logic_base_state::set_user(survarium::base_player&)
 void player_logic_base_state::set_user( base_player& user )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59c200]: 1
 	// <0x59c207>|0x007|+0x009:'29'
 	// ******
 }

@@ -11,7 +11,7 @@ namespace survarium {
 // survarium::jump_logic_state_start::jump_logic_state_start(survarium::jump_logic&)
 jump_logic_state_start::jump_logic_state_start( jump_logic& owner ) : jump_logic_base_state( owner )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8bd0]: 0
 	// ******
 }
 
@@ -29,7 +29,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	// animation::mixing::animation_lexeme look_lexeme
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9210]: 3
 	// <0x6f9221>|0x011|+0x045:'37'
 	// <0x6f9266>|0x056|+0x026:'38'
 	// <0x6f928c>|0x07c|+0x088:'39'
@@ -57,7 +57,7 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8f00]: 37
 	// <0x6f8f11>|0x011|+0x030:'46'
 	// <0x6f8f41>|0x041|+0x013:'47'
 	// <0>
@@ -114,7 +114,7 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	// resources::managed_resource_ptr look_animation
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8d80]: 25
 	// <0x6f8d90>|0x010|+0x00a:'90'
 	// <0x6f8d9a>|0x01a|+0x007:'91'
 	// <0x6f8da1>|0x021|+0x00e:'92'
@@ -147,7 +147,7 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 // void survarium::jump_logic_state_start::initialize()
 void jump_logic_state_start::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8c10]: 6
 	// <0x6f8c20>|0x010|+0x010:'119'
 	// <0x6f8c30>|0x020|+0x010:'120'
 	// <0x6f8c40>|0x030|+0x00a:'121'
@@ -161,7 +161,7 @@ void jump_logic_state_start::initialize( )
 // void survarium::jump_logic_state_start::finalize()
 void jump_logic_state_start::finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8a00]: 2
 	// <0x6f8a09>|0x009|+0x022:'129'
 	// <0x6f8a2b>|0x02b|+0x01f:'130'
 	// ******
@@ -171,7 +171,7 @@ void jump_logic_state_start::finalize( )
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_interval_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8a50]: 9
 	// <0x6f8a59>|0x009|+0x030:'135'
 	// <0x6f8a89>|0x039|+0x043:'136'
 	// <0x6f8acc>|0x07c|+0x017:'137'
@@ -194,7 +194,7 @@ animation::callback_return_type_enum jump_logic_state_start::on_jump_event( anim
 	// <0x6f8bbb> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f8b00]: 11
 	// <0>
 	// <0x6f8b09>|0x009|+0x046:'149'
 	// <0>

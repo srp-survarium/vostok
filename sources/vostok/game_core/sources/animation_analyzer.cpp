@@ -14,7 +14,7 @@ animation_analyzer::animation_analyzer( leg_info const* legs_info, u32 legs_coun
 	m_skeleton		( skeleton ),
 	m_ground_height	( 0.0f )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcbd0]: 0
 	// ******
 }
 

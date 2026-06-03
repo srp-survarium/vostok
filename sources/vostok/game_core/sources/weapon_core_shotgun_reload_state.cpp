@@ -16,7 +16,7 @@ weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 	weapon_core_shotgun_reload_base_substate*	reload_finish
 ) : weapon_core_base_state( weapon, true )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599d40]: 2
 	// <0x599d7f>|0x03f|+0x00d:'27'
 	// <0x599d8c>|0x04c|+0x014:'28'
 	// ******
@@ -30,7 +30,7 @@ weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state( )
 	// ai::fsm_state* 				state<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5998d0]: 6
 	// <0x5998ec>|0x01c|+0x00e:'33'
 	// <0x5998fa>|0x02a|+0x017|[1]:'34'
 	// <0x599911>|0x041|+0x026:'35'
@@ -44,7 +44,7 @@ weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state( )
 // void survarium::weapon_core_shotgun_reload_state::initialize()
 void weapon_core_shotgun_reload_state::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599730]: 3
 	// <0>
 	// <0x599737>|0x007|+0x022:'44'
 	// <0x599759>|0x029|+0x00a:'45'
@@ -55,7 +55,7 @@ void weapon_core_shotgun_reload_state::initialize( )
 // void survarium::weapon_core_shotgun_reload_state::finalize()
 void weapon_core_shotgun_reload_state::finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599770]: 2
 	// <0x599777>|0x007|+0x00d:'50'
 	// <0x599784>|0x014|+0x010:'51'
 	// ******
@@ -72,7 +72,7 @@ void weapon_core_shotgun_reload_state::serialize( network_core::udp_match_packet
 	// ai::fsm_state const* 		i<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599830]: 12
 	// <0x599839>|0x009|+0x004:'56'
 	// <0x59983d>|0x00d|+0x004:'57'
 	// <0x599841>|0x011|+0x00f:'58'
@@ -99,7 +99,7 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	// ai::fsm_state* 				i<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5997a0]: 12
 	// <0x5997a9>|0x009|+0x00b:'72'
 	// <0x5997b4>|0x014|+0x004:'73'
 	// <0x5997b8>|0x018|+0x007:'74'
@@ -124,7 +124,7 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599db0]: 2
 	// <0>
 	// <0x599db9>|0x009|+0x035:'89'
 	// ******
@@ -136,7 +136,7 @@ static bool true_predicate( )
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599720]: 1
 	// <0x599723>|0x003|+0x002:'94'
 	// ******
 }
@@ -145,7 +145,7 @@ static bool true_predicate( )
 // void survarium::weapon_core_shotgun_reload_state::initialize_logic(survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
 void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_reload_base_substate* reload_start, weapon_core_shotgun_reload_base_substate* reload_one_round, weapon_core_shotgun_reload_base_substate* reload_finish )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599ad0]: 10
 	// <0x599ae0>|0x010|+0x05d:'99'
 	// <0x599b3d>|0x06d|+0x014:'100'
 	// <0x599b51>|0x081|+0x015:'101'
@@ -165,7 +165,7 @@ bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599980]: 4
 	// <0>
 	// <1>
 	// <2>
@@ -177,7 +177,7 @@ bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 // void survarium::weapon_core_shotgun_reload_state::execute()
 void weapon_core_shotgun_reload_state::execute( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5998b0]: 1
 	// <0x5998b7>|0x007|+0x00e:'121'
 	// ******
 }

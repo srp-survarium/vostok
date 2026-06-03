@@ -12,7 +12,7 @@ namespace survarium {
 weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, float animation_timescale ) :
 	weapon_core_animation_end_aware_state( weapon, true )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ec20]: 0
 	// ******
 }
 
@@ -20,7 +20,7 @@ weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, f
 // void survarium::weapon_core_fire_state_base::initialize()
 void weapon_core_fire_state_base::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ec90]: 11
 	// <0>
 	// <1>
 	// <2>
@@ -39,7 +39,7 @@ void weapon_core_fire_state_base::initialize( )
 // void survarium::weapon_core_fire_state_base::execute()
 void weapon_core_fire_state_base::execute( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ec00]: 8
 	// <0x59ec07>|0x007|+0x008:'43'
 	// <0>
 	// <1>
@@ -55,7 +55,7 @@ void weapon_core_fire_state_base::execute( )
 // void survarium::weapon_core_fire_state_base::finalize()
 void weapon_core_fire_state_base::finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ebb0]: 10
 	// <0>
 	// <1>
 	// <2>
@@ -73,7 +73,7 @@ void weapon_core_fire_state_base::finalize( )
 // vostok::animation::callback_return_type_enum survarium::weapon_core_fire_state_base::on_shot_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ed80]: 33
 	// <0>
 	// <0x59ed91>|0x011|+0x007:'70'
 	// <0>
@@ -114,7 +114,7 @@ animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event(
 // void survarium::weapon_core_fire_state_base::on_animation_end_impl(bool&)
 void weapon_core_fire_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59eb90]: 2
 	// <0>
 	// <0x59eb97>|0x007|+0x006:'107'
 	// ******

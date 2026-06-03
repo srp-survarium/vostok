@@ -18,7 +18,7 @@ player_input::player_input( ) :
 // STATE[BLOCKED]
 void player_input::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x700e80]: 3
 	// <0x700e80>|0x000|+0x009:'22'	{
 	// <0x700e89>|0x009|+0x00b:'23'
 	// <0x700e94>|0x014|+0x00e:'24'
@@ -30,7 +30,7 @@ void player_input::serialize( network_core::udp_match_packet& packet ) const
 // STATE[BLOCKED]
 void player_input::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x700df0]: 3
 	// <0x700df0>|0x000|+0x00b:'29'	{
 	// <0x700dfb>|0x00b|+0x032:'30'
 	// <0x700e2d>|0x03d|+0x033:'31'
@@ -49,7 +49,7 @@ bool player_input::is_empty( ) const
 		&& !actions_mask
 		&& true; // sushi@NOTE: master_gold check
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x700d60]: 8
 	// <0>
 	// <1>
 	// <2>

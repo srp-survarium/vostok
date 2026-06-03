@@ -43,7 +43,7 @@ namespace mixing {
 	const u32							current_time_in_ms
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef2f0]: 1
 	// <0x6ef337>|0x047|+0x013:'480'
 	// ******
 }
@@ -51,7 +51,7 @@ namespace mixing {
 // STATE[STUB]
 void n_ary_tree::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef230]: 6
 	// <0x6ef238>|0x008|+0x055:'492'
 	// <0>
 	// <0x6ef28d>|0x05d|+0x014:'494'
@@ -65,7 +65,7 @@ void n_ary_tree::initialize( )
 n_ary_tree& n_ary_tree::operator=( n_ary_tree const& other )
 {
 	return *this;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee290]: 22
 	// <0>
 	// <0x6ee290>|0x000|+0x006:'503'
 	// <0>
@@ -94,7 +94,7 @@ n_ary_tree& n_ary_tree::operator=( n_ary_tree const& other )
 // STATE[STUB]
  n_ary_tree::~n_ary_tree( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee280]: 1
 	// <0x6ee280>|0x000|+0x007:'528'
 	// ******
 }
@@ -111,7 +111,7 @@ void n_ary_tree::destroy( )
 	// <0x6ee208> -> void* < unknown >( u32 )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee1a0]: 25
 	// <0x6ee1a0>|0x000|+0x006:'532'	{
 	// <0x6ee1a6>|0x006|+0x00d:'533'
 	// <0>
@@ -152,7 +152,7 @@ float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 
 	return vostok::math::float4x4();
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6efa20]: 19
 	// <0x6efa2f>|0x00f|+0x022:'641'
 	// <0>
 	// <1>
@@ -183,7 +183,7 @@ void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node
 	// resources::pinned_ptr_const< cubic_spline_skeleton_animation > pinned_animation
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6eef90]: 29
 	// <0x6eef90>|0x000|+0x004:'663'	{
 	// <0x6eef94>|0x004|+0x003:'664'
 	// <0x6eef97>|0x007|+0x006:'665'
@@ -222,7 +222,7 @@ void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node
 // STATE[STUB]
 void n_ary_tree::set_object_transform( pcvoid const animated_object, float4x4 const& object_transform )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef9d0]: 11
 	// <0x6ef9d9>|0x009|+0x007:'697'
 	// <0>
 	// <1>
@@ -240,7 +240,7 @@ void n_ary_tree::set_object_transform( pcvoid const animated_object, float4x4 co
 // STATE[STUB]
 void n_ary_tree::set_objects_transform( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f0890]: 2
 	// <0x6f0899>|0x009|+0x017:'712'
 	// <0x6f08b0>|0x020|+0x02b:'713'
 	// ******
@@ -255,7 +255,7 @@ void n_ary_tree::compute_bones_matrices(
 	u32* const			bones_masks
 ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef990]: 1
 	// <0x6ef996>|0x006|+0x02e:'718'
 	// ******
 }
@@ -273,7 +273,7 @@ void n_ary_tree::compute_bones_local_matrices(
 	// bone_matrices_computer 			computer
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef950]: 8
 	// <0x6ef956>|0x006|+0x018:'723'
 	// <0x6ef96e>|0x01e|+0x012:'724'
 	// <0>
@@ -293,7 +293,7 @@ void n_ary_tree::convert_to_object_matrices(
 	float4x4* const		end
 ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef910]: 1
 	// <0x6ef916>|0x006|+0x029:'735'
 	// ******
 }
@@ -315,7 +315,7 @@ void n_ary_tree::accumulate_object_movement(
 	// <0x6eeb5d> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6eeb10]: 31
 	// <0>
 	// <0x6eeb16>|0x006|+0x008:'745'
 	// <0x6eeb1e>|0x00e|+0x041:'746'
@@ -353,7 +353,7 @@ void n_ary_tree::accumulate_object_movement(
 // STATE[STUB]
 animation_state& animation_state::operator=( animation_state const& __that )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11c700]: 16
 	// <0x11c680>|0x000|+0x000:'785'	{
 	// <0x11c680>|0x000|+0x014:'786'
 	// <0>
@@ -399,7 +399,7 @@ void n_ary_tree::update_synchronization_group_using_integration(
 	// <0x6ef7af> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef6a0]: 126
 	// <0>
 	// <1>
 	// <0x6ef6a9>|0x009|+0x003:'812'
@@ -541,7 +541,7 @@ void n_ary_tree::update_animation_time( animation_state& animation_state )
 	// const float 						animation_length
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6eea30]: 11
 	// <0x6eea33>|0x003|+0x00b:'940'
 	// <0>
 	// <1>
@@ -567,7 +567,7 @@ void n_ary_tree::update_animation_state(
 	// n_ary_tree_weight_calculator 	weight_calculator
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef5d0]: 30
 	// <0x6ef5d0>|0x000|+0x003:'958'	{
 	// <0>
 	// <1>
@@ -612,7 +612,7 @@ void n_ary_tree::update_time_synchronization_group(
 	const u32						target_time_in_ms
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f07f0]: 39
 	// <0>
 	// <1>
 	// <2>
@@ -658,7 +658,7 @@ void n_ary_tree::update_time_synchronization_group(
 // STATE[STUB]
 void n_ary_tree::update_animation_states( const u32 start_time_in_ms, const u32 target_time_in_ms )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f0a70]: 6
 	// <0>
 	// <0x6f0a76>|0x006|+0x00a:'1041'
 	// <0x6f0a80>|0x010|+0x006:'1042'
@@ -673,7 +673,7 @@ bool n_ary_tree::need_new_transform( const u32 target_time_in_ms ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee130]: 13
 	// <0>
 	// <1>
 	// <0x6ee136>|0x006|+0x00b:'1052'
@@ -701,7 +701,7 @@ void n_ary_tree::remove_animation( n_ary_tree_animation_node*& i, n_ary_tree_ani
 	// <0x6ee102> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee0a0]: 27
 	// <0x6ee0a0>|0x000|+0x000:'1069'	{
 	// <0>
 	// <0x6ee0a0>|0x000|+0x020:'1071'
@@ -764,7 +764,7 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 	// <0x6efe59> -> void < unknown >( n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6efd20]: 220
 	// <0>
 	// <1>
 	// <2>
@@ -994,7 +994,7 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 // STATE[STUB]
 void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_types )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f0a30]: 8
 	// <0>
 	// <0x6f0a36>|0x006|+0x00a:'1464'
 	// <0x6f0a40>|0x010|+0x00b:'1465'
@@ -1009,7 +1009,7 @@ void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_ty
 // STATE[STUB]
 void n_ary_tree::update_event_iterators( const u32 target_time_in_ms )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6efc40]: 42
 	// <0>
 	// <1>
 	// <2>
@@ -1087,7 +1087,7 @@ bool n_ary_tree::dispatch_callbacks(
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee470]: 143
 	// <0x6ee486>|0x016|+0x008:'1526'
 	// <0>
 	// <1>
@@ -1251,7 +1251,7 @@ void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 	// animated_object_holder* 			j
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ef350]: 57
 	// <0>
 	// <0x6ef358>|0x008|+0x021:'1674'
 	// <0>
@@ -1330,7 +1330,7 @@ bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f08f0]: 71
 	// <0>
 	// <1>
 	// <2>
@@ -1422,7 +1422,7 @@ callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee300]: 57
 	// <0>
 	// <1>
 	// <2>
@@ -1492,7 +1492,7 @@ u32 n_ary_tree::nearest_event_time_in_ms( ) const
 {
 	return 0;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ee080]: 1
 	// <0x6ee080>|0x000|+0x000:'1892'	{
 	// <0x6ee080>|0x000|+0x012:'1893'
 	// <0x6ee092>|0x012|-0x001:'1893'
@@ -1510,7 +1510,7 @@ void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 	// subscribed_channel** const 		channels_head
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6efb00]: 15
 	// <0>
 	// <0x6efb03>|0x003|+0x0e1:'1951'
 	// <0x6efbe4>|0x0e4|-0x0b4:'1951'
@@ -1544,7 +1544,7 @@ bool n_ary_tree::tick(
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f0aa0]: 77
 	// <0x6f0aa0>|0x000|+0x009:'1972'	{
 	// <0>
 	// <1>

@@ -12,7 +12,7 @@ struct breath_holding_params {
 
 			void		load					( configs::binary_config_value const& cfg )
 	{
-		// FUNCTION BODY
+		// FUNCTION BODY[0x90c80]: 21
 		// <0x90c86>|0x006|+0x015:'41'
 		// <0x90c9b>|0x01b|+0x020:'42'
 		// <0x90cbb>|0x03b|+0x010:'43'

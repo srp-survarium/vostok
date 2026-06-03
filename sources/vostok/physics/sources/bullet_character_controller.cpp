@@ -468,7 +468,7 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	m_current_pos.setY( m_current_pos.getY( ) + m_shape.getMargin( ) );
 	setup_crouch_state( m_in_crouch );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x585cd0]: 97
 	// <0x585cdc>|0x000|0x000:'627' BT_PROFILE("step_down");
 	// <1>
 	// <2>

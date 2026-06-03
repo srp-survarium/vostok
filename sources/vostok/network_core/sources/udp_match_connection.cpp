@@ -44,7 +44,7 @@ static bool udp_match_connection::is_low_level_packet( base_packet const& packet
 	// ******
 
 	return false;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5564d0]: 10
 	// <0x5564d6>|0x000|0x000:'85'
 	// 1
 	// <0x5564e7>|0x011|0x011:'87'
@@ -67,7 +67,7 @@ void udp_match_connection::handle_send( udp_match_packet* packet, boost::system:
 	// u8* 							buffer<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x556bd0]: 30
 	// <0x556be7>|0x000|0x000:'99'
 	// 1
 	// <0x556c02>|0x01b|0x01b:'101'
@@ -105,7 +105,7 @@ void udp_match_connection::handle_send( udp_match_packet* packet, boost::system:
 // void vostok::network_core::udp_match_connection::send(vostok::network_core::udp_match_packet*)
 void udp_match_connection::send( udp_match_packet* packet )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x556fd0]: 19
 	// <0x556fe0>|0x000|0x000:'133'
 	// <0x556ff3>|0x013|0x013:'134'
 	// <0x557022>|0x042|0x02f:'135'
@@ -137,7 +137,7 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	// udp_match_packets_count_enum packet_type
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555bc0]: 10
 	// <0x555bc9>|0x000|0x000:'156'
 	// 1
 	// <0x555bd2>|0x009|0x009:'158'
@@ -170,7 +170,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* packets_list, u3
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x557180]: 66
 	// <0x55718d>|0x000|0x000:'170'
 	// 1
 	// <0x55719c>|0x00f|0x00f:'172'
@@ -244,7 +244,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* packets_list, u3
 // void vostok::network_core::udp_match_connection::dump(char const* const, const unsigned int)
 void udp_match_connection::dump( pcstr caption, u32 current_time_in_ms )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555b80]: 12
 	// <0x555b89>|0x000|0x000:'240'
 	// 1
 	// 2
@@ -270,7 +270,7 @@ udp_match_packet* udp_match_connection::new_low_level_packet( u8 message_type )
 	// ******
 
 	return NULL;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x556ec0]: 35
 	// <0x556eca>|0x000|0x000:'295'
 	// <0x556edf>|0x015|0x015:'296'
 	// 1
@@ -346,7 +346,7 @@ void udp_match_connection::send_queued_packets( u32 current_time_in_ms )
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5465c3 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN27") })
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5574b0]: 120
 	// 1
 	// 2
 	// <0x5574c0>|0x000|0x000:'336'
@@ -474,7 +474,7 @@ void udp_match_connection::send_queued_packets( u32 current_time_in_ms )
 // void vostok::network_core::udp_match_connection::connect(vostok::network_core::udp_match_packet*)
 void udp_match_connection::connect( udp_match_packet* packet )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555d30]: 4
 	// <0x555d39>|0x000|0x000:'458'
 	// <0x555d45>|0x00c|0x00c:'459'
 	// <0x555d52>|0x019|0x00d:'460'
@@ -491,7 +491,7 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 	// u8* 							stream<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555c60]: 12
 	// <0x555c69>|0x000|0x000:'466'
 	// <0x555c7c>|0x013|0x013|[1]:'467'
 	// <0x555c98>|0x02f|0x01c:'468'
@@ -511,7 +511,7 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 // void vostok::network_core::udp_match_connection::enqueue(vostok::network_core::udp_match_packet*)
 void udp_match_connection::enqueue( udp_match_packet* packet )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555e20]: 7
 	// <0x555e29>|0x000|0x000:'482'
 	// <0x555e35>|0x00c|0x00c:'483'
 	// <0x555e41>|0x018|0x00c:'484'
@@ -537,7 +537,7 @@ void udp_match_connection::update_acknowledgements( sequence_number<u16> remote_
 	// u32 							unacknowledged_packets_size<2>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555e70]: 50
 	// <0x555e7f>|0x000|0x000:'521'
 	// <0x555e8b>|0x00c|0x00c:'522'
 	// <0x555ea7>|0x028|0x01c:'523'
@@ -599,7 +599,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, u32
 	// udp_match_connection::low_level_message_type_enum message_type<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x556ab0]: 43
 	// <0x556ac1>|0x000|0x000|[1]:'575'
 	// 1
 	// 2
@@ -657,7 +657,7 @@ void udp_match_connection::instant_disconnect( disconnect_event_types_enum type 
 	// udp_match_packet* 			packet<3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5565a0]: 31
 	// <0x5565af>|0x000|0x000:'649'
 	// 1
 	// <0x5565bf>|0x010|0x010:'651'
@@ -704,7 +704,7 @@ void udp_match_connection::disconnect( )
 	// udp_match_packet* 			packet<3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x556870]: 24
 	// <0x55687f>|0x000|0x000:'684'
 	// 1
 	// <0x55688b>|0x00c|0x00c:'686'
@@ -743,7 +743,7 @@ u32 udp_match_connection::packets_count( ) const
 	// ******
 
 	return 0;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555d70]: 6
 	// <0x555d7a>|0x000|0x000:'712'
 	// 1
 	// <0x555daa>|0x030|0x030|[1]:'714'

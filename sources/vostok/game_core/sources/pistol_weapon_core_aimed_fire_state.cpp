@@ -33,7 +33,7 @@ pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	// <0x7aacf3><3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aabc0]: 15
 	// <0x7aac2b>|0x06b|+0x023:'26'
 	// <0x7aac4e>|0x08e|+0x007:'27'
 	// <0x7aac55>|0x095|+0x018|[1]:'28'
@@ -60,7 +60,7 @@ void pistol_weapon_core_aimed_fire_state::initialize( )
 	// bool 						last_shot
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ab0e0]: 3
 	// <0x7ab0e9>|0x009|+0x008:'45'
 	// <0x7ab0f1>|0x011|+0x05d:'46'
 	// <0x7ab14e>|0x06e|+0x013:'47'
@@ -81,7 +81,7 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_ha
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ab000]: 3
 	// <0x7ab010>|0x010|+0x01f:'52'
 	// <0x7ab02f>|0x02f|+0x02a:'53'
 	// <0x7ab059>|0x059|+0x07a:'54'
@@ -98,7 +98,7 @@ weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( 
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aaf30]: 11
 	// <0>
 	// <0x7aaf39>|0x009|+0x007:'60'
 	// <0x7aaf40>|0x010|+0x007:'61'
@@ -130,7 +130,7 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::get_user_hand
 	// pcstr[2] 					user_animation_captions
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aadd0]: 23
 	// <0x7aade1>|0x011|+0x006:'75'
 	// <0x7aade7>|0x017|+0x010:'76'
 	// <0>
@@ -168,7 +168,7 @@ pistol_weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aad60]: 6
 	// <0>
 	// <1>
 	// <2>

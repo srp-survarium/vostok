@@ -11,7 +11,7 @@ namespace survarium {
 // survarium::player_stealth::player_stealth()
 player_stealth::player_stealth( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5aaad0]: 0
 	// ******
 }
 
@@ -45,7 +45,7 @@ player_stealth& player_stealth::operator=( player_stealth const& other )
 // void survarium::player_stealth::load(vostok::configs::binary_config_value const&)
 void player_stealth::load( configs::binary_config_value const& config )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5aaae0]: 11
 	// <0x5aaae9>|0x009|+0x019:'45'
 	// <0x5aab02>|0x022|+0x01a:'46'
 	// <0x5aab1c>|0x03c|+0x01a:'47'

@@ -54,7 +54,7 @@ void n_ary_tree_time_scale_calculator::remove_transition( n_ary_tree_time_scale_
 	// <0x56d4e7> -> void* < unknown >( u32 )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56d410]: 39
 	// <0x56d416>|0x006|+0x00d:'44'
 	// <0>
 	// <1>

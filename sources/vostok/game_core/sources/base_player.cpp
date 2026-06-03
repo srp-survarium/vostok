@@ -17,14 +17,14 @@ base_player::base_player( base_player_creation_params const& params, survarium::
 	hit_initiator		( params.initial_info.id, params.initial_info.profile->is_local ),
 	m_recoil_params		( params.recoil_params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73f0b0]: 0
 	// ******
 }
 
 // STATE[STUB]
 base_player::~base_player( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ed70]: 1
 	// <0x73ed70>|0x000|+0x009:'35'	{
 	// <0x73ed79>|0x009|+0x00c:'36'
 	// <0x73ed85>|0x015|      :'37'	}
@@ -58,7 +58,7 @@ void base_player::tick_active_object( )
 	// <0x73f09e> -> weapon_core* <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ee40]: 31
 	// <0x73ee40>|0x000|+0x00a:'40'	{
 	// <0x73ee4a>|0x00a|+0x01b:'41'
 	// <0>
@@ -109,7 +109,7 @@ void base_player::send_game_world_object( game_world_object const* object, boost
 	// <0x73ec80> -> void <unknown>(network_core::udp_match_packet&) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ebe0]: 14
 	// <0x73ebe0>|0x000|+0x00f:'79'	{
 	// <0x73ebef>|0x00f|+0x00b:'80'
 	// <0>
@@ -142,7 +142,7 @@ void base_player::deserialize_game_world_object( network_core::packet_reader& re
 	// <0x73ed57> -> void <unknown>(network_core::packet_reader&)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ed00]: 11
 	// <0x73ed00>|0x000|+0x009:'113'	{
 	// <0>
 	// <0x73ed09>|0x009|+0x00e:'115'
@@ -163,7 +163,7 @@ void base_player::deserialize_game_world_object( network_core::packet_reader& re
 // void survarium::base_player::subscribe_on_player_death(survarium::player_death_subscriber*)
 void base_player::subscribe_on_player_death( player_death_subscriber* subscriber )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ebb0]: 2
 	// <0x73ebb0>|0x000|+0x009:'128'	{
 	// <0x73ebb9>|0x009|+0x00c:'129'
 	// <0x73ebc5>|0x015|+0x014:'130'
@@ -175,7 +175,7 @@ void base_player::subscribe_on_player_death( player_death_subscriber* subscriber
 // void survarium::base_player::unsubscribe_from_player_death(survarium::player_death_subscriber*)
 void base_player::unsubscribe_from_player_death( player_death_subscriber* subscriber )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73eb80]: 2
 	// <0x73eb80>|0x000|+0x009:'134'	{
 	// <0x73eb89>|0x009|+0x00c:'135'
 	// <0x73eb95>|0x015|+0x012:'136'
@@ -187,7 +187,7 @@ void base_player::unsubscribe_from_player_death( player_death_subscriber* subscr
 // void survarium::call_player_death_subscriber_callback(survarium::player_death_subscriber const* const)
 void call_player_death_subscriber_callback( player_death_subscriber const* subscriber )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73eca0]: 1
 	// <0x73eca0>|0x000|+0x009:'140'	{
 	// <0x73eca9>|0x009|+0x008:'141'
 	// <0x73ecb1>|0x011|      :'142'	}
@@ -198,7 +198,7 @@ void call_player_death_subscriber_callback( player_death_subscriber const* subsc
 // void survarium::base_player::on_player_death()
 void base_player::on_player_death( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ecc0]: 1
 	// <0x73ecc0>|0x000|+0x009:'145'	{
 	// <0x73ecc9>|0x009|+0x029:'146'
 	// <0x73ecf2>|0x032|      :'147'	}

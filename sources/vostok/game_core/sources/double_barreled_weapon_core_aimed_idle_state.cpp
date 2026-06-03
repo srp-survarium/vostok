@@ -20,7 +20,7 @@ double_barreled_weapon_core_aimed_idle_state::double_barreled_weapon_core_aimed_
 	// u32 							weapon_state_index<3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac910]: 12
 	// <0x7ac94f>|0x03f|+0x00c:'21'
 	// <0x7ac95b>|0x04b|+0x023:'22'
 	// <0>
@@ -49,7 +49,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weap
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7acb60]: 3
 	// <0x7acb71>|0x011|+0x036:'37'
 	// <0x7acba7>|0x047|+0x01f:'38'
 	// <0x7acbc6>|0x066|+0x059:'39'
@@ -67,7 +67,7 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexe
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aca90]: 10
 	// <0x7aca99>|0x009|+0x00c:'44'
 	// <0>
 	// <0x7acaa5>|0x015|+0x007:'46'
@@ -92,7 +92,7 @@ double_barreled_weapon_core_aimed_idle_state* weapon_core_state_cook_template<su
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aca30]: 5
 	// <0>
 	// <1>
 	// <2>

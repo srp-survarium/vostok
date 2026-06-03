@@ -16,7 +16,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	weapon_animation_parameters const&	__formal3
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ce30]: 5
 	// ******
 }
 

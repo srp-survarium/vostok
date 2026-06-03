@@ -139,7 +139,7 @@ udp_match_connection::channel::channel( )
 // void vostok::network_core::udp_match_connection::channel::~channel()
 void udp_match_connection::channel::~channel( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x137510]: 4
 	// <0x1374b9>|0x000|0x000:'156'
 	// <0x1374c5>|0x00c|0x00c:'157'
 	// <0x1374cd>|0x014|0x008:'158'

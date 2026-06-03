@@ -264,7 +264,7 @@ void logging_preinitialize( )
 		debug::set_log_callback( debug_log_callback );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6728b0]: 5
 	// <0x6728b0>|0x000|0x000:'209'
 	// 1
 	// 2

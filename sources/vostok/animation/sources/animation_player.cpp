@@ -42,7 +42,7 @@ float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 
 	return vostok::math::float4x4();
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11d090]: 5
 	// <0x11d090>|0x000|+0x00b:'43'	{
 	// <0>
 	// <0x11d09b>|0x00b|+0x017:'45'
@@ -59,7 +59,7 @@ void* n_ary_tree_time_inverter::`scalar deleting destructor'( u32 arg_0 )
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x1234a0]
 	// ******
 }
 */
@@ -87,7 +87,7 @@ void n_ary_tree_time_inverter::visit(
 	mixing::n_ary_tree_weight_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_weight_node& node */
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x22c50]: 1
 	// ******
 }
 
@@ -96,7 +96,7 @@ void n_ary_tree_time_inverter::visit(
 	mixing::n_ary_tree_time_scale_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_time_scale_node& node */
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11d0f0]: 2
 	// <0>
 	// <0x11d0f0>|0x000|+0x00d:'80'
 	// ******
@@ -111,7 +111,7 @@ void n_ary_tree_time_inverter::visit(
 	// <0x11d11e> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11d100]: 2
 	// <0x11d100>|0x000|+0x016:'85'
 	// <0x11d116>|0x016|+0x014:'86'
 	// ******
@@ -127,7 +127,7 @@ void n_ary_tree_time_inverter::visit(
 	// <0x11d155> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11d130]: 4
 	// <0>
 	// <0x11d133>|0x003|+0x00b:'104'
 	// <0x11d13e>|0x00e|+0x00e:'105'
@@ -140,7 +140,7 @@ animation_player::~animation_player( )
 {
 	reset( true );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fee0]: 1
 	// <0x56fee3>|0x003|+0x008:'126'
 	// ******
 }
@@ -150,7 +150,7 @@ void* animation_player::get_next_buffer( const u32 buffer_size )
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11d160]: 3
 	// <0x11d160>|0x000|+0x000:'130'	{
 	// <0>
 	// <0x11d160>|0x000|+0x017:'132'
@@ -166,7 +166,7 @@ bool animation_player::try_get_transform( pcvoid const animated_object, float4x4
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fdb0]: 7
 	// <0x56fdb0>|0x000|+0x006:'137'	{
 	// <0x56fdb6>|0x006|+0x020:'138'
 	// <0x56fdd6>|0x026|+0x015:'139'
@@ -202,7 +202,7 @@ bool animation_player::set_target(
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570b10]: 149
 	// <0x570b10>|0x000|+0x00f:'173'	{
 	// <0>
 	// <0x570b1f>|0x00f|+0x00c:'175'
@@ -379,7 +379,7 @@ void animation_player::skip_time_if_needed( const u32 current_time_in_ms )
 	}
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5709c0]: 16
 	// <0>
 	// <1>
 	// <0x5709c6>|0x006|+0x03b:'329'
@@ -413,7 +413,7 @@ bool animation_player::tick( const u32 current_time_in_ms )
 
 	return result;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570e30]: 22
 	// <0>
 	// <5>
 	// <0x570e3a>|0x00a|+0x006:'353'
@@ -440,7 +440,7 @@ bool animation_player::tick_to_nearest_user_handled_callback( const u32 current_
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570ed0]: 9
 	// <0x570eda>|0x00a|+0x006:'373'
 	// <0>
 	// <1>
@@ -462,7 +462,7 @@ bool animation_player::set_target_and_tick(
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570e90]: 31
 	// <0>
 	// <1>
 	// <0x570e90>|0x000|+0x00a:'388'
@@ -503,7 +503,7 @@ float4x4 single_object_get_transform( float4x4 const& transform, pcvoid const an
 	VOSTOK_UNREFERENCED_PARAMETER( animated_object );
 	return transform;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fcb0]: 2
 	// <0>
 	// <0x56fcb0>|0x000|+0x015:'422'
 	// ******
@@ -518,7 +518,7 @@ bool animation_player::set_target_and_tick(
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570f70]: 1
 	// <0x570f7e>|0x00e|+0x06c:'427'
 	// ******
 }
@@ -528,7 +528,7 @@ void animation_player::set_object_transform( float4x4 const& object_transform, p
 {
 	m_mixing_tree.set_object_transform( animated_object, object_transform );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5706e0]: 1
 	// <0x5706e0>|0x000|+0x010:'432'
 	// ******
 }
@@ -538,7 +538,7 @@ float4x4 animation_player::get_object_transform( pcvoid const animated_object ) 
 {
 	return m_mixing_tree.get_object_transform( animated_object );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5706c0]: 1
 	// <0x5706c1>|0x001|+0x011:'437'
 	// ******
 }
@@ -555,7 +555,7 @@ void animation_player::compute_bones_matrices(
 	R_ASSERT_CMP							( end - begin, >=, skeleton.get_non_root_bones_count( ) );
 	m_mixing_tree.compute_bones_matrices	( animated_object, skeleton, begin, end, bones_masks );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5706a0]: 2
 	// <0>
 	// <0x5706a0>|0x000|+0x01a:'448'
 	// ******
@@ -573,7 +573,7 @@ void animation_player::compute_bones_local_matrices(
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_mixing_tree.compute_bones_local_matrices( animated_object, skeleton, begin, end, bones_masks );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570680]: 2
 	// <0>
 	// <0x570680>|0x000|+0x01a:'454'
 	// ******
@@ -590,7 +590,7 @@ void animation_player::convert_to_object_matrices(
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_mixing_tree.convert_to_object_matrices( animated_object, skeleton, local_begin, local_end );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570660]: 2
 	// <0>
 	// <0x570660>|0x000|+0x015:'460'
 	// ******
@@ -599,7 +599,7 @@ void animation_player::convert_to_object_matrices(
 // STATE[STUB]
 void animation_player::reset( const bool clear_callbacks )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fe30]: 10
 	// <0x56fe3a>|0x00a|+0x057:'465'
 	// <0x56fe91>|0x061|+0x009:'466'
 	// <0>
@@ -627,7 +627,7 @@ void animation_player::subscribe(
 	// <0x570448> -> < unknown >
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5702a0]: 46
 	// <0x5702a0>|0x000|+0x007:'492'	{
 	// <0>
 	// <1>
@@ -695,7 +695,7 @@ void animation_player::subscribe(
 	char channel_id_string[] = { u8(channel_id), 0 };
 	subscribe( channel_id_string, callback, callback_uid, animation, 0xFF, animated_object );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570600]: 2
 	// <0>
 	// <0x570601>|0x001|+0x02d:'550'
 	// ******
@@ -720,7 +720,7 @@ void animation_player::destroy_subscriptions( subscribed_channel const* const ch
 	}
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fd50]: 14
 	// <0x56fd51>|0x001|+0x00f:'555'
 	// <0>
 	// <0x56fd60>|0x010|+0x039:'557'
@@ -757,7 +757,7 @@ void animation_player::compact_callbacks( )
 	// <0x5701f8> -> < unknown >
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56ff30]: 109
 	// <0>
 	// <0x56ff39>|0x009|+0x003:'574'
 	// <0>
@@ -877,7 +877,7 @@ void animation_player::compact_callbacks( )
 // STATE[STUB]
 void animation_player::unsubscribe( pcstr const channel_id, pcvoid const callback_uid )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5704b0]: 33
 	// <0>
 	// <1>
 	// <2>
@@ -920,7 +920,7 @@ void animation_player::unsubscribe( reserved_channel_ids_enum channel_id, pcvoid
 	char channel_id_string[]					= { u8(channel_id), 0 };
 	unsubscribe									( channel_id_string, callback_uid );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570640]: 2
 	// <0x570640>|0x000|+0x004:'723'
 	// <0x570644>|0x004|+0x014:'724'
 	// ******
@@ -931,7 +931,7 @@ u32 animation_player::get_state_buffer_size( ) const
 {
 	return 0x4000; // sushi@TODO: What this constant is. Can be figured out by usage.
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fc90]: 1
 	// <0x56fc90>|0x000|+0x005:'729'
 	// ******
 }
@@ -947,7 +947,7 @@ void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const
 	// <0x56fd04> -> void < unknown >( mixing::n_ary_tree_visitor& )
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fcd0]: 5
 	// <0>
 	// <0x56fcd8>|0x008|+0x020:'735'
 	// <0x56fcf8>|0x028|+0x015:'736'
@@ -969,7 +969,7 @@ void animation_player::invert_times(
 	for ( mixing::n_ary_tree_animation_node* i = tree.weight_root( ) ; i != NULL ; i = i->m_next_weight_animation )
 		invert_animation_times( *i, time_in_ms );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fe10]: 12
 	// <0>
 	// <4>
 	// <0x56fe11>|0x001|+0x007:'748'
@@ -1013,7 +1013,7 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 	for ( mixing::n_ary_tree_animation_node* root = tree->weight_root( ) ; root != NULL ; root = root->m_next_weight_animation )
 		invert_animation_times( *root, m_mixing_tree.tree_actual_time_in_ms( ) );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5708a0]: 48
 	// <0>
 	// <10>
 	// <0x5708b5>|0x015|+0x00a:'840'
@@ -1051,7 +1051,7 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 	// mutable_buffer 					mixing_buffer
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x570700]: 57
 	// <0x570700>|0x000|+0x009:'880'	{
 	// <0>
 	// <1>
@@ -1106,7 +1106,7 @@ void animation_player::destroy_state( void* buffer )
 	// mixing::n_ary_tree::destroy( );
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56ff10]: 7
 	// <0>
 	// <1>
 	// <0x56ff13>|0x003|+0x006:'944'
@@ -1122,7 +1122,7 @@ u32 animation_player::last_tick_time_in_ms( ) const
 {
 	return m_mixing_tree.tree_actual_time_in_ms( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56fca0]: 1
 	// <0x56fca0>|0x000|+0x006:'953'
 	// ******
 }

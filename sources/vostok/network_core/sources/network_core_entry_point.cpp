@@ -12,7 +12,7 @@ namespace network_core {
 // void vostok::network_core::memory_allocator(vostok::memory::base_allocator&)
 void memory_allocator( memory::base_allocator& allocator )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x586fa0]: 2
 	// <0x586fa4>|0x000|0x000:'18'
 	// <0x586fb0>|0x00c|0x00c:'19'
 	// ******
@@ -30,7 +30,7 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_addr
 	// boost::asio::ip::address 	addr<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x587040]: 18
 	// <0x58704b>|0x000|0x000:'135'
 	// <0x587057>|0x00c|0x00c:'136'
 	// <0x5870b8>|0x06d|0x061:'137'
@@ -63,7 +63,7 @@ bool get_connection_info_from_string( pcstr buffer, char* dest_host, u16& dest_p
 	// ******
 
 	return false;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x586fc0]: 13
 	// <0x586fc6>|0x000|0x000:'157'
 	// <0x586fd7>|0x011|0x011:'158'
 	// 1
@@ -84,7 +84,7 @@ bool get_connection_info_from_string( pcstr buffer, char* dest_host, u16& dest_p
 // void vostok::network_core::initialize()
 void initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x586f90]: 3
 	// 1
 	// 2
 	// 3
@@ -95,7 +95,7 @@ void initialize( )
 // void vostok::network_core::finalize()
 void finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x586f80]: 3
 	// 1
 	// 2
 	// 3

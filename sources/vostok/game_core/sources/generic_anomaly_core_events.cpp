@@ -35,7 +35,7 @@ void generic_anomaly_core::on_player_action( hit_receiver const* receiver, playe
 			NODEFAULT( );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcd30]: 25
 	// <0>
 	// <0x6fcd39>|0x009|+0x010:'16'	switch ( action )
 	// <0>							{
@@ -72,7 +72,7 @@ void generic_anomaly_core::on_artefact_container_use( artefact_container_core* c
 	if ( m_artefact_grab_time_ms == 0 )
 		m_artefact_grab_time_ms = m_current_time;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcce0]: 4
 	// <0>
 	// <0x6fcce9>|0x009|+0x01f:'53'
 	// <0x6fcd08>|0x028|+0x009:'54'
@@ -86,7 +86,7 @@ void generic_anomaly_core::on_zone_act( damage_zone_core* zone, hit_receiver* re
 	VOSTOK_UNREFERENCED_PARAMETERS( zone, receiver );
 	m_was_zone_trigger_event = true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcca0]: 2
 	// <0x6fcca9>|0x009|+0x023:'60'
 	// <0x6fcccc>|0x02c|+0x007:'61'
 	// ******
@@ -97,7 +97,7 @@ void generic_anomaly_core::on_hit_receiver_enter( hit_receiver* receiver, damage
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( receiver, zone );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcc60]: 1
 	// <0x6fcc69>|0x009|+0x023:'66'
 	// ******
 }
@@ -107,7 +107,7 @@ void generic_anomaly_core::on_hit_receiver_leave( hit_receiver* receiver, damage
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( receiver, zone );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcc20]: 1
 	// <0x6fcc29>|0x009|+0x023:'71'
 	// ******
 }

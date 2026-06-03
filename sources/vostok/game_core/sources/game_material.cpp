@@ -50,7 +50,7 @@ void game_material::load_from_config( configs::binary_config_value const& val )
 
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x760390]: 21
 	// <0x760399>|0x009|+0x019:'28'
 	// <0x7603b2>|0x022|+0x021:'29'
 	// <0x7603d3>|0x043|+0x026:'30'

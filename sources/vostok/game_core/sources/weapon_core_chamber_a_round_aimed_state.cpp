@@ -31,7 +31,7 @@ weapon_core_chamber_a_round_aimed_state::weapon_core_chamber_a_round_aimed_state
 	// <0x7a9fd3><3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a9ed0]: 13
 	// <0x7a9f2e>|0x05e|+0x023:'28'
 	// <0x7a9f51>|0x081|+0x007:'29'
 	// <0x7a9f58>|0x088|+0x018|[1]:'30'
@@ -62,7 +62,7 @@ animation::mixing::expression weapon_core_chamber_a_round_aimed_state::weapon_an
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa240]: 3
 	// <0x7aa250>|0x010|+0x01f:'45'
 	// <0x7aa26f>|0x02f|+0x02a:'46'
 	// <0x7aa299>|0x059|+0x07a:'47'
@@ -78,7 +78,7 @@ weapon_lexeme_pair weapon_core_chamber_a_round_aimed_state::get_weapon_lexeme_pa
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa1a0]: 7
 	// <0x7aa1a9>|0x009|+0x007:'52'
 	// <0x7aa1b0>|0x010|+0x023:'53'
 	// <0x7aa1d3>|0x033|+0x00c:'54'
@@ -105,7 +105,7 @@ animation::mixing::expression weapon_core_chamber_a_round_aimed_state::get_user_
 	// u32 							user_animation_index
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa0a0]: 22
 	// <0x7aa0b1>|0x011|+0x006:'63'
 	// <0x7aa0b7>|0x017|+0x010:'64'
 	// <0>
@@ -142,7 +142,7 @@ weapon_core_chamber_a_round_aimed_state* weapon_core_state_cook_template<survari
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa040]: 7
 	// <0>
 	// <1>
 	// <2>

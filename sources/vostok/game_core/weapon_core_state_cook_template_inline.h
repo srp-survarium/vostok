@@ -11,7 +11,7 @@ namespace survarium {
 template < typename T >
 inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x9ac80]: 1
 	// <0x9acb8>|0x038|+0x026:'16'
 	// ******
 }
@@ -20,7 +20,7 @@ inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
 template < typename T >
 inline mutable_buffer weapon_core_state_cook_template<T>::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x9af10]: 2
 	// <0>
 	// <0x9af17>|0x007|+0x023:'29'
 	// ******
@@ -50,7 +50,7 @@ inline void weapon_core_state_cook_template<T>::create_resource( resources::quer
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x9acf0]: 36
 	// <0x9ad05>|0x015|+0x00c:'41'
 	// <0x9ad11>|0x021|+0x01a:'42'
 	// <0x9ad2b>|0x03b|+0x028:'43'
@@ -107,7 +107,7 @@ inline void weapon_core_state_cook_template<T>::on_subresources_ready( resources
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xa0650]: 11
 	// <0>
 	// <1>
 	// <2>
@@ -130,7 +130,7 @@ inline void weapon_core_state_cook_template<T>::destroy_resource( resources::unm
 	// <0x9d47b> -> void* <unknown>(u32)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x9d460]: 1
 	// <0x9d460>|0x000|+0x00f:'98'
 	// ******
 }

@@ -13,7 +13,7 @@ namespace survarium {
 // void survarium::`dynamic initializer for 's_enable_breath_vibration_cc''()
 void `dynamic initializer for 's_enable_breath_vibration_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7db2f0]
 	// ******
 }
 */
@@ -56,7 +56,7 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 		m_current_multiplier		= m_target_multiplier;
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5934d0]: 9
 	// <0x5934d9>|0x009|+0x009:'34'
 	// <0x5934e2>|0x012|+0x021|[1]:'35'
 	// <0x593503>|0x033|+0x017:'36'
@@ -81,7 +81,7 @@ bool true_predicate( )
 {
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xcb5c0]: 1
 	// <0xcb5c3>|0x003|+0x002:'54'
 	// ******
 }
@@ -95,7 +95,7 @@ void breath_vibration_calculator::initialize_logic( )
 	// breath_state* 				shortbreathing
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5937e0]: 13
 	// <0x5937f0>|0x010|+0x086:'59'
 	// <0x593876>|0x096|+0x076:'60'
 	// <0x5938ec>|0x10c|+0x086:'61'
@@ -126,7 +126,7 @@ void breath_vibration_calculator::tick( u32 const current_time_in_ms, float cons
 	// <0x59371c> -> u32 <unknown>(const u32) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5935f0]: 21
 	// <0x5935f9>|0x009|+0x00c:'76'
 	// <0x593605>|0x015|+0x00b:'77'
 	// <0x593610>|0x020|+0x005:'78'
@@ -159,7 +159,7 @@ void breath_vibration_calculator::hold_breath( bool value )
 		m_is_breath_holded = value;
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5934a0]: 4
 	// <0x5934a7>|0x007|+0x00f:'101'
 	// <0>
 	// <0x5934b6>|0x016|+0x009:'103'

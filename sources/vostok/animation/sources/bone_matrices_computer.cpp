@@ -98,7 +98,7 @@ namespace animation {
 	// mixing::animation_state* 		e
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6edf40]: 12
 	// <0x6edf40>|0x000|+0x03b:'92'	{
 	// <0x6edf7b>|0x03b|-0x02b:'92'
 	// <0>
@@ -120,7 +120,7 @@ namespace animation {
 // STATE[STUB]
  bone_matrices_computer::~bone_matrices_computer( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ede90]: 2
 	// <0x6ede94>|0x004|+0x018:'109'
 	// <0x6edeac>|0x01c|+0x083:'110'
 	// ******
@@ -133,7 +133,7 @@ float3 mix_translations(
 {
 	return vostok::math::float3(1., 1., 1.);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ec800]: 7
 	// <0>
 	// <0x6ec800>|0x000|+0x005:'118'
 	// <0x6ec805>|0x005|+0x011:'119'
@@ -168,7 +168,7 @@ math::quaternion mix_rotations(
 
 	return vostok::math::quaternion();
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6eca10]: 46
 	// <0x6eca10>|0x000|+0x008:'200'	{
 	// <0>
 	// <1>
@@ -232,7 +232,7 @@ float3 mix_scales(
 {
 	return vostok::math::float3(1., 1., 1.);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ec970]: 7
 	// <0x6ec970>|0x000|+0x00c:'251'
 	// <0>
 	// <0x6ec97c>|0x00c|+0x014:'253'
@@ -246,7 +246,7 @@ float3 mix_scales(
 // STATE[STUB]
 frame identity_frame( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x11dfb0]: 5
 	// <0>
 	// <0x11dfb3>|0x003|+0x01d:'263'
 	// <0x11dfd0>|0x020|+0x01f:'264'
@@ -265,7 +265,7 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 	// current_frame_position 			frame_position
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ed2b0]: 79
 	// <0x6ed2b9>|0x009|+0x017:'275'
 	// <0x6ed2d0>|0x020|+0x012:'276'
 	// <0x6ed2e2>|0x032|+0x007:'277'
@@ -364,7 +364,7 @@ float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const
 
 	return vostok::math::float4x4();
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ed6d0]: 15
 	// <0>
 	// <0x6ed6dd>|0x00d|+0x00f:'359'
 	// <0x6ed6ec>|0x01c|+0x062:'360'
@@ -398,7 +398,7 @@ void bone_matrices_computer::compute_skeleton_branch(
 	// skeleton_bone const* const 		e
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6edbb0]: 12
 	// <0x6edbb6>|0x006|+0x055:'383'
 	// <0>
 	// <1>
@@ -426,7 +426,7 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 	// skeleton_bone const* const 		e
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6edae0]: 11
 	// <0x6edae3>|0x003|+0x035:'404'
 	// <0>
 	// <1>
@@ -444,7 +444,7 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 // STATE[STUB]
 void bone_matrices_computer::convert_skeleton_branch( skeleton_bone const& bone, float4x4* const result, float4x4 const& parent ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ec870]: 5
 	// <0x6ec873>|0x003|+0x01c:'419'
 	// <0x6ec88f>|0x01f|+0x014:'420'
 	// <0x6ec8a3>|0x033|+0x006:'421'
@@ -462,7 +462,7 @@ void bone_matrices_computer::compute_bones_matrices( float4x4* const begin, floa
 	// skeleton_bone const* const 		children_end
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6edda0]: 17
 	// <0>
 	// <1>
 	// <0x6edda3>|0x003|+0x014:'430'
@@ -492,7 +492,7 @@ void bone_matrices_computer::compute_bones_local_matrices( float4x4* const begin
 	// skeleton_bone const* const 		children_end
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6edcb0]: 16
 	// <0>
 	// <0x6edcb3>|0x003|+0x013:'450'
 	// <0x6edcc6>|0x016|+0x00c:'451'
@@ -519,7 +519,7 @@ void bone_matrices_computer::convert_to_object_matrices( float4x4* const begin, 
 	// skeleton_bone const* const 		roots_end
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ec8f0]: 11
 	// <0>
 	// <0x6ec8fb>|0x00b|+0x002:'470'
 	// <0x6ec8fd>|0x00d|+0x008:'471'
@@ -548,7 +548,7 @@ float4x4 bone_matrices_computer::get_object_transform( ) const
 
 	return vostok::math::float4x4();
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ecc20]: 45
 	// <0x6ecc29>|0x009|+0x05a:'492'
 	// <0x6ecc83>|0x063|-0x043:'492'
 	// <0x6ecc40>|0x020|+0x015:'493'

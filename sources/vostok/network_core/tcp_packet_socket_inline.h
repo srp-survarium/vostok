@@ -12,7 +12,7 @@ namespace network_core {
 // void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_received(vostok::network_core::tcp_packet const*, boost::system::error_code const&, unsigned int)
 void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_received( tcp_packet const* packet, boost::system::error_code const& error_code, u32 bytes_transferred )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x134f20]: 28
 	// <0x134f37>|0x000|0x000:'16'
 	// <0x134f4c>|0x015|0x015:'17'
 	// <0x134fa3>|0x06c|0x057:'18'
@@ -53,7 +53,7 @@ void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boo
 	// tcp_packet* 					packet<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x135370]: 55
 	// <0x13538a>|0x000|0x000:'50'
 	// <0x13539f>|0x015|0x015:'51'
 	// <0x135408>|0x07e|0x069:'52'
@@ -116,7 +116,7 @@ void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boo
 // void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::start_receiving()
 void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::start_receiving( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x133fb0]: 13
 	// 1
 	// 2
 	// 3
@@ -137,7 +137,7 @@ void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boo
 // void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_has_been_sent(vostok::network_core::tcp_packet const*, boost::system::error_code const&, unsigned int)
 void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_has_been_sent( tcp_packet const* packet_being_sent, boost::system::error_code const& error_code, u32 bytes_transferred )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x1340b0]: 17
 	// <0x1340c7>|0x000|0x000:'132'
 	// 1
 	// <0x1340f4>|0x02d|0x02d:'134'
@@ -168,7 +168,7 @@ void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boo
 	// tcp_packet* 					cloned_packet
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x133ee0]: 34
 	// <0x133efa>|0x000|0x000:'154'
 	// <0x133f08>|0x00e|0x00e:'155'
 	// 1
@@ -211,7 +211,7 @@ void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boo
 tcp_packet* tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::new_packet( )
 {
 	return NULL;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x1342d0]: 1
 	// <0x1342d9>|0x000|0x000:'193'
 	// ******
 }
@@ -224,7 +224,7 @@ void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boo
 	// boost::system::error_code 	error_code
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x134050]: 2
 	// <0x13405f>|0x000|0x000:'205'
 	// <0x13406e>|0x00f|0x00f:'206'
 	// ******

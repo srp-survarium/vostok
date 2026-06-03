@@ -15,7 +15,7 @@ weapon_ammunition_cook::weapon_ammunition_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x760550]: 5
 	// <0>
 	// <1>
 	// <2>
@@ -39,7 +39,7 @@ void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& 
 		&parent
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7606d0]: 11
 	// <0x7606df>|0x00f|+0x00b:'41'
 	// <0x7606ea>|0x01a|+0x01d:'42'
 	// <0>
@@ -59,7 +59,7 @@ void weapon_ammunition_cook::delete_resource( resources::resource_base* resource
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7605a0]: 1
 	// <0x7605a9>|0x009|+0x017:'56'
 	// ******
 }
@@ -75,7 +75,7 @@ void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, r
 	parent->set_unmanaged_resource( wa, resources::memory_usage_type( resources::nocache_memory, sizeof( weapon_ammunition ) ) );
 	parent->finish_query( result_success );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7605d0]: 7
 	// <0x7605da>|0x00a|+0x00c:'61'
 	// <0x7605e6>|0x016|+0x022:'62'
 	// <0x760608>|0x038|+0x051:'63'

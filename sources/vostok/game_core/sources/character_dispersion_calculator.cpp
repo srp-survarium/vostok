@@ -12,7 +12,7 @@ namespace survarium {
 // survarium::character_dispersion_calculator::character_dispersion_calculator()
 character_dispersion_calculator::character_dispersion_calculator( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596010]: 0
 	// ******
 }
 
@@ -20,7 +20,7 @@ character_dispersion_calculator::character_dispersion_calculator( )
 // void survarium::character_dispersion_calculator::set_character_dispersion_params(survarium::character_dispersion_params const*)
 void character_dispersion_calculator::set_character_dispersion_params( character_dispersion_params const* character_params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595e00]: 6
 	// <0x595e07>|0x007|+0x008:'28'
 	// <0x595e0f>|0x00f|+0x008:'29'
 	// <0x595e17>|0x017|+0x00d:'30'
@@ -51,7 +51,7 @@ void character_dispersion_calculator::tick(
 	// float 						dt
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596090]: 35
 	// <0x596099>|0x009|+0x00c:'50'
 	// <0x5960a5>|0x015|+0x009:'51'
 	// <0x5960ae>|0x01e|+0x009:'52'
@@ -124,7 +124,7 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 			return 1.0f;
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595ee0]: 37
 	// <0x595ee9>|0x009|+0x00c:'89'	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 	// <0>
 	// <1>
@@ -183,7 +183,7 @@ float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands
 
 	return 1.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595e50]: 11
 	// <0x595e59>|0x009|+0x00c:'130'	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 	// <0x595e65>|0x015|+0x018:'131'	switch ( broken_hands_count ) {
 	// <0>

@@ -32,7 +32,7 @@ double_barreled_weapon_core_fire_state::double_barreled_weapon_core_fire_state(
 	// <0x7ac4ce><3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac370]: 16
 	// <0x7ac3db>|0x06b|+0x02b:'27'
 	// <0x7ac406>|0x096|+0x023:'28'
 	// <0x7ac429>|0x0b9|+0x007:'29'
@@ -56,7 +56,7 @@ double_barreled_weapon_core_fire_state::double_barreled_weapon_core_fire_state(
 // void survarium::double_barreled_weapon_core_fire_state::initialize()
 void double_barreled_weapon_core_fire_state::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac8c0]: 3
 	// <0x7ac8c9>|0x009|+0x008:'47'
 	// <0x7ac8d1>|0x011|+0x00c:'48'
 	// <0x7ac8dd>|0x01d|+0x022:'49'
@@ -77,7 +77,7 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::weapon_and
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac7e0]: 3
 	// <0x7ac7f0>|0x010|+0x01f:'55'
 	// <0x7ac80f>|0x02f|+0x02a:'56'
 	// <0x7ac839>|0x059|+0x07a:'57'
@@ -94,7 +94,7 @@ weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pai
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac710]: 11
 	// <0>
 	// <0x7ac719>|0x009|+0x007:'63'
 	// <0x7ac720>|0x010|+0x007:'64'
@@ -126,7 +126,7 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::get_user_h
 	// pcstr[2] 					user_animation_captions
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac5b0]: 23
 	// <0x7ac5c1>|0x011|+0x006:'77'
 	// <0x7ac5c7>|0x017|+0x010:'78'
 	// <0>
@@ -164,7 +164,7 @@ double_barreled_weapon_core_fire_state* weapon_core_state_cook_template<survariu
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ac540]: 6
 	// <0>
 	// <1>
 	// <2>

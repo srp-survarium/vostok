@@ -49,7 +49,7 @@ inline float normal_random::rand_n( float sigma )
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xbc230]: 11
 	// <0xbc239>|0x009|+0x00d:'18'
 	// <0xbc246>|0x016|+0x012:'19'
 	// <0xbc258>|0x028|+0x007:'20'

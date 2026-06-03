@@ -21,7 +21,7 @@ pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapo
 	// u32 							weapon_state_index<3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7abaa0]: 10
 	// <0x7abadf>|0x03f|+0x023:'21'
 	// <0x7abb02>|0x062|+0x007:'22'
 	// <0x7abb09>|0x069|+0x018|[1]:'23'
@@ -48,7 +48,7 @@ animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_ex
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7abcd0]: 3
 	// <0x7abce1>|0x011|+0x036:'35'
 	// <0x7abd17>|0x047|+0x01f:'36'
 	// <0x7abd36>|0x066|+0x059:'37'
@@ -66,7 +66,7 @@ weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutabl
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7abc10]: 8
 	// <0>
 	// <0x7abc19>|0x009|+0x007:'43'
 	// <0x7abc20>|0x010|+0x007:'44'
@@ -89,7 +89,7 @@ pistol_weapon_core_idle_state* weapon_core_state_cook_template<survarium::pistol
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7abbb0]: 5
 	// <0>
 	// <1>
 	// <2>

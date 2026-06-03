@@ -20,7 +20,7 @@ static void udp_match_connection::construct_packet( udp_match_packets_orderer& p
 	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xd9cbf }, type_index: TypeIndex(0x1906e) })
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xeac90]: 14
 	// <0xeac96>|0x000|0x000:'22'
 	// <0xeac9f>|0x009|0x009:'23'
 	// <0xeacac>|0x016|0x00d:'24'

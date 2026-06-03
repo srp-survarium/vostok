@@ -12,7 +12,7 @@ float computed_reload_animation_time_scale( resources::managed_resource_ptr cons
 {
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xac9a0]: 2
 	// <0xac9a4>|0x004|+0x085:'17'
 	// <0xaca29>|0x089|+0x006:'18'
 	// ******
@@ -27,7 +27,7 @@ float computed_shooting_animation_time_scale( resources::managed_resource_ptr co
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xaca40]: 22
 	// <0xaca47>|0x007|+0x031:'23'
 	// <0xaca78>|0x038|+0x007:'24'
 	// <0>
@@ -59,7 +59,7 @@ float computed_shotgun_reload_animation_time_scale( resources::managed_resource_
 {
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xacb80]: 2
 	// <0xacb84>|0x004|+0x06d:'52'
 	// <0xacbf1>|0x071|+0x01e:'53'
 	// ******

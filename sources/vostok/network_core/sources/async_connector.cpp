@@ -18,7 +18,7 @@ async_connector::async_connector( )
 // void vostok::network_core::async_connector::on_connected(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)
 void async_connector::on_connected( boost::system::error_code const& error_code, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> iterator )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x555070]: 14
 	// <0x555087>|0x000|0x000:'24'
 	// 1
 	// <0x555093>|0x00c|0x00c:'26'
@@ -40,7 +40,7 @@ void async_connector::on_connected( boost::system::error_code const& error_code,
 // void vostok::network_core::async_connector::connect(boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> const&)
 void async_connector::connect( boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> const& iterator )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5551f0]: 11
 	// <0x5551ff>|0x000|0x000:'42'
 	// 1
 	// 2
@@ -59,7 +59,7 @@ void async_connector::connect( boost::asio::ip::basic_resolver_iterator<boost::a
 // void vostok::network_core::async_connector::on_resolved(boost::asio::ip::basic_resolver<boost::asio::ip::tcp,boost::asio::ip::resolver_service<boost::asio::ip::tcp> >* const, boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)
 void async_connector::on_resolved( boost::asio::ip::basic_resolver<boost::asio::ip::tcp,boost::asio::ip::resolver_service<boost::asio::ip::tcp> >* resolver, boost::system::error_code const& error_code, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> iterator )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5552b0]: 34
 	// <0x5552cb>|0x000|0x000:'61'
 	// 1
 	// <0x5552d7>|0x00c|0x00c:'63'
@@ -112,7 +112,7 @@ void async_connector::connect(
 	// char[6] 						port
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5558a0]: 26
 	// <0x5558bb>|0x000|0x000:'105'
 	// <0x5558ca>|0x00f|0x00f:'106'
 	// <0x5558da>|0x01f|0x010:'107'
@@ -146,7 +146,7 @@ void async_connector::connect(
 // void vostok::network_core::async_connector::reset()
 void async_connector::reset( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x554fd0]: 1
 	// <0x554fd7>|0x000|0x000:'135'
 	// ******
 }

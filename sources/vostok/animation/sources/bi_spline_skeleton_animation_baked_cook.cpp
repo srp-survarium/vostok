@@ -22,7 +22,7 @@ namespace animation {
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121e70]: 1
 	// <0x121e85>|0x015|+0x048:'27'
 	// ******
 }
@@ -46,7 +46,7 @@ mutable_buffer bi_spline_skeleton_animation_baked_cook::allocate_resource(
 		in_query.set_out_of_memory	(resources::unmanaged_memory, bytes_to_allocate);
 	*/
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121ee0]: 6
 	// <0>
 	// <1>
 	// <2>
@@ -61,7 +61,7 @@ void bi_spline_skeleton_animation_baked_cook::deallocate_resource( void* buffer 
 {
 	UNMANAGED_FREE( buffer );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121f30]: 1
 	// <0x121f30>|0x000|+0x01b:'48'
 	// ******
 }
@@ -78,7 +78,7 @@ void bi_spline_skeleton_animation_baked_cook::create_resource(
 	in_out_query.set_unmanaged_resource( new_particle_world, resources::nocache_memory, sizeof(particle_world) );
 	in_out_query.finish_query( result_success );
 	*/
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121f50]: 17
 	// <0>
 	// <1>
 	// <2>
@@ -104,7 +104,7 @@ void bi_spline_skeleton_animation_baked_cook::destroy_resource( resources::unman
 {
 	resource->~unmanaged_resource( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x4ee640]: 0
 	// ******
 }
 
@@ -113,7 +113,7 @@ bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_an
 {
 	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x122010]
 	// ******
 }
 

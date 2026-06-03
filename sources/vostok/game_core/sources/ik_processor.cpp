@@ -14,7 +14,7 @@ namespace survarium {
 // survarium::ik_processor::ik_processor()
 ik_processor::ik_processor( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58eba0]: 0
 	// ******
 }
 
@@ -22,7 +22,7 @@ ik_processor::ik_processor( )
 // void survarium::ik_processor::activate(vostok::animation::skeleton const&)
 void ik_processor::activate( animation::skeleton const& skeleton )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58eb80]: 1
 	// <0x58eb87>|0x007|+0x008:'21'
 	// ******
 }

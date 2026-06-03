@@ -14,7 +14,7 @@ namespace animation {
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121a80]: 1
 	// <0x121a90>|0x010|+0x050:'33'
 	// ******
 }
@@ -25,7 +25,7 @@ void bi_spline_skeleton_animation_impl_cook::on_resources_ready(
 	resources::query_result_for_cook* const	parent_query
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121af0]: 15
 	// <0x121af0>|0x000|+0x027:'38'	{
 	// <0>
 	// <0x121b17>|0x027|-0x023:'40'
@@ -80,7 +80,7 @@ void bi_spline_skeleton_animation_impl_cook::translate_query( resources::query_r
 		&parent
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x121c70]: 20
 	// <0x121c73>|0x003|+0x019:'58'
 	// <0>
 	// <1>
@@ -103,7 +103,7 @@ void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resourc
 {
 	resource_to_delete->~resource_base( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x607a0]: 2
 	// ******
 }
 

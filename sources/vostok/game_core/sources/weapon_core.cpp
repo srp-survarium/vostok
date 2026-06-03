@@ -13,7 +13,7 @@ namespace survarium {
 // void survarium::`dynamic initializer for 's_ik_use_cc''()
 void `dynamic initializer for 's_ik_use_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d95b0]
 	// ******
 }
 
@@ -21,7 +21,7 @@ void `dynamic initializer for 's_ik_use_cc''( )
 // void survarium::`dynamic initializer for 's_ik_use_on_legs_cc''()
 void `dynamic initializer for 's_ik_use_on_legs_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d95f0]
 	// ******
 }
 
@@ -29,7 +29,7 @@ void `dynamic initializer for 's_ik_use_on_legs_cc''( )
 // void survarium::`dynamic initializer for 's_recoil_vertical_eanble_cc''()
 void `dynamic initializer for 's_recoil_vertical_eanble_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d9630]
 	// ******
 }
 
@@ -37,7 +37,7 @@ void `dynamic initializer for 's_recoil_vertical_eanble_cc''( )
 // void survarium::`dynamic initializer for 's_recoil_horizontal_eanble_cc''()
 void `dynamic initializer for 's_recoil_horizontal_eanble_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d9670]
 	// ******
 }
 
@@ -45,7 +45,7 @@ void `dynamic initializer for 's_recoil_horizontal_eanble_cc''( )
 // void survarium::`dynamic initializer for 's_recoil_back_eanble_cc''()
 void `dynamic initializer for 's_recoil_back_eanble_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d96b0]
 	// ******
 }
 
@@ -53,7 +53,7 @@ void `dynamic initializer for 's_recoil_back_eanble_cc''( )
 // void survarium::`dynamic initializer for 's_recoil_enable_cc''()
 void `dynamic initializer for 's_recoil_enable_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d96f0]
 	// ******
 }
 */
@@ -61,7 +61,7 @@ void `dynamic initializer for 's_recoil_enable_cc''( )
 // survarium::weapon_core::weapon_core()
 weapon_core::weapon_core( ) : inventory_item( inventory_item::inventory_active_item )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5aa750]: 0
 	// ******
 }
 
@@ -73,7 +73,7 @@ weapon_core::~weapon_core( )
 	// ai::fsm_state* 				state<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4cd0]: 6
 	// <0x5a4ce2>|0x012|+0x013:'100'
 	// <0x5a4cf5>|0x025|+0x00e:'101'
 	// <0x5a4d03>|0x033|+0x019|[1]:'102'
@@ -87,7 +87,7 @@ weapon_core::~weapon_core( )
 // void survarium::weapon_core::set_magazine_capacity(unsigned short)
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3130]: 3
 	// <0x5a3139>|0x009|+0x00c:'110'
 	// <0>
 	// <0x5a3145>|0x015|+0x00e:'112'
@@ -122,7 +122,7 @@ void weapon_core::initialize_weapon_logic(
 	// weapon_core_base_state* 		chamber_a_round_aimed
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a7020]: 145
 	// <0>
 	// <0x5a7034>|0x014|+0x023:'128'
 	// <0x5a7057>|0x037|+0x00c:'129'
@@ -275,7 +275,7 @@ void weapon_core::initialize_weapon_logic(
 // void survarium::weapon_core::set_skeleton(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&)
 void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const& skeleton )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a42f0]: 1
 	// <0x5a42fa>|0x00a|+0x011:'276'
 	// ******
 }
@@ -286,7 +286,7 @@ bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) 
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xbc600]: 1
 	// <0xbc609>|0x009|+0x04b:'286'
 	// ******
 }
@@ -304,7 +304,7 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 	// <0x5a37a4> -> animation::mixing::expression <unknown>(mutable_buffer&, const bool, const weapon_user_state_enum, animation::mixing::animation_lexeme&) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3760]: 1
 	// <0x5a3769>|0x009|+0x040:'291'
 	// ******
 }
@@ -313,7 +313,7 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 // vostok::animation::body_part_masks_enum survarium::weapon_core::get_body_part_mask_for_user() const
 animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3450]: 1
 	// <0x5a3459>|0x009|+0x02a:'296'
 	// ******
 }
@@ -322,7 +322,7 @@ animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) cons
 // void survarium::`dynamic initializer for 'epsilon''()
 void `dynamic initializer for 'epsilon''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d9730]
 	// ******
 }
 */
@@ -337,7 +337,7 @@ float weapon_core::horizontal_recoil_value( ) const
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xbc660]: 5
 	// <0>
 	// <1>
 	// <0xbc669>|0x009|+0x050:'312'
@@ -357,7 +357,7 @@ float weapon_core::vertical_recoil_value( ) const
 
 	return 1.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xbc710]: 6
 	// <0>
 	// <1>
 	// <0xbc719>|0x009|+0x050:'321'
@@ -379,7 +379,7 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 	// std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> result
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3a40]: 21
 	// <0>
 	// <1>
 	// <2>
@@ -408,7 +408,7 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 // void survarium::weapon_core::update_recoil(unsigned int, const float)
 void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3710]: 1
 	// <0x5a3717>|0x007|+0x034:'354'
 	// ******
 }
@@ -421,7 +421,7 @@ void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 	// <0x5a33dc> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a33b0]: 9
 	// <0x5a33b9>|0x009|+0x00c:'359'
 	// <0>
 	// <1>
@@ -438,7 +438,7 @@ void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 // void survarium::weapon_core::update_breath_vibration(const bool, unsigned int, const float)
 void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_time_in_ms, float time_scale )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a39f0]: 3
 	// <0x5a39f7>|0x007|+0x013:'372'
 	// <0x5a3a0a>|0x01a|+0x013:'373'
 	// <0x5a3a1d>|0x02d|+0x019:'374'
@@ -465,7 +465,7 @@ void weapon_core::tick( )
 	// <0x5a5a7c> -> void <unknown>(const weapon_targets)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a58a0]: 41
 	// <0>
 	// <1>
 	// <0x5a58a9>|0x009|+0x01e:'381'
@@ -518,7 +518,7 @@ void weapon_core::instant_show( )
 	// <0x5a2c8f> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2c70]: 2
 	// <0x5a2c77>|0x007|+0x00a:'424'
 	// <0x5a2c81>|0x011|+0x010:'425'
 	// ******
@@ -532,7 +532,7 @@ void weapon_core::instant_hide( )
 	// <0x5a2c65> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2c50]: 1
 	// <0x5a2c57>|0x007|+0x010:'430'
 	// ******
 }
@@ -546,7 +546,7 @@ void weapon_core::load_magazine( )
 	// u16 							amount
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4b90]: 7
 	// <0x5a4b99>|0x009|+0x03e:'435'
 	// <0x5a4bd7>|0x047|+0x040:'436'
 	// <0x5a4c17>|0x087|+0x07f:'437'
@@ -561,7 +561,7 @@ void weapon_core::load_magazine( )
 // void survarium::weapon_core::chamber_a_round()
 void weapon_core::chamber_a_round( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a30d0]: 6
 	// <0x5a30d9>|0x009|+0x00c:'446'
 	// <0x5a30e5>|0x015|+0x00c:'447'
 	// <0x5a30f1>|0x021|+0x00c:'448'
@@ -579,7 +579,7 @@ void weapon_core::unload_ammo( )
 	// u16 							ammo_to_add
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4a40]: 12
 	// <0x5a4a49>|0x009|+0x034:'456'
 	// <0x5a4a7d>|0x03d|+0x005:'457'
 	// <0>
@@ -603,7 +603,7 @@ void weapon_core::instant_reload( )
 	// <0x5a5867> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5840]: 10
 	// <0x5a5847>|0x007|+0x00a:'473'
 	// <0>
 	// <0x5a5851>|0x011|+0x008:'475'
@@ -625,7 +625,7 @@ void weapon_core::instant_chamber_a_round( )
 	// <0x5a3391> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3350]: 11
 	// <0x5a3359>|0x009|+0x00c:'487'
 	// <0x5a3365>|0x015|+0x00c:'488'
 	// <0>
@@ -648,7 +648,7 @@ void weapon_core::reload_one_round( )
 	// <0x5a4a2f> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a48b0]: 5
 	// <0x5a48c0>|0x010|+0x08c:'502'
 	// <0x5a494c>|0x09c|+0x018:'503'
 	// <0x5a4964>|0x0b4|+0x0bd:'504'
@@ -665,7 +665,7 @@ void weapon_core::instant_aim_start( )
 	// <0x5a30a6> -> player_input const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3070]: 5
 	// <0x5a3079>|0x009|+0x037:'511'
 	// <0x5a30b0>|0x040|+0x008:'512'
 	// <0>
@@ -678,7 +678,7 @@ void weapon_core::instant_aim_start( )
 // void survarium::weapon_core::instant_aim_end()
 void weapon_core::instant_aim_end( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2c30]: 2
 	// <0x5a2c37>|0x007|+0x00a:'520'
 	// <0x5a2c41>|0x011|+0x00a:'521'
 	// ******
@@ -698,7 +698,7 @@ float3 weapon_core::get_dispersed_bullet_dir( )
 
 	return vostok::math::float3(1., 1., 1.);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4780]: 14
 	// <0>
 	// <0x5a4792>|0x012|+0x040:'527'
 	// <0x5a47d2>|0x052|+0x017:'528'
@@ -722,7 +722,7 @@ float weapon_core::get_dispersion( ) const
 {
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4760]: 1
 	// <0x5a4767>|0x007|+0x00e:'544'
 	// ******
 }
@@ -746,7 +746,7 @@ void weapon_core::instant_fire( u32 current_time_in_ms )
 	// <0x5a582e> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5660]: 35
 	// <0x5a5669>|0x009|+0x00c:'549'
 	// <0x5a5675>|0x015|+0x00c:'550'
 	// <0x5a5681>|0x021|+0x018:'551'
@@ -789,7 +789,7 @@ void weapon_core::instant_fire( u32 current_time_in_ms )
 // void survarium::weapon_core::set_fire_bullet_transform(vostok::math::float4x4 const&)
 void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transform )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2c00]: 2
 	// <0x5a2c09>|0x009|+0x00a:'588'
 	// <0x5a2c13>|0x013|+0x013:'589'
 	// ******
@@ -804,7 +804,7 @@ animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( ani
 	// <0x5a3052> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3000]: 16
 	// <0x5a3009>|0x009|+0x007:'594'
 	// <0>
 	// <1>
@@ -835,7 +835,7 @@ void weapon_core::set_target( weapon_targets target )
 	// <0x5a560e> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5170]: 57
 	// <0x5a518a>|0x01a|+0x00c:'614'
 	// <0>
 	// <0x5a5196>|0x026|+0x029:'616'
@@ -900,7 +900,7 @@ void weapon_core::set_target( weapon_targets target )
 // void survarium::weapon_core::reset_fire_queue()
 void weapon_core::reset_fire_queue( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2f40]: 12
 	// <0>
 	// <1>
 	// <0x5a2f49>|0x009|+0x012:'677'
@@ -920,7 +920,7 @@ void weapon_core::reset_fire_queue( )
 // void survarium::weapon_core::set_next_fire_queue_type()
 void weapon_core::set_next_fire_queue_type( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2bb0]: 4
 	// <0x5a2bb7>|0x007|+0x01b:'691'
 	// <0x5a2bd2>|0x022|+0x00a:'692'
 	// <0x5a2bdc>|0x02c|+0x002:'693'
@@ -936,7 +936,7 @@ void weapon_core::set_next_ammo_type( )
 	// profile_slot_enum 			next_slot
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5080]: 24
 	// <0>
 	// <1>
 	// <2>
@@ -968,7 +968,7 @@ void weapon_core::set_next_ammo_type( )
 // void survarium::weapon_core::set_ammunition(vostok::resources::resource_ptr<survarium::weapon_ammunition,vostok::resources::unmanaged_intrusive_base> const&)
 void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const& ammunition_to_set )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4730]: 1
 	// <0x5a4739>|0x009|+0x017:'727'
 	// ******
 }
@@ -977,7 +977,7 @@ void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,reso
 // void survarium::weapon_core::load_ammo()
 void weapon_core::load_ammo( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4e90]: 21
 	// <0x5a4ea0>|0x010|+0x08f:'732'
 	// <0>
 	// <0x5a4f2f>|0x09f|+0x00e:'734'
@@ -1006,7 +1006,7 @@ void weapon_core::load_ammo( )
 // void survarium::weapon_core::on_reload_started()
 void weapon_core::on_reload_started( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2ba0]: 0
 	// ******
 }
 
@@ -1014,7 +1014,7 @@ void weapon_core::on_reload_started( )
 // vostok::animation::callback_return_type_enum survarium::weapon_core::on_animation_ik_interval(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core::on_animation_ik_interval( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a35f0]: 15
 	// <0>
 	// <0x5a35f9>|0x009|+0x007:'762'
 	// <0>
@@ -1041,7 +1041,7 @@ void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid,
 	// <0x5a42d3> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4290]: 1
 	// <0x5a4299>|0x009|+0x044:'780'
 	// ******
 }
@@ -1054,7 +1054,7 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 	// <0x5a2b96> -> void <unknown>(pcstr, pcvoid)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2b70]: 1
 	// <0x5a2b77>|0x007|+0x021:'785'
 	// ******
 }
@@ -1067,7 +1067,7 @@ void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum c
 	// <0x5a427e> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, pcvoid const)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4240]: 1
 	// <0x5a4249>|0x009|+0x03f:'790'
 	// ******
 }
@@ -1080,7 +1080,7 @@ void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enu
 	// <0x5a2b66> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2b40]: 1
 	// <0x5a2b47>|0x007|+0x021:'795'
 	// ******
 }
@@ -1116,7 +1116,7 @@ void weapon_core::activate( base_player& user, engine& engine )
 	// <0x5a6ffe> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5f50]: 74
 	// <0x5a5f6b>|0x01b|+0x01a:'800'
 	// <0x5a5f85>|0x035|+0x01b:'801'
 	// <0x5a5fa0>|0x050|+0x00f:'802'
@@ -1213,7 +1213,7 @@ void weapon_core::deactivate( )
 	// <0x5a4212> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4010]: 38
 	// <0x5a4019>|0x009|+0x00f:'878'
 	// <0>
 	// <0x5a4028>|0x018|+0x026:'880'
@@ -1261,7 +1261,7 @@ bool weapon_core::is_ready_to_be_deactivated( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a32e0]: 1
 	// <0x5a32e9>|0x009|+0x057:'920'
 	// ******
 }
@@ -1270,7 +1270,7 @@ bool weapon_core::is_ready_to_be_deactivated( ) const
 // void survarium::weapon_core::on_player_model_added()
 void weapon_core::on_player_model_added( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2f20]: 1
 	// <0x5a2f27>|0x007|+0x008:'925'
 	// ******
 }
@@ -1279,7 +1279,7 @@ void weapon_core::on_player_model_added( )
 // void survarium::weapon_core::on_player_model_removed()
 void weapon_core::on_player_model_removed( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2f00]: 1
 	// <0x5a2f07>|0x007|+0x008:'930'
 	// ******
 }
@@ -1329,7 +1329,7 @@ void weapon_core::update_bones_matrices(
 	// <0x5a5ee3> -> void <unknown>(float4x4 const&)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5b30]: 86
 	// <0x5a5b41>|0x011|+0x00f:'943'
 	// <0x5a5b50>|0x020|+0x08a:'944'
 	// <0>
@@ -1425,7 +1425,7 @@ bool weapon_core::is_sprinting( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a32c0]: 1
 	// <0x5a32c7>|0x007|+0x00e:'1033'
 	// ******
 }
@@ -1443,7 +1443,7 @@ void weapon_core::on_skeleton_matrices_changed(
 	float4x4 const&		user_weapon_transform
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2e80]: 1
 	// <0x5a2e8b>|0x00b|+0x05f:'1047'
 	// ******
 }
@@ -1452,7 +1452,7 @@ void weapon_core::on_skeleton_matrices_changed(
 // void survarium::weapon_core::process_finger_correction(const unsigned int, vostok::math::float4x4* const)
 void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* user_matrices )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2e40]: 1
 	// <0x5a2e49>|0x009|+0x023:'1055'
 	// ******
 }
@@ -1472,7 +1472,7 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 	// <0x5a39d0> -> void <unknown>(network_core::udp_match_packet&) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3810]: 45
 	// <0x5a3819>|0x009|+0x010:'1060'
 	// <0>
 	// <1>
@@ -1536,7 +1536,7 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	// <0x5a46f3> -> void <unknown>(network_core::packet_reader&)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4450]: 53
 	// <0x5a445b>|0x00b|+0x00c:'1109'
 	// <0x5a4467>|0x017|+0x00a:'1110'
 	// <0>
@@ -1599,7 +1599,7 @@ bool weapon_core::instant_idle_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4e40]: 1
 	// <0x5a4e49>|0x009|+0x03d:'1166'
 	// ******
 }
@@ -1618,7 +1618,7 @@ bool weapon_core::could_be_used( base_player const& user ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3250]: 2
 	// <0x5a3259>|0x009|+0x02e:'1171'
 	// <0x5a3287>|0x037|+0x02a:'1172'
 	// ******
@@ -1638,7 +1638,7 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3200]: 2
 	// <0x5a3209>|0x009|+0x02e:'1177'
 	// <0x5a3237>|0x037|+0x00c:'1178'
 	// ******
@@ -1661,7 +1661,7 @@ float weapon_core::computed_backward_recoil_time(
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3e20]: 4
 	// <0x5a3e29>|0x009|+0x030:'1203'
 	// <0x5a3e59>|0x039|+0x013:'1204'
 	// <0x5a3e6c>|0x04c|+0x060:'1205'
@@ -1686,7 +1686,7 @@ float weapon_core::computed_horizontal_recoil_time(
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3d60]: 4
 	// <0x5a3d69>|0x009|+0x030:'1218'
 	// <0x5a3d99>|0x039|+0x013:'1219'
 	// <0x5a3dac>|0x04c|+0x060:'1220'
@@ -1711,7 +1711,7 @@ float weapon_core::computed_vertical_recoil_time(
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3ca0]: 4
 	// <0x5a3ca9>|0x009|+0x030:'1233'
 	// <0x5a3cd9>|0x039|+0x013:'1234'
 	// <0x5a3cec>|0x04c|+0x060:'1235'
@@ -1723,7 +1723,7 @@ float weapon_core::computed_vertical_recoil_time(
 // fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::backward_recoil_time_calculator()
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::backward_recoil_time_calculator( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3fc0]: 1
 	// <0x5a3fc9>|0x009|+0x039:'1241'
 	// ******
 }
@@ -1732,7 +1732,7 @@ fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::ba
 // fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::horizontal_recoil_time_calculator()
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::horizontal_recoil_time_calculator( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3f70]: 1
 	// <0x5a3f79>|0x009|+0x039:'1246'
 	// ******
 }
@@ -1741,7 +1741,7 @@ fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::ho
 // fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::vertical_recoil_time_calculator()
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::vertical_recoil_time_calculator( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3f20]: 1
 	// <0x5a3f29>|0x009|+0x039:'1251'
 	// ******
 }
@@ -1751,7 +1751,7 @@ void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 {
 	inventory_item::set_inventory( inv, slot );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2e20]: 1
 	// <0x5a2e27>|0x007|+0x010:'1256'
 	// ******
 }
@@ -1760,7 +1760,7 @@ void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 // survarium::profile_slot_enum survarium::weapon_core::get_ammo_slot(survarium::ammo_id_enum)
 profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2dd0]: 9
 	// <0x5a2dd9>|0x009|+0x019:'1261'
 	// <0>
 	// <1>
@@ -1783,7 +1783,7 @@ void weapon_core::get_ammo_info( weapon_ammo_info& info )
 	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot1_itm
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4320]: 12
 	// <0x5a432a>|0x00a|+0x024:'1274'
 	// <0x5a434e>|0x02e|+0x00f:'1275'
 	// <0x5a435d>|0x03d|+0x011:'1276'
@@ -1805,7 +1805,7 @@ bool weapon_core::must_chamber_a_round_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a31a0]: 2
 	// <0x5a31a9>|0x009|+0x00c:'1290'
 	// <0x5a31b5>|0x015|+0x044:'1291'
 	// ******
@@ -1817,7 +1817,7 @@ bool weapon_core::must_chamber_a_round_aimed_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a35b0]: 1
 	// <0x5a35b9>|0x009|+0x031:'1296'
 	// ******
 }
@@ -1828,7 +1828,7 @@ bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3540]: 2
 	// <0x5a3549>|0x009|+0x00c:'1301'
 	// <0x5a3555>|0x015|+0x04c:'1302'
 	// ******
@@ -1840,7 +1840,7 @@ bool weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate( ) co
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a37d0]: 1
 	// <0x5a37d9>|0x009|+0x031:'1307'
 	// ******
 }
@@ -1851,7 +1851,7 @@ bool weapon_core::is_ready_to_shoot( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2ac0]: 1
 	// <0x5a2ac9>|0x009|+0x066:'1312'
 	// ******
 }
@@ -1871,7 +1871,7 @@ bool weapon_core::is_trying_to_aim( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3490]: 7
 	// <0x5a3499>|0x009|+0x01e:'1317'
 	// <0x5a34b7>|0x027|+0x014:'1318'
 	// <0>
@@ -1888,7 +1888,7 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a37b0]: 1
 	// <0x5a37b7>|0x007|+0x012:'1328'
 	// ******
 }
@@ -1899,7 +1899,7 @@ bool weapon_core::can_and_must_reload_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a4de0]: 1
 	// <0x5a4df0>|0x010|+0x03e:'1333'
 	// ******
 }
@@ -1910,7 +1910,7 @@ bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a5ad0]: 3
 	// <0>
 	// <1>
 	// <0x5a5ad9>|0x009|+0x04c:'1340'
@@ -1925,7 +1925,7 @@ void weapon_core::unload_chambered_round( )
 	// <0x5a2dbd> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2d60]: 8
 	// <0x5a2d69>|0x009|+0x00c:'1345'
 	// <0x5a2d75>|0x015|+0x00c:'1346'
 	// <0x5a2d81>|0x021|+0x00c:'1347'
@@ -1947,7 +1947,7 @@ u16 weapon_core::maximum_ammo_in_weapon( ) const
 
 	return 0;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2a70]: 2
 	// <0x5a2a79>|0x009|+0x02c:'1357'
 	// <0x5a2aa5>|0x035|+0x016:'1358'
 	// ******
@@ -1961,7 +1961,7 @@ animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::a
 	// bool 						active
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2d00]: 5
 	// <0x5a2d09>|0x009|+0x00c:'1363'
 	// <0x5a2d15>|0x015|+0x00c:'1364'
 	// <0x5a2d21>|0x021|+0x010:'1365'
@@ -1978,7 +1978,7 @@ void weapon_core::on_user_sprint( bool user_is_sprinting )
 	// bool 						left_hand_ik_is_active
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2ca0]: 2
 	// <0x5a2ca9>|0x009|+0x027:'1372'
 	// <0x5a2cd0>|0x030|+0x01f:'1373'
 	// ******
@@ -1992,7 +1992,7 @@ void weapon_core::instant_idle_start( )
 	// <0x5a3188> -> player_input const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a3160]: 4
 	// <0x5a3167>|0x007|+0x00a:'1378'
 	// <0>
 	// <0x5a3171>|0x011|+0x021:'1380'
@@ -2004,7 +2004,7 @@ void weapon_core::instant_idle_start( )
 // void survarium::weapon_core::instant_idle_end()
 void weapon_core::instant_idle_end( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2a50]: 1
 	// <0x5a2a57>|0x007|+0x00a:'1386'
 	// ******
 }
@@ -2013,7 +2013,7 @@ void weapon_core::instant_idle_end( )
 // void survarium::weapon_core::instant_toggle_start()
 void weapon_core::instant_toggle_start( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2a30]: 1
 	// <0x5a2a37>|0x007|+0x00a:'1391'
 	// ******
 }
@@ -2022,7 +2022,7 @@ void weapon_core::instant_toggle_start( )
 // void survarium::weapon_core::instant_toggle_end()
 void weapon_core::instant_toggle_end( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a2a10]: 1
 	// <0x5a2a17>|0x007|+0x00a:'1396'
 	// ******
 }

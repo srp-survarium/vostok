@@ -70,7 +70,7 @@ void damage_model_cook::delete_resource( resources::resource_base* resource )
 	model_res->~damage_model( );																// sushi@NOTE:`VOSTOK_DELETE_IMPL` could have been used instead.
 	VOSTOK_FREE_IMPL( g_allocator, resource );													// sushi@MATCH: In target `free_helper` didn't inline into `free_helper_impl`. // sushi@TODO: Incorrect allocator?
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7610a0]: 27
 	// <0x7610aa>|0x00a|+0x006:'39'		damage_model* model_res = static_cast<damage_model*>( resource );
 	// <0>
 	// <0x7610b0>|0x010|+0x015|[1]:'41'	while ( body_part_parameters* part = model_res->pop_body_part( ) )
@@ -146,7 +146,7 @@ static u32 calculate_model_size( configs::binary_config_value const& model_value
 
 	return result;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x760950]: 41
 	// <0x760959>|0x009|+0x00b:'250'	const u32 body_parts_count = model_value.size( );
 	// <0x760964>|0x014|+0x011:'251'	u32 result = sizeof( body_part_parameters ) * body_parts_count;
 	// <0>
@@ -377,7 +377,7 @@ static body_part_parameters* create_body_part_parameters(
 	);
 	return new_part;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x760870]: 10
 	// <0>
 	// <7>
 	// <0x760876>|0x006|+0x0cf:'413'

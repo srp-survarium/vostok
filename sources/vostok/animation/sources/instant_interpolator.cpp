@@ -36,7 +36,7 @@ instant_interpolator* instant_interpolator::clone( vostok::animation::mixing::n_
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x56f8c0]: 1
 	// <0x56f8c0>|0x000|+0x020:'37'
 	// <0x56f8e0>|0x020|-0x003:'37'
 	// <0x56f8dd>|0x01d|+0x00f:'38'

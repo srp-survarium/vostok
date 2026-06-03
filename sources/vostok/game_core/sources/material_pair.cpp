@@ -32,7 +32,7 @@ void material_pair::load_from_config( game_material_manager const& manager, conf
 	m_second_material		= manager.get_material( second_mtrl_id );
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd490]: 6
 	// <0x6fd499>|0x009|+0x016:'25'
 	// <0x6fd4af>|0x01f|+0x016:'26'
 	// <0x6fd4c5>|0x035|+0x01a:'27'
@@ -57,7 +57,7 @@ resources::unmanaged_resource_ptr const& material_pair::particle( ) const
 
 	return m_particles[m_current_particle_idx++]; // sushi@MATCH: Has some useless call at the end. Maybe 'at' artifact?
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fd420]: 5
 	// <0x6fd429>|0x009|+0x00c:'40'
 	// <0x6fd435>|0x015|+0x016:'41'
 	// <0x6fd44b>|0x02b|+0x00a:'42'

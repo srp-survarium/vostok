@@ -25,7 +25,7 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 		"hands_jump_animation_id"
 	)
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e620]: 0
 	// ******
 }
 
@@ -33,7 +33,7 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 // void survarium::weapon_core_shotgun_reload_start_substate::initialize()
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e4e0]: 9
 	// <0>
 	// <0x59e4ea>|0x00a|+0x00a:'26'
 	// <0x59e4f4>|0x014|+0x0c6:'27'
@@ -50,7 +50,7 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 // void survarium::weapon_core_shotgun_reload_start_substate::finalize()
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e4a0]: 2
 	// <0x59e4a9>|0x009|+0x01a:'38'
 	// <0x59e4c3>|0x023|+0x014:'39'
 	// ******
@@ -62,7 +62,7 @@ bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e420]: 1
 	// <0x59e427>|0x007|+0x009:'44'
 	// ******
 }
@@ -71,7 +71,7 @@ bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 // vostok::animation::callback_return_type_enum survarium::weapon_core_shotgun_reload_start_substate::on_animation_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::on_animation_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e440]: 11
 	// <0x59e449>|0x009|+0x007:'49'
 	// <0>
 	// <0x59e450>|0x010|+0x010:'51'

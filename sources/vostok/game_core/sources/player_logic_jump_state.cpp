@@ -13,7 +13,7 @@ player_logic_jump_state::player_logic_jump_state( weapon_user_animations_selecto
 	player_logic_base_state	( owner, type_jump ),
 	m_logic					( owner )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9470]: 0
 	// ******
 }
 
@@ -21,7 +21,7 @@ player_logic_jump_state::player_logic_jump_state( weapon_user_animations_selecto
 // void survarium::player_logic_jump_state::initialize()
 void player_logic_jump_state::initialize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9370]: 4
 	// <0>
 	// <1>
 	// <0x6f9379>|0x009|+0x00b:'32'
@@ -33,7 +33,7 @@ void player_logic_jump_state::initialize( )
 // void survarium::player_logic_jump_state::execute()
 void player_logic_jump_state::execute( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9450]: 1
 	// <0x6f9457>|0x007|+0x00b:'38'
 	// ******
 }
@@ -48,7 +48,7 @@ bool player_logic_jump_state::is_ready_for_transition( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f93a0]: 1
 	// <0x6f93a9>|0x009|+0x070:'43'
 	// ******
 }
@@ -57,7 +57,7 @@ bool player_logic_jump_state::is_ready_for_transition( ) const
 // void survarium::player_logic_jump_state::finalize()
 void player_logic_jump_state::finalize( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9350]: 2
 	// <0>
 	// <0x6f9357>|0x007|+0x00b:'49'
 	// ******
@@ -67,7 +67,7 @@ void player_logic_jump_state::finalize( )
 // stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::player_logic_jump_state::selected_animations(vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, const bool) const
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_jump_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9420]: 1
 	// <0x6f9427>|0x007|+0x01f:'58'
 	// ******
 }
@@ -76,7 +76,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 // void survarium::player_logic_jump_state::set_user(survarium::base_player&)
 void player_logic_jump_state::set_user( base_player& user )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9320]: 2
 	// <0x6f9327>|0x007|+0x00c:'63'
 	// <0x6f9333>|0x013|+0x00f:'64'
 	// ******

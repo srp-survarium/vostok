@@ -37,7 +37,7 @@ void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 curren
 	for ( s32 i = 0 ; i < count && id->m_active ; ++i )
 		callback( update_delta, current_time );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xb8dd0]: 26
 	// <0xb8de0>|0x000|0x000:'16'
 	// <0xb8de9>|0x009|0x009:'17'
 	// <0xb8df1>|0x011|0x008:'18'
@@ -87,7 +87,7 @@ void scheduler::on_frame( u32 frame_delta, u32 current_time )
 
 	m_current_index = u32(-1);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x78de80]: 7
 	// <1>
 	// <2>
 	// <3>

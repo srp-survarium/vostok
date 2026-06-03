@@ -20,7 +20,7 @@ weapon_core_idle_state::weapon_core_idle_state( weapon_core& weapon, resources::
 	// u32 							user_state<2>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad1f0]: 7
 	// <0x7ad22f>|0x03f|+0x023:'21'
 	// <0x7ad252>|0x062|+0x007:'22'
 	// <0x7ad259>|0x069|+0x018|[1]:'23'
@@ -44,7 +44,7 @@ animation::mixing::expression weapon_core_idle_state::weapon_and_hands_expressio
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad3c0]: 3
 	// <0x7ad3d1>|0x011|+0x036:'32'
 	// <0x7ad407>|0x047|+0x01f:'33'
 	// <0x7ad426>|0x066|+0x059:'34'
@@ -60,7 +60,7 @@ weapon_lexeme_pair weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffe
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad330]: 3
 	// <0x7ad339>|0x009|+0x007:'39'
 	// <0x7ad340>|0x010|+0x023:'40'
 	// <0x7ad363>|0x033|+0x04f:'41'
@@ -77,7 +77,7 @@ weapon_core_idle_state* weapon_core_state_cook_template<weapon_core_idle_state>:
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad2d0]: 5
 	// <0>
 	// <1>
 	// <2>

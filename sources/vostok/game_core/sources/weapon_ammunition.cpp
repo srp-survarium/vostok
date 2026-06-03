@@ -12,7 +12,7 @@ weapon_ammunition::weapon_ammunition( ) :
 	inventory_item	( inventory_item::disabled ),
 	m_source		( NULL )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9bf0]
 	// ******
 }
 
@@ -33,7 +33,7 @@ void weapon_ammunition::load( configs::binary_config_value const& cfg )
 	m_muzzle_speed     = (float)cfg["muzzle_speed"];
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9a70]: 12
 	// <0x6f9a79>|0x009|+0x01d:'20'
 	// <0x6f9a96>|0x026|+0x01d:'21'
 	// <0x6f9ab3>|0x043|+0x01d:'22'
@@ -62,7 +62,7 @@ void weapon_ammunition::update_bones_matrices(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, &animation_player );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6f9a00]
 	// ******
 }
 

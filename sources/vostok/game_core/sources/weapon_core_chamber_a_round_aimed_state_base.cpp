@@ -12,7 +12,7 @@ namespace survarium {
 weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale ) :
 	weapon_core_animation_end_aware_state( weapon, true )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e3c0]: 1
 	// <0x73e419>|0x059|+0x00d:'22'
 	// ******
 }
@@ -25,7 +25,7 @@ void weapon_core_chamber_a_round_aimed_state_base::initialize( )
 	// <0x73e45b> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e430]: 3
 	// <0x73e437>|0x007|+0x008:'27'
 	// <0x73e43f>|0x00f|+0x01e:'28'
 	// <0>
@@ -40,7 +40,7 @@ void weapon_core_chamber_a_round_aimed_state_base::finalize( )
 	// <0x73e32b> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e300]: 3
 	// <0x73e307>|0x007|+0x008:'34'
 	// <0x73e30f>|0x00f|+0x01e:'35'
 	// <0>
@@ -51,7 +51,7 @@ void weapon_core_chamber_a_round_aimed_state_base::finalize( )
 // void survarium::weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl(bool&)
 void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e340]: 3
 	// <0>
 	// <0x73e347>|0x007|+0x00e:'42'
 	// <0x73e355>|0x015|+0x006:'43'
@@ -62,7 +62,7 @@ void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& 
 // void survarium::weapon_core_chamber_a_round_aimed_state_base::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e390]: 1
 	// <0x73e399>|0x009|+0x013:'48'
 	// ******
 }
@@ -71,7 +71,7 @@ void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_
 // void survarium::weapon_core_chamber_a_round_aimed_state_base::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_chamber_a_round_aimed_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e370]: 1
 	// <0x73e379>|0x009|+0x011:'53'
 	// ******
 }

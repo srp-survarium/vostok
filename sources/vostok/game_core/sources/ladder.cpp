@@ -24,7 +24,7 @@ ladder::~ladder( )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, m_occluder );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596640]: 1
 	// <0x59666c>|0x02c|+0x01c:'23'
 	// ******
 }
@@ -40,7 +40,7 @@ void ladder::load( configs::binary_config_value const& cfg_val )
 		m_occluder->load( cfg_val["occlusion_geometries"] );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596570]: 7
 	// <0x596579>|0x009|+0x00c:'28'
 	// <0x596585>|0x015|+0x016:'29'
 	// <0x59659b>|0x02b|+0x018:'30'
@@ -58,7 +58,7 @@ void ladder::resolve_links( base_project* p, configs::binary_config_value cfg )
 	if ( m_occluder )
 		m_occluder->resolve_links( p, cfg );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5964e0]: 3
 	// <0x5964e7>|0x007|+0x034:'39'
 	// <0x59651b>|0x03b|+0x009:'40'
 	// <0x596524>|0x044|+0x044:'41'
@@ -70,7 +70,7 @@ void ladder::add_landing_point( landing_point* const new_point )
 {
 	m_landing_points.push_back( new_point );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596470]: 1
 	// <0x596479>|0x009|+0x014:'102'
 	// ******
 }
@@ -80,7 +80,7 @@ landing_point* ladder::pop_landing_point( )
 {
 	return m_landing_points.pop_front( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596450]: 1
 	// <0x596459>|0x009|+0x00e:'107'
 	// ******
 }
@@ -91,7 +91,7 @@ bool ladder::use_initialize( usable_object_user_data* user )
 	user->owner->use_ladder( this );
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596420]: 2
 	// <0x596427>|0x007|+0x01a:'112'
 	// <0x596441>|0x021|+0x002:'113'
 	// ******
@@ -103,7 +103,7 @@ bool ladder::use_execute( usable_object_user_data* user )
 	VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596410]: 2
 	// <0>
 	// <0x596417>|0x007|+0x002:'119'
 	// ******
@@ -115,7 +115,7 @@ bool ladder::use_finalize( usable_object_user_data* user )
 	VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x596400]: 2
 	// <0>
 	// <0x596407>|0x007|+0x002:'125'
 	// ******
@@ -126,7 +126,7 @@ void ladder::activate( physics::world* world )
 {
 	usable_object::insert( world );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5964c0]: 1
 	// <0x5964c7>|0x007|+0x012:'130'
 	// ******
 }
@@ -136,7 +136,7 @@ void ladder::deactivate( )
 {
 	usable_object::remove( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5964a0]: 1
 	// <0x5964a7>|0x007|+0x00e:'135'
 	// ******
 }

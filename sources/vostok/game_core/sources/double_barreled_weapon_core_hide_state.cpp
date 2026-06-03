@@ -34,7 +34,7 @@ double_barreled_weapon_core_hide_state::double_barreled_weapon_core_hide_state(
 	// <0x7ad5f4><3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad490]: 16
 	// <0x7ad4fc>|0x06c|+0x02b:'27'
 	// <0x7ad527>|0x097|+0x023:'28'
 	// <0x7ad54a>|0x0ba|+0x007:'29'
@@ -68,7 +68,7 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::weapon_and
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad8f0]: 3
 	// <0x7ad900>|0x010|+0x01f:'47'
 	// <0x7ad91f>|0x02f|+0x02a:'48'
 	// <0x7ad949>|0x059|+0x07a:'49'
@@ -86,7 +86,7 @@ weapon_lexeme_pair double_barreled_weapon_core_hide_state::get_weapon_lexeme_pai
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad810]: 15
 	// <0x7ad819>|0x009|+0x00c:'54'
 	// <0>
 	// <0x7ad825>|0x015|+0x007:'56'
@@ -121,7 +121,7 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::get_user_h
 	// u32 							user_state_index
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad730]: 24
 	// <0x7ad741>|0x011|+0x006:'73'
 	// <0x7ad747>|0x017|+0x010:'74'
 	// <0>
@@ -166,7 +166,7 @@ double_barreled_weapon_core_hide_state* weapon_core_state_cook_template<survariu
 
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7ad660]: 10
 	// <0x7ad669>|0x009|+0x02b:'103'
 	// <0x7ad694>|0x034|+0x030:'104'
 	// <0x7ad6c4>|0x064|+0x00f:'105'

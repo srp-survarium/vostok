@@ -22,7 +22,7 @@ float pseudo_random::random_f( const float range )
 	float result	= math::abs( fmod( k, 1.0f ) ) * range;
 	return result;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e420]: 5
 	// <0x58e429>|0x009|+0x015:'22'
 	// <0x58e43e>|0x01e|+0x01b:'23'
 	// <0x58e459>|0x039|+0x0d5:'24'
@@ -50,7 +50,7 @@ weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	m_target_recoil_koef				( 0.0f ),
 	m_last_time_in_ms					( 0 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e310]: 1
 	// ******
 }
 
@@ -118,7 +118,7 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 		}
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e820]: 59
 	// <0x58e829>|0x009|+0x009:'58'
 	// <0>
 	// <0x58e832>|0x012|+0x009:'60'
@@ -210,7 +210,7 @@ void weapon_recoil_calculator::fire( )
 	m_time_since_shoot					= 0.0f;
 	m_additive_recoil_timer				= weapon_params.additive_recoil_time;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e600]: 26
 	// <0x58e609>|0x009|+0x00f:'121'
 	// <0x58e618>|0x018|+0x01b:'122'
 	// <0x58e633>|0x033|+0x011:'123'
@@ -252,7 +252,7 @@ void weapon_recoil_calculator::reset( )
 	m_target_horizontal_koef 			= 0.0f;
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58dfe0]: 7
 	// <0x58dfe7>|0x007|+0x010:'151'
 	// <0x58dff7>|0x017|+0x010:'152'
 	// <0x58e007>|0x027|+0x010:'153'
@@ -268,7 +268,7 @@ void weapon_recoil_calculator::reload( )
 {
 	reset( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e080]: 1
 	// <0x58e087>|0x007|+0x008:'162'
 	// ******
 }
@@ -278,7 +278,7 @@ void weapon_recoil_calculator::chamber_a_round( )
 {
 	reset( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e060]: 1
 	// <0x58e067>|0x007|+0x008:'167'
 	// ******
 }
@@ -304,7 +304,7 @@ void weapon_recoil_calculator::process_compensation( const float dt_sec )
 		? m_target_recoil_koef - recoil_compensation_amount
 		: 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e150]: 9
 	// <0x58e159>|0x009|+0x00f:'172'
 	// <0x58e168>|0x018|+0x035:'173'
 	// <0x58e19d>|0x04d|+0x01f:'174'
@@ -330,7 +330,7 @@ float weapon_recoil_calculator::get_random_angle( const float range )
 		return m_random.random_f( range );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e570]: 9
 	// <0x58e579>|0x009|+0x00b:'185'
 	// <0>
 	// <0x58e584>|0x014|+0x045:'187'
@@ -352,7 +352,7 @@ float weapon_recoil_calculator::get_random_amount( const float range )
 	float c_min_amaunt = math::max( 0.25, k ) * range;
 	return c_min_amaunt;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58e0a0]: 3
 	// <0x58e0a9>|0x009|+0x076:'198'
 	// <0x58e11f>|0x07f|+0x00d:'199'
 	// <0x58e12c>|0x08c|+0x01a:'200'
@@ -364,7 +364,7 @@ void weapon_recoil_calculator::set_weapon( weapon_core* weapon )
 {
 	m_weapon = weapon;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58dfc0]: 1
 	// <0x58dfc7>|0x007|+0x009:'205'
 	// ******
 }

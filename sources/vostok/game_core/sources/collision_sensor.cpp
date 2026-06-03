@@ -31,7 +31,7 @@ collision_sensor::~collision_sensor( )
 {
 	VOSTOK_FREE_IMPL( g_allocator, m_collision_geometries );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59af10]: 1
 	// <0x59af2c>|0x000|0x000:'24'
 	// ******
 }
@@ -45,7 +45,7 @@ void collision_sensor::load( binary_config_value const& cfg )
 
 	m_collision_geometries = (collision_geometry**)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( collision_geometry* ) * m_collision_geometries_count, "collision_geometries" );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59b010]: 14
 	// <0x59b01a>|0x000|0x000:'29'
 	// <0x59b04a>|0x030|0x030:'30'
 	// <0x59b058>|0x03e|0x00e:'31'
@@ -73,7 +73,7 @@ void collision_sensor::resolve_links( base_project* p, binary_config_value cfg )
 		m_collision_geometries[i] = static_cast_checked<collision_geometry*>( p->get_object_by_name( geom_name ) );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59a8a0]: 6
 	// <0x59a8a9>|0x000|0x000:'47'
 	// <0x59a8d9>|0x030|0x030|[1]:'48'
 	// <1>
@@ -146,7 +146,7 @@ void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 	notify_and_add_incoming_objects( sensed_objects );
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ab80]: 44
 	// <0x59ab90>|0x000|0x000:'95'
 	// <1>
 	// <0x59abb3>|0x023|0x023:'97'
@@ -218,7 +218,7 @@ struct left_objects_predicate {
 				m_objects_to_delete->push_back( obj );
 				return true;
 
-				// FUNCTION BODY
+				// FUNCTION BODY[0xc6610]: 6
 				// <0xc6619>|0x000|0x000:'156'
 				// <0xc665c>|0x043|0x043:'157'
 				// <0xc6664>|0x04b|0x008:'158'
@@ -276,7 +276,7 @@ void collision_sensor::notify_and_add_incoming_objects( buffer_vector<base_physi
 	for ( ; it != end ; ++it )
 		m_old_objects.push_back( *it );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59aa00]: 15
 	// <0x59aa09>|0x000|0x000:'187' buffer_vector<base_physics_object *> incoming_objects(
 	// <0x59aa50>|0x047|0x047:'188' base_physics_object** inc_it	= sensed_objects.begin( );
 	// <0x59aa58>|0x04f|0x008:'189' base_physics_object** inc_end	= sensed_objects.end( );
@@ -299,7 +299,7 @@ void collision_sensor::notify_objects_inside( )
 	objects_inside.assign( m_old_objects.begin( ), m_old_objects.end( ) );
 	on_inside( objects_inside ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59a240]: 3
 	// <0x59a249>|0x000|0x000:'206'
 	// <0x59a28a>|0x041|0x041:'207'
 	// <0x59a2ce>|0x085|0x044:'208'
@@ -350,7 +350,7 @@ void collision_sensor::get_shapes_centers( vectora<float3>& centers ) const
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->get_shapes_centers( centers );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59a9b0]: 2
 	// <0x59a9b9>|0x000|0x000|[1]:'254'
 	// <0x59a9d6>|0x01d|0x01d:'255'
 	// ******
@@ -392,7 +392,7 @@ void collision_sensor::remove( )
 	on_leave( leaved ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
 	m_old_objects.clear( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59a3e0]: 23
 	// <0x59a3f1>|0x000|0x000:'269'
 	// <0x59a3fd>|0x00c|0x00c:'270'		m_is_active = false;
 	// <1>

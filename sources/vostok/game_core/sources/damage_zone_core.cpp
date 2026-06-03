@@ -68,7 +68,7 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	for ( ; it != end ; ++it )
 		m_body_parts_filter.push_back((pcstr)it);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5994d0]: 38
 	// <0x5994d0>|0x000|+0x010:'49'	{
 	// <0x5994e0>|0x010|+0x00f:'50'
 	// <0>
@@ -100,7 +100,7 @@ bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, f
 {
 	return lhs.first->skeleton_bone_index == rhs.first->skeleton_bone_index;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597d60]: 1
 	// <0x597d63>|0x003|+0x017:'118'
 	// ******
 }
@@ -110,7 +110,7 @@ float distance_from_sphere_center_to_point_on_shape( float radius )
 {
 	return radius;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597d50]: 1
 	// <0x597d53>|0x003|+0x003:'123'
 	// ******
 }
@@ -133,7 +133,7 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 	// ******
 
 	return 0.0f;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5984d0]: 19
 	// <0x5984d0>|0x000|+0x006:'127'	{
 	// <0x5984d6>|0x006|+0x01c:'128'
 	// <0x5984f2>|0x022|+0x01c:'129'
@@ -355,7 +355,7 @@ void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> 
 {
 	VOSTOK_UNREFERENCED_PARAMETER( objects );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597d40]: 1
 	// ******
 }
 
@@ -374,7 +374,7 @@ void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> c
 	// <0x597ed1> -> void <unknown>(player_actions_subscriber*)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597e30]: 20
 	// <0x597e30>|0x000|+0x009:'271'	{
 	// <0x597e39>|0x009|+0x008:'272'
 	// <0x597e41>|0x011|+0x009:'273'
@@ -416,7 +416,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 	// <0x598801> -> void <unknown>(player_actions_subscriber*)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x598760]: 19
 	// <0x598760>|0x000|+0x009:'295'	{
 	// <0x598769>|0x009|+0x008:'296'
 	// <0x598771>|0x011|+0x009:'297'
@@ -445,7 +445,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 // void survarium::damage_zone_core::tick(const unsigned int, const unsigned int)
 void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x599250]: 16
 	// <0x599250>|0x000|+0x009:'318'	{
 	// <0x599259>|0x009|+0x010:'319'
 	// <0>
@@ -472,7 +472,7 @@ bool remove_null_receivers_predicate( hit_receiver_info const& info )
 {
 	return info.m_receiver == NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597d20]
 	// ******
 }
 
@@ -487,7 +487,7 @@ bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) 
 	// ******
 
 	return false;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597cf0]: 1
 	// <0x597cf0>|0x000|+0x007:'390'	{
 	// <0x597cf7>|0x007|+0x018:'391'
 	// <0x597d0f>|0x01f|      :'392'	}
@@ -741,7 +741,7 @@ void damage_zone_core::activate( zone_group* owner, physics::world* p_world, sch
 	m_scheduler = &scheduler;
 	scheduler.register_on_frame( &m_scheduler_identifier, boost::bind( &damage_zone_core::tick, this, _1, _2 ), true );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x598620]: 6
 	// <0x598630>|0x010|+0x00f:'546'
 	// <0x59863f>|0x01f|+0x00f:'547'
 	// <0x59864e>|0x02e|+0x00f:'548'
@@ -769,7 +769,7 @@ void damage_zone_core::deactivate( )
 	m_receivers.clear( );
 	m_owner = NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597f70]: 14
 	// <0x597f79>|0x009|+0x008:'556'
 	// <0x597f81>|0x011|+0x017:'557'
 	// <0>
@@ -798,7 +798,7 @@ void damage_zone_core::on_player_action(
 	// <0x597e1a> -> void <unknown>(hit_receiver const*, player_actions_subscriber::action, float)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x597de0]: 1
 	// <0x597de9>|0x009|+0x033:'574'
 	// ******
 }

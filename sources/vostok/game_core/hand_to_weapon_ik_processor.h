@@ -46,7 +46,7 @@ public:
 				// STATE[STUB]
 				explicit	hand( )
 				{
-					// FUNCTION BODY
+					// FUNCTION BODY[0xcaf50]: 0
 					// <0xcaf50>|0x000|+0x035:'51'	{
 					// <0xcaf85>|0x035|      :'52'	}
 					// ******

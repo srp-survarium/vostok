@@ -11,7 +11,7 @@ namespace survarium {
 weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_core& weapon, float animation_timescale ) :
 	weapon_core_animation_end_aware_state( weapon, false )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e7b0]: 0
 	// ******
 }
 
@@ -23,7 +23,7 @@ void weapon_core_aimed_fire_state_base::initialize( )
 	// <0x59e956> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e820]: 12
 	// <0>
 	// <1>
 	// <2>
@@ -43,7 +43,7 @@ void weapon_core_aimed_fire_state_base::initialize( )
 // void survarium::weapon_core_aimed_fire_state_base::execute()
 void weapon_core_aimed_fire_state_base::execute( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e790]: 8
 	// <0x59e797>|0x007|+0x008:'42'
 	// <0>
 	// <1>
@@ -63,7 +63,7 @@ void weapon_core_aimed_fire_state_base::finalize( )
 	// <0x59e752> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e710]: 12
 	// <0>
 	// <1>
 	// <2>
@@ -83,7 +83,7 @@ void weapon_core_aimed_fire_state_base::finalize( )
 // vostok::animation::callback_return_type_enum survarium::weapon_core_aimed_fire_state_base::on_shot_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ea90]: 26
 	// <0>
 	// <0x59eaa1>|0x011|+0x007:'71'
 	// <0>
@@ -117,7 +117,7 @@ animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_shot_
 // void survarium::weapon_core_aimed_fire_state_base::on_animation_end_impl(bool&)
 void weapon_core_aimed_fire_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e680]: 2
 	// <0>
 	// <0x59e687>|0x007|+0x006:'101'
 	// ******
@@ -132,7 +132,7 @@ animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_aimin
 	// <0x59e705> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59e6a0]: 9
 	// <0x59e6a9>|0x009|+0x00c:'106'
 	// <0x59e6b5>|0x015|+0x00c:'107'
 	// <0>

@@ -11,7 +11,7 @@ namespace survarium {
 weapon_user_animations_container_cook::weapon_user_animations_container_cook( )
 	: resources::translate_query_cook( resources::animation_container_class, reuse_true, use_current_thread_id )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762910]: 0
 	// ******
 }
 

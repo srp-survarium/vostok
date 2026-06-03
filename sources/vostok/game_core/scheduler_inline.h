@@ -44,7 +44,7 @@ inline scheduler::record& scheduler::register_object( scheduler::identifier* ide
 
 	return record;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x92cf0]: 27
 	// <1>
 	// <17>
 	// <0x92cf9>|0x000|0x000:'60'
@@ -68,7 +68,7 @@ inline void scheduler::register_on_frame( scheduler::identifier* identifier, sch
 	record.m_max_update_count = 0;
 	record.m_last_update_time = 0;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x96a60]: 5
 	// <0x96a60>|0x000|0x000:'74'
 	// <1>
 	// <2>
@@ -93,7 +93,7 @@ inline void scheduler::register_for_update(
 	record.m_max_update_count  = max_update_count;
 	record.m_last_update_time  = time_start_from;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x92da0]: 8
 	// <0x92da0>|0x000|0x000:'88'
 	// <1>
 	// <2>
@@ -121,7 +121,7 @@ inline void scheduler::unregister( scheduler::identifier* identifier )
 
 	identifier->m_active = false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x92de0]: 11
 	// <0x92de0>|0x000|0x000:'100'	if ( m_current_index >= identifier->m_id )
 	// <0x92df7>|0x017|0x017:'101'		m_current_index -= 1;
 	// <1>

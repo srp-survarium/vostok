@@ -33,7 +33,7 @@ void animation_analysis_result_cook::translate_query( resources::query_result_fo
 	parent.set_unmanaged_resource( result, resources::nocache_memory, sizeof( animation_analysis_result ) );
 	parent.finish_query( result_success, assert_on_fail_true );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7634b0]: 12
 	// <0x7634c1>|0x011|+0x008:'24'
 	// <0x7634c9>|0x019|+0x02a:'25'
 	// <0>
@@ -54,7 +54,7 @@ void animation_analysis_result_cook::delete_resource( resources::resource_base* 
 {
 	VOSTOK_DELETE_IMPL( *g_allocator, resource );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x763480]: 1
 	// <0x763489>|0x009|+0x017:'40'
 	// ******
 }

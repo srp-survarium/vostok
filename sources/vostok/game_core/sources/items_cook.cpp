@@ -17,7 +17,7 @@ items_cook::items_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761670]: 1
 	// <0x7616a5>|0x035|+0x00c:'19'
 	// ******
 }
@@ -37,7 +37,7 @@ void items_cook::translate_query( resources::query_result_for_cook& parent )
 		&parent
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761b20]: 11
 	// <0x761b2f>|0x00f|+0x00b:'24'
 	// <0x761b3a>|0x01a|+0x01d:'25'
 	// <0>
@@ -57,7 +57,7 @@ void items_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7616c0]: 1
 	// <0x7616c9>|0x009|+0x017:'39'
 	// ******
 }
@@ -71,7 +71,7 @@ void items_cook::on_config_ready( resources::queries_result& data, resources::qu
 	item_types_enum item_type				= (item_types_enum)(u32)current["type"];
 	create_item_and_finish_query( item_type, config, parent );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x761a60]: 6
 	// <0x761a6a>|0x00a|+0x00c:'44'
 	// <0x761a76>|0x016|+0x022:'45'
 	// <0x761a98>|0x038|+0x03c:'46'
@@ -142,7 +142,7 @@ void items_cook::create_item_and_finish_query( item_types_enum item_type, config
 
 	parent->finish_query( result );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7616f0]: 49
 	// <0x7616fc>|0x00c|+0x007:'54'
 	// <0>
 	// <0x761703>|0x013|+0x006:'56'

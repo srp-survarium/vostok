@@ -12,7 +12,7 @@ namespace survarium {
 // void survarium::`dynamic initializer for 's_ik_legs_debug_draw_cc''()
 void `dynamic initializer for 's_ik_legs_debug_draw_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7db1c0]
 	// ******
 }
 
@@ -20,7 +20,7 @@ void `dynamic initializer for 's_ik_legs_debug_draw_cc''( )
 // void survarium::`dynamic initializer for 's_ik_foot_capsule_radius_cc''()
 void `dynamic initializer for 's_ik_foot_capsule_radius_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7db200]
 	// ******
 }
 
@@ -28,7 +28,7 @@ void `dynamic initializer for 's_ik_foot_capsule_radius_cc''( )
 // void survarium::`dynamic initializer for 's_ik_legs_rot_axis_cc''()
 void `dynamic initializer for 's_ik_legs_rot_axis_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7db250]
 	// ******
 }
 
@@ -36,7 +36,7 @@ void `dynamic initializer for 's_ik_legs_rot_axis_cc''( )
 // void survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''()
 void `dynamic atexit destructor for 's_ik_legs_debug_draw_cc''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7f0ce0]
 	// <0x7db290>|0x000|      :'29'	{
 	// ******
 }
@@ -46,7 +46,7 @@ void `dynamic atexit destructor for 's_ik_legs_debug_draw_cc''( )
 // survarium::legs_ik_processor::leg_params::leg_params()
 legs_ik_processor::leg_params::leg_params( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa6c0]: 0
 	// ******
 }
 
@@ -58,7 +58,7 @@ void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleto
 	// animation::skeleton_bone const& foot_bone
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fad80]: 6
 	// <0x6fad89>|0x009|+0x016:'43'
 	// <0x6fad9f>|0x01f|+0x02e:'44'
 	// <0x6fadcd>|0x04d|+0x03a:'45'
@@ -72,7 +72,7 @@ void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleto
 // void survarium::legs_ik_processor::~legs_ik_processor()
 legs_ik_processor::~legs_ik_processor( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6faf40]: 1
 	// <0x6faf49>|0x009|+0x029:'53'
 	// ******
 }
@@ -81,7 +81,7 @@ legs_ik_processor::~legs_ik_processor( )
 // void survarium::legs_ik_processor::leg_params::tick(float)
 void legs_ik_processor::leg_params::tick( float dt )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa960]: 3
 	// <0x6fa969>|0x009|+0x022:'64'
 	// <0x6fa98b>|0x02b|+0x022:'65'
 	// <0x6fa9ad>|0x04d|+0x015:'66'
@@ -127,7 +127,7 @@ legs_ik_processor::legs_ik_processor( ) : m_heel_interpolator( 0.1f ), m_toe_int
 	// <0x6fa804> -> float <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa730]: 0
 	// ******
 }
 
@@ -135,7 +135,7 @@ legs_ik_processor::legs_ik_processor( ) : m_heel_interpolator( 0.1f ), m_toe_int
 // void survarium::legs_ik_processor::activate(vostok::animation::skeleton const&)
 void legs_ik_processor::activate( animation::skeleton const& skeleton )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6faed0]: 4
 	// <0x6faed9>|0x009|+0x00c:'105'
 	// <0x6faee5>|0x015|+0x014:'106'
 	// <0x6faef9>|0x029|+0x014:'107'
@@ -153,7 +153,7 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0xcb1f0]: 2
 	// <0xcb1f6>|0x006|+0x018:'113'
 	// <0xcb20e>|0x01e|+0x075:'114'
 	// ******
@@ -174,7 +174,7 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// float4x4 const& 				left_foot_fixed_transform
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fc640]: 42
 	// <0x6fc651>|0x011|+0x029:'119'
 	// <0x6fc67a>|0x03a|+0x023:'120'
 	// <0x6fc69d>|0x05d|+0x010:'121'
@@ -269,7 +269,7 @@ void legs_ik_processor::process_leg(
 	// <0x6fb91d><1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fafa0]: 125
 	// <0x6fafb1>|0x011|+0x018:'166'
 	// <0x6fafc9>|0x029|+0x017:'167'
 	// <0x6fafe0>|0x040|+0x01b:'168'
@@ -454,7 +454,7 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 
 	return vostok::math::float4x4();
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fbae0]: 105
 	// <0x6fbaf1>|0x011|+0x03b:'295'
 	// <0x6fbb2c>|0x04c|+0x03e:'296'
 	// <0x6fbb6a>|0x08a|+0x03e:'297'
@@ -567,7 +567,7 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 // void survarium::legs_ik_processor::set_left_heel_on_ground(bool)
 void legs_ik_processor::set_left_heel_on_ground( bool value )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fad50]: 1
 	// <0x6fad57>|0x007|+0x014:'404'
 	// ******
 }
@@ -576,7 +576,7 @@ void legs_ik_processor::set_left_heel_on_ground( bool value )
 // void survarium::legs_ik_processor::set_left_toe_on_ground(bool)
 void legs_ik_processor::set_left_toe_on_ground( bool value )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fad20]: 1
 	// <0x6fad27>|0x007|+0x014:'409'
 	// ******
 }
@@ -585,7 +585,7 @@ void legs_ik_processor::set_left_toe_on_ground( bool value )
 // void survarium::legs_ik_processor::set_right_heel_on_ground(bool)
 void legs_ik_processor::set_right_heel_on_ground( bool value )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6facf0]: 1
 	// <0x6facf7>|0x007|+0x014:'414'
 	// ******
 }
@@ -594,7 +594,7 @@ void legs_ik_processor::set_right_heel_on_ground( bool value )
 // void survarium::legs_ik_processor::set_right_toe_on_ground(bool)
 void legs_ik_processor::set_right_toe_on_ground( bool value )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6facc0]: 1
 	// <0x6facc7>|0x007|+0x014:'419'
 	// ******
 }
@@ -603,7 +603,7 @@ void legs_ik_processor::set_right_toe_on_ground( bool value )
 // void survarium::legs_ik_processor::set_heel_on_ground(survarium::legs_ik_processor::leg_params&, bool)
 void legs_ik_processor::set_heel_on_ground( legs_ik_processor::leg_params& params, bool value )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fab70]: 19
 	// <0x6fab79>|0x009|+0x015:'424'
 	// <0x6fab8e>|0x01e|+0x005:'425'
 	// <0x6fab93>|0x023|+0x00d:'426'
@@ -630,7 +630,7 @@ void legs_ik_processor::set_heel_on_ground( legs_ik_processor::leg_params& param
 // void survarium::legs_ik_processor::set_toe_on_ground(survarium::legs_ik_processor::leg_params&, bool)
 void legs_ik_processor::set_toe_on_ground( legs_ik_processor::leg_params& params, bool value )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6faa70]: 11
 	// <0x6faa79>|0x009|+0x015:'447'
 	// <0x6faa8e>|0x01e|+0x005:'448'
 	// <0x6faa93>|0x023|+0x00d:'449'
@@ -657,7 +657,7 @@ void legs_ik_processor::tick( u32 current_time_in_ms )
 	// <0x6fa9e0><1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fa9d0]: 9
 	// <0x6fa9d9>|0x009|+0x009:'462'
 	// <0>
 	// <0x6fa9e2>|0x012|+0x01f:'464'

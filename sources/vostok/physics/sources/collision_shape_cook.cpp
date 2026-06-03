@@ -167,7 +167,7 @@ void collision_shape_cook::on_collision_sources_loaded( resources::queries_resul
 	};
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x72d420]: 136
 	// <0x72d42f>|0x000|0x000:'88'
 	// <0x72d479>|0x04a|0x04a:'89'
 	// <1>

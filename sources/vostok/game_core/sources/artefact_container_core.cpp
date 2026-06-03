@@ -14,7 +14,7 @@ namespace survarium {
 // STATE[100%|DONE]
 artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73dfe0]
 	// ******
 }
 
@@ -24,7 +24,7 @@ void artefact_container_core::load( configs::binary_config_value const& cfg )
 	usable_object::load( cfg );
 	m_artefact_search_time_ms = math::floor( (float)cfg["artefacts_search_time_sec"] * 1000.0f );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73dee0]: 2
 	// <0x73dee0>|0x000|+0x009:'20'	{
 	// <0x73dee9>|0x009|+0x00c:'21'
 	// <0x73def5>|0x015|+0x02e:'22'
@@ -38,7 +38,7 @@ void artefact_container_core::activate( generic_anomaly_core* owner, physics::wo
 	m_owner = owner;
 	usable_object::insert( world );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73deb0]: 2
 	// <0x73deb0>|0x000|+0x007:'26'	{
 	// <0x73deb7>|0x007|+0x009:'27'
 	// <0x73dec0>|0x010|+0x00c:'28'
@@ -52,7 +52,7 @@ void artefact_container_core::deactivate( )
 	usable_object::remove( );
 	m_owner = NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73de90]: 2
 	// <0x73de90>|0x000|+0x007:'32'	{
 	// <0x73de97>|0x007|+0x008:'33'
 	// <0x73de9f>|0x00f|+0x00a:'34'
@@ -73,7 +73,7 @@ bool artefact_container_core::use_initialize( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73de30]: 8
 	// <0x73de30>|0x000|+0x009:'38'	{
 	// <0x73de39>|0x009|+0x013:'39'
 	// <0x73de4c>|0x01c|+0x004:'40'
@@ -111,7 +111,7 @@ bool artefact_container_core::use_execute( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e090]: 20
 	// <0x73e090>|0x000|+0x009:'50'	{
 	// <0x73e099>|0x009|+0x00c:'51'	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users[0] == user ) );
 	// <0x73e0a5>|0x015|+0x00c:'52'	ASSERT( UNKNOWN_EXPRESSION_T( user ) );
@@ -149,7 +149,7 @@ bool artefact_container_core::use_finalize( usable_object_user_data* user )
 	m_usable_object_users.erase( user );
 	return true;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73ddd0]: 8
 	// <0x73ddd0>|0x000|+0x009:'74'	{
 	// <0x73ddd9>|0x009|+0x00c:'75'
 	// <0x73dde5>|0x015|+0x00c:'76'
@@ -170,7 +170,7 @@ void artefact_container_core::artefact_spawned( resources::queries_result& data 
 	m_artefact = static_cast_resource_ptr<artefact_base_ptr>( data[0].get_unmanaged_resource( ) );
 	m_artefact->set_amount( 1 );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73df30]: 3
 	// <0x73df30>|0x000|+0x00a:'86'	{
 	// <0x73df3a>|0x00a|+0x00c:'87'
 	// <0x73df46>|0x016|+0x06c:'88'
@@ -194,7 +194,7 @@ void artefact_container_core::spawn_artefact( )
 		NULL
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e1d0]: 10
 	// <0x73e1e3>|0x013|+0x009:'94'
 	// <0x73e1ec>|0x01c|+0x018:'95'
 	// <0>
@@ -214,7 +214,7 @@ void artefact_container_core::transfer_artefact( inventory_holder* holder )
 	holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
 	m_artefact = NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x73e030]: 2
 	// <0x73e030>|0x000|+0x009:'107'	{
 	// <0x73e039>|0x009|+0x035:'108'
 	// <0x73e06e>|0x03e|+0x013:'109'

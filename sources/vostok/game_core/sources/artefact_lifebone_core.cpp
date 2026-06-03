@@ -33,7 +33,7 @@ artefact_lifebone_core::artefact_lifebone_core( ) :
 		m_damage_protectors[i].reduce_damage_functor	= boost::bind( &artefact_lifebone_core::reduce_damage, this, _1, _2, _3, _4 );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58fc10]: 5
 	// <0x58fcb9>|0x0a9|+0x01c|[1]:'33'
 	// <0>
 	// <0x58fcd5>|0x0c5|+0x0c4:'35'
@@ -82,7 +82,7 @@ void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 
 	m_passive_mode = switch_on;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ff10]: 15
 	// <0x58ff19>|0x009|+0x02c:'58'
 	// <0>
 	// <0x58ff45>|0x035|+0x008:'60'
@@ -111,7 +111,7 @@ void artefact_lifebone_core::activate_impl( )
 		bp->reset( );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58fe90]: 6
 	// <0x58fe99>|0x009|+0x02c:'77'
 	// <0x58fec5>|0x035|+0x018|[1]:'78'
 	// <0>
@@ -139,7 +139,7 @@ void artefact_lifebone_core::action( bool key_down )
 		artefact_lifebone_core::switch_passive_mode_impl( false );
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x590080]: 15
 	// <0x590087>|0x007|+0x008:'87'
 	// <0x59008f>|0x00f|+0x002:'88'
 	// <0>
@@ -164,7 +164,7 @@ bool artefact_lifebone_core::protect_affect( pcstr __formal, hit_affects_type_en
 	return affect >= affects_type_hand_damage && affect <= affects_type_leg_damage;
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58fad0]: 9
 	// <0x58fad9>|0x009|+0x014:'106'
 	// <0>
 	// <1>
@@ -197,7 +197,7 @@ void artefact_lifebone_core::load_core( configs::binary_config_value config )
 	m_unlimited		= amount == -1;
 	m_cooldown_ms	= (u32)config["cooldown_ms"];
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58fb50]: 4
 	// <0x58fb59>|0x009|+0x015:'128'
 	// <0x58fb6e>|0x01e|+0x00b:'129'
 	// <0x58fb79>|0x029|+0x012:'130'

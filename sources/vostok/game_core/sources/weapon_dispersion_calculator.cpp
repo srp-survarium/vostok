@@ -11,7 +11,7 @@ namespace survarium {
 // survarium::weapon_dispersion_calculator::weapon_dispersion_calculator()
 weapon_dispersion_calculator::weapon_dispersion_calculator( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58f880]: 1
 	// ******
 }
 
@@ -23,7 +23,7 @@ void weapon_dispersion_calculator::tick( u32 current_time_in_ms )
 	// float 						dt
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58f990]: 26
 	// <0>
 	// <0x58f999>|0x009|+0x009:'28'
 	// <0>
@@ -57,7 +57,7 @@ void weapon_dispersion_calculator::tick( u32 current_time_in_ms )
 // void survarium::weapon_dispersion_calculator::fire()
 void weapon_dispersion_calculator::fire( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58f950]: 3
 	// <0>
 	// <0x58f959>|0x009|+0x024:'58'
 	// <0>
@@ -68,7 +68,7 @@ void weapon_dispersion_calculator::fire( )
 // void survarium::weapon_dispersion_calculator::reload()
 void weapon_dispersion_calculator::reload( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58f910]: 3
 	// <0>
 	// <0x58f919>|0x009|+0x025:'65'
 	// <0>

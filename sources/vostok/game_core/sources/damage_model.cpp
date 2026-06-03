@@ -361,7 +361,7 @@ void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum 
 // STATE[BLOCKED]
 void damage_model::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ffc10]: 1
 	// <0x6ffc10>|0x000|+0x009:'433'	{
 	// <0x6ffc19>|0x009|+0x041:'434'
 	// <0x6ffc5a>|0x04a|      :'435'	}

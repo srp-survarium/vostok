@@ -100,7 +100,7 @@ bool operator>=( udp_match_stats const& left, udp_match_stats const& right )
 // STATE[STUB]
 inline	udp_match_stats	operator-( udp_match_stats const& left, udp_match_stats const& right )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x91fa0]: 15
 	// 1
 	// 2
 	// <0x91fa8>|0x000|0x000:'212'

@@ -31,7 +31,7 @@ inventory_cook::inventory_cook( ) :
 	static damage_model_cook 		s_damage_model_cook;
 	static weapon_ammunition_cook	s_weapon_ammunition_cook;;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x764e10]: 4
 	// <0x764e45>|0x035|+0x00c:'29'
 	// <0x764e51>|0x041|+0x02f:'30'
 	// <0x764e80>|0x070|+0x031:'31'

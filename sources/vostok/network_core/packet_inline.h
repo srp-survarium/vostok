@@ -138,7 +138,7 @@ inline void packet<T>::append( pcvoid const buffer, u32 const buffer_size )
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x7c6cb }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN45") })
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x8d690]: 11
 	// <0x8d695>|0x000|0x000:'137'
 	// <0x8d6af>|0x01a|0x01a:'138'
 	// <0x8d6b5>|0x020|0x006:'139'

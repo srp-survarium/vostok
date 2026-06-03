@@ -50,7 +50,7 @@ void weapon_core_base_state::serialize( network_core::udp_match_packet& packet )
 	// <0x6fcf47> -> bool <unknown>(pcvoid const, const u32, animation::animation_playback_state&) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fcee0]: 20
 	// <0x6fcee9>|0x009|+0x012:'33'
 	// <0>
 	// <1>
@@ -78,7 +78,7 @@ void weapon_core_base_state::serialize( network_core::udp_match_packet& packet )
 // void survarium::weapon_core_base_state::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_base_state::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fce90]: 5
 	// <0x6fce99>|0x009|+0x00e:'57'
 	// <0>
 	// <0x6fcea7>|0x017|+0x011:'59'

@@ -361,7 +361,7 @@ void medkit::remove_affects( )
 		m_inventory->holder( ).damage_model( )->cancel_affect( affct.body_part_name, affct.type ); // sushi@MATCH: Target pushed those two args before calling damage_model
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x75f9d0]: 6
 	// <0x75f9d9>|0x009|+0x021|[1]:'192'
 	// <0>
 	// <0x75f9fa>|0x02a|+0x012|[2]:'194'
@@ -383,7 +383,7 @@ medkit::damage_protection const* medkit::find_damage_protection( pcstr body_part
 	}
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x75f660]: 8
 	// <0x75f669>|0x009|+0x021|[1]:'202'
 	// <0>
 	// <0x75f68a>|0x02a|+0x012|[2]:'204'

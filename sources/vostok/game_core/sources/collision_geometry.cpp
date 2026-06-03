@@ -25,7 +25,7 @@ collision_geometry::~collision_geometry( )
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	destroy_ghost_object( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff180]: 3
 	// <0x6ff192>|0x000|0x000:'25'
 	// <0x6ff19e>|0x00c|0x00c:'26'
 	// <0x6ff1aa>|0x018|0x00c:'27'
@@ -37,7 +37,7 @@ void collision_geometry::destroy_ghost_object( )
 {
 	physics::destroy_ghost_object( m_ghost_object );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6ff160]: 1
 	// <0x6ff167>|0x000|0x000:'32'
 	// ******
 }
@@ -67,7 +67,7 @@ void collision_geometry::load( configs::binary_config_value const& cfg_val )
 	m_group									= cfg_val["filter_group"];
 	m_mask									= cfg_val["filter_mask"];
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6feee0]: 20
 	// <0x6feefb>|0x000|0x000:'37'
 	// <0x6fef16>|0x01b|0x01b:'38'
 	// <0x6fef2b>|0x030|0x015:'39'
@@ -97,7 +97,7 @@ u32 collision_geometry::get_overlapping_objects_count( ) const
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	return m_ghost_object->get_overlapping_objects_count( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fece0]: 2
 	// <0x6fece9>|0x000|0x000:'61'
 	// <0x6fecf5>|0x00c|0x00c:'62'
 	// ******
@@ -109,7 +109,7 @@ void collision_geometry::get_overlapping_objects(physics::base_physics_objects_t
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->get_overlapping_objects( result );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fecb0]: 2
 	// <0x6fecb9>|0x000|0x000:'67'
 	// <0x6fecc5>|0x00c|0x00c:'68'
 	// ******
@@ -121,7 +121,7 @@ void collision_geometry::contact_test( physics::base_physics_object* object, phy
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->contact_test( m_physics_world, object, predicate );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fee10]: 2
 	// <0x6fee19>|0x000|0x000:'73'
 	// <0x6fee25>|0x00c|0x00c:'74'
 	// ******
@@ -133,7 +133,7 @@ bool collision_geometry::contact_test( )
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	return m_ghost_object->contact_test( m_physics_world );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fec80]: 2
 	// <0x6fec89>|0x000|0x000:'79'
 	// <0x6fec95>|0x00c|0x00c:'80'
 	// ******
@@ -145,7 +145,7 @@ void collision_geometry::get_shapes_centers( vectora<float3>& centers_results ) 
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->non_compound_shapes_centers( centers_results );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fee80]: 2
 	// <0x6fee89>|0x000|0x000:'91'
 	// <0x6fee95>|0x00c|0x00c:'92'
 	// ******
@@ -159,7 +159,7 @@ void collision_geometry::insert( physics::world* world )
 	m_ghost_object->user_data = this;
 	m_ghost_object->insert( m_physics_world, m_group, m_mask );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6feb80]: 4
 	// <0x6feb89>|0x000|0x000:'97'
 	// <0x6feb92>|0x009|0x009:'98'
 	// <0x6feb9e>|0x015|0x00c:'99'
@@ -174,7 +174,7 @@ void collision_geometry::remove( )
 	m_ghost_object->remove( m_physics_world );			// sushi@NOTE: `user_data` was set in `insert`, but is not unset in `remove`.
 	m_physics_world = NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6feb40]: 3
 	// <0x6feb49>|0x000|0x000:'105'
 	// <0x6feb55>|0x00c|0x00c:'106'
 	// <0x6feb6a>|0x021|0x015:'107'
@@ -191,7 +191,7 @@ void collision_geometry::subscribe( physics::world* world, collision_geometry_su
 
 	m_subscribers.push_back( subscriber );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fedb0]: 6
 	// <0x6fedb9>|0x000|0x000:'112'
 	// <1>
 	// <0x6fedc5>|0x00c|0x00c:'114'
@@ -210,7 +210,7 @@ void collision_geometry::unsubscribe( collision_geometry_subscriber* subscriber 
 	if ( m_subscribers.empty( ) )
 		remove( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6febe0]: 5
 	// <0x6febe9>|0x000|0x000:'122'
 	// <0x6febf5>|0x00c|0x00c:'123'
 	// <1>
@@ -224,7 +224,7 @@ void collision_geometry::set_transform( float4x4 const& transform )
 {
 	m_ghost_object->set_transform( transform );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6feeb0]: 1
 	// <0x6feeb8>|0x000|0x000:'132'
 	// ******
 }
@@ -234,7 +234,7 @@ float4x4 collision_geometry::get_transform( )
 {
 	return m_ghost_object->get_transform( );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x6fee50]: 1
 	// <0x6fee57>|0x000|0x000:'136'
 	// ******
 }

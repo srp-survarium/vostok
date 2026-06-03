@@ -15,7 +15,7 @@ victory_item_core_cook::victory_item_core_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762070]: 1
 	// <0x7620a5>|0x035|+0x00c:'15'
 	// ******
 }
@@ -25,7 +25,7 @@ victory_item_core* victory_item_core_cook::create_resource( )
 {
 	return VOSTOK_NEW_IMPL( g_allocator, victory_item_core );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7620f0]: 1
 	// <0x7620f9>|0x009|+0x04e:'20'
 	// ******
 }
@@ -42,7 +42,7 @@ void victory_item_core_cook::translate_query( resources::query_result_for_cook& 
 		&parent
 	);
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762220]: 10
 	// <0>
 	// <7>
 	// <0x76222c>|0x00c|+0x0d0:'33'
@@ -68,7 +68,7 @@ void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 	parent->finish_query( result_success );
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x762150]: 10
 	// <0x76215a>|0x00a|+0x00b:'39'
 	// <0>
 	// <0x762165>|0x015|+0x022:'41'
@@ -87,7 +87,7 @@ void victory_item_core_cook::delete_resource( resources::resource_base* resource
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7620c0]: 1
 	// <0x7620c9>|0x009|+0x013:'53'
 	// ******
 }

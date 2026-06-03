@@ -30,7 +30,7 @@ weapon_core_reload_state::weapon_core_reload_state(
 	// <0x7aa873><3>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa770]: 13
 	// <0x7aa7ce>|0x05e|+0x023:'27'
 	// <0x7aa7f1>|0x081|+0x007:'28'
 	// <0x7aa7f8>|0x088|+0x018|[1]:'29'
@@ -60,7 +60,7 @@ animation::mixing::expression weapon_core_reload_state::weapon_and_hands_express
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aaae0]: 3
 	// <0x7aaaf0>|0x010|+0x01f:'44'
 	// <0x7aab0f>|0x02f|+0x02a:'45'
 	// <0x7aab39>|0x059|+0x07a:'46'
@@ -76,7 +76,7 @@ weapon_lexeme_pair weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buf
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aaa40]: 7
 	// <0x7aaa49>|0x009|+0x007:'51'
 	// <0x7aaa50>|0x010|+0x023:'52'
 	// <0x7aaa73>|0x033|+0x00c:'53'
@@ -103,7 +103,7 @@ animation::mixing::expression weapon_core_reload_state::get_user_hands_expressio
 	// u32 							user_state_index
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa950]: 22
 	// <0x7aa961>|0x011|+0x006:'62'
 	// <0x7aa967>|0x017|+0x010:'63'
 	// <0>
@@ -139,7 +139,7 @@ weapon_core_reload_state* weapon_core_state_cook_template<weapon_core_reload_sta
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7aa8e0]: 6
 	// <0>
 	// <1>
 	// <2>

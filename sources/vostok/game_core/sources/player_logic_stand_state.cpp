@@ -12,7 +12,7 @@ namespace survarium {
 player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_stand )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7806e0]: 0
 	// ******
 }
 
@@ -33,7 +33,7 @@ animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	// animation::mixing::animation_lexeme movement_lexeme
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x780960]: 20
 	// <0x780971>|0x011|+0x02b:'44'
 	// <0x78099c>|0x03c|+0x012:'45'
 	// <0x7809ae>|0x04e|+0x013:'46'
@@ -78,7 +78,7 @@ animation::mixing::expression player_logic_stand_state::get_recoil_animation_lex
 	// resources::managed_resource_ptr additive_animation
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x780710]: 17
 	// <0x780720>|0x010|+0x04f:'77'
 	// <0x78076f>|0x05f|+0x0b6:'78'
 	// <0x780825>|0x115|+0x012:'79'
@@ -132,7 +132,7 @@ animation::mixing::expression player_logic_stand_state::look_expression(
 	// <0x780f91><1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x780bc0]: 58
 	// <0x780bd1>|0x011|+0x00b:'105'
 	// <0x780bdc>|0x01c|+0x010:'106'
 	// <0x780bec>|0x02c|+0x009:'107'
@@ -207,7 +207,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	// <0x78109a> -> player_input const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x781070]: 13
 	// <0x781081>|0x011|+0x02a:'171'
 	// <0>
 	// <1>

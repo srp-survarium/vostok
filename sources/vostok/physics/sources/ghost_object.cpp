@@ -147,7 +147,7 @@ void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->addCollisionObject( m_bt_object, group, mask );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x583720]: 3
 	// <1>
 	// <2>
 	// <3>
@@ -159,7 +159,7 @@ void bt_ghost_object::remove( world* w )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->removeCollisionObject( m_bt_object );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x583700]: 1
 	// <1>
 	// ******
 }

@@ -12,7 +12,7 @@ namespace survarium {
 player_logic_crouch_state::player_logic_crouch_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_crouch )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ed20]: 0
 	// ******
 }
 
@@ -24,7 +24,7 @@ void player_logic_crouch_state::initialize( )
 	// <0x58ed1a> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ed00]: 2
 	// <0x58ed07>|0x007|+0x015:'37'
 	// <0>
 	// ******
@@ -38,7 +38,7 @@ void player_logic_crouch_state::finalize( )
 	// <0x58ecfa> -> void <unknown>()
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ece0]: 1
 	// <0x58ece7>|0x007|+0x015:'42'
 	// ******
 }
@@ -60,7 +60,7 @@ animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 	// animation::mixing::animation_lexeme movement_lexeme
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58efb0]: 19
 	// <0x58efc1>|0x011|+0x02b:'54'
 	// <0x58efec>|0x03c|+0x013:'55'
 	// <0>
@@ -104,7 +104,7 @@ animation::mixing::expression player_logic_crouch_state::get_recoil_animation_le
 	// resources::managed_resource_ptr additive_animation
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58ed50]: 17
 	// <0x58ed60>|0x010|+0x042:'86'
 	// <0x58eda2>|0x052|+0x0b6:'87'
 	// <0x58ee58>|0x108|+0x012:'88'
@@ -158,7 +158,7 @@ animation::mixing::expression player_logic_crouch_state::look_expression(
 	// <0x58f59f><1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58f1e0]: 57
 	// <0x58f1f1>|0x011|+0x00b:'114'
 	// <0x58f1fc>|0x01c|+0x010:'115'
 	// <0x58f20c>|0x02c|+0x009:'116'
@@ -233,7 +233,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	// <0x58f6fe> -> player_input const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x58f680]: 9
 	// <0x58f691>|0x011|+0x08a:'179'
 	// <0>
 	// <1>

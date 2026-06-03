@@ -12,7 +12,7 @@ namespace network_core {
 // vostok::network_core::udp_network_flow_emulator::udp_network_flow_emulator(vostok::memory::base_allocator&, vostok::memory::single_size_buffer_allocator<300,vostok::threading::single_threading_policy>&, vostok::network_core::udp_network_flow_emulator_options const&)
 udp_network_flow_emulator::udp_network_flow_emulator( memory::base_allocator& allocator, memory::single_size_buffer_allocator<300,threading::single_threading_policy>& packets_allocator, udp_network_flow_emulator_options const& options )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7388c0]: 1
 	// 1
 	// ******
 }
@@ -21,7 +21,7 @@ udp_network_flow_emulator::udp_network_flow_emulator( memory::base_allocator& al
 // void vostok::network_core::udp_network_flow_emulator::~udp_network_flow_emulator()
 void udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x738990]: 4
 	// <0x738999>|0x000|0x000:'34'
 	// <0x7389b0>|0x017|0x017:'35'
 	// <0x7389cf>|0x036|0x01f:'36'
@@ -34,7 +34,7 @@ void udp_network_flow_emulator::~udp_network_flow_emulator( )
 bool delayed_packets_predicate::operator()( std::pair<udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> > const& message ) const
 {
 	return false;
-	// FUNCTION BODY
+	// FUNCTION BODY[0x1369d0]: 5
 	// <0x1369d9>|0x000|0x000:'49'
 	// <0x1369e9>|0x010|0x010:'50'
 	// 1
@@ -64,7 +64,7 @@ void udp_network_flow_emulator::tick( u32 time_in_ms, boost::function<void __cde
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x738a30]: 30
 	// <0x738a40>|0x000|0x000:'63'
 	// <0x738a5d>|0x01d|0x01d:'64'
 	// 1
@@ -122,7 +122,7 @@ void udp_network_flow_emulator::add_packet(
 
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x738cf0]: 15
 	// <0x738d01>|0x000|0x000:'103'
 	// 1
 	// <0x738d1e>|0x01d|0x01d:'105'
@@ -149,7 +149,7 @@ void udp_network_flow_emulator::make_packet_lost( u8* buffer, u32 buffer_size, b
 	// bool 						is_low_level_packet
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x738a00]: 33
 	// 1
 	// 2
 	// <0x738a09>|0x000|0x000:'124'
@@ -195,7 +195,7 @@ void udp_network_flow_emulator::on_packet_received(
 	u32									time_in_ms,
 	u32									unacknowledged_packets_count)
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x738e60]: 4
 	// <0x738e67>|0x000|0x000:'165'
 	// <0x738e86>|0x01f|0x01f:'166'
 	// <0x738ea2>|0x03b|0x01c:'167'

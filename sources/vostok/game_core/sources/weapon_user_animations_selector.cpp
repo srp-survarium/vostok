@@ -18,7 +18,7 @@ weapon_user_animations_selector::weapon_user_animations_selector( )
 	// player_logic_base_state* 	jumping
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595610]: 29
 	// <0x595697>|0x087|+0x067:'27'
 	// <0x5956fe>|0x0ee|+0x067:'28'
 	// <0x595765>|0x155|+0x06d:'29'
@@ -59,7 +59,7 @@ weapon_user_animations_selector::~weapon_user_animations_selector( )
 	// ai::fsm_state* 				state<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5950b0]: 2
 	// <0x5950ba>|0x00a|+0x011|[1]:'60'
 	// <0x5950cb>|0x01b|+0x028:'61'
 	// ******
@@ -74,7 +74,7 @@ void weapon_user_animations_selector::tick( )
 	// <0x5954d2> -> player_input const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595480]: 10
 	// <0x595489>|0x009|+0x02f:'66'
 	// <0>
 	// <0x5954b8>|0x038|+0x007:'68'
@@ -96,7 +96,7 @@ player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 	// player_logic_base_state* 	result
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594a30]: 3
 	// <0x594a39>|0x009|+0x01a:'80'
 	// <0x594a53>|0x023|+0x00c:'81'
 	// <0x594a5f>|0x02f|+0x003:'82'
@@ -111,7 +111,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> wea
 	// <0x594e80> -> std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> <unknown>(mutable_buffer&, weapon_animation_parameters const&, const bool) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594e50]: 6
 	// <0>
 	// <1>
 	// <2>
@@ -135,7 +135,7 @@ void weapon_user_animations_selector::activate( base_player& user, boost::functi
 	// <0x595088> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594f90]: 16
 	// <0x594f9a>|0x00a|+0x009:'101'
 	// <0x594fa3>|0x013|+0x021|[1]:'102'
 	// <0x594fc4>|0x034|+0x019:'103'
@@ -164,7 +164,7 @@ void weapon_user_animations_selector::deactivate( )
 	// <0x594ed6> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594e90]: 4
 	// <0x594e99>|0x009|+0x00a:'121'
 	// <0x594ea3>|0x013|+0x019:'122'
 	// <0>
@@ -178,7 +178,7 @@ bool weapon_user_animations_selector::is_ready_to_be_deactivated( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594c00]: 1
 	// <0x594c09>|0x009|+0x017:'129'
 	// ******
 }
@@ -189,7 +189,7 @@ bool weapon_user_animations_selector::is_sprinting( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594bd0]: 1
 	// <0x594bd9>|0x009|+0x01d:'134'
 	// ******
 }
@@ -209,7 +209,7 @@ void weapon_user_animations_selector::serialize( network_core::udp_match_packet&
 	// <0x594e3d> -> void <unknown>(network_core::udp_match_packet&) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594dc0]: 14
 	// <0x594dc9>|0x009|+0x004:'139'
 	// <0x594dcd>|0x00d|+0x004:'140'
 	// <0x594dd1>|0x011|+0x009:'141'
@@ -242,7 +242,7 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 	// <0x594dac> -> void <unknown>(network_core::packet_reader&)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594d20]: 13
 	// <0x594d29>|0x009|+0x00b:'157'
 	// <0x594d34>|0x014|+0x004:'158'
 	// <0x594d38>|0x018|+0x007:'159'
@@ -263,7 +263,7 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 // survarium::weapon_user_state_enum survarium::weapon_user_animations_selector::get_current_state_id() const
 weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594a00]: 1
 	// <0x594a09>|0x009|+0x021:'174'
 	// ******
 }
@@ -280,7 +280,7 @@ bool weapon_user_animations_selector::sprint_predicate( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5953b0]: 13
 	// <0>
 	// <1>
 	// <2>
@@ -309,7 +309,7 @@ bool weapon_user_animations_selector::stand_predicate( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595520]: 15
 	// <0x595529>|0x009|+0x02a:'196'
 	// <0>
 	// <0x595553>|0x033|+0x007:'198'
@@ -336,7 +336,7 @@ void weapon_user_animations_selector::set_animation_callback( pcstr channel_id, 
 	// <0x594f7b> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, const u8, pcvoid const)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594f40]: 1
 	// <0x594f49>|0x009|+0x03c:'215'
 	// ******
 }
@@ -349,7 +349,7 @@ void weapon_user_animations_selector::remove_animation_callback( pcstr channel_i
 	// <0x594950> -> void <unknown>(pcstr, pcvoid)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594930]: 1
 	// <0x594937>|0x007|+0x01b:'220'
 	// ******
 }
@@ -362,7 +362,7 @@ void weapon_user_animations_selector::set_animation_callback( animation::reserve
 	// <0x594f26> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, pcvoid const)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594ef0]: 1
 	// <0x594ef9>|0x009|+0x037:'225'
 	// ******
 }
@@ -375,7 +375,7 @@ void weapon_user_animations_selector::remove_animation_callback( animation::rese
 	// <0x594920> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594900]: 1
 	// <0x594907>|0x007|+0x01b:'230'
 	// ******
 }
@@ -391,7 +391,7 @@ bool weapon_user_animations_selector::crouch_predicate( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594b50]: 9
 	// <0>
 	// <1>
 	// <2>
@@ -414,7 +414,7 @@ bool weapon_user_animations_selector::broken_legs_predicate( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594b00]: 1
 	// <0x594b09>|0x009|+0x03c:'248'
 	// ******
 }
@@ -437,7 +437,7 @@ bool weapon_user_animations_selector::jump_predicate( ) const
 
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595280]: 22
 	// <0>
 	// <1>
 	// <2>
@@ -469,7 +469,7 @@ bool weapon_user_animations_selector::is_weapon_in_idle( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5951f0]: 1
 	// <0x5951f9>|0x009|+0x074:'279'
 	// ******
 }
@@ -480,7 +480,7 @@ bool weapon_user_animations_selector::is_weapon_firing( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5951a0]: 1
 	// <0x5951a9>|0x009|+0x040:'284'
 	// ******
 }
@@ -491,7 +491,7 @@ bool weapon_user_animations_selector::is_weapon_toggling( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x595120]: 1
 	// <0x595129>|0x009|+0x066:'289'
 	// ******
 }
@@ -506,7 +506,7 @@ float weapon_user_animations_selector::look_time_factor( ) const
 
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594aa0]: 1
 	// <0x594aa9>|0x009|+0x050:'301'
 	// ******
 }
@@ -524,7 +524,7 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 {
 	return 0.0f;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594c90]: 2
 	// <0x594c99>|0x009|+0x041:'313'
 	// <0x594cda>|0x04a|+0x00b:'314'
 	// ******
@@ -534,7 +534,7 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 // fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_user_animations_selector::look_time_calculator() const
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_user_animations_selector::look_time_calculator( ) const
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594cf0]: 1
 	// <0x594cf7>|0x007|+0x01d:'319'
 	// ******
 }
@@ -547,7 +547,7 @@ animation::callback_return_type_enum weapon_user_animations_selector::on_interva
 	// const weapon_user_animations_selector::on_interval_ended::__l9::<unnamed-tag> c_right_leg_interval_id = 0;
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5949c0]: 9
 	// <0x5949c9>|0x009|+0x00c:'324'
 	// <0x5949d5>|0x015|+0x009:'325'
 	// <0>
@@ -564,7 +564,7 @@ animation::callback_return_type_enum weapon_user_animations_selector::on_interva
 // void survarium::weapon_user_animations_selector::on_broken_limb_affect(char const*, const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum)
 void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594960]: 5
 	// <0x594969>|0x009|+0x023:'337'
 	// <0>
 	// <0x59498c>|0x02c|+0x023:'339'
@@ -579,7 +579,7 @@ bool weapon_user_animations_selector::is_in_jump( ) const
 {
 	return false;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594a70]: 1
 	// <0x594a79>|0x009|+0x01d:'346'
 	// ******
 }
@@ -592,7 +592,7 @@ void weapon_user_animations_selector::set_sprint_callbacks( boost::function<void
 	// player_logic_base_state* 	state
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x594c30]: 7
 	// <0x594c39>|0x009|+0x01b:'351'
 	// <0x594c54>|0x024|+0x006:'352'
 	// <0x594c5a>|0x02a|+0x00f:'353'

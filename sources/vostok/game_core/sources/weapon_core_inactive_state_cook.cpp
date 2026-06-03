@@ -14,7 +14,7 @@ weapon_core_inactive_state_cook::weapon_core_inactive_state_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59eee0]: 1
 	// <0x59ef17>|0x037|+0x00c:'18'
 	// ******
 }
@@ -23,7 +23,7 @@ weapon_core_inactive_state_cook::weapon_core_inactive_state_cook( ) :
 // void survarium::weapon_core_inactive_state_cook::~weapon_core_inactive_state_cook()
 weapon_core_inactive_state_cook::~weapon_core_inactive_state_cook( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59eec0]: 1
 	// ******
 }
 
@@ -31,7 +31,7 @@ weapon_core_inactive_state_cook::~weapon_core_inactive_state_cook( )
 // vostok::mutable_buffer survarium::weapon_core_inactive_state_cook::allocate_resource(vostok::resources::query_result_for_cook&, vostok::const_buffer, bool)
 mutable_buffer weapon_core_inactive_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ef60]: 2
 	// <0x59ef6b>|0x00b|+0x03d:'28'
 	// <0x59efa8>|0x048|+0x02e:'29'
 	// ******
@@ -41,7 +41,7 @@ mutable_buffer weapon_core_inactive_state_cook::allocate_resource( resources::qu
 // void survarium::weapon_core_inactive_state_cook::deallocate_resource(void*)
 void weapon_core_inactive_state_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ef30]: 1
 	// <0x59ef38>|0x008|+0x014:'34'
 	// ******
 }
@@ -55,7 +55,7 @@ void weapon_core_inactive_state_cook::create_resource( resources::query_result_f
 	// weapon_state_creation_params const* params
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59efe0]: 4
 	// <0x59efe9>|0x009|+0x006:'39'
 	// <0x59efef>|0x00f|+0x068:'40'
 	// <0x59f057>|0x077|+0x045:'41'
@@ -75,7 +75,7 @@ void weapon_core_inactive_state_cook::destroy_resource( resources::unmanaged_res
 	// <0x59eeb3> -> void* <unknown>(u32)
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59ee80]: 2
 	// <0x59ee89>|0x009|+0x01e:'47'
 	// <0x59eea7>|0x027|+0x00e:'48'
 	// ******

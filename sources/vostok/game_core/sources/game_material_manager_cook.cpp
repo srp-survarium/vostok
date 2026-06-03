@@ -20,7 +20,7 @@ game_material_manager_cook::game_material_manager_cook( bool server_usage ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x763630]: 1
 	// <0x76366e>|0x03e|+0x00c:'21'
 	// ******
 }
@@ -43,7 +43,7 @@ void game_material_manager_cook::translate_query( resources::query_result_for_co
 	);
 
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7644b0]: 12
 	// <0>
 	// <0x7644b9>|0x009|+0x00e:'27'
 	// <0x7644c7>|0x017|+0x00e:'28'
@@ -67,7 +67,7 @@ void game_material_manager_cook::delete_resource( resources::resource_base* res 
 	mngr->~game_material_manager( );
 	VOSTOK_DELETE_IMPL( g_allocator, mngr ); // sushi@MATCH: A call to an empty function here in base.
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x763690]: 4
 	// <0x763699>|0x009|+0x006:'42'
 	// <0>
 	// <0x76369f>|0x00f|+0x00e:'44'
@@ -96,7 +96,7 @@ void game_material_manager_cook::on_configs_loaded( resources::queries_result& d
 	create_game_materials( manager, mtrl_cfg->get_root( )["materials"] );
 	create_game_material_pairs( *data.get_parent_query( ), manager, pairs_cfg->get_root( )["pairs"] );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x764330]: 17
 	// <0x76433a>|0x00a|+0x00c:'50'
 	// <0x764346>|0x016|+0x022:'51'
 	// <0>
@@ -143,7 +143,7 @@ void game_material_manager_cook::create_game_materials(
 	ASSERT( UNKNOWN_EXPRESSION );
 	physics::setup_game_material_groups( g_material_physics_group, sizeof( g_material_physics_group ) /  sizeof( u16 ) );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7636e0]: 22
 	// <0>
 	// <1>
 	// <0x7636e9>|0x009|+0x00d:'75'
@@ -284,7 +284,7 @@ void game_material_manager_cook::create_game_material_pairs(
 		);
 	}
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x763b00]: 120
 	// <0>
 	// <0x763b14>|0x014|+0x00f:'102'
 	// <0x763b23>|0x023|+0x00f:'103'
@@ -445,7 +445,7 @@ void game_material_manager_cook::on_decals_loaded( resources::queries_result& da
 
 	data.get_parent_query( )->finish_query( result_success );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x763830]: 36
 	// <0>
 	// <0x76384b>|0x01b|+0x013:'226'		if ( !data.is_successful( ) )
 	// <0>

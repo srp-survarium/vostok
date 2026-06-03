@@ -21,7 +21,7 @@ void legs_ik_drawer::draw_leg(
 	float					cross_half_size
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7b1d70]: 9
 	// <0x7b1d78>|0x008|+0x01b:'28'
 	// <0x7b1d93>|0x023|+0x01b:'29'
 	// <0x7b1dae>|0x03e|+0x01b:'30'
@@ -43,7 +43,7 @@ void legs_ik_drawer::draw_cross(
 	bool					use_depth
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7b1d40]: 1
 	// <0x7b1d47>|0x007|+0x022:'41'
 	// ******
 }
@@ -52,7 +52,7 @@ void legs_ik_drawer::draw_cross(
 // void survarium::legs_ik_drawer::draw_origin(vostok::math::float4x4 const&, const float, bool)
 void legs_ik_drawer::draw_origin( float4x4 const& matrix, float half_size, bool use_depth )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7b1d10]: 1
 	// <0x7b1d17>|0x007|+0x01e:'46'
 	// ******
 }
@@ -66,7 +66,7 @@ void legs_ik_drawer::draw_line_capsule(
 	bool					use_depth
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7b1ef0]: 1
 	// <0x7b1ef7>|0x007|+0x022:'51'
 	// ******
 }
@@ -80,7 +80,7 @@ void legs_ik_drawer::draw_solid_capsule(
 	bool					use_depth
 )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7b1ec0]: 1
 	// <0x7b1ec7>|0x007|+0x022:'56'
 	// ******
 }

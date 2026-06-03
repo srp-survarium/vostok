@@ -35,7 +35,7 @@ double_barreled_weapon_core_reload_state::double_barreled_weapon_core_reload_sta
 	// <0x7a9089><4>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a8f20]: 18
 	// <0x7a8f7e>|0x05e|+0x02b:'24'
 	// <0x7a8fa9>|0x089|+0x023:'25'
 	// <0x7a8fcc>|0x0ac|+0x007:'26'
@@ -71,7 +71,7 @@ animation::mixing::expression double_barreled_weapon_core_reload_state::weapon_a
 	// weapon_lexeme_pair 			lexeme_pair
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a93a0]: 5
 	// <0x7a93b0>|0x010|+0x01f:'46'
 	// <0>
 	// <0x7a93cf>|0x02f|+0x02a:'48'
@@ -91,7 +91,7 @@ weapon_lexeme_pair double_barreled_weapon_core_reload_state::get_weapon_lexeme_p
 	// pcstr 						animation_identifier
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a92c0]: 14
 	// <0x7a92c9>|0x009|+0x00c:'55'
 	// <0>
 	// <1>
@@ -126,7 +126,7 @@ animation::mixing::expression double_barreled_weapon_core_reload_state::get_user
 	// pcstr[2][2] 					user_animation_captions
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a9170]: 25
 	// <0x7a9182>|0x012|+0x012:'73'
 	// <0x7a9194>|0x024|+0x012:'74'
 	// <0>
@@ -166,7 +166,7 @@ double_barreled_weapon_core_reload_state* weapon_core_state_cook_template<survar
 {
 	return NULL;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7a9100]: 6
 	// <0>
 	// <1>
 	// <2>

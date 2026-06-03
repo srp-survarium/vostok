@@ -12,7 +12,7 @@ namespace survarium {
 // void survarium::`dynamic initializer for 'player_templates_count''()
 void `dynamic initializer for 'player_templates_count''( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x7d9ec0]
 	// <0x7d9ec0>|0x000|      :'512'	{
 	// ******
 }

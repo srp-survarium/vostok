@@ -26,7 +26,7 @@ weapon_state& weapon_state::operator=( weapon_state const& other )
 // void survarium::weapon_state::deserialize(vostok::network_core::packet_reader&)
 void weapon_state::deserialize( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0c50]: 3
 	// <0x5a0c59>|0x009|+0x00d:'36'
 	// <0x5a0c66>|0x016|+0x00e:'37'
 	// <0x5a0c74>|0x024|+0x00e:'38'

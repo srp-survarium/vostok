@@ -13,7 +13,7 @@ weapon_core_cook::weapon_core_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59f0d0]: 37
 	// <0>
 	// <35>
 	// <0x59f105>|0x035|+0x00c:'118'
@@ -28,7 +28,7 @@ void weapon_core_cook::translate_query( resources::query_result_for_cook& parent
 	// fs_new::virtual_path_string 	weapon_config_name
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0680]: 11
 	// <0x5a068f>|0x00f|+0x00b:'123'
 	// <0x5a069a>|0x01a|+0x01d:'124'
 	// <0>
@@ -53,7 +53,7 @@ void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data 
 	// resources::query_result_for_cook* parent
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a05c0]: 7
 	// <0x5a05ca>|0x00a|+0x00b:'138'
 	// <0x5a05d5>|0x015|+0x00c:'139'
 	// <0x5a05e1>|0x021|+0x022:'140'
@@ -83,7 +83,7 @@ void weapon_core_cook::load_weapon_parameters( configs::binary_config_ptr config
 	// configs::binary_config_value const* it<1>
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59f150]: 35
 	// <0x59f161>|0x011|+0x010:'149'
 	// <0x59f171>|0x021|+0x00c:'150'
 	// <0>
@@ -131,7 +131,7 @@ void weapon_core_cook::process_loading_weapon_core( resources::query_result_for_
 	// resources::request[2] 		requests
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0460]: 18
 	// <0x5a0470>|0x010|+0x01b:'188'
 	// <0>
 	// <0x5a048b>|0x02b|+0x00b:'190'
@@ -164,7 +164,7 @@ void weapon_core_cook::on_core_subresources_ready( resources::queries_result& da
 	// resources::query_result_for_cook* parent
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x5a0330]: 11
 	// <0x5a033a>|0x00a|+0x00b:'210'
 	// <0x5a0345>|0x015|+0x00c:'211'
 	// <0x5a0351>|0x021|+0x00c:'212'
@@ -183,7 +183,7 @@ void weapon_core_cook::on_core_subresources_ready( resources::queries_result& da
 // void survarium::weapon_core_cook::delete_resource(vostok::resources::resource_base*)
 void weapon_core_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59f120]: 1
 	// <0x59f129>|0x009|+0x013:'225'
 	// ******
 }
@@ -205,7 +205,7 @@ void weapon_core_cook::query_weapon_states( resources::query_result_for_cook* pa
 	// u32 							i
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59fbe0]: 42
 	// <0x59fc01>|0x021|+0x037:'230'
 	// <0x59fc38>|0x058|+0x02f:'231'
 	// <0x59fc67>|0x087|+0x08b:'232'
@@ -273,7 +273,7 @@ void weapon_core_cook::on_weapon_states_ready( resources::queries_result& data, 
 	// <0x59fb3b> -> u32 <unknown>(weapon_core&) const
 	// ******
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59f430]: 31
 	// <0x59f447>|0x017|+0x00c:'276'
 	// <0x59f453>|0x023|+0x032:'277'
 	// <0x59f485>|0x055|+0x007:'278'
@@ -314,7 +314,7 @@ u32 weapon_core_cook::cooked_object_size( weapon_core& object_to_cook ) const
 {
 	return 0;
 
-	// FUNCTION BODY
+	// FUNCTION BODY[0x59f0b0]: 2
 	// <0>
 	// <0x59f0b7>|0x007|+0x005:'312'
 	// ******
