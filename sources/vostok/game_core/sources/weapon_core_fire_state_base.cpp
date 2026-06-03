@@ -4,121 +4,112 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_fire_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.* + get_bullets_in_queue
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_fire_state_base::weapon_core_fire_state_base(survarium::weapon_core&, float)
+// STATE[100%|DONE]
 weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, float animation_timescale ) :
 	weapon_core_animation_end_aware_state( weapon, true )
 {
-	// FUNCTION BODY
-	// <0x59ec20>|0x000|+0x066:'23'	{
-	// <0x59ec86>|0x066|      :'24'	}
-	// ******
+	m_animation_timescale = animation_timescale;
+	m_playback_type = animation::mixing::play_cyclically;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::initialize()
+// STATE[99.71%|DONE]: every instruction matches; the sole residual is a 4-byte /Od
+// frame-size diff (base `sub esp,5Ch` vs target `58h`) that cascades into the [ebp-N]
+// slot numbering - stack-slot packing, not a logic/structure divergence.
 void weapon_core_fire_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ec9a>|0x00a|+0x008:'34'
-	// <0x59eca2>|0x012|+0x094:'35'
-	// <0x59ed36>|0x0a6|+0x029:'36'
-	// <0>
-	// <0x59ed5f>|0x0cf|+0x018:'38'
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
+
+	m_weapon.set_animation_callback(
+		"shoot",
+		this,
+		boost::bind( &weapon_core_fire_state_base::on_shot_event, this, _1 )
+	);
+
+	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xcf)
+
+	*m_is_firing_ptr = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::execute()
+// STATE[80.91%|PARTIAL]: LTCG inline-vs-call of the empty weapon_core_base_state::execute().
+// Target keeps it out-of-line and emits `call execute` (standalone @0x087f80); our /GL LTCG
+// inlines its empty `{}` body at this call site (standalone still exists @0x012c20, so it is a
+// per-call-site inline decision, not "inlined everywhere"). Same unsteerable class as
+// animation_playback_state::reset() in finalize. m_animation_has_been_ended = false matches.
 void weapon_core_fire_state_base::execute( )
 {
-	// FUNCTION BODY
-	// <0x59ec07>|0x007|+0x008:'43'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ec0f>|0x00f|+0x00a:'50'
+	weapon_core_base_state::execute( );
+	m_animation_has_been_ended = false;
+
+	// FUNCTION BODY (kept: PARTIAL - empty-callee inline-vs-call)
+	// <0x58ec07>|0x007 weapon_core_base_state::execute( );   (target `call`, base inlines empty body)
+	// <0x58ec0f>|0x00f m_animation_has_been_ended = false;
 	// ******
+	// TARGET @0x07: mov ecx,[ebp-4]; call survarium::weapon_core_base_state::execute
+	// BASE   @0x07: (call elided - empty body inlined to nothing)
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::finalize()
+// STATE[100%|DONE]
 void weapon_core_fire_state_base::finalize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ebb9>|0x009|+0x008:'61'
-	// <0x59ebc1>|0x011|+0x017:'62'
-	// <0>
-	// <0x59ebd8>|0x028|+0x018:'64'
-	// ******
+	weapon_core_animation_end_aware_state::finalize( );
+
+	m_weapon.remove_animation_callback( "shoot", this );
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0x28)
+
+	*m_is_firing_ptr = false;
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core_fire_state_base::on_shot_event(vostok::animation::animation_callback_params&)
-animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
-{
-	// FUNCTION BODY
-	// <0>
-	// <0x59ed91>|0x011|+0x007:'70'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ed98>|0x018|+0x00c:'77'
-	// <0x59eda4>|0x024|+0x00c:'78'
-	// <0>
-	// <1>
-	// <0x59edb0>|0x030|+0x01c:'81'
-	// <0x59edcc>|0x04c|+0x077:'82'
-	// <0x59ee43>|0x0c3|+0x004:'83'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59ee47>|0x0c7|+0x00c:'87'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x59ee53>|0x0d3|+0x015:'97'
-	// <0>
-	// <0x59ee68>|0x0e8|+0x00c:'99'
-	// <0>
-	// <0x59ee74>|0x0f4|+0x002:'101'
-	// ******
-}
-
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::on_animation_end_impl(bool&)
+// STATE[100%|DONE]
 void weapon_core_fire_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59eb97>|0x007|+0x006:'107'
+	animation_player_tick_result = true;
+}
+
+// STATE[95.26%|PARTIAL]: logging residual (same class as animation_analysis_result_cook::translate_query).
+// All control flow, the two leading + two trailing compiled-out ASSERTs, the if/else and instant_fire
+// match the target byte-for-byte. The residual is entirely inside the LOG_ERROR expansion: the __LINE__
+// immediate (base `push 4Bh`=75 vs target `push 52h`=82, our file is shorter), the __FILE__/__FUNCSIG__
+// string relocs (content differs build-to-build), and a one-instruction reorder of the boost::function
+// log_callback temp ctor. None steerable to a clean byte match.
+animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
+{
+	params.interrupt_animation_player_tick = true;
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0x18)
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0x24)
+
+	if ( !m_weapon.get_bullets_in_queue( ) )
+	{
+		LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );
+		return animation::callback_return_type_call_me_again;
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xc7)
+
+	m_weapon.instant_fire( params.callback_time_in_ms );
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xe8)
+
+	return animation::callback_return_type_call_me_again;
+
+	// FUNCTION BODY (kept: PARTIAL - logging string residual)
+	// <0x58ed80> params.interrupt_animation_player_tick = true;
+	// <0x58ed98> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
+	// <0x58eda4> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
+	// <0x58edb0> if ( !m_weapon.get_bullets_in_queue() ) {
+	// <0x58edcc>   LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );  (+0x77)
+	// <0x58ee43>   return callback_return_type_call_me_again;
+	// <0x58ee47> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
+	// <0x58ee53> m_weapon.instant_fire( params.callback_time_in_ms );
+	// <0x58ee68> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
+	// <0x58ee74> return callback_return_type_call_me_again;
 	// ******
 }
 
