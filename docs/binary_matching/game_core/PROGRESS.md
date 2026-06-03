@@ -590,8 +590,8 @@ infra base): `module::function -> STATE -> PR (regressions)`.
                                                    SUBCLASSES + boost::bind/function machinery +
                                                    header move to private (target AAE) +
                                                    resolving the duplicate breath_state defn.
-                                                   Full reconstructed body in the cpp STATE
-                                                   comment + _tick.md.)
+                                                   Full reconstructed body (5 add_transitions)
+                                                   + next steps in _tick.md.)
   Added the tick body (FPU vibration math, fsm tick, breath_state vtable dispatch, max/min
   clamp) + the s_enable_breath_vibration_cc static (the dynamic initializer) + a `calc.tick(...)`
   reachability call to the existing breath anchor. Regressions: none (only unrelated ICF-fold
