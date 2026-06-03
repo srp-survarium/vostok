@@ -755,3 +755,13 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   is_jump_finished, landing_predicate, selected_animations, get_animation, activate.
   SKIPPED: get_move_animation, get_move_look_animation (container::get_stand_animation LNK1257).
   Deferred: get_animation_caption, get_move_look_caption (need caption global decls + STUB animations()).
+- player_logic_jump_state (7 fns, PR #177):
+    player_logic_jump_state::player_logic_jump_state           100%   DONE     (: player_logic_base_state(owner, type_jump=3), m_logic(owner); empty body)
+    player_logic_jump_state::initialize                        100%   DONE     (m_logic.activate(); ASSERT(UNKNOWN_EXPRESSION) recovered from compiled-out empty_stub)
+    player_logic_jump_state::execute                           100%   DONE     (m_logic.tick())
+    player_logic_jump_state::finalize                          100%   DONE     (m_logic.deactivate())
+    player_logic_jump_state::set_user                          100%   DONE     (player_logic_base_state::set_user(user); m_logic.set_user(user))
+    player_logic_jump_state::is_ready_for_transition           79.48% PARTIAL  (control flow + broken_legs_count==2 byte-exact; residual = two upstream inline-vs-call decisions not steerable from this caller - target keeps intrusive_ptr::operator* AND base_player::is_alive out-of-line, our /GL inlines both; get_user inline-vs-call class)
+    player_logic_jump_state::selected_animations               36.84% INPROGRESS (one-line delegation return m_logic.selected_animations(...); BLOCKED on jump_logic::selected_animations still a value-returning STUB - C4716/LNK1257 under LTCG. Placeholder VOSTOK_UNREACHABLE_CODE() keeps the override compilable; match jump_logic::selected_animations first)
+  Access fixes (read from target mangling): all virtual overrides mangle E (private) - moved to private: section (ctor stays public, QAE). base_state m_owner/m_user moved private->protected so the derived override reads m_user directly (no byte change to base_state's own fns). Filled inline accessor damage_model::broken_legs_count() = m_broken_legs_count[0]+m_broken_legs_count[1] (reached only here). New anchor use_game_core_player_logic_jump_state in temp_include_all.cpp.
+  Regressions: none (~14 report-changes "regressed"/~16 "improved" are COMDAT fold-rep churn from anchoring a new TU; non-stacked branch-from-clean-base accounting; no touched-file logic fn regressed).

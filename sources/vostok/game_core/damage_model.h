@@ -124,7 +124,7 @@ public:
 			void					register_body_part_damage_protector		( pcstr part_name, damage_protector* protector );
 			void					unregister_body_part_damage_protector	( pcstr part_name, damage_protector* protector );
 
-	inline	u8						broken_legs_count				( ) const { /* no source */ }
+	inline	u8						broken_legs_count				( ) const { return m_broken_legs_count[0] + m_broken_legs_count[1]; }
 	inline	u8						broken_hands_count				( ) const { /* no source */ }
 	inline	u32						get_parts_count					( ) const { /* no source */ }
 	inline	u8						get_last_aggressor_id			( ) const { /* no source */ }

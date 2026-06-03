@@ -58,6 +58,7 @@
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
 #include <vostok/game_core/player_logic_base_state.h>
+#include "player_logic_jump_state.h"
 #include "jump_logic_state_inactive.h"
 #include "jump_logic_state_landing.h"
 #include "jump_logic_state_start.h"
@@ -1218,6 +1219,35 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
+	// claude@MATCH: anchor for player_logic_jump_state (jump_state unit). The anchor
+	// never runs, so fabricated null refs are fine; calling each override keeps the
+	// COMDAT and lets objdiff pair them.
+	void use_game_core_player_logic_jump_state()
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+		survarium::base_player&						user	= *reinterpret_cast< survarium::base_player* >( NULL );
+
+		survarium::player_logic_jump_state	state( owner );
+
+		// overrides are private in jump_state; reach them virtually through the
+		// base interfaces where they are public/protected.
+		survarium::player_logic_base_state&	base	= state;
+		vostok::ai::fsm_state&				fsm		= state;
+
+		base.set_user( user );
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		bool ready = base.is_ready_for_transition( );
+		example_callback( reinterpret_cast< pcstr >( &ready ) );
+
+		// claude@TODO: selected_animations is INPROGRESS (blocked on jump_logic::
+		// selected_animations stub); not anchored until that callee returns a value.
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
 
 	void use_game_core_jump_logic_state_inactive( )
 	{
@@ -1784,6 +1814,7 @@ IncludeAll::IncludeAll()
 	vostok::use_client_player_update( NULL );
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
+	vostok::use_game_core_player_logic_jump_state();
 	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_jump_logic_state_landing();
 	vostok::use_game_core_jump_logic_state_start();
