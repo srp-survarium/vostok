@@ -87,6 +87,7 @@
 #include <vostok/game_core/weapon_core_hide_state_base.h>
 #include <vostok/game_core/weapon_core_reload_state_base.h>
 #include <vostok/game_core/weapon_core_chamber_a_round_state_base.h>
+#include <vostok/game_core/weapon_core_chamber_a_round_state.h>
 #include <vostok/game_core/weapon_core_fire_state_base.h>
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
 #include <vostok/game_core/pistol_weapon_core_fire_state.h>
@@ -1064,6 +1065,27 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
 	}
 
+	void use_game_core_weapon_core_chamber_a_round_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		survarium::weapon_core_chamber_a_round_state	state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_chamber_a_round_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_chamber_a_round_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_chamber_a_round_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_chamber_a_round_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
 	void use_game_core_weapon_core_fire_state_base( )
 	{
 		// weapon_core_fire_state_base does not override the pure
@@ -1974,6 +1996,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_hide_state_base( );
 	vostok::use_game_core_weapon_core_reload_state_base( );
 	vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
+	vostok::use_game_core_weapon_core_chamber_a_round_state( );
 	vostok::use_game_core_weapon_core_fire_state_base( );
 	vostok::use_game_core_weapon_core_shotgun_reload_state( );
 	vostok::use_game_core_pistol_weapon_core_fire_state( );
