@@ -157,16 +157,7 @@ animation::mixing::expression weapon_core_show_state::get_user_hands_expression(
 	// ******
 }
 
-// STATE[99.98%|PARTIAL]: real index bug, NOT a reloc artifact. Target line 90 reads
-// `mov ecx,[ebp+14h]; add ecx, 10h` (=animations[0] + 0x10) for user_anim_length; sizeof
-// managed_resource_ptr is 4, so 0x10 == animations[4] (the first USER animation: the ctor
-// loads weapon anims into indices 0-3, user anims into 4-7). Our base emits `add ecx, 4`
-// (animations[1]). NEXT STEP: change `animations[1]` -> `animations[4]` on the user_anim_length
-// line, then rebuild. (Sibling pistol new_object uses animations[8] because its weapon block is
-// 2x2x2=8 wide; same rule, first user anim.) The two `call ?end@buffer_string` reloc-target
-// diffs are benign ICF-fold-representative churn - pistol new_object carries them and still
-// scores 100.0, so they do NOT block this; the add-immediate is the sole real residual.
-// claude@MATCH: animations[1] is the bug - target offset 0x10 -> animations[4].
+// STATE[100%|DONE]
 weapon_core_show_state* weapon_core_state_cook_template<weapon_core_show_state>::new_object(
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*		params,
@@ -175,23 +166,10 @@ weapon_core_show_state* weapon_core_state_cook_template<weapon_core_show_state>:
 )
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[0] )->length_in_frames( );
-	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[1] )->length_in_frames( );	// claude@MATCH: should be animations[4] (target add ecx,10h); see STATE
+	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[4] )->length_in_frames( );
 	float time_scale = weapon_anim_length / user_anim_length;
 
 	return new ( buffer.c_ptr( ) ) weapon_core_show_state( params->weapon, time_scale, animations, animations_count, params->shown );
-
-	// FUNCTION BODY
-	// <0x7aef99>|0x009|+0x02b:'89'	weapon_anim_length = ...animations[0]...
-	// <0x7aefc4>|0x034|+0x030:'90'	user_anim_length   = ...animations[4]... (target add ecx,10h; base emits animations[1] = add ecx,4)
-	// <0x7aeff4>|0x064|+0x00f:'91'	time_scale = weapon_anim_length / user_anim_length
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7af003>|0x073|+0x053:'98'	return new ( buffer.c_ptr() ) weapon_core_show_state( ... )
-	// ******
 }
 
 } // namespace survarium
