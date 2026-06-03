@@ -663,3 +663,32 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   Access fixes (read from target mangling): ctor IAE->protected; initialize/execute/finalize/on_animation_end_impl/on_shot_event all MAE->protected (header had them public). Filled inline getter weapon_core::get_bullets_in_queue() = m_bullets_in_queue (@0x47C). New anchor use_game_core_weapon_core_fire_state_base (concrete_fire_state derived stub overriding pure weapon_and_hands_expression) + include + friend decl + dispatcher call in temp_include_all.cpp.
   on_shot_event boost::bind ICF-folds onto the weapon_core_animation_end_aware_state bind<> rep (delinker names that symbol) but assign_to<> + vcall'{36}' are on weapon_core_fire_state_base - source binds &weapon_core_fire_state_base::on_shot_event (virtual, hence vcall thunk).
   Regressions: none (21 report-changes "regressed"/21 "improved" are symmetric ICF fold-rep churn - empty_stub, dtors, thunks, resource_ptr/buffer_string/interlocked trivials; none touch this unit's source).
+
+- weapon_core batch3 - predicates + small accessors/events (18 fns, one PR):
+    weapon_core::on_reload_started                                  100%  DONE   (empty body; UAE public virtual)
+    weapon_core::on_player_model_added                             100%  DONE   (instant_show(); EAE private virtual)
+    weapon_core::on_player_model_removed                           100%  DONE   (instant_hide(); EAE private virtual)
+    weapon_core::set_ammunition                                   100%  DONE   (m_ammunition = arg; QAE)
+    weapon_core::is_ready_to_shoot                                100%  DONE   (ternary m_is_there_chamber_a_round_state?m_is_round_chambered:m_ammo_in_magazine>0 && m_bullets_in_queue!=0 && m_ready_for_fire; QBE)
+    weapon_core::unload_chambered_round                          100%  DONE   (3x ASSERT; ++m_ammo_in_magazine; m_is_round_chambered=false; on_unload_chambered_round() vcall @0xB8; QAE)
+    weapon_core::must_chamber_a_round_predicate                  100%  DONE   (ASSERT; !m_is_round_chambered && m_ammo_in_magazine!=0 && !m_user_animations_selector.is_in_jump(); ABE private)
+    weapon_core::must_chamber_a_round_aimed_predicate            100%  DONE   (must_chamber_a_round_predicate() && is_trying_to_aim(); ABE)
+    weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate 100% DONE (must_chamber_a_round_and_animation_ended_predicate() && is_trying_to_aim(); ABE)
+    weapon_core::is_not_trying_to_aim_predicate                  100%  DONE   (!is_trying_to_aim(); ABE)
+    weapon_user_animations_selector::is_ready_to_be_deactivated  100%  DONE   (current_state().is_ready_to_be_deactivated(); forced-live by weapon_core::is_ready_to_be_deactivated; filled inline player_logic_base_state getter @0x27)
+    weapon_core::on_hand_ik_event                                96.55% PARTIAL (2x ASSERT; active=params.domain_data==9; activate_hand(hand,active,params.callback_time_in_ms); return call_me_again. Residual = extra `xor ecx,ecx` before `cmp eax,9;sete cl` register-zeroing artifact; AAE private)
+    weapon_core::on_user_sprint                                  89.72% PARTIAL (left_hand_ik_is_active = is_double_handed() || !user_is_sprinting; activate_hand(left,...,m_last_tick_time_in_ms). Residual = LTCG inline-vs-call of trivial is_double_handed(); MAE protected virtual)
+    weapon_core::maximum_ammo_in_weapon                          88.41% PARTIAL (bool chamber_a_round_but_not_on_reload = m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload; return m_magazine_capacity + that. Residual = bool->int: target byte temp + neg;sbb;neg normalize vs our dword add; QBE)
+    weapon_core::must_chamber_a_round_and_animation_ended_predicate 87.47% PARTIAL (ASSERT; must_chamber_a_round_predicate() && current_base_state().has_animation_ended(). Residual = LTCG inline-vs-call of trivial has_animation_ended(); ABE)
+    weapon_core::target_and_animation_ended_predicate            85.68% PARTIAL (m_target==target && current_base_state().has_animation_ended(); same has_animation_ended inline-vs-call residual; ABE)
+    weapon_core::is_ready_to_be_deactivated                      84.77% PARTIAL (current_base_state().is_ready_to_be_deactivated() && m_user_animations_selector.is_ready_to_be_deactivated(); same getter inline-vs-call residual; UBE public virtual)
+    weapon_core::is_trying_to_aim                                66.75% PARTIAL (input=m_user->input(); just_toggled=~m_old_actions_mask & input.actions_mask; return could_be_aimed(*get_user()) && (input.actions_mask&0x80) && !(input.is_sprinting() && (just_toggled&0x200)) && m_user_animations_selector.get_current_state_id()!=type_jump. Residual = LTCG inline-vs-call of player_input::is_sprinting(); ABE)
+    weapon_user_animations_selector::get_current_state_id        72.67% PARTIAL (forced-live by is_trying_to_aim; current_state().id(); residual = LTCG inline-decision on current_state)
+    weapon_user_animations_selector::current_state              INPROGRESS (forced-live helper; static_cast<player_logic_base_state*>(m_logic.current_state())+ASSERT+return; target adds 2 ref-copies + operator* fold-rep call this form omits)
+  Filled inline getters: weapon_core::current_base_state() = *static_cast<weapon_core_base_state*>(m_logic->current_state());
+  weapon_core_base_state::is_ready_to_be_deactivated() = m_is_ready_to_be_deactivated (@0x134).
+  Includes added to weapon_core.cpp: base_player.h, player_input.h. Include added to weapon_user_animations_selector.cpp: player_logic_base_state.h.
+  Access fixes (target mangling): must_chamber_* / is_trying_to_aim / is_not_trying_to_aim_predicate / target_and_animation_ended_predicate -> private (ABE); on_hand_ik_event -> private (AAE); on_player_model_added/removed -> private (EAE); on_user_sprint -> protected (MAE).
+  Anchor: extended use_game_core_weapon_core_initialize_weapon_logic (friended) to call is_ready_to_shoot/maximum_ammo_in_weapon/set_ammunition/unload_chambered_round/on_hand_ik_event so they emit + score.
+  The 7 PARTIALs share ONE residual class: LTCG inline-vs-call of trivial header getters (is_sprinting/is_double_handed/has_animation_ended/is_ready_to_be_deactivated) - target /Od emits standalone calls, our /GL inlines them. Same class as reload_state_base::initialize round_is_chambered. Not source-steerable without disabling LTCG.
+  Regressions: none (report-changes regressed=0 removed=0).

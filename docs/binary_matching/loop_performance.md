@@ -440,3 +440,22 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+## Resolving a `[this+0xNN]() void()` vcall identity WITHOUT counting the vtable
+When a function ends in an unresolved virtual call (`mov edx,[this]; mov eax,[edx+0xB8]; call eax`,
+delinker shows `void <unknown>()`), don't hand-count the vtable slot. Instead: write a placeholder
+body, build the whole batch ONCE, then grep report.json for the class's symbol that scored 0 with a
+matching name - the delinker emits the real virtual as its own (unanchored) symbol. For
+weapon_core::unload_chambered_round the vcall was found instantly as `?on_unload_chambered_round@
+weapon_core@@EAEXXZ` (0% in report.json), already declared `virtual void on_unload_chambered_round()
+{ /* no source */ }` in the header. Swapping the placeholder for it took the fn 99.96 -> 100. Costs
+zero extra rebuilds beyond the batch build you were doing anyway.
+
+## A member call into a `/* no source */` (bodyless) helper FORCES it live and breaks the link
+Calling another file's STUB/`/* no source */` function from your matched body makes the linker
+require it (e.g. weapon_core::is_trying_to_aim -> weapon_user_animations_selector::get_current_state_id,
+which had an empty body -> `error C4716: must return a value`). You then MUST give that helper a
+compiling body (ideally the matched one) and it cascades to anything IT calls (current_state ->
+player_logic_base_state.h include). Budget for this: before writing a body that calls a sibling
+getter/helper, grep the callee's .cpp for `/* no source */` / empty STUB so the cascade isn't a
+surprise mid-build.

@@ -1080,3 +1080,19 @@ shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` an
 `Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
 `&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
 wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
+
+### Trivial header getter WITHOUT the `inline` keyword -> standalone COMDAT + a `call` at the use site (our /GL inlines it)
+SYMPTOM: a `return X && obj.trivial_getter();` (or `+ getter()`) function diffs ~85-90%: the target
+emits `call survarium::...::getter` and round-trips the object through 2-3 `[ebp-XX]` ref copies,
+while our base reads the member directly (`mov al,[ecx+NNh]`). The getter (e.g. weapon_core::
+is_double_handed @+48A, weapon_core_base_state::has_animation_ended @+135, player_input::is_sprinting,
+weapon_user_animations_selector::is_ready_to_be_deactivated, round_is_chambered) is defined in the
+header but declared WITHOUT the `inline` keyword (siblings on the same lines that DO have `inline`
+get inlined in BOTH builds). At /Od the target compiles each TU separately -> the getter is a COMDAT
+standalone AND every caller emits a `call`; our whole-program /GL build inlines the trivial body in
+the delinked EXE. This is a genuine LTCG inline-vs-call residual (same class as
+reload_state_base::initialize round_is_chambered, fire_state_base::execute). NOT source-steerable
+short of moving the getter out-of-line, which changes its COMDAT placement and risks other matches -
+bank it PARTIAL [LTCG getter inline-vs-call]. Confirmed across weapon_core batch3:
+is_trying_to_aim 66.75, on_user_sprint 89.72, the has_animation_ended predicates 85-87,
+is_ready_to_be_deactivated 84.77.

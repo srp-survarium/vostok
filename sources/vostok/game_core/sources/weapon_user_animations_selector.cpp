@@ -5,6 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
 
+#include <vostok/game_core/player_logic_base_state.h>
+
 namespace survarium {
 
 // STATE[STUB]
@@ -88,13 +90,16 @@ void weapon_user_animations_selector::tick( )
 	// ******
 }
 
-// STATE[STUB]
-// survarium::player_logic_base_state& survarium::weapon_user_animations_selector::current_state() const
+// STATE[INPROGRESS]: forced-live by weapon_core::is_trying_to_aim (batch3) calling
+// get_current_state_id->current_state. Body = static_cast<player_logic_base_state*>(m_logic.current_state())
+// + ASSERT + return *result. Target adds 2 extra ref-copies + an `operator*` fold-rep call
+// before the ASSERT (deref/downcast shape) that this form does not reproduce; next step is to
+// reproduce the reference round-trip (`*static_cast<...&>(...)`) so the standalone symbol scores.
 player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 {
-	// LOCALS
-	// player_logic_base_state* 	result
-	// ******
+	player_logic_base_state* result = static_cast<player_logic_base_state*>( m_logic.current_state( ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( result ) );
+	return *result;
 
 	// FUNCTION BODY
 	// <0x594a39>|0x009|+0x01a:'80'
@@ -172,15 +177,10 @@ void weapon_user_animations_selector::deactivate( )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_ready_to_be_deactivated() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_ready_to_be_deactivated( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594c09>|0x009|+0x017:'129'
-	// ******
+	return current_state( ).is_ready_to_be_deactivated( );
 }
 
 // STATE[STUB]
@@ -259,10 +259,13 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_user_state_enum survarium::weapon_user_animations_selector::get_current_state_id() const
+// STATE[72.67%|PARTIAL]: forced-live by weapon_core::is_trying_to_aim (batch3). Body =
+// current_state().id(). Residual = LTCG inline-decision: target inlines current_state's cast
+// (3 ref copies, ASSERT compiled out) then id(); our /GL emits a `call current_state` instead.
 weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) const
 {
+	return current_state( ).id( );
+
 	// FUNCTION BODY
 	// <0x594a09>|0x009|+0x021:'174'
 	// ******
