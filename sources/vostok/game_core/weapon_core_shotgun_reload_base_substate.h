@@ -69,7 +69,7 @@ private:
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	/* resources::unmanaged_resource */
 	/* 0x0120 */	weapon_core&							m_weapon;
-	/* 0x0124 */	resources::managed_resource_ptr			m_animation_to_wait_for;
+	/* 0x0124 */	mutable resources::managed_resource_ptr	m_animation_to_wait_for;
 	/* 0x0128 */	resources::managed_resource_ptr			m_weapon_animations[2][2];
 	/* 0x0138 */	resources::managed_resource_ptr			m_user_animations[2][2];
 	/* 0x0148 */	animation::animation_playback_state*	m_animation_playback_state;

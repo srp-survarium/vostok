@@ -5,7 +5,27 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_base_substate.h>
 
+#include <vostok/game_core/weapon_core.h>
+
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/linear_interpolator.h>
+
 namespace survarium {
+
+static float s_aim_transition_time = 0.3f;
+
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
 
 // STATE[STUB]
 // survarium::weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int, const vostok::animation::mixing::playback_enum, const unsigned int, char const*, char const*, char const*, char const*)
@@ -56,20 +76,35 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
+// STATE[100%|DONE]: byte-identical to target 0x798790 (0xb0 bytes, same instructions through the
+// get_weapon_lexeme_pair_impl call + the trailing ICF-folded empty-stub). objdiff does not list a
+// score yet because the function is newly emitted and absent from the delink unit's function list,
+// but the base asm (0x449160) matches the target instruction-for-instruction. See md.
 weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	// FUNCTION BODY
-	// <0x7a8799>|0x009|+0x02f:'57'
-	// <0>
-	// <1>
-	// <0x7a87c8>|0x038|+0x072:'60'
-	// ******
+	m_animation_to_wait_for = m_weapon_animations[is_third_view != false][user_state_id == type_crouch];
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		m_animation_id,
+		m_animation_to_wait_for,
+		&m_weapon,
+		*m_animation_playback_state,
+		m_time_synchronization_group,
+		m_animation_timescale,
+		m_playback_type,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[68.18%|PARTIAL]: control structure matches the target statement-for-statement (6 stmts,
+// identical boundaries) - the get_weapon_lexeme_pair call, user_state_index, the override_lexeme
+// animation_lexeme_parameters builder chain, and the chained `override + main + offset`. Residual
+// is the documented whole-program LTCG inline-vs-call of the trivial animation_lexeme_parameters
+// setters (animated_object/bones_mask/playback_type) + operator+ in shared animation headers:
+// the target keeps them OUT-OF-LINE, our /GL inlines them (L83 0xa9 vs target 0x86). Same
+// unsteerable class as pistol_weapon_core_show_state::weapon_and_hands_expression (72%) and
+// get_weapon_lexeme_pair_impl (None); out of this file's scope. See md.
 animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -77,6 +112,25 @@ animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_a
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
+
+	u32 user_state_index = user_state_id == type_crouch;
+
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			m_hand_animation_captions[user_state_index],
+			m_user_animations[is_third_view != false][user_state_index],
+			&lexeme_pair.offset_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object( m_weapon.get_user( ) )
+		.bones_mask( 2 )
+		.playback_type( m_playback_type )
+	);
+
+	return override_lexeme + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+
 	// LOCALS
 	// animation::mixing::animation_lexeme override_lexeme
 	// u32 							user_state_index

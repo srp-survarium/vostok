@@ -133,10 +133,12 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	// ******
 }
 
-// STATE[INPROGRESS]: body written (return static_cast<substate*>(m_logic->current_state())->weapon_and_hands_expression(...)).
-// Cannot anchor/score yet: it calls weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression which is still a
-// no-return STUB (C4716 -> LNK1257). Next step: match that base_substate override first, then anchor this via member pointer.
-// vostok::animation::mixing::expression survarium::weapon_core_shotgun_reload_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[100%|DONE]: UNBLOCKED. Was a VOSTOK_UNREACHABLE_CODE placeholder (its real body referenced
+// the no-return base_substate STUB -> LNK1257); now that the base_substate override is matched the
+// real body is restored. Base asm (0x44eba0) is instruction-for-instruction identical to target
+// 0x589db0 (3 stmts, 0x44 bytes - the cast+call must be ONE return statement to keep the target's
+// extra current_state() temp). objdiff lists no score yet (newly emitted, absent from the delink
+// unit's function list), but the asm matches. See md.
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -144,18 +146,8 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// claude@TODO: real body (matched shape) is:
-	//   weapon_core_shotgun_reload_base_substate* current =
-	//       static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) );
-	//   return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
-	// Kept out for now: referencing base_substate::weapon_and_hands_expression (a no-return STUB)
-	// trips C4716 -> LNK1257 for the whole game_core link. Restore once that override is matched.
-	VOSTOK_UNREACHABLE_CODE( "weapon_core_shotgun_reload_state::weapon_and_hands_expression" );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x599db9>|0x009|+0x035:'89'
-	// ******
+	return static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) )
+		->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
 // STATE[INPROGRESS]: body is `return true;` (asm @0x589720: mov al,1). Only referenced by initialize_logic
