@@ -96,9 +96,11 @@ public:
 	inline	void			set_player_logic_initial_state	( player_logic_base_state* arg_0 ) { /* no source */ }
 	inline	void			set_forced_not_to_sprint		( bool arg_0 ) { /* no source */ }
 
-public:
+private:
+	// claude@MATCH: target mangling `ABE` -> private const.
 			player_logic_base_state&		current_state	( ) const;
 
+public:
 			bool			stand_predicate					( ) const;
 			bool			crouch_predicate				( ) const;
 			bool			broken_legs_predicate			( ) const;

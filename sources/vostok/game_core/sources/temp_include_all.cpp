@@ -1330,6 +1330,19 @@ namespace vostok
 		survarium::weapon_user_animations_selector&	sel	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
 		sel.set_animations( survarium::weapon_user_animations_container_ptr( NULL ) );
 		example_callback( reinterpret_cast< pcstr >( &sel ) );
+
+		// claude@MATCH: keep the state accessors as standalone COMDATs via member-fn
+		// pointers (a direct call would LTCG-inline them into this anchor, emitting no
+		// body). current_state is private but is reached transitively from these three.
+		typedef survarium::weapon_user_animations_selector self;
+		survarium::weapon_user_state_enum	( self::*p0 )( ) const = &self::get_current_state_id;
+		bool								( self::*p1 )( ) const = &self::is_in_jump;
+		bool								( self::*p2 )( ) const = &self::is_sprinting;
+		bool								( self::*p3 )( ) const = &self::is_ready_to_be_deactivated;
+		example_callback( reinterpret_cast< pcstr >( &p0 ) );
+		example_callback( reinterpret_cast< pcstr >( &p1 ) );
+		example_callback( reinterpret_cast< pcstr >( &p2 ) );
+		example_callback( reinterpret_cast< pcstr >( &p3 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public

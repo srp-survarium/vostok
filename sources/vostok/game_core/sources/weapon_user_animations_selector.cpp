@@ -89,19 +89,29 @@ void weapon_user_animations_selector::tick( )
 	// ******
 }
 
-// STATE[STUB]
-// survarium::player_logic_base_state& survarium::weapon_user_animations_selector::current_state() const
+// STATE[70.26%|PARTIAL]: structure matches (empty_stub ASSERT at L81, +20h/+27h
+// field reads in consumers) but the target materializes the cast result through an
+// extra `call <operator*>` (ICF-folds to `vec_begin`, `mov eax,[ecx]; ret`) taking
+// `&(fsm_state* temp)` at L80 - a smart-pointer/deref idiom not yet identified, so our
+// static_cast collapses it to a plain store. See
+// docs/binary_matching/game_core/weapon_user_animations_selector_state_accessors.md.
 player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 {
-	// LOCALS
-	// player_logic_base_state* 	result
-	// ******
+	player_logic_base_state* const result = static_cast< player_logic_base_state* >( m_logic.current_state( ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( result ) );
+	return *result;
 
 	// FUNCTION BODY
-	// <0x594a39>|0x009|+0x01a:'80'
-	// <0x594a53>|0x023|+0x00c:'81'
-	// <0x594a5f>|0x02f|+0x003:'82'
+	// <0x594a39>|0x009|+0x01a:'80'	result = <operator*>( m_logic.current_state() )  [target: lea &temp; call vec_begin]
+	// <0x594a53>|0x023|+0x00c:'81'	ASSERT( ... )  [empty_stub - matched]
+	// <0x594a5f>|0x02f|+0x003:'82'	return *result
 	// ******
+
+	// claude@NOTE target current_state() asm (the divergence is the extra call at L80):
+	// 0x09: mov ecx,[eax+10h]; mov [ebp-10h],ecx; mov edx,[ebp-10h]; mov [ebp-8],edx
+	// 0x18: lea eax,[ebp-8]; call <operator*>(==vec_begin); mov [ebp-4],eax   <- MISSING in base
+	// 0x23: mov byte[ebp-9],0; lea eax,[ebp-9]; call empty_stub               <- ASSERT, matched
+	// 0x2f: mov eax,[ebp-4]; ret
 }
 
 // STATE[STUB]
@@ -173,26 +183,16 @@ void weapon_user_animations_selector::deactivate( )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_ready_to_be_deactivated() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_ready_to_be_deactivated( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594c09>|0x009|+0x017:'129'
-	// ******
+	return current_state( ).is_ready_to_be_deactivated( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_sprinting() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_sprinting( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594bd9>|0x009|+0x01d:'134'
-	// ******
+	return current_state( ).id( ) == type_sprint;
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
@@ -260,16 +260,15 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 	// ******
 }
 
-// STATE[71.5%|INPROGRESS]: body inlines current_state()->id(); base has 2 temp
-// copies, target has 4 (extra reference-materialization). Trying an explicit
-// reference local to add the temp.
+// STATE[71.5%|PARTIAL]: same divergence as current_state() - target materializes the
+// inlined `m_logic.current_state()` + cast through TWO extra temps (frame 0x14 vs our
+// 0x0C) the static_cast chain collapses. Field reads (+10h/+20h) and control flow match.
 weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) const
 {
-	player_logic_base_state const& state = *static_cast< player_logic_base_state* >( m_logic.current_state( ) );
-	return state.id( );
+	return static_cast< player_logic_base_state* >( m_logic.current_state( ) )->id( );
 
 	// FUNCTION BODY
-	// <0x594a09>|0x009|+0x021:'174'
+	// <0x594a09>|0x009|+0x021:'174'	return static_cast<player_logic_base_state*>( m_logic.current_state() )->id()
 	// ******
 }
 
@@ -578,15 +577,10 @@ void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, hit
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_in_jump() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_in_jump( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594a79>|0x009|+0x01d:'346'
-	// ******
+	return current_state( ).id( ) == type_jump;
 }
 
 // STATE[STUB]
