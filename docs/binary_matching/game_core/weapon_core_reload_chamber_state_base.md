@@ -105,3 +105,24 @@ weapon_core_animation_end_aware_state::initialize();   // base call only - no de
 - report-changes: 10 regressed (all ICF fold-rep churn - boost storage ctors, float3/size_policy
   ctors, scaleform vector-deleting-dtor, interlocked_decrement, sun_cascade copy ctor, network::world
   vcall thunks; none touch this unit), 33 improved (incl. all 6 of this unit's scored fns + empty_stub).
+
+## Review (no logic change)
+Audited against report.json + both rich disassemblies; no defects to fix:
+- All 6 percents agree across .cpp STATE / this .md / PROGRESS / report.json:
+  reload {100, 92, 100}, chamber {100, 100, 100}.
+- No base/target swap. reload::initialize @0x43: TARGET `call ...round_is_chambered`,
+  BASE `mov cl,[+48Eh]` (verified both views) - the comment is the right way round.
+- The "identical-shape, why chamber=100" question is a false premise: the two
+  `initialize` bodies DIFFER. chamber::initialize (target rva 0x751d30) is a bare
+  `weapon_core_animation_end_aware_state::initialize();` - no accessor calls, nothing to
+  inline-vs-call. Only reload::initialize (0x766720) has the `!deserializing() &&
+  chamber_a_round_on_reload() && round_is_chambered()` guard. So the 92% residual is real
+  and not cross-contaminated from the sibling.
+- The 92% is a true trivial-accessor inline-vs-call (round_is_chambered standalone in
+  target @0x09b360, ABSENT in base; chamber_a_round_on_reload absent in BOTH so it matches)
+  - the permitted unsteerable class; PARTIAL is the correct tag, not a banked DONE.
+- ctor stores (`movss [+140h]` before `mov [+130h],0FFFFFFFDh`), the filled
+  chamber_a_round_on_reload getter, and the access specifiers (IAE/MAE->protected,
+  EAE/EBE->private per the target mangled names) all verified.
+- Lean policy ok: 5 DONE keep bare STATE lines (carcass+signature deleted, no logs);
+  the PARTIAL keeps its `// FUNCTION BODY` carcass verbatim with right-side annotations.
