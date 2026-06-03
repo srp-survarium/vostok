@@ -1420,10 +1420,16 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &get_anim ) );
 		example_callback( reinterpret_cast< pcstr >( &act ) );
 
-		// claude@NOTE: anchor the matched free fns + non-virtual members only. Do NOT
-		// construct a jump_logic: its ctor calls initialize_logic, which builds the
-		// jump_logic_state_* subclasses and force-codegens their STUB selected_animations
-		// (no return) -> C4716/LNK1257. So ctor/dtor/initialize_logic stay BLOCKED here.
+		// claude@MATCH: the C4716 state-vtable trap is gone (jump_logic_state_*
+		// selected_animations now return on the common ground), so constructing a
+		// jump_logic anchors the ctor -> initialize_logic + the dtor without LNK1257.
+		// The anchor never runs (the reference is NULL); construction only ODR-uses
+		// the bodies for the linker.
+		survarium::weapon_user_animations_selector& sel_owner =
+			*reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+		survarium::jump_logic anchored_jump_logic( sel_owner );
+		example_callback( reinterpret_cast< pcstr >( &anchored_jump_logic ) );
+
 		survarium::player_input const& input = *reinterpret_cast< survarium::player_input const* >( NULL );
 		survarium::move_direction_enum d = survarium::get_move_direction( input );
 		example_callback( reinterpret_cast< pcstr >( &d ) );
