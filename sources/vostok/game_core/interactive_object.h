@@ -54,14 +54,20 @@ public:
 						) = 0;
 
 	virtual	bool		is_sprinting				( ) const = 0;
-	// STATE[STUB]
+	// claude@MATCH: empty override; /OPT:ICF folds to the `ret 4` empty fold
+	// @0x12c50 -> unit reads None, bytes emitted/correct. Target `UAE`.
+	// STATE[None|DONE]
 	virtual	void		assign_game_ui				( game_world_ui* arg_0 ) { }
 
 	virtual	void		serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const = 0;
 	virtual	void		deserialize					( network_core::packet_reader& reader ) = 0;
 
+	// claude@MATCH: `return NULL;` override; /OPT:ICF folds to the `xor eax,eax;ret`
+	// fold @0x327c0 -> unit reads None, bytes emitted/correct. const = `UBE`.
+	// STATE[None|DONE]
 	virtual	weapon_core const*	cast_weapon_core			( ) const { return NULL; }
-	// STATE[STUB]
+	// claude@MATCH: same `xor eax,eax;ret` fold @0x327c0. non-const = `UAE`.
+	// STATE[None|DONE]
 	virtual	weapon_core*		cast_weapon_core			( ) { return NULL; }
 }; // class interactive_object
 
