@@ -401,3 +401,18 @@ TARGET obj symbols + asm, with zero re-rebuilds:
   folds, PARTIAL for inline-vs-call / frameless). This is the realistic ceiling for trivial members
   under /Od+/GL with no matched real consumers - budget the batch as "confirm byte-correctness + mark",
   not "drive each to 100%".
+
+## The "rebuild stuck for minutes with nothing happening" is a Wine zombie, not real work
+A full relink's real cost is ~1.5 min (≈37s whole-module recompile + ≈55s LTCG link + ≈5s delink),
+measured. But intermittently `rebuild.py` appears to hang for 10+ minutes at 0% CPU: Wine leaves a
+finished `cl.exe`/`link.exe` child that already wrote its output and SUCCEEDED but never exits, so
+ninja blocks on it (you'll see dozens of stale `cl` procs parented to `wineserver` in htop). That dead
+wait, not compute, is what made rebuilds feel like ~12-20 min. `scripts/ninja_build.py` now carries a
+**watchdog** for the full-game build: it runs `wine ninja` as a child and, once the EXE+PDB mtimes have
+advanced past build-start AND the whole wine compiler/linker tree has been idle (<0.15 cores) for 60s
+while ninja still hasn't returned, it concludes the link is done-but-zombied, reaps the wine children,
+and returns success. A normal build never trips it (ninja exits ~1s after the link, long before the
+idle timer fills), so there's zero added latency on the common path. Safety: it only proceeds once BOTH
+link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
+a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
+wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
