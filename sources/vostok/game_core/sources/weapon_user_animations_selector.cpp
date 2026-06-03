@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/player_logic_base_state.h>
 
 namespace survarium {
 
@@ -259,10 +260,14 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_user_state_enum survarium::weapon_user_animations_selector::get_current_state_id() const
+// STATE[71.5%|INPROGRESS]: body inlines current_state()->id(); base has 2 temp
+// copies, target has 4 (extra reference-materialization). Trying an explicit
+// reference local to add the temp.
 weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) const
 {
+	player_logic_base_state const& state = *static_cast< player_logic_base_state* >( m_logic.current_state( ) );
+	return state.id( );
+
 	// FUNCTION BODY
 	// <0x594a09>|0x009|+0x021:'174'
 	// ******

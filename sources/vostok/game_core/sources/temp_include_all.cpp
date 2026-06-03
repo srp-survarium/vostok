@@ -981,6 +981,21 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &wc ) );
 	}
 
+	// claude@NOTE: anchor for the small weapon_core setters/accessors batch.
+	void use_game_core_weapon_core_small_setters( )
+	{
+		survarium::weapon_core				wc;
+		vostok::animation::skeleton_ptr	skeleton( NULL );
+
+		wc.set_magazine_capacity( 0 );
+		wc.set_skeleton( skeleton );
+		wc.get_body_part_mask_for_user( );
+		wc.update_recoil( 0, 0.0f );
+		wc.update_breath_vibration( false, 0, 0.0f );
+		wc.instant_show( );
+		wc.instant_hide( );
+	}
+
 
 	void use_inventory( )
 	{
@@ -1607,6 +1622,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
 	vostok::use_game_core_weapon_core_fire_state_base( );
 	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	vostok::use_game_core_weapon_core_small_setters( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );

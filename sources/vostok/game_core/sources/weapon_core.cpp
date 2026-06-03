@@ -102,15 +102,11 @@ u16 weapon_core::ammo_in_magazine( ) const
 	return m_ammo_in_magazine;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_magazine_capacity(unsigned short)
+// STATE[100%|DONE]
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {
-	// FUNCTION BODY
-	// <0x5a3139>|0x009|+0x00c:'110'
-	// <0>
-	// <0x5a3145>|0x015|+0x00e:'112'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( magazine_capacity ) );
+	m_magazine_capacity = magazine_capacity;
 }
 
 // STATE[95.69%|INPROGRESS]: full FSM body written (10 add_state + 72 add_transition via boost::bind); residual is the boost::function Form-A vs Form-B construction shape across transitions; see weapon_core_initialize_weapon_logic.md
@@ -409,13 +405,10 @@ void weapon_core::initialize_weapon_logic(
 	// <0>
 	// ******
 
-// STATE[STUB]
-// void survarium::weapon_core::set_skeleton(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&)
+// STATE[100%|DONE]
 void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const& skeleton )
 {
-	// FUNCTION BODY
-	// <0x5a42fa>|0x00a|+0x011:'276'
-	// ******
+	m_skeleton = skeleton;
 }
 
 // STATE[STUB]
@@ -447,10 +440,15 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::body_part_masks_enum survarium::weapon_core::get_body_part_mask_for_user() const
+// STATE[83.89%|INPROGRESS]: body matches; base emits 3 temp slots, target 4 (one
+// extra reference-materialization between current_base_state() and the member read).
+// The ref local closed most of the gap (73%->83.89%); the last temp depends on the
+// original expression nesting of current_base_state(). See weapon_core_get_body_part_mask_for_user.md
 animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) const
 {
+	weapon_core_base_state const& state = current_base_state( );
+	return state.get_body_part_mask_for_user( );
+
 	// FUNCTION BODY
 	// <0x5a3459>|0x009|+0x02a:'296'
 	// ******
@@ -543,10 +541,15 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_recoil(unsigned int, const float)
+// STATE[72.04%|INPROGRESS]: body matches; sole diff is is_aimed() - target emits a
+// `call is_aimed` (standalone FPO symbol) but under /Od our inline is_aimed() expands
+// to `mov [this+0x488]` inline. Out-lining is_aimed reaches 99.78% here but FPO-breaks
+// many other inline callers (net -26 exact). Next: revisit once a per-call-site
+// inline/out-of-line story exists. See docs/.../weapon_core_update_recoil.md
 void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 {
+	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
+
 	// FUNCTION BODY
 	// <0x5a3717>|0x007|+0x034:'354'
 	// ******
@@ -573,15 +576,12 @@ void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_breath_vibration(const bool, unsigned int, const float)
+// STATE[100%|DONE]
 void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_time_in_ms, float time_scale )
 {
-	// FUNCTION BODY
-	// <0x5a39f7>|0x007|+0x013:'372'
-	// <0x5a3a0a>|0x01a|+0x013:'373'
-	// <0x5a3a1d>|0x02d|+0x019:'374'
-	// ******
+	m_breath_vibration_calculator.hold_breath( is_holding_breath );
+	m_breath_vibration_calculator.set_character_multiplier( 0.0f );
+	m_breath_vibration_calculator.tick( current_time_in_ms, time_scale );
 }
 
 // STATE[STUB]
@@ -653,9 +653,8 @@ void weapon_core::tick( )
 // void survarium::weapon_core::instant_show()
 void weapon_core::instant_show( )
 {
-	// CALL SITE INFO
-	// <0x5a2c8f> -> void <unknown>()
-	// ******
+	m_aimed = false;
+	on_show( );
 
 	// FUNCTION BODY
 	// <0x5a2c77>|0x007|+0x00a:'424'
@@ -667,9 +666,7 @@ void weapon_core::instant_show( )
 // void survarium::weapon_core::instant_hide()
 void weapon_core::instant_hide( )
 {
-	// CALL SITE INFO
-	// <0x5a2c65> -> void <unknown>()
-	// ******
+	on_hide( );
 
 	// FUNCTION BODY
 	// <0x5a2c57>|0x007|+0x010:'430'
