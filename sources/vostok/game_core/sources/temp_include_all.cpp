@@ -1348,10 +1348,7 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &lp ) );
 		example_callback( reinterpret_cast< pcstr >( &lt ) );
 		example_callback( reinterpret_cast< pcstr >( &jf ) );
-	}
 
-	void use_game_core_jump_logic( )
-	{
 		// ODR-use the out-of-line jump_logic method bodies via member-fn pointers so
 		// the linker keeps them (no instance constructed -> no vtable/STUB codegen).
 		std::pair< vostok::animation::mixing::expression, vostok::animation::mixing::animation_lexeme >
@@ -1363,10 +1360,7 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &sel ) );
 		example_callback( reinterpret_cast< pcstr >( &get_anim ) );
 		example_callback( reinterpret_cast< pcstr >( &act ) );
-	}
 
-	void use_game_core_jump_logic( )
-	{
 		// claude@NOTE: anchor the matched free fns + non-virtual members only. Do NOT
 		// construct a jump_logic: its ctor calls initialize_logic, which builds the
 		// jump_logic_state_* subclasses and force-codegens their STUB selected_animations
