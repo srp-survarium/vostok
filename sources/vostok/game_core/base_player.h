@@ -117,8 +117,8 @@ public:
 													pcvoid									arg_5
 												) = 0;
 
-	virtual	void								unsubscribe_animation_player	( animation::reserved_channel_ids_enum arg_0, pcvoid arg_1 ) = 0;
 	virtual	void								unsubscribe_animation_player	( pcstr arg_0, pcvoid arg_1 ) = 0;
+	virtual	void								unsubscribe_animation_player	( animation::reserved_channel_ids_enum arg_0, pcvoid arg_1 ) = 0;
 
 	virtual	bool								is_replaying_history			( ) const = 0;
 

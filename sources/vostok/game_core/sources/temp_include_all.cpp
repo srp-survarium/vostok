@@ -51,6 +51,7 @@
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/weapon_user_animations_container_cook.h>
 #include <vostok/game_core/base_project.h>
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
@@ -1570,6 +1571,15 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p1 ) );
 		example_callback( reinterpret_cast< pcstr >( &p2 ) );
 		example_callback( reinterpret_cast< pcstr >( &p3 ) );
+
+		// claude@MATCH: keep tick/deactivate/selected_animations as standalone COMDATs.
+		void					( self::*p4 )( )												= &self::tick;
+		void					( self::*p5 )( )												= &self::deactivate;
+		std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+								( self::*p6 )( mutable_buffer&, survarium::weapon_animation_parameters const&, bool ) const = &self::selected_animations;
+		example_callback( reinterpret_cast< pcstr >( &p4 ) );
+		example_callback( reinterpret_cast< pcstr >( &p5 ) );
+		example_callback( reinterpret_cast< pcstr >( &p6 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public
@@ -1589,6 +1599,21 @@ namespace vostok
 		concrete_base_project	p;
 		p.touch( );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
+	}
+
+	void use_game_core_weapon_user_animations_container_cook( )
+	{
+		// Constructing + registering keeps the vtable (translate_query, delete_resource).
+		static survarium::weapon_user_animations_container_cook	s_cook;
+		vostok::resources::register_cook( &s_cook );
+		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
+
+		// claude@NOTE: create_requests_for_animations (the .cpp-local free helper) and the
+		// private on_config_loaded/on_animations_loaded callbacks read None: taking the free
+		// function's address through a fn-pointer does NOT force EXE emission under LTCG (the
+		// pointer is provably dead), and the on_* callbacks are only reachable through the
+		// still-stubbed translate_query/on_config_loaded boost::bind chain. They will be kept
+		// (and scorable) once translate_query/on_config_loaded are matched with real bodies.
 	}
 
 	// booby_trap_core::get_speed is a PRIVATE virtual; befriended above so a
@@ -1922,6 +1947,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_scheduler();
 	vostok::use_game_core_inventory_holder();
 	vostok::use_game_core_weapon_user_animations_selector();
+	vostok::use_game_core_weapon_user_animations_container_cook();
 	vostok::use_game_core_base_project();
 	vostok::use_game_core_booby_trap_core_get_speed();
 	vostok::use_bt_character_controller();
