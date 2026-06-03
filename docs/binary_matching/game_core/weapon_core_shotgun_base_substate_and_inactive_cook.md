@@ -116,15 +116,45 @@ weapon_and_hands_expression escaped through example_callback.
    return current->weapon_and_hands_expression(...);` and re-diff - the cardinality of the slot is
    source-steerable, this is INPROGRESS not DONE.
 
+## PR #188 review re-match (FIX 1 + FIX 2)
+
+### FIX 1 - shotgun_reload_state::weapon_and_hands_expression (was INPROGRESS, mislabeled 100%)
+Iteration 5 above ended single-slot (`sub esp,8`). The target 0x589db0 uses TWO slots
+(`mov [ebp-8],edx; mov eax,[ebp-8]; mov [ebp-4],eax`, `sub esp,0Ch`). Tried:
+- (a) `substate* current = static_cast<...>( m_logic->current_state() )` (named ptr, single
+  statement): still `sub esp,8`, single slot - the cast folds current_state() into its operand.
+- (b) `static_cast<substate&>( *m_logic->current_state() ).method(...)` (reference cast): single slot.
+- (c) `ai::fsm_state* state = m_logic->current_state(); substate* current = static_cast<...>(state);
+  return current->...;` - the SEPARATE `state` local forces the extra slot; the cast is then a
+  no-op copy. base 0x44eba0 size 68, 26/26 instructions byte-identical to target (verified by
+  rich-index compare). objdiff still `None` (no target COMDAT to pair). -> 100%|DONE.
+
+### FIX 2 - inactive_state_cook::allocate_resource (41.38% -> 87.45%)
+The second half (behind the first ASSERT's checked bool) is a U-form ASSERT, not a dropped
+validator. Reference pattern from a matched sibling: `ASSERT_U( weight_driving_animation )` in
+weapon_core_aimed_state compiles (NDEBUG/MASTER_GOLD) to
+`if(identity(false)){ expression_eater(assert_untyped, <by-value copy>); }` - the first
+identity(false) gives the `bool x=false; check; movzx; test; je` guard and the body copies the
+arg by value (`rep movsd`) then calls the eater. The inactive target body args (top->bottom) are
+in_query(by value, 0x258), raw.ptr, raw.size, file_exist - NO leading assert_untyped enum. That
+maps to the raw `_T_U` form where arg0 = the assert_type slot:
+`ASSERT_T_U( in_query, raw_file_data, file_exist )` -> `expression_eater(in_query, raw_file_data,
+file_exist)`. Applied -> base body now byte-matches the target's first+second ASSERT exactly
+(by-value copy + `add esp,264h`). RESIDUAL (statement 29, malloc+return, the remaining ~12.5%):
+target inlines mutable_buffer(pvoid,u32) as two field stores into the sret with an extra [ebp-8]
+temp (`sub esp,0Ch`); base COMDAT-folds it to an out-of-line `uint2::uint2` call (`sub esp,8`,
+extra `push 138h`). Same inline-depth/COMDAT-fold wall as the shotgun cook allocate and
+weapon_core_cook - not source-steerable from this file. -> 87.45%|PARTIAL.
+
 ## Outcome (final STATE)
 - weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair -> 100%|DONE (objdiff unscored; byte-identical)
 - weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression -> 68.18%|PARTIAL (LTCG setter inline-vs-call)
-- weapon_core_shotgun_reload_state::weapon_and_hands_expression -> INPROGRESS, UNBLOCKED (objdiff unscored; NOT byte-identical - missing the `current` named local, target has an extra [ebp-8] slot. [reviewer correction] NEXT: introduce the local. Was mislabeled 100%|DONE.)
+- weapon_core_shotgun_reload_state::weapon_and_hands_expression -> 100%|DONE (objdiff unscored; byte-identical, FIX 1)
 - weapon_core_inactive_state_cook::~ -> 100%|DONE
 - weapon_core_inactive_state_cook::destroy_resource -> 100%|DONE
 - weapon_core_inactive_state_cook::create_resource -> 91.97%|PARTIAL (memory_usage_type/c_ptr COMDAT fold)
 - weapon_core_inactive_state_cook::weapon_core_inactive_state_cook -> 79.07%|PARTIAL (enum 0x103 vs 0x12C engine-wide + LTCG ctor convention)
-- weapon_core_inactive_state_cook::allocate_resource -> 41.38%|PARTIAL (validator ASSERT not recovered; same as shotgun cook)
+- weapon_core_inactive_state_cook::allocate_resource -> 87.45%|PARTIAL (FIX 2: 2nd ASSERT recovered; residual = mutable_buffer ctor inline-fold)
 - weapon_core_inactive_state_cook::deallocate_resource -> 55.64%|PARTIAL (free_helper out-of-line vs inlined; same as shotgun cook)
 
 ## Regressions

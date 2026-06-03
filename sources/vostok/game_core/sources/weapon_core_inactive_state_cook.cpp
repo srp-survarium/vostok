@@ -34,24 +34,27 @@ weapon_core_inactive_state_cook::~weapon_core_inactive_state_cook( )
 {
 }
 
-// STATE[41.38%|PARTIAL]: byte-identical shape to weapon_core_shotgun_reload_state_cook::allocate_resource
-// (only malloc size differs: 0x138 vs 0x140). Statement 28 is the compiled-out validator ASSERT
-// (`bool x=false; ASSERT_check(&x); if(x){ copy in_query by value (96h dwords) + raw_file_data + file_exist
-// ; ASSERT_check }`) - the exact UNKNOWN_EXPRESSION (a validator taking query_result_for_cook BY VALUE)
-// is not yet recovered, so only the first compiled-out half is produced. Statement 29 is the malloc+return
-// whose mutable_buffer(pvoid,u32) ctor the target inlines as two field stores vs base's COMDAT-folded
-// uint2 call. Same residual class as the shotgun cook allocate. See md + weapon_core_shotgun_reload_state_cook.md.
+// STATE[87.45%|PARTIAL]: statement 28 (the ASSERT) is now byte-identical. It is the U-form
+// `ASSERT_T_U( in_query, raw_file_data, file_exist )`: under NDEBUG/MASTER_GOLD this expands to
+// `if(identity(false)){ expression_eater(in_query, raw_file_data, file_exist); }` - the first
+// identity(false) gives the `bool x=false; check; test; je` guard, and BEHIND it the body copies
+// in_query BY VALUE (96h dwords = 0x258 bytes) plus raw_file_data + file_exist and calls the eater
+// (`add esp,264h`). RESIDUAL (statement 29, the malloc+return): the target inlines the
+// mutable_buffer(pvoid,u32) ctor as two field stores into the sret (with an extra [ebp-8] temp,
+// sub esp,0Ch) while the base COMDAT-folds it to an out-of-line uint2::uint2 call (sub esp,8,
+// extra `push 138h`). Inline-depth/COMDAT-fold wall - same residual class as the shotgun cook
+// allocate and weapon_core_cook. See md + weapon_core_shotgun_reload_state_cook.md.
 mutable_buffer weapon_core_inactive_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT_T_U( in_query, raw_file_data, file_exist );
 	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_inactive_state ), "weapon_core_inactive_state" ), sizeof( weapon_core_inactive_state ) );
 
 	// FUNCTION BODY
-	// <0x59ef6b>|0x00b|+0x03d:'28'	ASSERT( <validator taking in_query by value> )
-	// <0x59efa8>|0x048|+0x02e:'29'	return mutable_buffer( MALLOC(0x138), 0x138 );
+	// <0x59ef6b>|0x00b|+0x03d:'28'	ASSERT_T_U( in_query, raw_file_data, file_exist )  [matched]
+	// <0x59efa8>|0x048|+0x02e:'29'	return mutable_buffer( MALLOC(0x138), 0x138 )  [residual: ctor inline-fold]
 	// ******
-	// byte-identical shape to weapon_core_shotgun_reload_state_cook::allocate_resource (only
-	// malloc size differs: 0x138 vs 0x140). See weapon_core_shotgun_reload_state_cook.md.
+	// RESIDUAL @ statement 29: target inlines mutable_buffer(pvoid,u32) as field stores (temp [ebp-8],
+	// sub esp,0Ch); base out-of-lines to uint2::uint2 (sub esp,8, push 138h). See md.
 }
 
 // STATE[55.64%|PARTIAL]: byte-identical to weapon_core_shotgun_reload_state_cook::deallocate_resource.
