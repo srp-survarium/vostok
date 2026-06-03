@@ -6,6 +6,10 @@
 #include <vostok/game_core/jump_logic.h>
 
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/ai/fsm.h>
+#include "jump_logic_base_state.h"
 
 namespace survarium {
 
@@ -62,6 +66,9 @@ move_direction_enum get_move_direction( player_input const& input )
 	// <0x58d602>|0x102|+0x002:'64'
 	// <0x58d604>|0x104|+0x002:'65'
 	// ******
+
+	// claude@NOTE: placeholder return so callers (activate) link; body still STUB.
+	return move_direction_on_site;
 }
 
 // STATE[STUB]
@@ -214,15 +221,13 @@ u32 get_jump_animation_index(
 	// ******
 }
 
-// STATE[STUB]
-resources::managed_resource_ptr jump_logic::get_animation(
-	const jump_animation_parts		arg_0 /* jump_animation_parts anim_part */,
-	const bool						is_third_view
-) const
+// STATE[100%|DONE]
+resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts anim_part, bool is_third_view ) const
 {
-	// FUNCTION BODY[0x58df30]: 1
-	// <0x58df39>|0x009|+0x079:'162'
-	// ******
+	return m_owner.animations().get_jump_animation(
+		get_jump_animation_index( get_jump_direction( ), is_jump_from_right_leg( ), anim_part ),
+		is_third_view
+	);
 }
 
 // STATE[STUB]
@@ -237,7 +242,11 @@ pcstr jump_logic::get_animation_caption(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
+// m_jumping_direction * 3, is_third_view )` (verified against target asm @0x58dee0,
+// 1 empty_stub ASSERT for animations() operator*), but get_stand_animation has no
+// definition in our tree (weapon_user_animations_container.cpp absent) so anchoring
+// this body fails LTCG with LNK1257 (unresolved). Unblock once that symbol exists.
 resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_third_view ) const
 {
 	// FUNCTION BODY[0x58dee0]: 1
@@ -245,7 +254,9 @@ resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_th
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
+// m_jumping_direction * 3 + 2, is_third_view )` (target asm @0x58de90). Same
+// get_stand_animation undefined-symbol blocker as get_move_animation.
 resources::managed_resource_ptr jump_logic::get_move_look_animation( const bool is_third_view ) const
 {
 	// FUNCTION BODY[0x58de90]: 1
@@ -263,17 +274,11 @@ pcstr jump_logic::get_move_look_caption( ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void jump_logic::activate( )
 {
-	// CALL SITE INFO
-	// <0x58d89c> -> player_input const& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x58d880]: 2
-	// <0x58d889>|0x009|+0x024:'186'
-	// <0x58d8ad>|0x02d|+0x01c:'187'
-	// ******
+	m_jumping_direction			= get_move_direction( m_user->input( ) );
+	m_is_jump_from_right_leg	= !m_owner.is_right_leg_supporting( );
 }
 
 // STATE[STUB]
@@ -313,20 +318,14 @@ bool jump_logic::landing_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > jump_logic::selected_animations(
-	mutable_buffer&							buffer,
-	weapon_animation_parameters const&		weapon_parameters,
-	const bool								is_third_view
+	mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view
 ) const
 {
-	// CALL SITE INFO
-	// <0x58da16> -> std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > < unknown >( mutable_buffer&, const bool, fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > const&, weapon_animation_parameters const& )
-	// ******
-
-	// FUNCTION BODY[0x58d9d0]: 1
-	// <0x58d9d9>|0x009|+0x042:'210'
-	// ******
+	return static_cast< jump_logic_base_state* >( m_logic->current_state( ) )->selected_animations(
+		buffer, is_third_view, m_owner.look_time_calculator( ), weapon_parameters
+	);
 }
 
 // STATE[STUB]
