@@ -56,6 +56,7 @@
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/game_core/weapon_state.h>
+#include <vostok/game_core/weapon_core_base_state.h>
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
@@ -91,6 +92,13 @@ namespace survarium
 	float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
 	float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& bone, float4x4 const* matrices, animation::skeleton_bone const* first_non_root_bone );
 }
+
+// fsm_state has a pure-virtual dtor (= 0) with no body in our sources; the
+// concrete weapon_core_base_state anchor below needs it to LINK (vtable slot).
+// Define it here in the (non-target) anchor TU so it can't regress a matched obj.
+namespace vostok { namespace ai {
+	fsm_state::~fsm_state( ) { }
+} }
 
 namespace vostok
 {
@@ -352,6 +360,41 @@ namespace vostok
 
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
 		calc.get_value( );
+	}
+
+	void use_game_core_weapon_core_base_state( )
+	{
+		// weapon_core_base_state is abstract (pure weapon_and_hands_expression) and its
+		// ctor is protected; a concrete derived stub gives us a constructible instance.
+		struct concrete_state : survarium::weapon_core_base_state
+		{
+			concrete_state( survarium::weapon_core& weapon )
+				: survarium::weapon_core_base_state( weapon, false ) {}
+
+			virtual animation::mixing::expression weapon_and_hands_expression(
+				mutable_buffer&,
+				bool,
+				survarium::weapon_user_state_enum,
+				animation::mixing::animation_lexeme& ) const override
+			{
+				VOSTOK_UNREACHABLE_CODE( );
+			}
+
+			// deserializing() is protected on the base; expose it through the
+			// derived type so the anchor keeps the symbol alive.
+			bool call_deserializing( ) const { return deserializing( ); }
+		};
+
+		survarium::weapon_core		weapon;
+		concrete_state				state( weapon );
+
+		// Real call keeps the out-of-line deserializing() symbol; escape the result
+		// so it is observed.
+		volatile bool d = state.call_deserializing( );
+		example_callback( reinterpret_cast< pcstr >( const_cast< bool* >( &d ) ) );
+
+		// Escape &state so LTCG observes the ctor's member stores (loop_performance.md).
+		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
 	void use_bullet( )
@@ -799,6 +842,7 @@ IncludeAll::IncludeAll()
 	vostok::use_character_dispersion_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_weapon_dispersion_calculator( );
+	vostok::use_game_core_weapon_core_base_state( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );
