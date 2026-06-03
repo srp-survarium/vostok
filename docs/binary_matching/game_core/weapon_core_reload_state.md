@@ -83,11 +83,39 @@ whole-program decision (the documented residual class; see weapon_core_aimed_sta
             operator+<animation_lexeme> -> operator+ -> 3 ~intrusive_ptr<binary_tree...> dtors.
     BASE:   operator+<expression,animation_lexeme> -> operator+<addition_lexeme,animation_lexeme>
             -> expression::expression<addition_lexeme>.
-  This is NOT confirmed call-arg LTCG and NOT confirmed pure /GL inline noise - it is a
-  different template selection for the return expression. The exact operand grouping/types the
-  target source used are not yet diffed to a source cause; this is a RE-MATCH OPPORTUNITY (try
-  alternative parenthesizations / explicit `expression(...)` wrapping of the first operand) for a
-  faster machine, not a banked residual. Carcass preserved.
+
+  ## RE-MATCH 2026-06-03 (template-selection investigation) - CONFIRMED WALL, NOT source-steerable
+  Dumped the full operator+ family from the target index:
+    `pdb_rich_query --index binaries/rich/target/index.jsonl --function 'mixing::operator+' --list`
+  Target instantiates SIX operator+ symbols from mixing_addition_lexeme_inline.h, including:
+    - `operator+<animation_lexeme>(expression&, animation_lexeme&) -> expression`  (ONE explicit
+      template arg; sig has a FIXED `expression&` left operand => the real header had a separate
+      `template<typename T> operator+(expression& left, T& right) -> expression` overload, NOT the
+      on-disk `template<T1,T2> operator+(T1&,T2&) -> addition_lexeme&`).
+    - `operator+(expression&, expression&) -> expression`, plus const variants (non-template).
+  These overloads return `expression` BY VALUE and call `expression::is_empty()`. On disk:
+    - vostok/animation/mixing_addition_lexeme_inline.h has ONLY `template<T1,T2> operator+ ->
+      addition_lexeme&` (so the first `+` can never produce an `expression`-returning overload).
+    - vostok/animation/mixing_expression.h `is_empty()` is a `return false;` STUB (no real body).
+  Target asm at rva 0x79aae0 for the return: 0x59 lea [ebp-84h] (offset_lexeme) ->
+  expression::expression<animation_lexeme> temp at [ebp-118h]; 0x84 operator+<animation_lexeme>
+  (ecx=[ebp-110h] hands, eax=[ebp-108h] main); 0x91 operator+(expression&,expression&); then 3
+  ~intrusive_ptr<binary_tree_animation_node...> dtors + 2 ~animation_lexeme.
+  Source-reshape attempts (each a full `rebuild.py`; report.json units[].functions[]
+  fuzzy_match_percent, top-level):
+    - baseline `hands + main + offset`                                  -> 83.52
+    - `hands + main + animation::mixing::expression(offset)`            -> 77.48  (WORSE)
+    - `animation::mixing::expression(hands + main) + offset`            -> 56.65  (WORSE)
+  Both wraps drove selection FURTHER from the target because the `expression`-returning
+  `operator+(expression&, ...)` overloads simply do not exist to be chosen; the compiler falls
+  back to the `template<T1,T2> -> addition_lexeme&` form + extra `expression()` conversions.
+  CONCLUSION: this residual is a CROSS-UNIT HEADER GAP (the missing mixing operator+ overload
+  family + the stubbed `expression::is_empty`), NOT a return-expression source shape. No
+  parenthesization / `expression(...)` wrap / named-local on THIS function can fix it. To match
+  it, the mixing operator+ overload set in mixing_addition_lexeme_inline.h and `is_empty()` must
+  be matched as their own unit; once present, the baseline `hands + main + offset` shape should
+  pick them up. Reverted to baseline (83.52). Carcass preserved. SHARED across all weapon
+  weapon_and_hands_expression variants (idle/aimed 85.65, reload 83.52, etc.).
 
 ## Iterations
 - build1 (prior worker bodies, before access fix): FAILED - anchor C2248 private new_object.

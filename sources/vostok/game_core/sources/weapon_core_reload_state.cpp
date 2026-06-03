@@ -52,13 +52,18 @@ weapon_core_reload_state::weapon_core_reload_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: first two statements match byte-for-byte; the return
-// `hands + main + offset` selects a DIFFERENT operator+ / expression template instantiation
-// than the target (target: operator+<animation_lexeme> then operator+ with 3 binary_tree
-// intrusive_ptr dtors; base: operator+<expression,animation_lexeme> then
-// operator+<addition_lexeme,animation_lexeme> + expression<addition_lexeme>). The exact
-// operand grouping/types of the return expression are not yet diffed to a source cause -
-// likely source-steerable (re-match opportunity), NOT confirmed pure /GL noise. See the .md.
+// STATE[83.52%|PARTIAL]: first two statements match byte-for-byte. The return
+// `hands + main + offset` cannot match: the target selects operator+ overloads that DO NOT
+// EXIST in the on-disk mixing headers. Target uses `operator+<animation_lexeme>(expression&,
+// animation_lexeme&) -> expression` (a `template<T> operator+(expression&, T&)` form) for the
+// first `+`, then `operator+(expression&, expression&) -> expression` (non-template) for the
+// second - both return `expression` by value and call the real `expression::is_empty()`.
+// vostok/animation/mixing_addition_lexeme_inline.h only provides `template<T1,T2> operator+
+// -> addition_lexeme&`, and mixing_expression.h's `is_empty()` is a `return false` STUB. So no
+// reshaping of the return expression can select the target's overloads - this is a cross-unit
+// header gap (the whole mixing operator+ family + is_empty body), not source-steerable here.
+// Re-match attempts (all rebuilt, report.json): baseline 83.52; `+ expression(offset)` -> 77.48;
+// `expression(hands+main) + offset` -> 56.65. See the .md / assembly_patterns.md.
 animation::mixing::expression weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&							buffer,
 	bool									is_third_view,
