@@ -90,18 +90,16 @@ void dispersion_calculator::apply_aim_speed( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void dispersion_calculator::set_weapon( weapon_core* weapon )
 {
-	// FUNCTION BODY
-	// <0x5968c7>|0x007|+0x009:'88'
-	// <0x5968d0>|0x010|+0x009:'89'
-	// <0>
-	// <0x5968d9>|0x019|+0x018:'91'
-	// <0x5968f1>|0x031|+0x018:'92'
-	// <0>
-	// <0x596909>|0x049|+0x008:'94'
-	// ******
+	m_weapon = weapon;
+	if ( m_weapon )
+	{
+		m_weapon_calculator.set_one_shoot_dispersion_amount( m_weapon->get_dispersion_params( ).one_shoot_dispersion_amount );
+		m_weapon_calculator.set_reload_dispersion_amount( m_weapon->get_dispersion_params( ).reload_dispersion_amount );
+	}
+	apply_aim_speed( );
 }
 
 // STATE[UNCHECKED]

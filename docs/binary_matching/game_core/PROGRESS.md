@@ -158,3 +158,17 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     constant stores - the #107 trap). The ctor was in fact already 100% in the prior report (construct +
     get_dispersion was enough to keep stores observed); the &calc escape is belt-and-suspenders and caused
     0 regressed / 0 improved across all 1995 units.
+- game_core::dispersion_calculator::set_weapon(weapon_core*) -> STATE[100%|DONE] -> PR #138 (regressions: none)
+  - STACKED on #137. set_weapon only (apply_aim_speed / set_one_shoot_dispersion_amount /
+    set_reload_dispersion_amount are out-of-line `call`s, NOT inlined - separate units, untouched).
+    Body: `m_weapon = weapon; if ( m_weapon ) { m_weapon_calculator.set_one_shoot_dispersion_amount(
+    m_weapon->get_dispersion_params().one_shoot_dispersion_amount ); m_weapon_calculator.
+    set_reload_dispersion_amount( m_weapon->get_dispersion_params().reload_dispersion_amount ); }
+    apply_aim_speed();`. weapon_core::m_dispersion_params @0x3e4; the inline get_dispersion_params()
+    returns &m_dispersion_params so the compiler folds field offsets +0x10/+0x14 into the asm
+    constants 0x3F4 (one_shoot) / 0x3F8 (reload). Braced `if` confirmed by the two `<0>` carcass
+    markers bracketing L91/L92 (the `{`/`}` are L90/L93). Mangled `QAE` (public) matches header.
+    Anchored via use_dispersion_calculator: added `calc.set_weapon( NULL )`. First-try 100% match;
+    report-changes 0 regressed / 1 improved (set_weapon 0.00 -> 100.00). The `--view diff` 97.16%
+    header is one `~` at 0x4c (relative call displacement to apply_aim_speed, a reloc address, not a
+    body diff); report.json is 100.0.
