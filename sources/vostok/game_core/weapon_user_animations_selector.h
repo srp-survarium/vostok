@@ -36,11 +36,7 @@ public:
 							~weapon_user_animations_selector( );
 
 public:
-	// claude@NOTE: body is `m_animations = value` (resource_ptr @ +0x40 ->
-	// `add eax,40h; push value; call intrusive_ptr::operator=`). /GL LTCG inlines
-	// this trivial setter whole-program (anchored only by a synthetic caller), so no
-	// standalone body reaches the EXE -> None until a real game consumer keeps it.
-	// STATE[None|PARTIAL]: trivial-setter LTCG inline-vs-call (byte-correct). Target `QAE`.
+	// STATE[None|PARTIAL]: trivial-setter LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			void			set_animations					( weapon_user_animations_container_ptr const& value ) { m_animations = value; }
 	inline	weapon_user_animations_container const&
 							animations						( ) const { /* no source */ }
