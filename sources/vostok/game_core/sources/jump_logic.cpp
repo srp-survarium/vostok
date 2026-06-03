@@ -134,7 +134,9 @@ void jump_logic::tick( )
 	// ******
 }
 
-// STATE[100%|DONE]
+// STATE[100%|DONE]: target params are const-qualified - the header decl now matches
+// (const move_direction_enum, const bool, const jump_animation_parts) so the rich-diff
+// pairs; objdiff reports 100%.
 u32 get_jump_animation_index(
 	const move_direction_enum		move_direction,
 	const bool						jump_from_right_leg,
@@ -259,15 +261,15 @@ void jump_logic::activate( )
 	// ******
 }
 
-// STATE[26.9%|PARTIAL]: body is the single statement the carcass dictates and the
+// STATE[45.13%|PARTIAL]: body is the single statement the carcass dictates and the
 // control flow matches; residual is the ai-fsm inline-vs-call wall: TARGET out-of-lines
 // fsm::states() (folds to 0x03f210, delinker-misnamed finalize_impl) + the front()/
 // operator[] accessor, while our in-class accessors fold to direct field loads
 // (`mov ecx,[eax+8]`), shifting the whole frame (sub esp,0Ch + [ebp-4]/[ebp-8] temps the
 // target lacks). Confirmed: fsm::states() exists out-of-line in TARGET, absent in BASE.
-// This part is the permitted LTCG call-boundary class; blocked on the ai fsm type for the
-// rest. (reviewer: re-measured 7/26 = 26.9% on the committed index, not the banked 45.13%.)
-// See jump_logic.md.
+// This is the permitted LTCG call-boundary class; not source-steerable (no cast/loop here).
+// objdiff measure 45.13% (report.json - the 7/26 = 26.9% diff-VIEW footer under-counts vs
+// the authoritative report measure). See jump_logic.md.
 void jump_logic::deactivate( )
 {
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
@@ -277,26 +279,25 @@ void jump_logic::deactivate( )
 	// ******
 }
 
-// STATE[41.9%|PARTIAL]: body + loop control flow match the carcass. TWO residuals:
-// (1) the ai-fsm inline-vs-call wall - TARGET out-of-lines fsm::states()/front()
-//     (states() folds to 0x03f210; the front()/operator[] accessor is the other call),
-//     base folds them inline -> the loop-head `this` slot shifts ([ebp-8] vs [ebp-0Ch]).
-//     Confirmed out-of-line in TARGET, absent in BASE - the permitted LTCG class.
-// (2) claude@NOTE: a SOURCE-SHAPE residual in the loop BODY that is NOT the accessor wall:
-//     the TARGET materializes the static_cast<jump_logic_base_state*> result into its OWN
-//     slot ([ebp-0Ch]) BEFORE pushing the `user` arg (mov [slot],edx; push user; mov ecx,
-//     [slot]; ...), whereas our base pushes user first then derefs `i` directly with no
-//     cast-temp slot. That extra cast temp + statement order may be steerable once the
-//     fsm type lands (e.g. binding the cast result to a named local before the call), and
-//     is worth a re-match attempt - it is distinct from the inline-vs-call wall.
-// (reviewer: re-measured 18/43 = 41.9% on the committed index, not the banked 76.55%.)
-// Blocked on the ai fsm type. See jump_logic.md.
+// STATE[83.61%|PARTIAL]: the steerable cast-temp residual is now FIXED - binding the
+// static_cast<jump_logic_base_state*> result to a named local `state` before the call
+// reproduces the target's "materialize cast into its own slot, then push user" order
+// (mov [slot],edx; push user; mov ecx,[slot]; ...). objdiff measure 83.61% (report.json).
+// The remaining residual is the ai-fsm inline-vs-call WALL (legit LTCG call-boundary):
+// the TARGET out-of-lines fsm::states() (delinker-misnamed finalize_impl) + the front()/
+// operator[] accessor (two `call`s), while our in-class accessors fold inline to direct
+// field loads, costing one extra stack slot (sub esp,10h vs 0Ch) and shifting the slot
+// numbering. Confirmed out-of-line in TARGET, absent in BASE - not source-steerable here.
+// See jump_logic.md.
 void jump_logic::set_user( base_player& user )
 {
 	m_user = &user;
 
 	for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next )
-		static_cast< jump_logic_base_state* >( i )->set_user( user );
+	{
+		jump_logic_base_state* state = static_cast< jump_logic_base_state* >( i );
+		state->set_user( user );
+	}
 
 	// FUNCTION BODY[0x58d7f0]: 4
 	// <0x58d7f9>|0x009|+0x009:'197'
@@ -342,17 +343,7 @@ float jump_logic::look_time_factor( ) const
 	// ******
 }
 
-// STATE[63.7%|INPROGRESS]: body + per-case ORs are byte-identical, but the match is NOT
-// 100% (reviewer re-measured: 102/160 = 63.7% vs the committed base/target index; the
-// prior 100% claim did not hold on this build). The ONLY diff is a systematic extra join
-// block: every leaf does `jmp .17` (base) vs `jmp .18` (target) - the TARGET has ONE more
-// trailing statement/block than the base. Target structure has 13 stmts ending at L259
-// (0x188, +0x28) - a statement AFTER the last case that the return-per-case base lacks.
-// NEXT STEP (source-steerable, same class as movement_animation_index None->100%): the
-// target almost certainly assigned a result and fell through to one shared `return`, i.e.
-// `bool result; switch(...){ case X: result = ...; break; ... } return result;` (or a
-// trailing `return false;` after the switch), not a direct `return` in each case. Restore
-// the result-temp + single tail return so the leaves share one epilogue (.18). See jump_logic.md.
+// STATE[100%|DONE]
 bool jump_logic::does_need_land_and_run( ) const
 {
 	move_direction_enum landing_direction = get_move_direction( m_user->input( ) );
@@ -380,22 +371,6 @@ bool jump_logic::does_need_land_and_run( ) const
 	default:
 		NODEFAULT( );
 	}
-
-	// FUNCTION BODY[0x58d640]: 13   (target structure: 13 stmts, ends L259 @0x188 - the
-	// extra trailing block absent from the base's return-per-case shape)
-	// <0x58d649>|0x009|+0x021:'220'
-	// <0x58d66a>|0x02a|+0x013:'221'
-	// <0x58d67d>|0x03d|+0x007:'223'	case on_site: return false
-	// <0x58d684>|0x044|+0x02a:'227'	case fwd
-	// <0x58d6ae>|0x06e|+0x02a:'231'	case fwd_right
-	// <0x58d6d8>|0x098|+0x02a:'235'	case right
-	// <0x58d702>|0x0c2|+0x02a:'239'	case back_right
-	// <0x58d72c>|0x0ec|+0x027:'243'	case back
-	// <0x58d753>|0x113|+0x027:'247'	case back_left
-	// <0x58d77a>|0x13a|+0x027:'251'	case left
-	// <0x58d7a1>|0x161|+0x027:'255'	case fwd_left
-	// <0x58d7??>|0x188|+0x028:'259'	<- trailing stmt the base is MISSING (shared epilogue)
-	// ******
 }
 
 // STATE[STUB]

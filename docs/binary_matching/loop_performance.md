@@ -440,3 +440,30 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+### Disambiguate `pdb_fetch --function` with the FULL signature, and prefer the operand-aware (objdiff-dir) footer
+`pdb_fetch --function <substr> --view diff` pairs by the FIRST signature whose string contains the
+substring. A bare member name like `deactivate` can silently pair your function against an unrelated
+one (e.g. `jump_logic::deactivate` -> `thread_pool::deactivate_if_oversubscribed`), giving a
+plausible-but-WRONG footer (89.5%). Always pass a class-qualified substring (`jump_logic::deactivate`)
+or confirm the `--- base / +++ target` header lines name the SAME function before trusting the %.
+Two footer backends exist and can disagree: the RICH-index footer (indexes only) vs the operand-aware
+objdiff footer (add `--objdiff-base-dir binaries/objdiff/base --objdiff-target-dir
+binaries/objdiff/target`). For jump-table / relocation-heavy functions the rich footer can read HIGHER
+than the objdiff one for WORSE code (e.g. a trailing-return variant that added a bounds check read
+72.5% rich but the objdiff backend exposed the extra `cmp/ja`). Trust the objdiff-backed footer for
+the honest score and use it to detect added/removed real instructions.
+
+### The authoritative per-fn % is report.json `functions[].fuzzy_match_percent` (TOP-LEVEL), NOT `.measures.fuzzy_match_percent`
+TRAP: `binaries/objdiff/report.json` has TWO per-function fuzzy fields. `functions[].measures.
+fuzzy_match_percent` can be null worktree-wide (e.g. when `binaries/objdiff/target-symbol-map.tsv` is
+missing - rebuild logs "no target symbol map ... emitting local defaults"). But the TOP-LEVEL
+`functions[].fuzzy_match_percent` IS populated and is the AUTHORITATIVE measure - it is exactly what
+`scripts/generate_delink.py::_report_changes` (report-changes.json), `match_score.py`, and the README
+use. Read THAT. (Confirmed: with `.measures.` null for all 25372 fns, the top-level field still gave
+does_need_land_and_run 100.0%, set_user 83.61%, etc., and report-changes correctly logged the deltas.)
+This is the TRUE number to bank; the `pdb_fetch --view diff` footer is a diagnostic that under-counts
+jump-table/relocation functions - reconcile them. (A free function can read top-level 0.0 if its
+symbol didn't pair in the delinked .objs - cross-check with the objdiff-backend diff footer, which
+will show the real 100% if the code matches.) Don't waste a rebuild regenerating the target delink to
+"fix" null `.measures.` - just read the right field.

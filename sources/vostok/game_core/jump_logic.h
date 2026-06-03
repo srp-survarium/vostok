@@ -36,7 +36,7 @@ enum jump_animation_parts {
 	jump_animation_parts_count			= 0x0006,
 };
 
-u32 get_jump_animation_index( move_direction_enum move_direction, bool jump_from_right_leg, jump_animation_parts animation_part );
+u32 get_jump_animation_index( const move_direction_enum move_direction, const bool jump_from_right_leg, const jump_animation_parts animation_part );
 
 class jump_logic : public core::noncopyable {
 public:
