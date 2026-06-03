@@ -496,3 +496,34 @@ either match the callee first or leave your function INPROGRESS with a compilabl
 placeholder (`VOSTOK_UNREACHABLE_CODE();` returns "a value" for any type, as the
 player_logic_base_state concrete-stub anchor already does) and do NOT call it from the
 anchor. (player_logic_jump_state::selected_animations -> jump_logic::selected_animations stub.)
+## A base-class stub virtual's C4716 surfaces at LINK time and silently 0-bytes the EXE
+If your unit's class derives from a base whose virtuals are still pure STUBs (no `return` on a
+non-void virtual), instantiating your class's vtable (via the temp_include_all anchor) forces those
+base virtuals through LTCG codegen at LINK time. A non-void stub then fails `C4716 'must return a
+value'` - but because `/GL` does codegen during `link`, the error appears in the LINK output (citing
+the base `.cpp`), NOT the per-TU compile. The link aborts, leaving a **0-byte EXE**, yet `ninja` and
+`rebuild.py` still **exit 0** (ninja sees the 0-byte file as "created"), so `report.json` / the rich
+base index stay STALE and your unit shows **0 entries** in `binaries/rich/base/index.jsonl`. This
+looks like "my function didn't get built / got ICF-folded away" but is actually a compile error.
+- Tell: base index has 0 rows for your `.cpp`, EXE is 0 bytes, PDB mtime hasn't advanced.
+- Diagnose fast: `wine link @<the link .rsp> /NOLOGO 2>&1 | grep -iE "C4716|error C|LNK"` - the
+  `Generating code` line is immediately followed by the offending base function.
+- Fix: give each offending base stub virtual a minimal valid `return <enum_zero_or_call_me_again>;`
+  (keep it STATE[STUB], body as carcass) so codegen succeeds. It's the first anchor to instantiate
+  that base that pays this; later anchors inherit the fix.
+
+## Don't hand-delete vc90.pdb or the PCH between builds
+Removing `binaries/Win32/intermediates/<module>/vc90.pdb` (or just the `.pch`) to "force a rebuild"
+breaks the precompiled header (`C2859: vc90.pdb is not the pdb file that was used when this PCH was
+created`) and triggers a full module recompile that then also contends on the shared `vc90.pdb`
+(`C1033 cannot open program database`). If a build genuinely left a broken vc90.pdb, delete BOTH the
+`*.pch` and `vc90.pdb` (and `pch.obj`) together so they regenerate as a matched set, then run
+`rebuild.py` once. Normally: just `touch` the `.cpp` you changed and let rebuild.py handle the rest.
+
+## After a slow link, run rebuild.py twice (index regen can race the watchdog)
+On a long LTCG link, rebuild.py's parallel index/structure/delink regen occasionally fires while
+ninja's link is still finishing (or just after the watchdog reaps), regenerating from a stale EXE/PDB.
+Symptom: the link eventually wrote a fresh 72MB PDB but `report.json` / `index.jsonl` mtimes are older
+than the PDB and your unit shows 0 rows. Fix: run `rebuild.py` a SECOND time - ninja is now up-to-date
+(no relink, fast) and the regen reads the now-fresh PDB. Confirm with
+`grep -c <your_unit_token> binaries/rich/base/index.jsonl`.
