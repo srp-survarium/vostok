@@ -17,13 +17,6 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 )
 {
 	// FUNCTION BODY
-	// <0x58ce30>|0x000|+0x007:'19'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x58ce37>|0x007|      :'25'	}
 	// ******
 }
 

@@ -105,9 +105,6 @@ void bi_spline_skeleton_animation_baked_cook::destroy_resource( resources::unman
 	resource->~unmanaged_resource( );
 
 	// FUNCTION BODY
-	// <0x607a0>|0x000|+0x000:'76'	{
-	// <0>
-	// <0x607a0>|0x000|      :'78'	}
 	// ******
 }
 
@@ -117,7 +114,6 @@ bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_an
 	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource );
 
 	// FUNCTION BODY
-	// <0x122010>|0x000|      :'81'	{
 	// ******
 }
 

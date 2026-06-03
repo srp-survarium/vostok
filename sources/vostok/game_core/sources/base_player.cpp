@@ -18,8 +18,6 @@ base_player::base_player( base_player_creation_params const& params, survarium::
 	m_recoil_params		( params.recoil_params )
 {
 	// FUNCTION BODY
-	// <0x73f0b0>|0x000|+0x1da:'31'	{
-	// <0x73f28a>|0x1da|      :'32'	}
 	// ******
 }
 

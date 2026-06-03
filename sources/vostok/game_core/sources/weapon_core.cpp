@@ -14,7 +14,6 @@ namespace survarium {
 void `dynamic initializer for 's_ik_use_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7d95b0>|0x000|      :'38'	{
 	// ******
 }
 
@@ -23,7 +22,6 @@ void `dynamic initializer for 's_ik_use_cc''( )
 void `dynamic initializer for 's_ik_use_on_legs_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7d95f0>|0x000|      :'41'	{
 	// ******
 }
 
@@ -32,7 +30,6 @@ void `dynamic initializer for 's_ik_use_on_legs_cc''( )
 void `dynamic initializer for 's_recoil_vertical_eanble_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7d9630>|0x000|      :'44'	{
 	// ******
 }
 
@@ -41,7 +38,6 @@ void `dynamic initializer for 's_recoil_vertical_eanble_cc''( )
 void `dynamic initializer for 's_recoil_horizontal_eanble_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7d9670>|0x000|      :'47'	{
 	// ******
 }
 
@@ -50,7 +46,6 @@ void `dynamic initializer for 's_recoil_horizontal_eanble_cc''( )
 void `dynamic initializer for 's_recoil_back_eanble_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7d96b0>|0x000|      :'50'	{
 	// ******
 }
 
@@ -59,7 +54,6 @@ void `dynamic initializer for 's_recoil_back_eanble_cc''( )
 void `dynamic initializer for 's_recoil_enable_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7d96f0>|0x000|      :'53'	{
 	// ******
 }
 */
@@ -68,8 +62,6 @@ void `dynamic initializer for 's_recoil_enable_cc''( )
 weapon_core::weapon_core( ) : inventory_item( inventory_item::inventory_active_item )
 {
 	// FUNCTION BODY
-	// <0x5aa750>|0x000|+0x2aa:'95'	{
-	// <0x5aa9fa>|0x2aa|      :'96'	}
 	// ******
 }
 
@@ -331,7 +323,6 @@ animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) cons
 void `dynamic initializer for 'epsilon''( )
 {
 	// FUNCTION BODY
-	// <0x7d9730>|0x000|      :'300'	{
 	// ******
 }
 */
@@ -1016,8 +1007,6 @@ void weapon_core::load_ammo( )
 void weapon_core::on_reload_started( )
 {
 	// FUNCTION BODY
-	// <0x5a2ba0>|0x000|+0x007:'756'	{
-	// <0x5a2ba7>|0x007|      :'757'	}
 	// ******
 }
 

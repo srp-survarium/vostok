@@ -60,7 +60,6 @@ void* n_ary_tree_time_inverter::`scalar deleting destructor'( u32 arg_0 )
 	return NULL;
 
 	// FUNCTION BODY
-	// <0x122e20>|0x000|      :'67'	{
 	// ******
 }
 */
@@ -89,9 +88,6 @@ void n_ary_tree_time_inverter::visit(
 )
 {
 	// FUNCTION BODY
-	// <0x22c50>|0x000|+0x000:'73'	{
-	// <0>
-	// <0x22c50>|0x000|      :'75'	}
 	// ******
 }
 

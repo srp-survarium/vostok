@@ -12,8 +12,6 @@ namespace survarium {
 jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner ) : jump_logic_base_state( owner )
 {
 	// FUNCTION BODY
-	// <0x58cef0>|0x000|+0x028:'26'	{
-	// <0x58cf18>|0x028|      :'27'	}
 	// ******
 }
 
@@ -161,9 +159,6 @@ void jump_logic_state_landing::initialize( )
 void jump_logic_state_landing::finalize( )
 {
 	// FUNCTION BODY
-	// <0x58ce40>|0x000|+0x007:'117'	{
-	// <0>
-	// <0x58ce47>|0x007|      :'119'	}
 	// ******
 }
 

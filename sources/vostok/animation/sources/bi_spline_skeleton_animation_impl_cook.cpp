@@ -104,10 +104,6 @@ void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resourc
 	resource_to_delete->~resource_base( );
 
 	// FUNCTION BODY
-	// <0x607a0>|0x000|+0x000:'81'	{
-	// <0>
-	// <1>
-	// <0x607a0>|0x000|      :'84'	}
 	// ******
 }
 

@@ -13,7 +13,6 @@ namespace survarium {
 void `dynamic initializer for 's_ik_legs_debug_draw_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7db1c0>|0x000|      :'20'	{
 	// ******
 }
 
@@ -22,7 +21,6 @@ void `dynamic initializer for 's_ik_legs_debug_draw_cc''( )
 void `dynamic initializer for 's_ik_foot_capsule_radius_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7db200>|0x000|      :'23'	{
 	// ******
 }
 
@@ -31,7 +29,6 @@ void `dynamic initializer for 's_ik_foot_capsule_radius_cc''( )
 void `dynamic initializer for 's_ik_legs_rot_axis_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7db250>|0x000|      :'26'	{
 	// ******
 }
 
@@ -50,8 +47,6 @@ void `dynamic atexit destructor for 's_ik_legs_debug_draw_cc''( )
 legs_ik_processor::leg_params::leg_params( )
 {
 	// FUNCTION BODY
-	// <0x6fa6c0>|0x000|+0x062:'38'	{
-	// <0x6fa722>|0x062|      :'39'	}
 	// ******
 }
 
@@ -133,8 +128,6 @@ legs_ik_processor::legs_ik_processor( ) : m_heel_interpolator( 0.1f ), m_toe_int
 	// ******
 
 	// FUNCTION BODY
-	// <0x6fa730>|0x000|+0x0df:'100'	{
-	// <0x6fa80f>|0x0df|      :'101'	}
 	// ******
 }
 

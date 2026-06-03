@@ -12,8 +12,6 @@ weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_cor
 	weapon_core_animation_end_aware_state( weapon, false )
 {
 	// FUNCTION BODY
-	// <0x59e7b0>|0x000|+0x059:'21'	{
-	// <0x59e809>|0x059|      :'22'	}
 	// ******
 }
 

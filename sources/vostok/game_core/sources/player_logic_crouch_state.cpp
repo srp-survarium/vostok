@@ -13,8 +13,6 @@ player_logic_crouch_state::player_logic_crouch_state( weapon_user_animations_sel
 	player_logic_base_state	( owner, type_crouch )
 {
 	// FUNCTION BODY
-	// <0x58ed20>|0x000|+0x01e:'32'	{
-	// <0x58ed3e>|0x01e|      :'33'	}
 	// ******
 }
 

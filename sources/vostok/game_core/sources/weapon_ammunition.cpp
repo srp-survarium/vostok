@@ -13,7 +13,6 @@ weapon_ammunition::weapon_ammunition( ) :
 	m_source		( NULL )
 {
 	// FUNCTION BODY
-	// <0x6f9bf0>|0x000|      :'16'	{
 	// ******
 }
 
@@ -64,7 +63,6 @@ void weapon_ammunition::update_bones_matrices(
 	VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, &animation_player );
 
 	// FUNCTION BODY
-	// <0x6f9a00>|0x000|      :'43'	{
 	// ******
 }
 

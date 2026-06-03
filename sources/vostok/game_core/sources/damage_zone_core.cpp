@@ -356,9 +356,6 @@ void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> 
 	VOSTOK_UNREFERENCED_PARAMETER( objects );
 
 	// FUNCTION BODY
-	// <0x597d40>|0x000|+0x007:'266'	{
-	// <0>
-	// <0x597d47>|0x007|      :'268'	}
 	// ******
 }
 
@@ -476,7 +473,6 @@ bool remove_null_receivers_predicate( hit_receiver_info const& info )
 	return info.m_receiver == NULL;
 
 	// FUNCTION BODY
-	// <0x597d20>|0x000|      :'338'	{
 	// ******
 }
 

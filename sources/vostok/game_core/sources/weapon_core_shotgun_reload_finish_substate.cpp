@@ -27,8 +27,6 @@ weapon_core_shotgun_reload_finish_substate::weapon_core_shotgun_reload_finish_su
 	)
 {
 	// FUNCTION BODY
-	// <0x59e1b0>|0x000|+0x05a:'20'	{
-	// <0x59e20a>|0x05a|      :'21'	}
 	// ******
 }
 

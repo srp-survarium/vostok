@@ -12,9 +12,6 @@ namespace survarium {
 weapon_dispersion_calculator::weapon_dispersion_calculator( )
 {
 	// FUNCTION BODY
-	// <0x58f880>|0x000|+0x080:'21'	{
-	// <0>
-	// <0x58f900>|0x080|      :'23'	}
 	// ******
 }
 

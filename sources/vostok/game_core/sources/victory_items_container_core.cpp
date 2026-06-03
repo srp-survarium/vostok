@@ -15,9 +15,6 @@ victory_items_container_core::victory_items_container_core( ) :
 	m_owner_team		( team_undefined )
 {
 	// FUNCTION BODY
-	// <0x59dee0>|0x000|+0x06f:'21'	{
-	// <0>
-	// <0x59df4f>|0x06f|      :'23'	}
 	// ******
 }
 

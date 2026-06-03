@@ -15,8 +15,6 @@ animation_analyzer::animation_analyzer( leg_info const* legs_info, u32 legs_coun
 	m_ground_height	( 0.0f )
 {
 	// FUNCTION BODY
-	// <0x6fcbd0>|0x000|+0x039:'51'	{
-	// <0x6fcc09>|0x039|      :'52'	}
 	// ******
 }
 

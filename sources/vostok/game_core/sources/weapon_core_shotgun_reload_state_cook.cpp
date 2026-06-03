@@ -12,9 +12,6 @@ namespace survarium {
 weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
 	// FUNCTION BODY
-	// <0x590150>|0x000|+0x010:'29'	{
-	// <0>
-	// <0x590160>|0x010|      :'31'	}
 	// ******
 }
 

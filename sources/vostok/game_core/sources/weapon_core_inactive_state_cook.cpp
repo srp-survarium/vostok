@@ -24,9 +24,6 @@ weapon_core_inactive_state_cook::weapon_core_inactive_state_cook( ) :
 weapon_core_inactive_state_cook::~weapon_core_inactive_state_cook( )
 {
 	// FUNCTION BODY
-	// <0x59eec0>|0x000|+0x010:'22'	{
-	// <0>
-	// <0x59eed0>|0x010|      :'24'	}
 	// ******
 }
 

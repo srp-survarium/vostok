@@ -15,8 +15,6 @@ namespace survarium {
 ik_processor::ik_processor( )
 {
 	// FUNCTION BODY
-	// <0x58eba0>|0x000|+0x022:'16'	{
-	// <0x58ebc2>|0x022|      :'17'	}
 	// ******
 }
 

@@ -32,8 +32,6 @@ dispersion_calculator::dispersion_calculator( ) :
 	m_aiming_speed_coeff	( 1.0f )
 {
 	// FUNCTION BODY
-	// <0x596920>|0x000|+0x044:'22'	{
-	// <0x596964>|0x044|      :'23'	}
 	// ******
 }
 

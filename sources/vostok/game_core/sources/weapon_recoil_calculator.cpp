@@ -51,9 +51,6 @@ weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	m_last_time_in_ms					( 0 )
 {
 	// FUNCTION BODY
-	// <0x58e310>|0x000|+0x102:'46'	{
-	// <0>
-	// <0x58e412>|0x102|      :'48'	}
 	// ******
 }
 

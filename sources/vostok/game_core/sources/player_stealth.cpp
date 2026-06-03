@@ -12,8 +12,6 @@ namespace survarium {
 player_stealth::player_stealth( )
 {
 	// FUNCTION BODY
-	// <0x5aaad0>|0x000|+0x007:'15'	{
-	// <0x5aaad7>|0x007|      :'16'	}
 	// ******
 }
 

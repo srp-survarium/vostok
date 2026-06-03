@@ -13,8 +13,6 @@ player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selec
 	player_logic_base_state	( owner, type_stand )
 {
 	// FUNCTION BODY
-	// <0x7806e0>|0x000|+0x01e:'32'	{
-	// <0x7806fe>|0x01e|      :'33'	}
 	// ******
 }
 

@@ -12,8 +12,6 @@ namespace survarium {
 weapon_dispersion_params::weapon_dispersion_params( )
 {
 	// FUNCTION BODY
-	// <0x592de0>|0x000|+0x086:'21'	{
-	// <0x592e66>|0x086|      :'22'	}
 	// ******
 }
 

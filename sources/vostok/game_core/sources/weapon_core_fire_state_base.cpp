@@ -13,8 +13,6 @@ weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, f
 	weapon_core_animation_end_aware_state( weapon, true )
 {
 	// FUNCTION BODY
-	// <0x59ec20>|0x000|+0x066:'23'	{
-	// <0x59ec86>|0x066|      :'24'	}
 	// ******
 }
 

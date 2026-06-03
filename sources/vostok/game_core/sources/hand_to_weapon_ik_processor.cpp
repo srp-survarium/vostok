@@ -21,8 +21,6 @@ void `dynamic atexit destructor for 's_ik_hands_debug_draw_cc''( )
 hand_to_weapon_ik_processor::hand_to_weapon_ik_processor( ) : m_interpolator( 0.0f /* s_aim_transition_time */ ), m_active( true )
 {
 	// FUNCTION BODY
-	// <0x593f70>|0x000|+0x04b:'48'	{
-	// <0x593fbb>|0x04b|      :'49'	}
 	// ******
 }
 

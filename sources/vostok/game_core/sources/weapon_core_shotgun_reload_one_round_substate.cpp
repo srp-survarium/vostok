@@ -27,8 +27,6 @@ weapon_core_shotgun_reload_one_round_substate::weapon_core_shotgun_reload_one_ro
 	)
 {
 	// FUNCTION BODY
-	// <0x59e270>|0x000|+0x04d:'19'	{
-	// <0x59e2bd>|0x04d|      :'20'	}
 	// ******
 }
 

@@ -13,8 +13,6 @@ namespace survarium {
 character_dispersion_calculator::character_dispersion_calculator( )
 {
 	// FUNCTION BODY
-	// <0x596010>|0x000|+0x079:'23'	{
-	// <0x596089>|0x079|      :'24'	}
 	// ******
 }
 

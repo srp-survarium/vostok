@@ -12,8 +12,6 @@ weapon_user_animations_container_cook::weapon_user_animations_container_cook( )
 	: resources::translate_query_cook( resources::animation_container_class, reuse_true, use_current_thread_id )
 {
 	// FUNCTION BODY
-	// <0x762910>|0x000|+0x035:'15'	{
-	// <0x762945>|0x035|      :'16'	}
 	// ******
 }
 

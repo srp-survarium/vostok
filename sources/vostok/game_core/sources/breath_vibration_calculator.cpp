@@ -14,7 +14,6 @@ namespace survarium {
 void `dynamic initializer for 's_enable_breath_vibration_cc''( )
 {
 	// FUNCTION BODY
-	// <0x7db2f0>|0x000|      :'15'	{
 	// ******
 }
 */

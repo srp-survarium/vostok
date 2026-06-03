@@ -14,8 +14,6 @@ player_logic_base_state::player_logic_base_state( weapon_user_animations_selecto
 	m_owner		( owner )
 {
 	// FUNCTION BODY
-	// <0x59c220>|0x000|+0x052:'24'	{
-	// <0x59c272>|0x052|      :'25'	}
 	// ******
 }
 

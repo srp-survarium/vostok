@@ -28,8 +28,6 @@ booby_trap_set_core::booby_trap_set_core( ) :
 	m_damage_parameters	( NULL, 0 )
 {
 	// FUNCTION BODY
-	// <0x6fe380>|0x000|+0x08e:'28'	{
-	// <0x6fe40e>|0x08e|      :'29'	}
 	// ******
 }
 // STATE[77.75%|PARTIAL]

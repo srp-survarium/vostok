@@ -15,7 +15,6 @@ namespace survarium {
 artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 {
 	// FUNCTION BODY
-	// <0x73dfe0>|0x000|      :'17'	{
 	// ******
 }
 

@@ -14,8 +14,6 @@ player_logic_jump_state::player_logic_jump_state( weapon_user_animations_selecto
 	m_logic					( owner )
 {
 	// FUNCTION BODY
-	// <0x6f9470>|0x000|+0x02d:'25'	{
-	// <0x6f949d>|0x02d|      :'26'	}
 	// ******
 }
 

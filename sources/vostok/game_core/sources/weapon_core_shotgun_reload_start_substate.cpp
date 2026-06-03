@@ -26,8 +26,6 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 	)
 {
 	// FUNCTION BODY
-	// <0x59e620>|0x000|+0x04d:'20'	{
-	// <0x59e66d>|0x04d|      :'21'	}
 	// ******
 }
 
