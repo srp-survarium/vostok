@@ -89,20 +89,9 @@ bool true_predicate( )
 	// ******
 }
 
-// STATE[STUB|INPROGRESS]: NOT matched this unit (large, ~0x3bc bytes). Reconstructed
-// shape (verified from 0x5837e0 asm, see _tick.md): new three breath_state subclasses
-// (normal/holding/shortbreathing) via VOSTOK_NEW_IMPL(g_allocator, ...), add_state x3,
-// then five add_transition( from, to, pred ) calls:
-//   (normal,        holding,        boost::bind(&hold_button_state_equals_to,this,true))
-//   (holding,       normal,         boost::bind(&hold_button_state_equals_to,this,false))
-//   (holding,       shortbreathing, boost::bind(&insufficient_breath,this))
-//   (shortbreathing,normal,         true_predicate)
-//   (shortbreathing,holding,        true_predicate)
-// NEXT STEP to match: switch this cpp's #include from breath_state.h to
-// breath_holding_states.{h,inline} (the duplicate breath_state defn conflict must be
-// resolved first - the subclass ctors/vtables live there), make initialize_logic
-// private in the header (target mangles AAE; currently public -> scores None), write
-// the body above, and anchor by calling it transitively (the ctor already calls it).
+// STATE[STUB|INPROGRESS]: NOT matched this unit (large ~0x3bc; fsm-build with 3 breath_state
+// subclasses + 5 boost::bind/true_predicate add_transitions). Reconstructed body + concrete
+// next steps (header move to private AAE, breath_holding_states includes) in _tick.md.
 void breath_vibration_calculator::initialize_logic( )
 {
 	// LOCALS
