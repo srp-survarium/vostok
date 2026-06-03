@@ -54,7 +54,10 @@ public:
 
 	inline	weapon_user_state_enum		id							( ) const { return m_weapon_user_state_id; }
 	inline	bool						is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
-	// STATE[STUB]
+	// claude@MATCH: `return true;` override; /OPT:ICF folds to the `mov al,1;ret`
+	// fold @0x12700 -> unit reads None, bytes emitted/correct (the fold rep is
+	// weapon_user_dead_state's EBE; body is access-independent).
+	// STATE[None|DONE]
 	virtual	bool						is_ready_for_transition		( ) const override { return true; } // <0x22c50>|0x000|      :'61'
 
 	inline	bool						is_weapon_visible			( ) const { /* no source */ }
