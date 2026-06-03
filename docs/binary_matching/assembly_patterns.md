@@ -944,3 +944,23 @@ present-but-divergent, mark None|PARTIAL. CONTRAST: a member that USES `this` (r
 ctor/dtor storing into `this`) keeps its frame in BOTH and matches 100% (e.g. damage_protector
 ctor/dtor). So frame-presence tracks `this`-usage. Confirmed: artefact_container_core::use_info,
 booby_trap_core::get_speed (both None|PARTIAL, frameless target vs /Od frame).
+
+### `u32_diff -> [lo]; mov [hi],0; fild qword; fdiv 1000.0` = `float dt = ( u32a - u32b ) / 1000.0f`
+A millisecond->seconds delta `float dt = ( current_time - last_time ) / 1000.0f` where both
+operands are `u32`: MSVC computes the u32 subtraction, stores it as the LOW dword of a 64-bit
+slot, zeroes the HIGH dword, then `fild qword` (there is no unsigned-32 FPU load, so MSVC
+zero-extends the u32 to i64 and converts the i64), and `fdiv [__real@447a0000]` (0x447a0000 =
+1000.0f). One statement, ~0x1f bytes. Do NOT mistake the `fild qword`/zeroed-high for a real
+`u64`/`__int64` local - it is the standard u32->float widening of a plain `u32` difference.
+Confirmed in `game_core/character_dispersion_calculator::tick` (L59, dt the lone PDB local).
+
+### a member `tick`/update whose body is byte-identical but with `sub esp` off by 4 = one extra unused /Od frame slot (DONE-quality PARTIAL)
+When the base disasm matches the target instruction-for-instruction, member-offset-for-offset,
+call-for-call, constant-for-constant, but the TARGET reserved 4 more stack bytes
+(`sub esp,1Ch` vs base `sub esp,18h`) so the saved-`this` slot and every `[ebp-N]` shifts by 4
+(target this@[ebp-10h] vs base this@[ebp-0Ch]), that is a single UNUSED /Od frame slot the
+target build allocated - pure stack-allocation noise, NOT a missing local/brace/ASSERT/statement.
+The PDB local set maps, the carcass statement structure matches 1:1. Non-steerable under /Od.
+Mark PARTIAL at the resulting % (here 99.67%), not chase. Same class as
+`breath_vibration_calculator::tick` (94%, frame-slot churn). Confirmed in
+`game_core/character_dispersion_calculator::tick` (16 stmts, only diff = sub esp 1Ch vs 18h).

@@ -8,32 +8,32 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::character_dispersion_calculator::character_dispersion_calculator()
+// STATE[100%|DONE]
 character_dispersion_calculator::character_dispersion_calculator( )
+	:	m_params					( NULL )
+	,	m_target_value				( 0.0f )
+	,	m_current_value				( 0.0f )
+	,	m_value						( 0.0f )
+	,	m_value_smoothing_speed		( 5.0f )
+	,	m_aiming_speed				( 1.0f )
+	,	m_current_time				( 0 )
+	,	m_jumped					( false )
 {
-	// FUNCTION BODY
-	// <0x596010>|0x000|+0x079:'23'	{
-	// <0x596089>|0x079|      :'24'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::character_dispersion_calculator::set_character_dispersion_params(survarium::character_dispersion_params const*)
+// STATE[100%|DONE]
 void character_dispersion_calculator::set_character_dispersion_params( character_dispersion_params const* character_params )
 {
-	// FUNCTION BODY
-	// <0x595e07>|0x007|+0x008:'28'
-	// <0x595e0f>|0x00f|+0x008:'29'
-	// <0x595e17>|0x017|+0x00d:'30'
-	// <0x595e24>|0x024|+0x00d:'31'
-	// <0x595e31>|0x031|+0x00d:'32'
-	// <0>
-	// ******
+	m_params = character_params;
+	if ( m_params )
+	{
+		m_target_value	= m_params->idle_multiplier;
+		m_current_value	= m_params->idle_multiplier;
+		m_value			= m_params->idle_multiplier;
+	}
 }
 
-// STATE[STUB]
-// void survarium::character_dispersion_calculator::tick(const survarium::weapon_user_state_enum, const bool, const bool, const unsigned char, const bool, const unsigned int)
+// STATE[99.67%|PARTIAL]: every instruction/member-offset/call/constant byte-identical to target; the ONLY diff is target `sub esp,1Ch` (this@[ebp-10h]) vs base `sub esp,18h` (this@[ebp-0Ch]) - one extra unused 4-byte /Od frame slot shifting all [ebp-N] by 4. Non-steerable frame-allocation noise (same class as breath_vibration_calculator::tick). See character_dispersion_calculator_tick.md
 void character_dispersion_calculator::tick(
 	weapon_user_state_enum		character_state,
 	bool						is_moving,
@@ -43,11 +43,28 @@ void character_dispersion_calculator::tick(
 	u32							current_time_in_ms
 )
 {
-	// claude@NOTE: STUB - only references the two private getters so the linker
-	// keeps them alive (tick is the sole caller of get_target_koef /
-	// get_broken_hands_penalty). Real tick body is not matched here.
-	m_target_value = get_target_koef( character_state, is_moving, is_aiming )
-		+ get_broken_hands_penalty( broken_hands_count, using_double_handed_weapon );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
+
+	if ( m_current_time == 0 )
+	{
+		m_current_time = current_time_in_ms;
+		return;
+	}
+
+	if ( m_current_time >= current_time_in_ms )
+		return;
+
+	float const dt = ( current_time_in_ms - m_current_time ) / 1000.0f;
+	m_current_time = current_time_in_ms;
+
+	m_target_value = get_target_koef( character_state, is_moving, is_aiming ) * get_broken_hands_penalty( broken_hands_count, using_double_handed_weapon );
+
+	m_current_value = math::max( m_target_value, m_current_value - m_aiming_speed * dt );
+
+	if ( m_value > m_current_value )
+		m_value = math::max( m_current_value, m_value - m_value_smoothing_speed * dt );
+	else if ( m_current_value > m_value )
+		m_value = math::min( m_current_value, m_value + m_value_smoothing_speed * dt );
 
 	// LOCALS
 	// float 						dt
