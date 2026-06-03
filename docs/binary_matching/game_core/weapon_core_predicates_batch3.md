@@ -68,12 +68,33 @@ Small/related weapon_core members defined in weapon_core.cpp:
  0    weapon_user_animations_selector::current_state (forced helper; operator* ref round-trip not reproduced)
 
 ## Key learning
-The 7 PARTIALs all share ONE residual: trivial getters declared WITHOUT the `inline`
-keyword in the headers (is_double_handed, has_animation_ended, is_sprinting,
-selector::is_ready_to_be_deactivated) are emitted as COMDAT standalones AND called at /Od
-in the target objs, but our /GL build inlines them in the delinked EXE. This is the same
-LTCG inline-vs-call class the reload_state_base PROGRESS banked for round_is_chambered. Not
-source-steerable.
+FIVE of the seven weapon_core PARTIALs share ONE residual: trivial getters declared
+WITHOUT the `inline` keyword in the headers (is_double_handed, has_animation_ended,
+is_sprinting, selector::is_ready_to_be_deactivated) are emitted as COMDAT standalones AND
+called at /Od in the target objs (verified: standalone in target rich index, absent from
+base), but our /GL build inlines them in the delinked EXE. This is the same LTCG
+inline-vs-call class the reload_state_base PROGRESS banked for round_is_chambered. Not
+source-steerable. (on_user_sprint, must_chamber_a_round_and_animation_ended_predicate,
+target_and_animation_ended_predicate, is_ready_to_be_deactivated, is_trying_to_aim.)
+
+The OTHER TWO PARTIALs are NOT this class - they are distinct source-shape micro-codegen
+residuals (NOT LTCG, NOT arg-passing) that have not been diffed to a clean cause:
+- on_hand_ik_event 96.55%: body byte-identical incl. both ASSERT empty_stub calls and the
+  activate_hand args; the ONLY diff is base inserting `xor ecx,ecx` before `cmp eax,9;sete
+  cl` (target does `cmp;sete` straight on the movzx'd eax). A register-zeroing difference -
+  guidelines say such things are usually source-steerable; left as an open residual.
+- maximum_ammo_in_weapon 88.41%: target stores the `&&` into a BYTE temp and applies the
+  `neg;sbb;neg` (val!=0) bool-normalize before `add eax,ecx`; our base uses a DWORD temp
+  and a direct `add`. A bool->int promotion shape difference - source-steerable in
+  principle (cf. the `and X,mask; neg;sbb;neg` pattern in assembly_patterns.md); left open.
+
+## #176 overlap (re-match action)
+weapon_user_animations_selector::{is_ready_to_be_deactivated, get_current_state_id,
+current_state} in this PR DUPLICATE PR #176, which already matched exactly these three in
+the same file. This is a land-time conflict, not a note. is_trying_to_aim only requires
+get_current_state_id->current_state to be reachable (provided by #176); weapon_core's own
+is_ready_to_be_deactivated reaches the selector getter transitively. ON RE-MATCH: drop all
+three selector edits from this PR and keep only weapon_core's own functions.
 
 current_base_state() inline filled = *static_cast<weapon_core_base_state*>(m_logic->current_state()).
 weapon_core_base_state::is_ready_to_be_deactivated() filled = m_is_ready_to_be_deactivated (@0x134).

@@ -2040,8 +2040,9 @@ void weapon_core::unload_chambered_round( )
 }
 
 // STATE[88.41%|PARTIAL]: members/branches byte-identical; residual = bool->int codegen: target
-// stores the && into a byte temp and normalizes it (neg;sbb;neg) before `add eax,ecx`, our /GL
-// stores a dword temp and adds the byte directly. Micro bool-promotion codegen artifact.
+// stores the && into a BYTE temp and normalizes it (neg;sbb;neg, the (val!=0) shape) before
+// `add eax,ecx`, our base stores a DWORD temp and adds directly (no normalize). Source-shape
+// residual (NOT LTCG/arg-passing), not yet diffed to a clean cause.
 u16 weapon_core::maximum_ammo_in_weapon( ) const
 {
 	bool chamber_a_round_but_not_on_reload = m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload;
@@ -2054,8 +2055,9 @@ u16 weapon_core::maximum_ammo_in_weapon( ) const
 }
 
 // STATE[96.55%|PARTIAL]: ASSERTs/activate_hand args/return byte-identical; sole diff = `==9`
-// comparison codegen - target `cmp eax,9; sete cl`, our /GL emits an extra `xor ecx,ecx`
-// before the cmp (2-byte register-zeroing artifact). Not source-steerable.
+// comparison codegen - target `cmp eax,9; sete cl`, our base emits an extra `xor ecx,ecx`
+// before the cmp. Not the LTCG inline class; an open source-shape residual, not yet diffed
+// to a clean cause (register-zeroing is usually source-steerable).
 animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( params.domain_data ) );

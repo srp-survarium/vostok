@@ -90,6 +90,8 @@ void weapon_user_animations_selector::tick( )
 	// ******
 }
 
+// claude@NOTE: DUPLICATES PR #176 (selector state accessors), which already matches this fn
+// in this same file - drop this selector edit on re-match; see PROGRESS.md REVIEW note.
 // STATE[INPROGRESS]: forced-live by weapon_core::is_trying_to_aim (batch3) calling
 // get_current_state_id->current_state. Body = static_cast<player_logic_base_state*>(m_logic.current_state())
 // + ASSERT + return *result. Target adds 2 extra ref-copies + an `operator*` fold-rep call
