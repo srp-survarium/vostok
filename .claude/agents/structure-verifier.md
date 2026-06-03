@@ -125,6 +125,13 @@ do NOT touch report numbers (you only READ report.json). A genuine restructure i
 matcher's job - name it in your verdict and in the report.
 
 ## How you work
+- The pdb tools run under the nix dev shell: `nix develop -c pdb_fetch ...`. The
+  **first** `nix develop -c` call in a session prints a setup banner (vostok-libs copy,
+  Wine config, libEGL/pci-id/dri2 warnings) that can swallow the command's real output.
+  Warm up once with `nix develop -c true`, and/or pipe every call through a filter
+  (`... 2>&1 | grep -v -E 'setup|libEGL|pci id|dri2 screen'`). Re-run if the first call
+  came back empty. `python3` may not be on PATH - parse `report.json` with `grep`/the
+  rich tools, not Python. The shell cwd resets after each `nix develop -c` call; cd back.
 - Verify with the rich indexes (`pdb_fetch`, `pdb_rich_query`; indexes under
   `binaries/rich/`) and read `binaries/objdiff/report.json` for context. You may also
   read the generated `binaries/structure/{base,target}/<unit>` skeletons.
