@@ -42,7 +42,10 @@ public:
 
 			void						load							( configs::binary_config_value const& cfg_val );
 
-	// STATE[STUB]
+	// claude@MATCH: trivial `return this;` override (this @ offset 0, no ptr
+	// adjust); /OPT:ICF folds it to the empty-frame `mov eax,[ebp-4]` fold @0x17600,
+	// so the unit reads None while the bytes are emitted/correct. Target `UAE`.
+	// STATE[None|DONE]
 	virtual	collision_geometry*			cast_to_collision_geometry		( ) override { return this; };
 
 			void						subscribe						( physics::world* world, collision_geometry_subscriber* subscriber );
