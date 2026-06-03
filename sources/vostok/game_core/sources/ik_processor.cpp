@@ -29,36 +29,20 @@ void ik_processor::activate( animation::skeleton const& skeleton )
 	// ******
 }
 
-// STATE[STUB]
-// vostok::math::float4x4 survarium::get_bone_matrix_in_object_space_impl(vostok::animation::skeleton_bone const&, vostok::math::float4x4 const*, vostok::animation::skeleton_bone const*)
+// STATE[100%|DONE]
 float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& bone, float4x4 const* matrices, animation::skeleton_bone const* first_non_root_bone )
 {
-	// LOCALS
-	// u32 							matrix_index
-	// ******
-
-	return vostok::math::float4x4();
-
-	// FUNCTION BODY
-	// <0x58ebdb>|0x00b|+0x011:'26'
-	// <0x58ebec>|0x01c|+0x08f:'27'
-	// ******
+	u32 const matrix_index	= u32( &bone - first_non_root_bone );
+	return bone.parent( ) ?
+		matrices[matrix_index] * get_bone_matrix_in_object_space_impl( *bone.parent( ), matrices, first_non_root_bone ) :
+		float4x4( ).identity( );
 }
 
-// STATE[STUB]
-// vostok::math::float4x4 survarium::get_bone_matrix_in_object_space(vostok::animation::skeleton_bone const&, vostok::animation::skeleton const&, vostok::math::float4x4 const*)
+// STATE[100%|DONE]
 float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices )
 {
-	// LOCALS
-	// animation::skeleton_bone const* first_non_root_bone
-	// ******
-
-	return vostok::math::float4x4();
-
-	// FUNCTION BODY
-	// <0x58ec97>|0x007|+0x01a:'32'
-	// <0x58ecb1>|0x021|+0x01b:'33'
-	// ******
+	animation::skeleton_bone const* const first_non_root_bone	= &skeleton.get_root( ) + skeleton.get_root_bones_count( );
+	return get_bone_matrix_in_object_space_impl( bone, matrices, first_non_root_bone );
 }
 
 } // namespace survarium
