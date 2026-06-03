@@ -38,7 +38,7 @@ public:
 							weapon_animation_parameters const&	weapon_parameters
 						) = 0;
 
-	inline	bool		is_jump_finished		( ) const { /* no source */ }
+	inline	bool		is_jump_finished		( ) const { return m_is_jump_finished; }
 	// STATE[STUB]
 	explicit			jump_logic_base_state	( jump_logic& owner ) : m_jump_logic( owner ) {}
 

@@ -1203,6 +1203,22 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &r ) );
 	}
 
+	// claude@MATCH: anchor for jump_logic non-virtual leaf methods (landing_predicate,
+	// tick, look_time_factor, is_jump_finished). Qualified calls on a fabricated
+	// reference ODR-use the bodies without constructing an instance (the dtor/vtable
+	// of derived states stays untouched). The anchor never runs.
+	void use_game_core_jump_logic( )
+	{
+		survarium::jump_logic&	jl	= *reinterpret_cast< survarium::jump_logic* >( NULL );
+		bool	lp	= jl.landing_predicate( );
+		jl.tick( );
+		float	lt	= jl.look_time_factor( );
+		bool	jf	= jl.is_jump_finished( );
+		example_callback( reinterpret_cast< pcstr >( &lp ) );
+		example_callback( reinterpret_cast< pcstr >( &lt ) );
+		example_callback( reinterpret_cast< pcstr >( &jf ) );
+	}
+
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
 							void*				arg_0,
@@ -1675,6 +1691,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_jump_logic_state_landing();
 	vostok::use_game_core_jump_logic_state_start();
+	vostok::use_game_core_jump_logic();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();

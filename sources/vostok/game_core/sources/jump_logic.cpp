@@ -6,6 +6,11 @@
 #include <vostok/game_core/jump_logic.h>
 
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/weapon_user_animations_selector.h>
+
+#include <vostok/ai/fsm.h>
+
+#include "jump_logic_base_state.h"
 
 namespace survarium {
 
@@ -111,12 +116,10 @@ void jump_logic::initialize_logic( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void jump_logic::tick( )
 {
-	// FUNCTION BODY[0x58dac0]: 1
-	// <0x58dac7>|0x007|+0x00b:'109'
-	// ******
+	m_logic->tick( );
 }
 
 // STATE[STUB]
@@ -303,14 +306,12 @@ void jump_logic::set_user( base_player& user )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[None|DONE]: body is `mov al,1; ret` (8/8 bytes equal by RVA diff @0x57d4f0);
+// /OPT:ICF folds this `return true;` into a shared fold body, so objdiff reports
+// it unpaired (None) - byte-correct, not separately scorable.
 bool jump_logic::landing_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY[0x58d4f0]: 1
-	// <0x58d4f7>|0x007|+0x002:'205'
-	// ******
+	return true;
 }
 
 // STATE[STUB]
@@ -329,14 +330,10 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 float jump_logic::look_time_factor( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY[0x58d9b0]: 1
-	// <0x58d9b7>|0x007|+0x00a:'215'
-	// ******
+	return m_owner.look_time_factor( );
 }
 
 // STATE[STUB]
@@ -411,14 +408,10 @@ bool jump_logic::does_need_land_and_run( ) const
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 bool jump_logic::is_jump_finished( ) const
 {
-	return false;
-
-	// FUNCTION BODY[0x58d610]: 1
-	// <0x58d619>|0x009|+0x018:'263'
-	// ******
+	return static_cast< jump_logic_base_state* >( m_logic->current_state( ) )->is_jump_finished( );
 }
 
 } // namespace survarium
