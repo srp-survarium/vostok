@@ -267,8 +267,6 @@ public:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
-			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
-
 	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
