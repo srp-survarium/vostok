@@ -6,12 +6,20 @@
 #include <vostok/game_core/jump_logic.h>
 
 #include "jump_logic_base_state.h"
+#include "jump_logic_state_inactive.h"
+#include "jump_logic_state_start.h"
+#include "jump_logic_state_landing.h"
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/ai/fsm.h>
 
 namespace survarium {
+
+// claude@MATCH: the external survarium::true_predicate is defined in
+// breath_vibration_calculator.cpp (target 0xbb5c0); initialize_logic references it
+// via boost::bind<bool>(&true_predicate) - forward-declare and reuse, do not redefine.
+bool true_predicate( );
 
 // STATE[100%|DONE]
 move_direction_enum get_move_direction( player_input const& input )
@@ -64,66 +72,71 @@ move_direction_enum get_move_direction( player_input const& input )
 		return move_direction_on_site;
 }
 
-// STATE[BLOCKED]: ctor body is `: m_owner(owner), m_user(0), m_logic(0),
-// m_animated_object(0), m_jumping_direction(on_site), m_is_jump_from_right_leg(true)
-// { initialize_logic(); }` (verified from 0x58de30 asm). Anchoring needs constructing
-// a jump_logic, which runs initialize_logic -> constructs jump_logic_state_{inactive,
-// start,landing}, emitting their vtables -> forces their STUB selected_animations
-// (no return) to codegen -> C4716/LNK1257. Those overrides are matched only in PR #181
-// (absent from this base). Unblock: match jump_logic_state_* selected_animations first.
-jump_logic::jump_logic( weapon_user_animations_selector& owner ) : m_owner( owner )
+// STATE[100%|DONE]
+jump_logic::jump_logic( weapon_user_animations_selector& owner )
+	:	m_owner						( owner ),
+		m_user						( 0 ),
+		m_logic						( 0 ),
+		m_animated_object			( 0 ),
+		m_jumping_direction			( move_direction_on_site ),
+		m_is_jump_from_right_leg	( true )
 {
-	// FUNCTION BODY[0x58de30]: 1
-	// <0x58de76>|0x046|+0x008:'76'
-	// ******
+	initialize_logic( );
 }
 
-// STATE[BLOCKED]: dtor body is `m_logic->clear_transitions(); while(fsm_state* state =
-// m_logic->pop_state()) DELETE(state); DELETE(m_logic);` (verified from 0x58da30 asm,
-// same shape as breath_vibration_calculator::~). Blocked with the ctor: anchoring runs
-// through the state ctors -> C4716 on their STUB selected_animations. See ctor note.
- jump_logic::~jump_logic( )
+// STATE[100%|DONE]
+jump_logic::~jump_logic( )
 {
-	// LOCALS
-	// ai::fsm_state* 					state<1>
-	// ******
+	m_logic->clear_transitions( );
 
-	// FUNCTION BODY[0x58da30]: 4
-	// <0x58da39>|0x009|+0x00b:'81'
-	// <0x58da44>|0x014|+0x014|[1]:'82'
-	// <0x58da58>|0x028|+0x028:'83'
-	// <0x58da80>|0x050|+0x029:'84'
-	// ******
+	while ( ai::fsm_state* state = m_logic->pop_state( ) )
+		VOSTOK_DELETE_IMPL( g_allocator, state );
+
+	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// STATE[BLOCKED]: full body reconstructed (verified from 0x58dae0 asm, kept below as a
-// comment): m_logic = NEW(ai::fsm); inactive/start/landing = NEW(jump_logic_state_*)(*this);
-// add_state x3 (inactive,start,landing); add_transition(inactive,start, boost::bind<bool>(
-// &true_predicate)); add_transition(start,landing, boost::bind(&jump_logic::landing_predicate,
-// this)); set_initial_state(m_logic->states().front()). It COMPILES, but constructing the
-// three jump_logic_state_* subclasses emits their vtables -> forces their STUB
-// selected_animations (no return) -> C4716/LNK1257. Unblock by matching those overrides
-// (PR #181) first, then restore this body + anchor the ctor.
+// STATE[60.40%|PARTIAL]: body, statement order, member-init list, the two boost::bind
+// add_transition calls and the per-statement structure all match the target 1:1 (166/275
+// equal, text-diff fallback - objdiff can't pair this symbol because the boost stored_vtable
+// has an Absolute relocation it rejects, so report.json shows fuzzy=None). The residual is
+// the ai-fsm out-of-line-vs-inline WALL (the documented LTCG call-boundary class, same root
+// cause as deactivate/set_user): the TARGET out-of-lines fsm::states() (delinker-misnamed
+// finalize_impl) + front()/operator[] in the final set_initial_state(states().front()),
+// while our in-class accessors fold to direct field loads (mov [slot]; mov ecx,[ecx+8]).
+// That tail divergence raises base register pressure (extra [ebp-0BCh]/[ebp-0C0h] temps),
+// so base allocates a 0x18-larger frame and uses ecx (not the target's saved esi) for the
+// boost::function::clear() of each transition temp -> the slot numbering cascades. Not
+// source-steerable here (fsm::states() is `inline` in the header; the toolchain's LTCG
+// inline decision is the call boundary). See jump_logic.md.
 void jump_logic::initialize_logic( )
 {
-	// LOCALS
-	// jump_logic_base_state* 			start
-	// jump_logic_base_state* 			landing
-	// jump_logic_base_state* 			inactive
-	// ******
+	m_logic = VOSTOK_NEW_IMPL( g_allocator, ai::fsm );
+
+	jump_logic_base_state* inactive	= VOSTOK_NEW_IMPL( g_allocator, jump_logic_state_inactive )( *this );
+	jump_logic_base_state* start	= VOSTOK_NEW_IMPL( g_allocator, jump_logic_state_start )( *this );
+	jump_logic_base_state* landing	= VOSTOK_NEW_IMPL( g_allocator, jump_logic_state_landing )( *this );
+
+	m_logic->add_state( inactive );
+	m_logic->add_state( start );
+	m_logic->add_state( landing );
+
+	m_logic->add_transition( inactive, start, boost::bind< bool >( &true_predicate ) );
+	m_logic->add_transition( start, landing, boost::bind( &jump_logic::landing_predicate, this ) );
+
+	m_logic->set_initial_state( m_logic->states( ).front( ) );
 
 	// FUNCTION BODY[0x58dae0]: 11
-	// <0x58daf0>|0x010|+0x05a:'94'
-	// <0x58db4a>|0x06a|+0x067:'95'
-	// <0x58dbb1>|0x0d1|+0x067:'96'
-	// <0x58dc18>|0x138|+0x067:'97'
+	// <0x58daf0>|0x010|+0x05a:'94'	m_logic = NEW(ai::fsm)
+	// <0x58db4a>|0x06a|+0x067:'95'	inactive = NEW(jump_logic_state_inactive)(*this)
+	// <0x58dbb1>|0x0d1|+0x067:'96'	start = NEW(jump_logic_state_start)(*this)
+	// <0x58dc18>|0x138|+0x067:'97'	landing = NEW(jump_logic_state_landing)(*this)
 	// <0>
-	// <0x58dc7f>|0x19f|+0x012:'99'
-	// <0x58dc91>|0x1b1|+0x012:'100'
-	// <0x58dca3>|0x1c3|+0x012:'101'
-	// <0x58dcb5>|0x1d5|+0x0a3:'102'
-	// <0x58dd58>|0x278|+0x0aa:'103'
-	// <0x58de02>|0x322|+0x022:'104'
+	// <0x58dc7f>|0x19f|+0x012:'99'	add_state(inactive)
+	// <0x58dc91>|0x1b1|+0x012:'100'	add_state(start)
+	// <0x58dca3>|0x1c3|+0x012:'101'	add_state(landing)
+	// <0x58dcb5>|0x1d5|+0x0a3:'102'	add_transition(inactive,start, bind<bool>(&true_predicate))
+	// <0x58dd58>|0x278|+0x0aa:'103'	add_transition(start,landing, bind(&landing_predicate,this))
+	// <0x58de02>|0x322|+0x022:'104'	set_initial_state(states().front())
 	// ******
 }
 

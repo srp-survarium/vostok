@@ -149,7 +149,65 @@ Re-measured 7/26 = 26.9% on the committed index. TARGET out-of-lines states()
 [ebp-4]/[ebp-8] temps the target lacks). Permitted LTCG call-boundary class; blocked on
 the ai fsm type.
 
-## ctor / dtor / initialize_logic -> BLOCKED (C4716 state-vtable trap)
+## UNBLOCK follow-up (2026-06-03, branch match/game_core-jump_logic_ctor_initialize, off int/game_core)
+
+The C4716 state-vtable trap is GONE on the common ground (jump_logic_state_*
+selected_animations now return). Restored + matched ctor/dtor/initialize_logic.
+
+Commands:
+  pdb_rich_query --index binaries/rich/target/index.jsonl --list --function true_predicate
+  pdb_rich_query --index binaries/rich/target/index.jsonl --list --function jump_logic
+  pdb_fetch ... --function "jump_logic::initialize_logic" --view target
+  pdb_fetch ... --function "jump_logic::jump_logic" --view target
+  pdb_fetch ... --function "jump_logic::~jump_logic" --view target
+  nix develop -c python3 scripts/rebuild.py    (NO module arg)
+  pdb_fetch ... --objdiff-base-dir binaries/objdiff/base --objdiff-target-dir binaries/objdiff/target \
+      --function "jump_logic::initialize_logic" --view diff
+
+### true_predicate -> reused, NOT redefined
+Target has TWO `survarium::true_predicate()`: the EXTERNAL one in
+breath_vibration_calculator.cpp (0xbb5c0) and a file-static one in
+weapon_core_shotgun_reload_state.cpp (0x589720). initialize_logic @0x1d5 pushes the
+EXTERNAL `survarium::true_predicate`. breath_vibration_calculator.cpp already defines
+it (external linkage, always emitted). So jump_logic.cpp forward-declares
+`bool true_predicate();` and references it - redefining would be an ODR/LNK conflict.
+Not a stub to match here.
+
+### ctor (??0jump_logic, 0x57de30) -> 100% DONE
+`: m_owner(owner), m_user(0), m_logic(0), m_animated_object(0),
+m_jumping_direction(move_direction_on_site), m_is_jump_from_right_leg(true)
+{ initialize_logic(); }`. objdiff report.json top-level = 100.0%.
+
+### dtor (??1jump_logic, 0x57da30) -> 100% DONE
+`m_logic->clear_transitions(); while(ai::fsm_state* state = m_logic->pop_state())
+VOSTOK_DELETE_IMPL(g_allocator, state); VOSTOK_DELETE_IMPL(g_allocator, m_logic);`
+NOTE: game_core_memory.h's NEW/DELETE macros are COMMENTED OUT, so this TU must call
+VOSTOK_NEW_IMPL/VOSTOK_DELETE_IMPL(g_allocator, ...) directly (same as breath_vibration).
+objdiff report.json top-level = 100.0%.
+
+### initialize_logic (0x57dae0) -> 60.40% PARTIAL (ai-fsm out-of-line wall)
+Body (verified byte-for-byte structure, 166/275 equal text-diff): NEW(ai::fsm);
+inactive/start/landing = NEW(jump_logic_state_*)(*this) (source decl order
+inactive,start,landing -> slots -4/-0Ch/-8 match target); add_state x3; two
+add_transition with boost::bind<bool>(&true_predicate) and
+boost::bind(&jump_logic::landing_predicate,this); set_initial_state(states().front()).
+report.json shows fuzzy=None (NOT 0): objdiff CANNOT pair this symbol - it errors
+"x86: Failed to find operand for Absolute relocation" on the boost stored_vtable
+relocation and falls back to the text differ; the authoritative number is the
+text-diff 60.4%.
+RESIDUAL = the documented ai-fsm out-of-line-vs-inline WALL (LTCG call-boundary class,
+same root cause as deactivate 45.13% / set_user 83.61%): TARGET out-of-lines
+fsm::states() (delinker-misnamed finalize_impl) + front()/operator[] in the final
+set_initial_state(states().front()); BASE inlines all three to direct field loads.
+That tail raises base register pressure -> base allocates a 0x18-larger frame
+(sub esp,0D4h vs 0BCh), omits the target's `push esi`, and uses ecx (not esi) to hold
+each transition temp's address for boost::function::clear() -> every [ebp-XX] slot
+renumbers by 0x18, cascading the whole diff. fsm::states() is declared `inline` in
+fsm.h; whether the toolchain inlines it is the call-boundary LTCG decision - NOT
+source-steerable. EXHAUSTED source shapes: statement order, member-init list, local
+decl order (slots already match), the two bind expressions all verified 1:1. PARTIAL.
+
+## ctor / dtor / initialize_logic -> BLOCKED (C4716 state-vtable trap)  [SUPERSEDED above]
 All three reconstructed and VERIFIED from asm (bodies kept as comments in the .cpp):
 - ctor: `: m_owner(owner),m_user(0),m_logic(0),m_animated_object(0),
   m_jumping_direction(on_site),m_is_jump_from_right_leg(true) { initialize_logic(); }`
