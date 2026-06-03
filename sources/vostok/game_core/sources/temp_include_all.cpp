@@ -34,6 +34,8 @@
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
 
+#include <vostok/animation/skeleton.h>
+
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_holding_params.h>
@@ -85,6 +87,9 @@
 namespace survarium
 {
 	void game_core_initialize( );
+
+	float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
+	float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& bone, float4x4 const* matrices, animation::skeleton_bone const* first_non_root_bone );
 }
 
 namespace vostok
@@ -113,6 +118,18 @@ namespace vostok
 	void use_game_core_initialize( )
 	{
 		survarium::game_core_initialize( );
+	}
+
+	void use_game_core_ik_processor( animation::skeleton const* skeleton, animation::skeleton_bone const* bone, float4x4 const* matrices )
+	{
+		// escape the returned float4x4 so LTCG keeps the (observed) body
+		float4x4 result	= survarium::get_bone_matrix_in_object_space( *bone, *skeleton, matrices );
+		example_callback( reinterpret_cast< pcstr >( &result ) );
+
+		// keep the impl standalone too (also reachable via the wrapper)
+		float4x4 ( *fn )( animation::skeleton_bone const&, float4x4 const*, animation::skeleton_bone const* ) =
+			&survarium::get_bone_matrix_in_object_space_impl;
+		example_callback( reinterpret_cast< pcstr >( fn ) );
 	}
 
 	void use_medkit( )
@@ -764,6 +781,7 @@ IncludeAll::IncludeAll()
 	//
 	vostok::use_game_core_initialize( );
 	vostok::use_game_core_breath_vibration_calculator( );
+	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );
