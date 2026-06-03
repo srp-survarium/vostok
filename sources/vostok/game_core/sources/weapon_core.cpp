@@ -1860,31 +1860,22 @@ float weapon_core::computed_vertical_recoil_time(
 	// ******
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::backward_recoil_time_calculator()
-fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::backward_recoil_time_calculator( )
+// STATE[100%|DONE]
+weapon_core::calculator_functor weapon_core::backward_recoil_time_calculator( )
 {
-	// FUNCTION BODY
-	// <0x5a3fc9>|0x009|+0x039:'1241'
-	// ******
+	return calculator_functor( this, &weapon_core::computed_backward_recoil_time );
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::horizontal_recoil_time_calculator()
-fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::horizontal_recoil_time_calculator( )
+// STATE[100%|DONE]
+weapon_core::calculator_functor weapon_core::horizontal_recoil_time_calculator( )
 {
-	// FUNCTION BODY
-	// <0x5a3f79>|0x009|+0x039:'1246'
-	// ******
+	return calculator_functor( this, &weapon_core::computed_horizontal_recoil_time );
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::vertical_recoil_time_calculator()
-fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::vertical_recoil_time_calculator( )
+// STATE[100%|DONE]
+weapon_core::calculator_functor weapon_core::vertical_recoil_time_calculator( )
 {
-	// FUNCTION BODY
-	// <0x5a3f29>|0x009|+0x039:'1251'
-	// ******
+	return calculator_functor( this, &weapon_core::computed_vertical_recoil_time );
 }
 
 // STATE[UNCHECKED]
@@ -2141,31 +2132,22 @@ void weapon_core::instant_idle_start( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_idle_end()
+// STATE[100%|DONE]
 void weapon_core::instant_idle_end( )
 {
-	// FUNCTION BODY
-	// <0x5a2a57>|0x007|+0x00a:'1386'
-	// ******
+	m_is_idle = false;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_toggle_start()
+// STATE[100%|DONE]
 void weapon_core::instant_toggle_start( )
 {
-	// FUNCTION BODY
-	// <0x5a2a37>|0x007|+0x00a:'1391'
-	// ******
+	m_is_toggling = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_toggle_end()
+// STATE[100%|DONE]
 void weapon_core::instant_toggle_end( )
 {
-	// FUNCTION BODY
-	// <0x5a2a17>|0x007|+0x00a:'1396'
-	// ******
+	m_is_toggling = false;
 }
 
 } // namespace survarium
