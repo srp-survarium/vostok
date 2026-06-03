@@ -14,6 +14,18 @@ namespace animation {
 namespace mixing {
 
 
+// STATE[None|PARTIAL]: body byte-correct (20 bytes, == target 0x14) but objdiff can't pair -
+// our /GL LTCG inlines this trivial accessor at every call site, so no standalone copy lands in
+// the base mixing_expression_inline.h delink bucket (the target keeps one out-of-line copy that
+// many TUs call). The inline-vs-call LTCG wall. See assembly_patterns "mixing expression operator+".
+inline bool expression::is_empty				( ) const
+{
+	if ( m_node && m_lexeme )
+		return			false;
+
+	return				true;
+}
+
 template < typename T >
 inline expression::expression					( T& lexeme )
 {

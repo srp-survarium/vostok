@@ -708,3 +708,21 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   serialize/deserialize: stay BLOCKED (udp_match_packet/packet_reader never-compiled cluster).
   New anchor: use_game_core_weapon_user_animations_container_cook (static cook + resources::register_cook); extended use_game_core_weapon_user_animations_selector with member-fn-ptr anchors p4/p5/p6 for tick/deactivate/selected_animations. selector.cpp now #includes base_player.h + player_input.h (tick/deactivate need complete types).
   Regressions: none real - 6 net 100%->None vs clean baseline are all ICF fold-representative flips (btHashMap dtor, asio binder, artefact_lifebone thunks, boost storage2, interlocked_increment) - none authored here; offset by 96 net ->100% from the integration delta. (per the documented "ICF visibility, not source mismatch" convention.)
+
+- animation::mixing expression operator+ overloads + expression::is_empty (match/game_core-mixing_addition_lexeme_operator_plus):
+  Added the FOUR expression-returning operator+ overloads the weapon family needs (in
+  mixing_addition_lexeme.h/_inline.h) plus the real expression::is_empty() body (was a
+  `{return false;}` stub; now out-of-line in mixing_expression_inline.h).
+    operator+(expression const&, expression const&)            45.98% PARTIAL  (structure == target; residual is inline-vs-call LTCG x3: is_empty + addition_lexeme::cloned_in_buffer + ~addition_lexeme all kept out-of-line in target, inlined by our /GL)
+    operator+<animation_lexeme>(expression&, animation_lexeme&) 12.09% PARTIAL  (target compiles this instantiation with FULL optimization/FPO+inlining; base /Od - per-TU build-config divergence)
+    operator+(expression&, expression&)                        None   PARTIAL  (no base ODR-use yet - selecting caller still STUB)
+    operator+(expression&, expression const&)                  None   PARTIAL  (no base ODR-use yet - selecting caller still STUB)
+    expression::is_empty()                                     None   PARTIAL  (20-byte body byte-correct == target 0x14; inlined whole-program so no standalone base symbol to pair - inline-vs-call wall, strings|grep is_empty on base obj is empty)
+  Caller impact: idle-family weapon_and_hands_expression UNCHANGED at 85.65% (they use lexeme+lexeme
+  -> addition_lexeme&, not these). reload/fire/aimed weapon_and_hands_expression that would select the
+  new overloads are still STUB (None) - implementing them is a separate unit; this unit supplies the
+  overloads + is_empty they need to compile/resolve with the natural a+b+c shape. Overload set + is_empty
+  body recorded in assembly_patterns.md "mixing expression operator+".
+  Regressions: none real - 20 net 100%->0 are all ICF fold-representative flips (mutex/btHashMap/sun_cascade/
+  sound_target_selector trivial dtors+thunks); 13 improved. The named callers (get_weapon_lexeme_pair@idle/
+  aimed/pistol_*) all still 100% in report.json.

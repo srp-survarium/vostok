@@ -34,6 +34,12 @@ STATIC_SIZE_ASSERT(addition_lexeme, 0x24);
 	template < typename T1, typename T2 >
 	inline addition_lexeme&	operator +			( T1& left, T2& right );
 
+	template < typename T >
+	inline expression		operator +			( expression& left, T& right );
+	inline expression		operator +			( expression& left, expression& right );
+	inline expression		operator +			( expression& left, expression const& right );
+	inline expression		operator +			( expression const& left, expression const& right );
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

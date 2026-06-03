@@ -1040,3 +1040,59 @@ after the switch re-introduces a `cmp/ja` bounds check + dead store (WORSE code)
 footer misleadingly rises. Keep `default: NODEFAULT();`. Confirmed: TRUE 100%
 `game_core/jump_logic::does_need_land_and_run` (footer 63.7%) and
 `game_core/get_jump_animation_index` (footer 55.0%).
+
+### animation::mixing expression-returning operator+ + expression::is_empty - the overload set, and the inline-vs-call wall
+The weapon_and_hands_expression family (`a + b + c` over lexemes/expressions) needs FOUR
+`operator+` overloads in `mixing_addition_lexeme_inline.h` beyond the existing
+`template<T1,T2> operator+(T1&,T2&) -> addition_lexeme&`:
+```cpp
+template<typename T> inline expression operator+(expression& left, T& right) {
+    if (left.is_empty()) return right;
+    return expression(*addition_lexeme(left, right).cloned_in_buffer());
+}
+inline expression operator+(expression& left, expression& right) {
+    if (left.is_empty()) return right;
+    if (right.is_empty()) return left;
+    return expression(*addition_lexeme(left, right).cloned_in_buffer());
+}
+inline expression operator+(expression& left, expression const& right) {        // const rhs -> local copy
+    if (left.is_empty()) return right;
+    if (right.is_empty()) return left;
+    expression non_const_right = right;
+    return expression(*addition_lexeme(left, non_const_right).cloned_in_buffer());
+}
+inline expression operator+(expression const& left, expression const& right) {  // both const -> two copies
+    if (left.is_empty()) return right;
+    if (right.is_empty()) return left;
+    expression non_const_left = left, non_const_right = right;
+    return expression(*addition_lexeme(non_const_left, non_const_right).cloned_in_buffer());
+}
+```
+The const overloads copy each const arg to a local non-const `expression` because the
+`addition_lexeme(T1&,T2&)` ctor needs non-const refs (asm: `lea eax,[ebp-N]; call expression::expression`
+copy-ctor before the addition_lexeme ctor; push order = right-copy then left-copy). `return right;`/
+`return left;` on a const arg materializes via the expression copy ctor. The expression-first-arg
+overloads beat the `<T1,T2>` template by partial-ordering; lexeme+lexeme still selects `<T1,T2> ->
+addition_lexeme&`.
+And `expression::is_empty()` (was a `{return false;}` stub) is `if (m_node && m_lexeme) return false;
+return true;` (asm: `cmp [eax],0;je true; cmp [eax+4],0;je true; xor eax,eax;ret; true: mov eax,1;ret`;
+m_node intrusive_ptr @0, m_lexeme* @4 - declared OUT-OF-LINE in mixing_expression_inline.h, public `QBE`).
+
+WALL: under our /Od+/GL these score low and is_empty won't even pair. Two distinct, non-source-steerable
+causes, both LTCG/build-config:
+1. The `template<T> operator+(expression&,T&)` instantiation (T=animation_lexeme, target rva 0x099150)
+   is compiled in the TARGET with FULL optimization - FPO (no ebp frame, `sub esp,24h`, esp-relative,
+   ebx/edi/esi reg alloc), is_empty inlined as `cmp [ecx],0`, addition_lexeme ctor + cloned_in_buffer
+   + intrusive_ptr ref-count all inlined. Our base builds it /Od. A per-TU optimization-level divergence
+   (some animation-module TU emitted the optimized COMDAT rep); unmatchable from source (16.64%).
+2. The /Od-on-both overloads (e.g. `operator+(expr const&,expr const&)`, target 0x0b4180, 45.98%) have
+   IDENTICAL structure to the carcass but the residual is the inline-vs-call LTCG class x3: TARGET keeps
+   `expression::is_empty`, `addition_lexeme::cloned_in_buffer`, and `~addition_lexeme` as out-of-line
+   `call`s; our /GL inlines all three (is_empty -> `mov byte[ebp-N],0/1` temps; cloned_in_buffer ->
+   `add ecx,1Ch; call base_lexeme::cloned_in_buffer<addition_lexeme>`; ~addition_lexeme -> explicit
+   member `~expression` dtors at the temp's subobject offsets). is_empty has ZERO standalone symbol in
+   the base obj (`strings <obj> | grep is_empty` empty) - fully inlined whole-program, so it can't pair
+   (objdiff None) even though the 20-byte body is byte-correct. Same class as vectora::size()/is_aimed()/
+   fixed_string-ctor inline-vs-call. Mark PARTIAL; the source IS the target's source.
+NOTE: implementing these overloads is still the prerequisite that lets the weapon family's natural
+`a+b+c` shape compile and select them; the residual cap is the inline-vs-call, downstream of the caller.
