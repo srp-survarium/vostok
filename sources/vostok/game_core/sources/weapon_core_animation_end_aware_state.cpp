@@ -28,20 +28,18 @@ void weapon_core_animation_end_aware_state::finalize( )
 
 // STATE[77.33%|PARTIAL]: residual is the inline-vs-call of the trivial weapon_core::get_user()
 // accessor (target calls it out-of-line @0x9b330; base inlines it, also shifting frame slots).
-// Per the new guidelines this must be re-diffed against source, not banked as LTCG - see the .md.
 void weapon_core_animation_end_aware_state::set_animation_to_wait( resources::managed_resource_ptr const& animation ) const
 {
 	if ( !m_weapon.get_user()->is_replaying_history() )
 		m_animation_to_wait_for = animation;
 
-	// FUNCTION BODY (kept: this is a PARTIAL match, not 100%)
+	// FUNCTION BODY
 	// <0x6fd0e9>|0x009|+0x025:'29'
 	// <0x6fd10e>|0x02e|+0x012:'30'
 	// ******
 }
 
-// STATE[90.92%|PARTIAL]: empty_stub ASSERT recovered; residual is the inline-vs-call frame shape,
-// to be re-diffed against source per the new guidelines (not banked as LTCG) - see the .md.
+// STATE[90.92%|PARTIAL]: empty_stub ASSERT recovered; residual is the inline-vs-call frame shape.
 animation::callback_return_type_enum weapon_core_animation_end_aware_state::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;
