@@ -43,13 +43,23 @@ group 6, `m_time_scale`, `play_once_and_freeze_at_end`,
 then a trailing `ASSERT( UNKNOWN_EXPRESSION )` (the 0x8d finalize_impl eater, baked into the
 return). `s_aim_transition_time` is the per-file `static float = 0.3f` (same as every idle/show .cpp).
 
-### new_object  -> 99.98%  DONE
+### new_object  -> 99.98%  PARTIAL  (real index bug, NOT a reloc artifact)
 `weapon_anim_length = cubic_spline_skeleton_animation_pinned(animations[0])->length_in_frames()`,
-`user_anim_length = animations[1]` (offset 0x10), `time_scale = weapon/user`,
+`user_anim_length = ...animations[?]...`, `time_scale = weapon/user`,
 `new ( buffer.c_ptr() ) weapon_core_show_state( params->weapon, time_scale, animations, animations_count, params->shown )`.
-Instruction stream byte-identical to target (verified base vs target near the ctor call);
-the 0.02% is a relocation/symbol-representative artifact, same class the pistol/idle
-new_object siblings accept as DONE.
+
+REVIEW CORRECTION (this was mislabeled DONE with the residual called a reloc artifact):
+the 0.02% is NOT a reloc/representative artifact. objdiff (operand-aware, one-shot
+`objdiff-cli diff`) flags exactly one penalizing instruction at line 90: target
+`mov ecx,[ebp+14h]; add ecx, 10h` vs base `add ecx, 4`. `managed_resource_ptr` is 4 bytes,
+so target offset 0x10 == `animations[4]`, but the source writes `animations[1]` (= +4).
+The ctor loads weapon anims into indices 0-3 and user anims into 4-7, so the first user
+animation is `animations[4]`; the sibling pistol uses `animations[8]` for the same reason
+(its weapon block is 2x2x2=8). FIX: change `animations[1]` -> `animations[4]` on the
+user_anim_length line, then rebuild; expected 100.0 (pistol with the analogous `animations[8]`
+is 100.0). The two `call ?end@buffer_string@vostok@@QBE...` reloc-target diffs ARE benign
+ICF-fold-representative churn (pistol new_object carries the identical pair and scores 100.0),
+so they do not block this - the add-immediate is the sole real residual.
 
 ### weapon_and_hands_expression  -> 83.52%  PARTIAL  (known wall)
 Structure matches: get_weapon_lexeme_pair, get_user_hands_expression, then the chained
