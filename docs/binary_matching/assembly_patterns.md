@@ -999,3 +999,18 @@ math::max/min/sin stay out-of-line). The remaining ~6% is `sub esp,38h` (target)
 register holds the vtable at the second virtual call. Pure /Od register/slot allocation, NOT a
 missing local/brace/ASSERT/statement - the LOCALS all map, the carcass structure matches. Stop at
 PARTIAL. (breath_vibration_calculator::tick, 94.23%.)
+
+### a `this`-UNUSED trivial member (`return literal`/`return 0.0f`) is FRAMELESS in the target, framed under /Od
+SYMPTOM: a trivial member fn that NEVER references `this` (returns a string literal, `return 0.0f`,
+`return NULL` that ignores members) has a TARGET obj body with NO ebp frame - e.g. `get_speed` =
+`d9 ee c3` (`fldz; ret`), `use_info` = `b8 <reloc> c2 0400` (`mov eax,lit; ret 4`) - while our /Od
+BASE emits the full frame (`55 8bec 51 894dfc <body> 8be5 5d c3`, i.e. `push ebp; mov ebp,esp; push
+ecx; mov [ebp-4],ecx; ...`). The original build applied frame-pointer omission for `this`-unused
+leaves; `/Od` ALWAYS emits the frame + the `mov [ebp-4],ecx` save-this. The 3-5 vs 11+ byte gap is
+too large for objdiff to pair -> `fuzzy: None` even though the semantic body (the fldz / literal /
+ret N) is correct. NOT source-steerable under /Od (frame omission is a build flag). DISTINGUISH from
+ICF-fold None: these survive STANDALONE in the EXE (qualified-call anchor) at a real rva - they are
+present-but-divergent, mark None|PARTIAL. CONTRAST: a member that USES `this` (reads a member, the
+ctor/dtor storing into `this`) keeps its frame in BOTH and matches 100% (e.g. damage_protector
+ctor/dtor). So frame-presence tracks `this`-usage. Confirmed: artefact_container_core::use_info,
+booby_trap_core::get_speed (both None|PARTIAL, frameless target vs /Od frame).
