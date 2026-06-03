@@ -1040,3 +1040,30 @@ after the switch re-introduces a `cmp/ja` bounds check + dead store (WORSE code)
 footer misleadingly rises. Keep `default: NODEFAULT();`. Confirmed: TRUE 100%
 `game_core/jump_logic::does_need_land_and_run` (footer 63.7%) and
 `game_core/get_jump_animation_index` (footer 55.0%).
+
+## mixing operator+ template selection (animation::mixing::expression `+` chains)
+
+`weapon_and_hands_expression` (every weapon-state variant) returns a `+` chain of mixing
+lexemes/expressions (e.g. `hands_expression + main_lexeme + offset_lexeme`). These cap at
+~83-85% and the residual is a TEMPLATE-SELECTION divergence on the `operator+` overloads.
+
+The target picks `operator+`s that return `expression` BY VALUE and call `expression::is_empty()`:
+- `operator+<animation_lexeme>(expression& left, animation_lexeme& right) -> expression`
+  (ONE explicit template arg; the FIXED `expression&` left operand means the real engine header
+  had a `template<typename T> operator+(expression& left, T& right) -> expression` overload).
+- `operator+(expression&, expression&) -> expression` and const variants (non-template).
+
+The on-disk `vostok/animation/mixing_addition_lexeme_inline.h` provides ONLY
+`template<T1,T2> operator+(T1&, T2&) -> addition_lexeme&`, and `mixing_expression.h`'s
+`is_empty()` is a `return false;` STUB. So the base falls back to the addition_lexeme& form plus
+extra `expression()` conversions, and NO reshaping of the return expression can select the
+target's overloads (verified: wrapping operands in `expression(...)` only makes it WORSE -
+83.52 -> 77.48 / 56.65 - because the desired overloads do not exist to be chosen).
+
+CONCLUSION / pattern: when a `+` chain over `animation::mixing::expression`/lexemes diverges on
+operator+ template instantiation, it is a CROSS-UNIT HEADER GAP (the missing mixing operator+
+overload family + the stubbed `expression::is_empty`), NOT a source shape. Do NOT chase it with
+parenthesization/`expression()` wraps in the consuming function - mark PARTIAL. The real fix is
+to match the mixing operator+ overload set + `expression::is_empty` as their own unit; once those
+overloads exist, the natural `a + b + c` source should select them and these functions lift
+together. (Found re-matching game_core/weapon_core_reload_state::weapon_and_hands_expression.)
