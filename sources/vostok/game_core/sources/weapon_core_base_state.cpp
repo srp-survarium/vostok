@@ -8,7 +8,10 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
+// STATE[INPROGRESS]: bytes 100% (report.json) but SOURCE STRUCTURE does not match. The target packs
+// every member init onto the ctor decl line (2 statements: full member-init list L23 + empty body L24);
+// our base emits 7 statements ({ + 5 body assignments + }). Fix: move the 5 assignments into the
+// member-initializer list so the structure collapses to the target's 2 statements. See .md.
 weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serialize_animation_state ) : m_weapon( weapon )
 {
 	m_is_firing_ptr				= NULL;
@@ -16,6 +19,11 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 	m_is_ready_to_be_deactivated	= false;
 	m_animation_has_been_ended	= false;
 	m_serialize_animation_state	= serialize_animation_state;
+
+	// FUNCTION BODY  (target = 2 statements; our base = 7 -> structure mismatch)
+	// <0x6fcf90>|0x000|+0x0aa:'23'	{	// target: whole init region on the decl line (member-init list)
+	// <0x6fd03a>|0x0aa|      :'24'	}
+	// ******
 }
 
 // STATE[100%|DONE]
