@@ -1305,31 +1305,70 @@ namespace vostok
 		bool ( survarium::jump_logic_state_inactive::*ready )( ) const = &survarium::jump_logic_state_inactive::is_ready_for_transition;
 		example_callback( reinterpret_cast< pcstr >( &init ) );
 		example_callback( reinterpret_cast< pcstr >( &ready ) );
+
+		// claude@MATCH: selected_animations now has a (returning) body, so a qualified
+		// devirtualized call ODR-uses its out-of-line body without emitting the vtable.
+		survarium::jump_logic_state_inactive& s = *reinterpret_cast< survarium::jump_logic_state_inactive* >( NULL );
+		survarium::jump_logic_base_state::animation_delegate const& d =
+			*reinterpret_cast< survarium::jump_logic_base_state::animation_delegate const* >( NULL );
+		vostok::mutable_buffer&                    buf = *reinterpret_cast< vostok::mutable_buffer* >( NULL );
+		survarium::weapon_animation_parameters const& wp =
+			*reinterpret_cast< survarium::weapon_animation_parameters const* >( NULL );
+		std::pair< vostok::animation::mixing::expression, vostok::animation::mixing::animation_lexeme > p =
+			s.survarium::jump_logic_state_inactive::selected_animations( buf, false, d, wp );
+		example_callback( reinterpret_cast< pcstr >( &p ) );
 	}
 
 	void use_game_core_jump_logic_state_landing( )
 	{
-		// These are VIRTUAL header inline overrides. Address-of a virtual member yields
-		// a vtable thunk, NOT the body, so it does not ODR-use the body. Use a QUALIFIED
-		// (devirtualized, non-virtual) call on a fabricated pointer: that ODR-uses the
-		// exact body WITHOUT constructing an instance, so the vtable is never emitted and
-		// the still-STUB selected_animations is never codegen'd (the #148 C4716 trap).
-		// is_ready_for_transition is PRIVATE (target ?...@@EBE_NXZ) -> anchor befriended.
-		survarium::jump_logic_state_landing&	s	= *reinterpret_cast< survarium::jump_logic_state_landing* >( NULL );
+		// selected_animations now returns (UNREACHABLE), so the class can be instantiated
+		// without the #148 C4716 trap. Construct on a fabricated owner (never runs): this
+		// emits the ctor + the full vtable (all virtual overrides codegen'd). Then call the
+		// private non-virtual helpers (anchor befriended) so their bodies are emitted too.
+		survarium::jump_logic&					owner	= *reinterpret_cast< survarium::jump_logic* >( NULL );
+		survarium::jump_logic_state_landing		s( owner );
 		s.survarium::jump_logic_state_landing::execute( );
 		bool r = s.survarium::jump_logic_state_landing::is_ready_for_transition( );
 		example_callback( reinterpret_cast< pcstr >( &r ) );
+
+		vostok::mutable_buffer&					buf	= *reinterpret_cast< vostok::mutable_buffer* >( NULL );
+		vostok::animation::animation_callback_params& cbp =
+			*reinterpret_cast< vostok::animation::animation_callback_params* >( NULL );
+		survarium::jump_logic_base_state::animation_delegate const& d =
+			*reinterpret_cast< survarium::jump_logic_base_state::animation_delegate const* >( NULL );
+		vostok::animation::mixing::animation_lexeme& lx =
+			*reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		vostok::animation::mixing::animation_lexeme m = s.get_main_lexeme( buf, false, vostok::animation::body_part_whole_body );
+		vostok::animation::mixing::animation_lexeme l = s.get_look_lexeme( buf, false, d, lx );
+		vostok::animation::callback_return_type_enum ie = s.on_interval_end( cbp );
+		example_callback( reinterpret_cast< pcstr >( &ie ) );
+		example_callback( reinterpret_cast< pcstr >( &s ) );
 	}
 
 	void use_game_core_jump_logic_state_start( )
 	{
-		// Qualified devirtualized calls on a fabricated pointer (see landing above):
-		// ODR-use execute()/is_ready_for_transition() bodies without emitting the vtable.
-		// is_ready_for_transition is PRIVATE (target ?...@@EBE_NXZ) -> anchor befriended.
-		survarium::jump_logic_state_start&	s	= *reinterpret_cast< survarium::jump_logic_state_start* >( NULL );
+		// Construct (see landing): emits ctor + vtable; befriended anchor calls the private
+		// non-virtual helpers so their bodies are emitted.
+		survarium::jump_logic&					owner	= *reinterpret_cast< survarium::jump_logic* >( NULL );
+		survarium::jump_logic_state_start		s( owner );
 		s.survarium::jump_logic_state_start::execute( );
 		bool r = s.survarium::jump_logic_state_start::is_ready_for_transition( );
 		example_callback( reinterpret_cast< pcstr >( &r ) );
+
+		vostok::mutable_buffer&					buf	= *reinterpret_cast< vostok::mutable_buffer* >( NULL );
+		vostok::animation::animation_callback_params& cbp =
+			*reinterpret_cast< vostok::animation::animation_callback_params* >( NULL );
+		survarium::jump_logic_base_state::animation_delegate const& d =
+			*reinterpret_cast< survarium::jump_logic_base_state::animation_delegate const* >( NULL );
+		vostok::animation::mixing::animation_lexeme& lx =
+			*reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		vostok::animation::mixing::animation_lexeme m = s.get_main_lexeme( buf, false, vostok::animation::body_part_whole_body );
+		vostok::animation::mixing::animation_lexeme l = s.get_look_lexeme( buf, false, d, lx );
+		vostok::animation::callback_return_type_enum ie = s.on_interval_end( cbp );
+		vostok::animation::callback_return_type_enum je = s.on_jump_event( cbp );
+		example_callback( reinterpret_cast< pcstr >( &ie ) );
+		example_callback( reinterpret_cast< pcstr >( &je ) );
+		example_callback( reinterpret_cast< pcstr >( &s ) );
 	}
 
 	// claude@MATCH: anchor for jump_logic non-virtual leaf methods (landing_predicate,
