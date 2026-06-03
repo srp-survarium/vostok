@@ -467,6 +467,49 @@ brace-less. Do NOT decide braces from "has a local" alone (we mis-braced
 `get_target_koef` and earlier switches that way; prior switch matches should be
 re-checked against this).
 
+### derived ctor OVERWRITES an inherited member that the base ctor already set
+ASM (target, `weapon_core_show_state_base` ctor tail, after the base-ctor call + vtable stores):
+```
+mov eax,[ebp+0Ch]; mov [edx+140h],eax          ; m_is_shown ref store (the derived member)
+mov dword ptr [ecx+130h], 0FFFFFFFDh           ; m_body_part_mask_for_user = -3
+```
+SOURCE: the derived ctor BODY re-assigns an inherited protected member the base ctor
+already initialized. Here `weapon_core_base_state`'s ctor sets `m_body_part_mask_for_user
+= body_part_whole_body (-1)`; the show ctor's body OVERWRITES it to
+`m_body_part_mask_for_user = animation::body_part_whole_body_but_hands; // -3`. The store
+lands at the inherited offset (0x130) AFTER the init-list member stores. The member is
+`protected` on the base, so it is reachable from the derived body. Confirmed in
+`game_core/weapon_core_show_state_base::weapon_core_show_state_base` (100%). NOTE the enum
+values: body_part_whole_body=-1 (0xFFFFFFFF), body_part_whole_body_but_hands=-3 (0xFFFFFFFD).
+
+### non-virtual member call through a member reference -> direct `call` (contrast virtual)
+ASM (target, `m_weapon.instant_toggle_start()` where m_weapon is a weapon_core& @ 0x128):
+```
+mov ecx,[this]; mov ecx,[ecx+128h]      ; ecx = m_weapon (the reference)
+call survarium::weapon_core::instant_toggle_start    ; DIRECT call, no vtable indirection
+```
+SOURCE: `m_weapon.method()` where `method` is a NON-virtual member of weapon_core. Compare
+the virtual-call entry below (m_ref.virtual_method() -> `mov [vtbl+off]; call`). Same source
+shape; the asm differs ONLY by the method's virtual-ness - read the .h `virtual` keyword to
+decide. Confirmed: `weapon_core_show_state_base::{initialize,finalize}` call the non-virtual
+`instant_toggle_start/end` (direct), vs `aimed_state_base` calling virtual instant_aim_start/end.
+
+### stripped/folded empty out-of-line call can appear MID-BODY with a real source line
+SYMPTOM: `mov byte[ebp-1],0; lea eax,[ebp-1]; call <fn>` mid-function (a 1-byte local set to
+false, its address taken, then a `call`), where the call target is a single `ret` (delinker
+COMDAT-misnames it `fixed_size_allocator<...>::finalize_impl`), the arg is passed in EAX with
+NO push and NO stack cleanup (matches no writable C++ calling convention), and NO nameable
+symbol for the callee exists in EITHER rich index. This is the same class as the prologue
+`mov byte[ebp-1],0; ...; call empty_stub` artifact (above) - a call to a helper that is
+empty/stripped/COMDAT-folded whole-program - but here it carries a genuine source-line number
+(it IS a real source statement) rather than being a prologue artifact. NOT reproducible from
+the function's own source. Match every other statement and mark PARTIAL. Verify it is this
+class (not a real callee) by: (1) the call target disassembles to a bare `ret`; (2) the arg
+register/convention is non-standard; (3) `pdb_rich_query` finds no standalone symbol in target
+OR base. Confirmed in `game_core/weapon_core_show_state_base::{initialize (line 28, 75.13%),
+on_animation_end_impl (line 42, 69.93%)}` - every other statement (base init/finalize call,
+instant_toggle_start/end, *m_is_shown=true, result=true) is byte-exact.
+
 ### virtual call on a member reference through its OWN vtable (m_ref.virtual_method())
 ASM:
 ```

@@ -87,3 +87,10 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     Correction (on stack): initialize/finalize are PROTECTED virtual (MAE), dispatch instant_aim_start/end via
     weapon_core vtable 0x8c/0x90 - unlike idle's non-virtual pair.
   - STACK TIP was match/game_core-weapon_core_aimed_state_base.
+- game_core::weapon_core_show_state_base::{ctor,initialize,finalize,on_animation_end_impl} -> STATE[100%|DONE] -> PR #125 (regressions: none)
+  - STACKED on #124. ALL FOUR at 100%. The earlier "initialize 75.13% / on_animation_end_impl 69.93% PARTIAL,
+    unreproducible LTCG-folded empty call" diagnosis was WRONG: that empty out-of-line call was a compiled-out
+    ASSERT. Recovering it (ASSERT( UNKNOWN_EXPRESSION )) closed both to 100% - see assembly_patterns empty_stub.
+    ctor reproduces the inherited-member overwrite m_body_part_mask_for_user = body_part_whole_body_but_hands
+    ([this+130h]=0xFFFFFFFD).
+  - STACK TIP = match/game_core-weapon_core_show_state_base. New matches stack on this.
