@@ -28,9 +28,17 @@ public:
 
 	virtual	base_game_object*		get_object_by_name			( pcstr name );
 
-	// STATE[STUB]
+	// claude@NOTE: body verified byte-correct (inlined into the anchor's touch() as
+	// `add ecx,4` = &m_objects_registry @ +4, `call map::operator[]<char const*>`,
+	// then the store - matches target). /GL LTCG inlines it whole-program (anchored
+	// only by a synthetic caller), so no standalone body reaches the EXE -> None.
+	// STATE[None|PARTIAL]: LTCG inline-vs-call (byte-correct). Target `QAE`.
 			void					register_named_object		( pcstr name, base_game_object* obj ) { m_objects_registry[name] = obj; }
-	// STATE[STUB]
+	// claude@NOTE: body verified byte-correct (inlined into the anchor's touch() as
+	// the vector fast-path append + `_M_insert_overflow_aux` overflow - matches the
+	// target's inlined push_back). Same /GL LTCG inline-vs-call; no standalone body
+	// reaches the EXE -> None until a real game consumer keeps it standalone.
+	// STATE[None|PARTIAL]: LTCG inline-vs-call (byte-correct). Target `QAE`.
 			void					register_object_to_resolve	( link_resolver* obj, configs::binary_config_value cfg ) { m_objects_to_resolve.push_back( resolve_link_object( obj, cfg ) ); }
 
 	virtual	void					resolve_links				( );
