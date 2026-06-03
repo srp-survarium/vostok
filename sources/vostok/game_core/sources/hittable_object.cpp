@@ -18,8 +18,6 @@ namespace survarium {
 	m_mask			( 0 )
 {
 	// FUNCTION BODY[0x599f30]: 0
-	// <0x599f30>|0x000|+0x041:'19'	{
-	// <0x599f71>|0x041|      :'20'	}
 	// ******
 }
 

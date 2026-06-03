@@ -12,8 +12,6 @@ namespace survarium {
  hit_info::hit_info( )
 {
 	// FUNCTION BODY[0x73ea50]: 0
-	// <0x73ea50>|0x000|+0x01c:'20'	{
-	// <0x73ea6c>|0x01c|      :'21'	}
 	// ******
 }
 
@@ -36,8 +34,6 @@ namespace survarium {
 	being_hit		( being_hit )
 {
 	// FUNCTION BODY[0x73ea80]: 0
-	// <0x73ea80>|0x000|+0x059:'39'	{
-	// <0x73ead9>|0x059|      :'40'	}
 	// ******
 }
 
