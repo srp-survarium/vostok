@@ -1096,3 +1096,23 @@ short of moving the getter out-of-line, which changes its COMDAT placement and r
 bank it PARTIAL [LTCG getter inline-vs-call]. Confirmed across weapon_core batch3:
 is_trying_to_aim 66.75, on_user_sprint 89.72, the has_animation_ended predicates 85-87,
 is_ready_to_be_deactivated 84.77.
+### a no-bounds `default: NODEFAULT()` jump-table switch can be a TRUE 100% match while `--view diff` FOOTER reads ~55-65% - cross-check report.json
+SYMPTOM: a switch compiled to `jmp dword ptr [reg*4+table]` with NO bounds check (source ends
+`default: NODEFAULT();`, full contiguous case range). The function code matches byte-for-byte and
+`--view structure` is identical to the target carcass, yet the `pdb_fetch --view diff` footer reads
+~55-65%. The footer's "mismatches" are BOTH artifacts (NOT code diffs):
+  (1) every leaf `jmp .N`(base) vs `jmp .N+1`(target) - the label NUMBER differs but BOTH resolve to
+      the SAME address (verify in `--view base`/`--view target`: same epilogue offset). The index
+      shift is because the embedded jump table is a distinct symbol whose label objdiff counts.
+  (2) a tail of `(bad)` / nonsense instructions PAST the function `ret` - that is the jump TABLE
+      itself, disassembled as code. base and target tables hold binary-specific RVAs (relocations),
+      so they disassemble into different junk and the footer scores every table dword as a mismatch.
+The AUTHORITATIVE objdiff measure (`report.json` units[].functions[].fuzzy_match_percent - the
+TOP-LEVEL field, NOT `.measures.fuzzy_match_percent`) handles the relocation correctly and reports
+the TRUE % - which for both functions below was 100.0%. So the diff FOOTER is a secondary/diagnostic
+number that UNDER-counts inline jump-tables; ALWAYS reconcile it with report.json before banking a
+non-100%. Do NOT chase the footer with result-temps or trailing returns - a trailing `return X;`
+after the switch re-introduces a `cmp/ja` bounds check + dead store (WORSE code) while only the rich
+footer misleadingly rises. Keep `default: NODEFAULT();`. Confirmed: TRUE 100%
+`game_core/jump_logic::does_need_land_and_run` (footer 63.7%) and
+`game_core/get_jump_animation_index` (footer 55.0%).

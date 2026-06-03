@@ -22,6 +22,9 @@ class weapon_user_animations_selector;	// sushi@TODO
 struct weapon_animation_parameters;
 
 struct base_player;
+struct player_input;
+
+move_direction_enum get_move_direction( player_input const& input );
 
 enum jump_animation_parts {
 	jump_animations_part_start			= 0x0000,
@@ -32,6 +35,8 @@ enum jump_animation_parts {
 	jump_animations_part_land_run_look	= 0x0005,
 	jump_animation_parts_count			= 0x0006,
 };
+
+u32 get_jump_animation_index( const move_direction_enum move_direction, const bool jump_from_right_leg, const jump_animation_parts animation_part );
 
 class jump_logic : public core::noncopyable {
 public:
