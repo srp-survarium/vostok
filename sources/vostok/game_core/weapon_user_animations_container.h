@@ -13,7 +13,7 @@ public:
 			resources::managed_resource_ptr	get_stand_animation			( bool aimed, u32 index, bool is_third_view ) const;
 	inline	resources::managed_resource_ptr	get_crouch_animation		( bool arg_0, u32 arg_1, bool arg_2 ) const { /* no source */ }
 	inline	resources::managed_resource_ptr get_sprint_animation		( u32 arg_0, bool arg_1 ) const { /* no source */ }
-	inline	resources::managed_resource_ptr	get_jump_animation			( u32 arg_0, bool arg_1 ) const { /* no source */ }
+	inline	resources::managed_resource_ptr	get_jump_animation			( u32 index, bool is_third_view ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 100 ) ); return m_jump_animations[is_third_view][index]; }
 
 	inline	pcstr		get_stand_animation_caption		( bool arg_0, u32 arg_1 ) const { /* no source */ }
 	inline	pcstr		get_crouch_animation_caption	( bool arg_0, u32 arg_1 ) const { /* no source */ }

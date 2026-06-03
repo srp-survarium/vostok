@@ -534,13 +534,10 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 	// ******
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_user_animations_selector::look_time_calculator() const
+// STATE[100%|DONE]
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_user_animations_selector::look_time_calculator( ) const
 {
-	// FUNCTION BODY
-	// <0x594cf7>|0x007|+0x01d:'319'
-	// ******
+	return look_time_functor( this, &weapon_user_animations_selector::look_time_factor_calculator );
 }
 
 // STATE[STUB]
