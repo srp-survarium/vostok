@@ -16,11 +16,34 @@ Usage:
 Required env vars (set by flake.nix devShell):
   NINJA_DIR  - directory containing ninja.exe
   WINEPREFIX - wine prefix initialised by setup-toolchain.py
+
+## Stall watchdog (full-game build only)
+
+Wine intermittently leaves a `cl.exe`/`link.exe` child in a finished-but-never-
+exits state: the linker has already written the EXE+PDB and succeeded, yet the
+process never reaps, so ninja blocks on it and the whole rebuild appears to hang
+for many minutes with zero CPU activity. That dead wait dwarfs the real ~1-2 min
+of build work.
+
+So for the full-game build we don't just block on `wine ninja`: we run it as a
+child and watch (a) whether the EXE+PDB were freshly written and (b) the CPU of
+the whole Wine compiler/linker tree. If the outputs are written AND the tree has
+been idle (no real compute) for IDLE_LIMIT seconds while ninja still hasn't
+returned, the build is done and we're only waiting on a zombie - so we reap the
+Wine children and return success. A normal build never trips this: ninja exits
+within ~1s of the link finishing, long before the idle timer fills.
+
+Safety: we only declare done once BOTH the EXE and PDB mtimes have advanced past
+build start (so we never proceed on a half-written EXE - that would show up as a
+blown-up diff downstream); a real LTCG link keeps a core busy, so it never reads
+as idle. Module-only builds (which don't relink the EXE) skip the watchdog.
 """
 
 import os
+import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -30,12 +53,154 @@ BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
+# Outputs the final link writes; the watchdog waits for both to be refreshed.
+WIN32_DIR = VOSTOK_DIR / "binaries" / "Win32"
+LINK_OUTPUTS = (
+    WIN32_DIR / "survarium-dx11-win32-gold.exe",
+    WIN32_DIR / "survarium-dx11-win32-gold.pdb",
+)
+
+# Watchdog tuning.
+POLL_SECONDS = 5
+IDLE_LIMIT_SECONDS = 60          # idle-with-outputs-ready this long => zombie wait
+IDLE_CPU_CORES = 0.15            # whole wine tree below this many cores = idle
+HARD_TIMEOUT_SECONDS = 2400      # absolute ceiling, then give up (treat as failure)
+CLK_TCK = os.sysconf("SC_CLK_TCK")
+
+# comm names that are the persistent wineserver session, never the build itself.
+_WINE_SESSION = {
+    "wineserver", "services.exe", "winedevice.exe", "plugplay.exe",
+    "svchost.exe", "rpcss.exe", "explorer.exe", "conhost.exe",
+}
+# substrings identifying a build (compiler/linker/ninja) process under wine.
+_BUILD_COMMS = ("wine", "cl", "link", "ninja", "lib", "cmd", "mspdb", "c1", "c2")
+
 
 def die(msg: str, *hints: str) -> None:
     print(f"[ninja] ERROR: {msg}", file=sys.stderr)
     for h in hints:
         print(f"  {h}", file=sys.stderr)
     sys.exit(1)
+
+
+def _wine_tree_jiffies() -> int:
+    """Sum utime+stime (jiffies) over the live Wine build/compiler/linker tree.
+
+    Excludes the persistent wineserver session so its idle background processes
+    don't mask a stall. Over-inclusion is harmless: we only read the DELTA.
+    """
+    total = 0
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            comm = (entry / "comm").read_text().strip()
+        except OSError:
+            continue
+        low = comm.lower()
+        if low in _WINE_SESSION:
+            continue
+        if not any(k in low for k in _BUILD_COMMS):
+            continue
+        try:
+            fields = (entry / "stat").read_text().rsplit(") ", 1)[1].split()
+        except (OSError, IndexError):
+            continue
+        # after "(comm) " field 0 is state; utime=13, stime=14 in the full stat,
+        # i.e. indices 11 and 12 here (we split off everything up to ") ").
+        try:
+            total += int(fields[11]) + int(fields[12])
+        except (ValueError, IndexError):
+            continue
+    return total
+
+
+def _outputs_refreshed(since: float) -> bool:
+    """True once every link output's mtime has advanced past build start."""
+    for out in LINK_OUTPUTS:
+        try:
+            if out.stat().st_mtime <= since:
+                return False
+        except OSError:
+            return False
+    return True
+
+
+def _reap_wine_children() -> None:
+    """Kill leftover wine compiler/linker processes (NOT the wineserver session).
+
+    Best-effort: a process we can't kill is fine - the point is that we no longer
+    BLOCK on it, not that it must die.
+    """
+    for name in ("cl", "link.exe", "link", "conhost.exe"):
+        subprocess.run(["pkill", "-9", "-x", name],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
+    """Run the full-game ninja build, reaping the post-link Wine zombie wait."""
+    start = time.time()
+    # inherit stdout/stderr (no pipe) so the matcher still sees the -v output and
+    # so leaked wine children can't hold a pipe fd open (that itself hangs EOF).
+    proc = subprocess.Popen(
+        ["wine", str(ninja_exe), "-v", "-k", "0", *args],
+        cwd=str(BUILD_DIR),
+        start_new_session=True,
+    )
+
+    idle_seconds = 0.0
+    prev_jiffies = _wine_tree_jiffies()
+    prev_t = time.time()
+    reaped = False
+
+    while True:
+        rc = proc.poll()
+        if rc is not None:
+            return rc  # normal exit (the overwhelmingly common path)
+
+        time.sleep(POLL_SECONDS)
+        now = time.time()
+        jiffies = _wine_tree_jiffies()
+        elapsed = now - prev_t
+        cores = (jiffies - prev_jiffies) / (elapsed * CLK_TCK) if elapsed > 0 else 0.0
+        prev_jiffies, prev_t = jiffies, now
+
+        if cores < IDLE_CPU_CORES and _outputs_refreshed(start):
+            idle_seconds += elapsed
+        else:
+            idle_seconds = 0.0
+
+        if idle_seconds >= IDLE_LIMIT_SECONDS:
+            print(
+                f"[ninja] watchdog: EXE+PDB written and the wine tree has been idle "
+                f"~{int(idle_seconds)}s while ninja has not returned - the link "
+                f"finished but a child is stuck; reaping and proceeding.",
+                flush=True,
+            )
+            reaped = True
+            break
+
+        if now - start > HARD_TIMEOUT_SECONDS:
+            print(
+                f"[ninja] watchdog: hard timeout ({HARD_TIMEOUT_SECONDS}s) with no "
+                f"idle-completion signal; killing the build.",
+                flush=True,
+            )
+            break
+
+    # We broke out because the build is stuck. Kill our process group, then reap
+    # the reparented wine children. Return success only if we saw the clean
+    # outputs-ready + idle signal; a hard-timeout is a genuine failure.
+    try:
+        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+    _reap_wine_children()
+    try:
+        proc.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        pass
+    return 0 if reaped else 1
 
 
 def main() -> None:
@@ -64,10 +229,19 @@ def main() -> None:
     # Both come before the user's args, so a later -k/-j on the command line
     # still wins (ninja takes the last occurrence).
     args = sys.argv[1:] or [DEFAULT_TARGET]
-    rc = subprocess.run(
-        ["wine", str(ninja_exe), "-v", "-k", "0", *args],
-        cwd=str(BUILD_DIR),
-    ).returncode
+
+    # The stall watchdog only makes sense for the full-game build (the one that
+    # relinks the EXE+PDB and so can hit the post-link zombie wait). A module-only
+    # build (`ninja_build.py game_core`) doesn't relink and finishes fast, so run
+    # it plainly.
+    full_build = (not sys.argv[1:]) or (DEFAULT_TARGET in args)
+    if full_build:
+        rc = _run_with_watchdog(ninja_exe, args)
+    else:
+        rc = subprocess.run(
+            ["wine", str(ninja_exe), "-v", "-k", "0", *args],
+            cwd=str(BUILD_DIR),
+        ).returncode
     sys.exit(rc)
 
 
