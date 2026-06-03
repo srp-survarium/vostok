@@ -32,6 +32,7 @@
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
+#include <vostok/network_core/async_connector.h>
 #include <vostok/network_core/tcp_packet.h>
 
 #include <vostok/animation/skeleton.h>
@@ -1433,6 +1434,22 @@ namespace vostok
 		network_core::read_lines_from_stream( "prefix", buff );
 	}
 
+	void use_network_core_async_connector()
+	{
+		boost::asio::io_service io_service( 10 );
+		boost::asio::ip::tcp::socket socket( io_service );
+
+		network_core::async_connector connector;
+		connector.connect(
+			socket,
+			"host",
+			80,
+			boost::bind( &example_callback, "connected" ),
+			boost::bind( &example_callback, "error" ) );
+		connector.reset( );
+		example_callback( reinterpret_cast<pcstr>( &connector ) );
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -1632,6 +1649,7 @@ IncludeAll::IncludeAll()
 	vostok::use_physics_api();
 	vostok::use_log();
 	vostok::use_network_core_http_client();
+	vostok::use_network_core_async_connector();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();

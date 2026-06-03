@@ -1004,3 +1004,32 @@ shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` an
 `Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
 `&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
 wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
+
+## Boost.Asio `boost::asio::placeholders::error`/`::iterator` are anonymous-namespace statics
+A `boost::bind(&method, this, boost::asio::placeholders::error, ...::iterator)` reads those
+placeholders from `[?error@?A0xXXXXXXXX@placeholders@asio@boost@@...]` - an ANONYMOUS-NAMESPACE
+static whose `?A0xXXXXXXXX` hash differs between the base and target builds (it's per-TU). So a
+structurally byte-identical body (same `async_connect`/`async_resolve` + bind) still scores LOW in
+objdiff because every placeholder load + the surrounding register allocation reads as a mismatch.
+This is unsteerable noise, NOT a wrong body. Recognize it: the diff's `-`/`+` lines are all
+`mov reg, [?error@?A0x...]` / `[?iterator@?A0x...]` with differing hashes + ecx/eax/edx swaps, while
+the control flow and calls line up. (network_core async_connector::connect(iterator) - 24% over a
+correct body.)
+
+## MSVC mangles top-level `* const` on a pointer PARAMETER (PAV vs QAV) - but it can break overloads
+For a by-value pointer param, `T*` mangles `PAV`, `T* const` mangles `QAV` (MSVC encodes the
+top-level const, unlike Itanium). If the target's recovered symbol is `QAV` and your decl is `PAV`,
+objdiff won't pair them. BUT adding `* const` can break compilation: a `* const p` can't bind to a
+`delete_helper(A&, T*& pointer)` (the pointer-nulling overload MSVC selects first), C2664. The target
+must have resolved to a by-value `delete_helper(A&, T const*)` overload. If forcing the const overload
+risks build-red, keep the build GREEN (non-const) and accept the unpaired PARTIAL. (network_core
+async_connector::on_resolved.)
+
+## A 450KB+ boost-template-heavy .obj can fail to LOAD in objdiff ("os error 6") - unit skipped, can't regress
+A TU that instantiates deep Boost.Asio/`boost::bind` templates produces a huge `.obj`; `objdiff-cli` /
+`pdb_fetch --view diff` (objdiff-core backend) may fail to parse it and SILENTLY skip the whole unit -
+report.json shows 0 functions for it, and the functions never contribute to the README score (so they
+also can't regress it). Use the RVA-keyed rich-index `--view diff` for the authoritative % instead. Note
+the rich diff also refuses a function whose name substring collides with its own `boost::bind<...>`
+helper index entries (on_resolved/connect-5arg) - those need a manual rich-index instruction/size compare.
+(network_core async_connector.cpp.obj, 451KB.)

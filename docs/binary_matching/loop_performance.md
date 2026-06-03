@@ -433,3 +433,22 @@ tracked change is the `.vcproj`. **The TU's headers must be stood up so it actua
 change** - an enabled-but-uncompilable TU breaks the whole base build (no EXE -> no delink -> stale
 report.json for everyone). If the header cascade is too deep to compile, re-exclude it and keep the
 build green.
+
+- **Enabling a never-compiled TU: validate the header cascade with `rebuild.py <module>`
+  (module-only, ~30s) BEFORE the full relink.** The module build does NOT relink the EXE so
+  scores stay stale, but it surfaces compile errors fast and cheaply - iterate the
+  header/include cascade on it (one ~30s build per error) and only run the full no-arg
+  `rebuild.py` (~70s incremental relink, since the module obj is already built) once it
+  compiles clean. Caught 2 cascade errors (quote-vs-angle include path; `* const`/delete_helper
+  C2664) at ~30s each instead of ~17-min full builds. (network_core async_connector enable.)
+- **A new TU's `#include "header.h"` must use the header's REAL location.** async_connector.cpp
+  sat in `.../sources/` but its header in the PARENT `network_core/` dir, so `#include
+  "async_connector.h"` -> C1083. The built sibling http_client.cpp uses
+  `#include <vostok/network_core/http_client.h>` - copy the sibling's include FORM, don't assume
+  the quote-include resolves. (Cost one module build.)
+- **For LOG_INFO/`__LINE__`-bearing functions, replicate the TARGET source's exact LINE GEOMETRY.**
+  The `__LINE__` baked into each `LOG_*` is an operand in the bytes; the carcass `'NN'` annotations
+  ARE the target source line numbers. Build your .cpp so every log statement lands on its target
+  line (match the structure-target .cpp's preamble line count + per-function blank lines). Moving
+  on_connected's LOG from line 38 to its target line 33 + fixing the string literal lifted it
+  61.7 -> 64.3% in one rebuild. (network_core async_connector.)

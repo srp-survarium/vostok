@@ -1110,15 +1110,7 @@
 			<File
 				RelativePath=".\async_connector.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
+				</File>
 			<File
 				RelativePath=".\http_client.cpp"
 				>
