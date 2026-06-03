@@ -1139,6 +1139,10 @@ namespace vostok
 		wc.update_breath_vibration( false, 0, 0.0f );
 		wc.instant_show( );
 		wc.instant_hide( );
+		wc.instant_aim_start( );
+		wc.instant_aim_end( );
+		wc.chamber_a_round( );
+		wc.get_dispersion( );
 	}
 
 

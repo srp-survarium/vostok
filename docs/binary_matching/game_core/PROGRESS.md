@@ -708,3 +708,15 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   serialize/deserialize: stay BLOCKED (udp_match_packet/packet_reader never-compiled cluster).
   New anchor: use_game_core_weapon_user_animations_container_cook (static cook + resources::register_cook); extended use_game_core_weapon_user_animations_selector with member-fn-ptr anchors p4/p5/p6 for tick/deactivate/selected_animations. selector.cpp now #includes base_player.h + player_input.h (tick/deactivate need complete types).
   Regressions: none real - 6 net 100%->None vs clean baseline are all ICF fold-representative flips (btHashMap dtor, asio binder, artefact_lifebone thunks, boost storage2, interlocked_increment) - none authored here; offset by 96 net ->100% from the integration delta. (per the documented "ICF visibility, not source mismatch" convention.)
+
+- weapon_core instant/accessor batch4 (ONE unit, branch match/game_core-weapon_core-batch4
+  off origin/int/game_core, worktree vostok_3) - all in weapon_core.cpp:
+    weapon_core::instant_show         100%   DONE   (m_aimed=false; on_show();  on_show virtual vtable+0xB0)
+    weapon_core::instant_hide         100%   DONE   (on_hide();  vtable+0xB4)
+    weapon_core::instant_aim_end      100%   DONE   (m_aimed=false; m_aiming_state_transition=true;)
+    weapon_core::instant_aim_start    100%   DONE   (if(!is_firing() && !(m_user->input().actions_mask & 0x20)) reset_fire_queue(); m_aimed=true; m_aiming_state_transition=true; -- key: is_firing() accessor inline spills bool to [ebp-1]; aiming bit tested RAW as integer & 0x20, NOT a bool-returning is_aiming() (no neg/sbb normalization). 60.33%->100% after that shape fix.)
+    weapon_core::chamber_a_round      100%   DONE   (3x compiled-out ASSERT (finalize_impl) then --m_ammo_in_magazine; m_is_round_chambered=true;)
+    weapon_core::get_dispersion       100%   DONE   (return m_dispersion_calculator.get_dispersion();)
+  Anchor: appended instant_aim_start/instant_aim_end/chamber_a_round/get_dispersion to existing
+  use_game_core_weapon_core_small_setters() in temp_include_all.cpp (instant_show/hide already there).
+  No header edits (all access chars already correct: QAE/QAE/UAE/UAE/QAE/QBE). report-changes 0 regressed.
