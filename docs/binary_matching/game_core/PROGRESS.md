@@ -636,3 +636,10 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   collision_sensor's 4 overrides moved public->protected to match the `MAE` mangling.
   Regressions: none (15 report-changes "regressed" are all ICF fold-rep churn - boost storage,
   dtors, thunks, empty_stub; none touch this batch's 10 units).
+
+- character_dispersion_calculator STUB cluster (3 fns, ONE rebuild, 701s, watchdog not engaged):
+    character_dispersion_calculator::character_dispersion_calculator  100%  DONE     (member-init list; ctor consts read from EXE: smoothing=5.0, aiming=1.0, rest 0/NULL; core::noncopyable base ctor folded call)
+    character_dispersion_calculator::set_character_dispersion_params  100%  DONE     (m_params=arg; if(m_params){3x = m_params->idle_multiplier})
+    character_dispersion_calculator::tick                           99.67%  PARTIAL  (every instr/offset/call/const byte-identical; sole diff = target sub esp,1Ch vs base 18h - one unused /Od frame slot; frame-slot churn class, like breath_vibration_calculator::tick)
+  Anchor: use_character_dispersion_calculator extended to escape &calc (constant-ctor DSE observe).
+  report-changes: 0 regressed, 3 improved (30.32->100 / 22.86->100 / 25.26->99.67), 0 removed/added.
