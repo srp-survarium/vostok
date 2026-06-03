@@ -183,11 +183,6 @@ void jump_logic_state_start::finalize( )
 {
 	m_jump_logic.owner().remove_animation_callback( "jump", this );
 	m_jump_logic.owner().remove_animation_callback( animation::channel_id_on_animation_interval_end, this );
-
-	// FUNCTION BODY
-	// <0x6f8a09>|0x009|+0x022:'129'	m_jump_logic.owner().remove_animation_callback( "jump", this )
-	// <0x6f8a2b>|0x02b|+0x01f:'130'	m_jump_logic.owner().remove_animation_callback( channel_id_on_animation_interval_end, this )
-	// ******
 }
 
 // STATE[11.77%|PARTIAL]: UNREACHABLE stub. Real body reads animation_callback_params

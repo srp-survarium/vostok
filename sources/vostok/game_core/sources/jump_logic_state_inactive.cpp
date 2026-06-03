@@ -15,17 +15,6 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	weapon_animation_parameters const&	__formal3
 )
 {
-	// Empty frame, never touches the return pointer (target @0x57ce30): the
-	// body is an unreachable-code marker that compiles out under release.
-	// FUNCTION BODY
-	// <0x58ce30>|0x000|+0x007:'19'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x58ce37>|0x007|      :'25'	}
-	// ******
 	UNREACHABLE_CODE( );
 }
 
