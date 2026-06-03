@@ -4,38 +4,29 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_chamber_a_round_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.instant_chamber_a_round
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base(survarium::weapon_core&, const float)
+// STATE[100%|DONE]
 weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base( weapon_core& weapon, float animation_time_scale ) :
 	weapon_core_animation_end_aware_state( weapon, true )
 {
-	// FUNCTION BODY
-	// <0x761d19>|0x059|+0x00d:'22'
-	// ******
+	m_animation_timescale = animation_time_scale;
+	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_state_base::initialize()
+// STATE[100%|DONE]
 void weapon_core_chamber_a_round_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0x761d37>|0x007|+0x008:'27'
-	// <0>
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_state_base::on_animation_end_impl(bool&)
+// STATE[100%|DONE]
 void weapon_core_chamber_a_round_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x761c47>|0x007|+0x00e:'34'
-	// <0x761c55>|0x015|+0x006:'35'
-	// ******
+	m_weapon.instant_chamber_a_round( );
+	animation_player_tick_result = true;
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.

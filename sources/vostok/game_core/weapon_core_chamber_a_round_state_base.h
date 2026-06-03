@@ -7,17 +7,24 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
+namespace vostok { void use_game_core_weapon_core_chamber_a_round_state_base( ); }
+
 namespace survarium {
 
 class weapon_core_chamber_a_round_state_base : public weapon_core_animation_end_aware_state {
-public:
+protected:
 			explicit	weapon_core_chamber_a_round_state_base	( weapon_core& weapon, float animation_time_scale );
 
 	virtual	void		initialize								( ) override;
+
+private:
 	virtual	void		serialize								( network_core::udp_match_packet& packet ) const override;
 	virtual	void		deserialize								( network_core::packet_reader& reader ) override;
 
 	virtual	void		on_animation_end_impl					( bool& animation_player_tick_result ) override;
+
+	// temp_include_all.cpp anchor; needs the protected/private virtuals + ctor.
+	friend void ::vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
 
 private:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
