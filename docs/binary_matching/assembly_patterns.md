@@ -466,3 +466,42 @@ NOTES: this is how the carcass reveals where braces were. A `case`/`if` showing 
 brace-less. Do NOT decide braces from "has a local" alone (we mis-braced
 `get_target_koef` and earlier switches that way; prior switch matches should be
 re-checked against this).
+
+### virtual call on a member reference through its OWN vtable (m_ref.virtual_method())
+ASM:
+```
+mov eax,[ebp-4]; mov ecx,[eax+128h]   ; load m_weapon (a weapon_core& @ 0x128)
+mov edx,[ebp-4]; mov eax,[edx+128h]   ; (the slot is loaded twice under /Od)
+mov edx,[ecx]                         ; vtable of *m_weapon
+mov ecx,eax                           ; ecx = this for the callee
+mov eax,[edx+8Ch]; call eax           ; indirect call, vtable slot 0x8c
+```
+=> SOURCE: `m_weapon.instant_aim_start();` where `m_weapon` is a `weapon_core&` and
+`instant_aim_start` is declared `virtual` ON weapon_core. Calling a virtual through a
+reference of the declaring class dispatches via the vtable (the `[vtbl+0xNN]; call`).
+NOTES: contrast with a NON-virtual member of the same class, which compiles to a direct
+`call survarium::weapon_core::method` (no `[vtbl]` indirection). Same source shape
+(`m_weapon.foo()`), the asm differs ONLY by foo's virtual-ness. Caught on
+`weapon_core_aimed_state_base::{initialize,finalize}` (virtual instant_aim_start/end @
+slots 0x8c/0x90) vs `..._idle_state_base` (non-virtual instant_idle_start/end, direct
+call). Read the `.h` `virtual` keyword to decide which the source needs.
+
+### LTCG custom `this`-in-EAX convention = proof the target callee is out-of-line (don't escape its address)
+SYMPTOM: a member call the source writes as `member.reset()` appears in the target as
+`add eax,120h; call reset` (object pointer in **EAX**, no `lea ecx,...`), and the callee
+`reset` itself has NO `push ebp` frame and reads `[eax]/[eax+4]`:
+    xorps xmm0,xmm0; mov dword[eax],0; movss [eax+4],xmm0; ret
+This non-`__thiscall` (this-in-EAX, frameless) convention is an LTCG optimization MSVC applies
+ONLY to functions it decided to keep OUT-OF-LINE whole-program. So seeing EAX-this is itself the
+tell that the TARGET kept the callee standalone - and that our build, which instead INLINES the
+tiny body at every caller (`add eax,120h; mov [ebp-4],eax; mov [ecx],0; movss...`, frame grows from
+`push ecx`/`[ebp-4]` to `sub esp,8`/`[ebp-8]`), is fighting the LTCG inliner.
+WHAT DOES NOT WORK (verified, PR #124, `weapon_core_aimed_state_base::finalize` -> `animation_playback_state::reset`):
+decl/def split into the class's own header-TU; `__declspec(noinline)`; multiple real same-module
+callers. CRITICAL: do NOT try to force the out-of-line call by escaping `&callee` (member-fn-ptr)
+through an opaque sink - taking the address FORCES the standard `__thiscall` ECX convention with a
+full frame, which diverges from the target's EAX form AND still gets inlined. The closest reproducible
+shape is the EMPTY-stub callee, which lets `/Od` cleanly ELIDE the call (caller PARTIAL, the only diff
+is the N call instrs). This is a genuine inline-vs-call LTCG residual (the narrowed MATCHING.md rule
+allows stopping here - it is codegen, not a wrong member/branch in source; the `member.reset()` call
+IS written, only its inline-vs-call lowering differs).

@@ -72,3 +72,18 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   - GROUPED, all 3 at 100%. FIRST stacked PR: stacked on #121 (needed weapon_core_base_state scaffolding +
     fsm_state stopgap). Finding (on stack): mangled access codes U=public/M=protected/E=private virtual
     (initialize/finalize were private-virtual EAEXXZ, ctor protected IAE) - read them from target COFF up front.
+- game_core::weapon_core_aimed_state_base::{ctor,initialize,finalize} -> STATE[ctor 100%, initialize 100%, finalize 54.39%|PARTIAL] -> PR #124 (regressions: none)
+  - STACKED on #123. ctor+initialize 100%. finalize PARTIAL: HONEST inline-vs-call of
+    animation_playback_state::reset() (NOT "LTCG-uncontrollable" - that mislabel is fixed). reset() is
+    now IMPLEMENTED (real body `interval_id=0; interval_time=0.0f;`) in its own header
+    animation_playback_state.h, mirroring the target TU layout. The target keeps reset out-of-line
+    (`add eax,120h; call reset`, callee in an LTCG this-in-EAX frameless convention @0x087f60); our
+    /Od /Ob2 /GL link INLINES reset's member-zeroing body into finalize -> 54.39%. Verified
+    non-steerable: own-header decl/def split, __declspec(noinline), &reset address-escape, multiple
+    real same-module callers ALL still inline (full log in the per-fn .md). The empty-stub elision
+    that previously scored 83.33% was dropped: it required reset to be a FICTION (no-op stub) and the
+    higher % was coincidental; faithful reset() is the correct choice. reset itself is ~0% (LTCG
+    rewrote it to a frameless EAX function; source can only emit the /Od __thiscall frameful form).
+    Correction (on stack): initialize/finalize are PROTECTED virtual (MAE), dispatch instant_aim_start/end via
+    weapon_core vtable 0x8c/0x90 - unlike idle's non-virtual pair.
+  - STACK TIP was match/game_core-weapon_core_aimed_state_base.
