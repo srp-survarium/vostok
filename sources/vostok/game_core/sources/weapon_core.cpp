@@ -653,28 +653,17 @@ void weapon_core::tick( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_show()
+// STATE[100%|DONE]
 void weapon_core::instant_show( )
 {
 	m_aimed = false;
 	on_show( );
-
-	// FUNCTION BODY
-	// <0x5a2c77>|0x007|+0x00a:'424'
-	// <0x5a2c81>|0x011|+0x010:'425'
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_hide()
+// STATE[100%|DONE]
 void weapon_core::instant_hide( )
 {
 	on_hide( );
-
-	// FUNCTION BODY
-	// <0x5a2c57>|0x007|+0x010:'430'
-	// ******
 }
 
 // STATE[STUB]
@@ -697,18 +686,15 @@ void weapon_core::load_magazine( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::chamber_a_round()
+// STATE[100%|DONE]
 void weapon_core::chamber_a_round( )
 {
-	// FUNCTION BODY
-	// <0x5a30d9>|0x009|+0x00c:'446'
-	// <0x5a30e5>|0x015|+0x00c:'447'
-	// <0x5a30f1>|0x021|+0x00c:'448'
-	// <0>
-	// <0x5a30fd>|0x02d|+0x018:'450'
-	// <0x5a3115>|0x045|+0x00a:'451'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+
+	--m_ammo_in_magazine;
+	m_is_round_chambered = true;
 }
 
 // STATE[STUB]
@@ -797,31 +783,21 @@ void weapon_core::reload_one_round( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_aim_start()
+// STATE[100%|DONE]
 void weapon_core::instant_aim_start( )
 {
-	// CALL SITE INFO
-	// <0x5a30a6> -> player_input const& <unknown>() const
-	// ******
+	if ( !is_firing( ) && !( m_user->input( ).actions_mask & 0x20 ) )
+		reset_fire_queue( );
 
-	// FUNCTION BODY
-	// <0x5a3079>|0x009|+0x037:'511'
-	// <0x5a30b0>|0x040|+0x008:'512'
-	// <0>
-	// <0x5a30b8>|0x048|+0x00a:'514'
-	// <0x5a30c2>|0x052|+0x00a:'515'
-	// ******
+	m_aimed = true;
+	m_aiming_state_transition = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_aim_end()
+// STATE[100%|DONE]
 void weapon_core::instant_aim_end( )
 {
-	// FUNCTION BODY
-	// <0x5a2c37>|0x007|+0x00a:'520'
-	// <0x5a2c41>|0x011|+0x00a:'521'
-	// ******
+	m_aimed = false;
+	m_aiming_state_transition = true;
 }
 
 // STATE[STUB]
@@ -856,15 +832,10 @@ float3 weapon_core::get_dispersed_bullet_dir( )
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::get_dispersion() const
+// STATE[100%|DONE]
 float weapon_core::get_dispersion( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x5a4767>|0x007|+0x00e:'544'
-	// ******
+	return m_dispersion_calculator.get_dispersion( );
 }
 
 // STATE[STUB]
