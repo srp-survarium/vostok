@@ -83,6 +83,7 @@
 #include <vostok/game_core/weapon_core_reload_state_base.h>
 #include <vostok/game_core/weapon_core_chamber_a_round_state_base.h>
 #include <vostok/game_core/weapon_core_fire_state_base.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_state.h>
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
@@ -961,6 +962,25 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
 	}
 
+	void use_game_core_weapon_core_shotgun_reload_state( )
+	{
+		// claude@NOTE: anchor the matched methods. We construct an instance (ctor + dtor
+		// reachable) AND escape it through the opaque sink. This works only because this
+		// class's weapon_and_hands_expression override is currently a VOSTOK_UNREACHABLE_CODE
+		// placeholder: its real body would reference the still-STUB base_substate override
+		// (no return -> C4716 -> LNK1257). The qualified calls also keep the non-virtual paths.
+		typedef survarium::weapon_core_shotgun_reload_state state_t;
+
+		survarium::weapon_core	weapon;
+		state_t					state( weapon, NULL, NULL, NULL );
+
+		state.state_t::execute( );
+		state.state_t::initialize( );
+		state.state_t::finalize( );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
 	void use_bullet( )
 	{
 		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
@@ -1605,6 +1625,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_reload_state_base( );
 	vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
 	vostok::use_game_core_weapon_core_fire_state_base( );
+	vostok::use_game_core_weapon_core_shotgun_reload_state( );
 	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );

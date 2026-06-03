@@ -440,3 +440,25 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+## Anchoring fsm_state-derived concrete state methods: vtable & the no-return-stub trap
+Matching the easy methods (execute/initialize/finalize) of a concrete `ai::fsm_state`-derived
+state class (e.g. `weapon_core_shotgun_reload_state`) cost extra rebuilds for two reasons worth
+banking:
+- **A member-function POINTER to a VIRTUAL method does NOT anchor its out-of-line body.** MSVC
+  emits a vtable-thunk/index for `&Class::virtual_method`, not the real address, so the body is
+  still dead-stripped (the base rich index shows 0 of the class's methods). Anchor virtuals
+  EITHER by a *qualified* (non-virtual) call - `state->Class::execute()` through a never-deref'd
+  pointer, link-bait only - OR by constructing an instance (which emits the vtable and keeps ALL
+  the virtual bodies + the ctor/dtor at once). Construct-and-escape is the better anchor: it got
+  ctor 97.69% + dtor scored + execute/initialize/finalize in one shot.
+- **The class vtable references EVERY virtual override, including ones whose body calls a sibling
+  STUB.** Here `weapon_and_hands_expression`'s real body calls
+  `weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression`, a STUB with no `return`
+  -> C4716 -> the WHOLE-engine LTCG link dies with `LNK1257: code generation failed` (no
+  per-function error, just the generic LNK1257 - look BACK in the log for the C4716/C-error that
+  caused it). Fix without touching the sibling unit: make the override a
+  `VOSTOK_UNREACHABLE_CODE(...)` placeholder (=`__assume(0)` in Master Gold, no return needed),
+  keep its real body as a comment, mark INPROGRESS. Then construction links and the other methods
+  score. LNK1257 is almost always a downstream C4716/missing-return in a reached stub, not a real
+  LTCG limit.
