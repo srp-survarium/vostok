@@ -7,19 +7,18 @@
 
 #include "./jump_logic_base_state.h"
 
+// claude@MATCH: anchor (temp_include_all.cpp) befriended so its qualified call can
+// reach the private selected_animations override (target mangles it ?...@@EAE...,
+// i.e. private virtual). A friend decl emits no bytes.
+namespace vostok { void use_game_core_jump_logic_state_inactive( ); }
+
 namespace survarium {
 
 class jump_logic_state_inactive : public jump_logic_base_state {
+	friend void ::vostok::use_game_core_jump_logic_state_inactive( );
+
 public:
 	inline	explicit	jump_logic_state_inactive	( jump_logic& owner ) : jump_logic_base_state( owner ) { }
-
-	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
-						selected_animations			(
-							mutable_buffer&						buffer,
-							bool								is_third_view,		// sushi@NOTE: unused
-							animation_delegate const&			look_calculator,	// sushi@NOTE: unused
-							weapon_animation_parameters const&	weapon_parameters	// sushi@NOTE: unused
-						) override;
 
 	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
 	virtual	void		initialize					( ) override { }
@@ -29,6 +28,16 @@ public:
 	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 
 private:
+	// claude@MATCH: target mangles this override private virtual (?...@@EAE...),
+	// so it lives under private: (objdiff pairs by symbol name -> access char).
+	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+						selected_animations			(
+							mutable_buffer&						buffer,
+							bool								is_third_view,		// sushi@NOTE: unused
+							animation_delegate const&			look_calculator,	// sushi@NOTE: unused
+							weapon_animation_parameters const&	weapon_parameters	// sushi@NOTE: unused
+						) override;
+
 	/* 0x0000 */	/* jump_logic_base_state */
 }; // class jump_logic_state_inactive
 

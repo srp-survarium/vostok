@@ -19,6 +19,12 @@ class jump_logic_state_landing : public jump_logic_base_state {
 public:
 	explicit			jump_logic_state_landing	( jump_logic& owner );
 
+	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
+	virtual	void		execute						( ) override { }
+
+private:
+	// claude@MATCH: target mangles every override below private (EAE/AAE/EBE); only the
+	// ctor and execute (which folds to a public empty rep) stay public.
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations			(
 							mutable_buffer&						buffer,
@@ -29,8 +35,6 @@ public:
 
 	virtual	void		initialize					( ) override;
 	virtual	void		finalize					( ) override;
-	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
-	virtual	void		execute						( ) override { }
 
 			animation::mixing::animation_lexeme
 						get_main_lexeme				( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask );
@@ -46,7 +50,6 @@ public:
 			animation::callback_return_type_enum
 						on_interval_end				( animation::animation_callback_params& params );
 
-private:
 	// claude@MATCH: target mangles this override private virtual (?...@@EBE_NXZ),
 	// so it lives under private: (objdiff matches by symbol name -> access char).
 	// STATE[100%|DONE]: return false; bytes match target (rva 0xd2040, xor al,al)
