@@ -51,6 +51,7 @@
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/player_logic_base_state.h>
 #include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
@@ -96,9 +97,20 @@ namespace survarium
 // fsm_state has a pure-virtual dtor (= 0) with no body in our sources; the
 // concrete weapon_core_base_state anchor below needs it to LINK (vtable slot).
 // Define it here in the (non-target) anchor TU so it can't regress a matched obj.
+// Link stopgaps in this non-target TU (cannot regress a matched obj): both dtors
+// are declared but undefined in our sources. fsm_state's dtor is the documented
+// foundational gap (game_core/README.md); ~player_logic_base_state is the analogous
+// gap one level down, pulled in via the abstract class's vtable once the obj is
+// kept by the movement_animation_index anchor. claude@NOTE: real bodies belong to
+// the ai module / a future ~player_logic_base_state unit; these are just stopgaps.
 namespace vostok { namespace ai {
 	fsm_state::~fsm_state( ) { }
 } }
+
+namespace survarium
+{
+	player_logic_base_state::~player_logic_base_state( ) { }
+}
 
 namespace vostok
 {
@@ -501,6 +513,14 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &b ) );
 	}
 
+	void use_game_core_player_logic_base_state()
+	{
+		survarium::player_input input;
+		// Escape the computed index so LTCG does not elide the static body.
+		u32 index = survarium::player_logic_base_state::movement_animation_index( input );
+		example_callback( reinterpret_cast< pcstr >( &index ) );
+	}
+
 
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
@@ -853,6 +873,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_player_input();
 	vostok::use_client_player_update( NULL );
 	vostok::use_game_core_weapon_state();
+	vostok::use_game_core_player_logic_base_state();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
