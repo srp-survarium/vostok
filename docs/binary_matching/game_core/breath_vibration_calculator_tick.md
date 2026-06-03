@@ -72,14 +72,39 @@ execution_filter default in ecx=0. Mirrors dispersion_calculator's
 s_dispersion_enabled_cc, whose dynamic initializer also scores objdiff None
 (file-static cc_bool init/atexit thunks are LTCG/ICF folded).
 
-## initialize_logic (0x5837e0) — analysis (LARGE)
-Builds the fsm: news three breath_state subclasses (normal/holding/shortbreathing),
-sets each vtable + zeroes a float member, add_state x3, then four add_transition
-calls wiring boost::bind(hold_button_state_equals_to,...) and
-boost::bind(insufficient_breath,...) and true_predicate predicates via
-behaviour_cook_params + function0<bool>::assign_to. ~0x3bc bytes.
-Requires breath_holding_states.{h,inline}, behaviour_cook_params, the bind
-machinery, true_predicate. Target mangles AAE (private) — header currently public.
+## initialize_logic (0x5837e0) — analysis (LARGE), DEFERRED INPROGRESS
+
+This is the canonical home for the reconstructed body + next steps (the cpp keeps
+only a terse pointer here, per the lean-comment policy).
+
+Builds the fsm: news three breath_state subclasses (normal/holding/shortbreathing)
+via VOSTOK_NEW_IMPL(g_allocator, ...) (operator new + breath_state::breath_state each,
+sets vtable + zeroes a float member), add_state x3, then **five** add_transition( from,
+to, pred ) calls (verified against the 0x5837e0 asm: add_state @0x19c/0x1ab/0x1ba;
+add_transition @0x234/0x2b6/0x328/0x368/0x3a8):
+
+```
+add_transition( normal,         holding,        boost::bind( &hold_button_state_equals_to, this, true  ) )  // cmf1, 0x234
+add_transition( holding,        normal,         boost::bind( &hold_button_state_equals_to, this, false ) )  // cmf1, 0x2b6
+add_transition( holding,        shortbreathing, boost::bind( &insufficient_breath,         this        ) )  // cmf0, 0x328
+add_transition( shortbreathing, normal,         true_predicate )                                            // bool(*)(void), 0x368
+add_transition( shortbreathing, holding,        true_predicate )                                            // bool(*)(void), 0x3a8
+```
+
+Each predicate is materialized through a `behaviour_cook_params` temp +
+`boost::function0<bool>::assign_to<...>` then passed to `fsm::add_transition`, with a
+`boost::function1<void,char const*>::clear` after each. ~0x3bc bytes.
+
+NEXT STEP to match (concrete):
+1. Switch this cpp's `#include` from `breath_state.h` to
+   `breath_holding_states.{h,inline}` — the subclass ctors/vtables live there, and the
+   duplicate `breath_state` definition conflict must be resolved first.
+2. Make `initialize_logic` `private` in the header (target mangles AAE; currently public
+   under `public:` -> scores None until moved).
+3. Write the body above; anchor transitively (the ctor already calls initialize_logic).
+
+Requires: breath_holding_states.{h,inline}, behaviour_cook_params, the boost::bind /
+function0<bool> machinery, true_predicate.
 
 ## Iterations
 
