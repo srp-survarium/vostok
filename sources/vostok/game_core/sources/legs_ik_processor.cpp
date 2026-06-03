@@ -93,44 +93,32 @@ void legs_ik_processor::leg_params::tick( float dt )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::leg_params::set_heel_transition_time(float)
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 {
-	// FUNCTION BODY
-	// <0x6fa939>|0x009|+0x01a:'71'
-	// ******
+	heel_transition_time = math::min( heel_transition_time, tr_time );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::leg_params::set_toe_transition_time(float)
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_toe_transition_time( float tr_time )
 {
-	// FUNCTION BODY
-	// <0x6fa909>|0x009|+0x01a:'76'
-	// ******
+	toe_transition_time = math::min( toe_transition_time, tr_time );
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::leg_params::set_heel_on_ground(const bool)
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_heel_on_ground( bool value )
 {
-	// FUNCTION BODY
-	// <0x6fa899>|0x009|+0x009:'81'
-	// <0x6fa8a2>|0x012|+0x03a:'82'
-	// <0x6fa8dc>|0x04c|+0x010:'83'
-	// ******
+	m_heel_on_ground = value;
+	if ( is_full_on_ground( ) )
+		m_time_since_stance = 0.0f;
 }
 
-// STATE[STUB]
-// void survarium::legs_ik_processor::leg_params::set_toe_on_ground(const bool)
+// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_toe_on_ground( bool value )
 {
-	// FUNCTION BODY
-	// <0x6fa829>|0x009|+0x009:'88'
-	// <0x6fa832>|0x012|+0x03a:'89'
-	// <0x6fa86c>|0x04c|+0x010:'90'
-	// ******
+	m_toe_on_ground = value;
+	if ( is_full_on_ground( ) )
+		m_time_since_stance = 0.0f;
 }
 
 // STATE[STUB]
