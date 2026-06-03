@@ -95,6 +95,7 @@
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
+#include <vostok/game_core/weapon_core_cook.h>
 #include <vostok/game_core/artefact_lifebone_core.h>
 #include <vostok/game_core/hit_affects_type_enum.h>
 #include <vostok/game_core/artefact_container_core.h>
@@ -399,6 +400,12 @@ namespace vostok
 	{
 		static survarium::victory_item_core_cook s_victory_item_core_cook;
 		vostok::resources::register_cook( &s_victory_item_core_cook );
+	}
+
+	void use_weapon_core_cook( )
+	{
+		static survarium::weapon_core_cook s_weapon_core_cook;
+		vostok::resources::register_cook( &s_weapon_core_cook );
 	}
 
 	void use_dispersion_calculator( )
@@ -1620,6 +1627,7 @@ IncludeAll::IncludeAll()
 	vostok::use_artefact_container_core( );
 	vostok::use_artefact_lifebone_core( );
 	vostok::use_victory_item_core( );
+	vostok::use_weapon_core_cook( );
 	vostok::use_game_core_weapon_recoil_params( );
 	vostok::use_game_core_character_dispersion_params( );
 	vostok::use_game_core_weapon_dispersion_params( );
