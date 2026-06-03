@@ -30,7 +30,7 @@ Worktree: /home/sheep/Projects/surv/vostok_2 ; base commit fc3aadf9.
 
 ## RESULTS (diff-header fuzzy %, this PR)
 - execute    100%   DONE       m_logic->tick();
-- ctor        97.69% PARTIAL   only `call initialize_logic` reloc target differs (initialize_logic still STUB) -> 100% once it is matched.
+- ctor       100%   DONE       byte-exact; objdiff pairs `call initialize_logic` by symbol name (report.json: 100.0), so it scores DONE even while initialize_logic's body is a STUB.
 - finalize    78.57% PARTIAL   LTCG elides animation_playback_state::reset() (header-inline stub); 3 reset instrs missing. Documented unsteerable inline-vs-call (animation/type_definitions.h:40).
 - initialize  50.88% PARTIAL   LTCG inlines fsm_state_list::front(); target keeps states()/front() out-of-line (1 local vs our 3). Unsteerable inline-vs-call.
 - weapon_and_hands_expression  INPROGRESS  real body kept as comment; placeholder is VOSTOK_UNREACHABLE_CODE because the real body references the no-return base_substate STUB (C4716->LNK1257). Restore + anchor once base_substate override is matched.
@@ -48,7 +48,7 @@ Worktree: /home/sheep/Projects/surv/vostok_2 ; base commit fc3aadf9.
 - weapon_and_hands_expression:
     current = static_cast<substate*>( m_logic->current_state() );  // m_current_state @ fsm+0x10
     return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight );
-- ctor: init list m_logic(0), m_delete_substates_on_destruction(true);
+- ctor (100% DONE): init list m_logic(0), m_delete_substates_on_destruction(true);
     body: m_body_part_mask_for_user = body_part_whole_body_but_hands (-3);  initialize_logic(...);
 
 ## Hard / deferred

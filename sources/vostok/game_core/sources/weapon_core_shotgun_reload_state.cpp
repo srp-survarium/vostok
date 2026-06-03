@@ -9,10 +9,7 @@
 
 namespace survarium {
 
-// STATE[97.69%|PARTIAL]: every instruction, member offset and the init-list order match.
-// The sole diff is the `call initialize_logic` relocation target: initialize_logic is still a
-// STUB (different RVA than the target's real body), so objdiff flags only that one call's target.
-// -> 100% once initialize_logic is matched. (Anchored via construct-and-escape in temp_include_all.cpp.)
+// STATE[100%|DONE]
 weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 	weapon_core&								weapon,
 	weapon_core_shotgun_reload_base_substate*	reload_start,
@@ -25,11 +22,6 @@ weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 {
 	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 	initialize_logic( reload_start, reload_one_round, reload_finish );
-
-	// FUNCTION BODY
-	// <0x599d7f>|0x03f|+0x00d:'27'		m_body_part_mask_for_user = body_part_whole_body_but_hands;
-	// <0x599d8c>|0x04c|+0x014:'28'		initialize_logic( ... );
-	// ******
 }
 
 // STATE[STUB]

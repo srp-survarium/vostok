@@ -451,7 +451,7 @@ banking:
   EITHER by a *qualified* (non-virtual) call - `state->Class::execute()` through a never-deref'd
   pointer, link-bait only - OR by constructing an instance (which emits the vtable and keeps ALL
   the virtual bodies + the ctor/dtor at once). Construct-and-escape is the better anchor: it got
-  ctor 97.69% + dtor scored + execute/initialize/finalize in one shot.
+  ctor 100% + dtor scored + execute/initialize/finalize in one shot.
 - **The class vtable references EVERY virtual override, including ones whose body calls a sibling
   STUB.** Here `weapon_and_hands_expression`'s real body calls
   `weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression`, a STUB with no `return`
