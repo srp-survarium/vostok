@@ -246,3 +246,40 @@ _(Append new findings below this line.)_
   `friend void ::ns::use_*();` in the class. Set the access specifier to match the
   target's storage-class char in the SAME pass (read it from the target COFF symbol:
   C=private, K=protected, S=public static) or objdiff scores None.
+- **A target callee kept OUT-OF-LINE (`call X`) that our /GL LTCG INLINES at the caller is
+  unsteerable - and the header decl/def split does NOT help.** `weapon_core_aimed_state_base::finalize`
+  calls `animation_playback_state::reset()`; the target keeps reset standalone (@0x087f60, `call reset`)
+  but our base has NO standalone reset (`pdb_rich_query base --function reset` -> "no function matched")
+  because LTCG folds its tiny body into every caller whole-program. I burned 2 rebuilds trying to
+  force a call: (a) filling reset's body IN-CLASS in the shared header -> /Od inlined it into finalize
+  (54%, wrong frame); (b) splitting decl (in type_definitions.h) from an out-of-class `inline` def in a
+  new header included only by temp_include_all.cpp -> /Od per-TU inline stopped, but `/GL` LTCG still
+  inlined at LINK time (54%), AND an `inline` fn is only emitted by a TU that ODR-USES it, so I also hit
+  LNK2001 until the anchor actually CALLED reset. NET: the decl/def split is useless against LTCG. Pick
+  whichever CALLEE body makes the CALLER match best and stop: here the original empty `{}` stub ELIDES
+  the no-op call (finalize 83%, the only diff is the 3 missing call instrs, frame correct) which beats
+  the real-body inline (54%). Mark the caller PARTIAL [LTCG inline-vs-call], leave the callee stub
+  untouched. Recognize this pattern from the asm BEFORE editing the shared header - a 0x97f60-class tiny
+  member-zeroing reset called once is a textbook LTCG fold; verify with `pdb_rich_query base` (no standalone
+  symbol) and stop at the empty-stub 83% in ONE rebuild.
+
+- **Generated ninja files have NO header-dependency tracking - edit a header and the
+  dependent `.cpp` TUs are NOT recompiled.** A pure header edit (e.g. `animation_playback_state.h`,
+  `weapon_core_base_state.h`) can produce a rebuild report of `0 regressed / 0 improved` even though
+  you changed the class - the build reused the stale `.obj`s, so your % won't move and you'll waste a
+  ~20-min relink chasing a ghost. FIX: after any header-only change, `touch` the `.cpp` TUs that
+  include it (or `ninja_build.py -t clean`) BEFORE `rebuild.py`, so ninja recompiles them. Tell-tale:
+  a rebuild whose target functions are unchanged AND whose only churn is the rotating baseline dtors
+  means nothing of yours recompiled - touch and rebuild. (Found while moving a class between headers
+  for `weapon_core_aimed_state_base::finalize`.)
+- **Confirmed dead ends for the LTCG inline-vs-call of a tiny member (don't re-burn rebuilds on
+  these).** For `animation_playback_state::reset()` folded into `weapon_core_aimed_state_base::finalize`,
+  ALL of these still inlined under `/Od /Ob2 /GL`: (a) decl/def split into the class's OWN header
+  compiled as its own TU; (b) `__declspec(noinline)` on the callee (LTCG ignored it - byte-identical
+  output); (c) escaping `&reset` (member-fn-ptr) through the opaque sink - this even BACKFIRES, forcing
+  the standard __thiscall ECX convention whereas the target callee uses an LTCG custom `this`-in-EAX
+  convention; (d) adding multiple real same-module callers (gave a sibling finalize the same
+  `reset()` body) - every site still inlined, and the sibling got WORSE. If the asm shows a tiny
+  member-zeroing callee that the target keeps out-of-line (often with a non-__thiscall register
+  convention = proof LTCG kept it standalone), accept the empty-stub elision at the caller and stop -
+  none of these levers move it. (PR #124.)
