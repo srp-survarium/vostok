@@ -81,10 +81,15 @@ void weapon_core_aimed_fire_state_base::finalize( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB]: minimal valid return so the derived pistol_weapon_core_aimed_fire_state
+// anchor can force this virtual through LTCG codegen (C4716). Body left as carcass for
+// the weapon_core_aimed_fire_state_base matcher.
+// claude@NOTE: forced into codegen by pistol_weapon_core_aimed_fire_state's vtable.
 // vostok::animation::callback_return_type_enum survarium::weapon_core_aimed_fire_state_base::on_shot_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
+	return animation::callback_return_type_call_me_again;
+
 	// FUNCTION BODY
 	// <0>
 	// <0x59eaa1>|0x011|+0x007:'71'
@@ -125,10 +130,15 @@ void weapon_core_aimed_fire_state_base::on_animation_end_impl( bool& animation_p
 	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB]: minimal valid return so the derived pistol_weapon_core_aimed_fire_state
+// anchor can force this virtual through LTCG codegen (C4716). Body left as carcass for
+// the weapon_core_aimed_fire_state_base matcher.
+// claude@NOTE: forced into codegen by pistol_weapon_core_aimed_fire_state's vtable.
 // vostok::animation::callback_return_type_enum survarium::weapon_core_aimed_fire_state_base::on_aiming_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_aiming_event( animation::animation_callback_params& params )
 {
+	return animation::callback_return_type_call_me_again;
+
 	// CALL SITE INFO
 	// <0x59e6e7> -> void <unknown>()
 	// <0x59e705> -> void <unknown>()
