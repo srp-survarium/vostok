@@ -212,6 +212,14 @@ double_barreled_weapon_core_fire_state* weapon_core_state_cook_template<survariu
 		animations,
 		animations_count
 	);
+
+	// FUNCTION BODY
+	// <0x79c540>|0x000|+0x009:'105'	(prologue / hidden buffer arg)
+	// <0x79c549>|0x009|+0x05c:'111'	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_fire_state( params->weapon, computed_shooting_animation_time_scale( *animations, params->rounds_per_second ), animations, animations_count );
+	// <0x79c5a5>|0x065|+0x006:'112'	}
+	// ******
+	// residual @0x3d: target `call computed_shooting_animation_time_scale` (this in eax, float
+	// returned in xmm0 -> movss [esp]); base folds the STUB callee to `fldz` at the call site.
 }
 
 } // namespace survarium
