@@ -172,3 +172,18 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     report-changes 0 regressed / 1 improved (set_weapon 0.00 -> 100.00). The `--view diff` 97.16%
     header is one `~` at 0x4c (relative call displacement to apply_aim_speed, a reloc address, not a
     body diff); report.json is 100.0.
+- game_core::dispersion_calculator::apply_aim_speed() -> STATE[100%|DONE] -> PR #139 (regressions: none)
+  - STACKED on #138. Body: `float const speed_of_aiming = m_weapon ? m_weapon->get_dispersion_params().
+    speed_of_aiming * m_aiming_speed_coeff : 0.0f; m_character_calculator.set_aiming_speed(speed_of_aiming);
+    m_weapon_calculator.set_aiming_speed(speed_of_aiming);`. PDB local `const float speed_of_aiming`.
+    Member offsets: m_weapon @+0x40, m_aiming_speed_coeff @+0x48; weapon_core::get_dispersion_params()
+    (inline) -> m_dispersion_params @0x3e4, .speed_of_aiming @+0x0c => [edx+3F0h];
+    character_dispersion_calculator @0x20, m_aiming_speed @+0x14 => [this+0x34]. The else-branch const is
+    `0.0f` read directly out of survarium.exe (movss operand abs VA 0x974044 -> rva 0x964044 in .rdata =
+    0x00000000), NOT the disassembler's masked `[offset]`. SHAPE before build: (1) mangled `AAE` => moved
+    apply_aim_speed public -> PRIVATE in dispersion_calculator.h; (2) character_dispersion_calculator::
+    set_aiming_speed given a real body `{ m_aiming_speed = aiming_speed; }` (was empty stub) so L82 inlines
+    to the [this+0x34] store; (3) weapon_dispersion_calculator::set_aiming_speed stays an out-of-line call
+    (target call @0x5d). No new anchor (already reachable via matched set_weapon). First-try 100%;
+    report-changes 0->100 for apply_aim_speed, cluster unchanged, the 55/56 regressed/improved churn is
+    delinker non-determinism (none in the dispersion/weapon/character cluster).
