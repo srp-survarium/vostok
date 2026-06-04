@@ -865,8 +865,8 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     weapon_core::set_next_fire_queue_type               100%   DONE     (if(m_fire_queue_type==m_weapon_fire_queue_types_count-1) m_fire_queue_type=0; else ++m_fire_queue_type. carcass 693 +0x002 braced if-true. @@UAE public virtual.)
     weapon_core::remove_animation_callback(enum,..)     100%   DONE     (m_user->unsubscribe_animation_player(channel_id,callback_uid); vtable+0x54. @@QAE public.)
     weapon_core::remove_animation_callback(pcstr,..)    100%   DONE     (m_user->unsubscribe_animation_player(channel_id,callback_uid); vtable+0x58. @@QAE public.)
-    weapon_core::set_animation_callback(enum,..)        80.52% PARTIAL  (m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, managed_resource_ptr(NULL), this); vtable+0x4C. Residual = /Od temp-scheduling: target builds the managed_resource_ptr(NULL) temp before pushing `this`, base inlines after; same source expression, not steerable. @@QAE public.)
-    weapon_core::set_animation_callback(pcstr,..)       81.17% PARTIAL  (..., managed_resource_ptr(NULL), 0xff, this); vtable+0x50. Same /Od temp-scheduling residual. @@QAE public.)
+    weapon_core::set_animation_callback(enum,..)        80.52% PARTIAL  (m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, managed_resource_ptr(NULL), this); vtable+0x4C. Residual = temp-scheduling: target builds the managed_resource_ptr(NULL) temp before pushing `this`, base after. claude@review: UNTRIED steer = bind the rvalue to a NAMED local before the call; re-match opportunity, not yet rebuilt. @@QAE public.)
+    weapon_core::set_animation_callback(pcstr,..)       81.17% PARTIAL  (..., managed_resource_ptr(NULL), 0xff, this); vtable+0x50. Same temp-scheduling residual; same named-local re-match opportunity. @@QAE public.)
   KEY FIX (base_player.h): MSVC assigns vtable slots to same-name overloaded virtuals in
   REVERSE declaration order. subscribe_animation_player(enum) was declared BEFORE the (pcstr)
   overload, putting enum at the higher slot (+0x50); target wants enum at +0x4C. Swapped the

@@ -63,13 +63,33 @@ nothing (report-changes regressed: 0).
 
 ### set_animation_callback residual (PARTIAL, ~80-81%, the wall)
 After the vtable fix, args/call/dtor/vtable-slot are ALL byte-identical. The sole
-remaining diff is /Od temporary scheduling: the target constructs the
+remaining diff is temporary scheduling: the target constructs the
 `managed_resource_ptr( NULL )` temp FIRST (push 0; call ctor) and only then pushes
 `this`, recomputing `&temp` via `lea ecx,[ebp-4]`; our base pushes `this` first, then
-constructs the temp inline and pushes the ctor's eax return. Same source expression
-(a `managed_resource_ptr( NULL )` rvalue bound to a `const&` param) - the ordering is
-a /Od temp-materialization artifact, not source-steerable. `managed_resource_ptr()`
+constructs the temp inline and pushes the ctor's eax return. `managed_resource_ptr()`
 (default ctor) is wrong: it is `inline {}` (no push 0 / no call), so the `( NULL )`
 pointer-ctor form is required to reproduce the ctor bytes.
+
+claude@review (PR #208 audit): the matcher's "not source-steerable" framing is too
+strong - temp-materialization ORDER is the kind of diff MATCHING.md expects solved
+from source. UNTRIED re-match opportunity: bind the rvalue to a NAMED local declared
+BEFORE the call, so the temp ctor is forced to run ahead of the argument pushes:
+
+    resources::managed_resource_ptr tmp( NULL );
+    m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );        // enum
+    m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );   // pcstr
+
+The named local's dtor still fires at end-of-scope (function end), matching the target's
+dtor placement at 0x40/0x43. Worth a rebuild before banking PARTIAL. (Reviewer did NOT
+rebuild; flagged for a faster machine.) Verified vs report.json: enum 80.51724%,
+pcstr 81.166664% - both percentages accurate.
+
+base_player.h vtable swap - reviewer verification: the swap exchanges only the two
+ADJACENT same-name `subscribe_animation_player` overloads (slots +0x4C/+0x50); no other
+virtual's slot shifts. base_player is a pure-virtual interface and NO concrete subclass
+in the matched source overrides subscribe (only weapon_core + weapon_user_animations_selector
+CALL through it). report-changes.json: regressed []. Target vtable confirmed: enum overload
+dispatches via `[edx+4Ch]` (verified in target asm @0x594240) -> enum genuinely at +0x4C.
+Swap is safe.
 
 regressions: none.

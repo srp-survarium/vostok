@@ -1142,8 +1142,11 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 }
 
 // STATE[81.17%|PARTIAL]: vtable slot (+0x50), args, call, dtor all byte-identical;
-// sole diff = /Od temporary-scheduling: target materializes the managed_resource_ptr(NULL)
-// temp before pushing `this`, base inlines it after. Not source-steerable. See
+// sole diff = temp-scheduling: target materializes the managed_resource_ptr(NULL) temp
+// (push 0;ctor) BEFORE pushing `this`; base pushes `this` first then builds the temp.
+// claude@TODO: untried source steer - bind the temp to a NAMED local before the call
+// (resources::managed_resource_ptr tmp( NULL ); ...subscribe(..., tmp, 0xff, this )) to
+// force the temp ctor ahead of the arg pushes; re-match opportunity. See
 // weapon_core_small_setters_batch5.md.
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
@@ -1160,8 +1163,11 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 }
 
 // STATE[80.52%|PARTIAL]: vtable slot (+0x4C), args, call, dtor all byte-identical;
-// sole diff = /Od temporary-scheduling: target materializes the managed_resource_ptr(NULL)
-// temp before pushing `this`, base inlines it after. Not source-steerable. See
+// sole diff = temp-scheduling: target materializes the managed_resource_ptr(NULL) temp
+// (push 0;ctor) BEFORE pushing `this`; base pushes `this` first then builds the temp.
+// claude@TODO: untried source steer - bind the temp to a NAMED local before the call
+// (resources::managed_resource_ptr tmp( NULL ); ...subscribe(..., tmp, this )) to force
+// the temp ctor ahead of the arg pushes; re-match opportunity. See
 // weapon_core_small_setters_batch5.md.
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
