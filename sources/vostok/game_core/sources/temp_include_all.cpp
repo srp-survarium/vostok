@@ -61,6 +61,7 @@
 #include <vostok/game_core/player_logic_base_state.h>
 #include "player_logic_jump_state.h"
 #include "player_logic_crouch_state.h"
+#include "player_logic_stand_state.h"
 #include "jump_logic_state_inactive.h"
 #include "jump_logic_state_landing.h"
 #include "jump_logic_state_start.h"
@@ -1464,6 +1465,24 @@ namespace vostok
 	}
 
 
+	// claude@MATCH: anchor for player_logic_stand_state unit. Overrides are public
+	// in stand_state, but reach them through the base interface to mirror the sibling
+	// crouch/jump anchors and keep the COMDATs paired.
+	void use_game_core_player_logic_stand_state()
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+
+		survarium::player_logic_stand_state	state( owner );
+
+		vostok::ai::fsm_state&				fsm		= state;
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+
 	void use_game_core_jump_logic_state_inactive( )
 	{
 		// initialize()/is_ready_for_transition() are header inline overrides. Take
@@ -2104,6 +2123,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_player_logic_base_state();
 	vostok::use_game_core_player_logic_jump_state();
 	vostok::use_game_core_player_logic_crouch_state();
+	vostok::use_game_core_player_logic_stand_state();
 	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_jump_logic_state_landing();
 	vostok::use_game_core_jump_logic_state_start();
