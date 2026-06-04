@@ -15,6 +15,7 @@ class player_logic_crouch_state : public player_logic_base_state {
 public:
 												player_logic_crouch_state	( weapon_user_animations_selector& owner );
 
+private:
 	virtual	void								initialize					( ) override;
 	virtual	void								finalize					( ) override;
 	virtual	void								execute						( ) override { /* no source */ }
