@@ -1465,9 +1465,9 @@ namespace vostok
 	}
 
 
-	// claude@MATCH: anchor for player_logic_stand_state unit. Overrides are public
-	// in stand_state, but reach them through the base interface to mirror the sibling
-	// crouch/jump anchors and keep the COMDATs paired.
+	// claude@MATCH: anchor for player_logic_stand_state unit. initialize/execute/finalize
+	// are private virtual overrides, so reach them through the base ai::fsm_state interface
+	// (mirrors the sibling crouch/jump anchors and keeps the COMDATs paired).
 	void use_game_core_player_logic_stand_state()
 	{
 		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
