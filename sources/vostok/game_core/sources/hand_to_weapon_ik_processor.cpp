@@ -129,10 +129,17 @@ void hand_to_weapon_ik_processor::process( u32 current_time_in_ms, float4x4 cons
 	}
 }
 
-// STATE[88.54%|PARTIAL]: logic matches (law-of-coeff + interpolator slerp). Residual is
-// MSVC /Od stack-slot idiom: target stores hand_transition_time straight into the fild
-// qword-low slot (no extra copy) and round-trips the return value through xmm; base keeps
-// hand_transition_time in its own slot. Same instructions, divergent slots. See md.
+// STATE[88.54%|INPROGRESS]: NOT slot noise - a real SOURCE-STEERABLE structure divergence.
+// claude@NOTE: the target structure has only 6 statements (L185 frame, L186 ASSERT, L187
+// ONE statement computing (current-start)/1000.0f straight into the fild qword-low slot,
+// L190 ternary, epilogue). Our source splits that into TWO statements (hand_transition_time
+// then interpolation_coeff), so the base emits an extra `mov [ebp-4],edx; mov eax,[ebp-4]`
+// round-trip through a separate slot the target never allocates - 2 extra instructions, NOT
+// a slot rename. NEXT STEP: collapse to a single statement
+//   float const interpolation_coeff = ( current_time_in_ms - h.start_transition_time_in_ms ) / 1000.0f;
+// (drop the named hand_transition_time local; the PDB records no separate statement for it),
+// then rebuild and re-diff. (The trailing fld-via-[ebp-8] xmm round-trip on the return may
+// be a separate residual; re-evaluate after the merge.) See md.
 float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( true ) );
@@ -141,13 +148,27 @@ float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_proce
 	float const	interpolation_coeff		= hand_transition_time / 1000.0f;
 
 	return h.is_active ? 1.0f - m_interpolator.interpolated_value( interpolation_coeff ) : m_interpolator.interpolated_value( interpolation_coeff );
+
+	// FUNCTION BODY (target: 6 statements, 0x8b bytes)
+	// <0x583e70>|0x000|     :'185'		{
+	// <0x583e79>|0x009|+0x00c:'186'		ASSERT( UNKNOWN_EXPRESSION_T( true ) );
+	// <0x583e85>|0x015|+0x01e:'187'		(current_time - h.start) / 1000.0f  -- ONE statement on target
+	// <0x583ea3>|0x033|+0x04f:'190'		return is_active ? 1 - interp(c) : interp(c);
+	// <0x583ef2>|0x082|+0x003:'191'		(fld return)
+	// <0x583ef5>|0x085|+0x006:'192'		}
+	// ******
 }
 
-// STATE[89.69%|PARTIAL]: full 2-bone IK reconstructed - the disassembly opcode stream is
-// BYTE-IDENTICAL and the distinct local-slot count matches (57 == 57); the only residual
-// is MSVC /Od stack-slot placement (base frame 0x4D4 vs target 0x54C - a ~0x78 gap before
-// arm_obj_matrix and at function end). Same ops, same slot count, divergent absolute
-// offsets cascade. See process_hand.md.
+// STATE[89.69%|INPROGRESS]: NOT pure slot placement - a SOURCE-STEERABLE structure divergence.
+// claude@NOTE: target structure = 37 statements, our base = 36. The target keeps the inner
+// `get_bone_matrix_in_object_space( forearm_bone, ... )` as its OWN statement (L134, a named
+// temp, +0x2c) feeding original_forearm_dir at L135 (+0x2e); our source inlines it into the
+// L135 expression (one fused statement +0x5c), dropping a statement the target had. The frame/
+// slot gap the matcher attributed to "/Od placement" cascades from this missing temp. NEXT
+// STEP: hoist the forearm object-space matrix to a named local on its own line before
+// original_forearm_dir (matching the target's L134 statement break), rebuild and re-diff;
+// also re-check whether the L119/L120 matrix_index statements carry an embedded ASSERT
+// (call ...finalize_impl at 0xd2 in the target body). See process_hand.md.
 void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::hand const& h, float4x4 const& target_hand_obj_space_transform, float4x4* matrices ) const
 {
 	animation::skeleton_bone const&	hand_bone				= m_skeleton->get_bone( h.hand_bone_index );

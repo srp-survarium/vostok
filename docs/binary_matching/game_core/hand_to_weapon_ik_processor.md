@@ -13,13 +13,29 @@ Branch: `match/game_core-hand_to_weapon_ik_processor` off `origin/int/game_core`
 - `hand_need_correction`                 100%  DONE
 - `hand_need_interpolation`              100%  DONE
 - `get_hand_new_start_transition_time`   100%  DONE
-- `get_hand_coefficient`                 88.54% PARTIAL (stack-slot idiom)
-- `process`                              81.51% PARTIAL (mix_transformations wall)
-- `process_hand`                         89.69% PARTIAL (stack-slot layout; opcode-identical)
+- `get_hand_coefficient`                 88.54% INPROGRESS (split-statement structure divergence - source-steerable, see below)
+- `process`                              81.51% PARTIAL (mix_transformations wall - genuine, slerp_optimized has no source)
+- `process_hand`                         89.69% INPROGRESS (missing L134 named temp; 36 vs 37 statements - source-steerable, see below)
 - `serialize` / `deserialize`            BLOCKED (udp_match_packet/packet_reader cluster)
 - `s_ik_hands_debug_draw_cc` init/atexit None (pairing artifact, same as legs)
-- bonus, ik_utils.h: `get_angle` filled (now out-of-line, 72.58%);
-  `mix_transformations(3-arg)` filled to forward to the 4-arg.
+- ik_utils.h: `get_angle` 72.58% PARTIAL (inline-vs-call of vostok::math::acos, LTCG class);
+  `mix_transformations(3-arg)` BLOCKED (forwards to the 4-arg STUB; None in report.json).
+
+## REVIEW (audit) corrections - 2026-06-04
+- get_angle was marked `100%|DONE` in ik_utils.h but report.json scores it 72.58%. The
+  residual is a real divergence: target keeps `call vostok::math::acos` (out-of-line, frame
+  sub esp,14h); our /GL LTCG inlines it to `_CIacos` + extra movss/fld slot round-trips
+  (sub esp,1Ch). acos has a standalone symbol in BOTH indexes (target 0x27c80 / base 0x37930)
+  -> documented per-call-site inline-vs-call LTCG class, not steerable from this body. Source
+  correct, but it is NOT a clean DONE -> re-tagged PARTIAL 72.58%, carcass restored.
+- mix_transformations(3-arg) was marked `100%|DONE` but report.json scores it None (no base
+  bytes: both overloads exist out-of-line in TARGET, neither survives in BASE - DSE'd because
+  the 4-arg is a STUB). Re-tagged BLOCKED, carcass restored.
+- get_hand_coefficient / process_hand: the matcher banked both as PARTIAL with a "MSVC /Od
+  slot placement / slot idiom, same instructions" rationale. That is WRONG - both are
+  source-steerable STRUCTURE divergences (a high % hiding the wrong shape), re-tagged
+  INPROGRESS with the concrete restructure (below). Logic/compiled bytes NOT changed in this
+  review (no rebuild) - flagged for a faster machine to re-match.
 
 ## Key facts
 - RVAs in the carcass comments are +0x10000 vs the real target index
@@ -54,8 +70,14 @@ Branch: `match/game_core-hand_to_weapon_ik_processor` off `origin/int/game_core`
   `h.is_active || hand_need_interpolation(...)`.
 - `get_hand_coefficient`: `(current_time-h.start)/1000.0f` (__real@447a0000 = 1000.0f),
   then `is_active ? 1 - interp.interpolated_value(c) : interp.interpolated_value(c)`.
-  Residual: target stores hand_transition_time directly into the fild qword-low slot and
-  round-trips the float return through xmm; base keeps a separate slot. Same instructions.
+  [REVIEW CORRECTION] residual is NOT a slot idiom. Target structure = 6 statements; L187 is
+  ONE statement computing `(current-start)/1000.0f` straight into the fild qword-low slot. Our
+  source splits it into two locals (hand_transition_time, interpolation_coeff), so the base
+  emits an extra `mov [ebp-4],edx; mov eax,[ebp-4]` round-trip through a slot the target never
+  allocates - 2 EXTRA instructions, a real structure diff. FIX: collapse to a single statement
+  `float const interpolation_coeff = ( current_time_in_ms - h.start_transition_time_in_ms ) /
+  1000.0f;` (drop the named hand_transition_time local), rebuild, re-diff. The trailing
+  fld-via-[ebp-8] return round-trip may be a second residual; re-check after the merge.
 
 ## process (81.51%) - PROVEN wall
 The target calls `mix_transformations` OUT-OF-LINE (NRV). Its 3-arg overload (ik_utils.h)
@@ -68,14 +90,20 @@ transforms, the `if (hand_need_correction) { ... }` wrapping, the pointer-iterat
 matches; the residual is the stack-slot cascade caused by the missing NRV temp. Unblock =
 build out `slerp_optimized` / the 4-arg mix_transformations (separate unit).
 
-## process_hand (89.69%) - stack-slot residual
-Full 2-bone (arm->forearm->hand) IK reconstructed from asm. The disassembly **opcode
-stream is byte-identical** to the target and the **distinct local-slot count matches
-(57 == 57)**; the only residual is MSVC /Od absolute slot placement (base frame 0x4D4 vs
-target 0x54C; a ~0x78 gap appears before `arm_obj_matrix` and at function end). Fixing the
-forearm get_bone_matrix to be an inline temp (not the named `forearm_obj_matrix`) took it
-84.97->86.38; filling `get_angle` (it was inlining the 0.0f stub and dropping the call)
-took it 86.38->89.69. Closing the last 10% needs reproducing MSVC's exact slot allocation.
+## process_hand (89.69%) - REVIEW: structure divergence, NOT slot placement
+Full 2-bone (arm->forearm->hand) IK reconstructed from asm. [REVIEW CORRECTION] the matcher
+banked this as "opcode stream byte-identical, slot count 57==57, residual = /Od absolute slot
+placement". That mis-reads it: the TARGET structure has **37 statements**, our base has **36**.
+The target keeps the inner `get_bone_matrix_in_object_space( forearm_bone, ... )` as its OWN
+statement (L134, named temp, +0x2c) feeding `original_forearm_dir` at L135 (+0x2e); our source
+inlines it into L135 as one fused statement (+0x5c), so we drop a statement the target had. The
+frame/slot gap (base 0x4D4 vs target 0x54C) cascades from that missing temp - it is a real,
+source-steerable structure diff, not allocation noise. FIX: hoist the forearm object-space
+matrix to a named local on its own line before `original_forearm_dir`, rebuild, re-diff. Also
+re-check the L119/L120 matrix_index statements for an embedded ASSERT (`call ...finalize_impl`
+at 0xd2 in the target body). NOTE: the matcher's earlier "fix the forearm get_bone_matrix to be
+an inline temp (84.97->86.38)" went the WRONG direction - the target wants it OUT as a named
+statement. Filling `get_angle` (86.38->89.69) was correct.
 
 Helpers: `get_rotation_matrix`/`change_matrix_orientation` are declared in this TU and
 resolve to legs_ik_processor.cpp's external definitions; `get_relative_matrix` is defined

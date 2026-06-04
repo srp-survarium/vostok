@@ -833,14 +833,14 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     hand_need_correction                       100%   DONE     (h.is_active || hand_need_interpolation())
     hand_need_interpolation                    100%   DONE     ((current_time - h.start) < 300)
     get_hand_new_start_transition_time         100%   DONE     (ternary: ct<300 ? current_time-(300-ct) : current_time)
-    get_hand_coefficient                       88.54% PARTIAL  (ternary 1-interp / interp; residual = MSVC /Od slot idiom: target stores hand_transition_time straight into fild qword-low + xmm return round-trip; same instructions)
-    process                                    81.51% PARTIAL  (PROVEN WALL: mix_transformations called out-of-line by target but its 4-arg body needs file-local slerp_optimized from math_quaternion.cpp - NO source in tree, so stub inlines away to a default float4x4; control flow + all const& bindings match)
-    process_hand                               89.69% PARTIAL  (full 2-bone IK; OPCODE STREAM BYTE-IDENTICAL + slot count 57==57; residual is pure MSVC /Od absolute slot placement, base frame 0x4D4 vs target 0x54C)
+    get_hand_coefficient                       88.54% INPROGRESS [REVIEW] NOT slot noise - target L187 is ONE statement ((current-start)/1000.0f straight into fild qword slot); our source splits it into 2 locals -> 2 extra mov round-trip instrs. FIX: collapse to a single interpolation_coeff statement (drop hand_transition_time), rebuild.
+    process                                    81.51% PARTIAL  (genuine wall, confirmed in review: mix_transformations called out-of-line by target but its 4-arg body needs file-local slerp_optimized from core/math_quaternion.cpp - NO source in tree, so stub inlines away to a default float4x4; control flow + all const& bindings match)
+    process_hand                               89.69% INPROGRESS [REVIEW] NOT slot placement - target 37 statements, base 36: target keeps inner get_bone_matrix_in_object_space(forearm_bone) as its OWN statement (L134 temp) feeding original_forearm_dir (L135); base inlines it. FIX: hoist forearm obj-space matrix to a named local before original_forearm_dir, rebuild.
     serialize / deserialize                    BLOCKED          (udp_match_packet/packet_reader never-compiled cluster - see README; bodies parked)
     s_ik_hands_debug_draw_cc init/atexit       None             (cc_bool console-var dynamic init/atexit, same None pairing artifact as legs s_ik_legs_debug_draw_cc)
   ik_utils.h (shared helpers, filled to unblock the calls above):
-    get_angle                                  72.58% (was None/stub) (law of cosines: acos(clamp((sqr(a0)+sqr(a1)-sqr(opp))/(2*a0*a1),-1,1)); now called out-of-line by process_hand)
-    mix_transformations(3-arg)                 (forwards to 4-arg overload, position_coeff==orientation_coeff)
+    get_angle                                  72.58% PARTIAL  (law of cosines: acos(clamp((sqr(a0)+sqr(a1)-sqr(opp))/(2*a0*a1),-1,1)); residual = inline-vs-call of vostok::math::acos (target out-of-line, base inlines _CIacos), documented LTCG class. [REVIEW] ik_utils.h STATE was wrongly 100%|DONE -> corrected to PARTIAL.)
+    mix_transformations(3-arg)                 BLOCKED  (forwards to 4-arg overload; the 4-arg is a STUB - both overloads DSE'd in base, report.json scores None. [REVIEW] ik_utils.h STATE was wrongly 100%|DONE -> corrected to BLOCKED.)
   Header: process_hand/get_hand_coefficient moved to private: (mangled ABE); the 3 statics
   to private (C..). New anchor use_game_core_hand_to_weapon_ik_processor in
   temp_include_all.cpp (+ include + entrypoint) - the unit was compiled but link-discarded
