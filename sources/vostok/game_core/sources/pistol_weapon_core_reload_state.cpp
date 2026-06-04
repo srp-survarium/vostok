@@ -93,9 +93,11 @@ animation::mixing::expression pistol_weapon_core_reload_state::weapon_and_hands_
 	// ******
 }
 
-// STATE[99.92%|PARTIAL]: every statement matches. Sole residual is the __thiscall `this` for
-// m_weapon.ammo_in_magazine() loaded into ecx (base) vs eax (target) - an argument-passing
-// register choice (LTCG), same class as fire_state's idle getter.
+// STATE[99.92%|DONE]: LTCG arg passing - every statement matches byte-for-byte; the sole
+// residual is the `this` argument for the LTCG-folded m_weapon.ammo_in_magazine() call passed
+// in eax (target) vs ecx (base), a link-time calling-convention register choice for the
+// implicit argument (the documented call-boundary exception), not source-steerable. (The
+// `call empty_stub`/finalize_impl fold at the tail is the same byte-identical empty body.)
 weapon_lexeme_pair pistol_weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "pistol-reload", "pistol-reload_empty" };

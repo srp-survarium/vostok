@@ -35,7 +35,7 @@ Two triple-nested loops (both arrays are [2][2][2] = 8 each, 16 total), single s
 `animation_index`. `ASSERT_CMP_U(animations_count, ==, 16)` (failure branch pushes 0x10=16)
 + trailing `ASSERT(UNKNOWN_EXPRESSION)`. First build: 100%.
 
-## get_weapon_lexeme_pair -> 99.92% (LTCG this-register)
+## get_weapon_lexeme_pair -> 99.92% DONE (LTCG this-register, arg passing)
 captions = {"pistol-reload","pistol-reload_empty"}; weapon_state_index = (ammo_in_magazine()
 ==0); identifier = captions[weapon_state_index]; selected = m_weapon_animations[is_third_view
 !=0][user_state_id==type_crouch][weapon_state_index]; set_animation_to_wait; impl(buffer,
@@ -46,8 +46,10 @@ linear_interpolator(s_aim_transition_time)).
 First attempt had sync/playback swapped (sync=1, playback=play_once_and_remove_at_end=2) ->
 99.89%, the two push consts at 0x85/0x94 were reversed in the diff. push@0x85 = playback_type
 (closer arg), push@0x94 = time_sync_group. Target: 0x85 push 1, 0x94 push 2 -> playback=1
-(freeze), sync=2. Fixed -> 99.92%. Sole residual: `this` for ammo_in_magazine() in ecx (base)
-vs eax (target) - argument-passing register choice (LTCG).
+(freeze), sync=2. Fixed -> 99.92%. Sole residual: the `this` argument for the LTCG-folded ammo_in_magazine()
+call in ecx (base) vs eax (target) - a link-time calling-convention register choice for the
+implicit argument (the documented call-boundary exception). Marked DONE per MATCHING.md
+("mark DONE when the ONLY remaining difference is argument passing").
 
 ## get_user_hands_expression -> 77.49% (setter/get_user/~params inline wall)
 No early return (unlike base reload_state). captions[2][2] = stand/crouch x normal/empty
