@@ -92,8 +92,13 @@ animation::mixing::expression weapon_core_aimed_fire_state::weapon_and_hands_exp
 	// ******
 
 	// FUNCTION BODY (target rva 0x799890; weight_driving_animation [ebp+18h] is unreferenced)
-	// .1 branch (user_state==type_sprint||type_jump): return main + offset (addition_lexeme<animation_lexeme,animation_lexeme>)
-	// .2 branch: hands = get_user_hands_expression(offset,...); return main + expression(offset) + hands
+	// <0>
+	// <0x7a98a1>|0x011|+0x01f:'46'	lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
+	// <0x7a98c0>|0x030|+0x00c:'47'	if ( user_state_id == type_sprint || user_state_id == type_jump )
+	// <0x7a98cc>|0x03c|+0x05e:'48'	return main + offset (.1: addition_lexeme<animation_lexeme,animation_lexeme>)
+	// <0x7a992a>|0x09a|+0x026:'49'	hands = get_user_hands_expression( offset, buffer, is_third_view, user_state_id );
+	// <0x7a9950>|0x0c0|+0x07a:'50'	return main + expression(offset) + hands (.2)
+	// ******
 	// Sole residual is the SAME operator+<animation_lexeme> OUT-OF-LINE vs addition_lexeme INLINE /GL
 	// template-selection wall as weapon_core_fire_state::weapon_and_hands_expression.
 }
