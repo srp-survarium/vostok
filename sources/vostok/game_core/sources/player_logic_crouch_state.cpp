@@ -26,7 +26,8 @@ void player_logic_crouch_state::finalize( )
 	m_user->stand_up( );
 }
 
-// STATE[0%|PARTIAL]: UNREACHABLE stub. Real body (target @0x57efb0) is the lexeme
+// STATE[None|PARTIAL]: UNREACHABLE stub (report.json unscored - paired, body too divergent;
+// NOT 0%). Real body (target @0x57efb0) is the lexeme
 // machinery: builds an animation_lexeme via weapon_user_animations_container::
 // get_animation_impl<27,6>, crouch_animations_captions static, linear_interpolator,
 // and the animation_lexeme_parameters builder. Same machinery wall as
@@ -72,7 +73,8 @@ animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 	UNREACHABLE_CODE( );
 }
 
-// STATE[0%|PARTIAL]: UNREACHABLE stub. Real body (target @0x57ed50) is recoil lexeme
+// STATE[None|PARTIAL]: UNREACHABLE stub (report.json unscored - paired, body too divergent;
+// NOT 0%). Real body (target @0x57ed50) is recoil lexeme
 // machinery (animation_lexeme_parameters builder, managed_resource_ptr additive
 // animation, interpolators). Same lexeme/operator machinery wall, out of this unit.
 // Not anchored (only selected_animations would reach it, itself a blocked stub). Decoded
@@ -119,7 +121,8 @@ animation::mixing::expression player_logic_crouch_state::get_recoil_animation_le
 	UNREACHABLE_CODE( );
 }
 
-// STATE[0%|PARTIAL]: UNREACHABLE stub. Real body (target @0x57f1e0) is the look-lexeme
+// STATE[None|PARTIAL]: UNREACHABLE stub (report.json unscored - paired, body too divergent;
+// NOT 0%). Real body (target @0x57f1e0) is the look-lexeme
 // machinery: get_animation_impl<27,6>, crouch_animations_captions, instant/linear
 // interpolators, weapon_user_animations_selector::look_time_factor/look_time_calculator,
 // animation_lexeme_parameters builder, three near-identical lexeme-build blocks summed via

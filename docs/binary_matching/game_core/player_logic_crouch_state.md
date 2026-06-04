@@ -70,7 +70,9 @@ expression-returning overload is the shared lexeme/operator+ machinery (same wal
 `jump_logic_state_start::selected_animations`), out of this unit's scope. Reverted to
 `UNREACHABLE_CODE()`; emitted/paired at 6.47%.
 
-### movement_lexeme / get_recoil_animation_lexeme / look_expression (0% PARTIAL - UNREACHABLE stubs)
+### movement_lexeme / get_recoil_animation_lexeme / look_expression (None/unscored PARTIAL - UNREACHABLE stubs)
+(report.json `fuzzy_match_percent: None` - paired by mangled name but body too divergent to
+score; NOT a 0% score. selected_animations above IS scored, at 6.47%.)
 These are the per-subclass lexeme machinery. movement_lexeme @0x57efb0 and look_expression
 @0x57f1e0 both build an `animation_lexeme` via:
 - `weapon_user_animations_container::get_animation_impl<27,6>` (template),
