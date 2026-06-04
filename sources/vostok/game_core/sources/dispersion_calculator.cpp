@@ -76,18 +76,15 @@ void dispersion_calculator::set_aiming_speed_coeff( float const aiming_speed_coe
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void dispersion_calculator::apply_aim_speed( )
 {
-	// LOCALS
-	// float 						speed_of_aiming
-	// ******
+	float const speed_of_aiming = m_weapon
+		? m_weapon->get_dispersion_params( ).speed_of_aiming * m_aiming_speed_coeff
+		: 0.0f;
 
-	// FUNCTION BODY
-	// <0x5967a9>|0x009|+0x03d:'81'
-	// <0x5967e6>|0x046|+0x00d:'82'
-	// <0x5967f3>|0x053|+0x00f:'83'
-	// ******
+	m_character_calculator.set_aiming_speed( speed_of_aiming );
+	m_weapon_calculator.set_aiming_speed( speed_of_aiming );
 }
 
 // STATE[100%|DONE]
