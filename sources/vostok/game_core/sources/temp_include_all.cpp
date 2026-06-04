@@ -60,6 +60,7 @@
 #include <vostok/game_core/legs_ik_drawer.h>
 #include <vostok/game_core/player_logic_base_state.h>
 #include "player_logic_jump_state.h"
+#include "player_logic_sprint_state.h"
 #include "jump_logic_state_inactive.h"
 #include "jump_logic_state_landing.h"
 #include "jump_logic_state_start.h"
@@ -1404,6 +1405,30 @@ namespace vostok
 	}
 
 
+	// claude@MATCH: anchor for player_logic_sprint_state (sprint_state unit). Mirrors
+	// the jump anchor: construct (ODR-uses ctor + the bound on_stamina_depleted),
+	// reach the private virtual overrides through the base interface, and call the
+	// public set_callbacks. Never runs; null refs are fine.
+	void use_game_core_player_logic_sprint_state( )
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+
+		survarium::player_logic_sprint_state	state( owner );
+
+		vostok::ai::fsm_state&				fsm		= state;
+
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		boost::function< void() > const&	cb	=
+			*reinterpret_cast< boost::function< void() > const* >( NULL );
+		state.set_callbacks( cb, cb );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+
 	void use_game_core_jump_logic_state_inactive( )
 	{
 		// initialize()/is_ready_for_transition() are header inline overrides. Take
@@ -2041,6 +2066,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
 	vostok::use_game_core_player_logic_jump_state();
+	vostok::use_game_core_player_logic_sprint_state();
 	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_jump_logic_state_landing();
 	vostok::use_game_core_jump_logic_state_start();
