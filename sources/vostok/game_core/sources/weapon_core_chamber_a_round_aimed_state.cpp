@@ -51,7 +51,7 @@ weapon_core_chamber_a_round_aimed_state::weapon_core_chamber_a_round_aimed_state
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.18%|PARTIAL]: shared cross-cutting wall, identical to
+// STATE[83.52%|PARTIAL]: shared cross-cutting wall, identical to
 // weapon_core_chamber_a_round_state::weapon_and_hands_expression. Target uses the
 // expression-returning operator+ family (expression::expression<animation_lexeme>,
 // operator+<animation_lexeme>(expression&,..), operator+(expression&,expression&))
@@ -101,7 +101,7 @@ weapon_lexeme_pair weapon_core_chamber_a_round_aimed_state::get_weapon_lexeme_pa
 	);
 }
 
-// STATE[73.86%|PARTIAL]: shared cross-cutting wall, identical to
+// STATE[74.02%|PARTIAL]: shared cross-cutting wall, identical to
 // weapon_core_chamber_a_round_state::get_user_hands_expression. Structure matches the
 // carcass (if-sprint early return, ASSERT, captions, lexeme_parameters fluent build,
 // return override_lexeme). Target keeps animation_lexeme_parameters setters
