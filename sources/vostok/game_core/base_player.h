@@ -39,6 +39,12 @@ namespace animation {
 }
 }
 
+namespace vostok {
+	// claude@MATCH: temp_include_all anchor, befriended so it can ODR-use the
+	// protected leaf methods (tick_active_object / on_player_death).
+	void use_game_core_base_player( );
+}
+
 namespace survarium {
 
 struct engine;
@@ -50,6 +56,7 @@ struct base_player_creation_params;
 // sushi@TODO: <0x122e20>|0x000:'149'
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
+	friend void ::vostok::use_game_core_base_player( );
 public:
 	explicit									base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
 	virtual										~base_player					( );
@@ -149,11 +156,15 @@ public:
 			void								deserialize_game_world_object	( network_core::packet_reader& reader );
 
 	virtual	engine&								get_engine						( ) = 0;
+protected:
 			void								tick_active_object				( );
+public:
 
 	inline	game_world_object_list const&		game_world_objects				( ) const { return m_game_world_objects; }
 
+protected:
 			void								on_player_death					( );
+public:
 			void								send_game_world_object			(
 													game_world_object const*											object,
 													boost::function< network_core::udp_match_packet& ( ) > const&		reciver_packet_allocator,
