@@ -93,6 +93,7 @@
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
 #include <vostok/game_core/pistol_weapon_core_fire_state.h>
 #include <vostok/game_core/weapon_core_fire_state.h>
+#include <vostok/game_core/weapon_core_aimed_fire_state.h>
 #include <vostok/game_core/weapon_core.h>
 
 #include <vostok/game_core/game_material_manager.h>
@@ -824,6 +825,24 @@ namespace vostok
 		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::weapon_core_fire_state*			object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+	}
+
+	void use_game_core_weapon_core_aimed_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		survarium::weapon_core_aimed_fire_state		state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_aimed_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_aimed_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_aimed_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_aimed_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_aimed_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
 	}
 
 	void use_game_core_pistol_weapon_core_show_state( )
@@ -2027,6 +2046,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_pistol_weapon_core_fire_state( );
 
 	vostok::use_game_core_weapon_core_fire_state( );
+	vostok::use_game_core_weapon_core_aimed_fire_state( );
 	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
 	vostok::use_game_core_weapon_core_small_setters( );
 	vostok::use_bullet( );
