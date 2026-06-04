@@ -68,7 +68,7 @@ public:
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const										{ return m_magazine_capacity;		}	// STATE[STUB]
+			u16									get_magazine_capacity			( ) const;	// STATE[STUB] target keeps this out-of-line (called from the double-barreled ctor ASSERT_CMP_U)
 
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
