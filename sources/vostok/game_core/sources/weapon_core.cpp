@@ -905,14 +905,11 @@ void weapon_core::instant_fire( u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_fire_bullet_transform(vostok::math::float4x4 const&)
+// STATE[100%|DONE]
 void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transform )
 {
-	// FUNCTION BODY
-	// <0x5a2c09>|0x009|+0x00a:'588'
-	// <0x5a2c13>|0x013|+0x013:'589'
-	// ******
+	m_ready_for_fire = true;
+	m_fire_bullet_transform = fire_bullet_transform;
 }
 
 // STATE[STUB]
@@ -1036,16 +1033,13 @@ void weapon_core::reset_fire_queue( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_next_fire_queue_type()
+// STATE[100%|DONE]
 void weapon_core::set_next_fire_queue_type( )
 {
-	// FUNCTION BODY
-	// <0x5a2bb7>|0x007|+0x01b:'691'
-	// <0x5a2bd2>|0x022|+0x00a:'692'
-	// <0x5a2bdc>|0x02c|+0x002:'693'
-	// <0x5a2bde>|0x02e|+0x014:'694'
-	// ******
+	if ( m_fire_queue_type == m_weapon_fire_queue_types_count - 1 )
+		m_fire_queue_type = 0;
+	else
+		++m_fire_queue_type;
 }
 
 // STATE[STUB]
@@ -1147,56 +1141,40 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_animation_callback(char const*, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[81.17%|PARTIAL]: vtable slot (+0x50), args, call, dtor all byte-identical;
+// sole diff = /Od temporary-scheduling: target materializes the managed_resource_ptr(NULL)
+// temp before pushing `this`, base inlines it after. Not source-steerable. See
+// weapon_core_small_setters_batch5.md.
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x5a42d3> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// ******
-
 	// FUNCTION BODY
-	// <0x5a4299>|0x009|+0x044:'780'
-	// ******
+	// <0x594290>|0x009|+0x044:'780'   m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, managed_resource_ptr(NULL), 0xff, this)
+	// target: push 0;ctor;push 0FFh;...  base: push this;push 0FFh;push 0;ctor (temp built later)
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), 0xff, this );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::remove_animation_callback(char const*, void const*)
+// STATE[100%|DONE]
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x5a2b96> -> void <unknown>(pcstr, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a2b77>|0x007|+0x021:'785'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[80.52%|PARTIAL]: vtable slot (+0x4C), args, call, dtor all byte-identical;
+// sole diff = /Od temporary-scheduling: target materializes the managed_resource_ptr(NULL)
+// temp before pushing `this`, base inlines it after. Not source-steerable. See
+// weapon_core_small_setters_batch5.md.
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x5a427e> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, pcvoid const)
-	// ******
-
 	// FUNCTION BODY
-	// <0x5a4249>|0x009|+0x03f:'790'
-	// ******
+	// <0x594240>|0x009|+0x03f:'790'   m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, managed_resource_ptr(NULL), this)
+	// target: push 0;ctor;push this;...  base: push this;push 0;ctor (temp built later)
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), this );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::remove_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*)
+// STATE[100%|DONE]
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x5a2b66> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a2b47>|0x007|+0x021:'795'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
 // STATE[STUB]

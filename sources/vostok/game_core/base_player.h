@@ -100,14 +100,9 @@ public:
 public:
 	typedef boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > animation_callback;
 
-	virtual	void								subscribe_animation_player		(
-													animation::reserved_channel_ids_enum	arg_0,
-													animation_callback const&				arg_1,
-													pcvoid									arg_2,
-													resources::managed_resource_ptr const&	arg_3,
-													pcvoid									arg_4
-												) = 0;
-
+	// claude@MATCH: MSVC assigns vtable slots to same-name overloaded virtuals in
+	// REVERSE declaration order. Target wants enum-subscribe at vtable+0x4C (lower)
+	// and pcstr-subscribe at +0x50, so the enum overload must be declared LAST.
 	virtual	void								subscribe_animation_player		(
 													pcstr									arg_0,
 													animation_callback const&				arg_1,
@@ -115,6 +110,14 @@ public:
 													resources::managed_resource_ptr const&	arg_3,
 													u8										arg_4,
 													pcvoid									arg_5
+												) = 0;
+
+	virtual	void								subscribe_animation_player		(
+													animation::reserved_channel_ids_enum	arg_0,
+													animation_callback const&				arg_1,
+													pcvoid									arg_2,
+													resources::managed_resource_ptr const&	arg_3,
+													pcvoid									arg_4
 												) = 0;
 
 	virtual	void								unsubscribe_animation_player	( pcstr arg_0, pcvoid arg_1 ) = 0;
