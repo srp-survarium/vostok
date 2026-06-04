@@ -105,6 +105,15 @@ u16 weapon_core::ammo_in_magazine( ) const
 	return m_ammo_in_magazine;
 }
 
+// STATE[STUB]
+// claude@NOTE: out-of-line so the double-barreled ctor's ASSERT_CMP_U emits
+// `call get_magazine_capacity` instead of inlining `m_magazine_capacity`
+// (matches the target's out-of-line call; symbol @0x09cc20).
+u16 weapon_core::get_magazine_capacity( ) const
+{
+	return m_magazine_capacity;
+}
+
 // STATE[100%|DONE]
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {
