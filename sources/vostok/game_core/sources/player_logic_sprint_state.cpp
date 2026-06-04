@@ -27,8 +27,9 @@ player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_sel
 	//   mov [eax+20h],0;  ... assign_to<bind_t>; swap; clear
 }
 
-// STATE[3.32%|None]: lexeme/expression wall (mixing infrastructure not yet matched);
-// real body is the large animation-selection routine in the carcass below.
+// STATE[3.32%|STUB]: body is a VOSTOK_UNREACHABLE_CODE() placeholder, NOT matched -
+// the lexeme/expression mixing infrastructure is not yet reversed. report.json DOES
+// pair and score it (3.32%); the real body is the large routine in the carcass below.
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_sprint_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
 	// claude@TODO: lexeme/expression wall (mixing infrastructure not yet matched).

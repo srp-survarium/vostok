@@ -63,8 +63,9 @@ incomplete -> C2027 on `->force_animation_selection`/`->stamina`).
   store (`mov byte[edx+118h],1`) and grows the frame (`sub esp,8` vs target `push ecx`).
   Inline-vs-outline wall, fixable only in base_player.h (other unit). Same class as the
   jump_state `is_alive()` residual.
-- selected_animations 3.32% None: lexeme/expression wall (mixing infrastructure not
-  matched). Placeholder `VOSTOK_UNREACHABLE_CODE()`; carcass preserved.
+- selected_animations 3.32% STUB: body is a `VOSTOK_UNREACHABLE_CODE()` placeholder,
+  NOT matched (lexeme/expression mixing infrastructure not yet reversed). report.json
+  DOES pair and score it at 3.32%; carcass preserved for the next matcher.
 
 ## Regressions
 report-changes after the relink: 15 regressed / 11 improved, all (100->0)/(0->100)
