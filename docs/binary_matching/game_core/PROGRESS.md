@@ -216,3 +216,18 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     constructing noncopyable weapon_user_animations_selector. report-changes: only symmetric COMDAT/dtor/
     CRT 100<->0 delinker re-slice churn (39 scalar-deleting-dtor, float3/float4/float4x4 ctors,
     empty_stub, boost/bt/resource_ptr); no matched unit regressed.
+- game_core::ik_processor::{ctor, activate} -> STATE[ctor 100%, activate 100%|DONE] -> PR #142 (regressions: none)
+  - STACKED on #141. GROUPED (same trivial class). ctor (rva 0x57eba0, `IAE` protected): member-init list
+    m_skeleton(NULL)@0x0, m_last_time_in_ms(0)@0x4; the pre-store `call ...finalize_impl` is the COMDAT-folded
+    core::noncopyable base ctor (noncopyable::noncopyable, finalize_impl AND fsm_state::~fsm_state all fold to
+    rva 0x03f210) - NOT an ASSERT (an ASSERT would emit `mov byte[ebp-N],0; lea eax; call`). activate
+    (rva 0x57eb80, `IAE` protected): `m_skeleton = &skeleton;`. Header: both public -> protected (IAE).
+    Anchor: concrete_ik_processor : ik_processor subclass in use_game_core_ik_processor (construct -> protected
+    ctor; do_activate -> protected activate; &proc escaped).
+  - VERIFIED after /nix was freed (83G avail): full `python3 scripts/rebuild.py` relink, report.json
+    fuzzy_match_percent = 100.0 for both `??0ik_processor@survarium@@IAE@XZ` and
+    `?activate@ik_processor@survarium@@IAEXABVskeleton@animation@vostok@@@Z`; both show as improved
+    (0.0 -> 100.0) in report-changes.json. The folded base-ctor call reproduced exactly (no ASSERT). Carcass
+    deleted (clean 100% DONE). report-changes: 53 regressed are all symmetric COMDAT/dtor/CRT delinker
+    re-slice churn (scalar-deleting-dtor, thunk/vcall, resource_ptr, intrusive_ptr/interlocked, buffer_string
+    operator=), balanced by 65 improved; no matched game_core unit regressed.
