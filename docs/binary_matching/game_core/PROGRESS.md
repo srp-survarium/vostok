@@ -200,3 +200,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     for both; --view diff clean (ctor 8/8 equal, load no -/+ lines). report-changes 49 reg / 58+ imp
     all relink ICF/vcall-thunk/boost-storage churn (none in this unit; the 2 game_core-named hits are
     a collision_sensor scalar-deleting-dtor thunk and a BLOCKED inventory_item packet stub).
+- game_core::player_logic_base_state::{ctor, set_user} -> STATE[100%|DONE] -> PR #141 (regressions: none)
+  - STACKED on #140. Class layout reused from movement_animation_index (#122). ctor (rva 0x58c220,
+    `QAE` public): member-init list in offset order - m_owner(owner)@0x18, m_user(NULL)@0x1c,
+    m_weapon_user_state_id@0x20, four bools @0x24..0x27 (m_is_weapon_weapon_visible/m_is_smoothing_needed/
+    m_is_physics_transform_allowed/m_is_ready_to_be_deactivated) all `true`. set_user (rva 0x58c200,
+    `UAE` public virtual): `m_user = &user;` (0x1c). Base-class `call vostok::ai::fsm_state::fsm_state`
+    appears IDENTICALLY in target AND base (fsm_state has only a pure-virtual dtor; its implicit ctor is
+    a folded out-of-line symbol absent from both rich indexes by name but called in both) - the
+    orchestrator's inline-vs-call/BLOCKED risk resolved with NO source change => clean DONE, not BLOCKED.
+    Anchor: use_game_core_player_logic_base_state got a `concrete_logic_state` stub overriding ALL still-
+    pure inherited virtuals (fsm_state initialize/execute/finalize + own selected_animations - first build
+    C2259'd until all four were overridden), delegating ctor + calling set_user, &state escaped via
+    example_callback. Owner/user refs fabricated from NULL ptr casts (anchor never runs) to dodge
+    constructing noncopyable weapon_user_animations_selector. report-changes: only symmetric COMDAT/dtor/
+    CRT 100<->0 delinker re-slice churn (39 scalar-deleting-dtor, float3/float4/float4x4 ctors,
+    empty_stub, boost/bt/resource_ptr); no matched unit regressed.

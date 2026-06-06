@@ -8,24 +8,22 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::player_logic_base_state::player_logic_base_state(survarium::weapon_user_animations_selector&, const survarium::weapon_user_state_enum)
+// STATE[100%|DONE]
 player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id ) :
-	m_owner		( owner )
+	m_owner							( owner ),
+	m_user							( NULL ),
+	m_weapon_user_state_id			( weapon_user_state_id ),
+	m_is_weapon_weapon_visible		( true ),
+	m_is_smoothing_needed			( true ),
+	m_is_physics_transform_allowed	( true ),
+	m_is_ready_to_be_deactivated	( true )
 {
-	// FUNCTION BODY
-	// <0x59c220>|0x000|+0x052:'24'	{
-	// <0x59c272>|0x052|      :'25'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::player_logic_base_state::set_user(survarium::base_player&)
+// STATE[100%|DONE]
 void player_logic_base_state::set_user( base_player& user )
 {
-	// FUNCTION BODY
-	// <0x59c207>|0x007|+0x009:'29'
-	// ******
+	m_user	= &user;
 }
 
 // STATE[100%|DONE]
