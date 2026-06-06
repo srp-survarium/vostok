@@ -11,11 +11,21 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[INPROGRESS]: body is empty `{ }`; everything is the member-init list (decoded
+// from the @0x72f0b0 asm: recoil_params<-params+0x10, dispersion_params<-params+0x20,
+// breath_holding_params<-params+0x58, damage_model<-params+0x114, movement_speed_factor
+// <-clear_value, then the 4 bools=0). NOT yet anchored (base_player is abstract) so it
+// reads 0/unpaired in report.json. NEXT: (1) anchor via a concrete derived stub in
+// temp_include_all.cpp that constructs a base_player_creation_params and escapes &obj;
+// (2) like the dtor, full match is gated on the inventory_holder/collision_user/
+// hit_initiator/hit_receiver base CTORS being out-of-line (target calls them out-of-line).
 base_player::base_player( base_player_creation_params const& params, survarium::scheduler& the_scheduler ) :
-	inventory_holder	( the_scheduler, params.inventory ),
-	hit_initiator		( params.initial_info.id, params.initial_info.profile->is_local ),
-	m_recoil_params		( params.recoil_params )
+	inventory_holder		( the_scheduler, params.inventory ),
+	hit_initiator			( params.initial_info.id, params.initial_info.profile->is_local ),
+	m_recoil_params			( params.recoil_params ),
+	m_dispersion_params		( params.dispersion_params ),
+	m_breath_holding_params	( params.breath_holding_params ),
+	m_damage_model			( params.damage_model )
 {
 	// FUNCTION BODY
 	// <0x73f0b0>|0x000|+0x1da:'31'	{
@@ -23,18 +33,34 @@ base_player::base_player( base_player_creation_params const& params, survarium::
 	// ******
 }
 
-// STATE[STUB]
+// STATE[72.19%|PARTIAL]: body is just `ASSERT( UNKNOWN_EXPRESSION )` (line 36, the
+// finalize_impl @0x09); rest is compiler-generated member/base destruction. Gated on
+// the base-class destructors (hit_receiver/hit_initiator/collision_user/inventory_holder)
+// being OUT-OF-LINE: target calls e.g. `survarium::hit_receiver::~hit_receiver` out-of-line
+// and does NOT reset the 4 base vtables up front, while our build inlines those base dtors
+// (loose_ptr_base::~loose_ptr_base etc.) and lays all 4 vtables down at the top. The
+// remaining `dummy::nonnull` vs `finalize_impl` diffs are folded-empty-fn cosmetics (both
+// 0x3f210). Reach 100% by matching those base-class dtors out-of-line first.
 base_player::~base_player( )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
 	// FUNCTION BODY
 	// <0x73ed70>|0x000|+0x009:'35'	{
-	// <0x73ed79>|0x009|+0x00c:'36'
+	// <0x73ed79>|0x009|+0x00c:'36'	ASSERT( UNKNOWN_EXPRESSION )
 	// <0x73ed85>|0x015|      :'37'	}
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::base_player::tick_active_object()
+// STATE[3.38%|INPROGRESS]: large (~616B) function dispatching through the active
+// object's vtable (m_current_active_object @0x40, m_target_active_object @0x44) plus
+// weapon_core::could_be_used and inventory::{get_active_slot,item_in_slot,action}. Now
+// PAIRED (was unpaired) after setting the protected access specifier (target IAE) +
+// anchoring. NEXT: decode the @0x72ee40 asm control flow - two nested if-blocks guarded
+// by current/target active-object comparisons (operator!= / c_ptr ==), the vtable calls
+// at [vtbl+0x1c/0x20/0x28/0x2c/0x54/0x70/0x7c] need mapping to the concrete active-object
+// interface (offsets exceed interactive_object's own table, so the dynamic type has more
+// virtuals), and the broken_hands_count/another_weapon_slot locals. Real engine logic,
+// reconstruct statement-by-statement against the carcass below.
 void base_player::tick_active_object( )
 {
 	// LOCALS
@@ -161,50 +187,30 @@ void base_player::deserialize_game_world_object( network_core::packet_reader& re
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::base_player::subscribe_on_player_death(survarium::player_death_subscriber*)
+// STATE[100%|DONE]
 void base_player::subscribe_on_player_death( player_death_subscriber* subscriber )
 {
-	// FUNCTION BODY
-	// <0x73ebb0>|0x000|+0x009:'128'	{
-	// <0x73ebb9>|0x009|+0x00c:'129'
-	// <0x73ebc5>|0x015|+0x014:'130'
-	// <0x73ebd9>|0x029|      :'131'	}
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_player_death_subscribers.push_back( subscriber );
 }
 
-// STATE[STUB]
-// void survarium::base_player::unsubscribe_from_player_death(survarium::player_death_subscriber*)
+// STATE[100%|DONE]
 void base_player::unsubscribe_from_player_death( player_death_subscriber* subscriber )
 {
-	// FUNCTION BODY
-	// <0x73eb80>|0x000|+0x009:'134'	{
-	// <0x73eb89>|0x009|+0x00c:'135'
-	// <0x73eb95>|0x015|+0x012:'136'
-	// <0x73eba7>|0x027|      :'137'	}
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_player_death_subscribers.erase( subscriber );
 }
 
-// STATE[STUB]
-// void survarium::call_player_death_subscriber_callback(survarium::player_death_subscriber const* const)
-void call_player_death_subscriber_callback( player_death_subscriber const* subscriber )
+// STATE[100%|DONE]
+static void call_player_death_subscriber_callback( player_death_subscriber const* const subscriber )
 {
-	// FUNCTION BODY
-	// <0x73eca0>|0x000|+0x009:'140'	{
-	// <0x73eca9>|0x009|+0x008:'141'
-	// <0x73ecb1>|0x011|      :'142'	}
-	// ******
+	subscriber->subscription_callback( );
 }
 
-// STATE[STUB]
-// void survarium::base_player::on_player_death()
+// STATE[100%|DONE]
 void base_player::on_player_death( )
 {
-	// FUNCTION BODY
-	// <0x73ecc0>|0x000|+0x009:'145'	{
-	// <0x73ecc9>|0x009|+0x029:'146'
-	// <0x73ecf2>|0x032|      :'147'	}
-	// ******
+	m_player_death_subscribers.for_each( call_player_death_subscriber_callback );
 }
 
 } // namespace survarium
