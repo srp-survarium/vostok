@@ -1154,3 +1154,25 @@ infra base): `module::function -> STATE -> PR (regressions)`.
       inlines push/push) cascading the frame (0x54C vs 0x4DC) - same LTCG class as get_angle/acos.
       Free math::length(L190) was tried and REGRESSED (90.37->90.22), reverted to member .length().
   Regressions: none (report-changes 0 regressed). New commit on the branch updates PR #207.
+- weapon_core-batch6 (instant forwarders + idle predicate + reset_fire_queue; 6 fns, ONE unit;
+  branch match/game_core-weapon_core-batch6 off origin/int/game_core). All in weapon_core.cpp.
+  Anchored instant_reload/instant_chamber_a_round/instant_idle_start in
+  use_game_core_weapon_core_small_setters; reset_fire_queue + instant_idle_predicate reachable
+  transitively. See docs/binary_matching/game_core/weapon_core_instant_batch6.md.
+    weapon_core::instant_idle_predicate                 100%   DONE     (return m_user_animations_selector.sprint_predicate() || .is_in_jump(). @@ABE private const - MOVED decl into private section of weapon_core.h.)
+    weapon_core::instant_chamber_a_round                100%   DONE     (2 ASSERTs(m_ammo_in_magazine); m_aimed=false; chamber_a_round(); on_chamber_a_round() [vtable+0xAC]; m_recoil_calculator.chamber_a_round(). @@QAE public.)
+    weapon_core::instant_reload                         100%   DONE     (m_aimed=false; load_magazine(); on_reload() [vtable+0xA8]; m_recoil_calculator.reload(); m_dispersion_calculator.reload(); reset_fire_queue(). @@QAE public.)
+    weapon_core::instant_idle_start                     100%   DONE     (m_is_idle=true [+0x492]; if(!(m_user->input().actions_mask & 0x20)) reset_fire_queue(). @@QAE public.)
+    weapon_core::fire_queue_length                      100%   DONE     (return m_weapon_fire_queue_types[m_fire_queue_type]. OUT-LINED header->cpp so reset_fire_queue emits `call fire_queue_length` (target standalone @0x09b290) instead of inlining the [454][47E] read. @@QBE public const.)
+    weapon_core::reset_fire_queue                      99.65%  PARTIAL  (if(fire_queue_length()==0xff){m_bullets_in_queue=m_ammo_in_magazine; if(m_is_round_chambered) ++m_bullets_in_queue;} else { u16 bullets=m_ammo_in_magazine+(m_is_round_chambered!=0); m_bullets_in_queue=math::min(fire_queue_length(),bullets); }. @@QAE public.)
+  KEY FIXES this unit:
+  (1) fire_queue_length out-lined (header inline -> .cpp def): 66.5% -> 87.85% (both reset_fire_queue
+      calls now emitted). Same pattern as ammo_in_magazine/get_magazine_capacity NOTEs.
+  (2) else-branch min: HOIST desired into a NAMED local above the call (target materializes it to
+      its own slot then copies to the by-value min arg): 87.85% -> 94.09%.
+  (3) bool normalize: `m_ammo_in_magazine + ( m_is_round_chambered != 0 )` reproduces the target's
+      neg;sbb;neg (the `(x!=0)` 0/1 idiom) vs a bare `+ bool` direct add: 94.09% -> 99.65%.
+  reset_fire_queue residual: register choice (eax vs ecx for `this` at the fql call) + stack-slot
+  NUMBERING in the else min (target [ebp-2]/[ebp-6]/[ebp-4] vs base [ebp-4]/[ebp-8]/[ebp-6]); same
+  3-slot structure + identical instruction sequence. Allocator nondeterminism, not source-steerable.
+  Regressions: none - report-changes 0 regressed / 1 improved / 0 removed / 0 added.

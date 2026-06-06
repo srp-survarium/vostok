@@ -93,7 +93,7 @@ public:
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
-			u16									fire_queue_length				( ) const {  return m_weapon_fire_queue_types[m_fire_queue_type]; } // STATE[STUB]
+			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// STATE[STUB]
@@ -201,7 +201,6 @@ public:
 			bool								target_predicate						( weapon_targets target ) const { return m_target == target; } // STATE[STUB]
 private:
 			bool								target_and_animation_ended_predicate	( weapon_targets target ) const;
-public:
 			bool								instant_idle_predicate					( ) const;
 
 private:
