@@ -29,12 +29,14 @@ public:
 	virtual void	visit				( interpolator_comparer& dispatcher, linear_interpolator const& interpolator ) const;
 	virtual void	visit				( interpolator_comparer& dispatcher, fermi_interpolator const& interpolator ) const;
 
+	// claude@MATCH: members are non-const and operator= is the compiler-implicit
+	// memberwise one (per PDB ground-truth structure header) - legs_ik_processor::
+	// set_{heel,toe}_on_ground assigns `m_*_interpolator = fermi_interpolator(...)`,
+	// emitting a 2-float copy (+4/+8) that skips the vtable. `float const` members
+	// or a private operator= (the prior reconstruction) make that assignment illegal.
 private:
-	fermi_interpolator& operator =		( fermi_interpolator const& );
-
-private:
-	float const		m_total_transition_time;
-	float const		m_epsilon;
+	float			m_total_transition_time;
+	float			m_epsilon;
 }; // class fermi_interpolator
 
 STATIC_SIZE_ASSERT(fermi_interpolator, 0xC);
