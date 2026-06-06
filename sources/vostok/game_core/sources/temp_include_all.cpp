@@ -1840,6 +1840,21 @@ namespace vostok
 		holder.touch( );
 	}
 
+	// claude@MATCH: anchor for base_player non-virtual leaf functions. base_player is
+	// abstract, but these are non-virtual so a qualified call on a null ref ODR-uses
+	// each standalone body without needing a full concrete stub. on_player_death also
+	// pulls in the free helper call_player_death_subscriber_callback (taken as a
+	// function ref by intrusive_list::for_each).
+	void use_game_core_base_player( )
+	{
+		survarium::base_player&	p	= *reinterpret_cast< survarium::base_player* >( NULL );
+		p.subscribe_on_player_death( NULL );
+		p.unsubscribe_from_player_death( NULL );
+		p.on_player_death( );
+		p.tick_active_object( );
+		example_callback( reinterpret_cast< pcstr >( &p ) );
+	}
+
 	void use_game_core_weapon_user_animations_selector( )
 	{
 		survarium::weapon_user_animations_selector&	sel	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
@@ -2247,6 +2262,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
 	vostok::use_game_core_inventory_holder();
+	vostok::use_game_core_base_player();
 	vostok::use_game_core_weapon_user_animations_selector();
 	vostok::use_game_core_weapon_user_animations_container_cook();
 	vostok::use_game_core_base_project();
