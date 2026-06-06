@@ -150,18 +150,9 @@ void legs_ik_processor::activate( animation::skeleton const& skeleton )
 	// ******
 }
 
-// STATE[65.38%|PARTIAL]: sole residual is the dot-product statement. TARGET emits an
-// out-of-line `call vostok::math::operator|` (an LTCG-convention-promoted __fastcall
-// ecx/eax COMDAT, xmm0 return); BASE inlines operator| (/Ob2 is on despite /Od) into
-// SSE arithmetic, growing the frame sub esp,24h vs 20h. Both are whole-program LTCG/
-// linker decisions (per-site inline-vs-call + calling-convention promotion), NOT
-// caller-source-steerable: every source form keeping the `operator|` symbol inlines,
-// and the only form that yields a call (`dot_product(a,b)` -> 90.4%) binds a TEMPLATE
-// `dot_product<float3>` that DOES NOT EXIST in the target binary - a forbidden
-// coincidentally-higher % over a fabricated function. `upleg_dir | -leg_dir` is the
-// original source (target keeps only the `operator|` symbol). Every other statement,
-// all constants (1.0f/0.5f/epsilon_5) and the ternary are byte-exact. Trail:
-// docs/binary_matching/game_core/get_additional_length.md.
+// STATE[65.38%|PARTIAL]: sole residual is the dot-product - operator| did NOT inline in
+// the target (out-of-line call) but our /Ob2 build inlines it; not steerable from the
+// caller. Trail: docs/binary_matching/game_core/get_additional_length.md.
 float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len )
 {
 	float const knee_angle_cos	= upleg_dir | -leg_dir;
