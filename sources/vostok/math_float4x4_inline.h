@@ -406,6 +406,21 @@ inline void remove_scale( float4x4 &in_out )
 	remove_scale( in_out, in_out );
 }
 
+// STATE[100%|DONE]
+inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 const& parent_matrix )
+{
+	float4x4 inverted_parent_matrix;
+	if ( !inverted_parent_matrix.try_invert( parent_matrix ) )
+	{
+		DEBUG_BREAK( );	// claude@MATCH: L411 is a 1-byte int3, not an empty ASSERT
+		return float4x4( ).identity( );
+	}
+	else
+	{
+		return original_matrix * inverted_parent_matrix;
+	}
+}
+
 } // namespace math
 } // namespace vostok
 

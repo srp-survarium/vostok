@@ -314,3 +314,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     the else-branch single-byte original_color write (mov byte[tmp],64h; mov [original_color],cl) - written as
     a full color ctor; exact source form (a channel setter?) unknown. report-changes vs prior build: only the
     single 81.55->84.16 self-improvement, no regressions.
+- math::get_relative_matrix -> STATE[100%|DONE] -> PR #145 (regressions: none)
+  - STACKED on #145 (get_foot_fixed_transform), the function it is called from. Free __cdecl helper returning
+    float4x4 by value (sret), target rva 0xbb050, mangled ?get_relative_matrix@math@vostok@@YA?AVfloat4x4@12@ABV312@0@Z.
+    Relocated from legs_ik_processor.cpp into its REAL header sources/vostok/math_float4x4_inline.h (after
+    remove_scale). math_float4x4_inline.h is in the game_core PCH (extensions.h->math_extensions.h->
+    math_float4x4.h), so each edit needed: rm the game_core .pch + touch pch.cpp, then rebuild_watchdog.py.
+  - 90.2 -> 97.5 -> 100. Two source fixes from the carcass (target 8 statements / 0x66 bytes):
+    (1) L411 is a 1-byte int3, NOT an empty ASSERT (Master Gold ASSERT = VOSTOK_EMPTY_EXPRESSION, no bytes).
+        The bare int3 is DEBUG_BREAK( ) = __debugbreak (debug_macros.h:26), emits exactly +0x001. 90.2->97.5.
+    (2) The if/else shape, not if + trailing return. The if-block `}` jmp at 0x47 jumps to the EPILOGUE
+        (.2), skipping the multiply at 0x49 - that only happens if the multiply is the ELSE body the brace
+        jumps over (a plain `if(!x){return;} return mul;` falls THROUGH to mul, no extra jmp, and base folded
+        the two identical jmps). Writing it as `if(!try_invert){DEBUG_BREAK();return identity;}else{return
+        original*inverted;}` reproduced the double `jmp .2` (return-jmp + if-`}`-jmp). 97.5->100. 40/40 equal.
+  - get_foot_fixed_transform (the only caller) unchanged at 84.158% - it inlines a debug-draw guard around
+    this call but the out-of-line body match does not affect its score. No regressions in report-changes.
