@@ -858,3 +858,24 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     pistol_weapon_core_hide_state::get_user_hands_expression  73.86% PARTIAL  (if(user_state_id==type_sprint) return weapon_lexeme; user_state_index=user_state_id==type_crouch; captions {"stand_hide","crouch_hide"}; linear_interpolator(s_aim_transition_time) local; animation_lexeme_parameters builder(.animated_object(get_user()).bones_mask(2).playback_type(play_once_and_freeze_at_end)); return expression(override_lexeme). Residual = shared-header whole-program inline wall: target keeps weapon_core::get_user() + the lexeme_parameters setters OUT-OF-LINE (frame 0x114), base inlines to direct member stores + extra compiled-out ASSERTs (frame 0x128). Same class as pistol_weapon_core_show_state::get_user_hands_expression 72.12% / weapon_core_hide_state 73.52%. Out of unit scope. @@ABE private const.)
   Header (pistol_weapon_core_hide_state.h): ACCESS-SPECIFIER FIRST was the only blocker - first build had all 4 methods at public (QAE/QBE/UBE) -> objdiff would not pair public-vs-target-private -> all 0%. Fixed: ctor -> protected: (@@IAE), the 3 methods -> private: (get_weapon_lexeme_pair/get_user_hands_expression @@ABE, weapon_and_hands_expression @@EBE virtual). Mirrors pistol_weapon_core_idle_state.h. Added template friend cook_template + friend void ::vostok::use_game_core_pistol_weapon_core_hide_state() (+ fwd decl). New anchor use_game_core_pistol_weapon_core_hide_state in temp_include_all.cpp (+ include + entrypoint call); cook_template.h fwd-decl + friend (new_object private). cpp #includes mirror weapon_core_hide_state (weapon_core.h, weapon_state_creation_params.h, cook_template.h, cubic_spline_skeleton_animation.h, linear_interpolator.h, mixing_addition_lexeme.h, mixing_animation_lexeme_parameters.h); per-file static s_aim_transition_time=0.3f. NOTE: header edit needed a touch of the .cpp for ninja to recompile (stale obj kept QAE).
   Regressions: none - report-changes 0 regressed / 0 improved / 0 removed / 0 added.
+- damage_zone_core shape-distance helpers (4 free geometric helpers, ONE unit;
+  branch match/game_core-damage_zone_core off origin/int/game_core). Anchored in
+  temp_include_all.cpp (fwd-decl in namespace survarium + volatile fn-ptr address
+  take in use_damage_zone_core). NOTE: report.json does NOT pair these - the TARGET
+  obj names them DEMANGLED (survarium::distance_from_box_center_to_point_on_shape)
+  while the MSVC base obj uses the decorated name; objdiff pairs by exact string so
+  they list as target-only (-1.00). Authoritative % is pdb_fetch --view diff.
+    distance_from_sphere_center_to_point_on_shape   100%   DONE     (return radius; 5/5 instrs.)
+    distance_from_box_center_to_point_on_shape      77.9%  PARTIAL  (structure 1:1 with carcass. Residual = /Od /Ob2 /Oi /Oy /GL whole-program inline wall: base inlines the tiny inline float3_pod::dot_product at the call site (scalar mulss/addss), target's LTCG link kept it OUT-OF-LINE (call); the inlined temp grows the frame + cascades operand order; plus folded xyz() accessor thunk renaming. NOT call-arg LTCG, not de-inlinable from TU. 88/113.)
+    distance_from_capsule_center_to_point_on_shape  44.0%  PARTIAL  (same wall: base inlines TWO float3_pod::dot_product on proj_to_y_axis line; sub esp,0F8h base vs 0F4h target; cascading stack-offset + operator- operand-order shift. 102/232.)
+    distance_from_cylinder_center_to_point_on_shape 40.3%  PARTIAL  (same wall: base inlines THREE float3_pod::dot_product (2 on proj_to_y_axis, 1 on proj line y_axis.dot_product(circle_point_dir)); sub esp,10Ch base vs 108h target; cascade. 102/253.)
+  Proof of wall: standalone float3_pod::dot_product diverges 0/30 (0.0%) between sides
+  - base (rva 0x36d10) is /Od x87 thiscall (push ebp; fld/fmul; ret 4), target (rva
+  0x08130) is optimized register-arg SSE (eax/ecx, movss/mulss, ret). Target call sites
+  pass args in eax/ecx (optimized convention). Same documented wall as
+  weapon_core_reload_state / pistol_weapon_core_reload_state. Only lever would be
+  #pragma auto_inline(off), which the original source did not use. add_single_result
+  + hit_on_* left STUB (need .cpp-local dz_bone_data_contact_test_predicate vtable
+  anchored; deferred to a hit_on_* unit). Full notes:
+  docs/binary_matching/game_core/damage_zone_core_shape_distance.md.
+  Regressions: none - report-changes 0 regressed / 0 improved / 0 removed / 0 added.

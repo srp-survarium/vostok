@@ -105,34 +105,43 @@ bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, f
 	// ******
 }
 
-// STATE[SKIPPED]
+// STATE[100%|DONE]
 float distance_from_sphere_center_to_point_on_shape( float radius )
 {
 	return radius;
-
-	// FUNCTION BODY
-	// <0x597d53>|0x003|+0x003:'123'
-	// ******
 }
 
-// STATE[SKIPPED]
-// float survarium::distance_from_box_center_to_point_on_shape(vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const&)
+// STATE[77.9%|PARTIAL]: claude@NOTE: structure 1:1 with target carcass. Residual
+// is the documented /Od /Ob2 /Oi /Oy /GL whole-program inline wall: our base
+// inlines the tiny inline float3_pod::dot_product at the call site (scalar
+// mulss/addss) while target's LTCG link kept it OUT-OF-LINE (call); the inlined
+// temp shifts the frame size + cascades operand order downstream. Plus the folded
+// xyz() accessor thunk is renamed by the delinker (byte-identical call). NOT
+// call-arg LTCG and not de-inlinable from this TU. report.json does not pair this
+// free fn (target obj names it demangled, base obj mangled); % from pdb_fetch diff.
 float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
 {
-	// LOCALS
-	// float3 						dir
-	// float3 						result
-	// float3 						half_sides
-	// s32 							i<1>
-	// float 						dist<2>
-	// float3 						axis<2>
-	// ******
+	float3 dir			= source_position - transform.c.xyz( );
+	float3 result		= transform.c.xyz( );
+	float3 half_sides	= dim;
 
-	// SKIPPED BLOCKS
-	// <0x598538><2>
-	// ******
+	for ( s32 i = 0 ; i < 3 ; ++i )
+	{
+		float3 axis	= transform.lines[i].xyz( );
+		axis.normalize( );
+		float dist = dir.dot_product( axis );
 
-	return 0.0f;
+		if ( dist > half_sides[i] )
+			dist = half_sides[i];
+
+		if ( -half_sides[i] > dist )
+			dist = -half_sides[i];
+
+		result += axis * dist;
+	}
+
+	return ( result - transform.c.xyz( ) ).length( );
+
 	// FUNCTION BODY
 	// <0x5984d0>|0x000|+0x006:'127'	{
 	// <0x5984d6>|0x006|+0x01c:'128'
@@ -158,7 +167,14 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 	// ******
 }
 
-// STATE[STUB]
+// STATE[44.0%|PARTIAL]: claude@NOTE: structure 1:1 with target carcass. Residual
+// is the documented /Od /Ob2 /Oi /Oy /GL whole-program inline wall: base inlines
+// the two inline float3_pod::dot_product on the proj_to_y_axis line (scalar
+// mulss/addss) while target's LTCG link kept both OUT-OF-LINE (call). The inlined
+// temps grow the frame (sub esp,0F8h base vs 0F4h target) which then cascades a
+// stack-offset shift + operator- operand-passing order through the rest of the
+// body. Plus folded xyz() thunk renaming. NOT call-arg LTCG, not de-inlinable from
+// this TU. report.json does not pair this free fn; % from pdb_fetch diff.
 float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				half_length,
@@ -166,23 +182,22 @@ float distance_from_capsule_center_to_point_on_shape(
 	float3 const&		source_position
 )
 {
-	// LOCALS
-	// const float 						proj_to_y_axis
-	// float3 							bottom_surface_center
-	// float3 							y_axis
-	// float3 							surface_center
-	// float3 							top_surface_center
-	// float3 							height_vector
-	// float3 							center
-	// float3 							dir<1>
-	// float3 							height_vector_proj_point<1>
-	// ******
+	float3 center					= transform.c.xyz( );
+	float3 y_axis					= transform.j.xyz( );
+	float3 top_surface_center		= center + y_axis * half_length;
+	float3 bottom_surface_center	= center - y_axis * half_length;
+	float3 height_vector			= top_surface_center - bottom_surface_center;
+	const float proj_to_y_axis		= ( source_position - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 
-	// SKIPPED BLOCKS
-	// <0x59839a><1>
-	// ******
+	if ( proj_to_y_axis > 0.0f && 1.0f > proj_to_y_axis )
+	{
+		float3 height_vector_proj_point	= top_surface_center + height_vector * proj_to_y_axis;
+		float3 dir						= height_vector_proj_point - source_position;
+		return ( center - ( height_vector_proj_point + dir.normalize( ) * radius ) ).length( );
+	}
 
-	return 0.0f;
+	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
+	return ( center - ( surface_center + ( surface_center - source_position ).normalize( ) * radius ) ).length( );
 
 	// FUNCTION BODY[0x5982a0]: 16
 	// <0x5982a9>|0x009|+0x01c:'151'
@@ -204,7 +219,14 @@ float distance_from_capsule_center_to_point_on_shape(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[40.3%|PARTIAL]: claude@NOTE: structure 1:1 with target carcass. Residual
+// is the documented /Od /Ob2 /Oi /Oy /GL whole-program inline wall: base inlines
+// THREE inline float3_pod::dot_product (two on proj_to_y_axis, one on the proj
+// line y_axis.dot_product(circle_point_dir)) while target's LTCG link kept all
+// three OUT-OF-LINE (call). The inlined temps grow the frame (sub esp,10Ch base vs
+// 108h target) and cascade stack-offset + operand-order shifts through the body.
+// Plus folded xyz() thunk renaming. NOT call-arg LTCG, not de-inlinable from this
+// TU. report.json does not pair this free fn; % from pdb_fetch diff.
 float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				radius,
@@ -212,26 +234,25 @@ float distance_from_cylinder_center_to_point_on_shape(
 	float3 const&		source_position
 )
 {
-	// LOCALS
-	// const float 						proj_to_y_axis
-	// float3 							circle_point_dir
-	// float3 							bottom_surface_center
-	// float3 							circle_proj_vec
-	// float3 							proj
-	// float3 							y_axis
-	// float3 							surface_center
-	// float3 							top_surface_center
-	// float3 							height_vector
-	// float3 							center
-	// float3 							dir<1>
-	// float3 							height_vector_proj_point<1>
-	// ******
+	float3 center					= transform.c.xyz( );
+	float3 y_axis					= transform.j.xyz( );
+	float3 top_surface_center		= center + y_axis * half_length;
+	float3 bottom_surface_center	= center - y_axis * half_length;
+	float3 height_vector			= top_surface_center - bottom_surface_center;
+	const float proj_to_y_axis		= ( source_position - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 
-	// SKIPPED BLOCKS
-	// <0x598140><1>
-	// ******
+	if ( proj_to_y_axis > 0.0f && 1.0f > proj_to_y_axis )
+	{
+		float3 height_vector_proj_point	= top_surface_center + height_vector * proj_to_y_axis;
+		float3 dir						= height_vector_proj_point - source_position;
+		return ( center - ( height_vector_proj_point + dir.normalize( ) * radius ) ).length( );
+	}
 
-	return 0.0f;
+	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
+	float3 circle_point_dir			= surface_center - source_position;
+	float3 proj						= y_axis * y_axis.dot_product( circle_point_dir );
+	float3 circle_proj_vec			= proj - circle_point_dir;
+	return ( center - ( surface_center + circle_proj_vec ) ).length( );
 
 	// FUNCTION BODY[0x598040]: 21
 	// <0x598049>|0x009|+0x01c:'171'
@@ -279,7 +300,15 @@ public:
 
 STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
-// STATE[STUB]
+// STATE[STUB]: claude@NOTE: dispatches (switch on second_shape_type) to the four
+// distance_from_*_center helpers (target rva 0xb7be0), then result.first = bone,
+// result.second = dist/radius, m_result->push_back(result). Out of the geometric-
+// helper unit's scope: matching it needs the .cpp-local
+// dz_bone_data_contact_test_predicate vtable anchored in base (the class is only
+// instantiated inside hit_on_enter/inside/motion_inside, themselves STUBs), and a
+// full ~0x1fc-byte reconstruction (switch + folded xyz() + STL push_back). The four
+// helpers it calls would pair fine; the dispatch body itself does not hit the
+// dot_product inline wall. Deferred to a hit_on_* unit that brings the vtable.
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
 	collision::primitive_type	first_shape_type,
