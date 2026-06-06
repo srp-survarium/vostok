@@ -993,3 +993,42 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   Regressions: none in weapon-state family. report-changes shows 24 regressed / 45 improved - all
   generic boost/bt/math/particle/empty_stub/thunk COMDAT copy re-attribution from enabling the new
   TU (paired 100->0 / 0->100 mirrors), no matched weapon-state function regressed.
+- hand_to_weapon_ik_processor (IK math/geometry; 10 fns + 2 ik_utils helpers, ONE unit;
+  branch match/game_core-hand_to_weapon_ik_processor off origin/int/game_core):
+    hand::hand()                              100%   DONE     (header member-init: start=0, hand/hand_matrix/locator_index=u32(-1), is_active=true)
+    hand_to_weapon_ik_processor::ctor          100%   DONE     (m_interpolator(s_aim_transition_time=0.3f), m_current_transition_time(0.0f), m_active(true); consts read from EXE)
+    activate                                   100%   DONE     (m_skeleton, get_bone_index("Weapon"/"LeftHand"/"RightHand"/"left_hand_cont"/"right_hand_cont") - get_root_bones_count())
+    activate_hand                              100%   DONE     (if is_active!=active { set; start=get_hand_new_start_transition_time(); ASSERT })
+    hand_need_correction                       100%   DONE     (h.is_active || hand_need_interpolation())
+    hand_need_interpolation                    100%   DONE     ((current_time - h.start) < 300)
+    get_hand_new_start_transition_time         100%   DONE     (ternary: ct<300 ? current_time-(300-ct) : current_time)
+    get_hand_coefficient                       88.54% INPROGRESS [REVIEW] NOT slot noise - target L187 is ONE statement ((current-start)/1000.0f straight into fild qword slot); our source splits it into 2 locals -> 2 extra mov round-trip instrs. FIX: collapse to a single interpolation_coeff statement (drop hand_transition_time), rebuild.
+    process                                    81.51% PARTIAL  (genuine wall, confirmed in review: mix_transformations called out-of-line by target but its 4-arg body needs file-local slerp_optimized from core/math_quaternion.cpp - NO source in tree, so stub inlines away to a default float4x4; control flow + all const& bindings match)
+    process_hand                               89.69% INPROGRESS [REVIEW] NOT slot placement - target 37 statements, base 36: target keeps inner get_bone_matrix_in_object_space(forearm_bone) as its OWN statement (L134 temp) feeding original_forearm_dir (L135); base inlines it. FIX: hoist forearm obj-space matrix to a named local before original_forearm_dir, rebuild.
+    serialize / deserialize                    BLOCKED          (udp_match_packet/packet_reader never-compiled cluster - see README; bodies parked)
+    s_ik_hands_debug_draw_cc init/atexit       None             (cc_bool console-var dynamic init/atexit, same None pairing artifact as legs s_ik_legs_debug_draw_cc)
+  ik_utils.h (shared helpers, filled to unblock the calls above):
+    get_angle                                  72.58% PARTIAL  (law of cosines: acos(clamp((sqr(a0)+sqr(a1)-sqr(opp))/(2*a0*a1),-1,1)); residual = inline-vs-call of vostok::math::acos (target out-of-line, base inlines _CIacos), documented LTCG class. [REVIEW] ik_utils.h STATE was wrongly 100%|DONE -> corrected to PARTIAL.)
+    mix_transformations(3-arg)                 BLOCKED  (forwards to 4-arg overload; the 4-arg is a STUB - both overloads DSE'd in base, report.json scores None. [REVIEW] ik_utils.h STATE was wrongly 100%|DONE -> corrected to BLOCKED.)
+  Header: process_hand/get_hand_coefficient moved to private: (mangled ABE); the 3 statics
+  to private (C..). New anchor use_game_core_hand_to_weapon_ik_processor in
+  temp_include_all.cpp (+ include + entrypoint) - the unit was compiled but link-discarded
+  (read None) until anchored. .cpp declares get_rotation_matrix/change_matrix_orientation
+  (resolve to legs' external defs) and defines get_relative_matrix inline (COMDAT, as legs).
+  Regressions: none (report-changes regressed: 0).
+- hand_to_weapon_ik_processor RE-MATCH (2026-06-06): applied the two review diagnoses on a
+  faster machine; both reviewer fixes confirmed source-steerable (not /Od walls):
+    get_hand_coefficient   88.54% -> 99.90% PARTIAL  (1) collapse coeff to ONE statement (drop
+      hand_transition_time local) 88.54->95.54; (2) bind ternary to a NAMED return local and
+      return it (target materializes the return via movss/movss/fld + an extra slot, a bare
+      return <ternary> gives a plain fld) 95.54->99.90. Residual 0.10% = ONE /Od slot offset
+      (target return local [ebp-8] vs base reuses dead [ebp-4]); instr stream + structure
+      identical, const/non-const had no effect.
+    process_hand           89.69% -> 90.37% PARTIAL  hoist the forearm matrix's .c.xyz() into a
+      named float3 const& (NOT the whole float4x4 - a full-matrix hoist REGRESSED to 89.54;
+      target keeps only the .c.xyz() reference). Statement count now 37==37, control flow
+      identical (zero jmp/je/cmp/call-target diffs). Residual ~9.6% = per-call-site inline-vs-
+      out-of-line ABI for operator-/normalize/length (target out-of-line register-NRV, our LTCG
+      inlines push/push) cascading the frame (0x54C vs 0x4DC) - same LTCG class as get_angle/acos.
+      Free math::length(L190) was tried and REGRESSED (90.37->90.22), reverted to member .length().
+  Regressions: none (report-changes 0 regressed). New commit on the branch updates PR #207.

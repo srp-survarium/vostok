@@ -1078,3 +1078,33 @@ parenthesization/`expression()` wraps in the consuming function - mark PARTIAL. 
 to match the mixing operator+ overload set + `expression::is_empty` as their own unit; once those
 overloads exist, the natural `a + b + c` source should select them and these functions lift
 together. (Found re-matching game_core/weapon_core_reload_state::weapon_and_hands_expression.)
+
+## Ternary returned via a named result local (extra slot + movss/movss/fld)
+
+When the target's `float`-returning function ends with a ternary but the epilogue is
+`movss xmm0,[result_slot]; movss [ebp-N],xmm0; fld dword ptr [ebp-N]` (an EXTRA stack slot
+and an SSE round-trip) instead of a plain `fld [result_slot]`, the source assigned the
+ternary to a NAMED local and returned THAT local:
+
+    float const r = cond ? a : b;
+    return r;          // -> movss/movss/fld through r's own slot
+
+A bare `return cond ? a : b;` emits only the plain `fld` (no extra slot). The named local is
+recorded as its own statement in the PDB, so prefer it whenever the carcass shows the extra
+slot. (get_hand_coefficient: 95.54 -> 99.90 once the result local was added.) const vs
+non-const on the local does NOT change the slot assignment.
+
+## Hoisting a temporary's `.c.xyz()` is a float3 REFERENCE, not a full-matrix local
+
+When the target keeps `get_X().c.xyz()` (or any `member.subobject()`) of a returned temporary
+as its OWN srcline statement (carcass shows a `+small` step feeding the next), the materialized
+local is the `.c.xyz()` RESULT bound by reference - NOT the whole returned struct:
+
+    float3 const& p = get_bone_matrix_in_object_space( ... ).c.xyz( );   // <-- correct
+    // NOT: float4x4 m = get_bone_matrix_in_object_space( ... );  float3 p = m.c.xyz();
+
+The asm tell: after the call returns &temp in eax, the target does `add eax, <offset-to-member>`
+then the member-accessor ASSERT call, then `mov [slot], eax` - it stores a POINTER to the
+sub-object, never copies the full struct to the stack. A full-struct hoist allocates an extra
+NRV stack slot the target never uses and REGRESSES the match. (process_hand: full-float4x4 hoist
+89.69 -> 89.54; the .c.xyz() reference hoist 89.54 -> 90.37, restoring 37==37 statements.)

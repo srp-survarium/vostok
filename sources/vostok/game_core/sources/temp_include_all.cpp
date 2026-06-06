@@ -58,6 +58,7 @@
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
+#include <vostok/game_core/hand_to_weapon_ik_processor.h>
 #include <vostok/game_core/player_logic_base_state.h>
 #include "player_logic_jump_state.h"
 #include "player_logic_crouch_state.h"
@@ -280,6 +281,23 @@ namespace vostok
 		float4x4 ( *fn )( animation::skeleton_bone const&, float4x4 const*, animation::skeleton_bone const* ) =
 			&survarium::get_bone_matrix_in_object_space_impl;
 		example_callback( reinterpret_cast< pcstr >( fn ) );
+	}
+
+	// hand_to_weapon_ik_processor: anchor the public activate / process (ctor anchored
+	// by the local instance). process() reaches the private hand_need_correction /
+	// hand_need_interpolation / get_hand_new_start_transition_time / process_hand /
+	// get_hand_coefficient.
+	void use_game_core_hand_to_weapon_ik_processor( )
+	{
+		survarium::hand_to_weapon_ik_processor processor;
+		processor.activate(
+			*reinterpret_cast< vostok::animation::skeleton const* >( NULL ),
+			*reinterpret_cast< vostok::animation::skeleton const* >( NULL )
+		);
+		processor.activate_hand( survarium::hand_to_weapon_ik_processor::left, true, 0u );
+		processor.process( 0u, reinterpret_cast< float4x4 const* >( NULL ), reinterpret_cast< float4x4* >( NULL ) );
+
+		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
 
 	void use_medkit( )
@@ -2295,6 +2313,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_legs_ik_processor( );
 	vostok::use_game_core_legs_ik_drawer( );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
+	vostok::use_game_core_hand_to_weapon_ik_processor( );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );
