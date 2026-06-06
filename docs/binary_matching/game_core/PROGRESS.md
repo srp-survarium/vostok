@@ -922,3 +922,26 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     double_barreled_weapon_core_show_state::get_user_hands_expression  63.63% PARTIAL  (if(user_state_id==type_sprint) return weapon_lexeme; user_state_index=user==type_crouch; captions {"stand_show","crouch_show"}; animation_lexeme_parameters builder(.animated_object(m_weapon.get_user()).bones_mask(2).playback_type(play_once_and_freeze_at_end)) -> animation_lexeme override_lexeme -> expression. Residual = shared-header whole-program inline wall: target keeps weapon_core::get_user() + the 3 lexeme_parameters setters OUT-OF-LINE (frame 0x110), base inlines to direct member stores at [eax+20h]/[edx+4Ch]/[eax+3Ch] (frame 0x128); plus the type_sprint early-return ctor staged in eax(target) vs expression::expression<animation_lexeme>(edi,eax)(base). Same class as pistol sibling 72.12% (ours lower only by relative instruction counts; control structure identical). Out of unit scope. @@ABE private const.)
   Header (double_barreled_weapon_core_show_state.h): pre-existing in-progress work already had access fixed (ctor @@IAE protected; weapon_and_hands @@EBE private virtual const; get_weapon_lexeme_pair/get_user_hands @@ABE private const), template friend cook_template + friend use_*, size 0x190, [2][2][3]/[2][2] layout. BUILD FIX this session: temp_include_all anchor calls private cook_template::new_object -> added use_game_core_double_barreled_weapon_core_show_state to weapon_core_state_cook_template.h (fwd-decl + friend list); without it C2248 (cannot access private member). cpp #includes mirror pistol sibling.
   Regressions: none - report-changes 0 regressed / 0 improved / 0 removed / 0 added. The ??_G scalar-deleting-destructor thunk is 0% but that condition is repo-wide and shared by the already-matched pistol/weapon_core show_state siblings (not introduced here).
+- weapon_core-batch5 (weapon_core setters + animation-callback forwarders; 6 fns, ONE unit;
+  branch match/game_core-weapon_core-batch5 off origin/int/game_core). All in weapon_core.cpp
+  (+ one base_player.h vtable-order fix). Anchored in use_game_core_weapon_core_small_setters.
+    weapon_core::set_fire_bullet_transform              100%   DONE     (m_ready_for_fire=true [+0x489]; m_fire_bullet_transform=fire_bullet_transform [+0x118, rep movsd 0x10]. @@UAE public virtual.)
+    weapon_core::set_next_fire_queue_type               100%   DONE     (if(m_fire_queue_type==m_weapon_fire_queue_types_count-1) m_fire_queue_type=0; else ++m_fire_queue_type. carcass 693 +0x002 braced if-true. @@UAE public virtual.)
+    weapon_core::remove_animation_callback(enum,..)     100%   DONE     (m_user->unsubscribe_animation_player(channel_id,callback_uid); vtable+0x54. @@QAE public.)
+    weapon_core::remove_animation_callback(pcstr,..)    100%   DONE     (m_user->unsubscribe_animation_player(channel_id,callback_uid); vtable+0x58. @@QAE public.)
+    weapon_core::set_animation_callback(enum,..)        100%   DONE     (m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, tmp, this); vtable+0x4C. WAS 80.52% PARTIAL temp-scheduling; FIXED by NAMED local resources::managed_resource_ptr tmp( NULL ); above the call -> temp ctor runs ahead of arg pushes -> 100%. @@QAE public.)
+    weapon_core::set_animation_callback(pcstr,..)       100%   DONE     (..., tmp, 0xff, this); vtable+0x50. WAS 81.17% PARTIAL; same NAMED-local fix -> 100%. @@QAE public.)
+  KEY FIX (base_player.h): MSVC assigns vtable slots to same-name overloaded virtuals in
+  REVERSE declaration order. subscribe_animation_player(enum) was declared BEFORE the (pcstr)
+  overload, putting enum at the higher slot (+0x50); target wants enum at +0x4C. Swapped the
+  two subscribe declarations (enum declared LAST) -> base now emits +0x4C(enum)/+0x50(pcstr),
+  matching target and pinning both set_animation_callback overloads' call sites. (Confirmed by
+  the already-matched unsubscribe pair: enum declared 2nd -> +0x54 lower, pcstr 1st -> +0x58.)
+  Only weapon_core + weapon_user_animations_selector reference these overloads.
+  Regressions: none - report-changes 0 regressed / 0 improved / 0 removed / 0 added.
+  RE-MATCH (PR #208 reviewer follow-up): both set_animation_callback overloads' temp-scheduling
+  PARTIAL was source-steerable after all. Hoisting the managed_resource_ptr(NULL) rvalue into a
+  NAMED stack local declared above the subscribe call forced its ctor ahead of the argument
+  pushes -> enum 80.52% -> 100%, pcstr 81.17% -> 100%. Carcasses deleted (clean DONE).
+  report-changes after the fix: 0 regressed / 0 improved (improvements were already baked into
+  the report from the crashed session's build; re-confirmed both at 100% in report.json).

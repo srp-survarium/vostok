@@ -832,6 +832,17 @@ the delinker misnames `fixed_size_allocator<...>::finalize_impl`. `lea eax,[mat]
 row at +0x30). `add eax,10h`/`+0x20` = `.j`/`.k`. A separate `call float3_pod::length` after it =
 `.xyz().length()`.
 
+### by-value temp built BEFORE trailing arg pushes = HOIST it to a NAMED local
+When the target materializes a by-value argument temp FIRST (`push 0; call ctor` writing
+`[ebp-4]`) and only THEN pushes the remaining args (`push this`, recomputing `&temp` via
+`lea ecx,[ebp-4]`), but inline-rvalue codegen reorders it (pushes `this` first, then builds
+the temp and pushes the ctor's eax return), the cause is temp-scheduling - NOT LTCG, NOT a
+wall. FIX: hoist the rvalue into a NAMED local declared on the line above the call:
+`T tmp( ... ); f( ..., tmp, ... );`. The named local pins the ctor to its declaration point,
+ahead of the argument pushes; its dtor still fires at end-of-scope, matching the target's
+trailing dtor. Confirmed: `weapon_core::set_animation_callback` (both overloads) -
+`managed_resource_ptr( NULL )` inline temp 80.52%/81.17% -> NAMED local 100%/100%.
+
 ### a write/read at `[ebp+arg]+0xNN` is a MEMBER of an argument struct, not a local
 When asm writes `mov eax,[ebp+8]; add eax,0x1C; ...` (storing a normalize/operator result there),
 [ebp+8] is the by-ref struct ARG and +0x1C is a member offset - it is `arg.member = ...`, NOT a

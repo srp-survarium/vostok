@@ -1397,6 +1397,15 @@ namespace vostok
 		wc.instant_aim_end( );
 		wc.chamber_a_round( );
 		wc.get_dispersion( );
+
+		wc.set_fire_bullet_transform( vostok::math::float4x4( ) );
+		wc.set_next_fire_queue_type( );
+
+		boost::function< enum vostok::animation::callback_return_type_enum( vostok::animation::animation_callback_params& ) > cb;
+		wc.set_animation_callback( (pcstr)NULL, NULL, cb );
+		wc.set_animation_callback( vostok::animation::channel_id_on_animation_end, NULL, cb );
+		wc.remove_animation_callback( (pcstr)NULL, NULL );
+		wc.remove_animation_callback( vostok::animation::channel_id_on_animation_end, NULL );
 	}
 
 
