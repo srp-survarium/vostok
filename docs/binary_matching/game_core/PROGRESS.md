@@ -299,8 +299,10 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     Also: the two up_leg distances use the cached `up_leg_world_matrix` ref (hip-multiplied), not fresh
     matrices[]. knee_world_matrix is a declared-but-unused local in BOTH binaries (C4189 matches target;
     kept). else-branch is `finish = start`.
-  - Setup: get_relative_matrix (inline math helper, target rva 0xbb050) absent from our headers -> defined
-    vostok::math::get_relative_matrix directly in the .cpp (a header edit was a no-op due to PCH staleness).
+  - Setup: get_relative_matrix (inline math helper, target rva 0xbb050) was absent from our headers; it is
+    now defined in its real home math_float4x4_inline.h and matched 100% DONE as its own unit (see its ledger
+    line below). To make the header edit take effect, force the game_core PCH to rebuild (delete the .pch +
+    touch pch.cpp) - a plain header edit is a no-op since headers are not in the ninja graph (CLAUDE.md).
     #include physics/api.h before character_controller.h (VOSTOK_PHYSICS_API). Added protected inline
     ik_processor::get_skeleton() to read the private base m_skeleton. s_ik_legs_debug_draw_value(bool)/
     s_ik_foot_capsule_radius_value(float) declared as file statics (the cc machinery is STUB). Anchored via a
