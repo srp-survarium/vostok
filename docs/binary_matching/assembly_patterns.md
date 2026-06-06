@@ -513,6 +513,30 @@ brace-less. Do NOT decide braces from "has a local" alone (we mis-braced
 `get_target_koef` and earlier switches that way; prior switch matches should be
 re-checked against this).
 
+### two identical `jmp .end` back-to-back = a returning if-block's `}` jumping OVER an else
+ASM (target tail of an `if/else` where the if-body returns):
+```
+mov eax,[ebp+8]      ; load return value (sret ptr)
+jmp short .end       ; <- the `return` statement's own jmp
+jmp short .end       ; <- the if-block `}` jmp, jumping OVER the else body
+.else: ...           ; else body (entered via the cond `jne .else` at the top)
+mov eax,[ebp+8]
+.end: <epilogue>
+```
+CARCASS: a `+0x002:'<L_close>'` brace entry SANDWICHED between the if-body's last
+statement and the else-body's statement (e.g. L412 return, then `+0x002:'414'` `}`, then
+L416 else). The brace jmp targets the EPILOGUE and skips the else.
+SOURCE: it is a real `if (...) { ...; return a; } else { return b; }` - an `else` block,
+NOT `if (...) { return a; } return b;`. A plain if-then + trailing return falls THROUGH to
+the trailing statement (no jmp over it), and MSVC /Od folds the two identical `return` jmps
+into one (you lose the brace jmp). The tell that it is an else, not a fall-through: the
+if-`}` jmp jumps PAST the next statement to the epilogue (it would have to skip the else
+body). Confirmed on `math::get_relative_matrix` (90.2->97.5 via DEBUG_BREAK int3, then
+97.5->100 by changing `if(!x){...return;} return mul;` to `if(!x){...return;}else{return
+mul;}` - the else recovered the second `jmp .end` at 0x47). Also note: a 1-byte `int3`
+inside such a block is `DEBUG_BREAK( )` = `__debugbreak` (debug_macros.h), NOT an empty
+Master-Gold ASSERT (which emits zero bytes).
+
 ### derived ctor OVERWRITES an inherited member that the base ctor already set
 ASM (target, `weapon_core_show_state_base` ctor tail, after the base-ctor call + vtable stores):
 ```
