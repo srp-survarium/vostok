@@ -1397,6 +1397,9 @@ namespace vostok
 		wc.instant_aim_end( );
 		wc.chamber_a_round( );
 		wc.get_dispersion( );
+		wc.instant_reload( );
+		wc.instant_chamber_a_round( );
+		wc.instant_idle_start( );
 
 		wc.set_fire_bullet_transform( vostok::math::float4x4( ) );
 		wc.set_next_fire_queue_type( );
