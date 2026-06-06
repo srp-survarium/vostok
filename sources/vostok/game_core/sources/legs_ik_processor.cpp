@@ -10,28 +10,6 @@
 #include <vostok/physics/api.h>
 #include <vostok/physics/character_controller.h>
 
-// claude@NOTE: get_relative_matrix is an inline math helper (target rva 0xbb050,
-// math_float4x4_inline_2.h) not present in our headers; defined here so
-// get_foot_fixed_transform's out-of-line `call vostok::math::get_relative_matrix`
-// resolves. Reconstructed from binaries/structure/target.
-namespace vostok {
-namespace math {
-
-inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 const& parent_matrix )
-{
-	float4x4 inverted_parent_matrix;
-	if ( !inverted_parent_matrix.try_invert( parent_matrix ) )
-	{
-		ASSERT( UNKNOWN_EXPRESSION );
-		return float4x4( ).identity( );
-	}
-
-	return original_matrix * inverted_parent_matrix;
-}
-
-} // namespace math
-} // namespace vostok
-
 namespace survarium {
 
 // claude@NOTE: the s_ik_*_cc console-command machinery is still STUB; the dynamic
