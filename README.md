@@ -13,13 +13,13 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 48.64% fuzzy &middot; 8,196 / 25,372 functions exact (32.30%).**
+**Overall: 48.64% fuzzy &middot; 8,199 / 25,372 functions exact (32.32%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
 | `render` | 351 | 355 / 2,805 (12.7%) | 3.3% |
 | `game` | 141 | 18 / 1,634 (1.1%) | 0.1% |
-| `game_core` | 189 | 427 / 1,429 (29.9%) | 19.1% |
+| `game_core` | 189 | 433 / 1,429 (30.3%) | 19.3% |
 | `core` | 136 | 653 / 1,331 (49.1%) | 34.1% |
 | `animation` | 102 | 158 / 880 (18.0%) | 5.3% |
 | `ai` | 124 | 413 / 759 (54.4%) | 38.0% |
@@ -40,7 +40,7 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
 | `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
 
-_Updated 2026-06-04 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-06 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

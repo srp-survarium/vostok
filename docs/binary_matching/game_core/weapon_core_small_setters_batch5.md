@@ -48,8 +48,8 @@ Added to `use_game_core_weapon_core_small_setters()` in temp_include_all.cpp.
 - set_next_fire_queue_type               -> 100.00% DONE
 - remove_animation_callback(enum,..)     -> 100.00% DONE
 - remove_animation_callback(pcstr,..)    -> 100.00% DONE
-- set_animation_callback(enum,..)        ->  80.52% PARTIAL
-- set_animation_callback(pcstr,..)       ->  81.17% PARTIAL
+- set_animation_callback(enum,..)        -> 100.00% DONE (was 80.52% PARTIAL, fixed by named local)
+- set_animation_callback(pcstr,..)       -> 100.00% DONE (was 81.17% PARTIAL, fixed by named local)
 
 ### vtable-slot fix (made the subscribe call hit the right overload slot)
 MSVC assigns vtable slots to same-name overloaded virtuals in REVERSE declaration
@@ -61,28 +61,30 @@ unsubscribe pair: enum declared 2nd -> +0x54 lower, pcstr declared 1st -> +0x58.
 Only weapon_core + weapon_user_animations_selector use these; the swap regressed
 nothing (report-changes regressed: 0).
 
-### set_animation_callback residual (PARTIAL, ~80-81%, the wall)
-After the vtable fix, args/call/dtor/vtable-slot are ALL byte-identical. The sole
-remaining diff is temporary scheduling: the target constructs the
+### set_animation_callback residual (RESOLVED -> 100%, named-local temp)
+After the vtable fix, args/call/dtor/vtable-slot were ALL byte-identical. The sole
+remaining diff was temporary scheduling: the target constructs the
 `managed_resource_ptr( NULL )` temp FIRST (push 0; call ctor) and only then pushes
-`this`, recomputing `&temp` via `lea ecx,[ebp-4]`; our base pushes `this` first, then
-constructs the temp inline and pushes the ctor's eax return. `managed_resource_ptr()`
-(default ctor) is wrong: it is `inline {}` (no push 0 / no call), so the `( NULL )`
-pointer-ctor form is required to reproduce the ctor bytes.
+`this`, recomputing `&temp` via `lea ecx,[ebp-4]`; the inline-temp base pushed `this`
+first, then constructed the temp inline. `managed_resource_ptr()` (default ctor) is
+wrong: it is `inline {}` (no push 0 / no call), so the `( NULL )` pointer-ctor form is
+required to reproduce the ctor bytes.
 
-claude@review (PR #208 audit): the matcher's "not source-steerable" framing is too
-strong - temp-materialization ORDER is the kind of diff MATCHING.md expects solved
-from source. UNTRIED re-match opportunity: bind the rvalue to a NAMED local declared
-BEFORE the call, so the temp ctor is forced to run ahead of the argument pushes:
+FIX (PR #208 reviewer's diagnosis, confirmed): bind the rvalue to a NAMED local declared
+BEFORE the call, forcing the temp ctor to run ahead of the argument pushes:
 
     resources::managed_resource_ptr tmp( NULL );
     m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );        // enum
     m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );   // pcstr
 
-The named local's dtor still fires at end-of-scope (function end), matching the target's
-dtor placement at 0x40/0x43. Worth a rebuild before banking PARTIAL. (Reviewer did NOT
-rebuild; flagged for a faster machine.) Verified vs report.json: enum 80.51724%,
-pcstr 81.166664% - both percentages accurate.
+The named local's dtor still fires at end-of-scope, matching the target's dtor at 0x40/0x43.
+Rebuilt + scored: both overloads -> 100.0% in report.json (enum 80.51724% -> 100.0,
+pcstr 81.166664% -> 100.0). report-changes: 0 regressed. The carcass was deleted (clean DONE).
+
+Pattern (added to assembly_patterns): when the target materializes a by-value temp BEFORE
+pushing trailing args (push 0;ctor;...;push this), but inline-rvalue codegen reorders it
+(push this first, then build temp), HOIST the temp into a NAMED local declared above the
+call. The named local pins the ctor to the declaration point, ahead of the arg pushes.
 
 base_player.h vtable swap - reviewer verification: the swap exchanges only the two
 ADJACENT same-name `subscribe_animation_player` overloads (slots +0x4C/+0x50); no other

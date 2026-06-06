@@ -1141,19 +1141,13 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 	// ******
 }
 
-// STATE[81.17%|PARTIAL]: vtable slot (+0x50), args, call, dtor all byte-identical;
-// sole diff = temp-scheduling: target materializes the managed_resource_ptr(NULL) temp
-// (push 0;ctor) BEFORE pushing `this`; base pushes `this` first then builds the temp.
-// claude@TODO: untried source steer - bind the temp to a NAMED local before the call
-// (resources::managed_resource_ptr tmp( NULL ); ...subscribe(..., tmp, 0xff, this )) to
-// force the temp ctor ahead of the arg pushes; re-match opportunity. See
-// weapon_core_small_setters_batch5.md.
+// STATE[100%|DONE]
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// FUNCTION BODY
-	// <0x594290>|0x009|+0x044:'780'   m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, managed_resource_ptr(NULL), 0xff, this)
-	// target: push 0;ctor;push 0FFh;...  base: push this;push 0FFh;push 0;ctor (temp built later)
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), 0xff, this );
+	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
+	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
+	resources::managed_resource_ptr tmp( NULL );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
 }
 
 // STATE[100%|DONE]
@@ -1162,19 +1156,13 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[80.52%|PARTIAL]: vtable slot (+0x4C), args, call, dtor all byte-identical;
-// sole diff = temp-scheduling: target materializes the managed_resource_ptr(NULL) temp
-// (push 0;ctor) BEFORE pushing `this`; base pushes `this` first then builds the temp.
-// claude@TODO: untried source steer - bind the temp to a NAMED local before the call
-// (resources::managed_resource_ptr tmp( NULL ); ...subscribe(..., tmp, this )) to force
-// the temp ctor ahead of the arg pushes; re-match opportunity. See
-// weapon_core_small_setters_batch5.md.
+// STATE[100%|DONE]
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// FUNCTION BODY
-	// <0x594240>|0x009|+0x03f:'790'   m_user->subscribe_animation_player(channel_id, animation_callback, callback_uid, managed_resource_ptr(NULL), this)
-	// target: push 0;ctor;push this;...  base: push this;push 0;ctor (temp built later)
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), this );
+	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
+	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
+	resources::managed_resource_ptr tmp( NULL );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
 }
 
 // STATE[100%|DONE]
