@@ -13,9 +13,9 @@ Branch: `match/game_core-hand_to_weapon_ik_processor` off `origin/int/game_core`
 - `hand_need_correction`                 100%  DONE
 - `hand_need_interpolation`              100%  DONE
 - `get_hand_new_start_transition_time`   100%  DONE
-- `get_hand_coefficient`                 88.54% INPROGRESS (split-statement structure divergence - source-steerable, see below)
+- `get_hand_coefficient`                 99.90% PARTIAL (was 88.54; single-statement coeff + named return local - RE-MATCH below)
 - `process`                              81.51% PARTIAL (mix_transformations wall - genuine, slerp_optimized has no source)
-- `process_hand`                         89.69% INPROGRESS (missing L134 named temp; 36 vs 37 statements - source-steerable, see below)
+- `process_hand`                         90.37% PARTIAL (was 89.69; .c.xyz() reference hoist restored L134 - RE-MATCH below)
 - `serialize` / `deserialize`            BLOCKED (udp_match_packet/packet_reader cluster)
 - `s_ik_hands_debug_draw_cc` init/atexit None (pairing artifact, same as legs)
 - ik_utils.h: `get_angle` 72.58% PARTIAL (inline-vs-call of vostok::math::acos, LTCG class);
@@ -36,6 +36,46 @@ Branch: `match/game_core-hand_to_weapon_ik_processor` off `origin/int/game_core`
   source-steerable STRUCTURE divergences (a high % hiding the wrong shape), re-tagged
   INPROGRESS with the concrete restructure (below). Logic/compiled bytes NOT changed in this
   review (no rebuild) - flagged for a faster machine to re-match.
+
+## RE-MATCH applying the review diagnoses - 2026-06-06 (both reviewer fixes confirmed)
+
+### get_hand_coefficient: 88.54% -> 99.90%
+Two source edits, each verified by rebuild:
+1. Collapse `(current-start)/1000.0f` to ONE statement (drop the named hand_transition_time
+   local). The reviewer was right: the split emitted an extra `mov [ebp-4],edx; mov eax,[ebp-4]`
+   round-trip through a slot the target never allocates. 88.54 -> 95.54.
+2. Bind the ternary result to a NAMED return local and `return` it:
+   `float const hand_coefficient = is_active ? ... ; return hand_coefficient;`
+   The target materializes the return through `movss xmm0,[result]; movss [ebp-8],xmm0;
+   fld [ebp-8]` (an extra slot for the return value); a bare `return <ternary>` gives only a
+   plain `fld`. The named local reproduces the round-trip. 95.54 -> 99.90.
+Residual 0.10%: ONE /Od stack-slot offset - target gives the return local its own fresh slot
+[ebp-8]; base reuses the now-dead interpolation_coeff slot [ebp-4] for it (one mov/fld operand).
+Frame (sub esp,1Ch), instruction stream and statement structure are otherwise identical. Tried
+const vs non-const on the result local: no effect on the slot. Genuine /Od slot-numbering noise.
+
+### process_hand: 89.69% -> 90.37%
+The reviewer's "missing L134 named temp" was correct in spirit but the FIX was subtler:
+- A full-matrix hoist (`float4x4 forearm_obj_matrix_0 = get_bone_matrix_in_object_space(...)`)
+  was WRONG and REGRESSED it (89.69 -> 89.54): the target does NOT keep the whole float4x4 -
+  it materializes only the `.c.xyz()` of the temporary. Target L134 asm: `call get_bone_matrix;
+  add eax,30h (= &matrix.c); call finalize_impl (.xyz ASSERT); mov [ebp-10h],eax`. So L134 binds
+  a `float3 const&` to the `.c.xyz()` reference, not a matrix value.
+- CORRECT fix:
+  `float3 const& original_forearm_pos = get_bone_matrix_in_object_space( forearm_bone, *m_skeleton, matrices ).c.xyz( );`
+  `float3 const& original_forearm_dir = math::normalize( arm_pos - original_forearm_pos );`
+  This restored the statement (89.54 -> 90.37). Statement count now 37==37 (target == base),
+  control flow identical (diff of the opcode stream shows ZERO jmp/je/cmp/call-target diffs -
+  only push/mov/lea/add argument-marshalling differences remain).
+- Tried free `math::length(arm_pos - ...)` for L190 (target uses out-of-line `vostok::math::length`):
+  REGRESSED (90.37 -> 90.22) because our LTCG inlines the free `length(float3 const&)` overload to
+  `float3_pod::length` PLUS a `mov [ebp-3FCh],eax; mov eax,...` temp round-trip - worse than the
+  member `.length()` which inlines to a clean `call float3_pod::length`. Reverted to member.
+Residual ~9.6%: per-call-site inline-vs-out-of-line ABI for the vector-math helpers (operator-,
+normalize, free math::length). Target calls them OUT-OF-LINE with register-NRV (`mov esi/edi`) and
+cdecl-by-ref; our /GL LTCG inlines them to push/push + member-length. This cascades the frame size
+(target 0x54C vs base 0x4DC, 0x70 gap) and the operand slots. Same per-call-site inline-vs-call
+LTCG class documented above for get_angle/acos in this TU - NOT source-steerable from this body.
 
 ## Key facts
 - RVAs in the carcass comments are +0x10000 vs the real target index

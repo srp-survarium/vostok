@@ -129,46 +129,41 @@ void hand_to_weapon_ik_processor::process( u32 current_time_in_ms, float4x4 cons
 	}
 }
 
-// STATE[88.54%|INPROGRESS]: NOT slot noise - a real SOURCE-STEERABLE structure divergence.
-// claude@NOTE: the target structure has only 6 statements (L185 frame, L186 ASSERT, L187
-// ONE statement computing (current-start)/1000.0f straight into the fild qword-low slot,
-// L190 ternary, epilogue). Our source splits that into TWO statements (hand_transition_time
-// then interpolation_coeff), so the base emits an extra `mov [ebp-4],edx; mov eax,[ebp-4]`
-// round-trip through a separate slot the target never allocates - 2 extra instructions, NOT
-// a slot rename. NEXT STEP: collapse to a single statement
-//   float const interpolation_coeff = ( current_time_in_ms - h.start_transition_time_in_ms ) / 1000.0f;
-// (drop the named hand_transition_time local; the PDB records no separate statement for it),
-// then rebuild and re-diff. (The trailing fld-via-[ebp-8] xmm round-trip on the return may
-// be a separate residual; re-evaluate after the merge.) See md.
+// STATE[99.90%|PARTIAL]: structure fully matched (single-statement coeff + named return
+// local). Sole residual is one /Od stack-slot offset: target puts the return local at
+// [ebp-8] (its own fresh slot), base reuses the now-dead interpolation_coeff slot [ebp-4]
+// for it - one mov/fld operand differs. Instruction stream + statement structure identical.
 float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( true ) );
 
-	u32 const	hand_transition_time	= current_time_in_ms - h.start_transition_time_in_ms;
-	float const	interpolation_coeff		= hand_transition_time / 1000.0f;
+	float const	interpolation_coeff		= ( current_time_in_ms - h.start_transition_time_in_ms ) / 1000.0f;
 
-	return h.is_active ? 1.0f - m_interpolator.interpolated_value( interpolation_coeff ) : m_interpolator.interpolated_value( interpolation_coeff );
+	float const	hand_coefficient		= h.is_active ? 1.0f - m_interpolator.interpolated_value( interpolation_coeff ) : m_interpolator.interpolated_value( interpolation_coeff );
+	return hand_coefficient;
 
-	// FUNCTION BODY (target: 6 statements, 0x8b bytes)
+	// FUNCTION BODY (target: 6 statements, 0x8b bytes) - structure fully matched; only the
+	// return-local slot differs (target [ebp-8] vs base reuses [ebp-4]).
 	// <0x583e70>|0x000|     :'185'		{
 	// <0x583e79>|0x009|+0x00c:'186'		ASSERT( UNKNOWN_EXPRESSION_T( true ) );
-	// <0x583e85>|0x015|+0x01e:'187'		(current_time - h.start) / 1000.0f  -- ONE statement on target
-	// <0x583ea3>|0x033|+0x04f:'190'		return is_active ? 1 - interp(c) : interp(c);
-	// <0x583ef2>|0x082|+0x003:'191'		(fld return)
+	// <0x583e85>|0x015|+0x01e:'187'		interpolation_coeff = (current_time - h.start) / 1000.0f;
+	// <0x583ea3>|0x033|+0x04f:'190'		hand_coefficient = is_active ? 1 - interp(c) : interp(c);
+	// <0x583ef2>|0x082|+0x003:'191'		return hand_coefficient;  (movss/movss/fld via [ebp-8])
 	// <0x583ef5>|0x085|+0x006:'192'		}
 	// ******
 }
 
-// STATE[89.69%|INPROGRESS]: NOT pure slot placement - a SOURCE-STEERABLE structure divergence.
-// claude@NOTE: target structure = 37 statements, our base = 36. The target keeps the inner
-// `get_bone_matrix_in_object_space( forearm_bone, ... )` as its OWN statement (L134, a named
-// temp, +0x2c) feeding original_forearm_dir at L135 (+0x2e); our source inlines it into the
-// L135 expression (one fused statement +0x5c), dropping a statement the target had. The frame/
-// slot gap the matcher attributed to "/Od placement" cascades from this missing temp. NEXT
-// STEP: hoist the forearm object-space matrix to a named local on its own line before
-// original_forearm_dir (matching the target's L134 statement break), rebuild and re-diff;
-// also re-check whether the L119/L120 matrix_index statements carry an embedded ASSERT
-// (call ...finalize_impl at 0xd2 in the target body). See process_hand.md.
+// STATE[90.37%|PARTIAL]: structure matched - 37==37 statements, control flow identical (no
+// jmp/je/cmp/call-target diffs remain). The reviewer's missing-L134 fix landed: hoisting the
+// forearm matrix's .c.xyz() into a named float3 const& (original_forearm_pos) restored the
+// statement the target had (89.54->90.37). Residual ~9.6% is entirely call-boundary ABI: the
+// target calls the vector-math helpers (operator-, normalize, free math::length) OUT-OF-LINE
+// with register-NRV (mov esi/edi) and cdecl-by-ref; our /GL LTCG inlines them to push/push +
+// member-length, which cascades the frame size (target 0x54C vs base 0x4DC) and the operand
+// slots. Per-call-site inline-vs-call LTCG class (same as get_angle/acos in this TU), not
+// source-steerable from this body. NOTE: forearm matrix is the .c.xyz() REFERENCE, not a full
+// float4x4 local (a full-matrix hoist was wrong - target only keeps the .c.xyz() ref); the
+// free math::length(L190) form REGRESSED (LTCG inlines it worse than member .length()). See md.
 void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::hand const& h, float4x4 const& target_hand_obj_space_transform, float4x4* matrices ) const
 {
 	animation::skeleton_bone const&	hand_bone				= m_skeleton->get_bone( h.hand_bone_index );
@@ -193,7 +188,8 @@ void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::han
 
 	float3 const&					arm_to_hand_dir			= math::normalize( arm_pos - target_hand_obj_space_transform.c.xyz( ) );
 
-	float3 const&					original_forearm_dir	= math::normalize( arm_pos - get_bone_matrix_in_object_space( forearm_bone, *m_skeleton, matrices ).c.xyz( ) );
+	float3 const&					original_forearm_pos	= get_bone_matrix_in_object_space( forearm_bone, *m_skeleton, matrices ).c.xyz( );
+	float3 const&					original_forearm_dir	= math::normalize( arm_pos - original_forearm_pos );
 	float3 const&					rotation_axis			= math::normalize( arm_to_hand_dir ^ original_forearm_dir );
 
 	float const						arm_alpha_angle			= get_angle( arm_len, arm_to_hand_len, forearm_len );

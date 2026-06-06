@@ -847,3 +847,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   (read None) until anchored. .cpp declares get_rotation_matrix/change_matrix_orientation
   (resolve to legs' external defs) and defines get_relative_matrix inline (COMDAT, as legs).
   Regressions: none (report-changes regressed: 0).
+- hand_to_weapon_ik_processor RE-MATCH (2026-06-06): applied the two review diagnoses on a
+  faster machine; both reviewer fixes confirmed source-steerable (not /Od walls):
+    get_hand_coefficient   88.54% -> 99.90% PARTIAL  (1) collapse coeff to ONE statement (drop
+      hand_transition_time local) 88.54->95.54; (2) bind ternary to a NAMED return local and
+      return it (target materializes the return via movss/movss/fld + an extra slot, a bare
+      return <ternary> gives a plain fld) 95.54->99.90. Residual 0.10% = ONE /Od slot offset
+      (target return local [ebp-8] vs base reuses dead [ebp-4]); instr stream + structure
+      identical, const/non-const had no effect.
+    process_hand           89.69% -> 90.37% PARTIAL  hoist the forearm matrix's .c.xyz() into a
+      named float3 const& (NOT the whole float4x4 - a full-matrix hoist REGRESSED to 89.54;
+      target keeps only the .c.xyz() reference). Statement count now 37==37, control flow
+      identical (zero jmp/je/cmp/call-target diffs). Residual ~9.6% = per-call-site inline-vs-
+      out-of-line ABI for operator-/normalize/length (target out-of-line register-NRV, our LTCG
+      inlines push/push) cascading the frame (0x54C vs 0x4DC) - same LTCG class as get_angle/acos.
+      Free math::length(L190) was tried and REGRESSED (90.37->90.22), reverted to member .length().
+  Regressions: none (report-changes 0 regressed). New commit on the branch updates PR #207.
