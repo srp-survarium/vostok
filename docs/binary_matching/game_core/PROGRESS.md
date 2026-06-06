@@ -270,3 +270,13 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     args, never runs) and escapes the float result; forward-declared in the survarium decl block; called from
     IncludeAll. process_leg (its real caller) is still STUB. report-changes: only basic_streambuf::imbue
     100->0 (an unrelated CRT/STL streambuf method, build-ordering report flake; no game_core source touched).
+  - RE-INVESTIGATION (structure-verifier challenge that the LTCG label was wrong): re-litigated and the
+    LTCG classification STANDS - the residual is NOT caller-source-steerable. Three forms rebuilt: `a|b`
+    and explicit `operator|(a,b)` both INLINE -> 65.375%; `dot_product(a,b)` -> 90.4% but binds the TEMPLATE
+    `dot_product<float3>` (overload-preferred over the non-template free dot_product), emitted __cdecl - a
+    DIFFERENT function. The TARGET binary has NO `dot_product<float3>` symbol (only operator| 0x8160 + member
+    dot_product 0x8130), so the original wrote `a|b`; the 90.4% is a coincidentally-higher % over a fabricated
+    function and is REJECTED per the never-coincidentally-higher rule. Two real residuals, both whole-program
+    LTCG: per-site inline-vs-call AND the target's operator| being an LTCG calling-convention-promoted COMDAT
+    (__fastcall ecx/eax, xmm0 return) that our base never produces (base operator| is plain __cdecl x87). STATE
+    stays 65.38% PARTIAL with the correct source. Full trail: docs/.../game_core/get_additional_length.md.

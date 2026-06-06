@@ -76,11 +76,54 @@ its real caller, is still STUB). Forward-declared in the survarium decl block.
    codegen. Not steerable from this function's source (assembly_patterns.md, the
    vectora::size/is_aimed/fixed_string inline-vs-call class). Source is correct.
 
+## Re-investigation (structure-verifier challenge to the LTCG label)
+
+The structure verifier (docs/.../structure/get_additional_length.md) claimed the residual is
+caller-source-steerable (inline-vs-call of an inline COMDAT) and pushed for a rewrite. I ran the
+experiments. Verdict: the verifier's premise is EMPIRICALLY FALSE - no caller-source form both keeps
+the correct `operator|` symbol AND emits it as the target's out-of-line call. Detail:
+
+Forms tried (each a full rebuild, watchdog --stall 150, this worktree's report.json):
+1. `upleg_dir | -leg_dir`                  -> 65.375%. operator| INLINED at the call site.
+2. `math::operator |( upleg_dir, -leg_dir )` (explicit operator-call syntax, SAME symbol)
+                                            -> 65.375%. Byte-identical to form 1; still inlined.
+3. `math::dot_product( upleg_dir, -leg_dir )` -> 90.4%. BUT binds to the TEMPLATE
+   `vostok::math::dot_product<vostok::math::float3>` (math_functions_inline.h:16), which overload
+   resolution prefers over the non-template free `dot_product(float3_pod const&, float3_pod const&)`
+   (float3 is an exact `T` match; the non-template needs a float3->float3_pod base conversion). That
+   template is emitted as a `__cdecl` call (push/push, x87 `fstp` return) - NOT operator|.
+
+DECISIVE: the TARGET binary's rich index has NO `dot_product<float3>` template symbol at all - only
+`operator|` (rva 0x8160) and the member `float3_pod::dot_product` (rva 0x8130). So the original source
+did NOT write `dot_product(a,b)` (that would instantiate+emit the template). It wrote `a | b`. Form 3's
+90.4% is a coincidentally-higher score over a FABRICATED function that does not exist in the target -
+forbidden by the "reproduce exactly, never coincidentally-higher %" rule. Rejected; reverted to form 1.
+
+Why the correct form can't be steered to the target bytes:
+- TARGET `operator|` (0x8160) is a `__fastcall`-style COMDAT (ecx=left, eax=right, returns in xmm0),
+  emitted out-of-line and CALLED at this site. Its sibling member `dot_product` (0x8130) is likewise a
+  custom-convention COMDAT (eax=this/left, ecx=right). These custom calling conventions are LTCG
+  whole-program convention promotions on internal/COMDAT helpers.
+- BASE `operator|` standalone (0x37000) is plain `__cdecl` x87 `/Od` - our base build did NOT apply the
+  same LTCG convention promotion, and at this call site `/Ob2` INLINES operator| (SSE arithmetic).
+- The two divergences (per-call-site inline-vs-call + the fastcall-vs-cdecl convention) are both
+  whole-program/linker decisions. No caller-source spelling reaches them: every form that keeps the
+  `operator|` symbol inlines (forms 1,2), and the only form that calls (form 3) is a different function.
+
+Build config note: game_core `Master Gold|Win32` is `Optimization="0"` (/Od) BUT
+`InlineFunctionExpansion="2"` (/Ob2) + `EnableEnhancedInstructionSet="2"` (SSE2) + intrinsics +
+WholeProgramOptimization (/GL). So despite "/Od", /Ob2 DOES inline `inline` helpers - which is why
+operator| inlines in our base. (README's "/Od" is shorthand; /Ob2 is on.)
+
 ## Outcome
-STATE[65.38%|PARTIAL]: residual = `operator|` (dot) inlined in base, called in target -
-per-call-site whole-program LTCG inline-vs-call of a trivial COMDAT; both binaries keep
-the standalone operator|. Source `upleg_dir | -leg_dir` is correct; every other statement,
-all constants, and the ternary control flow are byte-exact.
-Regressions caused: none (report-changes shows only `basic_streambuf::imbue` 100->0, an
-unrelated CRT/STL streambuf function I did not touch - a build-ordering report flake).
-Inlining: the single `operator|` call site (whole-program, unsteerable).
+STATE[65.38%|PARTIAL]: honest match for the CORRECT source `upleg_dir | -leg_dir`. Residual = the
+`operator|` (float3 dot) COMDAT is (a) inlined at this call site in base while the target calls it
+out-of-line, and (b) emitted by the target as an LTCG-convention-promoted `__fastcall`(ecx/eax, xmm0)
+COMDAT that our base never produces (base operator| is plain __cdecl x87). Both are whole-program
+LTCG/linker decisions, NOT caller-source-steerable: the only source form that raises the % (90.4% via
+`dot_product(a,b)`) fabricates a `dot_product<float3>` template that does not exist in the target and
+is rejected per the never-coincidentally-higher-% rule. Every other statement, all three constants
+(1.0f/0.5f/epsilon_5) and the ternary control flow are byte-exact.
+Regressions caused: none attributable to this one-line statement (report-changes shows only the usual
+COMDAT-folding/build-ordering flakes on unrelated `scalar deleting destructor`/`empty_stub` symbols).
+The .cpp source is unchanged from the committed state.
