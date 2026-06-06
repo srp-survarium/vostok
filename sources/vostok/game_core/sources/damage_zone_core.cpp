@@ -111,14 +111,12 @@ float distance_from_sphere_center_to_point_on_shape( float radius )
 	return radius;
 }
 
-// STATE[77.9%|PARTIAL]: claude@NOTE: structure 1:1 with target carcass. Residual
-// is the documented /Od /Ob2 /Oi /Oy /GL whole-program inline wall: our base
-// inlines the tiny inline float3_pod::dot_product at the call site (scalar
-// mulss/addss) while target's LTCG link kept it OUT-OF-LINE (call); the inlined
-// temp shifts the frame size + cascades operand order downstream. Plus the folded
-// xyz() accessor thunk is renamed by the delinker (byte-identical call). NOT
-// call-arg LTCG and not de-inlinable from this TU. report.json does not pair this
-// free fn (target obj names it demangled, base obj mangled); % from pdb_fetch diff.
+// STATE[77.9%|PARTIAL]: whole-program inline wall - base inlines float3_pod::dot_product
+// at the call site (scalar mulss/addss), target keeps the out-of-line call (verified:
+// target `call dot_product` @0x9b; both indexes keep a standalone copy, a per-call-site
+// /Ob2 /GL decision). Tail operator- operand order then mis-aligns. report.json lists
+// this free fn target-only (% from pdb_fetch diff). Full rationale in the .md.
+// claude@NOTE: box frame is 5Ch on BOTH sides - the single inline does not grow it.
 float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
 {
 	float3 dir			= source_position - transform.c.xyz( );
@@ -167,14 +165,11 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 	// ******
 }
 
-// STATE[44.0%|PARTIAL]: claude@NOTE: structure 1:1 with target carcass. Residual
-// is the documented /Od /Ob2 /Oi /Oy /GL whole-program inline wall: base inlines
-// the two inline float3_pod::dot_product on the proj_to_y_axis line (scalar
-// mulss/addss) while target's LTCG link kept both OUT-OF-LINE (call). The inlined
-// temps grow the frame (sub esp,0F8h base vs 0F4h target) which then cascades a
-// stack-offset shift + operator- operand-passing order through the rest of the
-// body. Plus folded xyz() thunk renaming. NOT call-arg LTCG, not de-inlinable from
-// this TU. report.json does not pair this free fn; % from pdb_fetch diff.
+// STATE[44.0%|PARTIAL]: whole-program inline wall - base inlines the TWO float3_pod::dot_product
+// on the proj_to_y_axis line (scalar mulss/addss), target keeps both out-of-line (verified:
+// 2x `call dot_product`). The inlined temps grow the frame (sub esp,0F8h base vs 0F4h target),
+// cascading a stack-offset + operand-order shift through the body. Per-call-site /Ob2 /GL,
+// not de-inlinable from this TU. report.json lists target-only (% from pdb_fetch diff). See .md.
 float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				half_length,
@@ -219,14 +214,11 @@ float distance_from_capsule_center_to_point_on_shape(
 	// ******
 }
 
-// STATE[40.3%|PARTIAL]: claude@NOTE: structure 1:1 with target carcass. Residual
-// is the documented /Od /Ob2 /Oi /Oy /GL whole-program inline wall: base inlines
-// THREE inline float3_pod::dot_product (two on proj_to_y_axis, one on the proj
-// line y_axis.dot_product(circle_point_dir)) while target's LTCG link kept all
-// three OUT-OF-LINE (call). The inlined temps grow the frame (sub esp,10Ch base vs
-// 108h target) and cascade stack-offset + operand-order shifts through the body.
-// Plus folded xyz() thunk renaming. NOT call-arg LTCG, not de-inlinable from this
-// TU. report.json does not pair this free fn; % from pdb_fetch diff.
+// STATE[40.3%|PARTIAL]: whole-program inline wall - base inlines THREE float3_pod::dot_product
+// (two on proj_to_y_axis, one on the proj line y_axis.dot_product(circle_point_dir)), target
+// keeps all three out-of-line (verified: 3x `call dot_product`). The inlined temps grow the
+// frame (sub esp,10Ch base vs 108h target) and cascade stack-offset + operand-order shifts.
+// Per-call-site /Ob2 /GL, not de-inlinable from this TU. report.json target-only. See .md.
 float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				radius,

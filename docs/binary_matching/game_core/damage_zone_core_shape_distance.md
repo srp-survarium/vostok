@@ -47,8 +47,12 @@ target's demangled entry. The authoritative signal here is therefore the
 - v1 `axis.dot_product(dir)`: 77.9% (88/113). Diffs: (a) the 3 `xyz()` accessor
   calls resolve to differently-named folded thunks (cosmetic delinker naming,
   byte-identical call site); (b) base INLINED `axis.dot_product(dir)` to scalar
-  `mulss` while target kept a real `call float3_pod::dot_product`; tail operand
-  order then mis-aligns from the size delta.
+  `mulss` while target kept a real `call float3_pod::dot_product` @0x9b; (c) the
+  tail `( result - transform.c.xyz() ).length()` `operator-` swaps its two register
+  operands (base `mov ecx,eax; lea edx,[ebp-18h]` vs target `lea ecx,[ebp-18h]; mov
+  edx,eax`) - a call-boundary arg-passing diff, NOT a frame-size cascade (box frame
+  is 5Ch on BOTH sides; the single inline reuses existing slots and does not grow
+  it - corrected in review, the box rationale earlier said "size delta").
 - v2 `dir.dot_product(axis)`: 77.9%, same. Call object does NOT steer the inline.
 
 ## ROOT CAUSE (claude, 2026-06-06): /Od /Ob2 /Oi /Oy /GL whole-program inline wall
