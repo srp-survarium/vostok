@@ -162,6 +162,12 @@ namespace vostok { namespace ai {
 namespace survarium
 {
 	player_logic_base_state::~player_logic_base_state( ) { }
+
+	// claude@NOTE: anchors for damage_zone_core's free shape-distance helpers.
+	float distance_from_sphere_center_to_point_on_shape( float radius );
+	float distance_from_box_center_to_point_on_shape( vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const& );
+	float distance_from_capsule_center_to_point_on_shape( vostok::math::float4x4 const&, float, float, vostok::math::float3 const& );
+	float distance_from_cylinder_center_to_point_on_shape( vostok::math::float4x4 const&, float, float, vostok::math::float3 const& );
 }
 
 namespace vostok
@@ -362,6 +368,15 @@ namespace vostok
 
 		survarium::hit_receiver_info hit_receiver_info( NULL, NULL );
 		hit_receiver_info == hit_receiver_info;
+
+		typedef float (*shape_fn0)( float );
+		typedef float (*shape_fn1)( vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const& );
+		typedef float (*shape_fn2)( vostok::math::float4x4 const&, float, float, vostok::math::float3 const& );
+		volatile shape_fn0 p0 = &survarium::distance_from_sphere_center_to_point_on_shape;
+		volatile shape_fn1 p1 = &survarium::distance_from_box_center_to_point_on_shape;
+		volatile shape_fn2 p2 = &survarium::distance_from_capsule_center_to_point_on_shape;
+		volatile shape_fn2 p3 = &survarium::distance_from_cylinder_center_to_point_on_shape;
+		(void)p0; (void)p1; (void)p2; (void)p3;
 	}
 
 	void use_generic_anomaly_core( )

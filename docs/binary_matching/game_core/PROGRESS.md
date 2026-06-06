@@ -890,3 +890,24 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   send_game_world_object / deserialize_game_world_object remain BLOCKED (udp_match_packet/
   packet_reader never-compiled cluster) - untouched.
   Regressions: none - final report-changes 0 regressed.
+- damage_zone_core shape-distance helpers (4 free geometric helpers, ONE unit;
+  branch match/game_core-damage_zone_core off origin/int/game_core). Anchored in
+  temp_include_all.cpp (fwd-decl in namespace survarium + volatile fn-ptr address
+  take in use_damage_zone_core). NOTE: report.json does NOT pair these - the TARGET
+  obj names them DEMANGLED (survarium::distance_from_box_center_to_point_on_shape)
+  while the MSVC base obj uses the decorated name; objdiff pairs by exact string so
+  they list as target-only (-1.00). Authoritative % is pdb_fetch --view diff.
+    distance_from_sphere_center_to_point_on_shape   100%   DONE     (return radius; 5/5 instrs.)
+    distance_from_box_center_to_point_on_shape      77.9%  PARTIAL  (structure 1:1 with carcass. Residual = /Od /Ob2 /Oi /Oy /GL whole-program inline wall: base inlines the tiny inline float3_pod::dot_product at the call site (scalar mulss/addss), target keeps it OUT-OF-LINE (call `dot_product` @0x9b); frame is 5Ch on BOTH sides here (the single inline reuses existing slots, does NOT grow it), only the tail operator- operand order mis-aligns; plus folded xyz() accessor thunk renaming. NOT call-arg LTCG, not de-inlinable from TU. 88/113. [review: corrected the box frame-shift claim - box does not shift, only capsule/cylinder do.])
+    distance_from_capsule_center_to_point_on_shape  44.0%  PARTIAL  (same wall: base inlines TWO float3_pod::dot_product on proj_to_y_axis line; sub esp,0F8h base vs 0F4h target; cascading stack-offset + operator- operand-order shift. 102/232.)
+    distance_from_cylinder_center_to_point_on_shape 40.3%  PARTIAL  (same wall: base inlines THREE float3_pod::dot_product (2 on proj_to_y_axis, 1 on proj line y_axis.dot_product(circle_point_dir)); sub esp,10Ch base vs 108h target; cascade. 102/253.)
+  Proof of wall: standalone float3_pod::dot_product diverges 0/30 (0.0%) between sides
+  - base (rva 0x36d10) is /Od x87 thiscall (push ebp; fld/fmul; ret 4), target (rva
+  0x08130) is optimized register-arg SSE (eax/ecx, movss/mulss, ret). Target call sites
+  pass args in eax/ecx (optimized convention). Same documented wall as
+  weapon_core_reload_state / pistol_weapon_core_reload_state. Only lever would be
+  #pragma auto_inline(off), which the original source did not use. add_single_result
+  + hit_on_* left STUB (need .cpp-local dz_bone_data_contact_test_predicate vtable
+  anchored; deferred to a hit_on_* unit). Full notes:
+  docs/binary_matching/game_core/damage_zone_core_shape_distance.md.
+  Regressions: none - report-changes 0 regressed / 0 improved / 0 removed / 0 added.
