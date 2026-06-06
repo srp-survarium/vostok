@@ -450,6 +450,19 @@ Same class as `vectora::size()`/`is_aimed()`/`fixed_string` ctor inline-vs-call.
 already correct; mark PARTIAL. Confirmed in `game_core/survarium::get_additional_length` (target rva
 0x0bb1f0, 65.38% PARTIAL): the lone diff is the inlined `upleg_dir | -leg_dir` dot.
 
+RE-CONFIRMED (don't re-litigate): a structure verifier re-challenged this as "caller-source-steerable,
+not LTCG". It is NOT. Three forms rebuilt: `a|b` and explicit `operator|(a,b)` both INLINE -> 65.375%;
+`dot_product(a,b)` -> 90.4% BUT binds the TEMPLATE `dot_product<float3>` (math_functions_inline.h:16,
+preferred over the non-template free `dot_product(float3_pod const&,...)` because float3 is an exact T
+match) which is emitted `__cdecl` (push/push, x87) - a DIFFERENT function. The TARGET binary has NO
+`dot_product<float3>` symbol (only `operator|` 0x8160 + member `dot_product` 0x8130), so the original
+wrote `a|b`; the 90.4% is a coincidentally-higher % over a FABRICATED function and is forbidden. Two
+real residuals, both whole-program LTCG: (1) per-site inline-vs-call, AND (2) the target's `operator|`
+is an LTCG calling-convention-promoted COMDAT (`__fastcall` ecx=left/eax=right, xmm0 return) while our
+base operator| standalone is plain `__cdecl` x87 - our base build never applies that promotion. No
+caller spelling reaches either. (Note: game_core `Master Gold` is /Od but /Ob2=InlineFunctionExpansion=2
+is ON, which is why an `inline` helper inlines at all under nominal "/Od".)
+
 ### empty function body
 ASM:
     push  ebp
