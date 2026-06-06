@@ -102,6 +102,7 @@
 #include <vostok/game_core/pistol_weapon_core_reload_state.h>
 #include <vostok/game_core/double_barreled_weapon_core_fire_state.h>
 #include <vostok/game_core/double_barreled_weapon_core_aimed_fire_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_reload_state.h>
 #include <vostok/game_core/weapon_core_fire_state.h>
 #include <vostok/game_core/weapon_core_aimed_fire_state.h>
 #include <vostok/game_core/weapon_core.h>
@@ -890,6 +891,24 @@ namespace vostok
 		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::double_barreled_weapon_core_aimed_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
+	}
+
+	void use_game_core_double_barreled_weapon_core_reload_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 16 ];
+		survarium::double_barreled_weapon_core_reload_state	state( weapon, 1.0f, animations, 16 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::double_barreled_weapon_core_reload_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::double_barreled_weapon_core_reload_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::double_barreled_weapon_core_reload_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::double_barreled_weapon_core_reload_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::double_barreled_weapon_core_reload_state*	object	= cook->cook_type::new_object( buffer, params, animations, 16 );
 	}
 
 	void use_game_core_weapon_core_fire_state( )
@@ -2304,6 +2323,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_pistol_weapon_core_reload_state( );
 	vostok::use_game_core_double_barreled_weapon_core_fire_state( );
 	vostok::use_game_core_double_barreled_weapon_core_aimed_fire_state( );
+	vostok::use_game_core_double_barreled_weapon_core_reload_state( );
 
 	vostok::use_game_core_weapon_core_fire_state( );
 	vostok::use_game_core_weapon_core_aimed_fire_state( );
