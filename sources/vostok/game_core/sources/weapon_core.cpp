@@ -121,6 +121,15 @@ void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 	m_magazine_capacity = magazine_capacity;
 }
 
+// STATE[100%|DONE]
+// claude@NOTE: out-of-line so reset_fire_queue emits `call fire_queue_length`
+// instead of inlining the m_weapon_fire_queue_types[m_fire_queue_type] read
+// (matches the target's standalone symbol @0x09b290).
+u16 weapon_core::fire_queue_length( ) const
+{
+	return m_weapon_fire_queue_types[m_fire_queue_type];
+}
+
 // STATE[95.69%|INPROGRESS]: full FSM body written (10 add_state + 72 add_transition via boost::bind); residual is the boost::function Form-A vs Form-B construction shape across transitions; see weapon_core_initialize_weapon_logic.md
 void weapon_core::initialize_weapon_logic(
 	weapon_core_base_state_ptr const&	inactive_state,
@@ -730,49 +739,27 @@ void weapon_core::unload_ammo( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_reload()
+// STATE[100%|DONE]
 void weapon_core::instant_reload( )
 {
-	// CALL SITE INFO
-	// <0x5a5867> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a5847>|0x007|+0x00a:'473'
-	// <0>
-	// <0x5a5851>|0x011|+0x008:'475'
-	// <0>
-	// <0x5a5859>|0x019|+0x010:'477'
-	// <0>
-	// <0x5a5869>|0x029|+0x00e:'479'
-	// <0x5a5877>|0x037|+0x00e:'480'
-	// <0>
-	// <0x5a5885>|0x045|+0x008:'482'
-	// ******
+	m_aimed = false;
+	load_magazine( );
+	on_reload( );
+	m_recoil_calculator.reload( );
+	m_dispersion_calculator.reload( );
+	reset_fire_queue( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_chamber_a_round()
+// STATE[100%|DONE]
 void weapon_core::instant_chamber_a_round( )
 {
-	// CALL SITE INFO
-	// <0x5a3391> -> void <unknown>()
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
 
-	// FUNCTION BODY
-	// <0x5a3359>|0x009|+0x00c:'487'
-	// <0x5a3365>|0x015|+0x00c:'488'
-	// <0>
-	// <0x5a3371>|0x021|+0x00a:'490'
-	// <0>
-	// <0x5a337b>|0x02b|+0x008:'492'
-	// <0>
-	// <0x5a3383>|0x033|+0x010:'494'
-	// <0>
-	// <0x5a3393>|0x043|+0x00e:'496'
-	// <0>
-	// ******
+	m_aimed = false;
+	chamber_a_round( );
+	on_chamber_a_round( );
+	m_recoil_calculator.chamber_a_round( );
 }
 
 // STATE[STUB]
@@ -1013,24 +1000,23 @@ void weapon_core::set_target( weapon_targets target )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::reset_fire_queue()
+// STATE[99.65%|PARTIAL]: every instruction/op/order byte-identical; sole residual = register
+// choice (eax vs ecx for `this` at the fire_queue_length call) + stack-slot NUMBERING in the
+// else-branch min (target [ebp-2]/[ebp-6]/[ebp-4], base [ebp-4]/[ebp-8]/[ebp-6]); same 3-slot
+// structure. Allocator nondeterminism, not source-steerable. See weapon_core_instant_batch6.md
 void weapon_core::reset_fire_queue( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x5a2f49>|0x009|+0x012:'677'
-	// <0>
-	// <0x5a2f5b>|0x01b|+0x014:'679'
-	// <0x5a2f6f>|0x02f|+0x00e:'680'
-	// <0x5a2f7d>|0x03d|+0x018:'681'
-	// <0>
-	// <0x5a2f95>|0x055|+0x002:'683'
-	// <0x5a2f97>|0x057|+0x061:'684'
-	// <0>
-	// <1>
-	// ******
+	if ( fire_queue_length( ) == 0xff )
+	{
+		m_bullets_in_queue = m_ammo_in_magazine;
+		if ( m_is_round_chambered )
+			++m_bullets_in_queue;
+	}
+	else
+	{
+		u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
+		m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue );
+	}
 }
 
 // STATE[100%|DONE]
@@ -1675,15 +1661,10 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::instant_idle_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::instant_idle_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a4e49>|0x009|+0x03d:'1166'
-	// ******
+	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
 // STATE[STUB]
@@ -2030,20 +2011,12 @@ void weapon_core::on_user_sprint( bool user_is_sprinting )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_idle_start()
+// STATE[100%|DONE]
 void weapon_core::instant_idle_start( )
 {
-	// CALL SITE INFO
-	// <0x5a3188> -> player_input const& <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a3167>|0x007|+0x00a:'1378'
-	// <0>
-	// <0x5a3171>|0x011|+0x021:'1380'
-	// <0x5a3192>|0x032|+0x008:'1381'
-	// ******
+	m_is_idle = true;
+	if ( !( m_user->input( ).actions_mask & 0x20 ) )
+		reset_fire_queue( );
 }
 
 // STATE[100%|DONE]

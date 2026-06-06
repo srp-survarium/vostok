@@ -1108,3 +1108,21 @@ then the member-accessor ASSERT call, then `mov [slot], eax` - it stores a POINT
 sub-object, never copies the full struct to the stack. A full-struct hoist allocates an extra
 NRV stack slot the target never uses and REGRESSES the match. (process_hand: full-float4x4 hoist
 89.69 -> 89.54; the .c.xyz() reference hoist 89.54 -> 90.37, restoring 37==37 statements.)
+## bool-added-to-int with neg;sbb;neg = source wrote `(b != 0)`, not a bare bool
+When the target adds a `bool` member to an integer and emits `neg eax; sbb eax,eax; neg eax`
+(the `(x != 0)` normalize-to-0/1 idiom) BEFORE the `add`, the source did NOT write the bare
+`int + boolmember` (that compiles to a direct add of the already-0/1 bool, no normalize). Write
+the comparison explicitly: `int_expr + ( boolmember != 0 )`. (Found in weapon_core::reset_fire_queue
+else-branch `m_ammo_in_magazine + ( m_is_round_chambered != 0 )`: bare `+ m_is_round_chambered` gave
+a direct add @94%, `+ ( ... != 0 )` reproduced the neg;sbb;neg -> 99.65%.) Note the SAME bool in the
+sibling `if (m_is_round_chambered) ++...` branch reads direct (no normalize) - the normalize is
+specific to the arithmetic-add context.
+
+## header-inline accessor the target keeps as a `call` -> move the body to the .cpp
+If a trivial member accessor is `inline { return m_x; }` in the header but the target has a real
+standalone symbol for it AND a caller emits `call accessor` (not the inlined member read), move the
+definition out of the header into the .cpp (leave a forward decl in the header). The out-of-line .cpp
+definition makes /GL stop inlining it at the call site. (weapon_core::fire_queue_length: inline-in-header
+made reset_fire_queue inline `m_weapon_fire_queue_types[m_fire_queue_type]` @66%; out-lining it produced
+the two `call fire_queue_length` the target has. Same pattern as the pre-existing ammo_in_magazine /
+get_magazine_capacity NOTEs.) Confirm first the accessor is a real target symbol (pdb_rich_query --list).
