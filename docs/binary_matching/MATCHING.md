@@ -139,15 +139,20 @@ It emits a real `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` sequence
 (The delinker may misname `empty_stub` as `finalize_impl` etc. - don't take it
 literally.) Confirmed house style: `booby_trap_core.cpp` / `inventory_cook.cpp` map
 `ASSERT( UNKNOWN_EXPRESSION );` to a real `+0x0c` slot.
-- `ASSERT( UNKNOWN_EXPRESSION )` - a condition was here but you don't know it; this
-  alone reproduces the `call empty_stub` bytes (the condition is discarded).
-- `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` - prefer this: the `_T` form holds
-  your *guess* of the condition (risk-free, discarded). Guess what was asserted.
+- `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` - **almost always use this.** The `_T`
+  form holds your *guess* of the asserted condition (discarded, so byte-identical and
+  risk-free) and documents intent. ALWAYS try to infer the guess from the function
+  name / params / context - a non-null `this`/arg, a valid index, an in-range enum, a
+  non-empty container, `value_exists(cfg[...])`, etc.
+- `ASSERT( UNKNOWN_EXPRESSION )` - the bare fallback ONLY when you genuinely cannot
+  guess; it alone still reproduces the `call empty_stub` bytes.
 When you see the `empty_stub` sequence at a statement, place an `ASSERT(...)` there.
 
-`UNKNOWN_EXPRESSION` / `_T` are intentionally **undefined** - never define or
-"fix" them. Add `STATIC_SIZE_ASSERT( type, 0xNN )` after each reconstructed
-struct to pin its PDB size.
+`UNKNOWN_EXPRESSION` / `_T` are already **defined** and pch-provided (in
+`vostok/debug/macros.h`: `UNKNOWN_EXPRESSION` = `true`, `UNKNOWN_EXPRESSION_T( e )`
+= `( true ? true : !!e )`) - just USE them, never `#include`, redefine, or "fix"
+them. Add `STATIC_SIZE_ASSERT( type, 0xNN )` after each reconstructed struct to pin
+its PDB size.
 
 ## Switch statements - case-body braces change codegen
 The bracket style around a `case` body changes codegen/structure. **Read the carcass
@@ -277,17 +282,26 @@ emitted a block-open the target structure lacked - the target was an early `if (
 return;` guard, no braces - and the 76.80% hid it. The fix is a source restructure, not a %
 to bank.)
 
-**Keep the target structure inline when the match is NOT 100%.** If a function
-ends `PARTIAL` / `INPROGRESS` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY`
-block (and, for the diverging region, the relevant `pdb_fetch --view target` asm as
-a comment) in the source above/inside it, so the next reader has the full divergence
-context in place - not buried in a PR or a log. This is the existing house style; see
-`collision_sensor.cpp`, `player_stamina.cpp`, `damage_model.cpp`. Only a clean
-**100% DONE** match may delete the carcass for tidiness.
+**Carcass handoff (NOT 100%): the matcher DELETES the carcass; the structure-verifier
+embeds the structure-diff.** The matcher reads the STUB's `// FUNCTION BODY` carcass for
+the shape clues below, then deletes it when done - it does not preserve or annotate it.
+The structure-verifier then embeds the two-sided condensed structure-diff (next), which
+carries the divergence context the carcass used to (and whose presence marks that the
+verifier ran). A clean 100% DONE carries neither.
 
-**When the match is NOT 100%, PRESERVE the `// FUNCTION BODY` block verbatim -
-including its `<0> <1> <2>` marker lines. Never strip them** (a clean 100% DONE deletes
-the carcass entirely, per the rule just above). A `<N>` (no address) line is a statement/sub-expression
+**Preferred for a non-100% function: the two-sided condensed structure-diff** (it
+supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
+structure-diff --condensed` and paste its output, `// `-prefixed, in place of the
+carcass: it shows target-vs-base aligned with the matched runs collapsed to
+`.. same ..` and each divergence as `0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
+{stmt}   {SIZE|ONLY base|ONLY target|EMPTY only ...}`. That way the reader sees exactly
+where our build diverges from the target, not just the target shape. **Standard shape:
+the tool's `--condensed` output VERBATIM, then exactly one `// VERDICT: STRUCTURE
+<MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>` line; all detail lives in the
+per-function `.md`, never inline.** (The structure-verifier produces and owns these.)
+
+**Reading the STUB carcass (before you delete it)** - its markers are shape clues you
+need for the match. A `<N>` (no address) line is a statement/sub-expression
 the compiler set no breakpoint on (inlined, optimized out, or a continuation); its
 count and grouping between two addressed lines are a *structural clue* (an inlined
 call, a nested scope, a fall-through `jmp` thunk). When you record which statement a

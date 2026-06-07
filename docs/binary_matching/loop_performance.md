@@ -4,21 +4,25 @@ Shared, append-only notes on **making the match loop faster** — so each run wa
 less than the last. This is the process/time analogue of
 [`assembly_patterns.md`](assembly_patterns.md) (which is for asm→source mappings).
 
-When a worker discovers anything that lets a future match need **fewer rebuilds**
-or less waiting — a wiring trick, a step that turned out unnecessary, a cheaper
-way to get the same signal — it appends a one- to three-line entry here. Keep it
-concrete and actionable.
+When a worker discovers anything that lets a future match converge in **fewer
+iterations** or with less wasted work — a wiring trick, a step that turned out
+unnecessary, a cheaper way to get the same signal — it appends a one- to three-line
+entry here. Keep it concrete and actionable.
 
 ## What costs the time
 
-- **`rebuild.py` is the dominant cost, and it is ~fixed per call** regardless of
-  how small the function is. One invocation recompiles the whole changed module
-  under Wine *and* reruns the delinker over the entire EXE to regenerate
-  `binaries/objdiff/base` + `binaries/rich/base`. Budget ~10–15 min each.
-- Therefore: **minimize the number of `rebuild.py` calls.** Everything else
-  (reading target asm, writing the body, diffing) is cheap by comparison.
+- The dominant cost is now **token consumption** (agent context re-read on each
+  iteration), NOT the rebuild. A full `rebuild.py` (recompile the changed module
+  under Wine + rerun the delinker over the EXE to regenerate `binaries/objdiff/base`
+  + `binaries/rich/base`) is ~10 min and runs in the **background** — it is not the
+  thing to obsess over minimizing.
+- Therefore: **get the function RIGHT in as few iterations as possible** — each wrong
+  iteration means re-reading the target/context (tokens) and another wait. Reading
+  target asm, writing the body, diffing are all cheap; a wasted *iteration* is the
+  expensive part. (The tips below still apply: they were written as "saves a rebuild"
+  but the real win is saving an iteration.)
 
-## How to need fewer rebuilds
+## How to converge in fewer iterations
 
 - **Get the body as right as you can before the *first* rebuild.** Read the target
   with `pdb_fetch --view structure/target/callees/info` and wire reachability in
@@ -68,7 +72,7 @@ _(Append new findings below this line.)_
   builds the full game (`survarium_-_PC_-_DirectX_11`) and relinks the EXE. The
   delinker/rich index read the linked **EXE**, so if you pass a module name the
   EXE is stale and your source change does not show up in `--view diff` or the
-  score (build finishes in ~1 min instead of ~20, and `report-changes.json` shows
+  score (build finishes in ~1 min instead of ~10, and `report-changes.json` shows
   `+0.00 / 0 changed` - the tell). Run **`python3 scripts/rebuild.py`** with no
   module arg so the EXE actually relinks. Cost me one wasted rebuild on
   `scheduler::on_frame`. (Note: the per-function loop doc's `rebuild.py <module>`
@@ -300,7 +304,7 @@ _(Append new findings below this line.)_
   trivials), NOT regressions - none touch your source. ANCHOR via member-fn ADDRESS-OF only
   (`&Class::method`), NEVER construct an instance: instantiating an fsm_state-derived class
   emits its vtable and forces codegen of any still-STUB non-void virtual (e.g.
-  `selected_animations`) -> C4716/LNK1257 link failure (cost me one full ~20-min relink).
+  `selected_animations`) -> C4716/LNK1257 link failure (cost me one full ~10-min relink).
   Whole unit (2 trivial overrides) done in effectively one productive rebuild this way.
 - **The inherited stack tip's `temp_include_all.cpp` may not even COMPILE - brace-balance-check it
   BEFORE your first rebuild (zero cost).** On `weapon_core_hide_state_base` the tip branch
@@ -313,10 +317,10 @@ _(Append new findings below this line.)_
   before building: `python3 -c "s=open('.../temp_include_all.cpp').read(); d=0; [exec('global d')]"` - or
   just iterate chars counting `{`/`}` and assert final depth 0, min depth never negative. Fixing the
   braces is safe (the anchor TU emits no matched bytes) and re-enabled ~89 dead-stripped anchors. Cost me
-  one wasted ~20-min rebuild discovering it.
+  one wasted ~10-min rebuild discovering it.
 - **For trivial virtual overrides, read the access char from the delinked TARGET `.h`-unit's OWN
   recovered symbol (report.json), not the ICF fold representative's rich-index mangling - and anchor with
-  a QUALIFIED CALL, never address-of.** Two facts each cost a ~20-min rebuild on the
+  a QUALIFIED CALL, never address-of.** Two facts each cost a ~10-min rebuild on the
   jump_logic_state_{landing,start} overrides: (1) `landing::is_ready_for_transition`'s rich-index fold
   rep was `UBE` (public) but its OWN recovered symbol in report.json is `EBE` (private) - I declared it
   public, scored None, rebuilt. Read `report.json`'s function list for the unit FIRST. (2) Address-of a

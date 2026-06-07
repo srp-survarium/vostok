@@ -108,9 +108,10 @@ pdb_fetch --target-index binaries/rich/target/index.jsonl \
 
 This is the reference ("rich") assembly you diff against: offset-prefixed
 instructions, each statement annotated with its byte size `; <0xNN>`. Other views:
-`structure` (statement skeleton only - the cheap signal to compare before writing
-code), `callees` (the function's call targets resolved to signatures - match those
-first), `info` (PDB-recorded locals).
+`structure-diff --condensed` (the two-sided target-vs-base statement diff - your FIRST
+stop on a non-100% function: it localizes WHICH statement diverges and HOW, see 2a),
+`structure` (one side's statement skeleton), `callees` (the function's call targets
+resolved to signatures - match those first), `info` (PDB-recorded locals).
 
 `binaries/rich/target` is built once at setup and never changes;
 `binaries/rich/base` is refreshed by every `rebuild.py`, so you always have a fresh
@@ -210,9 +211,9 @@ Target asm: <pdb-parser output, or the key fragment>
 
 ## Commands run (verbatim, in order)
 - pdb_rich_query --index ... --function ... --list
-- pdb_fetch --target-index ... --function ... --view structure
+- pdb_fetch --target-index ... --base-index ... --function ... --view structure-diff --condensed   # FIRST: where does structure diverge
 - python3 scripts/rebuild.py        # NO module arg - bare name skips the EXE relink (stale score)
-- pdb_fetch ... --view diff ...
+- pdb_fetch ... --view diff ...     # then: instruction-level cause at the diverging statement
 - ...
 
 ## Iterations (one block per source variant you tried)
