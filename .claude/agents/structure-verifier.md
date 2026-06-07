@@ -73,20 +73,26 @@ So for a PARTIAL/INPROGRESS/BLOCKED function you GENERATE and embed the condense
 structure-diff yourself (commented), inline above/in the function, so the divergence is
 visible (a clean 100% DONE carries nothing). **The embedded `// STRUCTURE DIFF` block IS
 the marker that you ran:** a non-100% function with none means no verifier has touched it
-yet. Real example
-(`legs_ik_processor::get_foot_fixed_transform`, 84%):
+yet.
+
+**STANDARD embed format - every function reads identically:**
+1. The diff block is the tool's `--condensed` output VERBATIM, `// `-prefixed. Do NOT
+   hand-edit rows, append per-row source text, or re-summarize. (`ONLY target` rows stay
+   `Lxx` - the target PDB has no source text, and guessing it is not reproducible.)
+2. Exactly ONE `// VERDICT:` line directly after the block, fixed grammar:
+   `// VERDICT: STRUCTURE <MATCH | MISMATCH (size|quantity|both|order)> - <terse cause / next-step>`
+   (optionally end with `trail: <fn>.md`).
+3. ALL detailed reasoning goes in the per-function `.md`, NEVER inline - the inline embed
+   stays terse and uniform.
+Real example (`get_additional_length`, 65%):
 ```
-// STRUCTURE DIFF[target 0x6ebae0 | base 0x514fb0]: target 87 / base 95 stmts
+// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 3 stmts
+// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
+// --          | <0>          |    EMPTY only base
 // .. same ..
-// 0x011 <0x3b> | 0x011 <0x47> | up_leg_world_matrix = matrices[...] * hip_world_matrix;   SIZE
-// .. same ..
-// 0x46e <0x16> | 0x50d <0xb>  | float3 start;                                              SIZE
-// 0x484 <0x32> | 0x518 <0xb>  | float3 finish;                                             SIZE
-// --          | 0x523 <0x19>  | math::color original_color( 0x80u,0xc8u,0,0 );             ONLY base
-// .. same ..
+// ; aligned 1, size-diffs 1, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs inlined, non-steerable. trail: get_additional_length.md
 ```
-That replaces the old `// FUNCTION BODY` block. Paste the tool's `--condensed` output
-verbatim under a `// ` prefix; do not re-summarize it.
 
 Caveats baked into the format (do not misread these as divergences):
 - Carcass `<VA>` addresses are BASE-build addresses, off the target rva by ~0x10000;
