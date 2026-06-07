@@ -96,3 +96,10 @@ Out of scope for this leaf.
 Regressions caused: none (comment-only edit; compiled bytes unchanged).
 Inlining: interactive_object::interactive_object() inlined into base ctor (target keeps
 it out-of-line at rva 0x9ccb0); not a cluster I can match from this function's source.
+
+## Re-verification (item/material structure-verifier batch)
+Re-ran structure-diff: target 0 / base 0 stmts, 0 size, 0 quantity = STRUCTURE MATCH.
+report.json still 78.8%. Refreshed the embed's base rva (0x449c20 -> 0x449760) and
+tightened the verdict wording. serialize/deserialize remain BLOCKED carcass stubs
+(real target bodies not yet written - matcher work). get_item_props confirmed 100%,
+carcass stripped. No logic change.
