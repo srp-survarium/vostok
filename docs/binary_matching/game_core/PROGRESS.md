@@ -355,3 +355,18 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     empty-function ICF gap as game_core_initialize - not LTCG, not a source mismatch.
   - Anchor: member-fn ADDRESS-OF only (no instance construction, which emits the vtable and forces codegen of
     the still-STUB selected_animations -> C4716/LNK1257). Stacked on #147.
+- game_core::jump_logic_state_{landing,start}::{execute,is_ready_for_transition} -> STATE[100%|DONE] -> PR #149 (regressions: none)
+  - four trivial header virtual overrides across two sibling fsm_state classes. Bytes verified byte-exact vs
+    target disasm: execute() empty `{ }` (both classes fold to target rva 0x1a800, the empty __thiscall frame);
+    landing::is_ready_for_transition() const `{ return false; }` (target rva 0xd2040, `xor al,al`);
+    start::is_ready_for_transition() const `{ return m_jump_interval_ended; }` (target rva 0xbd480,
+    `mov al,[eax+2Eh]` = member @0x2e, confirmed m_jump_interval_ended in the PDB structure header).
+  - objdiff/report.json reads both `.h` units `fuzzy: None` (current post-#150 delinker still None): /OPT:ICF
+    folds the trivial bodies whole-program (landing.h pairs only the fold reps `is_event@particle_action@@UBE_N`
+    + `tick@medkit@@EAE`; start.h keeps its own `is_ready_for_transition@jump_logic_state_start@@EBE_N` symbol
+    but the base side has no standalone to diff). Same documented empty-fn/ICF + LTCG-inline fold gap as #148 -
+    NOT a bankable LTCG arg residual, NOT a source mismatch.
+  - start::is_ready_for_transition mangles `EBE` (private const virtual) -> declared `private:`. Anchor uses a
+    QUALIFIED devirtualized call on a fabricated null ptr (address-of a virtual emits no body), befriended so it
+    can reach the private override; no instance constructed (would emit the vtable -> codegen the still-STUB
+    selected_animations -> C4716/LNK1257). Stacked on #148 (inactive overrides).

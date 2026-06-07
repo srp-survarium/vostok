@@ -279,6 +279,27 @@ makes the overrides private even when the base declares them public. Confirmed:
 (protected); `protected:` -> 100%. (To anchor private virtuals non-virtually from a free `use_*`,
 befriend the anchor in the class - free decls/friends emit no bytes.)
 
+### address-of a VIRTUAL member yields a vtable thunk, NOT the body (anchoring trap)
+`&Class::virtual_member` does NOT ODR-use the function body - a pointer-to-member of a
+virtual is a vtable index/thunk, so MSVC emits NOTHING for the body. An anchor built on
+`void (Class::*p)() = &Class::virtual_member; example_callback(&p);` leaves ZERO `Class::member`
+symbols in the obj (only the `use_*` anchor). To force the actual body without emitting the
+vtable (instantiating would emit the vtable -> codegen of any still-STUB sibling virtual ->
+C4716/LNK1257), use a QUALIFIED (devirtualized, non-virtual) call on a fabricated null pointer:
+`Class& s = *reinterpret_cast<Class*>(NULL); s.Class::member();`. That ODR-uses the exact body
+(emits the COMDAT) and never touches the vtable. Caveat: under /GL LTCG the linker then INLINES
+the trivial one-liner into the reachable anchor, so no standalone body survives to the EXE (the
+target keeps it standalone only because it is virtual in a LIVE vtable and can't be inlined there);
+the source is still byte-correct - confirm by disassembling the anchor and reading the inlined
+bytes. Confirmed on `jump_logic_state_{landing,start}::{execute,is_ready_for_transition}`.
+
+### read the delinked TARGET `.h`-unit's OWN recovered symbol for access, not the ICF fold rep
+A trivial virtual that ICF-folds shows the FOLD REPRESENTATIVE's mangling in the rich index
+(e.g. landing::is_ready_for_transition folds to `?is_datatype@particle_action@...@@UBE_NXZ`,
+public). But the delinker's per-unit target `.h`.obj keeps the function's OWN recovered symbol
+(`report.json` lists it): `?is_ready_for_transition@jump_logic_state_landing@survarium@@EBE_NXZ`
+(private). Trust the unit's own symbol for the access char, not the fold rep - they can disagree.
+
 ### derived state ctor: base-ctor delegation + N compiler-emitted vtable stores, empty body
 ASM (target, `weapon_core_idle_state_base` ctor, multiple-inheritance state class):
     push 0; mov eax,[ebp+8]; push eax; mov ecx,[ebp-4]
