@@ -133,3 +133,35 @@ Re-ran the five checks against `--view target`/`--view diff` and report.json
 - PROGRESS rva corrected (was the base-region `0x5a3130`; target rva is `0x597020`).
 - No stray logs; the chamber-a-round flag guards (`byte[+48Dh]`, `cmp [ebp-4],0`,
   nested `m_chamber_a_round_on_reload`) match the target's branch structure.
+
+## Structure-verifier pass (2026-06-07)
+- report.json now reads **97.94%** (the STATE marker was stale at 95.69%); synced.
+- `--view structure-diff --condensed`: target 141 / base 128 stmts; aligned 126,
+  size-diffs 1, quantity-diffs 15. ALL the quantity rows are line-attribution
+  artifacts: the conditional `add_state(chamber_a_round)` (L168/L169) and the nested
+  `if(m_is_there_chamber_a_round_state) if(!m_chamber_a_round_on_reload)` at L205-207
+  emit the SAME instructions on both sides - `--view diff` shows them byte-identical
+  modulo register naming (target attributes both nested tests to one source line at
+  0x1871 <0x2a>, base splits them into two L-rows of 0x15). No real structural
+  divergence, no missing/extra transition.
+- Residual to 100% is the boost::bind/boost::function transition-temp REGISTER
+  allocation: base inserts a `push esi` in the prologue and uses esi where the target
+  uses ecx, cascading the `~` register-rename across the 72 transitions (the Form-A vs
+  Form-B boost::function construction shape documented above).
+- NEXT STEP: localize the FIRST transition whose temp-ctor register choice diverges
+  and steer the boost::function construction form there; the rest cascade from it.
+- Carcass deleted and replaced with the standard condensed `// STRUCTURE DIFF` embed.
+
+## BLOCKED packet cluster (re-checked, still blocked)
+The orchestrator asked whether any BLOCKED serialize/deserialize is now compilable.
+Re-checked: `network_core/udp_match_packet.h` still does NOT compile standalone -
+`udp_match_client_session` is entirely undefined, the private base
+`packet<udp_match_packet>` hides `append()`, and the header's own note still lists
+the missing pieces. report.json scores these (e.g. reload serialize 57%,
+deserialize 56.7%) only because the EMPTY stub bodies pair by mangled name against
+the real target bodies - that is the stub-vs-body partial artifact, NOT a compiled
+match. `weapon_core_reload_state_base::serialize/deserialize` targets are tiny
+(`packet.append(m_animation_has_been_ended)` @+0x135 and `reader.r<bool>()` into
+@+0x135), but writing those bodies requires including the broken header, which would
+break the whole game_core build. Left BLOCKED per game_core/README.md; unblocking is
+a separate header-cluster work item.

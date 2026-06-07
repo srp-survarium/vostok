@@ -17,31 +17,18 @@ weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapo
 }
 
 // STATE[92%|PARTIAL]: LTCG inline-vs-call of the trivial accessor round_is_chambered().
-// Every statement, member offset (m_weapon@0x128, m_chamber_a_round_on_reload@0x48F,
-// m_is_round_chambered@0x48E) and the && short-circuit match the target byte-for-byte;
-// the sole residual is that the target keeps round_is_chambered() out-of-line
-// (target standalone @0x09b360, `call ...round_is_chambered`) while our /GL LTCG inlines
-// it (`mov cl,[eax+48Eh]`). chamber_a_round_on_reload() is inlined on BOTH sides (no
-// standalone in either), so it matches. Same unsteerable inline-vs-call class as
-// is_aimed()/get_user() (assembly_patterns.md). No source change steers it.
+// STRUCTURE DIFF[target 0x766720 | base 0x44d6b0]: target 6 / base 4 stmts
+// 0x011 <0xf> | 0x011 <0x43> | if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )   SIZE
+// 0x020 <0x2f> | --          | L31   ONLY target
+// .. same ..
+// ; aligned 3, size-diffs 1, quantity-diffs 2
+// VERDICT: STRUCTURE MATCH (shape ok) - every stmt, member offset and the && short-circuit are byte-exact; the SIZE/ONLY-target rows are the line-marker split of the same if-condition: at +0x43 the target keeps round_is_chambered() out-of-line (`call`, standalone @0x09b360) while our /GL link inlines it (`mov cl,[eax+48Eh]`). Same unsteerable inline-vs-call class as is_aimed()/get_user(). trail: weapon_core_reload_chamber_state_base.md
 void weapon_core_reload_state_base::initialize( )
 {
 	weapon_core_animation_end_aware_state::initialize( );
 
 	if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
 		m_weapon.unload_chambered_round( );
-
-	// FUNCTION BODY
-	// <0x776729>|0x009|+0x008:'27'		weapon_core_animation_end_aware_state::initialize( );
-	// <0>
-	// <0x776731>|0x011|+0x00f:'29'		if ( !deserializing( ) && chamber_a_round_on_reload( ) && round_is_chambered( ) )
-	// <0>
-	// <0x776740>|0x020|+0x02f:'31'		(the && term reads + the unload_chambered_round leaf)
-	// <0x77676f>|0x04f|+0x00e:'32'		m_weapon.unload_chambered_round( );
-	// <0>
-	// ******
-	// TARGET @0x43: mov ecx,[ebp-8]; mov eax,[ecx+128h]; call survarium::weapon_core::round_is_chambered
-	// BASE   @0x43: mov edx,[ebp-8]; mov eax,[edx+128h]; mov cl,[eax+48Eh]  (inlined accessor)
 }
 
 // STATE[100%|DONE]
