@@ -2040,12 +2040,13 @@ namespace vostok
 		vostok::resources::register_cook( &s_cook );
 		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
 
-		// claude@NOTE: create_requests_for_animations (the .cpp-local free helper) and the
-		// private on_config_loaded/on_animations_loaded callbacks read None: taking the free
-		// function's address through a fn-pointer does NOT force EXE emission under LTCG (the
-		// pointer is provably dead), and the on_* callbacks are only reachable through the
-		// still-stubbed translate_query/on_config_loaded boost::bind chain. They will be kept
-		// (and scorable) once translate_query/on_config_loaded are matched with real bodies.
+		// claude@NOTE: translate_query (real body) -> on_config_loaded (real body) ->
+		// create_requests_for_animations + on_animations_loaded -> get_animations_from_request_results<N>
+		// are now all emitted via the boost::bind chain kept by this anchor. The free
+		// create_requests/get_animations helpers still read 0% (per-obj pairing limit + ICF
+		// fold of the 4 identical template instances); the member fns are matched (translate_query
+		// 99.82, on_animations_loaded 99.97, on_config_loaded 91.05). See
+		// docs/binary_matching/game_core/weapon_user_animations_container_cook.md.
 	}
 
 	// booby_trap_core::get_speed is a PRIVATE virtual; befriended above so a
