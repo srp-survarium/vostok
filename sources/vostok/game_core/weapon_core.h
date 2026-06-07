@@ -84,7 +84,9 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling; /* no source */ }
 
-			bool								ready_to_reload					( ) const { return true; /* sushi@TODO: A LOT OF LOGIC */ }			// STATE[STUB]
+			// claude@NOTE: out-of-line (target symbol @0x0ac370) so callers emit `call ready_to_reload`
+			// instead of inlining the stub; matches can_and_must_reload_predicate's `call ready_to_reload`.
+			bool								ready_to_reload					( ) const;			// STATE[STUB]
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
 			weapon_targets						get_target						( ) const { return m_target; }										// STATE[STUB]
@@ -236,7 +238,9 @@ public:
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
+private:
 	virtual	bool								is_sprinting					( ) const override;
+public:
 
 	virtual	void								on_before_fire					( ) { /* no source */ }
 	virtual	void								on_after_fire					( ) { /* no source */ }
@@ -246,6 +250,7 @@ public:
 	virtual	void								on_hide							( ) { /* no source */ }
 	virtual	void								on_unload_chambered_round		( ) { /* no source */ }
 
+private:
 	virtual	void								on_skeleton_matrices_changed	(
 													u32					current_time_in_ms,
 													float4x4 const&		weapon_transform,
@@ -258,6 +263,7 @@ public:
 												);
 
 	virtual	void								process_finger_correction		( u32 current_time_in_ms, float4x4* user_matrices );
+public:
 
 			animation::mixing::expression		get_weapon_and_hands_animation_expression(
 													mutable_buffer&						buffer,
@@ -302,10 +308,9 @@ public:
 private:
 			bool								is_trying_to_aim				( ) const;
 			bool								is_not_trying_to_aim_predicate	( ) const;
-public:
-
 			bool								can_and_must_reload_predicate	( ) const;
 			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
+public:
 
 			void								load_ammo						( );
 
