@@ -1310,3 +1310,20 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     `dynamic initializer for s_recoil_use_pseudo_random_cc`  0%  WALL (cc_bool ctor called with LTCG register args - calling-convention boundary.)
   Regressions: none (report-changes 0 regressed). Net: 5 fns to 100%, 4 PARTIAL substantially
   improved, 1 enabled TU added to the build.
+
+### RE-MATCH 2026-06-07 (claude): double_barreled get_user_hands_expression structure fixes
+Two structure-verifier-confirmed STRUCTURE-WRONG functions already landed in int; fixed source shape
+so statement count matches target.
+
+    double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression
+        75.61% -> 79.39%   statements: base 14 -> 12 == target 12
+        FIX: chained ctor+setters into ONE statement (dropped named params local) like show/hide siblings.
+    double_barreled_weapon_core_hide_state::get_user_hands_expression
+        72.12% -> 72.12%   statements: base 8 -> 9 == target 9
+        FIX: split single captions array-literal into two separate assignment statements (L80+L81).
+        % walled by the out-of-line-setter inline wall (base 0x8f vs target 0x79); structure now correct.
+
+  Both residuals are the unsteerable whole-program inline-vs-call class (animation_lexeme_parameters
+  setters / weapon_core::get_user out-of-line in target, inlined in base). Structure now matches target
+  on both. Regressions: none caused by these edits (the 10 report-changes "regressed" are delink
+  address-flap noise on folded thunks/dtors, balanced by 61 improved; unrelated to game_core hands fns).

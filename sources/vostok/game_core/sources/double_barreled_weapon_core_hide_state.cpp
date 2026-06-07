@@ -117,15 +117,15 @@ weapon_lexeme_pair double_barreled_weapon_core_hide_state::get_weapon_lexeme_pai
 	);
 }
 
-// STATE[72.12%|PARTIAL]: control structure matches the target exactly - the type_sprint early-return of
-// expression(weapon_lexeme), the user_state_index, the animation_lexeme_parameters builder chain
-// (animated_object( m_weapon.get_user() ) / bones_mask(2) / playback_type) and the final
-// expression(override_lexeme). Residual is the shared-header whole-program inline wall: the target keeps
-// weapon_core::get_user() and the three animation_lexeme_parameters setters OUT-OF-LINE (real `call`s,
-// frame 0x110) while the base inlines them to direct member stores. Identical residual class to
-// double_barreled_weapon_core_show_state::get_user_hands_expression and the pistol hide sibling. Note:
-// the double_barreled hide get_user_hands_expression has NO linear_interpolator local (verified from asm),
-// unlike the pistol hide sibling. Forcing the shared setters out-of-line is out of this file's scope.
+// STATE[72.12%|PARTIAL]: structure now matches the target exactly - 9 statements both sides. The type_sprint
+// early-return of expression(weapon_lexeme), the user_state_index, and - per claude@MATCH - the captions
+// split into TWO separate assignment statements (target L80+L81, each 0x7 bytes) instead of one array-literal,
+// then the animation_lexeme_parameters builder chain (animated_object / bones_mask(2) / playback_type) and the
+// final expression(override_lexeme). Residual is the shared-header whole-program inline wall: the target keeps
+// weapon_core::get_user() and the three animation_lexeme_parameters setters OUT-OF-LINE (real `call`s, frame
+// 0x110) while the base inlines them to direct member stores (base setter statement 0x8f vs target 0x79).
+// Identical residual class to double_barreled_weapon_core_show_state::get_user_hands_expression. Note: the
+// double_barreled hide get_user_hands_expression has NO linear_interpolator local (verified from asm).
 animation::mixing::expression double_barreled_weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -139,7 +139,11 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::get_user_h
 
 	u32 user_state_index = user_state_id == type_crouch;
 
-	pcstr animation_captions[2] = { "stand_hide", "crouch_hide" };
+	// claude@MATCH: two separate caption assignments (target L80+L81, each a 0x7-byte store) instead of a
+	// single array-literal initializer - that gives the target's 9 statements (the array decl emits no code).
+	pcstr animation_captions[2];
+	animation_captions[0] = "stand_hide";
+	animation_captions[1] = "crouch_hide";
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(
