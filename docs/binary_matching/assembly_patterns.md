@@ -1124,3 +1124,18 @@ every later `[esp+N]` offset shifts because the extra temp/copy enlarges the fra
 so a SINGLE root cause shows up as many SIZE/quantity rows downstream. Diagnose once
 (one create_request site), then attribute the whole cascade to it. Mark PARTIAL;
 do not chase the downstream rows individually.
+
+### the ASSERT empty-stub call's COMDAT-fold MISNAME is scored MATCHED by report.json (don't chase it)
+SYMPTOM: `--view diff` flags the compiled-out `ASSERT` call's target as a mismatch -
+base resolves it to `boost::function1<void,char const*>::dummy::nonnull`, target to
+`vostok::memory::fixed_size_allocator<...>::finalize_impl` (or other unrelated COMDAT-
+fold names). It looks like a divergence on EVERY function in a unit that has an ASSERT.
+TELL it is harmless: the same misname appears identically in the unit's 100% functions,
+and report.json's `fuzzy_match_percent` scores it as MATCHED (the reloc pairs at the
+fold representative). So a function whose ONLY `--view diff` flag is this ASSERT-call
+misname is 100% in report.json - do NOT bank it as a sub-100% wall. Confirmed across
+`game_core/collision_geometry.cpp` (get_overlapping_objects et al. - all 100% despite
+the misname). CAVEAT: read the TRUE % from report.json (`fuzzy_match_percent`), not from
+the `; N/M instructions equal` line `--view diff` prints (that operand-aware line counts
+the misname as unequal and reads ~85-88% while report.json reads 100%). STATE markers
+that quote the `--view diff` line are stale; re-confirm against report.json after rebuild.
