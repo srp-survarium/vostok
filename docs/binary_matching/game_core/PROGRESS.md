@@ -1070,3 +1070,23 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   empty boost binders) = ICF representative reshuffle from adding the boost::bind/function COMDATs
   (set differs each build). OVERALL UP: baseline fuzzy 48.728 / matched_code 27.447 / 8206 fns ->
   current 48.760 / 27.458 / 8207 fns (+1 fn, +matched bytes). honest match_score improves; no real loss.
+- body_part_parameters (data class; ONE unit; branch match/game_core-body_part_parameters off
+  origin/int/game_core). Already enabled + heavily matched on arrival (20/32 @100%). Survey pass:
+  drove the one definitively-winnable function to 100%, corrected one stale STATE, classified the rest.
+    protect_affect_predicate::operator()     0 -> 100   DONE   (byte-identical asm both sides; objdiff
+        could not PAIR them - mangled name differed by top-level pointer const: target QAU (`* const`)
+        vs base PAU (`*`). Fix: `operator()( damage_protector* const protector )`. Sibling
+        protect_damage_predicate::operator() already had `* const` and was already 100%.)
+    regenerate                               72.61      BLOCKED (was stale STATE[100%|DONE]; corrected.
+        Body matches statement-for-statement; sole residual: target keeps math::min(u32,u32) overload
+        @0x03fbb0 OUT-OF-LINE + CALLs it, our /Ob2 (rsp game_core_cl_0.rsp) inlines min->min_integral
+        sbb/neg/neg/and. Whole-program inline-heuristic, not steerable from this fn. +0x8 frame / slot
+        renames cascade from it. Same family as fill_new_stats_item/dump_state/fixed_string<46>.)
+  NOT touched (proven walls, classified in body_part_parameters.md):
+    dump_state(boost::function)  55%  - /Ob2 inlines boost::function4::operator() (target out-of-line).
+    fill_new_stats_item          91.78% - pre-existing BLOCKED on fixed_string<46>(char const*) inline.
+    dump_state(npc_statistics)   17%  - INPROGRESS, needs npc_statistics body-state member (cross-cutting).
+    serialize/deserialize/serialize_affect/deserialize_affect 0% - network_core packet wall (deferred;
+        header only fwd-decls udp_match_packet/packet_reader; bodies need packet::append / packet_reader::r<T>).
+    ctor 99.72% / hit_by_type 99.83% / get_hit_parameters 99.85% - stack-slot residuals (acceptable DONE-level).
+  Regressions: none - report-changes 0 regressed / 1 improved (protect_affect_predicate::operator 0->100) / 0 removed / 0 added.
