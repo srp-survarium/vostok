@@ -115,14 +115,28 @@ the numbers are always on hand.
 - Commit it as its own small housekeeping commit/PR (it is generated bookkeeping, not a
   source match) so it never muddies a match PR's one-commit shape.
 
-## Reviewing a matcher's work - the `reviewer` agent
-After a matcher finishes a unit (or before you merge its PR), you may dispatch a
-`reviewer` worker to audit it: it checks that target/base were not confused, the lean
-comment policy was followed, the match % is correct everywhere (vs `report.json`), and
-no residual was wrongly banked as "LTCG". The reviewer pushes ONE additional commit (no
-`--amend`, no force-push) so the human sees before/after, and flags real logic bugs for
-a faster machine instead of fixing them. It never rebuilds or merges. See
-`.claude/agents/reviewer.md`.
+## Audit a matcher's work, then ACT ON the findings (the loop does NOT end at review)
+After a matcher finishes a unit, dispatch the audit:
+- a `structure-verifier` - runs `pdb_fetch --view structure-diff`, embeds the condensed
+  diff + a `// VERDICT:` line, and downgrades a `DONE` whose source STRUCTURE is actually
+  wrong (the trap a high % hides). See `.claude/agents/structure-verifier.md`.
+- a `reviewer` - checks target/base were not confused, the lean-comment policy, the %
+  is right everywhere (vs `report.json`), and no residual was wrongly banked as "LTCG".
+  See `.claude/agents/reviewer.md`.
+Both push ONE additional commit (no `--amend`, no force-push) so the human sees
+before/after; neither rebuilds or merges.
+
+**Crucially: ACT on what the audit finds - a verdict naming a CONCRETE source fix is a
+WORK ITEM, not a closed ticket.** When a `// VERDICT:` or reviewer note names a concrete
+next step - e.g. `STRUCTURE MISMATCH (size) - cover all enum values + default:
+NODEFAULT()` on `get_target_koef`, or "move the 5 assigns into the member-init list" on a
+ctor, or "fold the trailing `return 1.0f` into case 0" - **queue a follow-up `matcher`**
+to apply it and re-match (the matcher rebuilds and confirms the new %). Do this for EVERY
+actionable finding across the audited set; an identified fix that nobody acts on is wasted
+verification. Stop a function only when the verdict is STRUCTURE MATCH or the sole residual
+is a genuine non-steerable artifact (LTCG argument passing / whole-program inline) with
+nothing left to do. So the full loop per unit is: **match -> land -> audit (structure-
+verifier ∥ reviewer) -> act on findings (re-match each actionable one) -> re-audit -> done.**
 
 ## Dispatch hygiene
 - Hand each worker exactly one function plus a locating hint (`file:line` or `rva`
