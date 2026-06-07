@@ -1203,3 +1203,17 @@ polarity OPPOSITE to BASE, while BASE does `call vostok::math::operator!=` direc
 + negation. BASE keeps a standalone float3 `operator!=` (@0x6f250 math_float3_inline.h) and calls it.
 Whole-program LTCG inline-vs-call (the `!=` wrapper folded to `!(==)` at the call site). Source `a != b`
 correct; mark PARTIAL. Confirmed: `redundant_bullet_predicate::operator()` (87.98%).
+
+### `static_cast_resource_ptr< P >( x.get_unmanaged_resource() )` extra copy-construct + 8B frame (NON-steerable)
+SYMPTOM: a `P p = static_cast_resource_ptr< P >( data[i].get_unmanaged_resource() )` line SIZE-diffs and
+the function frame is 8 bytes LARGER in BASE (`sub esp, 0BCh` vs target `0B4h`). TARGET builds the
+`get_unmanaged_resource()` result as a direct stack prvalue passed into `static_cast_resource_ptr`
+(`push ecx; mov esi, esp; ...; call get_unmanaged_resource; lea esi,[ebp-Ch]; call`), so ONE temp slot.
+BASE materializes the result into a named slot `[ebp-0Ch]` and then emits an EXTRA `resource_ptr`
+copy-construct call into a SECOND slot `[ebp-10h]` - the `+ call` and the recurring +8B frame.
+`static_cast_resource_ptr` takes its arg BY VALUE (`const src_ptr`, resources_resource_ptr_inline.h:55);
+whether the by-value param is constructed in place (target) or via an extra copy (base) is a header
+template inline/RVO decision under whole-program LTCG, NOT steerable from the consuming `.cpp` - the source
+is already the maximally direct nested-call form. Same inline-vs-temp class as the resource_ptr/create_request
+ABI walls. Mark DONE (structure matches). Confirmed: booby_trap_set_core_cook `on_subresources_loaded`
+(89.02%), `on_config_ready` (82.01%).
