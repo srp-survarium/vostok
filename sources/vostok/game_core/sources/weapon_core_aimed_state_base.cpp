@@ -33,14 +33,13 @@ void weapon_core_aimed_state_base::finalize( )
 	m_animation_playback_state.reset( );
 	m_weapon.instant_aim_end( );
 
-	// FUNCTION BODY (kept: this is a PARTIAL match, not 100%)
-	// target 0x6ea5c0:
-	//   mov eax,[ebp-4]; add eax,120h; call reset            ; m_animation_playback_state.reset() - INLINED in base
-	//   mov eax,[ebp-4]; mov ecx,[eax+128h]; mov edx,[ebp-4]; mov eax,[edx+128h]
-	//   mov edx,[ecx]; mov ecx,eax; mov eax,[edx+90h]; call eax   ; m_weapon.instant_aim_end() (virtual)
-	// <0x6ea5c7>|0x007|+0x00d:'28'
-	// <0x6ea5d4>|0x014|+0x01e:'29'
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x6ea5c0            base: 0x44f5e0
+	// ; void survarium::weapon_core_aimed_state_base::finalize() ; target 2 stmts / base 1 stmts
+	// 0x007 <0xd> | --          | L28   ONLY target
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 1
+	// VERDICT: STRUCTURE MISMATCH (quantity) - base drops m_animation_playback_state.reset(); target keeps it out-of-line, base elides/inlines it; source faithful, fix lives in how reset() is matched  trail: weapon_core_aimed_state_base-finalize.md
 }
 
 } // namespace survarium

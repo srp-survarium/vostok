@@ -97,11 +97,12 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 
-	// claude@TODO (faster machine): two structural fixes, then rebuild + re-diff:
-	//   1) no `cmp 3; ja default` in target - add `case type_preview: return 1.0f;` and change
-	//      `default:` to `NODEFAULT();` (__assume(0)) so MSVC emits the contiguous [0..4] table.
-	//   2) carcass shows `+0x002`/jmp `}` at 0x5d (line 108) & 0xc0 (line 114) -> the stand/crouch
-	//      blocks were brace-scoped; add `{ }` to match. (95.74% is the pre-fix score.)
+	// claude@TODO (faster machine): ONE structural fix, then rebuild + re-diff:
+	//   no `cmp 3; ja default` in target - add `case type_preview: return 1.0f;` and change
+	//   `default:` to `NODEFAULT();` (__assume(0)) so MSVC emits the contiguous [0..4] table.
+	//   (structure-diff: 21/21 stmts, 0 quantity-diffs; both SIZE diffs are this one
+	//   cause. The `+0x002` jmps at 0x5d/0xc0 are case fall-through thunks on BOTH
+	//   sides, NOT a missing brace-block - no `{ }` change needed. 95.74% pre-fix.)
 	switch ( character_state )
 	{
 		case type_stand:
@@ -126,48 +127,19 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 			return 1.0f;
 	}
 
-	// FUNCTION BODY
-	// <0x595ee9>|0x009|+0x00c:'89'	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x595ef5>|0x015|+0x010:'104'	switch ( character_state ) {   ; target: jmp [edx*4+table], NO cmp/ja bounds check
-	// <0>
-	// <0x595f05>|0x025|+0x008:'106'	case type_stand: if ( is_moving )
-	// <0x595f0d>|0x02d|+0x030:'107'	  return is_aiming ? walk_aim : walk;
-	// <0x595f3d>|0x05d|+0x002:'108'	  jmp .crouch (fall-through thunk)
-	// <0x595f3f>|0x05f|+0x02c:'109'	  else return is_aiming ? idle_aim : idle;
-	// <0>
-	// <1>
-	// <0x595f6b>|0x08b|+0x008:'112'	case type_crouch: if ( is_moving )
-	// <0x595f73>|0x093|+0x02d:'113'	  return is_aiming ? crouch_walk_aim : crouch_walk;
-	// <0x595fa0>|0x0c0|+0x002:'114'	  jmp .sprint (fall-through thunk)
-	// <0x595fa2>|0x0c2|+0x02d:'115'	  else return is_aiming ? crouch_aim : crouch;
-	// <0>
-	// <1>
-	// <0x595fcf>|0x0ef|+0x00a:'118'	case type_sprint: return run;
-	// <0>
-	// <0x595fd9>|0x0f9|+0x00a:'120'	case type_jump:   return jump;
-	// <0>
-	// <0x595fe3>|0x103|+0x004:'122'	case type_preview: return 1.0f; (default: NODEFAULT())
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x585ee0            base: 0x4543c0
+	// ; float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const ; target 19 stmts / base 19 stmts
+	// .. same ..
+	// 0x015 <0x10> | 0x015 <0x1a> | switch ( character_state )   SIZE
+	// .. same ..
+	// 0x103 <0x4> | 0x10d <0x2> | return 1.0f;   SIZE
+	// .. same ..
+	// ; aligned 17, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MISMATCH (size) - base switch emits a `cmp 3; ja default` bounds check target lacks; cover all enum values + `default: NODEFAULT();` to drop it  trail: character_dispersion-get_target_koef.md
 }
 
-// STATE[93.33%|PARTIAL]: switch body matches instruction-for-instruction (case 0/default -> fld1; cases 1/2 are ternaries on using_double_handed_weapon). Residual + full asm in character_dispersion_calculator_get_broken_hands_penalty.md
+// STATE[93.33%|INPROGRESS]: quantity divergence - base emits a trailing `return 1.0f;` (extra fld1 at 0x8b) that the target does NOT have. Target switch (cases 0/1/2) falls straight through to the epilogue: case 0's body IS the implicit-default fld1, shared with the no-match fall-through. The trailing `return 1.0f;` below must be folded into case 0 (matcher job). Full diff embedded; report in structure/character_dispersion-get_broken_hands_penalty.md
 // claude@MATCH: `case 0: return 1.0f;` (NOT `break;`) - break folds case 0 into default, drops the target's explicit `cmp 0`, and scores None.
 float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands_count, bool using_double_handed_weapon ) const
 {
@@ -185,19 +157,19 @@ float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands
 
 	return 1.0f;
 
-	// FUNCTION BODY
-	// <0x595e59>|0x009|+0x00c:'130'	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
-	// <0x595e65>|0x015|+0x018:'131'	switch ( broken_hands_count ) {
-	// <0>
-	// <0x595e7d>|0x02d|+0x004:'133'	case 0: return 1.0f;
-	// <0>
-	// <0x595e81>|0x031|+0x02b:'135'	case 1: return double_handed ? injury_double : 1.0f;
-	// <0>
-	// <0x595eac>|0x05c|+0x02b:'137'	case 2: return double_handed ? injury_double : injury_one;
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x585e50            base: 0x454320
+	// ; float survarium::character_dispersion_calculator::get_broken_hands_penalty(const unsigned char, const bool) const ; target 8 stmts / base 11 stmts
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x015 <0x18> | 0x015 <0x1a> | switch ( broken_hands_count )   SIZE
+	// .. same ..
+	// 0x05c <0x2b> | 0x05e <0x2d> | return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;   SIZE
+	// --          | <0>         |    EMPTY only base
+	// --          | 0x08b <0x2> | return 1.0f;   ONLY base
+	// .. same ..
+	// ; aligned 6, size-diffs 2, quantity-diffs 3
+	// VERDICT: STRUCTURE MISMATCH (both) - base has an extra trailing `return 1.0f;`; fold it into `case 0` so the switch falls through to the shared epilogue fld1  trail: character_dispersion-get_broken_hands_penalty.md
 }
 
 } // namespace survarium

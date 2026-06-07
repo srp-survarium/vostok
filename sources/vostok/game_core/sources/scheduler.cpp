@@ -87,15 +87,15 @@ void scheduler::on_frame( u32 frame_delta, u32 current_time )
 
 	m_current_index = u32(-1);
 
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <0x78de8f>|0x000|0x000:'49'
-	// <0x78decc>|0x03d|0x03d:'50'
-	// <1>
-	// <0x78def9>|0x06a|0x02d:'52'
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x77de80            base: 0x573f20
+	// ; void survarium::scheduler::on_frame(const unsigned int, const unsigned int) ; target 4 stmts / base 4 stmts
+	// 0x00f <0x3d> | 0x009 <0x41> | for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )   SIZE
+	// 0x04c <0x2d> | 0x04a <0x28> | on_frame( m_active_objects[m_current_index], frame_delta, current_time );   SIZE
+	// .. same ..
+	// 0x079 <0xd> | 0x072 <0xa> | m_current_index = u32(-1);   SIZE
+	// ; aligned 1, size-diffs 3, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH - 4/4 stmts, shape aligns; SIZE diffs are LTCG inline-vs-call of size()/operator[] (target out-of-lines them)  trail: scheduler-on_frame.md
 }
 
 } // namespace survarium

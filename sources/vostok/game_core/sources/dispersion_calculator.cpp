@@ -39,6 +39,19 @@ dispersion_calculator::dispersion_calculator( ) :
 //   [this+0x488] (m_aimed) - the inline-vs-call COMDAT decision, not steerable here;
 // claude@NOTE: the m_weapon->ammunition() safe-bool test (operator unspecified_bool_type)
 //   lowers via an extra bool slot in base vs a direct cmp/sete in target - LTCG materialization.
+// STRUCTURE DIFF:
+// target: 0x586970            base: 0x45c300
+// ; float survarium::dispersion_calculator::get_dispersion() const ; target 5 stmts / base 8 stmts
+// 0x010 <0x7b> | 0x010 <0x87> | if ( !( m_weapon && m_weapon->ammunition( ) && s_dispersion_enabled_value ) )   SIZE
+// .. same ..
+// --          | <0>         |    EMPTY only base
+// 0x092 <0xf> | 0x09e <0xe> | weapon_dispersion_params const& weapon_params = m_weapon->get_dispersion_params( );   SIZE
+// --          | <0>         |    EMPTY only base
+// --          | 0x0ac <0x3d> | : weapon_params.from_the_hip_multiplier;   ONLY base
+// .. same ..
+// 0x0a1 <0xef> | 0x0e9 <0xc1> | + ( m_weapon_calculator.get_value( ) + m_character_calculator.get_value( ) ) * m_shooting_skill_coeff;   SIZE
+// ; aligned 2, size-diffs 3, quantity-diffs 3
+// VERDICT: STRUCTURE MATCH - source ternary/guard shape mirrors target; stmt delta is is_aimed() inline-vs-call (ternary-else split) + safe-bool slot, LTCG only  trail: dispersion_calculator-get_dispersion.md
 // float survarium::dispersion_calculator::get_dispersion() const
 float dispersion_calculator::get_dispersion( ) const
 {

@@ -172,10 +172,14 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 		? knee_len * 0.5f
 		: math::sqrt( math::sqr( knee_len ) * 0.5f / ( 1.0f - knee_angle_cos ) );
 
-	// FUNCTION BODY
-	// <0xcb1f6>|0x006|+0x018:'113'	float const knee_angle_cos = upleg_dir | -leg_dir;  // operator| INLINED in base, target calls it
-	// <0xcb20e>|0x01e|+0x075:'114'	return is_similar(cos,1.0f,epsilon_5) ? knee_len*0.5f : sqrt(sqr(knee_len)*0.5f/(1.0f-cos));
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0xbb1f0            base: 0x513fa0
+	// ; float survarium::get_additional_length(vostok::math::float3 const&, vostok::math::float3 const&, float) ; target 2 stmts / base 3 stmts
+	// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos	= upleg_dir | -leg_dir;   SIZE
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// ; aligned 1, size-diffs 1, quantity-diffs 1
+	// VERDICT: STRUCTURE MISMATCH (size) - lone SIZE diff on the dot-product is the inline COMDAT operator| inlined in base vs called in target; source-steerable, not bankable LTCG  trail: get_additional_length.md
 }
 
 // STATE[STUB]
@@ -533,113 +537,87 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 
 	return foot_center_transform;
 
-	// FUNCTION BODY
-	// <0x6fbaf1>|0x011|+0x03b:'295'
-	// <0x6fbb2c>|0x04c|+0x03e:'296'
-	// <0x6fbb6a>|0x08a|+0x03e:'297'
-	// <0x6fbba8>|0x0c8|+0x03d:'298'
-	// <0x6fbbe5>|0x105|+0x03e:'299'
-	// <0x6fbc23>|0x143|+0x078:'300'
-	// <0x6fbc9b>|0x1bb|+0x018:'301'
-	// <0>
-	// <0x6fbcb3>|0x1d3|+0x04a:'303'
-	// <0x6fbcfd>|0x21d|+0x044:'304'
-	// <0x6fbd41>|0x261|+0x034:'305'
-	// <0>
-	// <0x6fbd75>|0x295|+0x008:'307'
-	// <0x6fbd7d>|0x29d|+0x008:'308'
-	// <0x6fbd85>|0x2a5|+0x01e:'309'
-	// <0x6fbda3>|0x2c3|+0x01e:'310'
-	// <0x6fbdc1>|0x2e1|+0x042:'311'
-	// <0>
-	// <0x6fbe03>|0x323|+0x015:'313'
-	// <0x6fbe18>|0x338|+0x03e:'314'
-	// <0x6fbe56>|0x376|+0x012:'315'
-	// <0x6fbe68>|0x388|+0x012:'316'
-	// <0x6fbe7a>|0x39a|+0x012:'317'
-	// <0x6fbe8c>|0x3ac|+0x028:'318'
-	// <0>
-	// <0x6fbeb4>|0x3d4|+0x025:'320'
-	// <0x6fbed9>|0x3f9|+0x02f:'321'
-	// <0>
-	// <0x6fbf08>|0x428|+0x029:'323'
-	// <0x6fbf31>|0x451|+0x01d:'324'
-	// <0>
-	// <0x6fbf4e>|0x46e|+0x016:'326'
-	// <0x6fbf64>|0x484|+0x032:'327'
-	// <0x6fbf96>|0x4b6|+0x010:'328'
-	// <0x6fbfa6>|0x4c6|+0x053:'329'
-	// <0>
-	// <0x6fbff9>|0x519|+0x050:'331'
-	// <0x6fc049>|0x569|+0x050:'332'
-	// <0x6fc099>|0x5b9|+0x02f:'333'
-	// <0>
-	// <0x6fc0c8>|0x5e8|+0x01b:'335'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6fc0e3>|0x603|+0x050:'340'
-	// <0x6fc133>|0x653|+0x050:'341'
-	// <0x6fc183>|0x6a3|+0x02f:'342'
-	// <0>
-	// <0x6fc1b2>|0x6d2|+0x01b:'344'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6fc1cd>|0x6ed|+0x050:'349'
-	// <0x6fc21d>|0x73d|+0x050:'350'
-	// <0x6fc26d>|0x78d|+0x026:'351'
-	// <0>
-	// <0x6fc293>|0x7b3|+0x005:'353'
-	// <0>
-	// <0x6fc298>|0x7b8|+0x050:'355'
-	// <0x6fc2e8>|0x808|+0x022:'356'
-	// <0x6fc30a>|0x82a|+0x013:'357'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6fc31d>|0x83d|+0x026:'364'
-	// <0>
-	// <0x6fc343>|0x863|+0x017:'366'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6fc35a>|0x87a|+0x022:'371'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6fc37c>|0x89c|+0x030:'375'
-	// <0>
-	// <0x6fc3ac>|0x8cc|+0x017:'377'
-	// <0>
-	// <0x6fc3c3>|0x8e3|+0x022:'379'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6fc3e5>|0x905|+0x01a:'384'
-	// <0>
-	// <0x6fc3ff>|0x91f|+0x02f:'386'
-	// <0x6fc42e>|0x94e|+0x02f:'387'
-	// <0x6fc45d>|0x97d|+0x02e:'388'
-	// <0>
-	// <0x6fc48b>|0x9ab|+0x039:'390'
-	// <0x6fc4c4>|0x9e4|+0x027:'391'
-	// <0x6fc4eb>|0xa0b|+0x03e:'392'
-	// <0x6fc529>|0xa49|+0x031:'393'
-	// <0>
-	// <0x6fc55a>|0xa7a|+0x026:'395'
-	// <0x6fc580>|0xaa0|+0x080:'396'
-	// <0x6fc600>|0xb20|+0x021:'397'
-	// <0>
-	// <0x6fc621>|0xb41|+0x013:'399'
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x6ebae0            base: 0x514fb0
+	// ; vostok::math::float4x4 survarium::legs_ik_processor::get_foot_fixed_transform(survarium::legs_ik_processor::leg_params const&, vostok::math::float4x4 const&, vostok::math::float4x4 const*, float&) const ; target 86 stmts / base 93 stmts
+	// 0x011 <0x3b> | 0x011 <0x47> | float4x4 const&			up_leg_world_matrix				= matrices[params.up_leg_bone_index - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
+	// 0x04c <0x3e> | 0x058 <0x47> | float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
+	// 0x08a <0x3e> | 0x09f <0x47> | float4x4 const&			leg_world_matrix				= matrices[params.leg_bone_index    - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
+	// 0x0c8 <0x3d> | 0x0e6 <0x46> | float4x4 const&			foot_world_matrix				= matrices[params.foot_bone_index   - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
+	// 0x105 <0x3e> | 0x12c <0x47> | float4x4 const&			toe_world_matrix				= matrices[params.toe_bone_index    - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
+	// --          | <0>         |    EMPTY only base
+	// 0x143 <0x78> | 0x173 <0xb6> | math::is_similar( foot_world_matrix.c.xyz( ), leg_world_matrix.c.xyz( ) ) )   SIZE
+	// .. same ..
+	// 0x1d3 <0x4a> | 0x241 <0x4d> | float3 const&			foot_to_leg_dir					= math::normalize( leg_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );   SIZE
+	// 0x21d <0x44> | 0x28e <0x4d> | float3 const&			foot_to_toe_dir					= math::normalize( toe_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );   SIZE
+	// 0x261 <0x34> | 0x2db <0x37> | float3 const&			left_dir						= math::normalize( foot_to_leg_dir ^ foot_to_toe_dir );   SIZE
+	// .. same ..
+	// 0x295 <0x8> | 0x312 <0xb> | float4x4				result;   SIZE
+	// 0x29d <0x8> | 0x31d <0xb> | result.identity( );   SIZE
+	// 0x2a5 <0x1e> | 0x328 <0x21> | result.i.xyz( )		= left_dir;   SIZE
+	// 0x2c3 <0x1e> | 0x349 <0x21> | result.j.xyz( )		= foot_to_leg_dir;   SIZE
+	// 0x2e1 <0x42> | 0x36a <0x48> | result.k.xyz( )		= math::normalize( foot_to_leg_dir ^ left_dir );   SIZE
+	// .. same ..
+	// 0x338 <0x3e> | 0x3c7 <0x44> | result				= math::create_rotation( left_dir, rotation_angle ) * result;   SIZE
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x3ac <0x28> | 0x441 <0x2b> | result.c.xyz( )		= foot_world_matrix.c.xyz( );   SIZE
+	// .. same ..
+	// 0x3f9 <0x2f> | 0x491 <0x36> | result.c.xyz( )		= result.transform_position( up_dir );   SIZE
+	// .. same ..
+	// 0x46e <0x16> | 0x50d <0xb> | float3					start;   SIZE
+	// 0x484 <0x32> | 0x518 <0xb> | float3					finish;   SIZE
+	// --          | 0x523 <0x19> | math::color				original_color( 0x80u, 0xc8u, 0x00u, 0x00u );   ONLY base
+	// --          | 0x53c <0x19> | math::color				fixed_color( 0x80u, 0x00u, 0xc8u, 0x00u );   ONLY base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// 0x519 <0x50> | 0x5b8 <0x4a> | start			= foot_to_cube_center_offset * dist_to_test + finish;   SIZE
+	// 0x569 <0x50> | 0x602 <0x4a> | finish			= foot_to_cube_center_offset * dist_to_test - finish;   SIZE
+	// .. same ..
+	// 0x603 <0x50> | 0x696 <0x4a> | start			= foot_to_cube_center_offset * dist_to_test + finish;   SIZE
+	// 0x653 <0x50> | 0x6e0 <0x4a> | finish			= foot_to_cube_center_offset * dist_to_test - finish;   SIZE
+	// .. same ..
+	// 0x6ed <0x50> | 0x774 <0x4a> | start			= foot_to_cube_center_offset * dist_to_test + finish;   SIZE
+	// 0x73d <0x50> | 0x7be <0x4a> | finish			= foot_to_cube_center_offset * dist_to_test - finish;   SIZE
+	// .. same ..
+	// 0x7b8 <0x50> | 0x833 <0x4a> | start			= foot_to_cube_center_offset * dist_to_test + finish;   SIZE
+	// 0x808 <0x22> | 0x87d <0x24> | finish			= start;   SIZE
+	// --          | <0>         |    EMPTY only base
+	// 0x82a <0x13> | 0x8a1 <0x1c> | original_color	= math::color( 0x64u, 0x00u, 0x00u );   SIZE
+	// .. same ..
+	// 0x83d <0x26> | 0x8bd <0x23> | float4x4 const&			foot_to_center_rel				= math::get_relative_matrix( foot_world_matrix, result );   SIZE
+	// .. same ..
+	// --          | 0x8f7 <0x25> | m_drawer->draw_line_capsule( result, capsule_size, original_color, false );   ONLY base
+	// .. same ..
+	// 0x87a <0x22> | 0x91c <0x33> | m_character_controller->adjust_foot_transform( capsule_size, start, finish, rotation_interpolation_koef, params.heel_transition_time, result );   SIZE
+	// .. same ..
+	// 0x89c <0x30> | --          | L375   ONLY target
+	// <0>         | --          |    EMPTY only target
+	// .. same ..
+	// --          | 0x966 <0x25> | m_drawer->draw_solid_capsule( result, capsule_size, fixed_color, true );   ONLY base
+	// .. same ..
+	// 0x8e3 <0x22> | --          | L379   ONLY target
+	// <0>         | --          |    EMPTY only target
+	// .. same ..
+	// 0x91f <0x2f> | 0x9a5 <0x3b> | float const				leg_len							= matrices[params.knee_bone_index   - get_skeleton( ).get_root_bones_count( )].c.xyz( ).length( );   SIZE
+	// 0x94e <0x2f> | 0x9e0 <0x3b> | float const				up_leg_len						= matrices[params.leg_bone_index    - get_skeleton( ).get_root_bones_count( )].c.xyz( ).length( );   SIZE
+	// 0x97d <0x2e> | 0xa1b <0x3a> | float const				knee_len						= matrices[params.foot_bone_index   - get_skeleton( ).get_root_bones_count( )].c.xyz( ).length( );   SIZE
+	// .. same ..
+	// 0x9ab <0x39> | 0xa55 <0x36> | float const				up_leg_to_fixed_foot_dist		= ( up_leg_world_matrix.c.xyz( ) - foot_center_transform.c.xyz( ) ).length( );   SIZE
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// 0xa7a <0x26> | 0xb21 <0x2a> | float const			position_iterpolation_koef		= 1.0f - m_heel_interpolator.interpolated_value( params.heel_transition_time );   SIZE
+	// 0xaa0 <0x80> | 0xb4b <0x7d> | float3 const&		position						= foot_world_matrix.c.xyz( ) * position_iterpolation_koef + foot_center_transform.c.xyz( ) * ( 1.0f - position_iterpolation_koef );   SIZE
+	// 0xb20 <0x21> | 0xbc8 <0x1e> | foot_center_transform.c.xyz( )	= position;   SIZE
+	// .. same ..
+	// 0xb41 <0x13> | 0xbe6 <0x10> | return foot_center_transform;   SIZE
+	// ; aligned 44, size-diffs 38, quantity-diffs 15
+	// VERDICT: STRUCTURE MATCH - 86/93 stmts, all aligned rows SIZE-only (LTCG temp-materialization at math call boundaries); quantity diffs are draw_*capsule/return codegen block placement, not source shape  trail: get_foot_fixed_transform.md
 }
 
 // STATE[100%|DONE]

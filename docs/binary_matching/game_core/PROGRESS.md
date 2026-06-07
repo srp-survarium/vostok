@@ -25,7 +25,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     OPEN (faster machine): OUR base emits an extra `cmp 3; ja default` bounds check the target lacks
     (target has a contiguous jump table). Fix: `case type_preview: return 1.0f;` + `default: NODEFAULT();`.
     NOT LTCG - a source-structure problem. (NOTE: #110 was merged into feature-2 before review.)
-- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[93.33%|PARTIAL] -> PR #111 (regressions: none)
+- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[93.33%|INPROGRESS] -> PR #111 (regressions: none); structure audit: QUANTITY diff - base has a trailing `return 1.0f;` (extra fld1) the target lacks; fold it into case 0 (matcher job)
   - switch body + m_params reads match instruction-for-instruction; recovered the empty_stub ASSERT
     (82.89% -> 93.33%). Residual not re-diffed after recovery; not LTCG. See the per-function .md.
   - PR CHAIN: #111 branched off #110 (shares the class scaffolding: private-getter mangling,

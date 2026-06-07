@@ -34,14 +34,21 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
-// STATE[76.80%|INPROGRESS]: NOT verified exact - the bracing is unconfirmed. The
-// FUNCTION BODY structure (below) shows '38'-'41' as four plain statements at function
-// scope with NO block-open marker, yet this source wraps them in `if ( m_params ) { ... }`
-// - that `{` would appear as a `<n>` (no-address) line in the structure, which is ABSENT.
-// Likely an early `return` guard (`if ( !m_params ) return;`, no braces) instead. Needs
-// independent verification + re-diff on a faster machine; do NOT trust the 76.80% as
-// "matched body". (Separately, fsm::states()/front() are inlined in base vs out-of-line
-// in target - that residual is blocked on the ai fsm type.) See ...accessors.md.
+// STATE[76.80%|INPROGRESS]: structure-verified MISMATCH (both quantity+size). The
+// 76.80% hides TWO source-shape divergences (see embedded structure-diff below):
+//   (A) for-loop body is BRACED in target - its back-edge `jmp` lands on its own
+//       source line L37 (`0x4a <0x2>`, ONLY target). Our brace-less single-statement
+//       for folds that jmp into L36, so we are missing L37. Brace the for body:
+//           for ( ... ) { static_cast<...>( it )->set_breath_holding_params( params ); }
+//   (B) the two multiplier writes are a CHAINED assignment in target (one statement
+//       L41, 0x3b bytes); we split them into L41 + a separate L42
+//       `m_current_multiplier = m_target_multiplier;` (ONLY base). Chain them:
+//           m_current_multiplier = m_target_multiplier = static_cast<...>( ... )->get_multiplier( );
+// The `if ( m_params )` braces are NOT the problem - both sides codegen the if
+// brace-less at function tail (no scope-close marker on either side); the earlier
+// "early-return guard" hypothesis was wrong. (Residual: fsm::states()/front() inlined
+// in base vs out-of-line in target - blocked on the ai fsm type.) A genuine restructure
+// (apply A+B) plus rebuild is a matcher's job; not done here.
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;
@@ -57,17 +64,24 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 		m_current_multiplier		= m_target_multiplier;
 	}
 
-	// FUNCTION BODY
-	// <0x5934d9>|0x009|+0x009:'34'
-	// <0x5934e2>|0x012|+0x021|[1]:'35'
-	// <0x593503>|0x033|+0x017:'36'
-	// <0x59351a>|0x04a|+0x002:'37'
-	// <0x59351c>|0x04c|+0x009:'38'
-	// <0x593525>|0x055|+0x00e:'39'
-	// <0x593533>|0x063|+0x016:'40'
-	// <0x593549>|0x079|+0x03b:'41'
-	// <0>
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x5834d0            base: 0x4574a0
+	// ; void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*) ; target 8 stmts / base 11 stmts
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x012 <0x21> | 0x012 <0x1a> | for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )   SIZE
+	// 0x033 <0x17> | 0x02c <0x13> | static_cast< breath_state* >( it )->set_breath_holding_params( params );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// 0x04a <0x2> | --          | L37   ONLY target
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// 0x063 <0x16> | 0x056 <0x15> | m_logic.set_initial_state( m_logic.states( ).front( ) );   SIZE
+	// 0x079 <0x3b> | 0x06b <0x23> | m_target_multiplier			= static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );   SIZE
+	// --          | 0x08e <0xc> | m_current_multiplier		= m_target_multiplier;   ONLY base
+	// .. same ..
+	// ; aligned 3, size-diffs 4, quantity-diffs 5
+	// VERDICT: STRUCTURE MISMATCH (both) - brace the for body (target back-edge on own line L37) and chain m_current=m_target=...->get_multiplier() into one stmt  trail: breath_vibration-set_breath_holding_params.md
 }
 
 // STATE[100%|DONE]
