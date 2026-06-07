@@ -1,6 +1,6 @@
 ---
 name: structure-verifier
-description: Verifies ONE thing and nothing else - that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %. It compares the target structure (the `// FUNCTION BODY` carcass / `pdb_fetch --view structure` on the target) against the base structure (`--view structure` on our build) statement by statement, and flags every divergence in statement QUANTITY (a count mismatch) or statement SIZE (a `+delta` mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It writes a report .md and downgrades a mislabeled `DONE` whose structure is wrong; it NEVER rebuilds, never changes compiled logic, never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides.
+description: Verifies ONE thing and nothing else - that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %. It runs `pdb_fetch --view structure-diff --condensed` (the parser's two-sided statement-structure diff: target vs base aligned, with each divergence tagged SIZE / ONLY base|target / EMPTY), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It EMBEDS the condensed diff (+ a one-line `// VERDICT:`) in place of the carcass for non-100% functions, writes a report .md, and downgrades a mislabeled `DONE` whose structure is wrong; it NEVER rebuilds, never changes compiled logic, never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -32,26 +32,69 @@ report.json cannot see it; you can. (Live example: `weapon_core_base_state` ctor
 Read these from the **current integration branch** (the PR branch you check out may
 carry a stale copy); review the code against the latest rules.
 
-## The two structures you compare
-For the function (resolve overloads first with `pdb_rich_query --list`):
+## The two structures you compare - start with `--view structure-diff` FIRST
+**Do NOT eyeball two `--view structure` dumps by hand.** The parser aligns target vs
+base for you. Run (resolve overloads first; pass the TARGET rva with `--rva` if the
+name is ambiguous - base is resolved by mangled symbol, not rva):
 
 ```
-# TARGET structure (ground truth) - the original source's shape
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
-  --function <name> --rva 0x<target_rva> --view structure
-
-# BASE structure - what OUR source currently compiles to
-pdb_rich_query --index binaries/rich/base/index.jsonl --function <name> --list   # get base rva
-pdb_fetch --base-index binaries/rich/base/index.jsonl \
-  --function <name> --rva 0x<base_rva> --view structure
+          --base-index   binaries/rich/base/index.jsonl \
+          --function <name> [--rva 0x<target_rva>] \
+          --view structure-diff --condensed
 ```
 
-`--view structure` prints `; N statements, 0xNN bytes` then one row per statement:
-`0xOFFSET  <0xSIZE>  <statement-or-srcline>`. The TARGET carcass (the `// FUNCTION
-BODY` block in the .cpp, or `pdb_fetch --view target`) is the same information in
-the source: `<absoluteVA>|offset|+delta:'srcline'  <text>`, plus `<0>/<1>` no-address
-markers and `[n]` block-opens. Either form is the target skeleton; the base form is
-our build's. **Compare them statement by statement.**
+Output: a header `target: 0x<rva>   base: 0x<rva>` + `; <sig> ; target N / base M
+stmts`, then aligned-equal runs COLLAPSED to `.. same ..`, and only the divergences
+as one compact line each:
+`0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> | {stmt}   {TAG}` - TAG is `SIZE` (same
+statement, different byte size), `ONLY base` / `ONLY target` (a statement present on
+one side only = a real QUANTITY divergence), or `EMPTY only base|target` (a collapsed
+source-line gap on one side). A trailing `; aligned A, size-diffs S, quantity-diffs Q`.
+A clean match prints just `.. same ..` with `size-diffs 0, quantity-diffs 0`. Drop
+`--condensed` to see every row (including the `.. same ..` ones) when you need the full
+picture. (`--view structure` single-side still exists for raw inspection.)
+
+**Read the offsets right: after the FIRST `SIZE` divergence the two sides' offsets
+DRIFT apart** (each accumulates the running size delta) - that drift is expected, not a
+new divergence; judge each row by its own `SIZE`/`ONLY`/`EMPTY` tag, not by whether the
+offsets still line up.
+
+**Order of tools: `--view structure-diff` FIRST.** It localizes the problem - WHICH
+statement diverges and HOW (SIZE vs quantity). Only AFTER you have located a divergence
+do you drop to the other views to NAME its cause at that spot: `--view diff` (operand-
+aware assembly) for the instruction-level reason, or `--view target`/`--view base` for
+the raw disassembly of that statement. Don't start from the assembly diff - you'd be
+reading instruction noise without knowing which statement matters.
+
+### Embed the condensed diff in a non-100% function (you OWN this; the matcher left none)
+The matcher does NOT maintain the `// FUNCTION BODY` carcass - it deletes it when done.
+So for a PARTIAL/INPROGRESS/BLOCKED function you GENERATE and embed the condensed
+structure-diff yourself (commented), inline above/in the function, so the divergence is
+visible (a clean 100% DONE carries nothing). **The embedded `// STRUCTURE DIFF` block IS
+the marker that you ran:** a non-100% function with none means no verifier has touched it
+yet. Conversely a **100% function must carry NO embed** - if a later match closed the
+residual and left a stale `// STRUCTURE DIFF`/`// VERDICT` block on a now-100% function,
+STRIP it (the byte-perfect match has trivially-correct structure).
+
+**STANDARD embed format - every function reads identically:**
+1. The diff block is the tool's `--condensed` output VERBATIM, `// `-prefixed. Do NOT
+   hand-edit rows, append per-row source text, or re-summarize. (`ONLY target` rows stay
+   `Lxx` - the target PDB has no source text, and guessing it is not reproducible.)
+2. Exactly ONE `// VERDICT:` line directly after the block, fixed grammar:
+   `// VERDICT: STRUCTURE <MATCH | MISMATCH (size|quantity|both|order)> - <terse cause / next-step>`
+   (optionally end with `trail: <fn>.md`).
+3. ALL detailed reasoning goes in the per-function `.md`, NEVER inline - the inline embed
+   stays terse and uniform.
+Real example (`get_additional_length`, 65%):
+```
+// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 3 stmts
+// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
+// --          | <0>          |    EMPTY only base
+// .. same ..
+// ; aligned 1, size-diffs 1, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs inlined, non-steerable. trail: get_additional_length.md
+```
 
 Caveats baked into the format (do not misread these as divergences):
 - Carcass `<VA>` addresses are BASE-build addresses, off the target rva by ~0x10000;
@@ -135,8 +178,9 @@ If a function is marked `100%|DONE` (or any banked tag) but its structure diverg
 it is not a clean match. You MAY, in the .cpp:
 - downgrade its `// STATE[..|DONE]` to `// STATE[INPROGRESS]` with a one-line note
   naming the divergence and the fix;
-- restore the `// FUNCTION BODY` carcass verbatim if a clean-DONE strip removed it
-  (a non-100%/INPROGRESS function keeps the carcass - MATCHING.md);
+- embed the condensed `// STRUCTURE DIFF` (per the format above) if a clean-DONE strip
+  left the now-non-100% function with nothing - a non-100% function carries the
+  structure-diff, not the old one-sided carcass (MATCHING.md);
 - sync the per-function `.md` outcome and the `PROGRESS.md` ledger line to match.
 That is the limit. You do NOT edit the body to apply the restructure, do NOT rebuild,
 do NOT touch report numbers (you only READ report.json). A genuine restructure is a

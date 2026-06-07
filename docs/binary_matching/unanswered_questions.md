@@ -26,7 +26,7 @@ STATUS: missing
 
 ### Single-function / incremental diff without a full rebuild
 WANT: rebuild just the edited TU and read that one function's match in seconds.
-WHY: a correct (EXE-relinking) `rebuild.py` is ~20 minutes - the ~1-minute
+WHY: a correct (EXE-relinking) `rebuild.py` is ~10 minutes - the ~1-minute
 figure is the module-only build (`rebuild.py <module>`), which skips the link and
 gives a STALE score, so it cannot substitute. A per-TU rebuild would tighten the
 loop over hundreds of functions.
@@ -36,8 +36,9 @@ CAVEAT: rarely viable - a single-TU compile does not run LTCG (a whole-program,
 link-time step), so LTCG-affected functions will not match at all in such a diff
 even when the full link does. Doable in theory for LTCG-insensitive code; expect
 LTCG artifacts to diverge.
-STATUS: nice-to-have, but now HIGHER value - the real loop cost is ~20 min/relink,
-not ~1 min, so anything that avoids a full relink per function matters.
+STATUS: nice-to-have, LOWER priority now - the rebuild (~10 min, backgrounded) is no
+longer the loop bottleneck; agent token cost is, and a faster per-TU relink does not
+save tokens. Worth it only if it also cuts an iteration.
 
 ### Type/declaration lookup in the target structure
 WANT: "give me the declaration of `class foo`" from `binaries/structure/target`
