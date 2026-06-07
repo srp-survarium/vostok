@@ -1351,3 +1351,27 @@ so statement count matches target.
     are compiler-generated or different-TU/different-flags COMDATs - not source-steerable from this unit.
   - No tractable byte-win remained; committed change is stale STATE-marker corrections + 2 clean-DONE carcass removals +
     documented wall rationale. See docs/binary_matching/game_core/player_parameters_cook.md.
+- game_core::booby_trap_core -> 3 fns improved (source-shape), rest LTCG-walled -> PR (regressions: none)
+  Unit was already partly matched on arrival. Drove the source-steerable shapes:
+    booby_trap_core::on_state_timer_finished   86.20% -> 99.67% DONE
+        FIX: cached `m_trap_state` into one local (`booby_trap_state const state = m_trap_state;`),
+        compared the temp twice - target reads the member once into a slot, base re-read it per compare.
+        Residual is a pure this/state stack-slot swap on a byte-identical stream (acceptable DONE).
+    booby_trap_core::can_defuse                81.57% -> 86.04% PARTIAL
+        FIX: rewrote ternary as short-circuit OR (`user == owner || user->team() != owner->team()`)
+        to get target's branch-merge (both true-paths -> one `mov 1`). Residual = inventory::holder()
+        LTCG no-inline wall.
+    booby_trap_core::switch_to_state           90.55% -> 93.08% PARTIAL
+        FIX: added `default: NODEFAULT();` - target jump table has no bounds check (full contiguous
+        range). Residual = booby_trap_set_core::config() LTCG no-inline wall.
+  Walls (deferred, all the same class - LTCG per-callsite no-inline of trivial header getters/helpers
+  under /Od /Ob2 /GL, emitted as standalone COMDAT + call in target but inlined in our base; no source
+  construct controls per-callsite inlining of `{ return m_x; }`):
+    config() -> set_transform 97.38%, insert 97.44%, switch_to_state/use_execute/load residuals
+    inventory::holder() -> can_defuse/on_enter 91.77%/apply_damage 83.06% residuals
+    new_helper/delete_helper/math::min -> ~booby_trap_core 14.86%, load 90.68%, use_execute 82.75%
+        (dtor: non-_MANAGED only declares the by-ref inline delete_helper; target's by-value T const*
+         overload is unreachable from this source)
+    register_tick 74.26% -> scheduler::register_on_frame + boost::bind LTCG
+    serialize 16.17% / deserialize 11.13% -> network_core packet wall (out of task scope)
+  See docs/binary_matching/game_core/booby_trap_core.md.

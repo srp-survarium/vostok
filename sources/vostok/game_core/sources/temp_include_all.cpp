@@ -110,7 +110,6 @@
 #include <vostok/game_core/double_barreled_weapon_core_reload_state.h>
 #include <vostok/game_core/weapon_core_fire_state.h>
 #include <vostok/game_core/weapon_core_aimed_fire_state.h>
-#include <vostok/game_core/weapon_core.h>
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
