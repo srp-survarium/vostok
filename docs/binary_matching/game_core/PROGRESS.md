@@ -370,3 +370,30 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     QUALIFIED devirtualized call on a fabricated null ptr (address-of a virtual emits no body), befriended so it
     can reach the private override; no instance constructed (would emit the vtable -> codegen the still-STUB
     selected_animations -> C4716/LNK1257). Stacked on #148 (inactive overrides).
+- game_core::weapon_core_idle_state + weapon_core_aimed_state state classes (8 fns, batched unit) ->
+  STATE[ctor 100%, new_object 100%, get_weapon_lexeme_pair 100%, weapon_and_hands_expression 85.65%|PARTIAL]
+  -> PR #151 (regressions: none)
+  - Two sibling state classes, byte-identical in shape; differ only in the get_weapon_lexeme_pair string
+    literal ("weapon-idle" vs "weapon-aimed_idle") and the auto vtable class name. Each: ctor(weapon_core&,
+    managed_resource_ptr const*, u32) 100%, weapon_core_state_cook_template<T>::new_object 100%,
+    get_weapon_lexeme_pair 100%, weapon_and_hands_expression 85.65% PARTIAL. (report.json fuzzy: ctor/
+    new_object/get_weapon_lexeme_pair = 100.0 for BOTH classes; weapon_and_hands_expression = 85.64815 both.)
+  - weapon_and_hands_expression residual (the dominant diff): per-call-site whole-program LTCG inline-vs-call
+    of operator+<animation_lexeme,animation_lexeme> - TARGET inlines it (addition_lexeme ctor + cloned_in_buffer
+    + ~addition_lexeme at the site), BASE keeps `call operator+`; operator+ is STANDALONE in BOTH rich indexes
+    (target 0x0b42f0, base 0x08b900 - verified), the documented operator|/fixed_string inline-vs-call class, not
+    source-steerable. Secondary residual: line-32 ASSERT_U emits an extra `push 0` (assert_untyped) the target's
+    single-arg expression_eater does not take - no standard macro reproduces a lone-expr eater exactly; PARTIAL
+    is the honest tag (not a banked DONE).
+  - Access specifiers set to the target mangling (objdiff pairs by name): ctor/new_object AAE (private),
+    get_weapon_lexeme_pair ABE (private const), weapon_and_hands_expression EBE (private virtual const).
+    Anchored via befriended use_game_core_weapon_core_{idle,aimed}_state in temp_include_all.cpp; new_object
+    reached via a qualified call on a fabricated null cook pointer (constructing a cook would emit its vtable).
+    get_weapon_lexeme_pair_impl given a STUB body in weapon_lexeme_pair.cpp so the callers link/score; the impl
+    itself is out of scope (stays STUB, report.json = None).
+  - Stacked on #150 (delinker reconciliation). report-changes: ICF/COMDAT-folding churn only (every 100->0 has a
+    matching 0->100 fold-representative bounce); no file authored here regressed.
+  - REVIEW (PR #151): verified all 8 STATE %s + .md + this ledger line against report.json; confirmed the
+    operator+ standalone-in-both-indexes claim and the base/target attribution direction from the disasm;
+    carcass present on the PARTIAL and stripped on the three 100% DONE; impl STATE still STUB. Added this
+    previously-missing ledger entry. No logic change.
