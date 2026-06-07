@@ -7,7 +7,10 @@
 
 namespace survarium {
 
+class weapon_user_animations_container_cook;
+
 class weapon_user_animations_container : public resources::unmanaged_resource , public core::noncopyable {
+	friend class weapon_user_animations_container_cook;
 public:
 	// sushi@TODO: Where are you defined?
 			resources::managed_resource_ptr	get_stand_animation			( bool aimed, u32 index, bool is_third_view ) const;
@@ -22,7 +25,7 @@ public:
 
 public:
 	// sushi@TODO: Where are you defined?
-	explicit									weapon_user_animations_container( );
+	inline										weapon_user_animations_container( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
