@@ -1,18 +1,20 @@
 # structure verification: breath_vibration_calculator::set_breath_holding_params
 
-target rva 0x5834d0  base rva 0x4574a0
-report.json fuzzy_match_percent = 76.803276 (INPROGRESS, issue #117)
+target rva 0x5834d0  base rva 0x450650
+report.json fuzzy_match_percent = 76.803276 (PARTIAL, flat after fix)
 
-## Verdict
+## Verdict (RESOLVED, shape)
 
-STRUCTURE MISMATCH (both quantity + size).
-
-The 76.80% fuzzy score is over the WRONG structure. The setter has TWO
-source-shape divergences that the byte/instruction view hides because the bulk
-residual is an unrelated inlining artifact (fsm::states()/front() inlined in base
-vs out-of-line in target). Statement-shape: target 8 body statements vs our base 8
-body statements, but NOT the same 8 - the base is missing one and has a spurious
-extra one, with two SIZE diffs on top.
+STRUCTURE MATCH (shape ok). Both source-shape divergences were fixed and rebuilt:
+- (A) braced the for-loop body -> the L37 back-edge `+0x002` row is gone.
+- (B) chained `m_current_multiplier = m_target_multiplier = ...->get_multiplier()`
+  into one statement -> the separate `m_current_multiplier = m_target_multiplier;`
+  `ONLY base` row is gone.
+The fuzzy_match_percent stays 76.803276 because the dominant residual is unchanged:
+`m_logic.states().front()` is OUT-OF-LINE (call) in the target but INLINED in our
+/Ob2 base, producing the four SIZE rows below. That is an inlining residual blocked
+on the ai::fsm type - NON-steerable from this caller, NOT a source-shape problem.
+The remaining `EMPTY only base` rows are collapsed blank-line gaps, not statements.
 
 ## Skeletons (condensed structure-diff)
 

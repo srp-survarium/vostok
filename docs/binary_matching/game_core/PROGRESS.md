@@ -20,12 +20,12 @@ infra base): `module::function -> STATE -> PR (regressions)`.
 - game_core::dispersion_calculator::get_dispersion() const -> STATE[87.49%|PARTIAL] -> PR #109 (regressions: none)
   - body matches instruction-for-instruction; residual entirely LTCG (frame/slots, is_aimed inlined,
     safe-bool extra slot). Effectively done as source allows. Getter strategy works well.
-- game_core::character_dispersion_calculator::get_target_koef(...) const -> STATE[95.74%|INPROGRESS] -> PR #110 (regressions: none)
+- game_core::character_dispersion_calculator::get_target_koef(...) const -> STATE[100%|DONE] -> PR #110 (regressions: none); resolved on match/game_core-act-on-structure-findings: `case type_preview` + `default: NODEFAULT()` drops the `cmp 3; ja default` bounds check (contiguous [0..4] table), structure 21/21 clean.
   - switch case bodies + m_params reads match; recovered the empty_stub ASSERT (88% -> 95.74%).
     OPEN (faster machine): OUR base emits an extra `cmp 3; ja default` bounds check the target lacks
     (target has a contiguous jump table). Fix: `case type_preview: return 1.0f;` + `default: NODEFAULT();`.
     NOT LTCG - a source-structure problem. (NOTE: #110 was merged into feature-2 before review.)
-- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[93.33%|INPROGRESS] -> PR #111 (regressions: none); structure audit: QUANTITY diff - base has a trailing `return 1.0f;` (extra fld1) the target lacks; fold it into case 0 (matcher job)
+- game_core::character_dispersion_calculator::get_broken_hands_penalty(u8,bool) const -> STATE[100%|DONE] -> PR #111 (regressions: none); resolved on match/game_core-act-on-structure-findings. The audit's "fold into case 0" was WRONG (it dropped the target's explicit `cmp 0`); the fix is `default: NODEFAULT()` after explicit cases 0/1/2 - marks the no-match path unreachable so MSVC emits no trailing fld1 yet keeps `cmp 0`. Structure 10/10 clean.
   - switch body + m_params reads match instruction-for-instruction; recovered the empty_stub ASSERT
     (82.89% -> 93.33%). Residual not re-diffed after recovery; not LTCG. See the per-function .md.
   - PR CHAIN: #111 branched off #110 (shares the class scaffolding: private-getter mangling,
@@ -43,7 +43,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     18%) with the opaque-sink escape anchor; README rule revised.
 - game_core::weapon_recoil_params::weapon_recoil_params() [RETRY of #107] -> STATE[100%|DONE] -> PR #116 (regressions: none)
   - 18% -> 100% with body untouched, just the observed-escape anchor. Confirms the revised ctor rule.
-- game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% INPROGRESS] -> PR #117 (regressions: none)
+- game_core::breath_vibration_calculator::{ctor,dtor,set_breath_holding_params} -> STATE[ctor 100% DONE, dtor 100% DONE, setter 76.8% PARTIAL] -> PR #117 (regressions: none); setter SHAPE resolved on match/game_core-act-on-structure-findings: braced for body + chained `m_current=m_target=...->get_multiplier()` removed both quantity divergences. % stays 76.8% - residual is `m_logic.states().front()` inline-vs-out-of-line (ai::fsm), NON-steerable.
   - GROUPED. ctor+dtor 100% (observed-escape anchor). setter INPROGRESS (76.8%): control structure NOT
     verified - the FUNCTION BODY structure shows the post-loop stores ('38'-'41') as plain function-scope
     statements with NO block-open marker, but the source wraps them in `if ( m_params ) { ... }`; the `{`
@@ -62,7 +62,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     Also refreshed the stale FUNCTION BODY carcass to the authoritative target --view structure (0x0ba3c0).
 - game_core::{get_bone_matrix_in_object_space, get_bone_matrix_in_object_space_impl} -> STATE[100%|DONE] -> PR #120 (regressions: none)
   - free-function pair (wrapper+impl), float4x4 matrix math, both 100% in one rebuild. Fresh independent.
-- game_core::weapon_core_base_state::{ctor,deserializing} -> STATE[ctor INPROGRESS (bytes 100% but structure mismatch: body-assigns vs member-init list), deserializing 100%|DONE] -> PR #121, structure fix folded into PR #122 (regressions: none)
+- game_core::weapon_core_base_state::{ctor,deserializing} -> STATE[ctor 100%|DONE (bytes AND structure match), deserializing 100%|DONE] -> PR #121, structure fix on match/game_core-act-on-structure-findings (regressions: none); moved the 5 body assignments into the member-initializer list - body collapses to target's 0 statements, structure-diff 0/0 clean.
   - GROUPED, 100%. Foundational state base. Surfaced: ai::fsm_state::~fsm_state has NO body in our sources
     (target rva 0x3f210); state classes need a local stopgap dtor to anchor (README). Consider matching it.
 - game_core::player_logic_base_state::movement_animation_index(player_input const&) [static] -> STATE[100%|DONE] -> PR #122 (regressions: none)
@@ -254,7 +254,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     dtor/CRT delinker re-slice churn (empty_stub, scalar-deleting-dtors, float3/4/4x4 ctors, boost _bi,
     bt*/Scaleform/ai/particle/render dtors, noncopyable, interlocked), balanced by 49 improved (incl. all 6
     of this unit, 0.0 -> final); no matched game_core unit regressed.
-- game_core::get_additional_length -> STATE[65.38%|PARTIAL] -> PR #144 (regressions: none)
+- game_core::get_additional_length -> STATE[65.38%|PARTIAL] -> PR #144 (regressions: none); VERDICT FLIP (on match/game_core-act-on-structure-findings): structure-verifier's "MISMATCH (size) ... source-steerable" was WRONG -> corrected to "STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs our /Ob2-inlined COMDAT; proven NON-steerable on #144 (3 source forms all inlined)" in both the embed and structure/get_additional_length.md.
   - STACKED on #143. Free function in namespace survarium (legs_ik_processor.cpp), target rva 0x0bb1f0.
     Body: `float const cos = upleg_dir | -leg_dir; return is_similar(cos,1.0f,epsilon_5) ? knee_len*0.5f :
     sqrt(sqr(knee_len)*0.5f/(1.0f-cos));` - a single ternary return (4 statements per structure). Constants
