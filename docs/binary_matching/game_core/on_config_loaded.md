@@ -50,3 +50,37 @@ materialization decision, not steerable from this function's source.
 
 VERDICT: STRUCTURE MATCH - sole SIZE diff is by-value resource_ptr temp materialization
 through the inlined data[0] operator[], non-steerable LTCG. No source restructure.
+
+---
+
+# weapon_ammunition_cook::on_config_ready
+
+target 0x7505d0 | base 0x45f180 | report.json: 94.625% (STATE marker was stale at 75.81%)
+
+Source (7 statements, matches target shape exactly): the ASSERT, the `config` =
+`static_cast_resource_ptr<...>( data[0].get_unmanaged_resource() )`, `wa` = VOSTOK_NEW_IMPL,
+`wa->load(...)`, `parent->set_unmanaged_resource(...)`, `parent->finish_query(...)`.
+
+## Structure
+`--view structure-diff --condensed` -> target 7 / base 7 stmts, exactly ONE SIZE diff on
+the `config = static_cast_resource_ptr<...>` statement, zero quantity diffs. Structure MATCHES.
+
+## Why only 94.625%
+Same by-value resource_ptr temp materialization class as victory_item_core_cook above, but
+the direction is reversed for this function:
+- TARGET: `push 0; mov ecx,[ebp+8]; call operator[]; lea esi,[ebp-10h]; call
+  get_unmanaged_resource; lea esi,[ebp-4]; call static_cast_resource_ptr; lea ecx,[ebp-10h];
+  call intrusive_ptr::dec` -> the get_unmanaged_resource() return is materialized into a NAMED
+  slot [ebp-10h] and destroyed with an explicit intrusive_ptr::dec.
+- BASE: `push ecx; mov esi,esp; push 0; mov ecx,[ebp+8]; call operator[]; call
+  get_unmanaged_resource; lea esi,[ebp-4]; call static_cast_resource_ptr; add esp,4` -> the
+  temp is built INLINE on the pushed stack slot (esi=esp), no [ebp-10h] slot and no dec dtor;
+  the stack is reclaimed with `add esp,4`.
+
+Same calls, same order, same statement; only the temp's slot vs inline-push materialization
+differs. Every other statement (ASSERT, VOSTOK_NEW, wa->load, set_unmanaged_resource,
+finish_query) is byte-exact. Documented intrusive_ptr-by-value LTCG class (assembly_patterns.md),
+non-steerable from source.
+
+VERDICT: STRUCTURE MATCH - sole SIZE diff is by-value resource_ptr temp materialization on the
+static_cast_resource_ptr line, non-steerable LTCG. No source restructure.
