@@ -8,6 +8,42 @@ This README covers the **Nix / Linux** workflow, which builds the exact VS2008
 toolchain under Wine for you - no Windows install required. For the original
 manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
+<!-- match-score:start -->
+## Match status
+
+_Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
+
+**Overall: 48.20% fuzzy &middot; 8,667 / 25,372 functions exact (34.16%).**
+
+| Module | Units | Functions exact | Code matched |
+|---|--:|--:|--:|
+| `render` | 351 | 372 / 2,805 (13.3%) | 3.3% |
+| `shared` | 112 | 757 / 2,255 (33.6%) | 33.3% |
+| `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
+| `game_core` | 189 | 331 / 1,429 (23.2%) | 13.2% |
+| `core` | 136 | 656 / 1,331 (49.3%) | 34.1% |
+| `animation` | 102 | 151 / 880 (17.2%) | 5.2% |
+| `ai` | 124 | 421 / 759 (55.5%) | 38.3% |
+| `sound` | 69 | 212 / 517 (41.0%) | 16.6% |
+| `collision` | 52 | 369 / 516 (71.5%) | 30.8% |
+| `particle` | 25 | 271 / 485 (55.9%) | 27.1% |
+| `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
+| `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
+| `ui` | 27 | 175 / 255 (68.6%) | 42.7% |
+| `physics` | 14 | 98 / 203 (48.3%) | 24.4% |
+| `fs` | 25 | 71 / 189 (37.6%) | 27.8% |
+| `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
+| `network` | 25 | 7 / 163 (4.3%) | 0.5% |
+| `network_core` | 22 | 6 / 140 (4.3%) | 6.1% |
+| `debug` | 16 | 77 / 127 (60.6%) | 48.1% |
+| `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
+| `input` | 9 | 31 / 56 (55.4%) | 27.7% |
+| `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
+| `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
+
+_Updated 2026-06-07 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+<!-- match-score:end -->
+
 ## Requirements
 
 - Linux (x86_64) with [Nix](https://nixos.org/download) and flakes enabled
