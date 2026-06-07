@@ -1080,3 +1080,28 @@ shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` an
 `Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
 `&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
 wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
+
+### `(T)config_value` -> `binary_config_value::operator T` standalone, base inlines it to cast_number
+SYMPTOM: a `(u8)cfg["x"]["y"]` (any `(T)binary_config_value`) where the TARGET emits
+`call binary_config_value::operator unsigned char` then `movzx eax,al`, but the BASE
+instead emits `mov [slot],eax; call cast_number<unsigned char,unsigned __int64,unsigned int>;
+mov [slot],al; movzx ...`. The conversion chain is `operator u8() -> cast_unsigned_number<u8>()
+-> cast_number<u8,u64,u32>()` (configs_binary_config_value_inline.h). Whole-program LTCG picks
+a DIFFERENT cut point in each binary: target keeps the OUTER `operator unsigned char` out-of-line
+(rva 0x52160) and inlines cast_number INTO it; base inlines the operator away and keeps the INNER
+`cast_number<u8,...>` standalone (base rva 0x79dd0). TELL: query both rich indexes - the operator
+exists out-of-line ONLY in target, cast_number<u8> ONLY in base. The `(T)cfg[...]` source is
+already correct; not steerable from the call site. Same inline-vs-call class as is_aimed()/get_user().
+Confirmed in `game_core/player_parameters_modifyer_cook::translate_query` (89.62% PARTIAL).
+
+### `delete_resource` body `VOSTOK_DELETE_IMPL(g_allocator, resource)` - the strip_pointer inline-vs-call wall (~31%)
+SYMPTOM: a one-line cook `delete_resource` whose only statement is `VOSTOK_DELETE_IMPL(g_allocator,
+resource)`. TARGET: `lea eax,[ebp+8]; push eax; mov eax,[g_allocator]; call <finalize_impl-misname>;
+push eax; call delete_helper; add esp,8` (TWO pushed args, strip_pointer kept out-of-line). BASE:
+`mov eax,[g_allocator]; call <Release-misname>; push eax; lea edi,[ebp+8]; call delete_helper;
+add esp,4` (ONE arg, strip_pointer inlined). The macro is `delete_helper(strip_pointer(allocator),
+pointer)` (Master Gold no-debug form, memory_macros.h:41); the divergence is purely whole-program
+inline-vs-call of `strip_pointer`/the delete_helper wrapper. Structure is 1 stmt / 1 stmt (matches);
+fuzzy stalls ~31% because nearly every instruction's operand differs. Non-steerable - identical residual
+across cooks: `items_cook::delete_resource` (31% DONE) and `player_parameters_modifyer_cook::delete_resource`
+(31% PARTIAL) have byte-identical diffs. Mark PARTIAL/DONE, do not chase.
