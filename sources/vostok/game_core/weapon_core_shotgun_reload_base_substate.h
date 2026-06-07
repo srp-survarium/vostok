@@ -65,7 +65,7 @@ public:
 			weapon_lexeme_pair
 					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
 
-private:
+protected:
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	/* resources::unmanaged_resource */
 	/* 0x0120 */	weapon_core&							m_weapon;

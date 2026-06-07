@@ -1090,3 +1090,38 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   reload predicates + ready_to_reload + get_ammo_slot call.
   Regressions: none - report-changes 0 regressed / 0 removed on the final rebuild; the reload-predicate
   build was 0 regressed / 2 improved.
+- weapon_core_shotgun_reload_{start,one_round,finish}_substate (3 substate classes, ONE unit;
+  branch match/game_core-shotgun_reload_substates off origin/int/game_core). Drove the three STUB
+  shotgun-reload substate .cpp files. 15 functions (ctor/initialize/finalize/is_ready_for_transition/
+  on_animation_end x3). Access fixed from headers' all-public to mangled chars: initialize/finalize
+  MAE protected, is_ready_for_transition EBE private const, on_animation_end AAE private, ctor QAE public.
+  Base substate header member block private->protected (C2248: subclasses read m_weapon/
+  m_animation_to_wait_for/m_animation_playback_state directly; accessibility-only, no layout change).
+    ctor (all 3)                     100  DONE  (init-list call to base substate with class literals:
+        start play_once_and_freeze_at_end/3/"shotgun-start_reload"+reload_start(stand/crouch/jump);
+        one_round play_cyclically/4/"shotgun-reload_one"+reload_cycle; finish play_once_and_freeze_at_end/5
+        +reload_finish; finish also inits m_owner_ready_for_transition(0).)
+    is_ready_for_transition (all 3)  100  DONE  (start: return m_animation_ended; one_round/finish: return true)
+    initialize  one_round 100 / finish 100 DONE; start 97.45 PARTIAL
+        (set_animation_callback(channel_id_on_animation_end,this,bind(&this::on_animation_end,this,_1));
+        start prepends m_animation_ended=false and appends if(!deserializing()&&chamber_a_round_on_reload()
+        &&round_is_chambered())unload_chambered_round(). start residual = round_is_chambered() inline-vs-call,
+        weapon_core.h owned by another worker; same wall as reload_state_base::initialize 92%.)
+    finalize    start 83.42 / one_round 83.42 / finish 89.40 PARTIAL
+        (ASSERT + m_animation_playback_state->reset() + remove_animation_callback(channel_id_on_animation_end,
+        this); finish appends if(!deserializing()&&chamber_a_round_on_reload()&&ammo_in_magazine())
+        instant_chamber_a_round(). residual = animation_playback_state::reset() header-inline-stub elision
+        (animation/type_definitions.h, out of scope; same wall as shotgun_reload_state::finalize 78%) +
+        dummy::nonnull/finalize_impl ICF fold.)
+    on_animation_end  start 83.0 / one_round 83.55 / finish 83.55 PARTIAL
+        (interrupt=false; if(animated_object==&m_weapon){ASSERT; if(m_animation_to_wait_for==params.animation){
+        <action>; interrupt=true;}} return call_me_again. action: start m_animation_ended=true; one_round
+        m_weapon.reload_one_round(); finish *m_owner_ready_for_transition=true. residual = dummy::nonnull/
+        finalize_impl ICF fold + intrusive_ptr::operator== operand scheduling (LTCG call-boundary).
+        Structure matches statement-for-statement.)
+  Anchor: temp_include_all.cpp template use_game_core_shotgun_reload_substate_impl<T> constructs each
+  substate (vtable -> virtuals; initialize's bind keeps non-virtual on_animation_end) + 3 wrappers.
+  Regressions: 9 trivial `100->0` in report-changes (boost storage2 ctor, ~pre_perceptors_filter,
+  vcall thunks, boost::function_base::empty, empty_stub, ~event, artefact_lifebone vcall/vector-dtor) =
+  ICF representative reshuffle from the new boost::bind/function COMDATs; byte-identical at link, no real
+  loss. 41 fns improved (the substate methods). OVERALL UP.
