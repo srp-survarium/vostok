@@ -18,6 +18,7 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
 | `render` | 351 | 372 / 2,805 (13.3%) | 3.3% |
+| `shared` | 112 | 757 / 2,255 (33.6%) | 33.3% |
 | `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
 | `game_core` | 189 | 331 / 1,429 (23.2%) | 13.2% |
 | `core` | 136 | 656 / 1,331 (49.3%) | 34.1% |
