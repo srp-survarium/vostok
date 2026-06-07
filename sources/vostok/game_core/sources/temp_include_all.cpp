@@ -100,6 +100,9 @@
 #include <vostok/game_core/weapon_core_chamber_a_round_aimed_state.h>
 #include <vostok/game_core/weapon_core_fire_state_base.h>
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_start_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_one_round_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_finish_substate.h>
 #include <vostok/game_core/pistol_weapon_core_fire_state.h>
 #include <vostok/game_core/pistol_weapon_core_reload_state.h>
 #include <vostok/game_core/double_barreled_weapon_core_fire_state.h>
@@ -1428,6 +1431,33 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
+	template < typename substate_t >
+	void use_game_core_shotgun_reload_substate_impl( )
+	{
+		// claude@NOTE: constructing the substate emits its vtable, anchoring the virtual
+		// overrides initialize/finalize/is_ready_for_transition; initialize's boost::bind in
+		// turn references the non-virtual on_animation_end, so the whole reachable set is kept.
+		survarium::weapon_core	weapon;
+		substate_t				substate( weapon, 0.0f, NULL, 0 );
+
+		example_callback( reinterpret_cast< pcstr >( &substate ) );
+	}
+
+	void use_game_core_weapon_core_shotgun_reload_start_substate( )
+	{
+		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_start_substate >( );
+	}
+
+	void use_game_core_weapon_core_shotgun_reload_one_round_substate( )
+	{
+		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_one_round_substate >( );
+	}
+
+	void use_game_core_weapon_core_shotgun_reload_finish_substate( )
+	{
+		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_finish_substate >( );
+	}
+
 	void use_bullet( )
 	{
 		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
@@ -2381,6 +2411,9 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_chamber_a_round_aimed_state( );
 	vostok::use_game_core_weapon_core_fire_state_base( );
 	vostok::use_game_core_weapon_core_shotgun_reload_state( );
+	vostok::use_game_core_weapon_core_shotgun_reload_start_substate( );
+	vostok::use_game_core_weapon_core_shotgun_reload_one_round_substate( );
+	vostok::use_game_core_weapon_core_shotgun_reload_finish_substate( );
 	vostok::use_game_core_pistol_weapon_core_fire_state( );
 	vostok::use_game_core_pistol_weapon_core_reload_state( );
 	vostok::use_game_core_double_barreled_weapon_core_fire_state( );
