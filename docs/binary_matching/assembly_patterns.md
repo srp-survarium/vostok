@@ -798,9 +798,14 @@ FOLLOWED BY arg pushes + a folded call = a `_U` assert; recover the args from th
 - `ASSERT_U(expr)` -> `expression_eater(assert_untyped, expr)` -> pushes expr then `push 0`.
 NOTE the order: `assert_untyped`(=0) is pushed LAST (it is an early macro arg) for `_U`, FIRST/last
 varies by form - read the push sequence. A class-typed arg (e.g. an `animation_lexeme`, 0x84) is
-copied by value (`sub esp,0x84; rep movsd`). CAVEAT: if the target's eater receives ONLY the
-expression with NO `assert_untyped push 0`, no standard macro reproduces it exactly (ASSERT_U adds
-the `push 0`); that lone `push 0` is the closest-macro residual. Confirmed in
+copied by value (`sub esp,0x84; rep movsd`). If the target's eater receives EXACTLY TWO args, both
+runtime values, with NO `assert_untyped push 0`, it is the raw typed-untyped form
+`ASSERT_T_U( assert_type, expression )` -> `expression_eater(assert_type, expression)` (= the bare
+`VOSTOK_EMPTY_EXPRESSION_U_VA_ARGS` macro before `ASSERT_U` wraps it with `assert_untyped`). The
+assert_type slot just holds the first runtime value - do NOT reach for `ASSERT_U`/`ASSERT_CMP_U`
+(both ADD the `push 0`). Push order is C right-to-left: `expression_eater(a, b)` -> `push b; push a`.
+Confirmed BYTE-PERFECT in `weapon_user_animations_selector::on_broken_limb_affect` (L337 =
+`ASSERT_T_U( bodypart, type )` -> `push [ebp+10h](type); push [ebp+8](bodypart)`). Other confirmations:
 `weapon_core_idle_state::weapon_core_idle_state` (ctor line 21 = `ASSERT_CMP_U(animations_count,==,4)`,
 100%) and `weapon_core_idle_state::weapon_and_hands_expression` (line 32 `ASSERT_U(weight_driving_animation)`).
 

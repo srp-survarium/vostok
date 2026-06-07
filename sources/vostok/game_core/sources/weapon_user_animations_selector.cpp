@@ -535,22 +535,26 @@ animation::callback_return_type_enum weapon_user_animations_selector::on_interva
 	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[20.12%|PARTIAL]: 3 statements decoded. L341 is `m_user->force_animation_selection()`
-// (direct call, m_user@+44h). L337/L339 are two compiled-out Master-Gold `_U` asserts (the
-// `byte=0; lea; call eater; movzx;test;je; push args; call eater; add esp` shape, assembly_patterns
-// "if(identity(false)){...}" entry). L339 = `ASSERT_CMP_U( affect, ==, 4 )` (pushes affect/4/0).
-// L337 pushes exactly 2 args (type, then bodypart) with NO `push 0`, so it is NOT a standard
-// ASSERT_U/ASSERT_CMP_U (those add the assert_untyped `push 0`); the exact 2-arg eater macro is
-// unidentified - needs the precise debug_macros.h form before a byte-match. Deferred.
-// void survarium::weapon_user_animations_selector::on_broken_limb_affect(char const*, const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum)
+// STATE[86.38%|PARTIAL]: all 5 statements match (was 20.12% / 2 stmts). First two ASSERTs are
+// byte-perfect: L337 = `ASSERT_T_U( bodypart, type )` (2-arg eater, no `push 0` - the assert_type
+// slot holds a runtime value), L339 = `ASSERT_CMP_U( affect, ==, 4 )`. Residual is L341 only:
+// `force_animation_selection()` is declared inline in base_player.h, so our build inlines
+// `m_user->m_force_animation_selection = true` (mov byte[ecx+118h],1) while the target kept the
+// call out-of-line (`call base_player::force_animation_selection`). Same whole-program inline-vs-call
+// LTCG residual as player_logic_sprint_state; base_player.h is owned by another unit (not editable here).
 void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
 {
+	ASSERT_T_U( bodypart, type );
+	ASSERT_CMP_U( affect, ==, 4 );
+	m_user->force_animation_selection( );
+
 	// FUNCTION BODY
-	// <0x594969>|0x009|+0x023:'337'	ASSERT-_U( bodypart, type )  [2-arg eater, no push 0]
+	// <0x594969>|0x009|+0x023:'337'	ASSERT_T_U( bodypart, type )       [matched byte-perfect]
 	// <0>
-	// <0x59498c>|0x02c|+0x023:'339'	ASSERT_CMP_U( affect, ==, 4 )
+	// <0x59498c>|0x02c|+0x023:'339'	ASSERT_CMP_U( affect, ==, 4 )      [matched byte-perfect]
 	// <0>
-	// <0x5949af>|0x04f|+0x00b:'341'	m_user->force_animation_selection()
+	// <0x5949af>|0x04f|+0x00b:'341'	m_user->force_animation_selection()  [residual: inline vs out-of-line call]
+	// target L341: mov edx,[ebp-8]; mov eax,[edx+44h]; call base_player::force_animation_selection
 	// ******
 }
 
