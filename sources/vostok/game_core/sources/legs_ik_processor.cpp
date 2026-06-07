@@ -417,14 +417,13 @@ void legs_ik_processor::process_leg(
 	// ******
 }
 
-// STATE[84.16%|PARTIAL]: large float4x4 IK math, full structure matched (all 64
+// STATE[84.66%|PARTIAL]: large float4x4 IK math, full structure matched (all 64
 // statements, the is_similar early-out, the 4-way ground if-chain, lengths, blend,
 // return). Residuals are register/[ebp-N] slot renaming plus the LTCG arg-passing /
 // temp-materialization at the many math call boundaries (operator -+^* / normalize /
 // create_rotation / transform_position / is_similar / length / get_root_bones_count /
 // interpolated_value / adjust_foot_transform) and a couple of trivial-COMDAT
-// inline-vs-call decisions. One unresolved statement: the else-branch single-byte
-// original_color write (0x64) - see @TODO. Full trail in get_foot_fixed_transform.md.
+// inline-vs-call decisions. Full trail in get_foot_fixed_transform.md.
 float4x4 legs_ik_processor::get_foot_fixed_transform(
 	legs_ik_processor::leg_params const&	params,
 	float4x4 const&						hip_world_matrix,
@@ -499,10 +498,9 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	{
 		start			= foot_to_cube_center_offset * dist_to_test + finish;
 		finish			= start;
-		// claude@TODO: target writes a single low byte (0x64=100) into original_color
-		// here (mov byte[tmp],64h; mov [original_color],cl), not a full color ctor -
-		// the exact source form (a channel setter?) is unresolved; this ctor diverges.
-		original_color	= math::color( 0x64u, 0x00u, 0x00u );
+		// claude@MATCH: target writes only the low (b) channel byte: mov byte[tmp],64h;
+		// mov cl,[tmp]; mov [original_color],cl == set_B(0x64) (b = val&0xff at offset 0).
+		original_color.set_B( 0x64u );
 	}
 
 	float4x4 const&			foot_to_center_rel				= math::get_relative_matrix( foot_world_matrix, result );
