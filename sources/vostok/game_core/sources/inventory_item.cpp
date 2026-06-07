@@ -9,7 +9,12 @@
 
 namespace survarium {
 
-// STATE[78.8%|PARTIAL]: body byte-exact; LTCG base-ctor inline. See inventory_item_ctor.md.
+// STATE[78.8%|PARTIAL]: member-init shape matches; % gap is LTCG base-ctor inline. See inventory_item_ctor.md.
+// STRUCTURE DIFF:
+// target: 0x590870            base: 0x449c20
+// ; survarium::inventory_item::inventory_item(survarium::inventory_item::action_behaviour_type) ; target 0 stmts / base 0 stmts
+// ; aligned 0, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH - both 0-stmt member-init, init order/offsets match; 78.8% gap is LTCG base-ctor inline-vs-call, not this ctor's shape  trail: inventory_item-ctor.md
 inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_action_behaviuor	( type ),
 	m_inventory			( NULL ),
