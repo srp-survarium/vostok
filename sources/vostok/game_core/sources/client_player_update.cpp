@@ -20,11 +20,13 @@ namespace survarium {
 // void survarium::client_player_update::serialize(vostok::network_core::udp_match_packet&) const
 void client_player_update::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x781199>|0x009|+0x00c:'23'		input.serialize( packet );
-	// <0x7811a5>|0x015|+0x00f:'24'		state.serialize( packet );
-	// <0x7811b4>|0x024|+0x00f:'25'		packet.append( time_in_ms );
-	// ******
+	// STRUCTURE DIFF[target 0x771190 | base 0x44d2e0]: target 4 / base 0 stmts
+	// (base is an empty stub - blocked, body not emitted; see STATE note above)
+	// <0>         | --          |       EMPTY only target
+	// 0x009 <0xc> | --          | L23   ONLY target   input.serialize( packet );
+	// 0x015 <0xf> | --          | L24   ONLY target   state.serialize( packet );
+	// 0x024 <0xf> | --          | L25   ONLY target   packet.append( time_in_ms );
+	// ; aligned 0, size-diffs 0, quantity-diffs 4
 }
 
 } // namespace survarium
