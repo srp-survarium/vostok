@@ -1,11 +1,33 @@
 # Structure audit: character_dispersion_calculator::get_broken_hands_penalty
 
-Verdict: STRUCTURE MISMATCH (both - quantity + size)
+Verdict (RESOLVED): STRUCTURE MATCH (shape ok) - 10/10 aligned, 0 size-diffs, 0
+real quantity-diffs (the sole remaining row is an EMPTY blank-line gap).
 
-- target rva 0x585e50, base rva 0x454320
+- target rva 0x585e50, base rva 0x44d700
 - signature: `private: float __thiscall survarium::character_dispersion_calculator::get_broken_hands_penalty(unsigned char, bool) const`
-- report.json fuzzy_match_percent: 93.33% (PARTIAL, not banked) - the residual
-  is structural, not just byte noise; see below.
+- report.json fuzzy_match_percent: 100.0% (was 93.33% PARTIAL).
+
+## How it was fixed (the verdict's suggested fold was WRONG)
+The embed verdict said "fold the trailing `return 1.0f;` into case 0 so the switch
+falls through to the shared epilogue fld1". Tried that two ways and both REGRESSED:
+- `default: case 0: return 1.0f;` (case 0 last/merged) -> 95.29%, but DROPPED the
+  target's explicit `cmp 0` (base switch shrank to 0x12 vs target 0x18) and the
+  reorder shifted the jump table.
+The target asm keeps THREE explicit comparisons (`cmp 0; cmp 1; cmp 2`) and the
+no-match path falls into case 0's fld1 with NO separate trailing return. The form
+that reproduces this exactly:
+```cpp
+switch ( broken_hands_count )
+{
+case 0:  return 1.0f;
+case 1:  return ... ;
+case 2:  return ... ;
+default: NODEFAULT();          // __assume(0)
+}
+```
+`default: NODEFAULT()` marks the no-match path unreachable, so MSVC emits no
+spurious trailing `fld1` yet still keeps the explicit `cmp 0` for case 0 (whose
+fld1 doubles as the shared exit). Result: 100%, 0 size-diffs.
 
 ## Condensed structure-diff (target 10 / base 13 stmts)
 
