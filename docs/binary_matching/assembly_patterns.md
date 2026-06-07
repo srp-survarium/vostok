@@ -1166,3 +1166,40 @@ from the prologue: target `push ecx` (this at `[ebp-4]`, 4-byte frame) vs base
 `sub esp,0Ch` (this at `[ebp-0Ch]`, 12-byte frame) + trailing alignment nops. MSVC's
 single-slot `push reg` frame vs `sub esp,N` is a prologue/frame-allocation quirk not
 expressible in C++ source. Non-steerable; mark DONE/PARTIAL with the residual noted.
+### boost::bind argument: by-VALUE vs boost::cref (reference_wrapper) - SOURCE-STEERABLE
+SYMPTOM: a `boost::bind( &f, this, a, b, ... )` where some args are large value types (float3,
+resource_ptr). BASE pushes each arg by VALUE: inline struct-copy onto the stack (`sub esp,0Ch;
+mov eax,esp; mov ecx,[src]; mov [eax],ecx; ...`) OR an out-of-line `call boost::_bi::value<T>::value`
+per arg, then `call boost::bind<...,T,T,...>` (the bind type's `listN<...,value<float3>,value<float3>>`).
+TARGET instead has a `call boost::addressof<...>` (== `boost::cref`) per arg and binds
+`listN<...,reference_wrapper<float3 const>,reference_wrapper<float3 const>>`; the
+`boost::function::assign_to<bind_t<...,list5<...,reference_wrapper<float3 const>,...>>>` symbol
+names the wrappers.
+FIX (steerable!): wrap each such bound arg in `boost::cref( functor->member )`. Read the TARGET
+bind's `listN<...>` type to decide WHICH args are wrappers vs values - scalars often stay by value
+(`value<unsigned short>`, `value<float>`) while float3/resource_ptr are `reference_wrapper<.. const>`.
+This is NOT an LTCG wall; the original source spelled `boost::cref(...)`. Confirmed: bullet_manager
+`play_particle` (67.87->98.81), `update_tracer` (58.56->89.38) - cref on the float3/resource args
+collapsed the whole bind region to `.. same ..`.
+
+### `bullet_functor_mt_allocator::malloc_impl` / `delete_helper<>` wrapper inline-vs-call (NON-steerable)
+SYMPTOM: a `VOSTOK_NEW_IMPL( allocator, T )` / `VOSTOK_DELETE_IMPL( allocator, p )` whose alloc/free
+SIZE-diffs by a few bytes and bumps the frame by 4. The new path: TARGET `call <allocator>::malloc_impl`
+(or `call delete_helper<alloc,T>` wrapper), BASE inlines the wrapper to the leaf (`call try_pop` for
+malloc; `call delete_helper_impl<...,call_destructor_predicate>` for delete, with the predicate bool
+materialized at the call site). TELL: `pdb_rich_query target --function malloc_impl|delete_helper` finds
+the wrapper at a real rva; the SAME query on the base index returns nothing (wrapper inlined away
+whole-program). The base's extra `push 58h` (size) / extra predicate-bool push and the +4 frame all
+cascade from the one inline. Same whole-program LTCG inline-vs-call class as vectora::size()/operator|.
+Source (`VOSTOK_NEW_IMPL`/`VOSTOK_DELETE_IMPL`) correct; mark PARTIAL. Confirmed: bullet_manager
+`add_decal` (malloc_impl @target 0xae5c0), `free_bullet` (delete_helper wrapper @target 0xae9f0,
+delete_helper_impl @0xaed80).
+
+### `a != b` for float3 folds to `!( operator==(a,b) )` when only operator== exists (NON-steerable)
+SYMPTOM: `x != float3(...)` shows TARGET `call vostok::math::operator==` then a `je`/`jne` branch
+polarity OPPOSITE to BASE, while BASE does `call vostok::math::operator!=` directly (no negate; plus a
+`mov ecx,eax` to pass the temp's this). The target binary has NO float3 `operator!=` symbol (only
+`operator==` @0x14b90); `operator!=` is `inline { return !(a==b); }` and is inlined to `call operator==`
++ negation. BASE keeps a standalone float3 `operator!=` (@0x6f250 math_float3_inline.h) and calls it.
+Whole-program LTCG inline-vs-call (the `!=` wrapper folded to `!(==)` at the call site). Source `a != b`
+correct; mark PARTIAL. Confirmed: `redundant_bullet_predicate::operator()` (87.98%).
