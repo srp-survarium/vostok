@@ -98,6 +98,20 @@ structure, and (3) track B's OWN `fuzzy_match_percent` and a `STATE`/ledger line
 same as any matched function. A call that resolves but whose callee body is unverified
 is a half-match hiding an unmatched function.
 
+**A cross-TU helper is DECLARED in a header with the module's `VOSTOK_<MODULE>_API`
+macro - never ad-hoc forward-declared in the consuming `.cpp`.** When B is defined
+out-of-line in one `.cpp` and called from another, put its declaration in a shared
+header (create the module's `api.h` if it lacks one, mirroring `vfs`/`ai`/`physics`)
+prefixed with `VOSTOK_<MODULE>_API`, and include that header in both the defining and
+the consuming `.cpp` so the symbol carries the correct DLL scope. The gold build defines
+`VOSTOK_STATIC_LIBRARIES`, so the macro expands to nothing and this is byte-neutral for
+the match - but the forward-decl-in-`.cpp` shortcut breaks DLL configs and is not how the
+engine is structured. EXCEPTION: a helper that is `inline` in a header yet *deliberately*
+forward-declared out-of-line in a `.cpp` to force the target's out-of-line `call` (a
+matching device - e.g. `computed_*_animation_time_scale`, inline in
+`weapon_animations_timescale_inline.h`) stays a forward-decl; header-izing it would inline
+the call and change the match.
+
 
 ## Style
 - Hard tabs; align member-init lists and `=` columns with tabs.
