@@ -1501,15 +1501,10 @@ void weapon_core::update_bones_matrices(
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_sprinting() const
+// STATE[100%|DONE]
 bool weapon_core::is_sprinting( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a32c7>|0x007|+0x00e:'1033'
-	// ******
+	return m_user_animations_selector.is_sprinting( );
 }
 
 // STATE[STUB]
@@ -1675,30 +1670,22 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::instant_idle_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::instant_idle_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a4e49>|0x009|+0x03d:'1166'
-	// ******
+	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::could_be_used(survarium::base_player const&) const
+// STATE[73.90%|PARTIAL]: branch + member reads byte-identical. Residual = inline-decision wall on
+// intrusive_ptr::operator* : target out-of-lines it (`call operator*` @0x16); our /Od /Ob2 build
+// inlines it because our compiled-out ASSERT(m_object) stub is small enough to fit the inline
+// budget, bringing the deref + ASSERT temp-chain inline. Source form already uses operator*
+// (*ptr).broken_hands_count(); the inline/out-line choice lives in the shared intrusive_ptr_inline.h,
+// not steerable from here. See weapon_core_could_be_used_aimed.md
 bool weapon_core::could_be_used( base_player const& user ) const
 {
-	// LOCALS
-	// u8 							broken_hands_count
-	// ******
-
-	// CALL SITE INFO
-	// <0x5a3264> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
+	u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	return !( broken_hands_count == 2 && is_double_handed( ) );
 
 	// FUNCTION BODY
 	// <0x5a3259>|0x009|+0x02e:'1171'
@@ -1706,19 +1693,11 @@ bool weapon_core::could_be_used( base_player const& user ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::could_be_aimed(survarium::base_player const&) const
+// STATE[75.88%|PARTIAL]: same intrusive_ptr::operator* inline-decision wall as could_be_used.
 bool weapon_core::could_be_aimed( base_player const& user ) const
 {
-	// LOCALS
-	// u8 							broken_hands_count
-	// ******
-
-	// CALL SITE INFO
-	// <0x5a3214> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
+	u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	return broken_hands_count != 2;
 
 	// FUNCTION BODY
 	// <0x5a3209>|0x009|+0x02e:'1177'
@@ -1829,21 +1808,22 @@ void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 	// ******
 }
 
-// STATE[STUB]
-// survarium::profile_slot_enum survarium::weapon_core::get_ammo_slot(survarium::ammo_id_enum)
+// STATE[99.77%|DONE]: byte-identical stream; sole residual = call-boundary register for the
+// `this` of profile_slot_id() (target passes it in eax, ours in ecx) - LTCG custom calling
+// convention on the callee, not source-steerable. claude@NOTE
 profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 {
-	// FUNCTION BODY
-	// <0x5a2dd9>|0x009|+0x019:'1261'
-	// <0>
-	// <1>
-	// <0x5a2df2>|0x022|+0x00c:'1264'
-	// <0>
-	// <0x5a2dfe>|0x02e|+0x00c:'1266'
-	// <0>
-	// <0x5a2e0a>|0x03a|+0x005:'1268'
-	// <0>
-	// ******
+	static profile_slot_enum const weapon_ammo_slots[2][2] = {
+		{ ammo1_weapon1_slot, ammo2_weapon1_slot },
+		{ ammo1_weapon2_slot, ammo2_weapon2_slot },
+	};
+
+	switch ( profile_slot_id( ) )
+	{
+		case weapon1_slot:	return weapon_ammo_slots[0][slot_id];
+		case weapon2_slot:	return weapon_ammo_slots[1][slot_id];
+		default:			return invalid_slot;
+	}
 }
 
 // STATE[STUB]
@@ -1943,22 +1923,34 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 	return !is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::can_and_must_reload_predicate() const
+// STATE[STUB]: out-of-line stub (target @0x0ac370 has the real "A LOT OF LOGIC" body, not matched
+// here). Defined so callers like can_and_must_reload_predicate emit `call ready_to_reload`.
+bool weapon_core::ready_to_reload( ) const
+{
+	return true;
+}
+
+// STATE[93.32%|PARTIAL]: control-flow + all member reads/branches/temp byte-identical (perfect
+// structure). Sole residual = target reserves a 0x30 frame and zeroes a dead dword [ebp-10h] in
+// the prologue (never read); ours has a 0x08 frame, no such slot. A hidden local with no PDB LOCALS
+// record and no read - not source-pinnable. claude@NOTE
 bool weapon_core::can_and_must_reload_predicate( ) const
 {
-	return false;
+	return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
 
 	// FUNCTION BODY
 	// <0x5a4df0>|0x010|+0x03e:'1333'
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::can_and_must_reload_and_animation_ended_predicate() const
+// STATE[86.17%|PARTIAL]: control-flow + can_and_must_reload_predicate call byte-identical; residual
+// = inline-decision wall on weapon_core_base_state::has_animation_ended() (target out-of-lines it -
+// `call has_animation_ended` + the 3 current_base_state() ref-copies; our /Od /Ob2 inlines the
+// [+135h] read). Same documented wall as target_and_animation_ended_predicate; out-lining the
+// shared getter would regress other inlined call sites. claude@NOTE
 bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
-	return false;
+	return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
 
 	// FUNCTION BODY
 	// <0>
