@@ -1241,3 +1241,48 @@ body matched) jumps straight to 100%. TELL: a sibling overload/functor in the sa
 `T* const` and matches. Confirmed: `protect_affect_predicate::operator()(damage_protector* const)`
 in body_part_parameters.cpp (0.00 -> 100.00 by adding `const`; its twin
 `protect_damage_predicate::operator()(damage_protector* const)` was already `* const`).
+
+### `math::pow(x, INT_literal)` inlines pow(float,int) in target, out-of-line call in base
+SYMPTOM: `math::pow( <float>, 5 )` (an INTEGER second arg -> binds `pow(float,int)`,
+not `pow(float,float)`) emits in TARGET an inlined sign-dispatch block
+(`mov edx,5; test edx; jne; ...; call pow_impl`) while BASE emits `mov ecx,5; call
+vostok::math::pow`. Same per-call-site inline-vs-call LTCG class as operator| /
+is_aimed / fixed_string ctor. TELL: query both rich indexes - `pow_impl(float,uint)`
+is out-of-line in BOTH, but `pow(float,int)` is out-of-line ONLY in base (target inlined
+it whole-program). Disassemble base `pow(float,int)`: its body
+(`test ecx; jne; movss[1.0]; ret / jge; divss; neg; jmp pow_impl / jmp pow_impl`) IS the
+target's inlined block. The inline also reorders operand evaluation (the int-pow's operand
+gets computed first) and shifts surrounding x87-vs-xmm result codegen. Source
+`math::pow(x, 5)` is already correct; mark PARTIAL. (Watch the overload: `pow(x,5)` with
+`5` an int binds `pow(float,int)`; `pow(x,5.0f)` would bind `pow(float,float)` - different
+function.) Confirmed in `game_core/pseudo_random::random_f` (target rva 0x57e420, 60.74%).
+
+### ternary precedence trap: `a * b * c ? x : y` makes `(a*b*c)` the condition, not `c`
+SYMPTOM: source `mult * koef * first_shoot ? side_a : side_b` where `first_shoot` is a
+bool flag. `*` binds tighter than `?:`, so this is `(mult*koef*first_shoot) ? side_a :
+side_b` - the whole float product is the ternary condition. TARGET instead tests the bool
+ALONE: `movzx ecx, byte[first_shoot]; test ecx,ecx; je .else` then multiplies the selected
+value. So the original source parenthesized the ternary:
+`mult * koef * ( first_shoot ? side_a : side_b )`. This is a SOURCE bug in the
+reconstruction, fully steerable - add the parens. Confirmed in
+`game_core/weapon_recoil_calculator::fire` (79.80% -> 91.69% by parenthesizing both the
+recoil and recoil_amount ternaries).
+
+### private LTCG-inlined helper has NO base symbol -> objdiff None / not in base index = STATE[INLINED]
+SYMPTOM: a private `AAE` member helper (e.g. `process_compensation`, `get_random_angle`,
+`get_random_amount`) is "not found in BASE index" by structure-diff and shows None in
+report.json, even though it exists out-of-line in TARGET. CAUSE: under /Od+/GL the linker
+inlined the private helper whole-program into its only callers (here tick/fire), so no
+standalone base symbol survives to pair. Not separately scorable; mark STATE[INLINED] and
+match its body as a callee of the caller. (Distinct from the constant-symbol-naming None
+below.) Confirmed in `game_core/weapon_recoil_calculator`.
+
+### objdiff None from differing delinker constant-pool symbol names (body byte-identical)
+SYMPTOM: a function whose body is byte-for-byte identical to the target (structure-diff
+7/7 aligned, 0 size/quantity-diffs) still scores None. CAUSE: each `movss xmm0,[0.0f]`
+reloc resolves to a DIFFERENT delinker-assigned symbol for the same 0.0f constant pool
+slot - base `out_of_range_reward` vs target `offset` - so objdiff's relocation compare
+cannot pair the instructions and bails to None. Non-steerable (the source `= 0.0f` is
+correct; it is a delinker naming artifact, same misname class as empty_stub/finalize_impl).
+Confirmed in `game_core/weapon_recoil_calculator::reset` (7 stores to 0.0f, all
+out_of_range_reward vs offset).

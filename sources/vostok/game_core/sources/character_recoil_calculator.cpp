@@ -31,7 +31,7 @@ void character_recoil_calculator::set_character_recoil_params( character_recoil_
 	// ******
 }
 
-// STATE[99.63%|DONE]: target allocated 4 more bytes on the stack and used different offsets for local variables
+// STATE[99.65%|DONE]: target allocated 4 more bytes on the stack and used different offsets for local variables (non-steerable /Od frame-slot noise)
 void character_recoil_calculator::tick(
 	const weapon_user_state_enum	character_state,
 	const bool						is_aiming,
@@ -67,31 +67,16 @@ void character_recoil_calculator::tick(
 			m_current_value = math::min( m_current_value + ( m_increase_speed * dt ), m_target_value );
 	}
 
-	// FUNCTION BODY
-	// <0x596279>|0x009|+0x00c:'32'
-	// <0x596285>|0x015|+0x016:'33'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x59629b>|0x02b|+0x035:'38'	m_target_value = is_aiming ?  m_params->aimed_stand_multiplier : m_params->stand_multiplier;
-	// <0x5962d0>|0x060|+0x002:'39'
-	// <0>
-	// <0x5962d2>|0x062|+0x034:'41'	m_target_value = is_aiming ?  m_params->aimed_crouch_multiplier : m_params->crouch_multiplier;
-	// <0>
-	// <1>
-	// <2>
-	// <0x596306>|0x096|+0x046:'45'	float dt = current_time_in_ms > m_current_time
-	// <0x59634c>|0x0dc|+0x009:'46'	m_current_time = current_time_in_ms;
-	// <0x596355>|0x0e5|+0x015:'47'	if ( m_current_value != m_target_value )
-	// <0>
-	// <0x59636a>|0x0fa|+0x011:'49'		if ( m_target_value < m_current_value )
-	// <0x59637b>|0x10b|+0x032:'50'
-	// <0x5963ad>|0x13d|+0x002:'51'
-	// <0x5963af>|0x13f|+0x02a:'52'
-	// <0>
-	// <1>
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x586270            base: 0x448640
+	// ; void survarium::character_recoil_calculator::tick(const survarium::weapon_user_state_enum, const bool, const unsigned int, const float) ; target 16 stmts / base 18 stmts
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// ; aligned 16, size-diffs 0, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - all 16 statements align, 0 size-diffs; the 2 quantity-diffs are EMPTY source-line gaps. Residual is the /Od frame-slot allocation (target +4 bytes of stack, shifted [ebp-N] offsets), non-steerable. trail: character_recoil_calculator_tick.md
 }
 
 } // namespace survarium
