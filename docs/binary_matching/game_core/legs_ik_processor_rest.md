@@ -65,3 +65,36 @@ All remaining functions implemented + anchored. 100%: leg_params ctor/activate, 
 90% process (get_skeleton temp-spill 0xC frame shift + R_ASSERT report half). cc inits effectively DONE (report.json
 None - universal cc dynamic-init/atexit name-pairing artifact, not 0%). get_additional_length stays 65.38% (operator| inline-vs-call). Regressions: layout churn on unrelated
 symbols from added statics (objdiff name-pairing), not code regressions; report-changes.json clean on final rebuild.
+
+## Structure-verifier v2 pass (2026-06-07)
+
+REAL FIX (process, 90.00 -> 92.60%): the `R_ASSERT( success )` after `try_invert`
+was the wrong assert macro. The target at 0xff emits the MASTER_GOLD `_U` assert form
+- `VOSTOK_EMPTY_EXPRESSION_U_VA_ARGS` = `if ( identity(false) ) { expression_eater(
+assert_type, success ); } else (void)0` - i.e. it materializes and passes the asserted
+expression to the eater: `mov byte[ebp-169h],0; lea eax,..; call stub; movzx [eax];
+test; je; push success; push 0; call`. Plain `R_ASSERT` expands to
+`VOSTOK_EMPTY_EXPRESSION_VA_ARGS` (no expression reference) and emitted only the 0x12
+stub. Changed to `R_ASSERT_U( success )`; the R_ASSERT row is now byte-identical and the
+fn jumped 90.00 -> 92.60. Sole residual now is the get_skeleton()/*m_skeleton spill (0xC
+per get_bone_matrix_in_object_space call; target inlines [m_skeleton]) - a call-boundary
+LTCG spill, the L155/L157-vs-3rd-branch swap in the diff is an aligner artifact, the 4-way
+ground ladder is fully present.
+
+CONFIRMED: the prior "is_full_on_ground vs is_on_ground" suspicion for `process`'s final
+branch is RESOLVED as `is_on_ground()` (the asm at .9/0x4b2 and the discarded
+`m_right_leg_params.is_on_ground()` at .12/0x516 both test heel `[+2Ch]` THEN-OR toe
+`[+2Dh]` = `heel || toe`; `is_full_on_ground` would be `heel && toe`). Source is correct,
+no change. Same check on get_foot_fixed_transform: first branch tests both bytes AND-wise
+(heel `je` next THEN toe `je` next) = `is_full_on_ground()` (correct); second = heel-only
+`is_heel_on_ground()`; third = toe-only `is_toe_on_ground()`. All correct.
+
+WALLS confirmed (structure MATCH, non-steerable residual; carcasses replaced with embeds):
+- ~legs_ik_processor 85.71%: 1/1 stmt clean; residual is the auto-emitted member-dtor
+  epilogue (target sets this+0x7Ch/this+0x70h before each ~fermi_interpolator; base
+  ICF-folds the this-setups). Codegen, not source.
+- leg_params::tick 97.42%: 3/3 clean; one extra 4-byte frame slot (LTCG phantom temp at
+  math::max boundary).
+- set_heel_on_ground 98.84% / set_toe_on_ground 98.59%: sole SIZE on the
+  m_*_interpolator = fermi_interpolator(...) row = lea ecx,[ebp-0Ch] for the COMDAT-folded
+  ~fermi_interpolator temp dtor this arg (ICF/LTCG).

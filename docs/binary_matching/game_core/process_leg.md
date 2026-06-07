@@ -220,3 +220,15 @@ block, NOT a function-scope statement between blocks.
   that missing in-block dir local, i.e. a RECOVERABLE matching item (declare the extra block-1 normalize
   local, route the dir reads through it), not purely an unsteerable compiler copy. Flagged for a faster
   machine as the concrete next step before banking it as non-reproducible. STATE stays PARTIAL (honest).
+
+## Structure-verifier v2 pass (2026-06-07) - 80.96% (structure MATCH, no change)
+
+Re-diffed: the three braced IK-stage blocks are present. All SIZE rows are call-boundary
+temp materialization (operator -/^/* / normalize / is_similar / create_rotation) plus the
+get_root_bones_count() spill (0xC per of the 5 index computations; target inlines the helper)
+and the is_similar inline (0xd7 vs 0x159). The `up_leg_alpha_angle = get_angle(...)` and
+`target_up_leg_dir` ONLY-base rows + L216/L217 ONLY-target rows are an ALIGNER SWAP around
+the get_angle call - both base AND target call get_angle out-of-line (base 0x531, target
+0x467), so there is no inline-vs-call divergence and no missing statement there. Carcass
+replaced with the condensed structure-diff embed + VERDICT. Residual is the documented
+LTCG/spill class, non-steerable from this function's source.
