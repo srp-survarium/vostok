@@ -69,9 +69,18 @@ Caveats baked into the format (do not misread these as divergences):
 2. **SIZE** - a statement exists on both sides but its `+delta` (bytes to the next
    statement) differs. That statement is exactly where codegen diverged - a fast
    localizer even when the byte view is noisy.
+3. **ORDER** - the matcher must have kept the ORIGINAL definition order; verify it did.
+   Compare the order of function/member definitions in our source against the original
+   (the PDB / header structure / the target unit's symbol order). If the matcher
+   REORDERED definitions or REGROUPED members under a single access specifier to "tidy"
+   the layout, FLAG it - we replicate the original code, not write our own, so the
+   original order (even with `private:`/`protected:`/`public:` repeated and interleaved)
+   is the correct layout and must be restored. Interleaved/repeated access specifiers
+   that PRESERVE the original order are CORRECT - never flag those, and never suggest
+   regrouping them.
 
-Report BOTH, per statement, as a side-by-side (target vs base): offset, size, srcline,
-statement text, and which side has the extra/missing/larger entry.
+Report ALL THREE, per statement/definition, as a side-by-side (target vs base): offset,
+size, srcline, statement text, and which side has the extra/missing/larger/out-of-order entry.
 
 ## Naming and source-shape conventions that DRIVE structure (you must know these)
 Structure is a function of how the source is written. The usual causes of a
