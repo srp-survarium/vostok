@@ -73,9 +73,16 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   relinks the EXE (~20 min; the module-only build is ~1 min). Then take the
   function's `fuzzy_match_percent` from `binaries/objdiff/report.json` (that is
   the `STATE` number) and check `report-changes.json` for regressions.
-- **Diff:** `pdb_fetch --view diff` shows *where* base and target differ; iterate.
-  Take the *number* from `report.json` / `STATE` (the diff header is a close but
-  secondary fuzzy %); use the diff for the *location*.
+- **Diff - `--view structure-diff` FIRST, then `--view diff`:** start with
+  `pdb_fetch --target-index .../target/index.jsonl --base-index .../base/index.jsonl
+  --function <name> [--rva 0x<target_rva>] --view structure-diff --condensed`. It
+  localizes the problem: WHICH statement diverges and HOW (`SIZE` = same statement
+  different byte size; `ONLY base|target` = a quantity divergence; `.. same ..` =
+  matched runs). Only AFTER you've located a divergent statement, drop to
+  `pdb_fetch --view diff` (operand-aware assembly) at that spot to see the
+  instruction-level cause. Take the *number* from `report.json` / `STATE`; use the
+  diffs for the *location* then the *cause*. (After a `SIZE` row the two sides'
+  offsets drift by the running delta - expected, not a new divergence.)
 - **Compare STRUCTURE, not just the %:** diff your function's layout in
   `binaries/structure/base/<unit>` against the target `// FUNCTION BODY` carcass - same
   `'srcline'` statements, same `[n]` block-opens, same `<n>` (no-address) lines, and roughly

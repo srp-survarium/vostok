@@ -285,6 +285,15 @@ context in place - not buried in a PR or a log. This is the existing house style
 `collision_sensor.cpp`, `player_stamina.cpp`, `damage_model.cpp`. Only a clean
 **100% DONE** match may delete the carcass for tidiness.
 
+**Preferred for a non-100% function: the two-sided condensed structure-diff** (it
+supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
+structure-diff --condensed` and paste its output, `// `-prefixed, in place of the
+carcass: it shows target-vs-base aligned with the matched runs collapsed to
+`.. same ..` and each divergence as `0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
+{stmt}   {SIZE|ONLY base|ONLY target|EMPTY only ...}`. That way the reader sees exactly
+where our build diverges from the target, not just the target shape. (The structure-
+verifier produces these.)
+
 **When the match is NOT 100%, PRESERVE the `// FUNCTION BODY` block verbatim -
 including its `<0> <1> <2>` marker lines. Never strip them** (a clean 100% DONE deletes
 the carcass entirely, per the rule just above). A `<N>` (no address) line is a statement/sub-expression

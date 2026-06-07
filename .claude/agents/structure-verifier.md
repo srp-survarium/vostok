@@ -32,26 +32,58 @@ report.json cannot see it; you can. (Live example: `weapon_core_base_state` ctor
 Read these from the **current integration branch** (the PR branch you check out may
 carry a stale copy); review the code against the latest rules.
 
-## The two structures you compare
-For the function (resolve overloads first with `pdb_rich_query --list`):
+## The two structures you compare - start with `--view structure-diff` FIRST
+**Do NOT eyeball two `--view structure` dumps by hand.** The parser aligns target vs
+base for you. Run (resolve overloads first; pass the TARGET rva with `--rva` if the
+name is ambiguous - base is resolved by mangled symbol, not rva):
 
 ```
-# TARGET structure (ground truth) - the original source's shape
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
-  --function <name> --rva 0x<target_rva> --view structure
-
-# BASE structure - what OUR source currently compiles to
-pdb_rich_query --index binaries/rich/base/index.jsonl --function <name> --list   # get base rva
-pdb_fetch --base-index binaries/rich/base/index.jsonl \
-  --function <name> --rva 0x<base_rva> --view structure
+          --base-index   binaries/rich/base/index.jsonl \
+          --function <name> [--rva 0x<target_rva>] \
+          --view structure-diff --condensed
 ```
 
-`--view structure` prints `; N statements, 0xNN bytes` then one row per statement:
-`0xOFFSET  <0xSIZE>  <statement-or-srcline>`. The TARGET carcass (the `// FUNCTION
-BODY` block in the .cpp, or `pdb_fetch --view target`) is the same information in
-the source: `<absoluteVA>|offset|+delta:'srcline'  <text>`, plus `<0>/<1>` no-address
-markers and `[n]` block-opens. Either form is the target skeleton; the base form is
-our build's. **Compare them statement by statement.**
+Output: a header `target: 0x<rva>   base: 0x<rva>` + `; <sig> ; target N / base M
+stmts`, then aligned-equal runs COLLAPSED to `.. same ..`, and only the divergences
+as one compact line each:
+`0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> | {stmt}   {TAG}` - TAG is `SIZE` (same
+statement, different byte size), `ONLY base` / `ONLY target` (a statement present on
+one side only = a real QUANTITY divergence), or `EMPTY only base|target` (a collapsed
+source-line gap on one side). A trailing `; aligned A, size-diffs S, quantity-diffs Q`.
+A clean match prints just `.. same ..` with `size-diffs 0, quantity-diffs 0`. Drop
+`--condensed` to see every row (including the `.. same ..` ones) when you need the full
+picture. (`--view structure` single-side still exists for raw inspection.)
+
+**Read the offsets right: after the FIRST `SIZE` divergence the two sides' offsets
+DRIFT apart** (each accumulates the running size delta) - that drift is expected, not a
+new divergence; judge each row by its own `SIZE`/`ONLY`/`EMPTY` tag, not by whether the
+offsets still line up.
+
+**Order of tools: `--view structure-diff` FIRST.** It localizes the problem - WHICH
+statement diverges and HOW (SIZE vs quantity). Only AFTER you have located a divergence
+do you drop to the other views to NAME its cause at that spot: `--view diff` (operand-
+aware assembly) for the instruction-level reason, or `--view target`/`--view base` for
+the raw disassembly of that statement. Don't start from the assembly diff - you'd be
+reading instruction noise without knowing which statement matters.
+
+### Embed the condensed diff in a non-100% function (replace the one-sided carcass)
+For a PARTIAL/INPROGRESS/BLOCKED function, REPLACE its one-sided `// FUNCTION BODY`
+carcass with the condensed structure-diff, commented, so the divergence is visible
+inline (a clean 100% DONE keeps no carcass at all). Real example
+(`legs_ik_processor::get_foot_fixed_transform`, 84%):
+```
+// STRUCTURE DIFF[target 0x6ebae0 | base 0x514fb0]: target 87 / base 95 stmts
+// .. same ..
+// 0x011 <0x3b> | 0x011 <0x47> | up_leg_world_matrix = matrices[...] * hip_world_matrix;   SIZE
+// .. same ..
+// 0x46e <0x16> | 0x50d <0xb>  | float3 start;                                              SIZE
+// 0x484 <0x32> | 0x518 <0xb>  | float3 finish;                                             SIZE
+// --          | 0x523 <0x19>  | math::color original_color( 0x80u,0xc8u,0,0 );             ONLY base
+// .. same ..
+```
+That replaces the old `// FUNCTION BODY` block. Paste the tool's `--condensed` output
+verbatim under a `// ` prefix; do not re-summarize it.
 
 Caveats baked into the format (do not misread these as divergences):
 - Carcass `<VA>` addresses are BASE-build addresses, off the target rva by ~0x10000;
