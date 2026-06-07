@@ -283,3 +283,51 @@ _(Append new findings below this line.)_
   member-zeroing callee that the target keeps out-of-line (often with a non-__thiscall register
   convention = proof LTCG kept it standalone), accept the empty-stub elision at the caller and stop -
   none of these levers move it. (PR #124.)
+- **A `boost::bind(&this_class::method, this, _1)` -> `set_X_callback(...)` whole statement
+  matched 100% in ONE rebuild** - the bind temp / boost::function1 ctor / clear() dtor all
+  inline byte-for-byte under /Od. No special anchoring beyond the standard observed-instance
+  escape. The callback method it binds (here `on_animation_end`) only needs to EXIST (it does,
+  it's another member of the unit). Confirmed on `weapon_core_animation_end_aware_state::initialize`.
+- **A 4-member same-class group can split DONE/PARTIAL cleanly in ONE rebuild if you read the
+  COFF access chars + member offsets + callee inline-vs-call up front.** Of
+  `weapon_core_animation_end_aware_state::{initialize,finalize,set_animation_to_wait,on_animation_end}`:
+  the two that only touch members + call NON-inlined methods hit 100%; the two that call a
+  trivial /GL-inlined accessor (get_user) or carry the folded-empty-call artifact capped at
+  ~77-78% PARTIAL. Both PARTIALs were recognizable from the asm pre-build (target keeps the
+  callee standalone, base doesn't), so no second rebuild was spent chasing them.
+- **A const method that ASSIGNS to a member needs the member `mutable` - catch it pre-build
+  (it's a guaranteed C2678 otherwise).** When the target's `... const` method takes `&member`
+  and calls a mutating op (`operator=`/byte store), declare the member `mutable` in the SAME
+  edit pass as the body; otherwise the first rebuild is wasted on the compile error. Cost me
+  one rebuild on `set_animation_to_wait` (the body was right, just needed `mutable`).
+- **A trivial fsm_state-style virtual override (empty `{}` / `{ return true; }`) is
+  BYTE-CORRECT but objdiff-UNSCORABLE - confirm it in ONE rebuild and stop, don't chase
+  the `None`.** These header one-liners get `/OPT:ICF`-folded whole-program: the surviving
+  representative symbol at the folded address differs build-to-build and side-to-side, so
+  neither delinker re-attaches the body to `your_class::method` - the `.h` unit reads
+  `fuzzy: None` with stray *other-class* fold-siblings (e.g. `breath_state*`) listed, and
+  `binaries/rich/base/index.jsonl` has no standalone symbol for your function (same class as
+  the documented `game_core_initialize` gap). PROVE the bytes instead of chasing a symbol:
+  read the target fold body (`pdb_rich_query target --rva`), then scan
+  `binaries/rich/base/index.jsonl` for functions whose `instructions` are byte-identical -
+  if the empty-thiscall fold (push ebp;mov ebp,esp;push ecx;mov [ebp-4],ecx;mov esp,ebp;pop
+  ebp;ret) and the return-true fold (...mov al,1...) both have a populated family (~100 / ~30
+  members on game_core), your bytes are emitted and correct. Mark 100%|DONE. The 50-ish
+  100<->0 rows in report-changes are symmetric fold-representative churn (dtors/thunks/refcount
+  trivials), NOT regressions - none touch your source. ANCHOR via member-fn ADDRESS-OF only
+  (`&Class::method`), NEVER construct an instance: instantiating an fsm_state-derived class
+  emits its vtable and forces codegen of any still-STUB non-void virtual (e.g.
+  `selected_animations`) -> C4716/LNK1257 link failure (cost me one full ~20-min relink).
+  Whole unit (2 trivial overrides) done in effectively one productive rebuild this way.
+- **The inherited stack tip's `temp_include_all.cpp` may not even COMPILE - brace-balance-check it
+  BEFORE your first rebuild (zero cost).** On `weapon_core_hide_state_base` the tip branch
+  (`match/game_core-weapon_core_show_state_base`) had FIVE anchor functions each missing their closing
+  `}` (use_dispersion_calculator, use_character_dispersion_calculator, use_weapon_dispersion_calculator,
+  use_client_player_update, use_game_core_weapon_state) - `void use_X(){...` ran straight into
+  `void use_Y(){`, so MSVC failed with `C2601 local function definitions are illegal` + `C1075 EOF`. The
+  prior report.json was therefore generated on a DIFFERENT (older, compiling) tree, which makes nearly
+  every `100->0` row in report-changes a stale-baseline artifact, not your regression. Catch it for free
+  before building: `python3 -c "s=open('.../temp_include_all.cpp').read(); d=0; [exec('global d')]"` - or
+  just iterate chars counting `{`/`}` and assert final depth 0, min depth never negative. Fixing the
+  braces is safe (the anchor TU emits no matched bytes) and re-enabled ~89 dead-stripped anchors. Cost me
+  one wasted ~20-min rebuild discovering it.
