@@ -221,14 +221,6 @@ _(Append new findings below this line.)_
   observed body from being DSE'd. No `--view diff` round trip needed. Confirmed on
   `get_bone_matrix_in_object_space{,_impl}`. (The inline helper accessors it calls -
   `skeleton::get_root`, `get_root_bones_count` - also went 0->100 for free.)
-- **A header-only edit may NOT retrigger .obj recompiles under this ninja setup -
-  touch the dependent .cpp.** After fixing an inline body in a header, `rebuild.py`
-  ran `[1/1]` (link only) and the LTCG codegen kept failing on the STALE obj IL
-  (the obj's depfile didn't list the header). The error even reported the *new*
-  source line while using the old IL. FIX: `touch` every .cpp that emits the
-  affected symbol (here the vtable-emitting TUs) so ninja recompiles them with the
-  fixed header. Cost 1 wasted rebuild on `movement_animation_index`'s
-  `get_attachment_transform` stub.
 - **Anchoring a STATIC member of an fsm_state-derived class pulls the WHOLE vtable
   chain - budget the stopgaps + a valid get_attachment_transform up front.** Even a
   pure static (no instance) anchor keeps the class's .obj, whose ctor emits the
@@ -263,15 +255,6 @@ _(Append new findings below this line.)_
   member-zeroing reset called once is a textbook LTCG fold; verify with `pdb_rich_query base` (no standalone
   symbol) and stop at the empty-stub 83% in ONE rebuild.
 
-- **Generated ninja files have NO header-dependency tracking - edit a header and the
-  dependent `.cpp` TUs are NOT recompiled.** A pure header edit (e.g. `animation_playback_state.h`,
-  `weapon_core_base_state.h`) can produce a rebuild report of `0 regressed / 0 improved` even though
-  you changed the class - the build reused the stale `.obj`s, so your % won't move and you'll waste a
-  ~20-min relink chasing a ghost. FIX: after any header-only change, `touch` the `.cpp` TUs that
-  include it (or `ninja_build.py -t clean`) BEFORE `rebuild.py`, so ninja recompiles them. Tell-tale:
-  a rebuild whose target functions are unchanged AND whose only churn is the rotating baseline dtors
-  means nothing of yours recompiled - touch and rebuild. (Found while moving a class between headers
-  for `weapon_core_aimed_state_base::finalize`.)
 - **Confirmed dead ends for the LTCG inline-vs-call of a tiny member (don't re-burn rebuilds on
   these).** For `animation_playback_state::reset()` folded into `weapon_core_aimed_state_base::finalize`,
   ALL of these still inlined under `/Od /Ob2 /GL`: (a) decl/def split into the class's OWN header
