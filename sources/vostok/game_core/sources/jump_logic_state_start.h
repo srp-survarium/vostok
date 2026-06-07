@@ -7,9 +7,17 @@
 
 #include "./jump_logic_base_state.h"
 
+// claude@MATCH: anchor (temp_include_all.cpp) befriended so it can call the private
+// is_ready_for_transition override (qualified); a friend decl emits no bytes.
+// claude@TODO: remove later - anchor-only friend decl, not in the shipped header;
+// drop once a real caller anchors is_ready_for_transition.
+namespace vostok { void use_game_core_jump_logic_state_start( ); }
+
 namespace survarium {
 
 class jump_logic_state_start : public jump_logic_base_state {
+	friend void ::vostok::use_game_core_jump_logic_state_start( );
+
 public:
 	explicit			jump_logic_state_start	( jump_logic& owner );
 
@@ -23,10 +31,8 @@ public:
 
 	virtual	void		initialize				( ) override;
 	virtual	void		finalize				( ) override;
-	// STATE[STUB]
-	virtual	void		execute					( ) override { /* <0x2a800>:'34' */ }
-	// STATE[STUB]
-	virtual	bool		is_ready_for_transition	( ) const override {/* <0xcd480>:'35' */ }
+	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
+	virtual	void		execute					( ) override { }
 
 			animation::mixing::animation_lexeme
 						get_main_lexeme			( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask );
@@ -46,6 +52,11 @@ public:
 						on_jump_event			( animation::animation_callback_params& params );
 
 private:
+	// claude@MATCH: target mangles this override private virtual (?...@@EBE_NXZ),
+	// so it lives under private: (objdiff matches by symbol name -> access char).
+	// STATE[100%|DONE]: return m_jump_interval_ended; reads this+0x2E (rva 0xbd480)
+	virtual	bool		is_ready_for_transition	( ) const override { return m_jump_interval_ended; }
+
 	/* 0x0000 */	/* jump_logic_base_state */
 	/* 0x0028 */	resources::managed_resource_ptr		m_preface_animation;
 	/* 0x002c */	bool								m_physics_jumped;
