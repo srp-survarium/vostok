@@ -42,10 +42,21 @@ def _module_of(unit_name: str) -> str | None:
     Unit names look like ``vostok/<module>/<file>``; the module is the second
     path segment (so ``vostok/network_core/x`` is ``network_core``, distinct
     from ``vostok/network/y``).
+
+    Root-level headers are ``vostok/<file>`` (two segments, no module dir) - the
+    shared library headers (math, containers, strings, configs, memory) that are
+    compiled into many modules. They have no owning module, so bucket them under
+    ``shared`` rather than dropping them from every per-module tally (which would
+    silently hide header-inlined matches, e.g. ``math::get_relative_matrix`` in
+    ``vostok/math_float4x4_inline.h``).
     """
     parts = unit_name.split("/")
-    if len(parts) >= 3 and parts[0] == "vostok":
+    if parts[0] != "vostok":
+        return None
+    if len(parts) >= 3:
         return parts[1]
+    if len(parts) == 2:
+        return "shared"
     return None
 
 
