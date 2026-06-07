@@ -33,14 +33,14 @@ void weapon_core_animation_end_aware_state::set_animation_to_wait( resources::ma
 	if ( !m_weapon.get_user()->is_replaying_history() )
 		m_animation_to_wait_for = animation;
 
-	// CALL SITE INFO
-	// <0x6fd105> -> bool < unknown >() const		get_user()->is_replaying_history()
-	// ******
-
-	// FUNCTION BODY[0x6fd0e0]: 2
-	// <0x6fd0e9>|0x009|+0x025:'29'	if ( !m_weapon.get_user()->is_replaying_history() )	target 0x25 / base 0x2c: get_user() inline-vs-call
-	// <0x6fd10e>|0x02e|+0x012:'30'	m_animation_to_wait_for = animation;
-	// ******
+	// STRUCTURE DIFF[target 0x6ed0e0 | base 0x44f9d0]: target 3 / base 4 stmts
+	// .. same ..
+	// 0x009 <0x25> | 0x009 <0x2c> | if ( !m_weapon.get_user()->is_replaying_history() )   SIZE
+	// 0x02e <0x12> | 0x035 <0x12> | m_animation_to_wait_for = animation;
+	// --          | <0>         |    EMPTY only base
+	// ; aligned 2, size-diffs 1, quantity-diffs 1
+	// SIZE: get_user() trivial accessor inline (base) vs call @0x9b330 (target) - LTCG residual.
+	// QUANTITY: EMPTY-only-base = a collapsed trailing source-line gap, whitespace artifact, not control flow.
 }
 
 // STATE[90.92%|PARTIAL]: empty_stub ASSERT recovered; residual is the inline-vs-call frame shape.
