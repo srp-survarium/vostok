@@ -39,3 +39,18 @@ whole-program / LTCG stack-layout decision, not steerable from this function's s
 
 VERDICT: STRUCTURE MATCH - sole residual is a uniform +0xC frame-size/slot shift, non-steerable
 LTCG slot allocation for the boost::bind functor temp. No source restructure.
+
+## items_cook::translate_query (target 0x751b20 | base 0x566c10 | 99.84931%; STATE was stale 94.84%)
+Identical case to the weapon_ammunition_cook one above. `--view structure-diff --condensed`
+-> target 4 / base 4 stmts, size-diffs 0, quantity-diffs 0 (perfect structural alignment).
+The lone residual is the same +0xC frame-size delta: base `sub esp,178h` vs target `sub esp,16Ch`,
+shifting every [ebp-N] slot by 0xC (e.g. [ebp-16Ch]->[ebp-178h]). The boost::bind functor here
+captures three values (this, _1, &parent -> list3/bind_t), copied through 4 dwords [eax]..[eax+0Ch]
+into the function temp; the temp's stack layout is the non-steerable LTCG slot-allocation decision.
+The text-fallback `--view diff` (objdiff reloc parse fails on this fn) prints spurious call-name
+mismatches (behaviour_cook_params, res_effect/sound_emitter, function0/function2) which are ICF
+COMDAT folds, NOT real divergences - the 99.85% objdiff score confirms the bytes are identical.
+Differs from the 100% siblings (damage_model_cook, items_dictionary_cook, victory_item_core_cook)
+only in that those pass a string literal + a simpler bind (list2, no &parent capture, NULL user_data),
+so their functor temp has a different (matching) layout - not a source bug in items_cook.
+VERDICT: STRUCTURE MATCH - non-steerable LTCG frame-padding on the boost functor temp.

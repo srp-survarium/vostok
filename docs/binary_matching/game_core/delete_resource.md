@@ -69,3 +69,14 @@ spellings). Left as-is; STRUCTURE MATCH, non-steerable LTCG inline-vs-call + arg
 
 VERDICT: STRUCTURE MATCH - non-steerable LTCG register-vs-stack arg passing on the
 shared delete_helper<doug_lea_allocator,resource_base> instantiation.
+
+## items_cook::delete_resource (target 0x7516c0 | base 0x5667c0 | 31.0%; STATE was stale 31.00%)
+Confirmed identical to the family wall. `--view structure-diff --condensed` -> target 1 / base 1
+stmt, size-diffs 1, quantity-diffs 0 (structure matches). `--view diff`:
+- TARGET: lea eax,[ebp+8]; push eax; mov eax,[g_allocator]; call strip_pointer; push eax;
+  call delete_helper<doug_lea_allocator,resource_base>; add esp,8   (both args on stack)
+- BASE:   push edi; ...; lea edi,[ebp+8]; ... call delete_helper...; add esp,4; pop edi
+  (resource_base*& arg passed in edi register; cleanup of only the allocator arg)
+Same call-boundary register-vs-stack LTCG convention as items_dictionary_cook above; items_cook is
+already listed in the family's 31% group. Non-steerable from items_cook.cpp source.
+VERDICT: STRUCTURE MATCH - call-boundary LTCG arg passing, shared cook-base wall.
