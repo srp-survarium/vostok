@@ -196,6 +196,21 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
 
+	// get_foot_fixed_transform is a private const method whose only callers
+	// (process / process_leg) are still STUB, so anchor it directly. We are a
+	// friend of legs_ik_processor (declared in its header); escape the returned
+	// float4x4 so LTCG observes the body.
+	void use_game_core_legs_ik_processor_get_foot_fixed_transform( )
+	{
+		survarium::legs_ik_processor const&		processor	= *reinterpret_cast< survarium::legs_ik_processor const* >( NULL );
+		survarium::legs_ik_processor::leg_params const&	params	= *reinterpret_cast< survarium::legs_ik_processor::leg_params const* >( NULL );
+		float4x4 const&							matrix		= *reinterpret_cast< float4x4 const* >( NULL );
+		float									delta_len	= 0.0f;
+
+		float4x4 result	= processor.get_foot_fixed_transform( params, matrix, &matrix, delta_len );
+		example_callback( reinterpret_cast< pcstr >( &result ) );
+	}
+
 	// get_additional_length is a free function; process_leg (its only real caller)
 	// is still a STUB, so anchor it directly and escape its float result so LTCG
 	// keeps the body.
@@ -1171,6 +1186,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_breath_vibration_calculator( );
 	vostok::use_game_core_legs_ik_processor_leg_params( );
 	vostok::use_game_core_legs_ik_processor( );
+	vostok::use_game_core_legs_ik_processor_get_foot_fixed_transform( );
 	vostok::use_game_core_get_additional_length( NULL, NULL );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
