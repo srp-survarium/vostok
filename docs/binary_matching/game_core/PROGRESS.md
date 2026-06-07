@@ -1125,3 +1125,44 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   vcall thunks, boost::function_base::empty, empty_stub, ~event, artefact_lifebone vcall/vector-dtor) =
   ICF representative reshuffle from the new boost::bind/function COMDATs; byte-identical at link, no real
   loss. 41 fns improved (the substate methods). OVERALL UP.
+
+- weapon_user_animations_selector batch2 (branch match/game_core-weapon_user_animations_selector-batch2,
+  base int/game_core). RESUME of a crashed session whose uncommitted state left the build BROKEN.
+  Primary fix: `friend void ::vostok::use_game_core_weapon_user_animations_selector();` on the class so
+  the free-function anchor can take member-fn pointers to the now-private (`ABE`/`AAE`) leaves (C2248
+  before). Build relinks; on_interval_ended + both remove_animation_callback reach 100%.
+    weapon_user_animations_selector::on_interval_ended            100%   DONE
+    weapon_user_animations_selector::remove_animation_callback(pcstr)   100%   DONE
+    weapon_user_animations_selector::remove_animation_callback(enum)    100%   DONE
+    weapon_user_animations_selector::set_animation_callback(enum)        84.79% PARTIAL (base_player vtable arg-count/this-load wall, owned elsewhere)
+    weapon_user_animations_selector::set_animation_callback(pcstr)       78.28% PARTIAL (same wall)
+    weapon_user_animations_selector::broken_legs_predicate              76.76% PARTIAL (intrusive_ptr operator* out-of-lining deref wall)
+    weapon_user_animations_selector::is_weapon_in_idle                  36.41% PARTIAL (current_active_object intrusive_ptr root/typedef + deref wall)
+    weapon_user_animations_selector::is_weapon_toggling                 31.17% PARTIAL (same wall)
+    weapon_user_animations_selector::is_weapon_firing                    8.96% PARTIAL (same wall)
+    weapon_user_animations_selector::on_broken_limb_affect             20.12% PARTIAL (force_animation_selection + 2 _U asserts; L337 2-arg eater macro unidentified)
+  Still STUB (deferred, deref/predicate-logic walls or named-const work): crouch/jump/stand/sprint
+  predicate, look_time_factor(_calculator), set_sprint_callbacks, ctor/dtor/activate. serialize/deserialize BLOCKED.
+  weapon_core.h: ONE minimal edit `is_idle() const { return m_is_idle; }` (was bodyless -> LNK1257 LTCG
+  codegen failure once is_weapon_in_idle consumes its return). Regressions: only the two wall-blocked
+  is_weapon_* partials shifted (structurally-correct bodies kept per MATCHING.md); nothing outside the unit.
+- body_part_parameters (data class; ONE unit; branch match/game_core-body_part_parameters off
+  origin/int/game_core). Already enabled + heavily matched on arrival (20/32 @100%). Survey pass:
+  drove the one definitively-winnable function to 100%, corrected one stale STATE, classified the rest.
+    protect_affect_predicate::operator()     0 -> 100   DONE   (byte-identical asm both sides; objdiff
+        could not PAIR them - mangled name differed by top-level pointer const: target QAU (`* const`)
+        vs base PAU (`*`). Fix: `operator()( damage_protector* const protector )`. Sibling
+        protect_damage_predicate::operator() already had `* const` and was already 100%.)
+    regenerate                               72.61      BLOCKED (was stale STATE[100%|DONE]; corrected.
+        Body matches statement-for-statement; sole residual: target keeps math::min(u32,u32) overload
+        @0x03fbb0 OUT-OF-LINE + CALLs it, our /Ob2 (rsp game_core_cl_0.rsp) inlines min->min_integral
+        sbb/neg/neg/and. Whole-program inline-heuristic, not steerable from this fn. +0x8 frame / slot
+        renames cascade from it. Same family as fill_new_stats_item/dump_state/fixed_string<46>.)
+  NOT touched (proven walls, classified in body_part_parameters.md):
+    dump_state(boost::function)  55%  - /Ob2 inlines boost::function4::operator() (target out-of-line).
+    fill_new_stats_item          91.78% - pre-existing BLOCKED on fixed_string<46>(char const*) inline.
+    dump_state(npc_statistics)   17%  - INPROGRESS, needs npc_statistics body-state member (cross-cutting).
+    serialize/deserialize/serialize_affect/deserialize_affect 0% - network_core packet wall (deferred;
+        header only fwd-decls udp_match_packet/packet_reader; bodies need packet::append / packet_reader::r<T>).
+    ctor 99.72% / hit_by_type 99.83% / get_hit_parameters 99.85% - stack-slot residuals (acceptable DONE-level).
+  Regressions: none - report-changes 0 regressed / 1 improved (protect_affect_predicate::operator 0->100) / 0 removed / 0 added.
