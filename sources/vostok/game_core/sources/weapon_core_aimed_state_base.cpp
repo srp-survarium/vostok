@@ -33,16 +33,13 @@ void weapon_core_aimed_state_base::finalize( )
 	m_animation_playback_state.reset( );
 	m_weapon.instant_aim_end( );
 
-	// STRUCTURE DIFF[target 0x6ea5c0 | base 0x44f5e0]: target 4 / base 3 stmts
+	// STRUCTURE DIFF:
+	// target: 0x6ea5c0            base: 0x44f5e0
+	// ; void survarium::weapon_core_aimed_state_base::finalize() ; target 2 stmts / base 1 stmts
+	// 0x007 <0xd> | --          | L28   ONLY target
 	// .. same ..
-	// 0x007 <0xd> | --         | L28   ONLY target   ; m_animation_playback_state.reset()
-	// 0x014 <0x1e>| 0x007 <0x1e>| m_weapon.instant_aim_end( );
-	// .. same ..
-	// ; aligned 3, size-diffs 0, quantity-diffs 1
-	// QUANTITY diff: target keeps reset() out-of-line (add eax,120h; call reset @0x087f60,
-	// LTCG this-in-EAX frameless), our /Od /Ob2 /GL link elides/inlines reset to nothing,
-	// dropping the statement. Source is faithful (reset + virtual instant_aim_end); the
-	// divergence is inline-vs-call codegen, not steerable from this source (see the .md).
+	// ; aligned 1, size-diffs 0, quantity-diffs 1
+	// VERDICT: STRUCTURE MISMATCH (quantity) - base drops m_animation_playback_state.reset(); target keeps it out-of-line, base elides/inlines it; source faithful, fix lives in how reset() is matched  trail: weapon_core_aimed_state_base-finalize.md
 }
 
 } // namespace survarium

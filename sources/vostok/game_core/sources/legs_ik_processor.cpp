@@ -172,18 +172,14 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 		? knee_len * 0.5f
 		: math::sqrt( math::sqr( knee_len ) * 0.5f / ( 1.0f - knee_angle_cos ) );
 
-	// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 3 / base 5 stmts (the 2 extra
-	// base stmts are EMPTY source-line gaps, not real statements - source shape matches).
+	// STRUCTURE DIFF:
+	// target: 0xbb1f0            base: 0x513fa0
+	// ; float survarium::get_additional_length(vostok::math::float3 const&, vostok::math::float3 const&, float) ; target 2 stmts / base 3 stmts
+	// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos	= upleg_dir | -leg_dir;   SIZE
+	// --          | <0>         |    EMPTY only base
 	// .. same ..
-	// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
-	// --          | <0>          |    EMPTY only base
-	// .. same ..
-	// --          | <0>          |    EMPTY only base
-	// ; aligned 2, size-diffs 1, quantity-diffs 2
-	//
-	// SIZE diff is codegen-only: target emits one `call math::operator|` for the dot
-	// product (0x18 B); our /Ob2 base inlines it to a movss/mulss/addss sequence (0x49 B).
-	// Not steerable from the source - same statement, same shape, different inlining.
+	// ; aligned 1, size-diffs 1, quantity-diffs 1
+	// VERDICT: STRUCTURE MISMATCH (size) - lone SIZE diff on the dot-product is the inline COMDAT operator| inlined in base vs called in target; source-steerable, not bankable LTCG  trail: get_additional_length.md
 }
 
 // STATE[STUB]
@@ -541,19 +537,9 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 
 	return foot_center_transform;
 
-	// STRUCTURE DIFF (--view structure-diff --condensed): source SHAPE matches; residuals
-	// are codegen, not structure:
-	//   - all aligned statements are SIZE-only (LTCG temp-materialization at the math
-	//     call boundaries) - already noted in STATE.
-	//   - the ONLY base draw bodies (draw_line_capsule/draw_solid_capsule) + their
-	//     original_color/fixed_color temps are OUTLINED in the target into cold blocks
-	//     (target L375/L379) - same if-guards on both sides, codegen block placement.
-	//   - ONLY base final "return foot_center_transform;" vs target L399: multi-return
-	//     epilogue relocated by the target. No source change fixes these.
-	//
+	// STRUCTURE DIFF:
 	// target: 0x6ebae0            base: 0x514fb0
-	// ; vostok::math::float4x4 survarium::legs_ik_processor::get_foot_fixed_transform(survarium::legs_ik_processor::leg_params const&, vostok::math::float4x4 const&, vostok::math::float4x4 const*, float&) const ; target 87 stmts / base 95 stmts
-	// .. same ..
+	// ; vostok::math::float4x4 survarium::legs_ik_processor::get_foot_fixed_transform(survarium::legs_ik_processor::leg_params const&, vostok::math::float4x4 const&, vostok::math::float4x4 const*, float&) const ; target 86 stmts / base 93 stmts
 	// 0x011 <0x3b> | 0x011 <0x47> | float4x4 const&			up_leg_world_matrix				= matrices[params.up_leg_bone_index - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
 	// 0x04c <0x3e> | 0x058 <0x47> | float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
 	// 0x08a <0x3e> | 0x09f <0x47> | float4x4 const&			leg_world_matrix				= matrices[params.leg_bone_index    - get_skeleton( ).get_root_bones_count( )] * hip_world_matrix;   SIZE
@@ -628,11 +614,10 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	// 0xa7a <0x26> | 0xb21 <0x2a> | float const			position_iterpolation_koef		= 1.0f - m_heel_interpolator.interpolated_value( params.heel_transition_time );   SIZE
 	// 0xaa0 <0x80> | 0xb4b <0x7d> | float3 const&		position						= foot_world_matrix.c.xyz( ) * position_iterpolation_koef + foot_center_transform.c.xyz( ) * ( 1.0f - position_iterpolation_koef );   SIZE
 	// 0xb20 <0x21> | 0xbc8 <0x1e> | foot_center_transform.c.xyz( )	= position;   SIZE
-	// --          | <0>         |    EMPTY only base
-	// --          | 0xbe6 <0x10> | return foot_center_transform;   ONLY base
 	// .. same ..
-	// 0xb41 <0x13> | --          | L399   ONLY target
-	// ; aligned 45, size-diffs 37, quantity-diffs 18
+	// 0xb41 <0x13> | 0xbe6 <0x10> | return foot_center_transform;   SIZE
+	// ; aligned 44, size-diffs 38, quantity-diffs 15
+	// VERDICT: STRUCTURE MATCH - 86/93 stmts, all aligned rows SIZE-only (LTCG temp-materialization at math call boundaries); quantity diffs are draw_*capsule/return codegen block placement, not source shape  trail: get_foot_fixed_transform.md
 }
 
 // STATE[100%|DONE]
