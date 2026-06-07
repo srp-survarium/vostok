@@ -133,14 +133,35 @@ overview; exact branch bodies refined while iterating.)
    is_full_on_ground `<0x53>`, rotation_angle `<0x15>`), confirming the control structure
    matches; the divergence is sub-statement arg passing, not structure.
 
+3. INPUT: resolve the @TODO else-branch single-byte original_color write. Read the
+   ACTUAL color type in play (math_color.h lines 115-164: the `union{u8 b,g,r,a; u32 m_value;}`
+   variant, NOT the float4 color_pod variant). Target asm at else-branch (rva 0x6ebae0 +0x82a):
+     0x82a: mov byte ptr [ebp-167h], 64h     ; materialize 0x64 & 0xff into a temp byte
+     0x831: mov cl, [ebp-167h]
+     0x837: mov [ebp-170h], cl               ; store into original_color's offset-0 byte = b
+   original_color is at [ebp-170h]; its lowest byte is the `b` channel (b,g,r,a order). The
+   3-instruction shape (const byte -> temp -> single channel store) is exactly the body of
+   `set_B(u32 val){ b = val & 0xff; }` with val=0x64u. NOT a full color ctor (the sibling
+   init at L476 IS a full 4-arg ctor: target emits `color::color` at +0x484 with r=0x80
+   (ecx), pushed g=0xC8,b=0,a=0 -> color(0x80,0xC8,0,0); leave that as-is). Rewrote the
+   else-branch statement to `original_color.set_B( 0x64u );`.
+   BUILD: 84.656% (report.json), up from 84.158%. get_relative_matrix stays 100%.
+   Regressions: report-changes shows 46 regressed / 52 improved, ALL the documented ICF /
+   COMDAT empty-dtor/ctor/inline-helper fold churn from the EXE relink (net +459, balanced)
+   - none is an in-scope matched function. The one notable entry is color::color(u32,u32,u32)
+   99.78->0: that is the 3-arg ctor I just REMOVED the sole call to, so it is no longer
+   emitted/folded - a removal artifact, not a real regression. No matched legs_ik_processor
+   or get_relative_matrix function regressed (verified by name filter).
+
 ## Outcome
-STATE[84.16%|PARTIAL]. Structure fully matched (all 64 statements / the carcass shape).
+STATE[84.66%|PARTIAL]. Structure fully matched (all 64 statements / the carcass shape).
+@TODO RESOLVED: else-branch original_color is a single `set_B(0x64u)` channel setter
+(reproduces the exact `mov byte[tmp],64h; mov cl,[tmp]; mov [color],cl` write at +0x82a),
+not the full color ctor previously written.
 Residual: register/slot renaming + LTCG arg-passing & temp-materialization at the many
 math-operator/helper call boundaries (the permitted call-boundary class) + a few
-trivial-COMDAT inline-vs-call decisions. One genuinely-unresolved statement: the
-else-branch single-byte original_color write (mov byte[tmp],64h; mov [original_color],cl)
-- I wrote a full color ctor instead; exact source form (a channel setter?) unknown -> @TODO.
-Regressions caused: none. Inlining: get_relative_matrix (target rva 0xbb050) defined in
-this TU; knee_world_matrix is a declared-but-unused local in BOTH binaries (the C4189
-warning matches the target - keep it).
+trivial-COMDAT inline-vs-call decisions. All are sub-statement register/slot/arg-passing,
+not structure. Regressions caused: none (in-scope). Inlining: get_relative_matrix (target
+rva 0xbb050) defined in this TU; knee_world_matrix is a declared-but-unused local in BOTH
+binaries (the C4189 warning matches the target - keep it).
 
