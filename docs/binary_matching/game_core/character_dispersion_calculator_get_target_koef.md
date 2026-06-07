@@ -10,19 +10,21 @@
 >   check + a 4-entry table, because our `switch` stops at `type_jump`(3) and uses
 >   `default: return 1.0f;`, so MSVC bounds the table at 3.
 >
-> FIX (faster machine), two parts, then rebuild + re-diff:
+> FIX (faster machine), ONE part, then rebuild + re-diff:
 > 1. **Dispatch:** add `case type_preview: return 1.0f;` and change
 >    `default: return 1.0f;` -> `default: NODEFAULT();` (NODEFAULT = `__assume(0)` in
 >    Master Gold, `sources/vostok/debug_macros.h`). `__assume(0)` tells MSVC the default
 >    is unreachable, so it drops the `cmp 3; ja` and emits the contiguous [0..4] table.
-> 2. **Braces:** the carcass shows a `+0x002` step (a 2-byte `jmp short` = a closing
->    `}`) at body offset 0x5d (src line 108) and 0xc0 (src line 114) - the `type_stand`
->    and `type_crouch` blocks were `{ }`-brace-scoped. Add the braces; a brace changes
->    the codegen/structure (MATCHING.md "switch"). The single-`return` cases
->    (`sprint`/`jump`) show no `+0x002` and stay brace-less.
+>
+> NOTE (structure-diff audit 2026-06-07): an earlier draft of this fix proposed a 2nd
+> part - "add `{ }` braces to type_stand/type_crouch (carcass `+0x002` at 0x5d/0xc0)".
+> That was a misread and is WITHDRAWN. `--view structure-diff` shows target 21 / base 21
+> stmts, **0 quantity-diffs** - there is no missing brace-block. The `+0x002` rows are
+> the case FALL-THROUGH thunks (jmp .crouch / jmp .sprint), present on BOTH sides. Cases
+> stay brace-less. The only open divergence is the dispatch (2 SIZE-diffs, one cause).
 >
 > NOT an LTCG residual - a source-structure problem. The per-case float bodies + the
-> recovered ASSERT already match; the dispatch + braces are what is open.
+> recovered ASSERT already match; the dispatch is what is open.
 
 `float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const`
 Target rva: 0x585ee0 (obj `.text` offset 0xd4 in character_dispersion_calculator.cpp.obj).
