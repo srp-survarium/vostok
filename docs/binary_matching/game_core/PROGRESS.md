@@ -1054,3 +1054,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   NUMBERING in the else min (target [ebp-2]/[ebp-6]/[ebp-4] vs base [ebp-4]/[ebp-8]/[ebp-6]); same
   3-slot structure + identical instruction sequence. Allocator nondeterminism, not source-steerable.
   Regressions: none - report-changes 0 regressed / 1 improved / 0 removed / 0 added.
+- weapon_user_animations_container_cook (config-load / animation-load chain; ONE unit;
+  branch match/game_core-weapon_user_animations_container_cook off origin/int/game_core).
+  Drove the remaining STUB members of a unit partially matched in batch #187. All in
+  weapon_user_animations_container_cook.cpp; kept by the existing use_game_core_weapon_user_animations_container_cook anchor.
+    translate_query                          8.04 -> 99.82  DONE   (virtual_path_string config_name; assignf("resources/%s",get_requested_path()); query_resource(.., binary_config_class_impl 0x22, bind(&on_config_loaded,this,_1), g_allocator, NULL, &parent). @@UAE public virtual. residual: frame-imm + trailing nop, boost temp-materialization wall.)
+    on_animations_loaded                     None -> 99.97  DONE   (if(!is_successful){ASSERT;finish_query(result_error);return;} container=VOSTOK_NEW_IMPL(g_allocator,weapon_user_animations_container); resource_index=0; 20x get_animations_from_request_results(data,count,resource_index,container->m_field[0|1]); set_unmanaged_resource(unmanaged_resource_ptr(container),memory_usage_type(nocache_memory,sizeof(container))); finish_query(result_success). @@AAE private. residual: frame-imm + nop; helper call operands ICF-folded (ignored by report fuzzy).)
+    on_config_loaded                         None -> 91.05  DONE   (if(!is_successful){...result_error;return;} buffer_vector<request> requests(ALLOCA(468*sizeof(request)),468); config=static_cast_resource_ptr<binary_config_ptr>(data[0].get_unmanaged_resource()); root=config->get_root(); 20x create_requests_for_animations(root[name],count,requests); query_resources(requests.begin(),requests.size(),bind(&on_animations_loaded,this,_1),g_allocator,NULL,get_parent_query()). @@AAE private. WALL: MSVC8 copy-elision of get_unmanaged_resource()/bind temporaries - identical to booby_trap_set_core_cook::on_config_ready 92.27% DONE.)
+    create_requests_for_animations           None -> 0      LTCG   (.cpp-local free fn. ASSERT(UNKNOWN_EXPRESSION_T(requests_count)); for(i;i<count;++i) requests.push_back(create_request(cfg[i],animation_class 0x3d)). EXE body matches except call-boundary LTCG arg: target passes 0x3d in EDX, base pushes it. Reads 0% only because free fn does not pair at per-obj scoring level - measures empty, NOT a body defect.)
+    get_animations_from_request_results<N>   None -> 0      WALL   (template, N in {2,6,27,100}. ASSERT; for(i=0;i!=count;++i) result[i]=static_cast_resource_ptr<managed_resource_ptr>(data[resource_index++].get_managed_resource()). EXE body matches except get_managed_resource() temp copy-elision. ALSO: 4 byte-identical instances ICF-folded to ONE base symbol (0x090b40) while target keeps 4 distinct addresses -> 3/4 cannot pair + survivor unscored. /OPT:ICF linker behavior, not source-fixable.)
+  Edits: container.h ctor -> inline empty `{}` (matches target inline ctor @0xaa560, resolves
+  VOSTOK_NEW_IMPL link without a stopgap) + `friend class weapon_user_animations_container_cook;`
+  (cook reads private m_*_animations arrays); cook.cpp includes container.h + configs_binary_config.h.
+  Regressions: 14 per-fn `100->0` in report-changes, ALL trivial fns (dtors, interlocked_*, thunks,
+  empty boost binders) = ICF representative reshuffle from adding the boost::bind/function COMDATs
+  (set differs each build). OVERALL UP: baseline fuzzy 48.728 / matched_code 27.447 / 8206 fns ->
+  current 48.760 / 27.458 / 8207 fns (+1 fn, +matched bytes). honest match_score improves; no real loss.
