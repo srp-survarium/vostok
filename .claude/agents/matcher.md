@@ -85,6 +85,13 @@ mark it `INPROGRESS` with the next step.
   re-embed it. The structure-verifier replaces it with the two-sided
   `--view structure-diff` (and downgrades a mislabeled DONE). A non-100% function with
   no embedded `// STRUCTURE DIFF` therefore means the verifier has not run yet.
+- **At 100%, the embed must be GONE.** A byte-perfect match has trivially-correct
+  structure - nothing left to verify - so when you take a function to 100%, DELETE any
+  `// STRUCTURE DIFF: ... // VERDICT:` block left in its body (the structure-verifier
+  only embeds for a *residual*, i.e. <100%). Reduce the surviving marker to a BARE
+  `// STATE[100%|DONE]` - no inline *why*, no stmt-count restatement: a clean 100% needs no
+  inline rationale, and what little there is (the asm->source trick) lives in the `<fn>.md`
+  trail and, if reusable, in `assembly_patterns.md`.
 - **Lean source, verbose `.md`.** Keep only the `// STATE[NN%|TAG]: reason` marker in
   the `.cpp`; tag deliberate shaping with `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior
   `sushi@...` notes). All rationale/attempts go in `docs/binary_matching/<module>/<fn>.md`,

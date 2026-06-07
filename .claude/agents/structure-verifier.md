@@ -73,7 +73,9 @@ So for a PARTIAL/INPROGRESS/BLOCKED function you GENERATE and embed the condense
 structure-diff yourself (commented), inline above/in the function, so the divergence is
 visible (a clean 100% DONE carries nothing). **The embedded `// STRUCTURE DIFF` block IS
 the marker that you ran:** a non-100% function with none means no verifier has touched it
-yet.
+yet. Conversely a **100% function must carry NO embed** - if a later match closed the
+residual and left a stale `// STRUCTURE DIFF`/`// VERDICT` block on a now-100% function,
+STRIP it (the byte-perfect match has trivially-correct structure).
 
 **STANDARD embed format - every function reads identically:**
 1. The diff block is the tool's `--condensed` output VERBATIM, `// `-prefixed. Do NOT
