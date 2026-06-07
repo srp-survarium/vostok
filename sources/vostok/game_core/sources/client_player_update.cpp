@@ -20,13 +20,14 @@ namespace survarium {
 // void survarium::client_player_update::serialize(vostok::network_core::udp_match_packet&) const
 void client_player_update::serialize( network_core::udp_match_packet& packet ) const
 {
-	// STRUCTURE DIFF[target 0x771190 | base 0x44d2e0]: target 4 / base 0 stmts
-	// (base is an empty stub - blocked, body not emitted; see STATE note above)
-	// <0>         | --          |       EMPTY only target
-	// 0x009 <0xc> | --          | L23   ONLY target   input.serialize( packet );
-	// 0x015 <0xf> | --          | L24   ONLY target   state.serialize( packet );
-	// 0x024 <0xf> | --          | L25   ONLY target   packet.append( time_in_ms );
-	// ; aligned 0, size-diffs 0, quantity-diffs 4
+	// STRUCTURE DIFF:
+	// target: 0x771190            base: 0x44d2e0
+	// ; void survarium::client_player_update::serialize(vostok::network_core::udp_match_packet&) const ; target 3 stmts / base 0 stmts
+	// 0x009 <0xc> | --          | L23   ONLY target
+	// 0x015 <0xf> | --          | L24   ONLY target
+	// 0x024 <0xf> | --          | L25   ONLY target
+	// ; aligned 0, size-diffs 0, quantity-diffs 3
+	// VERDICT: STRUCTURE MISMATCH (quantity) - base is empty stub, body blocked on udp_match_packet cluster; write 3 stmts when blocker clears  trail: client_player_update-serialize.md
 }
 
 } // namespace survarium

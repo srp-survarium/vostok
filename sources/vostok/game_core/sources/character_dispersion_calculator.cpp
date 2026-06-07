@@ -127,21 +127,16 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 			return 1.0f;
 	}
 
-	// STRUCTURE DIFF[target 0x585ee0 | base 0x4543c0]: target 21 / base 21 stmts
+	// STRUCTURE DIFF:
+	// target: 0x585ee0            base: 0x4543c0
+	// ; float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const ; target 19 stmts / base 19 stmts
 	// .. same ..
 	// 0x015 <0x10> | 0x015 <0x1a> | switch ( character_state )   SIZE
 	// .. same ..
-	// 0x103 <0x4>  | 0x10d <0x2>  | return 1.0f;                 SIZE
+	// 0x103 <0x4> | 0x10d <0x2> | return 1.0f;   SIZE
 	// .. same ..
-	// ; aligned 19, size-diffs 2, quantity-diffs 0
-	//
-	// Quantity 0: statement SHAPE matches (case fall-through `+0x002` thunks at
-	// 0x5d/0xc0 are present on BOTH sides - NOT a missing brace-block). Both SIZE
-	// diffs trace to ONE cause: base's `switch` emits a `cmp 3; ja default` range
-	// check (0x1a) the target's contiguous jump table omits (0x10); the default
-	// `return 1.0f;` then needs a `jmp` to epilogue on target (0x4) vs fall-through
-	// on base (0x2). Fix: cover all enum values (add `case type_preview: return
-	// 1.0f;`) and make `default:` a `NODEFAULT();` so MSVC drops the bounds check.
+	// ; aligned 17, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MISMATCH (size) - base switch emits a `cmp 3; ja default` bounds check target lacks; cover all enum values + `default: NODEFAULT();` to drop it  trail: character_dispersion-get_target_koef.md
 }
 
 // STATE[93.33%|INPROGRESS]: quantity divergence - base emits a trailing `return 1.0f;` (extra fld1 at 0x8b) that the target does NOT have. Target switch (cases 0/1/2) falls straight through to the epilogue: case 0's body IS the implicit-default fld1, shared with the no-match fall-through. The trailing `return 1.0f;` below must be folded into case 0 (matcher job). Full diff embedded; report in structure/character_dispersion-get_broken_hands_penalty.md
@@ -162,15 +157,19 @@ float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands
 
 	return 1.0f;
 
-	// STRUCTURE DIFF[target 0x585e50 | base 0x454320]: target 10 / base 13 stmts ; aligned 8, size-diffs 2, quantity-diffs 3
+	// STRUCTURE DIFF:
+	// target: 0x585e50            base: 0x454320
+	// ; float survarium::character_dispersion_calculator::get_broken_hands_penalty(const unsigned char, const bool) const ; target 8 stmts / base 11 stmts
 	// .. same ..
 	// --          | <0>         |    EMPTY only base
-	// 0x015 <0x18> | 0x015 <0x1a> | switch ( broken_hands_count )                                                                                                  SIZE
+	// 0x015 <0x18> | 0x015 <0x1a> | switch ( broken_hands_count )   SIZE
 	// .. same ..
-	// 0x05c <0x2b> | 0x05e <0x2d> | return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;     SIZE
+	// 0x05c <0x2b> | 0x05e <0x2d> | return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;   SIZE
 	// --          | <0>         |    EMPTY only base
-	// --          | 0x08b <0x2> | return 1.0f;                                                                                                                     ONLY base
+	// --          | 0x08b <0x2> | return 1.0f;   ONLY base
 	// .. same ..
+	// ; aligned 6, size-diffs 2, quantity-diffs 3
+	// VERDICT: STRUCTURE MISMATCH (both) - base has an extra trailing `return 1.0f;`; fold it into `case 0` so the switch falls through to the shared epilogue fld1  trail: character_dispersion-get_broken_hands_penalty.md
 }
 
 } // namespace survarium
