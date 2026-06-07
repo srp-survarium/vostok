@@ -67,3 +67,24 @@ out-of-file-scope walls (operator+ overloads; shared-animation-header inline dec
 within this file. Relink churn: generic boost/bt/math/particle/empty_stub/thunk COMDATs shuffled
 (24 regressed / 45 improved) - delinker copy re-attribution from enabling the new TU, no weapon-state
 function regressed.
+
+## RE-MATCH 2026-06-07 (claude): structure fix get_user_hands_expression
+
+Structure-verifier flagged STRUCTURE-WRONG: target = 9 statements, base = 8. Target has TWO
+separate 0x7-byte caption statements (carcass L80 + L81); base had a single
+`pcstr animation_captions[2] = { "stand_hide", "crouch_hide" };` array-literal statement.
+
+FIX: split into a bare `pcstr animation_captions[2];` (decl emits no code) + two assignment
+statements `animation_captions[0] = "stand_hide";` / `[1] = "crouch_hide";`. Each compiles to a
+0x7-byte string-pointer store, matching the target's L80/L81 breakpoint-bearing lines.
+
+Commands:
+  pdb_rich_query --index binaries/rich/target/index.jsonl --list --function 'double_barreled_weapon_core_hide_state::get_user_hands'   # 0x79d730
+  pdb_rich_query --index binaries/rich/base/index.jsonl   --list --function 'double_barreled_weapon_core_hide_state::get_user_hands'   # 0x454b20
+  pdb_fetch ... --view structure --rva 0x79d730   # target: 9 statements, L80+L81 each 0x7
+  pdb_fetch ... --view base      --rva 0x454b20   # base now: animation_captions[0]/[1] each 0x7 at 0x36/0x3d
+  pdb_fetch ... --view structure --rva 0x454b20   # base now: 9 statements
+
+Result: % unchanged at 72.12% (the residual is the documented out-of-line setter inline wall, base
+setter statement 0x8f vs target 0x79). Statement count base 9 == target 9 (structure matched) -
+that is the win per the re-match brief: structure now correct even though the % is walled.

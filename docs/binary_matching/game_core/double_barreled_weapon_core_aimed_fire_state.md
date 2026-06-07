@@ -68,3 +68,24 @@ both calls; only the operator+ tree layout diverges. get_user_hands base (0x4548
 (0x79bfe0) statement-for-statement incl the interpolator local @0xbd; only the setter call/inline
 ordering + the COMDAT-folded animation_type() callee diverge. All walls are the documented sibling
 walls (inline-vs-out-of-line /GL template selection + STUB-callee fold), not source-steerable here.
+
+## RE-MATCH 2026-06-07 (claude): structure fix get_user_hands_expression
+
+Structure-verifier flagged STRUCTURE-WRONG: target = 12 statements, base = 14. The base
+split the params build into a named `override_lexeme_parameters x(...);` decl PLUS a separate
+`x.setter().setter()...;` statement (2 statements). Target chains ctor + all setters into ONE
+statement (carcass L101, 0x6e) feeding the `animation_lexeme override_lexeme( ... )` construction.
+
+FIX: dropped the named params local, chained `.animated_object().playback_type().additivity_priority(1)`
+directly onto the `animation_lexeme_parameters( ... )` temporary inside the `override_lexeme` ctor -
+exactly the shape of the matching show/hide siblings.
+
+Commands:
+  pdb_rich_query --index binaries/rich/target/index.jsonl --list --function 'double_barreled_weapon_core_aimed_fire_state::get_user_hands'   # 0x79bfe0
+  pdb_rich_query --index binaries/rich/base/index.jsonl   --list --function 'double_barreled_weapon_core_aimed_fire_state::get_user_hands'   # 0x457970
+  pdb_fetch --base-index ... --target-index ... --view structure --rva 0x79bfe0   # target: 12 statements
+  pdb_fetch --base-index ... --target-index ... --view structure --rva 0x457970   # base now: 12 statements
+
+Result: 75.61% -> 79.39%. Statement count base 12 == target 12 (structure matched).
+Residual: unsteerable LTCG inline-vs-call (target keeps animated_object/playback_type setters
+out-of-line; base inlines them). Big chained statement now single on both sides (base 0x72 vs target 0x6e).
