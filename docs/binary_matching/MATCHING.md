@@ -145,9 +145,11 @@ literally.) Confirmed house style: `booby_trap_core.cpp` / `inventory_cook.cpp` 
   your *guess* of the condition (risk-free, discarded). Guess what was asserted.
 When you see the `empty_stub` sequence at a statement, place an `ASSERT(...)` there.
 
-`UNKNOWN_EXPRESSION` / `_T` are intentionally **undefined** - never define or
-"fix" them. Add `STATIC_SIZE_ASSERT( type, 0xNN )` after each reconstructed
-struct to pin its PDB size.
+`UNKNOWN_EXPRESSION` / `_T` are already **defined** and pch-provided (in
+`vostok/debug/macros.h`: `UNKNOWN_EXPRESSION` = `true`, `UNKNOWN_EXPRESSION_T( e )`
+= `( true ? true : !!e )`) - just USE them, never `#include`, redefine, or "fix"
+them. Add `STATIC_SIZE_ASSERT( type, 0xNN )` after each reconstructed struct to pin
+its PDB size.
 
 ## Switch statements - case-body braces change codegen
 The bracket style around a `case` body changes codegen/structure. **Read the carcass
