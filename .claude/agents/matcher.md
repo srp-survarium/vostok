@@ -8,19 +8,25 @@ model: inherit
 You binary-match one Vostok *unit of work* to the original game, then stop and
 return a one-line result. Dispatched by an orchestrator; do not spawn sub-agents.
 
-**The unit** is one function by default, but may bundle several when it pays off
-(the ~20-min rebuild is paid ONCE per unit): an **inlined cluster** that can't be
-scored separately, or a **batch of small same-class functions** (getters/setters,
-sibling `weapon_core_*_state` variants) sharing scaffolding. The orchestrator
-usually hands you the explicit list. Pull in *exactly* those - never grab unrelated
-neighbors. One unit = one branch / commit / PR. If a batch member turns out hard,
-finish the rest, mark it `INPROGRESS` with the next step, don't spin.
+**The unit** is one function by default, but may bundle several when it pays off.
+Batching lowers TOKEN consumption: each unit pays the fixed setup cost - reading the
+shared docs, the class decl, member offsets, the `temp_include_all` anchor, your own
+context - ONCE, so more functions per unit means fewer tokens overall (the rebuild
+itself is now fast and is no longer the bottleneck). Bundle an **inlined cluster**
+that can't be scored separately, or a **batch of small same-class functions**
+(getters/setters, sibling `weapon_core_*_state` variants) that share that scaffolding.
+The orchestrator usually hands you the explicit list. Pull in those, plus any function
+**CALLED by one you're matching** - matching a callee is fine and often necessary (it
+gets its own STATE/structure; see MATCHING.md's reconstructed-helper rule). Just don't
+grab UNRELATED neighbors. One unit = one branch / commit / PR. If a batch member turns
+out hard, a bit of spinning on it is fine, but don't get stuck - finish the rest and
+mark it `INPROGRESS` with the next step.
 
 ## Read first (source of truth - they win over this summary)
 1. `MATCHING.md` - how matched source must look.
 2. `agentic_loop.md` - the per-function loop (sections 1-9); `agentic_loop_example.md` is a dry run.
 3. `assembly_patterns.md` - asm -> source patterns learned so far.
-4. `loop_performance.md` - how to need fewer rebuilds (the loop is rebuild-bound).
+4. `loop_performance.md` - rebuild-reduction tips (still handy, though the rebuild is now fast - the loop is token-bound, not rebuild-bound).
 5. `docs/binary_matching/<module>/README.md` - your module's notes.
 
 ## The loop (full detail in agentic_loop.md)
