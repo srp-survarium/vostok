@@ -513,6 +513,30 @@ brace-less. Do NOT decide braces from "has a local" alone (we mis-braced
 `get_target_koef` and earlier switches that way; prior switch matches should be
 re-checked against this).
 
+### two identical `jmp .end` back-to-back = a returning if-block's `}` jumping OVER an else
+ASM (target tail of an `if/else` where the if-body returns):
+```
+mov eax,[ebp+8]      ; load return value (sret ptr)
+jmp short .end       ; <- the `return` statement's own jmp
+jmp short .end       ; <- the if-block `}` jmp, jumping OVER the else body
+.else: ...           ; else body (entered via the cond `jne .else` at the top)
+mov eax,[ebp+8]
+.end: <epilogue>
+```
+CARCASS: a `+0x002:'<L_close>'` brace entry SANDWICHED between the if-body's last
+statement and the else-body's statement (e.g. L412 return, then `+0x002:'414'` `}`, then
+L416 else). The brace jmp targets the EPILOGUE and skips the else.
+SOURCE: it is a real `if (...) { ...; return a; } else { return b; }` - an `else` block,
+NOT `if (...) { return a; } return b;`. A plain if-then + trailing return falls THROUGH to
+the trailing statement (no jmp over it), and MSVC /Od folds the two identical `return` jmps
+into one (you lose the brace jmp). The tell that it is an else, not a fall-through: the
+if-`}` jmp jumps PAST the next statement to the epilogue (it would have to skip the else
+body). Confirmed on `math::get_relative_matrix` (90.2->97.5 via DEBUG_BREAK int3, then
+97.5->100 by changing `if(!x){...return;} return mul;` to `if(!x){...return;}else{return
+mul;}` - the else recovered the second `jmp .end` at 0x47). Also note: a 1-byte `int3`
+inside such a block is `DEBUG_BREAK( )` = `__debugbreak` (debug_macros.h), NOT an empty
+Master-Gold ASSERT (which emits zero bytes).
+
 ### derived ctor OVERWRITES an inherited member that the base ctor already set
 ASM (target, `weapon_core_show_state_base` ctor tail, after the base-ctor call + vtable stores):
 ```
@@ -696,3 +720,43 @@ headers/...`) for the real const-ness/access and fix the working header to match
 `legs_ik_processor::set_{heel,toe}_on_ground(leg_params&,bool)` (98.84/98.59%): `m_*_interpolator
 = fermi_interpolator( time );` - the working fermi_interpolator.h wrongly had const members +
 private op=; the structure-target header showed plain non-const floats and no op=.
+
+### bone-object-space matrix index: `matrices[bone_index - skeleton.get_root_bones_count()]`, re-called per use (do NOT hoist)
+ASM (repeated per matrix in a function that builds several bone matrices):
+    mov ecx, [this]                  ; this
+    mov eax, [ecx]                   ; m_skeleton (a private base member, read via inline accessor)
+    call vostok::animation::skeleton::get_root_bones_count   ; leaf, `this`(m_skeleton) passed in EAX (LTCG)
+    mov edx, [params]; mov edx, [edx+BONEOFF]   ; params.<bone>_bone_index
+    sub edx, eax                     ; index - root_count
+    shl edx, 6                       ; * sizeof(float4x4)=0x40
+    add edx, [matrices_arg]          ; &matrices[index - root_count]
+SOURCE: `matrices[params.<bone>_bone_index - get_skeleton().get_root_bones_count()]`.
+NOTES: the original source calls `get_root_bones_count()` FRESH at every matrix site (the
+index helper is inlined each time) - **do NOT hoist it into one `u32 root_count` local**. A
+hoisted local caches `m_skeleton->get_root_bones_count()` once (`mov [ebp-N],eax` then reuse),
+which DROPS the repeated `mov eax,[m_skeleton]; call get_root_bones_count` the target keeps at
+every site (objdiff shows `+ call`/`+ mov` insertions per matrix). `add eax,0x30` after such an
+address = `.c.xyz()` (the float4x4 position row @ +0x30; the `xyz()` accessor folds to the
+0x3f210 empty-fn / delinker `finalize_impl`). A private base member (`ik_processor::m_skeleton`)
+is reached via a protected inline `get_skeleton()` accessor added to the base (no byte change).
+Confirmed in `legs_ik_processor::get_foot_fixed_transform` (84.16%, target rva 0x6ebae0): the
+single biggest fix was un-hoisting root_count (81.55 -> 84.16). A `float4x4 const&` ref bound to
+`matrices[...] * hip_world_matrix` materializes the product into a stack slot and stores its
+address (`lea;mov [ebp-N],addr`); a recorded ref local that is only stored-then-reloaded-once
+(no later use) is a declared-but-unused source local present in BOTH binaries - keep it (the
+C4189 "initialized but not referenced" warning matches the target), do not delete it.
+
+### A single low-byte store into a multi-byte member = a single-FIELD write (setter / single-arg ctor), NOT a multi-arg ctor
+SYMPTOM: a statement that assigns into a class member emits only ONE byte store, e.g.
+`mov byte[tmp],64h; mov cl,[tmp]; mov [member],cl` (0x64=100), where you wrote a full
+multi-argument constructor. A full `color( r, g, b )` / `T( a, b, c )` ctor writes ALL the
+fields (4 byte stores for a packed color, N for a struct); a single byte store means the
+source touched exactly ONE field. So the original wrote either a SINGLE-FIELD constructor
+or a single-FIELD SETTER, not the multi-arg ctor. RULE: when the byte count says one field
+but your source builds the whole object, read the type's STRUCTURE for its single-field
+options - a `T( one_value )` ctor (`color( u32 )`), or a per-field setter (`set_B( 0x64 )`,
+`set_x( .. )`) - and pick the one whose store matches. Caught on
+`legs_ik_processor::get_foot_fixed_transform` else-branch: target did
+`original_color.set_B( 0x64u )` (one channel on the packed-union color), not
+`color( 0x64u, 0x00u, 0x00u )` (which writes three). The structure's constructor/accessor
+list is the menu; the byte count tells you how many fields the statement is allowed to touch.

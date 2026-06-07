@@ -87,6 +87,17 @@ match % (`agentic_loop.md` section 2a) over a raw instruction-difference count.
 ## Scope
 If a function exists in target but its matching source file is not provided in base - skip it. Currently we only try to match skeletons that were already defined.
 
+**A helper you reconstruct to resolve a call is itself a match unit - it gets a
+structure and a tracked %.** If, while matching function A, you discover A calls a
+missing function B (e.g. an out-of-line `call vostok::math::get_relative_matrix`) and
+you write B to make the link resolve, B is NOT invisible scaffolding: it is a real
+function in the target binary with its own body and rva. You MUST (1) define B in its
+ONE real source location (its real header, never the consuming `.cpp` - see the
+`_N.h` note under "The carcass"), (2) give B its target carcass / `// FUNCTION BODY`
+structure, and (3) track B's OWN `fuzzy_match_percent` and a `STATE`/ledger line, the
+same as any matched function. A call that resolves but whose callee body is unverified
+is a half-match hiding an unmatched function.
+
 
 ## Style
 - Hard tabs; align member-init lists and `=` columns with tabs.
@@ -292,6 +303,15 @@ from the target rvas that `pdb_rich_query --list` / `--rva` report (two differen
 binaries; often off by ~0x10000). Pasting a carcass address into the *target*
 index will miss. Use the carcass addresses only as scratch for the base build;
 get the target asm by function name / target rva via `pdb_fetch --view target`.
+
+**A `<header>_N.h` filename in `binaries/structure/target` does NOT mean the header
+was split into numbered files.** The structure generator emits one file per
+*compiland instance* of a header and disambiguates duplicates with a `_1`/`_2`/...
+suffix - so `math_float4x4_inline_2.h` is just the SAME real `math_float4x4_inline.h`
+as it was included into a different `.cpp`. The shared include guard (all the `_N`
+variants carry the base file's guard) is the tell. Put a reconstructed function in
+its ONE real header (`math_float4x4_inline.h`), never invent a `_2.h` and never define
+a math helper in the consuming `.cpp` just to resolve a call.
 
 **Local `[ebp-N]` slot *numbers and ordering* are allocation noise** - MSVC `/Od`
 does NOT assign slots in declaration order (observed e.g. four bools at
