@@ -7,15 +7,8 @@ math helper called by `legs_ik_processor::get_foot_fixed_transform`.
 
 Result: **90.2% PARTIAL -> 100% DONE** (40/40 instructions equal). No regressions.
 
-## Build note (header in the PCH)
-math_float4x4_inline.h is pulled into the game_core PCH via
-extensions.h -> math_extensions.h -> math_float4x4.h, so a header edit alone does
-NOT rebuild. Before EACH rebuild:
-```
-rm -f "binaries/Win32/intermediates/Master Gold/game_core/vostok_game_core-static-gold.pch"
-touch sources/vostok/game_core/sources/pch.cpp
-nix develop -c python3 scripts/rebuild_watchdog.py --stall 150
-```
+## Build note
+Rebuild with `nix develop -c python3 scripts/rebuild_watchdog.py --stall 150`.
 Score read from THIS worktree's `binaries/objdiff/report.json`
 (`fuzzy_match_percent` for the mangled symbol).
 
