@@ -11,9 +11,8 @@ return a one-line result. Dispatched by an orchestrator; do not spawn sub-agents
 **The unit** is one function by default, but may bundle several when it pays off.
 Batching lowers TOKEN consumption: each unit pays the fixed setup cost - reading the
 shared docs, the class decl, member offsets, the `temp_include_all` anchor, your own
-context - ONCE, so more functions per unit means fewer tokens overall (the rebuild
-itself is now fast and is no longer the bottleneck). Bundle an **inlined cluster**
-that can't be scored separately, or a **batch of small same-class functions**
+context - ONCE, so more functions per unit means fewer tokens overall. Bundle an
+**inlined cluster** that can't be scored separately, or a **batch of small same-class functions**
 (getters/setters, sibling `weapon_core_*_state` variants) that share that scaffolding.
 The orchestrator usually hands you the explicit list. Pull in those, plus any function
 **CALLED by one you're matching** - matching a callee is fine and often necessary (it
