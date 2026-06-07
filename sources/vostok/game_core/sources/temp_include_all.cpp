@@ -1489,6 +1489,22 @@ namespace vostok
 		wc.set_animation_callback( vostok::animation::channel_id_on_animation_end, NULL, cb );
 		wc.remove_animation_callback( (pcstr)NULL, NULL );
 		wc.remove_animation_callback( vostok::animation::channel_id_on_animation_end, NULL );
+
+		// claude@NOTE: anchor the private predicates (friend reaches them). could_be_used
+		// has no other reachable caller yet (base_player::tick_active_object still STUB).
+		bool ( survarium::weapon_core::*pcu )( survarium::base_player const& ) const = &survarium::weapon_core::could_be_used;
+		bool ( survarium::weapon_core::*pca )( survarium::base_player const& ) const = &survarium::weapon_core::could_be_aimed;
+		bool ( survarium::weapon_core::*pip )( ) const = &survarium::weapon_core::instant_idle_predicate;
+		bool ( survarium::weapon_core::*pcr )( ) const = &survarium::weapon_core::can_and_must_reload_predicate;
+		bool ( survarium::weapon_core::*pcra )( ) const = &survarium::weapon_core::can_and_must_reload_and_animation_ended_predicate;
+		example_callback( reinterpret_cast< pcstr >( &pcu ) );
+		example_callback( reinterpret_cast< pcstr >( &pca ) );
+		example_callback( reinterpret_cast< pcstr >( &pip ) );
+		example_callback( reinterpret_cast< pcstr >( &pcr ) );
+		example_callback( reinterpret_cast< pcstr >( &pcra ) );
+
+		wc.get_ammo_slot( survarium::first_ammo );
+		wc.ready_to_reload( );
 	}
 
 

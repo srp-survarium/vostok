@@ -1192,3 +1192,23 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   empty boost binders) = ICF representative reshuffle from adding the boost::bind/function COMDATs
   (set differs each build). OVERALL UP: baseline fuzzy 48.728 / matched_code 27.447 / 8206 fns ->
   current 48.760 / 27.458 / 8207 fns (+1 fn, +matched bytes). honest match_score improves; no real loss.
+
+- weapon_core predicates/accessors batch 7 (ONE unit; branch
+  match/game_core-weapon_core-batch7 off origin/int/game_core). Resumed a crashed session.
+  A coherent batch of weapon_core predicates + accessors. See
+  weapon_core_predicates_accessors_batch7.md.
+    weapon_core::is_sprinting                                  100.00% DONE     (return m_user_animations_selector.is_sprinting(); @@EBE priv virtual const. Authored by crashed session, verified.)
+    weapon_core::instant_idle_predicate                       100.00% DONE     (return m_user_animations_selector.sprint_predicate() || ...is_in_jump(); @@ABE priv const.)
+    weapon_core::get_ammo_slot                                 99.77% DONE     (static profile_slot_enum const weapon_ammo_slots[2][2]; switch(profile_slot_id()) case weapon1_slot/weapon2_slot/default invalid_slot. Structure byte-identical. Residual = call-boundary `this` reg for out-of-line profile_slot_id (target eax / base ecx) - LTCG callee calling-convention, plus reloc-noise on the static table. @@QAE pub.)
+    weapon_core::can_and_must_reload_predicate                 93.32% PARTIAL  (return ready_to_reload() && m_ammo_in_magazine==0 && !m_is_round_chambered; out-lined ready_to_reload (header stub -> .cpp stub; target sym @0x0ac370) so caller emits `call`. Members read direct [+47Ah]/[+48Eh]. Structure byte-identical. Residual = target reserves 0x30 frame + zeroes a DEAD dword [ebp-10h] in prologue (no PDB LOCALS record, never read) - not source-pinnable. @@ABE priv const.)
+    weapon_core::can_and_must_reload_and_animation_ended_predicate 86.17% PARTIAL (return current_base_state().has_animation_ended() && can_and_must_reload_predicate(); m_logic([+414h])->current_state()([+10h]) static_cast pass-through + can_and_must_reload_predicate `call` byte-identical. Residual = inline-decision wall on weapon_core_base_state::has_animation_ended() - target out-of-lines `call`, base /Od /Ob2 inlines [+135h] read. Same documented wall as target_and_animation_ended_predicate 85.68%. @@ABE priv const.)
+    weapon_core::could_be_used                                 73.90% PARTIAL  ((*user.damage_model()).broken_hands_count(); return !(bhc==2 && is_double_handed()). Members/branches byte-identical (bhc reads [+33Ah]/[+33Bh], is_double_handed [+48Ah]). Residual = inline-decision wall: target out-of-lines intrusive_ptr::operator* (the COMDAT-folded template body); base /Od /Ob2 inlines it because the compiled-out ASSERT(m_object) stub is small enough to fit the inline budget. Lives in shared intrusive_ptr_inline.h. @@QBE pub const.)
+    weapon_core::could_be_aimed                                75.88% PARTIAL  ((*user.damage_model()).broken_hands_count(); return bhc != 2. Same operator* inline-decision wall as could_be_used. @@QBE pub const.)
+  Support: ready_to_reload out-of-lined as a `return true;` STUB (real body not matched, target
+  @0x0ac370). damage_model::broken_hands_count() header inline filled in
+  (m_broken_hands_count[0]+m_broken_hands_count[1], +0x33a). Header access fixed (is_sprinting EBE,
+  instant_idle_predicate/can_and_must_reload_* ABE -> private; could_be_*/get_ammo_slot/ready_to_reload
+  stay public). temp_include_all.cpp: anchored the private predicates via member-pointers + the
+  reload predicates + ready_to_reload + get_ammo_slot call.
+  Regressions: none - report-changes 0 regressed / 0 removed on the final rebuild; the reload-predicate
+  build was 0 regressed / 2 improved.
