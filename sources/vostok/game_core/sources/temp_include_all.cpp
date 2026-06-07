@@ -114,6 +114,7 @@
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
+#include <vostok/game_core/weapon_recoil_calculator.h>
 #include <vostok/game_core/character_dispersion_calculator.h>
 #include <vostok/game_core/weapon_dispersion_calculator.h>
 #include <vostok/game_core/weapon_recoil_params.h>
@@ -517,6 +518,31 @@ namespace vostok
 
 		example_callback( reinterpret_cast< pcstr >( &params ) );
 		example_callback( reinterpret_cast< pcstr >( &config_params ) );
+	}
+
+	void use_game_core_weapon_recoil_calculator( )
+	{
+		// Anchor the calculator: ctor + public entry points keep the COMDATs;
+		// the private helpers (process_compensation, get_random_*, reset) are
+		// reached transitively from tick/fire/reload/chamber_a_round.
+		survarium::weapon_recoil_calculator calc;
+		calc.set_weapon( NULL );
+		calc.set_interpolation_time( 0.0f );
+		calc.set_character_multiplier( 1.0f );
+		calc.set_player_compensation_multiplier( 1.0f );
+		calc.tick( 0, 1.0f );
+		calc.fire( );
+		calc.reload( );
+		calc.chamber_a_round( );
+		calc.get_vertical_koef( );
+		calc.get_horizontal_koef( );
+		calc.get_back_koef( );
+
+		survarium::pseudo_random pr( 0.0f );
+		pr.random_f( 1.0f );
+
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
+		example_callback( reinterpret_cast< pcstr >( &pr ) );
 	}
 
 	void use_game_core_character_dispersion_params( )
@@ -2411,6 +2437,7 @@ IncludeAll::IncludeAll()
 	vostok::use_weapon_core_shotgun_reload_state_cook( );
 	vostok::use_weapon_core_inactive_state_cook( );
 	vostok::use_game_core_weapon_recoil_params( );
+	vostok::use_game_core_weapon_recoil_calculator( );
 	vostok::use_game_core_character_dispersion_params( );
 	vostok::use_game_core_weapon_dispersion_params( );
 	vostok::use_recoil_calculator( );

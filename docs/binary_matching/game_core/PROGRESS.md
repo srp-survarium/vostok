@@ -1288,3 +1288,25 @@ infra base): `module::function -> STATE -> PR (regressions)`.
         header only fwd-decls udp_match_packet/packet_reader; bodies need packet::append / packet_reader::r<T>).
     ctor 99.72% / hit_by_type 99.83% / get_hit_parameters 99.85% - stack-slot residuals (acceptable DONE-level).
   Regressions: none - report-changes 0 regressed / 1 improved (protect_affect_predicate::operator 0->100) / 0 removed / 0 added.
+- weapon_recoil_calculator (recoil math / accessors / ctor; ONE unit; branch
+  match/game_core-weapon_recoil_calculator off origin/int/game_core). Whole TU was
+  previously disabled (no anchor, all STATE[BLOCKED]); enabled it. KEY ENABLER:
+  fixed header access specifiers (process_compensation/get_random_angle/get_random_amount/
+  reset are AAE=private but were public -> objdiff wouldn't pair) and added
+  use_game_core_weapon_recoil_calculator anchor in temp_include_all.cpp. All edits in
+  weapon_recoil_calculator.cpp/.h + pseudo_random (random_f). See
+  docs/binary_matching/game_core/weapon_recoil_calculator.md.
+    weapon_recoil_calculator::set_weapon          100%   DONE  (m_weapon=weapon. @@QAE public.)
+    weapon_recoil_calculator::reset               100%   DONE  (7 koef/timer zeroes incl. the 2 duplicated vert/horiz stores - reproduced verbatim. @@AAE private.)
+    weapon_recoil_calculator::reload              100%   DONE  (reset(). @@QAE public.)
+    weapon_recoil_calculator::chamber_a_round     100%   DONE  (reset(). @@QAE public.)
+    weapon_recoil_calculator::weapon_recoil_calculator  100%  DONE  (16-member init list. @@QAE public.)
+    weapon_recoil_calculator::fire               95.10%  PARTIAL (FIXED operator-precedence bug `mult * first_shoot ? a : b` -> `(first_shoot ? a : b) * force_koef * m_player_recoil_multiplier`, both recoil & recoil_amount; sqr(vert)+sqr(horiz) order. 79.80->95.10. Residual: +0xC frame + first_shoot && temp dword(base)/byte(target). std::min tried -> regressed, reverted. @@QAE public.)
+    weapon_recoil_calculator::tick               93.90%  PARTIAL (FIXED `!=0.0` double -> 0.0f float compare; sqr order. 93.37->93.90. Residual: std::min<float> at L80 INLINED in base but out-of-line call in target = LTCG inline-decision wall. @@QAE public.)
+    weapon_recoil_calculator::process_compensation 93.74% PARTIAL (FIXED sqr `*`->`+`, eval order `(param+additive)*dt*mult`. 86.90->93.74. Residual: 2x math::abs(float) cmp emit x87 fcomip(base)/comiss(target) = abs return-register ST0/xmm0 call-boundary diff. @@AAE private.)
+    weapon_recoil_calculator::get_random_angle   89.02%  PARTIAL (CROSS-UNIT WALL: target keeps `call weapon_core::get_user`; base inlines get_user [weapon_core.h in-class inline reading m_user@+0x44C], +4 frame & mov chain. weapon_core.h owned by another unit; out-lining get_user there would close it. @@AAE private.)
+    weapon_recoil_calculator::get_random_amount  80.75%  PARTIAL (same get_user inline wall; also FIXED `0.25` double -> 0.25f. @@AAE private.)
+    pseudo_random::random_f                       21.57%  PARTIAL (LTCG WALL: target inlines math::pow(float,int) [no such symbol in any target obj] + out-of-line call to pow_impl; base emits pow(float,int) as a call & doesn't inline -> whole x87 'k' schedule diverges. Shared math_functions_inline.h, not steerable from this unit. @@QAE public.)
+    `dynamic initializer for s_recoil_use_pseudo_random_cc`  0%  WALL (cc_bool ctor called with LTCG register args - calling-convention boundary.)
+  Regressions: none (report-changes 0 regressed). Net: 5 fns to 100%, 4 PARTIAL substantially
+  improved, 1 enabled TU added to the build.
