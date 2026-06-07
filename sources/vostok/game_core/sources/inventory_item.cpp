@@ -10,15 +10,11 @@
 namespace survarium {
 
 // STATE[78.8%|PARTIAL]: member-init shape matches; % gap is LTCG base-ctor inline. See inventory_item_ctor.md.
-// STRUCTURE DIFF[target 0x590870 | base 0x449c20]: target 0 / base 0 stmts
-// .. same ..
+// STRUCTURE DIFF:
+// target: 0x590870            base: 0x449c20
+// ; survarium::inventory_item::inventory_item(survarium::inventory_item::action_behaviour_type) ; target 0 stmts / base 0 stmts
 // ; aligned 0, size-diffs 0, quantity-diffs 0
-// Both sides are 0-statement (member-init only); field-init order + offsets match
-// (+108 type, +10C inventory=0, +110 slot=0x13, +114 amount=0, +116 dict_id=0).
-// The 78.8% gap is NOT a structure divergence: target CALLs
-// interactive_object::interactive_object for the base subobject, our base build
-// INLINEs it (push 1 + unmanaged_resource::unmanaged_resource + ??_7interactive_object
-// vtable store) - an LTCG inline-vs-call artifact of the base ctor, not this ctor's shape.
+// VERDICT: STRUCTURE MATCH - both 0-stmt member-init, init order/offsets match; 78.8% gap is LTCG base-ctor inline-vs-call, not this ctor's shape  trail: inventory_item-ctor.md
 inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_action_behaviuor	( type ),
 	m_inventory			( NULL ),

@@ -64,7 +64,9 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 		m_current_multiplier		= m_target_multiplier;
 	}
 
-	// STRUCTURE DIFF[target 0x5834d0 | base 0x4574a0]: target 10 / base 13 stmts
+	// STRUCTURE DIFF:
+	// target: 0x5834d0            base: 0x4574a0
+	// ; void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*) ; target 8 stmts / base 11 stmts
 	// .. same ..
 	// --          | <0>         |    EMPTY only base
 	// 0x012 <0x21> | 0x012 <0x1a> | for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )   SIZE
@@ -78,8 +80,8 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 	// 0x079 <0x3b> | 0x06b <0x23> | m_target_multiplier			= static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );   SIZE
 	// --          | 0x08e <0xc> | m_current_multiplier		= m_target_multiplier;   ONLY base
 	// .. same ..
-	// ; aligned 5, size-diffs 4, quantity-diffs 5
-	// ******
+	// ; aligned 3, size-diffs 4, quantity-diffs 5
+	// VERDICT: STRUCTURE MISMATCH (both) - brace the for body (target back-edge on own line L37) and chain m_current=m_target=...->get_multiplier() into one stmt  trail: breath_vibration-set_breath_holding_params.md
 }
 
 // STATE[100%|DONE]

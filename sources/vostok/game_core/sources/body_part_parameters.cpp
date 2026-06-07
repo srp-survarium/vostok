@@ -406,20 +406,14 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 	if ( m_affects.empty( ) )
 		new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );
 
-	// STRUCTURE DIFF[target 0x0ba3c0 | base 0x085aa0]: target 22 / base 23 stmts
+	// STRUCTURE DIFF:
+	// target: 0xba3c0            base: 0x85aa0
+	// ; void survarium::body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16> >(vostok::ai::statistics_item<46,16>&, const unsigned int) const ; target 21 stmts / base 21 stmts
+	// 0x010 <0x11> | 0x010 <0x12> | new_stats_item.caption = m_name;   SIZE
 	// .. same ..
-	// 0x010 <0x11> | 0x010 <0x12> | new_stats_item.caption = m_name;                                  SIZE
-	// .. same ..
-	// 0x1f0 <0x31> | 0x1f1 <0x19> | new_stats_item.content.push_back( fixed_string<46>( "none" ) );   SIZE
-	// --          | <0>          |                                                                     EMPTY only base
-	// ; aligned 20, size-diffs 2, quantity-diffs 1
-	//
-	// STRUCTURE MATCH (statement-for-statement; 22 vs 23 is an EMPTY blank-line gap, not a control diff).
-	// Both SIZE diffs cascade from one whole-program COMDAT inline at the "none" leaf (L306): target
-	// inlines fixed_string<46>(char const*) (mov 2Eh; call buffer_string::buffer_string), base calls
-	// fixed_string<46>::fixed_string<46> out-of-line. That widens the frame 0x10 (0xE8 vs 0xD8) and
-	// cascades the reg/slot renaming (incl. the L286 caption= operator= 0x11 vs 0x12). Not steerable
-	// from this function's source -> BLOCKED on fixed_string<46>'s emission, not PARTIAL/LTCG.
+	// 0x1f0 <0x31> | 0x1f1 <0x19> | new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );   SIZE
+	// ; aligned 19, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH - 21/21 stmt-for-stmt; both SIZE diffs cascade from the "none" leaf fixed_string<46>(char const*) inline-vs-call, BLOCKED on fixed_string<46> emission  trail: body_part_parameters-fill_new_stats_item.md
 }
 
 // claude@TODO: this explicit instantiation's PLACEMENT may be wrong - the original likely
