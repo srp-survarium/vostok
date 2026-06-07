@@ -406,34 +406,20 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 	if ( m_affects.empty( ) )
 		new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );
 
-	// FUNCTION BODY  (kept: PARTIAL; from target structure, rva 0x0ba3c0; 18 statements, 0x228 bytes)
-	// LOCALS
-	// vostok::fixed_string<46>   new_item
-	// u32                        i<1>
-	// u32                        remaining_time_in_ms<2>
-	// <0x0ba3c0>|0x000|+0x010:'285'      {
-	// <0x0ba3d0>|0x010|+0x011:'286'        new_stats_item.caption = m_name;
-	// <0x0ba3e1>|0x021|+0x00d:'287'        new_stats_item.caption.append( " state:" );
-	// <0>                                                                              (288 blank)
-	// <0x0ba3ee>|0x02e|+0x008:'289'        vostok::fixed_string<46> new_item;
-	// <0x0ba3f6>|0x036|+0x03c:'290'        new_item.appendf( "HP: %4.2f/%4.2f", m_health, m_max_health );
-	// <0x0ba432>|0x072|+0x00f:'291'        new_stats_item.content.push_back( new_item );
-	// <0>                                                                              (292 blank)
-	// <0x0ba441>|0x081|+0x008:'293'        new_item.clear( );
-	// <0x0ba449>|0x089|+0x00d:'294'        new_item.append( "affects: " );
-	// <0x0ba456>|0x096|+0x00f:'295'        new_stats_item.content.push_back( new_item );
-	// <0>                                                                              (296 blank)
-	// <0x0ba465>|0x0a5|+0x03e|[1]:'297'    for ( u32 i = 0 ; i < m_affects.size( ) ; ++i )
-	// <0>                                                                              (298 loop '{')
-	// <0x0ba4a3>|0x0e3|+0x008:'299'          new_item.clear( );
-	// <0x0ba4ab>|0x0eb|+0x067:'300'          const u32 remaining_time_in_ms = ... ? ... - ... : 0;
-	// <0x0ba512>|0x152|+0x05e:'301'          new_item.appendf( "%s [%4.2f seconds left]", affects_captions[...], .../1000.0f );
-	// <0x0ba570>|0x1b0|+0x00f:'302'          new_stats_item.content.push_back( new_item );
-	// <0x0ba57f>|0x1bf|+0x005:'303'        }
-	// <0x0ba584>|0x1c4|+0x02c:'305'        if ( m_affects.empty( ) )
-	// <0x0ba5b0>|0x1f0|+0x031:'306'          new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );    claude@MATCH: target inlines fixed_string<46>(char const*); base calls it
-	// <0x0ba5e1>|0x221|+0x007:'307'      }
-	// ******
+	// STRUCTURE DIFF[target 0x0ba3c0 | base 0x085aa0]: target 22 / base 23 stmts
+	// .. same ..
+	// 0x010 <0x11> | 0x010 <0x12> | new_stats_item.caption = m_name;                                  SIZE
+	// .. same ..
+	// 0x1f0 <0x31> | 0x1f1 <0x19> | new_stats_item.content.push_back( fixed_string<46>( "none" ) );   SIZE
+	// --          | <0>          |                                                                     EMPTY only base
+	// ; aligned 20, size-diffs 2, quantity-diffs 1
+	//
+	// STRUCTURE MATCH (statement-for-statement; 22 vs 23 is an EMPTY blank-line gap, not a control diff).
+	// Both SIZE diffs cascade from one whole-program COMDAT inline at the "none" leaf (L306): target
+	// inlines fixed_string<46>(char const*) (mov 2Eh; call buffer_string::buffer_string), base calls
+	// fixed_string<46>::fixed_string<46> out-of-line. That widens the frame 0x10 (0xE8 vs 0xD8) and
+	// cascades the reg/slot renaming (incl. the L286 caption= operator= 0x11 vs 0x12). Not steerable
+	// from this function's source -> BLOCKED on fixed_string<46>'s emission, not PARTIAL/LTCG.
 }
 
 // claude@TODO: this explicit instantiation's PLACEMENT may be wrong - the original likely
