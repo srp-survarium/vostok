@@ -745,3 +745,18 @@ single biggest fix was un-hoisting root_count (81.55 -> 84.16). A `float4x4 cons
 address (`lea;mov [ebp-N],addr`); a recorded ref local that is only stored-then-reloaded-once
 (no later use) is a declared-but-unused source local present in BOTH binaries - keep it (the
 C4189 "initialized but not referenced" warning matches the target), do not delete it.
+
+### A single low-byte store into a multi-byte member = a single-FIELD write (setter / single-arg ctor), NOT a multi-arg ctor
+SYMPTOM: a statement that assigns into a class member emits only ONE byte store, e.g.
+`mov byte[tmp],64h; mov cl,[tmp]; mov [member],cl` (0x64=100), where you wrote a full
+multi-argument constructor. A full `color( r, g, b )` / `T( a, b, c )` ctor writes ALL the
+fields (4 byte stores for a packed color, N for a struct); a single byte store means the
+source touched exactly ONE field. So the original wrote either a SINGLE-FIELD constructor
+or a single-FIELD SETTER, not the multi-arg ctor. RULE: when the byte count says one field
+but your source builds the whole object, read the type's STRUCTURE for its single-field
+options - a `T( one_value )` ctor (`color( u32 )`), or a per-field setter (`set_B( 0x64 )`,
+`set_x( .. )`) - and pick the one whose store matches. Caught on
+`legs_ik_processor::get_foot_fixed_transform` else-branch: target did
+`original_color.set_B( 0x64u )` (one channel on the packed-union color), not
+`color( 0x64u, 0x00u, 0x00u )` (which writes three). The structure's constructor/accessor
+list is the menu; the byte count tells you how many fields the statement is allowed to touch.
