@@ -53,6 +53,7 @@
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/player_logic_base_state.h>
+#include "jump_logic_state_inactive.h"
 #include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
@@ -866,6 +867,21 @@ namespace vostok
 	}
 
 
+	void use_game_core_jump_logic_state_inactive( )
+	{
+		// initialize()/is_ready_for_transition() are header inline overrides. Take
+		// their member-fn addresses to ODR-use them and force a standalone
+		// (un-inlined) out-of-line body for each, then escape the pointers so the
+		// uses are observed. Do NOT construct an instance: instantiating the class
+		// would emit its vtable and force codegen of the still-STUB
+		// selected_animations (no return -> C4716/LNK1257). Address-of touches only
+		// these two members, which is all this unit needs.
+		void ( survarium::jump_logic_state_inactive::*init )( )        = &survarium::jump_logic_state_inactive::initialize;
+		bool ( survarium::jump_logic_state_inactive::*ready )( ) const = &survarium::jump_logic_state_inactive::is_ready_for_transition;
+		example_callback( reinterpret_cast< pcstr >( &init ) );
+		example_callback( reinterpret_cast< pcstr >( &ready ) );
+	}
+
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
 							void*				arg_0,
@@ -1229,6 +1245,7 @@ IncludeAll::IncludeAll()
 	vostok::use_client_player_update( NULL );
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
+	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
