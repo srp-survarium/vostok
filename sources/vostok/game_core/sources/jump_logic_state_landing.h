@@ -9,6 +9,8 @@
 
 // claude@MATCH: anchor (temp_include_all.cpp) befriended so it can call the private
 // is_ready_for_transition override (qualified); a friend decl emits no bytes.
+// claude@TODO: remove later - anchor-only friend decl, not in the shipped header;
+// drop once a real caller anchors is_ready_for_transition.
 namespace vostok { void use_game_core_jump_logic_state_landing( ); }
 
 namespace survarium {
