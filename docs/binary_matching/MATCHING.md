@@ -290,8 +290,10 @@ structure-diff --condensed` and paste its output, `// `-prefixed, in place of th
 carcass: it shows target-vs-base aligned with the matched runs collapsed to
 `.. same ..` and each divergence as `0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
 {stmt}   {SIZE|ONLY base|ONLY target|EMPTY only ...}`. That way the reader sees exactly
-where our build diverges from the target, not just the target shape. (The structure-
-verifier produces these.)
+where our build diverges from the target, not just the target shape. **Standard shape:
+the tool's `--condensed` output VERBATIM, then exactly one `// VERDICT: STRUCTURE
+<MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>` line; all detail lives in the
+per-function `.md`, never inline.** (The structure-verifier produces and owns these.)
 
 **Reading the STUB carcass (before you delete it)** - its markers are shape clues you
 need for the match. A `<N>` (no address) line is a statement/sub-expression
