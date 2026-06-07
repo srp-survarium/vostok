@@ -277,13 +277,12 @@ emitted a block-open the target structure lacked - the target was an early `if (
 return;` guard, no braces - and the 76.80% hid it. The fix is a source restructure, not a %
 to bank.)
 
-**Keep the target structure inline when the match is NOT 100%.** If a function
-ends `PARTIAL` / `INPROGRESS` / `BLOCKED` / `SKIPPED`, leave the `// FUNCTION BODY`
-block (and, for the diverging region, the relevant `pdb_fetch --view target` asm as
-a comment) in the source above/inside it, so the next reader has the full divergence
-context in place - not buried in a PR or a log. This is the existing house style; see
-`collision_sensor.cpp`, `player_stamina.cpp`, `damage_model.cpp`. Only a clean
-**100% DONE** match may delete the carcass for tidiness.
+**Carcass handoff (NOT 100%): the matcher DELETES the carcass; the structure-verifier
+embeds the structure-diff.** The matcher reads the STUB's `// FUNCTION BODY` carcass for
+the shape clues below, then deletes it when done - it does not preserve or annotate it.
+The structure-verifier then embeds the two-sided condensed structure-diff (next), which
+carries the divergence context the carcass used to (and whose presence marks that the
+verifier ran). A clean 100% DONE carries neither.
 
 **Preferred for a non-100% function: the two-sided condensed structure-diff** (it
 supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
@@ -294,9 +293,8 @@ carcass: it shows target-vs-base aligned with the matched runs collapsed to
 where our build diverges from the target, not just the target shape. (The structure-
 verifier produces these.)
 
-**When the match is NOT 100%, PRESERVE the `// FUNCTION BODY` block verbatim -
-including its `<0> <1> <2>` marker lines. Never strip them** (a clean 100% DONE deletes
-the carcass entirely, per the rule just above). A `<N>` (no address) line is a statement/sub-expression
+**Reading the STUB carcass (before you delete it)** - its markers are shape clues you
+need for the match. A `<N>` (no address) line is a statement/sub-expression
 the compiler set no breakpoint on (inlined, optimized out, or a continuation); its
 count and grouping between two addressed lines are a *structural clue* (an inlined
 call, a nested scope, a fall-through `jmp` thunk). When you record which statement a
