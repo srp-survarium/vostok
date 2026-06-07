@@ -52,9 +52,8 @@ void change_matrix_orientation( float4x4 const& rotation, float4x4& matrix )
 
 namespace survarium {
 
-// claude@NOTE: defined out-of-line in ik_processor.cpp (same module); process()
-// calls it to build the hip object-space matrix.
-float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
+// get_bone_matrix_in_object_space is declared in <vostok/game_core/ik_utils.h>
+// (VOSTOK_GAME_CORE_API), defined out-of-line in ik_processor.cpp.
 
 // claude@MATCH: the s_ik_*_cc console-command static initializers. Each `static
 // console_commands::cc_*` emits the `dynamic initializer for 's_ik_*_cc'` (ctor +

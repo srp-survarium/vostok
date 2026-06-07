@@ -10,25 +10,12 @@
 #include <vostok/game_core/ik_utils.h>
 #include <vostok/console_command.h>
 
-// claude@NOTE: get_rotation_matrix / change_matrix_orientation are math helpers
-// (math_float4x4_inline_2.h on target) defined out-of-line in legs_ik_processor.cpp's
-// TU with external linkage; process_hand calls them OUT-OF-LINE so declaring them here
-// resolves the link to those definitions without touching their scored bytes.
-namespace vostok {
-namespace math {
-
-float4x4 get_rotation_matrix( float3 const& original_dir, float3 const& target_dir );
-void change_matrix_orientation( float4x4 const& rotation, float4x4& matrix );
-
-// get_relative_matrix is provided canonically as inline in math_float4x4_inline.h
-// (#185/feature base); int's local re-definition dropped during the restack.
-
-} // namespace math
-} // namespace vostok
+// get_rotation_matrix / change_matrix_orientation / get_bone_matrix_in_object_space are
+// out-of-line IK helpers declared in <vostok/game_core/ik_utils.h> with VOSTOK_GAME_CORE_API
+// (defined in legs_ik_processor.cpp / ik_processor.cpp). get_relative_matrix is the canonical
+// inline in math_float4x4_inline.h.
 
 namespace survarium {
-
-float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
 
 static float	s_aim_transition_time			= 0.3f;
 
