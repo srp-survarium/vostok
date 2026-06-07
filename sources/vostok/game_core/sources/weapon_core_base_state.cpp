@@ -22,14 +22,16 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 	m_animation_has_been_ended	= false;
 	m_serialize_animation_state	= serialize_animation_state;
 
-	// STRUCTURE DIFF[target 0x6ecf90 | base 0x4594c0]: target 0 / base 6 stmts
-	// --          | <0>         |    EMPTY only base
+	// STRUCTURE DIFF:
+	// target: 0x6ecf90            base: 0x4594c0
+	// ; survarium::weapon_core_base_state::weapon_core_base_state(survarium::weapon_core&, bool) ; target 0 stmts / base 5 stmts
 	// --          | 0x070 <0xd> | m_is_firing_ptr				= NULL;   ONLY base
 	// --          | 0x07d <0xd> | m_body_part_mask_for_user	= animation::body_part_whole_body;	// -1   ONLY base
 	// --          | 0x08a <0xa> | m_is_ready_to_be_deactivated	= false;   ONLY base
 	// --          | 0x094 <0xa> | m_animation_has_been_ended	= false;   ONLY base
 	// --          | 0x09e <0xc> | m_serialize_animation_state	= serialize_animation_state;   ONLY base
-	// ; aligned 0, size-diffs 0, quantity-diffs 6
+	// ; aligned 0, size-diffs 0, quantity-diffs 5
+	// VERDICT: STRUCTURE MISMATCH (quantity) - target is 0-stmt member-init list; base body-assigns 5 members; move the 5 assigns into the member-initializer list  trail: weapon_core_base_state-ctor.md
 }
 
 // STATE[100%|DONE]
