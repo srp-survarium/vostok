@@ -51,7 +51,19 @@ game PDB instead uses `c:/survarium/sources`.
 
 A full engine build under Wine takes ~20 minutes; run it in the background. The
 objdiff config is `binaries/objdiff/objdiff.json`; a match report is
-`objdiff-cli report generate -p binaries/objdiff`.
+`objdiff-cli report generate -p binaries/objdiff`. Every base delink regenerates
+`binaries/objdiff/report.json` (and `report-changes.json`).
+
+## Match score (README regression tracker)
+
+`scripts/match_score.py` rolls `report.json` up into the overall fuzzy % plus a
+per-module functions/code-matched table, and `--write-readme` refreshes the
+`<!-- match-score -->` block at the top of README.md. The numbers come straight
+from objdiff's measures, NOT from the `// STATE[..]` markers (which are often
+absent or stale), so the README is an honest, no-run regression tracker - diff
+the block across commits. Re-run `python3 scripts/match_score.py --write-readme`
+whenever `report.json` moves (after a re-delink, or a toolchain/delinker change
+that shifts many symbols).
 
 ### IMPORTANT: headers are NOT in the ninja dependency graph
 

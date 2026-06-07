@@ -15,12 +15,15 @@ it makes sense:**
 - **Inlined cluster:** if another function is inlined into yours (or yours into a
   reachable caller) and they cannot be matched or scored separately, match them
   together.
-- **Trivial accessors of one class:** getters/setters (and similarly tiny
-  one-liners) of the *same* class may be grouped into one unit. They share
-  scaffolding (class decl, member offsets, the `temp_include_all` anchor, COMDAT
-  mangling) and each costs a full ~20-min rebuild alone, so batching them is far
-  cheaper and avoids per-function PR chains. The orchestrator may hand you such a
-  group explicitly.
+- **A batch of small functions:** the ~20-min rebuild is the dominant cost and is
+  paid ONCE for the whole unit, so a unit normally bundles **several small
+  functions** - ~3-4 small multi-line ones, up to ~10 one-liners, fewer the
+  larger/harder they are. They share scaffolding (class decl, member offsets, the
+  `temp_include_all` anchor, COMDAT mangling). Prefer a related cluster: the same
+  class's getters/setters, or sibling classes of identical shape (e.g. the
+  `weapon_core_*_state` variants). The orchestrator usually hands you the explicit
+  list. If a member of the batch turns out genuinely hard, finish the rest, mark
+  that one INPROGRESS with the next step, and do NOT spin on it.
 
 A unit is still one branch / commit / PR. Pull in *exactly* the functions the
 grouping justifies (inlining forces them, or they are trivial same-class
