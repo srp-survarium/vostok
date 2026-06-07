@@ -1286,3 +1286,23 @@ cannot pair the instructions and bails to None. Non-steerable (the source `= 0.0
 correct; it is a delinker naming artifact, same misname class as empty_stub/finalize_impl).
 Confirmed in `game_core/weapon_recoil_calculator::reset` (7 stores to 0.0f, all
 out_of_range_reward vs offset).
+### Array brace-init: per-element source lines -> per-element statement attribution (structure-only)
+SYMPTOM: a `--view structure-diff` SIZE diff on a `pcstr captions[N] = { "a", "b", ... };` line,
+with the target showing N separate `'srcline'` statements (one per element, each size 0x7 on x86)
+where the base shows ONE combined statement (size N*0x7). The BYTES are identical
+(`mov dword ptr [ebp-X], <str0>; mov dword ptr [ebp-Y], <str1>; ...`); only the statement
+ATTRIBUTION differs, so report.json fuzzy is unchanged but the structure-diff flags it.
+CAUSE: under /Od, MSVC attributes each array-initializer element-store to the SOURCE LINE that
+element literal sits on. A single-line brace-init `= { "a", "b" }` collapses all stores onto one
+line -> one statement; the original wrote each element on its OWN physical line.
+FIX: split the brace-init across lines, one literal per line:
+    pcstr captions[2] =
+    {
+        "a",
+        "b"
+    };
+This re-attributes each store to its own line -> per-element statements aligning the target.
+The blank-line gaps between elements show up as harmless `EMPTY only base` quantity-diffs, NOT
+real divergences. Confirmed across all 7 `get_weapon_lexeme_pair` variants in the pistol/
+double_barreled weapon_core idle/aimed_idle/show states (SIZE-diff 1 -> 0; report.json unchanged
+at 99.92%, sole residual the ammo_in_magazine arg-passing register).

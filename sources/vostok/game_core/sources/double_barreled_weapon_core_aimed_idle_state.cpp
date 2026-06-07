@@ -48,11 +48,10 @@ double_barreled_weapon_core_aimed_idle_state::double_barreled_weapon_core_aimed_
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[85.65%|PARTIAL]: residual is the per-call-site LTCG inline-vs-call of
-// operator+<animation_lexeme,animation_lexeme> (target inlines the addition_lexeme ctor +
-// cloned_in_buffer here, base keeps the out-of-line call; operator+ is standalone in BOTH rich
-// indexes -> whole-program inline decision, not a source bug), plus the ASSERT_U eater shape.
-// Identical shape/diff to weapon_core_idle_state (#151) and the idle siblings (#153).
+// STATE[85.65%|PARTIAL]: structure matches (ASSERT_U, get_weapon_lexeme_pair, return expr).
+// Wall: target inlines operator+<animation_lexeme,animation_lexeme> into the return, base keeps
+// the out-of-line `call operator+` (standalone symbol in BOTH rich indexes -> whole-program LTCG
+// inline of the shared mixing header). Non-steerable from this file. Same wall as the siblings.
 animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -66,27 +65,30 @@ animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weap
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 
-	// FUNCTION BODY
-	// <0x79cb60>|0x011|+0x036	ASSERT_U( weight_driving_animation );
-	// <0x79cba7>|0x047|+0x01f	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( ... );
-	// <0x79cbc6>|0x066|+0x059	return expression( main + offset );  (target inlines operator+)
-	// ******
+	// STRUCTURE DIFF[target 0x79cb60 | base 0x44de20]: target 3 / base 5 stmts
+	// 0x011 <0x36> | 0x011 <0x38> | ASSERT_U( weight_driving_animation );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x066 <0x59> | 0x068 <0x38> | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );   SIZE
+	// ; aligned 1, size-diffs 2, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are operator+ inline-vs-call (whole-program LTCG), non-steerable. trail: weapon_and_hands_expression.md
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` call boundary - the
-// callee is LTCG-optimized to take `this` in eax (target `weapon_core::ammo_in_magazine` @0x9b270),
-// so the caller loads m_weapon into eax (target) vs ecx (base) at the ammo-call site: a link-time
-// custom calling convention, the permitted call-boundary arg-passing class - NOT a body register
-// choice. Plus the `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum`
-// typedef-alias in the get_weapon_lexeme_pair_impl callee mangling; identical to
-// weapon_core_idle_state::get_weapon_lexeme_pair (#151, 100% DONE) and the idle siblings (#153).
-// Leading ASSERT is the compiled-out lone eater at the top; the trailing `call empty_stub` is the
-// existing impl-call temporary cleanup (an ICF-folded empty fn both binaries call), NOT a separate ASSERT.
+// STATE[99.92%|DONE]: structure matches (3-element captions split per-element to align the
+// target's L46/L47/L48 stores; leading lone-eater ASSERT). Sole byte residual:
+// `m_weapon.ammo_in_magazine()` loads `this` into eax (target, LTCG callee takes it in eax) vs
+// ecx (base) - the permitted call-boundary arg-passing class. trail: get_weapon_lexeme_pair.md
 weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	pcstr weapon_animation_captions[3] = { "aimed_both_barrels_empty", "aimed_one_barrel_loaded", "aimed_two_barrels_loaded" };
+	pcstr weapon_animation_captions[3] =
+	{
+		"aimed_both_barrels_empty",
+		"aimed_one_barrel_loaded",
+		"aimed_two_barrels_loaded"
+	};
 
 	u32 animation_index = m_weapon.ammo_in_magazine( );
 	pcstr animation_identifier = weapon_animation_captions[animation_index];
@@ -106,18 +108,11 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexe
 		animation::linear_interpolator( s_aim_transition_time )
 	);
 
-	// FUNCTION BODY
-	// <0x79ca90>|0x000|+0x009:'43'	ASSERT( UNKNOWN_EXPRESSION );
-	// <0x79ca99>|0x009|+0x00c:'44'	pcstr weapon_animation_captions[3] = { "aimed_both_barrels_empty", ... };
-	// <0x79caa5>|0x015|+0x007:'46'	weapon_animation_captions[0] = "aimed_both_barrels_empty";
-	// <0x79caac>|0x01c|+0x007:'47'	weapon_animation_captions[1] = "aimed_one_barrel_loaded";
-	// <0x79cab3>|0x023|+0x007:'48'	weapon_animation_captions[2] = "aimed_two_barrels_loaded";
-	// <0x79caba>|0x02a|+0x014:'50'	u32 animation_index = m_weapon.ammo_in_magazine( );  (target this->eax, base ecx)
-	// <0x79cace>|0x03e|+0x00a:'51'	pcstr animation_identifier = weapon_animation_captions[animation_index];
-	// <0x79cad8>|0x048|+0x02e:'52'	selected_animation = m_weapon_animations[...];
-	// <0x79cb06>|0x076|+0x04f:'53'	return get_weapon_lexeme_pair_impl( ... );
-	// <0x79cb55>|0x0c5|+0x006:'54'	}
-	// ******
+	// STRUCTURE DIFF[target 0x79ca90 | base 0x44dd50]: target 10 / base 13 stmts
+	// .. same .. (captions now per-element; all 10 stmts aligned, size-diffs 0)
+	// quantity-diffs are EMPTY-only-base collapsed blank-line gaps inside the brace-init
+	// ; aligned 10, size-diffs 0, quantity-diffs 3
+	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine eax-vs-ecx arg-passing, non-steerable. trail: get_weapon_lexeme_pair.md
 }
 
 // STATE[100%|DONE]
