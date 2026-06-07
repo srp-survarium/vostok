@@ -58,5 +58,14 @@ So this is a single shared wall affecting all 5 raw-param deleters, not a per-fu
 source bug. Fixing it would require changing the linker's chosen convention, which we
 cannot do from source.
 
+## victory_item_core_cook::delete_resource (target 0x7520c0 | base 0x565c90 | 33.38%)
+Same family. Identical 1-stmt structure (size-diff 1, quantity-diff 0). The base's extra
+instruction vs target is the `strip_pointer(g_allocator)` call left out-of-line in base
+(target inlines it to `mov ecx,[g_allocator]; push ecx`), plus the same register-vs-stack
+arg shape on `delete_helper<doug_lea_allocator,resource_base>`. Confirmed NOT steerable by
+dereferencing: the `animation_analysis_result_cook` sibling uses `VOSTOK_DELETE_IMPL(
+*g_allocator, ... )` and still scores 31% (the macro's `strip_pointer` normalizes both
+spellings). Left as-is; STRUCTURE MATCH, non-steerable LTCG inline-vs-call + arg passing.
+
 VERDICT: STRUCTURE MATCH - non-steerable LTCG register-vs-stack arg passing on the
 shared delete_helper<doug_lea_allocator,resource_base> instantiation.
