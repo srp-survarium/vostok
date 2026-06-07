@@ -93,6 +93,15 @@ A concrete dry run is `docs/binary_matching/agentic_loop_example.md`.
   toward what looks right - that diverges your bytes from the target. The
   disassembly decides which member/branch/op the source must produce, never your
   judgment and never a coincidentally-higher fuzzy %. You are *matching*, not fixing.
+- **Preserve the original DEFINITION ORDER - never reorder or regroup.** Function and
+  member definitions must appear in the SAME order as the original (the PDB / header
+  structure). We are REPLICATING the original code, not writing our own tidy version.
+  So keep `private:` / `protected:` / `public:` exactly where the original layout puts
+  them - they may be REPEATED and INTERLEAVED (each appearing several times, out of the
+  conventional grouped order) to preserve definition order, and that is CORRECT, not a
+  mess to clean up. Do NOT move definitions around or collapse members under a single
+  access specifier to look neat - that changes the layout being matched. (The
+  structure-verifier checks that you obeyed this.)
 - **LTCG is an excuse ONLY for function ARGUMENTS - everything else is a matching
   problem.** The only differences you may attribute to LTCG and stop on are at the
   call boundary: an argument dropped (proven constant call-site-wide) or passed in a
