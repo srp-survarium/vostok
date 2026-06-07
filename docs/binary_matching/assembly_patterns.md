@@ -1217,3 +1217,15 @@ template inline/RVO decision under whole-program LTCG, NOT steerable from the co
 is already the maximally direct nested-call form. Same inline-vs-temp class as the resource_ptr/create_request
 ABI walls. Mark DONE (structure matches). Confirmed: booby_trap_set_core_cook `on_subresources_loaded`
 (89.02%), `on_config_ready` (82.01%).
+### Top-level `const` on a by-value pointer parameter GATES objdiff symbol pairing (source-steerable)
+SYMPTOM: a function reads `?` / unpaired in report.json and `--view structure-diff` says
+"not found in BASE index" even though the body is obviously identical to a sibling that DOES match.
+CAUSE: the source declares the parameter `T* param` but the TARGET mangles it `T* const param`
+(or vice versa). Top-level `const` on a BY-VALUE parameter is dropped for C++ overload resolution,
+but MSVC still encodes it in the DECORATED (mangled) name, and objdiff pairs base<->target by mangled
+symbol - so the const mismatch makes the two unpairable and the function scores 0/unpaired regardless
+of byte identity. FIX: match the target's const exactly on the parameter; rebuild -> pairs and (if the
+body matched) jumps straight to 100%. TELL: a sibling overload/functor in the same file already uses
+`T* const` and matches. Confirmed: `protect_affect_predicate::operator()(damage_protector* const)`
+in body_part_parameters.cpp (0.00 -> 100.00 by adding `const`; its twin
+`protect_damage_predicate::operator()(damage_protector* const)` was already `* const`).

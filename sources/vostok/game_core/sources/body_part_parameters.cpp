@@ -13,7 +13,7 @@
 
 namespace survarium {
 
-// STATE[93.97%|DONE]
+// STATE[99.72%|DONE]: structure-diff 1/1 stmt clean (target 0x586fd0); residual is stack-size/reg-slot noise, non-steerable
 body_part_parameters::body_part_parameters(
 	pcstr				name,
 	float				health,
@@ -35,10 +35,6 @@ body_part_parameters::body_part_parameters(
 	m_damage_group			( damage_group )
 {
 	m_regeneration_timeout = math::floor( 1000.0f * regeneration_timeout );
-
-	// FUNCTION BODY[0x596fd0]: 1
-	// <0x597105>|0x135|+0x024:'29'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -78,16 +74,11 @@ private:
 	/* 0x0000 */	pcstr	hit_type;
 }; // struct find_hit_parameters_by_type_predicate
 
-// STATE[99%|DONE]: Stack size
+// STATE[99.85%|DONE]: structure-diff 2/2 stmt clean (target 0x5871b0); residual is stack-size, non-steerable
 hit_type_parameters* body_part_parameters::get_hit_parameters( pcstr hit_type ) const
 {
 	find_hit_parameters_by_type_predicate find_predicate( hit_type );
 	return m_hit_types.find_if<find_hit_parameters_by_type_predicate>( find_predicate );
-
-	// FUNCTION BODY[0x5971b0]: 2
-	// <0x5971b9>|0x009|+0x00e:'69'
-	// <0x5971c7>|0x017|+0x01d:'70'
-	// ******
 }
 
 struct protect_damage_predicate : boost::noncopyable {
@@ -104,7 +95,7 @@ public:
 							m_armor_piercing	( armor_piercing ),
 							m_amount			( amount ) {}
 
-	// STATE[99%|DONE]
+	// STATE[100%|DONE]
 	inline		void	operator()					( damage_protector* const protector ) {
 					if ( m_amount > 0.0f && protector->reduce_damage_functor )	// <0xc9eff>
 						m_amount = protector->reduce_damage_functor( m_body_type_name, m_damage_type, m_amount, m_armor_piercing );
@@ -121,7 +112,7 @@ STATIC_SIZE_ASSERT(protect_damage_predicate, 0x10);
 
 static float g_arp_arm_coeff = 1.0;
 
-// STATE[99.83%|DONE]
+// STATE[99.83%|DONE]: structure-diff 29/29 stmt clean (target 0x587910); residual is stack-size/reg-slot noise, non-steerable
 void body_part_parameters::hit_by_type(
 	pcstr				hit_type,
 	u32					time_in_ms,
@@ -167,45 +158,6 @@ void body_part_parameters::hit_by_type(
 		check_affects( time_in_ms );
 
 	params->apply_damage( delta, time_in_ms );
-
-	// FUNCTION BODY[0x597910]: 36
-	// <0x59791f>|0x00f|+0x012:'112'
-	// <0x597931>|0x021|+0x00c:'113'
-	// <0>
-	// <0x59793d>|0x02d|+0x00a:'115'
-	// <0>
-	// <1>
-	// <2>
-	// <0x597947>|0x037|+0x01f:'119'	if ( params->m_armor == 0.0f )
-	// <0x597966>|0x056|+0x00d:'120'
-	// <0x597973>|0x063|+0x002:'121'	else
-	// <0x597975>|0x065|+0x031:'122'
-	// <0>
-	// <0x5979a6>|0x096|+0x017:'124'	float e_wnd = math::max( 0.0f, arp_arm_coeff );
-	// <0>
-	// <0x5979bd>|0x0ad|+0x072:'126'
-	// <0>
-	// <0x597a2f>|0x11f|+0x039:'128'
-	// <0x597a68>|0x158|+0x02b:'129'
-	// <0x597a93>|0x183|+0x017:'130'
-	// <0>
-	// <0x597aaa>|0x19a|+0x006:'132'
-	// <0x597ab0>|0x1a0|+0x04c:'133'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x597afc>|0x1ec|+0x012:'140'
-	// <0x597b0e>|0x1fe|+0x018:'141'
-	// <0x597b26>|0x216|+0x00f:'142'
-	// <0>
-	// <0x597b35>|0x225|+0x01e:'144'
-	// <0x597b53>|0x243|+0x00f:'145'
-	// <0>
-	// <0x597b62>|0x252|+0x013:'147'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -309,8 +261,8 @@ public:
 								m_affect_type		( affect_type ),
 								m_result			( false ) { }
 
-	// STATE[UNVERIFIED]
-	inline		void		operator()					( damage_protector* protector ) {
+	// STATE[100%|DONE]: target param is `damage_protector* const` (mangled), matching it pairs the symbol
+	inline		void		operator()					( damage_protector* const protector ) {
 		if ( !m_result && protector->protect_affect_functor )
 			m_result = protector->protect_affect_functor( m_body_type_name, m_affect_type );
 	}
@@ -422,33 +374,46 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 template void body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16> >(
 	vostok::ai::statistics_item<46,16>& new_stats_item, const u32 current_time_in_ms ) const;
 
-// STATE[INPROGRESS]: unblocked - fill_new_stats_item is now matched and wired in (this calls
-// it). Remaining: the trailing stats.<member>.push_back (commented below) needs npc_statistics's
-// body-state member.
+// STATE[17.04%|BLOCKED]: needs npc_statistics::body_state member (absent from our ai header)
 void body_part_parameters::dump_state( vostok::ai::npc_statistics& stats, u32 current_time_in_ms ) const
 {
 	typedef vostok::ai::statistics_item<46,16> content_type;
-	content_type new_stats_item = content_type( );					// <0x59714f>
-	fill_new_stats_item( new_stats_item, current_time_in_ms );		// <0x597165>
-	// stats->body_state.push_back(new_stats_item);					// <0x59717b>
+	content_type new_stats_item = content_type( );
+	fill_new_stats_item( new_stats_item, current_time_in_ms );
+	// stats.body_state.push_back( new_stats_item );	// claude@TODO: body_state @0x2798 missing from npc_statistics.h
+
+	// STRUCTURE DIFF:
+	// target: 0x587140            base: 0x45e3a0
+	// ; void survarium::body_part_parameters::dump_state(vostok::ai::npc_statistics&, const unsigned int) const ; target 3 stmts / base 3 stmts (stmt-skeleton aligns; the push_back source line collapses onto the dtor)
+	// VERDICT: STRUCTURE MISMATCH (quantity) - target's 3rd statement is
+	// `stats.body_state.push_back( new_stats_item )` calling buffer_vector<statistics_item<46,16>>::push_back
+	// at member offset 0x2798; our npc_statistics has NO body_state member there (sensors_state 0 +
+	// selectors_state 0x13CC land exactly at 0x2798, so body_state is an input_info_type-like member inserted
+	// after selectors_state that shifts working_memory_state and all following members - fill_npc_stats uses
+	// 0x7378, far past our 0x4470 layout, confirming our header undermodels npc_statistics). Uncommenting the
+	// push_back is blocked on adding body_state to vostok/ai/npc_statistics.h - a cross-module ai header change
+	// affecting every ai dump_state/fill_npc_stats consumer; out of scope here. trail: body_part_parameters_dump_state.md
 }
 
-// STATE[51.42%|PARTIAL]
+// STATE[55.04%|BLOCKED]: callback invocation is a boost::function inline-vs-call / arg-eval-order wall
 void body_part_parameters::dump_state( boost::function<void(u32, float, float, pcstr)> callback, u32 index ) const
 {
 	vostok::fixed_string<512> affects_str;
 	for ( u32 i = 0 ; i < m_affects.size( ) ; ++i ) {
 		affects_str.appendf( "%s ", affects_captions[m_affects.at( i ).first] );
 	}
-	callback( index, m_health, m_max_health, affects_str.c_str( ) ); // sushi@MATCH: Callback execution is inlined, which is not true in target
+	callback( index, m_health, m_max_health, affects_str.c_str( ) );
 
-	// FUNCTION BODY
-	// <0x597300>|0x010|+0x00b:'326'
-	// <0x59730b>|0x01b|+0x046|[1]:'327'
-	// <0x597351>|0x061|+0x03f:'328'
-	// <0x597390>|0x0a0|+0x002:'329'
-	// <0x597392>|0x0a2|+0x038:'330'
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x5872f0            base: 0x45e250
+	// ; void survarium::body_part_parameters::dump_state(boost::function<void __cdecl(unsigned int,float,float,char const *)>, const unsigned int) const ; target 5 stmts / base 5 stmts
+	// .. same ..
+	// 0x0a2 <0x38> | 0x0a2 <0x9c> | callback( index, m_health, m_max_health, affects_str.c_str( ) );   SIZE
+	// ; aligned 4, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 5/5 stmt-for-stmt; sole SIZE is the boost::function::operator()
+	// invocation: target precomputes m_health/m_max_health to stack slots + emits the out-of-line empty()
+	// guard before the indirect functor call, base inlines a shorter invoker (arg-eval-order + boost::function
+	// operator() inline-vs-call at the call boundary), non-steerable. trail: body_part_parameters_dump_state.md
 }
 
 // STATE[100%|DONE]
