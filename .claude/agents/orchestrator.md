@@ -44,8 +44,10 @@ workers' concern, not yours; do not load them.
 3. **For each function (or bundle), in order:**
    - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
      `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
-   - **Batch several small functions per dispatch** - the ~20-min rebuild is the
-     dominant cost and is paid ONCE per worker, so amortize it. Rule of thumb:
+   - **Batch several small functions per dispatch** - batching lowers TOKEN cost: a
+     worker pays the fixed setup (shared docs, class decl, member offsets, anchor,
+     context) ONCE per unit, so more functions per worker = fewer tokens (the rebuild
+     is ~10 min and backgrounded - no longer the thing to amortize). Rule of thumb:
      **3-4 small multi-line functions** per unit, **up to ~10 if they are
      one-liners**, and **fewer (down to 1) the larger/harder they are**. Prefer a
      related cluster - the same class, or sibling classes with identical shape
