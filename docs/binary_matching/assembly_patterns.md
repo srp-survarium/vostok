@@ -1139,3 +1139,30 @@ the misname). CAVEAT: read the TRUE % from report.json (`fuzzy_match_percent`), 
 the `; N/M instructions equal` line `--view diff` prints (that operand-aware line counts
 the misname as unequal and reads ~85-88% while report.json reads 100%). STATE markers
 that quote the `--view diff` line are stale; re-confirm against report.json after rebuild.
+### By-value `boost::function` argument copy: target copy-ctor (1 call) vs base default-ctor + `assign_to_own` (2 calls) -> non-steerable wall
+SOURCE: a call passing a `boost::function<...>` BY VALUE, e.g.
+`body_part->dump_state( callback, index++ )` where `dump_state` takes
+`boost::function<...> callback` by value (`damage_model::dump_stats`, 79.26%). The
+call constructs a temporary copy of the source `boost::function`.
+
+    target : sub esp,20h ; mov eax,esp ; lea ecx,[ebp+8] ; call function<>::function<>  (COPY CTOR, one call)
+             mov ecx,[this] ; call dump_state
+    base   : sub esp,20h ; mov [ebp-10h],esp ; mov eax,[ebp-10h] ; call function<>::function<> (default ctor)
+             lea ecx,[ebp+8] ; push ecx ; mov ecx,[ebp-10h] ; call assign_to_own  (EXTRA call)
+             mov ecx,[this] ; call dump_state
+
+The base default-constructs the temp then calls `assign_to_own`; the target copy-
+constructs in one call. The extra call + extra `[ebp-10h]` slot enlarge the frame
+(base `sub esp,20h` vs target `sub esp,14h`) and shift slot numbers, dropping the
+byte %. Statement count matches (7/7); the lone SIZE row is this call. The choice
+lives inside boost::function's own header inlining (copy-ctor vs default+assign);
+the source already passes by value, the only available shape. Non-steerable boost::
+function LTCG inline-vs-call. Mark PARTIAL; do not chase.
+
+### Single-`this`-spill prologue: target `push ecx` (4-byte frame) vs base `sub esp,0Ch` -> non-steerable
+SOURCE: a small method with NO declared locals, only `this` spilled to a stack slot
+(`damage_model::on_broken_limb_affect`, 98.95%). Identical instruction stream apart
+from the prologue: target `push ecx` (this at `[ebp-4]`, 4-byte frame) vs base
+`sub esp,0Ch` (this at `[ebp-0Ch]`, 12-byte frame) + trailing alignment nops. MSVC's
+single-slot `push reg` frame vs `sub esp,N` is a prologue/frame-allocation quirk not
+expressible in C++ source. Non-steerable; mark DONE/PARTIAL with the residual noted.

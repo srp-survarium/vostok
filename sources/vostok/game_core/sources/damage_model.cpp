@@ -13,7 +13,11 @@
 
 namespace survarium {
 
-// STATE[97.55%|DONE]
+// STATE[98.91%|DONE]: boost::bind/function temporary cleanup uses esi (push/pop esi) + ICF call offsets
+// STRUCTURE DIFF[target 0x6efeb0 | base 0x45d970]: target 11 / base 11 stmts
+// .. same ..
+// ; aligned 11, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - residual is esi scratch-reg for boost::bind temp cleanup + ICF-folded call offsets, non-steerable. trail: structure/damage_model_ctor.md
 damage_model::damage_model( affects_applying_type_enum affects_applying_type ) :
 	m_affects_applying_type					( affects_applying_type ),
 	m_last_tick_time_in_ms					( 0 ),
@@ -32,7 +36,11 @@ damage_model::damage_model( affects_applying_type_enum affects_applying_type ) :
 	subscribe_on_affect( affects_type_hand_damage, &m_hand_damaged_subscriber );
 }
 
-// STATE[83.38%|DONE]: Difference in compiler generated code.
+// STATE[83.38%|DONE]: compiler-generated member-dtor epilogue codegen
+// STRUCTURE DIFF[target 0x6efdd0 | base 0x45d880]: target 5 / base 5 stmts
+// .. same ..
+// ; aligned 5, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - all 5 source stmts match; residual is the auto-generated member-subscriber/list destruction epilogue (target inlines via esi, base routes through slots), non-steerable. trail: structure/damage_model_dtor.md
 damage_model::~damage_model( )
 {
 	while ( booster_damage_protector* p = m_damage_protectors.pop_front( ) )
@@ -126,7 +134,11 @@ private:
 }; // struct find_by_damage_type_predicate
 
 
-// STATE[99.82%|DONE]
+// STATE[99.90%|DONE]: frame size 0x64 vs target 0x60, [ebp-N] slots shifted by 4 (allocation noise)
+// STRUCTURE DIFF[target 0x6efaf0 | base 0x45d6e0]: target 18 / base 18 stmts
+// .. same ..
+// ; aligned 18, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - identical instruction stream; sole diff is sub esp 0x64 vs 0x60 and the resulting [ebp-N] slot numbers, allocation noise, non-steerable. trail: structure/damage_model_hit_body_part.md
 bool damage_model::hit_body_part(
 	u8			initiator,
 	pcstr		part_name,
@@ -196,14 +208,19 @@ void damage_model::fill_stats( ai::npc_statistics& stats, u32 current_time_in_ms
 	m_body_parts.for_each( dump_predicate );
 }
 
-// STATE[78.97%|PARTIAL]
+// STATE[79.26%|PARTIAL]: boost::function by-value copy lowered as default-ctor+assign_to_own vs target copy-ctor
+// STRUCTURE DIFF[target 0x6ef920 | base 0x45d2e0]: target 7 / base 7 stmts
+// 0x023 <0x28> | 0x022 <0x35> | body_part->dump_state( callback, body_part_index++ );   SIZE
+// .. same ..
+// ; aligned 6, size-diffs 1, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the by-value boost::function argument copy: target copy-constructs the temp in one call, base default-constructs then calls assign_to_own (extra call + extra slot, larger frame), a boost::function LTCG inline-vs-call divergence, non-steerable. trail: structure/damage_model_dump_stats.md
 void damage_model::dump_stats( boost::function<void( u32, float, float, pcstr )> callback )
 {
-	body_part_parameters*		body_part = m_body_parts.front( );	// <0x6ff92a>|0x00a|+0x00c:'231'
+	body_part_parameters*		body_part = m_body_parts.front( );
 	u32							body_part_index = 0;
 	while ( body_part )
 	{
-		body_part->dump_state( callback, body_part_index++ ); // sushi@NOTE: Seems like callback copy has inlined differently
+		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target, see STRUCTURE DIFF
 		body_part = m_body_parts.get_next_of_object( body_part );
 	}
 }
@@ -320,7 +337,7 @@ void damage_model::unregister_body_part_damage_protector( pcstr part_name, damag
 	part->remove_damage_protector( protector );
 }
 
-// STATE[92.21%|DONE]
+// STATE[100%|DONE]
 void damage_model::add_damage_protector( pcstr damage_type, float reduce, float absorb )
 {
 	booster_damage_protector* protector = m_damage_protectors.find_if(
@@ -337,7 +354,11 @@ void damage_model::add_damage_protector( pcstr damage_type, float reduce, float 
 	}
 }
 
-// STATE[98.95%|DONE]
+// STATE[98.95%|DONE]: prologue push ecx vs sub esp 0xC (this-slot frame) + trailing nop padding
+// STRUCTURE DIFF[target 0x6ef660 | base 0x45cfd0]: target 15 / base 15 stmts
+// .. same ..
+// ; aligned 15, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - instruction stream identical; target spills this via push ecx (4-byte frame), base via sub esp 0xC, plus 2 trailing alignment nops; prologue-frame + padding, non-steerable. trail: structure/damage_model_on_broken_limb_affect.md
 void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
 {
 	if ( affect == affects_type_leg_damage && strings::equal( "left_leg", bodypart ) )
