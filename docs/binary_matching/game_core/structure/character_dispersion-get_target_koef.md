@@ -1,14 +1,16 @@
 # structure: character_dispersion_calculator::get_target_koef
 
-## Verdict
-STRUCTURE MISMATCH (size) - target 21 / base 21 statements (0 quantity-diffs),
-2 SIZE-diffs, both tracing to ONE source cause: the `switch` bounds check.
+## Verdict (RESOLVED)
+STRUCTURE MATCH (clean) - target 21 / base 21 statements, 0 size-diffs, 0
+quantity-diffs. The fix below was applied and rebuilt: report.json
+fuzzy_match_percent is now 100.0% (was 95.74%, INPROGRESS).
 
 `float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const`
-target rva 0x585ee0 | base rva 0x4543c0
-report.json fuzzy_match_percent: 95.74% (INPROGRESS). The % is high, the SHAPE is
-right (statement counts and block structure align); the residual is a codegen-size
-divergence on two statements, both from the same dispatch fix.
+target rva 0x585ee0 | base rva 0x44d790
+Adding `case type_preview: return 1.0f;` and changing `default:` to
+`default: NODEFAULT();` (`__assume(0)`) made MSVC emit the contiguous [0..4] jump
+table with no `cmp 3; ja default` bounds check - exactly the target's dispatch.
+The two SIZE-diffs (switch + the default `return 1.0f;`) both vanished.
 
 ## Condensed structure-diff (--view structure-diff --condensed)
 ```

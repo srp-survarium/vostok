@@ -179,7 +179,7 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 	// --          | <0>         |    EMPTY only base
 	// .. same ..
 	// ; aligned 1, size-diffs 1, quantity-diffs 1
-	// VERDICT: STRUCTURE MISMATCH (size) - lone SIZE diff on the dot-product is the inline COMDAT operator| inlined in base vs called in target; source-steerable, not bankable LTCG  trail: get_additional_length.md
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs our /Ob2-inlined COMDAT; proven NON-steerable on #144 (3 source forms all inlined)  trail: get_additional_length.md
 }
 
 // STATE[STUB]
