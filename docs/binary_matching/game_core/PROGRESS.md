@@ -280,7 +280,10 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     LTCG: per-site inline-vs-call AND the target's operator| being an LTCG calling-convention-promoted COMDAT
     (__fastcall ecx/eax, xmm0 return) that our base never produces (base operator| is plain __cdecl x87). STATE
     stays 65.38% PARTIAL with the correct source. Full trail: docs/.../game_core/get_additional_length.md.
-- game_core::legs_ik_processor::get_foot_fixed_transform -> STATE[84.16%|PARTIAL] -> PR #145 (regressions: none)
+- game_core::legs_ik_processor::get_foot_fixed_transform -> STATE[84.66%|PARTIAL] -> PR #145 (regressions: none)
+  - @TODO RESOLVED: the else-branch original_color write is `original_color.set_B( 0x64u )` (single
+    channel setter on the `union{u8 b,g,r,a;u32 m_value;}` color), reproducing the exact
+    `mov byte[tmp],64h; mov cl,[tmp]; mov [color],cl` at +0x82a - not the full color ctor. 84.158->84.656%.
   - STACKED on #144. Private const member (mangled ABE), target rva 0x6ebae0, ~0xb5a bytes, 64 statements
     (src L294-L400). Large float4x4 IK math; the full control structure is matched: 5 bone world matrices
     `matrices[<bone>_index - get_skeleton().get_root_bones_count()] * hip_world_matrix`, the
