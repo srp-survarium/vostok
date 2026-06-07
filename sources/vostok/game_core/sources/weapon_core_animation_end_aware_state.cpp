@@ -63,20 +63,27 @@ animation::callback_return_type_enum weapon_core_animation_end_aware_state::on_a
 	// <0x6fd0b3> -> void < unknown >( bool& )		on_animation_end_impl( params.interrupt_animation_player_tick )
 	// ******
 
-	// FUNCTION BODY[0x6fd050]: 12
-	// <0x6fd059>|0x009|+0x007:'35'	params.interrupt_animation_player_tick = false;
-	// <0>
-	// <0x6fd060>|0x010|+0x010:'37'	if ( params.animated_object == &m_weapon ) {
-	// <0x6fd070>|0x020|+0x00c:'38'	ASSERT( UNKNOWN_EXPRESSION );  (compiled-out, +0x0c)
-	// <0>
-	// <0x6fd07c>|0x02c|+0x01b:'40'	if ( m_animation_to_wait_for == params.animation ) {	target 0x1b / base 0x1c: == operand-order inline-vs-call
-	// <0x6fd097>|0x047|+0x00a:'41'	m_animation_has_been_ended = true;
-	// <0x6fd0a1>|0x051|+0x014:'42'	on_animation_end_impl( params.interrupt_animation_player_tick );
-	// <0>
-	// <1>
-	// <2>
-	// <0x6fd0b5>|0x065|+0x002:'46'	return animation::callback_return_type_call_me_again;
-	// ******
+	// STRUCTURE DIFF[target 0x6ed050 | base 0x44f850]: target 11 / base 12 stmts
+	// .. same ..
+	// --          | 0x010 <0x10> | if ( params.animated_object == &m_weapon )            ONLY base
+	// .. same ..
+	// 0x010 <0x10> | --          | L37                                                   ONLY target
+	// .. same ..
+	// --          | 0x02c <0x1c> | if ( m_animation_to_wait_for == params.animation )    ONLY base
+	// .. same ..
+	// 0x02c <0x1b> | --          | L40                                                   ONLY target
+	// .. same ..
+	// --          | <0>         |                                                        EMPTY only base
+	// ; aligned 9, size-diffs 0, quantity-diffs 5
+	//
+	// STRUCTURE MATCH: the 5 "quantity-diffs" are an alignment artifact, NOT a real
+	// divergence. The target side carries bare source-line markers (L37/L40) where the
+	// base carries the resolved `if (...)` text; both `if` statements sit at the SAME
+	// offset 0x010 / 0x02c with the SAME size (0x10; 0x1b vs 0x1c). Both are nested
+	// brace-blocks whose `jne/je short` share the single `.1` return - count and shape
+	// agree. The 90.92% residual is purely operand evaluation order inside the second
+	// `if`'s intrusive_ptr::operator== (+0x2c..+0x38: this+0x138 computed before vs after
+	// params.animation is pushed) - a SIZE/inline-vs-call artifact, not structure.
 }
 
 } // namespace survarium
