@@ -33,14 +33,16 @@ void weapon_core_aimed_state_base::finalize( )
 	m_animation_playback_state.reset( );
 	m_weapon.instant_aim_end( );
 
-	// FUNCTION BODY (kept: this is a PARTIAL match, not 100%)
-	// target 0x6ea5c0:
-	//   mov eax,[ebp-4]; add eax,120h; call reset            ; m_animation_playback_state.reset() - INLINED in base
-	//   mov eax,[ebp-4]; mov ecx,[eax+128h]; mov edx,[ebp-4]; mov eax,[edx+128h]
-	//   mov edx,[ecx]; mov ecx,eax; mov eax,[edx+90h]; call eax   ; m_weapon.instant_aim_end() (virtual)
-	// <0x6ea5c7>|0x007|+0x00d:'28'
-	// <0x6ea5d4>|0x014|+0x01e:'29'
-	// ******
+	// STRUCTURE DIFF[target 0x6ea5c0 | base 0x44f5e0]: target 4 / base 3 stmts
+	// .. same ..
+	// 0x007 <0xd> | --         | L28   ONLY target   ; m_animation_playback_state.reset()
+	// 0x014 <0x1e>| 0x007 <0x1e>| m_weapon.instant_aim_end( );
+	// .. same ..
+	// ; aligned 3, size-diffs 0, quantity-diffs 1
+	// QUANTITY diff: target keeps reset() out-of-line (add eax,120h; call reset @0x087f60,
+	// LTCG this-in-EAX frameless), our /Od /Ob2 /GL link elides/inlines reset to nothing,
+	// dropping the statement. Source is faithful (reset + virtual instant_aim_end); the
+	// divergence is inline-vs-call codegen, not steerable from this source (see the .md).
 }
 
 } // namespace survarium
