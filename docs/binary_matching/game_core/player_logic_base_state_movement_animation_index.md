@@ -61,8 +61,6 @@ Mask->direction confirmation: player_input_inline.h `is_sprinting()` requires
    FIX: `touch` the TUs that emit the vtable (player_logic_base_state.cpp,
    temp_include_all.cpp, player_logic_sprint_state.cpp) to force recompile with the
    fixed header.
-   claude@LOOP-PERF: a header-only edit may not retrigger obj recompiles under this
-   ninja setup -> touch the dependent .cpp.
 5. INPUT: touched the 3 cpp TUs; body unchanged.
    BUILD: SUCCEEDED (delinked). But report.json fuzzy_match_percent = None for the fn.
    COFF symbol dump showed the mangling diff: TARGET `?...@@KAI...` vs BASE `?...@@SAI...`.
