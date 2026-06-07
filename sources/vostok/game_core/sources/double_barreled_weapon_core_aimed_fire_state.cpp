@@ -134,14 +134,14 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 	);
 }
 
-// STATE[75.61%|PARTIAL]: every statement, branch and operand matches (sprint early-return, the
-// animation_type()!=additive early-return, the captions array, the interpolator local, the
-// animation_lexeme_parameters build with &weight_driving_animation, and both expression returns).
-// Residuals are the same unsteerable inline-vs-call LTCG class as the double_barreled fire_state
-// sibling get_user_hands_expression (#203, 73.17%): the target keeps the lexeme_parameters setters
-// OUT-OF-LINE (animated_object/playback_type are calls, additivity_priority inline) while our /GL
-// build INLINES animated_object+playback_type and keeps additivity_priority a call, shifting the
-// layout; animation_type() is also COMDAT-folded onto a trivial getter. Both whole-program decisions.
+// STATE[79.39%|PARTIAL]: structure now matches the target exactly - 12 statements both sides (sprint
+// early-return, the animation_type()!=additive early-return, the captions array, the interpolator local,
+// and - per claude@MATCH - the animation_lexeme_parameters ctor+setter chain folded into ONE statement
+// (target L101=0x6e vs base 0x72) feeding the animation_lexeme override_lexeme construction, like the
+// matching show/hide siblings). Residual is the unsteerable inline-vs-call LTCG class: the target keeps
+// the lexeme_parameters setters OUT-OF-LINE (animated_object/playback_type are calls, additivity_priority
+// inline) while our /GL build INLINES animated_object+playback_type; animation_type() is also COMDAT-folded
+// onto a trivial getter. Both whole-program decisions, not source-steerable.
 animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -165,19 +165,21 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 
 	animation::linear_interpolator interpolator( s_aim_transition_time );
 
-	animation::mixing::animation_lexeme_parameters override_lexeme_parameters(
-		buffer,
-		user_animation_captions[user_animation_index],
-		selected_animation,
-		&weapon_lexeme,
-		&weight_driving_animation
+	// claude@MATCH: chain ctor + all setters into ONE statement (target L101 carcass) feeding the
+	// animation_lexeme construction - matches the show/hide siblings; a named params local + separate
+	// setter statement split this into 2 statements (14 vs target's 12).
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			user_animation_captions[user_animation_index],
+			selected_animation,
+			&weapon_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object( m_weapon.get_user( ) )
+		.playback_type( animation::mixing::play_once_and_freeze_at_end )
+		.additivity_priority( 1 )
 	);
-	override_lexeme_parameters
-		.animated_object						( m_weapon.get_user( ) )
-		.playback_type							( animation::mixing::play_once_and_freeze_at_end )
-		.additivity_priority					( 1 );
-
-	animation::mixing::animation_lexeme override_lexeme( override_lexeme_parameters );
 
 	return animation::mixing::expression( override_lexeme );
 
