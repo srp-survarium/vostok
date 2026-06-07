@@ -65,6 +65,10 @@
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 #include <vostok/game_core/weapon_core_idle_state_base.h>
 #include <vostok/game_core/weapon_core_aimed_state_base.h>
+#include <vostok/game_core/weapon_core_idle_state.h>
+#include <vostok/game_core/weapon_core_aimed_state.h>
+#include <vostok/game_core/weapon_core_state_cook_template.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_show_state_base.h>
 #include <vostok/game_core/weapon_core_hide_state_base.h>
 
@@ -642,6 +646,57 @@ namespace vostok
 		state.survarium::weapon_core_aimed_state_base::finalize( );
 
 		// Escape &state so LTCG observes the ctor's vtable stores.
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_weapon_core_idle_state( )
+	{
+		// All of weapon_core_idle_state's ctor / weapon_and_hands_expression /
+		// get_weapon_lexeme_pair and the cook's new_object are PRIVATE (target mangling
+		// AAE/EBE/ABE); this anchor is befriended by both the state class and the cook
+		// template, so it can reach them directly. The anchor never runs.
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 4 ];
+		survarium::weapon_core_idle_state			state( weapon, animations, 4 );
+
+		// Qualified, non-virtual calls keep the out-of-line private virtual /
+		// private const bodies (not the vtable slot).
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_idle_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_idle_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+
+		// new_object is a private member of the cook template; reach it via a qualified
+		// call on a fabricated null pointer so its body is ODR-used WITHOUT constructing
+		// a cook (constructing would emit the cook vtable and force codegen of the still-
+		// STUB create_resource/allocate_resource virtuals -> C4716). The anchor is
+		// befriended on the template, so the private new_object is accessible.
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_idle_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_idle_state*			object	= cook->cook_type::new_object( buffer, params, animations, 4 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_weapon_core_aimed_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 4 ];
+		survarium::weapon_core_aimed_state			state( weapon, animations, 4 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_aimed_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_aimed_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_aimed_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_aimed_state*			object	= cook->cook_type::new_object( buffer, params, animations, 4 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
@@ -1259,6 +1314,8 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_animation_end_aware_state( );
 	vostok::use_game_core_weapon_core_idle_state_base( );
 	vostok::use_game_core_weapon_core_aimed_state_base( );
+	vostok::use_game_core_weapon_core_idle_state( );
+	vostok::use_game_core_weapon_core_aimed_state( );
 	vostok::use_game_core_weapon_core_show_state_base( );
 	vostok::use_game_core_weapon_core_hide_state_base( );
 	vostok::use_bullet( );
