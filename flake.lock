@@ -49,11 +49,11 @@
     "vcproj2ninja-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1780074888,
-        "narHash": "sha256-3loFS+ODa2MMMC2zWeUgWjTVyReiprfAhc81grKw43U=",
+        "lastModified": 1780842979,
+        "narHash": "sha256-82XZP686X7EwRLqfGB+oSTXTYnlM9Q03LiCUj5vrjD8=",
         "owner": "srp-survarium",
         "repo": "vcproj2ninja",
-        "rev": "5578683d8018fcb037249fd9e49e3fd8f0e8e4d2",
+        "rev": "7298095384fdf63f1d21a6364a038a7b63114634",
         "type": "github"
       },
       "original": {

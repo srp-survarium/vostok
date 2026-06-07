@@ -304,8 +304,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     kept). else-branch is `finish = start`.
   - Setup: get_relative_matrix (inline math helper, target rva 0xbb050) was absent from our headers; it is
     now defined in its real home math_float4x4_inline.h and matched 100% DONE as its own unit (see its ledger
-    line below). To make the header edit take effect, force the game_core PCH to rebuild (delete the .pch +
-    touch pch.cpp) - a plain header edit is a no-op since headers are not in the ninja graph (CLAUDE.md).
+    line below).
     #include physics/api.h before character_controller.h (VOSTOK_PHYSICS_API). Added protected inline
     ik_processor::get_skeleton() to read the private base m_skeleton. s_ik_legs_debug_draw_value(bool)/
     s_ik_foot_capsule_radius_value(float) declared as file statics (the cc machinery is STUB). Anchored via a
@@ -324,7 +323,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     float4x4 by value (sret), target rva 0xbb050, mangled ?get_relative_matrix@math@vostok@@YA?AVfloat4x4@12@ABV312@0@Z.
     Relocated from legs_ik_processor.cpp into its REAL header sources/vostok/math_float4x4_inline.h (after
     remove_scale). math_float4x4_inline.h is in the game_core PCH (extensions.h->math_extensions.h->
-    math_float4x4.h), so each edit needed: rm the game_core .pch + touch pch.cpp, then rebuild_watchdog.py.
+    math_float4x4.h).
   - 90.2 -> 97.5 -> 100. Two source fixes from the carcass (target 8 statements / 0x66 bytes):
     (1) L411 is a 1-byte int3, NOT an empty ASSERT (Master Gold ASSERT = VOSTOK_EMPTY_EXPRESSION, no bytes).
         The bare int3 is DEBUG_BREAK( ) = __debugbreak (debug_macros.h:26), emits exactly +0x001. 90.2->97.5.

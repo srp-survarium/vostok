@@ -170,11 +170,7 @@ this repo has and recorded the exact results:
 8. INPUT: + __declspec(noinline) on reset() (the repo's established anti-inline lever, cf.
    inventory_item.h / material_pair.h).
    BUILD: 0 regressed / 0 improved -> the OUTPUT was byte-identical: noinline had NO codegen effect.
-          NOTE (also a build-system finding): the generated ninja files carry NO header dependency
-          tracking, so editing a header alone does NOT recompile dependent .cpp TUs - you must
-          `touch` the .cpp (or clean) for header edits to take effect. (Added to loop_performance.md.)
-   After touching the TUs to force recompile: finalize STILL 54.39% - /Ob2 /GL re-inlines reset
-   across the link regardless of noinline.
+   finalize STILL 54.39% - /Ob2 /GL re-inlines reset across the link regardless of noinline.
 9. INPUT: multi-caller hypothesis. The target keeps reset out-of-line because MANY sites call it
    (aimed-state finalize, weapon_core_base_state::finalize @0xb40c0 - both `add eax,120h; call reset`
    - plus the shotgun-reload states). Gave weapon_core_base_state::finalize its real body
