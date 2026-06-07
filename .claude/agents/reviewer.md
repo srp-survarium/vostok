@@ -71,6 +71,19 @@ content, other functions, or the guideline docs themselves.
    it: set STATE to INPROGRESS with the concrete restructure (e.g. "early `return` guard, no
    braces") and flag it. (Caught on `set_breath_holding_params`: an `if ( p ) { ... }`
    block-open absent from the target structure - really an early `if ( !p ) return;`.)
+6. **Temporary anchoring hacks must be tagged `claude@TODO: remove later`.** A matcher
+   sometimes adds source that is NOT in the original, purely so the `temp_include_all.cpp`
+   anchor can reach the function - e.g. a `friend void ::vostok::use_game_core_*( );` decl
+   befriending the anchor to call a private/protected override, a widened `public:`, an
+   extra accessor added only to read a private member, or a fabricated
+   `*reinterpret_cast<T*>(NULL)` instance. These emit NO matched bytes (so they do not hurt
+   the %), but they are scaffolding that deviates from the shipped header and MUST be removed
+   once a real caller anchors the symbol. Ensure every such deviation carries an explicit
+   `// claude@TODO: remove later` tag next to its `claude@MATCH:` note (the existing note
+   explains WHY it is there; the TODO marks it for the future cleanup sweep). If a
+   temporary anchor-only deviation lacks the tag, ADD it. (Caught on
+   `jump_logic_state_{landing,start}`: the `friend` decl that lets the anchor call the
+   private `is_ready_for_transition` override.)
 
 ## How you work
 - Verify with the rich indexes (`pdb_fetch`, `pdb_rich_query`; indexes in

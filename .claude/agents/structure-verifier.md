@@ -69,9 +69,18 @@ Caveats baked into the format (do not misread these as divergences):
 2. **SIZE** - a statement exists on both sides but its `+delta` (bytes to the next
    statement) differs. That statement is exactly where codegen diverged - a fast
    localizer even when the byte view is noisy.
+3. **ORDER** - the matcher must have kept the ORIGINAL definition order; verify it did.
+   Compare the order of function/member definitions in our source against the original
+   (the PDB / header structure / the target unit's symbol order). If the matcher
+   REORDERED definitions or REGROUPED members under a single access specifier to "tidy"
+   the layout, FLAG it - we replicate the original code, not write our own, so the
+   original order (even with `private:`/`protected:`/`public:` repeated and interleaved)
+   is the correct layout and must be restored. Interleaved/repeated access specifiers
+   that PRESERVE the original order are CORRECT - never flag those, and never suggest
+   regrouping them.
 
-Report BOTH, per statement, as a side-by-side (target vs base): offset, size, srcline,
-statement text, and which side has the extra/missing/larger entry.
+Report ALL THREE, per statement/definition, as a side-by-side (target vs base): offset,
+size, srcline, statement text, and which side has the extra/missing/larger/out-of-order entry.
 
 ## Naming and source-shape conventions that DRIVE structure (you must know these)
 Structure is a function of how the source is written. The usual causes of a
@@ -97,6 +106,15 @@ quantity/size divergence, and the source fix:
   members `m_`, globals `g_`, file statics `s_`. When you align `'srcline'` statements,
   a CamelCase or mis-cased identifier may make a matching statement look unmatched -
   note it, but the structural unit is the statement, not the spelling.
+- **Definition ORDER is part of the structure - PRESERVE the original order, never
+  reorder or regroup.** Function and member definitions must appear in the same order
+  as the original (the PDB / header structure). We are REPLICATING the original code,
+  not writing our own tidy version - so do NOT reorder definitions, and do NOT flag (or
+  ask a matcher to "clean up") repeated/interleaved access specifiers: `private:`,
+  `protected:`, `public:` may each appear MULTIPLE times, out of the conventional
+  grouped order, precisely to keep the original definition order. That interleaving is
+  CORRECT and expected, not a style defect. Grouping everything under one access
+  specifier to look tidy would change the layout we are matching - never suggest it.
 
 ## What you produce
 A report at `docs/binary_matching/<module>/structure/<function>.md` (create the dir).
