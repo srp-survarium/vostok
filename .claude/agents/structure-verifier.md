@@ -70,14 +70,16 @@ Caveats baked into the format (do not misread these as divergences):
    statement) differs. That statement is exactly where codegen diverged - a fast
    localizer even when the byte view is noisy.
 3. **ORDER** - the matcher must have kept the ORIGINAL definition order; verify it did.
-   Compare the order of function/member definitions in our source against the original
-   (the PDB / header structure / the target unit's symbol order). If the matcher
-   REORDERED definitions or REGROUPED members under a single access specifier to "tidy"
-   the layout, FLAG it - we replicate the original code, not write our own, so the
-   original order (even with `private:`/`protected:`/`public:` repeated and interleaved)
-   is the correct layout and must be restored. Interleaved/repeated access specifiers
-   that PRESERVE the original order are CORRECT - never flag those, and never suggest
-   regrouping them.
+   **The correct order is in the TARGET STRUCTURE for the class:** the class declaration
+   in `binaries/structure/target/sources/<path>/<class>.h` (member/method DECLARATION
+   order) and `binaries/structure/target/sources/<path>/sources/<class>.cpp` (function
+   DEFINITION order). Compare our source's definition/declaration order against those.
+   If the matcher REORDERED definitions or REGROUPED members under a single access
+   specifier to "tidy" the layout, FLAG it - we replicate the original code, not write
+   our own, so the target-structure order (even with `private:`/`protected:`/`public:`
+   repeated and interleaved) is the correct layout and must be restored. Interleaved/
+   repeated access specifiers that PRESERVE the target order are CORRECT - never flag
+   those, and never suggest regrouping them.
 
 Report ALL THREE, per statement/definition, as a side-by-side (target vs base): offset,
 size, srcline, statement text, and which side has the extra/missing/larger/out-of-order entry.
