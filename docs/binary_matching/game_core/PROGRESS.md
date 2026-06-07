@@ -993,3 +993,24 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   Regressions: none in weapon-state family. report-changes shows 24 regressed / 45 improved - all
   generic boost/bt/math/particle/empty_stub/thunk COMDAT copy re-attribution from enabling the new
   TU (paired 100->0 / 0->100 mirrors), no matched weapon-state function regressed.
+
+- weapon_user_animations_selector batch2 (branch match/game_core-weapon_user_animations_selector-batch2,
+  base int/game_core). RESUME of a crashed session whose uncommitted state left the build BROKEN.
+  Primary fix: `friend void ::vostok::use_game_core_weapon_user_animations_selector();` on the class so
+  the free-function anchor can take member-fn pointers to the now-private (`ABE`/`AAE`) leaves (C2248
+  before). Build relinks; on_interval_ended + both remove_animation_callback reach 100%.
+    weapon_user_animations_selector::on_interval_ended            100%   DONE
+    weapon_user_animations_selector::remove_animation_callback(pcstr)   100%   DONE
+    weapon_user_animations_selector::remove_animation_callback(enum)    100%   DONE
+    weapon_user_animations_selector::set_animation_callback(enum)        84.79% PARTIAL (base_player vtable arg-count/this-load wall, owned elsewhere)
+    weapon_user_animations_selector::set_animation_callback(pcstr)       78.28% PARTIAL (same wall)
+    weapon_user_animations_selector::broken_legs_predicate              76.76% PARTIAL (intrusive_ptr operator* out-of-lining deref wall)
+    weapon_user_animations_selector::is_weapon_in_idle                  36.41% PARTIAL (current_active_object intrusive_ptr root/typedef + deref wall)
+    weapon_user_animations_selector::is_weapon_toggling                 31.17% PARTIAL (same wall)
+    weapon_user_animations_selector::is_weapon_firing                    8.96% PARTIAL (same wall)
+    weapon_user_animations_selector::on_broken_limb_affect             20.12% PARTIAL (force_animation_selection + 2 _U asserts; L337 2-arg eater macro unidentified)
+  Still STUB (deferred, deref/predicate-logic walls or named-const work): crouch/jump/stand/sprint
+  predicate, look_time_factor(_calculator), set_sprint_callbacks, ctor/dtor/activate. serialize/deserialize BLOCKED.
+  weapon_core.h: ONE minimal edit `is_idle() const { return m_is_idle; }` (was bodyless -> LNK1257 LTCG
+  codegen failure once is_weapon_in_idle consumes its return). Regressions: only the two wall-blocked
+  is_weapon_* partials shifted (structurally-correct bodies kept per MATCHING.md); nothing outside the unit.

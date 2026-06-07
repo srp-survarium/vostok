@@ -7,6 +7,7 @@
 #include <vostok/game_core/player_logic_base_state.h>
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace survarium {
 
@@ -331,56 +332,35 @@ bool weapon_user_animations_selector::stand_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::set_animation_callback(char const*, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[78.28%|PARTIAL]: body byte-correct (subscribe_animation_player(channel_id,
+// animation_callback, callback_uid, managed_resource_ptr(), 0xff, NULL) at vtable+50h). The
+// residual is the base_player vtable arg-count/this-load shape: base emits one fewer pushed
+// arg and a `mov ecx,eax` this-setup vs the target's direct ecx. Rooted in base_player.h's
+// virtual overload/vtable layout (owned by another matcher; same class as the deactivate
+// slot fix), not steerable from this TU.
 void weapon_user_animations_selector::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x594f7b> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, const u8, pcvoid const)
-	// ******
-
-	// FUNCTION BODY
-	// <0x594f49>|0x009|+0x03c:'215'
-	// ******
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( ), 0xff, NULL );
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::remove_animation_callback(char const*, void const*)
+// STATE[100%|DONE]
 void weapon_user_animations_selector::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x594950> -> void <unknown>(pcstr, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x594937>|0x007|+0x01b:'220'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::set_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[84.79%|PARTIAL]: same base_player vtable shape residual as the pcstr overload
+// (subscribe_animation_player(channel_id, animation_callback, callback_uid,
+// managed_resource_ptr(), NULL) at vtable+4Ch).
 void weapon_user_animations_selector::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x594f26> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, pcvoid const)
-	// ******
-
-	// FUNCTION BODY
-	// <0x594ef9>|0x009|+0x037:'225'
-	// ******
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( ), NULL );
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::remove_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*)
+// STATE[100%|DONE]
 void weapon_user_animations_selector::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x594920> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x594907>|0x007|+0x01b:'230'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
 // STATE[STUB]
@@ -407,18 +387,19 @@ bool weapon_user_animations_selector::crouch_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::broken_legs_predicate() const
+// STATE[76.76%|PARTIAL]: body byte-correct (m_user@+44h read twice, virtual damage_model
+// @vtable+0Ch, broken_legs_count = byte[+339h]+byte[+338h], == 2 via xor/cmp/sete). The
+// sole divergence is the intrusive_ptr operator* out-of-lining: target emits a real
+// `call intrusive_ptr<booby_trap_core,...>::operator*` (a `mov eax,[eax]; ret` COMDAT with
+// NO assert), while base inlines operator* (our intrusive_ptr_inline.h operator* carries an
+// ASSERT, folded to `dummy::nonnull`). Same deref-idiom wall as current_state/deactivate;
+// rooted in shared intrusive_ptr_inline.h (not steerable from this TU). See _state_accessors.md.
 bool weapon_user_animations_selector::broken_legs_predicate( ) const
 {
-	// CALL SITE INFO
-	// <0x594b1a> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
+	return ( *m_user->damage_model( ) ).broken_legs_count( ) == 2;
 
 	// FUNCTION BODY
-	// <0x594b09>|0x009|+0x03c:'248'
+	// <0x594b09>|0x009|+0x03c:'248'	return (*m_user->damage_model()).broken_legs_count() == 2
 	// ******
 }
 
@@ -466,33 +447,36 @@ bool weapon_user_animations_selector::jump_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_weapon_in_idle() const
+// STATE[41.56%|PARTIAL]: body shape correct (cast *current_active_object() -> weapon_core,
+// read the inlined predicate field at +48Ch). WALL: target's current_active_object() returns
+// `intrusive_ptr<inventory_item,...>` (a by-value temp copy-ctor'd at [ebp-8], operator*
+// out-of-lined), while base's interactive_object_ptr is `intrusive_ptr<game_world_object,...>`
+// (different root) AND base inlines the copy-ctor. Both stem from base_player.h /
+// interactive_object.h typedef + the intrusive_ptr deref idiom, neither steerable here.
 bool weapon_user_animations_selector::is_weapon_in_idle( ) const
 {
-	return false;
+	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_idle( );
 
 	// FUNCTION BODY
 	// <0x5951f9>|0x009|+0x074:'279'
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_weapon_firing() const
+// STATE[8.96%|PARTIAL]: same wall as is_weapon_in_idle (current_active_object intrusive_ptr
+// root type + operator* out-of-lining, base_player/interactive_object owned elsewhere).
 bool weapon_user_animations_selector::is_weapon_firing( ) const
 {
-	return false;
+	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_firing( );
 
 	// FUNCTION BODY
 	// <0x5951a9>|0x009|+0x040:'284'
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_weapon_toggling() const
+// STATE[34.89%|PARTIAL]: same wall as is_weapon_in_idle.
 bool weapon_user_animations_selector::is_weapon_toggling( ) const
 {
-	return false;
+	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_toggling( );
 
 	// FUNCTION BODY
 	// <0x595129>|0x009|+0x066:'289'
@@ -539,37 +523,34 @@ fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_user_ani
 	return look_time_functor( this, &weapon_user_animations_selector::look_time_factor_calculator );
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_user_animations_selector::on_interval_ended(vostok::animation::animation_callback_params&)
+// STATE[100%|DONE]
 animation::callback_return_type_enum weapon_user_animations_selector::on_interval_ended( animation::animation_callback_params& params )
 {
-	// CONSTANTS
-	// const weapon_user_animations_selector::on_interval_ended::__l9::<unnamed-tag> c_right_leg_interval_id = 0;
-	// ******
+	enum { c_right_leg_interval_id };
 
-	// FUNCTION BODY
-	// <0x5949c9>|0x009|+0x00c:'324'
-	// <0x5949d5>|0x015|+0x009:'325'
-	// <0>
-	// <0x5949de>|0x01e|+0x013|[1]:'327'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5949f1>|0x031|+0x002:'332'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( &params ) );
+	if ( params.animation_user_data == 1 )
+		m_right_leg_is_supporting = params.animation_interval_id != c_right_leg_interval_id;
+
+	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[STUB]
+// STATE[20.12%|PARTIAL]: 3 statements decoded. L341 is `m_user->force_animation_selection()`
+// (direct call, m_user@+44h). L337/L339 are two compiled-out Master-Gold `_U` asserts (the
+// `byte=0; lea; call eater; movzx;test;je; push args; call eater; add esp` shape, assembly_patterns
+// "if(identity(false)){...}" entry). L339 = `ASSERT_CMP_U( affect, ==, 4 )` (pushes affect/4/0).
+// L337 pushes exactly 2 args (type, then bodypart) with NO `push 0`, so it is NOT a standard
+// ASSERT_U/ASSERT_CMP_U (those add the assert_untyped `push 0`); the exact 2-arg eater macro is
+// unidentified - needs the precise debug_macros.h form before a byte-match. Deferred.
 // void survarium::weapon_user_animations_selector::on_broken_limb_affect(char const*, const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum)
 void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
 {
 	// FUNCTION BODY
-	// <0x594969>|0x009|+0x023:'337'
+	// <0x594969>|0x009|+0x023:'337'	ASSERT-_U( bodypart, type )  [2-arg eater, no push 0]
 	// <0>
-	// <0x59498c>|0x02c|+0x023:'339'
+	// <0x59498c>|0x02c|+0x023:'339'	ASSERT_CMP_U( affect, ==, 4 )
 	// <0>
-	// <0x5949af>|0x04f|+0x00b:'341'
+	// <0x5949af>|0x04f|+0x00b:'341'	m_user->force_animation_selection()
 	// ******
 }
 

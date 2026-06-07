@@ -149,7 +149,11 @@ public:
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const { return m_aimed; }				// STATE[STUB]
-	inline	bool								is_idle							( ) const { /* no source */ }
+	// claude@MATCH: is_idle must return a value - is_weapon_user_animations_selector::
+	// is_weapon_in_idle is its first real consumer and a bodyless value-returning inline
+	// fails LTCG codegen (LNK1257). Minimal `return m_is_idle;` (mirrors is_firing/is_toggling);
+	// weapon_core owner can refine the predicate later.
+	inline	bool								is_idle							( ) const { return m_is_idle; }
 
 			void								unload_chambered_round			( );
 			void								unload_ammo						( );
