@@ -67,10 +67,13 @@ aware assembly) for the instruction-level reason, or `--view target`/`--view bas
 the raw disassembly of that statement. Don't start from the assembly diff - you'd be
 reading instruction noise without knowing which statement matters.
 
-### Embed the condensed diff in a non-100% function (replace the one-sided carcass)
-For a PARTIAL/INPROGRESS/BLOCKED function, REPLACE its one-sided `// FUNCTION BODY`
-carcass with the condensed structure-diff, commented, so the divergence is visible
-inline (a clean 100% DONE keeps no carcass at all). Real example
+### Embed the condensed diff in a non-100% function (you OWN this; the matcher left none)
+The matcher does NOT maintain the `// FUNCTION BODY` carcass - it deletes it when done.
+So for a PARTIAL/INPROGRESS/BLOCKED function you GENERATE and embed the condensed
+structure-diff yourself (commented), inline above/in the function, so the divergence is
+visible (a clean 100% DONE carries nothing). **The embedded `// STRUCTURE DIFF` block IS
+the marker that you ran:** a non-100% function with none means no verifier has touched it
+yet. Real example
 (`legs_ik_processor::get_foot_fixed_transform`, 84%):
 ```
 // STRUCTURE DIFF[target 0x6ebae0 | base 0x514fb0]: target 87 / base 95 stmts
