@@ -61,10 +61,14 @@ double_barreled_weapon_core_reload_state::double_barreled_weapon_core_reload_sta
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: operator+ template-selection / inline-vs-call LTCG on the
-// `hands + main + offset` chain (target keeps operator+<animation_lexeme> out-of-line;
-// base inlines operator+<expression,animation_lexeme> + operator+<addition_lexeme,animation_lexeme>).
-// Same wall as the fire_state sibling (83.18%). Not source-steerable.
+// STATE[83.52%|PARTIAL]: operator+ OVERLOAD-RESOLUTION wall on the `hands + main + offset`
+// chain (NOT LTCG): the shared mixing_addition_lexeme_inline.h lacks the expression-returning
+// operator+( expression&, animation_lexeme& ) / operator+( expression&, expression& ) overloads
+// the target uses, so base falls back to the generic addition_lexeme& operator+<T1,T2> chain
+// (operator+<expression,animation_lexeme> + operator+<addition_lexeme,animation_lexeme> +
+// expression(addition_lexeme)). Steerable in principle by adding those overloads to the shared
+// header, but cross-cutting (shifts other matched operator+ users) - out of this TU's scope. See
+// double_barreled_weapon_core_show_state weapon_and_hands_expression (same wall, fuller analysis).
 animation::mixing::expression double_barreled_weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,

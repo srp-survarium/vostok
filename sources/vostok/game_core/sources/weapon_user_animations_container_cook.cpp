@@ -85,10 +85,15 @@ void create_requests_for_animations(
 	// ******
 }
 
-// STATE[91.05%|DONE]: residual diff is temp materialization / copy-elision of the
-// get_unmanaged_resource() and boost::bind temporaries (target keeps them in named
-// stack slots + destroys them; base elides). Same MSVC8 copy-elision wall that caps
-// booby_trap_set_core_cook::on_config_ready at 92% with the identical query+bind shape.
+// STATE[91.05%|PARTIAL]: probable MSVC8 copy-elision wall (contested between audit lenses).
+// At 0x67 the target materializes data[0].get_unmanaged_resource()'s by-value
+// unmanaged_resource_ptr into a NAMED slot [ebp-18h] and destroys it (intrusive_ptr::dec)
+// after static_cast_resource_ptr; our base elides it. The reviewer pass suspected a
+// source-steerable named-local hoist; the structure-verifier then found the source skeleton
+// already matches (31==31 statements), so a hoist would ADD a statement and likely worsen it
+// - the [ebp-18h]/dec is codegen copy-elision, not a missing source statement. Treat as a
+// wall (same class as booby_trap_set_core_cook::on_config_ready ~92%) unless a future attempt
+// proves otherwise; see weapon_user_animations_container_cook.md.
 void weapon_user_animations_container_cook::on_config_loaded( resources::queries_result& data )
 {
 	if ( !data.is_successful( ) )

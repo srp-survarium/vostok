@@ -66,9 +66,20 @@ Changed container.h ctor to `inline weapon_user_animations_container(){ /* no so
 and dropped the temp_include_all stopgap. Rebuild: same member %s, link OK.
 
 ### Walls / residuals
-- on_config_loaded 91.05%: MSVC8 copy-elision of get_unmanaged_resource()/boost::bind
-  temporaries (target keeps named slots + dtors, base elides). Parallel proven wall:
-  booby_trap_set_core_cook::on_config_ready = 92.27% DONE with identical query+bind shape.
+- on_config_loaded 91.05%: REVIEW (claude 2026-06-07) - the get_unmanaged_resource() part is
+  NOT a copy-elision wall, it is a source-steerable named-local hoist that was never applied.
+  `pdb_fetch --view diff` at 0x67: the target materializes data[0].get_unmanaged_resource()'s
+  by-value unmanaged_resource_ptr into a NAMED slot [ebp-18h], then DESTROYS it
+  (intrusive_ptr::dec) after the static_cast_resource_ptr; our base elides it
+  (push ecx; mov esi,esp; ...; add esp,4, no dtor). NEXT (re-matchable): introduce the
+  intermediate named local the original source had -
+    resources::unmanaged_resource_ptr res = data[0].get_unmanaged_resource( );
+    configs::binary_config_ptr config = static_cast_resource_ptr<...>( res );
+  forcing the [ebp-18h] materialization + dec. The target frame is also far bigger
+  (sub esp,174h vs base 84h), so other named temps likely follow the same hoist - decode the
+  carcass locals and hoist each by-value temp the target named. ONLY the tail boost::bind query
+  temp is the genuine MSVC8 copy-elision residual (parallel: booby_trap_set_core_cook::
+  on_config_ready 92.27%). Retagged DONE -> PARTIAL accordingly.
 - create_requests_for_animations: body matches except call-boundary LTCG arg (animation_class
   0x3d passed in EDX in target vs pushed in base). Allowed LTCG-arg divergence. Reads 0%
   only because the .cpp-local free fn does not pair at per-obj scoring (measures empty).
