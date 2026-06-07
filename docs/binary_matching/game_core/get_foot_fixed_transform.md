@@ -173,3 +173,18 @@ transitively via the real `processor` instance (process() -> get_foot_fixed_tran
 - COMMAND: python3 scripts/rebuild.py (no module arg); python3 scripts/legs_scores.py
 - RESULT: 84.23% UNCHANGED. Function still SCORES. Residual is genuine (the documented
   call-boundary LTCG / slot-rename class), NOT the anchor-observation distortion.
+
+## Structure-verifier v2 pass (2026-06-07) - 84.23 -> 84.65%
+
+REAL FIX (the prior @TODO): the else-branch single-byte original_color write. Target at
+0x82a does `mov byte[ebp-167h],64h; mov cl,[ebp-167h]; mov [ebp-170h],cl` - a single low
+byte (offset 0 = the `b` channel of math::color's {b,g,r,a} union) write = `set_B(0x64u)`.
+The stale base form `original_color = math::color( 0x64u, 0x00u, 0x00u )` emitted a full
+color ctor + 4-byte copy (0x1c). Changed to `original_color.set_B( 0x64u )`; that row is
+now a single-byte write (0x10) and the fn moved 84.23 -> 84.65.
+
+Remaining residual is the documented call-boundary class: get_root_bones_count() spill
+(0xC per `matrices[idx]*hip_world_matrix` and per length() index; target inlines the helper),
+the is_similar operator inline (0x78 vs 0xb6), and the original_color/fixed_color ctor +
+draw_*capsule block placement (the ONLY base / L356/L357/L375/L379 ONLY target rows are
+codegen block placement, not source shape). 86/93 stmts, structure MATCH.
