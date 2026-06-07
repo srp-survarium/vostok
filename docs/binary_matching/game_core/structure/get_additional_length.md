@@ -128,6 +128,28 @@ The right next step is for a matcher to experiment with the call-site expression
 until `vostok::math::operator|` is emitted as a call at offset 0x14, collapsing
 L113 from 0x49 back to 0x18 and the frame from 0x24 to 0x20.
 
+## Re-verification with `--view structure-diff` (deployed tool)
+
+Re-run via the parser's aligned target-vs-base structure-diff (condensed):
+```
+target: 0xbb1f0            base: 0x513fa0
+; target 3 stmts / base 5 stmts
+.. same ..
+0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
+--          | <0>          |    EMPTY only base
+.. same ..
+--          | <0>          |    EMPTY only base
+; aligned 2, size-diffs 1, quantity-diffs 2
+```
+
+The tool reports 3 vs 5 stmts, but the two extra base rows are tagged
+`EMPTY only base` - collapsed source-line GAPS (blank lines), NOT real statements.
+The genuine source-statement shape matches on both sides; the only real divergence
+is the single `SIZE` row on the `knee_angle_cos` dot-product line (target 0x18 vs
+base 0x49). This corroborates the analysis above - no new structural divergence was
+found. The condensed diff is now embedded in the .cpp in place of the one-sided
+FUNCTION BODY carcass.
+
 ## Bottom line
 
 - STRUCTURE MISMATCH (size), isolated to the L113 dot-product statement.

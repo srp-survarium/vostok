@@ -172,10 +172,18 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 		? knee_len * 0.5f
 		: math::sqrt( math::sqr( knee_len ) * 0.5f / ( 1.0f - knee_angle_cos ) );
 
-	// FUNCTION BODY
-	// <0xcb1f6>|0x006|+0x018:'113'	float const knee_angle_cos = upleg_dir | -leg_dir;  // operator| INLINED in base, target calls it
-	// <0xcb20e>|0x01e|+0x075:'114'	return is_similar(cos,1.0f,epsilon_5) ? knee_len*0.5f : sqrt(sqr(knee_len)*0.5f/(1.0f-cos));
-	// ******
+	// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 3 / base 5 stmts (the 2 extra
+	// base stmts are EMPTY source-line gaps, not real statements - source shape matches).
+	// .. same ..
+	// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
+	// --          | <0>          |    EMPTY only base
+	// .. same ..
+	// --          | <0>          |    EMPTY only base
+	// ; aligned 2, size-diffs 1, quantity-diffs 2
+	//
+	// SIZE diff is codegen-only: target emits one `call math::operator|` for the dot
+	// product (0x18 B); our /Ob2 base inlines it to a movss/mulss/addss sequence (0x49 B).
+	// Not steerable from the source - same statement, same shape, different inlining.
 }
 
 // STATE[STUB]
