@@ -167,7 +167,7 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 	// ******
 }
 
-// STATE[93.33%|PARTIAL]: switch body matches instruction-for-instruction (case 0/default -> fld1; cases 1/2 are ternaries on using_double_handed_weapon). Residual + full asm in character_dispersion_calculator_get_broken_hands_penalty.md
+// STATE[93.33%|INPROGRESS]: quantity divergence - base emits a trailing `return 1.0f;` (extra fld1 at 0x8b) that the target does NOT have. Target switch (cases 0/1/2) falls straight through to the epilogue: case 0's body IS the implicit-default fld1, shared with the no-match fall-through. The trailing `return 1.0f;` below must be folded into case 0 (matcher job). Full diff embedded; report in structure/character_dispersion-get_broken_hands_penalty.md
 // claude@MATCH: `case 0: return 1.0f;` (NOT `break;`) - break folds case 0 into default, drops the target's explicit `cmp 0`, and scores None.
 float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands_count, bool using_double_handed_weapon ) const
 {
@@ -185,19 +185,15 @@ float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands
 
 	return 1.0f;
 
-	// FUNCTION BODY
-	// <0x595e59>|0x009|+0x00c:'130'	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
-	// <0x595e65>|0x015|+0x018:'131'	switch ( broken_hands_count ) {
-	// <0>
-	// <0x595e7d>|0x02d|+0x004:'133'	case 0: return 1.0f;
-	// <0>
-	// <0x595e81>|0x031|+0x02b:'135'	case 1: return double_handed ? injury_double : 1.0f;
-	// <0>
-	// <0x595eac>|0x05c|+0x02b:'137'	case 2: return double_handed ? injury_double : injury_one;
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	// STRUCTURE DIFF[target 0x585e50 | base 0x454320]: target 10 / base 13 stmts ; aligned 8, size-diffs 2, quantity-diffs 3
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x015 <0x18> | 0x015 <0x1a> | switch ( broken_hands_count )                                                                                                  SIZE
+	// .. same ..
+	// 0x05c <0x2b> | 0x05e <0x2d> | return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;     SIZE
+	// --          | <0>         |    EMPTY only base
+	// --          | 0x08b <0x2> | return 1.0f;                                                                                                                     ONLY base
+	// .. same ..
 }
 
 } // namespace survarium
