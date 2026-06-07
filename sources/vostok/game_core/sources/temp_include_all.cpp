@@ -635,6 +635,13 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &bc ) );
 		example_callback( reinterpret_cast< pcstr >( &hc ) );
 		example_callback( reinterpret_cast< pcstr >( &vc ) );
+
+		// claude@NOTE: pointer-to-member forces an out-of-line COMDAT body so objdiff
+		// can pair these otherwise-inlined predicates against the target.
+		bool ( survarium::weapon_core::*p_used )( survarium::base_player const& ) const = &survarium::weapon_core::could_be_used;
+		bool ( survarium::weapon_core::*p_aimed )( survarium::base_player const& ) const = &survarium::weapon_core::could_be_aimed;
+		example_callback( reinterpret_cast< pcstr >( &p_used ) );
+		example_callback( reinterpret_cast< pcstr >( &p_aimed ) );
 	}
 
 	void use_game_core_weapon_core_animation_end_aware_state( )

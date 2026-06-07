@@ -296,16 +296,16 @@ public:
 												);
 
 	inline	float								backward_recoil_value			( ) const { /* no source */ }
+private:
 			float								horizontal_recoil_value			( ) const;
 			float								vertical_recoil_value			( ) const;
 
-private:
 			bool								is_trying_to_aim				( ) const;
 			bool								is_not_trying_to_aim_predicate	( ) const;
-public:
 
 			bool								can_and_must_reload_predicate	( ) const;
 			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
+public:
 
 			void								load_ammo						( );
 

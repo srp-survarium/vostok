@@ -1070,3 +1070,46 @@ infra base): `module::function -> STATE -> PR (regressions)`.
   empty boost binders) = ICF representative reshuffle from adding the boost::bind/function COMDATs
   (set differs each build). OVERALL UP: baseline fuzzy 48.728 / matched_code 27.447 / 8206 fns ->
   current 48.760 / 27.458 / 8207 fns (+1 fn, +matched bytes). honest match_score improves; no real loss.
+- weapon_core batch8 (predicates / forwarders; ONE unit; branch
+  match/game_core-weapon_core-batch8 off origin/int/game_core). Drove still-STUB
+  weapon_core members from the batch7 hand-off. All in weapon_core.cpp; could_be_used/
+  could_be_aimed anchored via pointer-to-member in use_game_core_weapon_core_base_state.
+    is_sprinting                                       STUB -> 100%  DONE
+      (return m_user_animations_selector.is_sprinting(); @+0x278. @@EBE private virtual.
+       rich-index diff = 10/10 instrs equal. report.json shows 0% ONLY because this
+       10-byte virtual is ICF-folded with an identical body in BOTH binaries -> neither
+       delinked .obj keeps a distinct COMDAT -> objdiff cannot pair it. Documented
+       COMDAT-fold 100<->0 artifact; source is byte-correct.)
+    could_be_used                                      0 -> 81.19    PARTIAL
+      (broken_hands_count=(*user.damage_model()).broken_hands_count(); return
+       broken_hands_count!=2 || !m_is_double_handed. @@QBE public. control-flow + all
+       member reads (33A/33B/48A) byte-identical. WALL = smart-ptr operator* shape:
+       target calls operator* out-of-line on the resource_ptr const& (no copy), /GL
+       copies the resource_ptr + inlines operator*. LTCG inline/copy at call boundary.)
+    could_be_aimed                                     0 -> 75.88    PARTIAL
+      (return broken_hands_count!=2. @@QBE public. same operator* copy/inline residual.)
+    can_and_must_reload_predicate                      0 -> 85.32    PARTIAL
+      (return ready_to_reload() && m_ammo_in_magazine==0 && !m_is_round_chambered.
+       @@ABE private (moved decl public->private). members+&&-shape byte-identical.
+       WALL = LTCG inline-vs-call of trivial ready_to_reload() stub: target call+0x30
+       frame, /GL inlines `return true` to mov eax,1 + 0x08 frame. Same class as
+       must_chamber_a_round_and_animation_ended_predicate 87%.)
+    can_and_must_reload_and_animation_ended_predicate  0 -> 86.17    PARTIAL
+      (return current_base_state().has_animation_ended() && can_and_must_reload_predicate().
+       @@ABE private. control-flow byte-identical; residual = inherited ready_to_reload +
+       has_animation_ended inline class.)
+  Edits: damage_model.h - filled empty inline broken_hands_count() body
+  (m_broken_hands_count[0]+m_broken_hands_count[1], modeled on broken_legs_count, reads
+  +33A/+33B); weapon_core.h - moved horizontal/vertical_recoil_value + can_and_must_reload_*
+  decls into a private: block (mangled ABE) so objdiff pairs them; temp_include_all.cpp -
+  pointer-to-member anchors for could_be_used/could_be_aimed.
+  Deferred walls: horizontal/vertical_recoil_value (is_aimed() call + recoil_calculator
+  coeffs + math::clamp_r + statics c_anim_center/epsilon - is_aimed inline wall, PARTIAL
+  at best); get_ammo_slot (two reversed static jump tables + profile_slot_id call);
+  process_finger_correction / on_skeleton_matrices_changed / update_dispersion (ASSERT +
+  conditional forwarders into compiled-out stubs).
+  Regressions: report-changes.json 0 regressed on the final two builds. Cross-build
+  report.json 100->0 flips (bind.hpp/function_base.hpp/noncopyable.hpp/btsoftbody/
+  debug_renderer.cpp, incl. is_sprinting) are the documented symmetric delinker
+  COMDAT re-slice churn (different set each build, all in untouched files), not source
+  regressions.

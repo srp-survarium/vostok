@@ -1487,15 +1487,13 @@ void weapon_core::update_bones_matrices(
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_sprinting() const
+// STATE[100%|DONE]: body byte-identical (rich-index diff = 10/10 instrs equal). report.json
+// shows 0% only because this 10-byte virtual is ICF-folded with an identical body in BOTH
+// binaries, so neither delinked .obj keeps a distinct COMDAT for it (objdiff can't pair it -
+// the documented COMDAT-fold 100<->0 artifact, ik_processor-ctor-activate.md). Source is correct.
 bool weapon_core::is_sprinting( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a32c7>|0x007|+0x00e:'1033'
-	// ******
+	return m_user_animations_selector.is_sprinting( );
 }
 
 // STATE[STUB]
@@ -1667,44 +1665,23 @@ bool weapon_core::instant_idle_predicate( ) const
 	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::could_be_used(survarium::base_player const&) const
+// STATE[81.19%|PARTIAL]: control-flow + member reads (33A/33B/48A) byte-identical; sole
+// residual = smart-ptr operator* shape on (*user.damage_model()) - target calls operator*
+// out-of-line on the returned resource_ptr const& (no copy), our /GL copies the resource_ptr
+// (extra `mov byte[ebp-2],0; lea; call <copy>`) and inlines operator* (`mov eax,[edx]`).
+// LTCG inline/copy decision at the operator* call boundary. See weapon_core_could_be_predicates.md
 bool weapon_core::could_be_used( base_player const& user ) const
 {
-	// LOCALS
-	// u8 							broken_hands_count
-	// ******
-
-	// CALL SITE INFO
-	// <0x5a3264> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a3259>|0x009|+0x02e:'1171'
-	// <0x5a3287>|0x037|+0x02a:'1172'
-	// ******
+	u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	return broken_hands_count != 2 || !m_is_double_handed;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::could_be_aimed(survarium::base_player const&) const
+// STATE[75.88%|PARTIAL]: return-logic byte-identical; same operator* copy/inline residual as
+// could_be_used (see weapon_core_could_be_predicates.md).
 bool weapon_core::could_be_aimed( base_player const& user ) const
 {
-	// LOCALS
-	// u8 							broken_hands_count
-	// ******
-
-	// CALL SITE INFO
-	// <0x5a3214> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a3209>|0x009|+0x02e:'1177'
-	// <0x5a3237>|0x037|+0x00c:'1178'
-	// ******
+	u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	return broken_hands_count != 2;
 }
 
 // STATE[STUB]
@@ -1924,22 +1901,24 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 	return !is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::can_and_must_reload_predicate() const
+// STATE[85.32%|PARTIAL]: members/branches/&&-shape byte-identical; sole residual = LTCG
+// inline-vs-call of the trivial ready_to_reload() stub - target /Od `call ready_to_reload`
+// into a temp (frame 0x30), our /GL inlines its `return true` to `mov eax,1` (frame 0x08).
+// Same inline-decision class as must_chamber_a_round_and_animation_ended_predicate.
 bool weapon_core::can_and_must_reload_predicate( ) const
 {
-	return false;
+	return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
 
 	// FUNCTION BODY
 	// <0x5a4df0>|0x010|+0x03e:'1333'
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::can_and_must_reload_and_animation_ended_predicate() const
+// STATE[86.17%|PARTIAL]: control-flow byte-identical; residual = same ready_to_reload inline
+// (via can_and_must_reload_predicate) + has_animation_ended inline class.
 bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
-	return false;
+	return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
 
 	// FUNCTION BODY
 	// <0>
