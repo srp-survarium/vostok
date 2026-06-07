@@ -92,6 +92,15 @@ target obj `binaries/objdiff/target/vostok/game_core/sources/character_dispersio
    + frame 10h vs 14h + 4-byte [ebp-N] slot shift. Same prologue/ASSERT as get_target_koef.
 
 ## Outcome
+STATE[93.33%|INPROGRESS] (downgraded from PARTIAL by structure audit 2026-06-07):
+the % hid a real QUANTITY divergence. structure-diff (target 10 / base 13 stmts)
+shows the base emits a TRAILING `return 1.0f;` (extra `fld1` at base 0x8b) that the
+target does NOT have - the target's case jumps land straight on the epilogue and
+case 0's body IS the shared implicit-default fld1. Fix: fold the trailing
+`return 1.0f;` into case 0 so no separate post-switch fld1 is emitted (matcher job,
+needs rebuild). Full side-by-side in
+structure/character_dispersion-get_broken_hands_penalty.md.
+
 STATE[93.33%|PARTIAL]: observable switch body matches instruction-for-instruction.
 ASSERT recovery (82.89% -> 93.33%): the prologue `mov byte[ebp-1],0; lea eax,[ebp-1];
 call empty_stub` (delinker misnames it `finalize_impl`) is a COMPILED-OUT ASSERT,
