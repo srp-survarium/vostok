@@ -92,17 +92,11 @@ void character_dispersion_calculator::tick(
 	// ******
 }
 
-// STATE[95.74%|INPROGRESS]: OUR base emits an extra `cmp 3; ja default` bounds check the target lacks (target source covers all 5 enum values + `default: NODEFAULT()`); fix deferred to a faster machine. See character_dispersion_calculator_get_target_koef.md
+// STATE[100%|DONE]
 float character_dispersion_calculator::get_target_koef( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 
-	// claude@TODO (faster machine): ONE structural fix, then rebuild + re-diff:
-	//   no `cmp 3; ja default` in target - add `case type_preview: return 1.0f;` and change
-	//   `default:` to `NODEFAULT();` (__assume(0)) so MSVC emits the contiguous [0..4] table.
-	//   (structure-diff: 21/21 stmts, 0 quantity-diffs; both SIZE diffs are this one
-	//   cause. The `+0x002` jmps at 0x5d/0xc0 are case fall-through thunks on BOTH
-	//   sides, NOT a missing brace-block - no `{ }` change needed. 95.74% pre-fix.)
 	switch ( character_state )
 	{
 		case type_stand:
@@ -123,24 +117,15 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 		case type_jump:
 			return m_params->jump_multiplier;
 
-		default:
+		case type_preview:
 			return 1.0f;
-	}
 
-	// STRUCTURE DIFF:
-	// target: 0x585ee0            base: 0x4543c0
-	// ; float survarium::character_dispersion_calculator::get_target_koef(const survarium::weapon_user_state_enum, const bool, const bool) const ; target 19 stmts / base 19 stmts
-	// .. same ..
-	// 0x015 <0x10> | 0x015 <0x1a> | switch ( character_state )   SIZE
-	// .. same ..
-	// 0x103 <0x4> | 0x10d <0x2> | return 1.0f;   SIZE
-	// .. same ..
-	// ; aligned 17, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MISMATCH (size) - base switch emits a `cmp 3; ja default` bounds check target lacks; cover all enum values + `default: NODEFAULT();` to drop it  trail: character_dispersion-get_target_koef.md
+		default:
+			NODEFAULT();
+	}
 }
 
-// STATE[93.33%|INPROGRESS]: quantity divergence - base emits a trailing `return 1.0f;` (extra fld1 at 0x8b) that the target does NOT have. Target switch (cases 0/1/2) falls straight through to the epilogue: case 0's body IS the implicit-default fld1, shared with the no-match fall-through. The trailing `return 1.0f;` below must be folded into case 0 (matcher job). Full diff embedded; report in structure/character_dispersion-get_broken_hands_penalty.md
-// claude@MATCH: `case 0: return 1.0f;` (NOT `break;`) - break folds case 0 into default, drops the target's explicit `cmp 0`, and scores None.
+// STATE[100%|DONE]
 float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands_count, bool using_double_handed_weapon ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
@@ -153,23 +138,9 @@ float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands
 		return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : 1.0f;
 	case 2:
 		return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;
+	default:
+		NODEFAULT();
 	}
-
-	return 1.0f;
-
-	// STRUCTURE DIFF:
-	// target: 0x585e50            base: 0x454320
-	// ; float survarium::character_dispersion_calculator::get_broken_hands_penalty(const unsigned char, const bool) const ; target 8 stmts / base 11 stmts
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// 0x015 <0x18> | 0x015 <0x1a> | switch ( broken_hands_count )   SIZE
-	// .. same ..
-	// 0x05c <0x2b> | 0x05e <0x2d> | return using_double_handed_weapon ? m_params->injury_penalty_for_double_handed : m_params->injury_penalty_for_one_handed;   SIZE
-	// --          | <0>         |    EMPTY only base
-	// --          | 0x08b <0x2> | return 1.0f;   ONLY base
-	// .. same ..
-	// ; aligned 6, size-diffs 2, quantity-diffs 3
-	// VERDICT: STRUCTURE MISMATCH (both) - base has an extra trailing `return 1.0f;`; fold it into `case 0` so the switch falls through to the shared epilogue fld1  trail: character_dispersion-get_broken_hands_penalty.md
 }
 
 } // namespace survarium
