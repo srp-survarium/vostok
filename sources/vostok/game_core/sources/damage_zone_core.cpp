@@ -30,7 +30,7 @@ bool hit_receiver_info::operator==( hit_receiver_info const& rhs ) const
 	return m_receiver->m_pointer->m_pointer == rhs.m_receiver->m_pointer->m_pointer;
 }
 
-// STATE[99.39%|DONE]
+// STATE[99.63%|DONE]
 damage_zone_core::damage_zone_core( ) :
 	hit_initiator				( u8(-1), true ),
 	m_physics_world				( NULL ),
@@ -38,9 +38,12 @@ damage_zone_core::damage_zone_core( ) :
 	m_accumulated_hit_time_ms	( 0 ),
 	m_standalone				( true )
 {
+	// STRUCTURE DIFF[target 0x589380 | base 0x456b00]: target 0 / base 0 stmts
+	// ; aligned 0, size-diffs 0, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (member-init list, 0 body stmts) - residual is an LTCG frame-slot delta (sub esp 24h target vs 30h base) plus member-ctor call-target relocs; instruction shape identical, non-steerable. trail: damage_zone_core-ctor-dtor.md
 }
 
-// STATE[94.65%|DONE]
+// STATE[100%|DONE]
 damage_zone_core::~damage_zone_core( )
 {
 }

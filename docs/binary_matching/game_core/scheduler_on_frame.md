@@ -113,3 +113,69 @@ emit-out-of-line-vs-inline choice for a trivial COMDAT template method is an LTC
 decision not controllable from this function's source.
 Regressions caused: none (folding churn only).
 Inlining: size()/operator[] inlined in base, out-of-line in target - the residual.
+
+---
+
+# game_core::scheduler::on_frame(record&, u32, u32) -- private overload
+
+Structure-verifier pass (v2). Target RVA `0xa8dd0`, base RVA `0x574120`,
+report.json fuzzy 82.17%.
+
+## structure-diff (condensed)
+```
+target 25 / base 25 stmts
+0x0df <0x11> | 0x0de <0x3f> | count = math::min( count, (s32)record.m_max_update_count );   SIZE
+0x104 <0xe>  | 0x131 <0x17> | scheduler::callback callback = record.m_callback;   SIZE
+; aligned 22, size-diffs 2, quantity-diffs 2
+```
+Plus two EMPTY-only (one base, one target) source-line gaps -- collapsed line
+attribution, not control-structure divergence.
+
+## Cause of the two SIZE diffs (--view diff, fuzzy 88.50%)
+1. `count = math::min( ... )` -- target emits a `call` to an out-of-line
+   `math::min<s32>`; our base INLINES the branchless min
+   (`xor edx,edx; cmp; setl dl; neg edx; sub; and; add`). Pure LTCG inline-vs-call
+   of a trivial template, same as the already-noted `math::floor`.
+2. `scheduler::callback callback = record.m_callback;` -- target out-of-lines the
+   `boost::function` copy-construct (`lea; call`), base does the longer inline
+   `lea; call; push; lea; call` form. Again inline-vs-call at the COMDAT boundary.
+
+These extra inlined temporaries also explain the frame delta (`push esi`,
+`sub esp, 2D0h` base vs `2C0h` target) -- a downstream slot artifact, not a source
+shape change. `[ebp-NN]` slot numbers throughout are allocation noise.
+
+## Verdict
+STRUCTURE MATCH. 25/25 statements aligned, all control structure (the two early
+returns, the per-frame branch, the ASSERTs, the count loop) reproduced. Residual
+is LTCG inline-vs-call only; non-steerable from this function's source. STATE
+stays `82.17%|DONE`. No source logic changed; carcass replaced with the condensed
+structure-diff embed.
+
+---
+
+# Assessment: landing register_for_update / unregister out-of-line (orchestrator note)
+
+These two members are declared OUT-OF-LINE in `scheduler.h` (lines 57-66) but
+currently DEFINED `inline` in `scheduler_inline.h` with `STATE[BLOCKED]`
+(register_for_update at 0.0%, unregister at 0.0%/notes that everything inlined
+differently). The orchestrator asked whether landing them out-of-line (moving the
+definitions from `scheduler_inline.h` into `scheduler.cpp`) is doable here, since
+that is what the target did and would also help `oxygen_tank::set_active`.
+
+Decision: LEFT BLOCKED. Reasons:
+- These are NOT matched bodies -- they are unverified skeletons that still carry
+  carcasses and 0% match. Producing the out-of-line definitions is a genuine
+  MATCHING task (write+verify each body), not a structure-verification.
+- Both call `register_object()` and `objects()`, themselves `STATE[INLINED]`/
+  `STATE[BLOCKED]` inline helpers in the same header. Pulling
+  register_for_update/unregister out-of-line without first settling those helpers'
+  inline-vs-out-of-line story risks changing how they inline at the OTHER call
+  sites (register_on_frame, and the oxygen_tank path the note mentions) -- exactly
+  the "header restructure that risks other units" the orchestrator said to avoid.
+- This verifier pass is comment/marker-only by mandate; a header move + rebuild of
+  the dependent TUs is a separate matcher unit.
+
+Recommended next step (for a matcher, not this pass): take register_object/objects
+first (settle their target inline/out-of-line form), then move
+register_for_update + unregister definitions into scheduler.cpp and verify against
+target rvas 0x92da0 (register_for_update) and 0x92de0 (unregister).
