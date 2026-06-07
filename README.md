@@ -13,23 +13,23 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 48.21% fuzzy &middot; 8,685 / 25,372 functions exact (34.23%).**
+**Overall: 48.20% fuzzy &middot; 8,667 / 25,372 functions exact (34.16%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 374 / 2,805 (13.3%) | 3.3% |
-| `game` | 141 | 20 / 1,634 (1.2%) | 0.1% |
-| `game_core` | 189 | 337 / 1,429 (23.6%) | 13.2% |
+| `render` | 351 | 372 / 2,805 (13.3%) | 3.3% |
+| `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
+| `game_core` | 189 | 331 / 1,429 (23.2%) | 13.2% |
 | `core` | 136 | 656 / 1,331 (49.3%) | 34.1% |
 | `animation` | 102 | 151 / 880 (17.2%) | 5.2% |
 | `ai` | 124 | 421 / 759 (55.5%) | 38.3% |
-| `sound` | 69 | 211 / 517 (40.8%) | 16.5% |
+| `sound` | 69 | 212 / 517 (41.0%) | 16.6% |
 | `collision` | 52 | 369 / 516 (71.5%) | 30.8% |
-| `particle` | 25 | 263 / 485 (54.2%) | 26.1% |
+| `particle` | 25 | 271 / 485 (55.9%) | 27.1% |
 | `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
 | `ui` | 27 | 175 / 255 (68.6%) | 42.7% |
-| `physics` | 14 | 99 / 203 (48.8%) | 24.4% |
+| `physics` | 14 | 98 / 203 (48.3%) | 24.4% |
 | `fs` | 25 | 71 / 189 (37.6%) | 27.8% |
 | `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
 | `network` | 25 | 7 / 163 (4.3%) | 0.5% |
@@ -40,7 +40,7 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
 | `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
 
-_Updated 2026-06-02 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-07 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
