@@ -2058,6 +2058,39 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p4 ) );
 		example_callback( reinterpret_cast< pcstr >( &p5 ) );
 		example_callback( reinterpret_cast< pcstr >( &p6 ) );
+
+		// claude@MATCH (batch2): anchor the remaining private/public leaf members that no
+		// reachable caller keeps (LTCG would otherwise inline-drop them to None).
+		bool ( self::*p7 )( ) const = &self::is_weapon_firing;
+		bool ( self::*p8 )( ) const = &self::is_weapon_toggling;
+		bool ( self::*p9 )( ) const = &self::is_weapon_in_idle;
+		bool ( self::*p10 )( ) const = &self::broken_legs_predicate;
+		bool ( self::*p11 )( ) const = &self::stand_predicate;
+		bool ( self::*p12 )( ) const = &self::crouch_predicate;
+		bool ( self::*p13 )( ) const = &self::jump_predicate;
+		bool ( self::*p14 )( ) const = &self::sprint_predicate;
+		animation::callback_return_type_enum ( self::*p15 )( animation::animation_callback_params& ) = &self::on_interval_ended;
+		void ( self::*p16 )( pcstr, survarium::hit_affects_type_enum, survarium::affect_event_type_enum ) = &self::on_broken_limb_affect;
+		void ( self::*p17 )( boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::set_sprint_callbacks;
+		float ( self::*p18 )( ) const = &self::look_time_factor;
+		float ( self::*p19 )( float, float, u32, u32, u32, float ) const = &self::look_time_factor_calculator;
+		void ( self::*p20 )( animation::reserved_channel_ids_enum, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
+		void ( self::*p21 )( pcstr, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
+		example_callback( reinterpret_cast< pcstr >( &p7 ) );
+		example_callback( reinterpret_cast< pcstr >( &p8 ) );
+		example_callback( reinterpret_cast< pcstr >( &p9 ) );
+		example_callback( reinterpret_cast< pcstr >( &p10 ) );
+		example_callback( reinterpret_cast< pcstr >( &p11 ) );
+		example_callback( reinterpret_cast< pcstr >( &p12 ) );
+		example_callback( reinterpret_cast< pcstr >( &p13 ) );
+		example_callback( reinterpret_cast< pcstr >( &p14 ) );
+		example_callback( reinterpret_cast< pcstr >( &p15 ) );
+		example_callback( reinterpret_cast< pcstr >( &p16 ) );
+		example_callback( reinterpret_cast< pcstr >( &p17 ) );
+		example_callback( reinterpret_cast< pcstr >( &p18 ) );
+		example_callback( reinterpret_cast< pcstr >( &p19 ) );
+		example_callback( reinterpret_cast< pcstr >( &p20 ) );
+		example_callback( reinterpret_cast< pcstr >( &p21 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public

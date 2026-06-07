@@ -67,3 +67,68 @@ at +58h while the target uses +54h.
   base derefs first via a `dummy::nonnull` fold, frame `sub esp,10h`). That is the same
   deref-idiom / arg-eval-order wall as current_state() and is out of scope for this fix.
 - base_player.h is shared; the overload-order edit is minimal and reconciles at land.
+
+## batch2 (resume of crashed session) - branch match/game_core-weapon_user_animations_selector-batch2
+
+Worktree /home/sheep/Projects/surv/vostok_5. Resumed an uncommitted in-progress state.
+
+### Build was BROKEN on resume (the first thing to fix)
+The crashed session had set the predicate / is_weapon_* / on_* members to `private` (correct
+per their `ABE`/`AAE` mangling) but anchored them in `temp_include_all.cpp`'s FREE function
+`use_game_core_weapon_user_animations_selector` via member-fn pointers -> C2248 (can't take
+`&self::is_weapon_firing` etc. from a non-member). FIX: added
+`friend void ::vostok::use_game_core_weapon_user_animations_selector( );` to the class (the
+established house pattern - see booby_trap_core.h, weapon_core_*_state.h). Build then linked.
+
+### Access chars (pdb mangled, target index)
+- predicates broken_legs/crouch/jump/stand + is_weapon_firing/in_idle/toggling: `ABE` private const.
+- sprint_predicate, look_time_factor: `QBE` public const.
+- on_interval_ended/on_broken_limb_affect/set_sprint_callbacks: `AAE` private.
+- set_animation_callback x2, remove_animation_callback x2: `QAE` public.
+Header already matched these except the predicate block (was `public:`) -> moved to `private:`.
+
+### Commands (verbatim, key)
+- pdb_rich_query --index binaries/rich/target/index.jsonl --list | grep weapon_user_animations
+- grep -oE '"\?[^"]*weapon_user_animations_selector@survarium@@[^"]*"' binaries/rich/target/index.jsonl
+- pdb_fetch --target-index binaries/rich/target/index.jsonl --rva <rva> --view target|structure|callees
+- pdb_fetch --target-index ... --base-index binaries/rich/base/index.jsonl --function ... --view base
+- nix develop -c python3 scripts/rebuild.py   (no module arg)
+
+### Results this session (report.json fuzzy %)
+- on_interval_ended         100% DONE  (ASSERT(UNKNOWN_EXPRESSION_T(&params)); if(animation_user_data==1)
+                                         m_right_leg_is_supporting = animation_interval_id != 0; return call_me_again).
+- remove_animation_callback(pcstr)         100% DONE  (m_user->unsubscribe_animation_player(channel_id,callback_uid)).
+- remove_animation_callback(enum)          100% DONE.
+- set_animation_callback(pcstr)   78.28% PARTIAL  body byte-correct subscribe(...,managed_resource_ptr(),0xff,NULL) @vtable+50h.
+- set_animation_callback(enum)    84.79% PARTIAL  subscribe(...,managed_resource_ptr(),NULL) @vtable+4Ch.
+  WALL: base emits one fewer pushed arg + `mov ecx,eax` this-load vs target's direct ecx; rooted in
+  base_player.h virtual overload/vtable layout (owned by another matcher, same class as the
+  deactivate +54h slot fix). Not steerable from this TU.
+- broken_legs_predicate           76.76% PARTIAL  (*m_user->damage_model()).broken_legs_count()==2;
+  WALL: intrusive_ptr operator* out-of-lining - target `call intrusive_ptr<booby_trap_core,...>::operator*`
+  (a `mov eax,[eax];ret` COMDAT, NO assert), base inlines our intrusive_ptr_inline.h operator* (carries
+  ASSERT, folds to dummy::nonnull). Same deref wall as current_state/get_current_state_id/deactivate.
+- is_weapon_in_idle 36.41% / is_weapon_firing 8.96% / is_weapon_toggling 31.17%  PARTIAL.
+  WALL: current_active_object() returns intrusive_ptr<inventory_item,...> by value (copy-ctor'd temp,
+  operator* out-of-lined) in target; base's interactive_object_ptr root is game_world_object and base
+  inlines the copy-ctor. Rooted in base_player.h / interactive_object.h typedef + the deref idiom.
+- on_broken_limb_affect           20.12% PARTIAL  3 statements decoded: L341 m_user->force_animation_selection();
+  L339 = ASSERT_CMP_U(affect,==,4) (push affect/4/0); L337 = a 2-arg eater (push type,bodypart; NO push 0)
+  - NOT a standard ASSERT_U/ASSERT_CMP_U; exact debug macro unidentified. Deferred.
+- Still STUB (not decoded, deref/predicate-logic walls): crouch/jump/stand/sprint predicate,
+  look_time_factor (needs named float consts clear_value/epsilon_5/half/period + vtable+2Ch virtual),
+  look_time_factor_calculator, set_sprint_callbacks, ctor/dtor/activate. serialize/deserialize stay BLOCKED.
+
+### weapon_core.h LTCG gotcha (LNK1257)
+Reverting the crashed session's weapon_core.h guesses produced `LINK : fatal error LNK1257: code
+generation failed` (NO compile error). Cause: weapon_core::is_idle() was `{ /* no source */ }` (a
+value-returning inline with NO return path); is_weapon_in_idle is its FIRST real consumer (baseline had
+`return false`), and inlining a no-return value-returning fn under LTCG fails codegen. FIX (minimal,
+scoped): `inline bool is_idle() const { return m_is_idle; }` (mirrors is_firing/is_toggling; m_is_idle
+@+0x492). Left is_toggling at its baseline `return m_is_toggling`. This is the only weapon_core.h edit.
+
+### Regressions
+report-changes vs prior in-worktree build: 2 regressed, both MY OWN wall-blocked partials
+(is_weapon_in_idle 41.56->36.41, is_weapon_toggling 34.89->31.17, from the weapon_core.h is_idle
+minimal body / is_toggling baseline revert). No function outside the selector unit regressed; no ICF
+thunk churn. Per MATCHING.md the structurally-correct body is kept over a higher-scoring `return false`.

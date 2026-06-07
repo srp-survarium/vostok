@@ -24,6 +24,10 @@ namespace animation {
 }
 }
 
+namespace vostok {
+	void use_game_core_weapon_user_animations_selector( );
+}
+
 namespace survarium {
 
 struct base_player;
@@ -31,6 +35,9 @@ class player_logic_base_state;
 struct weapon_animation_parameters;
 
 class weapon_user_animations_selector : public boost::noncopyable {
+	// claude@MATCH: anchor takes member-fn pointers to private leaves to keep them
+	// as standalone COMDATs; needs access to the private members.
+	friend void ::vostok::use_game_core_weapon_user_animations_selector( );
 public:
 	explicit				weapon_user_animations_selector	( );
 							~weapon_user_animations_selector( );
@@ -100,13 +107,13 @@ private:
 	// claude@MATCH: target mangling `ABE` -> private const.
 			player_logic_base_state&		current_state	( ) const;
 
-public:
+private:
 			bool			stand_predicate					( ) const;
 			bool			crouch_predicate				( ) const;
 			bool			broken_legs_predicate			( ) const;
 			bool			jump_predicate					( ) const;
 
-public:
+private:
 			bool			is_weapon_in_idle				( ) const;
 			bool			is_weapon_firing				( ) const;
 			bool			is_weapon_toggling				( ) const;
@@ -120,7 +127,7 @@ public:
 								float		time_scale
 							) const;
 
-public:
+private:
 			animation::callback_return_type_enum
 							on_interval_ended				( animation::animation_callback_params& params );
 
