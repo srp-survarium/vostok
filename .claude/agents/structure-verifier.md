@@ -97,6 +97,15 @@ quantity/size divergence, and the source fix:
   members `m_`, globals `g_`, file statics `s_`. When you align `'srcline'` statements,
   a CamelCase or mis-cased identifier may make a matching statement look unmatched -
   note it, but the structural unit is the statement, not the spelling.
+- **Definition ORDER is part of the structure - PRESERVE the original order, never
+  reorder or regroup.** Function and member definitions must appear in the same order
+  as the original (the PDB / header structure). We are REPLICATING the original code,
+  not writing our own tidy version - so do NOT reorder definitions, and do NOT flag (or
+  ask a matcher to "clean up") repeated/interleaved access specifiers: `private:`,
+  `protected:`, `public:` may each appear MULTIPLE times, out of the conventional
+  grouped order, precisely to keep the original definition order. That interleaving is
+  CORRECT and expected, not a style defect. Grouping everything under one access
+  specifier to look tidy would change the layout we are matching - never suggest it.
 
 ## What you produce
 A report at `docs/binary_matching/<module>/structure/<function>.md` (create the dir).
