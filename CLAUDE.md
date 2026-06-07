@@ -65,25 +65,16 @@ the block across commits. Re-run `python3 scripts/match_score.py --write-readme`
 whenever `report.json` moves (after a re-delink, or a toolchain/delinker change
 that shifts many symbols).
 
-### IMPORTANT: headers are NOT in the ninja dependency graph
+### Header edits trigger rebuilds (vcproj2ninja tracks `#include`s)
 
-ninja here only tracks `.cpp` inputs - there are no dependency edges from `.h`
-files. So **editing a header never triggers a rebuild on its own**; the change is
-silently ignored and you compile stale (e.g. a freshly added function reads as
-`C2039: '<fn>' is not a member of ...`). After ANY header edit you must force the
-consuming compile to re-run, by EITHER:
-- a full clean rebuild, OR
-- `touch`-ing the `.cpp` file(s) that include that header (directly or
-  transitively) so ninja recompiles them.
+The generated ninja graph lists every header a `.cpp` transitively `#include`s as
+an implicit input, so **editing a header recompiles the dependent TUs
+automatically** (the precompiled-header chain included).
 
-The worst case is a header pulled into a module's **precompiled header** (e.g.
-`math_float4x4_inline.h` reaches game_core's PCH via `extensions.h ->
-math_extensions.h -> math_float4x4.h`). Touching the included `pch.h` does nothing
-(it is a header, not a graph node); instead delete the stale `.pch`
-(`binaries/Win32/intermediates/Master Gold/<module>/vostok_<module>-static-gold.pch`)
-and `touch sources/vostok/<module>/sources/pch.cpp` (the explicit `/Yc` input) so
-the PCH and every dependent TU rebuild. Never work around a no-op header edit by
-moving a definition into a consuming `.cpp` - that misplaces the symbol.
+vcproj2ninja resolves includes through the project's `/I` dirs (it evaluates
+`#if`/`#ifdef`, erring toward over-inclusion so a real dependency is never missed).
+Only project headers are tracked; system/CRT headers from `%INCLUDE%` are
+intentionally not (they don't change).
 
 ## Keep the README current
 
