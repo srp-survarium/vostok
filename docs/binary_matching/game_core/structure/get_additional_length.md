@@ -8,14 +8,18 @@ report.json fuzzy_match_percent: 65.375 (PARTIAL)
 
 ## Verdict
 
-STRUCTURE MISMATCH (size)
+STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs our
+/Ob2-inlined COMDAT; proven NON-steerable on #144 (3 source forms all inlined).
 
 QUANTITY matches (4 statements vs 4 statements). One statement diverges in SIZE:
-the dot-product line. The PARTIAL/LTCG label is NOT justified - the residual is a
-source-steerable inline-vs-call codegen decision on an inline COMDAT, which the
-project owner's standing rule explicitly classifies as a matching problem, NOT
-bankable LTCG (LTCG banks only dropped/register-passed ARGUMENTS at a call
-boundary). A matcher should continue.
+the dot-product line. CORRECTION (supersedes the earlier "source-steerable"
+verdict below): the inline-vs-call swing on `operator|` is NOT steerable from this
+caller. On #144 three distinct source spellings of the dot product were tried and
+MSVC's /Ob2 inlined `operator|` in every case; the target's out-of-line COMDAT call
+cannot be reproduced from the call site. The source SHAPE matches; the residual is a
+non-steerable codegen decision on the inline COMDAT. Earlier sections of this file
+argued the opposite - they are kept for history but are wrong on the steerability
+point.
 
 ## The two skeletons
 
@@ -150,10 +154,12 @@ base 0x49). This corroborates the analysis above - no new structural divergence 
 found. The condensed diff is now embedded in the .cpp in place of the one-sided
 FUNCTION BODY carcass.
 
-## Bottom line
+## Bottom line (corrected)
 
-- STRUCTURE MISMATCH (size), isolated to the L113 dot-product statement.
-- 65.375% is genuine PARTIAL, but the residual is SOURCE-STEERABLE
-  (inline-vs-call of an inline COMDAT), NOT bankable argument-passing LTCG.
-- The in-source "LTCG / not steerable" justification does NOT hold; PARTIAL should
-  stay open for a matcher to push on, not be banked as an LTCG excuse.
+- STRUCTURE MATCH (shape ok) - the source statement shape aligns on both sides; the
+  sole SIZE residual is isolated to the L113 dot-product statement.
+- That residual is the inline COMDAT `operator|` emitted out-of-line in the target
+  vs /Ob2-inlined in our base. It is NON-steerable: #144 tried 3 distinct source
+  forms and all inlined.
+- The earlier "source-steerable, keep PARTIAL open" conclusion was WRONG and is
+  superseded by this corrected verdict.

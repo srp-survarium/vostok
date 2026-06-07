@@ -1,17 +1,18 @@
 # weapon_core_base_state::weapon_core_base_state (ctor) - structure audit
 
-## Verdict
+## Verdict (RESOLVED)
 
-STRUCTURE MISMATCH (quantity)
+STRUCTURE MATCH (clean)
 
-The function reads `fuzzy_match_percent = 100.0` in report.json, yet the source
-structure does NOT match. This is the canonical "high % over the wrong structure
-is not a match" trap (MATCHING.md). report.json cannot see it; structure-diff can.
+Moving the five body assignments into the member-initializer list collapsed the
+body to the target's 0 statements. Rebuilt: structure-diff is now target 0 / base 0,
+0 diffs (and bytes stay 100.0%). The "high % over the wrong structure" trap is
+resolved - both bytes and shape match.
 
-- target: 0x6ecf90   base: 0x4594c0
+- target: 0x6ecf90   base: 0x452480
 - `survarium::weapon_core_base_state::weapon_core_base_state(survarium::weapon_core&, bool)`
-- target 0 stmts / base 6 stmts
-- aligned 0, size-diffs 0, quantity-diffs 6
+- target 0 stmts / base 0 stmts
+- aligned 0, size-diffs 0, quantity-diffs 0
 
 ## Structure-diff (condensed)
 

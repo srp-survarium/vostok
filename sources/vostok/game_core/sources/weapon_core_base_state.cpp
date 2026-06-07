@@ -8,30 +8,15 @@
 
 namespace survarium {
 
-// STATE[INPROGRESS]: bytes 100% (report.json fuzzy_match_percent=100.0) but SOURCE STRUCTURE does not
-// match. structure-diff: target 0 stmts / base 6 stmts - the target packs every member init onto the
-// ctor decl line (member-init list, no body statements), while our base emits the 5 assignments as
-// separate body statements (the diff flags 6 ONLY-base quantity divergences: the 5 assigns + 1 EMPTY).
-// Fix: move the 5 assignments into the member-initializer list so the body collapses to the target's 0
-// statements. Needs a rebuild to confirm. See .md.
-weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serialize_animation_state ) : m_weapon( weapon )
+// STATE[100%|DONE]
+weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serialize_animation_state )
+	:	m_weapon						( weapon ),
+		m_is_firing_ptr					( NULL ),
+		m_body_part_mask_for_user		( animation::body_part_whole_body ),	// -1
+		m_is_ready_to_be_deactivated	( false ),
+		m_animation_has_been_ended		( false ),
+		m_serialize_animation_state		( serialize_animation_state )
 {
-	m_is_firing_ptr				= NULL;
-	m_body_part_mask_for_user	= animation::body_part_whole_body;	// -1
-	m_is_ready_to_be_deactivated	= false;
-	m_animation_has_been_ended	= false;
-	m_serialize_animation_state	= serialize_animation_state;
-
-	// STRUCTURE DIFF:
-	// target: 0x6ecf90            base: 0x4594c0
-	// ; survarium::weapon_core_base_state::weapon_core_base_state(survarium::weapon_core&, bool) ; target 0 stmts / base 5 stmts
-	// --          | 0x070 <0xd> | m_is_firing_ptr				= NULL;   ONLY base
-	// --          | 0x07d <0xd> | m_body_part_mask_for_user	= animation::body_part_whole_body;	// -1   ONLY base
-	// --          | 0x08a <0xa> | m_is_ready_to_be_deactivated	= false;   ONLY base
-	// --          | 0x094 <0xa> | m_animation_has_been_ended	= false;   ONLY base
-	// --          | 0x09e <0xc> | m_serialize_animation_state	= serialize_animation_state;   ONLY base
-	// ; aligned 0, size-diffs 0, quantity-diffs 5
-	// VERDICT: STRUCTURE MISMATCH (quantity) - target is 0-stmt member-init list; base body-assigns 5 members; move the 5 assigns into the member-initializer list  trail: weapon_core_base_state-ctor.md
 }
 
 // STATE[100%|DONE]

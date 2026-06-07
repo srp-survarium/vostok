@@ -34,54 +34,46 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
-// STATE[76.80%|INPROGRESS]: structure-verified MISMATCH (both quantity+size). The
-// 76.80% hides TWO source-shape divergences (see embedded structure-diff below):
-//   (A) for-loop body is BRACED in target - its back-edge `jmp` lands on its own
-//       source line L37 (`0x4a <0x2>`, ONLY target). Our brace-less single-statement
-//       for folds that jmp into L36, so we are missing L37. Brace the for body:
-//           for ( ... ) { static_cast<...>( it )->set_breath_holding_params( params ); }
-//   (B) the two multiplier writes are a CHAINED assignment in target (one statement
-//       L41, 0x3b bytes); we split them into L41 + a separate L42
-//       `m_current_multiplier = m_target_multiplier;` (ONLY base). Chain them:
-//           m_current_multiplier = m_target_multiplier = static_cast<...>( ... )->get_multiplier( );
-// The `if ( m_params )` braces are NOT the problem - both sides codegen the if
-// brace-less at function tail (no scope-close marker on either side); the earlier
-// "early-return guard" hypothesis was wrong. (Residual: fsm::states()/front() inlined
-// in base vs out-of-line in target - blocked on the ai fsm type.) A genuine restructure
-// (apply A+B) plus rebuild is a matcher's job; not done here.
+// STATE[76.80%|PARTIAL]: source SHAPE now matched - bracing the for body and chaining
+// `m_current_multiplier = m_target_multiplier = ...->get_multiplier()` into one statement
+// removed both structure divergences (the L37 back-edge row and the `ONLY base` separate
+// assignment are gone; quantity-diffs dropped from 5 to blank-line gaps only). The flat
+// 76.80% is the residual `m_logic.states().front()` inline-vs-out-of-line codegen (all four
+// SIZE rows), blocked on the ai::fsm type - NOT source-steerable. See structure/breath_vibration-set_breath_holding_params.md
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;
 
 	for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )
+	{
 		static_cast< breath_state* >( it )->set_breath_holding_params( params );
+	}
 
 	if ( m_params )
 	{
 		m_breath_holding_reserve	= m_params->max_breath_holding_time;
 		m_logic.set_initial_state( m_logic.states( ).front( ) );
-		m_target_multiplier			= static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
-		m_current_multiplier		= m_target_multiplier;
+		m_current_multiplier = m_target_multiplier = static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
 	}
 
 	// STRUCTURE DIFF:
-	// target: 0x5834d0            base: 0x4574a0
-	// ; void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*) ; target 8 stmts / base 11 stmts
+	// target: 0x5834d0            base: 0x450650
+	// ; void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*) ; target 10 stmts / base 14 stmts
 	// .. same ..
 	// --          | <0>         |    EMPTY only base
 	// 0x012 <0x21> | 0x012 <0x1a> | for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )   SIZE
-	// 0x033 <0x17> | 0x02c <0x13> | static_cast< breath_state* >( it )->set_breath_holding_params( params );   SIZE
 	// --          | <0>         |    EMPTY only base
-	// 0x04a <0x2> | --          | L37   ONLY target
+	// 0x033 <0x17> | 0x02c <0x11> | static_cast< breath_state* >( it )->set_breath_holding_params( params );   SIZE
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
 	// .. same ..
 	// --          | <0>         |    EMPTY only base
 	// .. same ..
 	// 0x063 <0x16> | 0x056 <0x15> | m_logic.set_initial_state( m_logic.states( ).front( ) );   SIZE
-	// 0x079 <0x3b> | 0x06b <0x23> | m_target_multiplier			= static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );   SIZE
-	// --          | 0x08e <0xc> | m_current_multiplier		= m_target_multiplier;   ONLY base
+	// 0x079 <0x3b> | 0x06b <0x2f> | m_current_multiplier = m_target_multiplier = static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );   SIZE
 	// .. same ..
-	// ; aligned 3, size-diffs 4, quantity-diffs 5
-	// VERDICT: STRUCTURE MISMATCH (both) - brace the for body (target back-edge on own line L37) and chain m_current=m_target=...->get_multiplier() into one stmt  trail: breath_vibration-set_breath_holding_params.md
+	// ; aligned 6, size-diffs 4, quantity-diffs 4
+	// VERDICT: STRUCTURE MATCH (shape ok) - for body braced + chained multiplier assignment removed both shape divergences; the 4 SIZE rows are the m_logic.states().front() inline-vs-out-of-line residual (ai::fsm type), NON-steerable  trail: breath_vibration-set_breath_holding_params.md
 }
 
 // STATE[100%|DONE]
