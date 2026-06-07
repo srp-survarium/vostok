@@ -139,10 +139,13 @@ It emits a real `mov byte[ebp-1],0; lea eax,[ebp-1]; call empty_stub` sequence
 (The delinker may misname `empty_stub` as `finalize_impl` etc. - don't take it
 literally.) Confirmed house style: `booby_trap_core.cpp` / `inventory_cook.cpp` map
 `ASSERT( UNKNOWN_EXPRESSION );` to a real `+0x0c` slot.
-- `ASSERT( UNKNOWN_EXPRESSION )` - a condition was here but you don't know it; this
-  alone reproduces the `call empty_stub` bytes (the condition is discarded).
-- `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` - prefer this: the `_T` form holds
-  your *guess* of the condition (risk-free, discarded). Guess what was asserted.
+- `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` - **almost always use this.** The `_T`
+  form holds your *guess* of the asserted condition (discarded, so byte-identical and
+  risk-free) and documents intent. ALWAYS try to infer the guess from the function
+  name / params / context - a non-null `this`/arg, a valid index, an in-range enum, a
+  non-empty container, `value_exists(cfg[...])`, etc.
+- `ASSERT( UNKNOWN_EXPRESSION )` - the bare fallback ONLY when you genuinely cannot
+  guess; it alone still reproduces the `call empty_stub` bytes.
 When you see the `empty_stub` sequence at a statement, place an `ASSERT(...)` there.
 
 `UNKNOWN_EXPRESSION` / `_T` are already **defined** and pch-provided (in
