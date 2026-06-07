@@ -1,6 +1,6 @@
 ---
 name: structure-verifier
-description: Verifies ONE thing and nothing else - that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %. It compares the target structure (the `// FUNCTION BODY` carcass / `pdb_fetch --view structure` on the target) against the base structure (`--view structure` on our build) statement by statement, and flags every divergence in statement QUANTITY (a count mismatch) or statement SIZE (a `+delta` mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It writes a report .md and downgrades a mislabeled `DONE` whose structure is wrong; it NEVER rebuilds, never changes compiled logic, never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides.
+description: Verifies ONE thing and nothing else - that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %. It runs `pdb_fetch --view structure-diff --condensed` (the parser's two-sided statement-structure diff: target vs base aligned, with each divergence tagged SIZE / ONLY base|target / EMPTY), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It EMBEDS the condensed diff (+ a one-line `// VERDICT:`) in place of the carcass for non-100% functions, writes a report .md, and downgrades a mislabeled `DONE` whose structure is wrong; it NEVER rebuilds, never changes compiled logic, never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -176,8 +176,9 @@ If a function is marked `100%|DONE` (or any banked tag) but its structure diverg
 it is not a clean match. You MAY, in the .cpp:
 - downgrade its `// STATE[..|DONE]` to `// STATE[INPROGRESS]` with a one-line note
   naming the divergence and the fix;
-- restore the `// FUNCTION BODY` carcass verbatim if a clean-DONE strip removed it
-  (a non-100%/INPROGRESS function keeps the carcass - MATCHING.md);
+- embed the condensed `// STRUCTURE DIFF` (per the format above) if a clean-DONE strip
+  left the now-non-100% function with nothing - a non-100% function carries the
+  structure-diff, not the old one-sided carcass (MATCHING.md);
 - sync the per-function `.md` outcome and the `PROGRESS.md` ledger line to match.
 That is the limit. You do NOT edit the body to apply the restructure, do NOT rebuild,
 do NOT touch report numbers (you only READ report.json). A genuine restructure is a

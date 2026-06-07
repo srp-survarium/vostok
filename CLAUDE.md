@@ -49,7 +49,8 @@ game PDB instead uses `c:/survarium/sources`.
     python3 scripts/rebuild.py   # ninja build under Wine, then regenerate
                                  # binaries/structure/base + binaries/objdiff/base
 
-A full engine build under Wine takes ~20 minutes; run it in the background. The
+A full engine build under Wine takes ~10 minutes; run it in the background (it is no
+longer the loop bottleneck - agent token cost is). The
 objdiff config is `binaries/objdiff/objdiff.json`; a match report is
 `objdiff-cli report generate -p binaries/objdiff`. Every base delink regenerates
 `binaries/objdiff/report.json` (and `report-changes.json`).
