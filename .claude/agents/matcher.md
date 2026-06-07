@@ -37,7 +37,13 @@ mark it `INPROGRESS` with the next step.
   - **Visibility:** set the header access specifier to the mangled access char
     (public `QAE`/`UAE`, protected `IAE`/`MAE`, private `AAE`/`ABE`/`EAE`) or objdiff scores `None`.
   - **Asserts:** a `call empty_stub` (delinker may misname it `finalize_impl`) is a
-    compiled-out `ASSERT` - write `ASSERT( UNKNOWN_EXPRESSION_T( your_guess ) )` there.
+    compiled-out `ASSERT`. ALMOST ALWAYS use the `_T` form with a GUESSED condition -
+    `ASSERT( UNKNOWN_EXPRESSION_T( <your guess> ) )` - inferring the likely assert from
+    the function name / params / context (a non-null `this`/arg, a valid index, an
+    in-range enum, a non-empty container, `value_exists(cfg[...])`, etc.). The guess is
+    discarded so it is byte-identical and risk-free, but it documents intent for the
+    reader. Only fall back to bare `ASSERT( UNKNOWN_EXPRESSION )` when you genuinely
+    cannot guess.
   - **Locals:** declare AND use every `// LOCALS` entry (under `/Od` each gets a slot - a dropped local is a dropped statement).
   - **Switch braces / default:** read the carcass - a `+0x002` step (2-byte `jmp short` = a `}`) marks a braced `case`; a jump table with no `cmp max; ja default` means full contiguous cases + `default: NODEFAULT();`. Match it.
 - **Reachability:** reference the function from `temp_include_all.cpp` (unless an already-anchored function calls it).
