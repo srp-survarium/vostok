@@ -50,7 +50,7 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     would show as a <n> line that is ABSENT -> likely an early `return` guard (no braces). Restructure +
     re-diff on a faster machine. Secondary (after bracing): fsm::states()/front() out-of-line in target
     @0x03f210/0x082cd0 but inlined in base -> blocked on the ai fsm type. Added breath_state.h for the cast.
-- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[91.78%|BLOCKED] -> PR #119 (regressions: none)
+- game_core::body_part_parameters::fill_new_stats_item<statistics_item<46,16>> -> STATE[91.79%|PARTIAL] -> PR #119 (regressions: none) [reviewer: tag BLOCKED->PARTIAL, fixed_string<46> inline-vs-call LTCG]
   - SALVAGED: worker #15 crashed mid-run; finisher (#16) resumed from the WIP branch (branch-handoff -
     agent-context reuse / SendMessage is not available in this harness). Body was already a structural match.
     The "fixed_string<46>("none") needs the 3-arg ctor" hypothesis was MOOT: the 1-arg fixed_string(const char*)
@@ -1110,9 +1110,11 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     finalize    start 83.42 / one_round 83.42 / finish 89.40 PARTIAL
         (ASSERT + m_animation_playback_state->reset() + remove_animation_callback(channel_id_on_animation_end,
         this); finish appends if(!deserializing()&&chamber_a_round_on_reload()&&ammo_in_magazine())
-        instant_chamber_a_round(). residual = animation_playback_state::reset() header-inline-stub elision
-        (animation/type_definitions.h, out of scope; same wall as shotgun_reload_state::finalize 78%) +
-        dummy::nonnull/finalize_impl ICF fold.)
+        instant_chamber_a_round(). residual = animation_playback_state::reset() inline/elide-vs-call:
+        reset() has a REAL 2-store body (zeroes m_animation_playback_state @ this+0x148), kept OUT-OF-LINE
+        in target (rva 0x087f60) but ABSENT from the base rich index (whole-program elided/DSE'd) - the
+        documented per-call-site LTCG inline-vs-call wall, NOT a no-op header stub (corrected); same wall
+        as shotgun_reload_state::finalize 78%. + dummy::nonnull/finalize_impl ICF fold.)
     on_animation_end  start 83.0 / one_round 83.55 / finish 83.55 PARTIAL
         (interrupt=false; if(animated_object==&m_weapon){ASSERT; if(m_animation_to_wait_for==params.animation){
         <action>; interrupt=true;}} return call_me_again. action: start m_animation_ended=true; one_round
@@ -1153,14 +1155,19 @@ infra base): `module::function -> STATE -> PR (regressions)`.
         could not PAIR them - mangled name differed by top-level pointer const: target QAU (`* const`)
         vs base PAU (`*`). Fix: `operator()( damage_protector* const protector )`. Sibling
         protect_damage_predicate::operator() already had `* const` and was already 100%.)
-    regenerate                               72.61      BLOCKED (was stale STATE[100%|DONE]; corrected.
-        Body matches statement-for-statement; sole residual: target keeps math::min(u32,u32) overload
-        @0x03fbb0 OUT-OF-LINE + CALLs it, our /Ob2 (rsp game_core_cl_0.rsp) inlines min->min_integral
-        sbb/neg/neg/and. Whole-program inline-heuristic, not steerable from this fn. +0x8 frame / slot
-        renames cascade from it. Same family as fill_new_stats_item/dump_state/fixed_string<46>.)
+    regenerate                               72.61      PARTIAL (reviewer: tag was BLOCKED, corrected to
+        PARTIAL - nothing blocks it. Body matches statement-for-statement; sole residual: target keeps
+        math::min(u32,u32) overload @0x03fbb0 OUT-OF-LINE + CALLs it, our build inlines min->min_integral
+        cmp/sbb/neg/neg/sub/and/add. math::min(u32,u32) is a real standalone symbol in BOTH indexes
+        (target 0x03fbb0, base 0x023490) -> documented per-call-site inline-vs-call LTCG wall, not steerable
+        from this fn. +0x8 frame / slot renames cascade from it. Same family as fill_new_stats_item/fixed_string<46>.)
   NOT touched (proven walls, classified in body_part_parameters.md):
-    dump_state(boost::function)  55%  - /Ob2 inlines boost::function4::operator() (target out-of-line).
-    fill_new_stats_item          91.78% - pre-existing BLOCKED on fixed_string<46>(char const*) inline.
+    dump_state(boost::function)  55.04% PARTIAL - build inlines boost::function callback operator() (target out-of-line).
+    fill_new_stats_item          91.79% PARTIAL (reviewer: tag was BLOCKED, corrected to PARTIAL) - per-ctor
+        inline-vs-call of fixed_string<46>(char const*) (standalone in base @0x030ca0, inlined in target).
+    dump_state(npc_statistics)   17.04% BLOCKED - missing trailing stats.body_state.push_back(new_stats_item);
+        body_state @ npc_statistics+0x2798 is buffer_vector<statistics_item<46,16> > - needs the ai::npc_statistics
+        header member declared (cross-unit).
     dump_state(npc_statistics)   17%  - INPROGRESS, needs npc_statistics body-state member (cross-cutting).
     serialize/deserialize/serialize_affect/deserialize_affect 0% - network_core packet wall (deferred;
         header only fwd-decls udp_match_packet/packet_reader; bodies need packet::append / packet_reader::r<T>).

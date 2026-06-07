@@ -135,3 +135,15 @@ the honest tag is **BLOCKED on fixed_string<46>**, not a banked PARTIAL. STATE/.
 it has been replaced with the authoritative target `--view structure` (rva 0x0ba3c0, 18 statements,
 L285-L307) annotated per house style. The fdiv `__real@447a0000` (=1000.0) confirms `/ 1000.0f` is
 correct. NO source/logic change and NO rebuild in this review; the body shape is unchanged.
+
+## Reviewer correction (third pass): BLOCKED -> PARTIAL (the type IS emitted)
+The BLOCKED reclassification above is WRONG on its own evidence. The "type dependency / not emitted
+whole-program" framing applies only when a needed symbol is ABSENT from the base. But this note itself
+shows BASE *does* emit `fixed_string<46>(char const*)` standalone (re-confirmed this pass @0x030ca0,
+was 0x030ae0/0x030b00 - rva drifts per build); the TARGET is the side that inlined it. That is the
+TEXTBOOK per-call-site inline-vs-call decision documented in assembly_patterns.md
+("fixed_string<N>(\"literal\") - which ctor overload, and inline-vs-call is LTCG"), where the prescribed
+tag is **PARTIAL**, not BLOCKED. Nothing blocks the function: fixed_string<46> and all its ctors are
+fully present; only the target's whole-program inline heuristic differs. Corrected STATE/.md/PROGRESS to
+91.79%|PARTIAL. Classification for the audit: LEGIT wall (genuine inline-vs-call), but the TAG was the
+defect. No source/logic change, no rebuild.

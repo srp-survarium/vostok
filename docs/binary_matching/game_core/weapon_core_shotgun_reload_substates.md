@@ -52,10 +52,18 @@ finalize:                start 83.42 one_round 83.42 finish 89.40
 on_animation_end:        start 83.0  one_round 83.55 finish 83.55
 
 ## Residual analysis (all unsteerable, outside this unit's scope)
-- finalize (all): animation_playback_state::reset() is a header-inline no-op stub
-  (animation/type_definitions.h); target keeps it OUT-OF-LINE. Same documented wall as
-  weapon_core_shotgun_reload_state::finalize (78%). Plus the benign dummy::nonnull vs
-  finalize_impl ICF fold of the compiled-out ASSERT (both @0x3f210, byte-identical at link).
+- finalize (all): animation_playback_state::reset() has a REAL body (xorps; mov [eax],0;
+  movss [eax+4],xmm0 - zeroes the two fields of m_animation_playback_state @ this+0x148) and
+  is kept OUT-OF-LINE in the target (standalone symbol @ target rva 0x087f60). In our /GL base
+  it is ABSENT from the rich index (pdb_rich_query base ::reset -> "no function matched"): the
+  whole-program build elides the call entirely (the playback_state member is not observed after
+  finalize, so LTCG DSEs the two stores). This is the documented per-call-site inline/elide-vs-call
+  LTCG wall (assembly_patterns.md "animation_playback_state::reset() in
+  weapon_core_aimed_state_base::finalize"), NOT a no-op stub - corrected from the earlier claim.
+  Same wall as weapon_core_shotgun_reload_state::finalize (78%). The elided reset() also shifts the
+  downstream register numbers (the +0x148 load is gone), explaining the chamber-refill if churn in
+  finish.finalize. Plus the benign dummy::nonnull vs finalize_impl ICF fold of the compiled-out
+  ASSERT (both @0x3f210, byte-identical at link).
 - on_animation_end (all): dummy::nonnull/finalize_impl ICF fold + the LTCG operand scheduling
   of intrusive_ptr::operator== (target computes &m_animation_to_wait_for before loading the
   params.animation arg; ours pushes the arg first - call-boundary temp/arg residual). Structure

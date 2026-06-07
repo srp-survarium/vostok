@@ -447,12 +447,16 @@ bool weapon_user_animations_selector::jump_predicate( ) const
 	// ******
 }
 
-// STATE[41.56%|PARTIAL]: body shape correct (cast *current_active_object() -> weapon_core,
-// read the inlined predicate field at +48Ch). WALL: target's current_active_object() returns
-// `intrusive_ptr<inventory_item,...>` (a by-value temp copy-ctor'd at [ebp-8], operator*
-// out-of-lined), while base's interactive_object_ptr is `intrusive_ptr<game_world_object,...>`
-// (different root) AND base inlines the copy-ctor. Both stem from base_player.h /
-// interactive_object.h typedef + the intrusive_ptr deref idiom, neither steerable here.
+// STATE[36.41%|PARTIAL]: body shape correct (cast *current_active_object() -> weapon_core,
+// call weapon_core::is_idle()). TWO cross-unit walls, neither steerable from this TU:
+// (1) target's current_active_object() returns `intrusive_ptr<inventory_item,...>` built by a
+//     copy-ctor at [ebp-8] (one ctor + dtor), while base's interactive_object_ptr is
+//     `intrusive_ptr<game_world_object,...>` (different root) producing the full set/dec/
+//     interlocked_increment dance - base_player.h / interactive_object.h typedef.
+// (2) weapon_core::is_idle() itself: the TARGET inlines a 3-field compound
+//     (byte[+492]==0 && byte[+488] && byte[+48C]) while our base weapon_core.h is_idle()
+//     inlines a single byte[+492] read - the is_idle body lives in weapon_core.h (owned
+//     elsewhere). Both walls cross-unit; mark PARTIAL.
 bool weapon_user_animations_selector::is_weapon_in_idle( ) const
 {
 	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_idle( );
@@ -473,7 +477,8 @@ bool weapon_user_animations_selector::is_weapon_firing( ) const
 	// ******
 }
 
-// STATE[34.89%|PARTIAL]: same wall as is_weapon_in_idle.
+// STATE[31.17%|PARTIAL]: same two cross-unit walls as is_weapon_in_idle (current_active_object
+// intrusive_ptr root type + the weapon_core::is_toggling() body in weapon_core.h).
 bool weapon_user_animations_selector::is_weapon_toggling( ) const
 {
 	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_toggling( );

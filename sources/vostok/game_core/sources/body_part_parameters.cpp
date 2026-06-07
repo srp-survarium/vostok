@@ -225,14 +225,16 @@ void body_part_parameters::decrease_health( float amount )
 // # Arguments
 // * `time_delta_ms` - frame duration.
 //
-// STATE[72.61%|BLOCKED]: body + control structure are an exact statement-for-statement
+// STATE[72.61%|PARTIAL]: body + control structure are an exact statement-for-statement
 // match vs target (rva 0x587860). Sole residual: target keeps math::min(u32,u32) (the
-// non-template overload @0x03fbb0) OUT-OF-LINE and CALLs it; our build is /Ob2 (full inline
-// expansion) so it inlines min->min_integral (sbb/neg/neg/and) at the call site. That is a
-// whole-program inline-heuristic / header-visibility decision on math::min(u32,u32) - not
-// steerable from regenerate's own source - so BLOCKED, same family as fill_new_stats_item's
-// fixed_string<46> inline. The +0x8 frame delta and the [ebp-20h]-vs-[ebp-18h] slot rename
-// all cascade from that one inline. claude@NOTE see .md.
+// non-template overload @0x03fbb0) OUT-OF-LINE and CALLs it, but our build INLINES
+// min->min_integral (cmp/sbb/neg/neg/sub/and/add) at the call site. math::min(u32,u32) is a
+// real standalone symbol in BOTH rich indexes (target @0x03fbb0, base @0x023490) - so this is
+// the documented per-call-site inline-vs-call whole-program decision (same LTCG class as
+// operator|/vectora::size), NOT "inlined everywhere in base" and NOT steerable from regenerate's
+// own source (math::min lives in the shared math_functions_inline.h). The +0x8 frame delta and
+// the [ebp-20h]-vs-[ebp-18h] slot renames all cascade from that one inline. (Tag was BLOCKED;
+// nothing blocks it - it is an understood LTCG inline-vs-call residual = PARTIAL.) See .md.
 void body_part_parameters::regenerate( u32 time_delta_ms, u32 current_time_in_ms )
 {
 	u32 regenerate_delta = time_delta_ms;
@@ -381,13 +383,14 @@ void body_part_parameters::apply_affect_by_force(
 	}
 }
 
-// STATE[91.78%|BLOCKED]: body + control structure are an exact statement-for-statement match
-// (deltas agree vs target --view structure 0x0ba3c0). Sole residual: target inlines the
+// STATE[91.79%|PARTIAL]: body + control structure are an exact statement-for-statement match
+// (deltas agree vs target --view structure 0x0ba3c0). Sole residual: target INLINES the
 // fixed_string<46>(char const*) ctor at the "none" leaf while base keeps it out-of-line (the
-// const-char* ctor exists out-of-line in base @0x030ae0 but NOT in target). That inline is a
-// whole-program COMDAT decision on the fixed_string<46> type - not steerable from this function's
-// source - so this is BLOCKED on fixed_string<46>'s emission, not a banked LTCG/PARTIAL residual.
-// The +0x10 frame delta and all reg/slot renaming cascade from that one inline. See the .md.
+// (char const*) ctor exists standalone in BASE @0x030ca0 but is absent from the TARGET index -
+// inlined whole-program). This is the documented per-ctor inline-vs-call LTCG class
+// (assembly_patterns.md "fixed_string<N>(\"literal\") - inline-vs-call is LTCG"), which is marked
+// PARTIAL there - NOT BLOCKED (nothing blocks it; fixed_string<46> is fully emitted). The +0x10
+// frame delta and all reg/slot renaming cascade from that one inline. See the .md.
 template < class stats_item_type >
 void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item, const u32 current_time_in_ms ) const
 {
@@ -449,18 +452,24 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 template void body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16> >(
 	vostok::ai::statistics_item<46,16>& new_stats_item, const u32 current_time_in_ms ) const;
 
-// STATE[INPROGRESS]: unblocked - fill_new_stats_item is now matched and wired in (this calls
-// it). Remaining: the trailing stats.<member>.push_back (commented below) needs npc_statistics's
-// body-state member.
+// STATE[17.04%|BLOCKED]: fill_new_stats_item is matched and wired in (this calls it).
+// Remaining (target rva 0x587140): the trailing statement is
+// `stats.body_state.push_back( new_stats_item );` - target does `add ecx,2798h; call
+// buffer_vector<statistics_item<46,16> >::push_back`, i.e. npc_statistics::body_state is a
+// buffer_vector<statistics_item<46,16> > member @ offset 0x2798 (then ~statistics_item runs).
+// BLOCKED on the ai::npc_statistics header declaring that member; once it exists the commented
+// line below becomes `stats.body_state.push_back( new_stats_item );`.
 void body_part_parameters::dump_state( vostok::ai::npc_statistics& stats, u32 current_time_in_ms ) const
 {
 	typedef vostok::ai::statistics_item<46,16> content_type;
 	content_type new_stats_item = content_type( );					// <0x59714f>
 	fill_new_stats_item( new_stats_item, current_time_in_ms );		// <0x597165>
-	// stats->body_state.push_back(new_stats_item);					// <0x59717b>
+	// stats.body_state.push_back( new_stats_item );	// body_state @ npc_statistics+0x2798, buffer_vector<statistics_item<46,16> >  <0x59717b>
 }
 
-// STATE[51.42%|PARTIAL]
+// STATE[55.04%|PARTIAL]: loop + m_affects.at(i) bounds-ASSERT + appendf match; residual is the
+// trailing boost::function callback invocation (target keeps it out-of-line / vtable-dispatched
+// while base inlines it - sushi@MATCH below) plus the intrusive_ptr operator* out-of-lining.
 void body_part_parameters::dump_state( boost::function<void(u32, float, float, pcstr)> callback, u32 index ) const
 {
 	vostok::fixed_string<512> affects_str;

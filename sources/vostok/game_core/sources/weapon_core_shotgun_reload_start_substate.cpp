@@ -62,10 +62,11 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 	// ******
 }
 
-// STATE[83.42%|PARTIAL]: residual is the inline-vs-call elision of animation_playback_state::reset()
-// (animation/type_definitions.h header-inline stub; target keeps it out-of-line) plus the benign
-// dummy::nonnull/finalize_impl ICF fold for the compiled-out ASSERT. Both unsteerable, outside this
-// unit's scope (same class as weapon_core_shotgun_reload_state::finalize 78%). See md.
+// STATE[83.42%|PARTIAL]: residual is the inline/elide-vs-call of animation_playback_state::reset()
+// - reset() has a REAL 2-store body (zeroes m_animation_playback_state @ this+0x148) kept out-of-line
+// in target (rva 0x087f60) but absent/elided in our base (LTCG), NOT a no-op header stub - plus the
+// benign dummy::nonnull/finalize_impl ICF fold for the compiled-out ASSERT. Both unsteerable, outside
+// this unit's scope (same class as weapon_core_shotgun_reload_state::finalize 78%). See md.
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );

@@ -109,9 +109,15 @@ Header already matched these except the predicate block (was `public:`) -> moved
   (a `mov eax,[eax];ret` COMDAT, NO assert), base inlines our intrusive_ptr_inline.h operator* (carries
   ASSERT, folds to dummy::nonnull). Same deref wall as current_state/get_current_state_id/deactivate.
 - is_weapon_in_idle 36.41% / is_weapon_firing 8.96% / is_weapon_toggling 31.17%  PARTIAL.
-  WALL: current_active_object() returns intrusive_ptr<inventory_item,...> by value (copy-ctor'd temp,
+  WALL 1: current_active_object() returns intrusive_ptr<inventory_item,...> by value (copy-ctor'd temp,
   operator* out-of-lined) in target; base's interactive_object_ptr root is game_world_object and base
   inlines the copy-ctor. Rooted in base_player.h / interactive_object.h typedef + the deref idiom.
+  WALL 2 (reviewer, was missing here): weapon_core::is_idle() ITSELF diverges. The target inlines a
+  3-field COMPOUND at the call site - `byte[+492]==0 && byte[+488] && byte[+48C]` (diff: test [+492],jne;
+  test [+488],je; test [+48C],je; set 0/1) - whereas the weapon_core.h is_idle() we filled is a single
+  `return m_is_idle;` (one byte[+492] read). So even past the ptr-typedef wall the predicate body is wrong.
+  is_idle's real body lives in weapon_core.h (owned by another worker); the byte[+492]/[+488]/[+48C] reads
+  give the exact expression to fill there. Both walls cross-unit, neither steerable from this TU.
 - on_broken_limb_affect           20.12% PARTIAL  3 statements decoded: L341 m_user->force_animation_selection();
   L339 = ASSERT_CMP_U(affect,==,4) (push affect/4/0); L337 = a 2-arg eater (push type,bodypart; NO push 0)
   - NOT a standard ASSERT_U/ASSERT_CMP_U; exact debug macro unidentified. Deferred.
