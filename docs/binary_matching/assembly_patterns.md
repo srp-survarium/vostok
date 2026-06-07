@@ -1105,3 +1105,22 @@ inline-vs-call of `strip_pointer`/the delete_helper wrapper. Structure is 1 stmt
 fuzzy stalls ~31% because nearly every instruction's operand differs. Non-steerable - identical residual
 across cooks: `items_cook::delete_resource` (31% DONE) and `player_parameters_modifyer_cook::delete_resource`
 (31% PARTIAL) have byte-identical diffs. Mark PARTIAL/DONE, do not chase.
+
+### Callee returns a small struct in register-pair eax:edx + caller COPY (vs base sret/RVO) -> non-steerable wall
+SOURCE: `T r = some_factory( args );` where `T` is a small (<=8 byte) POD-ish struct
+(e.g. `resources::request`, 8 bytes). Seen in `game_material_manager_cook::create_game_material_pairs`
+at every `resources::request r = resources::create_request( name, class );` call.
+
+    base   : push 0Fh ; lea eax,[esp+10Ch] ; call create_request    ; sret/RVO - writes directly into r's slot
+    target : push 0Fh ; mov edx,[..] ; push edx ; call create_request ; add esp,8 ;
+             mov [tmp],eax ; mov [tmp+4],edx ; mov [r],eax ; mov [r+4],ecx  ; returns in eax:edx, then COPIES into r
+
+The target returns the struct in the eax:edx register pair and then copies the pair
+into the local; the base lowers the same source as a hidden-sret (return-value-
+optimization) call writing directly into `r`. This is a CALL-BOUNDARY return-ABI
+difference decided by how the callee/`request` type's copy+return convention was
+compiled under LTCG - it is NOT steerable from the calling function. It cascades:
+every later `[esp+N]` offset shifts because the extra temp/copy enlarges the frame,
+so a SINGLE root cause shows up as many SIZE/quantity rows downstream. Diagnose once
+(one create_request site), then attribute the whole cascade to it. Mark PARTIAL;
+do not chase the downstream rows individually.
