@@ -87,15 +87,20 @@ void scheduler::on_frame( u32 frame_delta, u32 current_time )
 
 	m_current_index = u32(-1);
 
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <0x78de8f>|0x000|0x000:'49'
-	// <0x78decc>|0x03d|0x03d:'50'
-	// <1>
-	// <0x78def9>|0x06a|0x02d:'52'
-	// ******
+	// STRUCTURE DIFF[target 0x77de80 | base 0x573f20]: target 5 / base 6 stmts
+	// .. same ..
+	// 0x00f <0x3d> | 0x009 <0x41> | for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )   SIZE
+	// 0x04c <0x2d> | 0x04a <0x28> | on_frame( m_active_objects[m_current_index], frame_delta, current_time );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// --          | 0x072 <0xa> | m_current_index = u32(-1);   ONLY base
+	// .. same ..
+	// 0x079 <0xd> | --          | L52   ONLY target
+	// ; aligned 2, size-diffs 2, quantity-diffs 3
+	// claude@STRUCTURE: shape matches. The two SIZE diffs are the LTCG inline-vs-call
+	// already documented above (size()/operator[]). The "ONLY base m_current_index =
+	// u32(-1)" + "ONLY target L52" pair is one statement double-attributed: the final
+	// mov dword ptr [eax+28h], 0FFFFFFFFh is present in BOTH disassemblies (diff view),
+	// just charged to a different srcline each side. Not a real quantity divergence.
 }
 
 } // namespace survarium
