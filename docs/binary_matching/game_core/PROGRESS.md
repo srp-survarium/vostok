@@ -1205,3 +1205,12 @@ so statement count matches target.
   setters / weapon_core::get_user out-of-line in target, inlined in base). Structure now matches target
   on both. Regressions: none caused by these edits (the 10 report-changes "regressed" are delink
   address-flap noise on folded thunks/dtors, balanced by 61 improved; unrelated to game_core hands fns).
+- game_core::weapon_user_animations_selector::on_broken_limb_affect -> STATE[86.38%|PARTIAL] -> RE-MATCH (regressions: none)
+  - Was 20.12% / 2 statements (empty body); now 86.38% / 5 statements (matches target's 5).
+    Filled the 3 decoded statements: `ASSERT_T_U( bodypart, type )` (the unidentified 2-arg eater -
+    raw typed-untyped form, no assert_untyped `push 0`), `ASSERT_CMP_U( affect, ==, 4 )`,
+    `m_user->force_animation_selection( )`. Both ASSERTs byte-perfect (base 0x00-0x4f == target).
+    Residual = L341 only: force_animation_selection is inline in base_player.h so our build inlines
+    `m_force_animation_selection=true` while target kept an out-of-line call (same LTCG inline wall as
+    player_logic_sprint_state; base_player.h owned by another unit). See
+    docs/binary_matching/game_core/weapon_user_animations_selector_on_broken_limb_affect.md.
