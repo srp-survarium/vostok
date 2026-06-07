@@ -1336,3 +1336,18 @@ so statement count matches target.
     `m_force_animation_selection=true` while target kept an out-of-line call (same LTCG inline wall as
     player_logic_sprint_state; base_player.h owned by another unit). See
     docs/binary_matching/game_core/weapon_user_animations_selector_on_broken_limb_affect.md.
+
+- game_core::player_parameters_cook (unit survey) -> wall-bound, marker/carcass cleanup only (regressions: none)
+  - get_booster_value -> STATE[100%|DONE] (was stale "BLOCKED"; carcass removed)
+  - player_parameters_modifyer_cook::player_parameters_modifyer_cook -> STATE[100%|DONE] (was stale "66.69%"; carcass removed)
+  - player_parameters_modifyer (default ctor, header unit) -> 100%|DONE (already matched)
+  - player_parameters_modifyer_cook::delete_resource -> STATE[49.75%|PARTIAL,LTCG]: source identical; residual is
+    delete_helper's T*& arg passed on the stack (target, +saves edi) vs in register edi (base) - call-boundary LTCG.
+  - player_parameters_modifyer::apply -> STATE[81.10%|PARTIAL]: damage_model_ptr copy-ctor out-of-line in target vs
+    inlined in base shifts frame +8 -> stack-slot cascade; plus documented add_damage_protector tail-order divergence.
+  - player_parameters_modifyer_cook::translate_query -> STATE[88.13%|PARTIAL]: confirmed config-read copy-elision wall.
+    Statement skeleton matches 1:1; residual is register allocation (target enregisters into esi/edi) + frame-size delta.
+  - Header-unit 0% functions (map operator=, ??_G scalar deleting dtor, is_ammo/item_by_id in items_dictionary_cook.h)
+    are compiler-generated or different-TU/different-flags COMDATs - not source-steerable from this unit.
+  - No tractable byte-win remained; committed change is stale STATE-marker corrections + 2 clean-DONE carcass removals +
+    documented wall rationale. See docs/binary_matching/game_core/player_parameters_cook.md.
