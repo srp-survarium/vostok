@@ -26,8 +26,10 @@ public:
 
 	inline	bool				eof				( ) const;
 
+private:
 	inline	pcbyte				pointer			( ) const;
 
+public:
 	inline	void				advance			( u32 offset );
 
 	inline	u32					size_to_eof		( ) const;

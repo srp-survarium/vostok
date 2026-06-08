@@ -30,6 +30,7 @@ public:
 
 	inline	std::string const&		result_content			( ) const { return m_result_content; }
 
+private:
 			void					handle_resolve			(
 										boost::system::error_code const&	err,
 										boost::asio::ip::tcp::resolver::iterator	endpoint_iterator
@@ -48,6 +49,7 @@ public:
 
 			void					close_connection		( );
 
+public:
 	inline							~http_client			( ) { /* no source */ }
 
 private:

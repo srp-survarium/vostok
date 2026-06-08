@@ -125,6 +125,7 @@ public:
 
 	inline	u32							pending_operations_count		( ) const { return 0; }
 
+private:
 			void						on_error						( client_error_codes_enum client_error_code, boost::system::error_code error_code );
 
 			void						handle_send						(
@@ -145,9 +146,11 @@ public:
 
 			void						process_low_level_message		( packet_reader& reader, u32 time_in_ms );
 
+public:
 	template < typename Predicate >
 			void						process_incoming_packet			( packet_reader& reader, Predicate const& predicate );
 
+private:
 	template < typename Predicate >
 			void						call_predicate					( Predicate const& predicate, packet_reader& reader );
 
@@ -156,6 +159,7 @@ public:
 	inline	void						disconnect_impl					( ) { /* no source */ }
 			void						enqueue_impl					( udp_match_packet* packet );
 
+public:
 	static			void				construct_packet				(
 											udp_match_packets_orderer&		packets_orderer,
 											udp_match_packet&				packet,
