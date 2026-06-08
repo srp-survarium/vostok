@@ -54,6 +54,11 @@ public:
 
 	inline	void		reallocate			( u32 new_size ) { /* no source */ }
 
+	// the channel's boost::intrusive::set names &udp_match_packet::set_member_hook and
+	// the connection's udp_match_packet_list names &udp_match_packet::next - both reach
+	// these private members (a friend's nested types share its access).
+	friend	class		udp_match_connection;
+
 private:
 	/* 0x0008 */	boost::intrusive::set_member_hook<>	set_member_hook;
 	/* 0x0018 */	udp_match_client_session*		client_session;
