@@ -32,6 +32,9 @@ private:
 
 STATIC_SIZE_ASSERT(tcp_packet, 0x10);
 
+boost::asio::const_buffers_1	buffer_to_send			( tcp_packet& packet );
+boost::asio::mutable_buffers_1	buffer_to_receive_into	( tcp_packet& packet );
+
 } // namespace network_core
 } // namespace vostok
 
