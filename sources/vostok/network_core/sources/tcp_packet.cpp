@@ -9,7 +9,9 @@
 namespace vostok {
 namespace network_core {
 
-boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet ) // STATE[STUB]
+// STATE[90.67%|PARTIAL]: shape exact; sole SIZE is buffer_size()/buffer() accessor
+// out-of-line call in target vs inlined in base - not source-fixable our side.
+boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet )
 {
 	u32 buffer_size = packet.buffer_size( );
 	pbyte buffer	= packet.buffer();
@@ -24,13 +26,26 @@ boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet ) // STATE[STUB]
 	ASSERT( buffer_size < (u32(1) << 16) );
 	*(buffer - 1) = 0;
 	*static_cast<u16*>(static_cast<pvoid>(buffer - 3)) = static_cast<u16>( buffer_size );
-	return boost::asio::buffer( static_cast<pcbyte>(buffer - 3), buffer_size + 3 );	// <0x6e7975>|0x08f|0x00b:'27'
+	return boost::asio::buffer( static_cast<pcbyte>(buffer - 3), buffer_size + 3 );
+
+	// STRUCTURE DIFF[target 0x6d78e0 | base 0x54aa00]: target 11 / base 11 stmts
+	//   1: 0x006 <0xb> | 0x006 <0x9> | u32 buffer_size = packet.buffer_size( );   SIZE
+	// .. same ..
+	// ; aligned 10, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is buffer_size() accessor out-of-line call (target) vs inlined (base), non-source-fixable.
 }
 
-boost::asio::mutable_buffers_1 buffer_to_receive_into( tcp_packet& packet ) // STATE[STUB]
+// STATE[75.68%|PARTIAL]: shape exact (1 stmt each); sole SIZE is buffer()/buffer_size()
+// accessor out-of-line call in target vs inlined in base - not source-fixable our side.
+boost::asio::mutable_buffers_1 buffer_to_receive_into( tcp_packet& packet )
 {
 	ASSERT( packet.buffer_size() );
-	return boost::asio::buffer( packet.buffer(), packet.buffer_size() );	// <0x6e79b2>|0x00c|0x00c:'33'
+	return boost::asio::buffer( packet.buffer(), packet.buffer_size() );
+
+	// STRUCTURE DIFF[target 0x6d79a0 | base 0x54a9b0]: target 2 / base 2 stmts
+	//   2: 0x012 <0x30> | 0x012 <0x2e> | return boost::asio::buffer( packet.buffer(), packet.buffer_size() );   SIZE
+	// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is buffer()/buffer_size() accessor out-of-line call (target) vs inlined (base), non-source-fixable.
 }
 
 } // namespace network_core

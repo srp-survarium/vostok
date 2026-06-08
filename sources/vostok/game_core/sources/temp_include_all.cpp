@@ -33,6 +33,8 @@
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
+#include <vostok/network_core/udp_match_stats.h>
+#include <vostok/network_core/sources/network_core_entry_point.h>
 
 #include <vostok/animation/skeleton.h>
 
@@ -1421,6 +1423,27 @@ namespace vostok
 	}
 
 
+	void use_network_core_entry_point()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::get_ip_address( io_service );
+
+		char dest_host[ 64 ];
+		u16 dest_port;
+		network_core::get_connection_info_from_string( "host:port", dest_host, dest_port );
+
+		memory::stack_allocator stack_allocator;
+		network_core::memory_allocator( stack_allocator );
+		network_core::initialize( );
+		network_core::finalize( );
+
+		network_core::udp_match_items_stats items_a, items_b;
+		network_core::udp_match_stream_stats stream_a, stream_b;
+		network_core::udp_match_stats stats_a, stats_b;
+		bool r = ( items_a >= items_b ) | ( stream_a >= stream_b ) | ( stats_a >= stats_b );
+		printf( "%d", r );
+	}
+
 	void use_network_core_http_client()
 	{
 		boost::asio::io_service io_service( 10 );
@@ -1631,6 +1654,8 @@ IncludeAll::IncludeAll()
 	vostok::use_physics_api();
 	vostok::use_log();
 	vostok::use_network_core_http_client();
+	vostok::use_network_core_tcp_packet();
+	vostok::use_network_core_entry_point();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
