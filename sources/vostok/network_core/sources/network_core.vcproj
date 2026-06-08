@@ -1129,15 +1129,7 @@
 			<File
 				RelativePath=".\tcp_packet_client.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
+				</File>
 			<File
 				RelativePath=".\udp_match_client.cpp"
 				>

@@ -34,6 +34,7 @@
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/async_connector.h>
 #include <vostok/network_core/tcp_packet.h>
+#include <vostok/network_core/tcp_packet_client.h>
 
 #include <vostok/animation/skeleton.h>
 
@@ -1459,6 +1460,16 @@ namespace vostok
 		bool			get_connection_info_from_string	( pcstr buffer, char* dest_host, u16& dest_port );
 	} // namespace network_core
 
+	void use_network_core_tcp_packet_client()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::tcp_packet_client client( io_service );
+
+		client.set_on_connected( boost::bind( &example_callback, "connected" ) );
+		client.connect( "host", 80 );
+		client.disconnect( );
+	}
+
 	void use_network_core_entry_point()
 	{
 		boost::asio::io_service io_service( 10 );
@@ -1674,6 +1685,7 @@ IncludeAll::IncludeAll()
 	vostok::use_log();
 	vostok::use_network_core_http_client();
 	vostok::use_network_core_async_connector();
+	vostok::use_network_core_tcp_packet_client();
 	vostok::use_network_core_entry_point();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
