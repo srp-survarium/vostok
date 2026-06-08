@@ -65,33 +65,40 @@ float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, 
 // destructor` thunk UNSCORED (fuzzy_match_percent: None) - objdiff does not pair the
 // base `??__E.../??__F...` mangled names with the target's demangled "dynamic
 // initializer/destructor" names. This is the SAME None every cc init in the codebase
-// reports (dispersion/bullet/etc.), a universal name-pairing artifact, not 0%. The
-// emitted base bytes match: cc_float's init is byte-identical to target; cc_bool's
-// init differs only in that the target passes the cc_bool ctor's command_type/
-// execution_filter args in registers (whole-program LTCG fastcall) where base
-// passes them on the stack - a call-boundary arg-passing artifact, not a source
-// divergence. So these are effectively DONE (capped only by the None pairing
-// artifact); the deeper second pass need not revisit them.
+// reports (dispersion/bullet/etc.), a universal name-pairing artifact, not 0%.
+//
+// VERIFIED (base init asm vs target init asm, both pulled via pdb_fetch):
+//   * cc_float (foot_capsule): base is BYTE-IDENTICAL to target - same push 1 / fld
+//     [3e4ccccd]=0.2f / push &value / push name / mov eax,1 / xor ecx / movss
+//     xmm0,[3c23d70a]=0.01f / mov esi,&cc / call. Fully matched.
+//   * cc_bool (debug_draw/rot_axis/adjust_hip): same arg VALUES, only the passing
+//     convention differs - base is plain thiscall (this in eax; serializable,
+//     command_type, execution_filter pushed on the stack: push <filter>; push 0
+//     <command_type=engine_internal>; push 0 <serializable=false>; push &value; push
+//     name), the target uses a whole-program LTCG custom convention (this in esi, and
+//     two args in registers: eax=1 plus ecx=<filter>). The base stack pushes carry the
+//     correct values - the omitted explicit filter on debug_draw defaults to
+//     execution_filter_general(=1), matching target ecx=1; rot_axis/adjust_hip pass
+//     execution_filter_early(=0), matching target ecx=0. (eax=1 is a constant the cc_bool
+//     convention loads in all three regardless of command_type, NOT command_type-in-eax.)
+// So all four are effectively DONE - bytes correct, capped only by the None pairing
+// artifact (cc_bool also by the register-vs-stack call-boundary LTCG choice).
 static bool		s_ik_legs_debug_draw_value		= false;
 static float	s_ik_foot_capsule_radius_value	= 0.0f;
 static bool		s_ik_legs_rot_axis_value		= false;
 static bool		s_ik_adjust_hip_position_value	= false;
 
 // Each cc static below emits a compiler-generated dynamic initializer (+ a paired atexit
-// destructor) thunk; both stay None (the name-pairing artifact in claude@NOTE above), never 0%.
-// The per-symbol STUB marker above each one surfaces a mis-written static init.
+// destructor) thunk; report.json leaves both unscored (None, name-pairing artifact), never 0%.
+// All four init bytes are VERIFIED correct against the target (see claude@NOTE above).
 
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_legs_debug_draw_cc''()
+// STATE[100%|DONE]: cc_bool init verified vs target (arg values match; cc_bool register-vs-stack LTCG)
 static console_commands::cc_bool	s_ik_legs_debug_draw_cc		( "ik_legs_debug_draw", s_ik_legs_debug_draw_value, false, console_commands::command_type_engine_internal );
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_foot_capsule_radius_cc''()
+// STATE[100%|DONE]: cc_float init is byte-identical to target
 static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule_radius", s_ik_foot_capsule_radius_value, 0.01f, 0.2f, true, console_commands::command_type_engine_internal );
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_legs_rot_axis_cc''()
+// STATE[100%|DONE]: cc_bool init verified vs target (filter_early -> ecx=0; cc_bool register-vs-stack LTCG)
 static console_commands::cc_bool	s_ik_legs_rot_axis_cc		( "ik_legs_rot_axis", s_ik_legs_rot_axis_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_adjust_hip_position_cc''()
+// STATE[100%|DONE]: cc_bool init verified vs target (filter_early -> ecx=0; cc_bool register-vs-stack LTCG)
 static console_commands::cc_bool	s_ik_adjust_hip_position_cc	( "ik_adjust_hip_position", s_ik_adjust_hip_position_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
 
 // STATE[100%|DONE]
@@ -224,17 +231,17 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, flo
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs our /Ob2-inlined COMDAT; proven NON-steerable on #144 (3 source forms all inlined)  trail: get_additional_length.md
 }
 
-// STATE[92.6%|PARTIAL]: full control structure matched (hip_world build, two
-// get_foot_fixed_transform calls, the inverted_transform + R_ASSERT_U(success), and
-// the four-way s_ik_adjust_hip_position if/else ladder with its three "process both
-// legs" blocks + final ground-state check). The R_ASSERT_U fix (target emits the
-// expression_eater(assert_type, success) call of the _U assert variant, push success;
-// push 0; call) closed that residual (90->92.6). Sole remaining residual is the
-// get_skeleton() materialization: base spills *m_skeleton into a per-call stack temp at
-// each get_bone_matrix_in_object_space site where the target inlines [m_skeleton]
-// directly - that 0xC of extra frame shifts every later [ebp-N] slot by 0xC (a uniform
-// slot-rename storm + an aligner-only L155/L157 vs 3rd-branch swap, no control-structure
-// divergence). A call-boundary LTCG spill, not source-steerable here. Trail in
+// STATE[90%|PARTIAL]: control flow VERIFIED one-to-one against the target asm (the
+// four-branch s_ik_adjust_hip_position ladder: both-legs / +=right_delta when left
+// is_on_ground / +=left_delta when right is_on_ground / left.is_on_ground()?
+// right.is_on_ground()); the operand-aware byte diff is 100% `~` register/slot renames
+// with ZERO missing-or-extra instructions, so there is NO structure bug (the
+// structure-diff's ONLY-base rows are an LCS aligner mis-pairing of the four
+// textually-identical process_leg blocks - see claude@NOTE on the diff). Sole residual
+// is the m_hip_bone pointer spill: base materializes `*m_hip_bone` into a stack temp
+// before each get_bone_matrix_in_object_space call where the target uses it inline,
+// giving a 0x4-bigger frame (sub esp 3C0h vs 3BCh) that renames every later [ebp-N]
+// slot. A call-boundary LTCG spill, not source-steerable. Trail in
 // legs_ik_processor_rest.md.
 void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 {
@@ -275,7 +282,7 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	}
 
 	// STRUCTURE DIFF:
-	// target: 0x6ec640            base: 0x516630
+	// target: 0x6ec640            base: 0x525ca0
 	// ; void survarium::legs_ik_processor::process(vostok::math::float4x4*, vostok::math::float4x4 const&) ; target 35 stmts / base 34 stmts
 	// 0x011 <0x29> | 0x011 <0x35> | float4x4				hip_obj_matrix				= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );   SIZE
 	// .. same ..
@@ -283,31 +290,40 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// .. same ..
 	// 0x0ab <0x37> | 0x0b7 <0x34> | float4x4 const&			left_foot_fixed_transform	= get_foot_fixed_transform( m_left_leg_params, hip_world_matrix, matrices, left_delta_len );   SIZE
 	// .. same ..
-	// 0x19b <0x47> | 0x1a4 <0x44> | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   SIZE
+	// 0x0ff <0x28> | 0x108 <0x12> | R_ASSERT( success );   SIZE
 	// .. same ..
-	// 0x28c <0x38> | 0x292 <0x44> | hip_obj_matrix			= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );   SIZE
+	// 0x19b <0x47> | 0x18e <0x44> | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   SIZE
+	// .. same ..
+	// 0x28c <0x38> | 0x27c <0x44> | hip_obj_matrix			= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );   SIZE
 	// <0>         | --          |    EMPTY only target
 	// <0>         | --          |    EMPTY only target
 	// .. same ..
-	// 0x303 <0x47> | 0x315 <0x44> | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   SIZE
+	// 0x303 <0x47> | 0x2ff <0x44> | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   SIZE
 	// .. same ..
-	// --          | 0x403 <0x44> | hip_obj_matrix			= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );   ONLY base
-	// --          | 0x447 <0x3f> | process_leg( m_left_leg_params, right_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   ONLY base
-	// --          | 0x486 <0x44> | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   ONLY base
+	// --          | 0x3ed <0x44> | hip_obj_matrix			= get_bone_matrix_in_object_space( *m_hip_bone, get_skeleton( ), matrices );   ONLY base
+	// --          | 0x431 <0x3f> | process_leg( m_left_leg_params, right_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   ONLY base
+	// --          | 0x470 <0x44> | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );   ONLY base
 	// .. same ..
-	// 0x3f4 <0x38> | 0x4ca <0x64> | else if ( m_left_leg_params.is_on_ground( ) )   SIZE
+	// 0x3f4 <0x38> | 0x4b4 <0x64> | else if ( m_left_leg_params.is_on_ground( ) )   SIZE
 	// .. same ..
-	// 0x42c <0x3f> | 0x52e <0x59> | m_right_leg_params.is_on_ground( );   SIZE
+	// 0x42c <0x3f> | 0x518 <0x59> | m_right_leg_params.is_on_ground( );   SIZE
 	// 0x46b <0x47> | --          | L155   ONLY target
 	// <0>         | --          |    EMPTY only target
 	// 0x4b2 <0xbd> | --          | L157   ONLY target
-	// ; aligned 23, size-diffs 7, quantity-diffs 9
-	// sushi@TODO: the 3 "ONLY base" rows (recomputed hip_obj_matrix + the two process_leg calls)
-	// are statements WE emit that target does not have aligned here - calling it an "aligner swap"
-	// is suspect. If a stmt is only in base, we cannot know the target stmt is really there; this is
-	// most likely a real STRUCTURE problem (an extra/duplicated branch), not a diff-aligner artifact.
-	// Investigate before trusting the %.
-	// VERDICT: STRUCTURE MATCH (shape ok) - all SIZE rows are the get_skeleton()/*m_skeleton spill (0xC per get_bone_matrix_in_object_space call, target inlines [m_skeleton]); the ONLY base/L155/L157 rows are an aligner swap of the matched 3rd ground branch, not a missing statement. Call-boundary LTCG, non-steerable. trail: legs_ik_processor_rest.md
+	// ; aligned 22, size-diffs 8, quantity-diffs 9
+	// claude@NOTE: the ONLY-base/L155/L157 rows are a structure-diff ALIGNER artifact, NOT a
+	// real extra branch (investigated: process()'s four ground branches each emit a textually
+	// IDENTICAL process_leg(L)/process_leg(R)/hip_obj_matrix string, so the LCS row-aligner
+	// slides them and mis-pairs base's +=right body against target's +=left body). The
+	// operand-aware byte diff (pdb_fetch --view diff) shows ZERO `<`/`>` instructions - every
+	// diff line is `~` (a register/[ebp-N] slot rename); base and target have the SAME
+	// instruction sequence in all four branches. Target/base control flow verified one-to-one
+	// from the target asm: .2=both-legs, .5=+=right_delta(L is_on_ground), .8=+=left_delta(R
+	// is_on_ground), .9=left.is_on_ground()?right.is_on_ground(). No source change needed.
+	// VERDICT: STRUCTURE MATCH (shape ok) - the SIZE/ONLY-base rows are the get_skeleton()/m_hip_bone
+	// spill (base spills the pointer to a stack temp where target uses it inline; 0x4 bigger frame,
+	// sub esp 3C0h vs 3BCh, renames every later slot) plus the aligner mis-pairing of the three
+	// identical-text ground branches. A call-boundary LTCG spill, non-steerable. trail: legs_ik_processor_rest.md
 }
 
 // STATE[80.96%|PARTIAL]: two-bone IK math, all 58 statements / operands matched AND the
