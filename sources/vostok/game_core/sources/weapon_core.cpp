@@ -103,6 +103,14 @@ u16 weapon_core::ammo_in_magazine( ) const
 }
 
 // STATE[STUB]
+// claude@NOTE: out-of-line so reload_state_base::initialize emits `call round_is_chambered`
+// instead of inlining `m_is_round_chambered` (matches the target's out-of-line call @0x09b360).
+bool weapon_core::round_is_chambered( ) const
+{
+	return m_is_round_chambered;
+}
+
+// STATE[STUB]
 // void survarium::weapon_core::set_magazine_capacity(unsigned short)
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {

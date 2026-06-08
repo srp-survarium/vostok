@@ -4,45 +4,47 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_reload_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.* + chamber_a_round_on_reload/round_is_chambered/unload_chambered_round/instant_reload
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_reload_state_base::weapon_core_reload_state_base(survarium::weapon_core&, const float)
+// STATE[100%|DONE]
 weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, float animation_time_scale ) :
 	weapon_core_animation_end_aware_state( weapon, true )
 {
+	m_animation_timescale = animation_time_scale;
 	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
-
-	// FUNCTION BODY
-	// <0x776709>|0x059|+0x00d:'22'
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_reload_state_base::initialize()
+// STATE[92%|INPROGRESS]: source SHAPE matches the target (base call + one flat `if` guarding a
+// single statement - control-flow skeleton is identical). Residual is NOT structural: target's 3rd
+// `&&` term is an out-of-line `call round_is_chambered` @0x09b360, but our base STILL INLINES it
+// (`mov cl,[eax+48Eh]`) - the out-of-lining did not take (round_is_chambered absent from base index;
+// see weapon_core.cpp STUB). That inline-vs-call is what produces the target's extra L31 row + the
+// `if`-head SIZE diff below; the source shape needs no change. Matcher: make round_is_chambered emit
+// out-of-line (linker/inline concern, byte not structure). trail: weapon_core_reload_chamber_state_base.md
+// STRUCTURE DIFF[target 0x766720 | base 0x44d690]: target 4 / base 3 stmts
+// 2: 0x011 <0xf> | 0x011 <0x43> | if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )   SIZE
+// 3: 0x020 <0x2f> | --          | L31   ONLY target
+// .. same ..
+// ; aligned 2, size-diffs 1, quantity-diffs 1, blank-gaps 1
+// VERDICT: STRUCTURE MATCH (shape ok) - SIZE+L31 are round_is_chambered inlined(base) vs out-of-line call(target), not a source-shape diff. trail: weapon_core_reload_chamber_state_base.md
 void weapon_core_reload_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0x776729>|0x009|+0x008:'27'
-	// <0>
-	// <0x776731>|0x011|+0x00f:'29'
-	// <0>
-	// <0x776740>|0x020|+0x02f:'31'
-	// <0x77676f>|0x04f|+0x00e:'32'
-	// <0>
-	// ******
+	// sushi@TODO: the structure is wrong here - the verifier's "STRUCTURE MATCH (shape ok)" verdict
+	// is disputed (the L31 ONLY-target row is more than just round_is_chambered inline-vs-call). To
+	// be dealt with later.
+	weapon_core_animation_end_aware_state::initialize( );
+
+	if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
+		m_weapon.unload_chambered_round( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_reload_state_base::on_animation_end_impl(bool&)
+// STATE[100%|DONE]
 void weapon_core_reload_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x776797>|0x007|+0x00e:'39'
-	// <0x7767a5>|0x015|+0x006:'40'
-	// ******
+	m_weapon.instant_reload( );
+	animation_player_tick_result = true;
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
