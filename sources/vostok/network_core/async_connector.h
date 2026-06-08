@@ -9,6 +9,8 @@
 #include <vostok/network_core/client_error_codes_enum.h>
 #include <boost/function.hpp>
 
+#include <boost/asio.hpp>
+
 namespace vostok {
 namespace network_core {
 
