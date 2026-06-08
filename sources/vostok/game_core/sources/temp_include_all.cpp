@@ -415,6 +415,11 @@ namespace vostok
 		survarium::character_dispersion_calculator calc;
 		calc.set_character_dispersion_params( NULL );
 		calc.tick( survarium::type_stand, true, false, 0, false, 0 );
+
+		// Escape &calc so LTCG observes the ctor's constant member stores
+		// (m_value_smoothing_speed=5.0f, m_aiming_speed=1.0f, etc.); the early
+		// returns in tick can leave them otherwise dead-store-eliminated.
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
 	}
 
 	void use_game_core_weapon_recoil_params( )
