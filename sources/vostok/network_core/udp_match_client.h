@@ -66,6 +66,7 @@ public:
 
 	inline	void								set_on_packet_received		( boost::function< void( u8, packet_reader& ) > const& value ) { /* no source */ }
 
+private:
 			void								start_receiving				( );
 
 			void								handle_receive				( boost::system::error_code const& error_code, u32 bytes_transferred );
@@ -79,6 +80,7 @@ public:
 
 			void								on_disconnect				( disconnect_event_types_enum disconnect_type );
 
+public:
 	inline										~udp_match_client			( ) { /* no source */ }
 
 	static	void								construct_packet			( udp_match_packets_orderer& packets_orderer, udp_match_packet& packet, u8 message_type ) { /* no source */ }
