@@ -38,9 +38,9 @@ public:
 
 			void	reset						( );
 
-	inline	bool	is_connected				( ) const { return false; }
+	inline	bool	is_connected				( ) const { return m_connection_state >= connection_is_being_established; }
 
-	inline	bool	has_connection_established	( ) const { return false; }
+	inline	bool	has_connection_established	( ) const { return m_connection_state == connection_has_been_established; }
 
 			void	on_connected				(
 						boost::system::error_code const&	error_code,
