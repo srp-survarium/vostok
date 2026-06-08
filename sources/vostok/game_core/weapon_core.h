@@ -89,7 +89,7 @@ public:
 	inline	void								set_fire_queue_type				( u8 arg_0 ) { /* no source */ }
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
-	inline	u16									get_bullets_in_queue			( ) const { /* no source */ }
+	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
 			u16									fire_queue_length				( ) const {  return m_weapon_fire_queue_types[m_fire_queue_type]; } // STATE[STUB]
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }

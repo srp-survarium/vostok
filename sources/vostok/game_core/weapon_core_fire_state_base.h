@@ -7,12 +7,16 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
+namespace vostok { void use_game_core_weapon_core_fire_state_base( ); }
+
 namespace survarium {
 
 class weapon_core_fire_state_base : public weapon_core_animation_end_aware_state {
-public:
+protected:
 			explicit		weapon_core_fire_state_base	( weapon_core& weapon, float animation_timescale );
 
+	// target mangles ctor @@IAE (protected), the four virtuals + on_shot_event
+	// @@MAE (protected virtual); objdiff pairs by mangled name.
 	virtual	void			initialize					( ) override;
 	virtual	void			execute						( ) override;
 	virtual	void			finalize					( ) override;
@@ -21,6 +25,9 @@ public:
 
 	virtual	animation::callback_return_type_enum
 							on_shot_event				( animation::animation_callback_params& params );
+
+	// temp_include_all.cpp anchor; needs the protected ctor + virtuals.
+	friend void ::vostok::use_game_core_weapon_core_fire_state_base( );
 
 private:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */

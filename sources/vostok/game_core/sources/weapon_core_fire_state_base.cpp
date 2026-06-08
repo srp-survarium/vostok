@@ -4,122 +4,99 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_fire_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.* + get_bullets_in_queue
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_fire_state_base::weapon_core_fire_state_base(survarium::weapon_core&, float)
+// STATE[100%|DONE]
 weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, float animation_timescale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+	weapon_core_animation_end_aware_state	( weapon, true ),
+	m_animation_timescale					( animation_timescale ),
+	m_playback_type							( animation::mixing::play_cyclically )
 {
-	// FUNCTION BODY
-	// <0x59ec20>|0x000|+0x066:'23'	{
-	// <0x59ec86>|0x066|      :'24'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::initialize()
+// STATE[99.71%|DONE]: every instruction matches; the sole residual is a 4-byte /Od
+// frame-size diff (target `sub esp,5Ch` vs base `58h`) that cascades into the [ebp-N]
+// slot numbering - stack-slot packing, not a logic/structure divergence.
+// STRUCTURE DIFF[target 0x58ec90 | base 0x44d1a0]: target 5 / base 9 stmts
+// 0x0cf <0x18> | 0x0cf <0xc> | ASSERT( UNKNOWN_EXPRESSION );   SIZE
+// .. same ..
+// ; aligned 4, size-diffs 1, quantity-diffs 4
+// VERDICT: STRUCTURE MATCH (shape ok) - all stmts byte-identical; sole SIZE is the ASSERT slot drift from the 4-byte larger target frame ([ebp-39h] vs [ebp-53h]), /Od slot packing, non-steerable. trail: weapon_core_fire_state_base.md
 void weapon_core_fire_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ec9a>|0x00a|+0x008:'34'
-	// <0x59eca2>|0x012|+0x094:'35'
-	// <0x59ed36>|0x0a6|+0x029:'36'
-	// <0>
-	// <0x59ed5f>|0x0cf|+0x018:'38'
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
+
+	m_weapon.set_animation_callback(
+		"shoot",
+		this,
+		boost::bind( &weapon_core_fire_state_base::on_shot_event, this, _1 )
+	);
+
+	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xcf)
+
+	*m_is_firing_ptr = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::execute()
+// STATE[80.91%|PARTIAL]: structure matches (both source statements present, in order). Residual is
+// the inline-vs-call of the empty weapon_core_base_state::execute: the target emits a real
+// `call weapon_core_base_state::execute` (it keeps that empty virtual standalone @0x97f80) but our
+// base inlines the header's inline `{}` to nothing. Out-lining execute would close it, but execute
+// belongs to the weapon_core_base_state unit - we do NOT modify another unit's source to win this
+// match (sushi). Wall stays until that unit out-lines it. trail: weapon_core_fire_state_base.md
 void weapon_core_fire_state_base::execute( )
 {
-	// FUNCTION BODY
-	// <0x59ec07>|0x007|+0x008:'43'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ec0f>|0x00f|+0x00a:'50'
-	// ******
+	weapon_core_base_state::execute( );
+	m_animation_has_been_ended = false;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::finalize()
+// STATE[100%|DONE]
 void weapon_core_fire_state_base::finalize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ebb9>|0x009|+0x008:'61'
-	// <0x59ebc1>|0x011|+0x017:'62'
-	// <0>
-	// <0x59ebd8>|0x028|+0x018:'64'
-	// ******
+	weapon_core_animation_end_aware_state::finalize( );
+
+	m_weapon.remove_animation_callback( "shoot", this );
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0x28)
+
+	*m_is_firing_ptr = false;
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core_fire_state_base::on_shot_event(vostok::animation::animation_callback_params&)
-animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
-{
-	// FUNCTION BODY
-	// <0>
-	// <0x59ed91>|0x011|+0x007:'70'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ed98>|0x018|+0x00c:'77'
-	// <0x59eda4>|0x024|+0x00c:'78'
-	// <0>
-	// <1>
-	// <0x59edb0>|0x030|+0x01c:'81'
-	// <0x59edcc>|0x04c|+0x077:'82'
-	// <0x59ee43>|0x0c3|+0x004:'83'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59ee47>|0x0c7|+0x00c:'87'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x59ee53>|0x0d3|+0x015:'97'
-	// <0>
-	// <0x59ee68>|0x0e8|+0x00c:'99'
-	// <0>
-	// <0x59ee74>|0x0f4|+0x002:'101'
-	// ******
-}
-
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::on_animation_end_impl(bool&)
+// STATE[100%|DONE]
 void weapon_core_fire_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59eb97>|0x007|+0x006:'107'
-	// ******
+	animation_player_tick_result = true;
+}
+
+// STATE[95.26%|PARTIAL]: logging residual (same class as animation_analysis_result_cook::translate_query).
+// STRUCTURE DIFF[target 0x58ed80 | base 0x44d290]: target 16 / base 17 stmts
+// 0x04c <0x77> | 0x04c <0x74> | LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );   SIZE
+// .. same ..
+// ; aligned 15, size-diffs 1, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - all control flow + 4 ASSERTs + instant_fire byte-exact; sole SIZE is inside the LOG_ERROR expansion (__LINE__/__FILE__/__FUNCSIG__ build-specific immediates+relocs), non-steerable. trail: weapon_core_fire_state_base.md
+animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
+{
+	params.interrupt_animation_player_tick = true;
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0x18)
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0x24)
+
+	if ( !m_weapon.get_bullets_in_queue( ) )
+	{
+		LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );
+		return animation::callback_return_type_call_me_again;
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xc7)
+
+	m_weapon.instant_fire( params.callback_time_in_ms );
+
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xe8)
+
+	return animation::callback_return_type_call_me_again;
 }
 
 } // namespace survarium
