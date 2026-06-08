@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 08.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef PACKET_READER_INLINE_H_INCLUDED
@@ -9,69 +9,89 @@ namespace vostok {
 namespace network_core {
 
 // STATE[STUB]
-// void vostok::network_core::packet_reader::r(void*, unsigned int, unsigned int)
-void packet_reader::r( void* destination, u32 size )
+inline void packet_reader::r( void* const destination, const u32 destination_size, const u32 size )
 {
-	// LOCALS
-	// u32 							destination_size
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETERS( destination, destination_size, size );
 
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// 4
-	// <0x8e5a0>|0x000|0x000:'25'
-	// <0x8e5af>|0x00f|0x00f:'26'
+	// FUNCTION BODY[0x8e5a0]: 6
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x8e5a0>|0x000|+0x00f:'25'
+	// <0x8e5af>|0x00f|+0x006:'26'
 	// ******
 }
 
 // STATE[STUB]
-// unsigned char vostok::network_core::packet_reader::r<unsigned char>()
-u8 packet_reader::r<u8>( )
+template < typename T >
+T packet_reader::r( )
 {
-	return 0;
-	// FUNCTION BODY
-	// 1
-	// <0x8e950>|0x000|0x000:'33'
-	// 1
+	return T( );
+
+	// FUNCTION BODY[0x96410]: 3 (r<u32>); [0xa7800] r<u16>; [0x8e950] r<u8>
+	// <0>
+	// <0x96410>|0x000|+0x00b:'33'
+	// <0>
 	// ******
 }
 
-	// TYPEDEFS
-	typedef
-		char[32]
-		account_name_type;
+// STATE[STUB]
+template < u32 size >
+char* packet_reader::r_string( char ( & string )[ size ] )
+{
+	VOSTOK_UNREFERENCED_PARAMETER( string );
 
-	typedef
-		collision::bone_collision_data const*
-		iterator_type;
+	return NULL;
 
-	typedef
-		collision::bone_collision_data*
-		iterator_type;
-
-	typedef
-		fixed_vector<std::pair<enum survarium::game_action_id,enum survarium::player_input_handler::action_state_enum>,32>
-		actions_type;
-
-	typedef
-		survarium::base_project::resolve_link_object*
-		iterator_type;
-
-	typedef
-		survarium::inventory_item_instance*
-		iterator_type;
-
-	typedef
-		survarium::scheduler::record*
-		iterator_type;
-
-	typedef
-		void**
-		iterator_type;
-
+	// FUNCTION BODY[0xa8860]: 1
+	// <0xa8860>|0x000|+0x028:'73'
 	// ******
+}
+
+// STATE[STUB]
+inline bool packet_reader::eof( ) const
+{
+	return false;
+
+	// FUNCTION BODY[0xa7650]: 1
+	// <0xa7650>|0x000|+0x00f:'39'
+	// ******
+}
+
+// STATE[STUB]
+inline pcbyte packet_reader::pointer( ) const
+{
+	return NULL;
+
+	// FUNCTION BODY[0x92cc0]: 1
+	// <0x92cc0>|0x000|+0x003:'44'
+	// ******
+}
+
+// STATE[STUB]
+inline void packet_reader::advance( const u32 offset )
+{
+	VOSTOK_UNREFERENCED_PARAMETER( offset );
+
+	// FUNCTION BODY[0x131650]: 5
+	// <0x13165a>|0x00a|+0x033:'49'
+	// <0x13168d>|0x03d|+0x041:'50'
+	// <0x1316ce>|0x07e|+0x046:'51'
+	// <0>
+	// <0x131714>|0x0c4|+0x00f:'53'
+	// ******
+}
+
+// STATE[STUB]
+inline u32 packet_reader::size_to_eof( ) const
+{
+	return 0;
+
+	// FUNCTION BODY[0xa7660]: 1
+	// <0xa7660>|0x000|+0x00a:'58'
+	// ******
+}
 
 } // namespace network_core
 } // namespace vostok

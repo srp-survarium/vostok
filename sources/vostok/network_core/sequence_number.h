@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 08.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef NETWORK_CORE_SEQUENCE_NUMBER_H_INCLUDED
@@ -8,51 +8,48 @@
 namespace vostok {
 namespace network_core {
 
-/* vostok::network_core::sequence_number<unsigned char> */
+class packet_reader;
+class udp_match_packet;
 
-//////////////////////////
-//     DEFINITIONS      //
-//////////////////////////
-
-class sequence_number<u8> {
+// claude@NOTE: PDB shows sequence_number<u8> and sequence_number<u16>; modelled
+// as a primary template so both instantiations are well-formed C++. Bodies are
+// stubs - matchers add the meat.
+template < typename T >
+class sequence_number {
 public:
-	inline							sequence_number<unsigned char>	( u8 arg_0 ) { /* no source */ }
+	inline						sequence_number	( T number ) : m_number( number ) { }
 
-	inline	void					serialize						( pbyte& arg_0 ) { /* no source */ }
+	inline	void				serialize		( pbyte& stream ) const { VOSTOK_UNREFERENCED_PARAMETER( stream ); }
+	inline	void				serialize		( udp_match_packet& packet ) const { VOSTOK_UNREFERENCED_PARAMETER( packet ); }
 
-	inline	void					serialize						( udp_match_packet& arg_0 ) { /* no source */ }
+	inline	bool				operator==		( sequence_number const& other ) const { return m_number == other.m_number; }
+	inline	bool				operator!=		( sequence_number const& other ) const { return m_number != other.m_number; }
+			bool				operator<		( sequence_number const& other ) const;
+			bool				operator<=		( sequence_number const& other ) const;
+	inline	bool				operator>		( sequence_number const& other ) const { return other < *this; }
+	inline	bool				operator>=		( sequence_number const& other ) const { return other <= *this; }
 
-	inline	bool					operator==						( sequence_number<u8> const& arg_0 ) const { /* no source */ }
+	inline	sequence_number		operator++		( s32 ) { sequence_number r( *this ); ++m_number; return r; }
+	inline	sequence_number&	operator++		( ) { ++m_number; return *this; }
+	inline	sequence_number		operator--		( s32 ) { sequence_number r( *this ); --m_number; return r; }
+	inline	sequence_number&	operator--		( ) { --m_number; return *this; }
 
-	inline	bool					operator!=						( sequence_number<u8> const& arg_0 ) const { /* no source */ }
+	inline	T					value			( ) const { return m_number; }
 
-	inline	bool					operator<						( sequence_number<u8> const& arg_0 ) const { /* no source */ }
-
-	inline	bool					operator<=						( sequence_number<u8> const& arg_0 ) const { /* no source */ }
-
-	inline	bool					operator>						( sequence_number<u8> const& arg_0 ) const { /* no source */ }
-
-	inline	bool					operator>=						( sequence_number<u8> const& arg_0 ) const { /* no source */ }
-
-	inline	sequence_number<u8>		operator++						( s32 arg_0 ) { /* no source */ }
-
-	inline	sequence_number<u8>&	operator++						( ) { /* no source */ }
-
-	inline	sequence_number<u8>		operator--						( s32 arg_0 ) { /* no source */ }
-
-	inline	sequence_number<u8>&	operator--						( ) { /* no source */ }
-
-
-	static	inline	sequence_number<u8>		deserialize						( packet_reader& arg_0 ) { /* no source */ }
-
+	static	sequence_number		deserialize		( packet_reader& reader );
 
 private:
-	/* 0x0000 */	u8		m_number;
-}; // class sequence_number<u8>
+	/* 0x0000 */	T		m_number;
+}; // class sequence_number
 
-STATIC_SIZE_ASSERT(sequence_number<u8>, 0x1);
+STATIC_SIZE_ASSERT( sequence_number< u8 >, 0x1 );
+
+template < typename T >
+s32 operator-( sequence_number< T > const& left, sequence_number< T > const& right );
 
 } // namespace network_core
 } // namespace vostok
+
+#include <vostok/network_core/sequence_number_inline.h>
 
 #endif // #ifndef NETWORK_CORE_SEQUENCE_NUMBER_H_INCLUDED
