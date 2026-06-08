@@ -54,8 +54,8 @@ public:
 
 	inline	weapon_user_state_enum		id							( ) const { return m_weapon_user_state_id; }
 	inline	bool						is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
-	// STATE[STUB]
-	virtual	bool						is_ready_for_transition		( ) const override { return true; } // <0x22c50>|0x000|      :'61'
+	// STATE[None|DONE]: ICF-folded `return true` override (byte-correct; see oneliners_batch1.md).
+	virtual	bool						is_ready_for_transition		( ) const override { return true; }
 
 	inline	bool						is_weapon_visible			( ) const { /* no source */ }
 	inline	bool						is_smoothing_needed			( ) const { /* no source */ }

@@ -46,8 +46,12 @@
 #include <vostok/game_core/collision_sensor.h>
 #include <vostok/game_core/damage_model_cook.h>
 #include <vostok/game_core/inventory.h>
+#include <vostok/game_core/inventory_holder.h>
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
+#include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/base_project.h>
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
@@ -364,7 +368,9 @@ namespace vostok
 		core.use_initialize( NULL );
 		core.use_execute( NULL );
 		core.use_finalize( NULL );
-		core.use_info( NULL );
+		// Qualified (devirtualized) call keeps the standalone `use_info` body
+		// (returns the "st_use_artefact_container" literal) for scoring.
+		core.artefact_container_core::use_info( NULL );
 
 		survarium::scheduler scheduler( NULL );
 		core.activate		( NULL, NULL, scheduler );
@@ -1000,6 +1006,9 @@ namespace vostok
 
 		concrete_logic_state	state( owner );
 		state.survarium::player_logic_base_state::set_user( user );
+		// claude@NOTE: is_ready_for_transition is `return true;` which /OPT:ICF folds
+		// to the `mov al,1;ret` fold @0x12700; unscorable None but byte-correct,
+		// marked None|DONE (a folded body cannot be made scorable by anchoring).
 
 		// Escape &state so LTCG observes the ctor's member stores.
 		example_callback( reinterpret_cast< pcstr >( &state ) );
@@ -1074,6 +1083,10 @@ namespace vostok
 		sensor.insert( NULL );
 		sensor.remove( );
 		sensor.get_collision_geometry( 10 );
+		// claude@NOTE: the four protected on_* overrides are trivial empty bodies
+		// that /OPT:ICF-fold (on_inside/on_leave/on_objetcs_loosed -> `ret 4`
+		// @0x12c50, on_enter -> @0xd2070); no anchor can make a folded body scorable,
+		// so they are proven byte-correct and marked None|DONE, not anchored here.
 	}
 
 
@@ -1102,6 +1115,9 @@ namespace vostok
 
 		gm.set_transform( float4x4() );
 		gm.get_transform( );
+		// claude@NOTE: cast_to_collision_geometry is `return this;` which /OPT:ICF
+		// folds to the empty-frame fold @0x17600; unscorable None but byte-correct,
+		// marked None|DONE (a folded body cannot be made scorable by anchoring).
 	}
 
 	void use_game_core_scheduler()
@@ -1112,6 +1128,81 @@ namespace vostok
 		sc.register_for_update( NULL, callback, true, 10, 10, 10 );
 		sc.on_frame( 10, 10 );
 		sc.unregister( NULL );
+	}
+
+	// claude@NOTE: interactive_object::assign_game_ui (`ret 4` empty @0x12c50) and
+	// cast_weapon_core (`xor eax,eax;ret` @0x327c0, const + non-const) are trivial
+	// overrides that /OPT:ICF folds; unscorable None but byte-correct, marked
+	// None|DONE (a folded body cannot be made scorable by anchoring).
+
+	// inventory_holder is abstract; reach the three non-virtual getters via a trivial
+	// concrete derived stub (overrides every pure virtual). Qualified calls keep the
+	// standalone getter bodies; escape the results.
+	struct concrete_inventory_holder : survarium::inventory_holder
+	{
+		concrete_inventory_holder( survarium::scheduler& s, survarium::inventory_ptr inv )
+			: survarium::inventory_holder( s, inv ) { }
+
+		virtual bool					set_new_active_item	( survarium::inventory_item_ptr const& ) override { return false; }
+		virtual void					take_inventory_item	( survarium::inventory_item_ptr const& ) override { }
+		virtual survarium::damage_model_ptr const&	damage_model( ) const override { return *reinterpret_cast< survarium::damage_model_ptr* >( NULL ); }
+		virtual survarium::base_player*	cast_to_base_player	( ) override { return NULL; }
+		virtual physics::world*			get_physics_world	( ) override { return NULL; }
+		virtual void					insert_game_world_object( survarium::game_world_object& ) override { }
+		virtual void					remove_game_world_object( survarium::game_world_object& ) override { }
+
+		void touch( )
+		{
+			survarium::inventory const&	ci	= inventory_holder::inventory( );
+			survarium::inventory&		mi	= inventory_holder::inventory( );
+			survarium::scheduler&		sc	= inventory_holder::scheduler( );
+			example_callback( reinterpret_cast< pcstr >( &ci ) );
+			example_callback( reinterpret_cast< pcstr >( &mi ) );
+			example_callback( reinterpret_cast< pcstr >( &sc ) );
+		}
+	};
+
+	void use_game_core_inventory_holder( )
+	{
+		survarium::scheduler&	sched	= *reinterpret_cast< survarium::scheduler* >( NULL );
+		concrete_inventory_holder	holder( sched, survarium::inventory_ptr( NULL ) );
+		holder.touch( );
+	}
+
+	void use_game_core_weapon_user_animations_selector( )
+	{
+		survarium::weapon_user_animations_selector&	sel	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+		sel.set_animations( survarium::weapon_user_animations_container_ptr( NULL ) );
+		example_callback( reinterpret_cast< pcstr >( &sel ) );
+	}
+
+	// base_project: register_named_object / register_object_to_resolve are public
+	// non-virtual. base_project has a pure-ish vtable (get_object_by_name/resolve_links
+	// are non-pure); reach the two registrars via a trivial concrete derived stub.
+	struct concrete_base_project : survarium::base_project
+	{
+		void touch( )
+		{
+			register_named_object( "name", NULL );
+			register_object_to_resolve( NULL, configs::binary_config_value( ) );
+		}
+	};
+
+	void use_game_core_base_project( )
+	{
+		concrete_base_project	p;
+		p.touch( );
+		example_callback( reinterpret_cast< pcstr >( &p ) );
+	}
+
+	// booby_trap_core::get_speed is a PRIVATE virtual; befriended above so a
+	// qualified (devirtualized) call on a null ref ODR-uses its standalone body
+	// (`fldz; ret`) without emitting a vtable / codegen-ing the other stubs.
+	void use_game_core_booby_trap_core_get_speed( )
+	{
+		survarium::booby_trap_core&	trap	= *reinterpret_cast< survarium::booby_trap_core* >( NULL );
+		float speed = trap.survarium::booby_trap_core::get_speed( );
+		example_callback( reinterpret_cast< pcstr >( &speed ) );
 	}
 
 	void use_physics_api()
@@ -1420,6 +1511,10 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
+	vostok::use_game_core_inventory_holder();
+	vostok::use_game_core_weapon_user_animations_selector();
+	vostok::use_game_core_base_project();
+	vostok::use_game_core_booby_trap_core_get_speed();
 	vostok::use_bt_character_controller();
 	vostok::use_physics_api();
 	vostok::use_log();

@@ -803,6 +803,26 @@ expression with NO `assert_untyped push 0`, no standard macro reproduces it exac
 the `push 0`); that lone `push 0` is the closest-macro residual. Confirmed in
 `weapon_core_idle_state::weapon_core_idle_state` (ctor line 21 = `ASSERT_CMP_U(animations_count,==,4)`,
 100%) and `weapon_core_idle_state::weapon_and_hands_expression` (line 32 `ASSERT_U(weight_driving_animation)`).
+CRITICAL AMBIGUITY: this eater shape is NOT unique to ASSERT_U - `VOSTOK_UNREFERENCED_PARAMETERS` emits
+the IDENTICAL `if(identity(false)){ helper(args); }` (see next entry). If the pushed args are the
+function's OWN otherwise-unused parameters (a `user`/`packet`/`dt` it never reads), it is the
+unreferenced-parameter macro, NOT an ASSERT. For an unused param, default to UNREFERENCED_PARAMETER(S).
+
+### `(void)(&p)` / `if(identity(false)){ unreferenced_parameter_helper(params); }` = VOSTOK_UNREFERENCED_PARAMETER(S)
+`macro_unreferenced_parameter.h` defines two macros, both to silence an unused parameter (the original
+code wrote one whenever a param is taken but not read - virtual overrides, callbacks, stubs).
+UNDER-USING them is a red flag: a `user`/`packet`/`dt`-style param with no body reads almost always had one.
+- `VOSTOK_UNREFERENCED_PARAMETER(p)` = `(void)(&p)`. ASM /Od: a lone `lea reg,[ebp+p]` (address-of the
+  param) that is discarded - NO mov-byte, NO call. A bare `lea` of a parameter slot with no consumer is
+  this, not a dead local.
+- `VOSTOK_UNREFERENCED_PARAMETERS(a,b,...)` = `if ( vostok::identity(false) ) { vostok::detail::
+  unreferenced_parameter_helper(a,b,...); } else (void)0`. ASM: the SAME eater shape as the ASSERT_U entry
+  above (the `mov byte[ebp-N],0; lea; call <folded-empty>` guard, then the never-taken block pushes
+  a,b,... and calls the folded-empty `unreferenced_parameter_helper`). DISTINGUISH from ASSERT_U purely by
+  WHAT is pushed: the function's own unused PARAMETERS -> this macro; an asserted expression's operands ->
+  ASSERT_U. (Both helpers are varargs folded-empty; the delinker misnames both `empty_stub`/`finalize_impl`.)
+SOURCE: write the macro, never hand-roll `(void)(&p)`. Def in `sources/vostok/macro_unreferenced_parameter.h`
+(244 uses across our game_core/animation sources - reach for it before labeling an unused-param eater an ASSERT).
 
 ### `/Od` counted loop with `je` (not `jae`) exit = source `for(...; i != N; ...)` not `i < N`
 ASM (target): `cmp [i], N; je .end` (loop exits on equality). SOURCE: `for ( u32 i = 0 ; i != N ; ++i )`.
@@ -999,3 +1019,18 @@ math::max/min/sin stay out-of-line). The remaining ~6% is `sub esp,38h` (target)
 register holds the vtable at the second virtual call. Pure /Od register/slot allocation, NOT a
 missing local/brace/ASSERT/statement - the LOCALS all map, the carcass structure matches. Stop at
 PARTIAL. (breath_vibration_calculator::tick, 94.23%.)
+
+### a `this`-UNUSED trivial member (`return literal`/`return 0.0f`) is FRAMELESS in the target, framed under /Od
+SYMPTOM: a trivial member fn that NEVER references `this` (returns a string literal, `return 0.0f`,
+`return NULL` that ignores members) has a TARGET obj body with NO ebp frame - e.g. `get_speed` =
+`d9 ee c3` (`fldz; ret`), `use_info` = `b8 <reloc> c2 0400` (`mov eax,lit; ret 4`) - while our /Od
+BASE emits the full frame (`55 8bec 51 894dfc <body> 8be5 5d c3`, i.e. `push ebp; mov ebp,esp; push
+ecx; mov [ebp-4],ecx; ...`). The original build applied frame-pointer omission for `this`-unused
+leaves; `/Od` ALWAYS emits the frame + the `mov [ebp-4],ecx` save-this. The 3-5 vs 11+ byte gap is
+too large for objdiff to pair -> `fuzzy: None` even though the semantic body (the fldz / literal /
+ret N) is correct. NOT source-steerable under /Od (frame omission is a build flag). DISTINGUISH from
+ICF-fold None: these survive STANDALONE in the EXE (qualified-call anchor) at a real rva - they are
+present-but-divergent, mark None|PARTIAL. CONTRAST: a member that USES `this` (reads a member, the
+ctor/dtor storing into `this`) keeps its frame in BOTH and matches 100% (e.g. damage_protector
+ctor/dtor). So frame-presence tracks `this`-usage. Confirmed: artefact_container_core::use_info,
+booby_trap_core::get_speed (both None|PARTIAL, frameless target vs /Od frame).

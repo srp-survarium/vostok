@@ -45,11 +45,14 @@ public:
 			collision_geometry*		get_collision_geometry			( u32 index );
 	inline	u32						collision_geometries_count		( ) const { return m_collision_geometries_count; }
 
-	// STATE[STUB]
+protected:	// claude@MATCH: target mangles these four overrides `MAE` (protected), not `UAE` - must be protected: to pair.
+	// STATE[None|DONE]
 	virtual	void					on_inside						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	// STATE[None|DONE]
 	virtual	void					on_leave						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
-	// STATE[STUB]
+	// STATE[None|DONE]
 	virtual	void					on_enter						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	// STATE[None|DONE]
 	virtual	void					on_objetcs_loosed				( vector<physics::base_physics_object *> const& objects )			{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 
 protected:

@@ -23,6 +23,10 @@ namespace collision{
 }
 }
 
+// claude@NOTE: anchor in temp_include_all.cpp befriended to reach the PRIVATE
+// virtual get_speed() via a qualified devirtualized call (friend decls emit no bytes).
+namespace vostok { void use_game_core_booby_trap_core_get_speed( ); }
+
 namespace survarium {
 
 class booby_trap_core_cook;
@@ -79,7 +83,8 @@ private:
 												bullet*	const							bullet
 											) override;
 
-	// STATE[STUB]
+	// claude@MATCH: target is FRAMELESS for this `this`-unused leaf (`fldz;ret`); /Od always frames -> unpairable. fldz correct. Private virtual `EBE`.
+	// STATE[None|PARTIAL]: frameless-target vs /Od-framed-base (see oneliners_batch1.md).
 	virtual	float							get_speed					( ) const override { return 0.0f; }
 	virtual	void							on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 	virtual	void							tick						( u32 time_delta_ms, u32 current_time_ms ) override;
@@ -113,6 +118,7 @@ private:
 	/* 0x01b4 */	u32							m_state_timer;
 private:
 	friend class booby_trap_core_cook;
+	friend void ::vostok::use_game_core_booby_trap_core_get_speed( );
 }; // class booby_trap_core
 
 STATIC_SIZE_ASSERT(booby_trap_core, 0x1B8);
