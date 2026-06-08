@@ -15,13 +15,24 @@ inline tcp_packet::tcp_packet( memory::base_allocator& allocator ) :
 	/* no source */
 }
 
+// STATE[INPROGRESS]: target dtor (0x972b0) is fully optimized/inlined (1/45 instr
+// equal, 2.2%); our /Od out-of-line body diverges in shape - target lacks the
+// separate VOSTOK_FREE_IMPL call statement (inlined). LTCG/opt mismatch, not a
+// source-shape fix from our side.
 inline tcp_packet::~tcp_packet( )
 {
-	if ( buffer( ) )										// <0xa72b0>|0x000|0x000:'21'
+	if ( buffer( ) )
 	{
-		pbyte real_buffer	= buffer( ) - 3;				// <0xa72b6>|0x006|0x006:'23'
-		VOSTOK_FREE_IMPL	( m_allocator, real_buffer );	// <0xa72b9>|0x009|0x003:'24'
+		pbyte real_buffer	= buffer( ) - 3;
+		VOSTOK_FREE_IMPL	( m_allocator, real_buffer );
 	}
+
+	// STRUCTURE DIFF[target 0x972b0 | base 0x7fd80]: target 2 / base 3 stmts
+	//   1: 0x006 <0x3> | 0x009 <0xe> | if ( buffer( ) )   SIZE
+	//   2: 0x009 <0xd> | 0x017 <0x11> | pbyte real_buffer	= buffer( ) - 3;   SIZE
+	//   3: --          | 0x028 <0x2f> | VOSTOK_FREE_IMPL	( m_allocator, real_buffer );   ONLY base
+	// ; aligned 0, size-diffs 2, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MISMATCH (both) - target dtor is optimized/inlined (free folded in, no standalone call stmt); base is /Od out-of-line. Not source-fixable; LTCG/opt divergence.
 }
 
 inline u32 tcp_packet::allocated_size( ) const
