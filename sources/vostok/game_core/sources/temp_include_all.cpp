@@ -867,6 +867,16 @@ namespace vostok
 		bullet_manager.fire( float3(), float3(), wa, wc, 10, NULL, NULL, true );
 	}
 
+	void use_game_core_weapon_core_initialize_weapon_logic( )
+	{
+		survarium::weapon_core				wc;
+		survarium::weapon_core_base_state_ptr	s( NULL );
+
+		wc.initialize_weapon_logic( s, s, s, s, s, s, s, s, s, s );
+
+		example_callback( reinterpret_cast< pcstr >( &wc ) );
+	}
+
 
 	void use_inventory( )
 	{
@@ -1406,6 +1416,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_double_barreled_weapon_core_aimed_idle_state( );
 	vostok::use_game_core_weapon_core_show_state_base( );
 	vostok::use_game_core_weapon_core_hide_state_base( );
+	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );
