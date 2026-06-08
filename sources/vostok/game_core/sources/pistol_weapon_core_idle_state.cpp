@@ -46,8 +46,11 @@ pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapo
 // STATE[85.65%|PARTIAL]: residual is the per-call-site inline-vs-call of
 // operator+<animation_lexeme,animation_lexeme> (side verified vs --view diff: the TARGET keeps
 // the out-of-line `call operator+`, OUR BASE inlines it here; operator+ is standalone in BOTH
-// rich indexes -> source-steerable (force the out-of-line call), NOT non-steerable LTCG, not yet
-// resolved), plus the line-35 ASSERT eater shape (target's
+// rich indexes -> source-steerable, NOT non-steerable LTCG. STEER ATTEMPTED+REVERTED: a spec-decl
+// of operator+ does NOT suppress MSVC8 inlining of the visible inline template; only an out-of-TU
+// restructure (drop mixing_addition_lexeme.h, forward-decl operator+/addition_lexeme - shared across
+// 7 sibling .cpp in the out-of-scope animation module) would steer it, not done here), plus the
+// line-35 ASSERT eater shape (target's
 // expression_eater gets only the lexeme; ASSERT_U adds the assert_untyped `push 0`).
 // Identical shape/diff to weapon_core_idle_state::weapon_and_hands_expression (#151).
 animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_expression(

@@ -862,3 +862,24 @@ it in the header and define it in the .cpp. This is NOT just one instruction - t
 the frame (`sub esp` differs by ~4) and clobbers a different register than a `call` would, cascading the
 WHOLE function's register allocation. Confirmed: moving `weapon_core::ammo_in_magazine()` out-of-line
 took `pistol_/double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair` from 77/92% to 99.92%.
+
+### Out-line an EMPTY inline virtual to recover the target's qualified `call` (STEERABLE)
+SYMPTOM: `--view diff` on a derived state shows the TARGET emitting `call base::execute` (an empty
+base virtual called qualified) then the member store, while OUR BASE has NO call - it inlined the
+empty `{}` at the call site (~80%, the missing call bytes). CAUSE: the base method's empty body was
+defined INLINE in the header, so /GL inlines the no-op at every qualified call site; the target keeps
+a standalone out-of-line body and emits a real `call`. FIX: out-line the empty body - keep the decl
+in the header (same access char), move the `{}` definition to the .cpp. Confirmed
+`weapon_core_fire_state_base::execute` 80.91% -> 99.09% (via `weapon_core_base_state::execute`).
+Regression-free ONLY if the out-of-line body's base method has a single qualified call site (else
+out-lining changes other derived classes' codegen). Same device class as out-lining a trivial accessor
+(round_is_chambered / ammo_in_magazine).
+
+### Explicit-specialization DECLARATION does NOT force a call to a VISIBLE inline template (INEFFECTIVE)
+SYMPTOM: inline-vs-call wall where the TARGET keeps `call operator+<T,T>` and OUR BASE inlines it; the
+specialization is standalone in BOTH indexes. TEMPTATION: add `template<> R operator+<T,T>(...);` in
+the consuming .cpp. RESULT: NO EFFECT under MSVC8 (`weapon_and_hands_expression` 85.65 -> 85.65) - when
+the primary inline template's DEFINITION is in scope (via the included `_inline.h`), MSVC still inlines
+it; a spec-DECL does not suppress that. The forward-decl device works ONLY when the inline DEFINITION is
+OUT of the consuming TU (drop the inline-header include + forward-decl the function AND its types) - a
+TU restructure, often shared across many sibling .cpp in an out-of-scope module (collateral risk).
