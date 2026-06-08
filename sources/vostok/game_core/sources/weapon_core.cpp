@@ -92,6 +92,14 @@ weapon_core::~weapon_core( )
 }
 
 // STATE[STUB]
+// claude@NOTE: out-of-line so the idle-state getters emit `call ammo_in_magazine`
+// instead of inlining `m_ammo_in_magazine` (matches the target's out-of-line call).
+u16 weapon_core::ammo_in_magazine( ) const
+{
+	return m_ammo_in_magazine;
+}
+
+// STATE[STUB]
 // void survarium::weapon_core::set_magazine_capacity(unsigned short)
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {
