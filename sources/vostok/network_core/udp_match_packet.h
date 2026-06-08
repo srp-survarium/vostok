@@ -21,6 +21,7 @@ public:
 	class helper {
 	public:
 		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
+		// STATE[STUB]
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
 			// FUNCTION BODY[0xea9c0]: 1
@@ -29,6 +30,7 @@ public:
 		}
 	}; // class helper
 
+	// STATE[STUB]
 	inline				udp_match_packet	( )
 	{
 		// FUNCTION BODY[0xea900]: 2
@@ -43,6 +45,7 @@ public:
 	inline	pcbyte		buffer_to_send		( ) const { return NULL; }
 	inline	pbyte		buffer_to_send		( ) { return NULL; }
 
+	// STATE[STUB]
 	inline	u8			header_size			( ) const
 	{
 		return 0;
@@ -77,6 +80,7 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
+// STATE[STUB]
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
@@ -89,6 +93,7 @@ inline udp_match_packet* new_udp_match_packet(
 	// ******
 }
 
+// STATE[STUB]
 inline void delete_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
 	udp_match_packet*&		packet

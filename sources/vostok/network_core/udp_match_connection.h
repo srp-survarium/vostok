@@ -46,6 +46,7 @@ public:
 	}; // struct comparer
 
 	struct channel {
+		// STATE[STUB]
 		inline			channel	( )
 		{
 			// FUNCTION BODY[0x137450]
@@ -55,6 +56,7 @@ public:
 
 		inline	void	reset	( ) { /* no source */ }
 
+		// STATE[STUB]
 		inline			~channel( )
 		{
 			// FUNCTION BODY[0x137510]: 4
