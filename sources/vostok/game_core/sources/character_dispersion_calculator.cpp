@@ -67,21 +67,11 @@ void character_dispersion_calculator::tick(
 		m_value = math::min( m_current_value, m_value + m_value_smoothing_speed * dt );
 
 	// STRUCTURE DIFF:
-	// target: 0x586090            base: 0x4546a0
-	// ; void survarium::character_dispersion_calculator::tick(const survarium::weapon_user_state_enum, const bool, const bool, const unsigned char, const bool, const unsigned int) ; target 22 stmts / base 21 stmts
+	// target: 0x586090            base: 0x4546c0
+	// ; void survarium::character_dispersion_calculator::tick(const survarium::weapon_user_state_enum, const bool, const bool, const unsigned char, const bool, const unsigned int) ; target 14 stmts / base 14 stmts
 	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// ; aligned 19, size-diffs 0, quantity-diffs 5
-	// VERDICT: STRUCTURE MATCH (shape ok) - 0 size-diffs, all 19 statements align; quantity-diffs are EMPTY source-line gaps only. Residual is the /Od frame-slot noise (target sub esp,1Ch, this@[ebp-10h] vs base sub esp,18h, this@[ebp-0Ch]), non-steerable. trail: character_dispersion_calculator_tick.md
+	// ; aligned 14, size-diffs 0, quantity-diffs 0, blank-gaps 5
+	// VERDICT: STRUCTURE MATCH (shape ok) - all 14 statements align (size-diffs 0, quantity-diffs 0); the 5 blank-gaps are blank-line-only attribution, not statement divergences. Residual is the /Od frame-slot noise (target sub esp,1Ch, this@[ebp-10h] vs base sub esp,18h, this@[ebp-0Ch]), non-steerable. trail: character_dispersion_calculator_tick.md
 }
 
 // STATE[100%|DONE]
