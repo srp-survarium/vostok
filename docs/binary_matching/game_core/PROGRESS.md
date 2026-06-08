@@ -525,3 +525,42 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     the dtor's two `this`-ptr setups for ~fermi_interpolator (offsets 0x7C/0x70) are genuine call-boundary/ICF
     artifacts, correctly PARTIAL with carcass preserved. No fixable cap found for the second pass beyond what is
     flagged. No code logic touched.
+- game_core::legs_ik_processor (DEEP second pass: anchor-removal) -> all %s UNCHANGED -> PR (base match/game_core-legs_ik_processor-rest)
+  - GOAL: the second-pass flag above hypothesised that fake NULL-cast observation anchors distorted LTCG/DSE codegen
+    for the private methods, capping them below 100%. Removed the redundant fake-observation anchors so the REAL
+    internal call chain (process() anchored via a real `legs_ik_processor processor;`) keeps them alive transitively.
+  - REMOVED from temp_include_all.cpp (+ their IncludeAll dispatch lines):
+    use_game_core_legs_ik_processor_get_foot_fixed_transform, use_game_core_legs_ik_processor_process_leg,
+    use_game_core_get_additional_length, use_game_core_legs_ik_processor_leg_params.
+  - REACHABILITY (verified - every fn still SCORES in report.json, none dead-stripped):
+    get_foot_fixed_transform/process_leg <- process(); get_additional_length <- process_leg; all leg_params members
+    <- the real processor instance (ctor/activate/tick/setters via the public processor methods).
+  - BEFORE -> AFTER (rebuild, no module arg; numbers from report.json):
+    get_foot_fixed_transform  84.23 -> 84.23   (unchanged)
+    process_leg               78.81 -> 78.81   (unchanged)
+    get_additional_length     65.38 -> 65.38   (unchanged; --view diff byte-identical, still the one operator| inline)
+    process                   90.00 -> 90.00   (unchanged)
+    ~legs_ik_processor        85.71 -> 85.71   (unchanged)
+    leg_params::tick          97.42 -> 97.42   (unchanged)
+    set_*_transition_time     83.69 -> 83.69   (unchanged)
+    set_heel/toe_on_ground(processor) 98.84/98.59 -> same; all 100% fns stayed 100%.
+  - RESULT: VERIFIED NEGATIVE - fake observation was NOT the cap. The residuals are genuine: get_additional_length =
+    per-call-site LTCG inline of operator| (diff byte-identical before/after); process_leg = the documented three-block
+    bracing (srclines 205/231/245 written flat) PLUS call-boundary LTCG; get_foot_fixed/process/dtor = call-boundary/
+    ICF artifacts. The removed anchors were redundant clutter (good to drop) but never distorted codegen.
+  - Regressions: none. report-changes shows 11 regressed / 15 improved, all 100<->0 trivial ICF/COMDAT-fold churn
+    (empty_stub, float3::float3(void), booby_trap thunks, trivial dtors) - the standard net-neutral relink shuffle;
+    NO legs_ik_processor (or any matched game_core) function regressed.
+
+- legs_ik_drawer: 5-function same-class cluster (thin debug-draw forwarders over
+  render::debug::renderer). One rebuild (incremental, 1m32s compile+link / 5s delink).
+    draw_cross          100%   DONE
+    draw_line_capsule   100%   DONE
+    draw_solid_capsule  79.43% PARTIAL  (LTCG call-boundary reg-vs-stack int-arg assignment)
+    draw_leg            73.36% PARTIAL  (LTCG draw_origin float pass xmm0 vs fld/fstp x4)
+    draw_origin         62.88% PARTIAL  (LTCG draw_origin float pass xmm0 vs fld/fstp)
+  Source is correct & minimal for all five (the two 100% siblings use the identical
+  forward pattern); the three partials' sole residual is the callee's whole-program
+  float/int arg-passing convention, not steerable from the drawer. float4_pod::xyz() shows
+  in target as a COMDAT-folded `...::finalize_impl` thunk (delinker misname) = matrix.c.xyz().
+  Regressions: none (only unrelated delinker COMDAT-fold churn; no matched game_core fn moved).
