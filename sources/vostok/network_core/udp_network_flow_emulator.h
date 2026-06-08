@@ -11,6 +11,8 @@
 #include <vostok/memory_single_size_buffer_allocator.h>
 #include <boost/function.hpp>
 
+#include <boost/asio.hpp>
+
 namespace vostok {
 
 namespace memory {

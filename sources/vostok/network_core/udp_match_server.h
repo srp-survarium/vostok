@@ -14,6 +14,8 @@
 #include <boost/function.hpp>
 #include <boost/intrusive/set.hpp>
 
+#include <boost/asio.hpp>
+
 namespace vostok {
 namespace network_core {
 
