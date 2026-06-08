@@ -12,7 +12,7 @@ Matched together in ONE rebuild (103s, watchdog not engaged).
 | fn | % | tag |
 |---|---|---|
 | reload::weapon_core_reload_state_base(weapon_core&, float) | 100 | DONE |
-| reload::initialize() | 99.83 | DONE (round_is_chambered out-lined; sole residual = eax-vs-ecx this-load arg-passing) |
+| reload::initialize() | 92 | INPROGRESS (STRUCTURE MATCH; see Structure-verifier review below - out-lining did NOT take, still inlined in current base) |
 | reload::on_animation_end_impl(bool&) | 100 | DONE |
 | chamber::weapon_core_chamber_a_round_state_base(weapon_core&, float) | 100 | DONE |
 | chamber::initialize() | 100 | DONE |
@@ -119,6 +119,39 @@ out-lining the accessor. round_is_chambered has ONE matched call site, so out-li
 weapon_core.h, body weapon_core.cpp) is regression-free. Rebuilt: reload::initialize 92% -> 99.83%
 DONE, no real regressions. The sole 0.17% is the eax-vs-ecx this-load (permitted arg-passing). The
 table/STATE/PROGRESS below are updated to 99.83% DONE.
+
+## Structure-verifier review (PR #167 cluster, no logic change)
+Ran `pdb_fetch --view structure-diff --condensed` (new-format binary) on all 6 fns against the
+CURRENT `binaries/rich/{target,base}/index.jsonl`. The user's directive: verify SOURCE STRUCTURE
+specifically; inlining can be dealt with later.
+
+Per-fn structure verdicts:
+- reload::ctor, chamber::ctor: target 1 / base 2 stmts, quantity-diff 1. NOT a real divergence -
+  raw disasm is instruction-identical on both sides; the target PDB folds the FIRST store
+  (`movss [+140h]` = m_animation_timescale) into the ctor decl-line statement while the base tags
+  it with its own srcline. Same bytes, same shape -> STRUCTURE MATCH (srcline-attribution only).
+  (The resource_ptr template arg base_scene-vs-res_effect is a separate inlining/template detail,
+  not structure.)
+- reload::on_animation_end_impl, chamber::on_animation_end_impl, chamber::initialize: clean
+  `.. same ..`, size-diffs 0, quantity-diffs 0 -> STRUCTURE MATCH. Left carcass-free, no embed.
+- weapon_core::round_is_chambered (target @0x9b360, size 7): trivial single `return
+  m_is_round_chambered;` (`mov al,[eax+48Eh]; ret`). Structurally trivial/correct. Absent from
+  the BASE index -> the out-of-line emission did NOT take in the current build (still inlined at
+  the call site). Nothing structural to embed.
+- reload::initialize (92%): STRUCTURE MATCH. Embedded condensed diff in the .cpp. The control-flow
+  skeleton (base call + one flat `if` guarding a single statement) is IDENTICAL target vs base.
+  The 2-vs-4-row question is NOT a brace/short-circuit/source-shape problem: the target's extra
+  L31 row + the `if`-head SIZE diff are entirely produced by the 3rd `&&` term `round_is_chambered()`
+  being an out-of-line `call` in the target (its own srcline) but INLINED (`mov cl,[eax+48Eh]`) in
+  our base. Our 2-statement source is the correct shape; bracing the if-body would be WRONG (single
+  statement -> brace-less, matching the target's lone `unload_chambered_round()`).
+
+CORRECTION to Review #2: it recorded reload::initialize at 99.83% DONE after out-lining
+round_is_chambered. The CURRENT committed state is 92% (report.json) with round_is_chambered ABSENT
+from the base index and still inlined at the call site - i.e. the out-lining is not present/effective
+in this worktree's build. Downgraded the .cpp STATE 99.83%|DONE -> 92%|INPROGRESS to match
+report.json + the (already-correct) PROGRESS ledger. NEXT for a matcher: make round_is_chambered
+actually emit out-of-line (linker/inline concern - bytes, not structure). No source-shape change needed.
 
 ## Review #1 (no logic change - superseded for reload::initialize by Review #2)
 Audited against report.json + both rich disassemblies:
