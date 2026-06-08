@@ -72,6 +72,22 @@ mark it `INPROGRESS` with the next step.
   appear in the same order as the original; `private:`/`protected:`/`public:` may repeat
   and interleave to keep that order - that is CORRECT, not a mess to tidy. (The
   structure-verifier checks this.)
+- **Faithful SOURCE STRUCTURE beats the % - TAKE THE HIT when they conflict.** Write the
+  shape the original author wrote, even when a less-faithful shape scores the same or higher.
+  A 100% byte match does NOT prove correct structure - the byte % cannot see these:
+  - **Member inits go in the initializer LIST, not body assignments.** `m_x = x;` in the
+    ctor body vs `m_x( x )` in the list is a real structure divergence (a body statement vs
+    a prologue init) that reads 100% for trivial members yet has the wrong shape. Same idea
+    for braces, early-return guards, lexical blocks.
+  - **Never ADD a function/symbol that isn't in the TARGET structure** to score it (a
+    fabricated override, an invented split). A real target symbol living in its own `.cpp`
+    is fine; inventing one to win a % is not - take the hit instead.
+  - **Never modify ANOTHER unit's source to win THIS match.** Out-lining a *different*
+    unit's empty method so your call site emits `call` instead of inlining `{}` is off-limits
+    - that out-line, if the target really keeps it standalone, belongs to THAT unit's own PR.
+    Leave your function at the inline-vs-call %, note the wall, move on.
+  When in doubt run `--view structure-diff` even on a 100% function and trust its shape verdict
+  over the score.
 - **LTCG is an excuse ONLY for function ARGUMENTS.** The only diffs you may bank as
   LTCG are at a call boundary: an argument dropped (proven constant) or passed in a
   register instead of its slot. EVERYTHING else - register choice, `[ebp-XX]` slot,
