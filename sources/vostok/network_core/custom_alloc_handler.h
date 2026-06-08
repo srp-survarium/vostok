@@ -15,6 +15,28 @@ class custom_alloc_handler {
 public:
 	inline			custom_alloc_handler	( handler_allocator& allocator, Handler handler );
 
+	template < typename Arg1 >
+	inline	void	operator()				( Arg1 const& arg1 ) { handler_( arg1 ); }
+
+	template < typename Arg1, typename Arg2 >
+	inline	void	operator()				( Arg1 const& arg1, Arg2 const& arg2 ) { handler_( arg1, arg2 ); }
+
+	friend	void*	asio_handler_allocate	( u32 size, custom_alloc_handler< Handler >* this_handler )
+	{
+		return this_handler->m_allocator->allocate( size );
+	}
+
+	friend	void	asio_handler_deallocate	( void* pointer, u32 /*size*/, custom_alloc_handler< Handler >* this_handler )
+	{
+		this_handler->m_allocator->deallocate( pointer );
+	}
+
+	template < typename Function >
+	friend	void	asio_handler_invoke		( Function function, custom_alloc_handler< Handler >* /*this_handler*/ )
+	{
+		function( );
+	}
+
 private:
 	/* 0x0000 */	handler_allocator*		m_allocator;
 	/* 0x0004 */	Handler					handler_;
@@ -26,6 +48,12 @@ inline custom_alloc_handler< Handler >::custom_alloc_handler( handler_allocator&
 	handler_	( handler )
 {
 	/* no source */
+}
+
+template < typename Handler >
+inline custom_alloc_handler< Handler > make_custom_alloc_handler( handler_allocator& allocator, Handler handler )
+{
+	return custom_alloc_handler< Handler >( allocator, handler );
 }
 
 } // namespace network_core

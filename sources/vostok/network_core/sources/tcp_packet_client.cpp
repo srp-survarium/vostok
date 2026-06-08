@@ -10,97 +10,85 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
+// STATE[70%|PARTIAL]: body byte-correct; boost::bind/function assign reps fold under LTCG (frame/slot residual)
 tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
 	m_socket		( io_service ),
-	// *g_allocator is a buildability placeholder - a matcher supplies the real wiring
 	m_packet_socket	( m_socket, *g_allocator ),
 	m_io_service	( io_service ),
 	m_first_packet	( NULL )
 {
-	// FUNCTION BODY[0x78cc70]: 1
-	// <0x78cd34>|0x0c4|+0x05e:'20'
-	// ******
+	m_on_error	= boost::bind( &tcp_packet_client::on_error, this, _1, _2 );
 }
 
-// STATE[STUB]
+// STATE[91%|PARTIAL]: body byte-correct; boost::function clear reps fold under LTCG
 tcp_packet_client::~tcp_packet_client( )
 {
-	// FUNCTION BODY[0x78cbe0]: 4
-	// <0x78cbea>|0x00a|+0x016:'25'
-	// <0x78cc00>|0x020|+0x002:'26'
-	// <0x78cc02>|0x022|+0x008:'28'
-	// ******
+	if ( m_async_connector.has_connection_established( ) )
+		disconnect( );
 }
 
-// STATE[STUB]
+// STATE[99.70%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::start_reading( )
 {
-	// FUNCTION BODY[0x78cde0]: 1
-	// <0x78cdef>|0x00f|+0x00e:'33'
-	// ******
+	m_packet_socket.start_receiving( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void tcp_packet_client::on_connected( )
 {
-	// FUNCTION BODY[0x78ce10]: 4
-	// <0x78ce1f>|0x00f|+0x021:'38'
-	// <0x78ce40>|0x030|+0x011:'39'
-	// <0x78ce51>|0x041|+0x00b:'41'
-	// ******
+	if ( m_on_connected )
+		m_on_connected( );
+
+	start_reading( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void tcp_packet_client::connect( pcstr host, u16 port )
 {
-	// FUNCTION BODY[0x78ce60]: 1
-	// <0x78ce69>|0x009|+0x09e:'46'
-	// ******
+	m_async_connector.connect(
+		m_socket,
+		host,
+		port,
+		boost::bind( &tcp_packet_client::on_connected, this ),
+		m_on_error
+	);
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void tcp_packet_client::disconnect( )
 {
-	// FUNCTION BODY[0x78cb90]: 3
-	// <0x78cb9f>|0x00f|+0x00e:'51'
-	// <0x78cbad>|0x01d|+0x024:'52'
-	// <0x78cbd1>|0x041|+0x00b:'53'
-	// ******
+	m_packet_socket.stop_receiving( );
+
+	if ( m_socket.is_open( ) )
+		close_connection( );
 }
 
-// STATE[STUB]
+// STATE[66%|PARTIAL]: ASSERT + shutdown + close + reset shape correct; residual = m_socket.close(ec)
+// out-lines to basic_socket::close in target but over-inlines to win_iocp service close in base (inline-boundary)
 void tcp_packet_client::close_connection( )
 {
-	// LOCALS
-	// boost::system::error_code 		ec
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_socket.is_open( ) ) );
 
-	// FUNCTION BODY[0x78cb10]: 5
-	// <0x78cb1f>|0x00f|+0x00c:'58'
-	// <0x78cb2b>|0x01b|+0x00f:'59'
-	// <0x78cb3a>|0x02a|+0x02f:'60'
-	// <0x78cb69>|0x059|+0x00b:'61'
-	// <0x78cb74>|0x064|+0x011:'62'
-	// ******
+	boost::system::error_code	ec;
+	m_socket.shutdown( boost::asio::ip::tcp::socket::shutdown_both, ec );
+	m_socket.close( ec );
+
+	m_async_connector.reset( );
 }
 
-// STATE[STUB]
+// STATE[99.69%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::send( tcp_packet const& packet )
 {
-	// FUNCTION BODY[0x78cda0]: 1
-	// <0x78cdb9>|0x019|+0x012:'67'
-	// ******
+	m_packet_socket.send( packet );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void tcp_packet_client::on_error( client_error_codes_enum client_error_code, boost::system::error_code error_code )
 {
-	// FUNCTION BODY[0x78caa0]: 3
-	// <0x78caaf>|0x00f|+0x011:'72'
-	// <0x78cac0>|0x020|+0x021:'73'
-	// <0x78cae1>|0x041|+0x01d:'74'
-	// ******
+	m_async_connector.reset( );
+
+	if ( m_on_error )
+		m_on_error( client_error_code, error_code );
 }
 
 } // namespace network_core

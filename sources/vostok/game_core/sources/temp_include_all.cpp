@@ -33,6 +33,7 @@
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
+#include <vostok/network_core/tcp_packet_client.h>
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
@@ -1444,6 +1445,21 @@ namespace vostok
 		printf( "%d", r );
 	}
 
+	void use_network_core_tcp_packet_client()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::tcp_packet_client c( io_service );
+
+		c.connect( "host", 80 );
+		c.disconnect();
+
+		memory::stack_allocator stack_allocator;
+		network_core::tcp_packet packet( stack_allocator );
+		c.send( packet );
+
+		c.io_service();
+	}
+
 	void use_network_core_http_client()
 	{
 		boost::asio::io_service io_service( 10 );
@@ -1656,6 +1672,7 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_http_client();
 	vostok::use_network_core_tcp_packet();
 	vostok::use_network_core_entry_point();
+	vostok::use_network_core_tcp_packet_client();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
