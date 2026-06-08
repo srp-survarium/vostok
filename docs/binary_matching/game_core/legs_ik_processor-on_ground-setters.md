@@ -104,7 +104,7 @@ fermi consumer that assigns; `game`/`animation` only construct it, so no codegen
 matched code changes. Also had to qualify as `animation::fermi_interpolator` in the
 cpp (file is in namespace survarium).
 
-Compile sequence (targeted obj, ~1min incremental each):
+Compile sequence (targeted obj, incremental each):
 - v0: `fermi_interpolator(...)` unqualified -> C3861 identifier not found
 - v1: `animation::fermi_interpolator(...)` -> C2248 cannot access private operator=
 - v2: header non-const + drop private op= -> EXIT=0 clean compile

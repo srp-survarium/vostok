@@ -133,9 +133,16 @@ pdb_fetch --target-index binaries/rich/target/index.jsonl \
 ```
 
 Read the rows: `  ` equal, `~ base -> target` same slot/different instruction,
-`-` base-only, `+` target-only. A `~` that is only a register or `[ebp-XX]`
-stack-slot difference is usually an LTCG/linker artifact, not a real mismatch (see
-`assembly_patterns.md`) - match the body, don't chase those.
+`-` base-only, `+` target-only. A *handful* of `~` rows that are only a register or
+`[ebp-XX]` stack-slot difference is usually an LTCG/linker artifact, not a real
+mismatch (see `assembly_patterns.md`) - match the body, don't chase those. But a
+*storm* of `[ebp-XX]` slot renames (dozens at once) is usually NOT LTCG: it means
+your locals landed in different stack slots because your block structure differs
+from the target's - a missing brace scope, an `if`/loop the target has, statements
+written flat where the target nests them. The carcass shows it as target `[n]`
+block-opens with `<1>`-tagged block-scoped locals that your base structure lacks.
+Block-scope the locals to match the target's braced blocks before writing it off as
+LTCG. (This is exactly what masqueraded as "447 slot renames" on `process_leg`.)
 
 The header `objdiff fuzzy match P%` is a target-byte-weighted fuzzy match (partial
 credit per instruction, so a stack-slot-only `~` barely costs anything). It tracks

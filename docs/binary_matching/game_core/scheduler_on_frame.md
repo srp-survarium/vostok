@@ -73,10 +73,10 @@ Note the frame is `sub esp, 274h` in target (huge) — the target inlined the
 ## Iterations
 1. INPUT: changed loop condition `m_inactive_objects.size()` -> `m_active_objects.size()`.
    BUILD #1: ran `rebuild.py game_core` (WRONG - module arg only builds the lib,
-   did NOT relink the EXE; finished in ~1 min, report-changes showed +0.00/0
+   did NOT relink the EXE; finished without relinking, report-changes showed +0.00/0
    changed; EXE timestamp unchanged at the previous day's link). Score stayed
    52.33% and base asm still read the old (m_inactive) code. See loop_performance.md.
-   BUILD #2: re-ran `rebuild.py` (no arg, full EXE relink, ~20 min).
+   BUILD #2: re-ran `rebuild.py` (no arg, full EXE relink).
    SCORE: 52.33% -> **46.39%**.
    DIFF: base now reads `add ecx,10h` then size `[edx+4]-[eax]` of offset 0x10
    (correct member, was offset 0x00 before). But base still *inlines* size()
