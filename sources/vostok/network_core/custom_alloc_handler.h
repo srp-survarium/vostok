@@ -15,6 +15,13 @@ class custom_alloc_handler {
 public:
 	inline			custom_alloc_handler	( handler_allocator& allocator, Handler handler );
 
+	// sushi@TODO: operator() emits 6 real out-of-line symbols in target
+	// (network_core::custom_alloc_handler<..>::operator()), but we wrote it `inline`
+	// so our base folds them away -> 6 unmatched scorable symbols. The generated
+	// structure dump for this header carries only the 4 layout records (no operator()
+	// carcass), so a later matcher must recover these 6 from the index directly. By
+	// contrast make_custom_alloc_handler + the asio_handler_* friends fully inline in
+	// target too (0 symbols both sides) and are consistent as-is. See review_todos.md.
 	template < typename Arg1 >
 	inline	void	operator()				( Arg1 const& arg1 ) { handler_( arg1 ); }
 
