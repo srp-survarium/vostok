@@ -36,11 +36,11 @@ void weapon_core_fire_state_base::initialize( )
 	*m_is_firing_ptr = true;
 }
 
-// STATE[80.91%|PARTIAL]: LTCG inline-vs-call of the empty weapon_core_base_state::execute().
-// Target keeps it out-of-line and emits `call execute` (standalone @0x087f80); our /GL LTCG
-// inlines its empty `{}` body at this call site (standalone still exists @0x012c20, so it is a
-// per-call-site inline decision, not "inlined everywhere"). Same unsteerable class as
-// animation_playback_state::reset() in finalize. m_animation_has_been_ended = false matches.
+// STATE[80.91%|PARTIAL]: inline-vs-call of the empty weapon_core_base_state::execute() (not yet steered).
+// Target keeps it out-of-line and emits `call execute` (standalone @0x087f80); our /GL
+// inlines its empty `{}` body at this call site (execute standalone in BOTH indexes, so it is a
+// per-call-site inline decision that is source-steerable in principle - force the out-of-line call -
+// NOT non-steerable LTCG). m_animation_has_been_ended = false matches.
 void weapon_core_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );
