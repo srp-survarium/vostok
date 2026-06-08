@@ -883,15 +883,6 @@ the primary inline template's DEFINITION is in scope (via the included `_inline.
 it; a spec-DECL does not suppress that. The forward-decl device works ONLY when the inline DEFINITION is
 OUT of the consuming TU (drop the inline-header include + forward-decl the function AND its types) - a
 TU restructure, often shared across many sibling .cpp in an out-of-scope module (collateral risk).
-### a lone 4-byte `mov byte[ebp-N],0` standalone statement (no lea/call) = an unused `bool b = false;`, NOT an ASSERT
-A carcass/structure statement of size `<0x4>` whose only instruction is `mov byte ptr [ebp-N], 0`
-with NO following `lea eax,[ebp-N]; call <empty_stub>` is a plain unused `bool` local initialized
-to false (`bool b = false;`), kept as a dead store under /Od (no DCE). DISTINGUISH from a
-compiled-out `ASSERT`, which is `<0xc>` (the byte-store PLUS `lea eax; call empty_stub`). Writing
-an `ASSERT(UNKNOWN_EXPRESSION)` for such a `<0x4>` slot OVER-produces the lea+call. The disp size
-(4 vs 7 bytes) only reflects whether MSVC put the slot at a small or large `[ebp-N]` offset -
-allocation noise, not a mismatch. Confirmed in `game_core/get_weapon_lexeme_pair_impl` (L40,
-target `<0x4>` `mov byte[ebp-5],0`).
 
 ### forward-kinematics chain: `mat = matrices[idx] * parent_obj` and the `operator*(out,A,B)` push order
 A run of `operator*` calls each `rep movsd 0x10` into a fresh 0x40-byte `[ebp-N]` slot, where
