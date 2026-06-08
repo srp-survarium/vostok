@@ -841,3 +841,45 @@ target's out-of-line `addition_lexeme::cloned_in_buffer()`). Whether operator+ i
 `call` at the site is per-call-site LTCG (operator+ is standalone in BOTH indexes), same class as the
 operator| entry. Confirmed in `weapon_core_idle_state::weapon_and_hands_expression` (85.65%, residual =
 that operator+ inline-vs-call): `main + offset` scored 85.65 vs the hand-expansion's 80.30.
+
+### Lone assert eater (no branch) = compiled-out NON-_U `ASSERT( ... )`
+A standalone `mov byte ptr [ebp-XX], 0 ; lea eax, [ebp-XX] ; call empty_stub` with NO following
+`movzx/test/je` and NO arg pushes is a compiled-out plain `ASSERT( expr )` (= `VOSTOK_EMPTY_EXPRESSION`
+= `if(::vostok::identity(false)){}else(void)0`; debug_macros.h). Under /Od the empty-`if` body lets MSVC
+drop the branch, leaving just the `identity(false)` guard call (the delinker misnames it
+`empty_stub`/`finalize_impl`). SOURCE: `ASSERT( UNKNOWN_EXPRESSION )`. DISTINGUISH from the `_U` asserts
+(`ASSERT_U`/`ASSERT_CMP_U`) which ALSO emit `movzx;test;je; push..; call expression_eater; add esp` (the
+eater body) - using a `_U` form for a lone eater over-produces those bytes. Confirmed in
+`pistol_/double_barreled_weapon_core_idle_state` ctors (trailing ASSERT after the fill loop) and the
+double-barreled getter (leading ASSERT). The double-barreled ctor has a leading lone `ASSERT` then an
+`ASSERT_CMP_U(count,==,12)` -> two byte-stores, only the second tested.
+
+### Inline class-body accessor inlined by base but called by target -> move it out-of-line
+When the target diff shows `call ?accessor@class@@...` but base shows the inlined member read
+(e.g. `mov ax,[reg+off]; mov [ebp-XX],ax; movzx`), the cause is a trivial accessor defined IN the
+class body (implicitly inline) that the target's build kept out-of-line at the call site. FIX: declare
+it in the header and define it in the .cpp. This is NOT just one instruction - the inlined temp grows
+the frame (`sub esp` differs by ~4) and clobbers a different register than a `call` would, cascading the
+WHOLE function's register allocation. Confirmed: moving `weapon_core::ammo_in_magazine()` out-of-line
+took `pistol_/double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair` from 77/92% to 99.92%.
+
+### Out-line an EMPTY inline virtual to recover the target's qualified `call` (STEERABLE)
+SYMPTOM: `--view diff` on a derived state shows the TARGET emitting `call base::execute` (an empty
+base virtual called qualified) then the member store, while OUR BASE has NO call - it inlined the
+empty `{}` at the call site (~80%, the missing call bytes). CAUSE: the base method's empty body was
+defined INLINE in the header, so /GL inlines the no-op at every qualified call site; the target keeps
+a standalone out-of-line body and emits a real `call`. FIX: out-line the empty body - keep the decl
+in the header (same access char), move the `{}` definition to the .cpp. Confirmed
+`weapon_core_fire_state_base::execute` 80.91% -> 99.09% (via `weapon_core_base_state::execute`).
+Regression-free ONLY if the out-of-line body's base method has a single qualified call site (else
+out-lining changes other derived classes' codegen). Same device class as out-lining a trivial accessor
+(round_is_chambered / ammo_in_magazine).
+
+### Explicit-specialization DECLARATION does NOT force a call to a VISIBLE inline template (INEFFECTIVE)
+SYMPTOM: inline-vs-call wall where the TARGET keeps `call operator+<T,T>` and OUR BASE inlines it; the
+specialization is standalone in BOTH indexes. TEMPTATION: add `template<> R operator+<T,T>(...);` in
+the consuming .cpp. RESULT: NO EFFECT under MSVC8 (`weapon_and_hands_expression` 85.65 -> 85.65) - when
+the primary inline template's DEFINITION is in scope (via the included `_inline.h`), MSVC still inlines
+it; a spec-DECL does not suppress that. The forward-decl device works ONLY when the inline DEFINITION is
+OUT of the consuming TU (drop the inline-header include + forward-decl the function AND its types) - a
+TU restructure, often shared across many sibling .cpp in an out-of-scope module (collateral risk).

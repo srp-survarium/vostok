@@ -396,3 +396,22 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     operator+ standalone-in-both-indexes claim and the base/target attribution direction from the disasm;
     carcass present on the PARTIAL and stripped on the three 100% DONE; impl STATE still STUB. Added this
     previously-missing ledger entry. No logic change.
+- game_core::{pistol_weapon_core_idle_state, double_barreled_weapon_core_idle_state}::{ctor, weapon_and_hands_expression,
+  get_weapon_lexeme_pair, weapon_core_state_cook_template<T>::new_object} -> STATE[ctors+new_objects 100% DONE,
+  get_weapon_lexeme_pair 99.92% DONE, weapon_and_hands_expression 85.65% PARTIAL] -> PR #153 (regressions: none)
+  - STACKED on docs/matching-macro-headers (#152). GROUPED: 8 fns, two sibling state classes near-copies of
+    weapon_core_idle_state (#151). Verified vs report.json: pistol ctor/new_object 100.0, get_weapon_lexeme_pair
+    99.91803, weapon_and_hands 85.64815; dbl ctor/new_object 100.0, get_weapon_lexeme_pair 99.92063, weapon_and_hands
+    85.64815. Both get_weapon_lexeme_pair DONE residual VERIFIED genuine LTCG arg passing: target
+    weapon_core::ammo_in_magazine @0x9b270 is `mov ax,[eax+47Ah]; ret` (takes `this` in eax via a link-time custom
+    calling convention), so the one residual instruction is `mov eax,[..+128h]` (target) vs `mov ecx,[..+128h]`
+    (base) at the call boundary - the permitted arg-passing class, NOT register-allocation noise. Both
+    weapon_and_hands PARTIAL residual = whole-program inline-vs-call of operator+<animation_lexeme,animation_lexeme>
+    (operator+ standalone in BOTH indexes: target 0xb42f0, base 0x8b900; base keeps the call, target inlines) -
+    same class as #151's sibling. Moved weapon_core::ammo_in_magazine out-of-line (header decl + weapon_core.cpp
+    body) so the getters emit the target's `call` (77/92% -> 99.92%); used only by these two files.
+  - REVIEW: restored the pistol get_weapon_lexeme_pair carcass (a non-100% DONE keeps the FUNCTION BODY per house
+    style, mirroring the dbl getter and booby_trap_core's 9x% DONEs); reworded both getter STATE lines to name the
+    verified eax-vs-ecx custom-calling-convention cause instead of bare "register choice"; added this PROGRESS line
+    (#153 shipped without one, like #148/#149/#151). No logic change. report-changes 44 regressions are all unrelated
+    relink/ICF churn (Scaleform vector-deleting-dtors etc.); 0 touch this unit (13 in-scope symbols improved 0 -> final).
