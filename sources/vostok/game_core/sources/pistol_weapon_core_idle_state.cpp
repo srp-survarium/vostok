@@ -5,38 +5,55 @@
 #include "pch.h"
 #include <vostok/game_core/pistol_weapon_core_idle_state.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
+
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/linear_interpolator.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::pistol_weapon_core_idle_state::pistol_weapon_core_idle_state(survarium::weapon_core&, vostok::resources::managed_resource_ptr const*, const unsigned int)
-pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
-	 weapon_core_idle_state_base( weapon )
-{
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							weapon_state_index<3>
-	// ******
+static float s_aim_transition_time = 0.3f;
 
-	// FUNCTION BODY
-	// <0x7abadf>|0x03f|+0x023:'21'
-	// <0x7abb02>|0x062|+0x007:'22'
-	// <0x7abb09>|0x069|+0x018|[1]:'23'
-	// <0x7abb21>|0x081|+0x018|[2]:'24'
-	// <0x7abb39>|0x099|+0x018|[3]:'25'
-	// <0x7abb51>|0x0b1|+0x03a:'26'
-	// <0x7abb8b>|0x0eb|+0x002:'27'
-	// <0x7abb8d>|0x0ed|+0x002:'28'
-	// <0x7abb8f>|0x0ef|+0x002:'29'
-	// <0x7abb91>|0x0f1|+0x00c:'30'
-	// ******
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
+
+// STATE[100%|DONE]
+pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
+	weapon_core_idle_state_base( weapon )
+{
+	ASSERT_CMP_U( animations_count, ==, 8 );
+
+	u32 animation_index = 0;
+	for ( u32 view = 0 ; view != 2 ; ++view )
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
+				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_idle_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[85.65%|PARTIAL]: structure matches (ASSERT_U, get_weapon_lexeme_pair, return expr).
+// Wall (inline-vs-call, side verified against --view diff): the TARGET keeps the out-of-line
+// `call operator+<animation_lexeme,animation_lexeme>`; OUR BASE inlines it into the return
+// (addition_lexeme ctor + cloned_in_buffer + ~addition_lexeme stack temporaries -> frame grows).
+// operator+ is a standalone symbol in BOTH rich indexes (target 0x0b42f0, base 0x08c9f0).
+// ATTEMPTED (reverted, no effect 85.65 -> 85.65): an explicit-specialization DECLARATION of
+// operator+<animation_lexeme,animation_lexeme> in this .cpp - MSVC8 still inlines the visible
+// primary inline template. The proven forward-decl device needs the inline DEFINITION to be
+// out of the TU (drop the mixing_addition_lexeme.h include and forward-decl the operator + the
+// addition_lexeme type), a deep restructure shared across 7 sibling .cpp in the out-of-scope
+// animation module - not done here. trail: pistol_double_barreled_weapon_core_idle_state.md
 animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -44,42 +61,60 @@ animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_ex
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
+	ASSERT_U( weight_driving_animation );
 
-	// FUNCTION BODY
-	// <0x7abce1>|0x011|+0x036:'35'
-	// <0x7abd17>|0x047|+0x01f:'36'
-	// <0x7abd36>|0x066|+0x059:'37'
-	// ******
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
+
+	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
+
+	// STRUCTURE DIFF[target 0x79bcd0 | base 0x44eee0]: target 3 / base 5 stmts
+	// 0x011 <0x36> | 0x011 <0x38> | ASSERT_U( weight_driving_animation );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x066 <0x59> | 0x068 <0x38> | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );   SIZE
+	// ; aligned 1, size-diffs 2, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are operator+ inline-vs-call: target keeps out-of-line `call operator+`, base inlines it (source-steerable, not yet resolved). trail: pistol_double_barreled_weapon_core_idle_state.md
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::pistol_weapon_core_idle_state::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
+// STATE[99.92%|DONE]: structure matches (the captions brace-init splits per-element to align
+// the target's two L43/L44 stores). Sole byte residual: `m_weapon.ammo_in_magazine()` loads
+// `this` into eax (target, LTCG `ammo_in_magazine` @0x9b270 takes it in eax) vs ecx (base) - the
+// permitted call-boundary arg-passing class. trail: get_weapon_lexeme_pair.md
 weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	// LOCALS
-	// pcstr[2] 					weapon_animation_captions
-	// resources::managed_resource_ptr const& selected_animation
-	// u32 							animation_index
-	// pcstr 						animation_identifier
-	// ******
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-idle",
+		"pistol-idle_empty"
+	};
 
-	// FUNCTION BODY
-	// <0>
-	// <0x7abc19>|0x009|+0x007:'43'
-	// <0x7abc20>|0x010|+0x007:'44'
-	// <0>
-	// <0x7abc27>|0x017|+0x01b:'46'
-	// <0x7abc42>|0x032|+0x00a:'47'
-	// <0x7abc4c>|0x03c|+0x02c:'48'
-	// <0x7abc78>|0x068|+0x04f:'49'
-	// ******
+	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
+	pcstr animation_identifier = weapon_animation_captions[animation_index];
+
+	resources::managed_resource_ptr const& selected_animation =
+		m_weapon_animations[is_third_view != false][user_state_id == type_crouch][animation_index];
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		animation_identifier,
+		selected_animation,
+		&m_weapon,
+		m_animation_playback_state,
+		u32( -1 ),
+		1.0f,
+		animation::mixing::play_cyclically,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
+
+	// STRUCTURE DIFF[target 0x79bc10 | base 0x44ee20]: target 7 / base 10 stmts
+	// .. same .. (captions now per-element; all 7 stmts aligned, size-diffs 0)
+	// quantity-diffs are EMPTY-only-base collapsed blank-line gaps inside the brace-init
+	// ; aligned 7, size-diffs 0, quantity-diffs 3
+	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine eax-vs-ecx arg-passing, non-steerable. trail: get_weapon_lexeme_pair.md
 }
 
-// STATE[STUB]
-// survarium::pistol_weapon_core_idle_state* survarium::weapon_core_state_cook_template<survarium::pistol_weapon_core_idle_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
+// STATE[100%|DONE]
 pistol_weapon_core_idle_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_idle_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
@@ -87,15 +122,7 @@ pistol_weapon_core_idle_state* weapon_core_state_cook_template<survarium::pistol
 	u32									animations_count
 )
 {
-	return NULL;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7abbb9>|0x009|+0x045:'60'
-	// ******
+	return new ( buffer.c_ptr( ) ) pistol_weapon_core_idle_state( params->weapon, animations, animations_count );
 }
 
 } // namespace survarium
