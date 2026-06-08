@@ -10,7 +10,7 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
+// STATE[86%|DONE]: full init list matches; residual is ICF-folded call-name noise + handler_allocator stub's trailing byte init (sibling unit)
  udp_match_connection::udp_match_connection(
 	boost::asio::ip::udp::socket&		socket,
 	boost::asio::ip::udp::endpoint const&	remote_endpoint,
@@ -26,61 +26,51 @@ namespace network_core {
 	m_packets_allocator	( packets_allocator ),
 	m_packets_orderer	( packets_orderer ),
 	m_logging_id		( logging_id ),
+	m_last_receive_time_in_ms		( 0 ),
 	m_disconnection_timeout_in_ms	( disconnection_timeout_in_ms ),
+	m_last_send_time_in_ms			( 0 ),
+	m_last_send_attempt_time_in_ms	( 0 ),
 	m_max_packet_wait_time_in_ms	( max_packet_wait_time_in_ms ),
-	m_max_idle_time_in_ms	( max_idle_time_in_ms )
+	m_max_idle_time_in_ms			( max_idle_time_in_ms ),
+	m_disconnection_receive_time_in_ms	( 0 ),
+	m_pending_operations_count		( 0 ),
+	m_state				( disconnected ),
+	m_remote_acknowledgement_bits		( 0 ),
+	m_received_local_acknowledgement_bits	( 0 ),
+	m_local_sequence_id				( 0xFFFF ),
+	m_remote_sequence_id			( 0xFFFF ),
+	m_received_local_sequence_id	( 0xFFFF ),
+	m_disconnection_local_sequence_id	( 0xFFFF )
 {
-	// FUNCTION BODY[0x5562a0]: 0
-	// <0x5562a0>|0x000|+0x220:'49'	{
-	// <0x5564c0>|0x220|      :'50'	}
-	// ******
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: auto-generated member-dtor cleanup matches; target caches `this` in esi vs base ebp-slot - /Od register-alloc residual + ICF call-name noise
  udp_match_connection::~udp_match_connection( )
 {
-	// FUNCTION BODY[0x556550]: 0
-	// <0x556550>|0x000|+0x00a:'53'	{
-	// <0x55655a>|0x00a|      :'54'	}
-	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_match_connection::on_error( client_error_codes_enum, boost::system::error_code )
 {
-	// FUNCTION BODY[0x555b70]: 0
-	// <0x555b70>|0x000|+0x007:'80'	{
-	// <0x555b77>|0x007|      :'81'	}
-	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful source; packet_reader::r<>/advance/eof are empty inline STUBs (sibling unit), so target's out-of-line calls do not emit
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
-	return false;
+	packet_reader	reader( packet );
 
-	// LOCALS
-	// packet_reader 					reader
-	// const u16 						bits
-	// ******
+	reader.r< u16 >( );
+	reader.r< u16 >( );
+	const u16	bits	= reader.r< u16 >( );
 
-	return false;
+	if ( ( bits & 1 ) == 0 )
+		return false;
 
-	// FUNCTION BODY[0x5564d0]: 10
-	// <0x5564d6>|0x006|+0x011:'85'
-	// <0>
-	// <0x5564e7>|0x017|+0x014:'87'
-	// <0x5564fb>|0x02b|+0x014:'88'
-	// <0x55650f>|0x03f|+0x00c:'89'
-	// <0x55651b>|0x04b|+0x009:'90'
-	// <0x556524>|0x054|+0x004:'91'
-	// <0>
-	// <0x556528>|0x058|+0x014:'93'
-	// <0x55653c>|0x06c|+0x008:'94'
-	// ******
+	reader.advance( reader.r< bool >( ) );
+	return reader.eof( );
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::handle_send(
 	udp_match_packet*					packet,
 	boost::system::error_code const&	error_code,
@@ -126,7 +116,7 @@ void udp_match_connection::handle_send(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::send( udp_match_packet* const packet )
 {
 	// FUNCTION BODY[0x556fd0]: 19
@@ -152,7 +142,7 @@ void udp_match_connection::send( udp_match_packet* const packet )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 {
 	// LOCALS
@@ -174,7 +164,7 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::send_packets_list( udp_match_packet* const packets_list, const u32 packets_count )
 {
 	// LOCALS
@@ -256,26 +246,13 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: single guarded debug-dump statement (bool guard call + 2-arg log call), both fold to empty_stub; exact logging helper API (sibling unit) unresolved
 void udp_match_connection::dump( pcstr const caption, const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x555b80]: 12
-	// <0x555b89>|0x009|+0x023:'240'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETERS( caption, current_time_in_ms );
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_type )
 {
 	return NULL;
@@ -326,7 +303,7 @@ udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_t
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 {
 	// LOCALS
@@ -480,56 +457,39 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[DONE]: bytes match (only diff is the ICF-folded empty_stub representative name objdiff prints)
 void udp_match_connection::connect( udp_match_packet* const packet )
 {
-	// FUNCTION BODY[0x555d30]: 4
-	// <0x555d39>|0x009|+0x00c:'458'
-	// <0x555d45>|0x015|+0x00d:'459'
-	// <0x555d52>|0x022|+0x006:'460'
-	// <0x555d58>|0x028|+0x00c:'461'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_state == disconnected ) );
+
+	m_state	= connected;
+
+	if ( packet )
+		enqueue_impl( packet );
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: is_reliable branch + push_back match; is_ordered block needs sequence_number::serialize/operator++ which are empty inline STUBs (sibling unit) and crash LTCG codegen if invoked
 void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 {
-	// LOCALS
-	// sequence_number< u16 >& 			sent_order_id<1>
-	// pbyte 							stream<1>
-	// ******
+	if ( packet->is_reliable )
+		++m_stats.unacknowledged_packets;
 
-	// FUNCTION BODY[0x555c60]: 12
-	// <0x555c69>|0x009|+0x013:'466'
-	// <0x555c7c>|0x01c|+0x01c|[1]:'467'
-	// <0x555c98>|0x038|+0x015:'468'
-	// <0x555cad>|0x04d|+0x011:'469'
-	// <0x555cbe>|0x05e|+0x021:'470'
-	// <0x555cdf>|0x07f|+0x010:'471'
-	// <0>
-	// <1>
-	// <0x555cef>|0x08f|+0x012:'474'
-	// <0x555d01>|0x0a1|+0x00f:'475'
-	// <0>
-	// <0x555d10>|0x0b0|+0x014:'477'
-	// ******
+	m_packets_to_send.push_back( packet );
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful source; delete_udp_match_packet is an empty inline STUB (sibling unit) so target's call + frame slots do not emit
 void udp_match_connection::enqueue( udp_match_packet* packet )
 {
-	// FUNCTION BODY[0x555e20]: 7
-	// <0x555e29>|0x009|+0x00c:'482'
-	// <0x555e35>|0x015|+0x00c:'483'
-	// <0x555e41>|0x021|+0x002:'484'
-	// <0>
-	// <1>
-	// <0x555e43>|0x023|+0x00c:'487'
-	// <0x555e4f>|0x02f|+0x016:'488'
-	// ******
+	if ( m_state == connected )
+		enqueue_impl( packet );
+	else
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( m_state != connected ) );
+		delete_udp_match_packet( m_packets_allocator, packet );
+	}
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::update_acknowledgements(
 	sequence_number< u16 >		remote_sequence_id,
 	sequence_number< u16 >		local_sequence_id,
@@ -601,7 +561,7 @@ void udp_match_connection::update_acknowledgements(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::process_low_level_message( packet_reader& reader, const u32 time_in_ms )
 {
 	// LOCALS
@@ -655,7 +615,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::instant_disconnect( disconnect_event_types_enum type )
 {
 	// LOCALS
@@ -700,7 +660,7 @@ void udp_match_connection::instant_disconnect( disconnect_event_types_enum type 
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
 void udp_match_connection::disconnect( )
 {
 	// LOCALS
@@ -739,27 +699,15 @@ void udp_match_connection::disconnect( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: control structure + ops match; base frame is 0x18 larger (intrusive set size() temp) + ICF call-name noise
 u32 udp_match_connection::packets_count( ) const
 {
-	return 0;
+	u32 result	= m_packets_to_send.size( ) + m_outgoing_packets.size( ) + m_unacknowledged_packets.size( );
 
-	// LOCALS
-	// u32 								result
-	// u32 								i<1>
-	// u32 								n<1>
-	// ******
+	for ( u32 i = 0, n = m_channels.size( ) ; i < n ; ++i )
+		result	+= m_channels[ i ].packets.size( );
 
-	return 0;
-
-	// FUNCTION BODY[0x555d70]: 6
-	// <0x555d7a>|0x00a|+0x030:'712'
-	// <0>
-	// <0x555daa>|0x03a|+0x021|[1]:'714'
-	// <0x555dcb>|0x05b|+0x04b:'715'
-	// <0>
-	// <0x555e16>|0x0a6|+0x003:'717'
-	// ******
+	return result;
 }
 
 
