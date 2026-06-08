@@ -293,8 +293,9 @@ verifier ran). A clean 100% DONE carries neither.
 supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
 structure-diff --condensed` and paste its output, `// `-prefixed, in place of the
 carcass: it shows target-vs-base aligned with the matched runs collapsed to
-`.. same ..` and each divergence as `0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
-{stmt}   {SIZE|ONLY base|ONLY target|EMPTY only ...}`. That way the reader sees exactly
+`.. same ..` and each divergence as `NN: 0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
+{stmt}   {SIZE|ONLY base|ONLY target}` (the `NN:` is a monotonic statement index; blank-
+line gaps are suppressed, tallied as `blank-gaps` in the summary). That way the reader sees exactly
 where our build diverges from the target, not just the target shape. **Standard shape:
 the tool's `--condensed` output VERBATIM, then exactly one `// VERDICT: STRUCTURE
 <MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>` line; all detail lives in the
