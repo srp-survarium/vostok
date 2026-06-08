@@ -243,7 +243,7 @@ pcstr jump_logic::get_animation_caption(
 }
 
 // STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
-// m_jumping_direction * 3, is_third_view )` (verified against target asm @0x58dee0,
+// m_jumping_direction * 3, is_third_view )` (verified against target asm @0x57dee0,
 // 1 empty_stub ASSERT for animations() operator*), but get_stand_animation has no
 // definition in our tree (weapon_user_animations_container.cpp absent) so anchoring
 // this body fails LTCG with LNK1257 (unresolved). Unblock once that symbol exists.
@@ -255,7 +255,7 @@ resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_th
 }
 
 // STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
-// m_jumping_direction * 3 + 2, is_third_view )` (target asm @0x58de90). Same
+// m_jumping_direction * 3 + 2, is_third_view )` (target asm @0x57de90). Same
 // get_stand_animation undefined-symbol blocker as get_move_animation.
 resources::managed_resource_ptr jump_logic::get_move_look_animation( const bool is_third_view ) const
 {

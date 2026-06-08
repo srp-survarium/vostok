@@ -60,7 +60,7 @@ temp_include_all.cpp: use_game_core_jump_logic() takes member-fn ptrs of the 5 m
   selected_animations; `return look_time_functor( this, &...::look_time_factor_calculator )`).
 
 ### get_move_animation / get_move_look_animation: STILL STUB (blocked)
-Bodies are verified against target asm (@0x58dee0 / @0x58de90):
+Bodies are verified against target asm (@0x57dee0 / @0x57de90):
   return m_owner.animations().get_stand_animation( false, m_jumping_direction*3[+2], is_third_view );
 But `weapon_user_animations_container::get_stand_animation` has NO definition in
 our tree (no weapon_user_animations_container.cpp - only _cook.cpp). Anchoring
