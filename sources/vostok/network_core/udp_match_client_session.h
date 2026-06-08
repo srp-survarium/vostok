@@ -66,6 +66,10 @@ public:
 
 	inline	void						on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
 
+	// the server's m_clients set names &udp_match_client_session::set_member_hook and its
+	// destroy list names &::next_in_destroy_list - both reach these private members.
+	friend	class						udp_match_server;
+
 private:
 	/* 0x0008 */	udp_match_connection				m_connection;
 	/* 0x0538 */	boost::asio::ip::udp::endpoint		m_client_endpoint;
