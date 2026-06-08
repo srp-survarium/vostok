@@ -13,6 +13,7 @@ namespace network_core {
 
 class handler_allocator : public core::noncopyable {
 public:
+	// STATE[STUB]
 	inline				handler_allocator	( )
 	{
 		// FUNCTION BODY[0x131730]: 0
