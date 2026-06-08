@@ -12,9 +12,6 @@
 #include <vostok/physics/character_controller.h>
 #include <vostok/console_command.h>
 
-// game_core's DELETE macro (game_core_memory.h has it commented out).
-#define DELETE( pointer )	VOSTOK_DELETE_IMPL( *::survarium::g_allocator, pointer )
-
 // claude@NOTE: get_rotation_matrix / change_matrix_orientation are inline math
 // helpers (math_float4x4_inline_2.h on target) absent from our headers; process_leg
 // calls them OUT-OF-LINE (not inlined), so a self-contained definition here resolves
@@ -85,6 +82,18 @@ static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule
 static console_commands::cc_bool	s_ik_legs_rot_axis_cc		( "ik_legs_rot_axis", s_ik_legs_rot_axis_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
 static console_commands::cc_bool	s_ik_adjust_hip_position_cc	( "ik_adjust_hip_position", s_ik_adjust_hip_position_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
 
+// Each cc static above emits a compiler-generated dynamic initializer (+ a paired atexit
+// destructor) thunk. Tracked per-symbol as STUB so a mis-written static init surfaces - they
+// stay None (the name-pairing artifact in claude@NOTE above), never 0%.
+// STATE[STUB]
+// void survarium::`dynamic initializer for 's_ik_legs_debug_draw_cc''()
+// STATE[STUB]
+// void survarium::`dynamic initializer for 's_ik_foot_capsule_radius_cc''()
+// STATE[STUB]
+// void survarium::`dynamic initializer for 's_ik_legs_rot_axis_cc''()
+// STATE[STUB]
+// void survarium::`dynamic initializer for 's_ik_adjust_hip_position_cc''()
+
 // STATE[100%|DONE]
 legs_ik_processor::leg_params::leg_params( ) :
 	heel_transition_time	( 0.0f ),
@@ -108,21 +117,21 @@ void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleto
 	up_leg_bone_index	= skeleton.get_bone_index( *foot_bone.parent( )->parent( )->parent( ) );
 }
 
-// STATE[85.71%|PARTIAL]: only `DELETE( m_drawer )` is real source; the residual is
+// STATE[85.71%|PARTIAL]: only the `VOSTOK_DELETE_IMPL( ..., m_drawer )` delete is real source; the residual is
 // the compiler-generated member-destructor epilogue - the target sets `this+0x7c`
 // (m_toe_interpolator) and `this+0x70` (m_heel_interpolator) before each
 // ~fermi_interpolator call, base ICF-folds those `this`-pointer setups away. An
 // ICF/codegen artifact in the auto-emitted dtor tail, not source-steerable.
 legs_ik_processor::~legs_ik_processor( )
 {
-	DELETE( m_drawer );
+	VOSTOK_DELETE_IMPL( *::survarium::g_allocator, m_drawer );
 
 	// STRUCTURE DIFF:
 	// target: 0x6eaf40            base: 0x522c50
 	// ; void survarium::legs_ik_processor::~legs_ik_processor() ; target 1 stmts / base 1 stmts
 	// .. same ..
 	// ; aligned 1, size-diffs 0, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - the sole source stmt DELETE( m_drawer ) matches; the <100% residual is the compiler-generated member-dtor epilogue: target sets this+0x7Ch (m_toe_interpolator) and this+0x70h (m_heel_interpolator) before each ~fermi_interpolator call, base ICF-folds those this-pointer setups away. Codegen in the auto-emitted dtor tail, non-steerable. trail: legs_ik_processor_rest.md
+	// VERDICT: STRUCTURE MATCH (shape ok) - the sole source stmt (the m_drawer delete) matches; the <100% residual is the compiler-generated member-dtor epilogue: target sets this+0x7Ch (m_toe_interpolator) and this+0x70h (m_heel_interpolator) before each ~fermi_interpolator call, base ICF-folds those this-pointer setups away. Codegen in the auto-emitted dtor tail, non-steerable. trail: legs_ik_processor_rest.md
 }
 
 // STATE[97.42%|DONE]: residual is a single extra 4-byte frame slot (target sub
