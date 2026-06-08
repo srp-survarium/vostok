@@ -5,6 +5,15 @@
 #include "pch.h"
 #include "network_core_entry_point.h"
 
+// carcass completeness: force-compile the type headers that no other enabled TU
+// includes yet, so the whole library's structure is validated (matchers will move
+// these to real TUs as they get bodies).
+#include <vostok/network_core/udp_match_server.h>
+#include <vostok/network_core/udp_match_packets_allocator.h>
+#include <vostok/network_core/process_packet_predicate.h>
+#include <vostok/network_core/move_to_list_predicate.h>
+#include <vostok/network_core/custom_alloc_handler.h>
+
 namespace vostok {
 namespace network_core {
 

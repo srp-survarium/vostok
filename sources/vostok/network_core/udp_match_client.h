@@ -13,6 +13,8 @@
 #include <boost/array.hpp>
 #include <boost/function.hpp>
 
+#include <boost/asio.hpp>
+
 namespace vostok {
 namespace network_core {
 
