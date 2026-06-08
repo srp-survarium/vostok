@@ -367,16 +367,6 @@ then compiles the UNTOUCHED stub in `sources/` and the whole relink is against s
 (not under `.../sources/`) is misplaced - `mv` it before building. (Cost one full relink while
 matching pistol_/double_barreled_weapon_core_aimed_idle_state.)
 
-## Editing ONLY a header does NOT trigger a ninja recompile - touch the .cpp too
-The vcproj2ninja-generated build does NOT track header dependencies. If you change a
-`.h` (e.g. move a method to `private:` to fix a `QAE`->`AAE` access-mangling mismatch,
-or add a member) but do not also edit/touch the dependent `.cpp`, `rebuild.py` prints
-`ninja: no work to do.` and the score/report.json are STALE - it looks like the change
-had no effect (objdiff still shows the old mangling / `None`). Fix: `touch` the affected
-`.cpp`(s) before `rebuild.py`. The tell is `ninja: no work to do.` in the rebuild log and
-an empty `report-changes.json`. (Cost one full relink on initialize_weapon_logic
-after making it private in the header only.)
-
 ## A function scores `fuzzy: None` (unpaired) when its access-mangling differs
 objdiff pairs base<->target by full mangled symbol. The access char is mangled in
 (`Q`=public, `I`=protected, `A`=private for `?...@@?AE`). If the target symbol is `AAE`
