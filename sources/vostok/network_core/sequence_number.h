@@ -17,6 +17,7 @@ class udp_match_packet;
 template < typename T >
 class sequence_number {
 public:
+	inline						sequence_number	( ) : m_number( 0 ) { }
 	inline						sequence_number	( T number ) : m_number( number ) { }
 
 	inline	void				serialize		( pbyte& stream ) const { VOSTOK_UNREFERENCED_PARAMETER( stream ); }
