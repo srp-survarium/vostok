@@ -31,6 +31,9 @@ weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapo
 // VERDICT: STRUCTURE MATCH (shape ok) - SIZE+L31 are round_is_chambered inlined(base) vs out-of-line call(target), not a source-shape diff. trail: weapon_core_reload_chamber_state_base.md
 void weapon_core_reload_state_base::initialize( )
 {
+	// sushi@TODO: the structure is wrong here - the verifier's "STRUCTURE MATCH (shape ok)" verdict
+	// is disputed (the L31 ONLY-target row is more than just round_is_chambered inline-vs-call). To
+	// be dealt with later.
 	weapon_core_animation_end_aware_state::initialize( );
 
 	if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
