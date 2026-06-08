@@ -64,7 +64,10 @@ public:
 										);
 
 			tcp_packet*					new_packet				( );
-	inline	void						delete_packet			( tcp_packet const*& packet ) { /* no source */ }
+	inline	void						delete_packet			( tcp_packet const*& packet )
+	{
+		VOSTOK_DELETE_IMPL( m_packet_allocator, packet );
+	}
 
 	inline								~tcp_packet_socket		( ) { /* no source */ }
 

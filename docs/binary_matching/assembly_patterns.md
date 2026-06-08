@@ -1094,3 +1094,23 @@ shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` an
 `Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
 `&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
 wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
+
+### asio completion bind: use `boost::asio::placeholders::error`/`::bytes_transferred`, not boost `_1`/`_2`
+SYMPTOM: a `boost::bind(&on_xxx, this, _1, _2)` feeding an `async_read`/`async_write`
+completion scores ~94% with a head divergence: target does
+`mov eax,[?error@...placeholders@asio@boost@@...]; movzx byte[eax]; push` (reads the
+placeholder object from a global), while base emits `movzx ecx, byte[_1]` (boost's global
+`_1` literal). Both compile, but they are DIFFERENT placeholder objects.
+FIX: for asio completion handlers the source uses the asio placeholders -
+`boost::asio::placeholders::error` and `boost::asio::placeholders::bytes_transferred`
+(or `::iterator` for resolvers) - NOT boost's `_1`/`_2`. Confirmed in
+`network_core/tcp_packet_socket::start_receiving` (94 -> 99.88%). Member-callback binds
+that are NOT asio handlers (e.g. `m_on_error = boost::bind(&on_error, this, _1, _2)`)
+correctly use boost `_1`/`_2`.
+
+### LOG_ERROR / __FILE__ residual is permanent on logging-heavy functions
+Every `LOG_*` bakes `__FILE__` into the call. Target's is `C:\survarium\sources\vostok\...`;
+our base build path is `Z:\home\...` (Wine). The `push <path-string>` therefore never
+matches, capping logging-dominated functions (e.g. tcp_packet_socket::on_packet_received/
+on_packet_size_received ~40%, on_packet_has_been_sent ~52%) well below 100% even when the
+control flow is fully matched. Not source-steerable - same wall as http_client's LOG lines.
