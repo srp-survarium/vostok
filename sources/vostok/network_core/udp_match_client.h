@@ -87,22 +87,22 @@ public:
 
 private:
 	/* 0x0000 */	udp_match_connection				m_connection;
-	/* 0x0530 */	boost::function< void( u8, packet_reader& ) >	m_on_packet_received;
-	/* 0x0550 */	boost::function< void( disconnect_event_types_enum ) >	m_on_disconnect;
-	/* 0x0570 */	timing::timer						m_timer;
-	/* 0x0588 */	boost::asio::ip::udp::socket		m_socket;
-	/* 0x05cc */	boost::asio::ip::udp::endpoint		m_server_endpoint;
-	/* 0x05e8 */	boost::asio::ip::udp::endpoint		m_remote_endpoint;
-	/* 0x0604 */	boost::asio::io_service&			m_io_service;
-	/* 0x0608 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
+	/* 0x0538 */	boost::function< void( u8, packet_reader& ) >	m_on_packet_received;
+	/* 0x0558 */	boost::function< void( disconnect_event_types_enum ) >	m_on_disconnect;
+	/* 0x0578 */	timing::timer						m_timer;
+	/* 0x0590 */	boost::asio::ip::udp::socket		m_socket;
+	/* 0x05d4 */	boost::asio::ip::udp::endpoint		m_server_endpoint;
+	/* 0x05f0 */	boost::asio::ip::udp::endpoint		m_remote_endpoint;
+	/* 0x061c */	boost::asio::io_service&			m_io_service;
+	/* 0x0618 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
 	/* 0x060c */	udp_network_flow_emulator* const	m_network_flow_emulator;
 	/* 0x0610 */	u32									m_time_in_ms;
 	/* 0x0614 */	bool								m_is_receiving;
-	/* 0x0615 */	boost::array< u8, 256 >				m_receive_buffer;
-	/* 0x0718 */	handler_allocator					m_handler_allocator;
+	/* 0x061d */	boost::array< u8, 256 >				m_receive_buffer;
+	/* 0x0720 */	handler_allocator					m_handler_allocator;
 }; // class udp_match_client
 
-STATIC_SIZE_ASSERT(udp_match_client, 0xB20);
+STATIC_SIZE_ASSERT(udp_match_client, 0xB28);
 
 } // namespace network_core
 } // namespace vostok
