@@ -5,17 +5,36 @@
 #include "pch.h"
 #include <vostok/network_core/udp_network_flow_emulator.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
+#include <vostok/network_core/udp_match_connection.h>
+#include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/buffer_vector.h>
 
 namespace vostok {
 namespace network_core {
 
 class delayed_packets_predicate {
 public:
+	inline	delayed_packets_predicate	(
+		buffer_vector< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > >&	delayed_packets_to_appear,
+		const u32	time_in_ms
+	) :
+		m_delayed_packets_to_appear	( delayed_packets_to_appear ),
+		m_time_in_ms				( time_in_ms )
+	{ }
+
 	bool	operator()	( std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > const& message ) const;
+
+private:
+	/* 0x0000 */	buffer_vector< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > >&	m_delayed_packets_to_appear;
+	/* 0x0004 */	const u32	m_time_in_ms;
 }; // class delayed_packets_predicate
 
-// STATE[STUB]
+// STATE[87%|PARTIAL]: only residual is the three random32 seeds. Target seeds
+// m_lost_packets_random/m_ping_random/m_out_of_order_random with relocated .rdata
+// addresses (mov ecx, 995A34h/35h/36h - consecutive, a reloc per the obj); base
+// default-constructs them (xor ecx,ecx, seed 0). Source seed expression unknown
+// (likely (u32)&<some const>); rest of init-list matches. claude@TODO: recover seeds.
  udp_network_flow_emulator::udp_network_flow_emulator(
 	memory::base_allocator&		allocator,
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
@@ -28,41 +47,42 @@ public:
 	m_min_ping_time_in_ms	( options.min_ping_time_in_ms ),
 	m_max_ping_time_in_ms	( options.max_ping_time_in_ms )
 {
-	// FUNCTION BODY[0x7388c0]: 1
-	// <0x7388c0>|0x000|+0x0b8:'28'	{
-	// <0>
-	// <0x738978>|0x0b8|      :'30'	}
-	// ******
 }
 
-// STATE[STUB]
+// STATE[58%|PARTIAL]: structure aligns (4/4 stmts). Residual is /Od iterator-temp
+// materialization in the while condition - target stores begin()/end() into stack
+// temps and does a direct cmp/je; base converts the != to a bool (sete/test/jne).
+// Same source shape, different STL-iterator-compare codegen; larger frame in target.
  udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
-	// FUNCTION BODY[0x738990]: 4
-	// <0x738999>|0x009|+0x017:'34'
-	// <0x7389b0>|0x020|+0x01f:'35'
-	// <0x7389cf>|0x03f|+0x01d:'36'
-	// <0x7389ec>|0x05c|+0x002:'37'
-	// ******
+	while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {
+		delete_udp_match_packet( m_packets_allocator, m_delayed_packets.back( ).first );
+		m_delayed_packets.pop_back( );
+	}
 }
 
-// STATE[STUB]
+// STATE[INPROGRESS]: body reconstructed from 0x1369d0; emitted only once tick's
+// remove_if instantiates it (no standalone base symbol until then), so currently 0%.
 bool delayed_packets_predicate::operator()(
-	std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > const&	arg_0 /* std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const& message */
+	std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > const&	message
 ) const
 {
-	return false;
+	if ( m_time_in_ms < message.first->last_send_time_in_ms )
+		return false;
 
-	// FUNCTION BODY[0x1369d0]: 5
-	// <0x1369d9>|0x009|+0x010:'49'
-	// <0x1369e9>|0x019|+0x004:'50'
-	// <0>
-	// <0x1369ed>|0x01d|+0x00e:'52'
-	// <0x1369fb>|0x02b|+0x002:'53'
-	// ******
+	m_delayed_packets_to_appear.push_back( message );
+	return true;
 }
 
-// STATE[STUB]
+// STATE[STUB|INPROGRESS]: from 0x728a30 - the big one. Shape: build a stack
+// buffer_vector<pair<udp_match_packet*,endpoint>> delayed_packets_to_appear sized
+// from m_delayed_packets.size(); remove_if( m_delayed_packets, delayed_packets_predicate(
+// delayed_packets_to_appear, time_in_ms ) ) then erase the moved tail; random_shuffle the
+// appeared range with m_out_of_order_random (this+0x18); for each appeared packet build a
+// packet_reader, read u16 received_local_sequence_id + remote_sequence_id, call functor(
+// reader, endpoint ), then delete_udp_match_packet( m_packets_allocator, packet ). The
+// predicate operator() (??Rdelayed_packets_predicate) is instantiated by this remove_if.
+// NEXT: stand up the buffer_vector alloca + remove_if/erase pattern, then the appear loop.
 void udp_network_flow_emulator::tick(
 	const u32		time_in_ms,
 	boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) > const&	functor
@@ -113,7 +133,11 @@ void udp_network_flow_emulator::tick(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[73%|PARTIAL]: structure matches (logic/calls all aligned). Residual is /Od
+// register allocation (edx<->ecx) and a larger target frame (0xB8 vs 0x94) - target
+// materializes more iterator/temp slots. The two r<u16> reads map to different source
+// lines in target (L109/L112); placing them to match exactly + recovering the extra
+// temps would close it. claude@TODO: line-position of the sequence-id reads.
 void udp_network_flow_emulator::add_packet(
 	pbyte const		buffer,
 	const u32		buffer_size,
@@ -122,82 +146,39 @@ void udp_network_flow_emulator::add_packet(
 	const u32		unacknowledged_packets_count
 )
 {
-	// LOCALS
-	// udp_match_packet* const 			packet
-	// const u16 						received_local_sequence_id
-	// packet_reader 					reader
-	// const u16 						remote_sequence_id
-	// ******
+	packet_reader	reader( base_packet( buffer, buffer_size ) );
+	const u16		received_local_sequence_id	= reader.r< u16 >( );
+	const u16		remote_sequence_id			= reader.r< u16 >( );
 
+	udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );
+	packet->last_send_time_in_ms	= m_ping_random( m_max_ping_time_in_ms - m_min_ping_time_in_ms ) + m_min_ping_time_in_ms + time_in_ms;
 
-	// FUNCTION BODY[0x738cf0]: 15
-	// <0x738d01>|0x011|+0x01d:'103'
-	// <0>
-	// <0x738d1e>|0x02e|+0x00c:'105'
-	// <0x738d2a>|0x03a|+0x00c:'106'
-	// <0>
-	// <1>
-	// <0x738d36>|0x046|+0x015:'109'
-	// <0x738d4b>|0x05b|+0x039:'110'
-	// <0>
-	// <0x738d84>|0x094|+0x039:'112'
-	// <0x738dbd>|0x0cd|+0x009:'113'
-	// <0>
-	// <0x738dc6>|0x0d6|+0x017:'115'
-	// <0x738ddd>|0x0ed|+0x016:'116'
-	// <0x738df3>|0x103|+0x059:'117'
-	// ******
+	if ( m_delayed_packets.size( ) + unacknowledged_packets_count >= m_packets_allocator.total_size( ) / 4 - 1 )
+		packet->last_send_time_in_ms	= time_in_ms;
+
+	memory::copy( packet->m_buffer.data( ), 6, buffer, 6 );
+	packet->append( buffer + 6, buffer_size - 6 );
+
+	m_delayed_packets.push_back( std::make_pair( packet, endpoint ) );
+
+	VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
+	VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_network_flow_emulator::make_packet_lost(
 	pbyte const		buffer,
 	const u32		buffer_size,
 	boost::asio::ip::udp::endpoint const&	endpoint
 )
 {
-	// LOCALS
-	// const bool 						is_low_level_packet
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( endpoint );
 
-	// FUNCTION BODY[0x738a00]: 33
-	// <0>
-	// <1>
-	// <0x738a09>|0x009|+0x01b:'124'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// ******
+	const bool	is_low_level_packet	= udp_match_connection::is_low_level_packet( base_packet( buffer, buffer_size ) );
+	VOSTOK_UNREFERENCED_PARAMETER( is_low_level_packet );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_network_flow_emulator::on_packet_received(
 	pbyte const		buffer,
 	const u32		buffer_size,
@@ -206,12 +187,10 @@ void udp_network_flow_emulator::on_packet_received(
 	const u32		unacknowledged_packets_count
 )
 {
-	// FUNCTION BODY[0x738e60]: 4
-	// <0x738e67>|0x007|+0x01f:'165'
-	// <0x738e86>|0x026|+0x01c:'166'
-	// <0x738ea2>|0x042|+0x002:'167'
-	// <0x738ea4>|0x044|+0x014:'168'
-	// ******
+	if ( m_lost_packets_random.random_f( 1.f ) > m_lost_packet_probability )
+		add_packet( buffer, buffer_size, endpoint, time_in_ms, unacknowledged_packets_count );
+	else
+		make_packet_lost( buffer, buffer_size, endpoint );
 }
 
 
