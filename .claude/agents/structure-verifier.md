@@ -1,6 +1,6 @@
 ---
 name: structure-verifier
-description: Verifies ONE thing and nothing else - that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %. It runs `pdb_fetch --view structure-diff --condensed` (the parser's two-sided statement-structure diff: target vs base aligned, with each divergence tagged SIZE / ONLY base|target / EMPTY), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It EMBEDS the condensed diff (+ a one-line `// VERDICT:`) in place of the carcass for non-100% functions, writes a report .md, and downgrades a mislabeled `DONE` whose structure is wrong; it NEVER rebuilds, never changes compiled logic, never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides.
+description: Verifies ONE thing and nothing else - that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %. It runs `pdb_fetch --view structure-diff --condensed` (the parser's two-sided statement-structure diff: target vs base aligned, each divergence row prefixed with a `NN:` statement index and tagged SIZE / ONLY base|target; blank-line gaps are suppressed and tallied as `blank-gaps`), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It EMBEDS the condensed diff (+ a one-line `// VERDICT:`) in place of the carcass for non-100% functions, writes a report .md, and downgrades a mislabeled `DONE` whose structure is wrong; it NEVER rebuilds, never changes compiled logic, never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -45,19 +45,22 @@ pdb_fetch --target-index binaries/rich/target/index.jsonl \
 ```
 
 Output: a header `target: 0x<rva>   base: 0x<rva>` + `; <sig> ; target N / base M
-stmts`, then aligned-equal runs COLLAPSED to `.. same ..`, and only the divergences
-as one compact line each:
-`0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> | {stmt}   {TAG}` - TAG is `SIZE` (same
-statement, different byte size), `ONLY base` / `ONLY target` (a statement present on
-one side only = a real QUANTITY divergence), or `EMPTY only base|target` (a collapsed
-source-line gap on one side). A trailing `; aligned A, size-diffs S, quantity-diffs Q`.
-A clean match prints just `.. same ..` with `size-diffs 0, quantity-diffs 0`. Drop
-`--condensed` to see every row (including the `.. same ..` ones) when you need the full
-picture. (`--view structure` single-side still exists for raw inspection.)
+stmts` (N/M count only REAL statements - blank-line gaps are excluded, so an
+empty-line-only difference never reads as a lost/gained statement), then aligned-equal
+runs COLLAPSED to `.. same ..`, and only the divergences as one compact line each,
+prefixed with a monotonic `NN:` statement index (so each row is locatable and a
+`.. same ..` run is bracketed by the index it resumes at):
+`NN: 0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> | {stmt}   {TAG}` - TAG is `SIZE` (same
+statement, different byte size) or `ONLY base` / `ONLY target` (a statement present on
+one side only = a real QUANTITY divergence). A trailing `; aligned A, size-diffs S,
+quantity-diffs Q, blank-gaps B` - `blank-gaps` are blank-line-only rows, counted but
+NOT printed (they are noise, not statements). A clean match prints just `.. same ..`
+with `size-diffs 0, quantity-diffs 0`. Drop `--condensed` to see every row.
+(`--view structure` single-side still exists for raw inspection.)
 
 **Read the offsets right: after the FIRST `SIZE` divergence the two sides' offsets
 DRIFT apart** (each accumulates the running size delta) - that drift is expected, not a
-new divergence; judge each row by its own `SIZE`/`ONLY`/`EMPTY` tag, not by whether the
+new divergence; judge each row by its own `SIZE`/`ONLY` tag, not by whether the
 offsets still line up.
 
 **Order of tools: `--view structure-diff` FIRST.** It localizes the problem - WHICH
@@ -88,11 +91,10 @@ STRIP it (the byte-perfect match has trivially-correct structure).
    stays terse and uniform.
 Real example (`get_additional_length`, 65%):
 ```
-// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 3 stmts
-// 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
-// --          | <0>          |    EMPTY only base
+// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 2 stmts
+//   1: 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
 // .. same ..
-// ; aligned 1, size-diffs 1, quantity-diffs 1
+// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 1
 // VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs inlined, non-steerable. trail: get_additional_length.md
 ```
 
