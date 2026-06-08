@@ -375,3 +375,43 @@ objdiff reports `fuzzy: None` (NOT 0%) even though the body may be byte-identica
 size matches. Read the target's mangled access char (`grep -o '<name>@...@@[A-Z]AE'
 binaries/rich/target/index.jsonl`) and set the header's access specifier to match BEFORE
 the first build. (initialize_weapon_logic: target `AAE`, declared public -> `None`.)
+
+## A fake-observation direct anchor is RARELY the cap on a private method's %
+A private method kept alive by a DIRECT `temp_include_all` anchor that observes a fabricated
+object (`*reinterpret_cast<T*>(NULL)`, escaped result, address-taken setters) does NOT
+generally distort that method's own scored bytes. Codegen for the method body is driven by the
+method's own source, not by what its anchor does at the call site - so the anchor's fake
+observation changes the *anchor* function's bytes, not the matched method's. Verified on the
+`legs_ik_processor` deep pass: removing the fake-observation anchors for `get_foot_fixed_transform`
+/ `process_leg` / `get_additional_length` / `leg_params::*` (so the real `process()` call chain
+keeps them alive transitively) left every % byte-for-byte UNCHANGED (`--view diff` identical).
+LESSON: do NOT spend a rebuild "removing fake observation to flip LTCG" hoping a capped private
+method jumps - the cap is almost always genuine (a missing brace/structure, an inline-vs-call
+COMDAT, a call-boundary arg). Removing redundant anchors is worthwhile for source HYGIENE (the
+private method should be reached transitively, not fake-observed), but budget it as cleanup, not
+as a %-recovery move. If you DO remove an anchor, the one thing to re-verify is that every fn
+still SCORES in report.json (not dead-stripped) - that is the only real risk.
+
+## A batch of ~18 trivial one-liners across 10 headers in ONE rebuild - read access + fold-class up front
+A large one-liner batch (getters, empty virtual overrides, a ctor/dtor pair, map/vector registrars)
+matched in a SINGLE rebuild (706s) by classifying each function BEFORE building, from the delinked
+TARGET obj symbols + asm, with zero re-rebuilds:
+- **Read the access char from the delinked TARGET obj symbol table** (`strings
+  binaries/objdiff/target/vostok/game_core/<unit>.h.obj | grep <fn>`), NOT the rich-index fold rep.
+  collision_sensor's four on_* overrides mangled `MAE` (protected) while the header had them
+  `public:` -> would be unpairable; moved them to `protected:` in the same pass.
+- **Recognize the THREE unscorable-but-byte-correct classes up front so you don't chase the None:**
+  (1) ICF-fold trivial overrides (`return this`/`return true`/empty/`return NULL`) - PROVE bytes by
+  counting the fold family in `binaries/rich/base/index.jsonl` (mov al,1;ret / ret 4 / xor eax,eax;ret
+  / empty-this-frame families were 25/68/16/100 members), mark None|DONE, do NOT anchor (a folded body
+  can't be made scorable). (2) trivial-accessor LTCG inline-vs-call - a getter/setter/registrar
+  anchored only by a synthetic caller gets INLINED whole-program into the anchor; verify by
+  disassembling the anchor (the member read lands at the right `[this+off]`), mark None|PARTIAL.
+  (3) frameless-target vs /Od-framed (the `this`-unused-leaf entry in assembly_patterns.md) - None|PARTIAL.
+- **Only the ctor/dtor that USE `this` and have a real game consumer score a real % (100%).** The
+  damage_protector ctor/dtor were already 100% (a `new booster_damage_protector` real consumer keeps
+  them standalone). Everything anchored ONLY synthetically is None.
+- **Net: of 18 one-liners, expect ~2 real-% (the real-consumer ctor/dtor) + the rest None** (DONE for
+  folds, PARTIAL for inline-vs-call / frameless). This is the realistic ceiling for trivial members
+  under /Od+/GL with no matched real consumers - budget the batch as "confirm byte-correctness + mark",
+  not "drive each to 100%".

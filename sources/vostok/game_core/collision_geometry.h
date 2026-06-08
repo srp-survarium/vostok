@@ -42,7 +42,7 @@ public:
 
 			void						load							( configs::binary_config_value const& cfg_val );
 
-	// STATE[STUB]
+	// STATE[None|DONE]: ICF-folded trivial override (byte-correct; see oneliners_batch1.md).
 	virtual	collision_geometry*			cast_to_collision_geometry		( ) override { return this; };
 
 			void						subscribe						( physics::world* world, collision_geometry_subscriber* subscriber );

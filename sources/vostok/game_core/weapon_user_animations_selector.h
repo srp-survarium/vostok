@@ -36,7 +36,7 @@ public:
 							~weapon_user_animations_selector( );
 
 public:
-	// STATE[STUB]
+	// STATE[None|PARTIAL]: trivial-setter LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			void			set_animations					( weapon_user_animations_container_ptr const& value ) { m_animations = value; }
 	inline	weapon_user_animations_container const&
 							animations						( ) const { /* no source */ }
