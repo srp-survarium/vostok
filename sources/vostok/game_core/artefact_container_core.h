@@ -32,7 +32,8 @@ public:
 	virtual	bool		use_initialize				( usable_object_user_data* user ) override;
 	virtual	bool		use_execute					( usable_object_user_data* user ) override;
 	virtual	bool		use_finalize				( usable_object_user_data* user ) override;
-	// STATE[STUB]
+	// claude@MATCH: target is FRAMELESS for this `this`-unused leaf (`mov eax,lit;ret 4`); /Od always frames -> unpairable. Literal correct.
+	// STATE[None|PARTIAL]: frameless-target vs /Od-framed-base (see oneliners_batch1.md).
 	virtual	pcstr		use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return "st_use_artefact_container"; }
 
 	virtual	void		activate					( generic_anomaly_core* owner, physics::world* world, scheduler& __formal );
