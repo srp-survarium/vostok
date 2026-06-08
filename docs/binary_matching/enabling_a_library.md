@@ -10,6 +10,81 @@ ExcludedFromBuild .cpp" (the single-TU recipe) and [MATCHING.md](MATCHING.md)
 (the byte-match conventions). Here the goal is *buildability of the type
 skeleton*, not byte-matching - bodies stay stubs.
 
+## THE GROUND TRUTH: `binaries/structure/target/headers/<module>/` (never guess)
+There is ONE canonical, per-type structure file for EVERY class/struct/enum the
+module defines, under `binaries/structure/target/headers/vostok/<module>/` (plus an
+`enums/` subdir, and `X__Y.h` files for nested types like
+`udp_match_connection__channel.h`, `udp_match_connection__comparer.h`). Each carries
+the EXACT members, `/* 0xNN */` offsets, `STATIC_SIZE_ASSERT`, access specifiers,
+method signatures, and `{ /* no source */ }` inline bodies. **Build every one of our
+headers by copying from the matching canonical file. NEVER guess a member, a type, an
+offset, an access, or a size** - if you guessed `sequence_number<u16>` where the
+canonical says `<u8>`, or private inheritance where it says `public`, the layout is
+wrong. (`generate_structure.py target` regenerates this tree; it is gitignored.)
+
+- The `sources/<module>/sources/*.cpp` carcasses give the OUT-OF-LINE function bodies
+  (the addressed `// FUNCTION BODY[VA]` blocks); the `headers/` tree gives the class
+  DEFINITIONS. You need both.
+- **When the canonical header and the real symbol disagree, the SYMBOL wins.** The
+  header type-record can be stale/normalised (e.g. it marked
+  `udp_match_connection::update_acknowledgements` as `inline`/`<u8>`, but the rich
+  index mangled name `?update_acknowledgements@...@@AAE...V?$sequence_number@G@...`
+  proves it is PRIVATE, out-of-line, `<u16>`). Verify signatures/access against
+  `binaries/rich/target/index.jsonl` (the `mangled` field); the access letter after
+  the qualified name is `Q/R`=public, `I/J`=protected, `A/B`=private,
+  `E/F/M/N/U/V`=virtual variants, `S/T/K/C`=static.
+
+## Recurring mechanical fixes when turning a canonical file into compilable C++
+- `/* INCLUDES */ class boost::...;` / `class vostok::...;` junk fwd-decl block ->
+  delete; replace with real `#include`s (the pch has `<boost/asio.hpp>`; add
+  `<boost/array.hpp>`, `<boost/function.hpp>`, `<boost/intrusive/set.hpp>`, and the
+  engine headers for the value-held members).
+- Monomorphised type (`packet<tcp_packet>`, `sequence_number<unsigned short>`,
+  `tcp_packet_socket<...stream_socket...>`) -> the PRIMARY `template<...> class`
+  (member set = union over instantiations). The `_1`/`_2` carcasses are the same
+  header per-TU; UNION them by the `'NN'` source-line numbers.
+- `class X public : Y {` -> `class X : public Y {`.
+- nested type printed as `struct X::Y {}` / `enum X::Y::state {}` standalone -> declare
+  it INSIDE the outer class. `STATIC_SIZE_ASSERT` expands to `namespace {...}` so it
+  CANNOT sit inside a class body - put nested-type asserts at namespace scope after the
+  outer class.
+- **boost::intrusive hooks/lists print the member as a BYTE OFFSET** (`...,8>` for a
+  set member_hook, `...,28,...` for an intrusive_list) - that offset is the PDB
+  encoding of a member pointer. Replace with `&T::member` (e.g.
+  `&udp_match_packet::set_member_hook`, `&udp_match_packet::next`). The named member is
+  usually private, so add `friend class <the owner>;` to reach it.
+- **Long container types -> a member `typedef` per engine convention** (cf.
+  `column_items_type`/`sub_items_type`): e.g.
+  `typedef intrusive_list<udp_match_packet,udp_match_packet*,&udp_match_packet::next,
+  threading::single_threading_policy,size_policy,no_debug_policy> udp_match_packet_list;`
+  then declare the members as `udp_match_packet_list m_...;`. (The canonical
+  `udp_match_connection.h` itself shows this `udp_match_packet_list` typedef.)
+- `__formal` parameter = **genuinely unused in the original source** (MSVC's unnamed
+  placeholder). Two `__formal`s collide - give them real names and
+  `VOSTOK_UNREFERENCED_PARAMETER(S)`, with a comment `// PDB: __formal (genuinely
+  unused in the original)` so the next agent knows to KEEP it (it is NOT a stub
+  artifact). Distinguish from a suppression you add only to silence a stub warning
+  (which the matcher removes when adding meat).
+- **Leave inline bodies as `{ /* no source */ }`** - do NOT invent returns or impl.
+  They compile because inline headers are only *included*, their methods never
+  *instantiated* unless an enabled TU calls them. Only add a `return ...;` to a stub
+  that an enabled TU (or an anchor) actually calls.
+- A value-held member needs its type COMPLETE; a pointer/reference member only needs a
+  forward decl. Reference members + non-default-constructible value members force the
+  enabled `.cpp` ctor to carry an init-list (even though the body is a stub).
+- The trailing `// TYPEDEFS` scratch in a carcass is pdb-parser noise (often duplicate
+  `iterator_type` -> C2040) - delete it.
+
+## Stub body format: keep the FRESH, ADDRESSED carcass
+Every `// FUNCTION BODY` block must carry the NEW addressed format from the freshly
+regenerated structure (`// FUNCTION BODY[0xVA]: N`, then `// <0xVA>|off|+delta:'NN'`
+and `// <N>` no-address markers) - VERBATIM, no abbreviation. An OLD-format block
+(`// FUNCTION BODY` with no `[VA]` and bare `// 1`/`// 2` lines, or `:'NN'` with
+`0x000|0x000`) marks a function that was never refreshed - replace it. Acceptance
+check for "we handled every file": `grep -rn 'FUNCTION BODY$' sources/<module>` returns
+nothing (no addressless block) AND no file still carries the old generation's
+`Created` date (bump each handled file's `Created` to the regen date).
+
 ## Where the ground-truth structure actually lives (read this first)
 The PDB does NOT hand you a clean header. The information is split across two
 kinds of generated carcass, and you reassemble the header from BOTH:
