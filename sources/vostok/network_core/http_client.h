@@ -18,13 +18,7 @@ public:
 
 			void					get						( pcstr server, pcstr path, boost::function< void() > const& callback );
 
-	// STATE[STUB]
-	inline	void					set_on_error			( boost::function< void( boost::system::error_code ) > const& callback )
-	{
-		// FUNCTION BODY[0x59070]
-		// <0x59070>|0x000|      :'22'	{
-		// ******
-	}
+	inline	void					set_on_error			( boost::function< void( boost::system::error_code ) > const& callback ) { m_on_error = callback; }
 
 	inline	std::string const&		result_content			( ) const { return m_result_content; }
 
