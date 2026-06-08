@@ -1170,6 +1170,8 @@ namespace vostok
 		// construct a jump_logic: its ctor calls initialize_logic, which builds the
 		// jump_logic_state_* subclasses and force-codegens their STUB selected_animations
 		// (no return) -> C4716/LNK1257. So ctor/dtor/initialize_logic stay BLOCKED here.
+		// claude@TODO: remove later - fabricated NULL instance is anchor-only scaffolding (emits
+		// no matched bytes); drop once a real caller anchors get_move_direction.
 		survarium::player_input const& input = *reinterpret_cast< survarium::player_input const* >( NULL );
 		survarium::move_direction_enum d = survarium::get_move_direction( input );
 		example_callback( reinterpret_cast< pcstr >( &d ) );

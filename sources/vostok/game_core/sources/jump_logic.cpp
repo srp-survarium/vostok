@@ -134,9 +134,7 @@ void jump_logic::tick( )
 	// ******
 }
 
-// STATE[100%|DONE]: target params are const-qualified - the header decl now matches
-// (const move_direction_enum, const bool, const jump_animation_parts) so the rich-diff
-// pairs; objdiff reports 100%.
+// STATE[100%|DONE]
 u32 get_jump_animation_index(
 	const move_direction_enum		move_direction,
 	const bool						jump_from_right_leg,
@@ -262,14 +260,15 @@ void jump_logic::activate( )
 }
 
 // STATE[45.13%|PARTIAL]: body is the single statement the carcass dictates and the
-// control flow matches; residual is the ai-fsm inline-vs-call wall: TARGET out-of-lines
-// fsm::states() (folds to 0x03f210, delinker-misnamed finalize_impl) + the front()/
-// operator[] accessor, while our in-class accessors fold to direct field loads
-// (`mov ecx,[eax+8]`), shifting the whole frame (sub esp,0Ch + [ebp-4]/[ebp-8] temps the
-// target lacks). Confirmed: fsm::states() exists out-of-line in TARGET, absent in BASE.
-// This is the permitted LTCG call-boundary class; not source-steerable (no cast/loop here).
-// objdiff measure 45.13% (report.json - the 7/26 = 26.9% diff-VIEW footer under-counts vs
-// the authoritative report measure). See jump_logic.md.
+// control flow matches; residual is an INLINE-VS-CALL matching problem (NOT LTCG - that
+// excuse is for argument passing only): TARGET out-of-lines fsm::states() (folds to
+// 0x03f210, delinker-misnamed finalize_impl) + the front()/operator[] accessor (two real
+// `call`s), while our in-class accessors fold to direct field loads (`mov ecx,[eax+8]`),
+// shifting the whole frame (sub esp,0Ch + [ebp-4]/[ebp-8] temps the target lacks).
+// Confirmed: fsm::states() exists out-of-line in TARGET, absent in BASE. NEXT STEP: get
+// the ai fsm type to emit those accessors out-of-line (out of the game_core lane - blocked
+// on the ai fsm type). objdiff measure 45.13% (report.json - the 7/26 = 26.9% diff-VIEW
+// footer under-counts vs the authoritative report measure). See jump_logic.md.
 void jump_logic::deactivate( )
 {
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
@@ -283,12 +282,13 @@ void jump_logic::deactivate( )
 // static_cast<jump_logic_base_state*> result to a named local `state` before the call
 // reproduces the target's "materialize cast into its own slot, then push user" order
 // (mov [slot],edx; push user; mov ecx,[slot]; ...). objdiff measure 83.61% (report.json).
-// The remaining residual is the ai-fsm inline-vs-call WALL (legit LTCG call-boundary):
-// the TARGET out-of-lines fsm::states() (delinker-misnamed finalize_impl) + the front()/
-// operator[] accessor (two `call`s), while our in-class accessors fold inline to direct
-// field loads, costing one extra stack slot (sub esp,10h vs 0Ch) and shifting the slot
-// numbering. Confirmed out-of-line in TARGET, absent in BASE - not source-steerable here.
-// See jump_logic.md.
+// The remaining residual is an INLINE-VS-CALL matching problem (NOT LTCG - that excuse is
+// for argument passing only): the TARGET out-of-lines fsm::states() (delinker-misnamed
+// finalize_impl) + the front()/operator[] accessor (two real `call`s), while our in-class
+// accessors fold inline to direct field loads, costing one extra stack slot (sub esp,10h vs
+// 0Ch) and shifting the slot numbering. Confirmed out-of-line in TARGET, absent in BASE.
+// NEXT STEP: get the ai fsm type to emit those accessors out-of-line (blocked on the ai fsm
+// type, out of the game_core lane). See jump_logic.md.
 void jump_logic::set_user( base_player& user )
 {
 	m_user = &user;

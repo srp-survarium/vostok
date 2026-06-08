@@ -85,7 +85,9 @@ mov edx,[ecx]; mov ecx,[slot]` (materialize cast into its own slot, then push th
 Authoritative objdiff measure 83.61% (report.json top-level; the diff-view footer reads
 50.0%/21-42 - it under-counts). Remaining residual = the ai-fsm inline-vs-call WALL: target
 `call finalize_impl`(states()) + `call operator[]`(front()); base inlines both -> one extra
-stack slot (sub esp,10h vs 0Ch) + slot renumbering. Legit LTCG call-boundary; not steerable.
+stack slot (sub esp,10h vs 0Ch) + slot renumbering. This is an INLINE-VS-CALL matching
+problem (NOT LTCG - that excuse is for argument passing only); next step = get the ai fsm
+type to emit those accessors out-of-line (blocked on the ai fsm type, out of game_core lane).
 
 ### deactivate - 45.13% PARTIAL (fsm wall)
 The substring "deactivate" mis-paired to `thread_pool::deactivate_if_oversubscribed`
@@ -93,7 +95,9 @@ The substring "deactivate" mis-paired to `thread_pool::deactivate_if_oversubscri
 footer 7/26 = 26.9%; authoritative objdiff measure = 45.13% (report.json top-level). Single
 statement `set_initial_state(states().front())`; no cast/loop to steer. The whole residual
 is the ai-fsm out-of-line-vs-inline wall (states()=finalize_impl + front()=operator[]
-out-of-line in target, all three inlined in base). Legit LTCG call-boundary. PARTIAL.
+out-of-line in target, all three inlined in base). INLINE-VS-CALL matching problem (NOT
+LTCG); next step = ai fsm type emits those accessors out-of-line (blocked on the ai fsm
+type, out of game_core lane). PARTIAL.
 
 ## get_move_direction (free fn) -> 100% DONE
 Bools from actions_mask bits: fwd=bit1, bwd=bit2, left=bit4, right=bit8.
@@ -112,7 +116,7 @@ anon enum with all 19 named constants. 22 no-address markers before L136 = const
 
 get_jump_animation_index -> 100% DONE (rebuild "improved 0% -> 100%").
 
-## does_need_land_and_run -> 63.7% INPROGRESS (was banked 100%, REVIEWER downgrade)
+## does_need_land_and_run -> SUPERSEDED (see RE-MATCH above: TRUE 100% DONE; the 63.7% below was the diff-VIEW footer artifact)
 landing_direction = get_move_direction( m_user->input() ); switch(m_jumping_direction)
 no-bounds jump table -> contiguous 0..8 + default:NODEFAULT(). each case returns a
 3-way OR (self, prev-wrap, next-wrap). order verified vs asm cmp sequence.
@@ -126,7 +130,7 @@ certainly wrote `bool result; switch(...){ case X: result = ...; break; } return
 (a result temp + single tail `return` at L259) rather than a direct `return` in each
 case - giving one shared epilogue (.18) reached by every leaf. Carcass restored inline.
 
-## set_user -> 41.9% PARTIAL (was banked 76.55%; ai-fsm wall + a steerable cast-temp residual)
+## set_user -> SUPERSEDED (see RE-MATCH above: 83.61% PARTIAL after cast-temp fix; 41.9% below was the diff-VIEW footer)
 m_user=&user; for(fsm_state* i=m_logic->states().front(); i; i=i->next)
   static_cast<jump_logic_base_state*>(i)->set_user(user);
 Re-measured 18/43 = 41.9% on the committed index.
@@ -142,7 +146,7 @@ derefs `i` directly with no cast temp. Steerable (bind the cast to a named local
 the call); distinct from the inline-vs-call wall. Try once the fsm type lands.
 Blocked on the ai fsm type for the wall part.
 
-## deactivate -> 26.9% PARTIAL (was banked 45.13%; ai-fsm wall, same root cause)
+## deactivate -> SUPERSEDED (see RE-MATCH above: 45.13% PARTIAL; 26.9% below was the diff-VIEW footer)
 m_logic->set_initial_state( m_logic->states().front() );
 Re-measured 7/26 = 26.9% on the committed index. TARGET out-of-lines states()
 (0x03f210/finalize_impl) + front()/operator[]; base inlines all three (sub esp,0Ch +
