@@ -12,7 +12,7 @@ Matched together in ONE rebuild (103s, watchdog not engaged).
 | fn | % | tag |
 |---|---|---|
 | reload::weapon_core_reload_state_base(weapon_core&, float) | 100 | DONE |
-| reload::initialize() | 92 | PARTIAL (LTCG inline-vs-call) |
+| reload::initialize() | 99.83 | DONE (round_is_chambered out-lined by reviewer; was 92% PARTIAL; sole residual = eax-vs-ecx this-load arg-passing — see RESIDUAL note below) |
 | reload::on_animation_end_impl(bool&) | 100 | DONE |
 | chamber::weapon_core_chamber_a_round_state_base(weapon_core&, float) | 100 | DONE |
 | chamber::initialize() | 100 | DONE |

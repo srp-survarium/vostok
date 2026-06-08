@@ -188,7 +188,7 @@ public:
 
 	inline	bool								is_third_view					( ) const { /* no source */ }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
-			bool								round_is_chambered				( ) const { return m_is_round_chambered; }	// STATE[STUB]
+			bool								round_is_chambered				( ) const;	// STATE[STUB] target keeps this out-of-line (called, not inlined, from reload_state_base::initialize @0x09b360)
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 

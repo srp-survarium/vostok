@@ -16,14 +16,12 @@ weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapo
 	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 }
 
-// STATE[92%|PARTIAL]: LTCG inline-vs-call of the trivial accessor round_is_chambered().
-// Every statement, member offset (m_weapon@0x128, m_chamber_a_round_on_reload@0x48F,
-// m_is_round_chambered@0x48E) and the && short-circuit match the target byte-for-byte;
-// the sole residual is that the target keeps round_is_chambered() out-of-line
-// (target standalone @0x09b360, `call ...round_is_chambered`) while our /GL LTCG inlines
-// it (`mov cl,[eax+48Eh]`). chamber_a_round_on_reload() is inlined on BOTH sides (no
-// standalone in either), so it matches. Same unsteerable inline-vs-call class as
-// is_aimed()/get_user() (assembly_patterns.md). No source change steers it.
+// STATE[99.83%|DONE]: round_is_chambered() out-lined (decl weapon_core.h, body weapon_core.cpp)
+// so the base emits the target's `call round_is_chambered` instead of inlining `m_is_round_chambered`
+// (was 92%; reviewer fix). Sole residual: the call's `this` load is `mov eax,[edx+128h]` (target,
+// round_is_chambered @0x09b360 takes `this` in eax via the link-time custom calling convention) vs
+// `mov ecx,[edx+128h]` (base) - the permitted call-boundary arg-passing class (same as #153's
+// ammo_in_magazine). trail: weapon_core_reload_chamber_state_base.md
 void weapon_core_reload_state_base::initialize( )
 {
 	weapon_core_animation_end_aware_state::initialize( );
