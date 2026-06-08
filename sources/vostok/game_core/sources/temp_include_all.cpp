@@ -869,15 +869,6 @@ namespace vostok
 		{
 			concrete_reload_state( survarium::weapon_core& weapon, float animation_time_scale )
 				: survarium::weapon_core_reload_state_base( weapon, animation_time_scale ) {}
-	void use_game_core_weapon_core_fire_state_base( )
-	{
-		// weapon_core_fire_state_base does not override the pure
-		// weapon_and_hands_expression, so it is still abstract; a concrete derived
-		// stub gives a constructible instance whose ctor observes the stores.
-		struct concrete_fire_state : survarium::weapon_core_fire_state_base
-		{
-			concrete_fire_state( survarium::weapon_core& weapon, float animation_timescale )
-				: survarium::weapon_core_fire_state_base( weapon, animation_timescale ) {}
 
 			virtual animation::mixing::expression weapon_and_hands_expression(
 				mutable_buffer&,
@@ -928,6 +919,29 @@ namespace vostok
 		state.survarium::weapon_core_chamber_a_round_state_base::on_animation_end_impl( tick_result );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
+		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
+	}
+
+	void use_game_core_weapon_core_fire_state_base( )
+	{
+		// weapon_core_fire_state_base does not override the pure
+		// weapon_and_hands_expression, so it is still abstract; a concrete derived
+		// stub gives a constructible instance whose ctor observes the stores.
+		struct concrete_fire_state : survarium::weapon_core_fire_state_base
+		{
+			concrete_fire_state( survarium::weapon_core& weapon, float animation_timescale )
+				: survarium::weapon_core_fire_state_base( weapon, animation_timescale ) {}
+
+			virtual animation::mixing::expression weapon_and_hands_expression(
+				mutable_buffer&,
+				bool,
+				survarium::weapon_user_state_enum,
+				animation::mixing::animation_lexeme& ) const override
+			{
+				VOSTOK_UNREACHABLE_CODE( );
+			}
+		};
+
 		survarium::weapon_core						weapon;
 		concrete_fire_state							state( weapon, 1.0f );
 		vostok::resources::managed_resource_ptr		anim;
