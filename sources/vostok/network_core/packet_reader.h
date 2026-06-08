@@ -7,6 +7,8 @@
 
 #include <vostok/network_core/base_packet.h>
 
+namespace vostok { void use_network_core_packet_reader( ); }
+
 namespace vostok {
 namespace network_core {
 
@@ -28,6 +30,9 @@ public:
 
 private:
 	inline	pcbyte				pointer			( ) const;
+
+	// the network_core anchor ODR-uses pointer() by address to keep its standalone body.
+	friend	void				::vostok::use_network_core_packet_reader	( );
 
 public:
 	inline	void				advance			( u32 offset );
