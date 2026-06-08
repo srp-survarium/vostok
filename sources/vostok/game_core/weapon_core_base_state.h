@@ -37,7 +37,7 @@ public:
 public:
 	virtual	void		initialize					( ) override {}
 	virtual	void		finalize					( ) override { /* 0xc40c0 */ } // sushi@TODO
-	virtual	void		execute						( ) override; // sushi@TODO 0x97f80; out-of-line so qualified calls emit `call` (target keeps it standalone)
+	virtual	void		execute						( ) override { /* 0x97f80 */ } // sushi@TODO
 	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 
 	virtual	void		serialize					( network_core::udp_match_packet& packet ) const;

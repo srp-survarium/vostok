@@ -41,20 +41,12 @@ void weapon_core_fire_state_base::initialize( )
 	*m_is_firing_ptr = true;
 }
 
-// STATE[99.09%|DONE]: out-lined weapon_core_base_state::execute (empty body moved from the
-// header inline to weapon_core_base_state.cpp) so this site now emits the target's
-// `call weapon_core_base_state::execute` instead of inlining {} (80.91% -> 99.09%). Sole
-// residual: the `m_animation_has_been_ended` store loads `this` into edx (target) vs eax (base) -
-// a single register-allocation choice across the call boundary. trail: weapon_core_fire_state_base.md
-// STRUCTURE DIFF[target 0x58ec00 | base 0x44d150]: target 3 / base 2 stmts
-// .. same ..
-// <0>         | --          |    EMPTY only target
-// .. same ..
-// ; aligned 2, size-diffs 0, quantity-diffs 1
-// VERDICT: STRUCTURE MATCH (shape ok) - both stmts byte-aligned; the `call base_state::execute`
-// is now emitted (was inlined); sole quantity-diff is an `EMPTY only target` collapsed source-line
-// gap, and the lone byte residual is the m_animation_has_been_ended this-load edx-vs-eax reg-alloc
-// (call-boundary, permitted). trail: weapon_core_fire_state_base.md
+// STATE[80.91%|PARTIAL]: structure matches (both source statements present, in order). Residual is
+// the inline-vs-call of the empty weapon_core_base_state::execute: the target emits a real
+// `call weapon_core_base_state::execute` (it keeps that empty virtual standalone @0x97f80) but our
+// base inlines the header's inline `{}` to nothing. Out-lining execute would close it, but execute
+// belongs to the weapon_core_base_state unit - we do NOT modify another unit's source to win this
+// match (sushi). Wall stays until that unit out-lines it. trail: weapon_core_fire_state_base.md
 void weapon_core_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );
