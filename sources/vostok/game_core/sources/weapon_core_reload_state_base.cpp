@@ -28,18 +28,6 @@ void weapon_core_reload_state_base::initialize( )
 
 	if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
 		m_weapon.unload_chambered_round( );
-
-	// FUNCTION BODY
-	// <0x776729>|0x009|+0x008:'27'		weapon_core_animation_end_aware_state::initialize( );
-	// <0>
-	// <0x776731>|0x011|+0x00f:'29'		if ( !deserializing( ) && chamber_a_round_on_reload( ) && round_is_chambered( ) )
-	// <0>
-	// <0x776740>|0x020|+0x02f:'31'		(the && term reads + the unload_chambered_round leaf)
-	// <0x77676f>|0x04f|+0x00e:'32'		m_weapon.unload_chambered_round( );
-	// <0>
-	// ******
-	// TARGET @0x43: mov ecx,[ebp-8]; mov eax,[ecx+128h]; call survarium::weapon_core::round_is_chambered
-	// BASE   @0x43: mov edx,[ebp-8]; mov eax,[edx+128h]; mov cl,[eax+48Eh]  (inlined accessor)
 }
 
 // STATE[100%|DONE]
