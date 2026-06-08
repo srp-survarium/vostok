@@ -106,3 +106,13 @@ source (proven by the two 100% siblings using the identical forward pattern).
 Regressions caused: none (only unrelated delinker COMDAT-fold churn).
 Inlining: none. float4_pod::xyz() shows as a COMDAT-folded `...::finalize_impl` thunk
 in the target (delinker misnames it) - it is `matrix.c.xyz()`, not an allocator/ASSERT.
+
+## Structure-verifier pass (2026-06-07, chain/game_core-sv-item_object_batch)
+Re-diffed all three PARTIALs with `--view structure-diff --condensed` after a clean rebuild:
+- draw_leg          target 9 / base 9 stmts, aligned 1, size-diffs 8, quantity-diffs 0  -> 73.36%
+- draw_origin       target 1 / base 1 stmts, aligned 0, size-diffs 1, quantity-diffs 0  -> 62.88%
+- draw_solid_capsule target 1 / base 1 stmts, aligned 1, size-diffs 0, quantity-diffs 0 -> 79.43%
+All STRUCTURE MATCH: statement counts identical, no quantity divergence. Residuals are the
+call-boundary float/reg-vs-stack arg passing into the unmatched render module (movss xmm0 vs
+fld/fstp [esp]; renderer-in-ecx vs pushed) - the only sanctioned LTCG stop reason. Embedded the
+condensed diffs + VERDICT lines; deleted the carcasses. No logic change, no % movement expected.
