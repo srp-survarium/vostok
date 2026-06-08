@@ -8,6 +8,9 @@
 namespace vostok {
 namespace network_core {
 
+// module allocator storage (wired up by memory_allocator(); a matcher fills that body)
+memory::base_allocator*	g_allocator	= NULL;
+
 // STATE[STUB]
 void memory_allocator( memory::base_allocator& allocator )
 {

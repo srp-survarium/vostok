@@ -22,7 +22,10 @@ public:
 		m_allocator			( allocator ),
 		m_reference_count	( 0 )
 	{
-		/* no source */
+		// FUNCTION BODY[0xeac50]: 0
+		// <0xeac50>|0x000|+0x02c:'21'	{
+		// <0xeac7c>|0x02c|      :'22'	}
+		// ******
 	}
 
 	inline	void	destroy						( udp_match_packets_allocator* allocator ) { /* no source */ }
