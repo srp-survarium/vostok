@@ -38,9 +38,37 @@ identity(=finalize_impl)` with NO conditional/push-args and the identity result 
 Pistol has NO such leading eater. First guess: `ASSERT_U( UNKNOWN_EXPRESSION )`. To be
 confirmed/iterated against `--view diff`.
 
-## weapon_and_hands_expression - expect PARTIAL ~85.65% (same as ref #151)
-LTCG inline-vs-call of operator+<animation_lexeme,animation_lexeme> + ASSERT_U eater
-`push 0` exactness. Documented cause; do NOT chase the operator+ inline.
+## weapon_and_hands_expression - PARTIAL 85.65% (same as ref #151)
+inline-vs-call of operator+<animation_lexeme,animation_lexeme> + ASSERT_U eater `push 0`
+exactness. SIDE (verified against `--view diff` at rva 0x79bcd0): the TARGET keeps the
+out-of-line `call operator+`; OUR BASE inlines it (addition_lexeme ctor + cloned_in_buffer
++ ~addition_lexeme). operator+<animation_lexeme,animation_lexeme> is a STANDALONE symbol in
+BOTH rich indexes (target 0x0b42f0, base 0x08c9f0), so forcing the out-of-line call IS
+source-steerable - a deliberate forward-decl device (cf. computed_*_animation_time_scale,
+inline in a header yet forward-declared out-of-line in a .cpp to force the target's call).
+
+### STRUCTURE-VERIFIER-v2 (batchA) - operator+ steer ATTEMPTED, REVERTED (85.65 -> 85.65, no effect)
+Added an explicit-specialization DECLARATION in both idle_state .cpp, after the includes:
+```cpp
+namespace vostok { namespace animation { namespace mixing {
+    template < >
+    addition_lexeme& operator+< animation_lexeme, animation_lexeme >( animation_lexeme& left, animation_lexeme& right );
+} } }
+```
+Rebuilt: NO change (still 85.65% both classes; report-changes shows no movement on either
+weapon_and_hands). MSVC8 still inlines the primary inline template because its DEFINITION is in
+scope (mixing_addition_lexeme.h includes _inline.h at its bottom); an explicit-specialization
+*declaration* does not suppress inlining of an already-visible inline template at this call site.
+The PROVEN forward-decl device (computed_*_animation_time_scale) only works because that function's
+inline definition is NOT in the consuming TU - the .cpp forward-declares it without including the
+inline header. To replicate here I would have to DROP `#include <vostok/animation/mixing_addition_lexeme.h>`
+from the idle_state .cpp and instead forward-declare BOTH `operator+` and the `addition_lexeme`
+type (the return is consumed by `animation::mixing::expression(...)`). That is a deep restructure
+shared across 7 sibling .cpp (weapon_core_idle_state, pistol/dbl idle, pistol/dbl aimed_idle,
+show_state...) in the OUT-OF-SCOPE animation module's header surface - collateral risk too high for
+this pass. REVERTED both files to comment-only. Remains 85.65% PARTIAL: source-steerable IN PRINCIPLE
+(a TU-include restructure) but the simple spec-decl device is ineffective. Do not bank as
+"non-steerable LTCG"; it is "steerable only via an include restructure not yet done".
 
 ## Build #1 results (first approximation)
 report.json fuzzy_match_percent (None = perfect, omitted by objdiff):
@@ -97,7 +125,7 @@ The only remaining getter diffs are:
 ## Build #3 (FINAL) results - no regressions
 - pistol::ctor 100% DONE, pistol::new_object 100% DONE
 - pistol::get_weapon_lexeme_pair 99.92% DONE (ammo-this reg + 2 benign relocs)
-- pistol::weapon_and_hands 85.65% PARTIAL (operator+ LTCG, documented)
+- pistol::weapon_and_hands 85.65% PARTIAL (operator+ inline-vs-call: target out-of-line call, base inlines; source-steerable, not yet attempted)
 - dbl::ctor 100% DONE, dbl::new_object 100% DONE
 - dbl::get_weapon_lexeme_pair 99.92% DONE, dbl::weapon_and_hands 85.65% PARTIAL
 report-changes.json: 0 regressed; ctors improved 95.5->100.

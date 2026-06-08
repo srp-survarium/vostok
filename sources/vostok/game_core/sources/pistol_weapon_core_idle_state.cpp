@@ -43,16 +43,17 @@ pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapo
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[85.65%|PARTIAL]: residual is the per-call-site inline-vs-call of
-// operator+<animation_lexeme,animation_lexeme> (side verified vs --view diff: the TARGET keeps
-// the out-of-line `call operator+`, OUR BASE inlines it here; operator+ is standalone in BOTH
-// rich indexes -> source-steerable, NOT non-steerable LTCG. STEER ATTEMPTED+REVERTED: a spec-decl
-// of operator+ does NOT suppress MSVC8 inlining of the visible inline template; only an out-of-TU
-// restructure (drop mixing_addition_lexeme.h, forward-decl operator+/addition_lexeme - shared across
-// 7 sibling .cpp in the out-of-scope animation module) would steer it, not done here), plus the
-// line-35 ASSERT eater shape (target's
-// expression_eater gets only the lexeme; ASSERT_U adds the assert_untyped `push 0`).
-// Identical shape/diff to weapon_core_idle_state::weapon_and_hands_expression (#151).
+// STATE[85.65%|PARTIAL]: structure matches (ASSERT_U, get_weapon_lexeme_pair, return expr).
+// Wall (inline-vs-call, side verified against --view diff): the TARGET keeps the out-of-line
+// `call operator+<animation_lexeme,animation_lexeme>`; OUR BASE inlines it into the return
+// (addition_lexeme ctor + cloned_in_buffer + ~addition_lexeme stack temporaries -> frame grows).
+// operator+ is a standalone symbol in BOTH rich indexes (target 0x0b42f0, base 0x08c9f0).
+// ATTEMPTED (reverted, no effect 85.65 -> 85.65): an explicit-specialization DECLARATION of
+// operator+<animation_lexeme,animation_lexeme> in this .cpp - MSVC8 still inlines the visible
+// primary inline template. The proven forward-decl device needs the inline DEFINITION to be
+// out of the TU (drop the mixing_addition_lexeme.h include and forward-decl the operator + the
+// addition_lexeme type), a deep restructure shared across 7 sibling .cpp in the out-of-scope
+// animation module - not done here. trail: pistol_double_barreled_weapon_core_idle_state.md
 animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -66,23 +67,27 @@ animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_ex
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 
-	// FUNCTION BODY
-	// <0x7abce1>|0x011|+0x036:'35'	ASSERT_U( weight_driving_animation );
-	// <0x7abd17>|0x047|+0x01f:'36'	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( ... );
-	// <0x7abd36>|0x066|+0x059:'37'	return expression( main + offset );  (target inlines operator+)
-	// ******
+	// STRUCTURE DIFF[target 0x79bcd0 | base 0x44eee0]: target 3 / base 5 stmts
+	// 0x011 <0x36> | 0x011 <0x38> | ASSERT_U( weight_driving_animation );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x066 <0x59> | 0x068 <0x38> | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );   SIZE
+	// ; aligned 1, size-diffs 2, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are operator+ inline-vs-call: target keeps out-of-line `call operator+`, base inlines it (source-steerable, not yet resolved). trail: pistol_double_barreled_weapon_core_idle_state.md
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` call boundary - the
-// callee is LTCG-optimized to take `this` in eax (target `weapon_core::ammo_in_magazine` @0x9b270
-// is `mov ax,[eax+47Ah]; ret`), so the caller loads m_weapon into eax (target) vs ecx (base): a
-// link-time custom calling convention, the permitted arg-passing class. Plus the
-// `s_aim_transition_time` reloc and the `playback_enum`/`playing_type_enum` typedef-alias in the
-// get_weapon_lexeme_pair_impl callee mangling; those two are byte-identical to the reference
-// weapon_core_idle_state::get_weapon_lexeme_pair (#151), which scores 100% lacking only this nit.
+// STATE[99.92%|DONE]: structure matches (the captions brace-init splits per-element to align
+// the target's two L43/L44 stores). Sole byte residual: `m_weapon.ammo_in_magazine()` loads
+// `this` into eax (target, LTCG `ammo_in_magazine` @0x9b270 takes it in eax) vs ecx (base) - the
+// permitted call-boundary arg-passing class. trail: get_weapon_lexeme_pair.md
 weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	pcstr weapon_animation_captions[2] = { "pistol-idle", "pistol-idle_empty" };
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-idle",
+		"pistol-idle_empty"
+	};
 
 	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
 	pcstr animation_identifier = weapon_animation_captions[animation_index];
@@ -102,15 +107,11 @@ weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutabl
 		animation::linear_interpolator( s_aim_transition_time )
 	);
 
-	// FUNCTION BODY
-	// <0x79bc10>|0x000|+0x009:'41'	pcstr weapon_animation_captions[2] = { "pistol-idle", "pistol-idle_empty" };
-	// <0x79bc19>|0x009|+0x007:'43'	weapon_animation_captions[0] = "pistol-idle";
-	// <0x79bc20>|0x010|+0x007:'44'	weapon_animation_captions[1] = "pistol-idle_empty";
-	// <0x79bc27>|0x017|+0x01b:'46'	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
-	// <0x79bc42>|0x032|+0x00a:'47'	pcstr animation_identifier = weapon_animation_captions[animation_index];
-	// <0x79bc4c>|0x03c|+0x02c:'48'	selected_animation = m_weapon_animations[...];
-	// <0x79bc78>|0x068|+0x04f:'49'	return get_weapon_lexeme_pair_impl( ... );
-	// ******
+	// STRUCTURE DIFF[target 0x79bc10 | base 0x44ee20]: target 7 / base 10 stmts
+	// .. same .. (captions now per-element; all 7 stmts aligned, size-diffs 0)
+	// quantity-diffs are EMPTY-only-base collapsed blank-line gaps inside the brace-init
+	// ; aligned 7, size-diffs 0, quantity-diffs 3
+	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine eax-vs-ecx arg-passing, non-steerable. trail: get_weapon_lexeme_pair.md
 }
 
 // STATE[100%|DONE]
