@@ -16,6 +16,22 @@ being matched, an ordering that matters). When deeper rationale or context would
 bloat the code, surface it in chat or record it in `CLAUDE-WORK.md` instead of a
 long inline comment.
 
+## Review TODOs (`sushi@TODO:`)
+
+When a PR review leaves an inline comment that is an **open matching question**
+(something unresolved, suspect, or to investigate later), capture it in BOTH places
+in the same commit that touches that PR:
+
+1. **In source**, at the spot the comment is anchored, as a `// sushi@TODO:` line
+   (paraphrase the reviewer's point; keep it lean).
+2. **In `docs/binary_matching/review_todos.md`**, as a new table row (Status /
+   Function / File:line / PR / TODO) so a later sweep agent can find it even after
+   squash-merges erase the branch.
+
+Grep `sushi@TODO:` for the live set; `review_todos.md` is the curated index. Tick a
+row to `done` (and drop the marker) only when the matching question is actually
+resolved.
+
 ## Python scripts
 
 After editing anything under `scripts/`, lint it with ruff (provided by the

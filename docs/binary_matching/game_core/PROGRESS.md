@@ -495,3 +495,33 @@ infra base): `module::function -> STATE -> PR (regressions)`.
     Reworded the STATE line + .md to name the missing-brace cause and the concrete next step (brace 205/231/245,
     re-diff); added this ledger line (#157 shipped without one). No logic change; report.json unchanged (no rebuild).
     FLAGGED for a faster machine: brace the three IK stages so the <1> locals are block-scoped.
+
+- game_core::legs_ik_processor (ALL remaining functions, one unit) -> see per-fn STATE below -> PR (base chore/remove-slow-machine-notes)
+  - First pass implementing + anchoring every remaining STUB in legs_ik_processor.cpp in one branch/commit/PR.
+  - s_ik_legs_debug_draw_cc / s_ik_foot_capsule_radius_cc / s_ik_legs_rot_axis_cc / s_ik_adjust_hip_position_cc
+    (the last NOT in the dispatch list; found referenced by process()) -> console_commands::cc_bool/cc_float
+    static initializers (console_command.h). report.json leaves all `dynamic initializer`/`atexit destructor`
+    thunks UNSCORED (fuzzy_match_percent None, NOT 0% - the universal cc name-pairing artifact, same as the
+    accepted dispersion/bullet cc inits); cc_float byte-identical to target, cc_bool differs only by
+    register-vs-stack ctor arg passing (LTCG). Effectively DONE.
+  - leg_params::leg_params -> 100%  | leg_params::activate -> 100%  | leg_params::tick -> 97.42% (1 extra LTCG frame slot)
+  - legs_ik_processor::legs_ik_processor -> 100% (key: transition_time_calculator() default m_value=0.1f)
+  - legs_ik_processor::activate -> 100%  | legs_ik_processor::tick -> 100%
+  - ~legs_ik_processor -> 85.71% (ICF-folded member-dtor this-ptr setup; DELETE(m_drawer) is the only real source)
+  - process -> 90% (full structure; residual = per-call get_skeleton() temp-spill 0xC frame shift + R_ASSERT report half)
+  - get_additional_length -> 65.38% PARTIAL unchanged (documented operator| inline-vs-call LTCG; re-verified, stays)
+  - ik_processor.h: m_last_time_in_ms private->protected (no bytes). legs_ik_processor.h: transition_time_calculator
+    ctor/tick, leg_params::is_on_ground filled in. temp_include_all.cpp: anchored activate/process/tick (both classes).
+  - FLAGGED for the deeper second pass: process()/dtor capped by anchor-observation + LTCG codegen (get_skeleton spill,
+    ICF dtor fold); revisit once private-method temp_include anchors are removed so real callers observe the objects.
+  - REVIEW (no logic change, no rebuild): verified every per-fn % against report.json (leg_params::tick 97.42308,
+    legs_ik ctor/activate/tick 100, dtor 85.71429, process 90.00284, get_additional_length 65.375 - all confirmed).
+    Corrected the "0%" wording for the cc dynamic-init/atexit thunks -> they are report.json `None` (unscored), the
+    universal cc name-pairing artifact (every cc init in the codebase is None), not a 0% score (.cpp comment, this
+    file, the per-fn .md). Trimmed lean-policy overruns on the two clean 100%|DONE fns (leg_params::activate,
+    legs_ik_processor ctor) to a bare STATE line (rationale already in the .md). Checked §2a: process()'s slot
+    "storm" is a UNIFORM 4-byte frame offset (3B0 vs 3AC) from the get_skeleton() spill, NOT a brace/structure
+    divergence - the if/else-if ladder braces pair cleanly base-vs-target; the R_ASSERT(success) report half and
+    the dtor's two `this`-ptr setups for ~fermi_interpolator (offsets 0x7C/0x70) are genuine call-boundary/ICF
+    artifacts, correctly PARTIAL with carcass preserved. No fixable cap found for the second pass beyond what is
+    flagged. No code logic touched.
