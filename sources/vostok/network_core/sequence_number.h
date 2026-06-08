@@ -14,6 +14,11 @@ class udp_match_packet;
 template < typename T >
 class sequence_number {
 public:
+	// default ctor: holders (udp_match_packet, channel, connection) keep these as
+	// uninitialised members; the PDB never recorded this (no instantiation) but the
+	// aggregates need it to be default-constructible.
+	inline						sequence_number	( ) { /* no source */ }
+
 	inline	explicit			sequence_number	( T number );
 
 	inline	void				serialize		( udp_match_packet& packet );
