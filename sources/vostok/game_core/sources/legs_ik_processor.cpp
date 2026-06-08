@@ -302,6 +302,11 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// <0>         | --          |    EMPTY only target
 	// 0x4b2 <0xbd> | --          | L157   ONLY target
 	// ; aligned 23, size-diffs 7, quantity-diffs 9
+	// sushi@TODO: the 3 "ONLY base" rows (recomputed hip_obj_matrix + the two process_leg calls)
+	// are statements WE emit that target does not have aligned here - calling it an "aligner swap"
+	// is suspect. If a stmt is only in base, we cannot know the target stmt is really there; this is
+	// most likely a real STRUCTURE problem (an extra/duplicated branch), not a diff-aligner artifact.
+	// Investigate before trusting the %.
 	// VERDICT: STRUCTURE MATCH (shape ok) - all SIZE rows are the get_skeleton()/*m_skeleton spill (0xC per get_bone_matrix_in_object_space call, target inlines [m_skeleton]); the ONLY base/L155/L157 rows are an aligner swap of the matched 3rd ground branch, not a missing statement. Call-boundary LTCG, non-steerable. trail: legs_ik_processor_rest.md
 }
 
