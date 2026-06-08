@@ -66,47 +66,22 @@ void character_dispersion_calculator::tick(
 	else if ( m_current_value > m_value )
 		m_value = math::min( m_current_value, m_value + m_value_smoothing_speed * dt );
 
-	// LOCALS
-	// float 						dt
-	// ******
-
-	// FUNCTION BODY
-	// <0x596099>|0x009|+0x00c:'50'
-	// <0x5960a5>|0x015|+0x009:'51'
-	// <0x5960ae>|0x01e|+0x009:'52'
-	// <0x5960b7>|0x027|+0x005:'53'
-	// <0>
-	// <1>
-	// <0x5960bc>|0x02c|+0x00b:'56'
-	// <0x5960c7>|0x037|+0x005:'57'
-	// <0>
-	// <0x5960cc>|0x03c|+0x01f:'59'
-	// <0x5960eb>|0x05b|+0x009:'60'
-	// <0>
-	// <1>
-	// <0x5960f4>|0x064|+0x034:'63'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x596128>|0x098|+0x02e:'69'
-	// <0>
-	// <1>
-	// <2>
-	// <0x596156>|0x0c6|+0x011:'73'
-	// <0>
-	// <0x596167>|0x0d7|+0x030:'75'
-	// <0>
-	// <1>
-	// <0x596197>|0x107|+0x011:'78'
-	// <0>
-	// <0x5961a8>|0x118|+0x02a:'80'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x586090            base: 0x4546a0
+	// ; void survarium::character_dispersion_calculator::tick(const survarium::weapon_user_state_enum, const bool, const bool, const unsigned char, const bool, const unsigned int) ; target 22 stmts / base 21 stmts
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// <0>         | --          |    EMPTY only target
+	// .. same ..
+	// <0>         | --          |    EMPTY only target
+	// .. same ..
+	// <0>         | --          |    EMPTY only target
+	// .. same ..
+	// ; aligned 19, size-diffs 0, quantity-diffs 5
+	// VERDICT: STRUCTURE MATCH (shape ok) - 0 size-diffs, all 19 statements align; quantity-diffs are EMPTY source-line gaps only. Residual is the /Od frame-slot noise (target sub esp,1Ch, this@[ebp-10h] vs base sub esp,18h, this@[ebp-0Ch]), non-steerable. trail: character_dispersion_calculator_tick.md
 }
 
 // STATE[100%|DONE]
