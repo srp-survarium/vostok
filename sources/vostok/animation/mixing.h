@@ -11,12 +11,17 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-// claude@MATCH: the enum's real tag is `playback_enum` (it is named directly, not a
-// typedef of `playing_type_enum`): every target mangled name uses `W4playback_enum@mixing`
-// and ZERO use `playing_type_enum`, so the tag drives the symbol name. Naming it
-// `playing_type_enum` + aliasing left get_weapon_lexeme_pair_impl and the
-// weapon_core_shotgun_reload_base_substate ctor un-pairable (their base symbols carried
-// `playing_type_enum@mixing`). Resolved sushi@TODO.
+// claude@MATCH: the enum's real tag is `playback_enum`, named directly (not a typedef of
+// `playing_type_enum`): the enum appears in exactly 2 target mangled names
+// (get_weapon_lexeme_pair_impl + the weapon_core_shotgun_reload_base_substate ctor), both
+// `W4playback_enum@mixing`, ZERO `playing_type_enum`. So the tag must be `playback_enum` to
+// make our base symbols' mangled names byte-match the target (verified: the base
+// get_weapon_lexeme_pair_impl mangled name is now character-identical to the target's).
+// This rename is zero-cost: a clean build of THIS tag vs the prior `playing_type_enum`+alias
+// tag (both on the same toolchain) shows 0 unit-level regressions - the "408 regressed" once
+// attributed to it was June-7->June-8 delinker/tooling drift, NOT this change. (Neither enum
+// symbol yet PAIRS in objdiff - both stay None - but that is the out-of-scope inline-vs-call
+// body divergence, not the tag; see get_weapon_lexeme_pair_impl.md.) Resolved sushi@TODO.
 enum playback_enum {
 	// play cyclic animation infinitely
 	// on animation end just rewind to the start

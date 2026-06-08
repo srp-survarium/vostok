@@ -90,21 +90,38 @@ The lone 4-byte `mov byte[ebp-N],0` standalone statement (no lea/call) is an unu
 reproduced as `bool dummy = false;`. An ASSERT would emit lea+call (<0xc>); the interval setters'
 R_ASSERT_CMP empty_stubs come from the inlined setter bodies, not from source ASSERTs here.
 
-## Pairing blocker found: enum tag name mismatch (sweep, #159 follow-up)
-A SECOND, more fundamental reason objdiff left this `None` (in addition to the body
-inline-vs-call divergence above): the `playback_enum` parameter's enum was declared in
-`sources/vostok/animation/mixing.h` as `enum playing_type_enum {...}; typedef playing_type_enum
-playback_enum;`. MSVC mangles a parameter by the enum's REAL TAG, so our base symbol became
-`?get_weapon_lexeme_pair_impl@...IMW4playing_type_enum@mixing@84@...` while the target uses
-`...IMW4playback_enum@mixing@84@...`. Different symbol names cannot pair, full stop.
+## Enum tag name: `playback_enum` is correct AND zero-cost - but does NOT pair this fn
+### The name fact
+`mixing.h` originally declared `enum playing_type_enum {...}; typedef playing_type_enum
+playback_enum;`. MSVC mangles a parameter by the enum's REAL TAG, so our base symbol was
+`?get_weapon_lexeme_pair_impl@...IMW4playing_type_enum@mixing@84@...` while the target spells it
+`...IMW4playback_enum@mixing@84@...`. The enum appears in EXACTLY 2 target mangled names - THIS
+fn + the `weapon_core_shotgun_reload_base_substate` ctor - and both are `W4playback_enum@mixing`;
+the target has ZERO `playing_type_enum`. So the target's real tag is `playback_enum`. Renaming
+the tag to `playback_enum` makes our base mangled name CHARACTER-IDENTICAL to the target's
+(verified in `binaries/rich/base/index.jsonl` vs `target/index.jsonl`). Kept.
 
-Evidence (index.jsonl mangled-name counts): target has 0 `playing_type_enum` and 2
-`playback_enum@mixing`; base had 2 `playing_type_enum@mixing` and 0 `playback_enum@mixing`. The
-two affected base symbols were THIS function and the `weapon_core_shotgun_reload_base_substate`
-ctor - both confirmed `playback_enum@mixing@animation` in the target.
+### The "408 regressed" was tooling drift, not this rename (verified 2026-06-08)
+The fd4ec86b commit message claimed the rename was a net +pairing; a later note feared it was a
+net regression of ~408 game_core symbols. Both were wrong. Three clean builds on the SAME current
+toolchain settle it:
+- pre-rename commit 5038c307 (tag `playing_type_enum` + alias): matched_functions = **7952**
+- this rename (tag `playback_enum`):                              matched_functions = **7952**
+- unit-level delta between the two: **0 units differ.**
+The rename costs nothing. The "408 regressed" seen in the fd4ec86b-era `report-changes.json` came
+from comparing against a STALE 8262-matched report generated on the June-7 delinker/objdiff
+toolchain; the June-8 toolchain's true game_core baseline is ~7950-7952 regardless of this tag
+(e.g. `hand_to_weapon_ik_processor.cpp.obj` delinks to a 562-byte near-empty base obj, unit
+fuzzy 2.53%/None, in 5038c307, the rename, AND the revert alike - a current-toolchain LTCG fold,
+unrelated to the enum). Trap encountered while testing: a plain rebuild compiled game_core
+against a STALE rename-era `.pch`; force the PCH (`rm` the module `.pch` + `touch pch.cpp`) to
+see the real result.
 
-Fix: renamed the enum tag to `playback_enum` (dropped the typedef) in mixing.h. Byte-neutral for
-all source (every call site already used the `playback_enum` alias), corrects both mangled names.
-Resolved the line-30 `sushi@TODO`. After this the symbols pair by name; any remaining residual is
-the body inline-vs-call class above. Also resolved: `.bones_mask( 2 )` -> the named
+### ...but the symbol STILL does not pair (stays None)
+Even with the byte-identical mangled name, objdiff leaves both enum symbols `None`. The pairing is
+blocked at the BODY by the whole-program inline-vs-call of the trivial `animation_lexeme_parameters`
+setters (target out-of-line, our /GL inlined - the divergence documented in Outcome above). The tag
+rename was necessary-but-not-sufficient: it is the faithful spelling of the target's type and is
+free, so it stays, but it does not by itself earn a %. No further zero-cost lever pairs this fn;
+left STATE[None]. Also resolved independently: `.bones_mask( 2 )` -> the named
 `animation::body_part_hands_only` (= 0x0002 in animation/type_definitions.h).

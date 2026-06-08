@@ -10,16 +10,18 @@
 namespace survarium {
 
 // STATE[None|PARTIAL]: a faithful 1:1 reconstruction (every statement, constant, control-flow
-// branch and the return arg order are byte-exact where not inlined). The None was traced to a
-// real PAIRING blocker, now FIXED at source: the `playback_enum` parameter's enum was named
-// `playing_type_enum` (with `playback_enum` a typedef alias) in mixing.h, so our base symbol
-// mangled to `...W4playing_type_enum@mixing...` while the target uses `...W4playback_enum@mixing...`
-// - a different symbol name objdiff can't pair. Renamed the enum tag to `playback_enum` (the
-// target never emits `playing_type_enum`; see mixing.h). Whether the BODY then earns a real %
-// is separately capped by the whole-program inline-vs-call of the trivial inline-in-class
-// animation_lexeme_parameters setters (target keeps them out-of-line; our /GL inlines them),
-// same unsteerable class as scheduler::on_frame / operator| in assembly_patterns.md. Rebuild to
-// confirm the pairing. See get_weapon_lexeme_pair_impl.md.
+// branch and the return arg order are byte-exact where not inlined). Two things are now
+// settled by clean builds: (1) the `playback_enum` parameter's enum tag is correct - with the
+// `playback_enum` tag (see mixing.h) our base symbol's mangled name is character-identical to
+// the target's `...IMW4playback_enum@mixing@84@...`, and this tag is zero-cost (0 unit
+// regressions). (2) Yet objdiff STILL leaves this `None`: the pairing is blocked at the BODY by
+// the whole-program inline-vs-call of the trivial inline-in-class animation_lexeme_parameters
+// setters (target keeps animated_object/playback_type/bones_mask/weight_interpolator/
+// start_animation_interval_id out-of-line; our /GL inlines them, shrinking the body ~415 vs
+// target 503 and shifting the [ebp-XX] layout past objdiff's pairing threshold). The setters are
+// inline COMDATs in the out-of-scope `animation` headers; the only lever (move them out-of-line)
+// is engine-wide. Same unsteerable class as scheduler::on_frame / operator|. See
+// get_weapon_lexeme_pair_impl.md.
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
 	pcstr										identifier,
