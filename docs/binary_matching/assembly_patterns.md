@@ -803,6 +803,26 @@ expression with NO `assert_untyped push 0`, no standard macro reproduces it exac
 the `push 0`); that lone `push 0` is the closest-macro residual. Confirmed in
 `weapon_core_idle_state::weapon_core_idle_state` (ctor line 21 = `ASSERT_CMP_U(animations_count,==,4)`,
 100%) and `weapon_core_idle_state::weapon_and_hands_expression` (line 32 `ASSERT_U(weight_driving_animation)`).
+CRITICAL AMBIGUITY: this eater shape is NOT unique to ASSERT_U - `VOSTOK_UNREFERENCED_PARAMETERS` emits
+the IDENTICAL `if(identity(false)){ helper(args); }` (see next entry). If the pushed args are the
+function's OWN otherwise-unused parameters (a `user`/`packet`/`dt` it never reads), it is the
+unreferenced-parameter macro, NOT an ASSERT. For an unused param, default to UNREFERENCED_PARAMETER(S).
+
+### `(void)(&p)` / `if(identity(false)){ unreferenced_parameter_helper(params); }` = VOSTOK_UNREFERENCED_PARAMETER(S)
+`macro_unreferenced_parameter.h` defines two macros, both to silence an unused parameter (the original
+code wrote one whenever a param is taken but not read - virtual overrides, callbacks, stubs).
+UNDER-USING them is a red flag: a `user`/`packet`/`dt`-style param with no body reads almost always had one.
+- `VOSTOK_UNREFERENCED_PARAMETER(p)` = `(void)(&p)`. ASM /Od: a lone `lea reg,[ebp+p]` (address-of the
+  param) that is discarded - NO mov-byte, NO call. A bare `lea` of a parameter slot with no consumer is
+  this, not a dead local.
+- `VOSTOK_UNREFERENCED_PARAMETERS(a,b,...)` = `if ( vostok::identity(false) ) { vostok::detail::
+  unreferenced_parameter_helper(a,b,...); } else (void)0`. ASM: the SAME eater shape as the ASSERT_U entry
+  above (the `mov byte[ebp-N],0; lea; call <folded-empty>` guard, then the never-taken block pushes
+  a,b,... and calls the folded-empty `unreferenced_parameter_helper`). DISTINGUISH from ASSERT_U purely by
+  WHAT is pushed: the function's own unused PARAMETERS -> this macro; an asserted expression's operands ->
+  ASSERT_U. (Both helpers are varargs folded-empty; the delinker misnames both `empty_stub`/`finalize_impl`.)
+SOURCE: write the macro, never hand-roll `(void)(&p)`. Def in `sources/vostok/macro_unreferenced_parameter.h`
+(244 uses across our game_core/animation sources - reach for it before labeling an unused-param eater an ASSERT).
 
 ### `/Od` counted loop with `je` (not `jae`) exit = source `for(...; i != N; ...)` not `i < N`
 ASM (target): `cmp [i], N; je .end` (loop exits on equality). SOURCE: `for ( u32 i = 0 ; i != N ; ++i )`.
