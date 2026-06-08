@@ -35,6 +35,8 @@
 #include <vostok/network_core/tcp_packet.h>
 #include <vostok/network_core/tcp_packet_client.h>
 #include <vostok/network_core/udp_match_stats.h>
+#include <vostok/network_core/udp_match_connection.h>
+#include <vostok/network_core/packet_reader.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
 #include <vostok/animation/skeleton.h>
@@ -1471,6 +1473,35 @@ namespace vostok
 		network_core::read_lines_from_stream( "prefix", buff );
 	}
 
+	struct test_udp_match_packets_orderer : network_core::udp_match_packets_orderer
+	{
+		virtual network_core::udp_match_message_type_info get_sending_message_info( u8 ) 	{ return network_core::udp_match_message_type_info( false, false, 0 ); }
+		virtual network_core::udp_match_message_type_info get_received_message_info( u8 ) 	{ return network_core::udp_match_message_type_info( false, false, 0 ); }
+	};
+
+	void use_network_core_udp_match_connection()
+	{
+		boost::asio::io_service io_service( 10 );
+		boost::asio::ip::udp::socket socket( io_service );
+		boost::asio::ip::udp::endpoint remote_endpoint;
+		memory::single_size_buffer_allocator< 300, threading::single_threading_policy > packets_allocator( NULL, 0 );
+		test_udp_match_packets_orderer packets_orderer;
+
+		network_core::udp_match_connection connection(
+			socket, remote_endpoint, packets_allocator, packets_orderer,
+			10, 20, 30, "id"
+		);
+
+		connection.connect( NULL );
+		connection.enqueue( NULL );
+		connection.send_queued_packets( 10 );
+		connection.disconnect( );
+		connection.instant_disconnect( network_core::disconnected_by_timeout );
+		connection.packets_count( );
+
+		network_core::udp_match_connection::is_low_level_packet( *(network_core::base_packet const*)NULL );
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -1673,6 +1704,7 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_tcp_packet();
 	vostok::use_network_core_entry_point();
 	vostok::use_network_core_tcp_packet_client();
+	vostok::use_network_core_udp_match_connection();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
