@@ -77,22 +77,22 @@ static float	s_ik_foot_capsule_radius_value	= 0.0f;
 static bool		s_ik_legs_rot_axis_value		= false;
 static bool		s_ik_adjust_hip_position_value	= false;
 
-static console_commands::cc_bool	s_ik_legs_debug_draw_cc		( "ik_legs_debug_draw", s_ik_legs_debug_draw_value, false, console_commands::command_type_engine_internal );
-static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule_radius", s_ik_foot_capsule_radius_value, 0.01f, 0.2f, true, console_commands::command_type_engine_internal );
-static console_commands::cc_bool	s_ik_legs_rot_axis_cc		( "ik_legs_rot_axis", s_ik_legs_rot_axis_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
-static console_commands::cc_bool	s_ik_adjust_hip_position_cc	( "ik_adjust_hip_position", s_ik_adjust_hip_position_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
+// Each cc static below emits a compiler-generated dynamic initializer (+ a paired atexit
+// destructor) thunk; both stay None (the name-pairing artifact in claude@NOTE above), never 0%.
+// The per-symbol STUB marker above each one surfaces a mis-written static init.
 
-// Each cc static above emits a compiler-generated dynamic initializer (+ a paired atexit
-// destructor) thunk. Tracked per-symbol as STUB so a mis-written static init surfaces - they
-// stay None (the name-pairing artifact in claude@NOTE above), never 0%.
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_legs_debug_draw_cc''()
+static console_commands::cc_bool	s_ik_legs_debug_draw_cc		( "ik_legs_debug_draw", s_ik_legs_debug_draw_value, false, console_commands::command_type_engine_internal );
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_foot_capsule_radius_cc''()
+static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule_radius", s_ik_foot_capsule_radius_value, 0.01f, 0.2f, true, console_commands::command_type_engine_internal );
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_legs_rot_axis_cc''()
+static console_commands::cc_bool	s_ik_legs_rot_axis_cc		( "ik_legs_rot_axis", s_ik_legs_rot_axis_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_adjust_hip_position_cc''()
+static console_commands::cc_bool	s_ik_adjust_hip_position_cc	( "ik_adjust_hip_position", s_ik_adjust_hip_position_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
 
 // STATE[100%|DONE]
 legs_ik_processor::leg_params::leg_params( ) :
