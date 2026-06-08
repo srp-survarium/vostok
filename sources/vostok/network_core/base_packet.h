@@ -22,6 +22,14 @@ public:
 
 	inline	u32			buffer_size	( ) const { return m_buffer_size; }
 
+	// the writer (packet< T >) and reader (packet_reader) reach the buffer + its
+	// size through these private members; the const buffer() accessor stays
+	// private (PDB-matched) so only friends see it. tcp_packet owns the realloc
+	// of its own backing buffer.
+	template < typename T > friend class packet;
+	friend class packet_reader;
+	friend class tcp_packet;
+
 private:
 	/* 0x0000 */	pbyte		m_buffer;
 	/* 0x0004 */	u32			m_buffer_size;

@@ -8,31 +8,37 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
+// STATE[PARTIAL]: empty base_packet ctor delegation; target carcass is the
+// packet< udp_match_packet > instance, not base-anchored here (udp_match_packet's
+// private ctor lives in another matcher's file).
 template < typename T >
 inline packet< T >::packet( )
 {
-	// FUNCTION BODY[0x8d680]: 0
-	// <0x8d680>|0x000|+0x007:'15'	{
-	// <0x8d687>|0x007|      :'16'	}
-	// ******
 }
 
 template < typename T >
 inline void packet< T >::clear( ) { /* no source */ }
 
+// STATE[INLINED]: no standalone symbol (inlined into resize); body needed so resize matches.
 template < typename T >
-inline void packet< T >::reserve( u32 size ) { /* no source */ }
+inline void packet< T >::reserve( u32 size )
+{
+	if ( allocated_size( ) >= size )
+		return;
 
-// STATE[STUB]
+	reallocate			( size );
+}
+
+// STATE[PARTIAL]: ASSERT(!buffer_size()); reserve(size); m_buffer_size = size -
+// matches the target's 5-stmt shape (ASSERT call, allocated_size() check via
+// reserve, reallocate, m_buffer_size store). Capped by the address-anchored
+// debug COMDAT + allocated_size()/reserve inline-vs-call on the base side.
 template < typename T >
 inline void packet< T >::resize( u32 size )
 {
-	// FUNCTION BODY[0x134ee0]: 3
-	// <0x134eea>|0x00a|+0x00c:'36'
-	// <0x134ef6>|0x016|+0x01a:'37'
-	// <0x134f10>|0x030|+0x009:'38'
-	// ******
+	ASSERT				( !buffer_size( ) );
+	reserve				( size );
+	m_buffer_size		= size;
 }
 
 template < typename T >
@@ -41,25 +47,23 @@ inline void packet< T >::clone( base_packet const& other ) { /* no source */ }
 template < typename T >
 inline void packet< T >::append( bool value ) { /* no source */ }
 
-// STATE[STUB]
+// STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
+// packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
 template < typename T >
 inline void packet< T >::append( u8 value )
 {
-	// FUNCTION BODY[0x8d750]: 1
-	// <0x8d751>|0x001|+0x011:'57'
-	// ******
+	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
 inline void packet< T >::append( s8 value ) { /* no source */ }
 
-// STATE[STUB]
+// STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
+// packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
 template < typename T >
 inline void packet< T >::append( u16 value )
 {
-	// FUNCTION BODY[0x8d730]: 1
-	// <0x8d731>|0x001|+0x011:'69'
-	// ******
+	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
@@ -77,31 +81,28 @@ inline void packet< T >::append( u64 value ) { /* no source */ }
 template < typename T >
 inline void packet< T >::append( s64 value ) { /* no source */ }
 
-// STATE[STUB]
+// STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
+// packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
 template < typename T >
 inline void packet< T >::append( float value )
 {
-	// FUNCTION BODY[0x8d710]: 1
-	// <0x8d711>|0x001|+0x011:'105'
-	// ******
+	append				( &value, sizeof( value ) );
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
+// packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
 template < typename T >
 inline void packet< T >::append( float2 const& value )
 {
-	// FUNCTION BODY[0x8d700]: 1
-	// <0x8d701>|0x001|+0x00d:'111'
-	// ******
+	append				( &value, sizeof( value ) );
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
+// packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
 template < typename T >
 inline void packet< T >::append( float3 const& value )
 {
-	// FUNCTION BODY[0x8d6f0]: 1
-	// <0x8d6f1>|0x001|+0x00d:'117'
-	// ******
+	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
@@ -110,43 +111,32 @@ inline void packet< T >::append( pcstr string ) { /* no source */ }
 template < typename T >
 inline void packet< T >::append( pcstr string, u8 string_length ) { /* no source */ }
 
-// STATE[STUB]
+// STATE[PARTIAL]: CRTP form of network::packet::append (grow-by-doubling + memcpy);
+// statement shape matches target. The target instance inlines reallocate/
+// allocated_size whole-program (LTCG) into one tight register-allocated body; the
+// base instance keeps them as calls with spills, so it scores low - the divergence
+// is LTCG cross-fn inlining, not the source. Serves both tcp + udp instantiations.
 template < typename T >
 inline void packet< T >::append( pcvoid buffer, u32 buffer_size )
 {
-	// FUNCTION BODY[0xa72f0]: 11 : packet< tcp_packet >
-	// <0xa72f0>|0x000|+0x019:'137'
-	// <0xa7309>|0x019|+0x006:'138'
-	// <0xa730f>|0x01f|+0x004:'139'
-	// <0xa7313>|0x023|+0x00a:'140'
-	// <0>
-	// <0xa731d>|0x02d|+0x031:'142'
-	// <0>
-	// <1>
-	// <2>
-	// <0xa734e>|0x05e|+0x010:'146'
-	// <0xa735e>|0x06e|+0x007:'147'
-	// ******
-	// FUNCTION BODY[0x8d690]: 11 : packet< udp_match_packet >
-	// <0x8d695>|0x005|+0x01a:'137'
-	// <0x8d6af>|0x01f|+0x006:'138'
-	// <0x8d6b5>|0x025|+0x004:'139'
-	// <0x8d6b9>|0x029|+0x00d:'140'
-	// <0>
-	// <0x8d6c6>|0x036|+0x005:'142'
-	// <0>
-	// <1>
-	// <2>
-	// <0x8d6cb>|0x03b|+0x010:'146'
-	// <0x8d6db>|0x04b|+0x007:'147'
-	// ******
+	if ( m_buffer_size + buffer_size > allocated_size( ) ) {
+		u32 new_allocated_size	= allocated_size( ) ? allocated_size( ) : buffer_size;
+		while ( new_allocated_size < m_buffer_size + buffer_size )
+			new_allocated_size	*= 2;
+
+		reallocate		( new_allocated_size );
+	}
+
+	ASSERT				( m_buffer_size + buffer_size <= allocated_size( ) );
+	memcpy				( this->buffer( ) + m_buffer_size, buffer, buffer_size );
+	m_buffer_size		+= buffer_size;
 }
 
 template < typename T >
-inline T const& packet< T >::implementation( ) const { /* no source */ }
+inline T const& packet< T >::implementation( ) const { return *static_cast< T const* >( this ); }
 
 template < typename T >
-inline T& packet< T >::implementation( ) { /* no source */ }
+inline T& packet< T >::implementation( ) { return *static_cast< T* >( this ); }
 
 } // namespace network_core
 } // namespace vostok
