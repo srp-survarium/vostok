@@ -10,10 +10,10 @@ namespace survarium {
 
 // STATE[100%|DONE]
 weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, float animation_timescale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+	weapon_core_animation_end_aware_state	( weapon, true ),
+	m_animation_timescale					( animation_timescale ),
+	m_playback_type							( animation::mixing::play_cyclically )
 {
-	m_animation_timescale = animation_timescale;
-	m_playback_type = animation::mixing::play_cyclically;
 }
 
 // STATE[99.71%|DONE]: every instruction matches; the sole residual is a 4-byte /Od
