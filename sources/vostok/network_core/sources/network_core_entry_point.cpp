@@ -49,14 +49,14 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_addr
 	// STRUCTURE DIFF[target 0x577040 | base 0x513ab0]: target 11 / base 10 stmts
 	//   9: 0x216 <0x2> | --          | L148   ONLY target
 	// ; aligned 10, size-diffs 0, quantity-diffs 1, blank-gaps 2
-	// VERDICT: NEAR-MATCH, one extra basic block in target (NOT ICF naming - that
-	// earlier verdict was wrong). Target routes the if-false branch through its own
-	// L148 block (0x216 `jmp short` -> 0x218 `jmp .1`/++iter); we fold it straight to
-	// the back-edge (0x216 `jmp .1`). That 2-byte `jmp short` shifts every later
-	// offset by 2 and is the whole 99.01% residual. Brace/whitespace can't add a
-	// block; only a real statement between the if and the loop `}` can - suspect a
-	// trailing loop-body statement that compiled out under MASTER_GOLD (an
-	// ASSERT/unreferenced-eater leaving an empty block). sushi@TODO: see review_todos.md.
+	// VERDICT: NEAR-MATCH. The extra target stmt is a DEAD `jmp short` at 0x216 (the
+	// if's closing-brace L148 breakpoint anchor): the if-false target is .7=0x218 and
+	// the loop-exit is .8=0x21d, while 0x216 is preceded by the unconditional
+	// `0x211 jmp .11` - so nothing reaches 0x216 (sushi confirmed). It's the
+	// "closing `}` carries a breakpoint" artifact - MSVC emits a no-op jmp so the `}`
+	// line is breakpointable; our build omits it. Zero functional effect; the 2 bytes
+	// shift every later offset = the whole 99.01% residual. Not ICF naming (earlier
+	// verdict was wrong). sushi@TODO: source/flag lever for the dead anchor - see review_todos.md.
 }
 
 // STATE[99.98%|PARTIAL]: structure exact; residual is the secure-CRT reloc naming
