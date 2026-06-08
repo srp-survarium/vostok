@@ -21,6 +21,8 @@
 #include <vostok/network_core/disconnect_event_types_enum.h>
 #include <vostok/network_core/udp_match_types.h>
 
+#include <boost/asio.hpp>
+
 namespace vostok {
 namespace network_core {
 
