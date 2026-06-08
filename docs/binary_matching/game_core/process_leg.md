@@ -135,3 +135,100 @@ roundtrip that sibling get_foot_fixed_transform (84%) also shows. Regressions ca
 Setup: get_rotation_matrix/change_matrix_orientation defined locally in this TU (called
 out-of-line by process_leg; their own bodies are separate objects). Anchored via friend
 use_game_core_legs_ik_processor_process_leg.
+
+## Deep pass (anchor-removal, match/game_core-legs_ik_processor-deep)
+Removed the fake-observation direct anchor `use_game_core_legs_ik_processor_process_leg`
+(NULL-cast processor/params) + its IncludeAll dispatch line. process_leg is now kept alive
+ONLY transitively through the real `processor` instance in `use_game_core_legs_ik_processor`
+(process() -> process_leg). Hypothesis: fake observation might distort LTCG/DSE.
+- COMMAND: python3 scripts/rebuild.py (no module arg); python3 scripts/legs_scores.py
+- RESULT: 78.81% UNCHANGED (vs PR #159 78.82). Function still SCORES (reached transitively).
+- CONCLUSION: anchor observation was NOT the cap. The real residual is the documented
+  three-block bracing (the [1] blocks at srclines 205/231/245 written flat in our source) -
+  a recoverable control-structure matching problem, plus the call-boundary LTCG class. NOT
+  pursued in this pass (the brace work is a multi-iteration restructure: the target also
+  declares an extra `original_up_leg_to_foot_dir<1>` inside the up_leg block that our source
+  lacks, so it needs the in-block local set matched, not just `{ }` added). Stays 78.81% PARTIAL.
+
+## Restructure pass (match/game_core-legs_ik_processor-process_leg-restructure)
+Goal: brace the three IK stages so the <1> locals become block-scoped (collapse the slot-rename storm).
+
+### Decode of the three target blocks (from `--view target` byte offsets + carcass `[1]` marks)
+Matrix obj slots (from srclines 176-180): up_leg=[ebp-180h], knee=[ebp-0F0h], leg=[ebp-48h],
+foot=[ebp-140h], toe=[ebp-0B0h]. Block boundaries and statement ORDER read off the asm:
+- 203 (FUNCTION scope): target_up_leg_to_foot_dir = normalize(up_leg.c.xyz - target_foot.c.xyz)
+- BLOCK 1 (up_leg, opens 205): up_leg_to_foot_len; additive_len; up_leg_alpha_angle;
+  original_up_leg_dir; target_up_leg_dir; if(!is_similar) rotation_axis=...; alpha_rotation_matrix;
+  rotated_dir; rotation_matrix; change_matrix_orientation(rotation_matrix, up_leg_obj).
+- BLOCK 2 (knee, opens 231): knee_obj = m[knee]*up_leg (231, FIRST stmt INSIDE block);
+  leg_obj = m[leg]*knee (232); original_knee_dir; rotation_matrix2 =
+  get_rotation_matrix(original_knee_dir, target_up_leg_to_foot_dir);
+  change_matrix_orientation(rotation_matrix2, knee_obj).
+- BLOCK 3 (leg, opens 245): leg_obj = m[leg]*knee (245, FIRST stmt INSIDE block);
+  foot_obj = m[foot]*leg (246); original_leg_dir; target_leg_dir; rotation_matrix3;
+  change_matrix_orientation(rotation_matrix3, leg_obj); foot_obj = target_foot_obj_matrix.
+KEY ORDERING FIX vs the old flat source: the old source computed original_knee_dir BEFORE
+the leg recompute (using stale leg_obj); the target recomputes leg FIRST (232) then takes
+original_knee_dir from it. The knee/leg recompute is the FIRST statement INSIDE the next
+block, NOT a function-scope statement between blocks.
+
+### Iterations
+1. INPUT: wrapped the three stages in `{ }`, moved the knee recompute into block 2 and the
+   leg recompute into block 3 (each as the first in-block statement), reordered block 2 to
+   knee,leg,orig_knee_dir,rot,change.
+   COMMAND: nix develop --command python3 scripts/rebuild.py (no module arg).
+   RESULT: report.json 78.81% -> **80.96%** (`0 regressed, 1 improved`). Base structure dump now
+   shows exactly THREE `[1]` block-opens at base-srclines 382/400/409 (= target 205/231/245);
+   the former ZERO. The slot-rename storm collapsed.
+   DIFF (--view diff, header fuzzy 68.86 - secondary metric): remaining residual is now the
+   non-bracing class, see Final residual below.
+
+### Final residual (80.96% PARTIAL - not bracing, not pursued further)
+1. **[ebp-150h] working slot.** Every up_leg_obj_matrix READ in the dir math (srclines
+   203/205/210/214/215) targets [ebp-150h], while change_matrix_orientation (222) and draw_leg
+   mutate/read [ebp-180h] (the slot srcline 176 actually writes). [ebp-150h] is never written in
+   the IK region and is NOT a named float4x4 in the carcass LOCALS - it is a compiler in/out
+   lowering copy of up_leg_obj that the target keeps for the dir math while the real local is
+   mutated. Also shows as an operand-EVALUATION-order swap at srcline 203 (target evaluates the
+   up_leg xyz() first, base evaluates target_foot first) and a target-only `lea [ebp-150h];call`
+   trailing srcline 203. Not reproducible from a single source variable.
+2. **get_angle inline-vs-call.** get_angle is a STUB here (base inlines `return 0`); the target
+   calls it out-of-line, so target srcline 212 (+0x03e) inlines the `leg_len+additive_len` /
+   `knee_len+additive_len` adds into the call (`addss xmm0,[ebp-1F0h]; push; movss [esp]`),
+   which base (+0x010) does not. Separate-fn inline-vs-call class.
+3. **get_skeleton()->get_root_bones_count temp-roundtrip.** Base spills *m_skeleton into a
+   per-call [ebp-8XXh] temp (`mov ecx,[eax]; mov [ebp-870h],ecx; mov eax,[ebp-870h]`) where the
+   target does `mov eax,[eax]` direct - the inline-accessor-returns-reference materialization
+   under /Od. Sibling get_foot_fixed_transform (84%) shows the same.
+4. **Call-boundary temps.** is_similar epsilon passed as the lone stack arg (`add esp,4`) while
+   base also pushes a ptr (`add esp,8`); operator*/-/^ temp materialization. Permitted LTCG/
+   call-boundary class.
+
+## REVIEW (claude, no rebuild) - verified 80.96% PARTIAL, structure confirmed, one residual under-attributed
+- report.json `fuzzy_match_percent` for `?process_leg@legs_ik_processor@survarium@@AAEX...` = **80.9602** -
+  the `.cpp` STATE, this `.md`, and PROGRESS.md all agree. PARTIAL tag correct (not 100%).
+- §2a STRUCTURE check PASSES: TARGET structure (binaries/structure/target/.../legs_ik_processor.cpp)
+  shows the three `[1]:'205'` / `[1]:'231'` / `[1]:'245'` block-opens; BASE structure now shows exactly
+  three `[1]` block-opens (base srclines 383/401/410, the dump's first-in-block lines; was ZERO before the
+  restructure). The brace restructure is real and faithful.
+- The DUPLICATE `leg_obj = matrices[leg]*knee` (block 2 srcline 232 AND block 3 srcline 245) is NOT a
+  reviewer logic bug: the target structure emits the recompute at BOTH 232 and 245. Reproducing it is
+  correct (MATCHING.md #1). No base/target confusion - get_angle is genuinely a STUB in base (ik_utils.h)
+  so base inlines / target calls out-of-line, the direction in STATE is correct.
+- CAVEAT on residual (1): the target LOCALS dump declares an extra block-1 `original_up_leg_to_foot_dir<1>`
+  (a `float3 const&`) that the source does NOT declare; the `[ebp-150h]` working-slot residual is plausibly
+  that missing in-block dir local, i.e. a RECOVERABLE matching item (declare the extra block-1 normalize
+  local, route the dir reads through it), not purely an unsteerable compiler copy. Flagged for a faster
+  machine as the concrete next step before banking it as non-reproducible. STATE stays PARTIAL (honest).
+
+## Structure-verifier v2 pass (2026-06-07) - 80.96% (structure MATCH, no change)
+
+Re-diffed: the three braced IK-stage blocks are present. All SIZE rows are call-boundary
+temp materialization (operator -/^/* / normalize / is_similar / create_rotation) plus the
+get_root_bones_count() spill (0xC per of the 5 index computations; target inlines the helper)
+and the is_similar inline (0xd7 vs 0x159). The `up_leg_alpha_angle = get_angle(...)` and
+`target_up_leg_dir` ONLY-base rows + L216/L217 ONLY-target rows are an ALIGNER SWAP around
+the get_angle call - both base AND target call get_angle out-of-line (base 0x531, target
+0x467), so there is no inline-vs-call divergence and no missing statement there. Carcass
+replaced with the condensed structure-diff embed + VERDICT. Residual is the documented
+LTCG/spill class, non-steerable from this function's source.
