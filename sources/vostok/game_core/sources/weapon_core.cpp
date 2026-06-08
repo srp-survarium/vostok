@@ -7,6 +7,9 @@
 
 #include <vostok/animation/sources/mixing_base_lexeme.h>
 
+#include <vostok/ai/fsm.h>
+#include <boost/bind.hpp>
+
 namespace survarium {
 /*
 // STATE[STUB]
@@ -110,8 +113,7 @@ void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::initialize_weapon_logic(vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&, vostok::resources::resource_ptr<survarium::weapon_core_base_state,vostok::resources::unmanaged_intrusive_base> const&)
+// STATE[95.69%|INPROGRESS]: full FSM body written (10 add_state + 72 add_transition via boost::bind); residual is the boost::function Form-A vs Form-B construction shape across transitions; see weapon_core_initialize_weapon_logic.md
 void weapon_core::initialize_weapon_logic(
 	weapon_core_base_state_ptr const&	inactive_state,
 	weapon_core_base_state_ptr const&	show_state,
@@ -125,20 +127,141 @@ void weapon_core::initialize_weapon_logic(
 	weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
 )
 {
-	// LOCALS
-	// weapon_core_base_state* 		idle
-	// weapon_core_base_state* 		aim_fire
-	// weapon_core_base_state* 		reload
-	// weapon_core_base_state* 		hide
-	// weapon_core_base_state* 		fire
-	// weapon_core_base_state* 		aim
-	// weapon_core_base_state* 		chamber_a_round
-	// weapon_core_base_state* 		inactive
-	// weapon_core_base_state* 		show
-	// weapon_core_base_state* 		chamber_a_round_aimed
-	// ******
+	m_is_there_chamber_a_round_state = chamber_a_round_state.c_ptr( ) != NULL;
+	ASSERT( UNKNOWN_EXPRESSION_T( m_logic ) );
 
-	// FUNCTION BODY
+	m_logic_states.push_back( inactive_state );
+	m_logic_states.push_back( show_state );
+	m_logic_states.push_back( hide_state );
+	m_logic_states.push_back( idle_state );
+	m_logic_states.push_back( reload_state );
+	m_logic_states.push_back( fire_state );
+	m_logic_states.push_back( aim_state );
+	m_logic_states.push_back( aim_fire_state );
+	if ( m_is_there_chamber_a_round_state )
+		m_logic_states.push_back( chamber_a_round_state );
+	if ( chamber_a_round_aimed_state )
+		m_logic_states.push_back( chamber_a_round_aimed_state );
+
+	weapon_core_base_state* inactive				= inactive_state.c_ptr( );
+	weapon_core_base_state* show					= show_state.c_ptr( );
+	weapon_core_base_state* hide					= hide_state.c_ptr( );
+	weapon_core_base_state* idle					= idle_state.c_ptr( );
+	weapon_core_base_state* reload				= reload_state.c_ptr( );
+	weapon_core_base_state* fire					= fire_state.c_ptr( );
+	weapon_core_base_state* aim					= aim_state.c_ptr( );
+	weapon_core_base_state* aim_fire				= aim_fire_state.c_ptr( );
+	weapon_core_base_state* chamber_a_round		= chamber_a_round_state.c_ptr( );
+	weapon_core_base_state* chamber_a_round_aimed	= chamber_a_round_aimed_state.c_ptr( );
+
+	fire->set_is_firing_ptr( &m_is_firing );
+	aim_fire->set_is_firing_ptr( &m_is_firing );
+
+	m_logic->add_state( inactive );
+	m_logic->add_state( show );
+	m_logic->add_state( hide );
+	m_logic->add_state( idle );
+	m_logic->add_state( reload );
+	m_logic->add_state( fire );
+	m_logic->add_state( aim );
+	m_logic->add_state( aim_fire );
+	if ( m_is_there_chamber_a_round_state )
+		m_logic->add_state( chamber_a_round );
+	if ( chamber_a_round_aimed )
+		m_logic->add_state( chamber_a_round_aimed );
+
+	m_logic->add_transition( inactive, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( inactive, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( inactive, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( inactive, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( inactive, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( show, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+	if ( chamber_a_round_aimed )
+		m_logic->add_transition( show, chamber_a_round_aimed, boost::bind( &weapon_core::must_chamber_a_round_aimed_predicate, this ) );
+	if ( m_is_there_chamber_a_round_state )
+		m_logic->add_transition( show, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_predicate, this ) );
+	m_logic->add_transition( show, reload, boost::bind( &weapon_core::can_and_must_reload_predicate, this ) );
+	m_logic->add_transition( show, idle, boost::bind( &weapon_core::target_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( show, reload, boost::bind( &weapon_core::target_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( show, fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( show, aim, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( show, aim_fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( hide, inactive, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+	m_logic->add_transition( hide, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( hide, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( hide, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( hide, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( hide, show, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( idle, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+	if ( chamber_a_round_aimed )
+		m_logic->add_transition( idle, chamber_a_round_aimed, boost::bind( &weapon_core::must_chamber_a_round_aimed_predicate, this ) );
+	if ( m_is_there_chamber_a_round_state )
+		m_logic->add_transition( idle, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_predicate, this ) );
+	m_logic->add_transition( idle, reload, boost::bind( &weapon_core::target_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( idle, fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( idle, aim, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( idle, aim_fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( reload, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+	if ( m_is_there_chamber_a_round_state )
+		if ( !m_chamber_a_round_on_reload )
+			m_logic->add_transition( reload, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_and_animation_ended_predicate, this ) );
+	m_logic->add_transition( reload, idle, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( reload, idle, boost::bind( &weapon_core::instant_idle_predicate, this ) );
+	m_logic->add_transition( reload, fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( reload, aim, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( reload, aim_fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( fire, hide, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_inactive ) );
+	if ( chamber_a_round_aimed )
+		m_logic->add_transition( fire, chamber_a_round_aimed, boost::bind( &weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate, this ) );
+	if ( m_is_there_chamber_a_round_state )
+		m_logic->add_transition( fire, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_and_animation_ended_predicate, this ) );
+	m_logic->add_transition( fire, reload, boost::bind( &weapon_core::can_and_must_reload_and_animation_ended_predicate, this ) );
+	m_logic->add_transition( fire, idle, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( fire, reload, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( fire, aim, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( fire, aim_fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( fire, aim_fire, boost::bind( &weapon_core::is_trying_to_aim, this ) );
+	m_logic->add_transition( aim, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+	m_logic->add_transition( aim, idle, boost::bind( &weapon_core::target_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( aim, idle, boost::bind( &weapon_core::instant_idle_predicate, this ) );
+	m_logic->add_transition( aim, reload, boost::bind( &weapon_core::target_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( aim, fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( aim, aim_fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim_fire ) );
+	m_logic->add_transition( aim_fire, hide, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_inactive ) );
+	if ( chamber_a_round_aimed )
+		m_logic->add_transition( aim_fire, chamber_a_round_aimed, boost::bind( &weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate, this ) );
+	if ( m_is_there_chamber_a_round_state )
+		m_logic->add_transition( aim_fire, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_and_animation_ended_predicate, this ) );
+	m_logic->add_transition( aim_fire, reload, boost::bind( &weapon_core::can_and_must_reload_and_animation_ended_predicate, this ) );
+	m_logic->add_transition( aim_fire, idle, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_idle ) );
+	m_logic->add_transition( aim_fire, reload, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_reload ) );
+	m_logic->add_transition( aim_fire, fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_fire ) );
+	m_logic->add_transition( aim_fire, aim, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim ) );
+	m_logic->add_transition( aim_fire, fire, boost::bind( &weapon_core::is_not_trying_to_aim_predicate, this ) );
+	if ( m_is_there_chamber_a_round_state )
+	{
+		m_logic->add_transition( chamber_a_round, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+		m_logic->add_transition( chamber_a_round, idle, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_idle ) );
+		m_logic->add_transition( chamber_a_round, idle, boost::bind( &weapon_core::instant_idle_predicate, this ) );
+		m_logic->add_transition( chamber_a_round, fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_fire ) );
+		m_logic->add_transition( chamber_a_round, aim, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim ) );
+		m_logic->add_transition( chamber_a_round, aim_fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim_fire ) );
+		if ( chamber_a_round_aimed )
+			m_logic->add_transition( chamber_a_round, chamber_a_round_aimed, boost::bind( &weapon_core::is_trying_to_aim, this ) );
+	}
+	if ( chamber_a_round_aimed )
+	{
+		m_logic->add_transition( chamber_a_round_aimed, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
+		m_logic->add_transition( chamber_a_round_aimed, idle, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_idle ) );
+		m_logic->add_transition( chamber_a_round_aimed, idle, boost::bind( &weapon_core::instant_idle_predicate, this ) );
+		m_logic->add_transition( chamber_a_round_aimed, fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_fire ) );
+		m_logic->add_transition( chamber_a_round_aimed, aim, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim ) );
+		m_logic->add_transition( chamber_a_round_aimed, aim_fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim_fire ) );
+		m_logic->add_transition( chamber_a_round_aimed, chamber_a_round, boost::bind( &weapon_core::is_not_trying_to_aim_predicate, this ) );
+	}
+}
+
+// FUNCTION BODY (target carcass, kept inline per MATCHING.md - non-100%; <N> = no-address)
 	// <0>
 	// <0x5a7034>|0x014|+0x023:'128'
 	// <0x5a7057>|0x037|+0x00c:'129'
@@ -285,7 +408,6 @@ void weapon_core::initialize_weapon_logic(
 	// <0x5aa6b8>|0x3698|+0x085:'270'
 	// <0>
 	// ******
-}
 
 // STATE[STUB]
 // void survarium::weapon_core::set_skeleton(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&)
