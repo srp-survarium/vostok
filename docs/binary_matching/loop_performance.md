@@ -348,3 +348,12 @@ then compiles the UNTOUCHED stub in `sources/` and the whole relink is against s
 "my change didn't show"). One `git status` catches it: a `??` cpp directly under the header dir
 (not under `.../sources/`) is misplaced - `mv` it before building. (Cost one full relink while
 matching pistol_/double_barreled_weapon_core_aimed_idle_state.)
+
+## A function scores `fuzzy: None` (unpaired) when its access-mangling differs
+objdiff pairs base<->target by full mangled symbol. The access char is mangled in
+(`Q`=public, `I`=protected, `A`=private for `?...@@?AE`). If the target symbol is `AAE`
+(private) but your header declares the method `public` (`QAE`), the names don't match and
+objdiff reports `fuzzy: None` (NOT 0%) even though the body may be byte-identical and the
+size matches. Read the target's mangled access char (`grep -o '<name>@...@@[A-Z]AE'
+binaries/rich/target/index.jsonl`) and set the header's access specifier to match BEFORE
+the first build. (initialize_weapon_logic: target `AAE`, declared public -> `None`.)
