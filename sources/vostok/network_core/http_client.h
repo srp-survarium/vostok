@@ -5,8 +5,16 @@
 #ifndef NETWORK_CORE_HTTP_CLIENT_H_INCLUDED
 #define NETWORK_CORE_HTTP_CLIENT_H_INCLUDED
 
+#include <vostok/network_core/api.h>
 #include <boost/function.hpp>
 
+// clear the engine's Windows macros before boost/asio re-includes the WinSDK headers,
+// so this header survives being force-included outside the module pch (e.g. game_core's
+// temp_include_all anchor), where _WIN32_WINNT/APIENTRY/etc. would otherwise collide.
+#	undef BOOL
+#	undef APIENTRY
+#	undef HMODULE
+#	undef HWND
 #include <boost/asio.hpp>
 
 namespace vostok {
@@ -53,6 +61,9 @@ private:
 }; // class http_client
 
 STATIC_SIZE_ASSERT(http_client, 0x108);
+
+// free helper defined in http_client.cpp; declared so the game_core anchor can call it
+VOSTOK_NETWORK_CORE_API void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff );
 
 } // namespace network_core
 } // namespace vostok
