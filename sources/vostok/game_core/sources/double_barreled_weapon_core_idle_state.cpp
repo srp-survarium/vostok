@@ -47,10 +47,11 @@ double_barreled_weapon_core_idle_state::double_barreled_weapon_core_idle_state( 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[85.65%|PARTIAL]: residual is the per-call-site LTCG inline-vs-call of
-// operator+<animation_lexeme,animation_lexeme> (target inlines it here, base keeps the
-// out-of-line call; operator+ is standalone in BOTH rich indexes -> whole-program inline
-// decision, not a source bug), plus the line-37 ASSERT eater shape (target's
+// STATE[85.65%|PARTIAL]: residual is the per-call-site inline-vs-call of
+// operator+<animation_lexeme,animation_lexeme> (side verified vs --view diff: the TARGET keeps
+// the out-of-line `call operator+`, OUR BASE inlines it here; operator+ is standalone in BOTH
+// rich indexes -> source-steerable (force the out-of-line call), NOT non-steerable LTCG, not yet
+// resolved), plus the line-37 ASSERT eater shape (target's
 // expression_eater gets only the lexeme; ASSERT_U adds the assert_untyped `push 0`).
 // Identical shape/diff to weapon_core_idle_state::weapon_and_hands_expression (#151).
 animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and_hands_expression(
