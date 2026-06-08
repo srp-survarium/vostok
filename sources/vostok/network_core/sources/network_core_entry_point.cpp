@@ -22,6 +22,8 @@ void memory_allocator( memory::base_allocator& allocator )
 // stlp_std::basic_string<char,stlp_std::char_traits<char>,stlp_std::allocator<char> > vostok::network_core::get_ip_address(boost::asio::io_service&)
 std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_address( boost::asio::io_service& io_service )
 {
+	return std::string( );
+
 	// LOCALS
 	// boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp> query
 	// boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> end
@@ -102,23 +104,11 @@ void finalize( )
 	// ******
 }
 
-	// TYPEDEFS
-	typedef
-		boost::asio::ip::basic_resolver_entry<boost::asio::ip::tcp>*
-		iterator_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>
-		iterator_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>
-		query_type;
-
-	typedef
-		sockaddr
-		data_type;
-
+	// TYPEDEFS (carcass scratch - pdb-parser dump, not real code)
+	// typedef boost::asio::ip::basic_resolver_entry<boost::asio::ip::tcp>* iterator_type;
+	// typedef boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> iterator_type;
+	// typedef boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp> query_type;
+	// typedef sockaddr data_type;
 	// ******
 
 } // namespace network_core

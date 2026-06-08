@@ -1450,6 +1450,30 @@ namespace vostok
 		example_callback( reinterpret_cast<pcstr>( &connector ) );
 	}
 
+	// network_core_entry_point.h lives in the module's sources/ dir (not the public
+	// include path), so forward-declare its free functions to anchor that TU.
+	namespace network_core {
+		void			initialize						( );
+		void			finalize						( );
+		std::string		get_ip_address					( boost::asio::io_service& io_service );
+		bool			get_connection_info_from_string	( pcstr buffer, char* dest_host, u16& dest_port );
+	} // namespace network_core
+
+	void use_network_core_entry_point()
+	{
+		boost::asio::io_service io_service( 10 );
+
+		network_core::initialize( );
+		example_callback( network_core::get_ip_address( io_service ).c_str( ) );
+
+		char host[ 64 ];
+		u16 port = 0;
+		if ( network_core::get_connection_info_from_string( "host:80", host, port ) )
+			example_callback( host );
+
+		network_core::finalize( );
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -1650,6 +1674,7 @@ IncludeAll::IncludeAll()
 	vostok::use_log();
 	vostok::use_network_core_http_client();
 	vostok::use_network_core_async_connector();
+	vostok::use_network_core_entry_point();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
