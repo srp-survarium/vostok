@@ -975,3 +975,27 @@ dictated by the (possibly unmatched) callee; it cannot be steered from the forwa
 the two 100%-matching siblings prove the source is right. Stop at PARTIAL and name the cause; do
 NOT chase it. (game_core/legs_ik_drawer: draw_cross/draw_line_capsule 100%, draw_origin 62.88%,
 draw_solid_capsule 79.43%, draw_leg 73.36% - same draw_origin xmm0-vs-fld/fstp residual x4.)
+
+## A file-static `cc_bool` console command -> `dynamic initializer` is objdiff-UNSCORABLE (None)
+A `static console_commands::cc_bool s_x_cc( "name", s_x_value, serializable, command_type )` at
+file scope compiles its construction into a `dynamic initializer for 's_x_cc'` (plus a matching
+`dynamic atexit destructor`). Both score **None** in report.json and have **no standalone symbol**
+in `binaries/rich/base/index.jsonl` - the per-TU init/atexit thunks are LTCG/ICF-folded so the
+delinker can't re-attach them. The body is still emitted and byte-correct. Recognize the asm:
+`push 1`(serializable) / `push s_x_value` / `push "name"` ; `mov eax,<command_type>` ; `xor ecx,ecx`
+(execution_filter_general default) ; `mov esi,s_x_cc`(this) ; `call cc_bool::cc_bool` ; then
+`push <atexit dtor> ; call atexit`. Mirror an existing matched sibling
+(dispersion_calculator's `s_dispersion_enabled_cc`, also None) and mark None|DONE - do not chase
+the symbol. command_type values: engine_internal=0 (eax=0), user_specific=1 (eax=1).
+
+## A `tick`/update with FPU vibration math hit 94% with structure 1:1; residual is /Od frame-slot churn
+A member `tick` that reads `[ebp+8]`(time arg)/`[ebp+0Ch]`(scale) and does `fild qword; fmul
+[epsilon_3]; fmul scale` (= `(a-b)*0.001f*scale`), `fsm::tick()`, a `static_cast<derived*>(
+m_logic.current_state())` (`mov [+10h]`), a `[vtbl+N]` virtual tick, a `cond ? math::max(...) :
+math::min(...)` clamp store, and a `[vtbl+M]` virtual returning u32 feeding a `sin(phase/period)*
+amp*...` FPU chain - all reproduce 1:1 from source (member offsets straight off the asm,
+math::max/min/sin stay out-of-line). The remaining ~6% is `sub esp,38h` (target) vs `30h` (base):
+2 extra temp dword slots shift the saved-`this` slot ([ebp-24h] vs [ebp-1Ch]) and swap which
+register holds the vtable at the second virtual call. Pure /Od register/slot allocation, NOT a
+missing local/brace/ASSERT/statement - the LOCALS all map, the carcass structure matches. Stop at
+PARTIAL. (breath_vibration_calculator::tick, 94.23%.)
