@@ -156,29 +156,22 @@ void breath_vibration_calculator::tick( u32 const current_time_in_ms, float cons
 	if ( !s_enable_breath_vibration_value )
 		m_horizontal_value = m_vertical_value = 0.0f;
 
-	// FUNCTION BODY
-	// <0x5935f9>|0x009|+0x00c:'76'	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) )
-	// <0x593605>|0x015|+0x00b:'77'	if ( current_time_in_ms < m_last_time_in_ms ) return
-	// <0x593610>|0x020|+0x005:'78'	float const dt = ...
-	// <0>
-	// <0x593615>|0x025|+0x022:'80'	m_last_time_in_ms = current_time_in_ms
-	// <0x593637>|0x047|+0x009:'81'	m_logic.tick()
-	// <0x593640>|0x050|+0x008:'82'	current_state = static_cast<breath_state*>( m_logic.current_state() )
-	// <0>
-	// <0x593648>|0x058|+0x015:'84'	current_state->tick( dt )
-	// <0x59365d>|0x06d|+0x014:'85'	m_target_multiplier = current_state->get_multiplier()
-	// <0x593671>|0x081|+0x01a:'86'
-	// <0>
-	// <1>
-	// <0x59368b>|0x09b|+0x07c:'89'	m_current_multiplier = cond ? max(...) : min(...)
-	// <0>
-	// <0x593707>|0x117|+0x036:'91'	float const current_phase = ...
-	// <0x59373d>|0x14d|+0x039:'92'	m_horizontal_value = ...
-	// <0x593776>|0x186|+0x039:'93'	m_vertical_value = ...
-	// <0x5937af>|0x1bf|+0x00b:'94'	if ( !s_enable_breath_vibration_value )
-	// <0x5937ba>|0x1ca|+0x020:'95'	m_horizontal_value = m_vertical_value = 0.0f
-	// <0>
-	// ******
+	// STRUCTURE DIFF:
+	// target: 0x5835f0            base: 0x457670
+	// ; void survarium::breath_vibration_calculator::tick(const unsigned int, const float) ; target 19 stmts / base 21 stmts
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | 0x058 <0x9> | breath_state* const current_state = static_cast< breath_state* >( m_logic.current_state( ) );   ONLY base
+	// .. same ..
+	// 0x058 <0x15> | --          | L84   ONLY target
+	// .. same ..
+	// 0x117 <0x36> | 0x10b <0x38> | float const current_phase = m_user->local_time( current_time_in_ms ) * math::epsilon_3 * math::pi_x2 * time_scale;   SIZE
+	// .. same ..
+	// ; aligned 17, size-diffs 1, quantity-diffs 4
+	// VERDICT: STRUCTURE MATCH (shape ok) - 17 statements align; the lone SIZE on current_phase is the m_user->local_time vcall frame-slot churn (target sub esp,38h, this@[ebp-24h] vs base 30h, this@[ebp-1Ch]) swapping the two m_user-load registers. The current_state ONLY base/target pair is a source-line attribution split of the same statement, not a quantity divergence. Non-steerable. trail: breath_vibration_calculator_tick.md
 }
 
 // STATE[UNCHECKED]
