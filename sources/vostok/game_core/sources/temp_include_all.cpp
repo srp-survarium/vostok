@@ -161,36 +161,13 @@ namespace vostok
 		survarium::game_core_initialize( );
 	}
 
-	void use_game_core_legs_ik_processor_leg_params( )
-	{
-		// The leg_params setters write members no reachable code reads, so LTCG
-		// dead-store-eliminates each store unless the object escapes. Take each
-		// setter's address to keep its standalone body un-inlined, then escape
-		// &params through the opaque sink so the stores are observed.
-		typedef void ( survarium::legs_ik_processor::leg_params::*float_setter_t )( float );
-		typedef void ( survarium::legs_ik_processor::leg_params::*bool_setter_t )( bool );
-
-		float_setter_t float_setters[ 2 ] =
-		{
-			&survarium::legs_ik_processor::leg_params::set_heel_transition_time,
-			&survarium::legs_ik_processor::leg_params::set_toe_transition_time,
-		};
-		bool_setter_t bool_setters[ 2 ] =
-		{
-			&survarium::legs_ik_processor::leg_params::set_heel_on_ground,
-			&survarium::legs_ik_processor::leg_params::set_toe_on_ground,
-		};
-		example_callback( reinterpret_cast< pcstr >( &float_setters ) );
-		example_callback( reinterpret_cast< pcstr >( &bool_setters ) );
-
-		survarium::legs_ik_processor::leg_params params;
-		params.set_heel_transition_time( 10.0f );
-		params.set_toe_transition_time( 20.0f );
-		params.set_heel_on_ground( true );
-		params.set_toe_on_ground( true );
-
-		example_callback( reinterpret_cast< pcstr >( &params ) );
-	}
+	// claude@MATCH: use_game_core_legs_ik_processor_leg_params removed as redundant.
+	// Every leg_params member is reached transitively through the real `processor`
+	// instance in use_game_core_legs_ik_processor below: ctor via the processor
+	// ctor; set_*_transition_time/set_heel_on_ground/set_toe_on_ground via the
+	// private set_*_on_ground(leg_params&,bool) helpers (reached from the public
+	// processor setters); activate via processor::activate; tick via processor::tick.
+	// (Verified: removing it left every leg_params % byte-for-byte unchanged.)
 
 	// The four public on_ground setters delegate to the private
 	// set_heel_on_ground/set_toe_on_ground(leg_params&, bool) helpers; calling them
@@ -204,45 +181,21 @@ namespace vostok
 		processor.set_right_heel_on_ground( true );
 		processor.set_right_toe_on_ground( false );
 
+		// anchor the public activate / process / tick (ctor + dtor anchored by the
+		// local instance). process() reaches the private process_leg/get_foot_fixed.
+		processor.activate( *reinterpret_cast< vostok::animation::skeleton const* >( NULL ) );
+		processor.process( reinterpret_cast< float4x4* >( NULL ), *reinterpret_cast< float4x4 const* >( NULL ) );
+		processor.tick( 0u );
+
 		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
 
-	// get_foot_fixed_transform is a private const method whose only callers
-	// (process / process_leg) are still STUB, so anchor it directly. We are a
-	// friend of legs_ik_processor (declared in its header); escape the returned
-	// float4x4 so LTCG observes the body.
-	void use_game_core_legs_ik_processor_get_foot_fixed_transform( )
-	{
-		survarium::legs_ik_processor const&		processor	= *reinterpret_cast< survarium::legs_ik_processor const* >( NULL );
-		survarium::legs_ik_processor::leg_params const&	params	= *reinterpret_cast< survarium::legs_ik_processor::leg_params const* >( NULL );
-		float4x4 const&							matrix		= *reinterpret_cast< float4x4 const* >( NULL );
-		float									delta_len	= 0.0f;
-
-		float4x4 result	= processor.get_foot_fixed_transform( params, matrix, &matrix, delta_len );
-		example_callback( reinterpret_cast< pcstr >( &result ) );
-	}
-
-	// process_leg is a private method; befriended by legs_ik_processor (header), so
-	// reach it directly on a fabricated instance. The anchor never runs.
-	void use_game_core_legs_ik_processor_process_leg( )
-	{
-		survarium::legs_ik_processor&			processor	= *reinterpret_cast< survarium::legs_ik_processor* >( NULL );
-		survarium::legs_ik_processor::leg_params&	params	= *reinterpret_cast< survarium::legs_ik_processor::leg_params* >( NULL );
-		float4x4 const&							matrix		= *reinterpret_cast< float4x4 const* >( NULL );
-		float4x4*								matrices	= reinterpret_cast< float4x4* >( NULL );
-
-		processor.process_leg( params, matrix, matrix, matrices, matrix );
-		example_callback( reinterpret_cast< pcstr >( &processor ) );
-	}
-
-	// get_additional_length is a free function; process_leg (its only real caller)
-	// is still a STUB, so anchor it directly and escape its float result so LTCG
-	// keeps the body.
-	void use_game_core_get_additional_length( float3 const* upleg_dir, float3 const* leg_dir )
-	{
-		float result	= survarium::get_additional_length( *upleg_dir, *leg_dir, 1.0f );
-		example_callback( reinterpret_cast< pcstr >( &result ) );
-	}
+	// claude@MATCH: get_foot_fixed_transform / process_leg / get_additional_length
+	// are reached transitively from process() (anchored via the real `processor`
+	// instance in use_game_core_legs_ik_processor above), so their former direct
+	// NULL-cast-observation anchors were redundant and are removed. (Verified: the
+	// real call chain keeps all three scored, and each % is byte-for-byte unchanged -
+	// the fake observation was clutter, not a codegen distortion; residuals are genuine.)
 
 	// ik_processor's ctor + activate are protected, so reach them through a
 	// trivial concrete subclass; escape the object so LTCG keeps the member stores.
@@ -1393,11 +1346,7 @@ IncludeAll::IncludeAll()
 	//
 	vostok::use_game_core_initialize( );
 	vostok::use_game_core_breath_vibration_calculator( );
-	vostok::use_game_core_legs_ik_processor_leg_params( );
 	vostok::use_game_core_legs_ik_processor( );
-	vostok::use_game_core_legs_ik_processor_get_foot_fixed_transform( );
-	vostok::use_game_core_legs_ik_processor_process_leg( );
-	vostok::use_game_core_get_additional_length( NULL, NULL );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );

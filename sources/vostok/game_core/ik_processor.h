@@ -25,6 +25,9 @@ protected:
 private:
 	/* 0x0000 */	/* core::noncopyable */
 	/* 0x0000 */	animation::skeleton const*		m_skeleton;
+protected:
+	// claude@NOTE: legs_ik_processor::tick reads/writes m_last_time_in_ms directly
+	// (protected so the derived class can touch it; protected vs private emits no bytes).
 	/* 0x0004 */	u32								m_last_time_in_ms;
 }; // class ik_processor
 

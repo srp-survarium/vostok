@@ -124,10 +124,10 @@ private:
 private:
 	class transition_time_calculator {
 	public:
-		inline	explicit	transition_time_calculator	( ) { /* no source */ }
+		inline	explicit	transition_time_calculator	( ) : m_value( 0.1f ) { }
 
 		inline	void		reset						( ) { m_value = 0.0f; }
-		inline	void		tick						( float arg_0 ) { /* no source */ }
+		inline	void		tick						( float arg_0 ) { m_value += arg_0; }
 		inline	float		get_value					( ) const { return m_value; }
 
 	private:
