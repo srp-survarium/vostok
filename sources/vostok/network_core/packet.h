@@ -1,0 +1,67 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef NETWORK_CORE_PACKET_H_INCLUDED
+#define NETWORK_CORE_PACKET_H_INCLUDED
+
+#include <vostok/network_core/base_packet.h>
+
+namespace vostok {
+namespace network_core {
+
+template < typename T >
+class packet : public base_packet {
+public:
+	inline				packet			( );
+
+	inline	u32			allocated_size	( ) const
+	{
+		return 0;
+		// FUNCTION BODY[0x92ce0]
+		// <0x92ce0>|0x000|      :'19'	{
+		// ******
+	}
+
+	inline	void		clear			( );
+
+	inline	void		reserve			( u32 size );
+	inline	void		resize			( u32 size );
+	inline	void		clone			( base_packet const& other );
+
+	inline	void		append			( bool value );
+	inline	void		append			( u8 value );
+	inline	void		append			( s8 value );
+	inline	void		append			( u16 value );
+	inline	void		append			( s16 value );
+	inline	void		append			( u32 value );
+	inline	void		append			( s32 value );
+	inline	void		append			( u64 value );
+	inline	void		append			( s64 value );
+	inline	void		append			( float value );
+	inline	void		append			( float2 const& value );
+	inline	void		append			( float3 const& value );
+	inline	void		append			( pcstr string );
+	inline	void		append			( pcstr string, u8 string_length );
+	inline	void		append			( pcvoid buffer, u32 buffer_size );
+
+	inline	T const&	implementation	( ) const;
+	inline	T&			implementation	( );
+
+	inline	void		reallocate		( u32 new_size )
+	{
+		// FUNCTION BODY[0xa7400]
+		// <0xa7400>|0x000|      :'46'	{
+		// ******
+		// FUNCTION BODY[0x122e20] : packet< udp_match_packet >
+		// <0x122e20>|0x000|      :'46'	{
+		// ******
+	}
+}; // class packet
+
+} // namespace network_core
+} // namespace vostok
+
+#include <vostok/network_core/packet_inline.h>
+
+#endif // #ifndef NETWORK_CORE_PACKET_H_INCLUDED
