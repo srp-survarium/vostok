@@ -74,12 +74,12 @@ public:
 
 private:
 	/* 0x0008 */	udp_match_connection				m_connection;
-	/* 0x0538 */	boost::asio::ip::udp::endpoint		m_client_endpoint;
-	/* 0x0554 */	boost::intrusive::set_member_hook<>	set_member_hook;
-	/* 0x0564 */	udp_match_client_session*			next_in_destroy_list;
+	/* 0x0540 */	boost::asio::ip::udp::endpoint		m_client_endpoint;
+	/* 0x055c */	boost::intrusive::set_member_hook<>	set_member_hook;
+	/* 0x056c */	udp_match_client_session*			next_in_destroy_list;
 }; // class udp_match_client_session
 
-STATIC_SIZE_ASSERT(udp_match_client_session, 0x568);
+STATIC_SIZE_ASSERT(udp_match_client_session, 0x570);
 
 } // namespace network_core
 } // namespace vostok

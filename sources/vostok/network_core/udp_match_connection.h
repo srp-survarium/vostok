@@ -190,14 +190,14 @@ private:
 	/* 0x011c */	state								m_state;
 	/* 0x0120 */	u16									m_remote_acknowledgement_bits;
 	/* 0x0122 */	u16									m_received_local_acknowledgement_bits;
-	/* 0x0124 */	sequence_number< u8 >				m_local_sequence_id;
-	/* 0x0125 */	sequence_number< u8 >				m_remote_sequence_id;
-	/* 0x0126 */	sequence_number< u8 >				m_received_local_sequence_id;
-	/* 0x0127 */	sequence_number< u8 >				m_disconnection_local_sequence_id;
-	/* 0x0128 */	handler_allocator					m_handler_allocator;
+	/* 0x0124 */	sequence_number< u16 >				m_local_sequence_id;
+	/* 0x0126 */	sequence_number< u16 >				m_remote_sequence_id;
+	/* 0x0128 */	sequence_number< u16 >				m_received_local_sequence_id;
+	/* 0x012a */	sequence_number< u16 >				m_disconnection_local_sequence_id;
+	/* 0x0130 */	handler_allocator					m_handler_allocator;
 }; // class udp_match_connection
 
-STATIC_SIZE_ASSERT(udp_match_connection, 0x530);
+STATIC_SIZE_ASSERT(udp_match_connection, 0x538);
 STATIC_SIZE_ASSERT(udp_match_connection::channel, 0x18);
 STATIC_SIZE_ASSERT(udp_match_connection::comparer, 0x1);
 
