@@ -421,9 +421,10 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 	// ******
 }
 
-// STATE[85.68%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of trivial
-// weapon_core_base_state::has_animation_ended() (target /Od `call`, our /GL inlines the [+135h]
-// read). Same class as must_chamber_a_round_and_animation_ended_predicate.
+// STATE[85.68%|PARTIAL]: control-flow byte-identical; residual = inline-vs-call codegen decision
+// for trivial weapon_core_base_state::has_animation_ended() (standalone+called in target, our /GL
+// inlines the [+135h] read). A whole-program-inlining divergence, NOT arg-passing LTCG; open
+// residual, same class as must_chamber_a_round_and_animation_ended_predicate.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
@@ -1392,10 +1393,10 @@ void weapon_core::deactivate( )
 	// ******
 }
 
-// STATE[84.77%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of the two
-// trivial getters (weapon_user_animations_selector::is_ready_to_be_deactivated returns false
-// standalone in target; current_base_state ref-copy shape). Same inline-decision class as the
-// has_animation_ended predicates.
+// STATE[84.77%|PARTIAL]: control-flow byte-identical; residual = inline-vs-call codegen decision
+// for the two trivial getters (weapon_user_animations_selector::is_ready_to_be_deactivated is
+// standalone+called in target; current_base_state ref-copy shape). Whole-program-inlining
+// divergence, NOT arg-passing LTCG; open residual, same class as the has_animation_ended predicates.
 bool weapon_core::is_ready_to_be_deactivated( ) const
 {
 	return current_base_state( ).is_ready_to_be_deactivated( ) && m_user_animations_selector.is_ready_to_be_deactivated( );
@@ -1945,10 +1946,11 @@ bool weapon_core::must_chamber_a_round_aimed_predicate( ) const
 	return must_chamber_a_round_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[87.47%|PARTIAL]: ASSERT + control-flow byte-identical; residual = LTCG inline-vs-call
-// of trivial weapon_core_base_state::has_animation_ended() (header inline; target /Od emits
+// STATE[87.47%|PARTIAL]: ASSERT + control-flow byte-identical; residual = inline-vs-call codegen
+// decision for trivial weapon_core_base_state::has_animation_ended() (target emits
 // `call has_animation_ended` @0x42 + 3 current_base_state ref copies, our /GL inlines the
-// `mov al,[+135h]` read). Same class as is_trying_to_aim / round_is_chambered.
+// `mov al,[+135h]` read). Whole-program-inlining divergence, NOT arg-passing LTCG; open residual,
+// same class as is_trying_to_aim / round_is_chambered.
 bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
@@ -1972,10 +1974,11 @@ bool weapon_core::is_ready_to_shoot( ) const
 	return ( m_is_there_chamber_a_round_state ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && m_ready_for_fire;
 }
 
-// STATE[66.75%|PARTIAL]: every member access/mask/order byte-identical; sole diff = LTCG
-// inline-vs-call of trivial player_input::is_sprinting() - target keeps it standalone
+// STATE[66.75%|PARTIAL]: every member access/mask/order byte-identical; sole diff = inline-vs-call
+// codegen decision for trivial player_input::is_sprinting() - target keeps it standalone
 // (`call player_input::is_sprinting` @0x60), our /GL inlines its (&0x200 && &0x1 && &0x16E==0)
-// body. Same inline-decision class as reload_state_base::initialize round_is_chambered.
+// body. Whole-program-inlining divergence, NOT arg-passing LTCG; open residual, same class as
+// reload_state_base::initialize round_is_chambered.
 bool weapon_core::is_trying_to_aim( ) const
 {
 	player_input const&	input			= m_user->input( );
@@ -2076,9 +2079,10 @@ animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::a
 	// ******
 }
 
-// STATE[89.72%|PARTIAL]: control-flow/args byte-identical; residual = LTCG inline-vs-call of
-// trivial weapon_core::is_double_handed() (header inline; target /Od `call is_double_handed`,
-// our /GL inlines the `mov cl,[+48Ah]` read). Same inline-decision class as is_trying_to_aim.
+// STATE[89.72%|PARTIAL]: control-flow/args byte-identical; residual = inline-vs-call codegen
+// decision for trivial weapon_core::is_double_handed() (target `call is_double_handed`, our /GL
+// inlines the `mov cl,[+48Ah]` read). Whole-program-inlining divergence, NOT arg-passing LTCG;
+// open residual, same class as is_trying_to_aim.
 void weapon_core::on_user_sprint( bool user_is_sprinting )
 {
 	bool left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;

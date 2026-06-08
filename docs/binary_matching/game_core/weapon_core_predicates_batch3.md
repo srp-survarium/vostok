@@ -72,9 +72,13 @@ FIVE of the seven weapon_core PARTIALs share ONE residual: trivial getters decla
 WITHOUT the `inline` keyword in the headers (is_double_handed, has_animation_ended,
 is_sprinting, selector::is_ready_to_be_deactivated) are emitted as COMDAT standalones AND
 called at /Od in the target objs (verified: standalone in target rich index, absent from
-base), but our /GL build inlines them in the delinked EXE. This is the same LTCG
-inline-vs-call class the reload_state_base PROGRESS banked for round_is_chambered. Not
-source-steerable. (on_user_sprint, must_chamber_a_round_and_animation_ended_predicate,
+base), but our /GL build inlines them in the delinked EXE. This is an inline-vs-call
+codegen-DECISION divergence (the /GL whole-program inliner chose differently from the
+target's /Od build) - the same class the reload_state_base PROGRESS banked for
+round_is_chambered. Per MATCHING.md this is NOT the bankable arg-passing LTCG (it is not an
+argument dropped or moved to a register); it is a real source/codegen residual, correctly
+left as an OPEN PARTIAL (never banked DONE), pending a clean re-diff by a faster machine -
+do not assert it unfixable. (on_user_sprint, must_chamber_a_round_and_animation_ended_predicate,
 target_and_animation_ended_predicate, is_ready_to_be_deactivated, is_trying_to_aim.)
 
 The OTHER TWO PARTIALs are NOT this class - they are distinct source-shape micro-codegen

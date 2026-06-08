@@ -262,8 +262,9 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 }
 
 // STATE[72.67%|PARTIAL]: forced-live by weapon_core::is_trying_to_aim (batch3). Body =
-// current_state().id(). Residual = LTCG inline-decision: target inlines current_state's cast
-// (3 ref copies, ASSERT compiled out) then id(); our /GL emits a `call current_state` instead.
+// current_state().id(). Residual = inline-vs-call codegen decision: target inlines current_state's
+// cast (3 ref copies, ASSERT compiled out) then id(); our /GL emits a `call current_state` instead.
+// Whole-program-inlining divergence, NOT arg-passing LTCG; open residual.
 weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) const
 {
 	return current_state( ).id( );
