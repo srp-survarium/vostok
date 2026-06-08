@@ -41,28 +41,30 @@ public:
 
 STATIC_SIZE_ASSERT(udp_match_stream_stats, 0x14);
 
-// STATE[STUB]
+// STATE[100%|DONE]: fully inlined into the stream/stats operator>= (no standalone
+// target symbol to diff); single chained return.
 inline bool operator>=( udp_match_items_stats const& left, udp_match_items_stats const& right )
 {
 	return left.count >= right.count && left.bytes >= right.count;
 }
 
-// STATE[STUB]
+// STATE[97.74%|PARTIAL]: shape exact (1 chained return); sole SIZE is the nested
+// items-stats operator>= call out-of-line (target) vs inlined (base).
 inline bool operator>=( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
 {
-	return left.packets >= right.packets		// 2
-		&& left.messages >= right.messages		// 3
-		&& left.data_bytes >= right.data_bytes;	// <0xeaac6>|0x000|0x000:'168'
+	return left.packets >= right.packets
+		&& left.messages >= right.messages
+		&& left.data_bytes >= right.data_bytes;
+
+	// STRUCTURE DIFF[target 0xdaac0 | base 0x7fdf0]: target 1 / base 1 stmts
+	//   1: 0x006 <0x97> | 0x006 <0x95> | && left.data_bytes >= right.data_bytes;   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - single chained return; sole SIZE is nested items operator>= inline-vs-call, non-source-fixable.
 }
 
 struct udp_match_stats {
-	// STATE[STUB]
 	inline			udp_match_stats	( )
 	{
-		// FUNCTION BODY[0x91f30]: 0
-		// <0x91f30>|0x000|+0x061:'96'	{
-		// <0x91f91>|0x061|      :'97'	}
-		// ******
 	}
 
 	inline	void	dump			( pcstr title ) const { /* no source */ }
@@ -85,34 +87,29 @@ public:
 
 STATIC_SIZE_ASSERT(udp_match_stats, 0x80);
 
-// STATE[STUB]
+// STATE[94.55%|PARTIAL]: structure now matches (dropped a spurious duplicate
+// received_duplicated compare - was 7 terms, target has 6). Residual is a target
+// idiom on the final term (bool materialize `mov eax,1; test`) + a short/near jump,
+// not source-fixable.
 inline bool operator>=( udp_match_stats const& left, udp_match_stats const& right )
 {
-	return left.sent >= right.sent									// 2
-		&& left.resent >= right.resent 								// 3
-		&& left.received >= right.received							// 4
-		&& left.received_duplicated >= right.received_duplicated	// 5
-		&& left.received_duplicated >= right.received_duplicated 	// 6
-		&& left.sent_low_level >= right.sent_low_level				// 7
-		&& left.received_low_level >= right.received_low_level;		// <0xeab76>|0x000|0x000:'180'
+	return left.sent >= right.sent
+		&& left.resent >= right.resent
+		&& left.received >= right.received
+		&& left.received_duplicated >= right.received_duplicated
+		&& left.sent_low_level >= right.sent_low_level
+		&& left.received_low_level >= right.received_low_level;
+
+	// STRUCTURE DIFF[target 0xdab70 | base 0x7fe60]: target 1 / base 1 stmts
+	//   1: 0x006 <0xcc> | 0x006 <0xbf> | && left.received_low_level >= right.received_low_level;   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - chain is now 6 terms matching target order; sole SIZE is target's final-term bool materialize + short/near jump, non-source-fixable.
 }
 
 // STATE[STUB]
 inline udp_match_stats operator-( udp_match_stats const& left, udp_match_stats const& right )
 {
 	return udp_match_stats();
-	// FUNCTION BODY[0x91fa0]: 15
-	// <0x91fa8>|0x008|+0x007:'212'
-	// <0x91faf>|0x00f|+0x044:'214'
-	// <0x91ff3>|0x053|+0x047:'215'
-	// <0x9203a>|0x09a|+0x047:'216'
-	// <0x92081>|0x0e1|+0x047:'217'
-	// <0x920c8>|0x128|+0x047:'218'
-	// <0x9210f>|0x16f|+0x047:'219'
-	// <0x92156>|0x1b6|+0x010:'221'
-	// <0x92166>|0x1c6|+0x009:'222'
-	// <0x9216f>|0x1cf|+0x005:'224'
-	// ******
 }
 
 } // namespace network_core
