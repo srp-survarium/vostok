@@ -19,13 +19,14 @@ Append-only ledger (union-merged across branches, like `PROGRESS.md` / `unanswer
 
 ## Provisional idiom candidates (NOT definitive — DO NOT promote to `assembly_patterns.md` yet)
 
-These two readings were drafted from `game_core/get_weapon_lexeme_pair_impl`, but that function is
-**unverified** (`STATE[None]` — it doesn't pair, so the match can't be confirmed) and the `bool
-dummy` reading is exactly what was questioned in review above. They are recorded here only so the
-future matcher has the candidate interpretation in hand; promote to `assembly_patterns.md` **only
-after** a function that actually pairs confirms them.
+Both were drafted from `game_core/get_weapon_lexeme_pair_impl`, which is **unverified** (`STATE[None]`
+— it doesn't pair, so the whole-function match can't be confirmed). They differ in confidence:
+**#1 is likely right** — its asm reproduces byte-for-byte at that single arg site, which is checkable
+locally regardless of the function pairing — while **#2 (the `bool dummy`) is the one questioned in
+review** above. Kept here (not in `assembly_patterns.md`) so the future matcher has both in hand;
+promote #1 once any paired function exercises it, and resolve #2 with the further matching it needs.
 
-**1. Conditional-pointer arg `val != u32(-1) ? &obj : NULL`**
+**1. Conditional-pointer arg `val != u32(-1) ? &obj : NULL`**  *(likely right — reproduces byte-for-byte at the site)*
 ```
 push 0                  ; (an unrelated arg pushed first)
 mov  edx, [ebp+20h]     ; val (a u32)
