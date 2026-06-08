@@ -135,7 +135,7 @@ public:
 
 			void						send_packets_list				( udp_match_packet* packets_list, u32 packets_count );
 
-	inline	void						update_acknowledgements			( sequence_number< u8 > local, sequence_number< u8 > remote, u16 bits ) { /* no source */ }
+			void						update_acknowledgements			( sequence_number< u16 > remote_sequence_id, sequence_number< u16 > local_sequence_id, u16 local_acknowledgement_bits );
 
 			void						dump							( pcstr caption, u32 current_time_in_ms );
 
