@@ -36,11 +36,20 @@ void weapon_core_fire_state_base::initialize( )
 	*m_is_firing_ptr = true;
 }
 
-// STATE[80.91%|PARTIAL]: inline-vs-call of the empty weapon_core_base_state::execute() (not yet steered).
-// Target keeps it out-of-line and emits `call execute` (standalone @0x087f80); our /GL
-// inlines its empty `{}` body at this call site (execute standalone in BOTH indexes, so it is a
-// per-call-site inline decision that is source-steerable in principle - force the out-of-line call -
-// NOT non-steerable LTCG). m_animation_has_been_ended = false matches.
+// STATE[99.09%|DONE]: out-lined weapon_core_base_state::execute (empty body moved from the
+// header inline to weapon_core_base_state.cpp) so this site now emits the target's
+// `call weapon_core_base_state::execute` instead of inlining {} (80.91% -> 99.09%). Sole
+// residual: the `m_animation_has_been_ended` store loads `this` into edx (target) vs eax (base) -
+// a single register-allocation choice across the call boundary. trail: weapon_core_fire_state_base.md
+// STRUCTURE DIFF[target 0x58ec00 | base 0x44d150]: target 3 / base 2 stmts
+// .. same ..
+// <0>         | --          |    EMPTY only target
+// .. same ..
+// ; aligned 2, size-diffs 0, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - both stmts byte-aligned; the `call base_state::execute`
+// is now emitted (was inlined); sole quantity-diff is an `EMPTY only target` collapsed source-line
+// gap, and the lone byte residual is the m_animation_has_been_ended this-load edx-vs-eax reg-alloc
+// (call-boundary, permitted). trail: weapon_core_fire_state_base.md
 void weapon_core_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );

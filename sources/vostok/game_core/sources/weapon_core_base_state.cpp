@@ -19,6 +19,14 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 {
 }
 
+// STATE[100%|DONE]: empty out-of-line body (target keeps it standalone @0x97f80, UAE public
+// virtual). Out-lined - not inline in the header - so qualified callers (weapon_core_fire_state_base
+// ::execute) emit `call weapon_core_base_state::execute` rather than inlining {}; ICF-folds with the
+// empty-function class so it has no separate report.json fuzzy entry.
+void weapon_core_base_state::execute( )
+{
+}
+
 // STATE[100%|DONE]
 bool weapon_core_base_state::deserializing( ) const
 {
