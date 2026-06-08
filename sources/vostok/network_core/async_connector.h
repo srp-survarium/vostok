@@ -34,14 +34,17 @@ public:
 						boost::function< void() > const&	on_connected,
 						boost::function< void( client_error_codes_enum, boost::system::error_code ) > const&	on_error
 					);
+private:
 			void	connect						( boost::asio::ip::tcp::resolver::iterator const& iterator );
 
+public:
 			void	reset						( );
 
 	inline	bool	is_connected				( ) const { return m_connection_state >= connection_is_being_established; }
 
 	inline	bool	has_connection_established	( ) const { return m_connection_state == connection_has_been_established; }
 
+private:
 			void	on_connected				(
 						boost::system::error_code const&	error_code,
 						boost::asio::ip::tcp::resolver::iterator	iterator
@@ -58,6 +61,7 @@ public:
 
 	inline	void	on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
 
+public:
 	inline			~async_connector			( ) { /* no source */ }
 
 private:

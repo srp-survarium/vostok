@@ -51,6 +51,7 @@ public:
 
 	inline	u32		delayed_packets_count		( ) const { return 0; }
 
+private:
 			void	add_packet					(
 						pbyte		buffer,
 						u32			buffer_size,

@@ -40,6 +40,7 @@ public:
 
 	inline	boost::asio::io_service&	io_service					( ) { return m_io_service; }
 
+private:
 			void						on_connected				( );
 			void						close_connection			( );
 			void						on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code );
