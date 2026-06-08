@@ -62,16 +62,26 @@ pdb_fetch ... --rva <rva> --view diff --objdiff-base-dir binaries/objdiff/base -
 |---|---|---|
 | ctor | 100 | DONE |
 | initialize | 99.71 | DONE (4-byte /Od frame-size slot packing only) |
-| execute | 80.91 | PARTIAL (LTCG empty-callee inline-vs-call) |
+| execute | 99.09 | DONE (out-lined empty base_state::execute -> target `call`; sole residual = edx-vs-eax this-load reg-alloc) |
 | finalize | 100 | DONE |
 | on_animation_end_impl | 100 | DONE |
 | on_shot_event | 95.26 | PARTIAL (logging __LINE__/__FILE__/__FUNCSIG__ + boost::function ctor reorder) |
 
 ## Residuals (diff details)
-- **execute (80.91%)**: base build elides `call weapon_core_base_state::execute` (empty body
-  inlined at this call site under /GL). Standalone execute exists in BOTH indexes (base 0x012c20,
-  target 0x087f80) -> per-call-site LTCG inline decision, unsteerable. Filling the empty body would
-  inline real bytes (worse). New assembly_patterns.md entry "empty base virtual called via qualified".
+- **execute (80.91% -> 99.09%, STEERED, structure-verifier-v2 batchA)**: the TARGET emitted
+  `call weapon_core_base_state::execute` then the member store; OUR BASE elided the call (empty
+  body inlined at this call site under /GL). FIX: out-lined `weapon_core_base_state::execute` -
+  moved its empty body from the `weapon_core_base_state.h` inline `{ /* 0x97f80 */ }` to a real
+  out-of-line definition in `weapon_core_base_state.cpp` (decl kept in the header, `UAE` public
+  virtual = the target's access). This is the same device class as round_is_chambered /
+  ammo_in_magazine. After the rebuild the site emits `mov ecx,[ebp-4]; call <execute>` exactly
+  like the target. Sole residual (the 0.91%): the following `m_animation_has_been_ended = false`
+  store loads `this` as `mov edx,[ebp-4]` (target) vs `mov eax,[ebp-4]` (base) - a single
+  call-boundary register-allocation choice (permitted arg-passing class). base_state::execute is
+  the ONLY qualified call site in game_core (other states override execute), and the target keeps
+  a standalone `UAE` execute @0x97f80 so out-lining matches the original. Regression-free (only
+  symmetric ICF fold-rep churn; the standalone execute symbol itself folds into empty_stub's
+  class). assembly_patterns.md entry "empty base virtual called via qualified".
 - **initialize (99.71%)**: every instruction identical; base `sub esp,5Ch` vs target `58h` (4 bytes),
   cascading the [ebp-N] slot numbers. /Od stack-slot packing, not logic/structure.
 - **on_shot_event (95.26%)**: residual is entirely inside the LOG_ERROR expansion - __LINE__ immediate

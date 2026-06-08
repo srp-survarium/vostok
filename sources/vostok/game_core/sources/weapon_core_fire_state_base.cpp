@@ -17,8 +17,13 @@ weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, f
 }
 
 // STATE[99.71%|DONE]: every instruction matches; the sole residual is a 4-byte /Od
-// frame-size diff (base `sub esp,5Ch` vs target `58h`) that cascades into the [ebp-N]
+// frame-size diff (target `sub esp,5Ch` vs base `58h`) that cascades into the [ebp-N]
 // slot numbering - stack-slot packing, not a logic/structure divergence.
+// STRUCTURE DIFF[target 0x58ec90 | base 0x44d1a0]: target 5 / base 9 stmts
+// 0x0cf <0x18> | 0x0cf <0xc> | ASSERT( UNKNOWN_EXPRESSION );   SIZE
+// .. same ..
+// ; aligned 4, size-diffs 1, quantity-diffs 4
+// VERDICT: STRUCTURE MATCH (shape ok) - all stmts byte-identical; sole SIZE is the ASSERT slot drift from the 4-byte larger target frame ([ebp-39h] vs [ebp-53h]), /Od slot packing, non-steerable. trail: weapon_core_fire_state_base.md
 void weapon_core_fire_state_base::initialize( )
 {
 	weapon_core_animation_end_aware_state::initialize( );
@@ -54,13 +59,6 @@ void weapon_core_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );
 	m_animation_has_been_ended = false;
-
-	// FUNCTION BODY (kept: PARTIAL - empty-callee inline-vs-call)
-	// <0x58ec07>|0x007 weapon_core_base_state::execute( );   (target `call`, base inlines empty body)
-	// <0x58ec0f>|0x00f m_animation_has_been_ended = false;
-	// ******
-	// TARGET @0x07: mov ecx,[ebp-4]; call survarium::weapon_core_base_state::execute
-	// BASE   @0x07: (call elided - empty body inlined to nothing)
 }
 
 // STATE[100%|DONE]
@@ -82,11 +80,11 @@ void weapon_core_fire_state_base::on_animation_end_impl( bool& animation_player_
 }
 
 // STATE[95.26%|PARTIAL]: logging residual (same class as animation_analysis_result_cook::translate_query).
-// All control flow, the two leading + two trailing compiled-out ASSERTs, the if/else and instant_fire
-// match the target byte-for-byte. The residual is entirely inside the LOG_ERROR expansion: the __LINE__
-// immediate (base `push 4Bh`=75 vs target `push 52h`=82, our file is shorter), the __FILE__/__FUNCSIG__
-// string relocs (content differs build-to-build), and a one-instruction reorder of the boost::function
-// log_callback temp ctor. None steerable to a clean byte match.
+// STRUCTURE DIFF[target 0x58ed80 | base 0x44d290]: target 16 / base 17 stmts
+// 0x04c <0x77> | 0x04c <0x74> | LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );   SIZE
+// .. same ..
+// ; aligned 15, size-diffs 1, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - all control flow + 4 ASSERTs + instant_fire byte-exact; sole SIZE is inside the LOG_ERROR expansion (__LINE__/__FILE__/__FUNCSIG__ build-specific immediates+relocs), non-steerable. trail: weapon_core_fire_state_base.md
 animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = true;
@@ -107,19 +105,6 @@ animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event(
 	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call finalize_impl` @ +0xe8)
 
 	return animation::callback_return_type_call_me_again;
-
-	// FUNCTION BODY (kept: PARTIAL - logging string residual)
-	// <0x58ed80> params.interrupt_animation_player_tick = true;
-	// <0x58ed98> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
-	// <0x58eda4> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
-	// <0x58edb0> if ( !m_weapon.get_bullets_in_queue() ) {
-	// <0x58edcc>   LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );  (+0x77)
-	// <0x58ee43>   return callback_return_type_call_me_again;
-	// <0x58ee47> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
-	// <0x58ee53> m_weapon.instant_fire( params.callback_time_in_ms );
-	// <0x58ee68> ASSERT( UNKNOWN_EXPRESSION );  (+0xc)
-	// <0x58ee74> return callback_return_type_call_me_again;
-	// ******
 }
 
 } // namespace survarium
