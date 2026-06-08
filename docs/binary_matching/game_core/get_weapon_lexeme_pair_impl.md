@@ -89,3 +89,22 @@ Inlining: the residual IS the inlining - documented above.
 The lone 4-byte `mov byte[ebp-N],0` standalone statement (no lea/call) is an unused `bool` local,
 reproduced as `bool dummy = false;`. An ASSERT would emit lea+call (<0xc>); the interval setters'
 R_ASSERT_CMP empty_stubs come from the inlined setter bodies, not from source ASSERTs here.
+
+## Pairing blocker found: enum tag name mismatch (sweep, #159 follow-up)
+A SECOND, more fundamental reason objdiff left this `None` (in addition to the body
+inline-vs-call divergence above): the `playback_enum` parameter's enum was declared in
+`sources/vostok/animation/mixing.h` as `enum playing_type_enum {...}; typedef playing_type_enum
+playback_enum;`. MSVC mangles a parameter by the enum's REAL TAG, so our base symbol became
+`?get_weapon_lexeme_pair_impl@...IMW4playing_type_enum@mixing@84@...` while the target uses
+`...IMW4playback_enum@mixing@84@...`. Different symbol names cannot pair, full stop.
+
+Evidence (index.jsonl mangled-name counts): target has 0 `playing_type_enum` and 2
+`playback_enum@mixing`; base had 2 `playing_type_enum@mixing` and 0 `playback_enum@mixing`. The
+two affected base symbols were THIS function and the `weapon_core_shotgun_reload_base_substate`
+ctor - both confirmed `playback_enum@mixing@animation` in the target.
+
+Fix: renamed the enum tag to `playback_enum` (dropped the typedef) in mixing.h. Byte-neutral for
+all source (every call site already used the `playback_enum` alias), corrects both mangled names.
+Resolved the line-30 `sushi@TODO`. After this the symbols pair by name; any remaining residual is
+the body inline-vs-call class above. Also resolved: `.bones_mask( 2 )` -> the named
+`animation::body_part_hands_only` (= 0x0002 in animation/type_definitions.h).

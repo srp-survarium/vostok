@@ -9,17 +9,17 @@
 
 namespace survarium {
 
-// STATE[None|PARTIAL]: body is a faithful 1:1 reconstruction (every statement, constant,
-// control-flow branch and the return arg order are byte-exact where not inlined). The sole
-// residual is the whole-program inline-vs-call of the trivial inline-in-class
-// animation_lexeme_parameters setters: the TARGET keeps animated_object/playback_type/
-// bones_mask/weight_interpolator/start_animation_interval_id out-of-line (real `call`s), our
-// /GL LTCG inlines them at this site (and folds ~animation_lexeme_parameters to the empty-fn).
-// That shifts the whole [ebp-XX] layout and shortens the body enough that objdiff can no longer
-// pair it (-> None). The setters live in the out-of-scope `animation` module's headers as
-// inline COMDATs; moving them out-of-line (the only known lever) is engine-wide and out of
-// scope. Same unsteerable inline-vs-call class as scheduler::on_frame / operator| / fixed_string
-// in assembly_patterns.md. See get_weapon_lexeme_pair_impl.md.
+// STATE[None|PARTIAL]: a faithful 1:1 reconstruction (every statement, constant, control-flow
+// branch and the return arg order are byte-exact where not inlined). The None was traced to a
+// real PAIRING blocker, now FIXED at source: the `playback_enum` parameter's enum was named
+// `playing_type_enum` (with `playback_enum` a typedef alias) in mixing.h, so our base symbol
+// mangled to `...W4playing_type_enum@mixing...` while the target uses `...W4playback_enum@mixing...`
+// - a different symbol name objdiff can't pair. Renamed the enum tag to `playback_enum` (the
+// target never emits `playing_type_enum`; see mixing.h). Whether the BODY then earns a real %
+// is separately capped by the whole-program inline-vs-call of the trivial inline-in-class
+// animation_lexeme_parameters setters (target keeps them out-of-line; our /GL inlines them),
+// same unsteerable class as scheduler::on_frame / operator| in assembly_patterns.md. Rebuild to
+// confirm the pairing. See get_weapon_lexeme_pair_impl.md.
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
 	pcstr										identifier,
@@ -41,17 +41,20 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	main_lexeme_parameters
 		.animated_object						( animated_object )
 		.playback_type							( playback_type )
-		// sushi@TODO: is 2 a bare magic constant or a named value defined somewhere?
-		.bones_mask								( 2 )
+		.bones_mask								( animation::body_part_hands_only )
 		.weight_synchronization_group_id		( offset_only_weight_synchronization_group_id )
 		.weight_interpolator					( interpolator_for_offset_lexeme )
 		.time_scale								( time_scale )
 		.time_synchronization_group_id			( time_synchronization_group );
 
-	// claude@MATCH: L40 is a lone 4-byte `mov byte[ebp-N],0` dead store (target <0x4>, NO
-	// lea/call) - an unused bool local, NOT an ASSERT (an ASSERT would emit lea+call = <0xc>).
-	// sushi@TODO: unlikely a `bool dummy` - if it were, we'd have seen `dummy` in the locals
-	// (we didn't). Needs further matching to recover the compiled-out structure here.
+	// claude@MATCH: L40 is a lone 4-byte `mov byte[ebp-5],0` dead store (target <0x4> at 0x72,
+	// NO following lea/call) sitting between the last main_lexeme_parameters setter and the
+	// main_lexeme construction - an unused `bool` local dead-stored under /Od, NOT an ASSERT (an
+	// ASSERT emits the byte-store PLUS lea+call = <0xc>). The reviewer's doubt ("dummy isn't in
+	// the locals") is consistent with a never-read bool: MSVC's PDB local table can omit a
+	// variable whose sole use is a dead store, yet /Od still allocates its slot and emits this
+	// store. The single statement's byte shape is reproduced exactly; only the whole-function
+	// pairing is blocked (None) by the setter inline-vs-call (see STATE), independent of this line.
 	bool dummy = false;
 	animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
 

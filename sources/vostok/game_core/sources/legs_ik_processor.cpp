@@ -162,13 +162,13 @@ void legs_ik_processor::leg_params::tick( float dt )
 // STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 {
-	heel_transition_time = math::min( heel_transition_time, tr_time );
+	heel_transition_time = math::min( tr_time, heel_transition_time );
 }
 
 // STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_toe_transition_time( float tr_time )
 {
-	toe_transition_time = math::min( toe_transition_time, tr_time );
+	toe_transition_time = math::min( tr_time, toe_transition_time );
 }
 
 // STATE[100%|DONE]

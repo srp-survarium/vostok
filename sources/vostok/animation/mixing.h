@@ -11,7 +11,13 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-enum playing_type_enum {
+// claude@MATCH: the enum's real tag is `playback_enum` (it is named directly, not a
+// typedef of `playing_type_enum`): every target mangled name uses `W4playback_enum@mixing`
+// and ZERO use `playing_type_enum`, so the tag drives the symbol name. Naming it
+// `playing_type_enum` + aliasing left get_weapon_lexeme_pair_impl and the
+// weapon_core_shotgun_reload_base_substate ctor un-pairable (their base symbols carried
+// `playing_type_enum@mixing`). Resolved sushi@TODO.
+enum playback_enum {
 	// play cyclic animation infinitely
 	// on animation end just rewind to the start
 	play_cyclically,
@@ -25,9 +31,7 @@ enum playing_type_enum {
 	// on animation end instantly remove animation
 	// as a consequence animation will be removed immediately after its end
 	play_once_and_remove_at_end,
-}; // enum playing_type_enum
-
-typedef playing_type_enum playback_enum; // sushi@TODO
+}; // enum playback_enum
 
 } // namespace mixing
 } // namespace animation
