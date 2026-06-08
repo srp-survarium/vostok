@@ -41,6 +41,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	main_lexeme_parameters
 		.animated_object						( animated_object )
 		.playback_type							( playback_type )
+		// sushi@TODO: is 2 a bare magic constant or a named value defined somewhere?
 		.bones_mask								( 2 )
 		.weight_synchronization_group_id		( offset_only_weight_synchronization_group_id )
 		.weight_interpolator					( interpolator_for_offset_lexeme )
@@ -49,6 +50,8 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 
 	// claude@MATCH: L40 is a lone 4-byte `mov byte[ebp-N],0` dead store (target <0x4>, NO
 	// lea/call) - an unused bool local, NOT an ASSERT (an ASSERT would emit lea+call = <0xc>).
+	// sushi@TODO: unlikely a `bool dummy` - if it were, we'd have seen `dummy` in the locals
+	// (we didn't). Needs further matching to recover the compiled-out structure here.
 	bool dummy = false;
 	animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
 
