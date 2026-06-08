@@ -21,6 +21,7 @@ public:
 	class helper {
 	public:
 		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
+	private:
 		// STATE[STUB]
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
@@ -30,6 +31,7 @@ public:
 		}
 	}; // class helper
 
+private:
 	// STATE[STUB]
 	inline				udp_match_packet	( )
 	{
@@ -38,6 +40,7 @@ public:
 		// <0xea9a4>|0x0a4|+0x007:'49'
 		// ******
 	}
+public:
 	inline				~udp_match_packet	( ) { /* no source */ }
 
 	inline	u32			allocated_size		( ) const { return 0; }
