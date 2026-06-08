@@ -48,6 +48,7 @@ private:
 
 	// temp_include_all.cpp anchor; reaches the protected ctor/initialize and private virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
+	// claude@TODO: remove later - anchor-only friend (no matched bytes); drop once a real caller anchors the symbol.
 	friend void ::vostok::use_game_core_pistol_weapon_core_aimed_fire_state( );
 }; // class pistol_weapon_core_aimed_fire_state
 

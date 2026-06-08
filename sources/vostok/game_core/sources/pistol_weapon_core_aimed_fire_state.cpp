@@ -34,8 +34,7 @@ float computed_shooting_animation_time_scale( resources::managed_resource_ptr co
 #include <vostok/game_core/weapon_animations_timescale_inline.h>
 namespace survarium {
 
-// STATE[100%|DONE]: byte-identical to target @0x79abc0; pairs in report.json at 100% (ctor set
-// protected in the .h to match the @@IAE mangled access char).
+// STATE[100%|DONE]: byte-identical to target @0x79abc0.
 pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -59,12 +58,9 @@ pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[99.76%|PARTIAL]: objdiff-scored 99.76% (target @0x79b0e0; pairs in report.json now that
-// initialize is protected-virtual to match @@MAE). The `last_shot ? 1u : 0u` ternary reproduced
-// the target's final-store boolize (neg;sbb;neg into m_weapon_animation_index) byte-for-byte.
-// Sole residual is the LTCG this-register at the ammo_in_magazine() call boundary: target loads
-// the m_weapon pointer into eax (`mov eax,[ecx+128h]` @0x30/0x50) before the call, base loads ecx -
-// argument passing at the call boundary, not source-steerable until ammo_in_magazine is matched.
+// STATE[99.76%|PARTIAL]: target @0x79b0e0. Sole residual is LTCG this-register at the
+// ammo_in_magazine() call boundary (target passes m_weapon in eax, base in ecx) - argument
+// passing, not source-steerable until ammo_in_magazine is matched. See .md.
 void pistol_weapon_core_aimed_fire_state::initialize( )
 {
 	weapon_core_aimed_fire_state_base::initialize( );
@@ -86,7 +82,6 @@ void pistol_weapon_core_aimed_fire_state::initialize( )
 // STATE[INPROGRESS]: large addition_lexeme/operator+ machinery. Next: model on
 // pistol_weapon_core_fire_state::weapon_and_hands_expression (sibling, also INPROGRESS) but with
 // the user_state==type_sprint branch that adds get_user_hands_expression; see target asm @0x79b000.
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_aimed_fire_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
 animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -108,9 +103,7 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_ha
 	// ******
 }
 
-// STATE[100%|DONE]: byte-identical to target @0x79af30; pairs in report.json at 100% (declared
-// private const in the .h to match the @@ABE mangled access char). Captions "pistol-aimed_shot" /
-// "pistol-aimed_last_shot".
+// STATE[100%|DONE]: byte-identical to target @0x79af30.
 weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "pistol-aimed_shot", "pistol-aimed_last_shot" };
@@ -137,7 +130,6 @@ weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( 
 
 // STATE[INPROGRESS]: large lexeme machinery (override animation + operator+). Next: model on
 // the weapon_core_fire_state::get_user_hands_expression sibling shape; see target asm @0x79add0.
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_aimed_fire_state::get_user_hands_expression(vostok::animation::mixing::animation_lexeme&, vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
 animation::mixing::expression pistol_weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
