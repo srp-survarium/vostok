@@ -8,20 +8,34 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// void vostok::network_core::memory_allocator(vostok::memory::base_allocator&)
+typedef boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>	query_type;
+
+// STATE[100%|DONE]
 void memory_allocator( memory::base_allocator& allocator )
 {
-	// FUNCTION BODY
-	// <0x586fa4>|0x000|0x000:'18'
-	// <0x586fb0>|0x00c|0x00c:'19'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call empty_stub`, delinker-misnamed finalize_impl)
+	g_allocator = &allocator;
 }
 
-// STATE[STUB]
-// stlp_std::basic_string<char,stlp_std::char_traits<char>,stlp_std::allocator<char> > vostok::network_core::get_ip_address(boost::asio::io_service&)
+// STATE[99.01%|PARTIAL]: body byte-correct; residual is ICF empty-fn fold-winner naming
+// (target's `finalize_impl`/`shared_ptr` ctor vs base's `unreferenced_parameter_helper`/
+// `bucket_type` ctor - both the 0x3f210 empty fold, not a source-fixable divergence).
 std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_address( boost::asio::io_service& io_service )
 {
+	boost::asio::ip::tcp::resolver				resolver( io_service );						// L135
+	query_type									query( boost::asio::ip::host_name(), "" );	// L136
+	boost::asio::ip::tcp::resolver::iterator	iter = resolver.resolve( query );			// L137
+	boost::asio::ip::tcp::resolver::iterator	end;										// L138
+
+	for ( ; iter != end; ++iter ) {														// L142
+		boost::asio::ip::address	addr = iter->endpoint( ).address( );					// L144
+		if ( !addr.is_loopback( ) && addr.is_v4( ) ) {										// L145
+			return iter->endpoint( ).address( ).to_string( );							// L147
+		}																				// L148
+	}																					// L150
+
+	return "unknown";																	// L152
+
 	// LOCALS
 	// boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp> query
 	// boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> end
@@ -52,17 +66,28 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_addr
 	// ******
 }
 
-// STATE[STUB]
-// bool vostok::network_core::get_connection_info_from_string(char const*, char*, unsigned short&)
-bool get_connection_info_from_string( pcstr buffer, char* dest_host, u16& dest_port )
+// STATE[99.98%|PARTIAL]: structure exact; residual is the secure-CRT reloc naming
+// (`_strncpy_s`/`_sscanf_s` vs `strncpy_s`/`sscanf_s`) + a 4-byte /Od frame slot (0x10 vs 0x0C).
+bool get_connection_info_from_string( pcstr buffer, char* const dest_host, u16& dest_port )
 {
+	pcstr	delim	= strchr( buffer, ':' );											// L157
+	if ( delim ) {																	// L158
+		u32	port;
+		strncpy_s( dest_host, 64, buffer, delim - buffer );							// L160
+		s32	result	= sscanf_s( delim + 1, "%d", &port );							// L162
+		if ( strings::length( dest_host ) && result == 1 ) {						// L163
+			dest_port	= port & 0xffff;											// L165
+			return true;															// L166
+		}
+	}
+	return false;																	// L169
+
 	// LOCALS
 	// pcstr 						delim
 	// s32 							result<1>
 	// u32 							port<1>
 	// ******
 
-	return false;
 	// FUNCTION BODY
 	// <0x586fc6>|0x000|0x000:'157'
 	// <0x586fd7>|0x011|0x011:'158'
@@ -80,46 +105,15 @@ bool get_connection_info_from_string( pcstr buffer, char* dest_host, u16& dest_p
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::network_core::initialize()
+// STATE[100%|DONE]
 void initialize( )
 {
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// ******
 }
 
-// STATE[STUB]
-// void vostok::network_core::finalize()
+// STATE[100%|DONE]
 void finalize( )
 {
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// ******
 }
-
-	// TYPEDEFS
-	typedef
-		boost::asio::ip::basic_resolver_entry<boost::asio::ip::tcp>*
-		iterator_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>
-		iterator_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>
-		query_type;
-
-	typedef
-		sockaddr
-		data_type;
-
-	// ******
 
 } // namespace network_core
 } // namespace vostok

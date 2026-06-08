@@ -452,3 +452,11 @@ build green.
   line (match the structure-target .cpp's preamble line count + per-function blank lines). Moving
   on_connected's LOG from line 38 to its target line 33 + fixing the string literal lifted it
   61.7 -> 64.3% in one rebuild. (network_core async_connector.)
+
+## Don't pipe `rebuild.py` through `tail -N` in a background task - it hides progress
+`python3 scripts/rebuild.py 2>&1 | tail -30` only flushes when the pipe hits EOF, so a backgrounded
+run shows an empty output file for the entire ~10-min build and you can't tell it from a hang. Redirect
+to a file instead (`> /tmp/rebuild.log 2>&1; echo EXIT=$?`) and `tail` the file when the process exits,
+or wait on the rebuild PID with `while kill -0 $PID; do sleep 10; done`. (Also: a stray foreground
+`until grep ...; do sleep; done` waiting on that file gets auto-backgrounded and lingers - just poll the
+PID.)

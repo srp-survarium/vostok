@@ -1033,3 +1033,27 @@ also can't regress it). Use the RVA-keyed rich-index `--view diff` for the autho
 the rich diff also refuses a function whose name substring collides with its own `boost::bind<...>`
 helper index entries (on_resolved/connect-5arg) - those need a manual rich-index instruction/size compare.
 (network_core async_connector.cpp.obj, 451KB.)
+
+### ICF empty-fn fold-winner naming differs target vs base (`finalize_impl`/`shared_ptr ctor` vs `unreferenced_parameter_helper`/`bucket_type ctor`)
+At a 99-point near-match, a strict instruction diff may show ONLY the *callee name* of a
+`call <empty stub>` differing - e.g. target `...fixed_size_allocator<...>::finalize_impl` where base
+emits `vostok::detail::unreferenced_parameter_helper`, or target `boost::shared_ptr<vector<...>>::shared_ptr()`
+where base emits `hash_map<...>::bucket_type::bucket_type()`. These are all the SAME 0x3f210 empty
+function (or an empty default ctor) that ICF folded; the linker keeps ONE representative for the whole
+fold group and the delinker prints whichever mangled name won. The bytes are identical - this is NOT a
+source-fixable divergence, do not chase it. (network_core_entry_point get_ip_address, 99.01%.)
+
+### Enabling a boost-heavy TU shifts global ICF fold winners (one-time `report-changes` churn)
+The first rebuild that un-excludes a TU instantiating many boost.asio/threading empties (default ctors,
+`bind_t`/`binder2`/`bucket_type` ctors, `event::~event`, vector-deleting-dtor thunks) will show a batch of
+`100% -> 0%` regressions mirrored by near-equal `0% -> 100%` improvements in `report-changes.json`. These
+are fold-winner reassignments (the new TU's identical COMDAT changes which name the linker keeps), net
+real bytes ~neutral, and they STABILIZE: the next rebuild shows 0 regressed / 0 improved. Expected and
+accepted (async_connector and network_core_entry_point both took it); call it out in the PR, don't try to
+source-fix it.
+
+### `dest = src & 0xffff` (u32->u16) emits `mov eax,src; and eax,0FFFFh; mov [dst],ax` (<0xe>), NOT a cast
+A `u16& dest = (u16)u32_local` compiles to `mov cx,[local]; mov [dst],cx` (<0xa> bytes - a direct 16-bit
+load/store). The target instead masking through a full 32-bit register (`mov eax,[local]; and eax,0FFFFh;
+mov [dst],ax`, <0xe>) means the SOURCE wrote `dest = local & 0xffff` (explicit mask), not a `(u16)` cast.
+(network_core_entry_point get_connection_info_from_string L165.)
