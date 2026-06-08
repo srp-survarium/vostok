@@ -1149,15 +1149,7 @@
 			<File
 				RelativePath=".\udp_network_flow_emulator.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
+				</File>
 		</Filter>
 		<File
 			RelativePath=".\network_core_entry_point.cpp"
