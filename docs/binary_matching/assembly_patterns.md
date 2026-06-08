@@ -1114,3 +1114,43 @@ our base build path is `Z:\home\...` (Wine). The `push <path-string>` therefore 
 matches, capping logging-dominated functions (e.g. tcp_packet_socket::on_packet_received/
 on_packet_size_received ~40%, on_packet_has_been_sent ~52%) well below 100% even when the
 control flow is fully matched. Not source-steerable - same wall as http_client's LOG lines.
+
+### CRTP `packet<T>` writer/reader need `friend` access to base_packet's private buffer
+`base_packet` keeps `m_buffer`/`m_buffer_size` private with only getters (the const
+`buffer()` stays private - PDB-matched, see tcp_packet_socket note). The CRTP writer
+`packet<T>` (resize/append set `m_buffer_size`, append reads `buffer()`), the reader
+`packet_reader` (eof/size_to_eof read `buffer()`/`m_buffer`), and `tcp_packet`
+(reallocate writes `m_buffer`) all touch those privates. Befriend exactly those three in
+base_packet (`template<typename T> friend class packet; friend class packet_reader;
+friend class tcp_packet;`) - no layout change, STATIC_SIZE_ASSERT stays 0x8. `reallocate`
+lives in `tcp_packet::reallocate` (allocator + 3-byte length-prefix dance, mirrors the
+older non-CRTP `network::packet::reallocate`); `packet<T>::reallocate` just forwards
+`implementation().reallocate(n)` and COMDAT-folds onto `packet<tcp_packet>::reallocate`
+(the surviving symbol). `packet<T>::append`/`reserve`/`resize`/`allocated_size` reach the
+T-specific allocator/allocated_size purely through `implementation()` so the template still
+compiles for `udp_match_packet` (whose reallocate is an empty/int3 stub).
+
+### template carcasses need member-fn-ADDRESS anchors (a call-site inlines them away)
+Calling `packet.append(...)` / `reader.r<u8>()` from the IncludeAll anchor fully inlines the
+body into the anchor at /Od and emits NO standalone COMDAT, so the symbol never lands in the
+base index and objdiff can't score it. Take each member-function's ADDRESS instead
+(`void (tcp_base::*p)(u8) = &tcp_base::append; example_callback((pcstr)&p);`) - that ODR-uses
+the out-of-line body without a call site, exactly like the jump_logic_state anchors. Private
+members (e.g. `packet_reader::pointer`) need the anchor befriended via the
+`namespace vostok { void use_network_core_packet_reader(); }` forward-decl + `friend void
+::vostok::use_network_core_packet_reader();` idiom. Template member instances are addressed as
+`&reader::r<u8>` / `&reader::r_string<16>`.
+
+### module-only ninja_build does NOT relink -> base index is stale for new symbols
+`scripts/ninja_build.py <module>` (and `rebuild.py <module>`) compiles the module's objs but
+skips the EXE/PDB link (watchdog note in ninja_build.py). The base structure/rich index is
+generated from the PDB, so brand-new symbols (e.g. freshly-anchored template instantiations in
+game_core/temp_include_all) won't appear in `binaries/rich/base/index.jsonl` until a FULL
+relink: run `python3 scripts/rebuild.py` with NO module arg (~10 min) before scoring anchors
+you just added.
+
+### carcass `// FUNCTION BODY[0xVA]` RVAs are +0x10000 off the rich index RVA
+The structure-carcass comment addresses are offset +0x10000 from the rva keys in
+`binaries/rich/target/index.jsonl` (e.g. carcass 0xa72f0 == index 0x972f0, carcass 0x8d690 ==
+index 0x7d690). Subtract 0x10000 when fetching a carcass function's disasm by `--rva`, or just
+look it up by `--function`/name.

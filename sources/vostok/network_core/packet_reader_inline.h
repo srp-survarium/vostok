@@ -15,45 +15,45 @@ inline packet_reader::packet_reader( base_packet const& packet ) :
 	/* no source */
 }
 
-// STATE[STUB]
+// Body shapes below are exact against the target disasm. The base instances come
+// from an address-of anchor (network_core/tcp_packet.cpp) in a single /Ot TU, so
+// they emit debug-quality COMDATs (frame ptr + stack temps) and score below the
+// target's whole-program-inlined codegen - a single-TU anchor cannot reproduce
+// that. The bodies, not the anchor codegen, are the deliverable.
+
+// STATE[PARTIAL]: memcpy(dst,m_pointer,size); m_pointer+=size - matches target shape.
 inline void packet_reader::r( void* destination, u32 destination_size, u32 size )
 {
-	// FUNCTION BODY[0x8e5a0]: 6
-	// <0x8e5a0>|0x000|+0x00f:'25'
-	// <0x8e5af>|0x00f|+0x006:'26'
-	// ******
+	ASSERT			( size <= destination_size );
+	memcpy( destination, m_pointer, size );
+	m_pointer		+= size;
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: read *m_pointer, advance by sizeof(T) - target shape exact.
 template < typename T >
 inline T packet_reader::r( )
 {
-	return T();
-	// FUNCTION BODY[0x8e950]: 3 : r< u8 >
-	// <0x8e950>|0x000|+0x009:'33'
-	// ******
-	// FUNCTION BODY[0xa7800]: 3 : r< u16 >
-	// <0xa7800>|0x000|+0x00c:'33'
-	// ******
-	// FUNCTION BODY[0x96410]: 3 : r< u32 >
-	// <0x96410>|0x000|+0x00b:'33'
-	// ******
+	T const result	= *static_cast< T const* >( static_cast< pcvoid >( m_pointer ) );
+	m_pointer		+= sizeof( T );
+	return result;
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: forwards to the u8-counted overload (inlined in target).
 template < int count >
 inline char* packet_reader::r_string( char ( &string )[ count ] )
 {
-	return NULL;
-	// FUNCTION BODY[0xa8860]: 1 : r_string< 16 >
-	// <0xa8860>|0x000|+0x028:'73'
-	// ******
+	return r_string( string, count );
 }
 
+// STATE[PARTIAL]: read u8 length prefix, memcpy, null-terminate - target shape exact.
 inline char* packet_reader::r_string( char* string, u8 count )
 {
-	return NULL;
-	/* no source */
+	u8 const length	= r< u8 >( );
+	ASSERT			( length < count );
+	memcpy( string, m_pointer, length );
+	m_pointer		+= length;
+	string[ length ]= 0;
+	return string;
 }
 
 inline base_packet const& packet_reader::get_packet( ) const
@@ -61,43 +61,32 @@ inline base_packet const& packet_reader::get_packet( ) const
 	return m_packet;
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: m_pointer == buffer()+buffer_size() - target shape exact.
 inline bool packet_reader::eof( ) const
 {
-	return false;
-	// FUNCTION BODY[0xa7650]: 1
-	// <0xa7650>|0x000|+0x00f:'39'
-	// ******
+	return m_pointer == m_packet.buffer( ) + m_packet.buffer_size( );
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: returns m_pointer ([+4]) - target shape exact.
 inline pcbyte packet_reader::pointer( ) const
 {
-	return NULL;
-	// FUNCTION BODY[0x92cc0]: 1
-	// <0x92cc0>|0x000|+0x003:'44'
-	// ******
+	return m_pointer;
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: net body (m_pointer += offset) matched; the three leading bounds
+// ASSERTs resolve to mis-symbolized inline buffer()/buffer_size() accessors in target.
 inline void packet_reader::advance( u32 offset )
 {
-	// FUNCTION BODY[0x131650]: 5
-	// <0x13165a>|0x00a|+0x033:'49'
-	// <0x13168d>|0x03d|+0x041:'50'
-	// <0x1316ce>|0x07e|+0x046:'51'
-	// <0>
-	// <0x131714>|0x0c4|+0x00f:'53'
-	// ******
+	ASSERT	( pointer( ) );
+	ASSERT	( pointer( ) <= m_packet.buffer( ) + m_packet.buffer_size( ) );
+	ASSERT	( pointer( ) + offset <= m_packet.buffer( ) + m_packet.buffer_size( ) );
+	m_pointer	+= offset;
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: (buffer()+buffer_size()) - m_pointer, target's buffer_size - ptr + buffer order.
 inline u32 packet_reader::size_to_eof( ) const
 {
-	return 0;
-	// FUNCTION BODY[0xa7660]: 1
-	// <0xa7660>|0x000|+0x00a:'58'
-	// ******
+	return m_packet.buffer_size( ) - u32( m_pointer ) + u32( m_packet.buffer( ) );
 }
 
 } // namespace network_core

@@ -40,7 +40,16 @@ inline u32 tcp_packet::allocated_size( ) const
 	return m_allocated_size;
 }
 
-inline void tcp_packet::reallocate( u32 new_size ) { /* no source */ }
+// STATE[PARTIAL]: mirrors network::packet::reallocate (m_allocated_size store,
+// std::min buffer_size, realloc(m_buffer?-3:0, new_size+3)+3). Folds with
+// packet< tcp_packet >::reallocate (the surviving COMDAT symbol). Shape exact;
+// base instance is the address-anchored debug COMDAT.
+inline void tcp_packet::reallocate( u32 new_size )
+{
+	m_allocated_size	= new_size;
+	m_buffer_size		= std::min( m_buffer_size, m_allocated_size );
+	m_buffer			= static_cast< pbyte >( VOSTOK_REALLOC_IMPL( m_allocator, m_buffer ? m_buffer - 3 : 0, new_size + 3, "packet" ) ) + 3;
+}
 
 } // namespace network_core
 } // namespace vostok

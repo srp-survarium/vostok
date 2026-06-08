@@ -15,13 +15,11 @@ class packet : public base_packet {
 public:
 	inline				packet			( );
 
-	// STATE[STUB]
+	// STATE[PARTIAL]: CRTP forward to implementation().allocated_size() ([+0xC]);
+	// shape exact, base instance is the address-anchored debug COMDAT.
 	inline	u32			allocated_size	( ) const
 	{
-		return 0;
-		// FUNCTION BODY[0x92ce0]
-		// <0x92ce0>|0x000|      :'19'	{
-		// ******
+		return implementation( ).allocated_size( );
 	}
 
 	inline	void		clear			( );
@@ -49,15 +47,12 @@ public:
 	inline	T const&	implementation	( ) const;
 	inline	T&			implementation	( );
 
-	// STATE[STUB]
+	// STATE[PARTIAL]: forwards to implementation().reallocate(); the surviving
+	// COMDAT for packet< tcp_packet > is the inlined tcp_packet::reallocate (the
+	// allocator + 3-byte length-prefix dance). Shape exact vs target.
 	inline	void		reallocate		( u32 new_size )
 	{
-		// FUNCTION BODY[0xa7400]
-		// <0xa7400>|0x000|      :'46'	{
-		// ******
-		// FUNCTION BODY[0x122e20] : packet< udp_match_packet >
-		// <0x122e20>|0x000|      :'46'	{
-		// ******
+		implementation( ).reallocate( new_size );
 	}
 }; // class packet
 

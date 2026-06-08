@@ -1643,6 +1643,11 @@ namespace vostok
 }
 
 
+namespace vostok {
+	void use_network_core_packet_reader( );
+	namespace network_core { void use_network_core_packet( ); }
+} // namespace vostok
+
 namespace survarium
 {
 
@@ -1724,6 +1729,10 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_tcp_packet_client();
 	vostok::use_network_core_udp_match_connection();
 	vostok::use_network_core_udp_network_flow_emulator();
+	// keep the /Ot packet< tcp_packet > + packet_reader anchors (defined in
+	// network_core/tcp_packet.cpp) alive past /OPT:REF.
+	vostok::use_network_core_packet_reader();
+	vostok::network_core::use_network_core_packet();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
