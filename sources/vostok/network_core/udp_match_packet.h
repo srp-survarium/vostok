@@ -15,6 +15,8 @@ namespace vostok {
 namespace network_core {
 
 class udp_match_client_session;
+class delayed_packets_predicate;
+class udp_network_flow_emulator;
 
 class udp_match_packet : public packet< udp_match_packet > {
 public:
@@ -64,6 +66,8 @@ public:
 	// the connection's udp_match_packet_list names &udp_match_packet::next - both reach
 	// these private members (a friend's nested types share its access).
 	friend	class		udp_match_connection;
+	friend	class		delayed_packets_predicate;
+	friend	class		udp_network_flow_emulator;
 
 private:
 	/* 0x0008 */	boost::intrusive::set_member_hook<>	set_member_hook;
