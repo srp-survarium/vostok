@@ -8,6 +8,7 @@
 namespace vostok {
 namespace network_core {
 
+// STATE[STUB]
 template < typename T >
 inline packet< T >::packet( )
 {
@@ -23,6 +24,7 @@ inline void packet< T >::clear( ) { /* no source */ }
 template < typename T >
 inline void packet< T >::reserve( u32 size ) { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::resize( u32 size )
 {
@@ -39,6 +41,7 @@ inline void packet< T >::clone( base_packet const& other ) { /* no source */ }
 template < typename T >
 inline void packet< T >::append( bool value ) { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::append( u8 value )
 {
@@ -50,6 +53,7 @@ inline void packet< T >::append( u8 value )
 template < typename T >
 inline void packet< T >::append( s8 value ) { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::append( u16 value )
 {
@@ -73,6 +77,7 @@ inline void packet< T >::append( u64 value ) { /* no source */ }
 template < typename T >
 inline void packet< T >::append( s64 value ) { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::append( float value )
 {
@@ -81,6 +86,7 @@ inline void packet< T >::append( float value )
 	// ******
 }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::append( float2 const& value )
 {
@@ -89,6 +95,7 @@ inline void packet< T >::append( float2 const& value )
 	// ******
 }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::append( float3 const& value )
 {
@@ -103,6 +110,7 @@ inline void packet< T >::append( pcstr string ) { /* no source */ }
 template < typename T >
 inline void packet< T >::append( pcstr string, u8 string_length ) { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline void packet< T >::append( pcvoid buffer, u32 buffer_size )
 {

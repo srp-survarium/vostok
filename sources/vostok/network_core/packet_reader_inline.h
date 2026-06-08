@@ -15,6 +15,7 @@ inline packet_reader::packet_reader( base_packet const& packet ) :
 	/* no source */
 }
 
+// STATE[STUB]
 inline void packet_reader::r( void* destination, u32 destination_size, u32 size )
 {
 	// FUNCTION BODY[0x8e5a0]: 6
@@ -23,6 +24,7 @@ inline void packet_reader::r( void* destination, u32 destination_size, u32 size 
 	// ******
 }
 
+// STATE[STUB]
 template < typename T >
 inline T packet_reader::r( )
 {
@@ -38,6 +40,7 @@ inline T packet_reader::r( )
 	// ******
 }
 
+// STATE[STUB]
 template < int count >
 inline char* packet_reader::r_string( char ( &string )[ count ] )
 {
@@ -58,6 +61,7 @@ inline base_packet const& packet_reader::get_packet( ) const
 	return m_packet;
 }
 
+// STATE[STUB]
 inline bool packet_reader::eof( ) const
 {
 	return false;
@@ -66,6 +70,7 @@ inline bool packet_reader::eof( ) const
 	// ******
 }
 
+// STATE[STUB]
 inline pcbyte packet_reader::pointer( ) const
 {
 	return NULL;
@@ -74,6 +79,7 @@ inline pcbyte packet_reader::pointer( ) const
 	// ******
 }
 
+// STATE[STUB]
 inline void packet_reader::advance( u32 offset )
 {
 	// FUNCTION BODY[0x131650]: 5
@@ -85,6 +91,7 @@ inline void packet_reader::advance( u32 offset )
 	// ******
 }
 
+// STATE[STUB]
 inline u32 packet_reader::size_to_eof( ) const
 {
 	return 0;

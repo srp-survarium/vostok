@@ -15,6 +15,7 @@ class packet : public base_packet {
 public:
 	inline				packet			( );
 
+	// STATE[STUB]
 	inline	u32			allocated_size	( ) const
 	{
 		return 0;
@@ -48,6 +49,7 @@ public:
 	inline	T const&	implementation	( ) const;
 	inline	T&			implementation	( );
 
+	// STATE[STUB]
 	inline	void		reallocate		( u32 new_size )
 	{
 		// FUNCTION BODY[0xa7400]

@@ -41,6 +41,7 @@ public:
 
 STATIC_SIZE_ASSERT(udp_match_stream_stats, 0x14);
 
+// STATE[STUB]
 inline bool operator>=( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
 {
 	return false;
@@ -50,6 +51,7 @@ inline bool operator>=( udp_match_stream_stats const& left, udp_match_stream_sta
 }
 
 struct udp_match_stats {
+	// STATE[STUB]
 	inline			udp_match_stats	( )
 	{
 		// FUNCTION BODY[0x91f30]: 0
@@ -78,6 +80,7 @@ public:
 
 STATIC_SIZE_ASSERT(udp_match_stats, 0x80);
 
+// STATE[STUB]
 inline bool operator>=( udp_match_stats const& left, udp_match_stats const& right )
 {
 	return false;
@@ -86,6 +89,7 @@ inline bool operator>=( udp_match_stats const& left, udp_match_stats const& righ
 	// ******
 }
 
+// STATE[STUB]
 inline udp_match_stats operator-( udp_match_stats const& left, udp_match_stats const& right )
 {
 	return udp_match_stats();

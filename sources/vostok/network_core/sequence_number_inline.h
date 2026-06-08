@@ -27,6 +27,7 @@ inline bool sequence_number< T >::operator==( sequence_number const& other ) con
 template < typename T >
 inline bool sequence_number< T >::operator!=( sequence_number const& other ) const { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline bool sequence_number< T >::operator<( sequence_number const& other ) const
 {
@@ -37,6 +38,7 @@ inline bool sequence_number< T >::operator<( sequence_number const& other ) cons
 	// ******
 }
 
+// STATE[STUB]
 template < typename T >
 inline bool sequence_number< T >::operator<=( sequence_number const& other ) const
 {
@@ -68,6 +70,7 @@ inline sequence_number< T > sequence_number< T >::operator--( s32 ) { /* no sour
 template < typename T >
 inline sequence_number< T > sequence_number< T >::deserialize( packet_reader& reader ) { /* no source */ }
 
+// STATE[STUB]
 template < typename T >
 inline s32 operator- ( sequence_number< T > const& left, sequence_number< T > const& right )
 {

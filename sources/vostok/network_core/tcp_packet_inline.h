@@ -15,6 +15,7 @@ inline tcp_packet::tcp_packet( memory::base_allocator& allocator ) :
 	/* no source */
 }
 
+// STATE[STUB]
 inline tcp_packet::~tcp_packet( )
 {
 	// FUNCTION BODY[0xa72b0]: 5

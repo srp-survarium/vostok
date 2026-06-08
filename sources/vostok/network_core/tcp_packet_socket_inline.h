@@ -8,6 +8,7 @@
 namespace vostok {
 namespace network_core {
 
+// STATE[STUB]
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::on_packet_received(
 	tcp_packet const*					packet,
@@ -37,6 +38,7 @@ inline void tcp_packet_socket< Socket >::on_packet_received(
 	// ******
 }
 
+// STATE[STUB]
 template < typename Socket >
 template < typename T >
 inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system::error_code const& error_code, u32 bytes_transferred )
@@ -72,6 +74,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 	// ******
 }
 
+// STATE[STUB]
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::start_receiving( )
 {
@@ -80,6 +83,7 @@ inline void tcp_packet_socket< Socket >::start_receiving( )
 	// ******
 }
 
+// STATE[STUB]
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 	tcp_packet const*					packet_being_sent,
@@ -101,6 +105,7 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 	// ******
 }
 
+// STATE[STUB]
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 {
@@ -118,6 +123,7 @@ inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 	// ******
 }
 
+// STATE[STUB]
 template < typename Socket >
 inline tcp_packet* tcp_packet_socket< Socket >::new_packet( )
 {
@@ -127,6 +133,7 @@ inline tcp_packet* tcp_packet_socket< Socket >::new_packet( )
 	// ******
 }
 
+// STATE[STUB]
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::stop_receiving( )
 {

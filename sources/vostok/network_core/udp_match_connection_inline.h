@@ -8,6 +8,7 @@
 namespace vostok {
 namespace network_core {
 
+// STATE[STUB]
 inline void udp_match_connection::construct_packet(
 	udp_match_packets_orderer&		packets_orderer,
 	udp_match_packet&				packet,
@@ -30,6 +31,7 @@ inline void udp_match_connection::construct_packet(
 	// ******
 }
 
+// STATE[STUB]
 template < typename Predicate >
 inline void udp_match_connection::process_incoming_packet( packet_reader& reader, Predicate const& predicate )
 {
@@ -56,6 +58,7 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 	// ******
 }
 
+// STATE[STUB]
 template < typename Predicate >
 inline void udp_match_connection::call_predicate( Predicate const& predicate, packet_reader& reader )
 {
