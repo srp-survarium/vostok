@@ -73,8 +73,11 @@ reading instruction noise without knowing which statement matters.
 ### Embed the condensed diff in a non-100% function (you OWN this; the matcher left none)
 The matcher does NOT maintain the `// FUNCTION BODY` carcass - it deletes it when done.
 So for a PARTIAL/INPROGRESS/BLOCKED function you GENERATE and embed the condensed
-structure-diff yourself (commented), inline above/in the function, so the divergence is
-visible (a clean 100% DONE carries nothing). **The embedded `// STRUCTURE DIFF` block IS
+structure-diff yourself (commented) INSIDE the function body, at the very END - after the
+last statement and just before the closing `}`. NOT on top of (above) the signature, and
+NOT at the top of the body: the reader sees the actual CODE first and the diff metadata
+last. The diff describes THIS body, so it travels with it. A clean 100% DONE carries
+nothing. **The embedded `// STRUCTURE DIFF` block IS
 the marker that you ran:** a non-100% function with none means no verifier has touched it
 yet. Conversely a **100% function must carry NO embed** - if a later match closed the
 residual and left a stale `// STRUCTURE DIFF`/`// VERDICT` block on a now-100% function,
@@ -89,13 +92,20 @@ STRIP it (the byte-perfect match has trivially-correct structure).
    (optionally end with `trail: <fn>.md`).
 3. ALL detailed reasoning goes in the per-function `.md`, NEVER inline - the inline embed
    stays terse and uniform.
-Real example (`get_additional_length`, 65%):
+Real example (`get_additional_length`, 65%) - the block sits at the END of the body,
+after the last statement, just before the closing `}`:
 ```
-// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 2 stmts
-//   1: 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
-// .. same ..
-// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 1
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs inlined, non-steerable. trail: get_additional_length.md
+float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir )
+{
+	float const knee_angle_cos = upleg_dir | -leg_dir;
+	// ...rest of body...
+
+	// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 2 stmts
+	//   1: 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
+	// .. same ..
+	// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs inlined, non-steerable. trail: get_additional_length.md
+}
 ```
 
 Caveats baked into the format (do not misread these as divergences):
