@@ -37,6 +37,8 @@
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/network_core/udp_match_connection.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/network_core/udp_network_flow_emulator.h>
+#include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
 #include <vostok/animation/skeleton.h>
@@ -1502,6 +1504,22 @@ namespace vostok
 		network_core::udp_match_connection::is_low_level_packet( *(network_core::base_packet const*)NULL );
 	}
 
+	void use_network_core_udp_network_flow_emulator_tick_functor( network_core::packet_reader&, boost::asio::ip::udp::endpoint const& )
+	{
+	}
+
+	void use_network_core_udp_network_flow_emulator()
+	{
+		memory::stack_allocator stack_allocator;
+		static char arena[ 4096 ];
+		memory::single_size_buffer_allocator< 300, threading::single_threading_policy > packets_allocator( arena, sizeof( arena ) );
+		network_core::udp_network_flow_emulator_options options;
+		network_core::udp_network_flow_emulator emulator( stack_allocator, packets_allocator, options );
+
+		emulator.tick( 10, boost::bind( &use_network_core_udp_network_flow_emulator_tick_functor, _1, _2 ) );
+		emulator.on_packet_received( NULL, 10, boost::asio::ip::udp::endpoint( ), 10, 10 );
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -1705,6 +1723,7 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_entry_point();
 	vostok::use_network_core_tcp_packet_client();
 	vostok::use_network_core_udp_match_connection();
+	vostok::use_network_core_udp_network_flow_emulator();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
