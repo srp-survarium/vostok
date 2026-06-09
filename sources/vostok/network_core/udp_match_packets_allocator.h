@@ -39,6 +39,14 @@ private:
 
 STATIC_SIZE_ASSERT(udp_match_packets_allocator, 0x14);
 
+// refcounted handle held by the network module's match_client/connect_order
+// (PDB: vostok::network_core::udp_match_packets_allocator_ptr)
+typedef intrusive_ptr<
+	udp_match_packets_allocator,
+	udp_match_packets_allocator,
+	threading::multi_threading_policy
+>	udp_match_packets_allocator_ptr;
+
 } // namespace network_core
 } // namespace vostok
 
