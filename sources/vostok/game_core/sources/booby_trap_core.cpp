@@ -389,7 +389,7 @@ pcstr booby_trap_core::use_info( usable_object_user_data* user )
 	return can_defuse( user_player ) ? "st_defuse_trap" : "";
 }
 
-// STATE[95.27%|PARTIAL]
+// STATE[86.04%|PARTIAL]: holder() kept as a call in target (LTCG no-inline of inventory::holder); we inline it
 bool booby_trap_core::can_defuse( base_player const* user ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -398,9 +398,7 @@ bool booby_trap_core::can_defuse( base_player const* user ) const
 	base_player const* owner = m_owner->get_inventory( ).holder( ).cast_to_base_player( );
 	ASSERT( UNKNOWN_EXPRESSION_T( owner ) );
 
-	return user != owner // sushi@MATCH: This is written somehow differently
-		? user->team( ) != owner->team( )
-		: true;
+	return user == owner || user->team( ) != owner->team( );
 
 	// FUNCTION BODY
 	// <0x59b27a>|0x00a|+0x00c:'249'
@@ -423,11 +421,12 @@ void booby_trap_core::defuse_completed( )
 	// ******
 }
 
-// STATE[86.20%|PARTIAL]
+// STATE[99.67%|DONE]: byte-identical stream, only the state/this stack-slot order swapped
 void booby_trap_core::on_state_timer_finished( )
 {
-	if ( m_trap_state == booby_trap_state_armed		// sushi@MATCH: Maybe some inlined function
-		|| m_trap_state > booby_trap_state_disarmed // sushi@MATCH: This should never hit
+	booby_trap_state const state = m_trap_state;
+	if ( state == booby_trap_state_armed
+		|| state > booby_trap_state_disarmed // claude@NOTE: target caches m_trap_state into one temp slot, compared twice
 	)
 		switch_to_state( booby_trap_state_disarmed );
 	else
@@ -448,7 +447,7 @@ void booby_trap_core::on_state_timer_finished( )
 	// ******
 }
 
-// STATE[BLOCKED] switch
+// STATE[93.08%|PARTIAL]: config() kept as a call in target (LTCG no-inline of booby_trap_set_core::config); we inline it
 void booby_trap_core::switch_to_state( booby_trap_state new_state )
 {
 	if ( m_trap_state == booby_trap_state_armed )
@@ -503,6 +502,7 @@ void booby_trap_core::switch_to_state( booby_trap_state new_state )
 			m_owner->on_trap_disarmed( *this );
 			break;
 		}
+		default: NODEFAULT( ); // claude@MATCH: target jump table has no bounds check -> full contiguous range + NODEFAULT
 	}
 
 	m_trap_state = new_state;

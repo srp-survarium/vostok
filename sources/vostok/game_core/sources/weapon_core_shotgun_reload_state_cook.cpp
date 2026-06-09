@@ -5,35 +5,55 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_state_cook.h>
 
+#include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include "game_core_memory.h"
+
 namespace survarium {
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook()
+// STATE[100%|DONE]
 weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
-	// FUNCTION BODY
-	// <0x590150>|0x000|+0x010:'29'	{
-	// <0>
-	// <0x590160>|0x010|      :'31'	}
-	// ******
 }
 
-// STATE[STUB]
-// vostok::mutable_buffer survarium::weapon_core_shotgun_reload_state_cook::allocate_resource(vostok::resources::query_result_for_cook&, vostok::const_buffer, bool)
+// STATE[41.38%|PARTIAL]: statement 36 (the malloc+return) matches in shape but the
+// base inlines the mutable_buffer(pvoid,u32) ctor to an out-of-line uint2::uint2
+// COMDAT-fold while the target inlines the two field stores ([edx]=ptr;
+// [ecx+4]=0x140) into the sret slot. Statement 35 is an unresolved ASSERT: target
+// emits `bool x=false; ASSERT_check(&x); if(x){ copy in_query(600 bytes) + raw_file
+// _data + file_exist; ASSERT_check }` - a real assertion calling a validator that
+// takes in_query BY VALUE; the exact UNKNOWN_EXPRESSION is not yet recovered, so
+// only the first compiled-out half is produced. See md.
 mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_shotgun_reload_state ), "weapon_core_shotgun_reload_state" ), sizeof( weapon_core_shotgun_reload_state ) );
+
 	// FUNCTION BODY
-	// <0x5901ab>|0x00b|+0x03d:'35'
-	// <0x5901e8>|0x048|+0x02e:'36'
+	// <0x5901ab>|0x00b|+0x03d:'35'	ASSERT( <validator taking in_query by value> )
+	// <0x5901e8>|0x048|+0x02e:'36'	return mutable_buffer( MALLOC(0x140), 0x140 );
 	// ******
+	//
+	// target statement 35:
+	//   mov byte [ebp-1],0; lea eax,[ebp-1]; call ASSERT; movzx eax,[eax]; test; je .1
+	//   movzx ecx,[ebp+18h](file_exist); push ecx; mov edx,[ebp+14h](raw.size); push edx
+	//   mov eax,[ebp+10h](raw.ptr); push eax; mov esi,[ebp+0Ch](in_query)
+	//   sub esp,258h; mov ecx,96h; rep movsd; call ASSERT; add esp,264h
+	// .1: ...malloc... (statement 36)
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state_cook::deallocate_resource(void*)
+// STATE[55.64%|PARTIAL]: target calls free_helper<doug_lea_allocator,resource_base>
+// OUT-OF-LINE (lea edi,[ebp+8]=&buffer; mov ecx,eax=allocator; call free_helper);
+// base INLINES the free_helper wrapper - it inlines the `if(!pointer) return` null
+// check and calls free_helper_impl directly, spilling the allocator to an extra
+// [ebp-4] temp (sub esp,8 vs target push ecx). Same inline-depth divergence as
+// weapon_core_cook::delete_resource; the allocator/type are correct (g_allocator
+// pointer, T=resource_base). See md.
 void weapon_core_shotgun_reload_state_cook::deallocate_resource( void* buffer )
 {
+	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
+
 	// FUNCTION BODY
-	// <0x590178>|0x008|+0x014:'41'
+	// <0x590178>|0x008|+0x014:'41'	VOSTOK_FREE_IMPL( g_allocator, (resource_base*&)buffer );
 	// ******
 }
 
@@ -237,22 +257,11 @@ void weapon_core_shotgun_reload_state_cook::on_subresources_ready( resources::qu
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state_cook::destroy_resource(vostok::resources::unmanaged_resource*)
+// STATE[100%|DONE]
 void weapon_core_shotgun_reload_state_cook::destroy_resource( resources::unmanaged_resource* resource )
 {
-	// LOCALS
-	// weapon_core_shotgun_reload_state* wpn_state
-	// ******
-
-	// CALL SITE INFO
-	// <0x590143> -> void* <unknown>(u32)
-	// ******
-
-	// FUNCTION BODY
-	// <0x590119>|0x009|+0x01e:'181'
-	// <0x590137>|0x027|+0x00e:'182'
-	// ******
+	weapon_core_shotgun_reload_state*	wpn_state	= static_cast< weapon_core_shotgun_reload_state* >( resource );
+	wpn_state->~weapon_core_shotgun_reload_state( );
 }
 
 } // namespace survarium

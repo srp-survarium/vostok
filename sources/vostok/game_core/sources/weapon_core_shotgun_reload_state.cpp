@@ -7,22 +7,23 @@
 #include <vostok/ai/fsm.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_base_substate.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(survarium::weapon_core&, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
+// STATE[100%|DONE]
 weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 	weapon_core&								weapon,
 	weapon_core_shotgun_reload_base_substate*	reload_start,
 	weapon_core_shotgun_reload_base_substate*	reload_one_round,
 	weapon_core_shotgun_reload_base_substate*	reload_finish
-) : weapon_core_base_state( weapon, true )
+) :
+	weapon_core_base_state( weapon, true ),
+	m_logic( 0 ),
+	m_delete_substates_on_destruction( true )
 {
-	// FUNCTION BODY
-	// <0x599d7f>|0x03f|+0x00d:'27'
-	// <0x599d8c>|0x04c|+0x014:'28'
-	// ******
+	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
+	initialize_logic( reload_start, reload_one_round, reload_finish );
 }
 
 // STATE[STUB]
@@ -43,25 +44,41 @@ weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::initialize()
+// STATE[50.88%|PARTIAL]: LTCG inline-vs-call of fsm::states()/fsm_state_list::front().
+// Every statement and member offset matches; the target keeps states()+front() OUT-OF-LINE
+// (frame = 1 local: `call finalize_impl`(=states fold) + `call operator[]`(=front)), while our
+// /GL LTCG inlines front() into the body (frame = 3 locals, reads the list members directly).
+// Same unsteerable inline-vs-call class as reload_state_base::initialize (assembly_patterns.md);
+// no source change steers it.
 void weapon_core_shotgun_reload_state::initialize( )
 {
+	m_logic->set_initial_state( m_logic->states( ).front( ) );
+	m_animation_has_been_ended = false;
+
 	// FUNCTION BODY
 	// <0>
-	// <0x599737>|0x007|+0x022:'44'
-	// <0x599759>|0x029|+0x00a:'45'
+	// <0x599737>|0x007|+0x022:'44'		m_logic->set_initial_state( m_logic->states().front() );
+	// <0x599759>|0x029|+0x00a:'45'		m_animation_has_been_ended = false;
 	// ******
+	// TARGET @0x07: mov eax,[m_logic]; call finalize_impl(=states); call operator[](=front); push eax; set_initial_state
+	// BASE: inlines front() -> extra [ebp-8] temp + reads list members in-line (sub esp,0Ch).
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::finalize()
+// STATE[78.57%|PARTIAL]: LTCG cross-module inline-vs-call of animation_playback_state::reset().
+// Both statements + offsets match; the target emits `add eax,120h; call reset` (out-of-line),
+// but reset() is a header-inline stub so our LTCG ELIDES it at this call site (the same
+// uncontrollable inline-vs-call documented at animation/type_definitions.h:40 for
+// weapon_core_base_state::finalize). The 3 missing reset instrs are the sole residual.
 void weapon_core_shotgun_reload_state::finalize( )
 {
+	m_animation_playback_state.reset( );
+	m_logic->set_initial_state( 0 );
+
 	// FUNCTION BODY
-	// <0x599777>|0x007|+0x00d:'50'
-	// <0x599784>|0x014|+0x010:'51'
+	// <0x599777>|0x007|+0x00d:'50'		m_animation_playback_state.reset();
+	// <0x599784>|0x014|+0x010:'51'		m_logic->set_initial_state( 0 );
 	// ******
+	// TARGET @0x07: mov eax,[ebp-4]; add eax,120h; call animation_playback_state::reset  (MISSING in base - LTCG elided)
 }
 
 // STATE[INPROGRESS]: walks the internal reload substate fsm to find the current substate's
@@ -113,8 +130,10 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x5897a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::weapon_core_shotgun_reload_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[100%|DONE]: byte-identical to target 0x589db0 (26/26 instructions, size 68). objdiff scores
+// it `None` only because the delinked target obj has no COMDAT to pair against; the rich-index bytes
+// match the live target exactly. The two-slot materialization (`state` [ebp-8], `current` [ebp-4],
+// sub esp,0Ch) comes from a SEPARATE named local for the current_state() result, not the inlined cast.
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -122,17 +141,17 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x599db9>|0x009|+0x035:'89'
-	// ******
+	ai::fsm_state* state = m_logic->current_state( );
+	weapon_core_shotgun_reload_base_substate* current = static_cast< weapon_core_shotgun_reload_base_substate* >( state );
+	return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
-// STATE[STUB]
+// STATE[INPROGRESS]: body is `return true;` (asm @0x589720: mov al,1). Only referenced by initialize_logic
+// (still STUB), so the compiler removes it as unreferenced (C4505); it scores once initialize_logic is matched.
 // bool survarium::true_predicate()
 static bool true_predicate( )
 {
-	return false;
+	return true;
 
 	// FUNCTION BODY
 	// <0x599723>|0x003|+0x002:'94'
@@ -171,13 +190,10 @@ bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::execute()
+// STATE[100%|DONE]
 void weapon_core_shotgun_reload_state::execute( )
 {
-	// FUNCTION BODY
-	// <0x5998b7>|0x007|+0x00e:'121'
-	// ******
+	m_logic->tick( );
 }
 
 } // namespace survarium
