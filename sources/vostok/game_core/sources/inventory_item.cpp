@@ -6,6 +6,8 @@
 #include <vostok/game_core/inventory_item.h>
 
 #include <vostok/game_core/inventory_item_props.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -38,21 +40,17 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
 void inventory_item::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x5a0849>|0x009|+0x013:'30'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( client_offset );
+	packet.append( m_amount );
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: single r< u16 > into m_amount ([+0x114]). Matches rva 0x590810.
 void inventory_item::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x5a0819>|0x009|+0x012:'35'
-	// ******
+	m_amount = reader.r< u16 >( );
 }
 
 } // namespace survarium

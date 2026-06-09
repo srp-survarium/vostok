@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_chamber_a_round_aimed_state_base.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -58,22 +60,16 @@ void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& 
 	// ******
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::serialize(vostok::network_core::udp_match_packet&) const
+// STATE[PARTIAL]: single append( m_animation_has_been_ended ) ([+0x135] bool). Matches target shape.
 void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x73e399>|0x009|+0x013:'48'
-	// ******
+	packet.append( m_animation_has_been_ended );
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::deserialize(vostok::network_core::packet_reader&)
+// STATE[PARTIAL]: single r< bool > into m_animation_has_been_ended ([+0x135]). Matches target shape.
 void weapon_core_chamber_a_round_aimed_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x73e379>|0x009|+0x011:'53'
-	// ******
+	m_animation_has_been_ended = reader.r< bool >( );
 }
 
 } // namespace survarium
