@@ -118,6 +118,27 @@ Plus a fourth, derived output pinned the same way:
 To build any one standalone (e.g. outside the shell): `nix build .#survarium-resources`,
 `.#survarium-resources-unpacked`, `.#survarium-keys`, `.#survarium-game`.
 
+## Matching (the orchestrator)
+
+Binary-matching is driven by an **orchestrator** that dispatches `matcher` +
+`structure-verifier` (+ a tiny `reviewer`) workers and stacks their PRs onto
+`feature/agentic-matching-loop-2` for review. **Start it from a fresh top-level Claude Code
+session** - it spawns worker subagents, so it cannot run as a nested subagent - with the
+`/match` slash command:
+
+```sh
+/match network_core        # whole queue, default 3 workers in parallel
+/match game_core 2         # whole queue, but only 2 workers in parallel
+```
+
+Per unit it then: prepares a sibling worktree `vostok_<N>` off the stack tip, dispatches a
+`matcher` (up to the worker cap, default 3), runs the `structure-verifier` + `reviewer` onto the same
+branch, and opens a **stacked PR** (match + verify commits, minimal body). Matchers spawn
+off the **top** of the stack so percentages compound; you review the stack **bottom-up** and
+merge one PR at a time (the `pr-verifier` agent prepares each onto the advancing base).
+Prereqs: worktrees `vostok_1..3` clean + warm (`binaries/rich/target` + `binaries/objdiff`
+present). Full rules: [`.claude/agents/orchestrator.md`](.claude/agents/orchestrator.md).
+
 ## Docs
 
 - [Matching guide](https://gist.github.com/sushi-shi/8bf16f82c3b1c65fd357d73ecfda909e) - how to actually match assembly.
