@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: A TINY, cheap final lint of ONE matcher PR's diff - checks the STATE %s against report.json, bogus "LTCG" banking, stray logs, untagged temp-anchor hacks, and lean comments; fixes the trivial comment/STATE defects in place and pushes ONE commit. Reads ONLY the PR diff + report.json (NO disassembly, NO guideline docs, NO rebuild), so it barely touches the token budget. Structure/target-vs-base is the structure-verifier's job (its commit is already on the PR) - the reviewer does NOT re-analyze it. OPTIONAL - the orchestrator usually skips it.
+description: A TINY, cheap final lint of ONE matcher PR's diff - checks the STATE %s against report.json, strips stray logs, and enforces lean comments; fixes those trivial defects in place and pushes ONE commit. Reads ONLY the PR diff + report.json (NO disassembly, NO guideline docs, NO rebuild), so it barely touches the token budget. Structure/target-vs-base is the structure-verifier's job (its commit is already on the PR) - the reviewer does NOT re-analyze it. OPTIONAL - the orchestrator usually skips it.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -18,15 +18,9 @@ One fix commit, one verdict line. Dispatched by the orchestrator/top-level; no s
 1. **%s match `report.json`.** Each `// STATE[NN%|TAG]` (and the commit message) must equal
    `binaries/objdiff/report.json`'s `fuzzy_match_percent` for that symbol; fix stale numbers
    and the TAG (a symbol report.json shows at 100% is `DONE`, not `PARTIAL`). READ it; never rebuild.
-2. **No bogus "LTCG".** LTCG excuses ONLY a call-ARGUMENT diff. If a STATE/comment banks
-   anything else (register/slot/frame/switch shape/extra `cmp`/inline-vs-call) as "LTCG",
-   relabel to the real cause and set the TAG `PARTIAL`/`INPROGRESS` - not a banked `DONE`.
-3. **No stray logs / noise.** Strip any `LOG_*`/`printf`/`OutputDebugString`/trace or
+2. **No stray logs / noise.** Strip any `LOG_*`/`printf`/`OutputDebugString`/trace or
    commented-out debug the matcher added that the target does not emit.
-4. **Temp anchor hacks tagged.** Source added ONLY so a `temp_include_all` anchor can reach
-   a symbol (a befriending `friend ... use_*`, a widened access specifier, a fabricated
-   `*reinterpret_cast<T*>(NULL)` instance) must carry `// claude@TODO: remove later`. Add it if missing.
-5. **Lean comments.** A clean `100%|DONE` keeps only `// STATE[100%|DONE]`; terse
+3. **Lean comments.** A clean `100%|DONE` keeps only `// STATE[100%|DONE]`; terse
    `claude@MATCH:`/`claude@NOTE:` only for genuinely non-obvious shaping.
 
 Fix the trivial comment/STATE defects in place. If you spot a REAL logic/structure bug, do
