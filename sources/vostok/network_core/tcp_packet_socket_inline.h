@@ -187,11 +187,9 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 	// branch-bucketing. Not a source-shape miss; env-path unsteerable. trail: tcp_packet_socket_inline.md
 }
 
-// STATE[55%|PARTIAL]: new_packet + write + on_packet_has_been_sent shape correct; clone( packet ) is the
-// RIGHT call - but packet<T>::clone() is an empty /* no source */ stub in packet_inline.h, so it folds to
-// nothing and the whole copy step is missing from base. Target inlines clone() -> clear()+append(buffer,size),
-// calling the out-of-line packet<tcp_packet>::append(void const*,u32). Fixing this needs clone()'s body in
-// packet_inline.h (another matcher's file, do-not-touch) - reported to orchestrator, not fixed here.
+// STATE[55%|PARTIAL]: new_packet/clone/write/on_packet_has_been_sent shape now correct -
+// clone()'s body restored in packet_inline.h (m_buffer_size=0; append(other.buffer(),size)),
+// so the copy step emits. Residual is the buffer()/buffer_size() accessor inline-boundary.
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 {
@@ -202,22 +200,22 @@ inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 	boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );
 
 	on_packet_has_been_sent( cloned_packet, error_code, cloned_packet->buffer_size( ) );
-	// STRUCTURE DIFF[target 0x123ee0 | base 0x90130]: target 6 / base 4 stmts
+	// STRUCTURE DIFF[target 0x123ee0 | base 0x90170]: target 6 / base 5 stmts
 	// .. same ..
-	//   2: 0x028 <0x24> | --          | L155   ONLY target
+	//   2: 0x028 <0x24> | 0x027 <0x2b> | cloned_packet->clone( packet );   SIZE
 	// .. same ..
 	//   3: 0x04c <0x16> | --          | L179   ONLY target
 	// .. same ..
-	//   5: --          | 0x036 <0x3a> | boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );   ONLY base
+	//   5: --          | 0x061 <0x3a> | boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );   ONLY base
 	// .. same ..
 	//   6: 0x071 <0x2d> | --          | L186   ONLY target
 	// .. same ..
-	// ; aligned 3, size-diffs 0, quantity-diffs 4, blank-gaps 0
-	// VERDICT: STRUCTURE MISMATCH (quantity) - send shape is right (new_packet/clone/write/
-	// on_packet_has_been_sent) but clone(packet) folds to nothing: packet<T>::clone() is an
-	// empty /* no source */ stub in packet_inline.h (target inlines it to clear()+append, the
-	// L155/L179/L186 ONLY-target rows). Needs clone()'s body in the shared packet_inline.h
-	// (do-not-touch) - REPORTED to orchestrator, not a fix here. trail: tcp_packet_socket_inline.md
+	// ; aligned 3, size-diffs 1, quantity-diffs 3, blank-gaps 0
+	// VERDICT: STRUCTURE FIXED (was quantity 4 -> 3) - clone() body restored, so the copy
+	// step now emits as a real statement (base 4 -> 5 stmts). Residual: target keeps
+	// other.buffer()/buffer_size() as out-of-line calls; base inlines the trivial accessors
+	// to direct [other+0]/[other+4] field reads (LTCG inline-boundary, no source lever).
+	// trail: tcp_packet_socket_inline.md
 }
 
 // STATE[95.5%|DONE]: NEW(tcp_packet)(m_packet_allocator); objdiff reports 0 (unit-pairing), bytes match
