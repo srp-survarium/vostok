@@ -9,6 +9,8 @@
 #include <vostok/game_core/bullet.h>
 
 #include <vostok/ai/npc_statistics.h>
+#include <vostok/network_core/packet_reader.h>
+#include <boost/bind.hpp>
 
 
 namespace survarium {
@@ -358,14 +360,10 @@ void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum 
 	}
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: for_each over the body-parts list, forwarding deserialize to each part.
 void damage_model::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x6ffc10>|0x000|+0x009:'433'	{
-	// <0x6ffc19>|0x009|+0x041:'434'
-	// <0x6ffc5a>|0x04a|      :'435'	}
-	// ******
+	m_body_parts.for_each( boost::bind( &body_part_parameters::deserialize, _1, boost::ref( reader ) ) );
 }
 
 } // namespace survarium
