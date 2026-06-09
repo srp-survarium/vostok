@@ -18,7 +18,7 @@ namespace network_core {
 // boost::function1::operator= (copy temp + swap + clear, +0xC frame, drops push esi/edi)
 // where target calls the ICF-folded COMDAT; plus folded-rep this-convention/temp noise
 // around the boost::function default-ctor / bind fold representatives.
- udp_match_client::udp_match_client(
+udp_match_client::udp_match_client(
 	boost::asio::io_service&			io_service,
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
 	udp_match_packets_orderer&			packets_orderer,
@@ -42,6 +42,10 @@ namespace network_core {
 	m_is_receiving		( false )
 {
 	m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x1b | 38 | m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE row is LTCG inline-vs-call both ways (base inlines function1::operator=, target inlines math::max in the init region); non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -202,6 +206,9 @@ void udp_match_client::check_consistency( ) const
 	u32 const registered_packets_count	= m_packets_allocator.allocated_size( ) / sizeof( udp_match_packet );
 	u32 const allocated_count			= ( m_network_flow_emulator ? m_network_flow_emulator->delayed_packets_count( ) : 0 ) + m_connection.packets_count( );
 	ASSERT( UNKNOWN_EXPRESSION_T( registered_packets_count == allocated_count ) );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (no diverging rows)
+	// VERDICT: STRUCTURE MATCH - byte-equal stmt sizes; assert site verified 1/1 at +0x67 (mov byte[ebp-9],0 / lea eax / call empty-stub, 0xc bytes); residual is the locals' ebp-4/-8 slot swap, LTCG allocation noise.
 }
 
 // STATE[100%|DONE]
