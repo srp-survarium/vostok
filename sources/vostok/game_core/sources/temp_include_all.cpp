@@ -36,6 +36,7 @@
 #include <vostok/network_core/tcp_packet_client.h>
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/network_core/udp_match_connection.h>
+#include <vostok/network_core/udp_match_client.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/network_core/udp_network_flow_emulator.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
@@ -1519,6 +1520,25 @@ namespace vostok
 		emulator.on_packet_received( NULL, 10, boost::asio::ip::udp::endpoint( ), 10, 10 );
 	}
 
+	void use_network_core_udp_match_client()
+	{
+		boost::asio::io_service io_service( 10 );
+		memory::single_size_buffer_allocator< 300, threading::single_threading_policy > packets_allocator( NULL, 0 );
+		test_udp_match_packets_orderer packets_orderer;
+
+		network_core::udp_match_client client( io_service, packets_allocator, packets_orderer, NULL );
+
+		client.connect( "host", 80, NULL, 10 );
+		client.enqueue( NULL );
+		client.send_queued_packets( 10 );
+		client.disconnect( );
+		client.check_consistency( );
+
+		// private on_error has no real caller yet (handle_receive still STUB); address-take keeps it standalone
+		void ( network_core::udp_match_client::*on_error_ptr )( network_core::client_error_codes_enum, boost::system::error_code ) = &network_core::udp_match_client::on_error;
+		example_callback( ( pcstr )&on_error_ptr );
+	}
+
 	void use_static_rigid_body()
 	{
 		physics::bt_collision_shape_ptr shape(NULL);
@@ -1722,6 +1742,7 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_tcp_packet_client();
 	vostok::use_network_core_udp_match_connection();
 	vostok::use_network_core_udp_network_flow_emulator();
+	vostok::use_network_core_udp_match_client();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();

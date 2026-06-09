@@ -106,7 +106,7 @@ public:
 			void						disconnect						( );
 
 			void						instant_disconnect				( disconnect_event_types_enum type );
-	inline	void						set_on_disconnect				( boost::function< void( disconnect_event_types_enum ) > const& value ) { /* no source */ }
+	inline	void						set_on_disconnect				( boost::function< void( disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
 	inline	bool						is_connected					( ) const { return false; }
 

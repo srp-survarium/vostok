@@ -15,6 +15,8 @@
 
 #include <boost/asio.hpp>
 
+namespace vostok { void use_network_core_udp_match_client( ); }
+
 namespace vostok {
 namespace network_core {
 
@@ -23,6 +25,8 @@ class udp_match_packet;
 class udp_network_flow_emulator;
 
 class udp_match_client : public boost::noncopyable {
+	friend	void						::vostok::use_network_core_udp_match_client	( );
+
 public:
 												udp_match_client			(
 													boost::asio::io_service&		io_service,
@@ -93,11 +97,11 @@ private:
 	/* 0x0590 */	boost::asio::ip::udp::socket		m_socket;
 	/* 0x05d4 */	boost::asio::ip::udp::endpoint		m_server_endpoint;
 	/* 0x05f0 */	boost::asio::ip::udp::endpoint		m_remote_endpoint;
-	/* 0x061c */	boost::asio::io_service&			m_io_service;
-	/* 0x0618 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
-	/* 0x060c */	udp_network_flow_emulator* const	m_network_flow_emulator;
-	/* 0x0610 */	u32									m_time_in_ms;
-	/* 0x0614 */	bool								m_is_receiving;
+	/* 0x060c */	boost::asio::io_service&			m_io_service;
+	/* 0x0610 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
+	/* 0x0614 */	udp_network_flow_emulator* const	m_network_flow_emulator;
+	/* 0x0618 */	u32									m_time_in_ms;
+	/* 0x061c */	bool								m_is_receiving;
 	/* 0x061d */	boost::array< u8, 256 >				m_receive_buffer;
 	/* 0x0720 */	handler_allocator					m_handler_allocator;
 }; // class udp_match_client

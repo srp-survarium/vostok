@@ -47,9 +47,9 @@ public:
 						u32			unacknowledged_packets_count
 					);
 
-	inline	u32		max_ping_time_in_ms			( ) const { return 0; }
+	inline	u32		max_ping_time_in_ms			( ) const { return m_max_ping_time_in_ms; }
 
-	inline	u32		delayed_packets_count		( ) const { return 0; }
+	inline	u32		delayed_packets_count		( ) const { return m_delayed_packets.size( ); }
 
 private:
 			void	add_packet					(
