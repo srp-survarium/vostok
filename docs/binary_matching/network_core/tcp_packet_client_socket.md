@@ -20,22 +20,52 @@ and is invoked from `IncludeAll::IncludeAll()`. Added
   STUB class had no callable, so `async_read`/`write` would not compile.
 - `tcp_packet_socket::delete_packet()` (was STUB) -> `VOSTOK_DELETE_IMPL( m_packet_allocator, packet )`.
 
-## Per-function results (objdiff fuzzy %, or direct byte-match where unit-pairing zeroes the report)
+## Per-function results (structure-verifier re-adjudicated; objdiff fuzzy %)
+
+Note: `tcp_packet_client` and `tcp_packet_socket` share their names with the old
+`vostok::network::tcp_packet_client` / `vostok::network::packet_socket` symbols, so the
+ctor/dtor/send/size_received diffs had to be pinned by the **network_core target rva**
+(the by-name lookup resolves the wrong namespace's first match).
+
 - `on_connected`, `connect`, `on_error`, `disconnect`  -> 100% DONE
-- `start_reading` 99.70, `send` (client) 99.69  -> DONE (residual = inline-boundary of forwarded socket call)
-- `start_receiving` 99.88, `stop_receiving` 99.81  -> DONE
-- `new_packet` 95.5 (report 0 = unit pairing; only diff is the assert-stub delinker naming) -> DONE
-- ctor 70, dtor 91  -> PARTIAL (body byte-correct; boost::bind/function reps fold under LTCG)
-- `close_connection` 66  -> PARTIAL. ASSERT(empty_stub) at top recovered (+ frame align).
-  Residual: `m_socket.close(ec)` out-lines to `basic_socket::close` in target but
-  over-inlines to the win_iocp service close in base (inline-boundary, not source-steerable).
-- `on_packet_has_been_sent` 52, `on_packet_received` 40, `on_packet_size_received<u8/u16>` PARTIAL.
-  Control flow matched: the asio `operation_aborted` (error 995/0x3E3) early-return, the
-  `bytes_transferred != packet->allocated_size()` size check, the header re-read recursion
-  (on_packet_size_received<u8> reads 1 byte then issues a u16 read), and the new_packet/resize/
-  async_read continuation. Residual is the LOG_ERROR blocks: the `__FILE__` baked into every
-  log call is `C:\survarium\sources\...` in target vs our `Z:\home\...` build path -> a
-  permanent byte diff on logging-dominated functions (same wall as http_client's LOG residuals).
+- `start_reading` 99.70%, `send` (client) 99.69%  -> **DONE, STRUCTURE MATCH** (1/1 stmt,
+  0 qty / 0 size; residual is the sub-statement inline boundary of the forwarded socket call).
+- `start_receiving` 99.88%, `new_packet` 95.5% (report 0 = unit pairing)  -> **DONE,
+  STRUCTURE MATCH** (1/1 stmt, 0 qty / 0 size).
+- `stop_receiving` 99.81%  -> **DONE, STRUCTURE MATCH** (2/2 stmts, 0 qty, 1 SIZE =
+  basic_socket::cancel(ec) inline-boundary).
+- ctor 70.24%  -> **PARTIAL, STRUCTURE MATCH** (shape ok). 1/1 stmt, 0 qty, 1 SIZE on the
+  m_on_error bind: target inlines the m_packet_socket member ctor + boost::function assign
+  epilogue regalloc; base emits one ctor call. No source lever.
+- dtor 90.98%  -> **PARTIAL, STRUCTURE MISMATCH (quantity)**. target 3 / base 2 stmts: the
+  1 extra target row is a 2-byte branch (target lowers the guard `jne .disconnect; jmp .end`,
+  base a single `je .end`). has_connection_established test + disconnect align; if-branch
+  codegen layout, not a source-shape miss.
+- `close_connection` 66.30%  -> **PARTIAL, STRUCTURE MATCH** (shape ok). 5/5 stmts align,
+  0 qty, 1 SIZE on `m_socket.close(ec)`: target out-lines to basic_socket::close, base
+  over-inlines to the win_iocp service close (boost inline-boundary).
+- `on_packet_received` 40%  -> **PARTIAL, STRUCTURE MISMATCH (both)**. target 18 / base 17;
+  6 SIZE (LOG_ERROR __FILE__/__LINE__ wall + allocated_size() inline-boundary) + 1 QTY
+  (L30 if(m_on_error) branch-bucketing). All 3 branches + success path align.
+- `on_packet_has_been_sent` 52%  -> **PARTIAL, STRUCTURE MISMATCH (both)**. target 10 /
+  base 9; 4 SIZE (LOG_ERROR wall) + 1 QTY (L142 branch-bucketing). delete_packet + both
+  error branches align.
+- `on_packet_size_received<u8/u16>` PARTIAL  -> **STRUCTURE MISMATCH (both)**. target 24 /
+  base 20 stmts (qty 4). Control flow (operation_aborted return, sizeof(T) check, header
+  re-read recursion) matches; residual is the LOG_ERROR __FILE__/__LINE__ wall + the
+  4-stmt success-path async_read split (target keeps buffer_to_receive_into/bind rows as
+  separate statements our LTCG folds). `--view structure-diff` cannot auto-align (target
+  param `const unsigned int` vs base `unsigned int` + the network::packet_socket name
+  shadow); compared via rva-pinned single-side dumps.
+- `send` (socket) 55%  -> **PARTIAL, STRUCTURE MISMATCH (quantity)**. target 6 / base 4
+  (qty 4). Shape right (new_packet/clone/write/on_packet_has_been_sent) but `clone(packet)`
+  folds to nothing: `packet<T>::clone()` is an empty `/* no source */` stub in
+  packet_inline.h (target inlines it to clear()+append -- the L155/L179/L186 ONLY-target
+  rows). Needs clone()'s body in the shared packet_inline.h (do-not-touch) -- REPORTED.
+
+The LOG_ERROR residual across the on_packet_* functions is the `__FILE__` baked into every
+log call: `C:\survarium\sources\...` in target vs our `Z:\home\...` build path -> a permanent
+byte diff on logging-dominated functions (same wall as http_client's LOG residuals).
 
 ## Key asm->source findings
 - The asio completion binds use `boost::asio::placeholders::error` /
