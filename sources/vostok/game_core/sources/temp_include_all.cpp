@@ -251,14 +251,11 @@ namespace vostok
 		proc.do_activate( *skeleton );
 		example_callback( reinterpret_cast< pcstr >( &proc ) );
 
-		// escape the returned float4x4 so LTCG keeps the (observed) body
+		// escape the returned float4x4 so LTCG keeps the (observed) body.
+		// get_bone_matrix_in_object_space_impl is recursive (calls itself), so the
+		// wrapper here keeps a real standalone impl body - no address-of anchor needed.
 		float4x4 result	= survarium::get_bone_matrix_in_object_space( *bone, *skeleton, matrices );
 		example_callback( reinterpret_cast< pcstr >( &result ) );
-
-		// keep the impl standalone too (also reachable via the wrapper)
-		float4x4 ( *fn )( animation::skeleton_bone const&, float4x4 const*, animation::skeleton_bone const* ) =
-			&survarium::get_bone_matrix_in_object_space_impl;
-		example_callback( reinterpret_cast< pcstr >( fn ) );
 	}
 
 	void use_medkit( )
@@ -505,19 +502,10 @@ namespace vostok
 
 		// The setters write members that get_value() does not read, so the
 		// object must escape or LTCG dead-store-eliminates each store (the
-		// same elision that empties the constant-only ctor - see README).
-		// Take each setter's address to force its standalone body to be kept,
-		// then escape &calc through the opaque example_callback so the stores
-		// it performs are observed.
-		typedef void ( survarium::weapon_dispersion_calculator::*setter_t )( const float );
-		setter_t setters[ 3 ] =
-		{
-			&survarium::weapon_dispersion_calculator::set_reload_dispersion_amount,
-			&survarium::weapon_dispersion_calculator::set_one_shoot_dispersion_amount,
-			&survarium::weapon_dispersion_calculator::set_aiming_speed,
-		};
-		example_callback( reinterpret_cast< pcstr >( &setters ) );
-
+		// same elision that empties the constant-only ctor - see README). The
+		// direct calls below keep the setter bodies (also genuinely reached via
+		// dispersion_calculator::set_weapon/tick -> m_weapon_calculator.set_*),
+		// so the former member-fn-pointer address-of array was redundant.
 		calc.set_reload_dispersion_amount( 10.0f );
 		calc.set_one_shoot_dispersion_amount( 20.0f );
 		calc.set_aiming_speed( 30.0f );
@@ -1173,45 +1161,14 @@ namespace vostok
 	}
 
 
-	void use_game_core_jump_logic_state_inactive( )
-	{
-		// initialize()/is_ready_for_transition() are header inline overrides. Take
-		// their member-fn addresses to ODR-use them and force a standalone
-		// (un-inlined) out-of-line body for each, then escape the pointers so the
-		// uses are observed. Do NOT construct an instance: instantiating the class
-		// would emit its vtable and force codegen of the still-STUB
-		// selected_animations (no return -> C4716/LNK1257). Address-of touches only
-		// these two members, which is all this unit needs.
-		void ( survarium::jump_logic_state_inactive::*init )( )        = &survarium::jump_logic_state_inactive::initialize;
-		bool ( survarium::jump_logic_state_inactive::*ready )( ) const = &survarium::jump_logic_state_inactive::is_ready_for_transition;
-		example_callback( reinterpret_cast< pcstr >( &init ) );
-		example_callback( reinterpret_cast< pcstr >( &ready ) );
-	}
-
-	void use_game_core_jump_logic_state_landing( )
-	{
-		// These are VIRTUAL header inline overrides. Address-of a virtual member yields
-		// a vtable thunk, NOT the body, so it does not ODR-use the body. Use a QUALIFIED
-		// (devirtualized, non-virtual) call on a fabricated pointer: that ODR-uses the
-		// exact body WITHOUT constructing an instance, so the vtable is never emitted and
-		// the still-STUB selected_animations is never codegen'd (the #148 C4716 trap).
-		// is_ready_for_transition is PRIVATE (target ?...@@EBE_NXZ) -> anchor befriended.
-		survarium::jump_logic_state_landing&	s	= *reinterpret_cast< survarium::jump_logic_state_landing* >( NULL );
-		s.survarium::jump_logic_state_landing::execute( );
-		bool r = s.survarium::jump_logic_state_landing::is_ready_for_transition( );
-		example_callback( reinterpret_cast< pcstr >( &r ) );
-	}
-
-	void use_game_core_jump_logic_state_start( )
-	{
-		// Qualified devirtualized calls on a fabricated pointer (see landing above):
-		// ODR-use execute()/is_ready_for_transition() bodies without emitting the vtable.
-		// is_ready_for_transition is PRIVATE (target ?...@@EBE_NXZ) -> anchor befriended.
-		survarium::jump_logic_state_start&	s	= *reinterpret_cast< survarium::jump_logic_state_start* >( NULL );
-		s.survarium::jump_logic_state_start::execute( );
-		bool r = s.survarium::jump_logic_state_start::is_ready_for_transition( );
-		example_callback( reinterpret_cast< pcstr >( &r ) );
-	}
+	// claude@MATCH: the three jump_logic_state anchors (inactive/landing/start) were
+	// removed. The whole jump_logic_state_{inactive,landing,start} family currently
+	// scores 0% in report.json - none of these bodies is genuinely matched yet (the
+	// classes are not wired to a real caller). The anchors only manufactured base
+	// symbols (an ICF-folded standalone for the trivial initialize/execute/
+	// is_ready_for_transition overrides, or a 0%-scoring qualified-call body) that do
+	// not match the target's codegen. Source bodies stay; they will earn a real % once
+	// jump_logic exercises them. (Verified: removal left matched_functions unchanged.)
 
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
@@ -1749,9 +1706,6 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_serialization( NULL, NULL );
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
-	vostok::use_game_core_jump_logic_state_inactive();
-	vostok::use_game_core_jump_logic_state_landing();
-	vostok::use_game_core_jump_logic_state_start();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
