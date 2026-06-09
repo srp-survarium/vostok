@@ -83,8 +83,9 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      worker pays the fixed setup (shared docs, class decl, member offsets, anchor,
      context) ONCE per unit, so more functions per worker = fewer tokens (the rebuild
      is ~10 min and backgrounded - no longer the thing to amortize). Rule of thumb:
-     **3-4 small multi-line functions** per unit, **up to ~10 if they are
-     one-liners**, and **fewer (down to 1) the larger/harder they are**. Prefer a
+     **6-9 small multi-line functions** per unit, **up to ~12 if they are
+     one-liners**, and **fewer (down to 1-2) the larger/harder they are**
+     (bumped from 3-4/~10 per sushi, 2026-06-09 - the setup overhead dominated). Prefer a
      related cluster - the same class, or sibling classes with identical shape
      (e.g. the `weapon_core_*_idle_state` variants all being {ctor,
      `weapon_and_hands_expression`, `get_weapon_lexeme_pair`, `cook_template::new_object`})
