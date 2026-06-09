@@ -6,6 +6,7 @@
 #include <vostok/game_core/booby_trap_core.h>
 
 #include <vostok/game_core/base_player.h>
+#include <vostok/game_core/booby_trap_set_core.h>
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_user.h>
 #include <vostok/game_core/inventory_holder.h>
@@ -13,6 +14,8 @@
 
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/physics/base_physics_object.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -589,46 +592,31 @@ void booby_trap_core::unregister_tick( scheduler& scheduler )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: owner serializes the world-object header, then trap state (u8), transform
+// position (float3) and Euler angles (float3). ASSERTs compiled out. trail: booby_trap_core_serialize.md
 void booby_trap_core::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59b75b>|0x00b|+0x00c:'358'
-	// <0x59b767>|0x017|+0x026:'359'
-	// <0>
-	// <0x59b78d>|0x03d|+0x013:'361'
-	// <0x59b7a0>|0x050|+0x015:'362'
-	// <0x59b7b5>|0x065|+0x019:'363'
-	// ******
+	m_owner->serialize_game_world_object_header( *this, packet );
+
+	packet.append( m_trap_state );
+	packet.append( (math::float3 const&)m_transform.c );
+	packet.append( m_transform.get_angles_xyz( ) );
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: read trap state + position + angles, rebuild the transform (rotation *
+// translation), let the owner insert the trap, then drive the trap to the read state when it
+// is not the default armed state. ASSERTs compiled out. trail: booby_trap_core_serialize.md
 void booby_trap_core::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// booby_trap_state 			state
-	// float4x4 					transform
-	// float3 						angles
-	// float3 						position
-	// ******
+	booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );
+	math::float3		position	= reader.r< math::float3 >( );
+	math::float3		angles		= reader.r< math::float3 >( );
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x59b68f>|0x00f|+0x00e:'370'
-	// <0x59b69d>|0x01d|+0x00b:'371'
-	// <0x59b6a8>|0x028|+0x00b:'372'
-	// <0>
-	// <0x59b6b3>|0x033|+0x00c:'374'
-	// <0x59b6bf>|0x03f|+0x00c:'375'
-	// <0>
-	// <0x59b6cb>|0x04b|+0x034:'377'
-	// <0x59b6ff>|0x07f|+0x02a:'378'
-	// <0>
-	// <0x59b729>|0x0a9|+0x006:'380'
-	// <0x59b72f>|0x0af|+0x017:'381'
-	// ******
+	float4x4			transform	= math::create_rotation( angles ) * math::create_translation( position );
+	m_owner->insert_trap( *this, transform );
+
+	if ( state != booby_trap_state_armed )
+		switch_to_state( state );
 }
 
 // STATE[100%|DONE]
