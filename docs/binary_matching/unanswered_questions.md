@@ -24,28 +24,6 @@ prior example of a pattern; `rg` only finds literal strings.
 IDEA: embed the tree, expose a query tool the agent can call.
 STATUS: missing
 
-### Single-function / incremental diff without a full rebuild
-WANT: rebuild just the edited TU and read that one function's match in seconds.
-WHY: a correct (EXE-relinking) `rebuild.py` is ~10 minutes - the ~1-minute
-figure is the module-only build (`rebuild.py <module>`), which skips the link and
-gives a STALE score, so it cannot substitute. A per-TU rebuild would tighten the
-loop over hundreds of functions.
-WHY: a correct (EXE-relinking) `rebuild.py` does a full whole-EXE relink - the
-module-only build (`rebuild.py <module>`) skips the link and gives a STALE score,
-so it cannot substitute. A per-TU rebuild would tighten the loop over hundreds of
-functions.
-IDEA: compile one `.obj` under Wine and run `objdiff-cli` on that unit only;
-cache everything else.
-CAVEAT: rarely viable - a single-TU compile does not run LTCG (a whole-program,
-link-time step), so LTCG-affected functions will not match at all in such a diff
-even when the full link does. Doable in theory for LTCG-insensitive code; expect
-LTCG artifacts to diverge.
-STATUS: nice-to-have, LOWER priority now - the rebuild (~10 min, backgrounded) is no
-longer the loop bottleneck; agent token cost is, and a faster per-TU relink does not
-save tokens. Worth it only if it also cuts an iteration.
-STATUS: nice-to-have - the real loop cost is the full EXE relink, not the
-module-only build, so anything that avoids a full relink per function helps.
-
 ### Type/declaration lookup in the target structure
 WANT: "give me the declaration of `class foo`" from `binaries/structure/target`
 as a command.
@@ -53,12 +31,6 @@ WHY: the missing-types step (loop section 4) is currently a manual grep through
 PDB-generated headers.
 IDEA: a small lookup over the target structure keyed by symbol name, returning
 the decl plus its source location.
-STATUS: missing
-
-### STUB progress tracker
-WANT: a live count of matched / parked / remaining functions per module.
-WHY: to pick the next unit and to know when a run is done.
-IDEA: derive it from the `STATE[...]` markers + `report.json`.
 STATUS: missing
 
 ### Assembly of a (suspected) inlined function
@@ -81,32 +53,7 @@ STATUS: partial (standalone inlinees fetchable now; inlined-everywhere ones are 
 
 ---
 
-## Done / closed
-
-Moved here once delivered or settled - kept for the rationale, out of the active list.
-
-### `pdb_fetch --view diff` % vs the scoreboard  [done]
-WANT: the diff view's headline % to mean roughly the same as `report.json`.
-WAS: `pdb_fetch` printed objdiff-core 2.5.0's *strict* per-instruction match (every
-differing instruction a full miss), e.g. 56% where `report.json` fuzzy said 89% -
-a foot-gun.
-DONE: `pdb_fetch` now computes a **target-byte-weighted fuzzy** match (partial
-credit per instruction; base-only `-` rows don't penalize), header reads
-`objdiff fuzzy match P%`. Tracks `report.json` closely but slightly conservatively
-(89.6 vs 89.3 on `notify_objects_inside`) - not bit-identical, since `report.json`
-comes from a different objdiff version. `report.json`/`STATE` stays authoritative.
-
-### Target assembly on demand  [done]
-WANT: a stable `vostok-pdb-parser` subcommand that prints a target function's
-disassembly by name.
-DONE: `pdb_fetch --view target` / `pdb_rich_query` over binaries/rich/target
-(agentic_loop.md section 2). Ships via the flake binary.
-
-### Instruction-level base-vs-target diff as text  [done]
-WANT: the agent reads the exact diverging instructions, not just a percentage.
-DONE: `pdb_fetch --view diff --objdiff-*` emits the per-function operand-aware
-instruction diff (`~`/`+`/`-` rows) with base source interleaved (agentic_loop.md
-section 2a). `report.json` stays the scoreboard.
+## Closed
 
 ### Cluster detection from PDB inline-site records  [closed - not possible]
 WANT: auto-detect which source functions are inlined into one target span (the
@@ -118,18 +65,3 @@ and our base PDB, checked at the raw CodeView-kind level with 0 parse errors. Th
 debug info only appears in later toolchains. So clusters cannot be derived from the
 PDB; infer inlining reactively from the diff (a missing/extra `call` plus a large
 statement-offset delta), per section 5.
-
-### Reconstruct the full carcass (VAs/+delta/[n]/<n>) from `--view structure`  [open]
-WANT: a reliable way to regenerate the STANDARD `// FUNCTION BODY` carcass
-(`<absVA>|offset|+delta[|[n]]:'srcline'` + the no-address `<n>` empty lines) for a
-function whose generated structure file is missing (e.g. a template member like
-`body_part_parameters::fill_new_stats_item<statistics_item<46,16>>`, #119).
-PROBLEM: `pdb_fetch --view structure` lists only the addressed statements in a
-non-standard `offset <size> Lline` form - it DROPS the empty/no-address `<n>` lines
-and is not the `<VA>|offset|+delta:'srcline'` carcass format. For #119 we converted by
-hand (absVA = rva + offset, +delta = <size>) and re-inserted the `<n>` markers by
-inferring them from the GAPS in the source line numbers (288/292/296/298/304 absent =
-no-address lines). That hand method is fragile; the `<n>` placement is a guess.
-OPEN: should `pdb_fetch` emit the standard carcass (incl. empty lines) directly, so
-matchers/reviewers don't reconstruct it by hand? Until then, treat a `--view structure`
-carcass as approximate.
