@@ -27,7 +27,7 @@ public:
 	virtual	void			create_resource					( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer ) override;
 	virtual	void			destroy_resource				( resources::unmanaged_resource* resource ) override;
 
-public:
+private:
 			void			on_subresources_ready			( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
 
 private:

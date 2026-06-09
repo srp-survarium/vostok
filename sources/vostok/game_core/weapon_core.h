@@ -65,7 +65,7 @@ public:
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const										{ return m_magazine_capacity;		}	// STATE[STUB]
+			u16									get_magazine_capacity			( ) const;	// STATE[STUB] target keeps this out-of-line (called from the double-barreled ctor ASSERT_CMP_U)
 
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
@@ -81,7 +81,9 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling; /* no source */ }
 
-			bool								ready_to_reload					( ) const { return true; /* sushi@TODO: A LOT OF LOGIC */ }			// STATE[STUB]
+			// claude@NOTE: out-of-line (target symbol @0x0ac370) so callers emit `call ready_to_reload`
+			// instead of inlining the stub; matches can_and_must_reload_predicate's `call ready_to_reload`.
+			bool								ready_to_reload					( ) const;			// STATE[STUB] sushi@TODO: A LOT OF LOGIC
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
 			weapon_targets						get_target						( ) const { return m_target; }										// STATE[STUB]
@@ -90,7 +92,7 @@ public:
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
-			u16									fire_queue_length				( ) const {  return m_weapon_fire_queue_types[m_fire_queue_type]; } // STATE[STUB]
+			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// STATE[STUB]
@@ -146,7 +148,10 @@ public:
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const { return m_aimed; }				// STATE[STUB]
-	inline	bool								is_idle							( ) const { /* no source */ }
+	// claude@MATCH: is_idle must return a value - a bodyless value-returning inline
+	// fails LTCG codegen (LNK1257). Minimal `return m_is_idle;` (mirrors is_firing/is_toggling);
+	// weapon_core owner can refine the predicate later.
+	inline	bool								is_idle							( ) const { return m_is_idle; }
 
 			void								unload_chambered_round			( );
 			void								unload_ammo						( );
@@ -266,7 +271,7 @@ public:
 
 			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
 
-	inline	weapon_core_base_state&				current_base_state				( ) const { /* no source */ }
+	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
 													float		animation_length,

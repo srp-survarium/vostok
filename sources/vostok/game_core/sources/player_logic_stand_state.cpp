@@ -4,21 +4,22 @@
 
 #include "pch.h"
 #include "player_logic_stand_state.h"
+#include <vostok/game_core/base_player.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::player_logic_stand_state::player_logic_stand_state(survarium::weapon_user_animations_selector&)
+// STATE[100%|DONE]
 player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_stand )
 {
-	// FUNCTION BODY
-	// <0x7806e0>|0x000|+0x01e:'32'	{
-	// <0x7806fe>|0x01e|      :'33'	}
-	// ******
 }
 
-// STATE[STUB]
+// STATE[None|PARTIAL]: UNREACHABLE stub (report.json unscored - paired, body too divergent;
+// NOT 0%). Real body (target @0x770960) is the lexeme machinery (animation_lexeme via
+// get_animation_impl<..>, stand_animations_captions static, linear_interpolator, the
+// animation_lexeme_parameters builder). Same machinery wall as the crouch/jump siblings
+// (needs get_animation_impl bodies + animation_lexeme_parameters chain), out of this unit.
+// Decoded asm in the .md.
 // vostok::animation::mixing::animation_lexeme survarium::player_logic_stand_state::movement_lexeme(vostok::mutable_buffer&, const unsigned int, const vostok::animation::body_part_masks_enum, const bool, const bool, const bool) const
 animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	mutable_buffer&						buffer,
@@ -57,9 +58,14 @@ animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	// <0>
 	// <0x780b94>|0x234|+0x021:'63'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[None|PARTIAL]: UNREACHABLE stub (report.json unscored - paired, body too divergent;
+// NOT 0%). Real body (target @0x770710) is recoil lexeme machinery
+// (animation_lexeme_parameters builder, managed_resource_ptr additive animation,
+// interpolators). Same lexeme/operator machinery wall as the crouch sibling, out of this
+// unit. Decoded asm in the .md.
 // vostok::animation::mixing::expression survarium::player_logic_stand_state::get_recoil_animation_lexeme(survarium::animation_type_enum, const bool, const float, vostok::animation::base_interpolator const&, vostok::mutable_buffer&, const bool, const unsigned int, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&) const
 animation::mixing::expression player_logic_stand_state::get_recoil_animation_lexeme(
 	animation_type_enum					animation_index,
@@ -99,9 +105,15 @@ animation::mixing::expression player_logic_stand_state::get_recoil_animation_lex
 	// <0x780918>|0x208|+0x011:'92'
 	// <0x780929>|0x219|+0x02f:'93'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[None|PARTIAL]: UNREACHABLE stub (report.json unscored - paired, body too divergent;
+// NOT 0%). Real body (target @0x770bc0) is the look-lexeme machinery: get_animation_impl<..>,
+// stand_animations_captions, instant/linear interpolators, look_time_factor/look_time_calculator,
+// animation_lexeme_parameters builder, three near-identical lexeme-build blocks summed via the
+// expression operator+ overload (the same operator+(expression&,expression const&) that blocks
+// selected_animations). Lexeme/operator machinery wall, out of this unit. Decoded asm in the .md.
 // vostok::animation::mixing::expression survarium::player_logic_stand_state::look_expression(vostok::mutable_buffer&, const unsigned int, const bool, const bool, survarium::weapon_animation_parameters const&, vostok::animation::mixing::animation_lexeme&) const
 animation::mixing::expression player_logic_stand_state::look_expression(
 	mutable_buffer&						buffer,
@@ -194,9 +206,24 @@ animation::mixing::expression player_logic_stand_state::look_expression(
 	// <0>
 	// <0x78101f>|0x45f|+0x044:'162'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[8.08%|PARTIAL]: UNREACHABLE stub (emitted, paired). Real body is verified from
+// the target @0x771070 (decoded in the .md):
+//   u32 movement_animation_index = player_logic_base_state::movement_animation_index( m_user->input() );
+//   animation::mixing::animation_lexeme main_lexeme = movement_lexeme( buffer,
+//       movement_animation_index, weapon_parameters.body_part_mask, weapon_parameters.is_aimed,
+//       is_third_view, weapon_parameters.is_firing );
+//   return std::make_pair( look_expression( buffer, movement_animation_index,
+//       weapon_parameters.is_aimed, is_third_view, weapon_parameters, main_lexeme )
+//       + animation::mixing::expression( main_lexeme ), main_lexeme );
+// (Unlike crouch's selected_animations there is NO broken_legs_count() branch - stand uses
+// the input index directly.) BLOCKED: target calls free `mixing::operator+(expression&,
+// expression const&) -> expression`, but only the template operator+(T1&,T2&) -> addition_lexeme&
+// is declared (mixing_addition_lexeme.h) -> C2678. The expression-returning overload is the
+// shared lexeme/operator+ machinery wall (same as crouch/jump), out of this unit. Also depends
+// on movement_lexeme/look_expression, themselves on the same wall.
 // stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::player_logic_stand_state::selected_animations(vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, const bool) const
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_stand_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
@@ -224,6 +251,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	// <4>
 	// <0x7810e4>|0x074|+0x0a1:'183'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
 } // namespace survarium

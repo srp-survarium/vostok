@@ -13,11 +13,13 @@ namespace survarium {
 
 class weapon_core_inactive_state : public weapon_core_base_state {
 public:
-	inline	explicit							weapon_core_inactive_state	( weapon_core& weapon ) : weapon_core_base_state( weapon ) { }
+	inline	explicit							weapon_core_inactive_state	( weapon_core& weapon ) : weapon_core_base_state( weapon, false ) { }
 
 	// STATE[STUB]
 	virtual	bool								is_ready_for_transition		( ) const override { return true; }
-	virtual	bool								has_animation_ended			( ) const { /* no source */ }
+	// STATE[STUB]: not in this unit's scope; placeholder `return true` so emitting the
+	// vtable (now anchored via create_resource) does not trip C4716 -> LNK1257.
+	virtual	bool								has_animation_ended			( ) const { return true; }
 
 	// STATE[STUB]
 	virtual	void								on_animation_end			( resources::managed_resource_ptr const& animation, u32 callback_time_in_ms ) { VOSTOK_UNREFERENCED_PARAMETERS( animation, callback_time_in_ms ); }

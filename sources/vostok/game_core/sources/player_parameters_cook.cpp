@@ -33,7 +33,10 @@ public:
 	/* 0x0000 */	float		m_coeff;
 }; // struct bodypart_health_regen_scale_predicate
 
-// STATE[84.21%|PARTIAL]
+// STATE[81.10%|PARTIAL]: skeleton matches; residual is the damage_model_ptr copy-ctor
+// inlining (out-of-line call 997h in target vs inlined in base) shifting the frame by 8
+// bytes -> stack-slot cascade, plus the documented add_damage_protector loop-order
+// divergence at the tail (sushi@MATCH line ~126). Register/slot + copy-elision wall.
 void player_parameters_modifyer::apply( base_player* player )
 {
 	damage_model_ptr damage_model = player->damage_model( );
@@ -242,7 +245,7 @@ void player_parameters_modifyer::apply( base_player* player )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 float get_booster_value( boosters_enum booster_id, player_profile const& profile )
 {
 	for ( u8 i = 0 ; i < 11 ; ++i ) // sushi@TODO: Shouldn't be hardcoded like this. Instead there should be something like boosters_no constant, or something. Do that at some point.
@@ -251,15 +254,6 @@ float get_booster_value( boosters_enum booster_id, player_profile const& profile
 			return profile.boosters[i].value;
 	}
 	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x5ab294>|0x004|+0x017|[1]:'153'
-	// <0>
-	// <0x5ab2ab>|0x01b|+0x011:'155'
-	// <0x5ab2bc>|0x02c|+0x00d:'156'
-	// <0x5ab2c9>|0x039|+0x002:'157'
-	// <0x5ab2cb>|0x03b|+0x002:'158'
-	// ******
 }
 
 struct player_parameters_cooker_data {
@@ -273,18 +267,17 @@ STATIC_SIZE_ASSERT(player_parameters_cooker_data, 0x8);
 // player_parameters_modifyer_cook
 //
 
-// STATE[66.69%|PARTIAL]
+// STATE[100%|DONE]
 player_parameters_modifyer_cook::player_parameters_modifyer_cook( ) :
 	resources::translate_query_cook( resources::player_parameters_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
-
-	// FUNCTION BODY
-	// <0x5ab315>|0x035|+0x00c:'165'
-	// ******
 }
 
-// STATE[89.62%|PARTIAL] sushi@TODO: Why don't we need to request for data here? Why is everything already in cooker_data?
+// STATE[88.13%|PARTIAL]: confirmed config-read copy-elision wall. Statement skeleton
+// matches the carcass 1:1; residual is register allocation (target enregisters into
+// esi/edi where base spills to stack) + frame-size delta -> stack-slot cascade. Not
+// source-steerable. sushi@TODO: Why don't we need to request for data here? Why is everything already in cooker_data?
 void player_parameters_modifyer_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	player_parameters_cooker_data* cooker_data = NULL;
@@ -499,7 +492,9 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 	// <0x5abbf2>|0x892|+0x00c:'274'	parent.finish_query( result_success, assert_on_fail_true );
 	// ******
 }
-// STATE[31.00%|PARTIAL]
+// STATE[49.75%|PARTIAL,LTCG]: source matches the target exactly; the residual is purely a
+// call-boundary arg-passing difference - target pushes &resource (the T*& of delete_helper)
+// on the stack and saves edi, base passes it in register edi. Source-identical; LTCG wall.
 void player_parameters_modifyer_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );

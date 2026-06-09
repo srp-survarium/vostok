@@ -13,7 +13,9 @@ namespace survarium {
 static bool s_recoil_use_pseudo_random_value = true; // <0x7db780>
 static console_commands::cc_bool s_recoil_use_pseudo_random_cc( "recoil_use_pseudo_random", s_recoil_use_pseudo_random_value, false, console_commands::command_type_engine_internal );
 
-// STATE[60.74%|PARTIAL]: pow inlined in base, after that is fixed further things need to be verified
+// STATE[21.57%|PARTIAL]: LTCG inlines math::pow(float,int) in the target (only
+// pow_impl is an out-of-line call); our build emits pow(float,int) as a call,
+// shifting the whole x87 stack schedule. Not source-steerable from this unit.
 float pseudo_random::random_f( const float range )
 {
 	float pi_x24	= math::pi * 24.0f;
@@ -31,7 +33,7 @@ float pseudo_random::random_f( const float range )
 	// ******
 }
 
-// STATE[BLOCKED]: Ghidra script didn't generate anything for `weapon_recoil_calculator`. Error is not returned at all.
+// STATE[100%|DONE]
 weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	m_random							( 0 ),
 	m_pseudo_random						( 0 ),
@@ -50,14 +52,12 @@ weapon_recoil_calculator::weapon_recoil_calculator( ) :
 	m_target_recoil_koef				( 0.0f ),
 	m_last_time_in_ms					( 0 )
 {
-	// FUNCTION BODY
-	// <0x58e310>|0x000|+0x102:'46'	{
-	// <0>
-	// <0x58e412>|0x102|      :'48'	}
-	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[93.90%|PARTIAL]: instruction stream matches; residual is LTCG inlining of
+// std::min<float> (target keeps an out-of-line call to stlp_std::min<float>; our
+// build inlines the ternary) plus the resulting stack-slot shift. Not steerable
+// from this unit.
 void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float time_scale )
 {
 	if ( !m_last_time_in_ms )
@@ -79,7 +79,7 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 		m_time_since_last_dispersion_change += dt_sec;
 		m_time_since_last_dispersion_change = std::min( m_time_since_last_dispersion_change, m_interpolator.transition_time( ) );
 
-		if ( m_additive_recoil_timer != 0.0 )
+		if ( m_additive_recoil_timer != 0.0f )
 		{
 			if ( dt_sec < m_additive_recoil_timer )
 			{
@@ -96,7 +96,7 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 				m_target_vertical_koef		= m_vertical_koef + math::cos( additive_dispersion_angle_rad ) * additive_dispersion_amount;
 				m_target_horizontal_koef	= m_horizontal_koef + math::sin( additive_dispersion_angle_rad ) * additive_dispersion_amount;
 
-				float total_square_amount = math::sqr( m_target_horizontal_koef ) + math::sqr( m_target_vertical_koef );
+				float total_square_amount = math::sqr( m_target_vertical_koef ) + math::sqr( m_target_horizontal_koef );
 				if ( total_square_amount > 1.0f )
 				{
 					float total_amount = math::sqrt( total_square_amount );
@@ -184,7 +184,10 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 	// ******
 }
 
-// STATE[BLOCKED]: sushi@TODO: Why two recoil types? m_target_vertical_koef & m_target_horizontal_koef vs. m_target_recoil_koef
+// STATE[95.10%|PARTIAL]: instruction stream matches; residual is a +0xC frame-size
+// diff and the `first_shoot` bool short-circuit temp stored as a dword in our build
+// vs a byte in the target (temp-width codegen). sushi@TODO: Why two recoil types?
+// m_target_vertical_koef & m_target_horizontal_koef vs. m_target_recoil_koef
 void weapon_recoil_calculator::fire( )
 {
 	weapon_recoil_params const& weapon_params = m_weapon->get_recoil_params( );
@@ -192,13 +195,13 @@ void weapon_recoil_calculator::fire( )
 	float force_koef		= get_random_amount( 1.0f );
 	bool first_shoot		= m_target_vertical_koef == 0.0f && m_target_horizontal_koef == 0.0f;
 
-	float recoil			= m_player_recoil_multiplier * force_koef * first_shoot ? weapon_params.first_shoot_side_recoil : weapon_params.shoot_side_recoil;
+	float recoil			= ( first_shoot ? weapon_params.first_shoot_side_recoil : weapon_params.shoot_side_recoil ) * force_koef * m_player_recoil_multiplier;
 	float recoil_angle_rad	= math::deg2rad( recoil_angle_deg );
 
 	m_target_vertical_koef		= m_vertical_koef + math::cos( recoil_angle_rad ) * recoil;
 	m_target_horizontal_koef	= m_horizontal_koef + math::sin( recoil_angle_rad ) * recoil;
 
-	float total_square_amount = math::sqr( m_target_horizontal_koef ) + math::sqr( m_target_vertical_koef );
+	float total_square_amount = math::sqr( m_target_vertical_koef ) + math::sqr( m_target_horizontal_koef );
 	if ( total_square_amount > 1.0f )
 	{
 		float total_amount = math::sqrt( total_square_amount );
@@ -206,7 +209,7 @@ void weapon_recoil_calculator::fire( )
 		m_target_horizontal_koef /= total_amount;
 	}
 
-	float recoil_amount		= m_player_recoil_multiplier * force_koef * first_shoot ? weapon_params.first_shoot_back_recoil : weapon_params.shoot_back_recoil;
+	float recoil_amount		= ( first_shoot ? weapon_params.first_shoot_back_recoil : weapon_params.shoot_back_recoil ) * force_koef * m_player_recoil_multiplier;
 	m_target_recoil_koef	= math::min( m_target_recoil_koef + recoil_amount, 1.0f );
 
 	m_time_since_last_dispersion_change = 0.0f;
@@ -243,7 +246,9 @@ void weapon_recoil_calculator::fire( )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
+// The two trailing assignments duplicate vert/horiz koef; reproduced verbatim
+// from the target (matching invariant - do not "fix" the redundancy).
 void weapon_recoil_calculator::reset( )
 {
 	m_time_since_last_dispersion_change	= 0.0f;
@@ -253,55 +258,39 @@ void weapon_recoil_calculator::reset( )
 	m_target_horizontal_koef 			= 0.0f;
 	m_target_vertical_koef 				= 0.0f;
 	m_target_horizontal_koef 			= 0.0f;
-
-
-	// FUNCTION BODY
-	// <0x58dfe7>|0x007|+0x010:'151'
-	// <0x58dff7>|0x017|+0x010:'152'
-	// <0x58e007>|0x027|+0x010:'153'
-	// <0x58e017>|0x037|+0x010:'154'
-	// <0x58e027>|0x047|+0x010:'155'
-	// <0x58e037>|0x057|+0x010:'156'
-	// <0x58e047>|0x067|+0x010:'157'
-	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 void weapon_recoil_calculator::reload( )
 {
 	reset( );
-
-	// FUNCTION BODY
-	// <0x58e087>|0x007|+0x008:'162'
-	// ******
 }
 
-// STATE[BLOCKED]: sushi@TODO: What does that mean
+// STATE[100%|DONE]
 void weapon_recoil_calculator::chamber_a_round( )
 {
 	reset( );
-
-	// FUNCTION BODY
-	// <0x58e067>|0x007|+0x008:'167'
-	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[93.74%|PARTIAL]: instruction stream matches; residual is the two
+// math::abs(float) comparisons emitting x87 (fld/fcomip) in our build vs SSE
+// (comiss) in the target - a return-register difference at the abs() call
+// boundary (abs returns ST0 here, xmm0 in the target LTCG build).
 void weapon_recoil_calculator::process_compensation( const float dt_sec )
 {
 	weapon_recoil_params const& weapon_params = m_weapon->get_recoil_params( );
-	float additive_compensation_speed = math::sqrt( math::sqr( m_target_vertical_koef ) * math::sqr( m_target_horizontal_koef ) );
-	float compenstion_amount = m_player_compensation_multiplier * dt_sec * ( weapon_params.side_compensation_speed + additive_compensation_speed );
+	float additive_compensation_speed = math::sqrt( math::sqr( m_target_vertical_koef ) + math::sqr( m_target_horizontal_koef ) );
+	float compenstion_amount = ( weapon_params.side_compensation_speed + additive_compensation_speed ) * dt_sec * m_player_compensation_multiplier;
 
-	m_target_vertical_koef = compenstion_amount < math::abs( m_target_vertical_koef )
+	m_target_vertical_koef = math::abs( m_target_vertical_koef ) > compenstion_amount
 		? m_target_vertical_koef - ( math::sign( m_target_vertical_koef ) * compenstion_amount )
 		: 0.0f;
-	m_target_horizontal_koef = compenstion_amount < math::abs( m_target_horizontal_koef )
+	m_target_horizontal_koef = math::abs( m_target_horizontal_koef ) > compenstion_amount
 		? m_target_horizontal_koef - ( math::sign( m_target_horizontal_koef ) * compenstion_amount )
 		: 0.0f;
 
 	float additive_recoil_compensation_speed = math::sqrt( math::sqr( m_target_recoil_koef ) + math::sqr( m_target_recoil_koef ) );
-	float recoil_compensation_amount = m_player_compensation_multiplier * dt_sec * ( weapon_params.back_compensation_speed + additive_recoil_compensation_speed );
+	float recoil_compensation_amount = ( weapon_params.back_compensation_speed + additive_recoil_compensation_speed ) * dt_sec * m_player_compensation_multiplier;
 
 	m_target_recoil_koef = recoil_compensation_amount < m_target_recoil_koef
 		? m_target_recoil_koef - recoil_compensation_amount
@@ -320,7 +309,11 @@ void weapon_recoil_calculator::process_compensation( const float dt_sec )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[89.02%|PARTIAL]: cross-unit wall. The target keeps an out-of-line
+// `call weapon_core::get_user`; our build inlines get_user (weapon_core.h declares
+// it as an in-class inline reading m_user at +0x44C), shifting the frame +4 and
+// replacing the call with a mov chain. weapon_core.h is owned by another unit;
+// making get_user out-of-line there would close this. Otherwise byte-identical.
 float weapon_recoil_calculator::get_random_angle( const float range )
 {
 	if ( s_recoil_use_pseudo_random_value )
@@ -346,13 +339,14 @@ float weapon_recoil_calculator::get_random_angle( const float range )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[80.75%|PARTIAL]: same cross-unit get_user inline wall as get_random_angle
+// (target keeps the out-of-line call; our build inlines get_user).
 float weapon_recoil_calculator::get_random_amount( const float range )
 {
 	float k = s_recoil_use_pseudo_random_value
 		? ( 1.0f + math::sin( m_weapon->get_user( )->local_time( m_last_time_in_ms ) * 0.01f ) ) * 0.5f
 		: m_random.random_f( 1.0f );
-	float c_min_amaunt = math::max( 0.25, k ) * range;
+	float c_min_amaunt = math::max( 0.25f, k ) * range;
 	return c_min_amaunt;
 
 	// FUNCTION BODY
@@ -362,14 +356,10 @@ float weapon_recoil_calculator::get_random_amount( const float range )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 void weapon_recoil_calculator::set_weapon( weapon_core* weapon )
 {
 	m_weapon = weapon;
-
-	// FUNCTION BODY
-	// <0x58dfc7>|0x007|+0x009:'205'
-	// ******
 }
 
 } // namespace survarium

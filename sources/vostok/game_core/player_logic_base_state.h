@@ -69,13 +69,18 @@ protected:
 	// public `S`; either mismatches the target's symbol so objdiff can't pair it.
 	static	u32							movement_animation_index	( player_input const& input );
 
+	// claude@NOTE: protected (not private) so derived state overrides
+	// (e.g. player_logic_jump_state::is_ready_for_transition) can read m_user
+	// directly, as the target codegen does (no accessor call). Access level does
+	// not affect base_state's own byte output.
+	/* 0x0000 */	/* ai::fsm_state */
+	/* 0x0018 */	weapon_user_animations_selector&	m_owner;
+	/* 0x001c */	base_player*						m_user;
+
 
 private:
 	friend void ::vostok::use_game_core_player_logic_base_state( );
 
-	/* 0x0000 */	/* ai::fsm_state */
-	/* 0x0018 */	weapon_user_animations_selector&	m_owner;
-	/* 0x001c */	base_player*						m_user;
 	/* 0x0020 */	weapon_user_state_enum				m_weapon_user_state_id;
 	/* 0x0024 */	bool								m_is_weapon_weapon_visible;
 	/* 0x0025 */	bool								m_is_smoothing_needed;

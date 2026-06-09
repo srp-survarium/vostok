@@ -442,53 +442,172 @@ void legs_ik_processor::process_leg(
 
 	return;
 
-	// STRUCTURE DIFF:
-	// target: 0x6eafa0            base: 0x514e30
-	// ; void survarium::legs_ik_processor::process_leg(survarium::legs_ik_processor::leg_params&, vostok::math::float4x4 const&, vostok::math::float4x4 const&, vostok::math::float4x4*, vostok::math::float4x4 const&) ; target 76 stmts / base 79 stmts
-	// 0x011 <0x18> | 0x011 <0x24> | u32 const				toe_matrix_index	= params.toe_bone_index    - get_skeleton( ).get_root_bones_count( );   SIZE
-	// 0x029 <0x17> | 0x035 <0x23> | u32 const				foot_matrix_index	= params.foot_bone_index   - get_skeleton( ).get_root_bones_count( );   SIZE
-	// 0x040 <0x1b> | 0x058 <0x27> | u32 const				leg_matrix_index	= params.leg_bone_index    - get_skeleton( ).get_root_bones_count( );   SIZE
-	// 0x05b <0x18> | 0x07f <0x24> | u32 const				knee_matrix_index	= params.knee_bone_index   - get_skeleton( ).get_root_bones_count( );   SIZE
-	// 0x073 <0x1b> | 0x0a3 <0x27> | u32 const				up_leg_matrix_index	= params.up_leg_bone_index - get_skeleton( ).get_root_bones_count( );   SIZE
-	// .. same ..
-	// 0x15c <0x1d> | 0x198 <0x20> | float4x4				toe_obj_matrix		= matrices[toe_matrix_index] * foot_obj_matrix;   SIZE
-	// .. same ..
-	// 0x179 <0xd7> | 0x1b8 <0x159> | math::is_similar( target_foot_obj_matrix.c.xyz( ), foot_obj_matrix.c.xyz( ), math::epsilon_3 ) )   SIZE
-	// .. same ..
-	// 0x33f <0x3e> | 0x400 <0x41> | float3 const&			target_up_leg_to_foot_dir		= math::normalize( up_leg_obj_matrix.c.xyz( ) - target_foot_obj_matrix.c.xyz( ) );   SIZE
-	// .. same ..
-	// 0x3b3 <0x84> | 0x477 <0x8a> | float const				additive_len					= get_additional_length( math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) ), math::normalize( leg_obj_matrix.c.xyz( ) - foot_obj_matrix.c.xyz( ) ), knee_len );   SIZE
-	// --          | 0x501 <0x10> | float const				up_leg_alpha_angle				= get_angle( leg_len + additive_len, up_leg_to_foot_len, knee_len + additive_len );   ONLY base
-	// .. same ..
-	// 0x437 <0x3e> | 0x511 <0x47> | float3 const&			original_up_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );   SIZE
-	// --          | 0x558 <0x47> | float3 const&			target_up_leg_dir				= math::normalize( target_foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );   ONLY base
-	// .. same ..
-	// 0x475 <0x44> | 0x59f <0x33> | if ( !math::is_similar( target_up_leg_dir, original_up_leg_dir, math::epsilon_3 ) )   SIZE
-	// 0x4b9 <0x44> | 0x5d2 <0x41> | params.rotation_axis	= math::normalize( target_up_leg_dir ^ original_up_leg_dir );   SIZE
-	// 0x4fd <0x25> | --          | L216   ONLY target
-	// 0x522 <0x4a> | --          | L217   ONLY target
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// 0x657 <0x41> | 0x6fe <0x44> | float3 const&			original_knee_dir				= math::normalize( leg_obj_matrix.c.xyz( ) - knee_obj_matrix.c.xyz( ) );   SIZE
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// 0x732 <0x41> | 0x7dc <0x44> | float3 const&			original_leg_dir				= math::normalize( foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );   SIZE
-	// 0x773 <0x41> | 0x820 <0x44> | float3 const&			target_leg_dir					= math::normalize( target_foot_obj_matrix.c.xyz( ) - leg_obj_matrix.c.xyz( ) );   SIZE
-	// .. same ..
-	// 0x81f <0xd4> | 0x8cf <0xd7> | 0.0f );   SIZE
-	// .. same ..
-	// 0x90a <0x28> | 0x9bd <0x27> | float3 const&	foot_pos	= transform.transform_position( target_foot_obj_matrix.c.xyz( ) );   SIZE
-	// 0x932 <0x36> | 0x9e4 <0x38> | m_drawer->draw_cross( foot_pos, s_ik_foot_capsule_radius_value, math::color( 0x00u, 0xFFu, 0x00u, 0x00u ), false );   SIZE
-	// .. same ..
-	// 0x983 <0x3c> | 0xa37 <0x5b> | u32 const		toe_matrix_index	= get_skeleton( ).get_bone_index( get_skeleton( ).get_bone( params.foot_bone_index ) ) - get_skeleton( ).get_root_bones_count( );   SIZE
-	// 0x9bf <0x45> | 0xa92 <0x44> | float3 const&	toe_pos	= transform.transform_position( ( matrices[toe_matrix_index] * target_foot_obj_matrix ).c.xyz( ) );   SIZE
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0xae5 <0x29> | 0xbb7 <0x2c> | matrices[foot_matrix_index]		= math::get_relative_matrix( foot_obj_matrix, target_foot_obj_matrix );   SIZE
-	// .. same ..
-	// ; aligned 53, size-diffs 21, quantity-diffs 7
-	// VERDICT: STRUCTURE MATCH (shape ok) - the three braced IK-stage blocks are present; all SIZE rows are the get_root_bones_count()/is_similar/operator call-boundary temp-materialization and the get_root_bones_count spill (0xC per matrix index, target inlines it). The up_leg_alpha_angle/target_up_leg_dir ONLY base + L216/L217 ONLY target rows are an aligner swap around the get_angle call (both sides call it out-of-line), not a missing statement. trail: process_leg.md
+	// LOCALS
+	// float4x4 					up_leg_obj_matrix
+	// float4x4 					foot_obj_matrix
+	// float3 const& 				target_up_leg_to_foot_dir
+	// u32 							up_leg_matrix_index
+	// u32 							leg_matrix_index
+	// float4x4 					knee_obj_matrix
+	// float4x4 					toe_obj_matrix
+	// u32 							foot_matrix_index
+	// float 						leg_len
+	// u32 							toe_matrix_index
+	// float3 						foot_pos
+	// float 						up_leg_len
+	// float4x4 					leg_obj_matrix
+	// u32 							knee_matrix_index
+	// float 						knee_len
+	// float3 const& 				original_up_leg_to_foot_dir<1>
+	// float 						up_leg_alpha_angle<1>
+	// float 						additive_len<1>
+	// float 						up_leg_to_foot_len<1>
+	// float3 const& 				original_up_leg_dir<1>
+	// float3 const& 				target_up_leg_dir<1>
+	// float4x4 const& 				rotation_matrix<1>
+	// float4x4 const& 				alpha_rotation_matrix<1>
+	// float4x4 const& 				rotation_matrix<1>
+	// float3 const& 				original_knee_dir<1>
+	// float3 const& 				target_leg_dir<1>
+	// float4x4 const& 				rotation_matrix<1>
+	// float3 const& 				original_leg_dir<1>
+	// float3 const& 				foot_pos<1>
+	// float3 const& 				toe_pos<1>
+	// u32 							toe_matrix_index<1>
+	// ******
+
+	// SKIPPED BLOCKS
+	// <0x6fb8a8><1>
+	// <0x6fb91d><1>
+	// ******
+
+	// FUNCTION BODY
+	// <0x6fafb1>|0x011|+0x018:'166'
+	// <0x6fafc9>|0x029|+0x017:'167'
+	// <0x6fafe0>|0x040|+0x01b:'168'
+	// <0x6faffb>|0x05b|+0x018:'169'
+	// <0x6fb013>|0x073|+0x01b:'170'
+	// <0>
+	// <0x6fb02e>|0x08e|+0x01a:'172'
+	// <0x6fb048>|0x0a8|+0x01d:'173'
+	// <0x6fb065>|0x0c5|+0x01a:'174'
+	// <0>
+	// <0x6fb07f>|0x0df|+0x020:'176'
+	// <0x6fb09f>|0x0ff|+0x020:'177'
+	// <0x6fb0bf>|0x11f|+0x020:'178'
+	// <0x6fb0df>|0x13f|+0x01d:'179'
+	// <0x6fb0fc>|0x15c|+0x01d:'180'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x6fb119>|0x179|+0x0d7:'185'
+	// <0x6fb1f0>|0x250|+0x005:'186'
+	// <0>
+	// <0x6fb1f5>|0x255|+0x01f:'188'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x6fb214>|0x274|+0x0cb:'200'
+	// <0>
+	// <1>
+	// <0x6fb2df>|0x33f|+0x03e:'203'
+	// <0>
+	// <0x6fb31d>|0x37d|+0x036|[1]:'205'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x6fb353>|0x3b3|+0x084:'210'
+	// <0>
+	// <0x6fb3d7>|0x437|+0x03e:'212'
+	// <0>
+	// <0x6fb415>|0x475|+0x044:'214'
+	// <0x6fb459>|0x4b9|+0x044:'215'
+	// <0x6fb49d>|0x4fd|+0x025:'216'
+	// <0x6fb4c2>|0x522|+0x04a:'217'
+	// <0>
+	// <0x6fb50c>|0x56c|+0x02a:'219'
+	// <0x6fb536>|0x596|+0x024:'220'
+	// <0x6fb55a>|0x5ba|+0x029:'221'
+	// <0x6fb583>|0x5e3|+0x016:'222'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x6fb599>|0x5f9|+0x02f|[1]:'231'
+	// <0x6fb5c8>|0x628|+0x02f:'232'
+	// <0x6fb5f7>|0x657|+0x041:'233'
+	// <0x6fb638>|0x698|+0x029:'234'
+	// <0x6fb661>|0x6c1|+0x016:'235'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <0x6fb677>|0x6d7|+0x02f|[1]:'245'
+	// <0x6fb6a6>|0x706|+0x02c:'246'
+	// <0x6fb6d2>|0x732|+0x041:'247'
+	// <0x6fb713>|0x773|+0x041:'248'
+	// <0x6fb754>|0x7b4|+0x029:'249'
+	// <0x6fb77d>|0x7dd|+0x013:'250'
+	// <0x6fb790>|0x7f0|+0x010:'251'
+	// <0>
+	// <0x6fb7a0>|0x800|+0x01f:'253'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x6fb7bf>|0x81f|+0x0d4:'265'
+	// <0>
+	// <0x6fb893>|0x8f3|+0x017:'267'
+	// <0>
+	// <0x6fb8aa>|0x90a|+0x028:'269'
+	// <0x6fb8d2>|0x932|+0x036:'270'
+	// <0>
+	// <0x6fb908>|0x968|+0x01b:'272'
+	// <0>
+	// <0x6fb923>|0x983|+0x03c:'274'
+	// <0x6fb95f>|0x9bf|+0x045:'275'
+	// <0x6fb9a4>|0xa04|+0x031:'276'
+	// <0>
+	// <1>
+	// <2>
+	// <0x6fb9d5>|0xa35|+0x02f:'280'
+	// <0x6fba04>|0xa64|+0x02f:'281'
+	// <0x6fba33>|0xa93|+0x02f:'282'
+	// <0x6fba62>|0xac2|+0x023:'283'
+	// <0x6fba85>|0xae5|+0x029:'284'
+	// <0x6fbaae>|0xb0e|+0x023:'285'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// ******
 }
 
 // STATE[84.65%|PARTIAL]: large float4x4 IK math, full structure matched (all 64

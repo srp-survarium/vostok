@@ -7,10 +7,13 @@
 
 #include <vostok/game_core/weapon_core_reload_state_base.h>
 
+namespace vostok { void use_game_core_double_barreled_weapon_core_reload_state( ); }
+
 namespace survarium {
 
 class double_barreled_weapon_core_reload_state : public weapon_core_reload_state_base {
-public:
+protected:
+	// ctor mangles ??0...@@IAE@... -> protected, non-const
 			explicit							double_barreled_weapon_core_reload_state(
 													weapon_core&							weapon,
 													float									animation_timescale,
@@ -18,6 +21,8 @@ public:
 													u32										animations_count
 												);
 
+private:
+	// weapon_and_hands_expression mangles ?...@@EBE... -> private virtual const
 	virtual	animation::mixing::expression		weapon_and_hands_expression		(
 													mutable_buffer&							buffer,
 													bool									is_third_view,
@@ -25,6 +30,7 @@ public:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const override;
 
+	// get_weapon_lexeme_pair / get_user_hands_expression mangle ?...@@ABE... -> private const
 			weapon_lexeme_pair					get_weapon_lexeme_pair			( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
 
 			animation::mixing::expression		get_user_hands_expression		(
@@ -39,6 +45,10 @@ private:
 	/* 0x0000 */	/* weapon_core_reload_state_base */
 	/* 0x0148 */	resources::managed_resource_ptr		m_weapon_animations[2][2][2];
 	/* 0x0168 */	resources::managed_resource_ptr		m_user_animations[2][2][2];
+
+	// temp_include_all.cpp anchor; reaches the protected ctor / private new_object+virtuals.
+	template < typename T > friend class weapon_core_state_cook_template;
+	friend void ::vostok::use_game_core_double_barreled_weapon_core_reload_state( );
 }; // class double_barreled_weapon_core_reload_state
 
 STATIC_SIZE_ASSERT(double_barreled_weapon_core_reload_state, 0x188);

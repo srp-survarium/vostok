@@ -4,21 +4,22 @@
 
 #include "pch.h"
 #include "jump_logic_state_start.h"
+#include <vostok/game_core/weapon_user_animations_selector.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::jump_logic_state_start::jump_logic_state_start(survarium::jump_logic&)
-jump_logic_state_start::jump_logic_state_start( jump_logic& owner ) : jump_logic_base_state( owner )
+// STATE[100%|DONE]: base ctor, default resource_ptr @0x28, m_preface_interval_ended /
+// m_jump_interval_ended cleared; m_physics_jumped (0x2C) deliberately left uninitialised
+// to match target @0x6f8bd0 (no store to +0x2C).
+jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
+	: jump_logic_base_state( owner ),
+	  m_preface_interval_ended( false ),
+	  m_jump_interval_ended( false )
 {
-	// FUNCTION BODY
-	// <0x6f8bd0>|0x000|+0x037:'29'	{
-	// <0x6f8c07>|0x037|      :'30'	}
-	// ******
 }
 
-// STATE[STUB]
-// stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::jump_logic_state_start::selected_animations(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, survarium::weapon_animation_parameters const&)
+// STATE[9.43%|PARTIAL]: UNREACHABLE stub (unblocks the class). Real body verified but
+// blocked on the lexeme/expression operator+ machinery (see claude@TODO below).
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_start::selected_animations(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -31,14 +32,26 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	// animation::mixing::animation_lexeme look_lexeme
 	// ******
 
+	// claude@TODO: real body (verified from target @0x6e9210):
+	//   main_lexeme = get_main_lexeme( buffer, is_third_view,
+	//       weapon_parameters.is_aimed ? body_part_whole_body : weapon_parameters.body_part_mask );
+	//   look_lexeme = get_look_lexeme( buffer, is_third_view, look_calculator, main_lexeme );
+	//   return make_pair( expression( main_lexeme ) + look_lexeme, main_lexeme );
+	// Blocked: animation_lexeme has no default ctor + the expression/operator+ (addition_lexeme)
+	// machinery needs the get_main/get_look bodies and the addition_lexeme include resolved
+	// (same lexeme-machinery wall as pistol_weapon_core_fire_state). Left UNREACHABLE to unblock.
+
 	// FUNCTION BODY
 	// <0x6f9221>|0x011|+0x045:'37'
 	// <0x6f9266>|0x056|+0x026:'38'
 	// <0x6f928c>|0x07c|+0x088:'39'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[3.3%|PARTIAL]: UNREACHABLE stub (emitted, paired). Real body is large lexeme/
+// interpolator machinery (jump_logic::get_animation/get_animation_caption, fixed_vector
+// of animation_intervals, linear_interpolator) - separate machinery unit.
 // vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_start::get_main_lexeme(vostok::mutable_buffer&, const bool, const vostok::animation::body_part_masks_enum)
 animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
 {
@@ -98,9 +111,12 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 	// <0x6f91a4>|0x2a4|+0x05d:'81'
 	// <0>
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[7.07%|PARTIAL]: UNREACHABLE stub (emitted, paired). Real body is large lexeme/
+// lexeme_parameters machinery (jump_logic::get_animation/get_move_look_*, look_time_factor,
+// animation_lexeme_parameters) - separate machinery unit.
 // vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_start::get_look_lexeme(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, vostok::animation::mixing::animation_lexeme&)
 animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	mutable_buffer&						buffer,
@@ -143,9 +159,12 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	// <5>
 	// <0x6f8e70>|0x0f0|+0x07b:'114'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[5.83%|PARTIAL]: empty stub. Real body sets up two animation callbacks via
+// boost::bind + set_animation_callback (on_interval_end / on_jump_event) - boost::bind
+// machinery unit.
 // void survarium::jump_logic_state_start::initialize()
 void jump_logic_state_start::initialize( )
 {
@@ -159,17 +178,15 @@ void jump_logic_state_start::initialize( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::jump_logic_state_start::finalize()
+// STATE[100%|DONE]: two remove_animation_callback calls on m_jump_logic.owner()
 void jump_logic_state_start::finalize( )
 {
-	// FUNCTION BODY
-	// <0x6f8a09>|0x009|+0x022:'129'
-	// <0x6f8a2b>|0x02b|+0x01f:'130'
-	// ******
+	m_jump_logic.owner().remove_animation_callback( "jump", this );
+	m_jump_logic.owner().remove_animation_callback( animation::channel_id_on_animation_interval_end, this );
 }
 
-// STATE[STUB]
+// STATE[11.77%|PARTIAL]: UNREACHABLE stub. Real body reads animation_callback_params
+// fields (interval_id vs m_interval_id_to_wait_for) - needs that type's layout.
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_interval_end( animation::animation_callback_params& params )
 {
@@ -184,9 +201,11 @@ animation::callback_return_type_enum jump_logic_state_start::on_interval_end( an
 	// <2>
 	// <0x6f8aea>|0x09a|+0x002:'143'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
-// STATE[STUB]
+// STATE[10.52%|PARTIAL]: UNREACHABLE stub. Real body touches player_stamina (see CALL
+// SITE INFO) + animation_callback_params - separate machinery unit.
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_jump_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_jump_event( animation::animation_callback_params& params )
 {
@@ -209,6 +228,7 @@ animation::callback_return_type_enum jump_logic_state_start::on_jump_event( anim
 	// <2>
 	// <0x6f8bbd>|0x0bd|+0x002:'158'
 	// ******
+	UNREACHABLE_CODE( );
 }
 
 } // namespace survarium
