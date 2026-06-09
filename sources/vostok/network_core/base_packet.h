@@ -29,6 +29,7 @@ public:
 	template < typename T > friend class packet;
 	friend class packet_reader;
 	friend class tcp_packet;
+	friend class udp_match_packet;
 
 private:
 	/* 0x0000 */	pbyte		m_buffer;

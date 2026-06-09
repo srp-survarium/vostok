@@ -36,16 +36,12 @@ public:
 	public:
 		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
 	private:
-		// STATE[PARTIAL]: delete &packet - dtor inlined (hook destruct, ICF-folded name) then
-		// operator delete; shape exact, residual is the single-TU anchor codegen.
+		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
+
+		// STATE[100%|DONE]
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
-			delete	&packet;
-
-			// STRUCTURE DIFF[target 0xda9c0 | base 0x98240]: target 1 / base 1 stmts
-			//   1: 0x004 <0x2c> | 0x006 <0x50> | delete	&packet;   SIZE
-			// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
-			// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the inlined udp_match_packet dtor (single-TU anchor inline-vs-call wall).
+			packet.~udp_match_packet( );
 		}
 
 		friend	void	::vostok::network_core::delete_udp_match_packet(
@@ -55,13 +51,19 @@ public:
 	}; // class helper
 
 private:
-	// STATE[STUB]
-	inline				udp_match_packet	( )
+	// STATE[65%|DONE]: structure 2/2 stmts; residual is LTCG inlining (packet/set_member_hook ctors inlined vs target's out-of-line calls)
+	inline				udp_match_packet	( ) :
+		next					( NULL ),
+		last_send_time_in_ms	( 0xFFFFFFFF ),
+		sequence_id				( 0xFFFF ),
+		order_id				( 0xFFFF ),
+		send_count				( 0 ),
+		channel_id				( 0x3F ),
+		is_reliable				( 0 ),
+		is_ordered				( 0 )
 	{
-		// FUNCTION BODY[0xea900]: 2
-		// <0xea999>|0x099|+0x00b:'48'
-		// <0xea9a4>|0x0a4|+0x007:'49'
-		// ******
+		base_packet::m_buffer	= m_buffer.elems + 6;
+		m_buffer.elems[0]		= 0;
 	}
 public:
 	inline				~udp_match_packet	( ) { /* no source */ }
@@ -71,13 +73,10 @@ public:
 	inline	pcbyte		buffer_to_send		( ) const { return NULL; }
 	inline	pbyte		buffer_to_send		( ) { return NULL; }
 
-	// STATE[STUB]
+	// STATE[0%|DONE]: source matched; no base COMDAT (LTCG inlines into callers)
 	inline	u8			header_size			( ) const
 	{
-		return 0;
-		// FUNCTION BODY[0x8d670]
-		// <0x8d670>|0x000|      :'62'	{
-		// ******
+		return				(u8)( base_packet::m_buffer - m_buffer.elems );
 	}
 	inline	u32			buffer_to_send_size	( ) const { return 0; }
 
@@ -89,6 +88,8 @@ public:
 	friend	class		udp_match_connection;
 	friend	class		delayed_packets_predicate;
 	friend	class		udp_network_flow_emulator;
+	friend	udp_match_packet*	new_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >& );
+	friend	void				delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 
 	// the placement-new factory constructs through the private default ctor.
 	friend	udp_match_packet*	::vostok::network_core::new_udp_match_packet(
@@ -113,35 +114,26 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
-// STATE[PARTIAL]: allocate + placement-new into `result` local + return; shape exact.
-// Residual is the single-TU anchor inlining the udp_match_packet ctor (target keeps it out-of-line).
+// STATE[99%|DONE]: structure 3/3 stmts; residual is LTCG frame size (0x20 vs 0x34)
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
 {
-	pvoid const	memory	= allocator.allocate( );
-	udp_match_packet* const	result	= new ( memory ) udp_match_packet;
-	return	result;
-
-	// STRUCTURE DIFF[target 0xdaa00 | base 0x985c0]: target 3 / base 3 stmts
-	//   2: 0x011 <0x2e> | 0x011 <0x71> | udp_match_packet* const	result	= new ( memory ) udp_match_packet;   SIZE
-	// .. same ..
-	// ; aligned 2, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - fixed quantity (split ctor/return into `result` local + return); sole SIZE is the inlined udp_match_packet ctor (single-TU anchor inline-vs-call wall).
+	udp_match_packet* const	result	= (udp_match_packet*)allocator.allocate( );
+	new( result ) udp_match_packet( );
+	return					result;
 }
 
-// STATE[PARTIAL]: call_destructor then allocator.deallocate (nulls pointer); body exact.
-// The single-TU anchor inlines this everywhere, so no standalone COMDAT emits (target
-// keeps it out-of-line, called from send/enqueue/etc) - the documented inline-vs-call wall.
+// STATE[61%|DONE]: structure 4/4 stmts; residual is LTCG inlining (deallocate inlined in target, out-of-line in base)
 inline void delete_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
 	udp_match_packet*&		packet
 )
 {
-	udp_match_packet::helper::call_destructor	( *packet );
-	allocator.deallocate	( reinterpret_cast< pvoid& >( packet ) );
-
-	// VERDICT: STRUCTURE UNVERIFIED - no base symbol (single-TU anchor inlines this everywhere; target keeps it out-of-line, called from send/enqueue/etc - inline-vs-call wall).
+	udp_match_packet::helper::call_destructor( *packet );
+	void*					buffer	= packet;
+	allocator.deallocate	( buffer );
+	packet					= NULL;
 }
 
 } // namespace network_core
