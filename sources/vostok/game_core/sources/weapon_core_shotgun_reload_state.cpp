@@ -64,8 +64,8 @@ void weapon_core_shotgun_reload_state::finalize( )
 	// ******
 }
 
-// STATE[PARTIAL]: walks the internal reload substate fsm to find the current substate's
-// index and appends it (u8). ASSERT( found ) compiled out.
+// STATE[INPROGRESS]: walks the internal reload substate fsm to find the current substate's
+// index and appends it (u8). ASSERT( found ) compiled out. DCE'd, no base symbol.
 void weapon_core_shotgun_reload_state::serialize( network_core::udp_match_packet& packet ) const
 {
 	u8						state_id	= 0;
@@ -85,10 +85,12 @@ void weapon_core_shotgun_reload_state::serialize( network_core::udp_match_packet
 	ASSERT( UNKNOWN_EXPRESSION_T( found ) );
 
 	packet.append( state_id );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x589830); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
-// STATE[PARTIAL]: reads the target substate index, walks the substate fsm to it and
-// promotes it to the initial state. ASSERT compiled out.
+// STATE[INPROGRESS]: reads the target substate index, walks the substate fsm to it and
+// promotes it to the initial state. ASSERT compiled out. DCE'd, no base symbol.
 void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader& reader )
 {
 	u8						target_state_id	= reader.r< bool >( );
@@ -107,6 +109,8 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	ASSERT( UNKNOWN_EXPRESSION_T( current ) );
 
 	m_logic->set_initial_state( current );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x5897a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[STUB]

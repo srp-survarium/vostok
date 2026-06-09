@@ -491,7 +491,7 @@ void inventory::remove( )
 	m_active_slot = max_slots_count;
 }
 
-// STATE[PARTIAL]: serializes a slot's item unless its profile slot is in the ignored set.
+// STATE[INPROGRESS]: serializes a slot's item unless its profile slot is in the ignored set. DCE'd, no base symbol.
 static void call_item_serialize(
 	inventory_slot const&				slot,
 	network_core::udp_match_packet&		packet,
@@ -501,30 +501,39 @@ static void call_item_serialize(
 	profile_slot_enum const* const	ignored_slots_start	= ignored_slots_for_serialization;
 	profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
 
-	if ( slot.item )
-	{
-		if ( std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
-			slot.item->serialize( packet, client_offset );
-	}
+	if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
+		slot.item->serialize( packet, client_offset );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f02f0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope. (slot.item guard combined to a single && to match the target's single-statement condition, mirroring call_item_deserialize.)
 }
 
 // STATE[PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
+// Structure matched (combined && guard); residual is LTCG inline-vs-call SIZE.
 static void call_item_deserialize( inventory_slot& slot, network_core::packet_reader& reader )
 {
 	profile_slot_enum const* const	ignored_slots_start	= ignored_slots_for_serialization;
 	profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
 
-	if ( slot.item )
-	{
-		if ( std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
-			slot.item->deserialize( reader );
-	}
+	if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
+		slot.item->deserialize( reader );
+
+	// STRUCTURE DIFF[target 0x6f0270 | base 0x4655b0]: target 4 / base 4 stmts (post-fix)
+	//   2: 0x00d <0x10> | 0x00d <0x7> | profile_slot_enum const* const	ignored_slots_end = ... + 7;   SIZE
+	//   3: 0x01d <0x35> | 0x014 <0x56> | if ( slot.item && std::find( ... ) == ignored_slots_end )   SIZE
+	//   4: 0x052 <0x1c> | 0x06a <0x2b> | slot.item->deserialize( reader );   SIZE
+	// ; aligned 1, size-diffs 3, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (fixed quantity) - combined the slot.item null-check and the
+	//   std::find guard into a single && condition (one statement) to match the target's single
+	//   L265 statement (both null-check and find-result branch to the same exit); base 5->4 stmts,
+	//   quantity-diffs 1->0; residual rows are LTCG inline-vs-call SIZE (find/profile_slot_id), non-steerable.
 }
 
-// STATE[PARTIAL]: for_each over the slot array, deserializing each non-ignored item.
+// STATE[INPROGRESS]: for_each over the slot array, deserializing each non-ignored item. DCE'd, no base symbol.
 void inventory::deserialize( network_core::packet_reader& reader )
 {
 	std::for_each( m_slots, m_slots + max_slots_count, boost::bind( call_item_deserialize, _1, boost::ref( reader ) ) );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f04a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[100%|DONE]
