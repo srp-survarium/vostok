@@ -22,7 +22,7 @@ Steps:
    other's source, anchors, and notes automatically (no forward-porting), and
    `temp_include_all.cpp` edits never conflict. To land/refresh a stacked PR on an advanced
    base, **cherry-pick its OWN commits** onto a fresh checkout of the base - never `git
-   merge` the base in (it drags in every inherited file and mangles `PROGRESS.md` /
+   merge` the base in (it drags in every inherited file and mangles
    `temp_include_all.cpp`).
 3. **Dispatch matchers in BATCHES**, foreground (never `run_in_background`), one at a time
    up to the cap ($2):

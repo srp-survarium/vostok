@@ -23,7 +23,7 @@ mark it `INPROGRESS` with the next step.
 
 ## Read first (source of truth - they win over this summary)
 1. `MATCHING.md` - how matched source must look.
-2. `agentic_loop.md` - the per-function loop (sections 1-9); `agentic_loop_example.md` is a dry run.
+2. `agentic_loop.md` - the per-function loop (sections 1-9).
 3. `assembly_patterns.md` - asm -> source patterns learned so far.
 4. `loop_performance.md` - rebuild-reduction tips (still handy, though the rebuild is now fast - the loop is token-bound, not rebuild-bound).
 5. `docs/binary_matching/<module>/README.md` - your module's notes.
@@ -106,14 +106,14 @@ mark it `INPROGRESS` with the next step.
   `// STRUCTURE DIFF: ... // VERDICT:` block left in its body (the structure-verifier
   only embeds for a *residual*, i.e. <100%). Reduce the surviving marker to a BARE
   `// STATE[100%|DONE]` - no inline *why*, no stmt-count restatement: a clean 100% needs no
-  inline rationale, and what little there is (the asm->source trick) lives in the `<fn>.md`
-  trail and, if reusable, in `assembly_patterns.md`.
-- **Lean source, verbose `.md`.** Keep only the `// STATE[NN%|TAG]: reason` marker in
-  the `.cpp`; tag deliberate shaping with `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior
-  `sushi@...` notes). All rationale/attempts go in `docs/binary_matching/<module>/<fn>.md`,
-  written *as you go* - record every command and every source variant + its resulting %
-  so a reviewer can replay your run. Strip any log line (`LOG_*`, `printf`, trace) the
-  target does not emit.
+  inline rationale; any reusable asm->source trick goes to `assembly_patterns.md`.
+- **Lean source - rationale in the commit message, NOT a `.md` trail.** Keep only the
+  `// STATE[NN%|TAG]: reason` marker in the `.cpp`; tag deliberate shaping with
+  `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior `sushi@...` notes). Do NOT write a
+  per-function `.md` (we don't keep them). Put the run narrative - what you tried, the
+  source variants + their %s - in the PR/commit message, and promote any reusable
+  asm->source mapping to `assembly_patterns.md`. Strip any log line (`LOG_*`, `printf`,
+  trace) the target does not emit.
 - **Append new learnings:** a new asm->source mapping to `assembly_patterns.md`; a
   rebuild-saving trick to `loop_performance.md`.
 - **Never force-push or rewrite a pushed branch** (`--force`/`--amend` after first push
@@ -126,7 +126,7 @@ The orchestrator leaves the current **stack tip** checked out and names it
 matches' source, anchors, and notes:
 ```
 git checkout -b match/<module>-<function>      # off the tip you were handed
-git add <the .cpp(s)> <per-function .md> <temp_include_all.cpp edits>
+git add <the .cpp(s)> <temp_include_all.cpp edits>
 git commit -m "<module>: match <function> (NN% TAG)"   # name grouped/inlined members too
 git push -u origin match/<module>-<function>
 gh pr create --fill --base <base-branch>
