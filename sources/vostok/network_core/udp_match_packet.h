@@ -41,6 +41,11 @@ public:
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
 			delete	&packet;
+
+			// STRUCTURE DIFF[target 0xda9c0 | base 0x98240]: target 1 / base 1 stmts
+			//   1: 0x004 <0x2c> | 0x006 <0x50> | delete	&packet;   SIZE
+			// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+			// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the inlined udp_match_packet dtor (single-TU anchor inline-vs-call wall).
 		}
 
 		friend	void	::vostok::network_core::delete_udp_match_packet(
@@ -108,14 +113,21 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
-// STATE[PARTIAL]: allocate + placement-new + return buffer ptr; shape exact. Residual is
-// the single-TU anchor inlining the udp_match_packet ctor (target keeps it out-of-line).
+// STATE[PARTIAL]: allocate + placement-new into `result` local + return; shape exact.
+// Residual is the single-TU anchor inlining the udp_match_packet ctor (target keeps it out-of-line).
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
 {
 	pvoid const	memory	= allocator.allocate( );
-	return	new ( memory ) udp_match_packet;
+	udp_match_packet* const	result	= new ( memory ) udp_match_packet;
+	return	result;
+
+	// STRUCTURE DIFF[target 0xdaa00 | base 0x985c0]: target 3 / base 3 stmts
+	//   2: 0x011 <0x2e> | 0x011 <0x71> | udp_match_packet* const	result	= new ( memory ) udp_match_packet;   SIZE
+	// .. same ..
+	// ; aligned 2, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - fixed quantity (split ctor/return into `result` local + return); sole SIZE is the inlined udp_match_packet ctor (single-TU anchor inline-vs-call wall).
 }
 
 // STATE[PARTIAL]: call_destructor then allocator.deallocate (nulls pointer); body exact.
@@ -128,6 +140,8 @@ inline void delete_udp_match_packet(
 {
 	udp_match_packet::helper::call_destructor	( *packet );
 	allocator.deallocate	( reinterpret_cast< pvoid& >( packet ) );
+
+	// VERDICT: STRUCTURE UNVERIFIED - no base symbol (single-TU anchor inlines this everywhere; target keeps it out-of-line, called from send/enqueue/etc - inline-vs-call wall).
 }
 
 } // namespace network_core
