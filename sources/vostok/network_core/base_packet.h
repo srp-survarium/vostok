@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef NETWORK_CORE_BASE_PACKET_H_INCLUDED
@@ -12,16 +12,23 @@ namespace network_core {
 
 class base_packet {
 public:
-	inline	explicit	base_packet		( u8* buffer, u32 buffer_size ) : m_buffer( buffer ), m_buffer_size( buffer_size ) {}
+	inline				base_packet	( ) : m_buffer( NULL ), m_buffer_size( 0 ) { }
+	inline				base_packet	( pbyte const buffer, const u32 buffer_size ) : m_buffer( buffer ), m_buffer_size( buffer_size ) { }
 
-	// sushi@NOTE: Considering that the class is private, is there a reason for this constructor
-	inline	explicit	base_packet		( ) : m_buffer( NULL ), m_buffer_size( 0 ) {} 
-
+private:
+	inline	pcbyte		buffer		( ) const { return m_buffer; }
 public:
 	inline	pbyte		buffer		( ) { return m_buffer; }
-	inline	pcbyte		buffer		( ) const { return m_buffer; }
+
 	inline	u32			buffer_size	( ) const { return m_buffer_size; }
 
+	// the writer (packet< T >) and reader (packet_reader) reach the buffer + its
+	// size through these private members; the const buffer() accessor stays
+	// private (PDB-matched) so only friends see it. tcp_packet owns the realloc
+	// of its own backing buffer.
+	template < typename T > friend class packet;
+	friend class packet_reader;
+	friend class tcp_packet;
 
 private:
 	/* 0x0000 */	pbyte		m_buffer;

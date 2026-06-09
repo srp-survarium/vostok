@@ -21,9 +21,8 @@ carry a stale copy of the docs - read the latest, then review the PR's code agai
 
 ## Scope - review ONLY what this PR introduced
 `git --no-pager show HEAD` and `git --no-pager diff HEAD~1..HEAD` (or `<base>..HEAD`)
-show the function(s) this unit added. Audit ONLY those function(s) and their
-per-function `.md` + their `PROGRESS.md` ledger line(s). Never touch inherited
-content, other functions, or the guideline docs themselves.
+show the function(s) this unit added. Audit ONLY those function(s). Never touch
+inherited content, other functions, or the guideline docs themselves.
 
 ## The four checks (the recurring matcher mistakes)
 1. **Target vs base NOT confused (the #1 mistake).** Fetch BOTH sides and confirm every
@@ -46,9 +45,9 @@ content, other functions, or the guideline docs themselves.
    `OutputDebugString`, trace) or commented-out debug/log line the matcher added that
    the target does not actually emit (it is not part of the byte-match). Fix violations:
    strip noise/logs from a clean 100%; restore a stripped carcass on a non-100%.
-3. **Percentages correct EVERYWHERE.** The `.cpp` `// STATE[NN%|TAG]`, the per-function
-   `.md` headline/outcome, and the `PROGRESS.md` ledger line must agree with EACH OTHER
-   and with `binaries/objdiff/report.json`'s `fuzzy_match_percent` for that symbol. READ
+3. **Percentages correct EVERYWHERE.** The `.cpp` `// STATE[NN%|TAG]` and the commit
+   message must agree with `binaries/objdiff/report.json`'s `fuzzy_match_percent` for that
+   symbol. READ
    report.json - do NOT rebuild. Stale numbers are a common defect (a pre-ASSERT-recovery
    %, an old PARTIAL that report.json now shows at 100%); sync all three to report.json's
    ground truth, and fix the TAG too (a function report.json shows at 100% is DONE, not
@@ -102,7 +101,7 @@ diff before (matcher) vs after (you). **NEVER `--amend`, NEVER `git push --force
 force-push clobbers concurrent work and orphans every PR stacked above (it also destroys
 the before/after the human reviews). Plain push only:
 ```
-git add <the function .cpp> <its per-function .md> <PROGRESS.md if changed>
+git add <the function .cpp>
 git commit -m "review: <fn> - <what you corrected> (no logic change)"
 git push
 ```

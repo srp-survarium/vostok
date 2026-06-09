@@ -32,7 +32,17 @@ void player_profile::deserialize( network_core::packet_reader& reader )
 */
 
 struct relocate_item_descr {
-			void	serialize	( network_core::tcp_packet& packet ) const {} // STATE[STUB]
+	// STATE[PARTIAL]: 6 appends (profile_id, item_id, item_dict_id, source/target slot u32,
+	// amount u16); target body is LTCG-inlined (register this/packet) so bytes won't match standalone.
+			void	serialize	( network_core::tcp_packet& packet ) const
+			{
+				packet.append( profile_id );
+				packet.append( item_id );
+				packet.append( item_dict_id );
+				packet.append( source_slot_id );
+				packet.append( target_slot_id );
+				packet.append( amount );
+			}
 	inline	void	deserialize	( network_core::packet_reader& arg_0 ) { /* no source */ }
 
 public:

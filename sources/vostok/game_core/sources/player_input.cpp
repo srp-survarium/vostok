@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include <vostok/game_core/player_input.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -15,28 +17,34 @@ player_input::player_input( ) :
 {
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: 3 appends (float2, float2, u32) - shape matches target.
 void player_input::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x700e80>|0x000|+0x009:'22'	{
-	// <0x700e89>|0x009|+0x00b:'23'
-	// <0x700e94>|0x014|+0x00e:'24'
-	// <0x700ea2>|0x022|+0x00f:'25'
-	// <0x700eb1>|0x031|      :'26'	}
-	// ******
+	packet.append		( angular_velocity );
+	packet.append		( angular_acceleration );
+	packet.append		( actions_mask );
+
+	// STRUCTURE DIFF[target 0x6f0e80 | base 0x51b0b0]: target 3 / base 3 stmts
+	//   1: 0x009 <0xb> | --          | L23   ONLY target
+	//   3: 0x022 <0xf> | 0x017 <0x11> | packet.append		( angular_acceleration );   SIZE
+	//   4: --          | 0x028 <0x17> | packet.append		( actions_mask );   ONLY base
+	// ; aligned 1, size-diffs 1, quantity-diffs 2, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3 appends in identical order (target <0xb>,<0xe>,<0xf>); ONLY rows are SIZE-drift mis-pairing of the LTCG-inlined packet<T>::append, non-steerable.
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: 3 reads (float2, float2, u32) into members - shape matches target.
 void player_input::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x700df0>|0x000|+0x00b:'29'	{
-	// <0x700dfb>|0x00b|+0x032:'30'
-	// <0x700e2d>|0x03d|+0x033:'31'
-	// <0x700e60>|0x070|+0x00e:'32'
-	// <0x700e6e>|0x07e|      :'33'	}
-	// ******
+	angular_velocity		= reader.r< math::float2 >( );
+	angular_acceleration	= reader.r< math::float2 >( );
+	actions_mask			= reader.r< u32 >( );
+
+	// STRUCTURE DIFF[target 0x6f0df0 | base 0x51afc0]: target 3 / base 3 stmts
+	//   1: 0x00b <0x32> | 0x009 <0x36> | angular_velocity		= reader.r< math::float2 >( );   SIZE
+	//   2: 0x03d <0x33> | 0x03f <0x37> | angular_acceleration	= reader.r< math::float2 >( );   SIZE
+	//   3: 0x070 <0xe> | 0x076 <0x23> | actions_mask			= reader.r< u32 >( );   SIZE
+	// ; aligned 0, size-diffs 3, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3 reads; SIZE rows are r<float2>/r<u32> LTCG inline (target) vs call (base), non-steerable.
 }
 
 // STATE[100%|DONE]

@@ -6,6 +6,8 @@
 #include <vostok/game_core/inventory_item.h>
 
 #include <vostok/game_core/inventory_item_props.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -38,21 +40,27 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
 void inventory_item::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x5a0849>|0x009|+0x013:'30'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( client_offset );
+	packet.append( m_amount );
+
+	// STRUCTURE DIFF[target 0x590840 | base 0x450230]: target 1 / base 1 stmts
+	//   1: 0x009 <0x13> | 0x009 <0x1c> | packet.append( m_amount );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: single r< u16 > into m_amount ([+0x114]). Matches rva 0x590810.
 void inventory_item::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x5a0819>|0x009|+0x012:'35'
-	// ******
+	m_amount = reader.r< u16 >( );
+
+	// STRUCTURE DIFF[target 0x590810 | base 0x4501f0]: target 1 / base 1 stmts
+	//   1: 0x009 <0x12> | 0x009 <0x2a> | m_amount = reader.r< u16 >( );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet_reader::r<u16> LTCG inline (target) vs call (base), non-steerable.
 }
 
 } // namespace survarium
