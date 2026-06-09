@@ -57,11 +57,15 @@ ctor/dtor/send/size_received diffs had to be pinned by the **network_core target
   separate statements our LTCG folds). `--view structure-diff` cannot auto-align (target
   param `const unsigned int` vs base `unsigned int` + the network::packet_socket name
   shadow); compared via rva-pinned single-side dumps.
-- `send` (socket) 55%  -> **PARTIAL, STRUCTURE MISMATCH (quantity)**. target 6 / base 4
-  (qty 4). Shape right (new_packet/clone/write/on_packet_has_been_sent) but `clone(packet)`
-  folds to nothing: `packet<T>::clone()` is an empty `/* no source */` stub in
-  packet_inline.h (target inlines it to clear()+append -- the L155/L179/L186 ONLY-target
-  rows). Needs clone()'s body in the shared packet_inline.h (do-not-touch) -- REPORTED.
+- `send` (socket) 55%  -> **STRUCTURE FIXED (qty 4 -> 3)**. Restored `packet<T>::clone()`'s
+  body in `packet_inline.h` -- it was an empty `/* no source */` stub. Target inlines clone()
+  to `m_buffer_size = 0; append( other.buffer(), other.buffer_size() )` (the legacy
+  `network::packet::clone` form); `packet<T>` is a `friend` of `base_packet` so the private
+  const `buffer()`/`buffer_size()` accessors are reachable on the `const& other`. After the
+  fix + rebuild the copy step emits as a real statement (base 4 -> 5 stmts, qty 4 -> 3).
+  Residual: target keeps `other.buffer()`/`buffer_size()` as out-of-line calls; base inlines
+  the trivial accessors to direct `[other+0]`/`[other+4]` field reads (LTCG inline-boundary,
+  no source lever).
 
 The LOG_ERROR residual across the on_packet_* functions is the `__FILE__` baked into every
 log call: `C:\survarium\sources\...` in target vs our `Z:\home\...` build path -> a permanent
@@ -77,7 +81,10 @@ byte diff on logging-dominated functions (same wall as http_client's LOG residua
   instruction-equal count, but documents intent).
 - Read-error size check is `packet->allocated_size()` (tcp_packet's m_allocated_size),
   not `buffer_size()`.
-- `tcp_packet_socket::send` target does `cloned->clear(); cloned->append(packet.buffer(),
-  packet.buffer_size())`, but `base_packet::buffer() const` is PRIVATE in the PDB-matched
-  header, so the socket (a non-member) cannot call it on a `const&`. Used `clone(packet)`
-  instead and took the hit rather than widen access (another unit's concern).
+- `tcp_packet_socket::send` calls `cloned->clone( packet )`, and `clone()` (a member of
+  `packet<T>`) does the copy: `m_buffer_size = 0; append( other.buffer(), other.buffer_size() )`.
+  `base_packet::buffer() const` is PRIVATE, but `base_packet` declares
+  `template < typename T > friend class packet;`, so `packet<T>::clone()` legally reaches the
+  private const accessors on the `base_packet const& other` -- no access widening needed. (The
+  earlier note that the socket "cannot call buffer() so we took the hit" was wrong: the socket
+  doesn't call buffer() directly, clone() does, and clone() is a friend.)

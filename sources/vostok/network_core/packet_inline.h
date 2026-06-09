@@ -41,8 +41,16 @@ inline void packet< T >::resize( u32 size )
 	m_buffer_size		= size;
 }
 
+// STATE[INLINED]: no standalone symbol (inlined into tcp_packet_socket::send); body
+// needed so send's clone() step (m_buffer_size=0; append(other.buffer(),size)) emits.
+// `packet< T >` is a friend of base_packet, so the private const buffer()/buffer_size()
+// accessors are reachable on the const& other.
 template < typename T >
-inline void packet< T >::clone( base_packet const& other ) { /* no source */ }
+inline void packet< T >::clone( base_packet const& other )
+{
+	m_buffer_size		= 0;
+	append				( other.buffer( ), other.buffer_size( ) );
+}
 
 // STATE[INLINED]: append(&value,sizeof) - the scalar overloads all forward to the
 // buffer/size primitive; bodies needed so call sites (serialize chains) emit.
