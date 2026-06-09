@@ -22,7 +22,7 @@ Full rules: `.claude/agents/orchestrator.md`. In short:
 3. **Dispatch up to $2 matchers in PARALLEL** (`run_in_background: true`), each in a sibling
    `vostok_<N>` worktree YOU prepared (`git reset --hard <tip>`, `regen_ninja.py`,
    `git checkout -b match/$1-<unit>`) - isolated `binaries/`/`WINEPREFIX`, so builds don't
-   race. Batch per unit (the worker pays setup once): **5-7 small multi-line fns**, **up to
+   race. Batch per unit (the worker pays setup once): **6-9 small multi-line fns**, **up to
    ~12 one-liners**, **fewer when hard**; a related cluster; pick NON-OVERLAPPING units
    (never two live workers on the same file/TU). The worker just matches + makes ONE commit:
    `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (on branch match/$1-<unit>, indexes warm). Match $1::<batch>. <file:line/rva each>. Commit ONE commit; do not branch/push/PR.")`
