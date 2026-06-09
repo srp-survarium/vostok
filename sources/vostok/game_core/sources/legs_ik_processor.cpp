@@ -610,7 +610,6 @@ void legs_ik_processor::process_leg(
 	// ******
 }
 
-// STATE[84.65%|PARTIAL]: large float4x4 IK math, full structure matched (all 64
 // statements, the is_similar early-out, the 4-way ground if-chain, lengths, blend,
 // return). The else-branch single-byte original_color write is now `set_B( 0x64u )`
 // (target writes only the low b channel: mov byte[tmp],64h; mov cl,[tmp]; mov

@@ -22,7 +22,7 @@ namespace survarium {
 float g_bullet_tracer_exposition = 0.5f;
 static console_commands::cc_float bullet_tracer_exposition( "bullet_tracer_exposition", g_bullet_tracer_exposition, 0.01f, 5.0f, true, console_commands::command_type_engine_internal );
 
-// STATE[97.92%|DONE]
+// STATE[97.92%|DONE]: LTCG - commutative FP-mul operand/register order + 4-byte frame temp; structure-diff clean (size 0/quantity 0)
 bullet::bullet(
 	bullet_manager&					bullet_manager,
 	float3 const&					position,
@@ -105,7 +105,55 @@ bullet::~bullet( )
 {
 }
 
-// STATE[89.91%|PARTIAL]
+// STATE[89.91%|PARTIAL]: LTCG inline-vs-call of get_bullet_time_factor (frame-layout cascade) + min reg-arg order
+// STRUCTURE DIFF[target 0x582a20 | base 0x467800]: target 72 / base 70 stmts
+// 0x00f <0xc> | 0x00c <0x9> | m_current_time_in_ms				= current_time_in_ms;   SIZE
+// .. same ..
+// 0x03e <0x10> | 0x038 <0xd> | float			low_time			= m_life_time;   SIZE
+// 0x04e <0x31> | 0x045 <0x3f> | float			high_time			= ( ... ) * m_bullet_manager->get_bullet_time_factor( );   SIZE
+// .. same ..
+// 0x08b <0xf> | 0x090 <0xc> | float3 const&	gravity				= m_bullet_manager->get_gravity( );   SIZE
+// .. same ..
+// 0x09a <0x16> | 0x09c <0x13> | if ( m_velocity.squared_length( ) < 1.f )   SIZE
+// .. same ..
+// 0x0b0 <0x1a> | 0x0af <0x17> | m_start_velocity = zero_velocity;   SIZE
+// .. same ..
+// 0x0cf <0xc> | 0x0cb <0x9> | if ( m_change_trajectory_count >= 32 )   SIZE
+// .. same ..
+// 0x0db <0x1a> | 0x0d4 <0x17> | m_start_velocity = zero_velocity;   SIZE
+// .. same ..
+// 0x10e <0x20> | 0x104 <0x1d> | float	time					= pick_next_permissible_time( low_time, high_time, gravity );   SIZE
+// .. same ..
+// 0x13d <0x1a> | 0x130 <0x17> | m_start_velocity = zero_velocity;   SIZE
+// .. same ..
+// 0x15c <0x37> | 0x14c <0x31> | collision_result	result	= check_collision( m_position, low_time, time );   SIZE
+// .. same ..
+// 0x199 <0x1a> | 0x183 <0x17> | m_start_velocity = zero_velocity;   SIZE
+// .. same ..
+// 0x1c4 <0x10> | 0x1ab <0xd> | low_time	= m_life_time;   SIZE
+// .. same ..
+// 0x1e3 <0x10> | 0x1c7 <0xd> | time		= m_life_time;   SIZE
+// .. same ..
+// --          | 0x1e6 <0x1a> | if ( !update_bullet_position( time, gravity ) )   ONLY base
+// .. same ..
+// 0x205 <0x1d> | 0x200 <0x17> | m_start_velocity = zero_velocity;   SIZE
+// 0x222 <0x1a> | --          | L183   ONLY target
+// .. same ..
+// 0x264 <0x16> | 0x23f <0x13> | if ( m_tracer_idx != 0xFFFF )   SIZE
+// .. same ..
+// 0x27a <0x1b> | 0x252 <0x15> | float3 d = m_position - m_start_position;   SIZE
+// .. same ..
+// 0x2c3 <0x11> | 0x295 <0xe> | float speed = m_velocity.length( );   SIZE
+// --          | 0x2a3 <0x1f> | float length = math::min( g_bullet_tracer_exposition, m_life_time ) * speed;   ONLY base
+// .. same ..
+// 0x2d4 <0x22> | 0x2c2 <0x28> | if ( m_initiator->is_local && ... )   SIZE
+// 0x2f6 <0x31> | --          | L200   ONLY target
+// .. same ..
+// 0x339 <0x17> | 0x2fc <0x14> | if ( m_change_trajectory_count && length > d_len )   SIZE
+// .. same ..
+// 0x368 <0x27> | 0x328 <0x1e> | m_bullet_manager->update_tracer( this, m_position, d, length );   SIZE
+// ; aligned 47, size-diffs 21, quantity-diffs 6
+// VERDICT: STRUCTURE MATCH (shape ok) - target inlined get_bullet_time_factor (reads s_bm_bullet_time_factor directly, TU-local static - non-steerable), shrinking its frame to 0x90/this@[ebp-88h] vs base 0x8c/[ebp-80h]; the resulting disp8-vs-disp32 on every this-read drives all 21 SIZE diffs. math::min reg-arg order (xmm0/xmm1 swap) is LTCG calling-convention. trail: tick.md
 void bullet::tick( u32 current_time_in_ms )
 {
 	m_current_time_in_ms				= current_time_in_ms;
@@ -198,7 +246,7 @@ bool bullet::is_finish_flying ( ) const
 	return m_start_velocity == zero_velocity;
 }
 
-// STATE[95.60%|DONE]: LTCG for float3
+// STATE[95.60%|DONE]: LTCG for float3 (inline-vs-call return construction); structure-diff clean (size 0/quantity 0)
 float3 bullet::compute_parabolic_velocity( float time, float3 const& gravity )
 {
 	float3 const xz_velocity	= float3( m_start_velocity.x, 0.f, m_start_velocity.z );
@@ -210,7 +258,7 @@ float3 bullet::compute_parabolic_velocity( float time, float3 const& gravity )
 	return						m_start_velocity * math::max( 0.f, 1.f - m_current_resistance * time ) + ( gravity * time );
 }
 
-// STATE[99.86%|DONE]: Target allocated less stack
+// STATE[99.86%|DONE]: Target allocated less stack (LTCG); structure-diff clean (size 0/quantity 0)
 float3 bullet::compute_trajectory_velocity( float time, float3 const& gravity )
 {
 	float const parabolic_time	= get_parabolic_time( );
@@ -223,7 +271,7 @@ float3 bullet::compute_trajectory_velocity( float time, float3 const& gravity )
 	return						parabolic_vel + gravity * fall_down_time;
 }
 
-// STATE[97.30%|DONE]: LTCG for float3
+// STATE[97.30%|DONE]: LTCG for float3 (inline-vs-call return construction); structure-diff clean (size 0/quantity 0)
 float3 bullet::compute_parabolic_position( float time, float3 const& gravity )
 {
 	float3 const xz_velocity	= float3( m_start_velocity.x, 0.f, m_start_velocity.z );
@@ -235,7 +283,7 @@ float3 bullet::compute_parabolic_position( float time, float3 const& gravity )
 	return					m_start_position + m_start_velocity * time + m_start_velocity * -m_current_resistance * sqr_t_div_2 + gravity * sqr_t_div_2;
 }
 
-// STATE[99.95%|DONE]
+// STATE[99.95%|DONE]: LTCG residual; structure-diff clean (size 0/quantity 0)
 float3 bullet::compute_trajectory_position( float time, float3 const& gravity )
 {
 	float const parabolic_time	= get_parabolic_time( );
@@ -250,7 +298,7 @@ float3 bullet::compute_trajectory_position( float time, float3 const& gravity )
 	return parabolic_pos + parabolic_vel * fall_down_time + gravity * ( math::sqr( fall_down_time ) * .5f );
 }
 
-// STATE[99.69%|DONE]
+// STATE[99.69%|DONE]: LTCG residual; structure-diff clean (size 0/quantity 0)
 float bullet::get_parabolic_time( )
 {
 	static const float air_resistance_epsilon = 1.1f;
@@ -384,7 +432,13 @@ float bullet::get_check_time( float const start_low, float high, float3 const& g
 	return					low;
 }
 
-// STATE[99.94%|DONE]
+// STATE[99.94%|DONE]: operator| (dot product) inlined in base vs out-of-line call in target - LTCG, non-steerable
+// STRUCTURE DIFF[target 0x581b80 | base 0x4668e0]: target 14 / base 14 stmts
+// .. same ..
+// 0x0c1 <0x32> | 0x0c1 <0x53> | float	cosine_alpha		= math::max( -1.0f, math::min( start_to_max_error | start_to_target, 1.0f ) );   SIZE
+// .. same ..
+// ; aligned 13, size-diffs 1, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| (start_to_max_error | start_to_target) inlined as mul/add in base vs an out-of-line call vostok::math::operator| in target (LTCG inline-vs-call); not source-steerable without forward-declaring operator| out-of-line for the whole TU. trail: compute_max_error.md
 float bullet::compute_max_error( float low, float high, float3 const& gravity )
 {
 	float					max_error_time = get_max_error_time( low, high );
