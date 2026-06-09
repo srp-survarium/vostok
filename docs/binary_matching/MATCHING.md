@@ -299,7 +299,16 @@ line gaps are suppressed, tallied as `blank-gaps` in the summary). That way the 
 where our build diverges from the target, not just the target shape. **Standard shape:
 the tool's `--condensed` output VERBATIM, then exactly one `// VERDICT: STRUCTURE
 <MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>` line; all detail lives in the
-per-function `.md`, never inline.** (The structure-verifier produces and owns these.)
+commit message, never inline.** (The structure-verifier produces and owns these.)
+
+**Each addressed statement IS a real source statement - that is the whole point of the
+structure.** The compiler emits one line-table entry (a debugger BREAKPOINT) per source
+statement, so the structure is a faithful, ORDERED list of the source's statements: an
+addressed `<0xsize>` row means that statement *was* in the original source, full stop. A
+QUANTITY divergence is therefore literally a missing or extra SOURCE statement, and
+reproducing the target's statement count + order reproduces the original structure - which
+is why structure beats the byte %. (The `<N>` no-address lines below are the COMPLEMENT: a
+sub-expression the compiler set no breakpoint on - inlined, optimized out, or a continuation.)
 
 **Reading the STUB carcass (before you delete it)** - its markers are shape clues you
 need for the match. A `<N>` (no address) line is a statement/sub-expression
