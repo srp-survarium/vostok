@@ -430,3 +430,21 @@ idle timer fills), so there's zero added latency on the common path. Safety: it 
 link outputs are freshly written (never on a half-written EXE - that would show as a blown-up diff), and
 a real LTCG link keeps a core busy so it never reads as idle. If you still see a multi-minute 0%-CPU
 wait, the watchdog's 60s idle window has not yet elapsed - that's the worst case now (60s, not 10 min).
+
+## The OTHER 10-minute stall: mspdbsrv.exe holds the build's output pipe (constant ~600s)
+The watchdog above didn't end the 10+ minute rebuilds in matcher worktrees: a fresh-worktree rebuild
+still took 11-15 min wall-clock while `.ninja_log` showed only ~100-325s of edges and the EXE+PDB were
+written on time. mtime forensics pinned the gap: a constant ~604s between the link finishing and the
+delink/structure/rich steps starting. Cause: `cl.exe`/`link.exe` spawn `mspdbsrv.exe` (the PDB-writer
+daemon), which idles for **~10 minutes** before exiting on its own and inherits the build's stdout fd.
+Anything reading the build through a pipe - `rebuild.py`'s module-counting reader, an agent's shell
+capture - gets EOF only when mspdbsrv dies, long after everything has exited. The main repo dodged it
+by luck (its long-lived mspdbsrv predated the pipe), which is why only fresh worktrees seemed slow.
+Two fixes, both in place: `ninja_build.py` kills its prefix's `mspdbsrv.exe` after every build
+(prefix-scoped by matching WINEPREFIX in `/proc/<pid>/environ` - a global pkill could corrupt a
+sibling worktree's in-flight link), and `rebuild.py` reads the pipe via `select()`, letting go once
+the child has exited and the pipe stays silent for 2s - so any future leaked fd-holder costs at most
+2s, not 10 min. Measured steady state after the fix (2-module recompile + relink): ~2 min wall-clock,
+of which ~60s is the LTCG link and ~5s the parallel structure/COFF/rich regeneration. If rebuilds
+ever creep back to a constant ~10-min overhead, compare `.ninja_log` edge spans against the
+rebuild.log wall-clock and look for a new pipe-holder via `/proc/<pid>/environ` WINEPREFIX matches.
