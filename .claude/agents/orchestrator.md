@@ -109,8 +109,11 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    c. **Dispatch the `structure-verifier` on the SAME branch/worktree** - it verifies and
       (phase 2) fixes, then pushes a SECOND commit to the same PR, so every PR is exactly
       `match` + `verify` (details under "Audit a matcher's work").
-   d. The unit's branch (both commits) is the **new stack tip**; the next matcher branches
-      off it.
+   d. **Dispatch the `reviewer` on the SAME branch** - cheap, diff-only: it strips stray
+      logs and enforces lean comments (a 3rd commit ONLY if it changes source) and posts a
+      PR comment flagging any NEW struct/class/enum/function the diff added. See
+      `.claude/agents/reviewer.md`.
+   e. The unit's branch is the **new stack tip**; the next matcher branches off it.
 5. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
    `SKIPPED`) with a reason. Report: counts + the full ledger.
 
@@ -177,9 +180,10 @@ diff + a `// VERDICT:` line, downgrades a `DONE` whose source STRUCTURE is actua
 divergence - rebuilding and re-diffing until the structure matches or only an LTCG residual
 remains. It pushes the **SECOND commit to the unit's PR branch** (no `--amend`, no
 force-push), so every PR reads `match` then `verify`. See `.claude/agents/structure-verifier.md`.
-A `reviewer` is OPTIONAL (currently skipped) - if you run one (target/base not confused,
-lean-comment policy, %s right vs `report.json`, no wrongly-banked "LTCG"), it pushes its
-own additional commit to the same branch. Neither merges.
+Then (step 4d) the `reviewer` - now a cheap, diff-only pass (no rebuild, no report.json):
+it strips stray logs, enforces the lean-comment policy, and posts a PR comment flagging any
+NEW struct/class/enum/function the matcher added. It commits to the same branch ONLY if it
+fixed source (logs/comments); the symbol flags are a PR comment, not source. Neither merges.
 
 **The structure-verifier now CLOSES its own structure findings** (phase 2 applies the
 fix, rebuilds, re-diffs), so a structure `// VERDICT:` is no longer a ticket you hand to a
