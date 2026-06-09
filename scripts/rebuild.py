@@ -14,9 +14,9 @@ The target side (binaries/structure/target, binaries/objdiff/target,
 binaries/rich/target) is the original game and does not change between
 recompiles; it is generated once on first `nix develop` (see setup-toolchain.py).
 
-Each run appends one tab-separated audit line to binaries/rebuild.log (git-ignored,
-mirrors binaries/pdb_fetch.log):
-    <timestamp>\t<elapsed>\t<git-branch>\t<summary>
+Each run appends one audit line to binaries/rebuild.log (git-ignored, mirrors
+binaries/pdb_fetch.log):
+    [<timestamp>][<git-branch>]: <elapsed>, <summary>
 where <summary> reports the wall-clock and the set of engine modules whose TUs
 ninja actually recompiled this run (a no-op rebuild = 0 modules).
 
@@ -90,8 +90,8 @@ def _summarize(modules: set[str]) -> str:
 def _append_log(elapsed: float, modules: set[str]) -> None:
     """Best-effort audit line; a logging error must never fail the rebuild."""
     try:
-        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        line = f"{ts}\t{_fmt_elapsed(elapsed)}\t{_git_branch()}\t{_summarize(modules)}\n"
+        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
+        line = f"[{ts}][{_git_branch()}]: {_fmt_elapsed(elapsed)}, {_summarize(modules)}\n"
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(LOG_PATH, "a", encoding="utf-8") as f:
             f.write(line)
