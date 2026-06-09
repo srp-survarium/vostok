@@ -156,6 +156,7 @@ void udp_network_flow_emulator::tick(
 	// and the appeared functor takes `i->second` (the endpoint). Measure after build.
 }
 
+// STATE[73%|PARTIAL]
 void udp_network_flow_emulator::add_packet(
 	pbyte const		buffer,
 	const u32		buffer_size,
