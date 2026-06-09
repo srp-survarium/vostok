@@ -39,6 +39,10 @@ public:
 	static	inline	sequence_number	deserialize	( packet_reader& reader );
 
 private:
+	// the free distance operator reads both operands' raw numbers directly.
+	template < typename U >
+	friend	s32			operator-	( sequence_number< U > const& left, sequence_number< U > const& right );
+
 	/* 0x0000 */	T		m_number;
 }; // class sequence_number
 

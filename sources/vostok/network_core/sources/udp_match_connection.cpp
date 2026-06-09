@@ -468,9 +468,17 @@ void udp_match_connection::connect( udp_match_packet* const packet )
 		enqueue_impl( packet );
 }
 
-// STATE[BLOCKED]: is_reliable branch + push_back match; is_ordered block needs sequence_number::serialize/operator++ which are empty inline STUBs (sibling unit) and crash LTCG codegen if invoked
+// STATE[PARTIAL]: is_ordered stamps the packet's order_id from the channel's running
+// sent_order_id (post-increment), then the is_reliable / push_back tail. Shape matches
+// target; the sequence_number post-increment temp accounts for the residual.
 void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 {
+	if ( packet->is_ordered )
+	{
+		channel&	channel	= m_channels[ packet->channel_id ];
+		packet->order_id	= channel.sent_order_id++;
+	}
+
 	if ( packet->is_reliable )
 		++m_stats.unacknowledged_packets;
 
