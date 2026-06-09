@@ -132,6 +132,14 @@ Caveats baked into the format (do not misread these as divergences):
 - A register-only or stack-slot-only `~` is an LTCG/linker artifact, not structure.
 
 ## The two divergences you flag
+**First, what a statement IS:** each addressed `<0xsize>` row is a REAL source statement -
+the compiler emits one line-table entry (a debugger BREAKPOINT) per source statement, so the
+structure is a faithful, ORDERED list of the source's statements. An addressed row means that
+statement *was* in the original source, full stop. So a QUANTITY divergence is literally a
+missing or extra SOURCE statement (not noise) - match the count and order and you reproduce
+the original structure. (`<N>` no-address lines are the complement: a sub-expression with no
+breakpoint - inlined, optimized out, or a continuation.)
+
 1. **QUANTITY** - the statement COUNT differs (or a `'srcline'` / `[n]` block-open /
    `<n>` no-address line present on one side, absent on the other). A block the base
    has that the target lacks (or vice versa) is a CONTROL-STRUCTURE divergence: braces
