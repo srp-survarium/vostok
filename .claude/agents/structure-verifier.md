@@ -29,15 +29,6 @@ You do NOT merge and do NOT change a PR base. Your transcript is your own contex
 return a short verdict line. You were dispatched by the top-level session or an
 orchestrator; do not spawn sub-agents.
 
-## Why this agent exists
-`report.json`'s `fuzzy_match_percent` scores INSTRUCTIONS with relocations
-resolved. Two sources can produce the same bytes from a different SHAPE - e.g. a
-member-initializer list vs body assignments, an early `if ( !p ) return;` vs an
-`if ( p ) { ... }` block - so a function can read 100% and still be structurally
-wrong. That is "a high % over the wrong structure is not a match" (MATCHING.md).
-report.json cannot see it; you can. (Live example: `weapon_core_base_state` ctor -
-100% in report.json, but target = 2 statements / our base = 7.)
-
 ## Read first (the rules you ENFORCE - they win over this summary)
 - `docs/binary_matching/MATCHING.md` - especially "The carcass", "Match the base
   structure to the target structure - not just the byte %", the Style/Naming
@@ -185,16 +176,6 @@ quantity/size divergence, and the source fix:
   members `m_`, globals `g_`, file statics `s_`. When you align `'srcline'` statements,
   a CamelCase or mis-cased identifier may make a matching statement look unmatched -
   note it, but the structural unit is the statement, not the spelling.
-- **Definition ORDER is part of the structure - PRESERVE the original order, never
-  reorder or regroup.** Function and member definitions must appear in the same order
-  as the original (the PDB / header structure). We are REPLICATING the original code,
-  not writing our own tidy version - so do NOT reorder definitions, and do NOT flag (or
-  ask a matcher to "clean up") repeated/interleaved access specifiers: `private:`,
-  `protected:`, `public:` may each appear MULTIPLE times, out of the conventional
-  grouped order, precisely to keep the original definition order. That interleaving is
-  CORRECT and expected, not a style defect. Grouping everything under one access
-  specifier to look tidy would change the layout we are matching - never suggest it.
-
 ## What you produce (NO per-function `.md` - we don't keep them)
 Your output is the in-source `// STRUCTURE DIFF` + `// VERDICT:` embed (phase 1) and the
 actual fix (phase 2). Do NOT create a `docs/binary_matching/<module>/structure/<fn>.md`
