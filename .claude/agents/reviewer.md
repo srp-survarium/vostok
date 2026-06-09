@@ -19,16 +19,19 @@ Dispatched by the orchestrator/top-level; no sub-agents.
    commented-out debug the matcher added that the target does not emit.
 2. **Lean comments.** A clean `100%|DONE` keeps only `// STATE[100%|DONE]`; terse
    `claude@MATCH:`/`claude@NOTE:` only for genuinely non-obvious shaping.
-3. **Flag NEW symbols.** List every `struct`/`class`/`enum`/`typedef` or free function the
-   diff ADDS (`git diff` `+` lines) that isn't from the generated carcass - a matcher must
-   never fabricate a symbol to win a %, and anchor-only scaffolding must be tagged. Do NOT
-   delete (it may be a legit reconstructed callee) - just NAME each in your verdict for the
-   human / a matcher to judge.
+3. **Flag NEW symbols (REPORT, never annotate the source).** Scan the diff's `+` lines for
+   any `struct`/`class`/`enum` or free function ADDED that isn't from the generated carcass
+   (`typedef`s are fine - skip) - a matcher must never fabricate a symbol to win a %. Do NOT
+   delete them and do NOT add source comments about them (keep the code clean): report each
+   by name in a **PR comment** (`gh pr comment <pr> --body ...`, the PR for your branch) and
+   your verdict line, for the human / a matcher to judge.
 
 Fix the trivial comment/STATE defects in place. If you spot a REAL logic/structure bug, do
 NOT fix it and do NOT rebuild - set an honest STATE and NAME it in your verdict for a faster machine.
 
-## Finish - ONE new commit (never `--amend`, never `git push --force`)
+## Finish - ONE new commit IF you fixed source (never `--amend`, never `git push --force`)
+A commit only for checks 1-2 (logs/comments) source fixes; the check-3 symbol flags go in a
+PR comment + the verdict, NOT the source. If you fixed nothing in source, skip the commit.
 ```
 git add <the .cpp>; git commit -m "review: <unit> - <what you fixed> (no logic change)"; git push
 ```
