@@ -37,10 +37,17 @@ orchestrator; do not spawn sub-agents.
 Read these from the **current integration branch** (the PR branch you check out may
 carry a stale copy); review the code against the latest rules.
 
-## The two structures you compare - start with `--view structure-diff` FIRST
-**Do NOT eyeball two `--view structure` dumps by hand.** The parser aligns target vs
-base for you. Run (resolve overloads first; pass the TARGET rva with `--rva` if the
-name is ambiguous - base is resolved by mangled symbol, not rva):
+## The two structures you compare - small: two dumps; big: `--view structure-diff`
+**Small function (a handful of statements) -> just fetch each side and compare by eye,
+two invocations:**
+```
+pdb_fetch --target-index binaries/rich/target/index.jsonl --function <name> --view structure
+pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function <name> --view structure
+```
+
+**Big function -> don't eyeball; let the parser align target vs base** (resolve overloads
+first; pass the TARGET rva with `--rva` if the name is ambiguous - base is resolved by
+mangled symbol, not rva):
 
 ```
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
@@ -61,6 +68,10 @@ one side only = a real QUANTITY divergence). A trailing `; aligned A, size-diffs
 quantity-diffs Q, blank-gaps B` - `blank-gaps` are blank-line-only rows, counted but
 NOT printed (they are noise, not statements). A clean match prints just `.. same ..`
 with `size-diffs 0, quantity-diffs 0`. Drop `--condensed` to see every row.
+
+**If the structure-diff is noisy** - many SIZE rows, offsets drifting after the first
+divergence, hard to read whole - don't fight it; drop back to per-statement `--address`
+slices (below) for the rows that actually matter and compare those one at a time.
 
 **The single-side `--view structure` dump is still useful - reach for it often.** Run
 it with JUST the target index, then JUST the base index, to read each side's FULL
@@ -85,6 +96,54 @@ do you drop to the other views to NAME its cause at that spot: `--view diff` (op
 aware assembly) for the instruction-level reason, or `--view target`/`--view base` for
 the raw disassembly of that statement. Don't start from the assembly diff - you'd be
 reading instruction noise without knowing which statement matters.
+
+**Choose your zoom - whole function vs one statement - YOU decide from the diff.**
+`--view target`/`--view base` give the WHOLE function's disassembly; add `--address 0x..`
+(the `address` column) to slice out just ONE statement. The address is absolute, so it
+also SELECTS the function it falls in (no `--function`/`--rva` needed) and picks the
+statement whose `[off, off+size)` range contains it. A sliced view is a `;` header (VA,
+index, size, line) + just that statement's instructions; the anchor instruction keeps the
+`<size>` + matched-source annotation (target has size only).
+
+Pick the zoom from what the comparison showed, to keep context tight:
+- **One statement** when the divergence is localized - a single SIZE row, or a couple of
+  statements you can check one at a time. Slice each, compare the two sides, done. This is
+  the common case and the cheapest.
+- **The whole function** when you need the cross-statement picture - many statements
+  diverge, a QUANTITY mismatch (a statement/block appeared or vanished, so the per-index
+  alignment shifts and a single slice would mislead), control flow / jump targets that
+  span statements, or a prologue/epilogue/frame issue that isn't tied to one body row.
+When unsure, start narrow (one statement) and widen only if the cause clearly spills past
+that statement. Don't pull the full function when a single statement already explains it.
+
+### Worked example - a small function, end to end
+- Two structures, one per side - compare by eye:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --function "legs_ik_drawer::draw_leg" --view structure
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function "legs_ik_drawer::draw_leg" --view structure
+  ```
+  -> both 8 statements; sizes differ (`draw_origin` +0x1b vs +0x1e, `draw_line` +0x34 vs
+  +0x32). A few localized SIZE diffs, no quantity diff.
+- Per diverging statement - grab each side's `address` and slice the asm:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x7b1d78
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --view base   --address 0x5b3a28
+  ```
+  -> compare the two slices, name the cause (float arg via SSE `movss` in target vs x87
+  `fld/fstp` in base).
+- Too many diverge, or a quantity diff shifts the alignment -> whole function each side:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --function "legs_ik_drawer::draw_leg" --view target
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function "legs_ik_drawer::draw_leg" --view base
+  ```
+
+**Using the addresses the views print.** The header `; 0x<va>, N statements, ...` is the
+function VA; each row's `address` is that statement's VA. Two derivations:
+- `statement_VA - function_VA = the offset` (the `offst` column) - the key that lines a
+  statement up across `--view target`/`base`/`diff` and structure-diff.
+- `function_VA - 0x10000 (image base) = the function RVA` - feed it to `--rva` to PIN an
+  overload (the `network`/`network_core` name-collision case). A per-statement VA is not
+  a function rva; use the header VA for `--rva`, or pass the statement VA to `--address`.
 
 ### Embed the condensed diff in a non-100% function (you OWN this; the matcher left none)
 The matcher does NOT maintain the `// FUNCTION BODY` carcass - it deletes it when done.
@@ -184,6 +243,15 @@ quantity/size divergence, and the source fix:
   members `m_`, globals `g_`, file statics `s_`. When you align `'srcline'` statements,
   a CamelCase or mis-cased identifier may make a matching statement look unmatched -
   note it, but the structural unit is the statement, not the spelling.
+- **`const` - preserve EVERY one the target's recorded types carry.** The `; locals`
+  block records const-ness, and so does the signature: target `const u32 buffer_size`
+  / `u8* const buffer` against base `u32` / `u8*` is a real divergence you FLAG and FIX.
+  `const` on a local/parameter is codegen-INVISIBLE (it won't move a byte or change the
+  statement structure), so it never shows up as a SIZE/QUANTITY row - you only catch it by
+  comparing the two single-side `; locals` lists (and the signatures). We reproduce the
+  target's source exactly, so restore every missing `const`: top-level (`const u32`),
+  pointer/reference (`T* const`, `const T&`), `const` member functions, and `const`
+  return types. Preserve it everywhere the target's type records it.
 ## What you produce (NO per-function `.md` - we don't keep them)
 Your output is the in-source `// STRUCTURE DIFF` + `// VERDICT:` embed (phase 1) and the
 actual fix (phase 2). Do NOT create a `docs/binary_matching/<module>/structure/<fn>.md`
