@@ -50,15 +50,36 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
   `report.json` (that's the STATE number); check `report-changes.json` for regressions.
-- **Diff - `--view structure-diff` FIRST, then `--view diff`:** run
-  `pdb_fetch --target-index .../target/index.jsonl --base-index .../base/index.jsonl
-  --function <name> [--rva 0x<target>] --view structure-diff --condensed`. It localizes
-  the problem: WHICH statement diverges and HOW (`SIZE` = same statement, different byte
-  size; `ONLY base|target` = a quantity divergence; `.. same ..` = matched runs). A high
-  % over the wrong structure is NOT a match - fix the source shape (braces, init-list vs
-  body-assigns, early-return vs `if`, definition order). Only AFTER locating a divergent
-  statement, drop to `--view diff` (operand-aware asm) at that spot for the cause. (After
-  a `SIZE` row the offsets drift by the running delta - expected, not a new divergence.)
+- **Diff - `--view structure-diff` FIRST, then zoom in.** All `pdb_fetch` calls run
+  under `nix develop` against the `binaries/rich/{target,base}/index.jsonl` indexes;
+  pass `--rva 0x<target>` to pin an overload. Start with the structure diff:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl \
+            --base-index   binaries/rich/base/index.jsonl \
+            --function <name> --view structure-diff
+  ```
+  It prints ONLY the diverging statements, each tagged in a `b.diff` column: `SIZE +0xN`
+  / `SIZE -0xN` (same statement, base N bytes bigger / smaller - `+` = base too big),
+  `BASE_ONLY` (base has an extra statement), `TRGT_ONLY` (base is missing a target one);
+  a clean shape prints `STRUCTURE MATCH`. A high % over the wrong structure is NOT a match
+  - fix the source shape (braces, init-list vs body-assigns, early-return vs `if`,
+  definition order). Each row carries `t.addr`/`b.addr` to zoom in with:
+  ```
+  # one side's full statement skeleton (sizes + source lines, no asm):
+  pdb_fetch --target-index ... --function <name> --view structure   # target side
+  pdb_fetch --base-index   ... --function <name> --view structure   # base side
+  # whole-function rich asm, each statement headed by `[0xNN]: <source>`:
+  pdb_fetch --target-index ... --function <name> --view target
+  pdb_fetch --base-index   ... --function <name> --view base
+  # JUST the diverging statement's asm, per side, by its address from the diff:
+  pdb_fetch --target-index ... --view target --address 0x<t.addr>
+  pdb_fetch --base-index   ... --view base   --address 0x<b.addr>
+  # operand-aware instruction diff (whole function), for the instruction-level cause:
+  pdb_fetch --target-index ... --base-index ... --function <name> --view diff
+  ```
+  Read the two single-statement slices side by side to NAME the cause; `--address` also
+  selects the function, so `--function`/`--rva` is optional with it. (After a `SIZE` row
+  the two sides' offsets drift by the running delta - expected, not a new divergence.)
 - **Missing type?** Pull its declaration from `binaries/structure/target`, declare it near the use.
 - **Stop** when matched, or when only LTCG/inlining artifacts remain. Don't spin.
 
