@@ -784,6 +784,25 @@ post-`operator new` `cmp [p],0; je` is the standard placement-new null guard (sk
 Confirmed 100% in `weapon_core_state_cook_template<weapon_core_idle_state>::new_object`
 (`return new ( buffer.c_ptr() ) weapon_core_idle_state( params->weapon, animations, animations_count );`).
 
+### a `call_destructor`-style helper (destruct WITHOUT freeing) -> `obj.~T()`, NOT `delete &obj`
+A static helper whose job is to run an object's destructor but leave the storage (which an
+allocator owns separately) is `obj.~T( );` - an EXPLICIT destructor call. Do NOT write
+`delete &obj;`: that compiles to the dtor PLUS an inlined `operator delete` (it frees the
+storage too), ~`0x50` bytes vs the target's ~`0x2c` (the difference being the extra
+`operator delete`). Confirmed in `udp_match_packet::helper::call_destructor`
+(43.2 -> 100.0 switching `delete &packet;` to `packet.~udp_match_packet( );`).
+
+### allocator `new_X` / `delete_X` free-function helpers - the exact statement shapes
+A `new_X( allocator )` that placement-news into raw storage is THREE statements: `T* const
+result = (T*)allocator.allocate( ); new ( result ) T( ); return result;` - cast the
+`allocate()` result into a `result` local, placement-new into it, return it (do NOT fuse to
+`new ( allocator.allocate() ) T` - the target keeps the cast-into-local + separate `new`).
+The mirror `delete_X( allocator, ptr )` is FOUR statements: `X::helper::call_destructor(
+*ptr ); void* buffer = ptr; allocator.deallocate( buffer ); ptr = NULL;` - note the `void*
+buffer = ptr;` temp (a real statement, NOT `deallocate( reinterpret_cast<pvoid&>(ptr) )`)
+and the explicit `ptr = NULL;`. Confirmed in `new_udp_match_packet` (13.7 -> 99.7, 3/3
+stmts) and `delete_udp_match_packet` (0 -> 61.3, 4/4 stmts); residuals are LTCG frame/inline.
+
 ### expression( lexeme_a + lexeme_b ) -> operator+ then expression ctor (each does a cloned_in_buffer)
 `animation::mixing::expression( a + b )` where a,b are `animation_lexeme&`: `operator+<L,L>` builds an
 `addition_lexeme(a,b)` temp, calls `.cloned_in_buffer()`, destroys the temp, returns the clone as
