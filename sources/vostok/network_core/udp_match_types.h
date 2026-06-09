@@ -11,6 +11,14 @@ namespace network_core {
 // referenced only by reference/pointer in the udp_match_* classes
 class	udp_match_client_session;
 
+// packet-class tag stored in the first header byte; fill_packet_header folds the
+// low-level flag into the acknowledgement word when the class is the low-level one.
+enum udp_match_packets_count_enum
+{
+	udp_match_regular_packet	= 0x0,
+	udp_match_low_level_packet	= 0x1,
+}; // enum udp_match_packets_count_enum
+
 struct udp_match_message_type_info {
 	inline	udp_match_message_type_info	( bool is_reliable, bool is_ordered, u8 channel_id ) { /* no source */ }
 
