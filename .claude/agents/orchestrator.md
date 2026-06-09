@@ -180,10 +180,10 @@ diff + a `// VERDICT:` line, downgrades a `DONE` whose source STRUCTURE is actua
 divergence - rebuilding and re-diffing until the structure matches or only an LTCG residual
 remains. It pushes the **SECOND commit to the unit's PR branch** (no `--amend`, no
 force-push), so every PR reads `match` then `verify`. See `.claude/agents/structure-verifier.md`.
-Then (step 4d) the `reviewer` - now a cheap, diff-only pass (no rebuild, no report.json):
-it strips stray logs, enforces the lean-comment policy, and posts a PR comment flagging any
-NEW struct/class/enum/function the matcher added. It commits to the same branch ONLY if it
-fixed source (logs/comments); the symbol flags are a PR comment, not source. Neither merges.
+Then (step 4d) the `reviewer`: it strips stray logs, enforces the lean-comment policy, and
+posts a PR comment flagging any NEW struct/class/enum/function the matcher added. It commits
+to the same branch ONLY if it fixed source (logs/comments); the symbol flags are a PR
+comment, not source. Neither merges.
 
 **The structure-verifier now CLOSES its own structure findings** (phase 2 applies the
 fix, rebuilds, re-diffs), so a structure `// VERDICT:` is no longer a ticket you hand to a
