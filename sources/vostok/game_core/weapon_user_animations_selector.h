@@ -24,6 +24,10 @@ namespace animation {
 }
 }
 
+namespace vostok {
+	void use_game_core_weapon_user_animations_selector( );
+}
+
 namespace survarium {
 
 struct base_player;
@@ -31,6 +35,9 @@ class player_logic_base_state;
 struct weapon_animation_parameters;
 
 class weapon_user_animations_selector : public boost::noncopyable {
+	// claude@MATCH: anchor takes member-fn pointers to private leaves to keep them
+	// as standalone COMDATs; needs access to the private members.
+	friend void ::vostok::use_game_core_weapon_user_animations_selector( );
 public:
 	explicit				weapon_user_animations_selector	( );
 							~weapon_user_animations_selector( );
@@ -39,7 +46,7 @@ public:
 	// STATE[None|PARTIAL]: trivial-setter LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			void			set_animations					( weapon_user_animations_container_ptr const& value ) { m_animations = value; }
 	inline	weapon_user_animations_container const&
-							animations						( ) const { /* no source */ }
+							animations						( ) const { return *m_animations; }
 
 public:
 	typedef boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> animation_functor;
@@ -91,20 +98,22 @@ public:
 
 	inline	ai::fsm&							logic							( ) { /* no source */ }
 
-	inline	bool			is_right_leg_supporting			( ) const { /* no source */ }
+	inline	bool			is_right_leg_supporting			( ) const { return m_right_leg_is_supporting; }
 
 	inline	void			set_player_logic_initial_state	( player_logic_base_state* arg_0 ) { /* no source */ }
 	inline	void			set_forced_not_to_sprint		( bool arg_0 ) { /* no source */ }
 
-public:
+private:
+	// claude@MATCH: target mangling `ABE` -> private const.
 			player_logic_base_state&		current_state	( ) const;
 
+private:
 			bool			stand_predicate					( ) const;
 			bool			crouch_predicate				( ) const;
 			bool			broken_legs_predicate			( ) const;
 			bool			jump_predicate					( ) const;
 
-public:
+private:
 			bool			is_weapon_in_idle				( ) const;
 			bool			is_weapon_firing				( ) const;
 			bool			is_weapon_toggling				( ) const;
@@ -118,7 +127,7 @@ public:
 								float		time_scale
 							) const;
 
-public:
+private:
 			animation::callback_return_type_enum
 							on_interval_ended				( animation::animation_callback_params& params );
 

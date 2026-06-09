@@ -25,9 +25,9 @@ private:
 	// temp_include_all.cpp anchor; needs the protected/private virtuals + ctor.
 	friend void ::vostok::use_game_core_weapon_core_reload_state_base( );
 
-private:
+protected:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
-	/* 0x0140 */	float		m_animation_timescale;
+	/* 0x0140 */	float		m_animation_timescale;	// protected: read directly by derived weapon_core_reload_state
 }; // class weapon_core_reload_state_base
 
 STATIC_SIZE_ASSERT(weapon_core_reload_state_base, 0x148);

@@ -18,8 +18,11 @@ public:
 							u32										animations_count
 						);
 
+protected:
 	virtual	void		initialize						( ) override;
 	virtual	void		finalize						( ) override;
+
+private:
 	virtual	bool		is_ready_for_transition			( ) const override;
 
 			animation::callback_return_type_enum

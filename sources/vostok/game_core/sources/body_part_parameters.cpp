@@ -228,7 +228,14 @@ void body_part_parameters::decrease_health( float amount )
 // # Arguments
 // * `time_delta_ms` - frame duration.
 //
-// STATE[100%|DONE]
+// STATE[72.61%|BLOCKED]: body + control structure are an exact statement-for-statement
+// match vs target (rva 0x587860). Sole residual: target keeps math::min(u32,u32) (the
+// non-template overload @0x03fbb0) OUT-OF-LINE and CALLs it; our build is /Ob2 (full inline
+// expansion) so it inlines min->min_integral (sbb/neg/neg/and) at the call site. That is a
+// whole-program inline-heuristic / header-visibility decision on math::min(u32,u32) - not
+// steerable from regenerate's own source - so BLOCKED, same family as fill_new_stats_item's
+// fixed_string<46> inline. The +0x8 frame delta and the [ebp-20h]-vs-[ebp-18h] slot rename
+// all cascade from that one inline. claude@NOTE see .md.
 void body_part_parameters::regenerate( u32 time_delta_ms, u32 current_time_in_ms )
 {
 	u32 regenerate_delta = time_delta_ms;
@@ -312,8 +319,8 @@ public:
 								m_affect_type		( affect_type ),
 								m_result			( false ) { }
 
-	// STATE[UNVERIFIED]
-	inline		void		operator()					( damage_protector* protector ) {
+	// STATE[100%|DONE]
+	inline		void		operator()					( damage_protector* const protector ) {
 		if ( !m_result && protector->protect_affect_functor )
 			m_result = protector->protect_affect_functor( m_body_type_name, m_affect_type );
 	}

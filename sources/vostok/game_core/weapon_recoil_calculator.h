@@ -34,6 +34,7 @@ public:
 	inline	float		get_horizontal_koef				( ) const { return m_horizontal_koef;	}
 	inline	float		get_back_koef					( ) const { return m_back_koef;			}
 
+private:
 			void		process_compensation			( float dt_sec );
 
 			float		get_random_angle				( float range );
@@ -41,7 +42,7 @@ public:
 
 			void		reset							( );
 
-private:
+
 	/* 0x0000 */	math::random32						m_random;
 	/* 0x0004 */	pseudo_random						m_pseudo_random;
 	/* 0x0008 */	animation::linear_interpolator		m_interpolator;
