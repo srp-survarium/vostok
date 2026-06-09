@@ -1028,3 +1028,29 @@ CONSEQUENCE: making the helper's body real does NOT make the consumer match - th
 inlines the real body instead of the old empty stub. Mark such consumers PARTIAL with the
 inline-vs-call residual; do not chase the % from the consuming unit's source. (Seen across the
 whole udp_match_connection unit: enqueue 4/5 stmts aligned, is_low_level_packet, new_udp_match_packet.)
+
+### A speculative ASSERT in an INLINE ctor multiplies into every inline site - verify against ALL of them
+A header-inline ctor/method is expanded at every call site, so an `ASSERT( UNKNOWN_EXPRESSION )`
+placed in it speculatively emits the ~0x10-byte eater (`mov byte[ebp-N],0; lea eax,[ebp-N]; call
+<folded-empty>`) at EVERY inlining consumer - and if the target sites do not show the eater, the
+guess silently caps every consumer's %. Before adding an ASSERT to an inline body, check the
+target bytes at EACH inline site (rich-view the consumers; the expansion is delimited by the
+member-address temp reload before and the member store after). Caught on
+`network_core/handler_allocator::handler_allocator()`: a speculative ASSERT emitted the eater
+inside THREE ctors while both target sites (`udp_match_connection` ctor 0x205-0x219,
+`udp_match_client` ctor 0x191-0x1ad) show only `call <folded sub-ctor>; mov byte[this+400h],0`;
+removing it moved async_connector ctor 81.38->91.79, connection ctor 95.58->98.52, client ctor
+77.47->79.20.
+
+### boost::function member assign: target calls folded operator=, /Od base may inline the copy-swap-clear body
+`m_fn = value;` (boost::function1/2 operator=(function const&)) in the TARGET is one
+`call <ICF-folded operator= rep>` (often shown under an unrelated signature like
+`boost::function<void(char const*)>::operator=`, this/args LTCG-reg-promoted, e.g. dest in edi).
+The /Od+LTCG BASE may instead INLINE operator='s body at the site: construct a 0x20-byte
+`function` temp copy (`lea ecx,[tmp]; push src; call function::function`), `push dest; call
+function1::swap`, then TWO `call clear` (temp dtor + bind-temp dtor) - growing the frame
+(+0x0C..0x10) and freeing esi/edi (the missing `push esi/edi` in the prologue is a TELL).
+Same per-call-site whole-program LTCG inline-vs-call class as operator|/vectora::size - the
+source spelling (`m_fn = value`, or an inline setter containing it) is already correct; mark
+PARTIAL. Confirmed in `network_core/udp_match_client::udp_match_client` (set_on_disconnect
+inlined; body stmt 0x73 vs target 0x59, 79.20% PARTIAL).
