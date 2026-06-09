@@ -14,8 +14,23 @@
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/game_core/profile_slots.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
+#include <boost/bind.hpp>
 
 namespace survarium {
+
+// Equipment slots whose items carry no per-frame network state and are skipped by the
+// item serialize/deserialize sweeps.
+static profile_slot_enum ignored_slots_for_serialization[ 7 ] = {
+	helmet_slot,
+	mask_slot,
+	torso_slot,
+	back_slot,
+	pants_slot,
+	gloves_slot,
+	boots_slot,
+};
 
 // sushi@TODO: Maybe move somewhere else.
 profile_slot_enum weapon_slots[WEAPON_COUNT] = {
@@ -476,58 +491,40 @@ void inventory::remove( )
 	m_active_slot = max_slots_count;
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: serializes a slot's item unless its profile slot is in the ignored set.
 static void call_item_serialize(
 	inventory_slot const&				slot,
 	network_core::udp_match_packet&		packet,
 	const u32							client_offset
 )
 {
-	// LOCALS
-	// profile_slot_enum const* const 	ignored_slots_start
-	// profile_slot_enum const* const 	ignored_slots_end
-	// ******
+	profile_slot_enum const* const	ignored_slots_start	= ignored_slots_for_serialization;
+	profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
 
-	// CALL SITE INFO
-	// <0x700360> -> void < unknown >( network_core::udp_match_packet&, u32 ) const
-	// ******
-
-	// FUNCTION BODY[0x7002f0]: 5
-	// <0x7002f6>|0x006|+0x007:'253'
-	// <0x7002fd>|0x00d|+0x010:'254'
-	// <0>
-	// <0x70030d>|0x01d|+0x035:'256'
-	// <0x700342>|0x052|+0x020:'257'
-	// ******
+	if ( slot.item )
+	{
+		if ( std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
+			slot.item->serialize( packet, client_offset );
+	}
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
 static void call_item_deserialize( inventory_slot& slot, network_core::packet_reader& reader )
 {
-	// LOCALS
-	// profile_slot_enum const* const 	ignored_slots_start
-	// profile_slot_enum const* const 	ignored_slots_end
-	// ******
+	profile_slot_enum const* const	ignored_slots_start	= ignored_slots_for_serialization;
+	profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
 
-	// CALL SITE INFO
-	// <0x7002dc> -> void < unknown >( network_core::packet_reader& )
-	// ******
-
-	// FUNCTION BODY[0x700270]: 5
-	// <0x700276>|0x006|+0x007:'262'
-	// <0x70027d>|0x00d|+0x010:'263'
-	// <0>
-	// <0x70028d>|0x01d|+0x035:'265'
-	// <0x7002c2>|0x052|+0x01c:'266'
-	// ******
+	if ( slot.item )
+	{
+		if ( std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
+			slot.item->deserialize( reader );
+	}
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: for_each over the slot array, deserializing each non-ignored item.
 void inventory::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY[0x7004a0]: 1
-	// <0x7004a9>|0x009|+0x075:'276'
-	// ******
+	std::for_each( m_slots, m_slots + max_slots_count, boost::bind( call_item_deserialize, _1, boost::ref( reader ) ) );
 }
 
 // STATE[100%|DONE]
