@@ -37,6 +37,16 @@ Safety: we only declare done once BOTH the EXE and PDB mtimes have advanced past
 build start (so we never proceed on a half-written EXE - that would show up as a
 blown-up diff downstream); a real LTCG link keeps a core busy, so it never reads
 as idle. Module-only builds (which don't relink the EXE) skip the watchdog.
+
+## mspdbsrv reaping (every build)
+
+cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which idles for
+~10 minutes after the last build before exiting on its own. It inherits the
+build's stdout/stderr, so a caller that reads us through a pipe (rebuild.py,
+an agent's shell) waits the full 10 minutes for EOF even though everything
+exited long ago - that was a constant ~600s tax on every fresh-worktree
+rebuild. We kill our prefix's mspdbsrv after every build; see
+_kill_prefix_processes for why the kill must be prefix-scoped.
 """
 
 import os
@@ -83,11 +93,26 @@ def die(msg: str, *hints: str) -> None:
     sys.exit(1)
 
 
+def _in_our_prefix(entry: Path) -> bool:
+    """True if /proc/<pid> belongs to THIS worktree's WINEPREFIX (or no prefix
+    is set, in which case scoping is impossible and we include everything)."""
+    prefix = os.environ.get("WINEPREFIX")
+    if not prefix:
+        return True
+    try:
+        return (b"WINEPREFIX=" + prefix.encode()) in (entry / "environ").read_bytes().split(b"\0")
+    except OSError:
+        return False
+
+
 def _wine_tree_jiffies() -> int:
     """Sum utime+stime (jiffies) over the live Wine build/compiler/linker tree.
 
     Excludes the persistent wineserver session so its idle background processes
-    don't mask a stall. Over-inclusion is harmless: we only read the DELTA.
+    don't mask a stall, and is scoped to our WINEPREFIX so a sibling worktree's
+    parallel build can't mask THIS build's zombie either (without the scoping,
+    a stuck link here would wait out the busy sibling all the way to the hard
+    timeout). Over-inclusion is harmless: we only read the DELTA.
     """
     total = 0
     for entry in Path("/proc").iterdir():
@@ -101,6 +126,8 @@ def _wine_tree_jiffies() -> int:
         if low in _WINE_SESSION:
             continue
         if not any(k in low for k in _BUILD_COMMS):
+            continue
+        if not _in_our_prefix(entry):
             continue
         try:
             fields = (entry / "stat").read_text().rsplit(") ", 1)[1].split()
@@ -126,15 +153,34 @@ def _outputs_refreshed(since: float) -> bool:
     return True
 
 
-def _reap_wine_children() -> None:
-    """Kill leftover wine compiler/linker processes (NOT the wineserver session).
+def _kill_prefix_processes(comms: tuple[str, ...]) -> None:
+    """SIGKILL wine processes by comm name, scoped to THIS worktree's WINEPREFIX.
 
-    Best-effort: a process we can't kill is fine - the point is that we no longer
-    BLOCK on it, not that it must die.
+    Sibling worktrees build in parallel inside their own prefixes; a global
+    pkill could hit a healthy cl/link in flight there, so match each candidate's
+    /proc/<pid>/environ against our prefix. Best-effort: a process we can't
+    kill is fine - the point is that we no longer BLOCK on it, not that it
+    must die.
     """
-    for name in ("cl", "link.exe", "link", "conhost.exe"):
-        subprocess.run(["pkill", "-9", "-x", name],
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if not os.environ.get("WINEPREFIX"):
+        return  # cannot scope the kill safely
+    targets = {c.lower() for c in comms}
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            if (entry / "comm").read_text().strip().lower() not in targets:
+                continue
+            if not _in_our_prefix(entry):
+                continue
+            os.kill(int(entry.name), signal.SIGKILL)
+        except (OSError, ValueError):
+            continue
+
+
+def _reap_wine_children() -> None:
+    """Kill leftover wine compiler/linker processes (NOT the wineserver session)."""
+    _kill_prefix_processes(("cl", "cl.exe", "link", "link.exe", "conhost.exe"))
 
 
 def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
@@ -242,6 +288,14 @@ def main() -> None:
             ["wine", str(ninja_exe), "-v", "-k", "0", *args],
             cwd=str(BUILD_DIR),
         ).returncode
+
+    # cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which then
+    # idles for ~10 minutes before exiting on its own. It inherits the build's
+    # stdout/stderr fds, so any caller reading us through a pipe (rebuild.py,
+    # an agent's shell) only sees EOF when mspdbsrv dies - a constant ~600s
+    # stall per rebuild. The PDB is fully written once ninja returns, so
+    # killing it here is safe; respawning next build costs ~a second.
+    _kill_prefix_processes(("mspdbsrv.exe",))
     sys.exit(rc)
 
 
