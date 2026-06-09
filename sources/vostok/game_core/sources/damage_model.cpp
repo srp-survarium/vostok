@@ -360,10 +360,12 @@ void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum 
 	}
 }
 
-// STATE[PARTIAL]: for_each over the body-parts list, forwarding deserialize to each part.
+// STATE[INPROGRESS]: for_each over the body-parts list, forwarding deserialize to each part. DCE'd, no base symbol.
 void damage_model::deserialize( network_core::packet_reader& reader )
 {
 	m_body_parts.for_each( boost::bind( &body_part_parameters::deserialize, _1, boost::ref( reader ) ) );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f0250); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 } // namespace survarium

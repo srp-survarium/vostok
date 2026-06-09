@@ -601,6 +601,15 @@ void booby_trap_core::serialize( network_core::udp_match_packet& packet ) const
 	packet.append( m_trap_state );
 	packet.append( (math::float3 const&)m_transform.c );
 	packet.append( m_transform.get_angles_xyz( ) );
+
+	// STRUCTURE DIFF[target 0x58b750 | base 0x45f940]: target 5 / base 4 stmts
+	//   1: 0x00b <0xc> | 0x00b <0x24> | m_owner->serialize_game_world_object_header( *this, packet );   SIZE
+	//   2: 0x017 <0x26> | --          | L359   ONLY target
+	//   3: 0x03d <0x13> | 0x02f <0x1a> | packet.append( m_trap_state );   SIZE
+	//   4: 0x050 <0x15> | 0x049 <0x14> | packet.append( (math::float3 const&)m_transform.c );   SIZE
+	//   5: 0x065 <0x19> | 0x05d <0x22> | packet.append( m_transform.get_angles_xyz( ) );   SIZE
+	// ; aligned 0, size-diffs 4, quantity-diffs 1, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - same header-forward + 3 appends; SIZE/quantity are LTCG inline-vs-call of append/get_angles_xyz (target inlines the get_angles_xyz body as its own stmt L359), non-steerable.
 }
 
 // STATE[PARTIAL]: read trap state + position + angles, rebuild the transform (rotation *
@@ -617,6 +626,16 @@ void booby_trap_core::deserialize( network_core::packet_reader& reader )
 
 	if ( state != booby_trap_state_armed )
 		switch_to_state( state );
+
+	// STRUCTURE DIFF[target 0x58b680 | base 0x45faa0]: target 9 / base 7 stmts
+	//   1: 0x00f <0xe> | 0x00f <0x27> | booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );   SIZE
+	//   2: 0x01d <0xb> | 0x036 <0x4a> | math::float3		position	= reader.r< math::float3 >( );   SIZE
+	//   3: 0x028 <0xb> | 0x080 <0x4a> | math::float3		angles		= reader.r< math::float3 >( );   SIZE
+	//   4: 0x033 <0xc> | --          | L374   ONLY target
+	//   5: 0x03f <0xc> | --          | L375   ONLY target
+	//   7: 0x07f <0x2a> | 0x0fe <0x2c> | m_owner->insert_trap( *this, transform );   SIZE
+	// ; aligned 3, size-diffs 4, quantity-diffs 2, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - same 3 reads + transform build (rotation*translation) + insert_trap + guarded switch_to_state; SIZE/quantity are LTCG inline-vs-call of r<float3>/create_rotation/create_translation (target inlines them into L374/L375 stmts), non-steerable.
 }
 
 // STATE[100%|DONE]

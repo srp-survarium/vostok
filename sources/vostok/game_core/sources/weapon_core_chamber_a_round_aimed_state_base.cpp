@@ -60,16 +60,20 @@ void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& 
 	// ******
 }
 
-// STATE[PARTIAL]: single append( m_animation_has_been_ended ) ([+0x135] bool). Matches target shape.
+// STATE[INPROGRESS]: single append( m_animation_has_been_ended ) ([+0x135] bool). DCE'd, no base symbol.
 void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
 	packet.append( m_animation_has_been_ended );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x72e390); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
-// STATE[PARTIAL]: single r< bool > into m_animation_has_been_ended ([+0x135]). Matches target shape.
+// STATE[INPROGRESS]: single r< bool > into m_animation_has_been_ended ([+0x135]). DCE'd, no base symbol.
 void weapon_core_chamber_a_round_aimed_state_base::deserialize( network_core::packet_reader& reader )
 {
 	m_animation_has_been_ended = reader.r< bool >( );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x72e370); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 } // namespace survarium

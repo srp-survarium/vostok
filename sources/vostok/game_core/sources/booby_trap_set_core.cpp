@@ -573,6 +573,12 @@ bool trap_is_active( booby_trap_core_ptr const& trap )
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const
 {
 	packet.append( trap_index( trap ) );
+
+	// STRUCTURE DIFF[target 0x6ed9d0 | base 0x450610]: target 2 / base 1 stmts
+	//   1: 0x009 <0xc> | 0x009 <0x1d> | packet.append( trap_index( trap ) );   SIZE
+	//   2: 0x015 <0x18> | --          | L411   ONLY target
+	// ; aligned 0, size-diffs 1, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - single append( trap_index ); SIZE/quantity are LTCG inline of trap_index()+append (target splits the inlined append tail into L411), non-steerable.
 }
 
 // STATE[PARTIAL]: read a trap index, resolve the trap and forward its
@@ -584,6 +590,14 @@ void booby_trap_set_core::deserialize_game_world_object( network_core::packet_re
 	booby_trap_core&	trap		= *traps( )[ trap_index ];
 	game_world_object&	object		= trap;
 	object.deserialize( reader );
+
+	// STRUCTURE DIFF[target 0x6ed960 | base 0x450500]: target 6 / base 4 stmts
+	//   1: 0x00a <0xb> | 0x009 <0x20> | const u8			trap_index	= reader.r< bool >( );   SIZE
+	//   2: 0x015 <0xc> | 0x029 <0x33> | booby_trap_core&	trap		= *traps( )[ trap_index ];   SIZE
+	//   3: 0x021 <0x1b> | --          | L419   ONLY target
+	//   4: 0x03c <0xc> | --          | L421   ONLY target
+	// ; aligned 2, size-diffs 2, quantity-diffs 2, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - read index, resolve trap, forward deserialize; SIZE/quantity are LTCG inline-vs-call of r<bool>/traps()[]/operator* (target inlines them into L419/L421), non-steerable.
 }
 
 // STATE[UNCHECKED]

@@ -61,6 +61,13 @@ void hit_info::deserialize( network_core::packet_reader& packet )
 	armor_piercing	= packet.r< float >( );
 
 	bullet			= NULL;
+
+	// STRUCTURE DIFF[target 0x72eaf0 | base 0x56d640]: target 9 / base 9 stmts
+	//   1-2: hit_initiator/being_hit r<bool>   ONLY base (SIZE-drift, target rows L45/L49/L52)
+	//   9: damage_type = damage_type_info;   ONLY base (SIZE-drift)
+	//  10-11: amount/armor_piercing r<float>   SIZE
+	// ; aligned 4, size-diffs 2, quantity-diffs 6, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - identical 9-stmt order (2 r<bool>, r_string+assign x2, 2 r<float>, bullet=NULL); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines r<bool>/r_string/r<float>), non-steerable.
 }
 
 } // namespace survarium

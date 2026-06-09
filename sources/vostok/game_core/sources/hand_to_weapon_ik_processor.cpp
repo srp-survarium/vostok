@@ -274,6 +274,13 @@ void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& pac
 	packet.append( active_hands );
 	packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
 	packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
+
+	// STRUCTURE DIFF[target 0x584040 | base 0x51aef0]: target 4 / base 4 stmts
+	//   2: 0x029 <0xd> | 0x029 <0x14> | packet.append( active_hands );   SIZE
+	//   3: 0x036 <0x11> | 0x03d <0x19> | packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );   SIZE
+	//   4: 0x047 <0x12> | 0x056 <0x1a> | packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );   SIZE
+	// ; aligned 1, size-diffs 3, quantity-diffs 0, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - pack byte + 3 appends; SIZE rows are packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
 // STATE[PARTIAL]: reads the packed active-hands byte then both start times; the trailing
@@ -287,6 +294,14 @@ void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& read
 
 	m_hands[ left  ].is_active = ( active_hands & 1 ) != 0;
 	m_hands[ right ].is_active = ( active_hands & 2 ) != 0;
+
+	// STRUCTURE DIFF[target 0x583fd0 | base 0x51ae50]: target 6 / base 5 stmts
+	//   1: 0x009 <0xb> | 0x009 <0x20> | u8 active_hands = reader.r< bool >( );   SIZE
+	//   2: 0x014 <0xd> | 0x029 <0x22> | m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );   SIZE
+	//   3: 0x021 <0xe> | 0x04b <0x23> | m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );   SIZE
+	//   4: 0x02f <0xc> | --          | L208   ONLY target
+	// ; aligned 2, size-diffs 3, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - read byte + 2 times + 2 bit-tests; SIZE/quantity are r<bool>/r<u32> LTCG inline (target) vs call (base), non-steerable.
 }
 
 } // namespace survarium

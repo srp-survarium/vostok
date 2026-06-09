@@ -219,6 +219,14 @@ void weapon_user_animations_selector::serialize( network_core::udp_match_packet&
 
 	packet.append( state_id );
 	static_cast< player_logic_base_state const* >( current )->serialize( packet );
+
+	// STRUCTURE DIFF[target 0x584dc0 | base 0x51a690]: target 11 / base 12 stmts
+	//   4: 0x01a <0x25> | 0x01a <0x1a> | for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next )   SIZE
+	//   8: --          | 0x042 <0x9> | ++state_id;   ONLY base
+	//  11: 0x05b <0xd> | 0x059 <0x14> | packet.append( state_id );   SIZE
+	//  12: 0x068 <0x17> | 0x06d <0x11> | static_cast< player_logic_base_state const* >( current )->serialize( packet );   SIZE
+	// ; aligned 8, size-diffs 3, quantity-diffs 1, blank-gaps 3
+	// VERDICT: STRUCTURE MATCH (shape ok) - same fsm-walk + append + forward; ++state_id ONLY base is SIZE-drift mis-pairing (target folds the inc into the for-tail row 4 <0x25>), SIZE rows are inlined states().front()/append, non-steerable.
 }
 
 // STATE[PARTIAL]: reads the target state index, walks m_logic's state list to that index,
@@ -242,6 +250,13 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 
 	m_logic.set_initial_state( current );
 	static_cast< player_logic_base_state* >( current )->deserialize( reader );
+
+	// STRUCTURE DIFF[target 0x584d20 | base 0x51a5f0]: target 11 / base 11 stmts
+	//   1: 0x009 <0xb> | 0x009 <0x20> | u8							target_state_id	= reader.r< bool >( );   SIZE
+	//   4: 0x01f <0x2a> | 0x034 <0x23> | for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )   SIZE
+	//  11: 0x077 <0x17> | 0x085 <0x11> | static_cast< player_logic_base_state* >( current )->deserialize( reader );   SIZE
+	// ; aligned 8, size-diffs 3, quantity-diffs 0, blank-gaps 4
+	// VERDICT: STRUCTURE MATCH (shape ok) - read index + fsm-walk + set_initial_state + forward; SIZE rows are r<bool>/states().front() LTCG inline (target) vs call (base), non-steerable.
 }
 
 // STATE[STUB]
