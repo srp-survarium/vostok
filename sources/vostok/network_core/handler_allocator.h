@@ -13,13 +13,11 @@ namespace network_core {
 
 class handler_allocator : public core::noncopyable {
 public:
-	// STATE[STUB]
+	// STATE[0%|DONE]: source matched; no base COMDAT (LTCG inlines into connection ctor)
 	inline				handler_allocator	( )
 	{
-		// FUNCTION BODY[0x131730]: 0
-		// <0x131730>|0x000|+0x019:'29'	{
-		// <0x131749>|0x019|      :'30'	}
-		// ******
+		ASSERT			( UNKNOWN_EXPRESSION );
+		in_use_			= false;
 	}
 
 	inline	void*		allocate			( u32 size ) { return NULL; }
