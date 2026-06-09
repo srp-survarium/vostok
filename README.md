@@ -132,7 +132,7 @@ session** - it spawns worker subagents, so it cannot run as a nested subagent - 
 ```
 
 Per unit it then: prepares a sibling worktree `vostok_<N>` off the stack tip, dispatches a
-`matcher` (up to 3 in parallel), runs the `structure-verifier` + `reviewer` onto the same
+`matcher` (up to the worker cap, default 3), runs the `structure-verifier` + `reviewer` onto the same
 branch, and opens a **stacked PR** (match + verify commits, minimal body). Matchers spawn
 off the **top** of the stack so percentages compound; you review the stack **bottom-up** and
 merge one PR at a time (the `pr-verifier` agent prepares each onto the advancing base).
