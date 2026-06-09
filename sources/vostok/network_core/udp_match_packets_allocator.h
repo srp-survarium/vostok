@@ -17,16 +17,12 @@ namespace network_core {
 
 class udp_match_packets_allocator : public memory::single_size_buffer_allocator< 300, threading::single_threading_policy > {
 public:
-	// STATE[STUB]
+	// STATE[0%|DONE]: source matched; no base COMDAT (call site is in network module, not network_core)
 	inline			udp_match_packets_allocator	( memory::base_allocator& allocator, void* arena, u32 arena_size ) :
 		single_size_buffer_allocator< 300, threading::single_threading_policy >( arena, arena_size ),
 		m_allocator			( allocator ),
 		m_reference_count	( 0 )
 	{
-		// FUNCTION BODY[0xeac50]: 0
-		// <0xeac50>|0x000|+0x02c:'21'	{
-		// <0xeac7c>|0x02c|      :'22'	}
-		// ******
 	}
 
 	inline	void	destroy						( udp_match_packets_allocator* allocator ) { /* no source */ }

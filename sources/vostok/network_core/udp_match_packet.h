@@ -24,23 +24,29 @@ public:
 	public:
 		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
 	private:
-		// STATE[STUB]
+		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
+
+		// STATE[100%|DONE]
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
-			// FUNCTION BODY[0xea9c0]: 1
-			// <0xea9c4>|0x004|+0x02c:'112'
-			// ******
+			packet.~udp_match_packet( );
 		}
 	}; // class helper
 
 private:
-	// STATE[STUB]
-	inline				udp_match_packet	( )
+	// STATE[65%|DONE]: structure 2/2 stmts; residual is LTCG inlining (packet/set_member_hook ctors inlined vs target's out-of-line calls)
+	inline				udp_match_packet	( ) :
+		next					( NULL ),
+		last_send_time_in_ms	( 0xFFFFFFFF ),
+		sequence_id				( 0xFFFF ),
+		order_id				( 0xFFFF ),
+		send_count				( 0 ),
+		channel_id				( 0x3F ),
+		is_reliable				( 0 ),
+		is_ordered				( 0 )
 	{
-		// FUNCTION BODY[0xea900]: 2
-		// <0xea999>|0x099|+0x00b:'48'
-		// <0xea9a4>|0x0a4|+0x007:'49'
-		// ******
+		base_packet::m_buffer	= m_buffer.elems + 6;
+		m_buffer.elems[0]		= 0;
 	}
 public:
 	inline				~udp_match_packet	( ) { /* no source */ }
@@ -50,13 +56,10 @@ public:
 	inline	pcbyte		buffer_to_send		( ) const { return NULL; }
 	inline	pbyte		buffer_to_send		( ) { return NULL; }
 
-	// STATE[STUB]
+	// STATE[0%|DONE]: source matched; no base COMDAT (LTCG inlines into callers)
 	inline	u8			header_size			( ) const
 	{
-		return 0;
-		// FUNCTION BODY[0x8d670]
-		// <0x8d670>|0x000|      :'62'	{
-		// ******
+		return				(u8)( base_packet::m_buffer - m_buffer.elems );
 	}
 	inline	u32			buffer_to_send_size	( ) const { return 0; }
 
@@ -68,6 +71,8 @@ public:
 	friend	class		udp_match_connection;
 	friend	class		delayed_packets_predicate;
 	friend	class		udp_network_flow_emulator;
+	friend	udp_match_packet*	new_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >& );
+	friend	void				delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 
 private:
 	/* 0x0008 */	boost::intrusive::set_member_hook<>	set_member_hook;
@@ -87,31 +92,26 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
-// STATE[STUB]
+// STATE[99%|DONE]: structure 3/3 stmts; residual is LTCG frame size (0x20 vs 0x34)
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
 {
-	return NULL;
-	// FUNCTION BODY[0xeaa00]: 3
-	// <0xeaa06>|0x006|+0x00b:'118'
-	// <0xeaa11>|0x011|+0x02e:'119'
-	// <0xeaa3f>|0x03f|+0x003:'120'
-	// ******
+	udp_match_packet* const	result	= (udp_match_packet*)allocator.allocate( );
+	new( result ) udp_match_packet( );
+	return					result;
 }
 
-// STATE[STUB]
+// STATE[61%|DONE]: structure 4/4 stmts; residual is LTCG inlining (deallocate inlined in target, out-of-line in base)
 inline void delete_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
 	udp_match_packet*&		packet
 )
 {
-	// FUNCTION BODY[0xeaa50]: 4
-	// <0xeaa56>|0x006|+0x00e:'125'
-	// <0xeaa64>|0x014|+0x008:'126'
-	// <0xeaa6c>|0x01c|+0x03b:'127'
-	// <0xeaaa7>|0x057|+0x009:'128'
-	// ******
+	udp_match_packet::helper::call_destructor( *packet );
+	void*					buffer	= packet;
+	allocator.deallocate	( buffer );
+	packet					= NULL;
 }
 
 } // namespace network_core
