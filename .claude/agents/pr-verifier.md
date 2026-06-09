@@ -1,6 +1,6 @@
 ---
 name: pr-verifier
-description: Lands stacked match PRs onto the advanced integration branch one at a time and verifies each, LOOPING up the stack and handing you each prepared PR to merge - until you stop it. Per PR it finds the current BOTTOM of the stack, recreates that PR on the up-to-date integration tip by cherry-picking ITS OWN commits (never merge-in), resolves the usual stack conflicts (PROGRESS.md ledger, temp_include_all.cpp braces, append-only docs), rebuilds locally in THIS worktree (never the sibling repo), runs the structure-verifier on the PR's matched function(s), and hands back a prepared+verified PR. It NEVER merges - it WAITS for you to merge, then advances to the next PR. It STOPS and surfaces the PR when the structure-verifier flags a MISMATCH. Run it as a top-level agent (it dispatches the structure-verifier).
+description: Lands stacked match PRs onto the advanced integration branch one at a time and verifies each, LOOPING up the stack and handing you each prepared PR to merge - until you stop it. Per PR it finds the current BOTTOM of the stack, recreates that PR on the up-to-date integration tip by cherry-picking ITS OWN commits (never merge-in), resolves the usual stack conflicts (temp_include_all.cpp braces, append-only docs), rebuilds locally in THIS worktree (never the sibling repo), runs the structure-verifier on the PR's matched function(s), and hands back a prepared+verified PR. It NEVER merges - it WAITS for you to merge, then advances to the next PR. It STOPS and surfaces the PR when the structure-verifier flags a MISMATCH. Run it as a top-level agent (it dispatches the structure-verifier).
 tools: Agent, Bash, Read, Edit, Write, Grep, Glob
 model: inherit
 ---
@@ -55,7 +55,7 @@ git log --reverse --oneline <prev-original-tip>..origin/<this-head>
   commit, its own sha is `<prev-original-tip>`).
 Sanity-check: the own-commit set should match the PR's diff (`git diff
 <prev-original-tip>..origin/<this-head> --stat`) and touch only this unit's files
-plus the shared `PROGRESS.md` / `temp_include_all.cpp` / append-only docs.
+plus the shared `temp_include_all.cpp` / append-only docs.
 
 ## 3. Recreate on the advanced integration tip + cherry-pick (NEVER merge-in)
 ```
@@ -64,24 +64,20 @@ git checkout -B <this-head> origin/feature/agentic-matching-loop-2
 git cherry-pick <own commit 1> <own commit 2> ...   # oldest-first, NOT the whole history
 ```
 `git merge` is forbidden here - it drags in every inherited file and 3-way-mangles
-`PROGRESS.md` / `temp_include_all.cpp`.
+`temp_include_all.cpp`.
 
 ## 4. Handle conflicts (what actually conflicts in this repo)
 A clean cherry-pick onto the advanced base usually has nothing to resolve, because
 everything below already merged. When a hunk DOES conflict, resolve by intent:
-- **`PROGRESS.md`** - append-only ledger. Keep the integration's accumulated lines
-  AND this PR's new line(s); union, no duplicates. Never delete an existing line.
 - **`temp_include_all.cpp`** - anchor calls / `use_*` blocks. Keep ALL anchors from
   both sides. Then VERIFY braces balance: `{` count == `}` count (a known failure
   mode is an anchor cherry-picked INSIDE a function's closing `}`, nesting it; add
   the one missing `}` if so). Mismatched braces will break the build.
-- **`assembly_patterns.md` / per-function `.md` / other docs** - append-only; take
-  both sides.
+- **`assembly_patterns.md` / other append-only docs** - take both sides.
 - **shared headers / `.cpp`** - if the integration advanced a header this PR also
   touched, take both changes (the PR's function edit AND the inherited edit). Never
   drop matched code to make a conflict go away.
-After resolving, re-run the brace check and grep `PROGRESS.md` for a duplicated
-ledger line. Confirm the tree matches the old PR content where nothing should have
+After resolving, re-run the brace check. Confirm the tree matches the old PR content where nothing should have
 changed: `git diff backup/pr<N> HEAD --stat` should be empty (pure rebase) unless a
 real conflict forced a content change - explain any non-empty diff.
 

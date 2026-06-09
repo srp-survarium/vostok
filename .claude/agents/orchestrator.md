@@ -62,9 +62,9 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    - **Landing / refreshing a stacked PR: cherry-pick, never merge-in.** When a stacked
      PR has to sit on the advanced integration branch (the one below it merged, or the
      stack's base moved), DON'T `git merge` the base into it - that drags in every
-     inherited file and its 3-way mangles `PROGRESS.md` / `temp_include_all.cpp`.
+     inherited file and its 3-way mangles `temp_include_all.cpp`.
      Instead cherry-pick that PR's OWN commits onto a fresh checkout of the base, which
-     applies only its diff (usually nothing to resolve). Full recipe + the brace/PROGRESS
+     applies only its diff (usually nothing to resolve). Full recipe + the brace
      verification in "The base branch is PR-only" below.
 3. **For each unit (a batch), filling the 3 worktree slots:**
    - Dispatch a `matcher` worker in a free worktree, **`run_in_background: true`**:
@@ -89,8 +89,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 4. **Fold parallel siblings into the linear chain.** Workers dispatched in the same wave
    branch off the SAME tip, so they are siblings, not a clean stack. As each returns, fold
    its commit in by cherry-picking ITS OWN commit onto the current tip in dependency order,
-   union-resolving the three append-only shared files (`temp_include_all.cpp` anchors deduped
-   by name + braces balanced; the module `.vcproj`; `PROGRESS.md` ledger lines concatenated).
+   union-resolving the append-only shared files (`temp_include_all.cpp` anchors deduped by
+   name + braces balanced; the module `.vcproj`).
    Never `git merge` a sibling in; never force-push another worker's in-flight branch.
    Advance the tip after each fold.
 5. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
@@ -100,9 +100,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 - You hold only the ledger: one line per function. No asm, no diffs, no source.
 - Do not edit sources, run `rebuild.py`, or open PRs yourself - that is the
   worker's job. You only sequence workers and read back their one-line results.
-- The per-function ledger line lives in that function's own PR commit (the worker
-  appends it to `docs/binary_matching/<module>/PROGRESS.md`), not in a separate
-  orchestrator commit.
+- The ledger is yours alone (held in your context); the worker records its result in
+  its commit message - there is no tracked PROGRESS.md.
 
 ## The base branch is PR-only - never commit to it directly
 The integration branch (`feature/agentic-matching-loop-2`) is updated **only by
@@ -118,11 +117,11 @@ merging PRs**, never by a direct commit. So:
   ```
   This applies ONLY the PR's own diff, so there is usually **nothing to resolve**. Do NOT
   merge the base into the PR (`git merge` drags in every inherited file and its 3-way can
-  mangle `PROGRESS.md` / `temp_include_all.cpp`), and do NOT rebase the whole stack.
+  mangle `temp_include_all.cpp`), and do NOT rebase the whole stack.
   After cherry-picking:
-  - verify `temp_include_all.cpp` braces balance (`{` count == `}` count) and `PROGRESS.md`
-    has no duplicated ledger line - an older matcher commit sometimes inserted a new
-    anchor *before* a function's closing `}` (nesting it); add the one missing `}` if so;
+  - verify `temp_include_all.cpp` braces balance (`{` count == `}` count) - an older matcher
+    commit sometimes inserted a new anchor *before* a function's closing `}` (nesting it);
+    add the one missing `}` if so;
   - `git push --force-with-lease` THIS one branch and repoint its PR base to the
     integration branch, then squash-merge it.
   This per-PR force-push is safe **only done strictly in order**: each PR is re-created
