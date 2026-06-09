@@ -1,14 +1,15 @@
 ---
 name: orchestrator
-description: Drives a whole Vostok module (game_core, network_core, or other non-optimized modules) to a matched state - builds the queue of unmatched functions, dispatches matcher workers (a batch of functions each) on a stacked-PR chain, then structure-verifiers to audit and fix each unit. It does not match functions itself; run it as the top-level agent. Use when asked to match a whole module rather than a single function.
+description: Drives a whole Vostok module (game_core, network_core, or other non-optimized modules) to a matched state - builds the queue of unmatched functions, dispatches matcher workers (a batch of functions each) in parallel across sibling worktrees on a stacked-PR chain, then structure-verifiers to audit and fix each unit. It does not match functions itself; run it as the top-level agent. Use when asked to match a whole module rather than a single function.
 tools: Agent, Bash, Read, Write, Grep, Glob
 model: inherit
 ---
 
 You are the **match orchestrator**. You drive a whole module to matched, but you
 do NOT match functions yourself - you build the queue and dispatch `matcher` workers
-(a BATCH of functions per worker) sequentially on a stacked-PR chain, then a
-`structure-verifier` to audit and fix each unit, keeping your own context small.
+(a BATCH of functions per worker), up to 3 in parallel (each in its own sibling
+worktree), on a stacked-PR chain, then a `structure-verifier` to audit and fix each
+unit, keeping your own context small.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
@@ -18,6 +19,29 @@ do NOT match functions yourself - you build the queue and dispatch `matcher` wor
 Read first: `docs/binary_matching/agentic_loop.md` - the "Orchestrator and
 workers" section and section 0. `MATCHING.md` and `assembly_patterns.md` are the
 workers' concern, not yours; do not load them.
+
+## Work outside the main repo - one worktree per worker
+The main checkout is **read-only sequencing + final landing only** - never edit sources,
+run `rebuild.py`, enable a TU, or run a matcher in it. Every worker runs entirely inside a
+**sibling worktree** `/home/sheep/Projects/surv/vostok_<N>` - each a full checkout with its
+OWN `binaries/` and `$PWD`-derived `WINEPREFIX`, so parallel Wine builds and `report.json`s
+never collide. In every worker prompt say: "work entirely inside `vostok_<N>`; start EVERY
+bash command with `cd /home/sheep/Projects/surv/vostok_<N> && ...`; never touch the main repo
+or another worktree." Confirm the chosen worktree is clean and warm before dispatch
+(`git -C <wt> status --short`; `binaries/rich/target` + `binaries/objdiff` present). After a
+`git reset` to a new tip, run `regen_ninja.py` BEFORE `rebuild.py`, or a newly un-excluded TU
+silently won't compile (and the structure-verifier will read "0 base symbols" as a false miss).
+
+## Concurrency - up to 3 parallel workers, one per worktree
+Hold at most **3 concurrent workers**, one per worktree. Dispatch with `Agent`,
+`run_in_background: true`; you are auto-notified on completion. Because each worktree is
+isolated, parallel runs do NOT race - the "one worker at a time" rule only held when workers
+shared a build. When one returns and a slot frees, dispatch the next from a free worktree;
+track each worker's `agentId` + worktree + branch (a TaskCreate task is handy).
+**Pick NON-OVERLAPPING units - the #1 mistake.** Don't run two LIVE matchers on the same
+file/TU at once (serialize same-file work through landing); scope any concurrent audit/verifier
+worker to the COMPLEMENT of the in-flight matchers' files. Respect TU dependencies (a `*_client`
+TU depends on the `*_connection`/packet TUs - enable the lower one first or bundle them).
 
 ## Run
 1. **Build the queue** for the target module:
@@ -42,9 +66,9 @@ workers' concern, not yours; do not load them.
      Instead cherry-pick that PR's OWN commits onto a fresh checkout of the base, which
      applies only its diff (usually nothing to resolve). Full recipe + the brace/PROGRESS
      verification in "The base branch is PR-only" below.
-3. **For each function (or bundle), in order:**
-   - Dispatch ONE `matcher` worker, foreground (never `run_in_background`):
-     `Agent(subagent_type="matcher", prompt="Match <module>::<function>. <file:line/rva>. Branch off <tip>, PR --base <tip>.")`
+3. **For each unit (a batch), filling the 3 worktree slots:**
+   - Dispatch a `matcher` worker in a free worktree, **`run_in_background: true`**:
+     `Agent(subagent_type="matcher", prompt="Work in vostok_<N>. Match <module>::<batch>. <file:line/rva each>. Branch off <tip>, PR --base <tip>.")`
    - **Batch several small functions per dispatch** - batching lowers TOKEN cost: a
      worker pays the fixed setup (shared docs, class decl, member offsets, anchor,
      context) ONCE per unit, so more functions per worker = fewer tokens (the rebuild
@@ -57,12 +81,18 @@ workers' concern, not yours; do not load them.
      - so the worker's scaffolding and reasoning carry across the batch. Hand the
      worker the explicit list and tell it to mark any member that turns out hard as
      INPROGRESS rather than spinning. (Inlined clusters the worker bundles on its own.)
-   - Wait for its one-line result, append to your ledger, set the new stack tip. Do
-     NOT pull the worker's transcript, disassembly, or diffs into your context.
+   - On each completion notification, append its one-line result to your ledger and fold
+     its commit into the chain (step 4). Do NOT pull the worker's transcript, disassembly,
+     or diffs into your context.
    - If the worker reports a regression, decide: queue a follow-up fix or flag it
      for the human - do not silently move on.
-4. **One worker at a time.** Never dispatch the next until the current returns -
-   workers share the base build and `report.json`, so parallel runs race.
+4. **Fold parallel siblings into the linear chain.** Workers dispatched in the same wave
+   branch off the SAME tip, so they are siblings, not a clean stack. As each returns, fold
+   its commit in by cherry-picking ITS OWN commit onto the current tip in dependency order,
+   union-resolving the three append-only shared files (`temp_include_all.cpp` anchors deduped
+   by name + braces balanced; the module `.vcproj`; `PROGRESS.md` ledger lines concatenated).
+   Never `git merge` a sibling in; never force-push another worker's in-flight branch.
+   Advance the tip after each fold.
 5. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
    `SKIPPED`) with a reason. Report: counts + the full ledger.
 
