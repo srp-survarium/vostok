@@ -184,6 +184,15 @@ quantity/size divergence, and the source fix:
   members `m_`, globals `g_`, file statics `s_`. When you align `'srcline'` statements,
   a CamelCase or mis-cased identifier may make a matching statement look unmatched -
   note it, but the structural unit is the statement, not the spelling.
+- **`const` - preserve EVERY one the target's recorded types carry.** The `; locals`
+  block records const-ness, and so does the signature: target `const u32 buffer_size`
+  / `u8* const buffer` against base `u32` / `u8*` is a real divergence you FLAG and FIX.
+  `const` on a local/parameter is codegen-INVISIBLE (it won't move a byte or change the
+  statement structure), so it never shows up as a SIZE/QUANTITY row - you only catch it by
+  comparing the two single-side `; locals` lists (and the signatures). We reproduce the
+  target's source exactly, so restore every missing `const`: top-level (`const u32`),
+  pointer/reference (`T* const`, `const T&`), `const` member functions, and `const`
+  return types. Preserve it everywhere the target's type records it.
 ## What you produce (NO per-function `.md` - we don't keep them)
 Your output is the in-source `// STRUCTURE DIFF` + `// VERDICT:` embed (phase 1) and the
 actual fix (phase 2). Do NOT create a `docs/binary_matching/<module>/structure/<fn>.md`
