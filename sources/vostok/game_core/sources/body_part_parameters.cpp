@@ -10,6 +10,9 @@
 #include <vostok/game_core/damage_protector.h>
 
 #include <vostok/ai/npc_statistics.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
+#include <boost/bind.hpp>
 
 namespace survarium {
 
@@ -503,24 +506,51 @@ void body_part_parameters::set_parameters( float max_health, float regeneration_
 	m_regeneration_speed = regeneration_speed ;
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: append affect type (u8) then its expiry time biased by client_offset.
 void serialize_affect( network_core::udp_match_packet& packet, std::pair<enum hit_affects_type_enum,u32> const& affect, s32 client_offset )
 {
+	packet.append( (u8)affect.first );
+	packet.append( affect.second - client_offset );
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: read affect type (r<bool>) and expiry time (r<u32>); trailing compiled-out assert.
 void deserialize_affect( network_core::packet_reader& reader, std::pair<enum hit_affects_type_enum,u32>& affect )
 {
+	affect.first	= (hit_affects_type_enum)reader.r< bool >( );
+	affect.second	= reader.r< u32 >( );
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: append health, last-hit time (biased by client_offset, 0 when unset), the
+// active-affect count, then each affect via serialize_affect. The map iteration/boost::bind
+// shape is approximate; refine against the diff. trail: body_part_parameters_serialize.md
 void body_part_parameters::serialize( network_core::udp_match_packet& packet, s32 client_offset ) const
 {
+	packet.append( m_health );
+	packet.append( m_last_hit_time ? m_last_hit_time - client_offset : 0 );
+	packet.append( (u32)m_affects.size( ) );
+
+	std::for_each(
+		m_affects.begin( ),
+		m_affects.end( ),
+		boost::bind( serialize_affect, boost::ref( packet ), _1, client_offset )
+	);
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: read health + last-hit time, then a count of affects, applying each by force.
 void body_part_parameters::deserialize( network_core::packet_reader& reader )
 {
+	m_health		= reader.r< float >( );
+	m_last_hit_time	= reader.r< u32 >( );
+
+	u8 affects_count = reader.r< bool >( );
+
+	while ( affects_count != 0 )
+	{
+		std::pair< hit_affects_type_enum, u32 >	affect;
+		deserialize_affect( reader, affect );
+		apply_affect_by_force( affect.first, (affect_event_type_enum)0, affect.second );
+		--affects_count;
+	}
 }
 
 } // namespace survarium
