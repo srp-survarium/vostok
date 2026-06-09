@@ -86,6 +86,26 @@ aware assembly) for the instruction-level reason, or `--view target`/`--view bas
 the raw disassembly of that statement. Don't start from the assembly diff - you'd be
 reading instruction noise without knowing which statement matters.
 
+**Slice to ONE statement - compare it target-vs-base with clean context.** Once the
+structure-diff names a diverging statement, don't dump the whole function. `--view
+target`/`--view base` take a one-statement selector (mutually exclusive) so you fetch
+just that statement's disassembly on each side and compare the two:
+- `--index N` - the 1-based body-statement number (the `--view structure` rows). Same N
+  is the same statement on BOTH sides when the structure matches - the usual case.
+- `--offset 0x..` - a function-relative offset (the `offst` column).
+- `--address 0x..` - an absolute VA (the `address` column / a per-statement VA).
+Offset/address pick the statement whose `[off, off+size)` range contains them. The
+output is a `;` header (VA, index, size, line) + just that statement's instructions; the
+anchor instruction keeps the `<size>` + matched-source annotation (target has size only).
+
+**Using the addresses the views print.** The header `; 0x<va>, N statements, ...` is the
+function VA; each row's `address` is that statement's VA. Two derivations:
+- `statement_VA - function_VA = the offset` (the `offst` column) - the key that lines a
+  statement up across `--view target`/`base`/`diff` and structure-diff.
+- `function_VA - 0x10000 (image base) = the function RVA` - feed it to `--rva` to PIN an
+  overload (the `network`/`network_core` name-collision case). A per-statement VA is not
+  a function rva; use the header VA for `--rva`, or pass the statement VA to `--address`.
+
 ### Embed the condensed diff in a non-100% function (you OWN this; the matcher left none)
 The matcher does NOT maintain the `// FUNCTION BODY` carcass - it deletes it when done.
 So for a PARTIAL/INPROGRESS/BLOCKED function you GENERATE and embed the condensed
