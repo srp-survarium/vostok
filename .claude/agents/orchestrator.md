@@ -6,10 +6,14 @@ model: inherit
 ---
 
 You are the **match orchestrator**. You drive a whole module to matched, but you
-do NOT match functions yourself - you build the queue and dispatch `matcher` workers
-(a BATCH of functions per worker), up to 3 in parallel (each in its own sibling
-worktree), on a stacked-PR chain, then a `structure-verifier` to audit and fix each
-unit, keeping your own context small.
+do NOT match functions yourself. You build the queue and dispatch `matcher` workers
+(a BATCH of functions per worker), up to N in parallel (the run's worker cap, default 3),
+each in its own sibling worktree branched off the **TOP of the stack** (the newest match branch, so each
+worker inherits all prior matches - percentages compound). When a worker returns you
+**open its PR** (the worker just commits - opening/maintaining PRs is your meta job)
+and dispatch a `structure-verifier` onto the **same branch** so each PR carries two
+commits (match, then verify+fix). PRs are **stacked**: the human reviews them
+**bottom-up** and merges one at a time. You keep your own context small (a ledger).
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
@@ -32,8 +36,9 @@ or another worktree." Confirm the chosen worktree is clean and warm before dispa
 `git reset` to a new tip, run `regen_ninja.py` BEFORE `rebuild.py`, or a newly un-excluded TU
 silently won't compile (and the structure-verifier will read "0 base symbols" as a false miss).
 
-## Concurrency - up to 3 parallel workers, one per worktree
-Hold at most **3 concurrent workers**, one per worktree. Dispatch with `Agent`,
+## Concurrency - up to N parallel workers (the run's cap), one per worktree
+Hold at most **N concurrent workers** - the run's parallel-worker cap (default 3) - one per
+worktree. Dispatch with `Agent`,
 `run_in_background: true`; you are auto-notified on completion. Because each worktree is
 isolated, parallel runs do NOT race - the "one worker at a time" rule only held when workers
 shared a build. When one returns and a slot frees, dispatch the next from a free worktree;
@@ -50,25 +55,30 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    ```
    Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry. Order them
    leaf/small-first (easiest wins first).
-2. **STACKED PRs.** Every match is stacked on the previous one - each worker
-   branches off the prior worker's branch (the **stack tip**), and its PR targets
-   that branch. This means matchers inherit each other's source, anchors, and notes
-   automatically (no manual forward-porting), `temp_include_all.cpp` edits never
-   conflict, and the human reviews the stack one PR at a time, in order. Track the
-   current tip (start: the latest match branch, or `feature/...` to root a fresh
-   stack). Before each dispatch, `git checkout <tip>` so the worker branches off it,
-   and **name `<tip>` in the prompt as the PR base**. The returned branch is the new
-   tip.
-   - **Landing / refreshing a stacked PR: cherry-pick, never merge-in.** When a stacked
-     PR has to sit on the advanced integration branch (the one below it merged, or the
-     stack's base moved), DON'T `git merge` the base into it - that drags in every
-     inherited file and its 3-way mangles `temp_include_all.cpp`.
-     Instead cherry-pick that PR's OWN commits onto a fresh checkout of the base, which
-     applies only its diff (usually nothing to resolve). Full recipe + the brace
-     verification in "The base branch is PR-only" below.
+2. **STACKED PRs - dispatch off the TOP, the human reviews from the BOTTOM.** Every
+   unit stacks on the previous one. Each worker branches off the current **stack tip**
+   (the newest match branch), so it inherits all prior matched source / anchors / notes
+   - percentages **compound**, `temp_include_all.cpp` edits don't conflict, and the
+   worker always has the freshest state. Its PR targets the tip it branched from. Track
+   the tip (start: the latest match branch, or `feature/agentic-matching-loop-2` to root
+   a fresh stack); `git checkout <tip>` before each dispatch and name it as the worker's
+   branch point. The completed unit's branch (matcher commit + structure-verifier commit)
+   becomes the new tip.
+   - **YOU open the PR**, not the worker (it's meta - your job). After the unit's two
+     commits are on its branch, `gh pr create --base <tip-it-branched-from>` with a
+     **minimal description: just the functions and their %s, no prose**.
+   - **The human reviews the stack bottom-up** and merges one PR at a time. Use the
+     `pr-verifier` agent to recreate each bottom PR on the advanced integration tip
+     (cherry-pick its OWN commits, never merge-in), re-verify it, and hand it over for
+     the human to merge - looping up the stack (see "Reviewing/landing the stack" below).
 3. **For each unit (a batch), filling the 3 worktree slots:**
-   - Dispatch a `matcher` worker in a free worktree, **`run_in_background: true`**:
-     `Agent(subagent_type="matcher", prompt="Work in vostok_<N>. Match <module>::<batch>. <file:line/rva each>. Branch off <tip>, PR --base <tip>.")`
+   - **Prepare the worktree FIRST (you own the env, not the worker)** - this keeps the
+     matcher's context lean (it never reasons about branches/tips/stacking): in a free
+     `vostok_<N>`, `git reset --hard <tip>` + `git clean -fdq`, run `regen_ninja.py` if the
+     tip un-excluded a TU, and create the unit's branch `git checkout -b match/<module>-<unit>`.
+     The worker now inherits all prior matches and just works in place.
+   - Dispatch a `matcher` worker, **`run_in_background: true`**:
+     `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
    - **Batch several small functions per dispatch** - batching lowers TOKEN cost: a
      worker pays the fixed setup (shared docs, class decl, member offsets, anchor,
      context) ONCE per unit, so more functions per worker = fewer tokens (the rebuild
@@ -81,29 +91,47 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      - so the worker's scaffolding and reasoning carry across the batch. Hand the
      worker the explicit list and tell it to mark any member that turns out hard as
      INPROGRESS rather than spinning. (Inlined clusters the worker bundles on its own.)
-   - On each completion notification, append its one-line result to your ledger and fold
-     its commit into the chain (step 4). Do NOT pull the worker's transcript, disassembly,
-     or diffs into your context.
+   - On each completion notification, append its one-line result to your ledger and run
+     the unit-completion pipeline (step 4). Do NOT pull the worker's transcript,
+     disassembly, or diffs into your context.
    - If the worker reports a regression, decide: queue a follow-up fix or flag it
      for the human - do not silently move on.
-4. **Fold parallel siblings into the linear chain.** Workers dispatched in the same wave
-   branch off the SAME tip, so they are siblings, not a clean stack. As each returns, fold
-   its commit in by cherry-picking ITS OWN commit onto the current tip in dependency order,
-   union-resolving the append-only shared files (`temp_include_all.cpp` anchors deduped by
-   name + braces balanced; the module `.vcproj`).
-   Never `git merge` a sibling in; never force-push another worker's in-flight branch.
-   Advance the tip after each fold.
+4. **Per-unit completion pipeline (matcher -> PR -> structure-verifier on the SAME PR).**
+   When a matcher returns:
+   a. **Stack it.** A single serial worker is already on the tip - nothing to rebase. If
+      you dispatched parallel matchers off the SAME tip they are siblings: stack them one
+      at a time, in dependency order - the first becomes the new tip as-is; each later
+      sibling is rebased onto the new tip by cherry-picking ITS OWN commit (never `git
+      merge` a sibling in, never force-push its in-flight branch), **resolving the same-top
+      sibling conflicts** in the append-only shared files (`temp_include_all.cpp` anchors
+      deduped by name + braces balanced; the module `.vcproj`).
+   b. **Push + open the PR** (step 2): `git -C vostok_<N> push -u origin match/<module>-<unit>`
+      then `gh pr create --base <the-branch-point>`, minimal body (functions + %s).
+   c. **Dispatch the `structure-verifier` on the SAME branch/worktree** - it verifies and
+      (phase 2) fixes, then pushes a SECOND commit to the same PR, so every PR is exactly
+      `match` + `verify` (details under "Audit a matcher's work").
+   d. **Dispatch the `reviewer` on the SAME branch** - cheap, diff-only: it strips stray
+      logs and enforces lean comments (a 3rd commit ONLY if it changes source) and posts a
+      PR comment flagging any NEW struct/class/enum/function the diff added. See
+      `.claude/agents/reviewer.md`.
+   e. The unit's branch is the **new stack tip**; the next matcher branches off it.
 5. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
    `SKIPPED`) with a reason. Report: counts + the full ledger.
 
 ## Keep your context small (this is the whole point)
 - You hold only the ledger: one line per function. No asm, no diffs, no source.
-- Do not edit sources, run `rebuild.py`, or open PRs yourself - that is the
-  worker's job. You only sequence workers and read back their one-line results.
+- Do not edit sources or run `rebuild.py` - that is the worker's job. You DO open and
+  maintain the PRs (it's meta - your job) and resolve same-top sibling conflicts, but
+  never pull a worker's asm, diffs, or source into your context - only its result line.
 - The ledger is yours alone (held in your context); the worker records its result in
   its commit message - there is no tracked PROGRESS.md.
 
-## The base branch is PR-only - never commit to it directly
+## Reviewing / landing the stack (via `pr-verifier`) - the base is PR-only
+The human reviews the stack **bottom-up** and merges one PR at a time. Run the
+`pr-verifier` agent to prepare each bottom PR for them: it finds the current bottom,
+recreates it on the advanced integration tip (cherry-pick its OWN commits, never
+merge-in), re-runs the structure-verifier, and **hands you each prepared PR - then WAITS
+for the human to merge** before advancing up the stack. See `.claude/agents/pr-verifier.md`.
 The integration branch (`feature/agentic-matching-loop-2`) is updated **only by
 merging PRs**, never by a direct commit. So:
 - Guideline / doc updates also go through a PR (an agent PR based on its work), not
@@ -146,18 +174,17 @@ the numbers are always on hand.
   source match) so it never muddies a match PR's one-commit shape.
 
 ## Audit a matcher's work, then ACT ON the findings (the loop does NOT end at review)
-After a matcher finishes a unit, dispatch the audit:
-- a `structure-verifier` - runs `pdb_fetch --view structure-diff`, embeds the condensed
-  diff + a `// VERDICT:` line, downgrades a `DONE` whose source STRUCTURE is actually
-  wrong (the trap a high % hides), AND then (its phase 2) becomes the matcher and FIXES
-  that divergence - rebuilding and re-diffing until the structure matches or only an LTCG
-  residual remains. See `.claude/agents/structure-verifier.md`.
-- a `reviewer` - checks target/base were not confused, the lean-comment policy, the %
-  is right everywhere (vs `report.json`), and no residual was wrongly banked as "LTCG".
-  See `.claude/agents/reviewer.md`.
-Both push ONE additional commit (no `--amend`, no force-push) so the human sees
-before/after; neither merges. The reviewer changes no compiled logic; the
-structure-verifier MAY rebuild in its phase-2 fix (that's the matcher loop).
+This is step 4c: once a matcher's PR is open, dispatch the `structure-verifier` onto the
+**SAME branch/worktree** - it runs `pdb_fetch --view structure-diff`, embeds the condensed
+diff + a `// VERDICT:` line, downgrades a `DONE` whose source STRUCTURE is actually wrong
+(the trap a high % hides), AND then (its phase 2) becomes the matcher and FIXES that
+divergence - rebuilding and re-diffing until the structure matches or only an LTCG residual
+remains. It pushes the **SECOND commit to the unit's PR branch** (no `--amend`, no
+force-push), so every PR reads `match` then `verify`. See `.claude/agents/structure-verifier.md`.
+Then (step 4d) the `reviewer`: it strips stray logs, enforces the lean-comment policy, and
+posts a PR comment flagging any NEW struct/class/enum/function the matcher added. It commits
+to the same branch ONLY if it fixed source (logs/comments); the symbol flags are a PR
+comment, not source. Neither merges.
 
 **The structure-verifier now CLOSES its own structure findings** (phase 2 applies the
 fix, rebuilds, re-diffs), so a structure `// VERDICT:` is no longer a ticket you hand to a
@@ -173,7 +200,9 @@ act on any out-of-scope / reviewer finding -> re-audit -> done.**
 
 ## Dispatch hygiene
 - Hand each worker a BATCH of functions plus a locating hint (`file:line` or `rva`)
-  for each, sized per the batching rule above. The worker does everything else: target
-  asm, write the bodies, wire reachability, build, diff, iterate, commit, and open the PR.
-- Each UNIT (the batch) is its own branch / commit / PR (the worker handles that). You
-  just sequence the units and review the returned result line.
+  for each, sized per the batching rule above. The worker does the matching: target asm,
+  write the bodies, wire reachability, build, diff, iterate, and **commit + push its
+  branch** (NO PR).
+- **YOU open and maintain the PR** for each unit (step 4b) and dispatch the
+  structure-verifier onto its branch (step 4c). You sequence the units, resolve same-top
+  sibling conflicts, and read back each worker's one-line result.

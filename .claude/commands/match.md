@@ -1,6 +1,6 @@
 ---
-description: Orchestrate binary-matching of a Vostok module - build the queue, dispatch matcher workers in batches (up to 3 parallel sibling worktrees) on a stacked-PR chain, then structure-verifiers to verify and fix each unit.
-argument-hint: <module> [max-functions]
+description: Orchestrate binary-matching of a Vostok module - build the queue, dispatch matcher workers in batches across N parallel sibling worktrees on a stacked-PR chain, then structure-verifiers to verify and fix each unit.
+argument-hint: <module> [parallel-workers]
 allowed-tools: Agent, Bash, Read, Write, Grep, Glob
 ---
 
@@ -9,45 +9,30 @@ dispatch subagents). Follow `.claude/agents/orchestrator.md` and
 `docs/binary_matching/agentic_loop.md` ("Orchestrator and workers" + section 0).
 
 Target module: **$1**  (if empty, ask which module before doing anything).
-Cap for this run: **$2** functions (if empty, do the whole queue).
+Parallel workers: **$2** (if empty, default 3) - this caps CONCURRENCY only; the run
+processes the WHOLE queue regardless.
 
-Steps:
-1. **Build the queue:** `rg -n "STATE\[STUB\]" sources/vostok/$1/sources` (plus any
-   `PARTIAL`/`SKIPPED` you were asked to retry). Order leaf/small-first. Refresh the
-   README score block now as a baseline (`python3 scripts/match_score.py --write-readme`).
-2. **Stacked PRs - every unit stacks on the previous one.** Track the current **stack
-   tip** (start: the latest match branch, or `feature/...` to root a fresh stack). Before
-   each dispatch `git checkout <tip>` so the worker branches off it, and name `<tip>` as
-   the PR base in the prompt; the returned branch is the new tip. Workers thus inherit each
-   other's source, anchors, and notes automatically (no forward-porting), and
-   `temp_include_all.cpp` edits never conflict. To land/refresh a stacked PR on an advanced
-   base, **cherry-pick its OWN commits** onto a fresh checkout of the base - never `git
-   merge` the base in (it drags in every inherited file and mangles
-   `temp_include_all.cpp`).
-3. **Dispatch matchers in BATCHES, up to 3 in PARALLEL** (`run_in_background: true`), one
-   per sibling worktree `vostok_<N>` - each isolated (own `binaries/` + `$PWD`-derived
-   `WINEPREFIX`), so parallel builds don't race. Workers run ENTIRELY in their worktree,
-   never the main repo:
-   `Agent(subagent_type="matcher", prompt="Work in vostok_<N>. Match $1::<batch>. <file:line/rva each>. Branch off <tip>, PR --base <tip>.")`
-   Batching lowers token cost - the worker pays the shared setup (docs, class decl, member
-   offsets, anchor, context) ONCE per unit: **3-4 small multi-line functions** per unit,
-   **up to ~10 one-liners**, **fewer (down to 1) the harder they are**. Prefer a related
-   cluster (same class, or sibling same-shape classes); pick NON-OVERLAPPING units (never
-   two live workers on the same file/TU). Tell the worker to mark any hard member
-   `INPROGRESS` rather than spin. On each completion notification, append its result to the
-   ledger and fold its commit onto the tip (cherry-pick its OWN commit; same-wave siblings
-   fold in dependency order). If a worker reports a regression, decide: queue a follow-up
-   fix or flag it for me - don't silently move on.
-4. **Audit each finished unit:** dispatch a `structure-verifier` over the unit's functions.
-   It embeds the condensed `--view structure-diff` + a `// VERDICT:`, downgrades any
-   mislabeled `DONE` (a high % over the wrong shape), AND - its Phase 2 - becomes the matcher
-   and FIXES the divergences it found, rebuilding and re-diffing until the structure matches
-   or only an LTCG/argument residual remains. (Optionally a `reviewer` for target/base
-   confusion, lean-comments, %-accuracy, wrongly-banked LTCG.) Only queue a separate
-   follow-up matcher if the verifier flags something outside its scope.
-5. **Stop** at the cap or when the queue is exhausted/parked (with reasons). Refresh +
-   commit the README score block, then print the ledger (`function -> STATE% -> PR`) and a
-   regressions summary.
+Full rules: `.claude/agents/orchestrator.md`. In short:
+1. **Build the queue:** `rg -n "STATE\[STUB\]" sources/vostok/$1/sources` (+ any
+   `PARTIAL`/`SKIPPED` to retry). Order leaf/small-first. Refresh the README score block as
+   a baseline (`python3 scripts/match_score.py --write-readme`).
+2. **Stacked PRs:** track the **stack tip** (the latest match branch, or
+   `feature/agentic-matching-loop-2` to root a fresh stack). Matchers branch off the TOP so
+   percentages compound; you review the stack BOTTOM-UP and merge one PR at a time.
+3. **Dispatch up to $2 matchers in PARALLEL** (`run_in_background: true`), each in a sibling
+   `vostok_<N>` worktree YOU prepared (`git reset --hard <tip>`, `regen_ninja.py`,
+   `git checkout -b match/$1-<unit>`) - isolated `binaries/`/`WINEPREFIX`, so builds don't
+   race. Batch per unit (the worker pays setup once): **3-4 small multi-line fns**, **up to
+   ~10 one-liners**, **fewer when hard**; a related cluster; pick NON-OVERLAPPING units
+   (never two live workers on the same file/TU). The worker just matches + makes ONE commit:
+   `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (on branch match/$1-<unit>, indexes warm). Match $1::<batch>. <file:line/rva each>. Commit ONE commit; do not branch/push/PR.")`
+4. **On each return (per unit):** push the branch + `gh pr create` (minimal body: fns + %s),
+   then dispatch the `structure-verifier` and the `reviewer` onto the SAME branch (the PR
+   becomes match + verify, + a review commit only if it fixed source). Same-wave siblings:
+   resolve their `temp_include_all`/`.vcproj` conflicts when stacking. The unit's branch is
+   the new tip. If a worker reports a regression, queue a follow-up or flag it for me.
+5. **Stop** when the queue is exhausted/parked (with reasons). Refresh + commit the README
+   score, then print the ledger (`fn -> STATE% -> PR`) + a regressions summary.
 
-Keep your own context small: hold only the ledger - never pull a worker's disassembly,
-diffs, or source into this session. Full detail lives in `.claude/agents/orchestrator.md`.
+Keep your context small: hold only the ledger - never pull a worker's disassembly, diffs,
+or source into this session.
