@@ -1,5 +1,5 @@
 ---
-description: Orchestrate binary-matching of a Vostok module - build the queue, dispatch matcher workers in batches on a stacked-PR chain, then structure-verifiers to verify and fix each unit.
+description: Orchestrate binary-matching of a Vostok module - build the queue, dispatch matcher workers in batches (up to 3 parallel sibling worktrees) on a stacked-PR chain, then structure-verifiers to verify and fix each unit.
 argument-hint: <module> [max-functions]
 allowed-tools: Agent, Bash, Read, Write, Grep, Glob
 ---
@@ -24,17 +24,20 @@ Steps:
    base, **cherry-pick its OWN commits** onto a fresh checkout of the base - never `git
    merge` the base in (it drags in every inherited file and mangles
    `temp_include_all.cpp`).
-3. **Dispatch matchers in BATCHES**, foreground (never `run_in_background`), one at a time
-   up to the cap ($2):
-   `Agent(subagent_type="matcher", prompt="Match $1::<batch of functions>. <file:line/rva each>. Branch off <tip>, PR --base <tip>.")`
+3. **Dispatch matchers in BATCHES, up to 3 in PARALLEL** (`run_in_background: true`), one
+   per sibling worktree `vostok_<N>` - each isolated (own `binaries/` + `$PWD`-derived
+   `WINEPREFIX`), so parallel builds don't race. Workers run ENTIRELY in their worktree,
+   never the main repo:
+   `Agent(subagent_type="matcher", prompt="Work in vostok_<N>. Match $1::<batch>. <file:line/rva each>. Branch off <tip>, PR --base <tip>.")`
    Batching lowers token cost - the worker pays the shared setup (docs, class decl, member
    offsets, anchor, context) ONCE per unit: **3-4 small multi-line functions** per unit,
    **up to ~10 one-liners**, **fewer (down to 1) the harder they are**. Prefer a related
-   cluster (same class, or sibling same-shape classes). Tell the worker to mark any hard
-   member `INPROGRESS` rather than spin. Wait for its one-line result, append to the ledger,
-   advance the tip. Never start the next before the current returns (workers share the base
-   build / `report.json`, so parallel runs race). If a worker reports a regression, decide:
-   queue a follow-up fix or flag it for me - don't silently move on.
+   cluster (same class, or sibling same-shape classes); pick NON-OVERLAPPING units (never
+   two live workers on the same file/TU). Tell the worker to mark any hard member
+   `INPROGRESS` rather than spin. On each completion notification, append its result to the
+   ledger and fold its commit onto the tip (cherry-pick its OWN commit; same-wave siblings
+   fold in dependency order). If a worker reports a regression, decide: queue a follow-up
+   fix or flag it for me - don't silently move on.
 4. **Audit each finished unit:** dispatch a `structure-verifier` over the unit's functions.
    It embeds the condensed `--view structure-diff` + a `// VERDICT:`, downgrades any
    mislabeled `DONE` (a high % over the wrong shape), AND - its Phase 2 - becomes the matcher
