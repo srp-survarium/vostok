@@ -30,6 +30,11 @@ private:
 	/* 0x0004 */	const u32	m_time_in_ms;
 }; // class delayed_packets_predicate
 
+// sushi@review: the size verifier swept only headers, so this .cpp-local class
+// (and its ctor) was missed. Its size is 0x8 (ref + const u32). The ctor + operator()
+// emit no standalone symbol until tick's remove_if instantiates them (see STATE below).
+STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
+
 // STATE[87%|PARTIAL]: only residual is the three random32 seeds. Target seeds
 // m_lost_packets_random/m_ping_random/m_out_of_order_random with relocated .rdata
 // addresses (mov ecx, 995A34h/35h/36h - consecutive, a reloc per the obj); base
@@ -53,6 +58,10 @@ private:
 // materialization in the while condition - target stores begin()/end() into stack
 // temps and does a direct cmp/je; base converts the != to a bool (sete/test/jne).
 // Same source shape, different STL-iterator-compare codegen; larger frame in target.
+// sushi@TODO: structure is WRONG here (disputes the 4/4 "aligns" claim) - the
+// while-condition codegen divergence is a real shape miss, not just regalloc. See
+// review_todos.md; likely the loop is a different form (the begin()!=end() vs a
+// cached-end / for-loop), revisit before trusting the 58%.
  udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
 	while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {
@@ -166,6 +175,10 @@ void udp_network_flow_emulator::add_packet(
 }
 
 // STATE[100%|DONE]
+// sushi@TODO: 100% without structure - objdiff pairs this at 100% but there's no
+// structure-diff backing it (trivial shape: two unreferenced-param eaters + one
+// is_low_level_packet call). The 100% is not structurally verified; confirm the
+// body shape against target before trusting it. See review_todos.md.
 void udp_network_flow_emulator::make_packet_lost(
 	pbyte const		buffer,
 	const u32		buffer_size,

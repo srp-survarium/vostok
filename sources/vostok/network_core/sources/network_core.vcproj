@@ -1121,7 +1121,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1133,7 +1132,6 @@
 				>
 				<FileConfiguration
 					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1168,7 +1166,6 @@
 			>
 			<FileConfiguration
 				Name="Master Gold|Win32"
-				ExcludedFromBuild="true"
 				>
 				<Tool
 					Name="VCCLCompilerTool"
