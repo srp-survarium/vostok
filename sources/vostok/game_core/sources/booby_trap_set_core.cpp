@@ -35,24 +35,29 @@ booby_trap_set_core::booby_trap_set_core( ) :
 	// <0x6fe40e>|0x08e|      :'29'	}
 	// ******
 }
-// STATE[77.75%|PARTIAL]
+// STATE[83.57%|PARTIAL]
  booby_trap_set_core::~booby_trap_set_core( )
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	pcvoid damage_parms_buffer = m_damage_parameters.begin( );
 	m_damage_parameters.clear( );
-	VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );
+	VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );	// claude@MATCH: target keeps free_helper out-of-line (free_helper_impl); base inlines it.
 
 	m_traps.clear( );
 	VOSTOK_FREE_IMPL( g_allocator, m_traps_buffer );
 
-	// FUNCTION BODY[0x6fe250]: 6
-	// <0x6fe263>|0x013|+0x01e:'33'
-	// <0x6fe281>|0x031|+0x037:'34'
-	// <0x6fe2b8>|0x068|+0x014:'35'
-	// <0>
-	// <0x6fe2cc>|0x07c|+0x00e:'37'
-	// <0x6fe2da>|0x08a|+0x040:'38'
-	// ******
+	// STRUCTURE DIFF[target 0x6ee250 | base 0x449bb0]: target 6 / base 8 stmts
+	// 0x013 <0x1e> | 0x012 <0xc> | ASSERT( UNKNOWN_EXPRESSION );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// --          | 0x01e <0x12> | pcvoid damage_parms_buffer = m_damage_parameters.begin( );   ONLY base
+	// .. same ..
+	// 0x068 <0x14> | 0x067 <0x2e> | VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );   SIZE
+	// .. same ..
+	// ; aligned 4, size-diffs 2, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - ASSERT recovered (77.75->83.57%); the target PDB attributes the
+	//   ASSERT to the same source line as begin() (parser splits them, hence the EMPTY/ONLY-base rows); sole
+	//   byte residual is free_helper(damage_parms_buffer) out-of-line vs base inline, non-steerable. trail: booby_trap_set_core_dtor.md
 }
 
 // STATE[UNCHECKED]
@@ -270,12 +275,12 @@ void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 	if ( trap->is_active( ) )
 		remove_trap_impl( *trap );
 
-	// FUNCTION BODY[0x6fd850]: 4
-	// <0x6fd859>|0x009|+0x00c:'152'
-	// <0>
-	// <0x6fd865>|0x015|+0x02a:'154'
-	// <0x6fd88f>|0x03f|+0x011:'155'
-	// ******
+	// STRUCTURE DIFF[target 0x6ed850 | base 0x449a40]: target 4 / base 4 stmts
+	// .. same ..
+	// 0x03f <0x11> | 0x03f <0x20> | remove_trap_impl( *trap );   SIZE
+	// ; aligned 3, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is resource_ptr::operator*( ) inlined on target
+	//   (deref + its ASSERT) vs called out-of-line in base, non-steerable. trail: booby_trap_set_core_dtor.md
 }
 
 // STATE[100%|DONE]
@@ -631,13 +636,14 @@ void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 	holder.remove_game_world_object( trap );
 	trap.remove( holder.scheduler( ) );
 
-	// FUNCTION BODY[0x6fd6b0]: 5
-	// <0x6fd6b9>|0x009|+0x00c:'437'
-	// <0>
-	// <0x6fd6c5>|0x015|+0x010:'439'
-	// <0x6fd6d5>|0x025|+0x011:'440'
-	// <0x6fd6e6>|0x036|+0x016:'441'
-	// ******
+	// STRUCTURE DIFF[target 0x6ed6b0 | base 0x449950]: target 5 / base 5 stmts
+	// .. same ..
+	// 0x015 <0x10> | 0x015 <0x17> | inventory_holder& holder = get_inventory( ).holder( );   SIZE
+	// .. same ..
+	// 0x036 <0x16> | 0x03d <0x1a> | trap.remove( holder.scheduler( ) );   SIZE
+	// ; aligned 3, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are inventory::holder( ) / inventory_holder::scheduler( )
+	//   inlined as member loads on target ([ecx+158h] / [.+4]) vs called out-of-line in base, non-steerable. trail: booby_trap_set_core_dtor.md
 }
 
 // STATE[97.38%|DONE]
@@ -653,17 +659,15 @@ void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& tr
 	trap.insert( world, transform, holder.scheduler( ) );
 	holder.insert_game_world_object( trap );
 
-	// FUNCTION BODY[0x6fd630]: 9
-	// <0x6fd639>|0x009|+0x00c:'446'
-	// <0>
-	// <0x6fd645>|0x015|+0x010:'448'
-	// <0>
-	// <0x6fd655>|0x025|+0x010:'450'
-	// <0x6fd665>|0x035|+0x00c:'451'
-	// <0>
-	// <0x6fd671>|0x041|+0x01e:'453'
-	// <0x6fd68f>|0x05f|+0x011:'454'
-	// ******
+	// STRUCTURE DIFF[target 0x6ed630 | base 0x4498c0]: target 9 / base 9 stmts
+	// .. same ..
+	// 0x015 <0x10> | 0x015 <0x17> | inventory_holder& holder = get_inventory( ).holder( );   SIZE
+	// .. same ..
+	// 0x041 <0x1e> | 0x048 <0x22> | trap.insert( world, transform, holder.scheduler( ) );   SIZE
+	// .. same ..
+	// ; aligned 7, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are inventory::holder( ) / inventory_holder::scheduler( )
+	//   inlined as member loads on target ([ecx+158h] / [.+4]) vs called out-of-line in base, non-steerable. trail: booby_trap_set_core_dtor.md
 }
 
 } // namespace survarium
