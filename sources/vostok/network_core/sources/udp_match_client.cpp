@@ -6,38 +6,52 @@
 #include <vostok/network_core/udp_match_client.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/network_core/udp_network_flow_emulator.h>
 
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
- udp_match_client::udp_match_client(
+// STATE[79.20%|PARTIAL]: init list + body shape exact; residuals are per-call-site LTCG
+// inline-vs-call, both directions: (a) base CALLS math::max(u32,u32) (LTCG reg-promoted)
+// where target INLINES the max_integral branchless body - both binaries keep the standalone
+// (target 0x0241d0 / base 0x03b4c0), the operator| precedent; (b) base INLINES
+// boost::function1::operator= (copy temp + swap + clear, +0xC frame, drops push esi/edi)
+// where target calls the ICF-folded COMDAT; plus folded-rep this-convention/temp noise
+// around the boost::function default-ctor / bind fold representatives.
+udp_match_client::udp_match_client(
 	boost::asio::io_service&			io_service,
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
 	udp_match_packets_orderer&			packets_orderer,
 	udp_network_flow_emulator* const	network_flow_emulator
 ) :
-	m_connection		( m_socket, m_server_endpoint, packets_allocator, packets_orderer, 0, 0, 0, NULL ),
+	m_connection		(
+		m_socket,
+		m_server_endpoint,
+		packets_allocator,
+		packets_orderer,
+		120000,
+		network_flow_emulator ? math::max( 250u, network_flow_emulator->max_ping_time_in_ms( ) * 6 ) : 500,
+		33,
+		"client"
+	),
 	m_socket			( io_service ),
 	m_io_service		( io_service ),
 	m_packets_allocator	( packets_allocator ),
-	m_network_flow_emulator	( network_flow_emulator )
+	m_network_flow_emulator	( network_flow_emulator ),
+	m_time_in_ms		( 0 ),
+	m_is_receiving		( false )
 {
-	// FUNCTION BODY[0x758370]: 1
-	// <0x75851e>|0x1ae|+0x059:'40'
-	// ******
+	m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x1b | 38 | m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE row is LTCG inline-vs-call both ways (base inlines function1::operator=, target inlines math::max in the init region); non-steerable.
 }
 
-// STATE[STUB]
-void udp_match_client::on_error(
-	const client_error_codes_enum		arg_0 /* client_error_codes_enum __formal */,
-	const boost::system::error_code		arg_1 /* boost::system::error_code __formal */
-)
+// STATE[100%|DONE]
+void udp_match_client::on_error( client_error_codes_enum, boost::system::error_code )
 {
-	// FUNCTION BODY[0x7582c0]: 2
-	// <0>
-	// <0x7582c7>|0x007|+0x00a:'49'
-	// ******
+	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }
 
 // STATE[STUB]
@@ -146,12 +160,10 @@ void udp_match_client::connect(
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_match_client::disconnect( )
 {
-	// FUNCTION BODY[0x7582e0]: 1
-	// <0x7582e7>|0x007|+0x008:'163'
-	// ******
+	m_connection.disconnect( );
 }
 
 // STATE[STUB]
@@ -186,34 +198,27 @@ void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[99.94%|DONE]: STRUCTURE MATCH (3/3 stmts, sizes byte-identical); sole residual is
+// the two locals' ebp slots swapped (-4/-8) - /Od+LTCG slot-allocation noise, no source lever
+// (statement order is fixed by the target and names do not affect slots).
 void udp_match_client::check_consistency( ) const
 {
-	// LOCALS
-	// const u32 						registered_packets_count
-	// const u32 						allocated_count
-	// ******
+	u32 const registered_packets_count	= m_packets_allocator.allocated_size( ) / sizeof( udp_match_packet );
+	u32 const allocated_count			= ( m_network_flow_emulator ? m_network_flow_emulator->delayed_packets_count( ) : 0 ) + m_connection.packets_count( );
+	ASSERT( UNKNOWN_EXPRESSION_T( registered_packets_count == allocated_count ) );
 
-	// FUNCTION BODY[0x758240]: 3
-	// <0x758249>|0x009|+0x01e:'194'
-	// <0x758267>|0x027|+0x040:'195'
-	// <0x7582a7>|0x067|+0x00c:'196'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (no diverging rows)
+	// VERDICT: STRUCTURE MATCH - byte-equal stmt sizes; assert site verified 1/1 at +0x67 (mov byte[ebp-9],0 / lea eax / call empty-stub, 0xc bytes); residual is the locals' ebp-4/-8 slot swap, LTCG allocation noise.
 }
 
-// STATE[STUB]
-void udp_match_client::on_disconnect(
-	const disconnect_event_types_enum		arg_0 /* disconnect_event_types_enum disconnect_type */
-)
+// STATE[100%|DONE]
+void udp_match_client::on_disconnect( const disconnect_event_types_enum disconnect_type )
 {
-	// FUNCTION BODY[0x758300]: 6
-	// <0x75830f>|0x00f|+0x011:'201'
-	// <0x758320>|0x020|+0x011:'202'
-	// <0>
-	// <1>
-	// <0x758331>|0x031|+0x022:'205'
-	// <0x758353>|0x053|+0x015:'206'
-	// ******
+	if ( m_is_receiving )
+		m_socket.cancel( );
+
+	if ( m_on_disconnect )
+		m_on_disconnect( disconnect_type );
 }
 
 
