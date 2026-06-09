@@ -2,8 +2,7 @@
 
 ### Writing matched code
 * [binary_matching/MATCHING.md](binary_matching/MATCHING.md) - conventions for the source we generate (naming, alignment, asserts, the `UNKNOWN_EXPRESSION` placeholder, STATE markers, carcass comments, `sushi@`/`claude@` `MATCH/NOTE/TODO` tags). Scoped to the non-optimized `/Od` modules (per target codegen): `game_core`, `network_core`, `logging` active, plus `sound`, `network`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug` matchable.
-* [binary_matching/agentic_loop.md](binary_matching/agentic_loop.md) - the per-function matching loop (queue, rebuild/diff, compile wiring, missing types, inlining, one commit + PR per function).
-* [binary_matching/agentic_loop_example.md](binary_matching/agentic_loop_example.md) - a concrete dry run of the loop on one PARTIAL function (illustrative outputs).
+* [binary_matching/agentic_loop.md](binary_matching/agentic_loop.md) - the matching loop (queue, rebuild/diff, compile wiring, missing types, inlining, one commit + PR per unit/batch).
 * [binary_matching/assembly_patterns.md](binary_matching/assembly_patterns.md) - shared asm -> source mappings; every run appends to it.
 * [binary_matching/unanswered_questions.md](binary_matching/unanswered_questions.md) - tooling the matching agent wants but does not have yet.
 
@@ -15,7 +14,7 @@
 * [target-vs-base.md](target-vs-base.md) — synthesis of every target-vs-base comparison the PDB/EXE tooling makes (PE/Rich header, flags, link order, RTTI): what's the same, what's different, and which differences are actionable.
 
 ### Per-module matching notes
-Each matched module has its own folder under `binary_matching/` (module notes in `README.md`, per-function logs alongside).
+Each matched module has its own folder under `binary_matching/` (module notes in `README.md`).
 * [game_core](binary_matching/game_core/README.md)
 * [network_core](binary_matching/network_core/README.md)
 * [logging](binary_matching/logging/README.md)

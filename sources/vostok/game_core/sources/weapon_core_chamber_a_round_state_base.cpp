@@ -5,6 +5,8 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_chamber_a_round_state_base.h>
 #include <vostok/game_core/weapon_core.h>		// m_weapon.instant_chamber_a_round
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -29,22 +31,26 @@ void weapon_core_chamber_a_round_state_base::on_animation_end_impl( bool& animat
 	animation_player_tick_result = true;
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core_chamber_a_round_state_base::serialize(vostok::network_core::udp_match_packet&) const
+// STATE[PARTIAL]: single append( m_animation_has_been_ended ) ([+0x135] bool). Matches target shape.
 void weapon_core_chamber_a_round_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x761c99>|0x009|+0x013:'40'
-	// ******
+	packet.append( m_animation_has_been_ended );
+
+	// STRUCTURE DIFF[target 0x751c90 | base 0x454180]: target 1 / base 1 stmts
+	//   1: 0x009 <0x13> | 0x009 <0x1a> | packet.append( m_animation_has_been_ended );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core_chamber_a_round_state_base::deserialize(vostok::network_core::packet_reader&)
+// STATE[PARTIAL]: single r< bool > into m_animation_has_been_ended ([+0x135]). Matches target shape.
 void weapon_core_chamber_a_round_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x761c79>|0x009|+0x011:'45'
-	// ******
+	m_animation_has_been_ended = reader.r< bool >( );
+
+	// STRUCTURE DIFF[target 0x751c70 | base 0x454110]: target 1 / base 1 stmts
+	//   1: 0x009 <0x11> | 0x009 <0x26> | m_animation_has_been_ended = reader.r< bool >( );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet_reader::r<bool> LTCG inline (target) vs call (base), non-steerable.
 }
 
 } // namespace survarium

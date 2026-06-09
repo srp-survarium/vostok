@@ -33,6 +33,13 @@
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
 #include <vostok/network_core/tcp_packet.h>
+#include <vostok/network_core/tcp_packet_client.h>
+#include <vostok/network_core/udp_match_stats.h>
+#include <vostok/network_core/udp_match_connection.h>
+#include <vostok/network_core/packet_reader.h>
+#include <vostok/network_core/udp_network_flow_emulator.h>
+#include <vostok/network_core/udp_network_flow_emulator_options.h>
+#include <vostok/network_core/sources/network_core_entry_point.h>
 
 #include <vostok/animation/skeleton.h>
 
@@ -50,11 +57,16 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/hand_to_weapon_ik_processor.h>
+#include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/base_project.h>
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/player_state.h>
+#include <vostok/game_core/server_player_update.h>
+#include <vostok/game_core/hit_info.h>
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
 #include <vostok/game_core/player_logic_base_state.h>
@@ -1066,6 +1078,43 @@ namespace vostok
 		update.serialize( *packet );
 	}
 
+	// Exercises the typed serialize/deserialize chain so the packet< T >::append
+	// and packet_reader::r< T > / r_string primitives keep real out-of-line call
+	// sites in the LTCG image (they would otherwise be inlined away / DCE'd).
+	void use_game_core_serialization(
+		network_core::udp_match_packet*	packet,
+		network_core::packet_reader*	reader
+	)
+	{
+		survarium::player_input			input;
+		input.serialize	( *packet );
+		input.deserialize( *reader );
+
+		survarium::player_state			state;
+		state.serialize	( *packet );
+		state.deserialize( *reader );
+
+		survarium::server_player_update	server_update;
+		server_update.deserialize( *reader );
+
+		survarium::hit_info				hit;
+		hit.deserialize	( *reader );
+
+		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
+		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
+		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
+		// weapon_user_animations_selector + the logic-state serialize forwards).
+		survarium::weapon_core			weapon;
+		survarium::inventory_item&		item = weapon;
+		item.serialize	( *packet, 0 );
+		item.deserialize( *reader );
+
+		// hand_to_weapon_ik_processor serialize/deserialize are public; call them directly.
+		survarium::hand_to_weapon_ik_processor	hand_ik;
+		hand_ik.serialize	( *packet, 0 );
+		hand_ik.deserialize	( *reader );
+	}
+
 	void use_game_core_weapon_state()
 	{
 		// Anchor weapon_state::operator= so its member stores are OBSERVED
@@ -1421,6 +1470,42 @@ namespace vostok
 	}
 
 
+	void use_network_core_entry_point()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::get_ip_address( io_service );
+
+		char dest_host[ 64 ];
+		u16 dest_port;
+		network_core::get_connection_info_from_string( "host:port", dest_host, dest_port );
+
+		memory::stack_allocator stack_allocator;
+		network_core::memory_allocator( stack_allocator );
+		network_core::initialize( );
+		network_core::finalize( );
+
+		network_core::udp_match_items_stats items_a, items_b;
+		network_core::udp_match_stream_stats stream_a, stream_b;
+		network_core::udp_match_stats stats_a, stats_b;
+		bool r = ( items_a >= items_b ) | ( stream_a >= stream_b ) | ( stats_a >= stats_b );
+		printf( "%d", r );
+	}
+
+	void use_network_core_tcp_packet_client()
+	{
+		boost::asio::io_service io_service( 10 );
+		network_core::tcp_packet_client c( io_service );
+
+		c.connect( "host", 80 );
+		c.disconnect();
+
+		memory::stack_allocator stack_allocator;
+		network_core::tcp_packet packet( stack_allocator );
+		c.send( packet );
+
+		c.io_service();
+	}
+
 	void use_network_core_http_client()
 	{
 		boost::asio::io_service io_service( 10 );
@@ -1430,6 +1515,51 @@ namespace vostok
 
 		boost::asio::streambuf buff;
 		network_core::read_lines_from_stream( "prefix", buff );
+	}
+
+	struct test_udp_match_packets_orderer : network_core::udp_match_packets_orderer
+	{
+		virtual network_core::udp_match_message_type_info get_sending_message_info( u8 ) 	{ return network_core::udp_match_message_type_info( false, false, 0 ); }
+		virtual network_core::udp_match_message_type_info get_received_message_info( u8 ) 	{ return network_core::udp_match_message_type_info( false, false, 0 ); }
+	};
+
+	void use_network_core_udp_match_connection()
+	{
+		boost::asio::io_service io_service( 10 );
+		boost::asio::ip::udp::socket socket( io_service );
+		boost::asio::ip::udp::endpoint remote_endpoint;
+		memory::single_size_buffer_allocator< 300, threading::single_threading_policy > packets_allocator( NULL, 0 );
+		test_udp_match_packets_orderer packets_orderer;
+
+		network_core::udp_match_connection connection(
+			socket, remote_endpoint, packets_allocator, packets_orderer,
+			10, 20, 30, "id"
+		);
+
+		connection.connect( NULL );
+		connection.enqueue( NULL );
+		connection.send_queued_packets( 10 );
+		connection.disconnect( );
+		connection.instant_disconnect( network_core::disconnected_by_timeout );
+		connection.packets_count( );
+
+		network_core::udp_match_connection::is_low_level_packet( *(network_core::base_packet const*)NULL );
+	}
+
+	void use_network_core_udp_network_flow_emulator_tick_functor( network_core::packet_reader&, boost::asio::ip::udp::endpoint const& )
+	{
+	}
+
+	void use_network_core_udp_network_flow_emulator()
+	{
+		memory::stack_allocator stack_allocator;
+		static char arena[ 4096 ];
+		memory::single_size_buffer_allocator< 300, threading::single_threading_policy > packets_allocator( arena, sizeof( arena ) );
+		network_core::udp_network_flow_emulator_options options;
+		network_core::udp_network_flow_emulator emulator( stack_allocator, packets_allocator, options );
+
+		emulator.tick( 10, boost::bind( &use_network_core_udp_network_flow_emulator_tick_functor, _1, _2 ) );
+		emulator.on_packet_received( NULL, 10, boost::asio::ip::udp::endpoint( ), 10, 10 );
 	}
 
 	void use_static_rigid_body()
@@ -1555,6 +1685,7 @@ namespace vostok
 }
 
 
+
 namespace survarium
 {
 
@@ -1615,6 +1746,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_player_stealth();
 	vostok::use_game_core_player_input();
 	vostok::use_client_player_update( NULL );
+	vostok::use_game_core_serialization( NULL, NULL );
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
 	vostok::use_game_core_jump_logic_state_inactive();
@@ -1631,6 +1763,11 @@ IncludeAll::IncludeAll()
 	vostok::use_physics_api();
 	vostok::use_log();
 	vostok::use_network_core_http_client();
+	vostok::use_network_core_tcp_packet();
+	vostok::use_network_core_entry_point();
+	vostok::use_network_core_tcp_packet_client();
+	vostok::use_network_core_udp_match_connection();
+	vostok::use_network_core_udp_network_flow_emulator();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();

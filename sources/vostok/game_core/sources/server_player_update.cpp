@@ -4,17 +4,22 @@
 
 #include "pch.h"
 #include <vostok/game_core/server_player_update.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: input.deserialize, state.deserialize, weapon_state.deserialize -
+// 3-stmt shape matches target.
 void server_player_update::deserialize( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY
-	// <0x7811d7>|0x007|+0x00c:'17'
-	// <0x7811e3>|0x013|+0x00f:'18'
-	// <0x7811f2>|0x022|+0x00f:'19'
-	// ******
+	input.deserialize			( packet );
+	state.deserialize			( packet );
+	weapon_state.deserialize	( packet );
+
+	// STRUCTURE DIFF[target 0x7711d0 | base 0x5851c0]: target 3 / base 3 stmts
+	// .. same ..
+	// ; aligned 3, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH - 3 deserialize forwards, byte-clean structure (no SIZE/quantity diffs).
 }
 
 } // namespace survarium

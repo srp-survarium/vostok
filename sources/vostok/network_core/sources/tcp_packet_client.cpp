@@ -1,134 +1,133 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "tcp_packet_client.h"
+#include <vostok/network_core/tcp_packet_client.h>
+#include <vostok/network_core/tcp_packet.h>
+#include "network_core_memory.h"
 
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// vostok::network_core::tcp_packet_client::tcp_packet_client(boost::asio::io_service&)
-tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service )
+// STATE[70.24%|PARTIAL]: body byte-correct; boost::bind/function assign reps fold under LTCG (frame/slot residual)
+tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
+	m_socket		( io_service ),
+	m_packet_socket	( m_socket, *g_allocator ),
+	m_io_service	( io_service ),
+	m_first_packet	( NULL )
 {
-	// FUNCTION BODY
-	// <0x78cd34>|0x000|0x000:'20'
-	// ******
+	m_on_error	= boost::bind( &tcp_packet_client::on_error, this, _1, _2 );
+
+	// STRUCTURE DIFF[target 0x77cc70 | base 0x57b020]: target 1 / base 1 stmts
+	//   1: 0x0c4 <0x5e> | 0x09d <0x67> | m_on_error	= boost::bind( &tcp_packet_client::on_error, this, _1, _2 );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - member-init order matches; sole SIZE is the
+	// member-socket ctor inline-boundary (target inlines m_packet_socket ctor; base emits
+	// one call) + boost::function assign epilogue regalloc. No source lever. trail: tcp_packet_client.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::~tcp_packet_client()
-void tcp_packet_client::~tcp_packet_client( )
+// STATE[90.98%|PARTIAL]: body byte-correct; boost::function clear reps fold under LTCG
+tcp_packet_client::~tcp_packet_client( )
 {
-	// FUNCTION BODY
-	// <0x78cbea>|0x000|0x000:'25'
-	// <0x78cc00>|0x016|0x016:'26'
-	// 1
-	// <0x78cc02>|0x018|0x002:'28'
-	// ******
+	if ( m_async_connector.has_connection_established( ) )
+		disconnect( );
+
+	// STRUCTURE DIFF[target 0x77cbe0 | base 0x57af90]: target 3 / base 2 stmts
+	// .. same ..
+	//   2: 0x020 <0x2> | --          | L26   ONLY target
+	// .. same ..
+	// ; aligned 2, size-diffs 0, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MISMATCH (quantity) - the 1 extra target stmt is a 2-byte branch
+	// row: target lowers the guard as `jne .disconnect; jmp .end`, base as a single `je .end`.
+	// has_connection_established test + disconnect call align; this is if-branch codegen layout,
+	// not a source-shape miss - no source lever, take the hit. trail: tcp_packet_client.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::start_reading()
+// STATE[99.70%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::start_reading( )
 {
-	// FUNCTION BODY
-	// <0x78cdef>|0x000|0x000:'33'
-	// ******
+	m_packet_socket.start_receiving( );
+
+	// STRUCTURE DIFF[target 0x77cde0 | base 0x57ae20]: target 1 / base 1 stmts
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; residual
+	// is the sub-statement inline boundary of start_receiving(). trail: tcp_packet_client.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::on_connected()
+// STATE[100%|DONE]
 void tcp_packet_client::on_connected( )
 {
-	// FUNCTION BODY
-	// <0x78ce1f>|0x000|0x000:'38'
-	// <0x78ce40>|0x021|0x021:'39'
-	// 1
-	// <0x78ce51>|0x032|0x011:'41'
-	// ******
+	if ( m_on_connected )
+		m_on_connected( );
+
+	start_reading( );
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::connect(char const*, unsigned short)
+// STATE[100%|DONE]
 void tcp_packet_client::connect( pcstr host, u16 port )
 {
-	// FUNCTION BODY
-	// <0x78ce69>|0x000|0x000:'46'
-	// ******
+	m_async_connector.connect(
+		m_socket,
+		host,
+		port,
+		boost::bind( &tcp_packet_client::on_connected, this ),
+		m_on_error
+	);
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::disconnect()
+// STATE[100%|DONE]
 void tcp_packet_client::disconnect( )
 {
-	// FUNCTION BODY
-	// <0x78cb9f>|0x000|0x000:'51'
-	// <0x78cbad>|0x00e|0x00e:'52'
-	// <0x78cbd1>|0x032|0x024:'53'
-	// ******
+	m_packet_socket.stop_receiving( );
+
+	if ( m_socket.is_open( ) )
+		close_connection( );
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::close_connection()
+// STATE[66%|PARTIAL]: ASSERT + shutdown + close + reset shape correct; residual = m_socket.close(ec)
+// out-lines to basic_socket::close in target but over-inlines to win_iocp service close in base (inline-boundary)
 void tcp_packet_client::close_connection( )
 {
-	// LOCALS
-	// boost::system::error_code 	ec
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_socket.is_open( ) ) );
 
-	// FUNCTION BODY
-	// <0x78cb1f>|0x000|0x000:'58'
-	// <0x78cb2b>|0x00c|0x00c:'59'
-	// <0x78cb3a>|0x01b|0x00f:'60'
-	// <0x78cb69>|0x04a|0x02f:'61'
-	// <0x78cb74>|0x055|0x00b:'62'
-	// ******
+	boost::system::error_code	ec;
+	m_socket.shutdown( boost::asio::ip::tcp::socket::shutdown_both, ec );
+	m_socket.close( ec );
+
+	m_async_connector.reset( );
+
+	// STRUCTURE DIFF[target 0x77cb10 | base 0x57aea0]: target 5 / base 5 stmts
+	// .. same ..
+	//   4: 0x059 <0xb> | 0x059 <0x28> | m_socket.close( ec );   SIZE
+	// .. same ..
+	// ; aligned 4, size-diffs 1, quantity-diffs 0, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - 5/5 stmts align, quantity 0; sole SIZE is
+	// m_socket.close(ec): target out-lines to basic_socket::close, base over-inlines to
+	// win_iocp_socket_service_base::close - boost inline-boundary, no source lever. trail: tcp_packet_client.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::send(vostok::network_core::tcp_packet const&)
+// STATE[99.69%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::send( tcp_packet const& packet )
 {
-	// FUNCTION BODY
-	// <0x78cdb9>|0x000|0x000:'67'
-	// ******
+	m_packet_socket.send( packet );
+
+	// STRUCTURE DIFF[target 0x77cda0 | base 0x57ade0]: target 1 / base 1 stmts
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; residual
+	// is the sub-statement inline boundary of socket send(). trail: tcp_packet_client.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_client::on_error(vostok::network_core::client_error_codes_enum, boost::system::error_code)
+// STATE[100%|DONE]
 void tcp_packet_client::on_error( client_error_codes_enum client_error_code, boost::system::error_code error_code )
 {
-	// FUNCTION BODY
-	// <0x78caaf>|0x000|0x000:'72'
-	// <0x78cac0>|0x011|0x011:'73'
-	// <0x78cae1>|0x032|0x021:'74'
-	// ******
+	m_async_connector.reset( );
+
+	if ( m_on_error )
+		m_on_error( client_error_code, error_code );
 }
-
-	// TYPEDEFS
-	typedef
-		boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> >
-		socket_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>
-		iterator_type;
-
-	typedef
-		boost::asio::stream_socket_service<boost::asio::ip::tcp>
-		service_type;
-
-	typedef
-		boost::function<void __cdecl(enum client_error_codes_enum,boost::system::error_code)>
-		on_error_type;
-
-	typedef
-		sockaddr
-		data_type;
-
-	// ******
 
 } // namespace network_core
 } // namespace vostok
