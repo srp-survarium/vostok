@@ -71,8 +71,13 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      (cherry-pick its OWN commits, never merge-in), re-verify it, and hand it over for
      the human to merge - looping up the stack (see "Reviewing/landing the stack" below).
 3. **For each unit (a batch), filling the 3 worktree slots:**
-   - Dispatch a `matcher` worker in a free worktree, **`run_in_background: true`**:
-     `Agent(subagent_type="matcher", prompt="Work in vostok_<N>. Match <module>::<batch>. <file:line/rva each>. Branch off <tip> as match/<module>-<unit>, commit + push the branch, NO PR - the orchestrator opens it.")`
+   - **Prepare the worktree FIRST (you own the env, not the worker)** - this keeps the
+     matcher's context lean (it never reasons about branches/tips/stacking): in a free
+     `vostok_<N>`, `git reset --hard <tip>` + `git clean -fdq`, run `regen_ninja.py` if the
+     tip un-excluded a TU, and create the unit's branch `git checkout -b match/<module>-<unit>`.
+     The worker now inherits all prior matches and just works in place.
+   - Dispatch a `matcher` worker, **`run_in_background: true`**:
+     `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
    - **Batch several small functions per dispatch** - batching lowers TOKEN cost: a
      worker pays the fixed setup (shared docs, class decl, member offsets, anchor,
      context) ONCE per unit, so more functions per worker = fewer tokens (the rebuild
@@ -99,8 +104,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       merge` a sibling in, never force-push its in-flight branch), **resolving the same-top
       sibling conflicts** in the append-only shared files (`temp_include_all.cpp` anchors
       deduped by name + braces balanced; the module `.vcproj`).
-   b. **Open the PR** (step 2): `gh pr create --base <the-branch-point>`, minimal body
-      (functions + %s).
+   b. **Push + open the PR** (step 2): `git -C vostok_<N> push -u origin match/<module>-<unit>`
+      then `gh pr create --base <the-branch-point>`, minimal body (functions + %s).
    c. **Dispatch the `structure-verifier` on the SAME branch/worktree** - it verifies and
       (phase 2) fixes, then pushes a SECOND commit to the same PR, so every PR is exactly
       `match` + `verify` (details under "Audit a matcher's work").

@@ -1,6 +1,6 @@
 ---
 name: matcher
-description: Binary-matches ONE Vostok engine unit of work (game_core, network_core, or other non-optimized modules) to the original game, end to end, then commits + pushes its branch (the orchestrator opens the PR; standalone, it opens its own). The unit of work is provided by the orchestrator when it dispatches matchers. By default it will be a batch of functions.
+description: Binary-matches ONE Vostok engine unit of work (game_core, network_core, or other non-optimized modules) to the original game, end to end, then commits the match. The unit of work and a prepared worktree (on the unit's branch) are provided by the orchestrator when it dispatches matchers. By default it will be a batch of functions.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -17,8 +17,7 @@ context - ONCE, so more functions per unit means fewer tokens overall. Bundle an
 The orchestrator usually hands you the explicit list. Pull in those, plus any function
 **CALLED by one you're matching** - matching a callee is fine and often necessary (it
 gets its own STATE/structure; see MATCHING.md's reconstructed-helper rule). 
-One unit = one branch + one match commit (the orchestrator opens the PR and adds the
-structure-verifier's commit). If a batch member turns out hard, a bit of spinning on it
+One unit = one match commit. If a batch member turns out hard, a bit of spinning on it
 is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the next step.
 
 ## Read first (source of truth - they win over this summary)
@@ -120,21 +119,15 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   orphans stacked PRs and destroys the before/after). Pre-first-push squash is fine;
   after that, revise by a NEW commit + plain push.
 
-## Finish - commit + push your branch (the orchestrator opens the PR)
-The orchestrator leaves the current **stack tip** checked out and names it
-(`<tip>`). Branch off it (do NOT reset to feature/xray) so you inherit prior
-matches' source, anchors, and notes:
+## Finish - commit your match, return your result line
+Your worktree is already on the unit's branch, indexes warm. Just commit your work:
 ```
-git checkout -b match/<module>-<unit>      # off the tip you were handed
 git add <the .cpp(s)> <temp_include_all.cpp edits>
 git commit -m "<module>: match <unit> (per-fn NN% TAG)"   # name grouped/inlined members too
-git push -u origin match/<module>-<unit>
 ```
-**ONE commit for your match** (squash WIP first: `git reset --soft <tip>` then one commit).
-Then STOP: if an orchestrator dispatched you, **IT opens the PR** and adds the
-structure-verifier's commit onto your branch (the PR is `match` + `verify`) - do NOT open
-it yourself. Only run `gh pr create --fill --base <tip>` when you were invoked STANDALONE
-(no orchestrator). Return ONE line, nothing else:
+**ONE commit** (squash WIP first: `git reset --soft <branch-point>` then one commit). Do
+NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack.
+Return ONE line, nothing else:
 ```
-<module>::<function> -> STATE[NN%|TAG] -> PR #<n>   (regressions: none | <unit/fn>)
+<module>::<unit> -> STATE[NN%|TAG] per fn   (regressions: none | <unit/fn>)
 ```
