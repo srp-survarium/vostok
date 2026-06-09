@@ -10,7 +10,7 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[70%|PARTIAL]: body byte-correct; boost::bind/function assign reps fold under LTCG (frame/slot residual)
+// STATE[70.24%|PARTIAL]: body byte-correct; boost::bind/function assign reps fold under LTCG (frame/slot residual)
 tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
 	m_socket		( io_service ),
 	m_packet_socket	( m_socket, *g_allocator ),
@@ -18,31 +18,42 @@ tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
 	m_first_packet	( NULL )
 {
 	m_on_error	= boost::bind( &tcp_packet_client::on_error, this, _1, _2 );
-	// structure-diff (condensed): 1/1 stmt, SIZE 0xc4 (target) vs 0x9d (base).
-	//   Member-init order matches. Residual: target INLINES the m_packet_socket(m_socket,*g_allocator)
-	//   ctor (handler_allocator + boost::function field ctors emitted inline) where base emits one
-	//   call tcp_packet_socket::tcp_packet_socket; plus the boost::function assign/swap epilogue
-	//   register shape (esi/edi, frame 0x60 vs 0x6c) differs.
-	// VERDICT: source shape correct; residual is LTCG inline-boundary on the member-socket ctor - take the hit.
+
+	// STRUCTURE DIFF[target 0x77cc70 | base 0x57b020]: target 1 / base 1 stmts
+	//   1: 0x0c4 <0x5e> | 0x09d <0x67> | m_on_error	= boost::bind( &tcp_packet_client::on_error, this, _1, _2 );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - member-init order matches; sole SIZE is the
+	// member-socket ctor inline-boundary (target inlines m_packet_socket ctor; base emits
+	// one call) + boost::function assign epilogue regalloc. No source lever. trail: tcp_packet_client.md
 }
 
-// STATE[91%|PARTIAL]: body byte-correct; boost::function clear reps fold under LTCG
+// STATE[90.98%|PARTIAL]: body byte-correct; boost::function clear reps fold under LTCG
 tcp_packet_client::~tcp_packet_client( )
 {
 	if ( m_async_connector.has_connection_established( ) )
 		disconnect( );
-	// structure-diff (condensed): target 3 stmts / base 2 (quantity +1 at L26, size 0x2).
-	//   has_connection_established == 4 test matches; residual is the if branch layout:
-	//   target emits `jne .disconnect; jmp .end` (the extra L26 stmt), base emits a single `je .end`.
-	//   The trailing boost::function::clear runs are positional matches (template names fold under unit-pairing).
-	// VERDICT: source shape correct; residual is LTCG if-branch layout (jne+jmp vs je) - no source lever, take the hit.
+
+	// STRUCTURE DIFF[target 0x77cbe0 | base 0x57af90]: target 3 / base 2 stmts
+	// .. same ..
+	//   2: 0x020 <0x2> | --          | L26   ONLY target
+	// .. same ..
+	// ; aligned 2, size-diffs 0, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MISMATCH (quantity) - the 1 extra target stmt is a 2-byte branch
+	// row: target lowers the guard as `jne .disconnect; jmp .end`, base as a single `je .end`.
+	// has_connection_established test + disconnect call align; this is if-branch codegen layout,
+	// not a source-shape miss - no source lever, take the hit. trail: tcp_packet_client.md
 }
 
 // STATE[99.70%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::start_reading( )
 {
 	m_packet_socket.start_receiving( );
-	// structure-diff: 1/1 stmt fully aligned. VERDICT: DONE; residual is sub-statement inline boundary of start_receiving().
+
+	// STRUCTURE DIFF[target 0x77cde0 | base 0x57ae20]: target 1 / base 1 stmts
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; residual
+	// is the sub-statement inline boundary of start_receiving(). trail: tcp_packet_client.md
 }
 
 // STATE[100%|DONE]
@@ -86,17 +97,27 @@ void tcp_packet_client::close_connection( )
 	m_socket.close( ec );
 
 	m_async_connector.reset( );
-	// structure-diff (condensed): 5/5 stmts, only stmt4 differs by SIZE
-	//   4: m_socket.close( ec )  target 0x0b (mov ecx; call basic_socket::close)
-	//      base 0x28 (inlines basic_socket::close -> direct win_iocp_socket_service_base::close)
-	// VERDICT: source shape correct; residual is a boost inline-boundary on close(ec) (no source lever) - take the hit.
+
+	// STRUCTURE DIFF[target 0x77cb10 | base 0x57aea0]: target 5 / base 5 stmts
+	// .. same ..
+	//   4: 0x059 <0xb> | 0x059 <0x28> | m_socket.close( ec );   SIZE
+	// .. same ..
+	// ; aligned 4, size-diffs 1, quantity-diffs 0, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - 5/5 stmts align, quantity 0; sole SIZE is
+	// m_socket.close(ec): target out-lines to basic_socket::close, base over-inlines to
+	// win_iocp_socket_service_base::close - boost inline-boundary, no source lever. trail: tcp_packet_client.md
 }
 
 // STATE[99.69%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::send( tcp_packet const& packet )
 {
 	m_packet_socket.send( packet );
-	// structure-diff: 1/1 stmt fully aligned. VERDICT: DONE; residual is sub-statement inline boundary of socket send().
+
+	// STRUCTURE DIFF[target 0x77cda0 | base 0x57ade0]: target 1 / base 1 stmts
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; residual
+	// is the sub-statement inline boundary of socket send(). trail: tcp_packet_client.md
 }
 
 // STATE[100%|DONE]
