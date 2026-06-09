@@ -73,14 +73,16 @@ player_stamina& player_stamina::operator=( player_stamina const& other )
 	// ******
 }
 
-// STATE[PARTIAL]: reads m_value (float), m_last_spending_time_in_ms (u32),
-// m_last_tick_time_in_ms (u32), m_lower_threshold_was_reached (bool). Matches target shape.
+// STATE[INPROGRESS]: reads m_value (float), m_last_spending_time_in_ms (u32),
+// m_last_tick_time_in_ms (u32), m_lower_threshold_was_reached (bool). DCE'd, no base symbol.
 void player_stamina::deserialize( network_core::packet_reader& packet )
 {
 	m_value							= packet.r< float >( );
 	m_last_spending_time_in_ms		= packet.r< u32 >( );
 	m_last_tick_time_in_ms			= packet.r< u32 >( );
 	m_lower_threshold_was_reached	= packet.r< bool >( );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x59b030); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[99.45%|DONE] LTCG for `binary_config_value::operator[]`.

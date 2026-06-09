@@ -132,14 +132,16 @@ void base_player::send_game_world_object( game_world_object const* object, boost
 	// ******
 }
 
-// STATE[PARTIAL]: reads the source profile slot, fetches that inventory item and forwards
-// deserialize_game_world_object to it. The trailing local-byte stub is a compiled-out assert.
+// STATE[INPROGRESS]: reads the source profile slot, fetches that inventory item and forwards
+// deserialize_game_world_object to it. The trailing local-byte stub is a compiled-out assert. DCE'd, no base symbol.
 void base_player::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	profile_slot_enum	slot	= (profile_slot_enum)reader.r< bool >( );
 
 	inventory_item_ptr	item	= inventory( ).item_in_slot( slot );
 	item->deserialize_game_world_object( reader );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x72ed00); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[STUB]

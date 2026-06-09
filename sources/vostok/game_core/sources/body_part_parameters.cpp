@@ -511,6 +511,12 @@ void serialize_affect( network_core::udp_match_packet& packet, std::pair<enum hi
 {
 	packet.append( (u8)affect.first );
 	packet.append( affect.second - client_offset );
+
+	// STRUCTURE DIFF[target 0xb9ff0 | base 0x4644f0]: target 2 / base 2 stmts
+	//   1: 0x006 <0xf> | 0x006 <0x16> | packet.append( (u8)affect.first );   SIZE
+	//   2: 0x015 <0x12> | 0x01c <0x1a> | packet.append( affect.second - client_offset );   SIZE
+	// ; aligned 0, size-diffs 2, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 2 appends; both SIZE are packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
 // STATE[PARTIAL]: read affect type (r<bool>) and expiry time (r<u32>); trailing compiled-out assert.
@@ -518,11 +524,18 @@ void deserialize_affect( network_core::packet_reader& reader, std::pair<enum hit
 {
 	affect.first	= (hit_affects_type_enum)reader.r< bool >( );
 	affect.second	= reader.r< u32 >( );
+
+	// STRUCTURE DIFF[target 0xba020 | base 0x464440]: target 3 / base 2 stmts
+	//   1: 0x006 <0x10> | 0x006 <0x23> | affect.first	= (hit_affects_type_enum)reader.r< bool >( );   SIZE
+	//   2: 0x016 <0xe> | 0x029 <0x23> | affect.second	= reader.r< u32 >( );   SIZE
+	//   3: 0x024 <0xc> | --          | L428   ONLY target
+	// ; aligned 0, size-diffs 2, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - 2 reads; SIZE/quantity are r<bool>/r<u32> LTCG inline (target splits the inlined r<u32> tail into L428) vs call (base), non-steerable.
 }
 
-// STATE[PARTIAL]: append health, last-hit time (biased by client_offset, 0 when unset), the
-// active-affect count, then each affect via serialize_affect. The map iteration/boost::bind
-// shape is approximate; refine against the diff. trail: body_part_parameters_serialize.md
+// STATE[INPROGRESS]: append health, last-hit time (biased by client_offset, 0 when unset), the
+// active-affect count, then each affect via serialize_affect. DCE'd, no base symbol.
+// trail: body_part_parameters_serialize.md
 void body_part_parameters::serialize( network_core::udp_match_packet& packet, s32 client_offset ) const
 {
 	packet.append( m_health );
@@ -534,6 +547,8 @@ void body_part_parameters::serialize( network_core::udp_match_packet& packet, s3
 		m_affects.end( ),
 		boost::bind( serialize_affect, boost::ref( packet ), _1, client_offset )
 	);
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x5871f0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[PARTIAL]: read health + last-hit time, then a count of affects, applying each by force.
@@ -551,6 +566,19 @@ void body_part_parameters::deserialize( network_core::packet_reader& reader )
 		apply_affect_by_force( affect.first, (affect_event_type_enum)0, affect.second );
 		--affects_count;
 	}
+
+	// STRUCTURE DIFF[target 0x587b90 | base 0x4653a0]: target 9 / base 9 stmts
+	//   1: 0x009 <0x13> | 0x009 <0x2e> | m_health		= reader.r< float >( );   SIZE
+	//   2: 0x01c <0x11> | 0x037 <0x26> | m_last_hit_time	= reader.r< u32 >( );   SIZE
+	//   3: 0x02d <0xb> | --          | L444   ONLY target
+	//   4: 0x038 <0xc> | 0x05d <0x20> | u8 affects_count = reader.r< bool >( );   SIZE
+	//   5: 0x044 <0xc> | --          | L447   ONLY target
+	//   6: 0x050 <0x13> | 0x07d <0x8> | while ( affects_count != 0 )   SIZE
+	//   9: 0x081 <0x14> | 0x0a3 <0x12> | apply_affect_by_force( ... );   SIZE
+	//  10: --          | 0x0b5 <0x9> | --affects_count;   ONLY base (SIZE-drift)
+	//  11: --          | 0x0be <0x2> | }   ONLY base (SIZE-drift)
+	// ; aligned 2, size-diffs 5, quantity-diffs 4, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - same 3 reads + while-loop (decl/deserialize_affect/apply/--count); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines r<float>/r<u32>/r<bool>), non-steerable.
 }
 
 } // namespace survarium

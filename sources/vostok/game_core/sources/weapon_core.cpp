@@ -1653,6 +1653,19 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 		static_cast< weapon_core_base_state const* >( current )->serialize( packet );
 		m_user_animations_selector.serialize( packet );
 	}
+
+	// STRUCTURE DIFF[target 0x593810 | base 0x456650]: target 26 / base 27 stmts
+	//   2: 0x019 <0x18> | 0x019 <0x20> | packet.append( m_random.seed( ) );   SIZE
+	//   3: 0x031 <0x18> | 0x039 <0x20> | packet.append( m_normal_random.seed( ) );   SIZE
+	//   4-9: ONLY base (m_target/m_old_actions_mask/m_ammo_in_magazine/m_bullets_in_queue/m_fire_queue_type/m_ammo_slot appends)
+	//  10-15: ONLY target (same 6 appends, L1071-L1076)   SIZE-drift mis-pairing
+	//  17: 0x0c8 <0x13> | 0x107 <0x1a> | packet.append( m_is_round_chambered );   SIZE
+	//  18: 0x0db <0x23> | 0x121 <0x19> | if ( m_logic->current_state( ) )   SIZE
+	//  24: 0x13e <0x2f> | 0x181 <0x26> | for ( ... i = i->next )   SIZE
+	//  28: --          | 0x1b5 <0x8> | ++state_id;   ONLY base (folded into target for-tail)
+	//  31/32: append( state_id ) / current->serialize( packet )   SIZE
+	// ; aligned 12, size-diffs 8, quantity-diffs 13, blank-gaps 8
+	// VERDICT: STRUCTURE MATCH (shape ok) - statement set/order identical (base inventory_item::serialize + 8 scalar appends, chamber-guard, fsm-walk + forwarded serialize/selector); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines packet<T>::append/seed/states().front()), non-steerable. trail: weapon_core_serialize.md
 }
 
 // STATE[PARTIAL]: mirror of serialize - guarded by m_deserializing, reads the base + scalar
@@ -1709,6 +1722,17 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	}
 
 	m_deserializing	= false;
+
+	// STRUCTURE DIFF[target 0x594450 | base 0x459f60]: target 33 / base 33 stmts
+	//   3: --          | 0x01f <0x2a> | m_random.seed( reader.r< u32 >( ) );   ONLY base (SIZE-drift)
+	//   5-6: m_target / m_old_actions_mask reads   SIZE
+	//   7-10: ONLY base (m_ammo_in_magazine/m_bullets_in_queue/m_fire_queue_type/m_ammo_slot reads, SIZE-drift)
+	//  11/12: if ( m_ammo_slot != invalid_slot ) / m_ammunition = ...item_in_slot...   SIZE
+	//  13-17: ONLY target (else m_ammunition=NULL / chamber-guard / is_shown / hand-ik)   SIZE-drift
+	//  19: m_ammunition = NULL;   SIZE
+	//  21/22/23/25/35/37: chamber read / fsm-guard / is_shown / target_state_id read / forwarded deserialize / force_animation_selection   SIZE
+	// ; aligned 17, size-diffs 11, quantity-diffs 10, blank-gaps 8
+	// VERDICT: STRUCTURE MATCH (shape ok) - statement set/order identical to the serialize mirror (guarded by m_deserializing; base deserialize + scalar reads + ammo resolve + fsm-walk + forwarded deserialize/selector); ALL divergences are LTCG inline-vs-call SIZE residual + alignment drift, non-steerable. trail: weapon_core_serialize.md
 }
 
 // STATE[STUB]
