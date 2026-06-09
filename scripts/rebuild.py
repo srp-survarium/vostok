@@ -26,7 +26,9 @@ Any extra args are forwarded to ninja_build.py:
 """
 
 import datetime
+import os
 import re
+import select
 import subprocess
 import sys
 import time
@@ -99,20 +101,52 @@ def _append_log(elapsed: float, modules: set[str]) -> None:
         log(f"(audit log skipped: {e})")
 
 
+# After ninja_build.py exits, a blocking read of its output pipe may STILL not
+# see EOF: wine children leaked by the build inherit the write end and hold it
+# open. The worst offender was mspdbsrv.exe (link.exe's PDB-writer daemon),
+# which idles for ~10 minutes before exiting on its own - that one stalled
+# every fresh-worktree rebuild by a constant ~600s until ninja_build.py
+# learned to kill it. Belt and braces here: read via select() with a timeout,
+# and once the child has exited and the pipe has stayed silent this long,
+# stop reading - nothing real is coming.
+DRAIN_GRACE_SECONDS = 2.0
+
+
 def run_ninja() -> set[str]:
     """Run ninja_build.py, streaming its output, and return the set of modules
     whose TUs were recompiled (parsed from the verbose cl command lines)."""
     modules: set[str] = set()
     proc = subprocess.Popen(
-        [sys.executable, str(SCRIPT_DIR / "ninja_build.py"), *sys.argv[1:]],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+        [sys.executable, "-u", str(SCRIPT_DIR / "ninja_build.py"), *sys.argv[1:]],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
-    for raw in proc.stdout:
-        sys.stdout.write(raw)            # keep the live build log intact
-        m = _CL_MODULE_RE.search(raw)
+    fd = proc.stdout.fileno()
+    tail = b""
+    exited_at = None
+
+    def scan(data: bytes) -> None:
+        m = _CL_MODULE_RE.search(data.decode("utf-8", "replace"))
         if m:
             modules.add(m.group(1))
-    sys.stdout.flush()
+
+    while True:
+        ready, _, _ = select.select([fd], [], [], 0.5)
+        if ready:
+            chunk = os.read(fd, 1 << 16)
+            if not chunk:
+                break                       # true EOF: every write end closed
+            sys.stdout.buffer.write(chunk)  # keep the live build log intact
+            sys.stdout.buffer.flush()
+            lines = (tail + chunk).split(b"\n")
+            tail = lines.pop()
+            for ln in lines:
+                scan(ln)
+        if proc.poll() is not None:
+            if exited_at is None:
+                exited_at = time.monotonic()
+            elif not ready and time.monotonic() - exited_at >= DRAIN_GRACE_SECONDS:
+                break                       # child gone, pipe silent: let go
+    scan(tail)
     rc = proc.wait()
     if rc != 0:
         # mirror ninja_build.py's exit code so callers/watchdog see the failure,
