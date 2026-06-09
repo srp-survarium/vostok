@@ -54,7 +54,8 @@ void udp_match_connection::on_error( client_error_codes_enum, boost::system::err
 {
 }
 
-// STATE[BLOCKED]: faithful source; packet_reader::r<>/advance/eof are empty inline STUBs (sibling unit), so target's out-of-line calls do not emit
+// STATE[PARTIAL]: shape exact; the single-TU anchor inlines packet_reader::r<> where the
+// target keeps the template out-of-line (the documented anchor/inline-vs-call wall).
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
 	packet_reader	reader( packet );
@@ -68,9 +69,27 @@ bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 
 	reader.advance( reader.r< bool >( ) );
 	return reader.eof( );
+
+	// STRUCTURE DIFF[target 0x5464d0 | base 0x44e910]: target 8 / base 8 stmts
+	//   1: 0x006 <0x11> | 0x006 <0xd> | packet_reader	reader( packet );   SIZE
+	//   2: --          | 0x013 <0x13> | reader.r< u16 >( );   ONLY base
+	//   3: --          | 0x026 <0x13> | reader.r< u16 >( );   ONLY base
+	//   4: --          | 0x039 <0x1b> | const u16	bits	= reader.r< u16 >( );   ONLY base
+	// .. same ..
+	//   5: 0x017 <0x14> | --          | L87   ONLY target
+	//   6: 0x02b <0x14> | --          | L88   ONLY target
+	//   7: 0x03f <0xc> | --          | L89   ONLY target
+	// .. same ..
+	//  10: 0x058 <0x14> | 0x061 <0x1e> | reader.advance( reader.r< bool >( ) );   SIZE
+	//  11: 0x06c <0x8> | 0x07f <0x1f> | return reader.eof( );   SIZE
+	// ; aligned 2, size-diffs 3, quantity-diffs 6, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - the base inlines packet_reader::r<> (one stmt per read) where the target keeps the template out-of-line (single-TU anchor inline-vs-call wall); same statement set, line-attribution shift only.
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::handle_send(
 	udp_match_packet*					packet,
 	boost::system::error_code const&	error_code,
@@ -116,7 +135,10 @@ void udp_match_connection::handle_send(
 	// ******
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::send( udp_match_packet* const packet )
 {
 	// FUNCTION BODY[0x556fd0]: 19
@@ -142,29 +164,30 @@ void udp_match_connection::send( udp_match_packet* const packet )
 	// ******
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: faithful body written (serialize header into packet.m_buffer: 3x
+// sequence_number<u16>::serialize(pbyte&)-style writes). NOT YET SCORED - this private
+// method is unreferenced (its callers send/new_low_level_packet are still carcasses), so
+// no COMDAT emits; next step: implement a caller (or anchor it via a friend) to verify.
 void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 {
-	// LOCALS
-	// pbyte 							buffer
-	// udp_match_packets_count_enum 	packet_type
-	// ******
+	pbyte	buffer	= packet.m_buffer.data( );
 
-	// FUNCTION BODY[0x555bc0]: 10
-	// <0x555bc9>|0x009|+0x009:'156'
-	// <0>
-	// <0x555bd2>|0x012|+0x009:'158'
-	// <0x555bdb>|0x01b|+0x00c:'159'
-	// <0>
-	// <0x555be7>|0x027|+0x022:'161'
-	// <0x555c09>|0x049|+0x025:'162'
-	// <0>
-	// <0x555c2e>|0x06e|+0x023:'164'
-	// <0x555c51>|0x091|+0x009:'165'
-	// ******
+	const udp_match_packets_count_enum	packet_type	= udp_match_packets_count_enum( *buffer );
+	ASSERT( UNKNOWN_EXPRESSION_T( packet_type < 2 ) );
+
+	reinterpret_cast< sequence_number< u16 >& >( packet.sequence_id ).serialize( buffer );
+	m_remote_sequence_id.serialize( buffer );
+
+	*reinterpret_cast< u16* >( buffer )	= u16( ( u32( m_remote_acknowledgement_bits ) << 1 ) | ( packet_type == udp_match_low_level_packet ) );
+	buffer	+= 2;
+
+	// VERDICT: STRUCTURE UNVERIFIED - no base symbol (private + unreferenced; callers send/new_low_level_packet are still carcasses, so no COMDAT emits). Next: anchor via a caller/friend to score.
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::send_packets_list( udp_match_packet* const packets_list, const u32 packets_count )
 {
 	// LOCALS
@@ -246,13 +269,19 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	// ******
 }
 
-// STATE[BLOCKED]: single guarded debug-dump statement (bool guard call + 2-arg log call), both fold to empty_stub; exact logging helper API (sibling unit) unresolved
+// STATE[INPROGRESS]: single guarded debug-dump statement (bool guard call + 2-arg log call),
+// both fold to empty_stub; exact logging helper API (sibling unit) unresolved.
 void udp_match_connection::dump( pcstr const caption, const u32 current_time_in_ms )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( caption, current_time_in_ms );
+
+	// VERDICT: STRUCTURE UNVERIFIED - no base symbol (current empty body folds to empty_stub via ICF; target's guarded debug-dump stmts unresolved - sibling logging unit API).
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_type )
 {
 	return NULL;
@@ -303,7 +332,10 @@ udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_t
 	// ******
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 {
 	// LOCALS
@@ -466,6 +498,11 @@ void udp_match_connection::connect( udp_match_packet* const packet )
 
 	if ( packet )
 		enqueue_impl( packet );
+
+	// STRUCTURE DIFF[target 0x545d30 | base 0x44e8d0]: target 4 / base 4 stmts
+	// .. same ..
+	// ; aligned 4, size-diffs 0, quantity-diffs 0, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH - all 4 statements aligned, no size/quantity divergence.
 }
 
 // STATE[PARTIAL]: is_ordered stamps the packet's order_id from the channel's running
@@ -483,9 +520,20 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 		++m_stats.unacknowledged_packets;
 
 	m_packets_to_send.push_back( packet );
+
+	// STRUCTURE DIFF[target 0x545c60 | base 0x44e820]: target 9 / base 6 stmts
+	//   3: 0x038 <0x15> | 0x038 <0x36> | packet->order_id	= channel.sent_order_id++;   SIZE
+	//   4: 0x04d <0x11> | --          | L469   ONLY target
+	//   5: 0x05e <0x21> | --          | L470   ONLY target
+	//   6: 0x07f <0x10> | --          | L471   ONLY target
+	// .. same ..
+	// ; aligned 5, size-diffs 1, quantity-diffs 3, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - the base inlines sequence_number<u16>::operator++(s32) (post-increment copy+inc+assign) as one statement where the target's /Od keeps the operator's steps as separate statements (L469-471); same op set, inline-vs-call/template line-attribution wall, not caller-steerable.
 }
 
-// STATE[BLOCKED]: faithful source; delete_udp_match_packet is an empty inline STUB (sibling unit) so target's call + frame slots do not emit
+// STATE[PARTIAL]: 4/5 statements aligned; the else-branch inlines delete_udp_match_packet
+// (call_destructor+deallocate+decrement) where the target emits a single out-of-line call -
+// the single-TU anchor cannot keep the inline free function standalone (inline-vs-call wall).
 void udp_match_connection::enqueue( udp_match_packet* packet )
 {
 	if ( m_state == connected )
@@ -495,9 +543,17 @@ void udp_match_connection::enqueue( udp_match_packet* packet )
 		ASSERT( UNKNOWN_EXPRESSION_T( m_state != connected ) );
 		delete_udp_match_packet( m_packets_allocator, packet );
 	}
+
+	// STRUCTURE DIFF[target 0x545e20 | base 0x44ea70]: target 5 / base 5 stmts
+	//   5: 0x02f <0x16> | 0x02f <0x44> | delete_udp_match_packet( m_packets_allocator, packet );   SIZE
+	// ; aligned 4, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the base inlining delete_udp_match_packet (call_destructor+deallocate) where the target emits one out-of-line call (single-TU anchor inline-vs-call wall).
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::update_acknowledgements(
 	sequence_number< u16 >		remote_sequence_id,
 	sequence_number< u16 >		local_sequence_id,
@@ -569,7 +625,10 @@ void udp_match_connection::update_acknowledgements(
 	// ******
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::process_low_level_message( packet_reader& reader, const u32 time_in_ms )
 {
 	// LOCALS
@@ -623,7 +682,10 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 	// ******
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::instant_disconnect( disconnect_event_types_enum type )
 {
 	// LOCALS
@@ -668,7 +730,10 @@ void udp_match_connection::instant_disconnect( disconnect_event_types_enum type 
 	// ******
 }
 
-// STATE[BLOCKED]: faithful body needs sibling-unit empty inline STUBs (sequence_number serialize/++, packet_reader r/advance/eof, delete_udp_match_packet) to emit real calls; out of this unit's scope
+// STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
+// (header_size, buffer_to_send/_size) + udp_match_stats; and even once those are real the
+// single-TU anchor inlines the now-real inline helpers where the target keeps them
+// out-of-line (the documented inline-vs-call wall). Next: implement those leaves, then diff.
 void udp_match_connection::disconnect( )
 {
 	// LOCALS
@@ -716,6 +781,11 @@ u32 udp_match_connection::packets_count( ) const
 		result	+= m_channels[ i ].packets.size( );
 
 	return result;
+
+	// STRUCTURE DIFF[target 0x545d70 | base 0x44e9c0]: target 4 / base 4 stmts
+	// .. same ..
+	// ; aligned 4, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - all 4 statements aligned; 99.79% residual is the intrusive set size() temp frame + ICF call-name noise.
 }
 
 

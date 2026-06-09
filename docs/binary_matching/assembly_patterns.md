@@ -992,3 +992,20 @@ game caller observes them. So: a constant-only default ctor whose only caller is
 the anchor is a PARTIAL until its real callers are matched - the body is right,
 but the base bytes are LTCG-emptied. Confirmed in
 `game_core/weapon_recoil_params::weapon_recoil_params()` (18.18%).
+
+### Single-TU anchor INLINES a now-real inline helper where the target CALLS it
+SYMPTOM: a consumer that calls a small `inline` helper (free function or template, e.g.
+`packet_reader::r<u16>`, `delete_udp_match_packet`, `new_udp_match_packet`'s `udp_match_packet`
+ctor) shows the target emitting a single `call <helper>` while the base inlines the helper body
+inline at the call site (the `call_destructor`+`deallocate`+`decrement` dance instead of one
+`call delete_udp_match_packet`; the `mov dx,[ecx]; add eax,2` instead of `call r<unsigned short>`).
+A pure inline free function with no out-of-line definition may not emit a standalone COMDAT in
+the base AT ALL (delete_udp_match_packet was absent from the base index -> 0%).
+CAUSE: the target's whole-program (/GL LTCG) build keeps these inline helpers as one out-of-line
+COMDAT and calls it from every site; our base instantiates them in a single anchor TU where
+MSVC inlines the small inline body at each `/Od` call site. This is the SAME wall the
+packet_reader_inline.h header note describes ("a single-TU anchor cannot reproduce that").
+CONSEQUENCE: making the helper's body real does NOT make the consumer match - the consumer now
+inlines the real body instead of the old empty stub. Mark such consumers PARTIAL with the
+inline-vs-call residual; do not chase the % from the consuming unit's source. (Seen across the
+whole udp_match_connection unit: enqueue 4/5 stmts aligned, is_low_level_packet, new_udp_match_packet.)
