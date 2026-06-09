@@ -6,6 +6,7 @@
 #include <vostok/game_core/player_stamina.h>
 
 #include <vostok/game_core/player_stamina_subscriber.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -72,17 +73,14 @@ player_stamina& player_stamina::operator=( player_stamina const& other )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: reads m_value (float), m_last_spending_time_in_ms (u32),
+// m_last_tick_time_in_ms (u32), m_lower_threshold_was_reached (bool). Matches target shape.
 void player_stamina::deserialize( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY
-	// <0x5ab030>|0x000|+0x009:'67'	{
-	// <0x5ab039>|0x009|+0x010:'68'
-	// <0x5ab049>|0x019|+0x00e:'69'
-	// <0x5ab057>|0x027|+0x00e:'70'
-	// <0x5ab065>|0x035|+0x00e:'71'
-	// <0x5ab073>|0x043|      :'72'	}
-	// ******
+	m_value							= packet.r< float >( );
+	m_last_spending_time_in_ms		= packet.r< u32 >( );
+	m_last_tick_time_in_ms			= packet.r< u32 >( );
+	m_lower_threshold_was_reached	= packet.r< bool >( );
 }
 
 // STATE[99.45%|DONE] LTCG for `binary_config_value::operator[]`.

@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include <vostok/game_core/hand_to_weapon_ik_processor.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 /*
@@ -263,39 +265,28 @@ float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_proce
 	// ******
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::hand_to_weapon_ik_processor::serialize(vostok::network_core::udp_match_packet&, unsigned int) const
+// STATE[PARTIAL]: packs both hands' is_active into a u8 bitfield (bit0=left, bit1=right),
+// appends it, then appends each hand's start_transition_time_in_ms biased by client_offset.
 void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	// LOCALS
-	// u8 							active_hands
-	// ******
+	u8 active_hands = ( m_hands[ left ].is_active ? 1 : 0 ) | ( m_hands[ right ].is_active ? 2 : 0 );
 
-	// FUNCTION BODY
-	// <0x594049>|0x009|+0x020:'196'
-	// <0x594069>|0x029|+0x00d:'197'
-	// <0x594076>|0x036|+0x011:'198'
-	// <0x594087>|0x047|+0x012:'199'
-	// ******
+	packet.append( active_hands );
+	packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
+	packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::hand_to_weapon_ik_processor::deserialize(vostok::network_core::packet_reader&)
+// STATE[PARTIAL]: reads the packed active-hands byte then both start times; the trailing
+// stub is a compiled-out assert. Bits 0/1 of active_hands drive each hand's is_active.
 void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// u8 							active_hands
-	// ******
+	u8 active_hands = reader.r< bool >( );
 
-	// FUNCTION BODY
-	// <0x593fd9>|0x009|+0x00b:'204'
-	// <0x593fe4>|0x014|+0x00d:'205'
-	// <0x593ff1>|0x021|+0x00e:'206'
-	// <0>
-	// <0x593fff>|0x02f|+0x00c:'208'
-	// <0x59400b>|0x03b|+0x013:'209'
-	// <0x59401e>|0x04e|+0x013:'210'
-	// ******
+	m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );
+	m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );
+
+	m_hands[ left  ].is_active = ( active_hands & 1 ) != 0;
+	m_hands[ right ].is_active = ( active_hands & 2 ) != 0;
 }
 
 } // namespace survarium
