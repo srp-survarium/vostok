@@ -62,6 +62,9 @@
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/player_state.h>
+#include <vostok/game_core/server_player_update.h>
+#include <vostok/game_core/hit_info.h>
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
 #include <vostok/game_core/player_logic_base_state.h>
@@ -1073,6 +1076,29 @@ namespace vostok
 		update.serialize( *packet );
 	}
 
+	// Exercises the typed serialize/deserialize chain so the packet< T >::append
+	// and packet_reader::r< T > / r_string primitives keep real out-of-line call
+	// sites in the LTCG image (they would otherwise be inlined away / DCE'd).
+	void use_game_core_serialization(
+		network_core::udp_match_packet*	packet,
+		network_core::packet_reader*	reader
+	)
+	{
+		survarium::player_input			input;
+		input.serialize	( *packet );
+		input.deserialize( *reader );
+
+		survarium::player_state			state;
+		state.serialize	( *packet );
+		state.deserialize( *reader );
+
+		survarium::server_player_update	server_update;
+		server_update.deserialize( *reader );
+
+		survarium::hit_info				hit;
+		hit.deserialize	( *reader );
+	}
+
 	void use_game_core_weapon_state()
 	{
 		// Anchor weapon_state::operator= so its member stores are OBSERVED
@@ -1708,6 +1734,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_player_stealth();
 	vostok::use_game_core_player_input();
 	vostok::use_client_player_update( NULL );
+	vostok::use_game_core_serialization( NULL, NULL );
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
 	vostok::use_game_core_jump_logic_state_inactive();
