@@ -14,13 +14,22 @@ The target side (binaries/structure/target, binaries/objdiff/target,
 binaries/rich/target) is the original game and does not change between
 recompiles; it is generated once on first `nix develop` (see setup-toolchain.py).
 
+Each run appends one tab-separated audit line to binaries/rebuild.log (git-ignored,
+mirrors binaries/pdb_fetch.log):
+    <timestamp>\t<elapsed>\t<git-branch>\t<summary>
+where <summary> reports the wall-clock and the set of engine modules whose TUs
+ninja actually recompiled this run (a no-op rebuild = 0 modules).
+
 Any extra args are forwarded to ninja_build.py:
   python3 scripts/rebuild.py            # build the game, then refresh base diff inputs
   python3 scripts/rebuild.py logging    # build just one project first
 """
 
+import datetime
+import re
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -30,6 +39,16 @@ import generate_structure
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+VOSTOK_DIR = SCRIPT_DIR.parent
+LOG_PATH   = VOSTOK_DIR / "binaries" / "rebuild.log"
+
+# A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
+# cd's into the module's source dir, e.g.
+#   cmd /c cd "Z:\...\sources\vostok\game_core\sources" && cl @...rsp ...
+# The "...\vostok\<module>\sources && cl" shape is unique to a recompile (link/lib
+# edges run `link`/`lib`, not `cl`), so it counts TUs without double-counting the
+# per-project link step. Path separators are backslashes under Wine.
+_CL_MODULE_RE = re.compile(r"vostok[\\/]([A-Za-z0-9_]+)[\\/]sources\b[^\n]*?&&\s*cl\b")
 
 
 def log(msg: str) -> None:
@@ -41,36 +60,100 @@ def die(msg: str) -> None:
     sys.exit(1)
 
 
-def main() -> None:
-    log("Building survarium via ninja ...")
+def _git_branch() -> str:
     try:
-        subprocess.run(
-            [sys.executable, str(SCRIPT_DIR / "ninja_build.py"), *sys.argv[1:]],
-            check=True,
+        out = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=str(VOSTOK_DIR), capture_output=True, text=True, check=True,
         )
-    except subprocess.CalledProcessError as e:
-        die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
+        return out.stdout.strip() or "?"
+    except Exception:  # noqa: BLE001 - audit log must never break the build
+        return "?"
 
-    log("Build OK. Regenerating base structure + COFF + rich index in parallel ...")
-    steps = {
-        "base structure":  lambda: generate_structure.generate("base"),
-        "base COFF":       lambda: generate_delink.generate("base"),
-        "base rich index": lambda: generate_rich.generate("base"),
-    }
-    failures = []
-    with ThreadPoolExecutor(max_workers=len(steps)) as ex:
-        futures = {name: ex.submit(fn) for name, fn in steps.items()}
-        for name, fut in futures.items():
-            try:
-                fut.result()
-                log(f"{name}: OK")
-            except Exception as e:  # noqa: BLE001 - report every step's failure
-                failures.append(name)
-                log(f"{name}: FAILED - {e}")
 
-    if failures:
-        die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
-    log("All done - base diff inputs refreshed.")
+def _fmt_elapsed(seconds: float) -> str:
+    if seconds >= 60:
+        m, s = divmod(int(round(seconds)), 60)
+        return f"{m}m{s:02d}s"
+    return f"{seconds:.1f}s"
+
+
+def _summarize(modules: set[str]) -> str:
+    n = len(modules)
+    if n == 0:
+        return "0 modules (no-op)"
+    if n <= 4:
+        return f"{n} module{'s' if n != 1 else ''}: {', '.join(sorted(modules))}"
+    return f"{n} modules"
+
+
+def _append_log(elapsed: float, modules: set[str]) -> None:
+    """Best-effort audit line; a logging error must never fail the rebuild."""
+    try:
+        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        line = f"{ts}\t{_fmt_elapsed(elapsed)}\t{_git_branch()}\t{_summarize(modules)}\n"
+        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception as e:  # noqa: BLE001
+        log(f"(audit log skipped: {e})")
+
+
+def run_ninja() -> set[str]:
+    """Run ninja_build.py, streaming its output, and return the set of modules
+    whose TUs were recompiled (parsed from the verbose cl command lines)."""
+    modules: set[str] = set()
+    proc = subprocess.Popen(
+        [sys.executable, str(SCRIPT_DIR / "ninja_build.py"), *sys.argv[1:]],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+    )
+    for raw in proc.stdout:
+        sys.stdout.write(raw)            # keep the live build log intact
+        m = _CL_MODULE_RE.search(raw)
+        if m:
+            modules.add(m.group(1))
+    sys.stdout.flush()
+    rc = proc.wait()
+    if rc != 0:
+        # mirror ninja_build.py's exit code so callers/watchdog see the failure,
+        # but the audit line is still written by main()'s finally guard.
+        raise subprocess.CalledProcessError(rc, "ninja_build.py")
+    return modules
+
+
+def main() -> None:
+    start = time.monotonic()
+    modules: set[str] = set()
+    try:
+        log("Building survarium via ninja ...")
+        try:
+            modules = run_ninja()
+        except subprocess.CalledProcessError as e:
+            die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
+
+        log(f"Build OK ({_summarize(modules)}). "
+            "Regenerating base structure + COFF + rich index in parallel ...")
+        steps = {
+            "base structure":  lambda: generate_structure.generate("base"),
+            "base COFF":       lambda: generate_delink.generate("base"),
+            "base rich index": lambda: generate_rich.generate("base"),
+        }
+        failures = []
+        with ThreadPoolExecutor(max_workers=len(steps)) as ex:
+            futures = {name: ex.submit(fn) for name, fn in steps.items()}
+            for name, fut in futures.items():
+                try:
+                    fut.result()
+                    log(f"{name}: OK")
+                except Exception as e:  # noqa: BLE001 - report every step's failure
+                    failures.append(name)
+                    log(f"{name}: FAILED - {e}")
+
+        if failures:
+            die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
+        log("All done - base diff inputs refreshed.")
+    finally:
+        _append_log(time.monotonic() - start, modules)
 
 
 if __name__ == "__main__":
