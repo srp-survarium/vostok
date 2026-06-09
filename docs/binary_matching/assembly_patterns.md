@@ -959,3 +959,36 @@ structure-diff, e.g. client_player_update::serialize missing its append(time_in_
 one byte: the first clause's `<` becomes `<=` (jge->jg). `operator-(left,right)` is
 `right <= left ? s16(left.m - right.m) : -(right - left)`; the `+0x10000 & 0x8000FFFF` +
 sign-extend sequence IS the compiler's `(s16)` cast, not extra logic.
+
+### LOG_ERROR / __FILE__ residual is permanent on logging-heavy functions
+Every `LOG_*` bakes `__FILE__` into the call. Target's is `C:\survarium\sources\vostok\...`;
+our base build path is `Z:\home\...` (Wine). The `push <path-string>` therefore never
+matches, capping logging-dominated functions (e.g. tcp_packet_socket::on_packet_received/
+on_packet_size_received ~40%, on_packet_has_been_sent ~52%) well below 100% even when the
+control flow is fully matched. Not source-steerable - same wall as http_client's LOG lines.
+
+### `objdiff fuzzy_match_percent: None` can mean "body too divergent", not only bad mangling
+SYMPTOM: report.json omits the percent for a function whose mangled name matches the target's
+exactly and is present in the base obj. CAUSE (besides access-specifier, above): the base body
+diverges structurally enough (e.g. a whole missing compare/branch block) that objdiff's symbol
+diff bails without a number. Before assuming unreachable/mangling: byte-compare the two `.text`
+regions; if the symbol is present with the right name, fix the body shape, not the header.
+
+### LTCG dead-store elimination: a /Od+/GL ctor with no real caller compiles EMPTY
+ASM (base, the same correct ctor source as above) for a function only reachable
+via a synthetic `temp_include_all` anchor:
+    push ebp; mov ebp,esp; push ecx; mov [ebp-4],ecx; mov eax,[ebp-4]; leave; ret
+    ; i.e. NO member stores at all - the whole init list is gone.
+CAUSE: Master Gold game_core is `Optimization=0` (/Od) **plus**
+`WholeProgramOptimization=1` (/GL = LTCG). The obj holds IL, and the linker does
+whole-program codegen: if the constructed object is never *observed* by a real
+consumer, LTCG proves every member store dead and emits an empty ctor body.
+NOT steerable from the anchor: escaping `&params` to an opaque external
+(`example_callback` -> `printf("%s")`) does NOT count as observing the float
+members, so the stores still vanish. Real matched value-struct ctors (e.g.
+`animation_analysis_result::animation_analysis_result`, 85.98% DONE) are NOT
+anchored in temp_include_all at all - they survive only because a real reachable
+game caller observes them. So: a constant-only default ctor whose only caller is
+the anchor is a PARTIAL until its real callers are matched - the body is right,
+but the base bytes are LTCG-emptied. Confirmed in
+`game_core/weapon_recoil_params::weapon_recoil_params()` (18.18%).
