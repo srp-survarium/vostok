@@ -18,19 +18,40 @@ class udp_match_client_session;
 class delayed_packets_predicate;
 class udp_network_flow_emulator;
 
+class udp_match_packet;
+
+// allocator-backed factory / disposer; both reach udp_match_packet's private ctor and
+// helper::call_destructor, so they are befriended below.
+inline udp_match_packet* new_udp_match_packet(
+	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
+);
+inline void delete_udp_match_packet(
+	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
+	udp_match_packet*&		packet
+);
+
 class udp_match_packet : public packet< udp_match_packet > {
 public:
 	class helper {
 	public:
 		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
 	private:
-		// STATE[STUB]
+		// STATE[PARTIAL]: delete &packet - dtor inlined (hook destruct, ICF-folded name) then
+		// operator delete; shape exact, residual is the single-TU anchor codegen.
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
-			// FUNCTION BODY[0xea9c0]: 1
-			// <0xea9c4>|0x004|+0x02c:'112'
-			// ******
+			delete	&packet;
+
+			// STRUCTURE DIFF[target 0xda9c0 | base 0x98240]: target 1 / base 1 stmts
+			//   1: 0x004 <0x2c> | 0x006 <0x50> | delete	&packet;   SIZE
+			// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+			// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the inlined udp_match_packet dtor (single-TU anchor inline-vs-call wall).
 		}
+
+		friend	void	::vostok::network_core::delete_udp_match_packet(
+			memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
+			udp_match_packet*&		packet
+		);
 	}; // class helper
 
 private:
@@ -69,6 +90,11 @@ public:
 	friend	class		delayed_packets_predicate;
 	friend	class		udp_network_flow_emulator;
 
+	// the placement-new factory constructs through the private default ctor.
+	friend	udp_match_packet*	::vostok::network_core::new_udp_match_packet(
+		memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
+	);
+
 private:
 	/* 0x0008 */	boost::intrusive::set_member_hook<>	set_member_hook;
 	/* 0x0018 */	udp_match_client_session*		client_session;
@@ -87,31 +113,35 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
-// STATE[STUB]
+// STATE[PARTIAL]: allocate + placement-new into `result` local + return; shape exact.
+// Residual is the single-TU anchor inlining the udp_match_packet ctor (target keeps it out-of-line).
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
 {
-	return NULL;
-	// FUNCTION BODY[0xeaa00]: 3
-	// <0xeaa06>|0x006|+0x00b:'118'
-	// <0xeaa11>|0x011|+0x02e:'119'
-	// <0xeaa3f>|0x03f|+0x003:'120'
-	// ******
+	pvoid const	memory	= allocator.allocate( );
+	udp_match_packet* const	result	= new ( memory ) udp_match_packet;
+	return	result;
+
+	// STRUCTURE DIFF[target 0xdaa00 | base 0x985c0]: target 3 / base 3 stmts
+	//   2: 0x011 <0x2e> | 0x011 <0x71> | udp_match_packet* const	result	= new ( memory ) udp_match_packet;   SIZE
+	// .. same ..
+	// ; aligned 2, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - fixed quantity (split ctor/return into `result` local + return); sole SIZE is the inlined udp_match_packet ctor (single-TU anchor inline-vs-call wall).
 }
 
-// STATE[STUB]
+// STATE[PARTIAL]: call_destructor then allocator.deallocate (nulls pointer); body exact.
+// The single-TU anchor inlines this everywhere, so no standalone COMDAT emits (target
+// keeps it out-of-line, called from send/enqueue/etc) - the documented inline-vs-call wall.
 inline void delete_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
 	udp_match_packet*&		packet
 )
 {
-	// FUNCTION BODY[0xeaa50]: 4
-	// <0xeaa56>|0x006|+0x00e:'125'
-	// <0xeaa64>|0x014|+0x008:'126'
-	// <0xeaa6c>|0x01c|+0x03b:'127'
-	// <0xeaaa7>|0x057|+0x009:'128'
-	// ******
+	udp_match_packet::helper::call_destructor	( *packet );
+	allocator.deallocate	( reinterpret_cast< pvoid& >( packet ) );
+
+	// VERDICT: STRUCTURE UNVERIFIED - no base symbol (single-TU anchor inlines this everywhere; target keeps it out-of-line, called from send/enqueue/etc - inline-vs-call wall).
 }
 
 } // namespace network_core

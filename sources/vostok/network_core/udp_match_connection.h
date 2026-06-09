@@ -39,6 +39,15 @@ public:
 		disconnected				= 0x3,
 	}; // enum state
 
+	// low-level (connection-control) message ids carried in new_low_level_packet /
+	// process_low_level_message; the values are inferred from the dispatch order.
+	enum low_level_message_type_enum
+	{
+		initiate_disconnection		= 0x0,
+		confirm_disconnection		= 0x1,
+		continuous_flow				= 0x2,
+	}; // enum low_level_message_type_enum
+
 	struct comparer {
 		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
 		inline	bool	operator()	( sequence_number< u16 > left, udp_match_packet const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
