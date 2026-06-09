@@ -8,6 +8,7 @@
 #include <vostok/game_core/base_player_creation_params.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/scheduler.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -131,34 +132,14 @@ void base_player::send_game_world_object( game_world_object const* object, boost
 	// ******
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::base_player::deserialize_game_world_object(vostok::network_core::packet_reader&)
+// STATE[PARTIAL]: reads the source profile slot, fetches that inventory item and forwards
+// deserialize_game_world_object to it. The trailing local-byte stub is a compiled-out assert.
 void base_player::deserialize_game_world_object( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> item
-	// profile_slot_enum 			slot
-	// ******
+	profile_slot_enum	slot	= (profile_slot_enum)reader.r< bool >( );
 
-	// CALL SITE INFO
-	// <0x73ed57> -> void <unknown>(network_core::packet_reader&)
-	// ******
-
-	// FUNCTION BODY
-	// <0x73ed00>|0x000|+0x009:'113'	{
-	// <0>
-	// <0x73ed09>|0x009|+0x00e:'115'
-	// <0>
-	// <0x73ed17>|0x017|+0x00c:'117'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x73ed23>|0x023|+0x01a:'123'
-	// <0x73ed3d>|0x03d|+0x01c:'124'
-	// <0x73ed59>|0x059|      :'125'	}
-	// ******
+	inventory_item_ptr	item	= inventory( ).item_in_slot( slot );
+	item->deserialize_game_world_object( reader );
 }
 
 // STATE[STUB]
