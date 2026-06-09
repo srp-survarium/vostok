@@ -86,17 +86,46 @@ aware assembly) for the instruction-level reason, or `--view target`/`--view bas
 the raw disassembly of that statement. Don't start from the assembly diff - you'd be
 reading instruction noise without knowing which statement matters.
 
-**Slice to ONE statement - compare it target-vs-base with clean context.** Once the
-structure-diff names a diverging statement, don't dump the whole function. `--view
-target`/`--view base` take a one-statement selector (mutually exclusive) so you fetch
-just that statement's disassembly on each side and compare the two:
+**Choose your zoom - whole function vs one statement - YOU decide from the diff.**
+`--view target`/`--view base` give the WHOLE function's disassembly; they also take a
+one-statement selector (mutually exclusive) that slices out just that statement:
 - `--index N` - the 1-based body-statement number (the `--view structure` rows). Same N
   is the same statement on BOTH sides when the structure matches - the usual case.
 - `--offset 0x..` - a function-relative offset (the `offst` column).
-- `--address 0x..` - an absolute VA (the `address` column / a per-statement VA).
-Offset/address pick the statement whose `[off, off+size)` range contains them. The
-output is a `;` header (VA, index, size, line) + just that statement's instructions; the
+- `--address 0x..` - an absolute VA (the `address` column / a per-statement VA); it also
+  SELECTS the function it falls in, so `--function`/`--rva` is optional with it.
+Offset/address pick the statement whose `[off, off+size)` range contains them. A sliced
+view is a `;` header (VA, index, size, line) + just that statement's instructions; the
 anchor instruction keeps the `<size>` + matched-source annotation (target has size only).
+
+Pick the zoom from what the structure-diff showed, to keep context tight:
+- **One statement** when the divergence is localized - a single SIZE row, or a couple of
+  statements you can check one at a time. Slice each, compare the two sides, done. This is
+  the common case and the cheapest.
+- **The whole function** when you need the cross-statement picture - many statements
+  diverge, a QUANTITY mismatch (a statement/block appeared or vanished, so the per-index
+  alignment shifts and a single slice would mislead), control flow / jump targets that
+  span statements, or a prologue/epilogue/frame issue that isn't tied to one body row.
+When unsure, start narrow (one statement) and widen only if the cause clearly spills past
+that statement. Don't pull the full function when a single statement already explains it.
+
+How to run each (resolve overloads with `--rva <target_rva>` when the name is ambiguous):
+```
+# ONE statement, both sides - structure-diff flagged stmt #2 as SIZE.
+# --index N is the same statement on each side when the structure matches:
+pdb_fetch --target-index binaries/rich/target/index.jsonl \
+          --function "legs_ik_drawer::draw_leg" --view target --index 2
+pdb_fetch --base-index   binaries/rich/base/index.jsonl \
+          --function "legs_ik_drawer::draw_leg" --view base   --index 2
+# same statement by its address instead (also picks the function, so no --function):
+pdb_fetch --base-index binaries/rich/base/index.jsonl --view base --address 0x5b3a46
+
+# WHOLE function, both sides - quantity mismatch / spread-out divergence:
+pdb_fetch --target-index binaries/rich/target/index.jsonl \
+          --function "legs_ik_drawer::draw_leg" --view target
+pdb_fetch --base-index   binaries/rich/base/index.jsonl \
+          --function "legs_ik_drawer::draw_leg" --view base
+```
 
 **Using the addresses the views print.** The header `; 0x<va>, N statements, ...` is the
 function VA; each row's `address` is that statement's VA. Two derivations:
