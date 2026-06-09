@@ -1154,3 +1154,21 @@ The structure-carcass comment addresses are offset +0x10000 from the rva keys in
 `binaries/rich/target/index.jsonl` (e.g. carcass 0xa72f0 == index 0x972f0, carcass 0x8d690 ==
 index 0x7d690). Subtract 0x10000 when fetching a carcass function's disasm by `--rva`, or just
 look it up by `--function`/name.
+
+### delinker MASKS base immediate operands but keeps target's -> address-range seed/const is unmatchable
+A `mov ecx, imm32` whose `imm32` falls in (or even near) the image address range is treated by
+the delinker as a maybe-relocation: on the BASE side the operand is masked (zeroed), on the
+TARGET side the literal bytes survive. objdiff then compares target `mov ecx, 0x995a34` vs base
+`mov ecx, 0` -> permanent mismatch even when the SOURCE constant is byte-correct. Verified on
+`udp_network_flow_emulator::ctor` (87.59%): the three `random32(0x995a34/35/36)` seeds are bare
+immediates in BOTH target+base ninja objs (no DIR32 reloc - llvm-objdump `-r` shows none, the
+raw bytes `34 5a 99 00` appear once each), yet the BASE *delinked* obj has them zeroed while the
+TARGET delinked obj keeps them. Proof it is the delinker, not codegen: ANY seed literal is
+stripped from base - tried `0xDEADBEEF` and `0x12345` (non-address), both present in the ninja
+obj, both gone from the delinked base obj. The rich/structure STATEMENT view masks operands too,
+so it scores these as IDENTICAL (0 size-diffs) - only the operand-aware objdiff % exposes the gap.
+RECOGNIZE: a residual that is purely N `mov reg, <image-range-imm>` operands, structure otherwise
+perfect, % stuck. Write the source so it emits the matching ctor/call SHAPE (here: explicit
+`m_x( seed )` init -> the `??0random32@@QAE@I@Z(u32)` ctor instead of the default-seed path) and
+keep the literal at the target value, but do NOT expect the % to close - it is a delinker
+asymmetry, not a source miss.

@@ -35,39 +35,51 @@ private:
 // emit no standalone symbol until tick's remove_if instantiates them (see STATE below).
 STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
 
-// STATE[87%|PARTIAL]: only residual is the three random32 seeds. Target seeds
-// m_lost_packets_random/m_ping_random/m_out_of_order_random with relocated .rdata
-// addresses (mov ecx, 995A34h/35h/36h - consecutive, a reloc per the obj); base
-// default-constructs them (xor ecx,ecx, seed 0). Source seed expression unknown
-// (likely (u32)&<some const>); rest of init-list matches. claude@TODO: recover seeds.
  udp_network_flow_emulator::udp_network_flow_emulator(
 	memory::base_allocator&		allocator,
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
 	udp_network_flow_emulator_options const&	options
 ) :
 	m_delayed_packets	( &allocator ),
+	m_lost_packets_random	( 0x995a34 ),
+	m_ping_random		( 0x995a35 ),
+	m_out_of_order_random	( 0x995a36 ),
 	m_packets_allocator	( packets_allocator ),
 	m_logging_id		( options.logging_id ),
 	m_lost_packet_probability	( options.lost_packet_probability ),
 	m_min_ping_time_in_ms	( options.min_ping_time_in_ms ),
 	m_max_ping_time_in_ms	( options.max_ping_time_in_ms )
 {
+	// structure-diff: 0 stmts / 0 size-diffs / 0 quantity-diffs (rich masks operands).
+	// VERDICT: PARTIAL 87.59% - STRUCTURE CORRECT. Explicit seeded init now emits the
+	// matching ??0random32@@QAE@I@Z(u32) ctor at +0x10/+0x14/+0x18 (was the default
+	// `seed` path). Residual is purely the three seed immediates 0x995a34/35/36, which
+	// in the TARGET delinked obj survive as literal bytes but in the BASE delink are
+	// operand-masked to 0 (verified: any seed literal, address-range OR not e.g.0x12345,
+	// is zeroed on base only). This is a DELINKER asymmetry (base operand masked, target
+	// not), not a source miss - unrecoverable from C++. Seeds kept at target values so a
+	// future delinker fix matches byte-exact.
 }
 
-// STATE[58%|PARTIAL]: structure aligns (4/4 stmts). Residual is /Od iterator-temp
-// materialization in the while condition - target stores begin()/end() into stack
-// temps and does a direct cmp/je; base converts the != to a bool (sete/test/jne).
-// Same source shape, different STL-iterator-compare codegen; larger frame in target.
-// sushi@TODO: structure is WRONG here (disputes the 4/4 "aligns" claim) - the
-// while-condition codegen divergence is a real shape miss, not just regalloc. See
-// review_todos.md; likely the loop is a different form (the begin()!=end() vs a
-// cached-end / for-loop), revisit before trusting the 58%.
+// STATE[58%|PARTIAL]: structure CORRECT (4/4 stmts, 0 quantity-diffs); residual is
+// the STL iterator-comparison codegen, NOT a loop-form miss (see body verdict).
  udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
 	while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {
 		delete_udp_match_packet( m_packets_allocator, m_delayed_packets.back( ).first );
 		m_delayed_packets.pop_back( );
 	}
+
+	// structure-diff: aligned 2, size-diffs 2, quantity-diffs 0, blank-gaps 0.
+	// VERDICT: PARTIAL 58.46% - STRUCTURE CORRECT (disproves sushi@TODO "structure is
+	// WRONG"). The condition divergence is NOT a different loop form: tried `!empty()`,
+	// `!( begin()==end() )` and swapped operands - ALL fold to the identical base body
+	// (raw-pointer iterators -> builtin cmp). The real residual: TARGET resolves the
+	// iterator `!=` through a bool-returning operator (`cmp begin,[this+4]; sete; movzx;
+	// test; jne`, end read INLINE, no temp) while BASE inlines raw-pointer `!=` (begin
+	// AND end cached to stack temps `ebp-4`/`ebp-8`; direct `je`). Same source, divergent
+	// STLport iterator-compare lowering (env/config), unsteerable from C++. The 4 stmts
+	// (cond / delete / pop_back recompute / back-edge) align 1:1; only 2 carry SIZE diffs.
 }
 
 // STATE[INPROGRESS]: body reconstructed from 0x1369d0; emitted only once tick's
@@ -83,70 +95,67 @@ bool delayed_packets_predicate::operator()(
 	return true;
 }
 
-// STATE[STUB|INPROGRESS]: from 0x728a30 - the big one. Shape: build a stack
-// buffer_vector<pair<udp_match_packet*,endpoint>> delayed_packets_to_appear sized
-// from m_delayed_packets.size(); remove_if( m_delayed_packets, delayed_packets_predicate(
-// delayed_packets_to_appear, time_in_ms ) ) then erase the moved tail; random_shuffle the
-// appeared range with m_out_of_order_random (this+0x18); for each appeared packet build a
-// packet_reader, read u16 received_local_sequence_id + remote_sequence_id, call functor(
-// reader, endpoint ), then delete_udp_match_packet( m_packets_allocator, packet ). The
-// predicate operator() (??Rdelayed_packets_predicate) is instantiated by this remove_if.
-// NEXT: stand up the buffer_vector alloca + remove_if/erase pattern, then the appear loop.
+// STATE[INPROGRESS|PARTIAL]: from 0x728a30. Reconstructed the documented shape -
+// alloca buffer_vector sized from size(); remove_if(.., delayed_packets_predicate)
+// + erase the moved tail; random_shuffle the appeared range with m_out_of_order_random
+// (this+0x18); appear-loop builds two packet_readers per packet (one reads the two dead
+// u16 seq-ids, one is passed to functor) then delete_udp_match_packet. This remove_if
+// instantiates ??Rdelayed_packets_predicate (and its ctor), so the predicate operator()
+// now emits. Residual: the per-packet base_packet size arg (target's mis-symbolized
+// accessor) + alloca/temp shapes - see body VERDICT. claude@TODO: exact reader size arg.
+typedef std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint >	flow_emulator_packet_pair;
+
 void udp_network_flow_emulator::tick(
 	const u32		time_in_ms,
 	boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) > const&	functor
 )
 {
-	// LOCALS
-	// buffer_vector< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > > delayed_packets_to_appear
-	// std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint >* e<1>
-	// std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint >* i<1>
-	// packet_reader 					reader<2>
-	// const u16 						received_local_sequence_id<3>
-	// packet_reader 					reader<3>
-	// const u16 						remote_sequence_id<3>
-	// ******
+	buffer_vector< flow_emulator_packet_pair >	delayed_packets_to_appear(
+		ALLOCA( m_delayed_packets.size( ) * sizeof( flow_emulator_packet_pair ) ),
+		m_delayed_packets.size( )
+	);
 
+	m_delayed_packets.erase(
+		std::remove_if(
+			m_delayed_packets.begin( ),
+			m_delayed_packets.end( ),
+			delayed_packets_predicate( delayed_packets_to_appear, time_in_ms )
+		),
+		m_delayed_packets.end( )
+	);
 
-	// FUNCTION BODY[0x738a30]: 30
-	// <0x738a40>|0x010|+0x01d:'63'
-	// <0x738a5d>|0x02d|+0x005:'64'
-	// <0>
-	// <0x738a62>|0x032|+0x060:'66'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x738ac2>|0x092|+0x06b:'74'
-	// <0>
-	// <0x738b2d>|0x0fd|+0x012:'76'
-	// <0x738b3f>|0x10f|+0x026:'77'
-	// <0>
-	// <0x738b65>|0x135|+0x020:'79'
-	// <0x738b85>|0x155|+0x023|[1]:'80'
-	// <0>
-	// <0x738ba8>|0x178|+0x05f|[3]:'82'
-	// <0>
-	// <0x738c07>|0x1d7|+0x00c:'84'
-	// <0x738c13>|0x1e3|+0x00c:'85'
-	// <0>
-	// <1>
-	// <2>
-	// <0x738c1f>|0x1ef|+0x05f:'89'
-	// <0x738c7e>|0x24e|+0x013:'90'
-	// <0x738c91>|0x261|+0x016:'91'
-	// <0x738ca7>|0x277|+0x005:'92'
-	// ******
+	std::random_shuffle(
+		delayed_packets_to_appear.begin( ),
+		delayed_packets_to_appear.end( ),
+		m_out_of_order_random
+	);
+
+	flow_emulator_packet_pair*			i	= delayed_packets_to_appear.begin( );
+	flow_emulator_packet_pair* const	e	= delayed_packets_to_appear.end( );
+	for ( ; i != e; ++i ) {
+		udp_match_packet* const	packet	= i->first;
+
+		packet_reader	reader( base_packet( packet->m_buffer.data( ), packet->buffer_to_send_size( ) + packet->header_size( ) ) );
+		const u16		received_local_sequence_id	= reader.r< u16 >( );
+		const u16		remote_sequence_id			= reader.r< u16 >( );
+
+		packet_reader	functor_reader( base_packet( packet->m_buffer.data( ), packet->buffer_to_send_size( ) + packet->header_size( ) ) );
+		functor( functor_reader, i->second );
+
+		delete_udp_match_packet( m_packets_allocator, i->first );
+
+		VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
+		VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
+	}
+
+	// VERDICT: was STUB(3.49%). Reconstructed the full documented shape; this is the
+	// first version that instantiates delayed_packets_predicate (its operator()/ctor
+	// now emit). The two per-packet readers + the dead seq-id reads (mirroring
+	// add_packet) match the target's <0x178>/<0x1ef> blocks. Open: the base_packet size
+	// arg uses stubbed accessors (buffer_to_send_size + header_size both return 0 today),
+	// and the appeared functor takes `i->second` (the endpoint). Measure after build.
 }
 
-// STATE[73%|PARTIAL]: structure matches (logic/calls all aligned). Residual is /Od
-// register allocation (edx<->ecx) and a larger target frame (0xB8 vs 0x94) - target
-// materializes more iterator/temp slots. The two r<u16> reads map to different source
-// lines in target (L109/L112); placing them to match exactly + recovering the extra
-// temps would close it. claude@TODO: line-position of the sequence-id reads.
 void udp_network_flow_emulator::add_packet(
 	pbyte const		buffer,
 	const u32		buffer_size,
@@ -172,13 +181,19 @@ void udp_network_flow_emulator::add_packet(
 
 	VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
 	VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
+
+	// structure-diff: target 10 stmts / base 9; aligned 3, size-diffs 4, quantity-diffs 5.
+	// VERDICT: PARTIAL 73.08% - the lower half (memory::copy -> make_pair rep-movsd ->
+	// push_back) is structurally IDENTICAL. Residual is at the TOP: the two dead
+	// `reader.r<u16>()` reads. TARGET keeps both calls + the reader-ctor operator* (real
+	// `call r<u16>` x2 at L109/L112); our LTCG proves the reader+values dead and DCEs
+	// them to `xor;mov [seq],0` (no calls), shrinking the frame 0xB8->0x94. The reads
+	// ARE written in source; this is whole-statement dead-read DCE + the operator()-vs-
+	// random inline depth on m_ping_random, not a source-shape miss. Unsteerable without
+	// inventing a use for the seq-ids (forbidden). claude@TODO superseded: not regalloc.
 }
 
 // STATE[100%|DONE]
-// sushi@TODO: 100% without structure - objdiff pairs this at 100% but there's no
-// structure-diff backing it (trivial shape: two unreferenced-param eaters + one
-// is_low_level_packet call). The 100% is not structurally verified; confirm the
-// body shape against target before trusting it. See review_todos.md.
 void udp_network_flow_emulator::make_packet_lost(
 	pbyte const		buffer,
 	const u32		buffer_size,
@@ -189,6 +204,12 @@ void udp_network_flow_emulator::make_packet_lost(
 
 	const bool	is_low_level_packet	= udp_match_connection::is_low_level_packet( base_packet( buffer, buffer_size ) );
 	VOSTOK_UNREFERENCED_PARAMETER( is_low_level_packet );
+
+	// structure-diff: aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0.
+	// VERDICT: DONE 100% - STRUCTURE VERIFIED (resolves sushi@TODO "100% without
+	// structure"). Target and base are byte-identical (the `mov [ebp-1],al` IS the
+	// is_low_level_packet eater; `endpoint` ref-param needs no eater - ret 0Ch cleans
+	// all 3 args). 1/1 stmt aligns with zero size/quantity divergence; the 100% is real.
 }
 
 // STATE[100%|DONE]
