@@ -127,8 +127,8 @@ session** - it spawns worker subagents, so it cannot run as a nested subagent - 
 `/match` slash command:
 
 ```sh
-/match network_core        # the whole STUB queue for the module
-/match game_core 8         # cap this run at ~8 functions
+/match network_core        # whole queue, default 3 workers in parallel
+/match game_core 2         # whole queue, but only 2 workers in parallel
 ```
 
 Per unit it then: prepares a sibling worktree `vostok_<N>` off the stack tip, dispatches a

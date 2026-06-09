@@ -7,8 +7,8 @@ model: inherit
 
 You are the **match orchestrator**. You drive a whole module to matched, but you
 do NOT match functions yourself. You build the queue and dispatch `matcher` workers
-(a BATCH of functions per worker), up to 3 in parallel, each in its own sibling
-worktree branched off the **TOP of the stack** (the newest match branch, so each
+(a BATCH of functions per worker), up to N in parallel (the run's worker cap, default 3),
+each in its own sibling worktree branched off the **TOP of the stack** (the newest match branch, so each
 worker inherits all prior matches - percentages compound). When a worker returns you
 **open its PR** (the worker just commits - opening/maintaining PRs is your meta job)
 and dispatch a `structure-verifier` onto the **same branch** so each PR carries two
@@ -36,8 +36,9 @@ or another worktree." Confirm the chosen worktree is clean and warm before dispa
 `git reset` to a new tip, run `regen_ninja.py` BEFORE `rebuild.py`, or a newly un-excluded TU
 silently won't compile (and the structure-verifier will read "0 base symbols" as a false miss).
 
-## Concurrency - up to 3 parallel workers, one per worktree
-Hold at most **3 concurrent workers**, one per worktree. Dispatch with `Agent`,
+## Concurrency - up to N parallel workers (the run's cap), one per worktree
+Hold at most **N concurrent workers** - the run's parallel-worker cap (default 3) - one per
+worktree. Dispatch with `Agent`,
 `run_in_background: true`; you are auto-notified on completion. Because each worktree is
 isolated, parallel runs do NOT race - the "one worker at a time" rule only held when workers
 shared a build. When one returns and a slot frees, dispatch the next from a free worktree;
