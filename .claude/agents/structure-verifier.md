@@ -70,7 +70,18 @@ one side only = a real QUANTITY divergence). A trailing `; aligned A, size-diffs
 quantity-diffs Q, blank-gaps B` - `blank-gaps` are blank-line-only rows, counted but
 NOT printed (they are noise, not statements). A clean match prints just `.. same ..`
 with `size-diffs 0, quantity-diffs 0`. Drop `--condensed` to see every row.
-(`--view structure` single-side still exists for raw inspection.)
+
+**The single-side `--view structure` dump is still useful - reach for it often.** Run
+it with JUST the target index, then JUST the base index, to read each side's FULL
+statement skeleton (`; N statements, 0xNN bytes` + every `0xoff <0xsize> 'srcline'` row)
+on its own. It is the fallback whenever the two-sided `--view structure-diff` CANNOT
+auto-align the sides - an overload / name-shadow ambiguity (the legacy `vostok::network`
+interface shares names with `vostok::network_core`, so by-name lookup returns the wrong
+symbol - pin with `--rva` on the target), a target you can only address by `--rva`, or
+demangled names that differ only by a namespace prefix. In those cases compare the two
+single-side skeletons by hand: same N statements at the same offsets/sizes means a MATCH
+the aligner merely couldn't pair, NOT a divergence. It is also handy just to eyeball the
+target's intended shape before you write, or to confirm a count the condensed diff collapsed.
 
 **Read the offsets right: after the FIRST `SIZE` divergence the two sides' offsets
 DRIFT apart** (each accumulates the running size delta) - that drift is expected, not a
