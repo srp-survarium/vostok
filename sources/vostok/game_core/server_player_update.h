@@ -7,6 +7,7 @@
 
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/player_state.h>
+#include <vostok/game_core/weapon_state.h>
 
 namespace vostok {
 namespace network_core {
@@ -16,9 +17,6 @@ namespace network_core {
 }
 
 namespace survarium {
-
-struct weapon_state {}; // sushi@TODO
-
 
 struct server_player_update {
 			void	deserialize			( network_core::packet_reader& packet );

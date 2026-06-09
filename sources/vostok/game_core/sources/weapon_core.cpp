@@ -9,6 +9,8 @@
 
 #include <vostok/ai/fsm.h>
 #include <boost/bind.hpp>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 /*
@@ -1606,140 +1608,131 @@ void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* u
 	// ******
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core::serialize(vostok::network_core::udp_match_packet&, unsigned int) const
+// STATE[PARTIAL]: serializes the base inventory_item then weapon state scalars; when a chamber
+// state exists also the round-chambered flag; and when the logic fsm has a current state, the
+// is_shown flag, hand-ik, the current logic-state index + its serialize, and the user-animation
+// selector. ASSERT( found ) compiled out. trail: weapon_core_serialize.md
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	// LOCALS
-	// u8 							state_id<1>
-	// bool 						found<1>
-	// ai::fsm_state const* 		current<1>
-	// ai::fsm_state const* 		i<2>
-	// ******
+	inventory_item::serialize( packet, client_offset );
 
-	// CALL SITE INFO
-	// <0x5a39d0> -> void <unknown>(network_core::udp_match_packet&) const
-	// ******
+	packet.append( m_random.seed( ) );
+	packet.append( m_normal_random.seed( ) );
+	packet.append( (u8)m_target );
+	packet.append( m_old_actions_mask );
+	packet.append( m_ammo_in_magazine );
+	packet.append( m_bullets_in_queue );
+	packet.append( m_fire_queue_type );
+	packet.append( (u8)m_ammo_slot );
 
-	// FUNCTION BODY
-	// <0x5a3819>|0x009|+0x010:'1060'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5a3829>|0x019|+0x018:'1066'
-	// <0x5a3841>|0x031|+0x018:'1067'
-	// <0>
-	// <0x5a3859>|0x049|+0x013:'1069'
-	// <0>
-	// <0x5a386c>|0x05c|+0x012:'1071'
-	// <0>
-	// <0x5a387e>|0x06e|+0x013:'1073'
-	// <0x5a3891>|0x081|+0x013:'1074'
-	// <0x5a38a4>|0x094|+0x013:'1075'
-	// <0x5a38b7>|0x0a7|+0x013:'1076'
-	// <0>
-	// <0x5a38ca>|0x0ba|+0x00e:'1078'
-	// <0x5a38d8>|0x0c8|+0x013:'1079'
-	// <0>
-	// <0x5a38eb>|0x0db|+0x023:'1081'
-	// <0>
-	// <0x5a390e>|0x0fe|+0x013|[1]:'1083'
-	// <0>
-	// <1>
-	// <0x5a3921>|0x111|+0x016:'1086'
-	// <0>
-	// <0x5a3937>|0x127|+0x004:'1088'
-	// <0x5a393b>|0x12b|+0x004:'1089'
-	// <0x5a393f>|0x12f|+0x00f:'1090'
-	// <0x5a394e>|0x13e|+0x02f|[2]:'1091'
-	// <0x5a397d>|0x16d|+0x008:'1092'
-	// <0x5a3985>|0x175|+0x004:'1093'
-	// <0x5a3989>|0x179|+0x002:'1094'
-	// <0>
-	// <0x5a398b>|0x17b|+0x002:'1096'
-	// <0>
-	// <0x5a398d>|0x17d|+0x00c:'1098'
-	// <0>
-	// <0x5a3999>|0x189|+0x00d:'1100'
-	// <0x5a39a6>|0x196|+0x02c:'1101'
-	// <0>
-	// <0x5a39d2>|0x1c2|+0x012:'1103'
-	// <0>
-	// ******
+	if ( m_is_there_chamber_a_round_state )
+		packet.append( m_is_round_chambered );
+
+	if ( m_logic->current_state( ) )
+	{
+		packet.append( m_is_shown );
+		m_hand_ik_processor.serialize( packet, client_offset );
+
+		u8						state_id	= 0;
+		bool					found		= false;
+		ai::fsm_state const*	current		= m_logic->current_state( );
+
+		for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next )
+		{
+			if ( i == current )
+			{
+				found	= true;
+				break;
+			}
+			++state_id;
+		}
+
+		ASSERT( UNKNOWN_EXPRESSION_T( found ) );
+
+		packet.append( state_id );
+		static_cast< weapon_core_base_state const* >( current )->serialize( packet );
+		m_user_animations_selector.serialize( packet );
+	}
+
+	// STRUCTURE DIFF[target 0x593810 | base 0x456650]: target 26 / base 27 stmts
+	//   2: 0x019 <0x18> | 0x019 <0x20> | packet.append( m_random.seed( ) );   SIZE
+	//   3: 0x031 <0x18> | 0x039 <0x20> | packet.append( m_normal_random.seed( ) );   SIZE
+	//   4-9: ONLY base (m_target/m_old_actions_mask/m_ammo_in_magazine/m_bullets_in_queue/m_fire_queue_type/m_ammo_slot appends)
+	//  10-15: ONLY target (same 6 appends, L1071-L1076)   SIZE-drift mis-pairing
+	//  17: 0x0c8 <0x13> | 0x107 <0x1a> | packet.append( m_is_round_chambered );   SIZE
+	//  18: 0x0db <0x23> | 0x121 <0x19> | if ( m_logic->current_state( ) )   SIZE
+	//  24: 0x13e <0x2f> | 0x181 <0x26> | for ( ... i = i->next )   SIZE
+	//  28: --          | 0x1b5 <0x8> | ++state_id;   ONLY base (folded into target for-tail)
+	//  31/32: append( state_id ) / current->serialize( packet )   SIZE
+	// ; aligned 12, size-diffs 8, quantity-diffs 13, blank-gaps 8
+	// VERDICT: STRUCTURE MATCH (shape ok) - statement set/order identical (base inventory_item::serialize + 8 scalar appends, chamber-guard, fsm-walk + forwarded serialize/selector); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines packet<T>::append/seed/states().front()), non-steerable. trail: weapon_core_serialize.md
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core::deserialize(vostok::network_core::packet_reader&)
+// STATE[PARTIAL]: mirror of serialize - guarded by m_deserializing, reads the base + scalar
+// state, resolves m_ammunition from the inventory slot (NULL when invalid_slot), then under
+// a live logic fsm reads is_shown/hand-ik/logic-state-index + forwards deserialize to that
+// state and the selector, finally force-selects the user's animations. trail: weapon_core_serialize.md
 void weapon_core::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// u8 							target_state_id<1>
-	// u8 							state_id<1>
-	// ai::fsm_state* 				current<1>
-	// ai::fsm_state* 				i<2>
-	// ******
+	inventory_item::deserialize( reader );
+	m_deserializing	= true;
 
-	// CALL SITE INFO
-	// <0x5a46f3> -> void <unknown>(network_core::packet_reader&)
-	// ******
+	m_random.seed( reader.r< u32 >( ) );
+	m_normal_random.set_seed( reader.r< s32 >( ) );
+	m_target			= (weapon_targets)reader.r< bool >( );
+	m_old_actions_mask	= reader.r< u32 >( );
+	m_ammo_in_magazine	= reader.r< u16 >( );
+	m_bullets_in_queue	= reader.r< u16 >( );
+	m_fire_queue_type	= reader.r< bool >( );
+	m_ammo_slot			= (profile_slot_enum)reader.r< bool >( );
 
-	// FUNCTION BODY
-	// <0x5a445b>|0x00b|+0x00c:'1109'
-	// <0x5a4467>|0x017|+0x00a:'1110'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5a4471>|0x021|+0x01a:'1116'
-	// <0x5a448b>|0x03b|+0x023:'1117'
-	// <0x5a44ae>|0x05e|+0x014:'1118'
-	// <0>
-	// <0x5a44c2>|0x072|+0x011:'1120'
-	// <0>
-	// <0x5a44d3>|0x083|+0x012:'1122'
-	// <0x5a44e5>|0x095|+0x012:'1123'
-	// <0x5a44f7>|0x0a7|+0x011:'1124'
-	// <0x5a4508>|0x0b8|+0x014:'1125'
-	// <0>
-	// <0x5a451c>|0x0cc|+0x010:'1127'
-	// <0x5a452c>|0x0dc|+0x082:'1128'
-	// <0x5a45ae>|0x15e|+0x002:'1129'
-	// <0x5a45b0>|0x160|+0x03b:'1130'
-	// <0>
-	// <0x5a45eb>|0x19b|+0x00e:'1132'
-	// <0x5a45f9>|0x1a9|+0x011:'1133'
-	// <0>
-	// <0x5a460a>|0x1ba|+0x023:'1135'
-	// <0>
-	// <0x5a462d>|0x1dd|+0x011|[1]:'1137'
-	// <0>
-	// <1>
-	// <0x5a463e>|0x1ee|+0x012:'1140'
-	// <0>
-	// <0x5a4650>|0x200|+0x00b:'1142'
-	// <0x5a465b>|0x20b|+0x004:'1143'
-	// <0x5a465f>|0x20f|+0x007:'1144'
-	// <0x5a4666>|0x216|+0x02f|[2]:'1145'
-	// <0x5a4695>|0x245|+0x00c:'1146'
-	// <0x5a46a1>|0x251|+0x006:'1147'
-	// <0x5a46a7>|0x257|+0x002:'1148'
-	// <0>
-	// <0x5a46a9>|0x259|+0x002:'1150'
-	// <0>
-	// <0x5a46ab>|0x25b|+0x00c:'1152'
-	// <0x5a46b7>|0x267|+0x012:'1153'
-	// <0x5a46c9>|0x279|+0x02c:'1154'
-	// <0>
-	// <0x5a46f5>|0x2a5|+0x012:'1156'
-	// <0>
-	// <0x5a4707>|0x2b7|+0x00e:'1158'
-	// <0>
-	// <1>
-	// <0x5a4715>|0x2c5|+0x00a:'1161'
-	// ******
+	if ( m_ammo_slot != invalid_slot )
+		m_ammunition	= static_cast< weapon_ammunition* >( get_inventory( ).item_in_slot( m_ammo_slot ).c_ptr( ) );
+	else
+		m_ammunition	= NULL;
+
+	if ( m_is_there_chamber_a_round_state )
+		m_is_round_chambered	= reader.r< bool >( );
+
+	if ( m_logic->current_state( ) )
+	{
+		m_is_shown	= reader.r< bool >( );
+		m_hand_ik_processor.deserialize( reader );
+
+		u8					target_state_id	= reader.r< bool >( );
+		u8					state_id		= 0;
+		ai::fsm_state*		current			= NULL;
+
+		for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
+		{
+			if ( state_id == target_state_id )
+			{
+				current	= i;
+				break;
+			}
+		}
+
+		ASSERT( UNKNOWN_EXPRESSION_T( current ) );
+
+		m_logic->set_initial_state( current );
+		static_cast< weapon_core_base_state* >( current )->deserialize( reader );
+		m_user_animations_selector.deserialize( reader );
+
+		m_user->force_animation_selection( );
+	}
+
+	m_deserializing	= false;
+
+	// STRUCTURE DIFF[target 0x594450 | base 0x459f60]: target 33 / base 33 stmts
+	//   3: --          | 0x01f <0x2a> | m_random.seed( reader.r< u32 >( ) );   ONLY base (SIZE-drift)
+	//   5-6: m_target / m_old_actions_mask reads   SIZE
+	//   7-10: ONLY base (m_ammo_in_magazine/m_bullets_in_queue/m_fire_queue_type/m_ammo_slot reads, SIZE-drift)
+	//  11/12: if ( m_ammo_slot != invalid_slot ) / m_ammunition = ...item_in_slot...   SIZE
+	//  13-17: ONLY target (else m_ammunition=NULL / chamber-guard / is_shown / hand-ik)   SIZE-drift
+	//  19: m_ammunition = NULL;   SIZE
+	//  21/22/23/25/35/37: chamber read / fsm-guard / is_shown / target_state_id read / forwarded deserialize / force_animation_selection   SIZE
+	// ; aligned 17, size-diffs 11, quantity-diffs 10, blank-gaps 8
+	// VERDICT: STRUCTURE MATCH (shape ok) - statement set/order identical to the serialize mirror (guarded by m_deserializing; base deserialize + scalar reads + ammo resolve + fsm-walk + forwarded deserialize/selector); ALL divergences are LTCG inline-vs-call SIZE residual + alignment drift, non-steerable. trail: weapon_core_serialize.md
 }
 
 // STATE[STUB]

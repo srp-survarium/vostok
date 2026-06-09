@@ -63,10 +63,10 @@ private:
 							animation::animation_player const&	animation_player
 						) override;
 
-	// STATE[STUB]
-	virtual	void		serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override {}
-	// STATE[STUB]
-	virtual	void		deserialize					( network_core::packet_reader& reader ) override {}
+	// STATE[PARTIAL]: pure base forward (ICF-folds with oxygen_tank/medkit). rva 0xbcd90.
+	virtual	void		serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override { inventory_item::serialize( packet, client_offset ); }
+	// STATE[PARTIAL]: pure base forward. rva 0xbcdb0.
+	virtual	void		deserialize					( network_core::packet_reader& reader ) override { inventory_item::deserialize( reader ); }
 
 	virtual	bool		is_sprinting				( ) const override { return false; /* sushi@TODO no source */ }
 

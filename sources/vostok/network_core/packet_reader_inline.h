@@ -1,79 +1,95 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef PACKET_READER_INLINE_H_INCLUDED
-#define PACKET_READER_INLINE_H_INCLUDED
+#ifndef NETWORK_CORE_PACKET_READER_INLINE_H_INCLUDED
+#define NETWORK_CORE_PACKET_READER_INLINE_H_INCLUDED
 
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// void vostok::network_core::packet_reader::r(void*, unsigned int, unsigned int)
-void packet_reader::r( void* destination, u32 size )
+inline packet_reader::packet_reader( base_packet const& packet ) :
+	m_packet	( packet ),
+	m_pointer	( NULL )
 {
-	// LOCALS
-	// u32 							destination_size
-	// ******
-
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// 4
-	// <0x8e5a0>|0x000|0x000:'25'
-	// <0x8e5af>|0x00f|0x00f:'26'
-	// ******
+	/* no source */
 }
 
-// STATE[STUB]
-// unsigned char vostok::network_core::packet_reader::r<unsigned char>()
-u8 packet_reader::r<u8>( )
+// Body shapes below are exact against the target disasm. The base instances come
+// from an address-of anchor (network_core/tcp_packet.cpp) in a single /Ot TU, so
+// they emit debug-quality COMDATs (frame ptr + stack temps) and score below the
+// target's whole-program-inlined codegen - a single-TU anchor cannot reproduce
+// that. The bodies, not the anchor codegen, are the deliverable.
+
+// STATE[PARTIAL]: memcpy(dst,m_pointer,size); m_pointer+=size - matches target shape.
+inline void packet_reader::r( void* destination, u32 destination_size, u32 size )
 {
-	return 0;
-	// FUNCTION BODY
-	// 1
-	// <0x8e950>|0x000|0x000:'33'
-	// 1
-	// ******
+	ASSERT			( size <= destination_size );
+	memcpy( destination, m_pointer, size );
+	m_pointer		+= size;
 }
 
-	// TYPEDEFS
-	typedef
-		char[32]
-		account_name_type;
+// STATE[PARTIAL]: read *m_pointer, advance by sizeof(T) - target shape exact.
+template < typename T >
+inline T packet_reader::r( )
+{
+	T const result	= *static_cast< T const* >( static_cast< pcvoid >( m_pointer ) );
+	m_pointer		+= sizeof( T );
+	return result;
+}
 
-	typedef
-		collision::bone_collision_data const*
-		iterator_type;
+// STATE[PARTIAL]: forwards to the u8-counted overload (inlined in target).
+template < int count >
+inline char* packet_reader::r_string( char ( &string )[ count ] )
+{
+	return r_string( string, count );
+}
 
-	typedef
-		collision::bone_collision_data*
-		iterator_type;
+// STATE[PARTIAL]: read u8 length prefix, memcpy, null-terminate - target shape exact.
+inline char* packet_reader::r_string( char* string, u8 count )
+{
+	u8 const length	= r< u8 >( );
+	ASSERT			( length < count );
+	memcpy( string, m_pointer, length );
+	m_pointer		+= length;
+	string[ length ]= 0;
+	return string;
+}
 
-	typedef
-		fixed_vector<std::pair<enum survarium::game_action_id,enum survarium::player_input_handler::action_state_enum>,32>
-		actions_type;
+inline base_packet const& packet_reader::get_packet( ) const
+{
+	return m_packet;
+}
 
-	typedef
-		survarium::base_project::resolve_link_object*
-		iterator_type;
+// STATE[PARTIAL]: m_pointer == buffer()+buffer_size() - target shape exact.
+inline bool packet_reader::eof( ) const
+{
+	return m_pointer == m_packet.buffer( ) + m_packet.buffer_size( );
+}
 
-	typedef
-		survarium::inventory_item_instance*
-		iterator_type;
+// STATE[PARTIAL]: returns m_pointer ([+4]) - target shape exact.
+inline pcbyte packet_reader::pointer( ) const
+{
+	return m_pointer;
+}
 
-	typedef
-		survarium::scheduler::record*
-		iterator_type;
+// STATE[PARTIAL]: net body (m_pointer += offset) matched; the three leading bounds
+// ASSERTs resolve to mis-symbolized inline buffer()/buffer_size() accessors in target.
+inline void packet_reader::advance( u32 offset )
+{
+	ASSERT	( pointer( ) );
+	ASSERT	( pointer( ) <= m_packet.buffer( ) + m_packet.buffer_size( ) );
+	ASSERT	( pointer( ) + offset <= m_packet.buffer( ) + m_packet.buffer_size( ) );
+	m_pointer	+= offset;
+}
 
-	typedef
-		void**
-		iterator_type;
-
-	// ******
+// STATE[PARTIAL]: (buffer()+buffer_size()) - m_pointer, target's buffer_size - ptr + buffer order.
+inline u32 packet_reader::size_to_eof( ) const
+{
+	return m_packet.buffer_size( ) - u32( m_pointer ) + u32( m_packet.buffer( ) );
+}
 
 } // namespace network_core
 } // namespace vostok
 
-#endif // #ifndef PACKET_READER_INLINE_H_INCLUDED
+#endif // #ifndef NETWORK_CORE_PACKET_READER_INLINE_H_INCLUDED

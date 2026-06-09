@@ -11,8 +11,11 @@
 #include <vostok/game_core/game_material.h>
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/collision_geometry.h>
+#include <vostok/game_core/game_world_object.h>
 
 #include <vostok/animation/animation_player.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 #include <vostok/physics/world.h>
 #include <vostok/physics/ray_result.h>
 #include <vostok/physics/base_physics_object.h>
@@ -566,40 +569,35 @@ bool trap_is_active( booby_trap_core_ptr const& trap )
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: append the trap's index within this set. ASSERT compiled out.
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY[0x6fd9d0]: 3
-	// <0x6fd9d9>|0x009|+0x00c:'409'
-	// <0>
-	// <0x6fd9e5>|0x015|+0x018:'411'
-	// ******
+	packet.append( trap_index( trap ) );
+
+	// STRUCTURE DIFF[target 0x6ed9d0 | base 0x450610]: target 2 / base 1 stmts
+	//   1: 0x009 <0xc> | 0x009 <0x1d> | packet.append( trap_index( trap ) );   SIZE
+	//   2: 0x015 <0x18> | --          | L411   ONLY target
+	// ; aligned 0, size-diffs 1, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - single append( trap_index ); SIZE/quantity are LTCG inline of trap_index()+append (target splits the inlined append tail into L411), non-steerable.
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: read a trap index, resolve the trap and forward its
+// deserialize_game_world_object. ASSERTs compiled out.
 void booby_trap_set_core::deserialize_game_world_object( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// game_world_object& 				object
-	// booby_trap_core& 				trap
-	// const u8 						trap_index
-	// ******
+	const u8			trap_index	= reader.r< bool >( );
 
-	// CALL SITE INFO
-	// <0x6fd9bd> -> void < unknown >( network_core::packet_reader& )
-	// ******
+	booby_trap_core&	trap		= *traps( )[ trap_index ];
+	game_world_object&	object		= trap;
+	object.deserialize( reader );
 
-	// FUNCTION BODY[0x6fd960]: 9
-	// <0x6fd96a>|0x00a|+0x00b:'416'
-	// <0>
-	// <0x6fd975>|0x015|+0x00c:'418'
-	// <0x6fd981>|0x021|+0x01b:'419'
-	// <0>
-	// <0x6fd99c>|0x03c|+0x00c:'421'
-	// <0>
-	// <0x6fd9a8>|0x048|+0x006:'423'
-	// <0x6fd9ae>|0x04e|+0x011:'424'
-	// ******
+	// STRUCTURE DIFF[target 0x6ed960 | base 0x450500]: target 6 / base 4 stmts
+	//   1: 0x00a <0xb> | 0x009 <0x20> | const u8			trap_index	= reader.r< bool >( );   SIZE
+	//   2: 0x015 <0xc> | 0x029 <0x33> | booby_trap_core&	trap		= *traps( )[ trap_index ];   SIZE
+	//   3: 0x021 <0x1b> | --          | L419   ONLY target
+	//   4: 0x03c <0xc> | --          | L421   ONLY target
+	// ; aligned 2, size-diffs 2, quantity-diffs 2, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - read index, resolve trap, forward deserialize; SIZE/quantity are LTCG inline-vs-call of r<bool>/traps()[]/operator* (target inlines them into L419/L421), non-steerable.
 }
 
 // STATE[UNCHECKED]

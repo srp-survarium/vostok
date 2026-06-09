@@ -4,6 +4,9 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/player_logic_base_state.h>		// current_state().serialize/deserialize virtuals
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -194,69 +197,66 @@ bool weapon_user_animations_selector::is_sprinting( ) const
 	// ******
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_user_animations_selector::serialize(vostok::network_core::udp_match_packet&) const
+// STATE[PARTIAL]: walks m_logic's state list to find the current state's index, appends
+// that u8, then forwards serialize to the current state. ASSERT( found ) is compiled out.
 void weapon_user_animations_selector::serialize( network_core::udp_match_packet& packet ) const
 {
-	// LOCALS
-	// u8 							state_id
-	// bool 						found
-	// ai::fsm_state const* 		current
-	// ai::fsm_state const* 		i<1>
-	// ******
+	u8							state_id	= 0;
+	bool						found		= false;
+	ai::fsm_state const*		current		= m_logic.current_state( );
 
-	// CALL SITE INFO
-	// <0x594e3d> -> void <unknown>(network_core::udp_match_packet&) const
-	// ******
+	for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next )
+	{
+		if ( i == current )
+		{
+			found	= true;
+			break;
+		}
+		++state_id;
+	}
 
-	// FUNCTION BODY
-	// <0x594dc9>|0x009|+0x004:'139'
-	// <0x594dcd>|0x00d|+0x004:'140'
-	// <0x594dd1>|0x011|+0x009:'141'
-	// <0x594dda>|0x01a|+0x025|[1]:'142'
-	// <0x594dff>|0x03f|+0x008:'143'
-	// <0x594e07>|0x047|+0x004:'144'
-	// <0x594e0b>|0x04b|+0x002:'145'
-	// <0>
-	// <0x594e0d>|0x04d|+0x002:'147'
-	// <0>
-	// <0x594e0f>|0x04f|+0x00c:'149'
-	// <0>
-	// <0x594e1b>|0x05b|+0x00d:'151'
-	// <0x594e28>|0x068|+0x017:'152'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( found ) );
+
+	packet.append( state_id );
+	static_cast< player_logic_base_state const* >( current )->serialize( packet );
+
+	// STRUCTURE DIFF[target 0x584dc0 | base 0x51a690]: target 11 / base 12 stmts
+	//   4: 0x01a <0x25> | 0x01a <0x1a> | for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next )   SIZE
+	//   8: --          | 0x042 <0x9> | ++state_id;   ONLY base
+	//  11: 0x05b <0xd> | 0x059 <0x14> | packet.append( state_id );   SIZE
+	//  12: 0x068 <0x17> | 0x06d <0x11> | static_cast< player_logic_base_state const* >( current )->serialize( packet );   SIZE
+	// ; aligned 8, size-diffs 3, quantity-diffs 1, blank-gaps 3
+	// VERDICT: STRUCTURE MATCH (shape ok) - same fsm-walk + append + forward; ++state_id ONLY base is SIZE-drift mis-pairing (target folds the inc into the for-tail row 4 <0x25>), SIZE rows are inlined states().front()/append, non-steerable.
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_user_animations_selector::deserialize(vostok::network_core::packet_reader&)
+// STATE[PARTIAL]: reads the target state index, walks m_logic's state list to that index,
+// promotes it to the initial state, then forwards deserialize. ASSERT compiled out.
 void weapon_user_animations_selector::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// u8 							target_state_id
-	// u8 							state_id
-	// ai::fsm_state* 				current
-	// ai::fsm_state* 				i<1>
-	// ******
+	u8							target_state_id	= reader.r< bool >( );
+	u8							state_id		= 0;
+	ai::fsm_state*				current			= NULL;
 
-	// CALL SITE INFO
-	// <0x594dac> -> void <unknown>(network_core::packet_reader&)
-	// ******
+	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
+	{
+		if ( state_id == target_state_id )
+		{
+			current	= i;
+			break;
+		}
+	}
 
-	// FUNCTION BODY
-	// <0x594d29>|0x009|+0x00b:'157'
-	// <0x594d34>|0x014|+0x004:'158'
-	// <0x594d38>|0x018|+0x007:'159'
-	// <0x594d3f>|0x01f|+0x02a|[1]:'160'
-	// <0x594d69>|0x049|+0x00c:'161'
-	// <0x594d75>|0x055|+0x006:'162'
-	// <0x594d7b>|0x05b|+0x002:'163'
-	// <0>
-	// <0x594d7d>|0x05d|+0x002:'165'
-	// <0>
-	// <0x594d7f>|0x05f|+0x00c:'167'
-	// <0x594d8b>|0x06b|+0x00c:'168'
-	// <0x594d97>|0x077|+0x017:'169'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( current ) );
+
+	m_logic.set_initial_state( current );
+	static_cast< player_logic_base_state* >( current )->deserialize( reader );
+
+	// STRUCTURE DIFF[target 0x584d20 | base 0x51a5f0]: target 11 / base 11 stmts
+	//   1: 0x009 <0xb> | 0x009 <0x20> | u8							target_state_id	= reader.r< bool >( );   SIZE
+	//   4: 0x01f <0x2a> | 0x034 <0x23> | for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )   SIZE
+	//  11: 0x077 <0x17> | 0x085 <0x11> | static_cast< player_logic_base_state* >( current )->deserialize( reader );   SIZE
+	// ; aligned 8, size-diffs 3, quantity-diffs 0, blank-gaps 4
+	// VERDICT: STRUCTURE MATCH (shape ok) - read index + fsm-walk + set_initial_state + forward; SIZE rows are r<bool>/states().front() LTCG inline (target) vs call (base), non-steerable.
 }
 
 // STATE[STUB]

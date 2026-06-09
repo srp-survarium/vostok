@@ -5,121 +5,91 @@
 #include "pch.h"
 #include "network_core_entry_point.h"
 
+// carcass completeness: force-compile the type headers no other enabled TU includes yet
+#include <vostok/network_core/udp_match_server.h>
+#include <vostok/network_core/udp_match_packets_allocator.h>
+#include <vostok/network_core/process_packet_predicate.h>
+#include <vostok/network_core/move_to_list_predicate.h>
+#include <vostok/network_core/custom_alloc_handler.h>
+
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// void vostok::network_core::memory_allocator(vostok::memory::base_allocator&)
+// module allocator storage (wired up by memory_allocator())
+memory::base_allocator*	g_allocator	= NULL;
+
+typedef boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>	query_type;
+
+// STATE[100%|DONE]
 void memory_allocator( memory::base_allocator& allocator )
 {
-	// FUNCTION BODY
-	// <0x586fa4>|0x000|0x000:'18'
-	// <0x586fb0>|0x00c|0x00c:'19'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call empty_stub`, delinker-misnamed finalize_impl)
+	g_allocator = &allocator;
 }
 
-// STATE[STUB]
-// stlp_std::basic_string<char,stlp_std::char_traits<char>,stlp_std::allocator<char> > vostok::network_core::get_ip_address(boost::asio::io_service&)
+// STATE[99.01%|PARTIAL]: body byte-correct; residual is ICF empty-fn fold-winner naming
+// (target's `finalize_impl`/`shared_ptr` ctor vs base's `unreferenced_parameter_helper`/
+// `bucket_type` ctor - both the 0x3f210 empty fold, not a source-fixable divergence).
 std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_address( boost::asio::io_service& io_service )
 {
-	// LOCALS
-	// boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp> query
-	// boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> end
-	// boost::asio::ip::basic_resolver<boost::asio::ip::tcp,boost::asio::ip::resolver_service<boost::asio::ip::tcp> > resolver
-	// boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> iter
-	// boost::asio::ip::address 	addr<1>
-	// ******
+	boost::asio::ip::tcp::resolver				resolver( io_service );
+	query_type									query( boost::asio::ip::host_name(), "" );
+	boost::asio::ip::tcp::resolver::iterator	iter = resolver.resolve( query );
+	boost::asio::ip::tcp::resolver::iterator	end;
 
-	// FUNCTION BODY
-	// <0x58704b>|0x000|0x000:'135'
-	// <0x587057>|0x00c|0x00c:'136'
-	// <0x5870b8>|0x06d|0x061:'137'
-	// <0x5870c8>|0x07d|0x010:'138'
-	// 1
-	// 2
-	// 3
-	// <0x5870d7>|0x08c|0x00f:'142'
-	// 1
-	// <0x587102>|0x0b7|0x02b|[1]:'144'
-	// <0x587150>|0x105|0x04e:'145'
-	// 1
-	// <0x58717d>|0x132|0x02d:'147'
-	// <0x587256>|0x20b|0x0d9:'148'
-	// 1
-	// <0x587258>|0x20d|0x002:'150'
-	// 1
-	// <0x58725d>|0x212|0x005:'152'
-	// ******
+	for ( ; iter != end; ++iter ) {
+		boost::asio::ip::address	addr = iter->endpoint( ).address( );
+		if ( !addr.is_loopback( ) && addr.is_v4( ) ) {
+			return iter->endpoint( ).address( ).to_string( );
+		}
+	}
+
+	return "unknown";
+
+	// STRUCTURE DIFF[target 0x577040 | base 0x513ab0]: target 11 / base 10 stmts
+	//   9: 0x216 <0x2> | --          | L148   ONLY target
+	// ; aligned 10, size-diffs 0, quantity-diffs 1, blank-gaps 2
+	// VERDICT: NEAR-MATCH. The extra target stmt is a DEAD `jmp short` at 0x216 (the
+	// if's closing-brace L148 breakpoint anchor): the if-false target is .7=0x218 and
+	// the loop-exit is .8=0x21d, while 0x216 is preceded by the unconditional
+	// `0x211 jmp .11` - so nothing reaches 0x216 (sushi confirmed). It's the
+	// "closing `}` carries a breakpoint" artifact - MSVC emits a no-op jmp so the `}`
+	// line is breakpointable; our build omits it. Zero functional effect; the 2 bytes
+	// shift every later offset = the whole 99.01% residual. Not ICF naming (earlier
+	// verdict was wrong). sushi@TODO: source/flag lever for the dead anchor - see review_todos.md.
 }
 
-// STATE[STUB]
-// bool vostok::network_core::get_connection_info_from_string(char const*, char*, unsigned short&)
-bool get_connection_info_from_string( pcstr buffer, char* dest_host, u16& dest_port )
+// STATE[99.98%|PARTIAL]: structure exact; residual is the secure-CRT reloc naming
+// (`_strncpy_s`/`_sscanf_s` vs `strncpy_s`/`sscanf_s`) + a 4-byte /Od frame slot (0x10 vs 0x0C).
+bool get_connection_info_from_string( pcstr buffer, char* const dest_host, u16& dest_port )
 {
-	// LOCALS
-	// pcstr 						delim
-	// s32 							result<1>
-	// u32 							port<1>
-	// ******
-
+	pcstr	delim	= strchr( buffer, ':' );
+	if ( delim ) {
+		u32	port;
+		strncpy_s( dest_host, 64, buffer, delim - buffer );
+		s32	result	= sscanf_s( delim + 1, "%d", &port );
+		if ( strings::length( dest_host ) && result == 1 ) {
+			dest_port	= port & 0xffff;
+			return true;
+		}
+	}
 	return false;
-	// FUNCTION BODY
-	// <0x586fc6>|0x000|0x000:'157'
-	// <0x586fd7>|0x011|0x011:'158'
-	// 1
-	// <0x586fdd>|0x017|0x006|[1]:'160'
-	// 1
-	// <0x586ff6>|0x030|0x019:'162'
-	// <0x587011>|0x04b|0x01b:'163'
-	// 1
-	// <0x587023>|0x05d|0x012:'165'
-	// <0x587031>|0x06b|0x00e:'166'
-	// 1
-	// 2
-	// <0x587035>|0x06f|0x004:'169'
-	// ******
+
+	// STRUCTURE DIFF[target 0x576fc0 | base 0x4496f0]: target 8 / base 8 stmts
+	// .. same ..
+	// ; aligned 8, size-diffs 0, quantity-diffs 0, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH - clean (0 size/quantity diffs). 99.98% residual is secure-CRT reloc naming (_strncpy_s/_sscanf_s) + a 4-byte /Od frame slot, not source-fixable.
 }
 
-// STATE[STUB]
-// void vostok::network_core::initialize()
+// STATE[100%|DONE]
 void initialize( )
 {
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// ******
 }
 
-// STATE[STUB]
-// void vostok::network_core::finalize()
+// STATE[100%|DONE]
 void finalize( )
 {
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// ******
 }
-
-	// TYPEDEFS
-	typedef
-		boost::asio::ip::basic_resolver_entry<boost::asio::ip::tcp>*
-		iterator_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>
-		iterator_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>
-		query_type;
-
-	typedef
-		sockaddr
-		data_type;
-
-	// ******
 
 } // namespace network_core
 } // namespace vostok
