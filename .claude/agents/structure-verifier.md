@@ -1,6 +1,6 @@
 ---
 name: structure-verifier
-description: First verifies that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %, then becomes a matcher and fixes the divergences it found. It runs `pdb_fetch --view structure-diff --condensed` (the parser's two-sided statement-structure diff: target vs base aligned, each divergence row prefixed with a `NN:` statement index and tagged SIZE / ONLY base|target; blank-line gaps are suppressed and tallied as `blank-gaps`), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It EMBEDS the condensed diff (+ a one-line `// VERDICT:`) in place of the carcass for non-100% functions and downgrades a mislabeled `DONE` whose structure is wrong. That is its FIRST goal; it THEN switches into the matcher role and FIXES the divergence it found - applying the source-shape change the diff points to (init-list vs body assigns, braces, early-return guard, lexical block, definition order, ...), rebuilding and re-diffing until the structure matches or only an LTCG/argument residual remains. It never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides - and then to close it.
+description: First verifies that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %, then becomes a matcher and fixes the divergences it found. It runs `pdb_fetch --view structure-diff` (the parser's two-sided statement-structure diff: only the diverging statements are shown, each tagged in a `b.diff` column SIZE +/-N / BASE_ONLY / TRGT_ONLY; a clean match prints `STRUCTURE MATCH`), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It EMBEDS the structure-diff (+ a one-line `// VERDICT:`) in place of the carcass for non-100% functions and downgrades a mislabeled `DONE` whose structure is wrong. That is its FIRST goal; it THEN switches into the matcher role and FIXES the divergence it found - applying the source-shape change the diff points to (init-list vs body assigns, braces, early-return guard, lexical block, definition order, ...), rebuilding and re-diffing until the structure matches or only an LTCG/argument residual remains. It never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides - and then to close it.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -53,25 +53,25 @@ mangled symbol, not rva):
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
           --base-index   binaries/rich/base/index.jsonl \
           --function <name> [--rva 0x<target_rva>] \
-          --view structure-diff --condensed
+          --view structure-diff
 ```
 
-Output: a header `target: 0x<rva>   base: 0x<rva>` + `; <sig> ; target N / base M
-stmts` (N/M count only REAL statements - blank-line gaps are excluded, so an
-empty-line-only difference never reads as a lost/gained statement), then aligned-equal
-runs COLLAPSED to `.. same ..`, and only the divergences as one compact line each,
-prefixed with a monotonic `NN:` statement index (so each row is locatable and a
-`.. same ..` run is bracketed by the index it resumes at):
-`NN: 0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> | {stmt}   {TAG}` - TAG is `SIZE` (same
-statement, different byte size) or `ONLY base` / `ONLY target` (a statement present on
-one side only = a real QUANTITY divergence). A trailing `; aligned A, size-diffs S,
-quantity-diffs Q, blank-gaps B` - `blank-gaps` are blank-line-only rows, counted but
-NOT printed (they are noise, not statements). A clean match prints just `.. same ..`
-with `size-diffs 0, quantity-diffs 0`. Drop `--condensed` to see every row.
+Output: per-side stats (`; target 0x<va>  N stmts  0xNN bytes` / `; base ...`), the
+signature, and a braced body holding a table of ONLY the diverging statements (equal
+statements and blank-line gaps are dropped - so a clean match shows no rows). A clean
+match instead leads with `; STRUCTURE MATCH`. Each table row:
+`b.diff | t.addr | b.addr | t.sz | b.sz | b.line | b.code` - the `b.diff` column tags the
+divergence: `SIZE +0xN` / `SIZE -0xN` (the byte delta `b.sz - t.sz`: positive = base is
+LARGER and must shrink, negative = base is smaller and must grow), `BASE_ONLY` (base has
+an extra statement target lacks - a QUANTITY divergence), or `TRGT_ONLY` (base is MISSING
+a target statement). The row is base-anchored (`b.addr`/`b.line`/`b.code` are the editable
+side); both VAs are shown so you can `--address` into either side; a `TRGT_ONLY` row's
+base columns are `--` (no base statement there). N stmts on the two `;` lines count only
+REAL statements, so a quantity mismatch shows as `target N / base M`.
 
-**If the structure-diff is noisy** - many SIZE rows, offsets drifting after the first
-divergence, hard to read whole - don't fight it; drop back to per-statement `--address`
-slices (below) for the rows that actually matter and compare those one at a time.
+**If the diff is large** - many SIZE rows - it's already only the divergences, but you can
+still drill each one with per-statement `--address` slices (below) for the rows that
+actually matter and compare those one at a time.
 
 **The single-side `--view structure` dump is still useful - reach for it often.** Run
 it with JUST the target index, then JUST the base index, to read each side's FULL
@@ -83,7 +83,7 @@ symbol - pin with `--rva` on the target), a target you can only address by `--rv
 demangled names that differ only by a namespace prefix. In those cases compare the two
 single-side skeletons by hand: same N statements at the same offsets/sizes means a MATCH
 the aligner merely couldn't pair, NOT a divergence. It is also handy just to eyeball the
-target's intended shape before you write, or to confirm a count the condensed diff collapsed.
+target's intended shape before you write, or to confirm a count the diff abstracts away.
 
 **Read the offsets right: after the FIRST `SIZE` divergence the two sides' offsets
 DRIFT apart** (each accumulates the running size delta) - that drift is expected, not a
@@ -159,14 +159,16 @@ residual and left a stale `// STRUCTURE DIFF`/`// VERDICT` block on a now-100% f
 STRIP it (the byte-perfect match has trivially-correct structure).
 
 **STANDARD embed format - every function reads identically:**
-1. The diff block is the tool's `--condensed` output VERBATIM, `// `-prefixed. Do NOT
-   hand-edit rows, append per-row source text, or re-summarize. (`ONLY target` rows stay
-   `Lxx` - the target PDB has no source text, and guessing it is not reproducible.)
+1. The diff block is the `--view structure-diff` divergence rows, `// `-prefixed: a
+   `// STRUCTURE DIFF: target N / base M stmts` header, then the `b.diff | b.line |
+   b.code` of each diverging row (the per-build `t.addr`/`b.addr` are noise in source -
+   drop them; keep the `b.diff` tag, line, and source). Do NOT re-summarize or invent
+   rows (a `TRGT_ONLY` row has no base source - leave its `b.code` as `L<line>`).
 2. Exactly ONE `// VERDICT:` line directly after the block, fixed grammar:
    `// VERDICT: STRUCTURE <MATCH | MISMATCH (size|quantity|both|order)> - <terse cause / next-step>`
 3. ALL detailed reasoning goes in the COMMIT MESSAGE, NEVER inline - the inline embed
    stays terse and uniform.
-Real example (`get_additional_length`, 65%) - the block sits at the END of the body,
+Real example (`get_additional_length`) - the block sits at the END of the body,
 after the last statement, just before the closing `}`:
 ```
 float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir )
@@ -174,21 +176,20 @@ float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir )
 	float const knee_angle_cos = upleg_dir | -leg_dir;
 	// ...rest of body...
 
-	// STRUCTURE DIFF[target 0xbb1f0 | base 0x513fa0]: target 2 / base 2 stmts
-	//   1: 0x006 <0x18> | 0x006 <0x49> | float const knee_angle_cos = upleg_dir | -leg_dir;   SIZE
-	// .. same ..
-	// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 1
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x31 | 212 | float const knee_angle_cos = upleg_dir | -leg_dir;
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is operator| out-of-line call vs inlined, non-steerable.
 }
 ```
 
 Caveats baked into the format (do not misread these as divergences):
-- Carcass `<VA>` addresses are BASE-build addresses, off the target rva by ~0x10000;
-  ignore the absolute values, compare the SHAPE (`'srcline'` set, sizes, blocks).
-- A multi-line statement (wrapped call, multi-line `if`, member-init list) carries
-  its `<VA>` only on its LAST line; a `<>`-less line is not automatically inlined-away.
+- `t.addr` / `b.addr` are real per-build VAs and differ between the two builds; compare
+  the SHAPE (the `b.diff` tags, sizes, lines), never the absolute addresses across sides.
+- A multi-line statement (wrapped call, multi-line `if`, member-init list) anchors on its
+  LAST line, so `b.code` may show just a `);` / `: member` tail - read the full statement
+  at that `b.line` in source, don't take the tail literally.
 - `[ebp-N]` slot numbers / ordering are allocation noise - never a structure diff.
-- A register-only or stack-slot-only `~` is an LTCG/linker artifact, not structure.
+- A register-only or stack-slot-only difference is an LTCG/linker artifact, not structure.
 
 ## The two divergences you flag
 **First, what a statement IS:** each addressed `<0xsize>` row is a REAL source statement -

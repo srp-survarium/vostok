@@ -28,8 +28,20 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
 5. `docs/binary_matching/<module>/README.md` - your module's notes.
 
 ## The loop (full detail in agentic_loop.md)
-- **Read the target** via `pdb_rich_query --list` (disambiguate) + `pdb_fetch
-  --view structure/target/callees/info` (under `nix develop`, indexes in `binaries/rich/`).
+- **Read the TARGET first - this is the matcher's main input (you write NEW source; you
+  do NOT diff yet - there is no base side until you have written and compiled).**
+  `pdb_rich_query --list` to disambiguate, then under `nix develop` (indexes in
+  `binaries/rich/`):
+  ```
+  # 1. the target's statement STRUCTURE - the shape to reproduce (sizes + source lines):
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --function <name> --view structure
+  # 2. its RICH ASM - each statement headed by `[0xNN]:`; read it to write the body:
+  pdb_fetch --target-index ... --function <name> --view target
+  # 3. one statement at a time (the `address` from --view structure) when it is dense:
+  pdb_fetch --target-index ... --view target --address 0x<va>
+  ```
+  (`--view callees`/`info` for callee names + PDB-recorded locals; `--rva 0x<target>` to
+  pin an overload.)
 - **Write** a first approximation in the `.cpp` per MATCHING.md.
 - **Match the SHAPE the asm dictates BEFORE building** (source-steerable, not LTCG -
   fixing up front saves rebuilds):
@@ -50,15 +62,20 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
   `report.json` (that's the STATE number); check `report-changes.json` for regressions.
-- **Diff - `--view structure-diff` FIRST, then `--view diff`:** run
-  `pdb_fetch --target-index .../target/index.jsonl --base-index .../base/index.jsonl
-  --function <name> [--rva 0x<target>] --view structure-diff --condensed`. It localizes
-  the problem: WHICH statement diverges and HOW (`SIZE` = same statement, different byte
-  size; `ONLY base|target` = a quantity divergence; `.. same ..` = matched runs). A high
-  % over the wrong structure is NOT a match - fix the source shape (braces, init-list vs
-  body-assigns, early-return vs `if`, definition order). Only AFTER locating a divergent
-  statement, drop to `--view diff` (operand-aware asm) at that spot for the cause. (After
-  a `SIZE` row the offsets drift by the running delta - expected, not a new divergence.)
+- **Only AFTER compiling, diff - to see what you got right and what you got wrong.**
+  There is no base side to compare until your code builds, so this comes last. Run the
+  structure diff, then the asm diff for the instruction-level cause:
+  ```
+  pdb_fetch --target-index ... --base-index ... --function <name> --view structure-diff
+  pdb_fetch --target-index ... --base-index ... --function <name> --view diff
+  ```
+  `--view structure-diff` lists ONLY the diverging statements, each tagged in a `b.diff`
+  column: `SIZE +0xN`/`-0xN` (same statement, base N bytes too big / too small),
+  `BASE_ONLY` (an extra base statement), `TRGT_ONLY` (a missing target one); a clean shape
+  prints `STRUCTURE MATCH`. A high % over the WRONG structure is NOT a match - fix the
+  source shape (braces, init-list vs body-assigns, early-return vs `if`, definition order).
+  Reach for the diff to CONFIRM/locate, not to live in it: deep structure-diff work and
+  embedding the verdict is the **structure-verifier's** job, not the matcher's.
 - **Missing type?** Pull its declaration from `binaries/structure/target`, declare it near the use.
 - **Stop** when matched, or when only LTCG/inlining artifacts remain. Don't spin.
 
