@@ -44,8 +44,13 @@ inline void packet< T >::resize( u32 size )
 template < typename T >
 inline void packet< T >::clone( base_packet const& other ) { /* no source */ }
 
+// STATE[INLINED]: append(&value,sizeof) - the scalar overloads all forward to the
+// buffer/size primitive; bodies needed so call sites (serialize chains) emit.
 template < typename T >
-inline void packet< T >::append( bool value ) { /* no source */ }
+inline void packet< T >::append( bool value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 // STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
 // packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
@@ -56,7 +61,10 @@ inline void packet< T >::append( u8 value )
 }
 
 template < typename T >
-inline void packet< T >::append( s8 value ) { /* no source */ }
+inline void packet< T >::append( s8 value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 // STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
 // packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.
@@ -67,19 +75,34 @@ inline void packet< T >::append( u16 value )
 }
 
 template < typename T >
-inline void packet< T >::append( s16 value ) { /* no source */ }
+inline void packet< T >::append( s16 value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 template < typename T >
-inline void packet< T >::append( u32 value ) { /* no source */ }
+inline void packet< T >::append( u32 value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 template < typename T >
-inline void packet< T >::append( s32 value ) { /* no source */ }
+inline void packet< T >::append( s32 value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 template < typename T >
-inline void packet< T >::append( u64 value ) { /* no source */ }
+inline void packet< T >::append( u64 value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 template < typename T >
-inline void packet< T >::append( s64 value ) { /* no source */ }
+inline void packet< T >::append( s64 value )
+{
+	append				( &value, sizeof( value ) );
+}
 
 // STATE[PARTIAL]: append(&value,sizeof) - body exact; target carcass is the
 // packet< udp_match_packet > instance (0x7d6f0-0x7d75x), not base-anchored here.

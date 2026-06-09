@@ -1172,3 +1172,26 @@ perfect, % stuck. Write the source so it emits the matching ctor/call SHAPE (her
 `m_x( seed )` init -> the `??0random32@@QAE@I@Z(u32)` ctor instead of the default-seed path) and
 keep the literal at the target value, but do NOT expect the % to close - it is a delinker
 asymmetry, not a source miss.
+### call-site call sites prevent r<T>/append from inlining away (the real lever)
+A template carcass like `packet<T>::append`/`packet_reader::r<T>` scores poorly when only
+ADDRESS-anchored, because its own COMDAT is the debug-quality single-TU body while the target
+keeps it standalone. In the target the standalone bodies survive because real `serialize`/
+`deserialize` functions CALL them (so they are out-of-line in the LTCG image). Implementing the
+typed `serialize(udp_match_packet&)` / `deserialize(packet_reader&)` methods (player_input,
+player_state, hit_info, sequence_number, ...) and anchoring those gives the primitives genuine
+call sites. Pair it with: every scalar `packet<T>::append(uN/sN/bool)` overload must have the
+`append(&value, sizeof(value))` body - an empty `/* no source */` overload inlines to nothing
+and SILENTLY DROPS the append statement at the call site (caught as a "ONLY target" stmt in
+structure-diff, e.g. client_player_update::serialize missing its append(time_in_ms)).
+
+### serial-number (RFC1982) operator< / operator<=
+`a < b` for wrap-around sequence numbers compiles to a two-clause OR:
+`(a < b && u32(a)+0x8000 > b) || (b < a && u32(b)+0x8000 <= a)`. operator<= differs by exactly
+one byte: the first clause's `<` becomes `<=` (jge->jg). `operator-(left,right)` is
+`right <= left ? s16(left.m - right.m) : -(right - left)`; the `+0x10000 & 0x8000FFFF` +
+sign-extend sequence IS the compiler's `(s16)` cast, not extra logic.
+
+### post-increment returning by value must have a `return` or you get LNK1257
+`sequence_number operator++(s32)` declared to return BY VALUE with an empty `/* no source */`
+body crashes the LTCG linker with LNK1257. Give it the real temp-copy body
+(`T r(*this); ++m_number; return r;`); this also unblocks every caller that post-increments.
