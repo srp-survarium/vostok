@@ -247,26 +247,6 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
 
-	// claude@MATCH: legs_ik_drawer is a thin forwarder over render::debug::renderer.
-	// Construct one over NULL renderer/scene refs (never run) and call every public
-	// draw_* so the linker keeps all five bodies.
-	void use_game_core_legs_ik_drawer( )
-	{
-		survarium::legs_ik_drawer drawer(
-			*reinterpret_cast< render::debug::renderer* >( NULL ),
-			render::scene_ptr( )
-		);
-		float4x4 const&			m	= *reinterpret_cast< float4x4 const* >( NULL );
-		float3 const&			v	= *reinterpret_cast< float3 const* >( NULL );
-		math::color const&		c	= *reinterpret_cast< math::color const* >( NULL );
-		drawer.draw_leg( m, m, m, m, c, c, c, c, 0.0f );
-		drawer.draw_cross( v, 0.0f, c, false );
-		drawer.draw_origin( m, 0.0f, false );
-		drawer.draw_line_capsule( m, v, c, false );
-		drawer.draw_solid_capsule( m, v, c, false );
-		example_callback( reinterpret_cast< pcstr >( &drawer ) );
-	}
-
 	// claude@MATCH: get_foot_fixed_transform / process_leg / get_additional_length
 	// are reached transitively from process() (anchored via the real `processor`
 	// instance in use_game_core_legs_ik_processor above), so their former direct
@@ -2569,7 +2549,6 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_initialize( );
 	vostok::use_game_core_breath_vibration_calculator( );
 	vostok::use_game_core_legs_ik_processor( );
-	vostok::use_game_core_legs_ik_drawer( );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
 	vostok::use_game_core_hand_to_weapon_ik_processor( );
 	vostok::use_medkit( );

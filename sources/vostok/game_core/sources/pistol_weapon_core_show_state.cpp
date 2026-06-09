@@ -54,16 +54,13 @@ pistol_weapon_core_show_state::pistol_weapon_core_show_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: structure (get_weapon_lexeme_pair, get_user_hands_expression, then the
-// chained `+`) matches the target. Residual: the target uses dedicated `expression operator+(
-// expression&, animation_lexeme&)` / `operator+(expression&, expression&)` overloads (returning
-// expression) that DO NOT EXIST in the current shared mixing_addition_lexeme_inline.h - only the
-// generic `addition_lexeme& operator+(T1&,T2&)` is declared, so the base build emits
-// `operator+<expression,animation_lexeme>` + `operator+<addition_lexeme,animation_lexeme>` +
-// expression(addition_lexeme) instead of the target's expression-returning overloads. Recovering
-// this needs adding those overloads to the shared animation header (out of this file's scope; would
-// also shift other operator+ matched functions). Same class of residual as
-// weapon_core_idle_state::weapon_and_hands_expression (#151, 85% PARTIAL).
+// STATE[83.52%|PARTIAL]: structure matches (get_weapon_lexeme_pair, get_user_hands_expression,
+// then the chained `+`). Wall: the target uses dedicated expression-returning operator+ overloads
+// (`expression operator+( expression&, animation_lexeme& )` etc.) that are not declared in the
+// shared mixing_addition_lexeme_inline.h - only the generic `addition_lexeme& operator+(T1&,T2&)`
+// exists, so base emits the generic chain + expression(addition_lexeme) where target inlines the
+// expression overloads. Adding those overloads touches the shared animation header (out of this
+// file's scope, would shift other operator+ matches). Same wall as the idle siblings.
 animation::mixing::expression pistol_weapon_core_show_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -77,19 +74,27 @@ animation::mixing::expression pistol_weapon_core_show_state::weapon_and_hands_ex
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// FUNCTION BODY
-	// <0x7ae870>|0x010|+0x01f:'47'
-	// <0x7ae88f>|0x02f|+0x02a:'48'
-	// <0x7ae8b9>|0x059|+0x07a:'49'
-	// ******
+	// STRUCTURE DIFF[target 0x79e860 | base 0x44eb30]: target 3 / base 5 stmts
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// 0x059 <0x7a> | 0x058 <0x53> | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;   SIZE
+	// ; aligned 2, size-diffs 1, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (missing expression-returning overloads in the shared mixing header), non-steerable. trail: weapon_and_hands_expression.md
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this` loaded
-// into eax (target) vs ecx (base) - a call-boundary argument-passing register choice. Byte-identical
-// otherwise; same residual the reference pistol_weapon_core_idle_state::get_weapon_lexeme_pair accepts.
+// STATE[99.92%|DONE]: structure matches (captions split per-element to align the target's two
+// L55/L56 stores). Sole byte residual: `m_weapon.ammo_in_magazine()` loads `this` into eax
+// (target, LTCG callee takes it in eax) vs ecx (base) - the permitted call-boundary arg-passing
+// class. trail: get_weapon_lexeme_pair.md
 weapon_lexeme_pair pistol_weapon_core_show_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	pcstr weapon_animation_captions[2] = { "pistol-show", "pistol-show_empty" };
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-show",
+		"pistol-show_empty"
+	};
 
 	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
 	pcstr animation_identifier = weapon_animation_captions[animation_index];
@@ -110,16 +115,22 @@ weapon_lexeme_pair pistol_weapon_core_show_state::get_weapon_lexeme_pair( mutabl
 		animation::mixing::play_once_and_freeze_at_end,
 		animation::instant_interpolator( )
 	);
+
+	// STRUCTURE DIFF[target 0x79e790 | base 0x44ea60]: target 9 / base 12 stmts
+	// .. same .. (captions now per-element; all 9 stmts aligned, size-diffs 0)
+	// quantity-diffs are EMPTY-only-base collapsed blank-line gaps inside the brace-init
+	// ; aligned 9, size-diffs 0, quantity-diffs 3
+	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine eax-vs-ecx arg-passing, non-steerable. trail: get_weapon_lexeme_pair.md
 }
 
 // STATE[72.12%|PARTIAL]: control structure matches the target exactly (the type_sprint early-return
 // of expression(weapon_lexeme); the user_animation_index; the animation_lexeme_parameters builder
-// chain; expression(hands_only_lexeme)). Residual is purely whole-program inline decisions in shared
-// animation/weapon_core headers: the target keeps weapon_core::get_user() and the
+// chain; expression(hands_only_lexeme)). Wall: whole-program inline decisions in shared
+// animation/weapon_core headers - target keeps weapon_core::get_user() and the
 // animation_lexeme_parameters setters (animated_object/bones_mask/playback_type) OUT-OF-LINE (proven:
-// `bones_mask` is a standalone symbol in the target index but absent from the base index), while the
-// base inlines all of them (frame 0x110 -> 0x128, direct member stores). These are `inline`-declared
-// one-liners in shared headers; forcing them out-of-line is out of this file's scope. LTCG inline class.
+// `bones_mask` is a standalone symbol in the target index, absent from base), while base inlines all
+// of them (frame 0x110 -> 0x128, direct member stores). These are `inline` one-liners in shared
+// headers; forcing them out-of-line is out of this file's scope. Non-steerable LTCG inline class.
 animation::mixing::expression pistol_weapon_core_show_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -150,27 +161,17 @@ animation::mixing::expression pistol_weapon_core_show_state::get_user_hands_expr
 
 	return hands_only_lexeme;
 
-	// FUNCTION BODY
-	// <0x7ae6b1>|0x011|+0x006:'69'
-	// <0x7ae6b7>|0x017|+0x010:'70'
-	// <0>
-	// <0x7ae6c7>|0x027|+0x00c:'72'
-	// <0x7ae6d3>|0x033|+0x014:'73'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x7ae6e7>|0x047|+0x079:'86'
-	// <0x7ae760>|0x0c0|+0x01c:'87'
-	// ******
+	// STRUCTURE DIFF[target 0x79e6a0 | base 0x44e960]: target 8 / base 10 stmts
+	// .. same ..
+	// 0x017 <0x10> | 0x017 <0x13> | return weapon_lexeme;   SIZE
+	// .. same ..
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// 0x047 <0x79> | 0x04a <0x8f> | );   SIZE
+	// --          | <0>         |    EMPTY only base
+	// .. same ..
+	// ; aligned 6, size-diffs 2, quantity-diffs 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are weapon_core::get_user / animation_lexeme_parameters setters kept out-of-line in target, inlined in base (whole-program LTCG inline of shared headers), non-steerable. trail: get_user_hands_expression.md
 }
 
 // STATE[100%|DONE]

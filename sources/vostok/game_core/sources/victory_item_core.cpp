@@ -10,7 +10,11 @@
 
 namespace survarium {
 
-// STATE[94.12%|DONE]: LTCG for unmanaged resource
+// STATE[94.12%|DONE]: LTCG for unmanaged_resource base ctor, non-steerable. trail: victory_item_core.md
+// STRUCTURE DIFF[target 0x58c450 | base 0x4495e0]: target 1 / base 1 stmts
+// .. same ..
+// ; aligned 1, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - init-list + identity() aligns; residual is the unmanaged_resource base ctor inline-vs-call (whole-program LTCG), non-steerable.
 victory_item_core::victory_item_core( ) :
 	id				( u8(-1) ),
 	m_is_inserted	( false ),
@@ -18,22 +22,16 @@ victory_item_core::victory_item_core( ) :
 	m_carrier_id	( u8(-1) )
 {
 	m_transform.identity( );
-
-	// FUNCTION BODY
-	// <0x59c450>|0x000|+0x074:'20'	{
-	// <0x59c4c4>|0x074|+0x00e:'21'
-	// <0x59c4d2>|0x082|      :'22'	}
-	// ******
 }
 
-// STATE[74.33%|PARTIAL]
+// STATE[74.33%|PARTIAL]: collision_geometry dtor inline-vs-call LTCG, non-steerable. trail: victory_item_core.md
+// STRUCTURE DIFF[target 0x58c3f0 | base 0x449580]: target 1 / base 1 stmts
+// 0x027 <0x19> | 0x026 <0x1a> | VOSTOK_DELETE_IMPL( g_allocator, m_collision_geometries[0] );   SIZE
+// ; aligned 0, size-diffs 1, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on VOSTOK_DELETE_IMPL; the collision_geometry dtor it inlines differs by one byte (whole-program inline form), non-steerable.
 victory_item_core::~victory_item_core( )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, m_collision_geometries[0] ); // sushi@TODO: Why is this called from this destructor and not the one in `usabe_object`
-
-	// FUNCTION BODY
-	// <0x59c417>|0x027|+0x019:'26'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -42,22 +40,18 @@ void victory_item_core::unload( )
 	usable_object::remove( );
 }
 
-// STATE[80.17%|PARTIAL]: LTCG for load.
+// STATE[85.05%|PARTIAL]: VOSTOK_NEW / config-value op inline-vs-call LTCG, non-steerable. trail: victory_item_core.md
+// STRUCTURE DIFF[target 0x58c4e0 | base 0x449670]: target 4 / base 4 stmts
+// 0x015 <0x47> | 0x015 <0x56> | *m_collision_geometries = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );   SIZE
+// 0x05c <0x24> | 0x06b <0x26> | m_collision_geometries[0]->load( cfg["collision_geometries"][0] );   SIZE
+// ; aligned 2, size-diffs 2, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - 2 SIZE: VOSTOK_NEW collision_geometry allocation + the cfg[...] config-value index op inline form, whole-program LTCG, non-steerable.
 void victory_item_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
 
 	*m_collision_geometries = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
 	m_collision_geometries[0]->load( cfg["collision_geometries"][0] );
-
-	// FUNCTION BODY
-	// <0x59c4e0>|0x000|+0x009:'35'	{
-	// <0x59c4e9>|0x009|+0x00c:'36'
-	// <0>
-	// <0x59c4f5>|0x015|+0x047:'38'
-	// <0x59c53c>|0x05c|+0x024:'39'
-	// <0x59c560>|0x080|      :'40'	}
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -76,13 +70,6 @@ bool victory_item_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( user ); VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
-
-	// FUNCTION BODY
-	// <0x59c310>|0x000|+0x009:'53'	{
-	// <0x59c319>|0x009|+0x00c:'54'
-	// <0x59c325>|0x015|+0x002:'55'
-	// <0x59c327>|0x017|      :'56'	}
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -90,13 +77,6 @@ bool victory_item_core::use_finalize( usable_object_user_data* user )
 {
 	ASSERT( user ); VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
-
-	// FUNCTION BODY
-	// <0x59c2f0>|0x000|+0x009:'59'	{
-	// <0x59c2f9>|0x009|+0x00c:'60'
-	// <0x59c305>|0x015|+0x002:'61'
-	// <0x59c307>|0x017|      :'62'	}
-	// ******
 }
 
 // STATE[100%|DONE]

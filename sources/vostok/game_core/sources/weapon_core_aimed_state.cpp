@@ -40,12 +40,13 @@ weapon_core_aimed_state::weapon_core_aimed_state( weapon_core& weapon, resources
 			m_weapon_animations[view][user_state] = animations[animation_index++];
 }
 
-// STATE[85.65%|PARTIAL]: residual is the per-call-site LTCG inline-vs-call of
-// operator+<animation_lexeme,animation_lexeme> (target inlines it here, base keeps the
-// out-of-line call; operator+ is standalone in BOTH rich indexes -> whole-program inline
-// decision, not a source bug), plus the line-31 ASSERT eater shape (target's
-// expression_eater gets only the lexeme; ASSERT_U adds the assert_untyped `push 0`).
-// Identical shape/diff to weapon_core_idle_state::weapon_and_hands_expression - see the .md.
+// STATE[85.65%|PARTIAL]: two non-steerable residuals - operator+ inline-vs-call and ASSERT_U macro shape (identical to weapon_core_idle_state).
+// STRUCTURE DIFF[target 0x79d120 | base 0x44f220]: target 3 / base 5 stmts
+// 0x011 <0x36> | 0x011 <0x38> | ASSERT_U( weight_driving_animation );   SIZE
+// 0x066 <0x59> | 0x068 <0x38> | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );   SIZE
+// .. same ..
+// ; aligned 1, size-diffs 2, quantity-diffs 2
+// VERDICT: STRUCTURE MATCH (shape ok) - (1) the return SIZE is the per-call-site LTCG inline-vs-call of operator+<animation_lexeme> (standalone in BOTH rich indexes); (2) the ASSERT_U SIZE is the fixed assert-macro expansion delta. Neither steerable from this function's source. trail: weapon_core_idle_aimed_state.md
 animation::mixing::expression weapon_core_aimed_state::weapon_and_hands_expression(
 	mutable_buffer&							buffer,
 	bool									is_third_view,
@@ -58,12 +59,6 @@ animation::mixing::expression weapon_core_aimed_state::weapon_and_hands_expressi
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-
-	// FUNCTION BODY
-	// <0x7ad131>|0x011|+0x036:'31'	ASSERT_U( weight_driving_animation );
-	// <0x7ad167>|0x047|+0x01f:'32'	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( ... );
-	// <0x7ad186>|0x066|+0x059:'33'	return expression( main + offset );  (target inlines operator+)
-	// ******
 }
 
 // STATE[100%|DONE]
