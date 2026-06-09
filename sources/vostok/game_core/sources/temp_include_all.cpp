@@ -57,6 +57,8 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/hand_to_weapon_ik_processor.h>
+#include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/base_project.h>
 #include <vostok/game_core/ladder.h>
@@ -1097,6 +1099,20 @@ namespace vostok
 
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
+
+		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
+		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
+		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
+		// weapon_user_animations_selector + the logic-state serialize forwards).
+		survarium::weapon_core			weapon;
+		survarium::inventory_item&		item = weapon;
+		item.serialize	( *packet, 0 );
+		item.deserialize( *reader );
+
+		// hand_to_weapon_ik_processor serialize/deserialize are public; call them directly.
+		survarium::hand_to_weapon_ik_processor	hand_ik;
+		hand_ik.serialize	( *packet, 0 );
+		hand_ik.deserialize	( *reader );
 	}
 
 	void use_game_core_weapon_state()
