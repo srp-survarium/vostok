@@ -37,10 +37,17 @@ orchestrator; do not spawn sub-agents.
 Read these from the **current integration branch** (the PR branch you check out may
 carry a stale copy); review the code against the latest rules.
 
-## The two structures you compare - start with `--view structure-diff` FIRST
-**Do NOT eyeball two `--view structure` dumps by hand.** The parser aligns target vs
-base for you. Run (resolve overloads first; pass the TARGET rva with `--rva` if the
-name is ambiguous - base is resolved by mangled symbol, not rva):
+## The two structures you compare - small: two dumps; big: `--view structure-diff`
+**Small function (a handful of statements) -> just fetch each side and compare by eye,
+two invocations:**
+```
+pdb_fetch --target-index binaries/rich/target/index.jsonl --function <name> --view structure
+pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function <name> --view structure
+```
+
+**Big function -> don't eyeball; let the parser align target vs base** (resolve overloads
+first; pass the TARGET rva with `--rva` if the name is ambiguous - base is resolved by
+mangled symbol, not rva):
 
 ```
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
@@ -61,6 +68,10 @@ one side only = a real QUANTITY divergence). A trailing `; aligned A, size-diffs
 quantity-diffs Q, blank-gaps B` - `blank-gaps` are blank-line-only rows, counted but
 NOT printed (they are noise, not statements). A clean match prints just `.. same ..`
 with `size-diffs 0, quantity-diffs 0`. Drop `--condensed` to see every row.
+
+**If the structure-diff is noisy** - many SIZE rows, offsets drifting after the first
+divergence, hard to read whole - don't fight it; drop back to per-statement `--address`
+slices (below) for the rows that actually matter and compare those one at a time.
 
 **The single-side `--view structure` dump is still useful - reach for it often.** Run
 it with JUST the target index, then JUST the base index, to read each side's FULL
@@ -94,7 +105,7 @@ statement whose `[off, off+size)` range contains it. A sliced view is a `;` head
 index, size, line) + just that statement's instructions; the anchor instruction keeps the
 `<size>` + matched-source annotation (target has size only).
 
-Pick the zoom from what the structure-diff showed, to keep context tight:
+Pick the zoom from what the comparison showed, to keep context tight:
 - **One statement** when the divergence is localized - a single SIZE row, or a couple of
   statements you can check one at a time. Slice each, compare the two sides, done. This is
   the common case and the cheapest.
@@ -105,42 +116,25 @@ Pick the zoom from what the structure-diff showed, to keep context tight:
 When unsure, start narrow (one statement) and widen only if the cause clearly spills past
 that statement. Don't pull the full function when a single statement already explains it.
 
-How to run each (read each side's `address` column from `--view structure` first):
-```
-# ONE statement, both sides - structure-diff flagged a SIZE; fetch each side by its
-# address (no --function needed, the address selects the function too):
-pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x7b1d93
-pdb_fetch --base-index   binaries/rich/base/index.jsonl   --view base   --address 0x5b3a46
-
-# WHOLE function, both sides - quantity mismatch / spread-out divergence:
-pdb_fetch --target-index binaries/rich/target/index.jsonl \
-          --function "legs_ik_drawer::draw_leg" --view target
-pdb_fetch --base-index   binaries/rich/base/index.jsonl \
-          --function "legs_ik_drawer::draw_leg" --view base
-```
-
 ### Worked example - a small function, end to end
-- Compare the two structures:
+- Two structures, one per side - compare by eye:
   ```
-  pdb_fetch --target-index binaries/rich/target/index.jsonl \
-            --base-index   binaries/rich/base/index.jsonl \
-            --function "medkit::action" --view structure-diff --condensed
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --function "legs_ik_drawer::draw_leg" --view structure
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function "legs_ik_drawer::draw_leg" --view structure
   ```
-- Read the trailer `aligned A, size-diffs S, quantity-diffs Q`:
-  - `S == 0 && Q == 0` -> STRUCTURE MATCH, done.
-  - a few SIZE rows -> per statement (next bullet).
-  - many rows, or any `quantity-diffs` -> whole function (last bullet).
-- Per diverging statement - grab each side's `address` and slice:
+  -> both 8 statements; sizes differ (`draw_origin` +0x1b vs +0x1e, `draw_line` +0x34 vs
+  +0x32). A few localized SIZE diffs, no quantity diff.
+- Per diverging statement - grab each side's `address` and slice the asm:
   ```
-  pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x75f9aa
-  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --view base   --address 0x461e7a
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x7b1d78
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --view base   --address 0x5b3a28
   ```
-  -> compare the two slices, name the cause (the medkit::action tail is a 1-byte
-  `set_amount` LTCG residual).
-- Whole function when too many diverge / quantity shifted:
+  -> compare the two slices, name the cause (float arg via SSE `movss` in target vs x87
+  `fld/fstp` in base).
+- Too many diverge, or a quantity diff shifts the alignment -> whole function each side:
   ```
-  pdb_fetch --target-index binaries/rich/target/index.jsonl --function "medkit::action" --view target
-  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function "medkit::action" --view base
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --function "legs_ik_drawer::draw_leg" --view target
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function "legs_ik_drawer::draw_leg" --view base
   ```
 
 **Using the addresses the views print.** The header `; 0x<va>, N statements, ...` is the
