@@ -8,7 +8,7 @@ class random32
 {
 public:
 	inline			random32	( u32 const start_seed = 0 ) : m_seed( start_seed ) { }
-	inline	u32		seed		( )													{ return m_seed; }
+	inline	u32		seed		( ) const											{ return m_seed; }
 	inline	void	seed		( u32 const seed )									{ m_seed = seed; }
 	inline	u32		random		( u32 const range )	
 	{

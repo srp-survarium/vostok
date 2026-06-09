@@ -5,6 +5,7 @@
 #include "pch.h"
 #include <vostok/game_core/hit_initiator.h>
 #include <vostok/game_core/hit_info.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -41,31 +42,32 @@ namespace survarium {
 	// ******
 }
 
-// STATE[BLOCKED]
+// STATE[PARTIAL]: r<bool>x2, r_string into temp + fixed_string assign x2,
+// r<float>x2, bullet=NULL - shape matches target.
 void hit_info::deserialize( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// char[16] 						damage_type_info
-	// char[16] 						c_body_part_name
-	// ******
+	hit_initiator	= packet.r< bool >( );
+	being_hit		= packet.r< bool >( );
 
-	// FUNCTION BODY[0x73eaf0]: 15
-	// <0x73eafa>|0x00a|+0x00e:'44'
-	// <0x73eb08>|0x018|+0x00e:'45'
-	// <0>
-	// <1>
-	// <0x73eb16>|0x026|+0x00c:'48'
-	// <0x73eb22>|0x032|+0x00b:'49'
-	// <0>
-	// <1>
-	// <0x73eb2d>|0x03d|+0x00c:'52'
-	// <0x73eb39>|0x049|+0x00e:'53'
-	// <0>
-	// <0x73eb47>|0x057|+0x010:'55'
-	// <0x73eb57>|0x067|+0x010:'56'
-	// <0>
-	// <0x73eb67>|0x077|+0x00a:'58'
-	// ******
+	char c_body_part_name[ 16 ];
+	packet.r_string	( c_body_part_name );
+	body_part_name	= c_body_part_name;
+
+	char damage_type_info[ 16 ];
+	packet.r_string	( damage_type_info );
+	damage_type		= damage_type_info;
+
+	amount			= packet.r< float >( );
+	armor_piercing	= packet.r< float >( );
+
+	bullet			= NULL;
+
+	// STRUCTURE DIFF[target 0x72eaf0 | base 0x56d640]: target 9 / base 9 stmts
+	//   1-2: hit_initiator/being_hit r<bool>   ONLY base (SIZE-drift, target rows L45/L49/L52)
+	//   9: damage_type = damage_type_info;   ONLY base (SIZE-drift)
+	//  10-11: amount/armor_piercing r<float>   SIZE
+	// ; aligned 4, size-diffs 2, quantity-diffs 6, blank-gaps 2
+	// VERDICT: STRUCTURE MATCH (shape ok) - identical 9-stmt order (2 r<bool>, r_string+assign x2, 2 r<float>, bullet=NULL); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines r<bool>/r_string/r<float>), non-steerable.
 }
 
 } // namespace survarium

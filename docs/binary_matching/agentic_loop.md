@@ -24,9 +24,6 @@ edits never conflict; and the human reviews the stack one PR at a time, in order
 MATCHING.md, rule #1). The target binary is ground truth; matching its bytes,
 warts and all, beats any notion of "correct".
 
-A concrete dry run of the whole loop on one function is in
-[`agentic_loop_example.md`](agentic_loop_example.md).
-
 ## Orchestrator and workers
 
 Run the loop as two tiers so context stays clean:

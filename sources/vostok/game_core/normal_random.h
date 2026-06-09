@@ -15,7 +15,7 @@ public:
 			float		rand_n			( float sigma );
 
 	inline	void		set_seed		( s32 arg_0 ) { /* no source */ }
-	inline	s32			seed			( ) const { /* no source */ }
+	inline	s32			seed			( ) const { return m_seed; }
 
 	inline	s32			maxI			( ) { /* no source */ }
 

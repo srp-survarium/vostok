@@ -1,259 +1,250 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef TCP_PACKET_SOCKET_INLINE_H_INCLUDED
-#define TCP_PACKET_SOCKET_INLINE_H_INCLUDED
+#ifndef NETWORK_CORE_TCP_PACKET_SOCKET_INLINE_H_INCLUDED
+#define NETWORK_CORE_TCP_PACKET_SOCKET_INLINE_H_INCLUDED
+
+#include <vostok/network_core/tcp_packet.h>
+#include <vostok/network_core/custom_alloc_handler.h>
 
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_received(vostok::network_core::tcp_packet const*, boost::system::error_code const&, unsigned int)
-void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_received( tcp_packet const* packet, boost::system::error_code const& error_code, u32 bytes_transferred )
+// STATE[40%|PARTIAL]: control flow fully matched (operation_aborted return, size check, both error
+// branches, success path). Residual is two unavoidable kinds, verified statement-by-statement:
+//   (1) LOG_ERROR __FILE__/__LINE__ wall: target pushes "C:\survarium\sources\..." + line 0x1D/..,
+//       base pushes "Z:\home\sheep\Projects\..." + line 0x23/.. - string bytes AND line numbers differ
+//       by build environment (cannot be faked).
+//   (2) inline-boundary: target calls tcp_packet::allocated_size() out-of-line; base inlines it to a
+//       [packet+0Ch] field read (LTCG decision on a trivial inline accessor).
+template < typename Socket >
+inline void tcp_packet_socket< Socket >::on_packet_received(
+	tcp_packet const*					packet,
+	boost::system::error_code const&	error_code,
+	u32									bytes_transferred
+)
 {
-	// FUNCTION BODY
-	// <0x134f37>|0x000|0x000:'16'
-	// <0x134f4c>|0x015|0x015:'17'
-	// <0x134fa3>|0x06c|0x057:'18'
-	// 1
-	// <0x134fa8>|0x071|0x005:'20'
-	// <0x135064>|0x12d|0x0bc:'21'
-	// <0x135083>|0x14c|0x01f:'22'
-	// 1
-	// <0x13509d>|0x166|0x01a:'24'
-	// <0x1350d6>|0x19f|0x039:'25'
-	// 1
-	// 2
-	// <0x1350db>|0x1a4|0x005:'28'
-	// <0x1350ec>|0x1b5|0x011:'29'
-	// <0x135163>|0x22c|0x077:'30'
-	// <0x135181>|0x24a|0x01e:'31'
-	// 1
-	// <0x13519b>|0x264|0x01a:'33'
-	// <0x1351d4>|0x29d|0x039:'34'
-	// 1
-	// 2
-	// 3
-	// 4
-	// <0x1351d6>|0x29f|0x002:'39'
-	// <0x1351f1>|0x2ba|0x01b:'40'
-	// 1
-	// <0x135200>|0x2c9|0x00f:'42'
-	// <0x135239>|0x302|0x039:'43'
-	// ******
+	if ( error_code )
+	{
+		if ( error_code == boost::asio::error::operation_aborted )
+			return;
+
+		LOG_ERROR( "error during reading from socket: %s\r\n", error_code.message( ).c_str( ) );
+		if ( m_on_error )
+			m_on_error( unable_to_read_from_socket, error_code );
+
+		delete_packet( packet );
+	} else if ( bytes_transferred != packet->allocated_size( ) )
+	{
+		LOG_ERROR( "unable to read from socket\r\n" );
+		if ( m_on_error )
+			m_on_error( unable_to_read_from_socket, error_code );
+
+		delete_packet( packet );
+	} else
+	{
+		if ( m_on_packet_received )
+			m_on_packet_received( *packet );
+
+		delete_packet( packet );
+
+		start_receiving( );
+	}
+	// STRUCTURE DIFF[target 0x124f20 | base 0x910e0]: target 18 / base 17 stmts
+	// .. same ..
+	//   4: 0x088 <0xbc> | 0x088 <0xb9> | LOG_ERROR( "error during reading from socket: %s\r\n", error_code.message( ).c_str( ) );   SIZE
+	//   5: 0x144 <0x1f> | 0x141 <0x1e> | if ( m_on_error )   SIZE
+	// .. same ..
+	//   8: 0x1b6 <0x5> | 0x1b2 <0x20> | } else if ( bytes_transferred != packet->allocated_size( ) )   SIZE
+	// .. same ..
+	//   9: 0x1bb <0x11> | 0x1d2 <0x74> | LOG_ERROR( "unable to read from socket\r\n" );   SIZE
+	//  10: 0x1cc <0x77> | 0x246 <0x1f> | if ( m_on_error )   SIZE
+	//  11: 0x243 <0x1e> | --          | L30   ONLY target
+	// .. same ..
+	//  15: 0x2b6 <0x1b> | 0x2ba <0x1c> | if ( m_on_packet_received )   SIZE
+	// .. same ..
+	// ; aligned 11, size-diffs 6, quantity-diffs 1, blank-gaps 2
+	// VERDICT: STRUCTURE MISMATCH (both) - all 3 branches + success path align; the 6 SIZE
+	// diffs are the LOG_ERROR __FILE__/__LINE__ wall (C:\survarium vs Z:\home path bytes +
+	// line nums) and allocated_size() inline-boundary; the 1 QTY (L30) is a if(m_on_error)
+	// branch-bucketing split, not a source-shape miss. Unsteerable (env paths). trail: tcp_packet_socket_inline.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_size_received<unsigned short>(boost::system::error_code const&, const unsigned int)
-void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_size_received<u16>( boost::system::error_code const& error_code, u32 bytes_transferred )
+// STATE[PARTIAL]: control flow matched (operation_aborted return, size check, header re-read recursion);
+// residual is the LOG_ERROR __FILE__/__LINE__ wall (C:\survarium vs Z:\home build path + differing line nums)
+template < typename Socket >
+template < typename T >
+inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system::error_code const& error_code, u32 bytes_transferred )
 {
-	// LOCALS
-	// u16 							buffer_size
-	// tcp_packet* 					packet<1>
-	// ******
+	if ( error_code )
+	{
+		if ( error_code == boost::asio::error::operation_aborted )
+			return;
 
-	// FUNCTION BODY
-	// <0x13538a>|0x000|0x000:'50'
-	// <0x13539f>|0x015|0x015:'51'
-	// <0x135408>|0x07e|0x069:'52'
-	// 1
-	// <0x13540d>|0x083|0x005:'54'
-	// <0x1354e7>|0x15d|0x0da:'55'
-	// <0x135506>|0x17c|0x01f:'56'
-	// <0x135520>|0x196|0x01a:'57'
-	// 1
-	// 2
-	// <0x135525>|0x19b|0x005:'60'
-	// <0x13552f>|0x1a5|0x00a:'61'
-	// <0x1355b0>|0x226|0x081:'62'
-	// <0x1355cf>|0x245|0x01f:'63'
-	// <0x1355e9>|0x25f|0x01a:'64'
-	// 1
-	// 2
-	// <0x1355ee>|0x264|0x005:'67'
-	// <0x1355ff>|0x275|0x011:'68'
-	// <0x13560b>|0x281|0x00c|[1]:'69'
-	// <0x135619>|0x28f|0x00e:'70'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// 8
-	// 9
-	// 10
-	// 11
-	// 12
-	// 13
-	// 14
-	// <0x135626>|0x29c|0x00d:'85'
-	// <0x1356cb>|0x341|0x0a5:'86'
-	// 1
-	// 2
-	// <0x1356d0>|0x346|0x005:'89'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// 8
-	// 9
-	// 10
-	// 11
-	// 12
-	// <0x1356ed>|0x363|0x01d:'102'
-	// <0x1357a9>|0x41f|0x0bc:'103'
-	// <0x1357ab>|0x421|0x002:'104'
-	// ******
+		LOG_ERROR( "error during reading from socket: %s\r\n", error_code.message( ).c_str( ) );
+		if ( m_on_error )
+			m_on_error( unable_to_read_from_socket, error_code );
+	} else if ( bytes_transferred != sizeof( T ) )
+	{
+		LOG_ERROR( "unable to read from socket\r\n" );
+		if ( m_on_error )
+			m_on_error( unable_to_read_from_socket, error_code );
+	} else
+	{
+		const T	buffer_size	= static_cast< T >( m_header_buffer );
+		if ( buffer_size )
+		{
+			tcp_packet* const	packet	= new_packet( );
+			packet->resize( buffer_size );
+
+			boost::asio::async_read(
+				m_socket,
+				buffer_to_receive_into( *packet ),
+				make_custom_alloc_handler(
+					m_allocator,
+					boost::bind( &tcp_packet_socket::on_packet_received, this, packet, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
+				)
+			);
+		} else
+		{
+			boost::asio::async_read(
+				m_socket,
+				boost::asio::buffer( &m_header_buffer, sizeof( u16 ) ),
+				make_custom_alloc_handler(
+					m_allocator,
+					boost::bind( &tcp_packet_socket::on_packet_size_received< u16 >, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
+				)
+			);
+		}
+	}
+	// STRUCTURE DIFF[<u8> target 0x124480 | base 0x906a0]: target 24 / base 20 stmts
+	// .. same ..  (--view structure-diff cannot auto-align: target param demangles as
+	//  `const unsigned int`, base as `unsigned int`, and a same-named vostok::network::
+	//  packet_socket shadows the lookup - compared by pinned rva. Both share the error /
+	//  size-check / success branches at matching offsets; the LOG_ERROR blocks carry the
+	//  usual __FILE__/__LINE__ SIZE wall.)
+	// ; target 24 / base 20 stmts -> quantity-diffs 4 (the success-path async_read + its
+	//  recursion-guard rows split into more statements on target), size-diffs on LOG_ERROR
+	// VERDICT: STRUCTURE MISMATCH (both) - control flow (operation_aborted return, sizeof(T)
+	// check, header re-read recursion) matches; residual is the __FILE__/__LINE__ wall plus
+	// the 4-stmt success-path async_read split (target keeps the buffer_to_receive_into /
+	// bind rows as separate statements our LTCG folds). Same for <u8> and <u16>. trail: tcp_packet_socket_inline.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::start_receiving()
-void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::start_receiving( )
+// STATE[99.88%|DONE]: async_read header + custom_alloc_handler(bind on_packet_size_received<u8>)
+template < typename Socket >
+inline void tcp_packet_socket< Socket >::start_receiving( )
 {
-	// FUNCTION BODY
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// 8
-	// 9
-	// 10
-	// 11
-	// 12
-	// <0x133fbf>|0x000|0x000:'122'
-	// ******
+	boost::asio::async_read(
+		m_socket,
+		boost::asio::buffer( &m_header_buffer, sizeof( u8 ) ),
+		make_custom_alloc_handler(
+			m_allocator,
+			boost::bind( &tcp_packet_socket::on_packet_size_received< u8 >, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
+		)
+	);
+	// STRUCTURE DIFF[target 0x123fb0 | base 0x901d0]: target 1 / base 1 stmts
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0. trail: tcp_packet_socket_inline.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_has_been_sent(vostok::network_core::tcp_packet const*, boost::system::error_code const&, unsigned int)
-void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_has_been_sent( tcp_packet const* packet_being_sent, boost::system::error_code const& error_code, u32 bytes_transferred )
+// STATE[52%|PARTIAL]: delete_packet + error/size branches matched; residual is logging file-path strings
+template < typename Socket >
+inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
+	tcp_packet const*					packet_being_sent,
+	boost::system::error_code const&	error_code,
+	u32									bytes_transferred
+)
 {
-	// FUNCTION BODY
-	// <0x1340c7>|0x000|0x000:'132'
-	// 1
-	// <0x1340f4>|0x02d|0x02d:'134'
-	// <0x134108>|0x041|0x014:'135'
-	// <0x1341c7>|0x100|0x0bf:'136'
-	// <0x1341e6>|0x11f|0x01f:'137'
-	// <0x134200>|0x139|0x01a:'138'
-	// 1
-	// 2
-	// <0x134205>|0x13e|0x005:'141'
-	// <0x13420f>|0x148|0x00a:'142'
-	// <0x13428a>|0x1c3|0x07b:'143'
-	// <0x1342a9>|0x1e2|0x01f:'144'
-	// 1
-	// 2
-	// 3
-	// 4
-	// ******
+	delete_packet( packet_being_sent );
+
+	if ( error_code )
+	{
+		LOG_ERROR( "error during writing to socket: %s", error_code.message( ).c_str( ) );
+		if ( m_on_error )
+			m_on_error( unable_to_write_to_socket, error_code );
+	} else if ( bytes_transferred == 0 )
+	{
+		LOG_ERROR( "unable to write to socket\n" );
+		if ( m_on_error )
+			m_on_error( unable_to_write_to_socket, error_code );
+	}
+	// STRUCTURE DIFF[target 0x1240b0 | base 0x902d0]: target 10 / base 9 stmts
+	// .. same ..
+	//   3: 0x058 <0xbf> | 0x058 <0xbc> | LOG_ERROR( "error during writing to socket: %s", error_code.message( ).c_str( ) );   SIZE
+	//   4: 0x117 <0x1f> | 0x114 <0x1e> | if ( m_on_error )   SIZE
+	// .. same ..
+	//   6: 0x150 <0x5> | 0x14c <0xf> | } else if ( bytes_transferred == 0 )   SIZE
+	// .. same ..
+	//   7: 0x155 <0xa> | 0x15b <0x77> | LOG_ERROR( "unable to write to socket\n" );   SIZE
+	//   8: 0x15f <0x7b> | --          | L142   ONLY target
+	// .. same ..
+	// ; aligned 5, size-diffs 4, quantity-diffs 1, blank-gaps 1
+	// VERDICT: STRUCTURE MISMATCH (both) - delete_packet + both error branches align; the 4
+	// SIZE diffs are the LOG_ERROR __FILE__/__LINE__ wall, the 1 QTY (L142) is if(m_on_error)
+	// branch-bucketing. Not a source-shape miss; env-path unsteerable. trail: tcp_packet_socket_inline.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::send(vostok::network_core::tcp_packet const&)
-void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::send( tcp_packet const& packet )
+// STATE[55%|PARTIAL]: new_packet/clone/write/on_packet_has_been_sent shape now correct -
+// clone()'s body restored in packet_inline.h (m_buffer_size=0; append(other.buffer(),size)),
+// so the copy step emits. Residual is the buffer()/buffer_size() accessor inline-boundary.
+template < typename Socket >
+inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 {
-	// LOCALS
-	// boost::asio::const_buffers_1 const& buffer
-	// boost::system::error_code 	error_code
-	// tcp_packet* 					cloned_packet
-	// ******
+	tcp_packet*	cloned_packet	= new_packet( );
+	cloned_packet->clone( packet );
 
-	// FUNCTION BODY
-	// <0x133efa>|0x000|0x000:'154'
-	// <0x133f08>|0x00e|0x00e:'155'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// 8
-	// 9
-	// 10
-	// 11
-	// 12
-	// 13
-	// 14
-	// 15
-	// 16
-	// 17
-	// 18
-	// 19
-	// 20
-	// 21
-	// 22
-	// 23
-	// <0x133f2c>|0x032|0x024:'179'
-	// <0x133f42>|0x048|0x016:'180'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// <0x133f51>|0x057|0x00f:'186'
-	// <0x133f7e>|0x084|0x02d:'187'
-	// ******
+	boost::system::error_code	error_code;
+	boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );
+
+	on_packet_has_been_sent( cloned_packet, error_code, cloned_packet->buffer_size( ) );
+	// STRUCTURE DIFF[target 0x123ee0 | base 0x90170]: target 6 / base 5 stmts
+	// .. same ..
+	//   2: 0x028 <0x24> | 0x027 <0x2b> | cloned_packet->clone( packet );   SIZE
+	// .. same ..
+	//   3: 0x04c <0x16> | --          | L179   ONLY target
+	// .. same ..
+	//   5: --          | 0x061 <0x3a> | boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );   ONLY base
+	// .. same ..
+	//   6: 0x071 <0x2d> | --          | L186   ONLY target
+	// .. same ..
+	// ; aligned 3, size-diffs 1, quantity-diffs 3, blank-gaps 0
+	// VERDICT: STRUCTURE FIXED (was quantity 4 -> 3) - clone() body restored, so the copy
+	// step now emits as a real statement (base 4 -> 5 stmts). Residual: target keeps
+	// other.buffer()/buffer_size() as out-of-line calls; base inlines the trivial accessors
+	// to direct [other+0]/[other+4] field reads (LTCG inline-boundary, no source lever).
+	// trail: tcp_packet_socket_inline.md
 }
 
-// STATE[STUB]
-// vostok::network_core::tcp_packet* vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::new_packet()
-tcp_packet* tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::new_packet( )
+// STATE[95.5%|DONE]: NEW(tcp_packet)(m_packet_allocator); objdiff reports 0 (unit-pairing), bytes match
+template < typename Socket >
+inline tcp_packet* tcp_packet_socket< Socket >::new_packet( )
 {
-	return NULL;
-	// FUNCTION BODY
-	// <0x1342d9>|0x000|0x000:'193'
-	// ******
+	return VOSTOK_NEW_IMPL( m_packet_allocator, tcp_packet )( m_packet_allocator );
+	// STRUCTURE DIFF[target 0x1242d0 | base 0x904f0]: target 1 / base 1 stmts
+	// .. same ..
+	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; objdiff
+	// 95.5% is template unit-pairing noise, bytes match. trail: tcp_packet_socket_inline.md
 }
 
-// STATE[STUB]
-// void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::stop_receiving()
-void tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::stop_receiving( )
+// STATE[99.81%|DONE]: error_code ec; m_socket.cancel(ec)
+template < typename Socket >
+inline void tcp_packet_socket< Socket >::stop_receiving( )
 {
-	// LOCALS
-	// boost::system::error_code 	error_code
-	// ******
-
-	// FUNCTION BODY
-	// <0x13405f>|0x000|0x000:'205'
-	// <0x13406e>|0x00f|0x00f:'206'
-	// ******
+	boost::system::error_code	error_code;
+	m_socket.cancel( error_code );
+	// STRUCTURE DIFF[target 0x124050 | base 0x90270]: target 2 / base 2 stmts
+	// .. same ..
+	//   2: 0x01e <0x31> | 0x01e <0x3a> | m_socket.cancel( error_code );   SIZE
+	// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - 2/2 stmts align, quantity 0; sole SIZE is the
+	// inline-boundary of basic_socket::cancel(ec). trail: tcp_packet_socket_inline.md
 }
-
-	// TYPEDEFS
-	typedef
-		boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> >
-		socket_type;
-
-	typedef
-		boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>
-		iterator_type;
-
-	typedef
-		boost::asio::stream_socket_service<boost::asio::ip::tcp>
-		service_type;
-
-	typedef
-		boost::function<void __cdecl(enum client_error_codes_enum,boost::system::error_code)>
-		on_error_type;
-
-	typedef
-		sockaddr
-		data_type;
-
-	// ******
 
 } // namespace network_core
 } // namespace vostok
 
-#endif // #ifndef TCP_PACKET_SOCKET_INLINE_H_INCLUDED
+#endif // #ifndef NETWORK_CORE_TCP_PACKET_SOCKET_INLINE_H_INCLUDED

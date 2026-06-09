@@ -4,6 +4,9 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include <vostok/ai/fsm.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -61,58 +64,53 @@ void weapon_core_shotgun_reload_state::finalize( )
 	// ******
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core_shotgun_reload_state::serialize(vostok::network_core::udp_match_packet&) const
+// STATE[INPROGRESS]: walks the internal reload substate fsm to find the current substate's
+// index and appends it (u8). ASSERT( found ) compiled out. DCE'd, no base symbol.
 void weapon_core_shotgun_reload_state::serialize( network_core::udp_match_packet& packet ) const
 {
-	// LOCALS
-	// u8 							state_id
-	// bool 						found
-	// ai::fsm_state const* 		current
-	// ai::fsm_state const* 		i<1>
-	// ******
+	u8						state_id	= 0;
+	bool					found		= false;
+	ai::fsm_state const*	current		= m_logic->current_state( );
 
-	// FUNCTION BODY
-	// <0x599839>|0x009|+0x004:'56'
-	// <0x59983d>|0x00d|+0x004:'57'
-	// <0x599841>|0x011|+0x00f:'58'
-	// <0x599850>|0x020|+0x02f|[1]:'59'
-	// <0x59987f>|0x04f|+0x008:'60'
-	// <0x599887>|0x057|+0x004:'61'
-	// <0x59988b>|0x05b|+0x002:'62'
-	// <0>
-	// <0x59988d>|0x05d|+0x002:'64'
-	// <0>
-	// <0x59988f>|0x05f|+0x00c:'66'
-	// <0x59989b>|0x06b|+0x00d:'67'
-	// ******
+	for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next )
+	{
+		if ( i == current )
+		{
+			found	= true;
+			break;
+		}
+		++state_id;
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION_T( found ) );
+
+	packet.append( state_id );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x589830); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
-// STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
-// void survarium::weapon_core_shotgun_reload_state::deserialize(vostok::network_core::packet_reader&)
+// STATE[INPROGRESS]: reads the target substate index, walks the substate fsm to it and
+// promotes it to the initial state. ASSERT compiled out. DCE'd, no base symbol.
 void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// u8 							target_state_id
-	// u8 							state_id
-	// ai::fsm_state* 				current
-	// ai::fsm_state* 				i<1>
-	// ******
+	u8						target_state_id	= reader.r< bool >( );
+	u8						state_id		= 0;
+	ai::fsm_state*			current			= NULL;
 
-	// FUNCTION BODY
-	// <0x5997a9>|0x009|+0x00b:'72'
-	// <0x5997b4>|0x014|+0x004:'73'
-	// <0x5997b8>|0x018|+0x007:'74'
-	// <0x5997bf>|0x01f|+0x02f|[1]:'75'
-	// <0x5997ee>|0x04e|+0x00c:'76'
-	// <0x5997fa>|0x05a|+0x006:'77'
-	// <0x599800>|0x060|+0x002:'78'
-	// <0>
-	// <0x599802>|0x062|+0x002:'80'
-	// <0>
-	// <0x599804>|0x064|+0x00c:'82'
-	// <0x599810>|0x070|+0x012:'83'
-	// ******
+	for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
+	{
+		if ( state_id == target_state_id )
+		{
+			current	= i;
+			break;
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION_T( current ) );
+
+	m_logic->set_initial_state( current );
+
+	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x5897a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[STUB]
