@@ -119,6 +119,30 @@ pdb_fetch --base-index   binaries/rich/base/index.jsonl \
           --function "legs_ik_drawer::draw_leg" --view base
 ```
 
+### Worked example - a small function, end to end
+- Compare the two structures:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl \
+            --base-index   binaries/rich/base/index.jsonl \
+            --function "medkit::action" --view structure-diff --condensed
+  ```
+- Read the trailer `aligned A, size-diffs S, quantity-diffs Q`:
+  - `S == 0 && Q == 0` -> STRUCTURE MATCH, done.
+  - a few SIZE rows -> per statement (next bullet).
+  - many rows, or any `quantity-diffs` -> whole function (last bullet).
+- Per diverging statement - grab each side's `address` and slice:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x75f9aa
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --view base   --address 0x461e7a
+  ```
+  -> compare the two slices, name the cause (the medkit::action tail is a 1-byte
+  `set_amount` LTCG residual).
+- Whole function when too many diverge / quantity shifted:
+  ```
+  pdb_fetch --target-index binaries/rich/target/index.jsonl --function "medkit::action" --view target
+  pdb_fetch --base-index   binaries/rich/base/index.jsonl   --function "medkit::action" --view base
+  ```
+
 **Using the addresses the views print.** The header `; 0x<va>, N statements, ...` is the
 function VA; each row's `address` is that statement's VA. Two derivations:
 - `statement_VA - function_VA = the offset` (the `offst` column) - the key that lines a
