@@ -87,16 +87,12 @@ the raw disassembly of that statement. Don't start from the assembly diff - you'
 reading instruction noise without knowing which statement matters.
 
 **Choose your zoom - whole function vs one statement - YOU decide from the diff.**
-`--view target`/`--view base` give the WHOLE function's disassembly; they also take a
-one-statement selector (mutually exclusive) that slices out just that statement:
-- `--index N` - the 1-based body-statement number (the `--view structure` rows). Same N
-  is the same statement on BOTH sides when the structure matches - the usual case.
-- `--offset 0x..` - a function-relative offset (the `offst` column).
-- `--address 0x..` - an absolute VA (the `address` column / a per-statement VA); it also
-  SELECTS the function it falls in, so `--function`/`--rva` is optional with it.
-Offset/address pick the statement whose `[off, off+size)` range contains them. A sliced
-view is a `;` header (VA, index, size, line) + just that statement's instructions; the
-anchor instruction keeps the `<size>` + matched-source annotation (target has size only).
+`--view target`/`--view base` give the WHOLE function's disassembly; add `--address 0x..`
+(the `address` column) to slice out just ONE statement. The address is absolute, so it
+also SELECTS the function it falls in (no `--function`/`--rva` needed) and picks the
+statement whose `[off, off+size)` range contains it. A sliced view is a `;` header (VA,
+index, size, line) + just that statement's instructions; the anchor instruction keeps the
+`<size>` + matched-source annotation (target has size only).
 
 Pick the zoom from what the structure-diff showed, to keep context tight:
 - **One statement** when the divergence is localized - a single SIZE row, or a couple of
@@ -109,16 +105,12 @@ Pick the zoom from what the structure-diff showed, to keep context tight:
 When unsure, start narrow (one statement) and widen only if the cause clearly spills past
 that statement. Don't pull the full function when a single statement already explains it.
 
-How to run each (resolve overloads with `--rva <target_rva>` when the name is ambiguous):
+How to run each (read each side's `address` column from `--view structure` first):
 ```
-# ONE statement, both sides - structure-diff flagged stmt #2 as SIZE.
-# --index N is the same statement on each side when the structure matches:
-pdb_fetch --target-index binaries/rich/target/index.jsonl \
-          --function "legs_ik_drawer::draw_leg" --view target --index 2
-pdb_fetch --base-index   binaries/rich/base/index.jsonl \
-          --function "legs_ik_drawer::draw_leg" --view base   --index 2
-# same statement by its address instead (also picks the function, so no --function):
-pdb_fetch --base-index binaries/rich/base/index.jsonl --view base --address 0x5b3a46
+# ONE statement, both sides - structure-diff flagged a SIZE; fetch each side by its
+# address (no --function needed, the address selects the function too):
+pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x7b1d93
+pdb_fetch --base-index   binaries/rich/base/index.jsonl   --view base   --address 0x5b3a46
 
 # WHOLE function, both sides - quantity mismatch / spread-out divergence:
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
