@@ -18,6 +18,12 @@ tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
 	m_first_packet	( NULL )
 {
 	m_on_error	= boost::bind( &tcp_packet_client::on_error, this, _1, _2 );
+	// structure-diff (condensed): 1/1 stmt, SIZE 0xc4 (target) vs 0x9d (base).
+	//   Member-init order matches. Residual: target INLINES the m_packet_socket(m_socket,*g_allocator)
+	//   ctor (handler_allocator + boost::function field ctors emitted inline) where base emits one
+	//   call tcp_packet_socket::tcp_packet_socket; plus the boost::function assign/swap epilogue
+	//   register shape (esi/edi, frame 0x60 vs 0x6c) differs.
+	// VERDICT: source shape correct; residual is LTCG inline-boundary on the member-socket ctor - take the hit.
 }
 
 // STATE[91%|PARTIAL]: body byte-correct; boost::function clear reps fold under LTCG
@@ -25,12 +31,18 @@ tcp_packet_client::~tcp_packet_client( )
 {
 	if ( m_async_connector.has_connection_established( ) )
 		disconnect( );
+	// structure-diff (condensed): target 3 stmts / base 2 (quantity +1 at L26, size 0x2).
+	//   has_connection_established == 4 test matches; residual is the if branch layout:
+	//   target emits `jne .disconnect; jmp .end` (the extra L26 stmt), base emits a single `je .end`.
+	//   The trailing boost::function::clear runs are positional matches (template names fold under unit-pairing).
+	// VERDICT: source shape correct; residual is LTCG if-branch layout (jne+jmp vs je) - no source lever, take the hit.
 }
 
 // STATE[99.70%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::start_reading( )
 {
 	m_packet_socket.start_receiving( );
+	// structure-diff: 1/1 stmt fully aligned. VERDICT: DONE; residual is sub-statement inline boundary of start_receiving().
 }
 
 // STATE[100%|DONE]
@@ -74,12 +86,17 @@ void tcp_packet_client::close_connection( )
 	m_socket.close( ec );
 
 	m_async_connector.reset( );
+	// structure-diff (condensed): 5/5 stmts, only stmt4 differs by SIZE
+	//   4: m_socket.close( ec )  target 0x0b (mov ecx; call basic_socket::close)
+	//      base 0x28 (inlines basic_socket::close -> direct win_iocp_socket_service_base::close)
+	// VERDICT: source shape correct; residual is a boost inline-boundary on close(ec) (no source lever) - take the hit.
 }
 
 // STATE[99.69%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
 void tcp_packet_client::send( tcp_packet const& packet )
 {
 	m_packet_socket.send( packet );
+	// structure-diff: 1/1 stmt fully aligned. VERDICT: DONE; residual is sub-statement inline boundary of socket send().
 }
 
 // STATE[100%|DONE]
