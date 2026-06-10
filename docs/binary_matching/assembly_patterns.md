@@ -1915,3 +1915,30 @@ return-widen) then test (the if) is the shape of an inlined bool-returning membe
 condition. FIX: find the declared-but-stubbed bool member in the class (PDB type info lists it)
 and give it the body the bytes spell. Confirmed: medkit::empty() = `return !m_activity_time_ms;`
 (was a 'no source' stub returning false) with active_tick's tail `if ( empty( ) )`; 53.50->57.12.
+
+### `for ( ; cond ; --count )` head merges the decrement AND the `}` backjump into ONE statement
+SYMPTOM: base (written as `while ( count != 0 ) { ...; --count; }`) shows the loop as THREE rows
+- while-head (0x8) + `--count;` (0x9) + `}` (0x2) - while target has ONE loop-head row of 0x13 =
+their exact sum, plus the target slice shows the /Od for-shape: `jmp short .test; .inc: <decrement>;
+.test: <cond>; je exit` (a jmp-over-the-increment entry). SOURCE: a `for ( ; cond ; --count )` -
+condition AND increment both attribute to the for line. Same size-sum family as the same-line
+merges. Confirmed body_part_parameters::deserialize (9/9 stmts, quantity 4 -> 0, 17.6 -> 29.3;
+together with two assert eaters at the preceding lines).
+
+### SIZE rows that decompose into 3-byte deltas = disp8-vs-disp32 frame noise, not structure
+SYMPTOM: several SIZE rows (+-0x6..0x12) on statements whose two slices are INSTRUCTION-FOR-
+INSTRUCTION identical except spill-slot addresses: target `[ebp-8Ch]/[ebp-90h]` vs base
+`[ebp-80h]/[ebp-84h]`. Each access past -0x80 costs 3 extra bytes (disp8 -> disp32), so a frame
+a few bytes bigger on one side turns pure allocation noise into SIZE rows. Read the slices before
+chasing such rows (collision_sensor::notify_and_erase_left_objects, 99.82%: every delta byte was
+disp width).
+
+### Emitting a DCE'd static helper: reconstruct its LTCG-inlined caller + anchor the caller
+SYMPTOM: a target-side static (e.g. `call_item_serialize`) exists with NO direct caller anywhere
+in the target index (only address-taken via boost::bind), and our base never emits it - the
+member function that bound it (inventory::serialize) has no standalone target symbol either
+(LTCG inlined it into ITS caller and /OPT:REF dropped our copy). FIX: define the member function
+in the TU (the bind proves it existed there), anchor it from temp_include_all; the bind's
+address-take emits the static out-of-line. Confirmed: inventory::serialize defined + anchored ->
+call_item_serialize None -> 49.5%, inventory::deserialize None -> 100%, body_part_parameters::
+serialize None -> 87.7% (plain pointer-call anchors suffice for the non-DCE'd publics).
