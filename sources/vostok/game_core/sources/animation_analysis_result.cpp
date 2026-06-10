@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[85.98%|DONE]: LTCG for unmanaged_resource.
+// STATE[100%|DONE]
 animation_analysis_result::animation_analysis_result( u32 legs_count ) :
 	m_buffer		( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( leg_key_times ) * legs_count, "animation_result_legs" ) ),
 	m_leg_key_times	( m_buffer, legs_count, legs_count )

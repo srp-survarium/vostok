@@ -43,13 +43,10 @@ public:
 
 public:
 			struct hand {
-				// STATE[STUB]
+				// STATE[100%|DONE]
 				explicit	hand( )
+					: start_transition_time_in_ms( 0 ), hand_bone_index( u32( -1 ) ), hand_matrix_index( u32( -1 ) ), locator_matrix_index( u32( -1 ) ), is_active( true )
 				{
-					// FUNCTION BODY
-					// <0xcaf50>|0x000|+0x035:'51'	{
-					// <0xcaf85>|0x035|      :'52'	}
-					// ******
 				}
 
 				/* 0x0000 */	u32		start_transition_time_in_ms;
@@ -59,10 +56,11 @@ public:
 				/* 0x0010 */	bool	is_active;
 			}; // struct hand
 
+private:
 			void		process_hand				( hand_to_weapon_ik_processor::hand const& h, float4x4 const& target_hand_obj_space_transform, float4x4* matrices ) const;
 			float		get_hand_coefficient		( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms ) const;
 
-public:
+private:
 	static	bool		hand_need_correction				( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms );
 	static	bool		hand_need_interpolation				( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms );
 	static	u32			get_hand_new_start_transition_time	( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms );
