@@ -32,38 +32,38 @@ filter_tree::filter_tree( memory::base_allocator& allocator ) :
 // STATE[100%|DONE]
 filter_tree::~filter_tree( )
 {
-	initiator_tree->clean( &allocator );				// <0x65c399>|0x000|0x000:'26'
-	VOSTOK_DELETE_IMPL( allocator, initiator_tree );	// <0x65c3ab>|0x012|0x012:'27'
+	initiator_tree->clean( &allocator );
+	VOSTOK_DELETE_IMPL( allocator, initiator_tree );
 }
 
 
 // STATE[100%|DONE]
 bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) const
 {
-	path_parts path( initiator );																						// <0x65c629>|0x000|0x000:'32'
-	threading::reader_writer_lock::mutex_raii raii( lock, threading::lock_type_read );									// <0x65c635>|0x00c|0x00c:'33'
-	vostok::logging::verbosity allowed_verbosity = (vostok::logging::verbosity)initiator_tree->get_verbosity( &path );	// <0x65c658>|0x02f|0x023:'34'
-	return allowed_verbosity >= verbosity;																				// <0x65c672>|0x049|0x01a:'35'
+	path_parts path( initiator );
+	threading::reader_writer_lock::mutex_raii raii( lock, threading::lock_type_read );
+	vostok::logging::verbosity allowed_verbosity = (vostok::logging::verbosity)initiator_tree->get_verbosity( &path );
+	return allowed_verbosity >= verbosity;
 }
 
 
 // STATE[91%|DONE]: LTCG for `malloc` and `fixed_string` constructor/operator=.
 void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_id )
 {
-	if ( !initiator )																								// <0x65c54a>|0x000|0x000:'40'
-		initiator = "";																								// <0x65c550>|0x006|0x006:'41'
+	if ( !initiator )
+		initiator = "";
 
-	initiator_filter * const filter			=	(initiator_filter *)VOSTOK_NEW_IMPL( allocator, initiator_filter );	// <0x65c557>|0x00d|0x007:'43'
+	initiator_filter * const filter			=	(initiator_filter *)VOSTOK_NEW_IMPL( allocator, initiator_filter );
 
-	filter->initiator						=	initiator;															// <0x65c5a9>|0x05f|0x052:'45'
-	filter->verbosity						=	verbosity;															// <0x65c5b7>|0x06d|0x00e:'46'
-	filter->thread_id						=	thread_id;															// <0x65c5c0>|0x076|0x009:'47'
+	filter->initiator						=	initiator;
+	filter->verbosity						=	verbosity;
+	filter->thread_id						=	thread_id;
 
-	threading::reader_writer_lock_raii	raii	(lock, threading::lock_type_write);									// <0x65c5c9>|0x07f|0x009:'49'
+	threading::reader_writer_lock_raii	raii	(lock, threading::lock_type_write);
 
-	filter_stack.push_back					(filter);																// <0x65c5ec>|0x0a2|0x023:'51'
+	filter_stack.push_back					(filter);
 
-	build_tree								();																		// <0x65c5fd>|0x0b3|0x011:'53'
+	build_tree								();
 
 	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
 	// SIZE +0x1 | 56 | filter->initiator						=	initiator;
@@ -76,15 +76,15 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
 
-	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// <0x65c0aa>|0x000|0x000|[1]:'72' // sushi@NOTE: Why is the first filter skipped, is this a bug?
-								it		!=	NULL;										// <0x65c0b2>|0x008|0x008:'73'
-								it		=	filter_stack.get_next_of_object(it) )		// <0x65c0b4>|0x00a|0x002:'74'
+	for ( initiator_filter *	it		=	filter_stack.get_next_of_object(filter);	// sushi@NOTE: Why is the first filter skipped, is this a bug?
+								it		!=	NULL;
+								it		=	filter_stack.get_next_of_object(it) )
 	{
-		if ( filter->initiator.find(it->initiator.c_str()) == 0 )						// <0x65c0c2>|0x018|0x00e:'76'
-			return							true;										// <0x65c0de>|0x034|0x01c:'77'
-	}																					// <0x65c0e2>|0x038|0x004:'78'
+		if ( filter->initiator.find(it->initiator.c_str()) == 0 )
+			return							true;
+	}
 
-	return									false;										// <0x65c0e4>|0x03a|0x002:'80'
+	return									false;
 
 	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
 	// SIZE +0x36 | 75 | if ( filter->initiator.find(it->initiator.c_str()) == 0 )
@@ -95,27 +95,27 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 // STATE[100%|DONE]: LTCG for `malloc`.
 void filter_tree::build_tree( )
 {
-	initiator_tree->clean( &allocator );																	// <0x65c319>|0x000|0x000:'85'
+	initiator_tree->clean( &allocator );
 
-	for ( initiator_filter *	it		=	filter_stack.front();											// <0x65c32b>|0x012|0x012|[1]:'87'
-								it		!=	NULL;															// <0x65c334>|0x01b|0x009:'88'
-								it		=	filter_stack.get_next_of_object(it)	)							// <0x65c336>|0x01d|0x002:'89'
+	for ( initiator_filter *	it		=	filter_stack.front();
+								it		!=	NULL;
+								it		=	filter_stack.get_next_of_object(it)	)
 	{
-		if ( !filter_is_overwritten( it ) )																	// <0x65c344>|0x02b|0x00e:'91'
-			initiator_tree->set( it->initiator.c_str(), it->verbosity, it->thread_id, &allocator, NULL );	// <0x65c357>|0x03e|0x013:'92'
-	}																										// <0x65c385>|0x06c|0x02e:'93'
+		if ( !filter_is_overwritten( it ) )
+			initiator_tree->set( it->initiator.c_str(), it->verbosity, it->thread_id, &allocator, NULL );
+	}
 }
 
 // STATE[91%|DONE]
 filter_tree* new_filter_tree( memory::base_allocator& allocator )
 {
-	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );	// <0x65c4e6>|0x000|0x000:'109'
+	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );
 }
 
 // STATE[100%|DONE]
 void delete_filter_tree( filter_tree*& filter_tree )
 {
-	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );	// <0x65c4b6>|0x000|0x000:'114'
+	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );
 }
 
 // STATE[100%|DONE]
@@ -126,13 +126,13 @@ void push_filter(
 	u32				thread_id
 )
 {
-	tree.push_filter( initiator, verbosity, thread_id );	// <0x65c6c3>|0x000|0x000:'124'
+	tree.push_filter( initiator, verbosity, thread_id );
 }
 
 // STATE[100%|DONE]
 bool has_passed_filters( filter_tree const& tree, pcstr initiator, verbosity verbosity )
 {
-	return tree.has_passed_filters( initiator, verbosity );	// <0x65c6a3>|0x000|0x000:'134'
+	return tree.has_passed_filters( initiator, verbosity );
 }
 
 pcstr verbosity_to_str[] ={
@@ -149,12 +149,12 @@ pcstr verbosity_to_str[] ={
 // STATE[80%|DONE]: core strings::compare_insensitive called out-of-line in target (ecx/eax conv), inlined to __stricmp in base.
 verbosity string_to_verbosity( pcstr in_verbosity )
 {
-	vostok::logging::verbosity verbosities[6] = { silent, error, warning, info, debug, trace };	// <0x65c026>|0x000|0x000:'139'
-	for ( u32 i = 0; i < 6; ++i	)																// <0x65c050>|0x02a|0x02a|[1]:'140'
-		if ( !strings::compare_insensitive( verbosity_to_str[verbosities[i]], in_verbosity ) )	// <0x65c068>|0x042|0x018:'141'
-			  return verbosities[i];															// <0x65c082>|0x05c|0x01a:'142'
+	vostok::logging::verbosity verbosities[6] = { silent, error, warning, info, debug, trace };
+	for ( u32 i = 0; i < 6; ++i	)
+		if ( !strings::compare_insensitive( verbosity_to_str[verbosities[i]], in_verbosity ) )
+			  return verbosities[i];
 
-	return invalid;																				// <0x65c08b>|0x065|0x009:'144'
+	return invalid;
 
 	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
 	// SIZE +0xb | 141 | if ( !strings::compare_insensitive( verbosity_to_str[verbosities[i]], in_verbosity ) )
@@ -164,7 +164,7 @@ verbosity string_to_verbosity( pcstr in_verbosity )
 // STATE[100%|DONE]
 pcstr verbosity_to_string( verbosity verbosity )
 {
-	switch ( verbosity )	// <0x65bfb4>|0x000|0x000:'149'
+	switch ( verbosity )
 	{
 	case silent:	return "silent";
 	case error:		return "ERROR";
@@ -189,7 +189,7 @@ private:
 	pcstr									name;
 };
 
-STATIC_SIZE_ASSERT(filter_name_eq, 0x4);
+STATIC_SIZE_ASSERT(filter_name_eq, // sushi@);
 
 // STATE[97.2%|DONE]: LTCG conv in the vectora ctor / strings::join / add_line calls (-0x2/-0x1/-0x1).
 void logging_filters_console_command::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const

@@ -113,8 +113,8 @@ void log_file::flush			( pcstr in_file_name )
 // STATE[100%|DONE]
 void log_file::append			( pcstr data, u32 const length )
 {
-	if ( length == 0 )	// <0x65b5c9>|0x000|0x000:'100'
-		return;			// <0x65b5cf>|0x006|0x006:'101'
+	if ( length == 0 )
+		return;
 	ASSERT				( length );
 	ASSERT				( data );
 	ASSERT				( m_file );
@@ -336,14 +336,14 @@ log_file* new_log_file(
 	log_file_usage_enum					log_file_usage
 )
 {
-	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device ); 	// <0x65bcd6>|0x000|0x000:'297'
+	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device );
 }
 
 // STATE[100%|DONE]
 void delete_log_file( log_file*& log_file )
 {
-	if ( log_file )												// <0x65b9d6>|0x000|0x000:'302'
-		VOSTOK_DELETE_IMPL( log_file->allocator(), log_file );	// <0x65b9de>|0x008|0x008:'303'
+	if ( log_file )
+		VOSTOK_DELETE_IMPL( log_file->allocator(), log_file );
 }
 
 } // namespace logging
