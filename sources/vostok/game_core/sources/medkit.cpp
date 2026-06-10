@@ -27,30 +27,21 @@ medkit::medkit( ) :
 {
 }
 
-// STATE[67.06%|PARTIAL]: VOSTOK_DELETE_IMPL inlined element-dtor differs (LTCG), non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x750180 | base 0x44bc60]: target 3 / base 3 stmts
-// 0x012 <0x40> | 0x012 <0x4b> | VOSTOK_DELETE_IMPL( g_allocator, m_influences );   SIZE
-// 0x052 <0x40> | 0x05d <0x4a> | VOSTOK_DELETE_IMPL( g_allocator, m_affects );   SIZE
-// 0x092 <0x40> | 0x0a7 <0x1d> | VOSTOK_DELETE_IMPL( g_allocator, m_damage_protect );   SIZE
-// ; aligned 0, size-diffs 3, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - all 3 statements align; each VOSTOK_DELETE_IMPL inlines the array element-dtor + free differently (whole-program inline form), non-steerable.
+// STATE[100%|DONE]: was 67.06 with VOSTOK_DELETE_IMPL - the target's three statements are the
+// free_helper shape exactly (null-check, free_impl, pointer=0, NO element dtor even for the
+// non-trivial damage_protection), i.e. VOSTOK_FREE_IMPL, symmetric with the raw
+// VOSTOK_MALLOC_IMPL allocations in load.
  medkit::~medkit( )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, m_influences );
-	VOSTOK_DELETE_IMPL( g_allocator, m_affects );
-	VOSTOK_DELETE_IMPL( g_allocator, m_damage_protect );
+	VOSTOK_FREE_IMPL( g_allocator, m_influences );
+	VOSTOK_FREE_IMPL( g_allocator, m_affects );
+	VOSTOK_FREE_IMPL( g_allocator, m_damage_protect );
 }
 
-// STATE[96.66%|PARTIAL]: strings::copy / for-loop counter inline-vs-call LTCG, non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x74fc20 | base 0x44b480]: target 48 / base 48 stmts
-// 0x136 <0x28> | 0x136 <0x24> | for ( u32 i = 0 ; i < m_influences_count ; ++i )   SIZE
-// 0x173 <0x35> | 0x16f <0x29> | strings::copy( infl.body_part_name, 0x10, influences[i]["body_part"] );   SIZE
-// 0x292 <0x35> | 0x282 <0x29> | strings::copy( affct.body_part_name, 0x10, remove_affects[i]["body_part"] );   SIZE
-// 0x2e9 <0x5> | 0x2cd <0x2> | }   SIZE
-// 0x498 <0x38> | 0x479 <0x2c> | strings::copy( dmgp.body_part_name, 0x10, damage_protect[i]["body_part"] );   SIZE
-// 0x4d0 <0x38> | 0x4a5 <0x2c> | strings::copy( dmgp.hit_type, 0x10, damage_protect[i]["hit_type"] );   SIZE
-// ; aligned 42, size-diffs 6, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - 48/48 statements; SIZE on strings::copy (inline-vs-call of the config-value -> pcstr conversion arg) and a loop-counter slot; whole-program LTCG, non-steerable. sushi@NOTE: allocations look off but reproduce the target.
+// STATE[96.20%|PARTIAL]: static_cast_checked< pcstr > on the four strings::copy args closed
+// ALL six SIZE rows - 34/34 statements, 0x55c bytes BOTH sides; the sub-100 residual is purely
+// the ICF fold-name relocs on the kept-out-of-line cast instantiations.
+// sushi@NOTE: allocations look off but reproduce the target.
 void medkit::load( configs::binary_config_value config )
 {
 	float activity_time_sec = (float)config["activity_time_sec"];
@@ -70,7 +61,7 @@ void medkit::load( configs::binary_config_value config )
 	for ( u32 i = 0 ; i < m_influences_count ; ++i )
 	{	// sushi@TODO: Is this UB? I don't see where memory is allocated
 		item_influence& infl = m_influences[i]; // sushi@TODO: Do not hardcode 0x10
-		strings::copy( infl.body_part_name, 0x10, influences[i]["body_part"] );
+		strings::copy( infl.body_part_name, 0x10, static_cast_checked< pcstr >( influences[i]["body_part"] ) );
 		infl.health_amount = (float)influences[i]["amount"];
 		infl.health_amount /= activity_time_sec;
 	}
@@ -83,7 +74,7 @@ void medkit::load( configs::binary_config_value config )
 	for ( u32 i = 0 ; i < m_affects_count ; ++i )
 	{
 		affect& affct = m_affects[i];
-		strings::copy( affct.body_part_name, 0x10, remove_affects[i]["body_part"] );
+		strings::copy( affct.body_part_name, 0x10, static_cast_checked< pcstr >( remove_affects[i]["body_part"] ) );
 		affct.type = (hit_affects_type_enum)(u32)remove_affects[i]["affect"];
 	}
 
@@ -97,29 +88,20 @@ void medkit::load( configs::binary_config_value config )
 		damage_protection& dmgp = m_damage_protect[i];
 		new( &dmgp ) damage_protector( );
 		dmgp.protector.reduce_damage_functor = boost::bind( &medkit::reduce_damage, this, _1, _2, _3, _4 );
-		strings::copy( dmgp.body_part_name, 0x10, damage_protect[i]["body_part"] );
-		strings::copy( dmgp.hit_type, 0x10, damage_protect[i]["hit_type"] );
+		strings::copy( dmgp.body_part_name, 0x10, static_cast_checked< pcstr >( damage_protect[i]["body_part"] ) );
+		strings::copy( dmgp.hit_type, 0x10, static_cast_checked< pcstr >( damage_protect[i]["hit_type"] ) );
 		dmgp.hit_coeff = (float)damage_protect[i]["hit_coeff"];
 		dmgp.threshold = (float)damage_protect[i]["threshold"];
 	}
+
+	// STRUCTURE DIFF: target 34 / base 34 stmts (no diverging rows, 0x55c bytes both)
+	// VERDICT: STRUCTURE MATCH - residual is fold-name reloc pairing on the static_cast_checked instantiations only.
 }
 
-// STATE[47.04%|PARTIAL]: register_for_update(boost::bind(...)) + resource_ptr accessors inlined deeper in base, non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x74f730 | base 0x44b0d0]: target 23 / base 25 stmts
-// 0x00d <0xc> | 0x00f <0xf> | m_active = bactive;   SIZE
-// --          | 0x01e <0x15> | if ( m_active )   ONLY base
-// 0x019 <0x12> | 0x033 <0x18> | m_activity_time_ms	= m_config_activity_time_ms;   SIZE
-// --          | 0x04b <0x18> | m_delay_ms			= m_config_delay_ms;   ONLY base
-// 0x02b <0x12> | 0x063 <0xf5> | );   SIZE
-// 0x04f <0xa3> | 0x158 <0x5> | else   SIZE
-// 0x0f2 <0x2> | 0x15d <0x50> | player_stamina& stamina = m_inventory->holder( ).cast_to_base_player( )->stamina( );   SIZE
-// 0x0f4 <0x31> | 0x1db <0x33> | m_inventory->holder( ).scheduler( ).unregister( &m_scheduler_identifier );   SIZE
-// 0x150 <0x23> | 0x20e <0x28> | for ( u32 i = 0 ; i < m_damage_protect_count ; ++i )   SIZE
-// 0x173 <0x25> | 0x236 <0x15> | damage_protection& dmgp = m_damage_protect[i];   SIZE
-// 0x198 <0x12> | 0x25c <0x73> | );   SIZE
-// 0x1ef <0x43> | 0x2d1 <0x78> | );   SIZE
-// ; aligned 9, size-diffs 10, quantity-diffs 10
-// VERDICT: STRUCTURE MATCH (shape ok) - the ONLY base/target rows are multi-line-statement attribution boundaries of the inlined register_for_update(boost::bind(...)) and the holder()/damage_model() resource_ptr accessor calls; base inlines these one layer deeper than the target, enlarging the frame (0xC0 vs 0x84) and shifting every slot; whole-program LTCG, non-steerable.
+// STATE[47.04%|PARTIAL]: hand-pairing the new diff aligns ALL 15 statements 1:1 in order -
+// no quantity divergence; the % is the holder()/cast_to_base_player()/stamina()/scheduler()/
+// damage_model() accessor inline-vs-call walls plus the this-slot disp8->disp32 cascade
+// (base frame grows past -0x80, +3 bytes on nearly every member-touching statement).
 void medkit::set_active( bool bactive )
 {
 	m_active = bactive;
@@ -160,13 +142,16 @@ void medkit::set_active( bool bactive )
 				&dmgp.protector
 			);
 	}
+
+	// STRUCTURE DIFF: target 15 / base 15 stmts (sequential hand-pairing; the table's ONLY rows are aligner slides)
+	// SIZE +0xe3 | 139 | ); (register_for_update bind)
+	// SIZE +0x4e | 143 | player_stamina& stamina = m_inventory->holder( ).cast_to_base_player( )->stamina( );
+	// SIZE +0x61 | 156 | ); (register_body_part_damage_protector)
+	// SIZE +0x35 | 161 | ); (unregister_body_part_damage_protector)
+	// VERDICT: STRUCTURE MATCH (shape ok) - base inlines the holder()/cast_to_base_player()/stamina()/scheduler()/damage_model() accessor chain one layer deeper than target (out-of-line there); the frame growth pushes this past -0x80 adding +3 per member statement; cross-unit headers, non-steerable.
 }
 
-// STATE[96.17%|PARTIAL]: set_amount inline-vs-call LTCG, non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x74f970 | base 0x44b420]: target 10 / base 10 stmts
-// 0x03a <0x16> | 0x03a <0x17> | set_amount( amount( ) - 1 );	// sushi@MATCH: LTCG for set_amount   SIZE
-// ; aligned 9, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on set_amount( amount() - 1 ): whole-program inline-vs-call of set_amount, non-steerable.
+// STATE[96.17%|PARTIAL]: set_amount inline-vs-call LTCG, non-steerable.
 void medkit::action( bool key_down )
 {
 	if ( !key_down )
@@ -180,19 +165,15 @@ void medkit::action( bool key_down )
 		set_active( true );
 		set_amount( amount( ) - 1 );	// sushi@MATCH: LTCG for set_amount
 	}
+
+	// STRUCTURE DIFF: target 7 / base 7 stmts
+	// SIZE +0x1 | 181 | set_amount( amount( ) - 1 );
+	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program inline-vs-call of set_amount, non-steerable.
 }
 
-// STATE[53.50%|PARTIAL]: math::min template + resource_ptr accessor inline-vs-call LTCG, non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x74fa50 | base 0x44ba50]: target 39 / base 36 stmts
-// 0x027 <0x14> | 0x027 <0x2c> | const u32 delay_time = math::min( m_delay_ms, time_left_ms );   SIZE
-// 0x08d <0x31> | 0x0a5 <0x38> | player_stamina& stamina = m_inventory->holder( ).cast_to_base_player( )->stamina( );   SIZE
-// 0x0e9 <0x14> | 0x108 <0x2c> | const u32 medkit_time = math::min( m_activity_time_ms, time_left_ms );   SIZE
-// 0x112 <0x21> | 0x149 <0x25> | for ( u32 i = 0 ; i < m_influences_count ; ++i )   SIZE
-// 0x164 <0x35> | 0x19f <0x4f> | );   SIZE
-// --          | 0x1ee <0x5> | }   ONLY base
-// 0x199 <0x2> | 0x1f3 <0xc> | if ( !m_activity_time_ms )   SIZE
-// ; aligned 29, size-diffs 6, quantity-diffs 5
-// VERDICT: STRUCTURE MATCH (shape ok) - 2 SIZE on math::min (template inlined to a tighter cmov in target), the others + the ONLY base/target rows are the inlined apply_med_kit / holder() resource_ptr accessor's multi-line attribution; base inlines deeper, shifting slots; whole-program LTCG, non-steerable.
+// STATE[57.12%|PARTIAL]: the tail-if is empty() (the inlined cmp/sete/movzx bool shape gave
+// the header stub its real body, 53.50 -> 57.12); residual is math::min(u32) and the
+// holder()/damage_model() accessor inline-vs-call walls.
 void medkit::active_tick( const u32 frame_time_ms )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -233,15 +214,20 @@ void medkit::active_tick( const u32 frame_time_ms )
 		);
 	}
 
-	if ( !m_activity_time_ms )
+	if ( empty( ) )
 		set_active( false );
+
+	// STRUCTURE DIFF: target 23 / base 23 stmts
+	// SIZE +0x18 | 204 | const u32 delay_time = math::min( m_delay_ms, time_left_ms );
+	// SIZE +0x7  | 219 | player_stamina& stamina = m_inventory->holder( ).cast_to_base_player( )->stamina( );
+	// SIZE +0x18 | 223 | const u32 medkit_time = math::min( m_activity_time_ms, time_left_ms );
+	// SIZE +0x4  | 226 | for ( u32 i = 0 ; i < m_influences_count ; ++i )
+	// SIZE +0x1a | 233 | ); (apply_med_kit)
+	// BASE_ONLY  | 234 | } / TRGT_ONLY 0x2 - the same loop backjump, near in base vs short in target (size cascade)
+	// VERDICT: STRUCTURE MATCH (shape ok) - base inlines math::min<u32> (cmp/sbb/neg/and branchless) where target calls the promoted out-of-line min; the stamina/apply_med_kit rows are the accessor inline walls; all cascade-only, non-steerable.
 }
 
-// STATE[60.46%|PARTIAL]: holder()/damage_model() resource_ptr accessor inlined as a by-value temp in base, non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x74f9d0 | base 0x44b9b0]: target 4 / base 4 stmts
-// 0x03c <0x37> | 0x03c <0x51> | m_inventory->holder( ).damage_model( )->cancel_affect( affct.body_part_name, affct.type );   SIZE
-// ; aligned 3, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the cancel_affect call: base inlines damage_model() (returns a resource_ptr by value) with the temp-construct/test materialization while the target out-of-lines it; cascades a bigger frame (0x20 vs 0x14); whole-program LTCG, non-steerable.
+// STATE[60.46%|PARTIAL]: holder()/damage_model() resource_ptr accessor inlined as a by-value temp in base, non-steerable.
 void medkit::remove_affects( )
 {
 	for ( u32 i = 0 ; i < m_affects_count; ++i )
@@ -249,13 +235,13 @@ void medkit::remove_affects( )
 		medkit::affect const& affct = m_affects[i];
 		m_inventory->holder( ).damage_model( )->cancel_affect( affct.body_part_name, affct.type ); // sushi@MATCH: Target pushed those two args before calling damage_model
 	}
+
+	// STRUCTURE DIFF: target 3 / base 3 stmts
+	// SIZE +0x1a | 250 | m_inventory->holder( ).damage_model( )->cancel_affect( affct.body_part_name, affct.type );
+	// VERDICT: STRUCTURE MATCH (shape ok) - base inlines damage_model() (by-value resource_ptr temp construct/test) where target calls it out-of-line; cross-unit header, non-steerable.
 }
 
-// STATE[99.90%|DONE]: frame 4 bytes smaller in base (slot allocation), non-steerable. trail: medkit.md
-// STRUCTURE DIFF[target 0x74f660 | base 0x44b000]: target 8 / base 8 stmts
-// .. same ..
-// ; aligned 8, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - all 8 statements align with 0 diffs; residual is a 4-byte frame-size / slot-allocation difference, non-steerable.
+// STATE[99.90%|DONE]: frame 4 bytes smaller in base (slot allocation), non-steerable.
 medkit::damage_protection const* medkit::find_damage_protection( pcstr body_part_name, pcstr hit_type )
 {
 	for ( u32 i = 0 ; i < m_damage_protect_count ; ++i )
@@ -266,6 +252,9 @@ medkit::damage_protection const* medkit::find_damage_protection( pcstr body_part
 			return &dmgp;
 	}
 	return NULL;
+
+	// STRUCTURE DIFF: target 6 / base 6 stmts (no diverging rows)
+	// VERDICT: STRUCTURE MATCH - residual is a 4-byte frame/slot allocation difference, non-steerable.
 }
 
 // STATE[100%|DONE]
