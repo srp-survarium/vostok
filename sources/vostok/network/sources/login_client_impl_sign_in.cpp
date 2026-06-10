@@ -136,6 +136,9 @@ void login_client_impl::on_sign_in_password_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 17 stmts / base 17 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling x3; non-steerable LTCG.
 }
 // STATE[78.58%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x1 + the callback by-value bind copy lowering in the async_write bind
 void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
@@ -166,6 +169,9 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback by-value bind copy in the async_write bind; non-steerable LTCG.
 }
 // STATE[47.08%|PARTIAL]: structure 27/27 (default-case `return` restored - the
 // target's 2-byte jmp goes to the EPILOGUE, skipping handshake; the old `break;`
@@ -268,6 +274,9 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling; non-steerable LTCG.
 }
 // STATE[77.65%|PARTIAL]: structure clean (sign_in_message_type byte + "0.100b" version block verified); residual = the function4::operator() inline-vs-call wall x1 + the callback bind-copy lowering
 void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
@@ -308,6 +317,9 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 18 stmts / base 18 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback bind-copy lowering; non-steerable LTCG.
 }
 // STATE[90.34%|PARTIAL]: structure clean (strncpy_s triple + const& functor local + if/else-if/else tail verified); residual = the function1(bind_t) conversion lowering + LOG-helper scheduling x3
 void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )

@@ -83,6 +83,9 @@ login_client::login_client( world& world ) :
 			boost::bind( &login_client::create_client, this )
 		)
 	);
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - the functor_order bind_t -> function0 copy lowering (function-ctor + assign_to vs direct templated ctor); non-steerable LTCG.
 }
 
 } // namespace network
@@ -133,6 +136,9 @@ void login_client::on_signed_up(
 			boost::bind( m_on_sign_up, connection_error, handshaking_error, socket_error, login_error, sign_up_info )
 		)
 	);
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - functor_response bind-copy lowering (function5 + info by-value); non-steerable LTCG.
 }
 
 // STATE[89.56%|PARTIAL]: structure clean (cmp 8 = servers_connection_info,
@@ -158,6 +164,9 @@ void login_client::on_signed_in(
 			boost::bind( m_on_sign_in, connection_error, handshaking_error, socket_error, login_error )
 		)
 	);
+
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - same functor_response bind-copy lowering as on_signed_up; non-steerable LTCG.
 }
 
 // STATE[96.88%|PARTIAL]: structure 1/1; residual = 2 bytes of bind-temp
@@ -227,6 +236,9 @@ void login_client::sign_in(
 			m_net_client_account_password
 		)
 	);
+
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - operator= copy-swap-clear inline + bind_t -> function3 conversion temp lowering; non-steerable LTCG.
 }
 
 // STATE[88.19%|PARTIAL]: structure 4/4; same functor_response bind-copy
@@ -248,6 +260,9 @@ void login_client::on_signed_out(
 			boost::bind( m_on_sign_out, connection_error, handshaking_error, socket_error, login_error )
 		)
 	);
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - same functor_response bind-copy lowering as on_signed_up; non-steerable LTCG.
 }
 
 // STATE[80.60%|PARTIAL]: structure 3/3 (const& lifetime-extended on_signed_out
@@ -269,6 +284,9 @@ void login_client::sign_out(
 			)
 		)
 	);
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - operator= copy-swap-clear inline + function4 temp conversion lowering; non-steerable LTCG.
 }
 
 // STATE[100%|DONE]

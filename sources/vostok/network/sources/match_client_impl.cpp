@@ -27,6 +27,9 @@ namespace network {
 {
 	m_client.set_on_packet_received	( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	m_client.set_on_disconnect		( boost::bind( &match_client_impl::on_disconnect, this, _1 ) );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - both rows are the udp_match_client set_on_* bind/function-assign lowering; non-steerable LTCG.
 }
 
 // STATE[85.43%|PARTIAL]: structure 1/1 (the g_allocator strip_pointer call is kept
@@ -36,6 +39,9 @@ namespace network {
 match_client_impl::~match_client_impl( )
 {
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts (aligner: STRUCTURE MATCH)
+	// VERDICT: STRUCTURE MATCH - residual is the folded member-clear COMDATs' this-convention (esi vs ecx); LTCG artifact.
 }
 
 // STATE[27.18%|PARTIAL]: structure 11/11; residuals all per-call-site
@@ -98,6 +104,10 @@ void match_client_impl::connect(
 {
 	m_on_connected			= on_connected;
 	m_client.connect		( host, port, packet ? clone_packet( *packet ) : 0, current_time_in_ms );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x22 | 89 | m_on_connected			= on_connected;
+	// VERDICT: STRUCTURE MATCH - sole SIZE is function4::operator= inline-vs-call (copy-swap-clear inlined in base); non-steerable LTCG.
 }
 
 // STATE[31.05%|PARTIAL]: structure 3/3; residual = both function2 assigns inlined
@@ -132,6 +142,9 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 	result->m_buffer[ 0 ]	= packet.m_buffer[ 0 ];
 	result->append			( reader.pointer( ), reader.size_to_eof( ) );
 	return					result;
+
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts (SIZE-only, field copies byte-aligned)
+	// VERDICT: STRUCTURE MATCH - pointer()/operator[] per-call-site inline-vs-call + append's LTCG arg convention; non-steerable.
 }
 
 // STATE[88.16%|PARTIAL]: structure 3/3, stmt sizes within +0x1; residual is
@@ -141,6 +154,9 @@ void match_client_impl::disconnect( )
 	m_state					= waiting_for_permission;
 	m_client.set_on_packet_received( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	m_client.disconnect		( );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (sizes within +0x1)
+	// VERDICT: STRUCTURE MATCH - register/slot renames inside the bind expansion only; LTCG artifact.
 }
 
 // STATE[81.63%|PARTIAL]: structure 4/4; residual = +0x1b on the
@@ -154,6 +170,9 @@ void match_client_impl::on_disconnect(
 	m_client.set_on_packet_received( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	if ( m_on_disconnect )
 		m_on_disconnect		( disconnect_type );
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - the set_on_packet_received bind/function-temp lowering (+0x1b); non-steerable LTCG.
 }
 
 } // namespace network

@@ -39,6 +39,9 @@ void login_client_impl::on_sign_up_answer_received(
 	close_connection		( false );
 	if ( !m_in_destructor )
 		callback			( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )m_data[0], sign_up_info );
+
+	// STRUCTURE DIFF: target 17 stmts / base 17 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - callback/info bind-copy lowering + LOG-helper scheduling; non-steerable LTCG.
 }
 
 // STATE[89.71%|PARTIAL]: structure clean; residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG-helper scheduling
@@ -78,6 +81,9 @@ void login_client_impl::on_sign_up_info_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - callback/info bind-copy lowering + LOG-helper scheduling; non-steerable LTCG.
 }
 
 // STATE[91.78%|PARTIAL]: structure clean (password/email length-prefixed writes + both ASSERT eaters verified); residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule
@@ -226,6 +232,9 @@ void login_client_impl::on_sign_up_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - callback/info bind-copy lowering + LOG-helper scheduling; non-steerable LTCG.
 }
 
 // STATE[90.66%|PARTIAL]: structure clean (sign_up_message_type byte + account_name length-prefixed write verified); residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule
@@ -284,6 +293,9 @@ void login_client_impl::sign_up( pcstr host, u16 port, sign_up_info const& sign_
 		login_resolve_retry_count,
 		login_connect_retry_count
 	);
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only, rva-pinned 0x7947f0)
+	// VERDICT: STRUCTURE MATCH - function1(bind_t) conversion lowering at the establish_connection boundary; non-steerable LTCG.
 }
 
 } // namespace network

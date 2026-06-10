@@ -62,6 +62,9 @@ public:
 
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats		= m_copied_stats;
+
+		// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+		// VERDICT: STRUCTURE MATCH - base_packet::buffer() inlined in the packet_reader-ctor expansion; non-steerable LTCG.
 	}
 
 private:
