@@ -42,21 +42,9 @@ bool player_logic_jump_state::is_ready_for_transition( ) const
 		|| ( *m_user->damage_model( ) ).broken_legs_count( ) == 2
 		|| !m_user->is_alive( );
 
-	// CALL SITE INFO
-	// <0x6f93cc> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x6f93a9>|0x009|+0x070:'43'	return is_jump_finished() || broken_legs_count()==2 || !is_alive();
-	// ******
-	// --- target asm (divergence: out-of-line operator* @0x97, out-of-line is_alive @0xC3) ---
-	// 0x2c: call eax                          ; m_user->damage_model() (virtual)
-	// 0x2e: mov [ebp-8], eax                  ; (target stores operator* result once)
-	// 0x38: call operator*                    ; intrusive_ptr::operator* (out-of-line)
-	// 0x48: movzx edx, byte [ecx+339h]        ; m_broken_legs_count[1]
-	// 0x52: movzx ecx, byte [eax+338h]        ; m_broken_legs_count[0]
-	// 0x59: add ecx, edx ; 0x5b: movzx edx, cl; 0x5e: cmp edx, 2
-	// 0x69: call is_alive                     ; base_player::is_alive (out-of-line)
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x14 | 43 | || !m_user->is_alive( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is two cross-unit inline-vs-call decisions inside the one return: target keeps intrusive_ptr::operator* and base_player::is_alive out-of-line, base inlines both (operator* brings its assert eater along); non-steerable from this TU.
 }
 
 // STATE[100%|DONE]
