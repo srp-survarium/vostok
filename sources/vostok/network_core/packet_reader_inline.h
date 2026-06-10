@@ -25,11 +25,12 @@ inline packet_reader::packet_reader( base_packet const& packet ) :
 // target's whole-program-inlined codegen - a single-TU anchor cannot reproduce
 // that. The bodies, not the anchor codegen, are the deliverable.
 
-// STATE[PARTIAL]: legacy body - 3x ASSERT_U bounds + memory::copy. Consistent with the
-// target's OPTIMIZED standalone r (24B: memcpy call + pointer advance; the identity(false)
-// ASSERT_U arms fold away there) and proven by advance() below, whose target emission keeps
-// the same ASSERT_U bounds triple un-folded (eater + expression eval bytes).
-inline void packet_reader::r( void* destination, u32 destination_size, u32 size )
+// STATE[0%|PARTIAL]: legacy body - 3x ASSERT_U bounds + memory::copy. Pairs at 0%: the
+// target standalone (0x7e5a0, 24B) is the /Ox+LTCG whole-program fold (custom convention
+// this=esi/size=edi, asserts folded away, memory::copy -> bare memcpy) - not reproducible
+// from this TU. advance() below keeps the same ASSERT_U bounds triple un-folded (the
+// shape proof). `size` is recorded const in the target PDB.
+inline void packet_reader::r( void* destination, u32 destination_size, u32 const size )
 {
 	ASSERT_U		( m_pointer >= m_packet.buffer( ) );
 	ASSERT_U		( m_pointer <= m_packet.buffer( ) + m_packet.buffer_size( ) );
@@ -37,11 +38,26 @@ inline void packet_reader::r( void* destination, u32 destination_size, u32 size 
 
 	memory::copy	( destination, destination_size, m_pointer, size );
 	m_pointer		+= size;
+
+	// STRUCTURE DIFF: target 1 stmts / base 5 stmts
+	// b.diff    |t.addr |b.addr |t.sz|b.sz|t.ln|b.ln|b.code
+	// ----------+-------+-------+----+----+----+----+------
+	// SIZE +0x36|0x7e5af|0x95899|0x6 |0x3c|0   |0   |ASSERT_U ( m_pointer >= m_packet.buffer( ) );
+	// BASE_ONLY |--     |0x958d5|--  |0x4a|--  |+1  |ASSERT_U ( m_pointer <= m_packet.buffer( ) + m_packet.buffer_size( ) );
+	// BASE_ONLY |--     |0x9591f|--  |0x4f|--  |+2  |ASSERT_U ( m_packet.buffer( ) + m_packet.buffer_size( ) >= ( m_pointer + size ) );
+	// BASE_ONLY |--     |0x9596e|--  |0x1b|--  |+4  |memory::copy ( destination, destination_size, m_pointer, size );
+	// BASE_ONLY |--     |0x95989|--  |0xf |--  |+5  |m_pointer += size;
+	// VERDICT: STRUCTURE MISMATCH (quantity) - expected, not a source miss: the target's lone
+	// line row is `m_pointer += size;` (its L26); the asserts/copy rows vanish in the /Ox fold
+	// (the aligner pairs that row against base assert #1). Non-steerable from this TU.
 }
 
-// STATE[PARTIAL]: legacy body - named result local routed through r(); the target's
-// optimized r<T> COMDATs (direct deref + advance) are this exact body after LTCG folds
-// the constant-size memory::copy.
+// STATE[0%|PARTIAL]: legacy body - named result local routed through r(). UNPAIRED: the
+// base link never emits these COMDATs (every base call site inlines them); the target
+// standalones (r<u8>=r<bool> 0x7e950 ICF-shared, r<u16> 0x97800, r<u32> 0x86410,
+// r<float> 0x7e960, r<float3> 0x7f1a0) are 0-line custom-convention LTCG folds - deref
+// m_pointer + advance sizeof(T), exactly this body after the constant-size r() folds.
+// Inline-site judges: game deserialize chains +30..47pp on adoption (legacy_comparison.md).
 template < typename T >
 inline T packet_reader::r( )
 {
@@ -50,16 +66,20 @@ inline T packet_reader::r( )
 	return			( result );
 }
 
-// STATE[PARTIAL]: legacy body - u8 clamp via std::min (compile-time folded for Count<255,
-// byte-neutral vs the plain forward at the lone target instantiation r_string<16>).
+// STATE[0%|PARTIAL]: legacy body - u8 clamp via std::min (compile-time folded for Count<255,
+// byte-neutral vs the plain forward). UNPAIRED: no base COMDAT (all base call sites inline);
+// the lone target instantiation r_string<16> (0x98860, 43B, 0-line custom-conv fold: r<u8>
+// length read + memcpy + advance + null-terminate) is this body + r_string(char*,u8) folded.
 template < int count >
 inline char* packet_reader::r_string( char ( &string )[ count ] )
 {
 	return r_string( &string[ 0 ], (u8)std::min( sizeof( string ), size_t( 255 ) ) );
 }
 
-// STATE[PARTIAL]: legacy body - ONE r() call (no hand-inlined memcpy/advance pair);
-// target r_string<16> (43B optimized) is this body after folding.
+// STATE[INLINED]: legacy body - ONE r() call (no hand-inlined memcpy/advance pair); no
+// standalone target symbol exists for this overload - body proven from the target
+// r_string<16> COMDAT bytes (0x98860: r<u8> length read, memcpy, pointer advance,
+// `string[ length ] = 0`, return string).
 inline char* packet_reader::r_string( char* string, u8 buffer_size )
 {
 	u8 const string_length	= r< u8 >( );
@@ -74,13 +94,15 @@ inline base_packet const& packet_reader::get_packet( ) const
 	return m_packet;
 }
 
-// STATE[PARTIAL]: m_pointer == buffer()+buffer_size() - target shape exact.
+// STATE[0%|PARTIAL]: m_pointer == buffer()+buffer_size() - target bytes exact (0x97650,
+// 16B: cmp [ecx+4] vs [m_packet]+[m_packet+4], sete). UNPAIRED: no base COMDAT emission.
 inline bool packet_reader::eof( ) const
 {
 	return m_pointer == m_packet.buffer( ) + m_packet.buffer_size( );
 }
 
-// STATE[PARTIAL]: returns m_pointer ([+4]) - target shape exact.
+// STATE[0%|PARTIAL]: returns m_pointer ([+4]) - target bytes exact (0x82cc0, 4B,
+// ICF-shared with boost::_bi::list2 operator[]). UNPAIRED: no base COMDAT emission.
 inline pcbyte packet_reader::pointer( ) const
 {
 	return m_pointer;
@@ -110,7 +132,8 @@ inline void packet_reader::advance( u32 offset )
 	// uniform +0x9 is the buffer() accessor inline-vs-call inside each eater arm, non-steerable.
 }
 
-// STATE[PARTIAL]: (buffer()+buffer_size()) - m_pointer, target's buffer_size - ptr + buffer order.
+// STATE[0%|PARTIAL]: (buffer()+buffer_size()) - m_pointer, target's buffer_size - ptr +
+// buffer order - target bytes exact (0x97660, 11B). UNPAIRED: no base COMDAT emission.
 inline u32 packet_reader::size_to_eof( ) const
 {
 	return m_packet.buffer_size( ) - u32( m_pointer ) + u32( m_packet.buffer( ) );

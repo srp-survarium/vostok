@@ -79,7 +79,7 @@ void tcp_packet_client::disconnect( )
 		close_connection( );
 }
 
-// STATE[66%|PARTIAL]: ASSERT + shutdown + close + reset shape correct; residual = m_socket.close(ec)
+// STATE[66.30%|PARTIAL]: ASSERT + shutdown + close + reset shape correct; residual = m_socket.close(ec)
 // out-lines to basic_socket::close in target but over-inlines to win_iocp service close in base (inline-boundary)
 void tcp_packet_client::close_connection( )
 {

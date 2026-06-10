@@ -11,9 +11,10 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[PARTIAL]: legacy flat early-return blocks (packet_socket_inline shape) - target's
+// STATE[94.21%|PARTIAL]: legacy flat early-return blocks (packet_socket_inline shape) - target's
 // 18-stmt carcass line map (16..34 == legacy lines exactly) carries `delete_packet; return;`
-// in BOTH error blocks, not an else-if chain. Residual is two unavoidable kinds:
+// in BOTH error blocks, not an else-if chain. Pairs since the private: access fix (was 0%,
+// QAE vs target AAE mangling). Residual is two unavoidable kinds:
 //   (1) LOG_ERROR __FILE__/__LINE__ wall: target pushes "C:\survarium\sources\..." + line 0x1D/..,
 //       base pushes "Z:\home\sheep\Projects\..." + line 0x23/.. - string bytes AND line numbers differ
 //       by build environment (cannot be faked).
@@ -70,13 +71,15 @@ inline void tcp_packet_socket< Socket >::on_packet_received(
 	// inline-boundary + regalloc, non-steerable.
 }
 
-// STATE[PARTIAL]: legacy tail adopted (packet_socket_inline shape): flat early-return error
-// blocks, pointer-cast header-buffer deref, `if ( identity( sizeof(T) < sizeof(u16) ) )`
+// STATE[85.21%|PARTIAL]: legacy tail adopted (packet_socket_inline shape): flat early-return
+// error blocks, pointer-cast header-buffer deref, `if ( identity( sizeof(T) < sizeof(u16) ) )`
 // template-recursion guard with else-ASSERT, early `return;` after the body-read async_read.
+// 85.21 BOTH instantiations (<u8> 1106B, <u16> 1108B) since the private: access fix (was 0%,
+// QAE vs target AAE mangling; bytes_transferred is recorded `u32 const` in the target PDB).
 // Residual is the LOG_ERROR __FILE__/__LINE__ wall (C:\survarium vs Z:\home + line nums).
 template < typename Socket >
 template < typename T >
-inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system::error_code const& error_code, u32 bytes_transferred )
+inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system::error_code const& error_code, u32 const bytes_transferred )
 {
 	if ( error_code )
 	{
@@ -126,16 +129,17 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 	else
 		ASSERT( sizeof( T ) < sizeof( u16 ) );
 
-	// STRUCTURE DIFF: target 22 stmts / base 22 stmts (both <u8> 0x124480/0x97430 and
-	// (<u8> instantiation, rva-pinned: target param demangles `const unsigned int` so identity join fails; <u16> mirrors it)
+	// STRUCTURE DIFF: target 22 stmts / base 22 stmts (<u8> 0x124480 / base 0xa1b90,
+	// rva-pinned: the rich-index identity join fails on the `const unsigned int` demangle;
+	// <u16> 0x125370 mirrors it)
 	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
 	// ----------+--------+--------+----+----+----+----+------
-	// SIZE -0x3 |0x12451d|0x0a1c2d|0xda|0xd7|+4  |+5  |return;
-	// SIZE -0x1 |0x1245f7|0x0a1d04|0x1f|0x1e|+5  |+6  |
-	// SIZE -0x4 |0x12463f|0x0a1d4b|0x81|0x7d|+11 |+13 |if ( bytes_transferred != sizeof( T ) )
-	// SIZE +0x46|0x124727|0x0a1e2f|0xd |0x53|+20 |+23 |{
-	// SIZE +0x2b|0x124734|0x0a1e82|0xa5|0xd0|+35 |+32 |boost::bind( &tcp_packet_socket::on_packet_received, this, packet, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
-	// SIZE +0x26|0x1247fb|0x0a1f74|0xbc|0xe2|+52 |+44 |boost::bind( &tcp_packet_socket::on_packet_size_received< u16 >, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
+	// SIZE -0x3 |0x12451d|0x0a1c2d|0xda|0xd7|+4  |+5  |LOG_ERROR( "error during reading from socket: %s\r\n", error_code.message( ).c_str( ) );
+	// SIZE -0x1 |0x1245f7|0x0a1d04|0x1f|0x1e|+5  |+6  |if ( m_on_error )
+	// SIZE -0x4 |0x12463f|0x0a1d4b|0x81|0x7d|+11 |+13 |LOG_ERROR( "unable to read from socket\r\n" );
+	// SIZE +0x46|0x124727|0x0a1e2f|0xd |0x53|+20 |+23 |packet->resize( buffer_size );
+	// SIZE +0x2b|0x124734|0x0a1e82|0xa5|0xd0|+35 |+32 |); [first async_read]
+	// SIZE +0x26|0x1247fb|0x0a1f74|0xbc|0xe2|+52 |+44 |); [second async_read]
 	// VERDICT: STRUCTURE MATCH (shape ok) - 22/22 after the legacy tail adoption (was 20 vs
 	// 24-row count): all three `return;` rows, the pointer-cast deref (0xf/0x11 exact), the
 	// identity() guard (0x1d exact), the 2-byte `else` row and the 0x12-byte ASSERT eater all
@@ -155,15 +159,17 @@ inline void tcp_packet_socket< Socket >::start_receiving( )
 		)
 	);
 	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// SIZE +0x12|0x123fbf|0x0972cf|0x8c|0x9e|152   |	);
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
+	// ----------+--------+--------+----+----+----+----+------
+	// SIZE +0x12|0x123fbf|0x0a15df|0x8c|0x9e|0   |0   |); [the lone async_read stmt]
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE row is make_custom_alloc_handler's named-return
 	// result-copy (6 movs) our LTCG fails to elide in this standalone emission (slot kept, frame 0xFC exact).
 }
 
-// STATE[PARTIAL]: legacy flat early-return blocks + `!bytes_transferred` spelling - target's
-// 10-stmt carcass (lines == legacy+2) has `return;` rows in both blocks; residual is the
-// LOG_ERROR __FILE__/__LINE__ wall only.
+// STATE[94.88%|PARTIAL]: legacy flat early-return blocks + `!bytes_transferred` spelling -
+// target's 10-stmt carcass (lines == legacy+2) has `return;` rows in both blocks. Pairs since
+// the private: access fix (was 0%, QAE vs target AAE mangling); residual is the LOG_ERROR
+// __FILE__/__LINE__ wall only.
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 	tcp_packet const*					packet_being_sent,
@@ -192,14 +198,14 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
 	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
 	// ---------+--------+--------+----+----+----+----+------
-	// SIZE -0x3|0x124108|0x0a1818|0xbf|0xbc|+3  |+4  |delete_packet( packet_being_sent );
-	// SIZE -0x1|0x1241c7|0x0a18d4|0x1f|0x1e|+4  |+5  |
-	// SIZE -0x4|0x12420f|0x0a191b|0x7b|0x77|+10 |+12 |}
+	// SIZE -0x3|0x124108|0x0a1818|0xbf|0xbc|+3  |+4  |LOG_ERROR( "error during writing to socket: %s", error_code.message( ).c_str( ) );
+	// SIZE -0x1|0x1241c7|0x0a18d4|0x1f|0x1e|+4  |+5  |if ( m_on_error )
+	// SIZE -0x4|0x12420f|0x0a191b|0x7b|0x77|+10 |+12 |LOG_ERROR( "unable to write to socket\n" );
 	// VERDICT: STRUCTURE MATCH (shape ok) - 10/10 after flat early-return adoption (was 9 + 1
 	// ONLY-target); SIZE rows are the LOG_ERROR __FILE__/__LINE__ wall, non-steerable.
 }
 
-// STATE[55%|PARTIAL]: new_packet/clone/write/on_packet_has_been_sent shape now correct -
+// STATE[64.72%|PARTIAL]: new_packet/clone/write/on_packet_has_been_sent shape now correct -
 // clone()'s body restored in packet_inline.h (m_buffer_size=0; append(other.buffer(),size)),
 // so the copy step emits. Residual is the buffer()/buffer_size() accessor inline-boundary.
 template < typename Socket >
@@ -212,34 +218,25 @@ inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 	boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );
 
 	on_packet_has_been_sent( cloned_packet, error_code, cloned_packet->buffer_size( ) );
-	// STRUCTURE DIFF[target 0x123ee0 | base 0x90170]: target 6 / base 5 stmts
-	// .. same ..
-	//   2: 0x028 <0x24> | 0x027 <0x2b> | cloned_packet->clone( packet );   SIZE
-	// .. same ..
-	//   3: 0x04c <0x16> | --          | L179   ONLY target
-	// .. same ..
-	//   5: --          | 0x061 <0x3a> | boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );   ONLY base
-	// .. same ..
-	//   6: 0x071 <0x2d> | --          | L186   ONLY target
-	// .. same ..
-	// ; aligned 3, size-diffs 1, quantity-diffs 3, blank-gaps 0
-	// VERDICT: STRUCTURE FIXED (was quantity 4 -> 3) - clone() body restored, so the copy
-	// step now emits as a real statement (base 4 -> 5 stmts). Residual: target keeps
-	// other.buffer()/buffer_size() as out-of-line calls; base inlines the trivial accessors
-	// to direct [other+0]/[other+4] field reads (LTCG inline-boundary, no source lever).
-	// trail: tcp_packet_socket_inline.md
+
+	// STRUCTURE DIFF: target 6 stmts / base 5 stmts (target 0x123ee0 / base 0xa1500)
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
+	// ---------+--------+--------+----+----+----+----+------
+	// SIZE +0x7|0x123f08|0x0a1527|0x24|0x2b|+1  |+1  |cloned_packet->clone( packet );
+	// TRGT_ONLY|0x123f2c|--      |0x16|--  |--  |--  |--
+	// BASE_ONLY|--      |0x0a1561|--  |0x3a|--  |+4  |boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );
+	// TRGT_ONLY|0x123f51|--      |0x2d|--  |--  |--  |--
+	// VERDICT: STRUCTURE MISMATCH (quantity) - statement bucketing, not a source miss: the
+	// asio::write call emits as TWO line rows on target (0x16 setup + 0x2d invoke) vs ONE on
+	// base, so the aligner pairs neither; clone()'s SIZE +0x7 is the buffer()/buffer_size()
+	// accessor inline-vs-call (target out-lines, base field-reads). No source lever.
 }
 
-// STATE[95.5%|DONE]: NEW(tcp_packet)(m_packet_allocator); objdiff reports 0 (unit-pairing), bytes match
+// STATE[100%|DONE]
 template < typename Socket >
 inline tcp_packet* tcp_packet_socket< Socket >::new_packet( )
 {
 	return VOSTOK_NEW_IMPL( m_packet_allocator, tcp_packet )( m_packet_allocator );
-	// STRUCTURE DIFF[target 0x1242d0 | base 0x904f0]: target 1 / base 1 stmts
-	// .. same ..
-	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; objdiff
-	// 95.5% is template unit-pairing noise, bytes match. trail: tcp_packet_socket_inline.md
 }
 
 // STATE[99.81%|DONE]: error_code ec; m_socket.cancel(ec)
@@ -248,12 +245,13 @@ inline void tcp_packet_socket< Socket >::stop_receiving( )
 {
 	boost::system::error_code	error_code;
 	m_socket.cancel( error_code );
-	// STRUCTURE DIFF[target 0x124050 | base 0x90270]: target 2 / base 2 stmts
-	// .. same ..
-	//   2: 0x01e <0x31> | 0x01e <0x3a> | m_socket.cancel( error_code );   SIZE
-	// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 0
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (target 0x124050 / base 0xa1690)
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
+	// ---------+--------+--------+----+----+----+----+------
+	// SIZE +0x9|0x12406e|0x0a16ae|0x31|0x3a|+1  |+1  |m_socket.cancel( error_code );
 	// VERDICT: STRUCTURE MATCH (shape ok) - 2/2 stmts align, quantity 0; sole SIZE is the
-	// inline-boundary of basic_socket::cancel(ec). trail: tcp_packet_socket_inline.md
+	// inline-boundary of basic_socket::cancel(ec).
 }
 
 } // namespace network_core

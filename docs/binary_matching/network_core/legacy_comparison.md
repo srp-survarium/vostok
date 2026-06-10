@@ -46,6 +46,17 @@ Doc-only audit (2026-06-10) of every network_core piece with a legacy ancestor
    row at tcp_packet_socket::send (0x123f08) lowers `other`'s buffer and size
    as out-of-line CALLS pushed before append - direct `other.m_buffer` reads
    can never compile into calls, so shipped clone() goes through the accessors.
+8. **[proven, structure-verifier follow-up] the tcp_packet_socket "0% block" was an
+   ACCESS-SPECIFIER mismatch, not template-pairing noise.** The target mangles
+   `on_packet_received` / `on_packet_has_been_sent` / `on_packet_size_received<T>` /
+   `new_packet` as `AAE` (private); our all-public class declared them `QAE`, so
+   objdiff's mangled-name join silently failed and reported 0%. Declaring them
+   `private:` repaired the pairing: new_packet 0 -> 100, on_packet_has_been_sent
+   0 -> 94.88, on_packet_received 0 -> 94.21, on_packet_size_received<u8>/<u16>
+   0 -> 85.21 (unit 25 -> 88.14), zero regressions. The earlier "identity join
+   fails on `const unsigned int`" only explains the RICH-INDEX demangle mismatch
+   (the PDB type records `u32 const bytes_transferred`, now restored in source);
+   the objdiff failure was the access bit.
 
 ## Findings table
 

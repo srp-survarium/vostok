@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 48.72% fuzzy &middot; 8,136 / 25,372 functions exact (32.07%).**
+**Overall: 48.79% fuzzy &middot; 8,137 / 25,372 functions exact (32.07%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
@@ -34,7 +34,7 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | `fs` | 25 | 66 / 189 (34.9%) | 26.8% |
 | `engine` | 22 | 51 / 165 (30.9%) | 11.0% |
 | `network` | 25 | 6 / 163 (3.7%) | 0.4% |
-| `network_core` | 22 | 27 / 140 (19.3%) | 12.0% |
+| `network_core` | 22 | 28 / 140 (20.0%) | 12.4% |
 | `debug` | 16 | 77 / 127 (60.6%) | 48.1% |
 | `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
 | `input` | 9 | 30 / 56 (53.6%) | 27.6% |
