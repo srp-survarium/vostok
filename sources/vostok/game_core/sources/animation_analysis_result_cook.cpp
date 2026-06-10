@@ -34,12 +34,9 @@ void animation_analysis_result_cook::translate_query( resources::query_result_fo
 	parent.set_unmanaged_resource( result, resources::nocache_memory, sizeof( animation_analysis_result ) );
 	parent.finish_query( result_success, assert_on_fail_true );
 
-	// STRUCTURE DIFF[target 0x7534b0 | base 0x567de0]: target 12 / base 12 stmts
-	// .. same ..
-	// 0x043 <0x78> | 0x043 <0x75> | LOG_ERROR( "Failed to get user data for animation_analysis_result_cook" );   SIZE
-	// .. same ..
-	// ; aligned 11, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is __LOG boost::function copy-construct inline-vs-call inside LOG_ERROR (logging internals; string len + __LINE__ now matched), non-steerable. trail: animation_analysis_result_cook_translate_query.md
+	// STRUCTURE DIFF: target 8 stmts / base 8 stmts
+	// SIZE -0x3 | 27 | LOG_ERROR( "Failed to get user data for animation_analysis_result_cook" );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is __LOG boost::function copy-construct inline-vs-call inside LOG_ERROR (logging internals; string len + __LINE__ matched), non-steerable.
 }
 
 // STATE[31.00%|PARTIAL]: shared cook-base delete_helper inline-vs-call wall
@@ -47,10 +44,9 @@ void animation_analysis_result_cook::delete_resource( resources::resource_base* 
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// STRUCTURE DIFF[target 0x753480 | base 0x567db0]: target 1 / base 1 stmts
-	// 0x009 <0x17> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the shared cook-base delete_helper wall: target inlines delete_helper down to delete_helper_impl while base keeps the wrapper + strip_pointer call, non-steerable. trail: animation_analysis_result_cook_delete_resource.md
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0x1 | 48 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the shared cook-base delete_helper wall: target inlines delete_helper down to delete_helper_impl while base keeps the wrapper + strip_pointer call, non-steerable.
 }
 
 } // namespace survarium
