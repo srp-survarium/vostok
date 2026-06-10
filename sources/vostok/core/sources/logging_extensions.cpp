@@ -244,15 +244,18 @@ static void logging_callback(
 	}																						// <2>
 }
 
-// STATE[52%|PARTIAL]: source now reproduces the target's two direct append calls argument-for-argument;
-// the % stays low because the target INLINES the boost function1 ctor+dtor machinery around each call
-// while our LTCG keeps the cloned out-of-line ctor - link-set residual, banked.
-// claude@MATCH: target calls logging::append DIRECTLY, twice (lines 196/200 in the original) - no
-// LOG_* macro fits: the initiator is the RUNTIME string debug_log (macros only concatenate literals),
-// there is NO has_passed_filters guard (FORCED form), verbosity is is_error ? error : info (sete;
-// lea edx,[edx*2+2]), user_data is the ADDRESS of the local log_flags (lea [ebp-4]), and the two arms
-// differ only in the format argument: format_message (format_specifier overload) when
-// log_only_user_string, &g_log_format (log_format* overload) otherwise.
+// STATE[52%|PARTIAL]: the % stays low because the target INLINES the boost function1 ctor+dtor
+// machinery around each append call while our LTCG keeps the cloned out-of-line ctor - link-set
+// residual, banked.
+// claude@MATCH: spelled via __LOG_FORCED - the one macro that takes a RUNTIME initiator (the public
+// LOG*/LOGI* wrappers only concatenate literals) and expands argument-for-argument to the target's
+// append calls: callback temp, (void*)&log_flags, format, __FILE__/__LINE__/__FUNCSIG__, debug_log,
+// is_error ? error : info (sete; lea [ecx*2+2]), "%s", message. Line evidence (sushi, PR #286): the
+// __LINE__ pushes are 0C4h/0C8h = 196/200, the 0xa4 record at '196' covers the if-test PLUS the whole
+// first arm and the jmp-over-else is the lone 5-byte record at '198' - so the first call STARTED on
+// the if line and closed on 198, else on 199, second call at 200: each arm spanned <= 3 compact lines.
+// sushi@TODO: __LOG_FORCED vs a hand-expanded logging::append is byte-undecidable (textually identical
+// expansion); spelled as the macro since it is the one form that fits the 3-line layout naturally.
 void debug_log_callback(
 	pcstr		initiator,
 	bool		is_error_verbosity,
@@ -260,39 +263,23 @@ void debug_log_callback(
 	pcstr		message
 )
 {
-	// claude@MATCH: not-set arm is 0, not log_to_console (target: dec;neg;sbb;and 2 -> {0,2})
+	// claude@MATCH: not-set arm is 0, not log_to_console(=1<<0): the target's dec;neg;sbb;and 2
+	// idiom can only yield {0,2}; a log_to_console arm ({1,2}) would need an extra inc/or after it
 	core::log_flags_enum const log_flags = s_write_errors_to_stderr.is_set( ) ?
-									core::log_to_stderr : core::log_flags_enum(0);	// <0x672453>|0x000|0x000:'191'
+									core::log_to_stderr : core::log_flags_enum(0);	// <0x672453>|0x003|0x02f:'191'
 	pstr debug_log = NULL;
-	STR_JOINA( debug_log, initiator, ":" );											// <0x672482>|0x02f|0x02f:'193'
+	STR_JOINA( debug_log, initiator, ":" );											// <0x672482>|0x032|0x03a:'193'
 
-	if ( log_only_user_string )														// <0x6724bc>|0x069|0x03a:'196'
-		logging::append(
-			logging::log_callback_boost( g_log_callback ),
-			(void*)&log_flags,
-			logging::format_message,
-			__FILE__,
-			__LINE__,
-			__FUNCSIG__,
-			debug_log,
-			is_error_verbosity ? logging::error : logging::info,
-			"%s",
-			message );																// <0x672560>|0x10d|0x0a4:'198'
+	if ( log_only_user_string )	__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
+									logging::format_message, &log_flags,
+									debug_log, "%s", message );						// <0x6724bc>|0x06c|0x0a4:'196'..'198'
 	else
-		logging::append(
-			logging::log_callback_boost( g_log_callback ),
-			(void*)&log_flags,
-			&g_log_format,
-			__FILE__,
-			__LINE__,
-			__FUNCSIG__,
-			debug_log,
-			is_error_verbosity ? logging::error : logging::info,
-			"%s",
-			message );																// <0x672565>|0x112|0x005:'200'
+		__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
+									&g_log_format, &log_flags,
+									debug_log, "%s", message );						// <0x672565>|0x115|0x086:'200'
 
-	if ( g_log_file )																// <0x6725eb>|0x198|0x086:'203'
-		g_log_file->flush( NULL );													// <0x6725f5>|0x1a2|0x00a:'204'
+	if ( g_log_file )																// <0x6725eb>|0x19b|0x00a:'203'
+		g_log_file->flush( NULL );													// <0x6725f5>|0x1a5|0x006:'204'
 }
 
 // STATE[100%|DONE]
