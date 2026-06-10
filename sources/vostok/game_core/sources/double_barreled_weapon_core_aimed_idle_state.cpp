@@ -48,31 +48,28 @@ double_barreled_weapon_core_aimed_idle_state::double_barreled_weapon_core_aimed_
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[85.65%|PARTIAL]: structure matches (ASSERT_U, get_weapon_lexeme_pair, return expr).
+// STATE[87.52%|PARTIAL]: was ASSERT_U - the target eater has NO leading assert_untyped enum
+// push, i.e. VOSTOK_UNREFERENCED_PARAMETERS (fixed, row closed byte-exact, 85.65 -> 87.52);
+// param consts restored from the target PDB signature.
 // Wall: target inlines operator+<animation_lexeme,animation_lexeme> into the return, base keeps
 // the out-of-line `call operator+` (standalone symbol in BOTH rich indexes -> whole-program LTCG
 // inline of the shared mixing header). Non-steerable from this file. Same wall as the siblings.
 animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool							is_third_view,
+	const weapon_user_state_enum		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	ASSERT_U( weight_driving_animation );
+	VOSTOK_UNREFERENCED_PARAMETERS( weight_driving_animation );
 
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 
-	// STRUCTURE DIFF[target 0x79cb60 | base 0x44de20]: target 3 / base 5 stmts
-	// 0x011 <0x36> | 0x011 <0x38> | ASSERT_U( weight_driving_animation );   SIZE
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// 0x066 <0x59> | 0x068 <0x38> | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );   SIZE
-	// ; aligned 1, size-diffs 2, quantity-diffs 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are operator+ inline-vs-call (whole-program LTCG), non-steerable. trail: weapon_and_hands_expression.md
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x21 | 66 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the per-call-site LTCG split of operator+<animation_lexeme>: target inlines it (addition_lexeme ctor/cloned_in_buffer/dtor out-of-line), base calls operator+. Non-steerable. trail: weapon_and_hands_expression.md
 }
 
 // STATE[99.92%|DONE]: structure matches (3-element captions split per-element to align the

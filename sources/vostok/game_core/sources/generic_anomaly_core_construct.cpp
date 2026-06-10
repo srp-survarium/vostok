@@ -15,13 +15,7 @@
 
 namespace survarium {
 
-// STATE[96.07%|PARTIAL]: vectora::resize / math::min / VOSTOK_NEW inline-vs-call LTCG, non-steerable. trail: generic_anomaly_core_construct.md
-// STRUCTURE DIFF[target 0x58c9c0 | base 0x455330]: target 54 / base 54 stmts
-// 0x088 <0x22> | 0x088 <0x26> | m_artefact_containers.resize( artefact_containers_count );   SIZE
-// 0x0aa <0x1a> | 0x0ae <0x32> | artefacts_max_count = math::min( artefacts_max_count, artefact_containers_count );   SIZE
-// 0x2a1 <0x79> | 0x2bd <0x85> | anomaly_state* state = VOSTOK_NEW_IMPL( g_allocator, anomaly_state )( this );   SIZE
-// ; aligned 51, size-diffs 3, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - 3 SIZE: vectora::resize, math::min (template), and the VOSTOK_NEW anomaly_state allocation are inlined to a different size; whole-program LTCG, non-steerable.
+// STATE[96.07%|PARTIAL]: vectora::resize / math::min / VOSTOK_NEW inline-vs-call LTCG, non-steerable
 void generic_anomaly_core::load( configs::binary_config_value const& config )
 {
 	artefacts_enabled			= (bool)config["artefacts_enabled"];
@@ -79,13 +73,15 @@ void generic_anomaly_core::load( configs::binary_config_value const& config )
 			math::clamp<u32>( group->max_charged_count, 0, zones_count );
 		}
 	}
+
+	// STRUCTURE DIFF: target 47 / base 47 stmts
+	// SIZE +0x4  | 33 | m_artefact_containers.resize( artefact_containers_count );
+	// SIZE +0x18 | 34 | artefacts_max_count = math::min( artefacts_max_count, artefact_containers_count );
+	// SIZE +0xc  | 55 | anomaly_state* state = VOSTOK_NEW_IMPL( g_allocator, anomaly_state )( this );
+	// VERDICT: STRUCTURE MATCH - vectora::resize / math::min / VOSTOK_NEW inlined to different sizes, whole-program LTCG, non-steerable.
 }
 
-// STATE[99.63%|DONE]: frame size differs (slot allocation), non-steerable. trail: generic_anomaly_core_construct.md
-// STRUCTURE DIFF[target 0x58c630 | base 0x454fa0]: target 5 / base 5 stmts
-// .. same ..
-// ; aligned 5, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - all 5 statements align with 0 diffs; residual is a frame-size / slot-allocation difference, non-steerable. (Prior BLOCKED note about Ghidra generation is obsolete - the function is fully reconstructed and matches.)
+// STATE[99.63%|DONE]: frame size differs (slot allocation), non-steerable
 bool state_prio( anomaly_state* s1, anomaly_state* s2 )
 {	// true on less
 	if ( s1->enabled == s2->enabled )
@@ -94,6 +90,9 @@ bool state_prio( anomaly_state* s1, anomaly_state* s2 )
 			: s2->select_priority < s1->select_priority;
 	else
 		return !s1->enabled < !s2->enabled; // s1->enabled && !s2->enabled
+
+	// STRUCTURE DIFF: target 4 / base 4 stmts, 0x78 bytes both (no diverging rows)
+	// VERDICT: STRUCTURE MATCH - residual is the frame-reserve immediate (slot allocation), non-steerable.
 }
 
 // STATE[100%|DONE]

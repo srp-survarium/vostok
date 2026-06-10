@@ -13,7 +13,9 @@ namespace survarium {
 static bool s_recoil_use_pseudo_random_value = true; // <0x7db780>
 static console_commands::cc_bool s_recoil_use_pseudo_random_cc( "recoil_use_pseudo_random", s_recoil_use_pseudo_random_value, false, console_commands::command_type_engine_internal );
 
-// STATE[60.74%|PARTIAL]: source matches; sole divergence is math::pow(float,int) inline-vs-call - target INLINES pow(float,int) (5 is an int -> binds the int overload), base keeps it an out-of-line call. Non-steerable LTCG. See structure/weapon_recoil_calculator-random_f.md
+// STATE[21.57%|PARTIAL]: math::pow(float,int) inline-vs-call wall (target inlines the int-pow
+// sign-dispatch, base calls out-of-line); the % collapse from the old 60.74 is reloc/fold-name
+// pairing churn on the float-const pool, not a structure change - 5/5 statements align.
 float pseudo_random::random_f( const float range )
 {
 	float pi_x24	= math::pi * 24.0f;
@@ -22,15 +24,10 @@ float pseudo_random::random_f( const float range )
 	float result	= math::abs( fmod( k, 1.0f ) ) * range;
 	return result;
 
-	// STRUCTURE DIFF:
-	// target: 0x57e420            base: 0x448d00
-	// ; float survarium::pseudo_random::random_f(const float) ; target 5 stmts / base 5 stmts
-	// .. same ..
-	// 0x039 <0xd5> | 0x039 <0x85> | float k			= math::pow( 2.73f, math::sin( t ) ) - math::cos( 4.0f * t ) * 2.0f + math::pow( math::sin( ( t - math::pi_d2 ) / 12.0f ), 5 );   SIZE
-	// 0x10e <0x2a> | 0x0be <0x26> | float result	= math::abs( fmod( k, 1.0f ) ) * range;   SIZE
-	// .. same ..
-	// ; aligned 3, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - all 5 statements present, 0 quantity-diffs. The k-row SIZE is math::pow(float,int) inline-vs-call: target inlines pow(float,int) (the test/jne sign-dispatch + pow_impl block, identical to base's out-of-line pow @0x4aaa0) while base emits `mov ecx,5; call math::pow`; that inline also reorders operand eval and shifts result-row codegen (movss vs x87). Non-steerable per-call-site LTCG, same class as the operator|/is_aimed/fixed_string entries. trail: weapon_recoil_calculator-random_f.md
+	// STRUCTURE DIFF: target 5 / base 5 stmts
+	// SIZE -0x50 | 21 | float k			= math::pow( 2.73f, math::sin( t ) ) - math::cos( 4.0f * t ) * 2.0f + math::pow( math::sin( ( t - math::pi_d2 ) / 12.0f ), 5 );
+	// SIZE -0x4  | 22 | float result	= math::abs( fmod( k, 1.0f ) ) * range;
+	// VERDICT: STRUCTURE MATCH (shape ok) - target inlines pow(float,int) (int literal 5 binds the int overload; the inlined block IS base's out-of-line pow body), base calls it; per-call-site LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]: target ctor is empty (0 stmts) - LTCG dead-store-eliminated the constant-init
@@ -56,10 +53,8 @@ weapon_recoil_calculator::weapon_recoil_calculator( ) :
 {
 }
 
-// STATE[93.37%|PARTIAL]: body/control-flow/offsets match (disassembles fine now; the old
-// BLOCKED "Ghidra didn't generate" note was stale). Residual SIZE rows are inline-vs-call of
-// std::min/m_interpolator.transition_time() and the m_additive_recoil_timer compare - LTCG, not
-// source-steerable. See structure embed below.
+// STATE[93.90%|PARTIAL]: 38/38 statements align; sole residual is std::min inline-vs-call
+// (base inlines stlp_std::min<float>, target calls the promoted out-of-line instantiation).
 void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float time_scale )
 {
 	if ( !m_last_time_in_ms )
@@ -123,36 +118,22 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 		}
 	}
 
-	// STRUCTURE DIFF:
-	// target: 0x57e820            base: 0x4490b0
-	// ; void survarium::weapon_recoil_calculator::tick(const unsigned int, const float) ; target 51 stmts / base 55 stmts
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0x098 <0x2a> | 0x098 <0x49> | m_time_since_last_dispersion_change = std::min( m_time_since_last_dispersion_change, m_interpolator.transition_time( ) );   SIZE
-	// --          | <0>         |    EMPTY only base
-	// 0x0c2 <0x19> | 0x0e1 <0x1a> | if ( m_additive_recoil_timer != 0.0 )   SIZE
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// ; aligned 49, size-diffs 2, quantity-diffs 4
-	// VERDICT: STRUCTURE MATCH (shape ok) - 49 statements align; the 2 SIZE rows are inline-vs-call of std::min / m_interpolator.transition_time() and the FPU 0.0-compare lowering, both LTCG. Quantity-diffs are EMPTY source-line gaps. Non-steerable. trail: weapon_recoil_calculator-tick.md
+	// STRUCTURE DIFF: target 38 / base 38 stmts
+	// SIZE +0x1f | 82 | m_time_since_last_dispersion_change = std::min( m_time_since_last_dispersion_change, m_interpolator.transition_time( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - base INLINES stlp_std::min<float> (comiss/branch ptr-select), target calls the LTCG-promoted out-of-line instantiation (ecx/eax by-address); per-call-site inline-vs-call, non-steerable.
 }
 
-// STATE[91.69%|PARTIAL]: fixed a source precedence bug (79.80% -> 91.69%): target tests `first_shoot`
-// ALONE as the ternary condition (movzx; test; je), so recoil/recoil_amount are
-// `mult * koef * ( first_shoot ? a : b )` (parenthesized), not the `(mult*koef*first_shoot) ? a : b`
-// we had. Residual is non-steerable: the `&&` bool temp width (target byte vs base dword), a frame-
-// slot shift, and deg2rad/math::min inline-vs-call. claude@TODO: Why two recoil types?
-// m_target_vertical_koef & m_target_horizontal_koef vs. m_target_recoil_koef
+// STATE[89.99%|PARTIAL]: bool const first_shoot closed the &&-temp-width row (the old BASE_ONLY
+// first_shoot quantity diff was that one size change sliding the aligner); min restored to
+// std::min - the target provably calls stlp_std::min<float> (by-ref temps + lea/lea/call), the
+// old math::min was byte-closer (91.69) but the WRONG function. Faithful source over %.
+// claude@TODO: Why two recoil types? m_target_vertical_koef & m_target_horizontal_koef vs. m_target_recoil_koef
 void weapon_recoil_calculator::fire( )
 {
 	weapon_recoil_params const& weapon_params = m_weapon->get_recoil_params( );
 	float recoil_angle_deg	= weapon_params.shoot_recoil_min_angle + get_random_angle( weapon_params.shoot_recoil_angle_range );
 	float force_koef		= get_random_amount( 1.0f );
-	bool first_shoot		= m_target_vertical_koef == 0.0f && m_target_horizontal_koef == 0.0f;
+	bool const first_shoot	= m_target_vertical_koef == 0.0f && m_target_horizontal_koef == 0.0f;
 
 	float recoil			= m_player_recoil_multiplier * force_koef * ( first_shoot ? weapon_params.first_shoot_side_recoil : weapon_params.shoot_side_recoil );
 	float recoil_angle_rad	= math::deg2rad( recoil_angle_deg );
@@ -169,36 +150,23 @@ void weapon_recoil_calculator::fire( )
 	}
 
 	float recoil_amount		= m_player_recoil_multiplier * force_koef * ( first_shoot ? weapon_params.first_shoot_back_recoil : weapon_params.shoot_back_recoil );
-	m_target_recoil_koef	= math::min( m_target_recoil_koef + recoil_amount, 1.0f );
+	m_target_recoil_koef	= std::min( m_target_recoil_koef + recoil_amount, 1.0f );
 
 	m_time_since_last_dispersion_change = 0.0f;
 	m_time_since_shoot					= 0.0f;
 	m_additive_recoil_timer				= weapon_params.additive_recoil_time;
 
-	// STRUCTURE DIFF:
-	// target: 0x57e600            base: 0x448e80
-	// ; void survarium::weapon_recoil_calculator::fire() ; target 22 stmts / base 24 stmts
-	// .. same ..
-	// --          | 0x044 <0x40> | bool first_shoot		= m_target_vertical_koef == 0.0f && m_target_horizontal_koef == 0.0f;   ONLY base
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0x07e <0x3a> | 0x0be <0xf> | float recoil_angle_rad	= math::deg2rad( recoil_angle_deg );   SIZE
-	// .. same ..
-	// 0x0b8 <0xf> | --          | L129   ONLY target
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0x1b1 <0x32> | 0x1b7 <0x22> | m_target_recoil_koef	= math::min( m_target_recoil_koef + recoil_amount, 1.0f );   SIZE
-	// .. same ..
-	// ; aligned 19, size-diffs 2, quantity-diffs 4
-	// VERDICT: STRUCTURE MATCH (shape ok) - after the precedence fix the recoil/recoil_amount ternaries align (no more ONLY base/target on those rows). Residual: the && bool temp is a byte in target vs dword in base + a frame-slot shift (the first_shoot ONLY base row), plus deg2rad/math::min inline-vs-call SIZE rows. Non-steerable. trail: weapon_recoil_calculator-fire.md
+	// STRUCTURE DIFF: target 18 / base 18 stmts
+	// BASE_ONLY | 158 | float recoil_angle_rad	= math::deg2rad( recoil_angle_deg );
+	// TRGT_ONLY | --  | L129 (0xf, same size+offset as the base row - aligner refused the pair on reloc content)
+	// SIZE +0x17 | 172 | m_target_recoil_koef	= std::min( m_target_recoil_koef + recoil_amount, 1.0f );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the deg2rad pair is both-sides 0xf at offset 0xb8, a pairing refusal not a divergence; the min row is base INLINING stlp_std::min<float> where target calls the promoted instantiation (same wall as tick). Non-steerable.
 }
 
-// STATE[None|DONE]: body byte-identical to target (7 stores align 7/7, 0 diffs); objdiff scores
-// None only because the 0.0f constant-pool reloc resolves to different delinker symbol names
-// (base out_of_range_reward vs target offset) - both are 0.0f. Non-steerable. claude@NOTE: the
-// source duplicates the vertical/horizontal koef stores (0x34/0x38 written twice) - matches the
-// target's 7 stores exactly, so reproduced as-is per the #1 rule.
+// STATE[100%|DONE]: the old None was the 0.0f constant-pool reloc-name artifact; the current
+// delinker pairs it and report.json now reads 100. claude@NOTE: the source duplicates the
+// vertical/horizontal koef stores (0x34/0x38 written twice) - matches the target's 7 stores
+// exactly, reproduced as-is per the #1 rule.
 void weapon_recoil_calculator::reset( )
 {
 	m_time_since_last_dispersion_change	= 0.0f;
@@ -245,6 +213,11 @@ void weapon_recoil_calculator::process_compensation( const float dt_sec )
 	m_target_recoil_koef = recoil_compensation_amount < m_target_recoil_koef
 		? m_target_recoil_koef - recoil_compensation_amount
 		: 0.0f;
+
+	// STRUCTURE DIFF: target 8 / base 8 stmts
+	// SIZE +0x5 | 237 | : 0.0f;
+	// SIZE +0x5 | 240 | : 0.0f;
+	// VERDICT: STRUCTURE MATCH (shape ok) - the two abs-compare ternaries: base compares via x87 (fld/fcomip) where target uses SSE comiss (abs() return-register at the LTCG call boundary); non-steerable.
 }
 
 // STATE[89.02%|PARTIAL]: cross-unit wall. The target keeps an out-of-line
@@ -263,17 +236,26 @@ float weapon_recoil_calculator::get_random_angle( const float range )
 	{
 		return m_random.random_f( range );
 	}
+
+	// STRUCTURE DIFF: target 5 / base 5 stmts
+	// SIZE +0x7 | 259 | m_pseudo_random.set_time( m_weapon->get_user( )->local_time( m_last_time_in_ms ) * 0.01f );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target calls weapon_core::get_user out-of-line, our build inlines the accessor (cross-unit header; out-lining it there is forbidden); non-steerable from here.
 }
 
-// STATE[80.75%|PARTIAL]: same cross-unit get_user inline wall as get_random_angle
-// (target keeps the out-of-line call; our build inlines get_user).
+// STATE[91.0%|PARTIAL]: statement split recovered (80.75 -> 91.0): target inits c_min_amaunt
+// to 0.25f in its OWN statement and does max+multiply in the return; only the cross-unit
+// get_user inline wall remains.
 float weapon_recoil_calculator::get_random_amount( const float range )
 {
 	float k = s_recoil_use_pseudo_random_value
 		? ( 1.0f + math::sin( m_weapon->get_user( )->local_time( m_last_time_in_ms ) * 0.01f ) ) * 0.5f
 		: m_random.random_f( 1.0f );
-	float c_min_amaunt = math::max( 0.25f, k ) * range;
-	return c_min_amaunt;
+	float c_min_amaunt = 0.25f;
+	return math::max( c_min_amaunt, k ) * range;
+
+	// STRUCTURE DIFF: target 3 / base 3 stmts
+	// SIZE +0x7 | 274 | : m_random.random_f( 1.0f );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row is the get_user accessor inline-vs-call (same cross-unit wall as get_random_angle); non-steerable from here.
 }
 
 // STATE[100%|DONE]

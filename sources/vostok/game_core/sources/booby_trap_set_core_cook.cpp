@@ -10,22 +10,14 @@
 
 namespace survarium {
 
-// STATE[96.53%|DONE]: LTCG call-target reloc only
-// STRUCTURE DIFF[target 0x752310 | base 0x458220]: target 1 / base 1 stmts
-// .. same ..
-// ; aligned 1, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole diff is a relocated base-init call target, non-steerable. trail: booby_trap_set_core_cook.md
+// STATE[100%|DONE]
 booby_trap_set_core_cook::booby_trap_set_core_cook( ) :
 	resources::translate_query_cook( resources::booby_trap_set_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[95.75%|DONE]: LTCG boost::bind closure-temp 8-byte frame inflation, no instr diff
-// STRUCTURE DIFF[target 0x752750 | base 0x458660]: target 17 / base 17 stmts
-// .. same ..
-// ; aligned 17, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - zero instr add/remove; sole diff is sub esp 188h vs 190h (8B larger bind-closure temp), shifting [ebp-XX] slots uniformly, non-steerable. trail: booby_trap_set_core_cook.md
+// STATE[99.86%|DONE]: ICF fold-name relocation residual only; byte sizes equal.
 void booby_trap_set_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -55,22 +47,12 @@ void booby_trap_set_core_cook::translate_query( resources::query_result_for_cook
 		NULL,
 		&parent
 	);
+
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts (no diverging rows, 0x1bf bytes both)
+	// VERDICT: STRUCTURE MATCH - byte sizes equal; 99.86 residual is an ICF fold-name relocation only.
 }
 
-// STATE[82.01%|DONE]: LTCG resource_ptr-temp inline & create_request ABI
-// STRUCTURE DIFF[target 0x7524c0 | base 0x4583d0]: target 28 / base 28 stmts
-// .. same ..
-// 0x02c <0x22> | 0x02c <0x1d> | configs::binary_config_ptr config = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );   SIZE
-// .. same ..
-// 0x0b2 <0xd> | 0x0ad <0x11> | resource->set_amount( cook_data.stack_size );   SIZE
-// .. same ..
-// 0x14f <0x27> | 0x14e <0x1a> | for ( u8 i = 0 ; i != cook_data.stack_size ; ++i )   SIZE
-// .. same ..
-// 0x176 <0x29> | 0x168 <0x26> | requests.push_back( resources::create_request( "", resources::booby_trap_class ) );   SIZE
-// .. same ..
-// 0x1b8 <0xa4> | 0x1a7 <0xb2> | );   SIZE
-// ; aligned 23, size-diffs 5, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - all 5 SIZE diffs are LTCG inline-vs-temp choices in header/template code (target passes get_unmanaged_resource()/create_request prvalue directly; base materializes an extra resource_ptr copy-construct, inflating the frame 8B), non-steerable. trail: booby_trap_set_core_cook.md
+// STATE[94.06%|DONE]: LTCG residuals only (promoted set_amount convention, inlined buffer_vector::size).
 void booby_trap_set_core_cook::on_config_ready(
 	resources::queries_result&	data,
 	booby_trap_set_cook_data	cook_data
@@ -112,15 +94,17 @@ void booby_trap_set_core_cook::on_config_ready(
 		user_data.begin( ),
 		data.get_parent_query( )
 	);
+
+	// STRUCTURE DIFF: target 20 stmts / base 20 stmts
+	// SIZE +0x4 | 87  | resource->set_amount( cook_data.stack_size );
+	// SIZE -0x1 | 101 | for ( u8 i = 0 ; i != cook_data.stack_size ; ++i )
+	// SIZE +0xe | 114 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - set_amount LTCG-promoted convention (cx/eax) vs
+	// thiscall, al-vs-cl loop increment, and base inlining buffer_vector::size where target
+	// calls it; all whole-program LTCG, non-steerable.
 }
 
-// STATE[89.02%|DONE]: LTCG resource_ptr-temp inline (static_cast_resource_ptr)
-// STRUCTURE DIFF[target 0x7523c0 | base 0x458270]: target 11 / base 11 stmts
-// .. same ..
-// 0x039 <0x44> | 0x039 <0x41> | booby_trap_core_ptr trap = static_cast_resource_ptr< booby_trap_core_ptr >( data[i].get_unmanaged_resource( ) );   SIZE
-// .. same ..
-// ; aligned 10, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE diff: target builds get_unmanaged_resource() result as a direct stack prvalue into static_cast_resource_ptr; base materializes an extra resource_ptr copy-construct (one more call, +8B frame). Header/template LTCG inline choice, non-steerable. trail: booby_trap_set_core_cook.md
+// STATE[100%|DONE]
 void booby_trap_set_core_cook::on_subresources_loaded(
 	resources::queries_result&		data,
 	booby_trap_set_core*			resource,

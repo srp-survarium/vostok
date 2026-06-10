@@ -30,11 +30,8 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 {
 }
 
-// STATE[97.45%|PARTIAL]: only residual is the documented inline-vs-call of the trivial
-// weapon_core::round_is_chambered() accessor (header STUB inlines `m_is_round_chambered`,
-// target keeps it out-of-line) - same wall as weapon_core_reload_state_base::initialize (92%);
-// weapon_core.h is out of this unit's scope. The folded boost::bind/assign_to/function::clear
-// symbol-name diffs are byte-identical ICF folds. See md.
+// STATE[76.17%|PARTIAL]: boost::function1::assign_to inline level differs (target inlines the
+// wrapper, exposing basic_vtable1::assign_to + the vtable-tag dance), whole-program LTCG.
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
 	m_animation_ended = false;
@@ -44,38 +41,31 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 		boost::bind( &weapon_core_shotgun_reload_start_substate::on_animation_end, this, _1 )
 	);
 
-	if ( !m_weapon.deserializing( ) &&
-		 m_weapon.chamber_a_round_on_reload( ) &&
-		 m_weapon.round_is_chambered( ) )
-		m_weapon.unload_chambered_round( );
+	if ( !m_weapon.deserializing( ) )
+	{
+		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
+			m_weapon.unload_chambered_round( );
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <0x59e4ea>|0x00a|+0x00a:'26'		m_animation_ended = false;
-	// <0x59e4f4>|0x014|+0x0c6:'27'		set_animation_callback(...);
-	// <0>
-	// <0x59e5ba>|0x0da|+0x01a:'29'		if ( !deserializing() &&
-	// <0>
-	// <0x59e5d4>|0x0f4|+0x02f:'31'		chamber_a_round_on_reload() && round_is_chambered() )
-	// <0x59e603>|0x123|+0x00e:'32'		unload_chambered_round();
-	// <0>
-	// ******
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE -0x35 | 42 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - nested if reproduces the target's split condition
+	// records (0x1a + 0x2f, identical bytes); sole SIZE is function1::assign_to kept
+	// out-of-line in base vs inlined in target, non-steerable boost-internal LTCG.
 }
 
-// STATE[83.42%|PARTIAL]: residual is the inline-vs-call elision of animation_playback_state::reset()
-// (animation/type_definitions.h header-inline stub; target keeps it out-of-line) plus the benign
-// dummy::nonnull/finalize_impl ICF fold for the compiled-out ASSERT. Both unsteerable, outside this
-// unit's scope (same class as weapon_core_shotgun_reload_state::finalize 78%). See md.
+// STATE[61.84%|PARTIAL]: animation_playback_state::reset() inlined in base vs out-of-line
+// promoted call in target, whole-program LTCG, non-steerable.
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
-	m_animation_playback_state->reset( );
+	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
 	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
 
-	// FUNCTION BODY
-	// <0x59e4a9>|0x009|+0x01a:'38'	ASSERT + m_animation_playback_state->reset();
-	// <0x59e4c3>|0x023|+0x014:'39'	remove_animation_callback(...);
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x17 | 61 | ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target's line record merges the assert eater and the
+	// reset on one line (0x1a = 0xc eater + 0xe promoted reset call); base inlines reset's body
+	// (0x25), non-steerable LTCG inline choice on the header-inline reset.
 }
 
 // STATE[100%|DONE]
@@ -84,10 +74,8 @@ bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 	return m_animation_ended;
 }
 
-// STATE[83%|PARTIAL]: residuals are the benign dummy::nonnull/finalize_impl ICF fold (compiled-out
-// ASSERT, byte-identical at link) and the LTCG operand scheduling of intrusive_ptr::operator== (target
-// computes the LHS m_animation_to_wait_for address before loading the params.animation arg; ours pushes
-// the arg first) - a call-boundary temp/arg residual. Structure matches statement-for-statement. See md.
+// STATE[83.00%|PARTIAL]: intrusive_ptr::operator== operand scheduling (+0x1) and the ASSERT
+// eater's ICF fold-name reloc; structure exact.
 animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;
@@ -102,6 +90,12 @@ animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::
 	}
 
 	return animation::callback_return_type_call_me_again;
+
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x1 | 97 | if ( m_animation_to_wait_for == params.animation )
+	// VERDICT: STRUCTURE MATCH (shape ok) - the outer-if BASE_ONLY/TRGT_ONLY pair is an aligner
+	// mispair (identical 0x10 bytes at offset 0x10 both sides); sole SIZE is the operator==
+	// operand scheduling, non-steerable.
 }
 
 } // namespace survarium

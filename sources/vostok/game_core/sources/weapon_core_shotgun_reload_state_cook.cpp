@@ -15,30 +15,19 @@ weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
 }
 
-// STATE[41.38%|PARTIAL]: statement 36 (the malloc+return) matches in shape but the
-// base inlines the mutable_buffer(pvoid,u32) ctor to an out-of-line uint2::uint2
-// COMDAT-fold while the target inlines the two field stores ([edx]=ptr;
-// [ecx+4]=0x140) into the sret slot. Statement 35 is an unresolved ASSERT: target
-// emits `bool x=false; ASSERT_check(&x); if(x){ copy in_query(600 bytes) + raw_file
-// _data + file_exist; ASSERT_check }` - a real assertion calling a validator that
-// takes in_query BY VALUE; the exact UNKNOWN_EXPRESSION is not yet recovered, so
-// only the first compiled-out half is produced. See md.
+// STATE[41.38%|PARTIAL]: the guarded-eater statement was VOSTOK_UNREFERENCED_PARAMETERS
+// (identity(false) guard + variadic helper taking in_query BY VALUE - the 0x258 rep movsd
+// copy), not an ASSERT; residual is the mutable_buffer(pvoid,u32) ctor inlined to two
+// field stores in target vs the out-of-line uint2::uint2 COMDAT-fold call in base.
 mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
+	VOSTOK_UNREFERENCED_PARAMETERS( in_query, raw_file_data, file_exist );
 	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_shotgun_reload_state ), "weapon_core_shotgun_reload_state" ), sizeof( weapon_core_shotgun_reload_state ) );
 
-	// FUNCTION BODY
-	// <0x5901ab>|0x00b|+0x03d:'35'	ASSERT( <validator taking in_query by value> )
-	// <0x5901e8>|0x048|+0x02e:'36'	return mutable_buffer( MALLOC(0x140), 0x140 );
-	// ******
-	//
-	// target statement 35:
-	//   mov byte [ebp-1],0; lea eax,[ebp-1]; call ASSERT; movzx eax,[eax]; test; je .1
-	//   movzx ecx,[ebp+18h](file_exist); push ecx; mov edx,[ebp+14h](raw.size); push edx
-	//   mov eax,[ebp+10h](raw.ptr); push eax; mov esi,[ebp+0Ch](in_query)
-	//   sub esp,258h; mov ecx,96h; rep movsd; call ASSERT; add esp,264h
-	// .1: ...malloc... (statement 36)
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0x6 | 25 | return mutable_buffer( VOSTOK_MALLOC_IMPL( ... ), sizeof( ... ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the eater row now matches byte-for-byte; sole SIZE
+	// is the mutable_buffer ctor inline-vs-call, non-steerable LTCG.
 }
 
 // STATE[55.64%|PARTIAL]: target calls free_helper<doug_lea_allocator,resource_base>
@@ -47,14 +36,15 @@ mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resourc
 // check and calls free_helper_impl directly, spilling the allocator to an extra
 // [ebp-4] temp (sub esp,8 vs target push ecx). Same inline-depth divergence as
 // weapon_core_cook::delete_resource; the allocator/type are correct (g_allocator
-// pointer, T=resource_base). See md.
+// pointer, T=resource_base).
 void weapon_core_shotgun_reload_state_cook::deallocate_resource( void* buffer )
 {
 	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
 
-	// FUNCTION BODY
-	// <0x590178>|0x008|+0x014:'41'	VOSTOK_FREE_IMPL( g_allocator, (resource_base*&)buffer );
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0xf | 53 | VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the free_helper wrapper
+	// inline-vs-call, non-steerable LTCG.
 }
 
 // STATE[STUB]

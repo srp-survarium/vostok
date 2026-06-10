@@ -20,34 +20,23 @@ oxygen_tank::oxygen_tank( ) :
 {
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]: was 61.61 with `infl.~item_influence( )` + VOSTOK_DELETE_IMPL.
  oxygen_tank::~oxygen_tank( )
 {	// sushi@NOTE: No check that it wasn't initialized, but this is fine
 	for ( u32 i = 0 ; i < m_influences_count ; ++i )
 	{
 		item_influence& infl = m_influences[i];
-		infl.~item_influence( );
+		// explicit VIRTUAL dtor call (push 0; call [vptr]) - the target destroys only the
+		// protector member; an `infl.~item_influence( )` devirtualizes to a direct call.
+		infl.protector.~damage_protector( );
 	}
-	VOSTOK_DELETE_IMPL( g_allocator, m_influences );
-
-	// FUNCTION BODY[0x6fa480]: 6
-	// <0x6fa492>|0x012|+0x021|[1]:'24'
-	// <0>
-	// <0x6fa4b3>|0x033|+0x012|[2]:'26'
-	// <0x6fa4c5>|0x045|+0x00e:'27'
-	// <0x6fa4d3>|0x053|+0x002:'28'
-	// <0x6fa4d5>|0x055|+0x040:'29'
-	// ******
+	VOSTOK_FREE_IMPL( g_allocator, m_influences );
 }
 
-// STATE[97.53%|DONE]: LTCG - target spills the binary_config_value temp to a stack slot on the two strings::copy lines; otherwise byte-identical
-// STRUCTURE DIFF[target 0x6ea1c0 | base 0x44abb0]: target 18 / base 18 stmts
-// .. same ..
-// 0x1f8 <0x38> | 0x1f8 <0x2c> | strings::copy( infl.body_part_name, 0x10, influences[i]["body_part"] );   SIZE
-// 0x230 <0x38> | 0x224 <0x2c> | strings::copy( infl.hit_type,		0x10, influences[i]["hit_type"] );   SIZE
-// .. same ..
-// ; aligned 16, size-diffs 2, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole diffs are the target materializing the influences[i][...] binary_config_value temp into a stack slot before strings::copy (extra mov to/from [ebp-A0h]); LTCG temp-spill at the call boundary, non-steerable. trail: oxygen_tank.md
+// STATE[95.17%|DONE]: the two strings::copy SIZE rows were the static_cast_checked< pcstr >
+// return-temp (+0xc each), now restored - 13/13 stmts, 0x2bc bytes BOTH sides; the % residual
+// (was 97.53 with the wrong-shape plain casts) is purely the ICF fold-name relocs on the
+// kept-out-of-line cast instantiations, same class as medkit::load.
 void oxygen_tank::load( configs::binary_config_value config )
 {
 	m_amount_ms = math::floor( (float)config["amount_time_sec"] * 1000.f );
@@ -64,11 +53,14 @@ void oxygen_tank::load( configs::binary_config_value config )
 		item_influence& infl = m_influences[i];
 		new ( &infl ) damage_protector( );
 		infl.protector.reduce_damage_functor = boost::bind( &oxygen_tank::reduce_damage, this, _1, _2, _3, _4 );
-		strings::copy( infl.body_part_name, 0x10, influences[i]["body_part"] );
-		strings::copy( infl.hit_type,		0x10, influences[i]["hit_type"] );
+		strings::copy( infl.body_part_name, 0x10, static_cast_checked< pcstr >( influences[i]["body_part"] ) );
+		strings::copy( infl.hit_type,		0x10, static_cast_checked< pcstr >( influences[i]["hit_type"] ) );
 		infl.hit_coeff = (float)influences[i]["hit_coeff"];
 		infl.threshold = (float)influences[i]["threshold"];
 	}
+
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts (0x2bc both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residual is ICF fold-name relocs on the kept-out-of-line cast instantiations (same class as medkit::load).
 }
 
 // STATE[100%|DONE]
@@ -82,22 +74,6 @@ void oxygen_tank::action( bool key_down )
 }
 
 // STATE[48.62%|PARTIAL]: inline-vs-call wall - target out-of-line-calls holder()/scheduler()/register_for_update(); our base inlines them
-// STRUCTURE DIFF[target 0x6e9dc0 | base 0x44a720]: target 17 / base 20 stmts
-// .. same ..
-// --          | <0>         |    EMPTY only base
-// 0x03b <0xa9> | 0x03b <0xf5> | );   SIZE
-// .. same ..
-// 0x0e6 <0x2a> | 0x132 <0x3e> | m_inventory->holder( ).scheduler( ).unregister( &m_scheduler_identifier );   SIZE
-// .. same ..
-// --          | <0>         |    EMPTY only base
-// 0x15e <0x50> | 0x1be <0x73> | );   SIZE
-// .. same ..
-// --          | <0>         |    EMPTY only base
-// 0x1b0 <0x50> | 0x233 <0x73> | );   SIZE
-// .. same ..
-// 0x205 <0xa8> | 0x2ab <0x77> | LOG_INFO( "Oxygen Tank switched to [%s]. amount= %dms" );   SIZE
-// ; aligned 12, size-diffs 5, quantity-diffs 3
-// VERDICT: STRUCTURE MATCH (shape ok) - target emits inventory::holder/inventory_holder::scheduler/scheduler::register_for_update OUT-OF-LINE (rva 0x86b70/0x82cc0/0x82da0) and calls them; our base inlines all three (base has no standalone copy). EMPTY-only-base rows are cosmetic blank-line gaps. Inline-vs-call inliner decision on inline accessors, non-steerable (de-inlining the accessor would break every other matched caller). trail: oxygen_tank.md
 void oxygen_tank::set_active( bool bactive )
 {
 	m_active = bactive;
@@ -130,16 +106,17 @@ void oxygen_tank::set_active( bool bactive )
 	}
 
 	LOG_INFO( "Oxygen Tank switched to [%s]. amount= %dms" );
+
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
+	// SIZE +0x4c | 113 | );
+	// SIZE +0x14 | 115 | m_inventory->holder( ).scheduler( ).unregister( &m_scheduler_identifier );
+	// SIZE +0x23 | 124 | );
+	// SIZE +0x23 | 129 | );
+	// SIZE -0x31 | 132 | LOG_INFO( "Oxygen Tank switched to [%s]. amount= %dms" );
+	// VERDICT: STRUCTURE MATCH (13/13) - target keeps inventory::holder/inventory_holder::scheduler/scheduler::register_for_update out-of-line (rva 0x86b70/0x82cc0/0x82da0); base inlines all three. LOG_INFO is the logging-macro LTCG. Inline-vs-call, non-steerable from this TU.
 }
 
 // STATE[75.86%|PARTIAL]: math::min inline-vs-call + logging-macro LTCG, non-steerable
-// STRUCTURE DIFF[target 0x6ea0d0 | base 0x44aaa0]: target 7 / base 7 stmts
-// .. same ..
-// 0x01d <0x25> | 0x01d <0x3d> | m_amount_ms -= math::min( m_amount_ms, frame_time_ms );   SIZE
-// 0x042 <0x81> | 0x05a <0x82> | LOG_INFO( "amount is: %dms", m_amount_ms );   SIZE
-// .. same ..
-// ; aligned 5, size-diffs 2, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES math::min(u32,u32) to branchless cmp/sbb/and/add; our base out-of-line-calls it (target also keeps a standalone copy at 0x3fbb0). LOG_INFO is the usual logging-macro LTCG. Both inline-vs-call inliner decisions, non-steerable. trail: oxygen_tank.md
 void oxygen_tank::active_tick( const u32 frame_time_ms )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_active ) );
@@ -149,15 +126,14 @@ void oxygen_tank::active_tick( const u32 frame_time_ms )
 
 	if ( empty( ) )
 		set_active( false );
+
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x18 | 147 | m_amount_ms -= math::min( m_amount_ms, frame_time_ms );
+	// SIZE +0x1  | 148 | LOG_INFO( "amount is: %dms", m_amount_ms );
+	// VERDICT: STRUCTURE MATCH (5/5) - target inlines math::min(u32,u32) to branchless cmp/sbb/and/add while base calls it out-of-line; LOG_INFO is the logging-macro LTCG. Both inline-vs-call, non-steerable.
 }
 
-// STATE[99.90%|DONE]: byte-identical; lone diff is a cosmetic blank-line gap (size-diffs 0)
-// STRUCTURE DIFF[target 0x6e9cf0 | base 0x44a650]: target 8 / base 9 stmts
-// .. same ..
-// --          | <0>         |    EMPTY only base
-// .. same ..
-// ; aligned 8, size-diffs 0, quantity-diffs 1
-// VERDICT: STRUCTURE MATCH - all statements byte-for-byte aligned; the single quantity row is a collapsed blank source-line between `return &infl;`'s `}` and `return NULL;`, non-steerable cosmetic gap. trail: oxygen_tank.md
+// STATE[99.90%|DONE]: byte-identical; residual is the empty_stub/ICF reloc fold-name only
 oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_name, pcstr hit_type )
 {
 	for ( u32 i = 0 ; i < m_influences_count ; ++i )
@@ -169,6 +145,9 @@ oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_
 	}
 
 	return NULL;
+
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts (0x75 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - clean 6/6 alignment; 99.90 residual is reloc fold-naming noise.
 }
 
 // STATE[100%|DONE]

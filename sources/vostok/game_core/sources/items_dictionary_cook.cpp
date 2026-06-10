@@ -40,7 +40,7 @@ void items_dictionary_cook::delete_resource( resources::resource_base* resource 
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE: target passes resource_base*& on stack (add esp,8); base passes it in edi via the LTCG custom calling convention chosen for delete_helper<doug_lea_allocator,resource_base> (add esp,4, push/pop edi). Shared across all 5 cooks deleting the raw `resource` param (items_cook, weapon_ammunition_cook, animation_analysis_result_cook, player_parameters_modifyer_cook all 31%); non-steerable LTCG arg passing. trail: delete_resource.md
 }
 
-// STATE[68.01%|PARTIAL]: inline-vs-call walls (vectora ctor, STR_JOINA, binary_config_value operator[])
+// STATE[70.40%|PARTIAL]: inline-vs-call walls (vectora ctor, STR_JOINA, binary_config_value operator[])
 void items_dictionary_cook::on_items_dictionary_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const parent	= data.get_parent_query( );
@@ -92,37 +92,20 @@ void items_dictionary_cook::on_items_dictionary_config_loaded( resources::querie
 		parent
 	);
 
-	// STRUCTURE DIFF[target 0x7548b0 | base 0x5689a0]: target 43 / base 41 stmts
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x08b <0x45> | 0x08b <0x3a> | cooked_resource->dict_config = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );   SIZE
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x0e5 <0x8> | 0x0da <0x44> | vectora< resources::request > requests( g_allocator );   SIZE
-	// .. same ..
-	// --          | 0x135 <0x1a> | u32* item_dict_ids = VOSTOK_NEW_ARRAY_IMPL( g_allocator, u32, requests_count );   ONLY base
-	// .. same ..
-	// 0x104 <0x22> | --          | L52   ONLY target
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x182 <0x115> | 0x1ab <0x7a> | STR_JOINA( item_cfg_path, "resources/", (pcstr)(*items_it)["cfg_name"] );   SIZE
-	// .. same ..
-	// 0x297 <0x27> | 0x225 <0x2e> | requests.push_back( resources::create_request( item_cfg_path, resources::binary_config_class_impl ) );   SIZE
-	// .. same ..
-	// 0x2d3 <0x15> | 0x268 <0x21> | const u8 item_category_id = (u8)(*items_it)["item_category"];   SIZE
-	// .. same ..
-	// 0x347 <0x18> | 0x2e8 <0x2a> | item_dict.item_cfg_name = (pcstr)(*items_it)["cfg_name"];   SIZE
-	// .. same ..
-	// 0x36b <0x23> | 0x31e <0xf> | cooked_resource->add_item_desc( item_dict );   SIZE
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0x39e <0xb4> | 0x33d <0xc6> | );   SIZE
-	// ; aligned 31, size-diffs 8, quantity-diffs 6
-	// VERDICT: STRUCTURE MATCH (shape ok) - all 8 SIZE diffs are inline-vs-call of shared helpers (vectora<request> ctor allocator inline direction reversed; STR_JOINA string-join macro; binary_config_value::operator[] index; static_cast_resource_ptr / get_unmanaged_resource; add_item_desc). The L52 item_dict_ids ONLY-target / 0x135 ONLY-base is the SAME statement de-paired by its SIZE diff (0x22 vs 0x1a) plus the surrounding empty-line runs - not a real quantity divergence; source statement order matches. Non-steerable from this call site (template/macro codegen). trail: on_items_dictionary_config_loaded.md
+	// STRUCTURE DIFF: target 27 stmts / base 27 stmts
+	// SIZE +0x3c | 52 | vectora< resources::request > requests( g_allocator );
+	// BASE_ONLY  | 55 | u32* item_dict_ids = VOSTOK_NEW_ARRAY_IMPL( g_allocator, u32, requests_count );
+	// TRGT_ONLY  | -- | L52 (0x22 - the same item_dict_ids statement, de-paired by its size: target spills g_allocator to a temp slot, base calls strip_pointer)
+	// SIZE -0x9b | 63 | STR_JOINA( item_cfg_path, "resources/", (pcstr)(*items_it)["cfg_name"] );
+	// SIZE +0x7  | 65 | requests.push_back( resources::create_request( item_cfg_path, resources::binary_config_class_impl ) );
+	// SIZE +0xc  | 68 | const u8 item_category_id = (u8)(*items_it)["item_category"];
+	// SIZE +0x12 | 78 | item_dict.item_cfg_name = (pcstr)(*items_it)["cfg_name"];
+	// SIZE -0x14 | 82 | cooked_resource->add_item_desc( item_dict );
+	// SIZE +0x12 | 93 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 27/27; the ONLY pair is one statement de-paired by its size diff, not a quantity divergence. All SIZE rows are inline-vs-call of shared helpers (vectora ctor, strip_pointer, STR_JOINA, operator[], create_request, add_item_desc); non-steerable from this call site.
 }
 
-// STATE[94.02%|PARTIAL]: inline-vs-call / reg-alloc walls (get_unmanaged_resource, value_exists ternary, delete_helper)
+// STATE[97.72%|PARTIAL]: inline-vs-call walls (value_exists ternary, strip_pointer in the array delete)
 void items_dictionary_cook::on_subresources_loaded(
 	resources::queries_result&		data,
 	items_dictionary*				cooked_resource,
@@ -158,23 +141,12 @@ void items_dictionary_cook::on_subresources_loaded(
 
 	parent->finish_query( result_success, assert_on_fail_true );
 
-	VOSTOK_DELETE_IMPL( g_allocator, item_dict_ids );
+	VOSTOK_DELETE_ARRAY_IMPL( g_allocator, item_dict_ids );
 
-	// STRUCTURE DIFF[target 0x754630 | base 0x568710]: target 27 / base 26 stmts
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x054 <0x24> | 0x054 <0x1f> | configs::binary_config_ptr item_cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[i].get_unmanaged_resource( ) );   SIZE
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x184 <0x7a> | 0x17f <0x86> | : 0;   SIZE
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0x24a <0x2e> | 0x251 <0x32> | VOSTOK_DELETE_IMPL( g_allocator, item_dict_ids );   SIZE
-	// ; aligned 22, size-diffs 3, quantity-diffs 3
-	// VERDICT: STRUCTURE MATCH (shape ok) - 3 SIZE diffs are inline-vs-call/reg-alloc: get_unmanaged_resource indexing, the value_exists(...)?:0 combat_log_icon ternary, and the u32* delete_helper (target keeps an out-of-line strip_pointer call + reg choice differs). The 3 quantity-diffs are all EMPTY-only empty-line runs, not real statements (target 27 vs base 26 = one extra collapsed blank line). Non-steerable. trail: on_subresources_loaded.md
+	// STRUCTURE DIFF: target 17 stmts / base 17 stmts
+	// SIZE +0xc | 152 | : 0;  (the value_exists(...) ? (u8)... : 0 combat_log_icon ternary)
+	// SIZE +0x4 | 161 | VOSTOK_DELETE_ARRAY_IMPL( g_allocator, item_dict_ids );
+	// VERDICT: STRUCTURE MATCH (shape ok) - DELETE -> DELETE_ARRAY restored the target's delete_array_helper_impl call shape (+0x14 -> +0x4); residuals are the ternary inline-vs-call and the strip_pointer call inside the macro, non-steerable.
 }
 
 } // namespace survarium

@@ -115,7 +115,7 @@ private:
 } // namespace resources
 
 template < typename dest_type, typename object_type, typename base_type >
-dest_type		static_cast_resource_ptr	(resources::resource_ptr<object_type, base_type> const src_ptr);
+dest_type		static_cast_resource_ptr	(resources::resource_ptr<object_type, base_type> const& src_ptr);
 
 } // namespace vostok
 

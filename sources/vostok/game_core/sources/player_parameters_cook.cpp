@@ -129,20 +129,24 @@ void player_parameters_modifyer::apply( base_player* player )
 
 	player->usable_object_user_data( )->booster_engineer_use_time_factor = 1.0f + this->engineer_use_time_corr_perc / 100.0f;
 
-	// STRUCTURE DIFF (target 0x59bc10):
-	// 0x01a <0x21> | 0x01a <0x29> | damage_model_ptr damage_model = player->damage_model( );   SIZE
-	// .. same ..
-	// 0x0c6 <0x1b> | 0x0ce <0x32> | body_part_parameters* current_body_part_parameters = damage_model->get_body_part( body_part_name.c_str( ) );   SIZE
-	// <0>         | --          |    EMPTY only target   (x several)
-	// .. same ..
-	// 0x21f <0x19> | 0x23e <0x28> | inventory& invent = player->cast_to_inventory_holder( )->inventory( );   SIZE
-	// 0x254 <0x1c> | 0x282 <0x30> | inventory_item_ptr item = invent.item_in_slot( weapon_slots[i] );   SIZE
-	// 0x289 <0x24> | 0x2cc <0x31> | weapon_core* wc = item->cast_weapon_core( );   SIZE
-	// 0x470 <0x17> | 0x4bb <0x2e> | body_part_parameters* bp = damage_model->get_body_part( "pain" );   SIZE
-	// 0x6a0 <0x37> | 0x6f5 <0x5e> | player->damage_model( )->add_damage_protector( anomaly_damage_types[i], anomaly_scale, 0.0f );   SIZE
-	// 0x6d7 <0x2> | --          | L141   ONLY target   (loop-body `}` jmp, follows from operator* being a call)
-	// aligned 61, size-diffs 15, quantity-diffs 10
-	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program LTCG inline-vs-call: target keeps resource_ptr copy-ctor and intrusive_ptr::operator* out-of-line, base inlines them (default-init+set, direct m_object load); +8 frame and reg/slot renames cascade. Non-steerable.
+	// STRUCTURE DIFF: target 50 stmts / base 49 stmts
+	// SIZE +0x8  | 39  | damage_model_ptr damage_model = player->damage_model( );
+	// SIZE +0x17 | 48  | body_part_parameters* current_body_part_parameters = damage_model->get_body_part( body_part_name.c_str( ) );
+	// SIZE +0xf  | 73  | inventory& invent = player->cast_to_inventory_holder( )->inventory( );
+	// SIZE +0x14 | 77  | inventory_item_ptr item = invent.item_in_slot( weapon_slots[i] );
+	// SIZE +0x1  | 78  | if ( !item )
+	// SIZE +0xd  | 81  | weapon_core* wc = item->cast_weapon_core( );
+	// SIZE -0x6  | 84  | LOG_WARNING( "non-weapon item in weapon slot" );
+	// SIZE +0x1  | 88  | dispersion_calculator& dc = wc->get_dispersion_calculator( );
+	// SIZE +0x17 | 99  | body_part_parameters* bp = damage_model->get_body_part( "pain" );
+	// SIZE -0x6  | 107 | LOG_WARNING( "there's no 'pain' bodypart, pain health will not be scaled" );
+	// SIZE +0xd  | 110 | damage_model->m_body_parts.for_each( hr_predicate );
+	// SIZE -0x10 | 112 | player->usable_object_user_data( )->booster_artcont_time_factor = ...;
+	// SIZE -0x4  | 124 | for ( u32 i = 0 ; i != array_size( anomaly_damage_types ) ; ++i )
+	// SIZE +0x27 | 126 | player->damage_model( )->add_damage_protector( anomaly_damage_types[i], anomaly_scale, 0.0f );
+	// TRGT_ONLY  | --  | L141 (0x2 loop-body `}` backjump record, follows from the operator* call split)
+	// SIZE -0x10 | 130 | player->usable_object_user_data( )->booster_engineer_use_time_factor = ...;
+	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program LTCG inline-vs-call: target keeps resource_ptr copy-ctor and intrusive_ptr::operator* out-of-line (slice-confirmed: base inlines operator* as eater + m_object load), frame/slot renames cascade. Non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -281,31 +285,21 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 	parent.set_unmanaged_resource( cooked_resource, resources::memory_usage_type( resources::nocache_memory, sizeof( player_parameters_modifyer ) ) );
 	parent.finish_query( result_success, assert_on_fail_true );
 
-	// STRUCTURE DIFF (target 0x59b360):  target 95 stmts / base 95 stmts
-	// .. same ..
-	// 0x29d <0x14> | 0x29b <0x18> | if ( current_item_config.value_exists( "additional_slots" ) )   SIZE
-	// 0x2b1 <0x36> | 0x2b3 <0x4c> | cooked_resource->additional_artefact_slots += (u8)current_item_config["additional_slots"]["artefact_slots"];   SIZE
-	// 0x2e7 <0x36> | 0x2ff <0x4c> | cooked_resource->additional_devices_slots  += (u8)current_item_config["additional_slots"]["device_slots"];   SIZE
-	// 0x576 <0x55> | 0x5a4 <0x61> | cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg;   SIZE
-	// aligned 90, size-diffs 4, quantity-diffs 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program LTCG inline-vs-call: the (u8) casts invoke
-	// binary_config_value::operator unsigned char, which the target keeps out-of-line (rva 0x52160, cast_number
-	// inlined into it) while base inlines the operator and instead calls cast_number<u8,u64,u32> (base rva 0x79dd0);
-	// plus the documented map_assign (operator[]= third member). Non-steerable.
+	// STRUCTURE DIFF: target 62 stmts / base 62 stmts
+	// SIZE +0x4  | 212 | if ( current_item_config.value_exists( "additional_slots" ) )
+	// SIZE +0x16 | 214 | cooked_resource->additional_artefact_slots += (u8)current_item_config["additional_slots"]["artefact_slots"];
+	// SIZE +0x16 | 215 | cooked_resource->additional_devices_slots  += (u8)current_item_config["additional_slots"]["device_slots"];
+	// SIZE +0xc  | 245 | cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg;
+	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program LTCG inline-vs-call: the (u8) casts invoke binary_config_value::operator u8, out-of-line in target (cast_number inlined into it) vs inlined in base (calls cast_number<u8,u64,u32>); plus the documented map_assign. Non-steerable.
 }
 // STATE[31.00%|PARTIAL]: single-statement structure matches; LTCG inline-vs-call of strip_pointer/delete_helper (same wall as items_cook::delete_resource)
 void player_parameters_modifyer_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// STRUCTURE DIFF (target 0x59b330):  target 1 stmts / base 1 stmts
-	// 0x009 <0x17> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
-	// aligned 0, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - the single VOSTOK_DELETE_IMPL statement diverges purely by
-	// whole-program LTCG inline-vs-call inside the macro: target keeps strip_pointer(g_allocator) out-of-line
-	// (the `lea &resource; push; call <finalize_impl-misname>` form, two pushed args) while base inlines it
-	// (`call <Release-misname>`, one arg) before delete_helper. Identical residual to items_cook::delete_resource
-	// (also banked at 31%). Non-steerable.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x1 | 299 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole statement diverges by LTCG inline-vs-call inside the macro (target keeps strip_pointer out-of-line, base inlines it before delete_helper); identical 31% wall as items_cook::delete_resource. Non-steerable.
 }
 
 } // namespace survarium

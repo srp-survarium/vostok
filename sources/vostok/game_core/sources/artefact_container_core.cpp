@@ -105,14 +105,10 @@ bool artefact_container_core::use_execute( usable_object_user_data* user )
 
 	return true;
 
-	// STRUCTURE DIFF[target 0x72e090 | base 0x54a040]: target 20 / base 19 stmts
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x0f0 <0x29> | 0x0f0 <0x1f> | if ( m_artefact	)   SIZE
-	// 0x119 <0x1c> | 0x10f <0x1a> | transfer_artefact( user->owner->cast_to_inventory_holder( ) );   SIZE
-	// .. same ..
-	// ; aligned 17, size-diffs 2, quantity-diffs 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - if(m_artefact): target calls intrusive_ptr unspecified_bool conversion, base inlines setne/movzx/test; transfer_artefact arg+this in different regs (LTCG). non-steerable. trail: artefact_container_core.md
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
+	// SIZE -0xa | 102 | if ( m_artefact )
+	// SIZE -0x2 | 103 | transfer_artefact( user->owner->cast_to_inventory_holder( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - if(m_artefact): target calls intrusive_ptr unspecified_bool conversion out-of-line, base inlines setne/movzx/test; transfer_artefact arg+this regs differ (LTCG). Non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -141,19 +137,17 @@ bool artefact_container_core::use_finalize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[74.74%|PARTIAL]: resource_ptr conversion materializes more temporaries in target + set_amount arg reg, non-steerable
+// STATE[98.56%|PARTIAL]: sole residual is the set_amount(1) arg passing (stack vs reg), non-steerable
+// (the conversion line closed when static_cast_resource_ptr went const&-parameter engine-wide)
 void artefact_container_core::artefact_spawned( resources::queries_result& data )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_artefact = static_cast_resource_ptr<artefact_base_ptr>( data[0].get_unmanaged_resource( ) );
 	m_artefact->set_amount( 1 );
 
-	// STRUCTURE DIFF[target 0x72df30 | base 0x549f80]: target 3 / base 3 stmts
-	// .. same ..
-	// 0x016 <0x6c> | 0x016 <0x80> | m_artefact = static_cast_resource_ptr<artefact_base_ptr>( data[0].get_unmanaged_resource( ) );   SIZE
-	// 0x082 <0x22> | 0x096 <0x1f> | m_artefact->set_amount( 1 );   SIZE
-	// ; aligned 1, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - assignment line: target/base materialize a different number of intrusive_ptr temporaries (extra ~dec dtors) for the resource_ptr conversion; set_amount(1): target pushes 1 on stack, base passes in ecx (LTCG arg). non-steerable. trail: artefact_container_core.md
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x3 | 149 | m_artefact->set_amount( 1 );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is set_amount(1): target pushes 1 on stack, base passes in reg; LTCG call-boundary arg passing, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -172,17 +166,15 @@ void artefact_container_core::spawn_artefact( )
 	);
 }
 
-// STATE[59.28%|PARTIAL]: resource_ptr conversion inlines to a different shape (target: read c_ptr + intrusive_ptr::set; base: out-of-line static_cast_resource_ptr + typecheck copy), non-steerable
+// STATE[80.80%|PARTIAL]: static_cast_resource_ptr inlined in target (c_ptr read + intrusive_ptr::set) vs out-of-line call in base, non-steerable
 void artefact_container_core::transfer_artefact( inventory_holder* holder )
 {
 	holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
 	m_artefact = NULL;
 
-	// STRUCTURE DIFF[target 0x72e030 | base 0x549ec0]: target 2 / base 2 stmts
-	// 0x009 <0x35> | 0x009 <0x8f> | holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );   SIZE
-	// .. same ..
-	// ; aligned 1, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the conversion: target inlines static_cast_resource_ptr to a bare c_ptr read + intrusive_ptr::set (0x35 bytes); base emits an out-of-line static_cast_resource_ptr call plus an inlined intrusive_ptr copy-with-vtable-typecheck (0x8f bytes). same source, different template-inline decision under LTCG. non-steerable. (report.json leaves this symbol unpaired -> shows ~0%.) trail: artefact_container_core.md
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0xc | 178 | holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the conversion: target inlines static_cast_resource_ptr (c_ptr read + intrusive_ptr::set, 0x35) while base keeps the instantiation out-of-line (0x29); per-call-site LTCG inline decision, same source, non-steerable.
 }
 
 } // namespace survarium

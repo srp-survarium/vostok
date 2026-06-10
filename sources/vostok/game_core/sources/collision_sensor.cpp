@@ -17,13 +17,6 @@ using configs::binary_config_value;
 namespace survarium {
 
 // STATE[82.21%|PARTIAL]: target CALLS the implicit link_resolver base ctor; base inlines its vtable store.
-// STRUCTURE DIFF[target 0x58af90 | base 0x450fa0]: target 0 / base 0 stmts (init-list, no addressed stmts)
-// .. same ..
-// ; aligned 0, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (init-list shape ok) - target emits one `call link_resolver::link_resolver`
-//   (folded implicit base ctor) for the link_resolver subobject; our /GL build INLINES that vtable-only
-//   ctor at the store site instead. Inline-vs-call of the implicit base ctor is decided by the base class
-//   decl (link_resolver has no user ctor), not the derived body - non-steerable LTCG/ICF. trail: collision_sensor.md
 collision_sensor::collision_sensor( ) :
 	link_resolver					( ),
 	m_collision_geometries			( NULL ),
@@ -31,6 +24,10 @@ collision_sensor::collision_sensor( ) :
 	m_is_active						( false )
 
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (init-list only; no diverging rows)
+	// VERDICT: STRUCTURE MATCH (init-list shape ok) - target emits one `call link_resolver::
+	// link_resolver` (implicit base ctor) where base inlines the vtable-only store; decided by
+	// the base-class decl, not this body. LTCG/ICF, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -75,13 +72,6 @@ bool remove_loosed_ptrs_predicate( base_physics_object* object )
 }
 
 // STATE[97.60%|PARTIAL]: buffer_vector(ALLOCA,...) ctor inline-vs-call, see notify_and_add_incoming_objects.
-// STRUCTURE DIFF[target 0x58ab80 | base 0x450bf0]: target 36 / base 36 stmts
-// 0x1c7 <0x2b> | 0x1c7 <0x3c> | buffer_vector<base_physics_object *> all_sensed_objects(  ALLOCA( objects_count * sizeof( base_physics_object* ) ), objects_count );   SIZE
-// 0x247 <0x34> | 0x258 <0x45> | buffer_vector<base_physics_object *> sensed_objects(  ALLOCA( all_sensed_objects_count * sizeof( base_physics_object* ) ), all_sensed_objects_count );   SIZE
-// .. same ..
-// ; aligned 34, size-diffs 2, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are the buffer_vector(ALLOCA,count) ctor: base
-//   re-evaluates size()/inlines fill_uninitialized where target folds it out-of-line, non-steerable LTCG. trail: collision_sensor.md
 void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( time_delta_ms, current_time_ms );
@@ -128,6 +118,12 @@ void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 	notify_and_erase_left_objects( sensed_objects );
 	notify_objects_inside( );
 	notify_and_add_incoming_objects( sensed_objects );
+
+	// STRUCTURE DIFF: target 25 stmts / base 25 stmts
+	// SIZE +0x11 | 113 | buffer_vector<base_physics_object *> all_sensed_objects(  ALLOCA( ... ), objects_count );
+	// SIZE +0x11 | 120 | buffer_vector<base_physics_object *> sensed_objects(  ALLOCA( ... ), all_sensed_objects_count );
+	// VERDICT: STRUCTURE MATCH (shape ok) - both rows are the buffer_vector(ALLOCA,count) ctor
+	// inline-vs-call shape (see notify_and_add_incoming_objects). LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -144,16 +140,11 @@ struct left_objects_predicate {
 					m_current_objects	( &current_objects ),
 					m_objects_to_delete	( &objects_to_delete ) {}
 
-			// STATE[97.67%|PARTIAL]: base emits a redundant `xor ecx,ecx` before `sete cl`; target does not.
-			// STRUCTURE DIFF[target 0xb6610 | base 0x8e850]: target 6 / base 6 stmts
-			// 0x009 <0x43> | 0x009 <0x45> | bool result = std::find( m_current_objects->begin( ), m_current_objects->end( ), obj ) == m_current_objects->end( );   SIZE
-			// .. same ..
-			// ; aligned 5, size-diffs 1, quantity-diffs 0
-			// VERDICT: STRUCTURE MATCH (shape ok) - the 2-byte SIZE is a /Od register-init artifact: base
-			//   zeroes ecx (`xor ecx,ecx`) before `cmp; sete cl`, target reuses a clean reg. Not source-steerable. trail: collision_sensor.md
+			// STATE[100%|DONE]: `bool const` (per the target PDB locals) drops the
+			// xor-before-sete; 97.67 -> 100.
 			bool	operator()				( base_physics_object* obj ) const
 			{
-				bool result = std::find( m_current_objects->begin( ), m_current_objects->end( ), obj ) == m_current_objects->end( );
+				bool const result = std::find( m_current_objects->begin( ), m_current_objects->end( ), obj ) == m_current_objects->end( );
 				if ( !result )
 					return false;
 
@@ -168,7 +159,8 @@ public:
 
 STATIC_SIZE_ASSERT(left_objects_predicate, 0x8);
 
-// STATE[100%|DONE]
+// STATE[99.82%|PARTIAL]: target's frame is 0xc bigger, pushing spill slots to disp32; was
+// mislabeled 100%|DONE.
 void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics_object *>& sensed_objects )
 {
 	buffer_vector<base_physics_object *> objects_to_delete(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object * ) ), m_old_objects.size( ) );
@@ -184,6 +176,15 @@ void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics
 
 	if ( !objects_to_delete.empty( ) )
 		 on_leave( objects_to_delete );
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x9  | 174 | buffer_vector<base_physics_object *> objects_to_delete(  ALLOCA( ... ), m_old_objects.size( ) );
+	// SIZE -0x12 | 183 | );
+	// SIZE -0x6  | 186 | 	 on_leave( objects_to_delete );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the slices are instruction-for-instruction identical;
+	// every byte of delta is disp8-vs-disp32 on the this/buffer spills (target [ebp-8Ch]/[ebp-90h]
+	// vs base [ebp-80h]/[ebp-84h]: target's frame is 0xc bigger). Frame-allocation noise,
+	// non-steerable.
 }
 
 // STATE[92.62%|PARTIAL]: buffer_vector(ALLOCA,count) ctor inline-vs-call (extra size()/fill_uninitialized).
@@ -191,12 +192,6 @@ void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics
 // For my code compiler generates two `size` calls after ALLOCA is called. The second one comes from the call to `fill_uninitialized`.
 // Target also this behaviour in `notify_and_erase_left_objects`.
 // Possibly they used `VOSTOK_ALLOCA_IMPL` directly, or `fill_uninitialized` got LTCG'ed. They never really use `VOSTOK_ALLOCA_IMPL` directly though.
-// STRUCTURE DIFF[target 0x58aa00 | base 0x450a50]: target 15 / base 15 stmts
-// 0x009 <0x47> | 0x009 <0x63> | buffer_vector<base_physics_object *> incoming_objects( ALLOCA( sensed_objects.size( ) * sizeof( base_physics_object * ) ), sensed_objects.size( ) );   SIZE
-// .. same ..
-// ; aligned 14, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the buffer_vector(ALLOCA,count) ctor; base inlines
-//   fill_uninitialized (extra size() eval) where target folds it out-of-line, non-steerable LTCG. trail: collision_sensor.md
 void collision_sensor::notify_and_add_incoming_objects( buffer_vector<base_physics_object *>& sensed_objects )
 {
 	buffer_vector<base_physics_object *> incoming_objects( ALLOCA( sensed_objects.size( ) * sizeof( base_physics_object * ) ), sensed_objects.size( ) );
@@ -214,20 +209,24 @@ void collision_sensor::notify_and_add_incoming_objects( buffer_vector<base_physi
 
 	for ( ; it != end ; ++it )
 		m_old_objects.push_back( *it );
+
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
+	// SIZE +0x1c | 202 | buffer_vector<base_physics_object *> incoming_objects( ALLOCA( ... ), sensed_objects.size( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row is the buffer_vector(ALLOCA,count) ctor
+	// inline-vs-call. LTCG, non-steerable.
 }
 
 // STATE[89.29%|PARTIAL]: buffer_vector(ALLOCA,count) ctor inline-vs-call, same as notify_and_add_incoming_objects.
-// STRUCTURE DIFF[target 0x58a240 | base 0x450680]: target 3 / base 3 stmts
-// 0x009 <0x41> | 0x009 <0x5a> | buffer_vector<base_physics_object *> objects_inside(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object* ) ), m_old_objects.size( ) );   SIZE
-// .. same ..
-// ; aligned 2, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the buffer_vector(ALLOCA,count) ctor; base inlines
-//   fill_uninitialized (an extra size() eval) where target folds it out-of-line, non-steerable LTCG. trail: collision_sensor.md
 void collision_sensor::notify_objects_inside( )
 {
 	buffer_vector<base_physics_object *> objects_inside(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object* ) ), m_old_objects.size( ) );
 	objects_inside.assign( m_old_objects.begin( ), m_old_objects.end( ) );
 	on_inside( objects_inside ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x19 | 228 | buffer_vector<base_physics_object *> objects_inside(  ALLOCA( ... ), m_old_objects.size( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row is the buffer_vector(ALLOCA,count) ctor
+	// inline-vs-call. LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -291,12 +290,6 @@ void collision_sensor::insert( physics::world* world )
 }
 
 // STATE[93.08%|PARTIAL]: target INLINES `m_old_objects.empty()`; our base keeps it an out-of-line call.
-// STRUCTURE DIFF[target 0x58a3e0 | base 0x450310]: target 15 / base 15 stmts
-// 0x064 <0x23> | 0x063 <0x15> | if ( m_old_objects.empty( ) )   SIZE
-// .. same ..
-// ; aligned 14, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is empty() inline-vs-call: target inlines the begin==end
-//   compare (and an extra esi reg), base emits the out-of-line call, non-steerable LTCG. trail: collision_sensor.md
 void collision_sensor::remove( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_active ) );
@@ -321,6 +314,13 @@ void collision_sensor::remove( )
 	leaved.assign( m_old_objects.begin( ), m_old_objects.end( ) );
 	on_leave( leaved ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
 	m_old_objects.clear( );
+
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE -0xe | 308 | if ( m_old_objects.empty( ) )
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row: target INLINES empty() (begin==end +
+	// sete/movzx/test), base CALLs it out-of-line. Reverse-direction inline-vs-call - not
+	// steerable from source (empty() IS the faithful spelling). The 94.32->93.08 drift was
+	// cross-unit LTCG churn, not a regression in this body.
 }
 
 // STATE[100%|DONE]

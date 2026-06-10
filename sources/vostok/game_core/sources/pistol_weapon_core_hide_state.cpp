@@ -65,8 +65,8 @@ pistol_weapon_core_hide_state::pistol_weapon_core_hide_state(
 // this file's scope (adding the overloads would shift other matched operator+ functions).
 animation::mixing::expression pistol_weapon_core_hide_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -76,22 +76,23 @@ animation::mixing::expression pistol_weapon_core_hide_state::weapon_and_hands_ex
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// FUNCTION BODY
-	// <0x7ae360>|0x010|+0x01f:'46'
-	// <0x7ae37f>|0x02f|+0x02a:'47'
-	// <0x7ae3a9>|0x059|+0x07a:'48'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x27 | 77 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
 // STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this` loaded
-// into eax (target) vs ecx (base) - a call-boundary argument-passing register choice. Byte-identical
-// otherwise (including the trailing compiled-out ASSERT). Same residual the reference
-// pistol_weapon_core_show_state::get_weapon_lexeme_pair accepts as DONE.
-weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+// into eax (target) vs ecx (base) - a call-boundary argument-passing register choice. Same residual
+// the reference pistol_weapon_core_show_state::get_weapon_lexeme_pair accepts as DONE.
+weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
-	pcstr weapon_animation_captions[2] = { "pistol-hide", "pistol-hide_empty" };
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-hide",
+		"pistol-hide_empty"
+	};
 
-	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
+	u32 const animation_index = m_weapon.ammo_in_magazine( ) == 0;
 	pcstr animation_identifier = weapon_animation_captions[animation_index];
 
 	resources::managed_resource_ptr const& selected_animation =
@@ -110,6 +111,9 @@ weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutabl
 		animation::mixing::play_once_and_freeze_at_end,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
+
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts (0xd0 both, captions split per-element to match the target's two records)
+	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine `this` eax-vs-ecx arg-passing, non-steerable.
 }
 
 // STATE[73.86%|PARTIAL]: control structure matches the target exactly - the type_sprint early-return of
@@ -123,17 +127,17 @@ weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutabl
 animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
 	if ( user_state_id == type_sprint )
 		return weapon_lexeme;
 
-	u32 user_state_index = user_state_id == type_crouch;
+	u32 const user_state_index = user_state_id == type_crouch;
 
-	pcstr animation_captions[2] = { "stand_hide", "crouch_hide" };
+	pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
 
 	animation::linear_interpolator interpolator( s_aim_transition_time );
 
@@ -152,28 +156,10 @@ animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expr
 
 	return override_lexeme;
 
-	// FUNCTION BODY
-	// <0x7ae191>|0x011|+0x006:'68'
-	// <0x7ae197>|0x017|+0x010:'69'
-	// <0>
-	// <0x7ae1a7>|0x027|+0x00c:'71'
-	// <0x7ae1b3>|0x033|+0x00e:'72'
-	// <0>
-	// <0x7ae1c1>|0x041|+0x010:'74'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7ae1d1>|0x051|+0x079:'86'
-	// <0x7ae24a>|0x0ca|+0x021:'87'
-	// ******
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x3  | 132 | return weapon_lexeme;
+	// SIZE +0x16 | 151 | );  (the chained animation_lexeme_parameters builder declaration)
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are weapon_core::get_user / animation_lexeme_parameters setters kept out-of-line in target, inlined in base (whole-program LTCG inline of shared headers), non-steerable.
 }
 
 // STATE[100%|DONE]

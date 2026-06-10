@@ -35,29 +35,21 @@ booby_trap_set_core::booby_trap_set_core( ) :
 	// <0x6fe40e>|0x08e|      :'29'	}
 	// ******
 }
-// STATE[83.57%|PARTIAL]
+// STATE[83.57%|PARTIAL]: free_helper out-of-line in target vs inlined in base, non-steerable.
  booby_trap_set_core::~booby_trap_set_core( )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
-
-	pcvoid damage_parms_buffer = m_damage_parameters.begin( );
+	ASSERT( UNKNOWN_EXPRESSION ); pcvoid damage_parms_buffer = m_damage_parameters.begin( );
 	m_damage_parameters.clear( );
 	VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );	// claude@MATCH: target keeps free_helper out-of-line (free_helper_impl); base inlines it.
 
 	m_traps.clear( );
 	VOSTOK_FREE_IMPL( g_allocator, m_traps_buffer );
 
-	// STRUCTURE DIFF[target 0x6ee250 | base 0x449bb0]: target 6 / base 8 stmts
-	// 0x013 <0x1e> | 0x012 <0xc> | ASSERT( UNKNOWN_EXPRESSION );   SIZE
-	// --          | <0>         |    EMPTY only base
-	// --          | 0x01e <0x12> | pcvoid damage_parms_buffer = m_damage_parameters.begin( );   ONLY base
-	// .. same ..
-	// 0x068 <0x14> | 0x067 <0x2e> | VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );   SIZE
-	// .. same ..
-	// ; aligned 4, size-diffs 2, quantity-diffs 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - ASSERT recovered (77.75->83.57%); the target PDB attributes the
-	//   ASSERT to the same source line as begin() (parser splits them, hence the EMPTY/ONLY-base rows); sole
-	//   byte residual is free_helper(damage_parms_buffer) out-of-line vs base inline, non-steerable. trail: booby_trap_set_core_dtor.md
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x1a | 43 | VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );
+	// VERDICT: STRUCTURE MATCH (shape ok) - eater + begin() share one line record in the target
+	// (0xc + 0x12 = 0x1e size-sum), merged; sole SIZE is free_helper out-of-line vs base inline,
+	// non-steerable.
 }
 
 // STATE[UNCHECKED]
@@ -267,7 +259,7 @@ booby_trap_core_ptr* booby_trap_set_core::try_place_trap( )
 	// ******
 }
 
-// STATE[79.71%|PARTIAL]
+// STATE[79.71%|PARTIAL]: resource_ptr::operator* inline-vs-call LTCG, non-steerable.
 void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -275,12 +267,10 @@ void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 	if ( trap->is_active( ) )
 		remove_trap_impl( *trap );
 
-	// STRUCTURE DIFF[target 0x6ed850 | base 0x449a40]: target 4 / base 4 stmts
-	// .. same ..
-	// 0x03f <0x11> | 0x03f <0x20> | remove_trap_impl( *trap );   SIZE
-	// ; aligned 3, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is resource_ptr::operator*( ) inlined on target
-	//   (deref + its ASSERT) vs called out-of-line in base, non-steerable. trail: booby_trap_set_core_dtor.md
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0xf | 276 | remove_trap_impl( *trap );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is resource_ptr::operator* inlined on
+	// target vs called out-of-line in base, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -574,7 +564,8 @@ bool trap_is_active( booby_trap_core_ptr const& trap )
 	// ******
 }
 
-// STATE[85.39%|PARTIAL]: a leading assert eater, then append the trap's index within this set.
+// STATE[85.39%|PARTIAL]: append the trap's index within this set; append(u8) inlined in base
+// vs out-of-line in target, non-steerable.
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -582,20 +573,20 @@ void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core co
 	packet.append( trap_index( trap ) );
 
 	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ---------+--------+--------+----+----+------+------
-	// SIZE +0x5|0x6ed9e5|0x4634b5|0x18|0x1d|577   |	packet.append( trap_index( trap ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 2/2 after adding the leading ASSERT eater (target stmt#1 is the 0xc triple; both sides call trap_index + append out-of-line); sole SIZE is argument-marshalling residual, non-steerable.
+	// SIZE +0x5 | 573 | packet.append( trap_index( trap ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the assert eater is stmt #1 in the target (0xc, was
+	// mislabeled "compiled out"), recovered; sole SIZE is packet::append(u8) inlined in base
+	// (&temp + size args) vs the out-of-line value-arg call in target, non-steerable.
 }
 
-// STATE[42.79%|PARTIAL]: read a trap index (assert eater), resolve the trap (assert eater),
-// bind it as a game_world_object and forward its deserialize.
+// STATE[29.68%|PARTIAL]: read a trap index, resolve the trap and forward its
+// deserialize_game_world_object; r<bool>/traps()[]/operator* inlined in base vs out-of-line
+// calls in target, non-steerable. Paired by restoring the target's private access (@@EAE).
 void booby_trap_set_core::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	const u8			trap_index	= reader.r< bool >( );
 
 	ASSERT( UNKNOWN_EXPRESSION );
-
 	booby_trap_core&	trap		= *traps( )[ trap_index ];
 
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -604,11 +595,11 @@ void booby_trap_set_core::deserialize_game_world_object( network_core::packet_re
 	object.deserialize( reader );
 
 	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
-	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ----------+--------+--------+----+----+------+------
-	// SIZE +0xb |0x6ed96a|0x463599|0xb |0x16|584   |	const u8			trap_index	= reader.r< bool >( );
-	// SIZE +0x18|0x6ed981|0x4635bb|0x1b|0x33|588   |	booby_trap_core&	trap		= *traps( )[ trap_index ];
-	// VERDICT: STRUCTURE MATCH (shape ok) - 6/6 after adding the two ASSERT eaters and fixing the private-virtual join; SIZE rows are r<bool>/operator[]/operator* LTCG inline (base) vs call (target), non-steerable.
+	// SIZE +0x15 | 587 | const u8 trap_index = reader.r< bool >( );
+	// SIZE +0x18 | 590 | booby_trap_core& trap = *traps( )[ trap_index ];
+	// VERDICT: STRUCTURE MATCH (shape ok) - both assert eaters recovered (target lines 418/421,
+	// were mislabeled "compiled out"); SIZE rows are r<bool> and traps()[]/operator* inlined in
+	// base vs kept out-of-line in target, non-steerable.
 }
 
 // STATE[UNCHECKED]
@@ -627,7 +618,8 @@ u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 	// ******
 }
 
-// STATE[96.21%|DONE]
+// STATE[75.00%|DONE]: holder()/scheduler() accessor inline-vs-call LTCG; % drop from 96.21
+// is reloc/fold-name churn, structure unchanged.
 void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -636,17 +628,15 @@ void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 	holder.remove_game_world_object( trap );
 	trap.remove( holder.scheduler( ) );
 
-	// STRUCTURE DIFF[target 0x6ed6b0 | base 0x449950]: target 5 / base 5 stmts
-	// .. same ..
-	// 0x015 <0x10> | 0x015 <0x17> | inventory_holder& holder = get_inventory( ).holder( );   SIZE
-	// .. same ..
-	// 0x036 <0x16> | 0x03d <0x1a> | trap.remove( holder.scheduler( ) );   SIZE
-	// ; aligned 3, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are inventory::holder( ) / inventory_holder::scheduler( )
-	//   inlined as member loads on target ([ecx+158h] / [.+4]) vs called out-of-line in base, non-steerable. trail: booby_trap_set_core_dtor.md
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x7 | 629 | inventory_holder& holder = get_inventory( ).holder( );
+	// SIZE +0x4 | 631 | trap.remove( holder.scheduler( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are holder( )/scheduler( ) inlined
+	// as member loads on target vs called out-of-line in base, non-steerable.
 }
 
-// STATE[97.38%|DONE]
+// STATE[81.74%|DONE]: holder()/scheduler() accessor inline-vs-call LTCG; % drop from 97.38
+// is reloc/fold-name churn, structure unchanged.
 void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& transform )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -659,15 +649,11 @@ void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& tr
 	trap.insert( world, transform, holder.scheduler( ) );
 	holder.insert_game_world_object( trap );
 
-	// STRUCTURE DIFF[target 0x6ed630 | base 0x4498c0]: target 9 / base 9 stmts
-	// .. same ..
-	// 0x015 <0x10> | 0x015 <0x17> | inventory_holder& holder = get_inventory( ).holder( );   SIZE
-	// .. same ..
-	// 0x041 <0x1e> | 0x048 <0x22> | trap.insert( world, transform, holder.scheduler( ) );   SIZE
-	// .. same ..
-	// ; aligned 7, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are inventory::holder( ) / inventory_holder::scheduler( )
-	//   inlined as member loads on target ([ecx+158h] / [.+4]) vs called out-of-line in base, non-steerable. trail: booby_trap_set_core_dtor.md
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
+	// SIZE +0x7 | 648 | inventory_holder& holder = get_inventory( ).holder( );
+	// SIZE +0x4 | 653 | trap.insert( world, transform, holder.scheduler( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are holder( )/scheduler( ) inlined
+	// as member loads on target vs called out-of-line in base, non-steerable.
 }
 
 } // namespace survarium

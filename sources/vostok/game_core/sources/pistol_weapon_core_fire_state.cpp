@@ -9,7 +9,11 @@
 #include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
 
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
 #include <vostok/animation/linear_interpolator.h>
+#include <vostok/resources_pinned_ptr.h>
 
 namespace survarium {
 
@@ -58,12 +62,9 @@ pistol_weapon_core_fire_state::pistol_weapon_core_fire_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[92.62%|PARTIAL]: every instruction/branch matches. Two residuals: (1) the
-// __thiscall `this` for m_weapon.ammo_in_magazine() loaded into ecx (base) vs eax (target) -
-// an argument-passing register choice (LTCG), same class as the reference idle getter; (2) at
-// `m_weapon_animation_index = last_shot` MSVC /Od boolizes the bool read (neg;sbb;neg) where
-// the target stores the byte directly - a bool-rvalue normalization not steerable from source
-// while the carcass LOCAL is genuinely `bool last_shot` (1-byte stack slot).
+// STATE[92.62%|PARTIAL]: every instruction/branch matches; residual is the __thiscall `this`
+// for m_weapon.ammo_in_magazine() loaded into ecx (base) vs eax (target) - an LTCG
+// argument-passing register choice, same class as the aimed sibling (99.76).
 void pistol_weapon_core_fire_state::initialize( )
 {
 	weapon_core_fire_state_base::initialize( );
@@ -72,44 +73,37 @@ void pistol_weapon_core_fire_state::initialize( )
 		? ( m_weapon.ammo_in_magazine( ) == 1 )
 		: ( m_weapon.ammo_in_magazine( ) == 0 );
 
-	m_weapon_animation_index = last_shot;
+	m_weapon_animation_index = last_shot ? 1u : 0u;
 
-	// FUNCTION BODY (kept: PARTIAL)
-	// <0x7ab719>|0x009 weapon_core_fire_state_base::initialize();
-	// <0x7ab721>|0x011 last_shot = get_bullets_in_queue() ? (ammo==1) : (ammo==0);  (this in eax vs ecx)
-	// <0x7ab77e>|0x06e m_weapon_animation_index = last_shot;  (target: plain movzx; base: + boolize)
-	// ******
+	// STRUCTURE DIFF: target 3 / base 3 stmts, 0x85 bytes both (after the ternary final-store fix)
+	// VERDICT: STRUCTURE MATCH - residual is the ammo_in_magazine `this` in eax (target) vs ecx (base), LTCG arg-register choice, non-steerable.
 }
 
-// STATE[INPROGRESS]: large addition_lexeme/operator+ machinery. Next: model on
-// pistol_weapon_core_idle_state::weapon_and_hands_expression but with the user_state==type_sprint
-// (==2) branch that adds get_user_hands_expression; see target asm @0x79b5b0 in the .md.
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_fire_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[79.09%|PARTIAL]: operator+ template-selection / inline-vs-call LTCG on the addition
+// tree (the weapon_core_fire_state #193 wall), non-steerable from this TU.
 animation::mixing::expression pistol_weapon_core_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	return animation::mixing::expression( weight_driving_animation );
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
-	// LOCALS
-	// animation::mixing::expression hands_expression
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
+	if ( user_state_id == type_sprint )
+		return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 
-	// FUNCTION BODY
-	// <0x7ab5c1>|0x011|+0x01f:'52'
-	// <0>
-	// <0x7ab5e0>|0x030|+0x006:'54'
-	// <0x7ab5e6>|0x036|+0x05e:'55'
-	// <0>
-	// <0x7ab644>|0x094|+0x012:'57'
-	// <0>
-	// <0x7ab656>|0x0a6|+0x02a:'59'
-	// <0x7ab680>|0x0d0|+0x07a:'60'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	animation::mixing::expression hands_expression =
+		get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
+
+	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+
+	// STRUCTURE DIFF: target 6 / base 6 stmts
+	// SIZE -0x21 | 94 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
+	// SIZE -0x11 | 101 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// VERDICT: STRUCTURE MATCH (6/6) - both rows are the mixing operator+ template-selection / inline-vs-call wall (target keeps operator+<animation_lexeme> out-of-line, base inlines addition_lexeme), whole-program LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -137,51 +131,49 @@ weapon_lexeme_pair pistol_weapon_core_fire_state::get_weapon_lexeme_pair( mutabl
 	);
 }
 
-// STATE[INPROGRESS]: large lexeme machinery (override animation + operator+). Next: model on
-// the weapon_core_fire_state::get_user_hands_expression sibling shape; see target asm @0x79b380.
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_fire_state::get_user_hands_expression(vostok::animation::mixing::animation_lexeme&, vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[77.13%|PARTIAL]: lexeme_parameters setters / animation_type() inline-vs-call LTCG,
+// non-steerable (identical residual to weapon_core_fire_state::get_user_hands_expression).
 animation::mixing::expression pistol_weapon_core_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	return animation::mixing::expression( weapon_lexeme );
+	if ( user_state_id == type_sprint )
+		return animation::mixing::expression( weapon_lexeme );
 
-	// LOCALS
-	// animation::mixing::animation_lexeme override_lexeme
-	// u32 							user_animation_index
-	// resources::managed_resource_ptr const& selected_animation
-	// pcstr[2] 					user_animation_captions
-	// ******
+	u32 user_animation_index = ( user_state_id == type_crouch );
+	resources::managed_resource_ptr const& selected_animation =
+		m_user_animations[is_third_view != false][user_animation_index];
 
-	// FUNCTION BODY
-	// <0x7ab391>|0x011|+0x006:'80'
-	// <0x7ab397>|0x017|+0x010:'81'
-	// <0>
-	// <0x7ab3a7>|0x027|+0x00c:'83'
-	// <0x7ab3b3>|0x033|+0x020:'84'
-	// <0x7ab3d3>|0x053|+0x059:'85'
-	// <0x7ab42c>|0x0ac|+0x010:'86'
-	// <0>
-	// <1>
-	// <0x7ab43c>|0x0bc|+0x00e:'89'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7ab44a>|0x0ca|+0x06e:'101'
-	// <0x7ab4b8>|0x138|+0x01c:'102'
-	// ******
+	if ( resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( selected_animation )->animation_type( ) != animation::animation_type_additive )
+		return animation::mixing::expression( weapon_lexeme );
+
+	pcstr user_animation_captions[2] = { "stand_shot_pistol", "crouch_shot_pistol" };
+
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			user_animation_captions[user_animation_index],
+			selected_animation,
+			&weapon_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object		( m_weapon.get_user( ) )
+		.playback_type			( animation::mixing::play_once_and_freeze_at_end )
+		.additivity_priority	( 1 )
+	);
+
+	return animation::mixing::expression( override_lexeme );
+
+	// STRUCTURE DIFF: target 9 / base 9 stmts
+	// SIZE +0x3  | 147 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE -0x13 | 153 | if ( pinned_ptr_const<...>( selected_animation )->animation_type( ) != ... )
+	// SIZE +0x3  | 154 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE +0x4  | 169 | ); (the chained params temporary declaration of override_lexeme)
+	// VERDICT: STRUCTURE MATCH (9/9) - per-site LTCG: target inlines animation_type() where base keeps the COMDAT call; setter-chain/expression-ctor boundaries differ by promoted-convention bytes, non-steerable.
 }
 
 // STATE[92.08%|PARTIAL]: control flow + placement-new + ctor call all match. Sole residual is
@@ -203,13 +195,9 @@ pistol_weapon_core_fire_state* weapon_core_state_cook_template<survarium::pistol
 		animations_count
 	);
 
-	// FUNCTION BODY (kept: PARTIAL - LTCG calling convention of computed_shooting_animation_time_scale)
-	// <0x7ab319>|0x009 new(buffer.c_ptr()) pistol_weapon_core_fire_state( params->weapon,
-	//                  computed_shooting_animation_time_scale(*animations, params->rounds_per_second),
-	//                  animations, animations_count );
-	// TARGET @0x3d: call computed... (ref in reg, ret xmm0 -> movss [esp])
-	// BASE   @0x3d: push ref; call computed...; add esp,4; fstp [esp]  (cdecl, st0)
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE -0x11 | 191 | ); (the placement-new ctor-call statement)
+	// VERDICT: STRUCTURE MATCH - residual is the LTCG-promoted convention of computed_shooting_animation_time_scale (target: ref in reg + xmm0 return; base: cdecl push + st0/fstp), blocked on that callee, non-steerable here.
 }
 
 } // namespace survarium

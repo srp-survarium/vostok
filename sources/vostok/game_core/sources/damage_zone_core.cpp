@@ -38,9 +38,9 @@ damage_zone_core::damage_zone_core( ) :
 	m_accumulated_hit_time_ms	( 0 ),
 	m_standalone				( true )
 {
-	// STRUCTURE DIFF[target 0x589380 | base 0x456b00]: target 0 / base 0 stmts
-	// ; aligned 0, size-diffs 0, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (member-init list, 0 body stmts) - residual is an LTCG frame-slot delta (sub esp 24h target vs 30h base) plus member-ctor call-target relocs; instruction shape identical, non-steerable. trail: damage_zone_core-ctor-dtor.md
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x148 vs 0x147 bytes)
+	// VERDICT: STRUCTURE MATCH (member-init list, 0 body stmts) - residual is an LTCG frame-slot
+	// delta plus member-ctor call-target relocs; instruction shape identical, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -109,18 +109,16 @@ bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, f
 }
 
 // STATE[100%|DONE]
-float distance_from_sphere_center_to_point_on_shape( float radius )
+// static in the target (PDB plain-name record): internal linkage is what lets objdiff pair
+// these four helpers; anchored from the add_single_result stub below, not temp_include_all.
+static float distance_from_sphere_center_to_point_on_shape( float radius )
 {
 	return radius;
 }
 
-// STATE[77.9%|PARTIAL]: whole-program inline wall - base inlines float3_pod::dot_product
-// at the call site (scalar mulss/addss), target keeps the out-of-line call (verified:
-// target `call dot_product` @0x9b; both indexes keep a standalone copy, a per-call-site
-// /Ob2 /GL decision). Tail operator- operand order then mis-aligns. report.json lists
-// this free fn target-only (% from pdb_fetch diff). Full rationale in the .md.
-// claude@NOTE: box frame is 5Ch on BOTH sides - the single inline does not grow it.
-float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
+// STATE[86.52%|PARTIAL]: dot_product inline wall (per-call-site /Ob2 /GL), non-steerable;
+// paired with the target static via internal linkage (was report-unpaired as extern).
+static float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
 {
 	float3 dir			= source_position - transform.c.xyz( );
 	float3 result		= transform.c.xyz( );
@@ -143,37 +141,15 @@ float distance_from_box_center_to_point_on_shape( float4x4 const& transform, flo
 
 	return ( result - transform.c.xyz( ) ).length( );
 
-	// FUNCTION BODY
-	// <0x5984d0>|0x000|+0x006:'127'	{
-	// <0x5984d6>|0x006|+0x01c:'128'
-	// <0x5984f2>|0x022|+0x01c:'129'
-	// <0x59850e>|0x03e|+0x014:'130'
-	// <0>
-	// <0x598522>|0x052|+0x01c|[1]:'132'
-	// <0>
-	// <0x59853e>|0x06e|+0x01f:'134'
-	// <0x59855d>|0x08d|+0x008:'135'
-	// <0x598565>|0x095|+0x010:'136'
-	// <0>
-	// <0x598575>|0x0a5|+0x015:'138'
-	// <0x59858a>|0x0ba|+0x014:'139'
-	// <0x59859e>|0x0ce|+0x01c:'140'
-	// <0x5985ba>|0x0ea|+0x01b:'141'
-	// <0>
-	// <0x5985d5>|0x105|+0x01c:'143'
-	// <0x5985f1>|0x121|+0x005:'144'
-	// <0>
-	// <0x5985f6>|0x126|+0x021:'146'
-	// <0x598617>|0x147|      :'147'	}
-	// ******
+	// STRUCTURE DIFF: target 14 stmts / base 14 stmts
+	// SIZE +0x1b | 135 | float dist = dir.dot_product( axis );
+	// VERDICT: STRUCTURE MATCH (14/14) - sole SIZE is float3_pod::dot_product inlined in base
+	// (scalar mulss/addss) vs out-of-line call in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
-// STATE[44.0%|PARTIAL]: whole-program inline wall - base inlines the TWO float3_pod::dot_product
-// on the proj_to_y_axis line (scalar mulss/addss), target keeps both out-of-line (verified:
-// 2x `call dot_product`). The inlined temps grow the frame (sub esp,0F8h base vs 0F4h target),
-// cascading a stack-offset + operand-order shift through the body. Per-call-site /Ob2 /GL,
-// not de-inlinable from this TU. report.json lists target-only (% from pdb_fetch diff). See .md.
-float distance_from_capsule_center_to_point_on_shape(
+// STATE[82.48%|PARTIAL]: dot_product inline wall (2 sites on the proj_to_y_axis line),
+// non-steerable; paired with the target static via internal linkage.
+static float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				half_length,
 	float				radius,
@@ -197,32 +173,15 @@ float distance_from_capsule_center_to_point_on_shape(
 	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
 	return ( center - ( surface_center + ( surface_center - source_position ).normalize( ) * radius ) ).length( );
 
-	// FUNCTION BODY[0x5982a0]: 16
-	// <0x5982a9>|0x009|+0x01c:'151'
-	// <0x5982c5>|0x025|+0x01c:'152'
-	// <0x5982e1>|0x041|+0x023:'153'
-	// <0x598304>|0x064|+0x023:'154'
-	// <0x598327>|0x087|+0x012:'155'
-	// <0x598339>|0x099|+0x043:'156'
-	// <0>
-	// <0x59837c>|0x0dc|+0x024:'158'
-	// <0>
-	// <0x5983a0>|0x100|+0x026:'160'
-	// <0x5983c6>|0x126|+0x012:'161'
-	// <0x5983d8>|0x138|+0x04e:'162'
-	// <0>
-	// <1>
-	// <0x598426>|0x186|+0x045:'165'
-	// <0x59846b>|0x1cb|+0x05d:'166'
-	// ******
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
+	// SIZE +0x4e | 190 | const float proj_to_y_axis = ( ... ).dot_product( ... ) / ... .dot_product( ... );
+	// VERDICT: STRUCTURE MATCH (12/12) - sole SIZE is the TWO dot_product calls inlined in base
+	// vs out-of-line in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
-// STATE[40.3%|PARTIAL]: whole-program inline wall - base inlines THREE float3_pod::dot_product
-// (two on proj_to_y_axis, one on the proj line y_axis.dot_product(circle_point_dir)), target
-// keeps all three out-of-line (verified: 3x `call dot_product`). The inlined temps grow the
-// frame (sub esp,10Ch base vs 108h target) and cascade stack-offset + operand-order shifts.
-// Per-call-site /Ob2 /GL, not de-inlinable from this TU. report.json target-only. See .md.
-float distance_from_cylinder_center_to_point_on_shape(
+// STATE[76.61%|PARTIAL]: dot_product inline wall (3 sites), non-steerable; paired with the
+// target static via internal linkage.
+static float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				radius,
 	float				half_length,
@@ -249,29 +208,11 @@ float distance_from_cylinder_center_to_point_on_shape(
 	float3 circle_proj_vec			= proj - circle_point_dir;
 	return ( center - ( surface_center + circle_proj_vec ) ).length( );
 
-	// FUNCTION BODY[0x598040]: 21
-	// <0x598049>|0x009|+0x01c:'171'
-	// <0x598065>|0x025|+0x01c:'172'
-	// <0x598081>|0x041|+0x026:'173'
-	// <0x5980a7>|0x067|+0x026:'174'
-	// <0x5980cd>|0x08d|+0x012:'175'
-	// <0x5980df>|0x09f|+0x043:'176'
-	// <0>
-	// <0x598122>|0x0e2|+0x024:'178'
-	// <0>
-	// <0x598146>|0x106|+0x026:'180'
-	// <0x59816c>|0x12c|+0x015:'181'
-	// <0>
-	// <0x598181>|0x141|+0x051:'183'
-	// <0>
-	// <1>
-	// <0x5981d2>|0x192|+0x045:'186'
-	// <0x598217>|0x1d7|+0x012:'187'
-	// <0x598229>|0x1e9|+0x028:'188'
-	// <0x598251>|0x211|+0x012:'189'
-	// <0>
-	// <0x598263>|0x223|+0x02e:'191'
-	// ******
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
+	// SIZE +0x4e | 239 | const float proj_to_y_axis = ( ... ).dot_product( ... ) / ... .dot_product( ... );
+	// SIZE +0x1b | 250 | float3 proj = y_axis * y_axis.dot_product( circle_point_dir );
+	// VERDICT: STRUCTURE MATCH (15/15) - both SIZE rows are dot_product inlined in base vs
+	// out-of-line in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
 struct dz_bone_data_contact_test_predicate : public physics::contact_test_predicate {
@@ -330,6 +271,19 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6d02 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6d42 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
 	// ******
+
+	// temp anchor: the real body dispatches to the four static distance_from_* helpers above;
+	// keep them emitted (and paired against the target statics) until that dispatch is matched.
+	{
+		typedef float ( *shape_fn0 )( float );
+		typedef float ( *shape_fn1 )( float4x4 const&, float3 const&, float3 const& );
+		typedef float ( *shape_fn2 )( float4x4 const&, float, float, float3 const& );
+		volatile shape_fn0 p0 = &distance_from_sphere_center_to_point_on_shape;
+		volatile shape_fn1 p1 = &distance_from_box_center_to_point_on_shape;
+		volatile shape_fn2 p2 = &distance_from_capsule_center_to_point_on_shape;
+		volatile shape_fn2 p3 = &distance_from_cylinder_center_to_point_on_shape;
+		(void)p0; (void)p1; (void)p2; (void)p3;
+	}
 
 	return 0.0f;
 
