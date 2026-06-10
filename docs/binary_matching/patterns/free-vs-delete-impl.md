@@ -1,7 +1,7 @@
 # VOSTOK_FREE_IMPL vs VOSTOK_DELETE_IMPL: read the dealloc statement shape
 tags: cpp:new-delete cpp:macro | asm:call asm:cmp | topic:allocator
 symptoms: identical bytes per member regardless of triviality, if(p){free;p=0} shape, no element dtor
-confidence: 9/10
+confidence: 8/10
 variants: delete-array-impl.md, allocator-new-delete-helpers.md, virtual-dtor-explicit-call.md
 
 A dealloc row that SIZE-diffs oddly per member - base BIGGER on trivially-destructible

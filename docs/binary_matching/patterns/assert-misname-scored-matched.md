@@ -1,7 +1,7 @@
 # ASSERT eater's COMDAT-fold misname is scored MATCHED by report.json
 tags: cpp:assert | asm:call | topic:scoring-artifact topic:fold-icf
 symptoms: dummy::nonnull vs finalize_impl, --view diff flags the eater call, N/M instructions equal line ~85-88%
-confidence: 9/10
+confidence: 8/10
 variants: assert-eater-recover.md, fold-misname-empty-fn.md
 
 `--view diff` flags the compiled-out ASSERT's call target as a mismatch (base

@@ -1,7 +1,7 @@
 # Destruct-without-freeing helper = `obj.~T()`, NOT `delete &obj`
 tags: cpp:dtor cpp:new-delete | asm:call | topic:allocator
 symptoms: ~0x2c body vs ~0x50 with inlined operator delete, call_destructor helper
-confidence: 9/10
+confidence: 8/10
 variants: virtual-dtor-explicit-call.md, allocator-new-delete-helpers.md
 
 A helper that runs an object's destructor but leaves the storage (owned by an allocator)

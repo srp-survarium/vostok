@@ -1,7 +1,7 @@
 # Compiler-generated dtor epilogue: missing member-dtor `this` setup is ICF folding
 tags: cpp:dtor | asm:add asm:call | topic:fold-icf
 symptoms: target add ecx 0xNN before each member ~T() call, base omits the add ecx setups
-confidence: 8/10
+confidence: 6/10
 variants: virtual-dtor-explicit-call.md
 
 A destructor where the target sets `mov ecx,[this]; add ecx,0xNN` before each trivial

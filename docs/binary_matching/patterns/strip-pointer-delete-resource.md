@@ -1,7 +1,7 @@
 # `VOSTOK_DELETE_IMPL(g_allocator, resource)` one-liner: the strip_pointer wall (~31%)
 tags: cpp:new-delete cpp:macro | asm:push asm:call asm:lea | topic:inline-vs-call topic:allocator
 symptoms: delete_helper two pushed args add esp 8 vs one arg add esp 4, ~31% with 1/1 stmts
-confidence: 9/10
+confidence: 7/10
 variants: allocator-wrapper-inline.md, free-vs-delete-impl.md
 
 A one-line cook `delete_resource` whose only statement is `VOSTOK_DELETE_IMPL(allocator,

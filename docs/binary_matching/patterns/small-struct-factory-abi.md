@@ -1,7 +1,7 @@
 # Small-struct factory: eax:edx register-pair return / promoted convention vs base sret (wall)
 tags: cpp:return cpp:cast | asm:call asm:mov asm:push | topic:convention topic:fold-icf
 symptoms: mov [tmp] eax mov [tmp+4] edx copy chain, lea eax [esp+10Ch] sret, callee body is one ret byte, const_buffer::const_buffer bogus name
-confidence: 8/10
+confidence: 6/10
 
 `T r = factory( args );` for a small (<=8B) POD (resources::request): the target returns
 in the eax:edx pair then copies into the local (or LTCG promotes the callee to a custom

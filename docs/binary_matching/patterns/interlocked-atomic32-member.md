@@ -1,7 +1,7 @@
 # A member fed to interlocked_* as the TARGET operand is threading::atomic32_type
 tags: cpp:member | topic:structure-shape
 symptoms: COMPILE_ASSERT do_not_pass_NON_VOLATILE_values_to_INTERLOCKED_functions, PDB shows plain long
-confidence: 9/10
+confidence: 8/10
 
 threading_functions_guard.h defines `interlocked_*(T&, ...)` template overloads whose
 body is a COMPILE_ASSERT(false). For a NON-volatile long member the template (exact

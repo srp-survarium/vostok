@@ -1,7 +1,7 @@
 # float3 `a != b` folds to `!(operator==)` when the target has only operator==
 tags: cpp:operator cpp:float | asm:call asm:jcc | topic:inline-vs-call
 symptoms: call operator== with inverted branch polarity vs call operator!=, no operator!= symbol in target
-confidence: 8/10
+confidence: 6/10
 variants: float3-dot-operator-inline.md
 
 `x != float3(...)`: TARGET calls `vostok::math::operator==` (@0x14b90) with je/jne

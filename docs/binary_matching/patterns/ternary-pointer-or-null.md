@@ -1,7 +1,7 @@
 # `val != u32(-1) ? &obj : NULL` = `sub r,-1; neg; sbb r,r; lea; and`
 tags: cpp:ternary | asm:neg asm:sbb asm:and asm:lea | topic:codegen-idiom
 symptoms: sub edx 0FFFFFFFFh neg sbb edx edx lea and edx eax push
-confidence: 9/10
+confidence: 8/10
 variants: bool-from-mask-test.md
 
 A pointer-or-NULL select on an unsigned `!= -1` test: MSVC /Od lowers the compare to

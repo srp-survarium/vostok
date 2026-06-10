@@ -1,7 +1,7 @@
 # `packet.append( field )`: scalar overloads push the VALUE, buffer/float3 push an ADDRESS
 tags: cpp:member cpp:operator | asm:push asm:lea | topic:codegen-idiom
 symptoms: push eax value vs lea/push of a stack slot before append
-confidence: 9/10
+confidence: 8/10
 
 The scalar `packet<T>::append(uN/sN/bool)` overloads push the value itself; the
 `append(pcvoid,u32)` and `append(float3 const&)` overloads push an address (lea/push).
