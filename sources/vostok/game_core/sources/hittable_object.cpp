@@ -10,38 +10,30 @@
 
 namespace survarium {
 
-// STATE[72.88%|PARTIAL]: hit_receiver sub-object ctor inlined in base, out-of-line in target; non-steerable. trail: hittable_object.md
-// STRUCTURE DIFF[target 0x589f30 | base 0x4570b0]: target 0 / base 0 stmts
-// ; aligned 0, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - empty body, init-list only; target emits an out-of-line ctor for the hit_receiver member while base inlines it (whole-program LTCG decision on the base class), non-steerable.
- hittable_object::hittable_object( ) :
+// STATE[72.88%|PARTIAL]: hit_receiver sub-object ctor inlined in base, out-of-line in target; non-steerable
+hittable_object::hittable_object( ) :
 	m_rigid_body	( NULL ),
 	m_physics_world	( NULL ),
 	m_group			( 0 ),
 	m_mask			( 0 )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x49 vs 0x5e, init-list only)
+	// VERDICT: STRUCTURE MATCH (shape ok) - target calls the hit_receiver base ctor out-of-line (a header-COMDAT in the target's hit_receiver.h unit) while base inlines it; whole-program LTCG, non-steerable.
 }
 
-// STATE[69.59%|PARTIAL]: hit_receiver sub-object dtor inlined in base, out-of-line in target; non-steerable. trail: hittable_object.md
-// STRUCTURE DIFF[target 0x589ee0 | base 0x457050]: target 4 / base 4 stmts
-// .. same ..
-// ; aligned 4, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - all 4 statements align; target emits the hit_receiver member dtor out-of-line while base inlines it (whole-program LTCG), non-steerable.
- hittable_object::~hittable_object( )
+// STATE[69.59%|PARTIAL]: hit_receiver sub-object dtor inlined in base, out-of-line in target; non-steerable
+hittable_object::~hittable_object( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	physics::destroy_static_rigid_body( m_rigid_body );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x43 vs 0x58) - no diverging rows
+	// VERDICT: STRUCTURE MATCH (shape ok) - target calls the hit_receiver base dtor out-of-line (header-COMDAT) while base inlines it; whole-program LTCG, non-steerable.
 }
 
-// STATE[98.14%|PARTIAL]: resource_ptr / shape-op inline-vs-call LTCG, non-steerable. trail: hittable_object.md
-// STRUCTURE DIFF[target 0x589f80 | base 0x457110]: target 29 / base 29 stmts
-// 0x169 <0x32> | 0x169 <0x33> | physics::bt_collision_shape_ptr shape = physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), name );   SIZE
-// 0x19b <0xf> | 0x19c <0xd> | shape->set_no_delete( );   SIZE
-// 0x1b2 <0xc> | 0x1b1 <0xb> | info.m_collisionShape = shape;   SIZE
-// ; aligned 26, size-diffs 3, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - 3 SIZE on bt_collision_shape_ptr (intrusive resource_ptr) construct/assign + set_no_delete; whole-program inline-vs-call of the ptr ops, non-steerable.
+// STATE[98.14%|PARTIAL]: resource_ptr / shape-op inline-vs-call LTCG, non-steerable
 void hittable_object::load( configs::binary_config_value const& cfg_val )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( cfg_val.value_exists( "full_name" ) ) );
@@ -73,6 +65,12 @@ void hittable_object::load( configs::binary_config_value const& cfg_val )
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
+
+	// STRUCTURE DIFF: target 23 stmts / base 23 stmts
+	// SIZE +0x1 | 62 | physics::bt_collision_shape_ptr shape = physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), name );
+	// SIZE -0x2 | 63 | shape->set_no_delete( );
+	// SIZE -0x1 | 66 | info.m_collisionShape = shape;
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3 tiny SIZE on bt_collision_shape_ptr construct/assign + set_no_delete; whole-program inline-vs-call of the ptr ops, non-steerable.
 }
 
 // STATE[100%|DONE]
