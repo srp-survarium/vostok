@@ -2148,3 +2148,49 @@ movzx directly. SOURCE: the original spelled the rvalue as a ternary - `m_index 
 ? 1u : 0u;` - which /Od lowers through the int boolize. Steerable: confirmed
 pistol_weapon_core_fire_state::initialize 92.62 -> 99.76 (3/3, 0x85 both sides), matching the
 aimed sibling that already carried the ternary.
+
+### ASSERT_U vs VOSTOK_UNREFERENCED_PARAMETERS: the assert_untyped enum push is the tell
+Both expand to the same guarded eater (`if (identity(false)) { <variadic call>(args) }`), so
+the statement shapes differ by EXACTLY one arg: ASSERT_U passes `::vostok::assert_untyped`
+FIRST, so the eater call is preceded by a `push 0` (the enum dword, pushed last) and the
+`add esp` is +4 over the args; VOSTOK_UNREFERENCED_PARAMETERS passes ONLY the parameters.
+A reference param is evaluated BY VALUE either way (rep movsd struct copy). So a SIZE +0x2
+row on an "assert" whose base slice has `push 0; call` where target goes straight to the
+call = the wrong macro. Confirmed weapon_core_{idle,aimed}_state::weapon_and_hands_expression
+85.65 -> 87.52 each (row closed byte-exact); 4 sibling weapon_and_hands_expression sites
+(double_barreled/pistol) still carry the mislabeled ASSERT_U (review_todos row 28).
+
+### fixed_string 1-arg ctor: target inlines it down to the 3-arg buffer_string BASE ctor
+SYMPTOM: a `fixed_string<N>( str )` construction site where target calls
+`buffer_string::buffer_string` with THREE args - `lea` of this+0xC (the m_buffer field), the
+ADDRESS of an N-constant temp (`mov [tmp],N; lea`, max_count is `size_type const&`), and the
+pcstr - while base calls a `fixed_string<N>::fixed_string` symbol with fewer args. The 3-arg
+base-ctor call IS the inline expansion of `fixed_string(value_type const* src) :
+buffer_string(m_buffer, Size, src)`. If base passes (src, &count) it was written with the
+2-arg `(src, size_type const& count)` ctor - a DIFFERENT ctor (constructs empty then appends)
+= a source bug, not an inline artifact. Confirmed damage_model_cook::on_hit_params_received
+(the (pcstr)*it_hit push_back; kept faithful though the % dipped 92.2 -> 90.7: base now keeps
+the 1-arg ctor itself out-of-line, the per-call-site LTCG split).
+
+### ICF fold names on intrusive_ptr helpers are NOISE; root-type evidence is call-site info + named locals
+SYMPTOM: target asm shows `intrusive_ptr<inventory_item,...>::intrusive_ptr` copy-ctors /
+`intrusive_ptr<booby_trap_core>::operator*` / `intrusive_ptr<vfs_mount>::operator!=` all
+applied to the SAME member - suggesting (wrongly) the member's template root type. All
+intrusive_ptr instantiations of a given operation are byte-identical COMDATs; ICF folds them
+onto ONE arbitrary winner, so the displayed template argument means NOTHING. RELIABLE type
+evidence in the PDB: (a) S_CALLSITEINFO records (the carcass CALL SITE INFO lines - compiler
+-recorded callee types, ICF-immune), (b) NAMED locals' types, (c) mangled names of real
+(non-COMDAT) symbols. Refuted the batch-2 "current_active_object root type must be
+inventory_item" header flag: the call-site record for on_before_active_object_changed binds
+the members directly as `resource_ptr<interactive_object> const&` - the header was already
+right (base_player::tick_active_object).
+
+### `if ( T x = expr )` decl-in-if: ONE record covering decl + test, opening its own [n] block
+SYMPTOM: a record whose range covers a local's initialization AND the `cmp/je` (or
+`test/je`) consuming it, with the PDB listing the local in a block `[n]` that OPENS at that
+statement - and the next nested guard repeats the shape one depth deeper ([1],[2],[3] on
+consecutive statements). SOURCE: chained brace-less condition-declaration guards:
+`if ( T const x = e ) if ( u8 const y = f ) if ( !x->p( ) ) { ... }`. A separate decl +
+separate if would emit TWO records. Also seen: a function-tail `{ T const x = e; }` braced
+block whose decl is a DEAD STORE (consumer compiled out of MASTER_GOLD) - reproduce the
+block, the bytes are real. Confirmed base_player::tick_active_object 3.38 -> 41.70 (19/19).
