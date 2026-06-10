@@ -5,12 +5,34 @@
 #include "pch.h"
 #include <vostok/game_core/double_barreled_weapon_core_hide_state.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
+
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::double_barreled_weapon_core_hide_state::double_barreled_weapon_core_hide_state(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int, bool&)
+static float s_aim_transition_time = 0.3f;
+
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
+
+// STATE[99.96%|DONE]: sole residual is `weapon` for the get_magazine_capacity( ) call staged into
+// eax (target) vs ecx (base) - a call-boundary argument-passing register choice. Byte-identical
+// otherwise. Same residual the matched double_barreled_weapon_core_show_state ctor accepts (99.96%).
 double_barreled_weapon_core_hide_state::double_barreled_weapon_core_hide_state(
 	weapon_core&							weapon,
 	float									animation_timescale,
@@ -19,43 +41,31 @@ double_barreled_weapon_core_hide_state::double_barreled_weapon_core_hide_state(
 	bool&									is_shown
 ) : weapon_core_hide_state_base( weapon, is_shown )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							weapon_state_index<3>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	m_time_scale = animation_timescale;
 
-	// SKIPPED BLOCKS
-	// <0x7ad567><2>
-	// <0x7ad57f><3>
-	// <0x7ad5f4><3>
-	// ******
+	ASSERT_CMP_U( weapon.get_magazine_capacity( ), ==, 2 );
+	ASSERT_CMP_U( animations_count, ==, 16 );
 
-	// FUNCTION BODY
-	// <0x7ad4fc>|0x06c|+0x02b:'27'
-	// <0x7ad527>|0x097|+0x023:'28'
-	// <0x7ad54a>|0x0ba|+0x007:'29'
-	// <0x7ad551>|0x0c1|+0x018|[1]:'30'
-	// <0x7ad569>|0x0d9|+0x018:'31'
-	// <0x7ad581>|0x0f1|+0x018:'32'
-	// <0x7ad599>|0x109|+0x03c:'33'
-	// <0x7ad5d5>|0x145|+0x002:'34'
-	// <0x7ad5d7>|0x147|+0x002:'35'
-	// <0x7ad5d9>|0x149|+0x005:'36'
-	// <0x7ad5de>|0x14e|+0x018|[2]:'37'
-	// <0x7ad5f6>|0x166|+0x018:'38'
-	// <0x7ad60e>|0x17e|+0x031:'39'
-	// <0x7ad63f>|0x1af|+0x002:'40'
-	// <0x7ad641>|0x1b1|+0x002:'41'
-	// <0x7ad643>|0x1b3|+0x00c:'42'
-	// ******
+	u32 animation_index = 0;
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 3 ; ++weapon_state_index )
+				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
+			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::double_barreled_weapon_core_hide_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[83.52%|PARTIAL]: control structure (get_weapon_lexeme_pair, get_user_hands_expression, then
+// the chained `+`) matches the target exactly. Residual is the shared-header operator+ wall: the target
+// uses dedicated `expression operator+(expression&, animation_lexeme&)` / `operator+(expression&,
+// expression&)` overloads (returning expression) absent from shared mixing_addition_lexeme_inline.h, so
+// the base falls back to the generic addition_lexeme& operator+. Identical residual/score to
+// double_barreled_weapon_core_show_state::weapon_and_hands_expression and the pistol hide sibling (83.52%).
+// Out of this file's scope (adding the overloads would shift other matched operator+ functions).
 animation::mixing::expression double_barreled_weapon_core_hide_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -63,10 +73,11 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::weapon_and
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::expression hands_expression
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
+
+	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
+
+	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
 	// FUNCTION BODY
 	// <0x7ad900>|0x010|+0x01f:'47'
@@ -75,38 +86,46 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::weapon_and
 	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::double_barreled_weapon_core_hide_state::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
+// STATE[99.93%|DONE]: sole residual is the inlined `m_weapon.ammo_in_magazine( )` `this` read into
+// eax (target, `mov eax, [ecx+128h]`) vs ecx (base) - a call-boundary/inline `this` register choice.
+// Byte-identical otherwise (including the leading compiled-out ASSERT). Same residual the matched
+// double_barreled_weapon_core_show_state::get_weapon_lexeme_pair accepts as DONE (99.93%).
 weapon_lexeme_pair double_barreled_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	// LOCALS
-	// pcstr[3] 					weapon_animation_captions
-	// resources::managed_resource_ptr const& selected_animation
-	// u32 							weapon_animation_index
-	// pcstr 						animation_identifier
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
-	// <0x7ad819>|0x009|+0x00c:'54'
-	// <0>
-	// <0x7ad825>|0x015|+0x007:'56'
-	// <0x7ad82c>|0x01c|+0x007:'57'
-	// <0x7ad833>|0x023|+0x007:'58'
-	// <0>
-	// <1>
-	// <0x7ad83a>|0x02a|+0x014:'61'
-	// <0x7ad84e>|0x03e|+0x00a:'62'
-	// <0x7ad858>|0x048|+0x02e:'63'
-	// <0x7ad886>|0x076|+0x00c:'64'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7ad892>|0x082|+0x056:'68'
-	// ******
+	pcstr weapon_animation_captions[3] = { "hide_both_barrels_empty", "hide_one_barrel_loaded", "hide_two_barrels_loaded" };
+
+	u32 weapon_animation_index = m_weapon.ammo_in_magazine( );
+	pcstr animation_identifier = weapon_animation_captions[weapon_animation_index];
+
+	resources::managed_resource_ptr const& selected_animation =
+		m_weapon_animations[is_third_view != false][user_state_id == type_crouch][weapon_animation_index];
+
+	set_animation_to_wait( selected_animation );
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		animation_identifier,
+		selected_animation,
+		&m_weapon,
+		m_animation_playback_state,
+		7,
+		m_time_scale,
+		animation::mixing::play_once_and_freeze_at_end,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::double_barreled_weapon_core_hide_state::get_user_hands_expression(vostok::animation::mixing::animation_lexeme&, vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[72.12%|PARTIAL]: structure now matches the target exactly - 9 statements both sides. The type_sprint
+// early-return of expression(weapon_lexeme), the user_state_index, and - per claude@MATCH - the captions
+// split into TWO separate assignment statements (target L80+L81, each 0x7 bytes) instead of one array-literal,
+// then the animation_lexeme_parameters builder chain (animated_object / bones_mask(2) / playback_type) and the
+// final expression(override_lexeme). Residual is the shared-header whole-program inline wall: the target keeps
+// weapon_core::get_user() and the three animation_lexeme_parameters setters OUT-OF-LINE (real `call`s, frame
+// 0x110) while the base inlines them to direct member stores (base setter statement 0x8f vs target 0x79).
+// Identical residual class to double_barreled_weapon_core_show_state::get_user_hands_expression. Note: the
+// double_barreled hide get_user_hands_expression has NO linear_interpolator local (verified from asm).
 animation::mixing::expression double_barreled_weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -115,11 +134,31 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::get_user_h
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::animation_lexeme override_lexeme
-	// pcstr[2] 					animation_captions
-	// u32 							user_state_index
-	// ******
+	if ( user_state_id == type_sprint )
+		return weapon_lexeme;
+
+	u32 user_state_index = user_state_id == type_crouch;
+
+	// claude@MATCH: two separate caption assignments (target L80+L81, each a 0x7-byte store) instead of a
+	// single array-literal initializer - that gives the target's 9 statements (the array decl emits no code).
+	pcstr animation_captions[2];
+	animation_captions[0] = "stand_hide";
+	animation_captions[1] = "crouch_hide";
+
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			animation_captions[user_state_index],
+			m_user_animations[is_third_view != false][user_state_index],
+			&weapon_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object( m_weapon.get_user( ) )
+		.bones_mask( 2 )
+		.playback_type( animation::mixing::play_once_and_freeze_at_end )
+	);
+
+	return override_lexeme;
 
 	// FUNCTION BODY
 	// <0x7ad741>|0x011|+0x006:'73'
@@ -149,8 +188,7 @@ animation::mixing::expression double_barreled_weapon_core_hide_state::get_user_h
 	// ******
 }
 
-// STATE[STUB]
-// survarium::double_barreled_weapon_core_hide_state* survarium::weapon_core_state_cook_template<survarium::double_barreled_weapon_core_hide_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
+// STATE[100%|DONE]
 double_barreled_weapon_core_hide_state* weapon_core_state_cook_template<survarium::double_barreled_weapon_core_hide_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
@@ -158,26 +196,11 @@ double_barreled_weapon_core_hide_state* weapon_core_state_cook_template<survariu
 	u32									animations_count
 )
 {
-	// LOCALS
-	// float 						time_scale
-	// float 						weapon_anim_length
-	// float 						user_anim_length
-	// ******
+	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[0] )->length_in_frames( );
+	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[12] )->length_in_frames( );
+	float time_scale = weapon_anim_length / user_anim_length;
 
-	return NULL;
-
-	// FUNCTION BODY
-	// <0x7ad669>|0x009|+0x02b:'103'
-	// <0x7ad694>|0x034|+0x030:'104'
-	// <0x7ad6c4>|0x064|+0x00f:'105'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7ad6d3>|0x073|+0x053:'112'
-	// ******
+	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_hide_state( params->weapon, time_scale, animations, animations_count, params->shown );
 }
 
 } // namespace survarium

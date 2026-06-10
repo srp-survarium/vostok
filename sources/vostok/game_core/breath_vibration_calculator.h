@@ -31,7 +31,7 @@ public:
 	inline	float		get_horizontal_value		( ) const { /* no source */ }
 	inline	float		get_vertical_value			( ) const { /* no source */ }
 
-	inline	void		set_character_multiplier	( float arg_0 ) { /* no source */ }
+	inline	void		set_character_multiplier	( float arg_0 ) { m_character_multiplier = arg_0; }
 
 			void		initialize_logic			( );
 
