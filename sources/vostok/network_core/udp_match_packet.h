@@ -68,7 +68,11 @@ private:
 public:
 	inline				~udp_match_packet	( ) { /* no source */ }
 
-	inline	u32			allocated_size		( ) const { return 0; }
+	// STATE[INLINED]: no standalone target symbol; the LTCG append(pcvoid,u32) COMDAT
+	// (0x7d690) folds this to `100h - movzx(header_size())` - payload capacity is the
+	// raw array minus the wire header. (`sizeof` vs `m_buffer.size()` indistinguishable
+	// in the folded emission.)
+	inline	u32			allocated_size		( ) const { return sizeof( m_buffer ) - header_size( ); }
 
 	// STATE[INLINED]: no standalone target symbol; send/handle_send inline this as
 	// `packet + 0x2B` - the raw wire buffer starts at m_buffer.elems.
@@ -87,6 +91,9 @@ public:
 	// `buffer_size()-fold + header_size() call` in that operand order.
 	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
+	// sushi@TODO: body unrecovered - the out-of-line packet<udp_match_packet>::reallocate
+	// (0x112e20) is a never-called int3 stub, and append's grow path ends in an
+	// ICF-folded no-arg call (an eater/abort macro?) the LTCG emission can't disambiguate.
 	inline	void		reallocate			( u32 new_size ) { /* no source */ }
 
 	// the channel's boost::intrusive::set names &udp_match_packet::set_member_hook and

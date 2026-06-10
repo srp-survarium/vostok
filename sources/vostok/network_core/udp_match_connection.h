@@ -206,6 +206,8 @@ private:
 	// claude@MATCH: threading::atomic32_type (volatile long) - process_incoming_packet
 	// targets it with interlocked_exchange; the non-volatile guard overload would
 	// otherwise fire (threading_functions_guard.h).
+	// sushi@TODO: can the structure/size tooling catch this? PDB member-type records
+	// should carry the volatile qualifier - today's sweep checks only sizes/offsets.
 	/* 0x00fc */	threading::atomic32_type			m_last_receive_time_in_ms;
 	/* 0x0100 */	const u32							m_disconnection_timeout_in_ms;
 	/* 0x0104 */	u32									m_last_send_time_in_ms;

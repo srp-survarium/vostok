@@ -119,7 +119,7 @@ inline bool operator>=( udp_match_stats const& left, udp_match_stats const& righ
 	// VERDICT: STRUCTURE MATCH (shape ok) - chain is now 6 terms matching target order; sole SIZE is target's final-term bool materialize + short/near jump, non-source-fixable.
 }
 
-// fully inlined into the stream/stats operator- (no standalone target symbol).
+// STATE[INLINED]: fully inlined into the stream/stats operator- (no standalone target symbol).
 inline udp_match_items_stats operator-( udp_match_items_stats const& left, udp_match_items_stats const& right )
 {
 	udp_match_items_stats	result;
@@ -128,7 +128,7 @@ inline udp_match_items_stats operator-( udp_match_items_stats const& left, udp_m
 	return			result;
 }
 
-// fully inlined into the stats operator- (no standalone target symbol).
+// STATE[INLINED]: fully inlined into the stats operator- (no standalone target symbol).
 inline udp_match_stream_stats operator-( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
 {
 	udp_match_stream_stats	result;
