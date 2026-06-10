@@ -7,6 +7,31 @@ move on, do not chase), and high-confidence-but-not-a-pattern TOOLING / build / 
 caveats (delinker quirks, RVA offsets, LNK1257, the LOG `__FILE__` wall). Useful to KNOW,
 but they do not tell you what source to write, so they stay out of the main list.
 
+## Index by action class
+
+Every entry below falls into one of four classes - know which you are reading,
+because each implies a different action. **When you append an entry, list it here.**
+
+- **UNSTEERABLE residuals (recognize, mark PARTIAL, do NOT chase):**
+  stripped/folded empty out-of-line call mid-body; LTCG custom `this`-in-EAX
+  convention; const setter/getter calling a trivial inline accessor;
+  compiler-generated dtor missing member-dtor `this` setups (ICF); thin forwarder
+  float/int arg in xmm0/eax vs stack; `this`-unused trivial member frameless in
+  target; two trivial accessors in ONE `&&` splitting inline-vs-call; empty base
+  virtual called via qualified `Base::method()`.
+- **/Od frame-slot noise (allocation churn, not structure - distinguish from a
+  real brace/scope diff):** per-call `get_skeleton()`/reference-return spill;
+  FPU vibration `tick` at 94% with structure 1:1; `sub esp` off by 4 (one extra
+  unused frame slot).
+- **NEGATIVE results (tried, did NOT work - don't retry):**
+  explicit-specialization DECLARATION does not suppress the inline (and the
+  "WHAT DOES NOT WORK" list inside the `this`-in-EAX entry).
+- **Tooling / build / scoring caveats:** file-static `cc_bool` dynamic
+  initializer is objdiff-unscorable; `boost::bind` ICF-folds onto a sibling
+  class's rep (the delinker name lies); module-only ninja_build does NOT relink;
+  carcass RVAs are +0x10000 off the rich index; delinker MASKS base immediates;
+  post-increment by value needs a real body or LNK1257.
+
 ## Notes
 
 ### stripped/folded empty out-of-line call can appear MID-BODY with a real source line

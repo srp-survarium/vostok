@@ -113,8 +113,9 @@ Agent(subagent_type="structure-verifier",
       prompt="Verify <fn>. Working dir <this worktree>. Branch <this-head> (PR #<N>).
               binaries/ is built locally here. Push any flag commit to origin/<this-head>.")
 ```
-It compares target vs base structure, flags QUANTITY/SIZE divergence, writes a report
-.md, and (if structure is wrong) downgrades the STATE + pushes one commit on
+It compares target vs base structure, flags QUANTITY/SIZE divergence, embeds the
+condensed structure-diff + `// VERDICT:` in-source, and (if structure is wrong)
+downgrades the STATE, fixes what it can (its phase 2), and pushes commits on
 `<this-head>`. Collect each one-line verdict. If a dispatch is impossible, run the
 verification inline per its definition.
 
@@ -122,7 +123,7 @@ verification inline per its definition.
 Report the prepared+verified PR (format below). Then:
 - **If the structure-verifier flagged a MISMATCH** on any of the PR's functions
   (bytes may match but structure is wrong - QUANTITY or SIZE): the flag commit
-  (STATE -> INPROGRESS, carcass restored) is already pushed on the PR branch.
+  (STATE -> INPROGRESS, structure-diff embedded) is already pushed on the PR branch.
   **STOP the loop.** Surface this PR to the human for a decision (correct the
   structure via a matcher, or accept and merge anyway). Do NOT advance.
 - **If everything is clean** (structure MATCH, no unresolved conflict, no rebuild
@@ -147,7 +148,8 @@ PR #<N> <title>
 
 ## Hard limits
 - Never merge, never squash, never push to the integration branch, never
-  `git push --force` (plain), never `--amend` a published commit. The human's merge
+  `git push --force` (the plain form - step 5's per-PR `--force-with-lease` is the
+  one sanctioned force push), never `--amend` a published commit. The human's merge
   is the ONLY way the stack advances; you wait for it.
 - Never touch a sibling repo or its `binaries/`. Build locally in this worktree.
 - Never edit compiled logic to force a structure match - that is a matcher's job;

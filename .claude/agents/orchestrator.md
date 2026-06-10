@@ -53,7 +53,9 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    ```
    rg -n "STATE\[STUB\]" sources/vostok/<module>/sources
    ```
-   Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry. Order them
+   Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry, and sweep
+   `docs/binary_matching/review_todos.md`'s **Actionable** section for open rows in
+   your module (an identified review question nobody acts on is wasted). Order them
    leaf/small-first (easiest wins first).
 2. **STACKED PRs - dispatch off the TOP, the human reviews from the BOTTOM.** Every
    unit stacks on the previous one. Each worker branches off the current **stack tip**
@@ -75,7 +77,10 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    - **Prepare the worktree FIRST (you own the env, not the worker)** - this keeps the
      matcher's context lean (it never reasons about branches/tips/stacking): in a free
      `vostok_<N>`, `git reset --hard <tip>` + `git clean -fdq`, run `regen_ninja.py` if the
-     tip un-excluded a TU, and create the unit's branch `git checkout -b match/<module>-<unit>`.
+     tip un-excluded a TU, verify `temp_include_all.cpp` braces balance (`{` count ==
+     `}` count - an inherited broken tip fails the worker's first rebuild and fakes
+     `report-changes.json` regressions; fixing it is byte-safe), and create the unit's
+     branch `git checkout -b match/<module>-<unit>`.
      The worker now inherits all prior matches and just works in place.
    - Dispatch a `matcher` worker, **`run_in_background: true`**:
      `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
@@ -110,7 +115,9 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       then `gh pr create --base <the-branch-point>`, minimal body (functions + %s).
    c. **Dispatch the `structure-verifier` on the SAME branch/worktree** - it verifies and
       (phase 2) fixes, then pushes a SECOND commit to the same PR, so every PR is exactly
-      `match` + `verify` (details under "Audit a matcher's work").
+      `match` + `verify` (details under "Audit a matcher's work"). It short-circuits
+      functions already at 100% in `report.json` (marker/order check only, no PDB
+      reads), so an all-100% unit's verify pass is cheap.
    d. **Dispatch the `reviewer` on the SAME branch** - cheap, diff-only: it strips stray
       logs and enforces lean comments (a 3rd commit ONLY if it changes source) and posts a
       PR comment flagging any NEW struct/class/enum/function the diff added. See

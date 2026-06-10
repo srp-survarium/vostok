@@ -6,14 +6,23 @@
 - Reachability anchor: `use_log` in `game_core/sources/temp_include_all.cpp`.
 - Status: nearly complete (1 `STUB` left).
 
-### Matching dept
+### Module constraints (what a matcher must know going in)
 
-* Previously there were multiple `operator()` overloads, which allowed `LOG_*` macro to pass flags and log location. With current `append` functions this was not possible and is instead replaced with a menagerie of `LOG_*` macros: `LOG_ERROR`, `LOGF_ERROR`, `LOGFD_ERROR`, `LOGIFD_ERROR` `LOGFD_FORCED`, etc. I don't think this is how they actually wrote this code, but based on the pdb file I cannot assume anything else for now.
-* Also those macro are not compiled into the same assembly. This needs to be investigated further.
-* Devs forgot to remove `static vostok::logging::log_callback_boost	s_log_callback` in `logger.cpp`. It doesn't seem to be used by anything according to IDA, but it did generate a dynamic constructor function, which is not generated in my case. Why? Maybe I should initialize it to something?
+* **The `LOG_*` API is a menagerie of macros, not overloads.** The PDB shows no
+  multiple `operator()` overloads (which would have let one macro pass flags and
+  log location); each variant is its own macro instead: `LOG_ERROR`, `LOGF_ERROR`,
+  `LOGFD_ERROR`, `LOGIFD_ERROR`, `LOGFD_FORCED`, etc. Match against the macro
+  expansion, not the naive single-entry-point C++ shape. (Probably not how the
+  original authors wrote it, but the PDB supports nothing else for now.)
+* **Those macros do NOT all compile to the same assembly** - do not assume a
+  shared shape across variants; verify per macro.
 
 ### Open questions
 
+* `logger.cpp` keeps a leftover `static vostok::logging::log_callback_boost s_log_callback`
+  (the devs forgot to remove it; unused per IDA), whose dynamic-initializer the
+  target emits but our build does not - why? Maybe it must be initialized to
+  something.
 * There are `debug_log` functions, which it seems like I didn't use at all.
 
 ### Overview

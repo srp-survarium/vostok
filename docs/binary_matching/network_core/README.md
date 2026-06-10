@@ -13,7 +13,8 @@
 Shared types, recurring gotchas, and asm quirks that span functions - add as you
 find them.
 
-## Per-function logs
-One `<function>.md` in this folder per function that needed real effort (see
+## Where per-function history lives
+NOT here - per-function `.md` trails were dropped (see
 [../agentic_loop.md](../agentic_loop.md) section 7). Live status is in the
-`STATE[...]` markers in the sources; these files hold the deeper write-ups.
+`STATE[...]` markers in the sources; the run narrative is in each match's
+commit/PR message. This README holds module-wide notes only.

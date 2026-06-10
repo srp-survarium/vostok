@@ -9,27 +9,53 @@ When a worker discovers anything that lets a future match converge in **fewer
 iterations** or with less wasted work — a wiring trick, a step that turned out
 unnecessary, a cheaper way to get the same signal — it appends a one- to three-line
 entry here. Keep it concrete and actionable.
-When a worker discovers anything that lets a future match need **fewer rebuilds** —
-a wiring trick, a step that turned out unnecessary, a cheaper way to get the same
-signal — it appends a one- to three-line entry here. Keep it concrete and
-actionable.
+
+## Index by situation
+
+Grep the quoted phrase to jump to the entry. **When you append an entry, add its
+key phrase to the right group here.**
+
+- **Before the FIRST rebuild (read it all up front):** "Get the body as right as
+  you can"; "Check the callee headers compile"; "Read the actual float/struct
+  constants straight out of the target `.obj`"; "Read ALL member offsets straight
+  from the target asm"; "read the access char from the delinked TARGET"; "needs
+  the member `mutable`"; "brace-balance-check it BEFORE your first rebuild";
+  "`git status` it before the rebuild"; "whole SCAFFOLDING may live in an OPEN,
+  unmerged PR".
+- **Zero-rebuild facts:** "A correct pre-existing STUB body needs zero rebuilds";
+  "does NOT need a rebuild"; "Batch source edits between rebuilds"; "DISASSEMBLE
+  the base out-of-line `X` (zero rebuilds)".
+- **Anchoring (one-rebuild recipes):** "needs its store OBSERVED"; "A trivial
+  member getter with NO callees"; "A POD-struct `operator=`"; "A trivial copy ctor
+  + operator= pair"; "Anchoring an ABSTRACT, fsm_state-derived class"; "Anchoring
+  a STATIC member"; "A private STATIC member"; "returns a by-value struct
+  (float4x4)"; "DEFINE *and* DISPATCH"; "A fake-observation direct anchor is
+  RARELY the cap"; "QUALIFIED CALL, never address-of".
+- **Known walls - recognize and STOP:** "A constant-only default ctor"; "kept
+  OUT-OF-LINE (`call X`) that our /GL LTCG INLINES"; "Confirmed dead ends for the
+  LTCG inline-vs-call"; "objdiff-UNSCORABLE - confirm it in ONE rebuild"; "A batch
+  of ~18 trivial one-liners"; "scores `fuzzy: None` (unpaired)".
+- **Scoring / build mechanics:** "`rebuild.py <module>` does NOT relink the EXE";
+  "ANONYMOUS OBJECTs"; "Distinguish real regressions from baseline-artifact
+  regressions"; "`pdb_fetch --view diff` silently refuses"; "Wine zombie";
+  "mspdbsrv.exe holds the build's output pipe".
 
 ## What a rebuild does
 
 - The dominant cost is now **token consumption** (agent context re-read on each
   iteration), NOT the rebuild. A full `rebuild.py` (recompile the changed module
   under Wine + rerun the delinker over the EXE to regenerate `binaries/objdiff/base`
-  + `binaries/rich/base`) is ~10 min and runs in the **background** — it is not the
-  thing to obsess over minimizing.
+  + `binaries/rich/base`) is ~2 min steady-state (historically ~10 - see the Wine
+  zombie / mspdbsrv entries at the bottom) and runs in the **background** — it is
+  not the thing to obsess over minimizing.
 - Therefore: **get the function RIGHT in as few iterations as possible** — each wrong
   iteration means re-reading the target/context (tokens) and another wait. Reading
   target asm, writing the body, diffing are all cheap; a wasted *iteration* is the
   expensive part. (The tips below still apply: they were written as "saves a rebuild"
   but the real win is saving an iteration.)
-- **`rebuild.py` is the dominant cost, and it is ~fixed per call** regardless of
-  how small the function is. One invocation recompiles the whole changed module
-  under Wine *and* reruns the delinker over the entire EXE to regenerate
-  `binaries/objdiff/base` + `binaries/rich/base`.
+- **A `rebuild.py` call is ~fixed-cost** regardless of how small the function is:
+  one invocation recompiles the whole changed module under Wine *and* reruns the
+  delinker over the entire EXE - so a one-line tweak pays the same as a whole batch.
 - Still worth **minimizing wasted `rebuild.py` calls** — a cycle spent on a
   reachability or compile bug teaches nothing. Everything else (reading target asm,
   writing the body, diffing) is cheap by comparison.
@@ -84,7 +110,6 @@ _(Append new findings below this line.)_
   builds the full game (`survarium_-_PC_-_DirectX_11`) and relinks the EXE. The
   delinker/rich index read the linked **EXE**, so if you pass a module name the
   EXE is stale and your source change does not show up in `--view diff` or the
-  score (build finishes in ~1 min instead of ~10, and `report-changes.json` shows
   score (the build finishes fast but does NOT relink, and `report-changes.json` shows
   `+0.00 / 0 changed` - the tell). Run **`python3 scripts/rebuild.py`** with no
   module arg so the EXE actually relinks. Cost me one wasted rebuild on
@@ -163,17 +188,6 @@ _(Append new findings below this line.)_
   also matches `tick`). Workaround: byte-diff the two COFF `.text` regions directly
   with the COFF parser (locate the fn symbol's `.text` offset on each side, slice
   and `.hex()` compare). The score/report-changes remain authoritative for the number.
-- **A trivial setter (`m_x = arg;`) needs its store OBSERVED or LTCG DSE's it - one
-  rebuild if you anchor it right the first time.** Calling `calc.set_x(v)` in the
-  anchor is NOT enough: LTCG can inline the setter into the anchor and then prove the
-  object dead and delete the store (same elision as the constant-only ctor). Anchor
-  that lands the setters at 100% on the first build: (1) put the setters' member-fn
-  addresses in a local table and escape `&table` through an opaque sink
-  (`example_callback`) so the standalone bodies are kept un-inlined; (2) call the
-  setters on a local `calc`, then escape `&calc` through the same opaque sink so the
-  stores are observed. Got all three `weapon_dispersion_calculator` setters to 100%
-  in a single rebuild this way. (A reader that touches the *same* members would also
-  work, but these members had no getter.)
 - **A POD-struct `operator=` (member-wise scalar/byte copy) + its empty default ctor
   both hit 100% in ONE rebuild from a single anchor.** For a 3-`u8` `struct
   weapon_state` (no copy ctor), the anchor `weapon_state a, b; b = a; example_callback(&a);
@@ -317,7 +331,6 @@ _(Append new findings below this line.)_
   trivials), NOT regressions - none touch your source. ANCHOR via member-fn ADDRESS-OF only
   (`&Class::method`), NEVER construct an instance: instantiating an fsm_state-derived class
   emits its vtable and forces codegen of any still-STUB non-void virtual (e.g.
-  `selected_animations`) -> C4716/LNK1257 link failure (cost me one full ~10-min relink).
   `selected_animations`) -> C4716/LNK1257 link failure (cost me one full relink).
   Whole unit (2 trivial overrides) done in effectively one productive rebuild this way.
 - **The inherited stack tip's `temp_include_all.cpp` may not even COMPILE - brace-balance-check it
@@ -331,10 +344,6 @@ _(Append new findings below this line.)_
   before building: `python3 -c "s=open('.../temp_include_all.cpp').read(); d=0; [exec('global d')]"` - or
   just iterate chars counting `{`/`}` and assert final depth 0, min depth never negative. Fixing the
   braces is safe (the anchor TU emits no matched bytes) and re-enabled ~89 dead-stripped anchors. Cost me
-  one wasted ~10-min rebuild discovering it.
-- **For trivial virtual overrides, read the access char from the delinked TARGET `.h`-unit's OWN
-  recovered symbol (report.json), not the ICF fold representative's rich-index mangling - and anchor with
-  a QUALIFIED CALL, never address-of.** Two facts each cost a ~10-min rebuild on the
   one wasted rebuild discovering it.
 - **For trivial virtual overrides, read the access char from the delinked TARGET `.h`-unit's OWN
   recovered symbol (report.json), not the ICF fold representative's rich-index mangling - and anchor with

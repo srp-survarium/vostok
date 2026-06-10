@@ -62,6 +62,22 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
   `report.json` (that's the STATE number); check `report-changes.json` for regressions.
+- **Don't waste rebuilds** (the top rules from `loop_performance.md` - it has the evidence):
+  - A correct pre-existing STUB needs ZERO rebuilds: symbol already in
+    `binaries/rich/base/index.jsonl` + `--view diff` already clean means the
+    `report.json` score is final; marker/comment edits change no bytes - don't
+    rebuild to "confirm".
+  - `--view diff`/`structure-diff` need NO rebuild - they read the existing
+    indexes. Rebuild only after a SOURCE change.
+  - ONE edit pass before the first rebuild: all the batch's bodies + anchors +
+    access specifiers + `mutable` + missing headers; read member offsets, float
+    constants (COFF `.rdata`), and mangled access chars from the target obj FIRST.
+  - Trivial setters/ctors land at 100% in ONE rebuild only if their stores are
+    OBSERVED (escape `&obj` through an opaque sink like `example_callback`) -
+    otherwise LTCG dead-store-eliminates them.
+  - Brace-balance-check the inherited `temp_include_all.cpp` BEFORE the first
+    rebuild - a broken tip fails the build and fakes `report-changes.json`
+    regressions (fixing it is byte-safe).
 - **Only AFTER compiling, diff - to see what you got right and what you got wrong.**
   There is no base side to compare until your code builds, so this comes last. Run the
   structure diff, then the asm diff for the instruction-level cause:

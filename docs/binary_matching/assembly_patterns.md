@@ -30,6 +30,64 @@ SOURCE:
 NOTES: <when it applies, the overload/intrinsic involved, gotchas>
 ```
 
+## Index by category
+
+Entry titles below, grouped so you can jump (grep the title) instead of scanning
+~1000 lines. **When you append a new entry, add its title to the right category here.**
+
+- **Ctors / dtors / initialization:** base-class ctor: out-of-line `call` vs inlined
+  trivial init; scalar default ctor: sequential `movss [this+off], const`; derived state
+  ctor: base-ctor delegation + N compiler-emitted vtable stores; derived ctor: member of
+  struct-with-ctor is `call <ctor>` THEN explicit member stores; Hand-written copy ctor
+  delegating to operator=; derived ctor OVERWRITES an inherited member; `member = T( args )`
+  (assign a temporary class object); console-variable static initializer (`cc_bool`/...);
+  placement `new ( buffer ) T(...)`; a `call_destructor`-style helper -> `obj.~T()`;
+  allocator `new_X` / `delete_X` free-function helpers; LTCG dead-store elimination: a
+  /Od+/GL ctor with no real caller compiles EMPTY.
+- **Control flow / switches / braces:** switch over a small enum (jump table); switch
+  dispatch: bounds check vs contiguous jump table (the `default:` shape); switch with
+  `case 0` whose body equals the default; `jmp short` (2 bytes) inside a switch = a
+  closing brace; two identical `jmp .end` back-to-back; nested if/else-if/else emits an
+  extra join `jmp` per level; `if ( a && b )` materializing a THIRD bool temp; `/Od`
+  counted loop with `je` exit = `i != N`; three sequential `[1]` block-opens.
+- **Asserts / debug machinery:** `call empty_stub` = a compiled-out ASSERT (RECOVER it);
+  `if(identity(false)){...}` = a Master-Gold ASSERT_*_U eater; `(void)(&p)` =
+  VOSTOK_UNREFERENCED_PARAMETER(S); Lone assert eater (no branch) = non-_U ASSERT; A
+  speculative ASSERT in an INLINE ctor multiplies into every inline site.
+- **Member access / virtuals / mangling:** member sub-object method call via
+  `add ecx, <offset>`; static member-function access codes C/K/S; VIRTUAL member access
+  codes U/M/E; private member function -> `ABE` not `QBE`; address-of a VIRTUAL member
+  yields a vtable thunk (anchoring trap); non-virtual member call through a member
+  reference; virtual call on a member reference through its OWN vtable; a const member
+  function that ASSIGNS -> `mutable`; a write/read at `[ebp+arg]+0xNN` is a MEMBER of an
+  argument struct.
+- **Inline-vs-call (LTCG) - what is and isn't steerable:** LTCG out-of-line-call vs
+  inline of a trivial COMDAT template method; inline-vs-call of a trivial bool getter
+  (is_aimed); per-call-site inline-vs-call of `operator|` (float3 dot); Inline class-body
+  accessor inlined by base but called by target -> move it out-of-line; Out-line an EMPTY
+  inline virtual (STEERABLE); Single-TU anchor INLINES a now-real inline helper;
+  boost::function member assign: folded operator= vs inlined copy-swap-clear.
+- **Anchoring / reachability:** anchoring an abstract fsm_state subclass; template
+  carcasses need member-fn-ADDRESS anchors; call-site call sites prevent r<T>/append from
+  inlining away (the real lever); CRTP `packet<T>` writer/reader need `friend` access.
+- **Floats / math / numeric idioms:** float literals 0.0f / 1.0f on the FPU; `and X,mask;
+  neg; sbb` = bool-normalize; `movzx; neg; sbb` on a bool array index = `arr[ b != false ]`;
+  pointer subtraction -> `sub; cdq; idiv sizeof`; by-value `float4x4 operator*` arg order;
+  `member = math::min( x, member )` operand order is STEERABLE; `u32_diff -> fild; fdiv
+  1000.0` = `/ 1000.0f`; forward-kinematics chain `operator*(out,A,B)` push order;
+  bone-object-space matrix index (do NOT hoist); serial-number (RFC1982) operator<; A
+  single low-byte store into a multi-byte member = a single-FIELD write; expression(
+  lexeme_a + lexeme_b ) -> operator+ then expression ctor.
+- **Containers / strings / library types:** `packet.append( field )` by value;
+  intrusive_ptr-by-value in a `&&` chain; `fixed_string<N>("literal")` ctor overload;
+  asio completion bind placeholders.
+- **Delinker / objdiff / naming quirks:** read the delinked TARGET `.h`-unit's OWN
+  recovered symbol, not the ICF fold rep; `lea ecx,[slot]; call <misnamed
+  allocator<char>>`; rva 0x03f210 universal empty-function fold target; `.i.xyz()`/
+  `.c.xyz()` fold = misnamed `finalize_impl`; `add reg,0x30; call finalize_impl` =
+  `matrix.c.xyz()`; empty function body; `objdiff fuzzy_match_percent: None` can mean
+  "body too divergent"; LOG_ERROR / `__FILE__` residual is permanent.
+
 ## Patterns
 
 > **Lower-signal notes live in [`assembly_patterns_low_confidence.md`](assembly_patterns_low_confidence.md)**: low-confidence/negative results, unsteerable

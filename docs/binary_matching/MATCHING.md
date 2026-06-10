@@ -152,7 +152,8 @@ When you see the `empty_stub` sequence at a statement, place an `ASSERT(...)` th
 `vostok/debug/macros.h`: `UNKNOWN_EXPRESSION` = `true`, `UNKNOWN_EXPRESSION_T( e )`
 = `( true ? true : !!e )`) - just USE them, never `#include`, redefine, or "fix"
 them. Add `STATIC_SIZE_ASSERT( type, 0xNN )` after each reconstructed struct to pin
-its PDB size.
+its PDB size. (`NODEFAULT` / `__assume(0)` in a switch `default:` is the same
+compiled-out-debug-machinery family - see the switch section below.)
 
 ## Switch statements - case-body braces change codegen
 The bracket style around a `case` body changes codegen/structure. **Read the carcass
@@ -192,28 +193,38 @@ One per function, line above it: `// STATE[<percent>%|<tag>]: short reason`.
 | tag | meaning |
 |---|---|
 | DONE | matched (may be <100% if the remaining diff is LTCG/CRT noise - say why) |
-| PARTIAL | mostly matched, remaining diff understood |
+| PARTIAL | mostly matched, remaining diff understood (an accepted residual) |
+| INPROGRESS | not done, with a concrete next step named - NOT parked (the anti-"bank it as PARTIAL" tag; see the LTCG section) |
 | STUB | skeleton only, body still the carcass |
 | BLOCKED | needs another function/type first |
 | SKIPPED | tried, deferred |
 | INLINED | inlined at all call sites; no standalone body |
 | UNCHECKED / UNVERIFIED | written, not yet diffed / not confirmed |
 
+The percent is `fuzzy_match_percent` from `report.json`. When objdiff cannot
+pair/score the symbol at all it reports no number - write `None` as the percent
+(`// STATE[None|PARTIAL]: ...`), and say WHY it is unscorable (ICF fold,
+access-mangling mismatch, frameless target - see
+`assembly_patterns_low_confidence.md`) - an unexplained `None` is just an
+unpaired function, often a fixable access specifier.
+
 e.g. `// STATE[94.32%|DONE]: LTCG for mutex`, `// STATE[97.67%|PARTIAL]: target didn't xor after std::find`.
 
 
-## Comment hygiene - lean code, verbose `.md`
+## Comment hygiene - lean code, verbose commit message
 **Code is not the place to be noisy.** Keep inline comments minimal. ALL the
-explanation, exploration, attempts, and rationale belong in the per-function `.md`
-(section 7) - be as detailed as you like *there*, never in the source. A reader of
-the `.cpp` should see matched code, not a narration.
+explanation, exploration, attempts, and rationale belong in the COMMIT MESSAGE
+(agentic_loop.md section 7; per-function `.md` trails are no longer kept) - be as
+detailed as you like *there*, never in the source. A reader of the `.cpp` should
+see matched code, not a narration.
 - **The carcass `// <full signature>` line is only a TYPE reference**, kept while
   matching because vostok-structure's generated argument *names* can be wrong while
   the *types* are right. **Once the arguments/types match the target, DELETE it** - a
   confirmed match does not keep the signature line.
 - **A clean `100%|DONE` keeps ONLY its `// STATE[100%|DONE]` line** - no explanation
-  block above the function (the why-it-matched detail goes in the `.md`). The single
-  exception is the non-100% carcass-structure rule below (keep structure inline).
+  block above the function (the why-it-matched detail goes in the commit message).
+  The single exception is the non-100% carcass-structure rule below (keep structure
+  inline).
 - Reserve inline comments for the genuinely unexpected/unique: a `claude@MATCH:` for
   an odd shape chosen to reproduce bytes, or a `claude@NOTE:` for a surprising target
   fact. Do NOT narrate routine mechanics (anchors, "empty body", ICF/linker folding)
@@ -223,8 +234,8 @@ the `.cpp` should see matched code, not a narration.
   `LOGF_*`, `printf`, `OutputDebugString`, a trace call) or commented-out debug/log
   line that was added while matching and that the TARGET does not actually emit - it is
   not part of the byte-match and only clutters the source. (A log the target's bytes
-  genuinely contain stays.) Any diagnostic you needed belongs in the `.md` trail, never
-  as a leftover log line in the `.cpp`.
+  genuinely contain stays.) Any diagnostic you needed belongs in the commit message,
+  never as a leftover log line in the `.cpp`.
 
 
 ## Comment tags (where matching knowledge lives - keep them)

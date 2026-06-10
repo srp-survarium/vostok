@@ -14,6 +14,15 @@ Compare the two statement skeletons, flag where they diverge, embed the condense
 diff + a `// VERDICT:`, and write the report. This phase reads the EXISTING obj/report
 and changes no bytes.
 
+**100% short-circuit (do this FIRST).** Read each handed function's
+`fuzzy_match_percent` from `binaries/objdiff/report.json` before any PDB work: a
+function already at 100% needs NO structure-diff pass (project policy: byte-perfect
+= trivially-correct statement structure - matcher.md "At 100%, the embed must be
+GONE"). For those, just confirm the marker is a bare `// STATE[100%|DONE]`, strip
+any stale embed, and still include them in the definition-ORDER check (order is the
+one thing per-function bytes can't prove). Spend the structure-diff / PDB reads on
+the <100% functions only.
+
 **Phase 2 - FIX (then become the matcher):** once you have the diff and know WHICH
 statement diverges and HOW (SIZE vs quantity vs order), switch into the matcher role
 and FIX the function - apply the source-shape change the divergence points to (member-
