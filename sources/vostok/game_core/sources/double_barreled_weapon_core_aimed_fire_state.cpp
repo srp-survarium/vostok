@@ -114,7 +114,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::weap
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
 	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// SIZE +0x29 | 101 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// SIZE +0x29 | 114 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the operator+ inline-vs-call LTCG on the addition tree, non-steerable.
 }
 
