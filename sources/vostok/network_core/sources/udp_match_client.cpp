@@ -51,7 +51,7 @@ void udp_match_client::on_error( client_error_codes_enum, boost::system::error_c
 {
 	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }
-// STATE[88.12%|BLOCKED]: 5/5 stmts, instruction stream identical modulo frame (base 0x50 vs target 0xB8 -> this-slot disp8 vs disp32); base LTCG inlines away the still-empty udp_match_connection::process_incoming_packet<process_packet_predicate> stub (its call + arg pushes drop). Next: template unit matched in PR #288 (stacked above) - re-diff here once it lands.
+// STATE[99.86%|PARTIAL]: re-diffed after PR #288's process_incoming_packet<process_packet_predicate> body landed: structure-diff clean, 5/5 stmts, 0xb1 bytes BOTH sides; residual is the frame immediate (base 0xD0 vs target 0xB8 spill area) + ICF naming on the folded assert-eater stubs - not source-steerable.
 void udp_match_client::process_incoming_packet( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint )
 {
 	ASSERT_U( endpoint == m_server_endpoint );
@@ -61,10 +61,10 @@ void udp_match_client::process_incoming_packet( packet_reader& reader, boost::as
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_connection.is_disconnected( ) ) );
 	m_connection.process_incoming_packet( reader, process_packet_predicate( *this ) );
 	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
-	// SIZE -0x3  | 57 | ASSERT_U( endpoint == m_server_endpoint );
-	// SIZE -0x6  | 58 | if ( m_network_flow_emulator && m_connection.is_disconnected( ) )
-	// SIZE -0x16 | 62 | m_connection.process_incoming_packet( reader, process_packet_predicate( *this ) );
-	// VERDICT: STRUCTURE MISMATCH (size) - base LTCG drops the push/push/call (0x16) of the still-STUB udp_match_connection::process_incoming_packet<process_packet_predicate>, shrinking the frame 0xB8->0x50 (disp32->disp8 = the -0x3/-0x6 rows); blocked on that template body (udp_match_connection_inline.h, target rva 0x121980, 43 stmts / 0x374 bytes; matched in PR #288, stacked above).
+	// (no diverging rows - clean align, 0xb1 bytes both sides)
+	// VERDICT: STRUCTURE MATCH (shape ok) - closed by PR #288's udp_match_connection::
+	// process_incoming_packet<process_packet_predicate> body (the dropped call + arg pushes are back);
+	// residual is the frame immediate (base 0xD0 vs target 0xB8) + ICF stub naming, not source-steerable.
 }
 
 // claude@NOTE: handle_receive must sit at its original source lines - the three
