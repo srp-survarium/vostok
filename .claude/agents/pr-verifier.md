@@ -73,7 +73,8 @@ everything below already merged. When a hunk DOES conflict, resolve by intent:
   both sides. Then VERIFY braces balance: `{` count == `}` count (a known failure
   mode is an anchor cherry-picked INSIDE a function's closing `}`, nesting it; add
   the one missing `}` if so). Mismatched braces will break the build.
-- **`assembly_patterns.md` / other append-only docs** - take both sides.
+- **`patterns/INDEX.md` / `patterns/*.md` / other additive docs** - take both sides
+  (two PRs adding different pattern files/INDEX lines never truly conflict).
 - **shared headers / `.cpp`** - if the integration advanced a header this PR also
   touched, take both changes (the PR's function edit AND the inherited edit). Never
   drop matched code to make a conflict go away.

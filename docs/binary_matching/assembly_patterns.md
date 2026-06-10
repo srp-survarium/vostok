@@ -1798,7 +1798,6 @@ negative results, tooling caveats.
 
 ## For humans
 
-Browse [`patterns/INDEX.md`](patterns/INDEX.md) top to bottom - it is sorted by
-primary `cpp:` tag so construct families cluster. Low-signal notes (negative
-results, tooling caveats) carry `confidence: 1-4/10`; the old
-`assembly_patterns_low_confidence.md` overflow file was absorbed into `patterns/`.
+Browse [`patterns/INDEX.md`](patterns/INDEX.md) top to bottom - sorted by primary
+`cpp:` tag so construct families cluster. The old `assembly_patterns_low_confidence.md`
+overflow was absorbed into `patterns/` as `confidence: 1-4/10` entries.
