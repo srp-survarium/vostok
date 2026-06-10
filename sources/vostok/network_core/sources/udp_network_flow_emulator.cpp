@@ -10,23 +10,23 @@
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/buffer_vector.h>
 
-namespace vostok {
-namespace network_core {
-
+// the tick remove_if predicate lives at GLOBAL scope - the target mangling carries no
+// namespace (??Rdelayed_packets_predicate@@QBE..); the namespaced spelling mangles
+// @network_core@vostok@ and the symbol join fails SILENTLY (objdiff never pairs it).
 class delayed_packets_predicate {
 public:
 	inline	delayed_packets_predicate	(
-		buffer_vector< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > >&	delayed_packets_to_appear,
+		vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	delayed_packets_to_appear,
 		const u32	time_in_ms
 	) :
 		m_delayed_packets_to_appear	( delayed_packets_to_appear ),
 		m_time_in_ms				( time_in_ms )
 	{ }
 
-	bool	operator()	( std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > const& message ) const;
+	bool	operator()	( std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const& message ) const;
 
 private:
-	/* 0x0000 */	buffer_vector< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > >&	m_delayed_packets_to_appear;
+	/* 0x0000 */	vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	m_delayed_packets_to_appear;
 	/* 0x0004 */	const u32	m_time_in_ms;
 }; // class delayed_packets_predicate
 
@@ -34,6 +34,9 @@ private:
 // (and its ctor) was missed. Its size is 0x8 (ref + const u32). The ctor + operator()
 // emit no standalone symbol until tick's remove_if instantiates them (see STATE below).
 STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
+
+namespace vostok {
+namespace network_core {
 
 // STATE[90.69%|PARTIAL]: structure CORRECT (member-init list); residual is the three
 // operand-masked seed immediates (delinker asymmetry, not a source miss).
@@ -52,23 +55,14 @@ STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
 	m_min_ping_time_in_ms	( options.min_ping_time_in_ms ),
 	m_max_ping_time_in_ms	( options.max_ping_time_in_ms )
 {
-	// STRUCTURE DIFF[target 0x7288c0 | base 0x54fed0]: target 0 / base 0 stmts
-	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
-	// ----------+--------+--------+----+----+----+----+------
-	// SIZE +0x47|0x728ac2|0x564f51|0x6b|0xb2|+11 |+15 |);
-	// SIZE +0x3 |0x728ba8|0x56507e|0x5f|0x62|+19 |+28 |packet_reader reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
-	// BASE_ONLY |--      |0x5650e0|--  |0x21|--  |+29 |const u16 received_local_sequence_id = reader.r< u16 >( );
-	// BASE_ONLY |--      |0x565101|--  |0x21|--  |+30 |const u16 remote_sequence_id = reader.r< u16 >( );
-	// SIZE +0x5c|0x728c07|0x565122|0xc |0x68|+21 |+36 |packet_reader reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
-	// SIZE +0x7 |0x728c13|0x56518a|0xc |0x13|+22 |+37 |functor( reader, i->second );
-	// TRGT_ONLY |0x728c1f|--      |0x5f|--  |+26 |--  |--
-	// TRGT_ONLY |0x728c7e|--      |0x13|--  |+27 |--  |--
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts - STRUCTURE MATCH, no diverging rows
+	// (the rows the old embed carried here were tick's, bled in by the old aligner).
 	// VERDICT: STRUCTURE MATCH (shape ok) - member-init list collapses to the ctor decl
 	// line on both sides; residual 90.69% is the three seed immediates 0x995a34/35/36
-	// (base operand-masked, target not - delinker asymmetry, not source). trail: udp_network_flow_emulator.md
+	// (base operand-masked, target not - delinker asymmetry, not source).
 }
 
-// STATE[58.46%|PARTIAL]: structure CORRECT (4/4 stmts, 0 quantity-diffs); residual is
+// STATE[79.07%|PARTIAL]: structure CORRECT (4/4 stmts, 0 quantity-diffs); residual is
 // the STL iterator-comparison codegen, NOT a loop-form miss (see body verdict).
  udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
@@ -77,21 +71,21 @@ STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
 		m_delayed_packets.pop_back( );
 	}
 
-	// STRUCTURE DIFF[target 0x728990 | base 0x54fe70]: target 4 / base 4 stmts
-	//   1: 0x009 <0x17> | 0x009 <0x19> | while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {   SIZE
-	//   2: 0x020 <0x1f> | 0x022 <0x9> | delete_udp_match_packet( m_packets_allocator, m_delayed_packets.back( ).first );   SIZE
-	// .. same ..
-	// ; aligned 2, size-diffs 2, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 4/4 stmts align 1:1, quantity-diffs 0; the
-	// two SIZE diffs are STLport iterator-compare lowering (target bool-op cmp vs base
-	// raw-ptr inline), codegen not structure. Disproves sushi "structure is WRONG"; leaving
-	// the review_todos sushi-confirm row open. trail: udp_network_flow_emulator.md
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x2|0| while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {
+	// VERDICT: STRUCTURE MATCH (shape ok) - 4/4 align 1:1; sole SIZE is the STLport
+	// iterator-compare lowering, codegen not structure. Disproves sushi "structure is
+	// WRONG"; leaving the review_todos sushi-confirm row open.
 }
 
-// STATE[100%|DONE]: tick's remove_if now instantiates it; base symbol present and
-// byte-identical to target (6/6 stmts, same offsets/sizes).
+} // namespace network_core
+} // namespace vostok
+
+// STATE[100%|DONE]: tick's remove_if instantiates it; at GLOBAL scope the mangled names
+// join (the namespaced spelling was byte-identical but scored None - silent join failure;
+// target mangles ??Rdelayed_packets_predicate@@QBE.. with no namespace).
 bool delayed_packets_predicate::operator()(
-	std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > const&	message
+	std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const&	message
 ) const
 {
 	if ( m_time_in_ms < message.first->last_send_time_in_ms )
@@ -99,18 +93,12 @@ bool delayed_packets_predicate::operator()(
 
 	m_delayed_packets_to_appear.push_back( message );
 	return true;
-
-	// STRUCTURE DIFF[target 0x1269d0 | base 0x550...]: target 6 / base 6 stmts
-	// .. same ..  (--view structure-diff cannot auto-align here: target/base demangled
-	//  names differ only by the vostok::network_core:: prefix; both single-side dumps are
-	//  6 stmts at IDENTICAL offsets/sizes 0x00<0x9> 0x09<0x10> 0x19<0x4> 0x1d<0xe>
-	//  0x2b<0x2> 0x2d<0x6>, 0x33 bytes total)
-	// ; aligned 6, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (byte-identical) - early-return guard + push_back + ret;
-	// quantity 0 / size 0. trail: udp_network_flow_emulator.md
 }
 
-// STATE[60.55%|PARTIAL]: from 0x728a30. Structure 15/15 per the target line table:
+namespace vostok {
+namespace network_core {
+
+// STATE[65.29%|PARTIAL]: from 0x728a30. Structure 15/15 per the target line table:
 // two flat empty-guards (m_delayed_packets at entry; delayed_packets_to_appear after
 // the erase - its `return` row carries the inlined buffer_vector dtor walk),
 // single-declaration `for ( pair* i = begin(), * e = end(); ... )` (one stmt, no
@@ -172,23 +160,23 @@ void udp_network_flow_emulator::tick(
 	}
 
 	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
-	// SIZE +0x47 | 136 | );
-	// SIZE +0x3  | 149 | packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
-	// BASE_ONLY  | 150 | const u16		received_local_sequence_id	= reader.r< u16 >( );
-	// BASE_ONLY  | 151 | const u16		remote_sequence_id			= reader.r< u16 >( );
-	// SIZE +0x5c | 157 | packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
-	// SIZE +0x7  | 158 | functor( reader, i->second );
-	// TRGT_ONLY  | t.ln +26 | 0x728c1f (0x5f)
-	// TRGT_ONLY  | t.ln +27 | 0x728c7e (0x13)
+	// SIZE +0x47|+15| );  (the remove_if erase tail)
+	// SIZE +0x3 |+28| packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+	// BASE_ONLY |+29| const u16		received_local_sequence_id	= reader.r< u16 >( );
+	// BASE_ONLY |+30| const u16		remote_sequence_id			= reader.r< u16 >( );
+	// SIZE +0x5c|+36| packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+	// SIZE +0x7 |+37| functor( reader, i->second );
+	// TRGT_ONLY |t+26| -- (0x5f)
+	// TRGT_ONLY |t+27| -- (0x13)
 	// VERDICT: STRUCTURE MATCH (shape ok) - 15/15; the ONLY rows are aligner pairing
 	// noise (it pairs our second reader 0x68 against the target's 0xc r<u16> row; hand
-	// alignment is 1:1 in order: readers 0x5f/0x5f vs 0x62/0x68, r<u16> 0xc vs 0x21 each,
+	// alignment is 1:1 in order: readers 0x5f/0x5f vs 0x62/0x68, r<u16> 0xc vs 0x1e each,
 	// functor 0x13 = 0x13). Residuals are the documented wall: base inlines r<u16> and
 	// the buffer accessors the target keeps out-of-line, and the remove_if site (+0x47)
 	// constructs the by-value predicate in-place in target vs our /Od temp+copy.
 }
 
-// STATE[73.13%|PARTIAL]
+// STATE[78.71%|PARTIAL]
 void udp_network_flow_emulator::add_packet(
 	pbyte const		buffer,
 	const u32		buffer_size,
@@ -198,6 +186,7 @@ void udp_network_flow_emulator::add_packet(
 )
 {
 	packet_reader	reader( base_packet( buffer, buffer_size ) );
+
 	const u16		received_local_sequence_id	= reader.r< u16 >( );
 	const u16		remote_sequence_id			= reader.r< u16 >( );
 
@@ -215,24 +204,17 @@ void udp_network_flow_emulator::add_packet(
 	VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
 	VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
 
-	// STRUCTURE DIFF[target 0x728cf0 | base 0x54ffd0]: target 10 / base 10 stmts
-	//   1: 0x011 <0x1d> | 0x011 <0x19> | packet_reader	reader( base_packet( buffer, buffer_size ) );   SIZE
-	//   2: --          | 0x02a <0x1b> | const u16		received_local_sequence_id	= reader.r< u16 >( );   ONLY base
-	//   3: --          | 0x045 <0x1b> | const u16		remote_sequence_id			= reader.r< u16 >( );   ONLY base
-	// .. same ..
-	//   4: 0x02e <0xc> | 0x060 <0x7> | udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );   SIZE
-	//   5: 0x03a <0xc> | 0x067 <0x3f> | packet->last_send_time_in_ms	= m_ping_random( m_max_ping_time_in_ms - m_min_ping_time_in_ms ) + m_min_ping_time_in_ms + time_in_ms;   SIZE
-	// .. same ..
-	//   6: 0x046 <0x15> | --          | L109   ONLY target
-	// .. same ..
-	//   8: 0x094 <0x39> | --          | L112   ONLY target
-	// .. same ..
-	// ; aligned 5, size-diffs 3, quantity-diffs 4, blank-gaps 2
-	// VERDICT: STRUCTURE MISMATCH (both) - lower half (memory::copy -> make_pair -> push_back)
-	// is identical; divergence is the two dead `reader.r<u16>()` reads: TARGET keeps both
-	// calls (ONLY target L109/L112), our LTCG DCEs them to `xor;mov [seq],0` (ONLY base) -
-	// whole-statement dead-read DCE, not a source-shape miss. SIZE diffs are the m_ping_random
-	// operator()-vs-inline depth. Unsteerable without a real seq-id use. trail: udp_network_flow_emulator.md
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
+	// SIZE -0x5|0 | packet_reader	reader( base_packet( buffer, buffer_size ) );
+	// BASE_ONLY|+1| const u16		received_local_sequence_id	= reader.r< u16 >( );
+	// BASE_ONLY|+2| const u16		remote_sequence_id			= reader.r< u16 >( );
+	// TRGT_ONLY|t+2| -- (0xc)
+	// TRGT_ONLY|t+3| -- (0xc)
+	// SIZE +0x6|+5| packet->last_send_time_in_ms	= m_ping_random( ... ) + m_min_ping_time_in_ms + time_in_ms;
+	// VERDICT: STRUCTURE MATCH (shape ok) - 10/10; the ONLY rows are the SAME two dead
+	// seq-id reads in the same ordinal slots, mis-paired because the sizes flip (target
+	// calls the r<u16> COMDAT at 0xc, base inlines it at 0x18 - the is_low_level_packet
+	// wall); reader/ping rows are accessor/operator() inline depth. Non-steerable.
 }
 
 // STATE[100%|DONE]
