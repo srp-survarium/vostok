@@ -38,6 +38,9 @@ body_part_parameters::body_part_parameters(
 	m_damage_group			( damage_group )
 {
 	m_regeneration_timeout = math::floor( 1000.0f * regeneration_timeout );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts (0x162 bytes BOTH; no diverging rows)
+	// VERDICT: STRUCTURE MATCH - residual is reg-slot/reloc noise only, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -82,6 +85,9 @@ hit_type_parameters* body_part_parameters::get_hit_parameters( pcstr hit_type ) 
 {
 	find_hit_parameters_by_type_predicate find_predicate( hit_type );
 	return m_hit_types.find_if<find_hit_parameters_by_type_predicate>( find_predicate );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (0x3a bytes BOTH; no diverging rows)
+	// VERDICT: STRUCTURE MATCH - residual is stack-slot noise only, non-steerable.
 }
 
 struct protect_damage_predicate : boost::noncopyable {
@@ -161,6 +167,9 @@ void body_part_parameters::hit_by_type(
 		check_affects( time_in_ms );
 
 	params->apply_damage( delta, time_in_ms );
+
+	// STRUCTURE DIFF: target 20 stmts / base 20 stmts (0x273 bytes BOTH; no diverging rows)
+	// VERDICT: STRUCTURE MATCH - residual is reg-slot noise only, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -180,35 +189,36 @@ void body_part_parameters::decrease_health( float amount )
 // # Arguments
 // * `time_delta_ms` - frame duration.
 //
-// STATE[72.61%|BLOCKED]: body + control structure are an exact statement-for-statement
-// match vs target (rva 0x587860). Sole residual: target keeps math::min(u32,u32) (the
-// non-template overload @0x03fbb0) OUT-OF-LINE and CALLs it; our build is /Ob2 (full inline
-// expansion) so it inlines min->min_integral (sbb/neg/neg/and) at the call site. That is a
-// whole-program inline-heuristic / header-visibility decision on math::min(u32,u32) - not
-// steerable from regenerate's own source - so BLOCKED, same family as fill_new_stats_item's
-// fixed_string<46> inline. The +0x8 frame delta and the [ebp-20h]-vs-[ebp-18h] slot rename
-// all cascade from that one inline. claude@NOTE see .md.
-void body_part_parameters::regenerate( u32 time_delta_ms, u32 current_time_in_ms )
+// STATE[72.61%|PARTIAL]: math::min(u32,u32) inline-vs-call (LTCG), non-steerable from this TU.
+void body_part_parameters::regenerate( const u32 time_delta_ms, const u32 current_time_in_ms )
 {
 	u32 regenerate_delta = time_delta_ms;
 
 	if ( m_regeneration_timeout )
 	{
-		u32 next_regen_time = m_last_hit_time + m_regeneration_timeout;
+		const u32 next_regen_time = m_last_hit_time + m_regeneration_timeout;
 
 		if ( current_time_in_ms <= next_regen_time )
 			return;
 
-		u32 regen_allowed = current_time_in_ms - next_regen_time;
+		const u32 regen_allowed = current_time_in_ms - next_regen_time;
 		regenerate_delta = math::min( regen_allowed, time_delta_ms );
 		// sushi@NOTE: There is an ifdef of some kind
 	}
 
-	float amount = regenerate_delta * m_regeneration_speed / 1000.0f;
+	const float amount = regenerate_delta * m_regeneration_speed / 1000.0f;
 	increase_health( amount );
 
 	if ( m_damage_model.get_affects_applying_type( ) == type_apply_directly ) // sushi@TODO: Needs getter
 		update_affects( current_time_in_ms );
+
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE +0x3  | 200 | 			return;
+	// SIZE +0x18 | 203 | 		regenerate_delta = math::min( regen_allowed, time_delta_ms );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target CALLs the LTCG-promoted math::min(u32,u32)
+	// (ecx/edx, exists out-of-line in BOTH builds), base inlines min_integral at this site;
+	// the return; +0x3 is the rel8->rel32 cascade. Callee identity verified: math::min, NOT
+	// stlp_std::min<u32> (which takes const&). Whole-program inline budget, non-steerable here.
 }
 
 // STATE[100%|DONE]
@@ -336,13 +346,8 @@ void body_part_parameters::apply_affect_by_force(
 	}
 }
 
-// STATE[91.78%|BLOCKED]: body + control structure are an exact statement-for-statement match
-// (deltas agree vs target --view structure 0x0ba3c0). Sole residual: target inlines the
-// fixed_string<46>(char const*) ctor at the "none" leaf while base keeps it out-of-line (the
-// const-char* ctor exists out-of-line in base @0x030ae0 but NOT in target). That inline is a
-// whole-program COMDAT decision on the fixed_string<46> type - not steerable from this function's
-// source - so this is BLOCKED on fixed_string<46>'s emission, not a banked LTCG/PARTIAL residual.
-// The +0x10 frame delta and all reg/slot renaming cascade from that one inline. See the .md.
+// STATE[91.79%|BLOCKED]: 16/16 stmt-for-stmt; blocked on the fixed_string<46>(pcstr) ctor's
+// whole-program emission (target inlines it at the "none" leaf, base keeps it out-of-line).
 template < class stats_item_type >
 void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item, const u32 current_time_in_ms ) const
 {
@@ -368,14 +373,14 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 	if ( m_affects.empty( ) )
 		new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );
 
-	// STRUCTURE DIFF:
-	// target: 0xba3c0            base: 0x85aa0
-	// ; void survarium::body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16> >(vostok::ai::statistics_item<46,16>&, const unsigned int) const ; target 21 stmts / base 21 stmts
-	// 0x010 <0x11> | 0x010 <0x12> | new_stats_item.caption = m_name;   SIZE
-	// .. same ..
-	// 0x1f0 <0x31> | 0x1f1 <0x19> | new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );   SIZE
-	// ; aligned 19, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH - 21/21 stmt-for-stmt; both SIZE diffs cascade from the "none" leaf fixed_string<46>(char const*) inline-vs-call, BLOCKED on fixed_string<46> emission  trail: body_part_parameters-fill_new_stats_item.md
+	// STRUCTURE DIFF: target 16 stmts / base 16 stmts
+	// SIZE +0x1  | 349 | new_stats_item.caption = m_name;
+	// SIZE -0x18 | 369 | 		new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the "none" leaf: target INLINES the fixed_string<46>
+	// (pcstr) ctor (forwarding to an out-of-line buffer_string ctor, count bound by ref through a
+	// u32 temp = the 0x2E store) while base keeps the whole ctor out-of-line; the +0x1 is the
+	// caption operator= promoted-call (target regs) vs plain call (base). BLOCKED on the
+	// fixed_string<46> ctor's whole-program emission, not steerable from this function.
 }
 
 // claude@TODO: this explicit instantiation's PLACEMENT may be wrong - the original likely
@@ -385,28 +390,25 @@ template void body_part_parameters::fill_new_stats_item<vostok::ai::statistics_i
 	vostok::ai::statistics_item<46,16>& new_stats_item, const u32 current_time_in_ms ) const;
 
 // STATE[17.04%|BLOCKED]: needs npc_statistics::body_state member (absent from our ai header)
-void body_part_parameters::dump_state( vostok::ai::npc_statistics& stats, u32 current_time_in_ms ) const
+void body_part_parameters::dump_state( vostok::ai::npc_statistics& stats, const u32 current_time_in_ms ) const
 {
 	typedef vostok::ai::statistics_item<46,16> content_type;
 	content_type new_stats_item = content_type( );
 	fill_new_stats_item( new_stats_item, current_time_in_ms );
 	// stats.body_state.push_back( new_stats_item );	// claude@TODO: body_state @0x2798 missing from npc_statistics.h
 
-	// STRUCTURE DIFF:
-	// target: 0x587140            base: 0x45e3a0
-	// ; void survarium::body_part_parameters::dump_state(vostok::ai::npc_statistics&, const unsigned int) const ; target 3 stmts / base 3 stmts (stmt-skeleton aligns; the push_back source line collapses onto the dtor)
+	// STRUCTURE DIFF: target 3 stmts / base 2 stmts
+	// TRGT_ONLY | -- | L<push_back> (0x15: stats.body_state.push_back( new_stats_item ))
 	// VERDICT: STRUCTURE MISMATCH (quantity) - target's 3rd statement is
-	// `stats.body_state.push_back( new_stats_item )` calling buffer_vector<statistics_item<46,16>>::push_back
-	// at member offset 0x2798; our npc_statistics has NO body_state member there (sensors_state 0 +
-	// selectors_state 0x13CC land exactly at 0x2798, so body_state is an input_info_type-like member inserted
-	// after selectors_state that shifts working_memory_state and all following members - fill_npc_stats uses
-	// 0x7378, far past our 0x4470 layout, confirming our header undermodels npc_statistics). Uncommenting the
-	// push_back is blocked on adding body_state to vostok/ai/npc_statistics.h - a cross-module ai header change
-	// affecting every ai dump_state/fill_npc_stats consumer; out of scope here. trail: body_part_parameters_dump_state.md
+	// stats.body_state.push_back( new_stats_item ) via buffer_vector<statistics_item<46,16>>::push_back
+	// at member offset 0x2798; our npc_statistics has NO body_state there (sensors_state 0 +
+	// selectors_state 0x13CC land exactly at 0x2798; fill_npc_stats uses 0x7378, far past our 0x4470
+	// layout). BLOCKED on adding body_state to vostok/ai/npc_statistics.h - a cross-module ai header
+	// change affecting every dump_state/fill_npc_stats consumer; out of scope here.
 }
 
-// STATE[55.04%|BLOCKED]: callback invocation is a boost::function inline-vs-call / arg-eval-order wall
-void body_part_parameters::dump_state( boost::function<void(u32, float, float, pcstr)> callback, u32 index ) const
+// STATE[55.04%|PARTIAL]: boost::function4::operator() inline-vs-call (LTCG), non-steerable
+void body_part_parameters::dump_state( boost::function<void(u32, float, float, pcstr)> callback, const u32 index ) const
 {
 	vostok::fixed_string<512> affects_str;
 	for ( u32 i = 0 ; i < m_affects.size( ) ; ++i ) {
@@ -414,16 +416,12 @@ void body_part_parameters::dump_state( boost::function<void(u32, float, float, p
 	}
 	callback( index, m_health, m_max_health, affects_str.c_str( ) );
 
-	// STRUCTURE DIFF:
-	// target: 0x5872f0            base: 0x45e250
-	// ; void survarium::body_part_parameters::dump_state(boost::function<void __cdecl(unsigned int,float,float,char const *)>, const unsigned int) const ; target 5 stmts / base 5 stmts
-	// .. same ..
-	// 0x0a2 <0x38> | 0x0a2 <0x9c> | callback( index, m_health, m_max_health, affects_str.c_str( ) );   SIZE
-	// ; aligned 4, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 5/5 stmt-for-stmt; sole SIZE is the boost::function::operator()
-	// invocation: target precomputes m_health/m_max_health to stack slots + emits the out-of-line empty()
-	// guard before the indirect functor call, base inlines a shorter invoker (arg-eval-order + boost::function
-	// operator() inline-vs-call at the call boundary), non-steerable. trail: body_part_parameters_dump_state.md
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x64 | 415 | callback( index, m_health, m_max_health, affects_str.c_str( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target CALLs function4<void,u32,float,float,pcstr>
+	// ::operator() out-of-line (the symbol exists ONLY in target); base inlines it (empty-check +
+	// bad_function_call throw + invoker, forcing the float args through pre-evaluated temps).
+	// Whole-program LTCG keep/inline decision on the boost header operator, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -485,14 +483,13 @@ void serialize_affect( network_core::udp_match_packet& packet, std::pair<enum hi
 	packet.append( affect.second - client_offset );
 
 	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ---------+--------+--------+----+----+------+------
-	// SIZE +0x7|0x0b9ff6|0x4773e6|0xf |0x16|512   |	packet.append( (u8)affect.first );
-	// SIZE +0x8|0x0ba005|0x4773fc|0x12|0x1a|513   |	packet.append( affect.second - client_offset );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 2/2 appends; both SIZE are packet<T>::append LTCG inline (base) vs call (target), non-steerable.
+	// SIZE +0x7 | 484 | packet.append( (u8)affect.first );
+	// SIZE +0x8 | 485 | packet.append( affect.second - client_offset );
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE are packet<T>::append promoted-call
+	// (target) vs plain call (base), LTCG, non-steerable.
 }
 
-// STATE[41.00%|PARTIAL]: read affect type (r<bool>) and expiry time (r<u32>); trailing assert eater.
+// STATE[PARTIAL]: read affect type (r<bool>) and expiry time (r<u32>), then an eaten assert.
 void deserialize_affect( network_core::packet_reader& reader, std::pair<enum hit_affects_type_enum,u32>& affect )
 {
 	affect.first	= (hit_affects_type_enum)reader.r< bool >( );
@@ -501,16 +498,18 @@ void deserialize_affect( network_core::packet_reader& reader, std::pair<enum hit
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ---------+--------+--------+----+----+------+------
-	// SIZE +0x9|0x0ba026|0x4775e6|0x10|0x19|525   |	affect.first	= (hit_affects_type_enum)reader.r< bool >( );
-	// SIZE +0xb|0x0ba036|0x4775ff|0xe |0x19|526   |	affect.second	= reader.r< u32 >( );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 3/3 after adding the trailing ASSERT eater (target 0xc triple at +0x24); SIZE rows are r<bool>/r<u32> LTCG inline (base) vs call (target), non-steerable.
+	// SIZE +0x13 | 500 | affect.first	= (hit_affects_type_enum)reader.r< bool >( );
+	// SIZE +0x15 | 501 | affect.second	= reader.r< u32 >( );
+	// VERDICT: STRUCTURE MATCH (fixed quantity) - the TRGT_ONLY 0xc row was a MASTER_GOLD assert
+	// eater (old "inlined r<u32> tail" verdict was wrong), ASSERT added -> 3/3. SIZE rows are
+	// r<bool>/r<u32> promoted-call (target) vs plain call (base), LTCG, non-steerable.
+	// NOTE: report.json shows None - the delinker attributes the base copy to another unit
+	// (ICF); the rich-index pairing above is by mangled symbol and verifies fine.
 }
 
-// STATE[INPROGRESS]: append health, last-hit time (biased by client_offset, 0 when unset), the
-// active-affect count, then each affect via serialize_affect. DCE'd, no base symbol.
-// trail: body_part_parameters_serialize.md
+// STATE[87.65%|PARTIAL]: append health, last-hit time (biased by client_offset, 0 when unset),
+// the active-affect count, then each affect via serialize_affect. Was DCE'd; anchored from
+// temp_include_all use_game_core_serialization.
 void body_part_parameters::serialize( network_core::udp_match_packet& packet, s32 client_offset ) const
 {
 	packet.append( m_health );
@@ -523,11 +522,15 @@ void body_part_parameters::serialize( network_core::udp_match_packet& packet, s3
 		boost::bind( serialize_affect, boost::ref( packet ), _1, client_offset )
 	);
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x5871f0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x9 | 519 | packet.append( m_health );
+	// SIZE +0x8 | 520 | packet.append( m_last_hit_time ? m_last_hit_time - client_offset : 0 );
+	// SIZE +0x8 | 521 | packet.append( (u32)m_affects.size( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - all rows are packet<T>::append promoted-call (target)
+	// vs plain call (base), LTCG, non-steerable; the for_each statement matches byte-for-byte.
 }
 
-// STATE[63.64%|PARTIAL]: read health + last-hit time, then a count of affects (two assert
-// eaters after the reads), applying each by force in a count-down for loop.
+// STATE[29.30%|PARTIAL]: read health + last-hit time, then a count of affects, applying each by force.
 void body_part_parameters::deserialize( network_core::packet_reader& reader )
 {
 	m_health		= reader.r< float >( );
@@ -537,7 +540,7 @@ void body_part_parameters::deserialize( network_core::packet_reader& reader )
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	for ( ; affects_count != 0; --affects_count )
+	for ( ; affects_count != 0 ; --affects_count )
 	{
 		std::pair< hit_affects_type_enum, u32 >	affect;
 		deserialize_affect( reader, affect );
@@ -546,13 +549,14 @@ void body_part_parameters::deserialize( network_core::packet_reader& reader )
 	}
 
 	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
-	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ---------+--------+--------+----+----+------+------
-	// SIZE +0xd|0x587b99|0x478199|0x13|0x20|552   |	m_health		= reader.r< float >( );
-	// SIZE +0xb|0x587bac|0x4781b9|0x11|0x1c|553   |	m_last_hit_time	= reader.r< u32 >( );
-	// SIZE +0xb|0x587bbd|0x4781d5|0xb |0x16|554   |	u8 affects_count = reader.r< bool >( );
-	// SIZE -0x1|0x587be0|0x478203|0x13|0x12|559   |	for ( ; affects_count != 0; --affects_count )
-	// VERDICT: STRUCTURE MATCH (shape ok) - 9/9 after the two ASSERT eaters + while->for(;cond;--count) rewrite (the separate --affects_count and `}` rows merged into the for/apply rows exactly as in the target); SIZE rows are r<T> LTCG inline (base) vs call (target), non-steerable.
+	// SIZE +0x1b | 536 | m_health		= reader.r< float >( );
+	// SIZE +0x15 | 537 | m_last_hit_time	= reader.r< u32 >( );
+	// SIZE +0x15 | 539 | u8 affects_count = reader.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (fixed quantity 4 -> 0; 17.60 -> 29.30) - the two TRGT_ONLY 0xc
+	// rows were MASTER_GOLD assert eaters (ASSERTs added); the while+`--affects_count;`+`}` trio
+	// (0x8+0x9+0x2) equals the target's single 0x13 loop head = `for ( ; cond ; --count )`
+	// (jmp-over-decrement entry shape confirmed in the slice). Remaining SIZE rows are r<T>
+	// promoted-call (target) vs plain call (base), LTCG, non-steerable.
 }
 
 } // namespace survarium
