@@ -105,14 +105,14 @@ weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_p
 // get_weapon_lexeme_pair_impl (None); out of this file's scope. See md.
 animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool							is_third_view,
+	const weapon_user_state_enum		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
-	u32 user_state_index = user_state_id == type_crouch;
+	const u32 user_state_index = user_state_id == type_crouch;
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -129,30 +129,10 @@ animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_a
 
 	return override_lexeme + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// LOCALS
-	// animation::mixing::animation_lexeme override_lexeme
-	// u32 							user_state_index
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
-
-	// FUNCTION BODY
-	// <0x7a8851>|0x011|+0x01f:'69'
-	// <0>
-	// <0x7a8870>|0x030|+0x00f:'71'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7a887f>|0x03f|+0x086:'83'
-	// <0x7a8905>|0x0c5|+0x095:'84'
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x23 | 128 | );
+	// SIZE -0x8  | 130 | return override_lexeme + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are the per-call-site LTCG inline-vs-call wall: target keeps get_user/animated_object/bones_mask/playback_type setters and operator+ out-of-line, base inlines them. Non-steerable.
 }
 
 } // namespace survarium
