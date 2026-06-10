@@ -45,12 +45,9 @@ void game_material_manager::delete_pairs( )
 	}
 	m_pairs.clear( );
 
-	// STRUCTURE DIFF[target 0x72e7d0 | base 0x54a5f0]: target 12 / base 12 stmts
-	// .. same ..
-	// 0x0d6 <0x30> | 0x0d6 <0x34> | VOSTOK_DELETE_IMPL( g_allocator, internail_it->second );   SIZE
-	// .. same ..
-	// ; aligned 11, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is strip_pointer/delete_helper inline-vs-call (base emits an extra null-check call the target inlines away), non-steerable. trail: delete_pairs.md
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
+	// SIZE +0x4 | 44 | VOSTOK_DELETE_IMPL( g_allocator, internail_it->second );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the g_allocator identity-helper call the target inlines (per-call-site LTCG, +0x4), non-steerable.
 }
 
 // STATE[97.14%|DONE]
@@ -62,12 +59,9 @@ void game_material_manager::delete_materials( )
 		VOSTOK_DELETE_IMPL( g_allocator, it->second );
 	m_materials.clear( );
 
-	// STRUCTURE DIFF[target 0x72e6e0 | base 0x54a500]: target 5 / base 5 stmts
-	// .. same ..
-	// 0x069 <0x30> | 0x069 <0x34> | VOSTOK_DELETE_IMPL( g_allocator, it->second );   SIZE
-	// .. same ..
-	// ; aligned 4, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is strip_pointer/delete_helper inline-vs-call (base emits an extra null-check call the target inlines away), non-steerable. trail: delete_materials.md
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x4 | 62 | VOSTOK_DELETE_IMPL( g_allocator, it->second );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the g_allocator identity-helper call the target inlines (per-call-site LTCG, +0x4), non-steerable.
 }
 
 // STATE[100%|DONE]
