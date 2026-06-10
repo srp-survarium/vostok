@@ -53,26 +53,29 @@ public:
 
 			void				disconnect				( );
 
-	// STATE[STUB]
+	// STATE[INLINED]: body from the enqueue_impl expansion (target 0x74ca40: the
+	// inline param slot pair + `add ecx, 258038h; call udp_match_client::enqueue`)
 	inline	void				enqueue					( network_core::udp_match_packet* packet )
 	{
-		VOSTOK_UNREFERENCED_PARAMETER	( packet );
+		m_client.enqueue	( packet );
 	}
 
-	// STATE[STUB]
+	// STATE[100%|DONE]
+	// claude@MATCH: positive guard, no early return - the target's single `jne`
+	// over the call (an `if ( x ) return;` shape emits je + jmp instead)
 	inline	void				send_queued_packets		( const u32 current_time_in_ms )
 	{
-		VOSTOK_UNREFERENCED_PARAMETER	( current_time_in_ms );
-
-		// FUNCTION BODY[0xead60]
-		// ******
+		if ( !is_disconnected( ) )
+			m_client.send_queued_packets	( current_time_in_ms );
 	}
 
-	// STATE[STUB]: forwarding guesses - the matcher confirms
+	// STATE[INLINED]: forwarders verified against the match_client::is_connected/
+	// is_disconnected expansions (0x74c670/0x74c620: cmp impl+0x258154 vs 0/3)
 	inline	bool				is_connected			( ) const { return m_client.is_connected( ); }
 	inline	bool				is_disconnected			( ) const { return m_client.is_disconnected( ); }
 
-	// STATE[STUB]
+	// STATE[INLINED]: verified against match_client::create_client 0x74d140 +0x1a0
+	// (folded function1::operator= into impl+0x258010)
 	inline	void				set_on_disconnect		(
 									boost::function< void ( enum network_core::disconnect_event_types_enum ) > const&	on_disconnect
 								)
@@ -86,21 +89,28 @@ public:
 
 			network_core::udp_match_packet*	clone_packet	( network_core::udp_match_packet const& packet );
 
-	// STATE[STUB]: forwarding guesses - the matcher confirms
+	// STATE[INLINED]: forwarders verified against match_client::enqueue/
+	// on_packet_received (impl+0x258038 = &m_client = its m_stats reference) and
+	// match_client::last_receive_time_in_ms (load of impl+0x258134)
 	inline	network_core::udp_match_stats const&	get_stats				( ) const { return m_client.get_stats( ); }
 	inline	u32					last_receive_time_in_ms	( ) const { return m_client.last_receive_time_in_ms( ); }
 
+// the target manglings are AAE (private) for both callbacks
+private:
 			void				on_packet_received		( u8 message_type, network_core::packet_reader& reader );
 			void				on_disconnect			( const network_core::disconnect_event_types_enum disconnect_type );
 
-	// STATE[STUB]
+public:
+	// STATE[INLINED]: body from the match_client::new_packet expansion (target
+	// 0x74c8b0: orderer materialized to the inline param slot, then a direct
+	// `call udp_match_connection::construct_packet`)
 	static inline	void		construct_packet		(
 									network_core::udp_match_packets_orderer&	packets_orderer,
 									network_core::udp_match_packet&		packet,
 									u8									message_type
 								)
 	{
-		VOSTOK_UNREFERENCED_PARAMETERS	( &packets_orderer, &packet, &message_type );
+		network_core::udp_match_connection::construct_packet( packets_orderer, packet, message_type );
 	}
 
 private:

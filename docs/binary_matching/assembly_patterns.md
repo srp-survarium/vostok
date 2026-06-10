@@ -1293,6 +1293,12 @@ flavor choice happens at the original vtable-emitting TU (the real ctor caller, 
 match_client.cpp, still a stub) and/or differs with that TU's whole-program view;
 revisit only when the real caller TU is matched. Keep stack-constructed anchors and
 bank the `??_G = None` as a known cross-unit residual, not a per-header bug.
+UPDATE (match_client TU matched): the real-caller hope did NOT pan out - with
+match_client.cpp fully matched the base vtable STILL holds `??_E` while the target's
+holds `??_G`; the base now emits BOTH flavors (its `??_G` lands delinker-attributed to
+a sibling unit) and `pdb_fetch --view diff` pairs the two `??_G` bodies with only a
+compiler-emitted frame-size delta. The flavor in the vtable is a link-time choice our
+toolchain makes differently; permanently bank the unit-level None rows.
 
 ### Pointer-param top-level `const` changes the MSVC mangling (QAV vs PAV): symbol pairs as None
 SYMPTOM: a function scores `None` in objdiff although its body looks right; the target
@@ -1362,3 +1368,32 @@ for function0 only (75.26% on tcp on_connected_impl/on_disconnected_impl). `if (
 return;` is DISTINCT and steerable: it calls the operator! COMDAT + `test/je` directly (no
 and-with-constant) - matched 100% across all on_X forwarders. Don't respell the positive test;
 bank the function0 residual as the vectora::size()-class wall.
+
+### `mov byte[ebp-N],0; lea eax; call <fold>; movzx eax,[eax]; test; je { <expr>; push; push 0; call <fold> }` = ASSERT_U (the eaten-expression assert)
+The plain gold ASSERT eater is 3 instructions and DEAD-ends (no test). When the eater is
+FOLLOWED by `movzx eax, byte ptr [eax]; test eax,eax; je .skip` and a guarded block that
+EVALUATES a real expression then does `push <expr-result>; push 0; call <fold>`, the macro is
+the `_U` (unconditionally-evaluated) form: `VOSTOK_EMPTY_EXPRESSION_U_VA_ARGS` =
+`if ( identity(false) ) { debug::detail::expression_eater( assert_untyped, expression ); }` -
+i.e. **`ASSERT_U( <expression> )`** (the `push 0` is `::vostok::assert_untyped`, pushed last =
+first arg). The expression survives as REAL code inside the never-taken branch - recover it
+exactly (here `reader.eof( )`). Confirmed in `network/match_client_impl::on_packet_received`
+L48 (target 0x765d90 +0x3a). NOTE the first call is the inlined `identity<bool>(false)`
+(returns the byte's address in eax), not an empty stub.
+
+### `boost::ref( *ptr )` at a ctor/bind arg = an out-of-line `push ptr; call boost::addressof` + slot
+A plain `*ptr` argument to a reference parameter pushes the pointer with NO call. When the
+target shows `push <ptr-value>; call boost::addressof<...>; add esp,4; mov [slot],eax` (often
+misnamed under an unrelated bind_t), the source wrapped the lvalue: `boost::ref( *ptr )` -
+ref() builds a reference_wrapper via the real addressof() call, and the wrapper's
+`operator T&()` materializes the extra slot. Disambiguates `*m_client` vs
+`boost::ref( *m_client )` in bind/ctor argument lists. Confirmed across
+`network/match_client::{disconnect,enqueue,send_queued_packets,connect,on_packet_received}`
+(targets 0x74ca80 +0x7a, 0x74cf90 +0xd1, 0x74d740 +0x7f/+0xee, 0x74d8e0 +0x12c).
+
+### single-`jne` guard over a call = positive `if ( !x ) ...` body, NOT `if ( x ) return;`
+For a guard whose taken-branch lands on the function end, `if ( is_disconnected( ) ) return;
+f( );` emits `je <over-the-return>; jmp <end>` (two jumps) while the target's single
+`jne <end>` straight over the call is the no-early-return spelling
+`if ( !is_disconnected( ) ) f( );`. Two-byte/one-jump difference, 91.6 -> 100 on
+`network/match_client_impl::send_queued_packets` (header COMDAT 0x0dad60).

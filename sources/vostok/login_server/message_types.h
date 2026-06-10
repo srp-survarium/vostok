@@ -41,6 +41,12 @@ enum login_client_message_types_enum {
 
 // client to server
 enum lobby_server_message_types_enum {
+	// claude@NOTE: 48/49 recovered from match_client_impl::on_packet_received's
+	// immediates (the lobby code passed on to on_connected); names guessed from
+	// the "connection forbidden" LOG on the 49 path
+	connection_allowed								= 48,
+	connection_forbidden							= 49,
+
 	set_status_ready_for_battle						= 128,
 
 	lobby_server_invalid_message_type				= 191,
