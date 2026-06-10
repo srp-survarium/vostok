@@ -94,7 +94,9 @@ public:
 
 private:
 	struct bullet_functor {
-		// STATE[99.55%|DONE]: LTCG for resource constructor.
+		// STATE[None|DONE]: structure matches (0 stmts / 0x42 bytes both sides); objdiff scores None
+		// from ICF fold-name relocs (member-ctor calls resolve to unrelated fold representatives) plus
+		// the first member ctor's promoted convention (target passes this in eax, base ecx). Non-steerable.
 		inline	explicit	bullet_functor	( ) { }
 		inline				~bullet_functor	( ) { }
 
@@ -208,8 +210,8 @@ private:
 		// STATE[INLINED]
 		inline	void			swap						( bullet_functor_mt_allocator& other )
 		{
-			std::swap( m_buffer, other.m_buffer );
 			std::swap( m_bullet_functors, other.m_bullet_functors );
+			std::swap( m_buffer, other.m_buffer );
 		}
 
 		// STATE[UNCHECKED]: sushi@TODO: Why unused
