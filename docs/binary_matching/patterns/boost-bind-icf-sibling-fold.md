@@ -1,7 +1,7 @@
 # `boost::bind(&Derived::virtual_method, ...)` ICF-folds onto a SIBLING class's bind<> rep
 tags: cpp:template cpp:virtual | asm:call | topic:fold-icf
 symptoms: bind<> call named with a DIFFERENT class than the bound method, vcall'{36}' thunk, assign_to<bind_t<...>>
-confidence: 9/10
+confidence: 8/10
 variants: icf-fold-names-noise.md, boost-bind-cref.md
 
 The `boost::bind<>` helper packs only {member-fn-ptr, this, arg} and is byte-identical

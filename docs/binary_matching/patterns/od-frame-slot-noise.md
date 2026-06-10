@@ -1,7 +1,7 @@
 # Byte-identical body, `sub esp` off by 4-8 = /Od frame-slot allocation noise (stop at PARTIAL)
 tags: cpp:local | asm:sub-esp asm:mov | topic:convention topic:pdb-locals
 symptoms: sub esp 1Ch vs 18h, sub esp 38h vs 30h, saved-this slot shifted, all [ebp-N] shifted by a constant
-confidence: 9/10
+confidence: 8/10
 variants: single-spill-prologue.md, disp8-disp32-size-rows.md, per-call-ref-return-spill.md
 
 When the base matches the target instruction-for-instruction, offset-for-offset,

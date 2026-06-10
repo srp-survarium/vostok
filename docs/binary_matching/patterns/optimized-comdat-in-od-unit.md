@@ -1,7 +1,7 @@
 # An /Od module unit can carry an OPTIMIZED LTCG COMDAT - correct source, unpairable bytes
 tags: cpp:template cpp:member | asm:mov asm:movss | topic:convention topic:scoring-artifact
 symptoms: no push ebp frame, this in eax, flat unrolled stores, xmm movq pairs, args in edi/esi
-confidence: 8/10
+confidence: 7/10
 variants: eax-this-convention.md, frameless-this-unused-leaf.md
 
 A COMDAT instantiated from BOTH /Od and optimized TUs survives as whichever emission the

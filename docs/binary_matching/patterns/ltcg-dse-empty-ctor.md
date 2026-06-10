@@ -1,7 +1,7 @@
 # LTCG dead-store elimination: an anchored-only ctor compiles EMPTY
 tags: cpp:ctor | topic:anchoring topic:codegen-idiom
 symptoms: ctor body with no member stores, push ebp mov ebp esp push ecx mov [ebp-4] ecx mov eax leave ret
-confidence: 8/10
+confidence: 7/10
 variants: dced-static-helper-anchor.md
 
 Under /Od + /GL (LTCG), a constant-only ctor whose ONLY caller is a synthetic

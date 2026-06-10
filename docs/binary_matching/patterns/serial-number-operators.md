@@ -1,7 +1,7 @@
 # Serial-number (RFC1982) operator< / operator<= / operator-
 tags: cpp:operator | asm:cmp asm:jcc | topic:codegen-idiom
 symptoms: two-clause OR with +0x8000, jge vs jg one-byte diff, +0x10000 & 0x8000FFFF
-confidence: 8/10
+confidence: 6/10
 
 Wrap-around sequence-number compare is a two-clause OR; `operator<=` differs by exactly
 one byte (first clause jge -> jg). The `+0x10000 & 0x8000FFFF` + sign-extend in

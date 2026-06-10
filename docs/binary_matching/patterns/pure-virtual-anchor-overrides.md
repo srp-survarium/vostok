@@ -1,7 +1,7 @@
 # Anchoring an abstract state subclass: override EVERY still-pure virtual
 tags: cpp:virtual | topic:anchoring
 symptoms: C2259 cannot instantiate abstract class, fsm_state pures
-confidence: 8/10
+confidence: 7/10
 variants: addressof-virtual-anchoring-trap.md
 
 A `concrete_state : survarium::<state>` anchor stub must override ALL still-pure virtuals

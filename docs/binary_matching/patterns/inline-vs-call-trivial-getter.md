@@ -1,7 +1,7 @@
 # Trivial header getter: target `call`s it, our /GL inlines the member read (wall)
 tags: cpp:inline cpp:member cpp:bool | asm:call asm:mov | topic:inline-vs-call
 symptoms: call is_aimed vs mov al [obj+488h], getter standalone in target index only, no inline keyword
-confidence: 9/10
+confidence: 7/10
 variants: inline-vs-call-template-comdat.md, outline-accessor-to-recover-call.md, two-accessors-one-and-split.md, accessor-call-result-temp.md
 
 A one-line header accessor (`{ return m_member; }`) emits a real `call` in TARGET but is

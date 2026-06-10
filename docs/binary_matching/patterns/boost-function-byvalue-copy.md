@@ -1,7 +1,7 @@
 # By-value boost::function argument: target copy-ctor (1 call) vs base default+assign_to_own (2)
 tags: cpp:template | asm:call asm:sub-esp | topic:inline-vs-call topic:convention
 symptoms: call function<>::function<> then call assign_to_own, sub esp 20h vs 14h, extra [ebp-10h] slot
-confidence: 8/10
+confidence: 6/10
 variants: boost-function-assign-inline.md
 
 Passing a boost::function BY VALUE constructs a temporary copy: target copy-constructs in

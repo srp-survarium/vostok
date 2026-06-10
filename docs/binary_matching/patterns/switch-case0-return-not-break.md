@@ -1,7 +1,7 @@
 # Case whose body equals the default: `case 0: return X;`, NOT `case 0: break;`
 tags: cpp:switch cpp:return | asm:cmp asm:jcc | topic:structure-shape
 symptoms: explicit cmp [v] 0 je to the shared return block, scores None with break
-confidence: 9/10
+confidence: 8/10
 variants: switch-default-nodefault.md, switch-redundant-case-compare.md
 
 A target with an explicit `cmp [v],0 / je <block>` where that block is the SAME return

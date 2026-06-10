@@ -1,7 +1,7 @@
 # malloc_impl / delete_helper<> wrapper inline-vs-call (VOSTOK_NEW/DELETE_IMPL)
 tags: cpp:new-delete cpp:macro | asm:call asm:push | topic:inline-vs-call topic:allocator
 symptoms: call malloc_impl vs call try_pop, call delete_helper vs delete_helper_impl with predicate bool, extra push 58h, frame +4
-confidence: 8/10
+confidence: 6/10
 variants: strip-pointer-delete-resource.md, free-vs-delete-impl.md
 
 `VOSTOK_NEW_IMPL`/`VOSTOK_DELETE_IMPL` alloc/free rows that SIZE-diff a few bytes + bump

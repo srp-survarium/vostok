@@ -1,7 +1,7 @@
 # `lea &slot; call <misnamed ctor>; mov ecx,eax; call identity` = `float4x4( ).identity( )`
 tags: cpp:ctor cpp:float | asm:lea asm:call | topic:fold-icf topic:codegen-idiom
 symptoms: call stlp_std::allocator<char>::allocator<char> before float4x4::identity
-confidence: 8/10
+confidence: 6/10
 variants: fold-misname-empty-fn.md, xyz-fold-misname.md
 
 A default-constructed float4x4 temporary with `identity()` called on it (identity returns

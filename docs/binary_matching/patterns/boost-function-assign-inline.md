@@ -1,7 +1,7 @@
 # `m_fn = value` (boost::function): target calls folded operator=, base may inline copy-swap-clear
 tags: cpp:operator cpp:template | asm:call asm:lea asm:push | topic:inline-vs-call
 symptoms: one call folded operator= vs function ctor + swap + TWO call clear, frame +0x0C..0x10, missing push esi/edi
-confidence: 8/10
+confidence: 6/10
 variants: boost-function-byvalue-copy.md, boost-bind-icf-sibling-fold.md
 
 boost::function operator=(function const&) in TARGET is one `call <ICF-folded operator=

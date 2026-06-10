@@ -1,7 +1,7 @@
 # ICF fold names on intrusive_ptr helpers are NOISE; real type evidence is elsewhere
 tags: cpp:template | topic:fold-icf
 symptoms: intrusive_ptr<random type> ctors/operators applied to the same member, contradictory template args
-confidence: 9/10
+confidence: 8/10
 variants: boost-bind-icf-sibling-fold.md, fold-misname-empty-fn.md, unit-own-symbol-vs-fold-rep.md
 
 All intrusive_ptr instantiations of an operation are byte-identical COMDATs; ICF folds

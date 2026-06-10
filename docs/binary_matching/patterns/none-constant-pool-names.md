@@ -1,7 +1,7 @@
 # objdiff None from differing delinker constant-pool symbol names (body byte-identical)
 tags: cpp:float | asm:movss | topic:scoring-artifact topic:fold-icf
 symptoms: structure-diff fully aligned 0 diffs yet scores None, same 0.0f reloc named differently per side
-confidence: 8/10
+confidence: 6/10
 variants: none-body-too-divergent.md, fold-misname-empty-fn.md
 
 A byte-identical body can score None when each `movss xmm0,[0.0f]` reloc resolves to a

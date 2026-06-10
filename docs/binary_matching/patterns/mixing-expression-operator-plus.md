@@ -1,7 +1,7 @@
 # animation::mixing `+` chains: keep the idiomatic spelling; the residual is a header gap
 tags: cpp:operator cpp:template | asm:call | topic:inline-vs-call topic:structure-shape
 symptoms: operator+ addition_lexeme cloned_in_buffer, expression::is_empty, caps ~83-85%
-confidence: 9/10
+confidence: 8/10
 variants: float3-dot-operator-inline.md
 
 `expression( a + b )`: operator+ builds an addition_lexeme temp, clones it

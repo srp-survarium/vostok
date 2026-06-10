@@ -1,7 +1,7 @@
 # rel32 brace-exit jmp gets its own line record; rel8 folds into the previous statement
 tags: cpp:if | asm:jmp | topic:structure-shape topic:scoring-artifact
 symptoms: one TRGT_ONLY 0x5 row at an if-branch closing }, preceding base statement SIZE +0x5, 21-vs-20 stmts byte-identical
-confidence: 8/10
+confidence: 6/10
 variants: closing-brace-jmp-rows.md
 
 The branch-exit jmp over the rest of an if/else-if chain is a 5-byte rel32 when the join

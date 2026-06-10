@@ -1,7 +1,7 @@
 # `(T)config_value`: target keeps operator T out-of-line, base keeps cast_number
 tags: cpp:cast cpp:operator | asm:call asm:movzx | topic:inline-vs-call
 symptoms: call binary_config_value::operator unsigned char vs call cast_number<unsigned char,unsigned __int64,unsigned int>
-confidence: 8/10
+confidence: 6/10
 variants: static-cast-checked.md
 
 `(u8)cfg["x"]["y"]` lowers through `operator u8() -> cast_unsigned_number<u8>() ->

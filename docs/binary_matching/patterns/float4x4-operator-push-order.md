@@ -1,7 +1,7 @@
 # float4x4/float3 operator push order: first-push = RIGHT operand, hidden sret last
 tags: cpp:operator cpp:float | asm:push asm:lea asm:rep-movsd | topic:codegen-idiom topic:convention
 symptoms: push push lea push edx call operator* add esp 0Ch, rep movsd 0x10 result chains
-confidence: 9/10
+confidence: 8/10
 variants: cxyz-reference-hoist.md, matrix-index-no-hoist.md
 
 For a __cdecl free operator returning a struct by value, args push right-to-left and the

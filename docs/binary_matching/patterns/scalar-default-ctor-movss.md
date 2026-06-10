@@ -1,7 +1,7 @@
 # Float-POD default ctor: sequential `movss [this+off], const` in declaration order
 tags: cpp:ctor cpp:init-list cpp:float | asm:movss asm:mov | topic:codegen-idiom
 symptoms: movss xmm0 [__real], per-member stores in offset order, gap in offset sequence
-confidence: 9/10
+confidence: 8/10
 variants: member-ctor-call-plus-inline-stores.md
 
 A member-init list of scalar float constants maps 1:1 to `movss` stores in DECLARATION

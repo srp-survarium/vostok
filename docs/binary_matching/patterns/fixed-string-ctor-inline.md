@@ -1,7 +1,7 @@
 # fixed_string<N>("literal"): the 3-arg buffer_string base-ctor expansion vs a ctor `call`
 tags: cpp:ctor cpp:string cpp:template | asm:push asm:lea asm:call asm:mov | topic:inline-vs-call
 symptoms: mov [ebp-XX] N lea push &capacity, call buffer_string::buffer_string 3 args, ??_C@ literal push
-confidence: 9/10
+confidence: 7/10
 variants: inline-vs-call-template-comdat.md
 
 `fixed_string<N>(value_type const* src) : buffer_string(m_buffer, Size, src) {}` - the

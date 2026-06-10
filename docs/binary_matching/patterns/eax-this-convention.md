@@ -1,7 +1,7 @@
 # LTCG this-in-EAX frameless callee = the target kept it out-of-line; do NOT escape its address
 tags: cpp:member | asm:call asm:mov | topic:inline-vs-call topic:convention
 symptoms: add eax 120h call reset, callee no push ebp reads [eax]/[eax+4], xorps frameless body
-confidence: 5/10
+confidence: 4/10
 variants: inline-vs-call-trivial-getter.md, optimized-comdat-in-od-unit.md
 
 A member call appearing as `add eax,<off>; call <callee>` with `this` in EAX and a
@@ -18,3 +18,4 @@ add eax,120h; call reset            ; this in EAX, no lea ecx
 ; callee: xorps xmm0,xmm0; mov dword[eax],0; movss [eax+4],xmm0; ret   ; frameless
 ```
 The closest reproducible shape is an EMPTY-stub callee (lets /Od elide the call cleanly); genuine inline-vs-call residual, caller PARTIAL.
+evidence-basis: negative result; all steering attempts verified ineffective (PR #124)

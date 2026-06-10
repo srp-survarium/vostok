@@ -1,7 +1,7 @@
 # Derived ctor: base-ctor `call` vs inlined init is decided by the BASE class declaration
 tags: cpp:ctor | asm:call asm:mov | topic:inline-vs-call topic:structure-shape
 symptoms: call Base::Base one call no args, inlined grand-base ctor + mov dword ptr [eax],0 vtable store
-confidence: 9/10
+confidence: 8/10
 variants: state-ctor-vtable-stores.md, fold-misname-empty-fn.md
 
 Whether a derived ctor emits one `call Base::Base` or inlines the grand-base init +

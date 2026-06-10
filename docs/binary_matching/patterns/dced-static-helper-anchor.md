@@ -1,7 +1,7 @@
 # Emitting a DCE'd static helper: reconstruct its LTCG-inlined caller and anchor THAT
 tags: cpp:static | topic:anchoring
 symptoms: target static with NO direct caller (only address-taken via boost::bind), our base never emits it
-confidence: 8/10
+confidence: 9/10
 variants: static-plain-name-pairing.md, ltcg-dse-empty-ctor.md
 
 A target-side static existing only via an address-take (boost::bind) whose binding

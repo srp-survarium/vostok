@@ -1,7 +1,7 @@
 # Two trivial accessors in ONE `&&` can split inline-vs-call (one matches, one residual)
 tags: cpp:inline cpp:if cpp:bool | asm:call asm:mov | topic:inline-vs-call
 symptoms: one getter call only on target side inside a && chain, [ebp-N] slot shift
-confidence: 8/10
+confidence: 6/10
 variants: inline-vs-call-trivial-getter.md
 
 In `if ( a() && getter_x() && getter_y() )` with both getters one-line header accessors,

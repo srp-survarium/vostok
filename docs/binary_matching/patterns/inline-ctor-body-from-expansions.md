@@ -1,7 +1,7 @@
 # Recover an INLINE ctor body from its consumer expansions (never guess NULL)
 tags: cpp:ctor cpp:inline cpp:init-list | asm:mov asm:call | topic:inline-vs-call
 symptoms: header-inline ctor no standalone symbol, mov [reader+4] eax after folded buffer() call
-confidence: 9/10
+confidence: 8/10
 
 A header-inline ctor with no standalone symbol leaves its body unrecorded - but every /Od
 consumer EXPANDS it, so the consumers are ground truth: rich-view 1-2 consumers and read

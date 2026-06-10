@@ -1,7 +1,7 @@
 # Per-call ref-return spill = uniform `[ebp-N]` shift, not a brace bug
 tags: cpp:member | asm:mov asm:push | topic:inline-vs-call topic:pdb-locals
 symptoms: uniform slot deltas all the SAME constant, zero TRGT_ONLY/BASE_ONLY rows, frame +4 per spilled site
-confidence: 8/10
+confidence: 6/10
 variants: accessor-call-result-temp.md, od-frame-slot-noise.md
 
 When a ref-returning accessor is passed repeatedly (`f(*ptr, accessor(), ...)`) and the

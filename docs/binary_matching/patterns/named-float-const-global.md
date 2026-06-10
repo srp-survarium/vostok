@@ -1,7 +1,7 @@
 # Named float-const global vs literal at a `float const&` parameter
 tags: cpp:float cpp:const | asm:push asm:movss asm:lea | topic:codegen-idiom
 symptoms: push <global> vs movss to a temp then lea/push of the temp
-confidence: 8/10
+confidence: 6/10
 variants: float-literal-fpu.md
 
 At a `float const&` parameter the target pushing the ADDRESS of a named global (e.g.

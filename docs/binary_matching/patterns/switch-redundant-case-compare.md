@@ -1,7 +1,7 @@
 # MSVC /Od drops the case-compare for a case sharing the `default:` arm (non-steerable)
 tags: cpp:switch | asm:cmp | topic:structure-shape topic:convention
 symptoms: target emits N compares incl. a redundant one, base N-1, +0x3 on the dispatch row
-confidence: 8/10
+confidence: 6/10
 variants: switch-case0-return-not-break.md
 
 When `case X:` and `default:` label the SAME arm, our compiler omits X's cmp/je (anything

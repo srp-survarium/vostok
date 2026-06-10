@@ -1,7 +1,7 @@
 # CRTP packet<T> writer/reader need `friend` access to base_packet's private buffer
 tags: cpp:template cpp:member | topic:structure-shape
 symptoms: private m_buffer/m_buffer_size access errors from packet/packet_reader/tcp_packet
-confidence: 8/10
+confidence: 6/10
 
 base_packet keeps m_buffer/m_buffer_size private with only getters (const buffer() stays
 private - PDB-matched). The CRTP writer packet<T>, the reader packet_reader, and

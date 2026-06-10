@@ -1,7 +1,7 @@
 # LOG expansion: base schedules the boost::function1 ctor at the append site (target: block entry)
 tags: cpp:macro | asm:lea asm:call asm:push | topic:logging topic:convention
 symptoms: lea eax [fn_slot] call fn-ctor at block entry vs lea esi at append, guard-bit cleanups swapped
-confidence: 8/10
+confidence: 6/10
 variants: log-line-verbosity-immediates.md, boost-function-assign-inline.md
 
 Inside each inlined LOG block the target constructs the log-callback boost::function

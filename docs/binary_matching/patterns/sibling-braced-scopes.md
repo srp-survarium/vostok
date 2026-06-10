@@ -1,7 +1,7 @@
 # N sequential `[1]` block-opens = N SEPARATE sibling braced scopes (not nesting)
 tags: cpp:local | asm:mov | topic:pdb-locals topic:structure-shape
 symptoms: depth resets to [1] each time never [2], slot-rename storm collapses when braced
-confidence: 8/10
+confidence: 7/10
 variants: decl-in-if-guard.md, per-call-ref-return-spill.md
 
 N `[1]` block-opens at distinct srclines with no enclosing block are N sibling braced

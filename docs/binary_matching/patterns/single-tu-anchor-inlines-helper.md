@@ -1,7 +1,7 @@
 # Single-TU anchor INLINES a now-real inline helper the target CALLs
 tags: cpp:inline cpp:template | asm:call | topic:inline-vs-call topic:anchoring
 symptoms: target single call <helper> vs base inlines helper body at site, helper absent from base index, 0%
-confidence: 9/10
+confidence: 7/10
 variants: real-call-sites-for-templates.md, inline-vs-call-trivial-getter.md
 
 Consumers of a small inline helper (free fn or template: packet_reader::r<u16>,

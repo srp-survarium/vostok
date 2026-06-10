@@ -1,7 +1,7 @@
 # report.json "None" can mean PAIRED AT 0.0% (protobuf default-value omission)
 tags: cpp:template | topic:scoring-artifact
 symptoms: fuzzy None but structure-diff resolves both sides, match_percent 0.0 in live diff
-confidence: 8/10
+confidence: 6/10
 variants: none-body-too-divergent.md, single-tu-anchor-inlines-helper.md
 
 objdiff's report.json drops fuzzy_match_percent when the value is exactly 0.0 (proto3

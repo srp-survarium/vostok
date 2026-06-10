@@ -1,7 +1,7 @@
 # `&Class::virtual_member` emits a vtable thunk, NOT the body (anchoring trap)
 tags: cpp:virtual | topic:anchoring
 symptoms: zero Class::member symbols in obj despite anchor, C4716, LNK1257 on instantiating
-confidence: 9/10
+confidence: 8/10
 variants: pure-virtual-anchor-overrides.md, template-address-anchors.md
 
 A pointer-to-member of a virtual is a vtable index/thunk - it does not ODR-use the body,
