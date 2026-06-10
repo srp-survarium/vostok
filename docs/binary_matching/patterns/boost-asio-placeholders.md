@@ -1,7 +1,7 @@
 # asio completion binds use boost::asio::placeholders::error/bytes_transferred, not _1/_2
 tags: cpp:template | asm:mov asm:push asm:movzx | topic:codegen-idiom
 symptoms: mov eax [?error@...placeholders@asio@boost@@] vs movzx ecx byte[_1], ~94% head divergence
-confidence: 9/10
+confidence: 8/10
 variants: boost-bind-cref.md
 
 An asio async_read/async_write completion bind scores ~94% with a head divergence: target

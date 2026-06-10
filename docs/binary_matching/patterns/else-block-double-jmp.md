@@ -1,7 +1,7 @@
 # Two identical `jmp .end` back-to-back = a returning if-block's `}` jumping OVER an else
 tags: cpp:if cpp:return | asm:jmp | topic:structure-shape
 symptoms: +0x002 brace row sandwiched between if-body last statement and else statement, two jmp short .end
-confidence: 9/10
+confidence: 8/10
 variants: closing-brace-jmp-rows.md, early-returns-vs-else-join.md
 
 A returning if-body followed immediately by a second `jmp .end` (the block's `}` jumping

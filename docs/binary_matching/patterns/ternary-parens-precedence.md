@@ -1,7 +1,7 @@
 # Ternary precedence trap: `a * b * c ? x : y` makes the whole product the condition
 tags: cpp:ternary cpp:float | asm:test asm:movzx | topic:structure-shape
 symptoms: target tests the bool ALONE then multiplies, base tests the float product
-confidence: 9/10
+confidence: 8/10
 
 `mult * koef * first_shoot ? side_a : side_b` parses as `(mult*koef*first_shoot) ? ...`
 (* binds tighter than ?:). If the target tests the bool alone

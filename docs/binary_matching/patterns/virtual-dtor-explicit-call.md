@@ -1,7 +1,7 @@
 # `push 0; call [vptr+0]` = explicit VIRTUAL dtor call (flag 0: destroy, don't free)
 tags: cpp:dtor cpp:virtual | asm:push asm:call asm:mov | topic:codegen-idiom
 symptoms: push 0 mov edx [eax] call eax, 0xe destroy row vs 0x1b direct dtor + flag dance
-confidence: 9/10
+confidence: 8/10
 variants: explicit-dtor-call-not-delete.md, compiler-dtor-icf-this-setup.md, free-vs-delete-impl.md
 
 An explicit dtor call on a POLYMORPHIC member dispatches through the vtable's scalar

@@ -1,7 +1,7 @@
 # A 2-byte `jmp short` row = a closing brace `}` (case blocks, braced loop bodies)
 tags: cpp:switch cpp:for | asm:jmp | topic:structure-shape
 symptoms: +0x002 carcass step, N trailing 0x2 rows after a loop body, base body row +2 per missing one
-confidence: 9/10
+confidence: 8/10
 variants: else-block-double-jmp.md, rel8-rel32-brace-exit.md, for-head-statement-merges.md
 
 /Od emits a 2-byte `jmp` for a block's `}` even when the block's last statement returns
