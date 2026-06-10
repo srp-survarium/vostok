@@ -569,35 +569,41 @@ bool trap_is_active( booby_trap_core_ptr const& trap )
 	// ******
 }
 
-// STATE[PARTIAL]: append the trap's index within this set. ASSERT compiled out.
+// STATE[85.39%|PARTIAL]: a leading assert eater, then append the trap's index within this set.
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const
 {
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	packet.append( trap_index( trap ) );
 
-	// STRUCTURE DIFF[target 0x6ed9d0 | base 0x450610]: target 2 / base 1 stmts
-	//   1: 0x009 <0xc> | 0x009 <0x1d> | packet.append( trap_index( trap ) );   SIZE
-	//   2: 0x015 <0x18> | --          | L411   ONLY target
-	// ; aligned 0, size-diffs 1, quantity-diffs 1, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - single append( trap_index ); SIZE/quantity are LTCG inline of trap_index()+append (target splits the inlined append tail into L411), non-steerable.
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ---------+--------+--------+----+----+------+------
+	// SIZE +0x5|0x6ed9e5|0x4634b5|0x18|0x1d|577   |	packet.append( trap_index( trap ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 2/2 after adding the leading ASSERT eater (target stmt#1 is the 0xc triple; both sides call trap_index + append out-of-line); sole SIZE is argument-marshalling residual, non-steerable.
 }
 
-// STATE[PARTIAL]: read a trap index, resolve the trap and forward its
-// deserialize_game_world_object. ASSERTs compiled out.
+// STATE[42.79%|PARTIAL]: read a trap index (assert eater), resolve the trap (assert eater),
+// bind it as a game_world_object and forward its deserialize.
 void booby_trap_set_core::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	const u8			trap_index	= reader.r< bool >( );
 
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	booby_trap_core&	trap		= *traps( )[ trap_index ];
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	game_world_object&	object		= trap;
 	object.deserialize( reader );
 
-	// STRUCTURE DIFF[target 0x6ed960 | base 0x450500]: target 6 / base 4 stmts
-	//   1: 0x00a <0xb> | 0x009 <0x20> | const u8			trap_index	= reader.r< bool >( );   SIZE
-	//   2: 0x015 <0xc> | 0x029 <0x33> | booby_trap_core&	trap		= *traps( )[ trap_index ];   SIZE
-	//   3: 0x021 <0x1b> | --          | L419   ONLY target
-	//   4: 0x03c <0xc> | --          | L421   ONLY target
-	// ; aligned 2, size-diffs 2, quantity-diffs 2, blank-gaps 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - read index, resolve trap, forward deserialize; SIZE/quantity are LTCG inline-vs-call of r<bool>/traps()[]/operator* (target inlines them into L419/L421), non-steerable.
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ----------+--------+--------+----+----+------+------
+	// SIZE +0xb |0x6ed96a|0x463599|0xb |0x16|584   |	const u8			trap_index	= reader.r< bool >( );
+	// SIZE +0x18|0x6ed981|0x4635bb|0x1b|0x33|588   |	booby_trap_core&	trap		= *traps( )[ trap_index ];
+	// VERDICT: STRUCTURE MATCH (shape ok) - 6/6 after adding the two ASSERT eaters and fixing the private-virtual join; SIZE rows are r<bool>/operator[]/operator* LTCG inline (base) vs call (target), non-steerable.
 }
 
 // STATE[UNCHECKED]

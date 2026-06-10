@@ -32,8 +32,16 @@ void player_profile::deserialize( network_core::packet_reader& reader )
 */
 
 struct relocate_item_descr {
-	// STATE[PARTIAL]: 6 appends (profile_id, item_id, item_dict_id, source/target slot u32,
-	// amount u16); target body is LTCG-inlined (register this/packet) so bytes won't match standalone.
+	// STATE[0%|PARTIAL]: 6 appends (profile_id, item_id, item_dict_id, source/target slot u32,
+	// amount u16) - order and member offsets (+0/+4/+8/+0xc/+0x10/+0x14) proven by the target
+	// line table (0x97680, 121B: one row per append, L+1..L+6). UNPAIRED: the base never emits
+	// this in-class COMDAT (the sole consumer, lobby_client::move_item, lives in the unbuilt
+	// `game` module), and the target standalone is a frameless optimized LTCG fold (this=esi,
+	// packet=eax->edi, custom convention - assembly_patterns.md "optimized LTCG COMDAT in an
+	// /Od unit"), so an /Od anchor emission could not approach it anyway.
+	// VERDICT: STRUCTURE UNVERIFIED (no base side) - body proven from the target line table;
+	// access matches (target QBE = public const, ours public const), so the non-pairing is
+	// genuine absence, not a mangled-join failure.
 			void	serialize	( network_core::tcp_packet& packet ) const
 			{
 				packet.append( profile_id );

@@ -17,34 +17,36 @@ player_input::player_input( ) :
 {
 }
 
-// STATE[PARTIAL]: 3 appends (float2, float2, u32) - shape matches target.
+// STATE[61.58%|PARTIAL]: 3 appends (float2, float2, u32) - shape matches target.
 void player_input::serialize( network_core::udp_match_packet& packet ) const
 {
 	packet.append		( angular_velocity );
 	packet.append		( angular_acceleration );
 	packet.append		( actions_mask );
 
-	// STRUCTURE DIFF[target 0x6f0e80 | base 0x51b0b0]: target 3 / base 3 stmts
-	//   1: 0x009 <0xb> | --          | L23   ONLY target
-	//   3: 0x022 <0xf> | 0x017 <0x11> | packet.append		( angular_acceleration );   SIZE
-	//   4: --          | 0x028 <0x17> | packet.append		( actions_mask );   ONLY base
-	// ; aligned 1, size-diffs 1, quantity-diffs 2, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 3 appends in identical order (target <0xb>,<0xe>,<0xf>); ONLY rows are SIZE-drift mis-pairing of the LTCG-inlined packet<T>::append, non-steerable.
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// TRGT_ONLY|0x6f0e89|--      |0xb |--  |--  |--
+	// SIZE +0x2|0x6f0ea2|0x52e727|0xf |0x11|0   |packet.append		( angular_acceleration );
+	// BASE_ONLY|--      |0x52e738|--  |0x17|+1  |packet.append		( actions_mask );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3 appends in identical order (target <0xb>,<0xe>,<0xf>); the ONLY rows are SIZE-drift mis-pairing of the LTCG-inlined packet<T>::append, non-steerable.
 }
 
-// STATE[PARTIAL]: 3 reads (float2, float2, u32) into members - shape matches target.
+// STATE[63.13%|PARTIAL]: 3 reads (float2, float2, u32) into members - shape matches target.
 void player_input::deserialize( network_core::packet_reader& reader )
 {
 	angular_velocity		= reader.r< math::float2 >( );
 	angular_acceleration	= reader.r< math::float2 >( );
 	actions_mask			= reader.r< u32 >( );
 
-	// STRUCTURE DIFF[target 0x6f0df0 | base 0x51afc0]: target 3 / base 3 stmts
-	//   1: 0x00b <0x32> | 0x009 <0x36> | angular_velocity		= reader.r< math::float2 >( );   SIZE
-	//   2: 0x03d <0x33> | 0x03f <0x37> | angular_acceleration	= reader.r< math::float2 >( );   SIZE
-	//   3: 0x070 <0xe> | 0x076 <0x23> | actions_mask			= reader.r< u32 >( );   SIZE
-	// ; aligned 0, size-diffs 3, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 3 reads; SIZE rows are r<float2>/r<u32> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0x2|0x6f0dfb|0x52e7ff|0x32|0x34|0   |angular_velocity		= reader.r< math::float2 >( );
+	// SIZE +0x2|0x6f0e2d|0x52e833|0x33|0x35|+1  |angular_acceleration	= reader.r< math::float2 >( );
+	// SIZE +0xe|0x6f0e60|0x52e868|0xe |0x1c|+2  |actions_mask			= reader.r< u32 >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3 reads; SIZE rows are the r<float2>/r<u32> wrapper inlined into the caller on both sides but the inner r() folded by LTCG on the target, non-steerable.
 }
 
 // STATE[100%|DONE]

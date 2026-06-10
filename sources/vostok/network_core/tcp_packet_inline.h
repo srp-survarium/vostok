@@ -40,10 +40,12 @@ inline u32 tcp_packet::allocated_size( ) const
 	return m_allocated_size;
 }
 
-// STATE[PARTIAL]: mirrors network::packet::reallocate (m_allocated_size store,
-// std::min buffer_size, realloc(m_buffer?-3:0, new_size+3)+3). Folds with
-// packet< tcp_packet >::reallocate (the surviving COMDAT symbol). Shape exact;
-// base instance is the address-anchored debug COMDAT.
+// STATE[0%|PARTIAL]: mirrors network::packet::reallocate (m_allocated_size store,
+// std::min buffer_size, realloc(m_buffer?-3:0, new_size+3)+3). UNPAIRED: our base keeps
+// this callee standalone (?reallocate@tcp_packet@..QAEXI@Z, rva 0x914F0, 125 bytes,
+// this unit) while the target inlined it INTO packet< tcp_packet >::reallocate (the
+// 56-byte AAE COMDAT at rva 0x97400, packet.h unit) and kept no tcp_packet-level symbol
+// here - an LTCG inline-direction flip objdiff cannot pair, not steerable from source.
 inline void tcp_packet::reallocate( u32 new_size )
 {
 	m_allocated_size	= new_size;

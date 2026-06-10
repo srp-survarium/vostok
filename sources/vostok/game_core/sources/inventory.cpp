@@ -507,7 +507,7 @@ static void call_item_serialize(
 	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f02f0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope. (slot.item guard combined to a single && to match the target's single-statement condition, mirroring call_item_deserialize.)
 }
 
-// STATE[PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
+// STATE[46.64%|PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
 // Structure matched (combined && guard); residual is LTCG inline-vs-call SIZE.
 static void call_item_deserialize( inventory_slot& slot, network_core::packet_reader& reader )
 {
@@ -517,15 +517,15 @@ static void call_item_deserialize( inventory_slot& slot, network_core::packet_re
 	if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
 		slot.item->deserialize( reader );
 
-	// STRUCTURE DIFF[target 0x6f0270 | base 0x4655b0]: target 4 / base 4 stmts (post-fix)
-	//   2: 0x00d <0x10> | 0x00d <0x7> | profile_slot_enum const* const	ignored_slots_end = ... + 7;   SIZE
-	//   3: 0x01d <0x35> | 0x014 <0x56> | if ( slot.item && std::find( ... ) == ignored_slots_end )   SIZE
-	//   4: 0x052 <0x1c> | 0x06a <0x2b> | slot.item->deserialize( reader );   SIZE
-	// ; aligned 1, size-diffs 3, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (fixed quantity) - combined the slot.item null-check and the
-	//   std::find guard into a single && condition (one statement) to match the target's single
-	//   L265 statement (both null-check and find-result branch to the same exit); base 5->4 stmts,
-	//   quantity-diffs 1->0; residual rows are LTCG inline-vs-call SIZE (find/profile_slot_id), non-steerable.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ----------+--------+--------+----+----+----+------
+	// SIZE -0x9 |0x6f027d|0x47831d|0x10|0x7 |0   |profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
+	// SIZE +0x21|0x6f028d|0x478324|0x35|0x56|+2  |if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
+	// SIZE +0xf |0x6f02c2|0x47837a|0x1c|0x2b|+3  |slot.item->deserialize( reader );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 4/4 after the earlier combined-&&-guard fix; residual
+	//   rows are LTCG inline-vs-call SIZE (find/profile_slot_id inlined into the target, plus the
+	//   target materializing ignored_slots_end from a folded constant), non-steerable.
 }
 
 // STATE[INPROGRESS]: for_each over the slot array, deserializing each non-ignored item. DCE'd, no base symbol.

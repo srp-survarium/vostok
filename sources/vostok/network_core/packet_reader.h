@@ -14,13 +14,13 @@ class packet_reader {
 public:
 	inline	explicit			packet_reader	( base_packet const& packet );
 
-	inline	void				r				( void* destination, u32 destination_size, u32 size );
+	inline	void				r				( void* destination, u32 destination_size, u32 const size );
 	template < typename T >
 	inline	T					r				( );
 
 	template < int count >
 	inline	char*				r_string		( char ( &string )[ count ] );
-	inline	char*				r_string		( char* string, u8 count );
+	inline	char*				r_string		( char* string, u8 buffer_size );
 
 	inline	base_packet const&	get_packet		( ) const;
 

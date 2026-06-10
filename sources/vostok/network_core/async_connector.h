@@ -50,7 +50,7 @@ private:
 						boost::asio::ip::tcp::resolver::iterator	iterator
 					);
 			void	on_resolved					(
-						boost::asio::ip::tcp::resolver*		resolver,
+						boost::asio::ip::tcp::resolver* const	resolver,
 						boost::system::error_code const&	error_code,
 						boost::asio::ip::tcp::resolver::iterator	iterator
 					);

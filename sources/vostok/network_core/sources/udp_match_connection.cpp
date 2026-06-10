@@ -44,7 +44,9 @@ namespace network_core {
 {
 }
 
-// STATE[PARTIAL]: auto-generated member-dtor cleanup matches; target caches `this` in esi vs base ebp-slot - /Od register-alloc residual + ICF call-name noise
+// STATE[91.40%|PARTIAL]: auto-generated member-dtor cleanup matches (STRUCTURE MATCH, 0 stmts
+// both sides, 0x50 vs 0x4e bytes); target caches `this` in esi (push esi/pop esi) vs base
+// ebp-slot - /Od register-alloc residual + ICF call-name noise on the empty-stub callees.
  udp_match_connection::~udp_match_connection( )
 {
 }
@@ -54,8 +56,9 @@ void udp_match_connection::on_error( client_error_codes_enum, boost::system::err
 {
 }
 
-// STATE[PARTIAL]: shape exact; the single-TU anchor inlines packet_reader::r<> where the
-// target keeps the template out-of-line (the documented anchor/inline-vs-call wall).
+// STATE[0%|PARTIAL]: shape exact (8/8); the single-TU anchor inlines packet_reader::r<> where
+// the target keeps the template out-of-line (the documented anchor/inline-vs-call wall);
+// report.json serializes the 0.0 fuzzy as null.
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
 	packet_reader	reader( packet );
@@ -71,21 +74,21 @@ bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 	return reader.eof( );
 
 	// STRUCTURE DIFF: target 8 stmts / base 8 stmts
-	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
-	// ----------+--------+--------+----+----+----+----+------
-	// SIZE +0x3 |0x5464d6|0x461926|0x11|0x14|0   |0   |packet_reader reader( packet );
-	// BASE_ONLY |--      |0x46193a|--  |0x13|--  |+2  |reader.r< u16 >( );
-	// BASE_ONLY |--      |0x46194d|--  |0x13|--  |+3  |reader.r< u16 >( );
-	// BASE_ONLY |--      |0x461960|--  |0x1b|--  |+4  |const u16 bits = reader.r< u16 >( );
-	// TRGT_ONLY |0x5464e7|--      |0x14|--  |+2  |--  |--
-	// TRGT_ONLY |0x5464fb|--      |0x14|--  |+3  |--  |--
-	// TRGT_ONLY |0x54650f|--      |0xc |--  |+4  |--  |--
-	// SIZE +0xa |0x546528|0x461988|0x14|0x1e|+8  |+9  |reader.advance( reader.r< bool >( ) );
-	// SIZE +0x17|0x54653c|0x4619a6|0x8 |0x1f|+9  |+10 |return reader.eof( );
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ----------+--------+--------+----+----+------+------
+	// SIZE +0x3 |0x5464d6|0x461e16|0x11|0x14|61    |	packet_reader	reader( packet );
+	// BASE_ONLY |--      |0x461e2a|--  |0x10|63    |	reader.r< u16 >( );
+	// BASE_ONLY |--      |0x461e3a|--  |0x10|64    |	reader.r< u16 >( );
+	// BASE_ONLY |--      |0x461e4a|--  |0x18|65    |	const u16	bits	= reader.r< u16 >( );
+	// TRGT_ONLY |0x5464e7|--      |0x14|--  |--    |--
+	// TRGT_ONLY |0x5464fb|--      |0x14|--  |--    |--
+	// TRGT_ONLY |0x54650f|--      |0xc |--  |--    |--
+	// SIZE +0x9 |0x546528|0x461e6f|0x14|0x1d|70    |	reader.advance( reader.r< bool >( ) );
+	// SIZE +0x19|0x54653c|0x461e8c|0x8 |0x21|71    |	return reader.eof( );
 	// VERDICT: STRUCTURE MATCH (shape ok) - 8/8; the ONLY rows are the SAME three r<u16>
 	// statements in the same ordinal slots (#2-#4) the aligner cannot pair because the
-	// sizes flip (base inlines r<> at 0x13-0x1b, target calls the kept COMDATs at 0xc-0x14
-	// with LTCG custom regs); byte overlap is near zero (report 0.0, serialized as None)
+	// sizes flip (base inlines r<> at 0x10-0x18, target calls the kept COMDATs at 0xc-0x14
+	// with LTCG custom regs); byte overlap is near zero (report 0.0, serialized as null)
 	// over a verified-identical skeleton - the documented call-boundary wall, not a shape miss.
 }
 
@@ -492,7 +495,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[DONE]: bytes match (only diff is the ICF-folded empty_stub representative name objdiff prints)
+// STATE[100%|DONE]
 void udp_match_connection::connect( udp_match_packet* const packet )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_state == disconnected ) );
@@ -501,22 +504,20 @@ void udp_match_connection::connect( udp_match_packet* const packet )
 
 	if ( packet )
 		enqueue_impl( packet );
-
-	// STRUCTURE DIFF[target 0x545d30 | base 0x44e8d0]: target 4 / base 4 stmts
-	// .. same ..
-	// ; aligned 4, size-diffs 0, quantity-diffs 0, blank-gaps 2
-	// VERDICT: STRUCTURE MATCH - all 4 statements aligned, no size/quantity divergence.
 }
 
-// STATE[PARTIAL]: is_ordered stamps the packet's order_id from the channel's running
-// sent_order_id (post-increment), then the is_reliable / push_back tail. Shape matches
-// target; the sequence_number post-increment temp accounts for the residual.
+// STATE[79.94%|PARTIAL]: is_ordered binds the channel's running sent_order_id by reference,
+// stamps the packet's order_id from it, serializes it into the wire buffer at +1 through a
+// raw cursor, then pre-increments it; then the is_reliable / push_back tail.
 void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 {
 	if ( packet->is_ordered )
 	{
-		channel&	channel	= m_channels[ packet->channel_id ];
-		packet->order_id	= channel.sent_order_id++;
+		sequence_number< u16 >&	sent_order_id	= m_channels[ packet->channel_id ].sent_order_id;
+		packet->order_id	= sent_order_id;
+		pbyte	stream		= packet->buffer( ) + 1;
+		sent_order_id.serialize( stream );
+		++sent_order_id;
 	}
 
 	if ( packet->is_reliable )
@@ -524,19 +525,20 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 
 	m_packets_to_send.push_back( packet );
 
-	// STRUCTURE DIFF[target 0x545c60 | base 0x44e820]: target 9 / base 6 stmts
-	//   3: 0x038 <0x15> | 0x038 <0x36> | packet->order_id	= channel.sent_order_id++;   SIZE
-	//   4: 0x04d <0x11> | --          | L469   ONLY target
-	//   5: 0x05e <0x21> | --          | L470   ONLY target
-	//   6: 0x07f <0x10> | --          | L471   ONLY target
-	// .. same ..
-	// ; aligned 5, size-diffs 1, quantity-diffs 3, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - the base inlines sequence_number<u16>::operator++(s32) (post-increment copy+inc+assign) as one statement where the target's /Od keeps the operator's steps as separate statements (L469-471); same op set, inline-vs-call/template line-attribution wall, not caller-steerable.
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ---------+--------+--------+----+----+------+------
+	// BASE_ONLY|--      |0x461a18|--  |0xd |519   |		packet->order_id	= sent_order_id;
+	// BASE_ONLY|--      |0x461a25|--  |0x11|520   |		pbyte	stream		= packet->buffer( ) + 1;
+	// TRGT_ONLY|0x545cad|--      |0x11|--  |--    |--
+	// TRGT_ONLY|0x545cbe|--      |0x21|--  |--    |--
+	// SIZE +0x1|0x545cef|0x461a5b|0x12|0x13|525   |	if ( packet->is_reliable )
+	// VERDICT: STRUCTURE MATCH (shape ok) - 9/9 after reconstructing the real body (the target locals expose sequence_number<u16>& sent_order_id + u8* stream); the ONLY rows are the SAME order_id-stamp / stream-init statements drift-mis-paired (target's inlined sequence_number op= materializes a this-temp, 0x15 vs our 0xd); residual is that op= lowering, non-steerable from this caller.
 }
 
-// STATE[PARTIAL]: 4/5 statements aligned; the else-branch inlines delete_udp_match_packet
-// (call_destructor+deallocate+decrement) where the target emits a single out-of-line call -
-// the single-TU anchor cannot keep the inline free function standalone (inline-vs-call wall).
+// STATE[99.80%|PARTIAL]: connected packets go to enqueue_impl; otherwise an assert eater and
+// delete_udp_match_packet. The old inline-vs-call residual closed when the packet leaves
+// landed - sizes now equal (0x4b/0x4b).
 void udp_match_connection::enqueue( udp_match_packet* packet )
 {
 	if ( m_state == connected )
@@ -547,10 +549,10 @@ void udp_match_connection::enqueue( udp_match_packet* packet )
 		delete_udp_match_packet( m_packets_allocator, packet );
 	}
 
-	// STRUCTURE DIFF[target 0x545e20 | base 0x44ea70]: target 5 / base 5 stmts
-	//   5: 0x02f <0x16> | 0x02f <0x44> | delete_udp_match_packet( m_packets_allocator, packet );   SIZE
-	// ; aligned 4, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the base inlining delete_udp_match_packet (call_destructor+deallocate) where the target emits one out-of-line call (single-TU anchor inline-vs-call wall).
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts - STRUCTURE MATCH, no diverging rows
+	// (0x4b bytes both sides).
+	// VERDICT: STRUCTURE MATCH - 5/5 aligned, equal sizes; the 0.2% byte residual is ICF
+	// call-name noise on the folded delete/assert callees.
 }
 
 // STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h
@@ -775,7 +777,8 @@ void udp_match_connection::disconnect( )
 	// ******
 }
 
-// STATE[PARTIAL]: control structure + ops match; base frame is 0x18 larger (intrusive set size() temp) + ICF call-name noise
+// STATE[99.79%|PARTIAL]: control structure + ops match; the residual is the intrusive set
+// size() temp + ICF call-name noise.
 u32 udp_match_connection::packets_count( ) const
 {
 	u32 result	= m_packets_to_send.size( ) + m_outgoing_packets.size( ) + m_unacknowledged_packets.size( );
@@ -785,10 +788,10 @@ u32 udp_match_connection::packets_count( ) const
 
 	return result;
 
-	// STRUCTURE DIFF[target 0x545d70 | base 0x44e9c0]: target 4 / base 4 stmts
-	// .. same ..
-	// ; aligned 4, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - all 4 statements aligned; 99.79% residual is the intrusive set size() temp frame + ICF call-name noise.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts - STRUCTURE MATCH, no diverging rows
+	// (0xae bytes both sides).
+	// VERDICT: STRUCTURE MATCH - 4/4 aligned, equal sizes; 99.79% residual is the intrusive
+	// set size() temp + ICF call-name noise.
 }
 
 

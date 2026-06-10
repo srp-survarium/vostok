@@ -265,43 +265,46 @@ float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_proce
 	// ******
 }
 
-// STATE[PARTIAL]: packs both hands' is_active into a u8 bitfield (bit0=left, bit1=right),
+// STATE[70.97%|PARTIAL]: packs both hands' is_active into a u8 bitfield (bit0=left, bit1=right),
 // appends it, then appends each hand's start_transition_time_in_ms biased by client_offset.
 void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	u8 active_hands = ( m_hands[ left ].is_active ? 1 : 0 ) | ( m_hands[ right ].is_active ? 2 : 0 );
+	const u8 active_hands = ( m_hands[ left ].is_active ? 1 : 0 ) | ( m_hands[ right ].is_active ? 2 : 0 );
 
 	packet.append( active_hands );
 	packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
 	packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
 
-	// STRUCTURE DIFF[target 0x584040 | base 0x51aef0]: target 4 / base 4 stmts
-	//   2: 0x029 <0xd> | 0x029 <0x14> | packet.append( active_hands );   SIZE
-	//   3: 0x036 <0x11> | 0x03d <0x19> | packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );   SIZE
-	//   4: 0x047 <0x12> | 0x056 <0x1a> | packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );   SIZE
-	// ; aligned 1, size-diffs 3, quantity-diffs 0, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - pack byte + 3 appends; SIZE rows are packet<T>::append LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ---------+--------+--------+----+----+------+------
+	// SIZE +0x7|0x584069|0x565309|0xd |0x14|274   |	packet.append( active_hands );
+	// SIZE +0x8|0x584076|0x56531d|0x11|0x19|275   |	packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
+	// SIZE +0x8|0x584087|0x565336|0x12|0x1a|276   |	packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
+	// VERDICT: STRUCTURE MATCH (shape ok) - pack byte + 3 appends, 4/4; SIZE rows are packet<T>::append LTCG inline (base) vs call (target), non-steerable.
 }
 
-// STATE[PARTIAL]: reads the packed active-hands byte then both start times; the trailing
-// stub is a compiled-out assert. Bits 0/1 of active_hands drive each hand's is_active.
+// STATE[47.46%|PARTIAL]: reads the packed active-hands byte then both start times, an
+// assert eater triple, then bits 0/1 of active_hands drive each hand's is_active.
 void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& reader )
 {
-	u8 active_hands = reader.r< bool >( );
+	const u8 active_hands = reader.r< bool >( );
 
 	m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );
 	m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );
 
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	m_hands[ left  ].is_active = ( active_hands & 1 ) != 0;
 	m_hands[ right ].is_active = ( active_hands & 2 ) != 0;
 
-	// STRUCTURE DIFF[target 0x583fd0 | base 0x51ae50]: target 6 / base 5 stmts
-	//   1: 0x009 <0xb> | 0x009 <0x20> | u8 active_hands = reader.r< bool >( );   SIZE
-	//   2: 0x014 <0xd> | 0x029 <0x22> | m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );   SIZE
-	//   3: 0x021 <0xe> | 0x04b <0x23> | m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );   SIZE
-	//   4: 0x02f <0xc> | --          | L208   ONLY target
-	// ; aligned 2, size-diffs 3, quantity-diffs 1, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - read byte + 2 times + 2 bit-tests; SIZE/quantity are r<bool>/r<u32> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ---------+--------+--------+----+----+------+------
+	// SIZE +0xb|0x583fd9|0x565369|0xb |0x16|290   |	const u8 active_hands = reader.r< bool >( );
+	// SIZE +0xb|0x583fe4|0x56537f|0xd |0x18|292   |	m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );
+	// SIZE +0xb|0x583ff1|0x565397|0xe |0x19|293   |	m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 6/6 after adding the ASSERT eater (the target's 0xc store-0/lea/call triple at +0x2f); SIZE rows are r<bool>/r<u32> LTCG inline (base) vs call (target), non-steerable.
 }
 
 } // namespace survarium

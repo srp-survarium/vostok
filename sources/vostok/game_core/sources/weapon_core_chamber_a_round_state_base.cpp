@@ -31,26 +31,28 @@ void weapon_core_chamber_a_round_state_base::on_animation_end_impl( bool& animat
 	animation_player_tick_result = true;
 }
 
-// STATE[PARTIAL]: single append( m_animation_has_been_ended ) ([+0x135] bool). Matches target shape.
+// STATE[69.33%|PARTIAL]: single append( m_animation_has_been_ended ) ([+0x135] bool). Matches target shape.
 void weapon_core_chamber_a_round_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
 	packet.append( m_animation_has_been_ended );
 
-	// STRUCTURE DIFF[target 0x751c90 | base 0x454180]: target 1 / base 1 stmts
-	//   1: 0x009 <0x13> | 0x009 <0x1a> | packet.append( m_animation_has_been_ended );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0x7|0x751c99|0x466ff9|0x13|0x1a|0   |packet.append( m_animation_has_been_ended );
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
-// STATE[PARTIAL]: single r< bool > into m_animation_has_been_ended ([+0x135]). Matches target shape.
+// STATE[46.91%|PARTIAL]: single r< bool > into m_animation_has_been_ended ([+0x135]). Matches target shape.
 void weapon_core_chamber_a_round_state_base::deserialize( network_core::packet_reader& reader )
 {
 	m_animation_has_been_ended = reader.r< bool >( );
 
-	// STRUCTURE DIFF[target 0x751c70 | base 0x454110]: target 1 / base 1 stmts
-	//   1: 0x009 <0x11> | 0x009 <0x26> | m_animation_has_been_ended = reader.r< bool >( );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet_reader::r<bool> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0xb|0x751c79|0x466fc9|0x11|0x1c|0   |m_animation_has_been_ended = reader.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the target's LTCG-folded r<bool> call vs the base's inlined wrapper + inner r() call, non-steerable.
 }
 
 } // namespace survarium

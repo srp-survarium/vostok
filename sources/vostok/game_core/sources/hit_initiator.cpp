@@ -42,8 +42,11 @@ namespace survarium {
 	// ******
 }
 
-// STATE[PARTIAL]: r<bool>x2, r_string into temp + fixed_string assign x2,
-// r<float>x2, bullet=NULL - shape matches target.
+// STATE[0%|PARTIAL]: r<bool>x2, r_string into temp + fixed_string assign x2,
+// r<float>x2, bullet=NULL - shape matches target 9/9. The 0% (report.json omits the
+// 0.0 as null) is wholesale inline-vs-call: the target keeps r<>/r_string<16>/
+// fixed_string::operator= out-of-line as LTCG custom-convention COMDATs (136 bytes)
+// where our base inlines them all (279 bytes) - not source-steerable.
 void hit_info::deserialize( network_core::packet_reader& packet )
 {
 	hit_initiator	= packet.r< bool >( );
@@ -62,12 +65,19 @@ void hit_info::deserialize( network_core::packet_reader& packet )
 
 	bullet			= NULL;
 
-	// STRUCTURE DIFF[target 0x72eaf0 | base 0x56d640]: target 9 / base 9 stmts
-	//   1-2: hit_initiator/being_hit r<bool>   ONLY base (SIZE-drift, target rows L45/L49/L52)
-	//   9: damage_type = damage_type_info;   ONLY base (SIZE-drift)
-	//  10-11: amount/armor_piercing r<float>   SIZE
-	// ; aligned 4, size-diffs 2, quantity-diffs 6, blank-gaps 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - identical 9-stmt order (2 r<bool>, r_string+assign x2, 2 r<float>, bullet=NULL); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines r<bool>/r_string/r<float>), non-steerable.
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ----------+--------+--------+----+----+------+------
+	// SIZE +0xe |0x72eafa|0x58112f|0xe |0x1c|49    |	hit_initiator	= packet.r< bool >( );
+	// SIZE +0xe |0x72eb08|0x58114b|0xe |0x1c|50    |	being_hit		= packet.r< bool >( );
+	// SIZE +0x22|0x72eb16|0x581167|0xc |0x2e|53    |	packet.r_string	( c_body_part_name );
+	// SIZE +0x4 |0x72eb22|0x581195|0xb |0xf |54    |	body_part_name	= c_body_part_name;
+	// SIZE +0x22|0x72eb2d|0x5811a4|0xc |0x2e|57    |	packet.r_string	( damage_type_info );
+	// SIZE +0x4 |0x72eb39|0x5811d2|0xe |0x12|58    |	damage_type		= damage_type_info;
+	// SIZE +0x10|0x72eb47|0x5811e4|0x10|0x20|60    |	amount			= packet.r< float >( );
+	// SIZE +0x10|0x72eb57|0x581204|0x10|0x20|61    |	armor_piercing	= packet.r< float >( );
+	// SIZE +0x3 |0x72eb67|0x581224|0xa |0xd |63    |	bullet			= NULL;
+	// VERDICT: STRUCTURE MATCH (shape ok) - 9/9 aligned, every row a SIZE flip from the same inline-vs-call wall (base inlines r<>/r_string/operator=, target calls), non-steerable.
 }
 
 } // namespace survarium

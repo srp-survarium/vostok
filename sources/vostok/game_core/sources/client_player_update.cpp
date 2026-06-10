@@ -8,7 +8,7 @@
 
 namespace survarium {
 
-// STATE[PARTIAL]: input.serialize, state.serialize, append(time_in_ms) - 3-stmt
+// STATE[85.24%|PARTIAL]: input.serialize, state.serialize, append(time_in_ms) - 3-stmt
 // shape matches target (rva 0x771190).
 void client_player_update::serialize( network_core::udp_match_packet& packet ) const
 {
@@ -16,10 +16,11 @@ void client_player_update::serialize( network_core::udp_match_packet& packet ) c
 	state.serialize		( packet );
 	packet.append		( time_in_ms );
 
-	// STRUCTURE DIFF[target 0x771190 | base 0x56d8c0]: target 3 / base 3 stmts
-	//   3: 0x024 <0xf> | 0x024 <0x17> | packet.append		( time_in_ms );   SIZE
-	// ; aligned 2, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - input/state serialize forwards + append; sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0x8|0x7711b4|0x590574|0xf |0x17|0   |packet.append		( time_in_ms );
+	// VERDICT: STRUCTURE MATCH (shape ok) - input/state serialize forwards align clean; sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
 } // namespace survarium
