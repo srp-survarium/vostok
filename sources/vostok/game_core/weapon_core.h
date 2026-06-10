@@ -227,9 +227,13 @@ public:
 													animation::animation_player const&	user_animation_player
 												) override;
 
+private:
+	// target mangles EBE/EAE (private virtual) - the public UBE/UAE spelling fails the
+	// objdiff symbol join entirely (the PR-291 access-letter lesson).
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
+public:
 	virtual	bool								is_sprinting					( ) const override;
 
 	virtual	void								on_before_fire					( ) { /* no source */ }

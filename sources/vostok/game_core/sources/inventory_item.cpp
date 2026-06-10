@@ -40,27 +40,29 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 	// ******
 }
 
-// STATE[PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
+// STATE[69.33%|PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
 void inventory_item::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER( client_offset );
 	packet.append( m_amount );
 
-	// STRUCTURE DIFF[target 0x590840 | base 0x450230]: target 1 / base 1 stmts
-	//   1: 0x009 <0x13> | 0x009 <0x1c> | packet.append( m_amount );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0x9|0x590849|0x4630c9|0x13|0x1c|0   |packet.append( m_amount );
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
 }
 
-// STATE[PARTIAL]: single r< u16 > into m_amount ([+0x114]). Matches rva 0x590810.
+// STATE[46.91%|PARTIAL]: single r< u16 > into m_amount ([+0x114]). Matches rva 0x590810.
 void inventory_item::deserialize( network_core::packet_reader& reader )
 {
 	m_amount = reader.r< u16 >( );
 
-	// STRUCTURE DIFF[target 0x590810 | base 0x4501f0]: target 1 / base 1 stmts
-	//   1: 0x009 <0x12> | 0x009 <0x2a> | m_amount = reader.r< u16 >( );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet_reader::r<u16> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0xc|0x590819|0x463099|0x12|0x1e|0   |m_amount = reader.r< u16 >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the target's LTCG-folded r<u16> call vs the base's inlined wrapper + inner r() call, non-steerable.
 }
 
 } // namespace survarium
