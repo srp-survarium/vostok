@@ -21,7 +21,9 @@ namespace survarium {
 // via boost::bind<bool>(&true_predicate) - forward-declare and reuse, do not redefine.
 bool true_predicate( );
 
-// STATE[100%|DONE]
+// STATE[None|DONE]: 99/99 instructions equal (rich-diff 100.0%, 30/30 stmts, 0x10a both
+// sides); report.json shows None because objdiff cannot pair the symbol - same pairing
+// artifact class as initialize_logic/landing_predicate, byte-correct.
 move_direction_enum get_move_direction( player_input const& input )
 {
 	bool move_bwd_pressed;
@@ -125,19 +127,9 @@ void jump_logic::initialize_logic( )
 
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
 
-	// FUNCTION BODY[0x58dae0]: 11
-	// <0x58daf0>|0x010|+0x05a:'94'	m_logic = NEW(ai::fsm)
-	// <0x58db4a>|0x06a|+0x067:'95'	inactive = NEW(jump_logic_state_inactive)(*this)
-	// <0x58dbb1>|0x0d1|+0x067:'96'	start = NEW(jump_logic_state_start)(*this)
-	// <0x58dc18>|0x138|+0x067:'97'	landing = NEW(jump_logic_state_landing)(*this)
-	// <0>
-	// <0x58dc7f>|0x19f|+0x012:'99'	add_state(inactive)
-	// <0x58dc91>|0x1b1|+0x012:'100'	add_state(start)
-	// <0x58dca3>|0x1c3|+0x012:'101'	add_state(landing)
-	// <0x58dcb5>|0x1d5|+0x0a3:'102'	add_transition(inactive,start, bind<bool>(&true_predicate))
-	// <0x58dd58>|0x278|+0x0aa:'103'	add_transition(start,landing, bind(&landing_predicate,this))
-	// <0x58de02>|0x322|+0x022:'104'	set_initial_state(states().front())
-	// ******
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
+	// SIZE +0x11 | 126 | m_logic->set_initial_state( m_logic->states( ).front( ) );
+	// VERDICT: STRUCTURE MATCH (10/10) - sole SIZE row is the ai-fsm states()/front() inline-vs-call wall (target out-of-lines them); non-steerable from this TU.
 }
 
 // STATE[100%|DONE]
@@ -284,37 +276,29 @@ void jump_logic::deactivate( )
 {
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
 
-	// FUNCTION BODY[0x58d850]: 1
-	// <0x58d857>|0x007|+0x01c:'192'
-	// ******
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE +0x5 | 285 | m_logic->set_initial_state( m_logic->states( ).front( ) );
+	// VERDICT: STRUCTURE MATCH (1/1) - the ai-fsm states()/front() inline-vs-call wall; non-steerable from this TU.
 }
 
-// STATE[83.61%|PARTIAL]: the steerable cast-temp residual is now FIXED - binding the
-// static_cast<jump_logic_base_state*> result to a named local `state` before the call
-// reproduces the target's "materialize cast into its own slot, then push user" order
-// (mov [slot],edx; push user; mov ecx,[slot]; ...). objdiff measure 83.61% (report.json).
-// The remaining residual is the ai-fsm inline-vs-call WALL (legit LTCG call-boundary):
-// the TARGET out-of-lines fsm::states() (delinker-misnamed finalize_impl) + the front()/
-// operator[] accessor (two `call`s), while our in-class accessors fold inline to direct
-// field loads, costing one extra stack slot (sub esp,10h vs 0Ch) and shifting the slot
-// numbering. Confirmed out-of-line in TARGET, absent in BASE - not source-steerable here.
-// See jump_logic.md.
+// STATE[74.90%|PARTIAL]: the PDB records NO `state` local and ONE statement for the loop
+// body (0x19 = cast-temp + virtual call + folded backjump): a brace-less one-line body with
+// static_cast_checked (its return temp is the slot the old named local was imitating) -
+// the body statement now byte-matches. Faithful 3/3 shape kept over the old higher-% (83.61)
+// wrong-quantity 4-stmt version. The residual is the ai-fsm inline-vs-call WALL: the TARGET
+// out-of-lines fsm::states() (delinker-misnamed finalize_impl) + front()/operator[] (two
+// `call`s) in the for-init, while our in-class accessors fold inline to direct field loads,
+// enlarging the frame and shifting the slot numbering. Confirmed out-of-line in TARGET, absent in BASE.
 void jump_logic::set_user( base_player& user )
 {
 	m_user = &user;
 
 	for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next )
-	{
-		jump_logic_base_state* state = static_cast< jump_logic_base_state* >( i );
-		state->set_user( user );
-	}
+		static_cast_checked< jump_logic_base_state* >( i )->set_user( user );
 
-	// FUNCTION BODY[0x58d7f0]: 4
-	// <0x58d7f9>|0x009|+0x009:'197'
-	// <0>
-	// <0x58d802>|0x012|+0x024|[1]:'199'
-	// <0x58d826>|0x036|+0x019:'200'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x5 | 295 | for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next )
+	// VERDICT: STRUCTURE MATCH (3/3) - sole SIZE row is the ai-fsm states()/front() inline-vs-call wall in the for-init; non-steerable from this TU.
 }
 
 // STATE[None|DONE]: body is `mov al,1; ret` (8/8 bytes equal by RVA diff @0x57d4f0);
