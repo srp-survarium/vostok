@@ -12,6 +12,10 @@
 namespace vostok {
 
 // client to server
+// sushi@TODO: this login pair is contradicted by the PDB extraction
+// (binaries/structure/target/headers/vostok/enums/login_server_message_types_enum.h:
+// login_server = the SERVER->client set, servers_connection_info 0x08 .. invalid 0x1f);
+// left untouched here - the login-chain TUs consume these names, reconcile there
 enum login_server_message_types_enum {
 	sign_up_message_type							= 0,
 	sign_in_message_type							= 1,
@@ -40,26 +44,46 @@ enum login_client_message_types_enum {
 }; // enum login_client_message_types_enum
 
 // client to server
-enum lobby_server_message_types_enum {
-	// claude@NOTE: 48/49 recovered from match_client_impl::on_packet_received's
-	// immediates (the lobby code passed on to on_connected); names guessed from
-	// the "connection forbidden" LOG on the 49 path
-	connection_allowed								= 48,
-	connection_forbidden							= 49,
+// values from the PDB type records (IDA extraction, PR #303 review; not in
+// binaries/structure/target/headers/vostok/enums/ - see review_todos.md on the
+// pdb_parser enum-reachability gap)
+enum lobby_client_message_types_enum {
+	set_status_ready_for_match						= 32,
+	query_client_status								= 33,
+	inventory_action								= 35,
+	shop_action										= 36,
+	skills_tree_action								= 37,
+	lobby_client_sign_in_info						= 38,
+	discard_playing_order							= 39,	// when disconnected from match (manually)
+	ping_server										= 40,
 
-	set_status_ready_for_battle						= 128,
-
-	lobby_server_invalid_message_type				= 191,
-}; // enum lobby_server_message_types_enum
+	lobby_client_invalid_message_type				= 47,
+}; // enum lobby_client_message_types_enum
 
 // server to client
-enum lobby_client_message_types_enum {
-	connection_successful							= 192,
-	invalid_session_id								= 193,
-	connect_to_battle_server						= 194,
+// values from the PDB type records
+// (binaries/structure/target/headers/vostok/enums/lobby_server_message_types_enum.h)
+enum lobby_server_message_types_enum {
+	connection_successful							= 48,
+	invalid_session_id								= 49,
+	invalid_password								= 50,
+	connect_to_match_server							= 51,
+	operation_permitted								= 52,
+	operation_denied								= 53,
+	client_status									= 54,
+	ping_server_answer								= 55,
 
-	lobby_client_invalid_message_type				= 255,
-}; // enum lobby_client_message_types_enum
+	lobby_server_invalid_message_type				= 63,
+}; // enum lobby_server_message_types_enum
+
+// sushi@TODO: NOT a lobby_server message (PDB extraction above has no 128); it is
+// the match server's first packet byte (match_client_impl::on_packet_received,
+// target cmp 0x80) - the real enum is likely vostok::match_server_message_types_enum
+// (type attested via survarium::network_packets_orderer's template args, enumerators
+// not extracted); name is a guess, value pinned by the target immediate
+enum {
+	set_status_ready_for_battle						= 128,
+};
 
 enum socket_error_types_enum {
 	no_socket_error									= 0,

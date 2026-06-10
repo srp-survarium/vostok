@@ -95,6 +95,11 @@ void match_client::create_responses_packets_allocator( )
 {
 	*m_client			= 0;
 
+	// an order is a command object (network::order, virtual execute): add_order
+	// enqueues it for the network thread, which executes then deletes it; results
+	// travel back as responses (add_response), drained on the game thread. the
+	// impl lives on the network thread, so every mutation goes through an order -
+	// match_client is the game-thread facade dispatching to it
 	m_world.add_order	(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
 			boost::bind( &match_client::create_responses_packets_allocator, this )
@@ -166,10 +171,10 @@ void match_client::on_connected(
 // plus the function-copy folds inside the connect_order-ctor expansion - both the
 // documented boost::function-assign inline-vs-call wall
 void match_client::connect(
-	pcstr			host,
-	u16				port,
-	u32				current_time_in_ms,
-	vostok::network_core::udp_match_packet*	packet,
+	pcstr const		host,
+	const u16		port,
+	const u32		current_time_in_ms,
+	vostok::network_core::udp_match_packet* const	packet,
 	boost::function< void( enum vostok::connection_error_types_enum, enum vostok::handshaking_error_types_enum, enum vostok::socket_error_types_enum, enum vostok::lobby_server_message_types_enum ) > const&	callback
 )
 {
@@ -190,6 +195,9 @@ void match_client::connect(
 // STATE[100%|DONE]
 void match_client::disconnect( )
 {
+	// asynchronous by design: the impl's socket state is only touched on the
+	// network thread, so disconnect is marshalled like every other mutation and
+	// runs when the network thread drains the order queue
 	m_world.add_order		(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
 			boost::bind( &match_client_impl::disconnect, boost::ref( *m_client ) )
@@ -224,7 +232,7 @@ void match_client::enqueue( vostok::network_core::udp_match_packet* packet )
 }
 
 // STATE[100%|DONE]
-void match_client::send_queued_packets( u32 current_time_in_ms )
+void match_client::send_queued_packets( const u32 current_time_in_ms )
 {
 	m_world.add_order		(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), send_queued_order ) (
@@ -236,7 +244,7 @@ void match_client::send_queued_packets( u32 current_time_in_ms )
 }
 
 // STATE[100%|DONE]
-void match_client::on_packet_received_impl( u8 message_type, vostok::network_core::packet_reader& reader )
+void match_client::on_packet_received_impl( const u8 message_type, vostok::network_core::packet_reader& reader )
 {
 	if ( m_on_packet_received )
 		m_on_packet_received( message_type, reader );
@@ -246,7 +254,7 @@ void match_client::on_packet_received_impl( u8 message_type, vostok::network_cor
 // operator* (with its compiled-out-ASSERT byte) in the new_udp_match_packet arg,
 // inlines packet_reader::pointer() at the append site, and lowers the function1
 // temp via extra slots - all the per-call-site inline-vs-call wall
-void match_client::on_packet_received( u8 message_type, vostok::network_core::packet_reader& reader )
+void match_client::on_packet_received( const u8 message_type, vostok::network_core::packet_reader& reader )
 {
 	if ( m_on_packet_received ) {
 		network_core::udp_match_packet* const packet	= network_core::new_udp_match_packet( *m_response_packets_allocator );
@@ -284,7 +292,7 @@ void match_client::on_disconnect( vostok::network_core::disconnect_event_types_e
 // STATE[75.40%|PARTIAL]: structure 3/3; residual = base inlines the intrusive_ptr
 // operator* body (with its compiled-out-ASSERT byte) where the target calls the
 // eax-promoted COMDAT - the intrusive_ptr inline-vs-call wall
-vostok::network_core::udp_match_packet* match_client::new_packet( u8 message_type )
+vostok::network_core::udp_match_packet* match_client::new_packet( const u8 message_type )
 {
 	network_core::udp_match_packet* const result	= network_core::new_udp_match_packet( *m_order_packets_allocator );
 

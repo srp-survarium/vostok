@@ -50,7 +50,7 @@ match_client_impl::~match_client_impl( )
 // claude@NOTE: the original's __LINE__ immediate pins the LOG to physical line 56
 // (the `}` must have shared a line); we keep the natural layout and accept the
 // 1-byte immediate residual per the no-line-padding rule
-void match_client_impl::on_packet_received( u8 message_type, network_core::packet_reader& reader )
+void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
 	state const previous_state	= m_state;
 
@@ -60,7 +60,7 @@ void match_client_impl::on_packet_received( u8 message_type, network_core::packe
 		m_client.set_on_packet_received( m_on_packet_received );
 
 		if ( m_on_connected )
-			m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_allowed );
+			m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
 
 		return;
 	}
@@ -71,7 +71,7 @@ void match_client_impl::on_packet_received( u8 message_type, network_core::packe
 			successfully_connected,
 			successfully_handshaked,
 			no_socket_error,
-			connection_forbidden
+			invalid_session_id
 		);
 }
 
@@ -79,10 +79,10 @@ void match_client_impl::on_packet_received( u8 message_type, network_core::packe
 // residual = `m_on_connected = on_connected` inlined as copy-swap-clear (target
 // calls the folded operator=, edi-promoted) - the boost::function-assign wall
 void match_client_impl::connect(
-	pcstr		host,
-	u16			port,
-	u32			current_time_in_ms,
-	network_core::udp_match_packet const*	packet,
+	pcstr const	host,
+	const u16	port,
+	const u32	current_time_in_ms,
+	network_core::udp_match_packet const* const	packet,
 	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) > const&	on_connected
 )
 {
