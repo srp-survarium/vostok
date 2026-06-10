@@ -1482,25 +1482,6 @@ namespace vostok
 		network_core::read_lines_from_stream( "prefix", buff );
 	}
 
-	// declared in network/sources/network_entry_point.h, off the public include path
-	namespace network {
-		void initialize	( );
-		void finalize	( );
-	} // namespace network
-
-	void use_network_clients()
-	{
-		network::initialize( );
-		network::finalize( );
-
-		// the rebuilt client headers must compile even while their bodies are stubs
-		network::login_client* login_client			= NULL;
-		network::match_client* match_client			= NULL;
-		network::tcp_packet_client* tcp_packet_client	= NULL;
-		network::http_client* http_client			= NULL;
-		printf( "%p%p%p%p", login_client, match_client, tcp_packet_client, http_client );
-	}
-
 	struct test_udp_match_packets_orderer : network_core::udp_match_packets_orderer
 	{
 		virtual network_core::udp_match_message_type_info get_sending_message_info( u8 ) 	{ return network_core::udp_match_message_type_info( false, false, 0 ); }
@@ -1563,6 +1544,118 @@ namespace vostok
 		// private on_error has no real caller yet (handle_receive still STUB); address-take keeps it standalone
 		void ( network_core::udp_match_client::*on_error_ptr )( network_core::client_error_codes_enum, boost::system::error_code ) = &network_core::udp_match_client::on_error;
 		example_callback( ( pcstr )&on_error_ptr );
+	}
+
+	// declared in network/sources/network_entry_point.h, off the public include path
+	namespace network {
+		void initialize	( );
+		void finalize	( );
+	} // namespace network
+
+	// every public network-module method is CALLED here so /OPT:REF keeps the
+	// carcass objects in the exe (a stub body references nothing on its own)
+	void use_network_clients()
+	{
+		network::initialize( );
+		network::finalize( );
+
+		network::engine engine;
+		memory::stack_allocator stack_allocator;
+		network::world* world = network::create_world( engine, stack_allocator );
+
+		{
+			network::tcp_packet_client client( *world );
+			client.set_on_packet_received( boost::function< void ( network_core::packet_reader& ) >() );
+			client.set_on_connected( boost::function< void ( ) >() );
+			client.set_on_disconnected( boost::function< void ( ) >() );
+			client.set_on_error( boost::function< void ( network_core::client_error_codes_enum, boost::system::error_code ) >() );
+			client.connect( "host", 80 );
+			network_core::tcp_packet packet( stack_allocator );
+			client.send( packet );
+			network_core::packet_reader reader( packet );
+			client.on_packet_received_impl( reader );
+			client.on_packet_received( packet );
+			client.on_connected( );
+			client.on_connected_impl( );
+			client.on_disconnected( );
+			client.on_disconnected_impl( );
+			client.on_error( ( network_core::client_error_codes_enum )0, boost::system::error_code() );
+			client.on_error_impl( ( network_core::client_error_codes_enum )0, boost::system::error_code() );
+			client.disconnect( );
+		}
+
+		{
+			network::http_client http_client( *world );
+			http_client.set_on_error( boost::function< void ( boost::system::error_code ) >() );
+			http_client.get( "server", "path", boost::bind( &example_callback, "hello" ) );
+			http_client.busy( );
+			http_client.get_impl( "server", "path" );
+			http_client.create_client_impl( );
+			http_client.on_content_downloaded( );
+			http_client.on_content_downloaded_impl( "content" );
+			http_client.on_error( boost::system::error_code() );
+			http_client.on_error_impl( boost::system::error_code() );
+		}
+
+		{
+			boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > login_callback;
+			boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, sign_up_info const& ) > sign_up_callback;
+			sign_up_info info;
+
+			network::login_client client( *world );
+			client.sign_up( "host", 80, info, sign_up_callback );
+			client.sign_in( "host", 80, "account", "password", login_callback );
+			client.sign_in_impl( "host", 80, "account", "password" );
+			client.sign_out( login_callback );
+			client.is_signed_in( );
+			client.is_signed_out( );
+			client.client_state( );
+			client.account_name( );
+			client.account_password( );
+			client.session_id( );
+			client.server_browser_address( );
+			client.server_browser_initial_query( );
+			client.local_ip_address( );
+			client.host_ip_address( );
+			client.store_user_password_in_settings( );
+			client.reset_user_password_in_settings( );
+			client.create_client( );
+			client.on_signed_up( ( connection_error_types_enum )0, ( handshaking_error_types_enum )0, ( socket_error_types_enum )0, ( login_server_message_types_enum )0, info );
+			client.on_signed_in( ( connection_error_types_enum )0, ( handshaking_error_types_enum )0, ( socket_error_types_enum )0, ( login_server_message_types_enum )0 );
+			client.on_signed_out( ( connection_error_types_enum )0, ( handshaking_error_types_enum )0, ( socket_error_types_enum )0, ( login_server_message_types_enum )0 );
+		}
+
+		{
+			test_udp_match_packets_orderer packets_orderer;
+			boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, lobby_server_message_types_enum ) > match_callback;
+
+			network::match_client client( *world, packets_orderer, NULL );
+			client.connect( "host", 80, 10, NULL, match_callback );
+			client.disconnect( );
+			client.enqueue( NULL );
+			client.send_queued_packets( 10 );
+			network_core::udp_match_packet* packet = client.new_packet( 0 );
+			client.delete_packet( packet );
+			client.set_on_packet_received( boost::function< void ( u8, network_core::packet_reader& ) >() );
+			client.set_on_disconnect( boost::function< void ( network_core::disconnect_event_types_enum ) >() );
+			client.get_stats( );
+			client.is_connected( );
+			client.is_disconnected( );
+			client.last_receive_time_in_ms( );
+			packet = client.new_response_packet( );
+			client.delete_response_packet( packet );
+			client.create_client( NULL );
+			client.create_responses_packets_allocator( );
+			client.on_connected( ( connection_error_types_enum )0, ( handshaking_error_types_enum )0, ( socket_error_types_enum )0, ( lobby_server_message_types_enum )0 );
+			network_core::tcp_packet tcp_packet( stack_allocator );
+			network_core::packet_reader reader( tcp_packet );
+			client.on_packet_received_impl( 0, reader );
+			client.on_packet_received( 0, reader );
+			client.on_disconnect_impl( ( network_core::disconnect_event_types_enum )0 );
+			client.on_disconnect( ( network_core::disconnect_event_types_enum )0 );
+		}
+
+		network::destroy_world( world );
 	}
 
 	void use_static_rigid_body()
