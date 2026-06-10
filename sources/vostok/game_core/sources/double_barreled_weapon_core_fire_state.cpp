@@ -41,6 +41,8 @@ namespace survarium {
 // STATE[99.96%|DONE]: every instruction matches. Sole residual is the
 // `weapon.get_magazine_capacity()` __thiscall `this` loaded into eax (target) vs ecx (base) -
 // an argument-passing register choice (LTCG), same class as the reference idle getters.
+// Nested for loops are braced like the reload sibling: each closing brace carries its
+// loop backjump as its own 0x2 statement (16/16 stmts, 0x1c2 both sides).
 double_barreled_weapon_core_fire_state::double_barreled_weapon_core_fire_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -53,14 +55,19 @@ double_barreled_weapon_core_fire_state::double_barreled_weapon_core_fire_state(
 	ASSERT_CMP_U( animations_count, ==, 12 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
+			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state ) {
 				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+			}
+		}
+	}
 
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
 			m_user_animations[view][user_state] = animations[animation_index++];
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
@@ -76,6 +83,9 @@ void double_barreled_weapon_core_fire_state::initialize( )
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	m_weapon_animation_index = m_weapon.ammo_in_magazine( ) != 2;
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x43 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residual is the ammo_in_magazine `this` in eax (target) vs ecx (base), LTCG arg-register choice.
 }
 
 // STATE[83.18%|PARTIAL]: every statement, branch, lexeme operand and the addition-tree shape
@@ -99,11 +109,9 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::weapon_and
 
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
-	// FUNCTION BODY
-	// <0x7ac7f0>|0x010|+0x01f:'55'	lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
-	// <0x7ac80f>|0x02f|+0x02a:'56'	hands_expression = get_user_hands_expression( offset_lexeme, ..., weight_driving_animation );
-	// <0x7ac839>|0x059|+0x07a:'57'	return main + expression( offset ) + hands_expression;
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x29 | 100 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// VERDICT: STRUCTURE MATCH (3/3) - operator+ template-selection / inline-vs-call LTCG on the addition chain (target keeps operator+<animation_lexeme> out-of-line, base inlines); whole-program, non-steerable from this TU.
 }
 
 // STATE[100%|DONE]
@@ -131,14 +139,7 @@ weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pai
 	);
 }
 
-// STATE[73.17%|PARTIAL]: every statement, branch and operand matches (the sprint early-return,
-// the animation_type()!=additive early-return, the captions array, the animation_lexeme_parameters
-// build with &weight_driving_animation as the weight-driving arg, and both expression returns).
-// Residuals are the same unsteerable inline-vs-call LTCG class as the reference
-// weapon_core_fire_state::get_user_hands_expression (#193, 73.51%): the target keeps the
-// animation_lexeme_parameters setters OUT-OF-LINE while our /GL build inlines
-// animated_object+playback_type, shifting the layout; the animation_type() check is COMDAT-folded
-// onto a trivial getter (delinked under a different attributed name). Both whole-program decisions.
+// STATE[77.13%|PARTIAL]: animation_lexeme_parameters setters / animation_type() inline-vs-call LTCG.
 animation::mixing::expression double_barreled_weapon_core_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -160,37 +161,27 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::get_user_h
 
 	pcstr user_animation_captions[2] = { "stand_shot_double_barrel", "crouch_shot_double_barrel" };
 
-	animation::mixing::animation_lexeme_parameters override_lexeme_parameters(
-		buffer,
-		user_animation_captions[user_animation_index],
-		selected_animation,
-		&weapon_lexeme,
-		&weight_driving_animation
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			user_animation_captions[user_animation_index],
+			selected_animation,
+			&weapon_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object		( m_weapon.get_user( ) )
+		.playback_type			( animation::mixing::play_once_and_freeze_at_end )
+		.additivity_priority	( 1 )
 	);
-	override_lexeme_parameters
-		.animated_object						( m_weapon.get_user( ) )
-		.playback_type							( animation::mixing::play_once_and_freeze_at_end )
-		.additivity_priority					( 1 );
-
-	animation::mixing::animation_lexeme override_lexeme( override_lexeme_parameters );
 
 	return animation::mixing::expression( override_lexeme );
 
-	// FUNCTION BODY
-	// <0x7ac5c1>|0x011|+0x006:'77'	if ( user_state_id == type_sprint )
-	// <0x7ac5c7>|0x017|+0x010:'78'	return expression( weapon_lexeme );
-	// <0>
-	// <0x7ac5d7>|0x027|+0x00c:'80'	u32 user_animation_index = ( user_state_id == type_crouch );
-	// <0x7ac5e3>|0x033|+0x020:'81'	selected_animation = m_user_animations[is_third_view!=false][user_animation_index];
-	// <0x7ac603>|0x053|+0x059:'82'	if ( pinned_ptr_const<...>( selected_animation )->animation_type() != additive )
-	// <0x7ac65c>|0x0ac|+0x010:'83'	return expression( weapon_lexeme );
-	// <0>
-	// <1>
-	// <0x7ac66c>|0x0bc|+0x00e:'86'	pcstr user_animation_captions[2] = { "stand_shot_double_barrel", "crouch_shot_double_barrel" };
-	// <0> .. <10>					animation_lexeme_parameters ctor + setter chain
-	// <0x7ac67a>|0x0ca|+0x06e:'98'	override_lexeme_parameters( ... ).animated_object().playback_type(1).additivity_priority(1); animation_lexeme override_lexeme( params );
-	// <0x7ac6e8>|0x138|+0x01c:'99'	return expression( override_lexeme );
-	// ******
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts (was 9/11 before the chained-temporary merge, 73.17 -> 77.13)
+	// SIZE +0x3  | 151 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE -0x13 | 158 | if ( pinned_ptr_const<...>( selected_animation )->animation_type( ) != ... )
+	// SIZE +0x3  | 159 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE +0x4  | 174 | animation::mixing::animation_lexeme override_lexeme( ... chained params temporary ... );
+	// VERDICT: STRUCTURE MATCH (9/9) - residuals are per-site LTCG: target inlines animation_type() (member read + temps) where base keeps the COMDAT call; setter-chain/expression-ctor call boundaries differ by promoted-convention bytes. Non-steerable from this TU.
 }
 
 // STATE[86.5%|PARTIAL]: control flow + placement-new + ctor call all match. Sole residual is the
@@ -213,13 +204,9 @@ double_barreled_weapon_core_fire_state* weapon_core_state_cook_template<survariu
 		animations_count
 	);
 
-	// FUNCTION BODY
-	// <0x79c540>|0x000|+0x009:'105'	(prologue / hidden buffer arg)
-	// <0x79c549>|0x009|+0x05c:'111'	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_fire_state( params->weapon, computed_shooting_animation_time_scale( *animations, params->rounds_per_second ), animations, animations_count );
-	// <0x79c5a5>|0x065|+0x006:'112'	}
-	// ******
-	// residual @0x3d: target `call computed_shooting_animation_time_scale` (this in eax, float
-	// returned in xmm0 -> movss [esp]); base folds the STUB callee to `fldz` at the call site.
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0x11 | 214 | ); (the whole placement-new return statement)
+	// VERDICT: STRUCTURE MATCH (1/1) - base folds the STUB computed_shooting_animation_time_scale to fldz at the call site while target keeps the call (xmm0 return, movss [esp]); closes itself once that callee is matched.
 }
 
 } // namespace survarium
