@@ -8,7 +8,7 @@
 namespace survarium {
 
 // STATE[82.17%|DONE]
-void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 current_time )
+void scheduler::on_frame( scheduler::record& record, const u32 frame_delta, const u32 current_time )
 {
 	u32 last_update_time = record.m_last_update_time;
 	if ( current_time <= last_update_time )
@@ -37,37 +37,27 @@ void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 curren
 	for ( s32 i = 0 ; i < count && id->m_active ; ++i )
 		callback( update_delta, current_time );
 
-	// STRUCTURE DIFF[target 0xa8dd0 | base 0x574100]: target 25 / base 25 stmts
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// <0>         | --          |    EMPTY only target
-	// .. same ..
-	// 0x0df <0x11> | 0x0de <0x3f> | count = math::min( count, (s32)record.m_max_update_count );   SIZE
-	// .. same ..
-	// 0x104 <0xe> | 0x131 <0x17> | scheduler::callback callback = record.m_callback;   SIZE
-	// .. same ..
-	// ; aligned 22, size-diffs 2, quantity-diffs 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - 25/25 stmts aligned; the two SIZE diffs are math::min and the boost::function copy-ctor out-of-lined (call) in target vs inlined in base, an LTCG inline-vs-call decision (drives the esi push / sub esp 2D0h frame), non-steerable. trail: scheduler_on_frame.md
+	// STRUCTURE DIFF: target 20 / base 20 stmts
+	// SIZE +0x2e | 32 | count = math::min( count, (s32)record.m_max_update_count );
+	// SIZE +0x9  | 36 | scheduler::callback callback = record.m_callback;
+	// VERDICT: STRUCTURE MATCH - both SIZE rows are math::min / boost::function copy out-of-lined (call) in target vs inlined in base, LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[46.39%|PARTIAL]: body source-correct; residual is LTCG inline-vs-call of
 // vectora<record>::size()/operator[] (target out-of-lines, base inlines). trail: scheduler_on_frame.md
 // claude@MATCH: loop iterates m_active_objects (offset 0x10), not m_inactive_objects (0x00).
-void scheduler::on_frame( u32 frame_delta, u32 current_time )
+void scheduler::on_frame( const u32 frame_delta, const u32 current_time )
 {   // sushi@NOTE: `size` didn't inline in target
 	for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )
 		on_frame( m_active_objects[m_current_index], frame_delta, current_time );
 
 	m_current_index = u32(-1);
 
-	// STRUCTURE DIFF[target 0x77de80 | base 0x574290]: target 4 / base 4 stmts
-	// 0x00f <0x3d> | 0x009 <0x41> | for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )   SIZE
-	// 0x04c <0x2d> | 0x04a <0x28> | on_frame( m_active_objects[m_current_index], frame_delta, current_time );   SIZE
-	// .. same ..
-	// 0x079 <0xd> | 0x072 <0xa> | m_current_index = u32(-1);   SIZE
-	// ; aligned 1, size-diffs 3, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 4/4 stmts aligned; all three SIZE diffs are vectora<record>::size()/operator[] out-of-lined (call) in target vs inlined (idiv/imul 0x38) in base, an LTCG inline-vs-call decision, non-steerable. trail: scheduler_on_frame.md
+	// STRUCTURE DIFF: target 3 / base 3 stmts
+	// SIZE +0x4 | 59 | for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )
+	// SIZE -0x5 | 60 | on_frame( m_active_objects[m_current_index], frame_delta, current_time );
+	// SIZE -0x3 | 62 | m_current_index = u32(-1);
+	// VERDICT: STRUCTURE MATCH - all rows are vectora<record>::size()/operator[] out-of-lined in target vs inlined (imul 0x38) in base + the resulting frame-size disp noise, LTCG inline-vs-call, non-steerable.
 }
 
 } // namespace survarium
