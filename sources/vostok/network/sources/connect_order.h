@@ -16,8 +16,9 @@ namespace network {
 
 class connect_order : public order {
 public:
-	// STATE[STUB]: ctor is fully inlined into its caller (no standalone carcass);
-	// init-list follows member declaration order
+	// STATE[INLINED]: no standalone target symbol (pdb_rich_query lists only
+	// dtor/execute/??_G); the only construction site is match_client::connect
+	// (carcass 0x75d8e0), so its bytes are verifiable only through that caller
 	inline			connect_order	(
 			memory::base_allocator& strings_allocator,
 			pcstr const host,
@@ -33,8 +34,12 @@ public:
 	{
 	}
 
-	// STATE[PARTIAL]: legacy body ported onto canonical types; unverified vs target
-	// FUNCTION BODY[0xeaee0]
+	// STATE[56.38%|PARTIAL]: statements/slots verified (two same-named PDB locals =
+	// two disjoint braced scopes, [ebp-4]/[ebp-8]); residual = base INLINES
+	// intrusive_ptr<udp_match_packets_allocator>::operator* and the member
+	// ~intrusive_ptr where the target keeps out-of-line calls (per-call-site
+	// whole-program LTCG inline-vs-call; the inlined operator* body carries
+	// intrusive_ptr_inline.h's compiled-out ASSERT byte)
 	virtual			~connect_order	( )
 	{
 		{
@@ -47,8 +52,7 @@ public:
 		}
 	}
 
-	// STATE[PARTIAL]: legacy body ported onto canonical types; unverified vs target
-	// FUNCTION BODY[0xeaf70]
+	// STATE[100%|DONE]
 	virtual	void	execute			( )
 	{
 		m_connector			( m_host, m_packet );

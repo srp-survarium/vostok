@@ -448,3 +448,15 @@ the child has exited and the pipe stays silent for 2s - so any future leaked fd-
 of which ~60s is the LTCG link and ~5s the parallel structure/COFF/rich regeneration. If rebuilds
 ever creep back to a constant ~10-min overhead, compare `.ninja_log` edge spans against the
 rebuild.log wall-clock and look for a new pipe-holder via `/proc/<pid>/environ` WINEPREFIX matches.
+
+## The exe LINK rsp goes stale in worktrees: regen_ninja never compares it (OpenSSL LNK2001 trap)
+A fresh worktree branched after a `.vcproj` LINKER change (e.g. PR-stack commit be4e9a5e adding
+`libeay32/ssleay32` + the openssl LIBPATH to the exe's VCLinkerTool) can fail its first rebuild with
+38 unresolved `_SSL_*`/`_BIO_*` externals even though `regen_ninja.py` reports "ninja graph already
+matches the .vcprojs". Cause: regen compares only each module's *compile-source union*
+(`<module>_cl_*.rsp`) and exact-compares the top-level `.ninja` files - the link flags live in
+`rsp/<exe>_link.rsp`, which is NEVER diffed, so a stale link rsp survives regen. Fix: diff the
+worktree's `<exe>_link.rsp` against a known-good worktree's (path-normalized) and hand-patch the
+missing `/LIBPATH:`/libs into the flags line (or delete the rsp dir + force a full vcproj2ninja
+regen). Symptom signature to remember: linker UNRESOLVED EXTERNALS for symbols a vcproj
+`AdditionalDependencies` should provide + a no-op regen_ninja.
