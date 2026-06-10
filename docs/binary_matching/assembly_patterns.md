@@ -2045,6 +2045,44 @@ SYMPTOM: target's first record is `0xc + <next stmt's bytes>` while base has a s
 (eater + m_damage_parameters.begin(), 6 -> 5 stmts) and
 weapon_core_shotgun_reload_start_substate::finalize (eater + reset(), 3 -> 2 stmts).
 
+### Switch jump-table BOUNDS CHECK present = the original had NO default (or a reachable one); NODEFAULT drops it
+SYMPTOM: a jump-table switch head SIZE-diffs by exactly 0xa: target `mov;mov; cmp [tmp],N; ja .end;
+mov; jmp [table]` (0x1a) vs base `mov;mov;mov; jmp [table]` (0x10, no cmp/ja). CAUSE: our base wrote
+`default: NODEFAULT( );` - `__assume(0)` makes default UNREACHABLE and MSVC omits the range check.
+The target's `ja .end` jumps PAST the switch = out-of-range values fall through, i.e. the original
+had no default clause at all (or a trivial reachable one). Pairs with a BASE_ONLY 0x2 `break;` row:
+the original's LAST case fell out of the switch with NO break (no jmp emitted), while our written
+`break;` emits an unreachable-style 2-byte jmp with its own line record. Removing both ->
+byte-perfect. Confirmed items_cook::create_item_and_finish_query 98.76 -> 100 (29/29, 0x370 both).
+
+### Recovering an INVERTED if/else from line records + branch sizes + jmp widths
+SYMPTOM: structure-diff shows a TRGT_ONLY pair (0x1a + 0x5) after the if-condition row and a
+BASE_ONLY pair (0x2 + 0x1a) after the then-block - statement COUNT equal, alignment shifted. Read
+the target's single-side skeleton: if the record right AFTER the if line is the size of the
+ELSE-branch call (0x1a = process_hand) followed by a 5-byte jmp record, the original put that call
+in the THEN branch - i.e. wrote the NEGATED condition `if ( !cond ) simple_call; else { big block }`.
+CROSS-CHECK with jmp widths: the if's je is rel8 when the then-branch is small (target 0x17) but
+rel32 over a big block (base 0x1b, +0x4 = exactly je rel32-rel8); the jmp-over-else is rel32 (0x5)
+over the big else block, rel8 (0x2) over a small one. Confirmed hand_to_weapon_ik_processor::process
+81.51 -> 94.64 (12/12, sole residual the documented mix_transformations wall).
+
+### VOSTOK_DELETE_IMPL on a NEW_ARRAY allocation: the target calls delete_array_helper_impl
+SYMPTOM: a dealloc row +0x14 in base; target slice is `push &pred_bool; lea edx,[&ptr]; push edx;
+push allocator; call delete_array_helper_impl<alloc,T,call_destructor_predicate>; add esp,0Ch`
+(takes the ADDRESS of the pointer - it NULLs it) while base inlines the scalar delete down to
+strip_pointer + null-check + free_impl. TELL: the allocation used VOSTOK_NEW_ARRAY_IMPL - the
+original freed it with VOSTOK_DELETE_ARRAY_IMPL, not VOSTOK_DELETE_IMPL. Sibling of the
+FREE-vs-DELETE pattern; read the dealloc statement shape. Confirmed items_dictionary_cook::
+on_subresources_loaded 93.95 -> 97.72 (row +0x14 -> +0x4, residual strip_pointer inline-vs-call).
+
+### report.json "None" can mean PAIRED AT 0.0% (protobuf default-value omission)
+objdiff's report.json drops `fuzzy_match_percent` when its value is exactly 0.0 (proto3 JSON
+omits default values), so a paired-but-0% function is indistinguishable from an unpaired one in
+the report. Disambiguate with a one-shot `objdiff-cli diff -p binaries/objdiff -u <unit> <mangled>`
+(the live diff shows `match_percent: 0.0` + a `target_symbol` pairing) or with structure-diff
+(which resolves both sides by symbol). Hit on player_stamina::deserialize: anchored, paired,
+structure 4/4, but every statement is the r<T> cross-module inline wall -> fuzzy 0.0 -> "None".
+
 ### Report-unpaired free function with a PLAIN target name = a STATIC; restore internal linkage to pair
 SYMPTOM: report.json lists a target function under its plain demangled-style name
 (`survarium::distance_from_box_center_to_point_on_shape`) with fuzzy None, while our base
