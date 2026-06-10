@@ -12,8 +12,10 @@ namespace network {
 
 class string_order : public order {
 public:
-	// STATE[STUB]: ctors are fully inlined into their callers (no line records);
-	// absent strings/functors init to NULL/empty - the matcher confirms
+	// STATE[99.70%|PARTIAL]: only diff is `sub esp` - target reserves one untouched
+	// ghost temp dword per strings::duplicate call; zero PDB locals on either side,
+	// whole-program LTCG inline-consideration context (see assembly_patterns.md);
+	// revisit when the real login/match callers stop being stubs
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr ) > const&	functor,
@@ -27,10 +29,9 @@ public:
 		m_string2	( NULL ),
 		m_allocator	( allocator )
 	{
-		// FUNCTION BODY[0xe7ee0]: 0
-		// ******
 	}
 
+	// STATE[99.75%|PARTIAL]: same ghost-frame-dword residual as the 1-string ctor (x2)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr, pcstr ) > const&	functor,
@@ -45,10 +46,9 @@ public:
 		m_string2	( NULL ),
 		m_allocator	( allocator )
 	{
-		// FUNCTION BODY[0x591b0]: 0
-		// ******
 	}
 
+	// STATE[99.77%|PARTIAL]: same ghost-frame-dword residual as the 1-string ctor (x3)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr, pcstr, pcstr ) > const&	functor,
@@ -64,51 +64,31 @@ public:
 		m_string2	( strings::duplicate( allocator, string2 ) ),
 		m_allocator	( allocator )
 	{
-		// FUNCTION BODY[0xe7f80]: 0
-		// ******
 	}
 
-	// STATE[PARTIAL]: three scoped free-blocks per the carcass (lines 51-58),
-	// the connect_order dtor pattern; unverified vs target
+	// STATE[100%|DONE]
 	virtual			~string_order	( )
 	{
-		{
-			pstr temp			= m_string0;
-			VOSTOK_FREE_IMPL	( m_allocator, temp );
-		}
-		{
-			pstr temp			= m_string1;
-			VOSTOK_FREE_IMPL	( m_allocator, temp );
-		}
-		{
-			pstr temp			= m_string2;
-			VOSTOK_FREE_IMPL	( m_allocator, temp );
-		}
+		pstr temp			= m_string0;
+		VOSTOK_FREE_IMPL	( m_allocator, temp );
 
-		// FUNCTION BODY[0x59310]: 8
-		// <0x59273>|0x013|+0x009:'51'
-		// <0x5927c>|0x01c|+0x015:'52'
-		// <0>
-		// <0x59291>|0x031|+0x009:'54'
-		// <0x5929a>|0x03a|+0x015:'55'
-		// <0>
-		// <0x592af>|0x04f|+0x009:'57'
-		// <0x592b8>|0x058|+0x015:'58'
-		// ******
+		temp				= m_string1;
+		VOSTOK_FREE_IMPL	( m_allocator, temp );
+
+		temp				= m_string2;
+		VOSTOK_FREE_IMPL	( m_allocator, temp );
 	}
 
-	// STATE[STUB]
+	// STATE[100%|DONE]
 	virtual	void	execute			( )
 	{
-		// FUNCTION BODY[0x59490]: 7
-		// <0x5949f>|0x00f|+0x00c:'62'
-		// <0x594ab>|0x01b|+0x00c:'63'
-		// <0x594b7>|0x027|+0x02c:'64'
-		// <0x594e3>|0x053|+0x002:'65'
-		// <0x594e5>|0x055|+0x022:'66'
-		// <0x59507>|0x077|+0x002:'67'
-		// <0x59509>|0x079|+0x018:'68'
-		// ******
+		if ( m_string1 )
+			if ( m_string2 )
+				m_functor2	( m_string0, m_string1, m_string2 );
+			else
+				m_functor1	( m_string0, m_string1 );
+		else
+			m_functor0	( m_string0 );
 	}
 
 private:

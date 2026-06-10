@@ -1194,3 +1194,39 @@ game_core's `temp_include_all.cpp` anchor, whose TU never recompiled (PCH stalen
 module). If a one-line header fix provably does not move the diff, `touch` the pch.h of EVERY module
 that instantiates the COMDAT (the anchor TU especially) and rebuild - the stream operator>= then
 went 97.74 -> 100.00.
+
+### PDB locals disambiguate "scoped blocks" vs "one local reassigned" in repeated free/delete runs
+A dtor freeing N pointers shows N near-identical `temp = m_x; VOSTOK_FREE_IMPL(...)` statement
+pairs; the SOURCE could be N disjoint `{ pstr temp = ...; FREE; }` blocks OR one `pstr temp`
+declared once and reassigned. `--view info` settles it: N same-named locals recorded = N disjoint
+braced scopes (each block redeclares `temp`; different types may take different slots, e.g.
+`char* temp` at [ebp-4] + `udp_match_packet* temp` at [ebp-8] in ~connect_order); exactly ONE
+recorded local + every store hitting the SAME slot = one local reassigned, no inner braces
+(~string_order: single `char* temp`, three [ebp-4] stores -> decl-init + two reassigns, 100%).
+
+### Nested brace-less if/else ladder: each 2-byte `jmp` carries the bare `else` line record
+`if (a) if (b) x; else y; else z;` (dangling-else binds inner; outer else legal) compiles to two
+chained 2-byte jmps: then-of-inner jumps to a label that itself holds the jmp over the outer else.
+In the carcass each jmp is its own `+0x002` statement carrying the `else` keyword's line ('65'/'67'
+in string_order::execute, lines 62-68 = if/if/call/else/call/else/call on 7 consecutive records).
+Byte-wise identical to the braced form - pick the ladder when the line records sit on consecutive
+lines with no room for `}` lines. Confirmed 100% on string_order::execute.
+
+### Untouched ghost frame dwords scaling per call site = LTCG inline-consideration context, not a missing local
+string_order's three ctors base-vs-target diff ONLY in `sub esp, N` (+4 per strings::duplicate
+call: 0x14->0x18, 0x1C->0x24, 0x24->0x30) plus the `this` home-slot rename that follows; ZERO
+PDB-recorded locals on EITHER side, every instruction otherwise identical, and the callee
+(`strings::duplicate<base_allocator>`) is itself 100%. The extra dwords are compiler temps the
+link-time codegen reserved while CONSIDERING the callee for inlining - their count depends on the
+whole-program caller/callee context (here the real login/match callers are still stubs), not on
+this unit's source. Don't burn rebuilds restructuring init lists for it; revisit once the real
+callers are matched. (string_order ctors banked at 99.70/99.75/99.77 PARTIAL.)
+
+### A base `ctor(){}`/dtor written in-class can BOTH inline into derived AND survive standalone
+network::order has user-written empty `order(){}` / virtual `~order(){}`, yet every derived
+ctor/dtor (string/connect/send_order) shows them INLINED: `call <noncopyable ctor fold>` on
+this+4 (boost::noncopyable's declared `noncopyable(){}` - it stays an out-of-line folded call) +
+`mov [this], ??_7order` vftable store, while a standalone `order::order()` still exists
+(0x49180, kept by some other call site). This is the per-call-site LTCG inline-vs-call class
+applied to a BASE ctor - the source stays a normal in-class `{ }`; our /Od+LTCG base reproduced
+the same inlining unprompted (derived dtors 100%).
