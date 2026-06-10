@@ -2,7 +2,7 @@
 tags: cpp:assert | asm:mov asm:lea asm:call | topic:assert-eater
 symptoms: TRGT_ONLY 0xc, TRGT_ONLY 0x12, mov byte ptr [ebp-N],0, lea eax, call empty_stub, finalize_impl, call_constructor_helper
 confidence: 10/10
-variants: assert-u-eater.md, unreferenced-params-eater.md, unused-bool-false-store.md, assert-misname-scored-matched.md, speculative-assert-inline-ctor.md
+variants: assert-u-eater.md, unreferenced-params-eater.md, lone-byte-store-zero.md, assert-misname-scored-matched.md, speculative-assert-inline-ctor.md
 
 Master Gold does NOT delete asserts: every non-evaluating assert (`ASSERT`/`R_ASSERT`/`FATAL`
 = `VOSTOK_EMPTY_EXPRESSION` = `if(::vostok::identity(false)){}else(void)0`) leaves a lone
