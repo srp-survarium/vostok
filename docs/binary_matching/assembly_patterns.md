@@ -1086,3 +1086,106 @@ push &ret), out-of-line `detail::endpoint::endpoint(address const&, u16)` ctor i
 `rep movsd` 7 dwords into the member (trivial copy-assign). The huge /Od frame (sub esp,51Ch with a
 ~0x4b4 unused gap between named locals and the bottom spill temps) reproduces by itself - don't
 chase it. Confirmed byte-perfect in `network_core/udp_match_client::connect` (100% first build).
+### LOG_* sites: the pushed verbosity literal picks the macro; the pushed line literal pins the file layout
+A `__LOG`-macro site pushes the verbosity TWICE (once into `has_passed_filters`, once into
+`append`): `push 2` = `LOG_ERROR`, `push 3` = `LOG_WARNING`, `push 4` = `LOG_INFO`
+(`vostok::logging::verbosity` in `logging/api.h`: silent=1,error=2,warning=3,info=4,debug=5,trace=6).
+Do NOT pick the macro from the message tone - "disconnection initiated but new packet has been
+enqueued" sounds like a warning but the target pushes 2 = LOG_ERROR (caught on
+`udp_match_client::enqueue`, push 3 vs push 2). The site also pushes `__LINE__` as an immediate
+(`push 0ACh` = line 172), so the LOG statement must sit on that PHYSICAL line of the `.cpp` -
+pad/trim blank+comment lines above it to land it (markers above must stay single-line). The
+remaining LOG residual after both match is the `log_callback_boost` function-ctor COMDAT call:
+target may call it FIRST with this in EAX while /Od base calls it LAST (canonical right-to-left
+arg order) with this in ESI, pushing its return - ICF/LTCG call-boundary convention, not steerable
+(http_client precedent). NOTE network_core's `__FILE__` is the RELATIVE `.\udp_match_client.cpp`
+and matches base, so the "__FILE__ never matches" cap does not apply to this module.
+
+### inlined state getter: `cmp [m+off], K; sete` with NO temp slot = positive `return m_x == k;`
+ASM (caller, /Od+/Ob2, getter inlined):
+    mov eax,[this]; xor ecx,ecx
+    cmp dword ptr [eax+11Ch], 0    ; K = the enum value the getter compares against
+    sete cl; movzx edx,cl; test edx,edx; je <else>
+SOURCE: `if ( m_connection.is_connected( ) )` where the getter is the POSITIVE inline one-liner
+`return m_state == connected;`. The sete/movzx/test normalize chain (no [ebp-N] bool store) is the
+inlined bool return. A NEGATED spelling (`if ( !has_disconnection_initiated() )` over
+`return m_state != connected;`) would emit setne + inverted jcc - wrong bytes. K identifies which
+getter: 0=connected -> is_connected, 3=disconnected -> is_disconnected
+(udp_match_connection::state). Confirmed in udp_match_client::{enqueue,process_incoming_packet,
+send_queued_packets} (all 94-100%).
+
+### +0xC frame with byte-equal code = an ELIDED named-return temp; the spelling is proven at the emission that KEPT the copy
+A target frame exactly +0xC over base with the instruction stream otherwise identical (only the
+bottom-of-frame this/temp slot disp constants shift) is NOT a missing ASSERT (that adds ~0xc bytes
+of CODE) - it is a dead 12-byte temp the target front-end materialized and the backend elided
+code-free. Cause found for make_custom_alloc_handler: the original spells the helper with a NAMED
+return value (`custom_alloc_handler< H > const result( a, h ); return result;`), not the direct
+`return custom_alloc_handler< H >( a, h );`. The named local reserves its slot at EVERY inline
+emission, but MSVC8 LTCG elides the 6-mov return copy per-emission: target kept the copy in
+tcp_packet_client::start_reading (the tcp_packet_socket::start_receiving body inlined there -
+100.00% only with the named-return spelling, the byte-proof) and elided it (slot kept) in the
+standalone udp/tcp start_receiving COMDATs, where our LTCG does NOT elide (+0x12 bytes residual,
+99.8% -> 87-91%). Same source, three emissions, two backend outcomes: when one emission
+byte-proves a spelling, keep it and book the other emissions' copy as non-steerable backend
+copy-prop variance. Net: +1 function at 100%, aggregate code% flat.
+
+### Recover an INLINE ctor body from its consumer inline expansions (never guess NULL)
+A header-inline ctor with no standalone symbol leaves its body unrecorded - but every /Od
+consumer EXPANDS it, so the consumers are the ground truth. `packet_reader(base_packet const&)`
+was reconstructed as `m_packet(packet), m_pointer(NULL)`; reading the expansions
+(udp_match_connection::is_low_level_packet stmt 1; process_incoming_packet<..> L141) shows
+`mov [reader+0], &packet;  lea/call <folded base_packet::buffer() const>;  mov [reader+4], eax`
+=> the real init list is `m_packet(packet), m_pointer(packet.buffer())`. The folded `call` is
+the tell: a NULL init would be a plain `mov [reader+4], 0`. Fixing the ctor moved
+udp_match_client::process_incoming_packet 88.12 -> 99.86 alongside the template body. RULE:
+before banking an inline ctor body, rich-view 1-2 consumers and read the expansion between the
+member stores.
+
+### interlocked_* on a member => the member is threading::atomic32_type, not long
+`threading_functions_guard.h` defines template overloads `interlocked_*(T&, ...)` whose body is
+`COMPILE_ASSERT(false, do_not_pass_NON_VOLATILE_values_to_INTERLOCKED_functions)`. For a
+NON-volatile `long` member the template (exact match) beats the real
+`interlocked_exchange(atomic32_type& = long volatile&, long)` (qualification conversion), so the
+build breaks. Therefore any member a target function feeds to `interlocked_*` as the TARGET
+operand was declared `threading::atomic32_type` in the original header, even when the PDB-dumped
+structure shows plain `long` (the generator drops volatile). Caught on
+`udp_match_connection::m_last_receive_time_in_ms` (process_incoming_packet does
+`interlocked_exchange(m_last_receive_time_in_ms, m_last_send_attempt_time_in_ms)`). The VALUE
+operand stays non-volatile.
+
+### an /Od module unit can carry an OPTIMIZED LTCG COMDAT - correct source, unpairable bytes
+A COMDAT instantiated from BOTH /Od and optimized TUs survives in the exe as whichever emission
+the linker kept - sometimes the OPTIMIZED one (frameless, custom regs, unrolled), even though the
+delinker files it under the /Od module's unit. Tells: no `push ebp` frame, `this` in eax,
+flat unrolled stores / xmm pairs. Examples: `udp_match_stats::udp_match_stats()` (0x62 bytes, 32
+flat dword zero-stores; `this` in eax), `udp_match_stats operator-` (xmm movq pairs, args
+LTCG-promoted to edi/esi), `udp_match_packet::header_size` (8-byte `mov eax,[ecx]; sub; sub; ret`).
+Your /Od body emits framed per-statement code and objdiff scores None or single digits NO MATTER
+WHAT - write the source the gold LINE TABLE proves (the optimized emission still carries statement
+lines in the PDB: e.g. operator-'s 10 statements at L212-224), mark PARTIAL citing the emission,
+and do not chase the %.
+
+### VOSTOK_UNREFERENCED_PARAMETERS (plural) EMITS code at /Od - use the singular form to stay row-free
+The plural macro expands to `if ( vostok::identity(false) ) { detail::unreferenced_parameter_helper(...); } else (void)0`
+- at /Od that is a REAL statement row (~0x25 bytes: identity call, test/branch, varargs call setup)
+the target does not have. The singular `VOSTOK_UNREFERENCED_PARAMETER(x)` = `(void)(&x)` = zero code,
+zero rows. Caught in `udp_network_flow_emulator::tick` (plural eater added a 16th base row and 0x25
+bytes; two singular eaters restored 15/15).
+
+### A fat early-`return` row = the inlined dtor walk of an in-scope local; a single `for` row = both iterator inits declared IN the for
+Two `if (empty) return;` guards can look completely different in the carcass: before any non-trivial
+local exists the `return` is a bare 5-byte `jmp epilogue`; after an alloca-backed `buffer_vector` is
+live, the SAME `return;` row carries the container's inlined dtor (walk begin..end by elem size,
+`end = begin`, then `jmp epilogue` - ~0x26 bytes). Don't misread the fat row as a missing statement.
+Likewise one `for`-line row containing two slot inits + the loop control = a single-declaration
+header `for ( pair* i = v.begin( ), * e = v.end( ); i != e; ++i )`; separate small `i =`/`e =` rows
+before the for mean separate declarations. Both confirmed in `udp_network_flow_emulator::tick`
+(structure went 14-vs-15 misaligned to 15/15, 48.44 -> 60.55).
+
+### A header fix that "does not take" can be a STALE OTHER-MODULE COMDAT winning the link
+After fixing `udp_match_stats.h`'s items operator>= the rebuilt network_core objs carried the new
+bytes, but the linked base STILL showed the old compare: the surviving COMDAT emission came from
+game_core's `temp_include_all.cpp` anchor, whose TU never recompiled (PCH staleness in the OTHER
+module). If a one-line header fix provably does not move the diff, `touch` the pch.h of EVERY module
+that instantiates the COMDAT (the anchor TU especially) and rebuild - the stream operator>= then
+went 97.74 -> 100.00.

@@ -48,10 +48,13 @@ public:
 		continuous_flow				= 0x2,
 	}; // enum low_level_message_type_enum
 
+	// claude@MATCH: bodies read from the target key_nodeptr_comp<comparer,...> thunks
+	// (0x122ed0/0x122f20/0x123120/0x1231e0): each compares order_id (packet @0x26)
+	// via sequence_number<u16>::operator<.
 	struct comparer {
-		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
-		inline	bool	operator()	( sequence_number< u16 > left, udp_match_packet const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
-		inline	bool	operator()	( udp_match_packet const& left, sequence_number< u16 > right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
+		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { return left.order_id < right.order_id; }
+		inline	bool	operator()	( sequence_number< u16 > left, udp_match_packet const& right ) const { return left < right.order_id; }
+		inline	bool	operator()	( udp_match_packet const& left, sequence_number< u16 > right ) const { return left.order_id < right; }
 	}; // struct comparer
 
 	struct channel {
@@ -116,24 +119,26 @@ public:
 
 	// sushi@TODO: the `/* no source */` bodies below are shams to compile - no inline-site
 	// evidence yet; reconstruct each from its consumer's target bytes when that consumer
-	// gets matched (is_connected/delete_packet land in PR #285, comparer in PR #288).
-	inline	bool						is_connected					( ) const { return false; }
+	// gets matched (is_connected/delete_packet matched in PR #285, comparer in PR #288).
+	// STATE[INLINED]: inlined in udp_match_client::enqueue as `cmp m_state(+0x11c), connected(0)`.
+	inline	bool						is_connected					( ) const { return m_state == connected; }
 
 	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ }
 
 	inline	bool						is_disconnecting				( ) const { return false; /* no source */ }
-	// claude@MATCH: inlined in udp_match_client::handle_receive as `cmp m_state(+0x11c), disconnected(3); sete`.
+	// STATE[INLINED]: inlined in udp_match_client::handle_receive as `cmp m_state(+0x11c), disconnected(3); sete`.
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
 	inline	void						set_disconnected				( ) { /* no source */ }
 
 	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; /* no source */ }
-	inline	void						delete_packet					( udp_match_packet*& packet ) { /* no source */ }
+	// STATE[INLINED]: body from udp_match_client::enqueue's else-branch bytes (the delete_udp_match_packet free+NULL-out pattern, assembly_patterns.md).
+	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
 	inline	void						set_max_packet_wait_time_in_ms	( u32 value ) { /* no source */ }
 
 	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ }
 
-	// claude@MATCH: udp_match_client::handle_receive passes this to on_packet_received; target
+	// STATE[INLINED]: udp_match_client::handle_receive passes this to on_packet_received; target
 	// reads m_unacknowledged_packets(+0xa0).size() via the ICF-folded size_policy::size COMDAT.
 	inline	u32							unacknowledged_packets_count	( ) const { return m_unacknowledged_packets.size( ); }
 			u32							packets_count					( ) const;
@@ -200,7 +205,12 @@ private:
 	/* 0x00f0 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
 	/* 0x00f4 */	udp_match_packets_orderer&			m_packets_orderer;
 	/* 0x00f8 */	pcstr								m_logging_id;
-	/* 0x00fc */	long								m_last_receive_time_in_ms;
+	// claude@MATCH: threading::atomic32_type (volatile long) - process_incoming_packet
+	// targets it with interlocked_exchange; the non-volatile guard overload would
+	// otherwise fire (threading_functions_guard.h).
+	// sushi@TODO: can the structure/size tooling catch this? PDB member-type records
+	// should carry the volatile qualifier - today's sweep checks only sizes/offsets.
+	/* 0x00fc */	threading::atomic32_type			m_last_receive_time_in_ms;
 	/* 0x0100 */	const u32							m_disconnection_timeout_in_ms;
 	/* 0x0104 */	u32									m_last_send_time_in_ms;
 	/* 0x0108 */	long								m_last_send_attempt_time_in_ms;

@@ -201,6 +201,13 @@ One per function, line above it: `// STATE[<percent>%|<tag>]: short reason`.
 
 e.g. `// STATE[94.32%|DONE]: LTCG for mutex`, `// STATE[97.67%|PARTIAL]: target didn't xor after std::find`.
 
+`INLINED` carries no percent: the function emits NO standalone symbol on the target side
+(every call site inlined it), so there is nothing for objdiff to pair or score. Use it when
+you reconstruct such a body from a matched consumer's bytes, and NAME that inline-site
+evidence in the reason (e.g. `// STATE[INLINED]: body from udp_match_client::enqueue's
+else-branch bytes`). A body with no consumer evidence yet is NOT `INLINED` - keep it a
+`/* no source */` sham (with its `sushi@TODO`) until a consumer gets matched.
+
 
 ## Comment hygiene - lean code, verbose `.md`
 **Code is not the place to be noisy.** Keep inline comments minimal. ALL the

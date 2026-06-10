@@ -132,7 +132,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 	// bind rows as separate statements our LTCG folds). Same for <u8> and <u16>. trail: tcp_packet_socket_inline.md
 }
 
-// STATE[99.88%|DONE]: async_read header + custom_alloc_handler(bind on_packet_size_received<u8>)
+// STATE[87.25%|PARTIAL]: frame now exact (0xFC) after the make_custom_alloc_handler named-return fix; residual is its result-copy (0x12 bytes) target LTCG elides in this standalone emission but keeps in the tcp_packet_client::start_reading emission (100% there - the spelling proof)
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::start_receiving( )
 {
@@ -144,10 +144,10 @@ inline void tcp_packet_socket< Socket >::start_receiving( )
 			boost::bind( &tcp_packet_socket::on_packet_size_received< u8 >, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
 		)
 	);
-	// STRUCTURE DIFF[target 0x123fb0 | base 0x901d0]: target 1 / base 1 stmts
-	// .. same ..
-	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0. trail: tcp_packet_socket_inline.md
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x12 | 146 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE row is make_custom_alloc_handler's named-return
+	// result-copy (6 movs) our LTCG fails to elide in this standalone emission (slot kept, frame 0xFC exact).
 }
 
 // STATE[52%|PARTIAL]: delete_packet + error/size branches matched; residual is logging file-path strings
