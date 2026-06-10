@@ -63,8 +63,8 @@ pistol_weapon_core_reload_state::pistol_weapon_core_reload_state(
 // operator+<expression,animation_lexeme> selection). Not source-steerable in this TU. See .md.
 animation::mixing::expression pistol_weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -79,18 +79,10 @@ animation::mixing::expression pistol_weapon_core_reload_state::weapon_and_hands_
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// LOCALS
-	// animation::mixing::expression hands_expression
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
-
-	// FUNCTION BODY
-	// <0x798dd1>|0x011 lexeme_pair = get_weapon_lexeme_pair(...)
-	// <0x798df6>|0x036 (sprint) return main + offset (addition_lexeme<lexeme,lexeme>)
-	// <0x798e54>|0x094 ASSERT
-	// <0x798e66>|0x0a6 hands_expression = get_user_hands_expression(...)
-	// <0x798e90>|0x0d0 return hands + main + offset
-	// ******
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
+	// SIZE -0x21 | 74 | return lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// SIZE +0x7  | 80 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (6/6) - both SIZE rows are the mixing operator+ overload-selection / inline-vs-call LTCG wall (target's expression-returning overloads absent from shared mixing headers); non-steerable from this TU.
 }
 
 // STATE[99.92%|DONE]: LTCG arg passing - every statement matches byte-for-byte; the sole
@@ -98,11 +90,15 @@ animation::mixing::expression pistol_weapon_core_reload_state::weapon_and_hands_
 // in eax (target) vs ecx (base), a link-time calling-convention register choice for the
 // implicit argument (the documented call-boundary exception), not source-steerable. (The
 // `call empty_stub`/finalize_impl fold at the tail is the same byte-identical empty body.)
-weapon_lexeme_pair pistol_weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair pistol_weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
-	pcstr weapon_animation_captions[2] = { "pistol-reload", "pistol-reload_empty" };
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-reload",
+		"pistol-reload_empty"
+	};
 
-	u32 weapon_state_index = m_weapon.ammo_in_magazine( ) == 0;
+	u32 const weapon_state_index = m_weapon.ammo_in_magazine( ) == 0;
 
 	pcstr animation_identifier = weapon_animation_captions[weapon_state_index];
 
@@ -132,12 +128,14 @@ weapon_lexeme_pair pistol_weapon_core_reload_state::get_weapon_lexeme_pair( muta
 animation::mixing::expression pistol_weapon_core_reload_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	pcstr const user_animation_captions[2][2] = {
+	// PDB records char const*[2][2] (no pointer const); each inner row attributes its two
+	// element stores to its own line (two 0xe statements).
+	pcstr user_animation_captions[2][2] = {
 		{ "stand_reload_pistol", "stand_reload_empty_pistol" },
 		{ "crouch_reload_pistol", "crouch_reload_empty_pistol" }
 	};
@@ -163,14 +161,9 @@ animation::mixing::expression pistol_weapon_core_reload_state::get_user_hands_ex
 
 	return override_lexeme;
 
-	// FUNCTION BODY
-	// <0x798be1>|0x011 captions[2][2]
-	// <0x798bfd>|0x02d user_state_index = (user_state_id == type_crouch)
-	// <0x798c09>|0x039 weapon_state_index = (ammo_in_magazine() == 0)
-	// <0x798c27>|0x057 interpolator( s_aim_transition_time )
-	// <0x798c37>|0x067 override_lexeme(...) - target keeps params setters/get_user/~params OUT-OF-LINE
-	// <0x798cb9>|0x0e9 return override_lexeme;
-	// ******
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x16 | 160 | );
+	// VERDICT: STRUCTURE MATCH (7/7) - sole SIZE row is the animation_lexeme_parameters setters / get_user( ) kept out-of-line in target vs inlined in base; whole-program LTCG, non-steerable from this TU.
 }
 
 // STATE[86.5%|PARTIAL]: placement-new + ctor call + arg order all match; sole residual is the
@@ -191,11 +184,9 @@ pistol_weapon_core_reload_state* weapon_core_state_cook_template<survarium::pist
 		animations_count
 	);
 
-	// FUNCTION BODY (kept: PARTIAL - LTCG calling convention of computed_reload_animation_time_scale)
-	// <0x798b69>|0x009 new(buffer.c_ptr()) pistol_weapon_core_reload_state( params->weapon,
-	//                  computed_reload_animation_time_scale(animations[0], params->reload_time),
-	//                  animations, animations_count );
-	// ******
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0x11 | 192 | );
+	// VERDICT: STRUCTURE MATCH (1/1) - target calls computed_reload_animation_time_scale out-of-line with an LTCG-promoted convention; base keeps the inline STUB helper. Bounded by that helper's own unit; non-steerable here.
 }
 
 } // namespace survarium
