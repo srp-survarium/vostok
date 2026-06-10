@@ -26,10 +26,18 @@ public:
 		m_current_time_in_ms	( current_time_in_ms ),
 		m_max_time_delta	( max_time_delta )
 	{
-		/* no source */
 	}
 
-	inline	bool	operator()				( udp_match_packet* packet ) const { return false; }
+	// STATE[UNVERIFIED]: body from the remove_if<move_to_list_predicate> emission
+	// (0x127900: last_send_time_in_ms + max_time_delta vs current, then push_back).
+	inline	bool	operator()				( udp_match_packet* packet ) const
+	{
+		if ( m_current_time_in_ms < packet->last_send_time_in_ms + m_max_time_delta )
+			return false;
+
+		m_list_to_move_to.push_back( packet );
+		return true;
+	}
 
 	inline			~move_to_list_predicate	( ) { /* no source */ }
 

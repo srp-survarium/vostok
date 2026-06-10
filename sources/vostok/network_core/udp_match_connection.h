@@ -58,31 +58,29 @@ public:
 	}; // struct comparer
 
 	struct channel {
-		// STATE[STUB]
-		inline			channel	( )
+		// STATE[53.90%|PARTIAL]: STRUCTURE MATCH (0 stmts both sides, all inits on the
+		// ctor decl line); residual is the intrusive set ctor inline depth in the init
+		// list (base 0x76 vs target 0x53 bytes), non-steerable.
+		inline			channel	( ) :
+			received_order_id	( 0xFFFF ),
+			sent_order_id		( 0 )
 		{
-			// FUNCTION BODY[0x137450]
-			// <0x137450>|0x000|      :'153'	{
-			// ******
 		}
 
-		// STATE[STUB]
+		// STATE[72.79%|PARTIAL]: 4/4; both SIZE rows (-0x8 on the two seq assigns) are
+		// the documented sequence_number op= this-temp lowering (target spills the member
+		// address, our LTCG folds it into the store), non-steerable.
 		inline	void	reset	( )
 		{
-			// FUNCTION BODY[0x1374b0]: 4
-			// <0x1374b9>|0x009|+0x00c:'156'
-			// <0x1374c5>|0x015|+0x008:'157'
-			// <0x1374cd>|0x01d|+0x01c:'158'
-			// <0x1374e9>|0x039|+0x019:'159'
-			// ******
+			ASSERT( UNKNOWN_EXPRESSION_T( packets.empty( ) ) );
+			packets.clear		( );
+			received_order_id	= sequence_number< u16 >( 0xFFFF );
+			sent_order_id		= sequence_number< u16 >( 0 );
 		}
 
-		// STATE[STUB]
+		// STATE[99.67%|DONE]: empty body; member-dtor machinery only (0x15 bytes).
 		inline			~channel( )
 		{
-			// FUNCTION BODY[0x137510]: 0
-			// (0 statements - 0x15 bytes of member-dtor machinery only)
-			// ******
 		}
 
 	public:
@@ -168,7 +166,9 @@ private:
 
 			void						update_acknowledgements			( sequence_number< u16 > remote_sequence_id, sequence_number< u16 > local_sequence_id, u16 local_acknowledgement_bits );
 
-			void						dump							( pcstr caption, u32 current_time_in_ms );
+			// claude@MATCH: pcstr const - the target mangles QBDI (top-level pointer
+			// const lives in the member declaration, the silent-join variant).
+			void						dump							( pcstr const caption, u32 current_time_in_ms );
 
 			void						process_low_level_message		( packet_reader& reader, u32 time_in_ms );
 

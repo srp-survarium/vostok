@@ -1252,3 +1252,30 @@ A `u16 dest = (u16)u32_local` compiles to `mov cx,[local]; mov [dst],cx` (<0xa> 
 and eax,0FFFFh; mov [dst],ax`, <0xe>) means the SOURCE wrote `dest = local & 0xffff` (explicit
 mask), not a `(u16)` cast. (network_core_entry_point get_connection_info_from_string,
 `dest_port = port & 0xffff;`. Recovered from pre-restack PR #268.)
+
+### A ~0x26 `return;` row = the by-value boost iterator param destroyed AT the return (sp release + jmp)
+A `basic_resolver_iterator` (or any shared_ptr-holding object) passed BY VALUE is callee-destroyed,
+and under /Od an early `return;` gets its OWN row carrying that dtor inlined: `lea ecx,[ebp+14h]
+(the param's shared_count slot); cmp [ecx],0; je .skip; call sp_counted_base::release; jmp .epilog`
+- ~0x26 bytes attributed to the return's line. Two identical ~0x26 rows in one function = two
+early `return;` statements, NOT codegen layout. Sibling of the "fat early-return = inlined dtor
+walk" entry. Confirmed in `async_connector::on_resolved` (both error-arm returns).
+
+### A fat mid-arm row calling the function's OWN bind + async op = a RETRY statement, not the success path
+`on_resolved`'s error/not-exhausted arm was guessed as `m_host = iterator; connect( m_host );` -
+the target bytes instead deref `*iterator` into a 0x1c endpoint temp (rep movsd 7 dwords from
+values[index]*0x4C), build `boost::bind( &async_connector::on_resolved, this, resolver, _1, _2 )`,
+and call `resolver_service::async_resolve` - i.e. the source RE-ISSUES the async op on the next
+endpoint: `++iterator;` (its own 0x8 row - an increment() call) then
+`if ( iterator != tcp::resolver::iterator( ) ) { resolver->async_resolve( *iterator, bind(...) );
+return; }`. DEDUCTION RULE: when an arm's big row ends in a call whose HANDLER template type names
+the enclosing function, the original re-arms the same async call - read the bind_t in the called
+symbol's template args before guessing the arm. (63.37 -> 93.25, 22 -> 20 stmts.)
+
+### MSVC /Od drops the case-compare for a case adjacent to `default:` - the target's redundant cmp is non-steerable
+`switch` dispatch with `case X:` and `default:` labeling the SAME arm: our compiler omits X's
+`cmp/je` (anything unmatched falls to default = the same block), emitting N-1 compares; the target
+emits all N including the redundant one. Flipping the label order (`default: case X:` vs
+`case X: default:`) changes NOTHING - both spellings dedup. Bank the few-byte SIZE row on the
+switch line; do not chase it. (udp_match_connection::process_low_level_message, +0x3 on the
+dispatch row.)

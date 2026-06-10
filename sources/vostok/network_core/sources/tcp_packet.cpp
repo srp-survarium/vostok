@@ -30,11 +30,10 @@ boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet )
 	*static_cast<u16*>(static_cast<pvoid>(buffer - 3)) = static_cast<u16>( buffer_size );
 	return boost::asio::buffer( static_cast<pcbyte>(buffer - 3), buffer_size + 3 );
 
-	// STRUCTURE DIFF[target 0x6d78e0 | base 0x54aa00]: target 11 / base 11 stmts
-	//   1: 0x006 <0xb> | 0x006 <0x9> | u32 buffer_size = packet.buffer_size( );   SIZE
-	// .. same ..
-	// ; aligned 10, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is buffer_size() accessor out-of-line call (target) vs inlined (base), non-source-fixable.
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE -0x2|0| u32 buffer_size = packet.buffer_size( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is buffer_size() accessor
+	// out-of-line call (target) vs inlined (base), non-source-fixable.
 }
 
 // STATE[75.68%|PARTIAL]: shape exact (1 stmt each); sole SIZE is buffer()/buffer_size()
@@ -44,10 +43,10 @@ boost::asio::mutable_buffers_1 buffer_to_receive_into( tcp_packet& packet )
 	ASSERT( packet.buffer_size() );
 	return boost::asio::buffer( packet.buffer(), packet.buffer_size() );
 
-	// STRUCTURE DIFF[target 0x6d79a0 | base 0x54a9b0]: target 2 / base 2 stmts
-	//   2: 0x012 <0x30> | 0x012 <0x2e> | return boost::asio::buffer( packet.buffer(), packet.buffer_size() );   SIZE
-	// ; aligned 1, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is buffer()/buffer_size() accessor out-of-line call (target) vs inlined (base), non-source-fixable.
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0x2|+1| return boost::asio::buffer( packet.buffer(), packet.buffer_size() );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is buffer()/buffer_size() accessor
+	// out-of-line call (target) vs inlined (base), non-source-fixable.
 }
 
 } // namespace network_core

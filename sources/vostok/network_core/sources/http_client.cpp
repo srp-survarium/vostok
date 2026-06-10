@@ -22,11 +22,11 @@ void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 	{
 	}
 
-	// STRUCTURE DIFF[target 0x779e50 | base 0x57b370]: target 5 / base 5 stmts
-	//   1: 0x013 <0x25> | 0x013 <0x12> | ASSERT( prefix );   SIZE
-	// .. same ..
-	// ; aligned 4, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the ASSERT lowering (empty_stub) byte-size, non-structural.
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE -0x13|0| ASSERT( prefix );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the gold-assert machinery lowering
+	// (target 0x25: bool temp + helper call + guarded handler call vs our 0x12 eater),
+	// non-structural.
 }
 
 // STATE[99.85%|PARTIAL]: member-init list, structure clean; residual is LTCG byte noise.
@@ -39,9 +39,9 @@ http_client::http_client( boost::asio::io_service& io_service ) :
 	m_on_content_downloaded	( ),
 	m_on_error				( )
 {
-	// STRUCTURE DIFF[target 0x779ff0 | base 0x57bda0]: target 0 / base 0 stmts
-	// ; aligned 0, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - all inits attributed to the ctor decl line; no body statements; residual is byte-level only.
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts - no diverging rows
+	// VERDICT: STRUCTURE MATCH (shape ok) - all inits attributed to the ctor decl line;
+	// no body statements; the 0.15% residual is byte-level LTCG noise only.
 }
 
 // STATE[100%|DONE]: LTCG for copying `m_on_content_downloaded = callback`
@@ -65,7 +65,7 @@ void http_client::get( pcstr server, pcstr path, boost::function<void()> const& 
 	);
 }
 
-// STATE[79%|PARTIAL]: LOG_ERROR / err.message() inline differently; control structure matches.
+// STATE[95.36%|PARTIAL]: LOG_ERROR / err.message() inline differently; control structure matches.
 void http_client::on_error( boost::system::error_code const& err )
 {
 	LOG_ERROR( "http_client error: %s", err.message().c_str() );
@@ -73,13 +73,11 @@ void http_client::on_error( boost::system::error_code const& err )
 	if ( m_on_error )
 		m_on_error( err );
 
-	// STRUCTURE DIFF[target 0x77a110 | base 0x57b6b0]: target 4 / base 4 stmts
-	//   1: 0x017 <0xbd> | 0x017 <0xba> | LOG_ERROR( "http_client error: %s", err.message().c_str() );   SIZE
-	// .. same ..
-	//   3: 0x0df <0x22> | 0x0dc <0x21> | if ( m_on_error )   SIZE
-	// .. same ..
-	// ; aligned 2, size-diffs 2, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are LOG_ERROR/message() inline-vs-call byte size; no control-structure divergence.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x3|0 | LOG_ERROR( "http_client error: %s", err.message().c_str() );
+	// SIZE -0x1|+2| if ( m_on_error )
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are LOG_ERROR/message()
+	// inline byte size (+ __LINE__ value noise); no control-structure divergence.
 }
 
 // STATE[100%|DONE]
@@ -96,14 +94,9 @@ void http_client::handle_resolve( boost::system::error_code const& err, tcp::res
 	{
 		on_error( err );
 	}
-
-	// STRUCTURE DIFF[target 0x77aa50 | base 0x57c0f0]: target 5 / base 5 stmts
-	// .. same ..
-	// ; aligned 5, size-diffs 0, quantity-diffs 0, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - statements, blocks and sizes all aligned; objdiff scores None (unit pairing), structure is clean.
 }
 
-// STATE[97%|PARTIAL]: one SIZE on the bind() arg; control structure matches.
+// STATE[97.98%|PARTIAL]: one SIZE on the bind() arg; control structure matches.
 void http_client::handle_connect( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
 	if ( !err )
@@ -127,12 +120,10 @@ void http_client::handle_connect( boost::system::error_code const& err, tcp::res
 		on_error( err );
 	}
 
-	// STRUCTURE DIFF[target 0x77a820 | base 0x57bec0]: target 8 / base 8 stmts
-	// .. same ..
-	//   6: 0x11d <0xce> | 0x11d <0xd2> | boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, ++endpoint_iterator ) );   SIZE
-	// .. same ..
-	// ; aligned 7, size-diffs 1, quantity-diffs 0, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the bind/async_connect call byte size; no control-structure divergence.
+	// STRUCTURE DIFF: target 8 stmts / base 8 stmts
+	// SIZE +0x4|+14| boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, ++endpoint_iterator ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the bind/async_connect call byte
+	// size; no control-structure divergence.
 }
 
 // STATE[100%|DONE]
@@ -147,14 +138,10 @@ void http_client::handle_write_request( boost::system::error_code const& err )
 		);
 	else
 		on_error( err );
-
-	// STRUCTURE DIFF[target 0x77a780 | base 0x57bd00]: target 4 / base 4 stmts
-	// .. same ..
-	// ; aligned 4, size-diffs 0, quantity-diffs 0, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - statements and sizes aligned; objdiff scores None (unit pairing), structure is clean.
 }
 
-// STATE[78%|PARTIAL]: read_lines_from_stream + async_read inline boundaries shuffle line attribution; LOG_ERROR/find inline byte sizes differ.
+// STATE[88.01%|PARTIAL]: read_lines_from_stream + async_read line attribution shuffles
+// (target wraps async_read over more lines); LOG_ERROR/find/else inline byte sizes differ.
 void http_client::handle_read_status_line( boost::system::error_code const& err )
 {
 	if ( !err )
@@ -188,25 +175,20 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 	} else
 		on_error( err );
 
-	// STRUCTURE DIFF[target 0x77a3e0 | base 0x57b970]: target 16 / base 16 stmts
-	// .. same ..
-	//   5: 0x0d6 <0x16> | 0x0d6 <0x23> | s32	found = status_message.find( "HTTP/" );   SIZE
-	// .. same ..
-	//   7: 0x110 <0x8d> | 0x11d <0x86> | LOG_ERROR( "http_client: Invalid response" );   SIZE
-	//   8: 0x19d <0x18> | 0x1a3 <0x5> | } else   SIZE
-	// .. same ..
-	//   9: 0x1b5 <0x16> | 0x1a8 <0x23> | found = status_message.find( "200" );   SIZE
-	// .. same ..
-	//  11: 0x1d5 <0x9c> | 0x1d5 <0x96> | LOG_ERROR( "http_client: Response returned with status code %s", status_message.c_str( ) );   SIZE
-	//  12: 0x271 <0x18> | 0x26b <0x5> | } else   SIZE
-	//  13: --          | 0x270 <0x1a> | read_lines_from_stream( "read_status_line", m_response_buff );   ONLY base
-	// .. same ..
-	//  14: 0x289 <0x19> | 0x28a <0xd1> | );   SIZE
-	// .. same ..
-	//  15: 0x2a2 <0xd2> | --          | L151   ONLY target
-	// .. same ..
-	// ; aligned 8, size-diffs 7, quantity-diffs 2, blank-gaps 2
-	// VERDICT: STRUCTURE MISMATCH (size) - same 16 statements + braces; the ONLY base/target pair is a line-attribution shuffle of read_lines_from_stream + the async_read `);` (different inline boundary), not an added/removed statement. All SIZE diffs are LOG_ERROR/string::find inline byte sizes. No source restructure needed.
+	// STRUCTURE DIFF: target 16 stmts / base 16 stmts
+	// SIZE +0xd |+6 | s32	found = status_message.find( "HTTP/" );	// @TODO: std::string::size_type
+	// SIZE -0x7 |+9 | LOG_ERROR( "http_client: Invalid response" );
+	// SIZE -0x13|+10| } else
+	// SIZE +0xd |+12| found = status_message.find( "200" );
+	// SIZE -0x6 |+15| LOG_ERROR( "http_client: Response returned with status code %s", status_message.c_str( ) );
+	// SIZE -0x13|+16| } else
+	// BASE_ONLY |+18| read_lines_from_stream( "read_status_line", m_response_buff );
+	// SIZE +0xb8|+25| );
+	// TRGT_ONLY |t+32| --
+	// VERDICT: STRUCTURE MATCH (shape ok) - 16/16; the ONLY pair is the SAME read_lines
+	// (t 0x19 vs b 0x1a) / async_read tail (t 0xd2 vs b 0xd1) statements mis-paired
+	// because the target wraps async_read over ~10 lines (anchor drifts to t+32); SIZE
+	// rows are string::find / LOG_ERROR / else-row lowering, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -221,25 +203,15 @@ bool http_client::add_result_content( )
 	}
 
 	return m_result_content.size( ) < 1024;
-
-	// STRUCTURE DIFF[target 0x779ca0 | base 0x57b4a0]: target 6 / base 6 stmts
-	// .. same ..
-	// ; aligned 6, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - statements, loop block and sizes aligned; objdiff scores None (unit pairing), structure is clean.
 }
 
-// STATE[99%|PARTIAL]: target used a different register; structure clean.
+// STATE[100%|DONE]
 void http_client::close_connection( )
 {
 	if ( m_socket.is_open( ) )
 		m_socket.close( );
 
 	m_on_content_downloaded( );
-
-	// STRUCTURE DIFF[target 0x779f90 | base 0x57b650]: target 3 / base 3 stmts
-	// .. same ..
-	// ; aligned 3, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - statements and sizes aligned; residual is the register-choice byte noise noted on the STATE line.
 }
 
 // STATE[100%|DONE]
@@ -265,11 +237,6 @@ void http_client::handle_read_content( boost::system::error_code const& err )
 		add_result_content( );
 		close_connection( );
 	}
-
-	// STRUCTURE DIFF[target 0x77a240 | base 0x57b7d0]: target 10 / base 10 stmts
-	// .. same ..
-	// ; aligned 10, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - statements, nested if/else-if blocks and sizes all aligned; objdiff scores None (unit pairing), structure is clean.
 }
 
 } // namespace network_core

@@ -8,7 +8,7 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[27%|PARTIAL]: body byte-correct; LTCG ICF fold reps + extra temp slot (frame 10h vs 0Ch)
+// STATE[91.79%|PARTIAL]: body byte-correct; LTCG ICF fold reps + extra temp slot (frame 10h vs 0Ch)
 async_connector::async_connector( ) :
 	m_host				( ),
 	m_socket			( NULL ),
@@ -16,7 +16,7 @@ async_connector::async_connector( ) :
 {
 }
 
-// STATE[64%|PARTIAL]: LTCG ICF-folded boost::function reps + register alloc; body byte-correct
+// STATE[96.25%|PARTIAL]: LTCG ICF-folded boost::function reps + register alloc; body byte-correct
 void async_connector::on_connected(
 	boost::system::error_code const&	error_code,
 	boost::asio::ip::tcp::resolver::iterator	iterator
@@ -37,7 +37,7 @@ void async_connector::on_connected(
 		m_on_connected( );
 }
 
-// STATE[24%|PARTIAL]: structurally byte-correct; anon-ns placeholder hash + register alloc noise
+// STATE[91.89%|PARTIAL]: structurally byte-correct; anon-ns placeholder hash + register alloc noise
 void async_connector::connect( boost::asio::ip::tcp::resolver::iterator const& iterator )
 {
 	m_connection_state	= connection_is_being_established;
@@ -47,10 +47,11 @@ void async_connector::connect( boost::asio::ip::tcp::resolver::iterator const& i
 		boost::bind( &async_connector::on_connected, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
 }
 
-// STATE[63.37%|PARTIAL]: logging-heavy Boost.Asio wall (1520/1510 bytes). The old join
-// failure (target `* const`/QAV vs base `*`/PAV) is FIXED: the header now declares the
-// resolver param `* const` (the definition drops the top-level const so DELETE() can
-// null it; MSVC mangles from the declaration -> QAV) and the symbol pairs.
+// STATE[93.25%|PARTIAL]: 20/20 after reconstructing the error/not-exhausted arm as a
+// RETRY re-resolve (target bytes at 0x5454b7: deref *iterator -> endpoint temp,
+// bind(&on_resolved, this, resolver, _1, _2), resolver_service::async_resolve), NOT the
+// old m_host/connect guess; ++iterator is its own statement, the inner if tests `!=`
+// with flat returns. Residual is LOG_INFO __LINE__/lowering + DELETE call-form noise.
 void async_connector::on_resolved(
 	// the header declares this `* const` (target mangles QAV); the definition drops the
 	// top-level const so DELETE( resolver ) can take the pointer by T*& and null it.
@@ -60,56 +61,52 @@ void async_connector::on_resolved(
 )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_connection_state == host_name_is_being_resolved ) );
-	if ( error_code )
-	{
+
+	if ( error_code ) {
 		LOG_INFO( "NOT host_name_has_been_resolved!" );
 		LOG_INFO( "error during host_name_is_being_resolved: %s", error_code.message( ).c_str( ) );
-		if ( ++iterator == boost::asio::ip::tcp::resolver::iterator( ) )
-		{
-			DELETE( resolver );
-			m_connection_state	= host_name_is_unresolved;
-			LOG_INFO( "can't resolve endpoints: %s", error_code.message( ).c_str( ) );
-			LOG_INFO( "please, try again later" );
-			if ( m_on_error )
-				m_on_error( host_cannot_be_resolved, error_code );
+		++iterator;
+		if ( iterator != boost::asio::ip::tcp::resolver::iterator( ) ) {
+			resolver->async_resolve(
+				*iterator,
+				boost::bind(
+					&async_connector::on_resolved,
+					this,
+					resolver,
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::iterator
+				)
+			);
 			return;
 		}
-		LOG_INFO( "host name has been resolved!" );
-		m_connection_state	= host_name_has_been_resolved;
-		m_host				= iterator;
-		connect( m_host );
+
+		DELETE( resolver );
+		m_connection_state	= host_name_is_unresolved;
+		LOG_INFO( "can't resolve endpoints: %s", error_code.message( ).c_str( ) );
+		LOG_INFO( "please, try again later" );
+		if ( m_on_error )
+			m_on_error( host_cannot_be_resolved, error_code );
 		return;
 	}
+
 	DELETE( resolver );
 	LOG_INFO( "host name has been resolved!" );
 	m_connection_state	= host_name_has_been_resolved;
 	m_host				= iterator;
 	connect( m_host );
 
-	// STRUCTURE DIFF: target 20 stmts / base 22 stmts
-	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ----------+--------+--------+----+----+------+------
-	// BASE_ONLY |--      |0x460d36|--  |0x15|62    |	if ( error_code )
-	// SIZE +0x68|0x5452d7|0x460d4b|0x15|0x7d|64    |		LOG_INFO( "NOT host_name_has_been_resolved!" );
-	// SIZE +0x57|0x5452ec|0x460dc8|0x80|0xd7|65    |		LOG_INFO( "error during host_name_is_being_resolved: %s", error_code.message( ).c_str( ) );
-	// SIZE -0x73|0x54536c|0x460e9f|0xda|0x67|66    |		if ( ++iterator == boost::asio::ip::tcp::resolver::iterator( ) )
-	// TRGT_ONLY |0x545446|--      |0x8 |--  |--    |--
-	// TRGT_ONLY |0x54544e|--      |0x69|--  |--    |--
-	// SIZE -0x94|0x5454b7|0x460f06|0xc2|0x2e|68    |			DELETE( resolver );
-	// BASE_ONLY |--      |0x460f34|--  |0x10|69    |			m_connection_state	= host_name_is_unresolved;
-	// BASE_ONLY |--      |0x460f44|--  |0xe6|70    |			LOG_INFO( "can't resolve endpoints: %s", error_code.message( ).c_str( ) );
-	// BASE_ONLY |--      |0x46102a|--  |0x83|71    |			LOG_INFO( "please, try again later" );
-	// BASE_ONLY |--      |0x4610ad|--  |0x1f|72    |			if ( m_on_error )
-	// BASE_ONLY |--      |0x4610cc|--  |0x1a|73    |				m_on_error( host_cannot_be_resolved, error_code );
-	// SIZE +0x6d|0x54559f|0x46110c|0x17|0x84|76    |		LOG_INFO( "host name has been resolved!" );
-	// SIZE -0xd4|0x5455c6|0x4611a0|0xef|0x1b|78    |		m_host				= iterator;
-	// SIZE -0x77|0x5456b5|0x4611bb|0x89|0x12|79    |		connect( m_host );
-	// TRGT_ONLY |0x54573e|--      |0x1e|--  |--    |--
-	// TRGT_ONLY |0x54575c|--      |0x1a|--  |--    |--
-	// SIZE -0x5 |0x54579c|0x4611f3|0x17|0x12|82    |	DELETE( resolver );
-	// SIZE +0x2 |0x5457b3|0x461205|0x8a|0x8c|83    |	LOG_INFO( "host name has been resolved!" );
-	// SIZE +0x3 |0x545868|0x4612bc|0xf |0x12|86    |	connect( m_host );
-	// VERDICT: STRUCTURE MISMATCH (quantity) - 20 vs 22; the LOG_INFO inline-vs-call wall flips every row size (target calls a logging helper at 0x15-0x17, base inlines 0x7d-0xe6 formatting blobs) and drags the aligner; the 2 extra base stmts are most likely the two `return;`s (the target's 9-line gap after the inner block suggests if/else shape instead) - left for a follow-up matcher, the wall dominates the score either way.
+	// STRUCTURE DIFF: target 20 stmts / base 20 stmts (all t.ln == b.ln, 1:1)
+	// SIZE -0x3|+3 | LOG_INFO( "NOT host_name_has_been_resolved!" );
+	// SIZE -0x3|+4 | LOG_INFO( "error during host_name_is_being_resolved: %s", error_code.message( ).c_str( ) );
+	// SIZE -0x4|+20| DELETE( resolver );
+	// SIZE -0x6|+22| LOG_INFO( "can't resolve endpoints: %s", error_code.message( ).c_str( ) );
+	// SIZE -0x6|+23| LOG_INFO( "please, try again later" );
+	// SIZE +0x1|+24| if ( m_on_error )
+	// SIZE -0x5|+29| DELETE( resolver );
+	// SIZE -0x7|+30| LOG_INFO( "host name has been resolved!" );
+	// SIZE +0x3|+33| connect( m_host );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 20/20 aligned 1:1; rows are LOG_INFO
+	// __LINE__/inline lowering, DELETE helper call form, and connect tail-form noise.
 }
 
 // STATE[88.25%|PARTIAL]: logging-heavy Boost.Asio resolver NEW + query + boost::bind.

@@ -67,6 +67,17 @@ STATIC_SIZE_ASSERT(http_client, 0x108);
 // free helper defined in http_client.cpp; declared so the game_core anchor can call it
 VOSTOK_NETWORK_CORE_API void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff );
 
+// delink unit "vostok/network_core/http_client.h" (5 target fns, all unpaired) diagnosis:
+// - set_on_error: mangle matches our declaration exactly (QAEXABV function<void(error_code)>),
+//   but our only caller (the game_core anchor) gets it INLINED by LTCG, so no base COMDAT is
+//   emitted anywhere - missing emission, not a silent-join variant.
+// - network::order::order() + the order/response/functor_order scalar-deleting dtors (line-0
+//   synthesized) are emitted by the UNWRITTEN legacy vostok::network http_client unit; the
+//   target attributes them to THIS header (the original defined the legacy glue classes here),
+//   while our port defines them under vostok/network/sources/*.h with a smaller functor_order
+//   dtor (0x38 vs 0x43) - pends the legacy network::http_client reconstruction; not fixable
+//   from network_core.
+
 } // namespace network_core
 } // namespace vostok
 
