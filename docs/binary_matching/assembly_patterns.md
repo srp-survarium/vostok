@@ -1194,3 +1194,22 @@ game_core's `temp_include_all.cpp` anchor, whose TU never recompiled (PCH stalen
 module). If a one-line header fix provably does not move the diff, `touch` the pch.h of EVERY module
 that instantiates the COMDAT (the anchor TU especially) and rebuild - the stream operator>= then
 went 97.74 -> 100.00.
+
+### A lone 2-byte TRGT_ONLY branch row after a guard = inverted-guard EARLY RETURN, not "codegen layout"
+Under /Od every line-table statement row maps to a SOURCE statement - codegen cannot add or
+drop rows. So a quantity diff whose extra TARGET row is a tiny (2-byte) bare branch with its
+OWN line number, sitting between a guard's test and the guarded body, is a real `return;`
+statement: the original spelled the guard INVERTED with an early return,
+	if ( !cond )
+		return;        // <- the 2-byte row: a standalone `jmp .end` attributed to this line
+	body...;
+which lowers as `jne .body; jmp .end`, while the condensed `if ( cond ) body;` folds into a
+single `je .end` under the if's line record - one statement row fewer. DEDUCTION RULE: never
+bank a 2-byte ONLY-target branch row as "if-branch codegen layout" - flip the guard to the
+early-return form and re-diff; the same logic generalizes to any bare-branch ONLY row with its
+own line (`return`/`break`/`continue`/`else` are all source statements). Confirmed: this exact
+row was banked as a wall on `tcp_packet_client::~tcp_packet_client` (target 3 / base 2 stmts,
+`<0x2> | L26 | ONLY target`), then PR #291's legacy adoption of `if ( !connected ) return;
+disconnect( );` closed it - STRUCTURE MATCH 3/3, 90.98 -> 94.88; the same shape closed the
+ONLY-target rows in `on_packet_received` (17+1 -> 18/18) and `on_packet_has_been_sent`
+(9+1 -> 10/10).
