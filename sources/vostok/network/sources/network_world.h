@@ -33,8 +33,10 @@ public:
 	virtual	void	dispatch_callbacks	( );
 
 public:
-			void	add_order			( order* const order );
-			void	add_response		( response* const response );
+			// claude@MATCH: no pointer-level const - `* const` params mangle QAV
+			// where the target has PAV, so the symbols would never pair
+			void	add_order			( order* order );
+			void	add_response		( response* response );
 			network_core::tcp_packet*	new_packet	( );
 
 public:
