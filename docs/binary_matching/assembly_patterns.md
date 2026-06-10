@@ -1949,3 +1949,66 @@ in the TU (the bind proves it existed there), anchor it from temp_include_all; t
 address-take emits the static out-of-line. Confirmed: inventory::serialize defined + anchored ->
 call_item_serialize None -> 49.5%, inventory::deserialize None -> 100%, body_part_parameters::
 serialize None -> 87.7% (plain pointer-call anchors suffice for the non-DCE'd publics).
+
+### 2-value switch cluster = jl/jle range check + switch temp; unreachable break still emits its jmp
+SYMPTOM: a 4-statement skeleton of sizes ~0x14/0x4/0x2/0x2: `mov eax,[arg]; mov [ebp-N],eax`
+(the SWITCH TEMP - a plain `if` compares the param slot directly, no copy), then
+`cmp [tmp],A; jl .default; cmp [tmp],B; jle .case; jmp .default` (the front-end lowers a
+`case A: case B:` cluster of consecutive values sharing one body to a RANGE check, not je/je;
+4-5+ dense values become a jump table instead), `mov al,1; jmp .epi` (return true), an
+UNREACHABLE 2-byte `jmp .epi` on its own line (a `break;` written after the return - /Od emits
+unreachable statements; its target = the break label AFTER the switch), `xor al,al` (default:
+return false). Confirmed artefact_lifebone_core::protect_affect 49.89 -> 100: switch + case/case/
+return true/break/default/return false.
+
+### Braced loop bodies split the backjump out: each `}` is its own 0x2 statement
+SYMPTOM: target has N extra 0x2 statements right after a loop-body row, and the base body row is
++2 bytes per missing one (size-sum tell again). CAUSE: a BRACED `for` body attributes the loop
+backjump (`jmp short` to the head) to the closing `}` line = its own statement; a brace-less body
+merges the backjump into the body statement's line record. Nested loops stack: 3 braced levels =
+3 trailing 0x2 rows. Confirmed double_barreled fire_state ctor (16/16, 0x1c2 both) - braces around
+all nested for levels, mirroring the reload sibling.
+
+### By-value vs const& template parameter: mangled V... vs ABV... and the caller's temp-destruction shape
+SYMPTOM: at a call site passing a returned-by-sret temporary, base emits `push ecx; mov esi,esp`
+(construct the BY-VALUE argument in the arg slot) and after the call just `add esp,4` with NO
+destructor (the callee destroys by-value args); target materializes the temp into a frame local,
+passes it, and destroys it in the CALLER (`lea ecx,[temp]; call intrusive_ptr::dec`) - a
+const& parameter. TELL: grep both rich indexes for the template's mangled name - `V?$...` (by
+value) vs `ABV?$...` (const&); the COMDAT instantiations only pair when the letters agree.
+Confirmed static_cast_resource_ptr: header said `const src_ptr` (by value), target is `const&` -
+fix paired all instantiations (0 -> 100) and moved game_material_manager_cook::on_configs_loaded
+90.20 -> 98.53. Engine-wide signature; check cross-module fallout after such a fix.
+
+### rel32 brace-exit jmp gets its own line record; rel8 folds into the previous statement
+SYMPTOM: one TRGT_ONLY 0x5 row at an if-branch closing `}` while the sibling branches match, plus
+the preceding statement SIZE +0x5 in base - identical bytes, 21-vs-20 stmt counts. CAUSE: the
+branch-exit `jmp` over the rest of an if/else-if chain is a 5-byte rel32 when the join is >127
+bytes away; the compiler then emits a line record on the `}` line for it, but folds a 2-byte rel8
+exit into the previous statement's record - on BOTH builds. When the two builds land on different
+sides of the rel8/rel32 edge for the same jmp, a zero-byte quantity artifact appears. Not
+source-steerable (same braced source both sides). Confirmed game_material_manager_cook::
+on_decals_loaded (decal1 rel32 split in target only; decal2/sound rel8 folded both sides).
+
+### LTCG-promoted small struct factory: the original symbol is a 1-byte `ret` stub, the real body ICF-folds elsewhere
+SYMPTOM: base calls `create_request` cdecl (8-byte POD returned in eax:edx, then a copy chain into
+the local, +0x27/site); target's call at the same site goes to a bogus-named tiny callee (e.g.
+`const_buffer::const_buffer`) taking the DEST in eax - and the target index still has the original
+mangled symbol but its body is ONE `ret` byte. CAUSE: LTCG promoted the callee to a custom
+write-through-pointer convention and ICF folded the promoted body onto a byte-identical two-store
+ctor; the leftover cdecl symbol is a dead stub. The promotion is a whole-program decision -
+`__declspec(noinline)` on our inline copy does not reproduce it; classify with the eax-vs-ecx
+arg-passing residual class. Confirmed resources::create_request in
+game_material_manager_cook::create_game_material_pairs (57.81, offsets cascade).
+
+### Chained-temporary parameters object = ONE statement (and ONE less local)
+SYMPTOM: target shows a single big row (e.g. 0xa3) where base has `params p(...)` + `p.set_a().
+set_b();` + `T obj(p);` rows (and target's PDB lists NO local for the params/interpolator). FIX:
+construct the parameters object as a TEMPORARY with the setter chain inline inside the consumer's
+declaration - `animation_lexeme override_lexeme( animation_lexeme_parameters(...).animated_object(..)
+.playback_type(..) );` - including nested temporaries (a `linear_interpolator(..)` argument) that
+the old shape held in named locals. Same family as the same-line merges: the whole declaration
+anchors on one line. Confirmed double_barreled fire (9/9, 73.17 -> 77.13) and reload (8/8)
+get_user_hands_expression - on reload the faithful shape costs % (33.11) because base still
+inlines the setters the target calls out-of-line and the extra bytes shift every frame offset:
+faithful structure kept over the higher-% wrong-quantity shape.
