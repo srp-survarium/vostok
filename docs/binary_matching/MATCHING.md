@@ -75,9 +75,9 @@ order - none of these are "LTCG noise". Each has a concrete source cause:
   `default: NODEFAULT();`** (`__assume(0)`) - see the switch section;
 - a `fld1` / const reached via the `default` may belong to an **explicit `case`**.
 
-Keep digging until the ONLY remaining difference is argument passing; mark `DONE`
-only then (e.g. `// STATE[97%|DONE]: LTCG arg passing`). If you cannot finish on this
-machine, mark `INPROGRESS` with the concrete next step - do **not** bank it as a
+Keep digging until the ONLY remaining difference is argument passing; record `DONE`
+in the module's `status.jsonl` only then (cause e.g. `LTCG arg passing`). If you
+cannot finish on this machine, record `INPROGRESS` with the concrete next step - do **not** bank it as a
 matched `PARTIAL` and call the residual "LTCG". (History: `empty_stub` calls and a
 switch bounds check were both wrongly written off as "LTCG" and were in fact a
 recoverable ASSERT and a missing `default: NODEFAULT()`.) Trust the operand-aware
@@ -94,7 +94,7 @@ you write B to make the link resolve, B is NOT invisible scaffolding: it is a re
 function in the target binary with its own body and rva. You MUST (1) define B in its
 ONE real source location (its real header, never the consuming `.cpp` - see the
 `_N.h` note under "The carcass"), (2) give B its target carcass / `// FUNCTION BODY`
-structure, and (3) track B's OWN `fuzzy_match_percent` and a `STATE`/ledger line, the
+structure, and (3) track B's OWN `fuzzy_match_percent` and `status.jsonl` entry, the
 same as any matched function. A call that resolves but whose callee body is unverified
 is a half-match hiding an unmatched function.
 
@@ -186,26 +186,41 @@ jump-table dispatch:
   top `case`(s) and a `default: NODEFAULT();`. A value the target reaches *through* the
   table (e.g. a final `fld1`) is an explicit terminal `case`, not the `default`.
 
-## STATE markers
-One per function, line above it: `// STATE[<percent>%|<tag>]: short reason`.
+## Match status (`status.jsonl`; the only in-source marker is `STATE[STUB]`)
+In-source `%`/status markers go stale the moment a rebuild moves the score, so they
+are NOT written anymore. The source carries exactly two things:
+- `// STATE[STUB]` on a body that is not matched yet (still the carcass / a
+  placeholder) - the ONLY `STATE` marker allowed in source - plus that stub's
+  signature/carcass comments (matcher input);
+- `sushi@` / `claude@` `@MATCH/@NOTE/@TODO` comments (see "Comment tags").
+
+Everything else is derived and lives outside the source:
+- **status + cause** per function: `docs/binary_matching/<module>/status.jsonl`, one
+  JSON object per line, keyed by target VA and sorted by symbol:
+  `{"symbol", "va", "status": "<TAG>", "pct", "cause", "file", "line"}`.
+  `pct` is the value at recording time - historical context only, never current.
+- **current %s**: `report.json` / `match_score.py` - the only live numbers.
+- **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
+  embedded in source.
+A navigation tool over source + status.jsonl + report.json is planned.
+
+Status tags (the `status` vocabulary):
 
 | tag | meaning |
 |---|---|
 | DONE | matched (may be <100% if the remaining diff is LTCG/CRT noise - say why) |
 | PARTIAL | mostly matched, remaining diff understood |
-| STUB | skeleton only, body still the carcass |
+| STUB | skeleton only, body still the carcass (in-source flag, not exported) |
 | BLOCKED | needs another function/type first |
 | SKIPPED | tried, deferred |
 | INLINED | inlined at all call sites; no standalone body |
 | UNCHECKED / UNVERIFIED | written, not yet diffed / not confirmed |
 
-e.g. `// STATE[94.32%|DONE]: LTCG for mutex`, `// STATE[97.67%|PARTIAL]: target didn't xor after std::find`.
-
 `INLINED` carries no percent: the function emits NO standalone symbol on the target side
 (every call site inlined it), so there is nothing for objdiff to pair or score. Use it when
 you reconstruct such a body from a matched consumer's bytes, and NAME that inline-site
-evidence in the reason (e.g. `// STATE[INLINED]: body from udp_match_client::enqueue's
-else-branch bytes`). A body with no consumer evidence yet is NOT `INLINED` - keep it a
+evidence in the `cause` (e.g. `body from udp_match_client::enqueue's else-branch bytes`).
+A body with no consumer evidence yet is NOT `INLINED` - keep it a
 `/* no source */` sham (with its `sushi@TODO`) until a consumer gets matched.
 
 
@@ -218,9 +233,8 @@ the `.cpp` should see matched code, not a narration.
   matching because vostok-structure's generated argument *names* can be wrong while
   the *types* are right. **Once the arguments/types match the target, DELETE it** - a
   confirmed match does not keep the signature line.
-- **A clean `100%|DONE` keeps ONLY its `// STATE[100%|DONE]` line** - no explanation
-  block above the function (the why-it-matched detail goes in the `.md`). The single
-  exception is the non-100% carcass-structure rule below (keep structure inline).
+- **A clean 100% match carries NO marker or explanation block at all** - the % lives
+  in `report.json`, the why-it-matched detail goes in the `.md`.
 - Reserve inline comments for the genuinely unexpected/unique: a `claude@MATCH:` for
   an odd shape chosen to reproduce bytes, or a `claude@NOTE:` for a surprising target
   fact. Do NOT narrate routine mechanics (anchors, "empty body", ICF/linker folding)
@@ -289,24 +303,24 @@ emitted a block-open the target structure lacked - the target was an early `if (
 return;` guard, no braces - and the 76.80% hid it. The fix is a source restructure, not a %
 to bank.)
 
-**Carcass handoff (NOT 100%): the matcher DELETES the carcass; the structure-verifier
-embeds the structure-diff.** The matcher reads the STUB's `// FUNCTION BODY` carcass for
-the shape clues below, then deletes it when done - it does not preserve or annotate it.
-The structure-verifier then embeds the two-sided condensed structure-diff (next), which
-carries the divergence context the carcass used to (and whose presence marks that the
-verifier ran). A clean 100% DONE carries neither.
+**Carcass handoff (NOT 100%): the matcher DELETES the carcass.** The matcher reads
+the STUB's `// FUNCTION BODY` carcass for the shape clues below, then deletes it when
+done - it does not preserve or annotate it. The structure-verifier then checks the
+shape with the two-sided condensed structure-diff (next), run **on demand** - the
+diff and its verdict are NEVER embedded in source; the verdict goes in the commit
+message and the function's `status.jsonl` cause. A clean 100% DONE carries nothing.
 
 **Preferred for a non-100% function: the two-sided condensed structure-diff** (it
 supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
-structure-diff --condensed` and paste its output, `// `-prefixed, in place of the
-carcass: it shows target-vs-base aligned with the matched runs collapsed to
+structure-diff --condensed` and read it: it shows target-vs-base aligned with the
+matched runs collapsed to
 `.. same ..` and each divergence as `NN: 0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
 {stmt}   {SIZE|ONLY base|ONLY target}` (the `NN:` is a monotonic statement index; blank-
 line gaps are suppressed, tallied as `blank-gaps` in the summary). That way the reader sees exactly
-where our build diverges from the target, not just the target shape. **Standard shape:
-the tool's `--condensed` output VERBATIM, then exactly one `// VERDICT: STRUCTURE
-<MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>` line; all detail lives in the
-commit message, never inline.** (The structure-verifier produces and owns these.)
+where our build diverges from the target, not just the target shape. It is rerun on
+demand whenever needed - never pasted into the source. **The verdict (`STRUCTURE
+<MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>`) goes in the commit
+message and the `status.jsonl` cause field.** (The structure-verifier produces and owns these.)
 
 **Each addressed statement IS a real source statement - that is the whole point of the
 structure.** The compiler emits one line-table entry (a debugger BREAKPOINT) per source
