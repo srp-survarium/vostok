@@ -8,6 +8,9 @@
 namespace vostok {
 namespace network_core {
 
+// sushi@TODO: the `/* no source */` members below (reset/operator+=/operator/=/dump) have no
+// inline-site evidence yet (no matched consumer accumulates/dumps stats); when one gets matched,
+// reconstruct them and revisit whether the implemented ctors/free operators should route through them.
 struct udp_match_items_stats {
 	inline			udp_match_items_stats	( ) :
 		count	( 0 ),

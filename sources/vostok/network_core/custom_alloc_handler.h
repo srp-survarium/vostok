@@ -58,6 +58,8 @@ inline custom_alloc_handler< Handler >::custom_alloc_handler( handler_allocator&
 	/* no source */
 }
 
+// STATE[INLINED]: no standalone symbol on either side (always inlined); body spelling proven
+// at the inline emissions cited below.
 // NAMED return value, not `return custom_alloc_handler< Handler >( allocator, handler );` -
 // the named local reserves a 0xC frame slot at EVERY inline emission (target frames carry it:
 // udp_match_client::start_receiving 0xD0, tcp 0xFC) and its return-copy code is byte-present in

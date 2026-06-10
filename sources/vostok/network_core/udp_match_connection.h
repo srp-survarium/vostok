@@ -120,23 +120,25 @@ public:
 	// sushi@TODO: the `/* no source */` bodies below are shams to compile - no inline-site
 	// evidence yet; reconstruct each from its consumer's target bytes when that consumer
 	// gets matched (is_connected/delete_packet matched in PR #285, comparer in PR #288).
+	// STATE[INLINED]: inlined in udp_match_client::enqueue as `cmp m_state(+0x11c), connected(0)`.
 	inline	bool						is_connected					( ) const { return m_state == connected; }
 
 	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ }
 
 	inline	bool						is_disconnecting				( ) const { return false; /* no source */ }
-	// claude@MATCH: inlined in udp_match_client::handle_receive as `cmp m_state(+0x11c), disconnected(3); sete`.
+	// STATE[INLINED]: inlined in udp_match_client::handle_receive as `cmp m_state(+0x11c), disconnected(3); sete`.
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
 	inline	void						set_disconnected				( ) { /* no source */ }
 
 	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; /* no source */ }
+	// STATE[INLINED]: body from udp_match_client::enqueue's else-branch bytes (the delete_udp_match_packet free+NULL-out pattern, assembly_patterns.md).
 	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
 	inline	void						set_max_packet_wait_time_in_ms	( u32 value ) { /* no source */ }
 
 	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ }
 
-	// claude@MATCH: udp_match_client::handle_receive passes this to on_packet_received; target
+	// STATE[INLINED]: udp_match_client::handle_receive passes this to on_packet_received; target
 	// reads m_unacknowledged_packets(+0xa0).size() via the ICF-folded size_policy::size COMDAT.
 	inline	u32							unacknowledged_packets_count	( ) const { return m_unacknowledged_packets.size( ); }
 			u32							packets_count					( ) const;
