@@ -52,6 +52,8 @@
 #include <vostok/network/sources/connect_order.h>
 #include <vostok/network/sources/string_response.h>
 #include <vostok/network/sources/receive_udp_response.h>
+#include <vostok/network/sources/send_queued_order.h>
+#include <vostok/network/sources/enqueue_order.h>
 
 #include <vostok/animation/skeleton.h>
 
@@ -1710,6 +1712,35 @@ namespace vostok
 				stats
 			);
 			response.execute( );
+		}
+
+		// send_queued_order/enqueue_order ctors are inlined into their only
+		// construction sites (match_client::send_queued_packets / enqueue, still
+		// stubs) - construct one of each so the vtables emit dtor/execute/
+		// scalar-deleting-dtor. NOTE: heap new + scalar delete here was tried and
+		// does NOT flip the vtable dtor slot from ??_E (vector) to the target's
+		// ??_G (scalar) - it only churns unrelated ICF folds; keep stack objects
+		{
+			network_core::udp_match_stats stats;
+			network::match_client_impl* impl = NULL;
+			network::send_queued_order order(
+				boost::function< void ( ) >( ),
+				impl,
+				stats
+			);
+			order.execute( );
+		}
+
+		{
+			network_core::udp_match_stats stats;
+			network::enqueue_order order(
+				boost::function< void ( network_core::udp_match_packet& ) >( ),
+				*static_cast< network_core::udp_match_packet* >( NULL ),
+				network_core::udp_match_packets_allocator_ptr( ),
+				stats,
+				stats
+			);
+			order.execute( );
 		}
 
 		network::destroy_world( world );
