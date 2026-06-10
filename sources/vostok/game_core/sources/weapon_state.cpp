@@ -23,20 +23,26 @@ weapon_state& weapon_state::operator=( weapon_state const& other )
 	return *this;
 }
 
-// STATE[PARTIAL]: reads slot_id, ammo_slot_id, state - each as r< bool > (single-byte
-// stores into the three u8 members, matching the target's r<bool> instantiation).
+// STATE[8.26%|PARTIAL]: reads slot_id, ammo_slot_id, state - each as r< bool > (single-byte
+// stores into the three u8 members, matching the target's r<bool> instantiation). The low % is
+// calling-convention-wide: the target CALLS the LTCG-folded custom-convention r<bool> COMDAT
+// (0x7e950: reader in edx, result in al, no stack args), while the /Od base inlines the r<bool>
+// wrapper and calls the inner 3-arg r(void*,u32,u32) per read - every instruction differs but
+// the 3-statement shape is identical, non-steerable.
 void weapon_state::deserialize( network_core::packet_reader& packet )
 {
 	slot_id			= packet.r< bool >( );
 	ammo_slot_id	= packet.r< bool >( );
 	state			= packet.r< bool >( );
 
-	// STRUCTURE DIFF[target 0x590c50 | base 0x453a20]: target 3 / base 3 stmts
-	//   1: 0x009 <0xd> | 0x009 <0x22> | slot_id			= packet.r< bool >( );   SIZE
-	//   2: 0x016 <0xe> | 0x02b <0x23> | ammo_slot_id	= packet.r< bool >( );   SIZE
-	//   3: 0x024 <0xe> | 0x04e <0x23> | state			= packet.r< bool >( );   SIZE
-	// ; aligned 0, size-diffs 3, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - all 3 SIZE are packet_reader::r<bool> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0xb|0x590c59|0x4668a9|0xd |0x18|0   |slot_id			= packet.r< bool >( );
+	// SIZE +0xb|0x590c66|0x4668c1|0xe |0x19|+1  |ammo_slot_id	= packet.r< bool >( );
+	// SIZE +0xb|0x590c74|0x4668da|0xe |0x19|+2  |state			= packet.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3/3, uniform +0xb per row = target's folded r<bool>
+	//   call vs base's inlined wrapper + inner r() call, non-steerable.
 }
 
 } // namespace survarium
