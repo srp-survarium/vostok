@@ -97,7 +97,7 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_ha
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
 	// STRUCTURE DIFF: target 3 / base 3 stmts
-	// SIZE +0x29 | 101 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// SIZE +0x29 | 97 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 	// VERDICT: STRUCTURE MATCH (3/3) - sole row is the mixing operator+ template-selection / inline-vs-call wall on the addition tree, whole-program LTCG, non-steerable.
 }
 
