@@ -101,8 +101,8 @@ animation::mixing::expression pistol_weapon_core_fire_state::weapon_and_hands_ex
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
 	// STRUCTURE DIFF: target 6 / base 6 stmts
-	// SIZE -0x21 | 100 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-	// SIZE -0x11 | 107 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// SIZE -0x21 | 94 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
+	// SIZE -0x11 | 101 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 	// VERDICT: STRUCTURE MATCH (6/6) - both rows are the mixing operator+ template-selection / inline-vs-call wall (target keeps operator+<animation_lexeme> out-of-line, base inlines addition_lexeme), whole-program LTCG, non-steerable.
 }
 

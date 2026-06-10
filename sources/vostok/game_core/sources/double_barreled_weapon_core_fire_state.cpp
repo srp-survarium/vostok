@@ -110,7 +110,7 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::weapon_and
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
 	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE +0x29 | 100 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// SIZE +0x29 | 110 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 	// VERDICT: STRUCTURE MATCH (3/3) - operator+ template-selection / inline-vs-call LTCG on the addition chain (target keeps operator+<animation_lexeme> out-of-line, base inlines); whole-program, non-steerable from this TU.
 }
 
