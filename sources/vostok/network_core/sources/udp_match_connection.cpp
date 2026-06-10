@@ -70,20 +70,23 @@ bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 	reader.advance( reader.r< bool >( ) );
 	return reader.eof( );
 
-	// STRUCTURE DIFF[target 0x5464d0 | base 0x44e910]: target 8 / base 8 stmts
-	//   1: 0x006 <0x11> | 0x006 <0xd> | packet_reader	reader( packet );   SIZE
-	//   2: --          | 0x013 <0x13> | reader.r< u16 >( );   ONLY base
-	//   3: --          | 0x026 <0x13> | reader.r< u16 >( );   ONLY base
-	//   4: --          | 0x039 <0x1b> | const u16	bits	= reader.r< u16 >( );   ONLY base
-	// .. same ..
-	//   5: 0x017 <0x14> | --          | L87   ONLY target
-	//   6: 0x02b <0x14> | --          | L88   ONLY target
-	//   7: 0x03f <0xc> | --          | L89   ONLY target
-	// .. same ..
-	//  10: 0x058 <0x14> | 0x061 <0x1e> | reader.advance( reader.r< bool >( ) );   SIZE
-	//  11: 0x06c <0x8> | 0x07f <0x1f> | return reader.eof( );   SIZE
-	// ; aligned 2, size-diffs 3, quantity-diffs 6, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - the base inlines packet_reader::r<> (one stmt per read) where the target keeps the template out-of-line (single-TU anchor inline-vs-call wall); same statement set, line-attribution shift only.
+	// STRUCTURE DIFF: target 8 stmts / base 8 stmts
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
+	// ----------+--------+--------+----+----+----+----+------
+	// SIZE +0x3 |0x5464d6|0x461926|0x11|0x14|0   |0   |packet_reader reader( packet );
+	// BASE_ONLY |--      |0x46193a|--  |0x13|--  |+2  |reader.r< u16 >( );
+	// BASE_ONLY |--      |0x46194d|--  |0x13|--  |+3  |reader.r< u16 >( );
+	// BASE_ONLY |--      |0x461960|--  |0x1b|--  |+4  |const u16 bits = reader.r< u16 >( );
+	// TRGT_ONLY |0x5464e7|--      |0x14|--  |+2  |--  |--
+	// TRGT_ONLY |0x5464fb|--      |0x14|--  |+3  |--  |--
+	// TRGT_ONLY |0x54650f|--      |0xc |--  |+4  |--  |--
+	// SIZE +0xa |0x546528|0x461988|0x14|0x1e|+8  |+9  |reader.advance( reader.r< bool >( ) );
+	// SIZE +0x17|0x54653c|0x4619a6|0x8 |0x1f|+9  |+10 |return reader.eof( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 8/8; the ONLY rows are the SAME three r<u16>
+	// statements in the same ordinal slots (#2-#4) the aligner cannot pair because the
+	// sizes flip (base inlines r<> at 0x13-0x1b, target calls the kept COMDATs at 0xc-0x14
+	// with LTCG custom regs); byte overlap is near zero (report 0.0, serialized as None)
+	// over a verified-identical skeleton - the documented call-boundary wall, not a shape miss.
 }
 
 // STATE[INPROGRESS]: still blocked on remaining empty STUB leaves in udp_match_packet.h

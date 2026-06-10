@@ -8,11 +8,15 @@
 namespace vostok {
 namespace network_core {
 
+// claude@MATCH: every target inline site (udp_match_client::handle_receive,
+// udp_match_connection::is_low_level_packet stmt 1, process_incoming_packet<..>
+// L141 subpacket_reader) stores m_packet then CALLS the folded
+// base_packet::buffer() const into m_pointer - the ctor inits m_pointer from
+// the packet's buffer, not NULL.
 inline packet_reader::packet_reader( base_packet const& packet ) :
 	m_packet	( packet ),
-	m_pointer	( NULL )
+	m_pointer	( packet.buffer( ) )
 {
-	/* no source */
 }
 
 // Body shapes below are exact against the target disasm. The base instances come
