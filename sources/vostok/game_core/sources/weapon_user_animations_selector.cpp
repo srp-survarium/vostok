@@ -205,7 +205,7 @@ void weapon_user_animations_selector::serialize( network_core::udp_match_packet&
 	bool						found		= false;
 	ai::fsm_state const* const	current		= m_logic.current_state( );
 
-	for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
+	for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next, ++state_id ) // sushi@TODO: comma operator in the for-tail - unseen in dev code so far; verify the original shape (nested ++? separate statement?)
 	{
 		if ( i == current )
 		{
@@ -236,7 +236,7 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 	u8							state_id		= 0;
 	ai::fsm_state*				current			= NULL;
 
-	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
+	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id ) // sushi@TODO: same comma-in-for-tail doubt as serialize above
 	{
 		if ( state_id == target_state_id )
 		{
