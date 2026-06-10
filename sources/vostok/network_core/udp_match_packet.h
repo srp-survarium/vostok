@@ -11,17 +11,18 @@
 #include <boost/array.hpp>
 #include <boost/intrusive/set_hook.hpp>
 
-// udp_match_connection.cpp's purge/sort helpers live at GLOBAL scope (the target
-// mangling carries no namespace) and reach udp_match_packet's private members.
+// udp_match_connection.cpp's purge/sort helpers and udp_network_flow_emulator.cpp's
+// tick predicate live at GLOBAL scope (the target mangling carries no namespace) and
+// reach udp_match_packet's private members.
 class sequence_id_predicate;
 class remove_all_predicate;
 class packets_in_list_predicate;
+class delayed_packets_predicate;
 
 namespace vostok {
 namespace network_core {
 
 class udp_match_client_session;
-class delayed_packets_predicate;
 class udp_network_flow_emulator;
 
 class udp_match_packet;
@@ -108,7 +109,7 @@ public:
 	// the connection's udp_match_packet_list names &udp_match_packet::next - both reach
 	// these private members (a friend's nested types share its access).
 	friend	class		udp_match_connection;
-	friend	class		delayed_packets_predicate;
+	friend	class		::delayed_packets_predicate;
 	friend	class		udp_network_flow_emulator;
 	friend	class		move_to_list_predicate;
 	friend	class		::sequence_id_predicate;
