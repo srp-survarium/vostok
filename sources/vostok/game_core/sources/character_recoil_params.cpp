@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
 character_recoil_params::character_recoil_params( ) :
 	crouch_multiplier		( 1.0f ),
 	stand_multiplier		( 1.0f ),
@@ -20,7 +19,6 @@ character_recoil_params::character_recoil_params( ) :
 	// ******
 }
 
-// STATE[UNCHECKED]
 void character_recoil_params::load( configs::binary_config_value const& cfg )
 {
 	if ( cfg.value_exists( "crouch_multiplier" ) )

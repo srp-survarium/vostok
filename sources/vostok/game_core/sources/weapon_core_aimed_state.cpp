@@ -28,7 +28,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 weapon_core_aimed_state::weapon_core_aimed_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
 	weapon_core_aimed_state_base( weapon )
 {
@@ -40,9 +39,6 @@ weapon_core_aimed_state::weapon_core_aimed_state( weapon_core& weapon, resources
 			m_weapon_animations[view][user_state] = animations[animation_index++];
 }
 
-// STATE[87.52%|PARTIAL]: was ASSERT_U - the target eater has NO leading assert_untyped enum
-// push, i.e. VOSTOK_UNREFERENCED_PARAMETERS (fixed, row closed, 85.65 -> 87.52); param consts
-// restored from the target PDB signature (identical to weapon_core_idle_state).
 animation::mixing::expression weapon_core_aimed_state::weapon_and_hands_expression(
 	mutable_buffer&							buffer,
 	const bool								is_third_view,
@@ -55,13 +51,8 @@ animation::mixing::expression weapon_core_aimed_state::weapon_and_hands_expressi
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x21 | 61 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the per-call-site LTCG split of operator+<animation_lexeme>: target inlines it (calling addition_lexeme ctor/cloned_in_buffer/dtor out-of-line), base calls operator+. Non-steerable.
 }
 
-// STATE[100%|DONE]
 weapon_lexeme_pair weapon_core_aimed_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-aimed_idle";
@@ -82,7 +73,6 @@ weapon_lexeme_pair weapon_core_aimed_state::get_weapon_lexeme_pair( mutable_buff
 	);
 }
 
-// STATE[100%|DONE]
 weapon_core_aimed_state* weapon_core_state_cook_template< weapon_core_aimed_state >::new_object(
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*		params,

@@ -125,7 +125,7 @@ inline T max_integral	( T const& left, T const& right )
 {
 	return		( left - ( ( left - right ) & -( left < right ) ) );
 }
-// STATE[UNCHECKED]: sushi@NOTE: Why not use templated function instead.
+// sushi@NOTE: Why not use templated function instead.
 inline float max		( float left, float right )
 {
 	return		( left > right ? left : right );	// <0x158f0>|0x000|+0x008:'113'

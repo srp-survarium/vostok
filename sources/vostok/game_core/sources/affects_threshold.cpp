@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 affects_threshold::affects_threshold( float value, u32 affects_count, body_part_parameters* const bodypart ) :
 	next			( NULL ),
 	m_value			( value ),

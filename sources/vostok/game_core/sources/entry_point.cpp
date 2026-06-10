@@ -8,7 +8,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 void game_core_initialize( )
 {
 }

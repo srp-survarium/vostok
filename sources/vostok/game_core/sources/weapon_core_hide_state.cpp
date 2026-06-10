@@ -30,7 +30,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 weapon_core_hide_state::weapon_core_hide_state(
 	weapon_core&							weapon,
 	float									animation_timescale,
@@ -57,14 +56,6 @@ weapon_core_hide_state::weapon_core_hide_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: control structure (get_weapon_lexeme_pair, get_user_hands_expression, then
-// the chained `+`) matches the target exactly. Residual is the shared-header operator+ wall: the target
-// uses dedicated `expression operator+(expression&, animation_lexeme&)` / `operator+(expression&,
-// expression&)` overloads (returning expression) that are NOT present in shared
-// mixing_addition_lexeme_inline.h, so the base falls back to the generic addition_lexeme& operator+.
-// Identical residual/score to pistol_weapon_core_show_state::weapon_and_hands_expression (83.52%) and
-// weapon_core_idle_state::weapon_and_hands_expression. Fixing it (adding the overloads) is out of this
-// file's scope and would shift other matched operator+ functions (#192).
 animation::mixing::expression weapon_core_hide_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool const							is_third_view,
@@ -77,14 +68,8 @@ animation::mixing::expression weapon_core_hide_state::weapon_and_hands_expressio
 	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x27 | 79 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines
-	// expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
-// STATE[100%|DONE]
 weapon_lexeme_pair weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-hide";
@@ -107,12 +92,6 @@ weapon_lexeme_pair weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffe
 	);
 }
 
-// STATE[73.52%|PARTIAL]: control structure matches the target exactly - the type_sprint early-return of
-// expression(weapon_lexeme), the trailing ASSERT, the user_animation_index, the animation_lexeme_parameters
-// builder chain (animated_object/bones_mask/playback_type) and the final expression(hands_only_lexeme).
-// Residual is the shared-header whole-program inline wall: the target keeps weapon_core::get_user() and the
-// animation_lexeme_parameters setters OUT-OF-LINE while the base inlines them (same residual class as
-// pistol_weapon_core_show_state::get_user_hands_expression). Forcing them out-of-line is out of this file's scope.
 animation::mixing::expression weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -144,18 +123,8 @@ animation::mixing::expression weapon_core_hide_state::get_user_hands_expression(
 	);
 
 	return hands_only_lexeme;
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
-	// SIZE +0x3 | 126 | return weapon_lexeme;
-	// SIZE +0x6 | 132 | pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
-	// SIZE +0x16 | 145 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - +0x3 is the promoted expression(animation_lexeme)
-	// ctor convention; +0x6 on the captions is disp8-vs-disp32 slot noise cascading from the
-	// bigger base frame; +0x16 is the lexeme_parameters setters/dtor inlined in base vs
-	// out-of-line in target, all non-steerable LTCG.
 }
 
-// STATE[100%|DONE]
 weapon_core_hide_state* weapon_core_state_cook_template<survarium::weapon_core_hide_state>::new_object(
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*	params,

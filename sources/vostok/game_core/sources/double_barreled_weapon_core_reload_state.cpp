@@ -30,7 +30,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[99.97%|DONE]: structure byte-identical to target; residual is reloc/symbol-attribution noise.
 double_barreled_weapon_core_reload_state::double_barreled_weapon_core_reload_state(
 	weapon_core&							weapon,
 	float									animation_timescale,
@@ -59,15 +58,8 @@ double_barreled_weapon_core_reload_state::double_barreled_weapon_core_reload_sta
 	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
-
-	// STRUCTURE DIFF: target 18 stmts / base 18 stmts (0x1d8 both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - residual is reloc/symbol-attribution noise only.
 }
 
-// STATE[83.52%|PARTIAL]: operator+ template-selection / inline-vs-call LTCG on the
-// `hands + main + offset` chain (target keeps operator+<animation_lexeme> out-of-line;
-// base inlines operator+<expression,animation_lexeme> + operator+<addition_lexeme,animation_lexeme>).
-// Same wall as the fire_state sibling (83.18%). Not source-steerable.
 animation::mixing::expression double_barreled_weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -80,13 +72,8 @@ animation::mixing::expression double_barreled_weapon_core_reload_state::weapon_a
 	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x27 | 79 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-	// VERDICT: STRUCTURE MATCH (3/3) - operator+ template-selection / inline-vs-call LTCG on the addition chain (target keeps operator+<animation_lexeme> out-of-line, base inlines a different selection); whole-program, non-steerable from this TU.
 }
 
-// STATE[99.93%|DONE]: structure byte-identical to target; residual is reloc/symbol-attribution noise.
 weapon_lexeme_pair double_barreled_weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -116,15 +103,8 @@ weapon_lexeme_pair double_barreled_weapon_core_reload_state::get_weapon_lexeme_p
 		animation::mixing::play_once_and_freeze_at_end,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
-
-	// STRUCTURE DIFF: target 8 stmts / base 8 stmts (0xde both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - residual is reloc/symbol-attribution noise only.
 }
 
-// STATE[33.11%|PARTIAL]: faithful 8/8 structure (interpolator temporary inside the chained
-// declaration, as the target PDB proves - no `interpolator` local) over the old 9-stmt shape
-// that scored 73.66: base inlines the four setters + get_user the target keeps out-of-line,
-// and the extra inline bytes shift every [ebp-N] offset, collapsing the fuzzy %.
 animation::mixing::expression double_barreled_weapon_core_reload_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -160,16 +140,8 @@ animation::mixing::expression double_barreled_weapon_core_reload_state::get_user
 	);
 
 	return override_lexeme;
-
-	// STRUCTURE DIFF: target 8 stmts / base 8 stmts (was 8/9 with a named interpolator local, 73.66% then)
-	// SIZE +0x22 | 147 | animation::mixing::animation_lexeme override_lexeme( ... chained params temporary ... );
-	// VERDICT: STRUCTURE MATCH (8/8) - sole row is the setter-chain inline-vs-call LTCG: target calls animated_object/weight_interpolator/bones_mask/playback_type + get_user out-of-line (promoted conventions), base inlines them; the extra inline bytes shift all frame offsets (33.11%). Faithful structure kept over the higher-%, wrong-quantity shape. Non-steerable from this TU.
 }
 
-// STATE[86.5%|PARTIAL]: base folds the STUB computed_reload_animation_time_scale (constant)
-// into `fldz` at the call site; target keeps it out-of-line (LTCG returns float in xmm0,
-// `movss [esp], xmm0`, extra spill slots). Call-boundary arg/inline-vs-call; not source-steerable
-// until computed_reload_animation_time_scale is matched. Same wall as fire_state sibling new_object.
 double_barreled_weapon_core_reload_state* weapon_core_state_cook_template<survarium::double_barreled_weapon_core_reload_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
@@ -183,10 +155,6 @@ double_barreled_weapon_core_reload_state* weapon_core_state_cook_template<survar
 		animations,
 		animations_count
 	);
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE -0x11 | 208 | ); (the whole placement-new return statement)
-	// VERDICT: STRUCTURE MATCH (1/1) - base folds the STUB computed_reload_animation_time_scale to fldz at the call site while target keeps the call (xmm0 return, movss [esp]); closes itself once that callee is matched.
 }
 
 } // namespace survarium

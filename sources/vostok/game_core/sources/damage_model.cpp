@@ -15,7 +15,6 @@
 
 namespace survarium {
 
-// STATE[98.91%|DONE]: boost::bind/function temporary cleanup uses esi (push/pop esi) + ICF call offsets
 damage_model::damage_model( affects_applying_type_enum const affects_applying_type ) :
 	m_affects_applying_type					( affects_applying_type ),
 	m_last_tick_time_in_ms					( 0 ),
@@ -32,12 +31,8 @@ damage_model::damage_model( affects_applying_type_enum const affects_applying_ty
 
 	subscribe_on_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
 	subscribe_on_affect( affects_type_hand_damage, &m_hand_damaged_subscriber );
-
-	// STRUCTURE DIFF: target 8 stmts / base 8 stmts - no diverging rows
-	// VERDICT: STRUCTURE MATCH (shape ok) - residual is esi scratch-reg for boost::bind temp cleanup + ICF-folded call offsets, non-steerable.
 }
 
-// STATE[83.38%|DONE]: compiler-generated member-dtor epilogue codegen
 damage_model::~damage_model( )
 {
 	while ( booster_damage_protector* p = m_damage_protectors.pop_front( ) )
@@ -45,12 +40,8 @@ damage_model::~damage_model( )
 
 	unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
 	unsubscribe_from_affect( affects_type_hand_damage, &m_hand_damaged_subscriber );
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts - no diverging rows
-	// VERDICT: STRUCTURE MATCH (shape ok) - residual is the auto-generated member-subscriber/list destruction epilogue (target inlines via esi, base routes through slots), non-steerable.
 }
 
-// STATE[100%|DONE]
 body_part_parameters* damage_model::pop_body_part( )
 {
 	return m_body_parts.empty( ) ? NULL : m_body_parts.pop_front( ); // <0x6ff629>|0x009|+0x033:'46'
@@ -58,12 +49,10 @@ body_part_parameters* damage_model::pop_body_part( )
 
 struct regenerate_body_parts_predicate : public boost::noncopyable {
 public:
-	// STATE[BLOCKED]
 	explicit			regenerate_body_parts_predicate		( u32 time_delta_ms, u32 current_time_in_ms ) :
 							time_delta_ms		( time_delta_ms ),
 							current_time_in_ms	( current_time_in_ms ) {}
 
-	// STATE[BLOCKED]
 	inline		void	operator()							( body_part_parameters * body_part ) const {
 		body_part->regenerate( time_delta_ms, current_time_in_ms );
 	}
@@ -76,7 +65,6 @@ public:
 STATIC_SIZE_ASSERT(regenerate_body_parts_predicate, 0x8);
 
 
-// STATE[100%|DONE]
 void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
 {
 	if ( !m_last_tick_time_in_ms )	// <0x6ffc69>|0x009|+0x00c:'68'
@@ -90,7 +78,6 @@ void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
 	m_last_tick_time_in_ms = current_time_in_ms;
 }
 
-// STATE[100%|DONE]
 void damage_model::add_body_part( body_part_parameters* const new_body_part )
 {
 	m_body_parts.push_back( new_body_part );	// <0x6ff5f9>|0x009|+0x014:'81'
@@ -98,10 +85,8 @@ void damage_model::add_body_part( body_part_parameters* const new_body_part )
 
 struct find_body_part_by_name_predicate : public boost::noncopyable {
 public:
-	// STATE[BLOCKED]
 	explicit	find_body_part_by_name_predicate	( pcstr body_part_name ) : body_part_name( body_part_name ) {}
 
-	// STATE[BLOCKED]
 	bool		operator()							( body_part_parameters* params ) const {
 		return strings::equal( params->get_name( ), body_part_name );
 	}
@@ -111,23 +96,18 @@ public:
 }; // struct find_body_part_by_name_predicate
 
 
-// STATE[99.85%|DONE]: frame imm (sub esp 0x24 vs target 0x28) + this-slot number, allocation noise
 body_part_parameters* damage_model::get_body_part( pcstr part_name ) const
 {
 	find_body_part_by_name_predicate find_predicate( part_name );	// <0x6ff739>|0x009|+0x00e:'101': why twice, isn't it boost::noncopy?, it looks like our asm has a copy :shrug:
 	return m_body_parts.find_if<find_body_part_by_name_predicate>( find_predicate );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (0x3d both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - residual is the frame imm 0x24 vs 0x28 + this-slot number (allocation noise) and ICF-fold callee names.
 }
 
 struct find_by_damage_type_predicate {
-	// STATE[BLOCKED]
 	explicit		find_by_damage_type_predicate	( pcstr damage_type ) {
 		strings::copy( m_damage_type, 16, damage_type );
 	}
 
-	// STATE[BLOCKED]: sushi@TODO: m_hit_type is getter
+	// sushi@TODO: m_hit_type is getter
 	inline	bool	operator()						( booster_damage_protector * protector ) const {
 		return strings::equal( protector->m_hit_type, m_damage_type );
 	}
@@ -137,7 +117,6 @@ private:
 }; // struct find_by_damage_type_predicate
 
 
-// STATE[99.90%|DONE]: frame size 0x64 vs target 0x60, [ebp-N] slots shifted by 4 (allocation noise)
 bool damage_model::hit_body_part(
 	u8 const	initiator,
 	pcstr		part_name,
@@ -167,12 +146,8 @@ bool damage_model::hit_body_part(
 		bullet->last_hitted_body_part( part );
 
 	return true;
-
-	// STRUCTURE DIFF: target 13 stmts / base 13 stmts (0x119 both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH (shape ok) - identical instruction stream; sole diff is sub esp 0x64 vs 0x60 and the resulting [ebp-N] slot numbers, allocation noise, non-steerable.
 }
 
-// STATE[100%|DONE]
 void damage_model::apply_med_kit( pcstr part_name, float amount )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -182,12 +157,10 @@ void damage_model::apply_med_kit( pcstr part_name, float amount )
 
 struct dump_npc_body_part_state_predicate : boost::noncopyable {
 public:
-	// STATE[UNVERIFIED]
 	explicit		dump_npc_body_part_state_predicate	( vostok::ai::npc_statistics& npc_stats, u32 current_time ) :
 						npc_stats		( npc_stats ),
 						current_time	( current_time ) {}
 
-	// STATE[UNVERIFIED]
 	inline	void	operator()							( body_part_parameters* params ) const {
 		params->dump_state( npc_stats, current_time );
 	}
@@ -198,7 +171,6 @@ public:
 }; // struct dump_npc_body_part_state_predicate
 
 
-// STATE[BLOCKED]
 void damage_model::fill_stats( ai::npc_statistics& stats, u32 const current_time_in_ms ) const
 {
 	typedef ai::statistics_item<46, 16> content_type;
@@ -208,13 +180,8 @@ void damage_model::fill_stats( ai::npc_statistics& stats, u32 const current_time
 
 	dump_npc_body_part_state_predicate dump_predicate( stats, current_time_in_ms );
 	m_body_parts.for_each( dump_predicate );
-
-	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
-	// SIZE +0xb | 205 | content_type new_stats_item;
-	// VERDICT: STRUCTURE MATCH (shape ok) - target keeps statistics_item<46,16>::ctor out-of-line (one call), base inlines it to the member fixed_string<32>/fixed_vector ctors (LTCG); remaining bytes sit in prologue/epilogue EH-frame; blocked on the npc_statistics layout TODO above.
 }
 
-// STATE[79.26%|PARTIAL]: boost::function by-value copy lowered as default-ctor+assign_to_own vs target copy-ctor
 // sushi@TODO: target PDB records the body_part local as body_part_parameters const* (pointee-const), but
 // intrusive_list::get_next_of_object takes PointerType const (= body_part_parameters* const) so the
 // const* spelling cannot compile against our list header - kept non-const.
@@ -227,22 +194,13 @@ void damage_model::dump_stats( boost::function<void( u32, float, float, pcstr )>
 		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target, see STRUCTURE DIFF
 		body_part = m_body_parts.get_next_of_object( body_part );
 	}
-
-	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
-	// SIZE +0xd | 225 | body_part->dump_state( callback, body_part_index++ );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the by-value boost::function argument copy: target copy-constructs the temp in one call, base default-constructs then calls assign_to_own (extra call + slot), boost::function LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[99.80%|DONE]: frame imm (sub esp 0x14 vs target 0x10) + this-slot number, allocation noise
 void damage_model::subscribe_on_affect( hit_affects_type_enum const affect_type, affect_subscriber* const subscriber )
 {
 	m_affect_subscriptions[affect_type].push_back( subscriber );	// <0x6ffa39>|0x009|+0x01b:'242'
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts (0x2a both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - residual is the frame imm 0x14 vs 0x10 + this-slot number (allocation noise) and the intrusive_list push_back COMDAT-fold name.
 }
 
-// STATE[100%|DONE]
 void damage_model::unsubscribe_from_affect( hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
 {
 	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
@@ -252,13 +210,11 @@ void damage_model::unsubscribe_from_affect( hit_affects_type_enum affect_type, a
 
 struct affect_event_predicate : public boost::noncopyable {
 public:
-	// STATE[BLOCKED]
 	explicit		affect_event_predicate	( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type ) :
 						body_part_name		( body_part_name ),
 						affect_type			( affect_type ),
 						event_type			( event_type ) { }
 
-	// STATE[BLOCKED]
 	inline	void	operator()				( affect_subscriber* subscriber ) const {
 		subscriber->subscription_callback( body_part_name, affect_type, event_type );
 	}
@@ -272,7 +228,6 @@ public:
 
 STATIC_SIZE_ASSERT(affect_event_predicate, 0xC);
 
-// STATE[100%|DONE]
 void damage_model::notify_on_affect_event( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type )
 {
 	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];	// <0x6ff99f>|0x00f|+0x016|[1]:'294'
@@ -283,13 +238,11 @@ struct reset_predicate : boost::noncopyable {
 public:
 	explicit			reset_predicate	( ) {}
 
-	// STATE[BLOCKED]
 	inline		void	operator()		( body_part_parameters* params ) const {
 		params->reset( );
 	}
 }; // struct reset_predicate
 
-// STATE[100%|DONE]
 void damage_model::reset( )
 {
 	m_last_hit_initiator = u8(-1);
@@ -303,7 +256,6 @@ void damage_model::reset( )
 	m_body_parts.for_each( reset_predicate( ) );
 }
 
-// STATE[100%|DONE]
 void damage_model::apply_affect( pcstr part_name, hit_affects_type_enum affect, affect_event_type_enum event_type )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -311,7 +263,6 @@ void damage_model::apply_affect( pcstr part_name, hit_affects_type_enum affect, 
 	part->apply_affect_by_force( affect, event_type, m_last_tick_time_in_ms );
 }
 
-// STATE[100%|DONE]
 u8 damage_model::get_total_health( )
 {
 	u8 result_value = 100;
@@ -324,7 +275,6 @@ u8 damage_model::get_total_health( )
 	return result_value;
 }
 
-// STATE[100%|DONE]
 void damage_model::cancel_affect( pcstr part_name, hit_affects_type_enum affect )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -332,7 +282,6 @@ void damage_model::cancel_affect( pcstr part_name, hit_affects_type_enum affect 
 	part->cancel_affect_by_force( affect );
 }
 
-// STATE[100%|DONE]
 void damage_model::register_body_part_damage_protector( pcstr part_name, damage_protector* protector )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -340,7 +289,6 @@ void damage_model::register_body_part_damage_protector( pcstr part_name, damage_
 	part->add_damage_protector( protector );
 }
 
-// STATE[100%|DONE]
 void damage_model::unregister_body_part_damage_protector( pcstr part_name, damage_protector* protector )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -348,7 +296,6 @@ void damage_model::unregister_body_part_damage_protector( pcstr part_name, damag
 	part->remove_damage_protector( protector );
 }
 
-// STATE[100%|DONE]
 void damage_model::add_damage_protector( pcstr damage_type, float reduce, float absorb )
 {
 	booster_damage_protector* protector = m_damage_protectors.find_if(
@@ -365,7 +312,6 @@ void damage_model::add_damage_protector( pcstr damage_type, float reduce, float 
 	}
 }
 
-// STATE[98.95%|DONE]: prologue push ecx vs sub esp 0xC (this-slot frame) + trailing nop padding
 void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum const affect, affect_event_type_enum const type )
 {
 	if ( affect == affects_type_leg_damage && strings::equal( "left_leg", bodypart ) )
@@ -384,20 +330,11 @@ void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum 
 	{
 		m_broken_hands_count[1] = ( type == affect_applying ) ? 1 : 0;
 	}
-
-	// STRUCTURE DIFF: target 8 stmts / base 8 stmts - no diverging rows
-	// VERDICT: STRUCTURE MATCH (shape ok) - instruction stream identical; target spills this via push ecx (4-byte frame), base via sub esp 0xC, plus trailing alignment nops; prologue-frame + padding, non-steerable.
 }
 
-// STATE[92.30%|PARTIAL]: was DCE'd (no base symbol); now anchored from temp_include_all (opaque
-// pointer call), pairs and scores. Sole residual is a 6-byte arg-evaluation temp.
 void damage_model::deserialize( network_core::packet_reader& reader )
 {
 	m_body_parts.for_each( boost::bind( &body_part_parameters::deserialize, _1, boost::ref( reader ) ) );
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// SIZE -0x6 | 395 | m_body_parts.for_each( boost::bind( &body_part_parameters::deserialize, _1, boost::ref( reader ) ) );
-	// VERDICT: STRUCTURE MATCH (1/1) - target spills the boost::bind sret pointer through a frame temp before pushing it to for_each, base pushes eax directly; /Od arg-evaluation temp at the call boundary, non-steerable.
 }
 
 } // namespace survarium

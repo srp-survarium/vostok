@@ -123,14 +123,12 @@ u16 weapon_core::get_magazine_capacity( ) const
 	return m_magazine_capacity;
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( magazine_capacity ) );
 	m_magazine_capacity = magazine_capacity;
 }
 
-// STATE[100%|DONE]
 // claude@NOTE: out-of-line so reset_fire_queue emits `call fire_queue_length`
 // instead of inlining the m_weapon_fire_queue_types[m_fire_queue_type] read
 // (matches the target's standalone symbol @0x09b290).
@@ -139,12 +137,6 @@ u16 weapon_core::fire_queue_length( ) const
 	return m_weapon_fire_queue_types[m_fire_queue_type];
 }
 
-// STATE[99.83%|PARTIAL]: 122/122 stmts after implementing weapon_core_base_state::
-// set_is_firing_ptr's real inline body (the two missing 0x15 stores) and merging the nested
-// chamber-round ifs into one `&&` condition (target line table proves one 0x2a statement).
-// Residual: boost::bind/function transition-temp register rename (base push esi/esi vs target
-// ecx) across the 72 add_transitions - allocator nondeterminism, see
-// weapon_core_initialize_weapon_logic.md
 void weapon_core::initialize_weapon_logic(
 	weapon_core_base_state_ptr const&	inactive_state,
 	weapon_core_base_state_ptr const&	show_state,
@@ -289,28 +281,16 @@ void weapon_core::initialize_weapon_logic(
 		m_logic->add_transition( chamber_a_round_aimed, aim_fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim_fire ) );
 		m_logic->add_transition( chamber_a_round_aimed, chamber_a_round, boost::bind( &weapon_core::is_not_trying_to_aim_predicate, this ) );
 	}
-
-	// STRUCTURE DIFF: target 122 stmts / base 122 stmts (clean)
-	// VERDICT: STRUCTURE MATCH - residual is the boost::function transition-temp register rename
-	// (esi vs ecx) cascading over the add_transition calls; allocator nondeterminism, non-steerable.
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const& skeleton )
 {
 	m_skeleton = skeleton;
 }
 
-// STATE[85.68%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of trivial
-// weapon_core_base_state::has_animation_ended() (target /Od `call`, our /GL inlines the [+135h]
-// read). Same class as must_chamber_a_round_and_animation_ended_predicate.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE -0x7 | 309 | return m_target == target && current_base_state( ).has_animation_ended( );
-	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
 // STATE[STUB]
@@ -331,17 +311,9 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 	// ******
 }
 
-// STATE[73.00%|PARTIAL]: restored the faithful one-liner - target is 1 stmt with NO locals,
-// so the earlier named-ref local (83.89%) was a fabricated statement the line table disproves.
-// Residual = /Od temp-chain depth of the inlined current_base_state() (target materializes one
-// extra reference copy), same class as the serialize forwarded-call temp chain.
 animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) const
 {
 	return current_base_state( ).get_body_part_mask_for_user( );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE -0xc | 340 | return current_base_state( ).get_body_part_mask_for_user( );
-	// VERDICT: STRUCTURE MATCH - quantity fixed (was 2 stmts); SIZE residual is /Od ref-temp depth, not source-steerable.
 }
 /*
 // STATE[STUB]
@@ -431,19 +403,9 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 	// ******
 }
 
-// STATE[72.04%|INPROGRESS]: body matches; sole diff is is_aimed() - target emits a
-// `call is_aimed` (standalone FPO symbol) but under /Od our inline is_aimed() expands
-// to `mov [this+0x488]` inline. Out-lining is_aimed reaches 99.78% here but FPO-breaks
-// many other inline callers (net -26 exact). Next: revisit once a per-call-site
-// inline/out-of-line story exists. See docs/.../weapon_core_update_recoil.md
 void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 {
 	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE +0x5 | 442 | m_recoil_calculator.tick( ... is_aimed( ) ... );
-	// VERDICT: STRUCTURE MATCH - is_aimed() call in target vs our inline read; out-lining it FPO-breaks
-	// many other callers (net -26 exact), so the inline stays.
 }
 
 // STATE[STUB]
@@ -467,7 +429,6 @@ void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_time_in_ms, float time_scale )
 {
 	m_breath_vibration_calculator.hold_breath( is_holding_breath );
@@ -540,14 +501,12 @@ void weapon_core::tick( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_show( )
 {
 	m_aimed = false;
 	on_show( );
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_hide( )
 {
 	on_hide( );
@@ -573,7 +532,6 @@ void weapon_core::load_magazine( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::chamber_a_round( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
@@ -608,7 +566,6 @@ void weapon_core::unload_ammo( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_reload( )
 {
 	m_aimed = false;
@@ -619,7 +576,6 @@ void weapon_core::instant_reload( )
 	reset_fire_queue( );
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_chamber_a_round( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
@@ -648,7 +604,6 @@ void weapon_core::reload_one_round( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_aim_start( )
 {
 	if ( !is_firing( ) && !( m_user->input( ).actions_mask & 0x20 ) )
@@ -658,7 +613,6 @@ void weapon_core::instant_aim_start( )
 	m_aiming_state_transition = true;
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_aim_end( )
 {
 	m_aimed = false;
@@ -697,7 +651,6 @@ float3 weapon_core::get_dispersed_bullet_dir( )
 	// ******
 }
 
-// STATE[100%|DONE]
 float weapon_core::get_dispersion( ) const
 {
 	return m_dispersion_calculator.get_dispersion( );
@@ -761,7 +714,6 @@ void weapon_core::instant_fire( u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transform )
 {
 	m_ready_for_fire = true;
@@ -869,12 +821,6 @@ void weapon_core::set_target( weapon_targets target )
 	// ******
 }
 
-// STATE[99.65%|PARTIAL]: instructions byte-identical modulo `this` register at the promoted
-// fire_queue_length call (eax vs ecx) + slot numbering. OPEN QUESTION: target's line table has
-// the else branch as ONE statement (6 stmts, NO named local recorded) yet keeps the named-local
-// byte shape ([ebp-2] store + [ebp-6] param spill); every local-free spelling tried merges the
-// temps and LOSES 8 bytes (u16(...) cast -> 85.8%, explicit min<u16> -> out-of-line call 79.0%,
-// by-value min template -> C2668 ambiguity engine-wide). Keeping the named local for the bytes.
 void weapon_core::reset_fire_queue( )
 {
 	if ( fire_queue_length( ) == 0xff )
@@ -888,14 +834,8 @@ void weapon_core::reset_fire_queue( )
 		u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
 		m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue );
 	}
-
-	// STRUCTURE DIFF: target 6 stmts / base 7 stmts
-	// BASE_ONLY | 886 | u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
-	// VERDICT: STRUCTURE MISMATCH (quantity) - target merges the else branch into one statement with no
-	// recorded local, but its byte shape needs the local; unresolved spelling, kept for the 99.65% bytes.
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_next_fire_queue_type( )
 {
 	if ( m_fire_queue_type == m_weapon_fire_queue_types_count - 1 )
@@ -940,7 +880,6 @@ void weapon_core::set_next_ammo_type( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const& ammunition_to_set )
 {
 	m_ammunition = ammunition_to_set;
@@ -975,7 +914,6 @@ void weapon_core::load_ammo( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::on_reload_started( )
 {
 }
@@ -1003,7 +941,6 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
 	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
@@ -1012,13 +949,11 @@ void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid,
 	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
 }
 
-// STATE[100%|DONE]
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
 {
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
 	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
@@ -1027,7 +962,6 @@ void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum c
 	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
 }
 
-// STATE[100%|DONE]
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
 {
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
@@ -1203,26 +1137,16 @@ void weapon_core::deactivate( )
 	// ******
 }
 
-// STATE[84.77%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of the two
-// trivial getters (weapon_user_animations_selector::is_ready_to_be_deactivated returns false
-// standalone in target; current_base_state ref-copy shape). Same inline-decision class as the
-// has_animation_ended predicates.
 bool weapon_core::is_ready_to_be_deactivated( ) const
 {
 	return current_base_state( ).is_ready_to_be_deactivated( ) && m_user_animations_selector.is_ready_to_be_deactivated( );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE -0xc | 1205 | return current_base_state( ).is_ready_to_be_deactivated( ) && ...;
-	// VERDICT: STRUCTURE MATCH - the two trivial getters out-of-line in target vs our inline; non-steerable LTCG class.
 }
 
-// STATE[100%|DONE]
 void weapon_core::on_player_model_added( )
 {
 	instant_show( );
 }
 
-// STATE[100%|DONE]
 void weapon_core::on_player_model_removed( )
 {
 	instant_hide( );
@@ -1363,7 +1287,6 @@ void weapon_core::update_bones_matrices(
 	// ******
 }
 
-// STATE[100%|DONE]
 bool weapon_core::is_sprinting( ) const
 {
 	return m_user_animations_selector.is_sprinting( );
@@ -1396,12 +1319,6 @@ void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* c
 	// ******
 }
 
-// STATE[61.76%|PARTIAL]: now PAIRED (the header access fix - target mangles it EBE private
-// virtual). Statement set/order match (26/26 after the for-tail ++state_id merge + the
-// current_state() re-read at the forwarded serialize). Residual: target calls the network_core
-// packet<T>::append / fsm::current_state out-of-line where our build inlines them (or
-// vice-versa) - a network_core/ai header inline-cost question, not steerable from this TU.
-// trail: weapon_core_serialize.md
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
 	inventory_item::serialize( packet, client_offset );
@@ -1442,21 +1359,8 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 		static_cast< weapon_core_base_state const* >( m_logic->current_state( ) )->serialize( packet );
 		m_user_animations_selector.serialize( packet );
 	}
-
-	// STRUCTURE DIFF: target 26 stmts / base 26 stmts
-	// SIZE +0x8 | 1400/1401 | packet.append( m_random/m_normal_random.seed( ) ); (x2)
-	// SIZE +0x7 | 1402-1407,1410,1414 | the u8/u16 appends (aligner shows BASE_ONLY/TRGT_ONLY drift over the same 6 stmts)
-	// SIZE -0xa | 1412 | if ( m_logic->current_state( ) ) (target materializes the bool, setne+movzx)
-	// SIZE +0x7 | append( state_id ); SIZE -0x6 | forwarded ->serialize( packet )
-	// VERDICT: STRUCTURE MATCH - set/order identical; every row is packet<T>::append / fsm accessor
-	// inline-vs-call (network_core/ai headers), not steerable from this TU.
 }
 
-// STATE[29.31%|PARTIAL]: now PAIRED (the header access fix - target mangles it EAE private
-// virtual). Statement set/order match (33/33). Residual: target calls packet_reader::r<T>
-// out-of-line (promoted edx-this convention) where our build inlines the read+advance - the
-// same network_core header inline-cost question as serialize; not steerable from this TU.
-// trail: weapon_core_serialize.md
 void weapon_core::deserialize( network_core::packet_reader& reader )
 {
 	inventory_item::deserialize( reader );
@@ -1507,49 +1411,23 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	}
 
 	m_deserializing	= false;
-
-	// STRUCTURE DIFF: target 33 stmts / base 33 stmts
-	// SIZE +0x12..+0x15 | 1461-1483 | every reader.r<T>( ) read (base inlines read+advance, target calls r<T>;
-	//                                 aligner shows BASE_ONLY/TRGT_ONLY drift over the same stmts)
-	// SIZE +0x52 | 1471 | m_ammunition = ...item_in_slot( m_ammo_slot ).c_ptr( ); (inline-vs-call mix)
-	// SIZE -0xa | 1478 | if ( m_logic->current_state( ) ) (target materializes the bool)
-	// SIZE -0x6 | 1499 | forwarded ->deserialize( reader )
-	// VERDICT: STRUCTURE MATCH - set/order identical; every row is the network_core r<T>/inventory
-	// accessor inline-vs-call class, not steerable from this TU.
 }
 
-// STATE[100%|DONE]
 bool weapon_core::instant_idle_predicate( ) const
 {
 	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[73.90%|PARTIAL]: branch + member reads byte-identical. Residual = inline-decision wall on
-// intrusive_ptr::operator* : target out-of-lines it (`call operator*` @0x16); our /Od /Ob2 build
-// inlines it because our compiled-out ASSERT(m_object) stub is small enough to fit the inline
-// budget, bringing the deref + ASSERT temp-chain inline. Source form already uses operator*
-// (*ptr).broken_hands_count(); the inline/out-line choice lives in the shared intrusive_ptr_inline.h,
-// not steerable from here. See weapon_core_could_be_used_aimed.md
 bool weapon_core::could_be_used( base_player const& user ) const
 {
 	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
 	return !( broken_hands_count == 2 && is_double_handed( ) );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE +0xf | 1533 | u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
-	// SIZE +0x6 | 1534 | return !( broken_hands_count == 2 && is_double_handed( ) );
-	// VERDICT: STRUCTURE MATCH - intrusive_ptr::operator* / is_double_handed inline-vs-call wall; non-steerable.
 }
 
-// STATE[75.88%|PARTIAL]: same intrusive_ptr::operator* inline-decision wall as could_be_used.
 bool weapon_core::could_be_aimed( base_player const& user ) const
 {
 	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
 	return broken_hands_count != 2;
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE +0xf | 1545 | u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
-	// VERDICT: STRUCTURE MATCH - same intrusive_ptr::operator* inline-vs-call wall as could_be_used; non-steerable.
 }
 
 // STATE[STUB]
@@ -1627,32 +1505,26 @@ float weapon_core::computed_vertical_recoil_time(
 	// ******
 }
 
-// STATE[100%|DONE]
 weapon_core::calculator_functor weapon_core::backward_recoil_time_calculator( )
 {
 	return calculator_functor( this, &weapon_core::computed_backward_recoil_time );
 }
 
-// STATE[100%|DONE]
 weapon_core::calculator_functor weapon_core::horizontal_recoil_time_calculator( )
 {
 	return calculator_functor( this, &weapon_core::computed_horizontal_recoil_time );
 }
 
-// STATE[100%|DONE]
 weapon_core::calculator_functor weapon_core::vertical_recoil_time_calculator( )
 {
 	return calculator_functor( this, &weapon_core::computed_vertical_recoil_time );
 }
 
-// STATE[100%|DONE]
 void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 {
 	inventory_item::set_inventory( inv, slot );
 }
 
-// STATE[99.77%|DONE]: byte-identical stream; sole residual = call-boundary register for the
-// `this` of profile_slot_id() (target passes it in eax, ours in ecx) - LTCG custom calling
 // convention on the callee, not source-steerable. claude@NOTE
 profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 {
@@ -1667,9 +1539,6 @@ profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 		case weapon2_slot:	return weapon_ammo_slots[1][slot_id];
 		default:			return invalid_slot;
 	}
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (clean, 0x45 bytes both)
-	// VERDICT: STRUCTURE MATCH - sole residual is the `this` register at the promoted profile_slot_id call (eax vs ecx); LTCG.
 }
 
 // STATE[STUB]
@@ -1698,49 +1567,33 @@ void weapon_core::get_ammo_info( weapon_ammo_info& info )
 	// ******
 }
 
-// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_predicate( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
 	return !m_is_round_chambered && m_ammo_in_magazine != 0 && !m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_aimed_predicate( ) const
 {
 	return must_chamber_a_round_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[87.47%|PARTIAL]: ASSERT + control-flow byte-identical; residual = LTCG inline-vs-call
-// of trivial weapon_core_base_state::has_animation_ended() (header inline; target /Od emits
-// `call has_animation_ended` @0x42 + 3 current_base_state ref copies, our /GL inlines the
-// `mov al,[+135h]` read). Same class as is_trying_to_aim / round_is_chambered.
 bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
 	return must_chamber_a_round_predicate( ) && current_base_state( ).has_animation_ended( );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE -0x7 | 1721 | return must_chamber_a_round_predicate( ) && current_base_state( ).has_animation_ended( );
-	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
-// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate( ) const
 {
 	return must_chamber_a_round_and_animation_ended_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[100%|DONE]
 bool weapon_core::is_ready_to_shoot( ) const
 {
 	return ( m_is_there_chamber_a_round_state ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && m_ready_for_fire;
 }
 
-// STATE[66.75%|PARTIAL]: every member access/mask/order byte-identical; sole diff = LTCG
-// inline-vs-call of trivial player_input::is_sprinting() - target keeps it standalone
-// (`call player_input::is_sprinting` @0x60), our /GL inlines its (&0x200 && &0x1 && &0x16E==0)
-// body. Same inline-decision class as reload_state_base::initialize round_is_chambered.
 bool weapon_core::is_trying_to_aim( ) const
 {
 	player_input const&	input			= m_user->input( );
@@ -1750,13 +1603,8 @@ bool weapon_core::is_trying_to_aim( ) const
 		&& ( input.actions_mask & 0x80 ) != 0	// sushi@TODO: aim action bit
 		&& !( input.is_sprinting( ) && ( just_toggled & 0x200 ) != 0 )	// sushi@TODO: sprint action bit
 		&& m_user_animations_selector.get_current_state_id( ) != type_jump;
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE +0x36 | 1753 | && m_user_animations_selector.get_current_state_id( ) != type_jump; (the return stmt)
-	// VERDICT: STRUCTURE MATCH - player_input::is_sprinting standalone call in target vs our inline of its mask body; non-steerable LTCG.
 }
 
-// STATE[100%|DONE]
 bool weapon_core::is_not_trying_to_aim_predicate( ) const
 {
 	return !is_trying_to_aim( );
@@ -1769,34 +1617,18 @@ bool weapon_core::ready_to_reload( ) const
 	return true;
 }
 
-// STATE[93.32%|PARTIAL]: control-flow + all member reads/branches/temp byte-identical (perfect
-// structure). Sole residual = target reserves a 0x30 frame and zeroes a dead dword [ebp-10h] in
-// the prologue (never read); ours has a 0x08 frame, no such slot. A hidden local with no PDB LOCALS
 // record and no read - not source-pinnable. claude@NOTE
 bool weapon_core::can_and_must_reload_predicate( ) const
 {
 	return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE -0x7 | 1785 | return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
-	// VERDICT: STRUCTURE MATCH - target reserves a 0x30 frame and zeroes a dead dword; not source-pinnable.
 }
 
-// STATE[86.17%|PARTIAL]: control-flow + can_and_must_reload_predicate call byte-identical; residual
-// = inline-decision wall on weapon_core_base_state::has_animation_ended() (target out-of-lines it -
-// `call has_animation_ended` + the 3 current_base_state() ref-copies; our /Od /Ob2 inlines the
-// [+135h] read). Same documented wall as target_and_animation_ended_predicate; out-lining the
 // shared getter would regress other inlined call sites. claude@NOTE
 bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
 	return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE -0x7 | 1799 | return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
-	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
-// STATE[100%|DONE]
 void weapon_core::unload_chambered_round( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
@@ -1808,16 +1640,12 @@ void weapon_core::unload_chambered_round( )
 	on_unload_chambered_round( );
 }
 
-// STATE[100%|DONE]: `bool const` local (per target PDB) flips the && temp to a byte store,
-// and `!= 0` in the addend emits the neg;sbb;neg normalize - both target shapes.
 u16 weapon_core::maximum_ammo_in_weapon( ) const
 {
 	bool const chamber_a_round_but_not_on_reload = m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload;
 	return m_magazine_capacity + ( chamber_a_round_but_not_on_reload != 0 );
 }
 
-// STATE[100%|DONE]: `bool const active` (per target PDB) drops the xor-before-sete; a plain
-// `bool` local zeroes the full register first.
 animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum const hand )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( params.domain_data ) );
@@ -1828,19 +1656,12 @@ animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::a
 	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[90.17%|PARTIAL]: is_double_handed inline-vs-call wall (same class as is_trying_to_aim);
-// `bool const` local (per target PDB) closed the rest.
 void weapon_core::on_user_sprint( bool user_is_sprinting )
 {
 	bool const left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;
 	m_hand_ik_processor.activate_hand( hand_to_weapon_ik_processor::left, left_hand_ik_is_active, m_last_tick_time_in_ms );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE +0x5 | 1862 | bool const left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;
-	// VERDICT: STRUCTURE MATCH - is_double_handed call in target vs our inline read; same wall as is_trying_to_aim.
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_idle_start( )
 {
 	m_is_idle = true;
@@ -1848,19 +1669,16 @@ void weapon_core::instant_idle_start( )
 		reset_fire_queue( );
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_idle_end( )
 {
 	m_is_idle = false;
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_toggle_start( )
 {
 	m_is_toggling = true;
 }
 
-// STATE[100%|DONE]
 void weapon_core::instant_toggle_end( )
 {
 	m_is_toggling = false;

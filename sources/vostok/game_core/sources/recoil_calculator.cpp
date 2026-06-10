@@ -7,30 +7,25 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 recoil_calculator::recoil_calculator( ) : m_weapon( NULL )
 {
 }
 
-// STATE[100%|DONE]
 float recoil_calculator::get_horizontal_coeff( ) const
 {
 	return m_weapon_calculator.get_horizontal_koef( );
 }
 
-// STATE[100%|DONE]
 float recoil_calculator::get_vertical_coeff( ) const
 {
 	return m_weapon_calculator.get_vertical_koef( );
 }
 
-// STATE[100%|DONE]
 float recoil_calculator::get_back_coeff( ) const
 {
 	return m_weapon_calculator.get_back_koef( );
 }
 
-// STATE[100%|DONE]
 void recoil_calculator::tick(
 	const weapon_user_state_enum	character_state,
 	const bool						is_aiming,
@@ -43,26 +38,22 @@ void recoil_calculator::tick(
 	m_weapon_calculator.set_character_multiplier( m_character_calculator.get_value( ) );
 }
 
-// STATE[100%|DONE]
 void recoil_calculator::set_weapon( weapon_core* weapon )
 {
 	m_weapon = weapon;
 	m_weapon_calculator.set_weapon( weapon );
 }
 
-// STATE[100%|DONE]
 void recoil_calculator::reload( )
 {
 	m_weapon_calculator.reload( );
 }
 
-// STATE[100%|DONE]
 void recoil_calculator::chamber_a_round( )
 {
 	m_weapon_calculator.chamber_a_round( );
 }
 
-// STATE[100%|DONE]
 void recoil_calculator::fire( )
 {
 	m_weapon_calculator.fire( );

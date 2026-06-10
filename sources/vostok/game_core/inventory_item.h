@@ -68,13 +68,7 @@ public:
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
-	// STATE[BLOCKED]: target (rva 0x869f0) copies object + packet BY VALUE into the
-	// VOSTOK_UNREFERENCED_PARAMETERS eater, which needs the COMPLETE udp_match_packet /
-	// game_world_object types - both only forward-declared in this header. Matching the
-	// eater requires moving the body out-of-line (its own .cpp) or heavy includes here.
 	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { /* rva 0x869f0 */ }
-	// STATE[BLOCKED]: target (rva 0x9b250) copies reader BY VALUE into the eater; packet_reader
-	// is forward-declared only here, so the copy will not compile as a header inline.
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { /* rva 0x9b250 */ }
 
 protected:

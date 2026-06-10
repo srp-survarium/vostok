@@ -23,7 +23,6 @@ collision_shape_cook::collision_shape_cook( bool static_object ):
 	register_cook( this );	// <0x72d2e5>|0x000|0x000:'29'
 }
 
-// STATE[93.03%|PARTIAL]
 // * `set_length` didn't inline.
 // * virtual_path vs path differences (possibly also inlining problems).
 // * LTCG for `query_resources`.
@@ -81,7 +80,6 @@ void collision_shape_cook::translate_query( resources::query_result_for_cook& pa
 	);																						// <0x72e3a5>|0x2e9|0x011:'83'
 }
 
-// STATE[SKIPPED]
 void collision_shape_cook::on_collision_sources_loaded( resources::queries_result& data, collision_shape_cook::cook_data* cd )
 {
 	configs::binary_config_ptr primitives_cfg = static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
@@ -307,7 +305,6 @@ void collision_shape_cook::on_collision_sources_loaded( resources::queries_resul
 	// ******
 }
 
-// STATE[100%|DONE]
 void collision_shape_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, resource ); // <0x72d261>|0x000|0x000:'229'
@@ -317,7 +314,6 @@ void collision_shape_cook::delete_resource( resources::resource_base* resource )
 
 }
 
-// STATE[55.99%|PARTIAL]: `is_similar` shouldn't be inlined.
 bt_collision_shape* collision_shape_cook::create_primitives_shape( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd )
 {
 	float3 p;

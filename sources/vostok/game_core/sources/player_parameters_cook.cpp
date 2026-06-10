@@ -33,7 +33,6 @@ public:
 	/* 0x0000 */	float		m_coeff;
 }; // struct bodypart_health_regen_scale_predicate
 
-// STATE[85.01%|PARTIAL]: structure matches; LTCG inline-vs-call of resource_ptr copy-ctor + intrusive_ptr::operator* (frame +8 cascade)
 void player_parameters_modifyer::apply( base_player* player )
 {
 	damage_model_ptr damage_model = player->damage_model( );
@@ -128,28 +127,8 @@ void player_parameters_modifyer::apply( base_player* player )
 	}
 
 	player->usable_object_user_data( )->booster_engineer_use_time_factor = 1.0f + this->engineer_use_time_corr_perc / 100.0f;
-
-	// STRUCTURE DIFF: target 50 stmts / base 49 stmts
-	// SIZE +0x8  | 39  | damage_model_ptr damage_model = player->damage_model( );
-	// SIZE +0x17 | 48  | body_part_parameters* current_body_part_parameters = damage_model->get_body_part( body_part_name.c_str( ) );
-	// SIZE +0xf  | 73  | inventory& invent = player->cast_to_inventory_holder( )->inventory( );
-	// SIZE +0x14 | 77  | inventory_item_ptr item = invent.item_in_slot( weapon_slots[i] );
-	// SIZE +0x1  | 78  | if ( !item )
-	// SIZE +0xd  | 81  | weapon_core* wc = item->cast_weapon_core( );
-	// SIZE -0x6  | 84  | LOG_WARNING( "non-weapon item in weapon slot" );
-	// SIZE +0x1  | 88  | dispersion_calculator& dc = wc->get_dispersion_calculator( );
-	// SIZE +0x17 | 99  | body_part_parameters* bp = damage_model->get_body_part( "pain" );
-	// SIZE -0x6  | 107 | LOG_WARNING( "there's no 'pain' bodypart, pain health will not be scaled" );
-	// SIZE +0xd  | 110 | damage_model->m_body_parts.for_each( hr_predicate );
-	// SIZE -0x10 | 112 | player->usable_object_user_data( )->booster_artcont_time_factor = ...;
-	// SIZE -0x4  | 124 | for ( u32 i = 0 ; i != array_size( anomaly_damage_types ) ; ++i )
-	// SIZE +0x27 | 126 | player->damage_model( )->add_damage_protector( anomaly_damage_types[i], anomaly_scale, 0.0f );
-	// TRGT_ONLY  | --  | L141 (0x2 loop-body `}` backjump record, follows from the operator* call split)
-	// SIZE -0x10 | 130 | player->usable_object_user_data( )->booster_engineer_use_time_factor = ...;
-	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program LTCG inline-vs-call: target keeps resource_ptr copy-ctor and intrusive_ptr::operator* out-of-line (slice-confirmed: base inlines operator* as eater + m_object load), frame/slot renames cascade. Non-steerable.
 }
 
-// STATE[100%|DONE]
 float get_booster_value( boosters_enum booster_id, player_profile const& profile )
 {
 	for ( u8 i = 0 ; i < 11 ; ++i ) // sushi@TODO: Shouldn't be hardcoded like this. Instead there should be something like boosters_no constant, or something. Do that at some point.
@@ -171,14 +150,13 @@ STATIC_SIZE_ASSERT(player_parameters_cooker_data, 0x8);
 // player_parameters_modifyer_cook
 //
 
-// STATE[100%|DONE]
 player_parameters_modifyer_cook::player_parameters_modifyer_cook( ) :
 	resources::translate_query_cook( resources::player_parameters_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[94.92%|PARTIAL]: structure matches; LTCG inline-vs-call of binary_config_value::operator u8 + the map_assign. sushi@TODO: Why don't we need to request for data here? Why is everything already in cooker_data?
+// sushi@TODO: Why don't we need to request for data here? Why is everything already in cooker_data?
 void player_parameters_modifyer_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	player_parameters_cooker_data* cooker_data = NULL;
@@ -284,22 +262,10 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 
 	parent.set_unmanaged_resource( cooked_resource, resources::memory_usage_type( resources::nocache_memory, sizeof( player_parameters_modifyer ) ) );
 	parent.finish_query( result_success, assert_on_fail_true );
-
-	// STRUCTURE DIFF: target 62 stmts / base 62 stmts
-	// SIZE +0x4  | 212 | if ( current_item_config.value_exists( "additional_slots" ) )
-	// SIZE +0x16 | 214 | cooked_resource->additional_artefact_slots += (u8)current_item_config["additional_slots"]["artefact_slots"];
-	// SIZE +0x16 | 215 | cooked_resource->additional_devices_slots  += (u8)current_item_config["additional_slots"]["device_slots"];
-	// SIZE +0xc  | 245 | cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg;
-	// VERDICT: STRUCTURE MATCH (shape ok) - whole-program LTCG inline-vs-call: the (u8) casts invoke binary_config_value::operator u8, out-of-line in target (cast_number inlined into it) vs inlined in base (calls cast_number<u8,u64,u32>); plus the documented map_assign. Non-steerable.
 }
-// STATE[31.00%|PARTIAL]: single-statement structure matches; LTCG inline-vs-call of strip_pointer/delete_helper (same wall as items_cook::delete_resource)
 void player_parameters_modifyer_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// SIZE -0x1 | 299 | VOSTOK_DELETE_IMPL( g_allocator, resource );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole statement diverges by LTCG inline-vs-call inside the macro (target keeps strip_pointer out-of-line, base inlines it before delete_helper); identical 31% wall as items_cook::delete_resource. Non-steerable.
 }
 
 } // namespace survarium

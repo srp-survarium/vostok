@@ -24,7 +24,6 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
 booby_trap_set_core::booby_trap_set_core( ) :
 	inventory_item		( use_silent ),
 	m_traps				( NULL, 0 ),
@@ -35,7 +34,6 @@ booby_trap_set_core::booby_trap_set_core( ) :
 	// <0x6fe40e>|0x08e|      :'29'	}
 	// ******
 }
-// STATE[83.57%|PARTIAL]: free_helper out-of-line in target vs inlined in base, non-steerable.
  booby_trap_set_core::~booby_trap_set_core( )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); pcvoid damage_parms_buffer = m_damage_parameters.begin( );
@@ -44,15 +42,8 @@ booby_trap_set_core::booby_trap_set_core( ) :
 
 	m_traps.clear( );
 	VOSTOK_FREE_IMPL( g_allocator, m_traps_buffer );
-
-	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
-	// SIZE +0x1a | 43 | VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );
-	// VERDICT: STRUCTURE MATCH (shape ok) - eater + begin() share one line record in the target
-	// (0xc + 0x12 = 0x1e size-sum), merged; sole SIZE is free_helper out-of-line vs base inline,
-	// non-steerable.
 }
 
-// STATE[UNCHECKED]
 void booby_trap_set_core::load( configs::binary_config_value const& config )
 {
 	m_traps.clear( );
@@ -202,7 +193,6 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool find_free_trap_predicate( booby_trap_core_ptr trap )
 {
 	return !trap->is_active( );
@@ -212,13 +202,11 @@ bool find_free_trap_predicate( booby_trap_core_ptr trap )
 	// ******
 }
 
-// STATE[100%|DONE]
 void booby_trap_set_core::remove_trap( booby_trap_core& trap )
 {
 	remove_trap_impl( trap );
 }
 
-// STATE[UNCHECKED]
 booby_trap_core_ptr* booby_trap_set_core::try_place_trap( )
 {
 	if ( amount( ) == 0 )
@@ -259,21 +247,14 @@ booby_trap_core_ptr* booby_trap_set_core::try_place_trap( )
 	// ******
 }
 
-// STATE[79.71%|PARTIAL]: resource_ptr::operator* inline-vs-call LTCG, non-steerable.
 void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	if ( trap->is_active( ) )
 		remove_trap_impl( *trap );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE +0xf | 276 | remove_trap_impl( *trap );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is resource_ptr::operator* inlined on
-	// target vs called out-of-line in base, non-steerable.
 }
 
-// STATE[100%|DONE]
 void booby_trap_set_core::remove( )
 {
 	std::for_each(
@@ -283,7 +264,7 @@ void booby_trap_set_core::remove( )
 	);
 }
 
-// STATE[BLOCKED]: sushi@TODO: Understand what it does exactly
+// sushi@TODO: Understand what it does exactly
 float4x4 create_place_matrix_for_looking_point(
 	float3 const&	hit_point,
 	float3 const&	normal,
@@ -345,7 +326,6 @@ float4x4 create_place_matrix_for_looking_point(
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 {
 	physics::world* world = get_inventory( ).holder( ).get_physics_world( );
@@ -526,7 +506,6 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	// ******
 }
 
-// STATE[100%|DONE]
 void booby_trap_set_core::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,
@@ -554,7 +533,6 @@ void booby_trap_set_core::update_bones_matrices(
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool trap_is_active( booby_trap_core_ptr const& trap )
 {
 	return trap->is_active( );
@@ -564,24 +542,13 @@ bool trap_is_active( booby_trap_core_ptr const& trap )
 	// ******
 }
 
-// STATE[85.39%|PARTIAL]: append the trap's index within this set; append(u8) inlined in base
-// vs out-of-line in target, non-steerable.
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	packet.append( trap_index( trap ) );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE +0x5 | 573 | packet.append( trap_index( trap ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - the assert eater is stmt #1 in the target (0xc, was
-	// mislabeled "compiled out"), recovered; sole SIZE is packet::append(u8) inlined in base
-	// (&temp + size args) vs the out-of-line value-arg call in target, non-steerable.
 }
 
-// STATE[29.68%|PARTIAL]: read a trap index, resolve the trap and forward its
-// deserialize_game_world_object; r<bool>/traps()[]/operator* inlined in base vs out-of-line
-// calls in target, non-steerable. Paired by restoring the target's private access (@@EAE).
 void booby_trap_set_core::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	const u8			trap_index	= reader.r< bool >( );
@@ -593,16 +560,8 @@ void booby_trap_set_core::deserialize_game_world_object( network_core::packet_re
 
 	game_world_object&	object		= trap;
 	object.deserialize( reader );
-
-	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
-	// SIZE +0x15 | 587 | const u8 trap_index = reader.r< bool >( );
-	// SIZE +0x18 | 590 | booby_trap_core& trap = *traps( )[ trap_index ];
-	// VERDICT: STRUCTURE MATCH (shape ok) - both assert eaters recovered (target lines 418/421,
-	// were mislabeled "compiled out"); SIZE rows are r<bool> and traps()[]/operator* inlined in
-	// base vs kept out-of-line in target, non-steerable.
 }
 
-// STATE[UNCHECKED]
 u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 {
 	booby_trap_core_ptr const* trap_iter = std::find( m_traps.begin( ), m_traps.end( ), &trap );
@@ -618,8 +577,6 @@ u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 	// ******
 }
 
-// STATE[75.00%|DONE]: holder()/scheduler() accessor inline-vs-call LTCG; % drop from 96.21
-// is reloc/fold-name churn, structure unchanged.
 void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -627,16 +584,8 @@ void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
 	inventory_holder& holder = get_inventory( ).holder( );
 	holder.remove_game_world_object( trap );
 	trap.remove( holder.scheduler( ) );
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// SIZE +0x7 | 629 | inventory_holder& holder = get_inventory( ).holder( );
-	// SIZE +0x4 | 631 | trap.remove( holder.scheduler( ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are holder( )/scheduler( ) inlined
-	// as member loads on target vs called out-of-line in base, non-steerable.
 }
 
-// STATE[81.74%|DONE]: holder()/scheduler() accessor inline-vs-call LTCG; % drop from 97.38
-// is reloc/fold-name churn, structure unchanged.
 void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& transform )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -648,12 +597,6 @@ void booby_trap_set_core::insert_trap( booby_trap_core& trap, float4x4 const& tr
 
 	trap.insert( world, transform, holder.scheduler( ) );
 	holder.insert_game_world_object( trap );
-
-	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
-	// SIZE +0x7 | 648 | inventory_holder& holder = get_inventory( ).holder( );
-	// SIZE +0x4 | 653 | trap.insert( world, transform, holder.scheduler( ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are holder( )/scheduler( ) inlined
-	// as member loads on target vs called out-of-line in base, non-steerable.
 }
 
 } // namespace survarium

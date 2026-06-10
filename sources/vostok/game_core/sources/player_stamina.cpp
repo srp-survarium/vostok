@@ -10,7 +10,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 player_stamina::player_stamina( ) :
 	m_max_value_factor				( 1.0f ),
 	m_spending_speed_factor			( 1.0f ),
@@ -22,13 +21,11 @@ player_stamina::player_stamina( ) :
 {
 }
 
-// STATE[100%|DONE]
 player_stamina::player_stamina( player_stamina const& other )
 {
 	*this = other;
 }
 
-// STATE[100%|DONE]
 player_stamina& player_stamina::operator=( player_stamina const& other )
 {
 	if ( this != &other )
@@ -69,26 +66,14 @@ player_stamina& player_stamina::operator=( player_stamina const& other )
 	// ******
 }
 
-// STATE[0.00%|PARTIAL]: anchored in temp_include_all (was DCE'd/unpaired); every statement is
-// the r<T> cross-module wall - base inlines packet_reader::r<T>, target keeps it out-of-line -
-// so the fuzzy score bottoms out despite the aligned structure (same wall as
-// hand_to_weapon_ik_processor::deserialize at 10.34%).
 void player_stamina::deserialize( network_core::packet_reader& packet )
 {
 	m_value							= packet.r< float >( );
 	m_last_spending_time_in_ms		= packet.r< u32 >( );
 	m_last_tick_time_in_ms			= packet.r< u32 >( );
 	m_lower_threshold_was_reached	= packet.r< bool >( );
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// SIZE +0x1b | 86 | m_value                       = packet.r< float >( );
-	// SIZE +0x15 | 87 | m_last_spending_time_in_ms    = packet.r< u32 >( );
-	// SIZE +0x15 | 88 | m_last_tick_time_in_ms        = packet.r< u32 >( );
-	// SIZE +0x15 | 89 | m_lower_threshold_was_reached = packet.r< bool >( );
-	// VERDICT: STRUCTURE MATCH (4/4) - all SIZE rows are r<T> kept out-of-line in target vs LTCG-inlined in base; cross-module wall, non-steerable.
 }
 
-// STATE[100%|DONE]
 void player_stamina::load( configs::binary_config_value const& config )
 {
 	m_spending_threshold		= (float)config["spending_threshold"];
@@ -107,7 +92,6 @@ void player_stamina::load( configs::binary_config_value const& config )
 	m_max_carried_weight		= (float)config["max_carried_weight"];
 }
 
-// STATE[100%|DONE]
 void player_stamina::reset( )
 {
 	m_value							= m_max_value * m_max_value_factor;
@@ -121,7 +105,6 @@ void player_stamina::reset( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::set_regeneration_speed( float new_regeneration_speed )
 {
 	m_regeneration_speed = new_regeneration_speed;
@@ -131,7 +114,6 @@ void player_stamina::set_regeneration_speed( float new_regeneration_speed )
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::set_regeneration_speed_factor( float new_regeneration_speed_factor )
 {
 	m_regeneration_speed_factor = new_regeneration_speed_factor;
@@ -141,7 +123,6 @@ void player_stamina::set_regeneration_speed_factor( float new_regeneration_speed
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::increase_value( float amount )
 {
 	m_value = vostok::math::clamp_r( m_value + amount, 0.0f, m_max_value * m_max_value_factor );
@@ -156,7 +137,6 @@ void player_stamina::increase_value( float amount )
 }
 
 struct stamina_depletion_predicate : public boost::noncopyable {
-	// STATE[INLINED]
 	inline	void	operator()					( player_stamina_subscriber* subscriber ) const
 	{
 		subscriber->subscription_callback( );
@@ -164,7 +144,6 @@ struct stamina_depletion_predicate : public boost::noncopyable {
 
 }; // struct stamina_depletion_predicate
 
-// STATE[100%|DONE]
 void player_stamina::decrease_value( float amount )
 {
 	m_value = vostok::math::clamp_r( m_value - amount, 0.0f, m_max_value * m_max_value_factor );
@@ -185,7 +164,6 @@ void player_stamina::decrease_value( float amount )
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::tick( u32 current_time_in_ms, bool is_sprinting )
 {
 	if ( is_sprinting )
@@ -211,7 +189,6 @@ void player_stamina::tick( u32 current_time_in_ms, bool is_sprinting )
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::regenerate( u32 current_time_in_ms )
 {
 	if ( !m_last_tick_time_in_ms )
@@ -229,7 +206,6 @@ void player_stamina::regenerate( u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::spend( float amount )
 {
 	decrease_value( amount );
@@ -241,7 +217,6 @@ void player_stamina::spend( float amount )
 	// ******
 }
 
-// STATE[100%|DONE]
 void player_stamina::sprint( u32 current_time_in_ms )
 {
 	float time_delta_in_sec = ( current_time_in_ms - m_last_tick_time_in_ms ) / 1000.0f;
@@ -255,7 +230,6 @@ void player_stamina::sprint( u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[100%|DONE]
 bool player_stamina::can_be_spent( ) const
 {
 	// return m_spending_threshold < m_value || !m_lower_threshold_was_reached;
@@ -266,16 +240,11 @@ bool player_stamina::can_be_spent( ) const
 	// ******
 }
 
-// STATE[99.75%|DONE]: push_back call reloc ICF fold-name + 4B frame pad, non-steerable
 void player_stamina::subscribe_on_depletion( player_stamina_subscriber* const subscriber )
 {
 	m_subscribers.push_back( subscriber );
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// VERDICT: STRUCTURE MATCH - identical stream 0x1d both; residual is base frame sub esp,14h vs 10h + push_back reloc ICF-folded onto a sibling instantiation, non-steerable.
 }
 
-// STATE[100%|DONE]
 void player_stamina::unsubscribe_from_depletion( player_stamina_subscriber* const subscriber )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_subscribers.contains_object( subscriber ) ) );

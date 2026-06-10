@@ -139,7 +139,6 @@ void n_ary_tree_time_inverter::visit(
 	// ******
 }
 
-// STATE[UNCHECKED]
 animation_player::~animation_player( )
 {
 	reset( true );
@@ -403,7 +402,6 @@ void animation_player::skip_time_if_needed( const u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool animation_player::tick( const u32 current_time_in_ms )
 {
 	skip_time_if_needed( current_time_in_ms );
@@ -501,7 +499,6 @@ bool animation_player::set_target_and_tick(
 	// ******
 }
 
-// STATE[UNCHECKED]
 float4x4 single_object_get_transform( float4x4 const& transform, pcvoid const animated_object )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( animated_object );
@@ -527,7 +524,6 @@ bool animation_player::set_target_and_tick(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::set_object_transform( float4x4 const& object_transform, pcvoid const animated_object )
 {
 	m_mixing_tree.set_object_transform( animated_object, object_transform );
@@ -537,7 +533,6 @@ void animation_player::set_object_transform( float4x4 const& object_transform, p
 	// ******
 }
 
-// STATE[UNCHECKED]
 float4x4 animation_player::get_object_transform( pcvoid const animated_object ) const
 {
 	return m_mixing_tree.get_object_transform( animated_object );
@@ -547,7 +542,6 @@ float4x4 animation_player::get_object_transform( pcvoid const animated_object ) 
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::compute_bones_matrices(
 	skeleton const&		skeleton,
 	float4x4* const		begin,
@@ -565,7 +559,6 @@ void animation_player::compute_bones_matrices(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::compute_bones_local_matrices(
 	skeleton const&		skeleton,
 	float4x4*			begin,
@@ -583,7 +576,6 @@ void animation_player::compute_bones_local_matrices(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::convert_to_object_matrices(
 	skeleton const&		skeleton,
 	float4x4*			local_begin,
@@ -687,7 +679,6 @@ void animation_player::subscribe(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::subscribe(
 	reserved_channel_ids_enum		channel_id,
 	new_callback_type const&		callback,
@@ -705,7 +696,6 @@ void animation_player::subscribe(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::destroy_subscriptions( subscribed_channel const* const channels_head )
 {
 	for (subscribed_channel const* i = channels_head; i; )
@@ -930,7 +920,6 @@ void animation_player::unsubscribe( reserved_channel_ids_enum channel_id, pcvoid
 	// ******
 }
 
-// STATE[UNCHECKED]
 u32 animation_player::get_state_buffer_size( ) const
 {
 	return 0x4000; // sushi@TODO: What this constant is. Can be figured out by usage.
@@ -960,7 +949,6 @@ void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::invert_times(
 	mixing::n_ary_tree&		tree,
 	const u32				time_in_ms,
@@ -983,7 +971,6 @@ void animation_player::invert_times(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 {
 	*((u32*)buffer + 0) = 0xB19B00B5;
@@ -1121,7 +1108,6 @@ void animation_player::destroy_state( void* buffer )
 	// ******
 }
 
-// STATE[UNCHECKED]
 u32 animation_player::last_tick_time_in_ms( ) const
 {
 	return m_mixing_tree.tree_actual_time_in_ms( );

@@ -8,7 +8,6 @@
 namespace vostok {
 namespace physics {
 
-// STATE[100%|DONE]
 bt_rigid_body_construction_info::bt_rigid_body_construction_info( ) :
 	m_mass						( 0.0f ),
 	m_collisionShape			( NULL ),

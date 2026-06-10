@@ -11,16 +11,8 @@
 
 namespace survarium {
 
-// STATE[None|DONE]: `dynamic initializer for 's_enable_breath_vibration_cc'`. The
-// dynamic initializer is the static construction of s_enable_breath_vibration_cc
-// below. Like dispersion_calculator's s_dispersion_enabled_cc it is objdiff-
-// unscorable (None) - the file-static cc_bool's init/atexit thunks are LTCG/ICF
-// folded so no standalone symbol re-attaches. asm: push 1 (serializable), value
-// ref, "breath_vibration_enable", command_type_user_specific (eax=1), default
-// execution_filter (ecx=0).
 static bool s_enable_breath_vibration_value = true;
 static console_commands::cc_bool s_enable_breath_vibration_cc( "breath_vibration_enable", s_enable_breath_vibration_value, true, console_commands::command_type_user_specific );
-// STATE[100%|DONE]
 breath_vibration_calculator::breath_vibration_calculator( )
 	:	m_user						( 0 ),
 		m_params					( 0 ),
@@ -36,12 +28,6 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
-// STATE[76.80%|PARTIAL]: source SHAPE now matched - bracing the for body and chaining
-// `m_current_multiplier = m_target_multiplier = ...->get_multiplier()` into one statement
-// removed both structure divergences (the L37 back-edge row and the `ONLY base` separate
-// assignment are gone; quantity-diffs dropped from 5 to blank-line gaps only). The flat
-// 76.80% is the residual `m_logic.states().front()` inline-vs-out-of-line codegen (all four
-// SIZE rows), blocked on the ai::fsm type - NOT source-steerable. See structure/breath_vibration-set_breath_holding_params.md
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;
@@ -57,35 +43,14 @@ void breath_vibration_calculator::set_breath_holding_params( breath_holding_para
 		m_logic.set_initial_state( m_logic.states( ).front( ) );
 		m_current_multiplier = m_target_multiplier = static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
 	}
-
-	// STRUCTURE DIFF:
-	// target: 0x5834d0            base: 0x450650
-	// ; void survarium::breath_vibration_calculator::set_breath_holding_params(survarium::breath_holding_params const*) ; target 10 stmts / base 14 stmts
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// 0x012 <0x21> | 0x012 <0x1a> | for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )   SIZE
-	// --          | <0>         |    EMPTY only base
-	// 0x033 <0x17> | 0x02c <0x11> | static_cast< breath_state* >( it )->set_breath_holding_params( params );   SIZE
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// 0x063 <0x16> | 0x056 <0x15> | m_logic.set_initial_state( m_logic.states( ).front( ) );   SIZE
-	// 0x079 <0x3b> | 0x06b <0x2f> | m_current_multiplier = m_target_multiplier = static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );   SIZE
-	// .. same ..
-	// ; aligned 6, size-diffs 4, quantity-diffs 4
-	// VERDICT: STRUCTURE MATCH (shape ok) - for body braced + chained multiplier assignment removed both shape divergences; the 4 SIZE rows are the m_logic.states().front() inline-vs-out-of-line residual (ai::fsm type), NON-steerable  trail: breath_vibration-set_breath_holding_params.md
 }
 
-// STATE[100%|DONE]
 breath_vibration_calculator::~breath_vibration_calculator( )
 {
 	while ( ai::fsm_state* state = m_logic.pop_state( ) )
 		VOSTOK_DELETE_IMPL( g_allocator, state );
 }
 
-// STATE[UNCHECKED]
 bool true_predicate( )
 {
 	return true;
@@ -123,13 +88,6 @@ void breath_vibration_calculator::initialize_logic( )
 	// ******
 }
 
-// STATE[94.23%|PARTIAL]: body, control flow, member offsets, virtual dispatch and FPU
-// math all match the target structure 1:1 (see _tick.md). The residual is /Od frame-slot
-// churn: target frames sub esp,38h vs base 30h, so the saved `this` slot is [ebp-24h]
-// (target) vs [ebp-1Ch] (base) and the two m_user loads at the local_time vcall site swap
-// registers. Not source-steerable (no missing local/brace/ASSERT - LOCALS dt/current_state/
-// current_phase all present, statements identical). math::max/min/sin stay out-of-line as
-// in the target.
 void breath_vibration_calculator::tick( u32 const current_time_in_ms, float const time_scale )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) );
@@ -155,26 +113,8 @@ void breath_vibration_calculator::tick( u32 const current_time_in_ms, float cons
 	m_vertical_value	= math::sin( current_phase / m_params->vertical_peroid ) * m_params->vertical_amplitude * m_character_multiplier * m_current_multiplier;
 	if ( !s_enable_breath_vibration_value )
 		m_horizontal_value = m_vertical_value = 0.0f;
-
-	// STRUCTURE DIFF:
-	// target: 0x5835f0            base: 0x457670
-	// ; void survarium::breath_vibration_calculator::tick(const unsigned int, const float) ; target 19 stmts / base 21 stmts
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | 0x058 <0x9> | breath_state* const current_state = static_cast< breath_state* >( m_logic.current_state( ) );   ONLY base
-	// .. same ..
-	// 0x058 <0x15> | --          | L84   ONLY target
-	// .. same ..
-	// 0x117 <0x36> | 0x10b <0x38> | float const current_phase = m_user->local_time( current_time_in_ms ) * math::epsilon_3 * math::pi_x2 * time_scale;   SIZE
-	// .. same ..
-	// ; aligned 17, size-diffs 1, quantity-diffs 4
-	// VERDICT: STRUCTURE MATCH (shape ok) - 17 statements align; the lone SIZE on current_phase is the m_user->local_time vcall frame-slot churn (target sub esp,38h, this@[ebp-24h] vs base 30h, this@[ebp-1Ch]) swapping the two m_user-load registers. The current_state ONLY base/target pair is a source-line attribution split of the same statement, not a quantity divergence. Non-steerable. trail: breath_vibration_calculator_tick.md
 }
 
-// STATE[UNCHECKED]
 void breath_vibration_calculator::hold_breath( bool value )
 {
 	if ( value != m_is_breath_holded )

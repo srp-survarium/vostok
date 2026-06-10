@@ -78,25 +78,21 @@ void weapon_dispersion_calculator::reload( )
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_dispersion_calculator::set_reload_dispersion_amount( const float reload_dispersion_amount )
 {
 	m_reload_dispersion_amount = reload_dispersion_amount;
 }
 
-// STATE[100%|DONE]
 void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( const float one_shoot_dispersion_amount )
 {
 	m_one_shoot_dispersion_amount = one_shoot_dispersion_amount;
 }
 
-// STATE[100%|DONE]
 float weapon_dispersion_calculator::get_value( ) const
 {
 	return m_current_coeff;
 }
 
-// STATE[100%|DONE]
 void weapon_dispersion_calculator::set_aiming_speed( const float aiming_speed )
 {
 	m_aiming_speed = aiming_speed;

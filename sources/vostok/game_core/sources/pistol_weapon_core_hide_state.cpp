@@ -30,7 +30,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 pistol_weapon_core_hide_state::pistol_weapon_core_hide_state(
 	weapon_core&							weapon,
 	float									animation_timescale,
@@ -56,13 +55,6 @@ pistol_weapon_core_hide_state::pistol_weapon_core_hide_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: control structure (get_weapon_lexeme_pair, get_user_hands_expression, then
-// the chained `+`) matches the target exactly. Residual is the shared-header operator+ wall: the target
-// uses dedicated `expression operator+(expression&, animation_lexeme&)` / `operator+(expression&,
-// expression&)` overloads (returning expression) absent from shared mixing_addition_lexeme_inline.h, so
-// the base falls back to the generic addition_lexeme& operator+. Same residual/score as
-// pistol_weapon_core_show_state::weapon_and_hands_expression and weapon_core_hide_state (83.52%). Out of
-// this file's scope (adding the overloads would shift other matched operator+ functions).
 animation::mixing::expression pistol_weapon_core_hide_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool const							is_third_view,
@@ -75,15 +67,8 @@ animation::mixing::expression pistol_weapon_core_hide_state::weapon_and_hands_ex
 	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x27 | 77 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
-// STATE[99.92%|DONE]: sole residual is the `m_weapon.ammo_in_magazine()` __thiscall `this` loaded
-// into eax (target) vs ecx (base) - a call-boundary argument-passing register choice. Same residual
-// the reference pistol_weapon_core_show_state::get_weapon_lexeme_pair accepts as DONE.
 weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] =
@@ -111,19 +96,8 @@ weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutabl
 		animation::mixing::play_once_and_freeze_at_end,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts (0xd0 both, captions split per-element to match the target's two records)
-	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine `this` eax-vs-ecx arg-passing, non-steerable.
 }
 
-// STATE[73.86%|PARTIAL]: control structure matches the target exactly - the type_sprint early-return of
-// expression(weapon_lexeme), the user_state_index, the s_aim_transition_time interpolator local, the
-// animation_lexeme_parameters builder chain (animated_object/bones_mask/playback_type) and the final
-// expression(override_lexeme). Residual is the shared-header whole-program inline wall: the target keeps
-// weapon_core::get_user() and the animation_lexeme_parameters setters OUT-OF-LINE (frame 0x114) while the
-// base inlines them to direct member stores + extra compiled-out ASSERTs (frame 0x128). Identical residual
-// class to pistol_weapon_core_show_state::get_user_hands_expression (72.12%) and weapon_core_hide_state
-// (73.52%). Forcing the shared setters out-of-line is out of this file's scope.
 animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -155,14 +129,8 @@ animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expr
 	);
 
 	return override_lexeme;
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
-	// SIZE +0x3  | 132 | return weapon_lexeme;
-	// SIZE +0x16 | 151 | );  (the chained animation_lexeme_parameters builder declaration)
-	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are weapon_core::get_user / animation_lexeme_parameters setters kept out-of-line in target, inlined in base (whole-program LTCG inline of shared headers), non-steerable.
 }
 
-// STATE[100%|DONE]
 pistol_weapon_core_hide_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_hide_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,

@@ -8,7 +8,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id ) :
 	m_owner							( owner ),
 	m_user							( NULL ),
@@ -20,13 +19,11 @@ player_logic_base_state::player_logic_base_state( weapon_user_animations_selecto
 {
 }
 
-// STATE[100%|DONE]
 void player_logic_base_state::set_user( base_player& user )
 {
 	m_user	= &user;
 }
 
-// STATE[100%|DONE]
 u32 player_logic_base_state::movement_animation_index( player_input const& input )
 {
 	bool	move_fwd_pressed	= ( input.actions_mask & 0x1 ) != 0;

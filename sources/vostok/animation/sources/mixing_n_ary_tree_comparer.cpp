@@ -26,7 +26,6 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-// STATE[UNCHECKED]
 void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 {
 	n_ary_tree_size_calculator	calculator( this );
@@ -38,7 +37,6 @@ void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool n_ary_tree_comparer::equal( ) const
 {
 	return						m_equal;
@@ -1357,7 +1355,6 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const& to )
 {
 	n_ary_tree_animation_node* i_begin		= from.weight_root();
@@ -1437,7 +1434,6 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	// ******
 }
 
-// STATE[UNCHECKED]
  n_ary_tree_comparer::n_ary_tree_comparer( n_ary_tree const& from, n_ary_tree const& to, u32 current_time_in_ms ) :
 	m_animations_count		( 0 ),
 	m_animated_objects_count( 0 ),

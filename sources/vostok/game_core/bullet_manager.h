@@ -94,9 +94,6 @@ public:
 
 private:
 	struct bullet_functor {
-		// STATE[None|DONE]: structure matches (0 stmts / 0x42 bytes both sides); objdiff scores None
-		// from ICF fold-name relocs (member-ctor calls resolve to unrelated fold representatives) plus
-		// the first member ctor's promoted convention (target passes this in eax, base ecx). Non-steerable.
 		inline	explicit	bullet_functor	( ) { }
 		inline				~bullet_functor	( ) { }
 
@@ -174,7 +171,6 @@ private:
 private:
 	class bullet_functor_mt_allocator : public boost::noncopyable {
 	public:
-		// STATE[INLINED]
 		explicit				bullet_functor_mt_allocator	( void* const buffer, u32 buffer_size ) : m_buffer( buffer )
 		{
 			ASSERT( UNKNOWN_EXPRESSION );
@@ -190,12 +186,11 @@ private:
 
 		inline	void*			buffer						( ) const { return m_buffer; }
 
-		// STATE[INLINED]: Safe cast versions?
 		inline	bullet_functor*	allocate					( ) {
 			return static_cast<bullet_functor*>( malloc_impl( 0 ) );
 		}
 
-		// STATE[UNCHECKED]: sushi@TODO: Why unused. Safe cast versions?
+		// sushi@TODO: Why unused. Safe cast versions?
 				void			deallocate					( bullet_functor*& functor )
 		{
 			free_impl( static_cast<void*>( functor ) );
@@ -207,14 +202,13 @@ private:
 			// ******
 		}
 
-		// STATE[INLINED]
 		inline	void			swap						( bullet_functor_mt_allocator& other )
 		{
 			std::swap( m_bullet_functors, other.m_bullet_functors );
 			std::swap( m_buffer, other.m_buffer );
 		}
 
-		// STATE[UNCHECKED]: sushi@TODO: Why unused
+		// sushi@TODO: Why unused
 				void*			malloc_impl					( u32 size )
 		{
 			VOSTOK_UNREFERENCED_PARAMETER( size );
@@ -228,7 +222,6 @@ private:
 			// ******
 		}
 
-		// STATE[INLINED]: Safe cast versions?
 		inline	void			free_impl					( void* pointer )
 		{
 			m_bullet_functors.push( static_cast<bullet_functor*>( pointer ) );

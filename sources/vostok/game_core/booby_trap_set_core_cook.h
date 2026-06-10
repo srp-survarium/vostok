@@ -20,7 +20,6 @@ public:
 	virtual	u32						get_derived_resource_size	( ) = 0;
 
 private:
-	// STATE[100%|DONE]
 	virtual	void					query_for_derived_resources	(
 										resources::query_result_for_cook*	parent,
 										booby_trap_set_core*				resource,
