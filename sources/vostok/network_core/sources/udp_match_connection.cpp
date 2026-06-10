@@ -75,9 +75,9 @@ bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 	// BASE_ONLY  | 63 | reader.r< u16 >( );
 	// BASE_ONLY  | 64 | reader.r< u16 >( );
 	// BASE_ONLY  | 65 | const u16	bits	= reader.r< u16 >( );
-	// TRGT_ONLY  | L87
-	// TRGT_ONLY  | L88
-	// TRGT_ONLY  | L89
+	// TRGT_ONLY  | 87 | --
+	// TRGT_ONLY  | 88 | --
+	// TRGT_ONLY  | 89 | --
 	// SIZE +0xa  | 70 | reader.advance( reader.r< bool >( ) );
 	// SIZE +0x17 | 71 | return reader.eof( );
 	// VERDICT: STRUCTURE MATCH (shape ok) - 8/8; the ONLY rows are the SAME three r<u16>

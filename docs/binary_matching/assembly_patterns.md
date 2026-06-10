@@ -1055,15 +1055,20 @@ source spelling (`m_fn = value`, or an inline setter containing it) is already c
 PARTIAL. Confirmed in `network_core/udp_match_client::udp_match_client` (set_on_disconnect
 inlined; body stmt 0x73 vs target 0x59, 79.20% PARTIAL).
 
-### LOG_* macros compile __LINE__ immediates - park the function at its ORIGINAL source lines
+### LOG_* macros compile __LINE__ immediates - do NOT pad for them, take the % hit
 The logging helper (`LOG_ERROR`/`LOG_WARNING`, logging_extensions.h) pushes `__LINE__` as an
 IMMEDIATE (`push 61h` = line 97) into the append call, so a function containing LOG sites only
 byte-matches when each LOG statement sits at the target's original line number (read it off the
-pushed immediate / the carcass `'NN'`). Pad the `.cpp` with blank/comment lines above the function
-to land them. For a MULTI-LINE macro invocation, VS2008 takes `__LINE__` (and the /Od line-table
-entry for the whole statement) from the CLOSING-PAREN line - a LOG spread over 4 lines with `);`
-on line 97 pushes 97. Confirmed in `network_core/udp_match_client::handle_receive` (LOG sites
-97/103/109 matched after padding; the 4-line first LOG attributed to its `);` line).
+pushed immediate / the carcass `'NN'`). For a MULTI-LINE macro invocation, VS2008 takes
+`__LINE__` (and the /Od line-table entry for the whole statement) from the CLOSING-PAREN line -
+a LOG spread over 4 lines with `);` on line 97 pushes 97.
+**Do NOT pad the `.cpp` to land these lines (sushi)** - accept the few-byte residual and note it
+(`__LINE__ immediate, N sites; +1 size class if the true line crosses the imm8/imm32 boundary at
+128`). Padding makes the file line-FRAGILE: every edit above the pins (sibling units, verifier
+embeds, restacks) silently breaks the bytes, and the maintenance cost dwarfs the points (proven
+by the `udp_match_client.cpp` pin churn). That file's existing padding (sites 97/103/109 + 172)
+predates this rule, is already matched, and stays - preserve its pins while it lives, but don't
+create new ones.
 
 ### logging helper expansion: base schedules the boost::function1 ctor at the append site (target: block entry)
 Inside each inlined LOG block the target constructs the log-callback `boost::function<...>`

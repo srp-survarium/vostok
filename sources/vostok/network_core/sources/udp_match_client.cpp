@@ -67,19 +67,7 @@ void udp_match_client::process_incoming_packet( packet_reader& reader, boost::as
 	// residual is the frame immediate (base 0xD0 vs target 0xB8) + ICF stub naming, not source-steerable.
 }
 
-// claude@NOTE: handle_receive must sit at its original source lines - the three
-// LOG_ERROR sites compile __LINE__ immediates (97/103/109) into the bytes; the
-// padding below stands in for process_incoming_packet's original body span
-// (another match unit) so those land correctly.
-
-
-
-
-
-
-
-
-// STATE[93.54%|PARTIAL]: 23/23 stmts aligned, all slots/frame identical; residuals are the
+// STATE[93.53%|PARTIAL]: 23/23 stmts aligned, all slots/frame identical; residuals are the LOG __LINE__ immediates (line-padding dropped per policy) plus the
 // shared LOG_ERROR helper machinery (base builds the boost::function1 callback at the append
 // site where target builds it at block entry, swapping the two guarded temp cleanups - the
 // http_client::on_error precedent) and stmt-118 packet.buffer() inline-vs-call, both LTCG.
@@ -120,7 +108,7 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 	check_consistency		( );
 	if ( !m_connection.is_disconnected( ) )
 		start_receiving		( );
-	// STRUCTURE DIFF (condensed; blanks squeezed for the line 172 pin below): 23/23 stmts; SIZE rows: -0x3|97 `);` / -0x3|103 LOG_ERROR(unable to read) / +0x1|108 if(server!=remote) / -0x5|109 LOG_ERROR(unexpected sender) / -0x5|118 packet_reader reader(...) / -0x1|119 process_incoming_packet(...)
+	// STRUCTURE DIFF (condensed): 23/23 stmts; SIZE rows: -0x3|97 `);` / -0x3|103 LOG_ERROR(unable to read) / +0x1|108 if(server!=remote) / -0x5|109 LOG_ERROR(unexpected sender) / -0x5|118 packet_reader reader(...) / -0x1|119 process_incoming_packet(...)
 	// VERDICT: STRUCTURE MATCH (shape ok) - 23/23 aligned; rows are LTCG: function1-ctor fold-rep convention/schedule at the 3 LOG sites (-3/-3/-5), packet.buffer() inline-vs-call (-5), register-form +/-1 (108/119); non-steerable.
 }
 // STATE[90.97%|PARTIAL]: frame/slots exact (0xD0) after make_custom_alloc_handler named-return fix; residual is the result-copy (0x12 bytes) our LTCG fails to elide in this standalone emission (target keeps it in the tcp_packet_client::start_reading emission, 100% there - the spelling proof).
@@ -162,7 +150,7 @@ void udp_match_client::disconnect( )
 {
 	m_connection.disconnect( );
 }
-// STATE[94.52%|PARTIAL]: shape/strings/__LINE__(172=0xACh) exact; residual is the LOG macro's log_callback_boost ctor COMDAT - target calls it first with this in EAX, base last with this in ESI (+8 frame, reg renames cascade) - ICF/LTCG call-boundary convention, http_client LOG precedent.
+// STATE[94.51%|PARTIAL]: shape/strings exact; __LINE__ immediate off by design (line-padding dropped per policy, -0.01); residual is the LOG macro's log_callback_boost ctor COMDAT - target calls it first with this in EAX, base last with this in ESI (+8 frame, reg renames cascade) - ICF/LTCG call-boundary convention, http_client LOG precedent.
 void udp_match_client::enqueue( udp_match_packet* packet )
 {
 	if ( m_connection.is_connected( ) ) {
