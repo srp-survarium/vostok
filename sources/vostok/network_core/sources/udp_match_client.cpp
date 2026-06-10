@@ -123,6 +123,15 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 
 	if ( !m_connection.is_disconnected( ) )
 		start_receiving		( );
+
+	// STRUCTURE DIFF: target 23 stmts / base 23 stmts
+	// SIZE -0x3 | 97  | 		);
+	// SIZE -0x3 | 103 | 		LOG_ERROR			( "unable to read from socket\r\n" );
+	// SIZE +0x1 | 108 | 	if ( m_server_endpoint != m_remote_endpoint ) {
+	// SIZE -0x5 | 109 | 		LOG_ERROR			( "unexpected sender\r\n" );
+	// SIZE -0x5 | 118 | 		packet_reader	reader( base_packet( m_receive_buffer.c_array( ), bytes_transferred ) );
+	// SIZE -0x1 | 119 | 		process_incoming_packet( reader, m_remote_endpoint );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 23/23 aligned; rows are LTCG: function1-ctor fold-rep convention/schedule at the 3 LOG sites (-3/-3/-5), packet.buffer() inline-vs-call (-5), register-form +/-1 (108/119); non-steerable.
 }
 
 // STATE[STUB]

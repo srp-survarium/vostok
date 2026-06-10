@@ -73,7 +73,9 @@ public:
 private:
 			void								start_receiving				( );
 
-			void								handle_receive				( boost::system::error_code const& error_code, u32 bytes_transferred );
+			// const u32 here is load-bearing: __FUNCSIG__ in the LOG_ERROR sites renders from
+			// the FIRST declaration, and the target literal reads "...,const unsigned int)".
+			void								handle_receive				( boost::system::error_code const& error_code, const u32 bytes_transferred );
 	inline	void								handle_send					( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ }
 
 			void								on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code );
