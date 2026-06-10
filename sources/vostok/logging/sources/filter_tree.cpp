@@ -189,7 +189,7 @@ private:
 	pcstr									name;
 };
 
-STATIC_SIZE_ASSERT(filter_name_eq, // sushi@);
+STATIC_SIZE_ASSERT(filter_name_eq, 0x4);
 
 // STATE[97.2%|DONE]: LTCG conv in the vectora ctor / strings::join / add_line calls (-0x2/-0x1/-0x1).
 void logging_filters_console_command::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
