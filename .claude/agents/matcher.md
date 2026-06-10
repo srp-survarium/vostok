@@ -98,6 +98,11 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   - **Never ADD a function/symbol that isn't in the TARGET structure** to score it (a
     fabricated override, an invented split). A real target symbol living in its own `.cpp`
     is fine; inventing one to win a % is not - take the hit instead.
+  - **A `const` already in the source was put there by the structure - do NOT drop it.**
+    The PDB records const-ness of params/locals (`pdb_fetch --view info`/`structure`), and
+    that is the source of truth; existing `const` almost always traces back to it. Remove
+    one only when the structure itself proves the value is non-const there (e.g. the PDB
+    deliberately records it mutable) - never as cleanup, never to chase a %.
   - **Never modify ANOTHER unit's source to win THIS match.** Out-lining a *different*
     unit's empty method so your call site emits `call` instead of inlining `{}` is off-limits
     - that out-line, if the target really keeps it standalone, belongs to THAT unit's own PR.
