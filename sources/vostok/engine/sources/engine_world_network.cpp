@@ -41,7 +41,7 @@ void engine_world::initialize_network	( )
 void engine_world::network_tick			( )
 {
 	resources::dispatch_callbacks	( );
-	m_network_world->tick			( );
+	m_network_world->tick			( false );
 }
 
 void engine_world::network				( )

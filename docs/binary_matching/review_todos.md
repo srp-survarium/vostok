@@ -13,6 +13,7 @@ Append-only ledger (union-merged across branches, like `PROGRESS.md` / `unanswer
 
 | Status | Function | File:line | PR | TODO |
 |--------|----------|-----------|----|------|
+| open | `game_world` legacy `network::client` wiring | `game/sources/game_world.h` + `game_world.cpp` | - | Disabled (commented, server-precedent style) during the network carcass rebuild: the legacy client/server/packet web is parked in `temp/network_legacy/` and no longer compiled. Redo the game-side wiring against the canonical `network::login_client`/`match_client`/`tcp_packet_client` when the game module gets matched. |
 | not done | `get_weapon_lexeme_pair_impl` | `game_core/sources/weapon_lexeme_pair.cpp` | #155 | Function is **not matched-done**: `STATE[None]` with no STRUCTURE DIFF — objdiff can't pair it (the LTCG inline-vs-call of the `animation_lexeme_parameters` setters shortens the body past the pairing threshold). Needs structure recovery before it earns a real % / embed. |
 | open | `get_weapon_lexeme_pair_impl` | `game_core/sources/weapon_lexeme_pair.cpp` (`.bones_mask( 2 )`) | #155 | Is `2` a bare magic constant or a named value defined somewhere? |
 | open | `get_weapon_lexeme_pair_impl` | `game_core/sources/weapon_lexeme_pair.cpp` (the `bool dummy` dead store) | #155 | Unlikely a `bool dummy` — if it were, `dummy` would appear in the locals (it does not). The lone 4-byte dead store needs further matching to recover the compiled-out structure (would let objdiff pair it: currently `STATE[None]`). |

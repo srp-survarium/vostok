@@ -42,6 +42,13 @@
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
+#include <vostok/network/world.h>
+#include <vostok/network/engine.h>
+#include <vostok/network/login_client.h>
+#include <vostok/network/match_client.h>
+#include <vostok/network/tcp_packet_client.h>
+#include <vostok/network/http_client.h>
+
 #include <vostok/animation/skeleton.h>
 
 #include <vostok/game_core/affects_threshold.h>
@@ -1475,6 +1482,25 @@ namespace vostok
 		network_core::read_lines_from_stream( "prefix", buff );
 	}
 
+	// declared in network/sources/network_entry_point.h, off the public include path
+	namespace network {
+		void initialize	( );
+		void finalize	( );
+	} // namespace network
+
+	void use_network_clients()
+	{
+		network::initialize( );
+		network::finalize( );
+
+		// the rebuilt client headers must compile even while their bodies are stubs
+		network::login_client* login_client			= NULL;
+		network::match_client* match_client			= NULL;
+		network::tcp_packet_client* tcp_packet_client	= NULL;
+		network::http_client* http_client			= NULL;
+		printf( "%p%p%p%p", login_client, match_client, tcp_packet_client, http_client );
+	}
+
 	struct test_udp_match_packets_orderer : network_core::udp_match_packets_orderer
 	{
 		virtual network_core::udp_match_message_type_info get_sending_message_info( u8 ) 	{ return network_core::udp_match_message_type_info( false, false, 0 ); }
@@ -1743,6 +1769,7 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_udp_match_connection();
 	vostok::use_network_core_udp_network_flow_emulator();
 	vostok::use_network_core_udp_match_client();
+	vostok::use_network_clients();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
