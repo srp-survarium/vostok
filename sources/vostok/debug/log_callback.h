@@ -14,10 +14,15 @@
 namespace vostok {
 namespace debug {
 
-// claude@MATCH: target PDB types both accessors with a RAW function pointer
-// (`void (*)(pcstr,bool,bool,pcstr) set_log_callback(void (*)(pcstr,bool,bool,pcstr))`),
-// and target debug.cpp emits NO dynamic initializer for s_log_callback - so the original
-// typedef was a plain pointer, not boost::function.
+// claude@MATCH: re-verified against the target PDB structure (sushi review, PR #286):
+//   ?set_log_callback@debug@vostok@@YAP6AXPBD_N10@ZP6AX0110@Z@Z
+//   ?get_log_callback@debug@vostok@@YAP6AXPBD_N10@ZXZ
+// the parameter mangles P6AX0110@Z = raw function pointer BY VALUE (a boost::function
+// const& would mangle ABV?$function@..., a `log_callback const&` would mangle ABQ6...),
+// and the only s_log_callback dynamic initializer/atexit dtor pair in the whole target
+// belongs to vostok::logging (its boost::function one) - debug.cpp emits none, so its
+// s_log_callback is a POD pointer. Top-level const on the by-value parameter would not
+// mangle (codegen- and PDB-invisible), so its presence is unknowable; spelled without it.
 typedef		void ( *log_callback )	  (	pcstr	initiator,
 									bool	is_error_verbosity,
 									bool	log_only_user_string,
