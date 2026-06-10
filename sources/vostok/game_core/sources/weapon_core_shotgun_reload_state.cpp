@@ -55,62 +55,64 @@ void weapon_core_shotgun_reload_state::initialize( )
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
 	m_animation_has_been_ended = false;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x599737>|0x007|+0x022:'44'		m_logic->set_initial_state( m_logic->states().front() );
-	// <0x599759>|0x029|+0x00a:'45'		m_animation_has_been_ended = false;
-	// ******
-	// TARGET @0x07: mov eax,[m_logic]; call finalize_impl(=states); call operator[](=front); push eax; set_initial_state
-	// BASE: inlines front() -> extra [ebp-8] temp + reads list members in-line (sub esp,0Ch).
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x5 | 55 | m_logic->set_initial_state( m_logic->states( ).front( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is states()/front() kept out-of-line in
+	// target vs inlined in base (extra temp + direct list-member reads), non-steerable LTCG.
 }
 
-// STATE[78.57%|PARTIAL]: LTCG cross-module inline-vs-call of animation_playback_state::reset().
+// STATE[55.50%|PARTIAL]: LTCG cross-module inline-vs-call of animation_playback_state::reset().
 // Both statements + offsets match; the target emits `add eax,120h; call reset` (out-of-line),
-// but reset() is a header-inline stub so our LTCG ELIDES it at this call site (the same
+// but reset() is a header-inline whose body our LTCG INLINES at this call site (the same
 // uncontrollable inline-vs-call documented at animation/type_definitions.h:40 for
-// weapon_core_base_state::finalize). The 3 missing reset instrs are the sole residual.
+// weapon_core_base_state::finalize).
 void weapon_core_shotgun_reload_state::finalize( )
 {
 	m_animation_playback_state.reset( );
 	m_logic->set_initial_state( 0 );
 
-	// FUNCTION BODY
-	// <0x599777>|0x007|+0x00d:'50'		m_animation_playback_state.reset();
-	// <0x599784>|0x014|+0x010:'51'		m_logic->set_initial_state( 0 );
-	// ******
-	// TARGET @0x07: mov eax,[ebp-4]; add eax,120h; call animation_playback_state::reset  (MISSING in base - LTCG elided)
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x17 | 74 | m_animation_playback_state.reset( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is reset() out-of-line promoted call in
+	// target vs inlined body in base, non-steerable LTCG.
 }
 
-// STATE[INPROGRESS]: walks the internal reload substate fsm to find the current substate's
-// index and appends it (u8). ASSERT( found ) compiled out. DCE'd, no base symbol.
+// STATE[77.95%|PARTIAL]: residuals are the states()/front() out-of-line calls in the for-init
+// (same wall as initialize) and append(u8) kept out-of-line in target vs inlined to the
+// temp+append(pcvoid,u32) leaf in base, both non-steerable LTCG.
 void weapon_core_shotgun_reload_state::serialize( network_core::udp_match_packet& packet ) const
 {
-	u8						state_id	= 0;
-	bool					found		= false;
-	ai::fsm_state const*	current		= m_logic->current_state( );
+	u8							state_id	= 0;
+	bool						found		= false;
+	ai::fsm_state const* const	current		= m_logic->current_state( );
 
-	for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next )
+	for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
 	{
 		if ( i == current )
 		{
 			found	= true;
 			break;
 		}
-		++state_id;
 	}
 
 	ASSERT( UNKNOWN_EXPRESSION_T( found ) );
 
 	packet.append( state_id );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x589830); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
+	// SIZE -0x1 | 89 | for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
+	// SIZE +0x7 | 100 | packet.append( state_id );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the ++state_id merged into the for head matches the
+	// target's .inc block (was an 11-vs-10 BASE_ONLY row); residual SIZEs are the
+	// states()/front() and append(u8) inline-vs-call walls, non-steerable.
 }
 
-// STATE[INPROGRESS]: reads the target substate index, walks the substate fsm to it and
-// promotes it to the initial state. ASSERT compiled out. DCE'd, no base symbol.
+// STATE[65.17%|PARTIAL]: sole residual is packet_reader::r<bool> kept out-of-line in target
+// (0xb call) vs inlined read+advance in base (0x20) - the documented r<T> cross-module
+// inline wall - plus the same states()/front() wall in the for-init.
 void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader& reader )
 {
-	u8						target_state_id	= reader.r< bool >( );
+	u8 const				target_state_id	= reader.r< bool >( );
 	u8						state_id		= 0;
 	ai::fsm_state*			current			= NULL;
 
@@ -127,12 +129,15 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 
 	m_logic->set_initial_state( current );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x5897a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
+	// SIZE +0x15 | 113 | u8						target_state_id	= reader.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the r<bool> inline-vs-call wall,
+	// non-steerable.
 }
 
-// STATE[100%|DONE]: byte-identical to target 0x589db0 (26/26 instructions, size 68). objdiff scores
-// it `None` only because the delinked target obj has no COMDAT to pair against; the rich-index bytes
-// match the live target exactly. The two-slot materialization (`state` [ebp-8], `current` [ebp-4],
+// STATE[100%|DONE]: scored 0/unpaired until the declaration moved to the private section
+// (target mangles it @@EBE - private virtual); with the access letters agreeing it pairs
+// and scores 100. The two-slot materialization (`state` [ebp-8], `current` [ebp-4],
 // sub esp,0Ch) comes from a SEPARATE named local for the current_state() result, not the inlined cast.
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
