@@ -51,7 +51,9 @@ public:
 							animation::mixing::animation_lexeme&	arg_3
 						) const = 0;
 
-	inline	void		set_is_firing_ptr			( bool* arg_0 ) { /* no source */ }
+	// claude@MATCH: real body proven by initialize_weapon_logic's target carcass -
+	// the inlined call stores the pointer at [state+0x12C] (m_is_firing_ptr).
+	inline	void		set_is_firing_ptr			( bool* is_firing ) { m_is_firing_ptr = is_firing; }
 	inline	void		set_is_firing				( bool arg_0 ) { /* no source */ }
 
 protected:
