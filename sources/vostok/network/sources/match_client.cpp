@@ -6,6 +6,11 @@
 #include <vostok/network/match_client.h>
 #include "match_client_impl.h"
 #include "network_world.h"
+#include "enqueue_order.h"
+#include "send_queued_order.h"
+#include "receive_udp_response.h"
+#include "functor_order.h"
+#include "udp_match_fixed_packets_allocator.h"
 
 // TU-local order living at GLOBAL namespace (per the PDB): deferred destruction
 // of the match client + its allocators on the network thread

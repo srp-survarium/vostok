@@ -11,7 +11,7 @@ namespace network {
 
 // STATE[STUB]
 void login_client_impl::on_sign_up_answer_received(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback,
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 	sign_up_info const&					sign_up_info,
 	boost::system::error_code const&	error_code,
 	const u32							bytes_transferred
@@ -46,7 +46,7 @@ void login_client_impl::on_sign_up_answer_received(
 
 // STATE[STUB]
 void login_client_impl::on_sign_up_info_written(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback,
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 	sign_up_info const&					sign_up_info,
 	boost::system::error_code const&	error_code,
 	const u32							bytes_transferred
@@ -90,7 +90,7 @@ void login_client_impl::on_sign_up_info_written(
 
 // STATE[STUB]
 void login_client_impl::sign_up_on_handshaked(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback,
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 	sign_up_info const&						sign_up_info,
 	const handshaking_error_types_enum		handshaking_result
 )
@@ -143,7 +143,7 @@ void login_client_impl::sign_up_on_handshaked(
 
 // STATE[STUB]
 void login_client_impl::on_sign_up_account_answer_received(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback,
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 	sign_up_info const&					sign_up_info,
 	boost::system::error_code const&	error_code,
 	const u32							bytes_transferred
@@ -205,7 +205,7 @@ void login_client_impl::on_sign_up_account_answer_received(
 
 // STATE[STUB]
 void login_client_impl::on_sign_up_written(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback,
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 	sign_up_info const&					sign_up_info,
 	boost::system::error_code const&	error_code,
 	const u32							bytes_transferred
@@ -250,7 +250,7 @@ void login_client_impl::on_sign_up_written(
 // STATE[STUB]
 void login_client_impl::sign_up_on_connected(
 	const connection_error_types_enum		connection_result,
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback,
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 	sign_up_info const&						sign_up_info
 )
 {
@@ -301,7 +301,7 @@ void login_client_impl::sign_up(
 	pcstr const				host,
 	const u16				port,
 	sign_up_info const&		sign_up_info,
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback
+	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( &host, &port, &sign_up_info, &callback );

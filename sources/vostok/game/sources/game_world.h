@@ -14,8 +14,9 @@
 
 // IMPORTANT!!!
 // for test purposes only
+// sushi@TODO: legacy network::client disabled (module parked in temp/network_legacy)
 //#include <vostok/network/server.h>
-#include <vostok/network/client.h>
+//#include <vostok/network/client.h>
 
 namespace vostok{
 
@@ -102,7 +103,7 @@ private:
 //	scenes_list								m_active_scenes;
 private:
 //	network::server		m_server;
-	network::client		m_client;
+//	network::client		m_client;
 }; // class game_world
 
 } // namespace survarium

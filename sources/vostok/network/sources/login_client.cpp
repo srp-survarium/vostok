@@ -6,6 +6,7 @@
 #include <vostok/network/login_client.h>
 #include "network_world.h"
 #include "login_client_impl.h"
+#include "string_response.h"
 #include <vostok/console_command.h>
 
 namespace vostok {
