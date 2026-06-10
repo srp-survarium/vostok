@@ -22,11 +22,8 @@ weapon_core_inactive_state_cook::weapon_core_inactive_state_cook( ) :
 {
 	resources::register_cook( this );
 
-	// FUNCTION BODY
-	// <0x59ef17>|0x037|+0x00c:'18'	register_cook( this );
-	// ******
-	// TARGET ctor @0x21: mov ecx,12Ch (class); edi=eax=0FFFFFFFDh (both thread ids = -3); push 0 (flags).
-	// BASE: push 103h (our enum's weapon_inactive_state_class), push 0, push -3, push -3 (stack convention).
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residuals: target ctor passes class id 0x12C in ecx (our enum gives 0x103, engine-wide enum gap) and the unmanaged_cook ctor's LTCG register convention (edi/eax=-3) vs our stack pushes; both unsteerable from this file.
 }
 
 // STATE[100%|DONE]
@@ -49,12 +46,9 @@ mutable_buffer weapon_core_inactive_state_cook::allocate_resource( resources::qu
 	ASSERT_T_U( in_query, raw_file_data, file_exist );
 	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_inactive_state ), "weapon_core_inactive_state" ), sizeof( weapon_core_inactive_state ) );
 
-	// FUNCTION BODY
-	// <0x59ef6b>|0x00b|+0x03d:'28'	ASSERT_T_U( in_query, raw_file_data, file_exist )  [matched]
-	// <0x59efa8>|0x048|+0x02e:'29'	return mutable_buffer( MALLOC(0x138), 0x138 )  [residual: ctor inline-fold]
-	// ******
-	// RESIDUAL @ statement 29: target inlines mutable_buffer(pvoid,u32) as field stores (temp [ebp-8],
-	// sub esp,0Ch); base out-of-lines to uint2::uint2 (sub esp,8, push 138h). See md.
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0x6 | 50 | return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_inactive_state ), "weapon_core_inactive_state" ), sizeof( weapon_core_inactive_state ) );
+	// VERDICT: STRUCTURE MATCH (2/2) - the ASSERT_T_U eater is byte-identical; sole SIZE is the mutable_buffer(pvoid,u32) ctor inlined as field stores in target vs COMDAT-folded out-of-line uint2::uint2 in base, inline-depth wall, non-steerable.
 }
 
 // STATE[55.64%|PARTIAL]: byte-identical to weapon_core_shotgun_reload_state_cook::deallocate_resource.
@@ -66,9 +60,9 @@ void weapon_core_inactive_state_cook::deallocate_resource( void* buffer )
 {
 	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
 
-	// FUNCTION BODY
-	// <0x59ef38>|0x008|+0x014:'34'	VOSTOK_FREE_IMPL( g_allocator, (resource_base*&)buffer );
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0xf | 67 | VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
+	// VERDICT: STRUCTURE MATCH (1/1) - target calls free_helper OUT-OF-LINE, base inlines the wrapper (null check + free_helper_impl call + allocator spill), inline-depth wall, non-steerable.
 }
 
 // STATE[91.97%|PARTIAL]: base asm (0x457500) is instruction-for-instruction identical to target
@@ -89,17 +83,10 @@ void weapon_core_inactive_state_cook::create_resource( resources::query_result_f
 	);
 	parent.finish_query( resources::cook_base::result_success );
 
-	// LOCALS
-	// weapon_core_inactive_state* 	object_to_cook
-	// weapon_state_creation_params const* params
-	// ******
-
-	// FUNCTION BODY
-	// <0x59efe9>|0x009|+0x006:'39'	params = (weapon_state_creation_params const*)raw_file_data.c_ptr();
-	// <0x59efef>|0x00f|+0x068:'40'	object_to_cook = new (in_out_buffer.c_ptr()) weapon_core_inactive_state( params->weapon );
-	// <0x59f057>|0x077|+0x045:'41'	parent.set_unmanaged_resource( unmanaged_resource_ptr(object), memory_usage_type(nocache_memory, 0x138) );
-	// <0x59f09c>|0x0bc|+0x00c:'42'	parent.finish_query( result_success );
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x5 | 82 | weapon_state_creation_params const*	params	= static_cast< weapon_state_creation_params const* >( raw_file_data.c_ptr( ) );
+	// SIZE -0xa | 84 | weapon_core_inactive_state*	object_to_cook	= new ( in_out_unmanaged_resource_buffer.c_ptr( ) ) weapon_core_inactive_state( params->weapon );
+	// VERDICT: STRUCTURE MATCH (4/4) - L82: target FOLDS const_buffer::c_ptr() to a direct member read (mov eax,[ebp+0Ch]) while base keeps the accessor call; L84: the inverse inline-depth on the placement-new path (mutable_buffer c_ptr/ctor fold). Per-site LTCG inline-vs-call, non-steerable (NOT a static_cast_checked site - target has no temps, it is SHORTER).
 }
 
 // STATE[100%|DONE]
