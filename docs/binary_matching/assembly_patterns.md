@@ -8,7 +8,7 @@ curation is sushi's.
 ## Searching (agents: do this when staring at a diff row)
 
 1. Skim/grep [`patterns/INDEX.md`](patterns/INDEX.md) - one line per pattern
-   (`- [title](file.md) — tags — symptoms`):
+   (`- [title](file.md) — cN — tags — symptoms` (cN = confidence/10)):
    - by construct: `grep 'cpp:if' patterns/INDEX.md` (also `cpp:switch`, `cpp:ctor`, ...)
    - by mnemonic: `grep 'asm:sbb' patterns/INDEX.md` (also `asm:call`, `asm:movss`, ...)
    - by category: `grep 'topic:mangling' patterns/INDEX.md`
