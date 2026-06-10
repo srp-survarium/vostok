@@ -43,11 +43,13 @@ pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapo
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[85.65%|PARTIAL]: structure matches (ASSERT_U, get_weapon_lexeme_pair, return expr).
-// Wall (inline-vs-call, side verified against --view diff): the TARGET keeps the out-of-line
-// `call operator+<animation_lexeme,animation_lexeme>`; OUR BASE inlines it into the return
-// (addition_lexeme ctor + cloned_in_buffer + ~addition_lexeme stack temporaries -> frame grows).
-// operator+ is a standalone symbol in BOTH rich indexes (target 0x0b42f0, base 0x08c9f0).
+// STATE[87.52%|PARTIAL]: was ASSERT_U - the target eater has NO leading assert_untyped enum
+// push, i.e. VOSTOK_UNREFERENCED_PARAMETERS (fixed, row closed byte-exact, 85.65 -> 87.52);
+// param consts restored from the target PDB signature.
+// Wall (inline-vs-call, sides re-verified against the slices): the TARGET INLINES
+// operator+<animation_lexeme,animation_lexeme> into the return (addition_lexeme ctor +
+// cloned_in_buffer + ~addition_lexeme emitted inline); OUR BASE keeps the out-of-line
+// `call operator+`. operator+ is a standalone symbol in BOTH rich indexes.
 // ATTEMPTED (reverted, no effect 85.65 -> 85.65): an explicit-specialization DECLARATION of
 // operator+<animation_lexeme,animation_lexeme> in this .cpp - MSVC8 still inlines the visible
 // primary inline template. The proven forward-decl device needs the inline DEFINITION to be
@@ -56,25 +58,20 @@ pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapo
 // animation module - not done here. trail: pistol_double_barreled_weapon_core_idle_state.md
 animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool							is_third_view,
+	const weapon_user_state_enum		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	ASSERT_U( weight_driving_animation );
+	VOSTOK_UNREFERENCED_PARAMETERS( weight_driving_animation );
 
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 
-	// STRUCTURE DIFF[target 0x79bcd0 | base 0x44eee0]: target 3 / base 5 stmts
-	// 0x011 <0x36> | 0x011 <0x38> | ASSERT_U( weight_driving_animation );   SIZE
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// 0x066 <0x59> | 0x068 <0x38> | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );   SIZE
-	// ; aligned 1, size-diffs 2, quantity-diffs 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are operator+ inline-vs-call: target keeps out-of-line `call operator+`, base inlines it (source-steerable, not yet resolved). trail: pistol_double_barreled_weapon_core_idle_state.md
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x21 | 68 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the per-call-site LTCG split of operator+<animation_lexeme>: target inlines it (addition_lexeme ctor/cloned_in_buffer/dtor out-of-line), base calls operator+. Non-steerable. trail: pistol_double_barreled_weapon_core_idle_state.md
 }
 
 // STATE[99.92%|DONE]: structure matches (the captions brace-init splits per-element to align
