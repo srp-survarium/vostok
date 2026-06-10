@@ -21,14 +21,11 @@ character_recoil_calculator::character_recoil_calculator( ) :
 {
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]: was unpaired (/OPT:REF - the target caller weapon_core::activate/
+// deactivate is unmatched); anchored via temp_include_all use_recoil_calculator -> 100.
 void character_recoil_calculator::set_character_recoil_params( character_recoil_params const* params )
 {
 	m_params = params;
-
-	// FUNCTION BODY
-	// <0x5961e7>|0x007|+0x008:'27'
-	// ******
 }
 
 // STATE[99.65%|DONE]: target allocated 4 more bytes on the stack and used different offsets for local variables (non-steerable /Od frame-slot noise)
@@ -67,16 +64,8 @@ void character_recoil_calculator::tick(
 			m_current_value = math::min( m_current_value + ( m_increase_speed * dt ), m_target_value );
 	}
 
-	// STRUCTURE DIFF:
-	// target: 0x586270            base: 0x448640
-	// ; void survarium::character_recoil_calculator::tick(const survarium::weapon_user_state_enum, const bool, const unsigned int, const float) ; target 16 stmts / base 18 stmts
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// --          | <0>         |    EMPTY only base
-	// .. same ..
-	// ; aligned 16, size-diffs 0, quantity-diffs 2
-	// VERDICT: STRUCTURE MATCH (shape ok) - all 16 statements align, 0 size-diffs; the 2 quantity-diffs are EMPTY source-line gaps. Residual is the /Od frame-slot allocation (target +4 bytes of stack, shifted [ebp-N] offsets), non-steerable. trail: character_recoil_calculator_tick.md
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts (no diverging rows, 0x184 bytes both)
+	// VERDICT: STRUCTURE MATCH - all statements align size-exact; residual is the /Od frame-slot allocation (target +4 bytes of stack, shifted [ebp-N] offsets), non-steerable. trail: character_recoil_calculator_tick.md
 }
 
 } // namespace survarium

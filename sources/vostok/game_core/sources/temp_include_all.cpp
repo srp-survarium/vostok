@@ -571,6 +571,9 @@ namespace vostok
 		calc.tick( survarium::type_stand, true, 10, 10.f );
 
 		calc.set_weapon( NULL );
+		// anchor character_recoil_calculator::set_character_recoil_params (its target
+		// caller weapon_core::activate/deactivate is unmatched, so /OPT:REF drops it)
+		calc.set_character_recoil_params( NULL );
 
 		calc.reload( );
 		calc.chamber_a_round( );
