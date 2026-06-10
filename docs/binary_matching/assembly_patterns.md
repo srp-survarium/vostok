@@ -1,33 +1,40 @@
 # Assembly patterns (MSVC 8.0 / VS2008, x86, /Od + LTCG)
 
-How recovered-assembly shapes map back to Vostok C++ source. Every agent in the
-matching loop reads this first and **appends** to it whenever it recognizes a new
-asm -> source mapping. This is the shared memory that makes each run faster than
-the last. Keep entries short - one pattern each.
+How recovered-assembly shapes map back to Vostok C++ source. The knowledge base
+lives in [`patterns/`](patterns/) - ONE FILE PER PATTERN, indexed in
+[`patterns/INDEX.md`](patterns/INDEX.md). There is no privileged "core list";
+curation is sushi's.
 
-Baseline for these modules (`/Od`, no optimization, plus LTCG):
-- every statement is emitted, in source order; no strength reduction or
-  reordering.
-- every local and parameter has a stack slot, addressed `ebp`-relative; standard
-  `push ebp / mov ebp, esp` frame.
-- LTCG / the linker can change how values cross a `call` boundary (which registers /
-  how much stack, or drop an argument proven constant). **That call-boundary argument
-  passing is the ONLY thing you may write off as LTCG** (see `MATCHING.md`). Frame size,
-  `[ebp-XX]` slot assignment, switch-dispatch shape, an extra `cmp/ja`, a stray `fld1`
-  are NOT LTCG; they are source-steerable and each has a cause (a missing ASSERT, a
-  missing `case`, a `default: NODEFAULT()`). The body is never reordered. Trust the
-  operand-aware match % over a raw instruction-difference count, but do not let it lull
-  you into banking a non-argument diff as "LTCG".
+## Searching (agents: do this when staring at a diff row)
 
-## Entry format
+1. Skim/grep [`patterns/INDEX.md`](patterns/INDEX.md) - one line per pattern
+   (`- [title](file.md) — tags — symptoms`):
+   - by construct: `grep 'cpp:if' patterns/INDEX.md` (also `cpp:switch`, `cpp:ctor`, ...)
+   - by mnemonic: `grep 'asm:sbb' patterns/INDEX.md` (also `asm:call`, `asm:movss`, ...)
+   - by category: `grep 'topic:mangling' patterns/INDEX.md`
+   - by symptom token: `grep 'TRGT_ONLY 0xc' patterns/INDEX.md`, `grep '@@ABE' ...`
+2. Read ONLY the hit files; follow their `variants:` links for siblings.
+3. Full-text fallback when the index line misses:
+   `grep -rli '<token>' docs/binary_matching/patterns/`
 
+## Per-file schema (authoring: new pattern = new file + one INDEX.md line, SAME commit)
+
+```markdown
+# <title - tightened, symptom-first>
+tags: cpp:<construct> | asm:<mnemonic> | topic:<category>   (1+ of each kind where applicable)
+symptoms: <raw grep tokens: asm fragments, b.diff tags, mangling letters, score behaviors>
+confidence: N/10
+variants: <sibling-file.md, ...>   (only when true variants of the same construct exist)
+
+<DESCRIPTION first: 1-3 lean sentences - what this is and when you see it.>
+
+```cpp
+<minimal C++ spelling - what to WRITE>      (omit block if no C++ side)
 ```
-### <short name>
-ASM:
-    <a few representative instructions>
-SOURCE:
-    <the C++ that produces it>
-NOTES: <when it applies, the overload/intrinsic involved, gotchas>
+```asm
+<minimal target-side asm signature - what you SEE>   (omit block if no asm side)
+```
+<at most 1-2 lean trailing lines: steerable-or-wall + evidence (functions, %s, PRs).>
 ```
 
 ## Patterns
@@ -1774,3 +1781,24 @@ The blank-line gaps between elements show up as harmless `EMPTY only base` quant
 real divergences. Confirmed across all 7 `get_weapon_lexeme_pair` variants in the pistol/
 double_barreled weapon_core idle/aimed_idle/show states (SIZE-diff 1 -> 0; report.json unchanged
 at 99.92%, sole residual the ammo_in_magazine arg-passing register).
+confidence scale: 9-10 byte-confirmed repeatedly / house style; 7-8 confirmed in
+named functions; 5-6 single observation or unresolved tension; 1-4 low-confidence,
+negative results, tooling caveats.
+
+## Tag vocabulary (keep controlled; extend only when something truly doesn't fit)
+
+- cpp: if, for, while, switch, ternary, ctor, dtor, init-list, bool, const, cast,
+  return, operator, template, inline, virtual, member, local, macro, assert,
+  new-delete, string, float, static
+- asm: mov, jmp, call, cmp, test, neg, sbb, sete, lea, push, fld, fstp, movss,
+  sub-esp, ret, jcc, add, and, movzx, idiv, fild, rep-movsd
+- topic: mangling, assert-eater, inline-vs-call, anchoring, scoring-artifact,
+  codegen-idiom, structure-shape, allocator, pdb-locals, fold-icf, convention,
+  logging, tooling
+
+## For humans
+
+Browse [`patterns/INDEX.md`](patterns/INDEX.md) top to bottom - it is sorted by
+primary `cpp:` tag so construct families cluster. Low-signal notes (negative
+results, tooling caveats) carry `confidence: 1-4/10`; the old
+`assembly_patterns_low_confidence.md` overflow file was absorbed into `patterns/`.
