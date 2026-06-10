@@ -1194,3 +1194,17 @@ game_core's `temp_include_all.cpp` anchor, whose TU never recompiled (PCH stalen
 module). If a one-line header fix provably does not move the diff, `touch` the pch.h of EVERY module
 that instantiates the COMDAT (the anchor TU especially) and rebuild - the stream operator>= then
 went 97.74 -> 100.00.
+
+### Wrong access specifier = SILENT mangled-join failure - check access BEFORE banking 0%/unpaired
+The base/target pairing joins on the EXACT mangled symbol, and the access specifier is baked into
+the mangling (`QAE` public / `IAE` protected / `AAE` private; 2nd letter `B` = const `this`).
+Declare a target-PRIVATE method under our `public:` and the names differ by ONE letter, the join
+fails SILENTLY, and the function shows 0%/unpaired - even when the compiled bytes are IDENTICAL.
+No error anywhere: not from the compiler, not from objdiff (it just never pairs them). RULE: before
+banking any 0%/unpaired marker, read the target's mangled name (rich index `mangled` field) and
+check the access letter AND every signature cv/byval const against our declaration. Confirmed on
+`tcp_packet_socket` (PR #291): four methods declared public that the target mangles private sat at
+0%/unpaired with byte-identical code; fixing the access flipped them to 85-100, with `new_packet`
+landing 100 byte-perfect. Generalizes the older "private member function -> mangled `ABE`, not
+`QBE`" entry above: 0%/unpaired + plausible source = ALWAYS suspect the mangled join (access
+letter, const-ness, byval consts) before accepting the 0.
