@@ -36,7 +36,8 @@ private:
 protected:
 			void								active_tick					( u32 frame_time_ms );
 			void								set_active					( bool bactive );
-	inline	bool								empty						( ) const { /* no source sushi@TODO */ return false; }
+	// body inferred from active_tick's inlined tail-if bytes (cmp m_activity_time_ms,0; sete; movzx)
+	inline	bool								empty						( ) const { return !m_activity_time_ms; }
 			void								remove_affects				( );
 			float								reduce_damage				(
 													pcstr		body_part_name,

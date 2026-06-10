@@ -10,12 +10,17 @@
 namespace survarium {
 
 class weapon_core_chamber_a_round_aimed_state_base : public weapon_core_animation_end_aware_state {
-public:
+protected:
+	// target mangling: ctor @@IAE (protected), initialize/finalize @@MAE (protected
+	// virtual), serialize/deserialize/on_animation_end_impl @@EBE/@@EAE (private
+	// virtual) - the public spellings left the whole unit unpaired (U/Q letters);
+	// mirrors the chamber_a_round_state_base sibling.
 			explicit	weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale );
 
 	virtual	void		initialize						( ) override;
 	virtual	void		finalize						( ) override;
 
+private:
 	virtual	void		serialize						( network_core::udp_match_packet& packet ) const override;
 	virtual	void		deserialize						( network_core::packet_reader& reader ) override;
 

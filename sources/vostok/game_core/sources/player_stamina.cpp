@@ -10,12 +10,7 @@
 
 namespace survarium {
 
-// STATE[96.60%|DONE]: mutex/list member-ctor reloc, non-steerable
-// STRUCTURE DIFF[target 0x59aea0 | base 0x45be60]: target 0 / base 0 stmts
-// .. same ..
-// ; aligned 0, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - residual is reloc-resolved member-ctor
-//          calls (intrusive_list w/ threading::mutex policy) + movss const, non-steerable. trail: player_stamina_ctors.md
+// STATE[100%|DONE]
 player_stamina::player_stamina( ) :
 	m_max_value_factor				( 1.0f ),
 	m_spending_speed_factor			( 1.0f ),
@@ -27,12 +22,7 @@ player_stamina::player_stamina( ) :
 {
 }
 
-// STATE[96.71%|DONE]: mutex/list member-ctor reloc, non-steerable
-// STRUCTURE DIFF[target 0x59ae50 | base 0x45be10]: target 1 / base 1 stmts
-// .. same ..
-// ; aligned 1, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole diff is reloc-resolved member-ctor
-//          call (intrusive_list w/ threading::mutex policy), non-steerable. trail: player_stamina_ctors.md
+// STATE[100%|DONE]
 player_stamina::player_stamina( player_stamina const& other )
 {
 	*this = other;
@@ -79,8 +69,10 @@ player_stamina& player_stamina::operator=( player_stamina const& other )
 	// ******
 }
 
-// STATE[INPROGRESS]: reads m_value (float), m_last_spending_time_in_ms (u32),
-// m_last_tick_time_in_ms (u32), m_lower_threshold_was_reached (bool). DCE'd, no base symbol.
+// STATE[0.00%|PARTIAL]: anchored in temp_include_all (was DCE'd/unpaired); every statement is
+// the r<T> cross-module wall - base inlines packet_reader::r<T>, target keeps it out-of-line -
+// so the fuzzy score bottoms out despite the aligned structure (same wall as
+// hand_to_weapon_ik_processor::deserialize at 10.34%).
 void player_stamina::deserialize( network_core::packet_reader& packet )
 {
 	m_value							= packet.r< float >( );
@@ -88,7 +80,12 @@ void player_stamina::deserialize( network_core::packet_reader& packet )
 	m_last_tick_time_in_ms			= packet.r< u32 >( );
 	m_lower_threshold_was_reached	= packet.r< bool >( );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x59b030); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x1b | 86 | m_value                       = packet.r< float >( );
+	// SIZE +0x15 | 87 | m_last_spending_time_in_ms    = packet.r< u32 >( );
+	// SIZE +0x15 | 88 | m_last_tick_time_in_ms        = packet.r< u32 >( );
+	// SIZE +0x15 | 89 | m_lower_threshold_was_reached = packet.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (4/4) - all SIZE rows are r<T> kept out-of-line in target vs LTCG-inlined in base; cross-module wall, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -269,16 +266,13 @@ bool player_stamina::can_be_spent( ) const
 	// ******
 }
 
-// STATE[85.31%|DONE]: intrusive_list mutex-policy push_back inline LTCG, non-steerable
-// STRUCTURE DIFF[target 0x59b0b0 | base 0x45c020]: target 1 / base 1 stmts
-// .. same ..
-// ; aligned 1, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - inlined push_back on intrusive_list w/
-//          threading::mutex policy emits a larger frame (sub esp,14h vs 10h) and a
-//          reloc-different call; frame-size/inline-LTCG, non-steerable. trail: subscribe_on_depletion.md
+// STATE[99.75%|DONE]: push_back call reloc ICF fold-name + 4B frame pad, non-steerable
 void player_stamina::subscribe_on_depletion( player_stamina_subscriber* const subscriber )
 {
 	m_subscribers.push_back( subscriber );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// VERDICT: STRUCTURE MATCH - identical stream 0x1d both; residual is base frame sub esp,14h vs 10h + push_back reloc ICF-folded onto a sibling instantiation, non-steerable.
 }
 
 // STATE[100%|DONE]

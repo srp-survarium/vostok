@@ -18,11 +18,7 @@ items_cook::items_cook( ) :
 	resources::register_cook( this );
 }
 
-// STATE[99.85%|DONE]: LTCG frame-padding on the boost functor temp; statements aligned 4/4
-// STRUCTURE DIFF[target 0x751b20 | base 0x566c10]: target 4 / base 4 stmts
-// .. same ..
-// ; aligned 4, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole residual is a 0xC frame-size delta (base sub esp,178h vs target 16Ch) on the boost::bind/boost::function temp storage; non-steerable LTCG. trail: translate_query.md
+// STATE[99.85%|DONE]: LTCG frame-padding on the boost functor temp; statements aligned
 void items_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -36,27 +32,22 @@ void items_cook::translate_query( resources::query_result_for_cook& parent )
 		parent.user_data( ),
 		&parent
 	);
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x120 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - sole residual is a frame-size delta on the boost::bind/boost::function temp storage; non-steerable LTCG.
 }
 
 // STATE[31%|DONE]: delete_helper arg-passing differs (register vs stack) - call-boundary LTCG
-// STRUCTURE DIFF[target 0x7516c0 | base 0x5667c0]: target 1 / base 1 stmts
-// 0x009 <0x17> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
-// ; aligned 0, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (1/1 stmt) - target passes resource via stack (lea [ebp+8]; push; add esp,8) while base uses edi/register (add esp,4) into delete_helper<doug_lea_allocator,resource_base>; call-boundary arg passing, non-steerable LTCG (shared cook-base wall). trail: delete_resource.md
 void items_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x1 | 48 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH (1/1) - target passes resource via stack while base uses edi/register into delete_helper<doug_lea_allocator,resource_base>; call-boundary arg passing, non-steerable LTCG (shared cook-base wall).
 }
 
-// STATE[93.21%|DONE]: resource_ptr by-value temp materialized+destroyed in target, elided in base
-// STRUCTURE DIFF[target 0x751a60 | base 0x566b60]: target 6 / base 5 stmts
-// .. same ..
-// 0x016 <0x22> | 0x016 <0x1d> | configs::binary_config_ptr config		= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );   SIZE
-// .. same ..
-// <0>         | --          |    EMPTY only target
-// .. same ..
-// ; aligned 4, size-diffs 1, quantity-diffs 1
-// VERDICT: STRUCTURE MATCH (shape ok) - get_unmanaged_resource() returns resource_ptr by value; target materializes the temp at [ebp-28h] and destroys it (call ::dec) before passing &temp to static_cast_resource_ptr, base elides it (add esp,4). resource_ptr by-value temp, non-steerable LTCG. trail: on_config_ready.md
+// STATE[100%|DONE]
 void items_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -66,7 +57,7 @@ void items_cook::on_config_ready( resources::queries_result& data, resources::qu
 	create_item_and_finish_query( item_type, config, parent );
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 void items_cook::create_item_and_finish_query( item_types_enum item_type, configs::binary_config_ptr config, resources::query_result_for_cook* parent )
 {
 	result_enum result	= result_undefined;
@@ -117,66 +108,14 @@ void items_cook::create_item_and_finish_query( item_types_enum item_type, config
 			break;
 		}
 
+		// no break and no default clause: the target's switch head keeps the
+		// jump-table bounds check (cmp,4; ja end - a NODEFAULT would drop it) and
+		// case foo falls out of the switch with no break jmp.
 		case item_type_foo:
 			result = result_error;
-		break;
-
-		default: NODEFAULT( );
 	}
 
 	parent->finish_query( result );
-
-	// FUNCTION BODY
-	// <0x7616fc>|0x00c|+0x007:'54'
-	// <0>
-	// <0x761703>|0x013|+0x006:'56'
-	// <0x761709>|0x019|+0x00c:'57'
-	// <0x761715>|0x025|+0x013:'58'
-	// <0>
-	// <0x761728>|0x038|+0x01a:'60'	switch ( item_type )
-	// <0>							{
-	// <1>								case item_type_base_medkit:
-	// <2>
-	// <0x761742>|0x052|+0x051|[1]:'64'		medkit* resource = VOSTOK_NEW_IMPL( g_allocator, medkit );
-	// <0x761793>|0x0a3|+0x048:'65'			resource->load( root["data"] );
-	// <0x7617db>|0x0eb|+0x008:'66'			if ( item_dict_id )
-	// <0x7617e3>|0x0f3|+0x016:'67'				resource->set_dict_id( item_dict_id );
-	// <0>
-	// <0x7617f9>|0x109|+0x02d:'69'
-	// <0x761826>|0x136|+0x007:'70'
-	// <0x76182d>|0x13d|+0x005:'71'
-	// <0>
-	// <1>
-	// <2>							{
-	// <0x761832>|0x142|+0x05a|[1]:'75'	oxygen_tank* resource = VOSTOK_NEW_IMPL( g_allocator, oxygen_tank );
-	// <0x76188c>|0x19c|+0x048:'76'		resource->load( config->get_root( )["data"] );
-	// <0x7618d4>|0x1e4|+0x033:'77'		parent->set_unmanaged_resource( resource, re
-	// <0x761907>|0x217|+0x007:'78'		result = result_success;
-	// <0x76190e>|0x21e|+0x005:'79'		break;
-	// <0>							}
-	// <1>
-	// <2>
-	// <0x761913>|0x223|+0x00c:'83'		ASSERT( UNKNOWN_EXPRESSION );
-	// <0x76191f>|0x22f|+0x007:'84'
-	// <0x761926>|0x236|+0x005:'85'		break;
-	// <0>
-	// <1>
-	// <0x76192b>|0x23b|+0x05a|[1]:'88'	artefact_lifebone_core* resource = VOSTO
-	// <0x761985>|0x295|+0x048:'89'		resource->load( config->get_root( )["data"] );
-	// <0x7619cd>|0x2dd|+0x008:'90'		if ( item_dict_id )
-	// <0x7619d5>|0x2e5|+0x016:'91'			resource->set_dict_id( item_dict_id );
-	// <0>
-	// <0x7619eb>|0x2fb|+0x033:'93'		parent->set_unmanaged_resource( resource,
-	// <0x761a1e>|0x32e|+0x007:'94'		result = result_success;
-	// <0x761a25>|0x335|+0x002:'95'		break;
-	// <0>
-	// <1>
-	// <0x761a27>|0x337|+0x007:'98'
-	// <0>
-	// <1>							}
-	// <0x761a2e>|0x33e|+0x00e:'101'
-	// <0>
-	// ******
 }
 
 } // namespace survarium

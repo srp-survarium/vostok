@@ -58,6 +58,7 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/usable_object.h>
 #include <vostok/game_core/hand_to_weapon_ik_processor.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
@@ -181,12 +182,6 @@ namespace vostok { namespace ai {
 namespace survarium
 {
 	player_logic_base_state::~player_logic_base_state( ) { }
-
-	// claude@NOTE: anchors for damage_zone_core's free shape-distance helpers.
-	float distance_from_sphere_center_to_point_on_shape( float radius );
-	float distance_from_box_center_to_point_on_shape( vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const& );
-	float distance_from_capsule_center_to_point_on_shape( vostok::math::float4x4 const&, float, float, vostok::math::float3 const& );
-	float distance_from_cylinder_center_to_point_on_shape( vostok::math::float4x4 const&, float, float, vostok::math::float3 const& );
 }
 
 namespace vostok
@@ -364,6 +359,13 @@ namespace vostok
 		hittable_object->remove( );
 	}
 
+	void use_usable_object( survarium::usable_object* usable_object )
+	{
+		// keeps get_transform: the real caller (game_world_ui::update_minimap_objects)
+		// is not matched yet, so /OPT:REF drops the unreferenced body.
+		usable_object->get_transform( );
+	}
+
 	void use_respawn_point_core( )
 	{
 		survarium::respawn_point_core	respawn_point_core;
@@ -382,14 +384,9 @@ namespace vostok
 		survarium::hit_receiver_info hit_receiver_info( NULL, NULL );
 		hit_receiver_info == hit_receiver_info;
 
-		typedef float (*shape_fn0)( float );
-		typedef float (*shape_fn1)( vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const& );
-		typedef float (*shape_fn2)( vostok::math::float4x4 const&, float, float, vostok::math::float3 const& );
-		volatile shape_fn0 p0 = &survarium::distance_from_sphere_center_to_point_on_shape;
-		volatile shape_fn1 p1 = &survarium::distance_from_box_center_to_point_on_shape;
-		volatile shape_fn2 p2 = &survarium::distance_from_capsule_center_to_point_on_shape;
-		volatile shape_fn2 p3 = &survarium::distance_from_cylinder_center_to_point_on_shape;
-		(void)p0; (void)p1; (void)p2; (void)p3;
+		// the four static distance_from_* shape helpers are now anchored in-TU from the
+		// dz_bone_data_contact_test_predicate::add_single_result stub (internal linkage,
+		// matching the target's static records - see damage_zone_core.cpp).
 	}
 
 	void use_generic_anomaly_core( )
@@ -411,6 +408,11 @@ namespace vostok
 		core.on_hit_receiver_enter( NULL, NULL );
 		core.on_hit_receiver_leave( NULL, NULL );
 		core.on_artefact_container_use( NULL );
+
+		// zone_group::on_zone_act is otherwise DCE'd (target rva 0x57d080); reach it
+		// through an opaque pointer (the anchor never runs).
+		survarium::zone_group* group = NULL;
+		group->on_zone_act( NULL, NULL );
 	}
 
 	void use_artefact_container_core( )
@@ -569,6 +571,9 @@ namespace vostok
 		calc.tick( survarium::type_stand, true, 10, 10.f );
 
 		calc.set_weapon( NULL );
+		// anchor character_recoil_calculator::set_character_recoil_params (its target
+		// caller weapon_core::activate/deactivate is unmatched, so /OPT:REF drops it)
+		calc.set_character_recoil_params( NULL );
 
 		calc.reload( );
 		calc.chamber_a_round( );
@@ -1650,6 +1655,10 @@ namespace vostok
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
 
+		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
+		survarium::player_stamina		stamina;
+		stamina.deserialize( *reader );
+
 		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
 		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
 		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
@@ -1663,6 +1672,23 @@ namespace vostok
 		survarium::hand_to_weapon_ik_processor	hand_ik;
 		hand_ik.serialize	( *packet, 0 );
 		hand_ik.deserialize	( *reader );
+
+		// inventory::serialize/deserialize are otherwise DCE'd ( /OPT:REF ); anchoring them
+		// also emits the static call_item_serialize/call_item_deserialize bind targets
+		// (address-taken, kept out-of-line - target inventory.cpp has both helpers).
+		survarium::inventory					inventory;
+		inventory.serialize		( *packet, 0 );
+		inventory.deserialize	( *reader );
+
+		// body_part_parameters::serialize is otherwise DCE'd (target rva 0x5871f0); no
+		// default ctor, so reach it through an opaque pointer (the anchor never runs).
+		survarium::body_part_parameters*		body_part = NULL;
+		body_part->serialize	( *packet, 0 );
+
+		// damage_model::deserialize is otherwise DCE'd (target rva 0x6f0250); noncopyable
+		// with a real ctor, so reach it through an opaque pointer (the anchor never runs).
+		survarium::damage_model*				damage_model = NULL;
+		damage_model->deserialize( *reader );
 	}
 
 	void use_game_core_weapon_state()
@@ -2070,6 +2096,7 @@ namespace vostok
 		p.unsubscribe_from_player_death( NULL );
 		p.on_player_death( );
 		p.tick_active_object( );
+		p.deserialize_game_world_object( *reinterpret_cast< vostok::network_core::packet_reader* >( NULL ) );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
 	}
 
@@ -2556,6 +2583,7 @@ IncludeAll::IncludeAll()
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
 	vostok::use_hittable_object( NULL );
+	vostok::use_usable_object( NULL );
 	vostok::use_respawn_point_core( );
 	vostok::use_damage_zone_core( );
 	vostok::use_generic_anomaly_core( );

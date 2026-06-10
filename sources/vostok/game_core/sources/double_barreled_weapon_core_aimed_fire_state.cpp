@@ -41,11 +41,13 @@ namespace survarium {
 // STATE[99.96%|DONE]: every instruction matches. Sole residual is the
 // `weapon.get_magazine_capacity()` __thiscall `this` loaded into eax (target) vs ecx (base) -
 // an argument-passing register choice (LTCG), same class as the double_barreled fire_state sibling.
+// Nested for loops are braced like the fire/reload siblings: each closing brace carries its
+// loop backjump as its own 0x2 statement (16/16 stmts, 0x1c2 both sides).
 double_barreled_weapon_core_aimed_fire_state::double_barreled_weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	float const								animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	u32 const								animations_count
 ) : weapon_core_aimed_fire_state_base( weapon, animation_time_scale ),
 	m_weapon_animation_index( u32( -1 ) )
 {
@@ -53,16 +55,24 @@ double_barreled_weapon_core_aimed_fire_state::double_barreled_weapon_core_aimed_
 	ASSERT_CMP_U( animations_count, ==, 12 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
-				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 2 ; ++weapon_state_index ) {
+				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+			}
+		}
+	}
 
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			m_user_animations[view][user_state] = animations[animation_index++];
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
+
+	// STRUCTURE DIFF: target 16 stmts / base 16 stmts (0x1c2 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residual is the get_magazine_capacity `this` in eax (target) vs ecx (base), LTCG arg-register choice.
 }
 
 // STATE[99.76%|DONE]: every instruction/branch matches. Sole residual is the
@@ -75,6 +85,9 @@ void double_barreled_weapon_core_aimed_fire_state::initialize( )
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	m_weapon_animation_index = m_weapon.ammo_in_magazine( ) != 2;
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x43 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residual is the ammo_in_magazine `this` in eax (target) vs ecx (base), LTCG arg-register choice.
 }
 
 // STATE[83.90%|PARTIAL]: every statement (the leading ASSERT, get_weapon_lexeme_pair,
@@ -86,8 +99,8 @@ void double_barreled_weapon_core_aimed_fire_state::initialize( )
 // whole-program decision, not source-steerable in this unit. See .md.
 animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -100,17 +113,13 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::weap
 
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
-	// FUNCTION BODY
-	// <0x7ac240>|0x010|+0x012:'54'	ASSERT( UNKNOWN_EXPRESSION );
-	// <0x7ac252>|0x022|+0x01f:'55'	lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
-	// <0x7ac271>|0x041|+0x02a:'56'	hands_expression = get_user_hands_expression( offset, ..., weight_driving_animation );
-	// <0>
-	// <0x7ac29b>|0x06b|+0x07a:'58'	return main + expression( offset ) + hands_expression;
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x29 | 114 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the operator+ inline-vs-call LTCG on the addition tree, non-steerable.
 }
 
 // STATE[100%|DONE]
-weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "aimed_shot_first_barrel", "aimed_shot_second_barrel" };
 
@@ -134,7 +143,7 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 	);
 }
 
-// STATE[79.39%|PARTIAL]: structure now matches the target exactly - 12 statements both sides (sprint
+// STATE[79.39%|PARTIAL]: structure now matches the target exactly - 10 statements both sides (sprint
 // early-return, the animation_type()!=additive early-return, the captions array, the interpolator local,
 // and - per claude@MATCH - the animation_lexeme_parameters ctor+setter chain folded into ONE statement
 // (target L101=0x6e vs base 0x72) feeding the animation_lexeme override_lexeme construction, like the
@@ -145,15 +154,15 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
 	if ( user_state_id == type_sprint )
 		return animation::mixing::expression( weapon_lexeme );
 
-	u32 user_animation_index = ( user_state_id == type_crouch );
+	u32 const user_animation_index = ( user_state_id == type_crouch );
 
 	resources::managed_resource_ptr const& selected_animation =
 		m_user_animations[is_third_view != false][user_animation_index];
@@ -161,7 +170,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 	if ( resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( selected_animation )->animation_type( ) != animation::animation_type_additive )
 		return animation::mixing::expression( weapon_lexeme );
 
-	pcstr user_animation_captions[2] = { "aimed_stand_shot", "aimed_crouch_shot" };
+	pcstr const user_animation_captions[2] = { "aimed_stand_shot", "aimed_crouch_shot" };
 
 	animation::linear_interpolator interpolator( s_aim_transition_time );
 
@@ -183,23 +192,12 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 
 	return animation::mixing::expression( override_lexeme );
 
-	// FUNCTION BODY
-	// <0x7abff1>|0x011|+0x006:'78'	if ( user_state_id == type_sprint )
-	// <0x7abff7>|0x017|+0x010:'79'	return expression( weapon_lexeme );
-	// <0>
-	// <0x7ac007>|0x027|+0x00c:'81'	u32 user_animation_index = ( user_state_id == type_crouch );
-	// <0x7ac013>|0x033|+0x020:'82'	selected_animation = m_user_animations[is_third_view!=false][user_animation_index];
-	// <0x7ac033>|0x053|+0x059:'83'	if ( pinned_ptr_const<...>( selected_animation )->animation_type() != additive )
-	// <0x7ac08c>|0x0ac|+0x010:'84'	return expression( weapon_lexeme );
-	// <0>
-	// <1>
-	// <0x7ac09c>|0x0bc|+0x00e:'87'	pcstr user_animation_captions[2] = { "aimed_stand_shot", "aimed_crouch_shot" };
-	// <0>
-	// <0x7ac0aa>|0x0ca|+0x010:'89'	animation::linear_interpolator interpolator( s_aim_transition_time );
-	// <0> .. <10>					animation_lexeme_parameters ctor + setter chain
-	// <0x7ac0ba>|0x0da|+0x06e:'101'	override_lexeme_parameters( ... ).animated_object().playback_type(1).additivity_priority(1); animation_lexeme override_lexeme( params );
-	// <0x7ac128>|0x148|+0x021:'102'	return expression( override_lexeme );
-	// ******
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
+	// SIZE +0x3  | 154 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE -0x13 | 161 | if ( resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( selected_animation )->animation_type( ) != animation::animation_type_additive )
+	// SIZE +0x3  | 162 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE +0x4  | 182 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - residuals are per-site LTCG inline-vs-call: target inlines animation_type() (reads [ptr+18h] via temps) where base keeps the call; expression(lexeme) ctor arg-register shape; setter-chain inline depth.
 }
 
 // STATE[86.50%|PARTIAL]: control flow + placement-new + ctor call all match. Sole residual is the
@@ -212,7 +210,7 @@ double_barreled_weapon_core_aimed_fire_state* weapon_core_state_cook_template<su
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	u32 const							animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_aimed_fire_state(
@@ -222,9 +220,9 @@ double_barreled_weapon_core_aimed_fire_state* weapon_core_state_cook_template<su
 		animations_count
 	);
 
-	// FUNCTION BODY
-	// <0x7abf79>|0x009|+0x05c:'114'	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_aimed_fire_state( ... );
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x11 | 223 | );
+	// VERDICT: STRUCTURE MATCH (1/1) - base folds the STUB computed_shooting_animation_time_scale to fldz at the call site while target keeps the call (xmm0 return); closes itself once that callee is matched.
 }
 
 } // namespace survarium
