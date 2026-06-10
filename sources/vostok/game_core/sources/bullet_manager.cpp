@@ -82,9 +82,15 @@ float bullet_manager::get_bullet_time_factor( ) const
 }
 
 struct redundant_bullet_predicate {
-	// STATE[90.15%|DONE] LTCG for float3
+	// STATE[INLINED]: ctor inlined into tick's remove_if; no standalone body.
 	inline	explicit	redundant_bullet_predicate	( bullet_manager& bullet_manager ) : bullet_manager( &bullet_manager ) { }
 
+	// STATE[87.98%|PARTIAL]: operator!= inline-vs-call (target folds to !(operator==)).
+	// STRUCTURE DIFF[target 0xae610 | base 0x7da20]: target 5 / base 5 stmts
+	// 0x009 <0x2e> | 0x009 <0x2c> | if ( bullet->get_start_velocity( ) != float3( 0, 0, 0 ) )   SIZE
+	// .. same ..
+	// ; aligned 4, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - target has NO float3 operator!= symbol; it inlines `a != b` to `!( operator==(a,b) )` (call operator== + je/jne flip), base keeps standalone operator!= and calls it; whole-program LTCG inline-vs-call, non-steerable. trail: redundant_bullet_predicate.md
 			bool		operator()					( bullet* bullet )
 	{
 		if ( bullet->get_start_velocity( ) != float3( 0, 0, 0 ) )
@@ -92,42 +98,32 @@ struct redundant_bullet_predicate {
 
 		bullet_manager->free_bullet( bullet );
 		return true;
-
-		// FUNCTION BODY
-		// <0xbe619>|0x009|+0x02e:'86'
-		// <0xbe647>|0x037|+0x004:'87'
-		// <0>
-		// <0xbe64b>|0x03b|+0x00e:'89'
-		// <0xbe659>|0x049|+0x002:'90'
-		// ******
 	}
 
 public:
 	/* 0x0000 */	survarium::bullet_manager*		bullet_manager;
 }; // struct redundant_bullet_predicate
 
-// STATE[87.80%|PARTIAL]: `delete_helper` didn't inline in target.
+// STATE[89.30%|PARTIAL]: delete_helper wrapper inline-vs-call LTCG.
+// STRUCTURE DIFF[target 0x5913f0 | base 0x463440]: target 4 / base 4 stmts
+// .. same ..
+// 0x038 <0x25> | 0x038 <0x2e> | VOSTOK_DELETE_IMPL( *m_bullets_allocator_ref, bullet );   SIZE
+// .. same ..
+// ; aligned 3, size-diffs 1, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - target calls delete_helper<> wrapper out-of-line (extra predicate-bool arg), base inlines wrapper to delete_helper_impl<>; whole-program LTCG, non-steerable. trail: free_bullet.md
 void bullet_manager::free_bullet( bullet* bullet )
 {
 	if ( m_engine && bullet->m_tracer_idx != u16(-1) )
 		m_engine->detach_tracer( bullet );
 
 	VOSTOK_DELETE_IMPL( *m_bullets_allocator_ref, bullet );
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5a13f9>|0x009|+0x018:'103'
-	// <0x5a1411>|0x021|+0x017:'104'
-	// <0>
-	// <0x5a1428>|0x038|+0x025:'106'
-	// ******
 }
 
-// STATE[98.49%|DONE]: Stack variables allocated slightly differently, since `boost::function` Got LTCG'd differently (ecx vs eax / ecx vs esi).
+// STATE[95.11%|PARTIAL]: 4-byte frame/slot LTCG (boost::function stack lowered differently).
+// STRUCTURE DIFF[target 0x591d80 | base 0x463c60]: target 23 / base 23 stmts
+// .. same ..
+// ; aligned 23, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - sole residual is target sub esp,1ECh vs base sub esp,1F0h (4-byte frame), cascading slot renames; whole-program LTCG, non-steerable. trail: tick.md
 void bullet_manager::tick( u32 current_time_in_ms )
 {
 	const u32 bullets_count = m_bullets.size( );
@@ -179,7 +175,14 @@ void bullet_manager::fire(
 	emit_bullet( position, velocity, s_bm_current_air_resistance, wa, wc, current_time_in_ms, initiator, ignorable_object, tracer );
 }
 
-// STATE[94.92%|DONE]
+// STATE[89.81%|PARTIAL]: bullet_functor_mt_allocator::malloc_impl inline-vs-call LTCG (4-byte frame).
+// STRUCTURE DIFF[target 0x591980 | base 0x4639e0]: target 12 / base 12 stmts
+// .. same ..
+// 0x030 <0x4d> | 0x030 <0x4b> | bullet_manager::bullet_functor* functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );   SIZE
+// .. same ..
+// 0x154 <0xb6> | 0x152 <0xbc> | m_functors.push( functor );   SIZE
+// ; aligned 10, size-diffs 2, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - target calls bullet_functor_mt_allocator::malloc_impl out-of-line, base inlines it to try_pop (+4-byte frame); the push SIZE is the cascading slot shift; whole-program LTCG, non-steerable. trail: add_decal.md
 void bullet_manager::add_decal(
 	resources::unmanaged_resource_ptr const&	decal,
 	float										size,
@@ -202,22 +205,6 @@ void bullet_manager::add_decal(
 		functor->functor		= boost::bind( &bullet_manager::add_decal_impl, this, functor );
 		m_functors.push( functor );	// sushi@MATCH: Seems the same!
 	}
-
-	// FUNCTION BODY
-	// <0x5a1990>|0x010|+0x020:'152'
-	// <0>
-	// <0x5a19b0>|0x030|+0x04d:'154'
-	// <0>
-	// <0x5a19fd>|0x07d|+0x00f:'156'
-	// <0x5a1a0c>|0x08c|+0x019:'157'
-	// <0x5a1a25>|0x0a5|+0x019:'158'
-	// <0x5a1a3e>|0x0be|+0x019:'159'
-	// <0x5a1a57>|0x0d7|+0x00d:'160'
-	// <0x5a1a64>|0x0e4|+0x009:'161'
-	// <0x5a1a6d>|0x0ed|+0x067:'162'
-	// <0x5a1ad4>|0x154|+0x0b6:'163'
-	// <0>
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -279,7 +266,15 @@ void bullet_manager::play_sound_impl( resources::unmanaged_resource_ptr const& s
 	m_engine->play_sound( sound, position );
 }
 
-// STATE[67.87%|PARTIAL]: bind problems
+// STATE[98.81%|PARTIAL]: boost::cref bind args fixed; residual is malloc_impl inline-vs-call LTCG.
+// STRUCTURE DIFF[target 0x5916e0 | base 0x463730]: target 12 / base 13 stmts
+// .. same ..
+// 0x020 <0x49> | 0x020 <0x4b> | bullet_manager::bullet_functor* functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );   SIZE
+// .. same ..
+// --          | <0>         |    EMPTY only base
+// .. same ..
+// ; aligned 11, size-diffs 1, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - bound args now boost::cref (reference_wrapper, was by-value); sole residual is bullet_functor_mt_allocator::malloc_impl inline-vs-call (base extra push, EMPTY-only-base slot); whole-program LTCG, non-steerable. trail: play_particle.md
 void bullet_manager::play_particle(
 	resources::unmanaged_resource_ptr const&	sound,
 	float3 const&								position,
@@ -301,29 +296,13 @@ void bullet_manager::play_particle(
 		functor->functor = boost::bind(
 			&bullet_manager::play_particle_impl,
 			this,
-			functor->resource,
-			functor->position,
-			functor->direction,
-			functor->normal
+			boost::cref( functor->resource ),
+			boost::cref( functor->position ),
+			boost::cref( functor->direction ),
+			boost::cref( functor->normal )
 		);
 		m_functors.push( functor );
 	}
-
-	// FUNCTION BODY
-	// <0x5a16f0>|0x010|+0x010:'217'
-	// <0>
-	// <0x5a1700>|0x020|+0x049|[1]:'219'
-	// <0>
-	// <0x5a1749>|0x069|+0x00f:'221'
-	// <0x5a1758>|0x078|+0x019:'222'		functor->position = position;
-	// <0x5a1771>|0x091|+0x019:'223'		functor->direction = direction;
-	// <0x5a178a>|0x0aa|+0x00b:'224'		functor->direction.normalize( );
-	// <0x5a1795>|0x0b5|+0x019:'225'		functor->direction = normal;
-	// <0x5a17ae>|0x0ce|+0x00b:'226'		functor->normal.normalize( );
-	// <0x5a17b9>|0x0d9|+0x103:'227'
-	// <0x5a18bc>|0x1dc|+0x0bc:'228'
-	// <0>
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -337,7 +316,16 @@ void bullet_manager::play_particle_impl(
 	m_engine->play_particle( particle, position, direction, normal );
 }
 
-// STATE[58.56%|PARTIAL] sushi@TODO: functor->position & functor->direction were pushed differently
+// STATE[89.38%|PARTIAL]: boost::cref bind args fixed; residual is malloc_impl inline-vs-call LTCG (4-byte frame).
+// STRUCTURE DIFF[target 0x5914a0 | base 0x4634f0]: target 9 / base 8 stmts
+// .. same ..
+// 0x020 <0x4d> | 0x020 <0x4b> | bullet_manager::bullet_functor* functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );   SIZE
+// <0>         | --          |    EMPTY only target
+// .. same ..
+// 0x09f <0xda> | 0x09d <0xe0> | );   SIZE
+// .. same ..
+// ; aligned 6, size-diffs 2, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH (shape ok) - position/direction now boost::cref (reference_wrapper); residual is bullet_functor_mt_allocator::malloc_impl inline-vs-call (target sub esp,0C0h vs base 0BCh, EMPTY-only-target slot); whole-program LTCG, non-steerable. trail: update_tracer.md
 void bullet_manager::update_tracer(
 	bullet*				bullet,
 	float3 const&		position,
@@ -354,30 +342,12 @@ void bullet_manager::update_tracer(
 			&bullet_manager::update_tracer_impl,
 			this,
 			bullet->m_tracer_idx,
-			functor->position,
-			functor->direction,
+			boost::cref( functor->position ),
+			boost::cref( functor->direction ),
 			length
 		);
 		m_functors.push( functor );
 	}
-
-	// FUNCTION BODY
-	// <0x5a14b0>|0x010|+0x010:'239'
-	// <0>
-	// < >|0x020|+0x04d:'241'
-	// <0>
-	// <1>
-	// <0x5a150d>|0x06d|+0x019:'244'
-	// <0x5a1526>|0x086|+0x019:'245'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5a153f>|0x09f|+0x0da:'251'
-	// <0x5a1619>|0x179|+0x0bc:'252'
-	// <0>
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -421,7 +391,13 @@ void bullet_manager::set_max_bullets( pcstr args )
 
 #define CALLBACKS_PER_BULLET 6
 
-// STATE[92.30%:PARTIAL]: Lot's of LTCG diffs. Maybe something more
+// STATE[85.75%|PARTIAL]: query_create_resources default-arg passing order LTCG.
+// STRUCTURE DIFF[target 0x592590 | base 0x464650]: target 11 / base 11 stmts
+// .. same ..
+// 0x051 <0x6b> | 0x051 <0x69> | );   SIZE
+// .. same ..
+// ; aligned 10, size-diffs 1, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the query_create_resources(_and_wait) trailing default args (two NULL + assert_on_fail bool) pushed in a different order/form (push 0/0 + mov ecx,1 vs push 1 + xor/xor), cascading reg renames; LTCG call-boundary arg passing, non-steerable. trail: allocate_bullets_memory.md
 // sushi@NOTE: I wonder why this waits only for when allocator is initialized
 void bullet_manager::allocate_bullets_memory( u32 new_max_bullets_count )
 {
@@ -588,7 +564,11 @@ void bullet_manager::emit_bullet(
 #endif // #ifndef MASTER_GOLD
 }
 
-// STATE[99.89%|DONE]: Allocated less stack space
+// STATE[97.20%|PARTIAL]: frame-size LTCG (target sub esp,2Ch vs base 40h).
+// STRUCTURE DIFF[target 0x591330 | base 0x463380]: target 4 / base 4 stmts
+// .. same ..
+// ; aligned 4, size-diffs 0, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - structure identical; sole residual is target sub esp,2Ch vs base sub esp,40h plus cascading slot renames; whole-program LTCG stack lowering, non-steerable. trail: destroy_bullet.md
 void bullet_manager::destroy_bullet( buffer_vector<bullet*>::iterator const& destroying_bullet_iterator )
 {
 	bullet* destroying_bullet = *destroying_bullet_iterator;

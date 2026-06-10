@@ -252,6 +252,18 @@ access specifier to match the target char. Confirmed: `movement_animation_index`
 (protected static) - public gave `S`, private gave `C`, both scored None; `protected:` -> `KAI`
 == target -> 100%.
 
+### static DATA-member access codes: private=`0`, protected=`1`, public=`2` (after `@@`)
+SYMPTOM: a `mov ecx, ?m_x@Class@ns@@0V...` (or `mov [...], ...`) where TARGET reads
+`@@2V...` but BASE reads `@@0V...` for the SAME static data member - objdiff pairs them
+(same name) but the relocation/symbol differs, costing match %. Distinct from the
+member-FUNCTION codes (Q/A/I) and the static-FUNCTION codes (C/K/S): for static DATA
+members the char right after `@@` is the access - `0`=private, `1`=protected, `2`=public
+(then the type, e.g. `PAV`=pointer, `V`=class by value, `IA`=u32). FIX: set the
+declaration's access specifier so the char matches. A class can have two statics with
+DIFFERENT access (interleave `private:`/`public:` to keep declaration order). Confirmed in
+`game_core/damage_model_cook::on_hit_params_received`: `m_hit_types` is `@@0V` (private,
+both sides) but `m_hit_types_strings` was target `@@2V` (PUBLIC) while our header had it
+private (`@@0V`); a `public:` before it fixed the symbol.
 ### VIRTUAL member access codes: public=`U`, protected=`M`, private=`E` (after `@@`)
 SYMPTOM: report.json `fuzzy_match_percent: None` for a virtual override that compiled and is in
 the base obj; the COFF symbol differs from the target only in the access/virtual char right after
@@ -732,9 +744,14 @@ FOLLOWED BY arg pushes + a folded call = a `_U` assert; recover the args from th
 - `ASSERT_U(expr)` -> `expression_eater(assert_untyped, expr)` -> pushes expr then `push 0`.
 NOTE the order: `assert_untyped`(=0) is pushed LAST (it is an early macro arg) for `_U`, FIRST/last
 varies by form - read the push sequence. A class-typed arg (e.g. an `animation_lexeme`, 0x84) is
-copied by value (`sub esp,0x84; rep movsd`). CAVEAT: if the target's eater receives ONLY the
-expression with NO `assert_untyped push 0`, no standard macro reproduces it exactly (ASSERT_U adds
-the `push 0`); that lone `push 0` is the closest-macro residual. Confirmed in
+copied by value (`sub esp,0x84; rep movsd`). If the target's eater receives EXACTLY TWO args, both
+runtime values, with NO `assert_untyped push 0`, it is the raw typed-untyped form
+`ASSERT_T_U( assert_type, expression )` -> `expression_eater(assert_type, expression)` (= the bare
+`VOSTOK_EMPTY_EXPRESSION_U_VA_ARGS` macro before `ASSERT_U` wraps it with `assert_untyped`). The
+assert_type slot just holds the first runtime value - do NOT reach for `ASSERT_U`/`ASSERT_CMP_U`
+(both ADD the `push 0`). Push order is C right-to-left: `expression_eater(a, b)` -> `push b; push a`.
+Confirmed BYTE-PERFECT in `weapon_user_animations_selector::on_broken_limb_affect` (L337 =
+`ASSERT_T_U( bodypart, type )` -> `push [ebp+10h](type); push [ebp+8](bodypart)`). Other confirmations:
 `weapon_core_idle_state::weapon_core_idle_state` (ctor line 21 = `ASSERT_CMP_U(animations_count,==,4)`,
 100%) and `weapon_core_idle_state::weapon_and_hands_expression` (line 32 `ASSERT_U(weight_driving_animation)`).
 CRITICAL AMBIGUITY: this eater shape is NOT unique to ASSERT_U - `VOSTOK_UNREFERENCED_PARAMETERS` emits
@@ -847,6 +864,32 @@ in the header (same access char), move the `{}` definition to the .cpp. Confirme
 Regression-free ONLY if the out-of-line body's base method has a single qualified call site (else
 out-lining changes other derived classes' codegen). Same device class as out-lining a trivial accessor
 (round_is_chambered / ammo_in_magazine).
+### `push 0; mov r,val; sub r,-1; neg r; sbb r,r; lea x,&obj; and r,x` = `val != u32(-1) ? &obj : NULL`
+ASM (target, materializing a conditional pointer arg):
+    push 0                       ; (an unrelated arg pushed first)
+    mov  edx, [ebp+20h]          ; val (a u32)
+    sub  edx, 0FFFFFFFFh         ; edx - (-1) == edx + 1
+    neg  edx                     ; CF set iff edx+1 != 0  (i.e. val != -1)
+    sbb  edx, edx                ; edx = (val != -1) ? 0xFFFFFFFF : 0
+    lea  eax, [ebp-0E0h]         ; &obj
+    and  edx, eax                ; (val != -1) ? &obj : NULL
+    push edx
+SOURCE: `val != u32(-1) ? &obj : NULL` (a pointer-or-NULL select on an unsigned `!= -1` test).
+Write the idiom in source (a ternary), do NOT hand-roll the asm. MSVC /Od lowers the
+`!= u32(-1)` compare to `sub r,-1; neg; sbb r,r` (mask = all-ones iff non-equal) and ANDs it
+with the address to pick `&obj` or 0. Reproduces byte-for-byte. Confirmed in
+`game_core/get_weapon_lexeme_pair_impl` (the offset lexeme's `time_driving_animation` arg =
+`time_synchronization_group != u32(-1) ? &main_lexeme : NULL`).
+
+### a lone 4-byte `mov byte[ebp-N],0` standalone statement (no lea/call) = an unused `bool b = false;`, NOT an ASSERT
+A carcass/structure statement of size `<0x4>` whose only instruction is `mov byte ptr [ebp-N], 0`
+with NO following `lea eax,[ebp-N]; call <empty_stub>` is a plain unused `bool` local initialized
+to false (`bool b = false;`), kept as a dead store under /Od (no DCE). DISTINGUISH from a
+compiled-out `ASSERT`, which is `<0xc>` (the byte-store PLUS `lea eax; call empty_stub`). Writing
+an `ASSERT(UNKNOWN_EXPRESSION)` for such a `<0x4>` slot OVER-produces the lea+call. The disp size
+(4 vs 7 bytes) only reflects whether MSVC put the slot at a small or large `[ebp-N]` offset -
+allocation noise, not a mismatch. Confirmed in `game_core/get_weapon_lexeme_pair_impl` (L40,
+target `<0x4>` `mov byte[ebp-5],0`).
 
 ### forward-kinematics chain: `mat = matrices[idx] * parent_obj` and the `operator*(out,A,B)` push order
 A run of `operator*` calls each `rep movsd 0x10` into a fresh 0x40-byte `[ebp-N]` slot, where
@@ -865,6 +908,17 @@ the delinker misnames `fixed_size_allocator<...>::finalize_impl`. `lea eax,[mat]
 = `mat.i.xyz()` (row .i at +0). `add eax,30h; call finalize_impl` = `mat.c.xyz()` (the .c position
 row at +0x30). `add eax,10h`/`+0x20` = `.j`/`.k`. A separate `call float3_pod::length` after it =
 `.xyz().length()`.
+
+### by-value temp built BEFORE trailing arg pushes = HOIST it to a NAMED local
+When the target materializes a by-value argument temp FIRST (`push 0; call ctor` writing
+`[ebp-4]`) and only THEN pushes the remaining args (`push this`, recomputing `&temp` via
+`lea ecx,[ebp-4]`), but inline-rvalue codegen reorders it (pushes `this` first, then builds
+the temp and pushes the ctor's eax return), the cause is temp-scheduling - NOT LTCG, NOT a
+wall. FIX: hoist the rvalue into a NAMED local declared on the line above the call:
+`T tmp( ... ); f( ..., tmp, ... );`. The named local pins the ctor to its declaration point,
+ahead of the argument pushes; its dtor still fires at end-of-scope, matching the target's
+trailing dtor. Confirmed: `weapon_core::set_animation_callback` (both overloads) -
+`managed_resource_ptr( NULL )` inline temp 80.52%/81.17% -> NAMED local 100%/100%.
 
 ### a write/read at `[ebp+arg]+0xNN` is a MEMBER of an argument struct, not a local
 When asm writes `mov eax,[ebp+8]; add eax,0x1C; ...` (storing a normalize/operator result there),
@@ -889,6 +943,22 @@ thunk 0% - it does not pair the base `??__E.../??__F...` mangled names with the 
 The emitted bytes still match (cc_float byte-identical; cc_bool's only diff is the ctor passing
 command_type/execution_filter in registers under LTCG vs on the stack in base). Treat as DONE.
 
+### compiler-generated dtor: missing member-dtor `this`-pointer setup is ICF folding
+A destructor where the target sets `mov ecx,[this]; add ecx,0xNN` before each trivial member
+`~T()` call but the base omits those `add ecx` setups (still issuing the calls) is ICF/codegen
+folding the identical member-dtor `this` adjustments - not source-steerable. The only real source is
+the explicit body (e.g. `DELETE(m_drawer)`); the member-dtor epilogue is auto-emitted.
+(game_core/legs_ik_processor::~legs_ik_processor, 85.71%.)
+
+### per-call `get_skeleton()`/reference-return spill = uniform `[ebp-N]` shift, not a brace bug
+When `f(*ptr, accessor_returning_ref(), ...)` is called repeatedly and the BASE spills the
+ref-returning accessor into a fresh stack temp per call while the TARGET inlines the deref
+(`mov ecx,[this]; mov edx,[ecx]; push edx`), the base frame grows by 4 bytes per spilled site and
+EVERY later `[ebp-N]` slot shifts by that total - a uniform slot-rename storm with NO `[n]`
+block-open / `+`/`-` control-flow divergence. Distinguish from the genuine brace-scope storm
+(§2a): if the diff has zero target-only/base-only rows and the slot deltas are all the SAME
+constant, it is a temp-spill/LTCG artifact, not a missing brace. (game_core/legs_ik_processor::process.)
+
 ### three sequential `[1]` block-opens = three separate braced `{ }` scopes (not nesting)
 When a `/Od` carcass shows N `[1]` block-opens (depth resets to 1 each time, never `[2]`) at
 distinct srclines with no enclosing `[1]` between them, they are N SEPARATE sibling braced
@@ -911,6 +981,57 @@ bytes of `c`). The delinker misnames the folded thunk after whatever symbol ICF 
 pushed/moved as a `float3 const&` argument, the source is `matrix.c.xyz()` - NOT an allocator
 call and NOT a compiled-out ASSERT/`empty_stub`. (Confirmed: sibling legs_ik_processor.cpp uses
 `.c.xyz()` throughout; game_core/legs_ik_drawer::draw_leg.)
+
+### thin forwarder `m_renderer.draw_X(m_scene, ...)`: float/int arg passed in xmm0/eax vs spilled to stack = LTCG call-boundary residual, NOT a source bug
+A one-line debug-draw forwarder `member_ref.method( other_member_ref, a, b, c )` (member_ref at
+this+0, scene_ptr at this+4 via `add ecx,4`) can match 100% for some overloads and stall at
+60-80% for sibling overloads with the SAME forwarding shape. The divergence is purely at the
+call boundary: e.g. the TARGET passes a `const float` arg in `movss xmm0,[ebp+..]` (register)
+while the BASE passes it on the stack (`fld [ebp+..]; fstp [esp]`), or which integer arg ends in
+`eax` vs gets pushed differs. This is whole-program LTCG calling-convention specialization
+dictated by the (possibly unmatched) callee; it cannot be steered from the forwarder's source -
+the two 100%-matching siblings prove the source is right. Stop at PARTIAL and name the cause; do
+NOT chase it. (game_core/legs_ik_drawer: draw_cross/draw_line_capsule 100%, draw_origin 62.88%,
+draw_solid_capsule 79.43%, draw_leg 73.36% - same draw_origin xmm0-vs-fld/fstp residual x4.)
+
+## A file-static `cc_bool` console command -> `dynamic initializer` is objdiff-UNSCORABLE (None)
+A `static console_commands::cc_bool s_x_cc( "name", s_x_value, serializable, command_type )` at
+file scope compiles its construction into a `dynamic initializer for 's_x_cc'` (plus a matching
+`dynamic atexit destructor`). Both score **None** in report.json and have **no standalone symbol**
+in `binaries/rich/base/index.jsonl` - the per-TU init/atexit thunks are LTCG/ICF-folded so the
+delinker can't re-attach them. The body is still emitted and byte-correct. Recognize the asm:
+`push 1`(serializable) / `push s_x_value` / `push "name"` ; `mov eax,<command_type>` ; `xor ecx,ecx`
+(execution_filter_general default) ; `mov esi,s_x_cc`(this) ; `call cc_bool::cc_bool` ; then
+`push <atexit dtor> ; call atexit`. Mirror an existing matched sibling
+(dispersion_calculator's `s_dispersion_enabled_cc`, also None) and mark None|DONE - do not chase
+the symbol. command_type values: engine_internal=0 (eax=0), user_specific=1 (eax=1).
+
+## A `tick`/update with FPU vibration math hit 94% with structure 1:1; residual is /Od frame-slot churn
+A member `tick` that reads `[ebp+8]`(time arg)/`[ebp+0Ch]`(scale) and does `fild qword; fmul
+[epsilon_3]; fmul scale` (= `(a-b)*0.001f*scale`), `fsm::tick()`, a `static_cast<derived*>(
+m_logic.current_state())` (`mov [+10h]`), a `[vtbl+N]` virtual tick, a `cond ? math::max(...) :
+math::min(...)` clamp store, and a `[vtbl+M]` virtual returning u32 feeding a `sin(phase/period)*
+amp*...` FPU chain - all reproduce 1:1 from source (member offsets straight off the asm,
+math::max/min/sin stay out-of-line). The remaining ~6% is `sub esp,38h` (target) vs `30h` (base):
+2 extra temp dword slots shift the saved-`this` slot ([ebp-24h] vs [ebp-1Ch]) and swap which
+register holds the vtable at the second virtual call. Pure /Od register/slot allocation, NOT a
+missing local/brace/ASSERT/statement - the LOCALS all map, the carcass structure matches. Stop at
+PARTIAL. (breath_vibration_calculator::tick, 94.23%.)
+
+### a `this`-UNUSED trivial member (`return literal`/`return 0.0f`) is FRAMELESS in the target, framed under /Od
+SYMPTOM: a trivial member fn that NEVER references `this` (returns a string literal, `return 0.0f`,
+`return NULL` that ignores members) has a TARGET obj body with NO ebp frame - e.g. `get_speed` =
+`d9 ee c3` (`fldz; ret`), `use_info` = `b8 <reloc> c2 0400` (`mov eax,lit; ret 4`) - while our /Od
+BASE emits the full frame (`55 8bec 51 894dfc <body> 8be5 5d c3`, i.e. `push ebp; mov ebp,esp; push
+ecx; mov [ebp-4],ecx; ...`). The original build applied frame-pointer omission for `this`-unused
+leaves; `/Od` ALWAYS emits the frame + the `mov [ebp-4],ecx` save-this. The 3-5 vs 11+ byte gap is
+too large for objdiff to pair -> `fuzzy: None` even though the semantic body (the fldz / literal /
+ret N) is correct. NOT source-steerable under /Od (frame omission is a build flag). DISTINGUISH from
+ICF-fold None: these survive STANDALONE in the EXE (qualified-call anchor) at a real rva - they are
+present-but-divergent, mark None|PARTIAL. CONTRAST: a member that USES `this` (reads a member, the
+ctor/dtor storing into `this`) keeps its frame in BOTH and matches 100% (e.g. damage_protector
+ctor/dtor). So frame-presence tracks `this`-usage. Confirmed: artefact_container_core::use_info,
+booby_trap_core::get_speed (both None|PARTIAL, frameless target vs /Od frame).
 
 ### `u32_diff -> [lo]; mov [hi],0; fild qword; fdiv 1000.0` = `float dt = ( u32a - u32b ) / 1000.0f`
 A millisecond->seconds delta `float dt = ( current_time - last_time ) / 1000.0f` where both
@@ -1279,3 +1400,377 @@ emits all N including the redundant one. Flipping the label order (`default: cas
 `case X: default:`) changes NOTHING - both spellings dedup. Bank the few-byte SIZE row on the
 switch line; do not chase it. (udp_match_connection::process_low_level_message, +0x3 on the
 dispatch row.)
+### a member `tick`/update whose body is byte-identical but with `sub esp` off by 4 = one extra unused /Od frame slot (DONE-quality PARTIAL)
+When the base disasm matches the target instruction-for-instruction, member-offset-for-offset,
+call-for-call, constant-for-constant, but the TARGET reserved 4 more stack bytes
+(`sub esp,1Ch` vs base `sub esp,18h`) so the saved-`this` slot and every `[ebp-N]` shifts by 4
+(target this@[ebp-10h] vs base this@[ebp-0Ch]), that is a single UNUSED /Od frame slot the
+target build allocated - pure stack-allocation noise, NOT a missing local/brace/ASSERT/statement.
+The PDB local set maps, the carcass statement structure matches 1:1. Non-steerable under /Od.
+Mark PARTIAL at the resulting % (here 99.67%), not chase. Same class as
+`breath_vibration_calculator::tick` (94%, frame-slot churn). Confirmed in
+`game_core/character_dispersion_calculator::tick` (16 stmts, only diff = sub esp 1Ch vs 18h).
+
+### two trivial accessors in ONE `&&` can split inline-vs-call (one matches, one is the residual)
+A `if ( a() && getter_x() && getter_y() )` where BOTH `getter_x`/`getter_y` are one-line
+header accessors (`{ return m_member; }`) can lower DIFFERENTLY under /GL: the linker keeps
+ONE of them out-of-line (the TARGET emits `call ...getter_x`, standalone symbol present in the
+target rich index) while INLINING the other (`mov al,[this+off]`, no standalone in either index).
+Our /GL LTCG inlines BOTH, so the inlined-on-both-sides one matches byte-for-byte and the
+target-kept-standalone one is the lone residual (`call` vs inlined member read), shifting the
+trailing `[ebp-N]` slot/frame by the one inline. This is the same unsteerable trivial-accessor
+inline-vs-call class as is_aimed()/get_user() - it is a per-method whole-program decision, NOT
+steerable from the caller's source. Confirm which is the residual by querying BOTH rich indexes
+per accessor (target standalone + base absent = the diverging one). Mark the caller PARTIAL at the
+resulting %. Confirmed on `game_core/weapon_core_reload_state_base::initialize` (92%): in
+`!deserializing() && chamber_a_round_on_reload() && round_is_chambered()`, chamber_a_round_on_reload
+(@0x48F) inlined on both sides (matches), round_is_chambered (standalone target @0x09b360, base
+inlines `mov cl,[+48Eh]`) is the residual.
+
+### empty base virtual called via qualified `Base::method()` - LTCG inlines the empty body at the call site (PARTIAL)
+SYMPTOM: a derived override calls the EMPTY base implementation, `Base::execute();` (base decl is
+`virtual void execute() override { /* no source */ }`). TARGET emits `mov ecx,[ebp-4]; call
+Base::execute` (the empty body kept out-of-line @ its rva). BASE (/GL LTCG) INLINES the empty `{}` at
+this call site - the `call` simply vanishes, so the diff shows `+ call <addr>` present only on the
+target side and the following member store with a different scratch reg. Both rich indexes STILL list
+a standalone `Base::execute` (base @0x012c20, target @0x087f80), so it is NOT "inlined everywhere in
+base" - it is the documented PER-CALL-SITE whole-program inline decision (same class as
+animation_playback_state::reset() in weapon_core_aimed_state_base::finalize). Filling the empty body
+would make /Od inline REAL bytes (worse); the empty stub elides one no-op call cleanly. Leave it,
+mark PARTIAL [LTCG empty-callee inline-vs-call]. Confirmed on
+`game_core/weapon_core_fire_state_base::execute` (80.91%): only the `call execute` (3 bytes) differs.
+
+### a `boost::bind(&Derived::virtual_method, this, _1)` ICF-folds onto a SIBLING class's bind<> rep - don't be misled by the delinker name
+SYMPTOM: `set_animation_callback("ch", this, boost::bind(&weapon_core_fire_state_base::on_shot_event,
+this, _1))` - the `call boost::bind<...>` at the bind site is delinker-named with a DIFFERENT class
+(`...weapon_core_animation_end_aware_state...`) than the actual bound method. The `boost::bind<>`
+helper packs only {member-fn-ptr, this, arg} and is byte-identical across sibling state classes, so
+/OPT:ICF folds them and the delinker prints whichever fold representative it picked. The TRUE class
+shows on the un-folded `assign_to<bind_t<...weapon_core_fire_state_base...>>` and the
+`Derived::vcall'{36}'` member-pointer (a vcall thunk because on_shot_event is VIRTUAL). Source is
+`&weapon_core_fire_state_base::on_shot_event` - the mismatched bind<> name is an ICF artifact, not a
+wrong source type. Confirmed in `game_core/weapon_core_fire_state_base::initialize` (99.71%).
+
+### Trivial header getter WITHOUT the `inline` keyword -> standalone COMDAT + a `call` at the use site (our /GL inlines it)
+SYMPTOM: a `return X && obj.trivial_getter();` (or `+ getter()`) function diffs ~85-90%: the target
+emits `call survarium::...::getter` and round-trips the object through 2-3 `[ebp-XX]` ref copies,
+while our base reads the member directly (`mov al,[ecx+NNh]`). The getter (e.g. weapon_core::
+is_double_handed @+48A, weapon_core_base_state::has_animation_ended @+135, player_input::is_sprinting,
+weapon_user_animations_selector::is_ready_to_be_deactivated, round_is_chambered) is defined in the
+header but declared WITHOUT the `inline` keyword (siblings on the same lines that DO have `inline`
+get inlined in BOTH builds). At /Od the target compiles each TU separately -> the getter is a COMDAT
+standalone AND every caller emits a `call`; our whole-program /GL build inlines the trivial body in
+the delinked EXE. This is a genuine LTCG inline-vs-call residual (same class as
+reload_state_base::initialize round_is_chambered, fire_state_base::execute). NOT source-steerable
+short of moving the getter out-of-line, which changes its COMDAT placement and risks other matches -
+bank it PARTIAL [LTCG getter inline-vs-call]. Confirmed across weapon_core batch3:
+is_trying_to_aim 66.75, on_user_sprint 89.72, the has_animation_ended predicates 85-87,
+is_ready_to_be_deactivated 84.77.
+### a no-bounds `default: NODEFAULT()` jump-table switch can be a TRUE 100% match while `--view diff` FOOTER reads ~55-65% - cross-check report.json
+SYMPTOM: a switch compiled to `jmp dword ptr [reg*4+table]` with NO bounds check (source ends
+`default: NODEFAULT();`, full contiguous case range). The function code matches byte-for-byte and
+`--view structure` is identical to the target carcass, yet the `pdb_fetch --view diff` footer reads
+~55-65%. The footer's "mismatches" are BOTH artifacts (NOT code diffs):
+  (1) every leaf `jmp .N`(base) vs `jmp .N+1`(target) - the label NUMBER differs but BOTH resolve to
+      the SAME address (verify in `--view base`/`--view target`: same epilogue offset). The index
+      shift is because the embedded jump table is a distinct symbol whose label objdiff counts.
+  (2) a tail of `(bad)` / nonsense instructions PAST the function `ret` - that is the jump TABLE
+      itself, disassembled as code. base and target tables hold binary-specific RVAs (relocations),
+      so they disassemble into different junk and the footer scores every table dword as a mismatch.
+The AUTHORITATIVE objdiff measure (`report.json` units[].functions[].fuzzy_match_percent - the
+TOP-LEVEL field, NOT `.measures.fuzzy_match_percent`) handles the relocation correctly and reports
+the TRUE % - which for both functions below was 100.0%. So the diff FOOTER is a secondary/diagnostic
+number that UNDER-counts inline jump-tables; ALWAYS reconcile it with report.json before banking a
+non-100%. Do NOT chase the footer with result-temps or trailing returns - a trailing `return X;`
+after the switch re-introduces a `cmp/ja` bounds check + dead store (WORSE code) while only the rich
+footer misleadingly rises. Keep `default: NODEFAULT();`. Confirmed: TRUE 100%
+`game_core/jump_logic::does_need_land_and_run` (footer 63.7%) and
+`game_core/get_jump_animation_index` (footer 55.0%).
+
+## mixing operator+ template selection (animation::mixing::expression `+` chains)
+
+`weapon_and_hands_expression` (every weapon-state variant) returns a `+` chain of mixing
+lexemes/expressions (e.g. `hands_expression + main_lexeme + offset_lexeme`). These cap at
+~83-85% and the residual is a TEMPLATE-SELECTION divergence on the `operator+` overloads.
+
+The target picks `operator+`s that return `expression` BY VALUE and call `expression::is_empty()`:
+- `operator+<animation_lexeme>(expression& left, animation_lexeme& right) -> expression`
+  (ONE explicit template arg; the FIXED `expression&` left operand means the real engine header
+  had a `template<typename T> operator+(expression& left, T& right) -> expression` overload).
+- `operator+(expression&, expression&) -> expression` and const variants (non-template).
+
+The on-disk `vostok/animation/mixing_addition_lexeme_inline.h` provides ONLY
+`template<T1,T2> operator+(T1&, T2&) -> addition_lexeme&`, and `mixing_expression.h`'s
+`is_empty()` is a `return false;` STUB. So the base falls back to the addition_lexeme& form plus
+extra `expression()` conversions, and NO reshaping of the return expression can select the
+target's overloads (verified: wrapping operands in `expression(...)` only makes it WORSE -
+83.52 -> 77.48 / 56.65 - because the desired overloads do not exist to be chosen).
+
+CONCLUSION / pattern: when a `+` chain over `animation::mixing::expression`/lexemes diverges on
+operator+ template instantiation, it is a CROSS-UNIT HEADER GAP (the missing mixing operator+
+overload family + the stubbed `expression::is_empty`), NOT a source shape. Do NOT chase it with
+parenthesization/`expression()` wraps in the consuming function - mark PARTIAL. The real fix is
+to match the mixing operator+ overload set + `expression::is_empty` as their own unit; once those
+overloads exist, the natural `a + b + c` source should select them and these functions lift
+together. (Found re-matching game_core/weapon_core_reload_state::weapon_and_hands_expression.)
+
+## Ternary returned via a named result local (extra slot + movss/movss/fld)
+
+When the target's `float`-returning function ends with a ternary but the epilogue is
+`movss xmm0,[result_slot]; movss [ebp-N],xmm0; fld dword ptr [ebp-N]` (an EXTRA stack slot
+and an SSE round-trip) instead of a plain `fld [result_slot]`, the source assigned the
+ternary to a NAMED local and returned THAT local:
+
+    float const r = cond ? a : b;
+    return r;          // -> movss/movss/fld through r's own slot
+
+A bare `return cond ? a : b;` emits only the plain `fld` (no extra slot). The named local is
+recorded as its own statement in the PDB, so prefer it whenever the carcass shows the extra
+slot. (get_hand_coefficient: 95.54 -> 99.90 once the result local was added.) const vs
+non-const on the local does NOT change the slot assignment.
+
+## Hoisting a temporary's `.c.xyz()` is a float3 REFERENCE, not a full-matrix local
+
+When the target keeps `get_X().c.xyz()` (or any `member.subobject()`) of a returned temporary
+as its OWN srcline statement (carcass shows a `+small` step feeding the next), the materialized
+local is the `.c.xyz()` RESULT bound by reference - NOT the whole returned struct:
+
+    float3 const& p = get_bone_matrix_in_object_space( ... ).c.xyz( );   // <-- correct
+    // NOT: float4x4 m = get_bone_matrix_in_object_space( ... );  float3 p = m.c.xyz();
+
+The asm tell: after the call returns &temp in eax, the target does `add eax, <offset-to-member>`
+then the member-accessor ASSERT call, then `mov [slot], eax` - it stores a POINTER to the
+sub-object, never copies the full struct to the stack. A full-struct hoist allocates an extra
+NRV stack slot the target never uses and REGRESSES the match. (process_hand: full-float4x4 hoist
+89.69 -> 89.54; the .c.xyz() reference hoist 89.54 -> 90.37, restoring 37==37 statements.)
+## bool-added-to-int with neg;sbb;neg = source wrote `(b != 0)`, not a bare bool
+When the target adds a `bool` member to an integer and emits `neg eax; sbb eax,eax; neg eax`
+(the `(x != 0)` normalize-to-0/1 idiom) BEFORE the `add`, the source did NOT write the bare
+`int + boolmember` (that compiles to a direct add of the already-0/1 bool, no normalize). Write
+the comparison explicitly: `int_expr + ( boolmember != 0 )`. (Found in weapon_core::reset_fire_queue
+else-branch `m_ammo_in_magazine + ( m_is_round_chambered != 0 )`: bare `+ m_is_round_chambered` gave
+a direct add @94%, `+ ( ... != 0 )` reproduced the neg;sbb;neg -> 99.65%.) Note the SAME bool in the
+sibling `if (m_is_round_chambered) ++...` branch reads direct (no normalize) - the normalize is
+specific to the arithmetic-add context.
+
+## header-inline accessor the target keeps as a `call` -> move the body to the .cpp
+If a trivial member accessor is `inline { return m_x; }` in the header but the target has a real
+standalone symbol for it AND a caller emits `call accessor` (not the inlined member read), move the
+definition out of the header into the .cpp (leave a forward decl in the header). The out-of-line .cpp
+definition makes /GL stop inlining it at the call site. (weapon_core::fire_queue_length: inline-in-header
+made reset_fire_queue inline `m_weapon_fire_queue_types[m_fire_queue_type]` @66%; out-lining it produced
+the two `call fire_queue_length` the target has. Same pattern as the pre-existing ammo_in_magazine /
+get_magazine_capacity NOTEs.) Confirm first the accessor is a real target symbol (pdb_rich_query --list).
+### `(T)config_value` -> `binary_config_value::operator T` standalone, base inlines it to cast_number
+SYMPTOM: a `(u8)cfg["x"]["y"]` (any `(T)binary_config_value`) where the TARGET emits
+`call binary_config_value::operator unsigned char` then `movzx eax,al`, but the BASE
+instead emits `mov [slot],eax; call cast_number<unsigned char,unsigned __int64,unsigned int>;
+mov [slot],al; movzx ...`. The conversion chain is `operator u8() -> cast_unsigned_number<u8>()
+-> cast_number<u8,u64,u32>()` (configs_binary_config_value_inline.h). Whole-program LTCG picks
+a DIFFERENT cut point in each binary: target keeps the OUTER `operator unsigned char` out-of-line
+(rva 0x52160) and inlines cast_number INTO it; base inlines the operator away and keeps the INNER
+`cast_number<u8,...>` standalone (base rva 0x79dd0). TELL: query both rich indexes - the operator
+exists out-of-line ONLY in target, cast_number<u8> ONLY in base. The `(T)cfg[...]` source is
+already correct; not steerable from the call site. Same inline-vs-call class as is_aimed()/get_user().
+Confirmed in `game_core/player_parameters_modifyer_cook::translate_query` (89.62% PARTIAL).
+
+### `delete_resource` body `VOSTOK_DELETE_IMPL(g_allocator, resource)` - the strip_pointer inline-vs-call wall (~31%)
+SYMPTOM: a one-line cook `delete_resource` whose only statement is `VOSTOK_DELETE_IMPL(g_allocator,
+resource)`. TARGET: `lea eax,[ebp+8]; push eax; mov eax,[g_allocator]; call <finalize_impl-misname>;
+push eax; call delete_helper; add esp,8` (TWO pushed args, strip_pointer kept out-of-line). BASE:
+`mov eax,[g_allocator]; call <Release-misname>; push eax; lea edi,[ebp+8]; call delete_helper;
+add esp,4` (ONE arg, strip_pointer inlined). The macro is `delete_helper(strip_pointer(allocator),
+pointer)` (Master Gold no-debug form, memory_macros.h:41); the divergence is purely whole-program
+inline-vs-call of `strip_pointer`/the delete_helper wrapper. Structure is 1 stmt / 1 stmt (matches);
+fuzzy stalls ~31% because nearly every instruction's operand differs. Non-steerable - identical residual
+across cooks: `items_cook::delete_resource` (31% DONE) and `player_parameters_modifyer_cook::delete_resource`
+(31% PARTIAL) have byte-identical diffs. Mark PARTIAL/DONE, do not chase.
+
+### Callee returns a small struct in register-pair eax:edx + caller COPY (vs base sret/RVO) -> non-steerable wall
+SOURCE: `T r = some_factory( args );` where `T` is a small (<=8 byte) POD-ish struct
+(e.g. `resources::request`, 8 bytes). Seen in `game_material_manager_cook::create_game_material_pairs`
+at every `resources::request r = resources::create_request( name, class );` call.
+
+    base   : push 0Fh ; lea eax,[esp+10Ch] ; call create_request    ; sret/RVO - writes directly into r's slot
+    target : push 0Fh ; mov edx,[..] ; push edx ; call create_request ; add esp,8 ;
+             mov [tmp],eax ; mov [tmp+4],edx ; mov [r],eax ; mov [r+4],ecx  ; returns in eax:edx, then COPIES into r
+
+The target returns the struct in the eax:edx register pair and then copies the pair
+into the local; the base lowers the same source as a hidden-sret (return-value-
+optimization) call writing directly into `r`. This is a CALL-BOUNDARY return-ABI
+difference decided by how the callee/`request` type's copy+return convention was
+compiled under LTCG - it is NOT steerable from the calling function. It cascades:
+every later `[esp+N]` offset shifts because the extra temp/copy enlarges the frame,
+so a SINGLE root cause shows up as many SIZE/quantity rows downstream. Diagnose once
+(one create_request site), then attribute the whole cascade to it. Mark PARTIAL;
+do not chase the downstream rows individually.
+
+### the ASSERT empty-stub call's COMDAT-fold MISNAME is scored MATCHED by report.json (don't chase it)
+SYMPTOM: `--view diff` flags the compiled-out `ASSERT` call's target as a mismatch -
+base resolves it to `boost::function1<void,char const*>::dummy::nonnull`, target to
+`vostok::memory::fixed_size_allocator<...>::finalize_impl` (or other unrelated COMDAT-
+fold names). It looks like a divergence on EVERY function in a unit that has an ASSERT.
+TELL it is harmless: the same misname appears identically in the unit's 100% functions,
+and report.json's `fuzzy_match_percent` scores it as MATCHED (the reloc pairs at the
+fold representative). So a function whose ONLY `--view diff` flag is this ASSERT-call
+misname is 100% in report.json - do NOT bank it as a sub-100% wall. Confirmed across
+`game_core/collision_geometry.cpp` (get_overlapping_objects et al. - all 100% despite
+the misname). CAVEAT: read the TRUE % from report.json (`fuzzy_match_percent`), not from
+the `; N/M instructions equal` line `--view diff` prints (that operand-aware line counts
+the misname as unequal and reads ~85-88% while report.json reads 100%). STATE markers
+that quote the `--view diff` line are stale; re-confirm against report.json after rebuild.
+### By-value `boost::function` argument copy: target copy-ctor (1 call) vs base default-ctor + `assign_to_own` (2 calls) -> non-steerable wall
+SOURCE: a call passing a `boost::function<...>` BY VALUE, e.g.
+`body_part->dump_state( callback, index++ )` where `dump_state` takes
+`boost::function<...> callback` by value (`damage_model::dump_stats`, 79.26%). The
+call constructs a temporary copy of the source `boost::function`.
+
+    target : sub esp,20h ; mov eax,esp ; lea ecx,[ebp+8] ; call function<>::function<>  (COPY CTOR, one call)
+             mov ecx,[this] ; call dump_state
+    base   : sub esp,20h ; mov [ebp-10h],esp ; mov eax,[ebp-10h] ; call function<>::function<> (default ctor)
+             lea ecx,[ebp+8] ; push ecx ; mov ecx,[ebp-10h] ; call assign_to_own  (EXTRA call)
+             mov ecx,[this] ; call dump_state
+
+The base default-constructs the temp then calls `assign_to_own`; the target copy-
+constructs in one call. The extra call + extra `[ebp-10h]` slot enlarge the frame
+(base `sub esp,20h` vs target `sub esp,14h`) and shift slot numbers, dropping the
+byte %. Statement count matches (7/7); the lone SIZE row is this call. The choice
+lives inside boost::function's own header inlining (copy-ctor vs default+assign);
+the source already passes by value, the only available shape. Non-steerable boost::
+function LTCG inline-vs-call. Mark PARTIAL; do not chase.
+
+### Single-`this`-spill prologue: target `push ecx` (4-byte frame) vs base `sub esp,0Ch` -> non-steerable
+SOURCE: a small method with NO declared locals, only `this` spilled to a stack slot
+(`damage_model::on_broken_limb_affect`, 98.95%). Identical instruction stream apart
+from the prologue: target `push ecx` (this at `[ebp-4]`, 4-byte frame) vs base
+`sub esp,0Ch` (this at `[ebp-0Ch]`, 12-byte frame) + trailing alignment nops. MSVC's
+single-slot `push reg` frame vs `sub esp,N` is a prologue/frame-allocation quirk not
+expressible in C++ source. Non-steerable; mark DONE/PARTIAL with the residual noted.
+### boost::bind argument: by-VALUE vs boost::cref (reference_wrapper) - SOURCE-STEERABLE
+SYMPTOM: a `boost::bind( &f, this, a, b, ... )` where some args are large value types (float3,
+resource_ptr). BASE pushes each arg by VALUE: inline struct-copy onto the stack (`sub esp,0Ch;
+mov eax,esp; mov ecx,[src]; mov [eax],ecx; ...`) OR an out-of-line `call boost::_bi::value<T>::value`
+per arg, then `call boost::bind<...,T,T,...>` (the bind type's `listN<...,value<float3>,value<float3>>`).
+TARGET instead has a `call boost::addressof<...>` (== `boost::cref`) per arg and binds
+`listN<...,reference_wrapper<float3 const>,reference_wrapper<float3 const>>`; the
+`boost::function::assign_to<bind_t<...,list5<...,reference_wrapper<float3 const>,...>>>` symbol
+names the wrappers.
+FIX (steerable!): wrap each such bound arg in `boost::cref( functor->member )`. Read the TARGET
+bind's `listN<...>` type to decide WHICH args are wrappers vs values - scalars often stay by value
+(`value<unsigned short>`, `value<float>`) while float3/resource_ptr are `reference_wrapper<.. const>`.
+This is NOT an LTCG wall; the original source spelled `boost::cref(...)`. Confirmed: bullet_manager
+`play_particle` (67.87->98.81), `update_tracer` (58.56->89.38) - cref on the float3/resource args
+collapsed the whole bind region to `.. same ..`.
+
+### `bullet_functor_mt_allocator::malloc_impl` / `delete_helper<>` wrapper inline-vs-call (NON-steerable)
+SYMPTOM: a `VOSTOK_NEW_IMPL( allocator, T )` / `VOSTOK_DELETE_IMPL( allocator, p )` whose alloc/free
+SIZE-diffs by a few bytes and bumps the frame by 4. The new path: TARGET `call <allocator>::malloc_impl`
+(or `call delete_helper<alloc,T>` wrapper), BASE inlines the wrapper to the leaf (`call try_pop` for
+malloc; `call delete_helper_impl<...,call_destructor_predicate>` for delete, with the predicate bool
+materialized at the call site). TELL: `pdb_rich_query target --function malloc_impl|delete_helper` finds
+the wrapper at a real rva; the SAME query on the base index returns nothing (wrapper inlined away
+whole-program). The base's extra `push 58h` (size) / extra predicate-bool push and the +4 frame all
+cascade from the one inline. Same whole-program LTCG inline-vs-call class as vectora::size()/operator|.
+Source (`VOSTOK_NEW_IMPL`/`VOSTOK_DELETE_IMPL`) correct; mark PARTIAL. Confirmed: bullet_manager
+`add_decal` (malloc_impl @target 0xae5c0), `free_bullet` (delete_helper wrapper @target 0xae9f0,
+delete_helper_impl @0xaed80).
+
+### `a != b` for float3 folds to `!( operator==(a,b) )` when only operator== exists (NON-steerable)
+SYMPTOM: `x != float3(...)` shows TARGET `call vostok::math::operator==` then a `je`/`jne` branch
+polarity OPPOSITE to BASE, while BASE does `call vostok::math::operator!=` directly (no negate; plus a
+`mov ecx,eax` to pass the temp's this). The target binary has NO float3 `operator!=` symbol (only
+`operator==` @0x14b90); `operator!=` is `inline { return !(a==b); }` and is inlined to `call operator==`
++ negation. BASE keeps a standalone float3 `operator!=` (@0x6f250 math_float3_inline.h) and calls it.
+Whole-program LTCG inline-vs-call (the `!=` wrapper folded to `!(==)` at the call site). Source `a != b`
+correct; mark PARTIAL. Confirmed: `redundant_bullet_predicate::operator()` (87.98%).
+
+### `static_cast_resource_ptr< P >( x.get_unmanaged_resource() )` extra copy-construct + 8B frame (NON-steerable)
+SYMPTOM: a `P p = static_cast_resource_ptr< P >( data[i].get_unmanaged_resource() )` line SIZE-diffs and
+the function frame is 8 bytes LARGER in BASE (`sub esp, 0BCh` vs target `0B4h`). TARGET builds the
+`get_unmanaged_resource()` result as a direct stack prvalue passed into `static_cast_resource_ptr`
+(`push ecx; mov esi, esp; ...; call get_unmanaged_resource; lea esi,[ebp-Ch]; call`), so ONE temp slot.
+BASE materializes the result into a named slot `[ebp-0Ch]` and then emits an EXTRA `resource_ptr`
+copy-construct call into a SECOND slot `[ebp-10h]` - the `+ call` and the recurring +8B frame.
+`static_cast_resource_ptr` takes its arg BY VALUE (`const src_ptr`, resources_resource_ptr_inline.h:55);
+whether the by-value param is constructed in place (target) or via an extra copy (base) is a header
+template inline/RVO decision under whole-program LTCG, NOT steerable from the consuming `.cpp` - the source
+is already the maximally direct nested-call form. Same inline-vs-temp class as the resource_ptr/create_request
+ABI walls. Mark DONE (structure matches). Confirmed: booby_trap_set_core_cook `on_subresources_loaded`
+(89.02%), `on_config_ready` (82.01%).
+### Top-level `const` on a by-value pointer parameter GATES objdiff symbol pairing (source-steerable)
+SYMPTOM: a function reads `?` / unpaired in report.json and `--view structure-diff` says
+"not found in BASE index" even though the body is obviously identical to a sibling that DOES match.
+CAUSE: the source declares the parameter `T* param` but the TARGET mangles it `T* const param`
+(or vice versa). Top-level `const` on a BY-VALUE parameter is dropped for C++ overload resolution,
+but MSVC still encodes it in the DECORATED (mangled) name, and objdiff pairs base<->target by mangled
+symbol - so the const mismatch makes the two unpairable and the function scores 0/unpaired regardless
+of byte identity. FIX: match the target's const exactly on the parameter; rebuild -> pairs and (if the
+body matched) jumps straight to 100%. TELL: a sibling overload/functor in the same file already uses
+`T* const` and matches. Confirmed: `protect_affect_predicate::operator()(damage_protector* const)`
+in body_part_parameters.cpp (0.00 -> 100.00 by adding `const`; its twin
+`protect_damage_predicate::operator()(damage_protector* const)` was already `* const`).
+
+### `math::pow(x, INT_literal)` inlines pow(float,int) in target, out-of-line call in base
+SYMPTOM: `math::pow( <float>, 5 )` (an INTEGER second arg -> binds `pow(float,int)`,
+not `pow(float,float)`) emits in TARGET an inlined sign-dispatch block
+(`mov edx,5; test edx; jne; ...; call pow_impl`) while BASE emits `mov ecx,5; call
+vostok::math::pow`. Same per-call-site inline-vs-call LTCG class as operator| /
+is_aimed / fixed_string ctor. TELL: query both rich indexes - `pow_impl(float,uint)`
+is out-of-line in BOTH, but `pow(float,int)` is out-of-line ONLY in base (target inlined
+it whole-program). Disassemble base `pow(float,int)`: its body
+(`test ecx; jne; movss[1.0]; ret / jge; divss; neg; jmp pow_impl / jmp pow_impl`) IS the
+target's inlined block. The inline also reorders operand evaluation (the int-pow's operand
+gets computed first) and shifts surrounding x87-vs-xmm result codegen. Source
+`math::pow(x, 5)` is already correct; mark PARTIAL. (Watch the overload: `pow(x,5)` with
+`5` an int binds `pow(float,int)`; `pow(x,5.0f)` would bind `pow(float,float)` - different
+function.) Confirmed in `game_core/pseudo_random::random_f` (target rva 0x57e420, 60.74%).
+
+### ternary precedence trap: `a * b * c ? x : y` makes `(a*b*c)` the condition, not `c`
+SYMPTOM: source `mult * koef * first_shoot ? side_a : side_b` where `first_shoot` is a
+bool flag. `*` binds tighter than `?:`, so this is `(mult*koef*first_shoot) ? side_a :
+side_b` - the whole float product is the ternary condition. TARGET instead tests the bool
+ALONE: `movzx ecx, byte[first_shoot]; test ecx,ecx; je .else` then multiplies the selected
+value. So the original source parenthesized the ternary:
+`mult * koef * ( first_shoot ? side_a : side_b )`. This is a SOURCE bug in the
+reconstruction, fully steerable - add the parens. Confirmed in
+`game_core/weapon_recoil_calculator::fire` (79.80% -> 91.69% by parenthesizing both the
+recoil and recoil_amount ternaries).
+
+### private LTCG-inlined helper has NO base symbol -> objdiff None / not in base index = STATE[INLINED]
+SYMPTOM: a private `AAE` member helper (e.g. `process_compensation`, `get_random_angle`,
+`get_random_amount`) is "not found in BASE index" by structure-diff and shows None in
+report.json, even though it exists out-of-line in TARGET. CAUSE: under /Od+/GL the linker
+inlined the private helper whole-program into its only callers (here tick/fire), so no
+standalone base symbol survives to pair. Not separately scorable; mark STATE[INLINED] and
+match its body as a callee of the caller. (Distinct from the constant-symbol-naming None
+below.) Confirmed in `game_core/weapon_recoil_calculator`.
+
+### objdiff None from differing delinker constant-pool symbol names (body byte-identical)
+SYMPTOM: a function whose body is byte-for-byte identical to the target (structure-diff
+7/7 aligned, 0 size/quantity-diffs) still scores None. CAUSE: each `movss xmm0,[0.0f]`
+reloc resolves to a DIFFERENT delinker-assigned symbol for the same 0.0f constant pool
+slot - base `out_of_range_reward` vs target `offset` - so objdiff's relocation compare
+cannot pair the instructions and bails to None. Non-steerable (the source `= 0.0f` is
+correct; it is a delinker naming artifact, same misname class as empty_stub/finalize_impl).
+Confirmed in `game_core/weapon_recoil_calculator::reset` (7 stores to 0.0f, all
+out_of_range_reward vs offset).
+### Array brace-init: per-element source lines -> per-element statement attribution (structure-only)
+SYMPTOM: a `--view structure-diff` SIZE diff on a `pcstr captions[N] = { "a", "b", ... };` line,
+with the target showing N separate `'srcline'` statements (one per element, each size 0x7 on x86)
+where the base shows ONE combined statement (size N*0x7). The BYTES are identical
+(`mov dword ptr [ebp-X], <str0>; mov dword ptr [ebp-Y], <str1>; ...`); only the statement
+ATTRIBUTION differs, so report.json fuzzy is unchanged but the structure-diff flags it.
+CAUSE: under /Od, MSVC attributes each array-initializer element-store to the SOURCE LINE that
+element literal sits on. A single-line brace-init `= { "a", "b" }` collapses all stores onto one
+line -> one statement; the original wrote each element on its OWN physical line.
+FIX: split the brace-init across lines, one literal per line:
+    pcstr captions[2] =
+    {
+        "a",
+        "b"
+    };
+This re-attributes each store to its own line -> per-element statements aligning the target.
+The blank-line gaps between elements show up as harmless `EMPTY only base` quantity-diffs, NOT
+real divergences. Confirmed across all 7 `get_weapon_lexeme_pair` variants in the pistol/
+double_barreled weapon_core idle/aimed_idle/show states (SIZE-diff 1 -> 0; report.json unchanged
+at 99.92%, sole residual the ammo_in_magazine arg-passing register).

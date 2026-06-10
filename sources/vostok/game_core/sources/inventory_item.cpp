@@ -13,10 +13,10 @@ namespace survarium {
 
 // STATE[78.8%|PARTIAL]: member-init shape matches; % gap is LTCG base-ctor inline. See inventory_item_ctor.md.
 // STRUCTURE DIFF:
-// target: 0x590870            base: 0x449c20
+// target: 0x590870            base: 0x449760
 // ; survarium::inventory_item::inventory_item(survarium::inventory_item::action_behaviour_type) ; target 0 stmts / base 0 stmts
 // ; aligned 0, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH - both 0-stmt member-init, init order/offsets match; 78.8% gap is LTCG base-ctor inline-vs-call, not this ctor's shape  trail: inventory_item-ctor.md
+// VERDICT: STRUCTURE MATCH (shape ok) - 0-stmt member-init, init order/offsets match; residual is LTCG base-ctor inline-vs-call, non-steerable. trail: inventory_item-ctor.md
 inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_action_behaviuor	( type ),
 	m_inventory			( NULL ),
@@ -32,12 +32,6 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 	props.m_dict_id = m_dict_id;
 	props.m_amount = m_amount;
 	return false;
-
-	// FUNCTION BODY
-	// <0x5a07e7>|0x007|+0x010:'22'
-	// <0x5a07f7>|0x017|+0x011:'23'
-	// <0x5a0808>|0x028|+0x002:'24'
-	// ******
 }
 
 // STATE[69.33%|PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
