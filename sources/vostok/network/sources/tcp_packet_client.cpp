@@ -155,6 +155,10 @@ void tcp_packet_client::on_packet_received		( vostok::network_core::tcp_packet c
 void tcp_packet_client::set_on_packet_received	( boost::function< void ( vostok::network_core::packet_reader& ) > const& on_packet_received )
 {
 	m_on_packet_received			= on_packet_received;
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x1d | 157 | m_on_packet_received			= on_packet_received;
+	// VERDICT: STRUCTURE MATCH - sole SIZE is function1::operator= inline-vs-call (target calls ICF-folded COMDAT, custom edi/ecx conv); function0 sibling proves out-of-line call matches; per-instantiation LTCG, non-steerable.
 }
 
 // STATE[75.26%|PARTIAL]: `if ( m_on_connected )` - target inlines function0's
@@ -246,4 +250,8 @@ void tcp_packet_client::set_on_error	(
 	)
 {
 	m_on_error						= on_error;
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x23 | 248 | m_on_error						= on_error;
+	// VERDICT: STRUCTURE MATCH - sole SIZE is function2::operator= inline-vs-call (same ICF-folded COMDAT wall as set_on_packet_received); per-instantiation LTCG, non-steerable.
 }

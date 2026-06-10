@@ -152,7 +152,12 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 		)
 	);
 }
-// STATE[47.34%|PARTIAL]: structure 26/27 (switch over m_data[0] with cmp 0x0a/0x0b verified); residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x4 (small fn, biggest hit of the TU) + one 2-byte TRGT_ONLY default-break jmp the base folds into fall-through
+// STATE[47.08%|PARTIAL]: structure 27/27 (default-case `return` restored - the
+// target's 2-byte jmp goes to the EPILOGUE, skipping handshake; the old `break;`
+// fell through and called handshake on unknown message types); residual = the
+// boost::function4::operator() inline-vs-call wall (target calls the out-of-line
+// COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d/0x49 per
+// callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x4
 void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
@@ -188,7 +193,7 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 			close_connection( false );
 			if ( !m_in_destructor )
 				callback	( successfully_connected, no_handshake, no_socket_error, ( login_server_message_types_enum )m_data[0] );
-			break;
+			return;
 	}
 
 	handshake				(
@@ -202,6 +207,18 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 		login_handshake_retry_count,
 		false
 	);
+
+	// STRUCTURE DIFF: target 27 stmts / base 27 stmts
+	// SIZE +0x3d | 164 | callback ( ..., login_server_invalid_message_type );
+	// SIZE -0x4  | 165 | LOG_ERROR ( "[LOGIN] SIGN_IN: error during writing to socket: %s", ... );
+	// SIZE +0x4  | 169 | if ( !bytes_transferred ) {
+	// SIZE +0x3d | 173 | callback ( ..., login_server_invalid_message_type );
+	// SIZE +0x7  | 177 | switch ( m_data[0] ) {
+	// SIZE +0x49 | 182 | callback ( ..., ( login_server_message_types_enum )m_data[0] );
+	// SIZE +0x3  | 185 | case valid_user_name_message_type :	break;
+	// SIZE +0x49 | 190 | callback ( ..., ( login_server_message_types_enum )m_data[0] );
+	// SIZE +0x20 | 204 | );
+	// VERDICT: STRUCTURE MATCH - quantity fixed (default-case return); all rows are the function4::operator() inline-vs-call wall + derived jmp-near/short distance bloat; non-steerable LTCG.
 }
 // STATE[66.52%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x2 + LOG-helper scheduling
 void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )

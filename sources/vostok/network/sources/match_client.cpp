@@ -119,6 +119,9 @@ void match_client::create_responses_packets_allocator( )
 client_destroyer::~client_destroyer( )
 {
 	VOSTOK_DELETE_IMPL		( m_orders_allocator, m_client );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts (aligner: STRUCTURE MATCH)
+	// VERDICT: STRUCTURE MATCH - byte delta is the compiler-emitted m_responses_allocator ~intrusive_ptr tail (base inlines, target calls); LTCG wall.
 }
 
 // STATE[0%|PARTIAL]: objdiff scores None (body too divergent to pair, not a
@@ -131,6 +134,11 @@ void client_destroyer::execute( )
 {
 	VOSTOK_DELETE_IMPL		( *vostok::network::g_allocator, *m_client );
 	m_responses_allocator	= 0;
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x4  | 132 | VOSTOK_DELETE_IMPL		( *vostok::network::g_allocator, *m_client );
+	// SIZE +0x3c | 133 | m_responses_allocator	= 0;
+	// VERDICT: STRUCTURE MATCH - +0x3c is intrusive_ptr::operator=(0) inlined in base (target calls esi-promoted COMDAT, same row as ~match_client); +0x4 is the strip_pointer fold; objdiff None is a pairing artifact, not structure.
 }
 
 // STATE[50.09%|PARTIAL]: structure 3/3; residual = base inlines the
@@ -146,6 +154,11 @@ void client_destroyer::execute( )
 	);
 	m_response_packets_allocator	= 0;
 	m_world.add_order		( order );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x14 | 146 | );
+	// SIZE +0x3c | 147 | m_response_packets_allocator	= 0;
+	// VERDICT: STRUCTURE MATCH - +0x3c verified in asm: target calls intrusive_ptr::operator= COMDAT (esi this, ecx 0), base inlines set/swap/decrement body; +0x14 is the destroyer-ctor intrusive_ptr copy-ctor inline; LTCG wall.
 }
 
 // STATE[88.33%|PARTIAL]: structure 2/2; residual = the by-value bind copy of

@@ -46,6 +46,10 @@ public:
 	{
 		network_core::udp_match_packet* temp	= &m_packet;
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
+
+		// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+		// SIZE +0xe | 48 | network_core::delete_udp_match_packet	( *m_allocator, temp );
+		// VERDICT: STRUCTURE MATCH - sole SIZE is intrusive_ptr::operator* inlined in base (target calls COMDAT); rest of byte delta is the compiler-emitted member ~intrusive_ptr tail (non-statement); LTCG wall.
 	}
 
 	// STATE[88.51%|PARTIAL]: base inlines base_packet::buffer() inside the

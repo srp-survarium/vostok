@@ -122,7 +122,11 @@ void login_client_impl::sign_up_on_handshaked(
 	);
 }
 
-// STATE[88.61%|PARTIAL]: structure clean (switch cmp 0x0e/0x0f verified); residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG-helper scheduling
+// STATE[88.75%|PARTIAL]: structure 26/26 (default-case `return` restored - the
+// target's 2-byte jmp goes to the epilogue, skipping handshake, same shape as
+// on_user_name_answer_received); residual = the callback/info bind-copy lowering
+// (function5 copy + boost::ref slot) vs the target folded-ctor schedule +
+// LOG-helper scheduling
 void login_client_impl::on_sign_up_account_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -162,7 +166,7 @@ void login_client_impl::on_sign_up_account_answer_received(
 			close_connection( false );
 			if ( !m_in_destructor )
 				callback	( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )m_data[0], sign_up_info );
-			break;
+			return;
 	}
 
 	handshake				(
@@ -177,6 +181,12 @@ void login_client_impl::on_sign_up_account_answer_received(
 		login_handshake_retry_count,
 		false
 	);
+
+	// STRUCTURE DIFF: target 26 stmts / base 26 stmts
+	// SIZE -0x4 | 137 | LOG_ERROR ( "[LOGIN] on_SIGN_UP_answer_received: ...", ... );
+	// SIZE +0x3 | 165 | return;
+	// SIZE +0x20| 179 | );
+	// VERDICT: STRUCTURE MATCH - quantity fixed (default-case return); residuals are the function5 bind-copy lowering + jmp-near/short distance bloat; non-steerable LTCG.
 }
 
 // STATE[89.66%|PARTIAL]: structure clean; residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG-helper scheduling

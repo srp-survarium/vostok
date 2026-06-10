@@ -73,6 +73,16 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 			no_socket_error,
 			invalid_session_id
 		);
+
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE -0x3  | 55 | state const previous_state	= m_state;
+	// SIZE +0x24 | 58 | ASSERT_U			( reader.eof( ) );
+	// SIZE +0x1b | 60 | m_client.set_on_packet_received( m_on_packet_received );
+	// SIZE +0xa  | 62 | if ( m_on_connected )
+	// SIZE +0x4f | 63 | m_on_connected	( successfully_connected, ... );
+	// SIZE -0x2  | 68 | LOG_ERROR				( "connection forbidden" );
+	// SIZE +0x4f | 75 | );
+	// VERDICT: STRUCTURE MATCH - all rows are per-call-site inline-vs-call (function4::operator() x2 verified in asm: target calls COMDAT, base inlines safe-bool/throw/get_vtable); non-steerable LTCG.
 }
 
 // STATE[59.58%|PARTIAL]: structure 2/2, the clone/connect statement byte-aligned;
@@ -100,6 +110,11 @@ void match_client_impl::set_on_packet_received(
 	m_on_packet_received	= on_packet_received;
 	if ( m_state == handshaked )
 		m_client.set_on_packet_received( m_on_packet_received );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x22 | 100 | m_on_packet_received	= on_packet_received;
+	// SIZE +0x1  | 102 | m_client.set_on_packet_received( m_on_packet_received );
+	// VERDICT: STRUCTURE MATCH - sole real SIZE is function2::operator= inline-vs-call (copy-swap-clear inlined in base); non-steerable LTCG.
 }
 
 // STATE[68.83%|PARTIAL]: structure 9/9 (field copies byte-aligned); residuals =
