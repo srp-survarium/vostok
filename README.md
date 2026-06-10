@@ -13,15 +13,15 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 48.50% fuzzy &middot; 8,075 / 25,372 functions exact (31.83%).**
+**Overall: 48.53% fuzzy &middot; 8,097 / 25,372 functions exact (31.91%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 357 / 2,805 (12.7%) | 3.3% |
-| `shared` | 112 | 643 / 2,255 (28.5%) | 31.2% |
-| `game` | 141 | 18 / 1,634 (1.1%) | 0.1% |
+| `render` | 351 | 356 / 2,805 (12.7%) | 3.3% |
+| `shared` | 112 | 643 / 2,255 (28.5%) | 31.1% |
+| `game` | 141 | 16 / 1,634 (1.0%) | 0.1% |
 | `game_core` | 189 | 343 / 1,429 (24.0%) | 15.0% |
-| `core` | 136 | 653 / 1,331 (49.1%) | 34.1% |
+| `core` | 136 | 655 / 1,331 (49.2%) | 34.1% |
 | `animation` | 102 | 156 / 880 (17.7%) | 5.3% |
 | `ai` | 124 | 413 / 759 (54.4%) | 38.0% |
 | `sound` | 69 | 186 / 517 (36.0%) | 15.6% |
@@ -35,7 +35,7 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | `engine` | 22 | 51 / 165 (30.9%) | 11.0% |
 | `network` | 25 | 6 / 163 (3.7%) | 0.4% |
 | `network_core` | 22 | 21 / 140 (15.0%) | 8.9% |
-| `debug` | 16 | 77 / 127 (60.6%) | 48.1% |
+| `debug` | 16 | 96 / 127 (75.6%) | 65.5% |
 | `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
 | `input` | 9 | 30 / 56 (53.6%) | 27.6% |
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
