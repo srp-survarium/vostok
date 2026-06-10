@@ -43,15 +43,11 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 		.time_scale								( time_scale )
 		.time_synchronization_group_id			( time_synchronization_group );
 
-	// claude@MATCH: L40 is a lone 4-byte `mov byte[ebp-5],0` dead store (target <0x4> at 0x72,
-	// NO following lea/call) sitting between the last main_lexeme_parameters setter and the
-	// main_lexeme construction - an unused `bool` local dead-stored under /Od, NOT an ASSERT (an
-	// ASSERT emits the byte-store PLUS lea+call = <0xc>). The reviewer's doubt ("dummy isn't in
-	// the locals") is consistent with a never-read bool: MSVC's PDB local table can omit a
-	// variable whose sole use is a dead store, yet /Od still allocates its slot and emits this
-	// store. The single statement's byte shape is reproduced exactly; only the whole-function
-	// pairing is blocked (None) by the setter inline-vs-call (see STATE), independent of this line.
-	bool dummy = false;
+	// sushi@TODO: target has a lone 4-byte `mov byte[ebp-5],0` here (<0x4> at 0x72, no lea/call,
+	// no PDB local). NOT an unused `bool` (this project has ~no unused variables, and the PDB
+	// records no such local) - likeliest a compiler-MATERIALIZED bool temp (a `false` bound into
+	// the parameter chain / a bool const& site) or a detached first record of a split eater.
+	// Origin unidentified; do not fabricate a local for it. trail: patterns/lone-byte-store-zero.md
 	animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
 
 	// claude@MATCH: the 4th (time_driving_animation) arg is the target's
@@ -85,7 +81,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	// STRUCTURE DIFF: target 21 stmts / base 11 stmts
 	// SIZE +0x1  | 42 | animation::mixing::animation_lexeme_parameters main_lexeme_parameters( buffer, identifier, animation, NULL, NULL );
 	// SIZE +0x4b | 50 | 		.time_synchronization_group_id			( time_synchronization_group );
-	// SIZE -0x4  | 60 | bool dummy = false;
+	// TRGT_ONLY <0x4> at 0x72 | lone `mov byte[ebp-5],0` - unexplained materialized temp (see sushi@TODO above)
 	// BASE_ONLY  | 61 | animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
 	// BASE_ONLY  | 72 | );
 	// BASE_ONLY  | 79 | 		.weight_synchronization_group_id		( all_but_offset_weight_synchronization_group_id );
