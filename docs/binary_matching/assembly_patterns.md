@@ -1293,3 +1293,23 @@ flavor choice happens at the original vtable-emitting TU (the real ctor caller, 
 match_client.cpp, still a stub) and/or differs with that TU's whole-program view;
 revisit only when the real caller TU is matched. Keep stack-constructed anchors and
 bank the `??_G = None` as a known cross-unit residual, not a per-header bug.
+
+### Pointer-param top-level `const` changes the MSVC mangling (QAV vs PAV): symbol pairs as None
+SYMPTOM: a function scores `None` in objdiff although its body looks right; the target
+unit lists `?fn@...@@QAEXPAVorder@...@Z` while base emits `...@@QAEXQAVorder@...@Z`.
+CAUSE: MSVC encodes the TOP-LEVEL const of a pointer parameter in the mangled name -
+`order*` mangles `PAV`, `order* const` mangles `QAV` - even though C++ ignores that
+const for the function type. The two names never pair, so the match reads None at any
+body quality. (network_world::add_order/add_response: dropping the `* const` in the
+declaration+definition flipped both from None to 100% with zero body edits.)
+RULE: read the P/Q letter off the target's mangled name to decide `T*` vs `T* const`
+for every pointer parameter; locals keep whatever `--view info` records (e.g. a
+`response* const` LOCAL is fine - only the parameter spelling is mangled).
+
+### Braced vs brace-less single-statement `while`: the `}` gets its own 2-byte line record
+ASM (braced, clear_resources):  body call = own stmt (+0xd), then a separate +0x2 stmt = `jmp` backedge
+ASM (brace-less, process_orders): one body stmt (+0xf) that INCLUDES the backedge `jmp`
+SOURCE: `while ( x ) { f( ); }` vs `while ( x ) f( );`
+NOTES: same bytes, different statement table - the carcass stmt count is the only tell.
+network_world has the twin pair side by side: process_orders (3 stmts, brace-less) vs
+clear_resources (4 stmts, braced); both 100% only with the right brace choice.
