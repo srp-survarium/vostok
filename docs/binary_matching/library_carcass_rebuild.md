@@ -134,6 +134,10 @@ carcasses are old-format (addressless `// FUNCTION BODY`).
 5. **Commit after EACH green TU** (a stray `git reset` once wiped uncommitted work).
 6. If a header cascade is too deep to compile cheaply, RE-EXCLUDE the TU and keep the
    build green - an enabled-but-uncompilable TU breaks the whole base build for everyone.
+7. **Consumers of deleted headers: REMOVE the `#include` line, don't comment it.**
+   vcproj2ninja's include scanner is over-inclusive and picks up even commented
+   includes, so a `//#include <vostok/<module>/x.h>` of a deleted header leaves a
+   dangling ninja dep ("missing and no known rule to make it") in every consumer TU.
 
 ## Acceptance gates
 - Both temp dirs (`headers` + `sources`) EMPTY.

@@ -14,9 +14,9 @@
 
 // IMPORTANT!!!
 // for test purposes only
-// sushi@TODO: legacy network::client disabled (module parked in temp/network_legacy)
-//#include <vostok/network/server.h>
-//#include <vostok/network/client.h>
+// sushi@TODO: legacy network::client/server test wiring disabled (module parked
+// in temp/network_legacy; the include-scanner picks up even commented includes,
+// so the lines are gone entirely)
 
 namespace vostok{
 
