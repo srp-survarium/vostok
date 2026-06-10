@@ -40,9 +40,7 @@ void weapon_core_cook::translate_query( resources::query_result_for_cook& parent
 	// ******
 }
 
-// STATE[93.27%|PARTIAL]: target frame is sub esp,38h vs base 34h - target
-// materializes data[0].get_unmanaged_resource() into a temp resource_ptr at
-// [ebp-14h] that it dec's; base treats it as a raw pointer (LTCG-ish temp shape).
+// STATE[100%|DONE]
 void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook*	parent			= data.get_parent_query( );
@@ -51,16 +49,6 @@ void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data 
 	weapon_core*						object_to_cook	= VOSTOK_NEW_IMPL( g_allocator, weapon_core );
 
 	process_loading_weapon_core( parent, config_ptr, object_to_cook );
-
-	// FUNCTION BODY
-	// <0x5a05ca>|0x00a|+0x00b:'138'
-	// <0x5a05d5>|0x015|+0x00c:'139'
-	// <0x5a05e1>|0x021|+0x022:'140'
-	// <0>
-	// <0x5a0603>|0x043|+0x051:'142'
-	// <0>
-	// <0x5a0654>|0x094|+0x01c:'144'
-	// ******
 }
 
 // STATE[STUB]
@@ -186,9 +174,10 @@ void weapon_core_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// FUNCTION BODY
-	// <0x59f129>|0x009|+0x013:'225'
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x3 | 187 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the delete_helper strip_pointer
+	// inline-vs-call/convention split, non-steerable LTCG.
 }
 
 // STATE[STUB]
