@@ -53,8 +53,16 @@ STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
 	m_max_ping_time_in_ms	( options.max_ping_time_in_ms )
 {
 	// STRUCTURE DIFF[target 0x7288c0 | base 0x54fed0]: target 0 / base 0 stmts
-	// .. same ..
-	// ; aligned 0, size-diffs 0, quantity-diffs 0, blank-gaps 0
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|t.ln|b.ln|b.code
+	// ----------+--------+--------+----+----+----+----+------
+	// SIZE +0x47|0x728ac2|0x564f51|0x6b|0xb2|+11 |+15 |);
+	// SIZE +0x3 |0x728ba8|0x56507e|0x5f|0x62|+19 |+28 |packet_reader reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+	// BASE_ONLY |--      |0x5650e0|--  |0x21|--  |+29 |const u16 received_local_sequence_id = reader.r< u16 >( );
+	// BASE_ONLY |--      |0x565101|--  |0x21|--  |+30 |const u16 remote_sequence_id = reader.r< u16 >( );
+	// SIZE +0x5c|0x728c07|0x565122|0xc |0x68|+21 |+36 |packet_reader reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+	// SIZE +0x7 |0x728c13|0x56518a|0xc |0x13|+22 |+37 |functor( reader, i->second );
+	// TRGT_ONLY |0x728c1f|--      |0x5f|--  |+26 |--  |--
+	// TRGT_ONLY |0x728c7e|--      |0x13|--  |+27 |--  |--
 	// VERDICT: STRUCTURE MATCH (shape ok) - member-init list collapses to the ctor decl
 	// line on both sides; residual 90.69% is the three seed immediates 0x995a34/35/36
 	// (base operand-masked, target not - delinker asymmetry, not source). trail: udp_network_flow_emulator.md
