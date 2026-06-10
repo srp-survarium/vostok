@@ -52,19 +52,10 @@ public:
 STATIC_SIZE_ASSERT(udp_match_stream_stats, 0x14);
 
 struct udp_match_stats {
-	// STATE[0%|PARTIAL]: empty body + scalar init list (streams zero through their own
-	// ctors), per the gold line table ('{' L96 carries all 0x61 bytes); the surviving
-	// target COMDAT is an optimized (frameless, this-in-eax, 32 flat dword stores)
-	// LTCG emission - a /Od body cannot pair against it (objdiff scores None).
 	inline			udp_match_stats	( ) :
 		max_local_sequence_difference	( 0 ),
 		unacknowledged_packets			( 0 )
 	{
-		// STRUCTURE DIFF: target 0 stmts / base 0 stmts (no divergence rows)
-		// VERDICT: STRUCTURE MATCH (shape ok) - both skeletons are empty, confirming the
-		// init-list-only spelling (body assigns would emit base statement rows); the
-		// None score is the optimized target emission (frameless, this-in-eax, flat
-		// stores), unpairable from /Od and non-steerable.
 	}
 
 	inline	void	dump			( pcstr title ) const { /* no source */ }
@@ -87,16 +78,11 @@ public:
 
 STATIC_SIZE_ASSERT(udp_match_stats, 0x80);
 
-// STATE[100%|DONE]: fully inlined into the stream/stats operator>= (no standalone
-// target symbol to diff); single chained return. The inlined emission in the stream
-// operator>= compares [+0]/[+0] then [+4]/[+4] - bytes against bytes.
 inline bool operator>=( udp_match_items_stats const& left, udp_match_items_stats const& right )
 {
 	return left.count >= right.count && left.bytes >= right.bytes;
 }
 
-// STATE[100%|DONE]: the old -0x2 SIZE residual was the items operator>= transcription
-// typo (right.count for right.bytes - two disp-less compares); byte-perfect once fixed.
 inline bool operator>=( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
 {
 	return left.packets >= right.packets
@@ -104,11 +90,6 @@ inline bool operator>=( udp_match_stream_stats const& left, udp_match_stream_sta
 		&& left.data_bytes >= right.data_bytes;
 }
 
-// STATE[94.55%|PARTIAL]: structure now matches (dropped a spurious duplicate
-// received_duplicated compare - was 7 terms, target has 6). Residual is a target
-// idiom on the final term (bool materialize `mov eax,1; test`) + a short/near jump,
-// not source-fixable - the six terms are out-of-line calls to the stream operator>=
-// on both sides, so no inlined compare bytes are involved.
 inline bool operator>=( udp_match_stats const& left, udp_match_stats const& right )
 {
 	return left.sent >= right.sent
@@ -117,15 +98,8 @@ inline bool operator>=( udp_match_stats const& left, udp_match_stats const& righ
 		&& left.received_duplicated >= right.received_duplicated
 		&& left.sent_low_level >= right.sent_low_level
 		&& left.received_low_level >= right.received_low_level;
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// SIZE -0xd | 115 | && left.received_low_level >= right.received_low_level;
-	// VERDICT: STRUCTURE MATCH (shape ok) - single chained return, 6 terms in target
-	// order (all six are calls to the stream operator>= on both sides); sole SIZE is
-	// the target's final-term bool-materialize idiom + short/near jump, non-steerable.
 }
 
-// STATE[INLINED]: fully inlined into the stream/stats operator- (no standalone target symbol).
 inline udp_match_items_stats operator-( udp_match_items_stats const& left, udp_match_items_stats const& right )
 {
 	udp_match_items_stats	result;
@@ -134,7 +108,6 @@ inline udp_match_items_stats operator-( udp_match_items_stats const& left, udp_m
 	return			result;
 }
 
-// STATE[INLINED]: fully inlined into the stats operator- (no standalone target symbol).
 inline udp_match_stream_stats operator-( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
 {
 	udp_match_stream_stats	result;
@@ -144,11 +117,6 @@ inline udp_match_stream_stats operator-( udp_match_stream_stats const& left, udp
 	return				result;
 }
 
-// STATE[5.80%|PARTIAL]: statement set/order per the gold line table (result; 6 stream
-// subs in sent/resent/received/received_duplicated/sent_low_level/received_low_level
-// order; math::max on max_local_sequence_difference; unacknowledged sub; return). The
-// target COMDAT is an optimized LTCG emission (xmm pairs, args in edi/esi) - not /Od
-// codegen; the % floor is that emission, not a source divergence.
 inline udp_match_stats operator-( udp_match_stats const& left, udp_match_stats const& right )
 {
 	udp_match_stats	result;
@@ -164,15 +132,6 @@ inline udp_match_stats operator-( udp_match_stats const& left, udp_match_stats c
 	result.unacknowledged_packets			= left.unacknowledged_packets - right.unacknowledged_packets;
 
 	return			result;
-
-	// STRUCTURE DIFF: target 10 stmts / base 10 stmts (aligner cannot pair the optimized
-	// emission - its SIZE/ONLY rows are pairing noise; the two single-side skeletons
-	// compared by hand are identical: result / blank / 6 stream subs in sent, resent,
-	// received, received_duplicated, sent_low_level, received_low_level order / blank /
-	// max + unacknowledged / blank / return)
-	// VERDICT: STRUCTURE MATCH (shape ok) - statement set, order and blank-gap pattern
-	// reproduce the gold line table (L212-224); the 5.80% is the optimized target COMDAT
-	// (xmm pairs, args LTCG-promoted to edi/esi), unpairable from /Od and non-steerable.
 }
 
 } // namespace network_core

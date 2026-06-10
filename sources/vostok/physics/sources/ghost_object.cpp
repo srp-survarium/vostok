@@ -13,7 +13,6 @@
 namespace vostok {
 namespace physics {
 
-// STATE[98%|DONE]: Instructions are ordered slightly differently
 bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGhostObject* obj ):
 	m_shape			( shape ),
 	m_bt_object		( obj )
@@ -21,15 +20,11 @@ bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGho
 	obj->setUserPointer( this );	// <0x583e86>|0x000|0x000:'23'
 }
 
-// STATE[64%|DONE]: ~loose_ptr_base didn't inline. In theory might be something different
 bt_ghost_object::~bt_ghost_object( )
 {
 	VOSTOK_DELETE_IMPL( *g_ph_allocator, m_bt_object ); // <0x583d97>|0x000|0x000:'28'
 }
 
-// STATE[48%|DONE] For some reason `push_back` was not inlined in target, it also had asserts inside, which didn't compile out.
-// All of this doesn't make much sense, since this module is compiled with optimizations, and `push_back` is a header-only inline function.
-// There are more functions like this.
 void bt_ghost_object::get_overlapping_objects( buffer_vector<base_physics_object *>& result ) const
 {
 	u32 const size = get_overlapping_objects_count( );																					// <0x583875>|0x000|0x000:'33'
@@ -41,20 +36,17 @@ void bt_ghost_object::get_overlapping_objects( buffer_vector<base_physics_object
 	}
 }
 
-// STATE[100%|DONE]
 u32 bt_ghost_object::get_overlapping_objects_count( ) const
 {
 	return m_bt_object->getNumOverlappingObjects( );	// <0x583860>|0x000|0x000:'44'
 }
 
-// STATE[100%|DONE]
 u16 bt_ghost_object::get_collision_group( ) const
 {
 	// sushi@TODO: ASSERT?
 	return m_bt_object->getBroadphaseHandle( )->m_collisionFilterGroup;	// <0x583740>|0x000|0x000:'50'
 }
 
-// STATE[95%|DONE] LTCG for intrusive pointer
 bt_ghost_object* create_ghost_object( bt_collision_shape_ptr shape, float4x4 const& transform )
 {
 	btPairCachingGhostObject* ghost = VOSTOK_NEW_IMPL( *g_ph_allocator, btPairCachingGhostObject );	// <0x583f26>|0x000|0x000:'55'
@@ -65,7 +57,6 @@ bt_ghost_object* create_ghost_object( bt_collision_shape_ptr shape, float4x4 con
 	return VOSTOK_NEW_IMPL( *g_ph_allocator, bt_ghost_object )( shape, ghost );						// <0x583f7a>|0x054|0x018:'60'
 }
 
-// STATE[100%|DONE]
 void destroy_ghost_object( bt_ghost_object* obj )
 {
 	bt_collision_shape* shape = obj->m_shape.c_ptr(); // sushi@TODO: Understand and document why the object is destroyed outside of `resource_ptr`.
@@ -73,14 +64,12 @@ void destroy_ghost_object( bt_ghost_object* obj )
 	VOSTOK_DELETE_IMPL( *g_ph_allocator, obj );		// <0x583ef3>|0x032|0x032:'67'
 }
 
-// STATE[100%|DONE]
 void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )
 {
 	btCollisionObject* bt_test_object = object->get_bt_collision_obect( );
 	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( m_bt_object, bt_test_object, contact_result_callback( &predicate ) ); // <0x583cc3>|0x000|0x000:'73'
 }
 
-// STATE[99%|DONE]: eax and edx were swapped for no apparent reason. Possibly we can match everything closer if we adhere to the target structure more diligently
 bool bt_ghost_object::contact_test( world* world )
 {
 	btBroadphasePairArray& bt_pair_array = m_bt_object->getOverlappingPairCache( )->getOverlappingPairArray( );
@@ -113,7 +102,6 @@ bool bt_ghost_object::contact_test( world* world )
 	return false;
 }
 
-// STATE[100%|DONE]
 static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransform const& transform, vectora<float3>& centres_results )
 {
 	if ( shape->getShapeType( ) != COMPOUND_SHAPE_PROXYTYPE )													// <0x5838c6>|0x000|0x000:'134'
@@ -133,7 +121,7 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 	}
 }
 
-// STATE[36%|DONE]: sushi@TODO: The problem with `operator->` somehow not being inlined on Master Gold with debug usage.
+// sushi@TODO: The problem with `operator->` somehow not being inlined on Master Gold with debug usage.
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );									// <0x583d31>|0x000|0x000:'152'
@@ -142,7 +130,7 @@ void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_resu
 																								// <1>
 }
 
-// STATE[100%|DONE]: sushi@NOTE: Doesn't match function body, also might be some other type of cast
+// sushi@NOTE: Doesn't match function body, also might be some other type of cast
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->addCollisionObject( m_bt_object, group, mask );
@@ -154,7 +142,6 @@ void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 	// ******
 }
 
-// STATE[100%|DONE]
 void bt_ghost_object::remove( world* w )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->removeCollisionObject( m_bt_object );
@@ -164,19 +151,16 @@ void bt_ghost_object::remove( world* w )
 	// ******
 }
 
-// STATE[100%|DONE]
 btCollisionObject* bt_ghost_object::get_bt_collision_obect( )
 {
 	return m_bt_object;	// <0x5836f0>|0x000|0x000:'174'
 }
 
-// STATE[100%|DONE]
 void bt_ghost_object::set_transform( float4x4 const& transform )
 {
 	m_bt_object->setWorldTransform( from_vostok( transform ) );	// <0x583d6a>|0x000|0x000:'179'
 }
 
-// STATE[100%|DONE]
 float4x4 bt_ghost_object::get_transform( ) const
 {
 	return from_bullet( m_bt_object->getWorldTransform( ) );	// <0x583d10>|0x000|0x000:'184'

@@ -23,11 +23,8 @@ public:
 			void				on_subresources_loaded		( resources::queries_result& data, configs::binary_config_ptr config );
 
 private:
-	// STATE[83.57%|DONE]
 	virtual	booby_trap_core*	new_derived_resource		( ) { return VOSTOK_NEW_IMPL( g_allocator, booby_trap_core ); }
-	// STATE[100%|DONE]
 	virtual	u32					get_derived_resource_size	( ) { return sizeof( booby_trap_core ); }
-	// STATE[100%|DONE]
 	virtual	void				query_for_derived_resources	( resources::query_result_for_cook* parent, booby_trap_core* resource, configs::binary_config_ptr config ) {
 		VOSTOK_UNREFERENCED_PARAMETER( config );
 		finish_query( parent, resource );

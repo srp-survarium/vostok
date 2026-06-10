@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[BLOCKED]: Ghidra fails to parse functions with NODEFAULT, even with "Decompiler Switch Analysis" analyzer enabled! I compared manually in IDA and match seems to be correct.
 void generic_anomaly_core::on_player_action( hit_receiver const* receiver, player_actions_subscriber::action action, float param )
 {
 	switch ( action )
@@ -64,7 +63,6 @@ void generic_anomaly_core::on_player_action( hit_receiver const* receiver, playe
 	// ******
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::on_artefact_container_use( artefact_container_core* container )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( container );
@@ -80,7 +78,6 @@ void generic_anomaly_core::on_artefact_container_use( artefact_container_core* c
 	// ******
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::on_zone_act( damage_zone_core* zone, hit_receiver* receiver )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( zone, receiver );
@@ -92,7 +89,6 @@ void generic_anomaly_core::on_zone_act( damage_zone_core* zone, hit_receiver* re
 	// ******
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::on_hit_receiver_enter( hit_receiver* receiver, damage_zone_core* zone )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( receiver, zone );
@@ -102,7 +98,6 @@ void generic_anomaly_core::on_hit_receiver_enter( hit_receiver* receiver, damage
 	// ******
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::on_hit_receiver_leave( hit_receiver* receiver, damage_zone_core* zone )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( receiver, zone );

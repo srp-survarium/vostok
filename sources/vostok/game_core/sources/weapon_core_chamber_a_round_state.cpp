@@ -29,7 +29,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 weapon_core_chamber_a_round_state::weapon_core_chamber_a_round_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -51,13 +50,6 @@ weapon_core_chamber_a_round_state::weapon_core_chamber_a_round_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: residual is operator+ overload resolution. The target
-// selects the expression-returning overloads from mixing_addition_lexeme_inline.h
-// - operator+<animation_lexeme>(expression&, animation_lexeme&)->expression and the
-// non-template operator+(expression&, expression&)->expression (both standalone in the
-// target rich index) - whereas our mixing_addition_lexeme_inline.h declares only the
-// generic template<T1,T2> operator+(T1&,T2&)->addition_lexeme&, so the base falls back
-// to operator+<expression,animation_lexeme> + operator+<addition_lexeme,animation_lexeme>.
 // claude@NOTE: recovering this needs the full expression-returning operator+ family
 // added to the shared mixing_addition_lexeme API - a separate cross-cutting unit, not
 // this chamber file.
@@ -73,14 +65,8 @@ animation::mixing::expression weapon_core_chamber_a_round_state::weapon_and_hand
 	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x27 | 75 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines
-	// expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
-// STATE[100%|DONE]
 weapon_lexeme_pair weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-chamber_a_round";
@@ -103,11 +89,6 @@ weapon_lexeme_pair weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( mu
 	);
 }
 
-// STATE[74.02%|PARTIAL]: residual is a whole-program inline decision on the
-// animation_lexeme_parameters fluent setters. The target keeps animated_object()/
-// bones_mask()/playback_type() and ~animation_lexeme_parameters() as out-of-line calls
-// (all standalone in the target rich index); our /Od base inlines the trivial in-class
-// setters (mov [ecx+20h],edx / [eax+4Ch],2 / [ecx+3Ch],1) and inlines the dtor down to
 // its ASSERT. claude@NOTE: not source-steerable from this file - would need the setters
 // out-of-class or __declspec(noinline) in the shared header.
 animation::mixing::expression weapon_core_chamber_a_round_state::get_user_hands_expression(
@@ -141,16 +122,8 @@ animation::mixing::expression weapon_core_chamber_a_round_state::get_user_hands_
 	);
 
 	return override_lexeme;
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
-	// SIZE +0x3  | 123 | return weapon_lexeme;
-	// SIZE +0x16 | 142 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - +0x3 is the promoted expression(animation_lexeme)
-	// ctor convention; +0x16 is the lexeme_parameters setters/dtor inlined in base vs
-	// out-of-line in target, both non-steerable LTCG.
 }
 
-// STATE[100%|DONE]
 weapon_core_chamber_a_round_state* weapon_core_state_cook_template<survarium::weapon_core_chamber_a_round_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,

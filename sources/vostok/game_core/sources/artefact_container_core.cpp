@@ -11,7 +11,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 {
 	// FUNCTION BODY
@@ -19,14 +18,12 @@ artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 	// ******
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
 	m_artefact_search_time_ms = math::floor( (float)cfg["artefacts_search_time_sec"] * 1000.0f );
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::activate( generic_anomaly_core* owner, physics::world* world, scheduler& __formal )
 {
 	m_owner = owner;
@@ -40,7 +37,6 @@ void artefact_container_core::activate( generic_anomaly_core* owner, physics::wo
 	// ******
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::deactivate( )
 {
 	usable_object::remove( );
@@ -54,7 +50,6 @@ void artefact_container_core::deactivate( )
 	// ******
 }
 
-// STATE[100%|DONE]
 bool artefact_container_core::use_initialize( usable_object_user_data* user )
 {
 	if ( !m_usable_object_users.empty( ) )
@@ -81,7 +76,6 @@ bool artefact_container_core::use_initialize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[92.86%|PARTIAL]: intrusive_ptr unspecified_bool conversion (if m_artefact) + transfer_artefact arg reg, non-steerable
 bool artefact_container_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users[0] == user ) );
@@ -104,14 +98,8 @@ bool artefact_container_core::use_execute( usable_object_user_data* user )
 	}
 
 	return true;
-
-	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
-	// SIZE -0xa | 102 | if ( m_artefact )
-	// SIZE -0x2 | 103 | transfer_artefact( user->owner->cast_to_inventory_holder( ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - if(m_artefact): target calls intrusive_ptr unspecified_bool conversion out-of-line, base inlines setne/movzx/test; transfer_artefact arg+this regs differ (LTCG). Non-steerable.
 }
 
-// STATE[100%|DONE]
 bool artefact_container_core::use_finalize( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( user ) );
@@ -137,20 +125,13 @@ bool artefact_container_core::use_finalize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[98.56%|PARTIAL]: sole residual is the set_amount(1) arg passing (stack vs reg), non-steerable
-// (the conversion line closed when static_cast_resource_ptr went const&-parameter engine-wide)
 void artefact_container_core::artefact_spawned( resources::queries_result& data )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_artefact = static_cast_resource_ptr<artefact_base_ptr>( data[0].get_unmanaged_resource( ) );
 	m_artefact->set_amount( 1 );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x3 | 149 | m_artefact->set_amount( 1 );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is set_amount(1): target pushes 1 on stack, base passes in reg; LTCG call-boundary arg passing, non-steerable.
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::spawn_artefact( )
 {
 	variant<32> ud;
@@ -166,15 +147,10 @@ void artefact_container_core::spawn_artefact( )
 	);
 }
 
-// STATE[80.80%|PARTIAL]: static_cast_resource_ptr inlined in target (c_ptr read + intrusive_ptr::set) vs out-of-line call in base, non-steerable
 void artefact_container_core::transfer_artefact( inventory_holder* holder )
 {
 	holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
 	m_artefact = NULL;
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE -0xc | 178 | holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the conversion: target inlines static_cast_resource_ptr (c_ptr read + intrusive_ptr::set, 0x35) while base keeps the instantiation out-of-line (0x29); per-call-site LTCG inline decision, same source, non-steerable.
 }
 
 } // namespace survarium

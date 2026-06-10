@@ -8,7 +8,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 weapon_core_hide_state_base::weapon_core_hide_state_base( weapon_core& weapon, bool& is_shown ) :
 	weapon_core_animation_end_aware_state	( weapon, true ),
 	m_is_shown								( is_shown )
@@ -16,7 +15,6 @@ weapon_core_hide_state_base::weapon_core_hide_state_base( weapon_core& weapon, b
 	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 }
 
-// STATE[100%|DONE]
 void weapon_core_hide_state_base::initialize( )
 {
 	weapon_core_animation_end_aware_state::initialize( );
@@ -24,14 +22,12 @@ void weapon_core_hide_state_base::initialize( )
 	m_weapon.instant_toggle_start( );
 }
 
-// STATE[100%|DONE]
 void weapon_core_hide_state_base::finalize( )
 {
 	weapon_core_animation_end_aware_state::finalize( );
 	m_weapon.instant_toggle_end( );
 }
 
-// STATE[100%|DONE]
 void weapon_core_hide_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
 	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call empty_stub`)
