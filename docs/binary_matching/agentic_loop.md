@@ -6,8 +6,10 @@ each worker takes its function as far as it can, then stops.
 
 **Starting context for a run:** [`MATCHING.md`](MATCHING.md) (how the
 source must look), this file (the process), and
-[`assembly_patterns.md`](assembly_patterns.md) (asm -> source mappings learned so
-far). Read all three first.
+[`patterns/INDEX.md`](patterns/INDEX.md) (one line per known asm -> source
+pattern; cheap skim). Read all three first; pull individual pattern files on
+demand via the search protocol in [`assembly_patterns.md`](assembly_patterns.md)
+(grep the INDEX by `cpp:`/`asm:`/`topic:` tag or symptom token, read only hits).
 
 **Unit of work:** one function = one branch = one commit = one PR. A unit may
 bundle several functions when justified: (a) an *inlined cluster* (A inlined into
@@ -132,7 +134,7 @@ pdb_fetch --target-index binaries/rich/target/index.jsonl \
 Read the rows: `  ` equal, `~ base -> target` same slot/different instruction,
 `-` base-only, `+` target-only. A *handful* of `~` rows that are only a register or
 `[ebp-XX]` stack-slot difference is usually an LTCG/linker artifact, not a real
-mismatch (see `assembly_patterns.md`) - match the body, don't chase those. But a
+mismatch (grep `patterns/INDEX.md` for `topic:convention`) - match the body, don't chase those. But a
 *storm* of `[ebp-XX]` slot renames (dozens at once) is usually NOT LTCG: it means
 your locals landed in different stack slots because your block structure differs
 from the target's - a missing brace scope, an `if`/loop the target has, statements
@@ -231,11 +233,14 @@ STATE[..]: <final status>. Blocker: <...>. Regressions caused: <unit/fn, or none
 Inlining: <blocks that inlined differently; cluster members matched together>.
 ```
 
-## 8. Assembly patterns -> `assembly_patterns.md`
+## 8. Assembly patterns -> `patterns/`
 
 Whenever you recognize an asm shape mapping back to specific C++ (a ctor
-prologue, an intrinsic, a constant-load idiom, a container call), **append it**
-to [`assembly_patterns.md`](assembly_patterns.md). That file is shared context
+prologue, an intrinsic, a constant-load idiom, a container call), add it as a
+**new file** under [`patterns/`](patterns/) plus **one line** in
+[`patterns/INDEX.md`](patterns/INDEX.md), same commit (schema + tag vocabulary
+in [`assembly_patterns.md`](assembly_patterns.md)); merge into an existing
+pattern file when it is the same lesson. That knowledge base is shared context
 for every future run; growing it is how the loop gets faster.
 
 ## 9. Commit & PR
