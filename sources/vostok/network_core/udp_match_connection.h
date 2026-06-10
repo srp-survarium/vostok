@@ -48,10 +48,13 @@ public:
 		continuous_flow				= 0x2,
 	}; // enum low_level_message_type_enum
 
+	// claude@MATCH: bodies read from the target key_nodeptr_comp<comparer,...> thunks
+	// (0x122ed0/0x122f20/0x123120/0x1231e0): each compares order_id (packet @0x26)
+	// via sequence_number<u16>::operator<.
 	struct comparer {
-		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
-		inline	bool	operator()	( sequence_number< u16 > left, udp_match_packet const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
-		inline	bool	operator()	( udp_match_packet const& left, sequence_number< u16 > right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
+		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { return left.order_id < right.order_id; }
+		inline	bool	operator()	( sequence_number< u16 > left, udp_match_packet const& right ) const { return left < right.order_id; }
+		inline	bool	operator()	( udp_match_packet const& left, sequence_number< u16 > right ) const { return left.order_id < right; }
 	}; // struct comparer
 
 	struct channel {
@@ -200,7 +203,12 @@ private:
 	/* 0x00f0 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
 	/* 0x00f4 */	udp_match_packets_orderer&			m_packets_orderer;
 	/* 0x00f8 */	pcstr								m_logging_id;
-	/* 0x00fc */	long								m_last_receive_time_in_ms;
+	// claude@MATCH: threading::atomic32_type (volatile long) - process_incoming_packet
+	// targets it with interlocked_exchange; the non-volatile guard overload would
+	// otherwise fire (threading_functions_guard.h).
+	// sushi@TODO: can the structure/size tooling catch this? PDB member-type records
+	// should carry the volatile qualifier - today's sweep checks only sizes/offsets.
+	/* 0x00fc */	threading::atomic32_type			m_last_receive_time_in_ms;
 	/* 0x0100 */	const u32							m_disconnection_timeout_in_ms;
 	/* 0x0104 */	u32									m_last_send_time_in_ms;
 	/* 0x0108 */	long								m_last_send_attempt_time_in_ms;
