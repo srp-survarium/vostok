@@ -1213,3 +1213,22 @@ row was banked as a wall on `tcp_packet_client::~tcp_packet_client` (target 3 / 
 disconnect( );` closed it - STRUCTURE MATCH 3/3, 90.98 -> 94.88; the same shape closed the
 ONLY-target rows in `on_packet_received` (17+1 -> 18/18) and `on_packet_has_been_sent`
 (9+1 -> 10/10).
+
+### `else if` merges chain-jmp + test into ONE row - a flat second `if` splits them (ONLY row at the LOG line)
+Sibling signature of the early-return entry above, seen when the FIRST arm ends in a
+(possibly implicit) early exit. The /Od statement table attributes an `} else if ( C )`
+spelling as ONE row (the else-jmp AND the `C` test bytes, on the `else if` line), and the
+arm's body row then starts at the LOG. The original flat spelling
+	if ( A ) { ...; return-ish; }
+	if ( C ) {
+		LOG_ERROR( ... );
+gives `C` its OWN test row and the LOG its own full row - one statement MORE, with a telltale
+size redistribution instead of a clean single diff:
+	6: <0x5>  | <0xf>  | } else if ( bytes_transferred == 0 )   SIZE   (target = bare jmp; base = jmp+test)
+	7: <0xa>  | <0x77> | LOG_ERROR( ... )                       SIZE   (target = test only; base = test+LOG merged)
+	8: <0x7b> | --     | ONLY target (the LOG line)
+DEDUCTION RULE: when a base mid-chain row is test-sized too SMALL on the target side, the next
+base row is LOG-block-sized too BIG, and an ONLY-target row follows at the LOG's line - the
+original used flat sequential `if`s, not an `else if` chain. Confirmed on
+`tcp_packet_socket::on_packet_has_been_sent` (9+1 -> 10/10) and `on_packet_received`
+(17+1 -> 18/18) via PR #291's flat early-return adoption.
