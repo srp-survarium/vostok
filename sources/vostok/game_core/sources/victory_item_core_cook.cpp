@@ -35,19 +35,12 @@ void victory_item_core_cook::translate_query( resources::query_result_for_cook& 
 	);
 }
 
-// STATE[93.71%|PARTIAL]: by-value resource_ptr temp materialization via inlined operator[] (LTCG)
-// STRUCTURE DIFF[target 0x752150 | base 0x565d20]: target 10 / base 10 stmts
-// 0x015 <0x22> | 0x015 <0x1d> | configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) ); // sushi@MATCH: operator[] inlined in target   SIZE
-// <0>         | --          |    EMPTY only target
-// --          | <0>         |    EMPTY only base
-// .. same ..
-// ; aligned 8, size-diffs 1, quantity-diffs 2
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the by-value resource_ptr temp built through the inlined data[0] operator[]; base spills an extra temp slot (frame 0x34 vs 0x30), non-steerable. trail: on_config_loaded.md
+// STATE[100%|DONE]
 void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* parent = data.get_parent_query( );
 
-	configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) ); // sushi@MATCH: operator[] inlined in target
+	configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
 
 	victory_item_core* object_to_cook = create_resource( );
 	object_to_cook->load( cfg->get_root( ) );
@@ -60,14 +53,14 @@ void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 	parent->finish_query( result_success );
 }
 
-// STATE[33.38%|PARTIAL]: delete_helper macro lowering - base adds an accessor call + differs in arg passing (LTCG)
-// STRUCTURE DIFF[target 0x7520c0 | base 0x565c90]: target 1 / base 1 stmts
-// 0x009 <0x13> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
-// ; aligned 0, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - target inlines strip_pointer(g_allocator) to mov [g_allocator];push and calls delete_helper( alloc, &resource ); base emits strip_pointer as an out-of-line call (the extra call), whole-program LTCG inline-vs-call, non-steerable. trail: delete_resource.md
+// STATE[33.38%|PARTIAL]: delete_helper macro lowering - base adds a strip_pointer call + LTCG-promoted convention
 void victory_item_core_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
+
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x3 | 70 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH - target calls delete_helper cdecl (alloc + &resource pushed); base adds an out-of-line strip_pointer call and LTCG promotes delete_helper to an edi-arg convention, non-steerable.
 }
 
 } // namespace survarium
