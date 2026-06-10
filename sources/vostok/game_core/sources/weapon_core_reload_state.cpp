@@ -77,11 +77,11 @@ animation::mixing::expression weapon_core_reload_state::weapon_and_hands_express
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// FUNCTION BODY
-	// <0x7aaaf0>|0x010|+0x01f:'44'
-	// <0x7aab0f>|0x02f|+0x02a:'45'
-	// <0x7aab39>|0x059|+0x07a:'46'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x27 | 78 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the mixing operator+ overload gap
+	// (target's operator+<animation_lexeme>/operator+(expression&,expression&) forms do not exist
+	// in the on-disk mixing headers), blocked on the mixing unit, non-steerable here.
 }
 
 // STATE[100%|DONE]
@@ -143,30 +143,12 @@ animation::mixing::expression weapon_core_reload_state::get_user_hands_expressio
 
 	return override_lexeme;
 
-	// FUNCTION BODY
-	// <0x7aa961>|0x011|+0x006:'62'
-	// <0x7aa967>|0x017|+0x010:'63'
-	// <0>
-	// <0x7aa977>|0x027|+0x012:'65'
-	// <0>
-	// <0x7aa989>|0x039|+0x00c:'67'
-	// <0>
-	// <0x7aa995>|0x045|+0x00e:'69'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x7aa9a3>|0x053|+0x079:'82'	override_lexeme(...) - target keeps setters/get_user/~params OUT-OF-LINE; base inlines them (/Ob2 /GL whole-program decision)
-	// <0x7aaa1c>|0x0cc|+0x01c:'83'	return override_lexeme;
-	// ******
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x3  | 123 | return weapon_lexeme;
+	// SIZE +0x16 | 142 | );
+	// VERDICT: STRUCTURE MATCH (7/7) - residuals are the lexeme_parameters setters /
+	// weapon_core::get_user / ~params kept out-of-line in target vs inlined in base
+	// (/Ob2 /GL whole-program decision), non-steerable from this TU.
 }
 
 // STATE[86.5%|PARTIAL]: placement-new + ctor call + arg order all match; sole residual is the
@@ -188,14 +170,10 @@ weapon_core_reload_state* weapon_core_state_cook_template<weapon_core_reload_sta
 		animations_count
 	);
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7aa8e9>|0x009|+0x05c:'95'	target: call computed_reload_animation_time_scale; base inlines the 0.0f STUB
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x11 | 189 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the timescale arg: target calls
+	// computed_reload_animation_time_scale, base inlines the 0.0f stub; blocked on that callee.
 }
 
 } // namespace survarium
