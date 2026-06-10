@@ -48,6 +48,8 @@
 #include <vostok/network/match_client.h>
 #include <vostok/network/tcp_packet_client.h>
 #include <vostok/network/http_client.h>
+#include <vostok/network/sources/string_order.h>
+#include <vostok/network/sources/connect_order.h>
 
 #include <vostok/animation/skeleton.h>
 
@@ -1595,6 +1597,23 @@ namespace vostok
 			client.on_error( ( network_core::client_error_codes_enum )0, boost::system::error_code() );
 			client.on_error_impl( ( network_core::client_error_codes_enum )0, boost::system::error_code() );
 			client.disconnect( );
+		}
+
+		{
+			// string_order's 1-string ctor is reached via tcp_packet_client::connect;
+			// the 2- and 3-string ctors have standalone target symbols but no
+			// reachable caller yet (the login flow is still stubbed) - construct them
+			network::string_order order2( stack_allocator, boost::function< void ( pcstr, pcstr ) >( ), "0", "1" );
+			network::string_order order3( stack_allocator, boost::function< void ( pcstr, pcstr, pcstr ) >( ), "0", "1", "2" );
+			order2.execute( );
+			order3.execute( );
+
+			// connect_order's ctor is inlined into its only construction site
+			// (match_client::connect, still a stub) - construct one so the
+			// vtable emits its dtor/execute/scalar-deleting-dtor
+			network_core::udp_match_packets_allocator_ptr packets_allocator;
+			network::connect_order order4( stack_allocator, "host", packets_allocator, NULL, boost::function< void ( pcstr, network_core::udp_match_packet const* ) >( ) );
+			order4.execute( );
 		}
 
 		{
