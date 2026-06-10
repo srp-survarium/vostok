@@ -592,34 +592,38 @@ void booby_trap_core::unregister_tick( scheduler& scheduler )
 	// ******
 }
 
-// STATE[PARTIAL]: owner serializes the world-object header, then trap state (u8), transform
-// position (float3) and Euler angles (float3). ASSERTs compiled out. trail: booby_trap_core_serialize.md
+// STATE[77.17%|PARTIAL]: a leading assert eater, owner serializes the world-object header,
+// then trap state (u8), transform position (float3) and Euler angles (float3).
+// trail: booby_trap_core_serialize.md
 void booby_trap_core::serialize( network_core::udp_match_packet& packet ) const
 {
+	ASSERT( UNKNOWN_EXPRESSION );
 	m_owner->serialize_game_world_object_header( *this, packet );
 
 	packet.append( m_trap_state );
-	packet.append( (math::float3 const&)m_transform.c );
+	packet.append( (math::float3 const&)m_transform.c ); // sushi@TODO: implausible spelling - float4x4 should expose a getter (cf. get_angles_xyz below); find the real translation accessor and respell
 	packet.append( m_transform.get_angles_xyz( ) );
 
-	// STRUCTURE DIFF[target 0x58b750 | base 0x45f940]: target 5 / base 4 stmts
-	//   1: 0x00b <0xc> | 0x00b <0x24> | m_owner->serialize_game_world_object_header( *this, packet );   SIZE
-	//   2: 0x017 <0x26> | --          | L359   ONLY target
-	//   3: 0x03d <0x13> | 0x02f <0x1a> | packet.append( m_trap_state );   SIZE
-	//   4: 0x050 <0x15> | 0x049 <0x14> | packet.append( (math::float3 const&)m_transform.c );   SIZE
-	//   5: 0x065 <0x19> | 0x05d <0x22> | packet.append( m_transform.get_angles_xyz( ) );   SIZE
-	// ; aligned 0, size-diffs 4, quantity-diffs 1, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - same header-forward + 3 appends; SIZE/quantity are LTCG inline-vs-call of append/get_angles_xyz (target inlines the get_angles_xyz body as its own stmt L359), non-steerable.
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ---------+--------+--------+----+----+------+------
+	// SIZE +0x7|0x58b78d|0x47278d|0x13|0x1a|602   |	packet.append( m_trap_state );
+	// SIZE -0x1|0x58b7a0|0x4727a7|0x15|0x14|603   |	packet.append( (math::float3 const&)m_transform.c );
+	// SIZE +0x9|0x58b7b5|0x4727bb|0x19|0x22|604   |	packet.append( m_transform.get_angles_xyz( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 5/5 after adding the leading ASSERT eater (target stmt#1 is the 0xc triple; the header-forward is stmt#2, a virtual call); SIZE rows are append/get_angles_xyz LTCG inline (base) vs call (target), non-steerable.
 }
 
-// STATE[PARTIAL]: read trap state + position + angles, rebuild the transform (rotation *
-// translation), let the owner insert the trap, then drive the trap to the read state when it
-// is not the default armed state. ASSERTs compiled out. trail: booby_trap_core_serialize.md
+// STATE[54.95%|PARTIAL]: read trap state + position + angles, two assert eaters, rebuild the
+// transform (rotation * translation), let the owner insert the trap, then drive the trap to
+// the read state when it is not the default armed state. trail: booby_trap_core_serialize.md
 void booby_trap_core::deserialize( network_core::packet_reader& reader )
 {
 	booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );
 	math::float3		position	= reader.r< math::float3 >( );
 	math::float3		angles		= reader.r< math::float3 >( );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 
 	float4x4			transform	= math::create_rotation( angles ) * math::create_translation( position );
 	m_owner->insert_trap( *this, transform );
@@ -627,15 +631,13 @@ void booby_trap_core::deserialize( network_core::packet_reader& reader )
 	if ( state != booby_trap_state_armed )
 		switch_to_state( state );
 
-	// STRUCTURE DIFF[target 0x58b680 | base 0x45faa0]: target 9 / base 7 stmts
-	//   1: 0x00f <0xe> | 0x00f <0x27> | booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );   SIZE
-	//   2: 0x01d <0xb> | 0x036 <0x4a> | math::float3		position	= reader.r< math::float3 >( );   SIZE
-	//   3: 0x028 <0xb> | 0x080 <0x4a> | math::float3		angles		= reader.r< math::float3 >( );   SIZE
-	//   4: 0x033 <0xc> | --          | L374   ONLY target
-	//   5: 0x03f <0xc> | --          | L375   ONLY target
-	//   7: 0x07f <0x2a> | 0x0fe <0x2c> | m_owner->insert_trap( *this, transform );   SIZE
-	// ; aligned 3, size-diffs 4, quantity-diffs 2, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - same 3 reads + transform build (rotation*translation) + insert_trap + guarded switch_to_state; SIZE/quantity are LTCG inline-vs-call of r<float3>/create_rotation/create_translation (target inlines them into L374/L375 stmts), non-steerable.
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
+	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
+	// ----------+--------+--------+----+----+------+------
+	// SIZE +0xf |0x58b68f|0x4728cf|0xe |0x1d|621   |	booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );
+	// SIZE +0x2e|0x58b69d|0x4728ec|0xb |0x39|622   |	math::float3		position	= reader.r< math::float3 >( );
+	// SIZE +0x2e|0x58b6a8|0x472925|0xb |0x39|623   |	math::float3		angles		= reader.r< math::float3 >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 9/9 after adding the two ASSERT eaters (target stmts #4/#5 are 0xc triples at L374/L375); SIZE rows are r<bool>/r<float3> LTCG inline (base) vs call (target), non-steerable.
 }
 
 // STATE[100%|DONE]

@@ -28,39 +28,45 @@ bool weapon_core_base_state::deserializing( ) const
 	return m_weapon.deserializing( );
 }
 
-// STATE[PARTIAL]: serialize_animation_state guards a get_animation_playback_state probe
-// (mask -3) then appends interval_id (u32) + interval_time (float). The lea/&success stub
-// and the const interval_time sentinel resist a byte-exact init; logical shape matches rva 0x6ecee0.
+// STATE[75.60%|PARTIAL]: serialize_animation_state guards a get_animation_playback_state probe
+// (mask -3) then appends interval_id (u32) + interval_time (float). Restructured to the target's
+// 10-stmt skeleton: compiled-out ASSERT after the decl (the byte+lea+empty_stub triple at
+// t.0x02f <0xc>), success declared AT the probe call (target locals order playback_state, user,
+// success; no `= false` init row), and the !success arm written as the two explicit member
+// resets the target line table shows (two separate rows, t.<0x7>+<0xd>) - NOT a
+// playback_state.reset() call.
 void weapon_core_base_state::serialize( network_core::udp_match_packet& packet ) const
 {
 	if ( m_serialize_animation_state )
 	{
 		animation::animation_playback_state	playback_state;
-		bool								success	= false;
-
+		ASSERT( UNKNOWN_EXPRESSION );
 		base_player const&	user	= *m_weapon.get_user( );
-		success	= user.get_animation_playback_state( &m_weapon, animation::body_part_whole_body_but_hands, playback_state );
+
+		bool success	= user.get_animation_playback_state( &m_weapon, animation::body_part_whole_body_but_hands, playback_state );
 		if ( !success )
-			playback_state.reset( );
+		{
+			playback_state.interval_id		= 0;
+			playback_state.interval_time	= 0.0f;
+		}
 
 		packet.append	( playback_state.interval_id );
 		packet.append	( playback_state.interval_time );
 	}
 
-	// STRUCTURE DIFF[target 0x6ecee0 | base 0x4604b0]: target 10 / base 9 stmts
-	//   3: 0x02f <0xc> | 0x02f <0x4> | bool								success	= false;   SIZE
-	//   4: 0x03b <0x11> | --          | L39   ONLY target
-	//   5: --          | 0x033 <0x12> | base_player const&	user	= *m_weapon.get_user( );   ONLY base
-	//   8: --          | 0x06d <0x14> | playback_state.reset( );   ONLY base
-	//   9: 0x074 <0x7> | 0x081 <0x14> | packet.append	( playback_state.interval_id );   SIZE
-	//  10: 0x07b <0xd> | 0x095 <0x18> | packet.append	( playback_state.interval_time );   SIZE
-	//  11: 0x088 <0xc> | --          | L50   ONLY target
-	//  12: 0x094 <0xf> | --          | L51   ONLY target
-	// ; aligned 4, size-diffs 3, quantity-diffs 5, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - same if-guarded probe (decl/success/get_user/get_animation_playback_state/!success reset/2 appends); quantity rows are SIZE-drift mis-pairing of the LTCG-inlined get_animation_playback_state+append calls (target inline vs base call), non-steerable.
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts (post-fix; was 10/9)
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0x1|0x6ecf1b|0x47320b|0x11|0x12|0   |base_player const&	user	= *m_weapon.get_user( );
+	// SIZE +0x8|0x6ecf68|0x473259|0xc |0x14|+9  |packet.append	( playback_state.interval_id );
+	// SIZE +0x9|0x6ecf74|0x47326d|0xf |0x18|+10 |packet.append	( playback_state.interval_time );
+	// VERDICT: STRUCTURE MATCH (fixed quantity) - 10/10 after recovering the ASSERT, folding the
+	//   success decl into the probe call, and writing the !success arm as the two explicit member
+	//   resets; residual SIZE rows are the target's LTCG custom-convention get_user call and the
+	//   inlined packet<T>::append pair, non-steerable.
 }
 
-// STATE[PARTIAL]: when serialize_animation_state, reads interval_id (u32) + interval_time
+// STATE[44.05%|PARTIAL]: when serialize_animation_state, reads interval_id (u32) + interval_time
 // (float) back into m_animation_playback_state. Matches rva 0x6ece90.
 void weapon_core_base_state::deserialize( network_core::packet_reader& reader )
 {
@@ -70,11 +76,14 @@ void weapon_core_base_state::deserialize( network_core::packet_reader& reader )
 		m_animation_playback_state.interval_time	= reader.r< float >( );
 	}
 
-	// STRUCTURE DIFF[target 0x6ece90 | base 0x460400]: target 3 / base 3 stmts
-	//   2: 0x017 <0x11> | 0x017 <0x26> | m_animation_playback_state.interval_id		= reader.r< u32 >( );   SIZE
-	//   3: 0x028 <0x13> | 0x03d <0x2e> | m_animation_playback_state.interval_time	= reader.r< float >( );   SIZE
-	// ; aligned 1, size-diffs 2, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - both if-guarded 2 reads; SIZE rows are packet_reader::r<u32>/r<float> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
+	// ---------+--------+--------+----+----+----+------
+	// SIZE +0xb|0x6ecea7|0x4732a7|0x11|0x1c|0   |m_animation_playback_state.interval_id		= reader.r< u32 >( );
+	// SIZE +0xd|0x6eceb8|0x4732c3|0x13|0x20|+1  |m_animation_playback_state.interval_time	= reader.r< float >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - both sides if-guarded 2 reads; SIZE rows are the
+	//   target's LTCG-folded r<u32>/r<float> calls vs the base's inlined wrapper + inner r() call,
+	//   non-steerable.
 }
 
 } // namespace survarium
