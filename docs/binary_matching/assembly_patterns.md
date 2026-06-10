@@ -1278,3 +1278,18 @@ Verify by NAME instead: `pdb_fetch --view diff --function <class>::execute` pair
 base symbol against the fold survivor - string_response::execute diffs with ZERO
 divergent rows (frame 0x388 included) despite the unit-level None. Write the real body
 in its own header; never leave `{}` because "no code is attributed here".
+
+### vtable dtor slot ??_E (vector) in base vs ??_G (scalar) in target: not anchor-steerable
+SYMPTOM: a virtual-dtor class matched via a temp_include_all anchor pairs everything
+except the deleting destructor: target unit lists `??_G<class>` (scalar deleting dtor,
+referenced by the target vftable), base emits `??_E<class>` (vector flavor) instead,
+so objdiff shows `None` for the `??_G` row and the unit's .rdata vtable reloc sits at
+50%. Module-wide across network's order/response headers (string/connect/send/
+send_queued/enqueue/receive_*).
+NEGATIVE RESULT (tested): heap `new` + scalar `delete` of the class in the anchor TU
+does NOT flip the base vftable slot to ??_G - the score stays None and the extra
+operator new/delete churns unrelated ICF folds (-10 functions binary-wide). The
+flavor choice happens at the original vtable-emitting TU (the real ctor caller, e.g.
+match_client.cpp, still a stub) and/or differs with that TU's whole-program view;
+revisit only when the real caller TU is matched. Keep stack-constructed anchors and
+bank the `??_G = None` as a known cross-unit residual, not a per-header bug.
