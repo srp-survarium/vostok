@@ -1,7 +1,7 @@
 # A write/read at `[ebp+arg]+0xNN` is a MEMBER of an argument struct, not a local
 tags: cpp:member | asm:mov asm:add | topic:structure-shape
 symptoms: mov eax [ebp+8] add eax 0x1C store there, re-read by a later call
-confidence: 8/10
+confidence: 6/10
 
 `[ebp+8]` is the by-ref struct ARG; +0x1C is a member offset - the statement is
 `arg.member = ...`, not a local. Mis-decoding it as a matrix-row write over-produces an

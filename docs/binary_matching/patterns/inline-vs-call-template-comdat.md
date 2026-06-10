@@ -1,7 +1,7 @@
 # Trivial COMDAT template method: target `call`s it, base inlines (vectora::size)
 tags: cpp:template cpp:member cpp:inline | asm:call asm:idiv | topic:inline-vs-call
 symptoms: call vectora<T>::size vs inlined [+4]-[+0] cdq idiv, imul edx 0x38 operator[]
-confidence: 9/10
+confidence: 6/10
 variants: inline-vs-call-trivial-getter.md, fixed-string-ctor-inline.md, float3-dot-operator-inline.md
 
 For `container.size()` / `container[i]` on a `vostok::vectora<T>` (thin std::vector

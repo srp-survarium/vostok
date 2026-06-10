@@ -1,7 +1,7 @@
 # Thin forwarder: float/int arg in xmm0/eax vs spilled to stack = LTCG call-boundary residual
 tags: cpp:member cpp:float | asm:movss asm:fld asm:fstp | topic:convention
 symptoms: movss xmm0 [ebp+..] vs fld fstp [esp], sibling overloads 100% same shape
-confidence: 8/10
+confidence: 7/10
 variants: small-struct-factory-abi.md
 
 A one-line forwarder `member_ref.method( other_member, a, b, c )` can match 100% for some

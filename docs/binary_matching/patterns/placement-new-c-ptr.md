@@ -1,7 +1,7 @@
 # Placement new on a mutable_buffer = `new ( buffer.c_ptr() ) T(...)`
 tags: cpp:new-delete | asm:call asm:cmp asm:push | topic:codegen-idiom
 symptoms: C2665 operator new overloads, call c_ptr misnamed operator*, post-new cmp [p] 0 je null guard
-confidence: 9/10
+confidence: 8/10
 
 `mutable_buffer` has NO conversion to void* (only operator bool), so `new ( buffer ) T`
 fails C2665 - the standard form is `new ( buffer.c_ptr() ) T(...)`. The `call operator*`

@@ -1,7 +1,7 @@
 # Smart-ptr returned by value in a `&&` chain: temp construct + safe-bool test + dtor
 tags: cpp:if cpp:bool | asm:sete asm:cmp asm:call | topic:codegen-idiom
 symptoms: or dword [ebp-18h] 1 EH guard, intrusive_ptr::set then cmp 0 sete then ::dec, and 0FFFFFFFEh
-confidence: 9/10
+confidence: 6/10
 
 A getter returning a resource_ptr/intrusive_ptr BY VALUE used in boolean context
 materializes the temp, tests it via the safe-bool operator, and destroys it before the

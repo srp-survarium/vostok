@@ -1,7 +1,7 @@
 # A fat early-`return;` row carries the inlined dtor of an in-scope local/by-value param
 tags: cpp:return cpp:dtor | asm:jmp asm:call asm:cmp | topic:structure-shape topic:pdb-locals
 symptoms: ~0x26 return row, sp_counted_base::release on the return line, dtor walk then jmp epilogue
-confidence: 9/10
+confidence: 8/10
 variants: for-head-statement-merges.md, closing-brace-jmp-rows.md
 
 Before any non-trivial local exists, `return;` is a bare 5-byte jmp; once an

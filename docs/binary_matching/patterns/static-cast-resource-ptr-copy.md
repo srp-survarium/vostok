@@ -1,7 +1,7 @@
 # `static_cast_resource_ptr<P>( x.get_unmanaged_resource() )`: extra copy-construct + 8B frame
 tags: cpp:cast cpp:template | asm:call asm:lea asm:sub-esp | topic:inline-vs-call
 symptoms: sub esp 0BCh vs 0B4h, extra resource_ptr copy-construct call into a second slot
-confidence: 8/10
+confidence: 7/10
 variants: static-cast-checked.md, template-param-byvalue-vs-constref.md
 
 TARGET builds the `get_unmanaged_resource()` result as a direct stack prvalue into the

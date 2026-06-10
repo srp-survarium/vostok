@@ -1,7 +1,7 @@
 # boost::asio socket open/bind/endpoint idioms (all match from plain source)
 tags: cpp:member cpp:ctor | asm:cmp asm:lea asm:rep-movsd | topic:codegen-idiom
 symptoms: cmp dword[socket+4] -1 setne, mov dword[ebp-4] 2 protocol temp, zero 7 dwords endpoint, sub esp 51Ch gap
-confidence: 9/10
+confidence: 8/10
 
 The plain asio source reproduces byte-perfect: `is_open()` inlines to
 `cmp dword[socket+4],-1; setne` (impl.socket_ != invalid_socket); `open(udp::v4())`

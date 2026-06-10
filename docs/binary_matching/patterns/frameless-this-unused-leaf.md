@@ -1,7 +1,7 @@
 # A `this`-unused trivial member is FRAMELESS in the target, framed under /Od (None|PARTIAL)
 tags: cpp:member cpp:return | asm:fld asm:ret | topic:scoring-artifact topic:convention
 symptoms: target body d9 ee c3 fldz ret, b8 reloc c2 0400, base full frame 11+ bytes, fuzzy None
-confidence: 8/10
+confidence: 7/10
 variants: optimized-comdat-in-od-unit.md
 
 A trivial member that never references `this` (returns a literal/0.0f/NULL) gets

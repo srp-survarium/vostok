@@ -1,7 +1,7 @@
 # Jump-table switch: read the case order from the obj's own .text relocs
 tags: cpp:switch | asm:jmp asm:movss | topic:structure-shape topic:tooling
 symptoms: jmp dword ptr [edx*4+table], trailing garbage after ret, add eax 6B00595Fh
-confidence: 9/10
+confidence: 8/10
 variants: switch-default-nodefault.md, switch-footer-vs-report.md
 
 `jmp dword ptr [edx*4 + <table>]` with the table inside the function's .text (the

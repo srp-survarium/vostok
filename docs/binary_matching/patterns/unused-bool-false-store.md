@@ -1,7 +1,7 @@
 # Lone 4-byte `mov byte[ebp-N],0` = unused `bool b = false;`, NOT an ASSERT
 tags: cpp:bool cpp:local | asm:mov | topic:assert-eater
 symptoms: <0x4> statement, mov byte ptr [ebp-N],0 with no lea/call
-confidence: 8/10
+confidence: 6/10
 variants: assert-eater-recover.md
 
 A statement of size <0x4> whose only instruction is the byte store, with NO following

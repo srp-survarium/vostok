@@ -1,7 +1,7 @@
 # Speculative ASSERT in an inline ctor multiplies into every inline site
 tags: cpp:assert cpp:inline cpp:ctor | asm:call | topic:assert-eater
 symptoms: eater bytes at every inlining consumer, ~0x10 per site, several consumers capped at once
-confidence: 8/10
+confidence: 9/10
 variants: assert-eater-recover.md
 
 A header-inline ctor/method expands at every call site, so a guessed

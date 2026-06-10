@@ -1,7 +1,7 @@
 # `math::pow(x, INT)` binds pow(float,int): target inlines the sign-dispatch, base calls
 tags: cpp:float cpp:cast | asm:call asm:test | topic:inline-vs-call
 symptoms: mov edx 5 test jne call pow_impl inlined vs mov ecx 5 call vostok::math::pow
-confidence: 8/10
+confidence: 6/10
 variants: float3-dot-operator-inline.md
 
 `math::pow( f, 5 )` (INTEGER second arg) binds `pow(float,int)`, whose body

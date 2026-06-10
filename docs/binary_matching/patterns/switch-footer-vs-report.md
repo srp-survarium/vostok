@@ -1,7 +1,7 @@
 # NODEFAULT jump-table switch: diff FOOTER reads ~55-65% while report.json says 100
 tags: cpp:switch | asm:jmp | topic:scoring-artifact
 symptoms: (bad) instructions past ret, jmp .N vs jmp .N+1 label shift, footer % far below report.json
-confidence: 9/10
+confidence: 8/10
 variants: switch-default-nodefault.md, switch-jump-table-relocs.md
 
 A no-bounds-check jump-table switch can be a TRUE 100% while the `--view diff` footer
