@@ -63,16 +63,22 @@ public:
 			// ******
 		}
 
-		inline	void	reset	( ) { /* no source */ }
-
 		// STATE[STUB]
-		inline			~channel( )
+		inline	void	reset	( )
 		{
-			// FUNCTION BODY[0x137510]: 4
+			// FUNCTION BODY[0x1374b0]: 4
 			// <0x1374b9>|0x009|+0x00c:'156'
 			// <0x1374c5>|0x015|+0x008:'157'
 			// <0x1374cd>|0x01d|+0x01c:'158'
 			// <0x1374e9>|0x039|+0x019:'159'
+			// ******
+		}
+
+		// STATE[STUB]
+		inline			~channel( )
+		{
+			// FUNCTION BODY[0x137510]: 0
+			// (0 statements - 0x15 bytes of member-dtor machinery only)
 			// ******
 		}
 
@@ -108,21 +114,24 @@ public:
 			void						instant_disconnect				( disconnect_event_types_enum type );
 	inline	void						set_on_disconnect				( boost::function< void( disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
+	// sushi@TODO: the `/* no source */` bodies below are shams to compile - no inline-site
+	// evidence yet; reconstruct each from its consumer's target bytes when that consumer
+	// gets matched (is_connected/delete_packet land in PR #285, comparer in PR #288).
 	inline	bool						is_connected					( ) const { return false; }
 
-	inline	bool						has_disconnection_initiated		( ) const { return false; }
+	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ }
 
-	inline	bool						is_disconnecting				( ) const { return false; }
+	inline	bool						is_disconnecting				( ) const { return false; /* no source */ }
 	// claude@MATCH: inlined in udp_match_client::handle_receive as `cmp m_state(+0x11c), disconnected(3); sete`.
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
 	inline	void						set_disconnected				( ) { /* no source */ }
 
-	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; }
+	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; /* no source */ }
 	inline	void						delete_packet					( udp_match_packet*& packet ) { /* no source */ }
 
 	inline	void						set_max_packet_wait_time_in_ms	( u32 value ) { /* no source */ }
 
-	inline	bool						are_there_any_queued_packets	( ) const { return false; }
+	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ }
 
 	// claude@MATCH: udp_match_client::handle_receive passes this to on_packet_received; target
 	// reads m_unacknowledged_packets(+0xa0).size() via the ICF-folded size_policy::size COMDAT.
@@ -131,11 +140,11 @@ public:
 
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }
 
-	inline	u32							last_send_time_in_ms			( ) const { return 0; }
-	inline	u32							last_receive_time_in_ms			( ) const { return 0; }
-	inline	u32							last_activity_time_in_ms		( ) const { return 0; }
+	inline	u32							last_send_time_in_ms			( ) const { return 0; /* no source */ }
+	inline	u32							last_receive_time_in_ms			( ) const { return 0; /* no source */ }
+	inline	u32							last_activity_time_in_ms		( ) const { return 0; /* no source */ }
 
-	inline	u32							pending_operations_count		( ) const { return 0; }
+	inline	u32							pending_operations_count		( ) const { return 0; /* no source */ }
 
 private:
 			void						on_error						( client_error_codes_enum client_error_code, boost::system::error_code error_code );
