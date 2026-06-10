@@ -60,11 +60,11 @@ weapon_core_chamber_a_round_state::weapon_core_chamber_a_round_state(
 // to operator+<expression,animation_lexeme> + operator+<addition_lexeme,animation_lexeme>.
 // claude@NOTE: recovering this needs the full expression-returning operator+ family
 // added to the shared mixing_addition_lexeme API - a separate cross-cutting unit, not
-// this chamber file. See .md.
+// this chamber file.
 animation::mixing::expression weapon_core_chamber_a_round_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -74,11 +74,10 @@ animation::mixing::expression weapon_core_chamber_a_round_state::weapon_and_hand
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// FUNCTION BODY
-	// <0x7aa6a0>|0x010|+0x01f:'45'
-	// <0x7aa6bf>|0x02f|+0x02a:'46'
-	// <0x7aa6e9>|0x059|+0x07a:'47'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x27 | 75 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines
+	// expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -110,12 +109,12 @@ weapon_lexeme_pair weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( mu
 // (all standalone in the target rich index); our /Od base inlines the trivial in-class
 // setters (mov [ecx+20h],edx / [eax+4Ch],2 / [ecx+3Ch],1) and inlines the dtor down to
 // its ASSERT. claude@NOTE: not source-steerable from this file - would need the setters
-// out-of-class or __declspec(noinline) in the shared header. See .md.
+// out-of-class or __declspec(noinline) in the shared header.
 animation::mixing::expression weapon_core_chamber_a_round_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -124,9 +123,9 @@ animation::mixing::expression weapon_core_chamber_a_round_state::get_user_hands_
 
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	u32 user_animation_index = user_state_id == type_crouch;
+	u32 const user_animation_index = user_state_id == type_crouch;
 
-	pcstr animation_captions[3] = { "stand_chamber_a_round", "crouch_chamber_a_round", "jump_chamber_a_round" };
+	pcstr const animation_captions[3] = { "stand_chamber_a_round", "crouch_chamber_a_round", "jump_chamber_a_round" };
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -143,30 +142,12 @@ animation::mixing::expression weapon_core_chamber_a_round_state::get_user_hands_
 
 	return override_lexeme;
 
-	// FUNCTION BODY
-	// <0x7aa501>|0x011|+0x006:'63'
-	// <0x7aa507>|0x017|+0x010:'64'
-	// <0>
-	// <0x7aa517>|0x027|+0x012:'66'
-	// <0>
-	// <0x7aa529>|0x039|+0x00c:'68'
-	// <0>
-	// <0x7aa535>|0x045|+0x015:'70'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x7aa54a>|0x05a|+0x079:'83'
-	// <0x7aa5c3>|0x0d3|+0x01c:'84'
-	// ******
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x3  | 123 | return weapon_lexeme;
+	// SIZE +0x16 | 142 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - +0x3 is the promoted expression(animation_lexeme)
+	// ctor convention; +0x16 is the lexeme_parameters setters/dtor inlined in base vs
+	// out-of-line in target, both non-steerable LTCG.
 }
 
 // STATE[100%|DONE]

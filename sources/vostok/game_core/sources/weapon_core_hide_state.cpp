@@ -67,8 +67,8 @@ weapon_core_hide_state::weapon_core_hide_state(
 // file's scope and would shift other matched operator+ functions (#192).
 animation::mixing::expression weapon_core_hide_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -78,11 +78,10 @@ animation::mixing::expression weapon_core_hide_state::weapon_and_hands_expressio
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// FUNCTION BODY
-	// <0x79ed40>|0x010|+0x01f:'51'	lexeme_pair = get_weapon_lexeme_pair(...)
-	// <0x79ed5f>|0x02f|+0x02a:'52'	hands_expression = get_user_hands_expression(...)
-	// <0x79ed89>|0x059|+0x07a:'53'	return hands + main + offset  (target uses dedicated expression operator+)
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x27 | 79 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines
+	// expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -117,8 +116,8 @@ weapon_lexeme_pair weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffe
 animation::mixing::expression weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -127,15 +126,15 @@ animation::mixing::expression weapon_core_hide_state::get_user_hands_expression(
 
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	u32 user_animation_index = user_state_id == type_crouch;
+	u32 const user_state_index = user_state_id == type_crouch;
 
-	pcstr animation_captions[2] = { "stand_hide", "crouch_hide" };
+	pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
 
 	animation::mixing::animation_lexeme hands_only_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
-			animation_captions[user_animation_index],
-			m_user_animations[is_third_view != false][user_animation_index],
+			animation_captions[user_state_index],
+			m_user_animations[is_third_view != false][user_state_index],
 			&weapon_lexeme,
 			&weight_driving_animation
 		)
@@ -146,17 +145,14 @@ animation::mixing::expression weapon_core_hide_state::get_user_hands_expression(
 
 	return hands_only_lexeme;
 
-	// FUNCTION BODY
-	// <0x79eba0>|0x011|+0x006:'69'	if ( user_state_id == type_sprint ) return weapon_lexeme;
-	// <0x79eba0>|0x017|+0x010:'70'	(sprint return expression)
-	// <0>
-	// <0x79eba0>|0x027|+0x012:'73'	ASSERT( UNKNOWN_EXPRESSION )
-	// <0>
-	// <0x79eba0>|0x039|+0x00c:'75'	user_animation_index = user_state_id == type_crouch
-	// <0>
-	// <0x79eba0>|0x045|+0x00e:'77'	animation_captions
-	// (lexeme_parameters builder + expression)
-	// ******
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x3 | 126 | return weapon_lexeme;
+	// SIZE +0x6 | 132 | pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
+	// SIZE +0x16 | 145 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - +0x3 is the promoted expression(animation_lexeme)
+	// ctor convention; +0x6 on the captions is disp8-vs-disp32 slot noise cascading from the
+	// bigger base frame; +0x16 is the lexeme_parameters setters/dtor inlined in base vs
+	// out-of-line in target, all non-steerable LTCG.
 }
 
 // STATE[100%|DONE]

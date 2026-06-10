@@ -64,8 +64,8 @@ weapon_core_show_state::weapon_core_show_state(
 // the shared animation header (out of this file's scope; a fix is under investigation on PR #192).
 animation::mixing::expression weapon_core_show_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -75,11 +75,10 @@ animation::mixing::expression weapon_core_show_state::weapon_and_hands_expressio
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 
-	// FUNCTION BODY
-	// <0x7af1f0>|0x010|+0x01f:'43'
-	// <0x7af20f>|0x02f|+0x02a:'44'
-	// <0x7af239>|0x059|+0x07a:'45'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x27 | 76 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the chained operator+ (target inlines
+	// expression-returning overloads absent from the shared mixing header), non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -115,17 +114,17 @@ weapon_lexeme_pair weapon_core_show_state::get_weapon_lexeme_pair( mutable_buffe
 animation::mixing::expression weapon_core_show_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
 	if ( user_state_id == type_sprint )
 		return weapon_lexeme;
 
-	u32 user_state_index = user_state_id == type_crouch;
+	u32 const user_state_index = user_state_id == type_crouch;
 
-	pcstr animation_captions[2] = { "stand_show", "crouch_show" };
+	pcstr const animation_captions[2] = { "stand_show", "crouch_show" };
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -142,19 +141,12 @@ animation::mixing::expression weapon_core_show_state::get_user_hands_expression(
 
 	return override_lexeme;
 
-	// FUNCTION BODY
-	// <0x7af071>|0x011|+0x006:'62'
-	// <0x7af077>|0x017|+0x010:'63'
-	// <0>
-	// <1>
-	// <0x7af087>|0x027|+0x00c:'66'
-	// <0>
-	// <0x7af093>|0x033|+0x00e:'68'
-	// <0>
-	// <1> <2> <3> <4> <5> <6> <7> <8> <9> <10> <11>
-	// <0x7af0a1>|0x041|+0x079:'81'
-	// <0x7af11a>|0x0ba|+0x01c:'82'
-	// ******
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
+	// SIZE +0x3  | 124 | return weapon_lexeme;
+	// SIZE +0x16 | 141 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - +0x3 is the promoted expression(animation_lexeme)
+	// ctor convention; +0x16 is the lexeme_parameters setters/dtor inlined in base vs
+	// out-of-line in target, both non-steerable LTCG.
 }
 
 // STATE[100%|DONE]
