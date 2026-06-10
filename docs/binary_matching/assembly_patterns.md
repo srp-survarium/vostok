@@ -2123,3 +2123,21 @@ QAE/UAE/UBE across the board. Fixing the header sections paired all six (ctor 0 
 serialize 0 -> 69.3, ...; 0 regressions). CAVEAT: if temp_include_all anchors take a
 member-pointer or call the member from outside, privatizing breaks the anchor - add the
 `friend void ::vostok::use_...( );` declaration (chamber_a_round_state_base precedent).
+
+### MASTER_GOLD ASSERT eater size scales with disp width: 0xc (disp8) / 0x12 (disp32)
+SYMPTOM: a lone statement of `mov byte ptr [ebp-N],0; lea eax,[ebp-N]; call <fold>` with NO
+test/je after it. SOURCE: any non-evaluating assert (ASSERT/R_ASSERT/FATAL) - in MASTER_GOLD
+they expand to VOSTOK_EMPTY_EXPRESSION = `if ( identity(false) ) { } else (void)0`: the false
+bool is materialized, its address goes to identity (promoted convention, ref in eax), and the
+empty then-branch lets the optimizer drop the movzx/test/je. Size is 4+3+5 = 0xc when the temp
+slot is within disp8, 7+6+5 = 0x12 past -0x80 (disp32) - same construct, frame-size dependent.
+Distinguish from the EVALUATING `*_U` eaters (expression_eater call with real args). Confirmed
+pistol_weapon_core_fire_state::weapon_and_hands_expression (the 0x12 row at the ASSERT line).
+
+### bool -> u32 member final-store: target's neg/sbb/neg boolize = a `? 1u : 0u` ternary
+SYMPTOM: the last store of `m_index = last_shot;` (bool local into u32 member) is +0x6 in
+TARGET: movzx + `neg eax; sbb eax,eax; neg eax` + store, where base's plain bool read stores
+movzx directly. SOURCE: the original spelled the rvalue as a ternary - `m_index = last_shot
+? 1u : 0u;` - which /Od lowers through the int boolize. Steerable: confirmed
+pistol_weapon_core_fire_state::initialize 92.62 -> 99.76 (3/3, 0x85 both sides), matching the
+aimed sibling that already carried the ternary.
