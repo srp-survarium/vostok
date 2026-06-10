@@ -77,7 +77,8 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   prints `STRUCTURE MATCH`. A high % over the WRONG structure is NOT a match - fix the
   source shape (braces, init-list vs body-assigns, early-return vs `if`, definition order).
   Reach for the diff to CONFIRM/locate, not to live in it: deep structure-diff work and
-  embedding the verdict is the **structure-verifier's** job, not the matcher's.
+  the verdict call is the **structure-verifier's** job, not the matcher's. (The diff is
+  rerun on demand - never embedded in source.)
 - **Missing type?** Pull its declaration from `binaries/structure/target`, declare it near the use.
 - **Stop** when matched, or when only LTCG/inlining artifacts remain. Don't spin.
 
@@ -115,23 +116,26 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   LTCG are at a call boundary: an argument dropped (proven constant) or passed in a
   register instead of its slot. EVERYTHING else - register choice, `[ebp-XX]` slot,
   frame size, switch shape, an extra `cmp/ja`, a stray `fld1`, statement order - is a
-  source problem with a concrete cause; solve it or mark `INPROGRESS` with the next
+  source problem with a concrete cause; solve it or record `INPROGRESS` (in
+  `status.jsonl`) with the next
   step, never bank it as "PARTIAL, LTCG residual". `DONE` only when the sole remaining
   diff is argument passing.
 - **Leave the carcass to the structure-verifier - do NOT maintain it.** The STUB
   arrives with a `// FUNCTION BODY` carcass; read it for the shape clues above, then
   **DELETE it when you're done** (matched or not). Do not preserve, annotate, or
-  re-embed it. The structure-verifier replaces it with the two-sided
-  `--view structure-diff` (and downgrades a mislabeled DONE). A non-100% function with
-  no embedded `// STRUCTURE DIFF` therefore means the verifier has not run yet.
-- **At 100%, the embed must be GONE.** A byte-perfect match has trivially-correct
-  structure - nothing left to verify - so when you take a function to 100%, DELETE any
-  `// STRUCTURE DIFF: ... // VERDICT:` block left in its body (the structure-verifier
-  only embeds for a *residual*, i.e. <100%). Reduce the surviving marker to a BARE
-  `// STATE[100%|DONE]` - no inline *why*, no stmt-count restatement: a clean 100% needs no
+  re-embed it. The structure-verifier checks the shape with the two-sided
+  `--view structure-diff`, run on demand (and downgrades a mislabeled DONE) - the diff
+  is never embedded in source.
+- **No derived state in source - ever.** Do not write `// STATE[NN%|TAG]` markers,
+  `// STRUCTURE DIFF` embeds or `// VERDICT:` lines; %s live in `report.json`,
+  structure-diffs are rerun on demand. When you take a function to 100%, DELETE its
+  `// STATE[STUB]` flag (and the carcass/signature comments) and leave NOTHING - a
+  clean 100% needs no
   inline rationale; any reusable asm->source trick goes to `patterns/` (new file + INDEX.md line).
-- **Lean source - rationale in the commit message, NOT a `.md` trail.** Keep only the
-  `// STATE[NN%|TAG]: reason` marker in the `.cpp`; tag deliberate shaping with
+- **Lean source - rationale in the commit message, NOT a `.md` trail.** Record the
+  function's status + cause as its `docs/binary_matching/<module>/status.jsonl` entry
+  (`{"symbol", "va", "status", "pct", "cause", "file", "line"}`, sorted by symbol;
+  only `// STATE[STUB]` stays in source, on still-unmatched bodies); tag deliberate shaping with
   `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior `sushi@...` notes). Do NOT write a
   per-function `.md` (we don't keep them). Put the run narrative - what you tried, the
   source variants + their %s - in the PR/commit message, and promote any reusable
@@ -148,12 +152,12 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
 ## Finish - commit your match, return your result line
 Your worktree is already on the unit's branch, indexes warm. Just commit your work:
 ```
-git add <the .cpp(s)> <temp_include_all.cpp edits>
+git add <the .cpp(s)> <temp_include_all.cpp edits> <the module's status.jsonl>
 git commit -m "<module>: match <unit> (per-fn NN% TAG)"   # name grouped/inlined members too
 ```
 **ONE commit** (squash WIP first: `git reset --soft <branch-point>` then one commit). Do
 NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack.
 Return ONE line, nothing else:
 ```
-<module>::<unit> -> STATE[NN%|TAG] per fn   (regressions: none | <unit/fn>)
+<module>::<unit> -> NN% TAG per fn   (regressions: none | <unit/fn>)
 ```
