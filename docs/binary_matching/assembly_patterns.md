@@ -1313,3 +1313,52 @@ SOURCE: `while ( x ) { f( ); }` vs `while ( x ) f( );`
 NOTES: same bytes, different statement table - the carcass stmt count is the only tell.
 network_world has the twin pair side by side: process_orders (3 stmts, brace-less) vs
 clear_resources (4 stmts, braced); both 100% only with the right brace choice.
+
+### TU-local `static` free function = UNMANGLED PDB-private symbol name on the target side
+SYMPTOM: a free helper (e.g. `destroy_client(tcp_packet_client*)`) shows in the target unit
+as a PLAIN demangled name (`destroy_client`, or `vostok::network::destroy_http_client`) while
+every other symbol is raw-mangled; a namespaced extern definition compiles fine but scores
+`None` (base emits `?destroy_client@network@vostok@@YAX...`, names never pair).
+CAUSE: the original function was `static` (internal linkage). The PDB records only the
+S_LPROC32 private name, so the delinker emits that plain text as the symbol - on BOTH sides
+(our base is delinked from our own PDB the same way). FIX: declare it `static` at the SCOPE
+the PDB name shows (no namespaces in the name = global scope; `vostok::network::` prefix =
+inside that namespace) and reference it from its real caller (the dtor's bind) to survive
+/OPT:REF. Confirmed on `network/tcp_packet_client.cpp::destroy_client` (global) and
+`http_client.cpp::destroy_http_client` (namespaced), both None -> scored.
+
+### VOSTOK_DELETE_IMPL with a POINTER allocator arg emits an out-of-line strip_pointer call the target lacks
+ASM (base, `VOSTOK_DELETE_IMPL( g_allocator, p )` where g_allocator is `doug_lea_allocator*`):
+    mov eax, [g_allocator]; call <strip_pointer fold>; push eax  ; deref via helper CALL
+ASM (target):
+    mov ecx, [g_allocator]; push ecx                             ; direct, no call
+SOURCE: the original passed the DEREFERENCED allocator - `VOSTOK_DELETE_IMPL( *g_allocator, p )`
+(the strip_pointer(T&) identity overload compiles to nothing; the (T*) overload is a real
+call under /Od). NOTE: the NEW path (`VOSTOK_NEW_IMPL`/`NEW`) keeps a folded helper call after
+the allocator load in BOTH binaries - that one is correct, only the DELETE-side strip call is
+the tell. (`DELETE(p)` from network_memory.h cannot be used in asio TUs - the WinSDK headers
+eat the macro -> C3861.) Confirmed on destroy_client/destroy_http_client 90.83% -> up.
+
+### explicit `boost::function<...>( bind(...) )` wrap mis-schedules the temp's EH guard `or` - drop the wrap when arity disambiguates
+SYMPTOM: a functor temp built for an out-of-line ctor arg (string_order/string_response)
+diverges ONLY in where `or dword ptr [ebp-NN], 1` (the temp's EH guard bit) lands: TARGET
+sets it right AFTER the function's assign_to completes; BASE with an explicit
+`boost::function< void ( pcstr ) >( boost::bind( ... ) )` wrap sets it EARLY (before even the
+bind call) - and may also reorder a sibling arg's inline evaluation around it.
+SOURCE: pass the bind_t DIRECTLY and let it convert at the ctor-param boundary - the overload
+set is already disambiguated by ARITY (string_order's 1/2/3-string ctors take 3/4/5 args), so
+the legacy-style explicit wrap is unnecessary AND wrong for the guard schedule. Sites passing
+bind directly (functor_order/receive_response, http ctor/dtor) matched 100% with the late or.
+Confirmed on tcp_packet_client::connect / http_client::get / on_content_downloaded.
+
+### boost::function SAFE-BOOL test: per-instantiation inline-vs-call (function0 vs function1/2)
+`if ( m_fn )` on a boost::function lowers either to ONE call of the out-of-line safe-bool
+COMDAT (`operator void (dummy::*)()`, returns flag in eax; `test eax,eax`) or to the INLINED
+safe-bool body: `call <operator! fold>; movzx; neg; sbb; not; and eax, <&dummy::nonnull reloc>`.
+Which form a given function INSTANTIATION gets is a whole-program LTCG choice: in the same
+target TU function1<pcstr>/function2<...> sites use the call form (matched 100% from plain
+`if ( m_fn )`) while the function0 sites are inlined - and our base made the opposite choice
+for function0 only (75.26% on tcp on_connected_impl/on_disconnected_impl). `if ( !m_fn )
+return;` is DISTINCT and steerable: it calls the operator! COMDAT + `test/je` directly (no
+and-with-constant) - matched 100% across all on_X forwarders. Don't respell the positive test;
+bank the function0 residual as the vectora::size()-class wall.
