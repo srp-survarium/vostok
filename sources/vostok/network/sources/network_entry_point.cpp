@@ -8,24 +8,27 @@
 #include "network_world.h"
 #include "network_entry_point.h"
 #include <vostok/network/api.h>
+#include <vostok/network_core/sources/network_core_entry_point.h>
 
 using vostok::network::network_world;
 
-// STATE[PARTIAL]: legacy static ported
-// FUNCTION BODY[0x7d5270] (`dynamic initializer for 's_world'')
+// STATE[PARTIAL]: legacy static ported; the base obj DOES contain the
+// initializer (mangled `??__Es_world@@YAXXZ`, same 3 stores as target rva
+// 0x7c5270) but the target side carries the demangled name
+// (`dynamic initializer for 's_world''), so objdiff never pairs them - a
+// delinker/naming gap affecting every dynamic initializer (base rich index has
+// zero), not source-steerable from this TU
 static vostok::uninitialized_reference<network_world>	s_world;
 vostok::network::allocator_type*	vostok::network::g_allocator = 0;
 
-// STATE[PARTIAL]: legacy body ported; unverified vs target
-// FUNCTION BODY[0x65cdc0]
+// STATE[100%|DONE]
 vostok::network::world* vostok::network::create_world	( engine& engine, vostok::memory::base_allocator& orders_allocator )
 {
 	VOSTOK_CONSTRUCT_REFERENCE	( s_world, network_world )	( engine, orders_allocator );
 	return						( &*s_world );
 }
 
-// STATE[PARTIAL]: legacy body ported; unverified vs target
-// FUNCTION BODY[0x65cd90]
+// STATE[100%|DONE]
 void vostok::network::destroy_world					( vostok::network::world*& world )
 {
 	R_ASSERT					( &*s_world == world );
@@ -33,26 +36,22 @@ void vostok::network::destroy_world					( vostok::network::world*& world )
 	world						= 0;
 }
 
-// STATE[PARTIAL]: legacy body ported; unverified vs target
-// FUNCTION BODY[0x65cd60]
+// STATE[100%|DONE]
 void vostok::network::memory_allocator				( allocator_type& allocator )
 {
 	ASSERT						( !g_allocator );
 	g_allocator					= &allocator;
+	network_core::memory_allocator	( allocator );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void vostok::network::initialize					( )
 {
-	// FUNCTION BODY[0x65cd50]: 1
-	// <0x65cd53>|0x003|+0x005:'38'
-	// ******
+	network_core::initialize	( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void vostok::network::finalize						( )
 {
-	// FUNCTION BODY[0x65cd40]: 1
-	// <0x65cd43>|0x003|+0x005:'43'
-	// ******
+	network_core::finalize		( );
 }
