@@ -2093,6 +2093,7 @@ namespace vostok
 		p.unsubscribe_from_player_death( NULL );
 		p.on_player_death( );
 		p.tick_active_object( );
+		p.deserialize_game_world_object( *reinterpret_cast< vostok::network_core::packet_reader* >( NULL ) );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
 	}
 

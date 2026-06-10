@@ -8,6 +8,7 @@
 #include <vostok/game_core/base_player_creation_params.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/scheduler.h>
+#include <vostok/game_core/weapon_core.h>
 #include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
@@ -34,94 +35,61 @@ base_player::base_player( base_player_creation_params const& params, survarium::
 	// ******
 }
 
-// STATE[72.19%|PARTIAL]: body is just `ASSERT( UNKNOWN_EXPRESSION )` (line 36, the
-// finalize_impl @0x09); rest is compiler-generated member/base destruction. Gated on
-// the base-class destructors (hit_receiver/hit_initiator/collision_user/inventory_holder)
-// being OUT-OF-LINE: target calls e.g. `survarium::hit_receiver::~hit_receiver` out-of-line
-// and does NOT reset the 4 base vtables up front, while our build inlines those base dtors
-// (loose_ptr_base::~loose_ptr_base etc.) and lays all 4 vtables down at the top. The
-// remaining `dummy::nonnull` vs `finalize_impl` diffs are folded-empty-fn cosmetics (both
-// 0x3f210). Reach 100% by matching those base-class dtors out-of-line first.
+// STATE[72.19%|PARTIAL]: gated on the base-class destructors (hit_receiver/hit_initiator/
+// collision_user/inventory_holder) being OUT-OF-LINE: target calls them out-of-line and does
+// NOT reset the 4 base vtables up front; our build inlines those base dtors. Other-unit
+// headers - not steerable from here.
 base_player::~base_player( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
-	// FUNCTION BODY
-	// <0x73ed70>|0x000|+0x009:'35'	{
-	// <0x73ed79>|0x009|+0x00c:'36'	ASSERT( UNKNOWN_EXPRESSION )
-	// <0x73ed85>|0x015|      :'37'	}
-	// ******
+
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// VERDICT: STRUCTURE MATCH - sole source statement (the assert eater) aligns; the byte
+	// residual (0xcd vs 0x108) is compiler-generated base/member destruction, inline-vs-call
+	// of the four base-class dtors (other units).
 }
 
-// STATE[3.38%|INPROGRESS]: large (~616B) function dispatching through the active
-// object's vtable (m_current_active_object @0x40, m_target_active_object @0x44) plus
-// weapon_core::could_be_used and inventory::{get_active_slot,item_in_slot,action}. Now
-// PAIRED (was unpaired) after setting the protected access specifier (target IAE) +
-// anchoring. NEXT: decode the @0x72ee40 asm control flow - two nested if-blocks guarded
-// by current/target active-object comparisons (operator!= / c_ptr ==), the vtable calls
-// at [vtbl+0x1c/0x20/0x28/0x2c/0x54/0x70/0x7c] need mapping to the concrete active-object
-// interface (offsets exceed interactive_object's own table, so the dynamic type has more
-// virtuals), and the broken_hands_count/another_weapon_slot locals. Real engine logic,
-// reconstruct statement-by-statement against the carcass below.
+// STATE[41.70%|PARTIAL]: full reconstruction from the @0x72ee40 asm (3.38 -> 41.70).
 void base_player::tick_active_object( )
 {
-	// LOCALS
-	// weapon_core const* 			current_weapon<1>
-	// u8 							broken_hands_count<2>
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> another_item<3>
-	// profile_slot_enum 			another_weapon_slot_id<3>
-	// weapon_core const* 			another_weapon<3>
-	// weapon_core const* 			current_weapon<1>
-	// ******
+	( *m_current_active_object ).tick( );
 
-	// CALL SITE INFO
-	// <0x73ee63> -> void <unknown>()
-	// <0x73ee9a> -> bool <unknown>() const
-	// <0x73eec0> -> void <unknown>(resources::resource_ptr<interactive_object,resources::unmanaged_intrusive_base> const&, resources::resource_ptr<interactive_object,resources::unmanaged_intrusive_base> const&) const
-	// <0x73eedb> -> void <unknown>()
-	// <0x73ef07> -> engine& <unknown>()
-	// <0x73ef19> -> void <unknown>(base_player&, engine&)
-	// <0x73ef34> -> void <unknown>()
-	// <0x73ef79> -> weapon_core* <unknown>()
-	// <0x73ef93> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// <0x73f038> -> weapon_core* <unknown>()
-	// <0x73f09e> -> weapon_core* <unknown>()
-	// ******
+	if ( m_current_active_object != m_target_active_object )
+		if ( ( *m_current_active_object ).is_ready_to_be_deactivated( ) )
+		{
+			on_before_active_object_changed( m_current_active_object, m_target_active_object );
+			( *m_current_active_object ).deactivate( );
+			m_current_active_object	= m_target_active_object;
+			( *m_current_active_object ).activate( *this, get_engine( ) );
+			( *m_current_active_object ).tick( );
+		}
 
-	// FUNCTION BODY
-	// <0x73ee40>|0x000|+0x00a:'40'	{
-	// <0x73ee4a>|0x00a|+0x01b:'41'
-	// <0>
-	// <0x73ee65>|0x025|+0x01c:'43'
-	// <0x73ee81>|0x041|+0x026:'44'
-	// <0>
-	// <0x73eea7>|0x067|+0x01b:'46'
-	// <0x73eec2>|0x082|+0x01b:'47'
-	// <0x73eedd>|0x09d|+0x011:'48'
-	// <0x73eeee>|0x0ae|+0x02d:'49'
-	// <0x73ef1b>|0x0db|+0x01b:'50'
-	// <0>
-	// <1>
-	// <2>
-	// <0x73ef36>|0x0f6|+0x02a:'54'
-	// <0x73ef60>|0x120|+0x028|[1]:'55'
-	// <0x73ef88>|0x148|+0x03a|[2]:'56'
-	// <0x73efc2>|0x182|+0x017:'57'
-	// <0x73efd9>|0x199|+0x020|[3]:'58'
-	// <0x73eff9>|0x1b9|+0x01d:'59'
-	// <0x73f016>|0x1d6|+0x036:'60'
-	// <0x73f04c>|0x20c|+0x019:'61'
-	// <0x73f065>|0x225|+0x018:'62'
-	// <0>
-	// <0x73f07d>|0x23d|+0x008:'64'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x73f085>|0x245|+0x01e|[1]:'70'
-	// <0>
-	// <0x73f0a3>|0x263|      :'72'	}
-	// ******
+	if ( m_current_active_object == m_target_active_object )
+		if ( weapon_core const* const current_weapon = ( *m_current_active_object ).cast_weapon_core( ) )
+			if ( u8 const broken_hands_count = ( *damage_model( ) ).broken_hands_count( ) )
+				if ( !current_weapon->could_be_used( *this ) ) {
+					profile_slot_enum another_weapon_slot_id = inventory( ).get_active_slot( ) != weapon1_slot ? weapon1_slot : weapon2_slot;
+					inventory_item_ptr another_item = inventory( ).item_in_slot( another_weapon_slot_id );
+					weapon_core const* const another_weapon = another_item ? ( *another_item ).cast_weapon_core( ) : NULL;
+					if ( another_weapon && another_weapon->could_be_used( *this ) )
+						inventory( ).action( another_weapon_slot_id, true );
+
+				}
+
+	// claude@MATCH: the trailing braced block is real - the target emits the cast (+0x54
+	// vcall) and a dead store into a second block-scoped `current_weapon` local at the
+	// function tail (lines 69-71 of the original; the value is never read - whatever
+	// consumed it was compiled out of MASTER_GOLD).
+	{
+		weapon_core const* const current_weapon = ( *m_current_active_object ).cast_weapon_core( );
+	}
+
+	// STRUCTURE DIFF: target 19 stmts / base 19 stmts
+	// (every statement pairs; all 18 remaining rows are SIZE +0x3..+0x38, base larger)
+	// VERDICT: STRUCTURE MATCH - 19/19, blocks/jumps/ternary (sub;neg;sbb;and;add) byte-shape
+	// aligned; every SIZE row is the engine-wide intrusive_ptr/resource_ptr deref-assign
+	// inline-vs-call wall (target calls operator*/operator=/c_ptr/accessors out-of-line, our
+	// /GL inlines them with their internal assert eaters). Non-steerable from this TU.
 }
 
 // STATE[BLOCKED]: udp_match_packet/packet_reader cluster is never-compiled (see game_core/README.md) - body is matchable from asm but cannot compile/diff until that header cluster is built.
@@ -158,16 +126,26 @@ void base_player::send_game_world_object( game_world_object const* object, boost
 	// ******
 }
 
-// STATE[INPROGRESS]: reads the source profile slot, fetches that inventory item and forwards
-// deserialize_game_world_object to it. The trailing local-byte stub is a compiled-out assert. DCE'd, no base symbol.
+// STATE[0.00%|PARTIAL]: now emitted + PAIRED (anchored via temp_include_all; was DCE'd with
+// no base symbol). report.json omits the percent because it is literally 0.0 (proto3
+// default-value omission) - every statement is the packet_reader::r<T>/inventory accessor
+// inline-vs-call wall, same class as player_stamina::deserialize.
 void base_player::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	profile_slot_enum	slot	= (profile_slot_enum)reader.r< bool >( );
 
+	ASSERT( UNKNOWN_EXPRESSION );
+
 	inventory_item_ptr	item	= inventory( ).item_in_slot( slot );
 	item->deserialize_game_world_object( reader );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x72ed00); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x13 | 130 | profile_slot_enum	slot	= (profile_slot_enum)reader.r< bool >( );
+	// SIZE +0x58 | 134 | inventory_item_ptr	item	= inventory( ).item_in_slot( slot );
+	// SIZE +0x7  | 135 | item->deserialize_game_world_object( reader );
+	// VERDICT: STRUCTURE MATCH - 4/4 (the assert-eater row aligns byte-exact); the SIZE rows
+	// are r<bool>/inventory()/item_in_slot/copy-ctor kept out-of-line by target, inlined by
+	// our /GL. Non-steerable from this TU.
 }
 
 // STATE[100%|DONE]
