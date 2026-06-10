@@ -1872,3 +1872,53 @@ smells like a switch dispatch - but a switch over 4-5 dense enum values lowers t
 TABLE on MSVC8 (cf. booby_trap_core::switch_to_state), not this compare chain, so the
 if-shape is the best reproduction. Confirmed booby_trap_core::on_state_timer_finished
 (99.67, 4/4 stmts, residual = slot swap only; the switch experiment dropped it to 67).
+
+### VOSTOK_DELETE_IMPL vs VOSTOK_FREE_IMPL: read the dealloc statement shape
+SYMPTOM: a dtor/cleanup VOSTOK_DELETE_IMPL row SIZE-diffs oddly per member - base is BIGGER on
+trivially-destructible members (+0xb: an extra xor/predicate-bool store + a doubled slot copy
+from the inlined delete_helper_impl) yet SMALLER on a non-trivial member (base emits an
+out-of-line `call delete_helper<alloc,T>`, target shows NO dtor at all).
+TELL: the target statement is the free_helper shape EXACTLY - `if (p) { call free_impl; p = 0; }`
+(null-check, free, NULL the member) with NO element destructor, identical bytes for every member
+regardless of triviality. The original used **VOSTOK_FREE_IMPL** (raw free, symmetric with a raw
+VOSTOK_MALLOC_IMPL allocation), not VOSTOK_DELETE_IMPL. Confirmed: medkit::~medkit 67.06 -> 100
+(three FREE rows 0x40 each; the boost::function-bearing damage_protection is freed undestroyed).
+
+### Inline accessor leaves a +0xc call-result temp; direct member access does not (source-steerable when the header is ours)
+SYMPTOM: every use of `get_x( )` (an inline accessor `return *m_x;` / `return m_x;`) is +0xc in
+base: `mov ecx,[member]; mov [ebp-TEMP],ecx; mov eax,[ebp-TEMP]` where target flows the member
+load straight into the consumer (or into the middle of an arg push sequence). CAUSE: at /Od
+(/Ob0) the accessor is a real CALL whose result lands in a temp; LTCG inlines the call but the
+temp survives. A direct member read is folded inline with NO temp. FIX (only if the accessor
+header is OURS): make the member protected and access it directly - the target provably did.
+Also a TELL for argument lists: /Od schedules CALLS in an arg list before the push sequence
+(temp), but a direct member read is evaluated IN the push sequence. Confirmed:
+legs_ik_processor get_skeleton() -> m_skeleton (process 92.60->98.96, process_leg +3, gfft +4).
+
+### Same-line merges: one line-table statement covering two source constructs
+The line table emits ONE statement per source LINE, so the original's line layout is recoverable
+from exact size sums:
+- `else if ( cond ) call;` on ONE line = ONE statement (legs_ik process: 0xbd = 0x64 test +
+  0x59 call; base's two-line version showed a 23-vs-24 stmt count).
+- `float3 start, finish;` = ONE statement of 2*0xb; two `math::color a(..), b(..);` on one line
+  = ONE statement of 2*0x19 (get_foot_fixed_transform).
+TELL: a TRGT_ONLY/BASE_ONLY pair whose sizes ADD UP exactly to the other side's single row.
+Same family as the array-brace-init per-element attribution (inverse direction).
+
+### static_cast_checked< pcstr >( config_value["key"] ): the config-string arg variant
+SYMPTOM: a `strings::copy( dst, N, value[i]["key"] )` row where target is +0xc: after the
+conversion-operator call (ICF-folded onto a bogus name like `intrusive_ptr<X>::operator*`),
+target spills eax to a deep temp and reloads (`mov [ebp-0Cxh],eax; mov eax,[ebp-0Cxh]`) before
+the copy call; base consumes eax directly. The +0xc is static_cast_checked's return-temp.
+Downstream loop rows (for-condition jump, `}` backjump) diff by +-0x3..0x6 = rel8->rel32
+cascade of the 12 bytes; they close themselves. FIX: wrap the arg in
+`static_cast_checked< pcstr >( ... )`. Confirmed: medkit::load - all 6 rows closed, 0x55c bytes
+BOTH sides (score residual is fold-name relocs only).
+
+### if-condition materializing a bool (cmp/sete/movzx/test/je) = an INLINED bool helper, not `if ( !x )`
+SYMPTOM: target's if emits `cmp [this+OFF],0; sete dl; movzx eax,dl; test eax,eax; je` while
+base's `if ( !m_member )` is a direct `cmp [this+OFF],0; jne`. The sete+movzx (bool produce +
+return-widen) then test (the if) is the shape of an inlined bool-returning member in the
+condition. FIX: find the declared-but-stubbed bool member in the class (PDB type info lists it)
+and give it the body the bytes spell. Confirmed: medkit::empty() = `return !m_activity_time_ms;`
+(was a 'no source' stub returning false) with active_tick's tail `if ( empty( ) )`; 53.50->57.12.
