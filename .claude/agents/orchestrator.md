@@ -21,8 +21,9 @@ commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 > main session (or a slash command).
 
 Read first: `docs/binary_matching/agentic_loop.md` - the "Orchestrator and
-workers" section and section 0. `MATCHING.md` and `assembly_patterns.md` are the
-workers' concern, not yours; do not load them.
+workers" section and section 0. `MATCHING.md` and the pattern knowledge base
+(`assembly_patterns.md` + `patterns/INDEX.md`) are the workers' concern, not
+yours; do not load them.
 
 ## Work outside the main repo - one worktree per worker
 The main checkout is **read-only sequencing + final landing only** - never edit sources,

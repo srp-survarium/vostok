@@ -33,7 +33,9 @@ orchestrator; do not spawn sub-agents.
 - `docs/binary_matching/MATCHING.md` - especially "The carcass", "Match the base
   structure to the target structure - not just the byte %", the Style/Naming
   sections, and "Switch statements - case-body braces change codegen".
-- `docs/binary_matching/assembly_patterns.md` - what a `+delta` / `+0x002` means.
+- `docs/binary_matching/patterns/INDEX.md` - one line per known pattern (what a `+delta` /
+  `+0x002` means); grep it by `cpp:`/`asm:`/`topic:` tag or symptom token and read only the
+  hit `patterns/*.md` files (search protocol in `assembly_patterns.md`).
 Read these from the **current integration branch** (the PR branch you check out may
 carry a stale copy); review the code against the latest rules.
 
@@ -261,7 +263,9 @@ the two skeletons, each QUANTITY/SIZE divergence + its likely source-shape cause
 phase-2 fix you applied and the BEFORE/AFTER diff (target N vs base M -> N vs N) or why it
 could not close (LTCG/argument residual, unsteerable codegen lowering), and the
 `report.json` `fuzzy_match_percent` (flag it when high over a wrong structure - the trap
-this agent exists to catch). Promote any reusable asm->source mapping to `assembly_patterns.md`.
+this agent exists to catch). Promote any reusable asm->source mapping to
+`docs/binary_matching/patterns/` (new file + one `patterns/INDEX.md` line, same commit;
+schema in `assembly_patterns.md`).
 
 ## Phase 2 - fix the divergence (you ARE the matcher now)
 After Phase 1 has located and embedded the divergence, fix it.
