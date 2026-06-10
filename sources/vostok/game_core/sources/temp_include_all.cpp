@@ -1529,6 +1529,7 @@ namespace vostok
 		network_core::udp_match_client client( io_service, packets_allocator, packets_orderer, NULL );
 
 		client.connect( "host", 80, NULL, 10 );
+		client.start_receiving( );
 		client.enqueue( NULL );
 		client.send_queued_packets( 10 );
 		client.disconnect( );

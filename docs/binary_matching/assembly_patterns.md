@@ -1086,3 +1086,30 @@ push &ret), out-of-line `detail::endpoint::endpoint(address const&, u16)` ctor i
 `rep movsd` 7 dwords into the member (trivial copy-assign). The huge /Od frame (sub esp,51Ch with a
 ~0x4b4 unused gap between named locals and the bottom spill temps) reproduces by itself - don't
 chase it. Confirmed byte-perfect in `network_core/udp_match_client::connect` (100% first build).
+### LOG_* sites: the pushed verbosity literal picks the macro; the pushed line literal pins the file layout
+A `__LOG`-macro site pushes the verbosity TWICE (once into `has_passed_filters`, once into
+`append`): `push 2` = `LOG_ERROR`, `push 3` = `LOG_WARNING`, `push 4` = `LOG_INFO`
+(`vostok::logging::verbosity` in `logging/api.h`: silent=1,error=2,warning=3,info=4,debug=5,trace=6).
+Do NOT pick the macro from the message tone - "disconnection initiated but new packet has been
+enqueued" sounds like a warning but the target pushes 2 = LOG_ERROR (caught on
+`udp_match_client::enqueue`, push 3 vs push 2). The site also pushes `__LINE__` as an immediate
+(`push 0ACh` = line 172), so the LOG statement must sit on that PHYSICAL line of the `.cpp` -
+pad/trim blank+comment lines above it to land it (markers above must stay single-line). The
+remaining LOG residual after both match is the `log_callback_boost` function-ctor COMDAT call:
+target may call it FIRST with this in EAX while /Od base calls it LAST (canonical right-to-left
+arg order) with this in ESI, pushing its return - ICF/LTCG call-boundary convention, not steerable
+(http_client precedent). NOTE network_core's `__FILE__` is the RELATIVE `.\udp_match_client.cpp`
+and matches base, so the "__FILE__ never matches" cap does not apply to this module.
+
+### inlined state getter: `cmp [m+off], K; sete` with NO temp slot = positive `return m_x == k;`
+ASM (caller, /Od+/Ob2, getter inlined):
+    mov eax,[this]; xor ecx,ecx
+    cmp dword ptr [eax+11Ch], 0    ; K = the enum value the getter compares against
+    sete cl; movzx edx,cl; test edx,edx; je <else>
+SOURCE: `if ( m_connection.is_connected( ) )` where the getter is the POSITIVE inline one-liner
+`return m_state == connected;`. The sete/movzx/test normalize chain (no [ebp-N] bool store) is the
+inlined bool return. A NEGATED spelling (`if ( !has_disconnection_initiated() )` over
+`return m_state != connected;`) would emit setne + inverted jcc - wrong bytes. K identifies which
+getter: 0=connected -> is_connected, 3=disconnected -> is_disconnected
+(udp_match_connection::state). Confirmed in udp_match_client::{enqueue,process_incoming_packet,
+send_queued_packets} (all 94-100%).

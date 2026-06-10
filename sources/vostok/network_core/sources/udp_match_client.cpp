@@ -7,6 +7,8 @@
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/network_core/udp_network_flow_emulator.h>
+#include <vostok/network_core/process_packet_predicate.h>
+#include <vostok/network_core/custom_alloc_handler.h>
 
 namespace vostok {
 namespace network_core {
@@ -54,17 +56,15 @@ void udp_match_client::on_error( client_error_codes_enum, boost::system::error_c
 	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }
 
-// STATE[STUB]
+// STATE[88.12%|BLOCKED]: 5/5 stmts, instruction stream identical modulo frame (base 0x50 vs target 0xB8 -> this-slot disp8 vs disp32); base LTCG inlines away the still-empty udp_match_connection::process_incoming_packet<process_packet_predicate> stub (its call + arg pushes drop). Next: match that template unit (udp_match_connection_inline.h), then re-diff.
 void udp_match_client::process_incoming_packet( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint )
 {
-	// FUNCTION BODY[0x758670]: 6
-	// <0x75867f>|0x00f|+0x03a:'78'
-	// <0x7586b9>|0x049|+0x028:'79'
-	// <0x7586e1>|0x071|+0x002:'80'
-	// <0>
-	// <0x7586e3>|0x073|+0x00c:'82'
-	// <0x7586ef>|0x07f|+0x02c:'83'
-	// ******
+	ASSERT_U( endpoint == m_server_endpoint );
+	if ( m_network_flow_emulator && m_connection.is_disconnected( ) )
+		return;
+
+	ASSERT( UNKNOWN_EXPRESSION_T( !m_connection.is_disconnected( ) ) );
+	m_connection.process_incoming_packet( reader, process_packet_predicate( *this ) );
 }
 
 // claude@NOTE: handle_receive must sit at its original source lines - the three
@@ -134,22 +134,20 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 	// VERDICT: STRUCTURE MATCH (shape ok) - 23/23 aligned; rows are LTCG: function1-ctor fold-rep convention/schedule at the 3 LOG sites (-3/-3/-5), packet.buffer() inline-vs-call (-5), register-form +/-1 (108/119); non-steerable.
 }
 
-// STATE[STUB]
+// STATE[99.84%|PARTIAL]: structure match, byte size equal (0xf4); instruction stream identical except target reserves +0xC frame (0xD0 vs 0xC4), shifting the this/socket slot constants - LTCG inline-temp merge across the asio/make_custom_alloc_handler inline chain, no source lever.
 void udp_match_client::start_receiving( )
 {
-	// FUNCTION BODY[0x758bf0]: 11
-	// <0x758bff>|0x00f|+0x00c:'130'
-	// <0x758c0b>|0x01b|+0x00d:'131'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x758c18>|0x028|+0x0c8:'140'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( !m_is_receiving ) );
+	m_is_receiving				= true;
+
+	m_socket.async_receive_from	(
+		boost::asio::buffer( m_receive_buffer ),
+		m_remote_endpoint,
+		make_custom_alloc_handler	(
+			m_handler_allocator,
+			boost::bind( &udp_match_client::handle_receive, this, _1, _2 )
+		)
+	);
 }
 
 // STATE[100%|DONE]
@@ -175,43 +173,38 @@ void udp_match_client::connect(
 	m_connection.send_queued_packets( current_time_in_ms );
 	check_consistency		( );
 }
-
 // STATE[100%|DONE]
 void udp_match_client::disconnect( )
 {
 	m_connection.disconnect( );
 }
-
-// STATE[STUB]
+// STATE[94.52%|PARTIAL]: shape/strings/__LINE__(172=0xACh) exact; residual is the LOG macro's log_callback_boost ctor COMDAT - target calls it first with this in EAX, base last with this in ESI (+8 frame, reg renames cascade) - ICF/LTCG call-boundary convention, http_client LOG precedent.
 void udp_match_client::enqueue( udp_match_packet* packet )
 {
-	// FUNCTION BODY[0x758590]: 8
-	// <0x7585a1>|0x011|+0x016:'168'
-	// <0x7585b7>|0x027|+0x00c:'169'
-	// <0>
-	// <0x7585c3>|0x033|+0x005:'171'
-	// <0x7585c8>|0x038|+0x07a:'172'
-	// <0x758642>|0x0b2|+0x016:'173'
-	// <0>
-	// <0x758658>|0x0c8|+0x008:'175'
-	// ******
+	if ( m_connection.is_connected( ) )
+		m_connection.enqueue		( packet );
+	else
+	{
+		LOG_ERROR					( "disconnection initiated but new packet has been enqueued" );
+		m_connection.delete_packet	( packet );
+	}
+	check_consistency				( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x758af0]: 10
-	// <0x758af9>|0x009|+0x010:'180'
-	// <0x758b09>|0x019|+0x0a1:'181'
-	// <0x758baa>|0x0ba|+0x016:'182'
-	// <0x758bc0>|0x0d0|+0x002:'183'
-	// <0>
-	// <1>
-	// <0x758bc2>|0x0d2|+0x00c:'186'
-	// <0x758bce>|0x0de|+0x008:'187'
-	// <0x758bd6>|0x0e6|+0x00c:'188'
-	// <0x758be2>|0x0f2|+0x008:'189'
-	// ******
+	if ( m_network_flow_emulator ) {
+		// claude@MATCH: tick gets the OLD m_time_in_ms - the member is updated only after this block
+		m_network_flow_emulator->tick( m_time_in_ms, boost::bind( &udp_match_client::process_incoming_packet, this, _1, _2 ) );
+		if ( m_connection.is_disconnected( ) )
+			return;
+	}
+
+	m_time_in_ms						= current_time_in_ms;
+	check_consistency					( );
+	m_connection.send_queued_packets	( current_time_in_ms );
+	check_consistency					( );
 }
 
 // STATE[99.94%|DONE]: STRUCTURE MATCH (3/3 stmts, sizes byte-identical); sole residual is

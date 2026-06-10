@@ -116,8 +116,8 @@ public:
 
 	// sushi@TODO: the `/* no source */` bodies below are shams to compile - no inline-site
 	// evidence yet; reconstruct each from its consumer's target bytes when that consumer
-	// gets matched (is_connected/delete_packet land in PR #285, comparer in PR #288).
-	inline	bool						is_connected					( ) const { return false; }
+	// gets matched (is_connected/delete_packet matched in PR #285, comparer in PR #288).
+	inline	bool						is_connected					( ) const { return m_state == connected; }
 
 	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ }
 
@@ -127,7 +127,7 @@ public:
 	inline	void						set_disconnected				( ) { /* no source */ }
 
 	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; /* no source */ }
-	inline	void						delete_packet					( udp_match_packet*& packet ) { /* no source */ }
+	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
 	inline	void						set_max_packet_wait_time_in_ms	( u32 value ) { /* no source */ }
 
