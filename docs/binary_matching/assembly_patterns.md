@@ -1245,3 +1245,10 @@ base row is LOG-block-sized too BIG, and an ONLY-target row follows at the LOG's
 original used flat sequential `if`s, not an `else if` chain. Confirmed on
 `tcp_packet_socket::on_packet_has_been_sent` (9+1 -> 10/10) and `on_packet_received`
 (17+1 -> 18/18) via PR #291's flat early-return adoption.
+
+### `dest = src & 0xffff` (u32->u16) emits `mov eax,src; and eax,0FFFFh; mov [dst],ax` (<0xe>), NOT a cast
+A `u16 dest = (u16)u32_local` compiles to `mov cx,[local]; mov [dst],cx` (<0xa> bytes - a direct
+16-bit load/store). The target instead masking through a full 32-bit register (`mov eax,[local];
+and eax,0FFFFh; mov [dst],ax`, <0xe>) means the SOURCE wrote `dest = local & 0xffff` (explicit
+mask), not a `(u16)` cast. (network_core_entry_point get_connection_info_from_string,
+`dest_port = port & 0xffff;`. Recovered from pre-restack PR #268.)
