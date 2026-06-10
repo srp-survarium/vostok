@@ -35,7 +35,7 @@ namespace core {
 
 enum stdstream_enum { stdstream_out, stdstream_error };
 
-		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
+		void		generate_log_file_name	( fs_new::native_path_string* const out_result, pcstr const extension );
 static	_iobuf*		get_stdstream_handle	( stdstream_enum stream );
 		void		write_to_stdstream		( stdstream_enum stream, pcstr format, ... );
 static	bool		is_logging_initialized	( );
@@ -77,6 +77,8 @@ struct logging_preinitializer
 	}
 };
 
+// claude@NOTE: the five dynamic initializers below all exist in the base (??__E... symbols,
+// see the logging README) - their None scores are the objdiff ??__E demangle-pairing gap.
 static logging_preinitializer		s_logging_preinitializer;
 
 static vostok::command_line::key	s_log_verbosity				("log_verbosity",			"", "logging", "one of: [trace|debug|info|warning|error|silent]");
@@ -97,8 +99,10 @@ logging::log_format			g_log_format;
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;
 
-// STATE[STUB]
-void generate_log_file_name( fs_new::native_path_string* out_result, pcstr extension )
+// STATE[55.6%|DONE]: paired by adding the QAV/QBD consts (was None purely on the mangled name);
+// residual is /Ox LTCG inlining user_data_directory (s_engine vtable call) + the whole
+// native_path_string::convert loop into the target body - link-set dependent, banked.
+void generate_log_file_name( fs_new::native_path_string* const out_result, pcstr const extension )
 {
 	ASSERT									(extension);
 	ASSERT									(out_result);
@@ -111,7 +115,7 @@ void generate_log_file_name( fs_new::native_path_string* out_result, pcstr exten
 	out_result->appendf						(".%s", extension);														// <0x671fae>|0x148|0x00f:'57'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 static _iobuf* get_stdstream_handle( stdstream_enum stream )
 {
 	if ( stream == stdstream_out )				// <0x671d70>|0x000|0x000:'68'
@@ -122,7 +126,7 @@ static _iobuf* get_stdstream_handle( stdstream_enum stream )
 	return					NULL;				// <0x671d8b>|0x01b|0x009:'73'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 {
 	_iobuf* handle		=	get_stdstream_handle( stream );	// <0x671d90>|0x000|0x000:'78'
@@ -137,33 +141,37 @@ void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 	va_end					( mark );						// <2>
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 static bool is_logging_initialized( )
 {
 	return g_log_filter_tree != NULL;	// <0x671d60>|0x000|0x000:'92'
 }
 
-// STATE[STUB]
+// STATE[98%|DONE]: fixed operand order (key first); residual = key::operator bool called out-of-line
+// in base vs target's inlined is_set guard (LTCG; explicit is_set() inlines a WRONG shape, 98 -> 50).
 bool use_console_for_logging( )
 {
 	if ( is_logging_initialized( ) )															// <0x672611>|0x000|0x000:'97'
 		return false;																			// <0x67261a>|0x009|0x009:'98'
 																								// <1>
-	static bool s_use_console_for_logging = testing::run_tests_command_line() || s_use_console;	// <0x67261f>|0x00e|0x005:'100'
+	// claude@MATCH: target evaluates the key FIRST (cmp key-state,1 before call run_tests_command_line).
+	// Keep the operator-bool form: explicit is_set() inlines a different guard shape and drops 98 -> 50.
+	static bool s_use_console_for_logging = s_use_console || testing::run_tests_command_line();	// <0x67261f>|0x00e|0x005:'100'
 	return						s_use_console_for_logging;										// <0x672671>|0x060|0x052:'101'
 }
 
-// STATE[STUB]
+// STATE[91%|DONE]: fixed user_data BIT tests + stderr/stdout tail restructure; residual =
+// s_log_to_stdout.is_set() called out-of-line in base vs inlined guard in target (LTCG).
 static void logging_callback(
-	void*						user_data,			// `g_log_flags` passes obscurely
-	pcstr						file,
-	u32							line,
-	pcstr						function_signature,
-	pcstr						initiator,
-	logging::verbosity			verbosity,
-	pcstr						log_string,
-	u32							log_string_length,
-	logging::callback_flag		flag				// sushi@TODO: Linker removed this arg.
+	void* const					user_data,			// claude@NOTE: a BITMASK (and 1 / shr 1) - debug_log_callback even passes &log_flags
+	pcstr const					file,
+	u32 const					line,
+	pcstr const					function_signature,
+	pcstr const					initiator,
+	logging::verbosity const	verbosity,
+	pcstr const					log_string,
+	u32 const					log_string_length,
+	logging::callback_flag const flag				// sushi@TODO: Linker removed this arg.
 )
 {
 	(void)file;	// sushi@NOTE: Unused arguments.
@@ -193,14 +201,15 @@ static void logging_callback(
 	}
 
 
-	bool log_to_console_settings = (log_flags_enum)(intptr_t)user_data == log_to_console;	// <0x6727be>|0x065|0x012:'143'
+	// claude@MATCH: target tests the BITS (and al,1 / shr,and 1), not equality - log_flags_enum is a mask
+	bool log_to_console_settings = ( (intptr_t)user_data & log_to_console ) != 0;			// <0x6727be>|0x065|0x012:'143'
 	bool should_use_console_for_logging = use_console_for_logging( );						// <0x6727c8>|0x06f|0x00a:'144'
 
 	if ( first_time && ( log_to_console_settings || should_use_console_for_logging ) )		// <0x6727cd>|0x074|0x005:'146'
 		first_time = false;																	// <0x6727e0>|0x087|0x013:'147'
 
 	bool logged_to_stdout = false;
-	bool log_to_stderr_settings = (log_flags_enum)(intptr_t)user_data == log_to_stderr;		// <0x6727e7>|0x08e|0x007:'150'
+	bool log_to_stderr_settings = ( (intptr_t)user_data & log_to_stderr ) != 0;				// <0x6727e7>|0x08e|0x007:'150'
 
 
 
@@ -221,10 +230,12 @@ static void logging_callback(
 		}
 	}
 
-	if ( g_log_filter_tree && !log_to_stderr_settings )										// <0x672831>|0x0d8|0x004:'171'
+	// claude@MATCH: target gates the stderr write on the stderr bit being SET (test bl,bl; je skip),
+	// inside an outer g_log_filter_tree check; the stdout block re-checks the tree (redundant, original)
+	if ( g_log_filter_tree )																// <0x672831>|0x0d8|0x004:'171'
 	{
-		write_to_stdstream( stdstream_error, "%s\r\n", log_string );						// <0x67283e>|0x0e5|0x00d:'173'
-
+		if ( log_to_stderr_settings )
+			write_to_stdstream( stdstream_error, "%s\r\n", log_string );					// <0x67283e>|0x0e5|0x00d:'173'
 
 		if ( g_log_filter_tree ) {															// <0x672851>|0x0f8|0x013:'176'
 			if ( s_log_to_stdout.is_set( ) && !logged_to_stdout )							// <1>
@@ -233,7 +244,15 @@ static void logging_callback(
 	}																						// <2>
 }
 
-// STATE[STUB]
+// STATE[52%|PARTIAL]: source now reproduces the target's two direct append calls argument-for-argument;
+// the % stays low because the target INLINES the boost function1 ctor+dtor machinery around each call
+// while our LTCG keeps the cloned out-of-line ctor - link-set residual, banked.
+// claude@MATCH: target calls logging::append DIRECTLY, twice (lines 196/200 in the original) - no
+// LOG_* macro fits: the initiator is the RUNTIME string debug_log (macros only concatenate literals),
+// there is NO has_passed_filters guard (FORCED form), verbosity is is_error ? error : info (sete;
+// lea edx,[edx*2+2]), user_data is the ADDRESS of the local log_flags (lea [ebp-4]), and the two arms
+// differ only in the format argument: format_message (format_specifier overload) when
+// log_only_user_string, &g_log_format (log_format* overload) otherwise.
 void debug_log_callback(
 	pcstr		initiator,
 	bool		is_error_verbosity,
@@ -241,21 +260,42 @@ void debug_log_callback(
 	pcstr		message
 )
 {
+	// claude@MATCH: not-set arm is 0, not log_to_console (target: dec;neg;sbb;and 2 -> {0,2})
 	core::log_flags_enum const log_flags = s_write_errors_to_stderr.is_set( ) ?
-									core::log_to_stderr : core::log_to_console;	// <0x672453>|0x000|0x000:'191'
+									core::log_to_stderr : core::log_flags_enum(0);	// <0x672453>|0x000|0x000:'191'
 	pstr debug_log = NULL;
-	STR_JOINA( debug_log, initiator, ":" );										// <0x672482>|0x02f|0x02f:'193'
+	STR_JOINA( debug_log, initiator, ":" );											// <0x672482>|0x02f|0x02f:'193'
 
-	if ( log_only_user_string )													// <0x6724bc>|0x069|0x03a:'196'
-		LOG_DEBUG( debug_log );													// <0x672560>|0x10d|0x0a4:'198' sushi@TODO
+	if ( log_only_user_string )														// <0x6724bc>|0x069|0x03a:'196'
+		logging::append(
+			logging::log_callback_boost( g_log_callback ),
+			(void*)&log_flags,
+			logging::format_message,
+			__FILE__,
+			__LINE__,
+			__FUNCSIG__,
+			debug_log,
+			is_error_verbosity ? logging::error : logging::info,
+			"%s",
+			message );																// <0x672560>|0x10d|0x0a4:'198'
 	else
-		LOG_ERROR( debug_log );													// <0x672565>|0x112|0x005:'200' sushi@TODO
+		logging::append(
+			logging::log_callback_boost( g_log_callback ),
+			(void*)&log_flags,
+			&g_log_format,
+			__FILE__,
+			__LINE__,
+			__FUNCSIG__,
+			debug_log,
+			is_error_verbosity ? logging::error : logging::info,
+			"%s",
+			message );																// <0x672565>|0x112|0x005:'200'
 
-	if ( g_log_file )															// <0x6725eb>|0x198|0x086:'203'
-		g_log_file->flush( NULL );												// <0x6725f5>|0x1a2|0x00a:'204'
+	if ( g_log_file )																// <0x6725eb>|0x198|0x086:'203'
+		g_log_file->flush( NULL );													// <0x6725f5>|0x1a2|0x00a:'204'
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void logging_preinitialize( )
 {
 	if ( !g_log_callback )
@@ -263,17 +303,11 @@ void logging_preinitialize( )
 		g_log_callback = logging_callback;
 		debug::set_log_callback( debug_log_callback );
 	}
-
-	// FUNCTION BODY
-	// <0x6728b0>|0x000|0x000:'209'
-	// 1
-	// 2
-	// 3
-	// <0x6728b9>|0x009|0x009:'213'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[36%|PARTIAL]: /Ox target inlines native_path_string::convert("../../user_data/user.cfg") +
+// the absolute-path machinery (rows 296-301 ~0x94 bytes bigger) and splits the key-check lines our
+// build merges - fs-side + LTCG inlining, banked. Statement order matches.
 static void push_logging_filters( )
 {
 	using namespace vostok;																									// <1>
@@ -303,7 +337,7 @@ static void push_logging_filters( )
 																															// <2>
 }
 
-// STATE[STUB]
+// STATE[85%|DONE]: /Ox line-record splits around generate_log_file_name + LTCG conv; shape matches.
 void logging_initialize( )
 {
 	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );												// <0x672687>|0x000|0x000:'252'
@@ -327,7 +361,7 @@ void logging_initialize( )
 	}
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: closed by the debug::log_callback raw-pointer fix (set_log_callback(NULL) is a plain push 0).
 void logging_finalize( )
 {
 	finalize_console( );														// <0x671dd0>|0x000|0x000:'275'
@@ -339,7 +373,8 @@ void logging_finalize( )
 	debug::set_log_callback( NULL );											// <0x671e51>|0x081|0x00a:'281'
 }
 
-// STATE[STUB]
+// STATE[83%|PARTIAL]: /Ox merges/reorders the per-handle statements (23 vs 30 line records) and sinks
+// the LOG_WARNING arm; instruction content matches per-block - optimizer scheduling, banked.
 static bool initialize_console( )
 {
 	if ( s_tried_to_initialize_console )
@@ -388,7 +423,7 @@ static bool initialize_console( )
 	return false;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 static void finalize_console( )
 {
 	if ( s_console_initialized )							// <0x671d20>|0x000|0x000:'340'
