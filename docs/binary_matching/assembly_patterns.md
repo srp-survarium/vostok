@@ -1128,3 +1128,39 @@ standalone udp/tcp start_receiving COMDATs, where our LTCG does NOT elide (+0x12
 99.8% -> 87-91%). Same source, three emissions, two backend outcomes: when one emission
 byte-proves a spelling, keep it and book the other emissions' copy as non-steerable backend
 copy-prop variance. Net: +1 function at 100%, aggregate code% flat.
+
+### Recover an INLINE ctor body from its consumer inline expansions (never guess NULL)
+A header-inline ctor with no standalone symbol leaves its body unrecorded - but every /Od
+consumer EXPANDS it, so the consumers are the ground truth. `packet_reader(base_packet const&)`
+was reconstructed as `m_packet(packet), m_pointer(NULL)`; reading the expansions
+(udp_match_connection::is_low_level_packet stmt 1; process_incoming_packet<..> L141) shows
+`mov [reader+0], &packet;  lea/call <folded base_packet::buffer() const>;  mov [reader+4], eax`
+=> the real init list is `m_packet(packet), m_pointer(packet.buffer())`. The folded `call` is
+the tell: a NULL init would be a plain `mov [reader+4], 0`. Fixing the ctor moved
+udp_match_client::process_incoming_packet 88.12 -> 99.86 alongside the template body. RULE:
+before banking an inline ctor body, rich-view 1-2 consumers and read the expansion between the
+member stores.
+
+### interlocked_* on a member => the member is threading::atomic32_type, not long
+`threading_functions_guard.h` defines template overloads `interlocked_*(T&, ...)` whose body is
+`COMPILE_ASSERT(false, do_not_pass_NON_VOLATILE_values_to_INTERLOCKED_functions)`. For a
+NON-volatile `long` member the template (exact match) beats the real
+`interlocked_exchange(atomic32_type& = long volatile&, long)` (qualification conversion), so the
+build breaks. Therefore any member a target function feeds to `interlocked_*` as the TARGET
+operand was declared `threading::atomic32_type` in the original header, even when the PDB-dumped
+structure shows plain `long` (the generator drops volatile). Caught on
+`udp_match_connection::m_last_receive_time_in_ms` (process_incoming_packet does
+`interlocked_exchange(m_last_receive_time_in_ms, m_last_send_attempt_time_in_ms)`). The VALUE
+operand stays non-volatile.
+
+### an /Od module unit can carry an OPTIMIZED LTCG COMDAT - correct source, unpairable bytes
+A COMDAT instantiated from BOTH /Od and optimized TUs survives in the exe as whichever emission
+the linker kept - sometimes the OPTIMIZED one (frameless, custom regs, unrolled), even though the
+delinker files it under the /Od module's unit. Tells: no `push ebp` frame, `this` in eax,
+flat unrolled stores / xmm pairs. Examples: `udp_match_stats::udp_match_stats()` (0x62 bytes, 32
+flat dword zero-stores; `this` in eax), `udp_match_stats operator-` (xmm movq pairs, args
+LTCG-promoted to edi/esi), `udp_match_packet::header_size` (8-byte `mov eax,[ecx]; sub; sub; ret`).
+Your /Od body emits framed per-statement code and objdiff scores None or single digits NO MATTER
+WHAT - write the source the gold LINE TABLE proves (the optimized emission still carries statement
+lines in the PDB: e.g. operator-'s 10 statements at L212-224), mark PARTIAL citing the emission,
+and do not chase the %.

@@ -1447,6 +1447,14 @@ namespace vostok
 		network_core::udp_match_stats stats_a, stats_b;
 		bool r = ( items_a >= items_b ) | ( stream_a >= stream_b ) | ( stats_a >= stats_b );
 		printf( "%d", r );
+
+		// address-takes keep the standalone COMDATs the target carries (a direct call
+		// would let LTCG inline them into this anchor).
+		network_core::udp_match_stats ( *stats_difference )( network_core::udp_match_stats const&, network_core::udp_match_stats const& ) = &network_core::operator-;
+		example_callback( ( pcstr )&stats_difference );
+
+		u8 ( network_core::udp_match_packet::*header_size_ptr )( ) const = &network_core::udp_match_packet::header_size;
+		example_callback( ( pcstr )&header_size_ptr );
 	}
 
 	void use_network_core_tcp_packet_client()

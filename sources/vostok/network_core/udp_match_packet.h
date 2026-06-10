@@ -70,15 +70,22 @@ public:
 
 	inline	u32			allocated_size		( ) const { return 0; }
 
-	inline	pcbyte		buffer_to_send		( ) const { return NULL; }
-	inline	pbyte		buffer_to_send		( ) { return NULL; }
+	// STATE[INLINED]: no standalone target symbol; send/handle_send inline this as
+	// `packet + 0x2B` - the raw wire buffer starts at m_buffer.elems.
+	inline	pcbyte		buffer_to_send		( ) const { return m_buffer.elems; }
+	// STATE[INLINED]
+	inline	pbyte		buffer_to_send		( ) { return m_buffer.elems; }
 
-	// STATE[0%|DONE]: source matched; no base COMDAT (LTCG inlines into callers)
+	// STATE[0%|DONE]: source proven by the send/handle_send inline sites; base COMDAT
+	// now anchored (address-take), but the surviving target symbol is an optimized
+	// LTCG leaf (mov/sub/sub/ret, frameless) a /Od body cannot pair against.
 	inline	u8			header_size			( ) const
 	{
 		return				(u8)( base_packet::m_buffer - m_buffer.elems );
 	}
-	inline	u32			buffer_to_send_size	( ) const { return 0; }
+	// STATE[INLINED]: no standalone target symbol; send's inline expansion is
+	// `buffer_size()-fold + header_size() call` in that operand order.
+	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
 	inline	void		reallocate			( u32 new_size ) { /* no source */ }
 
