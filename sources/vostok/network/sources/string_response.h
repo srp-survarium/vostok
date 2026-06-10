@@ -15,8 +15,10 @@ class string_response :
 	public boost::noncopyable
 {
 public:
-	// STATE[STUB]: ctors are fully inlined into their callers (no line records);
-	// absent strings/functors init to NULL/empty - the matcher confirms
+	// STATE[99.70%|PARTIAL]: standalone target symbol at rva 0x49340 (NOT
+	// inlined-only); all statements byte-equal - sole residual is one extra dead
+	// frame dword in the target (this at -0x18 vs -0x14), LTCG slot slack with no
+	// source statement mapping to it
 	inline			string_response	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr ) > const&	functor,
@@ -30,10 +32,11 @@ public:
 		m_string2	( NULL ),
 		m_allocator	( allocator )
 	{
-		// FUNCTION BODY[0x59340]: 0
-		// ******
 	}
 
+	// claude@NOTE: the two- and three-string ctors emit NO target symbol (only the
+	// one-functor ctor does); bodies by symmetry with the string_order ctor set,
+	// verifiable only through callers - not anchored
 	inline			string_response	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr, pcstr ) > const&	functor,
@@ -67,39 +70,32 @@ public:
 	{
 	}
 
-	// STATE[PARTIAL]: three scoped free-blocks per the carcass (lines 53-60);
-	// unverified vs target
+	// STATE[100%|DONE]
 	virtual			~string_response( )
 	{
-		{
-			pstr temp			= m_string0;
-			VOSTOK_FREE_IMPL	( m_allocator, temp );
-		}
-		{
-			pstr temp			= m_string1;
-			VOSTOK_FREE_IMPL	( m_allocator, temp );
-		}
-		{
-			pstr temp			= m_string2;
-			VOSTOK_FREE_IMPL	( m_allocator, temp );
-		}
+		pstr temp			= m_string0;
+		VOSTOK_FREE_IMPL	( m_allocator, temp );
 
-		// FUNCTION BODY[0x593e0]: 8
-		// <0x593f3>|0x013|+0x009:'53'
-		// <0x593fc>|0x01c|+0x015:'54'
-		// <0>
-		// <0x59411>|0x031|+0x009:'56'
-		// <0x5941a>|0x03a|+0x015:'57'
-		// <0>
-		// <0x5942f>|0x04f|+0x009:'59'
-		// <0x59438>|0x058|+0x015:'60'
-		// ******
+		temp				= m_string1;
+		VOSTOK_FREE_IMPL	( m_allocator, temp );
+
+		temp				= m_string2;
+		VOSTOK_FREE_IMPL	( m_allocator, temp );
 	}
 
-	// STATE[STUB]: no code attributed to this header in the target (the body
-	// ICF-folds with string_order::execute)
+	// STATE[100%|DONE]
+	// claude@NOTE: the target's ICF survivor lives in string_order.h's unit (rva
+	// 0x49490), so this unit's objdiff score reads None; verified by-name with
+	// --view diff - zero divergent rows
 	virtual	void	execute			( )
 	{
+		if ( m_string1 ) {
+			if ( m_string2 )
+				m_functor2	( m_string0, m_string1, m_string2 );
+			else
+				m_functor1	( m_string0, m_string1 );
+		} else
+			m_functor0		( m_string0 );
 	}
 
 private:
