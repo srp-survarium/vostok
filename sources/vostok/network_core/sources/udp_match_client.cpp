@@ -7,17 +7,16 @@
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/network_core/udp_network_flow_emulator.h>
+#include <vostok/network_core/process_packet_predicate.h>
+#include <vostok/network_core/custom_alloc_handler.h>
 
 namespace vostok {
 namespace network_core {
 
 // STATE[79.20%|PARTIAL]: init list + body shape exact; residuals are per-call-site LTCG
-// inline-vs-call, both directions: (a) base CALLS math::max(u32,u32) (LTCG reg-promoted)
-// where target INLINES the max_integral branchless body - both binaries keep the standalone
-// (target 0x0241d0 / base 0x03b4c0), the operator| precedent; (b) base INLINES
-// boost::function1::operator= (copy temp + swap + clear, +0xC frame, drops push esi/edi)
-// where target calls the ICF-folded COMDAT; plus folded-rep this-convention/temp noise
-// around the boost::function default-ctor / bind fold representatives.
+// inline-vs-call, both directions: (a) base CALLS math::max(u32,u32) where target INLINES the
+// max_integral body (both keep the standalone, target 0x0241d0 / base 0x03b4c0, operator| precedent);
+// (b) base INLINES boost::function1::operator= (+0xC frame) where target calls the ICF-folded COMDAT; plus folded-rep this-convention/temp noise.
 udp_match_client::udp_match_client(
 	boost::asio::io_service&			io_service,
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
@@ -47,94 +46,87 @@ udp_match_client::udp_match_client(
 	// SIZE +0x1b | 38 | m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE row is LTCG inline-vs-call both ways (base inlines function1::operator=, target inlines math::max in the init region); non-steerable.
 }
-
 // STATE[100%|DONE]
 void udp_match_client::on_error( client_error_codes_enum, boost::system::error_code )
 {
 	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }
-
-// STATE[STUB]
+// STATE[99.86%|PARTIAL]: re-diffed after PR #288's process_incoming_packet<process_packet_predicate> body landed: structure-diff clean, 5/5 stmts, 0xb1 bytes BOTH sides; residual is the frame immediate (base 0xD0 vs target 0xB8 spill area) + ICF naming on the folded assert-eater stubs - not source-steerable.
 void udp_match_client::process_incoming_packet( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint )
 {
-	// FUNCTION BODY[0x758670]: 6
-	// <0x75867f>|0x00f|+0x03a:'78'
-	// <0x7586b9>|0x049|+0x028:'79'
-	// <0x7586e1>|0x071|+0x002:'80'
-	// <0>
-	// <0x7586e3>|0x073|+0x00c:'82'
-	// <0x7586ef>|0x07f|+0x02c:'83'
-	// ******
+	ASSERT_U( endpoint == m_server_endpoint );
+	if ( m_network_flow_emulator && m_connection.is_disconnected( ) )
+		return;
+
+	ASSERT( UNKNOWN_EXPRESSION_T( !m_connection.is_disconnected( ) ) );
+	m_connection.process_incoming_packet( reader, process_packet_predicate( *this ) );
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// (no diverging rows - clean align, 0xb1 bytes both sides)
+	// VERDICT: STRUCTURE MATCH (shape ok) - closed by PR #288's udp_match_connection::
+	// process_incoming_packet<process_packet_predicate> body (the dropped call + arg pushes are back);
+	// residual is the frame immediate (base 0xD0 vs target 0xB8) + ICF stub naming, not source-steerable.
 }
 
-// STATE[STUB]
+// STATE[93.53%|PARTIAL]: 23/23 stmts aligned, all slots/frame identical; residuals are the LOG __LINE__ immediates (line-padding dropped per policy) plus the
+// shared LOG_ERROR helper machinery (base builds the boost::function1 callback at the append
+// site where target builds it at block entry, swapping the two guarded temp cleanups - the
+// http_client::on_error precedent) and stmt-118 packet.buffer() inline-vs-call, both LTCG.
 void udp_match_client::handle_receive( boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
-	// LOCALS
-	// packet_reader 					reader<1>
-	// ******
+	check_consistency		( );
 
-	// FUNCTION BODY[0x758730]: 38
-	// <0x75874a>|0x01a|+0x00b:'88'
-	// <0>
-	// <0x758755>|0x025|+0x00c:'90'
-	// <0x758761>|0x031|+0x00d:'91'
-	// <0>
-	// <0x75876e>|0x03e|+0x014:'93'
-	// <0>
-	// <1>
-	// <2>
-	// <0x758782>|0x052|+0x0da:'97'
-	// <0x75885c>|0x12c|+0x017:'98'
-	// <0x758873>|0x143|+0x005:'99'
-	// <0>
-	// <1>
-	// <0x758878>|0x148|+0x00a:'102'
-	// <0x758882>|0x152|+0x080:'103'
-	// <0x758902>|0x1d2|+0x017:'104'
-	// <0x758919>|0x1e9|+0x005:'105'
-	// <0>
-	// <1>
-	// <0x75891e>|0x1ee|+0x036:'108'
-	// <0x758954>|0x224|+0x089:'109'
-	// <0x7589dd>|0x2ad|+0x017:'110'
-	// <0x7589f4>|0x2c4|+0x005:'111'
-	// <0>
-	// <1>
-	// <0x7589f9>|0x2c9|+0x00f:'114'
-	// <0x758a08>|0x2d8|+0x058:'115'
-	// <0>
-	// <0x758a60>|0x330|+0x002:'117'
-	// <0x758a62>|0x332|+0x032|[1]:'118'
-	// <0x758a94>|0x364|+0x01c:'119'
-	// <0>
-	// <1>
-	// <0x758ab0>|0x380|+0x00b:'122'
-	// <0>
-	// <0x758abb>|0x38b|+0x019:'124'
-	// <0x758ad4>|0x3a4|+0x00b:'125'
-	// ******
+	ASSERT					( UNKNOWN_EXPRESSION_T( m_is_receiving ) );
+	m_is_receiving			= false;
+
+	if ( error_code ) {
+		LOG_ERROR			(
+			"error during reading from socket: %s\r\n",
+			error_code.message( ).c_str( )
+		);
+		on_error			( unable_to_read_from_socket, error_code );
+		return;
+	}
+
+	if ( !bytes_transferred ) {
+		LOG_ERROR			( "unable to read from socket\r\n" );
+		on_error			( unable_to_read_from_socket, error_code );
+		return;
+	}
+
+	if ( m_server_endpoint != m_remote_endpoint ) {
+		LOG_ERROR			( "unexpected sender\r\n" );
+		on_error			( unable_to_read_from_socket, error_code );
+		return;
+	}
+	if ( m_network_flow_emulator ) {
+		m_network_flow_emulator->on_packet_received( m_receive_buffer.c_array( ), bytes_transferred, m_remote_endpoint, m_time_in_ms, m_connection.unacknowledged_packets_count( ) );
+	}
+	else {
+		packet_reader	reader( base_packet( m_receive_buffer.c_array( ), bytes_transferred ) );
+		process_incoming_packet( reader, m_remote_endpoint );
+	}
+	check_consistency		( );
+	if ( !m_connection.is_disconnected( ) )
+		start_receiving		( );
+	// STRUCTURE DIFF (condensed): 23/23 stmts; SIZE rows: -0x3|97 `);` / -0x3|103 LOG_ERROR(unable to read) / +0x1|108 if(server!=remote) / -0x5|109 LOG_ERROR(unexpected sender) / -0x5|118 packet_reader reader(...) / -0x1|119 process_incoming_packet(...)
+	// VERDICT: STRUCTURE MATCH (shape ok) - 23/23 aligned; rows are LTCG: function1-ctor fold-rep convention/schedule at the 3 LOG sites (-3/-3/-5), packet.buffer() inline-vs-call (-5), register-form +/-1 (108/119); non-steerable.
 }
-
-// STATE[STUB]
+// STATE[90.97%|PARTIAL]: frame/slots exact (0xD0) after make_custom_alloc_handler named-return fix; residual is the result-copy (0x12 bytes) our LTCG fails to elide in this standalone emission (target keeps it in the tcp_packet_client::start_reading emission, 100% there - the spelling proof).
 void udp_match_client::start_receiving( )
 {
-	// FUNCTION BODY[0x758bf0]: 11
-	// <0x758bff>|0x00f|+0x00c:'130'
-	// <0x758c0b>|0x01b|+0x00d:'131'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x758c18>|0x028|+0x0c8:'140'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( !m_is_receiving ) );
+	m_is_receiving				= true;
+	m_socket.async_receive_from	(
+		boost::asio::buffer( m_receive_buffer ),
+		m_remote_endpoint,
+		make_custom_alloc_handler	(
+			m_handler_allocator,
+			boost::bind( &udp_match_client::handle_receive, this, _1, _2 )
+		)
+	);
+	// STRUCTURE DIFF 3/3; SIZE +0x12|130 `);` - VERDICT: STRUCTURE MATCH (shape ok) - sole row is make_custom_alloc_handler's named-return result-copy (6 movs) target LTCG elides in this emission (slot kept, frame 0xD0 exact both sides); non-steerable backend copy-prop variance.
 }
-
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_match_client::connect(
 	pcstr const					host,
 	const u16					port,
@@ -142,60 +134,53 @@ void udp_match_client::connect(
 	const u32					current_time_in_ms
 )
 {
-	// FUNCTION BODY[0x758cf0]: 14
-	// <0x758d01>|0x011|+0x029:'145'
-	// <0x758d2a>|0x03a|+0x011:'146'
-	// <0x758d3b>|0x04b|+0x01c:'147'
-	// <0x758d57>|0x067|+0x042:'148'
-	// <0>
-	// <0x758d99>|0x0a9|+0x04b:'150'
-	// <0>
-	// <0x758de4>|0x0f4|+0x00f:'152'
-	// <0>
-	// <0x758df3>|0x103|+0x00b:'154'
-	// <0x758dfe>|0x10e|+0x00b:'155'
-	// <0>
-	// <0x758e09>|0x119|+0x00f:'157'
-	// <0x758e18>|0x128|+0x00b:'158'
-	// ******
+	if ( m_socket.is_open( ) )
+		m_socket.close		( );
+	m_socket.open			( boost::asio::ip::udp::v4( ) );
+	m_socket.bind			( boost::asio::ip::udp::endpoint( ) );
+	m_server_endpoint		= boost::asio::ip::udp::endpoint( boost::asio::ip::address::from_string( host ), port );
+	m_connection.connect	( packet );
+	check_consistency		( );
+	start_receiving			( );
+	m_connection.send_queued_packets( current_time_in_ms );
+	check_consistency		( );
 }
-
 // STATE[100%|DONE]
 void udp_match_client::disconnect( )
 {
 	m_connection.disconnect( );
 }
-
-// STATE[STUB]
+// STATE[94.51%|PARTIAL]: shape/strings exact; __LINE__ immediate off by design (line-padding dropped per policy, -0.01); residual is the LOG macro's log_callback_boost ctor COMDAT - target calls it first with this in EAX, base last with this in ESI (+8 frame, reg renames cascade) - ICF/LTCG call-boundary convention, http_client LOG precedent.
 void udp_match_client::enqueue( udp_match_packet* packet )
 {
-	// FUNCTION BODY[0x758590]: 8
-	// <0x7585a1>|0x011|+0x016:'168'
-	// <0x7585b7>|0x027|+0x00c:'169'
-	// <0>
-	// <0x7585c3>|0x033|+0x005:'171'
-	// <0x7585c8>|0x038|+0x07a:'172'
-	// <0x758642>|0x0b2|+0x016:'173'
-	// <0>
-	// <0x758658>|0x0c8|+0x008:'175'
-	// ******
+	if ( m_connection.is_connected( ) ) {
+		m_connection.enqueue		( packet );
+	}
+	else {
+		LOG_ERROR					( "disconnection initiated but new packet has been enqueued" );
+		m_connection.delete_packet	( packet );
+	}
+	check_consistency				( );
+
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
+	// SIZE -0x3 | 172 | LOG_ERROR					( "disconnection initiated but new packet has been enqueued" );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 6/6 aligned (braced-then + cuddled `else {` lands the jmp-over-else on line 171 = target); sole SIZE row is the log_callback_boost function-ctor COMDAT convention (target first/this-in-EAX vs base last/this-in-ESI, +8 frame), LTCG call-boundary residual, http_client precedent.
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x758af0]: 10
-	// <0x758af9>|0x009|+0x010:'180'
-	// <0x758b09>|0x019|+0x0a1:'181'
-	// <0x758baa>|0x0ba|+0x016:'182'
-	// <0x758bc0>|0x0d0|+0x002:'183'
-	// <0>
-	// <1>
-	// <0x758bc2>|0x0d2|+0x00c:'186'
-	// <0x758bce>|0x0de|+0x008:'187'
-	// <0x758bd6>|0x0e6|+0x00c:'188'
-	// <0x758be2>|0x0f2|+0x008:'189'
-	// ******
+	if ( m_network_flow_emulator ) {
+		// claude@MATCH: tick gets the OLD m_time_in_ms - the member is updated only after this block
+		m_network_flow_emulator->tick( m_time_in_ms, boost::bind( &udp_match_client::process_incoming_packet, this, _1, _2 ) );
+		if ( m_connection.is_disconnected( ) )
+			return;
+	}
+
+	m_time_in_ms						= current_time_in_ms;
+	check_consistency					( );
+	m_connection.send_queued_packets	( current_time_in_ms );
+	check_consistency					( );
 }
 
 // STATE[99.94%|DONE]: STRUCTURE MATCH (3/3 stmts, sizes byte-identical); sole residual is
