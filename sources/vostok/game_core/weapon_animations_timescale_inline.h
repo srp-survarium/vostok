@@ -8,7 +8,7 @@
 namespace survarium {
 
 // STATE[STUB]
-float computed_reload_animation_time_scale( resources::managed_resource_ptr const& reload_animation, float reload_time )
+inline float computed_reload_animation_time_scale( resources::managed_resource_ptr const& reload_animation, float reload_time )
 {
 	return 0.0f;
 
@@ -19,7 +19,7 @@ float computed_reload_animation_time_scale( resources::managed_resource_ptr cons
 }
 
 // STATE[STUB]
-float computed_shooting_animation_time_scale( resources::managed_resource_ptr const& shooting_animation, float rounds_per_second )
+inline float computed_shooting_animation_time_scale( resources::managed_resource_ptr const& shooting_animation, float rounds_per_second )
 {
 	// LOCALS
 	// resources::pinned_ptr_const<animation::cubic_spline_skeleton_animation> pinned_animation
@@ -55,7 +55,7 @@ float computed_shooting_animation_time_scale( resources::managed_resource_ptr co
 }
 
 // STATE[STUB]
-float computed_shotgun_reload_animation_time_scale( resources::managed_resource_ptr const& reload_one_round_anim, u32 magazine_capacity, float reload_time )
+inline float computed_shotgun_reload_animation_time_scale( resources::managed_resource_ptr const& reload_one_round_anim, u32 magazine_capacity, float reload_time )
 {
 	return 0.0f;
 

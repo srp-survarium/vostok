@@ -20,8 +20,12 @@ public:
 
 public:
 	inline	void		set_owner_ready_for_transition	( bool* arg_0 ) { /* no source */ }
+
+protected:
 	virtual	void		initialize						( ) override;
 	virtual	void		finalize						( ) override;
+
+private:
 	virtual	bool		is_ready_for_transition			( ) const override;
 
 			animation::callback_return_type_enum

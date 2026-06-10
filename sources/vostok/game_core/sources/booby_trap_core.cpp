@@ -19,32 +19,29 @@
 
 namespace survarium {
 
-// STATE[94.90%|DONE]
+// STATE[100%|DONE]
 booby_trap_core::booby_trap_core( ) :
 	m_owner			( NULL ),
 	m_trap_state	( booby_trap_state_removed ),
 	m_state_timer	( 0 )
 {
 	m_transform.identity( );
-
-	// FUNCTION BODY
-	// <0x59be6a>|0x0da|+0x00e:'26'
-	// ******
 }
 
-// STATE[14.86%|PARTIAL]
+// STATE[14.86%|PARTIAL]: delete_helper out-of-line call in target vs inlined in base
 booby_trap_core::~booby_trap_core( )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries ); // sushi@MATCH: Deleter helper inlined
+	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries );
 	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
 
-	// FUNCTION BODY
-	// <0x59bed4>|0x054|+0x01c:'31'
-	// <0x59bef0>|0x070|+0x01c:'32'
-	// ******
+	// STRUCTURE DIFF[target 0x58be80 | base 0x466970]: target 2 / base 2 stmts
+	// 0x054 <0x1c> | 0x053 <0x4a> | VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries );   SIZE
+	// 0x070 <0x1c> | 0x09d <0x4b> | VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );   SIZE
+	// ; aligned 0, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE diffs are delete_helper<doug_lea_allocator,collision_geometry> emitted out-of-line (pointer in edi) in target vs fully inlined in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_dtor.md
 }
 
-// STATE[84.87%|PARTIAL]
+// STATE[90.68%|PARTIAL]: new_helper::call out-of-line in target vs inlined malloc in base
 void booby_trap_core::load( configs::binary_config_value const& config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -58,7 +55,7 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 	collision_sensor::m_collision_geometries[0]->load( config["collision_sensor"]["collision_geometries"][0] );
 
 	usable_object::load( config["usable_object"] );
-	usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry ); // sushi@MATCH: Inlined one layer deeper in base
+	usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
 	usable_object::m_collision_geometries[0]->load( config["usable_object"]["collision_geometries"][0] );
 
 	if ( config.value_exists("hittable_object") )
@@ -66,26 +63,12 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 		hittable_object::load( config["hittable_object"] );
 	}
 
-	// FUNCTION BODY
-	// <0x59bf69>|0x009|+0x00c:'37'
-	// <0x59bf75>|0x015|+0x00c:'38'
-	// <0x59bf81>|0x021|+0x00c:'39'
-	// <0x59bf8d>|0x02d|+0x00c:'40'
-	// <0x59bf99>|0x039|+0x00c:'41'
-	// <0>
-	// <0x59bfa5>|0x045|+0x016:'43'
-	// <0x59bfbb>|0x05b|+0x047:'44'
-	// <0x59c002>|0x0a2|+0x032:'45'
-	// <0>
-	// <0x59c034>|0x0d4|+0x019:'47'
-	// <0x59c04d>|0x0ed|+0x047:'48'
-	// <0x59c094>|0x134|+0x032:'49'
-	// <0>
-	// <0x59c0c6>|0x166|+0x014:'51'
-	// <0>
-	// <0x59c0da>|0x17a|+0x019:'53'
-	// <0>
-	// ******
+	// STRUCTURE DIFF[target 0x58bf60 | base 0x466aa0]: target 17 / base 17 stmts
+	// 0x05b <0x47> | 0x05b <0x56> | collision_sensor::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );   SIZE
+	// 0x0a2 <0x32> | 0x0b1 <0x30> | collision_sensor::m_collision_geometries[0]->load( config["collision_sensor"]["collision_geometries"][0] );   SIZE
+	// 0x0ed <0x47> | 0x0fa <0x56> | usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );   SIZE
+	// ; aligned 14, size-diffs 3, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are new_helper<collision_geometry>::call<doug_lea_allocator> emitted out-of-line in target vs malloc_impl inlined one layer deeper in base (LTCG inline-vs-call); the load() size diff is downstream slot drift, non-steerable. trail: booby_trap_core_load.md
 }
 
 // STATE[100%|DONE]
@@ -93,7 +76,7 @@ void booby_trap_core::load_aabb( configs::binary_config_value const& __formal )
 {
 }
 
-// STATE[97.38%|DONE]
+// STATE[97.38%|PARTIAL]: config() out-of-line in target vs inlined in base
 void booby_trap_core::set_transform( float4x4 const& transform )
 {
 	m_transform = transform;
@@ -105,19 +88,13 @@ void booby_trap_core::set_transform( float4x4 const& transform )
 	if ( m_owner->config( ).defuse_by_hit )
 		hittable_object::set_transform( transform );
 
-	// FUNCTION BODY
-	// <0x59b3cb>|0x00b|+0x013:'69'
-	// <0>
-	// <0x59b3de>|0x01e|+0x021:'71'
-	// <0x59b3ff>|0x03f|+0x021:'72'
-	// <0>
-	// <0x59b420>|0x060|+0x00c:'74'
-	// <0x59b42c>|0x06c|+0x016:'75'
-	// <0x59b442>|0x082|+0x012:'76'
-	// ******
+	// STRUCTURE DIFF[target 0x58b3c0 | base 0x465fb0]: target 8 / base 8 stmts
+	// 0x06c <0x16> | 0x06c <0x14> | if ( m_owner->config( ).defuse_by_hit )   SIZE
+	// ; aligned 7, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is booby_trap_set_core::config() emitted out-of-line in target vs inlined member read in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_set_transform.md
 }
 
-// STATE[99.85%|DONE]
+// STATE[83.06%|PARTIAL]: bone_collision_data ctor out-of-line in target vs inlined in base
 void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_receiver* const receiver )
 {
 	buffer_vector< booby_trap_set_core::apply_damage > const& damage_parameters = m_owner->damage_parameters( );
@@ -129,23 +106,14 @@ void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_re
 		receiver->hit( initiator, bcd, it->hit_type, it->amount, it->armor_piercing, NULL );
 	}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x59b9d0>|0x010|+0x015:'86'
-	// <0x59b9e5>|0x025|+0x008:'87'
-	// <0x59b9ed>|0x02d|+0x009:'88'
-	// <0x59b9f6>|0x036|+0x013:'89'
-	// <0>
-	// <0x59ba09>|0x049|+0x013:'91'
-	// <0>
-	// <8>
-	// <0x59ba1c>|0x05c|+0x034:'101'
-	// <0>
-	// ******
+	// STRUCTURE DIFF[target 0x58b9c0 | base 0x466510]: target 8 / base 7 stmts
+	// 0x049 <0x13> | 0x048 <0x27> | collision::bone_collision_data bcd( "", NULL, it->body_part );   SIZE
+	// <0>         | --          |    EMPTY only target
+	// ; aligned 6, size-diffs 1, quantity-diffs 1
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE/EMPTY are bone_collision_data::bone_collision_data ctor emitted out-of-line in target (name in edx, this in esi) vs the two fixed_string members built inline in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_apply_damage.md
 }
 
-// STATE[98.75%|DONE]
+// STATE[91.77%|PARTIAL]: holder() out-of-line in target vs inlined in base
 void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -167,26 +135,10 @@ void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> co
 	if ( is_active( ) )
 		switch_to_state( booby_trap_state_fired );
 
-	// FUNCTION BODY
-	// <0x59bb19>|0x009|+0x00c:'107'
-	// <0x59bb25>|0x015|+0x00c:'108'
-	// <0>
-	// <0x59bb31>|0x021|+0x008:'110'
-	// <0x59bb39>|0x029|+0x009:'111'
-	// <0x59bb42>|0x032|+0x017:'112'
-	// <0>
-	// <0x59bb59>|0x049|+0x041|[1]:'114'
-	// <0x59bb9a>|0x08a|+0x019:'115'
-	// <0>
-	// <0x59bbb3>|0x0a3|+0x00c:'117'
-	// <0x59bbbf>|0x0af|+0x00c:'118'
-	// <0>
-	// <0x59bbcb>|0x0bb|+0x016:'120'
-	// <0x59bbe1>|0x0d1|+0x005:'121'
-	// <0>
-	// <0x59bbe6>|0x0d6|+0x013:'123'
-	// <0x59bbf9>|0x0e9|+0x019:'124'
-	// ******
+	// STRUCTURE DIFF[target 0x58bb10 | base 0x4665c0]: target 18 / base 18 stmts
+	// 0x049 <0x41> | 0x049 <0x4e> | hit_initiator const*	initiator	= m_owner->get_inventory( ).holder( ).cast_to_base_player( );   SIZE
+	// ; aligned 17, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is inventory::holder() emitted out-of-line in target vs inlined member read in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_on_enter.md
 }
 
 // STATE[100%|DONE]
@@ -212,7 +164,7 @@ void booby_trap_core::tick( u32 const time_delta_ms, u32 const current_time_ms )
 	}
 }
 
-// STATE[97.44%|DONE]
+// STATE[97.44%|PARTIAL]: config() out-of-line in target vs inlined in base
 void booby_trap_core::insert( physics::world* world, float4x4 const& transform, scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -230,22 +182,10 @@ void booby_trap_core::insert( physics::world* world, float4x4 const& transform, 
 
 	switch_to_state( booby_trap_state_armed );
 
-	// FUNCTION BODY
-	// <0x59ba69>|0x009|+0x00c:'151'
-	// <0x59ba75>|0x015|+0x00c:'152'
-	// <0>
-	// <0x59ba81>|0x021|+0x011:'154'
-	// <0>
-	// <0x59ba92>|0x032|+0x011:'156'
-	// <0>
-	// <0x59baa3>|0x043|+0x00c:'158'
-	// <0x59baaf>|0x04f|+0x012:'159'
-	// <0x59bac1>|0x061|+0x012:'160'
-	// <0x59bad3>|0x073|+0x016:'161'
-	// <0x59bae9>|0x089|+0x012:'162'
-	// <0>
-	// <0x59bafb>|0x09b|+0x00f:'164'
-	// ******
+	// STRUCTURE DIFF[target 0x58ba60 | base 0x466460]: target 14 / base 14 stmts
+	// 0x073 <0x16> | 0x073 <0x14> | if ( m_owner->config( ).defuse_by_hit )   SIZE
+	// ; aligned 13, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is booby_trap_set_core::config() emitted out-of-line in target vs inlined member read in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_insert.md
 }
 
 // STATE[100%|DONE]
@@ -271,13 +211,13 @@ void booby_trap_core::remove( scheduler& scheduler )
 	// ******
 }
 
-// STATE[99.84%|DONE] sushi@TODO: What does this function do
+// STATE[99.84%|PARTIAL]: structure exact, residual is LTCG slot/reg noise
 bool booby_trap_core::use_initialize( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	if ( !m_usable_object_users.empty( ) ) // sushi@TODO: What does that mean
+	if ( !m_usable_object_users.empty( ) )
 		return false;
 
 	base_player* user_player = user->owner->cast_to_base_player( );
@@ -292,28 +232,13 @@ bool booby_trap_core::use_initialize( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
-	// <0x59b5c9>|0x009|+0x00c:'178'
-	// <0x59b5d5>|0x015|+0x00c:'179'
-	// <0>
-	// <0x59b5e1>|0x021|+0x013:'181'
-	// <0x59b5f4>|0x034|+0x004:'182'
-	// <0>
-	// <0x59b5f8>|0x038|+0x014:'184'
-	// <0x59b60c>|0x04c|+0x00c:'185'
-	// <0>
-	// <0x59b618>|0x058|+0x019:'187'
-	// <0x59b631>|0x071|+0x004:'188'
-	// <0>
-	// <0x59b635>|0x075|+0x011:'190'	m_usable_object_users.push_back( user );
-	// <0x59b646>|0x086|+0x023:'191'
-	// <0x59b669>|0x0a9|+0x00c:'192'
-	// <0>
-	// <0x59b675>|0x0b5|+0x002:'194'
-	// ******
+	// STRUCTURE DIFF[target 0x58b5c0 | base 0x466380]: target 17 / base 17 stmts
+	// .. same ..
+	// ; aligned 17, size-diffs 0, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (exact) - 0 size/quantity diffs; the <100% residual is register/stack-slot LTCG noise, non-steerable. trail: booby_trap_core_use_initialize.md
 }
 
-// STATE[97.35%|DONE]
+// STATE[82.75%|PARTIAL]: config() and math::min out-of-line in target vs inlined in base
 bool booby_trap_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -324,7 +249,7 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 
 	u32 passed_ms = user->current_time_ms - user->start_using_time_ms;
 	float engineer_factor = user->owner->usable_object_user_data( )->booster_engineer_use_time_factor;
-	u32 config_defuse_time = m_owner->config( ).defuse_time; // sushi@MATCH: config didn't inline in target
+	u32 config_defuse_time = m_owner->config( ).defuse_time;
 	u32 defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
 
 	user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, u32(100) ) : 100;
@@ -337,29 +262,11 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
-	// <0x59b469>|0x009|+0x00c:'199'
-	// <0x59b475>|0x015|+0x00c:'200'
-	// <0>
-	// <0x59b481>|0x021|+0x00c:'202'
-	// <0x59b48d>|0x02d|+0x00c:'203'
-	// <0>
-	// <0x59b499>|0x039|+0x00f:'205'
-	// <0x59b4a8>|0x048|+0x00f:'206'
-	// <0x59b4b7>|0x057|+0x011:'207'
-	// <0x59b4c8>|0x068|+0x022:'208'	u32 defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
-	// <0>
-	// <0x59b4ea>|0x08a|+0x032:'210'	user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, 100 ) : 100;
-	// <0>
-	// <0x59b51c>|0x0bc|+0x00e:'212'	if ( defuse_time_ms == 0 || passed_ms >= defuse_time_ms )
-	// <0>
-	// <1>
-	// <0x59b52a>|0x0ca|+0x017:'215'
-	// <0x59b541>|0x0e1|+0x004:'216'
-	// <0>
-	// <1>
-	// <0x59b545>|0x0e5|+0x002:'219'
-	// ******
+	// STRUCTURE DIFF[target 0x58b460 | base 0x466280]: target 19 / base 19 stmts
+	// 0x057 <0x11> | 0x057 <0xf>  | u32 config_defuse_time = m_owner->config( ).defuse_time;   SIZE
+	// 0x08a <0x32> | 0x088 <0x47> | user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, u32(100) ) : 100;   SIZE
+	// ; aligned 17, size-diffs 2, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are booby_trap_set_core::config() and math::min<u32> emitted out-of-line in target vs inlined (member read / branchless min) in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_use_execute.md
 }
 
 // STATE[100%|DONE]
@@ -389,7 +296,7 @@ pcstr booby_trap_core::use_info( usable_object_user_data* user )
 	return can_defuse( user_player ) ? "st_defuse_trap" : "";
 }
 
-// STATE[95.27%|PARTIAL]
+// STATE[86.04%|PARTIAL]: holder() out-of-line in target vs inlined in base
 bool booby_trap_core::can_defuse( base_player const* user ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -398,19 +305,12 @@ bool booby_trap_core::can_defuse( base_player const* user ) const
 	base_player const* owner = m_owner->get_inventory( ).holder( ).cast_to_base_player( );
 	ASSERT( UNKNOWN_EXPRESSION_T( owner ) );
 
-	return user != owner // sushi@MATCH: This is written somehow differently
-		? user->team( ) != owner->team( )
-		: true;
+	return user == owner || user->team( ) != owner->team( );
 
-	// FUNCTION BODY
-	// <0x59b27a>|0x00a|+0x00c:'249'
-	// <0x59b286>|0x016|+0x00c:'250'
-	// <0>
-	// <0x59b292>|0x022|+0x026:'252'
-	// <0x59b2b8>|0x048|+0x00c:'253' 0x56
-	// <0>
-	// <0x59b2c4>|0x054|+0x03b:'255'
-	// ******
+	// STRUCTURE DIFF[target 0x58b270 | base 0x458ec0]: target 7 / base 7 stmts
+	// 0x022 <0x26> | 0x022 <0x33> | base_player const* owner = m_owner->get_inventory( ).holder( ).cast_to_base_player( );   SIZE
+	// ; aligned 6, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - the return ternary was rewritten to `user == owner || user->team() != owner->team()` to match the target's branch (jne) codegen; sole residual SIZE is inventory::holder() emitted out-of-line in target vs inlined member read in base, LTCG inline-vs-call, non-steerable. trail: booby_trap_core_can_defuse.md
 }
 
 // STATE[100%|DONE]
@@ -423,11 +323,12 @@ void booby_trap_core::defuse_completed( )
 	// ******
 }
 
-// STATE[86.20%|PARTIAL]
+// STATE[99.67%|DONE]: byte-identical stream, only the state/this stack-slot order swapped
 void booby_trap_core::on_state_timer_finished( )
 {
-	if ( m_trap_state == booby_trap_state_armed		// sushi@MATCH: Maybe some inlined function
-		|| m_trap_state > booby_trap_state_disarmed // sushi@MATCH: This should never hit
+	booby_trap_state const state = m_trap_state;
+	if ( state == booby_trap_state_armed
+		|| state > booby_trap_state_disarmed // claude@NOTE: target caches m_trap_state into one temp slot, compared twice
 	)
 		switch_to_state( booby_trap_state_disarmed );
 	else
@@ -448,7 +349,7 @@ void booby_trap_core::on_state_timer_finished( )
 	// ******
 }
 
-// STATE[BLOCKED] switch
+// STATE[93.08%|PARTIAL]: config() kept as a call in target (LTCG no-inline of booby_trap_set_core::config); we inline it
 void booby_trap_core::switch_to_state( booby_trap_state new_state )
 {
 	if ( m_trap_state == booby_trap_state_armed )
@@ -503,6 +404,7 @@ void booby_trap_core::switch_to_state( booby_trap_state new_state )
 			m_owner->on_trap_disarmed( *this );
 			break;
 		}
+		default: NODEFAULT( ); // claude@MATCH: target jump table has no bounds check -> full contiguous range + NODEFAULT
 	}
 
 	m_trap_state = new_state;

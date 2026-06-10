@@ -30,8 +30,8 @@ protected:
 	explicit									weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
 
 public:
-	inline	bool								is_ready_to_be_deactivated	( ) const { /* no source */ }
-	inline	animation::body_part_masks_enum		get_body_part_mask_for_user	( ) const { /* no source */ }
+	inline	bool								is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
+	inline	animation::body_part_masks_enum		get_body_part_mask_for_user	( ) const { return m_body_part_mask_for_user; }
 			bool								has_animation_ended			( ) const { return m_animation_has_been_ended; }
 
 public:

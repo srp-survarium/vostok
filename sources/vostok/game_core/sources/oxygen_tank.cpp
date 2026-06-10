@@ -40,7 +40,14 @@ oxygen_tank::oxygen_tank( ) :
 	// ******
 }
 
-// STATE[91.94%|DONE]: Registers differ because of LTCG. Seems like that's it
+// STATE[97.53%|DONE]: LTCG - target spills the binary_config_value temp to a stack slot on the two strings::copy lines; otherwise byte-identical
+// STRUCTURE DIFF[target 0x6ea1c0 | base 0x44abb0]: target 18 / base 18 stmts
+// .. same ..
+// 0x1f8 <0x38> | 0x1f8 <0x2c> | strings::copy( infl.body_part_name, 0x10, influences[i]["body_part"] );   SIZE
+// 0x230 <0x38> | 0x224 <0x2c> | strings::copy( infl.hit_type,		0x10, influences[i]["hit_type"] );   SIZE
+// .. same ..
+// ; aligned 16, size-diffs 2, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - sole diffs are the target materializing the influences[i][...] binary_config_value temp into a stack slot before strings::copy (extra mov to/from [ebp-A0h]); LTCG temp-spill at the call boundary, non-steerable. trail: oxygen_tank.md
 void oxygen_tank::load( configs::binary_config_value config )
 {
 	m_amount_ms = math::floor( (float)config["amount_time_sec"] * 1000.f );
@@ -62,30 +69,6 @@ void oxygen_tank::load( configs::binary_config_value config )
 		infl.hit_coeff = (float)influences[i]["hit_coeff"];
 		infl.threshold = (float)influences[i]["threshold"];
 	}
-
-	// FUNCTION BODY[0x6fa1c0]: 21
-	// <0x6fa1d0>|0x010|+0x034:'34'
-	// <0>
-	// <0x6fa204>|0x044|+0x018:'36'
-	// <0>
-	// <0x6fa21c>|0x05c|+0x030:'38'	configs::binary_config_value influences
-	// <0>
-	// <0x6fa24c>|0x08c|+0x014:'40'
-	// <0x6fa260>|0x0a0|+0x02f:'41'	m_influences = VOSTOK_M
-	// <0>
-	// <1>
-	// <0x6fa28f>|0x0cf|+0x028|[1]:'44'
-	// <0>
-	// <0x6fa2b7>|0x0f7|+0x015:'46'		item_influence& infl = m_influences[i];
-	// <0x6fa2cc>|0x10c|+0x031:'47'
-	// <0x6fa2fd>|0x13d|+0x0bb:'48'		infl.protector.reduce_damage_functor
-	// <0x6fa3b8>|0x1f8|+0x038:'49'		strings::copy
-	// <0x6fa3f0>|0x230|+0x038:'50'
-	// <0x6fa428>|0x268|+0x024:'51'
-	// <0x6fa44c>|0x28c|+0x029:'52'
-	// <0>
-	// <1>
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -98,7 +81,23 @@ void oxygen_tank::action( bool key_down )
 		set_active( !m_active );
 }
 
-// STATE[50.42%|PARTIAL]. holder( ).scheduler( )
+// STATE[48.62%|PARTIAL]: inline-vs-call wall - target out-of-line-calls holder()/scheduler()/register_for_update(); our base inlines them
+// STRUCTURE DIFF[target 0x6e9dc0 | base 0x44a720]: target 17 / base 20 stmts
+// .. same ..
+// --          | <0>         |    EMPTY only base
+// 0x03b <0xa9> | 0x03b <0xf5> | );   SIZE
+// .. same ..
+// 0x0e6 <0x2a> | 0x132 <0x3e> | m_inventory->holder( ).scheduler( ).unregister( &m_scheduler_identifier );   SIZE
+// .. same ..
+// --          | <0>         |    EMPTY only base
+// 0x15e <0x50> | 0x1be <0x73> | );   SIZE
+// .. same ..
+// --          | <0>         |    EMPTY only base
+// 0x1b0 <0x50> | 0x233 <0x73> | );   SIZE
+// .. same ..
+// 0x205 <0xa8> | 0x2ab <0x77> | LOG_INFO( "Oxygen Tank switched to [%s]. amount= %dms" );   SIZE
+// ; aligned 12, size-diffs 5, quantity-diffs 3
+// VERDICT: STRUCTURE MATCH (shape ok) - target emits inventory::holder/inventory_holder::scheduler/scheduler::register_for_update OUT-OF-LINE (rva 0x86b70/0x82cc0/0x82da0) and calls them; our base inlines all three (base has no standalone copy). EMPTY-only-base rows are cosmetic blank-line gaps. Inline-vs-call inliner decision on inline accessors, non-steerable (de-inlining the accessor would break every other matched caller). trail: oxygen_tank.md
 void oxygen_tank::set_active( bool bactive )
 {
 	m_active = bactive;
@@ -131,51 +130,34 @@ void oxygen_tank::set_active( bool bactive )
 	}
 
 	LOG_INFO( "Oxygen Tank switched to [%s]. amount= %dms" );
-
-	// FUNCTION BODY[0x6f9dc0]: 17
-	// <0x6f9dd7>|0x017|+0x00f:'68'
-	// <0>
-	// <0x6f9de6>|0x026|+0x015:'70'
-	// <0x6f9dfb>|0x03b|+0x0a9:'71'
-	// <0x6f9ea4>|0x0e4|+0x002:'72'
-	// <0x6f9ea6>|0x0e6|+0x02a:'73'
-	// <0>
-	// <0x6f9ed0>|0x110|+0x028|[1]:'75'
-	// <0>
-	// <0x6f9ef8>|0x138|+0x015|[2]:'77'
-	// <0x6f9f0d>|0x14d|+0x011:'78'
-	// <0x6f9f1e>|0x15e|+0x050:'79'			m_inventory->h
-	// <0x6f9f6e>|0x1ae|+0x002:'80'		else
-	// <0x6f9f70>|0x1b0|+0x050:'81'			m_inventory->h
-	// <0x6f9fc0>|0x200|+0x005:'82'
-	// <0>
-	// <0x6f9fc5>|0x205|+0x0a8:'84'
-	// ******
 }
 
-// STATE[92.30%|PARTIAL]: Logging, as always
+// STATE[75.86%|PARTIAL]: math::min inline-vs-call + logging-macro LTCG, non-steerable
+// STRUCTURE DIFF[target 0x6ea0d0 | base 0x44aaa0]: target 7 / base 7 stmts
+// .. same ..
+// 0x01d <0x25> | 0x01d <0x3d> | m_amount_ms -= math::min( m_amount_ms, frame_time_ms );   SIZE
+// 0x042 <0x81> | 0x05a <0x82> | LOG_INFO( "amount is: %dms", m_amount_ms );   SIZE
+// .. same ..
+// ; aligned 5, size-diffs 2, quantity-diffs 0
+// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES math::min(u32,u32) to branchless cmp/sbb/and/add; our base out-of-line-calls it (target also keeps a standalone copy at 0x3fbb0). LOG_INFO is the usual logging-macro LTCG. Both inline-vs-call inliner decisions, non-steerable. trail: oxygen_tank.md
 void oxygen_tank::active_tick( const u32 frame_time_ms )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_active ) );
 
 	m_amount_ms -= math::min( m_amount_ms, frame_time_ms );
 	LOG_INFO( "amount is: %dms", m_amount_ms );
 
 	if ( empty( ) )
 		set_active( false );
-
-	// FUNCTION BODY[0x6fa0d0]: 7
-	// <0x6fa0e1>|0x011|+0x00c:'89'
-	// <0>
-	// <0x6fa0ed>|0x01d|+0x025:'91'
-	// <0x6fa112>|0x042|+0x081:'92'
-	// <0>
-	// <0x6fa193>|0x0c3|+0x016:'94'
-	// <0x6fa1a9>|0x0d9|+0x00a:'95'
-	// ******
 }
 
-// STATE[99.90%|DONE]
+// STATE[99.90%|DONE]: byte-identical; lone diff is a cosmetic blank-line gap (size-diffs 0)
+// STRUCTURE DIFF[target 0x6e9cf0 | base 0x44a650]: target 8 / base 9 stmts
+// .. same ..
+// --          | <0>         |    EMPTY only base
+// .. same ..
+// ; aligned 8, size-diffs 0, quantity-diffs 1
+// VERDICT: STRUCTURE MATCH - all statements byte-for-byte aligned; the single quantity row is a collapsed blank source-line between `return &infl;`'s `}` and `return NULL;`, non-steerable cosmetic gap. trail: oxygen_tank.md
 oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_name, pcstr hit_type )
 {
 	for ( u32 i = 0 ; i < m_influences_count ; ++i )
@@ -187,17 +169,6 @@ oxygen_tank::item_influence const* oxygen_tank::find_influence( pcstr body_part_
 	}
 
 	return NULL;
-
-	// FUNCTION BODY[0x6f9cf0]: 8
-	// <0x6f9cf9>|0x009|+0x021|[1]:'100'
-	// <0>
-	// <0x6f9d1a>|0x02a|+0x012|[2]:'102'
-	// <0>
-	// <0x6f9d2c>|0x03c|+0x02a:'104'
-	// <0x6f9d56>|0x066|+0x005:'105'
-	// <0x6f9d5b>|0x06b|+0x002:'106'
-	// <0x6f9d5d>|0x06d|+0x002:'107'
-	// ******
 }
 
 // STATE[100%|DONE]

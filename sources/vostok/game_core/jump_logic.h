@@ -22,6 +22,9 @@ class weapon_user_animations_selector;	// sushi@TODO
 struct weapon_animation_parameters;
 
 struct base_player;
+struct player_input;
+
+move_direction_enum get_move_direction( player_input const& input );
 
 enum jump_animation_parts {
 	jump_animations_part_start			= 0x0000,
@@ -33,15 +36,17 @@ enum jump_animation_parts {
 	jump_animation_parts_count			= 0x0006,
 };
 
+u32 get_jump_animation_index( const move_direction_enum move_direction, const bool jump_from_right_leg, const jump_animation_parts animation_part );
+
 class jump_logic : public core::noncopyable {
 public:
 			explicit							jump_logic				( weapon_user_animations_selector& owner );
 												~jump_logic				( );
 
-	inline	move_direction_enum					get_jump_direction		( ) const { /* no source */ }
-	inline	bool								is_jump_from_right_leg	( ) const { /* no source */ }
+	inline	move_direction_enum					get_jump_direction		( ) const { return m_jumping_direction; }
+	inline	bool								is_jump_from_right_leg	( ) const { return m_is_jump_from_right_leg; }
 
-	inline	weapon_user_animations_selector&	owner					( ) const { /* no source */ }
+	inline	weapon_user_animations_selector&	owner					( ) const { return m_owner; }
 
 			std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 												selected_animations		( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const;

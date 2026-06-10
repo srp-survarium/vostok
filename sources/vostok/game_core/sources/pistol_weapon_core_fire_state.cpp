@@ -5,69 +5,85 @@
 #include "pch.h"
 #include <vostok/game_core/pistol_weapon_core_fire_state.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
+
+#include <vostok/animation/linear_interpolator.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::pistol_weapon_core_fire_state::pistol_weapon_core_fire_state(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int)
+static float s_aim_transition_time = 0.3f;
+
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
+
+// computed_shooting_animation_time_scale is defined (STUB) in the timescale inline header;
+// new_object below is the only current caller, so pull in the definition here to resolve it.
+float computed_shooting_animation_time_scale( resources::managed_resource_ptr const& shooting_animation, float rounds_per_second );
+}
+#include <vostok/game_core/weapon_animations_timescale_inline.h>
+namespace survarium {
+
+// STATE[100%|DONE]
 pistol_weapon_core_fire_state::pistol_weapon_core_fire_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
 	u32										animations_count
-) : weapon_core_fire_state_base( weapon, animation_time_scale )
+) : weapon_core_fire_state_base( weapon, animation_time_scale ),
+	m_weapon_animation_index( u32( -1 ) )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							weapon_state_index<3>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	ASSERT_CMP_U( animations_count, ==, 12 );
 
-	// SKIPPED BLOCKS
-	// <0x7ab21b><2>
-	// <0x7ab233><3>
-	// <0x7ab2a3><3>
-	// ******
+	u32 animation_index = 0;
+	for ( u32 view = 0 ; view != 2 ; ++view )
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
+				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
 
-	// FUNCTION BODY
-	// <0x7ab1db>|0x06b|+0x023:'26'
-	// <0x7ab1fe>|0x08e|+0x007:'27'
-	// <0x7ab205>|0x095|+0x018|[1]:'28'
-	// <0x7ab21d>|0x0ad|+0x018:'29'
-	// <0x7ab235>|0x0c5|+0x018:'30'
-	// <0x7ab24d>|0x0dd|+0x03a:'31'
-	// <0x7ab287>|0x117|+0x002:'32'
-	// <0x7ab289>|0x119|+0x002:'33'
-	// <0x7ab28b>|0x11b|+0x002:'34'
-	// <0x7ab28d>|0x11d|+0x018|[2]:'35'
-	// <0x7ab2a5>|0x135|+0x018:'36'
-	// <0x7ab2bd>|0x14d|+0x031:'37'
-	// <0x7ab2ee>|0x17e|+0x002:'38'
-	// <0x7ab2f0>|0x180|+0x002:'39'
-	// <0x7ab2f2>|0x182|+0x00c:'40'
-	// ******
+	for ( u32 view = 0 ; view != 2 ; ++view )
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+			m_user_animations[view][user_state] = animations[animation_index++];
+
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[STUB]
-// void survarium::pistol_weapon_core_fire_state::initialize()
+// STATE[92.62%|PARTIAL]: every instruction/branch matches. Two residuals: (1) the
+// __thiscall `this` for m_weapon.ammo_in_magazine() loaded into ecx (base) vs eax (target) -
+// an argument-passing register choice (LTCG), same class as the reference idle getter; (2) at
+// `m_weapon_animation_index = last_shot` MSVC /Od boolizes the bool read (neg;sbb;neg) where
+// the target stores the byte directly - a bool-rvalue normalization not steerable from source
+// while the carcass LOCAL is genuinely `bool last_shot` (1-byte stack slot).
 void pistol_weapon_core_fire_state::initialize( )
 {
-	// LOCALS
-	// bool 						last_shot
-	// ******
+	weapon_core_fire_state_base::initialize( );
 
-	// FUNCTION BODY
-	// <0x7ab719>|0x009|+0x008:'45'
-	// <0x7ab721>|0x011|+0x05d:'46'
-	// <0x7ab77e>|0x06e|+0x013:'47'
+	bool last_shot = m_weapon.get_bullets_in_queue( )
+		? ( m_weapon.ammo_in_magazine( ) == 1 )
+		: ( m_weapon.ammo_in_magazine( ) == 0 );
+
+	m_weapon_animation_index = last_shot;
+
+	// FUNCTION BODY (kept: PARTIAL)
+	// <0x7ab719>|0x009 weapon_core_fire_state_base::initialize();
+	// <0x7ab721>|0x011 last_shot = get_bullets_in_queue() ? (ammo==1) : (ammo==0);  (this in eax vs ecx)
+	// <0x7ab77e>|0x06e m_weapon_animation_index = last_shot;  (target: plain movzx; base: + boolize)
 	// ******
 }
 
-// STATE[STUB]
+// STATE[INPROGRESS]: large addition_lexeme/operator+ machinery. Next: model on
+// pistol_weapon_core_idle_state::weapon_and_hands_expression but with the user_state==type_sprint
+// (==2) branch that adds get_user_hands_expression; see target asm @0x79b5b0 in the .md.
 // vostok::animation::mixing::expression survarium::pistol_weapon_core_fire_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
 animation::mixing::expression pistol_weapon_core_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
@@ -76,6 +92,8 @@ animation::mixing::expression pistol_weapon_core_fire_state::weapon_and_hands_ex
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
+	return animation::mixing::expression( weight_driving_animation );
+
 	// LOCALS
 	// animation::mixing::expression hands_expression
 	// weapon_lexeme_pair 			lexeme_pair
@@ -94,32 +112,33 @@ animation::mixing::expression pistol_weapon_core_fire_state::weapon_and_hands_ex
 	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::pistol_weapon_core_fire_state::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
+// STATE[100%|DONE]
 weapon_lexeme_pair pistol_weapon_core_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	// LOCALS
-	// pcstr[2] 					weapon_animation_captions
-	// resources::managed_resource_ptr const& selected_animation
-	// pcstr 						animation_identifier
-	// ******
+	pcstr weapon_animation_captions[2] = { "pistol-shot", "pistol-shot_last" };
 
-	// FUNCTION BODY
-	// <0>
-	// <0x7ab4e9>|0x009|+0x007:'66'
-	// <0x7ab4f0>|0x010|+0x007:'67'
-	// <0>
-	// <0x7ab4f7>|0x017|+0x010:'69'
-	// <0x7ab507>|0x027|+0x032:'70'
-	// <0x7ab539>|0x059|+0x00c:'71'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7ab545>|0x065|+0x05d:'75'
-	// ******
+	pcstr animation_identifier = weapon_animation_captions[m_weapon_animation_index];
+
+	resources::managed_resource_ptr const& selected_animation =
+		m_weapon_animations[is_third_view != false][user_state_id == type_crouch][m_weapon_animation_index];
+
+	set_animation_to_wait( selected_animation );
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		animation_identifier,
+		selected_animation,
+		&m_weapon,
+		m_animation_playback_state,
+		1,
+		m_animation_timescale,
+		m_playback_type,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
 }
 
-// STATE[STUB]
+// STATE[INPROGRESS]: large lexeme machinery (override animation + operator+). Next: model on
+// the weapon_core_fire_state::get_user_hands_expression sibling shape; see target asm @0x79b380.
 // vostok::animation::mixing::expression survarium::pistol_weapon_core_fire_state::get_user_hands_expression(vostok::animation::mixing::animation_lexeme&, vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
 animation::mixing::expression pistol_weapon_core_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
@@ -129,6 +148,8 @@ animation::mixing::expression pistol_weapon_core_fire_state::get_user_hands_expr
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
+	return animation::mixing::expression( weapon_lexeme );
+
 	// LOCALS
 	// animation::mixing::animation_lexeme override_lexeme
 	// u32 							user_animation_index
@@ -163,8 +184,11 @@ animation::mixing::expression pistol_weapon_core_fire_state::get_user_hands_expr
 	// ******
 }
 
-// STATE[STUB]
-// survarium::pistol_weapon_core_fire_state* survarium::weapon_core_state_cook_template<survarium::pistol_weapon_core_fire_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
+// STATE[92.08%|PARTIAL]: control flow + placement-new + ctor call all match. Sole residual is
+// the LTCG-specialized calling convention of computed_shooting_animation_time_scale: the target's
+// whole-program optimizer passes its `managed_resource_ptr const&` arg in a register and returns
+// the float in xmm0 (movss), while our STUB callee keeps default cdecl (stack push + st0/fstp).
+// Argument passing at the call boundary - not source-steerable until that callee is matched.
 pistol_weapon_core_fire_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_fire_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
@@ -172,15 +196,19 @@ pistol_weapon_core_fire_state* weapon_core_state_cook_template<survarium::pistol
 	u32									animations_count
 )
 {
-	return NULL;
+	return new ( buffer.c_ptr( ) ) pistol_weapon_core_fire_state(
+		params->weapon,
+		computed_shooting_animation_time_scale( *animations, params->rounds_per_second ),
+		animations,
+		animations_count
+	);
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7ab319>|0x009|+0x05c:'114'
+	// FUNCTION BODY (kept: PARTIAL - LTCG calling convention of computed_shooting_animation_time_scale)
+	// <0x7ab319>|0x009 new(buffer.c_ptr()) pistol_weapon_core_fire_state( params->weapon,
+	//                  computed_shooting_animation_time_scale(*animations, params->rounds_per_second),
+	//                  animations, animations_count );
+	// TARGET @0x3d: call computed... (ref in reg, ret xmm0 -> movss [esp])
+	// BASE   @0x3d: push ref; call computed...; add esp,4; fstp [esp]  (cdecl, st0)
 	// ******
 }
 

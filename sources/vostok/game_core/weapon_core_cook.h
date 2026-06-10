@@ -19,16 +19,21 @@ public:
 public:
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource				( resources::resource_base* resource ) override;
+
+protected:
 	virtual	void	on_weapon_config_loaded		( resources::queries_result& data );
 
-public:
+protected:
 			void	process_loading_weapon_core	( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 			void	load_weapon_parameters		(											configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
+
+private:
 			void	on_core_subresources_ready	( resources::queries_result& data,			configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 	inline	void	on_skeleton_config_loaded	( resources::queries_result& data,			configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook ) { /* no source */ }
 			void	query_weapon_states			( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 			void	on_weapon_states_ready		( resources::queries_result& data,			weapon_state_creation_params const* params, weapon_core* object_to_cook );
 
+private:
 	virtual	u32		cooked_object_size			( weapon_core& object_to_cook ) const;
 
 	static	void	register_cooks_for_logic_states( ) { /* no source */ }

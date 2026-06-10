@@ -24,6 +24,9 @@ private:
 	static	pcstr	get_current_hit_type		( ) { /* no source */ }
 
 	static fixed_vector< console_commands::command_token, 12 >	m_hit_types;
+	static console_commands::cc_token*							m_hit_types_commands;
+
+public:
 	static fixed_vector< fixed_string<24>, 12 >					m_hit_types_strings;
 
 }; // class damage_model_cook

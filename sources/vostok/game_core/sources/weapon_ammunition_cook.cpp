@@ -9,22 +9,14 @@
 
 namespace survarium {
 
-// STATE[66.69%|PARTIAL]
+// STATE[100%|DONE]
 weapon_ammunition_cook::weapon_ammunition_cook( ) :
 	resources::translate_query_cook( resources::weapon_ammunition_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x760585>|0x035|+0x00c:'36'
-	// ******
 }
 
-// STATE[95.62%|DONE]: LTCG for query_resource.
+// STATE[99.83%|DONE]: LTCG frame-size/slot residual (boost::bind functor temp); structure exact.
 void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -39,35 +31,35 @@ void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& 
 		&parent
 	);
 
-	// FUNCTION BODY
-	// <0x7606df>|0x00f|+0x00b:'41'
-	// <0x7606ea>|0x01a|+0x01d:'42'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x760707>|0x037|+0x122:'51'
-	// ******
+	// STRUCTURE DIFF[target 0x7506d0 | base 0x45f270]: target 4 / base 4 stmts
+	// .. same ..
+	// ; aligned 4, size-diffs 0, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole residual is a uniform +0xC frame-size
+	// (sub esp,18Ch base vs 180h target) shifting every [ebp-N] slot; instructions are
+	// otherwise byte-identical. Non-steerable LTCG slot allocation for the boost::bind
+	// functor temp passed to query_resource. trail: translate_query.md
 }
 
-// STATE[31.00%|PARTIAL]
+// STATE[31.00%|PARTIAL]: shared cook-base wall - delete_helper LTCG arg passing.
 void weapon_ammunition_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// FUNCTION BODY
-	// <0x7605a9>|0x009|+0x017:'56'
-	// ******
+	// STRUCTURE DIFF[target 0x7505a0 | base 0x45f150]: target 1 / base 1 stmts
+	// 0x009 <0x17> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
+	// ; aligned 0, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - both call the same
+	// delete_helper<doug_lea_allocator,resource_base> instantiation; target pushes the
+	// resource_base*& arg on the stack (add esp,8), base passes it in edi (push/pop edi,
+	// add esp,4) via the LTCG custom calling convention. Shared wall across all 5 raw-param
+	// cook deleters (items_cook, animation_analysis_result_cook, items_dictionary_cook,
+	// player_parameters_modifyer_cook, this), non-steerable LTCG arg passing. trail: delete_resource.md
 }
 
-// STATE[75.81%|PARTIAL]: LTCG everywhere
+// STATE[94.63%|PARTIAL]: resource_ptr-by-value temp materialization, non-steerable.
 void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION_T( data.size( ) == 1 ) );
 	configs::binary_config_ptr	config	= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
 	weapon_ammunition*			wa		= VOSTOK_NEW_IMPL( g_allocator, weapon_ammunition );
 	wa->load( config->get_root( )["data"] );
@@ -75,15 +67,16 @@ void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, r
 	parent->set_unmanaged_resource( wa, resources::memory_usage_type( resources::nocache_memory, sizeof( weapon_ammunition ) ) );
 	parent->finish_query( result_success );
 
-	// FUNCTION BODY
-	// <0x7605da>|0x00a|+0x00c:'61'
-	// <0x7605e6>|0x016|+0x022:'62'
-	// <0x760608>|0x038|+0x051:'63'
-	// <0x760659>|0x089|+0x022:'64'
-	// <0>
-	// <0x76067b>|0x0ab|+0x02d:'66'
-	// <0x7606a8>|0x0d8|+0x00c:'67'
-	// ******
+	// STRUCTURE DIFF[target 0x7505d0 | base 0x45f180]: target 7 / base 7 stmts
+	// .. same ..
+	// 0x016 <0x22> | 0x016 <0x1d> | configs::binary_config_ptr	config	= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );   SIZE
+	// .. same ..
+	// ; aligned 6, size-diffs 1, quantity-diffs 0
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the static_cast_resource_ptr line:
+	// target materializes the by-value get_unmanaged_resource() resource_ptr temp into a
+	// named [ebp-10h] slot and destroys it with an explicit intrusive_ptr::dec, base builds
+	// it inline via push ecx;mov esi,esp + add esp,4 (no dec). Non-steerable LTCG by-value
+	// smart-ptr temp materialization; all other 6 statements byte-exact. trail: on_config_loaded.md
 }
 
 } // namespace survarium
