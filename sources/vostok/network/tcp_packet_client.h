@@ -12,6 +12,11 @@
 
 namespace vostok {
 
+// the game_core reachability anchor (temp_include_all.cpp); befriended below so
+// it can call the private on_*/create_client/connect_impl members (free decls +
+// friends emit no bytes)
+void use_network_clients( );
+
 namespace network_core {
 	class packet_reader;
 	class tcp_packet;
@@ -45,6 +50,9 @@ public:
 					boost::function< void ( enum network_core::client_error_codes_enum, boost::system::error_code ) > const&	on_error
 				);
 
+	// claude@MATCH: private - all the on_*/create_client/connect_impl symbols
+	// mangle AAE (private non-const) in the target
+private:
 	void		on_packet_received		( network_core::tcp_packet const& packet );
 	void		on_packet_received_impl	( network_core::packet_reader& reader );
 	void		on_connected			( );
@@ -63,6 +71,9 @@ public:
 	void		create_client			( );
 
 	void		connect_impl			( pcstr host, u16 port );
+
+private:
+	friend void ::vostok::use_network_clients( );
 
 private:
 	boost::function< void ( network_core::packet_reader& ) >	m_on_packet_received;
