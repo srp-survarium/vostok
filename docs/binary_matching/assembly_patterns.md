@@ -2026,3 +2026,35 @@ resolves statically and LTCG inlines the deleting stub. TELL: the vptr load `mov
 at offset 0 of the object names WHICH subobject the original destroyed. Pairs with
 VOSTOK_FREE_IMPL on the storage (free undestroyed-rest, medkit pattern). Confirmed
 oxygen_tank::~oxygen_tank 61.61 -> 100.0 (both rows: virtual dtor call + DELETE->FREE).
+
+### A multi-line `&&` if emits ONE record at its LAST line; TWO records = a NESTED if
+SYMPTOM: target shows the if condition as TWO statements (e.g. 0x1a for the first leg's
+line + 0x2f for the remaining legs' line) whose sizes SUM to the base's single if row -
+identical bytes, off-by-one stmt counts. CAUSE: a single `if ( a && b && c )` statement,
+however many lines it wraps, anchors ONE line record on the LAST condition line; per-leg
+records mean the original NESTED the ifs: `if ( a ) { if ( b && c ) body; }` (the
+brace-less form is byte-identical; a line-number gap before the inner if suggests a `{`
+line). The nesting changes NO bytes (the exit labels coincide when there is no else) -
+only the line attribution. Confirmed weapon_core_shotgun_reload_start_substate::initialize
+(4 -> 5 stmts, 5/5).
+
+### ASSERT eater sharing a line record with the next statement (same-line merge variant)
+SYMPTOM: target's first record is `0xc + <next stmt's bytes>` while base has a separate
+0xc ASSERT row plus the statement row (exact size-sum tell). SOURCE: the original wrote
+`ASSERT( ... ); <statement>;` on ONE line. Confirmed booby_trap_set_core dtor
+(eater + m_damage_parameters.begin(), 6 -> 5 stmts) and
+weapon_core_shotgun_reload_start_substate::finalize (eater + reset(), 3 -> 2 stmts).
+
+### Report-unpaired free function with a PLAIN target name = a STATIC; restore internal linkage to pair
+SYMPTOM: report.json lists a target function under its plain demangled-style name
+(`survarium::distance_from_box_center_to_point_on_shape`) with fuzzy None, while our base
+defines it extern (mangled `?...@@YAM...@Z` symbol) - objdiff never pairs the two names.
+The target PDB records STATICS as plain names; statics in our base get the same plain
+name in the index (call_item_serialize precedent), so restoring `static` pairs them. The
+anchor must then live IN-TU (an extern temp_include_all declaration no longer links):
+park the volatile-fn-pointer block inside a same-TU STUB the target also has (ideally the
+function that really calls the statics - costs nothing on an already-null stub).
+Confirmed damage_zone_core shape helpers: sphere/box/capsule/cylinder None ->
+100/86.5/82.5/76.6, +8 report improvements, 0 regressions. Same shape pending on
+booby_trap_set_core's trap_is_active / find_free_trap_predicate /
+create_place_matrix_for_looking_point and damage_zone_core's two predicates.
