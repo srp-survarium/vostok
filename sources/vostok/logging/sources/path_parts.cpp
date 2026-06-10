@@ -41,7 +41,7 @@ void path_parts::to_next_element()
 	m_current_element		= m_parts[++m_index]; // next part of path
 }
 
-// STATE[89%|DONE]: LTCG for `memory::copy`.
+// STATE[99.97%|DONE]: one assert-dummy stack slot ([ebp-15h] vs target [ebp-16h]) - allocation noise.
 void path_parts::concat2buffer( format_string_type& buffer )
 {
 	u32 string_length = 0;																			// <0x70dab9>|0x000|0x000:'55'
@@ -54,4 +54,8 @@ void path_parts::concat2buffer( format_string_type& buffer )
 																									// <1>
 	if ( string_length && buffer[string_length - 1] == ':' )										// <0x70db5e>|0x0a5|0x005:'63'
 		buffer[string_length - 1] = '\0';															// <0x70db73>|0x0ba|0x015:'64'
+
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts (no diverging rows, sizes equal 0xd3)
+	// VERDICT: STRUCTURE MATCH - residual is the third fixed_vector-assert dummy's slot (-15h vs -16h, a 1-byte
+	// allocation hole in target) + ICF-folded stub naming; stack-slot-only, banked.
 }
