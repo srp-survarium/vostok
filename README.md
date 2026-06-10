@@ -13,12 +13,12 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 48.53% fuzzy &middot; 8,097 / 25,372 functions exact (31.91%).**
+**Overall: 48.55% fuzzy &middot; 8,098 / 25,372 functions exact (31.92%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 356 / 2,805 (12.7%) | 3.3% |
-| `shared` | 112 | 643 / 2,255 (28.5%) | 31.1% |
+| `render` | 351 | 357 / 2,805 (12.7%) | 3.3% |
+| `shared` | 112 | 639 / 2,255 (28.3%) | 31.1% |
 | `game` | 141 | 16 / 1,634 (1.0%) | 0.1% |
 | `game_core` | 189 | 343 / 1,429 (24.0%) | 15.0% |
 | `core` | 136 | 655 / 1,331 (49.2%) | 34.1% |
