@@ -13,14 +13,14 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 50.10% fuzzy &middot; 9,119 / 25,372 functions exact (35.94%).**
+**Overall: 50.26% fuzzy &middot; 9,122 / 25,372 functions exact (35.95%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 397 / 2,805 (14.2%) | 4.0% |
-| `shared` | 112 | 806 / 2,255 (35.7%) | 35.0% |
-| `game` | 141 | 18 / 1,634 (1.1%) | 0.1% |
-| `game_core` | 189 | 375 / 1,429 (26.2%) | 15.2% |
+| `render` | 351 | 398 / 2,805 (14.2%) | 4.0% |
+| `shared` | 112 | 796 / 2,255 (35.3%) | 35.1% |
+| `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
+| `game_core` | 189 | 378 / 1,429 (26.5%) | 15.2% |
 | `core` | 136 | 660 / 1,331 (49.6%) | 34.2% |
 | `animation` | 102 | 159 / 880 (18.1%) | 5.4% |
 | `ai` | 124 | 423 / 759 (55.7%) | 38.3% |
@@ -30,12 +30,12 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
 | `ui` | 27 | 176 / 255 (69.0%) | 43.3% |
-| `physics` | 14 | 99 / 203 (48.8%) | 24.4% |
+| `physics` | 14 | 100 / 203 (49.3%) | 24.5% |
 | `fs` | 25 | 72 / 189 (38.1%) | 28.3% |
 | `engine` | 22 | 54 / 165 (32.7%) | 11.3% |
 | `network` | 25 | 18 / 163 (11.0%) | 4.8% |
-| `network_core` | 22 | 20 / 140 (14.3%) | 8.6% |
-| `debug` | 16 | 78 / 127 (61.4%) | 48.1% |
+| `network_core` | 22 | 26 / 140 (18.6%) | 11.7% |
+| `debug` | 16 | 77 / 127 (60.6%) | 48.1% |
 | `logging` | 10 | 34 / 73 (46.6%) | 41.1% |
 | `input` | 9 | 31 / 56 (55.4%) | 27.7% |
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
