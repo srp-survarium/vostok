@@ -2089,3 +2089,37 @@ Confirmed damage_zone_core shape helpers: sphere/box/capsule/cylinder None ->
 100/86.5/82.5/76.6, +8 report improvements, 0 regressions. Same shape pending on
 booby_trap_set_core's trap_is_active / find_free_trap_predicate /
 create_place_matrix_for_looking_point and damage_zone_core's two predicates.
+
+### VOSTOK_UNREFERENCED_PARAMETERS, not ASSERT: guarded eater that EVALUATES args (by-value struct copy)
+SYMPTOM: an "assert" statement is much bigger than the 0xc eater - target emits
+`mov byte [ebp-1],0; lea eax,[ebp-1]; call <fold>; movzx eax,[eax]; test; je .skip;
+<push each parameter> ... sub esp,N; rep movsd; call <fold>; add esp,N+..` - the guard call
+PLUS a second variadic call whose args are the function's PARAMETERS pushed by value (a
+reference param gets a full `rep movsd` struct copy, e.g. 0x258 for query_result_for_cook).
+TELL it is NOT an ASSERT: no leading assert_untyped enum dword on top of the stack - the
+first (leftmost) arg is the first function parameter itself; and the function uses NONE of
+its parameters. SOURCE: `VOSTOK_UNREFERENCED_PARAMETERS( a, b, c );`
+(macro_unreferenced_parameter.h: `if ( identity(false) ) { unreferenced_parameter_helper
+(__VA_ARGS__); }`) - the C4100 eater for a parameter-ignoring override. Confirmed
+weapon_core_shotgun_reload_state_cook::allocate_resource 41.38 -> 87.45 (the 0x3d row
+matched byte-for-byte; ASSERT(UNKNOWN_EXPRESSION) had produced only the 0xc half).
+
+### Secondary loop counter merged into the for-head increment (comma operator)
+SYMPTOM: a BASE_ONLY row (`++state_id;` at loop-body end, ~0x9) plus the for-head row
+smaller in base by about that size; the target's loop-head record covers the /Od `.inc:`
+block containing BOTH `i = i->next` AND the counter bump. SOURCE: the original spelled the
+increment list with the comma operator - `for ( ...; i; i = i->next, ++state_id )` - so the
+counter executes in the .inc block (placed BEFORE the test at the loop top), not at body
+end. NOT just line attribution: the instruction PLACEMENT moves. Sibling of the
+`for ( ; cond ; --count )` head merge. Confirmed weapon_core_shotgun_reload_state::
+serialize 66.47 -> 77.95 (11 -> 10 stmts; deserialize next door already spelled it).
+
+### A WHOLE unit's functions at 0/None = the class's access sections are wrong, not the bodies
+SYMPTOM: every function of a unit reads 0/None in report.json although the unit compiles
+and the bodies look right. Check the access letters class-wide: grep both rich indexes for
+`@<class>@survarium@@[A-Z]{3}` and diff - e.g. weapon_core_chamber_a_round_aimed_state_base
+was target IAE/MAE/EAE/EBE (protected ctor, protected virtuals, private virtuals) vs base
+QAE/UAE/UBE across the board. Fixing the header sections paired all six (ctor 0 -> 82.6,
+serialize 0 -> 69.3, ...; 0 regressions). CAVEAT: if temp_include_all anchors take a
+member-pointer or call the member from outside, privatizing breaks the anchor - add the
+`friend void ::vostok::use_...( );` declaration (chamber_a_round_state_base precedent).
