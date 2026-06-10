@@ -78,13 +78,14 @@ u32 hand_to_weapon_ik_processor::get_hand_new_start_transition_time( hand_to_wea
 	return current_transition_time < 300 ? current_time_in_ms - ( 300 - current_transition_time ) : current_time_in_ms;
 }
 
-// STATE[81.51%|PARTIAL]: logic/control-flow match; capped by mix_transformations
-// collapsing to an inline default-float4x4 in base. The target calls it OUT-OF-LINE
-// (NRV); its 3-arg overload forwards to the 4-arg quaternion-slerp body which needs the
-// file-local `slerp_optimized` from math_quaternion.cpp - that function has NO source in
-// our tree, so the 4-arg stub inlines away and the out-of-line call cannot be materialized.
-// Residual is the resulting stack-slot offset cascade. See process.md.
-void hand_to_weapon_ik_processor::process( u32 current_time_in_ms, float4x4 const* weapon_matrices, float4x4* user_matrices ) const
+// STATE[94.64%|PARTIAL]: was 81.51 with the inner if/else inverted - the target's line records
+// (then-branch = the 0x1a process_hand(locator) call, 5-byte rel32 jmp over the big else block)
+// prove the original wrote `if ( !hand_need_interpolation ) process_hand(locator); else {...}`.
+// Residual is mix_transformations collapsing to an inline default-float4x4 in base: the target
+// calls it OUT-OF-LINE (NRV); its 3-arg overload forwards to the 4-arg quaternion-slerp body
+// which needs the file-local `slerp_optimized` from math_quaternion.cpp (no source in our tree),
+// so the out-of-line call cannot be materialized.
+void hand_to_weapon_ik_processor::process( u32 const current_time_in_ms, float4x4 const* weapon_matrices, float4x4* user_matrices ) const
 {
 	animation::skeleton_bone const&	weapon_bone			= m_skeleton->get_bone( m_weapon_bone_index );
 	float4x4 const&					weapon_transform	= get_bone_matrix_in_object_space( weapon_bone, *m_skeleton, user_matrices );
@@ -95,16 +96,20 @@ void hand_to_weapon_ik_processor::process( u32 current_time_in_ms, float4x4 cons
 		{
 			float4x4 const&	locator_transform	= weapon_matrices[h->locator_matrix_index] * weapon_transform;
 
-			if ( hand_need_interpolation( *h, current_time_in_ms ) )
+			if ( !hand_need_interpolation( *h, current_time_in_ms ) )
+				process_hand( *h, locator_transform, user_matrices );
+			else
 			{
 				float4x4 const&	target_transform	= get_bone_matrix_in_object_space( m_skeleton->get_bone( h->hand_bone_index ), *m_skeleton, user_matrices );
 				float4x4 const&	hand_transform		= mix_transformations( target_transform, locator_transform, get_hand_coefficient( *h, current_time_in_ms ) );
 				process_hand( *h, hand_transform, user_matrices );
 			}
-			else
-				process_hand( *h, locator_transform, user_matrices );
 		}
 	}
+
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
+	// SIZE -0xe | 103 | float4x4 const& hand_transform = mix_transformations( target_transform, locator_transform, get_hand_coefficient( *h, current_time_in_ms ) );
+	// VERDICT: STRUCTURE MATCH (12/12) - sole SIZE is the mix_transformations out-of-line call (target) vs inlined default-float4x4 (base, slerp_optimized body unavailable); non-steerable.
 }
 
 // STATE[99.90%|PARTIAL]: structure fully matched (single-statement coeff + named return
@@ -120,15 +125,8 @@ float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_proce
 	float const	hand_coefficient		= h.is_active ? 1.0f - m_interpolator.interpolated_value( interpolation_coeff ) : m_interpolator.interpolated_value( interpolation_coeff );
 	return hand_coefficient;
 
-	// FUNCTION BODY (target: 6 statements, 0x8b bytes) - structure fully matched; only the
-	// return-local slot differs (target [ebp-8] vs base reuses [ebp-4]).
-	// <0x583e70>|0x000|     :'185'		{
-	// <0x583e79>|0x009|+0x00c:'186'		ASSERT( UNKNOWN_EXPRESSION_T( true ) );
-	// <0x583e85>|0x015|+0x01e:'187'		interpolation_coeff = (current_time - h.start) / 1000.0f;
-	// <0x583ea3>|0x033|+0x04f:'190'		hand_coefficient = is_active ? 1 - interp(c) : interp(c);
-	// <0x583ef2>|0x082|+0x003:'191'		return hand_coefficient;  (movss/movss/fld via [ebp-8])
-	// <0x583ef5>|0x085|+0x006:'192'		}
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (0x8b both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - sole residual is one /Od stack-slot choice (target's return local at [ebp-8], base reuses the dead [ebp-4]); allocation noise, non-steerable.
 }
 
 // STATE[90.37%|PARTIAL]: structure matched - 37==37 statements, control flow identical (no
@@ -192,86 +190,52 @@ void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::han
 	matrices[forearm_matrix_index]	= math::get_relative_matrix( forearm_obj_matrix, arm_obj_matrix );
 	matrices[arm_matrix_index]		= math::get_relative_matrix( get_bone_matrix_in_object_space( *arm_bone.parent( ), *m_skeleton, matrices ), arm_obj_matrix );
 
-	// FUNCTION BODY
-	// <0x5940b1>|0x011|+0x01a:'115'		hand_bone
-	// <0x5940cb>|0x02b|+0x00c:'116'		forearm_bone
-	// <0x5940d7>|0x037|+0x00c:'117'		arm_bone
-	// <0x5940e3>|0x043|+0x05d:'119'		forearm_matrix_index
-	// <0x594140>|0x0a0|+0x060:'120'		arm_matrix_index
-	// <0x5941a0>|0x100|+0x01d:'122'		forearm_len
-	// <0x5941bd>|0x11d|+0x020:'123'		arm_len
-	// <0x5941dd>|0x13d|+0x012:'124'		ASSERT
-	// <0x5941ef>|0x14f|+0x012:'125'		ASSERT
-	// <0x594201>|0x161|+0x024:'127'		arm_obj_matrix
-	// <0x594225>|0x185|+0x025:'128'		arm_pos
-	// <0x59424a>|0x1aa|+0x02e:'129'		arm_to_hand_len
-	// <0x594278>|0x1d8|+0x014:'130'		if ( is_zero )
-	// <0x59428c>|0x1ec|+0x005:'131'		    return
-	// <0x594291>|0x1f1|+0x03b:'133'		arm_to_hand_dir
-	// <0x5942cc>|0x22c|+0x02c:'134'		(forearm get_bone_matrix temp)
-	// <0x5942f8>|0x258|+0x02e:'135'		original_forearm_dir
-	// <0x594326>|0x286|+0x02e:'136'		rotation_axis
-	// <0x594354>|0x2b4|+0x026:'137'		arm_alpha_angle
-	// <0x59437a>|0x2da|+0x024:'138'		alpha_rotation_matrix
-	// <0x59439e>|0x2fe|+0x021:'139'		new_forearm_dir
-	// <0x5943bf>|0x31f|+0x026:'140'		arm_rotation_matrix
-	// <0x5943e5>|0x345|+0x016:'141'		change_matrix_orientation
-	// <0x5943fb>|0x35b|+0x023:'143'		forearm_obj_matrix
-	// <0x59441e>|0x37e|+0x025:'144'		forearm_pos
-	// <0x594443>|0x3a3|+0x035:'145'		initial_hand_pos
-	// <0x594478>|0x3d8|+0x034:'146'		original_arm_dir
-	// <0x5944ac>|0x40c|+0x03b:'147'		target_arm_dir
-	// <0x5944e7>|0x447|+0x023:'149'		forearm_rotation_matrix
-	// <0x59450a>|0x46a|+0x016:'150'		change_matrix_orientation
-	// (151-175: inlined normalize/rescale ops of the is_similar rescale block)
-	// <0x594520>|0x480|+0x02f:'176'		matrices[hand_matrix_index] = get_relative_matrix(...)
-	// <0x59454f>|0x4af|+0x042:'177'		(rescale len check)
-	// <0x594591>|0x4f1|+0x05d:'178'		if ( !is_similar ) ...c.xyz() = normalize(...) * forearm_len
-	// <0x5945ee>|0x54e|+0x032:'180'		matrices[forearm_matrix_index] = get_relative_matrix(...)
-	// <0x594620>|0x580|+0x05f:'181'		matrices[arm_matrix_index]     = get_relative_matrix(...)
-	// ******
+	// STRUCTURE DIFF: target 35 stmts / base 35 stmts
+	// SIZE -0x4 | 163 | float const arm_to_hand_len = ( arm_pos - target_hand_obj_space_transform.c.xyz( ) ).length( );
+	// SIZE +0x3 | 167 | float3 const& arm_to_hand_dir = math::normalize( arm_pos - target_hand_obj_space_transform.c.xyz( ) );
+	// SIZE +0x6 | 170 | float3 const& original_forearm_dir = math::normalize( arm_pos - original_forearm_pos );
+	// SIZE +0x6 | 171 | float3 const& rotation_axis = math::normalize( arm_to_hand_dir ^ original_forearm_dir );
+	// SIZE +0x3 | 176 | float4x4 const& arm_rotation_matrix = math::get_rotation_matrix( original_forearm_dir, new_forearm_dir );
+	// SIZE -0x1 | 182 | float3 const& initial_hand_pos = forearm_obj_matrix.transform_position( matrices[h.hand_matrix_index].c.xyz( ) );
+	// SIZE +0x3 | 184 | float3 const& target_arm_dir = math::normalize( forearm_pos - target_hand_obj_space_transform.c.xyz( ) );
+	// SIZE -0x3 | 185 | float4x4 const& forearm_rotation_matrix = math::get_rotation_matrix( original_arm_dir, target_arm_dir );
+	// SIZE +0x3 | 190 | matrices[h.hand_matrix_index].c.xyz( ) = math::normalize( matrices[h.hand_matrix_index].c.xyz( ) ) * forearm_len;
+	// VERDICT: STRUCTURE MATCH (35/35, control flow identical) - all SIZE rows are +-6B inline-vs-call shifts of the vector-math helpers (operator-, normalize, get_rotation_matrix) at call boundaries; per-call-site LTCG, non-steerable.
 }
 
 // STATE[70.97%|PARTIAL]: packs both hands' is_active into a u8 bitfield (bit0=left, bit1=right),
 // appends it, then appends each hand's start_transition_time_in_ms biased by client_offset.
 void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
-	const u8 active_hands = ( m_hands[ left ].is_active ? 1 : 0 ) | ( m_hands[ right ].is_active ? 2 : 0 );
-
+	u8 const active_hands = ( m_hands[ left ].is_active ? 1 : 0 ) | ( m_hands[ right ].is_active ? 2 : 0 );
 	packet.append( active_hands );
 	packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
 	packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
 
 	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ---------+--------+--------+----+----+------+------
-	// SIZE +0x7|0x584069|0x565309|0xd |0x14|274   |	packet.append( active_hands );
-	// SIZE +0x8|0x584076|0x56531d|0x11|0x19|275   |	packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
-	// SIZE +0x8|0x584087|0x565336|0x12|0x1a|276   |	packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
-	// VERDICT: STRUCTURE MATCH (shape ok) - pack byte + 3 appends, 4/4; SIZE rows are packet<T>::append LTCG inline (base) vs call (target), non-steerable.
+	// SIZE +0x7 | 241 | packet.append( active_hands );
+	// SIZE +0x8 | 242 | packet.append( m_hands[ left  ].start_transition_time_in_ms - client_offset );
+	// SIZE +0x8 | 243 | packet.append( m_hands[ right ].start_transition_time_in_ms - client_offset );
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are packet<T>::append kept out-of-line in target vs LTCG-inlined in base, cross-module wall, non-steerable.
 }
 
-// STATE[47.46%|PARTIAL]: reads the packed active-hands byte then both start times, an
-// assert eater triple, then bits 0/1 of active_hands drive each hand's is_active.
+// STATE[PARTIAL]: reads the packed active-hands byte then both start times; bits 0/1 of
+// active_hands drive each hand's is_active.
 void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& reader )
 {
-	const u8 active_hands = reader.r< bool >( );
-
+	u8 const active_hands = reader.r< bool >( );
 	m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );
 	m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );
 
 	ASSERT( UNKNOWN_EXPRESSION );
-
 	m_hands[ left  ].is_active = ( active_hands & 1 ) != 0;
 	m_hands[ right ].is_active = ( active_hands & 2 ) != 0;
 
 	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
-	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
-	// ---------+--------+--------+----+----+------+------
-	// SIZE +0xb|0x583fd9|0x565369|0xb |0x16|290   |	const u8 active_hands = reader.r< bool >( );
-	// SIZE +0xb|0x583fe4|0x56537f|0xd |0x18|292   |	m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );
-	// SIZE +0xb|0x583ff1|0x565397|0xe |0x19|293   |	m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 6/6 after adding the ASSERT eater (the target's 0xc store-0/lea/call triple at +0x2f); SIZE rows are r<bool>/r<u32> LTCG inline (base) vs call (target), non-steerable.
+	// SIZE +0x15 | 257 | u8 const active_hands = reader.r< bool >( );
+	// SIZE +0x15 | 258 | m_hands[ left  ].start_transition_time_in_ms = reader.r< u32 >( );
+	// SIZE +0x15 | 259 | m_hands[ right ].start_transition_time_in_ms = reader.r< u32 >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the 0xc assert eater at target L208 is restored; remaining SIZE rows are r<bool>/r<u32> kept out-of-line in target vs LTCG-inlined in base, cross-module wall, non-steerable.
 }
 
 } // namespace survarium
