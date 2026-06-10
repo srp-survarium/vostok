@@ -1675,6 +1675,11 @@ namespace vostok
 		// default ctor, so reach it through an opaque pointer (the anchor never runs).
 		survarium::body_part_parameters*		body_part = NULL;
 		body_part->serialize	( *packet, 0 );
+
+		// damage_model::deserialize is otherwise DCE'd (target rva 0x6f0250); noncopyable
+		// with a real ctor, so reach it through an opaque pointer (the anchor never runs).
+		survarium::damage_model*				damage_model = NULL;
+		damage_model->deserialize( *reader );
 	}
 
 	void use_game_core_weapon_state()
