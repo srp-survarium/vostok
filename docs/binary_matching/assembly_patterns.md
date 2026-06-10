@@ -1831,3 +1831,44 @@ virtual), `@@AAE`/`@@ABE` (private) vs `@@QAE`/`@@QBE` (public), or `QAV`/`QBV`
 the symbol and diff the letters; fix the header access section / add the pointer const.
 Confirmed on weapon_core::serialize/deserialize (+update_bones_matrices, computed_*,
 target_predicate...): pairing them moved serialize 0->62%, target_predicate 0->100%.
+
+### static_cast_checked is the project-wide cast idiom: extra temps / an out-of-line `mov eax,[eax]; ret` call
+SYMPTOM (a): a cast site shows EXTRA stack-temp copies the plain `static_cast` collapses -
+e.g. `[this+10h] -> t1 -> t2 -> t3 -> read [t3+20h] -> t4` where our base emits only
+`t1 -> read`. SYMPTOM (b): the cast materializes through a real `call <some operator*>`
+taking `lea eax,&temp` and the callee is a one-instruction `mov eax,[eax]; ret` COMDAT
+whose demangled name is an unrelated `intrusive_ptr<X,...>::operator*` / `vec_begin`.
+CAUSE: the original spelled the cast `static_cast_checked< T >( expr )` (see
+debug_static_cast_checked.h). In MASTER_GOLD its body is an inline `T f( S const& s )
+{ return static_cast<T>(s); }` - at /Od+LTCG the cref-bind materializes one temp for an
+rvalue argument and the return materializes another; when LTCG keeps the instantiation
+OUT-OF-LINE instead, the call is the instantiation itself, ICF-folded onto any other
+`mov eax,[eax]; ret` symbol (hence the bogus operator* name). FIX: replace static_cast
+with static_cast_checked at the site. Confirmed:
+weapon_user_animations_selector::get_current_state_id 71.5->100, current_state
+70.26->80.2 (call residual = the kept-out-of-line instantiation, per-site LTCG),
+serialize/deserialize forward stmts +0x6 temp -> byte-match. A `sushi@TODO` in
+game_material_manager_cook.cpp already suspected this ("use in all other static_cast
+places") - check static_cast_checked FIRST when a cast statement is 6+ bytes short.
+
+### "ASSERTs compiled out" is a myth: TRGT_ONLY rows of size 0xc are missing assert eaters
+SYMPTOM: structure-diff shows `TRGT_ONLY` rows sized exactly 0xc between otherwise-matching
+statements; the target slice reads `mov byte ptr [ebp-X],0; lea eax,[ebp-X]; call
+<misnamed empty_stub alias>` (finalize_impl, call_constructor_helper... - ICF fold names).
+CAUSE: the original had `ASSERT( ... )` there; MASTER_GOLD eats the condition but still
+emits the 0xc eater (see the memory note "Asserts emit empty_stub in MASTER_GOLD"). FIX:
+add `ASSERT( UNKNOWN_EXPRESSION );` at the spot - each is its own statement on its own
+line. Confirmed booby_trap_core::serialize 60.3->77.2 (one eater before the header
+forward) and deserialize 15.6->18.1 / 7->9 stmts (two eaters after the reads).
+
+### init + double-compare in ONE statement: assignment-in-condition `if ( ( x = m ) == A || x > B )`
+SYMPTOM: target merges a member load into a temp AND two compares of that temp into ONE
+line-table statement (`mov ...; mov [tmp]; cmp [tmp],K1; je; cmp [tmp],K2; jle`), while a
+`T const x = m;` + `if ( x == A || x > B )` base splits it into two statements (and flips
+the x/this slot order). FIX: declare the local uninitialized and assign INSIDE the
+condition: `T x; if ( ( x = m ) == A || x > B )` - one statement, byte-identical stream.
+CAVEAT: the target PDB records NO user local here (compiler-temp-like slot order), which
+smells like a switch dispatch - but a switch over 4-5 dense enum values lowers to a JUMP
+TABLE on MSVC8 (cf. booby_trap_core::switch_to_state), not this compare chain, so the
+if-shape is the best reproduction. Confirmed booby_trap_core::on_state_timer_finished
+(99.67, 4/4 stmts, residual = slot swap only; the switch experiment dropped it to 67).
