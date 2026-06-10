@@ -1208,3 +1208,40 @@ check the access letter AND every signature cv/byval const against our declarati
 landing 100 byte-perfect. Generalizes the older "private member function -> mangled `ABE`, not
 `QBE`" entry above: 0%/unpaired + plausible source = ALWAYS suspect the mangled join (access
 letter, const-ness, byval consts) before accepting the 0.
+### A lone 2-byte TRGT_ONLY branch row after a guard = inverted-guard EARLY RETURN, not "codegen layout"
+Under /Od every line-table statement row maps to a SOURCE statement - codegen cannot add or
+drop rows. So a quantity diff whose extra TARGET row is a tiny (2-byte) bare branch with its
+OWN line number, sitting between a guard's test and the guarded body, is a real `return;`
+statement: the original spelled the guard INVERTED with an early return,
+	if ( !cond )
+		return;        // <- the 2-byte row: a standalone `jmp .end` attributed to this line
+	body...;
+which lowers as `jne .body; jmp .end`, while the condensed `if ( cond ) body;` folds into a
+single `je .end` under the if's line record - one statement row fewer. DEDUCTION RULE: never
+bank a 2-byte ONLY-target branch row as "if-branch codegen layout" - flip the guard to the
+early-return form and re-diff; the same logic generalizes to any bare-branch ONLY row with its
+own line (`return`/`break`/`continue`/`else` are all source statements). Confirmed: this exact
+row was banked as a wall on `tcp_packet_client::~tcp_packet_client` (target 3 / base 2 stmts,
+`<0x2> | L26 | ONLY target`), then PR #291's legacy adoption of `if ( !connected ) return;
+disconnect( );` closed it - STRUCTURE MATCH 3/3, 90.98 -> 94.88; the same shape closed the
+ONLY-target rows in `on_packet_received` (17+1 -> 18/18) and `on_packet_has_been_sent`
+(9+1 -> 10/10).
+
+### `else if` merges chain-jmp + test into ONE row - a flat second `if` splits them (ONLY row at the LOG line)
+Sibling signature of the early-return entry above, seen when the FIRST arm ends in a
+(possibly implicit) early exit. The /Od statement table attributes an `} else if ( C )`
+spelling as ONE row (the else-jmp AND the `C` test bytes, on the `else if` line), and the
+arm's body row then starts at the LOG. The original flat spelling
+	if ( A ) { ...; return-ish; }
+	if ( C ) {
+		LOG_ERROR( ... );
+gives `C` its OWN test row and the LOG its own full row - one statement MORE, with a telltale
+size redistribution instead of a clean single diff:
+	6: <0x5>  | <0xf>  | } else if ( bytes_transferred == 0 )   SIZE   (target = bare jmp; base = jmp+test)
+	7: <0xa>  | <0x77> | LOG_ERROR( ... )                       SIZE   (target = test only; base = test+LOG merged)
+	8: <0x7b> | --     | ONLY target (the LOG line)
+DEDUCTION RULE: when a base mid-chain row is test-sized too SMALL on the target side, the next
+base row is LOG-block-sized too BIG, and an ONLY-target row follows at the LOG's line - the
+original used flat sequential `if`s, not an `else if` chain. Confirmed on
+`tcp_packet_socket::on_packet_has_been_sent` (9+1 -> 10/10) and `on_packet_received`
+(17+1 -> 18/18) via PR #291's flat early-return adoption.
