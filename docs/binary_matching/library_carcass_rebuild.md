@@ -6,8 +6,9 @@ canonical structure, with stub bodies - so the module compiles and matchers can 
 fill in function bodies one at a time. Worked example: `network_core` (47 files,
 rebuilt clean from `feature/agentic-matching-loop-2`).
 
-This is the *clean redo* companion to [enabling_a_library.md](enabling_a_library.md)
-(which patches in place). Here we throw the old per-type files away and regenerate
+This is the *clean redo* of the older patch-in-place approach (PR #267's
+`enabling_a_library.md`, never merged - its content is subsumed here). Here we throw
+the old per-type files away and regenerate
 every one from the canonical dump, using an emptying **temp queue** as the proof of
 completeness.
 
