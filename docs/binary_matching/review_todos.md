@@ -77,3 +77,4 @@ DISTINGUISH from a compiled-out `ASSERT` (`<0xc>` = the byte-store PLUS `lea+cal
 just small-vs-large `[ebp-N]` offset (allocation noise). Candidate site: `get_weapon_lexeme_pair_impl`
 L40, target `<0x4>` `mov byte[ebp-5],0`. **Caveat:** only valid if the surrounding match is correct
 — here it is not yet (see the `not done` row).
+| open | get_weapon_lexeme_pair_impl | sources/vostok/game_core/sources/weapon_lexeme_pair.cpp:46 | #307 | lone `mov byte[ebp-5],0` (<0x4>, no PDB local): NOT an unused bool (fabricated `bool dummy` removed); likeliest a materialized bool temp or split-eater record - identify the real origin |
