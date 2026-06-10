@@ -460,3 +460,13 @@ worktree's `<exe>_link.rsp` against a known-good worktree's (path-normalized) an
 missing `/LIBPATH:`/libs into the flags line (or delete the rsp dir + force a full vcproj2ninja
 regen). Symptom signature to remember: linker UNRESOLVED EXTERNALS for symbols a vcproj
 `AdditionalDependencies` should provide + a no-op regen_ninja.
+## An include ADDED to temp_include_all.cpp after the graph regen is dep-invisible - `touch` the TU when you edit that header
+vcproj2ninja computes header deps at regen time. If your unit's flow is (regen) ->
+(add `#include <vostok/<module>/sources/<x>.h>` to `temp_include_all.cpp`) -> build ->
+(edit `<x>.h`) -> rebuild, the second rebuild recompiles the module TUs that always
+included `<x>.h` but NOT `temp_include_all.cpp` (its dep list predates your include) -
+and when the anchor TU holds the ONLY instantiation of the class, the linked COMDAT is
+the STALE one and your header edit silently "does not take" (score frozen). `touch
+sources/vostok/game_core/sources/temp_include_all.cpp` before the rebuild (do NOT
+re-run the regen mid-run - it rewrites the rsp files and loses hand patches like the
+OpenSSL exe-link libs). Cost one relink on string_response::~string_response.
