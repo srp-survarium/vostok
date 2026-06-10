@@ -601,7 +601,7 @@ void booby_trap_core::serialize( network_core::udp_match_packet& packet ) const
 	m_owner->serialize_game_world_object_header( *this, packet );
 
 	packet.append( m_trap_state );
-	packet.append( (math::float3 const&)m_transform.c );
+	packet.append( (math::float3 const&)m_transform.c ); // sushi@TODO: implausible spelling - float4x4 should expose a getter (cf. get_angles_xyz below); find the real translation accessor and respell
 	packet.append( m_transform.get_angles_xyz( ) );
 
 	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
