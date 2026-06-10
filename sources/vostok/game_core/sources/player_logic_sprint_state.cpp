@@ -19,12 +19,9 @@ player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_sel
 {
 	m_stamina_subscriber.subscription_callback = boost::bind( &player_logic_sprint_state::on_stamina_depleted, this );
 
-	// FUNCTION BODY
-	// <0x6f9563>|0x053|+0x055:'31'
-	// ******
-	// target ctor tail (subscriber default-ctor + function::operator=):
-	//   add edx,68h; mov [ebp-0Ch],edx; push 0; call function(clear_type);
-	//   mov [eax+20h],0;  ... assign_to<bind_t>; swap; clear
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE -0x2e | 20 | m_stamina_subscriber.subscription_callback = boost::bind( &player_logic_sprint_state::on_stamina_depleted, this );
+	// VERDICT: STRUCTURE MATCH - target inlines boost::function::operator= internals (temp ctor + assign_to + swap + clear), base calls operator= out-of-line; LTCG inline-vs-call on a boost header template, non-steerable.
 }
 
 // STATE[3.32%|STUB]: body is a VOSTOK_UNREACHABLE_CODE() placeholder, NOT matched -
@@ -103,7 +100,10 @@ void player_logic_sprint_state::set_callbacks( boost::function<void()> const& in
 void player_logic_sprint_state::on_stamina_depleted( )
 {
 	m_user->force_animation_selection( );
-	// target: mov eax,[eax+1Ch]; call base_player::force_animation_selection (out-of-line)
+
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x8 | 105 | m_user->force_animation_selection( );
+	// VERDICT: STRUCTURE MATCH - target keeps the header-defined setter out-of-line (call), base inlines the m_force_animation_selection store; LTCG per-call-site inlining, non-steerable.
 }
 
 // STATE[100%|DONE]
