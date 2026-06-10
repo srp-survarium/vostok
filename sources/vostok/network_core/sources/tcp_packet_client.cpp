@@ -44,7 +44,7 @@ tcp_packet_client::~tcp_packet_client( )
 	// not a source-shape miss - no source lever, take the hit. trail: tcp_packet_client.md
 }
 
-// STATE[100%|DONE]: closed by the make_custom_alloc_handler named-return fix - this inline emission of tcp_packet_socket::start_receiving keeps the result-copy code the standalone COMDAT elides
+// STATE[100%|DONE]
 void tcp_packet_client::start_reading( )
 {
 	m_packet_socket.start_receiving( );
