@@ -1644,6 +1644,10 @@ namespace vostok
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
 
+		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
+		survarium::player_stamina		stamina;
+		stamina.deserialize( *reader );
+
 		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
 		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
 		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
