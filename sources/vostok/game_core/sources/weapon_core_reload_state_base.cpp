@@ -58,7 +58,7 @@ void weapon_core_reload_state_base::serialize( network_core::udp_match_packet& p
 	// b.diff   |t.addr  |b.addr  |t.sz|b.sz|b.line|b.code
 	// ---------+--------+--------+----+----+------+------
 	// SIZE +0x7|0x766689|0x467269|0x13|0x1a|55    |	packet.append( m_animation_has_been_ended );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (base) vs call (target), non-steerable.
 }
 
 // STATE[46.91%|PARTIAL]: single r< bool > into m_animation_has_been_ended ([+0x135]). Matches target shape.
