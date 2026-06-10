@@ -2012,3 +2012,17 @@ anchors on one line. Confirmed double_barreled fire (9/9, 73.17 -> 77.13) and re
 get_user_hands_expression - on reload the faithful shape costs % (33.11) because base still
 inlines the setters the target calls out-of-line and the extra bytes shift every frame offset:
 faithful structure kept over the higher-% wrong-quantity shape.
+
+### `push 0; call [vptr+0]` (flag 0) = an explicit VIRTUAL dtor call; a wrapper-dtor call devirtualizes
+SYMPTOM: a destroy-in-loop statement is 0xe in target - `push 0; mov eax,[obj]; mov edx,[eax];
+mov ecx,[obj]; mov eax,[edx]; call eax` (virtual dispatch to the vtable's scalar deleting
+destructor with flag=0: destroy, don't free) - while base emits 0x1b: a DIRECT
+`call T::~T` followed by the INLINED deleting-dtor flag dance (`xor eax,eax; and eax,1;
+je; push this; call operator delete`). CAUSE: the target source explicitly calls the VIRTUAL
+dtor on the polymorphic member itself (`infl.protector.~damage_protector( );` - MSVC8 /Od
+dispatches an explicit virtual-dtor call through the vtable); our wrapper-struct call
+(`infl.~item_influence( );` where item_influence merely CONTAINS the polymorphic member)
+resolves statically and LTCG inlines the deleting stub. TELL: the vptr load `mov edx,[eax]`
+at offset 0 of the object names WHICH subobject the original destroyed. Pairs with
+VOSTOK_FREE_IMPL on the storage (free undestroyed-rest, medkit pattern). Confirmed
+oxygen_tank::~oxygen_tank 61.61 -> 100.0 (both rows: virtual dtor call + DELETE->FREE).
