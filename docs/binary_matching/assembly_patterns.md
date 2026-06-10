@@ -1164,3 +1164,28 @@ Your /Od body emits framed per-statement code and objdiff scores None or single 
 WHAT - write the source the gold LINE TABLE proves (the optimized emission still carries statement
 lines in the PDB: e.g. operator-'s 10 statements at L212-224), mark PARTIAL citing the emission,
 and do not chase the %.
+
+### VOSTOK_UNREFERENCED_PARAMETERS (plural) EMITS code at /Od - use the singular form to stay row-free
+The plural macro expands to `if ( vostok::identity(false) ) { detail::unreferenced_parameter_helper(...); } else (void)0`
+- at /Od that is a REAL statement row (~0x25 bytes: identity call, test/branch, varargs call setup)
+the target does not have. The singular `VOSTOK_UNREFERENCED_PARAMETER(x)` = `(void)(&x)` = zero code,
+zero rows. Caught in `udp_network_flow_emulator::tick` (plural eater added a 16th base row and 0x25
+bytes; two singular eaters restored 15/15).
+
+### A fat early-`return` row = the inlined dtor walk of an in-scope local; a single `for` row = both iterator inits declared IN the for
+Two `if (empty) return;` guards can look completely different in the carcass: before any non-trivial
+local exists the `return` is a bare 5-byte `jmp epilogue`; after an alloca-backed `buffer_vector` is
+live, the SAME `return;` row carries the container's inlined dtor (walk begin..end by elem size,
+`end = begin`, then `jmp epilogue` - ~0x26 bytes). Don't misread the fat row as a missing statement.
+Likewise one `for`-line row containing two slot inits + the loop control = a single-declaration
+header `for ( pair* i = v.begin( ), * e = v.end( ); i != e; ++i )`; separate small `i =`/`e =` rows
+before the for mean separate declarations. Both confirmed in `udp_network_flow_emulator::tick`
+(structure went 14-vs-15 misaligned to 15/15, 48.44 -> 60.55).
+
+### A header fix that "does not take" can be a STALE OTHER-MODULE COMDAT winning the link
+After fixing `udp_match_stats.h`'s items operator>= the rebuilt network_core objs carried the new
+bytes, but the linked base STILL showed the old compare: the surviving COMDAT emission came from
+game_core's `temp_include_all.cpp` anchor, whose TU never recompiled (PCH staleness in the OTHER
+module). If a one-line header fix provably does not move the diff, `touch` the pch.h of EVERY module
+that instantiates the COMDAT (the anchor TU especially) and rebuild - the stream operator>= then
+went 97.74 -> 100.00.

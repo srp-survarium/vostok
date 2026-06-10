@@ -102,14 +102,18 @@ bool delayed_packets_predicate::operator()(
 	// quantity 0 / size 0. trail: udp_network_flow_emulator.md
 }
 
-// STATE[56.47%|INPROGRESS]: from 0x728a30. Reconstructed the documented shape -
-// alloca buffer_vector sized from size(); remove_if(.., delayed_packets_predicate)
-// + erase the moved tail; random_shuffle the appeared range with m_out_of_order_random
-// (this+0x18); appear-loop builds two packet_readers per packet (one reads the two dead
-// u16 seq-ids, one is passed to functor) then delete_udp_match_packet. This remove_if
-// instantiates ??Rdelayed_packets_predicate (and its ctor), so the predicate operator()
-// now emits. Residual: the per-packet base_packet size arg (target's mis-symbolized
-// accessor) + alloca/temp shapes - see body VERDICT. claude@TODO: exact reader size arg.
+// STATE[60.55%|PARTIAL]: from 0x728a30. Structure 15/15 per the target line table:
+// two flat empty-guards (m_delayed_packets at entry; delayed_packets_to_appear after
+// the erase - its `return` row carries the inlined buffer_vector dtor walk),
+// single-declaration `for ( pair* i = begin(), * e = end(); ... )` (one stmt, no
+// separate begin/end rows, no `packet` local - target derefs i->first inline), and
+// both per-packet packet_readers named `reader` (first one + the two dead seq-id
+// reads in an inner brace scope). The reader args are buffer_to_send( ) /
+// buffer_to_send_size( ) - the target expansion is ONE folded buffer_size( ) call +
+// ONE header_size( ) call on a single i->first spill, then the inlined +2Bh data
+// pointer (resolves the old "exact reader size arg" TODO; `+ header_size( )` would
+// emit a second header_size). Residual is the documented LTCG call-boundary wall -
+// see body VERDICT.
 typedef std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint >	flow_emulator_packet_pair;
 
 void udp_network_flow_emulator::tick(
@@ -117,6 +121,9 @@ void udp_network_flow_emulator::tick(
 	boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) > const&	functor
 )
 {
+	if ( m_delayed_packets.empty( ) )
+		return;
+
 	buffer_vector< flow_emulator_packet_pair >	delayed_packets_to_appear(
 		ALLOCA( m_delayed_packets.size( ) * sizeof( flow_emulator_packet_pair ) ),
 		m_delayed_packets.size( )
@@ -131,60 +138,46 @@ void udp_network_flow_emulator::tick(
 		m_delayed_packets.end( )
 	);
 
+	if ( delayed_packets_to_appear.empty( ) )
+		return;
+
 	std::random_shuffle(
 		delayed_packets_to_appear.begin( ),
 		delayed_packets_to_appear.end( ),
 		m_out_of_order_random
 	);
 
-	flow_emulator_packet_pair*			i	= delayed_packets_to_appear.begin( );
-	flow_emulator_packet_pair* const	e	= delayed_packets_to_appear.end( );
-	for ( ; i != e; ++i ) {
-		udp_match_packet* const	packet	= i->first;
+	for ( flow_emulator_packet_pair* i = delayed_packets_to_appear.begin( ), * e = delayed_packets_to_appear.end( ); i != e; ++i ) {
+		{
+			packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+			const u16		received_local_sequence_id	= reader.r< u16 >( );
+			const u16		remote_sequence_id			= reader.r< u16 >( );
 
-		packet_reader	reader( base_packet( packet->m_buffer.data( ), packet->buffer_to_send_size( ) + packet->header_size( ) ) );
-		const u16		received_local_sequence_id	= reader.r< u16 >( );
-		const u16		remote_sequence_id			= reader.r< u16 >( );
+			VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
+			VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
+		}
 
-		packet_reader	functor_reader( base_packet( packet->m_buffer.data( ), packet->buffer_to_send_size( ) + packet->header_size( ) ) );
-		functor( functor_reader, i->second );
+		packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+		functor( reader, i->second );
 
 		delete_udp_match_packet( m_packets_allocator, i->first );
-
-		VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
-		VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
 	}
 
-	// STRUCTURE DIFF[target 0x728a30 | base 0x5501b0]: target 15 / base 13 stmts
-	//   1: 0x010 <0x1d> | --          | L63   ONLY target
-	//   2: 0x02d <0x5> | --          | L64   ONLY target
-	// .. same ..
-	//   4: 0x092 <0x6b> | 0x06f <0xb2> | );   SIZE
-	// .. same ..
-	//   5: 0x0fd <0x12> | --          | L76   ONLY target
-	//   6: 0x10f <0x26> | --          | L77   ONLY target
-	// .. same ..
-	//   8: 0x155 <0x23> | --          | L80   ONLY target
-	// .. same ..
-	//   9: 0x178 <0x5f> | 0x141 <0x6> | flow_emulator_packet_pair*			i	= delayed_packets_to_appear.begin( );   SIZE
-	//  10: --          | 0x147 <0x6> | flow_emulator_packet_pair* const	e	= delayed_packets_to_appear.end( );   ONLY base
-	//  11: --          | 0x14d <0x17> | for ( ; i != e; ++i ) {   ONLY base
-	//  12: --          | 0x164 <0x8> | udp_match_packet* const	packet	= i->first;   ONLY base
-	// .. same ..
-	//  13: 0x1d7 <0xc> | 0x16c <0x1b> | packet_reader	reader( base_packet( packet->m_buffer.data( ), packet->buffer_to_send_size( ) + packet->header_size( ) ) );   SIZE
-	//  14: 0x1e3 <0xc> | 0x187 <0x1b> | const u16		received_local_sequence_id	= reader.r< u16 >( );   SIZE
-	//  15: --          | 0x1a2 <0x21> | const u16		remote_sequence_id			= reader.r< u16 >( );   ONLY base
-	// .. same ..
-	//  16: 0x1ef <0x5f> | 0x1c3 <0x1b> | packet_reader	functor_reader( base_packet( packet->m_buffer.data( ), packet->buffer_to_send_size( ) + packet->header_size( ) ) );   SIZE
-	// .. same ..
-	//  18: 0x261 <0x16> | --          | L91   ONLY target
-	// .. same ..
-	// ; aligned 4, size-diffs 5, quantity-diffs 10, blank-gaps 3
-	// VERDICT: STRUCTURE MISMATCH (both) - target has 8 ONLY-target stmts our LTCG DCE'd
-	// (dead seq-id reads + per-packet readers' size args via the mis-symbolized base_packet
-	// accessors that stub to 0); 4 SIZE diffs on the surviving readers. Loop body shape is
-	// right but the in-loop reader/seq-id quantity differs. Needs the real packet-size
-	// accessors to recover the dead reads, then re-measure. trail: udp_network_flow_emulator.md
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
+	// SIZE +0x47 | 136 | );
+	// SIZE +0x3  | 149 | packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+	// BASE_ONLY  | 150 | const u16		received_local_sequence_id	= reader.r< u16 >( );
+	// BASE_ONLY  | 151 | const u16		remote_sequence_id			= reader.r< u16 >( );
+	// SIZE +0x5c | 157 | packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+	// SIZE +0x7  | 158 | functor( reader, i->second );
+	// TRGT_ONLY  | L89
+	// TRGT_ONLY  | L90
+	// VERDICT: STRUCTURE MATCH (shape ok) - 15/15; the ONLY rows are aligner pairing
+	// noise (it pairs our second reader 0x68 against the target's 0xc r<u16> row; hand
+	// alignment is 1:1 in order: readers 0x5f/0x5f vs 0x62/0x68, r<u16> 0xc vs 0x21 each,
+	// functor 0x13 = 0x13). Residuals are the documented wall: base inlines r<u16> and
+	// the buffer accessors the target keeps out-of-line, and the remove_if site (+0x47)
+	// constructs the by-value predicate in-place in target vs our /Od temp+copy.
 }
 
 // STATE[73.13%|PARTIAL]

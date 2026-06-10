@@ -80,9 +80,11 @@ public:
 	// STATE[INLINED]
 	inline	pbyte		buffer_to_send		( ) { return m_buffer.elems; }
 
-	// STATE[0%|DONE]: source proven by the send/handle_send inline sites; base COMDAT
-	// now anchored (address-take), but the surviving target symbol is an optimized
-	// LTCG leaf (mov/sub/sub/ret, frameless) a /Od body cannot pair against.
+	// STATE[0%|PARTIAL]: source proven by the send/handle_send inline sites (and the
+	// append COMDAT's `100h - movzx(header_size())` fold); base COMDAT anchored
+	// (address-take), but the surviving target symbol is an optimized LTCG leaf
+	// (mov eax,[ecx]; sub eax,ecx; sub eax,2Bh; ret - frameless) a /Od body cannot
+	// pair against - the None score is that emission, not a source divergence.
 	inline	u8			header_size			( ) const
 	{
 		return				(u8)( base_packet::m_buffer - m_buffer.elems );

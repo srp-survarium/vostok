@@ -79,6 +79,20 @@ inline void udp_match_connection::call_predicate( Predicate const& predicate, pa
 		++next_order_id;
 		delete_udp_match_packet		( m_packets_allocator, packet );
 	}
+
+	// STRUCTURE DIFF: target 27 stmts / base 27 stmts
+	// SIZE +0x15 | 41 | const u8	message_type		= reader.r< u8 >( );
+	// SIZE +0x2  | 42 | udp_match_message_type_info const&	info	= m_packets_orderer.get_received_message_info( message_type );
+	// SIZE +0x10 | 49 | sequence_number< u16 >	order_id( reader.r< u16 >( ) );
+	// SIZE -0x8  | 65 | packet.order_id					= order_id;
+	// SIZE +0x27 | 66 | packet.append					( reader.pointer( ), reader.size_to_eof( ) );
+	// SIZE +0x2d | 71 | while ( !channel.packets.empty( ) && channel.packets.begin( )->order_id == next_order_id )
+	// SIZE +0x29 | 73 | udp_match_packet*	packet	= &*channel.packets.begin( );
+	// SIZE +0x9  | 75 | packet_reader	reader		( *packet );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 27/27, all SIZE-class: the documented LTCG
+	// call-boundary wall (base inlines r<u8>/r<u16>/pointer/size_to_eof and the intrusive
+	// set thunks the target keeps out-of-line); L65 -0x8 is the target's this-spill assign
+	// lowering on sequence_number, same non-steerable class.
 }
 
 // STATE[49.60%|PARTIAL]: structure 43/43 stmts aligned (structure-diff shows only
@@ -152,6 +166,27 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 	}
 
 	dump							( "after  process_incoming   ", 0 );
+
+	// STRUCTURE DIFF: target 43 stmts / base 43 stmts
+	// SIZE +0x1f | 98  | const u32	message_bytes		= reader.size_to_eof( );
+	// SIZE +0x10 | 103 | sequence_number< u16 > const&	remote_sequence_id	= sequence_number< u16 >( reader.r< u16 >( ) );
+	// SIZE +0x10 | 104 | sequence_number< u16 > const&	local_sequence_id	= sequence_number< u16 >( reader.r< u16 >( ) );
+	// SIZE +0x18 | 105 | const u16	bits				= reader.r< u16 >( );
+	// SIZE +0x1  | 106 | const u16	local_acknowledgement_bits	= u16( ( bits >> 1 ) | 0x8000 );
+	// SIZE -0x12 | 120 | update_acknowledgements		( remote_sequence_id, local_sequence_id, local_acknowledgement_bits );
+	// SIZE +0x36 | 133 | for ( u32 i = 0; !reader.eof( ); ++i )
+	// SIZE +0x1b | 136 | const u8	subpacket_size	= reader.r< u8 >( );
+	// SIZE -0x7  | 139 | packet_reader	subpacket_reader( base_packet( pbyte( reader.pointer( ) ), subpacket_size ) );
+	// SIZE +0x36 | 141 | if ( i || !reader.eof( ) )
+	// BASE_ONLY  | 143 | else
+	// TRGT_ONLY  | L148
+	// SIZE +0x1e | 149 | m_stats.received_low_level.data_bytes		+= subpacket_reader.size_to_eof( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 43/43; the BASE_ONLY/TRGT_ONLY pair is the
+	// SAME else-jmp (stmt #35 on both sides, the 5-byte jmp over the else block, verified
+	// instruction-identical) split only by line attribution - the original anchored its
+	// then-call at else-2 lines, zero byte effect. All SIZE rows are the documented LTCG
+	// call-boundary wall (r<>/eof/pointer/size_to_eof out-of-line in target) plus
+	// update_acknowledgements' LTCG-shrunk arg setup against its carcass callee.
 }
 
 } // namespace network_core
