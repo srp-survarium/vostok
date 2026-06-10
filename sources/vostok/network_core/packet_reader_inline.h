@@ -8,11 +8,12 @@
 namespace vostok {
 namespace network_core {
 
+// claude@MATCH: udp_match_client::handle_receive inlines this ctor - m_pointer is
+// initialized from packet.buffer() (the folded one-load accessor call), not NULL.
 inline packet_reader::packet_reader( base_packet const& packet ) :
 	m_packet	( packet ),
-	m_pointer	( NULL )
+	m_pointer	( packet.buffer( ) )
 {
-	/* no source */
 }
 
 // Body shapes below are exact against the target disasm. The base instances come

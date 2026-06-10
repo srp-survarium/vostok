@@ -1534,9 +1534,13 @@ namespace vostok
 		client.disconnect( );
 		client.check_consistency( );
 
-		// private on_error has no real caller yet (handle_receive still STUB); address-take keeps it standalone
+		// private on_error is called by handle_receive; the address-take also keeps it standalone
 		void ( network_core::udp_match_client::*on_error_ptr )( network_core::client_error_codes_enum, boost::system::error_code ) = &network_core::udp_match_client::on_error;
 		example_callback( ( pcstr )&on_error_ptr );
+
+		// private handle_receive's real caller (start_receiving's async_receive_from bind) is still STUB; address-take keeps it
+		void ( network_core::udp_match_client::*handle_receive_ptr )( boost::system::error_code const&, u32 ) = &network_core::udp_match_client::handle_receive;
+		example_callback( ( pcstr )&handle_receive_ptr );
 	}
 
 	void use_static_rigid_body()

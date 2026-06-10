@@ -1054,3 +1054,35 @@ Same per-call-site whole-program LTCG inline-vs-call class as operator|/vectora:
 source spelling (`m_fn = value`, or an inline setter containing it) is already correct; mark
 PARTIAL. Confirmed in `network_core/udp_match_client::udp_match_client` (set_on_disconnect
 inlined; body stmt 0x73 vs target 0x59, 79.20% PARTIAL).
+
+### LOG_* macros compile __LINE__ immediates - park the function at its ORIGINAL source lines
+The logging helper (`LOG_ERROR`/`LOG_WARNING`, logging_extensions.h) pushes `__LINE__` as an
+IMMEDIATE (`push 61h` = line 97) into the append call, so a function containing LOG sites only
+byte-matches when each LOG statement sits at the target's original line number (read it off the
+pushed immediate / the carcass `'NN'`). Pad the `.cpp` with blank/comment lines above the function
+to land them. For a MULTI-LINE macro invocation, VS2008 takes `__LINE__` (and the /Od line-table
+entry for the whole statement) from the CLOSING-PAREN line - a LOG spread over 4 lines with `);`
+on line 97 pushes 97. Confirmed in `network_core/udp_match_client::handle_receive` (LOG sites
+97/103/109 matched after padding; the 4-line first LOG attributed to its `);` line).
+
+### logging helper expansion: base schedules the boost::function1 ctor at the append site (target: block entry)
+Inside each inlined LOG block the target constructs the log-callback `boost::function<...>`
+FIRST (block entry, `lea eax,[fn_slot]; call <fn-ctor COMDAT>` - this in eax), then evaluates
+`message()`, then `push &fn` at the append; the /Od+LTCG base instead emits the ctor call AT the
+append site (`lea esi,[fn_slot]; call <ctor>; push eax` - this in esi), which also SWAPS the two
+guard-bit cleanups (`[ebp-guard] & 2` destroys the function1 in base vs the message std::string
+in target). All slots/structure stay identical; the residual is a few bytes per LOG plus cascaded
+register renames. Same non-steerable whole-program class as the http_client::on_error precedent -
+mark PARTIAL. Confirmed in `network_core/udp_match_client::handle_receive` (93.54%, 23/23 stmts).
+
+### boost::asio socket open/bind/endpoint idioms (all matched 100% from plain source)
+`if ( m_socket.is_open( ) )` inlines to `&socket -> slot; load [socket+0](service) -> slot;
+cmp dword[socket+4], -1; setne` (impl.socket_ != invalid_socket). `m_socket.open( udp::v4( ) )`
+materializes the protocol temp `mov dword[ebp-4],2; lea/push; call basic_socket::open`.
+`m_socket.bind( udp::endpoint( ) )` INLINES the default endpoint ctor: zero 7 dwords (0x1c union),
+`family=2 (word), port=0 (word), addr=0 (dword)`, then push &temp; call bind. `m_server_endpoint =
+udp::endpoint( address::from_string( host ), port )` = sret call to address::from_string (push host,
+push &ret), out-of-line `detail::endpoint::endpoint(address const&, u16)` ctor into a temp, then
+`rep movsd` 7 dwords into the member (trivial copy-assign). The huge /Od frame (sub esp,51Ch with a
+~0x4b4 unused gap between named locals and the bottom spill temps) reproduces by itself - don't
+chase it. Confirmed byte-perfect in `network_core/udp_match_client::connect` (100% first build).

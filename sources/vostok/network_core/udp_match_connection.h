@@ -113,7 +113,8 @@ public:
 	inline	bool						has_disconnection_initiated		( ) const { return false; }
 
 	inline	bool						is_disconnecting				( ) const { return false; }
-	inline	bool						is_disconnected					( ) const { return false; }
+	// claude@MATCH: inlined in udp_match_client::handle_receive as `cmp m_state(+0x11c), disconnected(3); sete`.
+	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
 	inline	void						set_disconnected				( ) { /* no source */ }
 
 	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; }
@@ -123,7 +124,9 @@ public:
 
 	inline	bool						are_there_any_queued_packets	( ) const { return false; }
 
-	inline	u32							unacknowledged_packets_count	( ) const { return 0; }
+	// claude@MATCH: udp_match_client::handle_receive passes this to on_packet_received; target
+	// reads m_unacknowledged_packets(+0xa0).size() via the ICF-folded size_policy::size COMDAT.
+	inline	u32							unacknowledged_packets_count	( ) const { return m_unacknowledged_packets.size( ); }
 			u32							packets_count					( ) const;
 
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }

@@ -67,53 +67,62 @@ void udp_match_client::process_incoming_packet( packet_reader& reader, boost::as
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: handle_receive must sit at its original source lines - the three
+// LOG_ERROR sites compile __LINE__ immediates (97/103/109) into the bytes; the
+// padding below stands in for process_incoming_packet's original body span
+// (another match unit) so those land correctly.
+
+
+
+
+
+
+
+
+// STATE[93.54%|PARTIAL]: 23/23 stmts aligned, all slots/frame identical; residuals are the
+// shared LOG_ERROR helper machinery (base builds the boost::function1 callback at the append
+// site where target builds it at block entry, swapping the two guarded temp cleanups - the
+// http_client::on_error precedent) and stmt-118 packet.buffer() inline-vs-call, both LTCG.
 void udp_match_client::handle_receive( boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
-	// LOCALS
-	// packet_reader 					reader<1>
-	// ******
+	check_consistency		( );
 
-	// FUNCTION BODY[0x758730]: 38
-	// <0x75874a>|0x01a|+0x00b:'88'
-	// <0>
-	// <0x758755>|0x025|+0x00c:'90'
-	// <0x758761>|0x031|+0x00d:'91'
-	// <0>
-	// <0x75876e>|0x03e|+0x014:'93'
-	// <0>
-	// <1>
-	// <2>
-	// <0x758782>|0x052|+0x0da:'97'
-	// <0x75885c>|0x12c|+0x017:'98'
-	// <0x758873>|0x143|+0x005:'99'
-	// <0>
-	// <1>
-	// <0x758878>|0x148|+0x00a:'102'
-	// <0x758882>|0x152|+0x080:'103'
-	// <0x758902>|0x1d2|+0x017:'104'
-	// <0x758919>|0x1e9|+0x005:'105'
-	// <0>
-	// <1>
-	// <0x75891e>|0x1ee|+0x036:'108'
-	// <0x758954>|0x224|+0x089:'109'
-	// <0x7589dd>|0x2ad|+0x017:'110'
-	// <0x7589f4>|0x2c4|+0x005:'111'
-	// <0>
-	// <1>
-	// <0x7589f9>|0x2c9|+0x00f:'114'
-	// <0x758a08>|0x2d8|+0x058:'115'
-	// <0>
-	// <0x758a60>|0x330|+0x002:'117'
-	// <0x758a62>|0x332|+0x032|[1]:'118'
-	// <0x758a94>|0x364|+0x01c:'119'
-	// <0>
-	// <1>
-	// <0x758ab0>|0x380|+0x00b:'122'
-	// <0>
-	// <0x758abb>|0x38b|+0x019:'124'
-	// <0x758ad4>|0x3a4|+0x00b:'125'
-	// ******
+	ASSERT					( UNKNOWN_EXPRESSION_T( m_is_receiving ) );
+	m_is_receiving			= false;
+
+	if ( error_code ) {
+		LOG_ERROR			(
+			"error during reading from socket: %s\r\n",
+			error_code.message( ).c_str( )
+		);
+		on_error			( unable_to_read_from_socket, error_code );
+		return;
+	}
+
+	if ( !bytes_transferred ) {
+		LOG_ERROR			( "unable to read from socket\r\n" );
+		on_error			( unable_to_read_from_socket, error_code );
+		return;
+	}
+
+	if ( m_server_endpoint != m_remote_endpoint ) {
+		LOG_ERROR			( "unexpected sender\r\n" );
+		on_error			( unable_to_read_from_socket, error_code );
+		return;
+	}
+
+	if ( m_network_flow_emulator ) {
+		m_network_flow_emulator->on_packet_received( m_receive_buffer.c_array( ), bytes_transferred, m_remote_endpoint, m_time_in_ms, m_connection.unacknowledged_packets_count( ) );
+	}
+	else {
+		packet_reader	reader( base_packet( m_receive_buffer.c_array( ), bytes_transferred ) );
+		process_incoming_packet( reader, m_remote_endpoint );
+	}
+
+	check_consistency		( );
+
+	if ( !m_connection.is_disconnected( ) )
+		start_receiving		( );
 }
 
 // STATE[STUB]
@@ -134,7 +143,7 @@ void udp_match_client::start_receiving( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void udp_match_client::connect(
 	pcstr const					host,
 	const u16					port,
@@ -142,22 +151,20 @@ void udp_match_client::connect(
 	const u32					current_time_in_ms
 )
 {
-	// FUNCTION BODY[0x758cf0]: 14
-	// <0x758d01>|0x011|+0x029:'145'
-	// <0x758d2a>|0x03a|+0x011:'146'
-	// <0x758d3b>|0x04b|+0x01c:'147'
-	// <0x758d57>|0x067|+0x042:'148'
-	// <0>
-	// <0x758d99>|0x0a9|+0x04b:'150'
-	// <0>
-	// <0x758de4>|0x0f4|+0x00f:'152'
-	// <0>
-	// <0x758df3>|0x103|+0x00b:'154'
-	// <0x758dfe>|0x10e|+0x00b:'155'
-	// <0>
-	// <0x758e09>|0x119|+0x00f:'157'
-	// <0x758e18>|0x128|+0x00b:'158'
-	// ******
+	if ( m_socket.is_open( ) )
+		m_socket.close		( );
+	m_socket.open			( boost::asio::ip::udp::v4( ) );
+	m_socket.bind			( boost::asio::ip::udp::endpoint( ) );
+
+	m_server_endpoint		= boost::asio::ip::udp::endpoint( boost::asio::ip::address::from_string( host ), port );
+
+	m_connection.connect	( packet );
+
+	check_consistency		( );
+	start_receiving			( );
+
+	m_connection.send_queued_packets( current_time_in_ms );
+	check_consistency		( );
 }
 
 // STATE[100%|DONE]
