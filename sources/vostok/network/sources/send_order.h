@@ -17,7 +17,8 @@ class send_order : public order {
 public:
 	typedef boost::function< void ( network_core::tcp_packet const& ) >	send_type;
 
-	// STATE[STUB]: ctor is fully inlined into its caller (no standalone carcass)
+	// STATE[INLINED]: no standalone target symbol (pdb_rich_query lists only
+	// dtor/execute/??_G); the only construction site is tcp_packet_client::send
 	inline				send_order	(
 			send_type const& sender,
 			network_core::tcp_packet const& packet,
@@ -29,16 +30,14 @@ public:
 	{
 	}
 
-	// STATE[PARTIAL]: legacy body ported onto canonical types; unverified vs target
-	// FUNCTION BODY[0xed710]
+	// STATE[100%|DONE]
 	virtual				~send_order	( )
 	{
 		network_core::tcp_packet const* temp	= &m_packet;
 		VOSTOK_DELETE_IMPL	( m_allocator, temp );
 	}
 
-	// STATE[PARTIAL]: legacy body ported; unverified vs target
-	// FUNCTION BODY[0xed780]
+	// STATE[100%|DONE]
 	virtual	void		execute		( )
 	{
 		m_sender			( m_packet );
