@@ -58,6 +58,7 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/usable_object.h>
 #include <vostok/game_core/hand_to_weapon_ik_processor.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
@@ -356,6 +357,13 @@ namespace vostok
 		hittable_object->set_transform( float4x4( ) ),
 		hittable_object->insert( NULL );
 		hittable_object->remove( );
+	}
+
+	void use_usable_object( survarium::usable_object* usable_object )
+	{
+		// keeps get_transform: the real caller (game_world_ui::update_minimap_objects)
+		// is not matched yet, so /OPT:REF drops the unreferenced body.
+		usable_object->get_transform( );
 	}
 
 	void use_respawn_point_core( )
@@ -2571,6 +2579,7 @@ IncludeAll::IncludeAll()
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
 	vostok::use_hittable_object( NULL );
+	vostok::use_usable_object( NULL );
 	vostok::use_respawn_point_core( );
 	vostok::use_damage_zone_core( );
 	vostok::use_generic_anomaly_core( );
