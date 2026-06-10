@@ -21,7 +21,12 @@ class path_parts;
 class node : public node_base, private boost::noncopyable
 {
 public:
-	inline	explicit	node			(pcstr const name, verbosity filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
+	// STATE[20%|PARTIAL]: boost-internal inline-vs-call - target calls the set_member_hook ctor (eax conv),
+	// rbtree init_header and an empty size-holder fn out-of-line; base inlines all three to raw stores.
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x68 vs 0x9d bytes)
+	// VERDICT: STRUCTURE MATCH (shape ok) - same ctor chain order (hook, name fixed_string, multiset, m_verbosity,
+	// m_thread_id); divergence is entirely boost hook/rbtree ctor inline-vs-call, cross-unit; banked.
+	inline	explicit	node			(pcstr const name, verbosity const filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
 						~node			();
 			void		set				(pcstr						initiator_path,
 										 int						verbosity,
