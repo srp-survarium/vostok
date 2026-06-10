@@ -60,20 +60,31 @@ void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& 
 	// ******
 }
 
-// STATE[INPROGRESS]: single append( m_animation_has_been_ended ) ([+0x135] bool). DCE'd, no base symbol.
+// STATE[69.33%|PARTIAL]: paired once the header moved it to the private section (target
+// mangling @@EBE); residual is append(bool) kept out-of-line in target vs inlined to the
+// temp+append(pcvoid,u32) leaf in base, non-steerable LTCG.
 void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
 	packet.append( m_animation_has_been_ended );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x72e390); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x7 | 68 | packet.append( m_animation_has_been_ended );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the append(bool) inline-vs-call wall,
+	// non-steerable.
 }
 
-// STATE[INPROGRESS]: single r< bool > into m_animation_has_been_ended ([+0x135]). DCE'd, no base symbol.
+// STATE[0.00%|PARTIAL]: paired once the header moved it to the private section (target
+// mangling @@EAE) but scores 0.0 (report.json omits the field - the paired-at-0 protobuf
+// case): the single statement is wholly inside the r<bool> inline-vs-call wall (target 0x11
+// out-of-line call vs base 0x26 inlined read+advance), so no instruction pairs.
 void weapon_core_chamber_a_round_aimed_state_base::deserialize( network_core::packet_reader& reader )
 {
 	m_animation_has_been_ended = reader.r< bool >( );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x72e370); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x15 | 77 | m_animation_has_been_ended = reader.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the r<bool> inline-vs-call wall,
+	// non-steerable.
 }
 
 } // namespace survarium
