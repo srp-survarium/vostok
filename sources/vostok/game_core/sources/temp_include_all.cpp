@@ -50,6 +50,8 @@
 #include <vostok/network/http_client.h>
 #include <vostok/network/sources/string_order.h>
 #include <vostok/network/sources/connect_order.h>
+#include <vostok/network/sources/string_response.h>
+#include <vostok/network/sources/receive_udp_response.h>
 
 #include <vostok/animation/skeleton.h>
 
@@ -1685,6 +1687,29 @@ namespace vostok
 			client.on_packet_received( 0, reader );
 			client.on_disconnect_impl( ( network_core::disconnect_event_types_enum )0 );
 			client.on_disconnect( ( network_core::disconnect_event_types_enum )0 );
+		}
+
+		// two call sites so LTCG keeps the string_response ctor out-of-line, as the
+		// target does (standalone symbol at rva 0x49340)
+		{
+			network::string_response response( stack_allocator, boost::function< void ( pcstr ) >( ), "string0" );
+			response.execute( );
+		}
+		{
+			network::string_response response( stack_allocator, boost::function< void ( pcstr ) >( ), "string1" );
+			response.execute( );
+		}
+
+		{
+			network_core::udp_match_stats stats;
+			network::receive_udp_response response(
+				boost::function< void ( network_core::packet_reader& ) >( ),
+				network_core::udp_match_packets_allocator_ptr( ),
+				*static_cast< network_core::udp_match_packet* >( NULL ),
+				stats,
+				stats
+			);
+			response.execute( );
 		}
 
 		network::destroy_world( world );

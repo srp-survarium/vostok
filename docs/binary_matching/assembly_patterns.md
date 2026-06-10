@@ -1230,3 +1230,51 @@ this+4 (boost::noncopyable's declared `noncopyable(){}` - it stays an out-of-lin
 (0x49180, kept by some other call site). This is the per-call-site LTCG inline-vs-call class
 applied to a BASE ctor - the source stays a normal in-class `{ }`; our /Od+LTCG base reproduced
 the same inlining unprompted (derived dtors 100%).
+### each `boost::functionN<...>::operator()` call SITE reserves 0x12C of caller frame
+ASM:
+    sub  esp, 388h            ; string_response::execute - only `this` + no named locals visible
+    ...
+    call boost::function3<...>::operator()   ; x3 call sites
+SOURCE:
+    m_functor2( m_string0, m_string1, m_string2 );   // a plain functor invocation
+NOTES: under /Od+/GL each out-of-line `boost::functionN::operator()` call site adds
+exactly 0x12C bytes of dead caller frame (machinery temps allocated, never written).
+Frame reads: 4 (`this` spill) + named locals/temps + 0x12C * (operator() call sites):
+`string_response::execute` 3 calls = 0x388; `receive_response::execute` 1 call + 0xC
+reader locals = 0x13C; `receive_udp_response::execute` 1 call + extra stats stmts =
+0x16C. The base build reproduces it from plain source - do NOT hunt for a missing
+300-byte local when `sub esp` looks absurdly large next to the visible locals.
+
+### sibling free/delete statements reusing ONE `[ebp-4]` slot = a single reassigned local, NOT scoped blocks
+ASM:
+    mov edx, [ecx+68h]  ; mov [ebp-4], edx   ; temp = m_string0
+    ...call free_helper...
+    mov edx, [ecx+6Ch]  ; mov [ebp-4], edx   ; SAME slot for the next string
+SOURCE:
+    pstr temp        = m_string0;
+    VOSTOK_FREE_IMPL ( m_allocator, temp );
+
+    temp             = m_string1;
+    VOSTOK_FREE_IMPL ( m_allocator, temp );
+NOTES: /Od gives every distinct local its own slot, even across disjoint `{ }` sibling
+scopes - so three `{ pstr temp = ...; FREE; }` blocks emit THREE slots (-4/-8/-0xC) and
+a bigger frame, while the target's single reused `[ebp-4]` proves ONE local reassigned
+(blank lines between the pairs in the line table, no `}` jmps). Reshaping
+`string_response::~string_response` from three scoped blocks to one reused temp:
+88.87% -> byte-equal statements. Check which shape the target's slots show before
+copying the connect_order "scoped block" pattern (that one frees two DIFFERENT types,
+so it genuinely needs two locals).
+
+### ICF fold survivor in a SIBLING header's unit: per-unit fuzzy None over a byte-identical body
+ASM:
+    (target) ?execute@string_response@... rva 0x49490, line table = string_order.h:62-68
+SOURCE:
+    string_response::execute's real body in string_response.h (identical source to
+    string_order::execute - the original twins fold under /OPT:ICF)
+NOTES: when two classes carry identical method bodies, the target keeps ONE copy whose
+unit/line attribution is the SIBLING header (here string_order.h), so the symbol never
+appears in this header's target unit and objdiff reports `None` for the unit pairing.
+Verify by NAME instead: `pdb_fetch --view diff --function <class>::execute` pairs the
+base symbol against the fold survivor - string_response::execute diffs with ZERO
+divergent rows (frame 0x388 included) despite the unit-level None. Write the real body
+in its own header; never leave `{}` because "no code is attributed here".
