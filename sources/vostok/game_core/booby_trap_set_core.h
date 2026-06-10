@@ -52,6 +52,9 @@ public:
 	// STATE[STUB]
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
+private:
+	// target mangles EAE (private virtual) - the public UAE spelling fails the objdiff
+	// symbol join entirely (the PR-291 access-letter lesson).
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) override;
 
 protected:
