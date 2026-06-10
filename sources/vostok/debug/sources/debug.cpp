@@ -37,7 +37,7 @@ vostok::debug::log_callback	vostok::debug::get_log_callback	( )
 	return									s_log_disable_counter ? NULL : s_log_callback;
 }
 
-vostok::debug::log_callback	vostok::debug::set_log_callback	( log_callback const & callback )
+vostok::debug::log_callback	vostok::debug::set_log_callback	( log_callback callback )
 {
 	log_callback const previous_callback	=	s_log_callback;
 	s_log_callback						=	callback;

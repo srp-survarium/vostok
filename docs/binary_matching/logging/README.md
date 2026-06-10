@@ -55,6 +55,33 @@ Residuals at a correct site (bank, do not chase):
   <= 127 push imm8 (2 bytes), >= 128 push imm32 (5 bytes) - if our site and the original's
   straddle that boundary the statement SIZE shifts by 3; keep log-bearing lines on the same side.
 
+#### logging_extensions.cpp (core, /Ox) - swept 2026-06, 56.7 -> 69.4
+
+* **`debug::log_callback` was a RAW function pointer, not boost::function.** The target PDB types
+  `debug::set_log_callback` / `get_log_callback` as `void (*)(pcstr,bool,bool,pcstr) (...)`, and the
+  target debug.cpp emits no dynamic initializer for its `s_log_callback`. Fixing the typedef in
+  `vostok/debug/log_callback.h` (+ by-value param) took set/get to 100%, logging_finalize 63.7->100,
+  logging_preinitialize 0->100, bugtrap::finalize and all `load_function<>` thunks in debug to 100%.
+* **`debug_log_callback` calls `logging::append` DIRECTLY** (like `use_log`) - twice, NO
+  `has_passed_filters` guard (the FORCED form), runtime-joined initiator (`STR_JOINA(debug_log,
+  initiator, ":")` - no macro can pass a runtime initiator), verbosity `is_error ? error : info`,
+  format `format_message` (format_specifier overload) in the `log_only_user_string` arm vs
+  `&g_log_format` (log_format* overload) in the other, and user_data = **the ADDRESS of the local
+  `log_flags`** (lea, a real target oddity reproduced as `(void*)&log_flags`). The not-set arm of
+  log_flags is **0**, not log_to_console (target: `dec;neg;sbb;and 2` -> {0,2}).
+* **`log_flags_enum` is a bitmask at the consumer**: `logging_callback` tests `user_data & 1` /
+  `(user_data >> 1) & 1` - not `==` comparisons - and gates the stderr write on the stderr bit
+  being SET inside an outer `g_log_filter_tree` check (with a redundant re-check around the stdout
+  arm, original).
+* `use_console_for_logging`: the static-init expression evaluates the KEY first:
+  `s_use_console || testing::run_tests_command_line()` (46->98). Keep the operator-bool spelling -
+  explicit `.is_set()` inlines a different guard shape and drops it back to 50.
+* `generate_log_file_name` scored None purely on the MANGLED NAME: the target params are
+  `native_path_string* const` / `pcstr const` (QAV/QBD) - adding the top-level consts paired the
+  357-byte function (-> 55.6%, rest is /Ox LTCG inlining of user_data_directory + the convert loop).
+* Remaining sub-100 here is /Ox+LTCG inlining (convert loops, key::is_set guards, boost function1
+  ctor/dtor machinery) - link-set dependent, banked per function.
+
 #### The module-wide systemic residual: core/boost helper inline-vs-call
 
 Nearly every sub-100% logging function diverges for ONE reason: a tiny shared helper that the
