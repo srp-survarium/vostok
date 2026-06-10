@@ -42,9 +42,11 @@ inline void packet< T >::resize( u32 size )
 }
 
 // STATE[INLINED]: no standalone symbol (inlined into tcp_packet_socket::send); body
-// needed so send's clone() step (m_buffer_size=0; append(other.buffer(),size)) emits.
-// `packet< T >` is a friend of base_packet, so the private const buffer()/buffer_size()
-// accessors are reachable on the const& other.
+// needed so send's clone() step emits. claude@MATCH: legacy's direct friend reads
+// (other.m_buffer/m_buffer_size) are DISPROVEN - the target clone row (0x123f08, 0x24B)
+// lowers the two operands as out-of-line CALLS (push call-result x2 before append), which
+// direct member reads can never produce; shipped clone() calls the accessors. The base
+// residual (our LTCG inlines them to field reads) is the accessor inline-vs-call wall.
 template < typename T >
 inline void packet< T >::clone( base_packet const& other )
 {
@@ -136,11 +138,23 @@ inline void packet< T >::append( float3 const& value )
 	append				( &value, sizeof( value ) );
 }
 
+// STATE[INLINED]: legacy body (audit candidate 5b) - no packet< T >::append(pcstr[,u8])
+// instantiation exists in the target index, so these are byte-unverifiable; the legacy
+// bodies replace the empty stubs for source fidelity (strlen u8-cast; length prefix +
+// payload via the primitives).
 template < typename T >
-inline void packet< T >::append( pcstr string ) { /* no source */ }
+inline void packet< T >::append( pcstr string )
+{
+	append				( string, static_cast< u8 >( strlen( string ) ) );
+}
 
 template < typename T >
-inline void packet< T >::append( pcstr string, u8 string_length ) { /* no source */ }
+inline void packet< T >::append( pcstr string, u8 string_length )
+{
+	ASSERT				( string_length <= u8(-1) );
+	append				( string_length );
+	append				( static_cast< pcvoid >( string ), string_length );
+}
 
 // STATE[PARTIAL]: CRTP form of network::packet::append (grow-by-doubling + memcpy);
 // statement shape matches target. The target instance inlines reallocate/

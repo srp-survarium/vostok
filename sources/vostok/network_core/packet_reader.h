@@ -20,7 +20,7 @@ public:
 
 	template < int count >
 	inline	char*				r_string		( char ( &string )[ count ] );
-	inline	char*				r_string		( char* string, u8 count );
+	inline	char*				r_string		( char* string, u8 buffer_size );
 
 	inline	base_packet const&	get_packet		( ) const;
 
