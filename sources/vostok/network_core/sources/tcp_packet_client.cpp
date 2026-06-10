@@ -44,16 +44,10 @@ tcp_packet_client::~tcp_packet_client( )
 	// not a source-shape miss - no source lever, take the hit. trail: tcp_packet_client.md
 }
 
-// STATE[99.70%|DONE]: forwards to socket; residual is the inline-boundary of the called socket method
+// STATE[100%|DONE]: closed by the make_custom_alloc_handler named-return fix - this inline emission of tcp_packet_socket::start_receiving keeps the result-copy code the standalone COMDAT elides
 void tcp_packet_client::start_reading( )
 {
 	m_packet_socket.start_receiving( );
-
-	// STRUCTURE DIFF[target 0x77cde0 | base 0x57ae20]: target 1 / base 1 stmts
-	// .. same ..
-	// ; aligned 1, size-diffs 0, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - 1/1 stmt aligned, quantity 0 / size 0; residual
-	// is the sub-statement inline boundary of start_receiving(). trail: tcp_packet_client.md
 }
 
 // STATE[100%|DONE]

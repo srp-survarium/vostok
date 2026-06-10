@@ -1113,3 +1113,18 @@ inlined bool return. A NEGATED spelling (`if ( !has_disconnection_initiated() )`
 getter: 0=connected -> is_connected, 3=disconnected -> is_disconnected
 (udp_match_connection::state). Confirmed in udp_match_client::{enqueue,process_incoming_packet,
 send_queued_packets} (all 94-100%).
+
+### +0xC frame with byte-equal code = an ELIDED named-return temp; the spelling is proven at the emission that KEPT the copy
+A target frame exactly +0xC over base with the instruction stream otherwise identical (only the
+bottom-of-frame this/temp slot disp constants shift) is NOT a missing ASSERT (that adds ~0xc bytes
+of CODE) - it is a dead 12-byte temp the target front-end materialized and the backend elided
+code-free. Cause found for make_custom_alloc_handler: the original spells the helper with a NAMED
+return value (`custom_alloc_handler< H > const result( a, h ); return result;`), not the direct
+`return custom_alloc_handler< H >( a, h );`. The named local reserves its slot at EVERY inline
+emission, but MSVC8 LTCG elides the 6-mov return copy per-emission: target kept the copy in
+tcp_packet_client::start_reading (the tcp_packet_socket::start_receiving body inlined there -
+100.00% only with the named-return spelling, the byte-proof) and elided it (slot kept) in the
+standalone udp/tcp start_receiving COMDATs, where our LTCG does NOT elide (+0x12 bytes residual,
+99.8% -> 87-91%). Same source, three emissions, two backend outcomes: when one emission
+byte-proves a spelling, keep it and book the other emissions' copy as non-steerable backend
+copy-prop variance. Net: +1 function at 100%, aggregate code% flat.
