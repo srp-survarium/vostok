@@ -78,12 +78,12 @@ void inventory::set_holder( inventory_holder* holder )
 		if ( m_slots[i].item )
 			m_slots[i].item->holder_assigned( );
 
-	// STRUCTURE DIFF[target 0x6f0420 | base]: target 6 / base 6 stmts
-	// .. same ..
-	// 0x039 <0x16> | 0x039 <0x26> | if ( m_slots[i].item )   SIZE
-	// 0x04f <0x22> | 0x05f <0x2f> | m_slots[i].item->holder_assigned( );   SIZE
-	// ; aligned 4, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are intrusive_ptr operator T*()/operator*() inline-vs-call (LTCG); target calls out-of-line, base inlines. trail: set_holder.md
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x10 | 78 | 		if ( m_slots[i].item )
+	// SIZE +0xd  | 79 | 			m_slots[i].item->holder_assigned( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target CALLs resource_ptr's safe-bool/operator->
+	// out-of-line; base INLINES them (the MFP-temp safe-bool compare + the operator-> assert
+	// eater visible inline). Per-site LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[70.28%|PARTIAL]: intrusive_ptr operator T*/operator* inline-vs-call (LTCG), non-steerable
@@ -97,13 +97,11 @@ void inventory::unset_holder( )
 
 	m_holder = NULL;
 
-	// STRUCTURE DIFF[target 0x6f03a0 | base]: target 7 / base 7 stmts
-	// .. same ..
-	// 0x02d <0x16> | 0x02d <0x26> | if ( m_slots[i].item )   SIZE
-	// 0x043 <0x22> | 0x053 <0x2f> | m_slots[i].item->holder_removed( );   SIZE
-	// .. same ..
-	// ; aligned 5, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are intrusive_ptr operator T*()/operator*() inline-vs-call (LTCG); for-loop braces dropped to match target (was the INCORRECT tag). trail: unset_holder.md
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x10 | 95 | 		if ( m_slots[i].item )
+	// SIZE +0xd  | 96 | 			m_slots[i].item->holder_removed( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - same two rows as set_holder: target CALLs the
+	// safe-bool/operator-> out-of-line, base inlines them. LTCG, non-steerable.
 }
 
 // STATE[69.33%|PARTIAL]: intrusive_ptr operator= and operator* inline-vs-call (LTCG), non-steerable
@@ -117,12 +115,12 @@ void inventory::set_item(
 	m_slots[slot].item = item.c_ptr();	// sushi@MATCH: target does additional copying
 	item->set_inventory( this, slot );	// sushi@MATCH: -> inlined in target
 
-	// STRUCTURE DIFF[target 0x6f0c80 | base]: target 4 / base 4 stmts
-	// .. same ..
-	// 0x021 <0x40> | 0x021 <0x24> | m_slots[slot].item = item.c_ptr();	SIZE
-	// 0x061 <0x20> | 0x045 <0x2f> | item->set_inventory( this, slot );	SIZE
-	// ; aligned 2, size-diffs 2, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES intrusive_ptr::operator=(T*) (ctor+swap+dtor visible) and operator* on item; base emits them as out-of-line calls. Per-call-site LTCG inline-vs-call, non-steerable. trail: set_item.md
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x1c | 117 | m_slots[slot].item = item.c_ptr();
+	// SIZE +0xf  | 118 | item->set_inventory( this, slot );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES operator=(T*) (ctor+swap+dtor
+	// visible) but CALLs operator-> out-of-line; base does the exact reverse. Per-site LTCG
+	// inline-vs-call, non-steerable.
 }
 
 // STATE[58.21%|PARTIAL]: inventory_item_ptr copy-ctor + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
@@ -158,17 +156,14 @@ bool inventory::action(
 	}
 	return false;
 
-	// STRUCTURE DIFF[target 0x6f0b80 | base]: target 20 / base 20 stmts
-	// 0x009 <0x15> | 0x009 <0x5e> | inventory_item_ptr iitem = m_slots[slot_id].item;   SIZE
-	// 0x01e <0x10> | 0x067 <0x14> | if ( iitem != NULL )   SIZE
-	// .. same ..
-	// 0x02e <0x17> | 0x07b <0x1d> | inventory_item::action_behaviour_type const& behaviour_type = iitem->get_action_behaviuor( );   SIZE
-	// 0x045 <0x16> | 0x098 <0x1a> | switch ( behaviour_type )   SIZE
-	// .. same ..
-	// 0x05d <0x1d> | 0x0b4 <0x24> | iitem->action( key_down );   SIZE
-	// .. same ..
-	// ; aligned 15, size-diffs 5, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - target keeps inventory_item_ptr copy-ctor + operator T*()/operator* out-of-line; base inlines them. Per-call-site LTCG inline-vs-call, non-steerable. trail: action.md
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
+	// SIZE +0x49 | 134 | inventory_item_ptr iitem = m_slots[slot_id].item;
+	// SIZE +0x4  | 135 | if ( iitem != NULL )
+	// SIZE +0x6  | 137 | 		inventory_item::action_behaviour_type const& behaviour_type = iitem->get_action_behaviuor( );
+	// SIZE +0x4  | 138 | 		switch ( behaviour_type )
+	// SIZE +0x7  | 144 | 				iitem->action( key_down );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target keeps the resource_ptr copy-ctor +
+	// operator T*()/operator-> out-of-line; base inlines them. Per-site LTCG, non-steerable.
 }
 
 
@@ -203,20 +198,18 @@ void inventory::setup_demo_profile( )
 			iitem->set_amount( 100 );
 	}
 
-	// STRUCTURE DIFF[target 0x6f0a10 | base]: target / base same stmt set
-	// .. same ..
-	// 0x032 <0x32> | 0x032 <0x4c> | weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );   SIZE
-	// .. same ..
-	// 0x080 <0x19> | 0x09a <0x16> | weapon->set_amount( 100 );   SIZE
-	// .. same ..
-	// 0x0e7 <0xe> | 0x0fe <0x10> | inventory_item_ptr& iitem = item_in_slot( current );   SIZE
-	// 0x0f5 <0xc> | 0x10e <0x1e> | if ( iitem )   SIZE
-	// 0x101 <0x12> | 0x12c <0x1e> | iitem->set_amount( 100 );   SIZE
-	// 0x13a <0xe> | 0x171 <0x10> | inventory_item_ptr& iitem = item_in_slot( current );   SIZE
-	// 0x148 <0xc> | 0x181 <0x1e> | if ( iitem )   SIZE
-	// 0x154 <0x12> | 0x19f <0x1e> | iitem->set_amount( 100 );   SIZE
-	// ; aligned 18, size-diffs 8, quantity-diffs 0 (ONLY-target rows are alignment artifacts of the SIZE diffs)
-	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() (direct &m_slots[current].item) and calls intrusive_ptr operator T*()/operator* out-of-line; base does the reverse. Per-call-site LTCG inline-vs-call. Direct m_slots[current].item member access REBUILT WORSE (0x97 vs 0x4c) - keep item_in_slot(). trail: setup_demo_profile.md
+	// STRUCTURE DIFF: target 19 stmts / base 19 stmts
+	// SIZE +0x1a | 182 | 		weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );
+	// SIZE -0x3  | 185 | 			weapon->set_amount( 100 );
+	// SIZE +0x2  | 193 | 		inventory_item_ptr& iitem = item_in_slot( current );
+	// SIZE +0x12 | 194 | 		if ( iitem )
+	// SIZE +0xc  | 195 | 			iitem->set_amount( 100 );
+	// SIZE +0x2  | 201 | 		inventory_item_ptr& iitem = item_in_slot( current );
+	// SIZE +0x12 | 202 | 		if ( iitem )
+	// SIZE +0xc  | 203 | 			iitem->set_amount( 100 );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() and CALLs the
+	// resource_ptr safe-bool/operator-> out-of-line; base does the reverse. Per-site LTCG.
+	// Direct m_slots[current].item access REBUILT WORSE (0x97 vs 0x4c) - keep item_in_slot().
 }
 
 // STATE[47.35%|PARTIAL]: item_in_slot + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
@@ -271,20 +264,19 @@ void inventory::setup_from_profile( player_profile& profile, items_dictionary co
 		}
 	}
 
-	// STRUCTURE DIFF[target 0x6f0800 | base]: target / base same stmt set
-	// .. same ..
-	// 0x046 <0x9> | 0x045 <0xd> | if ( slot->item.id )   SIZE
-	// 0x04f <0x25> | 0x052 <0x4c> | weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );   SIZE
-	// 0x074 <0x1a> | 0x09e <0x1b> | weapon->set_amount( slot->item.condition_or_stack );   SIZE
-	// .. same ..
-	// 0x17f <0xe> | 0x1e0 <0x10> | inventory_item_ptr& iitem = item_in_slot( current );   SIZE
-	// 0x18d <0xc> | 0x1f0 <0x22> | if ( iitem )   SIZE
-	// 0x199 <0x1a> | 0x212 <0x17> | if ( dict.item_by_id( current ).is_stack )   SIZE
-	// 0x1b3 <0x13> | 0x229 <0x2b> | const u32 amount = math::min( ... );   SIZE
-	// 0x1c6 <0x10> | 0x254 <0x21> | iitem->set_amount( amount );   SIZE
-	// 0x1e7 <0x13> | 0x286 <0x23> | iitem->set_amount( slot->item.condition_or_stack );   SIZE
-	// ; aligned 32, size-diffs 12, quantity-diffs 5 (the AMMO-loop ONLY-target/ONLY-base rows are alignment artifacts of the item_in_slot SIZE diff, NOT a real missing statement - confirmed in --view diff: same stmt set, item_in_slot inlined in target)
-	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() and calls intrusive_ptr operators out-of-line; base does the reverse. Per-call-site LTCG inline-vs-call, non-steerable. trail: setup_from_profile.md
+	// STRUCTURE DIFF: target 31 stmts / base 31 stmts
+	// SIZE +0x27 | 233 | 			weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );
+	// SIZE +0x18 | 247 | 			const u32 amount = math::min( ... );  (AMMO loop; aligner mispairs as ONLY rows)
+	// SIZE +0x11 | 248 | 			iitem->set_amount( amount );
+	// SIZE +0x16 | 261 | 			if ( iitem )
+	// SIZE +0x18 | 265 | 				const u32 amount = math::min( ... );
+	// SIZE +0x11 | 266 | 				iitem->set_amount( amount );
+	// SIZE +0x10 | 269 | 				iitem->set_amount( slot->item.condition_or_stack );
+	// (+ small +-0x1..0x4 rows on if/for/decl lines)
+	// VERDICT: STRUCTURE MATCH (shape ok) - 31/31 hand-aligned (the differ's AMMO-loop
+	// TRGT_ONLY/BASE_ONLY pairs are equal-size mispairs: t0xe<->b246, t0x13<->b247, t0x10<->b248,
+	// t0xf<->b249); locals incl. both `const u32 amount` match the PDB exactly. Residuals are
+	// item_in_slot()/resource_ptr operator/math::min(u32,u32) inline-vs-call, LTCG, non-steerable.
 }
 
 // STATE[55.56%|PARTIAL]: item_in_slot + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
@@ -336,31 +328,31 @@ void inventory::unload_to_profile( player_profile& profile, items_dictionary con
 		}
 	}
 
-	// STRUCTURE DIFF[target 0x6f05f0 | base]: target 43 / base 43 stmts
-	// .. same ..
-	// 0x051 <0x25> | 0x050 <0x4c> | weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );   SIZE
-	// 0x0c5 <0x18> | 0x0eb <0x1c> | for ( u32 i = 0 ; i < AMMO_COUNT ; ++i )   SIZE
-	// 0x108 <0x15> | 0x132 <0x5e> | inventory_item_ptr ammo = item_in_slot( current );   SIZE
-	// 0x129 <0x1c> | 0x19c <0x29> | slot->item.amount_in_inventory += ammo->amount( );   SIZE
-	// 0x197 <0xe> | 0x21b <0x10> | inventory_item_ptr& iitem = item_in_slot( current );   SIZE
-	// 0x1a5 <0xc> | 0x22b <0x1e> | if ( iitem )   SIZE
-	// 0x1b1 <0x1a> | 0x249 <0x1b> | if ( dict.item_by_id( slot->item.dict_id ).is_stack )   SIZE
-	// 0x1cb <0x1c> | 0x264 <0x2b> | slot->item.amount_in_inventory += iitem->amount( );   SIZE
-	// 0x1e9 <0x15> | 0x291 <0x24> | slot->item.condition_or_stack = iitem->amount( );   SIZE
-	// ; aligned 33, size-diffs 10, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() and keeps intrusive_ptr copy-ctor/operator T*()/operator* out-of-line; base does the reverse. Per-call-site LTCG inline-vs-call, non-steerable. trail: unload_to_profile.md
+	// STRUCTURE DIFF: target 30 stmts / base 30 stmts
+	// SIZE +0x27 | 302 | 		weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );
+	// SIZE +0x49 | 316 | 		inventory_item_ptr ammo = item_in_slot( current );
+	// SIZE +0xd  | 318 | 		slot->item.amount_in_inventory += ammo->amount( );
+	// SIZE +0x12 | 329 | 			if ( iitem )
+	// SIZE +0xf  | 332 | 					slot->item.amount_in_inventory += iitem->amount( );
+	// SIZE +0xf  | 334 | 					slot->item.condition_or_stack = iitem->amount( );
+	// (+ small +-0x1..0x4 rows on for/decl lines)
+	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() and keeps the
+	// resource_ptr copy-ctor/safe-bool/operator-> out-of-line; base does the reverse.
+	// Per-site LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[BLOCKED]
+// STATE[31.17%|PARTIAL]: resource_ptr safe-bool/operator-> inline-vs-call (LTCG), non-steerable
 static void call_item_remove( inventory_slot& slot )
 {
 	if ( slot.item )
 		slot.item->remove( );
 
-	// FUNCTION BODY
-	// <0x700376>|0x006|+0x00c:'231'
-	// <0x700382>|0x012|+0x018:'232'
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x12 | 357 | if ( slot.item )
+	// SIZE +0xf  | 358 | 	slot.item->remove( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - same safe-bool/operator-> rows as set_holder;
+	// target CALLs them out-of-line, base inlines. LTCG, non-steerable. (Was STATE[BLOCKED]
+	// with a stale carcass - the base symbol exists and pairs at 31.17%.)
 }
 
 // STATE[100%|DONE]
@@ -371,7 +363,8 @@ void inventory::remove( )
 	m_active_slot = max_slots_count;
 }
 
-// STATE[INPROGRESS]: serializes a slot's item unless its profile slot is in the ignored set. DCE'd, no base symbol.
+// STATE[49.49%|PARTIAL]: serializes a slot's item unless its profile slot is in the ignored set.
+// Emitted via the bind in inventory::serialize below (was DCE'd / no base symbol).
 static void call_item_serialize(
 	inventory_slot const&				slot,
 	network_core::udp_match_packet&		packet,
@@ -384,7 +377,20 @@ static void call_item_serialize(
 	if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
 		slot.item->serialize( packet, client_offset );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f02f0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope. (slot.item guard combined to a single && to match the target's single-statement condition, mirroring call_item_deserialize.)
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x9  | 374 | profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
+	// SIZE +0x21 | 376 | if ( slot.item && std::find( ... ) == ignored_slots_end )
+	// SIZE +0xf  | 377 | 	slot.item->serialize( packet, client_offset );
+	// VERDICT: STRUCTURE MATCH (shape ok) - identical row set to call_item_deserialize:
+	// std::find/profile_slot_id/operator-> inline-vs-call, LTCG, non-steerable.
+}
+
+// STATE[INLINED]: the target has NO standalone inventory::serialize symbol (LTCG inlined it
+// into its caller) but call_item_serialize @0x6f02f0 exists and is only reachable through this
+// bind - the function provably existed in the original TU; defined here to emit the helper.
+void inventory::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
+{
+	std::for_each( m_slots, m_slots + max_slots_count, boost::bind( call_item_serialize, _1, boost::ref( packet ), client_offset ) );
 }
 
 // STATE[46.64%|PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
@@ -398,22 +404,18 @@ static void call_item_deserialize( inventory_slot& slot, network_core::packet_re
 		slot.item->deserialize( reader );
 
 	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// b.diff    |t.addr  |b.addr  |t.sz|b.sz|b.ln|b.code
-	// ----------+--------+--------+----+----+----+------
-	// SIZE -0x9 |0x6f027d|0x47831d|0x10|0x7 |0   |profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
-	// SIZE +0x21|0x6f028d|0x478324|0x35|0x56|+2  |if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
-	// SIZE +0xf |0x6f02c2|0x47837a|0x1c|0x2b|+3  |slot.item->deserialize( reader );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 4/4 after the earlier combined-&&-guard fix; residual
-	//   rows are LTCG inline-vs-call SIZE (find/profile_slot_id inlined into the target, plus the
-	//   target materializing ignored_slots_end from a folded constant), non-steerable.
+	// SIZE -0x9  | 395 | profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
+	// SIZE +0x21 | 397 | if ( slot.item && std::find( ... ) == ignored_slots_end )
+	// SIZE +0xf  | 398 | 	slot.item->deserialize( reader );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the combined && guard (one statement) matches the
+	// target; residuals are std::find/profile_slot_id/operator-> inline-vs-call, LTCG, non-steerable.
 }
 
-// STATE[INPROGRESS]: for_each over the slot array, deserializing each non-ignored item. DCE'd, no base symbol.
+// STATE[100%|DONE]: was DCE'd; anchored from temp_include_all use_game_core_serialization,
+// pairs at 100% (0x84 bytes both sides).
 void inventory::deserialize( network_core::packet_reader& reader )
 {
 	std::for_each( m_slots, m_slots + max_slots_count, boost::bind( call_item_deserialize, _1, boost::ref( reader ) ) );
-
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f04a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[100%|DONE]
