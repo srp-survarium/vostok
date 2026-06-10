@@ -8,14 +8,10 @@
 #include "response.h"
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/network_core/udp_match_packets_allocator.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace vostok {
-
-namespace network_core {
-	class udp_match_packet;
-	class packet_reader;
-} // namespace network_core
-
 namespace network {
 
 class receive_udp_response :
@@ -23,8 +19,10 @@ class receive_udp_response :
 	public boost::noncopyable
 {
 public:
-	// STATE[STUB]: ctor is fully inlined into its caller (no standalone carcass);
-	// m_copied_stats source is a buildability guess - the matcher confirms
+	// STATE[INLINED]: no standalone symbol on either side; init list verified
+	// against the inline expansion in match_client::on_packet_received (target rva
+	// 0x74cdb0): copied_stats rep-movsd copy, receiver function1 copy-ctor,
+	// allocator intrusive_ptr copy-ctor, packet address, target_stats reference
 	inline			receive_udp_response	(
 			boost::function< void ( network_core::packet_reader& ) > const& receiver,
 			network_core::udp_match_packets_allocator_ptr const& allocator,
@@ -40,33 +38,26 @@ public:
 	{
 	}
 
-	// STATE[STUB]
+	// STATE[37.91%|PARTIAL]: statements correct; base INLINES
+	// intrusive_ptr::operator* (with its ASSERT eater) and ~intrusive_ptr where
+	// the target CALLS both out-of-line - whole-program LTCG inline-vs-call,
+	// should flip as real consumers (match_client_impl) get matched
 	virtual			~receive_udp_response	( )
 	{
-		// LOCALS
-		// network_core::udp_match_packet* 	temp
-		// ******
-
-		// FUNCTION BODY[0xeb0f0]: 2
-		// <0xeb103>|0x013|+0x00c:'44'
-		// <0xeb10f>|0x01f|+0x01a:'45'
-		// ******
+		network_core::udp_match_packet* temp	= &m_packet;
+		network_core::delete_udp_match_packet	( *m_allocator, temp );
 	}
 
-	// STATE[STUB]
+	// STATE[88.51%|PARTIAL]: base inlines base_packet::buffer() inside the
+	// packet_reader-ctor expansion where the target calls the COMDAT (same LTCG
+	// wall as receive_response::execute); if/copy stats tail byte-equal
 	virtual	void	execute					( )
 	{
-		// LOCALS
-		// network_core::packet_reader 		reader
-		// ******
+		network_core::packet_reader	reader( m_packet );
+		m_receiver				( reader );
 
-		// FUNCTION BODY[0xeb160]: 5
-		// <0xeb171>|0x011|+0x020:'50'
-		// <0xeb191>|0x031|+0x015:'51'
-		// <0>
-		// <0xeb1a6>|0x046|+0x026:'53'
-		// <0xeb1cc>|0x06c|+0x01c:'54'
-		// ******
+		if ( m_copied_stats >= m_target_stats )
+			m_target_stats		= m_copied_stats;
 	}
 
 private:

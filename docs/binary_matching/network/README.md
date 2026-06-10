@@ -35,7 +35,16 @@
   separate-file layout already produced a 100% `functor_response.h.obj` match -
   keep it.
 - **`string_response::execute` likewise folds into `string_order::execute`** (no
-  code attributed to `string_response.h` in the target).
+  code attributed to `string_response.h` in the target). The body is still REAL -
+  write it in `string_response.h` and verify by NAME (`pdb_fetch --view diff
+  --function string_response::execute` pairs against the fold survivor at rva
+  0x49490; byte-identical as of the responses match); the unit-level objdiff score
+  stays `None` because the survivor lives in `string_order.h`'s unit.
+- The exe link needs the OpenSSL libs (`libeay32-vc90-mt-s.lib ssleay32-vc90-mt-s.lib`
+  + `/LIBPATH:.../sources/openssl/libraries`); they are in the vcproj
+  (`survarium_pc_dx11.vcproj` AdditionalDependencies) but the ninja regen can drop
+  them from `survarium_-_PC_-_DirectX_11_link.rsp` - re-add them there if the exe
+  link fails on `_SSL_*`/`_BIO_*` unresolved externals.
 - `udp_match_fixed_packets_allocator< N >` is a real template (instantiated at
   2048 and 8192); `vostok::network_core::udp_match_packets_allocator_ptr` is an
   `intrusive_ptr` with `threading::multi_threading_policy` (the typedef + policy
