@@ -411,6 +411,11 @@ namespace vostok
 		core.on_hit_receiver_enter( NULL, NULL );
 		core.on_hit_receiver_leave( NULL, NULL );
 		core.on_artefact_container_use( NULL );
+
+		// zone_group::on_zone_act is otherwise DCE'd (target rva 0x57d080); reach it
+		// through an opaque pointer (the anchor never runs).
+		survarium::zone_group* group = NULL;
+		group->on_zone_act( NULL, NULL );
 	}
 
 	void use_artefact_container_core( )
