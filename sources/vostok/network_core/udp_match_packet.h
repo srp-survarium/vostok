@@ -12,6 +12,11 @@
 #include <boost/intrusive/set_hook.hpp>
 
 namespace vostok {
+
+namespace network {
+	class match_client_impl;
+} // namespace network
+
 namespace network_core {
 
 class udp_match_client_session;
@@ -104,6 +109,8 @@ public:
 	friend	class		udp_match_connection;
 	friend	class		delayed_packets_predicate;
 	friend	class		udp_network_flow_emulator;
+	// match_client_impl::clone_packet copies the wire-header fields directly
+	friend	class		vostok::network::match_client_impl;
 	friend	udp_match_packet*	new_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >& );
 	friend	void				delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 
