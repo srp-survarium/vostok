@@ -25,5 +25,11 @@ redone against the canonical API - "deal with them later".
 member `network::client m_client` and the TU pulled the deleted headers into
 the game build graph.
 
+**network_core ancestry:** the rewrite also relocated several of these files
+into the shipped `network_core` - `packet_socket` -> `tcp_packet_socket`,
+`client_impl` -> `tcp_packet_client` + `async_connector`, `handler_allocator`,
+`packet`/`packet_reader`. The per-unit map lives in
+`docs/binary_matching/network_core/README.md` ("Legacy ancestry").
+
 Nothing here is compiled. Delete this directory once the network module is
 matched and the game/engine consumers are reworked.
