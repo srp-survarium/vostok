@@ -13,7 +13,7 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[86%|DONE]: full init list matches; residual is ICF-folded call-name noise + handler_allocator stub's trailing byte init (sibling unit)
+// STATE[99.51%|DONE]: full init list matches; residual is ICF-folded call-name noise + handler_allocator stub's trailing byte init (sibling unit)
  udp_match_connection::udp_match_connection(
 	boost::asio::ip::udp::socket&		socket,
 	boost::asio::ip::udp::endpoint const&	remote_endpoint,
@@ -277,9 +277,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	// buffer_size/header_size/append inline-vs-call wall + seq op= lowering, non-steerable.
 }
 
-// STATE[UNVERIFIED]: single-side skeletons identical (1 stmt, +0x23, 0x32 bytes both);
-// the target body is exactly the eaten VOSTOK_UNREFERENCED_PARAMETERS shape. Pairing
-// pended on the QBDI top-level-const declaration fix - re-score next rebuild.
+// STATE[100%|DONE]: paired after the QBDI top-level-const declaration fix.
 void udp_match_connection::dump( pcstr const caption, const u32 current_time_in_ms )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( caption, current_time_in_ms );
@@ -656,8 +654,10 @@ void udp_match_connection::update_acknowledgements(
 		}
 }
 
-// STATE[UNVERIFIED]: body re-derived from target bytes (0x546ab0), not yet diffed;
-// default shares the initiate_disconnection arm (the dispatch falls through into it).
+// STATE[86.24%|PARTIAL]: 12/12; default shares the initiate_disconnection arm (the
+// dispatch falls through into it). Residual: the target dispatch emits a redundant
+// cmp-0/je for case 0 that our compiler dedups against the adjacent default (label-order
+// flip changes nothing), on top of the r<bool> COMDAT call-form wall.
 void udp_match_connection::process_low_level_message( packet_reader& reader, const u32 time_in_ms )
 {
 	switch ( low_level_message_type_enum message_type = low_level_message_type_enum( reader.r< bool >( ) ) ) {
@@ -688,6 +688,13 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 		case continuous_flow :
 			break;
 	}
+
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
+	// SIZE +0x3|0  | switch ( low_level_message_type_enum message_type = low_level_message_type_enum( reader.r< bool >( ) ) ) {
+	// SIZE -0x2|+14| LOG_ERROR( "processing low level packet: skip confirming disconnection - we didn't initiated it" );
+	// VERDICT: STRUCTURE MATCH (shape ok) - 12/12; the switch row is the r<bool> COMDAT
+	// call-form wall + the target's redundant case-0 compare our compiler dedups against
+	// the adjacent default; the LOG row is __LINE__/lowering byte noise. Non-steerable.
 }
 
 } // namespace network_core
@@ -728,7 +735,8 @@ STATIC_SIZE_ASSERT(remove_all_predicate, 0xC);
 namespace vostok {
 namespace network_core {
 
-// STATE[UNVERIFIED]: body re-derived from target bytes (0x5465a0), not yet diffed.
+// STATE[73.23%|PARTIAL]: 25/25; the seq-reset rows are the op= this-temp lowering, the
+// channel-purge rows the intrusive rbtree begin/iterator inline-vs-call wall.
 void udp_match_connection::instant_disconnect( disconnect_event_types_enum type )
 {
 	m_state								= disconnected;
@@ -761,9 +769,23 @@ void udp_match_connection::instant_disconnect( disconnect_event_types_enum type 
 
 	if ( m_on_disconnect )
 		m_on_disconnect( type );
+
+	// STRUCTURE DIFF: target 25 stmts / base 25 stmts
+	// SIZE -0x8 |+9 | m_local_sequence_id					= sequence_number< u16 >( 0xFFFF );
+	// SIZE -0x7 |+10| m_remote_sequence_id				= sequence_number< u16 >( 0xFFFF );
+	// SIZE -0x8 |+11| m_received_local_sequence_id		= sequence_number< u16 >( 0xFFFF );
+	// SIZE -0x8 |+12| m_disconnection_local_sequence_id	= sequence_number< u16 >( 0xFFFF );
+	// SIZE +0x4 |+19| while ( !channel.packets.empty( ) ) {
+	// SIZE +0x1d|+20| udp_match_packet*	packet	= &*channel.packets.begin( );
+	// SIZE -0x1 |+28| if ( m_on_disconnect )
+	// VERDICT: STRUCTURE MATCH (shape ok) - 25/25; the four seq-reset rows are the op=
+	// this-temp lowering (target spills &member to a slot, our LTCG folds it into the
+	// store), the while/packet rows are the intrusive rbtree begin/iterator-ctor/
+	// operator-> kept out-of-line by target vs inlined by base; non-steerable.
 }
 
-// STATE[UNVERIFIED]: body re-derived from target bytes (0x546870), not yet diffed.
+// STATE[79.07%|PARTIAL]: 18/18; channel-purge rows are the intrusive begin inline-vs-call
+// wall (+ jump-width cascade), the m_disconnection_local_sequence_id rows the op= lowering.
 void udp_match_connection::disconnect( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_state == connected ) );
@@ -791,6 +813,16 @@ void udp_match_connection::disconnect( )
 
 	m_disconnection_local_sequence_id	= m_local_sequence_id;
 	++m_disconnection_local_sequence_id;
+
+	// STRUCTURE DIFF: target 18 stmts / base 18 stmts
+	// SIZE +0x4 |+16| while ( !channel.packets.empty( ) ) {
+	// SIZE +0x23|+17| udp_match_packet*	packet	= &*channel.packets.begin( );
+	// SIZE +0x3 |+20| }
+	// SIZE -0xe |+23| m_disconnection_local_sequence_id	= m_local_sequence_id;
+	// SIZE -0x1 |+24| ++m_disconnection_local_sequence_id;
+	// VERDICT: STRUCTURE MATCH (shape ok) - 18/18; while/packet/} rows are the intrusive
+	// rbtree begin/iterator inline-vs-call wall + its jump-width cascade; the two seq rows
+	// are the op= this-temp lowering; non-steerable.
 }
 
 // STATE[99.79%|PARTIAL]: control structure + ops match; the residual is the intrusive set

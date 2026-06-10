@@ -58,15 +58,18 @@ public:
 	}; // struct comparer
 
 	struct channel {
-		// STATE[UNVERIFIED]: init list re-derived from target bytes (0x127450:
-		// received_order_id 0xFFFF, sent_order_id 0), not yet diffed.
+		// STATE[53.90%|PARTIAL]: STRUCTURE MATCH (0 stmts both sides, all inits on the
+		// ctor decl line); residual is the intrusive set ctor inline depth in the init
+		// list (base 0x76 vs target 0x53 bytes), non-steerable.
 		inline			channel	( ) :
 			received_order_id	( 0xFFFF ),
 			sent_order_id		( 0 )
 		{
 		}
 
-		// STATE[UNVERIFIED]: body re-derived from target bytes (0x1274b0), not yet diffed.
+		// STATE[72.79%|PARTIAL]: 4/4; both SIZE rows (-0x8 on the two seq assigns) are
+		// the documented sequence_number op= this-temp lowering (target spills the member
+		// address, our LTCG folds it into the store), non-steerable.
 		inline	void	reset	( )
 		{
 			ASSERT( UNKNOWN_EXPRESSION_T( packets.empty( ) ) );
