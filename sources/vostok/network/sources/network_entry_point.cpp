@@ -12,7 +12,8 @@
 
 using vostok::network::network_world;
 
-// STATE[PARTIAL]: legacy static ported; the base obj DOES contain the
+// STATE[0%|PARTIAL]: objdiff credits 0 (symbols never pair). legacy static
+// ported; the base obj DOES contain the
 // initializer (mangled `??__Es_world@@YAXXZ`, same 3 stores as target rva
 // 0x7c5270) but the target side carries the demangled name
 // (`dynamic initializer for 's_world''), so objdiff never pairs them - a
