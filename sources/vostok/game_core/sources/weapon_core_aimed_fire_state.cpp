@@ -86,21 +86,12 @@ animation::mixing::expression weapon_core_aimed_fire_state::weapon_and_hands_exp
 
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 
-	// LOCALS
-	// animation::mixing::expression hands_expression
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
-
-	// FUNCTION BODY (target rva 0x799890; weight_driving_animation [ebp+18h] is unreferenced)
-	// <0>
-	// <0x7a98a1>|0x011|+0x01f:'46'	lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
-	// <0x7a98c0>|0x030|+0x00c:'47'	if ( user_state_id == type_sprint || user_state_id == type_jump )
-	// <0x7a98cc>|0x03c|+0x05e:'48'	return main + offset (.1: addition_lexeme<animation_lexeme,animation_lexeme>)
-	// <0x7a992a>|0x09a|+0x026:'49'	hands = get_user_hands_expression( offset, buffer, is_third_view, user_state_id );
-	// <0x7a9950>|0x0c0|+0x07a:'50'	return main + expression(offset) + hands (.2)
-	// ******
-	// Sole residual is the SAME operator+<animation_lexeme> OUT-OF-LINE vs addition_lexeme INLINE /GL
-	// template-selection wall as weapon_core_fire_state::weapon_and_hands_expression.
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE -0x21 | 82 | return lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
+	// SIZE -0x11 | 87 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are the mixing operator+
+	// template-selection / inline wall flipping at the two + sites, blocked on the mixing unit
+	// (PR #192), non-steerable here.
 }
 
 // STATE[100%|DONE]
@@ -126,14 +117,8 @@ weapon_lexeme_pair weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable
 	);
 }
 
-// STATE[73.51%|PARTIAL]: every statement, branch and operand matches (sprint early-return, the
-// animation_type()!=additive early-return, the captions array, the lexeme_parameters build and
-// both expression returns). Residuals are the same unsteerable inline-vs-call LTCG class as
-// weapon_core_fire_state::get_user_hands_expression (73.51%): the target keeps the
-// animation_lexeme_parameters setters OUT-OF-LINE while our /GL build inlines
-// animated_object+playback_type (only additivity_priority stays a call), shifting the layout.
-// animation_type() is also COMDAT-folded onto a trivial getter (delinked as inventory_holder::scheduler).
-// Both whole-program decisions, not source-steerable. See .md.
+// STATE[77.00%|PARTIAL]: lexeme_parameters setters / animation_type() inline-vs-call LTCG,
+// non-steerable; chained-temporary params merge landed (9/9, 73.51 -> 77.00).
 animation::mixing::expression weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -154,44 +139,29 @@ animation::mixing::expression weapon_core_aimed_fire_state::get_user_hands_expre
 
 	pcstr user_animation_captions[2] = { "aimed_shoot", "crouch_aimed_shoot" };
 
-	animation::mixing::animation_lexeme_parameters hands_lexeme_parameters(
-		buffer,
-		user_animation_captions[user_animation_index],
-		selected_animation,
-		&weapon_lexeme,
-		NULL
+	animation::mixing::animation_lexeme hands_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			user_animation_captions[user_animation_index],
+			selected_animation,
+			&weapon_lexeme,
+			NULL
+		)
+		.animated_object		( m_weapon.get_user( ) )
+		.playback_type			( animation::mixing::play_once_and_freeze_at_end )
+		.additivity_priority	( 1 )
 	);
-	hands_lexeme_parameters
-		.animated_object						( m_weapon.get_user( ) )
-		.playback_type							( animation::mixing::play_once_and_freeze_at_end )
-		.additivity_priority					( 1 );
-
-	animation::mixing::animation_lexeme hands_lexeme( hands_lexeme_parameters );
 
 	return animation::mixing::expression( hands_lexeme );
 
-	// LOCALS
-	// u32 							user_animation_index
-	// resources::managed_resource_ptr const& selected_animation
-	// animation::mixing::animation_lexeme hands_lexeme
-	// pcstr[2] 					user_animation_captions
-	// ******
-
-	// FUNCTION BODY (target rva 0x799660)
-	// <0x7a9671>|0x011|+0x006:'67'	if ( user_state_id == type_sprint )
-	// <0x7a9677>|0x017|+0x010:'68'	return expression( weapon_lexeme );
-	// <0>
-	// <0x7a9687>|0x027|+0x00f:'70'	u32 user_animation_index = ( user_state_id == type_crouch );
-	// <0x7a9696>|0x036|+0x026:'71'	selected_animation = m_user_animations[is_third_view!=false][user_animation_index];
-	// <0x7a96bc>|0x05c|+0x05c:'72'	if ( pinned_ptr_const<cubic_spline_skeleton_animation>( selected_animation )->animation_type() != animation_type_additive )
-	// <0x7a9718>|0x0b8|+0x010:'73'	return expression( weapon_lexeme );
-	// <0>
-	// <1>
-	// <0x7a9728>|0x0c8|+0x00e:'76'	pcstr user_animation_captions[2] = { "aimed_shoot", "crouch_aimed_shoot" };
-	// <0> .. <9>							animation_lexeme_parameters ctor + setter chain sub-blocks (.87)
-	// <0x7a9736>|0x0d6|+0x06f:'87'	hands_lexeme_parameters( ... ).animated_object(get_user).playback_type(1).additivity_priority(1); animation_lexeme hands_lexeme( params );
-	// <0x7a97a5>|0x145|+0x01c:'88'	return expression( hands_lexeme );
-	// ******
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts (was 9/11 before the chained-temporary merge)
+	// SIZE +0x3  | 136 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE -0x13 | 143 | if ( pinned_ptr_const<...>( selected_animation )->animation_type( ) != ... )
+	// SIZE +0x3  | 144 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE +0x4  | 159 | ); (the chained params temporary declaration of hands_lexeme)
+	// VERDICT: STRUCTURE MATCH (9/9) - residuals are per-site LTCG: target inlines animation_type()
+	// where base keeps the COMDAT call; setter-chain/expression-ctor call boundaries differ by
+	// promoted-convention bytes. Non-steerable from this TU.
 }
 
 // STATE[86.5%|PARTIAL]: control flow + placement-new + ctor call all match. Sole residual is the
@@ -214,14 +184,10 @@ weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::weapon_
 		animations_count
 	);
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7a95f9>|0x009|+0x05c:'100'
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x11 | 215 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is computed_shooting_animation_time_scale's
+	// LTCG-promoted convention (register arg, xmm0 return) vs our cdecl stub, blocked on that callee.
 }
 
 } // namespace survarium
