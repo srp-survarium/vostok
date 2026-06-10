@@ -7,6 +7,7 @@
 
 #include <boost/asio/ssl.hpp>
 #include <vostok/login_server/message_types.h>
+#include <vostok/login_server/constants.h>
 
 namespace vostok {
 
@@ -62,7 +63,11 @@ public:
 							boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 						);
 
-	// STATE[STUB]: trivial getters (buildability returns)
+	// STATE[INLINED]: no standalone symbols; session_id/host_ip/server_browser_*
+	// expansions byte-verified via login_client::{session_id,host_ip_address,
+	// server_browser_address,server_browser_initial_query} (all 100%); the
+	// is_signed_* pair has no matched consumer yet (state values consistent with
+	// ping()'s inlined `m_client_state != signed_in` cmp 3)
 	inline	bool		is_signed_in						( ) const { return m_client_state == signed_in; }
 	inline	bool		is_signed_out						( ) const { return m_client_state == signed_out; }
 
@@ -73,6 +78,7 @@ public:
 	inline	pcstr		server_browser_address				( ) const { return m_server_browser_address; }
 	inline	pcstr		server_browser_initial_query		( ) const { return m_server_browser_initial_query; }
 
+private:
 			bool		verify_ssl_certificate				( const bool preverified, boost::asio::ssl::verify_context& verify_context );
 
 			void		on_resolved							(
@@ -103,7 +109,8 @@ public:
 							boost::function< void ( enum connection_error_types_enum ) > const&	functor
 						);
 
-	// STATE[STUB]: no target symbol (fully inlined or dead)
+	// STATE[INLINED]: no target symbol and no call site in any matched target
+	// body (the connect/handshake chain never binds it) - dead inline source
 	inline	void		on_handshake_connected				(
 							const connection_error_types_enum		connection_result,
 							boost::function< void ( enum handshaking_error_types_enum ) > const&	functor,

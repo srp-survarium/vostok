@@ -1397,3 +1397,33 @@ f( );` emits `je <over-the-return>; jmp <end>` (two jumps) while the target's si
 `jne <end>` straight over the call is the no-early-return spelling
 `if ( !is_disconnected( ) ) f( );`. Two-byte/one-jump difference, 91.6 -> 100 on
 `network/match_client_impl::send_queued_packets` (header COMDAT 0x0dad60).
+
+### `case X : break;` FOLDS out of the cmp-chain but keeps its dead jmp line record
+A /Od switch whose dispatch cmp-chain SKIPS some explicit case values (e.g. only `cmp 1; cmp 3`
+for a 0..3 source switch) is NOT missing cases: a `case X : break;` whose body equals the
+no-match path is folded out of the dispatch (no cmp emitted), but the `break;` STATEMENT still
+emits its dead 2-byte `jmp <switch-end>` with its own line record. So a carcass showing
+dispatch, then a bare `+0x002` jmp, then real case bodies maps to source
+`case a : break; case b : <real>; ...` in source order. Validated 19/19 statements on
+`network/login_client_impl::~login_client_impl` (do/switch over m_connection_state with inner
+switches over m_client_state; `case unresolved: return;` + folded `case resolving/signing_out/
+signing_in : break;`). Corollary: a 5-byte near jmp can be the same folded break when the
+switch end is >127 bytes away.
+
+### boost::functionN::operator() inline-vs-call is per-INSTANTIATION (function4 called, function5 inlined, same exe)
+The login-chain target calls `function4<...login_server...>::operator()` OUT-OF-LINE at every
+callback site (a 0x10-byte push/push/push/push/call) while INLINING
+`function5<...,sign_up_info const&>::operator()` (safe-bool + throw_bad_function_call +
+get_vtable + invoker, ~0x5d bytes) at every site of the SAME exe. Our /Od+LTCG base made the
+OPPOSITE choice for function4 (inlined everywhere, +0x3d per site) and the SAME choice for
+function5 - so the sign_up TU scores ~90% while small function4-heavy handlers drop to 47-67%.
+Same whole-program class as the function0 safe-bool entry; not steerable from the call site -
+the source `callback( a, b, c, d );` is already correct. Confirmed across
+`login_client_impl_sign_{in,out}.cpp` (on_user_name_answer_received 47.34% worst case).
+
+### a 2-byte jmp-to-next-instruction can be KEPT by the target and DROPPED by the base
+A trailing `break;` whose jump target is the literal next instruction (last case of a switch
+falling into the join) survived as a real 2-byte `jmp short $+2` in the target but our /Od
+build emitted nothing - a 1-row `TRGT_ONLY <0x2>` residual that resists source steering
+(observed on `on_user_name_answer_received`'s default-case break). Bank it; do not reshape the
+switch for 2 bytes.

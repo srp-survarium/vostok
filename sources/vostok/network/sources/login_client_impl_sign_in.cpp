@@ -4,394 +4,311 @@
 
 #include "pch.h"
 #include "login_client_impl.h"
-#include <vostok/login_server/login_structures.h>
 
 namespace vostok {
 namespace network {
 
-// STATE[STUB]
+// STATE[81.15%|PARTIAL]: structure clean (servers_connection_info parse block + else verified); residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) + LOG-helper scheduling x2
 void login_client_impl::on_sign_in_answer_received(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback,
-	boost::system::error_code const&	error_code,
-	const u32							bytes_transferred
-)
+		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
+		boost::system::error_code const&	error_code,
+		const u32							bytes_transferred
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &callback, &error_code, &bytes_transferred );
 
-	// LOCALS
-	// pbyte 							buffer
-	// boost::asio::ip::basic_resolver_query< boost::asio::ip::udp > query<1>
-	// boost::asio::ip::basic_resolver_iterator< boost::asio::ip::udp > iterator<1>
-	// u8 								length1<1>
-	// boost::asio::ip::basic_resolver< boost::asio::ip::udp, boost::asio::ip::resolver_service< boost::asio::ip::udp > > resolver<1>
-	// u8 								length2<1>
-	// char[6] 							port<1>
-	// ******
 
-	// FUNCTION BODY[0x7a2050]: 63
-	// <0x7a206b>|0x01b|+0x012:'20'
-	// <0>
-	// <0x7a207d>|0x02d|+0x01b:'22'
-	// <0x7a2098>|0x048|+0x010:'23'
-	// <0x7a20a8>|0x058|+0x00d:'24'
-	// <0x7a20b5>|0x065|+0x015:'25'
-	// <0x7a20ca>|0x07a|+0x0f0:'26'
-	// <0>
-	// <0x7a21ba>|0x16a|+0x011:'28'
-	// <0x7a21cb>|0x17b|+0x010:'29'
-	// <0x7a21db>|0x18b|+0x005:'30'
-	// <0>
-	// <1>
-	// <0x7a21e0>|0x190|+0x089:'33'
-	// <0x7a2269>|0x219|+0x00f:'34'
-	// <0x7a2278>|0x228|+0x019:'35'
-	// <0>
-	// <0x7a2291>|0x241|+0x009|[1]:'37'
-	// <0>
-	// <0x7a229a>|0x24a|+0x011:'39'
-	// <0x7a22ab>|0x25b|+0x00d:'40'
-	// <0x7a22b8>|0x268|+0x00d:'41'
-	// <0>
-	// <1>
-	// <0x7a22c5>|0x275|+0x01e:'44'
-	// <0x7a22e3>|0x293|+0x00a:'45'
-	// <0x7a22ed>|0x29d|+0x012:'46'
-	// <0>
-	// <0x7a22ff>|0x2af|+0x011:'48'
-	// <0x7a2310>|0x2c0|+0x01e:'49'
-	// <0x7a232e>|0x2de|+0x00a:'50'
-	// <0x7a2338>|0x2e8|+0x012:'51'
-	// <0>
-	// <0x7a234a>|0x2fa|+0x011:'53'
-	// <0x7a235b>|0x30b|+0x009:'54'
-	// <0>
-	// <1>
-	// <0x7a2364>|0x314|+0x015:'57'
-	// <0>
-	// <0x7a2379>|0x329|+0x021:'59'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7a239a>|0x34a|+0x146:'64'
-	// <0x7a24e0>|0x490|+0x010:'65'
-	// <0x7a24f0>|0x4a0|+0x054:'66'
-	// <0>
-	// <0x7a2544>|0x4f4|+0x010:'68'
-	// <0x7a2554>|0x504|+0x00d:'69'
-	// <0x7a2561>|0x511|+0x011:'70'
-	// <0x7a2572>|0x522|+0x010:'71'
-	// <0>
-	// <0x7a2582>|0x532|+0x075:'73'
-	// <0x7a25f7>|0x5a7|+0x03b:'74'
-	// <0>
-	// <1>
-	// <0x7a2632>|0x5e2|+0x010:'77'
-	// <0x7a2642>|0x5f2|+0x011:'78'
-	// <0x7a2653>|0x603|+0x015:'79'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
+
+	if ( error_code || !bytes_transferred ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( error_code )
+			LOG_ERROR		( "[LOGIN] error during reading sign in answer: %s", error_code.message( ).c_str( ) );
+
+		if ( !m_in_destructor )
+			callback		( successfully_connected, successfully_handshaked, no_socket_error, sign_in_attempt_interval_violated_message_type );
+		return;
+	}
+
+	LOG_INFO				( "[LOGIN] answer has been received!\r\n" );
+	pbyte buffer			= m_data;
+	if ( *buffer == servers_connection_info_message_type ) {
+
+		++buffer;
+
+		const u8 length1	= *buffer++;
+		m_server_browser_address[0]			= 0;
+		m_server_browser_initial_query[0]	= 0;
+
+
+		memcpy				( m_server_browser_address, buffer, length1 );
+		buffer				+= length1;
+		m_server_browser_address[length1]	= 0;
+
+		const u8 length2	= *buffer++;
+		memcpy				( m_server_browser_initial_query, buffer, length2 );
+		buffer				+= length2;
+		m_server_browser_initial_query[length2]	= 0;
+
+		m_session_id		= *( u32* )buffer;
+		buffer				+= sizeof( m_session_id );
+
+		char port[6];
+		_itoa_s				( login_udp_port, port, sizeof( port ), 10 );
+
+		boost::asio::ip::udp::resolver resolver( m_io_service );
+		boost::asio::ip::udp::resolver::query query(
+			m_socket.remote_endpoint( ).address( ).is_v4( ) ? boost::asio::ip::udp::v4( ) : boost::asio::ip::udp::v6( ),
+			m_socket.remote_endpoint( ).address( ).to_string( ),
+			port
+		);
+		boost::asio::ip::udp::resolver::iterator iterator	= resolver.resolve( query );
+		m_ping_socket.connect	( iterator->endpoint( ) );
+
+		m_client_state		= signed_in;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, successfully_handshaked, no_socket_error, servers_connection_info_message_type );
+
+		m_ping_timer.async_wait	( boost::bind( &login_client_impl::ping, this, ping_retry_count ) );
+	}
+
+	else {
+		m_client_state		= signed_out;
+		if ( !m_in_destructor )
+			callback		( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )*buffer );
+	}
 }
 
-// STATE[STUB]
+// STATE[74.46%|PARTIAL]: structure clean; residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x2 + LOG-helper scheduling x3
 void login_client_impl::on_sign_in_password_written(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback,
-	boost::system::error_code const&	error_code,
-	const u32							bytes_transferred
-)
+		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
+		boost::system::error_code const&	error_code,
+		const u32							bytes_transferred
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &callback, &error_code, &bytes_transferred );
 
-	// LOCALS
-	// const u32 						buffer_size
-	// ******
+	if ( error_code ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, successfully_handshaked, unable_to_write_to_socket, login_server_invalid_message_type );
+		LOG_ERROR			( "[LOGIN] write_password_during_SIGN_IN: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		return;
+	}
 
-	// FUNCTION BODY[0x7a2670]: 33
-	// <0x7a268a>|0x01a|+0x015:'91'
-	// <0x7a269f>|0x02f|+0x010:'92'
-	// <0x7a26af>|0x03f|+0x00d:'93'
-	// <0x7a26bc>|0x04c|+0x011:'94'
-	// <0x7a26cd>|0x05d|+0x010:'95'
-	// <0x7a26dd>|0x06d|+0x0da:'96'
-	// <0x7a27b7>|0x147|+0x005:'97'
-	// <0>
-	// <1>
-	// <0x7a27bc>|0x14c|+0x006:'100'
-	// <0x7a27c2>|0x152|+0x010:'101'
-	// <0x7a27d2>|0x162|+0x00d:'102'
-	// <0x7a27df>|0x16f|+0x011:'103'
-	// <0x7a27f0>|0x180|+0x010:'104'
-	// <0x7a2800>|0x190|+0x005:'105'
-	// <0>
-	// <1>
-	// <0x7a2805>|0x195|+0x080:'108'
-	// <0x7a2885>|0x215|+0x080:'109'
-	// <0x7a2905>|0x295|+0x007:'110'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x7a290c>|0x29c|+0x0be:'123'
-	// ******
+	if ( !bytes_transferred ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, successfully_handshaked, unable_to_write_to_socket, login_server_invalid_message_type );
+		return;
+	}
+
+	LOG_INFO				( "[LOGIN] password has been written!\r\n" );
+	LOG_INFO				( "[LOGIN] waiting for answer...\r\n" );
+	const u32 buffer_size	= 70;
+	m_ssl_stream.async_read_some	(
+		boost::asio::buffer(
+			m_data,
+			buffer_size
+		),
+		boost::bind(
+			&login_client_impl::on_sign_in_answer_received,
+			this,
+			callback,
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred
+		)
+	);
 }
-
-// STATE[STUB]
-void login_client_impl::on_sign_in_handshaked(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback,
-	const handshaking_error_types_enum		error
-)
+// STATE[78.58%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x1 + the callback by-value bind copy lowering in the async_write bind
+void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &callback, &error );
+	if ( error == cannot_handshake ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, cannot_handshake, no_socket_error, sign_in_attempt_interval_violated_message_type );
+		return;
+	}
 
-	// LOCALS
-	// pbyte 							buffer
-	// const u32 						password_length
-	// ******
+	LOG_INFO				( "[LOGIN] writing password...\r\n" );
+	const u32 password_length	= strlen( m_password );
+	pbyte buffer			= m_data;
+	*buffer++				= ( u8 )password_length;
+	memcpy					( buffer, m_password, password_length );
+	buffer					+= password_length;
 
-	// FUNCTION BODY[0x7a29e0]: 26
-	// <0x7a29f7>|0x017|+0x006:'128'
-	// <0x7a29fd>|0x01d|+0x010:'129'
-	// <0x7a2a0d>|0x02d|+0x00d:'130'
-	// <0x7a2a1a>|0x03a|+0x011:'131'
-	// <0x7a2a2b>|0x04b|+0x010:'132'
-	// <0x7a2a3b>|0x05b|+0x005:'133'
-	// <0>
-	// <1>
-	// <0x7a2a40>|0x060|+0x07a:'136'
-	// <0x7a2aba>|0x0da|+0x05a:'137'
-	// <0x7a2b14>|0x134|+0x00f:'138'
-	// <0x7a2b23>|0x143|+0x011:'139'
-	// <0x7a2b34>|0x154|+0x01d:'140'
-	// <0x7a2b51>|0x171|+0x009:'141'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7a2b5a>|0x17a|+0x0ce:'153'
-	// ******
+	boost::asio::async_write	(
+		m_ssl_stream,
+		boost::asio::buffer( m_data, buffer - m_data ),
+		boost::bind(
+			&login_client_impl::on_sign_in_password_written,
+			this,
+			callback,
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred
+		)
+	);
 }
-
-// STATE[STUB]
-void login_client_impl::on_user_name_answer_received(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback,
-	boost::system::error_code const&	error_code,
-	const u32							bytes_transferred
-)
+// STATE[47.34%|PARTIAL]: structure 26/27 (switch over m_data[0] with cmp 0x0a/0x0b verified); residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x4 (small fn, biggest hit of the TU) + one 2-byte TRGT_ONLY default-break jmp the base folds into fall-through
+void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &callback, &error_code, &bytes_transferred );
+	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
 
-	// FUNCTION BODY[0x7a2c30]: 47
-	// <0x7a2c47>|0x017|+0x00c:'158'
-	// <0>
-	// <0x7a2c53>|0x023|+0x015:'160'
-	// <0x7a2c68>|0x038|+0x010:'161'
-	// <0x7a2c78>|0x048|+0x00d:'162'
-	// <0x7a2c85>|0x055|+0x011:'163'
-	// <0x7a2c96>|0x066|+0x010:'164'
-	// <0x7a2ca6>|0x076|+0x0cc:'165'
-	// <0x7a2d72>|0x142|+0x005:'166'
-	// <0>
-	// <1>
-	// <0x7a2d77>|0x147|+0x006:'169'
-	// <0x7a2d7d>|0x14d|+0x010:'170'
-	// <0x7a2d8d>|0x15d|+0x00d:'171'
-	// <0x7a2d9a>|0x16a|+0x011:'172'
-	// <0x7a2dab>|0x17b|+0x010:'173'
-	// <0x7a2dbb>|0x18b|+0x005:'174'
-	// <0>
-	// <1>
-	// <0x7a2dc0>|0x190|+0x026:'177'
-	// <0>
-	// <0x7a2de6>|0x1b6|+0x010:'179'
-	// <0x7a2df6>|0x1c6|+0x00d:'180'
-	// <0x7a2e03>|0x1d3|+0x011:'181'
-	// <0x7a2e14>|0x1e4|+0x01c:'182'
-	// <0x7a2e30>|0x200|+0x005:'183'
-	// <0>
-	// <0x7a2e35>|0x205|+0x002:'185'
-	// <0>
-	// <0x7a2e37>|0x207|+0x010:'187'
-	// <0x7a2e47>|0x217|+0x00d:'188'
-	// <0x7a2e54>|0x224|+0x011:'189'
-	// <0x7a2e65>|0x235|+0x01c:'190'
-	// <0x7a2e81>|0x251|+0x002:'191'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x7a2e83>|0x253|+0x05a:'204'
-	// ******
+	if ( error_code ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, no_handshake, unable_to_read_from_socket, login_server_invalid_message_type );
+		LOG_ERROR			( "[LOGIN] SIGN_IN: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		return;
+	}
+
+	if ( !bytes_transferred ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, no_handshake, unable_to_read_from_socket, login_server_invalid_message_type );
+		return;
+	}
+
+	switch ( m_data[0] ) {
+		case invalid_user_name_or_password_message_type :
+			m_client_state	= signed_out;
+			close_connection( false );
+			if ( !m_in_destructor )
+				callback	( successfully_connected, no_handshake, no_socket_error, ( login_server_message_types_enum )m_data[0] );
+			return;
+
+		case valid_user_name_message_type :	break;
+		default :
+			m_client_state	= signed_out;
+			close_connection( false );
+			if ( !m_in_destructor )
+				callback	( successfully_connected, no_handshake, no_socket_error, ( login_server_message_types_enum )m_data[0] );
+			break;
+	}
+
+	handshake				(
+		boost::bind
+		(
+			&login_client_impl::on_sign_in_handshaked,
+			this,
+			callback,
+			_1
+		),
+		login_handshake_retry_count,
+		false
+	);
 }
-
-// STATE[STUB]
-void login_client_impl::on_sign_in_written(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback,
-	boost::system::error_code const&	error_code,
-	const u32							bytes_transferred
-)
+// STATE[66.52%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x2 + LOG-helper scheduling
+void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &callback, &error_code, &bytes_transferred );
+	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
 
-	// FUNCTION BODY[0x7a2ef0]: 30
-	// <0x7a2f0a>|0x01a|+0x00c:'209'
-	// <0>
-	// <0x7a2f16>|0x026|+0x015:'211'
-	// <0x7a2f2b>|0x03b|+0x010:'212'
-	// <0x7a2f3b>|0x04b|+0x00d:'213'
-	// <0x7a2f48>|0x058|+0x011:'214'
-	// <0x7a2f59>|0x069|+0x010:'215'
-	// <0x7a2f69>|0x079|+0x0e1:'216'
-	// <0x7a304a>|0x15a|+0x005:'217'
-	// <0>
-	// <1>
-	// <0x7a304f>|0x15f|+0x006:'220'
-	// <0x7a3055>|0x165|+0x010:'221'
-	// <0x7a3065>|0x175|+0x00d:'222'
-	// <0x7a3072>|0x182|+0x011:'223'
-	// <0x7a3083>|0x193|+0x010:'224'
-	// <0x7a3093>|0x1a3|+0x005:'225'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x7a3098>|0x1a8|+0x0b0:'238'
-	// ******
+	if ( error_code ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, no_handshake, unable_to_write_to_socket, login_server_invalid_message_type );
+		LOG_ERROR			( "[LOGIN] SIGN_IN: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		return;
+	}
+
+	if ( !bytes_transferred ) {
+		m_client_state		= signed_out;
+		close_connection	( false );
+		if ( !m_in_destructor )
+			callback		( successfully_connected, no_handshake, unable_to_write_to_socket, login_server_invalid_message_type );
+		return;
+	}
+
+	boost::asio::async_read	(
+		m_socket,
+		boost::asio::buffer( m_data, 1 ),
+		boost::bind(
+			&login_client_impl::on_user_name_answer_received,
+			this,
+			callback,
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred
+		)
+	);
 }
-
-// STATE[STUB]
-void login_client_impl::sign_in_on_connected(
-	connection_error_types_enum		connection_result,
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
-)
+// STATE[77.65%|PARTIAL]: structure clean (sign_in_message_type byte + "0.100b" version block verified); residual = the function4::operator() inline-vs-call wall x1 + the callback bind-copy lowering
+void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &connection_result, &callback );
+	if ( connection_result ) {
+		m_client_state		= signed_out;
+		if ( !m_in_destructor )
+			callback		( cannot_connect, no_handshake, no_socket_error, login_server_invalid_message_type );
+		return;
+	}
 
-	// LOCALS
-	// pbyte 							buffer
-	// char[8] 							version
-	// const u8 						account_name_length
-	// ******
+	pbyte buffer			= m_data;
 
-	// FUNCTION BODY[0x7a3150]: 36
-	// <0x7a3160>|0x010|+0x006:'243'
-	// <0x7a3166>|0x016|+0x010:'244'
-	// <0x7a3176>|0x026|+0x011:'245'
-	// <0x7a3187>|0x037|+0x010:'246'
-	// <0x7a3197>|0x047|+0x005:'247'
-	// <0>
-	// <1>
-	// <0x7a319c>|0x04c|+0x00e:'250'
-	// <0>
-	// <0x7a31aa>|0x05a|+0x00f:'252'
-	// <0>
-	// <0x7a31b9>|0x069|+0x059:'254'
-	// <0x7a3212>|0x0c2|+0x00c:'255'
-	// <0x7a321e>|0x0ce|+0x011:'256'
-	// <0x7a322f>|0x0df|+0x01e:'257'
-	// <0x7a324d>|0x0fd|+0x00a:'258'
-	// <0>
-	// <1>
-	// <0x7a3257>|0x107|+0x008:'261'
-	// <0x7a325f>|0x10f|+0x012:'262'
-	// <0x7a3271>|0x121|+0x00e:'263'
-	// <0x7a327f>|0x12f|+0x009:'264'
-	// <0>
-	// <0x7a3288>|0x138|+0x010:'266'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7a3298>|0x148|+0x0cc:'278'
-	// ******
+	*buffer++				= ( u8 )sign_in_message_type;
+
+	const u8 account_name_length	= ( u8 )strlen( m_account_name );
+	ASSERT					( UNKNOWN_EXPRESSION_T( account_name_length < sizeof( m_account_name ) ) );
+	*buffer++				= account_name_length;
+	memcpy					( buffer, m_account_name, account_name_length );
+	buffer					+= account_name_length;
+
+
+	char version[8]			= { 0 };
+	strings::copy			( version, "0.100b" );
+	memcpy					( buffer, version, sizeof( version ) );
+	buffer					+= sizeof( version );
+
+	m_client_state			= signing_in;
+	boost::asio::async_write	(
+		m_socket,
+		boost::asio::buffer( m_data, buffer - m_data ),
+		boost::bind
+		(
+			&login_client_impl::on_sign_in_written,
+			this,
+			callback,
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred
+		)
+	);
 }
-
-// STATE[STUB]
-void login_client_impl::sign_in(
-	pcstr const		host,
-	const u16		port,
-	pcstr const		account_name,
-	pcstr const		password,
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
-)
+// STATE[90.34%|PARTIAL]: structure clean (strncpy_s triple + const& functor local + if/else-if/else tail verified); residual = the function1(bind_t) conversion lowering + LOG-helper scheduling x3
+void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &host, &port, &account_name, &password, &callback );
+	LOG_INFO				( "signing in to LOGIN Server: host[%s], port[%d], account[%s], password[%s]", host, port, account_name, password );
 
-	// LOCALS
-	// boost::function< void( enum connection_error_types_enum ) > const& sign_in_functor
-	// ******
+	m_host_port				= port;
+	strncpy_s				( m_host, sizeof( m_host ), host, sizeof( m_host ) - 1 );
+	m_host[ sizeof( m_host ) - 1 ]	= 0;
 
-	// FUNCTION BODY[0x7a3370]: 28
-	// <0x7a338a>|0x01a|+0x093:'283'
-	// <0>
-	// <0x7a341d>|0x0ad|+0x011:'285'
-	// <0x7a342e>|0x0be|+0x01c:'286'
-	// <0x7a344a>|0x0da|+0x00d:'287'
-	// <0>
-	// <0x7a3457>|0x0e7|+0x01c:'289'
-	// <0x7a3473>|0x103|+0x00d:'290'
-	// <0>
-	// <0x7a3480>|0x110|+0x01c:'292'
-	// <0x7a349c>|0x12c|+0x00d:'293'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x7a34a9>|0x139|+0x03f:'301'
-	// <0>
-	// <0x7a34e8>|0x178|+0x084:'303'
-	// <0>
-	// <0x7a356c>|0x1fc|+0x00f:'305'
-	// <0x7a357b>|0x20b|+0x018:'306'
-	// <0x7a3593>|0x223|+0x00f:'307'
-	// <0x7a35a2>|0x232|+0x00a:'308'
-	// <0x7a35ac>|0x23c|+0x005:'309'
-	// <0x7a35b1>|0x241|+0x08c:'310'
-	// ******
+	strncpy_s				( m_account_name, sizeof( m_account_name ), account_name, sizeof( m_account_name ) );
+	m_account_name[ sizeof( m_account_name ) - 1 ]	= 0;
+
+	strncpy_s				( m_password, sizeof( m_password ), password, sizeof( m_password ) );
+	m_password[ sizeof( m_password ) - 1 ]	= 0;
+
+	boost::function< void ( connection_error_types_enum ) > const& sign_in_functor	=
+		boost::bind(
+			&login_client_impl::sign_in_on_connected,
+			this,
+			_1,
+			callback
+		);
+
+	LOG_INFO				( "[LOGIN] signing in...\r\n" );
+
+	if ( m_connection_state == unresolved )
+		establish_connection	( sign_in_functor, login_resolve_retry_count, login_connect_retry_count );
+	else if ( m_client_state == signed_out )
+		sign_in_functor		( successfully_connected );
+	else
+		LOG_ERROR			( "[LOGIN] waiting for previous operation to be completed\r\n" );
 }
-
 
 } // namespace network
 } // namespace vostok

@@ -12,36 +12,36 @@
 namespace vostok {
 
 // client to server
-// sushi@TODO: this login pair is contradicted by the PDB extraction
-// (binaries/structure/target/headers/vostok/enums/login_server_message_types_enum.h:
-// login_server = the SERVER->client set, servers_connection_info 0x08 .. invalid 0x1f);
-// left untouched here - the login-chain TUs consume these names, reconcile there
-enum login_server_message_types_enum {
+// values pinned by the login-chain target immediates (sign_in_on_connected
+// writes 1, sign_out_on_connected writes 2, sign_up_on_connected writes 0)
+enum login_client_message_types_enum {
 	sign_up_message_type							= 0,
 	sign_in_message_type							= 1,
 	sign_out_message_type							= 2,
 
-	login_server_invalid_message_type				= 63,
-}; // enum login_server_message_types_enum
+	login_client_invalid_message_type				= 63,
+}; // enum login_client_message_types_enum
 
 // server to client
-enum login_client_message_types_enum {
-	// sign in
-	lobby_info_message_type							= 64,
-	password_request_message_type					= 65,
-	invalid_user_name_or_password_message_type		= 66,
-	sign_in_attempt_interval_violated_message_type	= 67,
+// values from the PDB type records
+// (binaries/structure/target/headers/vostok/enums/login_server_message_types_enum.h)
+enum login_server_message_types_enum {
+	servers_connection_info_message_type			= 0x08,
+	password_request_message_type					= 0x09,
+	invalid_user_name_or_password_message_type		= 0x0a,
+	valid_user_name_message_type					= 0x0b,
+	sign_in_attempt_interval_violated_message_type	= 0x0c,
+	sign_out_successful								= 0x0d,
+	occupied_user_name_message_type					= 0x0e,
+	send_sign_up_info_message_type					= 0x0f,
+	sign_up_successful_message_type					= 0x10,
+	user_banned_message_type						= 0x11,
+	user_restricted_by_access_level_message_type	= 0x12,
+	sign_in_user_already_signed_in					= 0x13,
+	sign_in_invalid_version							= 0x14,
 
-	// sign out
-	sign_out_successful								= 68,
-
-	// sign up
-	occupied_user_name_message_type					= 69,
-	send_sign_up_info_message_type					= 70,
-	sign_up_successful_message_type					= 71,
-
-	login_client_invalid_message_type				= 127,
-}; // enum login_client_message_types_enum
+	login_server_invalid_message_type				= 0x1f,
+}; // enum login_server_message_types_enum
 
 // client to server
 // values from the PDB type records (IDA extraction, PR #303 review; not in
