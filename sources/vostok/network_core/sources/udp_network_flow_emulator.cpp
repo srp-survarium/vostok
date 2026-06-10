@@ -170,8 +170,8 @@ void udp_network_flow_emulator::tick(
 	// BASE_ONLY  | 151 | const u16		remote_sequence_id			= reader.r< u16 >( );
 	// SIZE +0x5c | 157 | packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
 	// SIZE +0x7  | 158 | functor( reader, i->second );
-	// TRGT_ONLY  | 89 | --
-	// TRGT_ONLY  | 90 | --
+	// TRGT_ONLY  | t.ln +26 | 0x728c1f (0x5f)
+	// TRGT_ONLY  | t.ln +27 | 0x728c7e (0x13)
 	// VERDICT: STRUCTURE MATCH (shape ok) - 15/15; the ONLY rows are aligner pairing
 	// noise (it pairs our second reader 0x68 against the target's 0xc r<u16> row; hand
 	// alignment is 1:1 in order: readers 0x5f/0x5f vs 0x62/0x68, r<u16> 0xc vs 0x21 each,

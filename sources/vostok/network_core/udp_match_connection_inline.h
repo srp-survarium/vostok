@@ -179,7 +179,7 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 	// SIZE -0x7  | 139 | packet_reader	subpacket_reader( base_packet( pbyte( reader.pointer( ) ), subpacket_size ) );
 	// SIZE +0x36 | 141 | if ( i || !reader.eof( ) )
 	// BASE_ONLY  | 143 | else
-	// TRGT_ONLY  | 148 | --
+	// TRGT_ONLY  | t.ln +54 | 0x121c48 (0x5)
 	// SIZE +0x1e | 149 | m_stats.received_low_level.data_bytes		+= subpacket_reader.size_to_eof( );
 	// VERDICT: STRUCTURE MATCH (shape ok) - 43/43; the BASE_ONLY/TRGT_ONLY pair is the
 	// SAME else-jmp (stmt #35 on both sides, the 5-byte jmp over the else block, verified
