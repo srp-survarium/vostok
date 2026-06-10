@@ -18,18 +18,14 @@
 namespace vostok {
 namespace logging {
 
-// STATE[99.75%|DONE]: LTCG conv inside the VOSTOK_NEW_IMPL chain.
 filter_tree::filter_tree( memory::base_allocator& allocator ) :
 	lock			( ),
 	initiator_tree	( VOSTOK_NEW_IMPL( allocator, node )( "", trace ) ),
 	allocator		( allocator ),
 	filter_stack	( )
 {
-	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (sizes equal, 0xc2)
-	// VERDICT: STRUCTURE MATCH - residual is reloc/conv noise inside the new_helper chain, LTCG; banked.
 }
 
-// STATE[100%|DONE]
 filter_tree::~filter_tree( )
 {
 	initiator_tree->clean( &allocator );
@@ -37,7 +33,6 @@ filter_tree::~filter_tree( )
 }
 
 
-// STATE[100%|DONE]
 bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) const
 {
 	path_parts path( initiator );
@@ -47,7 +42,6 @@ bool filter_tree::has_passed_filters( pcstr initiator, verbosity verbosity ) con
 }
 
 
-// STATE[91%|DONE]: LTCG for `malloc` and `fixed_string` constructor/operator=.
 void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_id )
 {
 	if ( !initiator )
@@ -64,15 +58,8 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 	filter_stack.push_back					(filter);
 
 	build_tree								();
-
-	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
-	// SIZE +0x1 | 56 | filter->initiator						=	initiator;
-	// VERDICT: STRUCTURE MATCH (shape ok) - target calls fixed_string operator=(pcstr by-value, esi/ecx conv),
-	// base the template operator=<pcstr>(const&) - core header overload set + LTCG conv, banked.
 }
 
-// STATE[31%|PARTIAL]: target calls core buffer_string::find + fixed_string::c_str out-of-line; base inlines
-// the whole find (strstr + pointer math, +0x36). Cross-unit (vostok core headers) - flagged, not edited here.
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
 
@@ -85,14 +72,8 @@ bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 	}
 
 	return									false;
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
-	// SIZE +0x36 | 75 | if ( filter->initiator.find(it->initiator.c_str()) == 0 )
-	// VERDICT: STRUCTURE MISMATCH (size) - core buffer_string::find/c_str inline-vs-call (target calls both
-	// out-of-line); needs the core-side out-of-line definitions, blocked from logging.
 }
 
-// STATE[100%|DONE]: LTCG for `malloc`.
 void filter_tree::build_tree( )
 {
 	initiator_tree->clean( &allocator );
@@ -106,19 +87,16 @@ void filter_tree::build_tree( )
 	}
 }
 
-// STATE[91%|DONE]
 filter_tree* new_filter_tree( memory::base_allocator& allocator )
 {
 	return VOSTOK_NEW_IMPL( allocator, filter_tree )( allocator );
 }
 
-// STATE[100%|DONE]
 void delete_filter_tree( filter_tree*& filter_tree )
 {
 	VOSTOK_DELETE_IMPL( filter_tree->allocator, filter_tree );
 }
 
-// STATE[100%|DONE]
 void push_filter(
 	filter_tree&	tree,
 	pcstr			initiator,
@@ -129,7 +107,6 @@ void push_filter(
 	tree.push_filter( initiator, verbosity, thread_id );
 }
 
-// STATE[100%|DONE]
 bool has_passed_filters( filter_tree const& tree, pcstr initiator, verbosity verbosity )
 {
 	return tree.has_passed_filters( initiator, verbosity );
@@ -146,7 +123,6 @@ pcstr verbosity_to_str[] ={
 	NULL,
 };
 
-// STATE[80%|DONE]: core strings::compare_insensitive called out-of-line in target (ecx/eax conv), inlined to __stricmp in base.
 verbosity string_to_verbosity( pcstr in_verbosity )
 {
 	vostok::logging::verbosity verbosities[6] = { silent, error, warning, info, debug, trace };
@@ -155,13 +131,8 @@ verbosity string_to_verbosity( pcstr in_verbosity )
 			  return verbosities[i];
 
 	return invalid;
-
-	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
-	// SIZE +0xb | 141 | if ( !strings::compare_insensitive( verbosity_to_str[verbosities[i]], in_verbosity ) )
-	// VERDICT: STRUCTURE MATCH (shape ok) - core compare_insensitive inline-vs-call; core-side, banked.
 }
 
-// STATE[100%|DONE]
 pcstr verbosity_to_string( verbosity verbosity )
 {
 	switch ( verbosity )
@@ -191,7 +162,6 @@ private:
 
 STATIC_SIZE_ASSERT(filter_name_eq, 0x4);
 
-// STATE[97.2%|DONE]: LTCG conv in the vectora ctor / strings::join / add_line calls (-0x2/-0x1/-0x1).
 void logging_filters_console_command::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
 {
 	typedef vectora<initiator_filter>		filters_vec;
@@ -232,12 +202,6 @@ void logging_filters_console_command::save_to( console_commands::save_storage& f
 		strings::join						( out_str, buffer_size, name(), " ", filter_str, " ", verbosity_str );
 		f.add_line							( out_str );
 	}
-
-	// STRUCTURE DIFF: target 29 stmts / base 29 stmts
-	// SIZE -0x2 | 181 | filters_vec								uniq(a);
-	// SIZE -0x1 | 215 | strings::join						( out_str, buffer_size, name(), " ", filter_str, " ", verbosity_str );
-	// SIZE -0x1 | 216 | f.add_line							( out_str );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 4 bytes of LTCG arg/conv noise across three calls; banked.
 }
 } // namespace logging
 } // namespace vostok

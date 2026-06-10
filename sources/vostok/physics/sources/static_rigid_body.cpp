@@ -11,7 +11,6 @@
 namespace vostok {
 namespace physics {
 
-// STATE[100%|DONE]
 bt_static_rigid_body::bt_static_rigid_body( bt_collision_shape_ptr shape, btRigidBody* body ):
 	m_bt_body	( body ),
 	m_shape		( shape )
@@ -19,50 +18,42 @@ bt_static_rigid_body::bt_static_rigid_body( bt_collision_shape_ptr shape, btRigi
 	m_bt_body->setUserPointer( this );	// <0x584294>|0x000|0x000:'41'
 }
 
-// STATE[100%|DONE]: Same as `get_bt_collision_obect`.
 btRigidBody* bt_static_rigid_body::get_rigid_body( ) {
 	return m_bt_body;	// <0x584000>|0x000|0x000:'51'
 }
 
-// STATE[100%|DONE]
 float4x4 bt_static_rigid_body::get_transform( ) const {
 	return from_bullet( m_bt_body->getWorldTransform() );	// <0x584130>|0x000|0x000:'70'
 }
 
-// STATE[100%|DONE]
 void bt_static_rigid_body::set_transform( float4x4 const& transform ) {
 	m_bt_body->setWorldTransform( from_vostok( transform ) );						// <0x58415b>|0x000|0x000:'79'
 	m_bt_body->setInterpolationWorldTransform( m_bt_body->getWorldTransform( ) );
 }
 
-// STATE[83%|PARTIAL]: First statement used registers slightly differntly to retrieve `point_in_world`.
 void bt_static_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world ) {
 	btVector3 rel_pos = from_vostok( point_in_world ) - m_bt_body->getWorldTransform().getOrigin();
 	m_bt_body->setActivationState( ACTIVE_TAG );
 	m_bt_body->applyImpulse( from_vostok( impulse ), rel_pos );
 }
 
-// STATE[52%|DONE]: `resource_ptr` problems.
 u16 bt_static_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const {
 	return m_shape->get_triangle_material( triangle_id, is_shape_index );
 }
 
-// STATE[100%|DONE]
 u16 bt_static_rigid_body::get_collision_group( ) const {
 	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x584040>|0x000|0x000:'97'
 }
 
-// STATE[100%|DONE]
 btCollisionObject* bt_static_rigid_body::get_bt_collision_obect( ) {
 	return m_bt_body;	// <0x583ff0>|0x000|0x000:'108'
 }
 
-// STATE[100%|DONE]: sushi@NOTE: `m_bt_body` is deleted in destructor.
+// sushi@NOTE: `m_bt_body` is deleted in destructor.
 void destroy_static_rigid_body( bt_static_rigid_body* body ) {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, body );	// <0x584011>|0x000|0x000:'120'
 }
 
-// STATE[75%|DONE]: In target compiler thinks `shape` could have been destroyed because of uninlined `operator->`. I still don't know what's up with that.
 bt_static_rigid_body* create_static_rigid_body( bt_rigid_body_construction_info const& construction_info ) {
 	btVector3 local_inertia = btVector3( 0., 0., 0. );																			// <0x5842dc>|0x000|0x000:'126'
 
@@ -104,7 +95,6 @@ bt_static_rigid_body* create_static_rigid_body( bt_rigid_body_construction_info 
 	return static_rigid_body;																									// <0x5844d4>|0x1f8|0x047:'168'
 }
 
-// STATE[63%|DONE]: `loose_ptr_base` inlined in target.
 bt_static_rigid_body::~bt_static_rigid_body( ) {
 	ASSERT( m_bt_body );
 	VOSTOK_DELETE_IMPL( g_ph_allocator, m_bt_body );	// <0x58419a>|0x000|0x000:'174'

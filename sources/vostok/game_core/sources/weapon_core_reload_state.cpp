@@ -30,7 +30,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 weapon_core_reload_state::weapon_core_reload_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -52,18 +51,6 @@ weapon_core_reload_state::weapon_core_reload_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[83.52%|PARTIAL]: first two statements match byte-for-byte. The return
-// `hands + main + offset` cannot match: the target selects operator+ overloads that DO NOT
-// EXIST in the on-disk mixing headers. Target uses `operator+<animation_lexeme>(expression&,
-// animation_lexeme&) -> expression` (a `template<T> operator+(expression&, T&)` form) for the
-// first `+`, then `operator+(expression&, expression&) -> expression` (non-template) for the
-// second - both return `expression` by value and call the real `expression::is_empty()`.
-// vostok/animation/mixing_addition_lexeme_inline.h only provides `template<T1,T2> operator+
-// -> addition_lexeme&`, and mixing_expression.h's `is_empty()` is a `return false` STUB. So no
-// reshaping of the return expression can select the target's overloads - this is a cross-unit
-// header gap (the whole mixing operator+ family + is_empty body), not source-steerable here.
-// Re-match attempts (all rebuilt, report.json): baseline 83.52; `+ expression(offset)` -> 77.48;
-// `expression(hands+main) + offset` -> 56.65. See the .md / assembly_patterns.md.
 animation::mixing::expression weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&							buffer,
 	bool									is_third_view,
@@ -76,15 +63,8 @@ animation::mixing::expression weapon_core_reload_state::weapon_and_hands_express
 	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x27 | 78 | return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the mixing operator+ overload gap
-	// (target's operator+<animation_lexeme>/operator+(expression&,expression&) forms do not exist
-	// in the on-disk mixing headers), blocked on the mixing unit, non-steerable here.
 }
 
-// STATE[100%|DONE]
 weapon_lexeme_pair weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-reload";
@@ -107,10 +87,6 @@ weapon_lexeme_pair weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buf
 	);
 }
 
-// STATE[73.6%|PARTIAL]: all 7 statements (srcline 62,63,65,67,69,82,83) match the target
-// carcass; residual is target keeping animation_lexeme_parameters setters / weapon_core::get_user /
-// ~animation_lexeme_parameters OUT-OF-LINE while base inlines them (in-class header inlines under
-// /Ob2 /GL whole-program inlining) - not de-inlinable from this TU. See the .md.
 animation::mixing::expression weapon_core_reload_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -142,20 +118,8 @@ animation::mixing::expression weapon_core_reload_state::get_user_hands_expressio
 	);
 
 	return override_lexeme;
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
-	// SIZE +0x3  | 123 | return weapon_lexeme;
-	// SIZE +0x16 | 142 | );
-	// VERDICT: STRUCTURE MATCH (7/7) - residuals are the lexeme_parameters setters /
-	// weapon_core::get_user / ~params kept out-of-line in target vs inlined in base
-	// (/Ob2 /GL whole-program decision), non-steerable from this TU.
 }
 
-// STATE[86.5%|PARTIAL]: placement-new + ctor call + arg order all match; sole residual is the
-// timescale arg - target emits `call computed_reload_animation_time_scale`, base inlines that
-// helper to a constant `fldz` because it is still an inline STUB (return 0.0f) in
-// weapon_animations_timescale_inline.h. Bounded by that helper's own unit; should reach 100%
-// once it is matched non-stub. See the .md.
 weapon_core_reload_state* weapon_core_state_cook_template<weapon_core_reload_state>::new_object(
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*		params,
@@ -169,11 +133,6 @@ weapon_core_reload_state* weapon_core_state_cook_template<weapon_core_reload_sta
 		animations,
 		animations_count
 	);
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// SIZE -0x11 | 189 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the timescale arg: target calls
-	// computed_reload_animation_time_scale, base inlines the 0.0f stub; blocked on that callee.
 }
 
 } // namespace survarium

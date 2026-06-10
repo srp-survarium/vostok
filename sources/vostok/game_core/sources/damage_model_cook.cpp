@@ -17,14 +17,12 @@ console_commands::cc_token*							damage_model_cook::m_hit_types_commands;
 fixed_vector< fixed_string<24>, 12 >				damage_model_cook::m_hit_types_strings;
 u32 g_current_hit_type;	// sushi@TODO: There is `get_current_hit_type` function, which possibly relies on this. I didn't find any references to it though, so skipping for now.
 
-// STATE[100%|DONE]
 damage_model_cook::damage_model_cook( ) :
 	resources::translate_query_cook( resources::damage_model_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[100%|DONE]
 void damage_model_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	resources::query_resource(
@@ -37,8 +35,6 @@ void damage_model_cook::translate_query( resources::query_result_for_cook& paren
 	);
 }
 
-// STATE[93.26%|PARTIAL]: the whole model is one allocation, so the per-element deletes
-// reduce to dtor calls + one final free; sole residual is the final free_helper inline-vs-call.
 void damage_model_cook::delete_resource( resources::resource_base* resource )
 {
 	damage_model* model_res = static_cast_checked< damage_model* >( resource );
@@ -71,13 +67,8 @@ void damage_model_cook::delete_resource( resources::resource_base* resource )
 
 	model_res->~damage_model( );
 	VOSTOK_FREE_IMPL( g_allocator, resource );	// claude@MATCH: target keeps free_helper out-of-line (free_helper_impl); base inlines free_helper.
-
-	// STRUCTURE DIFF: target 20 stmts / base 20 stmts
-	// SIZE +0x15 | 73 | VOSTOK_FREE_IMPL( g_allocator, resource );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is free_helper kept out-of-line by target vs inlined by base (per-call-site LTCG), non-steerable.
 }
 
-// STATE[BLOCKED]
 static u32 calculate_model_size( configs::binary_config_value const& model_value )
 {
 	const u32 body_parts_count	= model_value.size( );
@@ -167,7 +158,6 @@ static u32 calculate_model_size( configs::binary_config_value const& model_value
 	// ******
 }
 
-// STATE[BLOCKED]
 static hit_type_parameters* create_hit_type_parameters(
 	damage_model* const						model,
 	memory::stack_allocator*				allocator,
@@ -221,7 +211,6 @@ static hit_type_parameters* create_hit_type_parameters(
 	// ******
 }
 
-// STATE[BLOCKED]
 static affects_threshold* create_threshold(
 	memory::stack_allocator*				allocator,
 	configs::binary_config_value const&		threshold_value,
@@ -271,7 +260,6 @@ static affects_threshold* create_threshold(
 	// ******
 }
 
-// STATE[BLOCKED]
 static void fill_body_part_parameters(
 	body_part_parameters*					body_part,
 	damage_model* const						model,
@@ -334,7 +322,7 @@ static void fill_body_part_parameters(
 	// ******
 }
 
-// STATE[BLOCKED] sushi@NOTE: Possibly requires proper casts
+// sushi@NOTE: Possibly requires proper casts
 static body_part_parameters* create_body_part_parameters(
 	memory::stack_allocator*				allocator,
 	configs::binary_config_value const&		part_value,
@@ -361,7 +349,6 @@ static body_part_parameters* create_body_part_parameters(
 	// ******
 }
 
-// STATE[BLOCKED]
 static void fill_damage_model(
 	damage_model* const						model,
 	memory::stack_allocator*				allocator,
@@ -446,8 +433,6 @@ static void fill_damage_model(
 
 }
 
-// STATE[90.73%|PARTIAL]: recovered public m_hit_types_strings + the m_hit_types_commands
-// static store + the 1-arg fixed_string ctor (see embed); residual is LTCG inline-vs-call.
 void damage_model_cook::on_hit_params_received( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const parent = data.get_parent_query( );
@@ -508,22 +493,6 @@ void damage_model_cook::on_hit_params_received( resources::queries_result& data 
 
 	parent->set_unmanaged_resource( new_model, resources::memory_usage_type( resources::nocache_memory, sizeof( damage_model ) ) );
 	parent->finish_query( result_success );
-
-	// STRUCTURE DIFF: target 33 stmts / base 33 stmts
-	// SIZE -0x4  | 482 | for ( u32 i = 0 ; it_hit != it_hit_end ; ++it_hit, ++i )
-	// SIZE -0x27 | 484 | m_hit_types_strings.push_back( fixed_string<24>( (pcstr)*it_hit ) );
-	// SIZE +0x1  | 485 | console_commands::command_token new_command = { i, m_hit_types_strings.back( ).c_str( ) };
-	// SIZE -0x3  | 487 | }
-	// SIZE -0x13 | 496 | );
-	// BASE_ONLY  | 502 | void* model_buffer = VOSTOK_MALLOC_IMPL( g_allocator, model_buffer_size, description );
-	// TRGT_ONLY 0x1d (the same malloc row - the aligner fails to pair it across the +0x6 delta)
-	// SIZE -0x11 | 512 | damage_model* const new_model = VOSTOK_NEW_IMPL( stack_allocator, damage_model )( affects_applying_type );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 33/33, 1:1 line alignment incl. the malloc row. The
-	// 484 row is the 1-arg fixed_string ctor split (target inlines it down to the out-of-line
-	// 3-arg buffer_string base ctor with &Size-temp; base keeps the ctor itself as a call) -
-	// the old 2-arg (src,count) ctor was a recovered SOURCE BUG, kept faithful over the 1.5%
-	// it cost. 482/487 rows are its rel8->rel32 jump cascade. The malloc/);/512 rows are the
-	// g_allocator/stack_allocator identity-helper inline-vs-call (+temp dance). Non-steerable.
 }
 
 } // namespace survarium

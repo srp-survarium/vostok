@@ -11,9 +11,7 @@ namespace survarium {
 
 struct damage_protector : public boost::noncopyable {
 public:
-	// STATE[100%|DONE]
 			damage_protector	( ) : next( NULL ) {}
-	// STATE[100%|DONE]
 	virtual ~damage_protector	( ) {}
 
 public:

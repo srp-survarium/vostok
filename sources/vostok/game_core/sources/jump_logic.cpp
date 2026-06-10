@@ -21,9 +21,6 @@ namespace survarium {
 // via boost::bind<bool>(&true_predicate) - forward-declare and reuse, do not redefine.
 bool true_predicate( );
 
-// STATE[None|DONE]: 99/99 instructions equal (rich-diff 100.0%, 30/30 stmts, 0x10a both
-// sides); report.json shows None because objdiff cannot pair the symbol - same pairing
-// artifact class as initialize_logic/landing_predicate, byte-correct.
 move_direction_enum get_move_direction( player_input const& input )
 {
 	bool move_bwd_pressed;
@@ -74,7 +71,6 @@ move_direction_enum get_move_direction( player_input const& input )
 		return move_direction_on_site;
 }
 
-// STATE[100%|DONE]
 jump_logic::jump_logic( weapon_user_animations_selector& owner )
 	:	m_owner						( owner ),
 		m_user						( 0 ),
@@ -86,7 +82,6 @@ jump_logic::jump_logic( weapon_user_animations_selector& owner )
 	initialize_logic( );
 }
 
-// STATE[100%|DONE]
 jump_logic::~jump_logic( )
 {
 	m_logic->clear_transitions( );
@@ -97,19 +92,6 @@ jump_logic::~jump_logic( )
 	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// STATE[60.40%|PARTIAL]: body, statement order, member-init list, the two boost::bind
-// add_transition calls and the per-statement structure all match the target 1:1 (166/275
-// equal, text-diff fallback - objdiff can't pair this symbol because the boost stored_vtable
-// has an Absolute relocation it rejects, so report.json shows fuzzy=None). The residual is
-// the ai-fsm out-of-line-vs-inline WALL (the documented LTCG call-boundary class, same root
-// cause as deactivate/set_user): the TARGET out-of-lines fsm::states() (delinker-misnamed
-// finalize_impl) + front()/operator[] in the final set_initial_state(states().front()),
-// while our in-class accessors fold to direct field loads (mov [slot]; mov ecx,[ecx+8]).
-// That tail divergence raises base register pressure (extra [ebp-0BCh]/[ebp-0C0h] temps),
-// so base allocates a 0x18-larger frame and uses ecx (not the target's saved esi) for the
-// boost::function::clear() of each transition temp -> the slot numbering cascades. Not
-// source-steerable here (fsm::states() is `inline` in the header; the toolchain's LTCG
-// inline decision is the call boundary). See jump_logic.md.
 void jump_logic::initialize_logic( )
 {
 	m_logic = VOSTOK_NEW_IMPL( g_allocator, ai::fsm );
@@ -126,21 +108,13 @@ void jump_logic::initialize_logic( )
 	m_logic->add_transition( start, landing, boost::bind( &jump_logic::landing_predicate, this ) );
 
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
-
-	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
-	// SIZE +0x11 | 126 | m_logic->set_initial_state( m_logic->states( ).front( ) );
-	// VERDICT: STRUCTURE MATCH (10/10) - sole SIZE row is the ai-fsm states()/front() inline-vs-call wall (target out-of-lines them); non-steerable from this TU.
 }
 
-// STATE[100%|DONE]
 void jump_logic::tick( )
 {
 	m_logic->tick( );
 }
 
-// STATE[100%|DONE]: target params are const-qualified - the header decl now matches
-// (const move_direction_enum, const bool, const jump_animation_parts) so the rich-diff
-// pairs; objdiff reports 100%.
 u32 get_jump_animation_index(
 	const move_direction_enum		move_direction,
 	const bool						jump_from_right_leg,
@@ -203,7 +177,6 @@ u32 get_jump_animation_index(
 	}
 }
 
-// STATE[100%|DONE]
 resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts anim_part, bool is_third_view ) const
 {
 	return m_owner.animations().get_jump_animation(
@@ -256,60 +229,30 @@ pcstr jump_logic::get_move_look_caption( ) const
 	// ******
 }
 
-// STATE[100%|DONE]
 void jump_logic::activate( )
 {
 	m_jumping_direction			= get_move_direction( m_user->input( ) );
 	m_is_jump_from_right_leg	= !m_owner.is_right_leg_supporting( );
 }
 
-// STATE[45.13%|PARTIAL]: body is the single statement the carcass dictates and the
-// control flow matches; residual is the ai-fsm inline-vs-call wall: TARGET out-of-lines
-// fsm::states() (folds to 0x03f210, delinker-misnamed finalize_impl) + the front()/
-// operator[] accessor, while our in-class accessors fold to direct field loads
-// (`mov ecx,[eax+8]`), shifting the whole frame (sub esp,0Ch + [ebp-4]/[ebp-8] temps the
-// target lacks). Confirmed: fsm::states() exists out-of-line in TARGET, absent in BASE.
-// This is the permitted LTCG call-boundary class; not source-steerable (no cast/loop here).
-// objdiff measure 45.13% (report.json - the 7/26 = 26.9% diff-VIEW footer under-counts vs
-// the authoritative report measure). See jump_logic.md.
 void jump_logic::deactivate( )
 {
 	m_logic->set_initial_state( m_logic->states( ).front( ) );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
-	// SIZE +0x5 | 285 | m_logic->set_initial_state( m_logic->states( ).front( ) );
-	// VERDICT: STRUCTURE MATCH (1/1) - the ai-fsm states()/front() inline-vs-call wall; non-steerable from this TU.
 }
 
-// STATE[74.90%|PARTIAL]: the PDB records NO `state` local and ONE statement for the loop
-// body (0x19 = cast-temp + virtual call + folded backjump): a brace-less one-line body with
-// static_cast_checked (its return temp is the slot the old named local was imitating) -
-// the body statement now byte-matches. Faithful 3/3 shape kept over the old higher-% (83.61)
-// wrong-quantity 4-stmt version. The residual is the ai-fsm inline-vs-call WALL: the TARGET
-// out-of-lines fsm::states() (delinker-misnamed finalize_impl) + front()/operator[] (two
-// `call`s) in the for-init, while our in-class accessors fold inline to direct field loads,
-// enlarging the frame and shifting the slot numbering. Confirmed out-of-line in TARGET, absent in BASE.
 void jump_logic::set_user( base_player& user )
 {
 	m_user = &user;
 
 	for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next )
 		static_cast_checked< jump_logic_base_state* >( i )->set_user( user );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE +0x5 | 295 | for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next )
-	// VERDICT: STRUCTURE MATCH (3/3) - sole SIZE row is the ai-fsm states()/front() inline-vs-call wall in the for-init; non-steerable from this TU.
 }
 
-// STATE[None|DONE]: body is `mov al,1; ret` (8/8 bytes equal by RVA diff @0x57d4f0);
-// /OPT:ICF folds this `return true;` into a shared fold body, so objdiff reports
-// it unpaired (None) - byte-correct, not separately scorable.
 bool jump_logic::landing_predicate( ) const
 {
 	return true;
 }
 
-// STATE[100%|DONE]
 std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > jump_logic::selected_animations(
 	mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view
 ) const
@@ -319,13 +262,11 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 	);
 }
 
-// STATE[100%|DONE]
 float jump_logic::look_time_factor( ) const
 {
 	return m_owner.look_time_factor( );
 }
 
-// STATE[100%|DONE]
 bool jump_logic::does_need_land_and_run( ) const
 {
 	move_direction_enum landing_direction = get_move_direction( m_user->input( ) );
@@ -355,7 +296,6 @@ bool jump_logic::does_need_land_and_run( ) const
 	}
 }
 
-// STATE[100%|DONE]
 bool jump_logic::is_jump_finished( ) const
 {
 	return static_cast< jump_logic_base_state* >( m_logic->current_state( ) )->is_jump_finished( );

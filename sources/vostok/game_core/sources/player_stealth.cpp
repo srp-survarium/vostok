@@ -7,18 +7,15 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 player_stealth::player_stealth( )
 {
 }
 
-// STATE[100%|DONE]
 player_stealth::player_stealth( player_stealth const& other )
 {
 	*this = other;
 }
 
-// STATE[100%|DONE]
 player_stealth& player_stealth::operator=( player_stealth const& other )
 {
 	if ( this != &other )
@@ -38,7 +35,6 @@ player_stealth& player_stealth::operator=( player_stealth const& other )
 	return *this;
 }
 
-// STATE[100%|DONE]
 void player_stealth::load( configs::binary_config_value const& config )
 {
 	m_default_value				= (float)config["default_value"];

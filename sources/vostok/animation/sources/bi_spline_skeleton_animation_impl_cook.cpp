@@ -8,7 +8,7 @@
 namespace vostok {
 namespace animation {
 
-// STATE[UNCHECKED]: sushi@NOTE: Incorrect flags most likely
+// sushi@NOTE: Incorrect flags most likely
  bi_spline_skeleton_animation_impl_cook::bi_spline_skeleton_animation_impl_cook( )
 	: resources::translate_query_cook( resources::bi_spline_skeleton_animation_class, reuse_true, use_resource_manager_thread_id, 1 << 3 /* resources::flag_last */ )
 {
@@ -98,7 +98,6 @@ void bi_spline_skeleton_animation_impl_cook::translate_query( resources::query_r
 	// ******
 }
 
-// STATE[UNCHECKED]
 void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resource_base* resource_to_delete )
 {
 	resource_to_delete->~resource_base( );
@@ -112,7 +111,6 @@ void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resourc
 }
 
 /* sushi@TODO: I have no idea how to make it included
-// STATE[UNCHECKED]
 //  `dynamic atexit destructor for 's_bi_spline_skeleton_animation_impl_cook'' <0x7deac0>
 static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
 */

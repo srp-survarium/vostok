@@ -11,20 +11,17 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 ik_processor::ik_processor( )
 	: m_skeleton		( NULL )
 	, m_last_time_in_ms	( 0 )
 {
 }
 
-// STATE[100%|DONE]
 void ik_processor::activate( animation::skeleton const& skeleton )
 {
 	m_skeleton = &skeleton;
 }
 
-// STATE[100%|DONE]
 float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& bone, float4x4 const* matrices, animation::skeleton_bone const* first_non_root_bone )
 {
 	u32 const matrix_index	= u32( &bone - first_non_root_bone );
@@ -33,7 +30,6 @@ float4x4 get_bone_matrix_in_object_space_impl( animation::skeleton_bone const& b
 		float4x4( ).identity( );
 }
 
-// STATE[100%|DONE]
 float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices )
 {
 	animation::skeleton_bone const* const first_non_root_bone	= &skeleton.get_root( ) + skeleton.get_root_bones_count( );

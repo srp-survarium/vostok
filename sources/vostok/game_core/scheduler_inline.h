@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[INLINED]: Shouldn't be generated in target
 inline scheduler::scheduler( vostok::memory::base_allocator* allocator ) :
 	m_inactive_objects	( allocator ),
 	m_active_objects	( allocator ),
@@ -24,13 +23,11 @@ inline scheduler::~scheduler( )
 	// <2>
 }
 
-// STATE[INLINED]: Shouldn't be generated in target.
 inline void	scheduler::change_status( scheduler::identifier* identifier, scheduler::records_type& dest, scheduler::records_type& src )
 {
 
 }
 
-// STATE[4.0%|BLOCKED]
 inline scheduler::record& scheduler::register_object( scheduler::identifier* identifier, scheduler::callback const& callback, bool active )
 {
 	identifier->m_active = active;
@@ -60,7 +57,6 @@ inline scheduler::record& scheduler::register_object( scheduler::identifier* ide
 	// ******
 }
 
-// STATE[BLOCKED]: 
 inline void scheduler::register_on_frame( scheduler::identifier* identifier, scheduler::callback const& callback, bool active )
 {
 	scheduler::record& record = register_object( identifier, callback, active );
@@ -77,7 +73,6 @@ inline void scheduler::register_on_frame( scheduler::identifier* identifier, sch
 	// ******
 }
 
-// STATE[BLOCKED]: Didn't 
 inline void scheduler::register_for_update(
 	scheduler::identifier*		identifier,
 	scheduler::callback const&	callback,
@@ -105,7 +100,6 @@ inline void scheduler::register_for_update(
 	// ******
 }
 
-// STATE[0.0%|BLOCKED]: Everything inlined differently. Most likely `dst = src` is `change_status`, but then the structure with the second breakpoint doesn't make sense
 inline void scheduler::unregister( scheduler::identifier* identifier )
 {
 	if ( m_current_index >= identifier->m_id )

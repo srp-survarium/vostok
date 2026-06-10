@@ -52,7 +52,6 @@ STATIC_SIZE_ASSERT(affect_subscriber, 0x28);
 
 struct booster_damage_protector : public damage_protector {
 public:
-	// STATE[99.87%|DONE]: Stack size is different
 	explicit			booster_damage_protector	( pcstr damage_type, float reduce, float absorb ) :
 							m_reduce	( reduce ),
 							m_absorb	( absorb )
@@ -61,7 +60,6 @@ public:
 		strings::copy( (pstr)&m_hit_type, 16, damage_type ); // sushi@TODO: damage_type can be less then 16, is this safe?
 	}
 
-	// STATE[99.50%|DONE]
 	inline	float		reduce_damage				(
 							pcstr		body_part_name,
 							pcstr		damage_type,
