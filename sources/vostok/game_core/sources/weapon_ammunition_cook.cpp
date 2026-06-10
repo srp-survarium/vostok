@@ -31,13 +31,8 @@ void weapon_ammunition_cook::translate_query( resources::query_result_for_cook& 
 		&parent
 	);
 
-	// STRUCTURE DIFF[target 0x7506d0 | base 0x45f270]: target 4 / base 4 stmts
-	// .. same ..
-	// ; aligned 4, size-diffs 0, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole residual is a uniform +0xC frame-size
-	// (sub esp,18Ch base vs 180h target) shifting every [ebp-N] slot; instructions are
-	// otherwise byte-identical. Non-steerable LTCG slot allocation for the boost::bind
-	// functor temp passed to query_resource. trail: translate_query.md
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (no diverging rows, 0x15f bytes both)
+	// VERDICT: STRUCTURE MATCH - byte sizes now equal; 99.83 residual is an ICF fold-name relocation only.
 }
 
 // STATE[31.00%|PARTIAL]: shared cook-base wall - delete_helper LTCG arg passing.
@@ -45,18 +40,13 @@ void weapon_ammunition_cook::delete_resource( resources::resource_base* resource
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
 
-	// STRUCTURE DIFF[target 0x7505a0 | base 0x45f150]: target 1 / base 1 stmts
-	// 0x009 <0x17> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - both call the same
-	// delete_helper<doug_lea_allocator,resource_base> instantiation; target pushes the
-	// resource_base*& arg on the stack (add esp,8), base passes it in edi (push/pop edi,
-	// add esp,4) via the LTCG custom calling convention. Shared wall across all 5 raw-param
-	// cook deleters (items_cook, animation_analysis_result_cook, items_dictionary_cook,
-	// player_parameters_modifyer_cook, this), non-steerable LTCG arg passing. trail: delete_resource.md
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x1 | 46 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH (shape ok) - delete_helper LTCG arg-passing convention differs
+	// (target stack arg vs base edi), shared wall across the 5 raw-param cook deleters, non-steerable.
 }
 
-// STATE[94.63%|PARTIAL]: resource_ptr-by-value temp materialization, non-steerable.
+// STATE[100%|DONE]
 void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( data.size( ) == 1 ) );
@@ -66,17 +56,6 @@ void weapon_ammunition_cook::on_config_ready( resources::queries_result& data, r
 
 	parent->set_unmanaged_resource( wa, resources::memory_usage_type( resources::nocache_memory, sizeof( weapon_ammunition ) ) );
 	parent->finish_query( result_success );
-
-	// STRUCTURE DIFF[target 0x7505d0 | base 0x45f180]: target 7 / base 7 stmts
-	// .. same ..
-	// 0x016 <0x22> | 0x016 <0x1d> | configs::binary_config_ptr	config	= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );   SIZE
-	// .. same ..
-	// ; aligned 6, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the static_cast_resource_ptr line:
-	// target materializes the by-value get_unmanaged_resource() resource_ptr temp into a
-	// named [ebp-10h] slot and destroys it with an explicit intrusive_ptr::dec, base builds
-	// it inline via push ecx;mov esi,esp + add esp,4 (no dec). Non-steerable LTCG by-value
-	// smart-ptr temp materialization; all other 6 statements byte-exact. trail: on_config_loaded.md
 }
 
 } // namespace survarium
