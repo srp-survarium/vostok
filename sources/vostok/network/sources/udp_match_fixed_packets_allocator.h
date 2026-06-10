@@ -14,7 +14,11 @@ namespace network {
 template < u32 packets_count >
 class udp_match_fixed_packets_allocator : public network_core::udp_match_packets_allocator {
 public:
-	// STATE[STUB]: arena wiring follows the base ctor (allocator, arena, size)
+	// STATE[INLINED]: no standalone symbol; wiring verified against the < 8192 >
+	// inline expansion in match_client::create_responses_packets_allocator (target
+	// rva 0x74cd00, +0x54..+0x7c): out-of-line single_size_buffer_allocator base
+	// ctor( m_buffer = this+0x14, 0x258000 ), then the inlined
+	// udp_match_packets_allocator member stores ( m_allocator, m_reference_count=0 )
 	inline	explicit	udp_match_fixed_packets_allocator	( memory::base_allocator& allocator ) :
 		network_core::udp_match_packets_allocator( allocator, m_buffer, sizeof( m_buffer ) )
 	{
