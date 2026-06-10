@@ -23,7 +23,6 @@
 
 // sushi@TODO: legacy network::client test wiring disabled (the legacy module is
 // parked in temp/network_legacy); redo against the canonical login/match clients
-//#include <vostok/network/packet_reader.h>
 
 #include <vostok/render/facade/scene_renderer.h>
 

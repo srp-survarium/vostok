@@ -20,5 +20,10 @@ fill in the rebuilt carcass. Game-side consumers (`game_world.h` had a value
 member `network::client m_client`) were commented out and must eventually be
 redone against the canonical API - "deal with them later".
 
+`game/` holds the game module's side of the same legacy wiring
+(`game_net_client.{h,cpp}`, removed from `game.vcproj`): the header had a value
+member `network::client m_client` and the TU pulled the deleted headers into
+the game build graph.
+
 Nothing here is compiled. Delete this directory once the network module is
 matched and the game/engine consumers are reworked.
