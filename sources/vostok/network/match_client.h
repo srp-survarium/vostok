@@ -17,7 +17,7 @@ namespace network_core {
 	class packet_reader;
 	class udp_match_packet;
 	struct udp_match_packets_orderer;
-	class udp_network_flow_emulator_options;
+	struct udp_network_flow_emulator_options;
 } // namespace network_core
 
 namespace network {

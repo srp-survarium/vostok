@@ -5,6 +5,7 @@
 #include "pch.h"
 #include <vostok/network/http_client.h>
 #include "network_world.h"
+#include <vostok/network_core/http_client.h>
 
 namespace vostok {
 namespace network {

@@ -33,8 +33,12 @@ public:
 	inline			~udp_match_packets_allocator( ) { /* no source */ }
 
 private:
+	// intrusive_ptr's threading policy reads m_reference_count directly
+	friend class threading::multi_threading_policy;
+
 	/* 0x000c */	memory::base_allocator&		m_allocator;
-	/* 0x0010 */	long						m_reference_count;
+	// volatile (threading::atomic32_type): the interlocked guard requires it
+	/* 0x0010 */	threading::atomic32_type	m_reference_count;
 }; // class udp_match_packets_allocator
 
 STATIC_SIZE_ASSERT(udp_match_packets_allocator, 0x14);

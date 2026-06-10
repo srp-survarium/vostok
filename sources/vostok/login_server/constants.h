@@ -12,7 +12,7 @@ namespace vostok {
 enum {
 	max_account_name_length		= 32,
 	max_password_length			= 48,
-	max_email_length			= 48,
+	max_email_length			= 100,	// PDB: sign_up_info::email[100] (0xB4 total)
 	max_host_name_length		= 64,
 };
 
