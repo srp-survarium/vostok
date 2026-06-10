@@ -142,12 +142,12 @@ public:
 					) const;
 
 public:
-	/* // sushi@ */	/* noncopyable */
-	/* // sushi@ */	path_parts&			m_path;
-	/* // sushi@ */	logger const&		m_helper;
+	/* 0x0000 */	/* noncopyable */
+	/* 0x0000 */	path_parts&			m_path;
+	/* 0x0004 */	logger const&		m_helper;
 }; // struct logger_predicate
 
-STATIC_SIZE_ASSERT(logger_predicate, // sushi@);
+STATIC_SIZE_ASSERT(logger_predicate, 0x8);
 
 struct debug_log_disable_raii
 {
