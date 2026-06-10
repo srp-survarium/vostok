@@ -1663,6 +1663,18 @@ namespace vostok
 		survarium::hand_to_weapon_ik_processor	hand_ik;
 		hand_ik.serialize	( *packet, 0 );
 		hand_ik.deserialize	( *reader );
+
+		// inventory::serialize/deserialize are otherwise DCE'd ( /OPT:REF ); anchoring them
+		// also emits the static call_item_serialize/call_item_deserialize bind targets
+		// (address-taken, kept out-of-line - target inventory.cpp has both helpers).
+		survarium::inventory					inventory;
+		inventory.serialize		( *packet, 0 );
+		inventory.deserialize	( *reader );
+
+		// body_part_parameters::serialize is otherwise DCE'd (target rva 0x5871f0); no
+		// default ctor, so reach it through an opaque pointer (the anchor never runs).
+		survarium::body_part_parameters*		body_part = NULL;
+		body_part->serialize	( *packet, 0 );
 	}
 
 	void use_game_core_weapon_state()
