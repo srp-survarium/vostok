@@ -57,6 +57,36 @@
 - Watch the param-name shadow: methods taking `sign_up_info const& sign_up_info`
   must qualify later TYPE uses in the same signature as `vostok::sign_up_info`.
 
+## Login stack (login_client + login_client_impl_*, 53 fns)
+
+- **Access**: every `on_*`/`*_on_connected`/`create_client`/`sign_in_impl`/impl-plumbing
+  method is `AAE` private in the target; the public surface is ctor/dtor +
+  `sign_up/sign_in/sign_out` + getters. The game_core anchor is befriended in
+  `login_client.h` (`friend void ::vostok::use_network_clients( );`).
+- **`login_client::sign_up` has NO standalone target symbol** - LTCG inlined it into its
+  optimized-module caller; reconstructed out-of-line in `login_client.cpp` (the impl chain
+  binds `boost::ref( sign_up_info )`, so it must pass the long-lived `m_sign_up_info`).
+  Reachability of the whole impl sign-up chain hangs off it.
+- **Globals**: `s_net_client_account_name` / `s_net_client_account_password_` (trailing
+  underscore!) are GLOBAL-scope extern char[128]; the cc_string statics register them as
+  "account_name"/"account_password" (user_specific, serializable). `destroy_client` is a
+  GLOBAL-scope static (unmangled PDB name), like tcp_packet_client's.
+- **Protocol bytes**: client->server sign_up/sign_in/sign_out = 0/1/2
+  (`login_client_message_types_enum`); server answers use the PDB-extracted
+  `login_server_message_types_enum` (0x08 servers_connection_info .. 0x1f invalid) - the
+  message_types.h reconciliation resolved the #303 sushi@TODO. Client version string
+  "0.100b" goes out in a zero-padded char[8].
+- **SSL**: `m_ssl_context( boost::asio::ssl::context::sslv23 )` (single-arg ctor, method 9),
+  verify file `"../../resources/ssl/survarium_login_server.crt"`, `verify_peer`;
+  account name travels in the clear over `m_socket`, password/sign-up info over
+  `m_ssl_stream` after `async_handshake`. Ping = 4-byte session_id over `m_ping_socket`
+  (udp, `login_udp_port` 25100) on a 1-second deadline timer, `ping_retry_count` 10.
+- **LOG line pins**: every `LOG_*` site sits on its original physical line in all 8 impl
+  TUs (the `push <line>` immediates byte-match); keep the file layouts line-stable.
+- **Recurring residuals** (see assembly_patterns.md): function4::operator()
+  inline-vs-call (the 47-67% handlers), boost::function-assign/ctor copy lowering,
+  LOG-helper function-ctor scheduling, strip_pointer fold on destroy_client.
+
 ## Per-function logs
 One `<function>.md` in this folder per function that needed real effort (see
 [../agentic_loop.md](../agentic_loop.md) section 7). Live status is in the

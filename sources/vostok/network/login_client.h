@@ -10,6 +10,12 @@
 #include <vostok/login_server/message_types.h>
 
 namespace vostok {
+
+// the game_core reachability anchor (temp_include_all.cpp); befriended below so
+// it can call the private on_*/create_*/sign_in_impl members (free decls +
+// friends emit no bytes)
+void use_network_clients( );
+
 namespace network {
 
 struct world;
@@ -28,16 +34,12 @@ public:
 			explicit			login_client					( world& world );
 								~login_client					( );
 
-	// STATE[STUB]: no target symbol (fully inlined or dead)
-	inline	void				sign_up							(
+			void				sign_up							(
 									pcstr					host,
 									u16						port,
 									sign_up_info const&		info,
 									boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback
-								)
-	{
-		VOSTOK_UNREFERENCED_PARAMETERS	( host, port, &info, &callback );
-	}
+								);
 
 			void				sign_in							(
 									pcstr		host,
@@ -50,7 +52,9 @@ public:
 									boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 								);
 
-	// STATE[STUB]: trivial getters (buildability returns)
+	// STATE[INLINED]: no standalone symbols and no matched consumer; bodies are
+	// the canonical state-compare one-liners (values pinned by the matched ctor/
+	// on_signed_* stores)
 	inline	bool				is_signed_in					( ) const { return m_client_state == signed_in; }
 	inline	bool				is_signed_out					( ) const { return m_client_state == signed_out; }
 	inline	client_state_enum	client_state					( ) const { return m_client_state; }
@@ -63,13 +67,15 @@ public:
 			pcstr				server_browser_address			( ) const;
 			pcstr				server_browser_initial_query	( ) const;
 
-	// STATE[STUB]: trivial getter (buildability return)
+	// STATE[INLINED]: no standalone symbol and no matched consumer; the member it
+	// returns is pinned by create_client's strings::copy( m_local_host_ip, ... )
 	inline	pcstr				local_ip_address				( ) const { return m_local_host_ip; }
 			pcstr				host_ip_address					( ) const;
 
 			void				store_user_password_in_settings	( );
 			void				reset_user_password_in_settings	( );
 
+private:
 			void				create_client					( );
 
 			void				sign_in_impl					(
@@ -98,6 +104,9 @@ public:
 									socket_error_types_enum				socket_error,
 									login_server_message_types_enum		login_error
 								);
+
+private:
+	friend void ::vostok::use_network_clients( );
 
 private:
 	sign_up_info				m_sign_up_info;

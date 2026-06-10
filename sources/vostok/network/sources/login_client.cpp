@@ -6,315 +6,293 @@
 #include <vostok/network/login_client.h>
 #include "network_world.h"
 #include "login_client_impl.h"
-#include "string_response.h"
+#include "string_order.h"
+#include "functor_order.h"
+#include "functor_response.h"
 #include <vostok/console_command.h>
+#include <vostok/network_core/sources/network_core_entry_point.h>
+
+// STATE[100%|DONE]
+// claude@MATCH: GLOBAL-scope, extern-linkage buffers (target mangles
+// ?s_net_client_account_name@@3PADA - no namespace); note the trailing
+// underscore on the password buffer (the original's exact spelling)
+char	s_net_client_account_name[128];
+char	s_net_client_account_password_[128];
+
+// STATE[0%|DONE]: dynamic-initializer thunks pair as None by design (objdiff
+// cannot pair the base ??__E mangling with the demangled target name - the
+// cc-initializer pattern, assembly_patterns.md); ctor args read off the target
+// initializer bytes (name/buffer/0x80/true/command_type_user_specific)
+static vostok::console_commands::cc_string s_net_client_account_name_cc(
+	"account_name", s_net_client_account_name,
+	sizeof( s_net_client_account_name ), true,
+	vostok::console_commands::command_type_user_specific );
+static vostok::console_commands::cc_string s_net_client_account_password_cc(
+	"account_password", s_net_client_account_password_,
+	sizeof( s_net_client_account_password_ ), true,
+	vostok::console_commands::command_type_user_specific );
 
 namespace vostok {
 namespace network {
 
-// STATE[STUB]: registration arguments are a buildability guess - the matcher
-// confirms (the PDB only records the dynamic initializers)
-// FUNCTION BODY[0x7dc460] / FUNCTION BODY[0x7dc4a0]
-static char s_net_client_account_name_value[128]		= "";
-static char s_net_client_account_password_value[128]	= "";
-static console_commands::cc_string s_net_client_account_name_cc(
-	"net_client_account_name", s_net_client_account_name_value,
-	sizeof( s_net_client_account_name_value ), false,
-	console_commands::command_type_engine_internal );
-static console_commands::cc_string s_net_client_account_password_cc(
-	"net_client_account_password", s_net_client_account_password_value,
-	sizeof( s_net_client_account_password_value ), false,
-	console_commands::command_type_engine_internal );
-
-// STATE[STUB]
+// STATE[100%|DONE]
 pcstr login_client::account_name( ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x579c60]: 1
-	// <0x579c67>|0x007|+0x005:'30'
-	// ******
+	return				s_net_client_account_name;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 pcstr login_client::account_password( ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x579c40]: 1
-	// <0x579c47>|0x007|+0x008:'35'
-	// ******
+	return				m_net_client_account_password;
 }
 
-// STATE[STUB]
+// STATE[99.77%|PARTIAL]: the out-of-line strings::copy<128> COMDAT takes its args via esi/eax with a 3-byte reg-shuffle delta - LTCG call-boundary arg passing
 void login_client::store_user_password_in_settings( )
 {
-	// FUNCTION BODY[0x579d00]: 1
-	// <0x579d0a>|0x00a|+0x012:'40'
-	// ******
+	strings::copy		( s_net_client_account_password_, m_net_client_account_password );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void login_client::reset_user_password_in_settings( )
 {
-	// FUNCTION BODY[0x579c20]: 1
-	// <0x579c27>|0x007|+0x007:'45'
-	// ******
+	s_net_client_account_password_[0]	= 0;
 }
 
-// STATE[STUB]
+// STATE[99.85%|PARTIAL]: 1-instruction reg rename at the inlined ip_address.c_str( ) read - LTCG slot choice after the get_ip_address sret
 void login_client::create_client( )
 {
-	// LOCALS
-	// std::string 						ip_address
-	// ******
-
-	// FUNCTION BODY[0x579d30]: 4
-	// <0x579d3a>|0x00a|+0x00c:'50'
-	// <0x579d46>|0x016|+0x06a:'51'
-	// <0x579db0>|0x080|+0x01f:'52'
-	// <0x579dcf>|0x09f|+0x01c:'53'
-	// ******
+	ASSERT				( UNKNOWN_EXPRESSION_T( !m_client ) );
+	m_client			= NEW( login_client_impl ) ( m_world.io_service( ) );
+	std::string ip_address	= network_core::get_ip_address( m_world.io_service( ) );
+	strings::copy		( m_local_host_ip, ip_address.c_str( ) );
 }
 
-// STATE[STUB]: only the member init-list is reconstructed
+// STATE[76.77%|PARTIAL]: structure 3/3; residual is one statement - base lowers the functor_order bind_t -> boost::function<void()> copy via function-ctor + assign_to with extra esp temps where the target calls the templated ctor direct (the boost::function-ctor inline-vs-call wall, match_client ctor precedent)
 login_client::login_client( world& world ) :
-	m_world			( static_cast_checked<network_world&>(world) ),
-	m_client		( 0 ),
-	m_client_state	( signed_out )
+	m_world				( static_cast_checked<network_world&>(world) ),
+	m_client			( 0 ),
+	m_client_state		( signed_out )
 {
-	// FUNCTION BODY[0x57a180]: 8
-	// <0x57a1e6>|0x066|+0x013:'61'
-	// <0>
-	// <0x57a1f9>|0x079|+0x00a:'63'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x57a203>|0x083|+0x0f0:'68'
-	// ******
+	strings::copy		( m_net_client_account_password, s_net_client_account_password_ );
+
+	m_local_host_ip[0]	= 0;
+
+	m_world.add_order	(
+		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
+			boost::bind( &login_client::create_client, this )
+		)
+	);
 }
 
-// STATE[PARTIAL]: the legacy client.cpp destroy pattern; unverified vs target
-void destroy_client( login_client_impl* client_to_destroy )
-{
-	VOSTOK_DELETE_IMPL	( g_allocator, client_to_destroy );
+} // namespace network
+} // namespace vostok
 
-	// FUNCTION BODY[0x57a4d0]: 1
-	// <0x57a4d6>|0x006|+0x013:'73'
-	// ******
+// STATE[90.83%|PARTIAL]: base keeps the LTCG-promoted strip_pointer fold call
+// before delete_helper where the target inlines it - byte-identical for either
+// allocator spelling (tcp_packet_client destroy_client precedent, same 90.83%)
+// claude@MATCH: GLOBAL-scope static - the target symbol is the unmangled
+// PDB-private name `destroy_client` (no namespaces), the tcp_packet_client idiom
+static void destroy_client( vostok::network::login_client_impl* client_to_destroy )
+{
+	VOSTOK_DELETE_IMPL	( vostok::network::g_allocator, client_to_destroy );
 }
 
-// STATE[STUB]
+namespace vostok {
+namespace network {
+
+// STATE[97.38%|PARTIAL]: same single-statement residual as the ctor (function0(bind_t) copy lowering inside the destroy_client functor_order)
 login_client::~login_client( )
 {
-	// FUNCTION BODY[0x57a5c0]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x57a5d1>|0x011|+0x0f6:'82'
-	// ******
+	m_world.add_order	(
+		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
+			boost::bind( &destroy_client, m_client )
+		)
+	);
 }
 
-// STATE[STUB]
+// STATE[89.29%|PARTIAL]: structure 4/4; residual = base inlines the
+// functor_response bind argument copies (m_on_sign_up function5 + sign_up_info
+// by-value) through extra esp temps where the target schedules them through the
+// folded ctor COMDATs - the boost::function copy inline-vs-call wall
 void login_client::on_signed_up(
-	connection_error_types_enum			connection_error,
-	handshaking_error_types_enum		handshaking_error,
-	socket_error_types_enum				socket_error,
-	login_server_message_types_enum		login_error,
-	sign_up_info const&					sign_up_info
-)
+		connection_error_types_enum			connection_error,
+		handshaking_error_types_enum		handshaking_error,
+		socket_error_types_enum				socket_error,
+		login_server_message_types_enum		login_error,
+		sign_up_info const&					sign_up_info
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( connection_error, handshaking_error, socket_error, login_error, &sign_up_info );
+	m_client_state		= signed_out;
 
-	// FUNCTION BODY[0x57a050]: 10
-	// <0x57a063>|0x013|+0x00d:'93'
-	// <0>
-	// <0x57a070>|0x020|+0x015:'95'
-	// <0x57a085>|0x035|+0x005:'96'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x57a08a>|0x03a|+0x0ec:'102'
-	// ******
+	if ( !m_on_sign_up )
+		return;
+
+	m_world.add_response	(
+		VOSTOK_NEW_IMPL( m_world.responses_allocator( ), functor_response ) (
+			boost::bind( m_on_sign_up, connection_error, handshaking_error, socket_error, login_error, sign_up_info )
+		)
+	);
 }
 
-// STATE[STUB]
+// STATE[89.56%|PARTIAL]: structure clean (cmp 8 = servers_connection_info,
+// brace-less if/else pair); residual = the same functor_response bind-copy
+// lowering as on_signed_up
 void login_client::on_signed_in(
-	connection_error_types_enum			connection_error,
-	handshaking_error_types_enum		handshaking_error,
-	socket_error_types_enum				socket_error,
-	login_server_message_types_enum		login_error
-)
+		connection_error_types_enum			connection_error,
+		handshaking_error_types_enum		handshaking_error,
+		socket_error_types_enum				socket_error,
+		login_server_message_types_enum		login_error
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( connection_error, handshaking_error, socket_error, login_error );
+	if ( !connection_error && !handshaking_error && !socket_error && ( login_error == servers_connection_info_message_type ) )
+		m_client_state	= signed_in;
+	else
+		m_client_state	= signed_out;
 
-	// FUNCTION BODY[0x579f10]: 18
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x579f21>|0x011|+0x018:'138'
-	// <0x579f39>|0x029|+0x00d:'139'
-	// <0x579f46>|0x036|+0x002:'140'
-	// <0x579f48>|0x038|+0x00d:'141'
-	// <0>
-	// <0x579f55>|0x045|+0x015:'143'
-	// <0x579f6a>|0x05a|+0x005:'144'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x579f6f>|0x05f|+0x0cf:'150'
-	// ******
+	if ( !m_on_sign_in )
+		return;
+
+	m_world.add_response	(
+		VOSTOK_NEW_IMPL( m_world.responses_allocator( ), functor_response ) (
+			boost::bind( m_on_sign_in, connection_error, handshaking_error, socket_error, login_error )
+		)
+	);
 }
 
-// STATE[STUB]
+// STATE[96.88%|PARTIAL]: structure 1/1; residual = 2 bytes of bind-temp
+// slot scheduling in the function4 conversion at the impl::sign_in boundary
 void login_client::sign_in_impl(
-	pcstr const		host,
-	const u16		port,
-	pcstr const		account_name,
-	pcstr const		password
-)
+		pcstr const		host,
+		const u16		port,
+		pcstr const		account_name,
+		pcstr const		password
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( host, port, account_name, password );
-
-	// FUNCTION BODY[0x57a4f0]: 1
-	// <0x57a4fa>|0x00a|+0x0b8:'155'
-	// ******
+	m_client->sign_in	( host, port, account_name, password, boost::bind( &login_client::on_signed_in, this, _1, _2, _3, _4 ) );
 }
 
-// STATE[STUB]
+// STATE[INLINED]: no standalone target symbol - LTCG fully inlined it into its
+// only real caller (the optimized game module); body reconstructed: the impl's
+// sign-up chain binds boost::ref over the info, so the original must pass the
+// long-lived m_sign_up_info member, and the callback routes through
+// on_signed_up (which forwards to m_on_sign_up, assigned here); defining it
+// here also keeps the whole impl sign-up chain reachable
+void login_client::sign_up(
+		pcstr					host,
+		u16						port,
+		sign_up_info const&		info,
+		boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback
+	)
+{
+	m_sign_up_info		= info;
+	m_on_sign_up		= callback;
+	m_client->sign_up	( host, port, m_sign_up_info, boost::bind( &login_client::on_signed_up, this, _1, _2, _3, _4, _5 ) );
+}
+
+// STATE[75.16%|PARTIAL]: structure 6/6; residuals = `m_on_sign_in = callback`
+// inlined as copy-swap-clear (target calls the folded operator=, edi-promoted)
+// plus the bind_t -> function3 conversion temp lowered via the converting-ctor
+// call where the target inlines assign_to with the late EH-guard `or` - both
+// the documented boost::function-assign inline-vs-call wall
 void login_client::sign_in(
-	pcstr const		host,
-	const u16		port,
-	pcstr const		account_name,
-	pcstr const		password,
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
-)
+		pcstr			host,
+		u16				port,
+		pcstr			account_name,
+		pcstr			password,
+		boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( host, port, account_name, password, &callback );
+	strings::copy		( m_server_host, host );
+	m_server_port		= port;
 
-	// FUNCTION BODY[0x57a700]: 23
-	// <0x57a718>|0x018|+0x014:'160'
-	// <0x57a72c>|0x02c|+0x011:'161'
-	// <0>
-	// <0x57a73d>|0x03d|+0x00d:'163'
-	// <0x57a74a>|0x04a|+0x014:'164'
-	// <0>
-	// <0x57a75e>|0x05e|+0x014:'166'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x57a772>|0x072|+0x1b6:'182'
-	// ******
+	strings::copy		( s_net_client_account_name, account_name );
+	strings::copy		( m_net_client_account_password, password );
+
+	m_on_sign_in		= callback;
+
+	m_world.add_order	(
+		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), string_order ) (
+			m_world.orders_allocator( ),
+			boost::bind(
+				&login_client::sign_in_impl,
+				this,
+				_1,
+				port,
+				_2,
+				_3
+			),
+			m_server_host,
+			s_net_client_account_name,
+			m_net_client_account_password
+		)
+	);
 }
 
-// STATE[STUB]
+// STATE[88.19%|PARTIAL]: structure 4/4; same functor_response bind-copy
+// lowering residual as on_signed_up
 void login_client::on_signed_out(
-	connection_error_types_enum			connection_error,
-	handshaking_error_types_enum		handshaking_error,
-	socket_error_types_enum				socket_error,
-	login_server_message_types_enum		login_error
-)
+		connection_error_types_enum			connection_error,
+		handshaking_error_types_enum		handshaking_error,
+		socket_error_types_enum				socket_error,
+		login_server_message_types_enum		login_error
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( connection_error, handshaking_error, socket_error, login_error );
+	m_client_state		= signed_out;
 
-	// FUNCTION BODY[0x579e00]: 10
-	// <0x579e11>|0x011|+0x00d:'192'
-	// <0>
-	// <0x579e1e>|0x01e|+0x015:'194'
-	// <0x579e33>|0x033|+0x005:'195'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x579e38>|0x038|+0x0d0:'201'
-	// ******
+	if ( !m_on_sign_out )
+		return;
+
+	m_world.add_response	(
+		VOSTOK_NEW_IMPL( m_world.responses_allocator( ), functor_response ) (
+			boost::bind( m_on_sign_out, connection_error, handshaking_error, socket_error, login_error )
+		)
+	);
 }
 
-// STATE[STUB]
+// STATE[80.60%|PARTIAL]: structure 3/3 (const& lifetime-extended on_signed_out
+// local verified); residuals = `m_on_sign_out = callback` copy-swap-clear inline
+// + the function4 temp conversion lowering - the boost::function-assign wall
 void login_client::sign_out(
-	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
-)
+		boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
+	)
 {
-	VOSTOK_UNREFERENCED_PARAMETER	( callback );
+	m_on_sign_out		= callback;
+	boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& on_signed_out	= boost::bind( &login_client::on_signed_out, this, _1, _2, _3, _4 );
 
-	// LOCALS
-	// boost::function< ... > const&	on_signed_out
-	// ******
-
-	// FUNCTION BODY[0x57a300]: 11
-	// <0x57a318>|0x018|+0x014:'206'
-	// <0x57a32c>|0x02c|+0x06d:'207'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x57a399>|0x099|+0x11c:'216'
-	// ******
+	m_world.add_order	(
+		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
+			boost::bind(
+				&login_client_impl::sign_out,
+				m_client,
+				on_signed_out
+			)
+		)
+	);
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 u32 login_client::session_id( ) const
 {
-	return 0;
-
-	// FUNCTION BODY[0x579cd0]: 1
-	// <0x579cd9>|0x009|+0x015:'221'
-	// ******
+	return				m_client->session_id( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 pcstr login_client::host_ip_address( ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x579cb0]: 1
-	// <0x579cb7>|0x007|+0x00e:'226'
-	// ******
+	return				m_client->host_ip( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 pcstr login_client::server_browser_address( ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x579c90]: 1
-	// <0x579c97>|0x007|+0x00e:'231'
-	// ******
+	return				m_client->server_browser_address( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 pcstr login_client::server_browser_initial_query( ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x579c70]: 1
-	// <0x579c77>|0x007|+0x00e:'236'
-	// ******
+	return				m_client->server_browser_initial_query( );
 }
 
 } // namespace network
