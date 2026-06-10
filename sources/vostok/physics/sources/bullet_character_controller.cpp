@@ -36,7 +36,6 @@ static bool	logging	= false;
 
 const btVector3 bullet_character_controller::m_up_vector = btVector3( 0.0f, 1.0f, 0.0f );
 
-// STATE[100%|DONE]
 static btVector3 getNormalizedVector( btVector3 const& v )
 {
 	btVector3 result = v.normalized( );		// <0x584e69>|0x000|0x000:'61'
@@ -45,25 +44,22 @@ static btVector3 getNormalizedVector( btVector3 const& v )
 	return result;							// <0x584f14>|0x0ab|0x042:'65'
 }
 
-// STATE[100%|DONE]
 btVector3 computeReflectionDirection( btVector3 const& direction, btVector3 const& normal )
 {
 	return direction - 2 * normal.dot( direction ) * normal;	// <0x584ae6>|0x000|0x000:'75'
 }
 
-// STATE[100%|DONE]: The structure doesn't match
 btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal )
 {
 	return direction.dot( normal ) * normal;
 }
 
-// STATE[100%|DONE]
 btVector3 perpindicularComponent( btVector3 const& direction, btVector3 const& normal )
 {
 	return direction - normal.dot( direction ) * normal;	// <0x584a66>|0x000|0x000:'92'
 }
 
-// STATE[100%|DONE]: sushi@NOTE: This function is used in `survarium` module.
+// sushi@NOTE: This function is used in `survarium` module.
 void setup_game_material_groups( u16 const* game_material_groups, u16 game_materials_count )
 {
 	g_game_material_groups = game_material_groups;
@@ -72,14 +68,12 @@ void setup_game_material_groups( u16 const* game_material_groups, u16 game_mater
 
 class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
 public:
-	// STATE[100%|DONE]
 						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, float minSlopeDot ) :
 							ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
 							m_up_vector					( up_vector ),
 							m_self						( self ),
 							m_minSlopeDot				( minSlopeDot ) {}
 
-	// STATE[100%|DONE]
 	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 	{
 		if ( convexResult.m_hitCollisionObject == m_self )
@@ -113,7 +107,7 @@ private:
 
 STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
-// STATE[91.29%|DONE]: sushi@NOTE: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
+// sushi@NOTE: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
 bullet_character_controller::bullet_character_controller(
 	btPairCachingGhostObject*	ghost_object,
 	float2 const&				stand_shape_dim,
@@ -153,12 +147,10 @@ bullet_character_controller::bullet_character_controller(
 	setup_crouch_state( false ); // <0x584e4b>|0x000|0x000:'310'
 }
 
-// STATE[83%|DONE]: LTCG for `this` in destructor.
 bullet_character_controller::~bullet_character_controller( )
 {
 }
 
-// STATE[99.80%|PARTIAL]
 // The implementation is based on `btKinematicCharacterController::updateTargetPositionBasedOnCollision`.
 // Further matches might come from updating `computeReflectionDirection`, possibly, even though it matches 100%, when inlined, it doesn't.
 // Can also be because of `normalMag` check that was compiled out by LTCG.
@@ -195,7 +187,6 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	return result;
 }
 
-// STATE[96%|DONE]: Logging is still not 100% matched
 void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld, float deltaTime )
 {
 	BT_PROFILE("updateAction1");																				// <0x5863f9>|0x000|0x000:'356'
@@ -213,7 +204,6 @@ void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld
 	m_walk_vector.setZero( );																					// <0x58674e>|0x355|0x0f9:'369'
 }
 
-// STATE[99%|DONE]: LTCG for `step_forward_and_strafe`. Might get fixed after it is implemented properly.
 void bullet_character_controller::player_step( float dt )
 {
 	// static bool use_shape_size = <0x10000>;
@@ -250,7 +240,6 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
-// STATE[96.92%|PARTIAL]
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration"); // <0x58506d>|0x000|0x000:'429'
@@ -311,7 +300,6 @@ float bullet_character_controller::recover_from_penetration( )
 	return math::abs( maxPen );
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
 	float new_cylinder_height = math::max( 0.0f, ( m_current_shape_dim.y - m_current_shape_dim.x ) - s_step_height );
@@ -341,7 +329,6 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
 	*/
 }
 
-// STATE[98.71%|DONE]: LTCG for s_cc_max_allowed_penetration_value
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
 {
 	BT_PROFILE("step_forward_and_strafe");
@@ -410,9 +397,6 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	}
 }
 
-// STATE[93.50%|PARTIAL]: Failed to match this further. See comments as to why.
-// * There were 44 commented out lines, possibly with some future logic.
-// * btKinematicCharacterController has a slightly different order for transforms and `finish_pos`.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
 	BT_PROFILE("step_down");
@@ -528,7 +512,6 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	// ******
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk_vector )
 {
 	m_has_updates = false;	// <0x584fde>|0x000|0x000:'728'
@@ -540,7 +523,6 @@ void bullet_character_controller::set_desired_walk_vector( btVector3 const& walk
 	m_walk_vector_applied = false;
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::pre_step( float dt )
 {
 	BT_PROFILE("pre_step");														// <0x5856c0>|0x000|0x000:'739'
@@ -557,13 +539,11 @@ void bullet_character_controller::pre_step( float dt )
 
 // sushi@NOTE: 300 empty lines
 
-// STATE[100%|DONE]
 bool bullet_character_controller::can_jump( ) const
 {
 	return !in_crouch( ) && on_ground( ) && !m_on_steep_slope; // <0x5845f1>|0x000|0x000:'1077'
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::jump( )
 {
 	if ( can_jump( ) )			// <0x5849f1>|0x000|0x000:'1082'
@@ -573,19 +553,16 @@ void bullet_character_controller::jump( )
 	}
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::end_jump( )
 {
 	m_jumping = false; // <0x584520>|0x000|0x000:'1094'
 }
 
-// STATE[100%|DONE]
 bool bullet_character_controller::on_ground( ) const
 {
 	return math::abs( m_vertical_velocity ) < math::epsilon_3; // <0x5845b1>|0x000|0x000:'1105'
 }
 
-// STATE[100%|DONE]
 // x = capsule diameter
 // y = full capsule height
 void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
@@ -599,7 +576,6 @@ void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 	); // <0x584549>|0x000|0x000:'1111'
 }
 
-// STATE[92%|PARTIAL]: The closest I was able to get. The assembly is the same except for a few instructions reshuffled.
 void bullet_character_controller::setup_crouch_state( bool crouch )
 {
 	btVector3 prev_shape_offset = m_shape_offset;												// <0x584809>|0x000|0x000:'1122'
@@ -634,7 +610,6 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 		);
 }
 
-// STATE[94%|PARTIAL]: Target preserves `ecx` by pushing it in prologue.
 void bullet_character_controller::insert( btDynamicsWorld* world )
 {
 	m_collision_world = world; // <0x584bb4>|0x000|0x000:'1152'
@@ -644,7 +619,6 @@ void bullet_character_controller::insert( btDynamicsWorld* world )
 	m_positions.clear( );
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::remove( btDynamicsWorld* world )
 {
 	// ASSERT( m_collision_world == world )? Why do we even need to pass world
@@ -656,7 +630,6 @@ void bullet_character_controller::remove( btDynamicsWorld* world )
 	m_collision_world = NULL;									// <0x5847eb>|0x085|0x03f:'1173'
 }
 
-// STATE[100%|DONE]
 btTransform bullet_character_controller::get_transform( )
 {
 	btTransform transform = m_ghost_object->getWorldTransform( );	// <0x5846a9>|0x000|0x000:'1178'
@@ -664,14 +637,12 @@ btTransform bullet_character_controller::get_transform( )
 	return transform;
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::set_transform( btTransform const& transform )
 {
 	m_ghost_object->setWorldTransform( btTransform( transform.getRotation( ), transform.getOrigin( ) + m_shape_offset ) );	// <0x584f4c>|0x000|0x000:'1186'
 	m_ghost_object->setInterpolationWorldTransform( m_ghost_object->getWorldTransform( ) );									// <0x584fb7>|0x06b|0x06b:'1187'
 }
 
-// STATE[100%|DONE]
 void bullet_character_controller::set_crouch( bool crouch )
 {
 	if ( crouch == m_in_crouch ) // <0x584b6a>|0x000|0x000:'1192'
@@ -689,7 +660,6 @@ void bullet_character_controller::set_crouch( bool crouch )
 	m_positions.clear( );
 }
 
-// STATE[100%|DONE]: The actual logic was commented out
 bool bullet_character_controller::can_stand( )
 {
 	return true; // <0x584510>|0x000|0x000:'1208'

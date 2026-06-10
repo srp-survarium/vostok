@@ -30,7 +30,6 @@ private:
 STATIC_SIZE_ASSERT(btBvhTriangleMeshShapeResource, 0x70);
 
 
-// STATE[0%|PARTIAL]
 btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 	btStridingMeshInterface*			meshInterface,
 	u16*								face_data,
@@ -44,7 +43,6 @@ btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 {
 }
 
-// STATE[80%|DONE]: LTCG for unmanaged resource
 bt_collision_shape::bt_collision_shape( btCollisionShape* sh ):
 	m_tri_face_data		( NULL ),
 	m_shapes_face_data	( NULL ),
@@ -53,7 +51,6 @@ bt_collision_shape::bt_collision_shape( btCollisionShape* sh ):
 	sh->setUserPointer( this );	// <0x72c4e3>|0x000|0x000:'48'
 }
 
-// STATE[100%|DONE]
 bt_collision_shape::~bt_collision_shape( )
 {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, m_shapes_face_data );	// <0x72c459>|0x000|0x000:'53'
@@ -61,7 +58,6 @@ bt_collision_shape::~bt_collision_shape( )
 	destroy_bt_shape( m_bt_shape );								// <0x72c49d>|0x044|0x022:'55'
 }
 
-// STATE[100%|DONE]
 u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_index )
 {
 	if ( is_shape_index )						// <0x72c230>|0x000|0x000:'60'
@@ -75,7 +71,6 @@ u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_in
 	}
 }
 
-// STATE[100%|DONE]
 void destroy_bt_shape( btCollisionShape* sh )
 {
 	s32 shape_type = sh->getShapeType();
@@ -99,13 +94,12 @@ void destroy_bt_shape( btCollisionShape* sh )
 	VOSTOK_DELETE_IMPL( g_ph_allocator, sh );
 }
 
-// STATE[100%|DONE]
 void destroy_shape( bt_collision_shape* shape )
 {
 	VOSTOK_DELETE_IMPL( g_ph_allocator, shape );	// <0x72c201>|0x000|0x000:'115'
 }
 
-// STATE[BLOCKED]: Based on IDA correct. sushi@TODO: Analyzers in Ghidra break for functions with jump tables.
+// sushi@TODO: Analyzers in Ghidra break for functions with jump tables.
 btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 const& dim, float3 const& __formal )
 {
 	btCollisionShape*	result = NULL;														// <0x72c269>|0x000|0x000:'120'
@@ -136,7 +130,6 @@ btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 co
 	return result;
 }
 
-// STATE[96%|DONE]: LTCG for `unamanged_resource`.
 bt_collision_shape* create_primitive_shape( collision::primitive_type type, float3 const& dim, float3 const& local_scale )
 {
 	btCollisionShape* bt_shape = create_bt_primitive( type, dim, local_scale );						// <0x72ca3e>|0x000|0x000:'167'
@@ -151,7 +144,6 @@ bt_collision_shape* create_primitive_shape( collision::primitive_type type, floa
 	return result;
 }
 
-// STATE[90.99%|PARTIAL]: LTCG eax vs. ecx. Maybe something more.
 bt_collision_shape* create_compound_shape( configs::binary_config_value const& shapes_root, float3 const& local_scale, pcstr model_path )
 {
 	configs::binary_config_value::const_iterator it		= shapes_root.begin();
@@ -189,7 +181,6 @@ bt_collision_shape* create_compound_shape( configs::binary_config_value const& s
 	return result;																													// <0x72ca15>|0x514|0x006:'230'
 }
 
-// STATE[88.19%|PARTIAL]: LTCG
 btBvhTriangleMeshShape* create_btBvhTriangleMeshShape(
 	float3*                            vertices,
 	u32*                               indices,
@@ -221,7 +212,6 @@ btBvhTriangleMeshShape* create_btBvhTriangleMeshShape(
 	return result;
 }
 
-// STATE[81.36%|PARTIAL]: LTCG
 bt_collision_shape* create_static_triangle_mesh_shape(
 	float3*                            vertices,
 	u32*                               indices,

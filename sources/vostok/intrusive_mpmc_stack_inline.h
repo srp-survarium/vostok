@@ -20,7 +20,6 @@ inline	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::~intrusive_mpmc_stack(
 {
 }
 
-// STATE[INLINED]
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
 inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
 {
@@ -39,7 +38,6 @@ inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
 			old_head.whole ) != old_head.whole );
 }
 
-// STATE[UNCHECKED]
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
 inline	T*	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::try_pop( )
 {

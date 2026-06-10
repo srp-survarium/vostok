@@ -406,7 +406,6 @@ inline void remove_scale( float4x4 &in_out )
 	remove_scale( in_out, in_out );
 }
 
-// STATE[100%|DONE]
 inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 const& parent_matrix )
 {
 	float4x4 inverted_parent_matrix;

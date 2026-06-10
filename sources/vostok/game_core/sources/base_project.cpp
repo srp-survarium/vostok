@@ -12,14 +12,12 @@
 
 namespace survarium {
 
-// STATE[SKIPPED]
 base_project::base_project( ) :
 	m_static_collision_objects		( NULL ),
 	m_static_collision_objects_count( 0 )
 {
 }
 
-// STATE[SKIPPED]
 base_project::~base_project( )
 {
 	if ( m_static_collision_objects )
@@ -31,7 +29,6 @@ base_project::~base_project( )
 	// ******
 }
 
-// STATE[SKIPPED]
 base_game_object* base_project::get_object_by_name( pcstr name )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_objects_registry.find( name ) != m_objects_registry.end( )  ) );
@@ -43,7 +40,6 @@ base_game_object* base_project::get_object_by_name( pcstr name )
 	// ******
 }
 
-// STATE[SKIPPED]
 void base_project::resolve_links( )
 {
 	base_project::resolve_link_object* it = m_objects_to_resolve.begin( );
@@ -63,7 +59,6 @@ void base_project::resolve_links( )
 	// ******
 }
 
-// STATE[SKIPPED]
 // sushi@NOTE: Used from `survarium::project_cooker_simple::create_game_objects`.
 void read_transform( vostok::configs::binary_config_value const& cfg, float4x4& result )
 {	// object_visual::load
@@ -80,7 +75,6 @@ void read_transform( vostok::configs::binary_config_value const& cfg, float4x4& 
 	// ******
 }
 
-// STATE[SKIPPED]
 void static_collision::insert( vostok::physics::world* w )
 {
 	vostok::physics::bt_rigid_body_construction_info info;
@@ -107,7 +101,6 @@ void static_collision::insert( vostok::physics::world* w )
 	// ******
 }
 
-// STATE[SKIPPED]
 void static_collision::remove( vostok::physics::world* w )
 {
 	w->remove( physics_rigid_body_ );

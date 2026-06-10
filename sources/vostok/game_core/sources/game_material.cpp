@@ -12,7 +12,6 @@ namespace survarium {
 // game_id -> physics_group
 u16 g_material_physics_group[64] = {};
 
-// STATE[97.78%|DONE]: fixed_string m_name ctor inline-vs-call frame-slot (LTCG), shape matches
 game_material::game_material( )	:
 	m_name							( "default" ),
 	m_material_resistance			( 50.0f ),
@@ -23,12 +22,8 @@ game_material::game_material( )	:
 	m_mine_can_place				( false ),
 	m_mine_can_stick				( false )
 {
-	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (member-init only; 0x7f vs 0x7d bytes)
-	// VERDICT: STRUCTURE MATCH (shape ok) - residual is the m_name fixed_string("default")
-	// ctor materialization frame-slot, non-steerable.
 }
 
-// STATE[96.23%|PARTIAL]: binary_config_value access + buffer_string inline-vs-call (LTCG), shape matches
 void game_material::load_from_config( configs::binary_config_value const& val )
 {
 	m_id							= (u16)val["id"];
@@ -52,11 +47,6 @@ void game_material::load_from_config( configs::binary_config_value const& val )
 	g_material_physics_group[m_id]	= physics_group;
 
 	ASSERT( UNKNOWN_EXPRESSION );
-
-	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (no diverging rows, 0x1b6 bytes BOTH)
-	// VERDICT: STRUCTURE MATCH - clean skeleton, equal byte counts; the % residual is
-	// relocation pairing only (binary_config_value operator[]/cast + buffer_string assign
-	// fold names), non-steerable.
 }
 
 } // namespace survarium

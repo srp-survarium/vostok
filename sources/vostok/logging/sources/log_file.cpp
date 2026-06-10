@@ -18,7 +18,6 @@ namespace logging {
 
 using namespace fs_new;
 
-// STATE[98.1%|DONE]: core interlocked_exchange_pointer inline-vs-call (same as close).
 log_file::log_file				(	memory::base_allocator&		allocator,
 									log_file_usage_enum			log_file_usage,
 									pcstr						file_name,
@@ -52,20 +51,15 @@ log_file::log_file				(	memory::base_allocator&		allocator,
 	m_cache_start		= -1;
 	m_cache_size		= 0;
 	m_current_pos		= 0;
-
-	// STRUCTURE DIFF: target 16 stmts / base 16 stmts
-	// SIZE -0x3 | 45 | threading::interlocked_exchange_pointer	( m_file, file );
-	// VERDICT: STRUCTURE MATCH (shape ok) - same core interlocked_exchange_pointer call-vs-xchg as close; banked.
 }
 
-// STATE[100%|DONE]
 log_file::~log_file				( )
 {
 	close				( );
 	VOSTOK_DESTROY_REFERENCE					(m_line_groups);
 }
 
-// STATE[75.7%|DONE]: fs-side native_path_string::convert / file_type_pointer ctor shape + core compare_insensitive/c_str inlining. sushi@NOTE: Possibly implementation for them has changed.
+// sushi@NOTE: Possibly implementation for them has changed.
 void log_file::flush			( pcstr in_file_name )
 {
 	if ( !m_file )
@@ -101,16 +95,8 @@ void log_file::flush			( pcstr in_file_name )
 		m_device->write			( file, buffer, read );
 		break;
 	}
-
-	// STRUCTURE DIFF: target 19 stmts / base 19 stmts
-	// SIZE +0xf  | 74 | if ( !in_file_name || !strings::compare_insensitive( m_file_name.c_str(), in_file_name ) )
-	// SIZE +0x2c | 80 | native_path_string	file_name		=	native_path_string::convert(in_file_name);
-	// SIZE +0x3d | 84 | 									 file_access::write, assert_on_fail_false, notify_watcher_false);
-	// VERDICT: STRUCTURE MATCH (shape ok) - row 74: target calls c_str+compare_insensitive out-of-line (core, flagged);
-	// rows 80/84: fs_new convert/file_type_pointer construct differently (fs-side headers, flagged - do not edit from logging).
 }
 
-// STATE[100%|DONE]
 void log_file::append			( pcstr data, u32 const length )
 {
 	if ( length == 0 )
@@ -153,7 +139,6 @@ void log_file::append			( pcstr data, u32 const length )
 	}
 }
 
-// STATE[92%|DONE]: LTCG for `mutex::lock`.
 void log_file::start_transaction	( )
 {
 	m_log_mutex.lock( );
@@ -163,7 +148,6 @@ void log_file::start_transaction	( )
 	m_transaction_thread_id		=	threading::current_thread_id();
 }
 
-// STATE[100%|DONE]
 void log_file::assert_transaction_in_current_thread	( ) const
 {
 	R_ASSERT						( m_transaction_thread_id != u32(-1),
@@ -172,7 +156,6 @@ void log_file::assert_transaction_in_current_thread	( ) const
 									 "transaction was started in another thread");
 }
 
-// STATE[99%|DONE]: LTCG for `mutex::unlock`.
 void log_file::end_transaction		( )
 {
 	assert_transaction_in_current_thread	( );
@@ -180,14 +163,12 @@ void log_file::end_transaction		( )
 	m_log_mutex.unlock( );
 }
 
-// STATE[100%|DONE]
 u32	log_file::get_lines_count		( ) const
 {
 	assert_transaction_in_current_thread	( );
 	return							m_last_line;
 }
 
-// STATE[100%|DONE]
 void log_file::goto_line		( u32 const line )
 {
 	assert_transaction_in_current_thread	( );
@@ -207,7 +188,6 @@ void log_file::goto_line		( u32 const line )
 		skip_next_line	( );
 }
 
-// STATE[100%|DONE]
 char log_file::read_next_char	( )
 {
 	int const cache_offs= m_current_pos - m_cache_start;
@@ -225,10 +205,6 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
-// STATE[76%|DONE]: core math::min called out-of-line in target (both instantiations), inlined in base
-// STRUCTURE DIFF (both instantiations): target 14 stmts / base 14 stmts
-// SIZE +0x18 | 224 | int const last_pos	= math::min(m_file_size, m_current_pos+buffer_size-1);
-// VERDICT: STRUCTURE MATCH (shape ok) - core-side inline-vs-call, banked.
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {
@@ -271,18 +247,13 @@ struct processor {
 
 STATIC_SIZE_ASSERT(processor, 0x4);
 
-// STATE[99.8%|DONE]: frame 0x18 vs target 0x10 (slot allocation only, identical statements/instructions)
 bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 {
 	assert_transaction_in_current_thread	( );
 
 	return				( process_next_line( buffer_size, processor( buffer ) ) );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (no diverging rows, sizes equal)
-	// VERDICT: STRUCTURE MATCH - residual is frame-size/slot allocation (sub esp,18h vs 10h), LTCG; banked.
 }
 
-// STATE[99.8%|DONE]: same slot-allocation-only residual as read_next_line
 bool log_file::skip_next_line	( )
 {
 	struct processor {
@@ -290,9 +261,6 @@ bool log_file::skip_next_line	( )
 	};
 
 	return				( process_next_line ( 0, &processor::dummy ) );
-
-	// STRUCTURE DIFF: target 1 stmt / base 1 stmt (no diverging rows, sizes equal)
-	// VERDICT: STRUCTURE MATCH - residual is slot allocation in the call shape, LTCG; banked.
 }
 
 } // namespace logging
@@ -303,7 +271,6 @@ bool log_file::skip_next_line	( )
 namespace vostok {
 namespace logging {
 
-// STATE[78.8%|DONE]: core threading::interlocked_exchange_pointer called out-of-line in target, inlined to xchg in base
 void log_file::close		( )
 {
 	if ( !m_file )
@@ -316,10 +283,6 @@ void log_file::close		( )
 
 	m_device->flush		( file );
 	m_device->close		( file );
-
-	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
-	// SIZE -0x3 | 292 | threading::interlocked_exchange_pointer( m_file, (file_type*)0 );
-	// VERDICT: STRUCTURE MATCH (shape ok) - target calls core interlocked_exchange_pointer (ecx/eax conv), base inlines xchg; core-side, banked.
 }
 
 // STATE[STUB]
@@ -328,7 +291,6 @@ void log_file::on_terminate			( )
 	close			( );
 }
 
-// STATE[92%|DONE]: LTCG for malloc
 log_file* new_log_file(
 	memory::base_allocator&				allocator,
 	fs_new::device_file_system_proxy&	device,
@@ -339,7 +301,6 @@ log_file* new_log_file(
 	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device );
 }
 
-// STATE[100%|DONE]
 void delete_log_file( log_file*& log_file )
 {
 	if ( log_file )

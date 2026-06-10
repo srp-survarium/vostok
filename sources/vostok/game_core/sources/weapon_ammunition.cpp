@@ -7,14 +7,12 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 weapon_ammunition::weapon_ammunition( ) :
 	inventory_item	( inventory_item::disabled ),
 	m_source		( NULL )
 {
 }
 
-// STATE[100%|DONE]
 void weapon_ammunition::load( configs::binary_config_value const& cfg )
 {
 	m_distance         = (float)cfg["distance_coef"];
@@ -31,7 +29,6 @@ void weapon_ammunition::load( configs::binary_config_value const& cfg )
 	m_muzzle_speed     = (float)cfg["muzzle_speed"];
 }
 
-// STATE[100%|DONE]
 void weapon_ammunition::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,

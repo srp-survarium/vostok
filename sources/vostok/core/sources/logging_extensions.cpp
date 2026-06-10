@@ -99,9 +99,6 @@ logging::log_format			g_log_format;
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;
 
-// STATE[55.6%|DONE]: paired by adding the QAV/QBD consts (was None purely on the mangled name);
-// residual is /Ox LTCG inlining user_data_directory (s_engine vtable call) + the whole
-// native_path_string::convert loop into the target body - link-set dependent, banked.
 void generate_log_file_name( fs_new::native_path_string* const out_result, pcstr const extension )
 {
 	ASSERT									(extension);
@@ -115,7 +112,6 @@ void generate_log_file_name( fs_new::native_path_string* const out_result, pcstr
 	out_result->appendf						(".%s", extension);
 }
 
-// STATE[100%|DONE]
 static _iobuf* get_stdstream_handle( stdstream_enum stream )
 {
 	if ( stream == stdstream_out )
@@ -126,7 +122,6 @@ static _iobuf* get_stdstream_handle( stdstream_enum stream )
 	return					NULL;
 }
 
-// STATE[100%|DONE]
 void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 {
 	_iobuf* handle		=	get_stdstream_handle( stream );
@@ -141,14 +136,11 @@ void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 	va_end					( mark );						// <2>
 }
 
-// STATE[100%|DONE]
 static bool is_logging_initialized( )
 {
 	return g_log_filter_tree != NULL;
 }
 
-// STATE[98%|DONE]: fixed operand order (key first); residual = key::operator bool called out-of-line
-// in base vs target's inlined is_set guard (LTCG; explicit is_set() inlines a WRONG shape, 98 -> 50).
 bool use_console_for_logging( )
 {
 	if ( is_logging_initialized( ) )
@@ -160,8 +152,6 @@ bool use_console_for_logging( )
 	return						s_use_console_for_logging;
 }
 
-// STATE[91%|DONE]: fixed user_data BIT tests + stderr/stdout tail restructure; residual =
-// s_log_to_stdout.is_set() called out-of-line in base vs inlined guard in target (LTCG).
 static void logging_callback(
 	void* const					user_data,			// claude@NOTE: a BITMASK (and 1 / shr 1) - debug_log_callback even passes &log_flags
 	pcstr const					file,
@@ -244,9 +234,6 @@ static void logging_callback(
 	}																						// <2>
 }
 
-// STATE[52%|PARTIAL]: the % stays low because the target INLINES the boost function1 ctor+dtor
-// machinery around each append call while our LTCG keeps the cloned out-of-line ctor - link-set
-// residual, banked.
 // claude@MATCH: spelled via __LOG_FORCED - the one macro that takes a RUNTIME initiator (the public
 // LOG*/LOGI* wrappers only concatenate literals) and expands argument-for-argument to the target's
 // append calls: callback temp, (void*)&log_flags, format, __FILE__/__LINE__/__FUNCSIG__, debug_log,
@@ -282,7 +269,6 @@ void debug_log_callback(
 		g_log_file->flush( NULL );
 }
 
-// STATE[100%|DONE]
 void logging_preinitialize( )
 {
 	if ( !g_log_callback )
@@ -292,9 +278,6 @@ void logging_preinitialize( )
 	}
 }
 
-// STATE[36%|PARTIAL]: /Ox target inlines native_path_string::convert("../../user_data/user.cfg") +
-// the absolute-path machinery (rows 296-301 ~0x94 bytes bigger) and splits the key-check lines our
-// build merges - fs-side + LTCG inlining, banked. Statement order matches.
 static void push_logging_filters( )
 {
 	using namespace vostok;																									// <1>
@@ -324,7 +307,6 @@ static void push_logging_filters( )
 																															// <2>
 }
 
-// STATE[85%|DONE]: /Ox line-record splits around generate_log_file_name + LTCG conv; shape matches.
 void logging_initialize( )
 {
 	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );
@@ -348,7 +330,6 @@ void logging_initialize( )
 	}
 }
 
-// STATE[100%|DONE]: closed by the debug::log_callback raw-pointer fix (set_log_callback(NULL) is a plain push 0).
 void logging_finalize( )
 {
 	finalize_console( );
@@ -360,8 +341,6 @@ void logging_finalize( )
 	debug::set_log_callback( NULL );
 }
 
-// STATE[83%|PARTIAL]: /Ox merges/reorders the per-handle statements (23 vs 30 line records) and sinks
-// the LOG_WARNING arm; instruction content matches per-block - optimizer scheduling, banked.
 static bool initialize_console( )
 {
 	if ( s_tried_to_initialize_console )
@@ -410,7 +389,6 @@ static bool initialize_console( )
 	return false;
 }
 
-// STATE[100%|DONE]
 static void finalize_console( )
 {
 	if ( s_console_initialized )

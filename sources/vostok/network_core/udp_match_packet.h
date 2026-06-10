@@ -45,7 +45,6 @@ public:
 	private:
 		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 
-		// STATE[100%|DONE]
 		static	inline	void	call_destructor		( udp_match_packet& packet )
 		{
 			packet.~udp_match_packet( );
@@ -58,7 +57,6 @@ public:
 	}; // class helper
 
 private:
-	// STATE[65%|DONE]: structure 2/2 stmts; residual is LTCG inlining (packet/set_member_hook ctors inlined vs target's out-of-line calls)
 	inline				udp_match_packet	( ) :
 		next					( NULL ),
 		last_send_time_in_ms	( 0xFFFFFFFF ),
@@ -75,29 +73,15 @@ private:
 public:
 	inline				~udp_match_packet	( ) { /* no source */ }
 
-	// STATE[INLINED]: no standalone target symbol; the LTCG append(pcvoid,u32) COMDAT
-	// (0x7d690) folds this to `100h - movzx(header_size())` - payload capacity is the
-	// raw array minus the wire header. (`sizeof` vs `m_buffer.size()` indistinguishable
-	// in the folded emission.)
 	inline	u32			allocated_size		( ) const { return sizeof( m_buffer ) - header_size( ); }
 
-	// STATE[INLINED]: no standalone target symbol; send/handle_send inline this as
-	// `packet + 0x2B` - the raw wire buffer starts at m_buffer.elems.
 	inline	pcbyte		buffer_to_send		( ) const { return m_buffer.elems; }
-	// STATE[INLINED]
 	inline	pbyte		buffer_to_send		( ) { return m_buffer.elems; }
 
-	// STATE[0%|PARTIAL]: source proven by the send/handle_send inline sites (and the
-	// append COMDAT's `100h - movzx(header_size())` fold); base COMDAT anchored
-	// (address-take), but the surviving target symbol is an optimized LTCG leaf
-	// (mov eax,[ecx]; sub eax,ecx; sub eax,2Bh; ret - frameless) a /Od body cannot
-	// pair against - the None score is that emission, not a source divergence.
 	inline	u8			header_size			( ) const
 	{
 		return				(u8)( base_packet::m_buffer - m_buffer.elems );
 	}
-	// STATE[INLINED]: no standalone target symbol; send's inline expansion is
-	// `buffer_size()-fold + header_size() call` in that operand order.
 	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
 	// sushi@TODO: body unrecovered - the out-of-line packet<udp_match_packet>::reallocate
@@ -141,7 +125,6 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
-// STATE[99%|DONE]: structure 3/3 stmts; residual is LTCG frame size (0x20 vs 0x34)
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
@@ -151,7 +134,6 @@ inline udp_match_packet* new_udp_match_packet(
 	return					result;
 }
 
-// STATE[61%|DONE]: structure 4/4 stmts; residual is LTCG inlining (deallocate inlined in target, out-of-line in base)
 inline void delete_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
 	udp_match_packet*&		packet

@@ -7,14 +7,12 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 booby_trap_core_cook::booby_trap_core_cook( ) :
 	resources::translate_query_cook( resources::booby_trap_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[90.16%|DONE]: LTCG temp/closure lowering only
 void booby_trap_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	configs::binary_config_ptr config;
@@ -43,19 +41,8 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 		&parent,
 		assert_on_fail_true
 	);
-
-	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
-	// SIZE +0x2 | 30 | if ( !parent.user_data( )->try_get( config ) )
-	// SIZE -0x5 | 44 | { aabb_path.c_str( ), resources::binary_config_class_impl },
-	// SIZE +0x6 | 54 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - L30 is the LTCG promoted-convention register (try_get
-	// takes user_data()'s result in eax in target, ecx in base, one mov); L44 is the documented
-	// LTCG-promoted two-store request factory (target builds the aggregate via an ICF-folded
-	// dest-in-eax helper; create_request form tested earlier and regressed); L54 is bind/
-	// query_resources closure-temp frame inflation. Non-steerable.
 }
 
-// STATE[100%|DONE]
 void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -70,7 +57,6 @@ void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& da
 	query_for_derived_resources( data.get_parent_query( ), resource, config );
 }
 
-// STATE[100%|DONE]
 void booby_trap_core_cook::finish_query( resources::query_result_for_cook* parent, booby_trap_core* resource )
 {
 	parent->set_unmanaged_resource(

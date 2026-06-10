@@ -27,7 +27,6 @@
 namespace vostok {
 namespace physics {
 
-// STATE[98%|PARTIAL]: LTCG for `game_material_id`.
 bt_animated_rigid_body::bt_animated_rigid_body( btCompoundShape* shape, btRigidBody* body, u16 game_material_id ) :
 	m_bt_body			( body ),
 	m_shape				( shape ),
@@ -36,45 +35,38 @@ bt_animated_rigid_body::bt_animated_rigid_body( btCompoundShape* shape, btRigidB
 	body->setUserPointer(this);	// <0x6bfe5a>|0x000|0x000:'25'
 }
 
-// STATE[100%|DONE]
 btRigidBody* bt_animated_rigid_body::get_rigid_body( )
 {
 	return m_bt_body;	// <0x6bf410>|0x000|0x000:'30'
 }
 
-// STATE[100%|DONE]
 u16 bt_animated_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( triangle_id, is_shape_index );
 	return m_game_material_id;	// <0x6bf4b0>|0x000|0x000:'36'
 }
 
-// STATE[100%|DONE]
 void bt_animated_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world)
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( impulse, point_in_world ); // sushi@NOTE: This function is empty
 }
 
-// STATE[100%|DONE]
 void bt_animated_rigid_body::set_transform( float4x4 const& transform )
 {
 	m_bt_body->setWorldTransform( from_vostok( transform ) );	// <0x6bf95b>|0x000|0x000:'46'
 }
 
-// STATE[100%|DONE]
 float4x4 bt_animated_rigid_body::get_transform( ) const
 {
 	return from_bullet( m_bt_body->getWorldTransform( ) );	// <0x6bf750>|0x000|0x000:'51'
 }
 
-// STATE[100%|DONE]
 void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
 	btTransform new_child_transform = from_vostok( new_transform );					// <0x6bf92a>|0x000|0x000:'56'
 	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );	// <0x6bf933>|0x009|0x009:'57'
 }
 
-// STATE[100%|DONE]
 math::aabb bt_animated_rigid_body::get_aabb( ) const
 {
 	btVector3 aabbMin, aabbMax;
@@ -82,14 +74,13 @@ math::aabb bt_animated_rigid_body::get_aabb( ) const
 	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );	// <0x6bf4e8>|0x01f|0x01f:'64'
 }
 
-// STATE[100%|DONE]
 float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
 {
 	btTransform& transform = m_shape->getChildTransform( index );	// <0x6bf730>|0x000|0x000:'69'
 	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
 }
 
-// STATE[BLOCKED]: sushi@TODO: switch statement problems
+// sushi@TODO: switch statement problems
 static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
 	switch ( type )	// <0x6bf579>|0x000|0x000:'86'
@@ -120,7 +111,6 @@ static btCollisionShape* new_bt_primitive( collision::primitive_type type, float
 	}
 }
 
-// STATE[90%|DONE]: LTCG is different for `binary_config_value::operator[]`, `new_bt_primitive`.
 static btCompoundShape* new_bt_element_joint( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data )
 {
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
@@ -141,7 +131,6 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
-// STATE[99.54%|DONE]: LTCG is different for `binary_config_value::operator[]`.
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];										// <0x6bf98f>|0x000|0x000:'146'
@@ -163,7 +152,6 @@ btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_con
 	return bt_shape;																								// <0x6bfdfa>|0x46b|0x16e:'165'
 }
 
-// STATE[100%|DONE]
 static u32 calculate_bt_hit_target_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -183,7 +171,7 @@ static u32 calculate_bt_hit_target_size( configs::binary_config_value const& con
 	}
 }
 
-// STATE[BLOCKED]: sushi@TODO: This function doesn't have xrefs and got inlined in target, don't know where exactly. Also constants.
+// sushi@TODO: This function doesn't have xrefs and got inlined in target, don't know where exactly. Also constants.
 static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -203,7 +191,7 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	}
 }
 
-// STATE[98.38%|PARTIAL]: sushi@TODO: Constants need to be converted to proper `sizeof` operations.
+// sushi@TODO: Constants need to be converted to proper `sizeof` operations.
 // STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
@@ -218,7 +206,6 @@ u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_con
 	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
 }
 
-// STATE[97.25%|DONE]: LTCG for `game_material_id`.
 bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator )
 {
 	btVector3	local_inertia( 0.f, 0.f, 0.f );
@@ -232,13 +219,11 @@ bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 gam
 	return rigid_body;
 }
 
-// STATE[100%|DONE]
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
 	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'
 }
 
-// STATE[99.81%|DONE]: LTCG for `calculate_bt_animated_body_size_from_hit_targets_config` and `get_bones_count_from_hit_targets_config`.
 collision::animated_object* new_animated_bt_hit_model(
 	configs::binary_config_value const& config,
 	animation::skeleton_ptr const&		model_skeleton,
@@ -256,20 +241,17 @@ collision::animated_object* new_animated_bt_hit_model(
 	return object;
 }
 
-// STATE[100%|DONE]
 u16 bt_animated_rigid_body::get_collision_group( ) const
 {
 	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x6bf460>|0x000|0x000:'252'
 }
 
-// STATE[100%|DONE]
 float3 const& bt_animated_rigid_body::center_of_mass_offset( ) const
 {
 	static float3 offset( 0.0f, 0.0f, 0.0f );	// <0x6bf420>|0x000|0x000:'257'
 	return offset;								// <0x6bf44e>|0x02e|0x02e:'258'
 }
 
-// STATE[100%|DONE]
 btCollisionObject* bt_animated_rigid_body::get_bt_collision_obect( )
 {
 	return m_bt_body;

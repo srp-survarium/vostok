@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]: empty frame, never touches the return ptr (target @0x57ce30)
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_inactive::selected_animations(
 	mutable_buffer&						buffer,
 	bool								__formal1,
