@@ -33,31 +33,6 @@ inventory_cook::inventory_cook( ) :
 }
 
 // STATE[91.38%|PARTIAL]: c_str/create_request/push_back inline-vs-call (LTCG), shape matches
-// STRUCTURE DIFF:
-// target: 0x755330            base: 0x466460
-// ; void survarium::inventory_cook::translate_query(vostok::resources::query_result_for_cook&) ; target 75 stmts / base 75 stmts
-// .. same ..
-// --          | <0>         |    EMPTY only base
-// .. same ..
-// <0>         | --          |    EMPTY only target
-// .. same ..
-// 0x0f8 <0x23> | 0x0f7 <0x24> | resource_name = ...item_by_id( slot->item.dict_id ).item_cfg_name.c_str( );   SIZE
-// 0x11b <0x2a> | 0x11b <0x2b> | requests.push_back( create_request( resource_name, weapon_class ) );   SIZE
-// .. same ..
-// 0x1c4 <0x23> | 0x1c5 <0x24> | resource_name = ...item_by_id( slot->item.dict_id ).item_cfg_name.c_str( );   SIZE
-// 0x1e7 <0x2a> | 0x1e9 <0x2b> | requests.push_back( create_request( resource_name, weapon_ammunition_class ) );   SIZE
-// .. same ..
-// 0x294 <0x1b> | 0x297 <0x1c> | dictionary_item const& desc = ...item_by_id( slot->item.dict_id );   SIZE
-// .. same ..
-// 0x2e5 <0x23> | 0x2e9 <0x24> | resource_name = ...item_by_id( slot->item.dict_id ).item_cfg_name.c_str( );   SIZE
-// .. same ..
-// 0x3db <0x2b> | 0x3e0 <0x30> | requests.push_back( create_request( resource_name, class_id ) );   SIZE
-// .. same ..
-// 0x43e <0x26> | 0x448 <0x29> | requests.push_back( create_request( "", unknown_data_class ) );   SIZE
-// .. same ..
-// 0x47c <0xdb> | 0x489 <0xe8> | );   SIZE
-// ; aligned 64, size-diffs 9, quantity-diffs 4
-// VERDICT: STRUCTURE MATCH - 75/75 stmts, all addressed stmts align; SIZE diffs are c_str()/create_request()/push_back() string+container inline-vs-call, quantity-diffs are blank-line gap markers, non-steerable. trail: inventory_cook.md
 void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	inventory_cooker_data* cooker_data;
@@ -160,23 +135,17 @@ void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 		user_data.begin( ),
 		&parent
 	);
+
+	// STRUCTURE DIFF: target 49 / base 49 stmts
+	// SIZE +0x1 x6 | 80/81/92/93/104/107 | c_str()/push_back(create_request(..)) rows
+	// SIZE +0x5  | 143 | requests.push_back( resources::create_request( resource_name, class_id ) );
+	// SIZE +0x3  | 151 | requests.push_back( resources::create_request( "", resources::unknown_data_class ) );
+	// SIZE +0xd  | 162 | ); (query_resources / bind tail)
+	// VERDICT: STRUCTURE MATCH - residuals are create_request promoted-convention bytes and bind internals, whole-program LTCG, non-steerable.
 }
 
-// STATE[82.10%|PARTIAL]: resource_ptr cast + intrusive_ptr temp + virtual setter inline-vs-call (LTCG), shape matches
-// STRUCTURE DIFF:
-// target: 0x754f30            base: 0x465fd0
-// ; void survarium::inventory_cook::on_subresources_loaded(vostok::resources::queries_result&, survarium::inventory_cooker_data*) ; target 57 stmts / base 54 stmts
-// .. same ..
-// <0>         | --          |    EMPTY only target   (x3: blank-line gap markers)
-// .. same ..
-// 0x0d4 <0x36> | 0x0d4 <0x40> | weapon_core_ptr wpn = static_cast_resource_ptr<...>( data[result_index].get_unmanaged_resource() );   SIZE
-// 0x11f <0x2b> | 0x129 <0x37> | wpn->set_dict_id( slot->item.dict_id );   SIZE
-// 0x14a <0x19> | 0x160 <0x60> | inventory_item_ptr iitem = static_cast_resource_ptr<...>( wpn );   SIZE
-// 0x163 <0x13> | 0x1c0 <0x21> | iitem->set_amount( (u16)slot->item.condition_or_stack );   SIZE
-// 0x250 <0x30> | 0x2bb <0x3d> | iitem->set_dict_id( slot->item.dict_id );   SIZE
-// 0x356 <0x30> | 0x3ce <0x3d> | iitem->set_dict_id( slot->item.dict_id );   SIZE
-// ; aligned 48, size-diffs 6, quantity-diffs 3
-// VERDICT: STRUCTURE MATCH - all addressed stmts align (quantity-diffs are 3 blank-line gap markers, not missing stmts); SIZE diffs are static_cast_resource_ptr intrusive_ptr temp materialization + setter inline-vs-call, non-steerable. trail: inventory_cook.md
+// STATE[89.61%|PARTIAL]: intrusive_ptr operator*/cast inline-vs-call (LTCG), shape matches
+// (82.10 -> 89.61 after the engine-wide static_cast_resource_ptr by-value -> const& fix)
 void inventory_cook::on_subresources_loaded( resources::queries_result& data, inventory_cooker_data* cooker_data )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -235,6 +204,14 @@ void inventory_cook::on_subresources_loaded( resources::queries_result& data, in
 	resources::query_result_for_cook* parent = data.get_parent_query( );
 	parent->set_unmanaged_resource( result, resources::memory_usage_type( resources::nocache_memory, sizeof( inventory ) ) );
 	parent->finish_query( result_success );
+
+	// STRUCTURE DIFF: target 42 / base 42 stmts
+	// SIZE +0xd  | 195 | weapon_core_ptr wpn = static_cast_resource_ptr< weapon_core_ptr >( data[result_index].get_unmanaged_resource( ) );
+	// SIZE +0x12 | 199 | inventory_item_ptr iitem = static_cast_resource_ptr< inventory_item_ptr >( wpn );
+	// SIZE +0xe  | 200 | iitem->set_amount( (u16)slot->item.condition_or_stack );
+	// SIZE +0xd  | 214 | iitem->set_dict_id( slot->item.dict_id );
+	// SIZE +0xd  | 228 | iitem->set_dict_id( slot->item.dict_id );
+	// VERDICT: STRUCTURE MATCH - every row is intrusive_ptr operator*/cast machinery the base INLINES (incl. its internal assert eater) where the target calls out-of-line, whole-program LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
