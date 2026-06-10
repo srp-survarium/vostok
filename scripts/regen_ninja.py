@@ -62,14 +62,19 @@ def gen_fresh(out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     # vcproj2ninja sometimes exits non-zero under wine even on success; trust the
     # produced build.ninja over the return code (same as setup-toolchain.py).
-    subprocess.run(
+    # Capture its chatter instead of discarding it, so a REAL failure (no
+    # build.ninja produced) can show what went wrong.
+    proc = subprocess.run(
         ["wine", exe, "--wine", "--sln-path", str(SLN_PATH),
          "--configuration-platform", "Master Gold|Win32",
          "--output-dir", str(out_dir),
          "--project-name", "survarium - PC - DirectX 11"],
-        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        check=False, capture_output=True, text=True, errors="replace",
     )
     if not (out_dir / "build.ninja").is_file():
+        tail = "\n".join((proc.stdout + proc.stderr).splitlines()[-20:])
+        if tail:
+            print(tail, file=sys.stderr)
         sys.exit("[regen-ninja] vcproj2ninja did not produce build.ninja")
 
 

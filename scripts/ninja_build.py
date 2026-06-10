@@ -56,10 +56,10 @@ import sys
 import time
 from pathlib import Path
 
+from _common import VOSTOK_DIR, make_die
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
+
+BUILD_DIR = VOSTOK_DIR / "binaries" / "ninja"
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
@@ -86,11 +86,7 @@ _WINE_SESSION = {
 _BUILD_COMMS = ("wine", "cl", "link", "ninja", "lib", "cmd", "mspdb", "c1", "c2")
 
 
-def die(msg: str, *hints: str) -> None:
-    print(f"[ninja] ERROR: {msg}", file=sys.stderr)
-    for h in hints:
-        print(f"  {h}", file=sys.stderr)
-    sys.exit(1)
+die = make_die("ninja")
 
 
 def _in_our_prefix(entry: Path) -> bool:
@@ -153,7 +149,7 @@ def _outputs_refreshed(since: float) -> bool:
     return True
 
 
-def _kill_prefix_processes(comms: tuple[str, ...]) -> None:
+def _kill_prefix_processes(comms: tuple[str, ...]) -> list[str]:
     """SIGKILL wine processes by comm name, scoped to THIS worktree's WINEPREFIX.
 
     Sibling worktrees build in parallel inside their own prefixes; a global
@@ -161,26 +157,36 @@ def _kill_prefix_processes(comms: tuple[str, ...]) -> None:
     /proc/<pid>/environ against our prefix. Best-effort: a process we can't
     kill is fine - the point is that we no longer BLOCK on it, not that it
     must die.
+
+    Returns a `comm(pid)` entry per kill so callers leave a trace - a prefix-
+    scoping miss here would silently kill a sibling worktree's build, and the
+    log line is what makes that diagnosable.
     """
+    killed: list[str] = []
     if not os.environ.get("WINEPREFIX"):
-        return  # cannot scope the kill safely
+        return killed  # cannot scope the kill safely
     targets = {c.lower() for c in comms}
     for entry in Path("/proc").iterdir():
         if not entry.name.isdigit():
             continue
         try:
-            if (entry / "comm").read_text().strip().lower() not in targets:
+            comm = (entry / "comm").read_text().strip()
+            if comm.lower() not in targets:
                 continue
             if not _in_our_prefix(entry):
                 continue
             os.kill(int(entry.name), signal.SIGKILL)
+            killed.append(f"{comm}({entry.name})")
         except (OSError, ValueError):
             continue
+    return killed
 
 
 def _reap_wine_children() -> None:
     """Kill leftover wine compiler/linker processes (NOT the wineserver session)."""
-    _kill_prefix_processes(("cl", "cl.exe", "link", "link.exe", "conhost.exe"))
+    killed = _kill_prefix_processes(("cl", "cl.exe", "link", "link.exe", "conhost.exe"))
+    if killed:
+        print(f"[ninja] watchdog reaped: {', '.join(killed)}", flush=True)
 
 
 def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
@@ -295,7 +301,9 @@ def main() -> None:
     # an agent's shell) only sees EOF when mspdbsrv dies - a constant ~600s
     # stall per rebuild. The PDB is fully written once ninja returns, so
     # killing it here is safe; respawning next build costs ~a second.
-    _kill_prefix_processes(("mspdbsrv.exe",))
+    killed = _kill_prefix_processes(("mspdbsrv.exe",))
+    if killed:
+        print(f"[ninja] reaped {', '.join(killed)} (post-build PDB daemon)", flush=True)
     sys.exit(rc)
 
 

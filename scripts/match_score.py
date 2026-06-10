@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -134,7 +135,11 @@ def _delinker_rev() -> str:
         lock = json.loads((REPO / "flake.lock").read_text())
         rev = lock["nodes"]["vostok-delinker-src"]["locked"]["rev"]
         return rev[:7]
-    except Exception:
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        # The rev is cosmetic (README footer), but don't hide a broken
+        # flake.lock behind a silent "unknown".
+        print(f"[match_score] WARNING: no delinker rev from flake.lock: {e}",
+              file=sys.stderr)
         return "unknown"
 
 
@@ -158,7 +163,11 @@ def main() -> None:
                     help="refresh the score block in README.md")
     args = ap.parse_args()
 
-    report = json.loads(REPORT.read_text())
+    try:
+        report = json.loads(REPORT.read_text())
+    except OSError:
+        sys.exit(f"[match_score] {REPORT} not found - run python3 scripts/rebuild.py "
+                 "(or generate_delink.py --report-only) first")
     overall, mods = collect(report)
     block = render(overall, mods, _delinker_rev())
     print(block)

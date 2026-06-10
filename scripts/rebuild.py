@@ -21,10 +21,14 @@ where <summary> reports the wall-clock and the set of engine modules whose TUs
 ninja actually recompiled this run (a no-op rebuild = 0 modules).
 
 Any extra args are forwarded to ninja_build.py:
-  python3 scripts/rebuild.py            # build the game, then refresh base diff inputs
-  python3 scripts/rebuild.py logging    # build just one project first
+  python3 scripts/rebuild.py               # build the game, then refresh base diff inputs
+  python3 scripts/rebuild.py logging       # build just one project first
+  python3 scripts/rebuild.py --skip-build  # no ninja: refresh base diff inputs from the
+                                           # existing EXE/PDB (e.g. after a delinker or
+                                           # pdb-parser bump)
 """
 
+import argparse
 import datetime
 import os
 import re
@@ -33,16 +37,14 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import generate_delink
 import generate_rich
 import generate_structure
+from _common import SCRIPTS_DIR, VOSTOK_DIR, make_die, make_log
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-LOG_PATH   = VOSTOK_DIR / "binaries" / "rebuild.log"
+LOG_PATH = VOSTOK_DIR / "binaries" / "rebuild.log"
 
 # A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
 # cd's into the module's source dir, e.g.
@@ -53,13 +55,8 @@ LOG_PATH   = VOSTOK_DIR / "binaries" / "rebuild.log"
 _CL_MODULE_RE = re.compile(r"vostok[\\/]([A-Za-z0-9_]+)[\\/]sources\b[^\n]*?&&\s*cl\b")
 
 
-def log(msg: str) -> None:
-    print(f"[rebuild] {msg}", flush=True)
-
-
-def die(msg: str) -> None:
-    print(f"[rebuild] ERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
+log = make_log("rebuild")
+die = make_die("rebuild")
 
 
 def _git_branch() -> str:
@@ -89,11 +86,12 @@ def _summarize(modules: set[str]) -> str:
     return f"{n} modules"
 
 
-def _append_log(elapsed: float, modules: set[str]) -> None:
+def _append_log(elapsed: float, modules: set[str], note: str = "") -> None:
     """Best-effort audit line; a logging error must never fail the rebuild."""
     try:
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
-        line = f"[{ts}][{_git_branch()}]: {_fmt_elapsed(elapsed)}, {_summarize(modules)}\n"
+        summary = _summarize(modules) + (f" [{note}]" if note else "")
+        line = f"[{ts}][{_git_branch()}]: {_fmt_elapsed(elapsed)}, {summary}\n"
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(LOG_PATH, "a", encoding="utf-8") as f:
             f.write(line)
@@ -112,12 +110,12 @@ def _append_log(elapsed: float, modules: set[str]) -> None:
 DRAIN_GRACE_SECONDS = 2.0
 
 
-def run_ninja() -> set[str]:
+def run_ninja(ninja_args: list[str]) -> set[str]:
     """Run ninja_build.py, streaming its output, and return the set of modules
     whose TUs were recompiled (parsed from the verbose cl command lines)."""
     modules: set[str] = set()
     proc = subprocess.Popen(
-        [sys.executable, "-u", str(SCRIPT_DIR / "ninja_build.py"), *sys.argv[1:]],
+        [sys.executable, "-u", str(SCRIPTS_DIR / "ninja_build.py"), *ninja_args],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
     fd = proc.stdout.fileno()
@@ -156,17 +154,28 @@ def run_ninja() -> set[str]:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--skip-build", action="store_true",
+        help="skip ninja; regenerate the base diff inputs from the existing EXE/PDB",
+    )
+    # Everything else (project names, ninja flags) is forwarded to ninja_build.py.
+    args, ninja_args = ap.parse_known_args()
+
     start = time.monotonic()
     modules: set[str] = set()
     try:
-        log("Building survarium via ninja ...")
-        try:
-            modules = run_ninja()
-        except subprocess.CalledProcessError as e:
-            die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
+        if args.skip_build:
+            log("Skipping ninja build (--skip-build).")
+        else:
+            log("Building survarium via ninja ...")
+            try:
+                modules = run_ninja(ninja_args)
+            except subprocess.CalledProcessError as e:
+                die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
+            log(f"Build OK ({_summarize(modules)}).")
 
-        log(f"Build OK ({_summarize(modules)}). "
-            "Regenerating base structure + COFF + rich index in parallel ...")
+        log("Regenerating base structure + COFF + rich index in parallel ...")
         steps = {
             "base structure":  lambda: generate_structure.generate("base"),
             "base COFF":       lambda: generate_delink.generate("base"),
@@ -187,7 +196,8 @@ def main() -> None:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
         log("All done - base diff inputs refreshed.")
     finally:
-        _append_log(time.monotonic() - start, modules)
+        _append_log(time.monotonic() - start, modules,
+                    note="skip-build" if args.skip_build else "")
 
 
 if __name__ == "__main__":

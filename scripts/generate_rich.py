@@ -28,32 +28,24 @@ import argparse
 import os
 import subprocess
 import sys
-from pathlib import Path
+
+from _common import (
+    VOSTOK_DIR, begin_output_dir, commit_output_dir, make_log,
+    survarium_bin_dir, wine_pdb_path,
+)
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
 ENGINE_DIR = VOSTOK_DIR / "sources" / "vostok"
 RICH_DIR   = VOSTOK_DIR / "binaries" / "rich"
 WIN32_DIR  = VOSTOK_DIR / "binaries" / "Win32"
 BASE_PDB   = WIN32_DIR / "survarium-dx11-win32-gold.pdb"
 BASE_EXE   = WIN32_DIR / "survarium-dx11-win32-gold.exe"
 
-
-def log(msg: str) -> None:
-    print(f"[rich] {msg}", flush=True)
+log = make_log("rich")
 
 
 def _pdb_rich() -> str:
     return os.environ.get("PDB_RICH", "pdb_rich_context")
-
-
-def _wine_path(p: Path) -> str:
-    r"""Render a native absolute path as MSVC-under-Wine records it in a PDB:
-    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
-    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
-    """
-    return "z:" + str(p).replace("/", "\\").lower()
 
 
 def generate(side: str) -> None:
@@ -70,7 +62,7 @@ def generate(side: str) -> None:
         # under Wine, so recorded paths are z:\...\vostok\sources\vostok\<module>.
         # Strip the Wine form of <repo>/sources (trailing sep) so file paths in the
         # index are rooted at vostok\..., matching the binaries/objdiff/*.obj tree.
-        engine = _wine_path(ENGINE_DIR.parent) + "\\"
+        engine = wine_pdb_path(ENGINE_DIR.parent) + "\\"
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]
         if not pdb.is_file() or not exe.is_file():
@@ -79,9 +71,7 @@ def generate(side: str) -> None:
                 "(python3 scripts/rebuild.py, or scripts/ninja_build.py)"
             )
     elif side == "target":
-        survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
-        )
+        survarium_bin = survarium_bin_dir()
         pdb = survarium_bin / "survarium.pdb"
         exe = survarium_bin / "survarium.exe"
         engine = "c:/survarium/sources"  # pdb_rich_context normalizes to c:\...\
@@ -94,7 +84,9 @@ def generate(side: str) -> None:
     else:  # pragma: no cover - argparse restricts choices
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
 
-    out.mkdir(parents=True, exist_ok=True)
+    # Generate into <out>.tmp and swap into place on success, so a crash
+    # mid-write can't leave a half-written index for the next pdb_fetch.
+    tmp = begin_output_dir(out)
     log(f"Building {side} rich index from {pdb.name}+{exe.name} -> {out}")
     try:
         subprocess.run(
@@ -104,7 +96,7 @@ def generate(side: str) -> None:
                 "--exe",         str(exe),
                 "--engine-path", engine,
                 "--mode",        side,
-                "--out",         str(out),
+                "--out",         str(tmp),
                 *extra,
             ],
             check=True,
@@ -114,6 +106,7 @@ def generate(side: str) -> None:
             f"pdb_rich_context binary {_pdb_rich()!r} not found on PATH - run inside "
             "`nix develop`, or set PDB_RICH"
         )
+    commit_output_dir(tmp, out)
     log(f"Done: {out}/index.jsonl")
 
 

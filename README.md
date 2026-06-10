@@ -95,7 +95,10 @@ Useful individual scripts (all run inside `nix develop`):
 
 ```sh
 python3 scripts/ninja_build.py [target]              # build only (verbose, keep-going)
+python3 scripts/rebuild.py --skip-build              # no ninja: regenerate the base diff
+                                                     # inputs from the existing EXE/PDB
 python3 scripts/generate_delink.py {base|target}     # COFF split for one side
+python3 scripts/generate_delink.py --report-only     # just regenerate report.json
 python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one side
 ```
 

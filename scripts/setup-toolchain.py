@@ -43,9 +43,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from _common import SCRIPTS_DIR, VOSTOK_DIR, make_die, make_log, nonempty_dir
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
 
 SLN_PATH   = VOSTOK_DIR / "sources" / "vostok v2.0.sln"
 BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
@@ -55,16 +54,8 @@ SETUP_STAMP = VOSTOK_DIR / "binaries" / ".setup-stamp"
 # the fingerprint says setup is already complete.
 STAGES = ("libs", "wine", "registry", "ninja", "target")
 
-
-def log(msg: str) -> None:
-    print(f"[setup] {msg}", flush=True)
-
-
-def die(msg: str, *hints: str) -> None:
-    log(f"ERROR: {msg}")
-    for h in hints:
-        print(f"  {h}", file=sys.stderr)
-    sys.exit(1)
+log = make_log("setup")
+die = make_die("setup")
 
 
 def require_env(name: str) -> str:
@@ -157,10 +148,6 @@ def compute_fingerprint(
     return "\n".join(lines) + "\n"
 
 
-def _nonempty_dir(p: Path) -> bool:
-    return p.is_dir() and any(p.iterdir())
-
-
 def ensure_target_side(force: bool = False) -> None:
     """Generate the target-side diff inputs (the original game never changes):
     binaries/objdiff/target (COFF), binaries/structure/target (pdb-parser stubs),
@@ -179,19 +166,19 @@ def ensure_target_side(force: bool = False) -> None:
     rich_target      = VOSTOK_DIR / "binaries" / "rich" / "target"
     if (
         not force
-        and _nonempty_dir(objdiff_target)
-        and _nonempty_dir(structure_target)
-        and _nonempty_dir(rich_target)
+        and nonempty_dir(objdiff_target)
+        and nonempty_dir(structure_target)
+        and nonempty_dir(rich_target)
     ):
         return  # already generated
 
     log("Generating target diff inputs (original game COFF + structure + rich index) ...")
     try:
-        if force or not _nonempty_dir(objdiff_target):
+        if force or not nonempty_dir(objdiff_target):
             generate_delink.generate("target")
-        if force or not _nonempty_dir(structure_target):
+        if force or not nonempty_dir(structure_target):
             generate_structure.generate("target")
-        if force or not _nonempty_dir(rich_target):
+        if force or not nonempty_dir(rich_target):
             generate_rich.generate("target")
     except (RuntimeError, subprocess.CalledProcessError) as e:
         die(f"could not generate target diff inputs: {e}")
@@ -201,7 +188,7 @@ def ensure_target_side(force: bool = False) -> None:
 def copy_libs(libs_dir: Path) -> None:
     log("Copying vostok-libs -> sources/ ...")
     subprocess.check_call([
-        sys.executable, str(SCRIPT_DIR / "copy_lib_files.py"),
+        sys.executable, str(SCRIPTS_DIR / "copy_lib_files.py"),
         str(libs_dir / "sources"), str(VOSTOK_DIR / "sources"),
     ])
     log("Library files copied.")
@@ -214,7 +201,13 @@ def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
     log(f"Initialising Wine prefix at {wineprefix} ...")
     wineprefix.mkdir(parents=True, exist_ok=True)
     subprocess.run(["wineboot", "--init"], check=True)
-    subprocess.run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
+    # Wait for the prefix services to settle, but bounded: a wedged wineserver
+    # used to stall setup here forever, silently.
+    try:
+        subprocess.run(["wineserver", "--wait"], check=False,
+                       stderr=subprocess.DEVNULL, timeout=120)
+    except subprocess.TimeoutExpired:
+        log("WARNING: wineserver --wait did not settle in 120s; continuing anyway")
     log("Wine prefix ready.")
 
 

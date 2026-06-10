@@ -18,6 +18,7 @@ but is driven from Python so the whole build/diff loop stays in this repo.
 Usage:
   python3 scripts/generate_delink.py base
   python3 scripts/generate_delink.py target
+  python3 scripts/generate_delink.py --report-only   # report.json from the existing trees
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN   - directory with the original survarium.{exe,pdb} (target side)
@@ -33,9 +34,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from _common import (
+    SCRIPTS_DIR, VOSTOK_DIR, begin_output_dir, commit_output_dir, make_log,
+    nonempty_dir, survarium_bin_dir, wine_pdb_path,
+)
 
-SCRIPT_DIR  = Path(__file__).resolve().parent
-VOSTOK_DIR  = SCRIPT_DIR.parent
+
 OBJDIFF_DIR = VOSTOK_DIR / "binaries" / "objdiff"
 WIN32_DIR   = VOSTOK_DIR / "binaries" / "Win32"
 
@@ -47,9 +51,7 @@ WIN32_DIR   = VOSTOK_DIR / "binaries" / "Win32"
 # survives the per-side rmtree and is shared across base rebuilds.
 SYMBOL_MAP  = OBJDIFF_DIR / "target-symbol-map.tsv"
 
-
-def log(msg: str) -> None:
-    print(f"[delink] {msg}", flush=True)
+log = make_log("delink")
 
 
 def _delinker_bin() -> str:
@@ -72,18 +74,6 @@ def _delinker_supports(delinker: str, flag: str) -> bool:
     return flag in (out.stdout + out.stderr)
 
 
-def _wine_path(p: Path) -> str:
-    r"""Render a native absolute path the way MSVC-under-Wine records it in a PDB:
-    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
-    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
-    """
-    return "z:" + str(p).replace("/", "\\").lower()
-
-
-def _nonempty_dir(p: Path) -> bool:
-    return p.is_dir() and any(p.iterdir())
-
-
 def _generate_report() -> None:
     """Write the objdiff match report (base vs target) to binaries/objdiff/report.json.
 
@@ -97,14 +87,24 @@ def _generate_report() -> None:
     if shutil.which(objdiff_cli) is None:
         log(f"objdiff-cli not found ({objdiff_cli!r}); skipping report")
         return
-    if not (_nonempty_dir(OBJDIFF_DIR / "base") and _nonempty_dir(OBJDIFF_DIR / "target")):
+    if not (nonempty_dir(OBJDIFF_DIR / "base") and nonempty_dir(OBJDIFF_DIR / "target")):
         log("Report skipped (base and target not both delinked yet).")
         return
 
     report = OBJDIFF_DIR / "report.json"
 
-    # Keep history: archive the existing report (timestamped) before regenerating,
-    # so we can diff the new one against it instead of overwriting it.
+    # Generate into a temp file FIRST, and only then archive the old report -
+    # archiving before generating would leave no current report.json behind if
+    # objdiff-cli failed.
+    fresh = OBJDIFF_DIR / "report.json.tmp"
+    log("Generating objdiff report ...")
+    subprocess.run(
+        [objdiff_cli, "report", "generate", "-p", str(OBJDIFF_DIR), "-o", str(fresh)],
+        check=True,
+    )
+
+    # Keep history: archive the previous report (timestamped) so we can diff
+    # the new one against it instead of overwriting it.
     previous = None
     if report.exists():
         archive_dir = OBJDIFF_DIR / "reports"
@@ -112,12 +112,8 @@ def _generate_report() -> None:
         ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         previous = archive_dir / f"report-{ts}.json"
         report.rename(previous)
+    fresh.rename(report)
 
-    log("Generating objdiff report ...")
-    subprocess.run(
-        [objdiff_cli, "report", "generate", "-p", str(OBJDIFF_DIR), "-o", str(report)],
-        check=True,
-    )
     try:
         m = json.loads(report.read_text()).get("measures", {})
         log("Match: code {:.2f}% / functions {:.2f}%".format(
@@ -237,15 +233,13 @@ def generate(side: str) -> None:
         # Pass the Wine form of <repo>/sources with a trailing separator (the
         # delinker strips this prefix off each recorded path), mirroring target's
         # bare `c:/survarium/sources`.
-        engine = ["--engine-path", _wine_path(VOSTOK_DIR / "sources") + "\\"]
+        engine = ["--engine-path", wine_pdb_path(VOSTOK_DIR / "sources") + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
         symbol_map = ["--read-symbol-map", str(SYMBOL_MAP)]
         hint = "build first (python3 scripts/rebuild.py)"
     elif side == "target":
-        survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
-        )
+        survarium_bin = survarium_bin_dir()
         exe = survarium_bin / "survarium.exe"
         pdb = survarium_bin / "survarium.pdb"
         engine = ["--engine-path", "c:/survarium/sources"]
@@ -260,8 +254,7 @@ def generate(side: str) -> None:
         if not f.is_file():
             raise RuntimeError(f"{f} not found - {hint}")
 
-    # Check the delinker is present before wiping the output directory, so a
-    # missing binary can't destroy a previously-good delink.
+    # Check the delinker is present before doing any work.
     if shutil.which(delinker) is None:
         raise RuntimeError(
             f"{delinker!r} not found on PATH - run inside `nix develop` "
@@ -274,10 +267,11 @@ def generate(side: str) -> None:
         log(f"delinker has no {symbol_map[0]}; skipping folded-symbol reconciliation")
         symbol_map = []
 
+    # Delink into <out>.tmp and swap into place on success, so a crash
+    # mid-delink can't leave a partial COFF tree behind (the report generated
+    # from one would silently misscore everything).
     out = OBJDIFF_DIR / side
-    if out.exists():
-        shutil.rmtree(out)
-    out.mkdir(parents=True, exist_ok=True)
+    tmp = begin_output_dir(out)
 
     log(f"Delinking {side} ({exe.name}) -> {out}")
     subprocess.run(
@@ -285,16 +279,17 @@ def generate(side: str) -> None:
             delinker,
             "--pdb-path",    str(pdb),
             "--exe-path",    str(exe),
-            "--output-path", str(out),
+            "--output-path", str(tmp),
             *engine,
             *symbol_map,
         ],
         check=True,
     )
+    commit_output_dir(tmp, out)
 
     log("Refreshing objdiff config ...")
     subprocess.run(
-        [sys.executable, str(SCRIPT_DIR / "generate_objdiff_config.py")],
+        [sys.executable, str(SCRIPTS_DIR / "generate_objdiff_config.py")],
         check=True,
     )
     log(f"Done: {out}")
@@ -305,9 +300,20 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description="Delink base/target EXE into COFF objs via vostok-delinker."
     )
-    ap.add_argument("side", choices=["base", "target"])
+    ap.add_argument("side", nargs="?", choices=["base", "target"])
+    ap.add_argument(
+        "--report-only", action="store_true",
+        help="skip delinking; regenerate report.json (+ report-changes.json) "
+             "from the existing base/target trees",
+    )
+    args = ap.parse_args()
+    if not args.report_only and args.side is None:
+        ap.error("side is required unless --report-only is given")
     try:
-        generate(ap.parse_args().side)
+        if args.report_only:
+            _generate_report()
+        else:
+            generate(args.side)
     except (RuntimeError, subprocess.CalledProcessError) as e:
         print(f"[delink] ERROR: {e}", file=sys.stderr)
         sys.exit(1)
