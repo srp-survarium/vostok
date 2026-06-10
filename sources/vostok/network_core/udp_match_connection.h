@@ -205,15 +205,12 @@ private:
 	/* 0x00f0 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
 	/* 0x00f4 */	udp_match_packets_orderer&			m_packets_orderer;
 	/* 0x00f8 */	pcstr								m_logging_id;
-	// claude@MATCH: threading::atomic32_type (volatile long) - process_incoming_packet
-	// targets it with interlocked_exchange; the non-volatile guard overload would
-	// otherwise fire (threading_functions_guard.h).
-	// sushi@TODO: can the structure/size tooling catch this? PDB member-type records
-	// should carry the volatile qualifier - today's sweep checks only sizes/offsets.
+	// PDB records volatile long here AND at m_last_send_attempt_time_in_ms
+	// (pdb-parser renders cv-qualifiers now) - spelled threading::atomic32_type.
 	/* 0x00fc */	threading::atomic32_type			m_last_receive_time_in_ms;
 	/* 0x0100 */	const u32							m_disconnection_timeout_in_ms;
 	/* 0x0104 */	u32									m_last_send_time_in_ms;
-	/* 0x0108 */	long								m_last_send_attempt_time_in_ms;
+	/* 0x0108 */	threading::atomic32_type			m_last_send_attempt_time_in_ms;
 	/* 0x010c */	u32									m_max_packet_wait_time_in_ms;
 	/* 0x0110 */	const u32							m_max_idle_time_in_ms;
 	/* 0x0114 */	u32									m_disconnection_receive_time_in_ms;
