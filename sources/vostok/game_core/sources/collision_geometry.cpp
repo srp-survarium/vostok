@@ -9,12 +9,6 @@
 
 namespace survarium {
 
-// STRUCTURE DIFF[target 0x6eed10 | base 0x5139e0]: target 0 / base 0 stmts
-// ; aligned 0, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - base INLINES the collision::game_object base
-// ctor (out-of-line `call game_object::game_object` in target, rva 0x9bbb0; absent from
-// base index - collision is an optimized/out-of-scope module), cascading frame 0x18 vs
-// 0x24 + slot renames. Non-steerable base-class inline-vs-call. trail: collision_geometry.md
 // STATE[88.12%|DONE]
 collision_geometry::collision_geometry( ) :
 	m_physics_world		( NULL ),
@@ -22,19 +16,19 @@ collision_geometry::collision_geometry( ) :
 	m_group				( 0 ),
 	m_mask				( 0 )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (member-init list only) - no diverging rows
+	// VERDICT: STRUCTURE MATCH (shape ok) - base INLINES the collision::game_object base ctor (out-of-line call in target; collision is an out-of-scope module), cascading frame 0x18 vs 0x24 + slot renames, non-steerable.
 }
 
-// STRUCTURE DIFF[target 0x6ef180 | base 0x513b70]: target 3 / base 3 stmts
-// .. same ..
-// ; aligned 3, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole diff is frame 0x3c vs 0x38 slot allocation
-// (both ASSERTs present) + ASSERT empty-stub COMDAT-fold misname, non-steerable. trail: collision_geometry.md
 // STATE[99.74%|DONE]
 collision_geometry::~collision_geometry( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	destroy_ghost_object( );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x4c both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH (shape ok) - residual is frame 0x3c vs 0x38 slot allocation + ASSERT empty-stub COMDAT-fold misname, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -43,18 +37,6 @@ void collision_geometry::destroy_ghost_object( )
 	physics::destroy_ghost_object( m_ghost_object );
 }
 
-// STRUCTURE DIFF[target 0x6eeee0 | base 0x513bc0]: target 19 / base 19 stmts
-// .. same ..
-// 0x0e0 <0x89> | 0x0e0 <0x83> | LOG_WARNING( "invalid collision_geometry" );   SIZE
-// .. same ..
-// 0x1bc <0x40> | 0x1b6 <0x41> | physics::bt_collision_shape_ptr shape	= physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), m_name.c_str( ) );   SIZE
-// 0x1fc <0x24> | 0x1f7 <0x23> | m_ghost_object							= physics::create_ghost_object( shape, transform );   SIZE
-// 0x220 <0xf> | 0x21a <0xd> | shape->set_no_delete( );	// sushi@TODO: `unmanaged_intrusive_base::destroy` will not delete this resource. Understand for what reasons this was done.   SIZE
-// .. same ..
-// ; aligned 15, size-diffs 4, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - SIZE diffs are LOG_WARNING boost::function ctor
-// inlining + operator[]/c_ptr COMDAT-fold misnames + a push 38h/2Dh signature-string-len
-// literal, all whole-program LTCG/ICF, non-steerable. trail: collision_geometry.md
 // STATE[96.04%|DONE]
 void collision_geometry::load( configs::binary_config_value const& cfg_val )
 {
@@ -79,6 +61,13 @@ void collision_geometry::load( configs::binary_config_value const& cfg_val )
 
 	m_group									= cfg_val["filter_group"];
 	m_mask									= cfg_val["filter_mask"];
+
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
+	// SIZE -0x6 | 69 | LOG_WARNING( "invalid collision_geometry" );
+	// SIZE +0x1 | 76 | physics::bt_collision_shape_ptr shape	= physics::create_compound_shape( meshes, float3( 1.0f, 1.0f, 1.0f ), m_name.c_str( ) );
+	// SIZE -0x1 | 77 | m_ghost_object							= physics::create_ghost_object( shape, transform );
+	// SIZE -0x2 | 78 | shape->set_no_delete( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are LOG_WARNING boost::function ctor inlining, create_* call-boundary arg registers, and the promoted intrusive_ptr::operator* convention (target mov ecx,eax vs base ecx-return), all whole-program LTCG/ICF, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -109,18 +98,15 @@ bool collision_geometry::contact_test( )
 	return m_ghost_object->contact_test( m_physics_world );
 }
 
-// STRUCTURE DIFF[target 0x6eee80 | base 0x513b20]: target 2 / base 2 stmts
-// .. same ..
-// 0x015 <0x12> | 0x015 <0x11> | m_ghost_object->non_compound_shapes_centers( centers_results );   SIZE
-// ; aligned 1, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the centers_results arg passed on
-// the stack (push) in target vs a register in base, an LTCG call-boundary arg-passing
-// choice, non-steerable. trail: collision_geometry.md
 // STATE[93.33%|DONE]
 void collision_geometry::get_shapes_centers( vectora<float3>& centers_results ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	m_ghost_object->non_compound_shapes_centers( centers_results );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0x1 | 123 | m_ghost_object->non_compound_shapes_centers( centers_results );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the centers_results arg on the stack (push ecx) in target vs the LTCG-promoted ecx register convention in base, call-boundary arg passing, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -151,14 +137,6 @@ void collision_geometry::subscribe( physics::world* world, collision_geometry_su
 	m_subscribers.push_back( subscriber );
 }
 
-// STRUCTURE DIFF[target 0x6eebe0 | base 0x513850]: target 5 / base 5 stmts
-// .. same ..
-// 0x015 <0x55> | 0x015 <0x50> | m_subscribers.erase( std::find( m_subscribers.begin( ), m_subscribers.end( ), subscriber ) );   SIZE
-// .. same ..
-// ; aligned 4, size-diffs 1, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is m_subscribers.end() emitted as an
-// out-of-line accessor call in target vs inlined member read (mov [this+8]) in base, the
-// vectora end() inline-vs-call LTCG class, non-steerable. trail: collision_geometry.md
 // STATE[91.38%|DONE]
 void collision_geometry::unsubscribe( collision_geometry_subscriber* subscriber )
 {
@@ -167,6 +145,10 @@ void collision_geometry::unsubscribe( collision_geometry_subscriber* subscriber 
 
 	if ( m_subscribers.empty( ) )
 		remove( );
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x5 | 166 | m_subscribers.erase( std::find( m_subscribers.begin( ), m_subscribers.end( ), subscriber ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is m_subscribers.end() out-of-line in target vs inlined member read in base, the vector end() inline-vs-call LTCG class, non-steerable.
 }
 
 // STATE[100%|DONE]
