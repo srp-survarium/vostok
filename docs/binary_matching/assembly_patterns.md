@@ -1774,3 +1774,53 @@ The blank-line gaps between elements show up as harmless `EMPTY only base` quant
 real divergences. Confirmed across all 7 `get_weapon_lexeme_pair` variants in the pistol/
 double_barreled weapon_core idle/aimed_idle/show states (SIZE-diff 1 -> 0; report.json unchanged
 at 99.92%, sole residual the ammo_in_magazine arg-passing register).
+
+### `bool const` local IS codegen-visible: drops xor-before-sete / flips && temps to byte
+SYMPTOM (a): `bool x = a == K;` emits `xor ecx,ecx; cmp eax,K; sete cl; mov [x],cl` in
+base while target has NO xor (`cmp; sete cl; mov`). SYMPTOM (b): `bool x = a && !b;`
+materializes the &&-result through a DWORD temp (`mov dword ptr [ebp-N],1/0`) in base
+while target stores a BYTE temp (`mov byte ptr [ebp-N],1/0`).
+CAUSE: the local's CONST-ness. `bool const x = ...` makes MSVC8 /Od emit the bare sete
+(no register pre-zeroing) and byte-sized &&-temps; plain `bool x` zeroes the full register
+and uses dword temps. The target PDB locals record (`; locals` in --view structure) shows
+`const bool` - restore the const and the shape follows. NOT codegen-invisible, despite the
+general rule that const on locals usually is.
+Confirmed: weapon_core::on_hand_ik_event 96.55%->100% (xor) and
+weapon_core::maximum_ammo_in_weapon 88.41%->100% (dword->byte temp; together with the
+`!= 0` addend below). Check `const u8`/`const bool` locals FIRST when a sete/temp-width
+diff shows up.
+
+### `+ ( b != 0 )` vs `+ b` for a bool addend: neg;sbb;neg normalize
+SYMPTOM: target adds a bool to an integer via `movzx ecx,byte [b]; neg ecx; sbb ecx,ecx;
+neg ecx; add eax,ecx`; base emits plain `movzx ecx,[b]; add eax,ecx`.
+SOURCE: target spelled the addend as a comparison - `m_magazine_capacity +
+( flag != 0 )` - the int!=0 conversion produces the neg;sbb;neg (val!=0) idiom; a plain
+bool->int promotion is a bare movzx. (weapon_core::maximum_ammo_in_weapon,
+weapon_core::reset_fire_queue.)
+
+### Named float-const global vs literal at a `float const&` parameter
+SYMPTOM: target passes `push <global>` (the address of a named float constant, e.g.
+`epsilon_3`) where base emits `movss xmm0,[const]; movss [ebp-N],xmm0; lea ecx,[ebp-N];
+push ecx` (materialize a temp, pass its address).
+SOURCE: the original named the GLOBAL (`bullet_direction * math::epsilon_3`); a literal
+`0.001f` binds the const& through a fresh temp. Restoring the named constant removes the
+temp (bullet::collide_front_face 95.13%->97.40% together with the min-order fix below).
+
+### math::min/max promoted-convention reg order reveals SOURCE argument order
+The LTCG-promoted float `vostok::math::min` in BOTH builds takes xmm0=SECOND arg,
+xmm1=FIRST arg. So at a call site, if base loads `movss xmm1,xmm0` (shuffling the
+previous call's result out of xmm0) while target consumes it in place, the source arg
+ORDER is swapped relative to the original. bullet::tick wanted
+`min( m_life_time, g_bullet_tracer_exposition )` and bullet::collide_front_face wanted
+`min( 1.0f, max( ... ) )` - both recovered from the register shuffle alone.
+
+### Defined function scores None: check the MANGLED ACCESS letters (and pointer-const)
+SYMPTOM: a function defined in the base compiles fine but report.json shows no
+fuzzy_match_percent (None) - objdiff cannot pair the symbols.
+CAUSE: the mangled name differs in the ACCESS/virtual code or a parameter's top-level
+pointer const: target `@@EBE`/`@@EAE` (private virtual) vs base `@@UBE`/`@@UAE` (public
+virtual), `@@AAE`/`@@ABE` (private) vs `@@QAE`/`@@QBE` (public), or `QAV`/`QBV`
+(`T* const`) vs `PAV`/`PBV` (`T*`) in the signature. grep both rich index.jsonl files for
+the symbol and diff the letters; fix the header access section / add the pointer const.
+Confirmed on weapon_core::serialize/deserialize (+update_bones_matrices, computed_*,
+target_predicate...): pairing them moved serialize 0->62%, target_predicate 0->100%.
