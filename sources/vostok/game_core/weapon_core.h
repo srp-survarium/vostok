@@ -38,6 +38,7 @@ namespace ai {
 	// claude@NOTE: anchor for the private update_recoil/update_breath_vibration/
 	// get_body_part_mask_for_user (target mangles them AAE/ABE).
 	void use_game_core_weapon_core_small_setters( );
+	void use_game_core_weapon_core_ik_callbacks( );
 }
 
 namespace survarium {
@@ -351,6 +352,7 @@ private:
 
 	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
 	friend void ::vostok::use_game_core_weapon_core_small_setters( );
+	friend void ::vostok::use_game_core_weapon_core_ik_callbacks( );
 
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:
