@@ -560,6 +560,12 @@ void weapon_core::load_magazine( )
 
 	if ( m_chamber_a_round_on_reload )
 		chamber_a_round( );
+
+	// STRUCTURE DIFF: target 6 / base 6 stmts
+	// SIZE +0x45 | 0 | weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); u16 const amount = ammo->amount( );
+	// SIZE +0xd  | +2 | u16 load = amount < u16( m_magazine_capacity - m_ammo_in_magazine ) ? amount : u16( m_magazine_capacity - m_ammo_in_magazine );
+	// SIZE +0x5  | +4 | weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( amount - load );
+	// VERDICT: STRUCTURE MATCH - SIZE residuals are LTCG intrusive_ptr::set out-of-line call vs inline + ASSERT expansion, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -591,6 +597,11 @@ void weapon_core::unload_ammo( )
 	}
 
 	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) + ammo_to_add );
+
+	// STRUCTURE DIFF: target 8 / base 8 stmts
+	// SIZE +0x41 | 0 | if ( !weapon_ammunition_ptr( m_ammunition ) )
+	// SIZE -0x1d | +13 | weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) + ammo_to_add );
+	// VERDICT: STRUCTURE MATCH - SIZE residuals are LTCG intrusive_ptr::set out-of-line call vs inline + scope guard shape, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -627,6 +638,12 @@ void weapon_core::reload_one_round( )
 	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) - 1 );
 
 	on_reload( );
+
+	// STRUCTURE DIFF: target 4 / base 4 stmts
+	// SIZE +0x27 | 0 | bool has_ammo = false; if ( m_ammo_in_magazine != m_magazine_capacity ) { weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); has_ammo = ammo->amount( ) != 0; }
+	// SIZE +0x8  | +2 | if ( has_ammo ) ++m_ammo_in_magazine;
+	// SIZE -0x1d | +4 | weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) - 1 );
+	// VERDICT: STRUCTURE MATCH - SIZE residuals are LTCG intrusive_ptr::set out-of-line call vs inline + scope guard shape, non-steerable.
 }
 
 // STATE[100%|DONE]
