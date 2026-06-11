@@ -33,9 +33,9 @@ OWN `binaries/` and `$PWD`-derived `WINEPREFIX`, so parallel Wine builds and `re
 never collide. In every worker prompt say: "work entirely inside `vostok_<N>`; start EVERY
 bash command with `cd /home/sheep/Projects/surv/vostok_<N> && ...`; never touch the main repo
 or another worktree." Confirm the chosen worktree is clean and warm before dispatch
-(`git -C <wt> status --short`; `binaries/rich/target` + `binaries/objdiff` present). After a
-`git reset` to a new tip, run `regen_ninja.py` BEFORE `rebuild.py`, or a newly un-excluded TU
-silently won't compile (and the structure-verifier will read "0 base symbols" as a false miss).
+(`git -C <wt> status --short`; `binaries/rich/target` + `binaries/objdiff` present). `rebuild.py` regenerates the
+ninja graph itself on every run (write-if-changed), so resets/un-excluded TUs are picked up
+automatically - no manual `regen_ninja.py` step.
 
 ## Concurrency - up to N parallel workers (the run's cap), one per worktree
 Hold at most **N concurrent workers** - the run's parallel-worker cap (default 3) - one per
@@ -75,8 +75,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 3. **For each unit (a batch), filling the 3 worktree slots:**
    - **Prepare the worktree FIRST (you own the env, not the worker)** - this keeps the
      matcher's context lean (it never reasons about branches/tips/stacking): in a free
-     `vostok_<N>`, `git reset --hard <tip>` + `git clean -fdq`, run `regen_ninja.py` if the
-     tip un-excluded a TU, and create the unit's branch `git checkout -b match/<module>-<unit>`.
+     `vostok_<N>`, `git reset --hard <tip>` + `git clean -fdq`, and create the
+     unit's branch `git checkout -b match/<module>-<unit>` (rebuild.py auto-regens the graph).
      The worker now inherits all prior matches and just works in place.
    - Dispatch a `matcher` worker, **`run_in_background: true`**:
      `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
