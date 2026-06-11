@@ -8,9 +8,9 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[85.68%|DONE]: 8/8 stmts; residual is the append(u8)/append(u16) COMDAT-forward
-// wall (base inlines the scalar overloads into append(pcvoid,u32), target calls the
-// kept scalar COMDATs directly), cascading reg/slot + frame size.
+// STATE[85.68%|DONE]: structure 8/8 stmts aligned; residual is the append(u8)/append(u16)
+// COMDAT-forward wall (base inlines the scalar overloads into append(pcvoid,u32), target
+// calls the kept scalar COMDATs directly), cascading reg/slot + frame size (0x28 vs 0x1C).
 inline void udp_match_connection::construct_packet(
 	udp_match_packets_orderer&		packets_orderer,
 	udp_match_packet&				packet,
@@ -29,6 +29,21 @@ inline void udp_match_connection::construct_packet(
 	{
 		packet.append				( u16( 0xFFFF ) );
 	}
+
+	// STRUCTURE DIFF: target 8 stmts / base 8 stmts
+	// b.diff    |t.addr |b.addr |t.sz|b.sz|t.ln|b.ln|b.code
+	// ----------+-------+-------+----+----+----+----+------
+	// SIZE +0x7 |0xdac9f|0x8e0df|0xd |0x14|+1  |+1  |packet.append( message_type );
+	// SIZE -0x2 |0xdacc7|0x8e10e|0x1c|0x1a|+4  |+4  |packet.channel_id = info.channel_id;
+	// BASE_ONLY |--     |0x8e128|--  |0x22|--  |+5  |packet.is_reliable = info.is_reliable;
+	// SIZE -0xe |0xdad04|0x8e16b|0x20|0x12|+6  |+8  |if ( packet.is_ordered )
+	// SIZE +0x4 |0xdad24|0x8e17d|0x13|0x17|+8  |+10 |packet.append( u16( 0xFFFF ) );
+	// TRGT_ONLY |0xdad37|--     |0x16|--  |+9  |--  |--
+	// VERDICT: STRUCTURE MATCH (shape ok) - 8/8 stmts, all SIZE-class: the documented
+	// append(u8)/append(u16) COMDAT-forward wall (base inlines scalar overloads into
+	// append(pcvoid,u32), target calls the kept COMDATs directly); BASE_ONLY/TRGT_ONLY
+	// pair is a line-attribution split on the is_reliable assign vs the append(u16) body,
+	// same statement count both sides. Frame 0x28 vs 0x1C from the extra inline spill.
 }
 
 // STATE[61.81%|PARTIAL]: structure 27/27 stmts aligned; residual is the documented
