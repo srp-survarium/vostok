@@ -8,27 +8,27 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
+// STATE[85.68%|DONE]: 8/8 stmts; residual is the append(u8)/append(u16) COMDAT-forward
+// wall (base inlines the scalar overloads into append(pcvoid,u32), target calls the
+// kept scalar COMDATs directly), cascading reg/slot + frame size.
 inline void udp_match_connection::construct_packet(
 	udp_match_packets_orderer&		packets_orderer,
 	udp_match_packet&				packet,
 	u8								message_type
 )
 {
-	// LOCALS
-	// udp_match_message_type_info const& info
-	// ******
+	packet.message_type				= message_type;
+	packet.append					( message_type );
+	udp_match_message_type_info const&	info	= packets_orderer.get_sending_message_info( message_type );
 
-	// FUNCTION BODY[0xeac90]: 14
-	// <0xeac96>|0x006|+0x009:'22'
-	// <0xeac9f>|0x00f|+0x00d:'23'
-	// <0xeacac>|0x01c|+0x01b:'24'
-	// <0xeacc7>|0x037|+0x01c:'26'
-	// <0xeace3>|0x053|+0x021:'27'
-	// <0xead04>|0x074|+0x020:'28'
-	// <0xead24>|0x094|+0x013:'30'
-	// <0xead37>|0x0a7|+0x016:'31'
-	// ******
+	packet.channel_id				= info.channel_id;
+	packet.is_reliable				= info.is_reliable;
+	packet.is_ordered				= info.is_ordered;
+
+	if ( packet.is_ordered )
+	{
+		packet.append				( u16( 0xFFFF ) );
+	}
 }
 
 // STATE[61.81%|PARTIAL]: structure 27/27 stmts aligned; residual is the documented
