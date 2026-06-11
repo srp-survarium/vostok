@@ -67,6 +67,9 @@ void tcp_packet_client::create_client( )
 	m_client->set_on_connected		( boost::bind( &tcp_packet_client::on_connected, this ) );
 	m_client->set_on_disconnected	( boost::bind( &tcp_packet_client::on_disconnected, this ) );
 	m_client->set_on_error			( boost::bind( &tcp_packet_client::on_error, this, _1, _2 ) );
+
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts (SIZE-only; base 0x20a vs target 0x2c2 - TARGET larger)
+	// VERDICT: STRUCTURE MATCH - target inlines network_core set_on_packet_received (operator= copy-swap-clear) where base calls; inverse of the setter wall, same LTCG class, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -147,6 +150,9 @@ void tcp_packet_client::on_packet_received		( vostok::network_core::tcp_packet c
 			*cloned_packet
 		)
 	);
+
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - clone buffer()/buffer_size() inline-vs-call + the m_receiver assign_to_own lowering; non-steerable LTCG.
 }
 
 // STATE[7.25%|PARTIAL]: one-statement `m_x = arg;` - target calls the
@@ -155,6 +161,10 @@ void tcp_packet_client::on_packet_received		( vostok::network_core::tcp_packet c
 void tcp_packet_client::set_on_packet_received	( boost::function< void ( vostok::network_core::packet_reader& ) > const& on_packet_received )
 {
 	m_on_packet_received			= on_packet_received;
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x1d | 157 | m_on_packet_received			= on_packet_received;
+	// VERDICT: STRUCTURE MATCH - sole SIZE is function1::operator= inline-vs-call (target calls ICF-folded COMDAT, custom edi/ecx conv); function0 sibling proves out-of-line call matches; per-instantiation LTCG, non-steerable.
 }
 
 // STATE[75.26%|PARTIAL]: `if ( m_on_connected )` - target inlines function0's
@@ -165,6 +175,9 @@ void tcp_packet_client::on_connected_impl		( )
 {
 	if ( m_on_connected )
 		m_on_connected						( );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (target 0x3f vs base 0x33)
+	// VERDICT: STRUCTURE MATCH - target inlines function0's safe-bool (neg/sbb fold), base calls the COMDAT; per-instantiation LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -192,6 +205,9 @@ void tcp_packet_client::on_disconnected_impl	( )
 {
 	if ( m_on_disconnected )
 		m_on_disconnected					( );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (target 0x3f vs base 0x33)
+	// VERDICT: STRUCTURE MATCH - same function0 safe-bool inline-vs-call as on_connected_impl; non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -246,4 +262,8 @@ void tcp_packet_client::set_on_error	(
 	)
 {
 	m_on_error						= on_error;
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x23 | 248 | m_on_error						= on_error;
+	// VERDICT: STRUCTURE MATCH - sole SIZE is function2::operator= inline-vs-call (same ICF-folded COMDAT wall as set_on_packet_received); per-instantiation LTCG, non-steerable.
 }

@@ -67,6 +67,9 @@ void login_client_impl::on_resolved(
 
 	m_connection_state	= resolved;
 	functor			( successfully_resolved, iterator );
+
+	// STRUCTURE DIFF: target 25 stmts / base 25 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - LOG-helper ctor scheduling x5 + functor/function2 bind-copy lowering at the retry sites; non-steerable LTCG.
 }
 // STATE[93.07%|PARTIAL]: structure clean; residual = LOG-helper ctor scheduling + the functor bind-copy lowering in the async_resolve bind
 void login_client_impl::resolve( boost::function< void ( resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const& functor, const u32 retry_count )

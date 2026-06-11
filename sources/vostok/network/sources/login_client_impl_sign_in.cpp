@@ -8,7 +8,13 @@
 namespace vostok {
 namespace network {
 
-// STATE[81.15%|PARTIAL]: structure clean (servers_connection_info parse block + else verified); residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) + LOG-helper scheduling x2
+// STATE[82.14%|PARTIAL]: structure 39/39 - the answer dispatch is a SWITCH over
+// *buffer (one case + default), NOT if/else: the target spills the byte to a temp
+// slot and emits cmp-mem + je-case/jmp-default (the /Od switch signature), the
+// braced case carries the locals and `break;` merges the scope dtors + exit jmp
+// into one line-74 statement (the old if/else split an extra `else {` stmt off);
+// residual = the boost::function4::operator() inline-vs-call wall (~+0x3d/0x49
+// per callback site, function0 safe-bool precedent) + LOG-helper scheduling x2
 void login_client_impl::on_sign_in_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -32,52 +38,61 @@ void login_client_impl::on_sign_in_answer_received(
 
 	LOG_INFO				( "[LOGIN] answer has been received!\r\n" );
 	pbyte buffer			= m_data;
-	if ( *buffer == servers_connection_info_message_type ) {
+	switch ( *buffer ) {
+		case servers_connection_info_message_type : {
+			++buffer;
 
-		++buffer;
-
-		const u8 length1	= *buffer++;
-		m_server_browser_address[0]			= 0;
-		m_server_browser_initial_query[0]	= 0;
+			const u8 length1	= *buffer++;
+			m_server_browser_address[0]			= 0;
+			m_server_browser_initial_query[0]	= 0;
 
 
-		memcpy				( m_server_browser_address, buffer, length1 );
-		buffer				+= length1;
-		m_server_browser_address[length1]	= 0;
+			memcpy				( m_server_browser_address, buffer, length1 );
+			buffer				+= length1;
+			m_server_browser_address[length1]	= 0;
 
-		const u8 length2	= *buffer++;
-		memcpy				( m_server_browser_initial_query, buffer, length2 );
-		buffer				+= length2;
-		m_server_browser_initial_query[length2]	= 0;
+			const u8 length2	= *buffer++;
+			memcpy				( m_server_browser_initial_query, buffer, length2 );
+			buffer				+= length2;
+			m_server_browser_initial_query[length2]	= 0;
 
-		m_session_id		= *( u32* )buffer;
-		buffer				+= sizeof( m_session_id );
+			m_session_id		= *( u32* )buffer;
+			buffer				+= sizeof( m_session_id );
 
-		char port[6];
-		_itoa_s				( login_udp_port, port, sizeof( port ), 10 );
+			char port[6];
+			_itoa_s				( login_udp_port, port, sizeof( port ), 10 );
 
-		boost::asio::ip::udp::resolver resolver( m_io_service );
-		boost::asio::ip::udp::resolver::query query(
-			m_socket.remote_endpoint( ).address( ).is_v4( ) ? boost::asio::ip::udp::v4( ) : boost::asio::ip::udp::v6( ),
-			m_socket.remote_endpoint( ).address( ).to_string( ),
-			port
-		);
-		boost::asio::ip::udp::resolver::iterator iterator	= resolver.resolve( query );
-		m_ping_socket.connect	( iterator->endpoint( ) );
+			boost::asio::ip::udp::resolver resolver( m_io_service );
+			boost::asio::ip::udp::resolver::query query(
+				m_socket.remote_endpoint( ).address( ).is_v4( ) ? boost::asio::ip::udp::v4( ) : boost::asio::ip::udp::v6( ),
+				m_socket.remote_endpoint( ).address( ).to_string( ),
+				port
+			);
+			boost::asio::ip::udp::resolver::iterator iterator	= resolver.resolve( query );
+			m_ping_socket.connect	( iterator->endpoint( ) );
 
-		m_client_state		= signed_in;
-		close_connection	( false );
-		if ( !m_in_destructor )
-			callback		( successfully_connected, successfully_handshaked, no_socket_error, servers_connection_info_message_type );
+			m_client_state		= signed_in;
+			close_connection	( false );
+			if ( !m_in_destructor )
+				callback		( successfully_connected, successfully_handshaked, no_socket_error, servers_connection_info_message_type );
 
-		m_ping_timer.async_wait	( boost::bind( &login_client_impl::ping, this, ping_retry_count ) );
+			m_ping_timer.async_wait	( boost::bind( &login_client_impl::ping, this, ping_retry_count ) );
+			break;
+		}
+		default :
+			m_client_state		= signed_out;
+			if ( !m_in_destructor )
+				callback		( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )*buffer );
 	}
 
-	else {
-		m_client_state		= signed_out;
-		if ( !m_in_destructor )
-			callback		( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )*buffer );
-	}
+	// STRUCTURE DIFF: target 39 stmts / base 39 stmts
+	// SIZE -0x6  | 26 | LOG_ERROR ( "[LOGIN] error during reading sign in answer: %s", ... );
+	// SIZE +0x3d | 29 | callback ( ..., sign_in_attempt_interval_violated_message_type );
+	// SIZE -0x6  | 33 | LOG_INFO ( "[LOGIN] answer has been received!\r\n" );
+	// SIZE +0x3d | 71 | callback ( ..., servers_connection_info_message_type );
+	// SIZE +0x1  | 73 | m_ping_timer.async_wait ( ... );
+	// SIZE +0x49 | 79 | callback ( ..., ( login_server_message_types_enum )*buffer );
+	// VERDICT: STRUCTURE MATCH - quantity fixed (if/else -> switch); rows are the function4::operator() wall + LOG-helper scheduling; non-steerable LTCG.
 }
 
 // STATE[74.46%|PARTIAL]: structure clean; residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x2 + LOG-helper scheduling x3
@@ -121,6 +136,9 @@ void login_client_impl::on_sign_in_password_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 17 stmts / base 17 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling x3; non-steerable LTCG.
 }
 // STATE[78.58%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x1 + the callback by-value bind copy lowering in the async_write bind
 void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
@@ -151,8 +169,16 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback by-value bind copy in the async_write bind; non-steerable LTCG.
 }
-// STATE[47.34%|PARTIAL]: structure 26/27 (switch over m_data[0] with cmp 0x0a/0x0b verified); residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x4 (small fn, biggest hit of the TU) + one 2-byte TRGT_ONLY default-break jmp the base folds into fall-through
+// STATE[47.08%|PARTIAL]: structure 27/27 (default-case `return` restored - the
+// target's 2-byte jmp goes to the EPILOGUE, skipping handshake; the old `break;`
+// fell through and called handshake on unknown message types); residual = the
+// boost::function4::operator() inline-vs-call wall (target calls the out-of-line
+// COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d/0x49 per
+// callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x4
 void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
@@ -188,7 +214,7 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 			close_connection( false );
 			if ( !m_in_destructor )
 				callback	( successfully_connected, no_handshake, no_socket_error, ( login_server_message_types_enum )m_data[0] );
-			break;
+			return;
 	}
 
 	handshake				(
@@ -202,6 +228,18 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 		login_handshake_retry_count,
 		false
 	);
+
+	// STRUCTURE DIFF: target 27 stmts / base 27 stmts
+	// SIZE +0x3d | 164 | callback ( ..., login_server_invalid_message_type );
+	// SIZE -0x4  | 165 | LOG_ERROR ( "[LOGIN] SIGN_IN: error during writing to socket: %s", ... );
+	// SIZE +0x4  | 169 | if ( !bytes_transferred ) {
+	// SIZE +0x3d | 173 | callback ( ..., login_server_invalid_message_type );
+	// SIZE +0x7  | 177 | switch ( m_data[0] ) {
+	// SIZE +0x49 | 182 | callback ( ..., ( login_server_message_types_enum )m_data[0] );
+	// SIZE +0x3  | 185 | case valid_user_name_message_type :	break;
+	// SIZE +0x49 | 190 | callback ( ..., ( login_server_message_types_enum )m_data[0] );
+	// SIZE +0x20 | 204 | );
+	// VERDICT: STRUCTURE MATCH - quantity fixed (default-case return); all rows are the function4::operator() inline-vs-call wall + derived jmp-near/short distance bloat; non-steerable LTCG.
 }
 // STATE[66.52%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x2 + LOG-helper scheduling
 void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
@@ -236,6 +274,9 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling; non-steerable LTCG.
 }
 // STATE[77.65%|PARTIAL]: structure clean (sign_in_message_type byte + "0.100b" version block verified); residual = the function4::operator() inline-vs-call wall x1 + the callback bind-copy lowering
 void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
@@ -276,6 +317,9 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 18 stmts / base 18 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback bind-copy lowering; non-steerable LTCG.
 }
 // STATE[90.34%|PARTIAL]: structure clean (strncpy_s triple + const& functor local + if/else-if/else tail verified); residual = the function1(bind_t) conversion lowering + LOG-helper scheduling x3
 void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )

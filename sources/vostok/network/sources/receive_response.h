@@ -52,6 +52,9 @@ public:
 	{
 		network_core::packet_reader	reader( m_packet );
 		m_receiver				( reader );
+
+		// STRUCTURE DIFF: target 2 stmts / base 2 stmts (SIZE-only)
+		// VERDICT: STRUCTURE MATCH - base_packet::buffer() inlined in the packet_reader-ctor expansion (target calls COMDAT); non-steerable LTCG.
 	}
 
 private:
