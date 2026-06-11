@@ -2399,6 +2399,7 @@ namespace vostok
 		connection.packets_count( );
 
 		network_core::udp_match_connection::is_low_level_packet( *(network_core::base_packet const*)NULL );
+		network_core::udp_match_connection::construct_packet( packets_orderer, *(network_core::udp_match_packet*)NULL, 0 );
 	}
 
 	void use_network_core_udp_network_flow_emulator_tick_functor( network_core::packet_reader&, boost::asio::ip::udp::endpoint const& )
