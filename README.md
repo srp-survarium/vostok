@@ -78,8 +78,10 @@ Then, after editing sources, run the build/diff loop:
 python3 scripts/rebuild.py
 ```
 
-This builds `survarium - PC - DirectX 11` with ninja under Wine, then regenerates
-the **base-side** diff inputs in parallel:
+This first refreshes the ninja graph from the `.vcproj`s (write-if-changed: a no-op
+regen touches nothing, so there are no spurious rebuilds), builds
+`survarium - PC - DirectX 11` with ninja under Wine, then regenerates the
+**base-side** diff inputs in parallel:
 
 | | base (your build) | target (original game) |
 |---|---|---|
