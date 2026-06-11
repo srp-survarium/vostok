@@ -13,13 +13,13 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.61% fuzzy &middot; 8,773 / 25,372 functions exact (34.58%).**
+**Overall: 52.61% fuzzy &middot; 8,766 / 25,372 functions exact (34.55%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 375 / 2,805 (13.4%) | 3.9% |
-| `shared` | 112 | 665 / 2,255 (29.5%) | 32.3% |
-| `game` | 141 | 18 / 1,634 (1.1%) | 0.1% |
+| `render` | 351 | 374 / 2,805 (13.3%) | 3.9% |
+| `shared` | 112 | 660 / 2,255 (29.3%) | 32.3% |
+| `game` | 141 | 16 / 1,634 (1.0%) | 0.1% |
 | `game_core` | 189 | 343 / 1,429 (24.0%) | 15.0% |
 | `core` | 136 | 657 / 1,331 (49.4%) | 34.1% |
 | `animation` | 102 | 156 / 880 (17.7%) | 5.3% |
@@ -41,7 +41,7 @@ _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` 
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
 | `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
 
-_Updated 2026-06-10 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-11 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
