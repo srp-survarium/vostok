@@ -41,6 +41,7 @@ import argparse
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -53,7 +54,7 @@ SETUP_STAMP = VOSTOK_DIR / "binaries" / ".setup-stamp"
 
 # Setup stages, in run order. Each can be forced via `--force <stage>` even when
 # the fingerprint says setup is already complete.
-STAGES = ("libs", "wine", "registry", "ninja", "target")
+STAGES = ("libs", "wine", "registry", "ninja", "compdb", "target")
 
 
 def log(msg: str) -> None:
@@ -220,7 +221,7 @@ def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
 
 def generate_ninja(vcproj_exe: Path) -> None:
     # Pass native Linux paths for I/O (vcproj2ninja reads/writes them directly),
-    # and --wine so the *emitted* build graph uses the drive-rooted `Z:\...` form
+    # and --wine so the *emitted* build graph uses the drive-rooted Z:\... form
     # that ninja.exe/cl.exe resolve under Wine. The .exe sometimes exits non-zero
     # under wine even on success, so we trust build.ninja's presence over the code.
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -236,6 +237,40 @@ def generate_ninja(vcproj_exe: Path) -> None:
     if not (BUILD_DIR / "build.ninja").is_file():
         die(f"vcproj2ninja did not produce {BUILD_DIR}/build.ninja")
     log("Ninja files generated.")
+
+
+def generate_compdb(vcproj_exe: Path) -> None:
+    """Generate clangd inputs at the repo root once during initial setup.
+
+    Subsequent rebuilds skip this — the compdb is include-invariant (a new
+    #include changes neither file), so it only needs to be regenerated when
+    files are added/removed or when explicitly forced.
+    """
+    changed: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="compdb_setup_") as tmp:
+        tmp_dir = Path(tmp)
+        subprocess.run([
+            "wine", str(vcproj_exe),
+            "--wine", "--target", "clangd",
+            "--sln-path", str(SLN_PATH),
+            "--configuration-platform", "Master Gold|Win32",
+            "--output-dir", str(tmp_dir),
+            "--project-name", "survarium - PC - DirectX 11",
+        ], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if not (tmp_dir / "compile_commands.json").is_file():
+            log("WARNING: vcproj2ninja did not produce compile_commands.json")
+            return
+        for name in ("compile_commands.json", "clangd-vfs.yaml"):
+            text = (tmp_dir / name).read_text().replace(str(tmp_dir), str(VOSTOK_DIR))
+            dst = VOSTOK_DIR / name
+            if dst.is_file() and dst.read_text() == text:
+                continue
+            changed.append(name)
+            dst.write_text(text)
+    if changed:
+        log(f"compdb: {', '.join(changed)} generated")
+    else:
+        log("compdb: already up to date")
 
 
 def parse_force(argv) -> set:
@@ -300,7 +335,12 @@ def main() -> None:
     )
 
     # setup_current: every input still matches AND every output still exists.
-    outputs = [wineprefix / "drive_c", BUILD_DIR / "build.ninja"]
+    outputs = [
+        wineprefix / "drive_c",
+        BUILD_DIR / "build.ninja",
+        VOSTOK_DIR / "compile_commands.json",
+        VOSTOK_DIR / "clangd-vfs.yaml",
+    ]
     setup_current = (
         SETUP_STAMP.is_file()
         and SETUP_STAMP.read_text() == fingerprint
@@ -324,6 +364,8 @@ def main() -> None:
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)
     if not setup_current or "ninja" in force:
         generate_ninja(vcproj_exe)
+    if not setup_current or "compdb" in force:
+        generate_compdb(vcproj_exe)
 
     # Record the fingerprint so the next plain run short-circuits.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
