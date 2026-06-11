@@ -23,7 +23,7 @@
 
 namespace survarium {
 
-// STATE[96.89%|PARTIAL]: 21/21 stmts structure match. Sole SIZE +4 on subscription_callback assign (boost::bind template vs-call diff via LTCG).
+// STATE[96.89%|PARTIAL]: STRUCTURE MATCH (21/21 stmts). Sole SIZE +4 on subscription_callback assign (boost::bind template vs-call diff via LTCG).
 weapon_user_animations_selector::weapon_user_animations_selector( )
 {
 	player_logic_base_state* const	stand	= VOSTOK_NEW_IMPL( *g_allocator, player_logic_stand_state )( *this );
@@ -50,6 +50,10 @@ weapon_user_animations_selector::weapon_user_animations_selector( )
 
 	m_leg_damaged_subscriber.subscription_callback = boost::bind( &weapon_user_animations_selector::on_broken_limb_affect, this, _1, _2, _3 );
 	m_player_logic_initial_state = stand;
+
+	// STRUCTURE DIFF: target 21 / base 21 stmts
+	// SIZE +0x4 | +22 | m_leg_damaged_subscriber.subscription_callback = boost::bind( &weapon_user_animations_selector::on_broken_limb_affect, this, _1, _2, _3 );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is boost::bind template call in base vs stored-vtable call in target (LTCG), non-steerable from this TU.
 }
 
 // STATE[83.22%|PARTIAL]: STRUCTURE MATCH (2/2 stmts). Sole residual is frame size vs call-template (VOSTOK_DELETE_IMPL vs delete_helper_impl).
@@ -57,6 +61,9 @@ weapon_user_animations_selector::~weapon_user_animations_selector( )
 {
 	while ( ai::fsm_state* state = m_logic.pop_state( ) )
 		VOSTOK_DELETE_IMPL( *g_allocator, state );
+
+	// STRUCTURE DIFF: target 2 / base 2 stmts -- STRUCTURE MATCH (no diverging rows)
+	// VERDICT: STRUCTURE MATCH - sole residual is frame size / VOSTOK_DELETE_IMPL template call (LTCG), non-steerable from this TU.
 }
 
 // STATE[68.66%|PARTIAL]
@@ -99,7 +106,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> wea
 	return current_state( ).selected_animations( buffer, weapon_parameters, is_third_view );
 }
 
-// STATE[57.88%|PARTIAL]: STRUCTURE MATCH (7/7 stmts). Residuals: L102 for-loop `states().front()` inline vs call; L113 subscribe_animation_player boost::bind assign with extra stored_vtable path (LTCG); L115 subscribe_on_affect intrusive_ptr deref-idiom wall.
+// STATE[57.88%|PARTIAL]: STRUCTURE MATCH (7/7 stmts). Residuals: for-loop `states().front()` inline vs call; subscribe_animation_player boost::bind assign with extra stored_vtable path (LTCG); subscribe_on_affect intrusive_ptr deref-idiom wall.
 void weapon_user_animations_selector::activate( base_player& user, boost::function<void()> const& sprint_start_callback, boost::function<void()> const& sprint_end_callback )
 {
 	m_user = &user;
@@ -114,6 +121,12 @@ void weapon_user_animations_selector::activate( base_player& user, boost::functi
 
 	( *m_user->damage_model( ) ).subscribe_on_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
 	set_sprint_callbacks( sprint_start_callback, sprint_end_callback );
+
+	// STRUCTURE DIFF: target 7 / base 7 stmts
+	// SIZE -0x1 | +2 | for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next )
+	// SIZE +0x30 | +8 | m_user->subscribe_animation_player( animation::channel_id_on_animation_interval_end, boost::bind( &weapon_user_animations_selector::on_interval_ended, this, _1 ), this, resources::managed_resource_ptr( ), m_user );
+	// SIZE +0x13 | +10 | ( *m_user->damage_model( ) ).subscribe_on_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
+	// VERDICT: STRUCTURE MATCH - all 3 SIZE rows are LTCG/idiom walls (states().front() call-vs-inline; subscribe_animation_player boost::bind stored-vtable path; intrusive_ptr operator* deref), non-steerable from this TU.
 }
 
 // STATE[34.91%|PARTIAL]: set_initial_state(NULL) + the unsubscribe_animation_player call now
@@ -212,7 +225,7 @@ weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) 
 	return static_cast_checked< player_logic_base_state* >( m_logic.current_state( ) )->id( );
 }
 
-// STATE[??%|PARTIAL]: STRUCTURE MATCH (body logic per the single-target-stmt vs multi-base-stmt PDB line grouping). Residuals: intrusive_ptr operator* (current_active_object deref) and `virtual stamina()` call-vs-inline walls (base_player.h owned elsewhere).
+// STATE[52.81%|PARTIAL]: STRUCTURE MISMATCH (quantity: target 1 / base 7 stmts). Target PDB debug-info groups entire function body under one line-table entry (MSVC 8.0 optimization grouping); base emits each source statement separately. Body logic is correct. Non-steerable PDB line-table artifact.
 bool weapon_user_animations_selector::sprint_predicate( ) const
 {
 	if ( is_weapon_firing( ) || is_weapon_toggling( ) )
@@ -225,9 +238,19 @@ bool weapon_user_animations_selector::sprint_predicate( ) const
 		return false;
 
 	return m_user->stamina( ).can_be_spent( );
+
+	// STRUCTURE DIFF: target 1 / base 7 stmts -- quantity divergence (PDB line-table grouping)
+	// SIZE -0xa0 | 218 | if ( is_weapon_firing( ) || is_weapon_toggling( ) )
+	// BASE_ONLY | 219 |   return false;
+	// BASE_ONLY | 221 |   if ( ( *m_user->damage_model( ) ).broken_legs_count( ) || m_forced_not_to_sprint )
+	// BASE_ONLY | 222 |     return false;
+	// BASE_ONLY | 224 |   if ( !m_user->input( ).is_sprinting( ) )
+	// BASE_ONLY | 225 |     return false;
+	// BASE_ONLY | 227 |   return m_user->stamina( ).can_be_spent( );
+	// VERDICT: STRUCTURE MISMATCH (quantity) - target MSVC PDB groups all 6 inner body statements under the first 'if' line entry (single 0xbe-byte span). Source logic is correct; non-steerable PDB debug-info artifact.
 }
 
-// STATE[??%|PARTIAL]: STRUCTURE MATCH (body logic per the 4-target-stmt vs 10-base-stmt PDB line grouping). Residuals: current_state() static_cast_checked deref wall, intrusive_ptr operator* (damage_model), input flags direct-field-access vs method inline.
+// STATE[61.32%|PARTIAL]: STRUCTURE MISMATCH (quantity: target 4 / base 10 stmts). Target PDB debug-info groups inner block statements under their parent `if` line (MSVC 8.0 optimization grouping); base emits each statement independently. Body logic is correct. Non-steerable PDB line-table artifact.
 bool weapon_user_animations_selector::stand_predicate( ) const
 {
 	weapon_user_state_enum const state_id = current_state( ).id( );
@@ -247,6 +270,19 @@ bool weapon_user_animations_selector::stand_predicate( ) const
 		return !sprint_predicate( );
 
 	return true;
+
+	// STRUCTURE DIFF: target 4 / base 10 stmts -- quantity divergence (PDB line-table grouping)
+	// SIZE -0x16 | 233 | weapon_user_state_enum const state_id = current_state( ).id( );
+	// BASE_ONLY | 235 |   if ( state_id == type_crouch )
+	// BASE_ONLY | 237 |     if ( ( *m_user->damage_model( ) ).broken_legs_count( ) == 2 )
+	// BASE_ONLY | 238 |       return false;
+	// BASE_ONLY | 240 |     if ( !( m_user->input( ).actions_mask & 0x100 ) && m_user->physics_controller( ).can_stand( ) )
+	// BASE_ONLY | 241 |       return true;
+	// SIZE -0x3 | 243 |     return false;
+	// SIZE -0x96 | 246 |     if ( state_id == type_sprint )
+	// BASE_ONLY | 247 |       return !sprint_predicate( );
+	// SIZE -0x10 | 249 |     return true;
+	// VERDICT: STRUCTURE MISMATCH (quantity) - target MSVC PDB groups inner block statements under the 4 outer-level line entries (variable decl + 2x if + final return). Source logic matches; non-steerable PDB debug-info artifact.
 }
 
 // STATE[78.28%|PARTIAL]: body byte-correct (subscribe_animation_player(channel_id,
@@ -288,7 +324,7 @@ void weapon_user_animations_selector::remove_animation_callback( animation::rese
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[??%|PARTIAL]: STRUCTURE MATCH (body logic per the 1-target-stmt vs 5-base-stmt PDB line grouping). Residuals: broken_legs_predicate() intrusive_ptr deref, input flags direct-field-access vs method inline, bt_character_controller::can_crouch call-vs-inline.
+// STATE[78.28%|PARTIAL]: STRUCTURE MISMATCH (quantity: target 1 / base 5 stmts). Target PDB debug-info groups entire function body under one line-table entry (MSVC 8.0 optimization grouping); base emits each source statement separately. Body logic is correct. Non-steerable PDB line-table artifact.
 bool weapon_user_animations_selector::crouch_predicate( ) const
 {
 	if ( broken_legs_predicate( ) )
@@ -298,6 +334,14 @@ bool weapon_user_animations_selector::crouch_predicate( ) const
 		return true;
 
 	return false;
+
+	// STRUCTURE DIFF: target 1 / base 5 stmts -- quantity divergence (PDB line-table grouping)
+	// SIZE -0x61 | 294 | if ( broken_legs_predicate( ) )
+	// BASE_ONLY | 295 |   return true;
+	// BASE_ONLY | 297 | if ( ( m_user->input( ).actions_mask & 0x100 ) && m_user->physics_controller( ).can_crouch( ) )
+	// BASE_ONLY | 298 |   return true;
+	// BASE_ONLY | 300 | return false;
+	// VERDICT: STRUCTURE MISMATCH (quantity) - target MSVC PDB groups all 4 inner body statements under the first 'if' line entry (single 0x70-byte span). Source logic is correct; non-steerable PDB debug-info artifact.
 }
 
 // STATE[76.76%|PARTIAL]: body byte-correct (m_user@+44h read twice, virtual damage_model
