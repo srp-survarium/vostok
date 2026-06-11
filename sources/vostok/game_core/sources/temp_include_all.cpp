@@ -600,6 +600,9 @@ namespace vostok
 		calc.set_one_shoot_dispersion_amount( 20.0f );
 		calc.set_aiming_speed( 30.0f );
 		calc.get_value( );
+		calc.tick( 100 );
+		calc.fire( );
+		calc.reload( );
 
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
 		calc.get_value( );
