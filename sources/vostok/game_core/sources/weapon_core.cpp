@@ -98,7 +98,7 @@ weapon_core::~weapon_core( )
 	// ******
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 // claude@NOTE: out-of-line so the idle-state getters emit `call ammo_in_magazine`
 // instead of inlining `m_ammo_in_magazine` (matches the target's out-of-line call).
 u16 weapon_core::ammo_in_magazine( ) const
@@ -106,7 +106,7 @@ u16 weapon_core::ammo_in_magazine( ) const
 	return m_ammo_in_magazine;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 // claude@NOTE: out-of-line so reload_state_base::initialize emits `call round_is_chambered`
 // instead of inlining `m_is_round_chambered` (matches the target's out-of-line call @0x09b360).
 bool weapon_core::round_is_chambered( ) const
@@ -114,7 +114,7 @@ bool weapon_core::round_is_chambered( ) const
 	return m_is_round_chambered;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 // claude@NOTE: out-of-line so the double-barreled ctor's ASSERT_CMP_U emits
 // `call get_magazine_capacity` instead of inlining `m_magazine_capacity`
 // (matches the target's out-of-line call; symbol @0x09cc20).
@@ -546,24 +546,20 @@ void weapon_core::instant_hide( )
 	on_hide( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::load_magazine()
+// STATE[47.64%|PARTIAL]: STRUCTURE MATCH 6/6 stmts. Residual: LTCG inlines intrusive_ptr::set vs
+// target's out-of-line call + ASSERT expansion shape. Non-steerable from this TU.
 void weapon_core::load_magazine( )
 {
-	// LOCALS
-	// u16 							load
-	// u16 							amount
-	// ******
+	weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); u16 const amount = ammo->amount( );
 
-	// FUNCTION BODY
-	// <0x5a4b99>|0x009|+0x03e:'435'
-	// <0x5a4bd7>|0x047|+0x040:'436'
-	// <0x5a4c17>|0x087|+0x07f:'437'
-	// <0x5a4c96>|0x106|+0x01a:'438'
-	// <0>
-	// <0x5a4cb0>|0x120|+0x00e:'440'
-	// <0x5a4cbe>|0x12e|+0x008:'441'
-	// ******
+	u16 load = amount < u16( m_magazine_capacity - m_ammo_in_magazine ) ? amount : u16( m_magazine_capacity - m_ammo_in_magazine );
+
+	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( amount - load );
+
+	m_ammo_in_magazine += load;
+
+	if ( m_chamber_a_round_on_reload )
+		chamber_a_round( );
 }
 
 // STATE[100%|DONE]
@@ -577,28 +573,24 @@ void weapon_core::chamber_a_round( )
 	m_is_round_chambered = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::unload_ammo()
+// STATE[47.08%|PARTIAL]: STRUCTURE MATCH 8/8 stmts. Residual: LTCG inlines intrusive_ptr::set vs
+// target's out-of-line call + temp destructor shape. Non-steerable from this TU.
 void weapon_core::unload_ammo( )
 {
-	// LOCALS
-	// u16 							ammo_to_add
-	// ******
+	if ( !weapon_ammunition_ptr( m_ammunition ) )
+		return;
 
-	// FUNCTION BODY
-	// <0x5a4a49>|0x009|+0x034:'456'
-	// <0x5a4a7d>|0x03d|+0x005:'457'
-	// <0>
-	// <0x5a4a82>|0x042|+0x00e:'459'
-	// <0x5a4a90>|0x050|+0x00c:'460'
-	// <0x5a4a9c>|0x05c|+0x00e:'461'
-	// <0>
-	// <0x5a4aaa>|0x06a|+0x00c:'463'
-	// <0x5a4ab6>|0x076|+0x00a:'464'
-	// <0>
-	// <1>
-	// <0x5a4ac0>|0x080|+0x0c0:'467'
-	// ******
+	u16 ammo_to_add = m_ammo_in_magazine;
+
+	m_ammo_in_magazine = 0;
+
+	if ( m_is_round_chambered )
+	{
+		++ammo_to_add;
+		m_is_round_chambered = false;
+	}
+
+	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) + ammo_to_add );
 }
 
 // STATE[100%|DONE]
@@ -624,21 +616,17 @@ void weapon_core::instant_chamber_a_round( )
 	m_recoil_calculator.chamber_a_round( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::reload_one_round()
+// STATE[40.44%|PARTIAL]: STRUCTURE MATCH 4/4 stmts. Residual: LTCG inlines intrusive_ptr::set vs
+// target's out-of-line call + scope guard bitflag vs direct destructor. Non-steerable from this TU.
 void weapon_core::reload_one_round( )
 {
-	// CALL SITE INFO
-	// <0x5a4a2f> -> void <unknown>()
-	// ******
+	bool has_ammo = false; if ( m_ammo_in_magazine != m_magazine_capacity ) { weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); has_ammo = ammo->amount( ) != 0; }
 
-	// FUNCTION BODY
-	// <0x5a48c0>|0x010|+0x08c:'502'
-	// <0x5a494c>|0x09c|+0x018:'503'
-	// <0x5a4964>|0x0b4|+0x0bd:'504'
-	// <0>
-	// <0x5a4a21>|0x171|+0x010:'506'
-	// ******
+	if ( has_ammo ) ++m_ammo_in_magazine;
+
+	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) - 1 );
+
+	on_reload( );
 }
 
 // STATE[100%|DONE]
