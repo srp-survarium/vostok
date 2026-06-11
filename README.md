@@ -101,6 +101,31 @@ python3 scripts/generate_delink.py {base|target}     # COFF split for one side
 python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one side
 ```
 
+### Source navigation (clangd)
+
+The graph regen also emits `compile_commands.json` + `clangd-vfs.yaml` at the
+repo root (`vcproj2ninja --target clangd`): a clang-cl view of every TU pinned
+to the MSVC 8.0 dialect (`_MSC_VER=1400`, i686, C++98), with a case-insensitive
+VFS overlay because the sources spell includes in Wine's case-insensitive world.
+clangd (in the devShell) navigates the whole engine through it - **clang is a
+reader here**; its diagnostics are suppressed via `.clangd` and the Wine build
+remains the only verdict on correctness.
+
+Point any LSP editor at the repo root (the compdb is found automatically), or
+query from the shell / an agent:
+
+```sh
+python3 scripts/clangd_query.py index                       # warm the background index once
+python3 scripts/clangd_query.py symbol weapon_lexeme_pair   # fuzzy workspace symbols
+python3 scripts/clangd_query.py def   <file> <line> [col]   # go to definition
+python3 scripts/clangd_query.py refs  <file> <line> [col]   # all references
+python3 scripts/clangd_query.py hover <file> <line> [col]   # type/expansion at point
+```
+
+A new `#include` changes neither generated file (include tracking lives in the
+ninja graph), so the background index never reindexes more than the TUs whose
+content actually changed.
+
 ## Game data
 
 The whole game comes from one installer extraction, split into three outputs of
