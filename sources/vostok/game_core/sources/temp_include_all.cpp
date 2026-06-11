@@ -2185,6 +2185,7 @@ namespace vostok
 		animation::callback_return_type_enum ( self::*p15 )( animation::animation_callback_params& ) = &self::on_interval_ended;
 		void ( self::*p16 )( pcstr, survarium::hit_affects_type_enum, survarium::affect_event_type_enum ) = &self::on_broken_limb_affect;
 		void ( self::*p17 )( boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::set_sprint_callbacks;
+		void ( self::*p22 )( survarium::base_player&, boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::activate;
 		float ( self::*p18 )( ) const = &self::look_time_factor;
 		float ( self::*p19 )( float, float, u32, u32, u32, float ) const = &self::look_time_factor_calculator;
 		void ( self::*p20 )( animation::reserved_channel_ids_enum, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
@@ -2204,6 +2205,7 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p19 ) );
 		example_callback( reinterpret_cast< pcstr >( &p20 ) );
 		example_callback( reinterpret_cast< pcstr >( &p21 ) );
+		example_callback( reinterpret_cast< pcstr >( &p22 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public
