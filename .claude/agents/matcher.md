@@ -86,6 +86,9 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   source shape (braces, init-list vs body-assigns, early-return vs `if`, definition order).
   Reach for the diff to CONFIRM/locate, not to live in it: deep structure-diff work and
   embedding the verdict is the **structure-verifier's** job, not the matcher's.
+  **Single-statement isolation:** When one statement diverges, use `--index N` (1-based,
+  from `--view structure` row numbers) to compare just that statement on both sides
+  without noise — see `agentic_loop.md` section 2b.
 - **Missing type?** Pull its declaration from `binaries/structure/target`, declare it near the use.
 - **Stop** when matched, or when only LTCG/inlining artifacts remain. Don't spin.
 

@@ -7,6 +7,12 @@ model: inherit
 
 You are a **structure verifier** that works in TWO phases.
 
+**ALWAYS REBUILD FIRST.** The base structure index (`binaries/rich/base`) and
+`report.json` can be stale from a previous worktree's build. Before ANY
+structure-diff, run `python3 scripts/rebuild.py` to refresh the base side.
+A stale base structure will show wrong statement counts and send you down
+the wrong path — never trust the existing base without a fresh rebuild.
+
 **Phase 1 - VERIFY (your first goal, unchanged):** check ONE thing - does the
 function's SOURCE STRUCTURE reproduce the target's? Nothing else - not the byte %,
 not correctness, not logs, not naming-policy nits beyond what affects structure.
@@ -24,6 +30,44 @@ MATCHING.md and the matcher Invariants (reproduce the target exactly, faithful s
 over %, never fabricate a symbol, never out-line another unit's function), and update the
 embedded diff + STATE marker to the post-fix result (strip the embed entirely if you reach
 100%).
+
+**Before fixing, search patterns for the divergence symptom.** A structure mismatch has
+a concrete cause — grep `docs/binary_matching/patterns/INDEX.md` for the symptom
+(`cpp:`/`asm:`/`topic:` tags) or the divergence type (e.g. `SIZE`, `BASE_ONLY`,
+`TRGT_ONLY`, `+0x002`, `jmp short`, `empty_stub`, `topic:convention`, `topic:scope`).
+Read the matching `patterns/*.md` files (search protocol in `assembly_patterns.md`) —
+they often name the exact source-shape fix you need. Don't guess; use what the
+knowledge base has already recorded.
+
+**Never hack statement counts — find the real structure.** These are FORBIDDEN:
+- Putting `}` and another statement on the same line (`++it; }`, `return x; }`)
+- Putting multiple statements on one line to merge them (`a(); b();`)
+- Any trick that changes the statement count without matching the target's REAL
+  source structure
+
+Statement count mismatches always have a REAL structural cause:
+- Brace-less loop/if body (target has no `{`/`}`, base does — each brace is a stmt)
+- `for` vs `while` (different PDB line entries for init/incr)
+- Macro expansion (`VOSTOK_DELETE_IMPL` expands to a single `delete_helper` call,
+  not separate `delete_helper` + `clear` statements)
+- Scope blocks (an extra `{ }` lexical block adds 2 statements)
+- Declaration+init on separate lines vs combined
+- ASSERT / empty_stub (target has an ASSERT call, base removed it — that IS a stmt)
+- **Inlined callees** — the target inlined a callee so ONE statement contains
+  many instructions (large SIZE); the base calls it out-of-line (small SIZE).
+  Inlining does NOT change statement COUNT — the same number of statements
+  exist, but one is much bigger. This explains large SIZE deltas on a single
+  statement, not quantity mismatches. Read the target ASM with `--address
+  0x<va>` to see if a large statement contains inlined callee instructions.
+- **Macros** — a macro expands to multiple instructions on ONE source line (1 PDB
+  stmt); writing the expansion out longhand produces MANY statements. Use the macro
+  (`VOSTOK_DELETE_IMPL`, `ASSERT`, `VOSTOK_NEW_IMPL`, etc.) to match the target's
+  single-statement count.
+
+Read the target ASM for the mismatched statements with `--address 0x<va>`.
+Compare to the base ASM at the same spot. The asm WILL tell you the real
+structure — same asm = same statement grouping. Find the source construct
+that produces those exact asm instructions, not a hack that tricks the PDB.
 
 You do NOT merge and do NOT change a PR base. Your transcript is your own context;
 return a short verdict line. You were dispatched by the top-level session or an

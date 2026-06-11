@@ -150,6 +150,33 @@ credit per instruction, so a stack-slot-only `~` barely costs anything). It trac
 a different objdiff version. So `report.json`/`STATE` stays the number of record;
 use this view for *where* the diffs are.
 
+## 2b. Single-statement isolation (`--index N`)
+
+When `--view structure-diff` flags a specific statement as diverging (SIZE,
+BASE_ONLY, TRGT_ONLY), zoom into JUST that statement on both sides with
+`--index N` (1-based, matching the `--view structure` row numbers):
+
+```
+# List all statements with their 1-based indices (base side):
+pdb_fetch --base-index   binaries/rich/base/index.jsonl \
+          --function <name> --view structure
+
+# The same for the target side:
+pdb_fetch --target-index binaries/rich/target/index.jsonl \
+          --function <name> --view structure
+
+# Then compare a single diverging statement on both sides:
+pdb_fetch --target-index binaries/rich/target/index.jsonl \
+          --base-index   binaries/rich/base/index.jsonl \
+          --function <name> --view structure-diff --index 7
+```
+
+The `--index N` output shows ONLY statement N from both sides, without noise
+from the rest of the function. This is the fastest way to pinpoint the exact
+cause of a single-statement divergence (wrong brace, missing scope, flat vs
+nested if/else) — compare the two statements side by side and reshape the
+base to match the target's structure byte-for-byte.
+
 ## 3. Make it reachable (or the linker strips it)
 
 The problem is not compilation - it is dead-code elimination. The delinker can
