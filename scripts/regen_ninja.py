@@ -42,7 +42,7 @@ def wine_path(p: Path) -> str:
     return "Z:" + str(p).replace("/", "\\")
 
 
-def gen_fresh(out_dir: Path) -> None:
+def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
     exe = os.environ.get("VCPROJ2NINJA_EXE")
     if not exe:
         sys.exit("[regen-ninja] VCPROJ2NINJA_EXE not set - run from `nix develop`")
@@ -50,16 +50,17 @@ def gen_fresh(out_dir: Path) -> None:
         sys.exit(f"[regen-ninja] solution not found: {SLN_PATH}")
     out_dir.mkdir(parents=True, exist_ok=True)
     # vcproj2ninja sometimes exits non-zero under wine even on success; trust the
-    # produced build.ninja over the return code (same as setup-toolchain.py).
+    # produced output over the return code (same as setup-toolchain.py).
     subprocess.run(
-        ["wine", exe, "--wine", "--sln-path", str(SLN_PATH),
+        ["wine", exe, "--wine", "--target", target, "--sln-path", str(SLN_PATH),
          "--configuration-platform", "Master Gold|Win32",
          "--output-dir", str(out_dir),
          "--project-name", "survarium - PC - DirectX 11"],
         check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
-    if not (out_dir / "build.ninja").is_file():
-        sys.exit("[regen-ninja] vcproj2ninja did not produce build.ninja")
+    probe = "build.ninja" if target == "ninja" else "compile_commands.json"
+    if not (out_dir / probe).is_file():
+        sys.exit(f"[regen-ninja] vcproj2ninja did not produce {probe}")
 
 
 def regenerate(dry_run: bool = False) -> list[str]:
@@ -101,6 +102,36 @@ def regenerate(dry_run: bool = False) -> list[str]:
         else "nothing to do - ninja graph already matches the .vcprojs/sources.")
     for rel in changed:
         log(f"  {rel}")
+
+    changed += regenerate_compdb(dry_run=dry_run)
+    return changed
+
+
+def regenerate_compdb(dry_run: bool = False) -> list[str]:
+    """clangd inputs at the repo root: compile_commands.json + clangd-vfs.yaml
+    (vcproj2ninja --target clangd), write-if-changed like the graph.
+
+    A new #include changes NEITHER file (flags and file sets are untouched -
+    include tracking lives in the ninja graph), so clangd's background index
+    reindexes only TUs whose content digests moved, never the world. The
+    overlay changes only when files appear/disappear, and its content is not
+    part of clangd's shard validity - only the path in the command is.
+    """
+    changed: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="compdb_regen_") as tmp:
+        tmp_dir = Path(tmp)
+        gen_fresh(tmp_dir, target="clangd")
+        for name in ("compile_commands.json", "clangd-vfs.yaml"):
+            # the overlay path inside the commands points at the temp dir
+            text = (tmp_dir / name).read_text().replace(str(tmp_dir), str(VOSTOK_DIR))
+            dst = VOSTOK_DIR / name
+            if dst.is_file() and dst.read_text() == text:
+                continue
+            changed.append(name)
+            if not dry_run:
+                dst.write_text(text)
+    if changed:
+        log(f"compdb: {', '.join(changed)} updated")
     return changed
 
 
