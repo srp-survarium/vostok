@@ -37,6 +37,9 @@ void login_client_impl::on_sign_out_password_written(
 	close_connection		( true );
 	if ( !m_in_destructor )
 		callback			( successfully_connected, successfully_handshaked, no_socket_error, servers_connection_info_message_type );
+
+	// STRUCTURE DIFF: target 16 stmts / base 16 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x3 + LOG-helper scheduling x2; non-steerable LTCG.
 }
 // STATE[78.58%|PARTIAL]: structure clean (inlined strlen + length-prefixed password write verified); residual = the function4::operator() inline-vs-call wall x1 + the callback bind-copy lowering
 void login_client_impl::on_sign_out_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
@@ -68,6 +71,9 @@ void login_client_impl::on_sign_out_handshaked( boost::function< void ( connecti
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback bind-copy lowering; non-steerable LTCG.
 }
 // STATE[67.69%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x2 + LOG-helper scheduling x2
 void login_client_impl::on_sign_out_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
@@ -103,6 +109,9 @@ void login_client_impl::on_sign_out_written( boost::function< void ( connection_
 		login_handshake_retry_count,
 		true
 	);
+
+	// STRUCTURE DIFF: target 16 stmts / base 16 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling x2; non-steerable LTCG.
 }
 // STATE[75.53%|PARTIAL]: structure clean (sign_out_message_type byte + session_id write verified); residual = the function4::operator() inline-vs-call wall x1 + the callback bind-copy lowering
 void login_client_impl::sign_out_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
@@ -136,6 +145,9 @@ void login_client_impl::sign_out_on_connected( connection_error_types_enum conne
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback bind-copy lowering; non-steerable LTCG.
 }
 // STATE[88.25%|PARTIAL]: structure clean (const& functor local + if/else-if/else ladder verified); residual = the function1(bind_t) conversion lowering + LOG-helper scheduling x3
 void login_client_impl::sign_out( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
@@ -160,6 +172,9 @@ void login_client_impl::sign_out( boost::function< void ( connection_error_types
 	}
 	else
 		LOG_ERROR			( "[LOGIN] waiting for previous operation to be completed\r\n" );
+
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts (SIZE-only, rva-pinned 0x791df0)
+	// VERDICT: STRUCTURE MATCH - function1(bind_t) conversion lowering + LOG-helper scheduling x3; non-steerable LTCG.
 }
 
 } // namespace network

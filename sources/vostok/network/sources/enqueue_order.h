@@ -50,6 +50,9 @@ public:
 
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats	= m_copied_stats;
+
+		// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+		// VERDICT: STRUCTURE MATCH - same intrusive_ptr operator*/~intrusive_ptr inline-vs-call as ~connect_order; non-steerable LTCG.
 	}
 
 	// STATE[100%|DONE]
