@@ -15,6 +15,10 @@
 #include <vostok/game_core/player_input.h>
 
 namespace survarium {
+
+static float const c_anim_center = 0.5f;
+static float const epsilon       = 0.001f;
+
 /*
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_use_cc''()
@@ -346,45 +350,24 @@ void `dynamic initializer for 'epsilon''( )
 	// ******
 }
 */
-// STATE[STUB]
-// float survarium::weapon_core::horizontal_recoil_value() const
+// STATE[PARTIAL]: STRUCTURE MATCH, SIZE +0x5 (LTCG is_aimed inline direction)
 float weapon_core::horizontal_recoil_value( ) const
 {
-	// LOCALS
-	// float 						result
-	// float 						total_horizontal_coeff
-	// ******
-
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0xbc669>|0x009|+0x050:'312'
-	// <0xbc6b9>|0x059|+0x04b:'313'
-	// <0xbc704>|0x0a4|+0x003:'314'
-	// ******
+	float const total_horizontal_coeff = is_aimed( ) ?
+		m_breath_vibration_calculator.get_horizontal_value( ) + m_recoil_calculator.get_horizontal_coeff( ) :
+		m_recoil_calculator.get_horizontal_coeff( );
+	float const result = c_anim_center - math::clamp_r( total_horizontal_coeff, -c_anim_center + epsilon, c_anim_center - epsilon );
+	return result;
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::vertical_recoil_value() const
+// STATE[PARTIAL]: STRUCTURE MATCH, SIZE +0x5 (LTCG is_aimed inline direction)
 float weapon_core::vertical_recoil_value( ) const
 {
-	// LOCALS
-	// float 						result
-	// float 						total_vertical_coeff
-	// ******
-
-	return 1.0f;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0xbc719>|0x009|+0x050:'321'
-	// <0>
-	// <0xbc769>|0x059|+0x047:'323'
-	// <0xbc7b0>|0x0a0|+0x003:'324'
-	// ******
+	float const total_vertical_coeff = is_aimed( ) ?
+		m_breath_vibration_calculator.get_vertical_value( ) + m_recoil_calculator.get_vertical_coeff( ) :
+		m_recoil_calculator.get_vertical_coeff( );
+	float const result = math::clamp_r( total_vertical_coeff, -c_anim_center + epsilon, c_anim_center - epsilon ) + c_anim_center;
+	return result;
 }
 
 // STATE[STUB]
@@ -439,25 +422,18 @@ void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 	// many other callers (net -26 exact), so the inline stays.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_dispersion(const bool, unsigned int)
+// STATE[PARTIAL]: STRUCTURE MATCH, SIZE +0x14 on tick (LTCG operator*/is_aimed inline direction)
 void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 {
-	// CALL SITE INFO
-	// <0x5a33dc> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a33b9>|0x009|+0x00c:'359'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5a33c5>|0x015|+0x07c:'367'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_dispersion_calculator.tick(
+		m_user_animations_selector.get_current_state_id( ),
+		is_moving,
+		is_aimed( ),
+		( *m_user->damage_model( ) ).broken_hands_count( ),
+		m_is_double_handed,
+		current_time_in_ms
+	);
 }
 
 // STATE[100%|DONE]

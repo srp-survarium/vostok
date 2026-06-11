@@ -678,6 +678,12 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &bc ) );
 		example_callback( reinterpret_cast< pcstr >( &hc ) );
 		example_callback( reinterpret_cast< pcstr >( &vc ) );
+
+		weapon.update_dispersion( false, 0 );
+		volatile float hr = weapon.horizontal_recoil_value( );
+		volatile float vr = weapon.vertical_recoil_value( );
+		example_callback( reinterpret_cast< pcstr >( const_cast< float* >( &hr ) ) );
+		example_callback( reinterpret_cast< pcstr >( const_cast< float* >( &vr ) ) );
 	}
 
 	void use_game_core_weapon_core_ik_callbacks( )
