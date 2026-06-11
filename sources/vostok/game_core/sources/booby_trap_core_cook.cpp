@@ -7,18 +7,14 @@
 
 namespace survarium {
 
-// STATE[66.69%|DONE]
+// STATE[100%|DONE]
 booby_trap_core_cook::booby_trap_core_cook( ) :
 	resources::translate_query_cook( resources::booby_trap_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
-
-	// FUNCTION BODY
-	// <0x761d85>|0x035|+0x00c:'17'
-	// ******
 }
 
-// STATE[73.88%|PARTIAL]
+// STATE[90.16%|DONE]: LTCG temp/closure lowering only
 void booby_trap_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	configs::binary_config_ptr config;
@@ -48,37 +44,18 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 		assert_on_fail_true
 	);
 
-	// FUNCTION BODY[0x761ee0]: 26
-	// <0x761ef0>|0x010|+0x00b:'22'
-	// <0x761efb>|0x01b|+0x01b:'23'
-	// <0>
-	// <0x761f16>|0x036|+0x012:'25'
-	// <0x761f28>|0x048|+0x00c:'26'
-	// <0x761f34>|0x054|+0x010:'27'
-	// <0>
-	// <1>
-	// <0x761f44>|0x064|+0x012:'30'
-	// <0x761f56>|0x076|+0x033:'31'
-	// <0>
-	// <1>
-	// <2>
-	// <0x761f89>|0x0a9|+0x00b:'35'
-	// <0x761f94>|0x0b4|+0x01b:'36'
-	// <0>
-	// <0x761faf>|0x0cf|+0x01a:'38'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x761fc9>|0x0e9|+0x090:'47'
-	// ******
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE +0x2 | 30 | if ( !parent.user_data( )->try_get( config ) )
+	// SIZE -0x5 | 44 | { aabb_path.c_str( ), resources::binary_config_class_impl },
+	// SIZE +0x6 | 54 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - L30 is the LTCG promoted-convention register (try_get
+	// takes user_data()'s result in eax in target, ecx in base, one mov); L44 is the documented
+	// LTCG-promoted two-store request factory (target builds the aggregate via an ICF-folded
+	// dest-in-eax helper; create_request form tested earlier and regressed); L54 is bind/
+	// query_resources closure-temp frame inflation. Non-steerable.
 }
 
-// STATE[87.99%|DONE]
+// STATE[100%|DONE]
 void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -91,25 +68,9 @@ void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& da
 	resource->load_aabb( aabb->get_root( ) );
 
 	query_for_derived_resources( data.get_parent_query( ), resource, config );
-
-
-	// FUNCTION BODY[0x761e00]: 12
-	// <0x761e0a>|0x00a|+0x00c:'52'
-	// <0x761e16>|0x016|+0x00c:'53'
-	// <0>
-	// <0x761e22>|0x022|+0x022:'55'
-	// <0>
-	// <1>
-	// <0x761e44>|0x044|+0x010:'58'
-	// <0x761e54>|0x054|+0x031:'59'
-	// <0x761e85>|0x085|+0x016:'60'
-	// <0>
-	// <1>
-	// <0x761e9b>|0x09b|+0x026:'63'
-	// ******
 }
 
-// STATE[74.00%|DONE]
+// STATE[100%|DONE]
 void booby_trap_core_cook::finish_query( resources::query_result_for_cook* parent, booby_trap_core* resource )
 {
 	parent->set_unmanaged_resource(
@@ -117,11 +78,6 @@ void booby_trap_core_cook::finish_query( resources::query_result_for_cook* paren
 		resources::memory_usage_type( resources::nocache_memory, get_derived_resource_size( ) )
 	);
 	parent->finish_query( result_success );
-
-	// FUNCTION BODY[0x761da0]: 2
-	// <0x761da9>|0x009|+0x036:'68'
-	// <0x761ddf>|0x03f|+0x00c:'69'
-	// ******
 }
 
 } // namespace survarium

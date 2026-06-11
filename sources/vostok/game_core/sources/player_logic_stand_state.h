@@ -15,6 +15,7 @@ class player_logic_stand_state : public player_logic_base_state {
 public:
 	explicit			player_logic_stand_state	( weapon_user_animations_selector& owner );
 
+private:
 	virtual	void		initialize					( ) override { /* no source */ }
 	virtual	void		finalize					( ) override { /* no source */ }
 	virtual	void		execute						( ) override { /* no source */ }

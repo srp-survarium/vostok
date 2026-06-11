@@ -46,6 +46,9 @@ public:
 											boost::function< void( client_error_codes_enum, boost::system::error_code ) > const&	value
 										) { /* no source */ }
 
+// claude@MATCH: target mangling is AAE (private) for the four members below -
+// QAE (public) left them unpairable in objdiff (the unit's 0% block).
+private:
 			void						on_packet_received		(
 											tcp_packet const*					packet,
 											boost::system::error_code const&	error_code,
@@ -60,7 +63,7 @@ public:
 	template < typename T >
 			void						on_packet_size_received	(
 											boost::system::error_code const&	error_code,
-											u32									bytes_transferred
+											u32 const							bytes_transferred
 										);
 
 			tcp_packet*					new_packet				( );
@@ -69,6 +72,7 @@ public:
 		VOSTOK_DELETE_IMPL( m_packet_allocator, packet );
 	}
 
+public:
 	inline								~tcp_packet_socket		( ) { /* no source */ }
 
 private:

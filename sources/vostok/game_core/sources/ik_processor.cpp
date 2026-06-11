@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include <vostok/game_core/ik_processor.h>
+#include <vostok/game_core/ik_utils.h>		// get_bone_matrix_in_object_space decl (VOSTOK_GAME_CORE_API)
 
 #include <vostok/animation/api.h>
 #include <vostok/animation/skeleton.h>

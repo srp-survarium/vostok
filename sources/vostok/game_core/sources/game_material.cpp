@@ -12,7 +12,7 @@ namespace survarium {
 // game_id -> physics_group
 u16 g_material_physics_group[64] = {};
 
-// STATE[83.44%|DONE]: LTCG for fixed_string constructor
+// STATE[97.78%|DONE]: fixed_string m_name ctor inline-vs-call frame-slot (LTCG), shape matches
 game_material::game_material( )	:
 	m_name							( "default" ),
 	m_material_resistance			( 50.0f ),
@@ -23,9 +23,12 @@ game_material::game_material( )	:
 	m_mine_can_place				( false ),
 	m_mine_can_stick				( false )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (member-init only; 0x7f vs 0x7d bytes)
+	// VERDICT: STRUCTURE MATCH (shape ok) - residual is the m_name fixed_string("default")
+	// ctor materialization frame-slot, non-steerable.
 }
 
-// STATE[88.10%|PARTIAL]: LTCG for binary_config_value access, also buffer_string
+// STATE[96.23%|PARTIAL]: binary_config_value access + buffer_string inline-vs-call (LTCG), shape matches
 void game_material::load_from_config( configs::binary_config_value const& val )
 {
 	m_id							= (u16)val["id"];
@@ -50,29 +53,10 @@ void game_material::load_from_config( configs::binary_config_value const& val )
 
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
-	// <0x760399>|0x009|+0x019:'28'
-	// <0x7603b2>|0x022|+0x021:'29'
-	// <0x7603d3>|0x043|+0x026:'30'
-	// <0x7603f9>|0x069|+0x026:'31'
-	// <0x76041f>|0x08f|+0x026:'32'
-	// <0x760445>|0x0b5|+0x026:'33'
-	// <0>
-	// <0x76046b>|0x0db|+0x006:'35'
-	// <0>
-	// <0x760471>|0x0e1|+0x026:'37'
-	// <0x760497>|0x107|+0x026:'38'
-	// <0>
-	// <0x7604bd>|0x12d|+0x027:'40'
-	// <0x7604e4>|0x154|+0x00b:'41'
-	// <0>
-	// <0x7604ef>|0x15f|+0x027:'43'
-	// <0x760516>|0x186|+0x00b:'44'
-	// <0>
-	// <0x760521>|0x191|+0x013:'46'
-	// <0>
-	// <0x760534>|0x1a4|+0x00c:'48'
-	// ******
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (no diverging rows, 0x1b6 bytes BOTH)
+	// VERDICT: STRUCTURE MATCH - clean skeleton, equal byte counts; the % residual is
+	// relocation pairing only (binary_config_value operator[]/cast + buffer_string assign
+	// fold names), non-steerable.
 }
 
 } // namespace survarium

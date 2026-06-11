@@ -19,18 +19,11 @@ artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 	// ******
 }
 
-// STATE[99.77%|DONE]
+// STATE[100%|DONE]
 void artefact_container_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
 	m_artefact_search_time_ms = math::floor( (float)cfg["artefacts_search_time_sec"] * 1000.0f );
-
-	// FUNCTION BODY
-	// <0x73dee0>|0x000|+0x009:'20'	{
-	// <0x73dee9>|0x009|+0x00c:'21'
-	// <0x73def5>|0x015|+0x02e:'22'
-	// <0x73df23>|0x043|      :'23'	}
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -88,7 +81,7 @@ bool artefact_container_core::use_initialize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[92.86%|PARTIAL]
+// STATE[92.86%|PARTIAL]: intrusive_ptr unspecified_bool conversion (if m_artefact) + transfer_artefact arg reg, non-steerable
 bool artefact_container_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users[0] == user ) );
@@ -112,30 +105,10 @@ bool artefact_container_core::use_execute( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
-	// <0x73e090>|0x000|+0x009:'50'	{
-	// <0x73e099>|0x009|+0x00c:'51'	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users[0] == user ) );
-	// <0x73e0a5>|0x015|+0x00c:'52'	ASSERT( UNKNOWN_EXPRESSION_T( user ) );
-	// <0x73e0b1>|0x021|+0x00f:'53'	u32 left_ms					= user->current_time_ms - user->start_using_time_ms
-	// <0>
-	// <0x73e0c0>|0x030|+0x01c:'55'	float artsearch_time		= m_artefact_search_time_ms * user->booster_artcont_time_factor;
-	// <0>
-	// <0x73e0dc>|0x04c|+0x03e:'57' u32 artefact_search_time_ms = artsearch_time > 0.0f ? artsearch_time : 0.0f;
-	// <0>
-	// <0x73e11a>|0x08a|+0x03a:'59' user->current_progress		= math::floor( left_ms / artefact_search_time_ms * 100.0f );
-	// <0>
-	// <0x73e154>|0x0c4|+0x008:'61'	if ( left_ms >= artefact_search_time_ms )
-	// <0>
-	// <0x73e15c>|0x0cc|+0x009:'63'		if ( m_owner )
-	// <0x73e165>|0x0d5|+0x00f:'64'			m_owner->on_artefact_container_use( this );
-	// <0>
-	// <0x73e174>|0x0e4|+0x00c:'66'		user->start_using_time_ms = user->current_time_ms;
-	// <0x73e180>|0x0f0|+0x029:'67'		if ( m_artefact )
-	// <0x73e1a9>|0x119|+0x01c:'68'			transfer_artefact( user->owner->cast_to_inventory_holder( ) );
-	// <0>
-	// <0x73e1c5>|0x135|+0x002:'70'	return true;
-	// <0x73e1c7>|0x137|      :'71'	}
-	// ******
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
+	// SIZE -0xa | 102 | if ( m_artefact )
+	// SIZE -0x2 | 103 | transfer_artefact( user->owner->cast_to_inventory_holder( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - if(m_artefact): target calls intrusive_ptr unspecified_bool conversion out-of-line, base inlines setne/movzx/test; transfer_artefact arg+this regs differ (LTCG). Non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -164,23 +137,20 @@ bool artefact_container_core::use_finalize( usable_object_user_data* user )
 	// ******
 }
 
-// STATE[64.31%|PARTIAL]: Everything inlined differently
+// STATE[98.56%|PARTIAL]: sole residual is the set_amount(1) arg passing (stack vs reg), non-steerable
+// (the conversion line closed when static_cast_resource_ptr went const&-parameter engine-wide)
 void artefact_container_core::artefact_spawned( resources::queries_result& data )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_artefact = static_cast_resource_ptr<artefact_base_ptr>( data[0].get_unmanaged_resource( ) );
 	m_artefact->set_amount( 1 );
 
-	// FUNCTION BODY
-	// <0x73df30>|0x000|+0x00a:'86'	{
-	// <0x73df3a>|0x00a|+0x00c:'87'
-	// <0x73df46>|0x016|+0x06c:'88'
-	// <0x73dfb2>|0x082|+0x022:'89'
-	// <0x73dfd4>|0x0a4|      :'90'	}
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x3 | 149 | m_artefact->set_amount( 1 );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is set_amount(1): target pushes 1 on stack, base passes in reg; LTCG call-boundary arg passing, non-steerable.
 }
 
-// STATE[96.11%|DONE]: LTCG for query_resource
+// STATE[100%|DONE]
 void artefact_container_core::spawn_artefact( )
 {
 	variant<32> ud;
@@ -194,33 +164,17 @@ void artefact_container_core::spawn_artefact( )
 		&ud,
 		NULL
 	);
-
-	// FUNCTION BODY
-	// <0x73e1e3>|0x013|+0x009:'94'
-	// <0x73e1ec>|0x01c|+0x018:'95'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x73e204>|0x034|+0x0eb:'103'
-	// ******
 }
 
-// STATE[0.00%|PARTIAL]: static_cast_resource_ptr didn't inline in target.
+// STATE[80.80%|PARTIAL]: static_cast_resource_ptr inlined in target (c_ptr read + intrusive_ptr::set) vs out-of-line call in base, non-steerable
 void artefact_container_core::transfer_artefact( inventory_holder* holder )
 {
 	holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
 	m_artefact = NULL;
 
-	// FUNCTION BODY
-	// <0x73e030>|0x000|+0x009:'107'	{
-	// <0x73e039>|0x009|+0x035:'108'
-	// <0x73e06e>|0x03e|+0x013:'109'
-	// <0x73e081>|0x051|      :'110'	}
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0xc | 178 | holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the conversion: target inlines static_cast_resource_ptr (c_ptr read + intrusive_ptr::set, 0x35) while base keeps the instantiation out-of-line (0x29); per-call-site LTCG inline decision, same source, non-steerable.
 }
 
 } // namespace survarium

@@ -27,21 +27,20 @@ tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
 	// one call) + boost::function assign epilogue regalloc. No source lever. trail: tcp_packet_client.md
 }
 
-// STATE[90.98%|PARTIAL]: body byte-correct; boost::function clear reps fold under LTCG
+// STATE[94.88%|PARTIAL]: legacy early-return guard (client_impl dtor shape) - the target's
+// 3-stmt carcass (guard test, 2-byte `return;` jmp row at L26, disconnect call) is exactly
+// `if ( !connected ) return; disconnect( );`, not the condensed `if ( c ) disconnect( );`.
 tcp_packet_client::~tcp_packet_client( )
 {
-	if ( m_async_connector.has_connection_established( ) )
-		disconnect( );
+	if ( !m_async_connector.has_connection_established( ) )
+		return;
 
-	// STRUCTURE DIFF[target 0x77cbe0 | base 0x57af90]: target 3 / base 2 stmts
-	// .. same ..
-	//   2: 0x020 <0x2> | --          | L26   ONLY target
-	// .. same ..
-	// ; aligned 2, size-diffs 0, quantity-diffs 1, blank-gaps 1
-	// VERDICT: STRUCTURE MISMATCH (quantity) - the 1 extra target stmt is a 2-byte branch
-	// row: target lowers the guard as `jne .disconnect; jmp .end`, base as a single `je .end`.
-	// has_connection_established test + disconnect call align; this is if-branch codegen layout,
-	// not a source-shape miss - no source lever, take the hit. trail: tcp_packet_client.md
+	disconnect( );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// VERDICT: STRUCTURE MATCH (shape ok) - 3/3 align after the early-return adoption (was
+	// 2 + 1 ONLY-target jmp row); residual is the compiler-epilogue member-dtor chain's
+	// ICF-folded boost::function::clear call symbols + target's esi regalloc, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -80,7 +79,7 @@ void tcp_packet_client::disconnect( )
 		close_connection( );
 }
 
-// STATE[66%|PARTIAL]: ASSERT + shutdown + close + reset shape correct; residual = m_socket.close(ec)
+// STATE[66.30%|PARTIAL]: ASSERT + shutdown + close + reset shape correct; residual = m_socket.close(ec)
 // out-lines to basic_socket::close in target but over-inlines to win_iocp service close in base (inline-boundary)
 void tcp_packet_client::close_connection( )
 {

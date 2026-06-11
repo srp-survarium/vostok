@@ -16,7 +16,7 @@ using configs::binary_config_value;
 
 namespace survarium {
 
-// STATE[82.21%|PARTIAL]: `link_resolver` constructor is called in target to set `vtable`.
+// STATE[82.21%|PARTIAL]: target CALLS the implicit link_resolver base ctor; base inlines its vtable store.
 collision_sensor::collision_sensor( ) :
 	link_resolver					( ),
 	m_collision_geometries			( NULL ),
@@ -24,19 +24,19 @@ collision_sensor::collision_sensor( ) :
 	m_is_active						( false )
 
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (init-list only; no diverging rows)
+	// VERDICT: STRUCTURE MATCH (init-list shape ok) - target emits one `call link_resolver::
+	// link_resolver` (implicit base ctor) where base inlines the vtable-only store; decided by
+	// the base-class decl, not this body. LTCG/ICF, non-steerable.
 }
 
 // STATE[100%|DONE]
 collision_sensor::~collision_sensor( )
 {
 	VOSTOK_FREE_IMPL( g_allocator, m_collision_geometries );
-
-	// FUNCTION BODY
-	// <0x59af2c>|0x000|0x000:'24'
-	// ******
 }
 
-// STATE[94.15%|DONE]: LTCG for `binary_config_value::operator[]`.
+// STATE[100%|DONE]
 void collision_sensor::load( binary_config_value const& cfg )
 {
 	binary_config_value collision_table = cfg["collision_geometries"];
@@ -44,26 +44,9 @@ void collision_sensor::load( binary_config_value const& cfg )
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	m_collision_geometries = (collision_geometry**)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( collision_geometry* ) * m_collision_geometries_count, "collision_geometries" );
-
-	// FUNCTION BODY
-	// <0x59b01a>|0x000|0x000:'29'
-	// <0x59b04a>|0x030|0x030:'30'
-	// <0x59b058>|0x03e|0x00e:'31'
-	// <1>
-	// <0x59b064>|0x04a|0x00c:'33'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// ******
 }
 
-// STATE[98.25%|DONE]
+// STATE[100%|DONE]
 void collision_sensor::resolve_links( base_project* p, binary_config_value cfg )
 {
 	binary_config_value collision_table = cfg["collision_geometries"];
@@ -72,15 +55,6 @@ void collision_sensor::resolve_links( base_project* p, binary_config_value cfg )
 		pcstr geom_name = collision_table[i]["name"];
 		m_collision_geometries[i] = static_cast_checked<collision_geometry*>( p->get_object_by_name( geom_name ) );
 	}
-
-	// FUNCTION BODY
-	// <0x59a8a9>|0x000|0x000:'47'
-	// <0x59a8d9>|0x030|0x030|[1]:'48'
-	// <1>
-	// <0x59a8f6>|0x04d|0x01d|[2]:'50'
-	// <0x59a915>|0x06c|0x01f:'51'
-	// <1>
-	// ******
 }
 
 struct objects_filter_predicate { // sushi@NOTE: Might be in a different place
@@ -97,7 +71,7 @@ bool remove_loosed_ptrs_predicate( base_physics_object* object )
 	return object == NULL;
 }
 
-// STATE[97.60%|PARTIAL]: See `notify_and_add_incoming_objects` regarding alloca.
+// STATE[97.60%|PARTIAL]: buffer_vector(ALLOCA,...) ctor inline-vs-call, see notify_and_add_incoming_objects.
 void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( time_delta_ms, current_time_ms );
@@ -145,53 +119,11 @@ void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
 	notify_objects_inside( );
 	notify_and_add_incoming_objects( sensed_objects );
 
-
-	// FUNCTION BODY
-	// <0x59ab90>|0x000|0x000:'95'
-	// <1>
-	// <0x59abb3>|0x023|0x023:'97'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x59abc4>|0x034|0x011:'106'
-	// <0x59ac7e>|0x0ee|0x0ba:'107'		if ( old_objects_count != m_old_objects.size( ) )
-	// <0x59ac91>|0x101|0x013:'108'			on_objetcs_loosed( m_old_objects );
-	// <1>
-	// <0x59acae>|0x11e|0x01d:'110'		u32 objects_count = 0;
-	// <0x59acb5>|0x125|0x007|[1]:'111'	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
-	// <0x59acd5>|0x145|0x020:'112'			objects_count += m_collision_geometries[i]->get_overlapping_objects_count( );
-	// <1>
-	// <0x59acf1>|0x161|0x01c:'114'		if ( objects_count == 0 )
-	// <1>
-	// <0x59acf7>|0x167|0x006|[2]:'116'		buffer_vector<base_physics_object *> sensed_objects( NULL, 0 );
-	// <0x59ad12>|0x182|0x01b:'117'			notify_and_erase_left_objects( sensed_objects );
-	// <0x59ad21>|0x191|0x00f:'118'			return;
-	// <1>
-	// <2>
-	// <0x59ad47>|0x1b7|0x026:'121'		buffer_vector<base_physics_object *> all_sensed_objects(  ALLOCA( objects_count * sizeof( base_physics_object * ) ), objects_count );
-	// <0x59ad72>|0x1e2|0x02b|[2]:'122'	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
-	// <0x59ad92>|0x202|0x020:'123'			m_collision_geometries[i]->get_overlapping_objects( all_sensed_objects );
-	// <1>
-	// <0x59adac>|0x21c|0x01a:'125'		filter_sensed_objects( all_sensed_objects );
-	// <1>
-	// <0x59adbb>|0x22b|0x00f:'127'		u32 all_sensed_objects_count = all_sensed_objects.size( );
-	// <0x59adc7>|0x237|0x00c:'128'		buffer_vector<base_physics_object *> sensed_objects(  ALLOCA( all_sensed_objects_count * sizeof( base_physics_object* ) ), all_sensed_objects_count );
-	// <1>
-	// <0x59adfb>|0x26b|0x034|[3]:'130'	for ( u32 i = 0 ; i < all_sensed_objects_count ; ++i )
-	// <1>
-	// <0x59ae15>|0x285|0x01a:'132'
-	// <0x59ae51>|0x2c1|0x03c:'133'
-	// <0x59ae75>|0x2e5|0x024:'134'
-	// <1>
-	// <0x59ae77>|0x2e7|0x002:'136'
-	// <0x59ae86>|0x2f6|0x00f:'137'
-	// <0x59ae91>|0x301|0x00b:'138'
-	// ******
+	// STRUCTURE DIFF: target 25 stmts / base 25 stmts
+	// SIZE +0x11 | 113 | buffer_vector<base_physics_object *> all_sensed_objects(  ALLOCA( ... ), objects_count );
+	// SIZE +0x11 | 120 | buffer_vector<base_physics_object *> sensed_objects(  ALLOCA( ... ), all_sensed_objects_count );
+	// VERDICT: STRUCTURE MATCH (shape ok) - both rows are the buffer_vector(ALLOCA,count) ctor
+	// inline-vs-call shape (see notify_and_add_incoming_objects). LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -208,24 +140,16 @@ struct left_objects_predicate {
 					m_current_objects	( &current_objects ),
 					m_objects_to_delete	( &objects_to_delete ) {}
 
-			// STATE[97.67%|PARTIAL]: target didn't generate xor after `std::find`.
+			// STATE[100%|DONE]: `bool const` (per the target PDB locals) drops the
+			// xor-before-sete; 97.67 -> 100.
 			bool	operator()				( base_physics_object* obj ) const
 			{
-				bool result = std::find( m_current_objects->begin( ), m_current_objects->end( ), obj ) == m_current_objects->end( );
+				bool const result = std::find( m_current_objects->begin( ), m_current_objects->end( ), obj ) == m_current_objects->end( );
 				if ( !result )
 					return false;
 
 				m_objects_to_delete->push_back( obj );
 				return true;
-
-				// FUNCTION BODY
-				// <0xc6619>|0x000|0x000:'156'
-				// <0xc665c>|0x043|0x043:'157'
-				// <0xc6664>|0x04b|0x008:'158'
-				// <1>
-				// <0xc6668>|0x04f|0x004:'160'
-				// <0xc6677>|0x05e|0x00f:'161'
-				// ******
 			}
 
 public:
@@ -235,7 +159,8 @@ public:
 
 STATIC_SIZE_ASSERT(left_objects_predicate, 0x8);
 
-// STATE[100%|DONE]
+// STATE[99.82%|PARTIAL]: target's frame is 0xc bigger, pushing spill slots to disp32; was
+// mislabeled 100%|DONE.
 void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics_object *>& sensed_objects )
 {
 	buffer_vector<base_physics_object *> objects_to_delete(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object * ) ), m_old_objects.size( ) );
@@ -251,9 +176,18 @@ void collision_sensor::notify_and_erase_left_objects( buffer_vector<base_physics
 
 	if ( !objects_to_delete.empty( ) )
 		 on_leave( objects_to_delete );
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x9  | 174 | buffer_vector<base_physics_object *> objects_to_delete(  ALLOCA( ... ), m_old_objects.size( ) );
+	// SIZE -0x12 | 183 | );
+	// SIZE -0x6  | 186 | 	 on_leave( objects_to_delete );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the slices are instruction-for-instruction identical;
+	// every byte of delta is disp8-vs-disp32 on the this/buffer spills (target [ebp-8Ch]/[ebp-90h]
+	// vs base [ebp-80h]/[ebp-84h]: target's frame is 0xc bigger). Frame-allocation noise,
+	// non-steerable.
 }
 
-// STATE[92.62%|PARTIAL]
+// STATE[92.62%|PARTIAL]: buffer_vector(ALLOCA,count) ctor inline-vs-call (extra size()/fill_uninitialized).
 // sushi@NOTE: The first line seems to be written differently.
 // For my code compiler generates two `size` calls after ALLOCA is called. The second one comes from the call to `fill_uninitialized`.
 // Target also this behaviour in `notify_and_erase_left_objects`.
@@ -276,34 +210,23 @@ void collision_sensor::notify_and_add_incoming_objects( buffer_vector<base_physi
 	for ( ; it != end ; ++it )
 		m_old_objects.push_back( *it );
 
-	// FUNCTION BODY
-	// <0x59aa09>|0x000|0x000:'187' buffer_vector<base_physics_object *> incoming_objects(
-	// <0x59aa50>|0x047|0x047:'188' base_physics_object** inc_it	= sensed_objects.begin( );
-	// <0x59aa58>|0x04f|0x008:'189' base_physics_object** inc_end	= sensed_objects.end( );
-	// <1>
-	// <0x59aaf4>|0x0eb|0x00c:'194'	if ( incoming_objects.size( ) )
-	// <0x59ab06>|0x0fd|0x012:'195'		on_enter( incoming_objects );
-	// <1>
-	// <0x59ab17>|0x10e|0x011:'197'
-	// <0x59ab1d>|0x114|0x006:'198'
-	// <1>
-	// <0x59ab23>|0x11a|0x006:'200'
-	// <0x59ab36>|0x12d|0x013:'201'
-	// ******
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
+	// SIZE +0x1c | 202 | buffer_vector<base_physics_object *> incoming_objects( ALLOCA( ... ), sensed_objects.size( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row is the buffer_vector(ALLOCA,count) ctor
+	// inline-vs-call. LTCG, non-steerable.
 }
 
-// STATE[89.29%|PARTIAL]: Same as `notify_and_add_incoming_objects`.
+// STATE[89.29%|PARTIAL]: buffer_vector(ALLOCA,count) ctor inline-vs-call, same as notify_and_add_incoming_objects.
 void collision_sensor::notify_objects_inside( )
 {
 	buffer_vector<base_physics_object *> objects_inside(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object* ) ), m_old_objects.size( ) );
 	objects_inside.assign( m_old_objects.begin( ), m_old_objects.end( ) );
 	on_inside( objects_inside ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
 
-	// FUNCTION BODY
-	// <0x59a249>|0x000|0x000:'206'
-	// <0x59a28a>|0x041|0x041:'207'
-	// <0x59a2ce>|0x085|0x044:'208'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x19 | 228 | buffer_vector<base_physics_object *> objects_inside(  ALLOCA( ... ), m_old_objects.size( ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row is the buffer_vector(ALLOCA,count) ctor
+	// inline-vs-call. LTCG, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -366,7 +289,7 @@ void collision_sensor::insert( physics::world* world )
 		m_collision_geometries[i]->subscribe( world, this );
 }
 
-// STATE[94.32%|DONE]: `vector::empty` didn't inline.
+// STATE[93.08%|PARTIAL]: target INLINES `m_old_objects.empty()`; our base keeps it an out-of-line call.
 void collision_sensor::remove( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_active ) );
@@ -392,31 +315,12 @@ void collision_sensor::remove( )
 	on_leave( leaved ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
 	m_old_objects.clear( );
 
-	// FUNCTION BODY
-	// <0x59a3f1>|0x000|0x000:'269'
-	// <0x59a3fd>|0x00c|0x00c:'270'		m_is_active = false;
-	// <1>
-	// <0x59a407>|0x016|0x00a|[1]:'272'	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
-	// <0x59a427>|0x036|0x020:'273'			m_collision_geometries[i]->unsubscribe( this );
-	// <1>
-	// <0x59a444>|0x053|0x01d:'275'		if ( m_old_objects.empty( ) )
-	// <0x59a467>|0x076|0x023:'276'			return;
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x59a46c>|0x07b|0x005:'286'
-	// <1>
-	// <0x59a526>|0x135|0x0ba:'288' buffer_vector<physi
-	// <0x59a58f>|0x19e|0x069:'289'
-	// <0x59a5d9>|0x1e8|0x04a:'290'
-	// <0x59a5f0>|0x1ff|0x017:'291'
-	// ******
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE -0xe | 308 | if ( m_old_objects.empty( ) )
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole row: target INLINES empty() (begin==end +
+	// sete/movzx/test), base CALLs it out-of-line. Reverse-direction inline-vs-call - not
+	// steerable from source (empty() IS the faithful spelling). The 94.32->93.08 drift was
+	// cross-unit LTCG churn, not a regression in this body.
 }
 
 // STATE[100%|DONE]

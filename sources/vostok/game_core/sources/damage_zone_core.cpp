@@ -30,7 +30,7 @@ bool hit_receiver_info::operator==( hit_receiver_info const& rhs ) const
 	return m_receiver->m_pointer->m_pointer == rhs.m_receiver->m_pointer->m_pointer;
 }
 
-// STATE[99.39%|DONE]
+// STATE[99.63%|DONE]
 damage_zone_core::damage_zone_core( ) :
 	hit_initiator				( u8(-1), true ),
 	m_physics_world				( NULL ),
@@ -38,9 +38,12 @@ damage_zone_core::damage_zone_core( ) :
 	m_accumulated_hit_time_ms	( 0 ),
 	m_standalone				( true )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x148 vs 0x147 bytes)
+	// VERDICT: STRUCTURE MATCH (member-init list, 0 body stmts) - residual is an LTCG frame-slot
+	// delta plus member-ctor call-target relocs; instruction shape identical, non-steerable.
 }
 
-// STATE[94.65%|DONE]
+// STATE[100%|DONE]
 damage_zone_core::~damage_zone_core( )
 {
 }
@@ -105,157 +108,111 @@ bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, f
 	// ******
 }
 
-// STATE[SKIPPED]
-float distance_from_sphere_center_to_point_on_shape( float radius )
+// STATE[100%|DONE]
+// static in the target (PDB plain-name record): internal linkage is what lets objdiff pair
+// these four helpers; anchored from the add_single_result stub below, not temp_include_all.
+static float distance_from_sphere_center_to_point_on_shape( float radius )
 {
 	return radius;
-
-	// FUNCTION BODY
-	// <0x597d53>|0x003|+0x003:'123'
-	// ******
 }
 
-// STATE[SKIPPED]
-// float survarium::distance_from_box_center_to_point_on_shape(vostok::math::float4x4 const&, vostok::math::float3 const&, vostok::math::float3 const&)
-float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
+// STATE[86.52%|PARTIAL]: dot_product inline wall (per-call-site /Ob2 /GL), non-steerable;
+// paired with the target static via internal linkage (was report-unpaired as extern).
+static float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
 {
-	// LOCALS
-	// float3 						dir
-	// float3 						result
-	// float3 						half_sides
-	// s32 							i<1>
-	// float 						dist<2>
-	// float3 						axis<2>
-	// ******
+	float3 dir			= source_position - transform.c.xyz( );
+	float3 result		= transform.c.xyz( );
+	float3 half_sides	= dim;
 
-	// SKIPPED BLOCKS
-	// <0x598538><2>
-	// ******
+	for ( s32 i = 0 ; i < 3 ; ++i )
+	{
+		float3 axis	= transform.lines[i].xyz( );
+		axis.normalize( );
+		float dist = dir.dot_product( axis );
 
-	return 0.0f;
-	// FUNCTION BODY
-	// <0x5984d0>|0x000|+0x006:'127'	{
-	// <0x5984d6>|0x006|+0x01c:'128'
-	// <0x5984f2>|0x022|+0x01c:'129'
-	// <0x59850e>|0x03e|+0x014:'130'
-	// <0>
-	// <0x598522>|0x052|+0x01c|[1]:'132'
-	// <0>
-	// <0x59853e>|0x06e|+0x01f:'134'
-	// <0x59855d>|0x08d|+0x008:'135'
-	// <0x598565>|0x095|+0x010:'136'
-	// <0>
-	// <0x598575>|0x0a5|+0x015:'138'
-	// <0x59858a>|0x0ba|+0x014:'139'
-	// <0x59859e>|0x0ce|+0x01c:'140'
-	// <0x5985ba>|0x0ea|+0x01b:'141'
-	// <0>
-	// <0x5985d5>|0x105|+0x01c:'143'
-	// <0x5985f1>|0x121|+0x005:'144'
-	// <0>
-	// <0x5985f6>|0x126|+0x021:'146'
-	// <0x598617>|0x147|      :'147'	}
-	// ******
+		if ( dist > half_sides[i] )
+			dist = half_sides[i];
+
+		if ( -half_sides[i] > dist )
+			dist = -half_sides[i];
+
+		result += axis * dist;
+	}
+
+	return ( result - transform.c.xyz( ) ).length( );
+
+	// STRUCTURE DIFF: target 14 stmts / base 14 stmts
+	// SIZE +0x1b | 135 | float dist = dir.dot_product( axis );
+	// VERDICT: STRUCTURE MATCH (14/14) - sole SIZE is float3_pod::dot_product inlined in base
+	// (scalar mulss/addss) vs out-of-line call in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
-// STATE[STUB]
-float distance_from_capsule_center_to_point_on_shape(
+// STATE[82.48%|PARTIAL]: dot_product inline wall (2 sites on the proj_to_y_axis line),
+// non-steerable; paired with the target static via internal linkage.
+static float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				half_length,
 	float				radius,
 	float3 const&		source_position
 )
 {
-	// LOCALS
-	// const float 						proj_to_y_axis
-	// float3 							bottom_surface_center
-	// float3 							y_axis
-	// float3 							surface_center
-	// float3 							top_surface_center
-	// float3 							height_vector
-	// float3 							center
-	// float3 							dir<1>
-	// float3 							height_vector_proj_point<1>
-	// ******
+	float3 center					= transform.c.xyz( );
+	float3 y_axis					= transform.j.xyz( );
+	float3 top_surface_center		= center + y_axis * half_length;
+	float3 bottom_surface_center	= center - y_axis * half_length;
+	float3 height_vector			= top_surface_center - bottom_surface_center;
+	const float proj_to_y_axis		= ( source_position - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 
-	// SKIPPED BLOCKS
-	// <0x59839a><1>
-	// ******
+	if ( proj_to_y_axis > 0.0f && 1.0f > proj_to_y_axis )
+	{
+		float3 height_vector_proj_point	= top_surface_center + height_vector * proj_to_y_axis;
+		float3 dir						= height_vector_proj_point - source_position;
+		return ( center - ( height_vector_proj_point + dir.normalize( ) * radius ) ).length( );
+	}
 
-	return 0.0f;
+	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
+	return ( center - ( surface_center + ( surface_center - source_position ).normalize( ) * radius ) ).length( );
 
-	// FUNCTION BODY[0x5982a0]: 16
-	// <0x5982a9>|0x009|+0x01c:'151'
-	// <0x5982c5>|0x025|+0x01c:'152'
-	// <0x5982e1>|0x041|+0x023:'153'
-	// <0x598304>|0x064|+0x023:'154'
-	// <0x598327>|0x087|+0x012:'155'
-	// <0x598339>|0x099|+0x043:'156'
-	// <0>
-	// <0x59837c>|0x0dc|+0x024:'158'
-	// <0>
-	// <0x5983a0>|0x100|+0x026:'160'
-	// <0x5983c6>|0x126|+0x012:'161'
-	// <0x5983d8>|0x138|+0x04e:'162'
-	// <0>
-	// <1>
-	// <0x598426>|0x186|+0x045:'165'
-	// <0x59846b>|0x1cb|+0x05d:'166'
-	// ******
+	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
+	// SIZE +0x4e | 190 | const float proj_to_y_axis = ( ... ).dot_product( ... ) / ... .dot_product( ... );
+	// VERDICT: STRUCTURE MATCH (12/12) - sole SIZE is the TWO dot_product calls inlined in base
+	// vs out-of-line in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
-// STATE[STUB]
-float distance_from_cylinder_center_to_point_on_shape(
+// STATE[76.61%|PARTIAL]: dot_product inline wall (3 sites), non-steerable; paired with the
+// target static via internal linkage.
+static float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				radius,
 	float				half_length,
 	float3 const&		source_position
 )
 {
-	// LOCALS
-	// const float 						proj_to_y_axis
-	// float3 							circle_point_dir
-	// float3 							bottom_surface_center
-	// float3 							circle_proj_vec
-	// float3 							proj
-	// float3 							y_axis
-	// float3 							surface_center
-	// float3 							top_surface_center
-	// float3 							height_vector
-	// float3 							center
-	// float3 							dir<1>
-	// float3 							height_vector_proj_point<1>
-	// ******
+	float3 center					= transform.c.xyz( );
+	float3 y_axis					= transform.j.xyz( );
+	float3 top_surface_center		= center + y_axis * half_length;
+	float3 bottom_surface_center	= center - y_axis * half_length;
+	float3 height_vector			= top_surface_center - bottom_surface_center;
+	const float proj_to_y_axis		= ( source_position - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 
-	// SKIPPED BLOCKS
-	// <0x598140><1>
-	// ******
+	if ( proj_to_y_axis > 0.0f && 1.0f > proj_to_y_axis )
+	{
+		float3 height_vector_proj_point	= top_surface_center + height_vector * proj_to_y_axis;
+		float3 dir						= height_vector_proj_point - source_position;
+		return ( center - ( height_vector_proj_point + dir.normalize( ) * radius ) ).length( );
+	}
 
-	return 0.0f;
+	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
+	float3 circle_point_dir			= surface_center - source_position;
+	float3 proj						= y_axis * y_axis.dot_product( circle_point_dir );
+	float3 circle_proj_vec			= proj - circle_point_dir;
+	return ( center - ( surface_center + circle_proj_vec ) ).length( );
 
-	// FUNCTION BODY[0x598040]: 21
-	// <0x598049>|0x009|+0x01c:'171'
-	// <0x598065>|0x025|+0x01c:'172'
-	// <0x598081>|0x041|+0x026:'173'
-	// <0x5980a7>|0x067|+0x026:'174'
-	// <0x5980cd>|0x08d|+0x012:'175'
-	// <0x5980df>|0x09f|+0x043:'176'
-	// <0>
-	// <0x598122>|0x0e2|+0x024:'178'
-	// <0>
-	// <0x598146>|0x106|+0x026:'180'
-	// <0x59816c>|0x12c|+0x015:'181'
-	// <0>
-	// <0x598181>|0x141|+0x051:'183'
-	// <0>
-	// <1>
-	// <0x5981d2>|0x192|+0x045:'186'
-	// <0x598217>|0x1d7|+0x012:'187'
-	// <0x598229>|0x1e9|+0x028:'188'
-	// <0x598251>|0x211|+0x012:'189'
-	// <0>
-	// <0x598263>|0x223|+0x02e:'191'
-	// ******
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
+	// SIZE +0x4e | 239 | const float proj_to_y_axis = ( ... ).dot_product( ... ) / ... .dot_product( ... );
+	// SIZE +0x1b | 250 | float3 proj = y_axis * y_axis.dot_product( circle_point_dir );
+	// VERDICT: STRUCTURE MATCH (15/15) - both SIZE rows are dot_product inlined in base vs
+	// out-of-line in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
 struct dz_bone_data_contact_test_predicate : public physics::contact_test_predicate {
@@ -279,7 +236,15 @@ public:
 
 STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
-// STATE[STUB]
+// STATE[STUB]: claude@NOTE: dispatches (switch on second_shape_type) to the four
+// distance_from_*_center helpers (target rva 0xb7be0), then result.first = bone,
+// result.second = dist/radius, m_result->push_back(result). Out of the geometric-
+// helper unit's scope: matching it needs the .cpp-local
+// dz_bone_data_contact_test_predicate vtable anchored in base (the class is only
+// instantiated inside hit_on_enter/inside/motion_inside, themselves STUBs), and a
+// full ~0x1fc-byte reconstruction (switch + folded xyz() + STL push_back). The four
+// helpers it calls would pair fine; the dispatch body itself does not hit the
+// dot_product inline wall. Deferred to a hit_on_* unit that brings the vtable.
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
 	collision::primitive_type	first_shape_type,
@@ -306,6 +271,19 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6d02 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6d42 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
 	// ******
+
+	// temp anchor: the real body dispatches to the four static distance_from_* helpers above;
+	// keep them emitted (and paired against the target statics) until that dispatch is matched.
+	{
+		typedef float ( *shape_fn0 )( float );
+		typedef float ( *shape_fn1 )( float4x4 const&, float3 const&, float3 const& );
+		typedef float ( *shape_fn2 )( float4x4 const&, float, float, float3 const& );
+		volatile shape_fn0 p0 = &distance_from_sphere_center_to_point_on_shape;
+		volatile shape_fn1 p1 = &distance_from_box_center_to_point_on_shape;
+		volatile shape_fn2 p2 = &distance_from_capsule_center_to_point_on_shape;
+		volatile shape_fn2 p3 = &distance_from_cylinder_center_to_point_on_shape;
+		(void)p0; (void)p1; (void)p2; (void)p3;
+	}
 
 	return 0.0f;
 

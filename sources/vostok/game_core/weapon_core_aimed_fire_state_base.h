@@ -25,7 +25,9 @@ public:
 	virtual	animation::callback_return_type_enum	on_aiming_event				( animation::animation_callback_params& params );
 
 
-private:
+protected:
+	// m_animation_timescale / m_playback_type read by the derived
+	// pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair -> protected.
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
 	/* 0x0140 */	float								m_animation_timescale;
 	/* 0x0144 */	animation::mixing::playback_enum	m_playback_type;
