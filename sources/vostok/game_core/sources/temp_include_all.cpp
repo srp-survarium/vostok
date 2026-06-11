@@ -652,6 +652,19 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &vc ) );
 	}
 
+	void use_game_core_weapon_core_ik_callbacks( )
+	{
+		survarium::weapon_core weapon;
+		vostok::animation::animation_callback_params params( 0, vostok::animation::skeleton_animation_ptr(), "", 0, 0, 0, 0 );
+		weapon.on_animation_ik_interval( params );
+
+		typedef vostok::animation::mixing::expression (survarium::weapon_core::*gwhe_t)(
+			vostok::mutable_buffer&, bool, survarium::weapon_user_state_enum,
+			vostok::animation::mixing::animation_lexeme& ) const;
+		gwhe_t gwhe = &survarium::weapon_core::get_weapon_and_hands_animation_expression;
+		example_callback( reinterpret_cast< pcstr >( &gwhe ) );
+	}
+
 	void use_game_core_weapon_core_animation_end_aware_state( )
 	{
 		// weapon_core_animation_end_aware_state is abstract (pure
@@ -2607,6 +2620,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_material_manager( );
 	vostok::use_weapon_dispersion_calculator( );
 	vostok::use_game_core_weapon_core_base_state( );
+	vostok::use_game_core_weapon_core_ik_callbacks( );
 	vostok::use_game_core_weapon_core_animation_end_aware_state( );
 	vostok::use_game_core_weapon_core_idle_state_base( );
 	vostok::use_game_core_weapon_core_aimed_state_base( );
