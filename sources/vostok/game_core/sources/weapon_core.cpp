@@ -313,8 +313,7 @@ bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) 
 	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::weapon_core::get_weapon_and_hands_animation_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[91.32%|PARTIAL]: STRUCTURE MATCH 1/1 stmts, SIZE -0x6 (current_base_state() temp-chain depth)
 animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -322,13 +321,7 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// CALL SITE INFO
-	// <0x5a37a4> -> animation::mixing::expression <unknown>(mutable_buffer&, const bool, const weapon_user_state_enum, animation::mixing::animation_lexeme&) const
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a3769>|0x009|+0x040:'291'
-	// ******
+	return current_base_state( ).weapon_and_hands_expression( buffer, is_third_view, weapon_user_state_id, weight_driving_animation );
 }
 
 // STATE[73.00%|PARTIAL]: restored the faithful one-liner - target is 1 stmt with NO locals,
@@ -980,27 +973,24 @@ void weapon_core::on_reload_started( )
 {
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core::on_animation_ik_interval(vostok::animation::animation_callback_params&)
+// STATE[99.20%|PARTIAL]: STRUCTURE MATCH 11/11 stmts, frame-size diff (push ecx vs sub esp,0Ch)
 animation::callback_return_type_enum weapon_core::on_animation_ik_interval( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x5a35f9>|0x009|+0x007:'762'
-	// <0>
-	// <0x5a3600>|0x010|+0x014:'764'
-	// <0>
-	// <0x5a3614>|0x024|+0x017:'766'
-	// <0x5a362b>|0x03b|+0x027:'767'
-	// <0x5a3652>|0x062|+0x017:'768'
-	// <0x5a3669>|0x079|+0x024:'769'
-	// <0x5a368d>|0x09d|+0x017:'770'
-	// <0x5a36a4>|0x0b4|+0x024:'771'
-	// <0x5a36c8>|0x0d8|+0x017:'772'
-	// <0x5a36df>|0x0ef|+0x022:'773'
-	// <0>
-	// <0x5a3701>|0x111|+0x002:'775'
-	// ******
+	params.interrupt_animation_player_tick = false;
+
+	if ( params.animated_object == m_user )
+	{
+		if ( strings::equal( params.channel_id, "Left heel" ) )
+			m_legs_ik_processor.set_left_heel_on_ground( params.domain_data != 0xFF );
+		else if ( strings::equal( params.channel_id, "Left toe" ) )
+			m_legs_ik_processor.set_left_toe_on_ground( params.domain_data != 0xFF );
+		else if ( strings::equal( params.channel_id, "Right heel" ) )
+			m_legs_ik_processor.set_right_heel_on_ground( params.domain_data != 0xFF );
+		else if ( strings::equal( params.channel_id, "Right toe" ) )
+			m_legs_ik_processor.set_right_toe_on_ground( params.domain_data != 0xFF );
+	}
+
+	return animation::callback_return_type_call_me_again;
 }
 
 // STATE[100%|DONE]
