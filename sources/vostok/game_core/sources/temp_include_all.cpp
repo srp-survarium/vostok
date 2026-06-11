@@ -47,6 +47,8 @@
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_holding_params.h>
+#include "breath_holding_states.h"
+#include "breath_holding_states_inline.h"
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/client_player_update.h>
@@ -206,6 +208,32 @@ namespace vostok
 		// Escape &calc so LTCG observes the ctor's member stores
 		// (otherwise the constant-only stores are dead-store-eliminated).
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
+	}
+
+	void use_game_core_breath_holding_states( )
+	{
+		float reserve = 0.0f;
+		survarium::breath_holding_params params;
+		survarium::breath_state_normal		st_normal( reserve );
+		survarium::breath_state_holding		st_holding( reserve );
+		survarium::breath_state_shortbreathing	st_short( reserve );
+
+		st_normal.set_breath_holding_params( &params );
+		st_normal.initialize( );
+		st_normal.tick( 0.0f );
+		st_normal.is_ready_for_transition( );
+
+		st_holding.set_breath_holding_params( &params );
+		st_holding.tick( 0.0f );
+		st_holding.is_ready_for_transition( );
+
+		st_short.set_breath_holding_params( &params );
+		st_short.tick( 0.0f );
+		st_short.is_ready_for_transition( );
+
+		example_callback( reinterpret_cast< pcstr >( &st_normal ) );
+		example_callback( reinterpret_cast< pcstr >( &st_holding ) );
+		example_callback( reinterpret_cast< pcstr >( &st_short ) );
 	}
 
 	void use_game_core_initialize( )
@@ -2603,6 +2631,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_dispersion_params( );
 	vostok::use_recoil_calculator( );
 	vostok::use_dispersion_calculator( );
+	vostok::use_game_core_breath_holding_states( );
 	vostok::use_character_dispersion_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_weapon_dispersion_calculator( );

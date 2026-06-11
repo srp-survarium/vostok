@@ -14,7 +14,7 @@ public:
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params );
 	inline	float		get_multiplier				( ) { /* no source */ }
 
-	virtual	void		tick						( float arg_0 ) = 0;
+	virtual	void		tick						( const float arg_0 ) = 0;
 
 	virtual	void		initialize					( ) override;
 	virtual	void		execute						( ) override { /* no source */ }
@@ -22,7 +22,7 @@ public:
 
 			explicit	breath_state				( float& breath_holding_reserve );
 
-private:
+protected:
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0019 */	/* core::noncopyable */
 	/* 0x001c */	float&							m_breath_holding_reserve;
@@ -35,31 +35,31 @@ STATIC_SIZE_ASSERT(breath_state, 0x28);
 
 class breath_state_holding : public breath_state {
 public:
-	inline	explicit	breath_state_holding		( float& breath_holding_reserve ) { /* no source */ }
+	inline	explicit	breath_state_holding		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
-	virtual	bool		is_ready_for_transition		( ) const override { /* no source */ }
+	virtual	bool		is_ready_for_transition		( ) const override { return false; }
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;
-	virtual	void		tick						( float dt ) override;
+	virtual	void		tick						( const float dt ) override;
 }; // class breath_state_holding
 
 STATIC_SIZE_ASSERT(breath_state_holding, 0x28);
 
 class breath_state_normal : public breath_state {
 public:
-	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) { /* no source */ }
+	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
 	virtual	bool		is_ready_for_transition	( ) const override;
-	virtual	void		tick					( float dt ) override;
+	virtual	void		tick					( const float dt ) override;
 }; // class breath_state_normal
 
 STATIC_SIZE_ASSERT(breath_state_normal, 0x28);
 
 class breath_state_shortbreathing : public breath_state {
 public:
-	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) { /* no source */ }
+	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;
-	virtual	void		tick						( float dt ) override;
+	virtual	void		tick						( const float dt ) override;
 	virtual	bool		is_ready_for_transition		( ) const override;
 
 private:
