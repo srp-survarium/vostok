@@ -15,8 +15,6 @@
 
 #include <boost/asio.hpp>
 
-namespace vostok { void use_network_core_udp_match_client( ); }
-
 namespace vostok {
 namespace network_core {
 
@@ -26,7 +24,6 @@ class udp_network_flow_emulator;
 class process_packet_predicate;
 
 class udp_match_client : public boost::noncopyable {
-	friend	void						::vostok::use_network_core_udp_match_client	( );
 	// the predicate's operator() invokes the private m_on_packet_received directly.
 	friend	class						process_packet_predicate;
 
