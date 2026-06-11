@@ -5,9 +5,12 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_start_substate.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/animation/animation_callback.h>
+
 namespace survarium {
 
-// STATE[STUB]
+// STATE[100%|DONE]
 weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_substate(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -17,75 +20,82 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 		weapon, animation_time_scale,
 		animations,
 		animations_count,
-		animation::mixing::play_once_and_remove_at_end,
-		10,
-		"animation_id",
-		"hands_stand_animation_id",
-		"hands_crouch_animation_id",
-		"hands_jump_animation_id"
+		animation::mixing::play_once_and_freeze_at_end,
+		3,
+		"shotgun-start_reload",
+		"reload_start(stand)",
+		"reload_start(crouch)",
+		"reload_start(jump)"
 	)
 {
-	// FUNCTION BODY
-	// <0x59e620>|0x000|+0x04d:'20'	{
-	// <0x59e66d>|0x04d|      :'21'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_start_substate::initialize()
+// STATE[76.17%|PARTIAL]: boost::function1::assign_to inline level differs (target inlines the
+// wrapper, exposing basic_vtable1::assign_to + the vtable-tag dance), whole-program LTCG.
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59e4ea>|0x00a|+0x00a:'26'
-	// <0x59e4f4>|0x014|+0x0c6:'27'
-	// <0>
-	// <0x59e5ba>|0x0da|+0x01a:'29'
-	// <0>
-	// <0x59e5d4>|0x0f4|+0x02f:'31'
-	// <0x59e603>|0x123|+0x00e:'32'
-	// <0>
-	// ******
+	m_animation_ended = false;
+	m_weapon.set_animation_callback(
+		animation::channel_id_on_animation_end,
+		this,
+		boost::bind( &weapon_core_shotgun_reload_start_substate::on_animation_end, this, _1 )
+	);
+
+	if ( !m_weapon.deserializing( ) )
+	{
+		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
+			m_weapon.unload_chambered_round( );
+	}
+
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE -0x35 | 42 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - nested if reproduces the target's split condition
+	// records (0x1a + 0x2f, identical bytes); sole SIZE is function1::assign_to kept
+	// out-of-line in base vs inlined in target, non-steerable boost-internal LTCG.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_start_substate::finalize()
+// STATE[61.84%|PARTIAL]: animation_playback_state::reset() inlined in base vs out-of-line
+// promoted call in target, whole-program LTCG, non-steerable.
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
-	// FUNCTION BODY
-	// <0x59e4a9>|0x009|+0x01a:'38'
-	// <0x59e4c3>|0x023|+0x014:'39'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x17 | 61 | ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target's line record merges the assert eater and the
+	// reset on one line (0x1a = 0xc eater + 0xe promoted reset call); base inlines reset's body
+	// (0x25), non-steerable LTCG inline choice on the header-inline reset.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_shotgun_reload_start_substate::is_ready_for_transition() const
+// STATE[100%|DONE]
 bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x59e427>|0x007|+0x009:'44'
-	// ******
+	return m_animation_ended;
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core_shotgun_reload_start_substate::on_animation_end(vostok::animation::animation_callback_params&)
+// STATE[83.00%|PARTIAL]: intrusive_ptr::operator== operand scheduling (+0x1) and the ASSERT
+// eater's ICF fold-name reloc; structure exact.
 animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::on_animation_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0x59e449>|0x009|+0x007:'49'
-	// <0>
-	// <0x59e450>|0x010|+0x010:'51'
-	// <0x59e460>|0x020|+0x00c:'52'
-	// <0x59e46c>|0x02c|+0x01b:'53'
-	// <0x59e487>|0x047|+0x00a:'54'
-	// <0x59e491>|0x051|+0x007:'55'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59e498>|0x058|+0x002:'59'
-	// ******
+	params.interrupt_animation_player_tick = false;
+	if ( params.animated_object == &m_weapon )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		if ( m_animation_to_wait_for == params.animation )
+		{
+			m_animation_ended = true;
+			params.interrupt_animation_player_tick = true;
+		}
+	}
+
+	return animation::callback_return_type_call_me_again;
+
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts
+	// SIZE +0x1 | 97 | if ( m_animation_to_wait_for == params.animation )
+	// VERDICT: STRUCTURE MATCH (shape ok) - the outer-if BASE_ONLY/TRGT_ONLY pair is an aligner
+	// mispair (identical 0x10 bytes at offset 0x10 both sides); sole SIZE is the operator==
+	// operand scheduling, non-steerable.
 }
 
 } // namespace survarium

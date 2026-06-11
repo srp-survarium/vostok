@@ -35,7 +35,7 @@ namespace core {
 
 enum stdstream_enum { stdstream_out, stdstream_error };
 
-		void		generate_log_file_name	( fs_new::native_path_string* out_result, pcstr extension );
+		void		generate_log_file_name	( fs_new::native_path_string* const out_result, pcstr const extension );
 static	_iobuf*		get_stdstream_handle	( stdstream_enum stream );
 		void		write_to_stdstream		( stdstream_enum stream, pcstr format, ... );
 static	bool		is_logging_initialized	( );
@@ -77,6 +77,8 @@ struct logging_preinitializer
 	}
 };
 
+// claude@NOTE: the five dynamic initializers below all exist in the base (??__E... symbols,
+// see the logging README) - their None scores are the objdiff ??__E demangle-pairing gap.
 static logging_preinitializer		s_logging_preinitializer;
 
 static vostok::command_line::key	s_log_verbosity				("log_verbosity",			"", "logging", "one of: [trace|debug|info|warning|error|silent]");
@@ -97,73 +99,79 @@ logging::log_format			g_log_format;
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;
 
-// STATE[STUB]
-void generate_log_file_name( fs_new::native_path_string* out_result, pcstr extension )
+// STATE[55.6%|DONE]: paired by adding the QAV/QBD consts (was None purely on the mangled name);
+// residual is /Ox LTCG inlining user_data_directory (s_engine vtable call) + the whole
+// native_path_string::convert loop into the target body - link-set dependent, banked.
+void generate_log_file_name( fs_new::native_path_string* const out_result, pcstr const extension )
 {
 	ASSERT									(extension);
 	ASSERT									(out_result);
-	* out_result							= 	fs_new::native_path_string::convert(core::user_data_directory());	// <0x671e66>|0x000|0x000:'51'
-	out_result->append_path					(core::application_name());												// <0x671eea>|0x084|0x084:'52'
-	fs_new::native_path_string user_name	=	core::user_name();													// <0x671efe>|0x098|0x014:'53'
-	if ( user_name.length() )																						// <0x671f85>|0x11f|0x087:'54'
-		out_result->appendf					("_%s", user_name.c_str());												// <0x671f9f>|0x139|0x01a:'55'
+	* out_result							= 	fs_new::native_path_string::convert(core::user_data_directory());
+	out_result->append_path					(core::application_name());
+	fs_new::native_path_string user_name	=	core::user_name();
+	if ( user_name.length() )
+		out_result->appendf					("_%s", user_name.c_str());
 
-	out_result->appendf						(".%s", extension);														// <0x671fae>|0x148|0x00f:'57'
+	out_result->appendf						(".%s", extension);
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 static _iobuf* get_stdstream_handle( stdstream_enum stream )
 {
-	if ( stream == stdstream_out )				// <0x671d70>|0x000|0x000:'68'
-		return				&__iob_func()[1];	// <0x671d74>|0x004|0x004:'69'
-	else if ( stream == stdstream_error )		// <0x671d7d>|0x00d|0x009:'70'
-		return				&__iob_func()[2];	// <0x671d82>|0x012|0x005:'71'
+	if ( stream == stdstream_out )
+		return				&__iob_func()[1];
+	else if ( stream == stdstream_error )
+		return				&__iob_func()[2];
 
-	return					NULL;				// <0x671d8b>|0x01b|0x009:'73'
+	return					NULL;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 {
-	_iobuf* handle		=	get_stdstream_handle( stream );	// <0x671d90>|0x000|0x000:'78'
-	if ( !handle )											// <0x671dab>|0x01b|0x01b:'79'
+	_iobuf* handle		=	get_stdstream_handle( stream );
+	if ( !handle )
 		return;												// <1>
 															// <2>
 	va_list					mark;							// <3>
 	va_start				( mark, format );				// <4>
 															// <5>
-	vfprintf				( handle, format, mark );		// <0x671daf>|0x01f|0x004:'85'
+	vfprintf				( handle, format, mark );
 															// <1>
 	va_end					( mark );						// <2>
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 static bool is_logging_initialized( )
 {
-	return g_log_filter_tree != NULL;	// <0x671d60>|0x000|0x000:'92'
+	return g_log_filter_tree != NULL;
 }
 
-// STATE[STUB]
+// STATE[98%|DONE]: fixed operand order (key first); residual = key::operator bool called out-of-line
+// in base vs target's inlined is_set guard (LTCG; explicit is_set() inlines a WRONG shape, 98 -> 50).
 bool use_console_for_logging( )
 {
-	if ( is_logging_initialized( ) )															// <0x672611>|0x000|0x000:'97'
-		return false;																			// <0x67261a>|0x009|0x009:'98'
+	if ( is_logging_initialized( ) )
+		return false;
 																								// <1>
-	static bool s_use_console_for_logging = testing::run_tests_command_line() || s_use_console;	// <0x67261f>|0x00e|0x005:'100'
-	return						s_use_console_for_logging;										// <0x672671>|0x060|0x052:'101'
+	// claude@MATCH: target evaluates the key FIRST (cmp key-state,1 before call run_tests_command_line).
+	// Keep the operator-bool form: explicit is_set() inlines a different guard shape and drops 98 -> 50.
+	static bool s_use_console_for_logging = s_use_console || testing::run_tests_command_line();
+	return						s_use_console_for_logging;
 }
 
-// STATE[STUB]
+// STATE[91%|DONE]: fixed user_data BIT tests + stderr/stdout tail restructure; residual =
+// s_log_to_stdout.is_set() called out-of-line in base vs inlined guard in target (LTCG).
 static void logging_callback(
-	void*						user_data,			// `g_log_flags` passes obscurely
-	pcstr						file,
-	u32							line,
-	pcstr						function_signature,
-	pcstr						initiator,
-	logging::verbosity			verbosity,
-	pcstr						log_string,
-	u32							log_string_length,
-	logging::callback_flag		flag				// sushi@TODO: Linker removed this arg.
+	void* const					user_data,			// claude@NOTE: a BITMASK (and 1 / shr 1) - debug_log_callback even passes &log_flags
+	pcstr const					file,
+	u32 const					line,
+	pcstr const					function_signature,
+	pcstr const					initiator,
+	logging::verbosity const	verbosity,
+	pcstr const					log_string,
+	u32 const					log_string_length,
+	logging::callback_flag const flag				// sushi@TODO: Linker removed this arg.
 )
 {
 	(void)file;	// sushi@NOTE: Unused arguments.
@@ -176,64 +184,78 @@ static void logging_callback(
 	static bool s_tried_to_initialize_console	= false; // sushi@NOTE: Conflicts with the one defined in the module
 	static bool s_initialized_console			= false;
 
-	if ( debug::is_debugger_present( ) )													// <0x672759>|0x000|0x000:'121'
+	if ( debug::is_debugger_present( ) )
 	{
-		u32 const buffer_size = (log_string_length + 2);									// <0x672768>|0x00f|0x00f:'128'
-		pstr const buffer = static_cast<pstr>( ALLOCA( buffer_size ) );						// <0x67276b>|0x012|0x003:'129'
-		memory::copy( buffer, buffer_size, log_string, log_string_length );					// <0x672772>|0x019|0x007:'130'
+		u32 const buffer_size = (log_string_length + 2);
+		pstr const buffer = static_cast<pstr>( ALLOCA( buffer_size ) );
+		memory::copy( buffer, buffer_size, log_string, log_string_length );
 		buffer[log_string_length] = '\n';
 		buffer[log_string_length + 1] = '\0';
-		debug::output( buffer );															// <0x67277a>|0x021|0x008:'133'
+		debug::output( buffer );
 	}
 
 
-	if ( g_log_file && g_log_file->initialized( ) ) {										// <0x67278c>|0x033|0x012:'137'
-		g_log_file->append( log_string, log_string_length );								// <0x67279f>|0x046|0x013:'138'
-		g_log_file->append( "\r\n", 2 );													// <0x6727ac>|0x053|0x00d:'139'
+	if ( g_log_file && g_log_file->initialized( ) ) {
+		g_log_file->append( log_string, log_string_length );
+		g_log_file->append( "\r\n", 2 );
 	}
 
 
-	bool log_to_console_settings = (log_flags_enum)(intptr_t)user_data == log_to_console;	// <0x6727be>|0x065|0x012:'143'
-	bool should_use_console_for_logging = use_console_for_logging( );						// <0x6727c8>|0x06f|0x00a:'144'
+	// claude@MATCH: target tests the BITS (and al,1 / shr,and 1), not equality - log_flags_enum is a mask
+	bool log_to_console_settings = ( (intptr_t)user_data & log_to_console ) != 0;
+	bool should_use_console_for_logging = use_console_for_logging( );
 
-	if ( first_time && ( log_to_console_settings || should_use_console_for_logging ) )		// <0x6727cd>|0x074|0x005:'146'
-		first_time = false;																	// <0x6727e0>|0x087|0x013:'147'
+	if ( first_time && ( log_to_console_settings || should_use_console_for_logging ) )
+		first_time = false;
 
 	bool logged_to_stdout = false;
-	bool log_to_stderr_settings = (log_flags_enum)(intptr_t)user_data == log_to_stderr;		// <0x6727e7>|0x08e|0x007:'150'
+	bool log_to_stderr_settings = ( (intptr_t)user_data & log_to_stderr ) != 0;
 
 
 
-	if ( log_to_console_settings || should_use_console_for_logging )						// <0x6727ec>|0x093|0x005:'154'
+	if ( log_to_console_settings || should_use_console_for_logging )
 	{
 
 
-		if ( !s_tried_to_initialize_console )												// <0x6727fa>|0x0a1|0x00e:'158'
+		if ( !s_tried_to_initialize_console )
 		{
-			s_initialized_console = initialize_console( );									// <0x672803>|0x0aa|0x009:'160'
-			s_tried_to_initialize_console = true;											// <0x67280d>|0x0b4|0x00a:'161'
+			s_initialized_console = initialize_console( );
+			s_tried_to_initialize_console = true;
 		}
 
-		if ( s_initialized_console )														// <0x672814>|0x0bb|0x007:'164'
+		if ( s_initialized_console )
 		{
-			write_to_stdstream( stdstream_out, "%s\r\n", log_string );						// <0x67281d>|0x0c4|0x009:'166'
-			logged_to_stdout = true;														// <0x67282d>|0x0d4|0x010:'167'
+			write_to_stdstream( stdstream_out, "%s\r\n", log_string );
+			logged_to_stdout = true;
 		}
 	}
 
-	if ( g_log_filter_tree && !log_to_stderr_settings )										// <0x672831>|0x0d8|0x004:'171'
+	// claude@MATCH: target gates the stderr write on the stderr bit being SET (test bl,bl; je skip),
+	// inside an outer g_log_filter_tree check; the stdout block re-checks the tree (redundant, original)
+	if ( g_log_filter_tree )
 	{
-		write_to_stdstream( stdstream_error, "%s\r\n", log_string );						// <0x67283e>|0x0e5|0x00d:'173'
+		if ( log_to_stderr_settings )
+			write_to_stdstream( stdstream_error, "%s\r\n", log_string );
 
-
-		if ( g_log_filter_tree ) {															// <0x672851>|0x0f8|0x013:'176'
+		if ( g_log_filter_tree ) {
 			if ( s_log_to_stdout.is_set( ) && !logged_to_stdout )							// <1>
-				write_to_stdstream( stdstream_out, "%s\r\n", log_string );					// <0x67288c>|0x133|0x03b:'178'
+				write_to_stdstream( stdstream_out, "%s\r\n", log_string );
 		}																					// <1>
 	}																						// <2>
 }
 
-// STATE[STUB]
+// STATE[52%|PARTIAL]: the % stays low because the target INLINES the boost function1 ctor+dtor
+// machinery around each append call while our LTCG keeps the cloned out-of-line ctor - link-set
+// residual, banked.
+// claude@MATCH: spelled via __LOG_FORCED - the one macro that takes a RUNTIME initiator (the public
+// LOG*/LOGI* wrappers only concatenate literals) and expands argument-for-argument to the target's
+// append calls: callback temp, (void*)&log_flags, format, __FILE__/__LINE__/__FUNCSIG__, debug_log,
+// is_error ? error : info (sete; lea [ecx*2+2]), "%s", message. Line evidence (sushi, PR #286): the
+// __LINE__ pushes are 0C4h/0C8h = 196/200, the 0xa4 record at '196' covers the if-test PLUS the whole
+// first arm and the jmp-over-else is the lone 5-byte record at '198' - so the first call STARTED on
+// the if line and closed on 198, else on 199, second call at 200: each arm spanned <= 3 compact lines.
+// sushi@TODO: __LOG_FORCED vs a hand-expanded logging::append is byte-undecidable (textually identical
+// expansion); spelled as the macro since it is the one form that fits the 3-line layout naturally.
 void debug_log_callback(
 	pcstr		initiator,
 	bool		is_error_verbosity,
@@ -241,21 +263,26 @@ void debug_log_callback(
 	pcstr		message
 )
 {
+	// claude@MATCH: not-set arm is 0, not log_to_console(=1<<0): the target's dec;neg;sbb;and 2
+	// idiom can only yield {0,2}; a log_to_console arm ({1,2}) would need an extra inc/or after it
 	core::log_flags_enum const log_flags = s_write_errors_to_stderr.is_set( ) ?
-									core::log_to_stderr : core::log_to_console;	// <0x672453>|0x000|0x000:'191'
+									core::log_to_stderr : core::log_flags_enum(0);
 	pstr debug_log = NULL;
-	STR_JOINA( debug_log, initiator, ":" );										// <0x672482>|0x02f|0x02f:'193'
+	STR_JOINA( debug_log, initiator, ":" );
 
-	if ( log_only_user_string )													// <0x6724bc>|0x069|0x03a:'196'
-		LOG_DEBUG( debug_log );													// <0x672560>|0x10d|0x0a4:'198' sushi@TODO
+	if ( log_only_user_string )	__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
+									logging::format_message, &log_flags,
+									debug_log, "%s", message );
 	else
-		LOG_ERROR( debug_log );													// <0x672565>|0x112|0x005:'200' sushi@TODO
+		__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
+									&g_log_format, &log_flags,
+									debug_log, "%s", message );
 
-	if ( g_log_file )															// <0x6725eb>|0x198|0x086:'203'
-		g_log_file->flush( NULL );												// <0x6725f5>|0x1a2|0x00a:'204'
+	if ( g_log_file )
+		g_log_file->flush( NULL );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 void logging_preinitialize( )
 {
 	if ( !g_log_callback )
@@ -263,50 +290,44 @@ void logging_preinitialize( )
 		g_log_callback = logging_callback;
 		debug::set_log_callback( debug_log_callback );
 	}
-
-	// FUNCTION BODY
-	// <0x6728b0>|0x000|0x000:'209'
-	// 1
-	// 2
-	// 3
-	// <0x6728b9>|0x009|0x009:'213'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[36%|PARTIAL]: /Ox target inlines native_path_string::convert("../../user_data/user.cfg") +
+// the absolute-path machinery (rows 296-301 ~0x94 bytes bigger) and splits the key-check lines our
+// build merges - fs-side + LTCG inlining, banked. Statement order matches.
 static void push_logging_filters( )
 {
 	using namespace vostok;																									// <1>
 	logging::verbosity	verbosity		=	logging::trace;																	// <2>
-	fixed_string512		verbosity_string;																					// <0x6722c6>|0x000|0x000:'220'
-	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);							// <0x6722e6>|0x020|0x020:'221'
-	if ( log_verbosity_key_is_set )																							// <0x67230b>|0x045|0x025:'222'
-		verbosity						= logging::string_to_verbosity(verbosity_string.c_str());							// <0x67230f>|0x049|0x004:'223'
-	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )									// <0x672323>|0x05d|0x014:'224'
+	fixed_string512		verbosity_string;
+	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);
+	if ( log_verbosity_key_is_set )
+		verbosity						= logging::string_to_verbosity(verbosity_string.c_str());
+	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )
 		verbosity						= logging::warning;																	// <1>
 																															// <2>
 	//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;	// <3>
-	logging::push_filter			( *g_log_filter_tree, "", verbosity, u32(-1) );											// <0x672331>|0x06b|0x00e:'228'
+	logging::push_filter			( *g_log_filter_tree, "", verbosity, u32(-1) );
 	//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );						// <1>
 	//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );				// <2>
 	//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );			// <3>
 	//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );	// <4>
 																															// <5>
 																															// <6> sushi@NOTE: New or empty line
-	fs_new::native_path_string	cfg_file_path;																				// <0x672345>|0x07f|0x014:'235'
+	fs_new::native_path_string	cfg_file_path;
 	if ( fs_new::convert_to_absolute_path(& cfg_file_path,																	// <1>
 										  fs_new::native_path_string::convert("../../user_data/user.cfg"),					// <2>
-										  assert_on_fail_false) )															// <0x672355>|0x08f|0x010:'238'
+										  assert_on_fail_false) )
 	{																														// <1>
-		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );			// <0x6723f2>|0x12c|0x09d:'240'
+		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );
 	}																														// <1>
 																															// <2>
 }
 
-// STATE[STUB]
+// STATE[85%|DONE]: /Ox line-record splits around generate_log_file_name + LTCG conv; shape matches.
 void logging_initialize( )
 {
-	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );												// <0x672687>|0x000|0x000:'252'
+	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );
 
 	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(	// sushi@NOTE: This opens up into `pt3malloc`
 		*g_log_filter_tree,
@@ -314,32 +335,33 @@ void logging_initialize( )
 		true,
 		console_commands::command_type_user_specific,
 		console_commands::execution_filter_early
-	);																													// <0x672699>|0x012|0x012:'260'
+	);
 
-	push_logging_filters( );																							// <0x6726d1>|0x04a|0x038:'262': sushi@NOTE: Initialized in `vostok::core::preinitialize`
+	push_logging_filters( );																							// sushi@NOTE: Initialized in `vostok::core::preinitialize`
 
 
-	if ( g_log_file_usage ) {																							// <0x6726d6>|0x04f|0x005:'265'
-		fs_new::device_file_system_proxy	device( NULL, fs_new::watcher_enabled_true );								// <0x6726df>|0x058|0x009:'266': sushi@TODO: `NULL` is `fs_new::s_hdd` in `core\sources\core_entry_point_win_xbox360.cpp`
-		fs_new::native_path_string 			log_file_name;																// <0x6726ef>|0x068|0x010:'267'
-		generate_log_file_name	( &log_file_name, "log" );																// <0x6726fc>|0x075|0x00d:'268'
-		g_log_file = logging::new_log_file( memory::g_mt_allocator, device, log_file_name.c_str( ), g_log_file_usage );	// <0x67271e>|0x097|0x022:'269'
+	if ( g_log_file_usage ) {
+		fs_new::device_file_system_proxy	device( NULL, fs_new::watcher_enabled_true );								// sushi@TODO: `NULL` is `fs_new::s_hdd` in `core\sources\core_entry_point_win_xbox360.cpp`
+		fs_new::native_path_string 			log_file_name;
+		generate_log_file_name	( &log_file_name, "log" );
+		g_log_file = logging::new_log_file( memory::g_mt_allocator, device, log_file_name.c_str( ), g_log_file_usage );
 	}
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]: closed by the debug::log_callback raw-pointer fix (set_log_callback(NULL) is a plain push 0).
 void logging_finalize( )
 {
-	finalize_console( );														// <0x671dd0>|0x000|0x000:'275'
-	logging::delete_log_file( g_log_file );										// <0x671e03>|0x033|0x033:'276'
+	finalize_console( );
+	logging::delete_log_file( g_log_file );
 
-	VOSTOK_DELETE_IMPL( memory::g_mt_allocator, s_logging_console_command );	// <0x671e0d>|0x03d|0x00a:'278'
+	VOSTOK_DELETE_IMPL( memory::g_mt_allocator, s_logging_console_command );
 
-	logging::delete_filter_tree( g_log_filter_tree );							// <0x671e47>|0x077|0x03a:'280'
-	debug::set_log_callback( NULL );											// <0x671e51>|0x081|0x00a:'281'
+	logging::delete_filter_tree( g_log_filter_tree );
+	debug::set_log_callback( NULL );
 }
 
-// STATE[STUB]
+// STATE[83%|PARTIAL]: /Ox merges/reorders the per-handle statements (23 vs 30 line records) and sinks
+// the LOG_WARNING arm; instruction content matches per-block - optimizer scheduling, banked.
 static bool initialize_console( )
 {
 	if ( s_tried_to_initialize_console )
@@ -388,15 +410,15 @@ static bool initialize_console( )
 	return false;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 static void finalize_console( )
 {
-	if ( s_console_initialized )							// <0x671d20>|0x000|0x000:'340'
+	if ( s_console_initialized )
 	{
-		CloseHandle( GetStdHandle( STD_INPUT_HANDLE ) );	// <0x671d2a>|0x00a|0x00a:'342'
-		CloseHandle( GetStdHandle( STD_OUTPUT_HANDLE ) );	// <0x671d3e>|0x01e|0x014:'343'
-		CloseHandle( GetStdHandle( STD_ERROR_HANDLE ) );	// <0x671d45>|0x025|0x007:'344'
-		FreeConsole( );										// <0x671d4e>|0x02e|0x009:'345'
+		CloseHandle( GetStdHandle( STD_INPUT_HANDLE ) );
+		CloseHandle( GetStdHandle( STD_OUTPUT_HANDLE ) );
+		CloseHandle( GetStdHandle( STD_ERROR_HANDLE ) );
+		FreeConsole( );
 	}
 }
 

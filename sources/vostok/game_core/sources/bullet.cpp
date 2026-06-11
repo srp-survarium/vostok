@@ -22,7 +22,7 @@ namespace survarium {
 float g_bullet_tracer_exposition = 0.5f;
 static console_commands::cc_float bullet_tracer_exposition( "bullet_tracer_exposition", g_bullet_tracer_exposition, 0.01f, 5.0f, true, console_commands::command_type_engine_internal );
 
-// STATE[97.92%|DONE]
+// STATE[97.92%|DONE]: LTCG - commutative FP-mul operand/register order + 4-byte frame temp; structure-diff clean (size 0/quantity 0)
 bullet::bullet(
 	bullet_manager&					bullet_manager,
 	float3 const&					position,
@@ -65,12 +65,8 @@ bullet::bullet(
 	m_bullet_material = m_bullet_manager->get_material_manager( ).get_material( wa->game_material_id( ) );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
-	// <0x5916fa>|0x24a|+0x00c:'85'
-	// <0x591706>|0x256|+0x00c:'86'
-	// <0x591712>|0x262|+0x041:'87'
-	// <0x591753>|0x2a3|+0x00c:'88'
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (clean)
+	// VERDICT: STRUCTURE MATCH - residual is commutative FP-mul operand/register order in the init list (LTCG), non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -105,12 +101,14 @@ bullet::~bullet( )
 {
 }
 
-// STATE[89.91%|PARTIAL]
+// STATE[95.86%|PARTIAL]: target inlined bullet_manager::get_bullet_time_factor (reads the
+// TU-local static directly - not expressible from this TU); the bigger frame pushes `this`
+// to [ebp-88h] (disp32) and that +3-bytes-per-this-read cascade is every remaining SIZE row.
 void bullet::tick( u32 current_time_in_ms )
 {
 	m_current_time_in_ms				= current_time_in_ms;
-	const float3	zero_velocity		= float3( 0, 0, 0 );	// sushi@MATCH: <0x592a3b> Arguments are built slightly differently.
-	u16				invalid_tracer_idx	= u16(-1);
+	float3			zero_velocity		= float3( 0, 0, 0 );	// sushi@MATCH: <0x592a3b> Arguments are built slightly differently. claude@MATCH: target PDB records it NON-const.
+	u16 const		invalid_tracer_idx	= u16(-1);
 	float			low_time			= m_life_time;
 	float			high_time			= ( current_time_in_ms - m_born_time_in_ms ) / 1000.0f * m_bullet_manager->get_bullet_time_factor( ); // sushi@MATCH: <0x592a6e> target inlined `get_bullet_time_factor`.
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -168,10 +166,10 @@ void bullet::tick( u32 current_time_in_ms )
 			if ( m_tracer_idx != 0xFFFF /* sushi@NOTE: invalid_tracer_idx */ )
 			{
 				float3 d = m_position - m_start_position;
-				float d_len = d.length( );
+				float const d_len = d.length( );
 				d.normalize_safe( float3( 0.0f, 0.0f, 1.0f ) );
-				float speed = m_velocity.length( );
-				float length = math::min( g_bullet_tracer_exposition, m_life_time ) * speed;
+				float const speed = m_velocity.length( );
+				float length = math::min( m_life_time, g_bullet_tracer_exposition ) * speed;
 
 				if ( m_initiator->is_local && m_change_trajectory_count == 0 && m_life_time < g_bullet_tracer_exposition )
 					length -= 5.0f;
@@ -189,6 +187,12 @@ void bullet::tick( u32 current_time_in_ms )
 		low_time			= time;
 		R_ASSERT			( low_time < high_time, "start_low[%f] high[%f]", low_time, high_time );
 	}
+
+	// STRUCTURE DIFF: target 48 stmts / base 48 stmts (same set/order; ~22 SIZE rows, all the
+	// get_bullet_time_factor frame cascade; the BASE_ONLY/TRGT_ONLY pairs are aligner drift over
+	// equal-size statements)
+	// VERDICT: STRUCTURE MATCH - sole real divergence is the LTCG inline of get_bullet_time_factor
+	// in target (high_time row, SIZE +0xe) and its disp8->disp32 frame cascade; non-steerable.
 }
 
 bool bullet::is_finish_flying ( ) const
@@ -198,10 +202,10 @@ bool bullet::is_finish_flying ( ) const
 	return m_start_velocity == zero_velocity;
 }
 
-// STATE[95.60%|DONE]: LTCG for float3
+// STATE[100%|DONE]
 float3 bullet::compute_parabolic_velocity( float time, float3 const& gravity )
 {
-	float3 const xz_velocity	= float3( m_start_velocity.x, 0.f, m_start_velocity.z );
+	float3 xz_velocity			= float3( m_start_velocity.x, 0.f, m_start_velocity.z );	// claude@MATCH: target PDB records it NON-const
 	// this could be since we could fire in different directions
 	// for example, vertically into the ground
 	if ( math::is_zero( xz_velocity.squared_length( ) ) )
@@ -210,7 +214,7 @@ float3 bullet::compute_parabolic_velocity( float time, float3 const& gravity )
 	return						m_start_velocity * math::max( 0.f, 1.f - m_current_resistance * time ) + ( gravity * time );
 }
 
-// STATE[99.86%|DONE]: Target allocated less stack
+// STATE[99.86%|DONE]: Target allocated less stack (LTCG); structure-diff clean (size 0/quantity 0)
 float3 bullet::compute_trajectory_velocity( float time, float3 const& gravity )
 {
 	float const parabolic_time	= get_parabolic_time( );
@@ -221,12 +225,15 @@ float3 bullet::compute_trajectory_velocity( float time, float3 const& gravity )
 
 	float3 const& parabolic_vel	= compute_parabolic_velocity( parabolic_time, gravity );
 	return						parabolic_vel + gravity * fall_down_time;
+
+	// STRUCTURE DIFF: target 6 stmts / base 6 stmts (clean, 0x96 bytes both)
+	// VERDICT: STRUCTURE MATCH - register/stack-slot residual only (LTCG).
 }
 
-// STATE[97.30%|DONE]: LTCG for float3
+// STATE[100%|DONE]
 float3 bullet::compute_parabolic_position( float time, float3 const& gravity )
 {
-	float3 const xz_velocity	= float3( m_start_velocity.x, 0.f, m_start_velocity.z );
+	float3 xz_velocity			= float3( m_start_velocity.x, 0.f, m_start_velocity.z );	// claude@MATCH: target PDB records it NON-const
 
 	if ( math::is_zero( xz_velocity.squared_length( ) ) )
 		return				m_start_position + m_start_velocity * time + gravity * ( math::sqr( time ) * .5f );
@@ -235,7 +242,7 @@ float3 bullet::compute_parabolic_position( float time, float3 const& gravity )
 	return					m_start_position + m_start_velocity * time + m_start_velocity * -m_current_resistance * sqr_t_div_2 + gravity * sqr_t_div_2;
 }
 
-// STATE[99.95%|DONE]
+// STATE[99.95%|DONE]: LTCG residual; structure-diff clean (size 0/quantity 0)
 float3 bullet::compute_trajectory_position( float time, float3 const& gravity )
 {
 	float const parabolic_time	= get_parabolic_time( );
@@ -248,13 +255,19 @@ float3 bullet::compute_trajectory_position( float time, float3 const& gravity )
 	float3 const& parabolic_vel	= compute_parabolic_velocity( parabolic_time, gravity );
 
 	return parabolic_pos + parabolic_vel * fall_down_time + gravity * ( math::sqr( fall_down_time ) * .5f );
+
+	// STRUCTURE DIFF: target 7 stmts / base 7 stmts (clean, 0xf1 bytes both)
+	// VERDICT: STRUCTURE MATCH - register/stack-slot residual only (LTCG).
 }
 
-// STATE[99.69%|DONE]
+// STATE[99.69%|DONE]: LTCG residual; structure-diff clean (size 0/quantity 0)
 float bullet::get_parabolic_time( )
 {
 	static const float air_resistance_epsilon = 1.1f;
 	return math::max( 0.f, 1.f / ( m_current_resistance * air_resistance_epsilon ) );
+
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt (clean, 0x3e bytes both)
+	// VERDICT: STRUCTURE MATCH - register residual only (LTCG).
 }
 
 // STATE[100%|DONE]
@@ -349,7 +362,7 @@ float bullet::get_check_time_in_vacuum( float start_low, float high, float3 cons
 	return					result;
 }
 
-// STATE[BLOCKED]
+// STATE[100%|DONE]
 inline static float get_max_error_time( float t0, float t1 )
 {
 	return					( ( t1 + t0 ) * .5f );
@@ -362,15 +375,15 @@ inline static float get_max_error_time( float t0, float t1 )
 float bullet::get_check_time( float const start_low, float high, float3 const& gravity )
 {
 	float const max_test_distance	= m_max_distance - m_flown_distance;
-	float3 const start		= compute_trajectory_position( start_low, gravity );
+	float3 start			= compute_trajectory_position( start_low, gravity );	// claude@MATCH: target PDB records start/intermediate/target NON-const
 #ifndef MASTER_GOLD
 	float const start_high	= high;
 #endif // #ifndef MASTER_GOLD
 	float					low = start_low;
 	float					check_time = high;
 	while ( !math::is_similar( low, high ) ) {
-		float3 const intermediate	= compute_trajectory_position( get_max_error_time( start_low, check_time ), gravity );
-		float3 const target			= compute_trajectory_position( check_time, gravity );
+		float3 intermediate			= compute_trajectory_position( get_max_error_time( start_low, check_time ), gravity );
+		float3 target				= compute_trajectory_position( check_time, gravity );
 		float const distance		= ( intermediate - start ).length( ) + ( intermediate - target ).length( );
 		if ( distance < max_test_distance )
 			low				= check_time;
@@ -384,14 +397,16 @@ float bullet::get_check_time( float const start_low, float high, float3 const& g
 	return					low;
 }
 
-// STATE[99.94%|DONE]
+// STATE[84.59%|DONE]: per-call-site operator| inline-vs-call, the documented non-steerable
+// LTCG class (assembly_patterns.md "per-call-site inline-vs-call of operator|" - do not re-litigate).
 float bullet::compute_max_error( float low, float high, float3 const& gravity )
 {
 	float					max_error_time = get_max_error_time( low, high );
 
-	float3 const start		= compute_trajectory_position( low, gravity );
-	float3 const target		= compute_trajectory_position( high, gravity );
-	float3 const max_error	= compute_trajectory_position( max_error_time, gravity );
+	// claude@MATCH: target PDB records these three NON-const.
+	float3 start			= compute_trajectory_position( low, gravity );
+	float3 target			= compute_trajectory_position( high, gravity );
+	float3 max_error		= compute_trajectory_position( max_error_time, gravity );
 
 	float3	start_to_max_error	= max_error - start;
 	float	magnitude			= start_to_max_error.length( );
@@ -401,12 +416,17 @@ float bullet::compute_max_error( float low, float high, float3 const& gravity )
 	float	sine_alpha			= math::sqrt( 1.f - math::sqr( cosine_alpha ) );
 
 	return	magnitude * sine_alpha;
+
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE +0x21 | 454 | float	cosine_alpha		= math::max( -1.0f, math::min( start_to_max_error | start_to_target, 1.0f ) );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is operator| inlined in base vs out-of-line call in target; non-steerable LTCG.
 }
 
-// STATE[98.16%|PARTIAL]
+// STATE[92.45%|PARTIAL]: per-call-site operator| inline-vs-call (LTCG, non-steerable);
+// `bool const ignorable_object_was_hit` (per target PDB) closed the bool-materialization rows.
 collision_result bullet::check_collision( float3 start_position, float start_time, float current_time )
 {
-	collision_result const result	= collision_result_no_collision;
+	collision_result result			= collision_result_no_collision;	// claude@MATCH: target PDB records this local NON-const
 
 	float3 const& target_position	= compute_trajectory_position( current_time, m_bullet_manager->get_gravity( ) );
 	R_ASSERT						( start_time < current_time, "start time can not be greater than current time" );
@@ -430,7 +450,7 @@ collision_result bullet::check_collision( float3 start_position, float start_tim
 		float3 triangle_normal		= ray_result.hit_normal_world;
 		float cos_alpha				= triangle_normal | direction;
 		triangle_orientation orientation	= (triangle_orientation)( 0.0f <= cos_alpha ); // sushi@MATCH: <0x5928de> Somehow done in reverse. Maybe with some inlined function.
-		bool ignorable_object_was_hit		= m_ignorable_object && ray_result.object->user_data && ray_result.object->user_data->cast_to_hit_receiver( ) == m_ignorable_object;
+		bool const ignorable_object_was_hit	= m_ignorable_object && ray_result.object->user_data && ray_result.object->user_data->cast_to_hit_receiver( ) == m_ignorable_object;
 
 		if ( ignorable_object_was_hit || orientation == triangle_orientation_back_face )
 		{
@@ -441,9 +461,13 @@ collision_result bullet::check_collision( float3 start_position, float start_tim
 
 		return process_ray_query( ray_result, distance, start_position, direction, start_time, current_time );
 	}
+
+	// STRUCTURE DIFF: target 23 stmts / base 23 stmts
+	// SIZE +0x1b | 485 | float cos_alpha = triangle_normal | direction;
+	// VERDICT: STRUCTURE MATCH - sole row is operator| inlined in base vs out-of-line call in target; non-steerable LTCG.
 }
 
-// STATE[99.16%|PARTIAL]
+// STATE[92.25%|PARTIAL]: operator| + math::acos wrapper inline-vs-call (LTCG, non-steerable).
 collision_result bullet::process_ray_query(
 	physics::closest_ray_result const&	ray_result,
 	float								distance,
@@ -485,9 +509,16 @@ collision_result bullet::process_ray_query(
 		return try_reflect( collide_point, fly_direction, triangle_normal, speed, collision_time, start_position, start_time, current_time, cos_alpha );
 
 	return collide_front_face( collide_point, fly_direction, triangle_normal, speed, collision_time, start_position, start_time, current_time, ray_result );
+
+	// STRUCTURE DIFF: target 22 stmts / base 22 stmts
+	// SIZE +0x23 | 515 | float cos_alpha = triangle_normal | fly_direction;
+	// SIZE +0x11 | 536 | float angle_alpha = math::acos( cos_alpha );
+	// VERDICT: STRUCTURE MATCH - operator| and math::acos inlined in base vs out-of-line calls in target; non-steerable LTCG.
 }
 
-// STATE[100%|DONE]
+// STATE[70.73%|DONE]: was tagged 100% by an old sweep; the two `| triangle_normal` dot products
+// are now inlined in base vs out-of-line operator| calls in target - the documented non-steerable
+// LTCG class. Structure itself is clean.
 void bullet::fix_collision_point_and_time(
 	float3&					collide_point,
 	float&					collision_time,
@@ -529,9 +560,16 @@ void bullet::fix_collision_point_and_time(
 
 		collide_point			= new_collide_point;
 	}
+
+	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
+	// SIZE +0x2f | 563 | float delta = ( ( new_collide_point - collide_point ) | triangle_normal );
+	// SIZE +0x2d | 581 | delta = ( ( new_collide_point - collide_point ) | triangle_normal );
+	// VERDICT: STRUCTURE MATCH - both rows are operator| inlined in base vs out-of-line call in target; non-steerable LTCG.
 }
 
-// STATE[94.67%|PARTIAL]
+// STATE[97.40%|PARTIAL]: decal1/decal1_size accessor inline-vs-call cascade (LTCG). The 0.001f
+// literal was math::epsilon_3 (target pushes the global's address for the float const& - a
+// literal materializes a temp instead) and the min/max nesting is min(1.0f, max(...)).
 collision_result bullet::collide_front_face(
 	float3 const&						collide_point,
 	float3 const&						bullet_direction,
@@ -564,32 +602,39 @@ collision_result bullet::collide_front_face(
 		}
 	}
 
-	physics::bt_rigid_body_base* target = static_cast<physics::bt_rigid_body_base*>( ray_result.object ); // sushi@NOTE: Why do we do this cast.
+	physics::bt_rigid_body_base* const target = static_cast<physics::bt_rigid_body_base*>( ray_result.object ); // sushi@NOTE: Why do we do this cast.
 	if ( target->user_data )
 	{
-		hit_receiver* hit_target = target->user_data->cast_to_hit_receiver( );
+		hit_receiver* const hit_target = target->user_data->cast_to_hit_receiver( );
 		if ( hit_target && hit_target != m_ignorable_object )
 			hit_target->hit( m_initiator, ray_result.triangle_index, "injury", m_weapon_bullet_damage * m_damage_factor, m_weapon_bullet_pierce * m_pierce_factor, this ); // sushi@TODO: Functions for damage
 	}
 
 	if ( m_collided_material->resistance( ) > m_weapon_bullet_pierce * m_pierce_factor )
 		return collision_result_collide;
-	// sushi@MATCH: min and max in incorrect order
 	float new_speed = math::min(	// sushi@NOTE: Use clamp instead
-		math::max( 0.0, m_weapon_bullet_pierce * m_pierce_factor / m_collided_material->resistance( ) - 1.0f ),
-		1.0f
+		1.0f,
+		math::max( 0.0, m_weapon_bullet_pierce * m_pierce_factor / m_collided_material->resistance( ) - 1.0f )
 	) * speed;
 
 	m_current_resistance = m_collided_material->resistance( ); // sushi@NOTE: Gets overwritten by `change_trajectory` :)
-	change_trajectory			( collide_point + bullet_direction * 0.001f, bullet_direction * new_speed, collision_time ); // Ensures collision is not triggered immediately?
+	change_trajectory			( collide_point + bullet_direction * math::epsilon_3, bullet_direction * new_speed, collision_time ); // Ensures collision is not triggered immediately?
 
 	start_position	= m_start_position;
 	start_time		= m_life_time;
 	current_time	-= collision_time;
 	return collision_result_pierced;
+
+	// STRUCTURE DIFF: target 25 stmts / base 25 stmts (0x3b7 vs 0x3b6 bytes)
+	// SIZE +0x2 | 609 | if ( mtl_pair->decal1( ) )
+	// SIZE -0x2 | 610 | m_bullet_manager->add_decal( ... );
+	// SIZE -0x3 | 617 | LOG_WARNING( ... );
+	// SIZE +0x2 | 624 | hit_receiver* hit_target = target->user_data->cast_to_hit_receiver( );
+	// VERDICT: STRUCTURE MATCH - residual is the material_pair accessor inline-vs-call cascade; non-steerable LTCG.
 }
 
-// STATE[95.43%|PARTIAL]
+// STATE[82.39%|PARTIAL]: math::acos / linear_interpolation inline-vs-call (LTCG) + the
+// esp-vs-ebp temp addressing cascade they cause; instruction streams otherwise identical.
 collision_result bullet::try_reflect(
 	float3 const&		collide_point,
 	float3				direction,
@@ -631,9 +676,18 @@ collision_result bullet::try_reflect(
 	m_ricochet_count += 1;
 
 	return collision_result_reflected;
+
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
+	// SIZE +0x10 | 660 | float angle_alpha = math::acos( cos_alpha ) - math::pi_d2; (acos call vs inlined wrapper)
+	// SIZE -0xb | 664 | speed *= math::linear_interpolation( ... ); (inlined in target)
+	// SIZE +0x7 | 673 | direction = 2 * triangle_normal * -cos_alpha + direction; (esp-vs-ebp temp addressing)
+	// (small +-0x5..0xd rows on the surrounding statements are the same addressing cascade;
+	//  the change_trajectory BASE_ONLY/TRGT_ONLY pair is aligner drift over the same stmt)
+	// VERDICT: STRUCTURE MATCH - all rows are inline-vs-call of math helpers + frame-addressing cascade; non-steerable LTCG.
 }
 
-// STATE[91.68%|PARTIAL]
+// STATE[91.68%|PARTIAL]: get_bullet_time_factor inlined in target (reads the bullet_manager
+// TU-local static directly - not expressible from this TU); non-steerable.
 void bullet::change_trajectory( float3 const& new_position, float3 const& new_velocity, float collision_time )
 {
 	++m_change_trajectory_count;
@@ -645,9 +699,13 @@ void bullet::change_trajectory( float3 const& new_position, float3 const& new_ve
 	m_current_resistance	= m_air_resistance;
 	m_born_time_in_ms		+= math::floor( 1000.f * collision_time / m_bullet_manager->get_bullet_time_factor( ) ); // sushi@MATCH: <0x590ffb> Different for many things
 	m_life_time				= 0;
+
+	// STRUCTURE DIFF: target 8 stmts / base 8 stmts
+	// SIZE -0x7 | 700 | m_born_time_in_ms += math::floor( ... get_bullet_time_factor( ) );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is get_bullet_time_factor inlined in target vs our call; non-steerable LTCG.
 }
 
-// STATE[99.26%|DONE]
+// STATE[100%|DONE]
 bool bullet::update_bullet_position( const float time, float3 const& gravity )
 {
 	float3 const& new_position	= compute_trajectory_position( time, gravity );

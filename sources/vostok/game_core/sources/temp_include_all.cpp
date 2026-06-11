@@ -71,9 +71,11 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
+#include <vostok/game_core/usable_object.h>
 #include <vostok/game_core/hand_to_weapon_ik_processor.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/weapon_user_animations_container_cook.h>
 #include <vostok/game_core/base_project.h>
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
@@ -84,6 +86,10 @@
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
 #include <vostok/game_core/player_logic_base_state.h>
+#include "player_logic_jump_state.h"
+#include "player_logic_crouch_state.h"
+#include "player_logic_stand_state.h"
+#include "player_logic_sprint_state.h"
 #include "jump_logic_state_inactive.h"
 #include "jump_logic_state_landing.h"
 #include "jump_logic_state_start.h"
@@ -102,6 +108,14 @@
 #include <vostok/game_core/double_barreled_weapon_core_idle_state.h>
 #include <vostok/game_core/pistol_weapon_core_aimed_idle_state.h>
 #include <vostok/game_core/double_barreled_weapon_core_aimed_idle_state.h>
+#include <vostok/game_core/weapon_core_reload_state.h>
+#include <vostok/game_core/pistol_weapon_core_show_state.h>
+#include <vostok/game_core/pistol_weapon_core_hide_state.h>
+#include <vostok/game_core/weapon_core_show_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_show_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_hide_state.h>
+#include <vostok/game_core/weapon_core_hide_state.h>
+#include <vostok/game_core/pistol_weapon_core_aimed_fire_state.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
 #include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_show_state_base.h>
@@ -109,9 +123,23 @@
 #include <vostok/game_core/weapon_core_reload_state_base.h>
 #include <vostok/game_core/weapon_core_chamber_a_round_state_base.h>
 #include <vostok/game_core/weapon_core_fire_state_base.h>
+#include <vostok/game_core/weapon_core_chamber_a_round_state.h>
+#include <vostok/game_core/weapon_core_chamber_a_round_aimed_state.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_start_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_one_round_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_finish_substate.h>
+#include <vostok/game_core/pistol_weapon_core_fire_state.h>
+#include <vostok/game_core/pistol_weapon_core_reload_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_fire_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_aimed_fire_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_reload_state.h>
+#include <vostok/game_core/weapon_core_fire_state.h>
+#include <vostok/game_core/weapon_core_aimed_fire_state.h>
 
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/game_core/recoil_calculator.h>
+#include <vostok/game_core/weapon_recoil_calculator.h>
 #include <vostok/game_core/character_dispersion_calculator.h>
 #include <vostok/game_core/weapon_dispersion_calculator.h>
 #include <vostok/game_core/weapon_recoil_params.h>
@@ -120,6 +148,7 @@
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
+#include <vostok/game_core/weapon_core_cook.h>
 #include <vostok/game_core/artefact_lifebone_core.h>
 #include <vostok/game_core/hit_affects_type_enum.h>
 #include <vostok/game_core/artefact_container_core.h>
@@ -133,8 +162,9 @@
 #include <vostok/game_core/booby_trap_core.h>
 #include <vostok/game_core/booby_trap_core_cook.h>
 #include <vostok/game_core/booby_trap_set_core_cook.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_state_cook.h>
+#include <vostok/game_core/weapon_core_inactive_state_cook.h>
 #include <vostok/game_core/victory_items_container_core.h>
-#include <vostok/game_core/inventory.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/player_parameters_modifyer.h>
@@ -225,26 +255,6 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
 
-	// claude@MATCH: legs_ik_drawer is a thin forwarder over render::debug::renderer.
-	// Construct one over NULL renderer/scene refs (never run) and call every public
-	// draw_* so the linker keeps all five bodies.
-	void use_game_core_legs_ik_drawer( )
-	{
-		survarium::legs_ik_drawer drawer(
-			*reinterpret_cast< render::debug::renderer* >( NULL ),
-			render::scene_ptr( )
-		);
-		float4x4 const&			m	= *reinterpret_cast< float4x4 const* >( NULL );
-		float3 const&			v	= *reinterpret_cast< float3 const* >( NULL );
-		math::color const&		c	= *reinterpret_cast< math::color const* >( NULL );
-		drawer.draw_leg( m, m, m, m, c, c, c, c, 0.0f );
-		drawer.draw_cross( v, 0.0f, c, false );
-		drawer.draw_origin( m, 0.0f, false );
-		drawer.draw_line_capsule( m, v, c, false );
-		drawer.draw_solid_capsule( m, v, c, false );
-		example_callback( reinterpret_cast< pcstr >( &drawer ) );
-	}
-
 	// claude@MATCH: get_foot_fixed_transform / process_leg / get_additional_length
 	// are reached transitively from process() (anchored via the real `processor`
 	// instance in use_game_core_legs_ik_processor above), so their former direct
@@ -270,6 +280,23 @@ namespace vostok
 		// wrapper here keeps a real standalone impl body - no address-of anchor needed.
 		float4x4 result	= survarium::get_bone_matrix_in_object_space( *bone, *skeleton, matrices );
 		example_callback( reinterpret_cast< pcstr >( &result ) );
+	}
+
+	// hand_to_weapon_ik_processor: anchor the public activate / process (ctor anchored
+	// by the local instance). process() reaches the private hand_need_correction /
+	// hand_need_interpolation / get_hand_new_start_transition_time / process_hand /
+	// get_hand_coefficient.
+	void use_game_core_hand_to_weapon_ik_processor( )
+	{
+		survarium::hand_to_weapon_ik_processor processor;
+		processor.activate(
+			*reinterpret_cast< vostok::animation::skeleton const* >( NULL ),
+			*reinterpret_cast< vostok::animation::skeleton const* >( NULL )
+		);
+		processor.activate_hand( survarium::hand_to_weapon_ik_processor::left, true, 0u );
+		processor.process( 0u, reinterpret_cast< float4x4 const* >( NULL ), reinterpret_cast< float4x4* >( NULL ) );
+
+		example_callback( reinterpret_cast< pcstr >( &processor ) );
 	}
 
 	void use_medkit( )
@@ -345,6 +372,13 @@ namespace vostok
 		hittable_object->remove( );
 	}
 
+	void use_usable_object( survarium::usable_object* usable_object )
+	{
+		// keeps get_transform: the real caller (game_world_ui::update_minimap_objects)
+		// is not matched yet, so /OPT:REF drops the unreferenced body.
+		usable_object->get_transform( );
+	}
+
 	void use_respawn_point_core( )
 	{
 		survarium::respawn_point_core	respawn_point_core;
@@ -362,6 +396,10 @@ namespace vostok
 
 		survarium::hit_receiver_info hit_receiver_info( NULL, NULL );
 		hit_receiver_info == hit_receiver_info;
+
+		// the four static distance_from_* shape helpers are now anchored in-TU from the
+		// dz_bone_data_contact_test_predicate::add_single_result stub (internal linkage,
+		// matching the target's static records - see damage_zone_core.cpp).
 	}
 
 	void use_generic_anomaly_core( )
@@ -383,6 +421,11 @@ namespace vostok
 		core.on_hit_receiver_enter( NULL, NULL );
 		core.on_hit_receiver_leave( NULL, NULL );
 		core.on_artefact_container_use( NULL );
+
+		// zone_group::on_zone_act is otherwise DCE'd (target rva 0x57d080); reach it
+		// through an opaque pointer (the anchor never runs).
+		survarium::zone_group* group = NULL;
+		group->on_zone_act( NULL, NULL );
 	}
 
 	void use_artefact_container_core( )
@@ -421,6 +464,24 @@ namespace vostok
 	{
 		static survarium::victory_item_core_cook s_victory_item_core_cook;
 		vostok::resources::register_cook( &s_victory_item_core_cook );
+	}
+
+	void use_weapon_core_cook( )
+	{
+		static survarium::weapon_core_cook s_weapon_core_cook;
+		vostok::resources::register_cook( &s_weapon_core_cook );
+	}
+
+	void use_weapon_core_shotgun_reload_state_cook( )
+	{
+		static survarium::weapon_core_shotgun_reload_state_cook s_weapon_core_shotgun_reload_state_cook;
+		vostok::resources::register_cook( &s_weapon_core_shotgun_reload_state_cook );
+	}
+
+	void use_weapon_core_inactive_state_cook( )
+	{
+		static survarium::weapon_core_inactive_state_cook s_weapon_core_inactive_state_cook;
+		vostok::resources::register_cook( &s_weapon_core_inactive_state_cook );
 	}
 
 	void use_dispersion_calculator( )
@@ -462,6 +523,31 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &config_params ) );
 	}
 
+	void use_game_core_weapon_recoil_calculator( )
+	{
+		// Anchor the calculator: ctor + public entry points keep the COMDATs;
+		// the private helpers (process_compensation, get_random_*, reset) are
+		// reached transitively from tick/fire/reload/chamber_a_round.
+		survarium::weapon_recoil_calculator calc;
+		calc.set_weapon( NULL );
+		calc.set_interpolation_time( 0.0f );
+		calc.set_character_multiplier( 1.0f );
+		calc.set_player_compensation_multiplier( 1.0f );
+		calc.tick( 0, 1.0f );
+		calc.fire( );
+		calc.reload( );
+		calc.chamber_a_round( );
+		calc.get_vertical_koef( );
+		calc.get_horizontal_koef( );
+		calc.get_back_koef( );
+
+		survarium::pseudo_random pr( 0.0f );
+		pr.random_f( 1.0f );
+
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
+		example_callback( reinterpret_cast< pcstr >( &pr ) );
+	}
+
 	void use_game_core_character_dispersion_params( )
 	{
 		// Escape &params so the constant-only ctor stores are OBSERVED (else
@@ -498,6 +584,9 @@ namespace vostok
 		calc.tick( survarium::type_stand, true, 10, 10.f );
 
 		calc.set_weapon( NULL );
+		// anchor character_recoil_calculator::set_character_recoil_params (its target
+		// caller weapon_core::activate/deactivate is unmatched, so /OPT:REF drops it)
+		calc.set_character_recoil_params( NULL );
 
 		calc.reload( );
 		calc.chamber_a_round( );
@@ -562,6 +651,15 @@ namespace vostok
 
 		// Escape &state so LTCG observes the ctor's member stores (loop_performance.md).
 		example_callback( reinterpret_cast< pcstr >( &state ) );
+
+		// claude@NOTE: anchor the non-virtual recoil-time-calculator getters so the
+		// linker keeps their out-of-line bodies for scoring.
+		survarium::weapon_core::calculator_functor bc = weapon.backward_recoil_time_calculator( );
+		survarium::weapon_core::calculator_functor hc = weapon.horizontal_recoil_time_calculator( );
+		survarium::weapon_core::calculator_functor vc = weapon.vertical_recoil_time_calculator( );
+		example_callback( reinterpret_cast< pcstr >( &bc ) );
+		example_callback( reinterpret_cast< pcstr >( &hc ) );
+		example_callback( reinterpret_cast< pcstr >( &vc ) );
 	}
 
 	void use_game_core_weapon_core_animation_end_aware_state( )
@@ -720,6 +818,27 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
+	void use_game_core_weapon_core_reload_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		survarium::weapon_core_reload_state			state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_reload_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_reload_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_reload_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_reload_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_reload_state*		object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
 	void use_game_core_pistol_weapon_core_idle_state( )
 	{
 		survarium::weapon_core						weapon;
@@ -735,6 +854,270 @@ namespace vostok
 		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::pistol_weapon_core_idle_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_pistol_weapon_core_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 12 ];
+		survarium::pistol_weapon_core_fire_state	state( weapon, 1.0f, animations, 12 );
+
+		state.survarium::pistol_weapon_core_fire_state::initialize( );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::pistol_weapon_core_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::pistol_weapon_core_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::pistol_weapon_core_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::pistol_weapon_core_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::pistol_weapon_core_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
+	}
+
+	void use_game_core_pistol_weapon_core_reload_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 16 ];
+		survarium::pistol_weapon_core_reload_state	state( weapon, 1.0f, animations, 16 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::pistol_weapon_core_reload_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::pistol_weapon_core_reload_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::pistol_weapon_core_reload_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::pistol_weapon_core_reload_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::pistol_weapon_core_reload_state*	object	= cook->cook_type::new_object( buffer, params, animations, 16 );
+	}
+
+	void use_game_core_double_barreled_weapon_core_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 12 ];
+		survarium::double_barreled_weapon_core_fire_state	state( weapon, 1.0f, animations, 12 );
+
+		state.survarium::double_barreled_weapon_core_fire_state::initialize( );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::double_barreled_weapon_core_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::double_barreled_weapon_core_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::double_barreled_weapon_core_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::double_barreled_weapon_core_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::double_barreled_weapon_core_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
+	}
+
+	void use_game_core_double_barreled_weapon_core_aimed_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 12 ];
+		survarium::double_barreled_weapon_core_aimed_fire_state	state( weapon, 1.0f, animations, 12 );
+
+		state.survarium::double_barreled_weapon_core_aimed_fire_state::initialize( );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::double_barreled_weapon_core_aimed_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::double_barreled_weapon_core_aimed_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::double_barreled_weapon_core_aimed_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
+	}
+
+	void use_game_core_double_barreled_weapon_core_reload_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 16 ];
+		survarium::double_barreled_weapon_core_reload_state	state( weapon, 1.0f, animations, 16 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::double_barreled_weapon_core_reload_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::double_barreled_weapon_core_reload_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::double_barreled_weapon_core_reload_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::double_barreled_weapon_core_reload_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::double_barreled_weapon_core_reload_state*	object	= cook->cook_type::new_object( buffer, params, animations, 16 );
+	}
+
+	void use_game_core_weapon_core_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		survarium::weapon_core_fire_state			state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_fire_state*			object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+	}
+
+	void use_game_core_weapon_core_aimed_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		survarium::weapon_core_aimed_fire_state		state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_aimed_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_aimed_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_aimed_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_aimed_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_aimed_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+	}
+
+	void use_game_core_pistol_weapon_core_show_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 12 ];
+		bool										is_shown	= false;
+		survarium::pistol_weapon_core_show_state	state( weapon, 1.0f, animations, 12, is_shown );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::pistol_weapon_core_show_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::pistol_weapon_core_show_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::pistol_weapon_core_show_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::pistol_weapon_core_show_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::pistol_weapon_core_show_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_weapon_core_show_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		bool										is_shown	= false;
+		survarium::weapon_core_show_state			state( weapon, 1.0f, animations, 8, is_shown );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_show_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_show_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_show_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_show_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_show_state*			object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_double_barreled_weapon_core_show_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 16 ];
+		bool										is_shown	= false;
+		survarium::double_barreled_weapon_core_show_state	state( weapon, 1.0f, animations, 16, is_shown );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::double_barreled_weapon_core_show_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::double_barreled_weapon_core_show_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::double_barreled_weapon_core_show_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::double_barreled_weapon_core_show_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::double_barreled_weapon_core_show_state*	object	= cook->cook_type::new_object( buffer, params, animations, 16 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_pistol_weapon_core_hide_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 12 ];
+		bool										is_shown	= false;
+		survarium::pistol_weapon_core_hide_state	state( weapon, 1.0f, animations, 12, is_shown );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::pistol_weapon_core_hide_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::pistol_weapon_core_hide_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::pistol_weapon_core_hide_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::pistol_weapon_core_hide_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::pistol_weapon_core_hide_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_double_barreled_weapon_core_hide_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 16 ];
+		bool										is_shown	= false;
+		survarium::double_barreled_weapon_core_hide_state	state( weapon, 1.0f, animations, 16, is_shown );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::double_barreled_weapon_core_hide_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::double_barreled_weapon_core_hide_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::double_barreled_weapon_core_hide_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::double_barreled_weapon_core_hide_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::double_barreled_weapon_core_hide_state*	object	= cook->cook_type::new_object( buffer, params, animations, 16 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_weapon_core_hide_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		bool										is_shown	= false;
+		survarium::weapon_core_hide_state			state( weapon, 1.0f, animations, 8, is_shown );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_hide_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_hide_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_hide_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_hide_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_hide_state*			object	= cook->cook_type::new_object( buffer, params, animations, 8 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
@@ -775,6 +1158,29 @@ namespace vostok
 		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::pistol_weapon_core_aimed_idle_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_pistol_weapon_core_aimed_fire_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 12 ];
+		survarium::pistol_weapon_core_aimed_fire_state	state( weapon, 1.0f, animations, 12 );
+
+		state.survarium::pistol_weapon_core_aimed_fire_state::initialize( );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::pistol_weapon_core_aimed_fire_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::pistol_weapon_core_aimed_fire_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::pistol_weapon_core_aimed_fire_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::pistol_weapon_core_aimed_fire_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
@@ -936,6 +1342,48 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
 	}
 
+	void use_game_core_weapon_core_chamber_a_round_state( )
+	{
+		survarium::weapon_core						weapon;
+		vostok::resources::managed_resource_ptr		animations[ 8 ];
+		survarium::weapon_core_chamber_a_round_state	state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer								buffer;
+		vostok::animation::mixing::animation_lexeme&	lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_chamber_a_round_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_chamber_a_round_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_chamber_a_round_state > cook_type;
+		cook_type*									cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_chamber_a_round_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	void use_game_core_weapon_core_chamber_a_round_aimed_state( )
+	{
+		survarium::weapon_core								weapon;
+		vostok::resources::managed_resource_ptr				animations[ 8 ];
+		survarium::weapon_core_chamber_a_round_aimed_state	state( weapon, 1.0f, animations, 8 );
+
+		mutable_buffer										buffer;
+		vostok::animation::mixing::animation_lexeme&		lexeme	= *reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		state.survarium::weapon_core_chamber_a_round_aimed_state::weapon_and_hands_expression( buffer, false, survarium::type_stand, lexeme );
+		state.survarium::weapon_core_chamber_a_round_aimed_state::get_weapon_lexeme_pair( buffer, false, survarium::type_stand );
+		state.survarium::weapon_core_chamber_a_round_aimed_state::get_user_hands_expression( lexeme, buffer, false, survarium::type_stand, lexeme );
+
+		typedef survarium::weapon_core_state_cook_template< survarium::weapon_core_chamber_a_round_aimed_state > cook_type;
+		cook_type*											cook	= reinterpret_cast< cook_type* >( NULL );
+		survarium::weapon_state_creation_params const*		params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
+		survarium::weapon_core_chamber_a_round_aimed_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
+		example_callback( reinterpret_cast< pcstr >( object ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
 	void use_game_core_weapon_core_fire_state_base( )
 	{
 		// weapon_core_fire_state_base does not override the pure
@@ -975,6 +1423,64 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &tick_result ) );
 	}
 
+	void use_game_core_weapon_core_shotgun_reload_state( )
+	{
+		// claude@NOTE: anchor the matched methods. We construct an instance (ctor + dtor
+		// reachable) AND escape it through the opaque sink. weapon_and_hands_expression is
+		// now matched (its real body calls the base_substate override, which is matched too),
+		// so the qualified call anchors the whole reachable chain (shotgun_reload_state ->
+		// weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression ->
+		// get_weapon_lexeme_pair -> get_weapon_lexeme_pair_impl).
+		typedef survarium::weapon_core_shotgun_reload_state state_t;
+
+		survarium::weapon_core	weapon;
+		state_t					state( weapon, NULL, NULL, NULL );
+
+		state.state_t::execute( );
+		state.state_t::initialize( );
+		state.state_t::finalize( );
+
+		// Anchor weapon_and_hands_expression (and, transitively, the base_substate override +
+		// get_weapon_lexeme_pair it calls) via a member-function pointer escaped through the
+		// opaque sink - this keeps it without having to construct an animation_lexeme arg.
+		vostok::animation::mixing::expression ( state_t::*waahe )(
+			vostok::mutable_buffer&,
+			bool,
+			survarium::weapon_user_state_enum,
+			vostok::animation::mixing::animation_lexeme&
+		) const = &state_t::weapon_and_hands_expression;
+		example_callback( reinterpret_cast< pcstr >( &waahe ) );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+	template < typename substate_t >
+	void use_game_core_shotgun_reload_substate_impl( )
+	{
+		// claude@NOTE: constructing the substate emits its vtable, anchoring the virtual
+		// overrides initialize/finalize/is_ready_for_transition; initialize's boost::bind in
+		// turn references the non-virtual on_animation_end, so the whole reachable set is kept.
+		survarium::weapon_core	weapon;
+		substate_t				substate( weapon, 0.0f, NULL, 0 );
+
+		example_callback( reinterpret_cast< pcstr >( &substate ) );
+	}
+
+	void use_game_core_weapon_core_shotgun_reload_start_substate( )
+	{
+		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_start_substate >( );
+	}
+
+	void use_game_core_weapon_core_shotgun_reload_one_round_substate( )
+	{
+		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_one_round_substate >( );
+	}
+
+	void use_game_core_weapon_core_shotgun_reload_finish_substate( )
+	{
+		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_finish_substate >( );
+	}
+
 	void use_bullet( )
 	{
 		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
@@ -991,7 +1497,67 @@ namespace vostok
 
 		wc.initialize_weapon_logic( s, s, s, s, s, s, s, s, s, s );
 
+		// Anchor weapon_core's public/private members defined in weapon_core.cpp so
+		// they are emitted and scored (this fn is friended; reaches privates).
+		volatile bool b = wc.is_ready_to_shoot( );
+		b = wc.maximum_ammo_in_weapon( ) != 0;
+		survarium::weapon_ammunition_ptr		ammo( NULL );
+		wc.set_ammunition( ammo );
+		wc.unload_chambered_round( );
+		vostok::resources::managed_resource_ptr	anim;
+		vostok::animation::animation_callback_params
+			params( NULL, anim, NULL, 0, 0, 0, 0 );
+		b = wc.on_hand_ik_event( params, survarium::hand_to_weapon_ik_processor::left ) == 0;
+
+		example_callback( reinterpret_cast< pcstr >( const_cast< bool* >( &b ) ) );
 		example_callback( reinterpret_cast< pcstr >( &wc ) );
+	}
+
+	// claude@NOTE: anchor for the small weapon_core setters/accessors batch.
+	void use_game_core_weapon_core_small_setters( )
+	{
+		survarium::weapon_core				wc;
+		vostok::animation::skeleton_ptr	skeleton( NULL );
+
+		wc.set_magazine_capacity( 0 );
+		wc.set_skeleton( skeleton );
+		wc.get_body_part_mask_for_user( );
+		wc.update_recoil( 0, 0.0f );
+		wc.update_breath_vibration( false, 0, 0.0f );
+		wc.instant_show( );
+		wc.instant_hide( );
+		wc.instant_aim_start( );
+		wc.instant_aim_end( );
+		wc.chamber_a_round( );
+		wc.get_dispersion( );
+		wc.instant_reload( );
+		wc.instant_chamber_a_round( );
+		wc.instant_idle_start( );
+
+		wc.set_fire_bullet_transform( vostok::math::float4x4( ) );
+		wc.set_next_fire_queue_type( );
+
+		boost::function< enum vostok::animation::callback_return_type_enum( vostok::animation::animation_callback_params& ) > cb;
+		wc.set_animation_callback( (pcstr)NULL, NULL, cb );
+		wc.set_animation_callback( vostok::animation::channel_id_on_animation_end, NULL, cb );
+		wc.remove_animation_callback( (pcstr)NULL, NULL );
+		wc.remove_animation_callback( vostok::animation::channel_id_on_animation_end, NULL );
+
+		// claude@NOTE: anchor the private predicates (friend reaches them). could_be_used
+		// has no other reachable caller yet (base_player::tick_active_object still STUB).
+		bool ( survarium::weapon_core::*pcu )( survarium::base_player const& ) const = &survarium::weapon_core::could_be_used;
+		bool ( survarium::weapon_core::*pca )( survarium::base_player const& ) const = &survarium::weapon_core::could_be_aimed;
+		bool ( survarium::weapon_core::*pip )( ) const = &survarium::weapon_core::instant_idle_predicate;
+		bool ( survarium::weapon_core::*pcr )( ) const = &survarium::weapon_core::can_and_must_reload_predicate;
+		bool ( survarium::weapon_core::*pcra )( ) const = &survarium::weapon_core::can_and_must_reload_and_animation_ended_predicate;
+		example_callback( reinterpret_cast< pcstr >( &pcu ) );
+		example_callback( reinterpret_cast< pcstr >( &pca ) );
+		example_callback( reinterpret_cast< pcstr >( &pip ) );
+		example_callback( reinterpret_cast< pcstr >( &pcr ) );
+		example_callback( reinterpret_cast< pcstr >( &pcra ) );
+
+		wc.get_ammo_slot( survarium::first_ammo );
+		wc.ready_to_reload( );
 	}
 
 
@@ -1102,6 +1668,10 @@ namespace vostok
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
 
+		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
+		survarium::player_stamina		stamina;
+		stamina.deserialize( *reader );
+
 		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
 		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
 		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
@@ -1115,6 +1685,23 @@ namespace vostok
 		survarium::hand_to_weapon_ik_processor	hand_ik;
 		hand_ik.serialize	( *packet, 0 );
 		hand_ik.deserialize	( *reader );
+
+		// inventory::serialize/deserialize are otherwise DCE'd ( /OPT:REF ); anchoring them
+		// also emits the static call_item_serialize/call_item_deserialize bind targets
+		// (address-taken, kept out-of-line - target inventory.cpp has both helpers).
+		survarium::inventory					inventory;
+		inventory.serialize		( *packet, 0 );
+		inventory.deserialize	( *reader );
+
+		// body_part_parameters::serialize is otherwise DCE'd (target rva 0x5871f0); no
+		// default ctor, so reach it through an opaque pointer (the anchor never runs).
+		survarium::body_part_parameters*		body_part = NULL;
+		body_part->serialize	( *packet, 0 );
+
+		// damage_model::deserialize is otherwise DCE'd (target rva 0x6f0250); noncopyable
+		// with a real ctor, so reach it through an opaque pointer (the anchor never runs).
+		survarium::damage_model*				damage_model = NULL;
+		damage_model->deserialize( *reader );
 	}
 
 	void use_game_core_weapon_state()
@@ -1174,15 +1761,227 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
+	// claude@MATCH: anchor for player_logic_jump_state (jump_state unit). The anchor
+	// never runs, so fabricated null refs are fine; calling each override keeps the
+	// COMDAT and lets objdiff pair them.
+	void use_game_core_player_logic_jump_state()
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+		survarium::base_player&						user	= *reinterpret_cast< survarium::base_player* >( NULL );
 
-	// claude@MATCH: the three jump_logic_state anchors (inactive/landing/start) were
-	// removed. The whole jump_logic_state_{inactive,landing,start} family currently
-	// scores 0% in report.json - none of these bodies is genuinely matched yet (the
-	// classes are not wired to a real caller). The anchors only manufactured base
-	// symbols (an ICF-folded standalone for the trivial initialize/execute/
-	// is_ready_for_transition overrides, or a 0%-scoring qualified-call body) that do
-	// not match the target's codegen. Source bodies stay; they will earn a real % once
-	// jump_logic exercises them. (Verified: removal left matched_functions unchanged.)
+		survarium::player_logic_jump_state	state( owner );
+
+		// overrides are private in jump_state; reach them virtually through the
+		// base interfaces where they are public/protected.
+		survarium::player_logic_base_state&	base	= state;
+		vostok::ai::fsm_state&				fsm		= state;
+
+		base.set_user( user );
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		bool ready = base.is_ready_for_transition( );
+		example_callback( reinterpret_cast< pcstr >( &ready ) );
+
+		// claude@TODO: selected_animations is INPROGRESS (blocked on jump_logic::
+		// selected_animations stub); not anchored until that callee returns a value.
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+
+	// claude@MATCH: anchor for player_logic_crouch_state unit. Reaches the virtual
+	// overrides through the base interfaces (they are private in crouch_state).
+	void use_game_core_player_logic_crouch_state()
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+
+		survarium::player_logic_crouch_state	state( owner );
+
+		vostok::ai::fsm_state&				fsm		= state;
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+
+	// claude@MATCH: anchor for player_logic_stand_state unit. initialize/execute/finalize
+	// are private virtual overrides, so reach them through the base ai::fsm_state interface
+	// (mirrors the sibling crouch/jump anchors and keeps the COMDATs paired).
+	void use_game_core_player_logic_stand_state()
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+
+		survarium::player_logic_stand_state	state( owner );
+
+		vostok::ai::fsm_state&				fsm		= state;
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+
+	// claude@MATCH: anchor for player_logic_sprint_state (sprint_state unit). Mirrors
+	// the jump anchor: construct (ODR-uses ctor + the bound on_stamina_depleted),
+	// reach the private virtual overrides through the base interface, and call the
+	// public set_callbacks. Never runs; null refs are fine.
+	void use_game_core_player_logic_sprint_state( )
+	{
+		survarium::weapon_user_animations_selector&	owner	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+
+		survarium::player_logic_sprint_state	state( owner );
+
+		vostok::ai::fsm_state&				fsm		= state;
+
+		fsm.initialize( );
+		fsm.execute( );
+		fsm.finalize( );
+
+		boost::function< void() > const&	cb	=
+			*reinterpret_cast< boost::function< void() > const* >( NULL );
+		state.set_callbacks( cb, cb );
+
+		example_callback( reinterpret_cast< pcstr >( &state ) );
+	}
+
+
+	void use_game_core_jump_logic_state_inactive( )
+	{
+		// initialize()/is_ready_for_transition() are header inline overrides. Take
+		// their member-fn addresses to ODR-use them and force a standalone
+		// (un-inlined) out-of-line body for each, then escape the pointers so the
+		// uses are observed. Do NOT construct an instance: instantiating the class
+		// would emit its vtable and force codegen of the still-STUB
+		// selected_animations (no return -> C4716/LNK1257). Address-of touches only
+		// these two members, which is all this unit needs.
+		void ( survarium::jump_logic_state_inactive::*init )( )        = &survarium::jump_logic_state_inactive::initialize;
+		bool ( survarium::jump_logic_state_inactive::*ready )( ) const = &survarium::jump_logic_state_inactive::is_ready_for_transition;
+		example_callback( reinterpret_cast< pcstr >( &init ) );
+		example_callback( reinterpret_cast< pcstr >( &ready ) );
+
+		// claude@MATCH: selected_animations now has a (returning) body, so a qualified
+		// devirtualized call ODR-uses its out-of-line body without emitting the vtable.
+		survarium::jump_logic_state_inactive& s = *reinterpret_cast< survarium::jump_logic_state_inactive* >( NULL );
+		survarium::jump_logic_base_state::animation_delegate const& d =
+			*reinterpret_cast< survarium::jump_logic_base_state::animation_delegate const* >( NULL );
+		vostok::mutable_buffer&                    buf = *reinterpret_cast< vostok::mutable_buffer* >( NULL );
+		survarium::weapon_animation_parameters const& wp =
+			*reinterpret_cast< survarium::weapon_animation_parameters const* >( NULL );
+		std::pair< vostok::animation::mixing::expression, vostok::animation::mixing::animation_lexeme > p =
+			s.survarium::jump_logic_state_inactive::selected_animations( buf, false, d, wp );
+		example_callback( reinterpret_cast< pcstr >( &p ) );
+	}
+
+	void use_game_core_jump_logic_state_landing( )
+	{
+		// selected_animations now returns (UNREACHABLE), so the class can be instantiated
+		// without the #148 C4716 trap. Construct on a fabricated owner (never runs): this
+		// emits the ctor + the full vtable (all virtual overrides codegen'd). Then call the
+		// private non-virtual helpers (anchor befriended) so their bodies are emitted too.
+		survarium::jump_logic&					owner	= *reinterpret_cast< survarium::jump_logic* >( NULL );
+		survarium::jump_logic_state_landing		s( owner );
+		s.survarium::jump_logic_state_landing::execute( );
+		bool r = s.survarium::jump_logic_state_landing::is_ready_for_transition( );
+		example_callback( reinterpret_cast< pcstr >( &r ) );
+
+		vostok::mutable_buffer&					buf	= *reinterpret_cast< vostok::mutable_buffer* >( NULL );
+		vostok::animation::animation_callback_params& cbp =
+			*reinterpret_cast< vostok::animation::animation_callback_params* >( NULL );
+		survarium::jump_logic_base_state::animation_delegate const& d =
+			*reinterpret_cast< survarium::jump_logic_base_state::animation_delegate const* >( NULL );
+		vostok::animation::mixing::animation_lexeme& lx =
+			*reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		vostok::animation::mixing::animation_lexeme m = s.get_main_lexeme( buf, false, vostok::animation::body_part_whole_body );
+		vostok::animation::mixing::animation_lexeme l = s.get_look_lexeme( buf, false, d, lx );
+		vostok::animation::callback_return_type_enum ie = s.on_interval_end( cbp );
+		example_callback( reinterpret_cast< pcstr >( &ie ) );
+		example_callback( reinterpret_cast< pcstr >( &s ) );
+	}
+
+	void use_game_core_jump_logic_state_start( )
+	{
+		// Construct (see landing): emits ctor + vtable; befriended anchor calls the private
+		// non-virtual helpers so their bodies are emitted.
+		survarium::jump_logic&					owner	= *reinterpret_cast< survarium::jump_logic* >( NULL );
+		survarium::jump_logic_state_start		s( owner );
+		s.survarium::jump_logic_state_start::execute( );
+		bool r = s.survarium::jump_logic_state_start::is_ready_for_transition( );
+		example_callback( reinterpret_cast< pcstr >( &r ) );
+
+		vostok::mutable_buffer&					buf	= *reinterpret_cast< vostok::mutable_buffer* >( NULL );
+		vostok::animation::animation_callback_params& cbp =
+			*reinterpret_cast< vostok::animation::animation_callback_params* >( NULL );
+		survarium::jump_logic_base_state::animation_delegate const& d =
+			*reinterpret_cast< survarium::jump_logic_base_state::animation_delegate const* >( NULL );
+		vostok::animation::mixing::animation_lexeme& lx =
+			*reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
+		vostok::animation::mixing::animation_lexeme m = s.get_main_lexeme( buf, false, vostok::animation::body_part_whole_body );
+		vostok::animation::mixing::animation_lexeme l = s.get_look_lexeme( buf, false, d, lx );
+		vostok::animation::callback_return_type_enum ie = s.on_interval_end( cbp );
+		vostok::animation::callback_return_type_enum je = s.on_jump_event( cbp );
+		example_callback( reinterpret_cast< pcstr >( &ie ) );
+		example_callback( reinterpret_cast< pcstr >( &je ) );
+		example_callback( reinterpret_cast< pcstr >( &s ) );
+	}
+
+	// claude@MATCH: anchor for jump_logic non-virtual leaf methods (landing_predicate,
+	// tick, look_time_factor, is_jump_finished). Qualified calls on a fabricated
+	// reference ODR-use the bodies without constructing an instance (the dtor/vtable
+	// of derived states stays untouched). The anchor never runs.
+	void use_game_core_jump_logic( )
+	{
+		survarium::jump_logic&	jl	= *reinterpret_cast< survarium::jump_logic* >( NULL );
+		bool	lp	= jl.landing_predicate( );
+		jl.tick( );
+		float	lt	= jl.look_time_factor( );
+		bool	jf	= jl.is_jump_finished( );
+		example_callback( reinterpret_cast< pcstr >( &lp ) );
+		example_callback( reinterpret_cast< pcstr >( &lt ) );
+		example_callback( reinterpret_cast< pcstr >( &jf ) );
+
+		// ODR-use the out-of-line jump_logic method bodies via member-fn pointers so
+		// the linker keeps them (no instance constructed -> no vtable/STUB codegen).
+		std::pair< vostok::animation::mixing::expression, vostok::animation::mixing::animation_lexeme >
+			( survarium::jump_logic::*sel )( vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, bool ) const
+				= &survarium::jump_logic::selected_animations;
+		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*get_anim )( survarium::jump_animation_parts, bool ) const
+			= &survarium::jump_logic::get_animation;
+		void ( survarium::jump_logic::*act )( ) = &survarium::jump_logic::activate;
+		example_callback( reinterpret_cast< pcstr >( &sel ) );
+		example_callback( reinterpret_cast< pcstr >( &get_anim ) );
+		example_callback( reinterpret_cast< pcstr >( &act ) );
+
+		// claude@MATCH: the C4716 state-vtable trap is gone (jump_logic_state_*
+		// selected_animations now return on the common ground), so constructing a
+		// jump_logic anchors the ctor -> initialize_logic + the dtor without LNK1257.
+		// The anchor never runs (the reference is NULL); construction only ODR-uses
+		// the bodies for the linker.
+		survarium::weapon_user_animations_selector& sel_owner =
+			*reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
+		survarium::jump_logic anchored_jump_logic( sel_owner );
+		example_callback( reinterpret_cast< pcstr >( &anchored_jump_logic ) );
+
+		survarium::player_input const& input = *reinterpret_cast< survarium::player_input const* >( NULL );
+		survarium::move_direction_enum d = survarium::get_move_direction( input );
+		example_callback( reinterpret_cast< pcstr >( &d ) );
+
+		u32 idx = survarium::get_jump_animation_index( d, true, survarium::jump_animations_part_start );
+		example_callback( reinterpret_cast< pcstr >( &idx ) );
+
+		// Address-of non-virtual members to ODR-use their bodies WITHOUT constructing a
+		// jump_logic (which would emit the vtable and force still-STUB members to codegen).
+		void ( survarium::jump_logic::*su )( survarium::base_player& ) = &survarium::jump_logic::set_user;
+		void ( survarium::jump_logic::*de )( )                         = &survarium::jump_logic::deactivate;
+		bool ( survarium::jump_logic::*dn )( ) const                   = &survarium::jump_logic::does_need_land_and_run;
+		example_callback( reinterpret_cast< pcstr >( &su ) );
+		example_callback( reinterpret_cast< pcstr >( &de ) );
+		example_callback( reinterpret_cast< pcstr >( &dn ) );
+	}
 
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
@@ -1298,11 +2097,82 @@ namespace vostok
 		holder.touch( );
 	}
 
+	// claude@MATCH: anchor for base_player non-virtual leaf functions. base_player is
+	// abstract, but these are non-virtual so a qualified call on a null ref ODR-uses
+	// each standalone body without needing a full concrete stub. on_player_death also
+	// pulls in the free helper call_player_death_subscriber_callback (taken as a
+	// function ref by intrusive_list::for_each).
+	void use_game_core_base_player( )
+	{
+		survarium::base_player&	p	= *reinterpret_cast< survarium::base_player* >( NULL );
+		p.subscribe_on_player_death( NULL );
+		p.unsubscribe_from_player_death( NULL );
+		p.on_player_death( );
+		p.tick_active_object( );
+		p.deserialize_game_world_object( *reinterpret_cast< vostok::network_core::packet_reader* >( NULL ) );
+		example_callback( reinterpret_cast< pcstr >( &p ) );
+	}
+
 	void use_game_core_weapon_user_animations_selector( )
 	{
 		survarium::weapon_user_animations_selector&	sel	= *reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
 		sel.set_animations( survarium::weapon_user_animations_container_ptr( NULL ) );
 		example_callback( reinterpret_cast< pcstr >( &sel ) );
+
+		// claude@MATCH: keep the state accessors as standalone COMDATs via member-fn
+		// pointers (a direct call would LTCG-inline them into this anchor, emitting no
+		// body). current_state is private but is reached transitively from these three.
+		typedef survarium::weapon_user_animations_selector self;
+		survarium::weapon_user_state_enum	( self::*p0 )( ) const = &self::get_current_state_id;
+		bool								( self::*p1 )( ) const = &self::is_in_jump;
+		bool								( self::*p2 )( ) const = &self::is_sprinting;
+		bool								( self::*p3 )( ) const = &self::is_ready_to_be_deactivated;
+		example_callback( reinterpret_cast< pcstr >( &p0 ) );
+		example_callback( reinterpret_cast< pcstr >( &p1 ) );
+		example_callback( reinterpret_cast< pcstr >( &p2 ) );
+		example_callback( reinterpret_cast< pcstr >( &p3 ) );
+
+		// claude@MATCH: keep tick/deactivate/selected_animations as standalone COMDATs.
+		void					( self::*p4 )( )												= &self::tick;
+		void					( self::*p5 )( )												= &self::deactivate;
+		std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+								( self::*p6 )( mutable_buffer&, survarium::weapon_animation_parameters const&, bool ) const = &self::selected_animations;
+		example_callback( reinterpret_cast< pcstr >( &p4 ) );
+		example_callback( reinterpret_cast< pcstr >( &p5 ) );
+		example_callback( reinterpret_cast< pcstr >( &p6 ) );
+
+		// claude@MATCH (batch2): anchor the remaining private/public leaf members that no
+		// reachable caller keeps (LTCG would otherwise inline-drop them to None).
+		bool ( self::*p7 )( ) const = &self::is_weapon_firing;
+		bool ( self::*p8 )( ) const = &self::is_weapon_toggling;
+		bool ( self::*p9 )( ) const = &self::is_weapon_in_idle;
+		bool ( self::*p10 )( ) const = &self::broken_legs_predicate;
+		bool ( self::*p11 )( ) const = &self::stand_predicate;
+		bool ( self::*p12 )( ) const = &self::crouch_predicate;
+		bool ( self::*p13 )( ) const = &self::jump_predicate;
+		bool ( self::*p14 )( ) const = &self::sprint_predicate;
+		animation::callback_return_type_enum ( self::*p15 )( animation::animation_callback_params& ) = &self::on_interval_ended;
+		void ( self::*p16 )( pcstr, survarium::hit_affects_type_enum, survarium::affect_event_type_enum ) = &self::on_broken_limb_affect;
+		void ( self::*p17 )( boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::set_sprint_callbacks;
+		float ( self::*p18 )( ) const = &self::look_time_factor;
+		float ( self::*p19 )( float, float, u32, u32, u32, float ) const = &self::look_time_factor_calculator;
+		void ( self::*p20 )( animation::reserved_channel_ids_enum, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
+		void ( self::*p21 )( pcstr, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
+		example_callback( reinterpret_cast< pcstr >( &p7 ) );
+		example_callback( reinterpret_cast< pcstr >( &p8 ) );
+		example_callback( reinterpret_cast< pcstr >( &p9 ) );
+		example_callback( reinterpret_cast< pcstr >( &p10 ) );
+		example_callback( reinterpret_cast< pcstr >( &p11 ) );
+		example_callback( reinterpret_cast< pcstr >( &p12 ) );
+		example_callback( reinterpret_cast< pcstr >( &p13 ) );
+		example_callback( reinterpret_cast< pcstr >( &p14 ) );
+		example_callback( reinterpret_cast< pcstr >( &p15 ) );
+		example_callback( reinterpret_cast< pcstr >( &p16 ) );
+		example_callback( reinterpret_cast< pcstr >( &p17 ) );
+		example_callback( reinterpret_cast< pcstr >( &p18 ) );
+		example_callback( reinterpret_cast< pcstr >( &p19 ) );
+		example_callback( reinterpret_cast< pcstr >( &p20 ) );
+		example_callback( reinterpret_cast< pcstr >( &p21 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public
@@ -1322,6 +2192,22 @@ namespace vostok
 		concrete_base_project	p;
 		p.touch( );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
+	}
+
+	void use_game_core_weapon_user_animations_container_cook( )
+	{
+		// Constructing + registering keeps the vtable (translate_query, delete_resource).
+		static survarium::weapon_user_animations_container_cook	s_cook;
+		vostok::resources::register_cook( &s_cook );
+		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
+
+		// claude@NOTE: translate_query (real body) -> on_config_loaded (real body) ->
+		// create_requests_for_animations + on_animations_loaded -> get_animations_from_request_results<N>
+		// are now all emitted via the boost::bind chain kept by this anchor. The free
+		// create_requests/get_animations helpers still read 0% (per-obj pairing limit + ICF
+		// fold of the 4 identical template instances); the member fns are matched (translate_query
+		// 99.82, on_animations_loaded 99.97, on_config_loaded 91.05). See
+		// docs/binary_matching/game_core/weapon_user_animations_container_cook.md.
 	}
 
 	// booby_trap_core::get_speed is a PRIVATE virtual; befriended above so a
@@ -1884,20 +2770,25 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_initialize( );
 	vostok::use_game_core_breath_vibration_calculator( );
 	vostok::use_game_core_legs_ik_processor( );
-	vostok::use_game_core_legs_ik_drawer( );
 	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
+	vostok::use_game_core_hand_to_weapon_ik_processor( );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
 	vostok::use_hittable_object( NULL );
+	vostok::use_usable_object( NULL );
 	vostok::use_respawn_point_core( );
 	vostok::use_damage_zone_core( );
 	vostok::use_generic_anomaly_core( );
 	vostok::use_artefact_container_core( );
 	vostok::use_artefact_lifebone_core( );
 	vostok::use_victory_item_core( );
+	vostok::use_weapon_core_cook( );
+	vostok::use_weapon_core_shotgun_reload_state_cook( );
+	vostok::use_weapon_core_inactive_state_cook( );
 	vostok::use_game_core_weapon_recoil_params( );
+	vostok::use_game_core_weapon_recoil_calculator( );
 	vostok::use_game_core_character_dispersion_params( );
 	vostok::use_game_core_weapon_dispersion_params( );
 	vostok::use_recoil_calculator( );
@@ -1914,6 +2805,17 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_pistol_weapon_core_idle_state( );
 	vostok::use_game_core_double_barreled_weapon_core_idle_state( );
 	vostok::use_game_core_pistol_weapon_core_aimed_idle_state( );
+	vostok::use_game_core_weapon_core_reload_state( );
+	vostok::use_game_core_pistol_weapon_core_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_show_state( );
+	vostok::use_game_core_weapon_core_show_state( );
+	vostok::use_game_core_double_barreled_weapon_core_show_state( );
+	vostok::use_game_core_double_barreled_weapon_core_hide_state( );
+	vostok::use_game_core_pistol_weapon_core_hide_state( );
+	vostok::use_game_core_weapon_core_hide_state( );
+	vostok::use_game_core_double_barreled_weapon_core_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_aimed_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_aimed_fire_state( );
 	vostok::use_game_core_double_barreled_weapon_core_aimed_idle_state( );
 	vostok::use_game_core_weapon_core_show_state_base( );
 	vostok::use_game_core_weapon_core_hide_state_base( );
@@ -1921,6 +2823,23 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
 	vostok::use_game_core_weapon_core_fire_state_base( );
 	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	vostok::use_game_core_weapon_core_chamber_a_round_state( );
+	vostok::use_game_core_weapon_core_chamber_a_round_aimed_state( );
+	vostok::use_game_core_weapon_core_fire_state_base( );
+	vostok::use_game_core_weapon_core_shotgun_reload_state( );
+	vostok::use_game_core_weapon_core_shotgun_reload_start_substate( );
+	vostok::use_game_core_weapon_core_shotgun_reload_one_round_substate( );
+	vostok::use_game_core_weapon_core_shotgun_reload_finish_substate( );
+	vostok::use_game_core_pistol_weapon_core_fire_state( );
+	vostok::use_game_core_pistol_weapon_core_reload_state( );
+	vostok::use_game_core_double_barreled_weapon_core_fire_state( );
+	vostok::use_game_core_double_barreled_weapon_core_aimed_fire_state( );
+	vostok::use_game_core_double_barreled_weapon_core_reload_state( );
+
+	vostok::use_game_core_weapon_core_fire_state( );
+	vostok::use_game_core_weapon_core_aimed_fire_state( );
+	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	vostok::use_game_core_weapon_core_small_setters( );
 	vostok::use_bullet( );
 	vostok::use_inventory( );
 	vostok::use_damage_model_cook( );
@@ -1933,11 +2852,22 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_serialization( NULL, NULL );
 	vostok::use_game_core_weapon_state();
 	vostok::use_game_core_player_logic_base_state();
+	vostok::use_game_core_player_logic_jump_state();
+	vostok::use_game_core_player_logic_crouch_state();
+	vostok::use_game_core_player_logic_stand_state();
+	vostok::use_game_core_player_logic_sprint_state();
+	vostok::use_game_core_jump_logic_state_inactive();
+	vostok::use_game_core_jump_logic_state_landing();
+	vostok::use_game_core_jump_logic_state_start();
+	vostok::use_game_core_jump_logic();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
 	vostok::use_game_core_inventory_holder();
 	vostok::use_game_core_weapon_user_animations_selector();
+	vostok::use_game_core_base_player();
+	vostok::use_game_core_weapon_user_animations_selector();
+	vostok::use_game_core_weapon_user_animations_container_cook();
 	vostok::use_game_core_base_project();
 	vostok::use_game_core_booby_trap_core_get_speed();
 	vostok::use_bt_character_controller();

@@ -14,7 +14,7 @@
 
 namespace survarium {
 
-// STATE[SKIPPED]: sushi@TODO: Most likely something to do with inheritance + NO_VTABLE + virtual methods
+// STATE[77.00%|PARTIAL]: vtable/base-init codegen of the multiply-inherited NO_VTABLE hierarchy, non-steerable.
 generic_anomaly_core::generic_anomaly_core( ):
 	m_artefact_grab_time_ms		( 0 ),
 	m_current_state				( NULL ),
@@ -23,14 +23,18 @@ generic_anomaly_core::generic_anomaly_core( ):
 	m_physics_world				( NULL ),
 	m_scheduler					( NULL )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (init-list only; 0xab vs 0xb2)
+	// VERDICT: STRUCTURE MATCH - residual is the compiler-emitted base-subobject ctor calls + vtable stores of the multiply-inherited (NO_VTABLE + virtuals) hierarchy, decided by the base-class declarations, non-steerable.
 }
 
-// STATE[SKIPPED]: sushi@TODO: Has two simple instructions swapped
+// STATE[99.91%|DONE]: two adjacent member sub-object dtor calls emitted in swapped order, non-steerable here.
 generic_anomaly_core::~generic_anomaly_core( )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x4c both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - empty body; sole residual: target destroys the members at +9 then +8, base at +8 then +9 (one swapped pair), a member-layout/destruction-order quirk needing a header member reorder (wide blast radius), out of scope at 99.91%.
 }
 
-// STATE[79.69%|PARTIAL]: boost::bind in target inlined for one more layer
+// STATE[83.49%|PARTIAL]: boost::bind / register_on_frame inlined one layer deeper in target, non-steerable.
 void generic_anomaly_core::activate( physics::world* world, survarium::scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -48,25 +52,14 @@ void generic_anomaly_core::activate( physics::world* world, survarium::scheduler
 	m_was_shoot_trigger_event = false;
 	spawn_artefacts( );
 
-	// FUNCTION BODY
-	// <0x59dc1a>|0x00a|+0x00c:'28'
-	// <0x59dc26>|0x016|+0x00c:'29'
-	// <0x59dc32>|0x022|+0x009:'30'
-	// <0x59dc3b>|0x02b|+0x009:'31'
-	// <0x59dc44>|0x034|+0x0ce:'32'
-	// <0>
-	// <0x59dd12>|0x102|+0x022|[1]:'34'	for ( u32 a = 0 ; a < m_artefact_containers.size( ) ; ++a )
-	// <0>								{
-	// <0x59dd34>|0x124|+0x050:'36'
-	// <0x59dd84>|0x174|+0x002:'37'		}
-	// <0>
-	// <0x59dd86>|0x176|+0x007:'39'
-	// <0x59dd8d>|0x17d|+0x007:'40'
-	// <0x59dd94>|0x184|+0x008:'41'
-	// ******
+	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
+	// SIZE +0x3e | 58 | m_scheduler->register_on_frame( &m_scheduler_identifier, boost::bind( &generic_anomaly_core::tick, this, _1, _2 ), true );
+	// SIZE +0x21 | 62 | m_artefact_containers[a]->activate( this, world, scheduler );
+	// (7 more +0x3 rows = disp8->disp32 frame noise cascading from the larger base frame)
+	// VERDICT: STRUCTURE MATCH (11/11) - the register_on_frame(boost::bind) machinery is inlined one layer deeper in target (0xce vs 0x10c); whole-program LTCG, non-steerable. The +0x3 rows are slot-displacement-width noise, not structure.
 }
 
-// STATE[99.68%|DONE]: Different stack size
+// STATE[99.68%|DONE]: frame size differs (slot allocation), non-steerable.
 void generic_anomaly_core::deactivate( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -81,21 +74,8 @@ void generic_anomaly_core::deactivate( )
 
 	m_scheduler = NULL;
 
-	// FUNCTION BODY
-	// <0x59d7c0>|0x000|+0x009:'45'	{
-	// <0x59d7c9>|0x009|+0x00c:'46'
-	// <0x59d7d5>|0x015|+0x012:'47'
-	// <0x59d7e7>|0x027|+0x009:'48'
-	// <0>
-	// <0x59d7f0>|0x030|+0x00b:'50'
-	// <0x59d7fb>|0x03b|+0x00a:'51'
-	// <0>
-	// <0x59d805>|0x045|+0x022|[1]:'53'
-	// <0x59d827>|0x067|+0x046:'54'
-	// <0>
-	// <0x59d86d>|0x0ad|+0x00a:'56'
-	// <0x59d877>|0x0b7|      :'57'	}
-	// ******
+	// STRUCTURE DIFF: target 8 stmts / base 8 stmts (0xbb both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - clean alignment; sole residual is a frame-size / [ebp-N] slot-allocation difference, non-steerable.
 }
 
 // STATE[100%|DONE]

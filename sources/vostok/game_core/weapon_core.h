@@ -35,6 +35,9 @@ namespace ai {
 	// claude@NOTE: temp_include_all anchor; friended below so it can call the
 	// private initialize_weapon_logic (target mangles it AAE).
 	void use_game_core_weapon_core_initialize_weapon_logic( );
+	// claude@NOTE: anchor for the private update_recoil/update_breath_vibration/
+	// get_body_part_mask_for_user (target mangles them AAE/ABE).
+	void use_game_core_weapon_core_small_setters( );
 }
 
 namespace survarium {
@@ -65,7 +68,7 @@ public:
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const										{ return m_magazine_capacity;		}	// STATE[STUB]
+			u16									get_magazine_capacity			( ) const;	// STATE[STUB] target keeps this out-of-line (called from the double-barreled ctor ASSERT_CMP_U)
 
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
@@ -81,7 +84,9 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling; /* no source */ }
 
-			bool								ready_to_reload					( ) const { return true; /* sushi@TODO: A LOT OF LOGIC */ }			// STATE[STUB]
+			// claude@NOTE: out-of-line (target symbol @0x0ac370) so callers emit `call ready_to_reload`
+			// instead of inlining the stub; matches can_and_must_reload_predicate's `call ready_to_reload`.
+			bool								ready_to_reload					( ) const;			// STATE[STUB] sushi@TODO: A LOT OF LOGIC
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
 			weapon_targets						get_target						( ) const { return m_target; }										// STATE[STUB]
@@ -90,7 +95,7 @@ public:
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
-			u16									fire_queue_length				( ) const {  return m_weapon_fire_queue_types[m_fire_queue_type]; } // STATE[STUB]
+			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// STATE[STUB]
@@ -146,7 +151,11 @@ public:
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const { return m_aimed; }				// STATE[STUB]
-	inline	bool								is_idle							( ) const { /* no source */ }
+	// claude@MATCH: is_idle must return a value - is_weapon_user_animations_selector::
+	// is_weapon_in_idle is its first real consumer and a bodyless value-returning inline
+	// fails LTCG codegen (LNK1257). Minimal `return m_is_idle;` (mirrors is_firing/is_toggling);
+	// weapon_core owner can refine the predicate later.
+	inline	bool								is_idle							( ) const { return m_is_idle; }
 
 			void								unload_chambered_round			( );
 			void								unload_ammo						( );
@@ -195,28 +204,33 @@ public:
 	inline	bool								deserializing					( ) const { return m_deserializing; }
 	inline	bool								is_active						( ) const { /* no source */ }
 
+private:
+	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
 			bool								target_predicate						( weapon_targets target ) const { return m_target == target; } // STATE[STUB]
 			bool								target_and_animation_ended_predicate	( weapon_targets target ) const;
 			bool								instant_idle_predicate					( ) const;
 
+private:
 			bool								must_chamber_a_round_predicate							( ) const;
 			bool								must_chamber_a_round_aimed_predicate					( ) const;
 			bool								must_chamber_a_round_and_animation_ended_predicate		( ) const;
 			bool								must_chamber_a_round_aimed_and_animation_ended_predicate( ) const;
 
+	// claude@MATCH: target mangles these AAE (private), not QAE.
 			float3								get_dispersed_bullet_dir		( );
 
-			void								update_recoil					( u32 current_time_in_ms, float time_scale );
 			void								update_dispersion				( bool is_moving, u32 current_time_in_ms );
-			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
 
 			animation::callback_return_type_enum	on_animation_ik_interval		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	on_sprint_animation_ended		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	fake_callback					( animation::animation_callback_params& params ) { return animation::callback_return_type_call_me_again; } // STATE[STUB]
 
+private:
 	virtual	void								on_player_model_added			( ) override;
 	virtual	void								on_player_model_removed			( ) override;
 
+	// claude@MATCH: target mangles update_bones_matrices/serialize/deserialize
+	// EAE/EBE/EAE (private virtual), not UAE/UBE.
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
@@ -231,6 +245,7 @@ public:
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
 	virtual	bool								is_sprinting					( ) const override;
+public:
 
 	virtual	void								on_before_fire					( ) { /* no source */ }
 	virtual	void								on_after_fire					( ) { /* no source */ }
@@ -240,19 +255,23 @@ public:
 	virtual	void								on_hide							( ) { /* no source */ }
 	virtual	void								on_unload_chambered_round		( ) { /* no source */ }
 
+private:
+	// claude@MATCH: target mangles the pointer params QBV/QAV (T* const) - keep the
+	// top-level const on every pointer.
 	virtual	void								on_skeleton_matrices_changed	(
 													u32					current_time_in_ms,
 													float4x4 const&		weapon_transform,
-													float4x4 const*		weapon_matrices_begin,
-													float4x4 const*		weapon_matrices_end,
+													float4x4 const* const	weapon_matrices_begin,
+													float4x4 const* const	weapon_matrices_end,
 													float4x4 const&		user_transform,
-													float4x4*			user_matrices_begin,
-													float4x4*			user_matrices_end,
+													float4x4* const		user_matrices_begin,
+													float4x4* const		user_matrices_end,
 													float4x4 const&		user_weapon_transform
 												);
 
-	virtual	void								process_finger_correction		( u32 current_time_in_ms, float4x4* user_matrices );
+	virtual	void								process_finger_correction		( u32 current_time_in_ms, float4x4* const user_matrices );
 
+	// claude@MATCH: target mangles this ABE (private const), not QBE.
 			animation::mixing::expression		get_weapon_and_hands_animation_expression(
 													mutable_buffer&						buffer,
 													bool								is_third_view,
@@ -260,9 +279,7 @@ public:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
-			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
-
-	inline	weapon_core_base_state&				current_base_state				( ) const { /* no source */ }
+	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
 													float		animation_length,
@@ -295,20 +312,28 @@ public:
 			float								horizontal_recoil_value			( ) const;
 			float								vertical_recoil_value			( ) const;
 
+private:
 			bool								is_trying_to_aim				( ) const;
 			bool								is_not_trying_to_aim_predicate	( ) const;
-
 			bool								can_and_must_reload_predicate	( ) const;
 			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
 
+	// claude@MATCH: target mangles load_ammo AAE (private), not QAE.
 			void								load_ammo						( );
 
+private:
 			animation::callback_return_type_enum
 												on_hand_ik_event				( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand );
-
+protected:
 	virtual	void								on_user_sprint					( bool user_is_sprinting );
+public:
 
 private:
+	// claude@MATCH: target mangles these AAE/ABE (private), not QAE/QBE.
+			void								update_recoil					( u32 current_time_in_ms, float time_scale );
+			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
+			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
+
 	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it
 	// in a private section. The temp_include_all anchor is a friend so it can call it.
 			void								initialize_weapon_logic			(
@@ -325,6 +350,7 @@ private:
 												);
 
 	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	friend void ::vostok::use_game_core_weapon_core_small_setters( );
 
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:

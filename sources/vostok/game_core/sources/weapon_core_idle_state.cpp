@@ -40,30 +40,25 @@ weapon_core_idle_state::weapon_core_idle_state( weapon_core& weapon, resources::
 			m_weapon_animations[view][user_state] = animations[animation_index++];
 }
 
-// STATE[85.65%|PARTIAL]: residual is the per-call-site LTCG inline-vs-call of
-// operator+<animation_lexeme,animation_lexeme> (target inlines it here, base keeps the
-// out-of-line call - the op| / fixed_string class in assembly_patterns.md; operator+ is
-// standalone in BOTH rich indexes, so it is a whole-program inline decision, not a source
-// bug), plus the line-32 ASSERT eater shape (target's expression_eater gets only the
-// lexeme; ASSERT_U adds the assert_untyped `push 0`). See the .md for the full diff.
+// STATE[87.52%|PARTIAL]: was ASSERT_U - the target eater has NO leading assert_untyped enum
+// push, i.e. VOSTOK_UNREFERENCED_PARAMETERS (fixed, row closed, 85.65 -> 87.52); param consts
+// restored from the target PDB signature.
 animation::mixing::expression weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool							is_third_view,
+	const weapon_user_state_enum		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	ASSERT_U( weight_driving_animation );
+	VOSTOK_UNREFERENCED_PARAMETERS( weight_driving_animation );
 
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 
-	// FUNCTION BODY
-	// <0x7ad3d1>|0x011|+0x036:'32'	ASSERT_U( weight_driving_animation );
-	// <0x7ad407>|0x047|+0x01f:'33'	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( ... );
-	// <0x7ad426>|0x066|+0x059:'34'	return expression( main + offset );  (target inlines operator+)
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE -0x21 | 61 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the per-call-site LTCG split of operator+<animation_lexeme>: target inlines it (calling addition_lexeme ctor/cloned_in_buffer/dtor out-of-line), base calls operator+. Non-steerable.
 }
 
 // STATE[100%|DONE]

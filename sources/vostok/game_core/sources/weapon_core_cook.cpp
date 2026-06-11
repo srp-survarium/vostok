@@ -5,19 +5,16 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_cook.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include "game_core_memory.h"
+
 namespace survarium {
 
-// STATE[STUB]
+// STATE[100%|DONE]
 weapon_core_cook::weapon_core_cook( ) :
 	resources::translate_query_cook( resources::weapon_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
-
-	// FUNCTION BODY
-	// <0>
-	// <35>
-	// <0x59f105>|0x035|+0x00c:'118'
-	// ******
 }
 
 // STATE[STUB]
@@ -43,25 +40,15 @@ void weapon_core_cook::translate_query( resources::query_result_for_cook& parent
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_cook::on_weapon_config_loaded(vostok::resources::queries_result&)
+// STATE[100%|DONE]
 void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// configs::binary_config_ptr config_ptr
-	// weapon_core* 				object_to_cook
-	// resources::query_result_for_cook* parent
-	// ******
+	resources::query_result_for_cook*	parent			= data.get_parent_query( );
+	ASSERT( UNKNOWN_EXPRESSION );
+	configs::binary_config_ptr			config_ptr		= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+	weapon_core*						object_to_cook	= VOSTOK_NEW_IMPL( g_allocator, weapon_core );
 
-	// FUNCTION BODY
-	// <0x5a05ca>|0x00a|+0x00b:'138'
-	// <0x5a05d5>|0x015|+0x00c:'139'
-	// <0x5a05e1>|0x021|+0x022:'140'
-	// <0>
-	// <0x5a0603>|0x043|+0x051:'142'
-	// <0>
-	// <0x5a0654>|0x094|+0x01c:'144'
-	// ******
+	process_loading_weapon_core( parent, config_ptr, object_to_cook );
 }
 
 // STATE[STUB]
@@ -179,13 +166,18 @@ void weapon_core_cook::on_core_subresources_ready( resources::queries_result& da
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_cook::delete_resource(vostok::resources::resource_base*)
+// STATE[33.38%|PARTIAL]: delete_helper<doug_lea_allocator,resource_base> picks
+// a different inline shape than the target - target inlines strip_pointer
+// (mov ecx,[g_allocator]; push ecx) and passes 2 cdecl args; base out-of-lines
+// strip_pointer and passes &resource in edi. Same delta as weapon_ammunition_cook.
 void weapon_core_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY
-	// <0x59f129>|0x009|+0x013:'225'
-	// ******
+	VOSTOK_DELETE_IMPL( g_allocator, resource );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x3 | 187 | VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the delete_helper strip_pointer
+	// inline-vs-call/convention split, non-steerable LTCG.
 }
 
 // STATE[STUB]
@@ -308,16 +300,10 @@ void weapon_core_cook::on_weapon_states_ready( resources::queries_result& data, 
 	// ******
 }
 
-// STATE[STUB]
-// unsigned int survarium::weapon_core_cook::cooked_object_size(survarium::weapon_core&) const
+// STATE[100%|DONE]
 u32 weapon_core_cook::cooked_object_size( weapon_core& object_to_cook ) const
 {
-	return 0;
-
-	// FUNCTION BODY
-	// <0>
-	// <0x59f0b7>|0x007|+0x005:'312'
-	// ******
+	return sizeof( weapon_core );
 }
 
 } // namespace survarium

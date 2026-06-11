@@ -10,7 +10,7 @@
 
 namespace survarium {
 
-// STATE[94.32%|DONE]: LTCG for mutex
+// STATE[100%|DONE]
 player_stamina::player_stamina( ) :
 	m_max_value_factor				( 1.0f ),
 	m_spending_speed_factor			( 1.0f ),
@@ -22,14 +22,10 @@ player_stamina::player_stamina( ) :
 {
 }
 
-// STATE[90.87%|DONE]: LTCG for mutex
+// STATE[100%|DONE]
 player_stamina::player_stamina( player_stamina const& other )
 {
 	*this = other;
-
-	// FUNCTION BODY
-	// <0x5aae86>|0x036|+0x00c:'28'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -73,8 +69,10 @@ player_stamina& player_stamina::operator=( player_stamina const& other )
 	// ******
 }
 
-// STATE[INPROGRESS]: reads m_value (float), m_last_spending_time_in_ms (u32),
-// m_last_tick_time_in_ms (u32), m_lower_threshold_was_reached (bool). DCE'd, no base symbol.
+// STATE[0.00%|PARTIAL]: anchored in temp_include_all (was DCE'd/unpaired); every statement is
+// the r<T> cross-module wall - base inlines packet_reader::r<T>, target keeps it out-of-line -
+// so the fuzzy score bottoms out despite the aligned structure (same wall as
+// hand_to_weapon_ik_processor::deserialize at 10.34%).
 void player_stamina::deserialize( network_core::packet_reader& packet )
 {
 	m_value							= packet.r< float >( );
@@ -82,10 +80,15 @@ void player_stamina::deserialize( network_core::packet_reader& packet )
 	m_last_tick_time_in_ms			= packet.r< u32 >( );
 	m_lower_threshold_was_reached	= packet.r< bool >( );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x59b030); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x1b | 86 | m_value                       = packet.r< float >( );
+	// SIZE +0x15 | 87 | m_last_spending_time_in_ms    = packet.r< u32 >( );
+	// SIZE +0x15 | 88 | m_last_tick_time_in_ms        = packet.r< u32 >( );
+	// SIZE +0x15 | 89 | m_lower_threshold_was_reached = packet.r< bool >( );
+	// VERDICT: STRUCTURE MATCH (4/4) - all SIZE rows are r<T> kept out-of-line in target vs LTCG-inlined in base; cross-module wall, non-steerable.
 }
 
-// STATE[99.45%|DONE] LTCG for `binary_config_value::operator[]`.
+// STATE[100%|DONE]
 void player_stamina::load( configs::binary_config_value const& config )
 {
 	m_spending_threshold		= (float)config["spending_threshold"];
@@ -102,24 +105,6 @@ void player_stamina::load( configs::binary_config_value const& config )
 	m_regeneration_speed		= regeneration_speed;
 
 	m_max_carried_weight		= (float)config["max_carried_weight"];
-
-
-	// FUNCTION BODY
-	// <0x5aaf49>|0x009|+0x01a:'84'
-	// <0x5aaf63>|0x023|+0x01a:'85'
-	// <0>
-	// <0x5aaf7d>|0x03d|+0x017:'87'
-	// <0x5aaf94>|0x054|+0x00d:'88'
-	// <0x5aafa1>|0x061|+0x018:'89'
-	// <0>
-	// <0x5aafb9>|0x079|+0x017:'91'
-	// <0x5aafd0>|0x090|+0x00d:'92'
-	// <0>
-	// <0x5aafdd>|0x09d|+0x017:'94'
-	// <0x5aaff4>|0x0b4|+0x00d:'95'
-	// <0>
-	// <0x5ab001>|0x0c1|+0x01a:'97'
-	// ******
 }
 
 // STATE[100%|DONE]
@@ -281,14 +266,13 @@ bool player_stamina::can_be_spent( ) const
 	// ******
 }
 
-// STATE[99.75%|DONE]
+// STATE[99.75%|DONE]: push_back call reloc ICF fold-name + 4B frame pad, non-steerable
 void player_stamina::subscribe_on_depletion( player_stamina_subscriber* const subscriber )
 {
 	m_subscribers.push_back( subscriber );
 
-	// FUNCTION BODY
-	// <0x5ab0b9>|0x009|+0x00e:'208'
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// VERDICT: STRUCTURE MATCH - identical stream 0x1d both; residual is base frame sub esp,14h vs 10h + push_back reloc ICF-folded onto a sibling instantiation, non-steerable.
 }
 
 // STATE[100%|DONE]

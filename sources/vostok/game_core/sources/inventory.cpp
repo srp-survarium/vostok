@@ -59,7 +59,7 @@ profile_slot_enum item_slots[ITEM_COUNT] = {
 	quick_slot6,
 };
 
-// STATE[91.03%|DONE]
+// STATE[100%|DONE]
 inventory::inventory( ) :
 	m_active_slot	( max_slots_count ),
 	m_holder		( NULL ),
@@ -68,51 +68,43 @@ inventory::inventory( ) :
 }
 
 
-// STATE[71.08%|PARTIAL]
+// STATE[71.08%|PARTIAL]: intrusive_ptr operator T*/operator* inline-vs-call (LTCG), non-steerable
 void inventory::set_holder( inventory_holder* holder )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_holder ) );
 	m_holder = holder;
 
-	for ( u32 i = 0 ; i < max_slots_count ; ++i ) {
+	for ( u32 i = 0 ; i < max_slots_count ; ++i )
 		if ( m_slots[i].item )
 			m_slots[i].item->holder_assigned( );
-	}
 
-	// FUNCTION BODY[0x700420]: 6
-	// <0x700429>|0x009|+0x00c:'28'
-	// <0x700435>|0x015|+0x00c:'29'
-	// <0>
-	// <0x700441>|0x021|+0x018|[1]:'31'
-	// <0x700459>|0x039|+0x016:'32'
-	// <0x70046f>|0x04f|+0x022:'33'
-	// ******
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x10 | 78 | 		if ( m_slots[i].item )
+	// SIZE +0xd  | 79 | 			m_slots[i].item->holder_assigned( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target CALLs resource_ptr's safe-bool/operator->
+	// out-of-line; base INLINES them (the MFP-temp safe-bool compare + the operator-> assert
+	// eater visible inline). Per-site LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[70.28%|INCORRECT]
+// STATE[70.28%|PARTIAL]: intrusive_ptr operator T*/operator* inline-vs-call (LTCG), non-steerable
 void inventory::unset_holder( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_holder ) );
 
-	for ( u32 i = 0 ; i < max_slots_count ; ++i ) {
+	for ( u32 i = 0 ; i < max_slots_count ; ++i )
 		if ( m_slots[i].item )
 			m_slots[i].item->holder_removed( );
-	}
 
 	m_holder = NULL;
 
-	// FUNCTION BODY[0x7003a0]: 7
-	// <0x7003a9>|0x009|+0x00c:'38'
-	// <0>
-	// <0x7003b5>|0x015|+0x018|[1]:'40'
-	// <0x7003cd>|0x02d|+0x016:'41'
-	// <0x7003e3>|0x043|+0x022:'42'
-	// <0>
-	// <0x700405>|0x065|+0x00f:'44'
-	// ******
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts
+	// SIZE +0x10 | 95 | 		if ( m_slots[i].item )
+	// SIZE +0xd  | 96 | 			m_slots[i].item->holder_removed( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - same two rows as set_holder: target CALLs the
+	// safe-bool/operator-> out-of-line, base inlines them. LTCG, non-steerable.
 }
 
-// STATE[66.80%|PARTIAL]
+// STATE[69.33%|PARTIAL]: intrusive_ptr operator= and operator* inline-vs-call (LTCG), non-steerable
 void inventory::set_item(
 	const profile_slot_enum			slot,
 	inventory_item_ptr const&		item
@@ -123,15 +115,15 @@ void inventory::set_item(
 	m_slots[slot].item = item.c_ptr();	// sushi@MATCH: target does additional copying
 	item->set_inventory( this, slot );	// sushi@MATCH: -> inlined in target
 
-	// FUNCTION BODY[0x700c80]: 4
-	// <0x700c89>|0x009|+0x00c:'49'
-	// <0x700c95>|0x015|+0x00c:'50'
-	// <0x700ca1>|0x021|+0x040:'51'
-	// <0x700ce1>|0x061|+0x020:'52'
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x1c | 117 | m_slots[slot].item = item.c_ptr();
+	// SIZE +0xf  | 118 | item->set_inventory( this, slot );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES operator=(T*) (ctor+swap+dtor
+	// visible) but CALLs operator-> out-of-line; base does the exact reverse. Per-site LTCG
+	// inline-vs-call, non-steerable.
 }
 
-// STATE[57.04%|PARTIAL]: inventory_item_ptr constructor inlined
+// STATE[58.21%|PARTIAL]: inventory_item_ptr copy-ctor + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
 bool inventory::action(
 	const profile_slot_enum		slot_id,
 	bool						key_down
@@ -164,39 +156,19 @@ bool inventory::action(
 	}
 	return false;
 
-	// FUNCTION BODY[0x700b80]: 26
-	// <0x700b89>|0x009|+0x015:'57'
-	// <0x700b9e>|0x01e|+0x010:'58'
-	// <0>
-	// <0x700bae>|0x02e|+0x017|[1]:'60'
-	// <0x700bc5>|0x045|+0x016:'61'		switch ( behaviour_type )
-	// <0>								{
-	// <1>									case inventory_item::disabled:
-	// <2>
-	// <0x700bdb>|0x05b|+0x002:'65'			break;
-	// <0>
-	// <1>									case inventory_item::use_silent:
-	// <0x700bdd>|0x05d|+0x01d:'68'				iitem->action( key_down ); !!
-	// <0x700bfa>|0x07a|+0x002:'69'			break;
-	// <0>
-	// <1>									case inventory_item::inventory_active_item:
-	// <0x700bfc>|0x07c|+0x00e:'72'				if ( m_active_slot == slot_id )
-	// <0x700c0a>|0x08a|+0x011:'73'					return true;
-	// <0>
-	// <0x700c1b>|0x09b|+0x024:'75'				if ( m_holder->set_new_active_item( iitem ) )
-	// <0x700c3f>|0x0bf|+0x00c:'76'					m_active_slot = slot_id;
-	// <0>									break;
-	// <1>
-	// <2>									default: NODEFAULT( );
-	// <0x700c4b>|0x0cb|+0x011:'80'			return true;
-	// <0>								}
-	// <0x700c5c>|0x0dc|+0x00f:'82'		return false;
-	// ******
+	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
+	// SIZE +0x49 | 134 | inventory_item_ptr iitem = m_slots[slot_id].item;
+	// SIZE +0x4  | 135 | if ( iitem != NULL )
+	// SIZE +0x6  | 137 | 		inventory_item::action_behaviour_type const& behaviour_type = iitem->get_action_behaviuor( );
+	// SIZE +0x4  | 138 | 		switch ( behaviour_type )
+	// SIZE +0x7  | 144 | 				iitem->action( key_down );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target keeps the resource_ptr copy-ctor +
+	// operator T*()/operator-> out-of-line; base inlines them. Per-site LTCG, non-steerable.
 }
 
 
 
-// STATE[36.41%|PARTIAL]
+// STATE[58.45%|PARTIAL]: item_in_slot + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
 void inventory::setup_demo_profile( )
 {
 	for ( u32 i = 0 ; i < WEAPON_COUNT ; ++i )
@@ -226,41 +198,21 @@ void inventory::setup_demo_profile( )
 			iitem->set_amount( 100 );
 	}
 
-	// FUNCTION BODY[0x700a10]: 30
-	// <0x700a19>|0x009|+0x01c|[1]:'87'
-	// <0>
-	// <0x700a35>|0x025|+0x00d|[2]:'89'		profile_slot_enum current = weapon_slots[i];
-	// <0x700a42>|0x032|+0x032:'90'			weapon_core_ptr weapon = s
-	// <0x700a74>|0x064|+0x01c:'91'			if ( weapon )
-	// <0>
-	// <0x700a90>|0x080|+0x019:'93'				weapon->set_amount( 100 );
-	// <0x700aa9>|0x099|+0x01c:'94'				weapon->load_ammo_on_next_activate( );
-	// <0>
-	// <0x700ac5>|0x0b5|+0x00d:'96'			}
-	// <0>
-	// <1>
-	// <0x700ad2>|0x0c2|+0x018|[2]:'99'		for ( u32 i = 0 ; i < AMMO_COUNT ; ++i )
-	// <0>
-	// <0x700aea>|0x0da|+0x00d|[3]:'101'		profile_slot_enum current = ammunition_slots[i];
-	// <0>
-	// <0x700af7>|0x0e7|+0x00e:'103'			inventory_item_ptr& iitem = item_in_slot( current );
-	// <0x700b05>|0x0f5|+0x00c:'104'			if ( iitem )
-	// <0x700b11>|0x101|+0x012:'105'				iitem->set_amount( 100 );
-	// <0x700b23>|0x113|+0x002:'106'		}
-	// <0>
-	// <1>
-	// <0x700b25>|0x115|+0x018|[3]:'109'	for ( u32 i = 0 ; i < ITEM_COUNT ; ++i )
-	// <0>
-	// <0x700b3d>|0x12d|+0x00d|[4]:'111'		profile_slot_enum current = ammunition_slots[i];
-	// <0x700b4a>|0x13a|+0x00e:'112'			inventory_item_ptr& iitem = item_in_slot( current );
-	// <0>
-	// <0x700b58>|0x148|+0x00c:'114'
-	// <0x700b64>|0x154|+0x012:'115'
-	// <0x700b76>|0x166|+0x002:'116'
-	// ******
+	// STRUCTURE DIFF: target 19 stmts / base 19 stmts
+	// SIZE +0x1a | 182 | 		weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );
+	// SIZE -0x3  | 185 | 			weapon->set_amount( 100 );
+	// SIZE +0x2  | 193 | 		inventory_item_ptr& iitem = item_in_slot( current );
+	// SIZE +0x12 | 194 | 		if ( iitem )
+	// SIZE +0xc  | 195 | 			iitem->set_amount( 100 );
+	// SIZE +0x2  | 201 | 		inventory_item_ptr& iitem = item_in_slot( current );
+	// SIZE +0x12 | 202 | 		if ( iitem )
+	// SIZE +0xc  | 203 | 			iitem->set_amount( 100 );
+	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() and CALLs the
+	// resource_ptr safe-bool/operator-> out-of-line; base does the reverse. Per-site LTCG.
+	// Direct m_slots[current].item access REBUILT WORSE (0x97 vs 0x4c) - keep item_in_slot().
 }
 
-// STATE[59.17%|PARTIAL]
+// STATE[47.35%|PARTIAL]: item_in_slot + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
 void inventory::setup_from_profile( player_profile& profile, items_dictionary const& dict )
 {
 	profile_slot* slot;
@@ -312,66 +264,22 @@ void inventory::setup_from_profile( player_profile& profile, items_dictionary co
 		}
 	}
 
-	// FUNCTION BODY[0x700800]: 55
-	// <0>
-	// <1>
-	// <0x70080a>|0x00a|+0x01c|[1]:'123'	for ( u32 i = 0 ; i < WEAPON_COUNT ; ++i )
-	// <0>
-	// <0x700826>|0x026|+0x00d|[2]:'125'		profile_slot_enum current = weapon_slots[i];
-	// <0x700833>|0x033|+0x013:'126'			profile_slot* slot = &profile.slots[current];
-	// <0>
-	// <0x700846>|0x046|+0x009:'128'			if ( slot->item.id )
-	// <0>										{
-	// <0x70084f>|0x04f|+0x025|[3]:'130'			weapon_core_ptr weapon = static_cast_reso
-	// <0x700874>|0x074|+0x01a:'131'				weapon->set_amount( slot->item.condition_or_stack );
-	// <0x70088e>|0x08e|+0x01c:'132'				weapon->load_ammo_on_next_activate( );
-	// <0x7008aa>|0x0aa|+0x008:'133'			}
-	// <0x7008b2>|0x0b2|+0x005:'134'		}
-	// <0>
-	// <1>
-	// <0x7008b7>|0x0b7|+0x018|[2]:'137'	for ( u32 i = 0 ; i < AMMO_COUNT ; ++i )
-	// <0>									{
-	// <0x7008cf>|0x0cf|+0x00d|[3]:'139'
-	// <0x7008dc>|0x0dc|+0x013:'140'			slot = &profile.slots[current];
-	// <0>
-	// <0x7008ef>|0x0ef|+0x009:'142'			if ( slot->item.id )
-	// <0>
-	// <0x7008f8>|0x0f8|+0x00e|[4]:'144'			inventory_item_ptr& iitem = item_in_slot( current );
-	// <0>
-	// <1>
-	// <0x700906>|0x106|+0x013:'147'				const u32 amount =
-	// <0x700919>|0x119|+0x010:'148'				iitem->set_amount( amount );
-	// <0x700929>|0x129|+0x00f:'149'
-	// <0>
-	// <0x700938>|0x138|+0x002:'151'		}
-	// <0>
-	// <1>
-	// <0x70093a>|0x13a|+0x01c|[3]:'154'	for ( u32 i = 0 ; i < ITEM_COUNT ; ++i )
-	// <0>
-	// <0x700956>|0x156|+0x00d|[4]:'156'		profile_slot_enum current = ammunition_slots[i];
-	// <0x700963>|0x163|+0x013:'157'			slot = &profile.slots[current];
-	// <0>
-	// <0x700976>|0x176|+0x009:'159'			if ( slot->item.id )
-	// <0>										{
-	// <0x70097f>|0x17f|+0x00e|[5]:'161'			inventory_item_ptr& iitem = item_in_slot( current );
-	// <0x70098d>|0x18d|+0x00c:'162'				if ( iitem )
-	// <0>											{
-	// <0x700999>|0x199|+0x01a:'164'					if ( dict.item_by_id( current ) )
-	// <0>												{
-	// <1>
-	// <0x7009b3>|0x1b3|+0x013|[6]:'167'					const u32 amount = math::min(
-	// <0x7009c6>|0x1c6|+0x010:'168'						iitem->set_amount( amount );
-	// <0x7009d6>|0x1d6|+0x00f:'169'						slot->item.amount_in_inventory -= amount;
-	// <0x7009e5>|0x1e5|+0x002:'170'					} else
-	// <0x7009e7>|0x1e7|+0x013:'171'
-	// <0>
-	// <0x7009fa>|0x1fa|+0x005:'173'				}
-	// <0>										}
-	// <1>									}
-	// ******
+	// STRUCTURE DIFF: target 31 stmts / base 31 stmts
+	// SIZE +0x27 | 233 | 			weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );
+	// SIZE +0x18 | 247 | 			const u32 amount = math::min( ... );  (AMMO loop; aligner mispairs as ONLY rows)
+	// SIZE +0x11 | 248 | 			iitem->set_amount( amount );
+	// SIZE +0x16 | 261 | 			if ( iitem )
+	// SIZE +0x18 | 265 | 				const u32 amount = math::min( ... );
+	// SIZE +0x11 | 266 | 				iitem->set_amount( amount );
+	// SIZE +0x10 | 269 | 				iitem->set_amount( slot->item.condition_or_stack );
+	// (+ small +-0x1..0x4 rows on if/for/decl lines)
+	// VERDICT: STRUCTURE MATCH (shape ok) - 31/31 hand-aligned (the differ's AMMO-loop
+	// TRGT_ONLY/BASE_ONLY pairs are equal-size mispairs: t0xe<->b246, t0x13<->b247, t0x10<->b248,
+	// t0xf<->b249); locals incl. both `const u32 amount` match the PDB exactly. Residuals are
+	// item_in_slot()/resource_ptr operator/math::min(u32,u32) inline-vs-call, LTCG, non-steerable.
 }
 
-// STATE[65.84%|PARTIAL]
+// STATE[55.56%|PARTIAL]: item_in_slot + intrusive_ptr operators inline-vs-call (LTCG), non-steerable
 void inventory::unload_to_profile( player_profile& profile, items_dictionary const& dict )
 {
 	profile_slot* slot;
@@ -420,67 +328,31 @@ void inventory::unload_to_profile( player_profile& profile, items_dictionary con
 		}
 	}
 
-	// FUNCTION BODY[0x7005f0]: 47
-	// <0>
-	// <1>
-	// <0x7005fa>|0x00a|+0x01c|[1]:'182'	for ( auto i = 0 ; i < 2 ; ++i )
-	// <0>
-	// <0x700616>|0x026|+0x00d|[2]:'184'		profile_slot_enum current = weapon_slots[i];
-	// <0x700623>|0x033|+0x013:'185'			profile_slot* slot
-	// <0>
-	// <0x700636>|0x046|+0x009:'187'
-	// <0x70063f>|0x04f|+0x002:'188'
-	// <0>
-	// <0x700641>|0x051|+0x025:'190'
-	// <0x700666>|0x076|+0x00c:'191'			ASSERT( UNKNOWN_EXPRESSION );
-	// <0x700672>|0x082|+0x014:'192'			weapon->unload_ammo( );
-	// <0x700686>|0x096|+0x022:'193'			slot->item.condition_or_stack = weapon->amount( );
-	// <0x7006a8>|0x0b8|+0x00d:'194'
-	// <0>
-	// <0x7006b5>|0x0c5|+0x018|[2]:'196'	for ( u32 i = 0 ; i < 4 ; ++i )
-	// <0>
-	// <0x7006cd>|0x0dd|+0x00d|[3]:'198'
-	// <0x7006da>|0x0ea|+0x013:'199'
-	// <0>
-	// <0x7006ed>|0x0fd|+0x009:'201'
-	// <0x7006f6>|0x106|+0x002:'202'
-	// <0>
-	// <0x7006f8>|0x108|+0x015:'204'			inventory_item_ptr ammo =  item_in_slot( current );
-	// <0x70070d>|0x11d|+0x00c:'205'
-	// <0x700719>|0x129|+0x01c:'206'
-	// <0x700735>|0x145|+0x00d:'207'
-	// <0>
-	// <1>
-	// <0x700742>|0x152|+0x01c|[3]:'210'	for ( u32 i = 0 ; i < 13 ; ++i )
-	// <0>
-	// <0x70075e>|0x16e|+0x00d|[4]:'212'
-	// <0x70076b>|0x17b|+0x013:'213'
-	// <0>
-	// <0x70077e>|0x18e|+0x009:'215'			if ( slot->item.id )
-	// <0>
-	// <0x700787>|0x197|+0x00e|[5]:'217'			inventory_item_ptr& iitem = item_in_slot( current );
-	// <0x700795>|0x1a5|+0x00c:'218'				if ( iitem )
-	// <0>
-	// <0x7007a1>|0x1b1|+0x01a:'220'					if ( dict.item_by_id( slot->item.dict_id ).is_stack )
-	// <0x7007bb>|0x1cb|+0x01c:'221'
-	// <0x7007d7>|0x1e7|+0x002:'222'					else
-	// <0x7007d9>|0x1e9|+0x015:'223'
-	// <0>
-	// <0x7007ee>|0x1fe|+0x005:'225'
-	// <0>
-	// ******
+	// STRUCTURE DIFF: target 30 stmts / base 30 stmts
+	// SIZE +0x27 | 302 | 		weapon_core_ptr weapon = static_cast_resource_ptr< weapon_core_ptr >( item_in_slot( current ) );
+	// SIZE +0x49 | 316 | 		inventory_item_ptr ammo = item_in_slot( current );
+	// SIZE +0xd  | 318 | 		slot->item.amount_in_inventory += ammo->amount( );
+	// SIZE +0x12 | 329 | 			if ( iitem )
+	// SIZE +0xf  | 332 | 					slot->item.amount_in_inventory += iitem->amount( );
+	// SIZE +0xf  | 334 | 					slot->item.condition_or_stack = iitem->amount( );
+	// (+ small +-0x1..0x4 rows on for/decl lines)
+	// VERDICT: STRUCTURE MATCH (shape ok) - target INLINES item_in_slot() and keeps the
+	// resource_ptr copy-ctor/safe-bool/operator-> out-of-line; base does the reverse.
+	// Per-site LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[BLOCKED]
+// STATE[31.17%|PARTIAL]: resource_ptr safe-bool/operator-> inline-vs-call (LTCG), non-steerable
 static void call_item_remove( inventory_slot& slot )
 {
 	if ( slot.item )
 		slot.item->remove( );
 
-	// FUNCTION BODY
-	// <0x700376>|0x006|+0x00c:'231'
-	// <0x700382>|0x012|+0x018:'232'
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x12 | 357 | if ( slot.item )
+	// SIZE +0xf  | 358 | 	slot.item->remove( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - same safe-bool/operator-> rows as set_holder;
+	// target CALLs them out-of-line, base inlines. LTCG, non-steerable. (Was STATE[BLOCKED]
+	// with a stale carcass - the base symbol exists and pairs at 31.17%.)
 }
 
 // STATE[100%|DONE]
@@ -491,7 +363,8 @@ void inventory::remove( )
 	m_active_slot = max_slots_count;
 }
 
-// STATE[INPROGRESS]: serializes a slot's item unless its profile slot is in the ignored set. DCE'd, no base symbol.
+// STATE[49.49%|PARTIAL]: serializes a slot's item unless its profile slot is in the ignored set.
+// Emitted via the bind in inventory::serialize below (was DCE'd / no base symbol).
 static void call_item_serialize(
 	inventory_slot const&				slot,
 	network_core::udp_match_packet&		packet,
@@ -504,10 +377,23 @@ static void call_item_serialize(
 	if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
 		slot.item->serialize( packet, client_offset );
 
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f02f0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope. (slot.item guard combined to a single && to match the target's single-statement condition, mirroring call_item_deserialize.)
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x9  | 374 | profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
+	// SIZE +0x21 | 376 | if ( slot.item && std::find( ... ) == ignored_slots_end )
+	// SIZE +0xf  | 377 | 	slot.item->serialize( packet, client_offset );
+	// VERDICT: STRUCTURE MATCH (shape ok) - identical row set to call_item_deserialize:
+	// std::find/profile_slot_id/operator-> inline-vs-call, LTCG, non-steerable.
 }
 
-// STATE[PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
+// STATE[INLINED]: the target has NO standalone inventory::serialize symbol (LTCG inlined it
+// into its caller) but call_item_serialize @0x6f02f0 exists and is only reachable through this
+// bind - the function provably existed in the original TU; defined here to emit the helper.
+void inventory::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
+{
+	std::for_each( m_slots, m_slots + max_slots_count, boost::bind( call_item_serialize, _1, boost::ref( packet ), client_offset ) );
+}
+
+// STATE[46.64%|PARTIAL]: deserializes a slot's item unless its profile slot is in the ignored set.
 // Structure matched (combined && guard); residual is LTCG inline-vs-call SIZE.
 static void call_item_deserialize( inventory_slot& slot, network_core::packet_reader& reader )
 {
@@ -517,23 +403,19 @@ static void call_item_deserialize( inventory_slot& slot, network_core::packet_re
 	if ( slot.item && std::find( ignored_slots_start, ignored_slots_end, slot.item->profile_slot_id( ) ) == ignored_slots_end )
 		slot.item->deserialize( reader );
 
-	// STRUCTURE DIFF[target 0x6f0270 | base 0x4655b0]: target 4 / base 4 stmts (post-fix)
-	//   2: 0x00d <0x10> | 0x00d <0x7> | profile_slot_enum const* const	ignored_slots_end = ... + 7;   SIZE
-	//   3: 0x01d <0x35> | 0x014 <0x56> | if ( slot.item && std::find( ... ) == ignored_slots_end )   SIZE
-	//   4: 0x052 <0x1c> | 0x06a <0x2b> | slot.item->deserialize( reader );   SIZE
-	// ; aligned 1, size-diffs 3, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (fixed quantity) - combined the slot.item null-check and the
-	//   std::find guard into a single && condition (one statement) to match the target's single
-	//   L265 statement (both null-check and find-result branch to the same exit); base 5->4 stmts,
-	//   quantity-diffs 1->0; residual rows are LTCG inline-vs-call SIZE (find/profile_slot_id), non-steerable.
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x9  | 395 | profile_slot_enum const* const	ignored_slots_end	= ignored_slots_for_serialization + 7;
+	// SIZE +0x21 | 397 | if ( slot.item && std::find( ... ) == ignored_slots_end )
+	// SIZE +0xf  | 398 | 	slot.item->deserialize( reader );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the combined && guard (one statement) matches the
+	// target; residuals are std::find/profile_slot_id/operator-> inline-vs-call, LTCG, non-steerable.
 }
 
-// STATE[INPROGRESS]: for_each over the slot array, deserializing each non-ignored item. DCE'd, no base symbol.
+// STATE[100%|DONE]: was DCE'd; anchored from temp_include_all use_game_core_serialization,
+// pairs at 100% (0x84 bytes both sides).
 void inventory::deserialize( network_core::packet_reader& reader )
 {
 	std::for_each( m_slots, m_slots + max_slots_count, boost::bind( call_item_deserialize, _1, boost::ref( reader ) ) );
-
-	// VERDICT: STRUCTURE UNVERIFIED - DCE'd, no base symbol (target rva 0x6f04a0); needs an opaque anchor in temp_include_all - a follow-up matcher's job, out of my scope.
 }
 
 // STATE[100%|DONE]
