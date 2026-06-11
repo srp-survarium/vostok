@@ -1,5 +1,5 @@
 # A 2-byte `jmp short` row = a closing brace `}` (case blocks, braced loop bodies)
-tags: cpp:switch cpp:for | asm:jmp | topic:structure-shape
+tags: cpp:switch cpp:for cpp:while | asm:jmp | topic:structure-shape
 symptoms: +0x002 carcass step, N trailing 0x2 rows after a loop body, base body row +2 per missing one
 confidence: 8/10
 variants: else-block-double-jmp.md, rel8-rel32-brace-exit.md, for-head-statement-merges.md
@@ -19,4 +19,4 @@ case x:
 }
 ```
 Do NOT decide braces from "has a local" alone (mis-braced get_target_koef and earlier switches that way).
-Evidence: double_barreled fire_state ctor (16/16, 0x1c2 both sides - braces around all nested for levels, mirroring the reload sibling).
+Evidence: double_barreled fire_state ctor (16/16, 0x1c2 both sides - braces around all nested for levels, mirroring the reload sibling); single-statement `while` twin pair in network_world: clear_resources braced (4 stmts, body call +0xd then separate +0x2 backedge) vs process_orders brace-less (3 stmts, one +0xf body row INCLUDING the backedge jmp) - both 100% only with the right brace choice.

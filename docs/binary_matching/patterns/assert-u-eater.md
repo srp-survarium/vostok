@@ -21,5 +21,8 @@ push <v2>; push <v1>; call <folded-empty>; add esp, M      ; expression_eater( .
 ; a class-typed arg is copied by value: sub esp,0x84; rep movsd (e.g. animation_lexeme)
 ```
 If the pushed args are the function's OWN otherwise-unused parameters, it is
-VOSTOK_UNREFERENCED_PARAMETERS, not an assert (identical shape; see variants).
-Evidence: weapon_user_animations_selector::on_broken_limb_affect L337 ASSERT_T_U byte-perfect; weapon_core_idle_state ctor ASSERT_CMP_U(count,==,4) 100%; weapon_and_hands_expression L32 ASSERT_U; ASSERT_U->UNREFERENCED swap (push 0 gone) took idle/aimed weapon_and_hands_expression 85.65->87.52 each.
+VOSTOK_UNREFERENCED_PARAMETERS, not an assert (identical shape; see variants). The
+never-taken block EVALUATES its expression as REAL code - recover it exactly; the first
+call is the inlined `identity<bool>(false)` (returns the byte's address in eax), not an
+empty stub.
+Evidence: weapon_user_animations_selector::on_broken_limb_affect L337 ASSERT_T_U byte-perfect; weapon_core_idle_state ctor ASSERT_CMP_U(count,==,4) 100%; weapon_and_hands_expression L32 ASSERT_U; ASSERT_U->UNREFERENCED swap (push 0 gone) took idle/aimed weapon_and_hands_expression 85.65->87.52 each; network/match_client_impl::on_packet_received L48 ASSERT_U( reader.eof( ) ) (target 0x765d90 +0x3a).
