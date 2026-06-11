@@ -8,74 +8,68 @@
 namespace survarium {
 
 // STATE[STUB]
-// survarium::weapon_dispersion_calculator::weapon_dispersion_calculator()
-weapon_dispersion_calculator::weapon_dispersion_calculator( )
+weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
+	m_one_shoot_dispersion_amount	( 0.0f ),
+	m_reload_dispersion_amount		( 0.0f ),
+	m_growth_speed					( 5.0f ),
+	m_aiming_speed					( 0.0f ),
+	m_max_value						( 1.0f ),
+	m_target_coeff					( 0.0f ),
+	m_current_coeff					( 0.0f ),
+	m_current_time					( 0 )
 {
-	// FUNCTION BODY
-	// <0x58f880>|0x000|+0x080:'21'	{
-	// <0>
-	// <0x58f900>|0x080|      :'23'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::tick(const unsigned int)
-void weapon_dispersion_calculator::tick( u32 current_time_in_ms )
+// STATE[94.46%|PARTIAL]: frame is 4 bytes short (sub esp,14h vs 18h); source
+// logic and structure match the target (13 base stmts vs 14 target - the extra is
+// a TRGT_ONLY short-jmp relay pair from the frame gap). The missing 4-byte stack
+// slot shifts this at [ebp-0ch] vs [ebp-10h], cascading through every member access.
+// STRUCTURE DIFF: target 14 stmts / base 13 stmts
+// SIZE +0x8 | if ( dt != 0.0f && m_current_coeff != m_target_coeff )
+// TRGT_ONLY 0x04 | target line 42 (short-jmp relay pair)
+// SIZE +0x4 | m_current_coeff = math::max(...)
+// VERDICT: STRUCTURE MATCH (shape ok) - quantity delta is the frame-gap relay jmp,
+// SIZE deltas are ebp-offset cascades from the 4-byte phantom slot. Non-steerable.
+void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 {
-	// LOCALS
-	// float 						dt
-	// ******
+	if ( !m_current_time )
+	{
+		m_current_time = current_time_in_ms;
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <0x58f999>|0x009|+0x009:'28'
-	// <0>
-	// <0x58f9a2>|0x012|+0x009:'30'
-	// <0x58f9ab>|0x01b|+0x005:'31'
-	// <0>
-	// <0x58f9b0>|0x020|+0x00b:'33'
-	// <0x58f9bb>|0x02b|+0x005:'34'
-	// <0x58f9c0>|0x030|+0x01f:'35'
-	// <0>
-	// <0x58f9df>|0x04f|+0x009:'37'
-	// <0x58f9e8>|0x058|+0x032:'38'
-	// <0>
-	// <1>
-	// <0x58fa1a>|0x08a|+0x027:'41'
-	// <0x58fa41>|0x0b1|+0x004:'42'
-	// <0x58fa45>|0x0b5|+0x011:'43'
-	// <0>
-	// <0x58fa56>|0x0c6|+0x030:'45'
-	// <0>
-	// <1>
-	// <0x58fa86>|0x0f6|+0x011:'48'
-	// <0>
-	// <0x58fa97>|0x107|+0x02a:'50'
-	// <0>
-	// <1>
-	// ******
+	if ( m_current_time >= current_time_in_ms )
+		return;
+
+	const float dt = (float)( current_time_in_ms - m_current_time ) * 0.001f;
+
+	m_current_time = current_time_in_ms;
+
+	m_target_coeff = math::max( m_target_coeff - m_aiming_speed * dt, 0.0f );
+
+	if ( dt != 0.0f && m_current_coeff != m_target_coeff )
+	{
+		if ( m_current_coeff > m_target_coeff )
+		{
+			m_current_coeff = math::max( m_current_coeff - m_aiming_speed * dt, m_target_coeff );
+		}
+		else if ( m_current_coeff < m_target_coeff )
+		{
+			m_current_coeff = math::min( m_current_coeff + m_growth_speed * dt, m_target_coeff );
+		}
+	}
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::fire()
+// STATE[100%|DONE]
 void weapon_dispersion_calculator::fire( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f959>|0x009|+0x024:'58'
-	// <0>
-	// ******
+	m_target_coeff = math::min( m_target_coeff + m_one_shoot_dispersion_amount, m_max_value );
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::reload()
+// STATE[100%|DONE]
 void weapon_dispersion_calculator::reload( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f919>|0x009|+0x025:'65'
-	// <0>
-	// ******
+	m_target_coeff = math::min( m_target_coeff + m_reload_dispersion_amount, m_max_value );
 }
 
 // STATE[100%|DONE]
