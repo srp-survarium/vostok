@@ -62,6 +62,9 @@ void match_client::create_client( vostok::network_core::udp_network_flow_emulato
 	vostok::threading::interlocked_exchange_pointer( (pvoid&)*m_client, temp );
 	( *m_client )->set_on_packet_received	( boost::bind( &match_client::on_packet_received, this, _1, _2 ) );
 	( *m_client )->set_on_disconnect		( boost::bind( &match_client::on_disconnect, this, _1 ) );
+
+	// STRUCTURE DIFF: target 5 stmts / base 5 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - set_on_disconnect's function1::operator= inline-vs-call; non-steerable LTCG.
 }
 
 // STATE[54.18%|PARTIAL]: structure 2/2; residual = base INLINES the intrusive_ptr
@@ -74,6 +77,10 @@ void match_client::create_responses_packets_allocator( )
 	m_response_packets_allocator	= VOSTOK_NEW_IMPL( m_world.responses_allocator( ), udp_match_fixed_packets_allocator< 8192 > ) (
 		m_world.responses_allocator( )
 	);
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x3d | 76 | );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is intrusive_ptr::operator=(T*) inlined in base (target calls esi-promoted COMDAT); non-steerable LTCG.
 }
 
 // STATE[94.58%|PARTIAL]: structure 3/3 clean; residual is in the init list -
@@ -119,6 +126,9 @@ void match_client::create_responses_packets_allocator( )
 client_destroyer::~client_destroyer( )
 {
 	VOSTOK_DELETE_IMPL		( m_orders_allocator, m_client );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts (aligner: STRUCTURE MATCH)
+	// VERDICT: STRUCTURE MATCH - byte delta is the compiler-emitted m_responses_allocator ~intrusive_ptr tail (base inlines, target calls); LTCG wall.
 }
 
 // STATE[0%|PARTIAL]: objdiff scores None (body too divergent to pair, not a
@@ -131,6 +141,11 @@ void client_destroyer::execute( )
 {
 	VOSTOK_DELETE_IMPL		( *vostok::network::g_allocator, *m_client );
 	m_responses_allocator	= 0;
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x4  | 132 | VOSTOK_DELETE_IMPL		( *vostok::network::g_allocator, *m_client );
+	// SIZE +0x3c | 133 | m_responses_allocator	= 0;
+	// VERDICT: STRUCTURE MATCH - +0x3c is intrusive_ptr::operator=(0) inlined in base (target calls esi-promoted COMDAT, same row as ~match_client); +0x4 is the strip_pointer fold; objdiff None is a pairing artifact, not structure.
 }
 
 // STATE[50.09%|PARTIAL]: structure 3/3; residual = base inlines the
@@ -146,6 +161,11 @@ void client_destroyer::execute( )
 	);
 	m_response_packets_allocator	= 0;
 	m_world.add_order		( order );
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x14 | 146 | );
+	// SIZE +0x3c | 147 | m_response_packets_allocator	= 0;
+	// VERDICT: STRUCTURE MATCH - +0x3c verified in asm: target calls intrusive_ptr::operator= COMDAT (esi this, ecx 0), base inlines set/swap/decrement body; +0x14 is the destroyer-ctor intrusive_ptr copy-ctor inline; LTCG wall.
 }
 
 // STATE[88.33%|PARTIAL]: structure 2/2; residual = the by-value bind copy of
@@ -164,6 +184,9 @@ void match_client::on_connected(
 				boost::bind( m_on_connected, connection_error, handshaking_error, socket_error, lobby_error )
 			)
 		);
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - the by-value function4 bind copy lowering (function-ctor + assign_to_own vs target's direct templated ctor); non-steerable LTCG.
 }
 
 // STATE[67.55%|PARTIAL]: structure 3/3; residuals = `m_on_connected = callback`
@@ -190,6 +213,11 @@ void match_client::connect(
 			boost::bind( &match_client_impl::connect, boost::ref( *m_client ), _1, port, current_time_in_ms, _2, on_connected )
 		)
 	);
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x20 | 181 | m_on_connected			= callback;
+	// SIZE -0x31 | 192 | );
+	// VERDICT: STRUCTURE MATCH - operator= copy-swap-clear inlined in base (+0x20) and the connect_order-ctor function-copy folds the TARGET inlines deeper (-0x31); both sides of the same LTCG wall.
 }
 
 // STATE[100%|DONE]
@@ -270,6 +298,9 @@ void match_client::on_packet_received( const u8 message_type, vostok::network_co
 			)
 		);
 	}
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - intrusive_ptr operator* / packet_reader::pointer() per-call-site inline-vs-call + function1 temp slots; non-steerable LTCG.
 }
 
 // STATE[100%|DONE]
@@ -298,6 +329,9 @@ vostok::network_core::udp_match_packet* match_client::new_packet( const u8 messa
 
 	match_client_impl::construct_packet	( m_packets_orderer, *result, message_type );
 	return					result;
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (SIZE-only)
+	// VERDICT: STRUCTURE MATCH - intrusive_ptr operator* inlined in base (target calls eax-promoted COMDAT); non-steerable LTCG.
 }
 
 // STATE[100%|DONE]

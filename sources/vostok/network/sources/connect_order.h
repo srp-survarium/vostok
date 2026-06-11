@@ -50,6 +50,9 @@ public:
 			network_core::udp_match_packet* temp	= const_cast< network_core::udp_match_packet* >( m_packet );
 			network_core::delete_udp_match_packet	( *m_packets_allocator, temp );
 		}
+
+		// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
+		// VERDICT: STRUCTURE MATCH - intrusive_ptr operator* + member ~intrusive_ptr inlined in base (target calls COMDATs); non-steerable LTCG.
 	}
 
 	// STATE[100%|DONE]
