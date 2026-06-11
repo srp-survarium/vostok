@@ -63,8 +63,12 @@ def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
         sys.exit(f"[regen-ninja] vcproj2ninja did not produce {probe}")
 
 
-def regenerate(dry_run: bool = False) -> list[str]:
-    """Regenerate and merge; return the relative paths that changed."""
+def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
+    """Regenerate and merge; return the relative paths that changed.
+
+    By default only the ninja graph is regenerated.  Pass compdb=True to also
+    regenerate compile_commands.json + clangd-vfs.yaml (include-invariant,
+    needed only for IDE support, not for building)."""
     changed: list[str] = []
     with tempfile.TemporaryDirectory(prefix="ninja_regen_") as tmp:
         tmp_dir = Path(tmp)
@@ -103,7 +107,8 @@ def regenerate(dry_run: bool = False) -> list[str]:
     for rel in changed:
         log(f"  {rel}")
 
-    changed += regenerate_compdb(dry_run=dry_run)
+    if compdb:
+        changed += regenerate_compdb(dry_run=dry_run)
     return changed
 
 
@@ -140,8 +145,11 @@ def main() -> None:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true",
                     help="report the delta, write nothing")
+    ap.add_argument("--compdb", action="store_true",
+                    help="also regenerate compile_commands.json + clangd-vfs.yaml "
+                         "(include-invariant; needed only for IDE support)")
     args = ap.parse_args()
-    regenerate(dry_run=args.dry_run)
+    regenerate(dry_run=args.dry_run, compdb=args.compdb)
 
 
 if __name__ == "__main__":
