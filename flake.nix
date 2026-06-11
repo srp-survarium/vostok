@@ -330,6 +330,11 @@
           pkgs.xxd
           pkgs.jq
 
+          # clangd - source navigation/LSP over the generated
+          # compile_commands.json (clang is a READER here; MSVC8 under Wine
+          # stays the only build truth)
+          pkgs.clang-tools
+
           # objdiff - GUI + CLI for comparing base vs target objects
           objdiff
           objdiff-cli

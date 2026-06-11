@@ -44,6 +44,14 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   ```
   (`--view callees`/`info` for callee names + PDB-recorded locals; `--rva 0x<target>` to
   pin an overload.)
+- **Navigate SOURCE with clangd, not grep**, when you need where-is-it/who-uses-it
+  across the 2k-file tree (`scripts/clangd_query.py`):
+  ```
+  python3 scripts/clangd_query.py symbol <fuzzy-name>        # find decls/defs by name
+  python3 scripts/clangd_query.py refs  <file> <line>        # all call/use sites
+  python3 scripts/clangd_query.py hover <file> <line> [col]  # resolved type at point
+  ```
+  pdb_fetch answers the BINARY side; clangd answers the source graph.
 - **Write** a first approximation in the `.cpp` per MATCHING.md.
 - **Match the SHAPE the asm dictates BEFORE building** (source-steerable, not LTCG -
   fixing up front saves rebuilds):

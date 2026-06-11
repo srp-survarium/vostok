@@ -1,0 +1,14 @@
+# clangd over the generated compile_commands.json (regen_ninja.py emits it on
+# every rebuild). Navigation only: clang is a READER of this MSVC8-dialect
+# code; the Wine build is the sole verdict on correctness.
+CompileFlags:
+  CompilationDatabase: .
+  # The dialect errors clang cannot be talked out of (plus their knock-on
+  # conversion cascades) exceed the default ~20 error limit, which would ABORT
+  # the parse mid-TU and lose the AST below the abort point. clangd's command
+  # mangler drops the flag when it comes from the compdb - it must live here.
+  Add: [-ferror-limit=0]
+Diagnostics:
+  # MSVC8-isms clang's compat mode doesn't model (non-POD varargs eaters,
+  # qualified forward decls, lax template matching, ...) - not actionable.
+  Suppress: "*"
