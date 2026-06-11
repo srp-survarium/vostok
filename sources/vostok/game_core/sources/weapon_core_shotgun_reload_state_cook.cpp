@@ -5,36 +5,46 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_state_cook.h>
 
+#include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include "game_core_memory.h"
+
 namespace survarium {
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook()
+// STATE[100%|DONE]
 weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
-	// FUNCTION BODY
-	// <0x590150>|0x000|+0x010:'29'	{
-	// <0>
-	// <0x590160>|0x010|      :'31'	}
-	// ******
 }
 
-// STATE[STUB]
-// vostok::mutable_buffer survarium::weapon_core_shotgun_reload_state_cook::allocate_resource(vostok::resources::query_result_for_cook&, vostok::const_buffer, bool)
+// STATE[41.38%|PARTIAL]: the guarded-eater statement was VOSTOK_UNREFERENCED_PARAMETERS
+// (identity(false) guard + variadic helper taking in_query BY VALUE - the 0x258 rep movsd
+// copy), not an ASSERT; residual is the mutable_buffer(pvoid,u32) ctor inlined to two
+// field stores in target vs the out-of-line uint2::uint2 COMDAT-fold call in base.
 mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	// FUNCTION BODY
-	// <0x5901ab>|0x00b|+0x03d:'35'
-	// <0x5901e8>|0x048|+0x02e:'36'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETERS( in_query, raw_file_data, file_exist );
+	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_shotgun_reload_state ), "weapon_core_shotgun_reload_state" ), sizeof( weapon_core_shotgun_reload_state ) );
+
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0x6 | 25 | return mutable_buffer( VOSTOK_MALLOC_IMPL( ... ), sizeof( ... ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - the eater row now matches byte-for-byte; sole SIZE
+	// is the mutable_buffer ctor inline-vs-call, non-steerable LTCG.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state_cook::deallocate_resource(void*)
+// STATE[55.64%|PARTIAL]: target calls free_helper<doug_lea_allocator,resource_base>
+// OUT-OF-LINE (lea edi,[ebp+8]=&buffer; mov ecx,eax=allocator; call free_helper);
+// base INLINES the free_helper wrapper - it inlines the `if(!pointer) return` null
+// check and calls free_helper_impl directly, spilling the allocator to an extra
+// [ebp-4] temp (sub esp,8 vs target push ecx). Same inline-depth divergence as
+// weapon_core_cook::delete_resource; the allocator/type are correct (g_allocator
+// pointer, T=resource_base).
 void weapon_core_shotgun_reload_state_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY
-	// <0x590178>|0x008|+0x014:'41'
-	// ******
+	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
+
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0xf | 53 | VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the free_helper wrapper
+	// inline-vs-call, non-steerable LTCG.
 }
 
 // STATE[STUB]
@@ -237,22 +247,11 @@ void weapon_core_shotgun_reload_state_cook::on_subresources_ready( resources::qu
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state_cook::destroy_resource(vostok::resources::unmanaged_resource*)
+// STATE[100%|DONE]
 void weapon_core_shotgun_reload_state_cook::destroy_resource( resources::unmanaged_resource* resource )
 {
-	// LOCALS
-	// weapon_core_shotgun_reload_state* wpn_state
-	// ******
-
-	// CALL SITE INFO
-	// <0x590143> -> void* <unknown>(u32)
-	// ******
-
-	// FUNCTION BODY
-	// <0x590119>|0x009|+0x01e:'181'
-	// <0x590137>|0x027|+0x00e:'182'
-	// ******
+	weapon_core_shotgun_reload_state*	wpn_state	= static_cast< weapon_core_shotgun_reload_state* >( resource );
+	wpn_state->~weapon_core_shotgun_reload_state( );
 }
 
 } // namespace survarium

@@ -23,7 +23,9 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
 ## Read first (source of truth - they win over this summary)
 1. `MATCHING.md` - how matched source must look.
 2. `agentic_loop.md` - the per-function loop (sections 1-9).
-3. `assembly_patterns.md` - asm -> source patterns learned so far.
+3. `docs/binary_matching/patterns/INDEX.md` - one line per known asm -> source pattern (cheap skim). Pull
+   individual `patterns/*.md` files on demand: grep the INDEX by `cpp:`/`asm:`/`topic:` tag or
+   symptom token and read only the hits (search protocol + schema in `assembly_patterns.md`).
 4. `loop_performance.md` - rebuild-reduction tips (still handy, though the rebuild is now fast - the loop is token-bound, not rebuild-bound).
 5. `docs/binary_matching/<module>/README.md` - your module's notes.
 
@@ -98,6 +100,11 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   - **Never ADD a function/symbol that isn't in the TARGET structure** to score it (a
     fabricated override, an invented split). A real target symbol living in its own `.cpp`
     is fine; inventing one to win a % is not - take the hit instead.
+  - **A `const` already in the source was put there by the structure - do NOT drop it.**
+    The PDB records const-ness of params/locals (`pdb_fetch --view info`/`structure`), and
+    that is the source of truth; existing `const` almost always traces back to it. Remove
+    one only when the structure itself proves the value is non-const there (e.g. the PDB
+    deliberately records it mutable) - never as cleanup, never to chase a %.
   - **Never modify ANOTHER unit's source to win THIS match.** Out-lining a *different*
     unit's empty method so your call site emits `call` instead of inlining `{}` is off-limits
     - that out-line, if the target really keeps it standalone, belongs to THAT unit's own PR.
@@ -122,16 +129,18 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   `// STRUCTURE DIFF: ... // VERDICT:` block left in its body (the structure-verifier
   only embeds for a *residual*, i.e. <100%). Reduce the surviving marker to a BARE
   `// STATE[100%|DONE]` - no inline *why*, no stmt-count restatement: a clean 100% needs no
-  inline rationale; any reusable asm->source trick goes to `assembly_patterns.md`.
+  inline rationale; any reusable asm->source trick goes to `patterns/` (new file + INDEX.md line).
 - **Lean source - rationale in the commit message, NOT a `.md` trail.** Keep only the
   `// STATE[NN%|TAG]: reason` marker in the `.cpp`; tag deliberate shaping with
   `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior `sushi@...` notes). Do NOT write a
   per-function `.md` (we don't keep them). Put the run narrative - what you tried, the
   source variants + their %s - in the PR/commit message, and promote any reusable
-  asm->source mapping to `assembly_patterns.md`. Strip any log line (`LOG_*`, `printf`,
+  asm->source mapping to `docs/binary_matching/patterns/`. Strip any log line (`LOG_*`, `printf`,
   trace) the target does not emit.
-- **Append new learnings:** a new asm->source mapping to `assembly_patterns.md`; a
-  rebuild-saving trick to `loop_performance.md`.
+- **Record new learnings:** a new asm->source mapping = a new file under
+  `docs/binary_matching/patterns/` + one `patterns/INDEX.md` line, same commit (schema + tags in
+  `assembly_patterns.md`; merge into an existing pattern file when it is the same lesson). A
+  rebuild-saving trick goes to `loop_performance.md`.
 - **Never force-push or rewrite a pushed branch** (`--force`/`--amend` after first push
   orphans stacked PRs and destroys the before/after). Pre-first-push squash is fine;
   after that, revise by a NEW commit + plain push.

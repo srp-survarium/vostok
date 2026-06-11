@@ -19,32 +19,28 @@
 
 namespace survarium {
 
-// STATE[94.90%|DONE]
+// STATE[100%|DONE]
 booby_trap_core::booby_trap_core( ) :
 	m_owner			( NULL ),
 	m_trap_state	( booby_trap_state_removed ),
 	m_state_timer	( 0 )
 {
 	m_transform.identity( );
-
-	// FUNCTION BODY
-	// <0x59be6a>|0x0da|+0x00e:'26'
-	// ******
 }
 
-// STATE[14.86%|PARTIAL]
+// STATE[14.86%|PARTIAL]: delete_helper out-of-line call in target vs inlined in base
 booby_trap_core::~booby_trap_core( )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries ); // sushi@MATCH: Deleter helper inlined
+	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries );
 	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
 
-	// FUNCTION BODY
-	// <0x59bed4>|0x054|+0x01c:'31'
-	// <0x59bef0>|0x070|+0x01c:'32'
-	// ******
+	// STRUCTURE DIFF: target 2 / base 2 stmts
+	// SIZE +0x2e | 34 | VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries );
+	// SIZE +0x2f | 35 | VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
+	// VERDICT: STRUCTURE MATCH - both SIZE rows are delete_helper out-of-line in target vs inlined in base, LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[84.87%|PARTIAL]
+// STATE[90.68%|PARTIAL]: new_helper::call out-of-line in target vs inlined malloc in base
 void booby_trap_core::load( configs::binary_config_value const& config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -58,7 +54,7 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 	collision_sensor::m_collision_geometries[0]->load( config["collision_sensor"]["collision_geometries"][0] );
 
 	usable_object::load( config["usable_object"] );
-	usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry ); // sushi@MATCH: Inlined one layer deeper in base
+	usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
 	usable_object::m_collision_geometries[0]->load( config["usable_object"]["collision_geometries"][0] );
 
 	if ( config.value_exists("hittable_object") )
@@ -66,26 +62,11 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 		hittable_object::load( config["hittable_object"] );
 	}
 
-	// FUNCTION BODY
-	// <0x59bf69>|0x009|+0x00c:'37'
-	// <0x59bf75>|0x015|+0x00c:'38'
-	// <0x59bf81>|0x021|+0x00c:'39'
-	// <0x59bf8d>|0x02d|+0x00c:'40'
-	// <0x59bf99>|0x039|+0x00c:'41'
-	// <0>
-	// <0x59bfa5>|0x045|+0x016:'43'
-	// <0x59bfbb>|0x05b|+0x047:'44'
-	// <0x59c002>|0x0a2|+0x032:'45'
-	// <0>
-	// <0x59c034>|0x0d4|+0x019:'47'
-	// <0x59c04d>|0x0ed|+0x047:'48'
-	// <0x59c094>|0x134|+0x032:'49'
-	// <0>
-	// <0x59c0c6>|0x166|+0x014:'51'
-	// <0>
-	// <0x59c0da>|0x17a|+0x019:'53'
-	// <0>
-	// ******
+	// STRUCTURE DIFF: target 13 / base 13 stmts
+	// SIZE +0xf | 54 | collision_sensor::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
+	// SIZE -0x2 | 55 | collision_sensor::m_collision_geometries[0]->load( config["collision_sensor"]["collision_geometries"][0] );
+	// SIZE +0xf | 58 | usable_object::m_collision_geometries[0] = VOSTOK_NEW_IMPL( g_allocator, collision_geometry );
+	// VERDICT: STRUCTURE MATCH - SIZE rows are new_helper<collision_geometry>::call out-of-line in target vs inlined in base, LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -93,7 +74,7 @@ void booby_trap_core::load_aabb( configs::binary_config_value const& __formal )
 {
 }
 
-// STATE[97.38%|DONE]
+// STATE[97.38%|PARTIAL]: config() out-of-line in target vs inlined in base
 void booby_trap_core::set_transform( float4x4 const& transform )
 {
 	m_transform = transform;
@@ -105,19 +86,12 @@ void booby_trap_core::set_transform( float4x4 const& transform )
 	if ( m_owner->config( ).defuse_by_hit )
 		hittable_object::set_transform( transform );
 
-	// FUNCTION BODY
-	// <0x59b3cb>|0x00b|+0x013:'69'
-	// <0>
-	// <0x59b3de>|0x01e|+0x021:'71'
-	// <0x59b3ff>|0x03f|+0x021:'72'
-	// <0>
-	// <0x59b420>|0x060|+0x00c:'74'
-	// <0x59b42c>|0x06c|+0x016:'75'
-	// <0x59b442>|0x082|+0x012:'76'
-	// ******
+	// STRUCTURE DIFF: target 6 / base 6 stmts
+	// SIZE -0x2 | 88 | if ( m_owner->config( ).defuse_by_hit )
+	// VERDICT: STRUCTURE MATCH - sole SIZE is booby_trap_set_core::config() out-of-line call in target vs inlined member read in base, LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[99.85%|DONE]
+// STATE[83.06%|PARTIAL]: bone_collision_data ctor out-of-line in target vs inlined in base
 void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_receiver* const receiver )
 {
 	buffer_vector< booby_trap_set_core::apply_damage > const& damage_parameters = m_owner->damage_parameters( );
@@ -129,23 +103,12 @@ void booby_trap_core::apply_damage( hit_initiator const* const initiator, hit_re
 		receiver->hit( initiator, bcd, it->hit_type, it->amount, it->armor_piercing, NULL );
 	}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x59b9d0>|0x010|+0x015:'86'
-	// <0x59b9e5>|0x025|+0x008:'87'
-	// <0x59b9ed>|0x02d|+0x009:'88'
-	// <0x59b9f6>|0x036|+0x013:'89'
-	// <0>
-	// <0x59ba09>|0x049|+0x013:'91'
-	// <0>
-	// <8>
-	// <0x59ba1c>|0x05c|+0x034:'101'
-	// <0>
-	// ******
+	// STRUCTURE DIFF: target 6 / base 6 stmts
+	// SIZE +0x14 | 105 | collision::bone_collision_data bcd( "", NULL, it->body_part );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is bone_collision_data ctor out-of-line in target vs fixed_string members built inline in base, LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[98.75%|DONE]
+// STATE[91.77%|PARTIAL]: holder() out-of-line in target vs inlined in base
 void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -167,26 +130,9 @@ void booby_trap_core::on_enter( buffer_vector<physics::base_physics_object *> co
 	if ( is_active( ) )
 		switch_to_state( booby_trap_state_fired );
 
-	// FUNCTION BODY
-	// <0x59bb19>|0x009|+0x00c:'107'
-	// <0x59bb25>|0x015|+0x00c:'108'
-	// <0>
-	// <0x59bb31>|0x021|+0x008:'110'
-	// <0x59bb39>|0x029|+0x009:'111'
-	// <0x59bb42>|0x032|+0x017:'112'
-	// <0>
-	// <0x59bb59>|0x049|+0x041|[1]:'114'
-	// <0x59bb9a>|0x08a|+0x019:'115'
-	// <0>
-	// <0x59bbb3>|0x0a3|+0x00c:'117'
-	// <0x59bbbf>|0x0af|+0x00c:'118'
-	// <0>
-	// <0x59bbcb>|0x0bb|+0x016:'120'
-	// <0x59bbe1>|0x0d1|+0x005:'121'
-	// <0>
-	// <0x59bbe6>|0x0d6|+0x013:'123'
-	// <0x59bbf9>|0x0e9|+0x019:'124'
-	// ******
+	// STRUCTURE DIFF: target 13 / base 13 stmts
+	// SIZE +0xd | 126 | hit_initiator const*	initiator	= m_owner->get_inventory( ).holder( ).cast_to_base_player( );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is inventory::holder() out-of-line in target vs inlined in base, LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -212,7 +158,7 @@ void booby_trap_core::tick( u32 const time_delta_ms, u32 const current_time_ms )
 	}
 }
 
-// STATE[97.44%|DONE]
+// STATE[97.44%|PARTIAL]: config() out-of-line in target vs inlined in base
 void booby_trap_core::insert( physics::world* world, float4x4 const& transform, scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -230,22 +176,9 @@ void booby_trap_core::insert( physics::world* world, float4x4 const& transform, 
 
 	switch_to_state( booby_trap_state_armed );
 
-	// FUNCTION BODY
-	// <0x59ba69>|0x009|+0x00c:'151'
-	// <0x59ba75>|0x015|+0x00c:'152'
-	// <0>
-	// <0x59ba81>|0x021|+0x011:'154'
-	// <0>
-	// <0x59ba92>|0x032|+0x011:'156'
-	// <0>
-	// <0x59baa3>|0x043|+0x00c:'158'
-	// <0x59baaf>|0x04f|+0x012:'159'
-	// <0x59bac1>|0x061|+0x012:'160'
-	// <0x59bad3>|0x073|+0x016:'161'
-	// <0x59bae9>|0x089|+0x012:'162'
-	// <0>
-	// <0x59bafb>|0x09b|+0x00f:'164'
-	// ******
+	// STRUCTURE DIFF: target 10 / base 10 stmts
+	// SIZE -0x2 | 180 | if ( m_owner->config( ).defuse_by_hit )
+	// VERDICT: STRUCTURE MATCH - sole SIZE is booby_trap_set_core::config() out-of-line call in target vs inlined member read in base, LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -256,28 +189,15 @@ void booby_trap_core::remove( scheduler& scheduler )
 	unregister_tick( scheduler );
 
 	switch_to_state( booby_trap_state_removed );
-
-	// CALL SITE INFO
-	// <0x59b3a4> -> void <unknown>(scheduler&)
-	// <0x59b3b3> -> void <unknown>(booby_trap_state)
-	// ******
-
-	// FUNCTION BODY
-	// <0x59b389>|0x009|+0x00c:'169'
-	// <0>
-	// <0x59b395>|0x015|+0x011:'171'
-	// <0>
-	// <0x59b3a6>|0x026|+0x00f:'173'
-	// ******
 }
 
-// STATE[99.84%|DONE] sushi@TODO: What does this function do
+// STATE[99.84%|PARTIAL]: structure exact, residual is LTCG slot/reg noise
 bool booby_trap_core::use_initialize( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	if ( !m_usable_object_users.empty( ) ) // sushi@TODO: What does that mean
+	if ( !m_usable_object_users.empty( ) )
 		return false;
 
 	base_player* user_player = user->owner->cast_to_base_player( );
@@ -292,28 +212,11 @@ bool booby_trap_core::use_initialize( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
-	// <0x59b5c9>|0x009|+0x00c:'178'
-	// <0x59b5d5>|0x015|+0x00c:'179'
-	// <0>
-	// <0x59b5e1>|0x021|+0x013:'181'
-	// <0x59b5f4>|0x034|+0x004:'182'
-	// <0>
-	// <0x59b5f8>|0x038|+0x014:'184'
-	// <0x59b60c>|0x04c|+0x00c:'185'
-	// <0>
-	// <0x59b618>|0x058|+0x019:'187'
-	// <0x59b631>|0x071|+0x004:'188'
-	// <0>
-	// <0x59b635>|0x075|+0x011:'190'	m_usable_object_users.push_back( user );
-	// <0x59b646>|0x086|+0x023:'191'
-	// <0x59b669>|0x0a9|+0x00c:'192'
-	// <0>
-	// <0x59b675>|0x0b5|+0x002:'194'
-	// ******
+	// STRUCTURE DIFF: target 12 / base 12 stmts (clean - no diverging rows)
+	// VERDICT: STRUCTURE MATCH - exact; the <100% residual is register/stack-slot LTCG noise, non-steerable.
 }
 
-// STATE[97.35%|DONE]
+// STATE[82.75%|PARTIAL]: config() and math::min out-of-line in target vs inlined in base
 bool booby_trap_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -324,7 +227,7 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 
 	u32 passed_ms = user->current_time_ms - user->start_using_time_ms;
 	float engineer_factor = user->owner->usable_object_user_data( )->booster_engineer_use_time_factor;
-	u32 config_defuse_time = m_owner->config( ).defuse_time; // sushi@MATCH: config didn't inline in target
+	u32 config_defuse_time = m_owner->config( ).defuse_time;
 	u32 defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
 
 	user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, u32(100) ) : 100;
@@ -337,29 +240,10 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 
 	return true;
 
-	// FUNCTION BODY
-	// <0x59b469>|0x009|+0x00c:'199'
-	// <0x59b475>|0x015|+0x00c:'200'
-	// <0>
-	// <0x59b481>|0x021|+0x00c:'202'
-	// <0x59b48d>|0x02d|+0x00c:'203'
-	// <0>
-	// <0x59b499>|0x039|+0x00f:'205'
-	// <0x59b4a8>|0x048|+0x00f:'206'
-	// <0x59b4b7>|0x057|+0x011:'207'
-	// <0x59b4c8>|0x068|+0x022:'208'	u32 defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
-	// <0>
-	// <0x59b4ea>|0x08a|+0x032:'210'	user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, 100 ) : 100;
-	// <0>
-	// <0x59b51c>|0x0bc|+0x00e:'212'	if ( defuse_time_ms == 0 || passed_ms >= defuse_time_ms )
-	// <0>
-	// <1>
-	// <0x59b52a>|0x0ca|+0x017:'215'
-	// <0x59b541>|0x0e1|+0x004:'216'
-	// <0>
-	// <1>
-	// <0x59b545>|0x0e5|+0x002:'219'
-	// ******
+	// STRUCTURE DIFF: target 13 / base 13 stmts
+	// SIZE -0x2  | 252 | u32 config_defuse_time = m_owner->config( ).defuse_time;
+	// SIZE +0x15 | 255 | user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, u32(100) ) : 100;
+	// VERDICT: STRUCTURE MATCH - SIZE rows are config() and math::min<u32> out-of-line calls in target vs inlined (member read / branchless sbb-min) in base, LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -389,7 +273,7 @@ pcstr booby_trap_core::use_info( usable_object_user_data* user )
 	return can_defuse( user_player ) ? "st_defuse_trap" : "";
 }
 
-// STATE[95.27%|PARTIAL]
+// STATE[86.04%|PARTIAL]: holder() out-of-line in target vs inlined in base
 bool booby_trap_core::can_defuse( base_player const* user ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -398,57 +282,39 @@ bool booby_trap_core::can_defuse( base_player const* user ) const
 	base_player const* owner = m_owner->get_inventory( ).holder( ).cast_to_base_player( );
 	ASSERT( UNKNOWN_EXPRESSION_T( owner ) );
 
-	return user != owner // sushi@MATCH: This is written somehow differently
-		? user->team( ) != owner->team( )
-		: true;
+	return user == owner || user->team( ) != owner->team( );
 
-	// FUNCTION BODY
-	// <0x59b27a>|0x00a|+0x00c:'249'
-	// <0x59b286>|0x016|+0x00c:'250'
-	// <0>
-	// <0x59b292>|0x022|+0x026:'252'
-	// <0x59b2b8>|0x048|+0x00c:'253' 0x56
-	// <0>
-	// <0x59b2c4>|0x054|+0x03b:'255'
-	// ******
+	// STRUCTURE DIFF: target 5 / base 5 stmts
+	// SIZE +0xd | 305 | base_player const* owner = m_owner->get_inventory( ).holder( ).cast_to_base_player( );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is inventory::holder() out-of-line in target vs inlined in base, LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[100%|DONE]
 void booby_trap_core::defuse_completed( )
 {
 	switch_to_state( booby_trap_state_disarmed );
-
-	// FUNCTION BODY
-	// <0x59b0f7>|0x007|+0x00f:'260'
-	// ******
 }
 
-// STATE[86.20%|PARTIAL]
+// STATE[99.67%|DONE]
+// claude@MATCH: target merges the state load + both compares into ONE statement (one
+// line-table entry), so the original assigned inside the condition. claude@NOTE: the
+// target PDB records NO user local here and the temp sits BELOW the this-save (compiler
+// temp order) - a switch-dispatch-like shape - but a real switch over the 4/5 dense enum
+// values lowers to a jump table (cf. switch_to_state), not the target's je/jle chain, so
+// the if shape is kept; residual is only the [ebp-4]/[ebp-8] slot swap.
 void booby_trap_core::on_state_timer_finished( )
 {
-	if ( m_trap_state == booby_trap_state_armed		// sushi@MATCH: Maybe some inlined function
-		|| m_trap_state > booby_trap_state_disarmed // sushi@MATCH: This should never hit
-	)
+	booby_trap_state state;
+	if ( ( state = m_trap_state ) == booby_trap_state_armed || state > booby_trap_state_disarmed )
 		switch_to_state( booby_trap_state_disarmed );
 	else
 		m_owner->remove_trap( *this );
 
-	// FUNCTION BODY
-	// <0x59b099>|0x009|+0x018:'265'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59b0b1>|0x021|+0x00f:'269'		switch_to_state( booby_trap_state_disarmed );
-	// <0x59b0c0>|0x030|+0x002:'270'	else
-	// <0>
-	// <3>
-	// <0x59b0c2>|0x032|+0x01d:'275'		m_owner->remove_trap( *this );
-	// <0>
-	// <5>
-	// ******
+	// STRUCTURE DIFF: target 4 / base 4 stmts (clean - no diverging rows, 0x53 bytes both)
+	// VERDICT: STRUCTURE MATCH - byte-identical except the this/state slot swap (allocation noise).
 }
 
-// STATE[BLOCKED] switch
+// STATE[93.08%|PARTIAL]: config() kept as a call in target (LTCG no-inline of booby_trap_set_core::config); we inline it
 void booby_trap_core::switch_to_state( booby_trap_state new_state )
 {
 	if ( m_trap_state == booby_trap_state_armed )
@@ -503,72 +369,21 @@ void booby_trap_core::switch_to_state( booby_trap_state new_state )
 			m_owner->on_trap_disarmed( *this );
 			break;
 		}
+		default: NODEFAULT( ); // claude@MATCH: target jump table has no bounds check -> full contiguous range + NODEFAULT
 	}
 
 	m_trap_state = new_state;
 
-	// FUNCTION BODY
-	// <0x59b809>|0x009|+0x00c:'286'
-	// <0>
-	// <0x59b815>|0x015|+0x00c:'288'
-	// <0>
-	// <0x59b821>|0x021|+0x00e:'290'
-	// <0x59b82f>|0x02f|+0x00e:'291'
-	// <0x59b83d>|0x03d|+0x016:'292'
-	// <0x59b853>|0x053|+0x00e:'293'
-	// <0>
-	// <1>
-	// <0x59b861>|0x061|+0x010:'296'	switch ( new_state )
-	// <0>								{
-	// <1>									case booby_trap_state_removed:
-	// <2>									{
-	// <0x59b871>|0x071|+0x00c:'300'			ASSERT( UNKNOWN_EXPRESSION );
-	// <0x59b87d>|0x07d|+0x005:'301'			break;
-	// <0>									}
-	// <1>									case booby_trap_state_armed:
-	// <2>									{
-	// <0x59b882>|0x082|+0x00c:'305'			ASSERT( UNKNOWN_EXPRESSION );
-	// <0>
-	// <0x59b88e>|0x08e|+0x01a:'307'			m_state_timer = m_owner->config( ).armed_life_time;
-	// <0x59b8a8>|0x0a8|+0x005:'308'			break;
-	// <0>									}
-	// <1>									case booby_trap_state_fired:
-	// <2>									{
-	// <0x59b8ad>|0x0ad|+0x00c:'312'			ASSERT( UNKNOWN_EXPRESSION );
-	// <0x59b8b9>|0x0b9|+0x01a:'313'			m_state_timer = m_owner->config( ).fired_life_time;
-	// <0>
-	// <0x59b8d3>|0x0d3|+0x00c:'315'			if ( !m_state_timer )
-	// <0>										{
-	// <0x59b8df>|0x0df|+0x01f:'317'				m_owner->remove_trap( *this );
-	// <0x59b8fe>|0x0fe|+0x005:'318'				return;
-	// <0>										}
-	// <1>
-	// <0x59b903>|0x103|+0x020:'321'			m_owner->on_trap_fired( *this );
-	// <0x59b923>|0x123|+0x002:'322'			break;
-	// <0>									}
-	// <1>									case booby_trap_state_disarmed:
-	// <2>									{
-	// <0x59b925>|0x125|+0x00c:'326'			ASSERT( UNKNOWN_EXPRESSION );
-	// <0x59b931>|0x131|+0x01a:'327'			m_state_timer = m_owner->config( ).disarmed_life_time;
-	// <0>
-	// <0x59b94b>|0x14b|+0x00c:'329'			if ( !m_state_timer )
-	// <0>										{
-	// <0x59b957>|0x157|+0x01d:'331'				m_owner->remove_trap( *this );
-	// <0x59b974>|0x174|+0x002:'332'				break;
-	// <0>										}
-	// <1>
-	// <0x59b976>|0x176|+0x020:'335'			m_owner->on_trap_disarmed( *this );
-	// <0x59b996>|0x196|+0x002:'336'			break;
-	// <0>									}
-	// <1>								}
-	// <2>
-	// <3>
-	// <4>
-	// <0x59b998>|0x198|+0x00c:'342'
-	// ******
+	// STRUCTURE DIFF: target 27 / base 27 stmts
+	// SIZE -0x2 | 361 | if ( m_owner->config( ).defuse_by_hit )
+	// SIZE -0x2 | 376 | m_state_timer = m_owner->config( ).armed_life_time;
+	// SIZE -0x2 | 382 | m_state_timer = m_owner->config( ).fired_life_time;
+	// SIZE -0x2 | 386 | m_owner->remove_trap( *this );
+	// SIZE -0x2 | 396 | m_state_timer = m_owner->config( ).disarmed_life_time;
+	// VERDICT: STRUCTURE MATCH - config() rows are the out-of-line call in target vs inlined member read in base (LTCG inline-vs-call); remove_trap row is a 2-byte virtual-call register shuffle, non-steerable.
 }
 
-// STATE[87.85%|PARTIAL]: register_on_frame LTCG
+// STATE[74.26%|PARTIAL]: register_on_frame LTCG
 void booby_trap_core::register_tick( scheduler& scheduler )
 {
 	scheduler.register_on_frame(
@@ -577,9 +392,9 @@ void booby_trap_core::register_tick( scheduler& scheduler )
 		true
 	);
 
-	// FUNCTION BODY
-	// <0x59bc30>|0x010|+0x0d4:'347'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x28 | 480 | );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is scheduler::register_on_frame kept out-of-line in target (promoted bool-in-al convention) vs inlined into register_object + field stores in base, LTCG inline-vs-call, non-steerable from this TU (scheduler.h).
 }
 
 // STATE[99.75%|DONE]
@@ -587,39 +402,39 @@ void booby_trap_core::unregister_tick( scheduler& scheduler )
 {
 	scheduler.unregister( &m_scheduler_identifier );
 
-	// FUNCTION BODY
-	// <0x59b7e9>|0x009|+0x011:'352'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts (clean - no diverging rows)
+	// VERDICT: STRUCTURE MATCH - exact; <100% residual is LTCG register noise, non-steerable.
 }
 
-// STATE[PARTIAL]: owner serializes the world-object header, then trap state (u8), transform
-// position (float3) and Euler angles (float3). ASSERTs compiled out. trail: booby_trap_core_serialize.md
+// STATE[77.17%|PARTIAL]: ASSERT + owner serializes the world-object header, then trap
+// state (u8), transform position (float3) and Euler angles (float3).
 void booby_trap_core::serialize( network_core::udp_match_packet& packet ) const
 {
+	ASSERT( UNKNOWN_EXPRESSION );
 	m_owner->serialize_game_world_object_header( *this, packet );
 
 	packet.append( m_trap_state );
-	packet.append( (math::float3 const&)m_transform.c );
+	packet.append( (math::float3 const&)m_transform.c ); // sushi@TODO: implausible spelling - float4x4 should expose a getter (cf. get_angles_xyz below); find the real translation accessor and respell
 	packet.append( m_transform.get_angles_xyz( ) );
 
-	// STRUCTURE DIFF[target 0x58b750 | base 0x45f940]: target 5 / base 4 stmts
-	//   1: 0x00b <0xc> | 0x00b <0x24> | m_owner->serialize_game_world_object_header( *this, packet );   SIZE
-	//   2: 0x017 <0x26> | --          | L359   ONLY target
-	//   3: 0x03d <0x13> | 0x02f <0x1a> | packet.append( m_trap_state );   SIZE
-	//   4: 0x050 <0x15> | 0x049 <0x14> | packet.append( (math::float3 const&)m_transform.c );   SIZE
-	//   5: 0x065 <0x19> | 0x05d <0x22> | packet.append( m_transform.get_angles_xyz( ) );   SIZE
-	// ; aligned 0, size-diffs 4, quantity-diffs 1, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - same header-forward + 3 appends; SIZE/quantity are LTCG inline-vs-call of append/get_angles_xyz (target inlines the get_angles_xyz body as its own stmt L359), non-steerable.
+	// STRUCTURE DIFF: target 5 / base 5 stmts
+	// SIZE +0x7 | 409 | packet.append( m_trap_state );
+	// SIZE -0x1 | 410 | packet.append( (math::float3 const&)m_transform.c );
+	// SIZE +0x9 | 411 | packet.append( m_transform.get_angles_xyz( ) );
+	// VERDICT: STRUCTURE MATCH - ASSERT + header-forward byte-match; residual rows are the network_core packet append inline-vs-call wall, non-steerable.
 }
 
-// STATE[PARTIAL]: read trap state + position + angles, rebuild the transform (rotation *
-// translation), let the owner insert the trap, then drive the trap to the read state when it
-// is not the default armed state. ASSERTs compiled out. trail: booby_trap_core_serialize.md
+// STATE[18.10%|PARTIAL]: read trap state + position + angles, two ASSERT eaters, rebuild the
+// transform (rotation * translation), let the owner insert the trap, then drive the trap
+// to the read state when it is not the default armed state.
 void booby_trap_core::deserialize( network_core::packet_reader& reader )
 {
 	booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );
 	math::float3		position	= reader.r< math::float3 >( );
 	math::float3		angles		= reader.r< math::float3 >( );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 
 	float4x4			transform	= math::create_rotation( angles ) * math::create_translation( position );
 	m_owner->insert_trap( *this, transform );
@@ -627,15 +442,11 @@ void booby_trap_core::deserialize( network_core::packet_reader& reader )
 	if ( state != booby_trap_state_armed )
 		switch_to_state( state );
 
-	// STRUCTURE DIFF[target 0x58b680 | base 0x45faa0]: target 9 / base 7 stmts
-	//   1: 0x00f <0xe> | 0x00f <0x27> | booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );   SIZE
-	//   2: 0x01d <0xb> | 0x036 <0x4a> | math::float3		position	= reader.r< math::float3 >( );   SIZE
-	//   3: 0x028 <0xb> | 0x080 <0x4a> | math::float3		angles		= reader.r< math::float3 >( );   SIZE
-	//   4: 0x033 <0xc> | --          | L374   ONLY target
-	//   5: 0x03f <0xc> | --          | L375   ONLY target
-	//   7: 0x07f <0x2a> | 0x0fe <0x2c> | m_owner->insert_trap( *this, transform );   SIZE
-	// ; aligned 3, size-diffs 4, quantity-diffs 2, blank-gaps 1
-	// VERDICT: STRUCTURE MATCH (shape ok) - same 3 reads + transform build (rotation*translation) + insert_trap + guarded switch_to_state; SIZE/quantity are LTCG inline-vs-call of r<float3>/create_rotation/create_translation (target inlines them into L374/L375 stmts), non-steerable.
+	// STRUCTURE DIFF: target 9 / base 9 stmts
+	// SIZE +0x19 | 419 | booby_trap_state	state		= (booby_trap_state)reader.r< bool >( );
+	// SIZE +0x3f | 420 | math::float3		position	= reader.r< math::float3 >( );
+	// SIZE +0x3f | 421 | math::float3		angles		= reader.r< math::float3 >( );
+	// VERDICT: STRUCTURE MATCH - both ASSERT eaters + transform build + insert_trap + guarded switch byte-shape match; residual rows are packet_reader::r<T> inlined in base vs called in target - the network_core r<T> wall, non-steerable.
 }
 
 // STATE[100%|DONE]

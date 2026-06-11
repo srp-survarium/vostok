@@ -52,6 +52,9 @@ public:
 	// STATE[STUB]
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
+
+private:
+	// private in the target: mangled @@EAE (private virtual), not @@UAE - pairing depends on it
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) override;
 
 protected:

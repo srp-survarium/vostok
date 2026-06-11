@@ -7,6 +7,9 @@
 #include <vostok/game_core/player_logic_base_state.h>		// current_state().serialize/deserialize virtuals
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/player_input.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace survarium {
 
@@ -68,60 +71,44 @@ weapon_user_animations_selector::~weapon_user_animations_selector( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::tick()
+// STATE[68.66%|PARTIAL]
 void weapon_user_animations_selector::tick( )
 {
-	// CALL SITE INFO
-	// <0x59549a> -> player_input const& <unknown>() const
-	// <0x5954d2> -> player_input const& <unknown>() const
-	// ******
+	if ( !m_user->input( ).is_trying_to_sprint( ) )
+		m_forced_not_to_sprint = false;
+	else if ( !( m_user->input( ).is_sprinting( ) && is_weapon_in_idle( ) ) && current_state( ).id( ) == type_sprint )
+		m_forced_not_to_sprint = true;
 
-	// FUNCTION BODY
-	// <0x595489>|0x009|+0x02f:'66'
-	// <0>
-	// <0x5954b8>|0x038|+0x007:'68'
-	// <0>
-	// <0x5954bf>|0x03f|+0x04c:'70'
-	// <0>
-	// <0x59550b>|0x08b|+0x007:'72'
-	// <0>
-	// <0x595512>|0x092|+0x008:'74'
-	// <0>
-	// ******
+	m_logic.tick( );
+
+	// STRUCTURE DIFF: target 5 / base 5 stmts
+	// BASE_ONLY |  78 | m_forced_not_to_sprint = false;
+	// BASE_ONLY |  79 | else if ( !( m_user->input( ).is_sprinting( ) && is_weapon_in_idle( ) ) && current_state( ).id( ) == type_sprint )
+	// TRGT_ONLY |  -- | L<else-if stmt 0x4c>
+	// TRGT_ONLY |  -- | L<store-true stmt 0x7>
+	// VERDICT: STRUCTURE MATCH - 5/5 stmts, the ONLY rows are aligner drift from one SIZE wall: target calls player_input::is_sprinting out-of-line (a player_input_inline.h COMDAT the LTCG kept) while base inlines its mask body; first-if + m_logic.tick() match after the is_trying_to_sprint( ) fill-in.
 }
 
-// STATE[STUB]
-// survarium::player_logic_base_state& survarium::weapon_user_animations_selector::current_state() const
+// STATE[80.21%|PARTIAL]
+// claude@MATCH: the "deref idiom" is static_cast_checked - its non-DEBUG body is an
+// inline cref-taking cast wrapper; the target's `call <op*>` IS the static_cast_checked
+// instantiation kept out-of-line by LTCG (ICF-folded onto intrusive_ptr<...>::operator*,
+// body `mov eax,[eax]; ret`), taking &(the cref-bound fsm_state* temp).
 player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 {
-	// LOCALS
-	// player_logic_base_state* 	result
-	// ******
+	player_logic_base_state* const result = static_cast_checked< player_logic_base_state* >( m_logic.current_state( ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( result ) );
+	return *result;
 
-	// FUNCTION BODY
-	// <0x594a39>|0x009|+0x01a:'80'
-	// <0x594a53>|0x023|+0x00c:'81'
-	// <0x594a5f>|0x02f|+0x003:'82'
-	// ******
+	// STRUCTURE DIFF: target 3 / base 3 stmts
+	// SIZE -0x5 | 92 | player_logic_base_state* const result = static_cast_checked< player_logic_base_state* >( m_logic.current_state( ) );
+	// VERDICT: STRUCTURE MATCH - frame/slots/ASSERT byte-identical to target; sole SIZE is the static_cast_checked instantiation called out-of-line in target vs inlined copy in base, LTCG inline-vs-call, non-steerable.
 }
 
-// STATE[STUB]
-// stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::weapon_user_animations_selector::selected_animations(vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, const bool) const
+// STATE[100%|DONE]
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> weapon_user_animations_selector::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
-	// CALL SITE INFO
-	// <0x594e80> -> std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> <unknown>(mutable_buffer&, weapon_animation_parameters const&, const bool) const
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x594e59>|0x009|+0x02c:'96'
-	// ******
+	return current_state( ).selected_animations( buffer, weapon_parameters, is_third_view );
 }
 
 // STATE[STUB]
@@ -158,86 +145,77 @@ void weapon_user_animations_selector::activate( base_player& user, boost::functi
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::deactivate()
+// STATE[34.91%|PARTIAL]: set_initial_state(NULL) + the unsubscribe_animation_player call now
+// match. The L122 vtable-slot delta is FIXED: reordering base_player.h's two
+// unsubscribe_animation_player overload declarations moved the (reserved_channel_ids_enum,
+// pcvoid) overload to vtable slot +54h, so base now emits `mov eax,[edx+54h]; call eax` like
+// the target (was +58h). Remaining (separate) divergence is L124: target evaluates the
+// unsubscribe_from_affect args (push 4, &m_leg_damaged_subscriber@0x18) THEN derefs via
+// `call intrusive_ptr<booby_trap_core,...>::operator*` (frame `sub esp,8`), while base derefs
+// first and resolves operator* to a different fold (`dummy::nonnull`, frame `sub esp,10h`).
+// Same deref-idiom/arg-eval-order wall as current_state(); see
+// weapon_user_animations_selector_state_accessors.md.
 void weapon_user_animations_selector::deactivate( )
 {
-	// CALL SITE INFO
-	// <0x594eba> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// <0x594ed6> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
+	m_logic.set_initial_state( NULL );
+	m_user->unsubscribe_animation_player( animation::channel_id_on_animation_interval_end, this );
+	( *m_user->damage_model( ) ).unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
 
-	// FUNCTION BODY
-	// <0x594e99>|0x009|+0x00a:'121'
-	// <0x594ea3>|0x013|+0x019:'122'
-	// <0>
-	// <0x594ebc>|0x02c|+0x028:'124'
-	// ******
+	// STRUCTURE DIFF: target 3 / base 3 stmts
+	// SIZE +0x13 | 178 | ( *m_user->damage_model( ) ).unsubscribe_from_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is the resource_ptr operator* out-of-line call + arg-eval order in target vs inlined deref in base (shared intrusive_ptr_inline.h, not steerable from this TU).
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_ready_to_be_deactivated() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_ready_to_be_deactivated( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594c09>|0x009|+0x017:'129'
-	// ******
+	return current_state( ).is_ready_to_be_deactivated( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_sprinting() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_sprinting( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594bd9>|0x009|+0x01d:'134'
-	// ******
+	return current_state( ).id( ) == type_sprint;
 }
 
-// STATE[PARTIAL]: walks m_logic's state list to find the current state's index, appends
-// that u8, then forwards serialize to the current state. ASSERT( found ) is compiled out.
+// STATE[81.83%|PARTIAL]: walks m_logic's state list to find the current state's index,
+// appends that u8, then forwards serialize to the current state.
 void weapon_user_animations_selector::serialize( network_core::udp_match_packet& packet ) const
 {
 	u8							state_id	= 0;
 	bool						found		= false;
-	ai::fsm_state const*		current		= m_logic.current_state( );
+	ai::fsm_state const* const	current		= m_logic.current_state( );
 
-	for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next )
+	for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
 	{
 		if ( i == current )
 		{
 			found	= true;
 			break;
 		}
-		++state_id;
 	}
 
 	ASSERT( UNKNOWN_EXPRESSION_T( found ) );
 
 	packet.append( state_id );
-	static_cast< player_logic_base_state const* >( current )->serialize( packet );
+	static_cast_checked< player_logic_base_state const* >( current )->serialize( packet );
 
-	// STRUCTURE DIFF[target 0x584dc0 | base 0x51a690]: target 11 / base 12 stmts
-	//   4: 0x01a <0x25> | 0x01a <0x1a> | for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next )   SIZE
-	//   8: --          | 0x042 <0x9> | ++state_id;   ONLY base
-	//  11: 0x05b <0xd> | 0x059 <0x14> | packet.append( state_id );   SIZE
-	//  12: 0x068 <0x17> | 0x06d <0x11> | static_cast< player_logic_base_state const* >( current )->serialize( packet );   SIZE
-	// ; aligned 8, size-diffs 3, quantity-diffs 1, blank-gaps 3
-	// VERDICT: STRUCTURE MATCH (shape ok) - same fsm-walk + append + forward; ++state_id ONLY base is SIZE-drift mis-pairing (target folds the inc into the for-tail row 4 <0x25>), SIZE rows are inlined states().front()/append, non-steerable.
+	// STRUCTURE DIFF: target 11 / base 11 stmts
+	// SIZE +0x6 | 179 | ai::fsm_state const* const	current		= m_logic.current_state( );
+	// SIZE -0x2 | 181 | for ( ai::fsm_state const* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
+	// SIZE +0x7 | 192 | packet.append( state_id );
+	// VERDICT: STRUCTURE MATCH - forward via static_cast_checked now byte-matches; residuals are the accessor ret-temp coalescing (target stores [this+10h] direct), states().front() call-vs-inline, and the packet append wall, LTCG, non-steerable.
 }
 
-// STATE[PARTIAL]: reads the target state index, walks m_logic's state list to that index,
-// promotes it to the initial state, then forwards deserialize. ASSERT compiled out.
+// STATE[70.14%|PARTIAL]: reads the target state index, walks m_logic's state list to that
+// index, promotes it to the initial state, then forwards deserialize.
 void weapon_user_animations_selector::deserialize( network_core::packet_reader& reader )
 {
-	u8							target_state_id	= reader.r< bool >( );
+	u8 const					target_state_id	= reader.r< bool >( );
 	u8							state_id		= 0;
 	ai::fsm_state*				current			= NULL;
 
-	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
+	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id ) // sushi@TODO: same comma-in-for-tail doubt as serialize above
 	{
 		if ( state_id == target_state_id )
 		{
@@ -249,23 +227,18 @@ void weapon_user_animations_selector::deserialize( network_core::packet_reader& 
 	ASSERT( UNKNOWN_EXPRESSION_T( current ) );
 
 	m_logic.set_initial_state( current );
-	static_cast< player_logic_base_state* >( current )->deserialize( reader );
+	static_cast_checked< player_logic_base_state* >( current )->deserialize( reader );
 
-	// STRUCTURE DIFF[target 0x584d20 | base 0x51a5f0]: target 11 / base 11 stmts
-	//   1: 0x009 <0xb> | 0x009 <0x20> | u8							target_state_id	= reader.r< bool >( );   SIZE
-	//   4: 0x01f <0x2a> | 0x034 <0x23> | for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )   SIZE
-	//  11: 0x077 <0x17> | 0x085 <0x11> | static_cast< player_logic_base_state* >( current )->deserialize( reader );   SIZE
-	// ; aligned 8, size-diffs 3, quantity-diffs 0, blank-gaps 4
-	// VERDICT: STRUCTURE MATCH (shape ok) - read index + fsm-walk + set_initial_state + forward; SIZE rows are r<bool>/states().front() LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 11 / base 11 stmts
+	// SIZE +0x15 | 200 | u8 const					target_state_id	= reader.r< bool >( );
+	// SIZE -0x7  | 204 | for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next, ++state_id )
+	// VERDICT: STRUCTURE MATCH - forward via static_cast_checked now byte-matches; residuals are packet_reader::r<bool> inline (base) vs call (target) - the network_core r<T> wall - and states().front() call-vs-inline, non-steerable.
 }
 
-// STATE[STUB]
-// survarium::weapon_user_state_enum survarium::weapon_user_animations_selector::get_current_state_id() const
+// STATE[100%|DONE]: static_cast_checked reproduces the target's cref-bind + return temps.
 weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) const
 {
-	// FUNCTION BODY
-	// <0x594a09>|0x009|+0x021:'174'
-	// ******
+	return static_cast_checked< player_logic_base_state* >( m_logic.current_state( ) )->id( );
 }
 
 // STATE[STUB]
@@ -328,56 +301,43 @@ bool weapon_user_animations_selector::stand_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::set_animation_callback(char const*, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[78.28%|PARTIAL]: body byte-correct (subscribe_animation_player(channel_id,
+// animation_callback, callback_uid, managed_resource_ptr(), 0xff, NULL) at vtable+50h). The
+// residual is the base_player vtable arg-count/this-load shape: base emits one fewer pushed
+// arg and a `mov ecx,eax` this-setup vs the target's direct ecx. Rooted in base_player.h's
+// virtual overload/vtable layout (owned by another matcher; same class as the deactivate
+// slot fix), not steerable from this TU.
 void weapon_user_animations_selector::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x594f7b> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, const u8, pcvoid const)
-	// ******
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( ), 0xff, NULL );
 
-	// FUNCTION BODY
-	// <0x594f49>|0x009|+0x03c:'215'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE -0x3 | 293 | m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( ), 0xff, NULL );
+	// VERDICT: STRUCTURE MATCH - sole SIZE is the base_player vtable arg/this-load shape (base_player.h owned elsewhere), non-steerable from this TU.
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::remove_animation_callback(char const*, void const*)
+// STATE[100%|DONE]
 void weapon_user_animations_selector::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x594950> -> void <unknown>(pcstr, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x594937>|0x007|+0x01b:'220'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::set_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[84.79%|PARTIAL]: same base_player vtable shape residual as the pcstr overload
+// (subscribe_animation_player(channel_id, animation_callback, callback_uid,
+// managed_resource_ptr(), NULL) at vtable+4Ch).
 void weapon_user_animations_selector::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x594f26> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, pcvoid const)
-	// ******
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( ), NULL );
 
-	// FUNCTION BODY
-	// <0x594ef9>|0x009|+0x037:'225'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE -0x3 | 307 | m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( ), NULL );
+	// VERDICT: STRUCTURE MATCH - same base_player vtable arg/this-load shape residual as the pcstr overload, non-steerable from this TU.
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::remove_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*)
+// STATE[100%|DONE]
 void weapon_user_animations_selector::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x594920> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x594907>|0x007|+0x01b:'230'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
 // STATE[STUB]
@@ -404,19 +364,20 @@ bool weapon_user_animations_selector::crouch_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::broken_legs_predicate() const
+// STATE[76.76%|PARTIAL]: body byte-correct (m_user@+44h read twice, virtual damage_model
+// @vtable+0Ch, broken_legs_count = byte[+339h]+byte[+338h], == 2 via xor/cmp/sete). The
+// sole divergence is the intrusive_ptr operator* out-of-lining: target emits a real
+// `call intrusive_ptr<booby_trap_core,...>::operator*` (a `mov eax,[eax]; ret` COMDAT with
+// NO assert), while base inlines operator* (our intrusive_ptr_inline.h operator* carries an
+// ASSERT, folded to `dummy::nonnull`). Same deref-idiom wall as current_state/deactivate;
+// rooted in shared intrusive_ptr_inline.h (not steerable from this TU). See _state_accessors.md.
 bool weapon_user_animations_selector::broken_legs_predicate( ) const
 {
-	// CALL SITE INFO
-	// <0x594b1a> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
+	return ( *m_user->damage_model( ) ).broken_legs_count( ) == 2;
 
-	return false;
-
-	// FUNCTION BODY
-	// <0x594b09>|0x009|+0x03c:'248'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0xf | 398 | return ( *m_user->damage_model( ) ).broken_legs_count( ) == 2;
+	// VERDICT: STRUCTURE MATCH - sole SIZE is the resource_ptr operator* out-of-line (no-assert COMDAT) in target vs inlined deref in base (shared intrusive_ptr_inline.h), non-steerable from this TU.
 }
 
 // STATE[STUB]
@@ -463,37 +424,40 @@ bool weapon_user_animations_selector::jump_predicate( ) const
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_weapon_in_idle() const
+// STATE[41.56%|PARTIAL]: body shape correct (cast *current_active_object() -> weapon_core,
+// read the inlined predicate field at +48Ch). WALL: target's current_active_object() returns
+// `intrusive_ptr<inventory_item,...>` (a by-value temp copy-ctor'd at [ebp-8], operator*
+// out-of-lined), while base's interactive_object_ptr is `intrusive_ptr<game_world_object,...>`
+// (different root) AND base inlines the copy-ctor. Both stem from base_player.h /
+// interactive_object.h typedef + the intrusive_ptr deref idiom, neither steerable here.
 bool weapon_user_animations_selector::is_weapon_in_idle( ) const
 {
-	return false;
+	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_idle( );
 
-	// FUNCTION BODY
-	// <0x5951f9>|0x009|+0x074:'279'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x15 | 457 | return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_idle( );
+	// VERDICT: STRUCTURE MATCH - wall: target copies an intrusive_ptr<inventory_item> temp via an out-of-line copy-ctor (base inlines the pin logic over intrusive_ptr<game_world_object> - base_player.h/interactive_object.h typedef root), and target's inlined is_idle( ) reads THREE flags (+492h || (+488h && !+48Ch)) vs base's single +492h read (weapon_core.h is_idle body, owned elsewhere).
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_weapon_firing() const
+// STATE[8.96%|PARTIAL]: same wall as is_weapon_in_idle (current_active_object intrusive_ptr
+// root type + operator* out-of-lining, base_player/interactive_object owned elsewhere).
 bool weapon_user_animations_selector::is_weapon_firing( ) const
 {
-	return false;
+	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_firing( );
 
-	// FUNCTION BODY
-	// <0x5951a9>|0x009|+0x040:'284'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x49 | 468 | return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_firing( );
+	// VERDICT: STRUCTURE MATCH - same current_active_object intrusive_ptr root/copy-ctor wall as is_weapon_in_idle (base_player.h/interactive_object.h owned elsewhere).
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_weapon_toggling() const
+// STATE[34.89%|PARTIAL]: same wall as is_weapon_in_idle.
 bool weapon_user_animations_selector::is_weapon_toggling( ) const
 {
-	return false;
+	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_toggling( );
 
-	// FUNCTION BODY
-	// <0x595129>|0x009|+0x066:'289'
-	// ******
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x23 | 478 | return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_toggling( );
+	// VERDICT: STRUCTURE MATCH - same current_active_object intrusive_ptr root/copy-ctor wall as is_weapon_in_idle (base_player.h/interactive_object.h owned elsewhere).
 }
 
 // STATE[STUB]
@@ -530,58 +494,46 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 	// ******
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_user_animations_selector::look_time_calculator() const
+// STATE[100%|DONE]
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_user_animations_selector::look_time_calculator( ) const
 {
-	// FUNCTION BODY
-	// <0x594cf7>|0x007|+0x01d:'319'
-	// ******
+	return look_time_functor( this, &weapon_user_animations_selector::look_time_factor_calculator );
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_user_animations_selector::on_interval_ended(vostok::animation::animation_callback_params&)
+// STATE[100%|DONE]
 animation::callback_return_type_enum weapon_user_animations_selector::on_interval_ended( animation::animation_callback_params& params )
 {
-	// CONSTANTS
-	// const weapon_user_animations_selector::on_interval_ended::__l9::<unnamed-tag> c_right_leg_interval_id = 0;
-	// ******
+	enum { c_right_leg_interval_id };
 
-	// FUNCTION BODY
-	// <0x5949c9>|0x009|+0x00c:'324'
-	// <0x5949d5>|0x015|+0x009:'325'
-	// <0>
-	// <0x5949de>|0x01e|+0x013|[1]:'327'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5949f1>|0x031|+0x002:'332'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( &params ) );
+	if ( params.animation_user_data == 1 )
+		m_right_leg_is_supporting = params.animation_interval_id != c_right_leg_interval_id;
+
+	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::on_broken_limb_affect(char const*, const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum)
+// STATE[86.38%|PARTIAL]: all 5 statements match (was 20.12% / 2 stmts). First two ASSERTs are
+// byte-perfect: L337 = `ASSERT_T_U( bodypart, type )` (2-arg eater, no `push 0` - the assert_type
+// slot holds a runtime value), L339 = `ASSERT_CMP_U( affect, ==, 4 )`. Residual is L341 only:
+// `force_animation_selection()` is declared inline in base_player.h, so our build inlines
+// `m_user->m_force_animation_selection = true` (mov byte[ecx+118h],1) while the target kept the
+// call out-of-line (`call base_player::force_animation_selection`). Same whole-program inline-vs-call
+// LTCG residual as player_logic_sprint_state; base_player.h is owned by another unit (not editable here).
 void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
 {
-	// FUNCTION BODY
-	// <0x594969>|0x009|+0x023:'337'
-	// <0>
-	// <0x59498c>|0x02c|+0x023:'339'
-	// <0>
-	// <0x5949af>|0x04f|+0x00b:'341'
-	// ******
+	ASSERT_T_U( bodypart, type );
+	ASSERT_CMP_U( affect, ==, 4 );
+	m_user->force_animation_selection( );
+
+	// STRUCTURE DIFF: target 3 / base 3 stmts
+	// SIZE +0x8 | 548 | m_user->force_animation_selection( );
+	// VERDICT: STRUCTURE MATCH - both ASSERT eaters byte-perfect; sole SIZE is force_animation_selection kept out-of-line in target vs the base_player.h inline body inlined in base, LTCG inline-vs-call (base_player.h owned elsewhere).
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::is_in_jump() const
+// STATE[100%|DONE]
 bool weapon_user_animations_selector::is_in_jump( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x594a79>|0x009|+0x01d:'346'
-	// ******
+	return current_state( ).id( ) == type_jump;
 }
 
 // STATE[STUB]

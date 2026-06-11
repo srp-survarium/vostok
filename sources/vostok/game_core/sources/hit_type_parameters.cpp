@@ -9,13 +9,13 @@
 
 namespace survarium {
 
-// STATE[78.14%|DONE]: LTCG for `m_type` constructor.
+// STATE[97.62%|DONE]: fixed_string m_type ctor inline-vs-call frame-slot (LTCG), shape matches
 hit_type_parameters::hit_type_parameters(
 	pcstr		type,
-	float		absorption,
-	float		armor,
+	const float	absorption,
+	const float	armor,
 	float		reduce,
-	u32			bdb_count
+	const u32	bdb_count
 ) :
 	next					( NULL ),
 	m_type				  	( type ),
@@ -24,6 +24,8 @@ hit_type_parameters::hit_type_parameters(
 	m_reduce				( reduce ),
 	m_bdb_count				( bdb_count )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts
+	// VERDICT: STRUCTURE MATCH (shape ok) - 0-stmt member-init, member stores byte-exact; residual is the m_type fixed_string ctor materialization frame-slot ([ebp-4] vs [ebp-0Ch]), non-steerable. trail: hit_type_parameters.md
 }
 
 // STATE[100%|DONE]

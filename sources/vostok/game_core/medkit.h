@@ -36,7 +36,8 @@ private:
 protected:
 			void								active_tick					( u32 frame_time_ms );
 			void								set_active					( bool bactive );
-	inline	bool								empty						( ) const { /* no source sushi@TODO */ return false; }
+	// body inferred from active_tick's inlined tail-if bytes (cmp m_activity_time_ms,0; sete; movzx)
+	inline	bool								empty						( ) const { return !m_activity_time_ms; }
 			void								remove_affects				( );
 			float								reduce_damage				(
 													pcstr		body_part_name,
@@ -74,9 +75,11 @@ private:
 													animation::animation_player const&	animation_player
 												) override {}
 
-	// STATE[PARTIAL]: pure base forward (ICF-folds with oxygen_tank/weapon_ammunition). rva 0xbcd90.
+	// STATE[100.00%|DONE]: pure base forward; ICF-folds with oxygen_tank/weapon_ammunition onto
+	// one body at rva 0xbcd90 (29 bytes) - this medkit rep carries the bytes, paired at 100 in report.json.
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override	{ inventory_item::serialize( packet, client_offset ); }
-	// STATE[PARTIAL]: pure base forward. rva 0xbcdb0.
+	// STATE[100.00%|DONE]: pure base forward; ICF-folds with oxygen_tank/weapon_ammunition onto
+	// one body at rva 0xbcdb0 (25 bytes) - this medkit rep carries the bytes, paired at 100 in report.json.
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override								{ inventory_item::deserialize( reader ); }
 
 	virtual	bool								is_sprinting				( ) const override { /* no source sushi@TODO */ return false; }

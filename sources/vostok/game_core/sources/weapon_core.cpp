@@ -11,6 +11,8 @@
 #include <boost/bind.hpp>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/player_input.h>
 
 namespace survarium {
 /*
@@ -113,17 +115,36 @@ bool weapon_core::round_is_chambered( ) const
 }
 
 // STATE[STUB]
-// void survarium::weapon_core::set_magazine_capacity(unsigned short)
-void weapon_core::set_magazine_capacity( u16 magazine_capacity )
+// claude@NOTE: out-of-line so the double-barreled ctor's ASSERT_CMP_U emits
+// `call get_magazine_capacity` instead of inlining `m_magazine_capacity`
+// (matches the target's out-of-line call; symbol @0x09cc20).
+u16 weapon_core::get_magazine_capacity( ) const
 {
-	// FUNCTION BODY
-	// <0x5a3139>|0x009|+0x00c:'110'
-	// <0>
-	// <0x5a3145>|0x015|+0x00e:'112'
-	// ******
+	return m_magazine_capacity;
 }
 
-// STATE[95.69%|INPROGRESS]: full FSM body written (10 add_state + 72 add_transition via boost::bind); residual is the boost::function Form-A vs Form-B construction shape across transitions; see weapon_core_initialize_weapon_logic.md
+// STATE[100%|DONE]
+void weapon_core::set_magazine_capacity( u16 magazine_capacity )
+{
+	ASSERT( UNKNOWN_EXPRESSION_T( magazine_capacity ) );
+	m_magazine_capacity = magazine_capacity;
+}
+
+// STATE[100%|DONE]
+// claude@NOTE: out-of-line so reset_fire_queue emits `call fire_queue_length`
+// instead of inlining the m_weapon_fire_queue_types[m_fire_queue_type] read
+// (matches the target's standalone symbol @0x09b290).
+u16 weapon_core::fire_queue_length( ) const
+{
+	return m_weapon_fire_queue_types[m_fire_queue_type];
+}
+
+// STATE[99.83%|PARTIAL]: 122/122 stmts after implementing weapon_core_base_state::
+// set_is_firing_ptr's real inline body (the two missing 0x15 stores) and merging the nested
+// chamber-round ifs into one `&&` condition (target line table proves one 0x2a statement).
+// Residual: boost::bind/function transition-temp register rename (base push esi/esi vs target
+// ecx) across the 72 add_transitions - allocator nondeterminism, see
+// weapon_core_initialize_weapon_logic.md
 void weapon_core::initialize_weapon_logic(
 	weapon_core_base_state_ptr const&	inactive_state,
 	weapon_core_base_state_ptr const&	show_state,
@@ -153,16 +174,16 @@ void weapon_core::initialize_weapon_logic(
 	if ( chamber_a_round_aimed_state )
 		m_logic_states.push_back( chamber_a_round_aimed_state );
 
-	weapon_core_base_state* inactive				= inactive_state.c_ptr( );
-	weapon_core_base_state* show					= show_state.c_ptr( );
-	weapon_core_base_state* hide					= hide_state.c_ptr( );
-	weapon_core_base_state* idle					= idle_state.c_ptr( );
-	weapon_core_base_state* reload				= reload_state.c_ptr( );
-	weapon_core_base_state* fire					= fire_state.c_ptr( );
-	weapon_core_base_state* aim					= aim_state.c_ptr( );
-	weapon_core_base_state* aim_fire				= aim_fire_state.c_ptr( );
-	weapon_core_base_state* chamber_a_round		= chamber_a_round_state.c_ptr( );
-	weapon_core_base_state* chamber_a_round_aimed	= chamber_a_round_aimed_state.c_ptr( );
+	weapon_core_base_state* const inactive				= inactive_state.c_ptr( );
+	weapon_core_base_state* const show					= show_state.c_ptr( );
+	weapon_core_base_state* const hide					= hide_state.c_ptr( );
+	weapon_core_base_state* const idle					= idle_state.c_ptr( );
+	weapon_core_base_state* const reload				= reload_state.c_ptr( );
+	weapon_core_base_state* const fire					= fire_state.c_ptr( );
+	weapon_core_base_state* const aim					= aim_state.c_ptr( );
+	weapon_core_base_state* const aim_fire				= aim_fire_state.c_ptr( );
+	weapon_core_base_state* const chamber_a_round		= chamber_a_round_state.c_ptr( );
+	weapon_core_base_state* const chamber_a_round_aimed	= chamber_a_round_aimed_state.c_ptr( );
 
 	fire->set_is_firing_ptr( &m_is_firing );
 	aim_fire->set_is_firing_ptr( &m_is_firing );
@@ -212,9 +233,8 @@ void weapon_core::initialize_weapon_logic(
 	m_logic->add_transition( idle, aim, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim ) );
 	m_logic->add_transition( idle, aim_fire, boost::bind( &weapon_core::target_predicate, this, weapon_target_aim_fire ) );
 	m_logic->add_transition( reload, hide, boost::bind( &weapon_core::target_predicate, this, weapon_target_inactive ) );
-	if ( m_is_there_chamber_a_round_state )
-		if ( !m_chamber_a_round_on_reload )
-			m_logic->add_transition( reload, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_and_animation_ended_predicate, this ) );
+	if ( m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload )
+		m_logic->add_transition( reload, chamber_a_round, boost::bind( &weapon_core::must_chamber_a_round_and_animation_ended_predicate, this ) );
 	m_logic->add_transition( reload, idle, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_idle ) );
 	m_logic->add_transition( reload, idle, boost::bind( &weapon_core::instant_idle_predicate, this ) );
 	m_logic->add_transition( reload, fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_fire ) );
@@ -269,174 +289,28 @@ void weapon_core::initialize_weapon_logic(
 		m_logic->add_transition( chamber_a_round_aimed, aim_fire, boost::bind( &weapon_core::target_and_animation_ended_predicate, this, weapon_target_aim_fire ) );
 		m_logic->add_transition( chamber_a_round_aimed, chamber_a_round, boost::bind( &weapon_core::is_not_trying_to_aim_predicate, this ) );
 	}
+
+	// STRUCTURE DIFF: target 122 stmts / base 122 stmts (clean)
+	// VERDICT: STRUCTURE MATCH - residual is the boost::function transition-temp register rename
+	// (esi vs ecx) cascading over the add_transition calls; allocator nondeterminism, non-steerable.
 }
 
-// FUNCTION BODY (target carcass, kept inline per MATCHING.md - non-100%; <N> = no-address)
-	// <0>
-	// <0x5a7034>|0x014|+0x023:'128'
-	// <0x5a7057>|0x037|+0x00c:'129'
-	// <0>
-	// <0x5a7063>|0x043|+0x015:'131'
-	// <0x5a7078>|0x058|+0x015:'132'
-	// <0x5a708d>|0x06d|+0x015:'133'
-	// <0x5a70a2>|0x082|+0x015:'134'
-	// <0x5a70b7>|0x097|+0x015:'135'
-	// <0x5a70cc>|0x0ac|+0x015:'136'
-	// <0x5a70e1>|0x0c1|+0x015:'137'
-	// <0x5a70f6>|0x0d6|+0x015:'138'
-	// <0>
-	// <0x5a710b>|0x0eb|+0x011:'140'
-	// <0x5a711c>|0x0fc|+0x015:'141'
-	// <0>
-	// <0x5a7131>|0x111|+0x027:'143'
-	// <0x5a7158>|0x138|+0x015:'144'
-	// <0>
-	// <0x5a716d>|0x14d|+0x008:'146'
-	// <0x5a7175>|0x155|+0x008:'147'
-	// <0x5a717d>|0x15d|+0x008:'148'
-	// <0x5a7185>|0x165|+0x008:'149'
-	// <0x5a718d>|0x16d|+0x008:'150'
-	// <0x5a7195>|0x175|+0x008:'151'
-	// <0x5a719d>|0x17d|+0x008:'152'
-	// <0x5a71a5>|0x185|+0x008:'153'
-	// <0x5a71ad>|0x18d|+0x008:'154'
-	// <0>
-	// <1>
-	// <0x5a71b5>|0x195|+0x008:'157'
-	// <0>
-	// <0x5a71bd>|0x19d|+0x015:'159'
-	// <0x5a71d2>|0x1b2|+0x015:'160'
-	// <0>
-	// <0x5a71e7>|0x1c7|+0x015:'162'
-	// <0x5a71fc>|0x1dc|+0x015:'163'
-	// <0x5a7211>|0x1f1|+0x015:'164'
-	// <0x5a7226>|0x206|+0x015:'165'
-	// <0x5a723b>|0x21b|+0x015:'166'
-	// <0x5a7250>|0x230|+0x015:'167'
-	// <0x5a7265>|0x245|+0x015:'168'
-	// <0x5a727a>|0x25a|+0x015:'169'
-	// <0x5a728f>|0x26f|+0x011:'170'
-	// <0x5a72a0>|0x280|+0x015:'171'
-	// <0x5a72b5>|0x295|+0x006:'172'
-	// <0x5a72bb>|0x29b|+0x015:'173'
-	// <0>
-	// <0x5a72d0>|0x2b0|+0x0ab:'175'
-	// <0x5a737b>|0x35b|+0x0c6:'176'
-	// <0x5a7441>|0x421|+0x0c6:'177'
-	// <0x5a7507>|0x4e7|+0x0c6:'178'
-	// <0x5a75cd>|0x5ad|+0x0c6:'179'
-	// <0>
-	// <0x5a7693>|0x673|+0x0c6:'181'
-	// <0x5a7759>|0x739|+0x00a:'182'
-	// <0x5a7763>|0x743|+0x0c4:'183'
-	// <0x5a7827>|0x807|+0x015:'184'
-	// <0x5a783c>|0x81c|+0x0c4:'185'
-	// <0x5a7900>|0x8e0|+0x0c4:'186'
-	// <0x5a79c4>|0x9a4|+0x0c6:'187'
-	// <0x5a7a8a>|0xa6a|+0x0c6:'188'
-	// <0x5a7b50>|0xb30|+0x0c6:'189'
-	// <0x5a7c16>|0xbf6|+0x0c6:'190'
-	// <0x5a7cdc>|0xcbc|+0x0c6:'191'
-	// <0>
-	// <0x5a7da2>|0xd82|+0x0c6:'193'
-	// <0x5a7e68>|0xe48|+0x0c6:'194'
-	// <0x5a7f2e>|0xf0e|+0x0c6:'195'
-	// <0x5a7ff4>|0xfd4|+0x0c6:'196'
-	// <0x5a80ba>|0x109a|+0x0c6:'197'
-	// <0x5a8180>|0x1160|+0x0c6:'198'
-	// <0>
-	// <0x5a8246>|0x1226|+0x0c6:'200'
-	// <0x5a830c>|0x12ec|+0x00a:'201'
-	// <0x5a8316>|0x12f6|+0x0c4:'202'
-	// <0x5a83da>|0x13ba|+0x015:'203'
-	// <0x5a83ef>|0x13cf|+0x0c4:'204'
-	// <0x5a84b3>|0x1493|+0x0c6:'205'
-	// <0x5a8579>|0x1559|+0x0c6:'206'
-	// <0x5a863f>|0x161f|+0x0c6:'207'
-	// <0x5a8705>|0x16e5|+0x0c6:'208'
-	// <0>
-	// <0x5a87cb>|0x17ab|+0x0c6:'210'
-	// <0x5a8891>|0x1871|+0x02a:'211'
-	// <0x5a88bb>|0x189b|+0x0c4:'212'
-	// <0x5a897f>|0x195f|+0x0c6:'213'
-	// <0x5a8a45>|0x1a25|+0x0c4:'214'
-	// <0x5a8b09>|0x1ae9|+0x0c6:'215'
-	// <0x5a8bcf>|0x1baf|+0x0c6:'216'
-	// <0x5a8c95>|0x1c75|+0x0c6:'217'
-	// <0>
-	// <0x5a8d5b>|0x1d3b|+0x0c6:'219'
-	// <0x5a8e21>|0x1e01|+0x00a:'220'
-	// <0x5a8e2b>|0x1e0b|+0x0c4:'221'
-	// <0x5a8eef>|0x1ecf|+0x015:'222'
-	// <0x5a8f04>|0x1ee4|+0x0c4:'223'
-	// <0x5a8fc8>|0x1fa8|+0x0c4:'224'
-	// <0x5a908c>|0x206c|+0x0c6:'225'
-	// <0x5a9152>|0x2132|+0x0c6:'226'
-	// <0x5a9218>|0x21f8|+0x0c6:'227'
-	// <0x5a92de>|0x22be|+0x0c6:'228'
-	// <0x5a93a4>|0x2384|+0x0c4:'229'
-	// <0>
-	// <0x5a9468>|0x2448|+0x0c6:'231'
-	// <0x5a952e>|0x250e|+0x0c6:'232'
-	// <0x5a95f4>|0x25d4|+0x0c4:'233'
-	// <0x5a96b8>|0x2698|+0x0c6:'234'
-	// <0x5a977e>|0x275e|+0x0c6:'235'
-	// <0x5a9844>|0x2824|+0x0c6:'236'
-	// <0>
-	// <0x5a990a>|0x28ea|+0x0c6:'238'
-	// <0x5a99d0>|0x29b0|+0x00a:'239'
-	// <0x5a99da>|0x29ba|+0x0c4:'240'
-	// <0x5a9a9e>|0x2a7e|+0x015:'241'
-	// <0x5a9ab3>|0x2a93|+0x0c4:'242'
-	// <0x5a9b77>|0x2b57|+0x0c4:'243'
-	// <0x5a9c3b>|0x2c1b|+0x0c6:'244'
-	// <0x5a9d01>|0x2ce1|+0x0c6:'245'
-	// <0x5a9dc7>|0x2da7|+0x0c6:'246'
-	// <0x5a9e8d>|0x2e6d|+0x08a:'247'
-	// <0x5a9f17>|0x2ef7|+0x085:'248'
-	// <0>
-	// <0x5a9f9c>|0x2f7c|+0x015:'250'
-	// <0>
-	// <0x5a9fb1>|0x2f91|+0x08a:'252'
-	// <0x5aa03b>|0x301b|+0x08a:'253'
-	// <0x5aa0c5>|0x30a5|+0x085:'254'
-	// <0x5aa14a>|0x312a|+0x08a:'255'
-	// <0x5aa1d4>|0x31b4|+0x08a:'256'
-	// <0x5aa25e>|0x323e|+0x08a:'257'
-	// <0x5aa2e8>|0x32c8|+0x00a:'258'
-	// <0x5aa2f2>|0x32d2|+0x085:'259'
-	// <0>
-	// <1>
-	// <0x5aa377>|0x3357|+0x00a:'262'
-	// <0>
-	// <0x5aa381>|0x3361|+0x08a:'264'
-	// <0x5aa40b>|0x33eb|+0x08a:'265'
-	// <0x5aa495>|0x3475|+0x085:'266'
-	// <0x5aa51a>|0x34fa|+0x08a:'267'
-	// <0x5aa5a4>|0x3584|+0x08a:'268'
-	// <0x5aa62e>|0x360e|+0x08a:'269'
-	// <0x5aa6b8>|0x3698|+0x085:'270'
-	// <0>
-	// ******
-
-// STATE[STUB]
-// void survarium::weapon_core::set_skeleton(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&)
+// STATE[100%|DONE]
 void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const& skeleton )
 {
-	// FUNCTION BODY
-	// <0x5a42fa>|0x00a|+0x011:'276'
-	// ******
+	m_skeleton = skeleton;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::target_and_animation_ended_predicate(const survarium::weapon_targets) const
+// STATE[85.68%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of trivial
+// weapon_core_base_state::has_animation_ended() (target /Od `call`, our /GL inlines the [+135h]
+// read). Same class as must_chamber_a_round_and_animation_ended_predicate.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
-	return false;
+	return m_target == target && current_base_state( ).has_animation_ended( );
 
-	// FUNCTION BODY
-	// <0xbc609>|0x009|+0x04b:'286'
-	// ******
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0x7 | 309 | return m_target == target && current_base_state( ).has_animation_ended( );
+	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
 // STATE[STUB]
@@ -457,13 +331,17 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::body_part_masks_enum survarium::weapon_core::get_body_part_mask_for_user() const
+// STATE[73.00%|PARTIAL]: restored the faithful one-liner - target is 1 stmt with NO locals,
+// so the earlier named-ref local (83.89%) was a fabricated statement the line table disproves.
+// Residual = /Od temp-chain depth of the inlined current_base_state() (target materializes one
+// extra reference copy), same class as the serialize forwarded-call temp chain.
 animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) const
 {
-	// FUNCTION BODY
-	// <0x5a3459>|0x009|+0x02a:'296'
-	// ******
+	return current_base_state( ).get_body_part_mask_for_user( );
+
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0xc | 340 | return current_base_state( ).get_body_part_mask_for_user( );
+	// VERDICT: STRUCTURE MATCH - quantity fixed (was 2 stmts); SIZE residual is /Od ref-temp depth, not source-steerable.
 }
 /*
 // STATE[STUB]
@@ -553,13 +431,19 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_recoil(unsigned int, const float)
+// STATE[72.04%|INPROGRESS]: body matches; sole diff is is_aimed() - target emits a
+// `call is_aimed` (standalone FPO symbol) but under /Od our inline is_aimed() expands
+// to `mov [this+0x488]` inline. Out-lining is_aimed reaches 99.78% here but FPO-breaks
+// many other inline callers (net -26 exact). Next: revisit once a per-call-site
+// inline/out-of-line story exists. See docs/.../weapon_core_update_recoil.md
 void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 {
-	// FUNCTION BODY
-	// <0x5a3717>|0x007|+0x034:'354'
-	// ******
+	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
+
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE +0x5 | 442 | m_recoil_calculator.tick( ... is_aimed( ) ... );
+	// VERDICT: STRUCTURE MATCH - is_aimed() call in target vs our inline read; out-lining it FPO-breaks
+	// many other callers (net -26 exact), so the inline stays.
 }
 
 // STATE[STUB]
@@ -583,15 +467,12 @@ void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_breath_vibration(const bool, unsigned int, const float)
+// STATE[100%|DONE]
 void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_time_in_ms, float time_scale )
 {
-	// FUNCTION BODY
-	// <0x5a39f7>|0x007|+0x013:'372'
-	// <0x5a3a0a>|0x01a|+0x013:'373'
-	// <0x5a3a1d>|0x02d|+0x019:'374'
-	// ******
+	m_breath_vibration_calculator.hold_breath( is_holding_breath );
+	m_breath_vibration_calculator.set_character_multiplier( 0.0f );
+	m_breath_vibration_calculator.tick( current_time_in_ms, time_scale );
 }
 
 // STATE[STUB]
@@ -659,31 +540,17 @@ void weapon_core::tick( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_show()
+// STATE[100%|DONE]
 void weapon_core::instant_show( )
 {
-	// CALL SITE INFO
-	// <0x5a2c8f> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a2c77>|0x007|+0x00a:'424'
-	// <0x5a2c81>|0x011|+0x010:'425'
-	// ******
+	m_aimed = false;
+	on_show( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_hide()
+// STATE[100%|DONE]
 void weapon_core::instant_hide( )
 {
-	// CALL SITE INFO
-	// <0x5a2c65> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a2c57>|0x007|+0x010:'430'
-	// ******
+	on_hide( );
 }
 
 // STATE[STUB]
@@ -706,18 +573,15 @@ void weapon_core::load_magazine( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::chamber_a_round()
+// STATE[100%|DONE]
 void weapon_core::chamber_a_round( )
 {
-	// FUNCTION BODY
-	// <0x5a30d9>|0x009|+0x00c:'446'
-	// <0x5a30e5>|0x015|+0x00c:'447'
-	// <0x5a30f1>|0x021|+0x00c:'448'
-	// <0>
-	// <0x5a30fd>|0x02d|+0x018:'450'
-	// <0x5a3115>|0x045|+0x00a:'451'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+
+	--m_ammo_in_magazine;
+	m_is_round_chambered = true;
 }
 
 // STATE[STUB]
@@ -744,49 +608,27 @@ void weapon_core::unload_ammo( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_reload()
+// STATE[100%|DONE]
 void weapon_core::instant_reload( )
 {
-	// CALL SITE INFO
-	// <0x5a5867> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a5847>|0x007|+0x00a:'473'
-	// <0>
-	// <0x5a5851>|0x011|+0x008:'475'
-	// <0>
-	// <0x5a5859>|0x019|+0x010:'477'
-	// <0>
-	// <0x5a5869>|0x029|+0x00e:'479'
-	// <0x5a5877>|0x037|+0x00e:'480'
-	// <0>
-	// <0x5a5885>|0x045|+0x008:'482'
-	// ******
+	m_aimed = false;
+	load_magazine( );
+	on_reload( );
+	m_recoil_calculator.reload( );
+	m_dispersion_calculator.reload( );
+	reset_fire_queue( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_chamber_a_round()
+// STATE[100%|DONE]
 void weapon_core::instant_chamber_a_round( )
 {
-	// CALL SITE INFO
-	// <0x5a3391> -> void <unknown>()
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammo_in_magazine ) );
 
-	// FUNCTION BODY
-	// <0x5a3359>|0x009|+0x00c:'487'
-	// <0x5a3365>|0x015|+0x00c:'488'
-	// <0>
-	// <0x5a3371>|0x021|+0x00a:'490'
-	// <0>
-	// <0x5a337b>|0x02b|+0x008:'492'
-	// <0>
-	// <0x5a3383>|0x033|+0x010:'494'
-	// <0>
-	// <0x5a3393>|0x043|+0x00e:'496'
-	// <0>
-	// ******
+	m_aimed = false;
+	chamber_a_round( );
+	on_chamber_a_round( );
+	m_recoil_calculator.chamber_a_round( );
 }
 
 // STATE[STUB]
@@ -806,31 +648,21 @@ void weapon_core::reload_one_round( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_aim_start()
+// STATE[100%|DONE]
 void weapon_core::instant_aim_start( )
 {
-	// CALL SITE INFO
-	// <0x5a30a6> -> player_input const& <unknown>() const
-	// ******
+	if ( !is_firing( ) && !( m_user->input( ).actions_mask & 0x20 ) )
+		reset_fire_queue( );
 
-	// FUNCTION BODY
-	// <0x5a3079>|0x009|+0x037:'511'
-	// <0x5a30b0>|0x040|+0x008:'512'
-	// <0>
-	// <0x5a30b8>|0x048|+0x00a:'514'
-	// <0x5a30c2>|0x052|+0x00a:'515'
-	// ******
+	m_aimed = true;
+	m_aiming_state_transition = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_aim_end()
+// STATE[100%|DONE]
 void weapon_core::instant_aim_end( )
 {
-	// FUNCTION BODY
-	// <0x5a2c37>|0x007|+0x00a:'520'
-	// <0x5a2c41>|0x011|+0x00a:'521'
-	// ******
+	m_aimed = false;
+	m_aiming_state_transition = true;
 }
 
 // STATE[STUB]
@@ -865,15 +697,10 @@ float3 weapon_core::get_dispersed_bullet_dir( )
 	// ******
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::get_dispersion() const
+// STATE[100%|DONE]
 float weapon_core::get_dispersion( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x5a4767>|0x007|+0x00e:'544'
-	// ******
+	return m_dispersion_calculator.get_dispersion( );
 }
 
 // STATE[STUB]
@@ -934,14 +761,11 @@ void weapon_core::instant_fire( u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_fire_bullet_transform(vostok::math::float4x4 const&)
+// STATE[100%|DONE]
 void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transform )
 {
-	// FUNCTION BODY
-	// <0x5a2c09>|0x009|+0x00a:'588'
-	// <0x5a2c13>|0x013|+0x013:'589'
-	// ******
+	m_ready_for_fire = true;
+	m_fire_bullet_transform = fire_bullet_transform;
 }
 
 // STATE[STUB]
@@ -1045,36 +869,39 @@ void weapon_core::set_target( weapon_targets target )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::reset_fire_queue()
+// STATE[99.65%|PARTIAL]: instructions byte-identical modulo `this` register at the promoted
+// fire_queue_length call (eax vs ecx) + slot numbering. OPEN QUESTION: target's line table has
+// the else branch as ONE statement (6 stmts, NO named local recorded) yet keeps the named-local
+// byte shape ([ebp-2] store + [ebp-6] param spill); every local-free spelling tried merges the
+// temps and LOSES 8 bytes (u16(...) cast -> 85.8%, explicit min<u16> -> out-of-line call 79.0%,
+// by-value min template -> C2668 ambiguity engine-wide). Keeping the named local for the bytes.
 void weapon_core::reset_fire_queue( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x5a2f49>|0x009|+0x012:'677'
-	// <0>
-	// <0x5a2f5b>|0x01b|+0x014:'679'
-	// <0x5a2f6f>|0x02f|+0x00e:'680'
-	// <0x5a2f7d>|0x03d|+0x018:'681'
-	// <0>
-	// <0x5a2f95>|0x055|+0x002:'683'
-	// <0x5a2f97>|0x057|+0x061:'684'
-	// <0>
-	// <1>
-	// ******
+	if ( fire_queue_length( ) == 0xff )
+	{
+		m_bullets_in_queue = m_ammo_in_magazine;
+		if ( m_is_round_chambered )
+			++m_bullets_in_queue;
+	}
+	else
+	{
+		u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
+		m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue );
+	}
+
+	// STRUCTURE DIFF: target 6 stmts / base 7 stmts
+	// BASE_ONLY | 886 | u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
+	// VERDICT: STRUCTURE MISMATCH (quantity) - target merges the else branch into one statement with no
+	// recorded local, but its byte shape needs the local; unresolved spelling, kept for the 99.65% bytes.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_next_fire_queue_type()
+// STATE[100%|DONE]
 void weapon_core::set_next_fire_queue_type( )
 {
-	// FUNCTION BODY
-	// <0x5a2bb7>|0x007|+0x01b:'691'
-	// <0x5a2bd2>|0x022|+0x00a:'692'
-	// <0x5a2bdc>|0x02c|+0x002:'693'
-	// <0x5a2bde>|0x02e|+0x014:'694'
-	// ******
+	if ( m_fire_queue_type == m_weapon_fire_queue_types_count - 1 )
+		m_fire_queue_type = 0;
+	else
+		++m_fire_queue_type;
 }
 
 // STATE[STUB]
@@ -1113,13 +940,10 @@ void weapon_core::set_next_ammo_type( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_ammunition(vostok::resources::resource_ptr<survarium::weapon_ammunition,vostok::resources::unmanaged_intrusive_base> const&)
+// STATE[100%|DONE]
 void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const& ammunition_to_set )
 {
-	// FUNCTION BODY
-	// <0x5a4739>|0x009|+0x017:'727'
-	// ******
+	m_ammunition = ammunition_to_set;
 }
 
 // STATE[STUB]
@@ -1151,14 +975,9 @@ void weapon_core::load_ammo( )
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_reload_started()
+// STATE[100%|DONE]
 void weapon_core::on_reload_started( )
 {
-	// FUNCTION BODY
-	// <0x5a2ba0>|0x000|+0x007:'756'	{
-	// <0x5a2ba7>|0x007|      :'757'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -1184,56 +1003,34 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_animation_callback(char const*, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[100%|DONE]
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x5a42d3> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a4299>|0x009|+0x044:'780'
-	// ******
+	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
+	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
+	resources::managed_resource_ptr tmp( NULL );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::remove_animation_callback(char const*, void const*)
+// STATE[100%|DONE]
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x5a2b96> -> void <unknown>(pcstr, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a2b77>|0x007|+0x021:'785'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*, boost::function<enum vostok::animation::callback_return_type_enum __cdecl(vostok::animation::animation_callback_params &)> const&)
+// STATE[100%|DONE]
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// CALL SITE INFO
-	// <0x5a427e> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, pcvoid const)
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a4249>|0x009|+0x03f:'790'
-	// ******
+	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
+	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
+	resources::managed_resource_ptr tmp( NULL );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::remove_animation_callback(vostok::animation::reserved_channel_ids_enum, void const*)
+// STATE[100%|DONE]
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
 {
-	// CALL SITE INFO
-	// <0x5a2b66> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a2b47>|0x007|+0x021:'795'
-	// ******
+	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
 // STATE[STUB]
@@ -1406,40 +1203,36 @@ void weapon_core::deactivate( )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_ready_to_be_deactivated() const
+// STATE[84.77%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of the two
+// trivial getters (weapon_user_animations_selector::is_ready_to_be_deactivated returns false
+// standalone in target; current_base_state ref-copy shape). Same inline-decision class as the
+// has_animation_ended predicates.
 bool weapon_core::is_ready_to_be_deactivated( ) const
 {
-	return false;
+	return current_base_state( ).is_ready_to_be_deactivated( ) && m_user_animations_selector.is_ready_to_be_deactivated( );
 
-	// FUNCTION BODY
-	// <0x5a32e9>|0x009|+0x057:'920'
-	// ******
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0xc | 1205 | return current_base_state( ).is_ready_to_be_deactivated( ) && ...;
+	// VERDICT: STRUCTURE MATCH - the two trivial getters out-of-line in target vs our inline; non-steerable LTCG class.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_player_model_added()
+// STATE[100%|DONE]
 void weapon_core::on_player_model_added( )
 {
-	// FUNCTION BODY
-	// <0x5a2f27>|0x007|+0x008:'925'
-	// ******
+	instant_show( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_player_model_removed()
+// STATE[100%|DONE]
 void weapon_core::on_player_model_removed( )
 {
-	// FUNCTION BODY
-	// <0x5a2f07>|0x007|+0x008:'930'
-	// ******
+	instant_hide( );
 }
 
 // STATE[STUB]
 // void survarium::weapon_core::update_bones_matrices(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&, vostok::math::float4x4* const, const unsigned int, const unsigned int, vostok::math::float4x4&, vostok::math::float4x4&, vostok::animation::animation_player const&)
 void weapon_core::update_bones_matrices(
 	resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const&	user_skeleton,
-	float4x4*							user_matrices,
+	float4x4* const						user_matrices,
 	u32									user_matrices_count,
 	u32									current_time_in_ms,
 	float4x4&							character_head_transform,
@@ -1570,28 +1363,23 @@ void weapon_core::update_bones_matrices(
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_sprinting() const
+// STATE[100%|DONE]
 bool weapon_core::is_sprinting( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a32c7>|0x007|+0x00e:'1033'
-	// ******
+	return m_user_animations_selector.is_sprinting( );
 }
 
 // STATE[STUB]
 // void survarium::weapon_core::on_skeleton_matrices_changed(const unsigned int, vostok::math::float4x4 const&, vostok::math::float4x4 const* const, vostok::math::float4x4 const* const, vostok::math::float4x4 const&, vostok::math::float4x4* const, vostok::math::float4x4* const, vostok::math::float4x4 const&)
 void weapon_core::on_skeleton_matrices_changed(
-	u32					current_time_in_ms,
-	float4x4 const&		weapon_transform,
-	float4x4 const*		weapon_matrices_begin,
-	float4x4 const*		weapon_matrices_end,
-	float4x4 const&		user_transform,
-	float4x4*			user_matrices_begin,
-	float4x4*			user_matrices_end,
-	float4x4 const&		user_weapon_transform
+	u32						current_time_in_ms,
+	float4x4 const&			weapon_transform,
+	float4x4 const* const	weapon_matrices_begin,
+	float4x4 const* const	weapon_matrices_end,
+	float4x4 const&			user_transform,
+	float4x4* const			user_matrices_begin,
+	float4x4* const			user_matrices_end,
+	float4x4 const&			user_weapon_transform
 )
 {
 	// FUNCTION BODY
@@ -1601,17 +1389,19 @@ void weapon_core::on_skeleton_matrices_changed(
 
 // STATE[STUB]
 // void survarium::weapon_core::process_finger_correction(const unsigned int, vostok::math::float4x4* const)
-void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* user_matrices )
+void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* const user_matrices )
 {
 	// FUNCTION BODY
 	// <0x5a2e49>|0x009|+0x023:'1055'
 	// ******
 }
 
-// STATE[PARTIAL]: serializes the base inventory_item then weapon state scalars; when a chamber
-// state exists also the round-chambered flag; and when the logic fsm has a current state, the
-// is_shown flag, hand-ik, the current logic-state index + its serialize, and the user-animation
-// selector. ASSERT( found ) compiled out. trail: weapon_core_serialize.md
+// STATE[61.76%|PARTIAL]: now PAIRED (the header access fix - target mangles it EBE private
+// virtual). Statement set/order match (26/26 after the for-tail ++state_id merge + the
+// current_state() re-read at the forwarded serialize). Residual: target calls the network_core
+// packet<T>::append / fsm::current_state out-of-line where our build inlines them (or
+// vice-versa) - a network_core/ai header inline-cost question, not steerable from this TU.
+// trail: weapon_core_serialize.md
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
 	inventory_item::serialize( packet, client_offset );
@@ -1633,45 +1423,40 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 		packet.append( m_is_shown );
 		m_hand_ik_processor.serialize( packet, client_offset );
 
-		u8						state_id	= 0;
-		bool					found		= false;
-		ai::fsm_state const*	current		= m_logic->current_state( );
+		u8							state_id	= 0;
+		bool						found		= false;
+		ai::fsm_state const* const	current		= m_logic->current_state( );
 
-		for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next )
+		for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
 		{
 			if ( i == current )
 			{
 				found	= true;
 				break;
 			}
-			++state_id;
 		}
 
 		ASSERT( UNKNOWN_EXPRESSION_T( found ) );
 
 		packet.append( state_id );
-		static_cast< weapon_core_base_state const* >( current )->serialize( packet );
+		static_cast< weapon_core_base_state const* >( m_logic->current_state( ) )->serialize( packet );
 		m_user_animations_selector.serialize( packet );
 	}
 
-	// STRUCTURE DIFF[target 0x593810 | base 0x456650]: target 26 / base 27 stmts
-	//   2: 0x019 <0x18> | 0x019 <0x20> | packet.append( m_random.seed( ) );   SIZE
-	//   3: 0x031 <0x18> | 0x039 <0x20> | packet.append( m_normal_random.seed( ) );   SIZE
-	//   4-9: ONLY base (m_target/m_old_actions_mask/m_ammo_in_magazine/m_bullets_in_queue/m_fire_queue_type/m_ammo_slot appends)
-	//  10-15: ONLY target (same 6 appends, L1071-L1076)   SIZE-drift mis-pairing
-	//  17: 0x0c8 <0x13> | 0x107 <0x1a> | packet.append( m_is_round_chambered );   SIZE
-	//  18: 0x0db <0x23> | 0x121 <0x19> | if ( m_logic->current_state( ) )   SIZE
-	//  24: 0x13e <0x2f> | 0x181 <0x26> | for ( ... i = i->next )   SIZE
-	//  28: --          | 0x1b5 <0x8> | ++state_id;   ONLY base (folded into target for-tail)
-	//  31/32: append( state_id ) / current->serialize( packet )   SIZE
-	// ; aligned 12, size-diffs 8, quantity-diffs 13, blank-gaps 8
-	// VERDICT: STRUCTURE MATCH (shape ok) - statement set/order identical (base inventory_item::serialize + 8 scalar appends, chamber-guard, fsm-walk + forwarded serialize/selector); ALL divergences are LTCG inline-vs-call SIZE residual + its alignment drift (target inlines packet<T>::append/seed/states().front()), non-steerable. trail: weapon_core_serialize.md
+	// STRUCTURE DIFF: target 26 stmts / base 26 stmts
+	// SIZE +0x8 | 1400/1401 | packet.append( m_random/m_normal_random.seed( ) ); (x2)
+	// SIZE +0x7 | 1402-1407,1410,1414 | the u8/u16 appends (aligner shows BASE_ONLY/TRGT_ONLY drift over the same 6 stmts)
+	// SIZE -0xa | 1412 | if ( m_logic->current_state( ) ) (target materializes the bool, setne+movzx)
+	// SIZE +0x7 | append( state_id ); SIZE -0x6 | forwarded ->serialize( packet )
+	// VERDICT: STRUCTURE MATCH - set/order identical; every row is packet<T>::append / fsm accessor
+	// inline-vs-call (network_core/ai headers), not steerable from this TU.
 }
 
-// STATE[PARTIAL]: mirror of serialize - guarded by m_deserializing, reads the base + scalar
-// state, resolves m_ammunition from the inventory slot (NULL when invalid_slot), then under
-// a live logic fsm reads is_shown/hand-ik/logic-state-index + forwards deserialize to that
-// state and the selector, finally force-selects the user's animations. trail: weapon_core_serialize.md
+// STATE[29.31%|PARTIAL]: now PAIRED (the header access fix - target mangles it EAE private
+// virtual). Statement set/order match (33/33). Residual: target calls packet_reader::r<T>
+// out-of-line (promoted edx-this convention) where our build inlines the read+advance - the
+// same network_core header inline-cost question as serialize; not steerable from this TU.
+// trail: weapon_core_serialize.md
 void weapon_core::deserialize( network_core::packet_reader& reader )
 {
 	inventory_item::deserialize( reader );
@@ -1699,7 +1484,7 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 		m_is_shown	= reader.r< bool >( );
 		m_hand_ik_processor.deserialize( reader );
 
-		u8					target_state_id	= reader.r< bool >( );
+		u8 const			target_state_id	= reader.r< bool >( );
 		u8					state_id		= 0;
 		ai::fsm_state*		current			= NULL;
 
@@ -1715,7 +1500,7 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 		ASSERT( UNKNOWN_EXPRESSION_T( current ) );
 
 		m_logic->set_initial_state( current );
-		static_cast< weapon_core_base_state* >( current )->deserialize( reader );
+		static_cast< weapon_core_base_state* >( m_logic->current_state( ) )->deserialize( reader );
 		m_user_animations_selector.deserialize( reader );
 
 		m_user->force_animation_selection( );
@@ -1723,67 +1508,48 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 
 	m_deserializing	= false;
 
-	// STRUCTURE DIFF[target 0x594450 | base 0x459f60]: target 33 / base 33 stmts
-	//   3: --          | 0x01f <0x2a> | m_random.seed( reader.r< u32 >( ) );   ONLY base (SIZE-drift)
-	//   5-6: m_target / m_old_actions_mask reads   SIZE
-	//   7-10: ONLY base (m_ammo_in_magazine/m_bullets_in_queue/m_fire_queue_type/m_ammo_slot reads, SIZE-drift)
-	//  11/12: if ( m_ammo_slot != invalid_slot ) / m_ammunition = ...item_in_slot...   SIZE
-	//  13-17: ONLY target (else m_ammunition=NULL / chamber-guard / is_shown / hand-ik)   SIZE-drift
-	//  19: m_ammunition = NULL;   SIZE
-	//  21/22/23/25/35/37: chamber read / fsm-guard / is_shown / target_state_id read / forwarded deserialize / force_animation_selection   SIZE
-	// ; aligned 17, size-diffs 11, quantity-diffs 10, blank-gaps 8
-	// VERDICT: STRUCTURE MATCH (shape ok) - statement set/order identical to the serialize mirror (guarded by m_deserializing; base deserialize + scalar reads + ammo resolve + fsm-walk + forwarded deserialize/selector); ALL divergences are LTCG inline-vs-call SIZE residual + alignment drift, non-steerable. trail: weapon_core_serialize.md
+	// STRUCTURE DIFF: target 33 stmts / base 33 stmts
+	// SIZE +0x12..+0x15 | 1461-1483 | every reader.r<T>( ) read (base inlines read+advance, target calls r<T>;
+	//                                 aligner shows BASE_ONLY/TRGT_ONLY drift over the same stmts)
+	// SIZE +0x52 | 1471 | m_ammunition = ...item_in_slot( m_ammo_slot ).c_ptr( ); (inline-vs-call mix)
+	// SIZE -0xa | 1478 | if ( m_logic->current_state( ) ) (target materializes the bool)
+	// SIZE -0x6 | 1499 | forwarded ->deserialize( reader )
+	// VERDICT: STRUCTURE MATCH - set/order identical; every row is the network_core r<T>/inventory
+	// accessor inline-vs-call class, not steerable from this TU.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::instant_idle_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::instant_idle_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a4e49>|0x009|+0x03d:'1166'
-	// ******
+	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::could_be_used(survarium::base_player const&) const
+// STATE[73.90%|PARTIAL]: branch + member reads byte-identical. Residual = inline-decision wall on
+// intrusive_ptr::operator* : target out-of-lines it (`call operator*` @0x16); our /Od /Ob2 build
+// inlines it because our compiled-out ASSERT(m_object) stub is small enough to fit the inline
+// budget, bringing the deref + ASSERT temp-chain inline. Source form already uses operator*
+// (*ptr).broken_hands_count(); the inline/out-line choice lives in the shared intrusive_ptr_inline.h,
+// not steerable from here. See weapon_core_could_be_used_aimed.md
 bool weapon_core::could_be_used( base_player const& user ) const
 {
-	// LOCALS
-	// u8 							broken_hands_count
-	// ******
+	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	return !( broken_hands_count == 2 && is_double_handed( ) );
 
-	// CALL SITE INFO
-	// <0x5a3264> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a3259>|0x009|+0x02e:'1171'
-	// <0x5a3287>|0x037|+0x02a:'1172'
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0xf | 1533 | u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	// SIZE +0x6 | 1534 | return !( broken_hands_count == 2 && is_double_handed( ) );
+	// VERDICT: STRUCTURE MATCH - intrusive_ptr::operator* / is_double_handed inline-vs-call wall; non-steerable.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::could_be_aimed(survarium::base_player const&) const
+// STATE[75.88%|PARTIAL]: same intrusive_ptr::operator* inline-decision wall as could_be_used.
 bool weapon_core::could_be_aimed( base_player const& user ) const
 {
-	// LOCALS
-	// u8 							broken_hands_count
-	// ******
+	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	return broken_hands_count != 2;
 
-	// CALL SITE INFO
-	// <0x5a3214> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a3209>|0x009|+0x02e:'1177'
-	// <0x5a3237>|0x037|+0x00c:'1178'
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0xf | 1545 | u8 broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
+	// VERDICT: STRUCTURE MATCH - same intrusive_ptr::operator* inline-vs-call wall as could_be_used; non-steerable.
 }
 
 // STATE[STUB]
@@ -1861,58 +1627,49 @@ float weapon_core::computed_vertical_recoil_time(
 	// ******
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::backward_recoil_time_calculator()
-fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::backward_recoil_time_calculator( )
+// STATE[100%|DONE]
+weapon_core::calculator_functor weapon_core::backward_recoil_time_calculator( )
 {
-	// FUNCTION BODY
-	// <0x5a3fc9>|0x009|+0x039:'1241'
-	// ******
+	return calculator_functor( this, &weapon_core::computed_backward_recoil_time );
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::horizontal_recoil_time_calculator()
-fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::horizontal_recoil_time_calculator( )
+// STATE[100%|DONE]
+weapon_core::calculator_functor weapon_core::horizontal_recoil_time_calculator( )
 {
-	// FUNCTION BODY
-	// <0x5a3f79>|0x009|+0x039:'1246'
-	// ******
+	return calculator_functor( this, &weapon_core::computed_horizontal_recoil_time );
 }
 
-// STATE[STUB]
-// fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> survarium::weapon_core::vertical_recoil_time_calculator()
-fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_core::vertical_recoil_time_calculator( )
+// STATE[100%|DONE]
+weapon_core::calculator_functor weapon_core::vertical_recoil_time_calculator( )
 {
-	// FUNCTION BODY
-	// <0x5a3f29>|0x009|+0x039:'1251'
-	// ******
+	return calculator_functor( this, &weapon_core::computed_vertical_recoil_time );
 }
 
-// STATE[UNCHECKED]
+// STATE[100%|DONE]
 void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 {
 	inventory_item::set_inventory( inv, slot );
-
-	// FUNCTION BODY
-	// <0x5a2e27>|0x007|+0x010:'1256'
-	// ******
 }
 
-// STATE[STUB]
-// survarium::profile_slot_enum survarium::weapon_core::get_ammo_slot(survarium::ammo_id_enum)
+// STATE[99.77%|DONE]: byte-identical stream; sole residual = call-boundary register for the
+// `this` of profile_slot_id() (target passes it in eax, ours in ecx) - LTCG custom calling
+// convention on the callee, not source-steerable. claude@NOTE
 profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 {
-	// FUNCTION BODY
-	// <0x5a2dd9>|0x009|+0x019:'1261'
-	// <0>
-	// <1>
-	// <0x5a2df2>|0x022|+0x00c:'1264'
-	// <0>
-	// <0x5a2dfe>|0x02e|+0x00c:'1266'
-	// <0>
-	// <0x5a2e0a>|0x03a|+0x005:'1268'
-	// <0>
-	// ******
+	static profile_slot_enum const weapon_ammo_slots[2][2] = {
+		{ ammo1_weapon1_slot, ammo2_weapon1_slot },
+		{ ammo1_weapon2_slot, ammo2_weapon2_slot },
+	};
+
+	switch ( profile_slot_id( ) )
+	{
+		case weapon1_slot:	return weapon_ammo_slots[0][slot_id];
+		case weapon2_slot:	return weapon_ammo_slots[1][slot_id];
+		default:			return invalid_slot;
+	}
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (clean, 0x45 bytes both)
+	// VERDICT: STRUCTURE MATCH - sole residual is the `this` register at the promoted profile_slot_id call (eax vs ecx); LTCG.
 }
 
 // STATE[STUB]
@@ -1941,232 +1698,172 @@ void weapon_core::get_ammo_info( weapon_ammo_info& info )
 	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a31a9>|0x009|+0x00c:'1290'
-	// <0x5a31b5>|0x015|+0x044:'1291'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	return !m_is_round_chambered && m_ammo_in_magazine != 0 && !m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_aimed_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_aimed_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a35b9>|0x009|+0x031:'1296'
-	// ******
+	return must_chamber_a_round_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_and_animation_ended_predicate() const
+// STATE[87.47%|PARTIAL]: ASSERT + control-flow byte-identical; residual = LTCG inline-vs-call
+// of trivial weapon_core_base_state::has_animation_ended() (header inline; target /Od emits
+// `call has_animation_ended` @0x42 + 3 current_base_state ref copies, our /GL inlines the
+// `mov al,[+135h]` read). Same class as is_trying_to_aim / round_is_chambered.
 bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 {
-	return false;
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	return must_chamber_a_round_predicate( ) && current_base_state( ).has_animation_ended( );
 
-	// FUNCTION BODY
-	// <0x5a3549>|0x009|+0x00c:'1301'
-	// <0x5a3555>|0x015|+0x04c:'1302'
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE -0x7 | 1721 | return must_chamber_a_round_predicate( ) && current_base_state( ).has_animation_ended( );
+	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a37d9>|0x009|+0x031:'1307'
-	// ******
+	return must_chamber_a_round_and_animation_ended_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_ready_to_shoot() const
+// STATE[100%|DONE]
 bool weapon_core::is_ready_to_shoot( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a2ac9>|0x009|+0x066:'1312'
-	// ******
+	return ( m_is_there_chamber_a_round_state ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && m_ready_for_fire;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_trying_to_aim() const
+// STATE[66.75%|PARTIAL]: every member access/mask/order byte-identical; sole diff = LTCG
+// inline-vs-call of trivial player_input::is_sprinting() - target keeps it standalone
+// (`call player_input::is_sprinting` @0x60), our /GL inlines its (&0x200 && &0x1 && &0x16E==0)
+// body. Same inline-decision class as reload_state_base::initialize round_is_chambered.
 bool weapon_core::is_trying_to_aim( ) const
 {
-	// LOCALS
-	// player_input const& 			input
-	// u32 							just_toggled
-	// ******
+	player_input const&	input			= m_user->input( );
+	u32					just_toggled	= ~m_old_actions_mask & input.actions_mask;
 
-	// CALL SITE INFO
-	// <0x5a34b2> -> player_input const& <unknown>() const
-	// ******
+	return could_be_aimed( *get_user( ) )
+		&& ( input.actions_mask & 0x80 ) != 0	// sushi@TODO: aim action bit
+		&& !( input.is_sprinting( ) && ( just_toggled & 0x200 ) != 0 )	// sushi@TODO: sprint action bit
+		&& m_user_animations_selector.get_current_state_id( ) != type_jump;
 
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a3499>|0x009|+0x01e:'1317'
-	// <0x5a34b7>|0x027|+0x014:'1318'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5a34cb>|0x03b|+0x065:'1323'
-	// ******
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
+	// SIZE +0x36 | 1753 | && m_user_animations_selector.get_current_state_id( ) != type_jump; (the return stmt)
+	// VERDICT: STRUCTURE MATCH - player_input::is_sprinting standalone call in target vs our inline of its mask body; non-steerable LTCG.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::is_not_trying_to_aim_predicate() const
+// STATE[100%|DONE]
 bool weapon_core::is_not_trying_to_aim_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x5a37b7>|0x007|+0x012:'1328'
-	// ******
+	return !is_trying_to_aim( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::can_and_must_reload_predicate() const
+// STATE[STUB]: out-of-line stub (target @0x0ac370 has the real "A LOT OF LOGIC" body, not matched
+// here). Defined so callers like can_and_must_reload_predicate emit `call ready_to_reload`.
+bool weapon_core::ready_to_reload( ) const
+{
+	return true;
+}
+
+// STATE[93.32%|PARTIAL]: control-flow + all member reads/branches/temp byte-identical (perfect
+// structure). Sole residual = target reserves a 0x30 frame and zeroes a dead dword [ebp-10h] in
+// the prologue (never read); ours has a 0x08 frame, no such slot. A hidden local with no PDB LOCALS
+// record and no read - not source-pinnable. claude@NOTE
 bool weapon_core::can_and_must_reload_predicate( ) const
 {
-	return false;
+	return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
 
-	// FUNCTION BODY
-	// <0x5a4df0>|0x010|+0x03e:'1333'
-	// ******
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0x7 | 1785 | return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
+	// VERDICT: STRUCTURE MATCH - target reserves a 0x30 frame and zeroes a dead dword; not source-pinnable.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core::can_and_must_reload_and_animation_ended_predicate() const
+// STATE[86.17%|PARTIAL]: control-flow + can_and_must_reload_predicate call byte-identical; residual
+// = inline-decision wall on weapon_core_base_state::has_animation_ended() (target out-of-lines it -
+// `call has_animation_ended` + the 3 current_base_state() ref-copies; our /Od /Ob2 inlines the
+// [+135h] read). Same documented wall as target_and_animation_ended_predicate; out-lining the
+// shared getter would regress other inlined call sites. claude@NOTE
 bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
-	return false;
+	return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x5a5ad9>|0x009|+0x04c:'1340'
-	// ******
+	// STRUCTURE DIFF: target 1 stmt / base 1 stmt
+	// SIZE -0x7 | 1799 | return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
+	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::unload_chambered_round()
+// STATE[100%|DONE]
 void weapon_core::unload_chambered_round( )
 {
-	// CALL SITE INFO
-	// <0x5a2dbd> -> void <unknown>()
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
 
-	// FUNCTION BODY
-	// <0x5a2d69>|0x009|+0x00c:'1345'
-	// <0x5a2d75>|0x015|+0x00c:'1346'
-	// <0x5a2d81>|0x021|+0x00c:'1347'
-	// <0>
-	// <0x5a2d8d>|0x02d|+0x018:'1349'
-	// <0x5a2da5>|0x045|+0x00a:'1350'
-	// <0>
-	// <0x5a2daf>|0x04f|+0x010:'1352'
-	// ******
+	++m_ammo_in_magazine;
+	m_is_round_chambered = false;
+	on_unload_chambered_round( );
 }
 
-// STATE[STUB]
-// unsigned short survarium::weapon_core::maximum_ammo_in_weapon() const
+// STATE[100%|DONE]: `bool const` local (per target PDB) flips the && temp to a byte store,
+// and `!= 0` in the addend emits the neg;sbb;neg normalize - both target shapes.
 u16 weapon_core::maximum_ammo_in_weapon( ) const
 {
-	// LOCALS
-	// bool 						chamber_a_round_but_not_on_reload
-	// ******
-
-	return 0;
-
-	// FUNCTION BODY
-	// <0x5a2a79>|0x009|+0x02c:'1357'
-	// <0x5a2aa5>|0x035|+0x016:'1358'
-	// ******
+	bool const chamber_a_round_but_not_on_reload = m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload;
+	return m_magazine_capacity + ( chamber_a_round_but_not_on_reload != 0 );
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core::on_hand_ik_event(vostok::animation::animation_callback_params&, const survarium::hand_to_weapon_ik_processor::hands_enum)
-animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand )
+// STATE[100%|DONE]: `bool const active` (per target PDB) drops the xor-before-sete; a plain
+// `bool` local zeroes the full register first.
+animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum const hand )
 {
-	// LOCALS
-	// bool 						active
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( params.domain_data ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( params.callback_time_in_ms ) );
 
-	// FUNCTION BODY
-	// <0x5a2d09>|0x009|+0x00c:'1363'
-	// <0x5a2d15>|0x015|+0x00c:'1364'
-	// <0x5a2d21>|0x021|+0x010:'1365'
-	// <0x5a2d31>|0x031|+0x01e:'1366'
-	// <0x5a2d4f>|0x04f|+0x002:'1367'
-	// ******
+	bool const active = params.domain_data == 9;
+	m_hand_ik_processor.activate_hand( hand, active, params.callback_time_in_ms );
+	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::on_user_sprint(bool)
+// STATE[90.17%|PARTIAL]: is_double_handed inline-vs-call wall (same class as is_trying_to_aim);
+// `bool const` local (per target PDB) closed the rest.
 void weapon_core::on_user_sprint( bool user_is_sprinting )
 {
-	// LOCALS
-	// bool 						left_hand_ik_is_active
-	// ******
+	bool const left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;
+	m_hand_ik_processor.activate_hand( hand_to_weapon_ik_processor::left, left_hand_ik_is_active, m_last_tick_time_in_ms );
 
-	// FUNCTION BODY
-	// <0x5a2ca9>|0x009|+0x027:'1372'
-	// <0x5a2cd0>|0x030|+0x01f:'1373'
-	// ******
+	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
+	// SIZE +0x5 | 1862 | bool const left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;
+	// VERDICT: STRUCTURE MATCH - is_double_handed call in target vs our inline read; same wall as is_trying_to_aim.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_idle_start()
+// STATE[100%|DONE]
 void weapon_core::instant_idle_start( )
 {
-	// CALL SITE INFO
-	// <0x5a3188> -> player_input const& <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a3167>|0x007|+0x00a:'1378'
-	// <0>
-	// <0x5a3171>|0x011|+0x021:'1380'
-	// <0x5a3192>|0x032|+0x008:'1381'
-	// ******
+	m_is_idle = true;
+	if ( !( m_user->input( ).actions_mask & 0x20 ) )
+		reset_fire_queue( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_idle_end()
+// STATE[100%|DONE]
 void weapon_core::instant_idle_end( )
 {
-	// FUNCTION BODY
-	// <0x5a2a57>|0x007|+0x00a:'1386'
-	// ******
+	m_is_idle = false;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_toggle_start()
+// STATE[100%|DONE]
 void weapon_core::instant_toggle_start( )
 {
-	// FUNCTION BODY
-	// <0x5a2a37>|0x007|+0x00a:'1391'
-	// ******
+	m_is_toggling = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_toggle_end()
+// STATE[100%|DONE]
 void weapon_core::instant_toggle_end( )
 {
-	// FUNCTION BODY
-	// <0x5a2a17>|0x007|+0x00a:'1396'
-	// ******
+	m_is_toggling = false;
 }
 
 } // namespace survarium

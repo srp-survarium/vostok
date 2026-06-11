@@ -5,22 +5,35 @@
 #include "pch.h"
 #include "player_logic_sprint_state.h"
 
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/player_stamina.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::player_logic_sprint_state::player_logic_sprint_state(survarium::weapon_user_animations_selector&)
+// STATE[66.70%|PARTIAL]: residual is boost-internal codegen of the subscriber's
+// default ctor (`next=0` + `function(clear_type)`) and `boost::function::operator=`
+// (assign_to/swap/clear), both in shared headers outside this unit. Base, type, and
+// the member-pointer bind all match.
 player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_sprint )
 {
-	// FUNCTION BODY
-	// <0x6f9563>|0x053|+0x055:'31'
-	// ******
+	m_stamina_subscriber.subscription_callback = boost::bind( &player_logic_sprint_state::on_stamina_depleted, this );
+
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE -0x2e | 20 | m_stamina_subscriber.subscription_callback = boost::bind( &player_logic_sprint_state::on_stamina_depleted, this );
+	// VERDICT: STRUCTURE MATCH - target inlines boost::function::operator= internals (temp ctor + assign_to + swap + clear), base calls operator= out-of-line; LTCG inline-vs-call on a boost header template, non-steerable.
 }
 
-// STATE[STUB]
-// stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::player_logic_sprint_state::selected_animations(vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, const bool) const
+// STATE[3.32%|STUB]: body is a VOSTOK_UNREACHABLE_CODE() placeholder, NOT matched -
+// the lexeme/expression mixing infrastructure is not yet reversed. report.json DOES
+// pair and score it (3.32%); the real body is the large routine in the carcass below.
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_sprint_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
+	// claude@TODO: lexeme/expression wall (mixing infrastructure not yet matched).
+	// Placeholder keeps the pair-returning override compilable (C4716/LNK1257) so
+	// the anchor can construct the state and the other members can match.
+	VOSTOK_UNREACHABLE_CODE( );
+
 	// LOCALS
 	// pcstr 						look_animation_id
 	// animation::instant_interpolator interpolator
@@ -74,53 +87,37 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::player_logic_sprint_state::set_callbacks(boost::function<void __cdecl(void)> const&, boost::function<void __cdecl(void)> const&)
+// STATE[100%|DONE]
 void player_logic_sprint_state::set_callbacks( boost::function<void()> const& initialize_callback, boost::function<void()> const& finalize_callback )
 {
-	// FUNCTION BODY
-	// <0x6f94df>|0x00f|+0x012:'77'
-	// <0x6f94f1>|0x021|+0x012:'78'
-	// ******
+	m_initialize_callback	= initialize_callback;
+	m_finalize_callback		= finalize_callback;
 }
 
-// STATE[STUB]
-// void survarium::player_logic_sprint_state::on_stamina_depleted()
+// STATE[47.50%|PARTIAL]: base_player::force_animation_selection is declared inline in
+// base_player.h, so our build inlines `m_force_animation_selection=true` while the
+// target keeps an out-of-line `call`. Fixing it needs base_player.h (other unit).
 void player_logic_sprint_state::on_stamina_depleted( )
 {
-	// FUNCTION BODY
-	// <0x6f94b7>|0x007|+0x00b:'83'
-	// ******
+	m_user->force_animation_selection( );
+
+	// STRUCTURE DIFF: target 1 / base 1 stmts
+	// SIZE +0x8 | 105 | m_user->force_animation_selection( );
+	// VERDICT: STRUCTURE MATCH - target keeps the header-defined setter out-of-line (call), base inlines the m_force_animation_selection store; LTCG per-call-site inlining, non-steerable.
 }
 
-// STATE[STUB]
-// void survarium::player_logic_sprint_state::initialize()
+// STATE[100%|DONE]
 void player_logic_sprint_state::initialize( )
 {
-	// CALL SITE INFO
-	// <0x6f9650> -> player_stamina& <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <0x6f962f>|0x00f|+0x02a:'89'
-	// <0x6f9659>|0x039|+0x00e:'90'
-	// ******
+	m_user->stamina( ).subscribe_on_depletion( &m_stamina_subscriber );
+	m_initialize_callback( );
 }
 
-// STATE[STUB]
-// void survarium::player_logic_sprint_state::finalize()
+// STATE[100%|DONE]
 void player_logic_sprint_state::finalize( )
 {
-	// CALL SITE INFO
-	// <0x6f9600> -> player_stamina& <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <0x6f95df>|0x00f|+0x02a:'95'
-	// <0x6f9609>|0x039|+0x00e:'96'
-	// ******
+	m_user->stamina( ).unsubscribe_from_depletion( &m_stamina_subscriber );
+	m_finalize_callback( );
 }
 
 } // namespace survarium

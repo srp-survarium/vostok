@@ -47,7 +47,7 @@ public:
 
 			void								remove						( );
 
-	inline	void								serialize					( network_core::udp_match_packet& arg_0, u32 arg_1 ) const { /* no source */ }
+			void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const;
 			void								deserialize					( network_core::packet_reader& reader );
 
 private:

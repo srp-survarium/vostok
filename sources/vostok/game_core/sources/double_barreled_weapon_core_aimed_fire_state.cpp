@@ -5,178 +5,224 @@
 #include "pch.h"
 #include <vostok/game_core/double_barreled_weapon_core_aimed_fire_state.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
+
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/resources_pinned_ptr.h>
 
 namespace survarium {
 
-// STATE[STUB]
+static float s_aim_transition_time = 0.3f;
+
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
+
+// computed_shooting_animation_time_scale is defined (STUB) in the timescale inline header;
+// new_object below is the only current caller, so pull in the definition here to resolve it.
+float computed_shooting_animation_time_scale( resources::managed_resource_ptr const& shooting_animation, float rounds_per_second );
+}
+#include <vostok/game_core/weapon_animations_timescale_inline.h>
+namespace survarium {
+
+// STATE[99.96%|DONE]: every instruction matches. Sole residual is the
+// `weapon.get_magazine_capacity()` __thiscall `this` loaded into eax (target) vs ecx (base) -
+// an argument-passing register choice (LTCG), same class as the double_barreled fire_state sibling.
+// Nested for loops are braced like the fire/reload siblings: each closing brace carries its
+// loop backjump as its own 0x2 statement (16/16 stmts, 0x1c2 both sides).
 double_barreled_weapon_core_aimed_fire_state::double_barreled_weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	float const								animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
-) : weapon_core_aimed_fire_state_base( weapon, animation_time_scale )
+	u32 const								animations_count
+) : weapon_core_aimed_fire_state_base( weapon, animation_time_scale ),
+	m_weapon_animation_index( u32( -1 ) )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							weapon_state_index<3>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	ASSERT_CMP_U( weapon.get_magazine_capacity( ), ==, 2 );
+	ASSERT_CMP_U( animations_count, ==, 12 );
 
-	// SKIPPED BLOCKS
-	// <0x7abe76><2>
-	// <0x7abe8e><3>
-	// <0x7abefe><3>
-	// ******
+	u32 animation_index = 0;
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 2 ; ++weapon_state_index ) {
+				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+			}
+		}
+	}
 
-	// FUNCTION BODY
-	// <0x7abe0b>|0x06b|+0x02b:'27'
-	// <0x7abe36>|0x096|+0x023:'28'
-	// <0x7abe59>|0x0b9|+0x007:'29'
-	// <0x7abe60>|0x0c0|+0x018|[1]:'30'
-	// <0x7abe78>|0x0d8|+0x018:'31'
-	// <0x7abe90>|0x0f0|+0x018:'32'
-	// <0x7abea8>|0x108|+0x03a:'33'
-	// <0x7abee2>|0x142|+0x002:'34'
-	// <0x7abee4>|0x144|+0x002:'35'
-	// <0x7abee6>|0x146|+0x002:'36'
-	// <0x7abee8>|0x148|+0x018|[2]:'37'
-	// <0x7abf00>|0x160|+0x018:'38'
-	// <0x7abf18>|0x178|+0x031:'39'
-	// <0x7abf49>|0x1a9|+0x002:'40'
-	// <0x7abf4b>|0x1ab|+0x002:'41'
-	// <0x7abf4d>|0x1ad|+0x00c:'42'
-	// ******
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	// STRUCTURE DIFF: target 16 stmts / base 16 stmts (0x1c2 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residual is the get_magazine_capacity `this` in eax (target) vs ecx (base), LTCG arg-register choice.
 }
 
-// STATE[STUB]
-// void survarium::double_barreled_weapon_core_aimed_fire_state::initialize()
+// STATE[99.76%|DONE]: every instruction/branch matches. Sole residual is the
+// `m_weapon.ammo_in_magazine()` __thiscall `this` loaded into eax (target) vs ecx (base) -
+// an argument-passing register choice (LTCG). Same shape as the double_barreled fire_state sibling.
 void double_barreled_weapon_core_aimed_fire_state::initialize( )
 {
-	// FUNCTION BODY
-	// <0x7ac329>|0x009|+0x008:'47'
-	// <0x7ac331>|0x011|+0x00c:'48'
-	// <0x7ac33d>|0x01d|+0x022:'49'
-	// ******
+	weapon_core_aimed_fire_state_base::initialize( );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	m_weapon_animation_index = m_weapon.ammo_in_magazine( ) != 2;
+
+	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x43 both) - no diverging rows
+	// VERDICT: STRUCTURE MATCH - residual is the ammo_in_magazine `this` in eax (target) vs ecx (base), LTCG arg-register choice.
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::double_barreled_weapon_core_aimed_fire_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[83.90%|PARTIAL]: every statement (the leading ASSERT, get_weapon_lexeme_pair,
+// get_user_hands_expression with weight_driving_animation, return), branch and lexeme operand
+// match. Sole residual is the operator+<...> template-selection / inline-vs-call LTCG on the
+// `main + expression(offset) + hands` addition tree: the target keeps operator+<animation_lexeme>
+// OUT-OF-LINE while our /GL build inlines addition_lexeme, shifting the [ebp-XX] layout. IDENTICAL
+// wall to double_barreled_weapon_core_fire_state::weapon_and_hands_expression (#203, 83.18%) -
+// whole-program decision, not source-steerable in this unit. See .md.
 animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::expression hands_expression
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
-	// <0x7ac240>|0x010|+0x012:'54'
-	// <0x7ac252>|0x022|+0x01f:'55'
-	// <0x7ac271>|0x041|+0x02a:'56'
-	// <0>
-	// <0x7ac29b>|0x06b|+0x07a:'58'
-	// ******
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
+
+	animation::mixing::expression hands_expression =
+		get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
+
+	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE +0x29 | 114 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the operator+ inline-vs-call LTCG on the addition tree, non-steerable.
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
-weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+// STATE[100%|DONE]
+weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
-	// LOCALS
-	// pcstr[2] 					weapon_animation_captions
-	// resources::managed_resource_ptr const& selected_animation
-	// pcstr 						animation_identifier
-	// ******
+	pcstr weapon_animation_captions[2] = { "aimed_shot_first_barrel", "aimed_shot_second_barrel" };
 
-	// FUNCTION BODY
-	// <0>
-	// <0x7ac169>|0x009|+0x007:'64'
-	// <0x7ac170>|0x010|+0x007:'65'
-	// <0>
-	// <0x7ac177>|0x017|+0x010:'67'
-	// <0x7ac187>|0x027|+0x032:'68'
-	// <0x7ac1b9>|0x059|+0x00c:'69'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7ac1c5>|0x065|+0x056:'73'
-	// ******
+	pcstr animation_identifier = weapon_animation_captions[m_weapon_animation_index];
+
+	resources::managed_resource_ptr const& selected_animation =
+		m_weapon_animations[is_third_view != false][user_state_id == type_crouch][m_weapon_animation_index];
+
+	set_animation_to_wait( selected_animation );
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		animation_identifier,
+		selected_animation,
+		&m_weapon,
+		m_animation_playback_state,
+		1,
+		m_animation_timescale,
+		animation::mixing::play_once_and_freeze_at_end,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression(vostok::animation::mixing::animation_lexeme&, vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// STATE[79.39%|PARTIAL]: structure now matches the target exactly - 10 statements both sides (sprint
+// early-return, the animation_type()!=additive early-return, the captions array, the interpolator local,
+// and - per claude@MATCH - the animation_lexeme_parameters ctor+setter chain folded into ONE statement
+// (target L101=0x6e vs base 0x72) feeding the animation_lexeme override_lexeme construction, like the
+// matching show/hide siblings). Residual is the unsteerable inline-vs-call LTCG class: the target keeps
+// the lexeme_parameters setters OUT-OF-LINE (animated_object/playback_type are calls, additivity_priority
+// inline) while our /GL build INLINES animated_object+playback_type; animation_type() is also COMDAT-folded
+// onto a trivial getter. Both whole-program decisions, not source-steerable.
 animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::animation_lexeme override_lexeme
-	// u32 							user_animation_index
-	// animation::linear_interpolator interpolator
-	// resources::managed_resource_ptr const& selected_animation
-	// pcstr[2] 					user_animation_captions
-	// ******
+	if ( user_state_id == type_sprint )
+		return animation::mixing::expression( weapon_lexeme );
 
-	// FUNCTION BODY
-	// <0x7abff1>|0x011|+0x006:'78'
-	// <0x7abff7>|0x017|+0x010:'79'
-	// <0>
-	// <0x7ac007>|0x027|+0x00c:'81'
-	// <0x7ac013>|0x033|+0x020:'82'
-	// <0x7ac033>|0x053|+0x059:'83'
-	// <0x7ac08c>|0x0ac|+0x010:'84'
-	// <0>
-	// <1>
-	// <0x7ac09c>|0x0bc|+0x00e:'87'
-	// <0>
-	// <0x7ac0aa>|0x0ca|+0x010:'89'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7ac0ba>|0x0da|+0x06e:'101'
-	// <0x7ac128>|0x148|+0x021:'102'
-	// ******
+	u32 const user_animation_index = ( user_state_id == type_crouch );
+
+	resources::managed_resource_ptr const& selected_animation =
+		m_user_animations[is_third_view != false][user_animation_index];
+
+	if ( resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( selected_animation )->animation_type( ) != animation::animation_type_additive )
+		return animation::mixing::expression( weapon_lexeme );
+
+	pcstr const user_animation_captions[2] = { "aimed_stand_shot", "aimed_crouch_shot" };
+
+	animation::linear_interpolator interpolator( s_aim_transition_time );
+
+	// claude@MATCH: chain ctor + all setters into ONE statement (target L101 carcass) feeding the
+	// animation_lexeme construction - matches the show/hide siblings; a named params local + separate
+	// setter statement split this into 2 statements (14 vs target's 12).
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			user_animation_captions[user_animation_index],
+			selected_animation,
+			&weapon_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object( m_weapon.get_user( ) )
+		.playback_type( animation::mixing::play_once_and_freeze_at_end )
+		.additivity_priority( 1 )
+	);
+
+	return animation::mixing::expression( override_lexeme );
+
+	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
+	// SIZE +0x3  | 154 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE -0x13 | 161 | if ( resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( selected_animation )->animation_type( ) != animation::animation_type_additive )
+	// SIZE +0x3  | 162 | return animation::mixing::expression( weapon_lexeme );
+	// SIZE +0x4  | 182 | );
+	// VERDICT: STRUCTURE MATCH (shape ok) - residuals are per-site LTCG inline-vs-call: target inlines animation_type() (reads [ptr+18h] via temps) where base keeps the call; expression(lexeme) ctor arg-register shape; setter-chain inline depth.
 }
 
-// STATE[STUB]
-// survarium::double_barreled_weapon_core_aimed_fire_state* survarium::weapon_core_state_cook_template<survarium::double_barreled_weapon_core_aimed_fire_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
+// STATE[86.50%|PARTIAL]: control flow + placement-new + ctor call all match. Sole residual is the
+// computed_shooting_animation_time_scale callee: it is a STUB returning a constant, so our /Od build
+// FOLDS it to `fldz` at the call site (no call), while the target keeps it OUT-OF-LINE and the LTCG
+// whole-program optimizer returns the float in xmm0 (movss [esp], xmm0). Argument passing /
+// inline-vs-call at the call boundary - not source-steerable until that callee is matched. SAME wall
+// as all the sibling new_objects (#203 86.5%, #182 92.08%, #199 86.5%).
 double_barreled_weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::double_barreled_weapon_core_aimed_fire_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	u32 const							animations_count
 )
 {
-	return NULL;
+	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_aimed_fire_state(
+		params->weapon,
+		computed_shooting_animation_time_scale( *animations, params->rounds_per_second ),
+		animations,
+		animations_count
+	);
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7abf79>|0x009|+0x05c:'114'
-	// ******
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE -0x11 | 223 | );
+	// VERDICT: STRUCTURE MATCH (1/1) - base folds the STUB computed_shooting_animation_time_scale to fldz at the call site while target keeps the call (xmm0 return); closes itself once that callee is matched.
 }
 
 } // namespace survarium

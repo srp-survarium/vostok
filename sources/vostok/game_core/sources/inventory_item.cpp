@@ -12,11 +12,6 @@
 namespace survarium {
 
 // STATE[78.8%|PARTIAL]: member-init shape matches; % gap is LTCG base-ctor inline. See inventory_item_ctor.md.
-// STRUCTURE DIFF:
-// target: 0x590870            base: 0x449c20
-// ; survarium::inventory_item::inventory_item(survarium::inventory_item::action_behaviour_type) ; target 0 stmts / base 0 stmts
-// ; aligned 0, size-diffs 0, quantity-diffs 0
-// VERDICT: STRUCTURE MATCH - both 0-stmt member-init, init order/offsets match; 78.8% gap is LTCG base-ctor inline-vs-call, not this ctor's shape  trail: inventory_item-ctor.md
 inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_action_behaviuor	( type ),
 	m_inventory			( NULL ),
@@ -24,6 +19,8 @@ inventory_item::inventory_item( inventory_item::action_behaviour_type type ) :
 	m_amount			( 0 ),
 	m_dict_id			( 0 )
 {
+	// STRUCTURE DIFF: target 0 stmts / base 0 stmts
+	// VERDICT: STRUCTURE MATCH (shape ok) - 0-stmt member-init, init order/offsets match; residual is LTCG base-ctor inline-vs-call, non-steerable. trail: inventory_item-ctor.md
 }
 
 // STATE[100%|DONE]
@@ -32,35 +29,27 @@ bool inventory_item::get_item_props( inventory_item_props& props )
 	props.m_dict_id = m_dict_id;
 	props.m_amount = m_amount;
 	return false;
-
-	// FUNCTION BODY
-	// <0x5a07e7>|0x007|+0x010:'22'
-	// <0x5a07f7>|0x017|+0x011:'23'
-	// <0x5a0808>|0x028|+0x002:'24'
-	// ******
 }
 
-// STATE[PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
+// STATE[69.33%|PARTIAL]: single append( m_amount ) ([+0x114] u16); client_offset unused (LTCG-dropped arg). Matches rva 0x590840.
 void inventory_item::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER( client_offset );
 	packet.append( m_amount );
 
-	// STRUCTURE DIFF[target 0x590840 | base 0x450230]: target 1 / base 1 stmts
-	//   1: 0x009 <0x13> | 0x009 <0x1c> | packet.append( m_amount );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet<T>::append LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x9 | 41 | packet.append( m_amount );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE: target CALLS the append(u16) overload out-of-line (push value), base INLINES it down to the (&tmp, sizeof) append(pcvoid,u32) call; cross-module LTCG, non-steerable.
 }
 
-// STATE[PARTIAL]: single r< u16 > into m_amount ([+0x114]). Matches rva 0x590810.
+// STATE[46.91%|PARTIAL]: single r< u16 > into m_amount ([+0x114]). Matches rva 0x590810.
 void inventory_item::deserialize( network_core::packet_reader& reader )
 {
 	m_amount = reader.r< u16 >( );
 
-	// STRUCTURE DIFF[target 0x590810 | base 0x4501f0]: target 1 / base 1 stmts
-	//   1: 0x009 <0x12> | 0x009 <0x2a> | m_amount = reader.r< u16 >( );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0, blank-gaps 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is packet_reader::r<u16> LTCG inline (target) vs call (base), non-steerable.
+	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
+	// SIZE +0x18 | 52 | m_amount = reader.r< u16 >( );
+	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE: target CALLS packet_reader::r<u16> out-of-line (LTCG this-in-EDX), base INLINES the read+advance; cross-module LTCG, non-steerable. Report None = paired at 0.0 (proto3 default omission), the whole 1-stmt body is this wall.
 }
 
 } // namespace survarium
