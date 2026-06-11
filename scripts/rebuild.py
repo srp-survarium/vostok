@@ -38,6 +38,7 @@ from pathlib import Path
 import generate_delink
 import generate_rich
 import generate_structure
+import regen_ninja
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -159,6 +160,9 @@ def main() -> None:
     start = time.monotonic()
     modules: set[str] = set()
     try:
+        log("Refreshing ninja graph from the .vcprojs ...")
+        regen_ninja.regenerate()
+
         log("Building survarium via ninja ...")
         try:
             modules = run_ninja()
