@@ -75,6 +75,14 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
+
+	// STRUCTURE DIFF: target 16 / base 16 stmts
+	// SIZE -0x17 | 57 | ASSERT( UNKNOWN_EXPRESSION );
+	// SIZE +0x9  | 63 | for ( u32 user_state_index = 0; user_state_index < 2; ++user_state_index, ++animation_index )
+	// SIZE -0xf  | 65 | m_weapon_animations[view_index][user_state_index] = animations[animation_index];
+	// SIZE +0x9  | 71 | for ( u32 user_state_index = 0; user_state_index < 2; ++user_state_index, ++animation_index )
+	// SIZE -0xf  | 73 | m_user_animations[view_index][user_state_index] = animations[animation_index];
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are LTCG inline-vs-call differences for ASSERT, for-loop constructs, and resource_ptr operator=. Non-steerable.
 }
 
 // STATE[100%|DONE]: objdiff-unscored (newly emitted, absent from the delink unit's function list) but

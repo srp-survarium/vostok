@@ -177,6 +177,12 @@ void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_rel
 
 	m_logic->add_transition( reload_start, reload_one_round, boost::bind< bool >( &true_predicate ) );
 	m_logic->add_transition( reload_one_round, reload_finish, boost::bind( &weapon_core_shotgun_reload_state::finish_reload_predicate, this ) );
+
+	// STRUCTURE DIFF: target 10 / base 10 stmts
+	// SIZE -0x6 | 167 | reload_finish->set_animation_playback_state_ptr( &m_animation_playback_state );
+	// SIZE -0x7 | 173 | static_cast< weapon_core_shotgun_reload_finish_substate* >( reload_finish )->set_owner_ready_for_transition( &m_is_ready_to_be_deactivated );
+	// SIZE -0xc | 175 | m_logic->add_transition( reload_start, reload_one_round, boost::bind< bool >( &true_predicate ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are LTCG inline-vs-call: target keeps set_animation_playback_state_ptr, set_owner_ready_for_transition, and boost::bind<bool> out-of-line vs base inlines them. Non-steerable.
 }
 
 // STATE[STUB]: real body is complex (ammo_in_magazine/capacity comparison + inventory check +
