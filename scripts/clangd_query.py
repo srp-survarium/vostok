@@ -11,7 +11,8 @@ who references it, what is its type.
                                                                 # index, wait until done
 
 Lines/columns are 1-based (as printed by grep/editors). When <col> is omitted,
-the first identifier on the line that yields a result is probed.
+identifiers on the line are probed right-to-left (the declared name sits
+rightmost on C++ declaration lines) until one yields a result.
 
 Cross-TU answers (symbol, refs into other TUs) come from clangd's background
 index, built incrementally under .cache/clangd/ on first use - early runs may
@@ -143,7 +144,9 @@ def positions_to_probe(path: Path, line: int, col: int | None):
         yield line - 1, col - 1
         return
     text = path.read_text(errors="replace").splitlines()[line - 1]
-    for m in re.finditer(r"[A-Za-z_][A-Za-z0-9_]*", text):
+    # right-to-left: on `u16 weapon_core::get_magazine_capacity( ) const` the
+    # declared name - not the return type - is what the caller means
+    for m in reversed(list(re.finditer(r"[A-Za-z_][A-Za-z0-9_]*", text))):
         yield line - 1, m.start()
 
 
@@ -177,11 +180,25 @@ def main() -> None:
     lsp = Clangd()
     try:
         if args.cmd == "index":
+            # CDB discovery (and thus background indexing) starts lazily on
+            # the first didOpen - kick it with the compdb's first entry.
+            first = json.loads(
+                (VOSTOK_DIR / "compile_commands.json").read_text())[0]["file"]
+            lsp.open_file(Path(first))
             lsp.wait_for_index()
             return
 
         if args.cmd == "symbol":
-            syms = lsp._request("workspace/symbol", {"query": args.query}) or []
+            # same lazy-CDB kick as `index`: shards load only after a didOpen,
+            # and loading ~6k shards takes a moment - retry briefly
+            first = json.loads(
+                (VOSTOK_DIR / "compile_commands.json").read_text())[0]["file"]
+            lsp.open_file(Path(first))
+            for _ in range(10):
+                syms = lsp._request("workspace/symbol", {"query": args.query}) or []
+                if syms:
+                    break
+                time.sleep(2)
             for s in syms:
                 container = s.get("containerName") or ""
                 print(f"{container}{'::' if container else ''}{s['name']}  "
