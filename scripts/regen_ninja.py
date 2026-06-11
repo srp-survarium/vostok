@@ -31,6 +31,14 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 VOSTOK_DIR = SCRIPT_DIR.parent
 BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
 SLN_PATH   = VOSTOK_DIR / "sources" / "vostok v2.0.sln"
+STAMP_PATH = BUILD_DIR / ".regen-stamp"
+
+# Source subtrees whose mtimes we check — only files in these directories
+# contribute to the fingerprint.  When nothing here changes, vcproj2ninja
+# is skipped entirely (its output is already byte-identical).
+WATCH_ROOTS = [
+    VOSTOK_DIR / "sources",
+]
 
 
 def log(msg: str) -> None:
@@ -63,13 +71,65 @@ def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
         sys.exit(f"[regen-ninja] vcproj2ninja did not produce {probe}")
 
 
-def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
+def _source_fingerprint() -> str:
+    """Return the newest mtime under WATCH_ROOTS as a string.
+
+    If any file is newer than the stamp, the source tree has changed and
+    vcproj2ninja must re-run.  This is intentionally coarse — the real fix
+    (per-file include-scan caching) belongs in vcproj2ninja itself."""
+    newest = 0
+    for root in WATCH_ROOTS:
+        if not root.is_dir():
+            continue
+        for fp in root.rglob("*"):
+            if not fp.is_file():
+                continue
+            try:
+                mtime = fp.stat().st_mtime_ns
+                if mtime > newest:
+                    newest = mtime
+            except OSError:
+                continue
+    return str(newest)
+
+
+def _skip_regen() -> bool:
+    """True if the source tree hasn't changed since the last regen."""
+    if not STAMP_PATH.is_file():
+        return False
+    if not (BUILD_DIR / "build.ninja").is_file():
+        return False
+    try:
+        prev = STAMP_PATH.read_text().strip()
+    except OSError:
+        return False
+    return prev == _source_fingerprint()
+
+
+def _write_stamp() -> None:
+    STAMP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STAMP_PATH.write_text(_source_fingerprint())
+
+
+def regenerate(dry_run: bool = False, compdb: bool = False,
+               force: bool = False) -> list[str]:
     """Regenerate and merge; return the relative paths that changed.
 
     By default only the ninja graph is regenerated.  Pass compdb=True to also
     regenerate compile_commands.json + clangd-vfs.yaml (include-invariant,
-    needed only for IDE support, not for building)."""
+    needed only for IDE support, not for building).
+
+    The regen is skipped entirely when the source-tree fingerprint hasn't
+    changed since the last run.  Pass force=True to override (e.g. after
+    editing a .vcproj)."""
     changed: list[str] = []
+
+    if not force and _skip_regen():
+        log("nothing to do - source tree unchanged since last regen.")
+        if compdb:
+            changed += regenerate_compdb(dry_run=dry_run)
+        return changed
+
     with tempfile.TemporaryDirectory(prefix="ninja_regen_") as tmp:
         tmp_dir = Path(tmp)
         gen_fresh(tmp_dir)
@@ -106,6 +166,9 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
         else "nothing to do - ninja graph already matches the .vcprojs/sources.")
     for rel in changed:
         log(f"  {rel}")
+
+    if not dry_run:
+        _write_stamp()
 
     if compdb:
         changed += regenerate_compdb(dry_run=dry_run)
@@ -148,8 +211,11 @@ def main() -> None:
     ap.add_argument("--compdb", action="store_true",
                     help="also regenerate compile_commands.json + clangd-vfs.yaml "
                          "(include-invariant; needed only for IDE support)")
+    ap.add_argument("--force", action="store_true",
+                    help="run vcproj2ninja even if the source-tree fingerprint "
+                         "hasn't changed (e.g. after editing a .vcproj)")
     args = ap.parse_args()
-    regenerate(dry_run=args.dry_run, compdb=args.compdb)
+    regenerate(dry_run=args.dry_run, compdb=args.compdb, force=args.force)
 
 
 if __name__ == "__main__":
