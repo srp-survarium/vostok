@@ -510,6 +510,67 @@ def cmd_report(args):
     emit(rows, args.json)
 
 
+def cmd_queue(args):
+    """Matcher-ready batches: whole TUs only (a TU is never split across batches
+    - two matchers in one file collide), smallest work first."""
+    con = open_db()
+    where, params = ["module = ?"], [args.module]
+    if args.small is not None:
+        where.append("size <= ?")
+        params.append(args.small)
+    q = f"""
+      WITH cand AS (
+        SELECT s.demangled, s.mangled, coalesce(u.name,'(no unit)') AS unit,
+               u.module, t.size, p.fuzzy_pct, p.struct_class,
+               CASE WHEN p.sym IS NULL THEN 'TARGET_ONLY' ELSE 'PAIRED' END AS presence
+        FROM target_functions t
+        JOIN symbols s ON s.id = t.sym
+        LEFT JOIN units u ON u.id = t.unit
+        LEFT JOIN pairs p ON p.sym = t.sym
+        WHERE NOT (p.fuzzy_pct >= 100 AND p.struct_class = 'MATCH')
+          AND s.mangled NOT IN (SELECT mangled FROM flags)
+      )
+      SELECT * FROM cand WHERE {" AND ".join(where)}
+      ORDER BY unit, size
+    """
+    by_unit = {}
+    for r in con.execute(q, params):
+        by_unit.setdefault(r["unit"], []).append(dict(r))
+    units = sorted(by_unit.items(), key=lambda kv: (sum(f["size"] for f in kv[1]), kv[0]))
+
+    batches, current = [], []
+    for unit, fns in units:
+        if current and len(current) + len(fns) > args.batch:
+            batches.append(current)
+            current = []
+        current.extend(fns)
+    if current:
+        batches.append(current)
+
+    if args.json:
+        out = [
+            {
+                "batch": i + 1,
+                "functions": [
+                    {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence")}
+                    for f in batch
+                ],
+            }
+            for i, batch in enumerate(batches)
+        ]
+        print(json.dumps(out, indent=1))
+        return
+    for i, batch in enumerate(batches, 1):
+        total = sum(f["size"] for f in batch)
+        print(f"=== batch {i}: {len(batch)} functions, {total:#x} bytes")
+        for f in batch:
+            pct = "-" if f["fuzzy_pct"] is None else f"{f['fuzzy_pct']:.1f}"
+            print(
+                f"  {f['size']:>6}  {pct:>6}  {f['struct_class'] or f['presence']:<11}  "
+                f"{f['unit']}  {f['demangled'][:100]}"
+            )
+
+
 def cmd_sql(args):
     con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
@@ -541,12 +602,24 @@ def main():
     p.add_argument("--per-unit", action="store_true")
     p.add_argument("--json", action="store_true")
 
+    p = sub.add_parser("queue", help="matcher-ready batches, whole TUs, small-first")
+    p.add_argument("--module", required=True)
+    p.add_argument("--batch", type=int, default=12, help="target functions per batch")
+    p.add_argument("--small", type=parse_size, help="only functions <= this size")
+    p.add_argument("--json", action="store_true")
+
     p = sub.add_parser("sql", help="read-only SQL escape hatch")
     p.add_argument("query")
     p.add_argument("--json", action="store_true")
 
     args = ap.parse_args()
-    {"refresh": cmd_refresh, "list": cmd_list, "report": cmd_report, "sql": cmd_sql}[args.cmd](args)
+    {
+        "refresh": cmd_refresh,
+        "list": cmd_list,
+        "report": cmd_report,
+        "queue": cmd_queue,
+        "sql": cmd_sql,
+    }[args.cmd](args)
 
 
 if __name__ == "__main__":
