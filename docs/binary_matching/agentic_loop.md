@@ -64,7 +64,7 @@ The match DB (`docs/binary_matching/match.db`, design in `match_db_design.md`)
 owns queue building:
 
 ```
-python3 scripts/match_db.py refresh                  # after a rebuild/delink
+python3 scripts/match_db.py refresh   # auto-runs rebuild.py first when sources moved
 python3 scripts/match_db.py report --module <m> [--per-unit]
 python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
 ```

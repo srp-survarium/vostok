@@ -55,7 +55,7 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    and commit `docs/binary_matching/match.db` at run milestones - workers never
    touch it):
    ```
-   python3 scripts/match_db.py refresh
+   python3 scripts/match_db.py refresh    # runs rebuild.py itself when sources moved
    python3 scripts/match_db.py report --module <m> --per-unit
    python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
    ```
