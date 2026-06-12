@@ -956,26 +956,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="temp_include_all"
-				>
-				<File
-					RelativePath=".\temp_include_all.cpp"
-					>
-					<FileConfiguration
-						Name="Master Gold|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							GeneratePreprocessedFile="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\temp_include_all.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="damage_model"
 				>
 				<File

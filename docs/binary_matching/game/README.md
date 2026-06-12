@@ -28,10 +28,16 @@ triaged; `temp/triage_log.md` records every removal with its reason:
 - A name hit in a `vostok::*`-namespace module is NOT coverage (e.g.
   `flash_renderer`, `render_visual` also exist in `vostok::render`) - those
   stayed in the queue, flagged CHECK in the triage log.
+- pass 3 (147 - 2 restored): instantiation dumps of the engine USER_ALLOCATOR
+  container machinery (`survarium::map/vector/std_allocator` come from
+  `vostok/map.h` + `std_containers.h` via the kept `game_memory.h`); restored
+  the 2 `weapon_sound_events_handler_state_cook` variants pass 2 dropped by
+  matching the template ARGUMENT type - that family is game's.
 
-What remains (458 headers + 144 compiland files) is game's work-list: a file is
-deleted from the queue when its real counterpart is reproduced in the tree.
-Empty queue = carcass complete.
+What remains is game's work-list (301 headers + 144 compiland files after pass
+3, minus whatever later batches reproduce): a file is deleted from the queue
+when its real counterpart is reproduced in the tree. Empty queue = carcass
+complete.
 
 ## Module-wide notes
 
@@ -59,7 +65,8 @@ Parking the legacy TUs cut the only real references into the engine_user world
 cone - `/OPT:REF` stripped game_core/ai/ui/animation almost whole (game_core
 509->0 exact). Restored by two temp anchors: `IncludeAll temp_anchor;` in
 `game_entry_point.cpp::create_world` (the legacy root was `game_world.cpp:99`)
-plus `use_engine_user_world_cone()` in game_core's `temp_include_all.cpp`
+plus `use_engine_user_world_cone()` in `temp_include_all.cpp` (the anchor TU,
+now owned by game - moved from game_core)
 (ai/ui/animation/input/rtp/ai_navigation create/destroy_world).
 
 Residual vs the pre-rebuild report: 880 lost exact fns / 635 gained (net exact

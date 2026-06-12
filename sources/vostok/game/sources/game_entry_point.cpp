@@ -22,7 +22,7 @@ namespace render {
 // cone) reachable for /OPT:REF while the rebuilt game module is still stubs;
 // the legacy game_world.cpp used to instantiate this (must move out before
 // this TU is matched)
-#include <vostok/game_core/sources/temp_include_all.h>
+#include "temp_include_all.h"
 
 // Canonical statics (game_entry_point.cpp lines 46-55): s_input_allocator,
 // s_ui_allocator, s_ai_navigation_allocator, s_ai_allocator, s_game_allocator,
