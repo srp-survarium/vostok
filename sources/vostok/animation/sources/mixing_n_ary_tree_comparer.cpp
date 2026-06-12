@@ -30,20 +30,11 @@ void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 {
 	n_ary_tree_size_calculator	calculator( this );
 	node.accept					( calculator );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x56d883>|0x003|+0x028:'51'
-	// ******
 }
 
 bool n_ary_tree_comparer::equal( ) const
 {
 	return						m_equal;
-
-	// FUNCTION BODY
-	// <0x56d860>|0x000|+0x003:'63'
-	// ******
 }
 
 // STATE[STUB]
@@ -1392,46 +1383,6 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 		add_weight_synchronization_group	( j_begin, j_end );
 		get_next_synchronization_group		( j_begin, j_end );
 	}
-
-
-	// FUNCTION BODY
-	// <0x56f233>|0x003|+0x003:'1078'
-	// <0x56f236>|0x006|+0x019:'1079'
-	// <0x56f24f>|0x01f|+0x007:'1080'
-	// <0x56f256>|0x026|+0x01a:'1081'	synchronization_group_end( j_begin );
-	// <0x56f270>|0x040|+0x048:'1082'	while
-	// <0x56f2b8>|0x088|-0x040:'1082'
-	// <0x56f278>|0x048|+0x00e:'1083'		if ( (*i_begin).weight_synchroni
-	// <0x56f286>|0x056|+0x00b:'1084'
-	// <0x56f291>|0x061|+0x01b:'1085'
-	// <0x56f2ac>|0x07c|+0x067:'1086'
-	// <0>
-	// <1>
-	// <0x56f313>|0x0e3|+0x002:'1089'
-	// <0x56f315>|0x0e5|+0x030:'1090'
-	// <0x56f345>|0x115|-0x091:'1091'
-	// <0x56f2b4>|0x084|+0x0ae:'1092'
-	// <0x56f362>|0x132|+0x005:'1092'
-	// <0>
-	// <1>
-	// <0x56f367>|0x137|+0x00f:'1095'
-	// <0x56f376>|0x146|+0x01f:'1096'
-	// <0x56f395>|0x165|+0x022:'1097'
-	// <0>
-	// <1>
-	// <0x56f3b7>|0x187|+0x009:'1100'
-	// <0x56f3c0>|0x190|+0x004:'1101'
-	// <0x56f3c4>|0x194|+0x00b:'1102'
-	// <0x56f3cf>|0x19f|-0x113:'1103'
-	// <0>
-	// <1>
-	// <0x56f2bc>|0x08c|+0x055:'1106'
-	// <0x56f311>|0x0e1|-0x04d:'1106'
-	// <0>
-	// <0x56f2c4>|0x094|+0x030:'1108'
-	// <0x56f2f4>|0x0c4|+0x104:'1109'
-	// <0>
-	// ******
 }
 
  n_ary_tree_comparer::n_ary_tree_comparer( n_ary_tree const& from, n_ary_tree const& to, u32 current_time_in_ms ) :
@@ -1452,23 +1403,6 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	m_animated_objects_count = m_animated_objects_end - m_animated_objects;
 
 	m_needed_buffer_size += m_animations_count * sizeof( animation_state );
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x56f426>|0x016|+0x01b:'1134'
-	// <0>
-	// <1>
-	// <0x56f441>|0x031|+0x013:'1137'
-	// <0>
-	// <1>
-	// <0x56f454>|0x044|+0x00e:'1140'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56f462>|0x052|+0x022:'1144'
-	// <0x56f484>|0x074|+0x00b:'1145'
-	// ******
 }
 
 } // namespace mixing

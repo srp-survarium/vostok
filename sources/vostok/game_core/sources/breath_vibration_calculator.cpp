@@ -54,13 +54,9 @@ breath_vibration_calculator::~breath_vibration_calculator( )
 bool true_predicate( )
 {
 	return true;
-
-	// FUNCTION BODY
-	// <0xcb5c3>|0x003|+0x002:'54'
-	// ******
 }
 
-// STATE[STUB|INPROGRESS]: NOT matched this unit (large ~0x3bc; fsm-build with 3 breath_state
+// STATE[STUB]: NOT matched this unit (large ~0x3bc; fsm-build with 3 breath_state
 // subclasses + 5 boost::bind/true_predicate add_transitions). Reconstructed body + concrete
 // next steps (header move to private AAE, breath_holding_states includes) in _tick.md.
 void breath_vibration_calculator::initialize_logic( )
@@ -121,13 +117,6 @@ void breath_vibration_calculator::hold_breath( bool value )
 	{
 		m_is_breath_holded = value;
 	}
-
-	// FUNCTION BODY
-	// <0x5934a7>|0x007|+0x00f:'101'
-	// <0>
-	// <0x5934b6>|0x016|+0x009:'103'
-	// <0>
-	// ******
 }
 
 } // namespace survarium

@@ -19,9 +19,6 @@ static console_commands::cc_bool s_dispersion_enabled_cc( "dispersion_enabled", 
 // void `dynamic atexit destructor for 's_dispersion_enabled_cc''()
 void `dynamic atexit destructor for 's_dispersion_enabled_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7dafa0>|0x000|      :'14'	{
-	// ******
 }
 */
 
@@ -54,21 +51,12 @@ float dispersion_calculator::get_dispersion( ) const
 void dispersion_calculator::set_shooting_skill_coeff( float const shooting_skill_coef )
 {
 	m_shooting_skill_coeff = shooting_skill_coef;
-
-	// FUNCTION BODY
-	// <0x596787>|0x007|+0x00d:'70'
-	// ******
 }
 
 void dispersion_calculator::set_aiming_speed_coeff( float const aiming_speed_coeff )
 {
 	m_aiming_speed_coeff = aiming_speed_coeff;
 	apply_aim_speed( );
-
-	// FUNCTION BODY
-	// <0x596817>|0x007|+0x00d:'75'
-	// <0x596824>|0x014|+0x008:'76'
-	// ******
 }
 
 void dispersion_calculator::apply_aim_speed( )
@@ -103,29 +91,16 @@ void dispersion_calculator::tick(
 {
 	m_weapon_calculator.tick( current_time_in_ms );
 	m_character_calculator.tick( character_state, is_moving, is_aiming, broken_hands_count, using_double_handed_weapon, current_time_in_ms );
-
-	// FUNCTION BODY
-	// <0x596887>|0x007|+0x00c:'100'
-	// <0x596893>|0x013|+0x027:'101'
-	// ******
 }
 
 void dispersion_calculator::reload( )
 {
 	m_weapon_calculator.reload( );
-
-	// FUNCTION BODY
-	// <0x596867>|0x007|+0x008:'106'
-	// ******
 }
 
 void dispersion_calculator::fire( )
 {
 	m_weapon_calculator.fire( );
-
-	// FUNCTION BODY
-	// <0x596847>|0x007|+0x008:'111'
-	// ******
 }
 
 } // namespace survarium

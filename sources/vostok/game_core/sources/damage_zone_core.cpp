@@ -63,41 +63,11 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	configs::binary_config_value const* end	= bone_parts_filter.end( );
 	for ( ; it != end ; ++it )
 		m_body_parts_filter.push_back((pcstr)it);
-
-	// FUNCTION BODY
-	// <0x5994d0>|0x000|+0x010:'49'	{
-	// <0x5994e0>|0x010|+0x00f:'50'
-	// <0>
-	// <0x5994ef>|0x01f|+0x042:'52'
-	// <0x599531>|0x061|+0x042:'53'
-	// <0x599573>|0x0a3|+0x042:'54'
-	// <0>
-	// <18>
-	// <0x5995b5>|0x0e5|+0x021:'74'
-	// <0x5995d6>|0x106|+0x020:'75'
-	// <0x5995f6>|0x126|+0x020:'76'
-	// <0x599616>|0x146|+0x020:'77'
-	// <0x599636>|0x166|+0x020:'78'
-	// <0x599656>|0x186|+0x01e:'79'
-	// <0x599674>|0x1a4|+0x01e:'80'
-	// <0>
-	// <1>
-	// <0x599692>|0x1c2|+0x030:'83'
-	// <0x5996c2>|0x1f2|+0x00b:'84'
-	// <0x5996cd>|0x1fd|+0x00b:'85'
-	// <0x5996d8>|0x208|+0x013:'86'
-	// <0x5996eb>|0x21b|+0x028:'87'
-	// <0x599713>|0x243|      :'88'	}
-	// ******
 }
 
 bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, float > const& lhs, std::pair< collision::bone_collision_data *, float > const& rhs )
 {
 	return lhs.first->skeleton_bone_index == rhs.first->skeleton_bone_index;
-
-	// FUNCTION BODY
-	// <0x597d63>|0x003|+0x017:'118'
-	// ******
 }
 
 // static in the target (PDB plain-name record): internal linkage is what lets objdiff pair
@@ -300,12 +270,6 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( objects );
-
-	// FUNCTION BODY
-	// <0x597d40>|0x000|+0x007:'266'	{
-	// <0>
-	// <0x597d47>|0x007|      :'268'	}
-	// ******
 }
 
 void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> const& objects )
@@ -416,10 +380,6 @@ void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 bool remove_null_receivers_predicate( hit_receiver_info const& info )
 {
 	return info.m_receiver == NULL;
-
-	// FUNCTION BODY
-	// <0x597d20>|0x000|      :'338'	{
-	// ******
 }
 
 // sushi@TODO: Big skip
@@ -427,16 +387,7 @@ bool remove_null_receivers_predicate( hit_receiver_info const& info )
 // bool survarium::damage_zone_core::is_filter_passed(vostok::physics::base_physics_object*) const
 bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) const
 {
-	// CALL SITE INFO
-	// <0x597d01> -> u16 <unknown>() const
-	// ******
-
 	return false;
-	// FUNCTION BODY
-	// <0x597cf0>|0x000|+0x007:'390'	{
-	// <0x597cf7>|0x007|+0x018:'391'
-	// <0x597d0f>|0x01f|      :'392'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -684,15 +635,6 @@ void damage_zone_core::activate( zone_group* owner, physics::world* p_world, sch
 	m_accumulated_hit_time_ms = 0;
 	m_scheduler = &scheduler;
 	scheduler.register_on_frame( &m_scheduler_identifier, boost::bind( &damage_zone_core::tick, this, _1, _2 ), true );
-
-	// FUNCTION BODY
-	// <0x598630>|0x010|+0x00f:'546'
-	// <0x59863f>|0x01f|+0x00f:'547'
-	// <0x59864e>|0x02e|+0x00f:'548'
-	// <0x59865d>|0x03d|+0x010:'549'
-	// <0x59866d>|0x04d|+0x00f:'550'
-	// <0x59867c>|0x05c|+0x0d3:'551'
-	// ******
 }
 
 void damage_zone_core::deactivate( )
@@ -711,23 +653,6 @@ void damage_zone_core::deactivate( )
 	}
 	m_receivers.clear( );
 	m_owner = NULL;
-
-	// FUNCTION BODY
-	// <0x597f79>|0x009|+0x008:'556'
-	// <0x597f81>|0x011|+0x017:'557'
-	// <0>
-	// <0x597f98>|0x028|+0x00d:'559'
-	// <0>
-	// <0x597fa5>|0x035|+0x00c:'561'		if ( m_owner )
-	// <0>									{
-	// <0x597fb1>|0x041|+0x012|[1]:'563'		hit_receiver_info* it	= m_receivers.begin( );
-	// <0x597fc3>|0x053|+0x012:'564'
-	// <0x597fd5>|0x065|+0x013:'565'			for ( ; it != end ; ++it )
-	// <0x597fe8>|0x078|+0x02f:'566'				if ( this )
-	// <0>									}
-	// <0x598017>|0x0a7|+0x00e:'568'
-	// <0x598025>|0x0b5|+0x00d:'569'
-	// ******
 }
 
 // sushi@TODO: I don't understand what is going on here. Also v0.100b didn't have anomalies anyway.

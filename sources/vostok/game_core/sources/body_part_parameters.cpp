@@ -56,7 +56,7 @@ void body_part_parameters::add_hit_type( hit_type_parameters* const new_hit_type
 
 void body_part_parameters::add_threshold( affects_threshold* const new_threshold )
 {
-	m_thresholds.push_back( new_threshold ); // <0x596f19>
+	m_thresholds.push_back( new_threshold );
 }
 
 struct find_hit_parameters_by_type_predicate : public boost::noncopyable {
@@ -92,7 +92,7 @@ public:
 							m_amount			( amount ) {}
 
 	inline		void	operator()					( damage_protector* const protector ) {
-					if ( m_amount > 0.0f && protector->reduce_damage_functor )	// <0xc9eff>
+					if ( m_amount > 0.0f && protector->reduce_damage_functor )
 						m_amount = protector->reduce_damage_functor( m_body_type_name, m_damage_type, m_amount, m_armor_piercing );
 				}
 

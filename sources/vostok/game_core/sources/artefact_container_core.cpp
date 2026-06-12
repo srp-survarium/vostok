@@ -28,26 +28,12 @@ void artefact_container_core::activate( generic_anomaly_core* owner, physics::wo
 {
 	m_owner = owner;
 	usable_object::insert( world );
-
-	// FUNCTION BODY
-	// <0x73deb0>|0x000|+0x007:'26'	{
-	// <0x73deb7>|0x007|+0x009:'27'
-	// <0x73dec0>|0x010|+0x00c:'28'
-	// <0x73decc>|0x01c|      :'29'	}
-	// ******
 }
 
 void artefact_container_core::deactivate( )
 {
 	usable_object::remove( );
 	m_owner = NULL;
-
-	// FUNCTION BODY
-	// <0x73de90>|0x000|+0x007:'32'	{
-	// <0x73de97>|0x007|+0x008:'33'
-	// <0x73de9f>|0x00f|+0x00a:'34'
-	// <0x73dea9>|0x019|      :'35'	}
-	// ******
 }
 
 bool artefact_container_core::use_initialize( usable_object_user_data* user )
@@ -61,19 +47,6 @@ bool artefact_container_core::use_initialize( usable_object_user_data* user )
 	user->start_using_time_ms = user->current_time_ms;
 
 	return true;
-
-	// FUNCTION BODY
-	// <0x73de30>|0x000|+0x009:'38'	{
-	// <0x73de39>|0x009|+0x013:'39'
-	// <0x73de4c>|0x01c|+0x004:'40'
-	// <0>
-	// <0x73de50>|0x020|+0x00c:'42'
-	// <0x73de5c>|0x02c|+0x011:'43'
-	// <0x73de6d>|0x03d|+0x009:'44'
-	// <0x73de76>|0x046|+0x00c:'45'
-	// <0x73de82>|0x052|+0x002:'46'
-	// <0x73de84>|0x054|      :'47'	}
-	// ******
 }
 
 bool artefact_container_core::use_execute( usable_object_user_data* user )
@@ -110,19 +83,6 @@ bool artefact_container_core::use_finalize( usable_object_user_data* user )
 	user->current_progress = u32(-1);
 	m_usable_object_users.erase( user );
 	return true;
-
-	// FUNCTION BODY
-	// <0x73ddd0>|0x000|+0x009:'74'	{
-	// <0x73ddd9>|0x009|+0x00c:'75'
-	// <0x73dde5>|0x015|+0x00c:'76'
-	// <0>
-	// <0x73ddf1>|0x021|+0x00c:'78'
-	// <0x73ddfd>|0x02d|+0x00a:'79'
-	// <0x73de07>|0x037|+0x00a:'80'
-	// <0x73de11>|0x041|+0x00f:'81'
-	// <0x73de20>|0x050|+0x002:'82'
-	// <0x73de22>|0x052|      :'83'	}
-	// ******
 }
 
 void artefact_container_core::artefact_spawned( resources::queries_result& data )

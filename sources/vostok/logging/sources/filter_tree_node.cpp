@@ -121,7 +121,6 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
             	return false;
 		    else
             	return true;					// sushi@NOTE: While assembly matches, this structure doesn't
-												// <0x65aef6>|0x080|0x004:'129'
         else if ( is_terminal_character(*s2) )
 			return false;
 

@@ -111,10 +111,6 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 static bool true_predicate( )
 {
 	return true;
-
-	// FUNCTION BODY
-	// <0x599723>|0x003|+0x002:'94'
-	// ******
 }
 
 // STATE[STUB]

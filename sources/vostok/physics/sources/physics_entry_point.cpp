@@ -23,7 +23,7 @@ namespace physics {
 
 vostok::physics::world* create_world_bt( vostok::memory::base_allocator* allocator, physics::engine& engine )
 {
-	return VOSTOK_NEW_IMPL( allocator, bullet_physics_world )( *allocator, engine ); // <0x72e5f0>|0x000|0x000:'24'
+	return VOSTOK_NEW_IMPL( allocator, bullet_physics_world )( *allocator, engine );
 }
 
 // STATE[STUB]:
@@ -39,7 +39,7 @@ void set_memory_allocator( memory::base_allocator* allocator )
 
 void destroy_world( vostok::memory::base_allocator* allocator, world* w )
 {
-	w->destroy( ); // <0x72e450>|0x000|0x000:'39'
+	w->destroy( );
 	VOSTOK_DELETE_IMPL( allocator, w );
 }
 

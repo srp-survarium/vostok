@@ -13,10 +13,6 @@ namespace animation {
 	: resources::translate_query_cook( resources::bi_spline_skeleton_animation_class, reuse_true, use_resource_manager_thread_id, 1 << 3 /* resources::flag_last */ )
 {
 	resources::register_cook( this );
-
-	// FUNCTION BODY
-	// <0x121a90>|0x010|+0x050:'33'
-	// ******
 }
 
 // STATE[STUB]
@@ -101,13 +97,6 @@ void bi_spline_skeleton_animation_impl_cook::translate_query( resources::query_r
 void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resource_base* resource_to_delete )
 {
 	resource_to_delete->~resource_base( );
-
-	// FUNCTION BODY
-	// <0x607a0>|0x000|+0x000:'81'	{
-	// <0>
-	// <1>
-	// <0x607a0>|0x000|      :'84'	}
-	// ******
 }
 
 /* sushi@TODO: I have no idea how to make it included

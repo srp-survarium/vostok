@@ -152,7 +152,7 @@ void bullet::tick( u32 current_time_in_ms )
 				return;
 			}
 
-		if ( math::is_similar( time, high_time ) ) // <0x592c61>|0x241|+0x023:'188'
+		if ( math::is_similar( time, high_time ) )
 		{
 			if ( m_tracer_idx != 0xFFFF /* sushi@NOTE: invalid_tracer_idx */ )
 			{

@@ -44,7 +44,7 @@ damage_model::~damage_model( )
 
 body_part_parameters* damage_model::pop_body_part( )
 {
-	return m_body_parts.empty( ) ? NULL : m_body_parts.pop_front( ); // <0x6ff629>|0x009|+0x033:'46'
+	return m_body_parts.empty( ) ? NULL : m_body_parts.pop_front( );
 }
 
 struct regenerate_body_parts_predicate : public boost::noncopyable {
@@ -67,7 +67,7 @@ STATIC_SIZE_ASSERT(regenerate_body_parts_predicate, 0x8);
 
 void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
 {
-	if ( !m_last_tick_time_in_ms )	// <0x6ffc69>|0x009|+0x00c:'68'
+	if ( !m_last_tick_time_in_ms )
 	{
 		m_last_tick_time_in_ms = current_time_in_ms;
 		return;
@@ -80,7 +80,7 @@ void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
 
 void damage_model::add_body_part( body_part_parameters* const new_body_part )
 {
-	m_body_parts.push_back( new_body_part );	// <0x6ff5f9>|0x009|+0x014:'81'
+	m_body_parts.push_back( new_body_part );
 }
 
 struct find_body_part_by_name_predicate : public boost::noncopyable {
@@ -98,7 +98,7 @@ public:
 
 body_part_parameters* damage_model::get_body_part( pcstr part_name ) const
 {
-	find_body_part_by_name_predicate find_predicate( part_name );	// <0x6ff739>|0x009|+0x00e:'101': why twice, isn't it boost::noncopy?, it looks like our asm has a copy :shrug:
+	find_body_part_by_name_predicate find_predicate( part_name );
 	return m_body_parts.find_if<find_body_part_by_name_predicate>( find_predicate );
 }
 
@@ -127,7 +127,7 @@ bool damage_model::hit_body_part(
 	bullet*		const bullet
 )
 {
-	body_part_parameters* last_hitted_body_part = bullet ? m_body_parts.find( bullet->last_hitted_body_part( ) ) : NULL;	// <0x6ffafa>|0x00a|+0x033:'145'
+	body_part_parameters* last_hitted_body_part = bullet ? m_body_parts.find( bullet->last_hitted_body_part( ) ) : NULL;
 
 	body_part_parameters* part = get_body_part( part_name );
 	if ( last_hitted_body_part )
@@ -174,7 +174,7 @@ public:
 void damage_model::fill_stats( ai::npc_statistics& stats, u32 const current_time_in_ms ) const
 {
 	typedef ai::statistics_item<46, 16> content_type;
-	content_type new_stats_item;	// <0x6ff800>|0x010|+0x00b:'211'
+	content_type new_stats_item;
 	new_stats_item.caption = "damage status: ";
 	stats.selectors_state.push_back( new_stats_item );	// sushi@TODO: This is wrong, npc_statistics has changed, this should be `body_state`.
 
@@ -191,14 +191,14 @@ void damage_model::dump_stats( boost::function<void( u32, float, float, pcstr )>
 	u32							body_part_index = 0;
 	while ( body_part )
 	{
-		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target, see STRUCTURE DIFF
+		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target
 		body_part = m_body_parts.get_next_of_object( body_part );
 	}
 }
 
 void damage_model::subscribe_on_affect( hit_affects_type_enum const affect_type, affect_subscriber* const subscriber )
 {
-	m_affect_subscriptions[affect_type].push_back( subscriber );	// <0x6ffa39>|0x009|+0x01b:'242'
+	m_affect_subscriptions[affect_type].push_back( subscriber );
 }
 
 void damage_model::unsubscribe_from_affect( hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
@@ -230,7 +230,7 @@ STATIC_SIZE_ASSERT(affect_event_predicate, 0xC);
 
 void damage_model::notify_on_affect_event( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type )
 {
-	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];	// <0x6ff99f>|0x00f|+0x016|[1]:'294'
+	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
 	subscribers->for_each( affect_event_predicate( body_part_name, affect_type, event_type ) );
 }
 

@@ -32,18 +32,18 @@ bt_animated_rigid_body::bt_animated_rigid_body( btCompoundShape* shape, btRigidB
 	m_shape				( shape ),
 	m_game_material_id	( game_material_id )
 {
-	body->setUserPointer(this);	// <0x6bfe5a>|0x000|0x000:'25'
+	body->setUserPointer(this);
 }
 
 btRigidBody* bt_animated_rigid_body::get_rigid_body( )
 {
-	return m_bt_body;	// <0x6bf410>|0x000|0x000:'30'
+	return m_bt_body;
 }
 
 u16 bt_animated_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( triangle_id, is_shape_index );
-	return m_game_material_id;	// <0x6bf4b0>|0x000|0x000:'36'
+	return m_game_material_id;
 }
 
 void bt_animated_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world)
@@ -53,37 +53,37 @@ void bt_animated_rigid_body::apply_impulse( float3 const& impulse, float3 const&
 
 void bt_animated_rigid_body::set_transform( float4x4 const& transform )
 {
-	m_bt_body->setWorldTransform( from_vostok( transform ) );	// <0x6bf95b>|0x000|0x000:'46'
+	m_bt_body->setWorldTransform( from_vostok( transform ) );
 }
 
 float4x4 bt_animated_rigid_body::get_transform( ) const
 {
-	return from_bullet( m_bt_body->getWorldTransform( ) );	// <0x6bf750>|0x000|0x000:'51'
+	return from_bullet( m_bt_body->getWorldTransform( ) );
 }
 
 void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
-	btTransform new_child_transform = from_vostok( new_transform );					// <0x6bf92a>|0x000|0x000:'56'
-	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );	// <0x6bf933>|0x009|0x009:'57'
+	btTransform new_child_transform = from_vostok( new_transform );
+	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );
 }
 
 math::aabb bt_animated_rigid_body::get_aabb( ) const
 {
 	btVector3 aabbMin, aabbMax;
-	m_bt_body->getAabb( aabbMin, aabbMax );													// <0x6bf4c9>|0x000|0x000:'63'
-	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );	// <0x6bf4e8>|0x01f|0x01f:'64'
+	m_bt_body->getAabb( aabbMin, aabbMax );
+	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );
 }
 
 float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
 {
-	btTransform& transform = m_shape->getChildTransform( index );	// <0x6bf730>|0x000|0x000:'69'
-	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
+	btTransform& transform = m_shape->getChildTransform( index );
+	return from_bullet ( transform );
 }
 
 // sushi@TODO: switch statement problems
 static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
-	switch ( type )	// <0x6bf579>|0x000|0x000:'86'
+	switch ( type )
 	{
 		case collision::primitive_sphere:
 		{
@@ -133,23 +133,23 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];										// <0x6bf98f>|0x000|0x000:'146'
-	u32 hit_targets_count = targets_table.size( );																	// <0x6bf99b>|0x00c|0x00c:'147'
+	configs::binary_config_value const& targets_table = config["hit_targets"];
+	u32 hit_targets_count = targets_table.size( );
 																													// <1>..<4>
-	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );										// <0x6bf9af>|0x020|0x014:'152'
+	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
 
-	for ( u32 i = 0 ; i < hit_targets_count ; ++i )																	// <0x6bf9e2>|0x053|0x033:'154'
+	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
 	{
-		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];													// <0x6bfa0b>|0x07c|0x029:'156'
+		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];
 		pcstr animation_bone = (pcstr)targets_table[i]["animation_bone"];
 
 		collision::bone_collision_data data( animation_bone, NULL, hit_param );
 		geometries_data.push_back(data);
-		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &geometries_data[i] );	// <0x6bfb17>|0x188|0x036:'159'
-		btTransform joint_transform( from_vostok( float4x4().identity() ) );										// <0x6bf9ec>|0x05d|-0x12b:'160'
-		bt_shape->addChildShape( joint_transform, element_joint );													// <0x6bfc8c>|0x2fd|0x2a0:'161'
+		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &geometries_data[i] );
+		btTransform joint_transform( from_vostok( float4x4().identity() ) );
+		bt_shape->addChildShape( joint_transform, element_joint );
 	}
-	return bt_shape;																								// <0x6bfdfa>|0x46b|0x16e:'165'
+	return bt_shape;
 }
 
 static u32 calculate_bt_hit_target_size( configs::binary_config_value const& config )
@@ -195,15 +195,15 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 // STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
-	u32 hit_targets_count = targets_table.size( );								// <0x6bf783>|0x00c|0x00c:'202'
+	configs::binary_config_value const& targets_table = config["hit_targets"];
+	u32 hit_targets_count = targets_table.size( );
 
-	u32 result = 0x70 * hit_targets_count + 0x60;								// <0x6bf7a1>|0x02a|0x01e:'204'
+	u32 result = 0x70 * hit_targets_count + 0x60;
 
-	for ( u32 i = 0 ; i < hit_targets_count ; ++i )								// <0x6bf7a6>|0x02f|0x005:'206'
-		result += calculate_bt_hit_target_size(targets_table[i]) + 0x60;		// <0x6bf7b3>|0x03c|0x00d:'207'
+	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
+		result += calculate_bt_hit_target_size(targets_table[i]) + 0x60;
 
-	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
+	return result;
 }
 
 bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator )
@@ -221,7 +221,7 @@ bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 gam
 
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
-	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'
+	VOSTOK_DELETE_IMPL( allocator, body );
 }
 
 collision::animated_object* new_animated_bt_hit_model(
@@ -243,13 +243,13 @@ collision::animated_object* new_animated_bt_hit_model(
 
 u16 bt_animated_rigid_body::get_collision_group( ) const
 {
-	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x6bf460>|0x000|0x000:'252'
+	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;
 }
 
 float3 const& bt_animated_rigid_body::center_of_mass_offset( ) const
 {
-	static float3 offset( 0.0f, 0.0f, 0.0f );	// <0x6bf420>|0x000|0x000:'257'
-	return offset;								// <0x6bf44e>|0x02e|0x02e:'258'
+	static float3 offset( 0.0f, 0.0f, 0.0f );
+	return offset;
 }
 
 btCollisionObject* bt_animated_rigid_body::get_bt_collision_obect( )

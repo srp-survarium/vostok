@@ -15,10 +15,6 @@ resources::managed_resource_ptr weapon_user_animations_container::get_animation_
 	u32 index
 )
 {
-	// FUNCTION BODY
-	// <0xccf96>|0x006|+0x00c:'19'
-	// <0xccfa2>|0x012|+0x036:'20'
-	// ******
 }
 */
 

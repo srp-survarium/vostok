@@ -38,17 +38,6 @@ bool player_input::is_empty( ) const
 		&& math::is_zero( angular_acceleration.y )
 		&& !actions_mask
 		&& true; // sushi@NOTE: master_gold check
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x700d69>|0x009|+0x07e:'56'
-	// ******
 }
 
 } // namespace survarium

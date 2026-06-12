@@ -40,21 +40,6 @@ inline scheduler::record& scheduler::register_object( scheduler::identifier* ide
 	record.m_callback = callback;
 
 	return record;
-
-	// FUNCTION BODY
-	// <1>
-	// <17>
-	// <0x92cf9>|0x000|0x000:'60'
-	// <1>
-	// <2>
-	// <0x92d0e>|0x015|0x015:'63' records.push_back( scheduler::record( ) );
-	// <1>
-	// <0x92d7c>|0x083|0x06e:'65'
-	// <1>
-	// <0x92d7f>|0x086|0x003:'67' record.m_callback = callback;
-	// <1>
-	// <2>
-	// ******
 }
 
 inline void scheduler::register_on_frame( scheduler::identifier* identifier, scheduler::callback const& callback, bool active )
@@ -63,14 +48,6 @@ inline void scheduler::register_on_frame( scheduler::identifier* identifier, sch
 	record.m_type			  = 0;
 	record.m_max_update_count = 0;
 	record.m_last_update_time = 0;
-
-	// FUNCTION BODY
-	// <0x96a60>|0x000|0x000:'74'
-	// <1>
-	// <2>
-	// <0x96a71>|0x011|0x011:'77'
-	// <0x96a7d>|0x01d|0x00c:'78'
-	// ******
 }
 
 inline void scheduler::register_for_update(
@@ -87,17 +64,6 @@ inline void scheduler::register_for_update(
 	record.m_update_delta	   = update_delta;
 	record.m_max_update_count  = max_update_count;
 	record.m_last_update_time  = time_start_from;
-
-	// FUNCTION BODY
-	// <0x92da0>|0x000|0x000:'88'
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x92db6>|0x016|0x016:'94'
-	// <0x92dba>|0x01a|0x004:'95'
-	// ******
 }
 
 inline void scheduler::unregister( scheduler::identifier* identifier )
@@ -114,20 +80,6 @@ inline void scheduler::unregister( scheduler::identifier* identifier )
 	records.pop_back( );
 
 	identifier->m_active = false;
-
-	// FUNCTION BODY
-	// <0x92de0>|0x000|0x000:'100'	if ( m_current_index >= identifier->m_id )
-	// <0x92df7>|0x017|0x017:'101'		m_current_index -= 1;
-	// <1>
-	// <0x92dfb>|0x01b|0x004:'103'	scheduler::records_type& records = objects( identifier );
-	// <1>
-	// <2>
-	// <0x92e06>|0x026|0x00b:'106'	dst = src;
-	// <0x92e3d>|0x05d|0x037:'107'	dst.m_id->m_id = identifier->m_id; 
-	// <0x92e55>|0x075|0x018:'108'	records.pop_back( ); // has destroy inside
-	// <1>
-	// <0x92e83>|0x0a3|0x02e:'110'	identifier->m_active = false;
-	// ******
 }
 
 } // namespace survarium
