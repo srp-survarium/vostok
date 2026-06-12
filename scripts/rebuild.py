@@ -156,6 +156,27 @@ def run_ninja() -> set[str]:
     return modules
 
 
+def _write_build_head() -> None:
+    """Record WHICH source state this report.json was built from
+    (binaries/objdiff/report.head: "<HEAD sha>[+dirty]"). match_db.py's
+    staleness guard compares it against the current HEAD - freshness is
+    created here, not at DB refresh time."""
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=VOSTOK_DIR,
+            capture_output=True, text=True, timeout=10,
+        ).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--", "sources/"], cwd=VOSTOK_DIR,
+            capture_output=True, text=True, timeout=10,
+        ).stdout.strip()
+        if head:
+            marker = VOSTOK_DIR / "binaries" / "objdiff" / "report.head"
+            marker.write_text(head + ("+dirty" if dirty else "") + "\n")
+    except Exception as e:  # noqa: BLE001 - never fail the build over bookkeeping
+        log(f"report.head not written: {e}")
+
+
 def main() -> None:
     start = time.monotonic()
     modules: set[str] = set()
@@ -189,6 +210,7 @@ def main() -> None:
 
         if failures:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
+        _write_build_head()
         log("All done - base diff inputs refreshed.")
     finally:
         _append_log(time.monotonic() - start, modules)
