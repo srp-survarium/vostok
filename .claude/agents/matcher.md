@@ -16,9 +16,11 @@ context - ONCE, so more functions per unit means fewer tokens overall. Bundle an
 (getters/setters, sibling `weapon_core_*_state` variants) that share that scaffolding.
 The orchestrator usually hands you the explicit list. Pull in those, plus any function
 **CALLED by one you're matching** - matching a callee is fine and often necessary (it
-gets its own STATE/structure; see MATCHING.md's reconstructed-helper rule). 
+gets its own `status.jsonl` entry/structure; see MATCHING.md's reconstructed-helper rule).
 One unit = one match commit. If a batch member turns out hard, a bit of spinning on it
-is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the next step.
+is fine, but don't get stuck - finish the rest and park it `SKIPPED` in `status.jsonl`
+(cause = the concrete next step) with a terse `claude@NOTE:` above the function saying
+why it is stuck and what you tried.
 
 ## Read first (source of truth - they win over this summary)
 1. `MATCHING.md` - how matched source must look.
@@ -71,7 +73,7 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
 - **Build + score:** `python3 scripts/rebuild.py` with **NO module arg** (a bare
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
-  `report.json` (that's the STATE number); check `report-changes.json` for regressions.
+  `report.json` (the only live number); check `report-changes.json` for regressions.
 - **Only AFTER compiling, diff - to see what you got right and what you got wrong.**
   There is no base side to compare until your code builds, so this comes last. Run the
   structure diff, then the asm diff for the instruction-level cause:
@@ -124,9 +126,9 @@ is fine, but don't get stuck - finish the rest and mark it `INPROGRESS` with the
   LTCG are at a call boundary: an argument dropped (proven constant) or passed in a
   register instead of its slot. EVERYTHING else - register choice, `[ebp-XX]` slot,
   frame size, switch shape, an extra `cmp/ja`, a stray `fld1`, statement order - is a
-  source problem with a concrete cause; solve it or record `INPROGRESS` (in
-  `status.jsonl`) with the next
-  step, never bank it as "PARTIAL, LTCG residual". `DONE` only when the sole remaining
+  source problem with a concrete cause; solve it or park it `SKIPPED` in `status.jsonl`
+  (cause = the concrete next step) plus a terse `claude@NOTE:` at the function - never
+  write the residual off as "LTCG" to bank a match. `DONE` only when the sole remaining
   diff is argument passing.
 - **Leave the carcass to the structure-verifier - do NOT maintain it.** The STUB
   arrives with a `// FUNCTION BODY` carcass; read it for the shape clues above, then
