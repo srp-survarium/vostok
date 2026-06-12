@@ -25,6 +25,10 @@ public:
 
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
+	// claude@NOTE: holder/item_in_slot/get_active_slot parked at 0% - the target
+	// keeps LTCG custom-convention copies (this in eax, no frame); our /GL inlines
+	// every real call site, and the address-taken anchor in temp_include_all can
+	// only emit the standard-thiscall /Od-shaped COMDAT (right unit, 0% bytes).
 	// STATE[STUB]
 			inventory_holder&					holder						( ) { return *m_holder; }
 

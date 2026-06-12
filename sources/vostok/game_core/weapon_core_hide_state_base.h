@@ -20,10 +20,15 @@ protected:
 	virtual	void	initialize					( ) override;
 	virtual	void	finalize					( ) override;
 
-public:
+private:
+	// is_ready_for_transition mangles ...@@EBE_NXZ -> private virtual (unlike the
+	// show-state sibling, which keeps it public).
+	// claude@NOTE: parked - the target's ICF fold survivor carries this EBE name but
+	// show_state_base.h line records, so it sits in the weapon_core_show_state_base.h
+	// unit; our base COMDAT (emitted via the vtable) is line-attributed here, so the
+	// units never pair. Needs delinker-level fold attribution to line up.
 	virtual	bool	is_ready_for_transition		( ) const override { return has_animation_ended( ); }
 
-private:
 	// on_animation_end_impl mangles ...@@EAEXAA_N@Z -> private virtual
 	virtual	void	on_animation_end_impl		( bool& animation_player_tick_result ) override;
 
