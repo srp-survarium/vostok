@@ -792,6 +792,12 @@ def cmd_queue(args):
         LEFT JOIN history h ON h.mangled = s.mangled
         WHERE NOT (coalesce(p.fuzzy_pct, 0) >= 100 AND p.struct_class = 'MATCH')
           AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag IN ('SKIP','OUT_OF_SCOPE'))
+          -- compiler-generated machinery is not source-steerable standalone:
+          -- deleting dtors / dynamic initializers (backtick names), thunks,
+          -- anonymous-namespace symbols
+          AND s.demangled NOT LIKE '%`%'
+          AND s.demangled NOT LIKE '[thunk]%'
+          AND s.mangled NOT LIKE '%?A0x%'
           -- seen-before, vanished without a source touch: external inline/link
           -- decision, out of scope (design: history does the classifying)
           AND NOT (p.sym IS NULL AND h.mangled IS NOT NULL)
@@ -813,10 +819,16 @@ def cmd_queue(args):
         return sum((f["fuzzy_pct"] or 0) * f["size"] for f in fns) / total if total else 0.0
 
     # LOWEST match level first - real unmatched code beats polishing 99% TUs
-    # (sushi, 2026-06-13); size ascending breaks ties.
+    # (sushi, 2026-06-13); real .cpp TUs before header-only batches at equal
+    # level; size ascending breaks remaining ties.
     units = sorted(
         by_unit.items(),
-        key=lambda kv: (matched_pct(kv[1]), sum(f["size"] for f in kv[1]), kv[0]),
+        key=lambda kv: (
+            matched_pct(kv[1]),
+            0 if kv[0].endswith(".cpp") else 1,
+            sum(f["size"] for f in kv[1]),
+            kv[0],
+        ),
     )
     if args.limit:
         units = units[: args.limit]
