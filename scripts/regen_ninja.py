@@ -17,6 +17,7 @@ the binaries/ninja form before comparing.
 Usage:
   python3 scripts/regen_ninja.py            # regen + merge (minimal rebuild)
   python3 scripts/regen_ninja.py --dry-run  # report the delta, write nothing
+  python3 scripts/regen_ninja.py --compdb   # also force the clangd inputs
 """
 
 import argparse
@@ -31,6 +32,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 VOSTOK_DIR = SCRIPT_DIR.parent
 BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
 SLN_PATH   = VOSTOK_DIR / "sources" / "vostok v2.0.sln"
+
+# clangd inputs at the repo root (gitignored, so absent on fresh clones and
+# worktrees). They only depend on flags and file sets, never on #includes.
+COMPDB_FILES = ("compile_commands.json", "clangd-vfs.yaml")
 
 
 def log(msg: str) -> None:
@@ -66,10 +71,13 @@ def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
 def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
     """Regenerate and merge; return the relative paths that changed.
 
-    By default only the ninja graph is regenerated.  Pass compdb=True to also
-    regenerate compile_commands.json + clangd-vfs.yaml (include-invariant,
-    needed only for IDE support, not for building)."""
+    The clangd inputs (COMPDB_FILES) are include-invariant, so they are only
+    regenerated when something they DO depend on may have moved: a generated
+    file appeared or went stale (TU/module added or removed), or they are
+    missing entirely (fresh clone/worktree). Pass compdb=True to force them
+    (e.g. after a flags-only .vcproj edit, which this trigger can't see)."""
     changed: list[str] = []
+    tu_set_changed = False
     with tempfile.TemporaryDirectory(prefix="ninja_regen_") as tmp:
         tmp_dir = Path(tmp)
         gen_fresh(tmp_dir)
@@ -86,6 +94,11 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             dst = BUILD_DIR / rel
             if dst.is_file() and dst.read_text() == text:
                 continue
+            if not dst.is_file():
+                # A brand-new .ninja/.rsp means a module/group/TU appeared -
+                # the only kind of change the compdb cares about. A content
+                # change to an existing file (new #include, flag edit) is not.
+                tu_set_changed = True
             changed.append(str(rel))
             if not dry_run:
                 dst.parent.mkdir(parents=True, exist_ok=True)
@@ -100,6 +113,7 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             rel = str(p.relative_to(BUILD_DIR))
             if rel not in fresh_set:
                 log(f"STALE (delete manually): {rel}")
+                tu_set_changed = True
 
     verb = "would change" if dry_run else "changed"
     log(f"{verb}: {len(changed)} file(s)" if changed
@@ -107,7 +121,11 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
     for rel in changed:
         log(f"  {rel}")
 
-    if compdb:
+    compdb_missing = not all((VOSTOK_DIR / n).is_file() for n in COMPDB_FILES)
+    if compdb or tu_set_changed or compdb_missing:
+        reason = ("forced" if compdb
+                  else "TU set changed" if tu_set_changed else "missing")
+        log(f"compdb: regenerating ({reason})")
         changed += regenerate_compdb(dry_run=dry_run)
     return changed
 
@@ -126,7 +144,7 @@ def regenerate_compdb(dry_run: bool = False) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="compdb_regen_") as tmp:
         tmp_dir = Path(tmp)
         gen_fresh(tmp_dir, target="clangd")
-        for name in ("compile_commands.json", "clangd-vfs.yaml"):
+        for name in COMPDB_FILES:
             # the overlay path inside the commands points at the temp dir
             text = (tmp_dir / name).read_text().replace(str(tmp_dir), str(VOSTOK_DIR))
             dst = VOSTOK_DIR / name
@@ -146,8 +164,9 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true",
                     help="report the delta, write nothing")
     ap.add_argument("--compdb", action="store_true",
-                    help="also regenerate compile_commands.json + clangd-vfs.yaml "
-                         "(include-invariant; needed only for IDE support)")
+                    help="force compile_commands.json + clangd-vfs.yaml regen "
+                         "(they auto-regen when missing or the TU set changes; "
+                         "force after a flags-only .vcproj edit)")
     args = ap.parse_args()
     regenerate(dry_run=args.dry_run, compdb=args.compdb)
 
