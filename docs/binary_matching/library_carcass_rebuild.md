@@ -21,6 +21,30 @@ the real tree, then DELETE it from the temp dir. When the temp dir is EMPTY, eve
 canonical class/struct/enum/carcass has been reproduced - that is the completeness
 signal. Then enable the TUs and drive the build green.
 
+## Shared-namespace header pools (the `game` complication)
+
+`headers/` in the canonical dump is keyed by NAMESPACE, not by module. For
+`vostok::<module>` libraries the two coincide; for the `game` module the pool is
+`headers/survarium/` - one flat dir shared by game, game_core and the pc exe
+(728 files). The queue then starts with the WHOLE pool and gets triaged file by
+file; record every removal + reason in a `temp/triage_log.md` so the queue stays
+the single source of truth:
+
+1. **Already rebuilt elsewhere**: basename (plus nested `outer__inner.h` and
+   `_N`-variant forms) matches a header in the sibling module's tree
+   (`sources/vostok/game_core/`) - within one namespace a type name is unique
+   engine-wide, so a filename match IS the type. Remove.
+2. **Defined inside an other-named file**: definition-grep
+   (`(class|struct|enum) <name>`) over `sources/vostok/` catches TU-local
+   predicates and types that live inside another module's `.cpp`/`.h`. Remove
+   only when the hit is in the SAME namespace; a hit in a `vostok::*` module
+   (e.g. `flash_renderer` also exists in `vostok::render`) is a name collision,
+   NOT coverage - keep the file and flag it CHECK.
+3. **The module's own compiland tree** (`sources/vostok/<module>/sources/` in
+   the dump) pins a stem to the module directly - those headers are yours.
+4. Whatever survives all three is figured out one by one during reproduction
+   (consumer grep, legacy tree, rich-index symbols).
+
 ## What you KEEP from the original module (everything else is regenerated)
 These are common library boilerplate, not PDB types, so the canonical dump does not
 contain them:
