@@ -23,9 +23,10 @@ struct weapon_animation_parameters;
 
 class jump_logic_base_state : public ai::fsm_state {
 public:
-	virtual				~jump_logic_base_state	( ) { /* no source */ }
+	// STATE[100%|DONE]
+	virtual				~jump_logic_base_state	( ) { }
 
-	// STATE[STUB]
+	// STATE[100%|DONE]
 	virtual	void		set_user				( base_player& user ) { m_user = &user; }
 
 

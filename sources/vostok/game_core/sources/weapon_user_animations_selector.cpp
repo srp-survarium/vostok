@@ -556,3 +556,4 @@ void weapon_user_animations_selector::set_sprint_callbacks( boost::function<void
 }
 
 } // namespace survarium
+

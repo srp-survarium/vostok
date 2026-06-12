@@ -86,6 +86,7 @@
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/game_core/weapon_state.h>
 #include <vostok/game_core/weapon_core_base_state.h>
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
@@ -412,6 +413,10 @@ namespace vostok
 		survarium::hit_receiver_info hit_receiver_info( NULL, NULL );
 		hit_receiver_info == hit_receiver_info;
 
+		damage_zone.hit_on_enter( 0, 0 );
+		damage_zone.hit_on_inside( 0, 0 );
+		damage_zone.is_filter_passed( NULL );
+
 		// the four static distance_from_* shape helpers are now anchored in-TU from the
 		// dz_bone_data_contact_test_predicate::add_single_result stub (internal linkage,
 		// matching the target's static records - see damage_zone_core.cpp).
@@ -678,6 +683,12 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &bc ) );
 		example_callback( reinterpret_cast< pcstr >( &hc ) );
 		example_callback( reinterpret_cast< pcstr >( &vc ) );
+
+		weapon.update_dispersion( false, 0 );
+		volatile float hr = weapon.horizontal_recoil_value( );
+		volatile float vr = weapon.vertical_recoil_value( );
+		example_callback( reinterpret_cast< pcstr >( const_cast< float* >( &hr ) ) );
+		example_callback( reinterpret_cast< pcstr >( const_cast< float* >( &vr ) ) );
 	}
 
 	void use_game_core_weapon_core_ik_callbacks( )
@@ -1589,6 +1600,13 @@ namespace vostok
 
 		wc.get_ammo_slot( survarium::first_ammo );
 		wc.ready_to_reload( );
+		wc.deactivate( );
+		wc.computed_backward_recoil_time( 0.0f, 0.0f, 0, 0, 0, 0.0f );
+		wc.computed_horizontal_recoil_time( 0.0f, 0.0f, 0, 0, 0, 0.0f );
+		wc.computed_vertical_recoil_time( 0.0f, 0.0f, 0, 0, 0, 0.0f );
+		survarium::weapon_ammo_info			ammo_info;
+		wc.get_ammo_info( ammo_info );
+		wc.process_finger_correction( 0, NULL );
 	}
 
 
@@ -2185,6 +2203,7 @@ namespace vostok
 		animation::callback_return_type_enum ( self::*p15 )( animation::animation_callback_params& ) = &self::on_interval_ended;
 		void ( self::*p16 )( pcstr, survarium::hit_affects_type_enum, survarium::affect_event_type_enum ) = &self::on_broken_limb_affect;
 		void ( self::*p17 )( boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::set_sprint_callbacks;
+		void ( self::*p22 )( survarium::base_player&, boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::activate;
 		float ( self::*p18 )( ) const = &self::look_time_factor;
 		float ( self::*p19 )( float, float, u32, u32, u32, float ) const = &self::look_time_factor_calculator;
 		void ( self::*p20 )( animation::reserved_channel_ids_enum, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
@@ -2204,6 +2223,7 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p19 ) );
 		example_callback( reinterpret_cast< pcstr >( &p20 ) );
 		example_callback( reinterpret_cast< pcstr >( &p21 ) );
+		example_callback( reinterpret_cast< pcstr >( &p22 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public

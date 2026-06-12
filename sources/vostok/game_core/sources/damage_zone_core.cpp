@@ -8,6 +8,8 @@
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/physics/contact_test_predicate.h>
 #include <vostok/game_core/hit_receiver.h>
+#include <vostok/game_core/zone_group.h>
+#include <vostok/physics/base_physics_object.h>
 #include <vostok/game_core/game_scene.h>
 
 // sushi@TODO: Everything is skipped, since v0.100b is not using anomalies at all.
@@ -460,20 +462,10 @@ bool remove_null_receivers_predicate( hit_receiver_info const& info )
 
 // sushi@TODO: Big skip
 
-// STATE[SKIPPED]
-// bool survarium::damage_zone_core::is_filter_passed(vostok::physics::base_physics_object*) const
+// STATE[100%|DONE]
 bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) const
 {
-	// CALL SITE INFO
-	// <0x597d01> -> u16 <unknown>() const
-	// ******
-
-	return false;
-	// FUNCTION BODY
-	// <0x597cf0>|0x000|+0x007:'390'	{
-	// <0x597cf7>|0x007|+0x018:'391'
-	// <0x597d0f>|0x01f|      :'392'	}
-	// ******
+	return ( object->get_collision_group( ) & 0x40 ) != 0;
 }
 
 // STATE[STUB]
@@ -786,3 +778,4 @@ void damage_zone_core::on_player_action(
 }
 
 } // namespace survarium
+

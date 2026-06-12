@@ -255,3 +255,4 @@ void weapon_core_shotgun_reload_state_cook::destroy_resource( resources::unmanag
 }
 
 } // namespace survarium
+

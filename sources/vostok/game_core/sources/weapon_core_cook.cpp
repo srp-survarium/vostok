@@ -21,23 +21,19 @@ weapon_core_cook::weapon_core_cook( ) :
 // void survarium::weapon_core_cook::translate_query(vostok::resources::query_result_for_cook&)
 void weapon_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// fs_new::virtual_path_string 	weapon_config_name
-	// ******
+	fs_new::virtual_path_string	weapon_config_name;
 
-	// FUNCTION BODY
-	// <0x5a068f>|0x00f|+0x00b:'123'
-	// <0x5a069a>|0x01a|+0x01d:'124'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5a06b7>|0x037|+0x11e:'133'
-	// ******
+	weapon_config_name.assignf( "resources/%s", parent.get_requested_path( ) );
+
+	resources::query_resource(
+		weapon_config_name.c_str( ),
+		resources::weapon_class,
+		boost::bind( &weapon_core_cook::on_weapon_config_loaded, this, _1 ),
+		g_allocator,
+		0,
+		&parent,
+		assert_on_fail_true
+	);
 }
 
 // STATE[100%|DONE]
@@ -113,57 +109,54 @@ void weapon_core_cook::load_weapon_parameters( configs::binary_config_ptr config
 // void survarium::weapon_core_cook::process_loading_weapon_core(vostok::resources::query_result_for_cook* const, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, survarium::weapon_core*)
 void weapon_core_cook::process_loading_weapon_core( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
-	// LOCALS
-	// fs_new::virtual_path_string 	skeleton_path
-	// resources::request[2] 		requests
-	// ******
+	load_weapon_parameters( config_ptr, object_to_cook );
 
-	// FUNCTION BODY
-	// <0x5a0470>|0x010|+0x01b:'188'
-	// <0>
-	// <0x5a048b>|0x02b|+0x00b:'190'
-	// <0x5a0496>|0x036|+0x03f:'191'
-	// <0>
-	// <1>
-	// <0x5a04d5>|0x075|+0x015:'194'
-	// <0x5a04ea>|0x08a|+0x028:'195'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x5a0512>|0x0b2|+0x095:'205'
-	// ******
+	fs_new::virtual_path_string	skeleton_path;
+
+	skeleton_path.assignf( "resources/animations/skeletons/%s", pcstr( config_ptr->get_root( )["object"]["skeleton"] ) );
+
+	resources::request			requests[ 2 ];
+	requests[ 0 ].path	= skeleton_path.c_str( );
+	requests[ 0 ].id	= resources::skeleton_class; requests[ 1 ].path = pcstr( config_ptr->get_root( )["user_animations"] ); requests[ 1 ].id = resources::class_id_enum( 0x74 );
+
+	resources::query_resources(
+		requests,
+		2,
+		boost::bind(
+			&weapon_core_cook::on_core_subresources_ready,
+			this,
+			_1,
+			config_ptr,
+			object_to_cook
+		),
+		g_allocator,
+		0,
+		parent,
+		assert_on_fail_true
+	);
 }
 
 // STATE[STUB]
 // void survarium::weapon_core_cook::on_core_subresources_ready(vostok::resources::queries_result&, vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>, survarium::weapon_core*)
 void weapon_core_cook::on_core_subresources_ready( resources::queries_result& data, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
-	// LOCALS
-	// resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> weapon_skeleton
-	// u32 							resource_index
-	// resources::resource_ptr<weapon_user_animations_container,resources::unmanaged_intrusive_base> user_animations
-	// resources::query_result_for_cook* parent
-	// ******
+	resources::query_result_for_cook*	parent	= data.get_parent_query( );
 
-	// FUNCTION BODY
-	// <0x5a033a>|0x00a|+0x00b:'210'
-	// <0x5a0345>|0x015|+0x00c:'211'
-	// <0x5a0351>|0x021|+0x00c:'212'
-	// <0>
-	// <0x5a035d>|0x02d|+0x007:'214'
-	// <0x5a0364>|0x034|+0x03b:'215'
-	// <0x5a039f>|0x06f|+0x058:'216'
-	// <0x5a03f7>|0x0c7|+0x00c:'217'
-	// <0x5a0403>|0x0d3|+0x012:'218'
-	// <0>
-	// <0x5a0415>|0x0e5|+0x021:'220'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	u32	resource_index	= 0;
+
+	resources::resource_ptr< animation::skeleton, resources::unmanaged_intrusive_base >		weapon_skeleton
+		= static_cast_resource_ptr< resources::resource_ptr< animation::skeleton, resources::unmanaged_intrusive_base > >( data[ resource_index++ ].get_unmanaged_resource( ) );
+
+	resources::resource_ptr< weapon_user_animations_container, resources::unmanaged_intrusive_base >	user_animations
+		= static_cast_resource_ptr< resources::resource_ptr< weapon_user_animations_container, resources::unmanaged_intrusive_base > >( data[ resource_index++ ].get_unmanaged_resource( ) );
+
+	object_to_cook->set_skeleton( weapon_skeleton );
+	object_to_cook->user_animations_selector( ).set_animations( user_animations );
+
+	query_weapon_states( parent, config_ptr, object_to_cook );
 }
 
 // STATE[33.38%|PARTIAL]: delete_helper<doug_lea_allocator,resource_base> picks
@@ -307,3 +300,4 @@ u32 weapon_core_cook::cooked_object_size( weapon_core& object_to_cook ) const
 }
 
 } // namespace survarium
+
