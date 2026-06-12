@@ -13,35 +13,35 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 51.78% fuzzy &middot; 9,547 / 25,372 functions exact (37.63%).**
+**Overall: 49.84% fuzzy &middot; 8,735 / 25,372 functions exact (34.43%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 384 / 2,805 (13.7%) | 3.5% |
-| `shared` | 112 | 840 / 2,255 (37.3%) | 36.1% |
-| `game` | 141 | 20 / 1,634 (1.2%) | 0.1% |
-| `game_core` | 189 | 553 / 1,429 (38.7%) | 22.8% |
-| `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
-| `animation` | 102 | 161 / 880 (18.3%) | 5.4% |
-| `ai` | 124 | 428 / 759 (56.4%) | 38.9% |
-| `sound` | 69 | 214 / 517 (41.4%) | 16.8% |
-| `collision` | 52 | 371 / 516 (71.9%) | 31.0% |
-| `particle` | 25 | 263 / 485 (54.2%) | 26.1% |
-| `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
+| `render` | 351 | 388 / 2,805 (13.8%) | 4.2% |
+| `shared` | 112 | 840 / 2,255 (37.3%) | 33.7% |
+| `game` | 141 | 1 / 1,634 (0.1%) | 0.0% |
+| `game_core` | 189 | 451 / 1,429 (31.6%) | 18.9% |
+| `core` | 136 | 678 / 1,331 (50.9%) | 35.3% |
+| `animation` | 102 | 77 / 880 (8.8%) | 3.1% |
+| `ai` | 124 | 430 / 759 (56.7%) | 39.2% |
+| `sound` | 69 | 213 / 517 (41.2%) | 16.8% |
+| `collision` | 52 | 435 / 516 (84.3%) | 61.7% |
+| `particle` | 25 | 264 / 485 (54.4%) | 26.8% |
+| `vfs` | 71 | 195 / 412 (47.3%) | 16.9% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
-| `ui` | 27 | 179 / 255 (70.2%) | 42.9% |
-| `physics` | 14 | 99 / 203 (48.8%) | 24.4% |
-| `fs` | 25 | 70 / 189 (37.0%) | 27.8% |
-| `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
-| `network` | 25 | 7 / 163 (4.3%) | 0.5% |
-| `network_core` | 22 | 31 / 140 (22.1%) | 12.8% |
+| `ui` | 27 | 174 / 255 (68.2%) | 43.0% |
+| `physics` | 14 | 103 / 203 (50.7%) | 28.2% |
+| `fs` | 25 | 76 / 189 (40.2%) | 31.6% |
+| `engine` | 22 | 54 / 165 (32.7%) | 11.3% |
+| `network` | 25 | 3 / 163 (1.8%) | 0.1% |
+| `network_core` | 22 | 26 / 140 (18.6%) | 6.2% |
 | `debug` | 16 | 96 / 127 (75.6%) | 65.5% |
-| `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
-| `input` | 9 | 31 / 56 (55.4%) | 27.7% |
-| `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
-| `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
+| `logging` | 10 | 33 / 73 (45.2%) | 28.5% |
+| `input` | 9 | 27 / 56 (48.2%) | 24.8% |
+| `survarium` | 5 | 9 / 22 (40.9%) | 12.0% |
+| `ai_navigation` | 3 | 9 / 14 (64.3%) | 46.9% |
 
-_Updated 2026-06-10 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-12 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

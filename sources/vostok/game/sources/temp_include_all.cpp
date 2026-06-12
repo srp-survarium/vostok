@@ -8,6 +8,7 @@
 
 // game carcass headers under validation (no real including TU yet)
 #include "action_type.h"
+#include "fingers_to_weapon_corrector.h"
 #include "flash_factory.h"
 #include "flash_movie.h"
 #include "game_action_id.h"
@@ -17,8 +18,21 @@
 #include "login_menu_status_enum.h"
 #include "option_item_type_enum.h"
 #include "options_enum.h"
+#include "rifle_scope.h"
+#include "rifle_scope_cook.h"
+#include "shotgun_weapon_reload_state.h"
+#include "shotgun_weapon_reload_state_cook.h"
 #include "toggle_action_enum.h"
 #include "video_options_enum.h"
+#include "weapon.h"
+#include "weapon_cook.h"
+#include "weapon_sound_effect.h"
+#include "weapon_sound_events_handler_state.h"
+#include "weapon_sound_events_handler_state_cook.h"
+#include "weapon_sound_events_handler_state_cook_inline.h"
+#include "weapon_sound_events_handler_state_cook_specializations.h"
+#include "weapon_sound_events_handler_state_inline.h"
+#include "weapon_user_dead_state.h"
 
 #include <vostok/physics/sources/bullet_include.h>
 
