@@ -3,10 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\base_game_scene.h"
+#include "base_game_scene.h"
 
 namespace survarium {
 
+// TU static 's_freeze_culling' (compiler-generated atexit destructor); a
+// matcher recovers its type/initializer from the init asm.
+/*
 // STATE[STUB]
 void `dynamic atexit destructor for 's_freeze_culling''( )
 {
@@ -14,9 +17,13 @@ void `dynamic atexit destructor for 's_freeze_culling''( )
 	// <0x7d85d0>|0x000|      :'24'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
-explicit base_game_scene::base_game_scene( game& g )
+ base_game_scene::base_game_scene( game& g ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	m_game( g )
 {
 	// FUNCTION BODY[0x5d6ea0]: 1
 	// <0x5d6ea0>|0x000|+0x000:'37'	{
@@ -38,6 +45,8 @@ explicit base_game_scene::base_game_scene( game& g )
 // STATE[STUB]
 math::uint2 const& base_game_scene::output_window_size( ) const
 {
+	return *( math::uint2 const* )NULL;	// buildability return
+
 	// FUNCTION BODY[0x5d6fa0]: 1
 	// <0x5d6fa1>|0x001|+0x045:'64'
 	// ******
@@ -129,6 +138,8 @@ void base_game_scene::destroy_physics( )
 // STATE[STUB]
 scheduler& base_game_scene::scheduler( )
 {
+	return *( survarium::scheduler* )NULL;	// buildability return
+
 	// FUNCTION BODY[0x5d6e00]: 1
 	// <0x5d6e00>|0x000|+0x00b:'130'
 	// ******
@@ -156,6 +167,8 @@ void base_game_scene::tick( const u32 __formal, const u32 current_time_in_ms, co
 // STATE[STUB]
 render::game::renderer& base_game_scene::renderer( ) const
 {
+	return *( render::game::renderer* )NULL;	// buildability return
+
 	// FUNCTION BODY[0x5d6da0]: 1
 	// <0x5d6da0>|0x000|+0x00c:'147'
 	// ******
@@ -164,6 +177,8 @@ render::game::renderer& base_game_scene::renderer( ) const
 // STATE[STUB]
 render::scene_renderer& base_game_scene::scene_renderer( ) const
 {
+	return *( render::scene_renderer* )NULL;	// buildability return
+
 	// FUNCTION BODY[0x5d6e10]: 1
 	// <0x5d6e10>|0x000|+0x00f:'151'
 	// ******
@@ -256,6 +271,8 @@ bool base_game_scene::point_to_screen( float3 const& p, float2& result )
 // STATE[STUB]
 swf_input_translator& base_game_scene::input_translator( )
 {
+	return *( swf_input_translator* )NULL;	// buildability return
+
 	// FUNCTION BODY[0x5d6d30]: 1
 	// <0x5d6d30>|0x000|+0x00b:'206'
 	// ******
@@ -277,32 +294,5 @@ void base_game_scene::on_after_tick( )
 	// <0x5d73e0>|0x000|+0x00c:'217'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::one_way_threads_channel< vostok::intrusive_spsc_queue< vostok::sound::sound_order, vostok::sound::sound_order, 4 >, vostok::intrusive_spsc_queue< vostok::sound::sound_order, vostok::sound::sound_order, 4 > >
-	// 	orders_channel_type;
-
-	// typedef
-	// 	vostok::one_way_threads_channel< vostok::intrusive_spsc_queue< vostok::sound::sound_response, vostok::sound::sound_response, 4 >, vostok::intrusive_spsc_queue< vostok::sound::sound_response, vostok::sound::sound_response, 4 > >
-	// 	responses_channel_type;
-
-	// ******
 
 } // namespace survarium

@@ -5,23 +5,16 @@
 #ifndef FREE_FLY_CAMERA_H_INCLUDED
 #define FREE_FLY_CAMERA_H_INCLUDED
 
-/* INCLUDES */
-class survarium::camera_director;
-class survarium::game_camera;
-class survarium::vector<int>;
-struct vostok::input::handler;
-class vostok::input::enum_gamepad_action;
-class vostok::input::enum_keyboard;
-class vostok::input::enum_keyboard_action;
-class vostok::input::enum_mouse_key_action;
-class vostok::input::gamepad_button;
-class vostok::input::mouse_button;
+#include <vostok/input/handler.h>
 
-/* FORWARD REFS */
-class vostok::input::world;
-class survarium::base_game_scene;
+#include "game_camera.h"
 
 namespace survarium {
+
+class base_game_scene;
+class camera_director;
+
+// void* free_fly_camera::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x96df0]: <0x968f0>|0x000|      :'31'	{
 
 class free_fly_camera : public game_camera , public input::handler {
 public:
@@ -49,7 +42,7 @@ public:
 						s32					z
 					) override;
 
-	virtual	s32		input_priority		( ) override { /* no source */ }
+	virtual	s32		input_priority		( ) override { /* no source */ return 0; }
 
 	virtual	void	tick				( ) override;
 

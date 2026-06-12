@@ -30,9 +30,8 @@ class scheduler;
 class swf_input_translator;
 struct flash_text_manager;
 
-// pulled ahead of batch 9 (a base of this batch's menu scenes); its compiland
-// carcass + the addressed inline bodies (sources/base_game_scene*.h) stay in
-// the queue for batch 9
+// pulled ahead by batch 5 (a base of its menu scenes); out-of-line bodies in
+// the base_game_scene.cpp compiland (batch 9)
 class base_game_scene : public game_scene , public engine , public physics::engine , public boost::noncopyable {
 public:
 			explicit								base_game_scene		( game& g );
@@ -48,8 +47,23 @@ public:
 	virtual	void									on_activate			( ) override;
 	virtual	void									on_deactivate		( ) override;
 
-	virtual	void									show_ui				( bool __formal ) { /* no source */ }
-	virtual	bool									is_mouse_over_ui	( ) { /* no source */ return false; }
+	// STATE[STUB]
+	virtual	void									show_ui				( bool __formal )
+	{
+		// FUNCTION BODY[0x22c50]
+		// <0x22c50>|0x000|      :'52'	{
+		// ******
+	}
+
+	// STATE[STUB]
+	virtual	bool									is_mouse_over_ui	( )
+	{
+		return false;
+
+		// FUNCTION BODY[0xb2740]
+		// <0xb2740>|0x000|      :'53'	{
+		// ******
+	}
 
 	virtual	void									tick				( const u32 __formal, const u32 current_time_in_ms, const bool is_game_paused ) override;
 

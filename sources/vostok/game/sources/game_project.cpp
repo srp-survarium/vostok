@@ -3,12 +3,17 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\game_project.h"
+#include "game_project.h"
+
+#include "render_visual.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit simple_game_project::simple_game_project( base_game_scene& s )
+ simple_game_project::simple_game_project( base_game_scene& s ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	m_game_scene( s )
 {
 	// FUNCTION BODY[0x5cc560]
 	// <0x5cc560>|0x000|      :'23'	{
@@ -224,40 +229,5 @@ victory_items_container_core* simple_game_project::get_items_container( u8 id )
 	// <0x5cc36f>|0x02f|      :'177'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::damage_zone_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::ladder_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::zone_group::zone_wrapper*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium
