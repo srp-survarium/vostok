@@ -774,7 +774,8 @@ def cmd_queue(args):
     matched in their real context (same inlining/LTCG environment as their
     callers) instead of as cross-TU small-function churn. Header pseudo-units
     fold into their host .cpp TU; frameless (LTCG-customized) leaves are
-    skipped. TUs are ordered by total open bytes, smallest first."""
+    skipped. TUs are ordered LOWEST match level first (real unmatched code
+    before 99% polish - that tail is verifier work), size breaking ties."""
     con = open_db(check_schema=True)
     where, params = ["module = ?"], [args.module]
     if not args.include_frameless:
@@ -805,7 +806,18 @@ def cmd_queue(args):
     by_unit = {}
     for r in con.execute(q, params):
         by_unit.setdefault(host(r["unit"], r["demangled"]), []).append(dict(r))
-    units = sorted(by_unit.items(), key=lambda kv: (sum(f["size"] for f in kv[1]), kv[0]))
+
+    def matched_pct(fns):
+        """Size-weighted match level of the batch (TARGET_ONLY counts as 0%)."""
+        total = sum(f["size"] for f in fns)
+        return sum((f["fuzzy_pct"] or 0) * f["size"] for f in fns) / total if total else 0.0
+
+    # LOWEST match level first - real unmatched code beats polishing 99% TUs
+    # (sushi, 2026-06-13); size ascending breaks ties.
+    units = sorted(
+        by_unit.items(),
+        key=lambda kv: (matched_pct(kv[1]), sum(f["size"] for f in kv[1]), kv[0]),
+    )
     if args.limit:
         units = units[: args.limit]
 
@@ -814,6 +826,7 @@ def cmd_queue(args):
             {
                 "unit": unit,
                 "total_size": sum(f["size"] for f in fns),
+                "matched_pct": round(matched_pct(fns), 2),
                 "functions": [
                     {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence")}
                     for f in fns
@@ -825,7 +838,7 @@ def cmd_queue(args):
         return
     for unit, fns in units:
         total = sum(f["size"] for f in fns)
-        print(f"=== {unit}: {len(fns)} functions, {total:#x} bytes")
+        print(f"=== {unit}: {len(fns)} functions, {total:#x} bytes, {matched_pct(fns):.1f}% matched")
         for f in fns:
             pct = "-" if f["fuzzy_pct"] is None else f"{f['fuzzy_pct']:.1f}"
             via = "" if f["unit"] == unit else f"   [defined in {f['unit']}]"
