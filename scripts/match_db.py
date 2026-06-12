@@ -899,13 +899,22 @@ def cmd_queue(args):
         SELECT s.demangled, s.mangled, coalesce(u.name,'(no unit)') AS unit,
                t.module, t.size, t.frameless, p.fuzzy_pct, p.struct_class,
                coalesce(a.n, 0) AS attempts,
-               CASE WHEN p.sym IS NULL THEN 'TARGET_ONLY' ELSE 'PAIRED' END AS presence
+               fl.path AS def_file,
+               bos.mangled AS near_miss_base,
+               CASE WHEN p.sym IS NULL AND bos.mangled IS NOT NULL THEN 'NEAR_MISS'
+                    WHEN p.sym IS NULL THEN 'TARGET_ONLY'
+                    ELSE 'PAIRED' END AS presence
         FROM target_functions t
         JOIN symbols s ON s.id = t.sym
         LEFT JOIN units u ON u.id = t.unit
         LEFT JOIN pairs p ON p.sym = t.sym
         LEFT JOIN history h ON h.mangled = s.mangled
         LEFT JOIN attempts a ON a.mangled = s.mangled
+        LEFT JOIN files fl ON fl.id = t.file
+        -- a base-only NEAR_MISS row's detail IS this target symbol: the body
+        -- exists under a different mangling (access/const) - a header fix
+        LEFT JOIN base_only_status bos
+               ON bos.detail = s.mangled AND bos.status = 'NEAR_MISS'
         WHERE NOT (coalesce(p.fuzzy_pct, 0) >= 100 AND p.struct_class = 'MATCH')
           AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag IN ('SKIP','OUT_OF_SCOPE'))
           -- compiler-generated machinery is not source-steerable standalone:
@@ -925,9 +934,31 @@ def cmd_queue(args):
       ORDER BY unit, size
     """
     host = queue_host_units(con, args.module)
+    src_cache = {}
+
+    def body_in_source(row):
+        """Cheap dispatch hint for unpaired rows: does the defining file
+        already name this function with an argument list? Distinguishes
+        'write it' from 'it exists - check the anchor / mangling first'."""
+        if row["presence"] == "PAIRED" or not row["def_file"]:
+            return None
+        path = VOSTOK / "sources" / row["def_file"]
+        if path not in src_cache:
+            try:
+                src_cache[path] = path.read_text(encoding="latin-1")
+            except OSError:
+                src_cache[path] = ""
+        qn = qualified_name(row["demangled"] or "")
+        if not qn:
+            return None
+        short = qn[1].split("<", 1)[0]
+        return f"{short}(" in src_cache[path] or f"{short} (" in src_cache[path]
+
     by_unit = {}
     for r in con.execute(q, params):
-        by_unit.setdefault(host(r["unit"], r["demangled"]), []).append(dict(r))
+        row = dict(r)
+        row["body_in_source"] = body_in_source(row)
+        by_unit.setdefault(host(row["unit"], row["demangled"]), []).append(row)
 
     def matched_pct(fns):
         """Size-weighted match level of the batch (TARGET_ONLY counts as 0%)."""
@@ -959,7 +990,14 @@ def cmd_queue(args):
                 "total_size": sum(f["size"] for f in fns),
                 "matched_pct": round(matched_pct(fns), 2),
                 "functions": [
-                    {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence", "attempts")}
+                    {
+                        k: f[k]
+                        for k in (
+                            "demangled", "mangled", "unit", "size", "fuzzy_pct",
+                            "struct_class", "presence", "attempts",
+                            "near_miss_base", "body_in_source",
+                        )
+                    }
                     for f in fns
                 ],
             }
@@ -974,9 +1012,20 @@ def cmd_queue(args):
             pct = "-" if f["fuzzy_pct"] is None else f"{f['fuzzy_pct']:.1f}"
             via = "" if f["unit"] == unit else f"   [defined in {f['unit']}]"
             tried = f"  tried:{f['attempts']}" if f["attempts"] else ""
+            hints = ""
+            if f["near_miss_base"]:
+                b = f["near_miss_base"]
+                tgt = f["mangled"]
+                cut = b.find("@@")
+                hints = (
+                    f"   [NEAR_MISS: body exists as @@{b[cut + 2:]} - change access/const "
+                    f"to match target @@{tgt[tgt.find('@@') + 2:]}]"
+                )
+            elif f["body_in_source"]:
+                hints = "   [body already in source - check anchor/mangling first]"
             print(
                 f"  {f['size']:>6}  {pct:>6}  {f['struct_class'] or f['presence']:<11}  "
-                f"{f['demangled'][:110]}{via}{tried}"
+                f"{f['demangled'][:110]}{via}{tried}{hints}"
             )
 
 
