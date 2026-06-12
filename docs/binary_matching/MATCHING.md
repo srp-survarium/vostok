@@ -77,8 +77,9 @@ order - none of these are "LTCG noise". Each has a concrete source cause:
 
 Keep digging until the ONLY remaining difference is argument passing; record `DONE`
 in the module's `status.jsonl` only then (cause e.g. `LTCG arg passing`). If you
-cannot finish on this machine, record `INPROGRESS` with the concrete next step - do **not** bank it as a
-matched `PARTIAL` and call the residual "LTCG". (History: `empty_stub` calls and a
+cannot finish, park it `SKIPPED` with the concrete next step in its cause and a terse
+`claude@NOTE:` above the function - do **not** bank it as matched and call the
+residual "LTCG". (History: `empty_stub` calls and a
 switch bounds check were both wrongly written off as "LTCG" and were in fact a
 recoverable ASSERT and a missing `default: NODEFAULT()`.) Trust the operand-aware
 match % (`agentic_loop.md` section 2a) over a raw instruction-difference count.
@@ -93,9 +94,10 @@ missing function B (e.g. an out-of-line `call vostok::math::get_relative_matrix`
 you write B to make the link resolve, B is NOT invisible scaffolding: it is a real
 function in the target binary with its own body and rva. You MUST (1) define B in its
 ONE real source location (its real header, never the consuming `.cpp` - see the
-`_N.h` note under "The carcass"), (2) give B its target carcass / `// FUNCTION BODY`
-structure, and (3) track B's OWN `fuzzy_match_percent` and `status.jsonl` entry, the
-same as any matched function. A call that resolves but whose callee body is unverified
+`_N.h` note under "The carcass"), (2) match B against its own target shape - fetch its
+statement structure and rich asm like any unit (`pdb_fetch --function <B> --view
+structure` / `--view target`), and (3) track B's OWN `fuzzy_match_percent` and
+`status.jsonl` entry, the same as any matched function. A call that resolves but whose callee body is unverified
 is a half-match hiding an unmatched function.
 
 **A cross-TU helper is DECLARED in a header with the module's `VOSTOK_<MODULE>_API`
@@ -208,13 +210,16 @@ Status tags (the `status` vocabulary):
 
 | tag | meaning |
 |---|---|
-| DONE | matched (may be <100% if the remaining diff is LTCG/CRT noise - say why) |
-| PARTIAL | mostly matched, remaining diff understood |
+| DONE | matched (may be <100% ONLY when the residual is understood and non-steerable - LTCG argument passing / CRT noise; the cause says why) |
 | STUB | skeleton only, body still the carcass (in-source flag, not exported) |
 | BLOCKED | needs another function/type first |
-| SKIPPED | tried, deferred |
+| SKIPPED | tried, deferred - cause = the concrete next step |
 | INLINED | inlined at all call sites; no standalone body |
 | UNCHECKED / UNVERIFIED | written, not yet diffed / not confirmed |
+
+(There is no "partially matched" tag: the live % already lives in `report.json`,
+so a not-DONE function is either parked - `SKIPPED`/`BLOCKED` with its cause and
+next step - or simply not banked yet.)
 
 `INLINED` carries no percent: the function emits NO standalone symbol on the target side
 (every call site inlined it), so there is nothing for objdiff to pair or score. Use it when
@@ -224,17 +229,17 @@ A body with no consumer evidence yet is NOT `INLINED` - keep it a
 `/* no source */` sham (with its `sushi@TODO`) until a consumer gets matched.
 
 
-## Comment hygiene - lean code, verbose `.md`
+## Comment hygiene - lean code, verbose commit message
 **Code is not the place to be noisy.** Keep inline comments minimal. ALL the
-explanation, exploration, attempts, and rationale belong in the per-function `.md`
-(section 7) - be as detailed as you like *there*, never in the source. A reader of
-the `.cpp` should see matched code, not a narration.
+explanation, exploration, attempts, and rationale belong in the COMMIT/PR MESSAGE
+(agentic_loop.md section 7) - be as detailed as you like *there*, never in the
+source. A reader of the `.cpp` should see matched code, not a narration.
 - **The carcass `// <full signature>` line is only a TYPE reference**, kept while
   matching because vostok-structure's generated argument *names* can be wrong while
   the *types* are right. **Once the arguments/types match the target, DELETE it** - a
   confirmed match does not keep the signature line.
 - **A clean 100% match carries NO marker or explanation block at all** - the % lives
-  in `report.json`, the why-it-matched detail goes in the `.md`.
+  in `report.json`, the why-it-matched detail goes in the commit message.
 - Reserve inline comments for the genuinely unexpected/unique: a `claude@MATCH:` for
   an odd shape chosen to reproduce bytes, or a `claude@NOTE:` for a surprising target
   fact. Do NOT narrate routine mechanics (anchors, "empty body", ICF/linker folding)
@@ -244,8 +249,8 @@ the `.cpp` should see matched code, not a narration.
   `LOGF_*`, `printf`, `OutputDebugString`, a trace call) or commented-out debug/log
   line that was added while matching and that the TARGET does not actually emit - it is
   not part of the byte-match and only clutters the source. (A log the target's bytes
-  genuinely contain stays.) Any diagnostic you needed belongs in the `.md` trail, never
-  as a leftover log line in the `.cpp`.
+  genuinely contain stays.) Any diagnostic you needed belongs in the commit message,
+  never as a leftover log line in the `.cpp`.
 
 
 ## Comment tags (where matching knowledge lives - keep them)
@@ -255,16 +260,21 @@ matcher) - never drop them. Prefix your own with `claude@...`.
 - `@NOTE:` an observation about the target.
 - `@TODO:` an open question.
 
-"Why it didn't match / why I stopped" = the reason on the `STATE` line plus a
-`@MATCH`/`@NOTE` comment at that statement (multi-line rationale goes in a comment
-block above the function).
+"Why it didn't match / why I stopped" = a terse `claude@NOTE:` above the function
+(why stuck, what was tried - the non-matching note the next matcher reads first)
+plus the same conclusion as the `cause` in the function's `status.jsonl` entry;
+long rationale goes in the commit message, never a comment block.
 
 
 ## The carcass (generated stub comments)
 Stubs arrive with `// FUNCTION BODY` / `// LOCALS` / `// TYPEDEFS` blocks. A body
 line is `<absoluteVA>|offset|+delta:'srcline'`: paste the VA into IDA (`G`);
 `<N>` = no address (inlined/comment); a large `+delta` = something inlined
-between. Use these as scratch while matching.
+between. Use these as scratch while matching - and remember the same information
+(and more) is available LIVE from the rich indexes: `pdb_fetch --view structure`
+(the statement skeleton), `--view target` (the rich asm), and `--address 0x<va>` /
+`--offset 0x..` / `--index N` (the asm of one specific statement). The carcass is
+a generation-time snapshot; `pdb_fetch` is the source of truth.
 
 **`+delta` reads structure - and `+0x002` is almost always a closing brace `}`.** A
 2-byte step is a `jmp short` (EB xx); inside a switch that `jmp` is the `break` /
@@ -335,13 +345,11 @@ sub-expression the compiler set no breakpoint on - inlined, optimized out, or a 
 need for the match. A `<N>` (no address) line is a statement/sub-expression
 the compiler set no breakpoint on (inlined, optimized out, or a continuation); its
 count and grouping between two addressed lines are a *structural clue* (an inlined
-call, a nested scope, a fall-through `jmp` thunk). When you record which statement a
-carcass line matched, write that annotation to the **RIGHT** of the line and leave the
-addressed and marker lines intact - e.g.
-`// <0x...>|0x025|+0x008:'106'\tcase type_stand: if ( is_moving )`. Of the generated
-blocks, keep only `// FUNCTION BODY`; the `// STATICS` / `// OTHER SYMBOLS` /
-`// LOCALS` / `// TYPEDEFS` comment blocks are scratch and may be dropped - but mine
-`// LOCALS` for the rule below first.
+call, a nested scope, a fall-through `jmp` thunk). Do NOT annotate the carcass -
+it is deleted whole when the function is matched, and a per-statement question is
+answered live (`pdb_fetch --view target --address 0x<va>`, or `--offset`/`--index`)
+instead of with margin notes. While the body is still a STUB, leave its generated
+blocks intact (they are the matcher input); mine `// LOCALS` for the rule below.
 
 **Every `// LOCALS` entry is a real source local - declare and use ALL of them.** If
 the PDB recorded a variable as a local of the function, it WAS in the target source,
