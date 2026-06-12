@@ -1734,4 +1734,3 @@ void weapon_core::instant_toggle_end( )
 }
 
 } // namespace survarium
-
