@@ -3,12 +3,15 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\game_generate_shaders.h"
+#include "game_generate_shaders.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit generate_shaders_world::generate_shaders_world( render::world& render_world )
+ generate_shaders_world::generate_shaders_world( render::world& render_world ) :
+	// ref member; buildability placeholder - the real source pulls the game
+	// renderer off render_world (a matcher supplies it)
+	m_renderer( *( render::game::renderer* )NULL )
 {
 	// FUNCTION BODY[0x747c70]: 0
 	// <0x747c70>|0x000|+0x013:'22'	{
@@ -198,24 +201,5 @@ void generate_shaders_world::tick( u32 current_frame_id )
 	// <0x74858c>|0x13c|+0x012:'159'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

@@ -3,12 +3,15 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\game_camera.h"
+#include "game_camera.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit game_camera::game_camera( base_game_scene& w )
+ game_camera::game_camera( base_game_scene& w ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	m_game_scene( w )
 {
 	// FUNCTION BODY[0x5d6ba0]: 4
 	// <0x5d6ba0>|0x000|+0x030:'39'	{

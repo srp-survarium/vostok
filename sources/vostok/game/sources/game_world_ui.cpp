@@ -3,10 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\game_world_ui.h"
+#include "game_world_ui.h"
 
 namespace survarium {
 
+// TU statics 'is_ui_minimap_rotable_old' / 's_is_ui_minimap_rotable'
+// (compiler-generated dynamic initializer + atexit destructor); a matcher
+// recovers their types/initializers from the init asm.
+/*
 // STATE[STUB]
 void `dynamic initializer for 'is_ui_minimap_rotable_old''( )
 {
@@ -22,9 +26,13 @@ void `dynamic atexit destructor for 's_is_ui_minimap_rotable''( )
 	// <0x7d8a70>|0x000|      :'35'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
-explicit game_world_ui::game_world_ui( game_world& w )
+ game_world_ui::game_world_ui( game_world& w ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	m_game_world( w )
 {
 	// FUNCTION BODY[0x5d2a10]: 1
 	// <0x5d2a5a>|0x04a|+0x005:'51'
@@ -1621,36 +1629,5 @@ void game_world_ui::set_player_online_status( u32 player_id, bool is_online )
 	// <0x5d0849>|0x0a9|+0x02a:'1184'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::inventory_item_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::profile_slot_enum*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

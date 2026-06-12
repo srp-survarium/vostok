@@ -3,12 +3,16 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\free_fly_camera.h"
+#include "free_fly_camera.h"
 
 namespace survarium {
 
 // STATE[STUB]
- free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd )
+ free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	game_camera( w ),
+	m_camera_director( cd )
 {
 	// FUNCTION BODY[0x5cf320]: 0
 	// <0x5cf320>|0x000|+0x07a:'33'	{
@@ -358,28 +362,5 @@ void free_fly_camera::tick( )
 	// <21>
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	s32*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium
