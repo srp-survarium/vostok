@@ -90,6 +90,10 @@ CREATE TABLE history(
 CREATE TABLE flags(
   mangled TEXT, flag TEXT, cause TEXT, set_at TEXT,
   PRIMARY KEY(mangled, flag));
+CREATE TABLE attempts(
+  mangled TEXT PRIMARY KEY,
+  n INTEGER,            -- how many matcher dispatches included this function
+  last_at TEXT, note TEXT);
 
 CREATE INDEX idx_target_sym ON target_functions(sym);
 CREATE INDEX idx_base_sym   ON base_functions(sym);
@@ -304,7 +308,7 @@ def file_mtime_iso(path):
     )
 
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 
 
 def _git(*args):
@@ -537,11 +541,17 @@ def cmd_refresh(args):
         log("no declarations.jsonl - BASE_ONLY legitimacy check degraded (parser dump pending)")
 
     # carry persistent tables forward from the existing DB
-    old_history, old_flags = {}, []
+    old_history, old_flags, old_attempts = {}, [], []
     if DB_PATH.is_file():
         old = open_db()
         old_history = {r["mangled"]: tuple(r) for r in old.execute("SELECT * FROM history")}
         old_flags = [tuple(r) for r in old.execute("SELECT * FROM flags ORDER BY mangled, flag")]
+        try:
+            old_attempts = [
+                tuple(r) for r in old.execute("SELECT * FROM attempts ORDER BY mangled")
+            ]
+        except sqlite3.OperationalError:
+            old_attempts = []  # pre-schema-3 DB
         old.close()
 
     # reconcile history: upsert every CURRENT pairing; reset rows whose source
@@ -663,6 +673,7 @@ def cmd_refresh(args):
     con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
     con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", history_rows)
     con.executemany("INSERT INTO flags VALUES (?,?,?,?)", old_flags)
+    con.executemany("INSERT INTO attempts VALUES (?,?,?,?)", old_attempts)
     # deterministic meta only (artifact mtimes, not wall clock)
     con.executemany(
         "INSERT INTO meta VALUES (?,?)",
@@ -673,7 +684,7 @@ def cmd_refresh(args):
             ("refresh_head", git_head()),
             ("build_head", build_head),
             ("declarations_loaded", "1" if (declared_methods or declared_free) else "0"),
-            ("schema_version", "2"),
+            ("schema_version", "3"),
         ],
     )
     con.commit()
@@ -887,12 +898,14 @@ def cmd_queue(args):
       WITH cand AS (
         SELECT s.demangled, s.mangled, coalesce(u.name,'(no unit)') AS unit,
                t.module, t.size, t.frameless, p.fuzzy_pct, p.struct_class,
+               coalesce(a.n, 0) AS attempts,
                CASE WHEN p.sym IS NULL THEN 'TARGET_ONLY' ELSE 'PAIRED' END AS presence
         FROM target_functions t
         JOIN symbols s ON s.id = t.sym
         LEFT JOIN units u ON u.id = t.unit
         LEFT JOIN pairs p ON p.sym = t.sym
         LEFT JOIN history h ON h.mangled = s.mangled
+        LEFT JOIN attempts a ON a.mangled = s.mangled
         WHERE NOT (coalesce(p.fuzzy_pct, 0) >= 100 AND p.struct_class = 'MATCH')
           AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag IN ('SKIP','OUT_OF_SCOPE'))
           -- compiler-generated machinery is not source-steerable standalone:
@@ -921,12 +934,15 @@ def cmd_queue(args):
         total = sum(f["size"] for f in fns)
         return sum((f["fuzzy_pct"] or 0) * f["size"] for f in fns) / total if total else 0.0
 
-    # LOWEST match level first - real unmatched code beats polishing 99% TUs
-    # (sushi, 2026-06-13); real .cpp TUs before header-only batches at equal
-    # level; size ascending breaks remaining ties.
+    # UNTRIED work first: a TU whose open functions were ALL dispatched before
+    # is demoted by its least-tried function's attempt count, so parked walls
+    # stop jumping to the front but still come back later (sushi, 2026-06-13).
+    # Then LOWEST match level (real unmatched code beats polishing 99% TUs),
+    # real .cpp TUs before header-only batches, size ascending.
     units = sorted(
         by_unit.items(),
         key=lambda kv: (
+            min(f["attempts"] for f in kv[1]),
             matched_pct(kv[1]),
             0 if kv[0].endswith(".cpp") else 1,
             sum(f["size"] for f in kv[1]),
@@ -943,7 +959,7 @@ def cmd_queue(args):
                 "total_size": sum(f["size"] for f in fns),
                 "matched_pct": round(matched_pct(fns), 2),
                 "functions": [
-                    {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence")}
+                    {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence", "attempts")}
                     for f in fns
                 ],
             }
@@ -957,10 +973,41 @@ def cmd_queue(args):
         for f in fns:
             pct = "-" if f["fuzzy_pct"] is None else f"{f['fuzzy_pct']:.1f}"
             via = "" if f["unit"] == unit else f"   [defined in {f['unit']}]"
+            tried = f"  tried:{f['attempts']}" if f["attempts"] else ""
             print(
                 f"  {f['size']:>6}  {pct:>6}  {f['struct_class'] or f['presence']:<11}  "
-                f"{f['demangled'][:110]}{via}"
+                f"{f['demangled'][:110]}{via}{tried}"
             )
+
+
+def cmd_tried(args):
+    """Record that a dispatch included these functions (orchestrator, after
+    each worker returns). Increments per-function attempt counts; the queue
+    demotes fully-tried TUs so they come back later instead of being retried
+    first. --unit marks every open function of a TU."""
+    import datetime
+
+    con = open_db(check_schema=True)
+    today = datetime.date.today().isoformat()
+    mangleds = list(args.mangled)
+    if args.unit:
+        q = """SELECT s.mangled FROM target_functions t JOIN symbols s ON s.id = t.sym
+               LEFT JOIN units u ON u.id = t.unit
+               LEFT JOIN pairs p ON p.sym = t.sym
+               WHERE u.name = ? AND NOT (coalesce(p.fuzzy_pct,0) >= 100 AND p.struct_class = 'MATCH')"""
+        mangleds += [r["mangled"] for r in con.execute(q, (args.unit,))]
+    if not mangleds:
+        sys.exit("[match_db] nothing to mark - pass mangled names and/or --unit")
+    for m in mangleds:
+        con.execute(
+            """INSERT INTO attempts VALUES (?, 1, ?, ?)
+               ON CONFLICT(mangled) DO UPDATE SET
+                 n = n + 1, last_at = excluded.last_at,
+                 note = coalesce(excluded.note, note)""",
+            (m, today, args.note),
+        )
+    con.commit()
+    log(f"marked {len(mangleds)} function(s) tried")
 
 
 def cmd_sql(args):
@@ -1020,8 +1067,21 @@ def cmd_merge_flags(args):
                 (r["best_fuzzy_pct"], r["mangled"]),
             )
             nh += 1
+    na = 0
+    try:
+        for r in other.execute("SELECT * FROM attempts"):
+            na += con.execute(
+                """INSERT INTO attempts VALUES (?,?,?,?)
+                   ON CONFLICT(mangled) DO UPDATE SET
+                     n = max(n, excluded.n),
+                     last_at = max(last_at, excluded.last_at),
+                     note = coalesce(excluded.note, note)""",
+                tuple(r),
+            ).rowcount
+    except sqlite3.OperationalError:
+        pass  # other DB predates attempts
     con.commit()
-    log(f"merged from {args.other}: {nf} flags, {nh} history rows")
+    log(f"merged from {args.other}: {nf} flags, {nh} history rows, {na} attempts")
 
 
 def audit_log():
@@ -1102,6 +1162,11 @@ def main():
     )
     p.add_argument("--json", action="store_true")
 
+    p = sub.add_parser("tried", help="record a dispatch attempt; queue demotes tried work")
+    p.add_argument("mangled", nargs="*")
+    p.add_argument("--unit", help="mark every open function of this TU")
+    p.add_argument("--note", help="optional context, e.g. the worker's park causes")
+
     p = sub.add_parser("sql", help="read-only SQL escape hatch")
     p.add_argument("query")
     p.add_argument("--json", action="store_true")
@@ -1127,6 +1192,7 @@ def main():
         "report": cmd_report,
         "queue": cmd_queue,
         "sql": cmd_sql,
+        "tried": cmd_tried,
         "flag": cmd_flag,
         "merge-flags": cmd_merge_flags,
     }[args.cmd](args)
