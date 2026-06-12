@@ -909,7 +909,38 @@ def cmd_merge_flags(args):
     log(f"merged from {args.other}: {nf} flags, {nh} history rows")
 
 
+def audit_log():
+    """Append this invocation to binaries/match_db.log (same format as
+    pdb_fetch.log: [timestamp][branch]: command) so a run's command history
+    is reconstructable. Never breaks the tool; skipped when binaries/ is absent."""
+    try:
+        log_dir = VOSTOK / "binaries"
+        if not log_dir.is_dir():
+            return
+        import datetime
+        import subprocess
+
+        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
+        try:
+            branch = (
+                subprocess.run(
+                    ["git", "-C", str(VOSTOK), "rev-parse", "--abbrev-ref", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                ).stdout.strip()
+                or "?"
+            )
+        except Exception:
+            branch = "?"
+        with open(log_dir / "match_db.log", "a", encoding="utf-8") as f:
+            f.write(f"[{ts}][{branch}]: match_db.py {' '.join(sys.argv[1:])}\n")
+    except OSError:
+        pass
+
+
 def main():
+    audit_log()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
