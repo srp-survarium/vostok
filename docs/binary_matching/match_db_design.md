@@ -191,6 +191,23 @@ the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
 - **Interned names:** symbols/units/files tables keep the committed DB at
   ~19MB; ids are sorted-dense and NOT stable across refreshes (persistent
   tables key on mangled TEXT).
+- **Frameless = custom-conv, out of scope (2026-06-12, from the first
+  orchestrator run):** a target function without the /Od `push ebp; mov ebp,
+  esp` prologue is an LTCG-customized leaf (custom calling convention,
+  this-in-eax) - never source-steerable as a standalone symbol; it only pairs
+  inlined into callers. refresh stores `frameless` per side-table row; queue
+  skips them (`--include-frameless` to override); report counts them as
+  `custom_conv`.
+- **Header pseudo-units fold into host TUs (same run):** the delinker
+  attributes inline methods to per-header pseudo-units; they are not real TUs
+  and matching them standalone hits the custom-conv/ICF walls. `queue` folds
+  each header unit's functions into a host .cpp: stem match (`x.h` /
+  `x_inline.h` -> `sources/x.cpp`), else the .cpp unit owning most functions
+  of the same class, else a standalone batch labeled `(header-only)`. Rows
+  carry their defining unit so the matcher knows it is editing the header.
+- **Schema guard:** query commands refuse a DB whose `meta.schema_version`
+  differs - after pulling a tool update, run `refresh` first (single-writer:
+  the orchestrator).
 
 ## Implementation steps (one commit each, single PR)
 

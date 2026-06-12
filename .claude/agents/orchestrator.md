@@ -97,8 +97,9 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      anchor, context) once for code that genuinely shares it, and small helpers
      get matched in their real place, in the same inlining/LTCG environment as
      their callers. `match_db.py queue` hands you the per-TU batches smallest
-     first. Two adjustments at the extremes: BUNDLE a few TINY units (1-3
-     one-liner functions, e.g. neighboring header units of the same class) into
+     first (header pseudo-units already folded into their host .cpp;
+     LTCG-customized frameless leaves already skipped). Two adjustments at the
+     extremes: BUNDLE a few TINY batches (1-2 functions) into
      one dispatch - each unit still handled whole; and for a HUGE TU
      (weapon_core.cpp-sized) tell the worker to work the functions in target
      order and park what it cannot finish rather than rushing the lot. Hand the

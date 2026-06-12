@@ -52,12 +52,16 @@ CREATE TABLE target_functions(
   rva INTEGER PRIMARY KEY, sym INTEGER REFERENCES symbols(id),
   unit INTEGER REFERENCES units(id), file INTEGER REFERENCES files(id),
   module TEXT,  -- from the unit when report.json knows the symbol, else the file
-  line INTEGER, size INTEGER, n_stmts INTEGER);
+  line INTEGER, size INTEGER, n_stmts INTEGER,
+  frameless INTEGER);  -- no push ebp/mov ebp,esp prologue: LTCG-customized leaf
+                       -- (custom calling conv, this-in-eax) - out of scope as a
+                       -- standalone match, it only pairs inlined into callers
 CREATE TABLE base_functions(
   rva INTEGER PRIMARY KEY, sym INTEGER REFERENCES symbols(id),
   unit INTEGER REFERENCES units(id), file INTEGER REFERENCES files(id),
   module TEXT,
-  line INTEGER, size INTEGER, n_stmts INTEGER);
+  line INTEGER, size INTEGER, n_stmts INTEGER,
+  frameless INTEGER);
 CREATE TABLE unit_functions(
   unit INTEGER REFERENCES units(id), sym INTEGER REFERENCES symbols(id),
   fuzzy_pct REAL, PRIMARY KEY(unit, sym)) WITHOUT ROWID;
@@ -259,6 +263,19 @@ def mangled_name_part(mangled):
     return mangled[:i] if i > 0 else mangled
 
 
+def is_framed(rec):
+    """True when the function keeps the /Od `push ebp; mov ebp, esp` prologue.
+    A frameless function in a matchable module is an LTCG-customized leaf
+    (custom calling convention, e.g. this-in-eax) - never source-steerable as a
+    standalone symbol; it only matters inlined into its callers."""
+    ins = rec.get("instructions") or []
+    return (
+        len(ins) >= 2
+        and ins[0]["text"].split()[:2] == ["push", "ebp"]
+        and ins[1]["text"].replace(" ", "").startswith("movebp,esp")
+    )
+
+
 def src_fingerprint(rec):
     """Hash of the function's source extent (file + statement line range text).
 
@@ -287,11 +304,24 @@ def file_mtime_iso(path):
     )
 
 
-def open_db(path=DB_PATH, must_exist=True):
+SCHEMA_VERSION = "2"
+
+
+def open_db(path=DB_PATH, must_exist=True, check_schema=False):
     if must_exist and not Path(path).is_file():
         sys.exit(f"[match_db] no database at {path} - run `match_db.py refresh` first")
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
+    if check_schema:
+        try:
+            v = con.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
+        except sqlite3.OperationalError:
+            v = None
+        if v is None or v[0] != SCHEMA_VERSION:
+            sys.exit(
+                f"[match_db] DB schema {v[0] if v else '?'} != {SCHEMA_VERSION} - "
+                "run `match_db.py refresh` first"
+            )
     return con
 
 
@@ -379,6 +409,7 @@ def cmd_refresh(args):
                     line,
                     rec["size"],
                     len(stmts),
+                    0 if is_framed(rec) else 1,
                 )
             )
         rows.sort()
@@ -527,8 +558,8 @@ def cmd_refresh(args):
         sorted((i, u, module_of(u)) for u, i in unit_id.items()),
     )
     con.executemany("INSERT INTO files VALUES (?,?)", sorted((i, p) for p, i in file_id.items()))
-    con.executemany("INSERT INTO target_functions VALUES (?,?,?,?,?,?,?,?)", side_rows(target))
-    con.executemany("INSERT INTO base_functions VALUES (?,?,?,?,?,?,?,?)", side_rows(base))
+    con.executemany("INSERT INTO target_functions VALUES (?,?,?,?,?,?,?,?,?)", side_rows(target))
+    con.executemany("INSERT INTO base_functions VALUES (?,?,?,?,?,?,?,?,?)", side_rows(base))
     con.executemany("INSERT INTO unit_functions VALUES (?,?,?)", unit_rows)
     con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?)", pair_rows)
     con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
@@ -542,7 +573,7 @@ def cmd_refresh(args):
             ("base_index_mtime", file_mtime_iso(BASE_IDX)),
             ("report_mtime", file_mtime_iso(REPORT)),
             ("declarations_loaded", "1" if (declared_methods or declared_free) else "0"),
-            ("schema_version", "1"),
+            ("schema_version", "2"),
         ],
     )
     con.commit()
@@ -577,7 +608,7 @@ def emit(rows, as_json):
 
 
 def cmd_list(args):
-    con = open_db()
+    con = open_db(check_schema=True)
     where, params = [], []
     if args.presence == "PAIRED" or args.presence is None:
         base = """
@@ -631,7 +662,7 @@ def cmd_list(args):
 
 
 def cmd_report(args):
-    con = open_db()
+    con = open_db(check_schema=True)
     scope = "unit_name" if args.per_unit else "module"
     where, params = "", []
     if args.module:
@@ -639,7 +670,7 @@ def cmd_report(args):
         params = [args.module]
     q = f"""
       WITH tf AS (
-        SELECT t.rva, t.sym, t.size,
+        SELECT t.rva, t.sym, t.size, t.frameless,
                coalesce(t.module, '(no unit)') AS module,
                coalesce(un.name, '(no unit)')  AS unit_name
         FROM target_functions t LEFT JOIN units un ON un.id = t.unit)
@@ -649,6 +680,7 @@ def cmd_report(args):
              coalesce(sum(p.fuzzy_pct >= 100), 0)                AS fuzzy_100,
              coalesce(sum(p.struct_class = 'MATCH'), 0)          AS struct_match,
              coalesce(sum(p.sym IS NULL), 0)                     AS target_only,
+             coalesce(sum(tf.frameless), 0)                      AS custom_conv,
              printf('%.2f', sum(coalesce(p.fuzzy_pct, 0) * tf.size) /
                             sum(tf.size))                        AS weighted_pct
       FROM tf
@@ -691,17 +723,66 @@ def cmd_report(args):
     emit(rows, args.json)
 
 
+def queue_host_units(con, module):
+    """Header pseudo-units are a delink artifact (the PDB attributes inline
+    methods to the header), not real TUs - fold their functions into a HOST
+    .cpp TU: stem match first (x.h / x_inline.h -> sources/x.cpp), then the
+    .cpp unit owning most functions of the same class; genuinely header-only
+    classes stay standalone, labeled."""
+    cpps = {
+        r["name"]
+        for r in con.execute(
+            "SELECT name FROM units WHERE module = ? AND name LIKE '%.cpp'", (module,)
+        )
+    }
+
+    def stem(path):
+        b = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+        return b[:-7] if b.endswith("_inline") else b
+
+    stem_to_cpp = {}
+    for c in sorted(cpps):
+        stem_to_cpp.setdefault(stem(c), c)
+    class_owner = {}
+    q = """SELECT u.name AS unit, s.demangled FROM target_functions t
+           JOIN symbols s ON s.id = t.sym JOIN units u ON u.id = t.unit
+           WHERE t.module = ? AND u.name LIKE '%.cpp'"""
+    for r in con.execute(q, (module,)):
+        qn = qualified_name(r["demangled"] or "")
+        if qn and qn[0]:
+            counts = class_owner.setdefault(norm_name(qn[0]), {})
+            counts[r["unit"]] = counts.get(r["unit"], 0) + 1
+
+    def host(unit, demangled):
+        if unit.endswith(".cpp"):
+            return unit
+        c = stem_to_cpp.get(stem(unit))
+        if c:
+            return c
+        qn = qualified_name(demangled or "")
+        if qn and qn[0]:
+            counts = class_owner.get(norm_name(qn[0]))
+            if counts:
+                return max(sorted(counts), key=lambda u: counts[u])
+        return f"{unit} (header-only)"
+
+    return host
+
+
 def cmd_queue(args):
     """One batch per TU: a matcher owns the WHOLE TU, so small helpers are
     matched in their real context (same inlining/LTCG environment as their
-    callers) instead of as cross-TU small-function churn. TUs are ordered by
-    total open bytes, smallest first."""
-    con = open_db()
+    callers) instead of as cross-TU small-function churn. Header pseudo-units
+    fold into their host .cpp TU; frameless (LTCG-customized) leaves are
+    skipped. TUs are ordered by total open bytes, smallest first."""
+    con = open_db(check_schema=True)
     where, params = ["module = ?"], [args.module]
+    if not args.include_frameless:
+        where.append("frameless = 0")
     q = f"""
       WITH cand AS (
         SELECT s.demangled, s.mangled, coalesce(u.name,'(no unit)') AS unit,
-               t.module, t.size, p.fuzzy_pct, p.struct_class,
+               t.module, t.size, t.frameless, p.fuzzy_pct, p.struct_class,
                CASE WHEN p.sym IS NULL THEN 'TARGET_ONLY' ELSE 'PAIRED' END AS presence
         FROM target_functions t
         JOIN symbols s ON s.id = t.sym
@@ -720,9 +801,10 @@ def cmd_queue(args):
       SELECT * FROM cand WHERE {" AND ".join(where)}
       ORDER BY unit, size
     """
+    host = queue_host_units(con, args.module)
     by_unit = {}
     for r in con.execute(q, params):
-        by_unit.setdefault(r["unit"], []).append(dict(r))
+        by_unit.setdefault(host(r["unit"], r["demangled"]), []).append(dict(r))
     units = sorted(by_unit.items(), key=lambda kv: (sum(f["size"] for f in kv[1]), kv[0]))
     if args.limit:
         units = units[: args.limit]
@@ -733,7 +815,7 @@ def cmd_queue(args):
                 "unit": unit,
                 "total_size": sum(f["size"] for f in fns),
                 "functions": [
-                    {k: f[k] for k in ("demangled", "mangled", "size", "fuzzy_pct", "struct_class", "presence")}
+                    {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence")}
                     for f in fns
                 ],
             }
@@ -746,9 +828,10 @@ def cmd_queue(args):
         print(f"=== {unit}: {len(fns)} functions, {total:#x} bytes")
         for f in fns:
             pct = "-" if f["fuzzy_pct"] is None else f"{f['fuzzy_pct']:.1f}"
+            via = "" if f["unit"] == unit else f"   [defined in {f['unit']}]"
             print(
                 f"  {f['size']:>6}  {pct:>6}  {f['struct_class'] or f['presence']:<11}  "
-                f"{f['demangled'][:110]}"
+                f"{f['demangled'][:110]}{via}"
             )
 
 
@@ -844,6 +927,11 @@ def main():
     p = sub.add_parser("queue", help="one batch per TU (all its open functions), small-first")
     p.add_argument("--module", required=True)
     p.add_argument("--limit", type=int, help="show only the first N TUs")
+    p.add_argument(
+        "--include-frameless",
+        action="store_true",
+        help="also queue LTCG-customized (frameless) leaves - normally pointless",
+    )
     p.add_argument("--json", action="store_true")
 
     p = sub.add_parser("sql", help="read-only SQL escape hatch")
