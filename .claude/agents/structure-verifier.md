@@ -274,10 +274,12 @@ function to win this match, NEVER reorder to "tidy". You still do not change a P
   Wine config, libEGL/pci-id/dri2 warnings) that can swallow the command's real output.
   Warm up once with `nix develop -c true`, and/or pipe every call through a filter
   (`... 2>&1 | grep -v -E 'setup|libEGL|pci id|dri2 screen'`). Re-run if the first call
-  came back empty. `python3` may not be on PATH - parse `report.json` with `grep`/the
-  rich tools, not Python. The shell cwd resets after each `nix develop -c` call; cd back.
+  came back empty. The shell cwd resets after each `nix develop -c` call; cd back.
 - Verify with the rich indexes (`pdb_fetch`, `pdb_rich_query`; indexes under
-  `binaries/rich/`) and read `binaries/objdiff/report.json` for context. You may also
+  `binaries/rich/`). **`report.json` is ~14MB - NEVER cat/Read it**; slice it with
+  `jq` (`jq -r --arg m "<mangled>" '[.units[].functions[] | select(.name==$m) |
+  .fuzzy_match_percent // "unpaired"] | max' binaries/objdiff/report.json`) and
+  read the small `report-changes.json` whole. You may also
   read the generated `binaries/structure/{base,target}/<unit>` skeletons.
 - **Phase 1: no rebuild** - the obj/report already exist and you change no bytes while
   verifying. **Phase 2: DO rebuild** (`rebuild.py`, no module arg) to confirm each fix -
