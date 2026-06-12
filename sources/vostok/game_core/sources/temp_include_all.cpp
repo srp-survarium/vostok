@@ -61,6 +61,7 @@
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
 #include <vostok/game_core/usable_object.h>
+#include <vostok/game_core/material_pair.h>
 #include <vostok/game_core/hand_to_weapon_ik_processor.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
@@ -338,6 +339,40 @@ namespace vostok
 
 		inventory.remove( );
 		inventory.set_victory_item( NULL );
+
+		// inventory.h trivial accessors: a plain anchor call is inlined by /GL, so
+		// take their addresses instead - an address-taken member keeps a standard
+		// out-of-line COMDAT (target keeps LTCG custom-convention copies).
+		survarium::profile_slot_enum ( survarium::inventory::*get_active_slot_fn )( ) const
+			= &survarium::inventory::get_active_slot;
+		survarium::inventory_holder& ( survarium::inventory::*holder_fn )( )
+			= &survarium::inventory::holder;
+		survarium::inventory_item_ptr& ( survarium::inventory::*item_in_slot_fn )( survarium::profile_slot_enum )
+			= &survarium::inventory::item_in_slot;
+		example_callback( reinterpret_cast< pcstr >( &get_active_slot_fn ) );
+		example_callback( reinterpret_cast< pcstr >( &holder_fn ) );
+		example_callback( reinterpret_cast< pcstr >( &item_in_slot_fn ) );
+
+		// weapon_user_animations_selector::set_animations: same device; its target
+		// copy keeps the plain /Od thiscall shape, so the emitted COMDAT can match.
+		void ( survarium::weapon_user_animations_selector::*set_animations_fn )( survarium::weapon_user_animations_container_ptr const& )
+			= &survarium::weapon_user_animations_selector::set_animations;
+		example_callback( reinterpret_cast< pcstr >( &set_animations_fn ) );
+	}
+
+	void use_material_pair( )
+	{
+		// material_pair.h trivial accessors: address-taken to keep standalone
+		// COMDATs (target keeps LTCG custom-convention copies).
+		resources::unmanaged_resource_ptr const& ( survarium::material_pair::*decal1_fn )( ) const
+			= &survarium::material_pair::decal1;
+		float ( survarium::material_pair::*decal1_size_fn )( ) const
+			= &survarium::material_pair::decal1_size;
+		bool ( survarium::material_pair::*has_particle_fn )( ) const
+			= &survarium::material_pair::has_particle;
+		example_callback( reinterpret_cast< pcstr >( &decal1_fn ) );
+		example_callback( reinterpret_cast< pcstr >( &decal1_size_fn ) );
+		example_callback( reinterpret_cast< pcstr >( &has_particle_fn ) );
 	}
 
 	void use_victory_items_container_core( survarium::victory_items_container_core* victory_items_container_core )
@@ -352,6 +387,12 @@ namespace vostok
 
 		victory_items_container_core->put_item( NULL );
 		victory_items_container_core->take_item( );
+
+		// The virtual calls above never odr-use the out-of-line definitions; a
+		// constructed local references the ctor (and through its vtable every
+		// override, plus the header-inline virtual dtor) so /OPT:REF keeps them.
+		survarium::victory_items_container_core container;
+		example_callback( reinterpret_cast< pcstr >( &container ) );
 	}
 
 	void use_booby_trap_cook( )
@@ -2625,6 +2666,7 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_hand_to_weapon_ik_processor( );
 	vostok::use_medkit( );
 	vostok::use_inventory_2( );
+	vostok::use_material_pair( );
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
 	vostok::use_hittable_object( NULL );
