@@ -8,7 +8,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 void server_player_update::deserialize( network_core::packet_reader& packet )
 {
 	input.deserialize			( packet );

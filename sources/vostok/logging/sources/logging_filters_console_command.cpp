@@ -10,7 +10,6 @@
 namespace vostok {
 namespace logging {
 
-// STATE[100%|DONE]
 logging_filters_console_command::logging_filters_console_command(
 	filter_tree&						filter_tree,
 	pcstr const							name,
@@ -24,7 +23,6 @@ logging_filters_console_command::logging_filters_console_command(
 	m_need_args = true;
 }
 
-// STATE[91%|DONE]: core strings::copy<512> called out-of-line in target (x2), inlined in base.
 void logging_filters_console_command::execute( pcstr args )
 {
 
@@ -57,11 +55,6 @@ void logging_filters_console_command::execute( pcstr args )
 	}
 
 	push_filter	( m_filter_tree, initiator, t_verb, u32(-1) );
-
-	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
-	// SIZE +0x5 | 43 | strings::copy( verbosity, initiator );
-	// SIZE +0x5 | 44 | strings::copy( initiator, "" ) ;
-	// VERDICT: STRUCTURE MATCH (shape ok) - core strings::copy<512> inline-vs-call at both rows; core-side, banked.
 }
 
 } // namespace logging

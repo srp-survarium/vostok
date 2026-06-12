@@ -22,15 +22,12 @@ format_specifier		format_time_brief	(format_specifier_time_brief);
 format_specifier		format_verbosity	(format_specifier_verbosity);
 format_specifier		format_message		(format_specifier_message);
 
-// STATE[100%|DONE]
 format_specifier::format_specifier		(format_specifier_enum specifier)
 	: m_specifier(specifier), m_left(NULL), m_right(NULL) {;}
 
-// STATE[100%|DONE]
 format_specifier::format_specifier		(format_specifier const & left, format_specifier const & right)
 	: m_left(& left), m_right(& right), m_specifier(format_specifier_unset) {;}
 
-// STATE[88%|DONE]: core strings::copy<512> called out-of-line in target (x3), inlined in base.
 void   format_specifier::fill_specifier_list	(format_specifier_list & list, format_string_type * out_format_string) const
 {
 	if ( m_left )
@@ -55,12 +52,6 @@ void   format_specifier::fill_specifier_list	(format_specifier_list & list, form
 			strings::copy					(*out_format_string, this_ptr->separator.c_str());
 		}
 	}
-
-	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
-	// SIZE +0x5  | 37 | strings::copy						(*out_format_string, left_string);
-	// SIZE +0x5  | 45 | strings::copy					(*out_format_string, "%s");
-	// SIZE +0x11 | 50 | strings::copy					(*out_format_string, this_ptr->separator.c_str());
-	// VERDICT: STRUCTURE MATCH (shape ok) - core strings::copy<512> (+ c_str at row 50) inline-vs-call; core-side, banked.
 }
 
 } // namespace logging

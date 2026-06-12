@@ -28,7 +28,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 // Two compiled-out asserts bracket the loop: a leading ASSERT before ASSERT_CMP_U
 // (count==12, i.e. 2*2*3), and a trailing ASSERT after the fill loop. Both are the
 // non-_U lone-eater shape (`mov byte,0; lea; call empty_stub`, no branch).
@@ -47,19 +46,6 @@ double_barreled_weapon_core_idle_state::double_barreled_weapon_core_idle_state( 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[87.52%|PARTIAL]: was ASSERT_U - the target eater has NO leading assert_untyped enum
-// push, i.e. VOSTOK_UNREFERENCED_PARAMETERS (fixed, row closed byte-exact, 85.65 -> 87.52);
-// param consts restored from the target PDB signature.
-// Wall (inline-vs-call, sides re-verified against the slices): the TARGET INLINES
-// operator+<animation_lexeme,animation_lexeme> into the return (addition_lexeme ctor +
-// cloned_in_buffer + ~addition_lexeme emitted inline); OUR BASE keeps the out-of-line
-// `call operator+`. operator+ is a standalone symbol in BOTH rich indexes.
-// ATTEMPTED (reverted, no effect 85.65 -> 85.65): an explicit-specialization DECLARATION of
-// operator+<animation_lexeme,animation_lexeme> in this .cpp - MSVC8 still inlines the visible
-// primary inline template. The proven forward-decl device needs the inline DEFINITION out of
-// the TU (drop the mixing_addition_lexeme.h include + forward-decl the operator/type), a deep
-// restructure shared across 7 sibling .cpp in the out-of-scope animation module - not done here.
-// Same wall as the siblings. trail: pistol_double_barreled_weapon_core_idle_state.md
 animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
@@ -72,16 +58,8 @@ animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x21 | 72 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the per-call-site LTCG split of operator+<animation_lexeme>: target inlines it (addition_lexeme ctor/cloned_in_buffer/dtor out-of-line), base calls operator+. Non-steerable. trail: pistol_double_barreled_weapon_core_idle_state.md
 }
 
-// STATE[99.92%|DONE]: structure matches (3-element captions split per-element to align the
-// target's L46/L47/L48 stores; leading lone-eater ASSERT at L44). Sole byte residual:
-// `m_weapon.ammo_in_magazine()` loads `this` into eax (target, LTCG callee takes it in eax) vs
-// ecx (base) - the permitted call-boundary arg-passing class. trail: get_weapon_lexeme_pair.md
 weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -110,15 +88,8 @@ weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pai
 		animation::mixing::play_cyclically,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
-
-	// STRUCTURE DIFF[target 0x79cdb0 | base 0x44e4b0]: target 10 / base 13 stmts
-	// .. same .. (captions now per-element; all 10 stmts aligned, size-diffs 0)
-	// quantity-diffs are EMPTY-only-base collapsed blank-line gaps inside the brace-init
-	// ; aligned 10, size-diffs 0, quantity-diffs 3
-	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine eax-vs-ecx arg-passing, non-steerable. trail: get_weapon_lexeme_pair.md
 }
 
-// STATE[100%|DONE]
 double_barreled_weapon_core_idle_state* weapon_core_state_cook_template<survarium::double_barreled_weapon_core_idle_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,

@@ -42,8 +42,6 @@ public:
 
 protected:
 	// claude@MATCH: target mangles the ctor ?...@@IAE (protected).
-	// STATE[100%|DONE]: base ctor inits m_jump_logic/m_user(0)/m_animation()/
-	// m_interval_id_to_wait_for(0xFF)/m_is_jump_finished(false) - matches target @0xbd230.
 	explicit			jump_logic_base_state	( jump_logic& owner )
 							:	m_jump_logic( owner ),
 								m_user( 0 ),

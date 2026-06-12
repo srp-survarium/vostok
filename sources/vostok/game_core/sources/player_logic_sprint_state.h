@@ -23,7 +23,6 @@ private:
 	virtual	void		finalize					( ) override;
 	// claude@MATCH: empty body; emitted bytes are 7/7 equal to target, but ICF folds
 	// the empty stub so objdiff pairs it to a different fold-rep (reads None).
-	// STATE[None|DONE]
 	virtual	void		execute						( ) override { /* no source */ }
 
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >

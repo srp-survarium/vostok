@@ -20,11 +20,9 @@ class jump_logic_state_inactive : public jump_logic_base_state {
 public:
 	inline	explicit	jump_logic_state_inactive	( jump_logic& owner ) : jump_logic_base_state( owner ) { }
 
-	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
 	virtual	void		initialize					( ) override { }
 	virtual	void		finalize					( ) override { /* no source */ }
 	virtual	void		execute						( ) override { /* no source */ }
-	// STATE[100%|DONE]: return true; bytes == target fold @0xd23e0 (ICF-unscorable, see .md)
 	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 
 private:

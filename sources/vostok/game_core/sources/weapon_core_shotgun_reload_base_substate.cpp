@@ -76,8 +76,6 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 	// ******
 }
 
-// STATE[100%|DONE]: objdiff-unscored (newly emitted, absent from the delink unit's function list) but
-// base 0x449160 is byte-identical to target 0x798790 (0xb0 bytes). See md.
 weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	m_animation_to_wait_for = m_weapon_animations[is_third_view != false][user_state_id == type_crouch];
@@ -95,14 +93,6 @@ weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_p
 	);
 }
 
-// STATE[68.18%|PARTIAL]: control structure matches the target statement-for-statement (6 stmts,
-// identical boundaries) - the get_weapon_lexeme_pair call, user_state_index, the override_lexeme
-// animation_lexeme_parameters builder chain, and the chained `override + main + offset`. Residual
-// is the documented whole-program LTCG inline-vs-call of the trivial animation_lexeme_parameters
-// setters (animated_object/bones_mask/playback_type) + operator+ in shared animation headers:
-// the target keeps them OUT-OF-LINE, our /GL inlines them (L83 0xa9 vs target 0x86). Same
-// unsteerable class as pistol_weapon_core_show_state::weapon_and_hands_expression (72%) and
-// get_weapon_lexeme_pair_impl (None); out of this file's scope. See md.
 animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
@@ -128,11 +118,6 @@ animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_a
 	);
 
 	return override_lexeme + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// SIZE +0x23 | 128 | );
-	// SIZE -0x8  | 130 | return override_lexeme + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
-	// VERDICT: STRUCTURE MATCH (shape ok) - both SIZE rows are the per-call-site LTCG inline-vs-call wall: target keeps get_user/animated_object/bones_mask/playback_type setters and operator+ out-of-line, base inlines them. Non-steerable.
 }
 
 } // namespace survarium

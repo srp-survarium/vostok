@@ -10,7 +10,6 @@
 namespace vostok {
 namespace animation {
 
-// STATE[UNCHECKED]
  bi_spline_skeleton_animation_baked_cook::bi_spline_skeleton_animation_baked_cook( )
 	: resources::inplace_unmanaged_cook(
 		resources::bi_spline_skeleton_animation_baked_class,
@@ -21,13 +20,8 @@ namespace animation {
 	)
 {
 	resources::register_cook( this );
-
-	// FUNCTION BODY
-	// <0x121e85>|0x015|+0x048:'27'
-	// ******
 }
 
-// STATE[UNCHECKED]
 mutable_buffer bi_spline_skeleton_animation_baked_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	u32										file_size,
@@ -45,25 +39,11 @@ mutable_buffer bi_spline_skeleton_animation_baked_cook::allocate_resource(
 		if ( !out_buffer )
 		in_query.set_out_of_memory	(resources::unmanaged_memory, bytes_to_allocate);
 	*/
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x121ee0>|0x000|+0x009:'42'
-	// <0x121ee9>|0x009|+0x036:'43'
-	// ******
 }
 
-// STATE[100%|DONE]
 void bi_spline_skeleton_animation_baked_cook::deallocate_resource( void* buffer )
 {
 	UNMANAGED_FREE( buffer );
-
-	// FUNCTION BODY
-	// <0x121f30>|0x000|+0x01b:'48'
-	// ******
 }
 
 // STATE[STUB]
@@ -99,36 +79,24 @@ void bi_spline_skeleton_animation_baked_cook::create_resource(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void bi_spline_skeleton_animation_baked_cook::destroy_resource( resources::unmanaged_resource* resource )
 {
 	resource->~unmanaged_resource( );
-
-	// FUNCTION BODY
-	// <0x607a0>|0x000|+0x000:'76'	{
-	// <0>
-	// <0x607a0>|0x000|      :'78'	}
-	// ******
 }
 
-// STATE[100%|PARTIAL]: sushi@NOTE: Might still be related to an unimplemented function
+// sushi@NOTE: Might still be related to an unimplemented function
 bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_animation_baked_cook::get_create_resource_inplace_in_inline_fat_delegate( )
 {
 	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource );
-
-	// FUNCTION BODY
-	// <0x122010>|0x000|      :'81'	{
-	// ******
 }
 
-// STATE[MISSING]: sushi@NOTE. The implementation is missing. If you look at vtable, you would see that exactly the same function is used for `inline_fat_delegate`.
+// sushi@NOTE. The implementation is missing. If you look at vtable, you would see that exactly the same function is used for `inline_fat_delegate`.
 bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_animation_baked_cook::get_create_resource_inplace_in_creation_data_delegate( )
 {
 	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource );
 }
 
 /* sushi@TODO: Same as impl_cook
-// STATE[UNCHECKED]
 //  `dynamic atexit destructor for 's_bi_spline_skeleton_animation_baked_cook'' <0x7deb70>
 static bi_spline_skeleton_animation_baked_cook s_bi_spline_skeleton_animation_baked_cook;
 */
