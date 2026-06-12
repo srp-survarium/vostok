@@ -177,6 +177,12 @@ def main() -> None:
         p.add_argument("col", type=int, nargs="?")
     args = ap.parse_args()
 
+    # Gitignored, so absent on fresh clones/worktrees; without it clangd
+    # falls back to a generic command and every query silently degrades.
+    if not (VOSTOK_DIR / "compile_commands.json").is_file():
+        sys.exit("[clangd-query] compile_commands.json not found - run "
+                 "scripts/regen_ninja.py --compdb (or scripts/setup-toolchain.py)")
+
     lsp = Clangd()
     try:
         if args.cmd == "index":
