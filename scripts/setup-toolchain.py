@@ -43,6 +43,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import regen_ninja
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 VOSTOK_DIR = SCRIPT_DIR.parent
@@ -238,6 +240,18 @@ def generate_ninja(vcproj_exe: Path) -> None:
     log("Ninja files generated.")
 
 
+def ensure_compdb(force: bool = False) -> None:
+    """clangd inputs at the repo root (gitignored, so absent on fresh clones
+    and worktrees). Generated here so editors/clangd_query work before the
+    first rebuild; rebuild.py keeps them fresh afterwards."""
+    if not force and all(
+        (VOSTOK_DIR / n).is_file() for n in regen_ninja.COMPDB_FILES
+    ):
+        return
+    log("Generating clangd inputs (compile_commands.json + clangd-vfs.yaml) ...")
+    regen_ninja.regenerate_compdb()
+
+
 def parse_force(argv) -> set:
     ap = argparse.ArgumentParser(
         description="Set up the Vostok Wine/ninja build environment."
@@ -309,6 +323,7 @@ def main() -> None:
 
     if setup_current and not force:
         log("Wine/ninja setup already complete.")
+        ensure_compdb()
         ensure_target_side()
         return
     if setup_current:
@@ -324,6 +339,7 @@ def main() -> None:
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)
     if not setup_current or "ninja" in force:
         generate_ninja(vcproj_exe)
+        ensure_compdb(force=True)
 
     # Record the fingerprint so the next plain run short-circuits.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
