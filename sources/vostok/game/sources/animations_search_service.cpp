@@ -3,7 +3,9 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\animations_search_service.h"
+#include "animations_search_service.h"
+#include "animation_space_heuristics.h"
+#include "animation_space_search_restrictor.h"
 
 namespace survarium {
 
@@ -53,44 +55,5 @@ bool animations_search_service::search(
 	// <0>
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	float
-	// 	distance_type;
-
-	// typedef
-	// 	survarium::animation_space_heuristics
-	// 	path_heuristics_type;
-
-	// typedef
-	// 	survarium::animation_space_search_restrictor
-	// 	search_restrictor_type;
-
-	// typedef
-	// 	survarium::animation_space_vertex_id
-	// 	vertex_id_type;
-
-	// typedef
-	// 	survarium::animations_search_service::vertex_manager_impl_type
-	// 	vertex_manager_type;
-
-	// typedef
-	// 	survarium::animations_search_service::vertex_type
-	// 	vertex_type;
-
-	// typedef
-	// 	survarium::vector< u32 >
-	// 	path_type;
-
-	// typedef
-	// 	u32*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::ai::path_constructor::edge::impl< survarium::animations_search_service::vertex_type, survarium::vector< u32 > >
-	// 	path_constructor_type;
-
-	// ******
 
 } // namespace survarium

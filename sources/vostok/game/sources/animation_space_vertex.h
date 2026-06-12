@@ -5,11 +5,7 @@
 #ifndef ANIMATION_SPACE_VERTEX_H_INCLUDED
 #define ANIMATION_SPACE_VERTEX_H_INCLUDED
 
-/* INCLUDES */
-class vostok::fs_new::virtual_path_string;
-typedef vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base>
-	vostok::resources::managed_resource_ptr;
-class vostok::resources::managed_resource;
+#include <vostok/resources_managed_resource.h>
 
 namespace survarium {
 

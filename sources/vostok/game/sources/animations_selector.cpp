@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\animations_selector.h"
+#include "animations_selector.h"
 
 namespace survarium {
 
@@ -15,7 +15,14 @@ namespace survarium {
 	ai::navigation::world const&		ai_navigation_world,
 	game_world const&					world,
 	human_npc&							owner
-)
+) :
+	// ref members + the controllers' non-default ctors force the init-list;
+	// the same-named params are the obvious sources - a matcher confirms
+	m_single_position_animation_controller( space_graph, ai_navigation_world, owner ),
+	m_simple_animation_controller( owner ),
+	m_animation_player( player ),
+	m_game_world( world ),
+	m_owner( owner )
 {
 	// FUNCTION BODY[0x5bc390]: 5
 	// <0>
@@ -148,7 +155,7 @@ void animations_selector::set_target( ai::movement_target const& target_position
 }
 
 // STATE[STUB]
-void animations_selector::debug_draw( render::game::renderer& render, render::base_scene_ptr const& scene ) const
+void animations_selector::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
 	// CALL SITE INFO
 	// <0x5bc09a> -> void < unknown >( render::game::renderer&, render::base_scene_ptr const& ) const
@@ -159,28 +166,5 @@ void animations_selector::debug_draw( render::game::renderer& render, render::ba
 	// <0x5bc089>|0x009|+0x013:'128'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::vectora< float3 >
-	// 	path_type;
-
-	// ******
 
 } // namespace survarium
