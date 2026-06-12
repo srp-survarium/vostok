@@ -10,5 +10,15 @@
 
 #include "pch.h"
 
+#include "action_type.h"
 #include "flash_factory.h"
 #include "flash_movie.h"
+#include "game_action_id.h"
+#include "game_status.h"
+#include "input_mode_type_enum.h"
+#include "keybind_group_type.h"
+#include "login_menu_status_enum.h"
+#include "option_item_type_enum.h"
+#include "options_enum.h"
+#include "toggle_action_enum.h"
+#include "video_options_enum.h"
