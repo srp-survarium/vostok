@@ -49,6 +49,12 @@ void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 	parent->finish_query( result_success );
 }
 
+// claude@NOTE: parked at ~33% - the source idiom is the one that matches 100%
+// elsewhere (inventory_cook etc); the residual is cross-TU LTCG: the target
+// inlines strip_pointer into this caller and calls the 2-arg delete_helper
+// wrapper with plain stack args, while our base keeps strip_pointer as a
+// custom-convention call and passes the wrapper its pointer-ref in edi.
+// Not steerable from this TU.
 void victory_item_core_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
