@@ -135,10 +135,8 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	// non-steerable.
 }
 
-// STATE[100%|DONE]: scored 0/unpaired until the declaration moved to the private section
-// (target mangles it @@EBE - private virtual); with the access letters agreeing it pairs
-// and scores 100. The two-slot materialization (`state` [ebp-8], `current` [ebp-4],
-// sub esp,0Ch) comes from a SEPARATE named local for the current_state() result, not the inlined cast.
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts (byte-identical). Single return expression
+// matches the target's single-statement shape (the intermediate local temps are folded out).
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -146,9 +144,7 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	ai::fsm_state* state = m_logic->current_state( );
-	weapon_core_shotgun_reload_base_substate* current = static_cast< weapon_core_shotgun_reload_base_substate* >( state );
-	return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
+	return static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) )->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
 // STATE[100%|DONE]: body is `return true;` (3 bytes: mov al,1; ret). Will score once
