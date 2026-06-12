@@ -692,13 +692,12 @@ def cmd_report(args):
 
 
 def cmd_queue(args):
-    """Matcher-ready batches: whole TUs only (a TU is never split across batches
-    - two matchers in one file collide), smallest work first."""
+    """One batch per TU: a matcher owns the WHOLE TU, so small helpers are
+    matched in their real context (same inlining/LTCG environment as their
+    callers) instead of as cross-TU small-function churn. TUs are ordered by
+    total open bytes, smallest first."""
     con = open_db()
     where, params = ["module = ?"], [args.module]
-    if args.small is not None:
-        where.append("size <= ?")
-        params.append(args.small)
     q = f"""
       WITH cand AS (
         SELECT s.demangled, s.mangled, coalesce(u.name,'(no unit)') AS unit,
@@ -725,37 +724,31 @@ def cmd_queue(args):
     for r in con.execute(q, params):
         by_unit.setdefault(r["unit"], []).append(dict(r))
     units = sorted(by_unit.items(), key=lambda kv: (sum(f["size"] for f in kv[1]), kv[0]))
-
-    batches, current = [], []
-    for unit, fns in units:
-        if current and len(current) + len(fns) > args.batch:
-            batches.append(current)
-            current = []
-        current.extend(fns)
-    if current:
-        batches.append(current)
+    if args.limit:
+        units = units[: args.limit]
 
     if args.json:
         out = [
             {
-                "batch": i + 1,
+                "unit": unit,
+                "total_size": sum(f["size"] for f in fns),
                 "functions": [
-                    {k: f[k] for k in ("demangled", "mangled", "unit", "size", "fuzzy_pct", "struct_class", "presence")}
-                    for f in batch
+                    {k: f[k] for k in ("demangled", "mangled", "size", "fuzzy_pct", "struct_class", "presence")}
+                    for f in fns
                 ],
             }
-            for i, batch in enumerate(batches)
+            for unit, fns in units
         ]
         print(json.dumps(out, indent=1))
         return
-    for i, batch in enumerate(batches, 1):
-        total = sum(f["size"] for f in batch)
-        print(f"=== batch {i}: {len(batch)} functions, {total:#x} bytes")
-        for f in batch:
+    for unit, fns in units:
+        total = sum(f["size"] for f in fns)
+        print(f"=== {unit}: {len(fns)} functions, {total:#x} bytes")
+        for f in fns:
             pct = "-" if f["fuzzy_pct"] is None else f"{f['fuzzy_pct']:.1f}"
             print(
                 f"  {f['size']:>6}  {pct:>6}  {f['struct_class'] or f['presence']:<11}  "
-                f"{f['unit']}  {f['demangled'][:100]}"
+                f"{f['demangled'][:110]}"
             )
 
 
@@ -848,10 +841,9 @@ def main():
     p.add_argument("--per-unit", action="store_true")
     p.add_argument("--json", action="store_true")
 
-    p = sub.add_parser("queue", help="matcher-ready batches, whole TUs, small-first")
+    p = sub.add_parser("queue", help="one batch per TU (all its open functions), small-first")
     p.add_argument("--module", required=True)
-    p.add_argument("--batch", type=int, default=12, help="target functions per batch")
-    p.add_argument("--small", type=parse_size, help="only functions <= this size")
+    p.add_argument("--limit", type=int, help="show only the first N TUs")
     p.add_argument("--json", action="store_true")
 
     p = sub.add_parser("sql", help="read-only SQL escape hatch")

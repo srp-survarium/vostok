@@ -1,8 +1,8 @@
 # Agentic matching loop
 
 How a module gets matched end to end: an **orchestrator** builds a queue of
-unmatched functions and dispatches one **worker** per function, sequentially;
-each worker takes its function as far as it can, then stops.
+TUs with open functions and dispatches one **worker** per TU; each worker
+takes its TU's functions as far as it can, then stops.
 
 **Starting context for a run:** [`MATCHING.md`](MATCHING.md) (how the
 source must look), this file (the process), and
@@ -11,11 +11,13 @@ pattern; cheap skim). Read all three first; pull individual pattern files on
 demand via the search protocol in [`assembly_patterns.md`](assembly_patterns.md)
 (grep the INDEX by `cpp:`/`asm:`/`topic:` tag or symptom token, read only hits).
 
-**Unit of work:** one function = one branch = one commit = one PR. A unit may
-bundle several functions when justified: (a) an *inlined cluster* (A inlined into
-B, cannot be separated), or (b) a group of *trivial same-class accessors*
-(getters/setters/one-liners) that share scaffolding and would otherwise each cost
-a full rebuild and spawn a PR chain. Don't grab unrelated nearby functions.
+**Unit of work: one TU** = one branch = one commit = one PR - a worker owns ALL
+of a translation unit's open functions (sushi, 2026-06-12; supersedes
+per-function and cross-TU small-function batching, which caused churn). Matched
+in their real TU, small helpers share their callers' inlining/LTCG environment
+and pair the way the target did. Tiny 1-3-function header units may be bundled
+into one dispatch, each still handled whole; an inlined cluster spanning TUs is
+the one reason to pull in an outside function.
 
 **PRs are stacked.** Each match branches off the previous match's branch (the
 stack tip) and its PR targets that branch, not xray/feature. So every worker
@@ -30,20 +32,20 @@ warts and all, beats any notion of "correct".
 
 Run the loop as two tiers so context stays clean:
 
-- **Orchestrator** (long-lived): owns the queue (section 0). For each entry it
-  dispatches one worker, waits for it to finish, and records a one-line result
-  (`function -> % TAG -> PR`). It never holds the disassembly or diff text, so
-  its context stays small across the whole module.
-- **Worker** (one per function): runs the per-function loop (sections 1-9) in its
-  own fresh context, then returns just that one-line result. All the heavy
-  context - target/base disassembly, `--view diff` dumps, the iteration history -
-  lives and dies inside the worker, so it pollutes neither the orchestrator nor
-  the next worker.
+- **Orchestrator** (long-lived): owns the queue (section 0). For each TU it
+  dispatches one worker, collects its one-line result
+  (`unit -> per-fn %s -> PR`), and records flags. It never holds the
+  disassembly or diff text, so its context stays small across the whole module.
+- **Worker** (one per TU): runs the per-function loop (sections 1-9) for each
+  open function in its TU, in its own fresh context, then returns just that
+  one-line result. All the heavy context - target/base disassembly, `--view
+  diff` dumps, the iteration history - lives and dies inside the worker, so it
+  pollutes neither the orchestrator nor the next worker.
 
-Dispatch is **sequential, one worker at a time** - not parallel. Each function's
-`rebuild.py` rewrites the shared base side (`binaries/rich/base`, `report.json`),
-and PRs are reviewed in order, so concurrent workers would race the build and the
-scoreboard.
+Within one build tree dispatch is **sequential** (each `rebuild.py` rewrites
+the shared base side - `binaries/rich/base`, `report.json`); the orchestrator
+parallelizes across SIBLING WORKTREES instead (own `binaries/`, own Wine
+prefix), up to its worker cap - see `.claude/agents/orchestrator.md`.
 
 In Claude Code this maps onto subagents: the orchestrator spawns each worker with
 one `Agent` call - `subagent_type: matcher` (defined in
@@ -64,14 +66,13 @@ owns queue building:
 ```
 python3 scripts/match_db.py refresh                  # after a rebuild/delink
 python3 scripts/match_db.py report --module <m> [--per-unit]
-python3 scripts/match_db.py queue  --module <m> --batch 12 [--small 0x100] [--json]
+python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
 ```
 
-`queue` emits matcher-ready batches: grouped by TU (a TU is never split across
-batches - two matchers in one file collide), smallest work first, automatically
-skipping done functions (100% + struct MATCH), out-of-scope ones (paired once,
-vanished/regressed without a source touch - external inlining), and `SKIP`
-flags. `match_db.py list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
+`queue` emits ONE batch per TU - all of the TU's open functions together,
+smallest TU first - automatically skipping done functions (100% + struct
+MATCH), out-of-scope ones (paired once, vanished/regressed without a source
+touch - external inlining), and `SKIP` flags. `match_db.py list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
 sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
 view. Work the batches until `report` shows every function done or parked
 (a `SKIP` flag with a written cause).
@@ -80,9 +81,10 @@ The orchestrator is the match DB's SINGLE WRITER: it runs `refresh`, records
 `flag`s (from worker result lines), and commits the DB at run milestones -
 workers never edit it.
 
-## 1. Per-function loop (one worker)
+## 1. Per-function loop (one worker, per function of its TU)
 
-The orchestrator hands the worker a single function; the worker does the rest:
+The orchestrator hands the worker a TU + its open-function list; for each
+function the worker does the rest:
 
 1. **Get the target assembly** for it (section 2).
 2. **Write a first approximation** of the body in its `.cpp`, following

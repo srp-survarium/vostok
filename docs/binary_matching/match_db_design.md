@@ -144,10 +144,11 @@ match_db.py list   --module <m> [--unit <tu>] [--max-size 0x80]
 match_db.py report --module <m> [--per-unit]   # totals / paired / 100% /
                                                # struct-MATCH / out-of-scope /
                                                # remaining + the BASE_ONLY lint
-match_db.py queue  --module <m> --batch 12 [--small 0x100]
-                   # matcher-ready batches, grouped by TU (a TU is never split
-                   # across batches - the no-two-matchers-same-file rule),
-                   # small-first, skipping out-of-scope/MATCHED_BEFORE
+match_db.py queue  --module <m> [--limit N]
+                   # ONE batch per TU - all its open functions, smallest TU
+                   # first - skipping out-of-scope/MATCHED_BEFORE/SKIP; per-TU
+                   # matching keeps small helpers in their callers' LTCG
+                   # environment (no cross-TU small-function churn)
 match_db.py sql "<query>"                 # escape hatch, read-only
 match_db.py flag <mangled> --requeue|--out-of-scope --cause "..."
 match_db.py merge-flags <other.db>
@@ -197,7 +198,7 @@ the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
 2. schema + `refresh` ingest of report.json + both rich indexes; `pairs` with
    struct classification
 3. `list` + `report` (module/TU rollups) + `sql`
-4. `queue` (TU-grouped batching)
+4. `queue` (one batch per TU)
 5. `history` + fingerprints + out-of-scope derivation + `flag`/`merge-flags`
 6. `declared_functions` ingest + BASE_ONLY taxonomy + fabricated-symbol lint
    (lands when the parser dump is available; graceful fallback before)
