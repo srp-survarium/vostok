@@ -25,8 +25,9 @@ Module notes: [README.md](README.md). Legacy priors: `temp/game_legacy/`.
 | 9 | cameras/scenes/projects | `game_camera`, `free_fly_camera`, `lobby_camera`, `levelmap_camera`, `camera_director`, `base_game_scene`, `simple_game_project`, `project_cooker_simple`, `generate_shaders_world`, `game_world_ui` | |
 | 10 | network-facing | `network_client*`, `base_network_client`, `match_client*`, `lobby_client`, `messaging_client`, `network_packets_orderer`, `circular_buffer_*`, `client_player_history_item` | |
 | 11 | world/game cascade | `game` (game.h), `game_world*`, `game_options`, `game_map_description`, `game_material_visibility_parameters` (header landed with batch 6), `global_input_handler`, `step_manager`, `generic_anomaly`, `damage_zone*`, `booby_trap*`, `artefact_container`, `victory_item*`, `empty_hands*`, `ai_collision_object`, `ai_sound_player`, `vostok_file_opener`, `sound_player_cook`, `damage_model_stats`, `first_predicate`, `game__debug_window_enum` | |
-| 12 | remaining compilands | every `temp/structure_queue/sources/` file not consumed by 2-11 | |
-| 13 | TU enablement | flip `ExcludedFromBuild` leaf-first, drive full build green, refresh `game_entry_point.cpp` statics (s_game etc.), retire interim anchors | |
+| 12 | scaleform module | NEW: `vostok/scaleform` - the one module the structure generator never emitted (parser gap; queue = `temp/structure_queue/sources_scaleform/`, symbol lists from the rich index). Scaffold `sources/vostok/scaleform/` (vcproj/pch/api), move the flash/scaleform headers there from game/sources, declarations in headers + definitions in the 10 compilands | |
+| 13 | remaining compilands | every `temp/structure_queue/sources/` file not consumed by 2-11 + the 9 owner-unknown TU-locals | |
+| 14 | TU enablement | flip `ExcludedFromBuild` leaf-first, drive full build green, refresh `game_entry_point.cpp` statics (s_game etc.), retire interim anchors | |
 
 Batches 2-11 also pull the SAME-STEM files from `temp/structure_queue/sources/`
 (`<stem>.cpp`, `<stem>.h`, `<stem>_inline.h`) so a subsystem leaves the queue
