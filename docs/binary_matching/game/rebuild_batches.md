@@ -15,8 +15,8 @@ Module notes: [README.md](README.md). Legacy priors: `temp/game_legacy/`.
 | # | Batch | Scope (queue stems) | Status |
 |--|-------|---------------------|--------|
 | 1 | enums | 10 standalone survarium enums | DONE (0732995a) |
-| 2 | predicates | `*_predicate`, `erase_*`, `relocate_item_func`, `max_angular_velocity_command`, `hit_object`, `dik_to_swf_bind`, `console_command_bind`, small TU-local helpers | |
-| 3 | weapon templates | `weapon_sound_events_handler_state*` (60), `weapon_core_state_cook_template*` (23), `shotgun_weapon_reload_state{,_cook}`, `rifle_scope{,_cook}`, `weapon_sound_effect`, `weapon_cook`, `weapon`, `weapon_user_dead_state` - reconstruct the PRIMARY templates (union across `_N` variants, per-instantiation STATIC_SIZE_ASSERTs) | |
+| 2 | predicates | DISSOLVED - TU-local types, reproduced inside their owner `.cpp` (mapping in `temp/triage_log.md`); 9 owner-unknown stay for batch 12 | DONE (analysis) |
+| 3 | weapon templates | `weapon_sound_events_handler_state*` (60), `shotgun_weapon_reload_state{,_cook}`, `rifle_scope{,_cook}`, `weapon_sound_effect`, `weapon_cook`, `weapon`, `weapon_user_dead_state` - reconstruct the PRIMARY templates (union across `_N` variants, per-instantiation STATIC_SIZE_ASSERTs) | |
 | 4 | flash/scaleform | `flash_*` (rest), `scaleform_*`, `swf_input_translator`, `vostok_scaleform_log`, `ui_label`, `text_translator` | |
 | 5 | options/menus/keys | `options_*`, `main_menu*`, `lobby_menu*`, `login_menu*`, `chat_tab`, `chat_handler`, `key_*`, `keyboard_key_descr`, `game_action_descr`, `graphic_preset` | |
 | 6 | player/stats/economy | `player_*` (non-input), `profile_*`, `account_*`, `npc_stats`, `stats*`, `statistics_item`, `base_point_stats`, `faction_price`, `price_item`, `service_prices`, `slot_def`, `items_compatibility`, `client_player_*`, `human_npc*` | |
