@@ -5,17 +5,11 @@
 #ifndef ANIMATED_MODEL_INSTANCE_COOK_H_INCLUDED
 #define ANIMATED_MODEL_INSTANCE_COOK_H_INCLUDED
 
-/* INCLUDES */
-class vostok::resources::translate_query_cook;
-
-/* FORWARD REFS */
-class vostok::fs_new::virtual_path_string;
-class vostok::resources::queries_result;
-class vostok::resources::query_result_for_cook;
-class vostok::resources::resource_base;
-class survarium::animated_model_instance;
+#include <vostok/resources_cook_classes.h>
 
 namespace survarium {
+
+struct animated_model_instance;
 
 class animated_model_instance_cook : public resources::translate_query_cook {
 public:

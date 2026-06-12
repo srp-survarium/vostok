@@ -5,11 +5,11 @@
 #ifndef ANIMATION_SPACE_EDGE_H_INCLUDED
 #define ANIMATION_SPACE_EDGE_H_INCLUDED
 
-/* INCLUDES */
-struct stlp_std::pair<survarium::animation_space_vertex const *,survarium::animation_space_vertex const *>;
-struct survarium::animation_space_vertex_id;
+#include "animation_space_vertex_id.h"
 
 namespace survarium {
+
+struct animation_space_vertex;
 
 struct animation_space_edge {
 	inline		animation_space_edge(

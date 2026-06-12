@@ -5,25 +5,29 @@
 #ifndef SINGLE_POSITION_ANIMATION_CONTROLLER_H_INCLUDED
 #define SINGLE_POSITION_ANIMATION_CONTROLLER_H_INCLUDED
 
-/* INCLUDES */
-class vostok::vectora<vostok::math::float3>;
-class survarium::animations_search_service;
-class survarium::human_npc;
-struct vostok::ai::navigation::world;
-struct survarium::animation_space_vertex_id;
-struct survarium::base_animation_controller;
-struct survarium::movement_animation_controller_parameters;
-class vostok::animation::mixing::expression;
-class vostok::render::base_scene;
-typedef vostok::resources::resource_ptr<survarium::animation_space_graph,vostok::resources::unmanaged_intrusive_base>
-	survarium::animation_space_graph_ptr;
-class survarium::animation_space_graph;
+#include "base_animation_controller.h"
+#include "animation_controller_parameters.h"
+#include <vostok/resources_unmanaged_resource.h>
 
-/* FORWARD REFS */
-class vostok::render::game::renderer;
-class survarium::animation_controller_parameters;
+namespace vostok {
+namespace ai {
+namespace navigation {
+	struct world;
+} // namespace navigation
+} // namespace ai
+} // namespace vostok
 
 namespace survarium {
+
+class animations_search_service;
+class human_npc;
+struct animation_space_vertex_id;
+
+class animation_space_graph;
+typedef resources::resource_ptr<
+	animation_space_graph,
+	resources::unmanaged_intrusive_base
+> animation_space_graph_ptr;
 
 class single_position_animation_controller : public base_animation_controller {
 public:
@@ -44,7 +48,7 @@ public:
 
 	virtual	void								query_new_target_if_needed	( ) override;
 
-	virtual	void								debug_draw					( render::game::renderer& render, render::base_scene_ptr const& scene ) const override;
+	virtual	void								debug_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const override;
 
 private:
 	/* 0x0000 */	/* base_animation_controller */

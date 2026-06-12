@@ -3,7 +3,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\animated_model_instance_cook.h"
+#include "animated_model_instance_cook.h"
+#include "animated_model_instance.h"
 
 namespace survarium {
 
@@ -215,16 +216,5 @@ void animated_model_instance_cook::delete_resource( resources::resource_base* re
 	// <0x769462>|0x052|+0x027:'170'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

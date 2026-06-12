@@ -5,15 +5,26 @@
 #ifndef BASE_ANIMATION_CONTROLLER_H_INCLUDED
 #define BASE_ANIMATION_CONTROLLER_H_INCLUDED
 
-/* INCLUDES */
-class vostok::animation::mixing::expression;
-class vostok::render::base_scene;
+// PDB spells the debug_draw param vostok::render::base_scene_ptr - the same
+// resource_ptr type our render tree typedefs as scene_ptr
+#include <vostok/render/engine/base_classes.h>
 
-/* FORWARD REFS */
-class vostok::render::game::renderer;
-class survarium::animation_controller_parameters;
+namespace vostok {
+namespace animation {
+namespace mixing {
+	class expression;
+} // namespace mixing
+} // namespace animation
+namespace render {
+namespace game {
+	class renderer;
+} // namespace game
+} // namespace render
+} // namespace vostok
 
 namespace survarium {
+
+struct animation_controller_parameters;
 
 struct base_animation_controller : public boost::noncopyable {
 	virtual	void								initialize					( ) = 0;
@@ -26,9 +37,11 @@ struct base_animation_controller : public boost::noncopyable {
 
 	virtual	void								query_new_target_if_needed	( ) = 0;
 
-	virtual	void								debug_draw					( render::game::renderer& arg_0, render::base_scene_ptr const& arg_1 ) const = 0;
+	virtual	void								debug_draw					( render::game::renderer& arg_0, render::scene_ptr const& arg_1 ) const = 0;
 
-	virtual										~base_animation_controller	( ) = 0;
+	// PDB: pure virtual dtor; the macro carries the inline body derived dtors chain to
+	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR		( base_animation_controller );
+
 	inline										base_animation_controller	( ) { /* no source */ }
 }; // struct base_animation_controller
 

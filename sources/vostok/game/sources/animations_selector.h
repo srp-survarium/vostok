@@ -5,32 +5,26 @@
 #ifndef ANIMATIONS_SELECTOR_H_INCLUDED
 #define ANIMATIONS_SELECTOR_H_INCLUDED
 
-/* INCLUDES */
-class vostok::animation::animation_player;
-class survarium::game_world;
-class survarium::human_npc;
-class survarium::simple_animation_controller;
-class survarium::single_position_animation_controller;
-struct survarium::animation_controller_parameters;
-struct survarium::base_animation_controller;
-struct survarium::movement_animation_controller_parameters;
-struct survarium::simple_animation_controller_parameters;
-enum vostok::animation::callback_return_type_enum;
-class vostok::render::base_scene;
-class survarium::animation_space_graph;
-typedef vostok::resources::resource_ptr<vostok::resources::managed_resource,vostok::resources::managed_intrusive_base>
-	vostok::resources::managed_resource_ptr;
-class vostok::resources::managed_resource;
+#include "animation_controller_parameters.h"
+#include "single_position_animation_controller.h"
+#include "simple_animation_controller.h"
+// callback_return_type_enum cannot be forward-declared (C++03 enum)
+#include <vostok/animation/animation_callback.h>
+#include <vostok/resources_managed_resource.h>
 
-/* FORWARD REFS */
-class vostok::ai::animation_item;
-class vostok::ai::movement_target;
-class vostok::ai::navigation::world;
-class vostok::animation::animation_callback_params;
-class vostok::animation::mixing::expression;
-class vostok::render::game::renderer;
+namespace vostok {
+namespace ai {
+	struct animation_item;
+	struct movement_target;
+} // namespace ai
+namespace animation {
+	class animation_player;
+} // namespace animation
+} // namespace vostok
 
 namespace survarium {
+
+class game_world;
 
 class animations_selector : public boost::noncopyable {
 public:
@@ -46,7 +40,7 @@ public:
 			void	set_target					( ai::animation_item const& animation_emitter );
 			void	set_target					( ai::movement_target const& target_position );
 
-			void	debug_draw					( render::game::renderer& render, render::base_scene_ptr const& scene ) const;
+			void	debug_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const;
 
 			animation::callback_return_type_enum	on_animation_interval_end	( animation::animation_callback_params& params );
 
