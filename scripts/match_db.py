@@ -17,6 +17,10 @@ stable across refreshes, mangled names are.
 
 Usage:
   python3 scripts/match_db.py refresh
+  python3 scripts/match_db.py list --module game_core --max-size 0x80 [--json]
+  python3 scripts/match_db.py list --module network_core --presence TARGET_ONLY
+  python3 scripts/match_db.py report [--module game_core] [--per-unit]
+  python3 scripts/match_db.py sql "SELECT ... "          # read-only
 """
 
 import argparse
@@ -119,9 +123,9 @@ def log(msg):
 
 def module_of(unit_or_file):
     parts = unit_or_file.split("/")
-    if parts[0] == "vostok" and len(parts) > 1:
+    if parts[0] == "vostok" and len(parts) > 2:
         return parts[1]
-    return parts[0]
+    return parts[0]  # third-party root, or a shared vostok/*.h -> "vostok"
 
 
 def load_index(path):
@@ -404,14 +408,145 @@ def cmd_refresh(args):
     )
 
 
+def parse_size(text):
+    return int(text, 0)
+
+
+def emit(rows, as_json):
+    """rows: list of dicts (insertion-ordered keys)."""
+    if as_json:
+        print(json.dumps(rows, indent=1))
+        return
+    if not rows:
+        print("(no rows)", file=sys.stderr)
+        return
+    cols = list(rows[0].keys())
+    widths = [max(len(c), *(len(str(r[c] if r[c] is not None else "-")) for r in rows)) for c in cols]
+    print("  ".join(c.ljust(w) for c, w in zip(cols, widths)))
+    for r in rows:
+        print("  ".join(str(r[c] if r[c] is not None else "-").ljust(w) for c, w in zip(cols, widths)))
+
+
+def cmd_list(args):
+    con = open_db()
+    where, params = [], []
+    if args.presence == "PAIRED" or args.presence is None:
+        base = """
+          SELECT s.demangled, s.mangled, u.name AS unit, u.module,
+                 t.size AS t_size, b.size AS b_size,
+                 p.fuzzy_pct, p.struct_class,
+                 p.t_stmts, p.b_stmts, p.n_size_rows, p.n_trgt_only, p.n_base_only,
+                 printf('0x%x', t.rva) AS target_va_hint
+          FROM pairs p
+          JOIN symbols s ON s.id = p.sym
+          JOIN target_functions t ON t.rva = p.target_rva
+          JOIN base_functions   b ON b.rva = p.base_rva
+          LEFT JOIN units u ON u.id = t.unit"""
+        size_col = "t.size"
+    elif args.presence == "TARGET_ONLY":
+        base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM target_only"
+        size_col = "size"
+    elif args.presence == "BASE_ONLY":
+        base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM base_only"
+        size_col = "size"
+    else:
+        sys.exit(f"[match_db] unknown --presence {args.presence}")
+
+    if args.module:
+        where.append("module = ?")
+        params.append(args.module)
+    if args.unit:
+        where.append("unit = ?")
+        params.append(args.unit)
+    if args.max_size is not None:
+        where.append(f"{size_col} <= ?")
+        params.append(args.max_size)
+    if args.struct_class:
+        classes = [c.strip().upper() for c in args.struct_class.split(",")]
+        where.append(f"struct_class IN ({','.join('?' * len(classes))})")
+        params.extend(classes)
+    q = base + ((" WHERE " + " AND ".join(where)) if where else "")
+    q += f" ORDER BY {size_col}, mangled"
+    rows = [dict(r) for r in con.execute(q, params)]
+    emit(rows, args.json)
+
+
+def cmd_report(args):
+    con = open_db()
+    scope = "unit_name" if args.per_unit else "module"
+    where, params = "", []
+    if args.module:
+        where = "WHERE tf.module = ?"
+        params = [args.module]
+    q = f"""
+      WITH tf AS (
+        SELECT t.rva, t.sym, t.size,
+               coalesce(un.module, '(no unit)') AS module,
+               coalesce(un.name, '(no unit)')   AS unit_name
+        FROM target_functions t LEFT JOIN units un ON un.id = t.unit)
+      SELECT tf.{scope} AS scope,
+             count(*)                                            AS target_fns,
+             coalesce(sum(p.sym IS NOT NULL), 0)                 AS paired,
+             coalesce(sum(p.fuzzy_pct >= 100), 0)                AS fuzzy_100,
+             coalesce(sum(p.struct_class = 'MATCH'), 0)          AS struct_match,
+             coalesce(sum(p.sym IS NULL), 0)                     AS target_only,
+             printf('%.2f', sum(coalesce(p.fuzzy_pct, 0) * tf.size) /
+                            sum(tf.size))                        AS weighted_pct
+      FROM tf
+      LEFT JOIN pairs p ON p.sym = tf.sym
+      {where}
+      GROUP BY scope ORDER BY scope
+    """
+    rows = [dict(r) for r in con.execute(q, params)]
+    # base-only lint per scope
+    bq = """SELECT coalesce({col}, '(no unit)') AS scope, count(*) AS base_only
+            FROM base_only {where} GROUP BY scope""".format(
+        col="unit" if args.per_unit else "module",
+        where=("WHERE module = ?" if args.module else ""),
+    )
+    bonly = {r["scope"]: r["base_only"] for r in con.execute(bq, params)}
+    for r in rows:
+        r["base_only"] = bonly.get(r["scope"], 0)
+    emit(rows, args.json)
+
+
+def cmd_sql(args):
+    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    rows = [dict(r) for r in con.execute(args.query)]
+    emit(rows, args.json)
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("refresh", help="rebuild derived tables from the delink/diff artifacts")
+
+    p = sub.add_parser("list", help="list functions with filters")
+    p.add_argument("--module")
+    p.add_argument("--unit", help="TU path, e.g. vostok/game_core/sources/weapon_core.cpp")
+    p.add_argument("--max-size", type=parse_size, help="max target size (0x.. ok)")
+    p.add_argument("--class", dest="struct_class", help="csv of MATCH,SIZE,SPLIT,QUANTITY")
+    p.add_argument(
+        "--presence",
+        choices=["PAIRED", "TARGET_ONLY", "BASE_ONLY"],
+        help="default PAIRED",
+    )
+    p.add_argument("--json", action="store_true")
+
+    p = sub.add_parser("report", help="per-module/TU rollup")
+    p.add_argument("--module")
+    p.add_argument("--per-unit", action="store_true")
+    p.add_argument("--json", action="store_true")
+
+    p = sub.add_parser("sql", help="read-only SQL escape hatch")
+    p.add_argument("query")
+    p.add_argument("--json", action="store_true")
+
     args = ap.parse_args()
-    {"refresh": cmd_refresh}[args.cmd](args)
+    {"refresh": cmd_refresh, "list": cmd_list, "report": cmd_report, "sql": cmd_sql}[args.cmd](args)
 
 
 if __name__ == "__main__":
