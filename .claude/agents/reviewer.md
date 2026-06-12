@@ -21,7 +21,9 @@ Dispatched by the orchestrator/top-level; no sub-agents.
    `// STATE[..]` marker (only `// STATE[STUB]` on a still-unmatched body), no
    `// STRUCTURE DIFF`/`// VERDICT:` embed, no leftover carcass rows (`// <0x..>`)
    on or above implemented code - strip any you find. Terse
-   `claude@MATCH:`/`claude@NOTE:` only for genuinely non-obvious shaping.
+   `claude@MATCH:`/`claude@NOTE:` only for genuinely non-obvious shaping, and
+   NEVER with a match % in them (scores go stale; report.json/the match DB own
+   the numbers) - rewrite `94% wall - ...` to name the wall, keep the facts.
 3. **Flag NEW symbols (REPORT, never annotate the source).** Scan the diff's `+` lines for
    any `struct`/`class`/`enum` or free function ADDED that isn't from the generated carcass
    (`typedef`s are fine - skip) - a matcher must never fabricate a symbol to win a %. Do NOT

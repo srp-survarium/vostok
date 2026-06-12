@@ -1,8 +1,8 @@
 # Agentic matching loop
 
 How a module gets matched end to end: an **orchestrator** builds a queue of
-unmatched functions and dispatches one **worker** per function, sequentially;
-each worker takes its function as far as it can, then stops.
+TUs with open functions and dispatches one **worker** per TU; each worker
+takes its TU's functions as far as it can, then stops.
 
 **Starting context for a run:** [`MATCHING.md`](MATCHING.md) (how the
 source must look), this file (the process), and
@@ -11,11 +11,13 @@ pattern; cheap skim). Read all three first; pull individual pattern files on
 demand via the search protocol in [`assembly_patterns.md`](assembly_patterns.md)
 (grep the INDEX by `cpp:`/`asm:`/`topic:` tag or symptom token, read only hits).
 
-**Unit of work:** one function = one branch = one commit = one PR. A unit may
-bundle several functions when justified: (a) an *inlined cluster* (A inlined into
-B, cannot be separated), or (b) a group of *trivial same-class accessors*
-(getters/setters/one-liners) that share scaffolding and would otherwise each cost
-a full rebuild and spawn a PR chain. Don't grab unrelated nearby functions.
+**Unit of work: one TU** = one branch = one commit = one PR - a worker owns ALL
+of a translation unit's open functions (sushi, 2026-06-12; supersedes
+per-function and cross-TU small-function batching, which caused churn). Matched
+in their real TU, small helpers share their callers' inlining/LTCG environment
+and pair the way the target did. Tiny 1-3-function header units may be bundled
+into one dispatch, each still handled whole; an inlined cluster spanning TUs is
+the one reason to pull in an outside function.
 
 **PRs are stacked.** Each match branches off the previous match's branch (the
 stack tip) and its PR targets that branch, not xray/feature. So every worker
@@ -30,20 +32,20 @@ warts and all, beats any notion of "correct".
 
 Run the loop as two tiers so context stays clean:
 
-- **Orchestrator** (long-lived): owns the queue (section 0). For each entry it
-  dispatches one worker, waits for it to finish, and records a one-line result
-  (`function -> % TAG -> PR`). It never holds the disassembly or diff text, so
-  its context stays small across the whole module.
-- **Worker** (one per function): runs the per-function loop (sections 1-9) in its
-  own fresh context, then returns just that one-line result. All the heavy
-  context - target/base disassembly, `--view diff` dumps, the iteration history -
-  lives and dies inside the worker, so it pollutes neither the orchestrator nor
-  the next worker.
+- **Orchestrator** (long-lived): owns the queue (section 0). For each TU it
+  dispatches one worker, collects its one-line result
+  (`unit -> per-fn %s -> PR`), and records flags. It never holds the
+  disassembly or diff text, so its context stays small across the whole module.
+- **Worker** (one per TU): runs the per-function loop (sections 1-9) for each
+  open function in its TU, in its own fresh context, then returns just that
+  one-line result. All the heavy context - target/base disassembly, `--view
+  diff` dumps, the iteration history - lives and dies inside the worker, so it
+  pollutes neither the orchestrator nor the next worker.
 
-Dispatch is **sequential, one worker at a time** - not parallel. Each function's
-`rebuild.py` rewrites the shared base side (`binaries/rich/base`, `report.json`),
-and PRs are reviewed in order, so concurrent workers would race the build and the
-scoreboard.
+Within one build tree dispatch is **sequential** (each `rebuild.py` rewrites
+the shared base side - `binaries/rich/base`, `report.json`); the orchestrator
+parallelizes across SIBLING WORKTREES instead (own `binaries/`, own Wine
+prefix), up to its worker cap - see `.claude/agents/orchestrator.md`.
 
 In Claude Code this maps onto subagents: the orchestrator spawns each worker with
 one `Agent` call - `subagent_type: matcher` (defined in
@@ -58,19 +60,31 @@ run it as the top-level agent, since subagents cannot reliably spawn subagents.
 
 ## 0. Build the queue (orchestrator)
 
-Collect the `STUB` (and other unmatched) functions for the module with `rg`:
+The match DB (`docs/binary_matching/match.db`, design in `match_db_design.md`)
+owns queue building:
 
 ```
-rg -n "STATE\[STUB\]" sources/vostok/<module>/sources
+python3 scripts/match_db.py refresh   # auto-runs rebuild.py first when sources moved
+python3 scripts/match_db.py report --module <m> [--per-unit]
+python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
 ```
 
-Order them however you like (small/leaf functions first is usually easiest).
-Work the list top to bottom until every entry is `DONE` or deliberately parked
-(`SKIPPED` / `BLOCKED`) with a written reason.
+`queue` emits ONE batch per TU - all of the TU's open functions together,
+smallest TU first - automatically skipping done functions (100% + struct
+MATCH), out-of-scope ones (paired once, vanished/regressed without a source
+touch - external inlining), and `SKIP` flags. `match_db.py list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
+sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
+view. Work the batches until `report` shows every function done or parked
+(a `SKIP` flag with a written cause).
 
-## 1. Per-function loop (one worker)
+The orchestrator is the match DB's SINGLE WRITER: it runs `refresh`, records
+`flag`s (from worker result lines), and commits the DB at run milestones -
+workers never edit it.
 
-The orchestrator hands the worker a single function; the worker does the rest:
+## 1. Per-function loop (one worker, per function of its TU)
+
+The orchestrator hands the worker a TU + its open-function list; for each
+function the worker does the rest:
 
 1. **Get the target assembly** for it (section 2).
 2. **Write a first approximation** of the body in its `.cpp`, following
@@ -86,11 +100,11 @@ The orchestrator hands the worker a single function; the worker does the rest:
    should move the percentage or teach you something.
 5. **Stop** when the function matches, or when you judge you can no longer make
    progress. You decide when to stop - do not spin.
-6. **Record the outcome** (sections 5-7): update the function's
-   `docs/binary_matching/<module>/status.jsonl` entry (and on a real match drop
-   its `// STATE[STUB]` flag and delete the carcass), put the stuck-reason and
-   tried variants in the commit message, NOTE any inlining, and flag any
-   regression you caused.
+6. **Record the outcome** (sections 5-7): on a real match drop the function's
+   `// STATE[STUB]` flag and delete the carcass; if parked, leave the
+   `claude@NOTE:` and name the cause in your result line (the orchestrator
+   records it as a match-DB flag). Put the stuck-reason and tried variants in
+   the commit message, NOTE any inlining, and flag any regression you caused.
 7. **Commit and open the PR** (section 8). Move to the next function.
 
 ## 2. Getting the target assembly
@@ -208,7 +222,8 @@ target but not in your base (or vice versa) you will see it as a missing/extra
 `call` and, in the carcass, as a large `+delta` between two statement addresses.
 Identify the block, leave a `claude@NOTE:` (or `claude@MATCH:` if you reshaped
 the source to compensate), and do **not** burn the loop fighting inlining you
-cannot steer - record the cause in the function's `status.jsonl` entry.
+cannot steer - name the cause in your result line (it becomes the function's
+match-DB `NOTE` flag).
 
 ## 6. When stuck - what to write
 
@@ -217,9 +232,9 @@ same two-layer convention other decomp projects use - a non-matching note at the
 function + an external tracker):
 - a terse **`claude@NOTE:` above the function** - why it is stuck, what you tried,
   a couple of lines max. Facts about the attempt, never a % or a diff dump.
-- the function's **`status.jsonl` entry** (`SKIPPED` / `BLOCKED`, with the cause =
-  the same conclusion plus the concrete next step; the live % stays in
-  `report.json`).
+- a **match-DB `SKIP` flag** whose cause is the same conclusion plus the concrete
+  next step (named in your result line; the orchestrator records it - the live %
+  stays in `report.json`).
 
 Full detail - every variant and its score, the diverging statements - goes in the
 COMMIT/PR MESSAGE (section 7), not inline.
@@ -230,8 +245,8 @@ We do NOT keep per-function `.md` logs. Module-wide notes (gotchas, shared types
 asm quirks for the whole module) still live in
 `docs/binary_matching/<module>/README.md`; everything per-function splits into:
 
-- **`status.jsonl`** - the terse status + cause, machine-readable (keyed by target
-  VA, sorted by symbol);
+- **the match DB** - derived status (%s, structure class, pairing history) plus
+  the hand-written `SKIP`/`NOTE` flag causes;
 - **the COMMIT/PR MESSAGE** - the narrative a reviewer needs to replay the run:
   the key commands, each source variant you tried with its resulting % /
   structure-diff outcome, the final residual and why. Shape:
@@ -266,7 +281,7 @@ next function.
 ---
 
 **Stop condition for the whole run:** every function in the module is `DONE` or
-parked (`SKIPPED`/`BLOCKED`) with its cause recorded in `status.jsonl` (narrative
+parked (a `SKIP` flag) with its cause recorded in the match DB (narrative
 in the commit messages).
 
 Missing tooling you wish you had goes in
