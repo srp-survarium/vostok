@@ -9,21 +9,22 @@
 
 namespace survarium {
 
+// claude@NOTE: 94% wall - target keeps vectora_allocator<void*>(base_allocator*) ctor
+// out-of-line at the m_victory_items init site, base inlines it (LTCG per-site cut;
+// patterns/inline-vs-call-template-comdat.md - same wall as usable_object/collision_sensor ctors).
 victory_items_container_core::victory_items_container_core( ) :
 	m_victory_items		( g_allocator ),
 	m_owner_team		( team_undefined )
 {
-	// FUNCTION BODY
-	// <0x59dee0>|0x000|+0x06f:'21'	{
-	// <0>
-	// <0x59df4f>|0x06f|      :'23'	}
-	// ******
 }
 
+// claude@NOTE: 83% wall - target calls binary_config_value::operator u8, base inlines it
+// and keeps cast_number<u8,u64,u32> standalone (patterns/config-value-operator-cast.md;
+// each symbol exists in only one index). Source is correct.
 void victory_items_container_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
-	m_owner_team	= (game_team_id)(u32)cfg["team"];
+	m_owner_team	= (game_team_id)(u8)cfg["team"];
 	m_container_id	= (u8)cfg["id"];
 }
 
@@ -43,8 +44,8 @@ pcstr victory_items_container_core::use_info( usable_object_user_data* __formal 
 
 bool victory_items_container_core::use_execute( usable_object_user_data* user )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
-	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION_T( user ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( user->owner ) );
 
 	return true;
 }
@@ -59,6 +60,9 @@ void victory_items_container_core::put_item( victory_item_core* item )
 	m_victory_items.push_back( item );
 }
 
+// claude@NOTE: 97% wall - target inlines _Impl_vector<void*>::back into `call end; sub eax,4`,
+// base keeps back() as a call (both COMDATs exist in both binaries; LTCG per-site cut,
+// patterns/inline-vs-call-template-comdat.md).
 victory_item_core* victory_items_container_core::take_item( )
 {
 	victory_item_core* last_item = m_victory_items.back( );
