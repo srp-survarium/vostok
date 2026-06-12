@@ -76,6 +76,18 @@ edit `match.db` yourself; the orchestrator is its single writer).
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
   `report.json` (the only live number); check `report-changes.json` for regressions.
+  **`report.json` is ~14MB - NEVER cat/Read it.** `report-changes.json` (~30KB) is
+  safe to read whole after a rebuild and is usually all you need. For scores, slice
+  `report.json` with `jq`:
+  ```
+  # your whole TU's scores:
+  jq -r '.units[] | select(.name=="vostok/<module>/sources/<file>.cpp")
+         | .functions[] | "\(.fuzzy_match_percent // "unpaired")\t\(.metadata.demangled_name)"' \
+     binaries/objdiff/report.json
+  # one function by mangled name (COMDATs appear in several units - take max):
+  jq -r --arg m "<mangled>" '[.units[].functions[] | select(.name==$m)
+         | .fuzzy_match_percent // "unpaired"] | max' binaries/objdiff/report.json
+  ```
 - **Only AFTER compiling, diff - to see what you got right and what you got wrong.**
   There is no base side to compare until your code builds, so this comes last. Run the
   structure diff, then the asm diff for the instruction-level cause:
