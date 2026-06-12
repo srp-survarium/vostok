@@ -129,9 +129,8 @@ carcasses are old-format (addressless `// FUNCTION BODY`).
    `#include`d here too, so the compiler actually validates it (the rule: every header
    compiles even if its bodies are empty). Forward-declare sources/-local free functions
    in the anchor (those headers are off the public include path).
-4. `python3 scripts/regen_ninja.py` (module-granular; absent on older bases - cherry-pick
-   it or regenerate ninja), then `python3 scripts/rebuild.py <module>` (~30s, no relink)
-   per TU. Only when the module compiles clean, run the full `python3 scripts/rebuild.py`.
+4. `python3 scripts/rebuild.py <module>` (~30s, no relink) per TU - it regenerates the
+   ninja graph itself (write-if-changed), so the .vcproj edit is picked up automatically. Only when the module compiles clean, run the full `python3 scripts/rebuild.py`.
 5. **Commit after EACH green TU** (a stray `git reset` once wiped uncommitted work).
 6. If a header cascade is too deep to compile cheaply, RE-EXCLUDE the TU and keep the
    build green - an enabled-but-uncompilable TU breaks the whole base build for everyone.

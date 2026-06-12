@@ -47,6 +47,8 @@
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_holding_params.h>
+#include "breath_holding_states.h"
+#include "breath_holding_states_inline.h"
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/client_player_update.h>
@@ -206,6 +208,32 @@ namespace vostok
 		// Escape &calc so LTCG observes the ctor's member stores
 		// (otherwise the constant-only stores are dead-store-eliminated).
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
+	}
+
+	void use_game_core_breath_holding_states( )
+	{
+		float reserve = 0.0f;
+		survarium::breath_holding_params params;
+		survarium::breath_state_normal		st_normal( reserve );
+		survarium::breath_state_holding		st_holding( reserve );
+		survarium::breath_state_shortbreathing	st_short( reserve );
+
+		st_normal.set_breath_holding_params( &params );
+		st_normal.initialize( );
+		st_normal.tick( 0.0f );
+		st_normal.is_ready_for_transition( );
+
+		st_holding.set_breath_holding_params( &params );
+		st_holding.tick( 0.0f );
+		st_holding.is_ready_for_transition( );
+
+		st_short.set_breath_holding_params( &params );
+		st_short.tick( 0.0f );
+		st_short.is_ready_for_transition( );
+
+		example_callback( reinterpret_cast< pcstr >( &st_normal ) );
+		example_callback( reinterpret_cast< pcstr >( &st_holding ) );
+		example_callback( reinterpret_cast< pcstr >( &st_short ) );
 	}
 
 	void use_game_core_initialize( )
@@ -600,6 +628,9 @@ namespace vostok
 		calc.set_one_shoot_dispersion_amount( 20.0f );
 		calc.set_aiming_speed( 30.0f );
 		calc.get_value( );
+		calc.tick( 100 );
+		calc.fire( );
+		calc.reload( );
 
 		example_callback( reinterpret_cast< pcstr >( &calc ) );
 		calc.get_value( );
@@ -647,6 +678,19 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &bc ) );
 		example_callback( reinterpret_cast< pcstr >( &hc ) );
 		example_callback( reinterpret_cast< pcstr >( &vc ) );
+	}
+
+	void use_game_core_weapon_core_ik_callbacks( )
+	{
+		survarium::weapon_core weapon;
+		vostok::animation::animation_callback_params params( 0, vostok::animation::skeleton_animation_ptr(), "", 0, 0, 0, 0 );
+		weapon.on_animation_ik_interval( params );
+
+		typedef vostok::animation::mixing::expression (survarium::weapon_core::*gwhe_t)(
+			vostok::mutable_buffer&, bool, survarium::weapon_user_state_enum,
+			vostok::animation::mixing::animation_lexeme& ) const;
+		gwhe_t gwhe = &survarium::weapon_core::get_weapon_and_hands_animation_expression;
+		example_callback( reinterpret_cast< pcstr >( &gwhe ) );
 	}
 
 	void use_game_core_weapon_core_animation_end_aware_state( )
@@ -2396,6 +2440,7 @@ namespace vostok
 		connection.packets_count( );
 
 		network_core::udp_match_connection::is_low_level_packet( *(network_core::base_packet const*)NULL );
+		network_core::udp_match_connection::construct_packet( packets_orderer, *(network_core::udp_match_packet*)NULL, 0 );
 	}
 
 	void use_network_core_udp_network_flow_emulator_tick_functor( network_core::packet_reader&, boost::asio::ip::udp::endpoint const& )
@@ -2599,10 +2644,12 @@ IncludeAll::IncludeAll()
 	vostok::use_game_core_weapon_dispersion_params( );
 	vostok::use_recoil_calculator( );
 	vostok::use_dispersion_calculator( );
+	vostok::use_game_core_breath_holding_states( );
 	vostok::use_character_dispersion_calculator( );
 	vostok::use_game_material_manager( );
 	vostok::use_weapon_dispersion_calculator( );
 	vostok::use_game_core_weapon_core_base_state( );
+	vostok::use_game_core_weapon_core_ik_callbacks( );
 	vostok::use_game_core_weapon_core_animation_end_aware_state( );
 	vostok::use_game_core_weapon_core_idle_state_base( );
 	vostok::use_game_core_weapon_core_aimed_state_base( );

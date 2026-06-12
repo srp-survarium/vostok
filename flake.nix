@@ -109,7 +109,7 @@
         pname = "vcproj2ninja";
         version = "0.1.0";
         src = vcproj2ninja-src;
-        cargoHash = "sha256-SKEVJ/2wEmEfevCJe8WtVief3BL25K2OmsYjWv9SSC4=";
+        cargoHash = "sha256-Fc30XVO4LYQT5HHHXm0J99QZgYXh4VNzeNukWV4sFeg=";
 
         CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER =
           "${mingw.stdenv.cc}/bin/${mingw.stdenv.cc.targetPrefix}cc";
@@ -329,6 +329,11 @@
           pkgs.file
           pkgs.xxd
           pkgs.jq
+
+          # clangd - source navigation/LSP over the generated
+          # compile_commands.json (clang is a READER here; MSVC8 under Wine
+          # stays the only build truth)
+          pkgs.clang-tools
 
           # objdiff - GUI + CLI for comparing base vs target objects
           objdiff
