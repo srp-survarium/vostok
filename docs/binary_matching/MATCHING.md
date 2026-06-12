@@ -75,11 +75,12 @@ order - none of these are "LTCG noise". Each has a concrete source cause:
   `default: NODEFAULT();`** (`__assume(0)`) - see the switch section;
 - a `fld1` / const reached via the `default` may belong to an **explicit `case`**.
 
-Keep digging until the ONLY remaining difference is argument passing; record `DONE`
-in the module's `status.jsonl` only then (cause e.g. `LTCG arg passing`). If you
-cannot finish, park it `SKIPPED` with the concrete next step in its cause and a terse
-`claude@NOTE:` above the function - do **not** bank it as matched and call the
-residual "LTCG". (History: `empty_stub` calls and a
+Keep digging until the ONLY remaining difference is argument passing; only then is
+the function done (the match DB notes the residual: a `NOTE` flag with cause, e.g.
+`LTCG arg passing`). If you cannot finish, park it: a terse `claude@NOTE:` above the
+function plus a `SKIP` flag whose cause is the concrete next step (flags are recorded
+via `scripts/match_db.py flag` - by the orchestrator for dispatched matchers) - do
+**not** bank it as matched and call the residual "LTCG". (History: `empty_stub` calls and a
 switch bounds check were both wrongly written off as "LTCG" and were in fact a
 recoverable ASSERT and a missing `default: NODEFAULT()`.) Trust the operand-aware
 match % (`agentic_loop.md` section 2a) over a raw instruction-difference count.
@@ -96,8 +97,8 @@ function in the target binary with its own body and rva. You MUST (1) define B i
 ONE real source location (its real header, never the consuming `.cpp` - see the
 `_N.h` note under "The carcass"), (2) match B against its own target shape - fetch its
 statement structure and rich asm like any unit (`pdb_fetch --function <B> --view
-structure` / `--view target`), and (3) track B's OWN `fuzzy_match_percent` and
-`status.jsonl` entry, the same as any matched function. A call that resolves but whose callee body is unverified
+structure` / `--view target`), and (3) track B's OWN `fuzzy_match_percent` - it shows
+up in `report.json` / the match DB like any function. A call that resolves but whose callee body is unverified
 is a half-match hiding an unmatched function.
 
 **A cross-TU helper is DECLARED in a header with the module's `VOSTOK_<MODULE>_API`
@@ -188,7 +189,7 @@ jump-table dispatch:
   top `case`(s) and a `default: NODEFAULT();`. A value the target reaches *through* the
   table (e.g. a final `fld1`) is an explicit terminal `case`, not the `default`.
 
-## Match status (`status.jsonl`; the only in-source marker is `STATE[STUB]`)
+## Match status (the match DB; the only in-source marker is `STATE[STUB]`)
 In-source `%`/status markers go stale the moment a rebuild moves the score, so they
 are NOT written anymore. The source carries exactly two things:
 - `// STATE[STUB]` on a body that is not matched yet (still the carcass / a
@@ -196,37 +197,38 @@ are NOT written anymore. The source carries exactly two things:
   signature/carcass comments (matcher input);
 - `sushi@` / `claude@` `@MATCH/@NOTE/@TODO` comments (see "Comment tags").
 
-Everything else is derived and lives outside the source:
-- **status + cause** per function: `docs/binary_matching/<module>/status.jsonl`, one
-  JSON object per line, keyed by target VA and sorted by symbol:
-  `{"symbol", "va", "status": "<TAG>", "pct", "cause", "file", "line"}`.
-  `pct` is the value at recording time - historical context only, never current.
+Everything else is DERIVED and lives outside the source
+(design: `match_db_design.md`):
 - **current %s**: `report.json` / `match_score.py` - the only live numbers.
+- **bulk status, queues, reports**: `docs/binary_matching/match.db`, rebuilt by
+  `python3 scripts/match_db.py refresh` from report.json + the rich indexes +
+  the PDB declaration dump. Per paired function it derives the structure class
+  (`MATCH | SIZE | SPLIT | QUANTITY`), tracks pairing history ("matched at NN%
+  before; vanished/regressed without a source touch -> out of scope"), and
+  classifies base-only symbols (`NEAR_MISS` mangling mismatches, declared-but-
+  inlined-in-target, the fabricated-symbol lint). Query it with
+  `match_db.py list / report / queue / sql`.
 - **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
   embedded in source.
-A navigation tool over source + status.jsonl + report.json is planned.
 
-Status tags (the `status` vocabulary):
+The only hand-written records are match-DB FLAGS (`match_db.py flag <mangled>`):
+- `SKIP` - parked; the cause is the concrete next step (covers the old
+  SKIPPED/BLOCKED: name the blocker in the cause).
+- `NOTE` - informational cause that queues ignore (a DONE-with-residual
+  explanation, inline-site evidence for a target-inlined body, ...).
+- `--requeue` - forget history+flags so queues offer the function again.
+The DB is committed; the ORCHESTRATOR is its single writer (refresh + flag +
+commit at run milestones) - dispatched matchers/verifiers never edit it, they
+report parking/causes in their result lines instead.
 
-| tag | meaning |
-|---|---|
-| DONE | matched (may be <100% ONLY when the residual is understood and non-steerable - LTCG argument passing / CRT noise; the cause says why) |
-| STUB | skeleton only, body still the carcass (in-source flag, not exported) |
-| BLOCKED | needs another function/type first |
-| SKIPPED | tried, deferred - cause = the concrete next step |
-| INLINED | inlined at all call sites; no standalone body |
-| UNCHECKED / UNVERIFIED | written, not yet diffed / not confirmed |
-
-(There is no "partially matched" tag: the live % already lives in `report.json`,
-so a not-DONE function is either parked - `SKIPPED`/`BLOCKED` with its cause and
-next step - or simply not banked yet.)
-
-`INLINED` carries no percent: the function emits NO standalone symbol on the target side
-(every call site inlined it), so there is nothing for objdiff to pair or score. Use it when
-you reconstruct such a body from a matched consumer's bytes, and NAME that inline-site
-evidence in the `cause` (e.g. `body from udp_match_client::enqueue's else-branch bytes`).
-A body with no consumer evidence yet is NOT `INLINED` - keep it a
-`/* no source */` sham (with its `sushi@TODO`) until a consumer gets matched.
+A function "counts as DONE" when report.json reads 100% and the structure class
+is MATCH; an under-100 function is done ONLY when the residual is understood and
+non-steerable (LTCG argument passing / CRT noise) and a `NOTE` flag says why.
+A function the target inlined everywhere emits no standalone target symbol -
+nothing to pair or score; reconstruct it only from a matched consumer's bytes
+and record that evidence as its `NOTE` cause (e.g. `body from
+udp_match_client::enqueue's else-branch bytes`). A body with no consumer
+evidence yet stays a `/* no source */` sham (with its `sushi@TODO`).
 
 
 ## Comment hygiene - lean code, verbose commit message
@@ -262,8 +264,8 @@ matcher) - never drop them. Prefix your own with `claude@...`.
 
 "Why it didn't match / why I stopped" = a terse `claude@NOTE:` above the function
 (why stuck, what was tried - the non-matching note the next matcher reads first)
-plus the same conclusion as the `cause` in the function's `status.jsonl` entry;
-long rationale goes in the commit message, never a comment block.
+plus the same conclusion as a match-DB `SKIP`/`NOTE` flag cause; long rationale
+goes in the commit message, never a comment block.
 
 
 ## The carcass (generated stub comments)
@@ -318,7 +320,8 @@ the STUB's `// FUNCTION BODY` carcass for the shape clues below, then deletes it
 done - it does not preserve or annotate it. The structure-verifier then checks the
 shape with the two-sided condensed structure-diff (next), run **on demand** - the
 diff and its verdict are NEVER embedded in source; the verdict goes in the commit
-message and the function's `status.jsonl` cause. A clean 100% DONE carries nothing.
+message (the match DB re-derives the structure class on refresh). A clean 100%
+match carries nothing.
 
 **Preferred for a non-100% function: the two-sided condensed structure-diff** (it
 supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
@@ -330,7 +333,8 @@ line gaps are suppressed, tallied as `blank-gaps` in the summary). That way the 
 where our build diverges from the target, not just the target shape. It is rerun on
 demand whenever needed - never pasted into the source. **The verdict (`STRUCTURE
 <MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>`) goes in the commit
-message and the `status.jsonl` cause field.** (The structure-verifier produces and owns these.)
+message** (and, when the residual is permanent, a match-DB `NOTE`/`SKIP` flag
+cause). (The structure-verifier produces and owns these.)
 
 **Each addressed statement IS a real source statement - that is the whole point of the
 structure.** The compiler emits one line-table entry (a debugger BREAKPOINT) per source

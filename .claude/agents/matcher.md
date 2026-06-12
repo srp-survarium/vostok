@@ -16,11 +16,12 @@ context - ONCE, so more functions per unit means fewer tokens overall. Bundle an
 (getters/setters, sibling `weapon_core_*_state` variants) that share that scaffolding.
 The orchestrator usually hands you the explicit list. Pull in those, plus any function
 **CALLED by one you're matching** - matching a callee is fine and often necessary (it
-gets its own `status.jsonl` entry/structure; see MATCHING.md's reconstructed-helper rule).
+scores as its own function; see MATCHING.md's reconstructed-helper rule).
 One unit = one match commit. If a batch member turns out hard, a bit of spinning on it
-is fine, but don't get stuck - finish the rest and park it `SKIPPED` in `status.jsonl`
-(cause = the concrete next step) with a terse `claude@NOTE:` above the function saying
-why it is stuck and what you tried.
+is fine, but don't get stuck - finish the rest and park it: a terse `claude@NOTE:`
+above the function (why stuck, what you tried) and the cause + concrete next step in
+your RESULT LINE - the orchestrator records it as a match-DB `SKIP` flag (you never
+edit `match.db` yourself; the orchestrator is its single writer).
 
 ## Read first (source of truth - they win over this summary)
 1. `MATCHING.md` - how matched source must look.
@@ -126,10 +127,10 @@ why it is stuck and what you tried.
   LTCG are at a call boundary: an argument dropped (proven constant) or passed in a
   register instead of its slot. EVERYTHING else - register choice, `[ebp-XX]` slot,
   frame size, switch shape, an extra `cmp/ja`, a stray `fld1`, statement order - is a
-  source problem with a concrete cause; solve it or park it `SKIPPED` in `status.jsonl`
-  (cause = the concrete next step) plus a terse `claude@NOTE:` at the function - never
-  write the residual off as "LTCG" to bank a match. `DONE` only when the sole remaining
-  diff is argument passing.
+  source problem with a concrete cause; solve it or park it (terse `claude@NOTE:` at
+  the function + the cause/next step in your result line for the orchestrator's `SKIP`
+  flag) - never write the residual off as "LTCG" to bank a match. Done only when the
+  sole remaining diff is argument passing.
 - **Leave the carcass to the structure-verifier - do NOT maintain it.** The STUB
   arrives with a `// FUNCTION BODY` carcass; read it for the shape clues above, then
   **DELETE it when you're done** (matched or not). Do not preserve, annotate, or
@@ -142,10 +143,10 @@ why it is stuck and what you tried.
   `// STATE[STUB]` flag (and the carcass/signature comments) and leave NOTHING - a
   clean 100% needs no
   inline rationale; any reusable asm->source trick goes to `patterns/` (new file + INDEX.md line).
-- **Lean source - rationale in the commit message, NOT a `.md` trail.** Record the
-  function's status + cause as its `docs/binary_matching/<module>/status.jsonl` entry
-  (`{"symbol", "va", "status", "pct", "cause", "file", "line"}`, sorted by symbol;
-  only `// STATE[STUB]` stays in source, on still-unmatched bodies); tag deliberate shaping with
+- **Lean source - rationale in the commit message, NOT a `.md` trail.** Status is
+  DERIVED (`report.json` + the match DB; only `// STATE[STUB]` stays in source, on
+  still-unmatched bodies); a parked function's cause goes in your result line (the
+  orchestrator records the match-DB flag). Tag deliberate shaping with
   `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior `sushi@...` notes). Do NOT write a
   per-function `.md` (we don't keep them). Put the run narrative - what you tried, the
   source variants + their %s - in the PR/commit message, and promote any reusable
@@ -162,12 +163,12 @@ why it is stuck and what you tried.
 ## Finish - commit your match, return your result line
 Your worktree is already on the unit's branch, indexes warm. Just commit your work:
 ```
-git add <the .cpp(s)> <temp_include_all.cpp edits> <the module's status.jsonl>
-git commit -m "<module>: match <unit> (per-fn NN% TAG)"   # name grouped/inlined members too
+git add <the .cpp(s)> <temp_include_all.cpp edits>
+git commit -m "<module>: match <unit> (per-fn NN%)"   # name grouped/inlined members too
 ```
 **ONE commit** (squash WIP first: `git reset --soft <branch-point>` then one commit). Do
-NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack.
-Return ONE line, nothing else:
+NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack
+(and `match.db` - never commit it). Return ONE line, nothing else:
 ```
-<module>::<unit> -> NN% TAG per fn   (regressions: none | <unit/fn>)
+<module>::<unit> -> NN% per fn   (parked: none | <fn>: <cause/next step>; regressions: none | <unit/fn>)
 ```

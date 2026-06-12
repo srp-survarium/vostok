@@ -77,7 +77,9 @@ objdiff config is `binaries/objdiff/objdiff.json`; a match report is
 per-module functions/code-matched table, and `--write-readme` refreshes the
 `<!-- match-score -->` block at the top of README.md. The numbers come straight
 from objdiff's measures (the source carries no status markers; per-function
-status/cause lives in `docs/binary_matching/<module>/status.jsonl`), so the
+status/queues live in `docs/binary_matching/match.db` via `scripts/match_db.py`
+- refresh / list / report / queue / flag; design in
+`docs/binary_matching/match_db_design.md`), so the
 README is an honest, no-run regression tracker - diff the block across commits. Re-run `python3 scripts/match_score.py --write-readme`
 whenever `report.json` moves (after a re-delink, or a toolchain/delinker change
 that shifts many symbols).

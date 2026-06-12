@@ -50,12 +50,20 @@ worker to the COMPLEMENT of the in-flight matchers' files. Respect TU dependenci
 TU depends on the `*_connection`/packet TUs - enable the lower one first or bundle them).
 
 ## Run
-1. **Build the queue** for the target module:
+1. **Build the queue** for the target module with the match DB (you are its
+   SINGLE WRITER: you run `refresh`, record `flag`s from worker result lines,
+   and commit `docs/binary_matching/match.db` at run milestones - workers never
+   touch it):
    ```
-   rg -n "STATE\[STUB\]" sources/vostok/<module>/sources
+   python3 scripts/match_db.py refresh
+   python3 scripts/match_db.py report --module <m> --per-unit
+   python3 scripts/match_db.py queue  --module <m> --batch 12 [--small 0x100] [--json]
    ```
-   Also pick up any `SKIPPED` / `BLOCKED` entry (from the module's `status.jsonl`)
-   you have been asked to retry. Order them leaf/small-first (easiest wins first).
+   `queue` already groups by TU (never splits one - matchers in the same file
+   collide), packs smallest-first, and skips done/out-of-scope/`SKIP`-flagged
+   functions. To retry a parked function: `match_db.py flag <mangled> --requeue`.
+   `list --presence TARGET_ONLY|BASE_ONLY` and the report's `suspicious` column
+   surface unpaired symbols and NEAR_MISS mangling mismatches worth queuing.
 2. **STACKED PRs - dispatch off the TOP, the human reviews from the BOTTOM.** Every
    unit stacks on the previous one. Each worker branches off the current **stack tip**
    (the newest match branch), so it inherits all prior matched source / anchors / notes
@@ -165,9 +173,9 @@ README.md carries an auto-generated score block (`<!-- match-score:start/end -->
 the overall fuzzy % plus a per-module **functions-exact / code-matched** table,
 produced by `python3 scripts/match_score.py --write-readme` from
 `binaries/objdiff/report.json`. It is **report-derived** (the source carries no status
-markers; per-function status/cause lives in `status.jsonl`) - this is how the human tracks
+markers; per-function status lives in the match DB) - this is how the human tracks
 progress and spots regressions *without running anything*, by diffing the block across
-commits. `report.json` is refreshed by every base delink (each matcher's rebuild), so
+commits. Refresh + commit `match.db` at the same milestones. `report.json` is refreshed by every base delink (each matcher's rebuild), so
 the numbers are always on hand.
 - **Rule:** refresh + commit the block whenever `report.json` has moved - at minimum at
   run start (a baseline) and before you hand back for review. After a delinker/toolchain
@@ -179,8 +187,8 @@ the numbers are always on hand.
 ## Audit a matcher's work, then ACT ON the findings (the loop does NOT end at review)
 This is step 4c: once a matcher's PR is open, dispatch the `structure-verifier` onto the
 **SAME branch/worktree** - it runs `pdb_fetch --view structure-diff` (on demand, never
-embedded in source), records the verdict in the commit message + the function's
-`status.jsonl` cause, downgrades a `DONE` whose source STRUCTURE is actually wrong
+embedded in source), records the verdict in the commit message + its result line,
+calls out a presented-as-done function whose source STRUCTURE is actually wrong
 (the trap a high % hides), AND then (its phase 2) becomes the matcher and FIXES that
 divergence - rebuilding and re-diffing until the structure matches or only an LTCG residual
 remains. It pushes the **SECOND commit to the unit's PR branch** (no `--amend`, no

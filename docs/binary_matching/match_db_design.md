@@ -164,6 +164,33 @@ signature, access, virtual/static/const, kind), deterministic order. Until the
 dump exists, `refresh` skips `declared_functions` ingestion with a warning and
 the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
 
+## Implementation deltas (as built; authoritative where they differ from above)
+
+- **Declarations are transient.** The dump (vostok-pdb-parser PR #25,
+  `pdb_declarations`; 222k rows / 85MB at `binaries/rich/target/
+  declarations.jsonl`) is too big to store in the committed DB; `refresh`
+  loads it in memory and persists only the per-function verdict in
+  `base_only_status(mangled, status, detail)`. There is no `declared_functions`
+  table.
+- **BASE_ONLY statuses grew:** `COMPILER` (thunks, backtick names, `??__E/F`
+  dynamic initializers, anon-ns), `ANCHOR` (our `temp_include_all`
+  scaffolding), `TEMPLATE` (instantiation of a declared template - dump and
+  demangler render template args differently, so the class/name STEM is
+  matched), alongside `NEAR_MISS`/`JITTER`/`INLINED_IN_TARGET`/`UNEXPLAINED`.
+  `NEAR_MISS.detail` carries the target-side mangled name, which encodes the
+  exact access/const header fix.
+- **Flags:** `SKIP` (queues skip; cause = next step), `NOTE` (informational
+  only), plus `--requeue` (forgets history+flags). status.jsonl was migrated
+  2026-06-12 - 620 causes imported as `[STATUS pct%] cause` flags (SKIP for
+  BLOCKED/SKIPPED/INPROGRESS, NOTE otherwise); 48 rows referenced symbols
+  absent from the current delink and live on in git history only.
+- **Single writer:** the ORCHESTRATOR runs refresh/flag and commits the DB at
+  run milestones; dispatched matchers/verifiers never edit `match.db` - they
+  report parking causes in their result lines.
+- **Interned names:** symbols/units/files tables keep the committed DB at
+  ~19MB; ids are sorted-dense and NOT stable across refreshes (persistent
+  tables key on mangled TEXT).
+
 ## Implementation steps (one commit each, single PR)
 
 1. this design doc

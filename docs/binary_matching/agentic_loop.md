@@ -58,15 +58,27 @@ run it as the top-level agent, since subagents cannot reliably spawn subagents.
 
 ## 0. Build the queue (orchestrator)
 
-Collect the `STUB` (and other unmatched) functions for the module with `rg`:
+The match DB (`docs/binary_matching/match.db`, design in `match_db_design.md`)
+owns queue building:
 
 ```
-rg -n "STATE\[STUB\]" sources/vostok/<module>/sources
+python3 scripts/match_db.py refresh                  # after a rebuild/delink
+python3 scripts/match_db.py report --module <m> [--per-unit]
+python3 scripts/match_db.py queue  --module <m> --batch 12 [--small 0x100] [--json]
 ```
 
-Order them however you like (small/leaf functions first is usually easiest).
-Work the list top to bottom until every entry is `DONE` or deliberately parked
-(`SKIPPED` / `BLOCKED`) with a written reason.
+`queue` emits matcher-ready batches: grouped by TU (a TU is never split across
+batches - two matchers in one file collide), smallest work first, automatically
+skipping done functions (100% + struct MATCH), out-of-scope ones (paired once,
+vanished/regressed without a source touch - external inlining), and `SKIP`
+flags. `match_db.py list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
+sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
+view. Work the batches until `report` shows every function done or parked
+(a `SKIP` flag with a written cause).
+
+The orchestrator is the match DB's SINGLE WRITER: it runs `refresh`, records
+`flag`s (from worker result lines), and commits the DB at run milestones -
+workers never edit it.
 
 ## 1. Per-function loop (one worker)
 
@@ -86,11 +98,11 @@ The orchestrator hands the worker a single function; the worker does the rest:
    should move the percentage or teach you something.
 5. **Stop** when the function matches, or when you judge you can no longer make
    progress. You decide when to stop - do not spin.
-6. **Record the outcome** (sections 5-7): update the function's
-   `docs/binary_matching/<module>/status.jsonl` entry (and on a real match drop
-   its `// STATE[STUB]` flag and delete the carcass), put the stuck-reason and
-   tried variants in the commit message, NOTE any inlining, and flag any
-   regression you caused.
+6. **Record the outcome** (sections 5-7): on a real match drop the function's
+   `// STATE[STUB]` flag and delete the carcass; if parked, leave the
+   `claude@NOTE:` and name the cause in your result line (the orchestrator
+   records it as a match-DB flag). Put the stuck-reason and tried variants in
+   the commit message, NOTE any inlining, and flag any regression you caused.
 7. **Commit and open the PR** (section 8). Move to the next function.
 
 ## 2. Getting the target assembly
@@ -208,7 +220,8 @@ target but not in your base (or vice versa) you will see it as a missing/extra
 `call` and, in the carcass, as a large `+delta` between two statement addresses.
 Identify the block, leave a `claude@NOTE:` (or `claude@MATCH:` if you reshaped
 the source to compensate), and do **not** burn the loop fighting inlining you
-cannot steer - record the cause in the function's `status.jsonl` entry.
+cannot steer - name the cause in your result line (it becomes the function's
+match-DB `NOTE` flag).
 
 ## 6. When stuck - what to write
 
@@ -217,9 +230,9 @@ same two-layer convention other decomp projects use - a non-matching note at the
 function + an external tracker):
 - a terse **`claude@NOTE:` above the function** - why it is stuck, what you tried,
   a couple of lines max. Facts about the attempt, never a % or a diff dump.
-- the function's **`status.jsonl` entry** (`SKIPPED` / `BLOCKED`, with the cause =
-  the same conclusion plus the concrete next step; the live % stays in
-  `report.json`).
+- a **match-DB `SKIP` flag** whose cause is the same conclusion plus the concrete
+  next step (named in your result line; the orchestrator records it - the live %
+  stays in `report.json`).
 
 Full detail - every variant and its score, the diverging statements - goes in the
 COMMIT/PR MESSAGE (section 7), not inline.
@@ -230,8 +243,8 @@ We do NOT keep per-function `.md` logs. Module-wide notes (gotchas, shared types
 asm quirks for the whole module) still live in
 `docs/binary_matching/<module>/README.md`; everything per-function splits into:
 
-- **`status.jsonl`** - the terse status + cause, machine-readable (keyed by target
-  VA, sorted by symbol);
+- **the match DB** - derived status (%s, structure class, pairing history) plus
+  the hand-written `SKIP`/`NOTE` flag causes;
 - **the COMMIT/PR MESSAGE** - the narrative a reviewer needs to replay the run:
   the key commands, each source variant you tried with its resulting % /
   structure-diff outcome, the final residual and why. Shape:
@@ -266,7 +279,7 @@ next function.
 ---
 
 **Stop condition for the whole run:** every function in the module is `DONE` or
-parked (`SKIPPED`/`BLOCKED`) with its cause recorded in `status.jsonl` (narrative
+parked (a `SKIP` flag) with its cause recorded in the match DB (narrative
 in the commit messages).
 
 Missing tooling you wish you had goes in
