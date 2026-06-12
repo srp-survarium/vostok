@@ -51,10 +51,12 @@ CREATE TABLE files(id INTEGER PRIMARY KEY, path TEXT UNIQUE);
 CREATE TABLE target_functions(
   rva INTEGER PRIMARY KEY, sym INTEGER REFERENCES symbols(id),
   unit INTEGER REFERENCES units(id), file INTEGER REFERENCES files(id),
+  module TEXT,  -- from the unit when report.json knows the symbol, else the file
   line INTEGER, size INTEGER, n_stmts INTEGER);
 CREATE TABLE base_functions(
   rva INTEGER PRIMARY KEY, sym INTEGER REFERENCES symbols(id),
   unit INTEGER REFERENCES units(id), file INTEGER REFERENCES files(id),
+  module TEXT,
   line INTEGER, size INTEGER, n_stmts INTEGER);
 CREATE TABLE unit_functions(
   unit INTEGER REFERENCES units(id), sym INTEGER REFERENCES symbols(id),
@@ -91,7 +93,7 @@ CREATE INDEX idx_target_unit ON target_functions(unit);
 CREATE INDEX idx_base_unit   ON base_functions(unit);
 
 CREATE VIEW target_only AS
-  SELECT s.mangled, s.demangled, u.name AS unit, u.module, f.path AS file,
+  SELECT s.mangled, s.demangled, u.name AS unit, t.module, f.path AS file,
          t.rva, t.line, t.size, t.n_stmts
   FROM target_functions t
   JOIN symbols s ON s.id = t.sym
@@ -99,7 +101,7 @@ CREATE VIEW target_only AS
   LEFT JOIN files f ON f.id = t.file
   LEFT JOIN pairs p ON p.sym = t.sym WHERE p.sym IS NULL;
 CREATE VIEW base_only AS
-  SELECT s.mangled, s.demangled, u.name AS unit, u.module, f.path AS file,
+  SELECT s.mangled, s.demangled, u.name AS unit, b.module, f.path AS file,
          b.rva, b.line, b.size, b.n_stmts
   FROM base_functions b
   JOIN symbols s ON s.id = b.sym
@@ -107,7 +109,7 @@ CREATE VIEW base_only AS
   LEFT JOIN files f ON f.id = b.file
   LEFT JOIN pairs p ON p.sym = b.sym WHERE p.sym IS NULL;
 CREATE VIEW paired AS
-  SELECT s.mangled, s.demangled, u.name AS unit, u.module,
+  SELECT s.mangled, s.demangled, u.name AS unit, t.module,
          p.fuzzy_pct, p.struct_class, p.t_stmts, p.b_stmts,
          p.n_size_rows, p.n_trgt_only, p.n_base_only,
          t.rva AS target_rva, t.size AS target_size,
@@ -373,6 +375,7 @@ def cmd_refresh(args):
                     sym_id[mangled],
                     unit_id.get(unit),
                     file_id[rec["file"]],
+                    module_of(unit or rec["file"]),
                     line,
                     rec["size"],
                     len(stmts),
@@ -524,8 +527,8 @@ def cmd_refresh(args):
         sorted((i, u, module_of(u)) for u, i in unit_id.items()),
     )
     con.executemany("INSERT INTO files VALUES (?,?)", sorted((i, p) for p, i in file_id.items()))
-    con.executemany("INSERT INTO target_functions VALUES (?,?,?,?,?,?,?)", side_rows(target))
-    con.executemany("INSERT INTO base_functions VALUES (?,?,?,?,?,?,?)", side_rows(base))
+    con.executemany("INSERT INTO target_functions VALUES (?,?,?,?,?,?,?,?)", side_rows(target))
+    con.executemany("INSERT INTO base_functions VALUES (?,?,?,?,?,?,?,?)", side_rows(base))
     con.executemany("INSERT INTO unit_functions VALUES (?,?,?)", unit_rows)
     con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?)", pair_rows)
     con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
@@ -589,14 +592,17 @@ def cmd_list(args):
           JOIN base_functions   b ON b.rva = p.base_rva
           LEFT JOIN units u ON u.id = t.unit"""
         size_col = "t.size"
+        name_col = "s.mangled"
     elif args.presence == "TARGET_ONLY":
         base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM target_only"
         size_col = "size"
+        name_col = "mangled"
     elif args.presence == "BASE_ONLY":
         base = """SELECT b.demangled, b.mangled, b.unit, b.module, b.size, b.n_stmts,
                          st.status, st.detail
                   FROM base_only b LEFT JOIN base_only_status st ON st.mangled = b.mangled"""
         size_col = "b.size"
+        name_col = "b.mangled"
     else:
         sys.exit(f"[match_db] unknown --presence {args.presence}")
 
@@ -619,7 +625,7 @@ def cmd_list(args):
         where.append("st.status = ?")
         params.append(args.status.upper())
     q = base + ((" WHERE " + " AND ".join(where)) if where else "")
-    q += f" ORDER BY {size_col}, mangled"
+    q += f" ORDER BY {size_col}, {name_col}"
     rows = [dict(r) for r in con.execute(q, params)]
     emit(rows, args.json)
 
@@ -634,8 +640,8 @@ def cmd_report(args):
     q = f"""
       WITH tf AS (
         SELECT t.rva, t.sym, t.size,
-               coalesce(un.module, '(no unit)') AS module,
-               coalesce(un.name, '(no unit)')   AS unit_name
+               coalesce(t.module, '(no unit)') AS module,
+               coalesce(un.name, '(no unit)')  AS unit_name
         FROM target_functions t LEFT JOIN units un ON un.id = t.unit)
       SELECT tf.{scope} AS scope,
              count(*)                                            AS target_fns,
@@ -696,21 +702,21 @@ def cmd_queue(args):
     q = f"""
       WITH cand AS (
         SELECT s.demangled, s.mangled, coalesce(u.name,'(no unit)') AS unit,
-               u.module, t.size, p.fuzzy_pct, p.struct_class,
+               t.module, t.size, p.fuzzy_pct, p.struct_class,
                CASE WHEN p.sym IS NULL THEN 'TARGET_ONLY' ELSE 'PAIRED' END AS presence
         FROM target_functions t
         JOIN symbols s ON s.id = t.sym
         LEFT JOIN units u ON u.id = t.unit
         LEFT JOIN pairs p ON p.sym = t.sym
         LEFT JOIN history h ON h.mangled = s.mangled
-        WHERE NOT (p.fuzzy_pct >= 100 AND p.struct_class = 'MATCH')
-          AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag != 'REQUEUE')
+        WHERE NOT (coalesce(p.fuzzy_pct, 0) >= 100 AND p.struct_class = 'MATCH')
+          AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag IN ('SKIP','OUT_OF_SCOPE'))
           -- seen-before, vanished without a source touch: external inline/link
           -- decision, out of scope (design: history does the classifying)
           AND NOT (p.sym IS NULL AND h.mangled IS NOT NULL)
           -- matched at 100 before and untouched since: a later regression is
           -- outside this function (LTCG non-steerable) - skip
-          AND NOT (h.best_fuzzy_pct >= 100 AND coalesce(p.fuzzy_pct, 0) < 100)
+          AND NOT (coalesce(h.best_fuzzy_pct, 0) >= 100 AND coalesce(p.fuzzy_pct, 0) < 100)
       )
       SELECT * FROM cand WHERE {" AND ".join(where)}
       ORDER BY unit, size
