@@ -9,18 +9,12 @@
 
 namespace survarium {
 
-// claude@NOTE: 94% wall - target keeps vectora_allocator<void*>(base_allocator*) ctor
-// out-of-line at the m_victory_items init site, base inlines it (LTCG per-site cut;
-// patterns/inline-vs-call-template-comdat.md - same wall as usable_object/collision_sensor ctors).
 victory_items_container_core::victory_items_container_core( ) :
 	m_victory_items		( g_allocator ),
 	m_owner_team		( team_undefined )
 {
 }
 
-// claude@NOTE: 83% wall - target calls binary_config_value::operator u8, base inlines it
-// and keeps cast_number<u8,u64,u32> standalone (patterns/config-value-operator-cast.md;
-// each symbol exists in only one index). Source is correct.
 void victory_items_container_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
@@ -60,9 +54,6 @@ void victory_items_container_core::put_item( victory_item_core* item )
 	m_victory_items.push_back( item );
 }
 
-// claude@NOTE: 97% wall - target inlines _Impl_vector<void*>::back into `call end; sub eax,4`,
-// base keeps back() as a call (both COMDATs exist in both binaries; LTCG per-site cut,
-// patterns/inline-vs-call-template-comdat.md).
 victory_item_core* victory_items_container_core::take_item( )
 {
 	victory_item_core* last_item = m_victory_items.back( );
