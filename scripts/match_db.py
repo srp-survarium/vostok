@@ -394,36 +394,17 @@ class Interner:
         return self.map
 
 
-def rebuild_if_stale(args):
-    """refresh owns freshness end to end: when sources/ moved past the state
-    report.json was built from (the report.head marker), run rebuild.py first.
-    --no-rebuild skips (old behavior); --rebuild forces one."""
+def run_rebuild(args):
+    """refresh always runs rebuild.py first - ninja makes it a no-op when
+    nothing changed, so rebuild.py IS the staleness check. --no-rebuild
+    ingests existing artifacts as-is."""
     if getattr(args, "no_rebuild", False):
-        return
-    marker = REPORT.parent / "report.head"
-    stale_reason = None
-    if getattr(args, "rebuild", False):
-        stale_reason = "--rebuild requested"
-    elif not REPORT.is_file() or not marker.is_file():
-        stale_reason = "no report.json / report.head marker yet"
-    else:
-        built = marker.read_text().strip().removesuffix("+dirty")
-        if built != git_head():
-            rc, _ = _git("diff", "--quiet", built, "HEAD", "--", "sources/")
-            if rc != 0:
-                stale_reason = f"sources/ changed since the last build ({built[:8]}..HEAD)"
-        if not stale_reason:
-            _, dirty = _git("status", "--porcelain", "--", "sources/")
-            if dirty:
-                stale_reason = "uncommitted sources/ changes"
-    if not stale_reason:
         return
     binaries = VOSTOK / "binaries"
     if binaries.is_symlink():
-        log(f"NOT auto-rebuilding ({stale_reason}): binaries/ is a symlink "
-            "(shared artifacts - rebuild in the owning checkout)")
+        log("NOT running rebuild.py: binaries/ is a symlink "
+            "(shared artifacts - rebuild belongs to the owning checkout)")
         return
-    log(f"stale inputs ({stale_reason}) - running rebuild.py first (this takes a while) ...")
     import subprocess
 
     rc = subprocess.run([sys.executable, str(VOSTOK / "scripts" / "rebuild.py")]).returncode
@@ -432,7 +413,7 @@ def rebuild_if_stale(args):
 
 
 def cmd_refresh(args):
-    rebuild_if_stale(args)
+    run_rebuild(args)
     for required in (REPORT, TARGET_IDX, BASE_IDX):
         if not required.is_file():
             sys.exit(f"[match_db] missing {required} - run rebuild.py / the delink first")
@@ -1081,11 +1062,9 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser(
         "refresh",
-        help="rebuild.py if sources moved since the last build, then rebuild derived tables",
+        help="run rebuild.py (incremental - no-op when nothing changed), then rebuild derived tables",
     )
-    g = p.add_mutually_exclusive_group()
-    g.add_argument("--no-rebuild", action="store_true", help="ingest existing artifacts as-is")
-    g.add_argument("--rebuild", action="store_true", help="force a rebuild.py run first")
+    p.add_argument("--no-rebuild", action="store_true", help="ingest existing artifacts as-is")
 
     p = sub.add_parser("list", help="list functions with filters")
     p.add_argument("--module")
