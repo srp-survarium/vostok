@@ -1,0 +1,988 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\game\sources\game_options.h"
+
+namespace survarium {
+
+// STATE[STUB]
+void game_options::apply_default_graphic( )
+{
+	// LOCALS
+	// flash_value[4] 					new_resolution_data
+	// ******
+
+	// FUNCTION BODY[0x7058e0]: 12
+	// <0x7058e7>|0x007|+0x019:'127'
+	// <0>
+	// <1>
+	// <2>
+	// <0x705900>|0x020|+0x021:'131'
+	// <0x705921>|0x041|+0x024:'132'
+	// <0x705945>|0x065|+0x038:'133'
+	// <0x70597d>|0x09d|+0x030:'134'
+	// <0x7059ad>|0x0cd|+0x02c:'135'
+	// <0>
+	// <0x7059d9>|0x0f9|+0x029:'137'
+	// <0x705a02>|0x122|+0x046:'138'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::callback(
+	flash_movie*			pmovieView,
+	pcstr					methodName,
+	flash_value const*		args,
+	u32						argCount
+)
+{
+	// FUNCTION BODY[0x708df0]: 65
+	// <0x708df0>|0x000|+0x002:'142'	{
+	// <0>
+	// <0x708df2>|0x002|+0x03b:'144'
+	// <0>
+	// <0x708e2d>|0x03d|+0x019:'146'
+	// <0x708e46>|0x056|+0x033:'147'
+	// <0>
+	// <0x708e79>|0x089|+0x00e:'149'
+	// <0>
+	// <0x708e87>|0x097|+0x032:'151'
+	// <0>
+	// <0x708eb9>|0x0c9|+0x013:'153'
+	// <0>
+	// <0x708ecc>|0x0dc|+0x010:'155'
+	// <0>
+	// <0x708edc>|0x0ec|+0x00e:'157'
+	// <0>
+	// <0x708eea>|0x0fa|+0x014:'159'
+	// <0>
+	// <0x708efe>|0x10e|+0x018:'161'
+	// <0>
+	// <1>
+	// <0x708f16>|0x126|+0x033:'164'
+	// <0>
+	// <0x708f49>|0x159|+0x007:'166'
+	// <0>
+	// <0x708f50>|0x160|+0x005:'168'
+	// <0x708f55>|0x165|+0x005:'169'
+	// <0x708f5a>|0x16a|+0x013:'170'
+	// <0>
+	// <0x708f6d>|0x17d|+0x030:'172'
+	// <0>
+	// <0x708f9d>|0x1ad|+0x007:'174'
+	// <0x708fa4>|0x1b4|+0x009:'175'
+	// <0>
+	// <0x708fad>|0x1bd|+0x009:'177'
+	// <0x708fb6>|0x1c6|+0x010:'178'
+	// <0>
+	// <0x708fc6>|0x1d6|+0x014:'180'
+	// <0>
+	// <1>
+	// <2>
+	// <0x708fda>|0x1ea|+0x010:'184'
+	// <0>
+	// <0x708fea>|0x1fa|+0x00f:'186'
+	// <0>
+	// <0x708ff9>|0x209|+0x010:'188'
+	// <0>
+	// <0x709009>|0x219|+0x00e:'190'
+	// <0>
+	// <0x709017>|0x227|+0x010:'192'
+	// <0>
+	// <1>
+	// <0x709027>|0x237|+0x007:'195'
+	// <0x70902e>|0x23e|+0x014:'196'
+	// <0>
+	// <0x709042>|0x252|+0x010:'198'
+	// <0>
+	// <0x709052>|0x262|+0x010:'200'
+	// <0x709062>|0x272|+0x00e:'201'
+	// <0x709070>|0x280|-0x1ec:'202'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x708e84>|0x094|+0x045:'208'
+	// <0x708ec9>|0x0d9|+0x01e:'208'
+	// <0x708ee7>|0x0f7|+0x02c:'208'
+	// <0x708f13>|0x123|+0x057:'208'
+	// <0x708f6a>|0x17a|+0x059:'208'
+	// <0x708fc3>|0x1d3|+0x033:'208'
+	// <0x708ff6>|0x206|+0x01e:'208'
+	// <0x709014>|0x224|+0x02b:'208'
+	// <0x70903f>|0x24f|+0x04a:'208'
+	// <0x709089>|0x299|      :'208'	}
+	// ******
+}
+
+// STATE[STUB]
+void game_options::show_options( bool b_val )
+{
+	// LOCALS
+	// flash_value 						b_show_value
+	// ******
+
+	// FUNCTION BODY[0x705870]: 3
+	// <0>
+	// <1>
+	// <0x705879>|0x009|+0x034:'215'
+	// ******
+}
+
+// STATE[STUB]
+explicit game_options::game_options( game& g )
+{
+	// FUNCTION BODY[0x7084a0]: 0
+	// <0x7084a0>|0x000|+0x03a:'222'	{
+	// <0x7084da>|0x03a|      :'223'	}
+	// ******
+}
+
+// STATE[STUB]
+ game_options::~game_options( )
+{
+	// FUNCTION BODY[0x7083c0]: 4
+	// <0>
+	// <1>
+	// <0x7083e6>|0x026|+0x034:'229'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void game_options::initialize( )
+{
+	// LOCALS
+	// resources::request[2] 			requests
+	// ******
+
+	// FUNCTION BODY[0x708cd0]: 14
+	// <0x708cda>|0x00a|+0x009:'235'
+	// <0x708ce3>|0x013|+0x02f:'236'
+	// <0>
+	// <1>
+	// <2>
+	// <0x708d12>|0x042|+0x009:'240'
+	// <0x708d1b>|0x04b|+0x004:'241'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x708d1f>|0x04f|+0x0bf:'248'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::on_resources_ready( resources::queries_result& data )
+{
+	// FUNCTION BODY[0x7085a0]: 23
+	// <0x7085a9>|0x009|+0x0b5:'253'
+	// <0>
+	// <0x70865e>|0x0be|+0x01b:'255'
+	// <0x708679>|0x0d9|+0x014:'256'
+	// <0x70868d>|0x0ed|+0x015:'257'
+	// <0>
+	// <0x7086a2>|0x102|+0x0b2:'259'
+	// <0>
+	// <0x708754>|0x1b4|+0x01c:'261'
+	// <0x708770>|0x1d0|+0x015:'262'
+	// <0x708785>|0x1e5|+0x015:'263'
+	// <0>
+	// <0x70879a>|0x1fa|+0x01c:'265'
+	// <0>
+	// <0x7087b6>|0x216|+0x006:'267'
+	// <0x7087bc>|0x21c|+0x014:'268'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7087d0>|0x230|+0x012:'272'
+	// <0>
+	// <1>
+	// <0x7087e2>|0x242|+0x006:'275'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::fill_labels( )
+{
+	// LOCALS
+	// options_name_to_label[22] 		names_to_label
+	// flash_value 						labels_array
+	// wchar_t[512] 					label_txt
+	// flash_value 						label
+	// flash_value 						label_member
+	// ******
+
+	// FUNCTION BODY[0x707370]: 48
+	// <0>
+	// <1>
+	// <0x707378>|0x008|+0x096:'282'
+	// <0x70740e>|0x09e|+0x0a4:'283'
+	// <0x7074b2>|0x142|+0x0a4:'284'
+	// <0x707556>|0x1e6|+0x0a4:'285'
+	// <0x7075fa>|0x28a|+0x0a4:'286'
+	// <0x70769e>|0x32e|+0x0a4:'287'
+	// <0x707742>|0x3d2|+0x0a4:'288'
+	// <0x7077e6>|0x476|+0x0a4:'289'
+	// <0x70788a>|0x51a|+0x0a4:'290'
+	// <0x70792e>|0x5be|+0x0a4:'291'
+	// <0x7079d2>|0x662|+0x0a4:'292'
+	// <0x707a76>|0x706|+0x0a4:'293'
+	// <0x707b1a>|0x7aa|+0x0a4:'294'
+	// <0x707bbe>|0x84e|+0x0a4:'295'
+	// <0x707c62>|0x8f2|+0x0a4:'296'
+	// <0x707d06>|0x996|+0x0a4:'297'
+	// <0x707daa>|0xa3a|+0x0a4:'298'
+	// <0x707e4e>|0xade|+0x0a4:'299'
+	// <0x707ef2>|0xb82|+0x0a4:'300'
+	// <0x707f96>|0xc26|+0x0a4:'301'
+	// <0x70803a>|0xcca|+0x0a4:'302'
+	// <0x7080de>|0xd6e|+0x0a2:'303'
+	// <0>
+	// <1>
+	// <2>
+	// <0x708180>|0xe10|+0x040:'307'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x7081c0>|0xe50|+0x028:'312'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7081e8>|0xe78|+0x003:'316'
+	// <0x7081eb>|0xe7b|+0x03c:'317'
+	// <0>
+	// <1>
+	// <0x708227>|0xeb7|+0x017:'320'
+	// <0x70823e>|0xece|+0x071:'321'
+	// <0>
+	// <0x7082af>|0xf3f|+0x02c:'323'
+	// <0>
+	// <0x7082db>|0xf6b|+0x016:'325'
+	// <0x7082f1>|0xf81|+0x058:'326'
+	// <0x708349>|0xfd9|+0x025:'327'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::fill_menu_buttons( bool in_game_world )
+{
+	// LOCALS
+	// main_menu_button_name_to_action[4] name_to_action_in_game_world
+	// main_menu_button_name_to_action[3] name_to_action_in_lobby_menu
+	// flash_value 						buttons_array
+	// flash_value 						button_member
+	// flash_value 						button
+	// wchar_t[512] 					button_txt
+	// ******
+
+	// FUNCTION BODY[0x706cc0]: 51
+	// <0>
+	// <1>
+	// <0x706cc9>|0x009|+0x0a7:'334'
+	// <0x706d70>|0x0b0|+0x0a4:'335'
+	// <0x706e14>|0x154|+0x0a4:'336'
+	// <0x706eb8>|0x1f8|+0x0a4:'337'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x706f5c>|0x29c|+0x098:'342'
+	// <0x706ff4>|0x334|+0x0a4:'343'
+	// <0x707098>|0x3d8|+0x0a2:'344'
+	// <0>
+	// <1>
+	// <2>
+	// <0x70713a>|0x47a|+0x027:'348'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x707161>|0x4a1|+0x009:'353'
+	// <0>
+	// <0x70716a>|0x4aa|+0x007:'355'
+	// <0x707171>|0x4b1|+0x002:'356'
+	// <0>
+	// <0x707173>|0x4b3|+0x002:'358'
+	// <0>
+	// <0x707175>|0x4b5|+0x004:'360'
+	// <0x707179>|0x4b9|+0x002:'361'
+	// <0>
+	// <1>
+	// <0x70717b>|0x4bb|+0x015:'364'
+	// <0>
+	// <1>
+	// <0x707190>|0x4d0|+0x021:'367'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7071b1>|0x4f1|+0x003:'371'
+	// <0x7071b4>|0x4f4|+0x03c:'372'
+	// <0>
+	// <1>
+	// <0x7071f0>|0x530|+0x017:'375'
+	// <0x707207>|0x547|+0x06e:'376'
+	// <0>
+	// <0x707275>|0x5b5|+0x02c:'378'
+	// <0>
+	// <0x7072a1>|0x5e1|+0x016:'380'
+	// <0x7072b7>|0x5f7|+0x05f:'381'
+	// <0x707316>|0x656|+0x01e:'382'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::fill_settings_data( )
+{
+	// LOCALS
+	// fixed_string< 64 >* 				controllers_options_labels
+	// fixed_string< 64 >* 				gameplay_options_labels
+	// fixed_string< 64 >* 				video_options_labels
+	// fixed_string< 64 >* 				sound_options_labels
+	// flash_value[2] 					options_args
+	// wchar_t[512] 					label_txt
+	// flash_value 						options_item_member
+	// flash_value 						options_item
+	// ******
+
+	// STATICS
+	// static < NoType > 				 = <0x706ca8>;
+	// ******
+
+	// CALL SITE INFO
+	// <0x706aee> -> void < unknown >( flash_value& )
+	// ******
+
+	// OTHER SYMBOLS
+	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f58a7 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN11") })
+	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f58af }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN10") })
+	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f58b7 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN9") })
+	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f58bf }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
+	// ******
+
+	// FUNCTION BODY[0x706310]: 107
+	// <0x706316>|0x006|+0x020:'387'
+	// <0x706336>|0x026|+0x01f:'388'
+	// <0x706355>|0x045|+0x01d:'389'
+	// <0x706372>|0x062|+0x023:'390'
+	// <0x706395>|0x085|+0x023:'391'
+	// <0x7063b8>|0x0a8|+0x023:'392'
+	// <0x7063db>|0x0cb|+0x023:'393'
+	// <0x7063fe>|0x0ee|+0x023:'394'
+	// <0x706421>|0x111|+0x023:'395'
+	// <0x706444>|0x134|+0x023:'396'
+	// <0>
+	// <0x706467>|0x157|+0x01d:'398'
+	// <0x706484>|0x174|+0x01f:'399'
+	// <0x7064a3>|0x193|+0x01d:'400'
+	// <0x7064c0>|0x1b0|+0x023:'401'
+	// <0x7064e3>|0x1d3|+0x023:'402'
+	// <0x706506>|0x1f6|+0x023:'403'
+	// <0x706529>|0x219|+0x023:'404'
+	// <0x70654c>|0x23c|+0x023:'405'
+	// <0x70656f>|0x25f|+0x023:'406'
+	// <0x706592>|0x282|+0x023:'407'
+	// <0x7065b5>|0x2a5|+0x023:'408'
+	// <0x7065d8>|0x2c8|+0x023:'409'
+	// <0x7065fb>|0x2eb|+0x023:'410'
+	// <0x70661e>|0x30e|+0x023:'411'
+	// <0x706641>|0x331|+0x023:'412'
+	// <0x706664>|0x354|+0x023:'413'
+	// <0x706687>|0x377|+0x023:'414'
+	// <0x7066aa>|0x39a|+0x023:'415'
+	// <0x7066cd>|0x3bd|+0x023:'416'
+	// <0x7066f0>|0x3e0|+0x023:'417'
+	// <0>
+	// <0x706713>|0x403|+0x01d:'419'
+	// <0x706730>|0x420|+0x01f:'420'
+	// <0x70674f>|0x43f|+0x01d:'421'
+	// <0x70676c>|0x45c|+0x023:'422'
+	// <0x70678f>|0x47f|+0x023:'423'
+	// <0x7067b2>|0x4a2|+0x023:'424'
+	// <0x7067d5>|0x4c5|+0x023:'425'
+	// <0x7067f8>|0x4e8|+0x023:'426'
+	// <0>
+	// <0x70681b>|0x50b|+0x01c:'428'
+	// <0x706837>|0x527|+0x01f:'429'
+	// <0x706856>|0x546|+0x01d:'430'
+	// <0>
+	// <1>
+	// <0x706873>|0x563|+0x01e:'433'
+	// <0>
+	// <1>
+	// <0x706891>|0x581|+0x016:'436'
+	// <0>
+	// <0x7068a7>|0x597|+0x008:'438'
+	// <0x7068af>|0x59f|+0x008:'439'
+	// <0x7068b7>|0x5a7|+0x008:'440'
+	// <0x7068bf>|0x5af|+0x006:'441'
+	// <0>
+	// <1>
+	// <0x7068c5>|0x5b5|+0x01d:'444'
+	// <0x7068e2>|0x5d2|+0x034:'445'
+	// <0>
+	// <1>
+	// <0x706916>|0x606|+0x032:'448'
+	// <0x706948>|0x638|+0x253:'449'
+	// <0x706b9b>|0x88b|-0x237:'449'
+	// <0>
+	// <1>
+	// <0x706964>|0x654|+0x023:'452'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x706987>|0x677|+0x023:'460'
+	// <0x7069aa>|0x69a|+0x06e:'461'
+	// <0>
+	// <0x706a18>|0x708|+0x02c:'463'
+	// <0>
+	// <0x706a44>|0x734|+0x00e:'465'
+	// <0>
+	// <0x706a52>|0x742|+0x005:'467'
+	// <0>
+	// <0x706a57>|0x747|+0x01c:'469'
+	// <0x706a73>|0x763|+0x02e:'470'
+	// <0>
+	// <0x706aa1>|0x791|+0x008:'472'
+	// <0x706aa9>|0x799|+0x016:'473'
+	// <0>
+	// <0x706abf>|0x7af|+0x002:'475'
+	// <0>
+	// <0x706ac1>|0x7b1|+0x005:'477'
+	// <0>
+	// <0x706ac6>|0x7b6|+0x01c:'479'
+	// <0x706ae2>|0x7d2|+0x00e:'480'
+	// <0x706af0>|0x7e0|+0x02e:'481'
+	// <0>
+	// <1>
+	// <2>
+	// <0x706b1e>|0x80e|+0x01c:'485'
+	// <0x706b3a>|0x82a|+0x06a:'486'
+	// <0>
+	// <0x706ba4>|0x894|+0x023:'488'
+	// <0x706bc7>|0x8b7|+0x045:'489'
+	// <0x706c0c>|0x8fc|+0x023:'490'
+	// <0x706c2f>|0x91f|+0x024:'491'
+	// <0x706c53>|0x943|+0x024:'492'
+	// <0x706c77>|0x967|+0x023:'493'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::activate( base_game_scene* parent_scene )
+{
+	// CALL SITE INFO
+	// <0x708b70> -> input::world& < unknown >()
+	// <0x708b7a> -> void < unknown >( input::handler& )
+	// ******
+
+	// FUNCTION BODY[0x708b40]: 11
+	// <0x708b40>|0x000|+0x00c:'498'
+	// <0>
+	// <1>
+	// <2>
+	// <0x708b4c>|0x00c|+0x00c:'502'
+	// <0x708b58>|0x018|+0x00c:'503'
+	// <0>
+	// <1>
+	// <0x708b64>|0x024|+0x018:'506'
+	// <0>
+	// <0x708b7c>|0x03c|+0x018:'508'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::deactivate( )
+{
+	// CALL SITE INFO
+	// <0x708b2f> -> input::world& < unknown >()
+	// <0x708b39> -> void < unknown >( input::handler& )
+	// ******
+
+	// FUNCTION BODY[0x708b00]: 8
+	// <0x708b00>|0x000|+0x006:'513'
+	// <0>
+	// <0x708b06>|0x006|+0x00b:'515'
+	// <0x708b11>|0x011|+0x00b:'516'
+	// <0>
+	// <1>
+	// <2>
+	// <0x708b1c>|0x01c|+0x01f:'520'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::tick( const u32 frame_delta, const u32 __formal, const bool __formal )
+{
+	// LOCALS
+	// float 							deltaTime
+	// ******
+
+	// FUNCTION BODY[0x705810]: 4
+	// <0x705811>|0x001|+0x010:'525'
+	// <0>
+	// <0x705821>|0x011|+0x024:'527'
+	// <0x705845>|0x035|+0x022:'528'
+	// ******
+}
+
+// STATE[STUB]
+bool game_options::process_key_input( s32 dik )
+{
+	// LOCALS
+	// key_binder& 						binder
+	// pcstr 							key_name
+	// flash_value 						message_txt
+	// wchar_t[512] 					w_text
+	// wchar_t[512] 					action_txt
+	// ******
+
+	return false;
+
+	// FUNCTION BODY[0x708840]: 64
+	// <0x708840>|0x000|+0x00f:'532'	{
+	// <0x70884f>|0x00f|+0x003:'533'
+	// <0x708852>|0x012|+0x006:'534'
+	// <0>
+	// <0x708858>|0x018|+0x00d:'536'
+	// <0>
+	// <0x708865>|0x025|+0x013:'538'
+	// <0>
+	// <0x708878>|0x038|+0x002:'540'
+	// <0x70887a>|0x03a|+0x006:'541'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x708880>|0x040|+0x027:'546'
+	// <0>
+	// <0x7088a7>|0x067|+0x011:'548'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7088b8>|0x078|+0x009:'552'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x7088c1>|0x081|+0x048:'558'
+	// <0x708909>|0x0c9|+0x037:'559'
+	// <0>
+	// <1>
+	// <2>
+	// <0x708940>|0x100|+0x00c:'563'
+	// <0>
+	// <0x70894c>|0x10c|+0x004:'565'
+	// <0x708950>|0x110|+0x003:'566'
+	// <0>
+	// <0x708953>|0x113|+0x04d:'568'
+	// <0x7089a0>|0x160|-0x043:'568'
+	// <0>
+	// <1>
+	// <2>
+	// <0x70895d>|0x11d|+0x01d:'572'
+	// <0x70897a>|0x13a|+0x014:'573'
+	// <0x70898e>|0x14e|+0x022:'574'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x7089b0>|0x170|+0x007:'579'
+	// <0x7089b7>|0x177|+0x024:'580'
+	// <0>
+	// <0x7089db>|0x19b|+0x017:'582'
+	// <0x7089f2>|0x1b2|+0x01a:'583'
+	// <0x708a0c>|0x1cc|+0x014:'584'
+	// <0x708a20>|0x1e0|+0x010:'585'
+	// <0x708a30>|0x1f0|+0x023:'586'
+	// <0>
+	// <1>
+	// <0x708a53>|0x213|+0x00d:'589'
+	// <0x708a60>|0x220|+0x020:'590'
+	// <0x708a80>|0x240|+0x028:'591'
+	// <0x708aa8>|0x268|+0x033:'592'
+	// <0>
+	// <1>
+	// <0x708adb>|0x29b|-0x009:'595'
+	// <0>
+	// <0x708ad2>|0x292|+0x017:'597'
+	// <0x708ae9>|0x2a9|      :'597'	}
+	// ******
+}
+
+// STATE[STUB]
+void game_options::assign_binding( game_action_id action_id, pcstr key )
+{
+	// LOCALS
+	// bool 							is_default
+	// flash_value[3] 					bind_value
+	// wchar_t[512] 					w_key_name_txt
+	// ******
+
+	// FUNCTION BODY[0x706110]: 27
+	// <0x70611b>|0x00b|+0x005:'601'
+	// <0x706120>|0x010|+0x002:'602'
+	// <0>
+	// <0x706122>|0x012|+0x00b:'604'
+	// <0>
+	// <0x70612d>|0x01d|+0x00b:'606'
+	// <0x706138>|0x028|+0x047:'607'
+	// <0x70617f>|0x06f|+0x002:'607'
+	// <0>
+	// <0x706181>|0x071|-0x018:'609'
+	// <0>
+	// <1>
+	// <0x706169>|0x059|+0x01d:'612'
+	// <0>
+	// <1>
+	// <2>
+	// <0x706186>|0x076|+0x023:'616'
+	// <0>
+	// <0x7061a9>|0x099|+0x029:'618'
+	// <0>
+	// <1>
+	// <0x7061d2>|0x0c2|+0x02c:'621'
+	// <0>
+	// <0x7061fe>|0x0ee|+0x06c:'623'
+	// <0x70626a>|0x15a|+0x02c:'624'
+	// <0>
+	// <0x706296>|0x186|+0x02b:'626'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void game_options::finish_binding( )
+{
+	// FUNCTION BODY[0x708800]: 3
+	// <0x708800>|0x000|+0x01d:'632'
+	// <0x70881d>|0x01d|+0x00c:'633'
+	// <0x708829>|0x029|+0x007:'634'
+	// ******
+}
+
+// STATE[STUB]
+bool game_options::on_keyboard_action(
+	input::world*					input_world,
+	input::enum_keyboard			key,
+	input::enum_keyboard_action		action
+)
+{
+	return false;
+
+	// FUNCTION BODY[0x708c60]: 10
+	// <0x708c60>|0x000|+0x000:'638'	{
+	// <0x708c60>|0x000|+0x012:'639'
+	// <0>
+	// <0x708c72>|0x012|+0x00c:'641'
+	// <0x708c7e>|0x01e|+0x002:'642'
+	// <0>
+	// <0x708c80>|0x020|+0x00b:'644'
+	// <0>
+	// <1>
+	// <0x708c8b>|0x02b|-0x006:'647'
+	// <0x708c85>|0x025|+0x039:'648'
+	// <0x708cbe>|0x05e|-0x036:'648'
+	// <0x708c88>|0x028|+0x039:'649'
+	// <0x708cc1>|0x061|      :'649'	}
+	// ******
+}
+
+// STATE[STUB]
+bool game_options::on_gamepad_action(
+	input::world*					input_world,
+	input::gamepad_button			button,
+	input::enum_gamepad_action		action
+)
+{
+	return false;
+
+	// FUNCTION BODY[0x7056f0]: 2
+	// <0>
+	// <0x7056f0>|0x000|+0x002:'654'
+	// ******
+}
+
+// STATE[STUB]
+bool game_options::on_mouse_key_action(
+	input::world*					input_world,
+	input::mouse_button				button,
+	input::enum_mouse_key_action	action
+)
+{
+	return false;
+
+	// FUNCTION BODY[0x708ba0]: 24
+	// <0x708ba0>|0x000|+0x00c:'658'	{
+	// <0>
+	// <1>
+	// <0x708bac>|0x00c|+0x00e:'661'
+	// <0>
+	// <0x708bba>|0x01a|+0x00b:'663'
+	// <0x708bc5>|0x025|+0x006:'664'
+	// <0>
+	// <0x708bcb>|0x02b|+0x01c:'666'
+	// <0x708be7>|0x047|+0x00c:'667'
+	// <0x708bf3>|0x053|+0x011:'668'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <0x708c04>|0x064|-0x00a:'679'
+	// <0>
+	// <1>
+	// <0x708bfa>|0x05a|+0x002:'682'
+	// <0x708bfc>|0x05c|+0x054:'683'
+	// <0x708c50>|0x0b0|      :'683'	}
+	// ******
+}
+
+// STATE[STUB]
+bool game_options::on_mouse_move(
+	input::world*		input_world,
+	s32					x,
+	s32					y,
+	s32					z
+)
+{
+	return false;
+
+	// FUNCTION BODY[0x7084e0]: 27
+	// <0>
+	// <1>
+	// <0x7084e3>|0x003|+0x004:'689'
+	// <0x7084e7>|0x007|+0x006:'690'
+	// <0>
+	// <0x7084ed>|0x00d|+0x007:'692'
+	// <0x7084f4>|0x014|+0x004:'693'
+	// <0>
+	// <0x7084f8>|0x018|+0x00b:'695'
+	// <0>
+	// <0x708503>|0x023|+0x016:'697'
+	// <0x708519>|0x039|+0x014:'698'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x70852d>|0x04d|+0x03b:'706'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x708568>|0x088|+0x02f:'712'
+	// <0x708597>|0x0b7|+0x003:'713'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::refill_item_data( u8 options_tab_id, u8 options_item_id )
+{
+	// LOCALS
+	// flash_value[3] 					options_item_data
+	// ******
+
+	// CALL SITE INFO
+	// <0x7057b1> -> void < unknown >( flash_value& )
+	// ******
+
+	// FUNCTION BODY[0x705700]: 8
+	// <0>
+	// <0x705708>|0x008|+0x01c:'724'
+	// <0x705724>|0x024|+0x024:'725'
+	// <0x705748>|0x048|+0x035:'726'
+	// <0x70577d>|0x07d|+0x022:'727'
+	// <0x70579f>|0x09f|+0x014:'728'
+	// <0>
+	// <0x7057b3>|0x0b3|+0x01e:'730'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::initialize_bindings( )
+{
+	// LOCALS
+	// flash_value 						keybinds_value_prop
+	// flash_value 						keybinds_array
+	// wchar_t[512] 					label_txt
+	// flash_value 						keybinds_value
+	// ******
+
+	// FUNCTION BODY[0x705e00]: 35
+	// <0x705e50>|0x050|-0x041:'735'
+	// <0>
+	// <0x705e0f>|0x00f|+0x022:'737'
+	// <0>
+	// <0x705e31>|0x031|+0x021:'739'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x705e52>|0x052|+0x021:'747'
+	// <0>
+	// <0x705e73>|0x073|+0x02b:'749'
+	// <0x705e9e>|0x09e|+0x036:'750'
+	// <0>
+	// <0x705ed4>|0x0d4|+0x02c:'752'
+	// <0x705f00>|0x100|+0x036:'753'
+	// <0>
+	// <0x705f36>|0x136|+0x02b:'755'
+	// <0x705f61>|0x161|+0x036:'756'
+	// <0>
+	// <1>
+	// <0x705f97>|0x197|+0x015:'759'
+	// <0>
+	// <0x705fac>|0x1ac|+0x06c:'761'
+	// <0x706018>|0x218|+0x02c:'762'
+	// <0>
+	// <0x706044>|0x244|+0x015:'764'
+	// <0x706059>|0x259|+0x02f:'765'
+	// <0>
+	// <0x706088>|0x288|+0x020:'767'
+	// <0>
+	// <0x7060a8>|0x2a8|+0x008:'769'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::reset_bindings( bool is_default )
+{
+	// LOCALS
+	// flash_value[3] 					bind_value
+	// pcstr 							key_name
+	// wchar_t[512] 					w_key_name_txt
+	// ******
+
+	// FUNCTION BODY[0x705be0]: 30
+	// <0x705bee>|0x00e|+0x019:'774'
+	// <0x705c07>|0x027|-0x012:'774'
+	// <0>
+	// <0x705bf5>|0x015|+0x014:'776'
+	// <0>
+	// <1>
+	// <2>
+	// <0x705c09>|0x029|+0x0ea:'780'
+	// <0x705cf3>|0x113|-0x08c:'780'
+	// <0>
+	// <0x705c67>|0x087|+0x01a:'782'
+	// <0>
+	// <0x705c81>|0x0a1|+0x030:'784'
+	// <0>
+	// <0x705cb1>|0x0d1|+0x004:'786'
+	// <0>
+	// <0x705cb5>|0x0d5|+0x015:'788'
+	// <0x705cca>|0x0ea|+0x00d:'789'
+	// <0x705cd7>|0x0f7|+0x01a:'790'
+	// <0>
+	// <0x705cf1>|0x111|+0x021:'792'
+	// <0>
+	// <0x705d12>|0x132|+0x01a:'794'
+	// <0x705d2c>|0x14c|+0x00e:'795'
+	// <0>
+	// <1>
+	// <0x705d3a>|0x15a|+0x02a:'798'
+	// <0>
+	// <0x705d64>|0x184|+0x024:'800'
+	// <0>
+	// <0x705d88>|0x1a8|+0x024:'802'
+	// <0x705dac>|0x1cc|+0x03f:'803'
+	// ******
+}
+
+// STATE[STUB]
+void game_options::apply_key_bindings( )
+{
+	// LOCALS
+	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
+	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
+	// ******
+
+	// CALL SITE INFO
+	// <0x705bb3> -> void < unknown >( pcstr )
+	// ******
+
+	// FUNCTION BODY[0x705a50]: 25
+	// <0>
+	// <1>
+	// <0x705a58>|0x008|+0x010:'810'
+	// <0>
+	// <1>
+	// <0x705a68>|0x018|+0x039:'813'
+	// <0>
+	// <0x705aa1>|0x051|+0x00e:'815'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x705aaf>|0x05f|+0x03a:'820'
+	// <0>
+	// <0x705ae9>|0x099|+0x00c:'822'
+	// <0x705af5>|0x0a5|+0x068:'823'
+	// <0>
+	// <0x705b5d>|0x10d|+0x002:'825'
+	// <0>
+	// <0x705b5f>|0x10f|+0x00a:'827'
+	// <0x705b69>|0x119|+0x042:'828'
+	// <0>
+	// <0x705bab>|0x15b|+0x01d:'830'
+	// <0>
+	// <1>
+	// ******
+}
+
+// STATE[STUB]
+void game_options::reset_bindings_to_defaults( )
+{
+	// FUNCTION BODY[0x7083a0]: 2
+	// <0x7083a0>|0x000|+0x00c:'837'
+	// <0x7083ac>|0x00c|+0x008:'838'
+	// ******
+}
+
+	// TYPEDEFS
+	// typedef
+	// 	survarium::base_project::resolve_link_object*
+	// 	iterator_type;
+
+	// typedef
+	// 	survarium::game_action_id*
+	// 	iterator_type;
+
+	// typedef
+	// 	survarium::scheduler::record*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::collision::bone_collision_data const*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::collision::bone_collision_data*
+	// 	iterator_type;
+
+	// ******
+
+} // namespace survarium
