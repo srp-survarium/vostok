@@ -477,11 +477,14 @@ not a `_N` variant.)
 These queue headers are TU-local types (no own compiland); they are reproduced
 INSIDE their owner `.cpp` when that file's batch runs, not as standalone headers:
 
-- `console_command_bind.h` -> key_binder.cpp (batch 5)
+- `console_command_bind.h` -> key_binder.cpp (batch 5 - DONE: defined in the
+  .cpp; key_binder.h needs no member of it, only the ctor's statics do)
 - `dik_to_swf_bind.h` -> swf_input_translator.cpp (batch 4) - CORRECTED in
   batch 4: must live in swf_input_translator.h (the map member instantiates
   pair< enum_keyboard, dik_to_swf_bind > at class completion - C2079 otherwise)
-- `relocate_item_func.h` -> lobby_menu_ui.cpp (batch 5)
+- `relocate_item_func.h` -> lobby_menu_ui.cpp (batch 5 - DONE: defined in the
+  .cpp; lobby_menu holds only a relocate_item_func* - a fwd-decl suffices in
+  lobby_menu.h, no header placement forced)
 - `hit_object.h` -> human_npc.cpp (batch 6)
 - `max_angular_velocity_command.h` -> game.cpp (batch 11)
 - `ray_query_predicate.h` -> game.cpp / game_unused.cpp (legacy prior; batch 11)
