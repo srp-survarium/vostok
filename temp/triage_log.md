@@ -502,3 +502,14 @@ INSIDE their owner `.cpp` when that file's batch runs, not as standalone headers
   erase_null_ptrs, erase_old_receivers, find_closest_collision_predicate,
   remove_left_receivers_predicate, remove_vertex_from_hit_parameters_predicate,
   test_objects_in_shape_predicate
+
+## Pass 5: the vostok/scaleform module gap (2026-06-12)
+
+Cross-checking every rich-index compiland against the structure tree found
+exactly ONE missing module: `vostok/scaleform/sources/` (10 .cpp + 4 .h with
+addressed code, ~275 fns) - the structure generator emitted no carcass for it
+(parser gap, see docs/binary_matching/unanswered_questions.md). Work-items
+fabricated from the rich index in `temp/structure_queue/sources_scaleform/`
+(batch 12). This also corrects the earlier "flash types have no addressed
+code" claim in the game README - flash_movie/flash_value bodies are
+OUT-OF-LINE in movie.cpp/value.cpp.

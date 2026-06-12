@@ -52,10 +52,15 @@ complete.
   s_ai_allocator, s_game_allocator, s_game, s_generate_shaders,
   s_generate_shaders_world` (lines 46-55); the last three wait on `game.h` /
   `game_generate_shaders.h`, so the file stays in the queue until they land.
-- **`flash_*` types have NO addressed code anywhere in the target** (all-inline,
-  inlined away at every use site) - their header placement under
-  `game/sources/` is our convention (kept from legacy; render facade includes
-  it), unverifiable from the PDB.
+- **The flash/scaleform code belongs to an original `vostok/scaleform` module
+  that the structure generator never emitted** (the ONLY compiland gap in the
+  whole tree - see `temp/structure_queue/sources_scaleform/`, 14 files / ~275
+  addressed fns from the rich index, incl. out-of-line `flash_movie`/`flash_value`
+  bodies in `movie.cpp`/`value.cpp` and the Scaleform D3D11 HAL `d3d1x_*` pair
+  files). The flash/scaleform headers parked under `game/sources/` (batches
+  sc+4) move into a real `sources/vostok/scaleform/` module when that batch
+  runs; their `{ /* no source */ }` inline stubs become declarations + .cpp
+  definitions there.
 - `survarium::collision_object_types` at the module root (`collision_object_types.h`)
   is a keeper infra enum shared with the editor.
 

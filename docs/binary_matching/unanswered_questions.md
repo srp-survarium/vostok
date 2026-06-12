@@ -65,3 +65,13 @@ and our base PDB, checked at the raw CodeView-kind level with 0 parse errors. Th
 debug info only appears in later toolchains. So clusters cannot be derived from the
 PDB; infer inlining reactively from the diff (a missing/extra `call` plus a large
 statement-offset delta), per section 5.
+
+## Why does generate_structure skip vostok/scaleform?
+
+The shipped PDB has 10 `vostok/scaleform/sources/*.cpp` compilands (+4 headers
+with addressed inlines) - the rich index sees all ~275 functions - but
+`binaries/structure/target/sources/` contains no `vostok/scaleform/` dir at
+all; every other of the 1,187 compilands is emitted. Found 2026-06-12 during
+the game carcass rebuild (the flash/scaleform types were initially mistaken
+for all-inlined because of this). Parser-side question: an exclusion list, a
+path-classification bug, or something about that lib's debug info?
