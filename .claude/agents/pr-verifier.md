@@ -115,16 +115,16 @@ Agent(subagent_type="structure-verifier",
               binaries/ is built locally here. Push any flag commit to origin/<this-head>.")
 ```
 It compares target vs base structure, flags QUANTITY/SIZE divergence, records the
-verdict (commit message + the function's `status.jsonl` cause), and (if structure is
-wrong) downgrades the `status.jsonl` entry + pushes one commit on `<this-head>`.
-Collect each one-line verdict. If a dispatch is impossible, run the verification
-inline per its definition.
+verdict (commit message + its result line; the match DB re-derives structure on
+refresh), and (if structure is wrong) pushes its fix attempt as one commit on
+`<this-head>`. Collect each one-line verdict. If a dispatch is impossible, run the
+verification inline per its definition.
 
 ## 8. Hand the PR back - then LOOP (wait for the merge, advance)
 Report the prepared+verified PR (format below). Then:
 - **If the structure-verifier flagged a MISMATCH** on any of the PR's functions
-  (bytes may match but structure is wrong - QUANTITY or SIZE): the flag commit
-  (the `status.jsonl` downgrade + its fix attempt) is already pushed on the PR branch.
+  (bytes may match but structure is wrong - QUANTITY or SIZE): its fix-attempt
+  commit is already pushed on the PR branch.
   **STOP the loop.** Surface this PR to the human for a decision (correct the
   structure via a matcher, or accept and merge anyway). Do NOT advance.
 - **If everything is clean** (structure MATCH, no unresolved conflict, no rebuild

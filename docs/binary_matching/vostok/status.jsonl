@@ -1,4 +1,0 @@
-{"symbol": "vostok::intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push", "va": null, "status": "INLINED", "pct": null, "cause": null, "file": "sources/vostok/intrusive_mpmc_stack_inline.h", "line": 23}
-{"symbol": "vostok::intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::try_pop", "va": null, "status": "UNCHECKED", "pct": null, "cause": null, "file": "sources/vostok/intrusive_mpmc_stack_inline.h", "line": 42}
-{"symbol": "vostok::math::get_relative_matrix", "va": 831568, "status": "DONE", "pct": 100, "cause": null, "file": "sources/vostok/math_float4x4_inline.h", "line": 409}
-{"symbol": "vostok::math::max", "va": null, "status": "UNCHECKED", "pct": null, "cause": "sushi@NOTE: Why not use templated function instead.", "file": "sources/vostok/math_functions_inline.h", "line": 128}
