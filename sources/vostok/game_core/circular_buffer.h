@@ -7,8 +7,11 @@
 
 namespace survarium {
 
+// claude@MATCH(game batch 6): was `class circular_buffer<T>` - pdb-parser printed
+// the monomorphised name; invalid as the primary-template declaration (C2988).
+// First real includer is game/sources/player.h (m_history member).
 template < typename T >
-class circular_buffer<T> : public boost::noncopyable {
+class circular_buffer : public boost::noncopyable {
 public:
 	typedef T			value_type;
 	typedef value_type*	pointer_type;
