@@ -288,7 +288,13 @@ Queue headers removed because the type already lives in sources/vostok/game_core
   members m_output_*+HAL+R2D, impl TU vostok/scaleform/sources/renderer.cpp per
   the rich index) vs the legacy vostok::render::flash_renderer (default ctor,
   m_movies vector, no canonical dump exists for it). Reproduced in game.
-- `render_visual.h`
+- `render_visual.h` - RESOLVED (batch 7): name collision confirmed, NOT coverage.
+  survarium::render_visual is a 0x44 POD-ish struct {float4x4 matrix;
+  static_model_instance_ptr model} with insert/remove(base_game_scene&) bodies
+  in the game_project.cpp compiland (still queued; lands with batch 9's
+  simple_game_project) vs
+  vostok::render::render_visual : public render::visual (render/engine/visual.h).
+  Reproduced in game.
 - `scaleform_engine__xrSysAllocMalloc.h` - RESOLVED (batch 4): survarium::
   scaleform_engine is a NAMESPACE (initialize/destroy are YA-mangled free fns);
   xrSysAllocMalloc + both fns live in vostok/scaleform/sources/factory.cpp - a
