@@ -13,17 +13,12 @@ victory_items_container_core::victory_items_container_core( ) :
 	m_victory_items		( g_allocator ),
 	m_owner_team		( team_undefined )
 {
-	// FUNCTION BODY
-	// <0x59dee0>|0x000|+0x06f:'21'	{
-	// <0>
-	// <0x59df4f>|0x06f|      :'23'	}
-	// ******
 }
 
 void victory_items_container_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
-	m_owner_team	= (game_team_id)(u32)cfg["team"];
+	m_owner_team	= (game_team_id)(u8)cfg["team"];
 	m_container_id	= (u8)cfg["id"];
 }
 
@@ -43,8 +38,8 @@ pcstr victory_items_container_core::use_info( usable_object_user_data* __formal 
 
 bool victory_items_container_core::use_execute( usable_object_user_data* user )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
-	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION_T( user ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( user->owner ) );
 
 	return true;
 }
