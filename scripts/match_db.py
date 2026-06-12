@@ -358,12 +358,42 @@ def cmd_refresh(args):
         log("no declarations.jsonl - declared_functions left empty (parser dump pending)")
 
     # carry persistent tables forward from the existing DB
-    old_history, old_flags = [], []
+    old_history, old_flags = {}, []
     if DB_PATH.is_file():
         old = open_db()
-        old_history = [tuple(r) for r in old.execute("SELECT * FROM history ORDER BY mangled")]
+        old_history = {r["mangled"]: tuple(r) for r in old.execute("SELECT * FROM history")}
         old_flags = [tuple(r) for r in old.execute("SELECT * FROM flags ORDER BY mangled, flag")]
         old.close()
+
+    # reconcile history: upsert every CURRENT pairing; reset rows whose source
+    # extent changed ("touched" - requirement: the seen-flag dies on any edit)
+    paired_at = file_mtime_iso(BASE_IDX)  # artifact time, not wall clock (determinism)
+    sym_by_id = {}
+    for mangled, i in sym_id.items():
+        sym_by_id[i] = mangled
+    touched = dropped = 0
+    paired_mangled = set(target) & set(base)
+    for row in pair_rows:
+        mangled = sym_by_id[row[0]]
+        fuzzy, cls = row[3], row[4]
+        fp = src_fingerprint(base[mangled])
+        prev = old_history.get(mangled)
+        best = fuzzy
+        if prev is not None and prev[5] == fp and prev[2] is not None:
+            best = prev[2] if fuzzy is None else max(prev[2], fuzzy)
+        elif prev is not None and prev[5] != fp:
+            touched += 1  # source edited: history restarts at the current state
+        old_history[mangled] = (mangled, paired_at, best, fuzzy, cls, fp)
+    # rows for functions that are NOT currently paired: keep only while their
+    # source extent is unchanged - a touched-then-vanished function re-queues
+    for mangled in list(old_history):
+        if mangled in base and mangled not in paired_mangled:
+            if old_history[mangled][5] != src_fingerprint(base[mangled]):
+                del old_history[mangled]
+                dropped += 1
+    history_rows = sorted(old_history.values())
+    if touched or dropped:
+        log(f"history: {touched} touched (reset), {dropped} touched-and-vanished (re-queued)")
 
     # build fresh in a temp file, then atomically replace (deterministic bytes)
     tmp = DB_PATH.with_suffix(".db.tmp")
@@ -384,7 +414,7 @@ def cmd_refresh(args):
     con.executemany("INSERT INTO unit_functions VALUES (?,?,?)", unit_rows)
     con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?)", pair_rows)
     con.executemany("INSERT INTO declared_functions VALUES (?,?,?,?,?,?,?,?)", decl_rows)
-    con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", old_history)
+    con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", history_rows)
     con.executemany("INSERT INTO flags VALUES (?,?,?,?)", old_flags)
     # deterministic meta only (artifact mtimes, not wall clock)
     con.executemany(
@@ -505,8 +535,19 @@ def cmd_report(args):
         where=("WHERE module = ?" if args.module else ""),
     )
     bonly = {r["scope"]: r["base_only"] for r in con.execute(bq, params)}
+    # out_of_scope: target-only functions whose history row survived (paired
+    # once, vanished without a source touch)
+    oq = """
+      SELECT coalesce({col}, '(no unit)') AS scope, count(*) AS n FROM target_only
+      WHERE mangled IN (SELECT mangled FROM history) {extra} GROUP BY scope
+    """.format(
+        col="unit" if args.per_unit else "module",
+        extra=("AND module = ?" if args.module else ""),
+    )
+    oos = {r["scope"]: r["n"] for r in con.execute(oq, params)}
     for r in rows:
         r["base_only"] = bonly.get(r["scope"], 0)
+        r["out_of_scope"] = oos.get(r["scope"], 0)
     emit(rows, args.json)
 
 
@@ -527,8 +568,15 @@ def cmd_queue(args):
         JOIN symbols s ON s.id = t.sym
         LEFT JOIN units u ON u.id = t.unit
         LEFT JOIN pairs p ON p.sym = t.sym
+        LEFT JOIN history h ON h.mangled = s.mangled
         WHERE NOT (p.fuzzy_pct >= 100 AND p.struct_class = 'MATCH')
-          AND s.mangled NOT IN (SELECT mangled FROM flags)
+          AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag != 'REQUEUE')
+          -- seen-before, vanished without a source touch: external inline/link
+          -- decision, out of scope (design: history does the classifying)
+          AND NOT (p.sym IS NULL AND h.mangled IS NOT NULL)
+          -- matched at 100 before and untouched since: a later regression is
+          -- outside this function (LTCG non-steerable) - skip
+          AND NOT (h.best_fuzzy_pct >= 100 AND coalesce(p.fuzzy_pct, 0) < 100)
       )
       SELECT * FROM cand WHERE {" AND ".join(where)}
       ORDER BY unit, size
@@ -578,6 +626,60 @@ def cmd_sql(args):
     emit(rows, args.json)
 
 
+def cmd_flag(args):
+    import datetime
+
+    con = open_db()
+    today = datetime.date.today().isoformat()
+    if args.requeue:
+        # manual override of the history-derived out-of-scope/matched-before
+        # skip: forget the function's history + flags so queues offer it again
+        n = con.execute("DELETE FROM history WHERE mangled = ?", (args.mangled,)).rowcount
+        m = con.execute("DELETE FROM flags WHERE mangled = ?", (args.mangled,)).rowcount
+        log(f"requeued {args.mangled}: dropped {n} history row(s), {m} flag(s)")
+    else:
+        if not args.cause:
+            sys.exit("[match_db] --cause is required when setting a flag")
+        con.execute(
+            "INSERT OR REPLACE INTO flags VALUES (?,?,?,?)",
+            (args.mangled, args.flag, args.cause, today),
+        )
+        log(f"flagged {args.mangled} {args.flag}")
+    con.commit()
+
+
+def cmd_merge_flags(args):
+    con = open_db()
+    other = sqlite3.connect(f"file:{args.other}?mode=ro", uri=True)
+    other.row_factory = sqlite3.Row
+    nf = nh = 0
+    for r in other.execute("SELECT * FROM flags"):
+        nf += con.execute(
+            "INSERT OR IGNORE INTO flags VALUES (?,?,?,?)",
+            (r["mangled"], r["flag"], r["cause"], r["set_at"]),
+        ).rowcount
+    for r in other.execute("SELECT * FROM history"):
+        cur = con.execute(
+            "SELECT last_paired_at, best_fuzzy_pct FROM history WHERE mangled = ?",
+            (r["mangled"],),
+        ).fetchone()
+        newer = cur is None or (r["last_paired_at"] or "") > (cur["last_paired_at"] or "")
+        if newer:
+            con.execute(
+                "INSERT OR REPLACE INTO history VALUES (?,?,?,?,?,?)",
+                tuple(r),
+            )
+            nh += 1
+        elif cur and r["best_fuzzy_pct"] and (cur["best_fuzzy_pct"] or 0) < r["best_fuzzy_pct"]:
+            con.execute(
+                "UPDATE history SET best_fuzzy_pct = ? WHERE mangled = ?",
+                (r["best_fuzzy_pct"], r["mangled"]),
+            )
+            nh += 1
+    con.commit()
+    log(f"merged from {args.other}: {nf} flags, {nh} history rows")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -612,6 +714,20 @@ def main():
     p.add_argument("query")
     p.add_argument("--json", action="store_true")
 
+    p = sub.add_parser("flag", help="manual override: set a flag or requeue")
+    p.add_argument("mangled")
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--flag", choices=["OUT_OF_SCOPE", "SKIP"])
+    g.add_argument(
+        "--requeue",
+        action="store_true",
+        help="forget history+flags so queues offer the function again",
+    )
+    p.add_argument("--cause")
+
+    p = sub.add_parser("merge-flags", help="union persistent tables from another match.db")
+    p.add_argument("other")
+
     args = ap.parse_args()
     {
         "refresh": cmd_refresh,
@@ -619,6 +735,8 @@ def main():
         "report": cmd_report,
         "queue": cmd_queue,
         "sql": cmd_sql,
+        "flag": cmd_flag,
+        "merge-flags": cmd_merge_flags,
     }[args.cmd](args)
 
 
