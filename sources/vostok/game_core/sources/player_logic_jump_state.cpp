@@ -49,10 +49,6 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	// pair-returning override compilable (C4716) until jump_logic::selected_animations
 	// is matched.
 	VOSTOK_UNREACHABLE_CODE( );
-
-	// FUNCTION BODY
-	// <0x6f9427>|0x007|+0x01f:'58'	return m_logic.selected_animations( buffer, weapon_parameters, is_third_view );
-	// ******
 }
 
 void player_logic_jump_state::set_user( base_player& user )

@@ -47,7 +47,6 @@ void path_parts::concat2buffer( format_string_type& buffer )
 		memory::copy( &buffer[string_length], 512 - string_length, m_parts[i], part_length + 1 );
 		string_length += part_length;
 	}
-																									// <1>
 	if ( string_length && buffer[string_length - 1] == ':' )
 		buffer[string_length - 1] = '\0';
 }

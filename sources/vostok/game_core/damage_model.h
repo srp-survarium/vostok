@@ -56,7 +56,7 @@ public:
 							m_reduce	( reduce ),
 							m_absorb	( absorb )
 	{
-		reduce_damage_functor = boost::bind( &booster_damage_protector::reduce_damage, this, _1, _2, _3, _4 );	// <0xbb247>|0x047|+0x0ac:'56'
+		reduce_damage_functor = boost::bind( &booster_damage_protector::reduce_damage, this, _1, _2, _3, _4 );
 		strings::copy( (pstr)&m_hit_type, 16, damage_type ); // sushi@TODO: damage_type can be less then 16, is this safe?
 	}
 
