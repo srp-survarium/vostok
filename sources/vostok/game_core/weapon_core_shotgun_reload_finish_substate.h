@@ -19,7 +19,7 @@ public:
 						);
 
 public:
-	inline	void		set_owner_ready_for_transition	( bool* arg_0 ) { /* no source */ }
+	inline	void		set_owner_ready_for_transition	( bool* arg_0 ) { m_owner_ready_for_transition = arg_0; }
 
 protected:
 	virtual	void		initialize						( ) override;

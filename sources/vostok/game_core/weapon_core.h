@@ -39,6 +39,7 @@ namespace ai {
 	// get_body_part_mask_for_user (target mangles them AAE/ABE).
 	void use_game_core_weapon_core_small_setters( );
 	void use_game_core_weapon_core_ik_callbacks( );
+	void use_game_core_weapon_core_base_state( );
 }
 
 namespace survarium {
@@ -48,6 +49,7 @@ struct hit_receiver;
 struct base_player;
 class bullet_manager;
 struct weapon_ammo_info;
+class weapon_core_cook;
 
 
 class weapon_core : public inventory_item {
@@ -176,6 +178,9 @@ public:
 
 			profile_slot_enum					ammo_slot						( ) { return m_ammo_slot; }					// STATE[STUB]
 
+	inline	void								set_double_handed				( bool val ) { m_is_double_handed = val; }
+	inline	void								set_chamber_a_round_on_reload	( bool val ) { m_chamber_a_round_on_reload = val; }
+
 	inline	void								set_weapon_fire_queue_types		( pbyte arg_0, u8 arg_1 ) { /* no source */ }
 
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
@@ -198,6 +203,7 @@ public:
 
 	inline	bool								is_third_view					( ) const { /* no source */ }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
+	inline	bool&								get_is_shown_ref				( ) { return m_is_shown; }
 			bool								round_is_chambered				( ) const;	// STATE[STUB] target keeps this out-of-line (called, not inlined, from reload_state_base::initialize @0x09b360)
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
@@ -350,9 +356,14 @@ private:
 													weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
 												);
 
+	friend class survarium::weapon_core_cook;
 	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
 	friend void ::vostok::use_game_core_weapon_core_small_setters( );
 	friend void ::vostok::use_game_core_weapon_core_ik_callbacks( );
+	friend void ::vostok::use_game_core_weapon_core_base_state( );
+	// claude@MATCH: target reads m_is_round_chambered + m_ammo_in_magazine directly from
+	// the weapon_core& m_weapon member; friend access needed for direct member reads.
+	friend class weapon_core_shotgun_reload_state;
 
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:

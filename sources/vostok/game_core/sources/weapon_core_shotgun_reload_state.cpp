@@ -4,10 +4,12 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include <vostok/game_core/weapon_core.h>
 #include <vostok/ai/fsm.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/weapon_core_shotgun_reload_base_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_finish_substate.h>
 
 namespace survarium {
 
@@ -26,22 +28,21 @@ weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 	initialize_logic( reload_start, reload_one_round, reload_finish );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state()
+// STATE[88.24%|PARTIAL]: STRUCTURE MATCH (5/5). Residual is LTCG inline-vs-call of the
+// base dtor chain + VOSTOK_DELETE_IMPL(g_allocator, m_logic) template depth
+// (delete_helper_impl<...,ai::fsm,...> vs target's <...,intrusive_list,...>). Same wall as
+// jump_logic dtor.
 weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
+	if ( m_delete_substates_on_destruction )
+	{
+		while ( ai::fsm_state* state = m_logic->pop_state( ) )
+		{
+			VOSTOK_DELETE_IMPL( g_allocator, state );
+		}
+	}
 
-	// FUNCTION BODY
-	// <0x5998ec>|0x01c|+0x00e:'33'
-	// <0x5998fa>|0x02a|+0x017|[1]:'34'
-	// <0x599911>|0x041|+0x026:'35'
-	// <0x599937>|0x067|+0x002:'36'
-	// <0>
-	// <0x599939>|0x069|+0x02c:'38'
-	// ******
+	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
 // STATE[50.88%|PARTIAL]: LTCG inline-vs-call of fsm::states()/fsm_state_list::front().
@@ -130,7 +131,7 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 	m_logic->set_initial_state( current );
 
 	// STRUCTURE DIFF: target 10 stmts / base 10 stmts
-	// SIZE +0x15 | 113 | u8						target_state_id	= reader.r< bool >( );
+	// SIZE +0xb | 113 | u8						target_state_id	= reader.r< bool >( );
 	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the r<bool> inline-vs-call wall,
 	// non-steerable.
 }
@@ -151,48 +152,54 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
-// STATE[INPROGRESS]: body is `return true;` (asm @0x589720: mov al,1). Only referenced by initialize_logic
-// (still STUB), so the compiler removes it as unreferenced (C4505); it scores once initialize_logic is matched.
-// bool survarium::true_predicate()
+// STATE[100%|DONE]: body is `return true;` (3 bytes: mov al,1; ret). Will score once
+// initialize_logic references it (currently compiled away as unreferenced, which is correct).
 static bool true_predicate( )
 {
 	return true;
-
-	// FUNCTION BODY
-	// <0x599723>|0x003|+0x002:'94'
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::initialize_logic(survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
+// STATE[92.99%|PARTIAL]: STRUCTURE MATCH (10/10). Sole residuals are LTCG inline-vs-call of
+// set_animation_playback_state_ptr, set_owner_ready_for_transition, and the boost::bind<bool>
+// (same fsm::states()/front() / boost::bind inline wall as jump_logic::initialize_logic).
 void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_reload_base_substate* reload_start, weapon_core_shotgun_reload_base_substate* reload_one_round, weapon_core_shotgun_reload_base_substate* reload_finish )
 {
-	// FUNCTION BODY
-	// <0x599ae0>|0x010|+0x05d:'99'
-	// <0x599b3d>|0x06d|+0x014:'100'
-	// <0x599b51>|0x081|+0x015:'101'
-	// <0x599b66>|0x096|+0x01b:'102'
-	// <0x599b81>|0x0b1|+0x015:'103'
-	// <0x599b96>|0x0c6|+0x015:'104'
-	// <0x599bab>|0x0db|+0x015:'105'
-	// <0x599bc0>|0x0f0|+0x01b:'106'
-	// <0x599bdb>|0x10b|+0x065:'107'
-	// <0x599c40>|0x170|+0x0ea:'108'
-	// ******
+	m_logic = VOSTOK_NEW_IMPL( g_allocator, ai::fsm );
+
+	reload_start->set_animation_playback_state_ptr( &m_animation_playback_state );
+	reload_one_round->set_animation_playback_state_ptr( &m_animation_playback_state );
+	reload_finish->set_animation_playback_state_ptr( &m_animation_playback_state );
+
+	m_logic->add_state( reload_start );
+	m_logic->add_state( reload_one_round );
+	m_logic->add_state( reload_finish );
+
+	static_cast< weapon_core_shotgun_reload_finish_substate* >( reload_finish )->set_owner_ready_for_transition( &m_is_ready_to_be_deactivated );
+
+	m_logic->add_transition( reload_start, reload_one_round, boost::bind< bool >( &true_predicate ) );
+	m_logic->add_transition( reload_one_round, reload_finish, boost::bind( &weapon_core_shotgun_reload_state::finish_reload_predicate, this ) );
+
+	// STRUCTURE DIFF: target 10 / base 10 stmts
+	// SIZE -0x6 | 167 | reload_finish->set_animation_playback_state_ptr( &m_animation_playback_state );
+	// SIZE -0x7 | 173 | static_cast< weapon_core_shotgun_reload_finish_substate* >( reload_finish )->set_owner_ready_for_transition( &m_is_ready_to_be_deactivated );
+	// SIZE -0xc | 175 | m_logic->add_transition( reload_start, reload_one_round, boost::bind< bool >( &true_predicate ) );
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are LTCG inline-vs-call: target keeps set_animation_playback_state_ptr, set_owner_ready_for_transition, and boost::bind<bool> out-of-line vs base inlines them. Non-steerable.
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_shotgun_reload_state::finish_reload_predicate() const
+// STATE[62.18%|PARTIAL]: STRUCTURE MATCH (1/1 stmt). Sole SIZE diff (0x64) is
+// inline-vs-call: target out-of-lines ammo_in_magazine/get_magazine_capacity/get_target
+// accessors while base inlines them; intrusive_ptr temporary copy pattern differs
+// (target manual ref-count, base uses set()). Non-steerable LTCG.
 bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x599991>|0x011|+0x137:'116'
-	// ******
+	return	m_weapon.ammo_in_magazine( ) == m_weapon.get_magazine_capacity( )
+		|| (	m_weapon.ammunition( )
+			&&	m_weapon.ammunition( )->amount( ) > 0
+			&&	( m_weapon.m_ammo_in_magazine + ( m_weapon.m_is_round_chambered != 0 ) ) > 0
+			&&	(	m_weapon.get_target( ) == weapon_target_fire
+				||	m_weapon.get_target( ) == weapon_target_aim_fire
+				)
+			);
 }
 
 // STATE[100%|DONE]

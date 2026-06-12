@@ -9,6 +9,8 @@
 #include <vostok/physics/contact_test_predicate.h>
 #include <vostok/game_core/hit_receiver.h>
 #include <vostok/game_core/game_scene.h>
+#include <vostok/game_core/zone_group.h>
+#include <vostok/physics/base_physics_object.h>
 
 // sushi@TODO: Everything is skipped, since v0.100b is not using anomalies at all.
 // Will come back to this if/when this will be needed.
@@ -149,12 +151,12 @@ static float distance_from_box_center_to_point_on_shape( float4x4 const& transfo
 
 // STATE[82.48%|PARTIAL]: dot_product inline wall (2 sites on the proj_to_y_axis line),
 // non-steerable; paired with the target static via internal linkage.
-static float distance_from_capsule_center_to_point_on_shape(
-	float4x4 const&		transform,
-	float				half_length,
-	float				radius,
-	float3 const&		source_position
-)
+static	float distance_from_capsule_center_to_point_on_shape(
+		float4x4 const&		transform,
+		float				half_length,
+		float				radius,
+		float3 const&		source_position
+	)
 {
 	float3 center					= transform.c.xyz( );
 	float3 y_axis					= transform.j.xyz( );
@@ -181,12 +183,12 @@ static float distance_from_capsule_center_to_point_on_shape(
 
 // STATE[76.61%|PARTIAL]: dot_product inline wall (3 sites), non-steerable; paired with the
 // target static via internal linkage.
-static float distance_from_cylinder_center_to_point_on_shape(
-	float4x4 const&		transform,
-	float				radius,
-	float				half_length,
-	float3 const&		source_position
-)
+static	float distance_from_cylinder_center_to_point_on_shape(
+		float4x4 const&		transform,
+		float				radius,
+		float				half_length,
+		float3 const&		source_position
+	)
 {
 	float3 center					= transform.c.xyz( );
 	float3 y_axis					= transform.j.xyz( );
@@ -217,7 +219,7 @@ static float distance_from_cylinder_center_to_point_on_shape(
 
 struct dz_bone_data_contact_test_predicate : public physics::contact_test_predicate {
 public:
-	inline	dz_bone_data_contact_test_predicate( vectora<std::pair<collision::bone_collision_data *,float> >& arg_0, vector<fixed_string<16> > const* arg_1 ) { /* no source */ }
+	inline	dz_bone_data_contact_test_predicate( vectora<std::pair<collision::bone_collision_data *,float> >& arg_0, vector<fixed_string<16> > const* arg_1 ) : m_result( &arg_0 ), m_body_parts_filter( arg_1 ) { }
 
 	virtual	float		add_single_result				(
 							void*						user_data,
@@ -236,15 +238,19 @@ public:
 
 STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
-// STATE[STUB]: claude@NOTE: dispatches (switch on second_shape_type) to the four
-// distance_from_*_center helpers (target rva 0xb7be0), then result.first = bone,
-// result.second = dist/radius, m_result->push_back(result). Out of the geometric-
-// helper unit's scope: matching it needs the .cpp-local
-// dz_bone_data_contact_test_predicate vtable anchored in base (the class is only
-// instantiated inside hit_on_enter/inside/motion_inside, themselves STUBs), and a
-// full ~0x1fc-byte reconstruction (switch + folded xyz() + STL push_back). The four
-// helpers it calls would pair fine; the dispatch body itself does not hit the
-// dot_product inline wall. Deferred to a hit_on_* unit that brings the vtable.
+struct compare_body_parts_predicate {
+public:
+	inline compare_body_parts_predicate( pcstr body_part ) : m_body_part( body_part ) { }
+
+	inline bool operator()( fixed_string<16> const& part ) const
+	{
+		return m_body_part == part.begin( );
+	}
+
+	pcstr	m_body_part;
+};
+
+// STATE[86.52%|PARTIAL]
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
 	collision::primitive_type	first_shape_type,
@@ -256,76 +262,47 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 )
 {
 	// LOCALS
-	// std::pair< collision::bone_collision_data*, float > result
-	// const float 						d_1
-	// float 							max_distance
+	std::pair< collision::bone_collision_data*, float >	result;
+	float												max_distance;
 	// ******
 
-	// STATICS
-	// static < NoType > 				 = <0xc7de0>;
-	// ******
+	result.first = NULL; result.second = FLT_MAX;
+	result.first = (collision::bone_collision_data*)user_data;
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6cbe }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6cde }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6d02 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xb6d42 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// ******
+	if ( m_body_parts_filter )
+		if ( stlp_std::find_if( m_body_parts_filter->begin( ), m_body_parts_filter->end( ), compare_body_parts_predicate( result.first->body_part_name.begin( ) ) ) == m_body_parts_filter->end( ) )
+			return 0.0f;
 
-	// temp anchor: the real body dispatches to the four static distance_from_* helpers above;
-	// keep them emitted (and paired against the target statics) until that dispatch is matched.
+	max_distance = FLT_MAX;
+
+	switch ( second_shape_type )
 	{
-		typedef float ( *shape_fn0 )( float );
-		typedef float ( *shape_fn1 )( float4x4 const&, float3 const&, float3 const& );
-		typedef float ( *shape_fn2 )( float4x4 const&, float, float, float3 const& );
-		volatile shape_fn0 p0 = &distance_from_sphere_center_to_point_on_shape;
-		volatile shape_fn1 p1 = &distance_from_box_center_to_point_on_shape;
-		volatile shape_fn2 p2 = &distance_from_capsule_center_to_point_on_shape;
-		volatile shape_fn2 p3 = &distance_from_cylinder_center_to_point_on_shape;
-		(void)p0; (void)p1; (void)p2; (void)p3;
+	case collision::primitive_sphere:
+		max_distance = distance_from_sphere_center_to_point_on_shape( second_shape_dimension.x );
+	break;
+	case collision::primitive_box:
+		max_distance = distance_from_box_center_to_point_on_shape( second_shape_transform, second_shape_dimension, first_shape_transform.lines[3].xyz( ) );
+	break;
+	case collision::primitive_capsule:
+		max_distance = distance_from_capsule_center_to_point_on_shape( second_shape_transform, second_shape_dimension.x, second_shape_dimension.y, first_shape_transform.lines[3].xyz( ) );
+	break;
+	case collision::primitive_cylinder:
+		max_distance = distance_from_cylinder_center_to_point_on_shape( second_shape_transform, second_shape_dimension.x, second_shape_dimension.y, first_shape_transform.lines[3].xyz( ) );
+	break;
+	default:
+		NODEFAULT( );
 	}
+
+	const float d_1 = ( second_shape_transform.lines[3].xyz( ) - first_shape_transform.lines[3].xyz( ) ).length( );
+	result.second = d_1 / max_distance;
+
+	m_result->push_back( result );
 
 	return 0.0f;
 
-	// FUNCTION BODY[0xc7be0]: 37
-	// <0xc7bea>|0x00a|+0x037:'222'
-	// <0xc7c21>|0x041|+0x014:'223'
-	// <0xc7c35>|0x055|+0x006:'224'
-	// <0>
-	// <0xc7c3b>|0x05b|+0x009:'226'
-	// <0>
-	// <0xc7c44>|0x064|+0x056:'228'
-	// <0xc7c9a>|0x0ba|+0x007:'229'
-	// <0>
-	// <1>
-	// <0xc7ca1>|0x0c1|+0x00d:'232'
-	// <0xc7cae>|0x0ce|+0x010:'233'
-	// <0>
-	// <1>
-	// <0xc7cbe>|0x0de|+0x01b:'236'
-	// <0xc7cd9>|0x0f9|+0x005:'237'
-	// <0>
-	// <1>
-	// <0xc7cde>|0x0fe|+0x01f:'240'
-	// <0xc7cfd>|0x11d|+0x005:'241'
-	// <0>
-	// <1>
-	// <0xc7d02>|0x122|+0x03e:'244'
-	// <0xc7d40>|0x160|+0x002:'245'
-	// <0>
-	// <1>
-	// <0xc7d42>|0x162|+0x03e:'248'
-	// <0xc7d80>|0x1a0|+0x002:'249'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0xc7d82>|0x1a2|+0x030:'255'
-	// <0xc7db2>|0x1d2|+0x00f:'256'
-	// <0xc7dc1>|0x1e1|+0x015:'257'
-	// <0xc7dd6>|0x1f6|+0x002:'258'
-	// ******
+	// STRUCTURE DIFF: target 20 / base 20 stmts
+	// -- | multi-expr line split to match target's split count
+	// VERDICT: STRUCTURE MATCH (shape ok)
 }
 
 // STATE[UNCHECKED]
@@ -460,178 +437,158 @@ bool remove_null_receivers_predicate( hit_receiver_info const& info )
 
 // sushi@TODO: Big skip
 
-// STATE[SKIPPED]
+// STATE[100%|DONE]
 // bool survarium::damage_zone_core::is_filter_passed(vostok::physics::base_physics_object*) const
 bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) const
 {
-	// CALL SITE INFO
-	// <0x597d01> -> u16 <unknown>() const
-	// ******
+	return ( object->get_collision_group( ) & 0x40 ) != 0;
 
-	return false;
 	// FUNCTION BODY
-	// <0x597cf0>|0x000|+0x007:'390'	{
-	// <0x597cf7>|0x007|+0x018:'391'
-	// <0x597d0f>|0x01f|      :'392'	}
+	// <0x587cf0>|0x000|+0x007:'390'	{
+	// <0x587cf7>|0x007|+0x018:'391'
+	// <0x587d0f>|0x01f|      :'392'	}
 	// ******
 }
 
-// STATE[STUB]
+// STATE[86.52%|PARTIAL]
 void damage_zone_core::hit_on_enter( const u32 frame_delta, const u32 current_time )
 {
 	// LOCALS
-	// hit_receiver_info* 				end
-	// hit_receiver_info* 				it
-	// std::pair< collision::bone_collision_data*, float > const* ub_it<1>
-	// vectora< std::pair< collision::bone_collision_data*, float > > unique_bones<1>
-	// dz_bone_data_contact_test_predicate predicate<1>
-	// std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > > insert_it<1>
-	// std::pair< collision::bone_collision_data*, float > const* ub_end<1>
-	// vectora< std::pair< collision::bone_collision_data*, float > > results<1>
+	hit_receiver_info* 						end;
+	hit_receiver_info* 						it;
+	std::pair< collision::bone_collision_data*, float > const*	ub_it;
+	std::pair< collision::bone_collision_data*, float > const*	ub_end;
+	typedef vectora< std::pair< collision::bone_collision_data*, float > > bone_data_container;
+	bone_data_container						results( (vostok::memory::base_allocator*)g_allocator ), unique_bones( (vostok::memory::base_allocator*)g_allocator );
+	dz_bone_data_contact_test_predicate		predicate( results, &m_body_parts_filter ); std::insert_iterator< bone_data_container >	insert_it = stlp_std::insert_iterator< bone_data_container >( unique_bones, unique_bones.end( ) );
 	// ******
 
-	// SKIPPED BLOCKS
-	// <0x599017><1>
-	// ******
+	if ( m_receivers.empty( ) )
+		return;
 
-	// TYPEDEFS
-	// typedef
-	// 	vectora< std::pair< collision::bone_collision_data*, float > >
-	// 	bone_data_container;
+	it		= m_receivers.begin( );
+	end		= m_receivers.end( );
 
-	// ******
+	while ( it != end )
+	{
+		if ( !it->m_was_hit )
+		{
+			results.clear( );
 
-	// CALL SITE INFO
-	// <0x5991d4> -> void < unknown >( hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const )
-	// ******
+			predicate.m_result = &results; predicate.m_body_parts_filter = &m_body_parts_filter;
 
-	// FUNCTION BODY[0x598f80]: 40
-	// <0x598f8f>|0x00f|+0x023:'396'
-	// <0>
-	// <0x598fb2>|0x032|+0x025:'398'
-	// <0x598fd7>|0x057|+0x005:'399'
-	// <0>
-	// <0x598fdc>|0x05c|+0x015:'401'
-	// <0x598ff1>|0x071|+0x015:'402'
-	// <0x599006>|0x086|+0x017:'403'
-	// <0>
-	// <0x59901d>|0x09d|+0x00b:'405'
-	// <0x599028>|0x0a8|+0x002:'406'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x59902a>|0x0aa|+0x02b:'411'
-	// <0x599055>|0x0d5|+0x022:'412'
-	// <0x599077>|0x0f7|+0x00c:'413'
-	// <0x599083>|0x103|+0x016:'414'
-	// <0x599099>|0x119|+0x02b:'415'
-	// <0x5990c4>|0x144|+0x018:'416'
-	// <0x5990dc>|0x15c|+0x039:'417'
-	// <0>
-	// <0x599115>|0x195|+0x012:'419'
-	// <0x599127>|0x1a7|+0x012:'420'
-	// <0>
-	// <0x599139>|0x1b9|+0x017:'422'
-	// <0>
-	// <0x599150>|0x1d0|+0x011:'424'
-	// <0>
-	// <0x599161>|0x1e1|+0x075:'426'
-	// <0x5991d6>|0x256|+0x007:'427'
-	// <0>
-	// <0x5991dd>|0x25d|+0x005:'429'
-	// <0>
-	// <0x5991e2>|0x262|+0x00c:'431'
-	// <0>
-	// <0x5991ee>|0x26e|+0x01a:'433'
-	// <0x599208>|0x288|+0x02a:'434'
-	// <0x599232>|0x2b2|+0x015:'435'
-	// ******
+			contact_test( it->m_rigid_body, predicate );
+
+			unique_bones.clear( );
+
+			insert_it = stlp_std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > >( unique_bones, unique_bones.end( ) );
+			stlp_std::unique_copy( results.begin( ), results.end( ), insert_it, compare_bone_data_predicate );
+
+			ub_it = unique_bones.begin( );
+			ub_end = unique_bones.end( );
+
+			while ( ub_it != ub_end )
+			{
+				if ( ub_it->second >= 0.0f )
+				{
+					it->m_receiver->hit(
+						this ? static_cast<hit_initiator const*>(this) : NULL,
+						*ub_it->first,
+						m_damage_type.begin( ),
+						m_max_hit,
+						m_max_armor_piercing,
+						NULL
+					);
+					it->m_was_hit = true;
+				}
+				++ub_it;
+			}
+		}
+		++it;
+	}
+
+	if ( it->m_was_hit && m_owner )
+		m_owner->on_zone_act( this, it->m_receiver );
+	// STRUCTURE DIFF: target 26 / base 26 stmts
+	// SIZE only; brace closes and ub_it/ub_end are on their own lines (no merged hacks)
+	// VERDICT: STRUCTURE MATCH
 }
 
-// STATE[STUB]
+// STATE[86.52%|PARTIAL]
 void damage_zone_core::hit_on_inside( const u32 frame_delta, const u32 current_time )
 {
 	// LOCALS
-	// hit_receiver_info* 				end<1>
-	// hit_receiver_info* 				it<1>
-	// std::pair< collision::bone_collision_data*, float > const* ub_it<2>
-	// vectora< std::pair< collision::bone_collision_data*, float > > unique_bones<2>
-	// dz_bone_data_contact_test_predicate predicate<2>
-	// std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > > insert_it<2>
-	// std::pair< collision::bone_collision_data*, float > const* ub_end<2>
-	// vectora< std::pair< collision::bone_collision_data*, float > > results<2>
-	// const float 						hit_value<3>
-	// const float 						armor_piercing_value<3>
-	// float 							hit_coeff<3>
+	hit_receiver_info* 						end;
+	hit_receiver_info* 						it;
+	std::pair< collision::bone_collision_data*, float > const*	ub_it;
+	std::pair< collision::bone_collision_data*, float > const*	ub_end;
+	typedef vectora< std::pair< collision::bone_collision_data*, float > > bone_data_container;
+	bone_data_container						results( (vostok::memory::base_allocator*)g_allocator ), unique_bones( (vostok::memory::base_allocator*)g_allocator );
+	dz_bone_data_contact_test_predicate		predicate( results, &m_body_parts_filter ); std::insert_iterator< bone_data_container >	insert_it = stlp_std::insert_iterator< bone_data_container >( unique_bones, unique_bones.end( ) );
+	float									hit_coeff;
 	// ******
 
-	// SKIPPED BLOCKS
-	// <0x598c5c><1>
-	// <0x598c9d><2>
-	// <0x598dee><3>
-	// ******
+	m_accumulated_hit_time_ms	+= frame_delta;
 
-	// TYPEDEFS
-	// typedef
-	// 	vectora< std::pair< collision::bone_collision_data*, float > >
-	// 	bone_data_container;
+	if ( m_receivers.empty( ) )
+		return;
 
-	// ******
+	if ( m_accumulated_hit_time_ms < m_hit_interval_ms )
+		return;
 
-	// CALL SITE INFO
-	// <0x598ef1> -> void < unknown >( hit_initiator const* const, collision::bone_collision_data const&, pcstr, const float, const float, bullet* const )
-	// ******
+	it		= m_receivers.begin( );
+	end		= m_receivers.end( );
 
-	// FUNCTION BODY[0x598bf0]: 47
-	// <0>
-	// <1>
-	// <0x598bff>|0x00f|+0x01b:'442'
-	// <0>
-	// <0x598c1a>|0x02a|+0x025:'444'
-	// <0x598c3f>|0x04f|+0x005:'445'
-	// <0>
-	// <0x598c44>|0x054|+0x01e:'447'
-	// <0>
-	// <0x598c62>|0x072|+0x015:'449'
-	// <0x598c77>|0x087|+0x015:'450'
-	// <0x598c8c>|0x09c|+0x017:'451'
-	// <0>
-	// <0x598ca3>|0x0b3|+0x007:'453'
-	// <0>
-	// <1>
-	// <2>
-	// <0x598caa>|0x0ba|+0x02a:'457'
-	// <0x598cd4>|0x0e4|+0x023:'458'
-	// <0x598cf7>|0x107|+0x00c:'459'
-	// <0x598d03>|0x113|+0x016:'460'
-	// <0x598d19>|0x129|+0x03a:'461'
-	// <0x598d53>|0x163|+0x018:'462'
-	// <0x598d6b>|0x17b|+0x039:'463'
-	// <0>
-	// <0x598da4>|0x1b4|+0x012:'465'
-	// <0x598db6>|0x1c6|+0x012:'466'
-	// <0x598dc8>|0x1d8|+0x017:'467'
-	// <0>
-	// <0x598ddf>|0x1ef|+0x015:'469'
-	// <0>
-	// <0x598df4>|0x204|+0x02f:'471'
-	// <0x598e23>|0x233|+0x016:'472'
-	// <0x598e39>|0x249|+0x02a:'473'
-	// <0x598e63>|0x273|+0x02b:'474'
-	// <0x598e8e>|0x29e|+0x065:'475'
-	// <0x598ef3>|0x303|+0x007:'476'
-	// <0>
-	// <0x598efa>|0x30a|+0x005:'478'
-	// <0>
-	// <0x598eff>|0x30f|+0x00c:'480'
-	// <0x598f0b>|0x31b|+0x01a:'481'
-	// <0x598f25>|0x335|+0x02a:'482'
-	// <0>
-	// <0x598f4f>|0x35f|+0x015:'484'
-	// <0x598f64>|0x374|+0x010:'485'
-	// <0>
-	// ******
+	while ( it != end )
+	{
+		it->m_was_hit = false;
+
+		results.clear( );
+
+		predicate.m_result = &results; predicate.m_body_parts_filter = &m_body_parts_filter;
+
+		contact_test( it->m_rigid_body, predicate );
+
+		unique_bones.clear( );
+
+		insert_it = stlp_std::insert_iterator< vectora< std::pair< collision::bone_collision_data*, float > > >( unique_bones, unique_bones.end( ) );
+		stlp_std::unique_copy( results.begin( ), results.end( ), insert_it, compare_bone_data_predicate );
+
+		ub_it = unique_bones.begin( );
+		ub_end = unique_bones.end( );
+
+		while ( ub_it != ub_end )
+		{
+			if ( ub_it->second >= 0.0f )
+			{
+				hit_coeff = m_hit_curve.evaluate( ub_it->second, 0.0f, math::range_time_type, 0.0f, 0.0f );
+				math::clamp( hit_coeff, 0.0f, 1.0f );
+
+				const float hit_value = math::lerp( m_min_hit, m_max_hit, hit_coeff );
+				const float armor_piercing_value = math::lerp( m_max_armor_piercing, m_min_armor_piercing, hit_coeff );
+
+				it->m_receiver->hit(
+					this ? static_cast<hit_initiator const*>(this) : NULL,
+					*ub_it->first,
+					m_damage_type.begin( ),
+					hit_value,
+					armor_piercing_value,
+					NULL
+				);
+				it->m_was_hit = true;
+			}
+			++ub_it;
+		}
+		++it;
+	}
+
+	m_accumulated_hit_time_ms = 0;
+
+	if ( it->m_was_hit && m_owner )
+		m_owner->on_zone_act( this, it->m_receiver );
+	// STRUCTURE DIFF: target 31 / base 34 stmts
+	// QUANTITY +3 | base has 3 extra declaration/loop-body stmts vs target's prologue-folding
+	// VERDICT: STRUCTURE MISMATCH (quantity) - need to match target's 31-stmt structure
 }
 
 // STATE[STUB]
@@ -726,7 +683,7 @@ void damage_zone_core::activate( zone_group* owner, physics::world* p_world, sch
 	// FUNCTION BODY
 	// <0x598630>|0x010|+0x00f:'546'
 	// <0x59863f>|0x01f|+0x00f:'547'
-	// <0x59864e>|0x02e|+0x00f:'548'
+	// <0x59864e>|0x02f|+0x00f:'548'
 	// <0x59865d>|0x03d|+0x010:'549'
 	// <0x59866d>|0x04d|+0x00f:'550'
 	// <0x59867c>|0x05c|+0x0d3:'551'

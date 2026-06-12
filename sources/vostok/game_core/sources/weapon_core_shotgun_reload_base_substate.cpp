@@ -27,53 +27,62 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[STUB]
-// survarium::weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int, const vostok::animation::mixing::playback_enum, const unsigned int, char const*, char const*, char const*, char const*)
+// STATE[78.64%|PARTIAL]: STRUCTURE MATCH (16/16). Residual SIZE rows are LTCG inline-vs-call:
+// ASSERT (target has extra conditional on animations_count), for-loop construct differences,
+// and operator= for resource_ptr assignments.
 weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float								animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count,
-	animation::mixing::playback_enum		playback_type,
-	u32										time_synchronization_group,
+	const u32								animations_count,
+	const animation::mixing::playback_enum	playback_type,
+	const u32								time_synchronization_group,
 	pcstr									animation_id,
 	pcstr									hands_stand_animation_id,
 	pcstr									hands_crouch_animation_id,
 	pcstr									hands_jump_animation_id
-) : m_weapon( weapon )
+) :
+	m_weapon( weapon ),
+	m_animation_to_wait_for( ),
+	m_animation_playback_state( 0 ),
+	m_animation_timescale( animation_time_scale ),
+	m_playback_type( playback_type ),
+	m_time_synchronization_group( time_synchronization_group ),
+	m_animation_id( animation_id )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	m_hand_animation_captions[0] = hands_stand_animation_id;
+	m_hand_animation_captions[1] = hands_crouch_animation_id;
+	m_hand_animation_captions[2] = hands_jump_animation_id;
 
-	// SKIPPED BLOCKS
-	// <0x7a86c0><2>
-	// <0x7a8725><3>
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
-	// <0x7a865c>|0x0bc|+0x00c:'36'
-	// <0x7a8668>|0x0c8|+0x00c:'37'
-	// <0x7a8674>|0x0d4|+0x00c:'38'
-	// <0>
-	// <0x7a8680>|0x0e0|+0x023:'40'
-	// <0x7a86a3>|0x103|+0x007:'41'
-	// <0x7a86aa>|0x10a|+0x018|[1]:'42'
-	// <0x7a86c2>|0x122|+0x018:'43'
-	// <0x7a86da>|0x13a|+0x031:'44'
-	// <0x7a870b>|0x16b|+0x002:'45'
-	// <0x7a870d>|0x16d|+0x002:'46'
-	// <0x7a870f>|0x16f|+0x018|[2]:'47'
-	// <0x7a8727>|0x187|+0x018:'48'
-	// <0x7a873f>|0x19f|+0x031:'49'
-	// <0x7a8770>|0x1d0|+0x002:'50'
-	// <0x7a8772>|0x1d2|+0x002:'51'
-	// <0x7a8774>|0x1d4|+0x00c:'52'
-	// ******
+	u32 animation_index = 0;
+
+	for ( u32 view_index = 0; view_index < 2; ++view_index )
+	{
+		for ( u32 user_state_index = 0; user_state_index < 2; ++user_state_index, ++animation_index )
+		{
+			m_weapon_animations[view_index][user_state_index] = animations[animation_index];
+		}
+	}
+
+	for ( u32 view_index = 0; view_index < 2; ++view_index )
+	{
+		for ( u32 user_state_index = 0; user_state_index < 2; ++user_state_index, ++animation_index )
+		{
+			m_user_animations[view_index][user_state_index] = animations[animation_index];
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	// STRUCTURE DIFF: target 16 / base 16 stmts
+	// SIZE -0x17 | 57 | ASSERT( UNKNOWN_EXPRESSION );
+	// SIZE +0x9  | 63 | for ( u32 user_state_index = 0; user_state_index < 2; ++user_state_index, ++animation_index )
+	// SIZE -0xf  | 65 | m_weapon_animations[view_index][user_state_index] = animations[animation_index];
+	// SIZE +0x9  | 71 | for ( u32 user_state_index = 0; user_state_index < 2; ++user_state_index, ++animation_index )
+	// SIZE -0xf  | 73 | m_user_animations[view_index][user_state_index] = animations[animation_index];
+	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are LTCG inline-vs-call differences for ASSERT, for-loop constructs, and resource_ptr operator=. Non-steerable.
 }
 
 // STATE[100%|DONE]: objdiff-unscored (newly emitted, absent from the delink unit's function list) but

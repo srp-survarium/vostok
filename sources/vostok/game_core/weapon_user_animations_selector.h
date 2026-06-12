@@ -119,12 +119,12 @@ private:
 			bool			is_weapon_toggling				( ) const;
 
 			float			look_time_factor_calculator		(
-								float		animation_length,
-								float		animation_time_before_time_scale_starts,
-								u32			time_scale_start_time_in_ms,
-								u32			current_time_in_ms,
-								u32			target_time_in_ms,
-								float		time_scale
+								float const	animation_length,
+								float const	animation_time_before_time_scale_starts,
+								u32 const	time_scale_start_time_in_ms,
+								u32 const	current_time_in_ms,
+								u32 const	target_time_in_ms,
+								float const	time_scale
 							) const;
 
 private:

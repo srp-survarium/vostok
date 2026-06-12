@@ -212,23 +212,20 @@ resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts 
 	);
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: needs extern `survarium::jump_animations_captions[][]` global table
+// + `jump_animation_parts` enum definition. Target asm indexes `?jump_animations_captions@survarium@@3QBQBDB`
+// (char const* const[]) with the result of get_jump_animation_index(). Unblock once the captions table exists.
+// Body: return jump_animations_captions[ get_jump_animation_index( m_jumping_direction, m_is_jump_from_right_leg, anim_part ) ];
 pcstr jump_logic::get_animation_caption(
 	const jump_animation_parts		arg_0 /* jump_animation_parts anim_part */
 ) const
 {
 	return NULL;
-
-	// FUNCTION BODY[0x58d930]: 1
-	// <0x58d939>|0x009|+0x063:'167'
-	// ******
 }
 
-// STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
-// m_jumping_direction * 3, is_third_view )` (verified against target asm @0x58dee0,
-// 1 empty_stub ASSERT for animations() operator*), but get_stand_animation has no
-// definition in our tree (weapon_user_animations_container.cpp absent) so anchoring
-// this body fails LTCG with LNK1257 (unresolved). Unblock once that symbol exists.
+// STATE[BLOCKED]: body is `return m_owner.animations().get_stand_animation( _1, m_jumping_direction * 3, false, is_third_view )`;
+// but get_stand_animation has no definition (weapon_user_animations_container.cpp absent) so anchoring
+// fails LTCG with LNK1257. Unblock once that symbol exists.
 resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_third_view ) const
 {
 	// FUNCTION BODY[0x58dee0]: 1
@@ -236,9 +233,8 @@ resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_th
 	// ******
 }
 
-// STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
-// m_jumping_direction * 3 + 2, is_third_view )` (target asm @0x58de90). Same
-// get_stand_animation undefined-symbol blocker as get_move_animation.
+// STATE[BLOCKED]: body is `return m_owner.animations().get_stand_animation( _1, m_jumping_direction * 3 + 2, false, is_third_view )`.
+// Same get_stand_animation undefined-symbol blocker as get_move_animation.
 resources::managed_resource_ptr jump_logic::get_move_look_animation( const bool is_third_view ) const
 {
 	// FUNCTION BODY[0x58de90]: 1
@@ -246,14 +242,12 @@ resources::managed_resource_ptr jump_logic::get_move_look_animation( const bool 
 	// ******
 }
 
-// STATE[STUB]
+// STATE[BLOCKED]: needs extern `survarium::stand_animations_captions[][]` global table.
+// Target asm indexes `?stand_animations_captions@survarium@@3QBQBDB` with (m_jumping_direction * 3 + 2).
+// Unblock once the captions table exists.
 pcstr jump_logic::get_move_look_caption( ) const
 {
 	return NULL;
-
-	// FUNCTION BODY[0x58d8d0]: 1
-	// <0x58d8d9>|0x009|+0x048:'181'
-	// ******
 }
 
 // STATE[100%|DONE]

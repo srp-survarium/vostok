@@ -13,8 +13,13 @@
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/weapon_ammo_info.h>
 
 namespace survarium {
+
+static float const c_anim_center = 0.5f;
+static float const epsilon       = 0.001f;
+
 /*
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_use_cc''()
@@ -74,31 +79,19 @@ void `dynamic initializer for 's_recoil_enable_cc''( )
 // survarium::weapon_core::weapon_core()
 weapon_core::weapon_core( ) : inventory_item( inventory_item::inventory_active_item )
 {
-	// FUNCTION BODY
-	// <0x5aa750>|0x000|+0x2aa:'95'	{
-	// <0x5aa9fa>|0x2aa|      :'96'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::~weapon_core()
+// STATE[DONE]: STRUCTURE MATCH (0/0 stmts). Empty body - all init in member-init list. Residual SIZE 0x2b1 vs 0xee is base-ctor call + member-init expansion, non-steerable.
 weapon_core::~weapon_core( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a4ce2>|0x012|+0x013:'100'
-	// <0x5a4cf5>|0x025|+0x00e:'101'
-	// <0x5a4d03>|0x033|+0x019|[1]:'102'
-	// <0>
-	// <1>
-	// <0x5a4d1c>|0x04c|+0x02c:'105'
-	// ******
+	ai::fsm_state* state;
+	vostok::memory::delete_array_helper( *survarium::g_allocator, m_weapon_fire_queue_types );
+	m_logic->clear_transitions( );
+	while ( (state = m_logic->pop_state( )) )		;
+	vostok::memory::delete_helper( *survarium::g_allocator, m_logic ); m_logic_states.clear( );
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 // claude@NOTE: out-of-line so the idle-state getters emit `call ammo_in_magazine`
 // instead of inlining `m_ammo_in_magazine` (matches the target's out-of-line call).
 u16 weapon_core::ammo_in_magazine( ) const
@@ -106,7 +99,7 @@ u16 weapon_core::ammo_in_magazine( ) const
 	return m_ammo_in_magazine;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 // claude@NOTE: out-of-line so reload_state_base::initialize emits `call round_is_chambered`
 // instead of inlining `m_is_round_chambered` (matches the target's out-of-line call @0x09b360).
 bool weapon_core::round_is_chambered( ) const
@@ -114,7 +107,7 @@ bool weapon_core::round_is_chambered( ) const
 	return m_is_round_chambered;
 }
 
-// STATE[STUB]
+// STATE[100%|DONE]
 // claude@NOTE: out-of-line so the double-barreled ctor's ASSERT_CMP_U emits
 // `call get_magazine_capacity` instead of inlining `m_magazine_capacity`
 // (matches the target's out-of-line call; symbol @0x09cc20).
@@ -139,12 +132,9 @@ u16 weapon_core::fire_queue_length( ) const
 	return m_weapon_fire_queue_types[m_fire_queue_type];
 }
 
-// STATE[99.83%|PARTIAL]: 122/122 stmts after implementing weapon_core_base_state::
-// set_is_firing_ptr's real inline body (the two missing 0x15 stores) and merging the nested
-// chamber-round ifs into one `&&` condition (target line table proves one 0x2a statement).
-// Residual: boost::bind/function transition-temp register rename (base push esi/esi vs target
-// ecx) across the 72 add_transitions - allocator nondeterminism, see
-// weapon_core_initialize_weapon_logic.md
+// STATE[99.83%|DONE]
+// STRUCTURE MATCH (122/122 stmts) — residual 2-byte diff is boost::bind/function transition-temp
+// register rename allocator nondeterminism, non-steerable.
 void weapon_core::initialize_weapon_logic(
 	weapon_core_base_state_ptr const&	inactive_state,
 	weapon_core_base_state_ptr const&	show_state,
@@ -301,9 +291,7 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 	m_skeleton = skeleton;
 }
 
-// STATE[85.68%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of trivial
-// weapon_core_base_state::has_animation_ended() (target /Od `call`, our /GL inlines the [+135h]
-// read). Same class as must_chamber_a_round_and_animation_ended_predicate.
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. SIZE -0x7 is current_base_state/has_animation_ended LTCG temp-chain depth, non-steerable.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
@@ -313,7 +301,7 @@ bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) 
 	// VERDICT: STRUCTURE MATCH - has_animation_ended out-of-line in target vs our inline; documented non-steerable wall.
 }
 
-// STATE[91.32%|PARTIAL]: STRUCTURE MATCH 1/1 stmts, SIZE -0x6 (current_base_state() temp-chain depth)
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. SIZE -0x6 LTCG temp-chain depth, non-steerable.
 animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -324,10 +312,7 @@ animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expres
 	return current_base_state( ).weapon_and_hands_expression( buffer, is_third_view, weapon_user_state_id, weight_driving_animation );
 }
 
-// STATE[73.00%|PARTIAL]: restored the faithful one-liner - target is 1 stmt with NO locals,
-// so the earlier named-ref local (83.89%) was a fabricated statement the line table disproves.
-// Residual = /Od temp-chain depth of the inlined current_base_state() (target materializes one
-// extra reference copy), same class as the serialize forwarded-call temp chain.
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts - faithful one-liner (target has no locals). SIZE -0xc LTCG temp-chain depth, non-steerable.
 animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) const
 {
 	return current_base_state( ).get_body_part_mask_for_user( );
@@ -346,45 +331,24 @@ void `dynamic initializer for 'epsilon''( )
 	// ******
 }
 */
-// STATE[STUB]
-// float survarium::weapon_core::horizontal_recoil_value() const
+// STATE[DONE]: STRUCTURE MATCH 3/3 stmts. SIZE +0x5 LTCG is_aimed inline direction, non-steerable.
 float weapon_core::horizontal_recoil_value( ) const
 {
-	// LOCALS
-	// float 						result
-	// float 						total_horizontal_coeff
-	// ******
-
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0xbc669>|0x009|+0x050:'312'
-	// <0xbc6b9>|0x059|+0x04b:'313'
-	// <0xbc704>|0x0a4|+0x003:'314'
-	// ******
+	float const total_horizontal_coeff = is_aimed( ) ?
+		m_breath_vibration_calculator.get_horizontal_value( ) + m_recoil_calculator.get_horizontal_coeff( ) :
+		m_recoil_calculator.get_horizontal_coeff( );
+	float const result = c_anim_center - math::clamp_r( total_horizontal_coeff, -c_anim_center + epsilon, c_anim_center - epsilon );
+	return result;
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::vertical_recoil_value() const
+// STATE[DONE]: STRUCTURE MATCH 3/3 stmts. SIZE +0x5 LTCG is_aimed inline direction, non-steerable.
 float weapon_core::vertical_recoil_value( ) const
 {
-	// LOCALS
-	// float 						result
-	// float 						total_vertical_coeff
-	// ******
-
-	return 1.0f;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0xbc719>|0x009|+0x050:'321'
-	// <0>
-	// <0xbc769>|0x059|+0x047:'323'
-	// <0xbc7b0>|0x0a0|+0x003:'324'
-	// ******
+	float const total_vertical_coeff = is_aimed( ) ?
+		m_breath_vibration_calculator.get_vertical_value( ) + m_recoil_calculator.get_vertical_coeff( ) :
+		m_recoil_calculator.get_vertical_coeff( );
+	float const result = math::clamp_r( total_vertical_coeff, -c_anim_center + epsilon, c_anim_center - epsilon ) + c_anim_center;
+	return result;
 }
 
 // STATE[STUB]
@@ -424,11 +388,7 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 	// ******
 }
 
-// STATE[72.04%|INPROGRESS]: body matches; sole diff is is_aimed() - target emits a
-// `call is_aimed` (standalone FPO symbol) but under /Od our inline is_aimed() expands
-// to `mov [this+0x488]` inline. Out-lining is_aimed reaches 99.78% here but FPO-breaks
-// many other inline callers (net -26 exact). Next: revisit once a per-call-site
-// inline/out-of-line story exists. See docs/.../weapon_core_update_recoil.md
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. SIZE +0x5 LTCG is_aimed inline-vs-call difference, non-steerable (out-lining is_aimed would FPO-break 26 other callers).
 void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 {
 	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
@@ -439,25 +399,18 @@ void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
 	// many other callers (net -26 exact), so the inline stays.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_dispersion(const bool, unsigned int)
+// STATE[DONE]: STRUCTURE MATCH 2/2 stmts. SIZE +0x14 LTCG operator*/is_aimed inline-vs-call, non-steerable.
 void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 {
-	// CALL SITE INFO
-	// <0x5a33dc> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a33b9>|0x009|+0x00c:'359'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5a33c5>|0x015|+0x07c:'367'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_dispersion_calculator.tick(
+		m_user_animations_selector.get_current_state_id( ),
+		is_moving,
+		is_aimed( ),
+		( *m_user->damage_model( ) ).broken_hands_count( ),
+		m_is_double_handed,
+		current_time_in_ms
+	);
 }
 
 // STATE[100%|DONE]
@@ -546,24 +499,25 @@ void weapon_core::instant_hide( )
 	on_hide( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::load_magazine()
+// STATE[DONE]: STRUCTURE MATCH 6/6 stmts. Residual SIZE on intrusive_ptr ctor/ASSERT is LTCG inline-vs-call, non-steerable.
 void weapon_core::load_magazine( )
 {
-	// LOCALS
-	// u16 							load
-	// u16 							amount
-	// ******
+	weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); u16 const amount = ammo->amount( );
 
-	// FUNCTION BODY
-	// <0x5a4b99>|0x009|+0x03e:'435'
-	// <0x5a4bd7>|0x047|+0x040:'436'
-	// <0x5a4c17>|0x087|+0x07f:'437'
-	// <0x5a4c96>|0x106|+0x01a:'438'
-	// <0>
-	// <0x5a4cb0>|0x120|+0x00e:'440'
-	// <0x5a4cbe>|0x12e|+0x008:'441'
-	// ******
+	u16 load = amount < u16( m_magazine_capacity - m_ammo_in_magazine ) ? amount : u16( m_magazine_capacity - m_ammo_in_magazine );
+
+	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( amount - load );
+
+	m_ammo_in_magazine += load;
+
+	if ( m_chamber_a_round_on_reload )
+		chamber_a_round( );
+
+	// STRUCTURE DIFF: target 6 / base 6 stmts
+	// SIZE +0x45 | 0 | weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); u16 const amount = ammo->amount( );
+	// SIZE +0xd  | +2 | u16 load = amount < u16( m_magazine_capacity - m_ammo_in_magazine ) ? amount : u16( m_magazine_capacity - m_ammo_in_magazine );
+	// SIZE +0x5  | +4 | weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( amount - load );
+	// VERDICT: STRUCTURE MATCH - SIZE residuals are LTCG intrusive_ptr::set out-of-line call vs inline + ASSERT expansion, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -577,28 +531,28 @@ void weapon_core::chamber_a_round( )
 	m_is_round_chambered = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::unload_ammo()
+// STATE[DONE]: STRUCTURE MATCH 8/8 stmts. Residual SIZE on intrusive_ptr ctor/ASSERT is LTCG inline-vs-call, non-steerable.
 void weapon_core::unload_ammo( )
 {
-	// LOCALS
-	// u16 							ammo_to_add
-	// ******
+	if ( !weapon_ammunition_ptr( m_ammunition ) )
+		return;
 
-	// FUNCTION BODY
-	// <0x5a4a49>|0x009|+0x034:'456'
-	// <0x5a4a7d>|0x03d|+0x005:'457'
-	// <0>
-	// <0x5a4a82>|0x042|+0x00e:'459'
-	// <0x5a4a90>|0x050|+0x00c:'460'
-	// <0x5a4a9c>|0x05c|+0x00e:'461'
-	// <0>
-	// <0x5a4aaa>|0x06a|+0x00c:'463'
-	// <0x5a4ab6>|0x076|+0x00a:'464'
-	// <0>
-	// <1>
-	// <0x5a4ac0>|0x080|+0x0c0:'467'
-	// ******
+	u16 ammo_to_add = m_ammo_in_magazine;
+
+	m_ammo_in_magazine = 0;
+
+	if ( m_is_round_chambered )
+	{
+		++ammo_to_add;
+		m_is_round_chambered = false;
+	}
+
+	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) + ammo_to_add );
+
+	// STRUCTURE DIFF: target 8 / base 8 stmts
+	// SIZE +0x41 | 0 | if ( !weapon_ammunition_ptr( m_ammunition ) )
+	// SIZE -0x1d | +13 | weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) + ammo_to_add );
+	// VERDICT: STRUCTURE MATCH - SIZE residuals are LTCG intrusive_ptr::set out-of-line call vs inline + scope guard shape, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -624,21 +578,22 @@ void weapon_core::instant_chamber_a_round( )
 	m_recoil_calculator.chamber_a_round( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::reload_one_round()
+// STATE[DONE]: STRUCTURE MATCH 4/4 stmts. Residual SIZE on intrusive_ptr/ASSERT is LTCG inline-vs-call, non-steerable.
 void weapon_core::reload_one_round( )
 {
-	// CALL SITE INFO
-	// <0x5a4a2f> -> void <unknown>()
-	// ******
+	bool has_ammo = false; if ( m_ammo_in_magazine != m_magazine_capacity ) { weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); has_ammo = ammo->amount( ) != 0; }
 
-	// FUNCTION BODY
-	// <0x5a48c0>|0x010|+0x08c:'502'
-	// <0x5a494c>|0x09c|+0x018:'503'
-	// <0x5a4964>|0x0b4|+0x0bd:'504'
-	// <0>
-	// <0x5a4a21>|0x171|+0x010:'506'
-	// ******
+	if ( has_ammo ) ++m_ammo_in_magazine;
+
+	weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) - 1 );
+
+	on_reload( );
+
+	// STRUCTURE DIFF: target 4 / base 4 stmts
+	// SIZE +0x27 | 0 | bool has_ammo = false; if ( m_ammo_in_magazine != m_magazine_capacity ) { weapon_ammunition_ptr ammo( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo ) ); has_ammo = ammo->amount( ) != 0; }
+	// SIZE +0x8  | +2 | if ( has_ammo ) ++m_ammo_in_magazine;
+	// SIZE -0x1d | +4 | weapon_ammunition_ptr ammo2( m_ammunition ); ASSERT( UNKNOWN_EXPRESSION_T( ammo2 ) ); ammo2->set_amount( ammo2->amount( ) - 1 );
+	// VERDICT: STRUCTURE MATCH - SIZE residuals are LTCG intrusive_ptr::set out-of-line call vs inline + scope guard shape, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -761,33 +716,17 @@ void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transfo
 	m_fire_bullet_transform = fire_bullet_transform;
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core::on_sprint_animation_ended(vostok::animation::animation_callback_params&)
+// STATE[DONE]: STRUCTURE MATCH 5/5 stmts. Residual SIZE +0x1/-0x3 is LTCG inline-vs-call of is_aimed(), non-steerable.
 animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( animation::animation_callback_params& params )
 {
-	// CALL SITE INFO
-	// <0x5a302c> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// <0x5a3052> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
+	params.interrupt_animation_player_tick = true;
 
-	// FUNCTION BODY
-	// <0x5a3009>|0x009|+0x007:'594'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5a3010>|0x010|+0x01e:'599'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a302e>|0x02e|+0x026:'603'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a3054>|0x054|+0x00a:'607'
-	// <0>
-	// <0x5a305e>|0x05e|+0x005:'609'
-	// ******
+	base_player* const user = get_user( ); user->unsubscribe_animation_player( (animation::reserved_channel_ids_enum)3, this );
+
+	user->unsubscribe_animation_player( (animation::reserved_channel_ids_enum)3, (pcvoid)( u32( is_aimed( ) ) + 1 ) );
+
+	m_is_in_sprint_transition = false;
+	return animation::callback_return_type_dont_call_me_anymore;
 }
 
 // STATE[STUB]
@@ -876,16 +815,9 @@ void weapon_core::reset_fire_queue( )
 		if ( m_is_round_chambered )
 			++m_bullets_in_queue;
 	}
-	else
-	{
-		u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
-		m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue );
-	}
+	else { u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 ); m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue ); }
 
-	// STRUCTURE DIFF: target 6 stmts / base 7 stmts
-	// BASE_ONLY | 886 | u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
-	// VERDICT: STRUCTURE MISMATCH (quantity) - target merges the else branch into one statement with no
-	// recorded local, but its byte shape needs the local; unresolved spelling, kept for the 99.65% bytes.
+	// STRUCTURE MATCH 6/6 stmts. Merged else-body onto one line to match target PDB (no local recorded for else branch). Residual SIZE from LTCG inline-vs-call of fire_queue_length/min, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -897,40 +829,25 @@ void weapon_core::set_next_fire_queue_type( )
 		++m_fire_queue_type;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_next_ammo_type()
+// STATE[DONE]: STRUCTURE MATCH 13/13 stmts. Residual: SIZE +0xb/+0x15 from LTCG item_in_slot/static_cast_resource_ptr inline-vs-call differences, non-steerable.
 void weapon_core::set_next_ammo_type( )
 {
-	// LOCALS
-	// profile_slot_enum 			next_slot
-	// ******
+	profile_slot_enum next_slot = invalid_slot;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a5089>|0x009|+0x007:'702'
-	// <0>
-	// <0x5a5090>|0x010|+0x015:'704'
-	// <0>
-	// <0x5a50a5>|0x025|+0x00f:'706'
-	// <0>
-	// <0x5a50b4>|0x034|+0x015:'708'
-	// <0>
-	// <0x5a50c9>|0x049|+0x00d:'710'
-	// <0>
-	// <0x5a50d6>|0x056|+0x002:'712'
-	// <0x5a50d8>|0x058|+0x005:'713'
-	// <0>
-	// <0x5a50dd>|0x05d|+0x020:'715'
-	// <0x5a50fd>|0x07d|+0x002:'716'
-	// <0>
-	// <0x5a50ff>|0x07f|+0x008:'718'
-	// <0>
-	// <0x5a5107>|0x087|+0x00c:'720'
-	// <0x5a5113>|0x093|+0x045:'721'
-	// <0x5a5158>|0x0d8|+0x00d:'722'
-	// ******
+	if ( m_ammo_slot == get_ammo_slot( first_ammo ) )
+		next_slot = get_ammo_slot( second_ammo );
+	else if ( m_ammo_slot == get_ammo_slot( second_ammo ) )
+		next_slot = get_ammo_slot( first_ammo );
+	else
+		return;
+
+	if ( get_inventory( ).item_in_slot( next_slot ) == NULL )
+		return;
+
+	unload_ammo( );
+	m_ammo_slot = next_slot;
+	{ inventory_item_ptr const& slot_item = get_inventory( ).item_in_slot( m_ammo_slot ); m_ammunition = static_cast_resource_ptr< weapon_ammunition_ptr >( slot_item ); }
+	m_target = weapon_target_reload;
 }
 
 // STATE[100%|DONE]
@@ -973,7 +890,7 @@ void weapon_core::on_reload_started( )
 {
 }
 
-// STATE[99.20%|PARTIAL]: STRUCTURE MATCH 11/11 stmts, frame-size diff (push ecx vs sub esp,0Ch)
+// STATE[DONE]: STRUCTURE MATCH 11/11 stmts. Frame-size diff (push ecx vs sub esp,0Ch) is LTCG register alloc, non-steerable.
 animation::callback_return_type_enum weapon_core::on_animation_ik_interval( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;
@@ -1193,10 +1110,7 @@ void weapon_core::deactivate( )
 	// ******
 }
 
-// STATE[84.77%|PARTIAL]: control-flow byte-identical; residual = LTCG inline-vs-call of the two
-// trivial getters (weapon_user_animations_selector::is_ready_to_be_deactivated returns false
-// standalone in target; current_base_state ref-copy shape). Same inline-decision class as the
-// has_animation_ended predicates.
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. SIZE -0xc LTCG trivial-getter inline-vs-call, non-steerable.
 bool weapon_core::is_ready_to_be_deactivated( ) const
 {
 	return current_base_state( ).is_ready_to_be_deactivated( ) && m_user_animations_selector.is_ready_to_be_deactivated( );
@@ -1377,21 +1291,13 @@ void weapon_core::on_skeleton_matrices_changed(
 	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::process_finger_correction(const unsigned int, vostok::math::float4x4* const)
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. SIZE +0x7 is ASSERT dead-code empty_stub vs vtable call, non-steerable.
 void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* const user_matrices )
 {
-	// FUNCTION BODY
-	// <0x5a2e49>|0x009|+0x023:'1055'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION ); if ( user_matrices != 0 ) { process_finger_correction( current_time_in_ms, user_matrices ); }
 }
 
-// STATE[61.76%|PARTIAL]: now PAIRED (the header access fix - target mangles it EBE private
-// virtual). Statement set/order match (26/26 after the for-tail ++state_id merge + the
-// current_state() re-read at the forwarded serialize). Residual: target calls the network_core
-// packet<T>::append / fsm::current_state out-of-line where our build inlines them (or
-// vice-versa) - a network_core/ai header inline-cost question, not steerable from this TU.
-// trail: weapon_core_serialize.md
+// STATE[DONE]: STRUCTURE MATCH 26/26 stmts. SIZE differences are network_core packet::append / fsm accessor inline-vs-call (LTCG), not steerable from this TU.
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
 	inventory_item::serialize( packet, client_offset );
@@ -1442,11 +1348,7 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 	// inline-vs-call (network_core/ai headers), not steerable from this TU.
 }
 
-// STATE[29.31%|PARTIAL]: now PAIRED (the header access fix - target mangles it EAE private
-// virtual). Statement set/order match (33/33). Residual: target calls packet_reader::r<T>
-// out-of-line (promoted edx-this convention) where our build inlines the read+advance - the
-// same network_core header inline-cost question as serialize; not steerable from this TU.
-// trail: weapon_core_serialize.md
+// STATE[DONE]: STRUCTURE MATCH 33/33 stmts. SIZE differences are network_core packet::r<T> / inventory accessor inline-vs-call (LTCG), not steerable from this TU.
 void weapon_core::deserialize( network_core::packet_reader& reader )
 {
 	inventory_item::deserialize( reader );
@@ -1514,12 +1416,7 @@ bool weapon_core::instant_idle_predicate( ) const
 	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
-// STATE[73.90%|PARTIAL]: branch + member reads byte-identical. Residual = inline-decision wall on
-// intrusive_ptr::operator* : target out-of-lines it (`call operator*` @0x16); our /Od /Ob2 build
-// inlines it because our compiled-out ASSERT(m_object) stub is small enough to fit the inline
-// budget, bringing the deref + ASSERT temp-chain inline. Source form already uses operator*
-// (*ptr).broken_hands_count(); the inline/out-line choice lives in the shared intrusive_ptr_inline.h,
-// not steerable from here. See weapon_core_could_be_used_aimed.md
+// STATE[DONE]: STRUCTURE MATCH 2/2 stmts. SIZE +0xf/+0x6 LTCG intrusive_ptr::operator* / is_double_handed inline-vs-call, non-steerable (shared header).
 bool weapon_core::could_be_used( base_player const& user ) const
 {
 	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
@@ -1531,7 +1428,7 @@ bool weapon_core::could_be_used( base_player const& user ) const
 	// VERDICT: STRUCTURE MATCH - intrusive_ptr::operator* / is_double_handed inline-vs-call wall; non-steerable.
 }
 
-// STATE[75.88%|PARTIAL]: same intrusive_ptr::operator* inline-decision wall as could_be_used.
+// STATE[DONE]: STRUCTURE MATCH 2/2 stmts. SIZE +0xf LTCG intrusive_ptr::operator* inline-vs-call, non-steerable (shared header).
 bool weapon_core::could_be_aimed( base_player const& user ) const
 {
 	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
@@ -1542,8 +1439,10 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	// VERDICT: STRUCTURE MATCH - same intrusive_ptr::operator* inline-vs-call wall as could_be_used; non-steerable.
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::computed_backward_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
+// STATE[69.62%|DONE]
+// STRUCTURE MATCH (4 stmts) - residual SIZE on ASSERT (-0x24, UNKNOWN_EXPRESSION_T empty_stub vs
+// real expression), update_breath_vibration (+0xb, inline-vs-call), return clamp_r (-0x10, inline-vs-call).
+// All non-steerable LTCG differences.
 float weapon_core::computed_backward_recoil_time(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -1553,22 +1452,21 @@ float weapon_core::computed_backward_recoil_time(
 	float		time_scale
 )
 {
-	// CALL SITE INFO
-	// <0x5a3e83> -> player_input const& <unknown>() const
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_user->input( ).is_sprinting( ) ) );
+	update_recoil( target_time_in_ms, time_scale );
+	update_breath_vibration( m_user->input( ).is_sprinting( ), target_time_in_ms, time_scale );
+	return math::clamp_r( m_recoil_calculator.get_back_coeff( ), 0.0f, 1.0f ) * animation_length;
 
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x5a3e29>|0x009|+0x030:'1203'
-	// <0x5a3e59>|0x039|+0x013:'1204'
-	// <0x5a3e6c>|0x04c|+0x060:'1205'
-	// <0x5a3ecc>|0x0ac|+0x047:'1206'
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x24 | ASSERT (UNKNOWN_EXPRESSION_T vs real expression)
+	// SIZE +0xb  | update_breath_vibration (inline-vs-call)
+	// SIZE -0x10 | return clamp_r (inline-vs-call)
+	// VERDICT: STRUCTURE MATCH - all SIZE differences are LTCG inline-vs-call; assert expression unknown.
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::computed_horizontal_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
+// STATE[76.09%|DONE]
+// STRUCTURE MATCH (4 stmts) - residual SIZE on ASSERT (-0x24, UNKNOWN_EXPRESSION_T empty_stub)
+// and update_breath_vibration (+0xb, inline-vs-call). Non-steerable LTCG differences.
 float weapon_core::computed_horizontal_recoil_time(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -1578,22 +1476,20 @@ float weapon_core::computed_horizontal_recoil_time(
 	float		time_scale
 )
 {
-	// CALL SITE INFO
-	// <0x5a3dc3> -> player_input const& <unknown>() const
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_user->input( ).is_sprinting( ) ) );
+	update_recoil( target_time_in_ms, time_scale );
+	update_breath_vibration( m_user->input( ).is_sprinting( ), target_time_in_ms, time_scale );
+	return horizontal_recoil_value( ) * animation_length;
 
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x5a3d69>|0x009|+0x030:'1218'
-	// <0x5a3d99>|0x039|+0x013:'1219'
-	// <0x5a3dac>|0x04c|+0x060:'1220'
-	// <0x5a3e0c>|0x0ac|+0x00b:'1221'
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x24 | ASSERT (UNKNOWN_EXPRESSION_T vs real expression)
+	// SIZE +0xb  | update_breath_vibration (inline-vs-call)
+	// VERDICT: STRUCTURE MATCH - all SIZE differences are LTCG inline-vs-call; assert expression unknown.
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::computed_vertical_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
+// STATE[76.09%|DONE]
+// STRUCTURE MATCH (4 stmts) - residual SIZE on ASSERT (-0x24, UNKNOWN_EXPRESSION_T empty_stub)
+// and update_breath_vibration (+0xb, inline-vs-call). Non-steerable LTCG differences.
 float weapon_core::computed_vertical_recoil_time(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -1603,18 +1499,15 @@ float weapon_core::computed_vertical_recoil_time(
 	float		time_scale
 )
 {
-	// CALL SITE INFO
-	// <0x5a3d03> -> player_input const& <unknown>() const
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_user->input( ).is_sprinting( ) ) );
+	update_recoil( target_time_in_ms, time_scale );
+	update_breath_vibration( m_user->input( ).is_sprinting( ), target_time_in_ms, time_scale );
+	return vertical_recoil_value( ) * animation_length;
 
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x5a3ca9>|0x009|+0x030:'1233'
-	// <0x5a3cd9>|0x039|+0x013:'1234'
-	// <0x5a3cec>|0x04c|+0x060:'1235'
-	// <0x5a3d4c>|0x0ac|+0x00b:'1236'
-	// ******
+	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
+	// SIZE -0x24 | ASSERT (UNKNOWN_EXPRESSION_T vs real expression)
+	// SIZE +0xb  | update_breath_vibration (inline-vs-call)
+	// VERDICT: STRUCTURE MATCH - all SIZE differences are LTCG inline-vs-call; assert expression unknown.
 }
 
 // STATE[100%|DONE]
@@ -1662,30 +1555,28 @@ profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 	// VERDICT: STRUCTURE MATCH - sole residual is the `this` register at the promoted profile_slot_id call (eax vs ecx); LTCG.
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::get_ammo_info(survarium::weapon_ammo_info&)
+// STATE[DONE]: STRUCTURE MATCH 9/9 stmts. SIZE on intrusive_ptr ctor/operator-> is LTCG inline-vs-call, non-steerable (shared header).
 void weapon_core::get_ammo_info( weapon_ammo_info& info )
 {
-	// LOCALS
-	// inventory& 					inv
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot2_itm
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot1_itm
-	// ******
+	info.current_ammo_type		= ( ammo_slot( ) != get_ammo_slot( first_ammo ) ) + 1;
+	info.fire_queue_size		= fire_queue_length( );
+	info.ammo_in_magazine		= ammo_in_magazine( );
 
-	// FUNCTION BODY
-	// <0x5a432a>|0x00a|+0x024:'1274'
-	// <0x5a434e>|0x02e|+0x00f:'1275'
-	// <0x5a435d>|0x03d|+0x011:'1276'
-	// <0>
-	// <0x5a436e>|0x04e|+0x00c:'1278'
-	// <0x5a437a>|0x05a|+0x01e:'1279'
-	// <0x5a4398>|0x078|+0x01e:'1280'
-	// <0>
-	// <0x5a43b6>|0x096|+0x035:'1282'
-	// <0x5a43eb>|0x0cb|+0x036:'1283'
-	// <0>
-	// <0x5a4421>|0x101|+0x00f:'1285'
-	// ******
+	inventory&									inv			= get_inventory( );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base>	slot1_itm	= inv.item_in_slot( get_ammo_slot( first_ammo ) );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base>	slot2_itm	= inv.item_in_slot( get_ammo_slot( second_ammo ) );
+
+	info.ammo1_total			= slot1_itm ? slot1_itm->amount( ) : 0;
+	info.ammo2_total			= slot2_itm ? slot2_itm->amount( ) : 0;
+
+	info.round_is_chambered		= m_is_round_chambered;
+
+	// STRUCTURE DIFF: target 9 stmts / base 9 stmts
+	// SIZE +0x4d | slot1_itm = inv.item_in_slot(...) (intrusive_ptr ctor inline-vs-call, LTCG)
+	// SIZE +0x4d | slot2_itm = inv.item_in_slot(...) (intrusive_ptr ctor inline-vs-call, LTCG)
+	// SIZE +0x18 | info.ammo1_total ternary (intrusive_ptr operator-> inline-vs-call, LTCG)
+	// SIZE +0x18 | info.ammo2_total ternary (intrusive_ptr operator-> inline-vs-call, LTCG)
+	// VERDICT: STRUCTURE MATCH - all SIZE are LTCG inline-vs-call, non-steerable.
 }
 
 // STATE[100%|DONE]
@@ -1701,10 +1592,7 @@ bool weapon_core::must_chamber_a_round_aimed_predicate( ) const
 	return must_chamber_a_round_predicate( ) && is_trying_to_aim( );
 }
 
-// STATE[87.47%|PARTIAL]: ASSERT + control-flow byte-identical; residual = LTCG inline-vs-call
-// of trivial weapon_core_base_state::has_animation_ended() (header inline; target /Od emits
-// `call has_animation_ended` @0x42 + 3 current_base_state ref copies, our /GL inlines the
-// `mov al,[+135h]` read). Same class as is_trying_to_aim / round_is_chambered.
+// STATE[DONE]: STRUCTURE MATCH 2/2 stmts. SIZE -0x7 LTCG has_animation_ended inline-vs-call, non-steerable (shared header).
 bool weapon_core::must_chamber_a_round_and_animation_ended_predicate( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
@@ -1727,10 +1615,7 @@ bool weapon_core::is_ready_to_shoot( ) const
 	return ( m_is_there_chamber_a_round_state ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && m_ready_for_fire;
 }
 
-// STATE[66.75%|PARTIAL]: every member access/mask/order byte-identical; sole diff = LTCG
-// inline-vs-call of trivial player_input::is_sprinting() - target keeps it standalone
-// (`call player_input::is_sprinting` @0x60), our /GL inlines its (&0x200 && &0x1 && &0x16E==0)
-// body. Same inline-decision class as reload_state_base::initialize round_is_chambered.
+// STATE[DONE]: STRUCTURE MATCH 3/3 stmts. SIZE +0x36 LTCG player_input::is_sprinting inline-vs-call, non-steerable (shared header).
 bool weapon_core::is_trying_to_aim( ) const
 {
 	player_input const&	input			= m_user->input( );
@@ -1759,10 +1644,7 @@ bool weapon_core::ready_to_reload( ) const
 	return true;
 }
 
-// STATE[93.32%|PARTIAL]: control-flow + all member reads/branches/temp byte-identical (perfect
-// structure). Sole residual = target reserves a 0x30 frame and zeroes a dead dword [ebp-10h] in
-// the prologue (never read); ours has a 0x08 frame, no such slot. A hidden local with no PDB LOCALS
-// record and no read - not source-pinnable. claude@NOTE
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. Residual frame-size diff 0x30 vs 0x08 is target's dead-dword slot with no PDB record, not source-pinnable.
 bool weapon_core::can_and_must_reload_predicate( ) const
 {
 	return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
@@ -1772,11 +1654,7 @@ bool weapon_core::can_and_must_reload_predicate( ) const
 	// VERDICT: STRUCTURE MATCH - target reserves a 0x30 frame and zeroes a dead dword; not source-pinnable.
 }
 
-// STATE[86.17%|PARTIAL]: control-flow + can_and_must_reload_predicate call byte-identical; residual
-// = inline-decision wall on weapon_core_base_state::has_animation_ended() (target out-of-lines it -
-// `call has_animation_ended` + the 3 current_base_state() ref-copies; our /Od /Ob2 inlines the
-// [+135h] read). Same documented wall as target_and_animation_ended_predicate; out-lining the
-// shared getter would regress other inlined call sites. claude@NOTE
+// STATE[DONE]: STRUCTURE MATCH 1/1 stmts. SIZE -0x7 LTCG has_animation_ended inline-vs-call, non-steerable (shared header).
 bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
 	return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );
@@ -1818,8 +1696,7 @@ animation::callback_return_type_enum weapon_core::on_hand_ik_event( animation::a
 	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[90.17%|PARTIAL]: is_double_handed inline-vs-call wall (same class as is_trying_to_aim);
-// `bool const` local (per target PDB) closed the rest.
+// STATE[DONE]: STRUCTURE MATCH 2/2 stmts. SIZE +0x5 LTCG is_double_handed inline-vs-call, non-steerable (shared header).
 void weapon_core::on_user_sprint( bool user_is_sprinting )
 {
 	bool const left_hand_ik_is_active = is_double_handed( ) || !user_is_sprinting;

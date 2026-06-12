@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// STATE[100%|DONE]
 weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
 	m_one_shoot_dispersion_amount	( 0.0f ),
 	m_reload_dispersion_amount		( 0.0f ),

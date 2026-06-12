@@ -5,6 +5,8 @@
 #ifndef VOSTOK_PHYSICS_CHARACTER_CONTROLLER_H_INCLUDED
 #define VOSTOK_PHYSICS_CHARACTER_CONTROLLER_H_INCLUDED
 
+#include <vostok/physics/api.h>
+
 namespace vostok {
 namespace physics {
 

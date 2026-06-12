@@ -11,19 +11,8 @@
 
 namespace survarium {
 
-static bool s_dispersion_enabled_value = true; // <0x7db?>
+static bool s_dispersion_enabled_value = true;
 static console_commands::cc_bool s_dispersion_enabled_cc( "dispersion_enabled", s_dispersion_enabled_value, false, console_commands::command_type_engine_internal );
-
-/*
-// STATE[STUB]
-// void `dynamic atexit destructor for 's_dispersion_enabled_cc''()
-void `dynamic atexit destructor for 's_dispersion_enabled_cc''( )
-{
-	// FUNCTION BODY
-	// <0x7dafa0>|0x000|      :'14'	{
-	// ******
-}
-*/
 
 // STATE[100%|DONE]
 dispersion_calculator::dispersion_calculator( ) :
