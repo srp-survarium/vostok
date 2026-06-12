@@ -31,12 +31,6 @@ inline float get_angle( float adjacent0, float adjacent1, float opposite )
 	float angle_cos	= ( vostok::math::sqr( adjacent0 ) + vostok::math::sqr( adjacent1 ) - vostok::math::sqr( opposite ) ) / ( 2.0f * adjacent0 * adjacent1 );
 	vostok::math::clamp( angle_cos, -1.0f, 1.0f );
 	return vostok::math::acos( angle_cos );
-
-	// FUNCTION BODY
-	// <0xcafd6>|0x006|+0x04f:'16'		angle_cos
-	// <0xcb025>|0x055|+0x016:'17'		clamp
-	// <0xcb03b>|0x06b|+0x00e:'18'		return acos
-	// ******
 }
 
 // STATE[STUB]
@@ -60,10 +54,6 @@ inline float4x4 mix_transformations(
 inline float4x4 mix_transformations( float4x4 const& first, float4x4 const& second, float coeff )
 {
 	return mix_transformations( first, second, coeff, coeff );
-
-	// FUNCTION BODY
-	// <0xacdc0>|0x000|+0x01d:'30'
-	// ******
 }
 
 

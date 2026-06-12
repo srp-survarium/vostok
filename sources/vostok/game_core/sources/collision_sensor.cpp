@@ -227,11 +227,6 @@ void collision_sensor::get_shapes_centers( vectora<float3>& centers ) const
 {
 	for ( u32 i = 0 ; i < m_collision_geometries_count ; ++i )
 		m_collision_geometries[i]->get_shapes_centers( centers );
-
-	// FUNCTION BODY
-	// <0x59a9b9>|0x000|0x000|[1]:'254'
-	// <0x59a9d6>|0x01d|0x01d:'255'
-	// ******
 }
 
 void collision_sensor::insert( physics::world* world )

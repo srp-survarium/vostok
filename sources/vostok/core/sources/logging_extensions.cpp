@@ -126,14 +126,11 @@ void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 {
 	_iobuf* handle		=	get_stdstream_handle( stream );
 	if ( !handle )
-		return;												// <1>
-															// <2>
-	va_list					mark;							// <3>
-	va_start				( mark, format );				// <4>
-															// <5>
+		return;
+	va_list					mark;
+	va_start				( mark, format );
 	vfprintf				( handle, format, mark );
-															// <1>
-	va_end					( mark );						// <2>
+	va_end					( mark );
 }
 
 static bool is_logging_initialized( )
@@ -145,7 +142,6 @@ bool use_console_for_logging( )
 {
 	if ( is_logging_initialized( ) )
 		return false;
-																								// <1>
 	// claude@MATCH: target evaluates the key FIRST (cmp key-state,1 before call run_tests_command_line).
 	// Keep the operator-bool form: explicit is_set() inlines a different guard shape and drops 98 -> 50.
 	static bool s_use_console_for_logging = s_use_console || testing::run_tests_command_line();
@@ -228,10 +224,10 @@ static void logging_callback(
 			write_to_stdstream( stdstream_error, "%s\r\n", log_string );
 
 		if ( g_log_filter_tree ) {
-			if ( s_log_to_stdout.is_set( ) && !logged_to_stdout )							// <1>
+			if ( s_log_to_stdout.is_set( ) && !logged_to_stdout )
 				write_to_stdstream( stdstream_out, "%s\r\n", log_string );
-		}																					// <1>
-	}																						// <2>
+		}
+	}
 }
 
 // claude@MATCH: spelled via __LOG_FORCED - the one macro that takes a RUNTIME initiator (the public
@@ -280,31 +276,28 @@ void logging_preinitialize( )
 
 static void push_logging_filters( )
 {
-	using namespace vostok;																									// <1>
-	logging::verbosity	verbosity		=	logging::trace;																	// <2>
+	using namespace vostok;
+	logging::verbosity	verbosity		=	logging::trace;
 	fixed_string512		verbosity_string;
 	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);
 	if ( log_verbosity_key_is_set )
 		verbosity						= logging::string_to_verbosity(verbosity_string.c_str());
 	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )
-		verbosity						= logging::warning;																	// <1>
-																															// <2>
-	//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;	// <3>
+		verbosity						= logging::warning;
+	//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;
 	logging::push_filter			( *g_log_filter_tree, "", verbosity, u32(-1) );
-	//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );						// <1>
-	//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );				// <2>
-	//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );			// <3>
-	//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );	// <4>
-																															// <5>
+	//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );
+	//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );
+	//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );
+	//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );
 																															// <6> sushi@NOTE: New or empty line
 	fs_new::native_path_string	cfg_file_path;
-	if ( fs_new::convert_to_absolute_path(& cfg_file_path,																	// <1>
-										  fs_new::native_path_string::convert("../../user_data/user.cfg"),					// <2>
+	if ( fs_new::convert_to_absolute_path(& cfg_file_path,
+										  fs_new::native_path_string::convert("../../user_data/user.cfg"),
 										  assert_on_fail_false) )
-	{																														// <1>
+	{
 		console_commands::execute_console_commands	( cfg_file_path, console_commands::execution_filter_early );
-	}																														// <1>
-																															// <2>
+	}
 }
 
 void logging_initialize( )

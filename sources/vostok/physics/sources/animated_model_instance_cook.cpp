@@ -27,7 +27,7 @@ animated_model_instance_cook::animated_model_instance_cook( ):
 	),
 	m_allocator						( g_ph_allocator )
 {
-	register_cook( this );	// <0x72cd82>|0x000|0x000:'25'
+	register_cook( this );
 }
 
 void animated_model_instance_cook::translate_request_path( pcstr request, fs_new::virtual_path_string& new_request ) const
@@ -35,7 +35,7 @@ void animated_model_instance_cook::translate_request_path( pcstr request, fs_new
 	new_request.assignf(
 		"resources/animated_model_instances/physics_animated_models/%s.physics_model",
 		request
-	); // <0x72cdb0>|0x000|0x000:'30'
+	);
 }
 
 void animated_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
@@ -47,12 +47,12 @@ void animated_model_instance_cook::translate_query( resources::query_result_for_
 		m_allocator,
 		0,
 		&parent
-	); // <0x72d1cd>|0x000|0x000:'42'
+	);
 }
 
 void animated_model_instance_cook::on_config_loaded( resources::queries_result& data )
 {
-	resources::query_result_for_cook* const	parent		= data.get_parent_query();											// <0x72d05c>|0x000|0x000:'47'
+	resources::query_result_for_cook* const	parent		= data.get_parent_query();
 	if ( !data.is_successful() )
 	{
 		parent->finish_query							( result_error );
@@ -60,12 +60,12 @@ void animated_model_instance_cook::on_config_loaded( resources::queries_result& 
 	}
 
 	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
-	configs::binary_config_value const& config_value	= config->get_root();												// <0x72d0cb>|0x06f|0x042:'55'
+	configs::binary_config_value const& config_value	= config->get_root();
 	configs::binary_config_value const& attributes		= config_value["attributes"];
 
 	pcstr skeleton_path									= attributes["skeleton"];
 	fs_new::virtual_path_string								skeleton_config_path;
-	skeleton_config_path.assignf						( "resources/models/%s.skinned_model/skeleton", skeleton_path );	// <0x72d0f3>|0x097|0x006:'60'
+	skeleton_config_path.assignf						( "resources/models/%s.skinned_model/skeleton", skeleton_path );
 
 	resources::query_resource							(
 		skeleton_config_path.c_str(),
@@ -74,29 +74,29 @@ void animated_model_instance_cook::on_config_loaded( resources::queries_result& 
 		m_allocator,
 		0,
 		parent
-	);																														// <0x72d125>|0x0c9|0x032:'69'
+	);
 }
 
 // sushi@NOTE: Only skeleton config is left from xray, collision_config and ragdoll config were removed (as well with `config` argument)
 void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
-	if ( !data.is_successful() )														// <0x72cf40>|0x007|0x007:'75'
+	if ( !data.is_successful() )
 	{
 		parent->finish_query							( result_error );
 		return;
 	}
 
 	configs::binary_config_ptr skeleton_config			= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
-	configs::binary_config_value const& skeleton_value	= skeleton_config->get_root();	// <0x72cfa6>|0x06d|0x042:'82'
+	configs::binary_config_value const& skeleton_value	= skeleton_config->get_root();
 
 	R_ASSERT											( skeleton_value.value_exists( "skeleton" ) );
-	pcstr skeleton_path									= skeleton_value["skeleton"];	// <0x72cfb0>|0x077|0x00a:'85'
+	pcstr skeleton_path									= skeleton_value["skeleton"];
 
 	resources::request requests[] =
 	{
 		{ skeleton_path, resources::skeleton_class }
-	};																					// <0x72cfba>|0x081|0x00a:'101'
+	};
 
 	query_resources										(
 		requests,
@@ -105,7 +105,7 @@ void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries
 		m_allocator,
 		0,
 		parent
-	);																					// <0x72cfbc>|0x083|0x002:'113'
+	);
 }
 
 void animated_model_instance_cook::on_subresources_loaded( resources::queries_result& data )
@@ -113,11 +113,11 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	resources::query_result_for_cook* const	parent	= data.get_parent_query();
 	if ( !data.is_successful() )
 	{
-		parent->finish_query						( result_error );											// <0x72cdf4>|0x01a|0x017:'121'
+		parent->finish_query						( result_error );
 		return;
 	}
 
-	animated_model_instance* new_model_instance		= VOSTOK_NEW_IMPL( m_allocator, animated_model_instance );	// <0x72ce0a>|0x030|0x016:'125'
+	animated_model_instance* new_model_instance		= VOSTOK_NEW_IMPL( m_allocator, animated_model_instance );
 	new_model_instance->m_skeleton					= static_cast_resource_ptr< animation::skeleton_ptr >( data[0].get_unmanaged_resource() );
 
 	R_ASSERT( parent );
@@ -131,15 +131,13 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	parent->set_unmanaged_resource					(
 				new_model_instance,
 				resources::memory_usage_type		( resources::nocache_memory, sizeof( animated_model_instance ) )
-			);																									// <0x72cee1>|0x107|0x0a9:'148'
-	parent->finish_query							( result_success );											// <0x72cdfc>|0x022|-0x0e5:'149'
+			);
+	parent->finish_query							( result_success );
 }
 
 void animated_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// <1>
-	// <2>
-	VOSTOK_DELETE_IMPL( m_allocator, resource ); // <0x72cd01>|0x000|0x000:'156'
+	VOSTOK_DELETE_IMPL( m_allocator, resource );
 }
 
 } // namespace physics
