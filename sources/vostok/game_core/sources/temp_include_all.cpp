@@ -7,6 +7,14 @@
 
 #include <vostok/ai/npc_statistics.h>
 
+// for use_engine_user_world_cone (the temp game-cone anchor)
+#include <vostok/ai/api.h>
+#include <vostok/ai_navigation/api.h>
+#include <vostok/animation/api.h>
+#include <vostok/input/api.h>
+#include <vostok/rtp/api.h>
+#include <vostok/ui/api.h>
+
 #include <vostok/collision/animated_object.h>
 #include <vostok/collision/bone_collision_data.h>
 #include <vostok/collision/api.h>
@@ -2348,6 +2356,36 @@ namespace vostok
 		printf("%s\n", name);
 	}
 
+	// game's legacy TUs were the only real consumers of the engine_user world
+	// cone (ai/ui/animation/input/rtp/ai_navigation); until the rebuilt game
+	// module calls these for real, anchor them here so /OPT:REF keeps the
+	// modules' objects in the exe (see temp/game_legacy/README.md).
+	void use_engine_user_world_cone()
+	{
+		ai::world* ai_world = ai::create_world( *( ai::engine* )NULL );
+		ai::destroy_world( ai_world );
+		ai::set_memory_allocator( *( ai::allocator_type* )NULL );
+
+		ui::world* ui_world = ui::create_world( *( ui::engine* )NULL, *( render::ui::renderer* )NULL, *( memory::base_allocator* )NULL );
+		ui::destroy_world( ui_world );
+
+		animation::world* animation_world = animation::create_world( *( animation::engine* )NULL, NULL, NULL );
+		animation::destroy_world( animation_world );
+		animation::set_memory_allocator( *( animation::allocator_type* )NULL );
+
+		input::world* input_world = input::create_world( *( input::engine* )NULL, NULL );
+		input::destroy_world( input_world );
+		input::set_memory_allocator( *( input::allocator_type* )NULL );
+
+		rtp::world* rtp_world = rtp::create_world( *( rtp::engine* )NULL, *( animation::world* )NULL, *( render::scene_ptr const* )NULL, NULL, NULL );
+		rtp::destroy_world( rtp_world );
+		rtp::set_memory_allocator( *( rtp::allocator_type* )NULL );
+
+		ai::navigation::world* ai_navigation_world = ai::navigation::create_world( *( ai::navigation::engine* )NULL, *( render::scene_ptr const* )NULL, *( render::debug::renderer* )NULL );
+		ai::navigation::destroy_world( ai_navigation_world );
+		ai::navigation::set_memory_allocator( *( ai::navigation::allocator_type* )NULL );
+	}
+
 	void use_network_core_tcp_packet()
 	{
 		memory::stack_allocator stack_allocator;
@@ -2733,6 +2771,7 @@ IncludeAll::IncludeAll()
 	vostok::use_network_core_udp_match_connection();
 	vostok::use_network_core_udp_network_flow_emulator();
 	vostok::use_network_core_udp_match_client();
+	vostok::use_engine_user_world_cone();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
 	vostok::use_animated_rigid_body();
