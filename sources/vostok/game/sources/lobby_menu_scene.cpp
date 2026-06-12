@@ -4,8 +4,9 @@
 
 #include "pch.h"
 #include "lobby_menu.h"
-// this compiland also holds out-of-line bodies of profile_player_character /
-// profile_character - their headers land with batch 6 (player/stats/economy)
+// this compiland also holds the out-of-line bodies of these two (batch 6) types
+#include "profile_player_character.h"
+#include "profile_character.h"
 
 namespace survarium {
 

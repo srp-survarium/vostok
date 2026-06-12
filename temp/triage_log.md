@@ -485,7 +485,8 @@ INSIDE their owner `.cpp` when that file's batch runs, not as standalone headers
 - `relocate_item_func.h` -> lobby_menu_ui.cpp (batch 5 - DONE: defined in the
   .cpp; lobby_menu holds only a relocate_item_func* - a fwd-decl suffices in
   lobby_menu.h, no header placement forced)
-- `hit_object.h` -> human_npc.cpp (batch 6)
+- `hit_object.h` -> human_npc.cpp (batch 6 - DONE: defined in the .cpp;
+  human_npc.h needs only a fwd-decl for its on_hit_event const-ref param)
 - `max_angular_velocity_command.h` -> game.cpp (batch 11)
 - `ray_query_predicate.h` -> game.cpp / game_unused.cpp (legacy prior; batch 11)
 - `get_first_npc_in_camera_direction_predicate.h` -> game_unused.cpp lineage (batch 11)
