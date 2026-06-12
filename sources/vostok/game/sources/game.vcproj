@@ -898,6 +898,10 @@
 			Name="sources"
 			>
 			<File
+				RelativePath=".\action_type.h"
+				>
+			</File>
+			<File
 				RelativePath=".\flash_factory.h"
 				>
 			</File>
@@ -906,7 +910,43 @@
 				>
 			</File>
 			<File
+				RelativePath=".\game_action_id.h"
+				>
+			</File>
+			<File
+				RelativePath=".\game_status.h"
+				>
+			</File>
+			<File
+				RelativePath=".\input_mode_type_enum.h"
+				>
+			</File>
+			<File
+				RelativePath=".\keybind_group_type.h"
+				>
+			</File>
+			<File
+				RelativePath=".\login_menu_status_enum.h"
+				>
+			</File>
+			<File
+				RelativePath=".\option_item_type_enum.h"
+				>
+			</File>
+			<File
+				RelativePath=".\options_enum.h"
+				>
+			</File>
+			<File
 				RelativePath=".\temp_game_include_all.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\toggle_action_enum.h"
+				>
+			</File>
+			<File
+				RelativePath=".\video_options_enum.h"
 				>
 			</File>
 		</Filter>
