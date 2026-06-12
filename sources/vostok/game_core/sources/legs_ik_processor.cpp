@@ -130,8 +130,8 @@ void legs_ik_processor::leg_params::tick( float dt )
 	m_time_since_stance		+= dt;
 }
 
-// claude@MATCH: arg order is min( member, tr_time ) - verified 100% by build. The swapped
-// min( tr_time, member ) regresses to 83.69% (an extra movss reorders the operand spills).
+// claude@MATCH: arg order is min( member, tr_time ), verified against the target asm.
+// The swapped min( tr_time, member ) emits an extra movss that reorders the operand spills.
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 {
 	heel_transition_time = math::min( heel_transition_time, tr_time );
