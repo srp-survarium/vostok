@@ -938,7 +938,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\temp_game_include_all.cpp"
+				RelativePath=".\temp_include_all.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\temp_include_all.h"
 				>
 			</File>
 			<File

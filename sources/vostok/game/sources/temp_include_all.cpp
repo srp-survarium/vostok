@@ -1,5 +1,24 @@
+// Temp build device for the matching effort, owned by the game module (the
+// startup root - game_entry_point.cpp::create_world instantiates IncludeAll):
+// use_*() calls keep otherwise-unreferenced symbols alive under /OPT:REF, and
+// every rebuilt game header that no real TU includes yet is #included below so
+// the compiler validates it (see docs/binary_matching/library_carcass_rebuild.md).
 #include "pch.h"
 #include "temp_include_all.h"
+
+// game carcass headers under validation (no real including TU yet)
+#include "action_type.h"
+#include "flash_factory.h"
+#include "flash_movie.h"
+#include "game_action_id.h"
+#include "game_status.h"
+#include "input_mode_type_enum.h"
+#include "keybind_group_type.h"
+#include "login_menu_status_enum.h"
+#include "option_item_type_enum.h"
+#include "options_enum.h"
+#include "toggle_action_enum.h"
+#include "video_options_enum.h"
 
 #include <vostok/physics/sources/bullet_include.h>
 
@@ -37,6 +56,12 @@
 #include <vostok/physics/sources/bullet_character_controller.h>
 #include <vostok/physics/static_rigid_body.h>
 
+// game's pch (game_memory.h) pins _WIN32_WINNT to 0x0500, so ws2tcpip.h pulls
+// the wspiapi.h getaddrinfo emulation whose inlines call CRT calloc/free -
+// lift the engine's CRT bans (memory_override_operators.h) around the
+// asio-pulling includes; restored right after.
+#undef calloc
+#undef free
 // #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <vostok/network_core/http_client.h>
@@ -50,13 +75,16 @@
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
+#define calloc(...)						VOSTOK_UNREACHABLE_CODE( "CRT calloc detected!" );
+#define free(...)						VOSTOK_UNREACHABLE_CODE( "CRT free detected!" );
+
 #include <vostok/animation/skeleton.h>
 
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_holding_params.h>
-#include "breath_holding_states.h"
-#include "breath_holding_states_inline.h"
+#include <vostok/game_core/sources/breath_holding_states.h>
+#include <vostok/game_core/sources/breath_holding_states_inline.h>
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/client_player_update.h>
@@ -83,13 +111,13 @@
 #include <vostok/game_core/legs_ik_processor.h>
 #include <vostok/game_core/legs_ik_drawer.h>
 #include <vostok/game_core/player_logic_base_state.h>
-#include "player_logic_jump_state.h"
-#include "player_logic_crouch_state.h"
-#include "player_logic_stand_state.h"
-#include "player_logic_sprint_state.h"
-#include "jump_logic_state_inactive.h"
-#include "jump_logic_state_landing.h"
-#include "jump_logic_state_start.h"
+#include <vostok/game_core/sources/player_logic_jump_state.h>
+#include <vostok/game_core/sources/player_logic_crouch_state.h>
+#include <vostok/game_core/sources/player_logic_stand_state.h>
+#include <vostok/game_core/sources/player_logic_sprint_state.h>
+#include <vostok/game_core/sources/jump_logic_state_inactive.h>
+#include <vostok/game_core/sources/jump_logic_state_landing.h>
+#include <vostok/game_core/sources/jump_logic_state_start.h>
 #include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>

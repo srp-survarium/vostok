@@ -147,7 +147,8 @@ carcasses are old-format (addressless `// FUNCTION BODY`).
    `NEW/DELETE` macros) and define the storage in the entry-point TU.
 2. **Un-exclude each `.cpp`** in `<module>.vcproj` - delete its `Master Gold|Win32`
    `ExcludedFromBuild="true"` (the only TRACKED build-graph change). Order TUs leaf-first.
-3. **Anchor + force-include**: in `game_core/sources/temp_include_all.cpp`, add a
+3. **Anchor + force-include**: in `game/sources/temp_include_all.cpp` (the
+   engine-wide anchor TU, owned by the startup-root game module), add a
    `use_<module>_<thing>()` that touches new symbols, and call it from
    `IncludeAll::IncludeAll()`. A header that NO enabled TU includes must be
    `#include`d here too, so the compiler actually validates it (the rule: every header
