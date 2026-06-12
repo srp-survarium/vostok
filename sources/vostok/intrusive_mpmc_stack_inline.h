@@ -20,7 +20,6 @@ inline	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::~intrusive_mpmc_stack(
 {
 }
 
-// STATE[INLINED]
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
 inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
 {
@@ -39,7 +38,6 @@ inline	void	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::push( T* value )
 			old_head.whole ) != old_head.whole );
 }
 
-// STATE[UNCHECKED]
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
 inline	T*	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::try_pop( )
 {
@@ -60,27 +58,6 @@ inline	T*	intrusive_mpmc_stack<T,BaseWithMember,MemberNext>::try_pop( )
 			result.whole ) != result.whole );
 
 	return result.pointer( );
-
-	// FUNCTION BODY: See multi_threading_single_size_allocator_policy< T >::allocate
-	// <0>
-	// <1>
-	// <2>
-	// <0xbe71a>|0x00a|+0x00e:'49'		result = m_top;
-	// <0xbe728>|0x018|+0x006:'50'		if ( !result.pointer( ) )
-	// <0xbe72e>|0x01e|+0x004:'51'			return NULL;
-	// <0>
-	// <0xbe732>|0x022|+0x009:'53'		new_head.counter = result.counter + 1;
-	// <0xbe73b>|0x02b|+0x009:'54'		new_head.m_pointer = result.pointer( )->*MemberNext;
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0xbe744>|0x034|+0x03d:'61'
-	// <0>
-	// <0xbe781>|0x071|+0x003:'63'
-	// ******
 }
 
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >

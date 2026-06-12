@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 // claude@MATCH: additive_back_recoil (offset 0x20) is omitted - the target never
 // stores it (no movss [this+20h]); additive_recoil_time is math::epsilon_3 (.001f).
 weapon_recoil_params::weapon_recoil_params( ) :
@@ -26,7 +25,6 @@ weapon_recoil_params::weapon_recoil_params( ) :
 {
 }
 
-// STATE[100%|DONE]
 // claude@MATCH: the member-init list omits first_shoot_back_recoil (0x08),
 // shoot_back_recoil (0x0c), additive_back_recoil (0x20) and back_compensation_speed
 // (0x30) - only 9 of the 12 members are initialized here (the default ctor inits all

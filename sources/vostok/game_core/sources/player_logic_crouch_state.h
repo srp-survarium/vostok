@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-// player_logic_crouch_state::`scalar deleting destructor'( ) // <0x2a800>|0x000|      :'34'	{
+// player_logic_crouch_state::`scalar deleting destructor'( )
 
 class player_logic_crouch_state : public player_logic_base_state {
 public:

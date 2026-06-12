@@ -8,9 +8,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]: base ctor, default resource_ptr @0x28, m_preface_interval_ended /
-// m_jump_interval_ended cleared; m_physics_jumped (0x2C) deliberately left uninitialised
-// to match target @0x6f8bd0 (no store to +0x2C).
 jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
 	: jump_logic_base_state( owner ),
 	  m_preface_interval_ended( false ),
@@ -18,7 +15,6 @@ jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
 {
 }
 
-// STATE[9.43%|PARTIAL]: UNREACHABLE stub (unblocks the class). Real body verified but
 // blocked on the lexeme/expression operator+ machinery (see claude@TODO below).
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_start::selected_animations(
 	mutable_buffer&						buffer,
@@ -49,9 +45,6 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	UNREACHABLE_CODE( );
 }
 
-// STATE[3.3%|PARTIAL]: UNREACHABLE stub (emitted, paired). Real body is large lexeme/
-// interpolator machinery (jump_logic::get_animation/get_animation_caption, fixed_vector
-// of animation_intervals, linear_interpolator) - separate machinery unit.
 // vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_start::get_main_lexeme(vostok::mutable_buffer&, const bool, const vostok::animation::body_part_masks_enum)
 animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
 {
@@ -114,9 +107,6 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 	UNREACHABLE_CODE( );
 }
 
-// STATE[7.07%|PARTIAL]: UNREACHABLE stub (emitted, paired). Real body is large lexeme/
-// lexeme_parameters machinery (jump_logic::get_animation/get_move_look_*, look_time_factor,
-// animation_lexeme_parameters) - separate machinery unit.
 // vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_start::get_look_lexeme(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, vostok::animation::mixing::animation_lexeme&)
 animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	mutable_buffer&						buffer,
@@ -162,9 +152,6 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	UNREACHABLE_CODE( );
 }
 
-// STATE[5.83%|PARTIAL]: empty stub. Real body sets up two animation callbacks via
-// boost::bind + set_animation_callback (on_interval_end / on_jump_event) - boost::bind
-// machinery unit.
 // void survarium::jump_logic_state_start::initialize()
 void jump_logic_state_start::initialize( )
 {
@@ -178,15 +165,12 @@ void jump_logic_state_start::initialize( )
 	// ******
 }
 
-// STATE[100%|DONE]: two remove_animation_callback calls on m_jump_logic.owner()
 void jump_logic_state_start::finalize( )
 {
 	m_jump_logic.owner().remove_animation_callback( "jump", this );
 	m_jump_logic.owner().remove_animation_callback( animation::channel_id_on_animation_interval_end, this );
 }
 
-// STATE[11.77%|PARTIAL]: UNREACHABLE stub. Real body reads animation_callback_params
-// fields (interval_id vs m_interval_id_to_wait_for) - needs that type's layout.
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_interval_end( animation::animation_callback_params& params )
 {
@@ -204,8 +188,6 @@ animation::callback_return_type_enum jump_logic_state_start::on_interval_end( an
 	UNREACHABLE_CODE( );
 }
 
-// STATE[10.52%|PARTIAL]: UNREACHABLE stub. Real body touches player_stamina (see CALL
-// SITE INFO) + animation_callback_params - separate machinery unit.
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_jump_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_jump_event( animation::animation_callback_params& params )
 {

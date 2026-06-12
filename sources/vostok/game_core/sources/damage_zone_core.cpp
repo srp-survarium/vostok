@@ -16,7 +16,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_physics_object* rigid_body ) :
 	m_receiver		( receiver ),
 	m_rigid_body	( rigid_body ),
@@ -24,13 +23,12 @@ hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_phys
 {
 }
 
-// STATE[100%|DONE]: sushi@TODO: Think about this a bit more.
+// sushi@TODO: Think about this a bit more.
 bool hit_receiver_info::operator==( hit_receiver_info const& rhs ) const
 {
 	return m_receiver->m_pointer->m_pointer == rhs.m_receiver->m_pointer->m_pointer;
 }
 
-// STATE[99.63%|DONE]
 damage_zone_core::damage_zone_core( ) :
 	hit_initiator				( u8(-1), true ),
 	m_physics_world				( NULL ),
@@ -38,17 +36,12 @@ damage_zone_core::damage_zone_core( ) :
 	m_accumulated_hit_time_ms	( 0 ),
 	m_standalone				( true )
 {
-	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x148 vs 0x147 bytes)
-	// VERDICT: STRUCTURE MATCH (member-init list, 0 body stmts) - residual is an LTCG frame-slot
-	// delta plus member-ctor call-target relocs; instruction shape identical, non-steerable.
 }
 
-// STATE[100%|DONE]
 damage_zone_core::~damage_zone_core( )
 {
 }
 
-// STATE[UNCHECKED]
 void damage_zone_core::load( configs::binary_config_value const& t )
 {
 	collision_sensor::load( t );
@@ -70,45 +63,13 @@ void damage_zone_core::load( configs::binary_config_value const& t )
 	configs::binary_config_value const* end	= bone_parts_filter.end( );
 	for ( ; it != end ; ++it )
 		m_body_parts_filter.push_back((pcstr)it);
-
-	// FUNCTION BODY
-	// <0x5994d0>|0x000|+0x010:'49'	{
-	// <0x5994e0>|0x010|+0x00f:'50'
-	// <0>
-	// <0x5994ef>|0x01f|+0x042:'52'
-	// <0x599531>|0x061|+0x042:'53'
-	// <0x599573>|0x0a3|+0x042:'54'
-	// <0>
-	// <18>
-	// <0x5995b5>|0x0e5|+0x021:'74'
-	// <0x5995d6>|0x106|+0x020:'75'
-	// <0x5995f6>|0x126|+0x020:'76'
-	// <0x599616>|0x146|+0x020:'77'
-	// <0x599636>|0x166|+0x020:'78'
-	// <0x599656>|0x186|+0x01e:'79'
-	// <0x599674>|0x1a4|+0x01e:'80'
-	// <0>
-	// <1>
-	// <0x599692>|0x1c2|+0x030:'83'
-	// <0x5996c2>|0x1f2|+0x00b:'84'
-	// <0x5996cd>|0x1fd|+0x00b:'85'
-	// <0x5996d8>|0x208|+0x013:'86'
-	// <0x5996eb>|0x21b|+0x028:'87'
-	// <0x599713>|0x243|      :'88'	}
-	// ******
 }
 
-// STATE[SKIPPED]
 bool compare_bone_data_predicate( std::pair< collision::bone_collision_data *, float > const& lhs, std::pair< collision::bone_collision_data *, float > const& rhs )
 {
 	return lhs.first->skeleton_bone_index == rhs.first->skeleton_bone_index;
-
-	// FUNCTION BODY
-	// <0x597d63>|0x003|+0x017:'118'
-	// ******
 }
 
-// STATE[100%|DONE]
 // static in the target (PDB plain-name record): internal linkage is what lets objdiff pair
 // these four helpers; anchored from the add_single_result stub below, not temp_include_all.
 static float distance_from_sphere_center_to_point_on_shape( float radius )
@@ -116,8 +77,6 @@ static float distance_from_sphere_center_to_point_on_shape( float radius )
 	return radius;
 }
 
-// STATE[86.52%|PARTIAL]: dot_product inline wall (per-call-site /Ob2 /GL), non-steerable;
-// paired with the target static via internal linkage (was report-unpaired as extern).
 static float distance_from_box_center_to_point_on_shape( float4x4 const& transform, float3 const& dim, float3 const& source_position )
 {
 	float3 dir			= source_position - transform.c.xyz( );
@@ -140,15 +99,8 @@ static float distance_from_box_center_to_point_on_shape( float4x4 const& transfo
 	}
 
 	return ( result - transform.c.xyz( ) ).length( );
-
-	// STRUCTURE DIFF: target 14 stmts / base 14 stmts
-	// SIZE +0x1b | 135 | float dist = dir.dot_product( axis );
-	// VERDICT: STRUCTURE MATCH (14/14) - sole SIZE is float3_pod::dot_product inlined in base
-	// (scalar mulss/addss) vs out-of-line call in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
-// STATE[82.48%|PARTIAL]: dot_product inline wall (2 sites on the proj_to_y_axis line),
-// non-steerable; paired with the target static via internal linkage.
 static float distance_from_capsule_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				half_length,
@@ -172,15 +124,8 @@ static float distance_from_capsule_center_to_point_on_shape(
 
 	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
 	return ( center - ( surface_center + ( surface_center - source_position ).normalize( ) * radius ) ).length( );
-
-	// STRUCTURE DIFF: target 12 stmts / base 12 stmts
-	// SIZE +0x4e | 190 | const float proj_to_y_axis = ( ... ).dot_product( ... ) / ... .dot_product( ... );
-	// VERDICT: STRUCTURE MATCH (12/12) - sole SIZE is the TWO dot_product calls inlined in base
-	// vs out-of-line in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
-// STATE[76.61%|PARTIAL]: dot_product inline wall (3 sites), non-steerable; paired with the
-// target static via internal linkage.
 static float distance_from_cylinder_center_to_point_on_shape(
 	float4x4 const&		transform,
 	float				radius,
@@ -207,12 +152,6 @@ static float distance_from_cylinder_center_to_point_on_shape(
 	float3 proj						= y_axis * y_axis.dot_product( circle_point_dir );
 	float3 circle_proj_vec			= proj - circle_point_dir;
 	return ( center - ( surface_center + circle_proj_vec ) ).length( );
-
-	// STRUCTURE DIFF: target 15 stmts / base 15 stmts
-	// SIZE +0x4e | 239 | const float proj_to_y_axis = ( ... ).dot_product( ... ) / ... .dot_product( ... );
-	// SIZE +0x1b | 250 | float3 proj = y_axis * y_axis.dot_product( circle_point_dir );
-	// VERDICT: STRUCTURE MATCH (15/15) - both SIZE rows are dot_product inlined in base vs
-	// out-of-line in target, per-call-site /Ob2 /GL, non-steerable.
 }
 
 struct dz_bone_data_contact_test_predicate : public physics::contact_test_predicate {
@@ -328,19 +267,11 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void damage_zone_core::on_inside( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( objects );
-
-	// FUNCTION BODY
-	// <0x597d40>|0x000|+0x007:'266'	{
-	// <0>
-	// <0x597d47>|0x007|      :'268'	}
-	// ******
 }
 
-// STATE[SKIPPED]
 void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> const& objects )
 {
 	// LOCALS
@@ -381,7 +312,6 @@ void damage_zone_core::on_leave( buffer_vector<physics::base_physics_object *> c
 	// ******
 }
 
-// STATE[SKIPPED]
 // void survarium::damage_zone_core::on_enter(vostok::buffer_vector<vostok::physics::base_physics_object *> const&)
 void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> const& objects )
 {
@@ -422,7 +352,6 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 	// ******
 }
 
-// STATE[SKIPPED]
 // void survarium::damage_zone_core::tick(const unsigned int, const unsigned int)
 void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 {
@@ -448,32 +377,17 @@ void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool remove_null_receivers_predicate( hit_receiver_info const& info )
 {
 	return info.m_receiver == NULL;
-
-	// FUNCTION BODY
-	// <0x597d20>|0x000|      :'338'	{
-	// ******
 }
 
 // sushi@TODO: Big skip
 
-// STATE[SKIPPED]
 // bool survarium::damage_zone_core::is_filter_passed(vostok::physics::base_physics_object*) const
 bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) const
 {
-	// CALL SITE INFO
-	// <0x597d01> -> u16 <unknown>() const
-	// ******
-
 	return false;
-	// FUNCTION BODY
-	// <0x597cf0>|0x000|+0x007:'390'	{
-	// <0x597cf7>|0x007|+0x018:'391'
-	// <0x597d0f>|0x01f|      :'392'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -713,7 +627,6 @@ void damage_zone_core::hit_on_motion_inside( const u32 frame_delta, const u32 cu
 	// ******
 }
 
-// STATE[UNCHECKED]
 void damage_zone_core::activate( zone_group* owner, physics::world* p_world, scheduler& scheduler )
 {
 	m_physics_world = p_world;
@@ -722,18 +635,8 @@ void damage_zone_core::activate( zone_group* owner, physics::world* p_world, sch
 	m_accumulated_hit_time_ms = 0;
 	m_scheduler = &scheduler;
 	scheduler.register_on_frame( &m_scheduler_identifier, boost::bind( &damage_zone_core::tick, this, _1, _2 ), true );
-
-	// FUNCTION BODY
-	// <0x598630>|0x010|+0x00f:'546'
-	// <0x59863f>|0x01f|+0x00f:'547'
-	// <0x59864e>|0x02e|+0x00f:'548'
-	// <0x59865d>|0x03d|+0x010:'549'
-	// <0x59866d>|0x04d|+0x00f:'550'
-	// <0x59867c>|0x05c|+0x0d3:'551'
-	// ******
 }
 
-// STATE[SKIPPED]
 void damage_zone_core::deactivate( )
 {
 	collision_sensor::remove( );
@@ -750,26 +653,9 @@ void damage_zone_core::deactivate( )
 	}
 	m_receivers.clear( );
 	m_owner = NULL;
-
-	// FUNCTION BODY
-	// <0x597f79>|0x009|+0x008:'556'
-	// <0x597f81>|0x011|+0x017:'557'
-	// <0>
-	// <0x597f98>|0x028|+0x00d:'559'
-	// <0>
-	// <0x597fa5>|0x035|+0x00c:'561'		if ( m_owner )
-	// <0>									{
-	// <0x597fb1>|0x041|+0x012|[1]:'563'		hit_receiver_info* it	= m_receivers.begin( );
-	// <0x597fc3>|0x053|+0x012:'564'
-	// <0x597fd5>|0x065|+0x013:'565'			for ( ; it != end ; ++it )
-	// <0x597fe8>|0x078|+0x02f:'566'				if ( this )
-	// <0>									}
-	// <0x598017>|0x0a7|+0x00e:'568'
-	// <0x598025>|0x0b5|+0x00d:'569'
-	// ******
 }
 
-// STATE[BLOCKED]: sushi@TODO: I don't understand what is going on here. Also v0.100b didn't have anomalies anyway.
+// sushi@TODO: I don't understand what is going on here. Also v0.100b didn't have anomalies anyway.
 void damage_zone_core::on_player_action(
 	hit_receiver const*						receiver,
 	player_actions_subscriber::action		action,

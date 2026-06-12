@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 character_dispersion_params::character_dispersion_params( ) :
 	idle_multiplier				( 1.0f ),
 	idle_aim_multiplier			( 1.0f ),
@@ -26,7 +25,6 @@ character_dispersion_params::character_dispersion_params( ) :
 {
 }
 
-// STATE[100%|DONE]
 void character_dispersion_params::load( configs::binary_config_value const& cfg )
 {
 	if ( cfg.value_exists( "idle_multiplier" ) )

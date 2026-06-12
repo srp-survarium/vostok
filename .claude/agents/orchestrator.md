@@ -54,8 +54,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    ```
    rg -n "STATE\[STUB\]" sources/vostok/<module>/sources
    ```
-   Also pick up any `PARTIAL` / `SKIPPED` you have been asked to retry. Order them
-   leaf/small-first (easiest wins first).
+   Also pick up any `SKIPPED` / `BLOCKED` entry (from the module's `status.jsonl`)
+   you have been asked to retry. Order them leaf/small-first (easiest wins first).
 2. **STACKED PRs - dispatch off the TOP, the human reviews from the BOTTOM.** Every
    unit stacks on the previous one. Each worker branches off the current **stack tip**
    (the newest match branch), so it inherits all prior matched source / anchors / notes
@@ -91,8 +91,9 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      (e.g. the `weapon_core_*_idle_state` variants all being {ctor,
      `weapon_and_hands_expression`, `get_weapon_lexeme_pair`, `cook_template::new_object`})
      - so the worker's scaffolding and reasoning carry across the batch. Hand the
-     worker the explicit list and tell it to mark any member that turns out hard as
-     INPROGRESS rather than spinning. (Inlined clusters the worker bundles on its own.)
+     worker the explicit list and tell it to park any member that turns out hard as
+     `SKIPPED` (cause = next step) rather than spinning. (Inlined clusters the worker
+     bundles on its own.)
    - On each completion notification, append its one-line result to your ledger and run
      the unit-completion pipeline (step 4). Do NOT pull the worker's transcript,
      disassembly, or diffs into your context.
@@ -117,8 +118,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       PR comment flagging any NEW struct/class/enum/function the diff added. See
       `.claude/agents/reviewer.md`.
    e. The unit's branch is the **new stack tip**; the next matcher branches off it.
-5. **Stop** when every queue entry is `DONE` or parked (`PARTIAL` / `BLOCKED` /
-   `SKIPPED`) with a reason. Report: counts + the full ledger.
+5. **Stop** when every queue entry is `DONE` or parked (`BLOCKED` / `SKIPPED`)
+   with a reason. Report: counts + the full ledger.
 
 ## Keep your context small (this is the whole point)
 - You hold only the ledger: one line per function. No asm, no diffs, no source.
@@ -163,8 +164,8 @@ merging PRs**, never by a direct commit. So:
 README.md carries an auto-generated score block (`<!-- match-score:start/end -->`):
 the overall fuzzy % plus a per-module **functions-exact / code-matched** table,
 produced by `python3 scripts/match_score.py --write-readme` from
-`binaries/objdiff/report.json`. It is **report-derived, NOT `// STATE`-based**, so it
-stays honest even where a function has no `STATE` marker - this is how the human tracks
+`binaries/objdiff/report.json`. It is **report-derived** (the source carries no status
+markers; per-function status/cause lives in `status.jsonl`) - this is how the human tracks
 progress and spots regressions *without running anything*, by diffing the block across
 commits. `report.json` is refreshed by every base delink (each matcher's rebuild), so
 the numbers are always on hand.
@@ -177,8 +178,9 @@ the numbers are always on hand.
 
 ## Audit a matcher's work, then ACT ON the findings (the loop does NOT end at review)
 This is step 4c: once a matcher's PR is open, dispatch the `structure-verifier` onto the
-**SAME branch/worktree** - it runs `pdb_fetch --view structure-diff`, embeds the condensed
-diff + a `// VERDICT:` line, downgrades a `DONE` whose source STRUCTURE is actually wrong
+**SAME branch/worktree** - it runs `pdb_fetch --view structure-diff` (on demand, never
+embedded in source), records the verdict in the commit message + the function's
+`status.jsonl` cause, downgrades a `DONE` whose source STRUCTURE is actually wrong
 (the trap a high % hides), AND then (its phase 2) becomes the matcher and FIXES that
 divergence - rebuilding and re-diffing until the structure matches or only an LTCG residual
 remains. It pushes the **SECOND commit to the unit's PR branch** (no `--amend`, no
@@ -189,7 +191,7 @@ to the same branch ONLY if it fixed source (logs/comments); the symbol flags are
 comment, not source. Neither merges.
 
 **The structure-verifier now CLOSES its own structure findings** (phase 2 applies the
-fix, rebuilds, re-diffs), so a structure `// VERDICT:` is no longer a ticket you hand to a
+fix, rebuilds, re-diffs), so a structure verdict is no longer a ticket you hand to a
 separate matcher. You still **queue a follow-up `matcher`** for what the verifier can't
 reach: a `reviewer` note (target/base confusion, a wrongly-banked LTCG residual, a
 %-accuracy fix), or a structure fix the verifier explicitly PUNTED as out of its scope

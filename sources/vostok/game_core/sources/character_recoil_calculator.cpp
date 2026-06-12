@@ -10,7 +10,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 character_recoil_calculator::character_recoil_calculator( ) :
 	m_params		( NULL ),
 	m_target_value	( 0.0f ),
@@ -21,14 +20,11 @@ character_recoil_calculator::character_recoil_calculator( ) :
 {
 }
 
-// STATE[100%|DONE]: was unpaired (/OPT:REF - the target caller weapon_core::activate/
-// deactivate is unmatched); anchored via temp_include_all use_recoil_calculator -> 100.
 void character_recoil_calculator::set_character_recoil_params( character_recoil_params const* params )
 {
 	m_params = params;
 }
 
-// STATE[99.65%|DONE]: target allocated 4 more bytes on the stack and used different offsets for local variables (non-steerable /Od frame-slot noise)
 void character_recoil_calculator::tick(
 	const weapon_user_state_enum	character_state,
 	const bool						is_aiming,
@@ -63,9 +59,6 @@ void character_recoil_calculator::tick(
 		else
 			m_current_value = math::min( m_current_value + ( m_increase_speed * dt ), m_target_value );
 	}
-
-	// STRUCTURE DIFF: target 12 stmts / base 12 stmts (no diverging rows, 0x184 bytes both)
-	// VERDICT: STRUCTURE MATCH - all statements align size-exact; residual is the /Od frame-slot allocation (target +4 bytes of stack, shifted [ebp-N] offsets), non-steerable. trail: character_recoil_calculator_tick.md
 }
 
 } // namespace survarium

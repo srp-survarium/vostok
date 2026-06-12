@@ -58,10 +58,6 @@ float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 void* n_ary_tree_time_inverter::`scalar deleting destructor'( u32 arg_0 )
 {
 	return NULL;
-
-	// FUNCTION BODY
-	// <0x122e20>|0x000|      :'67'	{
-	// ******
 }
 */
 
@@ -139,14 +135,9 @@ void n_ary_tree_time_inverter::visit(
 	// ******
 }
 
-// STATE[UNCHECKED]
 animation_player::~animation_player( )
 {
 	reset( true );
-
-	// FUNCTION BODY
-	// <0x56fee3>|0x003|+0x008:'126'
-	// ******
 }
 
 // STATE[STUB]
@@ -403,7 +394,6 @@ void animation_player::skip_time_if_needed( const u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[UNCHECKED]
 bool animation_player::tick( const u32 current_time_in_ms )
 {
 	skip_time_if_needed( current_time_in_ms );
@@ -416,25 +406,6 @@ bool animation_player::tick( const u32 current_time_in_ms )
 		compact_callbacks( );
 
 	return result;
-
-	// FUNCTION BODY
-	// <0>
-	// <5>
-	// <0x570e3a>|0x00a|+0x006:'353'
-	// <0>
-	// <0x570e40>|0x010|+0x007:'355'
-	// <0>
-	// <0x570e47>|0x017|+0x01b:'357'
-	// <0>
-	// <0x570e62>|0x032|+0x015:'359'
-	// <0>
-	// <1>
-	// <2>
-	// <0x570e77>|0x047|+0x009:'363'
-	// <0x570e80>|0x050|+0x006:'364'
-	// <0>
-	// <3>
-	// ******
 }
 
 // STATE[STUB]
@@ -501,16 +472,10 @@ bool animation_player::set_target_and_tick(
 	// ******
 }
 
-// STATE[UNCHECKED]
 float4x4 single_object_get_transform( float4x4 const& transform, pcvoid const animated_object )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( animated_object );
 	return transform;
-
-	// FUNCTION BODY
-	// <0>
-	// <0x56fcb0>|0x000|+0x015:'422'
-	// ******
 }
 
 // STATE[STUB]
@@ -527,27 +492,16 @@ bool animation_player::set_target_and_tick(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::set_object_transform( float4x4 const& object_transform, pcvoid const animated_object )
 {
 	m_mixing_tree.set_object_transform( animated_object, object_transform );
-
-	// FUNCTION BODY
-	// <0x5706e0>|0x000|+0x010:'432'
-	// ******
 }
 
-// STATE[UNCHECKED]
 float4x4 animation_player::get_object_transform( pcvoid const animated_object ) const
 {
 	return m_mixing_tree.get_object_transform( animated_object );
-
-	// FUNCTION BODY
-	// <0x5706c1>|0x001|+0x011:'437'
-	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::compute_bones_matrices(
 	skeleton const&		skeleton,
 	float4x4* const		begin,
@@ -558,14 +512,8 @@ void animation_player::compute_bones_matrices(
 {
 	R_ASSERT_CMP							( end - begin, >=, skeleton.get_non_root_bones_count( ) );
 	m_mixing_tree.compute_bones_matrices	( animated_object, skeleton, begin, end, bones_masks );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x5706a0>|0x000|+0x01a:'448'
-	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::compute_bones_local_matrices(
 	skeleton const&		skeleton,
 	float4x4*			begin,
@@ -576,14 +524,8 @@ void animation_player::compute_bones_local_matrices(
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_mixing_tree.compute_bones_local_matrices( animated_object, skeleton, begin, end, bones_masks );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x570680>|0x000|+0x01a:'454'
-	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::convert_to_object_matrices(
 	skeleton const&		skeleton,
 	float4x4*			local_begin,
@@ -593,11 +535,6 @@ void animation_player::convert_to_object_matrices(
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_mixing_tree.convert_to_object_matrices( animated_object, skeleton, local_begin, local_end );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x570660>|0x000|+0x015:'460'
-	// ******
 }
 
 // STATE[STUB]
@@ -687,7 +624,6 @@ void animation_player::subscribe(
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::subscribe(
 	reserved_channel_ids_enum		channel_id,
 	new_callback_type const&		callback,
@@ -698,14 +634,8 @@ void animation_player::subscribe(
 {
 	char channel_id_string[] = { u8(channel_id), 0 };
 	subscribe( channel_id_string, callback, callback_uid, animation, 0xFF, animated_object );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x570601>|0x001|+0x02d:'550'
-	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::destroy_subscriptions( subscribed_channel const* const channels_head )
 {
 	for (subscribed_channel const* i = channels_head; i; )
@@ -722,25 +652,6 @@ void animation_player::destroy_subscriptions( subscribed_channel const* const ch
 		i										= i->next;
 		temp->~subscribed_channel				( );
 	}
-
-
-	// FUNCTION BODY
-	// <0x56fd51>|0x001|+0x00f:'555'
-	// <0>
-	// <0x56fd60>|0x010|+0x039:'557'
-	// <0x56fd99>|0x049|-0x032:'557'
-	// <0>
-	// <0x56fd67>|0x017|+0x002:'559'
-	// <0x56fd69>|0x019|+0x003:'560'
-	// <0x56fd6c>|0x01c|+0x031:'561'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56fd9d>|0x04d|+0x00a:'566'
-	// <0>
-	// <1>
-	// ******
 }
 
 // STATE[STUB]
@@ -930,14 +841,9 @@ void animation_player::unsubscribe( reserved_channel_ids_enum channel_id, pcvoid
 	// ******
 }
 
-// STATE[UNCHECKED]
 u32 animation_player::get_state_buffer_size( ) const
 {
 	return 0x4000; // sushi@TODO: What this constant is. Can be figured out by usage.
-
-	// FUNCTION BODY
-	// <0x56fc90>|0x000|+0x005:'729'
-	// ******
 }
 
 // STATE[STUB]
@@ -960,7 +866,6 @@ void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const
 	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::invert_times(
 	mixing::n_ary_tree&		tree,
 	const u32				time_in_ms,
@@ -972,18 +877,8 @@ void animation_player::invert_times(
 
 	for ( mixing::n_ary_tree_animation_node* i = tree.weight_root( ) ; i != NULL ; i = i->m_next_weight_animation )
 		invert_animation_times( *i, time_in_ms );
-
-	// FUNCTION BODY
-	// <0>
-	// <4>
-	// <0x56fe11>|0x001|+0x007:'748'
-	// <0x56fe18>|0x008|+0x011:'749'
-	// <0>
-	// <4>
-	// ******
 }
 
-// STATE[UNCHECKED]
 void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 {
 	*((u32*)buffer + 0) = 0xB19B00B5;
@@ -1016,36 +911,6 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 
 	for ( mixing::n_ary_tree_animation_node* root = tree->weight_root( ) ; root != NULL ; root = root->m_next_weight_animation )
 		invert_animation_times( *root, m_mixing_tree.tree_actual_time_in_ms( ) );
-
-	// FUNCTION BODY
-	// <0>
-	// <10>
-	// <0x5708b5>|0x015|+0x00a:'840'
-	// <0>
-	// <1>
-	// <0x5708bf>|0x01f|+0x00b:'843'	*((u32*)buffer + 1) = m_mixing_tree_buffer_size;
-	// <0>
-	// <1>
-	// <0x5708ca>|0x02a|+0x009:'846'	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size );
-	// <0>
-	// <13>
-	// <0x5708d3>|0x033|+0x089:'861'
-	// <0>
-	// <0x57095c>|0x0bc|+0x004:'863'
-	// <0x570960>|0x0c0|+0x027:'864'
-	// <0>
-	// <1>
-	// <0x570987>|0x0e7|+0x00c:'867'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x570993>|0x0f3|+0x01e:'872'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
 }
 
 // STATE[STUB]
@@ -1121,14 +986,9 @@ void animation_player::destroy_state( void* buffer )
 	// ******
 }
 
-// STATE[UNCHECKED]
 u32 animation_player::last_tick_time_in_ms( ) const
 {
 	return m_mixing_tree.tree_actual_time_in_ms( );
-
-	// FUNCTION BODY
-	// <0x56fca0>|0x000|+0x006:'953'
-	// ******
 }
 
 } // namespace animation

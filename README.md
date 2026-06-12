@@ -13,35 +13,35 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 51.78% fuzzy &middot; 9,547 / 25,372 functions exact (37.63%).**
+**Overall: 51.79% fuzzy &middot; 9,516 / 25,372 functions exact (37.51%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 384 / 2,805 (13.7%) | 3.5% |
-| `shared` | 112 | 840 / 2,255 (37.3%) | 36.1% |
-| `game` | 141 | 20 / 1,634 (1.2%) | 0.1% |
-| `game_core` | 189 | 553 / 1,429 (38.7%) | 22.8% |
+| `render` | 351 | 387 / 2,805 (13.8%) | 3.5% |
+| `shared` | 112 | 821 / 2,255 (36.4%) | 36.1% |
+| `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
+| `game_core` | 189 | 554 / 1,429 (38.8%) | 22.9% |
 | `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
 | `animation` | 102 | 161 / 880 (18.3%) | 5.4% |
 | `ai` | 124 | 428 / 759 (56.4%) | 38.9% |
 | `sound` | 69 | 214 / 517 (41.4%) | 16.8% |
-| `collision` | 52 | 371 / 516 (71.9%) | 31.0% |
-| `particle` | 25 | 263 / 485 (54.2%) | 26.1% |
+| `collision` | 52 | 370 / 516 (71.7%) | 31.0% |
+| `particle` | 25 | 269 / 485 (55.5%) | 26.5% |
 | `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
 | `ui` | 27 | 179 / 255 (70.2%) | 42.9% |
-| `physics` | 14 | 99 / 203 (48.8%) | 24.4% |
+| `physics` | 14 | 98 / 203 (48.3%) | 24.4% |
 | `fs` | 25 | 70 / 189 (37.0%) | 27.8% |
 | `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
 | `network` | 25 | 7 / 163 (4.3%) | 0.5% |
 | `network_core` | 22 | 31 / 140 (22.1%) | 12.8% |
-| `debug` | 16 | 96 / 127 (75.6%) | 65.5% |
+| `debug` | 16 | 97 / 127 (76.4%) | 65.5% |
 | `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
 | `input` | 9 | 31 / 56 (55.4%) | 27.7% |
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
 | `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
 
-_Updated 2026-06-10 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-12 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

@@ -38,8 +38,6 @@ float computed_shooting_animation_time_scale( resources::managed_resource_ptr co
 #include <vostok/game_core/weapon_animations_timescale_inline.h>
 namespace survarium {
 
-// STATE[100%|DONE]: byte-identical to target @0x79abc0; pairs in report.json at 100% (ctor set
-// protected in the .h to match the @@IAE mangled access char).
 pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
 	float									animation_time_scale,
@@ -63,12 +61,6 @@ pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[99.76%|PARTIAL]: objdiff-scored 99.76% (target @0x79b0e0; pairs in report.json now that
-// initialize is protected-virtual to match @@MAE). The `last_shot ? 1u : 0u` ternary reproduced
-// the target's final-store boolize (neg;sbb;neg into m_weapon_animation_index) byte-for-byte.
-// Sole residual is the LTCG this-register at the ammo_in_magazine() call boundary: target loads
-// the m_weapon pointer into eax (`mov eax,[ecx+128h]` @0x30/0x50) before the call, base loads ecx -
-// argument passing at the call boundary, not source-steerable until ammo_in_magazine is matched.
 void pistol_weapon_core_aimed_fire_state::initialize( )
 {
 	weapon_core_aimed_fire_state_base::initialize( );
@@ -78,13 +70,8 @@ void pistol_weapon_core_aimed_fire_state::initialize( )
 		: ( m_weapon.ammo_in_magazine( ) == 0 );
 
 	m_weapon_animation_index = last_shot ? 1u : 0u;
-
-	// STRUCTURE DIFF: target 3 / base 3 stmts, 0x85 bytes both (no diverging rows)
-	// VERDICT: STRUCTURE MATCH - residual is the ammo_in_magazine `this` in eax (target) vs ecx (base), LTCG arg-register choice, non-steerable.
 }
 
-// STATE[83.18%|PARTIAL]: operator+ template-selection / inline-vs-call LTCG on the addition
-// tree (same +0x29 residual as double_barreled_weapon_core_fire_state #203), non-steerable.
 animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool const							is_third_view,
@@ -95,15 +82,8 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_ha
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
-
-	// STRUCTURE DIFF: target 3 / base 3 stmts
-	// SIZE +0x29 | 97 | return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
-	// VERDICT: STRUCTURE MATCH (3/3) - sole row is the mixing operator+ template-selection / inline-vs-call wall on the addition tree, whole-program LTCG, non-steerable.
 }
 
-// STATE[100%|DONE]: byte-identical to target @0x79af30; pairs in report.json at 100% (declared
-// private const in the .h to match the @@ABE mangled access char). Captions "pistol-aimed_shot" /
-// "pistol-aimed_last_shot".
 weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] = { "pistol-aimed_shot", "pistol-aimed_last_shot" };
@@ -128,8 +108,6 @@ weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( 
 	);
 }
 
-// STATE[77.13%|PARTIAL]: lexeme_parameters setters / animation_type() inline-vs-call LTCG,
-// non-steerable (identical residual to weapon_core_fire_state::get_user_hands_expression).
 animation::mixing::expression pistol_weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -164,20 +142,8 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::get_user_hand
 	);
 
 	return animation::mixing::expression( override_lexeme );
-
-	// STRUCTURE DIFF: target 9 / base 9 stmts
-	// SIZE +0x3  | 143 | return animation::mixing::expression( weapon_lexeme );
-	// SIZE -0x13 | 149 | if ( pinned_ptr_const<...>( selected_animation )->animation_type( ) != ... )
-	// SIZE +0x3  | 150 | return animation::mixing::expression( weapon_lexeme );
-	// SIZE +0x4  | 165 | ); (the chained params temporary declaration of override_lexeme)
-	// VERDICT: STRUCTURE MATCH (9/9) - per-site LTCG: target inlines animation_type() where base keeps the COMDAT call; setter-chain/expression-ctor boundaries differ by promoted-convention bytes, non-steerable.
 }
 
-// STATE[92.08%|PARTIAL]: objdiff-scored 92.08% (control flow + placement-new + ctor call all
-// match). Sole residual is the LTCG calling convention of computed_shooting_animation_time_scale:
-// the target passes its `managed_resource_ptr const&` arg in a register and returns the float in
-// xmm0 (movss), while our STUB callee keeps default cdecl (stack push + st0/fstp). Argument
-// passing at the call boundary - not source-steerable until that callee is matched. target @0x79ad60.
 pistol_weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_aimed_fire_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
@@ -191,10 +157,6 @@ pistol_weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::
 		animations,
 		animations_count
 	);
-
-	// STRUCTURE DIFF: target 1 / base 1 stmts
-	// SIZE -0x11 | 189 | ); (the placement-new ctor-call statement)
-	// VERDICT: STRUCTURE MATCH - residual is the LTCG-promoted convention of computed_shooting_animation_time_scale (target: ref in reg + xmm0 return; base: cdecl push + st0/fstp), blocked on that callee, non-steerable here.
 }
 
 } // namespace survarium

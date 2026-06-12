@@ -48,13 +48,11 @@ static console_commands::cc_bool s_ph_debug_cmd03 (
 	console_commands::command_type_user_specific
 );
 
-// STATE[BLOCKED]
 void dump_physics_profiler( pcstr __formal )
 {
 	CProfileManager::dumpAll( );
 }
 
-// STATE[BLOCKED]
 void reset_physics_profiler( pcstr __formal )
 {
 	CProfileManager::Reset();
@@ -70,38 +68,34 @@ static console_commands::cc_delegate s_reset_statistics (
 );
 
 
-// STATE[BLOCKED]
 void* bullet_alloc( u32 size )
 {
-	return VOSTOK_MALLOC_IMPL( vostok::physics::g_ph_allocator, size, "bullet" );	// <0x6bc9e0>|0x000|0x000:'45'
+	return VOSTOK_MALLOC_IMPL( vostok::physics::g_ph_allocator, size, "bullet" );
 }
 
-// STATE[BLOCKED]
 void bullet_free( void* memblock )
 {
-	return VOSTOK_FREE_IMPL( vostok::physics::g_ph_allocator, memblock );	// <0x6bc9c0>|0x000|0x000:'50'
+	return VOSTOK_FREE_IMPL( vostok::physics::g_ph_allocator, memblock );
 }
 
 namespace vostok {
 namespace physics {
 
-// STATE[100%|DONE]
 btTransform from_vostok( float4x4 const& m )
 {
-	math::quaternion q_vostok = math::quaternion(m);	// <0x6bd789>|0x000|0x000:'58'
-	btQuaternion q0		= from_vostok(q_vostok);		// <0x6bd794>|0x00b|0x00b:'59'
-	return btTransform(q0, from_vostok(m.c.xyz()) );	// <0x6bd7a2>|0x019|0x00e:'60'
+	math::quaternion q_vostok = math::quaternion(m);
+	btQuaternion q0		= from_vostok(q_vostok);
+	return btTransform(q0, from_vostok(m.c.xyz()) );
 }
 
-// STATE[100%|DONE]
 float4x4 from_bullet( btTransform const& m )
 {
-	btQuaternion q_bullet	= m.getRotation();												// <0x6bd6df>|0x000|0x000:'65'
-	math::quaternion q_vostok = from_bullet( q_bullet );									// <0x6bd6e9>|0x00a|0x00a:'66'
-	return create_rotation(q_vostok) * create_translation( from_bullet(m.getOrigin()) );	// <0x6bd6f7>|0x018|0x00e:'67'
+	btQuaternion q_bullet	= m.getRotation();
+	math::quaternion q_vostok = from_bullet( q_bullet );
+	return create_rotation(q_vostok) * create_translation( from_bullet(m.getOrigin()) );
 }
 
-// STATE[64%|STUB]
+// STATE[STUB]
 bullet_physics_world::bullet_physics_world( memory::base_allocator& allocator, engine& engine ):
 	m_allocator		( allocator ),
 	m_engine		( engine ),
@@ -112,13 +106,11 @@ bullet_physics_world::bullet_physics_world( memory::base_allocator& allocator, e
 {
 }
 
-// STATE[94%|PARTIAL]: Best function to fix logging based on
 void log_cb( char* text )
 {
 	LOG_INFO( text );
 }
 
-// STATE[99.35%|DONE]
 void bullet_physics_world::initialize( )
 {
 	btAlignedAllocSetCustom		( bullet_alloc, bullet_free );
@@ -128,11 +120,11 @@ void bullet_physics_world::initialize( )
 
 	//SoftDicsreteDynamicWorld
 	m_softBodyWorldInfo						= VOSTOK_NEW_IMPL( m_allocator, btSoftBodyWorldInfo );
-	m_softBodyWorldInfo->air_density		= (btScalar)1.2; // <0x6bf1d0>|0x0f6|0x0b0:'92'
+	m_softBodyWorldInfo->air_density		= (btScalar)1.2;
 	m_softBodyWorldInfo->water_density		= 0;
 	m_softBodyWorldInfo->water_offset		= 0;
 	m_softBodyWorldInfo->water_normal		= btVector3(0,0,0);
-	m_softBodyWorldInfo->m_gravity.setValue	(0,-10,0); // <0x6bf217>|0x13d|0x033:'96'
+	m_softBodyWorldInfo->m_gravity.setValue	(0,-10,0);
 
 	const int maxProxies = 32766;
 	m_collisionConfiguration	= VOSTOK_NEW_IMPL( m_allocator, btSoftBodyRigidBodyCollisionConfiguration )( );
@@ -149,7 +141,7 @@ void bullet_physics_world::initialize( )
 																						m_constraintSolver,
 																						m_collisionConfiguration );
 
-	m_dynamicsWorld->getDispatchInfo().m_enableSPU = false;//true; //? // <0x6bf331>|0x257|0x02f:'114'
+	m_dynamicsWorld->getDispatchInfo().m_enableSPU = false;//true; //?
 	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
 	m_softBodyWorldInfo->m_gravity.setValue(0,-10,0);
 	m_softBodyWorldInfo->m_sparsesdf.Initialize();
@@ -163,7 +155,6 @@ void bullet_physics_world::initialize( )
 	CProfileManager::set_log_callback( log_cb );
 }
 
-// STATE[99.86%|DONE]: Target used registers slightly differently.
 void bullet_physics_world::destroy( )
 {
 	m_dynamicsWorld->getBroadphase( )->getOverlappingPairCache( )->setInternalGhostPairCallback( NULL );
@@ -180,31 +171,27 @@ void bullet_physics_world::destroy( )
 	m_last_frame_time = 0.0;
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::set_renderer( btIDebugDraw* const renderer )
 {
 	m_dynamicsWorld->setDebugDrawer( renderer );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::draw_object( btCollisionShape* const shape, btTransform const& transform, btVector3 const& color )
 {
-	m_dynamicsWorld->debugDrawObject( transform, shape, color );	// <0x6bc880>|0x000|0x000:'152'
+	m_dynamicsWorld->debugDrawObject( transform, shape, color );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::on_before_reuse( )
 {
-	m_last_frame_delta = 0.0f; // <0x6bc870>|0x000|0x000:'157'
+	m_last_frame_delta = 0.0f;
 	m_last_frame_time = 0.0f;
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::tick( u32 current_time_in_ms )
 {
 	m_last_frame_delta =
 		( current_time_in_ms * math::epsilon_3 - m_last_frame_time ) * 0.1f
-		+ m_last_frame_delta * 0.9f;	// <0x6bde70>|0x000|0x000:'164'
+		+ m_last_frame_delta * 0.9f;
 	m_last_frame_time = current_time_in_ms * math::epsilon_3;
 
 	s32 max_substeps = math::floor( m_last_frame_delta * 60.0f + 0.5f );
@@ -218,63 +205,56 @@ void bullet_physics_world::tick( u32 current_time_in_ms )
 	m_softBodyWorldInfo->m_sparsesdf.GarbageCollect( );
 }
 
-// STATE[SKIPPED] sushi@TODO: Shouldn't be needed for server logic.
+// sushi@TODO: Shouldn't be needed for server logic.
 void bullet_physics_world::debug_draw_world( )
 {
 	NOT_IMPLEMENTED( );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::add( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask )
 {
-	m_dynamicsWorld->addRigidBody( body->get_rigid_body( ), filter_group, filter_mask);	// <0x6bd18b>|0x000|0x000:'249'
+	m_dynamicsWorld->addRigidBody( body->get_rigid_body( ), filter_group, filter_mask);
 
-	btTransform trans = body->get_rigid_body( )->getWorldTransform( );					// <0x6bd1b5>|0x02a|0x02a:'251'
+	btTransform trans = body->get_rigid_body( )->getWorldTransform( );
 
 	btVector3 minAabb;
 	btVector3 maxAabb;
-	body->get_rigid_body( )->getCollisionShape( )->getAabb( trans, minAabb, maxAabb );	// <0x6bd213>|0x088|0x05e:'255'
-	m_world_aabb.modify( from_bullet( minAabb ) );										// <0x6bd23e>|0x0b3|0x02b:'256'
-	m_world_aabb.modify( from_bullet( maxAabb ) );										// <0x6bd277>|0x0ec|0x039:'257'
+	body->get_rigid_body( )->getCollisionShape( )->getAabb( trans, minAabb, maxAabb );
+	m_world_aabb.modify( from_bullet( minAabb ) );
+	m_world_aabb.modify( from_bullet( maxAabb ) );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::remove( bt_rigid_body_base* body )
 {
 	m_dynamicsWorld->removeRigidBody( body->get_rigid_body( ) );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::move( bt_rigid_body_base* body, float4x4 const& new_transform )
 {
 	body->set_transform( new_transform );
 }
 
-// STATE[100%|DONE]: sushi@NOTE: Why filter_group with filter_mask is not passed here.
+// sushi@NOTE: Why filter_group with filter_mask is not passed here.
 void bullet_physics_world::add( bt_soft_body_rope* body )
 {
-	m_dynamicsWorld->addSoftBody( body->m_bt_body ); // <0x6bd160>|0x000|0x000:'272'
+	m_dynamicsWorld->addSoftBody( body->m_bt_body );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::remove( bt_soft_body_rope* body )
 {
-	m_dynamicsWorld->removeSoftBody( body->m_bt_body ); // <0x6bcde0>|0x000|0x000:'277'
+	m_dynamicsWorld->removeSoftBody( body->m_bt_body );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::add( bt_constraint* constraint )
 {
-	m_dynamicsWorld->addConstraint( constraint->m_bt_typed_constraint ); // <0x6bc800>|0x000|0x000:'282'
+	m_dynamicsWorld->addConstraint( constraint->m_bt_typed_constraint );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::remove( bt_constraint* constraint )
 {
 	m_dynamicsWorld->removeConstraint( constraint->m_bt_typed_constraint );
 }
 
-// STATE[100%|DONE]
 void bullet_physics_world::create_test_scene( )
 {
 	// <1> sushi@NOTE: this is ifdefed original xray impl
@@ -299,7 +279,6 @@ public:
 
 STATIC_SIZE_ASSERT(closest_ray_result_callback, 0x70);
 
-// STATE[100%|DONE]
 closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFromWorld, btVector3 const& rayToWorld ) :
 	m_rayFromWorld		( rayFromWorld ),
 	m_rayToWorld		( rayToWorld ),
@@ -308,7 +287,6 @@ closest_ray_result_callback::closest_ray_result_callback( btVector3 const& rayFr
 {
 }
 
-// STATE[100%|DONE]
 float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace )
 {
 	m_closestHitFraction = rayResult.m_hitFraction;
@@ -321,10 +299,10 @@ float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayRe
 	} else
 	{
 		m_triangleIndex = -1;
-		m_is_shape_index = false;	// <0x36418>|0x032|0x007:'354'
+		m_is_shape_index = false;
 	}
 
-	if ( normalInWorldSpace )		// <0x3641c>|0x036|0x004:'357'
+	if ( normalInWorldSpace )
 	{
 		m_hitNormalWorld = rayResult.m_hitNormalLocal;
 	} else
@@ -336,7 +314,7 @@ float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayRe
 	return rayResult.m_hitFraction;
 }
 
-// STATE[79.93%|PARTIAL]: sushi@NOTE: Lots of instructions reordered. Logic seems to be the same. Don't really care about getting this 100% correct for now.
+// sushi@NOTE: Lots of instructions reordered. Logic seems to be the same. Don't really care about getting this 100% correct for now.
 closest_ray_result bullet_physics_world::ray_test(
 	float3 const&		ray_from,
 	float3 const&		ray_dir,
@@ -369,7 +347,6 @@ closest_ray_result bullet_physics_world::ray_test(
 	return result;
 }
 
-// STATE[93.31%|PARTIAL]
 bool bullet_physics_world::recover_from_penetrations(
 	bt_collision_shape*		const shape,
 	float4x4 const&			transform_initial,
@@ -458,7 +435,6 @@ bool bullet_physics_world::recover_from_penetrations(
 	return true;
 }
 
-// STATE[99.21%|DONE]: Logging is still not done properly
 // transfrom_from - starting position + starting rotation (local -> world)
 // transfrom_to   - ending position + ending rotation	  (local -> world)
 void bullet_physics_world::object_query(
@@ -472,16 +448,15 @@ void bullet_physics_world::object_query(
 {
 	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , public boost::noncopyable {
 	public:
-		// STATE[BLOCKED]
 		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 filter_group, u16 filter_mask ) :
 								m_results	( results )
 		{
 			m_collisionFilterGroup = filter_group;
 			m_collisionFilterMask = filter_mask;
-			m_modify_result_transform.setIdentity( ); // <0x6bd3b0>|0x000|0x000:'488'
+			m_modify_result_transform.setIdentity( );
 		}
 
-		// STATE[BLOCKED]: sushi@TODO: Ghidra scripts cannot generate symbols for this function.
+		// sushi@TODO: Ghidra scripts cannot generate symbols for this function.
 		virtual	float		addSingleResult			( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 		{
 			closest_ray_result query_result;
@@ -554,7 +529,7 @@ public:
 
 STATIC_SIZE_ASSERT(distance_predicate, 0xC);
 
-// STATE[100%|DONE]: sushi@TODO: Noticed that `m_shape_id` was added to bt ray callback
+// sushi@TODO: Noticed that `m_shape_id` was added to bt ray callback
 void bullet_physics_world::ray_query(
 	float3 const&					ray_from,
 	float3 const&					ray_dir,
@@ -571,11 +546,11 @@ void bullet_physics_world::ray_query(
 	cb.m_collisionFilterMask = filter_mask;
 	cb.m_flags |= 1 << 1;
 
-	m_dynamicsWorld->rayTest( from, to, cb ); // <0x6bd503>|0x0b2|0x010:'569'
+	m_dynamicsWorld->rayTest( from, to, cb );
 
 	if ( cb.m_collisionObject )
 	{
-		s32 size = cb.m_collisionObjects.size( ); // <0x6bd531>|0x0e0|0x00e:'573'
+		s32 size = cb.m_collisionObjects.size( );
 		for ( s32 i = 0 ; i < size ; ++i )
 		{
 			closest_ray_result ray_result; // sushi@NOTE: One day I will reorder those assignments to the declaration order.
@@ -610,7 +585,6 @@ static const u8 s_convert_from_bullet_type[] = {
     0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC
 };
 
-// STATE[BLOCKED] Incorrect generation by Ghidra scripts
 static collision::primitive_type from_bullet_shape_type( s32 type )
 {
 	switch ( s_convert_from_bullet_type[ type ] )
@@ -623,8 +597,6 @@ static collision::primitive_type from_bullet_shape_type( s32 type )
 	}
 }
 
-// STATE[BLOCKED] Incorrect generation by Ghidra scripts.
-// Possibly has `from_bullet_shape_type` call inlined?
 static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 {
 	switch ( s_convert_from_bullet_type[ bullet_shape->getShapeType( ) ] )
@@ -657,7 +629,6 @@ static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape
 	}
 }
 
-// STATE[42.88%|BLOCKED]: Problems in Ghidra scripts, `from_bullet_shape_type` got inlined also
 float contact_result_callback::addSingleResult(
 	btManifoldPoint&			cp,
 	btCollisionObject const*	colObj0,
@@ -684,7 +655,7 @@ float contact_result_callback::addSingleResult(
 		from_bullet_shape_type( shape_1_type ),
 		shape_1_transform,
 		shape_1_dim
-	); // <0x365d9>|0x05c|0x00f:'723'
+	);
 }
 
 // STATE[STUB]
@@ -694,7 +665,7 @@ void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate,
 	m_dynamicsWorld->contactPairTest( first_object, second_object, cb );
 }
 
-// STATE[67.42%|SKIPPED]: sushi@TODO: Need to play around with this function. Didn't match the variable names, though I did the structure (somewhat)
+// sushi@TODO: Need to play around with this function. Didn't match the variable names, though I did the structure (somewhat)
 bool bullet_physics_world::adjust_foot_transform(
 	float3 const&		half_size,
 	float3 const&		start,
@@ -743,15 +714,14 @@ bool bullet_physics_world::adjust_foot_transform(
 	return callback.hasHit( );
 }
 
-// STATE[95.83%|PARTIAL]: Functionally complete. See comments inside the function for diffs.
 void bullet_physics_world::notify_about_contact( )
 {
-	s32 num_manifold = m_dispatcher->getNumManifolds( );											// <0x6bdced>|0x000|0x000:'826'
+	s32 num_manifold = m_dispatcher->getNumManifolds( );
 	for ( s32 i = 0; i < num_manifold ; ++i )
 	{
 		btPersistentManifold* manifold = m_dispatcher->getManifoldByIndexInternal( i );
 		s32 num_contacts = manifold->getNumContacts( );
-		for ( s32 j = 0 ; j < num_contacts ; ++j )													// <0x6bdd24>|0x037|0x006:'831'
+		for ( s32 j = 0 ; j < num_contacts ; ++j )
 		{
 			btManifoldPoint& pt = manifold->getContactPoint( j );
 			if ( 0.0f <= pt.m_distance1 )															// <0x6bdd34>|0x047|0x010:'834' sushi@NOTE: comiss reversed
@@ -759,10 +729,10 @@ void bullet_physics_world::notify_about_contact( )
 
 			base_physics_object* base_obj_a = static_cast< base_physics_object* >(
 				static_cast< btPairCachingGhostObject* >( manifold->getBody0( ) )->getUserPointer( )
-			);																						// <0x6bdd4a>|0x05d|0x016:'839'
+			);
 			base_physics_object* base_obj_b = static_cast< base_physics_object* >(
 				static_cast< btPairCachingGhostObject* >( manifold->getBody1( ) )->getUserPointer( )
-			);																						// <0x6bdd50>|0x063|0x006:'840'
+			);
 
 			callbacks_begin_end_pair begin_end	= m_contact_callbacks.equal_range( base_obj_a );
 			callbacks_type::iterator it			= begin_end.first;
@@ -777,7 +747,6 @@ void bullet_physics_world::notify_about_contact( )
 	}
 }
 
-// STATE[88.74%|PARTIAL]: Seems like LTCG related issues, but couldn't match the structure also.
 void bullet_physics_world::subscribe_on_contact( base_physics_object* object, callback_type* callback )
 {
 	ASSERT( callback );
@@ -788,10 +757,9 @@ void bullet_physics_world::subscribe_on_contact( base_physics_object* object, ca
 	for ( ; it != it_end; ++it )
 		ASSERT( it->second != callback );
 
-	m_contact_callbacks.insert( callbacks_type::value_type(object, callback) );	// <0x6bcac2>|0x037|0x025:'864'
+	m_contact_callbacks.insert( callbacks_type::value_type(object, callback) );
 }
 
-// STATE[77.04%|PARTIAL]: Possibly can be matched further, but I don't think it matters much.
 void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object, callback_type* callback )
 {
 	ASSERT( callback );
@@ -805,7 +773,7 @@ void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object
 
 	ASSERT( it != it_end );
 
-	m_contact_callbacks.erase( it ); // <0x6bca4f>|0x043|0x002:'883'
+	m_contact_callbacks.erase( it );
 }
 
 } // namespace physics

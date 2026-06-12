@@ -75,11 +75,7 @@ private:
 													animation::animation_player const&	animation_player
 												) override {}
 
-	// STATE[100.00%|DONE]: pure base forward; ICF-folds with oxygen_tank/weapon_ammunition onto
-	// one body at rva 0xbcd90 (29 bytes) - this medkit rep carries the bytes, paired at 100 in report.json.
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override	{ inventory_item::serialize( packet, client_offset ); }
-	// STATE[100.00%|DONE]: pure base forward; ICF-folds with oxygen_tank/weapon_ammunition onto
-	// one body at rva 0xbcdb0 (25 bytes) - this medkit rep carries the bytes, paired at 100 in report.json.
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override								{ inventory_item::deserialize( reader ); }
 
 	virtual	bool								is_sprinting				( ) const override { /* no source sushi@TODO */ return false; }

@@ -7,13 +7,11 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]: base ctor + m_landing_type = jump_animations_part_land_run (4)
 jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner )
 	: jump_logic_base_state( owner ), m_landing_type( jump_animations_part_land_run )
 {
 }
 
-// STATE[9.43%|PARTIAL]: UNREACHABLE stub (unblocks the class). Real body verified but
 // blocked on the lexeme/expression operator+ machinery (see claude@TODO below).
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_landing::selected_animations(
 	mutable_buffer&						buffer,
@@ -42,8 +40,6 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	UNREACHABLE_CODE( );
 }
 
-// STATE[3.22%|PARTIAL]: UNREACHABLE stub (emitted, paired). Large lexeme/interpolator
-// machinery - separate machinery unit.
 // vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_landing::get_main_lexeme(vostok::mutable_buffer&, const bool, const vostok::animation::body_part_masks_enum)
 animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
 {
@@ -107,8 +103,6 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( m
 	UNREACHABLE_CODE( );
 }
 
-// STATE[10.04%|PARTIAL]: UNREACHABLE stub (emitted, paired). Large lexeme_parameters
-// machinery - separate machinery unit.
 // vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_landing::get_look_lexeme(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, vostok::animation::mixing::animation_lexeme&)
 animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
 	mutable_buffer&						buffer,
@@ -147,8 +141,6 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
 	UNREACHABLE_CODE( );
 }
 
-// STATE[8.38%|PARTIAL]: empty stub. Real body sets up an animation callback via
-// boost::bind + set_animation_callback - boost::bind machinery unit.
 // void survarium::jump_logic_state_landing::initialize()
 void jump_logic_state_landing::initialize( )
 {
@@ -165,13 +157,10 @@ void jump_logic_state_landing::initialize( )
 	// ******
 }
 
-// STATE[100%|DONE]: empty body, target @0x57ce40 is the 7-byte empty __thiscall frame
 void jump_logic_state_landing::finalize( )
 {
 }
 
-// STATE[12.81%|PARTIAL]: UNREACHABLE stub. Real body reads animation_callback_params
-// fields + intrusive_ptr::operator== + remove_animation_callback - needs that type's layout.
 // vostok::animation::callback_return_type_enum survarium::jump_logic_state_landing::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_landing::on_interval_end( animation::animation_callback_params& params )
 {

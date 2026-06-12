@@ -14,7 +14,6 @@
 
 namespace survarium {
 
-// STATE[77.00%|PARTIAL]: vtable/base-init codegen of the multiply-inherited NO_VTABLE hierarchy, non-steerable.
 generic_anomaly_core::generic_anomaly_core( ):
 	m_artefact_grab_time_ms		( 0 ),
 	m_current_state				( NULL ),
@@ -23,18 +22,12 @@ generic_anomaly_core::generic_anomaly_core( ):
 	m_physics_world				( NULL ),
 	m_scheduler					( NULL )
 {
-	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (init-list only; 0xab vs 0xb2)
-	// VERDICT: STRUCTURE MATCH - residual is the compiler-emitted base-subobject ctor calls + vtable stores of the multiply-inherited (NO_VTABLE + virtuals) hierarchy, decided by the base-class declarations, non-steerable.
 }
 
-// STATE[99.91%|DONE]: two adjacent member sub-object dtor calls emitted in swapped order, non-steerable here.
 generic_anomaly_core::~generic_anomaly_core( )
 {
-	// STRUCTURE DIFF: target 0 stmts / base 0 stmts (0x4c both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - empty body; sole residual: target destroys the members at +9 then +8, base at +8 then +9 (one swapped pair), a member-layout/destruction-order quirk needing a header member reorder (wide blast radius), out of scope at 99.91%.
 }
 
-// STATE[83.49%|PARTIAL]: boost::bind / register_on_frame inlined one layer deeper in target, non-steerable.
 void generic_anomaly_core::activate( physics::world* world, survarium::scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -51,15 +44,8 @@ void generic_anomaly_core::activate( physics::world* world, survarium::scheduler
 	m_was_zone_trigger_event = false;
 	m_was_shoot_trigger_event = false;
 	spawn_artefacts( );
-
-	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
-	// SIZE +0x3e | 58 | m_scheduler->register_on_frame( &m_scheduler_identifier, boost::bind( &generic_anomaly_core::tick, this, _1, _2 ), true );
-	// SIZE +0x21 | 62 | m_artefact_containers[a]->activate( this, world, scheduler );
-	// (7 more +0x3 rows = disp8->disp32 frame noise cascading from the larger base frame)
-	// VERDICT: STRUCTURE MATCH (11/11) - the register_on_frame(boost::bind) machinery is inlined one layer deeper in target (0xce vs 0x10c); whole-program LTCG, non-steerable. The +0x3 rows are slot-displacement-width noise, not structure.
 }
 
-// STATE[99.68%|DONE]: frame size differs (slot allocation), non-steerable.
 void generic_anomaly_core::deactivate( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -73,12 +59,8 @@ void generic_anomaly_core::deactivate( )
 		m_artefact_containers[a]->deactivate( );
 
 	m_scheduler = NULL;
-
-	// STRUCTURE DIFF: target 8 stmts / base 8 stmts (0xbb both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - clean alignment; sole residual is a frame-size / [ebp-N] slot-allocation difference, non-steerable.
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::inc_energy( float amount )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -89,7 +71,6 @@ void generic_anomaly_core::inc_energy( float amount )
 	}
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::dec_energy( float amount )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -100,7 +81,6 @@ void generic_anomaly_core::dec_energy( float amount )
 	}
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::tick( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	m_current_time = current_time_ms;
@@ -121,7 +101,6 @@ void generic_anomaly_core::tick( u32 const time_delta_ms, u32 const current_time
 		spawn_artefacts( );
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::spawn_artefacts( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -148,7 +127,6 @@ void generic_anomaly_core::spawn_artefacts( )
 	m_artefact_grab_time_ms = 0;
 }
 
-// STATE[100%|DONE]
 anomaly_state* generic_anomaly_core::select_state( )
 {
 	anomaly_state* state = m_states[0];
@@ -172,7 +150,6 @@ anomaly_state* generic_anomaly_core::select_state( )
 	return state;
 }
 
-// STATE[100%|DONE]
 void anomaly_state::initialize( )
 {
 	for ( u32 g = 0 ; g < groups.size( ) ; ++g )
@@ -184,7 +161,6 @@ void anomaly_state::initialize( )
 		m_finish_time_ms = 0;
 }
 
-// STATE[100%|DONE]
 void anomaly_state::execute( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	for ( u32 g = 0 ; g < groups.size( ) ; ++g )
@@ -194,21 +170,18 @@ void anomaly_state::execute( u32 const time_delta_ms, u32 const current_time_ms 
 		owner->set_current_energy( (float)energy_on_exit );
 }
 
-// STATE[100%|DONE]
 void anomaly_state::finalize( )
 {
 	for ( u32 g = 0 ; g < groups.size( ) ; ++g )
 		groups[g]->finalize( );
 }
 
-// STATE[100%|DONE]
 void zone_group::initialize( )
 {
 	charged_count = 0;
 	recharge( );
 }
 
-// STATE[100%|DONE]
 void zone_group::execute( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	if ( next_recharge_time && current_time_ms >= next_recharge_time )
@@ -221,7 +194,6 @@ void zone_group::execute( u32 const time_delta_ms, u32 const current_time_ms )
 	}
 }
 
-// STATE[100%|DONE]
 void zone_group::finalize( )
 {
 	for ( u32 z = 0 ; z < zones.size( ) ; ++z )
@@ -234,7 +206,6 @@ void zone_group::finalize( )
 	}
 }
 
-// STATE[100%|DONE]
 void zone_group::recharge( )
 {
 	for ( u32 z = 0 ; z < zones.size( ) ; ++z )
@@ -248,7 +219,6 @@ void zone_group::recharge( )
 	next_recharge_time = 0;
 }
 
-// STATE[100%|DONE]
 void zone_group::on_zone_act( damage_zone_core* zone, hit_receiver* receiver )
 {
 	core( )->on_zone_act( zone, receiver );

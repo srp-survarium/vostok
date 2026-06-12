@@ -8,7 +8,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 character_dispersion_calculator::character_dispersion_calculator( )
 	:	m_params					( NULL )
 	,	m_target_value				( 0.0f )
@@ -21,7 +20,6 @@ character_dispersion_calculator::character_dispersion_calculator( )
 {
 }
 
-// STATE[100%|DONE]
 void character_dispersion_calculator::set_character_dispersion_params( character_dispersion_params const* character_params )
 {
 	m_params = character_params;
@@ -33,7 +31,6 @@ void character_dispersion_calculator::set_character_dispersion_params( character
 	}
 }
 
-// STATE[99.67%|PARTIAL]: every instruction/member-offset/call/constant byte-identical to target; the ONLY diff is target `sub esp,1Ch` (this@[ebp-10h]) vs base `sub esp,18h` (this@[ebp-0Ch]) - one extra unused 4-byte /Od frame slot shifting all [ebp-N] by 4. Non-steerable frame-allocation noise (same class as breath_vibration_calculator::tick). See character_dispersion_calculator_tick.md
 void character_dispersion_calculator::tick(
 	weapon_user_state_enum		character_state,
 	bool						is_moving,
@@ -65,16 +62,8 @@ void character_dispersion_calculator::tick(
 		m_value = math::max( m_current_value, m_value - m_value_smoothing_speed * dt );
 	else if ( m_current_value > m_value )
 		m_value = math::min( m_current_value, m_value + m_value_smoothing_speed * dt );
-
-	// STRUCTURE DIFF:
-	// target: 0x586090            base: 0x4546c0
-	// ; void survarium::character_dispersion_calculator::tick(const survarium::weapon_user_state_enum, const bool, const bool, const unsigned char, const bool, const unsigned int) ; target 14 stmts / base 14 stmts
-	// .. same ..
-	// ; aligned 14, size-diffs 0, quantity-diffs 0, blank-gaps 5
-	// VERDICT: STRUCTURE MATCH (shape ok) - all 14 statements align (size-diffs 0, quantity-diffs 0); the 5 blank-gaps are blank-line-only attribution, not statement divergences. Residual is the /Od frame-slot noise (target sub esp,1Ch, this@[ebp-10h] vs base sub esp,18h, this@[ebp-0Ch]), non-steerable. trail: character_dispersion_calculator_tick.md
 }
 
-// STATE[100%|DONE]
 float character_dispersion_calculator::get_target_koef( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
@@ -107,7 +96,6 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 	}
 }
 
-// STATE[100%|DONE]
 float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands_count, bool using_double_handed_weapon ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );

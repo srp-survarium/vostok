@@ -28,7 +28,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[100%|DONE]
 pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
 	weapon_core_aimed_state_base( weapon )
 {
@@ -43,12 +42,6 @@ pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state( weapon
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[87.52%|PARTIAL]: was ASSERT_U - the target eater has NO leading assert_untyped enum
-// push, i.e. VOSTOK_UNREFERENCED_PARAMETERS (fixed, row closed byte-exact, 85.65 -> 87.52);
-// param consts restored from the target PDB signature.
-// Wall: target inlines operator+<animation_lexeme,animation_lexeme> into the return, base keeps
-// the out-of-line `call operator+` (standalone symbol in BOTH rich indexes -> whole-program LTCG
-// inline of the shared mixing header). Non-steerable from this file. Same wall as the siblings.
 animation::mixing::expression pistol_weapon_core_aimed_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
@@ -61,16 +54,8 @@ animation::mixing::expression pistol_weapon_core_aimed_idle_state::weapon_and_ha
 	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x21 | 61 | return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the per-call-site LTCG split of operator+<animation_lexeme>: target inlines it (addition_lexeme ctor/cloned_in_buffer/dtor out-of-line), base calls operator+. Non-steerable. trail: weapon_and_hands_expression.md
 }
 
-// STATE[99.92%|DONE]: structure matches (captions split per-element to align the target's two
-// L43/L44 stores). Sole byte residual: `m_weapon.ammo_in_magazine()` loads `this` into eax
-// (target, LTCG callee takes it in eax) vs ecx (base) at offset 0x1a - the permitted call-boundary
-// arg-passing class. trail: get_weapon_lexeme_pair.md
 weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] =
@@ -96,15 +81,8 @@ weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( 
 		animation::mixing::play_cyclically,
 		animation::linear_interpolator( s_aim_transition_time )
 	);
-
-	// STRUCTURE DIFF[target 0x79b910 | base 0x44e100]: target 7 / base 10 stmts
-	// .. same .. (captions now per-element; all 7 stmts aligned, size-diffs 0)
-	// quantity-diffs are EMPTY-only-base collapsed blank-line gaps inside the brace-init
-	// ; aligned 7, size-diffs 0, quantity-diffs 3
-	// VERDICT: STRUCTURE MATCH - sole byte diff is ammo_in_magazine eax-vs-ecx arg-passing, non-steerable. trail: get_weapon_lexeme_pair.md
 }
 
-// STATE[100%|DONE]
 pistol_weapon_core_aimed_idle_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_aimed_idle_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,

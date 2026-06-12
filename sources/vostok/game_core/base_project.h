@@ -28,9 +28,7 @@ public:
 
 	virtual	base_game_object*		get_object_by_name			( pcstr name );
 
-	// STATE[None|PARTIAL]: LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			void					register_named_object		( pcstr name, base_game_object* obj ) { m_objects_registry[name] = obj; }
-	// STATE[None|PARTIAL]: LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			void					register_object_to_resolve	( link_resolver* obj, configs::binary_config_value cfg ) { m_objects_to_resolve.push_back( resolve_link_object( obj, cfg ) ); }
 
 	virtual	void					resolve_links				( );

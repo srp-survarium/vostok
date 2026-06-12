@@ -10,7 +10,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 weapon_core_cook::weapon_core_cook( ) :
 	resources::translate_query_cook( resources::weapon_class, reuse_false, use_current_thread_id )
 {
@@ -40,7 +39,6 @@ void weapon_core_cook::translate_query( resources::query_result_for_cook& parent
 	// ******
 }
 
-// STATE[100%|DONE]
 void weapon_core_cook::on_weapon_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook*	parent			= data.get_parent_query( );
@@ -166,18 +164,9 @@ void weapon_core_cook::on_core_subresources_ready( resources::queries_result& da
 	// ******
 }
 
-// STATE[33.38%|PARTIAL]: delete_helper<doug_lea_allocator,resource_base> picks
-// a different inline shape than the target - target inlines strip_pointer
-// (mov ecx,[g_allocator]; push ecx) and passes 2 cdecl args; base out-of-lines
-// strip_pointer and passes &resource in edi. Same delta as weapon_ammunition_cook.
 void weapon_core_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// SIZE +0x3 | 187 | VOSTOK_DELETE_IMPL( g_allocator, resource );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is the delete_helper strip_pointer
-	// inline-vs-call/convention split, non-steerable LTCG.
 }
 
 // STATE[STUB]
@@ -300,7 +289,6 @@ void weapon_core_cook::on_weapon_states_ready( resources::queries_result& data, 
 	// ******
 }
 
-// STATE[100%|DONE]
 u32 weapon_core_cook::cooked_object_size( weapon_core& object_to_cook ) const
 {
 	return sizeof( weapon_core );

@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-// void* survarium::player_logic_stand_state::`scalar deleting destructor'(unsigned int) // <0x2a800>|0x000|      :'33'	{
+// void* survarium::player_logic_stand_state::`scalar deleting destructor'(unsigned int)
 
 class player_logic_stand_state : public player_logic_base_state {
 public:

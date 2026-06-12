@@ -9,14 +9,12 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 items_dictionary_cook::items_dictionary_cook( ) :
 	resources::translate_query_cook( resources::items_dictionary_class, reuse_true, use_any_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[100%|DONE]
 void items_dictionary_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	resources::query_resource(
@@ -29,18 +27,11 @@ void items_dictionary_cook::translate_query( resources::query_result_for_cook& p
 	);
 }
 
-// STATE[31.00%|PARTIAL]: LTCG reg-vs-stack arg passing on shared delete_helper instantiation
 void items_dictionary_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
-
-	// STRUCTURE DIFF[target 0x754600 | base 0x5686e0]: target 1 / base 1 stmts
-	// 0x009 <0x17> | 0x00a <0x16> | VOSTOK_DELETE_IMPL( g_allocator, resource );   SIZE
-	// ; aligned 0, size-diffs 1, quantity-diffs 0
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE: target passes resource_base*& on stack (add esp,8); base passes it in edi via the LTCG custom calling convention chosen for delete_helper<doug_lea_allocator,resource_base> (add esp,4, push/pop edi). Shared across all 5 cooks deleting the raw `resource` param (items_cook, weapon_ammunition_cook, animation_analysis_result_cook, player_parameters_modifyer_cook all 31%); non-steerable LTCG arg passing. trail: delete_resource.md
 }
 
-// STATE[70.40%|PARTIAL]: inline-vs-call walls (vectora ctor, STR_JOINA, binary_config_value operator[])
 void items_dictionary_cook::on_items_dictionary_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const parent	= data.get_parent_query( );
@@ -91,21 +82,8 @@ void items_dictionary_cook::on_items_dictionary_config_loaded( resources::querie
 		NULL,
 		parent
 	);
-
-	// STRUCTURE DIFF: target 27 stmts / base 27 stmts
-	// SIZE +0x3c | 52 | vectora< resources::request > requests( g_allocator );
-	// BASE_ONLY  | 55 | u32* item_dict_ids = VOSTOK_NEW_ARRAY_IMPL( g_allocator, u32, requests_count );
-	// TRGT_ONLY  | -- | L52 (0x22 - the same item_dict_ids statement, de-paired by its size: target spills g_allocator to a temp slot, base calls strip_pointer)
-	// SIZE -0x9b | 63 | STR_JOINA( item_cfg_path, "resources/", (pcstr)(*items_it)["cfg_name"] );
-	// SIZE +0x7  | 65 | requests.push_back( resources::create_request( item_cfg_path, resources::binary_config_class_impl ) );
-	// SIZE +0xc  | 68 | const u8 item_category_id = (u8)(*items_it)["item_category"];
-	// SIZE +0x12 | 78 | item_dict.item_cfg_name = (pcstr)(*items_it)["cfg_name"];
-	// SIZE -0x14 | 82 | cooked_resource->add_item_desc( item_dict );
-	// SIZE +0x12 | 93 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 27/27; the ONLY pair is one statement de-paired by its size diff, not a quantity divergence. All SIZE rows are inline-vs-call of shared helpers (vectora ctor, strip_pointer, STR_JOINA, operator[], create_request, add_item_desc); non-steerable from this call site.
 }
 
-// STATE[97.72%|PARTIAL]: inline-vs-call walls (value_exists ternary, strip_pointer in the array delete)
 void items_dictionary_cook::on_subresources_loaded(
 	resources::queries_result&		data,
 	items_dictionary*				cooked_resource,
@@ -142,11 +120,6 @@ void items_dictionary_cook::on_subresources_loaded(
 	parent->finish_query( result_success, assert_on_fail_true );
 
 	VOSTOK_DELETE_ARRAY_IMPL( g_allocator, item_dict_ids );
-
-	// STRUCTURE DIFF: target 17 stmts / base 17 stmts
-	// SIZE +0xc | 152 | : 0;  (the value_exists(...) ? (u8)... : 0 combat_log_icon ternary)
-	// SIZE +0x4 | 161 | VOSTOK_DELETE_ARRAY_IMPL( g_allocator, item_dict_ids );
-	// VERDICT: STRUCTURE MATCH (shape ok) - DELETE -> DELETE_ARRAY restored the target's delete_array_helper_impl call shape (+0x14 -> +0x4); residuals are the ternary inline-vs-call and the strip_pointer call inside the macro, non-steerable.
 }
 
 } // namespace survarium
