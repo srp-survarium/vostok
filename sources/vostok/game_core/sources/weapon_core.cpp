@@ -20,54 +20,36 @@ namespace survarium {
 // void survarium::`dynamic initializer for 's_ik_use_cc''()
 void `dynamic initializer for 's_ik_use_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7d95b0>|0x000|      :'38'	{
-	// ******
 }
 
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_ik_use_on_legs_cc''()
 void `dynamic initializer for 's_ik_use_on_legs_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7d95f0>|0x000|      :'41'	{
-	// ******
 }
 
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_recoil_vertical_eanble_cc''()
 void `dynamic initializer for 's_recoil_vertical_eanble_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7d9630>|0x000|      :'44'	{
-	// ******
 }
 
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_recoil_horizontal_eanble_cc''()
 void `dynamic initializer for 's_recoil_horizontal_eanble_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7d9670>|0x000|      :'47'	{
-	// ******
 }
 
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_recoil_back_eanble_cc''()
 void `dynamic initializer for 's_recoil_back_eanble_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7d96b0>|0x000|      :'50'	{
-	// ******
 }
 
 // STATE[STUB]
 // void survarium::`dynamic initializer for 's_recoil_enable_cc''()
 void `dynamic initializer for 's_recoil_enable_cc''( )
 {
-	// FUNCTION BODY
-	// <0x7d96f0>|0x000|      :'53'	{
-	// ******
 }
 */
 // STATE[STUB]
@@ -293,7 +275,6 @@ bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) 
 	return m_target == target && current_base_state( ).has_animation_ended( );
 }
 
-// STATE[91.32%|PARTIAL]: STRUCTURE MATCH 1/1 stmts, SIZE -0x6 (current_base_state() temp-chain depth)
 animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -313,9 +294,6 @@ animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) cons
 // void survarium::`dynamic initializer for 'epsilon''()
 void `dynamic initializer for 'epsilon''( )
 {
-	// FUNCTION BODY
-	// <0x7d9730>|0x000|      :'300'	{
-	// ******
 }
 */
 // STATE[STUB]
@@ -911,7 +889,6 @@ void weapon_core::on_reload_started( )
 {
 }
 
-// STATE[99.20%|PARTIAL]: STRUCTURE MATCH 11/11 stmts, frame-size diff (push ecx vs sub esp,0Ch)
 animation::callback_return_type_enum weapon_core::on_animation_ik_interval( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;

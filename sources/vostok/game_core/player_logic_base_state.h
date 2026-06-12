@@ -29,8 +29,8 @@ struct base_player;
 class weapon_user_animations_selector;
 struct player_input;
 
-//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)	// <0x122e20>|0x000|      :'60'	{
-//	inventory_item::action												//  <0x22c50>|0x000|      :'61'	{
+//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)
+//	inventory_item::action
 
 class player_logic_base_state : public ai::fsm_state {
 public:
