@@ -59,9 +59,6 @@ CREATE TABLE base_functions(
 CREATE TABLE unit_functions(
   unit INTEGER REFERENCES units(id), sym INTEGER REFERENCES symbols(id),
   fuzzy_pct REAL, PRIMARY KEY(unit, sym)) WITHOUT ROWID;
-CREATE TABLE declared_functions(
-  class TEXT, name TEXT, signature TEXT, access TEXT,
-  is_virtual INTEGER, is_static INTEGER, is_const INTEGER, kind TEXT);
 
 -- pairing + structure classification (derived)
 CREATE TABLE pairs(
@@ -72,6 +69,12 @@ CREATE TABLE pairs(
   struct_class TEXT,   -- MATCH | SIZE | SPLIT | QUANTITY
   t_stmts INTEGER, b_stmts INTEGER,
   n_size_rows INTEGER, n_trgt_only INTEGER, n_base_only INTEGER) WITHOUT ROWID;
+
+-- BASE_ONLY taxonomy (derived at refresh; design: declaration-grounded)
+CREATE TABLE base_only_status(
+  mangled TEXT PRIMARY KEY,
+  status TEXT,            -- NEAR_MISS | JITTER | INLINED_IN_TARGET | UNEXPLAINED
+  detail TEXT);           -- NEAR_MISS: the target-side mangled it likely is
 
 -- persistent (carried across refreshes; keyed by mangled TEXT for stability)
 CREATE TABLE history(
@@ -176,6 +179,82 @@ def classify(t_rec, b_rec):
     else:
         cls = "SIZE"
     return cls, t_n, b_n, n_size, n_trgt_only, n_base_only
+
+
+_OPERATOR_PLACEHOLDERS = [
+    ("operator<<", "operator\x01"),
+    ("operator>>", "operator\x02"),
+    ("operator<=", "operator\x03"),
+    ("operator>=", "operator\x04"),
+    ("operator->", "operator\x05"),
+    ("operator<", "operator\x06"),
+    ("operator>", "operator\x07"),
+    ("operator()", "operator\x08"),
+]
+
+
+def qualified_name(demangled):
+    """Demangled signature -> (class_or_None, name); None for compiler-generated
+    names (thunks, backtick names) that have no source declaration."""
+    if demangled.startswith("[thunk]") or "`" in demangled:
+        return None
+    s = demangled
+    for op, ph in _OPERATOR_PLACEHOLDERS:
+        s = s.replace(op, ph)
+    depth = 0
+    cut = None
+    for i, c in enumerate(s):
+        if c == "<":
+            depth += 1
+        elif c == ">":
+            depth -= 1
+        elif c == "(" and depth == 0:
+            cut = i
+            break
+    head = s[:cut] if cut is not None else s
+    # qualified name = last space-separated token at angle-depth 0
+    depth = 0
+    token_start = 0
+    for i, c in enumerate(head):
+        if c == "<":
+            depth += 1
+        elif c == ">":
+            depth -= 1
+        elif c == " " and depth == 0:
+            token_start = i + 1
+    qual = head[token_start:]
+    # split class::name at the last depth-0 '::'
+    depth = 0
+    split = None
+    i = 0
+    while i < len(qual):
+        c = qual[i]
+        if c == "<":
+            depth += 1
+        elif c == ">":
+            depth -= 1
+        elif c == ":" and depth == 0 and i + 1 < len(qual) and qual[i + 1] == ":":
+            split = i
+            i += 1
+        i += 1
+    def restore(t):
+        for op, ph in _OPERATOR_PLACEHOLDERS:
+            t = t.replace(ph, op)
+        return t
+    if split is None:
+        return None, restore(qual)
+    return restore(qual[:split]), restore(qual[split + 2 :])
+
+
+def norm_name(text):
+    return text.replace(" ", "") if text else text
+
+
+def mangled_name_part(mangled):
+    """The qualified-name portion of an MSVC-mangled symbol (everything before
+    the first '@@', where the access/convention/type encoding starts)."""
+    i = mangled.find("@@")
+    return mangled[:i] if i > 0 else mangled
 
 
 def src_fingerprint(rec):
@@ -335,27 +414,20 @@ def cmd_refresh(args):
     )
     unit_rows = [(u, s, f) for (u, s), f in unit_rows]
 
-    decl_rows = []
+    # declaration records: loaded TRANSIENTLY (222k rows / 85MB - never stored
+    # in the committed DB; only the per-function base_only_status verdict is)
+    declared_methods, declared_free = set(), set()
     if DECLARATIONS.is_file():
-        log("loading declaration records ...")
+        log("loading declaration records (transient) ...")
         with open(DECLARATIONS, encoding="utf-8") as f:
             for line in f:
                 d = json.loads(line)
-                decl_rows.append(
-                    (
-                        d.get("class"),
-                        d["name"],
-                        d.get("signature"),
-                        d.get("access"),
-                        int(bool(d.get("is_virtual"))),
-                        int(bool(d.get("is_static"))),
-                        int(bool(d.get("is_const"))),
-                        d.get("kind", "method"),
-                    )
-                )
-        decl_rows.sort(key=lambda r: (r[0] or "", r[1], r[2] or ""))
+                if d.get("class"):
+                    declared_methods.add((norm_name(d["class"]), norm_name(d["name"])))
+                else:
+                    declared_free.add(norm_name(d["name"]))
     else:
-        log("no declarations.jsonl - declared_functions left empty (parser dump pending)")
+        log("no declarations.jsonl - BASE_ONLY legitimacy check degraded (parser dump pending)")
 
     # carry persistent tables forward from the existing DB
     old_history, old_flags = {}, []
@@ -395,6 +467,49 @@ def cmd_refresh(args):
     if touched or dropped:
         log(f"history: {touched} touched (reset), {dropped} touched-and-vanished (re-queued)")
 
+    # BASE_ONLY taxonomy (design: declaration-grounded)
+    log("classifying base-only symbols ...")
+    target_only_parts = {}
+    for mangled in target:
+        if mangled not in paired_mangled:
+            target_only_parts.setdefault(mangled_name_part(mangled), mangled)
+    declared_stems = {
+        (cls.split("<", 1)[0], name.split("<", 1)[0]) for cls, name in declared_methods
+    }
+    bos_rows = []
+    counts = {}
+    for mangled in sorted(set(base) - paired_mangled):
+        rec = base[mangled]
+        near = target_only_parts.get(mangled_name_part(mangled))
+        qn = qualified_name(rec["name"])
+        if qn is None or mangled.startswith("??__") or "?A0x" in mangled:
+            # thunks, backtick names, dynamic initializers/finalizers, anon-ns
+            status, detail = "COMPILER", None
+        elif rec["file"].endswith("temp_include_all.cpp"):
+            status, detail = "ANCHOR", None  # our reachability scaffolding
+        elif near is not None:
+            status, detail = "NEAR_MISS", near
+        elif mangled in old_history:
+            status, detail = "JITTER", None
+        elif declared_methods or declared_free:
+            cls, name = qn
+            cls_n, name_n = norm_name(cls), norm_name(name)
+            if (cls and (cls_n, name_n) in declared_methods) or (
+                not cls and name_n in declared_free
+            ):
+                status, detail = "INLINED_IN_TARGET", None
+            elif cls and (cls_n.split("<", 1)[0], name_n.split("<", 1)[0]) in declared_stems:
+                # instantiation of a declared template (dump and demangler
+                # render template args differently; the stem is the signal)
+                status, detail = "TEMPLATE", None
+            else:
+                status, detail = "UNEXPLAINED", None
+        else:
+            status, detail = "UNEXPLAINED", None  # no declarations dump to consult
+        bos_rows.append((mangled, status, detail))
+        counts[status] = counts.get(status, 0) + 1
+    log(f"  base-only: {counts}")
+
     # build fresh in a temp file, then atomically replace (deterministic bytes)
     tmp = DB_PATH.with_suffix(".db.tmp")
     tmp.unlink(missing_ok=True)
@@ -413,7 +528,7 @@ def cmd_refresh(args):
     con.executemany("INSERT INTO base_functions VALUES (?,?,?,?,?,?,?)", side_rows(base))
     con.executemany("INSERT INTO unit_functions VALUES (?,?,?)", unit_rows)
     con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?)", pair_rows)
-    con.executemany("INSERT INTO declared_functions VALUES (?,?,?,?,?,?,?,?)", decl_rows)
+    con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
     con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", history_rows)
     con.executemany("INSERT INTO flags VALUES (?,?,?,?)", old_flags)
     # deterministic meta only (artifact mtimes, not wall clock)
@@ -423,6 +538,7 @@ def cmd_refresh(args):
             ("target_index_mtime", file_mtime_iso(TARGET_IDX)),
             ("base_index_mtime", file_mtime_iso(BASE_IDX)),
             ("report_mtime", file_mtime_iso(REPORT)),
+            ("declarations_loaded", "1" if (declared_methods or declared_free) else "0"),
             ("schema_version", "1"),
         ],
     )
@@ -434,7 +550,7 @@ def cmd_refresh(args):
     log(
         f"refreshed {DB_PATH.relative_to(VOSTOK)}: "
         f"{len(target)} target / {len(base)} base / {len(pair_rows)} paired / "
-        f"{len(decl_rows)} declared"
+        f"{len(bos_rows)} base-only classified"
     )
 
 
@@ -477,8 +593,10 @@ def cmd_list(args):
         base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM target_only"
         size_col = "size"
     elif args.presence == "BASE_ONLY":
-        base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM base_only"
-        size_col = "size"
+        base = """SELECT b.demangled, b.mangled, b.unit, b.module, b.size, b.n_stmts,
+                         st.status, st.detail
+                  FROM base_only b LEFT JOIN base_only_status st ON st.mangled = b.mangled"""
+        size_col = "b.size"
     else:
         sys.exit(f"[match_db] unknown --presence {args.presence}")
 
@@ -495,6 +613,11 @@ def cmd_list(args):
         classes = [c.strip().upper() for c in args.struct_class.split(",")]
         where.append(f"struct_class IN ({','.join('?' * len(classes))})")
         params.extend(classes)
+    if args.status:
+        if args.presence != "BASE_ONLY":
+            sys.exit("[match_db] --status only applies to --presence BASE_ONLY")
+        where.append("st.status = ?")
+        params.append(args.status.upper())
     q = base + ((" WHERE " + " AND ".join(where)) if where else "")
     q += f" ORDER BY {size_col}, mangled"
     rows = [dict(r) for r in con.execute(q, params)]
@@ -545,8 +668,19 @@ def cmd_report(args):
         extra=("AND module = ?" if args.module else ""),
     )
     oos = {r["scope"]: r["n"] for r in con.execute(oq, params)}
+    # the fabricated-symbol lint: base-only rows nothing explains
+    uq = """
+      SELECT coalesce({col}, '(no unit)') AS scope, count(*) AS n
+      FROM base_only b JOIN base_only_status st ON st.mangled = b.mangled
+      WHERE st.status IN ('UNEXPLAINED', 'NEAR_MISS') {extra} GROUP BY scope
+    """.format(
+        col="unit" if args.per_unit else "module",
+        extra=("AND module = ?" if args.module else ""),
+    )
+    suspicious = {r["scope"]: r["n"] for r in con.execute(uq, params)}
     for r in rows:
         r["base_only"] = bonly.get(r["scope"], 0)
+        r["suspicious"] = suspicious.get(r["scope"], 0)
         r["out_of_scope"] = oos.get(r["scope"], 0)
     emit(rows, args.json)
 
@@ -696,6 +830,10 @@ def main():
         "--presence",
         choices=["PAIRED", "TARGET_ONLY", "BASE_ONLY"],
         help="default PAIRED",
+    )
+    p.add_argument(
+        "--status",
+        help="BASE_ONLY taxonomy filter: NEAR_MISS|JITTER|INLINED_IN_TARGET|UNEXPLAINED|COMPILER",
     )
     p.add_argument("--json", action="store_true")
 
