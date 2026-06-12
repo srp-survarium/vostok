@@ -990,11 +990,51 @@
 				>
 			</File>
 			<File
+				RelativePath=".\flash_external_handler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_external_handler_impl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\flash_factory.h"
 				>
 			</File>
 			<File
+				RelativePath=".\flash_function_handler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_function_handler_impl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_function_handler_params.h"
+				>
+			</File>
+			<File
 				RelativePath=".\flash_movie.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_movie_resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_renderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_text.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_text_manager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\flash_value.h"
 				>
 			</File>
 			<File
@@ -1202,6 +1242,30 @@
 				>
 			</File>
 			<File
+				RelativePath=".\scaleform_engine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\scaleform_game_engine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\scaleform_movie_cook.h"
+				>
+			</File>
+			<File
+				RelativePath=".\scaleform_render_command.h"
+				>
+			</File>
+			<File
+				RelativePath=".\scaleform_render_command_queue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\scaleform_render_command_queue_impl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shotgun_weapon_reload_state.h"
 				>
 			</File>
@@ -1294,6 +1358,94 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swf_input_translator.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release(static)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release(static)|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug(static)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug(static)|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Master Gold|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\swf_input_translator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\temp_include_all.cpp"
 				>
 			</File>
@@ -1302,11 +1454,107 @@
 				>
 			</File>
 			<File
+				RelativePath=".\text_translator.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release(static)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release(static)|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug(static)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug(static)|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Master Gold|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\text_translator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\toggle_action_enum.h"
 				>
 			</File>
 			<File
+				RelativePath=".\ui_label.h"
+				>
+			</File>
+			<File
 				RelativePath=".\video_options_enum.h"
+				>
+			</File>
+			<File
+				RelativePath=".\vostok_scaleform_log.h"
 				>
 			</File>
 			<File

@@ -5,9 +5,15 @@
 #ifndef FLASH_TEXT_MANAGER_H_INCLUDED
 #define FLASH_TEXT_MANAGER_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::GFx::DrawTextManager;
-class survarium::flash_text;
+// create_text/create_text_w return flash_text by value
+#include "flash_text.h"
+
+namespace Scaleform {
+namespace GFx {
+	class DrawTextManager;
+	class Loader;
+} // namespace GFx
+} // namespace Scaleform
 
 namespace survarium {
 
@@ -17,8 +23,8 @@ struct flash_text_manager {
 
 	inline	void			set_viewport		( u32 arg_0, u32 arg_1 ) { /* no source */ }
 
-	inline	flash_text		create_text			( pcstr arg_0 ) { /* no source */ }
-	inline	flash_text		create_text_w		( wchar_t* arg_0 ) { /* no source */ }
+	inline	flash_text		create_text			( pcstr arg_0 ) { /* no source */ return flash_text( ); }
+	inline	flash_text		create_text_w		( wchar_t* arg_0 ) { /* no source */ return flash_text( ); }
 
 	inline	void			destroy_text		( flash_text& arg_0 ) { /* no source */ }
 

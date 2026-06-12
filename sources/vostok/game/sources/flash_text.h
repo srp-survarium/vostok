@@ -5,18 +5,31 @@
 #ifndef FLASH_TEXT_H_INCLUDED
 #define FLASH_TEXT_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::GFx::DrawText;
-struct survarium::flash_text_manager;
-class survarium::flash_text::alignment;
+namespace Scaleform {
+namespace GFx {
+	class DrawText;
+} // namespace GFx
+} // namespace Scaleform
 
 namespace survarium {
 
+struct flash_text_manager;
+
 struct flash_text {
+	// nested enum has no PDB type record (referenced only); enumerators mirror
+	// Scaleform::GFx::DrawText::Alignment, unverifiable from the PDB
+	enum alignment {
+		align_left,
+		align_default,
+		align_right,
+		align_center,
+		align_justify
+	};
+
 	inline				flash_text		( ) { /* no source */ }
 
-	inline	float		get_width		( ) { /* no source */ }
-	inline	float		get_height		( ) { /* no source */ }
+	inline	float		get_width		( ) { /* no source */ return 0.f; }
+	inline	float		get_height		( ) { /* no source */ return 0.f; }
 
 	inline	void		set_visible		( bool arg_0 ) { /* no source */ }
 	inline	void		set_font_size	( const float arg_0 ) { /* no source */ }

@@ -5,19 +5,36 @@
 #ifndef SWF_INPUT_TRANSLATOR_H_INCLUDED
 #define SWF_INPUT_TRANSLATOR_H_INCLUDED
 
-/* INCLUDES */
-class survarium::map<enum vostok::input::enum_keyboard,survarium::dik_to_swf_bind,stlp_std::less<enum vostok::input::enum_keyboard> >;
-class vostok::input::enum_keyboard;
-class vostok::input::enum_keyboard_action;
-class vostok::input::enum_mouse_key_action;
-class vostok::input::mouse_button;
+#include <vostok/input/keyboard.h>	// enum_keyboard (map key + by-value params)
+#include <vostok/input/mouse.h>		// mouse_button, enum_mouse_key_action
 
-/* FORWARD REFS */
-class vostok::input::world;
-class survarium::dik_to_swf_bind;
-class survarium::flash_movie;
+namespace vostok {
+namespace input {
+	class world;
+} // namespace input
+} // namespace vostok
 
 namespace survarium {
+
+// must be complete here: the stlport map member instantiates
+// pair< enum_keyboard, dik_to_swf_bind > when the class is completed (so the
+// batch-2 "TU-local, owned by swf_input_translator.cpp" call was wrong - the
+// original header had the definition; the dump's FORWARD REFS line is parser
+// output, not source truth)
+struct dik_to_swf_bind {
+
+public:
+	/* 0x0000 */	input::enum_keyboard	key;
+	/* 0x0004 */	wchar_t					c;
+	/* 0x0006 */	wchar_t					c_shift;
+	/* 0x0008 */	s32						scan;
+	/* 0x000c */	bool					translate;
+	/* 0x000d */	bool					is_character;
+}; // struct dik_to_swf_bind
+
+STATIC_SIZE_ASSERT(dik_to_swf_bind, 0x10);
+
+struct flash_movie;
 
 class swf_input_translator {
 public:
@@ -65,7 +82,7 @@ public:
 	inline						~swf_input_translator	( ) { /* no source */ }
 
 private:
-	/* 0x0000 */	map< enum input::enum_keyboard, dik_to_swf_bind, std::less< enum input::enum_keyboard > >	char_map;
+	/* 0x0000 */	map< input::enum_keyboard, dik_to_swf_bind >	char_map;
 }; // class swf_input_translator
 
 STATIC_SIZE_ASSERT(swf_input_translator, 0x18);

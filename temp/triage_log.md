@@ -283,9 +283,17 @@ Queue headers removed because the type already lives in sources/vostok/game_core
 
 ## CHECK individually (kept in queue; def-grep hit a non-game_core module, likely name collision)
 
-- `flash_renderer.h`
+- `flash_renderer.h` - RESOLVED (batch 4): name collision confirmed, NOT coverage.
+  survarium::flash_renderer (ctor takes scaleform_render_command_queue*/ID3D11*,
+  members m_output_*+HAL+R2D, impl TU vostok/scaleform/sources/renderer.cpp per
+  the rich index) vs the legacy vostok::render::flash_renderer (default ctor,
+  m_movies vector, no canonical dump exists for it). Reproduced in game.
 - `render_visual.h`
-- `scaleform_engine__xrSysAllocMalloc.h`
+- `scaleform_engine__xrSysAllocMalloc.h` - RESOLVED (batch 4): survarium::
+  scaleform_engine is a NAMESPACE (initialize/destroy are YA-mangled free fns);
+  xrSysAllocMalloc + both fns live in vostok/scaleform/sources/factory.cpp - a
+  glue module absent from our tree. Reproduced as game/sources/scaleform_engine.h
+  until that module is rebuilt.
 - `enums/action_type.h`
 
 ## Pass 3: real-definition audit + template-instantiation noise (2026-06-12)
@@ -470,7 +478,9 @@ These queue headers are TU-local types (no own compiland); they are reproduced
 INSIDE their owner `.cpp` when that file's batch runs, not as standalone headers:
 
 - `console_command_bind.h` -> key_binder.cpp (batch 5)
-- `dik_to_swf_bind.h` -> swf_input_translator.cpp (batch 4)
+- `dik_to_swf_bind.h` -> swf_input_translator.cpp (batch 4) - CORRECTED in
+  batch 4: must live in swf_input_translator.h (the map member instantiates
+  pair< enum_keyboard, dik_to_swf_bind > at class completion - C2079 otherwise)
 - `relocate_item_func.h` -> lobby_menu_ui.cpp (batch 5)
 - `hit_object.h` -> human_npc.cpp (batch 6)
 - `max_angular_velocity_command.h` -> game.cpp (batch 11)

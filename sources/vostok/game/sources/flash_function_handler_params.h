@@ -5,12 +5,12 @@
 #ifndef FLASH_FUNCTION_HANDLER_PARAMS_H_INCLUDED
 #define FLASH_FUNCTION_HANDLER_PARAMS_H_INCLUDED
 
-/* INCLUDES */
-struct survarium::flash_movie;
-struct survarium::flash_value;
-
 namespace survarium {
 
+struct flash_movie;
+struct flash_value;
+
+// mirrors Scaleform::GFx::FunctionHandler::Params (hence the SDK field naming)
 struct flash_function_handler_params {
 
 public:

@@ -7,6 +7,8 @@
 
 namespace survarium {
 
+// opaque storage for a Scaleform::GFx::Value (0x18 bytes), keeping the SDK
+// type out of the public header
 struct flash_value {
 	inline						flash_value			( ) { /* no source */ }
 	inline						~flash_value		( ) { /* no source */ }
@@ -32,23 +34,23 @@ struct flash_value {
 
 	inline	void				PushBack			( flash_value& arg_0 ) { /* no source */ }
 
-	inline	u32					GetArraySize		( ) { /* no source */ }
+	inline	u32					GetArraySize		( ) { /* no source */ return 0; }
 
 	inline	void				GetMember			( pcstr arg_0, flash_value* arg_1 ) { /* no source */ }
 
-	inline	float				GetNumber			( ) { /* no source */ }
+	inline	float				GetNumber			( ) { /* no source */ return 0.f; }
 
-	inline	bool				GetBool				( ) { /* no source */ }
+	inline	bool				GetBool				( ) { /* no source */ return false; }
 
-	inline	pcstr				GetString			( ) const { /* no source */ }
+	inline	pcstr				GetString			( ) const { /* no source */ return NULL; }
 
 	inline	void				SetConvertStringW	( ) { /* no source */ }
 
-	inline	wchar_t const*		GetStringW			( ) const { /* no source */ }
+	inline	wchar_t const*		GetStringW			( ) const { /* no source */ return NULL; }
 
-	inline	s32					GetInt				( ) const { /* no source */ }
+	inline	s32					GetInt				( ) const { /* no source */ return 0; }
 
-	inline	u32					GetUInt				( ) const { /* no source */ }
+	inline	u32					GetUInt				( ) const { /* no source */ return 0; }
 
 public:
 	/* 0x0000 */	char	body[24];

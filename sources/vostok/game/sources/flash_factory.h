@@ -17,7 +17,7 @@ namespace GFx {
 
 namespace survarium {
 
-class flash_text_manager;
+struct flash_text_manager;
 class scaleform_game_engine;
 class scaleform_render_command_queue;
 

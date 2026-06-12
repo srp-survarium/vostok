@@ -5,22 +5,33 @@
 #ifndef SCALEFORM_RENDER_COMMAND_QUEUE_IMPL_H_INCLUDED
 #define SCALEFORM_RENDER_COMMAND_QUEUE_IMPL_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::Render::HAL;
-class Scaleform::Render::Renderer2D;
-class Scaleform::Render::TextureManager;
-class Scaleform::Render::ThreadCommandQueue;
-class survarium::scaleform_game_engine;
+#include "Render/Render_ThreadCommandQueue.h"	// Scaleform::Render::ThreadCommandQueue (base)
+
+namespace Scaleform {
+namespace Render {
+	class HAL;
+	class Renderer2D;
+	class TextureManager;
+	// not in the vendored GFx 4.0.15; the shipped binary overrode
+	// ThreadCommandQueue::GetRenderInterfaces(Interfaces*) from a newer SDK
+	class Interfaces;
+} // namespace Render
+} // namespace Scaleform
 
 namespace survarium {
 
+class scaleform_game_engine;
+
 class scaleform_render_command_queue_impl : public Scaleform::Render::ThreadCommandQueue , public boost::noncopyable {
 public:
-	inline	explicit	scaleform_render_command_queue_impl	( scaleform_game_engine& arg_0 ) { /* no source */ }
+	inline	explicit	scaleform_render_command_queue_impl	( scaleform_game_engine& arg_0 )
+		:	engine	( arg_0 )
+	{ /* no source */ }
 
 	virtual	void		PushThreadCommand					( Scaleform::Render::ThreadCommand* arg_0 ) override { /* no source */ }
 
-	virtual	void		GetRenderInterfaces					( Scaleform::Render::Interfaces* arg_0 ) override { /* no source */ }
+	// no `override`: the vendored SDK's ThreadCommandQueue lacks this virtual (see above)
+	virtual	void		GetRenderInterfaces					( Scaleform::Render::Interfaces* arg_0 ) { /* no source */ }
 
 	virtual				~scaleform_render_command_queue_impl( ) { /* no source */ }
 
