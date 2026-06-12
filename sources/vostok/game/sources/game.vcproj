@@ -905,6 +905,10 @@
 				RelativePath=".\flash_movie.h"
 				>
 			</File>
+			<File
+				RelativePath=".\temp_game_include_all.cpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
