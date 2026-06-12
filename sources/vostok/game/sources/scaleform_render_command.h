@@ -5,11 +5,15 @@
 #ifndef SCALEFORM_RENDER_COMMAND_H_INCLUDED
 #define SCALEFORM_RENDER_COMMAND_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::Render::ThreadCommand;
+namespace Scaleform {
+namespace Render {
+	class ThreadCommand;
+} // namespace Render
+} // namespace Scaleform
 
 namespace survarium {
 
+// passed BY VALUE through the render facade (execute_scaleform_command)
 struct scaleform_render_command {
 	inline	void	execute	( ) { /* no source */ }
 

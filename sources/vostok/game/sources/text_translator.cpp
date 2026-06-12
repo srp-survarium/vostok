@@ -3,10 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\text_translator.h"
+#include "text_translator.h"
 
 namespace survarium {
 
+// TU static 's_localization' (compiler-generated atexit destructor); a matcher
+// recovers its type/initializer from the load_text_localization asm.
+/*
 // STATE[STUB]
 void `dynamic atexit destructor for 's_localization''( )
 {
@@ -14,6 +17,7 @@ void `dynamic atexit destructor for 's_localization''( )
 	// <0x7d8380>|0x000|      :'13'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
  text_translator::text_translator( )

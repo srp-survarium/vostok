@@ -5,17 +5,14 @@
 #ifndef SCALEFORM_MOVIE_COOK_H_INCLUDED
 #define SCALEFORM_MOVIE_COOK_H_INCLUDED
 
-/* INCLUDES */
-class vostok::resources::translate_query_cook;
-class survarium::flash_factory;
-
-/* FORWARD REFS */
-class vostok::resources::queries_result;
-class vostok::resources::query_result_for_cook;
-class vostok::resources::resource_base;
+#include <vostok/resources_cook_classes.h>
 
 namespace survarium {
 
+class flash_factory;
+
+// out-of-line bodies live in game.cpp (translate_query/delete_resource/
+// on_raw_data_loaded) and base_game_scene.cpp (ctor) per the PDB
 class scaleform_movie_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
 			explicit	scaleform_movie_cook	( flash_factory& factory );

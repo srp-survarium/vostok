@@ -3,7 +3,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\swf_input_translator.h"
+#include "swf_input_translator.h"
+#include "flash_movie.h"
 
 namespace survarium {
 
@@ -172,6 +173,8 @@ dik_to_swf_bind* swf_input_translator::get_bind( input::enum_keyboard key )
 // STATE[STUB]
 wchar_t swf_input_translator::translate_key_action( input::world* input_world, bool is_shift_now, dik_to_swf_bind& current )
 {
+	return 0;
+
 	// LOCALS
 	// wchar_t[64] 						buff
 	// ******

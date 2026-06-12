@@ -5,14 +5,14 @@
 #ifndef VOSTOK_SCALEFORM_LOG_H_INCLUDED
 #define VOSTOK_SCALEFORM_LOG_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::Log;
+#include "Kernel/SF_Log.h"	// Scaleform::Log (base)
 
 namespace survarium {
 
 class vostok_scaleform_log : public Scaleform::Log {
 public:
-	virtual	void	LogMessageVarg			( Scaleform::LogMessageId arg_0, pcstr arg_1, char* arg_2 ) override { /* no source */ }
+	// PDB shows the va_list argument as char* (its x86 MSVC definition)
+	virtual	void	LogMessageVarg			( Scaleform::LogMessageId arg_0, pcstr arg_1, va_list arg_2 ) override { /* no source */ }
 
 	inline			vostok_scaleform_log	( ) { /* no source */ }
 	virtual			~vostok_scaleform_log	( ) { /* no source */ }

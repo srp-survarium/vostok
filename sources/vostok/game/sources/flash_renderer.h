@@ -5,16 +5,28 @@
 #ifndef FLASH_RENDERER_H_INCLUDED
 #define FLASH_RENDERER_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::Render::D3D1x::HAL;
-class Scaleform::Render::Renderer2D;
+// This is GAME's survarium::flash_renderer (impl TU was the original
+// vostok/scaleform/sources/renderer.cpp) - a name collision with the legacy
+// vostok::render::flash_renderer, NOT the same type (different namespace,
+// ctor and member set; see docs/binary_matching/game/README.md triage notes).
 
-/* FORWARD REFS */
-class survarium::flash_movie;
-class survarium::flash_text_manager;
-class survarium::scaleform_render_command_queue;
+struct ID3D11Device;
+struct ID3D11DeviceContext;
+
+namespace Scaleform {
+namespace Render {
+	class Renderer2D;
+	namespace D3D1x {
+		class HAL;
+	} // namespace D3D1x
+} // namespace Render
+} // namespace Scaleform
 
 namespace survarium {
+
+struct flash_movie;
+struct flash_text_manager;
+class scaleform_render_command_queue;
 
 struct flash_renderer {
 	inline			flash_renderer	(

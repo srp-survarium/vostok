@@ -21,9 +21,9 @@ namespace GFx {
 
 namespace survarium {
 
-class flash_external_handler;
-class flash_function_handler;
-class flash_value;
+struct flash_external_handler;
+struct flash_function_handler;
+struct flash_value;
 
 struct flash_movie {
 	// nested enums have no PDB type record (referenced only); AlignType and

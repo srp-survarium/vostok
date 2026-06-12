@@ -5,8 +5,8 @@
 #ifndef SCALEFORM_GAME_ENGINE_H_INCLUDED
 #define SCALEFORM_GAME_ENGINE_H_INCLUDED
 
-/* INCLUDES */
-class survarium::scaleform_render_command;
+// execute_scaleform_command takes the command by value
+#include "scaleform_render_command.h"
 
 namespace survarium {
 

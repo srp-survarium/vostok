@@ -5,14 +5,16 @@
 #ifndef FLASH_FUNCTION_HANDLER_IMPL_H_INCLUDED
 #define FLASH_FUNCTION_HANDLER_IMPL_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::GFx::FunctionHandler;
-struct survarium::flash_function_handler;
+#include "GFx/GFx_Player.h"		// Scaleform::GFx::FunctionHandler (base)
 
 namespace survarium {
 
+struct flash_function_handler;
+
 struct flash_function_handler_impl : public Scaleform::GFx::FunctionHandler , public boost::noncopyable {
-	inline	explicit	flash_function_handler_impl	( flash_function_handler& arg_0 ) { /* no source */ }
+	inline	explicit	flash_function_handler_impl	( flash_function_handler& arg_0 )
+		:	owner	( arg_0 )
+	{ /* no source */ }
 
 	virtual	void		Call						( Scaleform::GFx::FunctionHandler::Params const& arg_0 ) override { /* no source */ }
 
