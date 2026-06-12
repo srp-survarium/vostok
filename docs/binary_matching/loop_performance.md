@@ -351,8 +351,8 @@ _(Append new findings below this line.)_
 
 ## temp_include_all anchors: DEFINE *and* DISPATCH, or the rebuild is wasted
 A new `use_game_core_<x>()` anchor must be (a) defined, (b) befriended on the class/cook
-template, AND (c) CALLED from the dispatcher aggregator (`temp_include_all.cpp` ~line 1359,
-the function that lists `vostok::use_game_core_...();`). If you only do (a)+(b) but forget (c),
+template, AND (c) CALLED from the dispatcher aggregator (`IncludeAll::IncludeAll()` in
+`game/sources/temp_include_all.cpp`, the ctor that lists `vostok::use_game_core_...();`). If you only do (a)+(b) but forget (c),
 nothing references the anchor, so the linker folds away your target functions; they vanish from
 the base side and `report.json` scores them 0 (shown as `fuzzy_match_percent: null` AND missing
 from the diff `right`/base side). That costs a full relink to discover. Grep the

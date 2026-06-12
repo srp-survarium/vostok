@@ -157,9 +157,11 @@ only compare functions that survive into the linked EXE; the linker drops any
 function not reachable from `main`, so an unreferenced match never appears on the
 base side and cannot be diffed.
 
-`game_core` keeps matched code alive through
-`sources/vostok/game_core/sources/temp_include_all.cpp`: an `IncludeAll` instance
-is created in `game/sources/game_world.cpp` (reachable from `main`), and its
+Matched code is kept alive through
+`sources/vostok/game/sources/temp_include_all.cpp` (game's, since the game
+carcass rebuild; previously under game_core): an `IncludeAll` instance
+is created in `game/sources/game_entry_point.cpp::create_world` (reachable
+from `main` via game_module_proxy), and its
 constructor calls one `use_<thing>( )` per matched class; each `use_*`
 instantiates the class and calls its methods, referencing the functions so the
 linker retains them. The same file also anchors the `network_core` and `logging`
