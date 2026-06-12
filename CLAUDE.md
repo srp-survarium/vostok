@@ -93,6 +93,10 @@ vcproj2ninja resolves includes through the project's `/I` dirs (it evaluates
 Only project headers are tracked; system/CRT headers from `%INCLUDE%` are
 intentionally not (they don't change).
 
+`rebuild.py` also regenerates the graph itself on every run (write-if-changed,
+no mtime churn on no-ops), so NEW `#include`s, un-excluded TUs, and .vcproj
+edits are picked up without any manual `regen_ninja.py` step.
+
 ## Keep the README current
 
 README.md documents this Nix/Linux workflow and goes stale easily. Whenever you
