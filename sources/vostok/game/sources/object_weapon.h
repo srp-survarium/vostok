@@ -14,8 +14,11 @@ namespace survarium {
 class human_npc;
 
 // pulled ahead of batch 7 (human_npc::npc_game_attributes' intrusive-list
-// member pointer &object_weapon::m_next needs the complete type); its compiland
-// carcass (sources/object_weapon.{h,cpp}) stays in the queue for batch 7
+// member pointer &object_weapon::m_next needs the complete type); out-of-line
+// bodies in the object_weapon.cpp compiland
+
+// void* object_weapon::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0xabef0]: <0xabee0>|0x000|      :'43'	{
+
 class object_weapon : public ai::weapon , public ai::game_object {
 	// human_npc::npc_game_attributes names &object_weapon::m_next (private)
 	friend class human_npc;
@@ -28,21 +31,82 @@ public:
 										);
 	virtual								~object_weapon			( );
 
-	virtual	ai::game_object const*		cast_game_object		( ) const override { /* no source */ return this; }
+	// STATE[STUB]
+	virtual	ai::game_object const*		cast_game_object		( ) const override
+	{
+		return this;
 
-	virtual	ai::weapon_types_enum		get_type				( ) const override { /* no source */ return m_type; }
+		// FUNCTION BODY[0xabeb0]
+		// <0xabeb0>|0x000|      :'31'	{
+		// ******
+	}
 
-	virtual	bool						is_loaded				( ) const override { /* no source */ return false; }
+	// STATE[STUB]
+	virtual	ai::weapon_types_enum		get_type				( ) const override
+	{
+		return m_type;
+
+		// FUNCTION BODY[0x3c580]
+		// <0x3c580>|0x000|      :'32'	{
+		// ******
+	}
+
+	// STATE[STUB]
+	virtual	bool						is_loaded				( ) const override
+	{
+		return false;
+
+		// FUNCTION BODY[0xabec0]
+		// <0xabec0>|0x000|      :'33'	{
+		// ******
+	}
 
 	virtual	pcstr						get_name				( ) const override { /* no source */ return m_name; }
-	virtual	u32							get_id					( ) const override { /* no source */ return m_id; }
 
-	virtual	ai::npc*					cast_npc				( ) override { /* no source */ return NULL; }
+	// STATE[STUB]
+	virtual	u32							get_id					( ) const override
+	{
+		return m_id;
+
+		// FUNCTION BODY[0xabed0]
+		// <0xabed0>|0x000|      :'36'	{
+		// ******
+	}
+
+	// STATE[STUB]
+	virtual	ai::npc*					cast_npc				( ) override
+	{
+		return NULL;
+
+		// FUNCTION BODY[0x427c0]
+		// <0x427c0>|0x000|      :'38'	{
+		// ******
+	}
+
 	virtual	ai::npc const*				cast_npc				( ) const override { /* no source */ return NULL; }
-	virtual	ai::weapon*					cast_weapon				( ) override { /* no source */ return this; }
+
+	// STATE[STUB]
+	virtual	ai::weapon*					cast_weapon				( ) override
+	{
+		return this;
+
+		// FUNCTION BODY[0xabb00]
+		// <0xabb00>|0x000|      :'40'	{
+		// ******
+	}
+
 	virtual	ai::weapon const*			cast_weapon				( ) const override { /* no source */ return this; }
 
-	virtual	float						get_velocity			( ) const override { /* no source */ return 0.0f; }
+	// STATE[STUB]
+	virtual	float						get_velocity			( ) const override
+	{
+		return 0.0f;
+
+		// FUNCTION BODY[0xab8f0]
+		// <0xab8f0>|0x000|      :'42'	{
+		// ******
+	}
+
 	virtual	float						get_luminosity			( ) const override { /* no source */ return 0.0f; }
 	virtual	float3						get_random_surface_point( const u32 current_time ) const override;
 

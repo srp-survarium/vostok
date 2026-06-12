@@ -18,8 +18,8 @@ namespace survarium {
 
 class base_game_scene;
 
-// pulled ahead of batch 7 (a base of this batch's human_npc); its compiland
-// carcass (sources/object.{h,cpp}) stays in the queue for batch 7
+// pulled ahead of batch 7 (a base of batch 6's human_npc); out-of-line bodies
+// in the object.cpp compiland
 class game_object_ : public resources::unmanaged_resource , public boost::noncopyable {
 public:
 			explicit			game_object_	( base_game_scene& s );
@@ -30,7 +30,14 @@ public:
 									boost::function< void( game_object_& ) >&	arg_2
 								) = 0;
 
-	virtual	void				insert			( ) { /* no source */ }
+	// STATE[STUB]
+	virtual	void				insert			( )
+	{
+		// FUNCTION BODY[0x4f210]
+		// <0x4f210>|0x000|      :'28'	{
+		// ******
+	}
+
 	virtual	void				remove			( ) { /* no source */ }
 
 	inline	base_game_scene&	get_game_scene	( ) { /* no source */ return m_game_scene; }
