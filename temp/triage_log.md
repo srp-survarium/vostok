@@ -455,3 +455,30 @@ are under target game/sources/):
 
 - `weapon_sound_events_handler_state_cook_survarium__weapon_sound_events_handler_state_survarium__weapon_core_shotgun_reload_one_round_substate_1.h`
 - `weapon_sound_events_handler_state_cook_survarium__weapon_sound_events_handler_state_survarium__weapon_core_shotgun_reload_one_round_substate.h`
+
+## Pass 4: weapon_core_state_cook_template instantiations (2026-06-12)
+
+Removed 23 monomorphised dumps of `weapon_core_state_cook_template< T >` -
+the primary template is game_core's (`game_core/weapon_core_state_cook_template.h`,
+already matched); the instantiations materialize from game_core's own use.
+(Passes 1-2 missed them because the filename suffix is the template ARGUMENT,
+not a `_N` variant.)
+
+## TU-local helpers - owner mapping (was batch 2)
+
+These queue headers are TU-local types (no own compiland); they are reproduced
+INSIDE their owner `.cpp` when that file's batch runs, not as standalone headers:
+
+- `console_command_bind.h` -> key_binder.cpp (batch 5)
+- `dik_to_swf_bind.h` -> swf_input_translator.cpp (batch 4)
+- `relocate_item_func.h` -> lobby_menu_ui.cpp (batch 5)
+- `hit_object.h` -> human_npc.cpp (batch 6)
+- `max_angular_velocity_command.h` -> game.cpp (batch 11)
+- `ray_query_predicate.h` -> game.cpp / game_unused.cpp (legacy prior; batch 11)
+- `get_first_npc_in_camera_direction_predicate.h` -> game_unused.cpp lineage (batch 11)
+- owner UNKNOWN (no carcass/legacy signal - placed when a consumer TU is
+  matched; stay in queue for batch 12): check_health_predicate,
+  compare_body_parts_predicate, dump_player_body_part_state_predicate,
+  erase_null_ptrs, erase_old_receivers, find_closest_collision_predicate,
+  remove_left_receivers_predicate, remove_vertex_from_hit_parameters_predicate,
+  test_objects_in_shape_predicate
