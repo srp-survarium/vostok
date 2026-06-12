@@ -219,7 +219,7 @@ void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& pac
 	// VERDICT: STRUCTURE MATCH (shape ok) - SIZE rows are packet<T>::append kept out-of-line in target vs LTCG-inlined in base, cross-module wall, non-steerable.
 }
 
-// STATE[PARTIAL]: reads the packed active-hands byte then both start times; bits 0/1 of
+// STATE[0%|PARTIAL]: reads the packed active-hands byte then both start times; bits 0/1 of
 // active_hands drive each hand's is_active.
 void hand_to_weapon_ik_processor::deserialize( network_core::packet_reader& reader )
 {

@@ -489,7 +489,7 @@ void serialize_affect( network_core::udp_match_packet& packet, std::pair<enum hi
 	// (target) vs plain call (base), LTCG, non-steerable.
 }
 
-// STATE[PARTIAL]: read affect type (r<bool>) and expiry time (r<u32>), then an eaten assert.
+// STATE[0%|PARTIAL]: read affect type (r<bool>) and expiry time (r<u32>), then an eaten assert.
 void deserialize_affect( network_core::packet_reader& reader, std::pair<enum hit_affects_type_enum,u32>& affect )
 {
 	affect.first	= (hit_affects_type_enum)reader.r< bool >( );

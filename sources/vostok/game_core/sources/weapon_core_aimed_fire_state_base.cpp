@@ -15,7 +15,7 @@ weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_cor
 {
 }
 
-// STATE[PARTIAL]: structure and logic match target; residual is LTCG frame-size diff
+// STATE[0%|PARTIAL]: structure and logic match target; residual is LTCG frame-size diff
 // (base sub esp,0ACh vs target 0A4h) cascading into [ebp-N] slot numbering + COMDAT
 // boost::bind symbol pairing mismatch. Same class as weapon_core_fire_state_base::initialize.
 void weapon_core_aimed_fire_state_base::initialize( )
@@ -43,7 +43,7 @@ void weapon_core_aimed_fire_state_base::initialize( )
 	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
 }
 
-// STATE[PARTIAL]: structure correct (2 stmts); target keeps weapon_core_base_state::execute()
+// STATE[0%|PARTIAL]: structure correct (2 stmts); target keeps weapon_core_base_state::execute()
 // out-of-line, base inlines the empty `{}` body. Same wall as weapon_core_fire_state_base::execute.
 void weapon_core_aimed_fire_state_base::execute( )
 {
@@ -51,7 +51,7 @@ void weapon_core_aimed_fire_state_base::execute( )
 	m_animation_has_been_ended = false;
 }
 
-// STATE[PARTIAL]: structure and logic match; residual is ASSERT slot drift from the
+// STATE[0%|PARTIAL]: structure and logic match; residual is ASSERT slot drift from the
 // 8-byte frame gap (same LTCG class as initialize). `*m_is_firing_ptr = false` folds
 // into the ASSERT statement boundary in target PDB.
 void weapon_core_aimed_fire_state_base::finalize( )
@@ -69,7 +69,7 @@ void weapon_core_aimed_fire_state_base::finalize( )
 	*m_is_firing_ptr = false;
 }
 
-// STATE[PARTIAL]: 10/10 stmts matched; SIZE -0x3 on LOG_WARNING is LTCG inline-vs-call
+// STATE[0%|PARTIAL]: 10/10 stmts matched; SIZE -0x3 on LOG_WARNING is LTCG inline-vs-call
 // of the logging infrastructure, non-steerable.
 animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
