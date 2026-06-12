@@ -3,12 +3,15 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\lobby_camera.h"
+#include "lobby_camera.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit lobby_camera::lobby_camera( base_game_scene& w )
+ lobby_camera::lobby_camera( base_game_scene& w ) :
+	// game_camera has no default ctor; the same-named param is the obvious
+	// source - a matcher confirms when this TU is enabled
+	game_camera( w )
 {
 	// FUNCTION BODY[0x5c3e90]: 1
 	// <0x5c3eeb>|0x05b|+0x038:'29'
@@ -257,24 +260,5 @@ void lobby_camera::on_focus( bool b_focus_enter )
 	// <0x5c3ce9>|0x049|      :'155'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

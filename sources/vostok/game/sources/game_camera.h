@@ -10,8 +10,8 @@ namespace survarium {
 class base_game_scene;
 class camera_director;
 
-// pulled ahead of batch 9 (a base of this batch's player_input_handler); its
-// compiland carcass (sources/game_camera.{h,cpp}) stays in the queue for batch 9
+// pulled ahead by batch 6 (a base of its player_input_handler); out-of-line
+// bodies in the game_camera.cpp compiland (batch 9)
 class game_camera : public boost::noncopyable {
 public:
 			explicit			game_camera				( base_game_scene& w );
@@ -28,8 +28,22 @@ public:
 	inline	float				get_far_plane			( ) const { /* no source */ return m_far_plane; }
 
 	virtual	void				on_activate				( camera_director* cd );
-	virtual	void				on_deactivate			( ) { /* no source */ }
-	virtual	void				on_focus				( bool __formal ) { /* no source */ }
+
+	// STATE[STUB]
+	virtual	void				on_deactivate			( )
+	{
+		// FUNCTION BODY[0x4f210]
+		// <0x4f210>|0x000|      :'38'	{
+		// ******
+	}
+
+	// STATE[STUB]
+	virtual	void				on_focus				( bool __formal )
+	{
+		// FUNCTION BODY[0x22c50]
+		// <0x22c50>|0x000|      :'39'	{
+		// ******
+	}
 
 	virtual	void				tick					( );
 

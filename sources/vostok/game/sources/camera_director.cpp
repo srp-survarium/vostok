@@ -3,10 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\camera_director.h"
+#include "camera_director.h"
 
 namespace survarium {
 
+// the ctor-local console-command static 'cc_cam_pos' emits a compiler-generated
+// atexit destructor; a matcher recovers it with the ctor body.
+/*
 // STATE[STUB]
 void `survarium::camera_director::camera_director'::`2'::`dynamic atexit destructor for 'cc_cam_pos''( )
 {
@@ -14,9 +17,13 @@ void `survarium::camera_director::camera_director'::`2'::`dynamic atexit destruc
 	// <0x7d8b50>|0x000|      :'17'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
-explicit camera_director::camera_director( base_game_scene& w )
+ camera_director::camera_director( base_game_scene& w ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	m_game_scene( w )
 {
 	// STATICS
 	// static console_commands::cc_float3 cc_cam_pos = <0x4c2ac60>;
@@ -128,24 +135,5 @@ void camera_director::on_focus( bool b_focus_enter )
 	// <0x5cc9c9>|0x009|+0x00d:'86'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

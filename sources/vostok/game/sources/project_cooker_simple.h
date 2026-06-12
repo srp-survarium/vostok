@@ -5,18 +5,13 @@
 #ifndef PROJECT_COOKER_SIMPLE_H_INCLUDED
 #define PROJECT_COOKER_SIMPLE_H_INCLUDED
 
-/* INCLUDES */
-class vostok::resources::translate_query_cook;
-class vostok::configs::binary_config;
-
-/* FORWARD REFS */
-class vostok::resources::queries_result;
-class vostok::resources::query_result_for_cook;
-class vostok::resources::resource_base;
-class survarium::game_object_;
-class survarium::simple_game_project;
+#include <vostok/resources_cook_classes.h>
+#include <vostok/configs.h>	// configs::binary_config_ptr (by-value param)
 
 namespace survarium {
+
+class game_object_;
+class simple_game_project;
 
 class project_cooker_simple : public resources::translate_query_cook , public boost::noncopyable {
 public:
