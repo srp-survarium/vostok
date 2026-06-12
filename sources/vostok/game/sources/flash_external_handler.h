@@ -5,14 +5,11 @@
 #ifndef FLASH_EXTERNAL_HANDLER_H_INCLUDED
 #define FLASH_EXTERNAL_HANDLER_H_INCLUDED
 
-/* INCLUDES */
-struct survarium::flash_external_handler_impl;
-
-/* FORWARD REFS */
-class survarium::flash_movie;
-class survarium::flash_value;
-
 namespace survarium {
+
+struct flash_external_handler_impl;
+struct flash_movie;
+struct flash_value;
 
 struct flash_external_handler {
 	inline			flash_external_handler	( ) { /* no source */ }

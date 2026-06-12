@@ -5,14 +5,13 @@
 #ifndef SCALEFORM_RENDER_COMMAND_QUEUE_H_INCLUDED
 #define SCALEFORM_RENDER_COMMAND_QUEUE_H_INCLUDED
 
-/* INCLUDES */
-class survarium::scaleform_render_command_queue_impl;
-
-/* FORWARD REFS */
-class survarium::scaleform_game_engine;
-
 namespace survarium {
 
+class scaleform_game_engine;
+class scaleform_render_command_queue_impl;
+
+// ctor/dtor are addressed in the original vostok/scaleform/sources/
+// command_queue.cpp (module absent from our tree); inline stubs until then
 class scaleform_render_command_queue {
 public:
 	inline	explicit	scaleform_render_command_queue	( scaleform_game_engine& arg_0 ) { /* no source */ }

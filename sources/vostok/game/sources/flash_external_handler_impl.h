@@ -5,14 +5,16 @@
 #ifndef FLASH_EXTERNAL_HANDLER_IMPL_H_INCLUDED
 #define FLASH_EXTERNAL_HANDLER_IMPL_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::GFx::ExternalInterface;
-struct survarium::flash_external_handler;
+#include "GFx/GFx_Player.h"		// Scaleform::GFx::ExternalInterface (base)
 
 namespace survarium {
 
+struct flash_external_handler;
+
 struct flash_external_handler_impl : public Scaleform::GFx::ExternalInterface , public boost::noncopyable {
-	inline	explicit	flash_external_handler_impl	( flash_external_handler& arg_0 ) { /* no source */ }
+	inline	explicit	flash_external_handler_impl	( flash_external_handler& arg_0 )
+		:	owner	( arg_0 )
+	{ /* no source */ }
 
 	virtual	void		Callback					(
 							Scaleform::GFx::Movie*			arg_0,

@@ -5,13 +5,13 @@
 #ifndef TEXT_TRANSLATOR_H_INCLUDED
 #define TEXT_TRANSLATOR_H_INCLUDED
 
-/* INCLUDES */
-typedef vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>
-	vostok::configs::binary_config_ptr;
-class vostok::configs::binary_config;
+#include <vostok/configs.h>	// configs::binary_config_ptr (value member)
 
-/* FORWARD REFS */
-class vostok::resources::queries_result;
+namespace vostok {
+namespace resources {
+	class queries_result;
+} // namespace resources
+} // namespace vostok
 
 namespace survarium {
 

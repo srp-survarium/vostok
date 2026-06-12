@@ -5,14 +5,12 @@
 #ifndef FLASH_FUNCTION_HANDLER_H_INCLUDED
 #define FLASH_FUNCTION_HANDLER_H_INCLUDED
 
-/* INCLUDES */
-struct survarium::flash_function_handler_impl;
-
-/* FORWARD REFS */
-class survarium::flash_function_handler_params;
-
 namespace survarium {
 
+struct flash_function_handler_impl;
+struct flash_function_handler_params;
+
+// PDB: dtor is NON-virtual (only `call` populates the vtable after the ctor)
 struct flash_function_handler {
 	inline			flash_function_handler	( ) { /* no source */ }
 	inline			~flash_function_handler	( ) { /* no source */ }
