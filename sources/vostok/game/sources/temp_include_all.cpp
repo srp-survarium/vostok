@@ -59,7 +59,10 @@
 // game's pch (game_memory.h) pins _WIN32_WINNT to 0x0500, so ws2tcpip.h pulls
 // the wspiapi.h getaddrinfo emulation whose inlines call CRT calloc/free -
 // lift the engine's CRT bans (memory_override_operators.h) around the
-// asio-pulling includes; restored right after.
+// asio-pulling includes; restored right after. Delete the pair together with
+// the use_network_core_* anchors once the rebuilt game TUs (base_network_client
+// & co) reference the network clients for real - no other TU parses asio under
+// a 0x0500 pch.
 #undef calloc
 #undef free
 // #include <boost/asio.hpp>
