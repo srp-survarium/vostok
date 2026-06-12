@@ -66,7 +66,7 @@ rg -n "STATE\[STUB\]" sources/vostok/<module>/sources
 
 Order them however you like (small/leaf functions first is usually easiest).
 Work the list top to bottom until every entry is `DONE` or deliberately parked
-(`SKIPPED` / `BLOCKED` / `PARTIAL`) with a written reason.
+(`SKIPPED` / `BLOCKED`) with a written reason.
 
 ## 1. Per-function loop (one worker)
 
@@ -87,10 +87,10 @@ The orchestrator hands the worker a single function; the worker does the rest:
 5. **Stop** when the function matches, or when you judge you can no longer make
    progress. You decide when to stop - do not spin.
 6. **Record the outcome** (sections 5-7): update the function's
-   `docs/binary_matching/<module>/status.jsonl` entry (and drop its
-   `// STATE[STUB]` flag on a real match), write the
-   stuck-reason and tried variants, NOTE any inlining, and flag any regression
-   you caused.
+   `docs/binary_matching/<module>/status.jsonl` entry (and on a real match drop
+   its `// STATE[STUB]` flag and delete the carcass), put the stuck-reason and
+   tried variants in the commit message, NOTE any inlining, and flag any
+   regression you caused.
 7. **Commit and open the PR** (section 8). Move to the next function.
 
 ## 2. Getting the target assembly
@@ -102,17 +102,34 @@ Use **`pdb_fetch`** / **`pdb_rich_query`** (from vostok-pdb-parser, on PATH insi
 # discover / disambiguate overloads first (rva  file  signature)
 pdb_rich_query --index binaries/rich/target/index.jsonl --function <name> --list
 
-# the target listing for one function (--rva 0x... for an exact pick)
+# 1. the statement STRUCTURE - the shape to reproduce (one row per source
+#    statement: address, offset, <byte size>, 'srcline', [n] block-opens):
+pdb_fetch --target-index binaries/rich/target/index.jsonl \
+  --function <name> [--rva 0x...] --view structure
+
+# 2. the RICH ASM for the whole function - offset-prefixed instructions,
+#    each statement headed by `[0xNN]:` with its byte size:
 pdb_fetch --target-index binaries/rich/target/index.jsonl \
   --function <name> --view target
+
+# 3. the asm of ONE statement when the function is dense - slice by the
+#    structure's `address` column (an absolute VA: it also SELECTS the function,
+#    so no --function needed), by function-relative offset, or by 1-based index:
+pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x<va>
+pdb_fetch --target-index ... --function <name> --view target --offset 0x<offst>
+pdb_fetch --target-index ... --function <name> --view target --index <N>
 ```
 
-This is the reference ("rich") assembly you diff against: offset-prefixed
-instructions, each statement annotated with its byte size `; <0xNN>`. Other views:
-`structure-diff --condensed` (the two-sided target-vs-base statement diff - your FIRST
-stop on a non-100% function: it localizes WHICH statement diverges and HOW, see 2a),
-`structure` (one side's statement skeleton), `callees` (the function's call targets
-resolved to signatures - match those first), `info` (PDB-recorded locals).
+Work in that order: read the structure first (it is the skeleton your source must
+reproduce - statement count, order, sizes, block-opens), then the rich asm to write
+the body, then per-statement slices to drill into any statement that is dense or
+diverging - a slice keeps context tight where the full listing would drown you.
+Other views: `structure-diff --condensed` (the two-sided target-vs-base statement
+diff - your FIRST stop on a non-100% function: it localizes WHICH statement diverges
+and HOW, see 2a), `callees` (the function's call targets resolved to signatures -
+match those first), `info` (PDB-recorded locals). The same `--address`/`--offset`/
+`--index` slicing works on the base side (`--base-index ... --view base`) once your
+code builds.
 
 `binaries/rich/target` is built once at setup and never changes;
 `binaries/rich/base` is refreshed by every `rebuild.py`, so you always have a fresh
@@ -191,50 +208,43 @@ target but not in your base (or vice versa) you will see it as a missing/extra
 `call` and, in the carcass, as a large `+delta` between two statement addresses.
 Identify the block, leave a `claude@NOTE:` (or `claude@MATCH:` if you reshaped
 the source to compensate), and do **not** burn the loop fighting inlining you
-cannot steer - note it and record `PARTIAL` (with the cause) in `status.jsonl`.
+cannot steer - record the cause in the function's `status.jsonl` entry.
 
 ## 6. When stuck - what to write
 
-At the **top of the function** (comment block above it):
-- `claude@NOTE:` why it is stuck / your best current understanding.
-- a short list (one line each) of the variants you tried.
+A failed/parked match leaves its context where the NEXT matcher will look (the
+same two-layer convention other decomp projects use - a non-matching note at the
+function + an external tracker):
+- a terse **`claude@NOTE:` above the function** - why it is stuck, what you tried,
+  a couple of lines max. Facts about the attempt, never a % or a diff dump.
+- the function's **`status.jsonl` entry** (`SKIPPED` / `BLOCKED`, with the cause =
+  the same conclusion plus the concrete next step; the live % stays in
+  `report.json`).
 
-Then update the function's `status.jsonl` entry (`SKIPPED` / `PARTIAL` /
-`BLOCKED`, with the cause; the live % stays in `report.json`). Full detail -
-pasted asm, every variant and its score -
-goes in the per-function log (section 7), not inline.
+Full detail - every variant and its score, the diverging statements - goes in the
+COMMIT/PR MESSAGE (section 7), not inline.
 
-## 7. Per-function log: `docs/binary_matching/<module>/<function>.md`
+## 7. Run narrative: the commit/PR message (NO per-function `.md`)
 
-Each module has its own folder under `docs/binary_matching/` so its material does
-not mix with the general docs: `README.md` holds module-wide notes (gotchas,
-shared types, asm quirks for the whole module), and **one `<function>.md` per
-function, always** - it is the debugging trail, written *as you go*, not
-reconstructed at the end. A reviewer must be able to replay your whole run from
-it: every command verbatim, every source variant, every resulting score. Shape:
+We do NOT keep per-function `.md` logs. Module-wide notes (gotchas, shared types,
+asm quirks for the whole module) still live in
+`docs/binary_matching/<module>/README.md`; everything per-function splits into:
 
-```
-# <module>::<function>
+- **`status.jsonl`** - the terse status + cause, machine-readable (keyed by target
+  VA, sorted by symbol);
+- **the COMMIT/PR MESSAGE** - the narrative a reviewer needs to replay the run:
+  the key commands, each source variant you tried with its resulting % /
+  structure-diff outcome, the final residual and why. Shape:
 
-Target asm: <pdb-parser output, or the key fragment>
+  ```
+  <module>: match <function> (NN% TAG)
 
-## Commands run (verbatim, in order)
-- pdb_rich_query --index ... --function ... --list
-- pdb_fetch --target-index ... --base-index ... --function ... --view structure-diff --condensed   # FIRST: where does structure diverge
-- python3 scripts/rebuild.py        # NO module arg - bare name skips the EXE relink (stale score)
-- pdb_fetch ... --view diff ...     # then: instruction-level cause at the diverging statement
-- ...
+  structure: target N stmts / base N stmts (MATCH | residual: <...>)
+  variants: <one line each - what changed, what it scored>
+  blockers/regressions: <... or none>
+  ```
 
-## Iterations (one block per source variant you tried)
-1. INPUT: <what you wrote/changed in the .cpp>
-   BUILD: <match % from report.json>   (regressions: <...>)
-   DIFF:  <what `--view diff` then showed - the diverging rows>
-2. ...
-
-## Outcome
-status: <final TAG + %>. Blocker: <...>. Regressions caused: <unit/fn, or none>.
-Inlining: <blocks that inlined differently; cluster members matched together>.
-```
+- any reusable asm -> source mapping is promoted to `patterns/` (section 8).
 
 ## 8. Assembly patterns -> `patterns/`
 
@@ -256,8 +266,8 @@ next function.
 ---
 
 **Stop condition for the whole run:** every function in the module is `DONE` or
-parked (`SKIPPED`/`BLOCKED`/`PARTIAL`) with a written reason and a per-function
-log where it mattered.
+parked (`SKIPPED`/`BLOCKED`) with its cause recorded in `status.jsonl` (narrative
+in the commit messages).
 
 Missing tooling you wish you had goes in
 [`unanswered_questions.md`](unanswered_questions.md).
