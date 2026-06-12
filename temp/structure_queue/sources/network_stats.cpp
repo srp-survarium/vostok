@@ -1,0 +1,212 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\game\sources\network_stats.h"
+
+namespace survarium {
+
+// STATE[STUB]
+ stats_stream::~stats_stream( )
+{
+	// FUNCTION BODY[0x783640]: 10
+	// <0x783646>|0x006|+0x00c:'22'
+	// <0>
+	// <1>
+	// <0x783652>|0x012|+0x027:'25'
+	// <0x783679>|0x039|+0x026:'26'
+	// <0>
+	// <0x78369f>|0x05f|+0x018:'28'
+	// <0x7836b7>|0x077|+0x018:'29'
+	// <0x7836cf>|0x08f|+0x018:'30'
+	// <0x7836e7>|0x0a7|+0x01c:'31'
+	// ******
+}
+
+// STATE[STUB]
+void stats_stream::create(
+	flash_text_manager&		text_manager_in,
+	const float				start_width,
+	const float				start_height,
+	const float				column0_width,
+	const float				column1_width,
+	const float				column2_width,
+	math::color const&		color
+)
+{
+	// FUNCTION BODY[0x7839b0]: 25
+	// <0>
+	// <1>
+	// <2>
+	// <0x7839c1>|0x011|+0x01f:'47'
+	// <0x7839e0>|0x030|+0x01d:'48'
+	// <0x7839fd>|0x04d|+0x044:'49'
+	// <0x783a41>|0x091|+0x060:'50'
+	// <0>
+	// <0x783aa1>|0x0f1|+0x020:'52'
+	// <0x783ac1>|0x111|+0x01e:'53'
+	// <0x783adf>|0x12f|+0x041:'54'
+	// <0x783b20>|0x170|+0x080:'55'
+	// <0>
+	// <0x783ba0>|0x1f0|+0x020:'57'
+	// <0x783bc0>|0x210|+0x01e:'58'
+	// <0x783bde>|0x22e|+0x041:'59'
+	// <0x783c1f>|0x26f|+0x081:'60'
+	// <0>
+	// <0x783ca0>|0x2f0|+0x020:'62'
+	// <0x783cc0>|0x310|+0x01e:'63'
+	// <0x783cde>|0x32e|+0x042:'64'
+	// <0x783d20>|0x370|+0x07b:'65'
+	// <0>
+	// <0x783d9b>|0x3eb|+0x061:'67'
+	// <0x783dfc>|0x44c|+0x05e:'68'
+	// ******
+}
+
+// STATE[STUB]
+void stats_stream::set_text(
+	const u32		current_time_in_ms,
+	network_core::udp_match_items_stats const&	new_stats,
+	network_core::udp_match_items_stats const&	previous_stats
+)
+{
+	// LOCALS
+	// char[256] 						text
+	// ******
+
+	// FUNCTION BODY[0x783800]: 21
+	// <0>
+	// <0x783800>|0x000|+0x066:'78'
+	// <0x783866>|0x066|+0x028:'79'
+	// <0>
+	// <1>
+	// <2>
+	// <0x78388e>|0x08e|+0x01f:'83'
+	// <0x7838ad>|0x0ad|+0x00b:'84'
+	// <0>
+	// <0x7838b8>|0x0b8|+0x01d:'86'
+	// <0x7838d5>|0x0d5|+0x00c:'87'
+	// <0>
+	// <0x7838e1>|0x0e1|+0x01a:'89'
+	// <0x7838fb>|0x0fb|+0x03a:'90'
+	// <0x783935>|0x135|+0x008:'91'
+	// <0>
+	// <1>
+	// <0x78393d>|0x13d|+0x01a:'94'
+	// <0x783957>|0x157|+0x03e:'95'
+	// <0x783995>|0x195|+0x00c:'96'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+ stats_row::~stats_row( )
+{
+	// FUNCTION BODY[0x783710]: 10
+	// <0x783716>|0x006|+0x00f:'106'
+	// <0>
+	// <1>
+	// <0x783725>|0x015|+0x02d:'109'
+	// <0>
+	// <0x783752>|0x042|+0x01b:'111'
+	// <0x78376d>|0x05d|+0x01b:'112'
+	// <0x783788>|0x078|+0x01b:'113'
+	// <0x7837a3>|0x093|+0x01b:'114'
+	// <0x7837be>|0x0ae|+0x01d:'115'
+	// ******
+}
+
+// STATE[STUB]
+void stats_row::create(
+	flash_text_manager&		text_manager_in,
+	pcstr const				caption_string,
+	const float				start_width,
+	const float				start_height,
+	const float				caption_width,
+	const float				column0_width,
+	const float				column1_width,
+	const float				column2_width,
+	const float				column3_width,
+	math::color const&		color
+)
+{
+	// FUNCTION BODY[0x784020]: 34
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x784026>|0x006|+0x033:'136'
+	// <0x784059>|0x039|+0x01f:'137'
+	// <0>
+	// <0x784078>|0x058|+0x021:'139'
+	// <0x784099>|0x079|+0x01d:'140'
+	// <0x7840b6>|0x096|+0x044:'141'
+	// <0x7840fa>|0x0da|+0x063:'142'
+	// <0>
+	// <0x78415d>|0x13d|+0x023:'144'
+	// <0x784180>|0x160|+0x01e:'145'
+	// <0x78419e>|0x17e|+0x045:'146'
+	// <0x7841e3>|0x1c3|+0x065:'147'
+	// <0>
+	// <0x784248>|0x228|+0x023:'149'
+	// <0x78426b>|0x24b|+0x01e:'150'
+	// <0x784289>|0x269|+0x045:'151'
+	// <0x7842ce>|0x2ae|+0x065:'152'
+	// <0>
+	// <0x784333>|0x313|+0x023:'154'
+	// <0x784356>|0x336|+0x01e:'155'
+	// <0x784374>|0x354|+0x045:'156'
+	// <0x7843b9>|0x399|+0x065:'157'
+	// <0>
+	// <0x78441e>|0x3fe|+0x023:'159'
+	// <0x784441>|0x421|+0x01e:'160'
+	// <0x78445f>|0x43f|+0x046:'161'
+	// <0x7844a5>|0x485|+0x065:'162'
+	// <0>
+	// <0x78450a>|0x4ea|+0x062:'164'
+	// ******
+}
+
+// STATE[STUB]
+void stats_row::set_text(
+	const u32		current_time_in_ms,
+	network_core::udp_match_stream_stats const&	new_stats,
+	network_core::udp_match_stream_stats const&	previous_stats
+)
+{
+	// LOCALS
+	// char[256] 						text
+	// ******
+
+	// FUNCTION BODY[0x783e70]: 25
+	// <0x783e8a>|0x01a|+0x00f:'173'
+	// <0x783e99>|0x029|+0x011:'174'
+	// <0>
+	// <0x783eaa>|0x03a|+0x006:'176'
+	// <0x783eb0>|0x040|+0x03f:'177'
+	// <0>
+	// <1>
+	// <2>
+	// <0x783eef>|0x07f|+0x01f:'181'
+	// <0x783f0e>|0x09e|+0x00c:'182'
+	// <0>
+	// <0x783f1a>|0x0aa|+0x01d:'184'
+	// <0x783f37>|0x0c7|+0x03f:'185'
+	// <0x783f76>|0x106|+0x008:'186'
+	// <0>
+	// <1>
+	// <0x783f7e>|0x10e|+0x00d:'189'
+	// <0x783f8b>|0x11b|+0x030:'190'
+	// <0x783fbb>|0x14b|+0x00c:'191'
+	// <0>
+	// <1>
+	// <0x783fc7>|0x157|+0x011:'194'
+	// <0x783fd8>|0x168|+0x02b:'195'
+	// <0x784003>|0x193|+0x00c:'196'
+	// <0>
+	// ******
+}
+
+} // namespace survarium
