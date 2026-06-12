@@ -262,6 +262,18 @@ matcher) - never drop them. Prefix your own with `claude@...`.
 - `@NOTE:` an observation about the target.
 - `@TODO:` an open question.
 
+**@-comments carry FACTS, never SCORES.** A match % (or fuzzy number, or
+report figure) in a comment goes stale the moment a rebuild moves it - that
+is the same disease the old `STATE[NN%]` markers died of; the numbers live in
+`report.json`/the match DB. Describe the WALL, not the percentage:
+- BAD:  `claude@NOTE: 94% wall - target keeps vectora_allocator ctor out-of-line`
+- GOOD: `claude@NOTE: inline-vs-call wall - target keeps the
+  vectora_allocator<void*>(base_allocator*) ctor out-of-line at the
+  m_victory_items init site, base inlines it (LTCG per-site cut; see
+  patterns/inline-vs-call-template-comdat.md)`
+Byte sizes, instruction names, pattern refs, target shapes: all fine - they
+are facts about the binary. Anything that re-measures on rebuild is not.
+
 "Why it didn't match / why I stopped" = a terse `claude@NOTE:` above the function
 (why stuck, what was tried - the non-matching note the next matcher reads first)
 plus the same conclusion as a match-DB `SKIP`/`NOTE` flag cause; long rationale

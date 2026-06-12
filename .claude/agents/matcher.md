@@ -20,9 +20,11 @@ across code that genuinely shares it. Also pull in any function
 scores as its own function; see MATCHING.md's reconstructed-helper rule).
 One unit = one match commit. If a batch member turns out hard, a bit of spinning on it
 is fine, but don't get stuck - finish the rest and park it: a terse `claude@NOTE:`
-above the function (why stuck, what you tried) and the cause + concrete next step in
-your RESULT LINE - the orchestrator records it as a match-DB `SKIP` flag (you never
-edit `match.db` yourself; the orchestrator is its single writer).
+above the function (why stuck, what you tried - FACTS only, NEVER a match % in
+a comment: numbers go stale, they live in report.json/the match DB) and the
+cause + concrete next step in your RESULT LINE - the orchestrator records it as
+a match-DB `SKIP` flag (you never edit `match.db` yourself; the orchestrator is
+its single writer).
 
 ## Read first (source of truth - they win over this summary)
 1. `MATCHING.md` - how matched source must look.
