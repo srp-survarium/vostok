@@ -5,19 +5,19 @@
 #ifndef ANIMATION_SPACE_GRAPH_COOK_H_INCLUDED
 #define ANIMATION_SPACE_GRAPH_COOK_H_INCLUDED
 
-/* INCLUDES */
-class vostok::resources::translate_query_cook;
-struct vostok::ai::navigation::world;
-class vostok::configs::binary_config;
+#include <vostok/resources_cook_classes.h>
 
-/* FORWARD REFS */
-class vostok::fs_new::virtual_path_string;
-class vostok::resources::queries_result;
-class vostok::resources::query_result_for_cook;
-class vostok::resources::resource_base;
-class survarium::animation_space_graph;
+namespace vostok {
+namespace ai {
+namespace navigation {
+	struct world;
+} // namespace navigation
+} // namespace ai
+} // namespace vostok
 
 namespace survarium {
+
+class animation_space_graph;
 
 class animation_space_graph_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:

@@ -5,14 +5,8 @@
 #ifndef ANIMATION_SPACE_SEARCH_RESTRICTOR_H_INCLUDED
 #define ANIMATION_SPACE_SEARCH_RESTRICTOR_H_INCLUDED
 
-/* INCLUDES */
-class vostok::ai::search_restrictor::generic<survarium::animation_space_vertex_id,unsigned int,float>;
-typedef vostok::resources::resource_ptr<survarium::animation_space_graph,vostok::resources::unmanaged_intrusive_base>
-	survarium::animation_space_graph_ptr;
-class survarium::animation_space_graph;
-
-/* FORWARD REFS */
-class survarium::animation_space_vertex_id;
+#include "animation_space_graph.h"
+#include <vostok/ai/search/search_restrictor_generic.h>
 
 namespace survarium {
 
@@ -25,9 +19,15 @@ public:
 						float const&						arg_3,
 						const u32							arg_4,
 						const u32							arg_5
-					) { /* no source */ }
+					) :
+		// the base refs/m_graph force the init-list; the arg mapping is the
+		// generic<> ctor's own (start, target, max_range, max_iterations,
+		// max_visited) - a matcher confirms at the inlining call site
+		ai::search_restrictor::generic< animation_space_vertex_id, u32, float >( arg_1, arg_2, arg_3, arg_4, arg_5 ),
+		m_graph( arg_0 )
+	{ /* no source */ }
 
-	inline	u32		get_start_vertices_count			( ) const { /* no source */ }
+	inline	u32		get_start_vertices_count			( ) const { /* no source */ return 0; }
 
 	inline			~animation_space_search_restrictor	( ) { /* no source */ }
 

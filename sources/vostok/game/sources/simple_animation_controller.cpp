@@ -3,12 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\simple_animation_controller.h"
+#include "simple_animation_controller.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit simple_animation_controller::simple_animation_controller( human_npc& owner )
+ simple_animation_controller::simple_animation_controller( human_npc& owner ) :
+	// ref member; the same-named param is the obvious source - a matcher confirms
+	m_owner( owner )
 {
 	// FUNCTION BODY[0x5bbff0]: 0
 	// <0x5bbff0>|0x000|+0x023:'22'	{
@@ -95,7 +97,7 @@ animation::mixing::expression simple_animation_controller::try_finalize( base_an
 }
 
 // STATE[STUB]
-void simple_animation_controller::debug_draw( render::game::renderer& render, render::base_scene_ptr const& scene ) const
+void simple_animation_controller::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
 	// FUNCTION BODY[0x5bbee0]: 1
 	// <0x5bbee0>|0x000|+0x000:'70'	{
@@ -103,16 +105,5 @@ void simple_animation_controller::debug_draw( render::game::renderer& render, re
 	// <0x5bbee0>|0x000|      :'72'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

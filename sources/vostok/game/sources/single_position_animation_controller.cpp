@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\single_position_animation_controller.h"
+#include "single_position_animation_controller.h"
 
 namespace survarium {
 
@@ -12,7 +12,13 @@ namespace survarium {
 	animation_space_graph_ptr const&	graph,
 	ai::navigation::world const&		ai_navigation_world,
 	human_npc&							owner
-)
+) :
+	// the ref members + allocator-taking vectora force the init-list; the
+	// same-named params / module allocator are the obvious sources - a matcher
+	// confirms when this TU is enabled
+	m_ai_navigation_world( ai_navigation_world ),
+	m_owner( owner ),
+	m_navigation_path( g_allocator )
 {
 	// FUNCTION BODY[0x7769b0]: 0
 	// <0x7769b0>|0x000|+0x085:'37'	{
@@ -242,7 +248,7 @@ void single_position_animation_controller::set_target( animation_controller_para
 }
 
 // STATE[STUB]
-void single_position_animation_controller::debug_draw( render::game::renderer& render, render::base_scene_ptr const& scene ) const
+void single_position_animation_controller::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
 	// LOCALS
 	// float3 const* 					e
@@ -264,48 +270,5 @@ void single_position_animation_controller::debug_draw( render::game::renderer& r
 	// <0>
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	float
-	// 	distance_type;
-
-	// typedef
-	// 	float3*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::animation_space_vertex_id
-	// 	vertex_id_type;
-
-	// typedef
-	// 	survarium::animations_search_service::vertex_manager_impl_type
-	// 	vertex_manager_type;
-
-	// typedef
-	// 	survarium::animations_search_service::vertex_type
-	// 	vertex_type;
-
-	// typedef
-	// 	survarium::vector< u32 >
-	// 	path_type;
-
-	// typedef
-	// 	u32*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::vectora< float3 >
-	// 	path_type;
-
-	// ******
 
 } // namespace survarium

@@ -15,12 +15,15 @@ namespace vertex_allocator {
 #define allocator				vertex_allocator::fixed_count::impl< vertex_type >
 
 TEMPLATE_SPECIALIZATION
-inline allocator::impl			( u32 const max_vertex_count )
+inline allocator::impl			( memory::base_allocator* memory_allocator, u32 const max_vertex_count ) :
+	m_allocator					( memory_allocator )
 {
-	m_vertices					= static_cast< vertex_type* >( MALLOC( max_vertex_count * sizeof( vertex_type ), typeid( vertex_type ).name() ) );
+	// allocate through the stored allocator - the callers pass their module's
+	// g_allocator, so behaviour matches the old module-local MALLOC
+	m_vertices					= static_cast< vertex_type* >( VOSTOK_MALLOC_IMPL( m_allocator, max_vertex_count * sizeof( vertex_type ), typeid( vertex_type ).name() ) );
 	m_vertices_end				= m_vertices + max_vertex_count;
 	vertex_type* iter			= m_vertices;
-	
+
 	for ( ; iter != m_vertices_end; ++iter )
 		new(iter)vertex_type	( );
 }
@@ -32,7 +35,7 @@ inline allocator::~impl			( )
 	for ( ; iter != m_vertices_end; ++iter )
 		iter->~vertex_type		( );
 
-	FREE						( m_vertices );
+	VOSTOK_FREE_IMPL				( m_allocator, m_vertices );
 }
 
 TEMPLATE_SPECIALIZATION
@@ -60,6 +63,12 @@ TEMPLATE_SPECIALIZATION
 inline u32 allocator::visited_vertex_count						( ) const
 {
 	return					u32( m_vertex_current - m_vertices );
+}
+
+TEMPLATE_SPECIALIZATION
+inline memory::base_allocator* allocator::memory_allocator		( ) const
+{
+	return					m_allocator;
 }
 
 #undef allocator

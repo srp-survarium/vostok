@@ -3,12 +3,16 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\animation_space_graph_cook.h"
+#include "animation_space_graph_cook.h"
+#include "animation_space_graph.h"
+#include "animation_space_vertex.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit animation_space_graph_cook::animation_space_graph_cook( ai::navigation::world& navigation_world )
+ animation_space_graph_cook::animation_space_graph_cook( ai::navigation::world& navigation_world ) :
+	// ref member; the same-named param is the obvious source - a matcher confirms
+	m_navigation_world( navigation_world )
 {
 	// FUNCTION BODY[0x7677a0]: 0
 	// <0x7677a0>|0x000|+0x06c:'20'	{

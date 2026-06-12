@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\animation_controller_parameters.h"
+#include "animation_controller_parameters.h"
 
 namespace survarium {
 

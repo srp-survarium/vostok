@@ -5,9 +5,6 @@
 #ifndef ANIMATION_SPACE_VERTEX_ID_H_INCLUDED
 #define ANIMATION_SPACE_VERTEX_ID_H_INCLUDED
 
-/* INCLUDES */
-class vostok::math::quaternion;
-
 namespace survarium {
 
 struct animation_space_vertex_id {

@@ -5,22 +5,29 @@
 #ifndef ANIMATION_SPACE_GRAPH_WRAPPER_H_INCLUDED
 #define ANIMATION_SPACE_GRAPH_WRAPPER_H_INCLUDED
 
-/* INCLUDES */
-struct survarium::animation_space_vertex_id;
-typedef vostok::resources::resource_ptr<survarium::animation_space_graph,vostok::resources::unmanaged_intrusive_base>
-	survarium::animation_space_graph_ptr;
-class survarium::animation_space_graph;
+#include "animation_space_graph.h"
 
 namespace survarium {
 
 struct animation_space_graph_wrapper : public boost::noncopyable {
-	inline									animation_space_graph_wrapper	( animation_space_graph_ptr const& arg_0, animation_space_vertex_id const& arg_1 ) { /* no source */ }
+	// PDB prints the nested impl tags standalone (Outer__Inner.h); both are the
+	// empty mix-in bases the search-service vertex/cell types inherit from
+	struct vertex_impl {
+	}; // struct vertex_impl
+
+	struct look_up_cell_impl {
+	}; // struct look_up_cell_impl
+
+	inline									animation_space_graph_wrapper	( animation_space_graph_ptr const& arg_0, animation_space_vertex_id const& arg_1 ) :
+		m_graph( arg_0 ),
+		m_start_vertex_id( arg_1 )
+	{ /* no source */ }
 
 	inline	void							on_before_search				( ) { /* no source */ }
 	inline	void							on_after_search					( const bool arg_0 ) { /* no source */ }
 
-	inline	animation_space_vertex_id		vertex_id						( animation_space_vertex_id const& vertex_id, const u32 iterator ) const { /* no source */ }
-	inline	u32								edge_id							( animation_space_vertex_id const& arg_0, const u32 arg_1 ) const { /* no source */ }
+			animation_space_vertex_id		vertex_id						( animation_space_vertex_id const& vertex_id, const u32 iterator ) const;
+	inline	u32								edge_id							( animation_space_vertex_id const& arg_0, const u32 arg_1 ) const { /* no source */ return 0; }
 
 	inline									~animation_space_graph_wrapper	( ) { /* no source */ }
 
@@ -31,7 +38,11 @@ public:
 }; // struct animation_space_graph_wrapper
 
 STATIC_SIZE_ASSERT(animation_space_graph_wrapper, 0x8);
+STATIC_SIZE_ASSERT(animation_space_graph_wrapper::vertex_impl, 0x1);
+STATIC_SIZE_ASSERT(animation_space_graph_wrapper::look_up_cell_impl, 0x1);
 
 } // namespace survarium
+
+#include "animation_space_graph_wrapper_inline.h"
 
 #endif // #ifndef ANIMATION_SPACE_GRAPH_WRAPPER_H_INCLUDED

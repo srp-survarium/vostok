@@ -53,7 +53,7 @@ class game_world;
 class hit_initiator;
 struct hit_object;
 
-class animated_model_instance;
+struct animated_model_instance;
 typedef resources::resource_ptr<
 	animated_model_instance,
 	resources::unmanaged_intrusive_base

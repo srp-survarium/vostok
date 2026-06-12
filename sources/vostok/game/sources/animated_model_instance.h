@@ -5,19 +5,21 @@
 #ifndef ANIMATED_MODEL_INSTANCE_H_INCLUDED
 #define ANIMATED_MODEL_INSTANCE_H_INCLUDED
 
-/* INCLUDES */
-class vostok::animation::animation_player;
-class vostok::collision::animated_object;
-class vostok::resources::unmanaged_resource;
-typedef vostok::resources::resource_ptr<survarium::damage_model,vostok::resources::unmanaged_intrusive_base>
-	survarium::damage_model_ptr;
-typedef vostok::resources::resource_ptr<vostok::physics::animated_model_instance,vostok::resources::unmanaged_intrusive_base>
-	vostok::physics::animated_model_instance_ptr;
-typedef vostok::resources::resource_ptr<vostok::render::animated_model_instance,vostok::resources::unmanaged_intrusive_base>
-	vostok::render::animated_model_instance_ptr;
-class vostok::physics::animated_model_instance;
-class vostok::render::animated_model_instance;
-class survarium::damage_model;
+// render::animated_model_instance_ptr / physics::animated_model_instance_ptr /
+// damage_model_ptr value members
+#include <vostok/render/facade/model.h>
+#include <vostok/physics/model.h>
+#include <vostok/game_core/damage_model.h>
+#include <vostok/resources_unmanaged_resource.h>
+
+namespace vostok {
+namespace animation {
+	class animation_player;
+} // namespace animation
+namespace collision {
+	class animated_object;
+} // namespace collision
+} // namespace vostok
 
 namespace survarium {
 
@@ -35,6 +37,11 @@ public:
 }; // struct animated_model_instance
 
 STATIC_SIZE_ASSERT(animated_model_instance, 0x120);
+
+typedef resources::resource_ptr<
+	animated_model_instance,
+	resources::unmanaged_intrusive_base
+> animated_model_instance_ptr;
 
 } // namespace survarium
 

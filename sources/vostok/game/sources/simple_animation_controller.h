@@ -5,18 +5,12 @@
 #ifndef SIMPLE_ANIMATION_CONTROLLER_H_INCLUDED
 #define SIMPLE_ANIMATION_CONTROLLER_H_INCLUDED
 
-/* INCLUDES */
-class survarium::human_npc;
-struct survarium::base_animation_controller;
-struct survarium::simple_animation_controller_parameters;
-class vostok::animation::mixing::expression;
-class vostok::render::base_scene;
-
-/* FORWARD REFS */
-class vostok::render::game::renderer;
-class survarium::animation_controller_parameters;
+#include "base_animation_controller.h"
+#include "animation_controller_parameters.h"
 
 namespace survarium {
+
+class human_npc;
 
 class simple_animation_controller : public base_animation_controller {
 public:
@@ -33,7 +27,7 @@ public:
 
 	virtual	void								query_new_target_if_needed	( ) override;
 
-	virtual	void								debug_draw					( render::game::renderer& render, render::base_scene_ptr const& scene ) const override;
+	virtual	void								debug_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const override;
 
 private:
 	/* 0x0000 */	/* base_animation_controller */

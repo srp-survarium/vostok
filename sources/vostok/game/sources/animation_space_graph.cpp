@@ -3,7 +3,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\animation_space_graph.h"
+#include "animation_space_graph.h"
+#include "animation_space_vertex.h"
 
 namespace survarium {
 
@@ -23,7 +24,14 @@ namespace survarium {
 	const u32					animations_count,
 	const u32					mixes_count,
 	const u32					edges_count
-)
+) :
+	// the ref/const members force the init-list; the same-named params are the
+	// obvious sources - a matcher confirms when this TU is enabled
+	m_navigation_world( navigation_world ),
+	m_agent_radius( agent_radius ),
+	m_animations_count( animations_count ),
+	m_mixes_count( mixes_count ),
+	m_edges_count( edges_count )
 {
 	// FUNCTION BODY[0x765960]: 0
 	// <0x765960>|0x000|+0x057:'41'	{
