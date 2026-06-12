@@ -325,23 +325,29 @@ def git_head():
 
 
 def staleness_check(con, strict=False):
-    """The DB is a snapshot of the last delink. Under lowest-match-first
+    """Freshness has TWO legs: report.json must be BUILT from the current
+    sources (rebuild.py records the HEAD it built at in report.head), and the
+    DB must have ingested that report (refresh). Under lowest-match-first
     ordering, stale rows for freshly-landed work look like 0% and get
-    dispatched FIRST - so queue refuses on a stale DB (--stale-ok overrides);
-    other commands warn. Cadence: land -> rebuild.py -> refresh -> queue."""
+    dispatched FIRST - so queue refuses on either stale leg (--stale-ok
+    overrides); other commands warn. Cadence: land -> rebuild.py -> refresh."""
     hard, soft = [], []
-    row = con.execute("SELECT value FROM meta WHERE key='refresh_head'").fetchone()
-    refresh_head = row[0] if row else None
-    if not refresh_head or refresh_head == "?":
-        hard.append("DB predates the staleness guard - run `match_db.py refresh`")
-    elif refresh_head != git_head():
-        rc, _ = _git("diff", "--quiet", refresh_head, "HEAD", "--", "sources/")
-        if rc != 0:
-            _, last = _git("log", "-1", "--format=%h %s", "--", "sources/")
-            hard.append(
-                f"sources/ changed since the DB was refreshed ({refresh_head[:8]}..HEAD,"
-                f" last: {last}) - rebuild.py + refresh first"
-            )
+    row = con.execute("SELECT value FROM meta WHERE key='build_head'").fetchone()
+    build_head = row[0] if row else None
+    if not build_head or build_head.startswith("?"):
+        hard.append("DB predates the staleness guard - rebuild.py + refresh first")
+    else:
+        if build_head.endswith("+dirty"):
+            build_head = build_head[: -len("+dirty")]
+            soft.append("report.json was built from a DIRTY sources/ tree")
+        if build_head != git_head():
+            rc, _ = _git("diff", "--quiet", build_head, "HEAD", "--", "sources/")
+            if rc != 0:
+                _, last = _git("log", "-1", "--format=%h %s", "--", "sources/")
+                hard.append(
+                    f"sources/ changed since report.json was BUILT ({build_head[:8]}..HEAD,"
+                    f" last: {last}) - rebuild.py + refresh first"
+                )
     if REPORT.is_file():
         row = con.execute("SELECT value FROM meta WHERE key='report_mtime'").fetchone()
         if row and row[0] != file_mtime_iso(REPORT):
@@ -592,6 +598,31 @@ def cmd_refresh(args):
         counts[status] = counts.get(status, 0) + 1
     log(f"  base-only: {counts}")
 
+    # which source state was report.json BUILT from? rebuild.py records it in
+    # report.head. Without the marker (older rebuild.py): CARRY FORWARD the
+    # previous DB's build_head - re-assuming the current HEAD on every refresh
+    # would let refresh-without-rebuild launder staleness. Only a virgin DB
+    # gets the one-time current-HEAD assumption.
+    head_marker = REPORT.parent / "report.head"
+    if head_marker.is_file():
+        build_head = head_marker.read_text().strip()
+    else:
+        prev = None
+        if DB_PATH.is_file():
+            try:
+                prev_row = open_db().execute(
+                    "SELECT value FROM meta WHERE key='build_head'"
+                ).fetchone()
+                prev = prev_row[0] if prev_row else None
+            except sqlite3.OperationalError:
+                prev = None
+        if prev and not prev.startswith("?"):
+            build_head = prev
+            log("no report.head marker - carrying forward the previous build_head")
+        else:
+            build_head = git_head()
+            log("no report.head marker (older rebuild.py) - assuming report was built at current HEAD")
+
     # build fresh in a temp file, then atomically replace (deterministic bytes)
     tmp = DB_PATH.with_suffix(".db.tmp")
     tmp.unlink(missing_ok=True)
@@ -621,6 +652,7 @@ def cmd_refresh(args):
             ("base_index_mtime", file_mtime_iso(BASE_IDX)),
             ("report_mtime", file_mtime_iso(REPORT)),
             ("refresh_head", git_head()),
+            ("build_head", build_head),
             ("declarations_loaded", "1" if (declared_methods or declared_free) else "0"),
             ("schema_version", "2"),
         ],
