@@ -10,7 +10,6 @@
 using vostok::logging::path_parts;
 using vostok::logging::format_string_type;
 
-// STATE[100%|DONE]
 path_parts::path_parts	(pcstr initiator) : m_index(0), m_current_element(0)
 {
 	ASSERT									( initiator );
@@ -19,7 +18,6 @@ path_parts::path_parts	(pcstr initiator) : m_index(0), m_current_element(0)
 	add_part								(0);
 }
 
-// STATE[100%|DONE]
 void path_parts::add_part		( pcstr const part )
 {
 	ASSERT					( !part || *part );
@@ -29,7 +27,6 @@ void path_parts::add_part		( pcstr const part )
 	m_parts.push_back		( part );
 }
 
-// STATE[100%|DONE]
 void path_parts::to_next_element()
 {
 	m_current_element		= strchr( m_current_element, initiator_separator );
@@ -41,7 +38,6 @@ void path_parts::to_next_element()
 	m_current_element		= m_parts[++m_index]; // next part of path
 }
 
-// STATE[99.97%|DONE]: one assert-dummy stack slot ([ebp-15h] vs target [ebp-16h]) - allocation noise.
 void path_parts::concat2buffer( format_string_type& buffer )
 {
 	u32 string_length = 0;
@@ -51,11 +47,6 @@ void path_parts::concat2buffer( format_string_type& buffer )
 		memory::copy( &buffer[string_length], 512 - string_length, m_parts[i], part_length + 1 );
 		string_length += part_length;
 	}
-																									// <1>
 	if ( string_length && buffer[string_length - 1] == ':' )
 		buffer[string_length - 1] = '\0';
-
-	// STRUCTURE DIFF: target 9 stmts / base 9 stmts (no diverging rows, sizes equal 0xd3)
-	// VERDICT: STRUCTURE MATCH - residual is the third fixed_vector-assert dummy's slot (-15h vs -16h, a 1-byte
-	// allocation hole in target) + ICF-folded stub naming; stack-slot-only, banked.
 }

@@ -45,7 +45,7 @@ static inline void convert_slashes_to_colons( pstr const string )
 			*i							=	':';
 }
 
-// STATE[97.5%|DONE]: core strings::copy<512> inline-vs-call. sushi@TODO: Ghidra script does not handle static functions
+// sushi@TODO: Ghidra script does not handle static functions
 static void fill_log_string(
 	vostok::buffer_string&				dest,
 	pstr const							message_start,
@@ -103,16 +103,11 @@ static void fill_log_string(
 	);
 
 	* (pstr)message_end					=	saved_end_char;
-
-	// STRUCTURE DIFF: target 18 stmts / base 18 stmts
-	// SIZE +0x11 | 71 | strings::copy( strings_storage[format_specifier_verbosity], verbosity_to_string( verbosity ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is core strings::copy<512> called out-of-line in target, inlined in base (core-side, flagged).
 }
 
 namespace vostok {
 namespace logging {
 
-// STATE[100%|DONE]
 void log_format::set( format_specifier const & format_expression )
 {
 	format_specifier_list					specifiers;
@@ -156,7 +151,6 @@ struct debug_log_disable_raii
 };
 
 
-// STATE[80.6%|DONE]: core vostok::vsnprintf inline-vs-call + LTCG-materialized empty dtor call after iterate_items
 void logger::operator()( pcstr const format, pstr const args )
 {
 	debug_log_disable_raii debug_log_disable;
@@ -171,16 +165,8 @@ void logger::operator()( pcstr const format, pstr const args )
 		logger_predicate( path, *this ),
 		'\n'
 	);
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// SIZE +0x2 | 151 | vsnprintf( message_buffer, sizeof( message_buffer ) - 1, format, args );
-	// SIZE -0x5 | 159 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - target calls core vostok::vsnprintf out-of-line (base inlines to __vsnprintf_s)
-	// and calls an ICF-folded empty dtor for the logger_predicate temp (no symbol for it in the target unit, so an explicit
-	// out-of-line ~logger_predicate would fabricate one - tried, reverted); both core/LTCG, banked.
 }
 
-// STATE[99.5%|DONE]: LTCG for `buffer_string`
 bool logger_predicate::operator()(
 	u32			index,
 	pstr		string,
@@ -209,13 +195,8 @@ bool logger_predicate::operator()(
 		);
 
 	return true;
-
-	// STRUCTURE DIFF: target 6 stmts / base 6 stmts
-	// SIZE +0x1 | 168 | buffer_string final_string( ( pstr )ALLOCA( final_length ), final_length );
-	// VERDICT: STRUCTURE MATCH (shape ok) - 1 byte inside the buffer_string ctor call (LTCG conv), banked.
 }
 
-// STATE[93%|DONE]: target calls one more empty ctor while expanding logger's ctor (log_format()/noncopyable(), the format.h empty_stub COMDAT) - LTCG, see README
 void append(
 	log_callback_boost const&	log_callback,
 	void* const					user_data,
@@ -233,14 +214,8 @@ void append(
 	va_start( mark, format );
 	logger( log_callback, user_data, log_format, initiator, line, file, function_signature, verbosity )( format, mark );
 	va_end( mark );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0xb | 205 | logger( log_callback, user_data, log_format, initiator, line, file, function_signature, verbosity )( format, mark );
-	// VERDICT: STRUCTURE MATCH (shape ok) - target's inlined logger ctor calls TWO empty subobject ctors (ecx- and eax-conv),
-	// base only one; the second is the un-expanded log_format(){}/noncopyable() COMDAT (format.h empty_stub) - LTCG, banked.
 }
 
-// STATE[93%|DONE]: same -0xb as the other append (one more empty subobject-ctor call in target) - LTCG, see README
 void append(
 	log_callback_boost const&	log_callback,
 	void* const					user_data,
@@ -260,10 +235,6 @@ void append(
 	va_start( mark, format );
 	logger( log_callback, user_data, &log_format, initiator, line, file, function_signature, verbosity )( format, mark );
 	va_end( mark );
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts
-	// SIZE -0xb | 227 | logger( log_callback, user_data, &log_format, initiator, line, file, function_signature, verbosity )( format, mark );
-	// VERDICT: STRUCTURE MATCH (shape ok) - same missing empty subobject-ctor call as the log_format-ptr append; LTCG, banked.
 }
 
 } // namespace logging

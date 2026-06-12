@@ -9,7 +9,6 @@
 
 namespace survarium {
 
-// STATE[95.94%|DONE]
 player_parameters_modifyer::player_parameters_modifyer( ) :
 	speed_modifyer                 ( 0.0f ),
 	total_items_weight             ( 0.0f ),

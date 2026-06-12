@@ -94,9 +94,6 @@ public:
 
 private:
 	struct bullet_functor {
-		// STATE[None|DONE]: structure matches (0 stmts / 0x42 bytes both sides); objdiff scores None
-		// from ICF fold-name relocs (member-ctor calls resolve to unrelated fold representatives) plus
-		// the first member ctor's promoted convention (target passes this in eax, base ecx). Non-steerable.
 		inline	explicit	bullet_functor	( ) { }
 		inline				~bullet_functor	( ) { }
 
@@ -174,61 +171,39 @@ private:
 private:
 	class bullet_functor_mt_allocator : public boost::noncopyable {
 	public:
-		// STATE[INLINED]
 		explicit				bullet_functor_mt_allocator	( void* const buffer, u32 buffer_size ) : m_buffer( buffer )
 		{
 			ASSERT( UNKNOWN_EXPRESSION );
 			for ( bullet_functor *i = static_cast<bullet_functor*>( buffer ), *e = i + buffer_size / sizeof( bullet_functor ) ; i != e ; ++i )
 				free_impl( i );
-
-			// FUNCTION BODY
-			// <0xbe481>|0x031|+0x00c:'161'
-			// <0xbe48d>|0x03d|+0x02e|[1]:'162'
-			// <0xbe4bb>|0x06b|+0x062:'163'
-			// ******
 		}
 
 		inline	void*			buffer						( ) const { return m_buffer; }
 
-		// STATE[INLINED]: Safe cast versions?
 		inline	bullet_functor*	allocate					( ) {
 			return static_cast<bullet_functor*>( malloc_impl( 0 ) );
 		}
 
-		// STATE[UNCHECKED]: sushi@TODO: Why unused. Safe cast versions?
+		// sushi@TODO: Why unused. Safe cast versions?
 				void			deallocate					( bullet_functor*& functor )
 		{
 			free_impl( static_cast<void*>( functor ) );
 			functor = NULL;
-
-			// FUNCTION BODY
-			// <0xbe53a>|0x00a|+0x068:'180'
-			// <0xbe5a2>|0x072|+0x009:'181'
-			// ******
 		}
 
-		// STATE[INLINED]
 		inline	void			swap						( bullet_functor_mt_allocator& other )
 		{
 			std::swap( m_bullet_functors, other.m_bullet_functors );
 			std::swap( m_buffer, other.m_buffer );
 		}
 
-		// STATE[UNCHECKED]: sushi@TODO: Why unused
+		// sushi@TODO: Why unused
 				void*			malloc_impl					( u32 size )
 		{
 			VOSTOK_UNREFERENCED_PARAMETER( size );
 			return m_bullet_functors.try_pop( );
-
-			// FUNCTION BODY
-			// <0>
-			// <1>
-			// <0xbe5c9>|0x009|+0x023:'194'
-			// <0xbe5ec>|0x02c|+0x01a:'195'
-			// ******
 		}
 
-		// STATE[INLINED]: Safe cast versions?
 		inline	void			free_impl					( void* pointer )
 		{
 			m_bullet_functors.push( static_cast<bullet_functor*>( pointer ) );

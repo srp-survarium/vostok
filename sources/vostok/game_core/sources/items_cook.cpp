@@ -11,14 +11,12 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 items_cook::items_cook( ) :
 	resources::translate_query_cook( resources::item_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[99.85%|DONE]: LTCG frame-padding on the boost functor temp; statements aligned
 void items_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -32,22 +30,13 @@ void items_cook::translate_query( resources::query_result_for_cook& parent )
 		parent.user_data( ),
 		&parent
 	);
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (0x120 both) - no diverging rows
-	// VERDICT: STRUCTURE MATCH - sole residual is a frame-size delta on the boost::bind/boost::function temp storage; non-steerable LTCG.
 }
 
-// STATE[31%|DONE]: delete_helper arg-passing differs (register vs stack) - call-boundary LTCG
 void items_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts
-	// SIZE -0x1 | 48 | VOSTOK_DELETE_IMPL( g_allocator, resource );
-	// VERDICT: STRUCTURE MATCH (1/1) - target passes resource via stack while base uses edi/register into delete_helper<doug_lea_allocator,resource_base>; call-boundary arg passing, non-steerable LTCG (shared cook-base wall).
 }
 
-// STATE[100%|DONE]
 void items_cook::on_config_ready( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -57,7 +46,6 @@ void items_cook::on_config_ready( resources::queries_result& data, resources::qu
 	create_item_and_finish_query( item_type, config, parent );
 }
 
-// STATE[100%|DONE]
 void items_cook::create_item_and_finish_query( item_types_enum item_type, configs::binary_config_ptr config, resources::query_result_for_cook* parent )
 {
 	result_enum result	= result_undefined;

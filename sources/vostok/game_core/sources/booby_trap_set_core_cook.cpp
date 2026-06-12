@@ -10,14 +10,12 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 booby_trap_set_core_cook::booby_trap_set_core_cook( ) :
 	resources::translate_query_cook( resources::booby_trap_set_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
 
-// STATE[99.86%|DONE]: ICF fold-name relocation residual only; byte sizes equal.
 void booby_trap_set_core_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string config_name;
@@ -47,12 +45,8 @@ void booby_trap_set_core_cook::translate_query( resources::query_result_for_cook
 		NULL,
 		&parent
 	);
-
-	// STRUCTURE DIFF: target 11 stmts / base 11 stmts (no diverging rows, 0x1bf bytes both)
-	// VERDICT: STRUCTURE MATCH - byte sizes equal; 99.86 residual is an ICF fold-name relocation only.
 }
 
-// STATE[94.06%|DONE]: LTCG residuals only (promoted set_amount convention, inlined buffer_vector::size).
 void booby_trap_set_core_cook::on_config_ready(
 	resources::queries_result&	data,
 	booby_trap_set_cook_data	cook_data
@@ -94,17 +88,8 @@ void booby_trap_set_core_cook::on_config_ready(
 		user_data.begin( ),
 		data.get_parent_query( )
 	);
-
-	// STRUCTURE DIFF: target 20 stmts / base 20 stmts
-	// SIZE +0x4 | 87  | resource->set_amount( cook_data.stack_size );
-	// SIZE -0x1 | 101 | for ( u8 i = 0 ; i != cook_data.stack_size ; ++i )
-	// SIZE +0xe | 114 | );
-	// VERDICT: STRUCTURE MATCH (shape ok) - set_amount LTCG-promoted convention (cx/eax) vs
-	// thiscall, al-vs-cl loop increment, and base inlining buffer_vector::size where target
-	// calls it; all whole-program LTCG, non-steerable.
 }
 
-// STATE[100%|DONE]
 void booby_trap_set_core_cook::on_subresources_loaded(
 	resources::queries_result&		data,
 	booby_trap_set_core*			resource,
@@ -126,7 +111,6 @@ void booby_trap_set_core_cook::on_subresources_loaded(
 	query_for_derived_resources( data.get_parent_query( ), resource, cook_data, config );
 }
 
-// STATE[100%|DONE]
 void booby_trap_set_core_cook::finish_query( resources::query_result_for_cook* parent, booby_trap_set_core* resource )
 {
 	parent->set_unmanaged_resource(

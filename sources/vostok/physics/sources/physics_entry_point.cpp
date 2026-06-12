@@ -21,13 +21,12 @@ VOSTOK_DECLARE_LINKAGE_ID(physics_entry_point)
 namespace vostok {
 namespace physics {
 
-// STATE[91.54%|DONE]: LTCG for allocator: vostok::memory::pthreads3_allocator vostok::memory::g_mt_allocator
 vostok::physics::world* create_world_bt( vostok::memory::base_allocator* allocator, physics::engine& engine )
 {
-	return VOSTOK_NEW_IMPL( allocator, bullet_physics_world )( *allocator, engine ); // <0x72e5f0>|0x000|0x000:'24'
+	return VOSTOK_NEW_IMPL( allocator, bullet_physics_world )( *allocator, engine );
 }
 
-// STATE[56.38%|STUB]:
+// STATE[STUB]:
 void set_memory_allocator( memory::base_allocator* allocator )
 {
 	ASSERT				( !g_ph_allocator || g_ph_allocator==allocator );
@@ -38,10 +37,9 @@ void set_memory_allocator( memory::base_allocator* allocator )
 	static animated_model_instance_cook animated_model_cook;
 }
 
-// STATE[98%|DONE]: LTCG for allocator
 void destroy_world( vostok::memory::base_allocator* allocator, world* w )
 {
-	w->destroy( ); // <0x72e450>|0x000|0x000:'39'
+	w->destroy( );
 	VOSTOK_DELETE_IMPL( allocator, w );
 }
 

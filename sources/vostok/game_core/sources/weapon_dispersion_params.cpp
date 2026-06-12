@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 weapon_dispersion_params::weapon_dispersion_params( ) :
 	base_dispersion				( 0.0f ),
 	from_the_hip_multiplier		( 1.0f ),
@@ -20,7 +19,6 @@ weapon_dispersion_params::weapon_dispersion_params( ) :
 {
 }
 
-// STATE[100%|DONE]
 weapon_dispersion_params::weapon_dispersion_params( configs::binary_config_value const& cfg ) :
 	base_dispersion				( 0.0f ),
 	from_the_hip_multiplier		( 1.0f ),

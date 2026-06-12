@@ -21,7 +21,6 @@ class jump_logic_state_start : public jump_logic_base_state {
 public:
 	explicit			jump_logic_state_start	( jump_logic& owner );
 
-	// STATE[100%|DONE]: empty body; bytes == target fold @0x1a800 (ICF-unscorable, see .md)
 	virtual	void		execute					( ) override { }
 
 private:
@@ -57,7 +56,6 @@ private:
 
 	// claude@MATCH: target mangles this override private virtual (?...@@EBE_NXZ),
 	// so it lives under private: (objdiff matches by symbol name -> access char).
-	// STATE[100%|DONE]: return m_jump_interval_ended; reads this+0x2E (rva 0xbd480)
 	virtual	bool		is_ready_for_transition	( ) const override { return m_jump_interval_ended; }
 
 	/* 0x0000 */	/* jump_logic_base_state */

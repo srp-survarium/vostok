@@ -92,16 +92,11 @@ static bool		s_ik_adjust_hip_position_value	= false;
 // destructor) thunk; report.json leaves both unscored (None, name-pairing artifact), never 0%.
 // All four init bytes are VERIFIED correct against the target (see claude@NOTE above).
 
-// STATE[100%|DONE]: cc_bool init verified vs target (arg values match; cc_bool register-vs-stack LTCG)
 static console_commands::cc_bool	s_ik_legs_debug_draw_cc		( "ik_legs_debug_draw", s_ik_legs_debug_draw_value, false, console_commands::command_type_engine_internal );
-// STATE[100%|DONE]: cc_float init is byte-identical to target
 static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule_radius", s_ik_foot_capsule_radius_value, 0.01f, 0.2f, true, console_commands::command_type_engine_internal );
-// STATE[100%|DONE]: cc_bool init verified vs target (filter_early -> ecx=0; cc_bool register-vs-stack LTCG)
 static console_commands::cc_bool	s_ik_legs_rot_axis_cc		( "ik_legs_rot_axis", s_ik_legs_rot_axis_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
-// STATE[100%|DONE]: cc_bool init verified vs target (filter_early -> ecx=0; cc_bool register-vs-stack LTCG)
 static console_commands::cc_bool	s_ik_adjust_hip_position_cc	( "ik_adjust_hip_position", s_ik_adjust_hip_position_value, false, console_commands::command_type_engine_internal, console_commands::execution_filter_early );
 
-// STATE[100%|DONE]
 legs_ik_processor::leg_params::leg_params( ) :
 	heel_transition_time	( 0.0f ),
 	toe_transition_time		( 0.0f ),
@@ -112,7 +107,6 @@ legs_ik_processor::leg_params::leg_params( ) :
 {
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleton, pcstr foot_bone_name )
 {
 	animation::skeleton_bone const&	foot_bone	= skeleton.get_bone( skeleton.get_bone_index( foot_bone_name ) );
@@ -124,34 +118,18 @@ void legs_ik_processor::leg_params::activate( animation::skeleton const& skeleto
 	up_leg_bone_index	= skeleton.get_bone_index( *foot_bone.parent( )->parent( )->parent( ) );
 }
 
-// STATE[85.71%|PARTIAL]: only the `VOSTOK_DELETE_IMPL( ..., m_drawer )` delete is real source; the residual is
-// the compiler-generated member-destructor epilogue - the target sets `this+0x7c`
-// (m_toe_interpolator) and `this+0x70` (m_heel_interpolator) before each
-// ~fermi_interpolator call, base ICF-folds those `this`-pointer setups away. An
-// ICF/codegen artifact in the auto-emitted dtor tail, not source-steerable.
 legs_ik_processor::~legs_ik_processor( )
 {
 	VOSTOK_DELETE_IMPL( *::survarium::g_allocator, m_drawer );
-
-	// STRUCTURE DIFF: target 1 / base 1 stmts (no diverging rows; 0x51 vs 0x45 bytes)
-	// VERDICT: STRUCTURE MATCH - residual is the compiler-generated member-dtor epilogue (target sets this+0x7c/+0x70 before each ~fermi_interpolator call, base ICF-folds those setups away); non-steerable.
 }
 
-// STATE[97.42%|DONE]: residual is a single extra 4-byte frame slot (target sub
-// esp,8 / this at [ebp-8]; base push ecx / this at [ebp-4]) - an LTCG frame-layout
-// artifact (a phantom temp at the math::max call boundary, same family as the
-// swapped-xmm set_*_transition_time residual). Every statement/operand byte-exact.
 void legs_ik_processor::leg_params::tick( float dt )
 {
 	heel_transition_time	= math::max( heel_transition_time - dt, 0.0f );
 	toe_transition_time		= math::max( toe_transition_time - dt, 0.0f );
 	m_time_since_stance		+= dt;
-
-	// STRUCTURE DIFF: target 3 / base 3 stmts (no diverging rows)
-	// VERDICT: STRUCTURE MATCH - residual is one extra 4-byte frame slot (target sub esp,8; base push ecx), LTCG frame layout, non-steerable.
 }
 
-// STATE[100%|DONE]
 // claude@MATCH: arg order is min( member, tr_time ) - verified 100% by build. The swapped
 // min( tr_time, member ) regresses to 83.69% (an extra movss reorders the operand spills).
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
@@ -159,13 +137,11 @@ void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 	heel_transition_time = math::min( heel_transition_time, tr_time );
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_toe_transition_time( float tr_time )
 {
 	toe_transition_time = math::min( toe_transition_time, tr_time );
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_heel_on_ground( bool value )
 {
 	m_heel_on_ground = value;
@@ -173,7 +149,6 @@ void legs_ik_processor::leg_params::set_heel_on_ground( bool value )
 		m_time_since_stance = 0.0f;
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::leg_params::set_toe_on_ground( bool value )
 {
 	m_toe_on_ground = value;
@@ -181,7 +156,6 @@ void legs_ik_processor::leg_params::set_toe_on_ground( bool value )
 		m_time_since_stance = 0.0f;
 }
 
-// STATE[100%|DONE]
 legs_ik_processor::legs_ik_processor( ) :
 	m_drawer				( NULL ),
 	m_character_controller	( NULL ),
@@ -192,7 +166,6 @@ legs_ik_processor::legs_ik_processor( ) :
 	m_toe_transition_time	= m_toe_interpolator.transition_time( );
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::activate( animation::skeleton const& skeleton )
 {
 	ik_processor::activate( skeleton );
@@ -201,30 +174,14 @@ void legs_ik_processor::activate( animation::skeleton const& skeleton )
 	m_hip_bone	= &skeleton.get_bone( skeleton.get_bone_index( "Hip" ) );
 }
 
-// STATE[65.38%|PARTIAL]: only residual is the dot product `operator|` being INLINED
-// in base while the target emits a `call vostok::math::operator|` - a per-call-site
-// whole-program LTCG inline-vs-call of a trivial COMDAT (both binaries keep the
-// standalone operator|; base just inlined this site). Not steerable from this
-// function's source. The cascading frame shift (sub esp,24h vs 20h) and the extra
-// [ebp-18h] temp all follow from that one inline. Every other statement, all
-// constants (1.0f/0.5f/epsilon_5) and the ternary control flow are byte-exact.
 float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len )
 {
 	float const knee_angle_cos	= upleg_dir | -leg_dir;
 	return math::is_similar( knee_angle_cos, 1.0f, math::epsilon_5 )
 		? knee_len * 0.5f
 		: math::sqrt( math::sqr( knee_len ) * 0.5f / ( 1.0f - knee_angle_cos ) );
-
-	// STRUCTURE DIFF: target 2 / base 2 stmts
-	// SIZE +0x31 | 221 | float const knee_angle_cos	= upleg_dir | -leg_dir;
-	// VERDICT: STRUCTURE MATCH (shape ok) - operator| (dot product) inlined in base vs out-of-line call in target; proven non-steerable on #144 (3 source forms all inlined).
 }
 
-// STATE[98.96%|PARTIAL]: 92.60 -> 98.96 by (1) direct m_skeleton access (the get_skeleton()
-// accessor left a +0xc call-result temp per site the target lacks) and (2) merging the final
-// `else if ( ... ) ...is_on_ground( );` onto ONE line - the target attributes test+body to a
-// single statement (0xbd = 0x64 + 0x59), which was the one REAL quantity diff the old
-// "aligner swap" verdict hid (review_todos row updated). 23/23 statements now.
 void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 {
 	float4x4				hip_obj_matrix				= get_bone_matrix_in_object_space( *m_hip_bone, *m_skeleton, matrices );
@@ -261,19 +218,8 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 	// claude@MATCH: the whole branch is ONE target statement (0xbd = test 0x64 + call 0x59):
 	// condition and body sit on the SAME source line in the original.
 	else if ( m_left_leg_params.is_on_ground( ) ) m_right_leg_params.is_on_ground( );
-
-	// STRUCTURE DIFF: target 23 / base 23 stmts
-	// SIZE -0x3 | 256 | float4x4 const&			left_foot_fixed_transform	= get_foot_fixed_transform( m_left_leg_params, hip_world_matrix, matrices, left_delta_len );
-	// SIZE -0x3 | 265 | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
-	// SIZE -0x3 | 272 | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
-	// SIZE -0x3 | 279 | process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
-	// VERDICT: STRUCTURE MATCH (shape ok) - identical instruction streams; the -0x3s are the left_foot_fixed_transform ref slot landing at disp8 [ebp-4] in base vs disp32 [ebp-94h] in target (LTCG slot allocation), non-steerable.
 }
 
-// STATE[86.08%|PARTIAL]: 83.12 -> 86.08 via direct m_skeleton access (the get_skeleton()
-// accessor temp, +0xc per matrix-index row, all five closed). Braced 3-stage IK blocks are
-// CORRECT - do not unbrace. Residual: float3 is_similar inline-vs-call (x4 in the early-out
-// if, +0x82), get_angle out-of-line in target (STUB here), call-boundary temps/slot disps.
 void legs_ik_processor::process_leg(
 	legs_ik_processor::leg_params&		params,
 	float4x4 const&						target_foot_obj_matrix,
@@ -392,21 +338,8 @@ void legs_ik_processor::process_leg(
 	matrices[foot_matrix_index].c.xyz( )	= foot_pos;
 
 	return;
-
-	// STRUCTURE DIFF: target 56 / base 56 stmts
-	// SIZE +0x82 | 370 | math::is_similar( ..., math::epsilon_3 ) ) (the 4x float3 is_similar early-out if)
-	// SIZE +0x6  | 390 | float const additive_len = get_additional_length( ... );
-	// BASE_ONLY  | 391 | up_leg_alpha_angle = get_angle( ... ) / TRGT_ONLY 0x3e at L212 - SAME size, aligner pairing refusal
-	// BASE_ONLY  | 394 | target_up_leg_dir = normalize( ... ) / TRGT_ONLY 0x4a at L217 - aligner slide of the -0x3/-0x9 dir rows
-	// (rest: +/-0x3..0x11 rows on normalize/draw/matrix statements)
-	// VERDICT: STRUCTURE MATCH (shape ok) - hand-pairing aligns all 56 statements in order (target L212 get_angle is 0x3e exactly like base's); the big row is float3 is_similar INLINED in base vs called out-of-line in target (x4 sites, same wall family as operator|); the small rows are call-boundary temp/slot-disp cascade. Non-steerable.
 }
 
-// STATE[88.54%|PARTIAL]: 84.65 -> 88.54 via direct m_skeleton access (the accessor temp on
-// all eight matrix-index rows) plus two line-merge recoveries: `float3 start, finish;` is ONE
-// target statement (0x16 = 2*0xb) and the two color ctors are ONE (0x32 = 2*0x19). Residual:
-// float3 is_similar inline-vs-call in the early-out if, math call-boundary temps, and the
-// draw_*capsule/set_B aligner slides (sizes pair sequentially by hand).
 float4x4 legs_ik_processor::get_foot_fixed_transform(
 	legs_ik_processor::leg_params const&	params,
 	float4x4 const&						hip_world_matrix,
@@ -515,44 +448,28 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	}
 
 	return foot_center_transform;
-
-	// STRUCTURE DIFF: target 62 / base 62 stmts
-	// SIZE +0x3e | 658 | math::is_similar( foot_world_matrix.c.xyz( ), leg_world_matrix.c.xyz( ) ) ) (2x float3 is_similar, inlined in base vs called in target)
-	// SIZE -0x6 x6 | 694-708 | start/finish = foot_to_cube_center_offset * dist_to_test +/- finish; (target materializes &finish via a folded helper call)
-	// BASE_ONLY 712/713 + SIZE -0x40 | 716 | else-branch start/finish=start/set_B rows - aligner slide; sizes pair sequentially (0x50/0x22/0x13 vs 0x4a/0x24/0x10)
-	// BASE_ONLY 722/727 + TRGT_ONLY 0x30/0x22 | draw_line/draw_solid_capsule - aligner slide (+0xb/-0x3 real deltas)
-	// (rest: +/-0x3..0x11 call-boundary temp rows)
-	// VERDICT: STRUCTURE MATCH (shape ok) - 62/62 statements pair sequentially by hand; all rows are the is_similar/accessor inline-vs-call walls and math call-boundary temp/slot-disp cascade. Non-steerable.
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::set_left_heel_on_ground( bool value )
 {
 	set_heel_on_ground( m_left_leg_params, value );
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::set_left_toe_on_ground( bool value )
 {
 	set_toe_on_ground( m_left_leg_params, value );
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::set_right_heel_on_ground( bool value )
 {
 	set_heel_on_ground( m_right_leg_params, value );
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::set_right_toe_on_ground( bool value )
 {
 	set_toe_on_ground( m_right_leg_params, value );
 }
 
-// STATE[98.84%|DONE]: residual is a single `lea ecx,[ebp-0Ch]` (the `this` arg
-// of the COMDAT-folded trivial ~fermi_interpolator temp dtor) the target emits
-// before the dtor call and base omits - an ICF/LTCG call-boundary arg-passing
-// artifact; every statement, the control structure and all consts match.
 void legs_ik_processor::set_heel_on_ground( legs_ik_processor::leg_params& params, bool value )
 {
 	if ( params.is_heel_on_ground( ) == value )
@@ -575,14 +492,8 @@ void legs_ik_processor::set_heel_on_ground( legs_ik_processor::leg_params& param
 		params.toe_transition_time = m_toe_transition_time;
 		m_toe_transition_time_calculator.reset( );
 	}
-
-	// STRUCTURE DIFF: target 14 / base 14 stmts
-	// SIZE -0x3 | 574 | m_heel_interpolator = animation::fermi_interpolator( m_heel_transition_time );
-	// VERDICT: STRUCTURE MATCH (shape ok) - target emits lea ecx,[ebp-0Ch] (this arg of the COMDAT-folded trivial ~fermi_interpolator temp dtor) that base omits; ICF/LTCG call-boundary artifact, non-steerable.
 }
 
-// STATE[98.59%|DONE]: same ICF/LTCG residual as set_heel_on_ground - the lone
-// `lea ecx,[ebp-0Ch]` (this arg of the folded ~fermi_interpolator temp dtor).
 void legs_ik_processor::set_toe_on_ground( legs_ik_processor::leg_params& params, bool value )
 {
 	if ( params.is_toe_on_ground( ) == value )
@@ -598,13 +509,8 @@ void legs_ik_processor::set_toe_on_ground( legs_ik_processor::leg_params& params
 		m_right_leg_params.set_toe_transition_time( m_toe_transition_time );
 		m_toe_interpolator = animation::fermi_interpolator( m_toe_transition_time );
 	}
-
-	// STRUCTURE DIFF: target 9 / base 9 stmts
-	// SIZE -0x3 | 606 | m_toe_interpolator = animation::fermi_interpolator( m_toe_transition_time );
-	// VERDICT: STRUCTURE MATCH (shape ok) - same ICF/LTCG residual as set_heel_on_ground (the folded ~fermi_interpolator temp-dtor this arg), non-steerable.
 }
 
-// STATE[100%|DONE]
 void legs_ik_processor::tick( u32 current_time_in_ms )
 {
 	if ( m_last_time_in_ms != 0 )

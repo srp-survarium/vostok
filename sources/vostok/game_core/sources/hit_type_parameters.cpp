@@ -9,7 +9,6 @@
 
 namespace survarium {
 
-// STATE[97.62%|DONE]: fixed_string m_type ctor inline-vs-call frame-slot (LTCG), shape matches
 hit_type_parameters::hit_type_parameters(
 	pcstr		type,
 	const float	absorption,
@@ -24,11 +23,8 @@ hit_type_parameters::hit_type_parameters(
 	m_reduce				( reduce ),
 	m_bdb_count				( bdb_count )
 {
-	// STRUCTURE DIFF: target 0 stmts / base 0 stmts
-	// VERDICT: STRUCTURE MATCH (shape ok) - 0-stmt member-init, member stores byte-exact; residual is the m_type fixed_string ctor materialization frame-slot ([ebp-4] vs [ebp-0Ch]), non-steerable. trail: hit_type_parameters.md
 }
 
-// STATE[100%|DONE]
 void hit_type_parameters::apply_damage( const float delta, const u32 time_in_ms )
 {
 	std::pair<body_part_parameters*, float>* const it_begin = get_bdb_coefficients();
@@ -39,7 +35,6 @@ void hit_type_parameters::apply_damage( const float delta, const u32 time_in_ms 
 			it->first->hit_by_type( get_type( ), time_in_ms, it->second * delta, 0.0f, false, NULL ); // sushi@MATCH: In target `c_str` is called in a different order.
 }
 
-// STATE[100%|DONE]
 void hit_type_parameters::set_parameters( float armor, float reduce, float absorbtion )
 {
 	m_armor = armor;

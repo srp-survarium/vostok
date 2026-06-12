@@ -9,13 +9,6 @@
 
 namespace survarium {
 
-// STATE[61.19%|PARTIAL]: now PAIRED (was None; the current objdiff/delinker pairs the
-// character-identical mangled names - the playback_enum tag fix from PR #155 holds). The
-// residual is the documented whole-program inline-vs-call of the trivial inline-in-class
-// animation_lexeme_parameters setters: target keeps animated_object/playback_type/bones_mask/
-// weight_interpolator/start_animation_interval_id out-of-line, our /GL inlines them (~0x19f
-// vs target 0x1f7 bytes). Inline COMDATs in the out-of-scope `animation` headers; the only
-// lever (move them out-of-line) is engine-wide. Same unsteerable class as scheduler::on_frame.
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
 	pcstr										identifier,
@@ -77,23 +70,6 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::mixing::animation_lexeme offset_lexeme( offset_lexeme_parameters );
 
 	return weapon_lexeme_pair( offset_lexeme, main_lexeme );
-
-	// STRUCTURE DIFF: target 21 stmts / base 11 stmts
-	// SIZE +0x1  | 42 | animation::mixing::animation_lexeme_parameters main_lexeme_parameters( buffer, identifier, animation, NULL, NULL );
-	// SIZE +0x4b | 50 | 		.time_synchronization_group_id			( time_synchronization_group );
-	// TRGT_ONLY <0x4> at 0x72 | lone `mov byte[ebp-5],0` - unexplained materialized temp (see sushi@TODO above)
-	// BASE_ONLY  | 61 | animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
-	// BASE_ONLY  | 72 | );
-	// BASE_ONLY  | 79 | 		.weight_synchronization_group_id		( all_but_offset_weight_synchronization_group_id );
-	// BASE_ONLY  | 81 | if ( ! offset_lexeme_parameters.time_driving_animation( ) )
-	// BASE_ONLY  | 83 | 		ASSERT( UNKNOWN_EXPRESSION );
-	// TRGT_ONLY x14 (the per-line setter/statement records of both chains)
-	// SIZE +0x35 | 89 | return weapon_lexeme_pair( offset_lexeme, main_lexeme );
-	// VERDICT: STRUCTURE MATCH (shape ok) - the source statements are 1:1; the 21-vs-11 record
-	// count is a line-table artifact of the setter inline-vs-call wall (target's out-of-line
-	// setter CALLS keep one record per chain line; our inlined chains collapse onto each
-	// statement's anchor line). The dummy SIZE -0x4 is disp8->disp32 slot noise from the
-	// larger inlined frame. Non-steerable from this TU.
 }
 
 } // namespace survarium

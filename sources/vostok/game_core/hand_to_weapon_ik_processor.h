@@ -43,7 +43,6 @@ public:
 
 public:
 			struct hand {
-				// STATE[100%|DONE]
 				explicit	hand( )
 					: start_transition_time_in_ms( 0 ), hand_bone_index( u32( -1 ) ), hand_matrix_index( u32( -1 ) ), locator_matrix_index( u32( -1 ) ), is_active( true )
 				{

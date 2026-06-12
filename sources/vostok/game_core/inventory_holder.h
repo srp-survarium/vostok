@@ -32,12 +32,9 @@ public:
 	virtual	base_player*						cast_to_base_player		( ) = 0;
 	virtual	physics::world*						get_physics_world		( ) = 0;
 
-	// STATE[None|DONE]: ICF-folds with the non-const inventory() (byte-correct; see oneliners_batch1.md).
 	inline	survarium::inventory const&			inventory				( ) const { return *m_inventory; }
-	// STATE[None|PARTIAL]: trivial-accessor LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 	inline	survarium::inventory&				inventory				( ) { return *m_inventory; }
 
-	// STATE[None|PARTIAL]: trivial-accessor LTCG inline-vs-call, byte-correct (see oneliners_batch1.md).
 			scheduler&							scheduler				( ) { return m_scheduler; }
 
 	virtual	void								insert_game_world_object( game_world_object& arg_0 ) = 0;

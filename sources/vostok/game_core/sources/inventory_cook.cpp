@@ -22,7 +22,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 inventory_cook::inventory_cook( ) :
 	resources::translate_query_cook( resources::inventory_class, reuse_false, use_any_thread_id )
 {
@@ -32,7 +31,6 @@ inventory_cook::inventory_cook( ) :
 	static weapon_ammunition_cook	s_weapon_ammunition_cook;;
 }
 
-// STATE[91.38%|PARTIAL]: c_str/create_request/push_back inline-vs-call (LTCG), shape matches
 void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	inventory_cooker_data* cooker_data;
@@ -135,17 +133,8 @@ void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 		user_data.begin( ),
 		&parent
 	);
-
-	// STRUCTURE DIFF: target 49 / base 49 stmts
-	// SIZE +0x1 x6 | 80/81/92/93/104/107 | c_str()/push_back(create_request(..)) rows
-	// SIZE +0x5  | 143 | requests.push_back( resources::create_request( resource_name, class_id ) );
-	// SIZE +0x3  | 151 | requests.push_back( resources::create_request( "", resources::unknown_data_class ) );
-	// SIZE +0xd  | 162 | ); (query_resources / bind tail)
-	// VERDICT: STRUCTURE MATCH - residuals are create_request promoted-convention bytes and bind internals, whole-program LTCG, non-steerable.
 }
 
-// STATE[89.61%|PARTIAL]: intrusive_ptr operator*/cast inline-vs-call (LTCG), shape matches
-// (82.10 -> 89.61 after the engine-wide static_cast_resource_ptr by-value -> const& fix)
 void inventory_cook::on_subresources_loaded( resources::queries_result& data, inventory_cooker_data* cooker_data )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -204,17 +193,8 @@ void inventory_cook::on_subresources_loaded( resources::queries_result& data, in
 	resources::query_result_for_cook* parent = data.get_parent_query( );
 	parent->set_unmanaged_resource( result, resources::memory_usage_type( resources::nocache_memory, sizeof( inventory ) ) );
 	parent->finish_query( result_success );
-
-	// STRUCTURE DIFF: target 42 / base 42 stmts
-	// SIZE +0xd  | 195 | weapon_core_ptr wpn = static_cast_resource_ptr< weapon_core_ptr >( data[result_index].get_unmanaged_resource( ) );
-	// SIZE +0x12 | 199 | inventory_item_ptr iitem = static_cast_resource_ptr< inventory_item_ptr >( wpn );
-	// SIZE +0xe  | 200 | iitem->set_amount( (u16)slot->item.condition_or_stack );
-	// SIZE +0xd  | 214 | iitem->set_dict_id( slot->item.dict_id );
-	// SIZE +0xd  | 228 | iitem->set_dict_id( slot->item.dict_id );
-	// VERDICT: STRUCTURE MATCH - every row is intrusive_ptr operator*/cast machinery the base INLINES (incl. its internal assert eater) where the target calls out-of-line, whole-program LTCG, non-steerable.
 }
 
-// STATE[100%|DONE]
 void inventory_cook::delete_resource( resources::resource_base* resource )
 {
 	inventory* inventory = static_cast_checked< survarium::inventory* >( resource );
