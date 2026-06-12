@@ -287,3 +287,171 @@ Queue headers removed because the type already lives in sources/vostok/game_core
 - `render_visual.h`
 - `scaleform_engine__xrSysAllocMalloc.h`
 - `enums/action_type.h`
+
+## Pass 3: real-definition audit + template-instantiation noise (2026-06-12)
+
+Audit: all pass-2 removals re-verified against `{`-bodied definitions - no
+forward-declaration false positives. Cross-module name hits re-checked:
+booby_trap[_set]_cook defs in game_core are TU-local anchor stand-ins (the
+real cooks are game's), fingers_to_weapon_corrector__hand[s_enum] collide
+with hand_to_weapon_ik_processor's nested types - all four KEPT in queue.
+
+Removed 147 instantiation dumps of the engine USER_ALLOCATOR container
+machinery (vostok/map.h, vector.h, std_allocator via std_containers.h -
+game_memory.h already instantiates these into survarium::):
+
+- `map_enum vostok__input__enum_keyboard,survarium__dik_to_swf_bind,stlp_std__less_enum vostok__input__enum_keyboard_ _.h`
+- `map_unsigned int,survarium__base_point_stats,stlp_std__less_unsigned int_ _.h`
+- `map_unsigned int,survarium__dictionary_item,stlp_std__less_unsigned int_ _.h`
+- `map_unsigned int,survarium__respawn_point_core +,stlp_std__less_unsigned int_ _.h`
+- `map_unsigned short,stlp_std__pair_unsigned short const ,survarium__material_pair const +_,stlp_std__less_unsigned short_ _.h`
+- `map_unsigned short,survarium__game_material const +,stlp_std__less_unsigned short_ _.h`
+- `map_unsigned short,survarium__map_unsigned short,survarium__material_pair const +,stlp_std__less_unsigned short_ _,stlp_std__less_unsigned s.h`
+- `map_unsigned short,survarium__material_pair const +,stlp_std__less_unsigned short_ _.h`
+- `map_vostok__fixed_string_16_,stlp_std__pair_vostok__fixed_string_16_ const ,survarium__hit_type_parameters_modifyer_,stlp_std__less_vostok__.h`
+- `map_vostok__fixed_string_16_,survarium__body_part_parameters_modifyer,stlp_std__less_vostok__fixed_string_16_ _ _.h`
+- `map_vostok__fixed_string_16_,survarium__hit_type_parameters_modifyer,stlp_std__less_vostok__fixed_string_16_ _ _.h`
+- `map_vostok__fixed_string_260_,survarium__base_game_object +,stlp_std__less_vostok__fixed_string_260_ _ _.h`
+- `std_allocator_enum survarium__game_action_id_.h`
+- `std_allocator_enum survarium__game_action_id___rebind_enum survarium__game_action_id_.h`
+- `std_allocator_enum survarium__profile_slot_enum_.h`
+- `std_allocator_enum survarium__profile_slot_enum___rebind_enum survarium__profile_slot_enum_.h`
+- `std_allocator_int_.h`
+- `std_allocator_int___rebind_int_.h`
+- `std_allocator_stlp_std__pair_enum vostok__input__enum_keyboard,survarium__dik_to_swf_bind_ _.h`
+- `std_allocator_stlp_std__pair_enum vostok__input__enum_keyboard,survarium__dik_to_swf_bind_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std_.h`
+- `std_allocator_stlp_std__pair_unsigned int,survarium__base_point_stats_ _.h`
+- `std_allocator_stlp_std__pair_unsigned int,survarium__base_point_stats_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned int c.h`
+- `std_allocator_stlp_std__pair_unsigned int,survarium__dictionary_item_ _.h`
+- `std_allocator_stlp_std__pair_unsigned int,survarium__dictionary_item_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned int co.h`
+- `std_allocator_stlp_std__pair_unsigned int,survarium__respawn_point_core +_ _.h`
+- `std_allocator_stlp_std__pair_unsigned int,survarium__respawn_point_core +_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned i.h`
+- `std_allocator_stlp_std__pair_unsigned short,stlp_std__pair_unsigned short const ,survarium__material_pair const +_ _ _.h`
+- `std_allocator_stlp_std__pair_unsigned short,stlp_std__pair_unsigned short const ,survarium__material_pair const +_ _ ___rebind_stlp_std__pri.h`
+- `std_allocator_stlp_std__pair_unsigned short,survarium__game_material const +_ _.h`
+- `std_allocator_stlp_std__pair_unsigned short,survarium__game_material const +_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigne.h`
+- `std_allocator_stlp_std__pair_unsigned short,survarium__map_unsigned short,survarium__material_pair const +,stlp_std__less_unsigned short_ _ .h`
+- `std_allocator_stlp_std__pair_unsigned short,survarium__map_unsigned short,survarium__material_pair const +,stlp_std__less_unsigned short_ _ _1.h`
+- `std_allocator_stlp_std__pair_unsigned short,survarium__material_pair const +_ _.h`
+- `std_allocator_stlp_std__pair_unsigned short,survarium__material_pair const +_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigne.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_16_,stlp_std__pair_vostok__fixed_string_16_ const ,survarium__hit_type_parameters_modifyer.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_16_,stlp_std__pair_vostok__fixed_string_16_ const ,survarium__hit_type_parameters_modifyer_1.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_16_,survarium__body_part_parameters_modifyer_ _.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_16_,survarium__body_part_parameters_modifyer_ ___rebind_stlp_std__priv___Rb_tree_node_stlp.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_16_,survarium__hit_type_parameters_modifyer_ _.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_16_,survarium__hit_type_parameters_modifyer_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_260_,survarium__base_game_object +_ _.h`
+- `std_allocator_stlp_std__pair_vostok__fixed_string_260_,survarium__base_game_object +_ ___rebind_stlp_std__priv___Rb_tree_node_stlp_std__pair.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_enum vostok__input__enum_keyboard const ,survarium__dik_to_swf_bind_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned int const ,survarium__base_point_stats_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned int const ,survarium__dictionary_item_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned int const ,survarium__respawn_point_core +_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned short const ,stlp_std__pair_unsigned short const ,survarium__material_pa.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned short const ,survarium__game_material const +_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned short const ,survarium__map_unsigned short,survarium__material_pair cons.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_unsigned short const ,survarium__material_pair const +_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_vostok__fixed_string_16_ const ,stlp_std__pair_vostok__fixed_string_16_ const ,su.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_vostok__fixed_string_16_ const ,survarium__body_part_parameters_modifyer_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_vostok__fixed_string_16_ const ,survarium__hit_type_parameters_modifyer_ _ _.h`
+- `std_allocator_stlp_std__priv___Rb_tree_node_stlp_std__pair_vostok__fixed_string_260_ const ,survarium__base_game_object +_ _ _.h`
+- `std_allocator_survarium__anomaly_state +_.h`
+- `std_allocator_survarium__anomaly_state +___rebind_survarium__anomaly_state +_.h`
+- `std_allocator_survarium__anomaly_state +___rebind_void +_.h`
+- `std_allocator_survarium__artefact_container_core +_.h`
+- `std_allocator_survarium__artefact_container_core +___rebind_survarium__artefact_container_core +_.h`
+- `std_allocator_survarium__artefact_container_core +___rebind_void +_.h`
+- `std_allocator_survarium__base_project__resolve_link_object_.h`
+- `std_allocator_survarium__base_project__resolve_link_object___rebind_survarium__base_project__resolve_link_object_.h`
+- `std_allocator_survarium__collision_geometry +_.h`
+- `std_allocator_survarium__collision_geometry +___rebind_survarium__collision_geometry +_.h`
+- `std_allocator_survarium__collision_geometry +___rebind_void +_.h`
+- `std_allocator_survarium__game_material_manager_cook__query_ext_data_.h`
+- `std_allocator_survarium__game_material_manager_cook__query_ext_data___rebind_survarium__game_material_manager_cook__query_ext_data_.h`
+- `std_allocator_survarium__game_object_ +_.h`
+- `std_allocator_survarium__game_object_ +___rebind_survarium__game_object_ +_.h`
+- `std_allocator_survarium__game_object_ +___rebind_void +_.h`
+- `std_allocator_survarium__game_world__bullet_tracer_.h`
+- `std_allocator_survarium__game_world__bullet_tracer___rebind_survarium__game_world__bullet_tracer_.h`
+- `std_allocator_survarium__generic_anomaly_core +_.h`
+- `std_allocator_survarium__generic_anomaly_core +___rebind_survarium__generic_anomaly_core +_.h`
+- `std_allocator_survarium__generic_anomaly_core +___rebind_void +_.h`
+- `std_allocator_survarium__hit_receiver_info_.h`
+- `std_allocator_survarium__hit_receiver_info___rebind_survarium__hit_receiver_info_.h`
+- `std_allocator_survarium__player_actions_subscriber +_.h`
+- `std_allocator_survarium__player_actions_subscriber +___rebind_survarium__player_actions_subscriber +_.h`
+- `std_allocator_survarium__player_actions_subscriber +___rebind_void +_.h`
+- `std_allocator_survarium__relocate_item_descr_.h`
+- `std_allocator_survarium__relocate_item_descr___rebind_survarium__relocate_item_descr_.h`
+- `std_allocator_survarium__victory_items_container +_.h`
+- `std_allocator_survarium__victory_items_container +___rebind_survarium__victory_items_container +_.h`
+- `std_allocator_survarium__victory_items_container +___rebind_void +_.h`
+- `std_allocator_survarium__zone_group +_.h`
+- `std_allocator_survarium__zone_group +___rebind_survarium__zone_group +_.h`
+- `std_allocator_survarium__zone_group +___rebind_void +_.h`
+- `std_allocator_survarium__zone_group__zone_wrapper_.h`
+- `std_allocator_survarium__zone_group__zone_wrapper___rebind_survarium__zone_group__zone_wrapper_.h`
+- `std_allocator_unsigned int_.h`
+- `std_allocator_unsigned int___rebind_unsigned int_.h`
+- `std_allocator_void +_.h`
+- `std_allocator_void const +_.h`
+- `std_allocator_vostok__fixed_string_16_ _.h`
+- `std_allocator_vostok__fixed_string_16_ ___rebind_vostok__fixed_string_16_ _.h`
+- `std_allocator_vostok__math__float3_.h`
+- `std_allocator_vostok__math__float3___rebind_vostok__math__float3_.h`
+- `std_allocator_vostok__physics__base_physics_object +_.h`
+- `std_allocator_vostok__physics__base_physics_object +___rebind_void +_.h`
+- `std_allocator_vostok__physics__base_physics_object +___rebind_vostok__physics__base_physics_object +_.h`
+- `std_allocator_vostok__render__light_props_.h`
+- `std_allocator_vostok__render__light_props___rebind_vostok__render__light_props_.h`
+- `std_allocator_vostok__resources__creation_request_.h`
+- `std_allocator_vostok__resources__creation_request___rebind_vostok__resources__creation_request_.h`
+- `std_allocator_vostok__resources__request_.h`
+- `std_allocator_vostok__resources__request___rebind_vostok__resources__request_.h`
+- `std_allocator_vostok__resources__resource_ptr_survarium__damage_zone,vostok__resources__unmanaged_intrusive_base_ _.h`
+- `std_allocator_vostok__resources__resource_ptr_survarium__damage_zone,vostok__resources__unmanaged_intrusive_base_ ___rebind_vostok__resource.h`
+- `std_allocator_vostok__resources__resource_ptr_survarium__ladder,vostok__resources__unmanaged_intrusive_base_ _.h`
+- `std_allocator_vostok__resources__resource_ptr_survarium__ladder,vostok__resources__unmanaged_intrusive_base_ ___rebind_vostok__resources__re.h`
+- `std_allocator_vostok__resources__resource_ptr_vostok__resources__unmanaged_resource,vostok__resources__unmanaged_intrusive_base_ _.h`
+- `std_allocator_vostok__resources__resource_ptr_vostok__resources__unmanaged_resource,vostok__resources__unmanaged_intrusive_base_ ___rebind_v.h`
+- `std_allocator_vostok__variant_32_ _.h`
+- `std_allocator_vostok__variant_32_ ___rebind_vostok__variant_32_ _.h`
+- `std_allocator_vostok__variant_32_ const +_.h`
+- `std_allocator_vostok__variant_32_ const +___rebind_void const +_.h`
+- `std_allocator_vostok__variant_32_ const +___rebind_vostok__variant_32_ const +_.h`
+- `vector_enum survarium__game_action_id_.h`
+- `vector_enum survarium__profile_slot_enum_.h`
+- `vector_int_.h`
+- `vector_survarium__anomaly_state +_.h`
+- `vector_survarium__artefact_container_core +_.h`
+- `vector_survarium__base_project__resolve_link_object_.h`
+- `vector_survarium__collision_geometry +_.h`
+- `vector_survarium__game_material_manager_cook__query_ext_data_.h`
+- `vector_survarium__game_object_ +_.h`
+- `vector_survarium__game_world__bullet_tracer_.h`
+- `vector_survarium__generic_anomaly_core +_.h`
+- `vector_survarium__hit_receiver_info_.h`
+- `vector_survarium__player_actions_subscriber +_.h`
+- `vector_survarium__relocate_item_descr_.h`
+- `vector_survarium__victory_items_container +_.h`
+- `vector_survarium__zone_group +_.h`
+- `vector_survarium__zone_group__zone_wrapper_.h`
+- `vector_unsigned int_.h`
+- `vector_vostok__fixed_string_16_ _.h`
+- `vector_vostok__math__float3_.h`
+- `vector_vostok__physics__base_physics_object +_.h`
+- `vector_vostok__render__light_props_.h`
+- `vector_vostok__resources__creation_request_.h`
+- `vector_vostok__resources__request_.h`
+- `vector_vostok__resources__resource_ptr_survarium__damage_zone,vostok__resources__unmanaged_intrusive_base_ _.h`
+- `vector_vostok__resources__resource_ptr_survarium__ladder,vostok__resources__unmanaged_intrusive_base_ _.h`
+- `vector_vostok__resources__resource_ptr_vostok__resources__unmanaged_resource,vostok__resources__unmanaged_intrusive_base_ _.h`
+- `vector_vostok__variant_32_ _.h`
+- `vector_vostok__variant_32_ const +_.h`
+
+Restored 2 files pass 2 removed by matching the template ARGUMENT type
+(...shotgun_reload_one_round_substate) instead of the template: the
+weapon_sound_events_handler_state_cook family is GAME's (its compilands
+are under target game/sources/):
+
+- `weapon_sound_events_handler_state_cook_survarium__weapon_sound_events_handler_state_survarium__weapon_core_shotgun_reload_one_round_substate_1.h`
+- `weapon_sound_events_handler_state_cook_survarium__weapon_sound_events_handler_state_survarium__weapon_core_shotgun_reload_one_round_substate.h`
