@@ -250,7 +250,7 @@ schema in `assembly_patterns.md`).
 After Phase 1 has located the divergence, fix it.
 1. **If it was mislabeled**, first downgrade the record: a function recorded `DONE`
    (or any banked tag) in `status.jsonl` whose structure diverges is not a clean match -
-   set its entry to `INPROGRESS` with a one-line cause naming the divergence.
+   set its entry to `UNVERIFIED` with a one-line cause naming the divergence.
 2. **Apply the source-shape restructure** the diff points to - the cause from "Naming
    and source-shape conventions" above: move body assignments into the member-init list,
    add or drop braces, flip a wrapping `if ( p ) { ... }` to an early-return guard, open/
@@ -294,7 +294,7 @@ correct, nothing to fix) still commits so the verification is on record (the
 source change + the refreshed `status.jsonl` entry too:
 ```
 git add <the .cpp> <the module's status.jsonl>
-git commit -m "structure: <fn> - <MATCH | fixed <cause>: target N == base N | INPROGRESS: <residual>>"
+git commit -m "structure: <fn> - <MATCH | fixed <cause>: target N == base N | UNVERIFIED: <residual>>"
 git push origin HEAD:<the PR branch>
 ```
 Use "(no logic change)" in the message ONLY when you changed no bytes (the structure was

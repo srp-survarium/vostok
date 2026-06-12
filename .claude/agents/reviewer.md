@@ -17,7 +17,10 @@ Dispatched by the orchestrator/top-level; no sub-agents.
 ## Checks (purely the diff text - no report.json, no disassembly, no rebuild)
 1. **No stray logs / noise.** Strip any `LOG_*`/`printf`/`OutputDebugString`/trace or
    commented-out debug the matcher added that the target does not emit.
-2. **Lean comments.** A clean `100%|DONE` keeps only `// STATE[100%|DONE]`; terse
+2. **Lean comments.** A matched function carries NO derived-state comment: no
+   `// STATE[..]` marker (only `// STATE[STUB]` on a still-unmatched body), no
+   `// STRUCTURE DIFF`/`// VERDICT:` embed, no leftover carcass rows (`// <0x..>`)
+   on or above implemented code - strip any you find. Terse
    `claude@MATCH:`/`claude@NOTE:` only for genuinely non-obvious shaping.
 3. **Flag NEW symbols (REPORT, never annotate the source).** Scan the diff's `+` lines for
    any `struct`/`class`/`enum` or free function ADDED that isn't from the generated carcass
@@ -26,8 +29,8 @@ Dispatched by the orchestrator/top-level; no sub-agents.
    by name in a **PR comment** (`gh pr comment <pr> --body ...`, the PR for your branch) and
    your verdict line, for the human / a matcher to judge.
 
-Fix the trivial comment/STATE defects in place. If you spot a REAL logic/structure bug, do
-NOT fix it and do NOT rebuild - set an honest STATE and NAME it in your verdict for a faster machine.
+Fix the trivial log/comment defects in place. If you spot a REAL logic/structure bug, do
+NOT fix it and do NOT rebuild - NAME it in your verdict line for a follow-up matcher.
 
 ## Finish - ONE new commit IF you fixed source (never `--amend`, never `git push --force`)
 A commit only for checks 1-2 (logs/comments) source fixes; the check-3 symbol flags go in a
