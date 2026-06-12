@@ -5,23 +5,58 @@
 #ifndef FLASH_MOVIE_H_INCLUDED
 #define FLASH_MOVIE_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::GFx::Movie;
-class Scaleform::GFx::MovieDef;
-class Scaleform::Render::ContextImpl::DisplayHandle<Scaleform::Render::TreeRoot>;
-class survarium::flash_movie::AlignType;
-class survarium::flash_movie::ScaleModeType;
-class survarium::flash_movie::keyb_btn_action;
-class survarium::flash_movie::mouse_btn_action;
-
-/* FORWARD REFS */
-class survarium::flash_external_handler;
-class survarium::flash_function_handler;
-class survarium::flash_value;
+namespace Scaleform {
+namespace Render {
+	class TreeRoot;
+	namespace ContextImpl {
+		template < class C > class DisplayHandle;
+	} // namespace ContextImpl
+	using ContextImpl::DisplayHandle;
+} // namespace Render
+namespace GFx {
+	class Movie;
+	class MovieDef;
+} // namespace GFx
+} // namespace Scaleform
 
 namespace survarium {
 
+class flash_external_handler;
+class flash_function_handler;
+class flash_value;
+
 struct flash_movie {
+	// nested enums have no PDB type record (referenced only); AlignType and
+	// ScaleModeType wrap Scaleform::GFx::Movie's, the *_btn_action values are guesses
+	enum AlignType {
+		Align_Center,
+		Align_TopCenter,
+		Align_BottomCenter,
+		Align_CenterLeft,
+		Align_CenterRight,
+		Align_TopLeft,
+		Align_TopRight,
+		Align_BottomLeft,
+		Align_BottomRight
+	};
+
+	enum ScaleModeType {
+		SM_NoScale,
+		SM_ShowAll,
+		SM_ExactFit,
+		SM_NoBorder
+	};
+
+	enum keyb_btn_action {
+		keyb_btn_down,
+		keyb_btn_up
+	};
+
+	enum mouse_btn_action {
+		mouse_btn_down,
+		mouse_btn_up
+	};
+
 	inline			flash_movie			( ) { /* no source */ }
 
 	inline	void	SetViewport			( u32 arg_0, u32 arg_1 ) { /* no source */ }
@@ -69,11 +104,11 @@ struct flash_movie {
 						flash_value*			arg_1,
 						flash_value const*		arg_2,
 						u32						arg_3
-					) { /* no source */ }
+					) { /* no source */ return false; }
 
 	inline	void	SetPriority			( u8 arg_0 ) { /* no source */ }
 
-	inline	u8		GetPriority			( ) { /* no source */ }
+	inline	u8		GetPriority			( ) { /* no source */ return 0; }
 
 public:
 	/* 0x0000 */	Scaleform::GFx::MovieDef*		m_movie_def;

@@ -5,28 +5,33 @@
 #ifndef FLASH_FACTORY_H_INCLUDED
 #define FLASH_FACTORY_H_INCLUDED
 
-/* INCLUDES */
-class Scaleform::GFx::Loader;
-class survarium::scaleform_render_command_queue;
+// the legacy header defined flash_movie inline, so render's consumers
+// (flash_renderer.cpp) expect the complete type from this include
+#include "flash_movie.h"
 
-/* FORWARD REFS */
-class survarium::flash_movie;
-class survarium::flash_text_manager;
-class survarium::scaleform_game_engine;
+namespace Scaleform {
+namespace GFx {
+	class Loader;
+} // namespace GFx
+} // namespace Scaleform
 
 namespace survarium {
+
+class flash_text_manager;
+class scaleform_game_engine;
+class scaleform_render_command_queue;
 
 class flash_factory {
 public:
 	inline	explicit				flash_factory		( scaleform_game_engine& arg_0 ) { /* no source */ }
 	inline							~flash_factory		( ) { /* no source */ }
 
-	inline	flash_movie*			build_movie			( void* arg_0, u32 arg_1, pcstr arg_2 ) { /* no source */ }
+	inline	flash_movie*			build_movie			( void* arg_0, u32 arg_1, pcstr arg_2 ) { /* no source */ return NULL; }
 	inline	void					destroy_movie		( flash_movie* arg_0 ) { /* no source */ }
 
 	inline	void					tick				( ) { /* no source */ }
 
-	inline	flash_text_manager*		create_text_manager	( ) { /* no source */ }
+	inline	flash_text_manager*		create_text_manager	( ) { /* no source */ return NULL; }
 	inline	void					destroy_text_manager( flash_text_manager* arg_0 ) { /* no source */ }
 
 private:
