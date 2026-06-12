@@ -307,6 +307,54 @@ def file_mtime_iso(path):
 SCHEMA_VERSION = "2"
 
 
+def _git(*args):
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(VOSTOK), *args], capture_output=True, text=True, timeout=10
+        )
+        return out.returncode, out.stdout.strip()
+    except Exception:
+        return 1, ""
+
+
+def git_head():
+    _, head = _git("rev-parse", "HEAD")
+    return head or "?"
+
+
+def staleness_check(con, strict=False):
+    """The DB is a snapshot of the last delink. Under lowest-match-first
+    ordering, stale rows for freshly-landed work look like 0% and get
+    dispatched FIRST - so queue refuses on a stale DB (--stale-ok overrides);
+    other commands warn. Cadence: land -> rebuild.py -> refresh -> queue."""
+    hard, soft = [], []
+    row = con.execute("SELECT value FROM meta WHERE key='refresh_head'").fetchone()
+    refresh_head = row[0] if row else None
+    if not refresh_head or refresh_head == "?":
+        hard.append("DB predates the staleness guard - run `match_db.py refresh`")
+    elif refresh_head != git_head():
+        rc, _ = _git("diff", "--quiet", refresh_head, "HEAD", "--", "sources/")
+        if rc != 0:
+            _, last = _git("log", "-1", "--format=%h %s", "--", "sources/")
+            hard.append(
+                f"sources/ changed since the DB was refreshed ({refresh_head[:8]}..HEAD,"
+                f" last: {last}) - rebuild.py + refresh first"
+            )
+    if REPORT.is_file():
+        row = con.execute("SELECT value FROM meta WHERE key='report_mtime'").fetchone()
+        if row and row[0] != file_mtime_iso(REPORT):
+            hard.append("report.json changed since the DB was refreshed - run refresh")
+    _, dirty = _git("status", "--porcelain", "--", "sources/")
+    if dirty:
+        soft.append("uncommitted sources/ changes - rows may not reflect them")
+    for m in hard + soft:
+        log(f"STALE: {m}")
+    if strict and hard:
+        sys.exit("[match_db] stale DB - rows would dispatch already-done work (--stale-ok to override)")
+
+
 def open_db(path=DB_PATH, must_exist=True, check_schema=False):
     if must_exist and not Path(path).is_file():
         sys.exit(f"[match_db] no database at {path} - run `match_db.py refresh` first")
@@ -572,6 +620,7 @@ def cmd_refresh(args):
             ("target_index_mtime", file_mtime_iso(TARGET_IDX)),
             ("base_index_mtime", file_mtime_iso(BASE_IDX)),
             ("report_mtime", file_mtime_iso(REPORT)),
+            ("refresh_head", git_head()),
             ("declarations_loaded", "1" if (declared_methods or declared_free) else "0"),
             ("schema_version", "2"),
         ],
@@ -609,6 +658,7 @@ def emit(rows, as_json):
 
 def cmd_list(args):
     con = open_db(check_schema=True)
+    staleness_check(con)
     where, params = [], []
     if args.presence == "PAIRED" or args.presence is None:
         base = """
@@ -663,6 +713,7 @@ def cmd_list(args):
 
 def cmd_report(args):
     con = open_db(check_schema=True)
+    staleness_check(con)
     scope = "unit_name" if args.per_unit else "module"
     where, params = "", []
     if args.module:
@@ -777,6 +828,7 @@ def cmd_queue(args):
     skipped. TUs are ordered LOWEST match level first (real unmatched code
     before 99% polish - that tail is verifier work), size breaking ties."""
     con = open_db(check_schema=True)
+    staleness_check(con, strict=not args.stale_ok)
     where, params = ["module = ?"], [args.module]
     if not args.include_frameless:
         where.append("frameless = 0")
@@ -987,6 +1039,11 @@ def main():
         "--include-frameless",
         action="store_true",
         help="also queue LTCG-customized (frameless) leaves - normally pointless",
+    )
+    p.add_argument(
+        "--stale-ok",
+        action="store_true",
+        help="emit the queue even when the DB predates source changes (rows may be stale)",
     )
     p.add_argument("--json", action="store_true")
 
