@@ -11,7 +11,6 @@
 
 namespace survarium {
 
-// STATE[100%|DONE]
 artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 {
 	// FUNCTION BODY
@@ -19,42 +18,24 @@ artefact_container_core::artefact_container_core( ) : m_owner( NULL )
 	// ******
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::load( configs::binary_config_value const& cfg )
 {
 	usable_object::load( cfg );
 	m_artefact_search_time_ms = math::floor( (float)cfg["artefacts_search_time_sec"] * 1000.0f );
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::activate( generic_anomaly_core* owner, physics::world* world, scheduler& __formal )
 {
 	m_owner = owner;
 	usable_object::insert( world );
-
-	// FUNCTION BODY
-	// <0x73deb0>|0x000|+0x007:'26'	{
-	// <0x73deb7>|0x007|+0x009:'27'
-	// <0x73dec0>|0x010|+0x00c:'28'
-	// <0x73decc>|0x01c|      :'29'	}
-	// ******
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::deactivate( )
 {
 	usable_object::remove( );
 	m_owner = NULL;
-
-	// FUNCTION BODY
-	// <0x73de90>|0x000|+0x007:'32'	{
-	// <0x73de97>|0x007|+0x008:'33'
-	// <0x73de9f>|0x00f|+0x00a:'34'
-	// <0x73dea9>|0x019|      :'35'	}
-	// ******
 }
 
-// STATE[100%|DONE]
 bool artefact_container_core::use_initialize( usable_object_user_data* user )
 {
 	if ( !m_usable_object_users.empty( ) )
@@ -66,22 +47,8 @@ bool artefact_container_core::use_initialize( usable_object_user_data* user )
 	user->start_using_time_ms = user->current_time_ms;
 
 	return true;
-
-	// FUNCTION BODY
-	// <0x73de30>|0x000|+0x009:'38'	{
-	// <0x73de39>|0x009|+0x013:'39'
-	// <0x73de4c>|0x01c|+0x004:'40'
-	// <0>
-	// <0x73de50>|0x020|+0x00c:'42'
-	// <0x73de5c>|0x02c|+0x011:'43'
-	// <0x73de6d>|0x03d|+0x009:'44'
-	// <0x73de76>|0x046|+0x00c:'45'
-	// <0x73de82>|0x052|+0x002:'46'
-	// <0x73de84>|0x054|      :'47'	}
-	// ******
 }
 
-// STATE[92.86%|PARTIAL]: intrusive_ptr unspecified_bool conversion (if m_artefact) + transfer_artefact arg reg, non-steerable
 bool artefact_container_core::use_execute( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users[0] == user ) );
@@ -104,14 +71,8 @@ bool artefact_container_core::use_execute( usable_object_user_data* user )
 	}
 
 	return true;
-
-	// STRUCTURE DIFF: target 13 stmts / base 13 stmts
-	// SIZE -0xa | 102 | if ( m_artefact )
-	// SIZE -0x2 | 103 | transfer_artefact( user->owner->cast_to_inventory_holder( ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - if(m_artefact): target calls intrusive_ptr unspecified_bool conversion out-of-line, base inlines setne/movzx/test; transfer_artefact arg+this regs differ (LTCG). Non-steerable.
 }
 
-// STATE[100%|DONE]
 bool artefact_container_core::use_finalize( usable_object_user_data* user )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( user ) );
@@ -122,35 +83,15 @@ bool artefact_container_core::use_finalize( usable_object_user_data* user )
 	user->current_progress = u32(-1);
 	m_usable_object_users.erase( user );
 	return true;
-
-	// FUNCTION BODY
-	// <0x73ddd0>|0x000|+0x009:'74'	{
-	// <0x73ddd9>|0x009|+0x00c:'75'
-	// <0x73dde5>|0x015|+0x00c:'76'
-	// <0>
-	// <0x73ddf1>|0x021|+0x00c:'78'
-	// <0x73ddfd>|0x02d|+0x00a:'79'
-	// <0x73de07>|0x037|+0x00a:'80'
-	// <0x73de11>|0x041|+0x00f:'81'
-	// <0x73de20>|0x050|+0x002:'82'
-	// <0x73de22>|0x052|      :'83'	}
-	// ******
 }
 
-// STATE[98.56%|PARTIAL]: sole residual is the set_amount(1) arg passing (stack vs reg), non-steerable
-// (the conversion line closed when static_cast_resource_ptr went const&-parameter engine-wide)
 void artefact_container_core::artefact_spawned( resources::queries_result& data )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	m_artefact = static_cast_resource_ptr<artefact_base_ptr>( data[0].get_unmanaged_resource( ) );
 	m_artefact->set_amount( 1 );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE -0x3 | 149 | m_artefact->set_amount( 1 );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE is set_amount(1): target pushes 1 on stack, base passes in reg; LTCG call-boundary arg passing, non-steerable.
 }
 
-// STATE[100%|DONE]
 void artefact_container_core::spawn_artefact( )
 {
 	variant<32> ud;
@@ -166,15 +107,10 @@ void artefact_container_core::spawn_artefact( )
 	);
 }
 
-// STATE[80.80%|PARTIAL]: static_cast_resource_ptr inlined in target (c_ptr read + intrusive_ptr::set) vs out-of-line call in base, non-steerable
 void artefact_container_core::transfer_artefact( inventory_holder* holder )
 {
 	holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
 	m_artefact = NULL;
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE -0xc | 178 | holder->take_inventory_item( static_cast_resource_ptr< inventory_item_ptr >( m_artefact ) );
-	// VERDICT: STRUCTURE MATCH (shape ok) - sole SIZE on the conversion: target inlines static_cast_resource_ptr (c_ptr read + intrusive_ptr::set, 0x35) while base keeps the instantiation out-of-line (0x29); per-call-site LTCG inline decision, same source, non-steerable.
 }
 
 } // namespace survarium

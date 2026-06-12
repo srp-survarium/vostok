@@ -15,7 +15,6 @@
 
 namespace survarium {
 
-// STATE[96.07%|PARTIAL]: vectora::resize / math::min / VOSTOK_NEW inline-vs-call LTCG, non-steerable
 void generic_anomaly_core::load( configs::binary_config_value const& config )
 {
 	artefacts_enabled			= (bool)config["artefacts_enabled"];
@@ -73,15 +72,8 @@ void generic_anomaly_core::load( configs::binary_config_value const& config )
 			math::clamp<u32>( group->max_charged_count, 0, zones_count );
 		}
 	}
-
-	// STRUCTURE DIFF: target 47 / base 47 stmts
-	// SIZE +0x4  | 33 | m_artefact_containers.resize( artefact_containers_count );
-	// SIZE +0x18 | 34 | artefacts_max_count = math::min( artefacts_max_count, artefact_containers_count );
-	// SIZE +0xc  | 55 | anomaly_state* state = VOSTOK_NEW_IMPL( g_allocator, anomaly_state )( this );
-	// VERDICT: STRUCTURE MATCH - vectora::resize / math::min / VOSTOK_NEW inlined to different sizes, whole-program LTCG, non-steerable.
 }
 
-// STATE[99.63%|DONE]: frame size differs (slot allocation), non-steerable
 bool state_prio( anomaly_state* s1, anomaly_state* s2 )
 {	// true on less
 	if ( s1->enabled == s2->enabled )
@@ -90,12 +82,8 @@ bool state_prio( anomaly_state* s1, anomaly_state* s2 )
 			: s2->select_priority < s1->select_priority;
 	else
 		return !s1->enabled < !s2->enabled; // s1->enabled && !s2->enabled
-
-	// STRUCTURE DIFF: target 4 / base 4 stmts, 0x78 bytes both (no diverging rows)
-	// VERDICT: STRUCTURE MATCH - residual is the frame-reserve immediate (slot allocation), non-steerable.
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::resolve_links( base_project* p, configs::binary_config_value config )
 {
 	u32 artefact_containers_count = m_artefact_containers.size( );

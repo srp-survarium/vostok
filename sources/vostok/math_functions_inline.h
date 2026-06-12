@@ -40,7 +40,7 @@ inline float min( const float left, const float right )
 {
 	R_ASSERT	( valid(left) );
 	R_ASSERT	( valid(right) );
-	return		( left < right ? left : right );	// <0x239e0>|0x000|+0x008:'41'
+	return		( left < right ? left : right );
 }
 
 template < typename T >
@@ -125,10 +125,10 @@ inline T max_integral	( T const& left, T const& right )
 {
 	return		( left - ( ( left - right ) & -( left < right ) ) );
 }
-// STATE[UNCHECKED]: sushi@NOTE: Why not use templated function instead.
+// sushi@NOTE: Why not use templated function instead.
 inline float max		( float left, float right )
 {
-	return		( left > right ? left : right );	// <0x158f0>|0x000|+0x008:'113'
+	return		( left > right ? left : right );
 }
 
 

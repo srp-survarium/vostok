@@ -29,8 +29,8 @@ struct base_player;
 class weapon_user_animations_selector;
 struct player_input;
 
-//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)	// <0x122e20>|0x000|      :'60'	{
-//	inventory_item::action												//  <0x22c50>|0x000|      :'61'	{
+//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)
+//	inventory_item::action
 
 class player_logic_base_state : public ai::fsm_state {
 public:
@@ -54,7 +54,6 @@ public:
 
 	inline	weapon_user_state_enum		id							( ) const { return m_weapon_user_state_id; }
 	inline	bool						is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
-	// STATE[None|DONE]: ICF-folded `return true` override (byte-correct; see oneliners_batch1.md).
 	virtual	bool						is_ready_for_transition		( ) const override { return true; }
 
 	inline	bool						is_weapon_visible			( ) const { /* no source */ }

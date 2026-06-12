@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[UNCHECKED]
 respawn_point_core::respawn_point_core( ) :
 	point_id				( u32(-1) ),
 	position				( 0.0f, 0.0f, 0.0f ),
@@ -18,7 +17,6 @@ respawn_point_core::respawn_point_core( ) :
 {
 }
 
-// STATE[100%|DONE]
 void respawn_point_core::load( configs::binary_config_value const& config )
 {
 	point_id		= (u32)config["point_id"];
