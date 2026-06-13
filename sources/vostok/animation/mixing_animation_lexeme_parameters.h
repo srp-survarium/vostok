@@ -109,6 +109,7 @@ public:
 
 private:
 			void							create_animation_intervals			( skeleton_animation_ptr const& animation );
+public:
 	static	u32								animation_intervals_count			( skeleton_animation_ptr const& animation );
 	static	animation_interval				create_animation_interval			( skeleton_animation_ptr const& animation, const u32 interval_id );
 

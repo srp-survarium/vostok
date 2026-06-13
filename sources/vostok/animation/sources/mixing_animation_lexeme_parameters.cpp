@@ -63,3 +63,25 @@ u32 animation_lexeme_parameters::animation_intervals_count	( skeleton_animation_
 	event_channel const& channel	= pinned_animation->event_channels().channel( channel_id );
 	return							channel.domains_count( );
 }
+
+vostok::animation::mixing::animation_interval animation_lexeme_parameters::create_animation_interval( skeleton_animation_ptr const& animation, const u32 interval_id )
+{
+	cubic_spline_skeleton_animation_pinned pinned_animation( animation );
+	float const animation_length	= pinned_animation->length_in_frames()/default_fps;
+
+	u32 const channel_id			= pinned_animation->event_channels().get_channel_id( animation_intervals_channel_id );
+
+	float start_time				= 0.f;
+	float length					= animation_length;
+	if ( channel_id != u32(-1) ) {
+		event_channel const& channel	= pinned_animation->event_channels().channel( channel_id );
+		if ( channel.knots_count() ) {
+			start_time				= channel.knot( interval_id )/default_fps;
+			length					= ( interval_id + 1 < channel.knots_count() ) ?
+				channel.knot( interval_id + 1 )/default_fps - start_time :
+				animation_length - start_time;
+		}
+	}
+
+	return							animation_interval( animation, start_time, length );
+}
