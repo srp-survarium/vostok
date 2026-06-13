@@ -5,6 +5,8 @@
 #ifndef WEAPON_ANIMATIONS_TIMESCALE_INLINE_H_INCLUDED
 #define WEAPON_ANIMATIONS_TIMESCALE_INLINE_H_INCLUDED
 
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
+
 namespace survarium {
 
 // STATE[STUB]
@@ -54,15 +56,13 @@ inline float computed_shooting_animation_time_scale( resources::managed_resource
 	// ******
 }
 
-// STATE[STUB]
-inline float computed_shotgun_reload_animation_time_scale( resources::managed_resource_ptr const& reload_one_round_anim, u32 magazine_capacity, float reload_time )
+// claude@NOTE: target emits this COMDAT with x87 FP + length_in_frames() fully inlined;
+// our base picks SSE (divss) and out-of-lines length_in_frames - a COMDAT-codegen/FP-flag
+// difference owned by whichever TU wins the COMDAT, not steerable from this body.
+inline float computed_shotgun_reload_animation_time_scale( resources::managed_resource_ptr const& reload_one_round_anim, u32 const magazine_capacity, float const reload_time )
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0xacb84>|0x004|+0x06d:'52'
-	// <0xacbf1>|0x071|+0x01e:'53'
-	// ******
+	float const one_round_animation_time	= resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( reload_one_round_anim )->length_in_frames( ) / 30.f;
+	return one_round_animation_time * magazine_capacity / reload_time;
 }
 
 } // namespace survarium
