@@ -15,6 +15,29 @@ and dispatch a `structure-verifier` onto the **same branch** so each PR carries 
 commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 **bottom-up** and merges one at a time. You keep your own context small (a ledger).
 
+## The loop - this is your whole plan
+
+Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`) and build THERE -
+incrementally, NEVER from the integration branch (it lacks the stack's matches, so it
+would rebuild from scratch every time). Then repeat:
+
+1. **Switch to the top** - checkout the newest match branch in the worktree.
+2. **Build it** - `python3 scripts/rebuild.py` (warm worktree -> incremental, ~2-3 min/unit).
+3. **Spawn matcher agent(s)** - ONE TU each, branched off the top.
+4. **Get their work** - each returns ONE commit.
+5. **Handle conflicts** if siblings clash - `temp_include_all.cpp` / module `.vcproj` /
+   `match.db`; stack them in dependency order.
+6. **Go to the new top** - the just-landed unit's branch is the new tip.
+7. **Build the new top** - incremental.
+8. **Regen the DB** - `python3 scripts/match_db.py refresh`.
+9. **Mark functions** - retries (`match_db.py tried <fn>`) + comments/flags
+   (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue` a stale SKIP).
+10. **Loop** -> back to step 3.
+
+Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before building - a bare `cd` keeps the
+parent shell's prefix, so parallel builds collide on one `mspdbsrv`. Everything below is
+reference detail for these ten steps.
+
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
 > workers. In that case stop and tell the human to run the orchestrator from the
