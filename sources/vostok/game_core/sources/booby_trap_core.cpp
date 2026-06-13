@@ -240,16 +240,15 @@ void booby_trap_core::defuse_completed( )
 	switch_to_state( booby_trap_state_disarmed );
 }
 
-// claude@MATCH: target merges the state load + both compares into ONE statement (one
-// line-table entry), so the original assigned inside the condition. claude@NOTE: the
-// target PDB records NO user local here and the temp sits BELOW the this-save (compiler
-// temp order) - a switch-dispatch-like shape - but a real switch over the 4/5 dense enum
-// values lowers to a jump table (cf. switch_to_state), not the target's je/jle chain, so
-// the if shape is kept; residual is only the [ebp-4]/[ebp-8] slot swap.
+// claude@NOTE: target records ZERO named locals (kept here, structure > %). It loads
+// m_trap_state ONCE into a compiler temp at [ebp-8] (below the this-save) and compares
+// that temp twice; reaching that single-load-temp-after-this layout needs an assignment
+// to a variable, but a named local claims [ebp-4] and swaps the slots vs the target, so
+// the faithful zero-local spelling reads the member directly twice (one extra member
+// load). Byte residual only; named-local set matches the target (0).
 void booby_trap_core::on_state_timer_finished( )
 {
-	booby_trap_state state;
-	if ( ( state = m_trap_state ) == booby_trap_state_armed || state > booby_trap_state_disarmed )
+	if ( m_trap_state == booby_trap_state_armed || m_trap_state > booby_trap_state_disarmed )
 		switch_to_state( booby_trap_state_disarmed );
 	else
 		m_owner->remove_trap( *this );
