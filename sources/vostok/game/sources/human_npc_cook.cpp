@@ -9,6 +9,9 @@ namespace survarium {
 
 // STATE[STUB]
  human_npc_cook::human_npc_cook( game_world& world ) :
+	// base args are the legacy prior (translate_query_cook has no default ctor);
+	// a matcher confirms when this TU is enabled
+	translate_query_cook( resources::human_npc_class, reuse_true, use_any_thread_id ),
 	m_game_world( world )
 {
 	// FUNCTION BODY[0x7681a0]: 0

@@ -4,13 +4,14 @@
 
 #include "pch.h"
 #include "player_input_handler.h"
+#include "game_world.h"	// game_camera base needs game_world complete (upcast to base_game_scene)
 
 namespace survarium {
 
 // STATE[STUB]
-// no init-list yet: the game_camera base needs the base_game_scene (behind the
-// incomplete game_world) - a matcher supplies it when this TU is enabled
- player_input_handler::player_input_handler( game_world& world )
+ player_input_handler::player_input_handler( game_world& world ) :
+	game_camera( world ),		// base needs base_game_scene& (game_world derives from it)
+	m_game_world( world )		// ref member - the owner
 {
 	// FUNCTION BODY[0x5cfca0]: 0
 	// <0x5cfca0>|0x000|+0x0b2:'32'	{

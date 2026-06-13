@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "game_world.h"
+#include "game.h"			// get_game().get_sound_world() needs game complete
+#include "game_memory.h"	// g_allocator for allocator-taking vectora member
 
 namespace survarium {
 
@@ -41,7 +43,8 @@ game_world::game_world( game& game ) :
 	// base / value-member sources are the obvious ones (base_game_scene and
 	// game_ui take the owner refs) - a matcher confirms when this TU is enabled
 	base_game_scene( game ),
-	game_ui( *this )
+	game_ui( *this ),
+	m_victory_items( g_allocator )	// allocator-taking vectora (no default ctor)
 {
 	// STATICS
 	// static console_commands::cc_delegate clear_player_spawn_cc = <0x4c2b450>;

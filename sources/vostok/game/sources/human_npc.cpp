@@ -4,6 +4,9 @@
 
 #include "pch.h"
 #include "human_npc.h"
+#include "game_world.h"				// base game_object_ + ref members source off game_world
+#include "animated_model_instance.h"	// resource_ptr member dtor needs complete type
+#include "animation_space_graph.h"		// resource_ptr member dtor needs complete type
 
 namespace survarium {
 
@@ -70,10 +73,16 @@ human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human
 }
 
 // STATE[STUB]
-// no init-list yet: the game_object_ base needs the base_game_scene and the
-// reference members their real sources (all behind the incomplete game_world) -
-// a matcher supplies them when this TU is enabled
- human_npc::human_npc( game_world& game_world )
+// init-list sources off the owning game_world (its base_game_scene supplies the
+// physics/renderer) - buildability shapes; a matcher confirms the real sources.
+ human_npc::human_npc( game_world& game_world ) :
+	game_object_( game_world ),								// base needs base_game_scene&
+	m_ai_world( game_world.get_ai_world( ) ),
+	m_sound_world( game_world.get_sound_world( ) ),
+	m_physics_world( *game_world.get_physics_world( ) ),
+	m_game_world( game_world ),
+	m_renderer( game_world.renderer( ) ),
+	m_visibility_parameters( 0.0f )							// buildability: matcher supplies real value
 {
 	// CALL SITE INFO
 	// <0x5c0372> -> < unknown >
@@ -249,7 +258,7 @@ void human_npc::on_hit_event( hit_object const& hit_source )
 // STATE[STUB]
 math::aabb human_npc::get_aabb( ) const
 {
-	return vostok::math::aabb();
+	return vostok::math::create_zero_aabb();	// aabb default ctor is private; use the friend factory
 
 	// FUNCTION BODY[0x5be6b0]: 1
 	// <0x5be6b0>|0x000|+0x019:'203'
@@ -341,7 +350,7 @@ float4x4 human_npc::local_to_cell( float3 const& requester ) const
 }
 
 // STATE[STUB]
-void human_npc::draw_damage_model( render::game::renderer& render, render::base_scene_ptr const& scene ) const
+void human_npc::draw_damage_model( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
 	// FUNCTION BODY[0x5be970]: 12
 	// <0>
@@ -360,7 +369,7 @@ void human_npc::draw_damage_model( render::game::renderer& render, render::base_
 }
 
 // STATE[STUB]
-void human_npc::draw( render::game::renderer& render, render::base_scene_ptr const& scene ) const
+void human_npc::draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
 	// CALL SITE INFO
 	// <0x5c0404> -> float3 < unknown >() const
