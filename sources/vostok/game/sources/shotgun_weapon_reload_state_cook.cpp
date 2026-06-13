@@ -8,7 +8,9 @@
 namespace survarium {
 
 // STATE[STUB]
- shotgun_weapon_reload_state_cook::shotgun_weapon_reload_state_cook( )
+ shotgun_weapon_reload_state_cook::shotgun_weapon_reload_state_cook( ) :
+	// buildability: matcher supplies real class/reuse/thread args
+	resources::unmanaged_cook( resources::weapon_shotgun_reload_state_class, reuse_false, use_current_thread_id, use_current_thread_id )
 {
 	// FUNCTION BODY[0x5bd6f0]: 1
 	// <0x5bd728>|0x038|+0x026:'25'

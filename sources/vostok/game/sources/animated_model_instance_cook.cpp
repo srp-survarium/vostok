@@ -9,7 +9,9 @@
 namespace survarium {
 
 // STATE[STUB]
- animated_model_instance_cook::animated_model_instance_cook( )
+ animated_model_instance_cook::animated_model_instance_cook( ) :
+	// buildability: matcher supplies real class/reuse/thread args
+	resources::translate_query_cook( resources::game_animated_model_instance_class, reuse_false, use_current_thread_id )
 {
 	// FUNCTION BODY[0x769390]: 0
 	// <0x769390>|0x000|+0x051:'25'	{

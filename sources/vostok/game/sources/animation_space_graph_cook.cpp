@@ -11,6 +11,8 @@ namespace survarium {
 
 // STATE[STUB]
  animation_space_graph_cook::animation_space_graph_cook( ai::navigation::world& navigation_world ) :
+	// buildability: matcher supplies real class/reuse/thread args
+	resources::translate_query_cook( resources::animation_space_graph_class, reuse_false, use_current_thread_id ),
 	// ref member; the same-named param is the obvious source - a matcher confirms
 	m_navigation_world( navigation_world )
 {

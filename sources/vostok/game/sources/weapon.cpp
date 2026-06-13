@@ -42,7 +42,13 @@ void `dynamic atexit destructor for 'dispersion_magic_coef_cc''( )
 	const u32		first_view_death_animations_count,
 	const u32		third_view_death_animations_count,
 	u32				preview_animations_count
-)
+) :
+	// const members must be initialized; counts map from the params,
+	// m_fire_light_anim_length is a buildability placeholder (matcher supplies real value)
+	m_fire_light_anim_length				( 0 ),
+	m_first_view_death_animations_count		( first_view_death_animations_count ),
+	m_third_view_death_animations_count		( third_view_death_animations_count ),
+	m_preview_animations_count				( preview_animations_count )
 {
 	// FUNCTION BODY[0x5c2100]: 30
 	// <0>

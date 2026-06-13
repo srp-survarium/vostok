@@ -8,7 +8,9 @@
 namespace survarium {
 
 // STATE[STUB]
-weapon_cook::weapon_cook( game& g )
+weapon_cook::weapon_cook( game& g ) :
+	// ref member; the same-named param is the obvious source - a matcher confirms
+	m_game( g )
 {
 	// FUNCTION BODY[0x5cd730]: 0
 	// <0x5cd730>|0x000|+0x01d:'55'	{

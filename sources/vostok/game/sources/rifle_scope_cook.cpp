@@ -8,7 +8,9 @@
 namespace survarium {
 
 // STATE[STUB]
- rifle_scope_cook::rifle_scope_cook( )
+ rifle_scope_cook::rifle_scope_cook( ) :
+	// buildability: matcher supplies real class/reuse/thread args
+	resources::translate_query_cook( resources::rifle_scope_class, reuse_false, use_current_thread_id )
 {
 	// FUNCTION BODY[0x766d70]: 1
 	// <0x766da8>|0x038|+0x029:'17'
