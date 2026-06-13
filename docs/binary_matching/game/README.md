@@ -54,13 +54,14 @@ complete.
   `game_generate_shaders.h`, so the file stays in the queue until they land.
 - **The flash/scaleform code belongs to an original `vostok/scaleform` module
   that the structure generator never emitted** (the ONLY compiland gap in the
-  whole tree - see `temp/structure_queue/sources_scaleform/`, 14 files / ~275
-  addressed fns from the rich index, incl. out-of-line `flash_movie`/`flash_value`
-  bodies in `movie.cpp`/`value.cpp` and the Scaleform D3D11 HAL `d3d1x_*` pair
-  files). The flash/scaleform headers parked under `game/sources/` (batches
-  sc+4) move into a real `sources/vostok/scaleform/` module when that batch
-  runs; their `{ /* no source */ }` inline stubs become declarations + .cpp
-  definitions there.
+  whole tree - the symbol lists were fabricated from the rich index, ~275
+  addressed fns, incl. out-of-line `flash_movie`/`flash_value` bodies in
+  `movie.cpp`/`value.cpp` and the Scaleform D3D11 HAL `d3d1x_*` pair files).
+  **Batch 12 built this module** (`sources/vostok/scaleform/`, see
+  [../scaleform/README.md](../scaleform/README.md)): the flash/scaleform headers
+  moved there from `game/sources/`, their `{ /* no source */ }` inline stubs
+  became declarations + .cpp definitions in the 10 compilands, and game's
+  `temp_include_all.cpp` + render now include them via `<vostok/scaleform/sources/...>`.
 - `survarium::collision_object_types` at the module root (`collision_object_types.h`)
   is a keeper infra enum shared with the editor.
 

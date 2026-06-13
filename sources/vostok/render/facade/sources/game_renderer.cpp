@@ -15,7 +15,7 @@
 #include "functor_with_big_buffer_to_copy_command.h"
 #include <vostok/render/facade/model.h>
 #include <vostok/render/engine/sources/flash_renderer.h>
-#include <vostok/game/sources/flash_factory.h>
+#include <vostok/scaleform/sources/flash_factory.h>
 
 
 namespace vostok {

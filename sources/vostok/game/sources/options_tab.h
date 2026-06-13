@@ -5,7 +5,7 @@
 #ifndef OPTIONS_TAB_H_INCLUDED
 #define OPTIONS_TAB_H_INCLUDED
 
-#include "flash_movie_resource.h"
+#include <vostok/scaleform/sources/flash_movie_resource.h>
 #include "options_enum.h"
 
 namespace survarium {

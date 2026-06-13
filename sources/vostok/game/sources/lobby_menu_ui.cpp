@@ -5,7 +5,7 @@
 #include "pch.h"
 #include "lobby_menu.h"
 #include "lobby_menu_external_handler.h"
-#include "flash_function_handler.h"
+#include <vostok/scaleform/sources/flash_function_handler.h>
 
 namespace survarium {
 

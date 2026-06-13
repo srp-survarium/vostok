@@ -11,7 +11,7 @@
 #include <vostok/game_core/profile_slot_enum.h>
 
 #include "base_point_stats.h"
-#include "flash_movie_resource.h"
+#include <vostok/scaleform/sources/flash_movie_resource.h>
 
 namespace vostok {
 namespace network_core {

@@ -8,8 +8,8 @@
 #include <vostok/input/handler.h>
 #include <vostok/math_int2.h>
 
-#include "flash_external_handler.h"
-#include "flash_movie_resource.h"
+#include <vostok/scaleform/sources/flash_external_handler.h>
+#include <vostok/scaleform/sources/flash_movie_resource.h>
 #include "game_action_id.h"	// the canonical dump inlines the enum here; it lives in its own header
 
 namespace vostok {

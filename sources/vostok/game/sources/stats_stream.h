@@ -5,7 +5,7 @@
 #ifndef STATS_STREAM_H_INCLUDED
 #define STATS_STREAM_H_INCLUDED
 
-#include "flash_text.h"
+#include <vostok/scaleform/sources/flash_text.h>
 
 namespace vostok {
 namespace network_core {
