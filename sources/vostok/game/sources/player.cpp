@@ -4,6 +4,9 @@
 
 #include "pch.h"
 #include "player.h"
+#include "player_creation_params.h"	// params.game_scene field
+#include "base_game_scene.h"			// game_scene supplies game / scheduler
+#include "game_memory.h"				// g_allocator for circular_buffer member
 
 namespace survarium {
 
@@ -84,10 +87,13 @@ void `dynamic initializer for 's_show_client_player_command''( )
 */
 
 // STATE[STUB]
-// no init-list yet: the base_player base needs (params, scheduler) and the
-// ref/const members their real sources - a matcher supplies them when this
-// TU is enabled
- player::player( player_creation_params const& params )
+// init-list sources off params.game_scene (it supplies game + scheduler);
+// buildability shapes - a matcher confirms the real sources.
+ player::player( player_creation_params const& params ) :
+	base_player( params, params.game_scene->scheduler( ) ),
+	m_history( *g_allocator, 0 ),				// buildability: allocator + capacity
+	m_game_scene( *params.game_scene ),
+	m_game( params.game_scene->get_game( ) )
 {
 	// FUNCTION BODY[0x5e44b0]: 20
 	// <0x5e468c>|0x1dc|+0x050:'125'

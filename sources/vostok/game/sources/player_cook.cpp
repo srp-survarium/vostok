@@ -10,7 +10,10 @@
 namespace survarium {
 
 // STATE[STUB]
- player_cook::player_cook( )
+ player_cook::player_cook( ) :
+	// base args are the legacy prior (translate_query_cook has no default ctor);
+	// a matcher confirms when this TU is enabled
+	translate_query_cook( resources::player_class, reuse_true, use_any_thread_id )
 {
 	// FUNCTION BODY[0x5dcbe0]: 0
 	// <0x5dcbe0>|0x000|+0x057:'27'	{
@@ -238,6 +241,9 @@ void player_cook::on_hit_params_loaded( resources::queries_result& data, player_
 
 // STATE[STUB]
  profile_skin_visual_cook::profile_skin_visual_cook( game& g ) :
+	// base args are the legacy prior (translate_query_cook has no default ctor);
+	// a matcher confirms when this TU is enabled
+	translate_query_cook( resources::player_skin_visual_class, reuse_true, use_any_thread_id ),
 	m_game( g )
 {
 	// FUNCTION BODY[0x5dcb60]: 1

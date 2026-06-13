@@ -8,9 +8,13 @@
 namespace survarium {
 
 // STATE[STUB]
-// no init-list yet (ref + const members); a matcher supplies the real values
-// when this TU is enabled
- npc_stats::npc_stats( ui::world& ui_world )
+ npc_stats::npc_stats( ui::world& ui_world ) :
+	m_ui_world( ui_world ),				// ref member - owner is the obvious source
+	m_caption_color( 0 ),				// buildability: matcher supplies real value
+	m_text_color( 0 ),					// buildability: matcher supplies real value
+	m_line_height( 0.0f ),				// buildability: matcher supplies real value
+	m_medium_column_width( 0.0f ),		// buildability: matcher supplies real value
+	m_wide_column_width( 0.0f )			// buildability: matcher supplies real value
 {
 	// CALL SITE INFO
 	// <0x5cbcff> -> ui::window* < unknown >()
@@ -102,7 +106,7 @@ ui::text* npc_stats::create_new_group(
 }
 
 // STATE[STUB]
-void npc_stats::draw( render::ui::renderer& ui_renderer, render::base_scene_view_ptr const& scene_view )
+void npc_stats::draw( render::ui::renderer& ui_renderer, render::scene_view_ptr const& scene_view )
 {
 	// CALL SITE INFO
 	// <0x5cbb48> -> void < unknown >( render::ui::renderer&, render::base_scene_view_ptr const& )
