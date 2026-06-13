@@ -4,6 +4,10 @@
 
 #include "pch.h"
 #include "human_npc_cook.h"
+#include <vostok/resources.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
@@ -23,6 +27,31 @@ namespace survarium {
 // STATE[STUB]
 void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	configs::binary_config_value* t_object	= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
+
+	if ( t_object != 0 )
+	{
+		pcstr npc_brain_config_path		= ( *t_object )["brain"];
+		resources::query_resource		(
+			npc_brain_config_path,
+			resources::binary_config_class,
+			boost::bind( &human_npc_cook::on_queried_data_received, this, _1 ),
+			g_allocator,
+			parent.user_data(),
+			&parent
+		);
+		return;
+	}
+
+	resources::query_resource			(
+		parent.get_requested_path(),
+		resources::binary_config_class,
+		boost::bind( &human_npc_cook::on_queried_data_received, this, _1 ),
+		g_allocator,
+		parent.user_data(),
+		&parent
+	);
+
 	// FUNCTION BODY[0x7688a0]: 23
 	// <0x7688ab>|0x00b|+0x023:'24'
 	// <0>
@@ -53,6 +82,8 @@ void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 // STATE[STUB]
 void human_npc_cook::delete_resource( resources::resource_base* resource )
 {
+	VOSTOK_DELETE_IMPL					( g_allocator, resource );
+
 	// FUNCTION BODY[0x768220]: 1
 	// <0x768220>|0x000|+0x045:'51'
 	// ******
@@ -61,6 +92,18 @@ void human_npc_cook::delete_resource( resources::resource_base* resource )
 // STATE[STUB]
 void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 {
+	resources::query_result_for_cook* const	parent		= data.get_parent_query();
+	if ( !data.is_successful() )
+	{
+		R_ASSERT										( data.is_successful(), "couldn't retrieve npc config options" );
+		parent->finish_query							( result_error );
+		return;
+	}
+
+	configs::binary_config_ptr config					= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource() );
+
+	on_npc_options_received								( config->get_root(), *parent );
+
 	// LOCALS
 	// configs::binary_config_ptr 		config
 	// ******

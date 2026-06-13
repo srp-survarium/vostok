@@ -7,6 +7,18 @@
 #include "game_world.h"				// base game_object_ + ref members source off game_world
 #include "animated_model_instance.h"	// resource_ptr member dtor needs complete type
 #include "animation_space_graph.h"		// resource_ptr member dtor needs complete type
+#include <vostok/ai/world.h>
+#include <vostok/ai/weapon.h>
+#include <vostok/ai/collision_object.h>	// is_at_node: get_collision_object()->get_origin()
+#include <vostok/ai/npc_statistics.h>
+#include <vostok/ai/sensed_sound_object.h>
+#include <vostok/ai/sensed_hit_object.h>
+#include <vostok/collision/animated_object.h>
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/console_command.h>
+
+static bool s_npc_debug_draw		= false;
+static vostok::console_commands::cc_bool s_npc_debug_draw_command( "npc_debug_draw", s_npc_debug_draw, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
@@ -37,7 +49,19 @@ void `dynamic atexit destructor for 's_npc_debug_draw_command''( )
 */
 
 // STATE[STUB]
- human_npc::npc_game_attributes::npc_game_attributes( )
+ human_npc::npc_game_attributes::npc_game_attributes( ) :
+	initial_position		( float3( 0.f, 0.f, 0.f ) ),
+	initial_scale			( float3( 1.f, 1.f, 1.f ) ),
+	initial_rotation		( float3( 0.f, 0.f, 0.f ) ),
+	debug_draw_color		( math::color( 0, 0, 0 ) ),
+	name					( "noname" ),
+	description				( "human" ),
+	initial_velocity		( 0.f ),
+	initial_luminosity		( 0.002f ),
+	id						( u32(-1) ),
+	group_id				( u32(-1) ),
+	class_id				( 0 ),
+	outfit_id				( u32(-1) )
 {
 	// FUNCTION BODY[0x5be6d0]: 0
 	// <0x5be6d0>|0x000|+0x11f:'52'	{
@@ -48,6 +72,23 @@ void `dynamic atexit destructor for 's_npc_debug_draw_command''( )
 // STATE[STUB]
 human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human_npc::npc_game_attributes& other )
 {
+	if ( this != &other )
+	{
+		initial_position	= other.initial_position;
+		initial_scale		= other.initial_scale;
+		initial_rotation	= other.initial_rotation;
+		debug_draw_color	= other.debug_draw_color;
+		name				= other.name;
+		description			= other.description;
+		initial_velocity	= other.initial_velocity;
+		initial_luminosity	= other.initial_luminosity;
+		id					= other.id;
+		group_id			= other.group_id;
+		class_id			= other.class_id;
+		outfit_id			= other.outfit_id;
+		weapons.swap		( other.weapons );
+	}
+
 	return *this;
 
 	// FUNCTION BODY[0x5bef40]: 18
@@ -132,6 +173,9 @@ void human_npc::clear_resources( )
 // STATE[STUB]
 void human_npc::set_brain_unit( resources::unmanaged_resource_ptr const& brain_unit )
 {
+	R_ASSERT					( !m_brain_unit );
+	m_brain_unit				= brain_unit;
+
 	// FUNCTION BODY[0x5bed10]: 2
 	// <0>
 	// <0x5bed10>|0x000|+0x00c:'125'
@@ -206,6 +250,17 @@ void human_npc::enable( )
 // STATE[STUB]
 void human_npc::on_sound_event( sound::sound_producer const& sound_source )
 {
+	m_sound_perceived			= true;
+
+	ai::sensed_sound_object		perceived_sound;
+	human_npc const* source		= static_cast_checked< human_npc const* >( &sound_source );
+	perceived_sound.object		= source->cast_game_object();
+	perceived_sound.position	= sound_source.get_source_position( float3( 0, 0, 0 ) );
+	perceived_sound.type		= (ai::sound_collection_types)sound_source.m_sound_type;
+	perceived_sound.power		= sound_source.m_sound_power;
+
+	m_ai_world.on_sound_event	( *this, perceived_sound );
+
 	// LOCALS
 	// ai::sensed_sound_object 			perceived_sound
 	// ******
@@ -233,6 +288,16 @@ void human_npc::on_sound_event( sound::sound_producer const& sound_source )
 // STATE[STUB]
 void human_npc::on_hit_event( hit_object const& hit_source )
 {
+	ai::sensed_hit_object			perceived_hit;
+	perceived_hit.own_position		= get_position( hit_source.m_position );
+	perceived_hit.object			= hit_source.m_source;
+	perceived_hit.direction			= hit_source.m_position;
+	perceived_hit.bone_index		= hit_source.m_target_bone;
+	perceived_hit.extent_of_damage	= hit_source.m_power;
+
+	m_ai_world.on_hit_event			( *this, perceived_hit );
+	m_sound_produced				= true;
+
 	// LOCALS
 	// ai::sensed_hit_object 			perceived_hit
 	// ******
@@ -258,7 +323,7 @@ void human_npc::on_hit_event( hit_object const& hit_source )
 // STATE[STUB]
 math::aabb human_npc::get_aabb( ) const
 {
-	return vostok::math::create_zero_aabb();	// aabb default ctor is private; use the friend factory
+	return m_model_instance->m_damage_collision->get_aabb();
 
 	// FUNCTION BODY[0x5be6b0]: 1
 	// <0x5be6b0>|0x000|+0x019:'203'
@@ -268,7 +333,7 @@ math::aabb human_npc::get_aabb( ) const
 // STATE[STUB]
 float3 human_npc::get_random_surface_point( const u32 current_time ) const
 {
-	return vostok::math::float3(1., 1., 1.);
+	return m_model_instance->m_damage_collision->get_random_surface_point( current_time );
 
 	// FUNCTION BODY[0x5be9d0]: 1
 	// <0x5be9d0>|0x000|+0x020:'208'
@@ -278,11 +343,11 @@ float3 human_npc::get_random_surface_point( const u32 current_time ) const
 // STATE[STUB]
 float3 human_npc::get_position( float3 const& requester ) const
 {
+	return local_to_cell( requester ).c.xyz();
+
 	// CALL SITE INFO
 	// <0x5be49b> -> float4x4 < unknown >( float3 const& ) const
 	// ******
-
-	return vostok::math::float3(1., 1., 1.);
 
 	// FUNCTION BODY[0x5be480]: 1
 	// <0x5be486>|0x006|+0x02e:'213'
@@ -292,7 +357,7 @@ float3 human_npc::get_position( float3 const& requester ) const
 // STATE[STUB]
 float3 human_npc::get_position( ) const
 {
-	return vostok::math::float3(1., 1., 1.);
+	return m_transform.c.xyz( );
 
 	// FUNCTION BODY[0x5be460]: 1
 	// <0x5be460>|0x000|+0x015:'218'
@@ -302,12 +367,16 @@ float3 human_npc::get_position( ) const
 // STATE[STUB]
 float4x4 human_npc::get_eyes_matrix( ) const
 {
+	return math::create_camera_direction	(
+		get_eyes_position(),
+		get_eyes_direction(),
+		float3( 0.f, 1.f, 0.f )
+	);
+
 	// CALL SITE INFO
 	// <0x5bece0> -> float3 < unknown >() const
 	// <0x5becf0> -> float3 < unknown >() const
 	// ******
-
-	return vostok::math::float4x4();
 
 	// FUNCTION BODY[0x5becb0]: 5
 	// <0>
@@ -321,7 +390,7 @@ float4x4 human_npc::get_eyes_matrix( ) const
 // STATE[STUB]
 float3 human_npc::get_eyes_direction( ) const
 {
-	return vostok::math::float3(1., 1., 1.);
+	return normalize( m_transform.transform_direction( m_model_instance->m_damage_collision->get_eyes_direction() ) );
 
 	// FUNCTION BODY[0x5bee00]: 1
 	// <0x5bee06>|0x006|+0x122:'232'
@@ -331,7 +400,7 @@ float3 human_npc::get_eyes_direction( ) const
 // STATE[STUB]
 float3 human_npc::get_eyes_position( ) const
 {
-	return vostok::math::float3(1., 1., 1.);
+	return m_transform.transform_position( m_model_instance->m_damage_collision->get_head_bone_center() );
 
 	// FUNCTION BODY[0x5bed20]: 1
 	// <0x5bed27>|0x007|+0x0d3:'237'
@@ -341,7 +410,8 @@ float3 human_npc::get_eyes_position( ) const
 // STATE[STUB]
 float4x4 human_npc::local_to_cell( float3 const& requester ) const
 {
-	return vostok::math::float4x4();
+	VOSTOK_UNREFERENCED_PARAMETER	( requester );
+	return m_transform;
 
 	// FUNCTION BODY[0x5be440]: 2
 	// <0>
@@ -477,7 +547,7 @@ void human_npc::render_model( )
 // STATE[STUB]
 object_weapon* human_npc::pop_weapon( )
 {
-	return NULL;
+	return m_game_attributes.weapons.pop_front( );
 
 	// FUNCTION BODY[0x5bef30]: 1
 	// <0x5bef31>|0x001|+0x00d:'364'
@@ -487,11 +557,11 @@ object_weapon* human_npc::pop_weapon( )
 // STATE[STUB]
 bool human_npc::is_safe( ) const
 {
+	return m_ai_world.is_npc_safe( m_brain_unit );
+
 	// CALL SITE INFO
 	// <0x5be963> -> bool < unknown >( resources::unmanaged_resource_ptr ) const
 	// ******
-
-	return false;
 
 	// FUNCTION BODY[0x5be940]: 1
 	// <0x5be943>|0x003|+0x022:'369'
@@ -501,11 +571,12 @@ bool human_npc::is_safe( ) const
 // STATE[STUB]
 bool human_npc::is_target_in_melee_range( ai::npc const* const target ) const
 {
+	R_ASSERT					( target );
+	return math::length			( target->get_position( get_position() ) - get_position() ) <= 10;
+
 	// CALL SITE INFO
 	// <0x5be8ca> -> float3 < unknown >( float3 const& ) const
 	// ******
-
-	return false;
 
 	// FUNCTION BODY[0x5be890]: 2
 	// <0x5be890>|0x000|+0x003:'373'	{
@@ -520,7 +591,8 @@ bool human_npc::is_target_in_melee_range( ai::npc const* const target ) const
 // STATE[STUB]
 bool human_npc::is_at_node( ai::game_object const* const node ) const
 {
-	return false;
+	R_ASSERT					( node );
+	return math::length			( node->get_collision_object()->get_origin() - get_position() ) <= 4;
 
 	// FUNCTION BODY[0x5be430]: 4
 	// <0>
@@ -533,6 +605,10 @@ bool human_npc::is_at_node( ai::game_object const* const node ) const
 // STATE[STUB]
 void human_npc::prepare_to_attack( ai::npc const* const target, ai::weapon const* const gun )
 {
+	LOG_INFO					( "%s: prepare to attack %s with %s", get_name(), target->cast_game_object()->get_name(), gun->cast_game_object()->get_name() );
+	m_current_target			= target;
+	m_current_weapon			= gun;
+
 	// CALL SITE INFO
 	// <0x5bfd64> -> ai::game_object const* < unknown >() const
 	// <0x5bfd70> -> ai::game_object const* < unknown >() const
@@ -551,6 +627,9 @@ void human_npc::prepare_to_attack( ai::npc const* const target, ai::weapon const
 // STATE[STUB]
 void human_npc::attack( ai::npc const* const target, ai::weapon const* const gun )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
+	LOG_INFO					( "%s: attacking %s with %s", get_name(), m_current_target->cast_game_object()->get_name(), m_current_weapon->cast_game_object()->get_name() );
+
 	// CALL SITE INFO
 	// <0x5bfc41> -> ai::game_object const* < unknown >() const
 	// <0x5bfc50> -> ai::game_object const* < unknown >() const
@@ -568,6 +647,9 @@ void human_npc::attack( ai::npc const* const target, ai::weapon const* const gun
 // STATE[STUB]
 void human_npc::attack_melee( ai::npc const* const target, ai::weapon const* const gun )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
+	LOG_INFO					( "%s: melee attacking %s with %s", get_name(), m_current_target->cast_game_object()->get_name(), m_current_weapon->cast_game_object()->get_name() );
+
 	// CALL SITE INFO
 	// <0x5bfb21> -> ai::game_object const* < unknown >() const
 	// <0x5bfb30> -> ai::game_object const* < unknown >() const
@@ -585,6 +667,9 @@ void human_npc::attack_melee( ai::npc const* const target, ai::weapon const* con
 // STATE[STUB]
 void human_npc::attack_from_cover( ai::npc const* const target, ai::weapon const* const gun )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
+	LOG_INFO					( "%s: attacking from cover %s with %s", get_name(), m_current_target->cast_game_object()->get_name(), m_current_weapon->cast_game_object()->get_name() );
+
 	// CALL SITE INFO
 	// <0x5bfa01> -> ai::game_object const* < unknown >() const
 	// <0x5bfa10> -> ai::game_object const* < unknown >() const
@@ -602,6 +687,11 @@ void human_npc::attack_from_cover( ai::npc const* const target, ai::weapon const
 // STATE[STUB]
 void human_npc::stop_attack( ai::npc const* const target, ai::weapon const* const gun )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
+	LOG_INFO					( "%s: stopping attack", get_name() );
+	m_current_target			= 0;
+	m_current_weapon			= 0;
+
 	// CALL SITE INFO
 	// <0x5bf901> -> pcstr < unknown >() const
 	// ******
@@ -617,6 +707,9 @@ void human_npc::stop_attack( ai::npc const* const target, ai::weapon const* cons
 // STATE[STUB]
 void human_npc::survey_area( )
 {
+	LOG_INFO					( "%s: patrolling", get_name() );
+	m_is_patrolling				= true;
+
 	// CALL SITE INFO
 	// <0x5bf80e> -> pcstr < unknown >() const
 	// ******
@@ -630,6 +723,9 @@ void human_npc::survey_area( )
 // STATE[STUB]
 void human_npc::stop_patrolling( )
 {
+	LOG_INFO					( "%s: quit patrolling", get_name() );
+	m_is_patrolling				= false;
+
 	// CALL SITE INFO
 	// <0x5bf71e> -> pcstr < unknown >() const
 	// ******
@@ -643,6 +739,8 @@ void human_npc::stop_patrolling( )
 // STATE[STUB]
 void human_npc::reload( ai::weapon const* const gun )
 {
+	LOG_INFO					( "%s: reloading %s", get_name(), gun->cast_game_object()->get_name() );
+
 	// CALL SITE INFO
 	// <0x5bf624> -> ai::game_object const* < unknown >() const
 	// <0x5bf62f> -> pcstr < unknown >() const
@@ -657,6 +755,23 @@ void human_npc::reload( ai::weapon const* const gun )
 // STATE[STUB]
 void human_npc::fill_stats( ai::npc_statistics& stats ) const
 {
+	stats.general_state.caption	= "general properties:";
+
+	typedef ai::npc_statistics::general_info_type::content_type content_type;
+	content_type				new_item_content( "name: " );
+	new_item_content.append		( get_name() );
+	stats.general_state.content.push_back( new_item_content );
+
+	new_item_content.clear		( );
+	new_item_content.appendf	( "position: %f  %f  %f", get_position().x, get_position().y, get_position().z );
+	stats.general_state.content.push_back( new_item_content );
+
+	new_item_content.clear		( );
+	new_item_content.appendf	( "eyes direction: %f  %f  %f", get_eyes_direction().x, get_eyes_direction().y, get_eyes_direction().z );
+	stats.general_state.content.push_back( new_item_content );
+
+	m_ai_world.fill_npc_stats	( stats, m_brain_unit );
+
 	// LOCALS
 	// fixed_string< 64 > 				new_item_content
 	// ******
@@ -700,6 +815,11 @@ void human_npc::fill_stats( ai::npc_statistics& stats ) const
 // STATE[STUB]
 void human_npc::set_attributes( human_npc::npc_game_attributes& attributes )
 {
+	m_game_attributes			= attributes;
+	m_transform					= create_scale( m_game_attributes.initial_scale ) *
+								  math::create_rotation_y( m_game_attributes.initial_rotation.y ) *
+								  create_translation( m_game_attributes.initial_position );
+
 	// FUNCTION BODY[0x5bf100]: 4
 	// <0x5bf10a>|0x00a|+0x00c:'459'
 	// <0>
@@ -711,6 +831,9 @@ void human_npc::set_attributes( human_npc::npc_game_attributes& attributes )
 // STATE[STUB]
 void human_npc::get_available_weapons( vectora< ai::weapon* >& list_to_be_filled ) const
 {
+	for ( object_weapon* weapon = m_game_attributes.weapons.front(); weapon; weapon = npc_game_attributes::object_weapon_list::get_next_of_object( weapon ) )
+		list_to_be_filled.push_back		( weapon );
+
 	// FUNCTION BODY[0x5be670]: 2
 	// <0x5be673>|0x003|+0x00d:'467'
 	// <0x5be680>|0x010|+0x028:'468'
@@ -736,6 +859,8 @@ void human_npc::set_translation( float4x4 const& new_translation )
 // STATE[STUB]
 void human_npc::set_behaviour( resources::unmanaged_resource_ptr new_behaviour )
 {
+	m_ai_world.set_behaviour			( new_behaviour, m_brain_unit );
+
 	// CALL SITE INFO
 	// <0x5be863> -> void < unknown >( resources::unmanaged_resource_ptr, resources::resource_ptr< resources::unmanaged_resource, resources::unmanaged_intrusive_base > )
 	// ******
@@ -748,7 +873,7 @@ void human_npc::set_behaviour( resources::unmanaged_resource_ptr new_behaviour )
 // STATE[STUB]
 bool human_npc::debug_draw_allowed( ) const
 {
-	return false;
+	return s_npc_debug_draw;
 
 	// FUNCTION BODY[0x5be420]: 1
 	// <0x5be420>|0x000|+0x005:'496'

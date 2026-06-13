@@ -21,16 +21,6 @@
 
 namespace survarium {
 
-ai_sound_player::sounds_collection_type::sounds_collection_type	(	ai_sound_player* parent,
-																	ai::sound_collection_types collection_type,
-																	sound::sound_emitter_ptr emitter_ptr,
-																	u32 collection_priority ) :
-		type				( collection_type ),
-		priority			( collection_priority )
-{
-	emitter.initialize_and_set_parent( parent, emitter_ptr.c_ptr() );
-}
-
 ai_sound_player::ai_sound_player	(	sound::sound_scene_ptr& scene,
 										u32 sounds_count,
 										sound::world_user& user,
@@ -85,84 +75,6 @@ void ai_sound_player::on_dbg_sound_scene_created	( resources::queries_result& da
 {
 	R_ASSERT			( data.is_successful( ) );
 	m_dbg_scene			= static_cast_resource_ptr< vostok::sound::sound_scene_ptr >( data[0].get_unmanaged_resource() );
-}
-
-ai_sound_player::~ai_sound_player	( )
-{
-	LOG_DEBUG						( "~ai_sound_player" );
-
-	m_dbg_scene						= 0;
-	m_active_sound					= 0;
-	m_dbg_active_sound				= 0;
-//	m_scene							= 0;
-
-
-	sounds_collection_type const* const begin	= sounds( );
-	sounds_collection_type const* const end		= begin + m_sounds_count;
-	for ( sounds_collection_type const* i = begin; i != end; ++i )
-	{
-		i->~sounds_collection_type	( );
-	}
-
-}
-
-ai_sound_player::sounds_collection_type const* ai_sound_player::find (
-		ai::sound_collection_types const sound_type
-	) const
-{
-	sounds_collection_type const* const begin	= sounds( );
-	sounds_collection_type const* const end		= begin + m_sounds_count;
-	for ( sounds_collection_type const* i = begin; i != end; ++i )
-	{
-		if ( i->type == sound_type )
-			return i;
-	}
-	return 0;
-}
-
-void ai_sound_player::play			(
-		ai::sound_collection_types sound_type,
-		bool sound_is_positioned,
-		float3 const& position
-	)
-{
-	sounds_collection_type const* type	= find( sound_type );
-	R_ASSERT						( type, "such a type is absent in sound collections" );
-
-	m_active_sound					= type->emitter->emit( m_scene, m_user );
-	m_active_sound->set_callback	( boost::bind( &ai_sound_player::on_finish_playing, this ) );
-
-//	if ( sound_is_positioned )
-//		m_active_sound->play		( position, sound::once, m_sound_producer, m_ignorable_receiver );
-//	else
-//		m_active_sound->play		( sound::once, m_sound_producer, m_ignorable_receiver );
-}
-
-void ai_sound_player::play			(
-		resources::unmanaged_resource_ptr sound_to_be_played,
-		ai::finish_playing_callback const& finish_callback,
-		float3 const& position
-	)
-{
-	sound::sound_emitter_ptr sound	= static_cast_resource_ptr< sound::sound_emitter_ptr >( sound_to_be_played );
-	m_active_sound					= sound->emit( m_scene, m_user );
-	m_active_sound->set_callback	( finish_callback );
-	m_active_sound->set_position	( position );
-	m_active_sound->play			( sound::once, m_sound_producer, m_ignorable_receiver );
-}
-
-void ai_sound_player::play_once		(
-		ai::sound_collection_types sound_type,
-		bool sound_is_positioned,
-		float3 const& position
-	)
-{
-	VOSTOK_UNREFERENCED_PARAMETER				( sound_is_positioned );
-	sounds_collection_type const* type		= find( sound_type );
-	R_ASSERT								( type, "such a type is absent in sound collections" );
-
-	sound::sound_instance_proxy_ptr proxy	= type->emitter->emit( m_scene, m_user );
-	type->emitter->emit_and_play_once( m_scene, m_user, position, m_sound_producer, m_ignorable_receiver );
 }
 
 void ai_sound_player::tick			( )
@@ -389,22 +301,6 @@ void ai_sound_player::process_input	( )
 }
 #endif // #ifndef MASTER_GOLD
 
-sound::command_result_enum ai_sound_player::on_finish_playing( )
-{
-//	m_active_sound				= 0;
-	LOG_DEBUG					( "ai_sound_player::on_finish_playing( )" );
-	return sound::command_result_executed;
-}
-
-void ai_sound_player::clear_resources	( )
-{
-	m_user.remove_sound_scene	( m_dbg_scene );
-//	m_dbg_scene				= 0;
-	m_active_sound			= 0;
-	m_dbg_active_sound		= 0;
-//	m_scene					= 0;
-}
-
 void ai_sound_player::serialize			( )
 {
 	memory::writer* w			= VOSTOK_NEW_IMPL( g_allocator, memory::writer ) ( g_allocator );			
@@ -420,18 +316,6 @@ void ai_sound_player::serialize			( )
 					= boost::bind( &ai_sound_player::on_active_sound_serialized, this, _1, _2 );	
 	m_active_sound->serialize	( fn, w );
 }
-
-void ai_sound_player::on_active_sound_serialized	( memory::writer* sound_thread_writer, memory::writer* current_thread_writer )
-{
-	current_thread_writer->write		( sound_thread_writer->pointer(), sound_thread_writer->size() );
-	if ( !current_thread_writer->save_to( "Z:/test.sound_player" ) )
-	{
-		LOG_ERROR( "unable to write file [Z:/test.sound_player]" );
-	}
-
-	VOSTOK_DELETE_IMPL					( g_allocator, current_thread_writer );
-}
-
 
 void ai_sound_player::deserialize		( )
 {
@@ -472,12 +356,6 @@ void ai_sound_player::deserialize		( )
 			*type->emitter.c_ptr( ),
 			boost::bind( &ai_sound_player::on_finish_playing, this ) );
 	}
-}
-
-void ai_sound_player::on_active_sound_deserialized( memory::reader* reader, pvoid buf )
-{
-	VOSTOK_UNREFERENCED_PARAMETERS		( reader, buf );
-//	return sound::command_result_executed;
 }
 
 } // namespace survarium
