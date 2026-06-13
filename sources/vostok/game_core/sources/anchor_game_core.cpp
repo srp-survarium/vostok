@@ -2050,15 +2050,6 @@ namespace vostok
 			*reinterpret_cast< vostok::animation::mixing::animation_lexeme* >( NULL );
 		vostok::animation::mixing::animation_lexeme m = s.get_main_lexeme( buf, false, vostok::animation::body_part_whole_body );
 		vostok::animation::mixing::animation_lexeme l = s.get_look_lexeme( buf, false, d, lx );
-		// claude@TODO: interim anchor for animation_lexeme_parameters::create_animation_interval
-		// (now public static, matching the target's `S` mangling). Its real callers are the
-		// jump_logic_state_start/landing get_main_lexeme bodies (separate worker); this reference
-		// keeps the keystone reachable/scored until those land, then can be dropped.
-		vostok::resources::resource_ptr< vostok::resources::managed_resource, vostok::resources::managed_intrusive_base > const& anim =
-			*reinterpret_cast< vostok::resources::resource_ptr< vostok::resources::managed_resource, vostok::resources::managed_intrusive_base >* >( NULL );
-		vostok::animation::mixing::animation_interval ai =
-			vostok::animation::mixing::animation_lexeme_parameters::create_animation_interval( anim, 0 );
-		example_callback( reinterpret_cast< pcstr >( &ai ) );
 		vostok::animation::callback_return_type_enum ie = s.on_interval_end( cbp );
 		vostok::animation::callback_return_type_enum je = s.on_jump_event( cbp );
 		example_callback( reinterpret_cast< pcstr >( &ie ) );

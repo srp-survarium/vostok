@@ -5,27 +5,23 @@
 #include "pch.h"
 #include "jump_logic_state_landing.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/weapon_animation_parameters.h>
 #include <vostok/game_core/base_player.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/animation/instant_interpolator.h>
+#include <vostok/fixed_vector.h>
 
 namespace survarium {
+
+static float s_aim_transition_time = 0.3f;
 
 jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner )
 	: jump_logic_base_state( owner ), m_landing_type( jump_animations_part_land_run )
 {
 }
 
-// claude@NOTE: PARKED at the mixing expression/operator+ wall, same as the sibling
-// jump_logic_state_start::selected_animations. Recovered structure (target @0x57d3e0,
-// 3 statements, locals main_lexeme/look_lexeme - both animation_lexeme, which has no
-// default ctor so they are constructed in the make_pair return):
-//   main_lexeme = get_main_lexeme( buffer, is_third_view,
-//       weapon_parameters.is_aimed ? animation::body_part_whole_body : weapon_parameters.body_part_mask );
-//   look_lexeme = get_look_lexeme( buffer, is_third_view, look_calculator, main_lexeme );
-//   return std::make_pair( animation::mixing::expression( main_lexeme ) + look_lexeme, main_lexeme );
-// Blocked: the expression operator+ emits an out-of-line addition_lexeme builder that
-// cannot be steered from this TU, AND get_main_lexeme must land first (see below). Both
-// wait on the animation module's create_animation_interval / operator+ PR.
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_landing::selected_animations(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -33,48 +29,79 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	weapon_animation_parameters const&	weapon_parameters
 )
 {
-	UNREACHABLE_CODE( );
+	animation::mixing::animation_lexeme	main_lexeme	= get_main_lexeme(
+		buffer,
+		is_third_view,
+		weapon_parameters.is_aimed ? animation::body_part_whole_body : weapon_parameters.body_part_mask
+	);
+
+	animation::mixing::animation_lexeme	look_lexeme	= get_look_lexeme( buffer, is_third_view, look_calculator, main_lexeme );
+
+	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >(
+		animation::mixing::expression( main_lexeme ) + look_lexeme,
+		main_lexeme
+	);
 }
 
-// claude@NOTE: PARKED on the cross-module create_animation_interval wall. Full structure
-// recovered from target @0x57d110 (19 statements, locals: pcstr const caption /
-// resource_ptr move_animation / fixed_vector<animation::mixing::animation_interval,2>
-// intervals / bool const landing_to_left_leg). Recovered body:
-//   typedef fixed_vector<animation::mixing::animation_interval,2> two_anim_intervals_type;
-//   m_animation = m_jump_logic.get_animation( m_landing_type, is_third_view );
-//   pcstr const caption = m_jump_logic.get_animation_caption( m_landing_type );
-//   if ( m_landing_type == jump_animations_part_land_run ) {
-//       move_animation = m_jump_logic.get_move_animation( is_third_view );
-//       ASSERT( UNKNOWN_EXPRESSION );
-//       two_anim_intervals_type intervals;
-//       bool const landing_to_left_leg = m_jump_logic.is_jump_from_right_leg();
-//       if ( landing_to_left_leg ) {
-//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( move_animation, 0 ) );
-//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
-//           m_interval_id_to_wait_for = 1;
-//       } else {
-//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
-//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( move_animation, 1 ) );
-//           m_interval_id_to_wait_for = 0;
-//       }
-//       return animation_lexeme( animation_lexeme_parameters( buffer, caption, intervals.begin(), intervals.end(), 0, 0 )
-//           .weight_synchronization_group_id(0).weight_interpolator( instant_interpolator() )
-//           .time_synchronization_group_id(0).time_scale_interpolator( linear_interpolator(s_aim_transition_time) )
-//           .animated_object( m_user ).bones_mask( bones_mask ) );
-//   }
-//   m_interval_id_to_wait_for = 0;
-//   return animation_lexeme( animation_lexeme_parameters( buffer, caption, m_animation, 0, 0 )
-//       .weight_synchronization_group_id(0).animated_object( m_user ).bones_mask( bones_mask )
-//       .playback_type( play_once_and_freeze_at_end ) );
-// Blocked: animation_lexeme_parameters::create_animation_interval (private static) is only
-// DECLARED, never defined - the animation module's mixing_animation_lexeme_parameters.cpp
-// implements only create_animation_intervals(plural), so the body LNK2001s unresolved (called
-// at target offsets 0xd7/0x12a/0x15e/0x180). NEXT STEP: implement create_animation_interval in
-// the animation module first (cross-module), then friend + land this body. Also needs a file
-// static `static float s_aim_transition_time = 0.3f;`.
+// claude@MATCH: the trailing branch is a real `else` (target emits a back-to-back
+// `jmp .epilogue; jmp .epilogue` = the returning if-body's `}` jumping OVER the else;
+// patterns/else-block-double-jmp.md). Residual is the builder-chain inline-vs-call ceiling
+// (the animation_lexeme_parameters setters go out-of-line in the target), not steerable here.
 animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
 {
-	UNREACHABLE_CODE( );
+	typedef fixed_vector< animation::mixing::animation_interval, 2 >	two_anim_intervals_type;
+
+	m_animation		= m_jump_logic.get_animation( m_landing_type, is_third_view );
+
+	pcstr const		caption	= m_jump_logic.get_animation_caption( m_landing_type );
+
+	if ( m_landing_type == jump_animations_part_land_run )
+	{
+		resources::managed_resource_ptr	move_animation	= m_jump_logic.get_move_animation( is_third_view );
+
+		ASSERT( UNKNOWN_EXPRESSION );
+
+		two_anim_intervals_type	intervals;
+
+		bool const	landing_to_left_leg	= m_jump_logic.is_jump_from_right_leg( );
+
+		if ( landing_to_left_leg )
+		{
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( move_animation, 0 ) );
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
+
+			m_interval_id_to_wait_for	= 1;
+		}
+		else
+		{
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( move_animation, 1 ) );
+
+			m_interval_id_to_wait_for	= 0;
+		}
+
+		return animation::mixing::animation_lexeme(
+			animation::mixing::animation_lexeme_parameters( buffer, caption, intervals.begin( ), intervals.end( ), 0, 0 )
+			.weight_synchronization_group_id	( 0 )
+			.weight_interpolator				( animation::instant_interpolator( ) )
+			.time_synchronization_group_id		( 0 )
+			.time_scale_interpolator			( animation::linear_interpolator( s_aim_transition_time ) )
+			.animated_object					( m_user )
+			.bones_mask							( bones_mask )
+		);
+	}
+	else
+	{
+		m_interval_id_to_wait_for	= 0;
+
+		return animation::mixing::animation_lexeme(
+			animation::mixing::animation_lexeme_parameters( buffer, caption, m_animation, 0, 0 )
+			.weight_synchronization_group_id	( 0 )
+			.animated_object					( m_user )
+			.bones_mask							( bones_mask )
+			.playback_type						( animation::mixing::play_once_and_freeze_at_end )
+		);
+	}
 }
 
 animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
