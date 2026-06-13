@@ -64,7 +64,7 @@ The match DB (`docs/binary_matching/match.db`, design in `match_db_design.md`)
 owns queue building:
 
 ```
-python3 scripts/match_db.py refresh   # auto-runs rebuild.py first when sources moved
+python3 scripts/rebuild.py            # canonical build; regenerates match.db at the end
 python3 scripts/match_db.py report --module <m> [--per-unit]
 python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
 ```
@@ -77,7 +77,8 @@ sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
 view. Work the batches until `report` shows every function done or parked
 (a `SKIP` flag with a written cause).
 
-The orchestrator is the match DB's SINGLE WRITER: it runs `refresh`, records
+The orchestrator is the match DB's SINGLE WRITER: `rebuild.py` regenerates the
+DB at the end of every build (or `refresh` re-derives it regen-only), it records
 `flag`s (from worker result lines), and commits the DB at run milestones -
 workers never edit it.
 
@@ -91,9 +92,10 @@ function the worker does the rest:
    `MATCHING.md`. Reference it from `temp_include_all.cpp` so the linker keeps it
    (section 3). Pull in any missing types (section 4).
 3. **`python3 scripts/rebuild.py`** - builds under Wine, then logs
-   `Match: code X% / functions Y%` and refreshes the diff inputs. Read the new
-   per-function number from `binaries/objdiff/report.json` and any
-   regressions/improvements from `binaries/objdiff/report-changes.json`.
+   `Match: code X% / functions Y%`, refreshes the diff inputs, and regenerates
+   `match.db` from the fresh `report.json`. Read the new per-function number from
+   `binaries/objdiff/report.json` and any regressions/improvements from
+   `binaries/objdiff/report-changes.json`.
 4. **Compare again and iterate.** The rebuild also refreshes the *base* rich
    index, so re-diff base vs target with `pdb_fetch --view diff` (section 2a) to
    read the exact diverging instructions, adjust the source, rebuild. Each pass

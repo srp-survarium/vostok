@@ -90,8 +90,9 @@ regen touches nothing, so there are no spurious rebuilds), builds
 
 Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 `binaries/objdiff/objdiff.json`) and match `base` against `target`. The rebuild
-also writes an overall match summary to `binaries/objdiff/report.json` and logs
-the code / function match percentages.
+also writes an overall match summary to `binaries/objdiff/report.json`, logs
+the code / function match percentages, and regenerates the match DB
+(`docs/binary_matching/match.db`) from that fresh report at the end of the run.
 
 Useful individual scripts (all run inside `nix develop`):
 
@@ -174,7 +175,9 @@ present). Full rules: [`.claude/agents/orchestrator.md`](.claude/agents/orchestr
 
 These read the **last build** - the committed `binaries/objdiff/report.json` and
 `docs/binary_matching/match.db`. For *current* numbers after edits, run
-`python3 scripts/match_db.py refresh` first (it rebuilds only if sources moved).
+`python3 scripts/rebuild.py` first (it regenerates `match.db` at the end of the
+build); `python3 scripts/match_db.py refresh` only re-derives the DB from an
+already-built `report.json` (it does NOT rebuild - run `rebuild.py` if sources moved).
 A function is **DONE only when the compile says so** (`struct_class`/`fuzzy_pct`
 below); the only hand-set status is a **PARK** (an `out_of_scope` flag with a
 cause) - so a low % is "still open", never silently "done".
