@@ -40,7 +40,10 @@ public:
 	inline	PointerType	pop_front			();
 	inline	PointerType	pop_front			(bool * out_popped_last);
 	inline	PointerType	pop_all_and_clear	( u32 * out_size = NULL);
-	inline	PointerType	front				() const;
+	// claude@MATCH: front() is NOT inline - the target keeps it out-of-line per
+	// instantiation (LTCG this-in-EAX convention; e.g. intrusive_list<ai::fsm_state,...>
+	// ::front is a real standalone target symbol called from jump_logic/fsm users).
+			PointerType	front				() const;
 	inline	PointerType	back				() const;
 	inline	bool		empty				() const;
 	inline	bool		contains_one_element() const { return m_first && m_first == m_last; }

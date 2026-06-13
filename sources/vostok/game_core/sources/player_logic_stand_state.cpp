@@ -5,8 +5,49 @@
 #include "pch.h"
 #include "player_logic_stand_state.h"
 #include <vostok/game_core/base_player.h>
+#include <vostok/game_core/weapon_user_animations_container.h>
 
 namespace survarium {
+
+// claude@NOTE: extern definition needed by weapon_user_animations_container::
+// get_stand_animation_caption (inlined into jump_logic::get_move_look_caption);
+// content read from the target exe .rdata @va 0x89d090 (33 entries, single copy).
+// 3 captions per direction: move, shoot, look - indexed by direction * 3 + part.
+pcstr const stand_animations_captions[] = {
+	"idle",
+	"shoot_on_site",
+	"idle_look",
+	"move_fwd",
+	"shoot_fwd",
+	"move_fwd_look",
+	"move_fwd_right",
+	"shoot_fwd_right",
+	"move_fwd_right_look",
+	"move_right",
+	"shoot_right",
+	"move_right_look",
+	"move_bwd_right",
+	"shoot_bwd_right",
+	"move_bwd_right_look",
+	"move_bwd",
+	"shoot_bwd",
+	"move_bwd_look",
+	"move_bwd_left",
+	"shoot_bwd_left",
+	"move_bwd_left_look",
+	"move_left",
+	"shoot_left",
+	"move_left_look",
+	"move_fwd_left",
+	"shoot_fwd_left",
+	"move_fwd_left_look",
+	"recoil_vertical",
+	"recoil_horizontal",
+	"recoil_back",
+	"throw_idle",
+	"throw_start",
+	"throw_end",
+};
 
 player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_stand )

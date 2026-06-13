@@ -7,28 +7,24 @@
 
 namespace survarium {
 
-/*
-// STATE[STUB]
-resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl<27,6>(
-	resources::managed_resource_ptr[27] move[27],
-	resources::managed_resource_ptr[6] hands[6],
-	u32 index
-)
+template < u32 move_count, u32 hands_count >
+inline resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl(
+		resources::managed_resource_ptr const	(&move)[ move_count ],
+		resources::managed_resource_ptr const	(&hands)[ hands_count ],
+		const u32								index
+	)
 {
+	ASSERT( UNKNOWN_EXPRESSION_T( index < move_count + hands_count ) );
+	return index < move_count ? move[ index ] : hands[ index - move_count ];
 }
-*/
 
-// STATE[STUB]
-inline resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( bool aimed, u32 index, bool is_third_view ) const
+inline resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( const bool aimed, const u32 index, const bool is_third_view ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0xccee9>|0x009|+0x094:'30'
-	// ******
+	return get_animation_impl(
+		( aimed ? m_aimed_stand_animations : m_stand_animations )[ is_third_view ],
+		( aimed ? m_aimed_stand_hands_only_animations : m_stand_hands_only_animations )[ is_third_view ],
+		index
+	);
 }
 
 } // namespace survarium
