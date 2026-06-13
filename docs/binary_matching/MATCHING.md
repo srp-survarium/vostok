@@ -359,6 +359,29 @@ reproducing the target's statement count + order reproduces the original structu
 is why structure beats the byte %. (The `<N>` no-address lines below are the COMPLEMENT: a
 sub-expression the compiler set no breakpoint on - inlined, optimized out, or a continuation.)
 
+**Named LOCALS are structure too, and structure beats the byte % for them as well.** The
+PDB records the source's named-local set; `pdb_fetch --view structure` prints a
+`locals (N): <name> <type>` block per side (or none). It is ground truth - "locals don't
+lie" (sushi): if the target records 0 named locals and your base records 1, your source is
+structurally wrong, so REMOVE the local (inline a single-use temp; for a multi-use value
+find the 0-local construct the target used). Take the byte hit when they conflict (100% ->
+90% is fine - the byte residual is recoverable later; a wrong local set is not), exactly as
+for any other structure divergence. NEVER keep a load-bearing temp to hold a high %, and
+NEVER "fix" a QUANTITY by collapsing decl+use onto one source line while keeping the local -
+that preserves the wrong structure. `match_db` encodes this: a local-count mismatch demotes
+a would-be MATCH to the `LOCALS` struct_class (kept in the queue), and `diff` reports a
+MATCH->LOCALS flip as a REGRESS. Precedent: `weapon_and_hands_expression` - the chained
+0-local form (90%) is correct over the 2-named-local 100% form.
+
+The **one exception is genuine debug-elision**: the target PDB records locals for only ~44%
+of functions, so sometimes the local is real and only its NAME is elided - provable when 0
+locals is *impossible* (a `for`/`while` iterator the language requires) or when the 0-local
+spelling BREAKS OTHER structure (re-orders a ctor temp, drops a read-twice slot) and craters
+the bytes (->23/46%). There the load-bearing local IS the faithful structure (the name is
+the only divergence): keep it, `claude@NOTE` the obstacle, and let the `LOCALS` flag track it
+for a later pass rather than cratering other structure to drop a name. (Proof the PDB elides:
+`inventory::remove` byte-matches our with-iterator loop at 100% yet records 0 locals.)
+
 **Reading the STUB carcass (before you delete it)** - its markers are shape clues you
 need for the match. A `<N>` (no address) line is a statement/sub-expression
 the compiler set no breakpoint on (inlined, optimized out, or a continuation); its

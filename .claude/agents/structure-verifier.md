@@ -75,6 +75,23 @@ side); both VAs are shown so you can `--address` into either side; a `TRGT_ONLY`
 base columns are `--` (no base statement there). N stmts on the two `;` lines count only
 REAL statements, so a quantity mismatch shows as `target N / base M`.
 
+**Also verify the named LOCALS - they are STRUCTURE, governed by structure > %.** The
+single-side `--view structure` dump prints a `locals (N): <name> <type>` block (or none).
+Compare the target's local SET against the base's: a COUNT mismatch (target records 0
+named locals, base records 1) is a structural divergence - "locals don't lie" (sushi) -
+so DEFAULT to fixing it in your matcher phase: remove the phantom local (inline a
+single-use temp; for a multi-use value find the 0-local construct the target used), EVEN
+WHEN it drops the % (a byte residual is recoverable later; a wrong local set is not). Do
+NOT keep a load-bearing temp for the %, and do NOT accept a "QUANTITY fixed by collapsing
+decl+use onto one line" that keeps the local. `match_db` flags this as the `LOCALS`
+struct_class (a demoted would-be MATCH) and `diff` reports the MATCH->LOCALS flip as a
+REGRESS. **Exception - genuine debug-elision:** the target PDB records locals for only ~44%
+of fns, so if 0 locals is *impossible* (a loop iterator the language needs) or the 0-local
+spelling BREAKS OTHER structure (re-orders a ctor temp) and craters the bytes, the NAME is
+elided but the local is real - keep it, `claude@NOTE` the obstacle, leave the `LOCALS` flag
+to track it for later. Don't crater other structure to drop a name. Precedent:
+weapon_and_hands_expression - the 0-local form (90%) is correct over 2-local 100%.
+
 **If the diff is large** - many SIZE rows - it's already only the divergences, but you can
 still drill each one with per-statement `--address` slices (below) for the rows that
 actually matter and compare those one at a time.

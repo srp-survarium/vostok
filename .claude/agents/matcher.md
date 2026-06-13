@@ -132,6 +132,26 @@ its single writer).
     that is the source of truth; existing `const` almost always traces back to it. Remove
     one only when the structure itself proves the value is non-const there (e.g. the PDB
     deliberately records it mutable) - never as cleanup, never to chase a %.
+  - **Named LOCALS are structure - match the target's local SET, even at a byte cost.**
+    The PDB records the source's named locals (`pdb_fetch --view structure` shows a
+    `locals (N):` block, or none). It is ground truth: if the target records 0 named locals
+    and your base records 1, your source is structurally WRONG - remove the local (inline a
+    single-use temp; for a multi-use value find the 0-local construct the target used - a
+    while/pointer-walk instead of an indexed for, in-place eval, a different shape). Do this
+    EVEN WHEN it drops the % (e.g. 100% -> 90%): "locals don't lie" (sushi) - DEFAULT to
+    treating a local-count mismatch as a real structural divergence and take the byte hit
+    (recoverable later). NEVER keep a load-bearing temp just to hold a high %, and NEVER
+    "fix" a QUANTITY by collapsing decl+use onto one line while keeping the local (that
+    preserves the wrong structure). Precedent: weapon_and_hands_expression - the chained
+    0-local form (90%) is correct over the 2-local 100% form.
+    **The one exception (genuine debug-elision):** the target PDB records locals for only
+    ~44% of functions, so SOMETIMES the local is real but its NAME is elided - provably so
+    when 0 locals is *impossible* (a `for`/`while` loop iterator the language requires) or
+    when the 0-local spelling BREAKS OTHER structure (re-orders a ctor temp, drops a
+    read-twice slot) and craters the bytes (e.g. ->23/46%). There, keeping the load-bearing
+    local IS the more faithful structure (the name is the only divergence) - keep it, leave
+    the `LOCALS` flag to track it, `claude@NOTE` the obstacle, revisit later. Do NOT crater
+    other structure to drop a name. `match_db` flags every count mismatch as `LOCALS`.
   - **Never modify ANOTHER unit's source to win THIS match.** Out-lining a *different*
     unit's empty method so your call site emits `call` instead of inlining `{}` is off-limits
     - that out-line, if the target really keeps it standalone, belongs to THAT unit's own PR.
