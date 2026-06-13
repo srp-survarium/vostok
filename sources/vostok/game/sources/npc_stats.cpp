@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "npc_stats.h"
+#include <vostok/ui/ui.h>
+#include <vostok/ui/world.h>
 
 namespace survarium {
 
@@ -16,6 +18,11 @@ namespace survarium {
 	m_medium_column_width( 0.0f ),		// buildability: matcher supplies real value
 	m_wide_column_width( 0.0f )			// buildability: matcher supplies real value
 {
+	m_main_window						= m_ui_world.create_window();
+	m_main_window->set_visible			( true );
+	m_main_window->set_position			( float2( 0.f, 0.f ) );
+	m_main_window->set_size				( float2( 1024.f, 768.f ) );
+
 	// CALL SITE INFO
 	// <0x5cbcff> -> ui::window* < unknown >()
 	// <0x5cbd0d> -> void < unknown >( bool )
@@ -96,6 +103,8 @@ ui::text* npc_stats::create_new_group(
 // STATE[STUB]
  npc_stats::~npc_stats( )
 {
+	m_ui_world.destroy_window			( m_main_window );
+
 	// CALL SITE INFO
 	// <0x5cbb5b> -> void < unknown >( ui::window* )
 	// ******
@@ -108,6 +117,8 @@ ui::text* npc_stats::create_new_group(
 // STATE[STUB]
 void npc_stats::draw( render::ui::renderer& ui_renderer, render::scene_view_ptr const& scene_view )
 {
+	m_main_window->draw					( ui_renderer, scene_view );
+
 	// CALL SITE INFO
 	// <0x5cbb48> -> void < unknown >( render::ui::renderer&, render::base_scene_view_ptr const& )
 	// ******

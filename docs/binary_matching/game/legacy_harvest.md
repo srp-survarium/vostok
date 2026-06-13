@@ -38,7 +38,7 @@ match/verify here — that's the next phase, once everything is in.
 
 | # | Subsystem | carcass files (fns) | Status |
 |--|-----------|---------------------|--------|
-| 1 | npc | human_npc, human_npc_cook, npc_stats, ai_sound_player (60) | |
+| 1 | npc | human_npc, human_npc_cook, npc_stats, ai_sound_player (60) | DONE |
 | 2 | game/world | game, game_initialize, game_world + the game_world*.cpp split (37+) | |
 | 3 | camera | free_fly_camera, game_camera, camera_director (21) | |
 | 4 | cooks/stats | animated_model_instance_cook, sound_player_cook, stats, stats_graph (26) | |
