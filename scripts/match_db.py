@@ -773,20 +773,283 @@ def cmd_list(args):
     emit(rows, args.json)
 
 
+# Display caps for the function column: a demangled signature splits into a return
+# type and name+args; cap each so a boost/asio template monster can't blow out the
+# table. JSON output stays full (the raw name). Tune here.
+RET_MAX = 24   # return type
+SIG_MAX = 80   # name + args (+ trailing const, etc.)
+
+
+def _split_return(dem):
+    """(return_type, name+args) for a demangled signature. The arg list opens at the
+    first '(' at angle-bracket depth 0; the return type ends at the nearest depth-0
+    space to its left. Ctors/dtors (no return type) yield ('', dem)."""
+    depth, paren = 0, -1
+    for i, ch in enumerate(dem):
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+        elif ch == "(" and depth == 0:
+            paren = i
+            break
+    if paren < 0:
+        return "", dem
+    depth = 0
+    for i in range(paren - 1, -1, -1):
+        ch = dem[i]
+        if ch == ">":
+            depth += 1
+        elif ch == "<":
+            depth -= 1
+        elif ch == " " and depth == 0:
+            return dem[:i], dem[i + 1:]
+    return "", dem
+
+
+def shorten_fn(dem):
+    """Cap the return type and the name+args independently (RET_MAX / SIG_MAX)."""
+    ret, rest = _split_return(dem)
+    if len(ret) > RET_MAX:
+        ret = ret[:RET_MAX - 1] + "…"
+    if len(rest) > SIG_MAX:
+        rest = rest[:SIG_MAX - 1] + "…"
+    return f"{ret} {rest}".strip()
+
+
+_MANGLED_OPS = {
+    "2": "operator new", "3": "operator delete", "4": "operator=",
+    "8": "operator==", "9": "operator!=", "A": "operator[]",
+    "R": "operator()", "E": "operator++", "F": "operator--",
+    "_7": "`vftable'", "_8": "`vbtable'",
+}
+
+
+def _scope_tokens(s):
+    """`@`-separated scope identifiers up to the terminating `@@`."""
+    toks = []
+    for t in s.split("@"):
+        if t == "":
+            break
+        toks.append(t)
+    return toks
+
+
+def _name_from_demangled(dem):
+    """Clean 'scope::name' from a demangled signature: drop the return type, every
+    <template-arg> block (any depth), and the parameter list. Robust where the
+    mangled name has templated scopes the lightweight parser can't walk."""
+    if not dem:
+        return ""
+    _, rest = _split_return(dem)
+    out, depth = [], 0
+    for ch in rest:                          # strip balanced <...>
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            out.append(ch)
+    s = "".join(out)
+    rp = s.rfind(")")                         # cut the parameter list
+    if rp != -1:
+        depth = 0
+        for i in range(rp, -1, -1):
+            if s[i] == ")":
+                depth += 1
+            elif s[i] == "(":
+                depth -= 1
+                if depth == 0:
+                    s = s[:i]
+                    break
+    return s.strip()
+
+
+def _looks_clean(name):
+    """A parsed qualified name with no leftover mangling artifacts."""
+    return bool(name) and not any(c in name for c in "?$@")
+
+
+def fn_from_mangled(mangled, demangled=""):
+    """A short 'scope::name' that reads far easier than the demangled signature.
+    Parsed straight from the MSVC mangled name for the simple cases; for a template
+    function or a templated scope (a '?$' - nested type encodings the lightweight
+    parser can't skip) it falls back to stripping <...>+params off the demangled."""
+    try:
+        m = mangled
+        if not m.startswith("?"):
+            return m  # already a plain qualified name (free functions, etc.)
+        body = m[1:]
+        if "?$" in body:                      # template fn / templated scope
+            return _name_from_demangled(demangled) or body
+        if body.startswith("?"):              # ctor / dtor / operator
+            body = body[1:]
+            code = body[:2] if body[:1] == "_" else body[:1]
+            toks = _scope_tokens(body[len(code):].lstrip("@"))
+            if not toks:
+                raise ValueError
+            cls = toks[0]
+            leaf = (cls if code == "0"
+                    else "~" + cls if code in ("1", "_G", "_E")
+                    else _MANGLED_OPS.get(code, "operator" + code))
+            name = "::".join(reversed(toks)) + "::" + leaf
+        else:                                 # normal function
+            base, _, rest = body.partition("@")
+            toks = _scope_tokens(rest)
+            name = ("::".join(reversed(toks)) + "::" + base) if toks else base
+        return name if _looks_clean(name) else (_name_from_demangled(demangled) or name)
+    except Exception:
+        return _name_from_demangled(demangled) or shorten_fn(demangled)
+
+
+def resolve_units(con, partial, module=None):
+    """Unit names whose path CONTAINS `partial` (case-insensitive), optionally
+    scoped to a module. A full path is a unique substring, so it resolves to one."""
+    q, params = "SELECT name FROM units WHERE name LIKE ?", [f"%{partial}%"]
+    if module:
+        q, params = q + " AND module = ?", params + [module]
+    return [r["name"] for r in con.execute(q + " ORDER BY name", params)]
+
+
 def cmd_report(args):
     con = open_db(check_schema=True)
     staleness_check(con)
-    scope = "unit_name" if args.per_unit else "module"
-    where, params = "", []
-    if args.module:
-        where = "WHERE tf.module = ?"
-        params = [args.module]
+
+    # --function: every target fn whose demangled name CONTAINS the substring
+    # (e.g. 'medkit::'), across units; same columns as --per-function plus a unit
+    # column. --module optional; lists ALL matches (no ambiguity refusal).
+    if args.function:
+        mod = "AND t.module = ?" if args.module else ""
+        mparams = [args.module] if args.module else []
+        like = f"%{args.function}%"
+        hdr = con.execute(
+            f"""SELECT count(*) AS n,
+                       printf('%.2f', sum(coalesce(p.fuzzy_pct, 0) * t.size) /
+                                      nullif(sum(t.size), 0))        AS w,
+                       printf('%.2f', avg(coalesce(p.fuzzy_pct, 0))) AS a
+                FROM target_functions t JOIN symbols s ON s.id = t.sym
+                LEFT JOIN pairs p ON p.sym = t.sym
+                WHERE s.demangled LIKE ? {mod}""",
+            [like] + mparams).fetchone()
+        if not hdr["n"]:
+            sys.exit(f"[match_db] no function matches '{args.function}'"
+                     + (f" in module {args.module}" if args.module else ""))
+        if not args.json:
+            print(f"[match_db] {hdr['n']} fn(s) matching '{args.function}': "
+                  f"weighted {hdr['w']}%  avg {hdr['a']}%", file=sys.stderr)
+        ffq = f"""
+          SELECT CASE WHEN p.fuzzy_pct IS NULL THEN NULL
+                      ELSE printf('%.2f', p.fuzzy_pct) END        AS pct,
+                 CASE WHEN h.best_fuzzy_pct IS NULL THEN NULL
+                      ELSE printf('%.2f', h.best_fuzzy_pct) END   AS best,
+                 coalesce(a.n, 0)                                 AS tries,
+                 coalesce(p.struct_class, '-')                    AS cls,
+                 t.size                                           AS size,
+                 coalesce((SELECT group_concat(flag, '+') FROM flags
+                           WHERE mangled = s.mangled), '-')       AS flag,
+                 -- the source FILE (== the .cpp for a TU fn, the header for an
+                 -- inline one); prefer it over the TU, strip the 'vostok/' prefix
+                 CASE WHEN coalesce(fl.path, u.name) LIKE 'vostok/%'
+                      THEN substr(coalesce(fl.path, u.name), 8)
+                      ELSE coalesce(fl.path, u.name, '(no unit)') END AS file,
+                 s.demangled                                      AS fn,
+                 s.mangled                                        AS m
+          FROM target_functions t
+          JOIN symbols s ON s.id = t.sym
+          LEFT JOIN units u ON u.id = t.unit
+          LEFT JOIN files fl ON fl.id = t.file
+          LEFT JOIN pairs p ON p.sym = t.sym
+          LEFT JOIN history h ON h.mangled = s.mangled
+          LEFT JOIN attempts a ON a.mangled = s.mangled
+          WHERE s.demangled LIKE ? {mod}
+          ORDER BY p.fuzzy_pct DESC, t.size DESC
+        """
+        rows = [dict(r) for r in con.execute(ffq, [like] + mparams)]
+        for r in rows:
+            m = r.pop("m")
+            if not args.json:
+                r["fn"] = (shorten_fn(r["fn"]) if args.verbose
+                           else fn_from_mangled(m, r["fn"]))
+        emit(rows, args.json)
+        return
+
+    # --unit: fuzzy-resolve to exactly ONE unit; refuse (with paste-ready full
+    # names) on ambiguity. --module is optional - a unit substring stands alone.
+    unit_full = None
+    if args.unit:
+        matches = resolve_units(con, args.unit, args.module)
+        if not matches:
+            sys.exit(f"[match_db] no unit matches '{args.unit}'"
+                     + (f" in module {args.module}" if args.module else ""))
+        if len(matches) > 1:
+            sys.exit("Multiple units found:\n"
+                     + "\n".join(f"  --unit {m}" for m in matches))
+        unit_full = matches[0]
+
+    # --per-function: list every function of ONE unit (pct / cls / size / flag),
+    # sorted 100%->0% like the unit rollup; NULL pct = unpaired/open.
+    if args.per_function:
+        if not unit_full:
+            sys.exit("[match_db] --per-function needs --unit (one unit)")
+        if not args.json:  # unit-level weighted + avg % as a header (terminal only)
+            s = con.execute(
+                """SELECT printf('%.2f', sum(coalesce(p.fuzzy_pct, 0) * t.size) /
+                                         sum(t.size))          AS w,
+                          printf('%.2f', avg(coalesce(p.fuzzy_pct, 0))) AS a
+                   FROM target_functions t LEFT JOIN pairs p ON p.sym = t.sym
+                   JOIN units u ON u.id = t.unit WHERE u.name = ?""",
+                [unit_full]).fetchone()
+            print(f"[match_db] {unit_full}: weighted {s['w']}%  avg {s['a']}%",
+                  file=sys.stderr)
+        # best = best-ever fuzzy (history); best==100 with pct<100 is a TRANSIENT
+        # (regressed) match. tries = how many matcher dispatches included this fn.
+        fq = """
+          SELECT CASE WHEN p.fuzzy_pct IS NULL THEN NULL
+                      ELSE printf('%.2f', p.fuzzy_pct) END        AS pct,
+                 CASE WHEN h.best_fuzzy_pct IS NULL THEN NULL
+                      ELSE printf('%.2f', h.best_fuzzy_pct) END   AS best,
+                 coalesce(a.n, 0)                                 AS tries,
+                 coalesce(p.struct_class, '-')                    AS cls,
+                 t.size                                           AS size,
+                 coalesce((SELECT group_concat(flag, '+') FROM flags
+                           WHERE mangled = s.mangled), '-')       AS flag,
+                 s.demangled                                      AS fn,
+                 s.mangled                                        AS m
+          FROM target_functions t
+          JOIN symbols s ON s.id = t.sym
+          JOIN units u ON u.id = t.unit
+          LEFT JOIN pairs p ON p.sym = t.sym
+          LEFT JOIN history h ON h.mangled = s.mangled
+          LEFT JOIN attempts a ON a.mangled = s.mangled
+          WHERE u.name = ?
+          ORDER BY p.fuzzy_pct DESC, t.size DESC
+        """
+        rows = [dict(r) for r in con.execute(fq, [unit_full])]
+        for r in rows:
+            m = r.pop("m")
+            if not args.json:
+                r["fn"] = (shorten_fn(r["fn"]) if args.verbose
+                           else fn_from_mangled(m, r["fn"]))
+        emit(rows, args.json)
+        return
+
+    per_unit = args.per_unit or unit_full is not None
+    lite = args.lite or unit_full is not None  # one unit -> always the lean view
+    scope = "unit_name" if per_unit else "module"
+    if unit_full:
+        where, params = "WHERE tf.unit_name = ?", [unit_full]
+    elif args.module:
+        where, params = "WHERE tf.module = ?", [args.module]
+    else:
+        where, params = "", []
     q = f"""
       WITH tf AS (
         SELECT t.rva, t.sym, t.size, t.frameless,
                coalesce(t.module, '(no unit)') AS module,
-               coalesce(un.name, '(no unit)')  AS unit_name
-        FROM target_functions t LEFT JOIN units un ON un.id = t.unit)
+               coalesce(fl.path, un.name, '(no unit)') AS unit_name
+        FROM target_functions t
+        LEFT JOIN units un ON un.id = t.unit
+        LEFT JOIN files fl ON fl.id = t.file)
       SELECT tf.{scope} AS scope,
              count(*)                                            AS target_fns,
              coalesce(sum(p.sym IS NOT NULL), 0)                 AS paired,
@@ -795,45 +1058,197 @@ def cmd_report(args):
              coalesce(sum(p.sym IS NULL), 0)                     AS target_only,
              coalesce(sum(tf.frameless), 0)                      AS custom_conv,
              printf('%.2f', sum(coalesce(p.fuzzy_pct, 0) * tf.size) /
-                            sum(tf.size))                        AS weighted_pct
+                            sum(tf.size))                        AS weighted_pct,
+             printf('%.2f', avg(coalesce(p.fuzzy_pct, 0)))       AS avg_pct
       FROM tf
       LEFT JOIN pairs p ON p.sym = tf.sym
       {where}
-      GROUP BY scope ORDER BY scope
+      GROUP BY scope
+      ORDER BY sum(coalesce(p.fuzzy_pct, 0) * tf.size) / sum(tf.size) DESC, scope
     """
     rows = [dict(r) for r in con.execute(q, params)]
+    # The base-only/out_of_scope/suspicious lints only ever scope BY MODULE; for a
+    # single --unit they compute module-wide (or repo-wide) and the per-scope merge
+    # below picks the row - and the lean --unit/--lite view drops them anyway.
+    # per-unit scope prefers the source FILE (so header inlines show their .h, not
+    # one '(no unit)' lump); module scope stays the module. The base_only/target_only
+    # views carry both `file` and `unit`, so the counts merge against the same key.
+    scope_expr = ("coalesce(file, unit, '(no unit)')" if per_unit
+                  else "coalesce(module, '(no unit)')")
+    sub_where = "WHERE module = ?" if args.module else ""
+    sub_extra = "AND module = ?" if args.module else ""
+    sub_params = [args.module] if args.module else []
     # base-only lint per scope
-    bq = """SELECT coalesce({col}, '(no unit)') AS scope, count(*) AS base_only
+    bq = """SELECT {scope} AS scope, count(*) AS base_only
             FROM base_only {where} GROUP BY scope""".format(
-        col="unit" if args.per_unit else "module",
-        where=("WHERE module = ?" if args.module else ""),
-    )
-    bonly = {r["scope"]: r["base_only"] for r in con.execute(bq, params)}
+        scope=scope_expr, where=sub_where)
+    bonly = {r["scope"]: r["base_only"] for r in con.execute(bq, sub_params)}
     # out_of_scope: target-only functions whose history row survived (paired
     # once, vanished without a source touch)
     oq = """
-      SELECT coalesce({col}, '(no unit)') AS scope, count(*) AS n FROM target_only
+      SELECT {scope} AS scope, count(*) AS n FROM target_only
       WHERE mangled IN (SELECT mangled FROM history) {extra} GROUP BY scope
-    """.format(
-        col="unit" if args.per_unit else "module",
-        extra=("AND module = ?" if args.module else ""),
-    )
-    oos = {r["scope"]: r["n"] for r in con.execute(oq, params)}
+    """.format(scope=scope_expr, extra=sub_extra)
+    oos = {r["scope"]: r["n"] for r in con.execute(oq, sub_params)}
     # the fabricated-symbol lint: base-only rows nothing explains
     uq = """
-      SELECT coalesce({col}, '(no unit)') AS scope, count(*) AS n
+      SELECT {scope} AS scope, count(*) AS n
       FROM base_only b JOIN base_only_status st ON st.mangled = b.mangled
       WHERE st.status IN ('UNEXPLAINED', 'NEAR_MISS') {extra} GROUP BY scope
-    """.format(
-        col="unit" if args.per_unit else "module",
-        extra=("AND module = ?" if args.module else ""),
-    )
-    suspicious = {r["scope"]: r["n"] for r in con.execute(uq, params)}
+    """.format(scope=scope_expr, extra=sub_extra)
+    suspicious = {r["scope"]: r["n"] for r in con.execute(uq, sub_params)}
     for r in rows:
         r["base_only"] = bonly.get(r["scope"], 0)
         r["suspicious"] = suspicious.get(r["scope"], 0)
         r["out_of_scope"] = oos.get(r["scope"], 0)
+    if lite:
+        rows = [r for r in rows if r["scope"] != "(no unit)"]
+        for r in rows:
+            for c in ("custom_conv", "out_of_scope", "suspicious"):
+                r.pop(c, None)
     emit(rows, args.json)
+
+
+def _db_blob_at(rev):
+    """(path, cleanup_path) for a readable match.db at git `rev`. Empty rev = the
+    on-disk current DB (cleanup None). Else extract the committed blob to a tempfile."""
+    if not rev:
+        return str(DB_PATH), None
+    import subprocess
+    import tempfile
+
+    rel = "docs/binary_matching/match.db"
+    fd, tmp = tempfile.mkstemp(prefix="match_db_", suffix=".db")
+    os.close(fd)
+    with open(tmp, "wb") as fh:
+        r = subprocess.run(
+            ["git", "-C", str(VOSTOK), "show", f"{rev}:{rel}"],
+            stdout=fh, stderr=subprocess.PIPE,
+        )
+    if r.returncode != 0:
+        os.unlink(tmp)
+        sys.exit(f"[match_db] cannot read {rel} at '{rev}': "
+                 f"{r.stderr.decode(errors='replace').strip()}")
+    return tmp, tmp
+
+
+def _fn_state(db_path, module):
+    """{mangled: row(dem, pct, cls, loc)} over a match.db's target functions."""
+    con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    where = "WHERE t.module = ?" if module else ""
+    rows = con.execute(
+        f"""SELECT s.mangled AS m, s.demangled AS dem, p.fuzzy_pct AS pct,
+                   p.struct_class AS cls,
+                   coalesce(fl.path, un.name, '(no unit)') AS loc
+            FROM symbols s
+            JOIN target_functions t ON t.sym = s.id
+            LEFT JOIN units un ON un.id = t.unit
+            LEFT JOIN files fl ON fl.id = t.file
+            LEFT JOIN pairs p ON p.sym = s.id
+            {where}""",
+        ([module] if module else []),
+    ).fetchall()
+    con.close()
+    return {r["m"]: r for r in rows}
+
+
+def cmd_diff(args):
+    """Function-level diff between two committed match.db revisions (or a rev vs the
+    working tree): what each target function's fuzzy_pct / struct_class did."""
+    spec = args.spec
+    a_rev, b_rev = spec.split("..", 1) if ".." in spec else (spec, "")
+    if not a_rev:
+        sys.exit("[match_db] diff needs a base rev: <hash> or <hash>..<hash>")
+    a_path, a_tmp = _db_blob_at(a_rev)
+    b_path, b_tmp = _db_blob_at(b_rev)
+    try:
+        a_state = _fn_state(a_path, args.module)
+        b_state = _fn_state(b_path, args.module)
+    finally:
+        for t in (a_tmp, b_tmp):
+            if t:
+                os.unlink(t)
+
+    eps = 0.01
+    regressed, improved, matched, lost, reclass = [], [], [], [], []
+    for m in set(a_state) | set(b_state):
+        a, b = a_state.get(m), b_state.get(m)
+        ap = a["pct"] if a else None
+        bp = b["pct"] if b else None
+        ac = a["cls"] if a else None
+        bc = b["cls"] if b else None
+        dem = (b or a)["dem"]
+        loc = (b or a)["loc"]
+        if ap is None and bp is None:
+            continue
+        if ap is None:
+            matched.append((bp, bc, dem, loc, m))
+        elif bp is None:
+            lost.append((ap, ac, dem, loc, m))
+        elif bp - ap > eps:
+            improved.append((bp - ap, ap, bp, ac, bc, dem, loc, m))
+        elif ap - bp > eps:
+            regressed.append((bp - ap, ap, bp, ac, bc, dem, loc, m))
+        elif ac != bc:
+            reclass.append((ap, ac, bc, dem, loc, m))
+
+    b_label = b_rev or "WORKTREE"
+    if args.json:
+        cols6 = ["delta", "from", "to", "from_cls", "to_cls", "fn", "file"]
+        print(json.dumps({
+            "a": a_rev, "b": b_label, "module": args.module,
+            "regressed": [dict(zip(cols6, r)) for r in sorted(regressed)],
+            "improved": [dict(zip(cols6, r)) for r in sorted(improved, reverse=True)],
+            "newly_matched": [dict(zip(["to", "to_cls", "fn", "file"], r))
+                              for r in sorted(matched, reverse=True)],
+            "lost": [dict(zip(["from", "from_cls", "fn", "file"], r))
+                     for r in sorted(lost, reverse=True)],
+            "reclassified": [dict(zip(["pct", "from_cls", "to_cls", "fn", "file"], r))
+                             for r in sorted(reclass, reverse=True)],
+        }, indent=1))
+        return
+
+    def strip(loc):
+        return loc[7:] if loc.startswith("vostok/") else loc
+
+    def clsfmt(ac, bc):
+        return (ac or "-") if ac == bc else f"{ac or ''}->{bc or ''}"
+
+    print(f"[match_db] diff {a_rev} -> {b_label}"
+          + (f"  (module {args.module})" if args.module else ""))
+    print(f"  regressed {len(regressed)}  lost {len(lost)}  "
+          f"newly-matched {len(matched)}  improved {len(improved)}  "
+          f"reclassified {len(reclass)}")
+
+    rows = []
+    for d, ap, bp, ac, bc, dem, loc, m in sorted(regressed):
+        rows.append({"kind": "REGRESS", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
+                     "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
+                     "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
+    for ap, ac, dem, loc, m in sorted(lost, reverse=True):
+        rows.append({"kind": "LOST", "d": "gone", "from": f"{ap:.1f}", "to": "-",
+                     "cls": clsfmt(ac, None), "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
+    for bp, bc, dem, loc, m in sorted(matched, reverse=True):
+        rows.append({"kind": "NEW", "d": "new", "from": "-", "to": f"{bp:.1f}",
+                     "cls": clsfmt(None, bc), "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
+    for d, ap, bp, ac, bc, dem, loc, m in sorted(improved, reverse=True):
+        rows.append({"kind": "IMPROVE", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
+                     "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
+                     "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
+    for ap, ac, bc, dem, loc, m in sorted(reclass, reverse=True):
+        rows.append({"kind": "RECLASS", "d": "~", "from": f"{ap:.1f}",
+                     "to": f"{ap:.1f}", "cls": clsfmt(ac, bc),
+                     "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
+    if not rows:
+        print("  (no function-level differences)")
+    else:
+        emit(rows, False)
 
 
 def queue_host_units(con, module):
@@ -1193,7 +1608,34 @@ def main():
 
     p = sub.add_parser("report", help="per-module/TU rollup")
     p.add_argument("--module")
+    p.add_argument(
+        "--unit",
+        help="filter to ONE unit by name or substring (e.g. 'medkit'); --module "
+        "optional. Refuses with paste-ready full names if the substring is ambiguous",
+    )
     p.add_argument("--per-unit", action="store_true")
+    p.add_argument(
+        "--per-function",
+        action="store_true",
+        help="list every function of ONE --unit (pct/cls/size/flag), 100%%->0%%",
+    )
+    p.add_argument(
+        "--function",
+        help="list every function whose demangled name CONTAINS this substring "
+        "(e.g. 'medkit::'), across units; --module optional",
+    )
+    p.add_argument(
+        "--lite",
+        action="store_true",
+        help="lean view: drop any '(no unit)' catch-all row and the custom_conv/"
+        "out_of_scope/suspicious columns",
+    )
+    p.add_argument(
+        "--verbose",
+        action="store_true",
+        help="fn column = the full (capped) demangled signature instead of the "
+        "mangled-derived scope::name",
+    )
     p.add_argument("--json", action="store_true")
 
     p = sub.add_parser("queue", help="one batch per TU (all its open functions), small-first")
@@ -1234,6 +1676,17 @@ def main():
     p = sub.add_parser("merge-flags", help="union persistent tables from another match.db")
     p.add_argument("other")
 
+    p = sub.add_parser(
+        "diff", help="function-level diff between two committed match.db revisions")
+    p.add_argument("spec", help="<hash> (vs working tree) or <hash>..<hash>")
+    p.add_argument("--module")
+    p.add_argument(
+        "--verbose",
+        action="store_true",
+        help="fn column = the full (capped) demangled signature instead of scope::name",
+    )
+    p.add_argument("--json", action="store_true")
+
     args = ap.parse_args()
     {
         "refresh": cmd_refresh,
@@ -1244,6 +1697,7 @@ def main():
         "tried": cmd_tried,
         "flag": cmd_flag,
         "merge-flags": cmd_merge_flags,
+        "diff": cmd_diff,
     }[args.cmd](args)
 
 
