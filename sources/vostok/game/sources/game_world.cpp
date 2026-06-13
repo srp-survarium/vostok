@@ -6,6 +6,8 @@
 #include "game_world.h"
 #include "game.h"			// get_game().get_sound_world() needs game complete
 #include "game_memory.h"	// g_allocator for allocator-taking vectora member
+#include "camera_director.h"	// switch_to_camera (switch_to_free_fly_camera)
+#include "free_fly_camera.h"	// free_fly_camera complete (game_camera* arg)
 
 namespace survarium {
 
@@ -275,6 +277,10 @@ void game_world::switch_to_player_camera( const bool first_person_view )
 // STATE[STUB]
 void game_world::switch_to_free_fly_camera( )
 {
+	// legacy reached m_camera_director directly; it moved into base_game_scene
+	// (private) - go through get_camera_director()
+	get_camera_director( ).switch_to_camera	( m_free_fly_camera, "free fly camera" );
+
 	// FUNCTION BODY[0x5dfe60]: 2
 	// <0>
 	// <0x5dfe60>|0x000|+0x022:'315'
