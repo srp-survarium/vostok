@@ -10,6 +10,23 @@
 #include <vostok/game_core/damage_protector.h>
 #include <vostok/game_core/hit_type_parameters.h>
 
+namespace vostok
+{
+	// /OPT:REF reachability anchor entry points, one per engine module. Each
+	// instantiates its module's classes and calls their methods so the linker
+	// keeps them in the base EXE for the delinker to score. IncludeAll::IncludeAll()
+	// (instantiated in game/sources/game_world.cpp) dispatches to all of them.
+	void anchor_game_core( );
+	void anchor_network_core( );
+	void anchor_physics( );
+	void anchor_collision( );
+	void anchor_logging( );
+
+	// shared opaque sink: escapes addresses so LTCG observes member stores.
+	// Defined once in anchor_network_core.cpp; used by every anchor TU.
+	void example_callback( const char* name );
+}
+
 namespace survarium
 {
 
@@ -30,7 +47,7 @@ public:
 
 public:
 	typedef boost::function< void ( char const * ) > fn;
-	
+
 	fn m_complete;
 	fn m_partial;
 };
@@ -44,7 +61,7 @@ public:
 	void partial  ( char const * name, int value, float precision );
 
 public:
-	typedef boost::function< void ( char const *, int ) > fn;	
+	typedef boost::function< void ( char const *, int ) > fn;
 
 	fn m_complete;
 	fn m_partial;
