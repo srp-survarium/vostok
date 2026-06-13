@@ -418,6 +418,30 @@ namespace vostok
 
 	}
 
+	// booby_trap_set_core's ctor / get_visible_place_transform / try_place_trap /
+	// trap_index are protected non-virtuals: the cook vtable does not odr-use them.
+	// A concrete derived helper that calls them keeps the out-of-line bodies under
+	// /OPT:REF. The free predicates trap_is_active / find_free_trap_predicate are
+	// taken by address.
+	void use_booby_trap_set_internals( ::survarium::booby_trap_core* trap )
+	{
+		struct concrete_booby_trap_set : survarium::booby_trap_set_core
+		{
+			virtual	survarium::game_material_manager const&	get_game_material_manager	( ) { return *reinterpret_cast< survarium::game_material_manager const* >( NULL ); }
+
+			void poke( survarium::booby_trap_core* trap )
+			{
+				vostok::math::float4x4 m;
+				get_visible_place_transform( m );
+				try_place_trap( );
+				trap_index( *trap );
+			}
+		};
+
+		static concrete_booby_trap_set	s_set;
+		s_set.poke( trap );
+	}
+
 	void use_hittable_object( survarium::hittable_object* hittable_object )
 	{
 		configs::binary_config_value	config;
@@ -2676,6 +2700,7 @@ IncludeAll::IncludeAll()
 	vostok::use_material_pair( );
 	vostok::use_victory_items_container_core( NULL );
 	vostok::use_booby_trap_cook( );
+	vostok::use_booby_trap_set_internals( NULL );
 	vostok::use_hittable_object( NULL );
 	vostok::use_usable_object( NULL );
 	vostok::use_respawn_point_core( );

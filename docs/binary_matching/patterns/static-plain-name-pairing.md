@@ -12,4 +12,4 @@ same-TU stub the target also has (an extern temp_include_all declaration no long
 ```cpp
 static float distance_from_box_center_to_point_on_shape( ... );   // internal linkage pairs
 ```
-Evidence: damage_zone_core shape helpers (sphere/box/capsule/cylinder) None -> 100/86.5/82.5/76.6, +8 report improvements, 0 regressions; call_item_serialize precedent. Same shape pending on booby_trap_set_core trap_is_active / find_free_trap_predicate / create_place_matrix_for_looking_point.
+Evidence: damage_zone_core shape helpers (sphere/box/capsule/cylinder) None -> 100/86.5/82.5/76.6, +8 report improvements, 0 regressions; call_item_serialize precedent. booby_trap_set_core: find_free_trap_predicate / create_place_matrix_for_looking_point paired (100 / 89.8) once made static + organically called in-TU (try_place_trap / get_visible_place_transform). trap_is_active stayed unpaired: its only caller (header-inline count_active_traps) is LTCG-inlined into a root in ANOTHER TU, so this TU has no in-TU anchor and /OPT:REF drops it (anchoring from temp_include_all would emit it in the wrong obj).

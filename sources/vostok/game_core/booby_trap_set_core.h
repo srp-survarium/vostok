@@ -35,8 +35,17 @@ public:
 
 public:
 	struct config_params {
-		// STATE[STUB]
-		inline	explicit	config_params	( ) { }
+		inline	explicit	config_params	( ) :
+			max_slope_cos			( 0.0f ),
+			max_distance			( 0.0f ),
+			armed_life_time			( 0 ),
+			fired_life_time			( 0 ),
+			disarmed_life_time		( 0 ),
+			defuse_time				( 0 ),
+			defuse_by_hit			( false ),
+			material_can_place_test	( false ),
+			material_can_stick_test	( false )
+		{ }
 
 		/* 0x0000 */	float		max_slope_cos;
 		/* 0x0004 */	float		max_distance;
@@ -110,7 +119,6 @@ protected:
 	inline	void								remove_traps					( ) { /* no source */ }
 
 	inline	buffer_vector< booby_trap_core_ptr > const&	traps					( ) const	{ return m_traps; }
-	// STATE[STUB]
 			buffer_vector< booby_trap_core_ptr >&		traps					( )			{ return m_traps; }
 
 			u8									trap_index						( booby_trap_core const& trap ) const;

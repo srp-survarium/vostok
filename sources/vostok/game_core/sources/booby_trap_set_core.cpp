@@ -27,12 +27,9 @@ namespace survarium {
 booby_trap_set_core::booby_trap_set_core( ) :
 	inventory_item		( use_silent ),
 	m_traps				( NULL, 0 ),
-	m_damage_parameters	( NULL, 0 )
+	m_damage_parameters	( NULL, 0 ),
+	m_traps_buffer		( NULL )
 {
-	// FUNCTION BODY
-	// <0x6fe380>|0x000|+0x08e:'28'	{
-	// <0x6fe40e>|0x08e|      :'29'	}
-	// ******
 }
  booby_trap_set_core::~booby_trap_set_core( )
 {
@@ -116,7 +113,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-bool find_free_trap_predicate( booby_trap_core_ptr trap )
+static bool find_free_trap_predicate( booby_trap_core_ptr trap )
 {
 	return !trap->is_active( );
 }
@@ -164,7 +161,7 @@ void booby_trap_set_core::remove( )
 }
 
 // sushi@TODO: Understand what it does exactly
-float4x4 create_place_matrix_for_looking_point(
+static float4x4 create_place_matrix_for_looking_point(
 	float3 const&	hit_point,
 	float3 const&	normal,
 	float4x4 const& head_transform
@@ -301,7 +298,11 @@ void booby_trap_set_core::update_bones_matrices(
 	);
 }
 
-bool trap_is_active( booby_trap_core_ptr const& trap )
+// claude@NOTE: static (target stores it under a plain demangled name => file-local).
+// Its only caller is the header-inline count_active_traps, which the target inlines into
+// a root in another TU; this TU has no in-TU caller, so /OPT:REF drops it here and it stays
+// unpaired. Anchoring from temp_include_all would emit it in that TU's obj, not this one.
+static bool trap_is_active( booby_trap_core_ptr const& trap )
 {
 	return trap->is_active( );
 }
