@@ -79,7 +79,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( m
 
 animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
+	bool const							is_third_view,
 	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	look_calculator,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 )
