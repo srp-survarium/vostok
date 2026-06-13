@@ -62,6 +62,7 @@
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/game_core/weapon_state.h>
 #include <vostok/game_core/weapon_core_base_state.h>
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
@@ -1679,6 +1680,18 @@ namespace vostok
 
 		wc.get_ammo_slot( survarium::first_ammo );
 		wc.ready_to_reload( );
+
+		// recoil values + ammo info getters defined in weapon_core.cpp
+		float ( survarium::weapon_core::*pvr )( ) const = &survarium::weapon_core::vertical_recoil_value;
+		float ( survarium::weapon_core::*phr )( ) const = &survarium::weapon_core::horizontal_recoil_value;
+		example_callback( reinterpret_cast< pcstr >( &pvr ) );
+		example_callback( reinterpret_cast< pcstr >( &phr ) );
+		survarium::weapon_ammo_info ai;
+		wc.get_ammo_info( ai );
+		wc.ammo_slot( );
+
+		void ( survarium::weapon_core::*pla )( ) = &survarium::weapon_core::load_ammo;
+		example_callback( reinterpret_cast< pcstr >( &pla ) );
 	}
 
 

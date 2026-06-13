@@ -151,7 +151,7 @@ public:
 	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// STATE[STUB]
 			void								reset_fire_queue				( );
 
-			bool								is_aimed						( ) const { return m_aimed; }				// STATE[STUB]
+			bool								is_aimed						( ) const;	// out-of-line: target emits `call is_aimed` @0x09b310 (e.g. from the recoil-value getters)
 	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
 	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
 	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
@@ -174,15 +174,15 @@ public:
 	inline	float								aim_fov_factor					( ) const { return m_aim_fov_factor; }
 	inline	float								aim_near_plane_factor			( ) const { return m_aim_near_plane_factor; }
 
-			profile_slot_enum					ammo_slot						( ) { return m_ammo_slot; }					// STATE[STUB]
+			profile_slot_enum					ammo_slot						( );	// out-of-line: target emits `call ammo_slot` @0x09b320 (e.g. from get_ammo_info)
 
 	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
 
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
 
-			base_player*						get_user						( ) const { return m_user; }				// STATE[STUB]
-			bool								is_double_handed				( ) const { return m_is_double_handed; }	// STATE[STUB]
+			base_player*						get_user						( ) const;	// out-of-line: target emits `call get_user` @0x09b330
+			bool								is_double_handed				( ) const;	// out-of-line: target emits `call is_double_handed` @0x09b340
 	// claude@NOTE: reconstructed for weapon_core_cook::load_weapon_parameters (direct byte
 	// stores to m_is_double_handed/m_chamber_a_round_on_reload, no symbol - always inlined).
 	inline	void								set_double_handed				( bool is_double_handed ) { m_is_double_handed = is_double_handed; }

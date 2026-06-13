@@ -28,8 +28,8 @@ public:
 
 	inline	void		set_user					( base_player const* arg_0 ) { /* no source */ }
 
-	inline	float		get_horizontal_value		( ) const { /* no source */ }
-	inline	float		get_vertical_value			( ) const { /* no source */ }
+	inline	float		get_horizontal_value		( ) const { return m_horizontal_value; }
+	inline	float		get_vertical_value			( ) const { return m_vertical_value; }
 
 	inline	void		set_character_multiplier	( float arg_0 ) { m_character_multiplier = arg_0; }
 
