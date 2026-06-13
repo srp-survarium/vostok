@@ -14,46 +14,6 @@ IncludeAll::IncludeAll()
 	vostok::anchor_physics( );
 	vostok::anchor_collision( );
 	vostok::anchor_logging( );
-
-	Callback1 cb1;
-	Callback2 cb2;
-}
-
-
-Callback1::Callback1()
-{
-	m_complete = boost::bind(&Callback1::complete, this, _1);
-	m_partial  = boost::bind(&Callback1::partial , this, _1, 10);
-}
-
-
-
-void Callback1::complete(const char *name)
-{
-	m_complete = boost::bind(&Callback1::complete, this, _1);
-}
-
-void Callback1::partial(const char *name, int value)
-{
-	m_partial  = boost::bind(&Callback1::partial , this, _1, 10);
-}
-
-
-
-Callback2::Callback2()
-{
-	m_complete = boost::bind(&Callback2::complete, this, _1, _2);
-	m_partial  = boost::bind(&Callback2::partial , this, _1, _2, 10.f);
-}
-
-void Callback2::complete(const char *name, int value)
-{
-	m_complete = boost::bind(&Callback2::complete, this, _1, _2);
-}
-
-void Callback2::partial(const char *name, int value, float precision)
-{
-	m_partial  = boost::bind(&Callback2::partial , this, _1, _2, 10.f);
 }
 
 
