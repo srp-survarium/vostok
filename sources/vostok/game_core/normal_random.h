@@ -10,7 +10,7 @@ namespace survarium {
 class normal_random {
 public:
 	inline	explicit	normal_random	( s32 arg_0 ) { /* no source */ }
-	inline	explicit	normal_random	( ) { /* no source */ }
+	inline	explicit	normal_random	( ) : m_seed( 1 ) { }
 
 			float		rand_n			( float sigma );
 

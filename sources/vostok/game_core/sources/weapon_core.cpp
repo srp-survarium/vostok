@@ -13,6 +13,7 @@
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/weapon_ammo_info.h>
 
 namespace survarium {
 /*
@@ -52,35 +53,51 @@ void `dynamic initializer for 's_recoil_enable_cc''( )
 {
 }
 */
-// STATE[STUB]
-// survarium::weapon_core::weapon_core()
-weapon_core::weapon_core( ) : inventory_item( inventory_item::inventory_active_item )
+weapon_core::weapon_core( ) :
+	inventory_item						( inventory_item::inventory_active_item ),
+	m_initiator_holder					( NULL ),
+	m_receiver_holder					( NULL ),
+	m_logic								( VOSTOK_NEW_IMPL( g_allocator, ai::fsm ) ),
+	m_bullet_manager					( NULL ),
+	m_user								( NULL ),
+	m_weapon_fire_queue_types			( NULL ),
+	m_bullet_damage						( 1.0f ),
+	m_bullet_pierce						( 1.0f ),
+	m_target							( weapon_target_idle ),
+	m_old_actions_mask					( 0 ),
+	m_magazine_capacity					( 0 ),
+	m_ammo_in_magazine					( 0 ),
+	m_bullets_in_queue					( 0 ),
+	m_fire_queue_type					( 0 ),
+	m_ammo_slot							( invalid_slot ),
+	m_weapon_id							( 0 ),
+	m_weapon_fire_queue_types_count		( 0 ),
+	m_is_shown							( false ),
+	m_aimed								( false ),
+	m_ready_for_fire					( false ),
+	m_is_double_handed					( true ),
+	m_is_in_sprint_transition			( false ),
+	m_is_firing							( false ),
+	m_is_there_chamber_a_round_state	( false ),
+	m_is_round_chambered				( false ),
+	m_chamber_a_round_on_reload			( false ),
+	m_load_ammo_on_next_activate		( true ),
+	m_aiming_state_transition			( false ),
+	m_is_idle							( false ),
+	m_deserializing						( false ),
+	m_is_toggling						( false )
 {
-	// FUNCTION BODY
-	// <0x5aa750>|0x000|+0x2aa:'95'	{
-	// <0x5aa9fa>|0x2aa|      :'96'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::~weapon_core()
 weapon_core::~weapon_core( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
+	VOSTOK_DELETE_ARRAY_IMPL( g_allocator, m_weapon_fire_queue_types );
 
-	// FUNCTION BODY
-	// <0x5a4ce2>|0x012|+0x013:'100'
-	// <0x5a4cf5>|0x025|+0x00e:'101'
-	// <0x5a4d03>|0x033|+0x019|[1]:'102'
-	// <0>
-	// <1>
-	// <0x5a4d1c>|0x04c|+0x02c:'105'
-	// ******
+	m_logic->clear_transitions( );
+	while ( ai::fsm_state* state = m_logic->pop_state( ) ) { }
+	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// STATE[STUB]
 // claude@NOTE: out-of-line so the idle-state getters emit `call ammo_in_magazine`
 // instead of inlining `m_ammo_in_magazine` (matches the target's out-of-line call).
 u16 weapon_core::ammo_in_magazine( ) const
@@ -88,7 +105,6 @@ u16 weapon_core::ammo_in_magazine( ) const
 	return m_ammo_in_magazine;
 }
 
-// STATE[STUB]
 // claude@NOTE: out-of-line so reload_state_base::initialize emits `call round_is_chambered`
 // instead of inlining `m_is_round_chambered` (matches the target's out-of-line call @0x09b360).
 bool weapon_core::round_is_chambered( ) const
@@ -96,7 +112,6 @@ bool weapon_core::round_is_chambered( ) const
 	return m_is_round_chambered;
 }
 
-// STATE[STUB]
 // claude@NOTE: out-of-line so the double-barreled ctor's ASSERT_CMP_U emits
 // `call get_magazine_capacity` instead of inlining `m_magazine_capacity`
 // (matches the target's out-of-line call; symbol @0x09cc20).
@@ -117,6 +132,34 @@ void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 u16 weapon_core::fire_queue_length( ) const
 {
 	return m_weapon_fire_queue_types[m_fire_queue_type];
+}
+
+// claude@NOTE: out-of-line so get_ammo_info emits `call ammo_slot` instead of
+// inlining the m_ammo_slot read (matches the target's standalone symbol @0x09b320).
+profile_slot_enum weapon_core::ammo_slot( )
+{
+	return m_ammo_slot;
+}
+
+// claude@NOTE: out-of-line so the recoil-value getters emit `call is_aimed`
+// instead of inlining the m_aimed read (matches the target's standalone symbol @0x09b310).
+bool weapon_core::is_aimed( ) const
+{
+	return m_aimed;
+}
+
+// claude@NOTE: out-of-line so callers emit `call get_user` instead of inlining the
+// m_user read (matches the target's standalone symbol @0x09b330).
+base_player* weapon_core::get_user( ) const
+{
+	return m_user;
+}
+
+// claude@NOTE: out-of-line so callers emit `call is_double_handed` instead of inlining the
+// m_is_double_handed read (matches the target's standalone symbol @0x09b340).
+bool weapon_core::is_double_handed( ) const
+{
+	return m_is_double_handed;
 }
 
 void weapon_core::initialize_weapon_logic(
@@ -270,6 +313,9 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 	m_skeleton = skeleton;
 }
 
+// claude@NOTE: walled at ~86% - the target out-of-lines weapon_core_base_state::has_animation_ended
+// (symbol @0x087f70) but our weapon_core_base_state.h keeps it inline, so the member read is
+// inlined here instead of a `call`. Out-lining it belongs to weapon_core_base_state's PR.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
@@ -289,52 +335,22 @@ animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) cons
 {
 	return current_base_state( ).get_body_part_mask_for_user( );
 }
-/*
-// STATE[STUB]
-// void survarium::`dynamic initializer for 'epsilon''()
-void `dynamic initializer for 'epsilon''( )
-{
-}
-*/
-// STATE[STUB]
-// float survarium::weapon_core::horizontal_recoil_value() const
+
+static float const	c_anim_center	= 0.5f;
+static float		epsilon			= math::epsilon_7;
+
 float weapon_core::horizontal_recoil_value( ) const
 {
-	// LOCALS
-	// float 						result
-	// float 						total_horizontal_coeff
-	// ******
-
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0xbc669>|0x009|+0x050:'312'
-	// <0xbc6b9>|0x059|+0x04b:'313'
-	// <0xbc704>|0x0a4|+0x003:'314'
-	// ******
+	float const total_horizontal_coeff	= is_aimed( ) ? m_breath_vibration_calculator.get_horizontal_value( ) + m_recoil_calculator.get_horizontal_coeff( ) : m_recoil_calculator.get_horizontal_coeff( );
+	float const result					= c_anim_center - math::clamp_r( total_horizontal_coeff, -c_anim_center + epsilon, c_anim_center - epsilon );
+	return result;
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::vertical_recoil_value() const
 float weapon_core::vertical_recoil_value( ) const
 {
-	// LOCALS
-	// float 						result
-	// float 						total_vertical_coeff
-	// ******
-
-	return 1.0f;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0xbc719>|0x009|+0x050:'321'
-	// <0>
-	// <0xbc769>|0x059|+0x047:'323'
-	// <0xbc7b0>|0x0a0|+0x003:'324'
-	// ******
+	float const total_vertical_coeff	= is_aimed( ) ? m_breath_vibration_calculator.get_vertical_value( ) + m_recoil_calculator.get_vertical_coeff( ) : m_recoil_calculator.get_vertical_coeff( );
+	float const result					= math::clamp_r( total_vertical_coeff, -c_anim_center + epsilon, c_anim_center - epsilon ) + c_anim_center;
+	return result;
 }
 
 // STATE[STUB]
@@ -483,24 +499,17 @@ void weapon_core::instant_hide( )
 	on_hide( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::load_magazine()
+// claude@NOTE: structure recovered; % walled by intrusive_ptr inline-vs-call (target keeps
+// resource_ptr set/dec/operator* out-of-line, this build inlines them).
 void weapon_core::load_magazine( )
 {
-	// LOCALS
-	// u16 							load
-	// u16 							amount
-	// ******
+	u16 const amount = ( *m_ammunition ).amount( );
+	u16 load = math::min( amount, (u16)( m_magazine_capacity - m_ammo_in_magazine ) );
+	( *m_ammunition ).set_amount( amount - load );
+	m_ammo_in_magazine += load;
 
-	// FUNCTION BODY
-	// <0x5a4b99>|0x009|+0x03e:'435'
-	// <0x5a4bd7>|0x047|+0x040:'436'
-	// <0x5a4c17>|0x087|+0x07f:'437'
-	// <0x5a4c96>|0x106|+0x01a:'438'
-	// <0>
-	// <0x5a4cb0>|0x120|+0x00e:'440'
-	// <0x5a4cbe>|0x12e|+0x008:'441'
-	// ******
+	if ( m_chamber_a_round_on_reload )
+		chamber_a_round( );
 }
 
 void weapon_core::chamber_a_round( )
@@ -513,28 +522,20 @@ void weapon_core::chamber_a_round( )
 	m_is_round_chambered = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::unload_ammo()
+// claude@NOTE: structure recovered; % walled by intrusive_ptr inline-vs-call (target keeps
+// resource_ptr set/dec/operator* out-of-line, this build inlines them).
 void weapon_core::unload_ammo( )
 {
-	// LOCALS
-	// u16 							ammo_to_add
-	// ******
+	if ( !m_ammunition )
+		return;
 
-	// FUNCTION BODY
-	// <0x5a4a49>|0x009|+0x034:'456'
-	// <0x5a4a7d>|0x03d|+0x005:'457'
-	// <0>
-	// <0x5a4a82>|0x042|+0x00e:'459'
-	// <0x5a4a90>|0x050|+0x00c:'460'
-	// <0x5a4a9c>|0x05c|+0x00e:'461'
-	// <0>
-	// <0x5a4aaa>|0x06a|+0x00c:'463'
-	// <0x5a4ab6>|0x076|+0x00a:'464'
-	// <0>
-	// <1>
-	// <0x5a4ac0>|0x080|+0x0c0:'467'
-	// ******
+	u16 ammo_to_add = m_ammo_in_magazine;
+	m_ammo_in_magazine = 0;
+	if ( m_is_round_chambered )
+		++ammo_to_add;
+	m_is_round_chambered = false;
+
+	( *m_ammunition ).set_amount( ( *m_ammunition ).amount( ) + ammo_to_add );
 }
 
 void weapon_core::instant_reload( )
@@ -558,21 +559,17 @@ void weapon_core::instant_chamber_a_round( )
 	m_recoil_calculator.chamber_a_round( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::reload_one_round()
+// claude@NOTE: structure recovered; % walled by intrusive_ptr inline-vs-call (target keeps
+// resource_ptr set/dec/operator* out-of-line, this build inlines them).
 void weapon_core::reload_one_round( )
 {
-	// CALL SITE INFO
-	// <0x5a4a2f> -> void <unknown>()
-	// ******
+	if ( m_ammo_in_magazine != m_magazine_capacity && ( *m_ammunition ).amount( ) != 0 )
+	{
+		++m_ammo_in_magazine;
+		( *m_ammunition ).set_amount( ( *m_ammunition ).amount( ) - 1 );
+	}
 
-	// FUNCTION BODY
-	// <0x5a48c0>|0x010|+0x08c:'502'
-	// <0x5a494c>|0x09c|+0x018:'503'
-	// <0x5a4964>|0x0b4|+0x0bd:'504'
-	// <0>
-	// <0x5a4a21>|0x171|+0x010:'506'
-	// ******
+	on_reload( );
 }
 
 void weapon_core::instant_aim_start( )
@@ -692,6 +689,12 @@ void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transfo
 }
 
 // STATE[STUB]
+// claude@NOTE: PARK. Shape: params.interrupt_animation_player_tick = true; two
+// get_user()->unsubscribe_animation_player(channel_id_max/*3*/, <uid>) calls; m_is_in_sprint_transition
+// = false; return callback_return_type_dont_call_me_anymore. Stuck on the two callback UIDs: first is
+// `this`, second is `<finalize_impl(this) result>+1` - the middle `finalize_impl` (empty_stub) returns a
+// value used as uid2, an idiom I couldn't pin (likely a per-callback uid derived from this). Needs the
+// matching subscribe sites in activate() decoded first.
 // vostok::animation::callback_return_type_enum survarium::weapon_core::on_sprint_animation_ended(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( animation::animation_callback_params& params )
 {
@@ -801,13 +804,9 @@ void weapon_core::reset_fire_queue( )
 			++m_bullets_in_queue;
 	}
 	else
-		// sushi@TODO: the min's 2nd operand is an INLINE ACCESSOR, proven by experiment - a
-		// helper returning `m_ammo_in_magazine + ( m_is_round_chambered != 0 )` lands 99.81%
-		// MATCH (0xbc==0xbc; the return-temp double-store is byte-required) vs 85.8% for this
-		// direct expression. Its real name/signature is unknown (inline, no standalone symbol),
-		// so we do NOT fabricate the function here; restore the accessor call once it is
-		// identified (a consumer's asm, a standalone symbol, or another build version).
-		m_bullets_in_queue = math::min( fire_queue_length( ), u16( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) );
+	{
+		u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 ); m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue );
+	}
 }
 
 void weapon_core::set_next_fire_queue_type( )
@@ -859,33 +858,30 @@ void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,reso
 	m_ammunition = ammunition_to_set;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::load_ammo()
+// claude@NOTE: structure recovered; the % is walled by the intrusive_ptr inline-vs-call
+// ceiling - the target keeps resource_ptr ctor/set/dec out-of-line, this build inlines them.
 void weapon_core::load_ammo( )
 {
-	// FUNCTION BODY
-	// <0x5a4ea0>|0x010|+0x08f:'732'
-	// <0>
-	// <0x5a4f2f>|0x09f|+0x00e:'734'
-	// <0x5a4f3d>|0x0ad|+0x008:'735'
-	// <0>
-	// <0x5a4f45>|0x0b5|+0x024:'737'
-	// <0>
-	// <0x5a4f69>|0x0d9|+0x00c:'739'
-	// <0>
-	// <0x5a4f75>|0x0e5|+0x04a:'741'
-	// <0>
-	// <0x5a4fbf>|0x12f|+0x00a:'743'
-	// <0x5a4fc9>|0x139|+0x07c:'744'
-	// <0>
-	// <0x5a5045>|0x1b5|+0x010:'746'
-	// <0>
-	// <0x5a5055>|0x1c5|+0x00a:'748'
-	// <0x5a505f>|0x1cf|+0x018:'749'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	if ( m_ammunition && ( *m_ammunition ).amount( ) != 0 )
+	{
+		if ( m_ammo_in_magazine == 0 )
+			load_magazine( );
+
+		if ( m_is_there_chamber_a_round_state && !m_chamber_a_round_on_reload )
+		{
+			ASSERT( UNKNOWN_EXPRESSION_T( m_is_round_chambered ) );
+			if ( ( *m_ammunition ).amount( ) != 0 )
+			{
+				m_is_round_chambered = true;
+				( *m_ammunition ).set_amount( ( *m_ammunition ).amount( ) - 1 );
+			}
+		}
+		else if ( m_ammo_in_magazine != 0 )
+		{
+			m_is_round_chambered = true;
+			--m_ammo_in_magazine;
+		}
+	}
 }
 
 void weapon_core::on_reload_started( )
@@ -913,7 +909,10 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), 0xff, this );
+	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
+	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
+	// Both on one source line: the target emits the ctor + subscribe call as a single statement.
+	resources::managed_resource_ptr tmp( NULL ); m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
 }
 
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
@@ -923,7 +922,10 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), this );
+	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
+	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
+	// Both on one source line: the target emits the ctor + subscribe call as a single statement.
+	resources::managed_resource_ptr tmp( NULL ); m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
 }
 
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
@@ -1257,6 +1259,9 @@ bool weapon_core::is_sprinting( ) const
 }
 
 // STATE[STUB]
+// claude@NOTE: PARK. Whole body is `if (<cc_bool debug flag, read via the finalize_impl/empty_stub
+// accessor>) <compiled-out debug-draw call>(...)`. Walled by the console_command flag-read machinery
+// and the compiled-out draw call - same wall as process_finger_correction and the recoil-time trio.
 // void survarium::weapon_core::on_skeleton_matrices_changed(const unsigned int, vostok::math::float4x4 const&, vostok::math::float4x4 const* const, vostok::math::float4x4 const* const, vostok::math::float4x4 const&, vostok::math::float4x4* const, vostok::math::float4x4* const, vostok::math::float4x4 const&)
 void weapon_core::on_skeleton_matrices_changed(
 	u32						current_time_in_ms,
@@ -1275,6 +1280,8 @@ void weapon_core::on_skeleton_matrices_changed(
 }
 
 // STATE[STUB]
+// claude@NOTE: PARK. Whole body is `if (<cc_bool debug flag>) <compiled-out debug call>(
+// current_time_in_ms, user_matrices)`. Same console_command-flag-read wall as on_skeleton_matrices_changed.
 // void survarium::weapon_core::process_finger_correction(const unsigned int, vostok::math::float4x4* const)
 void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* const user_matrices )
 {
@@ -1395,6 +1402,11 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 }
 
 // STATE[STUB]
+// claude@NOTE: PARK. Body recovered (line 1: if(s_recoil_*_eanble cc_bool) LOG(...); update_recoil(
+// target_time_in_ms,time_scale); update_breath_vibration((input.actions_mask&0x80)&&(&0x8000000),
+// target_time_in_ms,time_scale); return backward_recoil_value()*animation_length). Walled by the
+// compiled-out cc_bool flag-read + LOG (line 1) whose exact bytes need the console_command accessor
+// and format string - not reconstructable here without matching that debug machinery first.
 // float survarium::weapon_core::computed_backward_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
 float weapon_core::computed_backward_recoil_time(
 	float		animation_length,
@@ -1505,30 +1517,20 @@ profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 	}
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::get_ammo_info(survarium::weapon_ammo_info&)
 void weapon_core::get_ammo_info( weapon_ammo_info& info )
 {
-	// LOCALS
-	// inventory& 					inv
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot2_itm
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot1_itm
-	// ******
+	info.current_ammo_type		= (u8)( ammo_slot( ) != get_ammo_slot( first_ammo ) ) + 1;
+	info.fire_queue_size		= fire_queue_length( );
+	info.ammo_in_magazine		= ammo_in_magazine( );
 
-	// FUNCTION BODY
-	// <0x5a432a>|0x00a|+0x024:'1274'
-	// <0x5a434e>|0x02e|+0x00f:'1275'
-	// <0x5a435d>|0x03d|+0x011:'1276'
-	// <0>
-	// <0x5a436e>|0x04e|+0x00c:'1278'
-	// <0x5a437a>|0x05a|+0x01e:'1279'
-	// <0x5a4398>|0x078|+0x01e:'1280'
-	// <0>
-	// <0x5a43b6>|0x096|+0x035:'1282'
-	// <0x5a43eb>|0x0cb|+0x036:'1283'
-	// <0>
-	// <0x5a4421>|0x101|+0x00f:'1285'
-	// ******
+	inventory& inv				= get_inventory( );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot1_itm = inv.item_in_slot( get_ammo_slot( first_ammo ) );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> slot2_itm = inv.item_in_slot( get_ammo_slot( second_ammo ) );
+
+	info.ammo1_total			= slot1_itm ? ( *slot1_itm ).amount( ) : 0;
+	info.ammo2_total			= slot2_itm ? ( *slot2_itm ).amount( ) : 0;
+
+	info.round_is_chambered		= m_is_round_chambered;
 }
 
 bool weapon_core::must_chamber_a_round_predicate( ) const
