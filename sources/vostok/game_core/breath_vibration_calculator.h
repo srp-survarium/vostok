@@ -33,11 +33,11 @@ public:
 
 	inline	void		set_character_multiplier	( float arg_0 ) { m_character_multiplier = arg_0; }
 
+private:
 			void		initialize_logic			( );
 
-	// STATE[STUB]
 			bool		hold_button_state_equals_to	( bool btn_state ) const { return m_is_breath_holded == btn_state; }
-	// STATE[STUB]
+
 			bool		insufficient_breath			( ) const { return m_breath_holding_reserve <= 0.0f; }
 
 

@@ -12,7 +12,7 @@ namespace survarium {
 class breath_state : public ai::fsm_state , public core::noncopyable {
 public:
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params );
-	inline	float		get_multiplier				( ) { /* no source */ }
+	inline	float		get_multiplier				( ) { return m_multiplier; }
 
 	virtual	void		tick						( const float arg_0 ) = 0;
 
@@ -52,7 +52,7 @@ STATIC_SIZE_ASSERT(breath_state_holding, 0x28);
 
 class breath_state_normal : public breath_state {
 public:
-	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
+	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { m_multiplier = 0.0f; }
 
 private:
 	virtual	bool		is_ready_for_transition	( ) const override;
@@ -63,7 +63,7 @@ STATIC_SIZE_ASSERT(breath_state_normal, 0x28);
 
 class breath_state_shortbreathing : public breath_state {
 public:
-	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
+	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ), m_restoring_speed( 0.0f ) { }
 
 private:
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;

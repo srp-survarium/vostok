@@ -4,8 +4,9 @@
 
 #include "pch.h"
 #include <vostok/game_core/breath_vibration_calculator.h>
-#include <vostok/game_core/breath_state.h>
 #include <vostok/game_core/breath_holding_params.h>
+#include "breath_holding_states.h"
+#include "breath_holding_states_inline.h"
 #include <vostok/game_core/base_player.h>
 #include <vostok/console_command.h>
 
@@ -28,27 +29,34 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
+// claude@NOTE: residual = the two m_logic.states( ).front( ) sites. Target calls
+// intrusive_list::front with `this` in EAX (no `mov ecx,eax`); base inlines/calls it
+// with `this` in ECX, leaving a 2-byte `mov ecx,eax` per site. That is the global
+// intrusive_list front()-de-inline knob (intrusive_list_inline.h) - off-limits from
+// this TU. See patterns/template-accessor-deinline-global-knob.md.
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;
 
 	for ( ai::fsm_state* it = m_logic.states( ).front( ); it; it = it->next )
 	{
-		static_cast< breath_state* >( it )->set_breath_holding_params( params );
+		static_cast_checked< breath_state* >( it )->set_breath_holding_params( params );
 	}
 
 	if ( m_params )
 	{
 		m_breath_holding_reserve	= m_params->max_breath_holding_time;
 		m_logic.set_initial_state( m_logic.states( ).front( ) );
-		m_current_multiplier = m_target_multiplier = static_cast< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
+		m_current_multiplier = m_target_multiplier = static_cast_checked< breath_state* >( m_logic.current_state( ) )->get_multiplier( );
 	}
 }
 
 breath_vibration_calculator::~breath_vibration_calculator( )
 {
 	while ( ai::fsm_state* state = m_logic.pop_state( ) )
+	{
 		VOSTOK_DELETE_IMPL( g_allocator, state );
+	}
 }
 
 bool true_predicate( )
@@ -56,32 +64,25 @@ bool true_predicate( )
 	return true;
 }
 
-// STATE[STUB]: NOT matched this unit (large ~0x3bc; fsm-build with 3 breath_state
-// subclasses + 5 boost::bind/true_predicate add_transitions). Reconstructed body + concrete
-// next steps (header move to private AAE, breath_holding_states includes) in _tick.md.
+// claude@NOTE: STRUCTURE MATCH (11/11). Residual is a 4-byte frame delta - the target
+// saves ESI (push esi / sub esp,128h) and uses it as `this` for the trailing
+// boost::function::clear() calls, shifting every [ebp-XX] slot by 8; base keeps ECX
+// (no esi, sub esp,130h). Whole-program LTCG register-budget choice, not source-steerable.
 void breath_vibration_calculator::initialize_logic( )
 {
-	// LOCALS
-	// breath_state* 				holding
-	// breath_state* 				normal
-	// breath_state* 				shortbreathing
-	// ******
+	breath_state* normal			= VOSTOK_NEW_IMPL( g_allocator, breath_state_normal )( m_breath_holding_reserve );
+	breath_state* holding			= VOSTOK_NEW_IMPL( g_allocator, breath_state_holding )( m_breath_holding_reserve );
+	breath_state* shortbreathing	= VOSTOK_NEW_IMPL( g_allocator, breath_state_shortbreathing )( m_breath_holding_reserve );
 
-	// FUNCTION BODY
-	// <0x5937f0>|0x010|+0x086:'59'
-	// <0x593876>|0x096|+0x076:'60'
-	// <0x5938ec>|0x10c|+0x086:'61'
-	// <0>
-	// <0x593972>|0x192|+0x00f:'63'
-	// <0x593981>|0x1a1|+0x00f:'64'
-	// <0x593990>|0x1b0|+0x00f:'65'
-	// <0x59399f>|0x1bf|+0x082:'66'
-	// <0x593a21>|0x241|+0x082:'67'
-	// <0x593aa3>|0x2c3|+0x075:'68'
-	// <0x593b18>|0x338|+0x040:'69'
-	// <0x593b58>|0x378|+0x040:'70'
-	// <0>
-	// ******
+	m_logic.add_state( normal );
+	m_logic.add_state( holding );
+	m_logic.add_state( shortbreathing );
+
+	m_logic.add_transition( normal, holding, boost::bind( &breath_vibration_calculator::hold_button_state_equals_to, this, true ) );
+	m_logic.add_transition( holding, normal, boost::bind( &breath_vibration_calculator::hold_button_state_equals_to, this, false ) );
+	m_logic.add_transition( holding, shortbreathing, boost::bind( &breath_vibration_calculator::insufficient_breath, this ) );
+	m_logic.add_transition( shortbreathing, normal, &true_predicate );
+	m_logic.add_transition( shortbreathing, holding, &true_predicate );
 }
 
 void breath_vibration_calculator::tick( u32 const current_time_in_ms, float const time_scale )
@@ -95,7 +96,7 @@ void breath_vibration_calculator::tick( u32 const current_time_in_ms, float cons
 
 	m_last_time_in_ms = current_time_in_ms;
 	m_logic.tick( );
-	breath_state* const current_state = static_cast< breath_state* >( m_logic.current_state( ) );
+	breath_state* const current_state = static_cast_checked< breath_state* >( m_logic.current_state( ) );
 
 	current_state->tick( dt );
 	m_target_multiplier = current_state->get_multiplier( );
