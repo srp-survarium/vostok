@@ -9,6 +9,10 @@ rebuild.py - full base-side refresh after editing sources.
           + refreshed objdiff.json
        c. binaries/rich/base       - pdb_rich_context index (generate_rich.py),
           the backing store for `pdb_fetch` (target asm + instruction diff).
+  3. Regenerate docs/binary_matching/match.db from the fresh report.json
+     (match_db.regen()). rebuild.py is the canonical build step and owns the DB
+     regen; `match_db.py refresh` is the regen-only path for an already-built
+     report. A regen failure warns but does not fail the build.
 
 The target side (binaries/structure/target, binaries/objdiff/target,
 binaries/rich/target) is the original game and does not change between
@@ -211,6 +215,22 @@ def main() -> None:
         if failures:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
         _write_build_head()
+
+        # rebuild.py is the canonical build step, so it also regenerates the
+        # match.db from the report.json it just produced (the inverse of the old
+        # model where match_db.py refresh shelled out to rebuild.py). A regen
+        # failure is logged but does NOT fail the build - the diff inputs are
+        # already good; the DB can be re-derived later with `match_db.py refresh`.
+        try:
+            import match_db
+            match_db.regen()
+            log("match.db regenerated.")
+        # catch SystemExit too (regen's missing-artifact guard calls sys.exit) so
+        # a DB hiccup never aborts a build whose diff inputs are already good.
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the DB
+            log(f"WARNING: match.db NOT regenerated ({e}); "
+                "re-derive it with `python3 scripts/match_db.py refresh`")
+
         log("All done - base diff inputs refreshed.")
     finally:
         _append_log(time.monotonic() - start, modules)

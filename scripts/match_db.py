@@ -3,7 +3,9 @@
 
 Design: docs/binary_matching/match_db_design.md. The DB answers BULK questions
 (queues, per-TU reports, unpaired functions); pdb_fetch stays the authoritative
-per-function view. Derived tables are rebuilt by `refresh` from:
+per-function view. Derived tables are regenerated from the already-built diff
+artifacts by `rebuild.py` (at the end of every build) or, regen-only, by
+`refresh` (run rebuild.py first if sources moved):
 
   binaries/objdiff/report.json          per-TU roster + fuzzy %s
   binaries/rich/target/index.jsonl      exe-level target inventory + statements
@@ -16,7 +18,7 @@ persistent tables (history, flags) are keyed by mangled TEXT - ids are NOT
 stable across refreshes, mangled names are.
 
 Usage:
-  python3 scripts/match_db.py refresh
+  python3 scripts/match_db.py refresh    # regen-only (rebuild.py first if sources moved)
   python3 scripts/match_db.py list --module game_core --max-size 0x80 [--json]
   python3 scripts/match_db.py list --module network_core --presence TARGET_ONLY
   python3 scripts/match_db.py report [--module game_core] [--per-unit]
@@ -331,10 +333,12 @@ def git_head():
 def staleness_check(con, strict=False):
     """Freshness has TWO legs: report.json must be BUILT from the current
     sources (rebuild.py records the HEAD it built at in report.head), and the
-    DB must have ingested that report (refresh). Under lowest-match-first
+    DB must have ingested that report (rebuild.py regenerates it at the end of
+    every build; `refresh` re-derives it regen-only). Under lowest-match-first
     ordering, stale rows for freshly-landed work look like 0% and get
     dispatched FIRST - so queue refuses on either stale leg (--stale-ok
-    overrides); other commands warn. Cadence: land -> rebuild.py -> refresh."""
+    overrides); other commands warn. Cadence: land -> rebuild.py (regenerates
+    the DB); run `refresh` by hand only to re-ingest an already-built report."""
     hard, soft = [], []
     row = con.execute("SELECT value FROM meta WHERE key='build_head'").fetchone()
     build_head = row[0] if row else None
@@ -398,26 +402,16 @@ class Interner:
         return self.map
 
 
-def run_rebuild(args):
-    """refresh always runs rebuild.py first - ninja makes it a no-op when
-    nothing changed, so rebuild.py IS the staleness check. --no-rebuild
-    ingests existing artifacts as-is."""
-    if getattr(args, "no_rebuild", False):
-        return
-    binaries = VOSTOK / "binaries"
-    if binaries.is_symlink():
-        log("NOT running rebuild.py: binaries/ is a symlink "
-            "(shared artifacts - rebuild belongs to the owning checkout)")
-        return
-    import subprocess
-
-    rc = subprocess.run([sys.executable, str(VOSTOK / "scripts" / "rebuild.py")]).returncode
-    if rc != 0:
-        sys.exit(f"[match_db] rebuild.py failed (exit {rc}) - not refreshing from stale artifacts")
-
-
 def cmd_refresh(args):
-    run_rebuild(args)
+    regen()
+
+
+def regen():
+    """Regenerate match.db from the already-built diff artifacts (report.json +
+    rich indexes). This is REGEN-ONLY: it does NOT run rebuild.py. rebuild.py is
+    the canonical build step and calls this at the end of its run; invoke
+    `match_db.py refresh` by hand only to re-derive the DB from an artifact set
+    that is already on disk (run rebuild.py first if sources moved)."""
     for required in (REPORT, TARGET_IDX, BASE_IDX):
         if not required.is_file():
             sys.exit(f"[match_db] missing {required} - run rebuild.py / the delink first")
@@ -430,6 +424,20 @@ def cmd_refresh(args):
             "side smears scores across modules; consider "
             "`generate_delink.py target` (see per-worktree staleness notes)"
         )
+
+    # soft staleness note: refresh is a deliberate regen-only step, so it proceeds
+    # even when report.json predates the current sources - but warn so a hand-run
+    # refresh doesn't silently re-derive the DB from a stale build (the same
+    # build-leg the queue staleness_check enforces; here we only warn).
+    head_marker = REPORT.parent / "report.head"
+    if head_marker.is_file():
+        report_head = head_marker.read_text().strip()
+        bh = report_head[: -len("+dirty")] if report_head.endswith("+dirty") else report_head
+        if bh and not bh.startswith("?") and bh != git_head():
+            rc, _ = _git("diff", "--quiet", bh, "HEAD", "--", "sources/")
+            if rc != 0:
+                log("STALE: report.json is stale (sources/ moved since it was "
+                    "built) - run rebuild.py first; refreshing anyway")
 
     log("loading rich indexes ...")
     target = load_index(TARGET_IDX)
@@ -1586,9 +1594,10 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser(
         "refresh",
-        help="run rebuild.py (incremental - no-op when nothing changed), then rebuild derived tables",
+        help="regen-only: rebuild derived tables from the already-built report.json "
+        "(rebuild.py is the canonical build and regenerates the DB itself; run it "
+        "first if sources moved)",
     )
-    p.add_argument("--no-rebuild", action="store_true", help="ingest existing artifacts as-is")
 
     p = sub.add_parser("list", help="list functions with filters")
     p.add_argument("--module")

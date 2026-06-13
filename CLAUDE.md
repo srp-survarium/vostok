@@ -63,13 +63,17 @@ game PDB instead uses `c:/survarium/sources`.
     nix develop                  # first entry builds the toolchain, sets up Wine
                                  # + ninja, and generates the target side once
     python3 scripts/rebuild.py   # ninja build under Wine, then regenerate
-                                 # binaries/structure/base + binaries/objdiff/base
+                                 # binaries/structure/base + binaries/objdiff/base,
+                                 # then regenerate docs/binary_matching/match.db
 
 A full engine build under Wine takes ~10 minutes; run it in the background (it is no
 longer the loop bottleneck - agent token cost is). The
 objdiff config is `binaries/objdiff/objdiff.json`; a match report is
 `objdiff-cli report generate -p binaries/objdiff`. Every base delink regenerates
-`binaries/objdiff/report.json` (and `report-changes.json`).
+`binaries/objdiff/report.json` (and `report-changes.json`); `rebuild.py` then
+regenerates `match.db` from that report at the end of its run. `match_db.py
+refresh` is the regen-only path (re-derive the DB from an already-built report;
+run `rebuild.py` first if sources moved) - it does NOT rebuild.
 
 ## Match score (README regression tracker)
 

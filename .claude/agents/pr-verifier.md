@@ -116,7 +116,8 @@ Agent(subagent_type="structure-verifier",
 ```
 It compares target vs base structure, flags QUANTITY/SIZE divergence, records the
 verdict (commit message + its result line; the match DB re-derives structure on
-refresh), and (if structure is wrong) pushes its fix attempt as one commit on
+its next regen - rebuild.py at the end of a build, or a regen-only refresh), and
+(if structure is wrong) pushes its fix attempt as one commit on
 `<this-head>`. Collect each one-line verdict. If a dispatch is impossible, run the
 verification inline per its definition.
 

@@ -21,29 +21,33 @@ commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 these 8 steps as a checklist; then every iteration `TaskUpdate` the step you're on
 (in-progress) and tick completed ones - re-using the SAME checklist each pass. The
 bullet list must always be on screen, so you never skip a step (especially
-refresh-before-mark) and the human always sees exactly where you are.
+rebuild-before-mark) and the human always sees exactly where you are.
 
-Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). `match_db.py
-refresh` is your build+DB step in one - it rebuilds the worktree incrementally
-(~2-3 min/unit) AND regens `match.db`, so you NEVER call `rebuild.py` separately and
-NEVER build the integration branch (it lacks the matches -> full rebuild).
+Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). `rebuild.py`
+is your build+DB step in one - it rebuilds the worktree incrementally
+(~2-3 min/unit) AND regenerates `match.db` at the end, so you run `rebuild.py`
+(not a separate `refresh`) to advance the DB, and NEVER build the integration
+branch (it lacks the matches -> full rebuild). `match_db.py refresh` is regen-only
+(re-derive the DB from an already-built `report.json` without rebuilding); reach
+for it only when the artifacts are already fresh.
 
-1. **Switch to the top + refresh** - checkout the newest match branch, then ALWAYS run
-   `python3 scripts/match_db.py refresh` (catches any staleness from a prior session
-   before you spawn anything).
+1. **Switch to the top + rebuild** - checkout the newest match branch, then ALWAYS run
+   `python3 scripts/rebuild.py` (builds incrementally and regenerates the DB, catching
+   any staleness from a prior session before you spawn anything).
 2. **Spawn matcher agent(s)** - ONE TU each, branched off the top.
 3. **Get their work** - each returns ONE commit (the top advances).
 4. **Handle conflicts** if siblings clash - `temp_include_all.cpp` / module `.vcproj` /
    `match.db`; stack them in dependency order.
 5. **Go to the new top** - the just-landed unit's branch is the new tip.
-6. **Refresh** - `python3 scripts/match_db.py refresh` (builds the new top incrementally
-   + regens the DB). MUST run before you mark, so marking reads the MEASURED state.
-7. **Mark functions** - from the refreshed DB: retries (`match_db.py tried <fn>`) +
+6. **Rebuild** - `python3 scripts/rebuild.py` (builds the new top incrementally
+   + regenerates the DB at the end). MUST run before you mark, so marking reads the
+   MEASURED state.
+7. **Mark functions** - from the regenerated DB: retries (`match_db.py tried <fn>`) +
    comments/flags (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue`
    a stale SKIP); upgrade any banked LTCG residual the rebuild lifted to 100%.
 8. **Loop** -> back to step 2.
 
-Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before refreshing - a bare `cd` keeps
+Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before rebuilding - a bare `cd` keeps
 the parent shell's prefix, so parallel builds collide on one `mspdbsrv`. Everything below
 is reference detail for these eight steps.
 
@@ -83,13 +87,14 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 
 ## Run
 1. **Build the queue** for the target module with the match DB (you are its
-   SINGLE WRITER - workers never touch it: you `refresh`, record EVERY dispatch
-   with `tried`, set/clear `flag`s from worker result lines, and commit
+   SINGLE WRITER - workers never touch it: `rebuild.py` regenerates the DB at the
+   end of every build (or `refresh` re-derives it regen-only), you record EVERY
+   dispatch with `tried`, set/clear `flag`s from worker result lines, and commit
    `docs/binary_matching/match.db` at run milestones. Booktrack EVERY worker as
    you go - see "Booktrack the match DB every step" below; never leave it to an
    end-of-run sweep or only in chat):
    ```
-   python3 scripts/match_db.py refresh    # runs rebuild.py itself when sources moved
+   python3 scripts/rebuild.py             # canonical build; regenerates match.db at the end
    python3 scripts/match_db.py report --module <m> --per-unit
    python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
    ```
@@ -164,14 +169,16 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       logs and enforces lean comments (a 3rd commit ONLY if it changes source) and posts a
       PR comment flagging any NEW struct/class/enum/function the diff added. See
       `.claude/agents/reviewer.md`.
-   e. **Rebuild + refresh the DB from the unit's worktree, then booktrack it - do
-      this PER UNIT, never as an end-of-run sweep.** The SV/reviewer already rebuilt
-      the tip, so its `report.json` is fresh: run `match_db.py refresh` against it to
-      capture this unit's matches AND any LTCG/LTO walls the match LIFTED in OTHER
-      units. Whole-program optimization means matching unit A can flip the inlining
-      budget so a banked "95% LTCG residual" in unit B compiles to 100% - re-check
-      previously-banked residuals after every rebuild and clear/upgrade the ones that
-      lifted. The refresh records each function's compile-measured status (DONE is
+   e. **Regenerate the DB from the unit's worktree, then booktrack it - do
+      this PER UNIT, never as an end-of-run sweep.** The SV/reviewer's `rebuild.py`
+      already regenerated the DB from a fresh `report.json` for the tip; if you need
+      to re-derive it (e.g. you only have an already-built `report.json` from another
+      step) run `match_db.py refresh` against it. Either way you capture this unit's
+      matches AND any LTCG/LTO walls the match LIFTED in OTHER units. Whole-program
+      optimization means matching unit A can flip the inlining budget so a banked
+      "95% LTCG residual" in unit B compiles to 100% - re-check previously-banked
+      residuals after every rebuild and clear/upgrade the ones that lifted. The
+      regenerated DB records each function's compile-measured status (DONE is
       READ from it, never hand-flagged); you only hand-write PARKs - `flag <mangled>
       --requeue` any now-matched fn that still carried a stale SKIP, and `flag
       <mangled> --flag OUT_OF_SCOPE --cause "<blocker + next step>"` every genuinely
@@ -184,15 +191,17 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 The DB is the durable record of the run - keep it current AS YOU GO, never in a
 single end-of-run sweep and never only in chat/PR bodies. It outlives your context
 and every PR branch: a fact that lives only in your ledger or a PR description is
-lost to the next session. `refresh` PRESERVES the `attempts` + `flags` tables, so
-booktracking survives rebuilds.
+lost to the next session. The DB regen (rebuild.py at the end of its run, or a
+regen-only `refresh`) PRESERVES the `attempts` + `flags` tables, so booktracking
+survives rebuilds.
 
 **DONE and PARKED are mutually exclusive, and DONE is COMPILE-ESTABLISHED - never
 hand-written.** You cannot know a function matched without building it; a worker's
-(or SV's) reported % is a CLAIM until your post-build `refresh` records it in the
-DERIVED tables (`pairs.struct_class` / `fuzzy_pct`). So the only stop-status you ever
-hand-write is PARKED (a `flag` + cause = "not done, here is the blocker"); DONE is
-READ BACK from the refresh, never flagged. Never `SKIP` a partial match as
+(or SV's) reported % is a CLAIM until your post-build DB regen (`rebuild.py` at the
+end of its run) records it in the DERIVED tables (`pairs.struct_class` / `fuzzy_pct`).
+So the only stop-status you ever hand-write is PARKED (a `flag` + cause = "not done,
+here is the blocker"); DONE is READ BACK from the regenerated DB, never flagged.
+Never `SKIP` a partial match as
 "done-with-residual" (a contradiction in terms), and never freeze a "banked LTCG
 residual" as done - it is NOT done, it stays OPEN so the next rebuild can lift it
 (that is the whole point of rebuilding after every worker). PARK only what is
@@ -203,10 +212,10 @@ Per worker:
   the batch. `queue` demotes tried work, so this stops the next wave re-offering
   what is in flight. (`sql "SELECT sum(n) FROM attempts ..."` returning 0 over a unit
   you worked means you forgot this step.)
-- **Rebuild + refresh after EVERY worker** (step 4e) - not just to score this unit but
-  because the rebuild can LIFT LTCG/LTO walls in OTHER units (a banked 95% residual
-  flips to 100% once this unit changes the whole-program inlining budget). Re-check
-  banked residuals each rebuild; upgrade the ones that lifted.
+- **Rebuild after EVERY worker** (step 4e) - `rebuild.py` regenerates the DB at the end
+  of its run, so a rebuild both scores this unit AND can LIFT LTCG/LTO walls in OTHER
+  units (a banked 95% residual flips to 100% once this unit changes the whole-program
+  inlining budget). Re-check banked residuals each rebuild; upgrade the ones that lifted.
 - **On completion, from the worker's ONE-LINE result:**
   - matched a fn that carried a stale SKIP/OUT_OF_SCOPE from an earlier run? -
     `flag <mangled> --requeue` (a now-matched fn must not read as skipped).
@@ -215,13 +224,14 @@ Per worker:
     step>"` so the blocker is QUERYABLE from the DB, not only in a PR body. Do NOT `SKIP`
     a park you want re-offered once its dependency lands.
   - otherwise leave the function OPEN: do NOT flag it "done". Its compile-measured status
-    is recorded by the post-build `refresh` (derived `struct_class`/`fuzzy_pct`); the
-    `tried` note carries only the ATTEMPT (and, for a park, the cause) - never a done claim.
+    is recorded by the post-build DB regen (`rebuild.py`; derived `struct_class`/`fuzzy_pct`);
+    the `tried` note carries only the ATTEMPT (and, for a park, the cause) - never a done claim.
 - **Derived vs hand-written (the one caveat):** `tried`/`flags` are NOT merge-gated -
   booktrack them immediately, anywhere. The derived %s (`pairs.fuzzy_pct`, `history`)
-  only reflect a unit's matches once the base is rebuilt WITH them - so `refresh` for
-  real %s/lifted-walls runs in the TOP-OF-STACK WORKTREE (after the worker's build,
-  or a target+base regen), never the main repo, which never compiled the worktree edits.
+  only reflect a unit's matches once the base is rebuilt WITH them - so the DB regen for
+  real %s/lifted-walls happens in the TOP-OF-STACK WORKTREE (`rebuild.py` regenerates
+  it at the end of the worker's build; a regen-only `refresh` re-derives it from that
+  fresh report), never the main repo, which never compiled the worktree edits.
 - **Commit `docs/binary_matching/match.db`** at run milestones (per-unit or per-wave),
   as its own housekeeping commit/PR - not folded into a match PR's one-commit shape.
 - **Audit with `match_db.py sql "<SELECT ...>"`** (read-only escape hatch) before you
@@ -260,8 +270,9 @@ merging PRs**, never by a direct commit. So:
     across so `match_db.py diff <base>..<merged>` keeps working *on the integration
     branch* - that per-step visibility is the whole reason the DB commits exist. If the
     `match.db` blob conflicts on cherry-pick, resolve it by taking the unit's side and
-    re-running `match_db.py refresh` in the worktree (the DB is deterministic, so a
-    refresh reconciles it) - resolving by dropping the DB change loses the diff trail.
+    re-running `match_db.py refresh` (regen-only) in the worktree against its already-built
+    `report.json` (the DB is deterministic, so a regen reconciles it; `rebuild.py` first if
+    the artifacts moved) - resolving by dropping the DB change loses the diff trail.
     (If a stack was already landed source-only, the dropped per-step lineage can be
     preserved out-of-band with `git tag stack/<module>-per-step-db <old-tip>`.)
   After cherry-picking:
@@ -282,9 +293,10 @@ produced by `python3 scripts/match_score.py --write-readme` from
 `binaries/objdiff/report.json`. It is **report-derived** (the source carries no status
 markers; per-function status lives in the match DB) - this is how the human tracks
 progress and spots regressions *without running anything*, by diffing the block across
-commits. Refresh + commit `match.db` at the same milestones. `report.json` is refreshed by every base delink (each matcher's rebuild), so
-the numbers are always on hand.
-- **Rule:** refresh + commit the block whenever `report.json` has moved - at minimum at
+commits. Regenerate (via `rebuild.py`, or regen-only `refresh`) + commit `match.db` at the
+same milestones. `report.json` is regenerated by every base delink (each matcher's rebuild),
+which also regenerates `match.db`, so the numbers are always on hand.
+- **Rule:** regenerate + commit the block whenever `report.json` has moved - at minimum at
   run start (a baseline) and before you hand back for review. After a delinker/toolchain
   change that shifts many symbols (e.g. folded-symbol reconciliation), regenerate it in
   the *same* change so the recorded numbers match the new ground truth.
