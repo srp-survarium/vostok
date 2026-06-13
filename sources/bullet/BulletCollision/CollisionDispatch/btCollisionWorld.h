@@ -201,7 +201,7 @@ public:
 		short int	m_collisionFilterMask;
       //@BP Mod - Custom flags, currently used to enable backface culling on tri-meshes, see btRaycastCallback
       unsigned int m_flags;
-		unsigned int m_shape_id; // sushi@TODO: A NEW FIELD WAS ADDED TO BULLET CALLBACK
+		unsigned int m_shape_id; // Survarium addition: backs getShapeId() (-1 => use the per-triangle local id)
 
 		virtual ~RayResultCallback()
 		{
@@ -231,6 +231,14 @@ public:
 
 
 		virtual	btScalar	addSingleResult(LocalRayResult& rayResult,bool normalInWorldSpace) = 0;
+
+		// Survarium addition: appended to the vtable after addSingleResult. Returns the
+		// override shape id when set, else the per-triangle local id the caller passes in.
+		virtual unsigned int getShapeId(unsigned int local_shape_id)
+		{
+			if ( m_shape_id != (unsigned int)(-1) ) return m_shape_id;
+			return local_shape_id;
+		}
 	};
 
 	struct	ClosestRayResultCallback : public RayResultCallback
