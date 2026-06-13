@@ -12,15 +12,6 @@
 
 namespace survarium{
 
-static u32 light_ids = 1000000;
-
-object_light::object_light( game_scene& w ) 
-:super			( w ),
-m_current_state	( false )
-{
-	m_light_id	= ++light_ids;
-}
-
 object_light::~object_light( )
 {
 }

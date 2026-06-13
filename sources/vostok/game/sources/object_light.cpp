@@ -7,10 +7,14 @@
 
 namespace survarium {
 
+static u32 light_ids = 1000000;
+
 // STATE[STUB]
  object_light::object_light( base_game_scene& w ) :
 	game_object_static( w )
 {
+	m_light_id = ++light_ids;
+
 	// FUNCTION BODY[0x5c3870]: 1
 	// <0x5c3894>|0x024|+0x011:'20'
 	// ******

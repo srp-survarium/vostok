@@ -17,14 +17,6 @@
 
 namespace survarium{
 
-static u32 decal_ids					= 0;
-
-object_decal::object_decal(game_scene& w)
-:super(w)
-{
-	m_decal_id							= decal_ids++;
-}
-
 object_decal::~object_decal()
 {
 	m_game_scene.renderer().scene().remove_decal(m_game_scene.get_render_scene(), m_decal_id);
