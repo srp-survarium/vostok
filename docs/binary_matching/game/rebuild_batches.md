@@ -27,8 +27,28 @@ Module notes: [README.md](README.md). Legacy priors: `temp/game_legacy/`.
 | 11 | world/game cascade | `game` (game.h), `game_world*`, `game_options`, `game_map_description`, `game_material_visibility_parameters` (header landed with batch 6), `global_input_handler`, `step_manager`, `generic_anomaly`, `damage_zone*`, `booby_trap*`, `artefact_container`, `victory_item*`, `empty_hands*`, `ai_collision_object`, `ai_sound_player`, `vostok_file_opener` (deferred to batch 12 - its methods live in the missing scaleform module), `sound_player_cook`, `damage_model_stats`, `first_predicate`, `game__debug_window_enum` | DONE (a5e3096c) |
 | 12 | scaleform module | NEW: `vostok/scaleform` - the one module the structure generator never emitted (parser gap; queue = `temp/structure_queue/sources_scaleform/`, symbol lists from the rich index). Scaffold `sources/vostok/scaleform/` (vcproj/pch/api), move the flash/scaleform headers there from game/sources, declarations in headers + definitions in the 10 compilands. Wired via a `game_core -> scaleform` `ProjectDependencies` edge in the .sln (mirrors `game_core -> network_core`) so vcproj2ninja emits the lib; only pch.cpp builds, all 10 TUs `ExcludedFromBuild`. The d3d1x_* HAL family is a fork of a NEWER Scaleform SDK than the vendored 4.0.15 - reproduced as documentation, but its headers are reached by no enabled TU (only their own excluded .cpp), so the SDK gap stays contained until TU enablement. | DONE (1bcb53f5) |
 | 13 | remaining compilands | every `temp/structure_queue/sources/` file not consumed by 2-11 + the 9 owner-unknown TU-locals | DONE (2972258c) - 9 orphan predicates triaged out (pass 6); header queue empty |
-| 14 | TU enablement | flip `ExcludedFromBuild` leaf-first, drive full build green, refresh `game_entry_point.cpp` statics (s_game etc.), retire interim anchors | |
+| 14 | TU enablement (MATCHING PHASE - not carcass rebuild) | flip `ExcludedFromBuild` leaf-first, drive each TU's bodies to compile, refresh `game_entry_point.cpp` to its real form (s_game etc.), retire the interim anchors. This is where the carcass rebuild ENDS and the normal matcher loop BEGINS - hand to the `match` skill. | PENDING |
 
 Batches 2-11 also pull the SAME-STEM files from `temp/structure_queue/sources/`
 (`<stem>.cpp`, `<stem>.h`, `<stem>_inline.h`) so a subsystem leaves the queue
 whole. Update the Status column (+ commit SHA) when a batch lands.
+
+## CARCASS REBUILD COMPLETE (2026-06-13)
+
+Both acceptance gates met: `temp/structure_queue/` is EMPTY (every canonical
+class/struct/enum/carcass reproduced or triaged) and no addressless `FUNCTION
+BODY` remains in `sources/vostok/game/sources/`. The game module's entire type
+skeleton is real, compilable C++; `python3 scripts/rebuild.py` is green; the
+new `vostok/scaleform` module is scaffolded. ~144 game compilands (+10
+scaleform) sit `ExcludedFromBuild` as addressed stub carcasses, ready for the
+matcher loop (batch 14). `game_entry_point.cpp` keeps its interim form (returns
+NULL, `create_world` carcass preserved in comments) because the real `s_game`
+instantiation needs `game::game` from the still-excluded `game.cpp` - that
+unblocks only as enablement proceeds.
+
+Interim devices still in place (retire during/after batch 14):
+- `temp_include_all.cpp` world-cone anchors (`use_engine_user_world_cone`, the
+  `use_network_core_*` block + its CRT-ban `#undef` pair) and `IncludeAll
+  temp_anchor;` in `create_world` - keep the engine_user cone alive under
+  /OPT:REF; removed when the rebuilt game TUs reference those subsystems for real.
+- `temp/game_legacy/` - body-reference priors; delete once the module is matched.
