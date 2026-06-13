@@ -1337,7 +1337,12 @@ def cmd_queue(args):
         -- exists under a different mangling (access/const) - a header fix
         LEFT JOIN base_only_status bos
                ON bos.detail = s.mangled AND bos.status = 'NEAR_MISS'
-        WHERE NOT (coalesce(p.fuzzy_pct, 0) >= 100 AND p.struct_class = 'MATCH')
+        -- skip near-ceiling fns whose STRUCTURE already matches (MATCH/SIZE/SPLIT all
+        -- have the target's statement count; the residual is non-steerable LTCG -
+        -- inline-vs-call / reg-alloc). Don't hand an effectively-done fn to a matcher.
+        -- QUANTITY (wrong statement count = real divergence, incl. the high-%-over-
+        -- wrong-structure trap) STAYS in the queue at any %, as do all fns below 95%.
+        WHERE NOT (coalesce(p.fuzzy_pct, 0) >= 95 AND coalesce(p.struct_class, '') != 'QUANTITY')
           AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag IN ('SKIP','OUT_OF_SCOPE'))
           -- compiler-generated machinery is not source-steerable standalone:
           -- deleting dtors / dynamic initializers (backtick names), thunks,
