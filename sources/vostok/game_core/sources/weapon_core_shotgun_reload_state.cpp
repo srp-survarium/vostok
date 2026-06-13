@@ -8,6 +8,8 @@
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/weapon_core_shotgun_reload_base_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_finish_substate.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace survarium {
 
@@ -25,22 +27,15 @@ weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 	initialize_logic( reload_start, reload_one_round, reload_finish );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state()
 weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
+	if ( m_delete_substates_on_destruction )
+		while ( ai::fsm_state* state = m_logic->pop_state( ) )
+		{
+			VOSTOK_DELETE_IMPL( g_allocator, state );
+		}
 
-	// FUNCTION BODY
-	// <0x5998ec>|0x01c|+0x00e:'33'
-	// <0x5998fa>|0x02a|+0x017|[1]:'34'
-	// <0x599911>|0x041|+0x026:'35'
-	// <0x599937>|0x067|+0x002:'36'
-	// <0>
-	// <0x599939>|0x069|+0x02c:'38'
-	// ******
+	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
 void weapon_core_shotgun_reload_state::initialize( )
@@ -102,9 +97,10 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	ai::fsm_state* state = m_logic->current_state( );
-	weapon_core_shotgun_reload_base_substate* current = static_cast< weapon_core_shotgun_reload_base_substate* >( state );
-	return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
+	// claude@MATCH: state + cast + return live on ONE source line (line 89) - the PDB
+	// records the whole body as a single statement (2 temps), splitting them onto three
+	// lines reads 100% byte but flags the statement-count quantity trap.
+	ai::fsm_state* state = m_logic->current_state( ); weapon_core_shotgun_reload_base_substate* current = static_cast< weapon_core_shotgun_reload_base_substate* >( state ); return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
 // bool survarium::true_predicate()
@@ -113,36 +109,39 @@ static bool true_predicate( )
 	return true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::initialize_logic(survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
 void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_reload_base_substate* reload_start, weapon_core_shotgun_reload_base_substate* reload_one_round, weapon_core_shotgun_reload_base_substate* reload_finish )
 {
-	// FUNCTION BODY
-	// <0x599ae0>|0x010|+0x05d:'99'
-	// <0x599b3d>|0x06d|+0x014:'100'
-	// <0x599b51>|0x081|+0x015:'101'
-	// <0x599b66>|0x096|+0x01b:'102'
-	// <0x599b81>|0x0b1|+0x015:'103'
-	// <0x599b96>|0x0c6|+0x015:'104'
-	// <0x599bab>|0x0db|+0x015:'105'
-	// <0x599bc0>|0x0f0|+0x01b:'106'
-	// <0x599bdb>|0x10b|+0x065:'107'
-	// <0x599c40>|0x170|+0x0ea:'108'
-	// ******
+	m_logic = VOSTOK_NEW_IMPL( g_allocator, ai::fsm );
+
+	reload_start->set_animation_playback_state_ptr( &m_animation_playback_state );
+	reload_one_round->set_animation_playback_state_ptr( &m_animation_playback_state );
+	reload_finish->set_animation_playback_state_ptr( &m_animation_playback_state );
+
+	m_logic->add_state( reload_start );
+	m_logic->add_state( reload_one_round );
+	m_logic->add_state( reload_finish );
+
+	static_cast< weapon_core_shotgun_reload_finish_substate* >( reload_finish )->set_owner_ready_for_transition( &m_animation_has_been_ended );
+
+	m_logic->add_transition( reload_start, reload_one_round, boost::bind< bool >( &true_predicate ) );
+	m_logic->add_transition( reload_one_round, reload_finish, boost::bind( &weapon_core_shotgun_reload_state::finish_reload_predicate, this ) );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_shotgun_reload_state::finish_reload_predicate() const
+// claude@NOTE: structure matched (1 stmt @0x14d) and the boolean logic is byte-faithful.
+// Two residuals, both rooted in another unit's header (weapon_core), so out of scope here:
+//   (1) the target reads m_weapon.m_ammo_in_magazine (+0x47a) and m_weapon.m_is_round_chambered
+//       (+0x48e) INLINE (direct member access => weapon_core befriends this state), but the
+//       state is not a friend, so ammo_in_magazine()/round_is_chambered() are CALLed instead.
+//   (2) the target keeps m_weapon.get_target() out-of-line (a `call`), but our inline getter
+//       (return m_target) folds to a direct read here.
+// Both need cross-unit weapon_core.h changes (friend decl + out-of-line get_target) that would
+// touch weapon_core's own matches; left for the weapon_core owner.
 bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x599991>|0x011|+0x137:'116'
-	// ******
+	return m_weapon.ammo_in_magazine( ) == m_weapon.get_magazine_capacity( )
+		|| m_weapon.ammunition( )->amount( ) == 0
+		|| ( ( m_weapon.ammo_in_magazine( ) + ( m_weapon.round_is_chambered( ) != 0 ) ) != 0
+			&& ( m_weapon.get_target( ) == weapon_target_fire || m_weapon.get_target( ) == weapon_target_aim_fire ) );
 }
 
 void weapon_core_shotgun_reload_state::execute( )
