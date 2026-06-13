@@ -13,10 +13,6 @@ character_recoil_params::character_recoil_params( ) :
 	aimed_crouch_multiplier	( 1.0f ),
 	aimed_stand_multiplier	( 1.0f )
 {
-	// FUNCTION BODY
-	// <0x5a1020>|0x000|+0x046:'16'	{
-	// <0x5a1066>|0x046|      :'17'	}
-	// ******
 }
 
 void character_recoil_params::load( configs::binary_config_value const& cfg )
