@@ -19,10 +19,25 @@ build repo. The human's merge is your signal to advance.
 > inline yourself (follow `.claude/agents/structure-verifier.md` step by step) and
 > say so in your report.
 
-Read first: `.claude/agents/orchestrator.md` ("STACKED PRs" + "The base branch is
-PR-only" - the cherry-pick landing recipe is the canon you implement) and
+Read first: `.claude/agents/orchestrator.md` (the loop + "STACKED PRs" + "The base
+branch is PR-only" - the cherry-pick landing recipe is the canon you implement) and
 `.claude/agents/structure-verifier.md` (what you dispatch). `MATCHING.md` is the
 matcher's concern, not yours.
+
+**The tooling you have - `scripts/rebuild.py` + `scripts/match_db.py`** (use it, don't hand-roll):
+- `rebuild.py` = your BUILD step: incremental rebuild AND regenerates `match.db` at the
+  end of its run. Use it to build + advance the DB. `match_db.py refresh` is regen-only
+  (re-derive the DB from an already-built `report.json`, no build) - reach for it only when
+  the artifacts are already fresh.
+- `diff <A>..<B> --module <m>` = function-level diff between two committed stack points
+  (it extracts each rev's `match.db` via `git show`): groups regress / lost / new /
+  improve / TOUCHED / reclass, with `from->to` / `max` (best-ever %) / `tries`. This is
+  how you VERIFY a landed PR - `diff <integration-tip>..HEAD` shows EXACTLY what the PR
+  contributes and surfaces any cross-unit regression a rebuild caused (clearer than
+  eyeballing `report.json`).
+- The orchestrator commits a measured `match.db` snapshot on every stack commit (so the
+  per-step `diff` works). That binary therefore travels in a PR's own commits - treat it
+  like a generated artifact: never 3-way-merge it, regenerate it (step 6).
 
 The integration branch is **`feature/agentic-matching-loop-2`** unless told
 otherwise. Always `git fetch origin` first; reason about `origin/...` refs.
@@ -78,6 +93,11 @@ everything below already merged. When a hunk DOES conflict, resolve by intent:
 - **shared headers / `.cpp`** - if the integration advanced a header this PR also
   touched, take both changes (the PR's function edit AND the inherited edit). Never
   drop matched code to make a conflict go away.
+- **`docs/binary_matching/match.db`** - a generated binary snapshot (the per-step DB);
+  NEVER 3-way-merge it. Take either side to get past the cherry-pick
+  (`git checkout --theirs docs/binary_matching/match.db && git add` it), then REGENERATE
+  it from this PR's rebuilt source in step 6 (`rebuild.py`, which regenerates the DB) and
+  commit the fresh snapshot - so the landed PR carries a DB measured against the advanced base.
 After resolving, re-run the brace check. Confirm the tree matches the old PR content where nothing should have
 changed: `git diff backup/pr<N> HEAD --stat` should be empty (pure rebase) unless a
 real conflict forced a content change - explain any non-empty diff.
@@ -91,20 +111,30 @@ This per-PR force-push is safe ONLY because you land strictly in order - nothing
 downstream relies on the old branch yet. NEVER `git push --force` (plain) and NEVER
 push to the integration branch.
 
-## 6. Rebuild LOCALLY in this worktree (never the sibling repo)
-The structure-verifier needs `binaries/` built from THIS PR's source. Build here:
+## 6. Rebuild + regen the DB LOCALLY in this worktree, then diff-verify
+The structure-verifier needs `binaries/` built from THIS PR's source, and the landed PR
+needs a `match.db` snapshot measured against the advanced base. Both in ONE command, here:
 ```
 nix develop -c python3 scripts/rebuild.py
 ```
-- This worktree is self-sufficient. Do NOT symlink or read another checkout's
-  `binaries/` - build them here. The first `nix develop` entry in a fresh tree also
-  generates the branch-independent target side once (~minutes); the base build is
-  ~20-40 min. Run it in the background and wait; do NOT `git checkout` another branch
-  while ninja is compiling (it reads the working tree). The first `nix develop -c`
-  call prints a setup banner that can swallow output - warm up with `nix develop -c
-  true` if needed.
-- Read `binaries/objdiff/report.json` / `report-changes.json` after: confirm THIS
-  PR's function(s) are present and note any regression the rebuild surfaced.
+- `rebuild.py` runs the incremental build AND regenerates `match.db` from the fresh
+  `report.json` at the end of its run (`match_db.py refresh` is the regen-only path if the
+  artifacts are already built). This worktree is self-sufficient - do NOT symlink or read
+  another checkout's `binaries/`. A fresh tree's first `nix develop` entry generates the
+  branch-independent target side once (~minutes); the base build is ~20-40 min cold,
+  ~2-3 min incremental. Run it in the background and wait; do NOT `git checkout` another
+  branch while ninja compiles (it reads the working tree). First `nix develop -c` prints
+  a setup banner that can swallow output - warm with `nix develop -c true` if needed.
+- **Commit the regenerated `docs/binary_matching/match.db`** onto `<this-head>` (amend
+  the PR's DB-snapshot commit, or add a `match_db: refresh DB for #<N> on advanced base`
+  commit) so the PR carries a DB measured against the advanced integration tip.
+- **Diff-verify** (don't eyeball `report.json`):
+  ```
+  python3 scripts/match_db.py diff origin/feature/agentic-matching-loop-2..HEAD --module <m>
+  ```
+  Confirm THIS PR's function(s) appear (new / improve / TOUCHED) and that nothing in
+  OTHER units regressed. A regression here is a stop-condition (step 8). Quote the diff
+  summary line in your report.
 
 ## 7. Unleash the structure-verifier on the PR's function(s)
 For each function the PR matched, dispatch one `structure-verifier` worker (you are
@@ -143,7 +173,8 @@ Per-PR report (one block each time you hand a PR back):
 PR #<N> <title>
   bottom-of-stack: yes ; own commits cherry-picked: <list> ; conflicts: <none | what+how resolved>
   rebased onto feature/agentic-matching-loop-2, force-pushed <sha>, base repointed -> <mergeable state>
-  local rebuild: <ok ; report.json has fn(s) ; regressions: none | what>
+  rebuild + DB refresh: <ok ; match.db snapshot committed <sha>>
+  diff vs base: <new N / improve N / regress N / touched N - name any REGRESS in another unit>
   structure: <fn -> MATCH | MISMATCH (quantity|size|both): cause -> report path> [per function]
   -> READY TO MERGE (waiting for your merge to advance) | STOPPED (structure mismatch - your call)
 ```
