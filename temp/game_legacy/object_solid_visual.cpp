@@ -266,11 +266,6 @@ void object_skeleton_visual::on_visual_ready( resources::queries_result& data )
 	}
 }
 
-object_particle_visual::object_particle_visual( game_scene& w )
-:super		( w ),
-m_playing	( false )
-{}
-
 void object_particle_visual::unload_contents( )
 {
 	if (m_particle_system_instance_ptr)

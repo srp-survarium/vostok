@@ -7,10 +7,14 @@
 
 namespace survarium {
 
+static u32 decal_ids = 0;
+
 // STATE[STUB]
  object_decal::object_decal( base_game_scene& w ) :
 	game_object_static( w )
 {
+	m_decal_id = decal_ids++;
+
 	// FUNCTION BODY[0x78f200]: 1
 	// <0x78f213>|0x013|+0x021:'25'
 	// ******
