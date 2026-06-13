@@ -20,6 +20,8 @@
 #include <vostok/game_core/breath_holding_params.h>
 #include "breath_holding_states.h"
 #include "breath_holding_states_inline.h"
+#include <vostok/game_core/usable_object_user_data.h>
+#include <vostok/game_core/normal_random.h>
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/client_player_update.h>
@@ -200,22 +202,41 @@ namespace vostok
 		survarium::breath_state_holding		st_holding( reserve );
 		survarium::breath_state_shortbreathing	st_short( reserve );
 
-		st_normal.set_breath_holding_params( &params );
-		st_normal.initialize( );
-		st_normal.tick( 0.0f );
-		st_normal.is_ready_for_transition( );
+		// the overrides are private virtuals; dispatch through the base
+		// interface so each is reachable and instantiated.
+		survarium::breath_state& base_normal = st_normal;
+		survarium::breath_state& base_holding = st_holding;
+		survarium::breath_state& base_short = st_short;
 
-		st_holding.set_breath_holding_params( &params );
-		st_holding.tick( 0.0f );
-		st_holding.is_ready_for_transition( );
+		base_normal.set_breath_holding_params( &params );
+		base_normal.initialize( );
+		base_normal.tick( 0.0f );
+		base_normal.is_ready_for_transition( );
 
-		st_short.set_breath_holding_params( &params );
-		st_short.tick( 0.0f );
-		st_short.is_ready_for_transition( );
+		base_holding.set_breath_holding_params( &params );
+		base_holding.tick( 0.0f );
+		base_holding.is_ready_for_transition( );
+
+		base_short.set_breath_holding_params( &params );
+		base_short.tick( 0.0f );
+		base_short.is_ready_for_transition( );
 
 		example_callback( reinterpret_cast< pcstr >( &st_normal ) );
 		example_callback( reinterpret_cast< pcstr >( &st_holding ) );
 		example_callback( reinterpret_cast< pcstr >( &st_short ) );
+	}
+
+	void use_game_core_usable_object_user_data( )
+	{
+		survarium::usable_object_user_data data;
+		example_callback( reinterpret_cast< pcstr >( &data ) );
+	}
+
+	void use_game_core_normal_random( )
+	{
+		survarium::normal_random rnd;
+		float n = rnd.rand_n( 1.0f );
+		example_callback( reinterpret_cast< pcstr >( &n ) );
 	}
 
 	void use_game_core_initialize( )
@@ -2358,6 +2379,8 @@ namespace vostok
 		use_recoil_calculator( );
 		use_dispersion_calculator( );
 		use_game_core_breath_holding_states( );
+		use_game_core_usable_object_user_data( );
+		use_game_core_normal_random( );
 		use_character_dispersion_calculator( );
 		use_game_material_manager( );
 		use_weapon_dispersion_calculator( );
