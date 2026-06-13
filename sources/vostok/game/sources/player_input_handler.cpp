@@ -232,6 +232,25 @@ bool player_input_handler::alt_is_held( ) const
 	// ******
 }
 
+// TU-local primary template (canonical "headers/first_predicate_enum
+// survarium__game_action_id_.h" - the PDB only records the <game_action_id>
+// monomorphisation; its consumer is process_first_person_mode's __find_if over
+// m_game_actions, per the rich index)
+template < typename T >
+struct first_predicate {
+	inline	explicit	first_predicate	( T const& arg_0 ) :
+		parameter( arg_0 ) { /* no source */ }
+
+	// inlined away in the __find_if COMDAT (no PDB record); pair.first shape
+	// per the instantiation's argument types
+	template < typename P >
+	inline	bool	operator()	( P const& arg_0 ) const { /* no source */ return arg_0.first == parameter; }
+
+	/* 0x0000 */	T		parameter;
+}; // struct first_predicate
+
+STATIC_SIZE_ASSERT(first_predicate< enum game_action_id >, 0x4);
+
 // STATE[STUB]
 void player_input_handler::process_first_person_mode( const bool use_mouse_move )
 {
