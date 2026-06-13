@@ -17,6 +17,17 @@ enum query_info_types
 {
 };
 
+// canonical: headers/others/enums/lobby__client_state_enum.h (lobby_client's
+// m_status member)
+enum client_state_enum
+{
+	surf_lobby_menu				= 0x0,
+	in_match_making_order		= 0x1,
+	in_match_making				= 0x2,
+	in_match					= 0x3,
+	unknown						= 0x4,
+};
+
 } // namespace lobby
 
 #endif // #ifndef LOBBY_ENUMS_H_INCLUDED

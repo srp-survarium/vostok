@@ -3,10 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\network_client.h"
+#include "network_client.h"
 
 namespace survarium {
 
+// TU static console command (compiler-generated atexit destructor); a matcher
+// recovers its type/initializer from the init asm when this TU is enabled.
+/*
 // STATE[STUB]
 void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 {
@@ -14,9 +17,19 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 	// <0x7d84f0>|0x000|      :'26'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
- network_client::network_client( game& g, const bool is_spectator )
+ network_client::network_client( game& g, const bool is_spectator ) :
+	base_network_client( g ),
+	// the client members have no default ctors; the world placeholders are
+	// buildability only - a matcher supplies the real network world when this
+	// TU is enabled
+	m_login_client( *( network::world* )NULL ),
+	m_lobby_client( g ),
+	m_match_client( *( network::world* )NULL ),
+	m_messaging_client( g ),
+	m_http_client( *( network::world* )NULL )
 {
 	// STATICS
 	// static console_commands::cc_delegate s_attach_to_player = <0x4c2bad8>;
@@ -559,6 +572,9 @@ void network_client::connect_to_login(
 // STATE[STUB]
 game_world& network_client::get_game_world( )
 {
+	// buildability return; the real body reaches the world through m_game
+	return *( game_world* )NULL;
+
 	// FUNCTION BODY[0x702e50]: 1
 	// <0x702e50>|0x000|+0x008:'453'
 	// ******
@@ -660,6 +676,9 @@ void network_client::draw_stats( const u32 current_time_in_ms )
 // STATE[STUB]
 game_team_id network_client::get_player_team( pcstr player_profile_name )
 {
+	// buildability return
+	return team_invalid;
+
 	// FUNCTION BODY[0x702e60]: 6
 	// <0x702e60>|0x000|+0x001:'538'	{
 	// <0x702e61>|0x001|+0x00f:'539'
@@ -672,32 +691,5 @@ game_team_id network_client::get_player_team( pcstr player_profile_name )
 	// <0x702eca>|0x06a|      :'545'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::inventory_item_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

@@ -3,13 +3,16 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\network_client_processing.h"
+#include "network_client.h"
 
 namespace survarium {
 
 // STATE[STUB]
 player_ptr network_client::get_player( const u8 id ) const
 {
+	// buildability return; the real body indexes m_net_players
+	return player_ptr( );
+
 	// FUNCTION BODY[0x5c51c0]: 2
 	// <0>
 	// <0x5c51c0>|0x000|+0x046:'62'
@@ -186,11 +189,13 @@ void network_client::process_team_bases( network_core::packet_reader& reader )
 }
 
 // STATE[STUB]
+// TU-local sign-out callback; PDB: all four params __formal (genuinely
+// unused) - they would collide, left unnamed
 void on_signed_out(
-	connection_error_types_enum			__formal,
-	handshaking_error_types_enum		__formal,
-	socket_error_types_enum				__formal,
-	login_server_message_types_enum		__formal
+	connection_error_types_enum,
+	handshaking_error_types_enum,
+	socket_error_types_enum,
+	login_server_message_types_enum
 )
 {
 	// FUNCTION BODY[0x5c4210]: 0
@@ -431,6 +436,10 @@ void network_client::process_match_wait_timer( network_core::packet_reader& pack
 	// ******
 }
 
+// TU static console value behind setup_camera_for_warmup (compiler-generated
+// dynamic initializer + atexit destructor); a matcher recovers its type/
+// initializer from the init asm when this TU is enabled.
+/*
 // STATE[STUB]
 void `dynamic initializer for 'cc_warmup_camera_position''( )
 {
@@ -446,6 +455,7 @@ void `dynamic atexit destructor for 'cc_warmup_camera_position''( )
 	// <0x7d8e10>|0x000|      :'347'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
 void network_client::setup_camera_for_warmup( )
@@ -1196,40 +1206,5 @@ void network_client::damage_model_state_arrived( network_core::packet_reader& pa
 	// <0x5c48dd>|0x01d|+0x012:'1031'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	long
-	// 	counter_type;
-
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::inventory_item_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::memory::multi_threading_single_size_allocator_policy< vostok::memory::single_size_buffer_allocator< 128, vostok::threading::simple_lock >::node >::free_list_type
-	// 	free_list_type;
-
-	// ******
 
 } // namespace survarium

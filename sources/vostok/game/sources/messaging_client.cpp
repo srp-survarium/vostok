@@ -3,12 +3,18 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\messaging_client.h"
+#include "messaging_client.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit messaging_client::messaging_client( game& g )
+ messaging_client::messaging_client( game& g ) :
+	// ref members + no-default-ctor packet client force the init-list; the
+	// chat_handler/world placeholders are buildability only - a matcher
+	// supplies the real sources (game's chat handler) when this TU is enabled
+	m_game( g ),
+	m_chat_handler( *( chat_handler* )NULL ),
+	m_network_client( *( network::world* )NULL )
 {
 	// FUNCTION BODY[0x7666a0]: 11
 	// <0>
@@ -220,32 +226,5 @@ bool messaging_client::read_found_players( network_core::packet_reader& reader )
 	// <0x765fc9>|0x099|+0x003:'169'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	survarium::account_list_item*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

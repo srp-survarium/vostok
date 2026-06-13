@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\messaging_client_sign_in.h"
+#include "messaging_client.h"
 
 namespace survarium {
 
@@ -68,16 +68,5 @@ void messaging_client::update_channel_subscriptions( )
 	// <0x799aeb>|0x08b|+0x00e:'60'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium
