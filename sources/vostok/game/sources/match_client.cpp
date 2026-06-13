@@ -3,10 +3,16 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\match_client.h"
+#include "match_client.h"
+
+#include <vostok/network_core/udp_network_flow_emulator_options.h>
 
 namespace survarium {
 
+// TU statics behind the flow-emulator console commands (compiler-generated
+// dynamic initializers); a matcher recovers their types/initializers from the
+// init asm when this TU is enabled.
+/*
 // STATE[STUB]
 void `dynamic initializer for 's_flow_emulator''( )
 {
@@ -38,6 +44,7 @@ void `dynamic initializer for 's_max_ping''( )
 	// <0x7d8c80>|0x000|      :'16'	{
 	// ******
 }
+*/
 
 // STATE[STUB]
 network_core::udp_network_flow_emulator_options const* network_flow_emulator_options( )
@@ -64,7 +71,11 @@ network_core::udp_network_flow_emulator_options const* network_flow_emulator_opt
 }
 
 // STATE[STUB]
-explicit match_client::match_client( network::world& world )
+ match_client::match_client( network::world& world ) :
+	// network::match_client has no default ctor; the same-named param, the
+	// orderer member and the TU's options getter are the obvious sources - a
+	// matcher confirms when this TU is enabled
+	m_client( world, m_packets_orderer, network_flow_emulator_options( ) )
 {
 	// FUNCTION BODY[0x5c7410]: 0
 	// <0x5c7410>|0x000|+0x034:'41'	{

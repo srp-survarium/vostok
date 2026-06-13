@@ -423,6 +423,10 @@ private:
 
 STATIC_SIZE_ASSERT(player, 0x10F88);
 
+// per-instantiation assert for m_history (the PDB's monomorphised
+// circular_buffer_survarium__client_player_history_item_ dump)
+STATIC_SIZE_ASSERT(circular_buffer< client_player_history_item >, 0x14);
+
 typedef resources::resource_ptr<
 	player,
 	resources::unmanaged_intrusive_base

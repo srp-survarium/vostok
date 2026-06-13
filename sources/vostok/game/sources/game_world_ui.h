@@ -6,6 +6,7 @@
 #define GAME_WORLD_UI_H_INCLUDED
 
 #include <vostok/game_core/affect_event_type_enum.h>
+#include <vostok/game_core/game_mode_type.h>
 #include <vostok/game_core/hit_affects_type_enum.h>
 #include <vostok/game_core/profile_slot_enum.h>
 
@@ -33,13 +34,8 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > player_ptr;
 
-enum game_mode_type
-{
-	capture_enemy_base		= 0x00,
-	capture_neutral_base	= 0x01,
-	gather_victory_items	= 0x02,
-	invalid_game_mode		= 0xff,
-};
+// the dump re-prints game_mode_type here; the real home is game_core (see
+// game_mode_type.h) - included via the header list above, not redefined
 
 class game_world_ui : public boost::noncopyable {
 public:

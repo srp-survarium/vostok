@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\network_client_handler.h"
+#include "network_client.h"
 
 namespace survarium {
 
@@ -210,20 +210,5 @@ void network_client::on_match_packet_received( const u8 message_type, network_co
 	// <0x7c0617>|0x217|      :'152'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	survarium::inventory_item_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

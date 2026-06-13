@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 06.12.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef CIRCULAR_BUFFER_INLINE_H_INCLUDED
@@ -11,7 +11,7 @@ namespace survarium {
 template < typename T >
 circular_buffer<T>::~circular_buffer( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x8efc0]: 4
 	// <0x8efc0>|0x000|+0x010:'25'
 	// <0x8efd0>|0x010|+0x013:'26'
 	// <0>
@@ -23,7 +23,7 @@ circular_buffer<T>::~circular_buffer( )
 template < typename T >
 T& circular_buffer<T>::new_item( )
 {
-	// FUNCTION BODY
+	// FUNCTION BODY[0x8f000]: 6
 	// <0x8f000>|0x000|+0x01e:'40'
 	// <0x8f01e>|0x01e|+0x003:'41'
 	// <0x8f021>|0x021|+0x015:'42'

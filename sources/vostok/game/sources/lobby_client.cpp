@@ -3,12 +3,17 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\lobby_client.h"
+#include "lobby_client.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit lobby_client::lobby_client( game& g )
+ lobby_client::lobby_client( game& g ) :
+	// ref member + no-default-ctor packet client force the init-list; the world
+	// placeholder is buildability only (NULL deref never runs in a stub) - a
+	// matcher supplies the real source when this TU is enabled
+	m_game( g ),
+	m_packet_client( *( network::world* )NULL )
 {
 	// FUNCTION BODY[0x5c8a70]: 12
 	// <0>
@@ -96,9 +101,10 @@ void lobby_client::on_disconnected( )
 }
 
 // STATE[STUB]
+// PDB: both params __formal (genuinely unused); two would collide - left unnamed
 void lobby_client::on_error(
-	network_core::client_error_codes_enum	__formal,
-	boost::system::error_code		__formal
+	network_core::client_error_codes_enum,
+	boost::system::error_code
 )
 {
 	// FUNCTION BODY[0x5c8440]: 4
@@ -372,6 +378,9 @@ faction_price const& lobby_client::price(
 	const u8	arg_0 /* u8 faction_id */
 )
 {
+	// buildability return
+	return m_prices[ 0 ];
+
 	// FUNCTION BODY[0x5c7520]: 2
 	// <0>
 	// <0x5c7520>|0x000|+0x00a:'293'
@@ -486,6 +495,9 @@ bool lobby_client::read_player_skills_tree( network_core::packet_reader& reader 
 // STATE[STUB]
 lobby::client_state_enum lobby_client::status( fixed_string< 128 >& dest ) const
 {
+	// buildability return
+	return m_status;
+
 	// STATICS
 	// static < NoType > 				 = <0x5c763c>;
 	// ******
@@ -771,28 +783,5 @@ bool lobby_client::read_ping_server_answer( network_core::packet_reader& reader 
 	// <0x5c774e>|0x05e|+0x002:'563'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::inventory_item_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium
