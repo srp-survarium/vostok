@@ -29,7 +29,7 @@ inline bool breath_state_normal::is_ready_for_transition( ) const
 inline void breath_state_normal::tick( const float dt )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params != 0 ) );
-	m_breath_holding_reserve = math::min( m_params->max_breath_holding_time, m_breath_holding_reserve + dt );
+	m_breath_holding_reserve = math::min( m_breath_holding_reserve + dt, m_params->max_breath_holding_time );
 }
 
 inline void breath_state_holding::set_breath_holding_params( breath_holding_params const* params )
@@ -58,7 +58,7 @@ inline void breath_state_shortbreathing::set_breath_holding_params( breath_holdi
 inline void breath_state_shortbreathing::tick( const float dt )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params != 0 ) );
-	m_breath_holding_reserve = math::min( m_params->max_breath_holding_time, m_restoring_speed * dt + m_breath_holding_reserve );
+	m_breath_holding_reserve = math::min( m_breath_holding_reserve + m_restoring_speed * dt, m_params->max_breath_holding_time );
 }
 
 inline bool breath_state_shortbreathing::is_ready_for_transition( ) const
