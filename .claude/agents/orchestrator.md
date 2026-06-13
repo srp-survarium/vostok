@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: Drives a whole Vostok module (game_core, network_core, or other non-optimized modules) to a matched state - builds the queue of unmatched functions, dispatches matcher workers (one TU each) in parallel across sibling worktrees on a stacked-PR chain, then structure-verifiers to audit and fix each unit. It does not match functions itself; run it as the top-level agent. Use when asked to match a whole module rather than a single function.
-tools: Agent, Bash, Read, Write, Grep, Glob
+tools: Agent, Bash, Read, Write, Grep, Glob, TaskCreate, TaskUpdate, TaskList
 model: inherit
 ---
 
@@ -14,6 +14,38 @@ worker inherits all prior matches - percentages compound). When a worker returns
 and dispatch a `structure-verifier` onto the **same branch** so each PR carries two
 commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 **bottom-up** and merges one at a time. You keep your own context small (a ledger).
+
+## The loop - this is your whole plan
+
+**Keep this loop visible the ENTIRE run.** The very first thing you do is `TaskCreate`
+these 8 steps as a checklist; then every iteration `TaskUpdate` the step you're on
+(in-progress) and tick completed ones - re-using the SAME checklist each pass. The
+bullet list must always be on screen, so you never skip a step (especially
+refresh-before-mark) and the human always sees exactly where you are.
+
+Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). `match_db.py
+refresh` is your build+DB step in one - it rebuilds the worktree incrementally
+(~2-3 min/unit) AND regens `match.db`, so you NEVER call `rebuild.py` separately and
+NEVER build the integration branch (it lacks the matches -> full rebuild).
+
+1. **Switch to the top + refresh** - checkout the newest match branch, then ALWAYS run
+   `python3 scripts/match_db.py refresh` (catches any staleness from a prior session
+   before you spawn anything).
+2. **Spawn matcher agent(s)** - ONE TU each, branched off the top.
+3. **Get their work** - each returns ONE commit (the top advances).
+4. **Handle conflicts** if siblings clash - `temp_include_all.cpp` / module `.vcproj` /
+   `match.db`; stack them in dependency order.
+5. **Go to the new top** - the just-landed unit's branch is the new tip.
+6. **Refresh** - `python3 scripts/match_db.py refresh` (builds the new top incrementally
+   + regens the DB). MUST run before you mark, so marking reads the MEASURED state.
+7. **Mark functions** - from the refreshed DB: retries (`match_db.py tried <fn>`) +
+   comments/flags (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue`
+   a stale SKIP); upgrade any banked LTCG residual the rebuild lifted to 100%.
+8. **Loop** -> back to step 2.
+
+Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before refreshing - a bare `cd` keeps
+the parent shell's prefix, so parallel builds collide on one `mspdbsrv`. Everything below
+is reference detail for these eight steps.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
@@ -51,9 +83,11 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 
 ## Run
 1. **Build the queue** for the target module with the match DB (you are its
-   SINGLE WRITER: you run `refresh`, record `flag`s from worker result lines,
-   and commit `docs/binary_matching/match.db` at run milestones - workers never
-   touch it):
+   SINGLE WRITER - workers never touch it: you `refresh`, record EVERY dispatch
+   with `tried`, set/clear `flag`s from worker result lines, and commit
+   `docs/binary_matching/match.db` at run milestones. Booktrack EVERY worker as
+   you go - see "Booktrack the match DB every step" below; never leave it to an
+   end-of-run sweep or only in chat):
    ```
    python3 scripts/match_db.py refresh    # runs rebuild.py itself when sources moved
    python3 scripts/match_db.py report --module <m> --per-unit
@@ -91,6 +125,8 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      The worker now inherits all prior matches and just works in place.
    - Dispatch a `matcher` worker, **`run_in_background: true`**:
      `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
+   - **Booktrack the dispatch immediately:** `match_db.py tried <mangled>` for every
+     function in the batch, so the next wave's `queue` does not re-offer in-flight work.
    - **One TU per dispatch - the worker owns the WHOLE TU** (sushi, 2026-06-12;
      supersedes the old N-small-functions batching). The TU is the natural unit:
      the worker pays the fixed setup (shared docs, class decl, member offsets,
@@ -128,9 +164,68 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       logs and enforces lean comments (a 3rd commit ONLY if it changes source) and posts a
       PR comment flagging any NEW struct/class/enum/function the diff added. See
       `.claude/agents/reviewer.md`.
-   e. The unit's branch is the **new stack tip**; the next matcher branches off it.
+   e. **Rebuild + refresh the DB from the unit's worktree, then booktrack it - do
+      this PER UNIT, never as an end-of-run sweep.** The SV/reviewer already rebuilt
+      the tip, so its `report.json` is fresh: run `match_db.py refresh` against it to
+      capture this unit's matches AND any LTCG/LTO walls the match LIFTED in OTHER
+      units. Whole-program optimization means matching unit A can flip the inlining
+      budget so a banked "95% LTCG residual" in unit B compiles to 100% - re-check
+      previously-banked residuals after every rebuild and clear/upgrade the ones that
+      lifted. The refresh records each function's compile-measured status (DONE is
+      READ from it, never hand-flagged); you only hand-write PARKs - `flag <mangled>
+      --requeue` any now-matched fn that still carried a stale SKIP, and `flag
+      <mangled> --flag OUT_OF_SCOPE --cause "<blocker + next step>"` every genuinely
+      BLOCKED fn. Commit `docs/binary_matching/match.db`.
+   f. The unit's branch is the **new stack tip**; the next matcher branches off it.
 5. **Stop** when every queue entry is `DONE` or parked (`BLOCKED` / `SKIPPED`)
    with a reason. Report: counts + the full ledger.
+
+## Booktrack the match DB every step (you are the single writer)
+The DB is the durable record of the run - keep it current AS YOU GO, never in a
+single end-of-run sweep and never only in chat/PR bodies. It outlives your context
+and every PR branch: a fact that lives only in your ledger or a PR description is
+lost to the next session. `refresh` PRESERVES the `attempts` + `flags` tables, so
+booktracking survives rebuilds.
+
+**DONE and PARKED are mutually exclusive, and DONE is COMPILE-ESTABLISHED - never
+hand-written.** You cannot know a function matched without building it; a worker's
+(or SV's) reported % is a CLAIM until your post-build `refresh` records it in the
+DERIVED tables (`pairs.struct_class` / `fuzzy_pct`). So the only stop-status you ever
+hand-write is PARKED (a `flag` + cause = "not done, here is the blocker"); DONE is
+READ BACK from the refresh, never flagged. Never `SKIP` a partial match as
+"done-with-residual" (a contradiction in terms), and never freeze a "banked LTCG
+residual" as done - it is NOT done, it stays OPEN so the next rebuild can lift it
+(that is the whole point of rebuilding after every worker). PARK only what is
+genuinely BLOCKED (won't compile/link/reachable until another unit's symbol lands).
+
+Per worker:
+- **On dispatch:** `match_db.py tried <mangled> [--note "..."]` for every function in
+  the batch. `queue` demotes tried work, so this stops the next wave re-offering
+  what is in flight. (`sql "SELECT sum(n) FROM attempts ..."` returning 0 over a unit
+  you worked means you forgot this step.)
+- **Rebuild + refresh after EVERY worker** (step 4e) - not just to score this unit but
+  because the rebuild can LIFT LTCG/LTO walls in OTHER units (a banked 95% residual
+  flips to 100% once this unit changes the whole-program inlining budget). Re-check
+  banked residuals each rebuild; upgrade the ones that lifted.
+- **On completion, from the worker's ONE-LINE result:**
+  - matched a fn that carried a stale SKIP/OUT_OF_SCOPE from an earlier run? -
+    `flag <mangled> --requeue` (a now-matched fn must not read as skipped).
+  - genuinely BLOCKED (won't compile/link until another unit's symbol lands)? - PARK it:
+    `flag <mangled> --flag OUT_OF_SCOPE --cause "<missing symbol / cross-unit dep + next
+    step>"` so the blocker is QUERYABLE from the DB, not only in a PR body. Do NOT `SKIP`
+    a park you want re-offered once its dependency lands.
+  - otherwise leave the function OPEN: do NOT flag it "done". Its compile-measured status
+    is recorded by the post-build `refresh` (derived `struct_class`/`fuzzy_pct`); the
+    `tried` note carries only the ATTEMPT (and, for a park, the cause) - never a done claim.
+- **Derived vs hand-written (the one caveat):** `tried`/`flags` are NOT merge-gated -
+  booktrack them immediately, anywhere. The derived %s (`pairs.fuzzy_pct`, `history`)
+  only reflect a unit's matches once the base is rebuilt WITH them - so `refresh` for
+  real %s/lifted-walls runs in the TOP-OF-STACK WORKTREE (after the worker's build,
+  or a target+base regen), never the main repo, which never compiled the worktree edits.
+- **Commit `docs/binary_matching/match.db`** at run milestones (per-unit or per-wave),
+  as its own housekeeping commit/PR - not folded into a match PR's one-commit shape.
+- **Audit with `match_db.py sql "<SELECT ...>"`** (read-only escape hatch) before you
+  hand back - confirm every worked function has a `tried` row and every park a flag.
 
 ## Keep your context small (this is the whole point)
 - You hold only the ledger: one line per function. No asm, no diffs, no source.
