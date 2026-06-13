@@ -11,10 +11,6 @@ namespace survarium {
 
  hit_info::hit_info( )
 {
-	// FUNCTION BODY[0x73ea50]: 0
-	// <0x73ea50>|0x000|+0x01c:'20'	{
-	// <0x73ea6c>|0x01c|      :'21'	}
-	// ******
 }
 
  hit_info::hit_info(
@@ -34,12 +30,16 @@ namespace survarium {
 	hit_initiator	( hit_initiator ),
 	being_hit		( being_hit )
 {
-	// FUNCTION BODY[0x73ea80]: 0
-	// <0x73ea80>|0x000|+0x059:'39'	{
-	// <0x73ead9>|0x059|      :'40'	}
-	// ******
 }
 
+// claude@NOTE: structure matches the target 1:1 (9 stmts, same source lines), but each
+// statement is byte-larger because the base INLINES packet_reader::r<bool>/r<float>/
+// r_string<16> while the target keeps them OUT-OF-LINE (standalone target symbols
+// ??$r@_N@, ??$r@M@, ??$r_string@$0BA@@ exist; the base has no such instantiations - they
+// inline at every site). Steering that is a cross-unit LTCG inliner decision in the already
+// matched packet_reader_inline.h, off-limits from here; the bigger base frame (sub esp 98h
+// vs 58h) and the per-statement +0xN sizes all follow from it. objdiff leaves it unpaired
+// purely on the size gap (0x117 vs 0x88 bytes).
 void hit_info::deserialize( network_core::packet_reader& packet )
 {
 	hit_initiator	= packet.r< bool >( );
