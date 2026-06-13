@@ -11,113 +11,8 @@
 using survarium::stats_graph;
 using vostok::render::world;
 
-stats_graph::stats_graph				(
-		float const time_interval,
-		float const invalid_value,
-		float const important_value0,
-		float const important_value1,
-		u32 const color
-	) :
-	m_current_value					( 0 ),
-	m_values_pool					( 0 ),
-#ifdef FIXED_FPS
-	m_last_render_time				( 0.f ),
-#endif // #ifdef FIXED_FPS
-	m_time_interval					( time_interval ),
-	m_invalid_value					( invalid_value	),
-	m_important_value0				( important_value0 ),
-	m_important_value1				( important_value1 ),
-	m_count							( 0 ),
-	m_color							( color )
-{
-#ifdef FIXED_FPS
-	m_last_commands[0]				= 0;
-#endif // #ifdef FIXED_FPS
-}
-
-stats_graph::~stats_graph				( )
-{
-	for ( u32 i=0; i < m_count; ++i ) {
-		stats_value* value			= m_current_value;
-		m_current_value				= m_current_value->next;
-		DELETE						( value );
-	}
-
-	while ( m_values_pool ) {
-		stats_value* value			= m_values_pool;
-		m_values_pool				= m_values_pool->next;
-		DELETE						( value );
-	}
-}
-
-void stats_graph::adjust_time_interval	( )
-{
-	ASSERT							( m_current_value->time >= m_current_value->next->time );
-	if ( m_current_value->time - m_current_value->next->time <= m_time_interval )
-		return;
-	
-	while ( m_current_value->time - m_current_value->next->next->time >= m_time_interval ) {
-		stats_value* old_value		= m_current_value->next;
-		m_current_value->next		= old_value->next;
-		old_value->next->previous	= m_current_value;
-		--m_count;
-
-		ASSERT						( m_count >= 2 );
-		ASSERT						( m_current_value->time - m_current_value->next->time >= m_time_interval );
-
-		if ( !m_values_pool ) {
-			m_values_pool			= old_value;
-			m_values_pool->next		= 0;
-		}
-		else {
-			old_value->next			= m_values_pool;
-			m_values_pool			= old_value;
-		}
-	}
-}
-
-void stats_graph::add_value				( float time, float value )
-{
-	if ( (m_count > 1) && (time - m_current_value->next->next->time >= m_time_interval) ) {
-		m_current_value				= m_current_value->next;
-		m_current_value->time		= time;
-		m_current_value->value		= value;
-		adjust_time_interval		( );
-		return;
-	}
-
-	stats_value*					new_value;
-	if ( !m_values_pool )
-		new_value					= NEW( stats_value );
-	else {
-		new_value					= m_values_pool;
-		m_values_pool				= m_values_pool->next;
-	}
-
-	new_value->time					= time;
-	new_value->value				= value;
-	++m_count;
-
-	if ( !m_current_value ) {
-		new_value->next				= new_value;
-		new_value->previous			= new_value;
-		m_current_value				= new_value;
-		return;
-	}
-
-	new_value->next					= m_current_value->next;
-	new_value->previous				= m_current_value;
-	m_current_value->next			= new_value;
-	new_value->next->previous		= new_value;
-	m_current_value					= new_value;
-}
-
-void stats_graph::set_time_interval		( float new_time_interval )
-{
-	m_time_interval					= new_time_interval;
-	adjust_time_interval			( );
-}
-
+// stats_time: canonical renamed this to cumulative_time() (a separate carcass
+// stub, not in this batch's port list) - left for manual review.
 float stats_graph::stats_time			( ) const
 {
 	R_ASSERT						( m_count );
@@ -126,15 +21,10 @@ float stats_graph::stats_time			( ) const
 	return							m_current_value->time - m_current_value->next->time;
 }
 
-float stats_graph::average_value		( ) const
-{
-	float const time				= stats_time();
-	if ( math::is_zero(time) )
-		return						( 0.f );
-
-	return							m_count / time;
-}
-
+// render: NOT HARVESTED. Signature diverged - the canonical render() drops the
+// legacy current_frame_id / left_margin / width params (carcass params are
+// top_margin / height / arg_4..6), so the legacy body's left_margin/width/
+// current_frame_id usage doesn't map. Needs manual review.
 void stats_graph::render				( vostok::render::ui::renderer& renderer, vostok::render::scene_view_ptr const& scene_view, u32 const current_frame_id, u32 const left_margin, u32 const top_margin, u32 const width, u32 const height )
 {
 	VOSTOK_UNREFERENCED_PARAMETER		(current_frame_id);
@@ -168,7 +58,7 @@ void stats_graph::render				( vostok::render::ui::renderer& renderer, vostok::re
 			max_value				= math::max( i->value, max_value );
 			++count;
 		}
-		
+
 		i							= i->next;
 	} while ( i->previous != m_current_value );
 
@@ -255,6 +145,9 @@ void stats_graph::render				( vostok::render::ui::renderer& renderer, vostok::re
 //	renderer.push_command				( command );
 }
 
+// stop_rendering: NOT HARVESTED. Legacy body is entirely under #ifdef FIXED_FPS
+// (off), so it compiles to nothing, but the carcass body (10 lines) clearly does
+// real work - divergence. Needs manual review.
 void stats_graph::stop_rendering	( )
 {
 #ifdef FIXED_FPS

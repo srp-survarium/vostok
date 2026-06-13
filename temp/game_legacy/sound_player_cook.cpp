@@ -16,86 +16,11 @@
 
 namespace survarium {
 
-sound_player_cook::sound_player_cook( sound::sound_scene_ptr& scene, sound::world* world, resources::class_id_enum class_id ) :
-	translate_query_cook			( class_id, reuse_false, use_current_thread_id ),
-	m_scene							( scene ),
-	m_world							( world ),
-	m_dbg_input_world				( 0 )
-{
-}
-
-sound_player_cook::sound_player_cook(	sound::sound_scene_ptr& scene,
-										sound::world* sound_world,
-										input::world* input_world,
-										resources::class_id_enum class_id ) :
-	translate_query_cook			( class_id, reuse_false, use_current_thread_id ),
-	m_scene							( scene ),
-	m_world							( sound_world ),
-	m_dbg_input_world				( input_world )
-{
-}
-
-void sound_player_cook::translate_query	( resources::query_result_for_cook& parent )
-{
-	resources::query_resource	(
-		parent.get_requested_path(),
-		resources::binary_config_class,
-		boost::bind( &sound_player_cook::on_config_loaded, this, _1 ),
-		g_allocator,
-		0,
-		&parent
-	);
-}
-
-void sound_player_cook::delete_resource	( resources::resource_base* resource )
-{
-	resource->~resource_base			( );
-	VOSTOK_FREE_IMPL						( g_allocator, resource );
-}
-
-void sound_player_cook::on_config_loaded				( resources::queries_result& data )
-{
-	resources::query_result_for_cook* const	parent		= data.get_parent_query();
-	if ( !data.is_successful() )
-	{
-		R_ASSERT										( data.is_successful(), "couldn't retrieve sound collection options" );
-		parent->finish_query							( result_error );
-		return;
-	}
-	
-	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr const>( data[0].get_unmanaged_resource() );
-	configs::binary_config_value const& sounds_value	= (*config)["sounds"];
-	
-	configs::binary_config_value::const_iterator it		= sounds_value.begin();
-	configs::binary_config_value::const_iterator it_end	= sounds_value.end();
-		
-	buffer_vector< resources::request >	requests		( ALLOCA( sizeof( resources::request ) * sounds_value.size() ), sounds_value.size() );
-	
-//	resources::user_data_variant user_data;
-//	user_data.set										( resources::wav_encoded_sound_interface_class ); 
-//	buffer_vector< resources::user_data_variant const* > sound_interface_params ( ALLOCA( sizeof( resources::user_data_variant* ) * sounds_value.size() ), sounds_value.size() );
-
-	for ( ; it != it_end; ++it )
-	{
-		configs::binary_config_value const& sound_value	= *it;
-		resources::request								request;
-		request.path									= sound_value["filename"];
-		request.id										= resources::sound_collection_class;
-		requests.push_back								( request );
-		//sound_interface_params.push_back				( &user_data );
-	}
-
-	query_resources	(
-		&requests.front(), 
-		requests.size(), 
-		boost::bind( &sound_player_cook::on_sounds_loaded, this, _1, config ), 
-		g_allocator,
-		0, //sound_interface_params.begin( ),
-		parent
-	);
-}
-	
-void sound_player_cook::on_sounds_loaded	( resources::queries_result& data, configs::binary_config_ptr config  )	
+// NOT HARVESTED: structural divergence. Canonical sound_player_cook dropped the
+// m_scene and m_dbg_input_world members and the scene-taking ctors, and the
+// ai_sound_player ctor arity differs (no scene / input_world overloads). Needs
+// manual review.
+void sound_player_cook::on_sounds_loaded	( resources::queries_result& data, configs::binary_config_ptr config  )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
 	if ( !data.is_successful() )
@@ -104,9 +29,9 @@ void sound_player_cook::on_sounds_loaded	( resources::queries_result& data, conf
 		parent->finish_query							( result_error );
 		return;
 	}
-	
+
 	configs::binary_config_value const& sounds_value	= (*config)["sounds"];
-	
+
 	sound::world_user* world_user					= 0;
 	switch ( get_class_id() )
 	{
@@ -166,7 +91,7 @@ void sound_player_cook::on_sounds_loaded	( resources::queries_result& data, conf
 			sound_value["priority"]
 		);
 	}
-	
+
 	parent->set_unmanaged_resource						( player, resources::nocache_memory, sizeof( ai_sound_player ) + sounds_size );
 	parent->finish_query								( result_success );
 }
