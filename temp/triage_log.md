@@ -528,3 +528,24 @@ fabricated from the rich index in `temp/structure_queue/sources_scaleform/`
 (batch 12). This also corrects the earlier "flash types have no addressed
 code" claim in the game README - flash_movie/flash_value bodies are
 OUT-OF-LINE in movie.cpp/value.cpp.
+
+## Pass 6: orphan TU-local predicate type-records (2026-06-13, batch 13)
+
+The 9 remaining `*_predicate` / `erase_*` headers are stateless functors
+(size 0x1, boost::noncopyable, all-inline `operator()`) with NO addressed code
+anywhere in the rich index - their `operator()` is always inlined into the
+`std::find_if`/`remove_if`/`for_each` that uses it. None is referenced in our
+tree, the legacy tree, or the canonical game compilands. Their argument types
+(`body_part_parameters*`, hit-receivers, collision results) are game_core's, so
+their consuming TUs are game_core's - and game_core is ALREADY matched, having
+reproduced those consuming functions' inlined behaviour WITHOUT needing the
+named struct (the same way damage_model.cpp defines affect_event_predicate
+locally). They are not `game` types and emit nothing to match, so they are
+dropped from the queue. The canonical dumps remain in
+binaries/structure/target/headers/survarium/ (regenerable) as priors if a
+future game_core consumer-TU match wants the original predicate name.
+
+Removed: check_health_predicate, compare_body_parts_predicate,
+dump_player_body_part_state_predicate, erase_null_ptrs, erase_old_receivers,
+find_closest_collision_predicate, remove_left_receivers_predicate,
+remove_vertex_from_hit_parameters_predicate, test_objects_in_shape_predicate.
