@@ -19,7 +19,7 @@
 
 #include "game_options.h"
 #include "game_world.h"
-#include "scaleform_game_engine.h"
+#include <vostok/scaleform/sources/scaleform_game_engine.h>
 #include "swf_input_translator.h"
 #include "text_translator.h"
 

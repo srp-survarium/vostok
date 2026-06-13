@@ -5,7 +5,7 @@
 #ifndef OPTIONS_ITEM_BASE_H_INCLUDED
 #define OPTIONS_ITEM_BASE_H_INCLUDED
 
-#include "flash_function_handler.h"
+#include <vostok/scaleform/sources/flash_function_handler.h>
 #include "option_item_type_enum.h"
 
 namespace vostok {

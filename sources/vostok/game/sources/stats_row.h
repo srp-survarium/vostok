@@ -5,7 +5,7 @@
 #ifndef STATS_ROW_H_INCLUDED
 #define STATS_ROW_H_INCLUDED
 
-#include "flash_text.h"
+#include <vostok/scaleform/sources/flash_text.h>
 #include "stats_stream.h"
 
 namespace vostok {

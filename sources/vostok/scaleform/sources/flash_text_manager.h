@@ -1,0 +1,48 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef FLASH_TEXT_MANAGER_H_INCLUDED
+#define FLASH_TEXT_MANAGER_H_INCLUDED
+
+// create_text/create_text_w return flash_text by value
+#include "flash_text.h"
+
+namespace Scaleform {
+namespace GFx {
+	class DrawTextManager;
+	class Loader;
+} // namespace GFx
+} // namespace Scaleform
+
+namespace survarium {
+
+struct flash_text_manager {
+	// all out-of-line in movie.cpp per the rich index, except the dtor and
+	// capture (unaddressed - true inlines)
+			explicit		flash_text_manager	( Scaleform::GFx::Loader* arg_0 );
+	inline					~flash_text_manager	( ) { /* no source */ }
+
+			void			set_viewport		( u32 arg_0, u32 arg_1 );
+
+			flash_text		create_text			( pcstr arg_0 );
+			flash_text		create_text_w		( wchar_t* arg_0 );
+
+			void			destroy_text		( flash_text& arg_0 );
+
+	inline	void			capture				( ) { /* no source */ }
+
+			void			tick				( );
+
+public:
+	/* 0x0000 */	Scaleform::GFx::DrawTextManager*	text_manager_impl;
+	/* 0x0004 */	bool								need_capture;
+	/* 0x0008 */	u32									m_output_width;
+	/* 0x000c */	u32									m_output_height;
+}; // struct flash_text_manager
+
+STATIC_SIZE_ASSERT(flash_text_manager, 0x10);
+
+} // namespace survarium
+
+#endif // #ifndef FLASH_TEXT_MANAGER_H_INCLUDED

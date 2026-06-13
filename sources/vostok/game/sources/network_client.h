@@ -15,7 +15,7 @@
 #include <vostok/game_core/client_player_update.h>
 
 #include "base_network_client.h"
-#include "flash_text.h"
+#include <vostok/scaleform/sources/flash_text.h>
 #include "game_status.h"
 #include "lobby_client.h"
 #include "match_client.h"

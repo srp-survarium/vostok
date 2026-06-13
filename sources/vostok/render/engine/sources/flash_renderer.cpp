@@ -7,7 +7,7 @@
 #include "pch.h"
 #include "flash_renderer.h"
 #include <vostok/render/core/device.h>
-#include <vostok/game/sources/flash_factory.h>
+#include <vostok/scaleform/sources/flash_factory.h>
 
 #pragma comment ( lib,"d3dx10.lib" )
 #pragma comment	( lib,"d3d10.lib")
