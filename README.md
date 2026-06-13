@@ -13,35 +13,35 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 51.79% fuzzy &middot; 9,516 / 25,372 functions exact (37.51%).**
+**Overall: 51.82% fuzzy &middot; 9,570 / 25,372 functions exact (37.72%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 387 / 2,805 (13.8%) | 3.5% |
-| `shared` | 112 | 821 / 2,255 (36.4%) | 36.1% |
-| `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
-| `game_core` | 189 | 554 / 1,429 (38.8%) | 22.9% |
+| `render` | 351 | 386 / 2,805 (13.8%) | 3.5% |
+| `shared` | 112 | 859 / 2,255 (38.1%) | 36.2% |
+| `game` | 141 | 20 / 1,634 (1.2%) | 0.1% |
+| `game_core` | 189 | 567 / 1,429 (39.7%) | 23.1% |
 | `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
 | `animation` | 102 | 161 / 880 (18.3%) | 5.4% |
 | `ai` | 124 | 428 / 759 (56.4%) | 38.9% |
-| `sound` | 69 | 214 / 517 (41.4%) | 16.8% |
-| `collision` | 52 | 370 / 516 (71.7%) | 31.0% |
+| `sound` | 69 | 213 / 517 (41.2%) | 16.7% |
+| `collision` | 52 | 371 / 516 (71.9%) | 31.0% |
 | `particle` | 25 | 269 / 485 (55.5%) | 26.5% |
 | `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
-| `ui` | 27 | 179 / 255 (70.2%) | 42.9% |
+| `ui` | 27 | 175 / 255 (68.6%) | 42.7% |
 | `physics` | 14 | 98 / 203 (48.3%) | 24.4% |
 | `fs` | 25 | 70 / 189 (37.0%) | 27.8% |
 | `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
 | `network` | 25 | 7 / 163 (4.3%) | 0.5% |
 | `network_core` | 22 | 31 / 140 (22.1%) | 12.8% |
-| `debug` | 16 | 97 / 127 (76.4%) | 65.5% |
+| `debug` | 16 | 96 / 127 (75.6%) | 65.5% |
 | `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
 | `input` | 9 | 31 / 56 (55.4%) | 27.7% |
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
 | `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
 
-_Updated 2026-06-12 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-13 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
@@ -169,6 +169,76 @@ off the **top** of the stack so percentages compound; you review the stack **bot
 merge one PR at a time (the `pr-verifier` agent prepares each onto the advancing base).
 Prereqs: worktrees `vostok_1..3` clean + warm (`binaries/rich/target` + `binaries/objdiff`
 present). Full rules: [`.claude/agents/orchestrator.md`](.claude/agents/orchestrator.md).
+
+## Reviewing match % (no rebuild needed)
+
+These read the **last build** - the committed `binaries/objdiff/report.json` and
+`docs/binary_matching/match.db`. For *current* numbers after edits, run
+`python3 scripts/match_db.py refresh` first (it rebuilds only if sources moved).
+A function is **DONE only when the compile says so** (`struct_class`/`fuzzy_pct`
+below); the only hand-set status is a **PARK** (an `out_of_scope` flag with a
+cause) - so a low % is "still open", never silently "done".
+
+```sh
+# headline + per-module table (overall fuzzy %, functions-exact)
+python3 scripts/match_score.py
+
+# per-UNIT rollup for a module, sorted 100%->0% (a header inline shows its .h file,
+# not a '(no unit)' lump): weighted_pct (size-weighted) + avg_pct (plain per-function
+# mean), struct_match, out_of_scope (parked). --lite drops custom_conv/out_of_scope/suspicious.
+python3 scripts/match_db.py report --module game_core --per-unit --lite
+
+# ONE unit by name or substring (--module optional; lean view; refuses with
+# paste-ready full names if the substring is ambiguous, e.g. medkit.cpp vs medkit.h)
+python3 scripts/match_db.py report --unit medkit
+
+# per-FUNCTION list for ONE unit, with a weighted%/avg% header. Columns: pct,
+# best (best-ever % - best=100 with pct<100 is a TRANSIENT/regressed match), tries
+# (matcher dispatches), cls, size, flag. Sorted 100%->0%; NULL pct = unpaired/open.
+python3 scripts/match_db.py report --unit medkit --per-function
+
+# any function by NAME substring, across files (e.g. all 'medkit::' members); same
+# columns + a file column (the .cpp TU, or the header for an inline fn) and a
+# count/weighted/avg header. --module optional.
+python3 scripts/match_db.py report --function 'medkit::'
+
+# (the fn column is the mangled-derived scope::name - no return type, template args, or
+#  parameter list, so even a boost/asio handler reads cleanly. --verbose shows the
+#  demangled signature instead; --json gives the full untruncated name. Works on diff too.)
+
+# TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
+# WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-
+# verifier (`pdb_fetch --view structure-diff`); a 100%/QUANTITY is the classic false win.
+python3 scripts/match_db.py sql "SELECT printf('%.1f',p.fuzzy_pct) pct, p.struct_class cls, substr(u.name,25) unit, s.demangled \
+  FROM pairs p JOIN symbols s ON s.id=p.sym JOIN target_functions t ON t.sym=p.sym JOIN units u ON u.id=t.unit \
+  WHERE t.module='game_core' AND p.fuzzy_pct>=80 AND p.struct_class IN ('QUANTITY','SPLIT') ORDER BY p.fuzzy_pct DESC"
+
+# every PARKED function + why (the blocker, queryable - not buried in a PR body)
+python3 scripts/match_db.py sql "SELECT substr(u.name,25) unit, s.demangled, f.cause \
+  FROM flags f JOIN symbols s ON s.mangled=f.mangled JOIN target_functions tf ON tf.sym=s.id \
+  JOIN units u ON u.id=tf.unit WHERE f.flag='OUT_OF_SCOPE' AND u.module='game_core'"
+
+# function-level DIFF of the committed match.db across revisions (a regression tracker):
+#   <hash>          compares that commit vs the working tree
+#   <hash>..<hash>  compares two commits
+# groups every changed function: regressed / lost / newly-matched / improved / reclassified
+python3 scripts/match_db.py diff <hash>..<hash> --module game_core   # --json for machine-readable
+```
+
+**`cls` (structure class)** is the DB's *approximate* shape verdict (the
+authoritative one is the structure-verifier's `pdb_fetch --view structure-diff`;
+full defs in [`match_db_design.md`](docs/binary_matching/match_db_design.md)):
+
+| `cls` | meaning |
+|---|---|
+| `MATCH` | same statement **count** *and* per-statement byte **sizes** - clean structure; only sub-statement noise left |
+| `SIZE` | same count, >=1 statement differs in **bytes** - skeleton matches; residual = inline-vs-call / LTCG / reg-alloc |
+| `SPLIT` | equal counts *and* total bytes, but alignment leaves paired target-only/base-only rows (line-attribution split) |
+| `QUANTITY` | statement **counts differ** - real missing/extra source statements (the high-%-over-WRONG-structure trap) |
+| `-` (NULL) | unpaired/open - no base match yet |
+
+A high `fuzzy_pct` with `cls = QUANTITY`/`SPLIT` is the trap the structure-verifier
+exists to catch: the bytes line up over the **wrong** statement shape.
 
 ## Docs
 
