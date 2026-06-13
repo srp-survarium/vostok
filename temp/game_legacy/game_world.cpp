@@ -214,10 +214,7 @@ void game_world::switch_to_hud_camera( )
 		m_camera_director->switch_to_camera	( m_actor_input_controller, "actor camera" );
 }
 
-void game_world::switch_to_free_fly_camera( )
-{
-	m_camera_director->switch_to_camera	( m_free_fly_camera, "free fly camera" );
-}
+// [batch 2] switch_to_free_fly_camera harvested into game_world.cpp
 
 bool game_world::empty( )
 {

@@ -73,14 +73,7 @@ static console_commands::cc_bool s_draw_stats("draw_stats", s_draw_stats_value, 
 static command_line::key		s_level_key			( "level", "", "", "level to load" );
 static command_line::key		s_run_sound_tests	( "run_sound_test", "", "", "test for sound system" );
 
-void cfg_save_user()
-{
-	vostok::console_commands::save(NULL, vostok::console_commands::command_type_user_specific, memory::g_mt_allocator );
-}
-void cfg_save_system()
-{
-	vostok::console_commands::save(NULL, vostok::console_commands::command_type_engine_internal, memory::g_mt_allocator );
-}
+// [batch 2] cfg_save_user / cfg_save_system harvested into game.cpp
 
 static cc_delegate	cgf_save_system_cc( "cfg_save_system", boost::bind(&cfg_save_system), false );
 static cc_delegate	cgf_save_user_cc( "cfg_save_user", boost::bind(&cfg_save_user), false );
@@ -417,21 +410,8 @@ void game::register_console_commands( )
  	static cc_delegate				cfg_unload_level( "level_unload", boost::bind( &game::unload_cmd, this, _1 ), false );
 }
 
-void game::switch_to_scene( game_scene* scene )
-{
-	R_ASSERT						( scene );
-//	ASSERT			( m_active_scene != scene );
-
-	if( m_active_scene )
-		m_active_scene->on_deactivate( );
-
-	m_active_scene	= scene;
-	m_active_scene->on_activate		( );
-
-#ifndef MASTER_GOLD
-	m_stats->set_active_scene(m_active_scene->dbg_name());
-#endif //#ifndef MASTER_GOLD
-}
+// [batch 2] switch_to_scene harvested into game.cpp (MASTER_GOLD body; the
+// non-MASTER_GOLD dbg_name/set_active_scene line has no canonical counterpart)
 
 u32 game::time_ms( )
 {
@@ -445,23 +425,7 @@ u32 game::time_ms( )
 //	m_sound_world.get_logic_world_user().set_listener_properties( m_inverted_view );
 //}
 
-void game::toggle_console			( )
-{
-	if ( m_console->get_active() )
-		m_console->on_deactivate	( );
-	else
-		m_console->on_activate		( );
-}
-
-void game::exit( pcstr str )
-{
-	unload							( str, true );
-
-	if ( m_engine.command_line_editor() )
-		m_engine.enter_editor_mode	( );
-	else
-		m_engine.exit				( 0 );
-}
+// [batch 2] toggle_console / exit harvested into game.cpp
 
 void game::tick( u32 const current_frame_id )
 {
@@ -609,15 +573,7 @@ void game::clear_resources				( )
 		m_game_world->unload			( );
 }
 
-void game::load_cmd						( pcstr project_name )
-{
-	load								( project_name );
-}
-
-void game::unload_cmd					( pcstr s )
-{
-	unload								( s, false );
-}
+// [batch 2] load_cmd / unload_cmd harvested into game.cpp
 
 void game::load( pcstr project_resource_name, pcstr project_resource_path )
 {
@@ -647,10 +603,7 @@ void game::unload( pcstr , bool destroying )
 		switch_to_scene					( m_main_menu );
 }
 
-void game::switch_to_lobby( )
-{
-		switch_to_scene					( m_lobby_menu );
-}
+// [batch 2] switch_to_lobby harvested into game.cpp
 
 void game::scene_close_query( )
 {
@@ -815,29 +768,7 @@ static void on_lua_config_loaded	( resources::queries_result& data )
 }
 #endif // #if 0
 
-void game::on_application_activate		( )
-{
-	threading::mutex_raii guard			( m_application_activation );
-
-	R_ASSERT							( !m_is_active );
-
-	if ( m_input_world )
-		m_input_world->on_activate		( );
-
-	m_is_active							= true;
-}
-
-void game::on_application_deactivate	( )
-{
-	if ( !m_input_world )
-		return;
-
-	threading::mutex_raii guard			( m_application_activation );
-
-//?	R_ASSERT	( m_is_active );
-	m_input_world->on_deactivate		( );
-	m_is_active							= false;
-}
+// [batch 2] on_application_activate / on_application_deactivate harvested into game.cpp
 //
 //
 //struct ray_query_predicate : private boost::noncopyable
@@ -945,21 +876,7 @@ void game::draw_debug_window			()
 	m_debug_window->draw				( renderer().ui(), get_active_scene_view() );
 }
 
-void game::create_debug_window			()
-{
-	R_ASSERT							(!m_debug_window);
-	m_debug_window						= m_ui_world->create_window( );
-	m_debug_window->set_visible			( true );
-	m_debug_window->set_position		( float2( 0.f, 120.f ) );
-	m_debug_window->set_size			( float2( 2024.f, 768.f ) );
-}
-
-void game::destroy_debug_window			()
-{
-	R_ASSERT							( m_debug_window );
-	m_ui_world->destroy_window			( m_debug_window );
-	m_debug_window						= 0;
-}
+// [batch 2] create_debug_window / destroy_debug_window harvested into game.cpp
 
 void game::toggle_debug_window			()
 {
@@ -981,11 +898,6 @@ vostok::render::scene_ptr const game::get_active_scene( )	const
 	return m_active_scene ? m_active_scene->get_render_scene() : NULL;//get_game_world().get_render_scene();
 }
 
-#ifdef VOSTOK_STATIC_LIBRARIES
-flash_factory&					game::get_flash_factory	( )
-{
-	return *m_flash_factory;
-}
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+// [batch 2] get_flash_factory already present in carcass (identical body)
 
 } // namespace survarium
