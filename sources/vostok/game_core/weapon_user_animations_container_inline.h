@@ -7,6 +7,13 @@
 
 namespace survarium {
 
+// claude@NOTE: target keeps get_animation_impl out-of-line as the instantiation
+// <27,5> (mangled $0BL@$05, hands param array [5]); our get_stand_animation passes
+// m_stand_hands_only_animations[is_third_view] which is [6], so we instantiate <27,6>
+// -> byte-identical body (hands_count only feeds the dropped ASSERT) but a different
+// mangled name, so objdiff never pairs it. get_stand_animation itself is 100% (the call
+// bytes are identical). Recovering <27,5> needs the original get_stand_animation source
+// (`/* no source */` in the target structure) - no [5] hands member exists to deduce 5 from.
 template < u32 move_count, u32 hands_count >
 inline resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl(
 		resources::managed_resource_ptr const	(&move)[ move_count ],
