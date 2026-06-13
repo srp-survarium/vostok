@@ -13,35 +13,35 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 49.84% fuzzy &middot; 8,735 / 25,372 functions exact (34.43%).**
+**Overall: 49.80% fuzzy &middot; 8,703 / 25,372 functions exact (34.30%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 388 / 2,805 (13.8%) | 4.2% |
-| `shared` | 112 | 840 / 2,255 (37.3%) | 33.7% |
+| `render` | 351 | 393 / 2,805 (14.0%) | 4.2% |
+| `shared` | 112 | 797 / 2,255 (35.3%) | 33.4% |
 | `game` | 141 | 1 / 1,634 (0.1%) | 0.0% |
-| `game_core` | 189 | 451 / 1,429 (31.6%) | 18.9% |
+| `game_core` | 189 | 453 / 1,429 (31.7%) | 18.9% |
 | `core` | 136 | 678 / 1,331 (50.9%) | 35.3% |
 | `animation` | 102 | 77 / 880 (8.8%) | 3.1% |
-| `ai` | 124 | 430 / 759 (56.7%) | 39.2% |
+| `ai` | 124 | 434 / 759 (57.2%) | 39.7% |
 | `sound` | 69 | 213 / 517 (41.2%) | 16.8% |
 | `collision` | 52 | 435 / 516 (84.3%) | 61.7% |
-| `particle` | 25 | 264 / 485 (54.4%) | 26.8% |
+| `particle` | 25 | 256 / 485 (52.8%) | 25.7% |
 | `vfs` | 71 | 195 / 412 (47.3%) | 16.9% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
 | `ui` | 27 | 174 / 255 (68.2%) | 43.0% |
 | `physics` | 14 | 103 / 203 (50.7%) | 28.2% |
-| `fs` | 25 | 76 / 189 (40.2%) | 31.6% |
+| `fs` | 25 | 80 / 189 (42.3%) | 31.8% |
 | `engine` | 22 | 54 / 165 (32.7%) | 11.3% |
 | `network` | 25 | 3 / 163 (1.8%) | 0.1% |
-| `network_core` | 22 | 26 / 140 (18.6%) | 6.2% |
+| `network_core` | 22 | 27 / 140 (19.3%) | 6.2% |
 | `debug` | 16 | 96 / 127 (75.6%) | 65.5% |
 | `logging` | 10 | 33 / 73 (45.2%) | 28.5% |
 | `input` | 9 | 27 / 56 (48.2%) | 24.8% |
 | `survarium` | 5 | 9 / 22 (40.9%) | 12.0% |
 | `ai_navigation` | 3 | 9 / 14 (64.3%) | 46.9% |
 
-_Updated 2026-06-12 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-13 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
