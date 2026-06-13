@@ -11,8 +11,8 @@ namespace survarium {
 
 class flash_factory;
 
-// out-of-line bodies live in game.cpp (translate_query/delete_resource/
-// on_raw_data_loaded) and base_game_scene.cpp (ctor) per the PDB
+// out-of-line bodies (ctor + translate_query/delete_resource/on_raw_data_loaded)
+// live in game.cpp per the PDB
 class scaleform_movie_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
 			explicit	scaleform_movie_cook	( flash_factory& factory );

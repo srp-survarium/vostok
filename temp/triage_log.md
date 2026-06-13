@@ -493,15 +493,30 @@ INSIDE their owner `.cpp` when that file's batch runs, not as standalone headers
   lobby_menu.h, no header placement forced)
 - `hit_object.h` -> human_npc.cpp (batch 6 - DONE: defined in the .cpp;
   human_npc.h needs only a fwd-decl for its on_hit_event const-ref param)
-- `max_angular_velocity_command.h` -> game.cpp (batch 11)
-- `ray_query_predicate.h` -> game.cpp / game_unused.cpp (legacy prior; batch 11)
-- `get_first_npc_in_camera_direction_predicate.h` -> game_unused.cpp lineage (batch 11)
-- owner UNKNOWN (no carcass/legacy signal - placed when a consumer TU is
-  matched; stay in queue for batch 12): check_health_predicate,
-  compare_body_parts_predicate, dump_player_body_part_state_predicate,
-  erase_null_ptrs, erase_old_receivers, find_closest_collision_predicate,
-  remove_left_receivers_predicate, remove_vertex_from_hit_parameters_predicate,
-  test_objects_in_shape_predicate
+- `max_angular_velocity_command.h` -> game.cpp (batch 11 - DONE: defined in the .cpp)
+- `ray_query_predicate.h` -> game_world_npc.cpp (batch 11 - DONE: that compiland
+  carries game_world::ray_query, the legacy game.cpp/game_unused.cpp family)
+- `get_first_npc_in_camera_direction_predicate.h` -> game_world_npc.cpp (batch 11 -
+  DONE: game_unused lineage; the new shape operates on physics::closest_ray_result)
+- `first_predicate_enum survarium__game_action_id_.h` -> player_input_handler.cpp
+  (batch 11 - DONE: primary template reconstructed there; the rich index pins the
+  __find_if<pair<game_action_id,action_state_enum>const*,first_predicate<...>>
+  COMDAT to process_first_person_mode)
+- owner UNKNOWN (no game-module carcass/legacy signal - placed when a consumer TU
+  is matched; stay in queue for batch 12). Batch-11 sweep notes (signals all point
+  at game_core TUs, cross-module - left untouched):
+  - check_health_predicate, compare_body_parts_predicate,
+    dump_player_body_part_state_predicate, remove_vertex_from_hit_parameters_predicate:
+    body_part_parameters/damage_info_type/hit_type_parameters machinery
+    (game_core damage_model.cpp defines its own same-family TU-locals;
+    damage_model.h::fill_stats is inline no-source)
+  - erase_null_ptrs, erase_old_receivers, remove_left_receivers_predicate:
+    hit_receiver_info consumers live in game_core damage_zone_core.cpp
+    (damage_zone_core.h::remove_left_receivers is inline no-source)
+  - find_closest_collision_predicate: physics::closest_ray_result; no game-module
+    consumer signal (step_manager.cpp/game_world_npc.cpp use the type directly)
+  - test_objects_in_shape_predicate: physics::contact_test_predicate derivative;
+    game_core damage_zone_core.cpp/collision_sensor.cpp are the consumer family
 
 ## Pass 5: the vostok/scaleform module gap (2026-06-12)
 

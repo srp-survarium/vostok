@@ -401,6 +401,10 @@ public:
 
 	inline	human_npc*							return_this					( ) { /* no source */ return this; }
 
+	// game_world's human_npc_list member typedef names &human_npc::next_npc
+	// (the PDB intrusive_list offset 320 = 0x140); friend grants the access
+	friend class game_world;
+
 private:
 	/* 0x0000 */	/* ai::npc */
 	/* 0x0004 */	/* ai::game_object */
