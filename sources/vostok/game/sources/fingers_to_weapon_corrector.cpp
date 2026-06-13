@@ -8,7 +8,9 @@
 namespace survarium {
 
 // STATE[STUB]
- fingers_to_weapon_corrector::fingers_to_weapon_corrector( )
+ fingers_to_weapon_corrector::fingers_to_weapon_corrector( ) :
+	// buildability: linear_interpolator has only explicit(float); matcher supplies real time
+	m_interpolator( 0.0f )
 {
 	// FUNCTION BODY[0x5bca00]: 0
 	// <0x5bca00>|0x000|+0x03a:'47'	{

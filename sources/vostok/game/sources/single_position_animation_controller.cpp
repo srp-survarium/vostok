@@ -4,6 +4,10 @@
 
 #include "pch.h"
 #include "single_position_animation_controller.h"
+// mixing::expression returned by value -> needs the complete type at the definition
+#include <vostok/animation/mixing_expression.h>
+// resource_ptr<animation_space_graph> dtor instantiates ->destroy() -> needs complete type
+#include "animation_space_graph.h"
 
 namespace survarium {
 
