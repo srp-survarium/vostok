@@ -2,6 +2,26 @@
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
 
+// claude@VERIFY (structure, 2026-06-13): every body in this TU is a confirmed
+// STRUCTURE MATCH (statement quantity + order). The low fuzzy% on several is a
+// header-level, cross-unit byte wall, NOT a per-TU structure defect:
+//   ctor / dtor / crouch_predicate ........ clean MATCH (no steerable residual)
+//   sprint/jump/stand_predicate, activate,
+//   deactivate ............................ SIZE-only on the ( *m_user->damage_model() )
+//                                           deref: target ICF-folds intrusive_ptr::operator*
+//                                           (mov eax,[eax]), base inlines the empty-stub'd
+//                                           assert + extra indirection (intrusive_ptr_inline.h).
+//                                           activate's BASE_ONLY/TRGT_ONLY rows are an
+//                                           aligner artifact from SIZE drift; both sides 7 stmts.
+//   is_weapon_firing/in_idle/toggling ..... SIZE +0x49 (identical) on the current_active_object()
+//                                           temp: intrusive_ptr<inventory_item> copy-ctor
+//                                           inline-vs-call + temp element type.
+//   set_sprint_callbacks / look_time_factor SIZE-only: static_cast_checked instantiation /
+//                                           float-op scheduling+regalloc (LTCG), not source-shape.
+//   look_time_factor_calculator ........... parked: LOG_INFO byte shape blocked on ungolded
+//                                           base logging (gold ICF-folds has_passed_filters/append).
+// None of the residuals is steerable from this TU; see the claude@NOTE blocks below.
+
 #include "pch.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/player_logic_base_state.h>		// current_state().serialize/deserialize virtuals
@@ -9,66 +29,56 @@
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/player_input.h>
+#include <vostok/game_core/player_stamina.h>
 #include <vostok/game_core/weapon_core.h>
+#include <vostok/physics/api.h>
+#include <vostok/physics/character_controller.h>
+
+#include "player_logic_stand_state.h"
+#include "player_logic_crouch_state.h"
+#include "player_logic_sprint_state.h"
+#include "player_logic_jump_state.h"
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_user_animations_selector::weapon_user_animations_selector()
-weapon_user_animations_selector::weapon_user_animations_selector( )
+weapon_user_animations_selector::weapon_user_animations_selector( ) :
+	m_forced_not_to_sprint		( false ),
+	m_right_leg_is_supporting	( true )
 {
-	// LOCALS
-	// player_logic_base_state* 	crouch
-	// player_logic_base_state* 	sprint
-	// player_logic_base_state* 	stand
-	// player_logic_base_state* 	jumping
-	// ******
+	player_logic_base_state* const stand	= VOSTOK_NEW_IMPL( g_allocator, player_logic_stand_state )( *this );
+	player_logic_base_state* const crouch	= VOSTOK_NEW_IMPL( g_allocator, player_logic_crouch_state )( *this );
+	player_logic_base_state* const sprint	= VOSTOK_NEW_IMPL( g_allocator, player_logic_sprint_state )( *this );
+	player_logic_base_state* const jumping	= VOSTOK_NEW_IMPL( g_allocator, player_logic_jump_state )( *this );
 
-	// FUNCTION BODY
-	// <0x595697>|0x087|+0x067:'27'
-	// <0x5956fe>|0x0ee|+0x067:'28'
-	// <0x595765>|0x155|+0x06d:'29'
-	// <0x5957d2>|0x1c2|+0x067:'30'
-	// <0>
-	// <0x595839>|0x229|+0x00f:'32'
-	// <0x595848>|0x238|+0x00f:'33'
-	// <0x595857>|0x247|+0x00f:'34'
-	// <0x595866>|0x256|+0x00f:'35'
-	// <0>
-	// <0x595875>|0x265|+0x066:'37'
-	// <0x5958db>|0x2cb|+0x066:'38'
-	// <0x595941>|0x331|+0x075:'39'
-	// <0>
-	// <0x5959b6>|0x3a6|+0x075:'41'
-	// <0x595a2b>|0x41b|+0x075:'42'
-	// <0>
-	// <0x595aa0>|0x490|+0x075:'44'
-	// <0x595b15>|0x505|+0x075:'45'
-	// <0x595b8a>|0x57a|+0x075:'46'
-	// <0>
-	// <0x595bff>|0x5ef|+0x075:'48'
-	// <0x595c74>|0x664|+0x075:'49'
-	// <0>
-	// <0x595ce9>|0x6d9|+0x075:'51'
-	// <0>
-	// <0x595d5e>|0x74e|+0x087:'53'
-	// <0>
-	// <0x595de5>|0x7d5|+0x00c:'55'
-	// ******
+	m_logic.add_state( stand );
+	m_logic.add_state( crouch );
+	m_logic.add_state( sprint );
+	m_logic.add_state( jumping );
+
+	m_logic.add_transition( stand,   crouch,  boost::bind( &weapon_user_animations_selector::crouch_predicate, this ) );
+	m_logic.add_transition( stand,   sprint,  boost::bind( &weapon_user_animations_selector::sprint_predicate, this ) );
+	m_logic.add_transition( stand,   jumping, boost::bind( &weapon_user_animations_selector::jump_predicate,   this ) );
+
+	m_logic.add_transition( crouch,  stand,   boost::bind( &weapon_user_animations_selector::stand_predicate,  this ) );
+	m_logic.add_transition( crouch,  sprint,  boost::bind( &weapon_user_animations_selector::sprint_predicate, this ) );
+
+	m_logic.add_transition( sprint,  crouch,  boost::bind( &weapon_user_animations_selector::crouch_predicate, this ) );
+	m_logic.add_transition( sprint,  stand,   boost::bind( &weapon_user_animations_selector::stand_predicate,  this ) );
+	m_logic.add_transition( sprint,  jumping, boost::bind( &weapon_user_animations_selector::jump_predicate,   this ) );
+
+	m_logic.add_transition( jumping, crouch,  boost::bind( &weapon_user_animations_selector::broken_legs_predicate, this ) );
+	m_logic.add_transition( jumping, stand,   boost::bind( &weapon_user_animations_selector::stand_predicate,  this ) );
+	m_logic.add_transition( jumping, sprint,  boost::bind( &weapon_user_animations_selector::sprint_predicate, this ) );
+
+	m_leg_damaged_subscriber.subscription_callback = boost::bind( &weapon_user_animations_selector::on_broken_limb_affect, this, _1, _2, _3 );
+
+	m_player_logic_initial_state = stand;
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::~weapon_user_animations_selector()
 weapon_user_animations_selector::~weapon_user_animations_selector( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
-
-	// FUNCTION BODY
-	// <0x5950ba>|0x00a|+0x011|[1]:'60'
-	// <0x5950cb>|0x01b|+0x028:'61'
-	// ******
+	while ( ai::fsm_state* state = m_logic.pop_state( ) )
+		VOSTOK_DELETE_IMPL( g_allocator, state );
 }
 
 void weapon_user_animations_selector::tick( )
@@ -97,38 +107,20 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> wea
 	return current_state( ).selected_animations( buffer, weapon_parameters, is_third_view );
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::activate(survarium::base_player&, boost::function<void __cdecl(void)> const&, boost::function<void __cdecl(void)> const&)
 void weapon_user_animations_selector::activate( base_player& user, boost::function<void()> const& sprint_start_callback, boost::function<void()> const& sprint_end_callback )
 {
-	// LOCALS
-	// ai::fsm_state* 				i<1>
-	// ******
+	m_user = &user;
 
-	// CALL SITE INFO
-	// <0x594fd9> -> void <unknown>(base_player&)
-	// <0x59505c> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::managed_resource_ptr const&, pcvoid const)
-	// <0x595088> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
+	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next )
+		static_cast< player_logic_base_state* >( i )->set_user( user );
 
-	// FUNCTION BODY
-	// <0x594f9a>|0x00a|+0x009:'101'
-	// <0x594fa3>|0x013|+0x021|[1]:'102'
-	// <0x594fc4>|0x034|+0x019:'103'
-	// <0>
-	// <0x594fdd>|0x04d|+0x00f:'105'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x594fec>|0x05c|+0x082:'113'
-	// <0>
-	// <0x59506e>|0x0de|+0x028:'115'
-	// <0x595096>|0x106|+0x010:'116'
-	// ******
+	m_logic.set_initial_state( m_player_logic_initial_state );
+
+	set_animation_callback( animation::channel_id_on_animation_interval_end, this, boost::bind( &weapon_user_animations_selector::on_interval_ended, this, _1 ) );
+
+	( *m_user->damage_model( ) ).subscribe_on_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
+
+	set_sprint_callbacks( sprint_start_callback, sprint_end_callback );
 }
 
 void weapon_user_animations_selector::deactivate( )
@@ -195,64 +187,26 @@ weapon_user_state_enum weapon_user_animations_selector::get_current_state_id( ) 
 	return static_cast_checked< player_logic_base_state* >( m_logic.current_state( ) )->id( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::sprint_predicate() const
 bool weapon_user_animations_selector::sprint_predicate( ) const
 {
-	// CALL SITE INFO
-	// <0x5953f0> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// <0x595433> -> player_input const& <unknown>() const
-	// <0x595454> -> player_stamina& <unknown>()
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x5953b9>|0x009|+0x0be:'190'
-	// <0>
-	// ******
+	return !is_weapon_firing( ) && !is_weapon_toggling( )
+		&& ( *m_user->damage_model( ) ).broken_legs_count( ) == 0
+		&& !m_forced_not_to_sprint
+		&& m_user->input( ).is_sprinting( )
+		&& m_user->stamina( ).can_be_spent( );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::stand_predicate() const
 bool weapon_user_animations_selector::stand_predicate( ) const
 {
-	// CALL SITE INFO
-	// <0x59556b> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// <0x5955a4> -> player_input const& <unknown>() const
-	// <0x5955d3> -> physics::bt_character_controller& <unknown>()
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0x595529>|0x009|+0x02a:'196'
-	// <0>
-	// <0x595553>|0x033|+0x007:'198'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59555a>|0x03a|+0x09c:'205'
-	// <0>
-	// <0x5955f6>|0x0d6|+0x012:'207'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	switch ( current_state( ).id( ) )
+	{
+		default:
+			return true;
+		case type_crouch:
+			return ( *m_user->damage_model( ) ).broken_legs_count( ) != 2 && !m_user->input( ).is_crouching( ) && m_user->physics_controller( ).can_stand( );
+		case type_sprint:
+			return !sprint_predicate( );
+	}
 }
 
 void weapon_user_animations_selector::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
@@ -275,79 +229,39 @@ void weapon_user_animations_selector::remove_animation_callback( animation::rese
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::crouch_predicate() const
 bool weapon_user_animations_selector::crouch_predicate( ) const
 {
-	// CALL SITE INFO
-	// <0x594b79> -> player_input const& <unknown>() const
-	// <0x594ba8> -> physics::bt_character_controller& <unknown>()
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x594b59>|0x009|+0x070:'243'
-	// ******
+	return broken_legs_predicate( ) || ( m_user->input( ).is_crouching( ) && m_user->physics_controller( ).can_crouch( ) );
 }
 
+// claude@NOTE: the `( *m_user->damage_model( ) )` deref wall, shared by deactivate /
+// sprint_predicate / jump_predicate / stand_predicate / activate: target folds
+// intrusive_ptr::operator* onto a no-assert representative (mov eax,[eax]); base emits the
+// inline ASSERT( m_object ) (call to the empty stub) + an extra indirection. Header-level
+// ICF/assert-fold artifact (intrusive_ptr_inline.h), not per-TU fixable; structure matches.
 bool weapon_user_animations_selector::broken_legs_predicate( ) const
 {
 	return ( *m_user->damage_model( ) ).broken_legs_count( ) == 2;
 }
 
-// STATE[STUB]
-// bool survarium::weapon_user_animations_selector::jump_predicate() const
 bool weapon_user_animations_selector::jump_predicate( ) const
 {
-	// LOCALS
-	// bool 						result
-	// ******
+	bool const result =
+		!is_weapon_firing( ) && !is_weapon_toggling( )
+		&& ( *m_user->damage_model( ) ).broken_legs_count( ) == 0
+		&& m_user->input( ).is_jumping( )
+		&& m_user->physics_controller( ).can_jump( )
+		&& m_user->stamina( ).current_value( ) >= m_user->stamina( ).amount_to_jump( );
 
-	// CALL SITE INFO
-	// <0x5952c0> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// <0x5952fc> -> player_input const& <unknown>() const
-	// <0x59532e> -> physics::bt_character_controller& <unknown>()
-	// <0x59534d> -> player_stamina& <unknown>()
-	// <0x595370> -> player_stamina& <unknown>()
-	// ******
-
-	return false;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x595289>|0x009|+0x11e:'261'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x5953a7>|0x127|+0x003:'274'
-	// ******
+	return result;
 }
 
+// claude@NOTE: is_weapon_in_idle / is_weapon_firing / is_weapon_toggling share a wall: the
+// target builds the current_active_object() temp via an out-of-line `intrusive_ptr<inventory_item>`
+// copy-ctor CALL, then reads the weapon_core flag; base INLINES the intrusive_ptr copy
+// (refcount dec/interlocked_increment) and over a different temp element type
+// (interactive_object/weapon_ammunition). Copy-ctor inline-vs-call + temp-type artifact, not
+// per-TU fixable; the weapon_core::is_idle/is_toggling bodies (recovered from this asm) are correct.
 bool weapon_user_animations_selector::is_weapon_in_idle( ) const
 {
 	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_idle( );
@@ -363,23 +277,11 @@ bool weapon_user_animations_selector::is_weapon_toggling( ) const
 	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_toggling( );
 }
 
-// STATE[STUB]
-// float survarium::weapon_user_animations_selector::look_time_factor() const
 float weapon_user_animations_selector::look_time_factor( ) const
 {
-	// CALL SITE INFO
-	// <0x594ad1> -> float <unknown>() const
-	// ******
-
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x594aa9>|0x009|+0x050:'301'
-	// ******
+	return math::min( 1.f - math::epsilon_5, m_user->get_look_pitch( ) / 2.f + .5f );
 }
 
-// STATE[STUB]
-// float survarium::weapon_user_animations_selector::look_time_factor_calculator(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float) const
 float weapon_user_animations_selector::look_time_factor_calculator(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -389,12 +291,14 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 	float		time_scale
 ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x594c99>|0x009|+0x041:'313'
-	// <0x594cda>|0x04a|+0x00b:'314'
-	// ******
+	// claude@NOTE: target L313 is a surviving LOG_* of these 5 params: in gold both
+	// has_passed_filters and append ICF-fold onto the empty stub (finalize_impl), so the
+	// site keeps only the 5 arg pushes. Base logging is NOT stubbed here (real
+	// has_passed_filters/append bodies + format/__FILE__/__LINE__ pushes), so the byte
+	// shape can't match until the logging module is gold-stubbed; structure (2 stmts) is
+	// right. Format/verbosity unverifiable without a stubbed base.
+	LOG_INFO( "%f %d %d %d %f", animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms, target_time_in_ms, time_scale );
+	return look_time_factor( ) * animation_length;
 }
 
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_user_animations_selector::look_time_calculator( ) const
@@ -425,23 +329,16 @@ bool weapon_user_animations_selector::is_in_jump( ) const
 	return current_state( ).id( ) == type_jump;
 }
 
-// STATE[STUB]
-// void survarium::weapon_user_animations_selector::set_sprint_callbacks(boost::function<void __cdecl(void)> const&, boost::function<void __cdecl(void)> const&)
 void weapon_user_animations_selector::set_sprint_callbacks( boost::function<void()> const& start_callback, boost::function<void()> const& end_callback )
 {
-	// LOCALS
-	// player_logic_base_state* 	state
-	// ******
+	player_logic_base_state* state = static_cast_checked< player_logic_base_state* >( m_logic.states( ).front( ) );
+	while ( state )
+	{
+		if ( state->id( ) == type_sprint )
+			static_cast< player_logic_sprint_state* >( state )->set_callbacks( start_callback, end_callback );
 
-	// FUNCTION BODY
-	// <0x594c39>|0x009|+0x01b:'351'
-	// <0x594c54>|0x024|+0x006:'352'
-	// <0x594c5a>|0x02a|+0x00f:'353'
-	// <0x594c69>|0x039|+0x010:'354'
-	// <0>
-	// <0x594c79>|0x049|+0x00f:'356'
-	// <0x594c88>|0x058|+0x002:'357'
-	// ******
+		state = static_cast_checked< player_logic_base_state* >( state->next );
+	}
 }
 
 } // namespace survarium
