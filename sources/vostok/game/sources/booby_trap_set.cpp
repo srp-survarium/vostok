@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "booby_trap_set.h"
+#include "game_world.h" // get_game_material_manager() needs complete type
 
 namespace survarium {
 

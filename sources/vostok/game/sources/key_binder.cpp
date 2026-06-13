@@ -32,6 +32,8 @@ STATIC_SIZE_ASSERT(console_command_bind, 0x68);
 // the cc_delegate base has no default ctor - a matcher supplies the real
 // (name, functor, need_args) base init when this TU is enabled
  console_command_bind::console_command_bind( key_binder* binder, s32 type )
+	// buildability: cc_delegate has no default ctor; matcher supplies real args
+	: console_commands::cc_delegate( NULL, console_commands::functor_type(), false )
 {
 	// FUNCTION BODY[0x91980]: 1
 	// <0x91980>|0x000|+0x0ab:'32'	{
@@ -85,6 +87,7 @@ void `dynamic atexit destructor for 'set_mouse_sensitivity_cc''( )
 
 // STATE[STUB]
  key_binder::key_binder( game& g )
+	: m_game( g ) // buildability: ref member must be init'd
 {
 	// STATICS
 	// static console_commands::cc_delegate s_unbind_key_command = <0x4c2b208>;

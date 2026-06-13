@@ -29,6 +29,7 @@ STATIC_SIZE_ASSERT(relocate_item_func, 0xC);
 
 // STATE[STUB]
  relocate_item_func::relocate_item_func( game& g )
+	: m_game( g ) // buildability: ref member must be init'd
 {
 	// FUNCTION BODY[0x93370]
 	// <0x93370>|0x000|      :'31'	{

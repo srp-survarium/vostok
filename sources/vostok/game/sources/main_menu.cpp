@@ -9,6 +9,7 @@ namespace survarium {
 
 // STATE[STUB]
  main_menu::main_menu( game& g )
+	: base_game_scene( g ) // buildability: base has no default ctor
 {
 	// FUNCTION BODY[0x5d9cb0]: 1
 	// <0x5d9cb8>|0x008|+0x01d:'43'

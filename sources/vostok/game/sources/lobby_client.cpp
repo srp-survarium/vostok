@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "lobby_client.h"
+#include "game_memory.h"	// g_allocator for allocator-taking vectora member
 
 namespace survarium {
 
@@ -13,7 +14,8 @@ namespace survarium {
 	// placeholder is buildability only (NULL deref never runs in a stub) - a
 	// matcher supplies the real source when this TU is enabled
 	m_game( g ),
-	m_packet_client( *( network::world* )NULL )
+	m_packet_client( *( network::world* )NULL ),
+	m_inventory_item_instances( g_allocator )	// allocator-taking vectora (no default ctor)
 {
 	// FUNCTION BODY[0x5c8a70]: 12
 	// <0>
@@ -614,7 +616,8 @@ void lobby_client::buy_item(
 }
 
 // STATE[STUB]
-void lobby_client::set_player_skills( vectora< player_skill >& skills, vectora< u8 >& perks )
+// player_skill( u8 ) getter member hides the type name here - qualify it
+void lobby_client::set_player_skills( vectora< survarium::player_skill >& skills, vectora< u8 >& perks )
 {
 	// LOCALS
 	// network_core::tcp_packet 		packet

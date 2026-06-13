@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "base_network_client.h"
+#include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 
 namespace survarium {
 
