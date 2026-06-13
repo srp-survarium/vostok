@@ -4,6 +4,10 @@
 
 #include "pch.h"
 #include "ai_sound_player.h"
+#include <vostok/sound/sound_emitter.h>
+#include <vostok/sound/sound_instance_proxy.h>
+#include <vostok/sound/world_user.h>
+#include <vostok/memory_writer.h>
 
 namespace survarium {
 
@@ -19,6 +23,8 @@ namespace survarium {
 	type( collection_type ),
 	priority( collection_priority )
 {
+	emitter.initialize_and_set_parent( parent, emitter_ptr.c_ptr() );
+
 	// FUNCTION BODY[0x5be300]: 1
 	// <0x5be300>|0x000|+0x01f:'24'
 	// ******
@@ -63,6 +69,15 @@ namespace survarium {
 // STATE[STUB]
  ai_sound_player::~ai_sound_player( )
 {
+	m_active_sound					= 0;
+
+	sounds_collection_type const* const begin	= sounds( );
+	sounds_collection_type const* const end		= begin + m_sounds_count;
+	for ( sounds_collection_type const* i = begin; i != end; ++i )
+	{
+		i->~sounds_collection_type	( );
+	}
+
 	// CALL SITE INFO
 	// <0x5be14f> -> void < unknown >( resources::resource_base* )
 	// ******
@@ -87,7 +102,14 @@ namespace survarium {
 // STATE[STUB]
 ai_sound_player::sounds_collection_type const* ai_sound_player::find( ai::sound_collection_types sound_type ) const
 {
-	return NULL;
+	sounds_collection_type const* const begin	= sounds( );
+	sounds_collection_type const* const end		= begin + m_sounds_count;
+	for ( sounds_collection_type const* i = begin; i != end; ++i )
+	{
+		if ( i->type == sound_type )
+			return i;
+	}
+	return 0;
 
 	// FUNCTION BODY[0x5bdc80]: 8
 	// <0x5bdc80>|0x000|+0x006:'88'
@@ -108,6 +130,16 @@ void ai_sound_player::play(
 	float3 const&					position
 )
 {
+	sounds_collection_type const* type	= find( sound_type );
+	R_ASSERT						( type, "such a type is absent in sound collections" );
+
+	m_active_sound					= type->emitter->emit( m_scene, m_user );
+	m_active_sound->set_callback	( boost::bind( &ai_sound_player::on_finish_playing, this ) );
+
+	if ( sound_is_positioned )
+		m_active_sound->set_position( position );
+	m_active_sound->play			( sound::once, m_sound_producer, m_ignorable_receiver );
+
 	// CALL SITE INFO
 	// <0x5bdf1e> -> void < unknown >( float3 const& )
 	// <0x5bdf3b> -> void < unknown >( sound::playback_mode, sound::sound_producer const* const, sound::sound_receiver const* const )
@@ -137,6 +169,12 @@ void ai_sound_player::play(
 	float3 const&							position
 )
 {
+	sound::sound_emitter_ptr sound	= static_cast_resource_ptr< sound::sound_emitter_ptr >( sound_to_be_played );
+	m_active_sound					= sound->emit( m_scene, m_user );
+	m_active_sound->set_callback	( finish_callback );
+	m_active_sound->set_position	( position );
+	m_active_sound->play			( sound::once, m_sound_producer, m_ignorable_receiver );
+
 	// LOCALS
 	// sound::sound_emitter_ptr 		sound
 	// ******
@@ -162,6 +200,13 @@ void ai_sound_player::play_once(
 	float3 const&					position
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETER			( sound_is_positioned );
+	sounds_collection_type const* type		= find( sound_type );
+	R_ASSERT								( type, "such a type is absent in sound collections" );
+
+	sound::sound_instance_proxy_ptr proxy	= type->emitter->emit( m_scene, m_user );
+	type->emitter->emit_and_play_once( m_scene, m_user, position, m_sound_producer, m_ignorable_receiver );
+
 	// LOCALS
 	// sound::sound_instance_proxy_ptr 	proxy
 	// ******
@@ -240,6 +285,9 @@ sound::command_result_enum ai_sound_player::on_finish_playing( )
 // STATE[STUB]
 void ai_sound_player::clear_resources( )
 {
+	// dbg scene/active-sound members removed from the canonical layout
+	m_active_sound			= 0;
+
 	// FUNCTION BODY[0x5bdd50]: 5
 	// <0x5bdd50>|0x000|+0x001:'378'	{
 	// <0>
@@ -256,6 +304,14 @@ void ai_sound_player::clear_resources( )
 // STATE[STUB]
 void ai_sound_player::on_active_sound_serialized( memory::writer* sound_thread_writer, memory::writer* current_thread_writer )
 {
+	current_thread_writer->write		( sound_thread_writer->pointer(), sound_thread_writer->size() );
+	if ( !current_thread_writer->save_to( "Z:/test.sound_player" ) )
+	{
+		LOG_ERROR( "unable to write file [Z:/test.sound_player]" );
+	}
+
+	VOSTOK_DELETE_IMPL					( g_allocator, current_thread_writer );
+
 	// CALL SITE INFO
 	// <0x5bdf77> -> void < unknown >( pcvoid, u32 )
 	// <0x5be071> -> void* < unknown >( u32 )
@@ -275,6 +331,8 @@ void ai_sound_player::on_active_sound_serialized( memory::writer* sound_thread_w
 // STATE[STUB]
 void ai_sound_player::on_active_sound_deserialized( memory::reader* reader, void* buf )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS		( reader, buf );
+
 	// FUNCTION BODY[0x5bdc60]: 2
 	// <0x5bdc60>|0x000|+0x000:'456'	{
 	// <0>
