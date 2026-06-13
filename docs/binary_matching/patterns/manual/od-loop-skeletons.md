@@ -40,3 +40,5 @@ $LN3@dw:
   83 7d 08 00 / 7f e4   cmp [n],0 / jg .top          ; back-edge, non-inverted; no top test
 ```
 Steerable: the `jmp .test` entry + a separate increment block = a `for` (not a `while`); a `while(c){...;++i;}` puts `++i` INLINE at the body bottom. for-head merges into one line record (for-head-statement-merges.md); `i != N` exits on `je`, `i < N` on `jge`/`jae` (loop-comparator-je-vs-jae.md).
+
+**What lands in the increment block** (the codebase's lockstep idiom): whatever you put in the for-increment goes there, ABOVE the test, in source order — `++a`, `++a,--b`, or `++a,f()` all emit into that block (the comma is NOT invisible here, cf. comma-operator-invisible.md). The SAME op written at the body bottom — `for(;;++a){ …; --b; }` or `{ …; f(); }` — lands in the body block instead (below the body, before the back-edge `jmp .incr`). So increment-block-vs-body-block placement distinguishes `for(;;++a,f())` from `for(;;++a){…;f();}` (probe-verified: `for(a=0;a<10;++a,hello())` puts `call hello` between `add a,1` and the `cmp`, while end-of-body puts it between `call body` and the back-edge).
