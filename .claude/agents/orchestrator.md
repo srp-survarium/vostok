@@ -38,9 +38,11 @@ NEVER build the integration branch (it lacks the matches -> full rebuild).
 5. **Go to the new top** - the just-landed unit's branch is the new tip.
 6. **Refresh** - `python3 scripts/match_db.py refresh` (builds the new top incrementally
    + regens the DB). MUST run before you mark, so marking reads the MEASURED state.
-7. **Mark functions** - from the refreshed DB: retries (`match_db.py tried <fn>`) +
-   comments/flags (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue`
-   a stale SKIP); upgrade any banked LTCG residual the rebuild lifted to 100%.
+7. **Mark functions** - from the refreshed DB: bump retries for the WHOLE worked TU
+   (`match_db.py tried --unit <tu>` marks EVERY function, even ones already at 100%, so
+   a later `diff` shows the whole TU was touched - not only the functions that moved);
+   flag parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP);
+   upgrade any banked LTCG residual the rebuild lifted to 100%.
 8. **Loop** -> back to step 2.
 
 Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before refreshing - a bare `cd` keeps

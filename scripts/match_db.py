@@ -1133,19 +1133,28 @@ def _db_blob_at(rev):
 
 
 def _fn_state(db_path, module):
-    """{mangled: row(dem, pct, cls, loc)} over a match.db's target functions."""
+    """{mangled: row(dem, pct, cls, loc, best, tries)} over a match.db's target fns.
+    Tolerates older schemas that lack the history/attempts tables (best=NULL,tries=0)."""
     con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
+    have = {r[0] for r in con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    best = "h.best_fuzzy_pct" if "history" in have else "NULL"
+    tries = "coalesce(a.n, 0)" if "attempts" in have else "0"
+    hist = "LEFT JOIN history h ON h.mangled = s.mangled" if "history" in have else ""
+    att = "LEFT JOIN attempts a ON a.mangled = s.mangled" if "attempts" in have else ""
     where = "WHERE t.module = ?" if module else ""
     rows = con.execute(
         f"""SELECT s.mangled AS m, s.demangled AS dem, p.fuzzy_pct AS pct,
-                   p.struct_class AS cls,
+                   p.struct_class AS cls, {best} AS best, {tries} AS tries,
                    coalesce(fl.path, un.name, '(no unit)') AS loc
             FROM symbols s
             JOIN target_functions t ON t.sym = s.id
             LEFT JOIN units un ON un.id = t.unit
             LEFT JOIN files fl ON fl.id = t.file
             LEFT JOIN pairs p ON p.sym = s.id
+            {hist}
+            {att}
             {where}""",
         ([module] if module else []),
     ).fetchall()
@@ -1171,42 +1180,49 @@ def cmd_diff(args):
                 os.unlink(t)
 
     eps = 0.01
-    regressed, improved, matched, lost, reclass = [], [], [], [], []
+    # ORDER drives both the printed summary and row grouping.
+    ORDER = ["REGRESS", "LOST", "NEW", "IMPROVE", "TOUCHED", "RECLASS"]
+    cats = {k: [] for k in ORDER}
     for m in set(a_state) | set(b_state):
         a, b = a_state.get(m), b_state.get(m)
-        ap = a["pct"] if a else None
-        bp = b["pct"] if b else None
-        ac = a["cls"] if a else None
-        bc = b["cls"] if b else None
-        dem = (b or a)["dem"]
-        loc = (b or a)["loc"]
+        ap, bp = (a["pct"] if a else None), (b["pct"] if b else None)
+        ac, bc = (a["cls"] if a else None), (b["cls"] if b else None)
+        at, bt = (a["tries"] if a else 0), (b["tries"] if b else 0)
+        rec = {"m": m, "dem": (b or a)["dem"], "loc": (b or a)["loc"],
+               "ap": ap, "bp": bp, "ac": ac, "bc": bc, "mx": (b or a)["best"],
+               "at": at, "bt": bt}
         if ap is None and bp is None:
-            continue
-        if ap is None:
-            matched.append((bp, bc, dem, loc, m))
+            kind, srt = ("TOUCHED", bt - at) if bt > at else (None, 0)
+        elif ap is None:
+            kind, srt = "NEW", bp
         elif bp is None:
-            lost.append((ap, ac, dem, loc, m))
+            kind, srt = "LOST", ap
         elif bp - ap > eps:
-            improved.append((bp - ap, ap, bp, ac, bc, dem, loc, m))
+            kind, srt = "IMPROVE", bp - ap
         elif ap - bp > eps:
-            regressed.append((bp - ap, ap, bp, ac, bc, dem, loc, m))
+            kind, srt = "REGRESS", bp - ap
         elif ac != bc:
-            reclass.append((ap, ac, bc, dem, loc, m))
+            kind, srt = "RECLASS", ap or 0
+        elif bt > at:                       # worked but % + structure unchanged
+            kind, srt = "TOUCHED", bt - at
+        else:
+            kind = None
+        if kind:
+            rec["srt"] = srt
+            cats[kind].append(rec)
+    for k in ORDER:                          # REGRESS most-negative first; rest desc
+        cats[k].sort(key=lambda r: r["srt"], reverse=(k != "REGRESS"))
 
     b_label = b_rev or "WORKTREE"
     if args.json:
-        cols6 = ["delta", "from", "to", "from_cls", "to_cls", "fn", "file"]
-        print(json.dumps({
-            "a": a_rev, "b": b_label, "module": args.module,
-            "regressed": [dict(zip(cols6, r)) for r in sorted(regressed)],
-            "improved": [dict(zip(cols6, r)) for r in sorted(improved, reverse=True)],
-            "newly_matched": [dict(zip(["to", "to_cls", "fn", "file"], r))
-                              for r in sorted(matched, reverse=True)],
-            "lost": [dict(zip(["from", "from_cls", "fn", "file"], r))
-                     for r in sorted(lost, reverse=True)],
-            "reclassified": [dict(zip(["pct", "from_cls", "to_cls", "fn", "file"], r))
-                             for r in sorted(reclass, reverse=True)],
-        }, indent=1))
+        def js(r):
+            return {"from": r["ap"], "to": r["bp"], "max": r["mx"],
+                    "from_cls": r["ac"], "to_cls": r["bc"],
+                    "tries_from": r["at"], "tries_to": r["bt"],
+                    "fn": r["dem"], "file": r["loc"]}
+        print(json.dumps({"a": a_rev, "b": b_label, "module": args.module,
+                          **{k.lower(): [js(r) for r in cats[k]] for k in ORDER}},
+                         indent=1))
         return
 
     def strip(loc):
@@ -1215,36 +1231,27 @@ def cmd_diff(args):
     def clsfmt(ac, bc):
         return (ac or "-") if ac == bc else f"{ac or ''}->{bc or ''}"
 
+    def pf(x):
+        return f"{x:.1f}" if x is not None else "-"
+
     print(f"[match_db] diff {a_rev} -> {b_label}"
           + (f"  (module {args.module})" if args.module else ""))
-    print(f"  regressed {len(regressed)}  lost {len(lost)}  "
-          f"newly-matched {len(matched)}  improved {len(improved)}  "
-          f"reclassified {len(reclass)}")
+    print("  " + "  ".join(f"{k.lower()} {len(cats[k])}" for k in ORDER))
 
+    DTAG = {"LOST": "gone", "NEW": "new", "TOUCHED": "~tries", "RECLASS": "~cls"}
     rows = []
-    for d, ap, bp, ac, bc, dem, loc, m in sorted(regressed):
-        rows.append({"kind": "REGRESS", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
-                     "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc),
-                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
-    for ap, ac, dem, loc, m in sorted(lost, reverse=True):
-        rows.append({"kind": "LOST", "d": "gone", "from": f"{ap:.1f}", "to": "-",
-                     "cls": clsfmt(ac, None), "file": strip(loc),
-                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
-    for bp, bc, dem, loc, m in sorted(matched, reverse=True):
-        rows.append({"kind": "NEW", "d": "new", "from": "-", "to": f"{bp:.1f}",
-                     "cls": clsfmt(None, bc), "file": strip(loc),
-                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
-    for d, ap, bp, ac, bc, dem, loc, m in sorted(improved, reverse=True):
-        rows.append({"kind": "IMPROVE", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
-                     "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc),
-                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
-    for ap, ac, bc, dem, loc, m in sorted(reclass, reverse=True):
-        rows.append({"kind": "RECLASS", "d": "~", "from": f"{ap:.1f}",
-                     "to": f"{ap:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc),
-                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
+    for k in ORDER:
+        for r in cats[k]:
+            d = (f"{r['bp'] - r['ap']:+.2f}" if k in ("REGRESS", "IMPROVE")
+                 else DTAG[k])
+            tries = (f"{r['at']}->{r['bt']}" if r["bt"] != r["at"] else str(r["bt"]))
+            rows.append({
+                "kind": k, "d": d, "from": pf(r["ap"]), "to": pf(r["bp"]),
+                "max": pf(r["mx"]), "cls": clsfmt(r["ac"], r["bc"]), "tries": tries,
+                "file": strip(r["loc"]),
+                "fn": (shorten_fn(r["dem"]) if args.verbose
+                       else fn_from_mangled(r["m"], r["dem"])),
+            })
     if not rows:
         print("  (no function-level differences)")
     else:
@@ -1448,7 +1455,8 @@ def cmd_tried(args):
     """Record that a dispatch included these functions (orchestrator, after
     each worker returns). Increments per-function attempt counts; the queue
     demotes fully-tried TUs so they come back later instead of being retried
-    first. --unit marks every open function of a TU."""
+    first. --unit marks EVERY function of a TU - even ones already at 100% - so a
+    later `diff` shows the whole TU was touched, not just the functions that moved."""
     import datetime
 
     con = open_db(check_schema=True)
@@ -1456,9 +1464,7 @@ def cmd_tried(args):
     mangleds = list(args.mangled)
     if args.unit:
         q = """SELECT s.mangled FROM target_functions t JOIN symbols s ON s.id = t.sym
-               LEFT JOIN units u ON u.id = t.unit
-               LEFT JOIN pairs p ON p.sym = t.sym
-               WHERE u.name = ? AND NOT (coalesce(p.fuzzy_pct,0) >= 100 AND p.struct_class = 'MATCH')"""
+               LEFT JOIN units u ON u.id = t.unit WHERE u.name = ?"""
         mangleds += [r["mangled"] for r in con.execute(q, (args.unit,))]
     if not mangleds:
         sys.exit("[match_db] nothing to mark - pass mangled names and/or --unit")
@@ -1655,7 +1661,7 @@ def main():
 
     p = sub.add_parser("tried", help="record a dispatch attempt; queue demotes tried work")
     p.add_argument("mangled", nargs="*")
-    p.add_argument("--unit", help="mark every open function of this TU")
+    p.add_argument("--unit", help="mark every function of this TU (even 100%-matched)")
     p.add_argument("--note", help="optional context, e.g. the worker's park causes")
 
     p = sub.add_parser("sql", help="read-only SQL escape hatch")
