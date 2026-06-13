@@ -1777,6 +1777,13 @@ namespace vostok
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
 
+		// The parameterized hit_info ctor is otherwise DCE'd ( /OPT:REF ) - its real
+		// call site (hit_initiator) is not yet in the image; anchor it explicitly.
+		survarium::hit_info				hit_constructed(
+			0, 0, NULL, NULL, 0.f, 0.f, NULL
+		);
+		hit_constructed.deserialize( *reader );
+
 		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
 		survarium::player_stamina		stamina;
 		stamina.deserialize( *reader );

@@ -20,11 +20,11 @@ struct hit_info {
 					hit_info	(
 						u8			hit_initiator,
 						u8			being_hit,
-						pcstr		body_part_name,
-						pcstr		damage_type,
+						pcstr const	body_part_name,
+						pcstr const	damage_type,
 						float		amount,
 						float		armor_piercing,
-						bullet*		bullet
+						bullet* const	bullet
 					);
 
 					hit_info	( );

@@ -36,3 +36,13 @@ push eax
 Evidence: jump_logic.cpp 2026-06-13 - deactivate 45.1->93.0, set_user 74.9->96.6,
 initialize_logic unpaired->89.7 (sole stmt diffs = EAX-vs-ECX this convention +
 the assign_to collapse); breath/shotgun/selector siblings moved toward target.
+
+Same knob, packet_reader: hit_info::deserialize (game_core/hit_initiator.cpp) matches the
+target STRUCTURE 1:1 (9 stmts, same lines) but stays objdiff-unpaired on size (base 0x117
+vs target 0x88 bytes) because the base INLINES packet_reader::r<bool>/r<float>/
+r_string<16> at every call while the target keeps them OUT-OF-LINE (real target symbols
+??$r@_N@, ??$r@M@, ??$r_string@$0BA@@; base index has NO such instantiations). De-inlining
+them = removing `inline` from the template decls in the already-matched
+packet_reader_inline.h - a global cross-unit flip touching every read site engine-wide,
+off-limits from a single consumer TU. The bigger base frame (sub esp 98h vs 58h) and each
+statement's +0xN size all follow from the inlining; not steerable from hit_initiator.cpp.
