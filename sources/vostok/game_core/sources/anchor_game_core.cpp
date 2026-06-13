@@ -106,6 +106,7 @@
 #include <vostok/game_core/weapon_recoil_params.h>
 #include <vostok/game_core/character_dispersion_params.h>
 #include <vostok/game_core/weapon_dispersion_params.h>
+#include <vostok/game_core/character_recoil_params.h>
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
@@ -398,6 +399,30 @@ namespace vostok
 
 	}
 
+	// booby_trap_set_core's ctor / get_visible_place_transform / try_place_trap /
+	// trap_index are protected non-virtuals: the cook vtable does not odr-use them.
+	// A concrete derived helper that calls them keeps the out-of-line bodies under
+	// /OPT:REF. The free predicates trap_is_active / find_free_trap_predicate are
+	// taken by address.
+	void use_booby_trap_set_internals( ::survarium::booby_trap_core* trap )
+	{
+		struct concrete_booby_trap_set : survarium::booby_trap_set_core
+		{
+			virtual	survarium::game_material_manager const&	get_game_material_manager	( ) { return *reinterpret_cast< survarium::game_material_manager const* >( NULL ); }
+
+			void poke( survarium::booby_trap_core* trap )
+			{
+				vostok::math::float4x4 m;
+				get_visible_place_transform( m );
+				try_place_trap( );
+				trap_index( *trap );
+			}
+		};
+
+		static concrete_booby_trap_set	s_set;
+		s_set.poke( trap );
+	}
+
 	void use_hittable_object( survarium::hittable_object* hittable_object )
 	{
 		configs::binary_config_value	config;
@@ -589,6 +614,18 @@ namespace vostok
 		// Escape &params so the constant-only ctor stores are OBSERVED (else
 		// LTCG dead-store-eliminates them and the ctor compiles empty).
 		survarium::character_dispersion_params params;
+
+		configs::binary_config_value cfg;
+		params.load( cfg );
+
+		example_callback( reinterpret_cast< pcstr >( &params ) );
+	}
+
+	void use_game_core_character_recoil_params( )
+	{
+		// Escape &params so the constant-only ctor stores are OBSERVED (else
+		// LTCG dead-store-eliminates them and the ctor compiles empty).
+		survarium::character_recoil_params params;
 
 		configs::binary_config_value cfg;
 		params.load( cfg );
@@ -1720,6 +1757,13 @@ namespace vostok
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
 
+		// The parameterized hit_info ctor is otherwise DCE'd ( /OPT:REF ) - its real
+		// call site (hit_initiator) is not yet in the image; anchor it explicitly.
+		survarium::hit_info				hit_constructed(
+			0, 0, NULL, NULL, 0.f, 0.f, NULL
+		);
+		hit_constructed.deserialize( *reader );
+
 		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
 		survarium::player_stamina		stamina;
 		stamina.deserialize( *reader );
@@ -1988,11 +2032,11 @@ namespace vostok
 	void use_game_core_jump_logic( )
 	{
 		survarium::jump_logic&	jl	= *reinterpret_cast< survarium::jump_logic* >( NULL );
-		bool	lp	= jl.landing_predicate( );
+		// landing_predicate is private (target mangling ABE); it is ODR-used through
+		// initialize_logic's boost::bind, anchored by the jump_logic construction below.
 		jl.tick( );
 		float	lt	= jl.look_time_factor( );
 		bool	jf	= jl.is_jump_finished( );
-		example_callback( reinterpret_cast< pcstr >( &lp ) );
 		example_callback( reinterpret_cast< pcstr >( &lt ) );
 		example_callback( reinterpret_cast< pcstr >( &jf ) );
 
@@ -2018,11 +2062,9 @@ namespace vostok
 		survarium::jump_logic anchored_jump_logic( sel_owner );
 		example_callback( reinterpret_cast< pcstr >( &anchored_jump_logic ) );
 
-		survarium::player_input const& input = *reinterpret_cast< survarium::player_input const* >( NULL );
-		survarium::move_direction_enum d = survarium::get_move_direction( input );
-		example_callback( reinterpret_cast< pcstr >( &d ) );
-
-		u32 idx = survarium::get_jump_animation_index( d, true, survarium::jump_animations_part_start );
+		// get_move_direction is a file static in jump_logic.cpp (plain-name target
+		// symbol); it is kept alive by its real callers activate/does_need_land_and_run.
+		u32 idx = survarium::get_jump_animation_index( survarium::move_direction_on_site, true, survarium::jump_animations_part_start );
 		example_callback( reinterpret_cast< pcstr >( &idx ) );
 
 		// Address-of non-virtual members to ODR-use their bodies WITHOUT constructing a
@@ -2033,6 +2075,15 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &su ) );
 		example_callback( reinterpret_cast< pcstr >( &de ) );
 		example_callback( reinterpret_cast< pcstr >( &dn ) );
+
+		pcstr ( survarium::jump_logic::*gac )( const survarium::jump_animation_parts ) const = &survarium::jump_logic::get_animation_caption;
+		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*gma )( const bool ) const  = &survarium::jump_logic::get_move_animation;
+		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*gmla )( const bool ) const = &survarium::jump_logic::get_move_look_animation;
+		pcstr ( survarium::jump_logic::*gmlc )( ) const = &survarium::jump_logic::get_move_look_caption;
+		example_callback( reinterpret_cast< pcstr >( &gac ) );
+		example_callback( reinterpret_cast< pcstr >( &gma ) );
+		example_callback( reinterpret_cast< pcstr >( &gmla ) );
+		example_callback( reinterpret_cast< pcstr >( &gmlc ) );
 	}
 
 	struct ghost_predicate : physics::contact_test_predicate {
@@ -2287,6 +2338,7 @@ namespace vostok
 		use_material_pair( );
 		use_victory_items_container_core( NULL );
 		use_booby_trap_cook( );
+		use_booby_trap_set_internals( NULL );
 		use_hittable_object( NULL );
 		use_usable_object( NULL );
 		use_respawn_point_core( );
@@ -2301,6 +2353,7 @@ namespace vostok
 		use_game_core_weapon_recoil_params( );
 		use_game_core_weapon_recoil_calculator( );
 		use_game_core_character_dispersion_params( );
+		use_game_core_character_recoil_params( );
 		use_game_core_weapon_dispersion_params( );
 		use_recoil_calculator( );
 		use_dispersion_calculator( );

@@ -44,6 +44,11 @@ void fsm::add_transition( fsm_state* from, fsm_state* to, boost::function<bool()
 	// ******
 }
 
+fsm_state_list& fsm::states( )
+{
+	return m_states;
+}
+
 // STATE[STUB]
 // void vostok::ai::fsm::set_initial_state(vostok::ai::fsm_state*)
 void fsm::set_initial_state( fsm_state* initial_state )

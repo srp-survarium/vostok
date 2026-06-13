@@ -10,7 +10,7 @@
 namespace survarium {
 
 class weapon_core;
-class weapon_state_creation_params;
+struct weapon_state_creation_params;
 
 class weapon_core_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
@@ -24,13 +24,13 @@ protected:
 	virtual	void	on_weapon_config_loaded		( resources::queries_result& data );
 
 protected:
-			void	process_loading_weapon_core	( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
+			void	process_loading_weapon_core	( resources::query_result_for_cook* const parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 			void	load_weapon_parameters		(											configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 
 private:
 			void	on_core_subresources_ready	( resources::queries_result& data,			configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 	inline	void	on_skeleton_config_loaded	( resources::queries_result& data,			configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook ) { /* no source */ }
-			void	query_weapon_states			( resources::query_result_for_cook* parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
+			void	query_weapon_states			( resources::query_result_for_cook* const parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 			void	on_weapon_states_ready		( resources::queries_result& data,			weapon_state_creation_params const* params, weapon_core* object_to_cook );
 
 private:
