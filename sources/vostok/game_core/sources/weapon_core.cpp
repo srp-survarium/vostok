@@ -313,9 +313,10 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 	m_skeleton = skeleton;
 }
 
-// claude@NOTE: walled at ~86% - the target out-of-lines weapon_core_base_state::has_animation_ended
-// (symbol @0x087f70) but our weapon_core_base_state.h keeps it inline, so the member read is
-// inlined here instead of a `call`. Out-lining it belongs to weapon_core_base_state's PR.
+// claude@NOTE: walled by the has_animation_ended inline-vs-call - the target out-of-lines
+// weapon_core_base_state::has_animation_ended (symbol @0x087f70) but our weapon_core_base_state.h
+// keeps it inline, so the member read is inlined here instead of a `call`. Out-lining it belongs
+// to weapon_core_base_state's PR.
 bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
