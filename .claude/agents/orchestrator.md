@@ -250,11 +250,20 @@ merging PRs**, never by a direct commit. So:
   ```
   git checkout -B <pr-branch> origin/<base> && git tag -f backup/<pr> <old-pr-tip>
   git reset --hard origin/<base>
-  git cherry-pick <the PR's own match + review commits>   # NOT the whole stacked history
+  git cherry-pick <the PR's own match + verify + per-step DB-refresh commits>  # NOT the whole stacked history
   ```
   This applies ONLY the PR's own diff, so there is usually **nothing to resolve**. Do NOT
   merge the base into the PR (`git merge` drags in every inherited file and its 3-way can
   mangle `temp_include_all.cpp`), and do NOT rebase the whole stack.
+  - **Preserve the per-step `match.db` commit - NEVER drop it when landing.** Each unit's
+    own commits INCLUDE its `match_db: per-step DB refresh (<unit>)` commit; carry it
+    across so `match_db.py diff <base>..<merged>` keeps working *on the integration
+    branch* - that per-step visibility is the whole reason the DB commits exist. If the
+    `match.db` blob conflicts on cherry-pick, resolve it by taking the unit's side and
+    re-running `match_db.py refresh` in the worktree (the DB is deterministic, so a
+    refresh reconciles it) - resolving by dropping the DB change loses the diff trail.
+    (If a stack was already landed source-only, the dropped per-step lineage can be
+    preserved out-of-band with `git tag stack/<module>-per-step-db <old-tip>`.)
   After cherry-picking:
   - verify `temp_include_all.cpp` braces balance (`{` count == `}` count) - an older matcher
     commit sometimes inserted a new anchor *before* a function's closing `}` (nesting it);
