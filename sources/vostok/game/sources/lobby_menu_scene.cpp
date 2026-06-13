@@ -7,6 +7,7 @@
 // this compiland also holds the out-of-line bodies of these two (batch 6) types
 #include "profile_player_character.h"
 #include "profile_character.h"
+#include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 
 namespace survarium {
 
@@ -116,6 +117,7 @@ void lobby_menu::query_scene_resources( )
 
 // STATE[STUB]
  profile_player_character::profile_player_character( lobby_menu& lobby_menu )
+	: m_lobby_menu( lobby_menu ) // buildability: ref member must be init'd
 {
 	// FUNCTION BODY[0x73f5c0]: 0
 	// <0x73f5c0>|0x000|+0x009:'107'	{

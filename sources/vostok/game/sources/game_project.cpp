@@ -6,6 +6,8 @@
 #include "game_project.h"
 
 #include "render_visual.h"
+#include "damage_zone.h"          // complete damage_zone for the damage_zone_ptr vector dtor
+#include <vostok/game_core/ladder.h> // complete ladder for the ladder_ptr vector dtor
 
 namespace survarium {
 

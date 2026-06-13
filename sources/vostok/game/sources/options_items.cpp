@@ -22,6 +22,7 @@ namespace survarium {
 	u8							option_item_id,
 	option_item_type_enum		type
 )
+	: m_parent_tab( parent_tab ) // buildability: ref member must be init'd
 {
 	// FUNCTION BODY[0x5cad50]: 3
 	// <0x5cadb0>|0x060|+0x008:'109'
@@ -60,6 +61,8 @@ void options_item_base::revert( )
 	pcstr*			values,
 	u8				values_count
 )
+	// buildability: base has no default ctor; matcher supplies real args
+	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
 {
 	// FUNCTION BODY[0x5cb0a0]: 2
 	// <0>
@@ -205,6 +208,8 @@ void options_item_int::call( flash_function_handler_params& params )
 	u8				option_item_id,
 	float			step
 )
+	// buildability: base has no default ctor; matcher supplies real args
+	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
 {
 	// FUNCTION BODY[0x5caf60]: 1
 	// <0x5caf60>|0x000|+0x024:'225'	{
@@ -306,6 +311,8 @@ void options_item_float::call( flash_function_handler_params& params )
 
 // STATE[STUB]
  options_item_bool::options_item_bool( options_tab& parent_tab, pcstr console_command, u8 option_item_id )
+	// buildability: base has no default ctor; matcher supplies real args
+	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
 {
 	// FUNCTION BODY[0x5caf40]: 0
 	// <0x5caf40>|0x000|+0x018:'289'	{
@@ -413,6 +420,8 @@ void options_gamma_selector::revert( )
 
 // STATE[STUB]
  options_resolution_selector::options_resolution_selector( options_tab& parent_tab )
+	// buildability: base has no default ctor; matcher supplies real args
+	: options_item_int( parent_tab, NULL, 0, NULL, 0 )
 {
 	// FUNCTION BODY[0x5cb1e0]: 5
 	// <0x5cb217>|0x037|+0x00a:'355'
@@ -521,6 +530,8 @@ void options_resolution_selector::apply( )
 
 // STATE[STUB]
  options_monitor_index_selector::options_monitor_index_selector( options_tab& parent_tab )
+	// buildability: base has no default ctor; matcher supplies real args
+	: options_item_int( parent_tab, NULL, 0, NULL, 0 )
 {
 	// FUNCTION BODY[0x5cb100]: 12
 	// <0>
@@ -568,6 +579,8 @@ void options_monitor_index_selector::refill_resolutions_data( )
 
 // STATE[STUB]
  options_graphics_quality_selector::options_graphics_quality_selector( options_tab& parent_tab )
+	// buildability: base has no default ctor; matcher supplies real args
+	: options_item_int( parent_tab, NULL, 0, NULL, 0 )
 {
 	// FUNCTION BODY[0x5cb0d0]: 1
 	// <0x5cb0d0>|0x000|+0x023:'480'	{
@@ -606,6 +619,8 @@ void options_graphics_quality_selector::call( flash_function_handler_params& par
 
 // STATE[STUB]
  options_tab::options_tab( game& g, flash_movie_resource_ptr& movie, options_enum type )
+	: m_game( g )       // buildability: ref members must be init'd
+	, m_movie( movie )
 {
 	// STATICS
 	// static < NoType > 				 = <0x5cba78>;

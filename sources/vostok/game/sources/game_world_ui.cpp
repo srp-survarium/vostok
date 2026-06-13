@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "game_world_ui.h"
+#include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 
 namespace survarium {
 

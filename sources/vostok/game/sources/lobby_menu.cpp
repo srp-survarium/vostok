@@ -4,11 +4,13 @@
 
 #include "pch.h"
 #include "lobby_menu.h"
+#include "game_project.h" // complete simple_game_project for the resource_ptr dtor
 
 namespace survarium {
 
 // STATE[STUB]
  lobby_menu::lobby_menu( game& g )
+	: base_game_scene( g ) // buildability: base has no default ctor
 {
 	// FUNCTION BODY[0x79c100]: 14
 	// <0>
