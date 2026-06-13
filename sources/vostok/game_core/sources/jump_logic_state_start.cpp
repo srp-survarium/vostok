@@ -5,6 +5,9 @@
 #include "pch.h"
 #include "jump_logic_state_start.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/game_core/player_stamina.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 namespace survarium {
 
@@ -15,7 +18,16 @@ jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
 {
 }
 
-// blocked on the lexeme/expression operator+ machinery (see claude@TODO below).
+// claude@NOTE: PARKED at the mixing expression/operator+ wall. Recovered structure
+// (target @0x6e9210, 3 statements, locals main_lexeme/look_lexeme - both
+// animation_lexeme, which has NO default ctor so they are constructed in the return):
+//   main_lexeme = get_main_lexeme( buffer, is_third_view,
+//       weapon_parameters.is_aimed ? animation::body_part_whole_body : weapon_parameters.body_part_mask );
+//   look_lexeme = get_look_lexeme( buffer, is_third_view, look_calculator, main_lexeme );
+//   return std::make_pair( animation::mixing::expression( main_lexeme ) + look_lexeme, main_lexeme );
+// Blocked: the expression operator+ emits an out-of-line addition_lexeme builder
+// (mixing_addition_lexeme) that cannot be steered from this TU; same wall as the sibling
+// player_logic_*_state lexeme fns. Needs get_main_lexeme landed first (see below).
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_start::selected_animations(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -23,91 +35,48 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	weapon_animation_parameters const&	weapon_parameters
 )
 {
-	// LOCALS
-	// animation::mixing::animation_lexeme main_lexeme
-	// animation::mixing::animation_lexeme look_lexeme
-	// ******
-
-	// claude@TODO: real body (verified from target @0x6e9210):
-	//   main_lexeme = get_main_lexeme( buffer, is_third_view,
-	//       weapon_parameters.is_aimed ? body_part_whole_body : weapon_parameters.body_part_mask );
-	//   look_lexeme = get_look_lexeme( buffer, is_third_view, look_calculator, main_lexeme );
-	//   return make_pair( expression( main_lexeme ) + look_lexeme, main_lexeme );
-	// Blocked: animation_lexeme has no default ctor + the expression/operator+ (addition_lexeme)
-	// machinery needs the get_main/get_look bodies and the addition_lexeme include resolved
-	// (same lexeme-machinery wall as pistol_weapon_core_fire_state). Left UNREACHABLE to unblock.
-
-	// FUNCTION BODY
-	// <0x6f9221>|0x011|+0x045:'37'
-	// <0x6f9266>|0x056|+0x026:'38'
-	// <0x6f928c>|0x07c|+0x088:'39'
-	// ******
 	UNREACHABLE_CODE( );
 }
 
-// vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_start::get_main_lexeme(vostok::mutable_buffer&, const bool, const vostok::animation::body_part_masks_enum)
+// claude@NOTE: PARKED. Full structure recovered from target @0x6e8f00 (19 statements,
+// locals: pcstr const caption / fixed_vector<animation::mixing::animation_interval,2>
+// intervals / animation::linear_interpolator interpolator). Recovered body:
+//   typedef fixed_vector<animation::mixing::animation_interval,2> two_anim_intervals_type;
+//   m_animation = m_jump_logic.get_animation( jump_animations_part_start, is_third_view );
+//   pcstr const caption = m_jump_logic.get_animation_caption( jump_animations_part_start );
+//   if ( m_jump_logic.get_jump_direction() != move_direction_on_site ) {
+//       m_preface_animation = m_jump_logic.get_move_animation( is_third_view );
+//       ASSERT( UNKNOWN_EXPRESSION );
+//       two_anim_intervals_type intervals;
+//       if ( m_jump_logic.is_jump_from_right_leg() ) {
+//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
+//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( m_preface_animation, 1 ) );
+//           m_interval_id_to_wait_for = 0;
+//       } else {
+//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( m_preface_animation, 0 ) );
+//           intervals.push_back( animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
+//           m_interval_id_to_wait_for = 1;
+//       }
+//       return animation_lexeme( animation_lexeme_parameters( buffer, caption, intervals.begin(), intervals.end(), 0, 0 )
+//           .weight_synchronization_group_id(0).weight_interpolator( linear_interpolator(s_aim_transition_time) )
+//           .time_synchronization_group_id(0).time_scale_interpolator( linear_interpolator(s_aim_transition_time) )
+//           .animated_object( m_user ).bones_mask( bones_mask ) );
+//   }
+//   m_interval_id_to_wait_for = 0;
+//   linear_interpolator interpolator( s_aim_transition_time );
+//   return animation_lexeme( animation_lexeme_parameters( buffer, caption, m_animation, 0, 0 )
+//       .weight_synchronization_group_id(0).weight_interpolator( interpolator )
+//       .animated_object( m_user ).bones_mask( bones_mask ) );
+// Blocked: animation_lexeme_parameters::create_animation_interval (private static) is only
+// DECLARED, never defined - it is unimplemented in the animation module's
+// mixing_animation_lexeme_parameters.cpp (only create_animation_intervals(plural) exists), so
+// the friend + body LNK2001 unresolved. NEXT STEP: implement create_animation_interval in the
+// animation module first (cross-module), then friend jump_logic_state_start here and land this body.
 animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
 {
-	// LOCALS
-	// pcstr 						caption
-	// fixed_vector<animation::mixing::animation_interval,2> intervals<1>
-	// animation::linear_interpolator interpolator<1>
-	// ******
-
-	// SKIPPED BLOCKS
-	// <0x6f8f6d><1>
-	// ******
-
-	// TYPEDEFS
-	// typedef
-	// 	fixed_vector<animation::mixing::animation_interval,2>
-	// 	two_anim_intervals_type;
-
-	// ******
-
-	// FUNCTION BODY
-	// <0x6f8f11>|0x011|+0x030:'46'
-	// <0x6f8f41>|0x041|+0x013:'47'
-	// <0>
-	// <0x6f8f54>|0x054|+0x01f:'49'
-	// <0x6f8f73>|0x073|+0x02e:'50'
-	// <0x6f8fa1>|0x0a1|+0x00c:'51'
-	// <0>
-	// <0x6f8fad>|0x0ad|+0x01c:'53'
-	// <0x6f8fc9>|0x0c9|+0x021:'54'
-	// <0x6f8fea>|0x0ea|+0x053:'55'
-	// <0x6f903d>|0x13d|+0x028:'56'
-	// <0x6f9065>|0x165|+0x00a:'57'
-	// <0x6f906f>|0x16f|+0x002:'58'
-	// <0x6f9071>|0x171|+0x028:'59'
-	// <0x6f9099>|0x199|+0x028:'60'
-	// <0x6f90c1>|0x1c1|+0x00a:'61'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x6f90cb>|0x1cb|+0x0bd:'71'
-	// <0x6f9188>|0x288|+0x002:'72'
-	// <0x6f918a>|0x28a|+0x00a|[1]:'73'
-	// <0x6f9194>|0x294|+0x010:'74'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6f91a4>|0x2a4|+0x05d:'81'
-	// <0>
-	// ******
 	UNREACHABLE_CODE( );
 }
 
-// vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_start::get_look_lexeme(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, vostok::animation::mixing::animation_lexeme&)
 animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
@@ -115,54 +84,41 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	animation::mixing::animation_lexeme&	weight_driving_animation
 )
 {
-	// LOCALS
-	// pcstr 						look_animation_id
-	// animation::mixing::animation_lexeme_parameters parameters
-	// float 						start_animation_interval_time
-	// resources::managed_resource_ptr look_animation
-	// ******
+	resources::managed_resource_ptr	look_animation( 0 );
+	pcstr							look_animation_id	= 0;
+	if ( m_preface_interval_ended )
+	{
+		look_animation		= m_jump_logic.get_animation( jump_animations_part_start_look, is_third_view );
+		look_animation_id	= m_jump_logic.get_animation_caption( jump_animations_part_start_look );
+	}
+	else
+	{
+		look_animation		= m_jump_logic.get_move_look_animation( is_third_view );
+		look_animation_id	= m_jump_logic.get_move_look_caption( );
+	}
 
-	// FUNCTION BODY
-	// <0x6f8d90>|0x010|+0x00a:'90'
-	// <0x6f8d9a>|0x01a|+0x007:'91'
-	// <0x6f8da1>|0x021|+0x00e:'92'
-	// <0x6f8daf>|0x02f|+0x02a:'93'
-	// <0x6f8dd9>|0x059|+0x013:'94'
-	// <0x6f8dec>|0x06c|+0x002:'95'
-	// <0x6f8dee>|0x06e|+0x028:'96'
-	// <0x6f8e16>|0x096|+0x011:'97'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6f8e27>|0x0a7|+0x016:'106'
-	// <0x6f8e3d>|0x0bd|+0x033:'107'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6f8e70>|0x0f0|+0x07b:'114'
-	// ******
-	UNREACHABLE_CODE( );
+	animation::mixing::animation_lexeme_parameters	parameters( buffer, look_animation_id, look_animation, 0, &weight_driving_animation );
+
+	float const	start_animation_interval_time	= parameters.animation_intervals( )[ 0 ].length( ) * m_jump_logic.look_time_factor( );
+
+	return animation::mixing::animation_lexeme(
+		parameters
+			.start_animation_interval_time( start_animation_interval_time )
+			.animated_object( m_user )
+			.additivity_priority( 4 )
+			.time_calculator( look_calculator )
+	);
 }
 
-// void survarium::jump_logic_state_start::initialize()
 void jump_logic_state_start::initialize( )
 {
-	// FUNCTION BODY
-	// <0x6f8c20>|0x010|+0x010:'119'
-	// <0x6f8c30>|0x020|+0x010:'120'
-	// <0x6f8c40>|0x030|+0x00a:'121'
-	// <0x6f8c4a>|0x03a|+0x00a:'122'
-	// <0x6f8c54>|0x044|+0x074:'123'
-	// <0x6f8cc8>|0x0b8|+0x0b2:'124'
-	// ******
+	m_animation					= 0;
+	m_preface_animation			= 0;
+	m_preface_interval_ended	= false;
+	m_jump_interval_ended		= false;
+
+	m_jump_logic.owner().set_animation_callback( animation::channel_id_on_animation_interval_end, this, boost::bind( &jump_logic_state_start::on_interval_end, this, _1 ) );
+	m_jump_logic.owner().set_animation_callback( "jump", this, boost::bind( &jump_logic_state_start::on_jump_event, this, _1 ) );
 }
 
 void jump_logic_state_start::finalize( )
@@ -171,46 +127,28 @@ void jump_logic_state_start::finalize( )
 	m_jump_logic.owner().remove_animation_callback( animation::channel_id_on_animation_interval_end, this );
 }
 
-// vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_interval_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0x6f8a59>|0x009|+0x030:'135'
-	// <0x6f8a89>|0x039|+0x043:'136'
-	// <0x6f8acc>|0x07c|+0x017:'137'
-	// <0>
-	// <0x6f8ae3>|0x093|+0x007:'139'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f8aea>|0x09a|+0x002:'143'
-	// ******
-	UNREACHABLE_CODE( );
+	if ( params.animated_object == &m_jump_logic.owner().user() )
+	{
+		m_jump_interval_ended		= m_animation == params.animation && params.animation_interval_id == m_interval_id_to_wait_for;
+		m_preface_interval_ended	= m_preface_animation == params.animation;
+		params.interrupt_animation_player_tick = true;
+	}
+
+	return animation::callback_return_type_call_me_again;
 }
 
-// vostok::animation::callback_return_type_enum survarium::jump_logic_state_start::on_jump_event(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_start::on_jump_event( animation::animation_callback_params& params )
 {
-	// CALL SITE INFO
-	// <0x6f8b67> -> player_stamina& <unknown>()
-	// <0x6f8ba1> -> player_stamina& <unknown>()
-	// <0x6f8bbb> -> void <unknown>()
-	// ******
+	if ( params.animation_interval_id == m_interval_id_to_wait_for && params.animated_object == &m_jump_logic.owner().user() )
+	{
+		params.interrupt_animation_player_tick = false;
+		m_user->stamina().spend( m_user->stamina().amount_to_jump() );
+		m_user->jump();
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <0x6f8b09>|0x009|+0x046:'149'
-	// <0>
-	// <1>
-	// <0x6f8b4f>|0x04f|+0x007:'152'
-	// <0x6f8b56>|0x056|+0x054:'153'
-	// <0x6f8baa>|0x0aa|+0x013:'154'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f8bbd>|0x0bd|+0x002:'158'
-	// ******
-	UNREACHABLE_CODE( );
+	return animation::callback_return_type_call_me_again;
 }
 
 } // namespace survarium

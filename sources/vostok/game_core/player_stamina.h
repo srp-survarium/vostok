@@ -46,7 +46,7 @@ public:
 
 	inline	float				current_value					( ) const { return m_value; }
 	inline	float				max_value						( ) const { return m_max_value; }
-	inline	float				amount_to_jump					( ) const { /* no source */ }
+	inline	float				amount_to_jump					( ) const { return m_max_value * m_max_value_factor / 5.0f; }
 
 	inline	float				get_max_carried_weight			( ) const { return m_max_carried_weight; }
 	inline	void				set_max_carried_weight			( float max_carried_weight ) { m_max_carried_weight = max_carried_weight; }
