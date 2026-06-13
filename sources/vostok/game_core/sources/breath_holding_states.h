@@ -20,9 +20,13 @@ public:
 	virtual	void		execute						( ) override { /* no source */ }
 	virtual	void		finalize					( ) override { /* no source */ }
 
+protected:
+	// claude@NOTE: out-of-line ctor body in breath_holding_states_inline.h; the
+	// target emits it standalone (??0breath_state@@IAE@AAM@Z, 0xbb380) but the
+	// temp_include_all anchor's subclass ctors inline it, so it stays unpaired
+	// here (inline-vs-call wall - body is verified-correct via the inline def).
 			explicit	breath_state				( float& breath_holding_reserve );
 
-protected:
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0019 */	/* core::noncopyable */
 	/* 0x001c */	float&							m_breath_holding_reserve;
@@ -37,7 +41,9 @@ class breath_state_holding : public breath_state {
 public:
 	inline	explicit	breath_state_holding		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
-	virtual	bool		is_ready_for_transition		( ) const override { return false; }
+private:
+	// folds with breath_state_normal::is_ready_for_transition (same `return true` body)
+	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;
 	virtual	void		tick						( const float dt ) override;
 }; // class breath_state_holding
@@ -48,6 +54,7 @@ class breath_state_normal : public breath_state {
 public:
 	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
+private:
 	virtual	bool		is_ready_for_transition	( ) const override;
 	virtual	void		tick					( const float dt ) override;
 }; // class breath_state_normal
@@ -58,11 +65,11 @@ class breath_state_shortbreathing : public breath_state {
 public:
 	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
+private:
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;
 	virtual	void		tick						( const float dt ) override;
 	virtual	bool		is_ready_for_transition		( ) const override;
 
-private:
 	/* 0x0000 */	/* breath_state */
 	/* 0x0028 */	float		m_restoring_speed;
 }; // class breath_state_shortbreathing
