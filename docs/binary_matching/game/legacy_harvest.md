@@ -44,7 +44,12 @@ match/verify here — that's the next phase, once everything is in.
 | 4 | cooks/stats | animated_model_instance_cook, sound_player_cook, stats, stats_graph (26) | DONE |
 | 5 | menus/input | key_binder, main_menu(+_input), lobby_menu(+_input) (34) | DONE |
 | 6 | objects | object, object_{decal,environment,light,sky,solid_visual,volumetric_sound,weapon,wire} (31) | DONE |
-| 7 | misc + anim | project_cooker_simple, weapon, weapon_cook (9) + animations_selector, simple/single_position_animation_controller | |
+| 7 | misc + anim | project_cooker_simple, weapon, weapon_cook (9) + animations_selector, simple/single_position_animation_controller | DONE |
+
+**The direct-name harvest (batches 1-7) is COMPLETE.** Every direct-name carcass
+file has had its simple legacy bodies seeded; what remains in `temp/game_legacy/`
+is the can't-port remainder (removed subsystems / diverged control flow / rewritten
+types) plus the renamed/split layer below, which is manual-review-only.
 
 Renamed/split layer (after the direct passes, simple cases only): legacy
 `actor*.cpp`→`player*.cpp`, legacy `game_world.cpp`→ the 5 shipped `game_world*.cpp`

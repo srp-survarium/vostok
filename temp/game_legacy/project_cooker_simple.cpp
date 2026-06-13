@@ -30,11 +30,6 @@ extern pcstr editor_project_ext;
 extern pcstr resources_converted_path;
 extern pcstr resources_path;
 
-project_cooker_simple::project_cooker_simple( bool editor_present)
-	:super				( resources::game_project_simple_class, reuse_true, use_any_thread_id ),
-	m_editor_present	( editor_present )
-{}
-
 void project_cooker_simple::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string	project_name	= parent.get_requested_path();
@@ -112,23 +107,8 @@ void project_cooker_simple::on_fs_iterators_ready( resources::queries_result& da
 }
 #endif // #ifndef MASTER_GOLD
 
-void project_cooker_simple::on_game_project_loaded( resources::queries_result& data, 
-	resources::query_result_for_cook* parent )
-{
-	R_ASSERT(data.is_successful());
-
-	resources::query_result_for_user const& result	= data[0];
-
-	configs::binary_config_ptr game_proj_ptr	= static_cast_resource_ptr<configs::binary_config_ptr>( result.get_unmanaged_resource() );
-
-	create_game_objects( game_proj_ptr, parent );
-
-	parent->finish_query			( result_success );
-}
-
-
 #ifndef MASTER_GOLD
-void project_cooker_simple::on_editor_project_loaded( resources::queries_result& data, 
+void project_cooker_simple::on_editor_project_loaded( resources::queries_result& data,
 	resources::query_result_for_cook* parent )
 {
 	R_ASSERT							( data.is_successful() );
