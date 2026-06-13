@@ -9,7 +9,7 @@
 #include "game.h"
 #include "cell_manager.h"
 #include <vostok/game_core/bullet_manager.h>
-#include <vostok/game_core/sources/temp_include_all.h> // sushi@TODO: Final remove :)
+#include <vostok/game_core/sources/anchor.h> // sushi@TODO: Final remove :)
 #include "event_manager.h"
 #include "object_scene.h"
 #include "actor.h"
