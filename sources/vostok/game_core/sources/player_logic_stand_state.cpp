@@ -5,10 +5,17 @@
 #include "pch.h"
 #include "player_logic_stand_state.h"
 #include <vostok/game_core/base_player.h>
+#include <vostok/game_core/weapon_core.h>
 #include <vostok/game_core/weapon_user_animations_container.h>
+#include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/animation/instant_interpolator.h>
 
 namespace survarium {
+
+static float s_aim_transition_time = 0.3f;
 
 // claude@NOTE: extern definition needed by weapon_user_animations_container::
 // get_stand_animation_caption (inlined into jump_logic::get_move_look_caption);
@@ -55,26 +62,10 @@ player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selec
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED on the weapon_user_animations_container::get_stand_animation wall
-// (its template get_animation_impl<27,6> is declared but never DEFINED in any TU, so a real
-// body LNK2001s unresolved - the same class of cross-keystone block as create_animation_interval).
-// Recovered structure (target @0x780960, 5 statements, locals interpolator/main_animation_index/
-// movement_lexeme):
-//   u32 const main_animation_index = is_firing ? animation_index + 1 : animation_index;   // 44
-//   ASSERT( UNKNOWN_EXPRESSION );                                                          // 45
-//   linear_interpolator interpolator( s_aim_transition_time );                             // 46
-//   return animation_lexeme( animation_lexeme_parameters( buffer,                          // 61
-//       stand_animations_captions[ main_animation_index ],
-//       m_user->animations()->get_stand_animation( is_aimed, animation_index, is_third_view ),
-//       0, 0 )
-//       .weight_synchronization_group_id( 0 )
-//       .time_synchronization_group_id( animation_index ? 0 : u32(-1) )
-//       .weight_interpolator( interpolator ).time_scale_interpolator( interpolator )
-//       .time_scale( m_user-><float@+0x114> ).animated_object( m_user )
-//       .bones_mask( bones_mask ).user_data( 1 ) );                                        // 63
-// NEXT STEP: implement weapon_user_animations_container::get_stand_animation + get_animation_impl
-// (the animation-container keystone), then land this body.
+// claude@NOTE: structure faithful; residual is the module-wide animation_lexeme_parameters
+// builder-chain inline-vs-call wall (the VOSTOK_ANIMATION_API setters / mixing::operator+ /
+// expression::operator= go out-of-line in the target but inline here). Same ceiling as the
+// already-matched weapon_core_aimed_fire_state::get_user_hands_expression (~77%).
 animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	mutable_buffer&						buffer,
 	u32 const							animation_index,
@@ -84,15 +75,33 @@ animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	bool const							is_firing
 ) const
 {
-	UNREACHABLE_CODE( );
+	u32 const							main_animation_index	= is_firing ? animation_index + 1 : animation_index;
+
+	ASSERT( UNKNOWN_EXPRESSION_T( main_animation_index < 33 ) );
+
+	animation::linear_interpolator		interpolator( s_aim_transition_time );
+
+	animation::mixing::animation_lexeme	movement_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			m_owner.animations( ).get_stand_animation_caption( is_aimed, main_animation_index ),
+			m_owner.animations( ).get_stand_animation( is_aimed, animation_index, is_third_view ),
+			0,
+			0
+		)
+		.weight_synchronization_group_id	( 0 )
+		.time_synchronization_group_id		( animation_index ? 0 : u32(-1) )
+		.weight_interpolator				( interpolator )
+		.time_scale_interpolator			( interpolator )
+		.time_scale							( m_user->get_movement_speed_factor( ) )
+		.animated_object					( m_user )
+		.bones_mask							( bones_mask )
+		.user_data							( 1 )
+	);
+
+	return movement_lexeme;
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED on the same weapon_user_animations_container::get_stand_animation /
-// get_animation_impl<27,6> wall (undefined template -> LNK2001). Target @0x780710, 10 statements;
-// locals recoil_lexeme_parameters / lexeme / start_animation_interval_time / additive_animation_id
-// / additive_animation. Reached only by look_expression (also parked). NEXT STEP: land the
-// animation-container keystone (get_stand_animation), then reconstruct from --view target.
 animation::mixing::expression player_logic_stand_state::get_recoil_animation_lexeme(
 	animation_type_enum					animation_index,
 	bool const							aimed,
@@ -104,17 +113,27 @@ animation::mixing::expression player_logic_stand_state::get_recoil_animation_lex
 	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	time_calculator
 ) const
 {
-	UNREACHABLE_CODE( );
+	pcstr const							additive_animation_id	= m_owner.animations( ).get_stand_animation_caption( aimed, animation_index );
+
+	resources::managed_resource_ptr		additive_animation		= m_owner.animations( ).get_stand_animation( aimed, animation_index, is_third_view );
+
+	animation::mixing::animation_lexeme_parameters	recoil_lexeme_parameters( buffer, additive_animation_id, additive_animation, 0, 0 );
+
+	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * coeff;
+
+	animation::mixing::animation_lexeme	lexeme(
+		recoil_lexeme_parameters
+		.start_animation_interval_time	( start_animation_interval_time )
+		.animated_object				( m_user )
+		.additivity_priority			( additivity_priority )
+		.weight_interpolator			( interpolator )
+		.time_scale_interpolator		( interpolator )
+		.time_calculator				( time_calculator )
+	);
+
+	return animation::mixing::expression( lexeme );
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED on the weapon_user_animations_container::get_stand_animation /
-// get_animation_impl<27,6> wall (undefined template -> LNK2001), same block as movement_lexeme.
-// Large body (target @0x780bc0, ~0x46f bytes; locals result/look_animation_id/weapon/interpolator/
-// look_lexeme_parameters/start_animation_interval_time/look_lexeme/look_animation/l_interpolator/
-// animation_type + 3 SKIPPED expression branches at 0x780e51/0x780ef1/0x780f91). It also calls the
-// parked get_recoil_animation_lexeme. NEXT STEP: land the animation-container keystone
-// (get_stand_animation), then reconstruct from --view target/structure.
 animation::mixing::expression player_logic_stand_state::look_expression(
 	mutable_buffer&						buffer,
 	u32 const							movement_animation_index,
@@ -124,7 +143,42 @@ animation::mixing::expression player_logic_stand_state::look_expression(
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	UNREACHABLE_CODE( );
+	animation::instant_interpolator		interpolator;
+	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
+
+	animation_type_enum const			animation_type	= animation_type_enum( movement_animation_index + 2 );
+
+	pcstr const							look_animation_id	= m_owner.animations( ).get_stand_animation_caption( is_aimed, animation_type );
+
+	resources::managed_resource_ptr		look_animation		= m_owner.animations( ).get_stand_animation( is_aimed, animation_type, is_third_view );
+
+	animation::mixing::animation_lexeme_parameters	look_lexeme_parameters( buffer, look_animation_id, look_animation, NULL, &weight_driving_animation );
+
+	float const							start_animation_interval_time	= look_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * m_owner.look_time_factor( );
+
+	animation::mixing::animation_lexeme	look_lexeme(
+		look_lexeme_parameters
+		.start_animation_interval_time	( start_animation_interval_time )
+		.animated_object				( m_user )
+		.additivity_priority			( 4 )
+		.time_scale_interpolator		( interpolator )
+		.time_calculator				( m_owner.look_time_calculator( ) )
+	);
+
+	animation::mixing::expression		result( look_lexeme );
+
+	weapon_core&						weapon	= static_cast< weapon_core& >( *m_user->current_active_object( ) );
+
+	if ( weapon_parameters.recoil_backward != 0 )
+		result = result + get_recoil_animation_lexeme( recoil_back_anim, is_aimed, weapon_parameters.recoil_backward, interpolator, buffer, is_third_view, 2, weapon.backward_recoil_time_calculator( ) );
+
+	if ( weapon_parameters.recoil_horizontal != 0 )
+		result = result + get_recoil_animation_lexeme( recoil_horizontal, is_aimed, weapon_parameters.recoil_horizontal, interpolator, buffer, is_third_view, 3, weapon.horizontal_recoil_time_calculator( ) );
+
+	if ( weapon_parameters.recoil_vertical != 0 )
+		result = result + get_recoil_animation_lexeme( recoil_vertical, is_aimed, weapon_parameters.recoil_vertical, interpolator, buffer, is_third_view, 3, weapon.vertical_recoil_time_calculator( ) );
+
+	return result;
 }
 
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_stand_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool const is_third_view ) const

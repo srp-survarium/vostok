@@ -7,13 +7,12 @@
 
 namespace survarium {
 
-// claude@NOTE: target keeps get_animation_impl out-of-line as the instantiation
-// <27,5> (mangled $0BL@$05, hands param array [5]); our get_stand_animation passes
-// m_stand_hands_only_animations[is_third_view] which is [6], so we instantiate <27,6>
-// -> byte-identical body (hands_count only feeds the dropped ASSERT) but a different
-// mangled name, so objdiff never pairs it. get_stand_animation itself pairs (its call
-// bytes are byte-identical). Recovering <27,5> needs the original get_stand_animation source
-// (`/* no source */` in the target structure) - no [5] hands member exists to deduce 5 from.
+// claude@NOTE: get_animation_impl<27,6> (mangled $0BL@$05 == <27,6>; $05 encodes 6) is the
+// instantiation get_stand_animation forwards to, passing the [6] hands member. It is kept
+// out-of-line in the target (standalone @0x0bcf90) because the *_lexeme callers in
+// player_logic_*_state inline get_stand_animation but leave the nested template call as a
+// `call`. ODR-using it from those callers (movement_lexeme et al.) emits the standalone here
+// and pairs it 100%; get_stand_animation itself is 100% (impl inlined).
 template < u32 move_count, u32 hands_count >
 inline resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl(
 		resources::managed_resource_ptr const	(&move)[ move_count ],
