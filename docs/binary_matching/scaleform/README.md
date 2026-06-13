@@ -55,13 +55,26 @@ left as `{ /* no source */ }` inline stubs are OUT-OF-LINE here
 
 ## What is stubbed / deferred
 
+- **The `d3d1x_*` render HAL is survarium's IN-TREE COPY of the vendored
+  Scaleform 4.0.15 D3D11 HAL - NOT a different SDK version** (an earlier note
+  here called it "a newer SDK"; that was an over-conclusion, corrected
+  2026-06-13). Evidence: the vendored SDK at `sources/scaleform/` is 4.0.15
+  (`Include/GFxVersion.h`) and already ships the D3D1x HAL
+  (`Src/Render/D3D1x/D3D1x_*.{h,cpp}`); the shipped `D3D1x::HAL` symbols match
+  4.0.15 exactly - same base `Render::HAL` (`class HAL : public Render::HAL`),
+  same methods (`InitHAL(HALInitParams)`, `DrawProcessedPrimitive`,
+  `PushMask_BeginSubmit`, `beginMaskDisplay`, `MapVertexFormat`,
+  `GetTextureManager`/`GetMeshCache`); and the engine's render module already
+  compiles against these vendored headers (`render/engine/sources/flash_renderer.cpp`
+  includes `Render/D3D1x/D3D1x_HAL.h`). Survarium just copied the 4.0.15 HAL
+  source into its own `vostok/scaleform` module (so it compiles as a survarium
+  compiland with an engine path, instead of linking a prebuilt Scaleform lib);
+  the file split differs slightly (survarium's `d3d1x_hal.cpp` ~= vendored
+  `D3D1x_HAL.cpp` + `D3D1x_HALSetup.cpp`; `d3d1x_shaderdescs.cpp` is the
+  generated shader-descriptions TU). So these ARE matchable against the
+  vendored SDK - no SDK acquisition needed. They stay `ExcludedFromBuild` for
+  now only because no enabled TU reaches them yet; when matching reaches them,
+  include the vendored `Src/Render/D3D1x` headers the way the render module
+  does and reconcile the file split.
 - All function bodies are `// FUNCTION BODY[0xVA]` stubs (no functional
   reconstruction) - matchers fill them once the TUs are enabled.
-- **The `d3d1x_*` render HAL is a fork of a NEWER Scaleform SDK than the
-  vendored 4.0.15** (ShaderHAL base, render events, filters, MatrixState, ...).
-  Its headers are reproduced as documentation but are reached by NO enabled TU
-  (only their own excluded `.cpp`), so the SDK-version mismatch is contained -
-  nothing forces them to compile against the older vendored headers until the
-  TU-enablement pass reconciles the base classes. Several base-SDK member
-  bodies the fork header carried (`Render::HAL::~HAL` etc.) are recorded as
-  carcass markers in `d3d1x_hal.h` rather than compiled.
