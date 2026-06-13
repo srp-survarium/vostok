@@ -41,6 +41,8 @@ void simple_animation_controller::initialize( )
 // STATE[STUB]
 void simple_animation_controller::set_target( animation_controller_parameters const& target )
 {
+	m_target_parameters										= static_cast_checked< simple_animation_controller_parameters const& >( target );
+
 	// FUNCTION BODY[0x5bbf40]: 1
 	// <0x5bbf40>|0x000|+0x045:'35'
 	// ******
