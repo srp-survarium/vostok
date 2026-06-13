@@ -21,7 +21,10 @@ namespace survarium {
 // via boost::bind<bool>(&true_predicate) - forward-declare and reuse, do not redefine.
 bool true_predicate( );
 
-move_direction_enum get_move_direction( player_input const& input )
+// claude@MATCH: file STATIC - the target obj records this function under the PLAIN
+// name `survarium::get_move_direction` (no mangling), the file-static signature
+// (see patterns/static-plain-name-pairing.md); an extern definition never pairs.
+static move_direction_enum get_move_direction( player_input const& input )
 {
 	bool move_bwd_pressed;
 	bool move_right_pressed;
@@ -177,7 +180,7 @@ u32 get_jump_animation_index(
 	}
 }
 
-resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts anim_part, bool is_third_view ) const
+resources::managed_resource_ptr jump_logic::get_animation( const jump_animation_parts anim_part, const bool is_third_view ) const
 {
 	return m_owner.animations().get_jump_animation(
 		get_jump_animation_index( get_jump_direction( ), is_jump_from_right_leg( ), anim_part ),
@@ -185,48 +188,26 @@ resources::managed_resource_ptr jump_logic::get_animation( jump_animation_parts 
 	);
 }
 
-// STATE[STUB]
-pcstr jump_logic::get_animation_caption(
-	const jump_animation_parts		arg_0 /* jump_animation_parts anim_part */
-) const
+pcstr jump_logic::get_animation_caption( const jump_animation_parts anim_part ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x58d930]: 1
-	// <0x58d939>|0x009|+0x063:'167'
-	// ******
+	return m_owner.animations().get_jump_animation_caption(
+		get_jump_animation_index( get_jump_direction( ), is_jump_from_right_leg( ), anim_part )
+	);
 }
 
-// STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
-// m_jumping_direction * 3, is_third_view )` (verified against target asm @0x58dee0,
-// 1 empty_stub ASSERT for animations() operator*), but get_stand_animation has no
-// definition in our tree (weapon_user_animations_container.cpp absent) so anchoring
-// this body fails LTCG with LNK1257 (unresolved). Unblock once that symbol exists.
 resources::managed_resource_ptr jump_logic::get_move_animation( const bool is_third_view ) const
 {
-	// FUNCTION BODY[0x58dee0]: 1
-	// <0x58dee9>|0x009|+0x03d:'172'
-	// ******
+	return m_owner.animations().get_stand_animation( false, m_jumping_direction * 3, is_third_view );
 }
 
-// STATE[STUB]: body is `return m_owner.animations().get_stand_animation( false,
-// m_jumping_direction * 3 + 2, is_third_view )` (target asm @0x58de90). Same
-// get_stand_animation undefined-symbol blocker as get_move_animation.
 resources::managed_resource_ptr jump_logic::get_move_look_animation( const bool is_third_view ) const
 {
-	// FUNCTION BODY[0x58de90]: 1
-	// <0x58de99>|0x009|+0x040:'177'
-	// ******
+	return m_owner.animations().get_stand_animation( false, m_jumping_direction * 3 + 2, is_third_view );
 }
 
-// STATE[STUB]
 pcstr jump_logic::get_move_look_caption( ) const
 {
-	return NULL;
-
-	// FUNCTION BODY[0x58d8d0]: 1
-	// <0x58d8d9>|0x009|+0x048:'181'
-	// ******
+	return m_owner.animations().get_stand_animation_caption( false, m_jumping_direction * 3 + 2 );
 }
 
 void jump_logic::activate( )
@@ -254,7 +235,7 @@ bool jump_logic::landing_predicate( ) const
 }
 
 std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > jump_logic::selected_animations(
-	mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view
+	mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view
 ) const
 {
 	return static_cast< jump_logic_base_state* >( m_logic->current_state( ) )->selected_animations(
@@ -300,5 +281,127 @@ bool jump_logic::is_jump_finished( ) const
 {
 	return static_cast< jump_logic_base_state* >( m_logic->current_state( ) )->is_jump_finished( );
 }
+
+// claude@MATCH: rows 80/81 and 86/87 repeat the land/land_look captions - the left
+// (and right-to-left) jump directions have no land_run animations in the original
+// data (string pooling folds the repeats onto one literal in the exe).
+pcstr const jump_animations_captions[] = {
+	"on_site_jump",
+	"on_site_jump_look",
+	"on_site_jump_land",
+	"on_site_jump_land_look",
+
+	"(r)fwd_jump",
+	"(r)fwd_jump_look",
+	"(r)fwd_jump_land",
+	"(r)fwd_jump_land_look",
+	"(r)fwd_jump_land_run",
+	"(r)fwd_jump_land_run_look",
+
+	"(l)fwd_jump",
+	"(l)fwd_jump_look",
+	"(l)fwd_jump_land",
+	"(l)fwd_jump_land_look",
+	"(l)fwd_jump_land_run",
+	"(l)fwd_jump_land_run_look",
+
+	"(r)fwd_right_jump",
+	"(r)fwd_right_jump_look",
+	"(r)fwd_right_jump_land",
+	"(r)fwd_right_jump_land_look",
+	"(r)fwd_right_jump_land_run",
+	"(r)fwd_right_jump_land_run_look",
+
+	"(l)fwd_right_jump",
+	"(l)fwd_right_jump_look",
+	"(l)fwd_right_jump_land",
+	"(l)fwd_right_jump_land_look",
+	"(l)fwd_right_jump_land_run",
+	"(l)fwd_right_jump_land_run_look",
+
+	"(r)right_jump",
+	"(r)right_jump_look",
+	"(r)right_jump_land",
+	"(r)right_jump_land_look",
+	"(r)right_jump_land_run",
+	"(r)right_jump_land_run_look",
+
+	"(l)right_jump",
+	"(l)right_jump_look",
+	"(l)right_jump_land",
+	"(l)right_jump_land_look",
+	"(l)right_jump_land_run",
+	"(l)right_jump_land_run_look",
+
+	"(r)back_right_jump",
+	"(r)back_right_jump_look",
+	"(r)back_right_jump_land",
+	"(r)back_right_jump_land_look",
+	"(r)back_right_jump_land_run",
+	"(r)back_right_jump_land_run_look",
+
+	"(l)back_right_jump",
+	"(l)back_right_jump_look",
+	"(l)back_right_jump_land",
+	"(l)back_right_jump_land_look",
+	"(l)back_right_jump_land_run",
+	"(l)back_right_jump_land_run_look",
+
+	"(r)back_jump",
+	"(r)back_jump_look",
+	"(r)back_jump_land",
+	"(r)back_jump_land_look",
+	"(r)back_jump_land_run",
+	"(r)back_jump_land_run_look",
+
+	"(l)back_jump",
+	"(l)back_jump_look",
+	"(l)back_jump_land",
+	"(l)back_jump_land_look",
+	"(l)back_jump_land_run",
+	"(l)back_jump_land_run_look",
+
+	"(r)back_left_jump",
+	"(r)back_left_jump_look",
+	"(r)back_left_jump_land",
+	"(r)back_left_jump_land_look",
+	"(r)back_left_jump_land_run",
+	"(r)back_left_jump_land_run_look",
+
+	"(l)back_left_jump",
+	"(l)back_left_jump_look",
+	"(l)back_left_jump_land",
+	"(l)back_left_jump_land_look",
+	"(l)back_left_jump_land_run",
+	"(l)back_left_jump_land_run_look",
+
+	"(r)left_jump",
+	"(r)left_jump_look",
+	"(r)left_jump_land",
+	"(r)left_jump_land_look",
+	"(r)left_jump_land",
+	"(r)left_jump_land_look",
+
+	"(l)left_jump",
+	"(l)left_jump_look",
+	"(l)left_jump_land",
+	"(l)left_jump_land_look",
+	"(l)left_jump_land",
+	"(l)left_jump_land_look",
+
+	"(r)fwd_left_jump",
+	"(r)fwd_left_jump_look",
+	"(r)fwd_left_jump_land",
+	"(r)fwd_left_jump_land_look",
+	"(r)fwd_left_jump_land_run",
+	"(r)fwd_left_jump_land_run_look",
+
+	"(l)fwd_left_jump",
+	"(l)fwd_left_jump_look",
+	"(l)fwd_left_jump_land",
+	"(l)fwd_left_jump_land_look",
+	"(l)fwd_left_jump_land_run",
+	"(l)fwd_left_jump_land_run_look",
+};
 
 } // namespace survarium
