@@ -95,7 +95,6 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    end-of-run sweep or only in chat):
    ```
    python3 scripts/rebuild.py             # canonical build; regenerates match.db at the end
-   python3 scripts/match_db.py refresh    # regen-only: re-derive the DB from an already-built report.json
    python3 scripts/match_db.py report --module <m> --per-unit
    python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
    ```
