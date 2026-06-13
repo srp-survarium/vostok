@@ -14,16 +14,7 @@ namespace survarium {
 class console_command_bind: private vostok::console_commands::cc_delegate
 {
 public:
-	console_command_bind( key_binder* binder, int type )
-		: vostok::console_commands::cc_delegate(
-		(type == 0 )?"bind":"bind_sec", 
-		boost::bind( &key_binder::bind_key, binder, _1, type ),
-		true
-		),
-		m_type(type)
-	{
-
-	}
+	// ctor HARVESTED to canonical key_binder.cpp (batch 5)
 private:
 	int m_type;
 public:
@@ -126,78 +117,7 @@ game_action_descr  actions[]		= {
 	{ NULL, 				kLASTACTION				,_both}		
 };															
 
-keyboard_key_descr keyboards[] = {
-	{ "kESCAPE",	 	key_escape		},	{ "k1",				key_1			},
-	{ "k2",				key_2			},	{ "k3",				key_3			},
-	{ "k4",				key_4			},	{ "k5",				key_5			},
-	{ "k6",				key_6			},	{ "k7",				key_7			},
-	{ "k8",				key_8			},	{ "k9",				key_9			},
-	{ "k0",				key_0			},	{ "kMINUS",			key_minus		},
-	{ "kEQUALS",		key_equals		},	{ "kBACK",			key_back		},
-	{ "kTAB",			key_tab 		},	{ "kQ",				key_q			},
-	{ "kW",				key_w			},	{ "kE",				key_e			},
-	{ "kR",				key_r			},	{ "kT",				key_t			},
-	{ "kY",				key_y			},	{ "kU",				key_u			},
-	{ "kI",				key_i			},	{ "kO",				key_o			},
-	{ "kP",				key_p			},	{ "kLBRACKET",		key_lbracket	},
-	{ "kRBRACKET",		key_rbracket	},	{ "kRETURN",		key_return		},
-	{ "kLCONTROL",		key_lcontrol	},	{ "kA",				key_a			},
-	{ "kS",				key_s			},	{ "kD",				key_d			},
-	{ "kF",				key_f			},	{ "kG",				key_g			},
-	{ "kH",				key_h			},	{ "kJ",				key_j			},
-	{ "kK",				key_k			},	{ "kL",				key_l			},
-	{ "kSEMICOLON",		key_semicolon	},	{ "kAPOSTROPHE",	key_apostrophe	},
-	{ "kGRAVE",			key_grave		},	{ "kLSHIFT",	 	key_lshift		},
-	{ "kBACKSLASH",		key_backslash	},	{ "kZ",				key_z			},
-	{ "kX",				key_x			},	{ "kC",				key_c			},
-	{ "kV",				key_v			},	{ "kB",				key_b			},
-	{ "kN",				key_n			},	{ "kM",				key_m			},
-	{ "kCOMMA",			key_comma		},	{ "kPERIOD",		key_period		},
-	{ "kSLASH",			key_slash		},	{ "kRSHIFT",		key_rshift		},
-	{ "kMULTIPLY",		key_multiply	},	{ "kLMENU",			key_lmenu		},
-	{ "kSPACE",			key_space		},	{ "kCAPITAL",		key_capital		},
-	{ "kF1",			key_f1			},	{ "kF2",			key_f2			},
-	{ "kF3",			key_f3			},	{ "kF4",			key_f4			},
-	{ "kF5",			key_f5			},	{ "kF6",			key_f6			},
-	{ "kF7",			key_f7			},	{ "kF8",			key_f8			},
-	{ "kF9",			key_f9			},	{ "kF10",			key_f10			},
-	{ "kNUMLOCK",		key_numlock		},	{ "kSCROLL",		key_scroll		},
-	{ "kNUMPAD7",		key_numpad7		},	{ "kNUMPAD8",		key_numpad8		},
-	{ "kNUMPAD9",		key_numpad9		},	{ "kSUBTRACT",		key_subtract	},
-	{ "kNUMPAD4",		key_numpad4		},	{ "kNUMPAD5",		key_numpad5		},
-	{ "kNUMPAD6",		key_numpad6		},	{ "kADD",			key_add			},
-	{ "kNUMPAD1",		key_numpad1		},	{ "kNUMPAD2",		key_numpad2		},
-	{ "kNUMPAD3",		key_numpad3		},	{ "kNUMPAD0",		key_numpad0		},
-	{ "kDECIMAL",		key_decimal		},	{ "kF11",			key_f11			},
-	{ "kF12",			key_f12			},	{ "kF13",			key_f13			},
-	{ "kF14",			key_f14			},	{ "kF15",			key_f15			},
-	{ "kKANA",			key_kana		},	{ "kCONVERT",		key_convert		},
-	{ "kNOCONVERT",		key_noconvert	},	{ "kYEN",			key_yen			},
-	{ "kNUMPADEQUALS",	key_numpadequals},	{ "kCIRCUMFLEX",	key_circumflex	},
-	{ "kAT",			key_at			},	{ "kCOLON",			key_colon		},
-	{ "kUNDERLINE",		key_underline	},	{ "kKANJI",			key_kanji		},
-	{ "kSTOP",			key_stop		},	{ "kAX",			key_ax			},
-	{ "kUNLABELED",		key_unlabeled	},	{ "kNUMPADENTER",	key_numpadenter	},
-	{ "kRCONTROL",		key_rcontrol	},	{ "kNUMPADCOMMA",	key_numpadcomma	},
-	{ "kDIVIDE",		key_divide		},	{ "kSYSRQ",			key_sysrq		},
-	{ "kRMENU",			key_rmenu		},	{ "kHOME",			key_home		},
-	{ "kUP",			key_up			},	{ "kPRIOR",			key_prior		},
-	{ "kLEFT",			key_left		},	{ "kRIGHT",			key_right		},
-	{ "kEND",			key_end			},	{ "kDOWN",			key_down		},
-	{ "kNEXT",			key_next		},	{ "kINSERT",		key_insert		},
-	{ "kDELETE",		key_delete		},	{ "kLWIN",			key_lwin		},
-	{ "kRWIN",			key_rwin		},	{ "kAPPS",			key_apps		},
-	{ "kPAUSE",			key_pause		},
-	{ "mouse1",			mouse_button_left},
-	{ "mouse2",			mouse_button_right},
-	{ "mouse3",			mouse_button_middle},
-	{ "mouse4",			mouse_button_extended0	},
-	{ "mouse5",			mouse_button_extended1	},
-	{ "mouse6",			mouse_button_extended2	},
-	{ "mouse7",			mouse_button_extended3	},
-	{ "mouse8",			mouse_button_extended4	},
-	{ NULL, 			0				}
-};
+// keyboards[] table HARVESTED to canonical key_binder.cpp (batch 5)
 
 key_binder::key_binder	( game& game ):m_game( game )
 {
@@ -235,24 +155,7 @@ void key_binder::set_default_controls( )
 	}
 }
 
-void key_binder::remap_keys()
- {
- 	int idx				= 0;
- 	string128			buff;
- 	while(keyboards[idx].key_name)
- 	{
- 		buff[0]				= 0;
- 		keyboard_key_descr&	kb		= keyboards[idx];
-		bool res			= m_game.input_world().get_keyboard()->get_dik_name(kb.dik, buff, sizeof(buff) );
- 		if(res)
-			strings::copy( kb.key_local_name, buff ) ;
- 		else
- 			strings::copy( kb.key_local_name, kb.key_name );/*kb.key_local_name	= kb.key_name;*/
- 
- //.		Msg("[%s]-[%s]",kb.key_name, kb.key_local_name.c_str());
- 		++idx;
- 	}
- }
+// remap_keys HARVESTED to canonical key_binder.cpp (batch 5)
 
 pcstr key_binder::id_to_action_name(game_action_id _id)
 {
@@ -289,29 +192,7 @@ game_action_descr* key_binder::action_name_to_ptr(pcstr _name)
 	return			NULL;
 }
 
-pcstr	key_binder::dik_to_keyname			(int _dik)
-{
-	keyboard_key_descr* kb = key_binder::dik_to_ptr(_dik, true);
-	if(kb)
-		return kb->key_name;
-	else
-		return NULL;
-}
-
-keyboard_key_descr* key_binder::dik_to_ptr(int _dik, bool bSafe)
-{
-	int idx =0;
-	while(keyboards[idx].key_name)
-	{
-		keyboard_key_descr&	kb		= keyboards[idx];
-		if(kb.dik==_dik)
-			return &keyboards[idx];
-		++idx;
-	}	
-	if (!bSafe)
-		LOG_INFO			("! cant find corresponding [keyboard_key_descr] for dik");
-	return			NULL;
-}
+// dik_to_keyname + dik_to_ptr HARVESTED to canonical key_binder.cpp (batch 5)
 
 int	key_binder::keyname_to_dik (LPCSTR _name)
 {
@@ -319,20 +200,7 @@ int	key_binder::keyname_to_dik (LPCSTR _name)
 	return _kb->dik;
 }
 
-keyboard_key_descr*	key_binder::keyname_to_ptr(LPCSTR _name)
-{
-	int idx =0;
-	while(keyboards[idx].key_name)
-	{
-		keyboard_key_descr&	kb		= keyboards[idx];
-		if( !_stricmp(_name, kb.key_name) )
-			return &keyboards[idx];
-		++idx;
-	}	
-
-	LOG_INFO				("! cant find corresponding [keyboard_key_descr*] for keyname %s", _name);
-	return			NULL;
-}
+// keyname_to_ptr HARVESTED to canonical key_binder.cpp (batch 5)
 
 bool is_group_not_conflicted(keyboard_key_group g1, keyboard_key_group g2)
 {
