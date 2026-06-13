@@ -46,10 +46,34 @@ match/verify here — that's the next phase, once everything is in.
 | 6 | objects | object, object_{decal,environment,light,sky,solid_visual,volumetric_sound,weapon,wire} (31) | DONE |
 | 7 | misc + anim | project_cooker_simple, weapon, weapon_cook (9) + animations_selector, simple/single_position_animation_controller | DONE |
 
-**The direct-name harvest (batches 1-7) is COMPLETE.** Every direct-name carcass
-file has had its simple legacy bodies seeded; what remains in `temp/game_legacy/`
+**The direct-name harvest (batches 1-7) is COMPLETE.** ~125 functions seeded;
+7 legacy `.cpp` fully consumed + deleted (animated_model_instance_cook,
+camera_director, game_camera, game_initialize, object_weapon,
+simple/single_position_animation_controller). What remains in `temp/game_legacy/`
 is the can't-port remainder (removed subsystems / diverged control flow / rewritten
-types) plus the renamed/split layer below, which is manual-review-only.
+types) plus the renamed/split layer below — the manual-review bucket.
+
+## ⚠️ Measurement gap — the game module is /OPT:REF-stripped (matching-phase blocker)
+
+The harvested bodies compile + link but read **0%**, and NOT because the bodies
+are wrong: **the entire game module is dead-stripped from the base exe**. Only 2
+game base objs delink (`game_entry_point.cpp`, `temp_include_all.cpp` — the
+reachable ones); the objdiff config points the other 139 game units at
+`./dummy.obj`. Nothing instantiates the game object graph (the interim
+`create_world` returns NULL), so `/OPT:REF` drops every game class method. The
+base rich index has ZERO `human_npc`/`game_camera`/`camera_director` symbols.
+
+So before the next-phase matching can measure/drive any game function (harvested
+or not), the game functions must be made REACHABLE in the base exe — either:
+1. **Reachability spine**: port/match `create_world → game ctor → game_world
+   ctor → …` so the object graph is reachable naturally (as the shipped game is).
+   The harvest SKIPPED these (heavily diverged), so this is real matching work; OR
+2. **Anchors**: extend `game/sources/temp_include_all.cpp` with `use_game_*()`
+   functions that instantiate each game class and call its methods (the exact
+   pattern that keeps game_core matchable). This is the cheaper bridge.
+
+This is the FIRST task of the game matching phase. Until then the harvest's
+value is latent (bodies in source, invisible to the % tracker).
 
 Renamed/split layer (after the direct passes, simple cases only): legacy
 `actor*.cpp`→`player*.cpp`, legacy `game_world.cpp`→ the 5 shipped `game_world*.cpp`
