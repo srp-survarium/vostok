@@ -2,6 +2,26 @@
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
 
+// claude@VERIFY (structure, 2026-06-13): every body in this TU is a confirmed
+// STRUCTURE MATCH (statement quantity + order). The low fuzzy% on several is a
+// header-level, cross-unit byte wall, NOT a per-TU structure defect:
+//   ctor / dtor / crouch_predicate ........ clean MATCH (no steerable residual)
+//   sprint/jump/stand_predicate, activate,
+//   deactivate ............................ SIZE-only on the ( *m_user->damage_model() )
+//                                           deref: target ICF-folds intrusive_ptr::operator*
+//                                           (mov eax,[eax]), base inlines the empty-stub'd
+//                                           assert + extra indirection (intrusive_ptr_inline.h).
+//                                           activate's BASE_ONLY/TRGT_ONLY rows are an
+//                                           aligner artifact from SIZE drift; both sides 7 stmts.
+//   is_weapon_firing/in_idle/toggling ..... SIZE +0x49 (identical) on the current_active_object()
+//                                           temp: intrusive_ptr<inventory_item> copy-ctor
+//                                           inline-vs-call + temp element type.
+//   set_sprint_callbacks / look_time_factor SIZE-only: static_cast_checked instantiation /
+//                                           float-op scheduling+regalloc (LTCG), not source-shape.
+//   look_time_factor_calculator ........... parked: LOG_INFO byte shape blocked on ungolded
+//                                           base logging (gold ICF-folds has_passed_filters/append).
+// None of the residuals is steerable from this TU; see the claude@NOTE blocks below.
+
 #include "pch.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/player_logic_base_state.h>		// current_state().serialize/deserialize virtuals
