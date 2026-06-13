@@ -18,38 +18,90 @@ commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 ## The loop - this is your whole plan
 
 **Keep this loop visible the ENTIRE run.** The very first thing you do is `TaskCreate`
-these 8 steps as a checklist; then every iteration `TaskUpdate` the step you're on
-(in-progress) and tick completed ones - re-using the SAME checklist each pass. The
-bullet list must always be on screen, so you never skip a step (especially
-rebuild-before-mark) and the human always sees exactly where you are.
+these steps as a checklist; then every iteration `TaskUpdate` the step you're on and tick
+completed ones - re-using the SAME checklist each pass. The bullet list must always be on
+screen, so you never skip a step (especially the rebase and rebuild-before-mark) and the
+human always sees where you are.
 
-Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). `rebuild.py`
-is your build+DB step in one - it rebuilds the worktree incrementally
-(~2-3 min/unit) AND regenerates `match.db` at the end, so you run `rebuild.py`
-(not a separate `refresh`) to advance the DB, and NEVER build the integration
-branch (it lacks the matches -> full rebuild). `match_db.py refresh` is regen-only
-(re-derive the DB from an already-built `report.json` without rebuilding); reach
-for it only when the artifacts are already fresh.
+Build a STACK and always sit on its TOP, in one worktree. Each finishing matcher's TU is
+REBASED onto the current tip and gets its own committed `match.db` snapshot - so
+`match_db.py diff <tip-A>..<tip-B> --module <m>` reports exactly the work between any two
+stack points. `rebuild.py` is your build+DB step in one - it rebuilds the worktree
+incrementally AND regenerates `match.db` at the end of its run, so you run `rebuild.py`
+(not a bare `refresh`) to advance the DB; `match_db.py refresh` is regen-only (re-derive
+the DB from an already-built `report.json`, no build). NEVER build the integration branch
+(it lacks the matches -> full rebuild).
 
-1. **Switch to the top + rebuild** - checkout the newest match branch, then ALWAYS run
-   `python3 scripts/rebuild.py` (builds incrementally and regenerates the DB, catching
-   any staleness from a prior session before you spawn anything).
-2. **Spawn matcher agent(s)** - ONE TU each, branched off the top.
-3. **Get their work** - each returns ONE commit (the top advances).
-4. **Handle conflicts** if siblings clash - `temp_include_all.cpp` / module `.vcproj` /
-   `match.db`; stack them in dependency order.
-5. **Go to the new top** - the just-landed unit's branch is the new tip.
-6. **Rebuild** - `python3 scripts/rebuild.py` (builds the new top incrementally
-   + regenerates the DB at the end). MUST run before you mark, so marking reads the
-   MEASURED state.
-7. **Mark functions** - from the regenerated DB: retries (`match_db.py tried <fn>`) +
-   comments/flags (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue`
-   a stale SKIP); upgrade any banked LTCG residual the rebuild lifted to 100%.
-8. **Loop** -> back to step 2.
+1. **Sit on the top + rebuild** - checkout the CURRENT stack tip, then ALWAYS run
+   `python3 scripts/rebuild.py` (builds incrementally AND regenerates the DB, catching any
+   staleness before you spawn).
+2. **Spawn matcher(s) off the top** - ONE TU each, ALL branched off the CURRENT tip
+   (parallel in sibling worktrees is fine; bundle a few TINY TUs into one matcher so the
+   per-iteration rebuild cost amortizes).
+3. **When a matcher FINISHES, rebase it onto the current tip** - cherry-pick ITS OWN
+   commit onto the tip (a parallel sibling may have landed first, so it branched off an
+   OLDER tip - never merge-in). Resolve the stack conflicts in `temp_include_all.cpp` /
+   module `.vcproj`. That commit is the NEW top.
+4. **Rebuild + snapshot the DB** - `python3 scripts/rebuild.py` (builds the new top
+   incrementally + regenerates the DB at the end), then COMMIT the updated `match.db` onto
+   the tip. EVERY stack commit must carry a measured DB snapshot - that is what makes the
+   per-step `diff` work. Rebuild BEFORE you mark, so marking reads the MEASURED state.
+5. **Mark functions** - from the regenerated DB: `match_db.py tried --unit <tu>` (marks the
+   WHOLE TU, even ones already at 100%, so the diff shows the whole TU was touched); flag
+   parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP); upgrade
+   any banked LTCG residual the rebuild lifted to 100%.
+6. **Loop** - take finishers ONE AT A TIME (each rebased onto the advancing tip +
+   snapshotted); the next matchers branch off the NEW top.
 
 Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before rebuilding - a bare `cd` keeps
 the parent shell's prefix, so parallel builds collide on one `mspdbsrv`. Everything below
-is reference detail for these eight steps.
+is reference detail for these six steps.
+
+## Why each step snapshots the DB - the `diff` payoff
+
+Step 4 commits a MEASURED `match.db` on every stack commit, so any two stack points are
+comparable with the `diff` subcommand (the reason the loop is shaped this way):
+
+    python3 scripts/match_db.py diff <tip-A>..<tip-B> --module <m>   # also --verbose / --json
+
+It groups the function-level work between A and B: regress / lost / new / improve /
+TOUCHED (retries rose but % + structure held - i.e. a worked TU's already-100% fns) /
+reclass; columns show `from->to`, `max` (best-ever %), and `tries` (from->to). That lets
+the human - and you - (1) read exactly what each matcher contributed (diff its tip against
+the one below it), (2) catch a CROSS-UNIT regression a match caused elsewhere - e.g. a
+global header de-inline knocking other TUs' 100% fns down, which a single-unit view hides
+- and (3) see the whole touched TU, not just the fns that moved. Defer the regen to a wave
+boundary and you LOSE this: no per-step snapshots to diff, and the parked worktree drifts.
+
+The **`max` column distinguishes a re-work from an LTO wobble** (the DB regen tracks a
+`src_fingerprint` per function): when the source is UNCHANGED, `max` accumulates the
+peak %, so a current-% drop with `max` HELD means the toolchain (LTO/LTCG) moved the
+bytes, not you - non-steerable, leave it. When the source CHANGED (a real re-match),
+`max` RESETS to the new current %, and the diff prints it as a drop `oldmax->newmax`.
+So a `max` shown as `X->Y` (Y<X) in the diff is the unambiguous "this fn was actually
+re-worked and lost ground" flag, vs a plain held `max` next to a dropped current %,
+which is just LTO noise you should not chase.
+
+## Batching - amortize the per-step regen
+
+The fixed cost of an iteration is the rebuild (incremental build + DB regen, step 4), NOT
+the matching. So size the work to that cost - never iterate one tiny TU at a time:
+
+- **Big TU** (weapon_core.cpp-sized): one matcher, one TU - it pays for its own regen.
+- **Tiny TUs** (1-2 fns, header pseudo-units, `*_cook` leftovers): batch them. Two ways:
+  - **Parallel matchers** - spawn several off the SAME tip (one TU each, in sibling
+    worktrees), then take finishers ONE AT A TIME, rebasing each onto the advancing tip
+    (loop steps 3-5). Each TU still gets its OWN commit + DB snapshot, so the per-TU diff
+    granularity is preserved - you just overlap the matching wall-clock, not the regen.
+  - **Bundle into one matcher** - hand ONE matcher several tiny RELATED TUs; it makes ONE
+    commit and you rebuild + snapshot once for the lot. Cheapest on regen, but the diff
+    then shows the whole bundle as a single step (coarser) - so bundle only TUs you won't
+    need to diff apart.
+
+Constraints: pick NON-OVERLAPPING TUs (never two live matchers on the same file/TU -
+serialize same-file work); for PARALLEL matchers set `WINEPREFIX=<worktree>/binaries/
+.wineprefix` per worktree or they collide on one `mspdbsrv`. `match_db.py queue` already
+hands you per-TU batches smallest-first, with the effectively-done near-ceiling fns dropped.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
@@ -100,6 +152,14 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    ```
    `queue` emits ONE batch per TU - ALL of the TU's open functions together,
    smallest TU first - and skips done/out-of-scope/`SKIP`-flagged functions.
+   **The queue ranks and excludes by `max` (best-ever %), not current %**: a
+   function that once hit ~100% but a later LTO/LTCG shift knocked down is NOT
+   steerable from source, so re-offering it wastes a worker - the near-ceiling
+   exclusion keeps it out (kept ONLY when `struct_class == QUANTITY`, the real
+   structural trap, since that is genuine work regardless of %). To bank the
+   already-done set out of the queue once, `match_db.py tried --done` stamps every
+   fn that ever reached 100% with `tries=1` (it then sorts behind everything
+   untried). What stays in the queue is real work: low-`max` fns and high-% QUANTITY.
    We match PER TU (sushi, 2026-06-12): cherry-picking small functions across
    TUs causes churn; matched in their real TU, small helpers sit in the same
    inlining/LTCG environment as their callers and pair the way the target did.
@@ -260,7 +320,7 @@ merging PRs**, never by a direct commit. So:
   ```
   git checkout -B <pr-branch> origin/<base> && git tag -f backup/<pr> <old-pr-tip>
   git reset --hard origin/<base>
-  git cherry-pick <the PR's own match + verify + per-step DB-refresh commits>  # NOT the whole stacked history
+  git cherry-pick <the PR's own match + review commits>   # NOT the whole stacked history
   ```
   This applies ONLY the PR's own diff, so there is usually **nothing to resolve**. Do NOT
   merge the base into the PR (`git merge` drags in every inherited file and its 3-way can
@@ -330,10 +390,15 @@ unit: **match -> land -> audit (structure-verifier verifies AND fixes ∥ review
 act on any out-of-scope / reviewer finding -> re-audit -> done.**
 
 ## Dispatch hygiene
-- Hand each worker its TU plus the open-function list with a locating hint
-  (`file:line` or `rva`) for each. The worker does the matching: target asm,
-  write the bodies, wire reachability, build, diff, iterate, and **commit + push its
-  branch** (NO PR).
+- Hand each worker its TU plus the open-function list FROM `match_db.py queue` with a
+  locating hint (`file:line` or `rva`) for each - and ONLY that list. The queue already
+  drops the effectively-done functions: anything `>=95%` whose structure matches
+  (`MATCH`/`SIZE`/`SPLIT`) - the residual there is non-steerable LTCG, so a matcher would
+  just re-confirm it. Do NOT add already-matched / 100%-or-close functions to the worker's
+  task (it may touch one as a side effect of a header change - that's fine - but never
+  TELL it to). The queue keeps what has real work: low-% fns and high-% `QUANTITY` (wrong
+  statement count - the trap). The worker does the matching: target asm, write the bodies,
+  wire reachability, build, diff, iterate, and **commit + push its branch** (NO PR).
 - **YOU open and maintain the PR** for each unit (step 4b) and dispatch the
   structure-verifier onto its branch (step 4c). You sequence the units, resolve same-top
   sibling conflicts, and read back each worker's one-line result.
