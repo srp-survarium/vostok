@@ -2,8 +2,7 @@
 
 `C++ construct/idiom -> asm` mappings gathered two ways, both grounded:
 1. **Foundational probes** — write a minimal snippet, compile it with the real toolchain,
-   read the `/FAcs` listing (the method the original `Callback1`/`Callback2` anchor probes
-   used, which this set replaces). Recipe below.
+   read the `/FAcs` machine-code listing. Recipe below.
 2. **Real-function mining** — grep the engine source for a genuinely-used idiom, then read the
    shipped TARGET asm of a real function with `pdb_fetch --view target` (cited per pattern).
 

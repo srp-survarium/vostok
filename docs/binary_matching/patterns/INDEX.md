@@ -157,11 +157,12 @@ line here, same commit.
 - [Pin reconstructed resources class_id_enum values from cook-registration ctors](class-id-enum-pinning.md) — c8 — cpp:member cpp:ctor | asm:mov asm:push | topic:structure-shape — push 12Ch where the enum names 103h, unmanaged_cook ctor immediate pins the block start
 - [Calling a thin inline accessor vs hand-inlining its body changes operand scheduling](inline-helper-vs-expanded-expression-scheduling.md) — c7 — cpp:member cpp:float | asm:cvtsi2ss asm:divss asm:call | topic:codegen-idiom topic:inline-vs-call — randF() member call defers the cvtsi2ss/divss past a sibling call vs hand-inlined float(randI())/maxF() pinning it; match the imprecise 1.2539185f literal not true sqrt(pi/2)
 
-## Manual foundational probes (`manual/`)
+## Manual patterns (`manual/`)
 
-`construct -> /Od asm` mappings bootstrapped by compiling minimal snippets (the
-`Callback`-probe method this set replaces). Index + reproduction recipe in
-[`manual/INDEX.md`](manual/INDEX.md). Greppable by tag like any line here.
+`construct/idiom -> asm` mappings gathered by compiling minimal probes and by mining real
+functions' shipped asm (`pdb_fetch`). Full index + reproduction recipe in
+[`manual/INDEX.md`](manual/INDEX.md); opt level is per-TU (see
+`manual/tu-optimization-level-od-vs-ox.md`). Greppable by tag like any line here.
 
 - [if/else under /Od: the condition INVERTS, the then-block ends in a jmp over the else](manual/od-ifelse-inversion.md) — c9 — cpp:if cpp:return | asm:cmp asm:jcc asm:jmp | topic:codegen-idiom — cmp/jge skipping then, jmp over else, else-if = chained cmp/jne .next + jmp .end
 - [Early-return guard `if(!c) return;` = inverted test jne .body + a bare jmp epilogue](manual/od-early-return-guard.md) — c9 — cpp:if cpp:return | asm:cmp asm:jcc asm:jmp | topic:structure-shape — cmp 0/jne .body/jmp .end pair, two branches where a wrapping-if has one je
@@ -184,11 +185,6 @@ line here, same commit.
 - [`inline` free fns and class-body members DO inline under /Od /Ob2 — only out-of-line defs emit a call](manual/inline-under-od-ob2.md) — c9 — cpp:inline cpp:member | asm:call asm:imul asm:mov | topic:inline-vs-call topic:codegen-idiom — small accessor/helper has NO call site, body spliced in; /Ob2 overrides /Od; LTCG inlines even more
 - [Scalar float math = movss/addss/mulss on xmm, ONE component at a time, base ptr reloaded per component (/Od)](manual/scalar-float-sse2-ops.md) — c9 — cpp:float | asm:movss asm:addss asm:mulss | topic:codegen-idiom — f3 0f 10/58/59, base pointer reloaded per component, __fltused, __real@<hex>, float global @@3MA
 - [Returning a struct by value: >8 bytes = hidden return-pointer (sret); <=8-byte POD = edx:eax](manual/struct-by-value-return-sret.md) — c8 — cpp:return cpp:member | asm:lea asm:push asm:call asm:mov | topic:convention — lea slot/push as extra arg + result via eax (sret), or mov eax/mov edx for an 8-byte POD
-
-## Manual — real-function-mined engine idioms (`manual/`)
-
-Grounded in shipped TARGET asm (`pdb_fetch`) for idioms confirmed in the engine source; see [`manual/INDEX.md`](manual/INDEX.md). Opt level is per-TU (`manual/tu-optimization-level-od-vs-ox.md`).
-
 - [Optimization level is PER-TU (.vcproj Optimization 0 vs 3) — read the asm to know which world you're in](manual/tu-optimization-level-od-vs-ox.md) — c9 — cpp:for cpp:operator | asm:idiv asm:mul asm:add | topic:convention topic:ltcg — idiv vs magic-multiply, verbose iterator object vs register pointer, same source two codegens
 - [`strings::equal(a,b)` is a register-args helper call (NO pushes); 1st arg->EAX, 2nd->ECX](manual/strings-equal-register-args.md) — c9 — cpp:string cpp:call | asm:call asm:mov asm:movzx asm:test | topic:codegen-idiom — mov eax literal/mov ecx other/call strings::equal/movzx/test/jcc, no push
 - [`str.assignf("fmt", ...)` = cdecl varargs: push args R-to-L, push &fmt, push this(lea), call, add esp,N](manual/buffer-string-assignf-varargs.md) — c9 — cpp:string cpp:varargs | asm:push asm:call asm:lea asm:add | topic:codegen-idiom — push vararg/push format literal/lea this/call assignf/add esp,0Ch
