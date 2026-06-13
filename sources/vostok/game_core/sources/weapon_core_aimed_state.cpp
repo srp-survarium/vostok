@@ -35,8 +35,12 @@ weapon_core_aimed_state::weapon_core_aimed_state( weapon_core& weapon, resources
 
 	u32 animation_index = 0;
 	for ( u32 view = 0 ; view != 2 ; ++view )
+	{
 		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+		{
 			m_weapon_animations[view][user_state] = animations[animation_index++];
+		}
+	}
 }
 
 animation::mixing::expression weapon_core_aimed_state::weapon_and_hands_expression(
