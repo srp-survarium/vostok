@@ -164,8 +164,10 @@ public:
 			void								load_magazine					( );
 			void								chamber_a_round					( );
 
-	inline	void								set_bullet_damage				( float bullet_damage ) { m_bullet_damage = bullet_damage; }
-	inline	void								set_bullet_pierce				( float bullet_pierce ) { m_bullet_pierce = bullet_pierce; }
+	// claude@MATCH: weapon_core_cook::load_weapon_parameters inlines these two setters
+	// WITH an empty_stub (compiled-out ASSERT) before the member store.
+	inline	void								set_bullet_damage				( float bullet_damage ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_damage >= 0.f ) ); m_bullet_damage = bullet_damage; }
+	inline	void								set_bullet_pierce				( float bullet_pierce ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_pierce >= 0.f ) ); m_bullet_pierce = bullet_pierce; }
 	inline	void								set_aim_fov_factor				( float aim_fov_factor ) { m_aim_fov_factor = aim_fov_factor; }
 	inline	void								set_aim_near_plane_factor		( float aim_near_plane_factor ) { m_aim_near_plane_factor = aim_near_plane_factor; }
 
@@ -176,13 +178,17 @@ public:
 
 			profile_slot_enum					ammo_slot						( ) { return m_ammo_slot; }					// STATE[STUB]
 
-	inline	void								set_weapon_fire_queue_types		( pbyte arg_0, u8 arg_1 ) { /* no source */ }
+	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
 
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
 
 			base_player*						get_user						( ) const { return m_user; }				// STATE[STUB]
 			bool								is_double_handed				( ) const { return m_is_double_handed; }	// STATE[STUB]
+	// claude@NOTE: reconstructed for weapon_core_cook::load_weapon_parameters (direct byte
+	// stores to m_is_double_handed/m_chamber_a_round_on_reload, no symbol - always inlined).
+	inline	void								set_double_handed				( bool is_double_handed ) { m_is_double_handed = is_double_handed; }
+	inline	void								set_chamber_a_round_on_reload	( bool chamber_a_round_on_reload ) { m_chamber_a_round_on_reload = chamber_a_round_on_reload; }
 
 	virtual	weapon_core const*					cast_weapon_core				( ) const override { return this; }
 	virtual	weapon_core*						cast_weapon_core				( ) override { return this; }				// STATE[STUB]
@@ -197,6 +203,9 @@ public:
 			void								remove_animation_callback		( pcstr channel_id, pcvoid callback_uid );
 
 	inline	bool								is_third_view					( ) const { /* no source */ }
+	// claude@NOTE: reconstructed for weapon_core_cook::query_weapon_states - the
+	// weapon_state_creation_params `bool& shown` binds &m_is_shown (lea object+487h).
+	inline	bool&								is_shown						( ) { return m_is_shown; }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
 			bool								round_is_chambered				( ) const;	// STATE[STUB] target keeps this out-of-line (called, not inlined, from reload_state_base::initialize @0x09b360)
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
@@ -337,6 +346,9 @@ private:
 
 	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it
 	// in a private section. The temp_include_all anchor is a friend so it can call it.
+	// claude@NOTE: weapon_core_cook::on_weapon_states_ready calls it too (target @0x59fb16),
+	// so the cook must be a friend.
+	friend class weapon_core_cook;
 			void								initialize_weapon_logic			(
 													weapon_core_base_state_ptr const&	inactive_state,
 													weapon_core_base_state_ptr const&	show_state,
