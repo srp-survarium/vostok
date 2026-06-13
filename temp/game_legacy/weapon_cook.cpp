@@ -10,11 +10,6 @@
 #include "weapon.h"
 
 namespace survarium{
-weapon_cook::weapon_cook(  game& game )
-:super	( resources::weapon_class, reuse_false, use_current_thread_id ),
-m_game	( game )
-{}
-
 void weapon_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string	weapon_config_name;
@@ -107,11 +102,6 @@ void weapon_cook::on_weapon_parts_ready( resources::queries_result& data,
 			);
 
 	parent->finish_query					( result_success );
-}
-
-void weapon_cook::delete_resource( resources::resource_base* resource )
-{
- 	VOSTOK_DELETE_IMPL					( g_allocator, resource );
 }
 
 

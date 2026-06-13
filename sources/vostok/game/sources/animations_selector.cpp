@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "animations_selector.h"
+#include <vostok/ai/animation_item.h>
+#include <vostok/ai/movement_target.h>
 
 namespace survarium {
 
@@ -128,6 +130,11 @@ void animations_selector::on_set_target( )
 // STATE[STUB]
 void animations_selector::set_target( ai::animation_item const& animation_emitter )
 {
+	m_simple_animation_parameters.emitter	= static_cast_resource_ptr< animation::animation_expression_emitter_ptr >( animation_emitter.animation );
+
+	m_target_controller						= &m_simple_animation_controller;
+	m_target_controller_parameters			= &m_simple_animation_parameters;
+
 	// FUNCTION BODY[0x5bc5b0]: 6
 	// <0x5bc5b0>|0x000|+0x078:'104'
 	// <0>
@@ -141,6 +148,14 @@ void animations_selector::set_target( ai::animation_item const& animation_emitte
 // STATE[STUB]
 void animations_selector::set_target( ai::movement_target const& target_position )
 {
+	m_movement_animation_parameters.position		= target_position.target_position;
+	m_movement_animation_parameters.eyes_direction	= target_position.direction;
+	m_movement_animation_parameters.velocity		= target_position.velocity;
+	m_movement_animation_parameters.animation		= static_cast_resource_ptr< animation::animation_expression_emitter_ptr >( target_position.preferable_animation->animation );
+
+	m_target_controller								= &m_single_position_animation_controller;
+	m_target_controller_parameters					= &m_movement_animation_parameters;
+
 	// FUNCTION BODY[0x5bc4b0]: 9
 	// <0x5bc4b0>|0x000|+0x019:'114'
 	// <0x5bc4c9>|0x019|+0x016:'115'

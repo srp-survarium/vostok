@@ -246,6 +246,8 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 // STATE[STUB]
 void single_position_animation_controller::set_target( animation_controller_parameters const& target )
 {
+	m_target_parameters												= static_cast_checked< movement_animation_controller_parameters const& >( target );
+
 	// FUNCTION BODY[0x776a50]: 1
 	// <0x776a50>|0x000|+0x00e:'207'
 	// ******

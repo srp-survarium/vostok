@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "project_cooker_simple.h"
+#include <vostok/resources_query_result.h>
+#include <vostok/resources_queries_result.h>
 
 namespace survarium {
 
@@ -83,6 +85,16 @@ void project_cooker_simple::translate_query( resources::query_result_for_cook& p
 // STATE[STUB]
 void project_cooker_simple::on_game_project_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
+	R_ASSERT( data.is_successful() );
+
+	resources::query_result_for_user const& result	= data[0];
+
+	configs::binary_config_ptr game_proj_ptr	= static_cast_resource_ptr<configs::binary_config_ptr>( result.get_unmanaged_resource() );
+
+	create_game_objects( game_proj_ptr, parent );
+
+	parent->finish_query			( result_success );
+
 	// LOCALS
 	// configs::binary_config_ptr 		game_proj_ptr
 	// ******

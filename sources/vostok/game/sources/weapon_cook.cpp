@@ -264,6 +264,10 @@ void weapon_cook::on_weapon_subresources_ready(
 // STATE[STUB]
 void weapon_cook::delete_resource( resources::resource_base* const resource )
 {
+	// carcass signature is const-ptr; delete_helper takes a non-const ref - matcher reconciles
+	resources::resource_base* to_delete	= resource;
+	VOSTOK_DELETE_IMPL					( g_allocator, to_delete );
+
 	// CALL SITE INFO
 	// <0x5cd781> -> void* < unknown >( u32 )
 	// ******
