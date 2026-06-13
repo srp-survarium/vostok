@@ -26,8 +26,8 @@ bool login_menu::on_keyboard_action(
 // STATE[STUB]
 bool login_menu::on_gamepad_action(
 	input::world*					__formal,
-	input::gamepad_button			__formal,
-	input::enum_gamepad_action		__formal
+	input::gamepad_button			__formal2, // PDB: __formal too (collision)
+	input::enum_gamepad_action		__formal3  // PDB: __formal too (collision)
 )
 {
 	return false;

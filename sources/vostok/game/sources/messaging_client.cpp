@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "messaging_client.h"
+#include "game_memory.h"	// g_allocator for allocator-taking vectora members
 
 namespace survarium {
 
@@ -14,7 +15,11 @@ namespace survarium {
 	// supplies the real sources (game's chat handler) when this TU is enabled
 	m_game( g ),
 	m_chat_handler( *( chat_handler* )NULL ),
-	m_network_client( *( network::world* )NULL )
+	m_network_client( *( network::world* )NULL ),
+	// allocator-taking vectora members (no default ctor)
+	m_friend_list( g_allocator ),
+	m_ignore_list( g_allocator ),
+	m_found_players_list( g_allocator )
 {
 	// FUNCTION BODY[0x7666a0]: 11
 	// <0>

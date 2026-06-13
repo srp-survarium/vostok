@@ -10,6 +10,7 @@ namespace survarium {
 
 // STATE[STUB]
  chat_handler::chat_handler( game& game )
+	: m_game( game ) // buildability: ref member must be init'd
 {
 	// FUNCTION BODY[0x5dc4f0]: 0
 	// <0x5dc4f0>|0x000|+0x070:'34'	{
@@ -85,7 +86,7 @@ void chat_handler::callback(
 	flash_movie*			__formal,
 	pcstr					methodName,
 	flash_value const*		args,
-	u32						__formal
+	u32						__formal2 /* PDB: __formal too (two would collide) */
 )
 {
 	// CALL SITE INFO

@@ -149,5 +149,6 @@ void project_cooker_simple::create_game_objects(
 	// variant< 32 >* 					ud
 	// resources::request 				request
 	// ******
+}
 
 } // namespace survarium
