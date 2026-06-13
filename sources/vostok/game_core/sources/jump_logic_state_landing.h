@@ -43,7 +43,7 @@ private:
 			animation::mixing::animation_lexeme
 						get_look_lexeme				(
 							mutable_buffer&							buffer,
-							bool									is_third_view,
+							bool const								is_third_view,
 							animation_delegate const&				look_calculator,
 							animation::mixing::animation_lexeme&	weight_driving_animation
 						);
