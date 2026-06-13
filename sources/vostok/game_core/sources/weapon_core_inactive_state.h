@@ -22,8 +22,8 @@ private:
 	// sides) - there is no second empty_stub, so no compiled-out ASSERT to recover. The residual
 	// is the dead-guard fold: target's COMDAT emits the eater UNCONDITIONAL (no movzx/test/je),
 	// our /Od MASTER_GOLD build keeps the full if(identity(false)){...}else(void)0 branch. Verified
-	// systemic: EVERY weapon_*_state::weapon_and_hands_expression override sits 64-88% with this
-	// same guard, none reach 100% unless its target COMDAT happened to be the /Od build (optimized
+	// systemic: EVERY weapon_*_state::weapon_and_hands_expression override carries this same guard
+	// and only fully pairs where its target COMDAT happened to be the /Od build (optimized
 	// COMDAT in /Od unit - see optimized-comdat-in-od-unit.md). weapon_and_hands_expression below
 	// carries a SECOND /Od artifact: the animation_lexeme& arg promoted through the variadic eater
 	// is copied by value (sub esp,84h; rep movsd) in /Od vs passed as a pointer in the optimized
