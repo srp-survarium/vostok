@@ -22,7 +22,7 @@ player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_sel
 	m_stamina_subscriber.subscription_callback = boost::bind( &player_logic_sprint_state::on_stamina_depleted, this );
 }
 
-// STATE[STUB]: VOSTOK_UNREACHABLE_CODE() placeholder, NOT matched (~3.3%).
+// STATE[STUB]: VOSTOK_UNREACHABLE_CODE() placeholder, NOT matched.
 // claude@NOTE: walled like the jump_logic_state_* family - the body builds two
 // animation::mixing::animation_interval objects (target ~animation_interval dtors at
 // 0x161/0x361) via the only producer, the static
