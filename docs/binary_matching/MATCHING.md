@@ -200,9 +200,10 @@ are NOT written anymore. The source carries exactly two things:
 Everything else is DERIVED and lives outside the source
 (design: `match_db_design.md`):
 - **current %s**: `report.json` / `match_score.py` - the only live numbers.
-- **bulk status, queues, reports**: `docs/binary_matching/match.db`, rebuilt by
-  `python3 scripts/match_db.py refresh` from report.json + the rich indexes +
-  the PDB declaration dump. Per paired function it derives the structure class
+- **bulk status, queues, reports**: `docs/binary_matching/match.db`, regenerated
+  from report.json + the rich indexes + the PDB declaration dump by `rebuild.py`
+  at the end of every build (or, regen-only, by `python3 scripts/match_db.py
+  refresh`). Per paired function it derives the structure class
   (`MATCH | SIZE | SPLIT | QUANTITY`), tracks pairing history ("matched at NN%
   before; vanished/regressed without a source touch -> out of scope"), and
   classifies base-only symbols (`NEAR_MISS` mangling mismatches, declared-but-
@@ -217,9 +218,10 @@ The only hand-written records are match-DB FLAGS (`match_db.py flag <mangled>`):
 - `NOTE` - informational cause that queues ignore (a DONE-with-residual
   explanation, inline-site evidence for a target-inlined body, ...).
 - `--requeue` - forget history+flags so queues offer the function again.
-The DB is committed; the ORCHESTRATOR is its single writer (refresh + flag +
-commit at run milestones) - dispatched matchers/verifiers never edit it, they
-report parking/causes in their result lines instead.
+The DB is committed; the ORCHESTRATOR is its single writer (regenerate via
+rebuild.py / regen-only refresh + flag + commit at run milestones) - dispatched
+matchers/verifiers never edit it, they report parking/causes in their result
+lines instead.
 
 A function "counts as DONE" when report.json reads 100% and the structure class
 is MATCH; an under-100 function is done ONLY when the residual is understood and
@@ -332,7 +334,7 @@ the STUB's `// FUNCTION BODY` carcass for the shape clues below, then deletes it
 done - it does not preserve or annotate it. The structure-verifier then checks the
 shape with the two-sided condensed structure-diff (next), run **on demand** - the
 diff and its verdict are NEVER embedded in source; the verdict goes in the commit
-message (the match DB re-derives the structure class on refresh). A clean 100%
+message (the match DB re-derives the structure class on every DB regen). A clean 100%
 match carries nothing.
 
 **Preferred for a non-100% function: the two-sided condensed structure-diff** (it
