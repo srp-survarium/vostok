@@ -927,6 +927,15 @@ namespace vostok
 		survarium::weapon_core_aimed_state*			object	= cook->cook_type::new_object( buffer, params, animations, 4 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
 
+		// ODR-use the cook's allocate_resource / create_resource / on_subresources_ready via
+		// qualified calls on the null cook (no construction -> no vtable / STUB-virtual codegen).
+		vostok::resources::query_result_for_cook&	cook_query	= *reinterpret_cast< vostok::resources::query_result_for_cook* >( NULL );
+		vostok::resources::queries_result&			cook_results	= *reinterpret_cast< vostok::resources::queries_result* >( NULL );
+		mutable_buffer								allocated	= cook->cook_type::allocate_resource( cook_query, vostok::const_buffer( ), false );
+		cook->cook_type::create_resource( cook_query, vostok::const_buffer( ), buffer );
+		cook->cook_type::on_subresources_ready( cook_results, buffer, params );
+		example_callback( reinterpret_cast< pcstr >( allocated.c_ptr( ) ) );
+
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
