@@ -3078,54 +3078,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\flash_external_handler.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_external_handler_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_factory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_function_handler.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_function_handler_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_function_handler_params.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_movie.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_movie_resource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_renderer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_text.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_text_manager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\flash_value.h"
-				>
-			</File>
-			<File
 				RelativePath=".\free_fly_camera.cpp"
 				>
 				<FileConfiguration
@@ -8778,27 +8730,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\scaleform_engine.h"
-				>
-			</File>
-			<File
-				RelativePath=".\scaleform_game_engine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\scaleform_movie_cook.h"
-				>
-			</File>
-			<File
-				RelativePath=".\scaleform_render_command.h"
-				>
-			</File>
-			<File
-				RelativePath=".\scaleform_render_command_queue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\scaleform_render_command_queue_impl.h"
 				>
 			</File>
 			<File
@@ -9903,10 +9835,6 @@
 			</File>
 			<File
 				RelativePath=".\video_options_enum.h"
-				>
-			</File>
-			<File
-				RelativePath=".\vostok_scaleform_log.h"
 				>
 			</File>
 			<File

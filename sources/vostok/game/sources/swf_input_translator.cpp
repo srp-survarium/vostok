@@ -4,7 +4,7 @@
 
 #include "pch.h"
 #include "swf_input_translator.h"
-#include "flash_movie.h"
+#include <vostok/scaleform/sources/flash_movie.h>
 
 namespace survarium {
 

@@ -10,7 +10,7 @@
 #include <vostok/physics/engine.h>
 #include <vostok/resources_unmanaged_resource.h>
 
-#include "flash_movie_resource.h"
+#include <vostok/scaleform/sources/flash_movie_resource.h>
 
 namespace vostok {
 namespace physics {

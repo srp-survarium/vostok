@@ -5,7 +5,7 @@
 #ifndef LOGIN_MENU_EXTERNAL_HANDLER_H_INCLUDED
 #define LOGIN_MENU_EXTERNAL_HANDLER_H_INCLUDED
 
-#include "flash_external_handler.h"
+#include <vostok/scaleform/sources/flash_external_handler.h>
 
 namespace survarium {
 
