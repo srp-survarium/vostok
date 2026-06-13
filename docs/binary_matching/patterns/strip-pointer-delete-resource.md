@@ -26,4 +26,7 @@ the shared `delete_helper<doug_lea_allocator,resource_base>` COMDAT a custom con
 (&pointer in EDI, one stack arg, add esp,4) while the target's takes both on stack - a pure
 argument-passing LTCG boundary, bankable (~41%).
 Evidence: weapon_core_cook::delete_resource (target @0x59a670; 33% with the macro, 41% direct,
-remaining diff is only the EDI convention).
+remaining diff is only the EDI convention); victory_item_core_cook::delete_resource (target
+@0x7520c0, 0x22 bytes vs the macro cooks' 0x26: 33% macro -> 41% direct, same EDI residual).
+Tell for the direct variant: target stmt is SMALLER (no strip_pointer call), `mov ecx,[g_allocator];
+push ecx` inline; the macro cooks' targets keep `call <strip_pointer-misname>` and are 0x26 bytes.
