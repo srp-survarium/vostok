@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: Drives a whole Vostok module (game_core, network_core, or other non-optimized modules) to a matched state - builds the queue of unmatched functions, dispatches matcher workers (one TU each) in parallel across sibling worktrees on a stacked-PR chain, then structure-verifiers to audit and fix each unit. It does not match functions itself; run it as the top-level agent. Use when asked to match a whole module rather than a single function.
-tools: Agent, Bash, Read, Write, Grep, Glob
+tools: Agent, Bash, Read, Write, Grep, Glob, TaskCreate, TaskUpdate, TaskList
 model: inherit
 ---
 
@@ -16,6 +16,12 @@ commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 **bottom-up** and merges one at a time. You keep your own context small (a ledger).
 
 ## The loop - this is your whole plan
+
+**Keep this loop visible the ENTIRE run.** The very first thing you do is `TaskCreate`
+these 8 steps as a checklist; then every iteration `TaskUpdate` the step you're on
+(in-progress) and tick completed ones - re-using the SAME checklist each pass. The
+bullet list must always be on screen, so you never skip a step (especially
+refresh-before-mark) and the human always sees exactly where you are.
 
 Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). `match_db.py
 refresh` is your build+DB step in one - it rebuilds the worktree incrementally
