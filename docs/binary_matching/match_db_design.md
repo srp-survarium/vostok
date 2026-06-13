@@ -7,6 +7,12 @@ store. It does NOT replace `pdb_fetch`: the parser stays the authoritative
 per-function view (structure-diff, rich asm, statement slices); the DB exists
 for queries across thousands of functions at once.
 
+The derived tables are regenerated from the already-built diff artifacts by
+`rebuild.py` at the end of every build (it is the canonical build step and owns
+the DB regen); `match_db.py refresh` is the regen-only path that re-derives the
+DB from an artifact set already on disk (run `rebuild.py` first if sources
+moved). "refresh" below means that regen step regardless of which trigger ran it.
+
 ## Data sources
 
 | source | gives |
@@ -137,7 +143,10 @@ everything we match is a class method.
 ## CLI
 
 ```
-match_db.py refresh                       # ingest everything, reconcile history
+match_db.py refresh                       # regen-only: ingest the already-built
+                                          #   report.json + indexes, reconcile
+                                          #   history (rebuild.py first if sources
+                                          #   moved - it regenerates the DB itself)
 match_db.py list   --module <m> [--unit <tu>] [--max-size 0x80]
                    [--class QUANTITY,SIZE] [--presence TARGET_ONLY]
                    [--queue-eligible] [--json]
