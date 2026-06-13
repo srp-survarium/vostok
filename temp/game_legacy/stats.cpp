@@ -10,29 +10,8 @@
 
 using survarium::stats;
 
-stats::stats(vostok::ui::world& ui_world)
-:m_ui_world(ui_world)
-{
-	create	();
-}
-
-stats::~stats()
-{
-	m_ui_world.destroy_window(m_main_window);
-}
-
-void stats::draw(render::ui::renderer& w, render::scene_view_ptr const& scene_view )
-{
-	m_main_window->draw( w, scene_view );
-}
-
-void stats::set_fps_stats(float fps)
-{
-	string64		buff;
-	vostok::sprintf	(buff, "%3.2f", fps);
-	m_fps->set_text	(buff);
-}
-
+// set_active_scene: canonical is an inline no-source stub (m_active_scene_info
+// not in this batch's port list) - left for manual review.
 void stats::set_active_scene( pcstr scene_name )
 {
 	string64		buff;
@@ -40,28 +19,18 @@ void stats::set_active_scene( pcstr scene_name )
 	m_active_scene_info->set_text( buff );
 }
 
-void stats::set_camera_stats(float3 const& pos, float3 const& dir)
-{
-	string64		buff;
-	vostok::sprintf	(buff, "cam pos:%3.2f %3.2f %3.2f", pos.x, pos.y, pos.z);
-	m_camera_position->set_text	(buff);
-
-	vostok::sprintf	(buff, "cam dir:%3.2f %3.2f %3.2f", dir.x, dir.y, dir.z);
-	m_camera_direction->set_text	(buff);
-}
-
-void stats::set_resources_stats( pcstr str )
-{
-	m_resources_activity->set_text	( str );
-}
-
+// create: NOT HARVESTED. Structural divergence - the canonical stats grew many
+// more widgets (m_crosshair_distance / m_player_*_speed / m_player_stamina /
+// m_can_use / m_dispersion_components / m_player_logic_state /
+// m_weapon_logic_state), so the carcass create() body (125 lines) is far larger
+// than this 5-widget legacy. Needs manual review.
 void stats::create()
 {
 	m_main_window						= m_ui_world.create_window();
 	m_main_window->set_visible			(true);
 	m_main_window->set_position			(float2(0.0f, 0.0f));
 	m_main_window->set_size				(float2(1024.0f, 768.0f));
-	
+
 	m_fps								= m_ui_world.create_text();
 	m_fps->w()->set_visible				(true);
 	m_fps->w()->set_position			(float2(0.0f, 0.0f));
@@ -98,7 +67,7 @@ void stats::create()
 	m_resources_activity->set_color		(0xffffffff);
 	m_main_window->add_child			(m_resources_activity->w(), true);
 
-	
+
 	m_active_scene_info						= m_ui_world.create_text();
 	m_active_scene_info->w()->set_visible	(true);
 	m_active_scene_info->w()->set_position	(float2(0.0f, 80.0f));
