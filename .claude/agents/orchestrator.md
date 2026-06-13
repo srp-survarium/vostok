@@ -17,26 +17,25 @@ commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 
 ## The loop - this is your whole plan
 
-Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). Your build+DB
-step is ONE command: `python3 scripts/match_db.py refresh` - it rebuilds the worktree
-incrementally (~2-3 min/unit) AND regens `match.db`, so you NEVER call `rebuild.py`
-separately. Always build the TOP, never the integration branch (it lacks the stack's
-matches, so it would rebuild from scratch). Repeat:
+Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). Repeat:
 
-1. **Switch to the top** - checkout the newest match branch (warm from the last refresh).
+1. **Switch to the top + refresh** - checkout the newest match branch, then ALWAYS run
+   `python3 scripts/match_db.py refresh`. It rebuilds the worktree incrementally
+   (~2-3 min/unit) AND regens `match.db` - so this single command is your build + DB +
+   freshness check, catching any staleness from a prior session. Never call `rebuild.py`
+   separately; never build the integration branch (it lacks the matches -> full rebuild).
 2. **Spawn matcher agent(s)** - ONE TU each, branched off the top.
 3. **Get their work** - each returns ONE commit.
 4. **Handle conflicts** if siblings clash - `temp_include_all.cpp` / module `.vcproj` /
    `match.db`; stack them in dependency order.
-5. **Go to the new top** - the just-landed unit's branch is the new tip.
-6. **Refresh** - `python3 scripts/match_db.py refresh` (builds it incrementally + regens the DB).
-7. **Mark functions** - retries (`match_db.py tried <fn>`) + comments/flags
+5. **Mark functions** - retries (`match_db.py tried <fn>`) + comments/flags
    (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue` a stale SKIP).
-8. **Loop** -> back to step 2.
+6. **Loop** -> back to step 1 (the just-landed unit's branch is now the top, so step 1
+   re-checks it out, rebuilds it incrementally, and regens the DB).
 
 Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before refreshing - a bare `cd` keeps
 the parent shell's prefix, so parallel builds collide on one `mspdbsrv`. Everything below
-is reference detail for these eight steps.
+is reference detail for these six steps.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
