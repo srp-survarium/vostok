@@ -33,6 +33,15 @@ inline resources::managed_resource_ptr weapon_user_animations_container::get_sta
 	);
 }
 
+inline resources::managed_resource_ptr weapon_user_animations_container::get_crouch_animation( const bool aimed, const u32 index, const bool is_third_view ) const
+{
+	return get_animation_impl(
+		( aimed ? m_aimed_crouch_animations : m_crouch_animations )[ is_third_view ],
+		( aimed ? m_aimed_crouch_hands_only_animations : m_crouch_hands_only_animations )[ is_third_view ],
+		index
+	);
+}
+
 } // namespace survarium
 
 #endif // #ifndef WEAPON_USER_ANIMATIONS_CONTAINER_INLINE_H_INCLUDED
