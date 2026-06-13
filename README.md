@@ -221,7 +221,8 @@ python3 scripts/match_db.py sql "SELECT substr(u.name,25) unit, s.demangled, f.c
 # function-level DIFF of the committed match.db across revisions (a regression tracker):
 #   <hash>          compares that commit vs the working tree
 #   <hash>..<hash>  compares two commits
-# groups every changed function: regressed / lost / newly-matched / improved / reclassified
+# groups every function: regress / lost / new / improve / TOUCHED (retries up, % unchanged -
+# i.e. a worked TU's 100% fns) / reclass. Columns include max (best-ever %) + tries (from->to).
 python3 scripts/match_db.py diff <hash>..<hash> --module game_core   # --json for machine-readable
 ```
 
