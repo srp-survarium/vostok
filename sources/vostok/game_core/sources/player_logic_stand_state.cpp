@@ -64,8 +64,8 @@ player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selec
 
 // claude@NOTE: structure faithful; residual is the module-wide animation_lexeme_parameters
 // builder-chain inline-vs-call wall (the VOSTOK_ANIMATION_API setters / mixing::operator+ /
-// expression::operator= go out-of-line in the target but inline here). Same ceiling as the
-// already-matched weapon_core_aimed_fire_state::get_user_hands_expression (~77%).
+// expression::operator= go out-of-line in the target but inline here). Same ceiling as
+// weapon_core_aimed_fire_state::get_user_hands_expression.
 animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	mutable_buffer&						buffer,
 	u32 const							animation_index,
