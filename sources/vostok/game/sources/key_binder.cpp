@@ -4,11 +4,91 @@
 
 #include "pch.h"
 #include "key_binder.h"
+#include "game.h"
 #include "game_action_descr.h"
 #include "keyboard_key_descr.h"
 #include <vostok/console_command.h>
+#include <vostok/input/world.h>
+#include <vostok/input/keyboard.h>
+#include <vostok/input/mouse.h>
 
 namespace survarium {
+
+// TU-local key-name table (lineage-preserved from the legacy module); the
+// ctor wires it into the per-action bindings (a matcher recovers the actions[]
+// side - reshaped to the canonical 5-field game_action_descr - when enabled)
+keyboard_key_descr keyboards[] = {
+	{ "kESCAPE",		input::key_escape		},	{ "k1",				input::key_1			},
+	{ "k2",				input::key_2			},	{ "k3",				input::key_3			},
+	{ "k4",				input::key_4			},	{ "k5",				input::key_5			},
+	{ "k6",				input::key_6			},	{ "k7",				input::key_7			},
+	{ "k8",				input::key_8			},	{ "k9",				input::key_9			},
+	{ "k0",				input::key_0			},	{ "kMINUS",			input::key_minus		},
+	{ "kEQUALS",		input::key_equals		},	{ "kBACK",			input::key_back			},
+	{ "kTAB",			input::key_tab			},	{ "kQ",				input::key_q			},
+	{ "kW",				input::key_w			},	{ "kE",				input::key_e			},
+	{ "kR",				input::key_r			},	{ "kT",				input::key_t			},
+	{ "kY",				input::key_y			},	{ "kU",				input::key_u			},
+	{ "kI",				input::key_i			},	{ "kO",				input::key_o			},
+	{ "kP",				input::key_p			},	{ "kLBRACKET",		input::key_lbracket		},
+	{ "kRBRACKET",		input::key_rbracket		},	{ "kRETURN",		input::key_return		},
+	{ "kLCONTROL",		input::key_lcontrol		},	{ "kA",				input::key_a			},
+	{ "kS",				input::key_s			},	{ "kD",				input::key_d			},
+	{ "kF",				input::key_f			},	{ "kG",				input::key_g			},
+	{ "kH",				input::key_h			},	{ "kJ",				input::key_j			},
+	{ "kK",				input::key_k			},	{ "kL",				input::key_l			},
+	{ "kSEMICOLON",		input::key_semicolon	},	{ "kAPOSTROPHE",	input::key_apostrophe	},
+	{ "kGRAVE",			input::key_grave		},	{ "kLSHIFT",		input::key_lshift		},
+	{ "kBACKSLASH",		input::key_backslash	},	{ "kZ",				input::key_z			},
+	{ "kX",				input::key_x			},	{ "kC",				input::key_c			},
+	{ "kV",				input::key_v			},	{ "kB",				input::key_b			},
+	{ "kN",				input::key_n			},	{ "kM",				input::key_m			},
+	{ "kCOMMA",			input::key_comma		},	{ "kPERIOD",		input::key_period		},
+	{ "kSLASH",			input::key_slash		},	{ "kRSHIFT",		input::key_rshift		},
+	{ "kMULTIPLY",		input::key_multiply		},	{ "kLMENU",			input::key_lmenu		},
+	{ "kSPACE",			input::key_space		},	{ "kCAPITAL",		input::key_capital		},
+	{ "kF1",			input::key_f1			},	{ "kF2",			input::key_f2			},
+	{ "kF3",			input::key_f3			},	{ "kF4",			input::key_f4			},
+	{ "kF5",			input::key_f5			},	{ "kF6",			input::key_f6			},
+	{ "kF7",			input::key_f7			},	{ "kF8",			input::key_f8			},
+	{ "kF9",			input::key_f9			},	{ "kF10",			input::key_f10			},
+	{ "kNUMLOCK",		input::key_numlock		},	{ "kSCROLL",		input::key_scroll		},
+	{ "kNUMPAD7",		input::key_numpad7		},	{ "kNUMPAD8",		input::key_numpad8		},
+	{ "kNUMPAD9",		input::key_numpad9		},	{ "kSUBTRACT",		input::key_subtract		},
+	{ "kNUMPAD4",		input::key_numpad4		},	{ "kNUMPAD5",		input::key_numpad5		},
+	{ "kNUMPAD6",		input::key_numpad6		},	{ "kADD",			input::key_add			},
+	{ "kNUMPAD1",		input::key_numpad1		},	{ "kNUMPAD2",		input::key_numpad2		},
+	{ "kNUMPAD3",		input::key_numpad3		},	{ "kNUMPAD0",		input::key_numpad0		},
+	{ "kDECIMAL",		input::key_decimal		},	{ "kF11",			input::key_f11			},
+	{ "kF12",			input::key_f12			},	{ "kF13",			input::key_f13			},
+	{ "kF14",			input::key_f14			},	{ "kF15",			input::key_f15			},
+	{ "kKANA",			input::key_kana			},	{ "kCONVERT",		input::key_convert		},
+	{ "kNOCONVERT",		input::key_noconvert	},	{ "kYEN",			input::key_yen			},
+	{ "kNUMPADEQUALS",	input::key_numpadequals	},	{ "kCIRCUMFLEX",	input::key_circumflex	},
+	{ "kAT",			input::key_at			},	{ "kCOLON",			input::key_colon		},
+	{ "kUNDERLINE",		input::key_underline	},	{ "kKANJI",			input::key_kanji		},
+	{ "kSTOP",			input::key_stop			},	{ "kAX",			input::key_ax			},
+	{ "kUNLABELED",		input::key_unlabeled	},	{ "kNUMPADENTER",	input::key_numpadenter	},
+	{ "kRCONTROL",		input::key_rcontrol		},	{ "kNUMPADCOMMA",	input::key_numpadcomma	},
+	{ "kDIVIDE",		input::key_divide		},	{ "kSYSRQ",			input::key_sysrq		},
+	{ "kRMENU",			input::key_rmenu		},	{ "kHOME",			input::key_home			},
+	{ "kUP",			input::key_up			},	{ "kPRIOR",			input::key_prior		},
+	{ "kLEFT",			input::key_left			},	{ "kRIGHT",			input::key_right		},
+	{ "kEND",			input::key_end			},	{ "kDOWN",			input::key_down			},
+	{ "kNEXT",			input::key_next			},	{ "kINSERT",		input::key_insert		},
+	{ "kDELETE",		input::key_delete		},	{ "kLWIN",			input::key_lwin			},
+	{ "kRWIN",			input::key_rwin			},	{ "kAPPS",			input::key_apps			},
+	{ "kPAUSE",			input::key_pause		},
+	{ "mouse1",			input::mouse_button_left		},
+	{ "mouse2",			input::mouse_button_right		},
+	{ "mouse3",			input::mouse_button_middle		},
+	{ "mouse4",			input::mouse_button_extended0	},
+	{ "mouse5",			input::mouse_button_extended1	},
+	{ "mouse6",			input::mouse_button_extended2	},
+	{ "mouse7",			input::mouse_button_extended3	},
+	{ "mouse8",			input::mouse_button_extended4	},
+	{ NULL,				0						}
+};
 
 // TU-local (canonical headers/console_command_bind.h; owner mapping in
 // temp/triage_log.md) - the type of the ctor's s_bind_*_command statics
@@ -29,11 +109,14 @@ private:
 STATIC_SIZE_ASSERT(console_command_bind, 0x68);
 
 // STATE[STUB]
-// the cc_delegate base has no default ctor - a matcher supplies the real
-// (name, functor, need_args) base init when this TU is enabled
  console_command_bind::console_command_bind( key_binder* binder, s32 type )
-	// buildability: cc_delegate has no default ctor; matcher supplies real args
-	: console_commands::cc_delegate( NULL, console_commands::functor_type(), false )
+	: console_commands::cc_delegate(
+		( type == 0 ) ? "bind" : "bind_sec",
+		boost::bind( &key_binder::bind_key, binder, _1, type ),
+		true
+	),
+	m_type		( type ),
+	m_binder	( binder )
 {
 	// FUNCTION BODY[0x91980]: 1
 	// <0x91980>|0x000|+0x0ab:'32'	{
@@ -140,6 +223,19 @@ void key_binder::set_default_controls( )
 // STATE[STUB]
 void key_binder::remap_keys( )
 {
+	s32			idx = 0;
+	string128	buff;
+	while ( keyboards[idx].key_name ) {
+		buff[0]						= 0;
+		keyboard_key_descr&	kb		= keyboards[idx];
+		bool res					= m_game.input_world().get_keyboard()->get_dik_name( kb.dik, buff, sizeof( buff ) );
+		if ( res )
+			strings::copy	( kb.key_local_name, buff );
+		else
+			strings::copy	( kb.key_local_name, kb.key_name );
+		++idx;
+	}
+
 	// LOCALS
 	// char[128] 						buff
 	// ******
@@ -224,7 +320,11 @@ game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 // STATE[STUB]
 pcstr key_binder::dik_to_keyname( s32 _dik )
 {
-	return NULL;
+	keyboard_key_descr* kb = key_binder::dik_to_ptr( _dik, true );
+	if ( kb )
+		return kb->key_name;
+	else
+		return NULL;
 
 	// FUNCTION BODY[0x5db1f0]: 5
 	// <0x5db1f0>|0x000|+0x001:'305'	{
@@ -241,6 +341,15 @@ pcstr key_binder::dik_to_keyname( s32 _dik )
 // STATE[STUB]
 keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 {
+	s32 idx = 0;
+	while ( keyboards[idx].key_name ) {
+		keyboard_key_descr& kb = keyboards[idx];
+		if ( kb.dik == _dik )
+			return &keyboards[idx];
+		++idx;
+	}
+	if ( !bSafe )
+		LOG_INFO	( "! cant find corresponding [keyboard_key_descr] for dik" );
 	return NULL;
 
 	// FUNCTION BODY[0x5db1b0]: 11
@@ -264,6 +373,15 @@ keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 // STATE[STUB]
 keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 {
+	s32 idx = 0;
+	while ( keyboards[idx].key_name ) {
+		keyboard_key_descr& kb = keyboards[idx];
+		if ( !_stricmp( _name, kb.key_name ) )
+			return &keyboards[idx];
+		++idx;
+	}
+
+	LOG_INFO	( "! cant find corresponding [keyboard_key_descr*] for keyname %s", _name );
 	return NULL;
 
 	// FUNCTION BODY[0x5db080]: 11
