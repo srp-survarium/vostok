@@ -817,6 +817,68 @@ def shorten_fn(dem):
     return f"{ret} {rest}".strip()
 
 
+_MANGLED_OPS = {
+    "2": "operator new", "3": "operator delete", "4": "operator=",
+    "8": "operator==", "9": "operator!=", "A": "operator[]",
+    "R": "operator()", "E": "operator++", "F": "operator--",
+    "_7": "`vftable'", "_8": "`vbtable'",
+}
+
+
+def _scope_tokens(s):
+    """`@`-separated scope identifiers up to the terminating `@@`; a templated
+    scope token (`?$name@...`) degrades to its base name (best effort)."""
+    toks = []
+    for t in s.split("@"):
+        if t == "":
+            break
+        toks.append(t[2:] if t.startswith("?$") else t)
+    return toks
+
+
+def _qual_before_template(dem):
+    """The qualified name in a demangled signature, cut at the earliest '<' or '('
+    (so a function template's args and the parameter list are dropped)."""
+    _, rest = _split_return(dem)
+    cut = len(rest)
+    for ch in "<(":
+        i = rest.find(ch)
+        if 0 <= i < cut:
+            cut = i
+    return rest[:cut].strip()
+
+
+def fn_from_mangled(mangled, demangled=""):
+    """A short 'scope::name' read from the MSVC mangled name - no template args, no
+    parameter list, so it reads far easier than the demangled signature. Falls back
+    to the capped demangled when it can't parse."""
+    try:
+        m = mangled
+        if not m.startswith("?"):
+            return m  # already a plain qualified name (free functions, etc.)
+        body = m[1:]
+        if body.startswith("?"):            # ctor / dtor / operator / template
+            body = body[1:]
+            if body.startswith("$"):        # template function: drop its <args>
+                base = body[1:].split("@", 1)[0]
+                qual = _qual_before_template(demangled)
+                return qual if qual.endswith(base) else base
+            code = body[:2] if body[0] == "_" else body[:1]
+            toks = _scope_tokens(body[len(code):].lstrip("@"))
+            if not toks:
+                raise ValueError
+            cls = toks[0]
+            leaf = (cls if code == "0"
+                    else "~" + cls if code in ("1", "_G", "_E")
+                    else _MANGLED_OPS.get(code, "operator" + code))
+            return "::".join(reversed(toks)) + "::" + leaf
+        name, _, rest = body.partition("@")  # normal function
+        toks = _scope_tokens(rest)
+        return ("::".join(reversed(toks)) + "::" + name) if toks else name
+    except Exception:
+        return shorten_fn(demangled)
+
+
 def resolve_units(con, partial, module=None):
     """Unit names whose path CONTAINS `partial` (case-insensitive), optionally
     scoped to a module. A full path is a unique substring, so it resolves to one."""
@@ -867,7 +929,8 @@ def cmd_report(args):
                  CASE WHEN coalesce(fl.path, u.name) LIKE 'vostok/%'
                       THEN substr(coalesce(fl.path, u.name), 8)
                       ELSE coalesce(fl.path, u.name, '(no unit)') END AS file,
-                 s.demangled                                      AS fn
+                 s.demangled                                      AS fn,
+                 s.mangled                                        AS m
           FROM target_functions t
           JOIN symbols s ON s.id = t.sym
           LEFT JOIN units u ON u.id = t.unit
@@ -879,9 +942,10 @@ def cmd_report(args):
           ORDER BY p.fuzzy_pct DESC, t.size DESC
         """
         rows = [dict(r) for r in con.execute(ffq, [like] + mparams)]
-        if not args.json:
-            for r in rows:
-                r["fn"] = shorten_fn(r["fn"])
+        for r in rows:
+            m = r.pop("m")
+            if not args.json:
+                r["fn"] = fn_from_mangled(m, r["fn"])
         emit(rows, args.json)
         return
 
@@ -925,7 +989,8 @@ def cmd_report(args):
                  t.size                                           AS size,
                  coalesce((SELECT group_concat(flag, '+') FROM flags
                            WHERE mangled = s.mangled), '-')       AS flag,
-                 s.demangled                                      AS fn
+                 s.demangled                                      AS fn,
+                 s.mangled                                        AS m
           FROM target_functions t
           JOIN symbols s ON s.id = t.sym
           JOIN units u ON u.id = t.unit
@@ -936,9 +1001,10 @@ def cmd_report(args):
           ORDER BY p.fuzzy_pct DESC, t.size DESC
         """
         rows = [dict(r) for r in con.execute(fq, [unit_full])]
-        if not args.json:
-            for r in rows:
-                r["fn"] = shorten_fn(r["fn"])
+        for r in rows:
+            m = r.pop("m")
+            if not args.json:
+                r["fn"] = fn_from_mangled(m, r["fn"])
         emit(rows, args.json)
         return
 
@@ -1092,15 +1158,15 @@ def cmd_diff(args):
         if ap is None and bp is None:
             continue
         if ap is None:
-            matched.append((bp, bc, dem, loc))
+            matched.append((bp, bc, dem, loc, m))
         elif bp is None:
-            lost.append((ap, ac, dem, loc))
+            lost.append((ap, ac, dem, loc, m))
         elif bp - ap > eps:
-            improved.append((bp - ap, ap, bp, ac, bc, dem, loc))
+            improved.append((bp - ap, ap, bp, ac, bc, dem, loc, m))
         elif ap - bp > eps:
-            regressed.append((bp - ap, ap, bp, ac, bc, dem, loc))
+            regressed.append((bp - ap, ap, bp, ac, bc, dem, loc, m))
         elif ac != bc:
-            reclass.append((ap, ac, bc, dem, loc))
+            reclass.append((ap, ac, bc, dem, loc, m))
 
     b_label = b_rev or "WORKTREE"
     if args.json:
@@ -1131,26 +1197,26 @@ def cmd_diff(args):
           f"reclassified {len(reclass)}")
 
     rows = []
-    for d, ap, bp, ac, bc, dem, loc in sorted(regressed):
+    for d, ap, bp, ac, bc, dem, loc, m in sorted(regressed):
         rows.append({"kind": "REGRESS", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
                      "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc), "fn": shorten_fn(dem)})
-    for ap, ac, dem, loc in sorted(lost, reverse=True):
+                     "file": strip(loc), "fn": fn_from_mangled(m, dem)})
+    for ap, ac, dem, loc, m in sorted(lost, reverse=True):
         rows.append({"kind": "LOST", "d": "gone", "from": f"{ap:.1f}", "to": "-",
                      "cls": clsfmt(ac, None), "file": strip(loc),
-                     "fn": shorten_fn(dem)})
-    for bp, bc, dem, loc in sorted(matched, reverse=True):
+                     "fn": fn_from_mangled(m, dem)})
+    for bp, bc, dem, loc, m in sorted(matched, reverse=True):
         rows.append({"kind": "NEW", "d": "new", "from": "-", "to": f"{bp:.1f}",
                      "cls": clsfmt(None, bc), "file": strip(loc),
-                     "fn": shorten_fn(dem)})
-    for d, ap, bp, ac, bc, dem, loc in sorted(improved, reverse=True):
+                     "fn": fn_from_mangled(m, dem)})
+    for d, ap, bp, ac, bc, dem, loc, m in sorted(improved, reverse=True):
         rows.append({"kind": "IMPROVE", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
                      "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc), "fn": shorten_fn(dem)})
-    for ap, ac, bc, dem, loc in sorted(reclass, reverse=True):
+                     "file": strip(loc), "fn": fn_from_mangled(m, dem)})
+    for ap, ac, bc, dem, loc, m in sorted(reclass, reverse=True):
         rows.append({"kind": "RECLASS", "d": "~", "from": f"{ap:.1f}",
                      "to": f"{ap:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc), "fn": shorten_fn(dem)})
+                     "file": strip(loc), "fn": fn_from_mangled(m, dem)})
     if not rows:
         print("  (no function-level differences)")
     else:

@@ -202,8 +202,8 @@ python3 scripts/match_db.py report --unit medkit --per-function
 # count/weighted/avg header. --module optional.
 python3 scripts/match_db.py report --function 'medkit::'
 
-# (in both views the fn column caps the return type and the name+args separately so a
-#  boost/asio template monster can't blow out the table; add --json for the full name.)
+# (the fn column is the mangled-derived scope::name - no return type, template args, or
+#  parameter list, so even a boost/asio handler reads cleanly; --json gives full demangled.)
 
 # TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
 # WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-
