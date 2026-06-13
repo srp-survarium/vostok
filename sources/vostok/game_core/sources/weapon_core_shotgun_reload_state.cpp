@@ -98,8 +98,8 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 ) const
 {
 	// claude@MATCH: state + cast + return live on ONE source line (line 89) - the PDB
-	// records the whole body as a single statement (2 temps), splitting them onto three
-	// lines reads 100% byte but flags the statement-count quantity trap.
+	// records the whole body as a single statement (2 temps); splitting onto three lines
+	// keeps the bytes but trips the per-line statement-count quantity check, so collapse it.
 	ai::fsm_state* state = m_logic->current_state( ); weapon_core_shotgun_reload_base_substate* current = static_cast< weapon_core_shotgun_reload_base_substate* >( state ); return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
