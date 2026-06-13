@@ -15,11 +15,18 @@ namespace survarium {
 	const float		important_value1,
 	const u32		color
 ) :
-	// const members; the same-named params are the obvious sources - a matcher
-	// confirms when this TU is enabled
-	m_invalid_value		( invalid_value ),
-	m_important_value0	( important_value0 ),
-	m_important_value1	( important_value1 )
+	// legacy m_current_value -> canonical m_newest_value; m_cumulative_value /
+	// m_weighted_average_value are canonical-only (no legacy source) -> buildability 0
+	m_newest_value			( 0 ),
+	m_values_pool			( 0 ),
+	m_time_interval			( time_interval ),
+	m_invalid_value			( invalid_value ),
+	m_important_value0		( important_value0 ),
+	m_important_value1		( important_value1 ),
+	m_cumulative_value		( 0 ),			// buildability: matcher supplies real value
+	m_weighted_average_value( 0 ),			// buildability: matcher supplies real value
+	m_count					( 0 ),
+	m_color					( color )
 {
 	// FUNCTION BODY[0x5d9d80]: 3
 	// <0x5d9d80>|0x000|+0x03f:'45'	{
@@ -33,6 +40,19 @@ namespace survarium {
 // STATE[STUB]
  stats_graph::~stats_graph( )
 {
+	// legacy m_current_value -> canonical m_newest_value
+	for ( u32 i=0; i < m_count; ++i ) {
+		stats_value* value			= m_newest_value;
+		m_newest_value				= m_newest_value->next;
+		DELETE						( value );
+	}
+
+	while ( m_values_pool ) {
+		stats_value* value			= m_values_pool;
+		m_values_pool				= m_values_pool->next;
+		DELETE						( value );
+	}
+
 	// FUNCTION BODY[0x5d9e30]: 13
 	// <0x5d9e32>|0x002|+0x00e:'53'
 	// <0>
@@ -54,6 +74,30 @@ namespace survarium {
 // STATE[STUB]
 void stats_graph::adjust_time_interval( )
 {
+	// legacy m_current_value -> canonical m_newest_value
+	ASSERT							( m_newest_value->time >= m_newest_value->next->time );
+	if ( m_newest_value->time - m_newest_value->next->time <= m_time_interval )
+		return;
+
+	while ( m_newest_value->time - m_newest_value->next->next->time >= m_time_interval ) {
+		stats_value* old_value		= m_newest_value->next;
+		m_newest_value->next		= old_value->next;
+		old_value->next->previous	= m_newest_value;
+		--m_count;
+
+		ASSERT						( m_count >= 2 );
+		ASSERT						( m_newest_value->time - m_newest_value->next->time >= m_time_interval );
+
+		if ( !m_values_pool ) {
+			m_values_pool			= old_value;
+			m_values_pool->next		= 0;
+		}
+		else {
+			old_value->next			= m_values_pool;
+			m_values_pool			= old_value;
+		}
+	}
+
 	// FUNCTION BODY[0x5d9d00]: 28
 	// <0>
 	// <0x5d9d00>|0x000|+0x01b:'71'
@@ -89,6 +133,40 @@ void stats_graph::adjust_time_interval( )
 // STATE[STUB]
 void stats_graph::add_value( const float time, const float value )
 {
+	// legacy m_current_value -> canonical m_newest_value
+	if ( (m_count > 1) && (time - m_newest_value->next->next->time >= m_time_interval) ) {
+		m_newest_value				= m_newest_value->next;
+		m_newest_value->time		= time;
+		m_newest_value->value		= value;
+		adjust_time_interval		( );
+		return;
+	}
+
+	stats_value*					new_value;
+	if ( !m_values_pool )
+		new_value					= NEW( stats_value );
+	else {
+		new_value					= m_values_pool;
+		m_values_pool				= m_values_pool->next;
+	}
+
+	new_value->time					= time;
+	new_value->value				= value;
+	++m_count;
+
+	if ( !m_newest_value ) {
+		new_value->next				= new_value;
+		new_value->previous			= new_value;
+		m_newest_value				= new_value;
+		return;
+	}
+
+	new_value->next					= m_newest_value->next;
+	new_value->previous				= m_newest_value;
+	m_newest_value->next			= new_value;
+	new_value->next->previous		= new_value;
+	m_newest_value					= new_value;
+
 	// FUNCTION BODY[0x5d9e90]: 53
 	// <0x5d9e90>|0x000|+0x001:'101'	{
 	// <0>
@@ -154,6 +232,9 @@ void stats_graph::add_value( const float time, const float value )
 // STATE[STUB]
 void stats_graph::set_time_interval( float new_time_interval )
 {
+	m_time_interval					= new_time_interval;
+	adjust_time_interval			( );
+
 	// FUNCTION BODY[0x5d9dd0]: 1
 	// <0x5d9dd0>|0x000|+0x005:'159'
 	// ******
@@ -175,7 +256,12 @@ float stats_graph::cumulative_time( ) const
 // STATE[STUB]
 float stats_graph::average_value( ) const
 {
-	return 0.0f;
+	// legacy stats_time() -> canonical cumulative_time()
+	float const time				= cumulative_time();
+	if ( math::is_zero(time) )
+		return						( 0.f );
+
+	return							m_count / time;
 
 	// FUNCTION BODY[0x5d9de0]: 5
 	// <0x5d9de0>|0x000|+0x001:'172'	{

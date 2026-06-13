@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "stats.h"
+#include <vostok/ui/ui.h>
+#include <vostok/ui/world.h>
 
 namespace survarium {
 
@@ -13,6 +15,8 @@ namespace survarium {
 	m_odd_row_color( 0 ),			// buildability: matcher supplies real value
 	m_even_row_color( 0 )			// buildability: matcher supplies real value
 {
+	create	( );
+
 	// FUNCTION BODY[0x5daf20]: 1
 	// <0x5daf3b>|0x01b|+0x005:'22'
 	// ******
@@ -21,6 +25,8 @@ namespace survarium {
 // STATE[STUB]
  stats::~stats( )
 {
+	m_ui_world.destroy_window( m_main_window );
+
 	// CALL SITE INFO
 	// <0x5da32b> -> void < unknown >( ui::window* )
 	// ******
@@ -33,6 +39,8 @@ namespace survarium {
 // STATE[STUB]
 void stats::draw( render::ui::renderer& w, render::scene_view_ptr const& scene_view )
 {
+	m_main_window->draw( w, scene_view );
+
 	// CALL SITE INFO
 	// <0x5da2fe> -> void < unknown >( render::ui::renderer&, render::base_scene_view_ptr const& )
 	// <0x5da308> -> ui::window* < unknown >()
@@ -47,6 +55,10 @@ void stats::draw( render::ui::renderer& w, render::scene_view_ptr const& scene_v
 // STATE[STUB]
 void stats::set_fps_stats( const float fps )
 {
+	string64		buff;
+	vostok::sprintf	( buff, "%3.2f", fps );
+	m_fps->set_text	( buff );
+
 	// LOCALS
 	// char[64] 						buff
 	// ******
@@ -101,6 +113,13 @@ void stats::set_player_linear_speed( const float speed )
 // STATE[STUB]
 void stats::set_camera_stats( float3 const& pos, float3 const& dir )
 {
+	string64		buff;
+	vostok::sprintf	( buff, "cam pos:%3.2f %3.2f %3.2f", pos.x, pos.y, pos.z );
+	m_camera_position->set_text	( buff );
+
+	vostok::sprintf	( buff, "cam dir:%3.2f %3.2f %3.2f", dir.x, dir.y, dir.z );
+	m_camera_direction->set_text	( buff );
+
 	// LOCALS
 	// char[64] 						buff3
 	// char[64] 						buff1
@@ -139,6 +158,8 @@ void stats::set_crosshair_info( const float dist )
 // STATE[STUB]
 void stats::set_resources_stats( pcstr str )
 {
+	m_resources_activity->set_text	( str );
+
 	// CALL SITE INFO
 	// <0x5da2d8> -> void < unknown >( pcstr )
 	// ******

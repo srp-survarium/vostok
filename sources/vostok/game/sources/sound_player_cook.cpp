@@ -4,6 +4,10 @@
 
 #include "pch.h"
 #include "sound_player_cook.h"
+#include <vostok/resources.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
@@ -23,6 +27,15 @@ namespace survarium {
 // STATE[STUB]
 void sound_player_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	resources::query_resource	(
+		parent.get_requested_path(),
+		resources::binary_config_class,
+		boost::bind( &sound_player_cook::on_config_loaded, this, _1 ),
+		g_allocator,
+		0,
+		&parent
+	);
+
 	// FUNCTION BODY[0x768f20]: 8
 	// <0>
 	// <1>
@@ -38,6 +51,9 @@ void sound_player_cook::translate_query( resources::query_result_for_cook& paren
 // STATE[STUB]
 void sound_player_cook::delete_resource( resources::resource_base* resource )
 {
+	resource->~resource_base			( );
+	VOSTOK_FREE_IMPL						( g_allocator, resource );
+
 	// CALL SITE INFO
 	// <0x768a5d> -> void* < unknown >( u32 )
 	// ******
@@ -51,6 +67,40 @@ void sound_player_cook::delete_resource( resources::resource_base* resource )
 // STATE[STUB]
 void sound_player_cook::on_config_loaded( resources::queries_result& data )
 {
+	resources::query_result_for_cook* const	parent		= data.get_parent_query();
+	if ( !data.is_successful() )
+	{
+		R_ASSERT										( data.is_successful(), "couldn't retrieve sound collection options" );
+		parent->finish_query							( result_error );
+		return;
+	}
+
+	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr const>( data[0].get_unmanaged_resource() );
+	configs::binary_config_value const& sounds_value	= (*config)["sounds"];
+
+	configs::binary_config_value::const_iterator it		= sounds_value.begin();
+	configs::binary_config_value::const_iterator it_end	= sounds_value.end();
+
+	buffer_vector< resources::request >	requests		( ALLOCA( sizeof( resources::request ) * sounds_value.size() ), sounds_value.size() );
+
+	for ( ; it != it_end; ++it )
+	{
+		configs::binary_config_value const& sound_value	= *it;
+		resources::request								request;
+		request.path									= sound_value["filename"];
+		request.id										= resources::sound_collection_class;
+		requests.push_back								( request );
+	}
+
+	resources::query_resources	(
+		&requests.front(),
+		requests.size(),
+		boost::bind( &sound_player_cook::on_sounds_loaded, this, _1, config ),
+		g_allocator,
+		0,
+		parent
+	);
+
 	// LOCALS
 	// resources::query_result_for_cook* const parent
 	// configs::binary_config_value const* it_end
