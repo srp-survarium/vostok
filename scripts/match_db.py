@@ -1018,6 +1018,145 @@ def cmd_report(args):
     emit(rows, args.json)
 
 
+def _db_blob_at(rev):
+    """(path, cleanup_path) for a readable match.db at git `rev`. Empty rev = the
+    on-disk current DB (cleanup None). Else extract the committed blob to a tempfile."""
+    if not rev:
+        return str(DB_PATH), None
+    import subprocess
+    import tempfile
+
+    rel = "docs/binary_matching/match.db"
+    fd, tmp = tempfile.mkstemp(prefix="match_db_", suffix=".db")
+    os.close(fd)
+    with open(tmp, "wb") as fh:
+        r = subprocess.run(
+            ["git", "-C", str(VOSTOK), "show", f"{rev}:{rel}"],
+            stdout=fh, stderr=subprocess.PIPE,
+        )
+    if r.returncode != 0:
+        os.unlink(tmp)
+        sys.exit(f"[match_db] cannot read {rel} at '{rev}': "
+                 f"{r.stderr.decode(errors='replace').strip()}")
+    return tmp, tmp
+
+
+def _fn_state(db_path, module):
+    """{mangled: row(dem, pct, cls, loc)} over a match.db's target functions."""
+    con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    where = "WHERE t.module = ?" if module else ""
+    rows = con.execute(
+        f"""SELECT s.mangled AS m, s.demangled AS dem, p.fuzzy_pct AS pct,
+                   p.struct_class AS cls,
+                   coalesce(fl.path, un.name, '(no unit)') AS loc
+            FROM symbols s
+            JOIN target_functions t ON t.sym = s.id
+            LEFT JOIN units un ON un.id = t.unit
+            LEFT JOIN files fl ON fl.id = t.file
+            LEFT JOIN pairs p ON p.sym = s.id
+            {where}""",
+        ([module] if module else []),
+    ).fetchall()
+    con.close()
+    return {r["m"]: r for r in rows}
+
+
+def cmd_diff(args):
+    """Function-level diff between two committed match.db revisions (or a rev vs the
+    working tree): what each target function's fuzzy_pct / struct_class did."""
+    spec = args.spec
+    a_rev, b_rev = spec.split("..", 1) if ".." in spec else (spec, "")
+    if not a_rev:
+        sys.exit("[match_db] diff needs a base rev: <hash> or <hash>..<hash>")
+    a_path, a_tmp = _db_blob_at(a_rev)
+    b_path, b_tmp = _db_blob_at(b_rev)
+    try:
+        a_state = _fn_state(a_path, args.module)
+        b_state = _fn_state(b_path, args.module)
+    finally:
+        for t in (a_tmp, b_tmp):
+            if t:
+                os.unlink(t)
+
+    eps = 0.01
+    regressed, improved, matched, lost, reclass = [], [], [], [], []
+    for m in set(a_state) | set(b_state):
+        a, b = a_state.get(m), b_state.get(m)
+        ap = a["pct"] if a else None
+        bp = b["pct"] if b else None
+        ac = a["cls"] if a else None
+        bc = b["cls"] if b else None
+        dem = (b or a)["dem"]
+        loc = (b or a)["loc"]
+        if ap is None and bp is None:
+            continue
+        if ap is None:
+            matched.append((bp, bc, dem, loc))
+        elif bp is None:
+            lost.append((ap, ac, dem, loc))
+        elif bp - ap > eps:
+            improved.append((bp - ap, ap, bp, ac, bc, dem, loc))
+        elif ap - bp > eps:
+            regressed.append((bp - ap, ap, bp, ac, bc, dem, loc))
+        elif ac != bc:
+            reclass.append((ap, ac, bc, dem, loc))
+
+    b_label = b_rev or "WORKTREE"
+    if args.json:
+        cols6 = ["delta", "from", "to", "from_cls", "to_cls", "fn", "file"]
+        print(json.dumps({
+            "a": a_rev, "b": b_label, "module": args.module,
+            "regressed": [dict(zip(cols6, r)) for r in sorted(regressed)],
+            "improved": [dict(zip(cols6, r)) for r in sorted(improved, reverse=True)],
+            "newly_matched": [dict(zip(["to", "to_cls", "fn", "file"], r))
+                              for r in sorted(matched, reverse=True)],
+            "lost": [dict(zip(["from", "from_cls", "fn", "file"], r))
+                     for r in sorted(lost, reverse=True)],
+            "reclassified": [dict(zip(["pct", "from_cls", "to_cls", "fn", "file"], r))
+                             for r in sorted(reclass, reverse=True)],
+        }, indent=1))
+        return
+
+    def strip(loc):
+        return loc[7:] if loc.startswith("vostok/") else loc
+
+    def clsfmt(ac, bc):
+        return (ac or "-") if ac == bc else f"{ac or ''}->{bc or ''}"
+
+    print(f"[match_db] diff {a_rev} -> {b_label}"
+          + (f"  (module {args.module})" if args.module else ""))
+    print(f"  regressed {len(regressed)}  lost {len(lost)}  "
+          f"newly-matched {len(matched)}  improved {len(improved)}  "
+          f"reclassified {len(reclass)}")
+
+    rows = []
+    for d, ap, bp, ac, bc, dem, loc in sorted(regressed):
+        rows.append({"kind": "REGRESS", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
+                     "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
+                     "file": strip(loc), "fn": shorten_fn(dem)})
+    for ap, ac, dem, loc in sorted(lost, reverse=True):
+        rows.append({"kind": "LOST", "d": "gone", "from": f"{ap:.1f}", "to": "-",
+                     "cls": clsfmt(ac, None), "file": strip(loc),
+                     "fn": shorten_fn(dem)})
+    for bp, bc, dem, loc in sorted(matched, reverse=True):
+        rows.append({"kind": "NEW", "d": "new", "from": "-", "to": f"{bp:.1f}",
+                     "cls": clsfmt(None, bc), "file": strip(loc),
+                     "fn": shorten_fn(dem)})
+    for d, ap, bp, ac, bc, dem, loc in sorted(improved, reverse=True):
+        rows.append({"kind": "IMPROVE", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
+                     "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
+                     "file": strip(loc), "fn": shorten_fn(dem)})
+    for ap, ac, bc, dem, loc in sorted(reclass, reverse=True):
+        rows.append({"kind": "RECLASS", "d": "~", "from": f"{ap:.1f}",
+                     "to": f"{ap:.1f}", "cls": clsfmt(ac, bc),
+                     "file": strip(loc), "fn": shorten_fn(dem)})
+    if not rows:
+        print("  (no function-level differences)")
+    else:
+        emit(rows, False)
+
+
 def queue_host_units(con, module):
     """Header pseudo-units are a delink artifact (the PDB attributes inline
     methods to the header), not real TUs - fold their functions into a HOST
@@ -1437,6 +1576,12 @@ def main():
     p = sub.add_parser("merge-flags", help="union persistent tables from another match.db")
     p.add_argument("other")
 
+    p = sub.add_parser(
+        "diff", help="function-level diff between two committed match.db revisions")
+    p.add_argument("spec", help="<hash> (vs working tree) or <hash>..<hash>")
+    p.add_argument("--module")
+    p.add_argument("--json", action="store_true")
+
     args = ap.parse_args()
     {
         "refresh": cmd_refresh,
@@ -1447,6 +1592,7 @@ def main():
         "tried": cmd_tried,
         "flag": cmd_flag,
         "merge-flags": cmd_merge_flags,
+        "diff": cmd_diff,
     }[args.cmd](args)
 
 

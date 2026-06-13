@@ -216,6 +216,12 @@ python3 scripts/match_db.py sql "SELECT printf('%.1f',p.fuzzy_pct) pct, p.struct
 python3 scripts/match_db.py sql "SELECT substr(u.name,25) unit, s.demangled, f.cause \
   FROM flags f JOIN symbols s ON s.mangled=f.mangled JOIN target_functions tf ON tf.sym=s.id \
   JOIN units u ON u.id=tf.unit WHERE f.flag='OUT_OF_SCOPE' AND u.module='game_core'"
+
+# function-level DIFF of the committed match.db across revisions (a regression tracker):
+#   <hash>          compares that commit vs the working tree
+#   <hash>..<hash>  compares two commits
+# groups every changed function: regressed / lost / newly-matched / improved / reclassified
+python3 scripts/match_db.py diff <hash>..<hash> --module game_core   # --json for machine-readable
 ```
 
 **`cls` (structure class)** is the DB's *approximate* shape verdict (the
