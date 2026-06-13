@@ -5,56 +5,36 @@
 #ifndef LOBBY_CLIENT_H_INCLUDED
 #define LOBBY_CLIENT_H_INCLUDED
 
-/* INCLUDES */
-class boost::function<void __cdecl(void)>;
-class boost::function<void __cdecl(vostok::network_core::packet_reader &)>;
-class vostok::core::noncopyable;
-class vostok::fixed_string<128>;
-class vostok::fixed_string<32>;
-class vostok::network::tcp_packet_client;
-class vostok::vectora<survarium::inventory_item_instance>;
-class survarium::game;
-struct vostok::server_connection_info;
-struct survarium::account_money;
-struct survarium::faction_price;
-struct survarium::items_compatibility;
-struct survarium::player_leveling_info;
-struct survarium::player_profile;
-struct survarium::player_reputation;
-struct survarium::player_skill;
-struct survarium::profile_slot_restriction;
-struct survarium::service_prices;
-enum vostok::network_core::client_error_codes_enum;
-class survarium::game_team_id;
-class survarium::inventory_item_instance;
-typedef vostok::resources::resource_ptr<vostok::configs::binary_config,vostok::resources::unmanaged_intrusive_base>
-	vostok::configs::binary_config_ptr;
-class vostok::configs::binary_config;
+#include <boost/function.hpp>
+#include <boost/system/error_code.hpp>
+#include <vostok/configs.h>	// configs::binary_config_ptr (value member)
+#include <vostok/network/tcp_packet_client.h>
+#include <vostok/network_core/client_error_codes_enum.h>
+#include <vostok/game_core/game_team_id.h>
+#include <vostok/game_core/inventory_item_instance.h>
+#include <vostok/game_core/player_profile.h>
 
-/* FORWARD REFS */
-class vostok::network_core::packet_reader;
-class vostok::vectora<survarium::player_skill>;
-class vostok::vectora<unsigned char>;
-class survarium::vector<survarium::relocate_item_descr>;
+#include "account_money.h"
+#include "faction_price.h"
+#include "items_compatibility.h"
+#include "lobby_enums.h"
+#include "player_leveling_info.h"
+#include "player_reputation.h"
+#include "player_skill.h"
+#include "profile_slot_restriction.h"
+#include "server_connection_info.h"
+#include "service_prices.h"
+
+namespace vostok {
+namespace network_core {
+	class packet_reader;
+} // namespace network_core
+} // namespace vostok
 
 namespace survarium {
 
-enum survarium::game_team_id
-{
-	team_1				= 0x00,
-	team_2				= 0x01,
-	team_neutral		= 0x02,
-	team_undefined		= 0x03,
-	team_invalid		= 0xff,
-};
-enum lobby::client_state_enum
-{
-	surf_lobby_menu				= 0x0,
-	in_match_making_order		= 0x1,
-	in_match_making				= 0x2,
-	in_match					= 0x3,
-	unknown						= 0x4,
-};
+class game;
+struct relocate_item_descr;
 
 class lobby_client : public core::noncopyable {
 public:
@@ -71,7 +51,7 @@ public:
 
 			u32										session_id							( ) const;
 
-	inline	bool									net_connected						( ) const { /* no source */ }
+	inline	bool									net_connected						( ) const { /* no source */ return m_net_client_connected; }
 
 			void									set_status_ready_for_match			(
 														const u32		arg_0 /* u32 profile_id */
@@ -88,31 +68,31 @@ public:
 			void									discard_playing_order				( );
 			void									discard_playing_order_on_connected	( );
 
-	inline	lobby::client_state_enum				status								( ) const { /* no source */ }
+	inline	lobby::client_state_enum				status								( ) const { /* no source */ return m_status; }
 			lobby::client_state_enum				status								( fixed_string< 128 >& dest ) const;
-	inline	lobby::client_state_enum&				status								( ) { /* no source */ }
+	inline	lobby::client_state_enum&				status								( ) { /* no source */ return m_status; }
 
-	inline	u32										match_id							( ) const { /* no source */ }
-	inline	u32&									match_id							( ) { /* no source */ }
-	inline	game_team_id							team_id								( ) const { /* no source */ }
-	inline	game_team_id&							team_id								( ) { /* no source */ }
-	inline	u32										match_order_id						( ) const { /* no source */ }
+	inline	u32										match_id							( ) const { /* no source */ return m_match_id; }
+	inline	u32&									match_id							( ) { /* no source */ return m_match_id; }
+	inline	game_team_id							team_id								( ) const { /* no source */ return m_team_id; }
+	inline	game_team_id&							team_id								( ) { /* no source */ return m_team_id; }
+	inline	u32										match_order_id						( ) const { /* no source */ return m_match_order_id; }
 
-	inline	u8										profiles_count						( ) const { /* no source */ }
+	inline	u8										profiles_count						( ) const { /* no source */ return m_profiles_count; }
 
-	inline	player_profile const&					profile								( u8 arg_0 ) const { /* no source */ }
+	inline	player_profile const&					profile								( u8 arg_0 ) const { /* no source */ return m_profiles[ arg_0 ]; }
 
-	inline	u8										player_skills_count					( ) const { /* no source */ }
-	inline	player_skill const&						player_skill						( u8 arg_0 ) const { /* no source */ }
-	inline	u8										player_perks_count					( ) const { /* no source */ }
-	inline	u8										player_perk							( u8 arg_0 ) const { /* no source */ }
+	inline	u8										player_skills_count					( ) const { /* no source */ return m_player_skills_count; }
+	inline	player_skill const&						player_skill						( u8 arg_0 ) const { /* no source */ return m_player_skills[ arg_0 ]; }
+	inline	u8										player_perks_count					( ) const { /* no source */ return m_player_perks_count; }
+	inline	u8										player_perk							( u8 arg_0 ) const { /* no source */ return m_player_perks[ arg_0 ]; }
 
-	inline	u32										slot_restrictions_count				( ) const { /* no source */ }
-	inline	profile_slot_restriction const&			slot_restriction					( u32 arg_0 ) const { /* no source */ }
+	inline	u32										slot_restrictions_count				( ) const { /* no source */ return m_profile_slot_restrictions_count; }
+	inline	profile_slot_restriction const&			slot_restriction					( u32 arg_0 ) const { /* no source */ return m_profile_slot_restrictions[ arg_0 ]; }
 
-	inline	u32										item_compatibilities_count			( ) const { /* no source */ }
+	inline	u32										item_compatibilities_count			( ) const { /* no source */ return m_items_compatibilities_count; }
 
-	inline	items_compatibility const&				get_items_compatibility				( u32 arg_0 ) const { /* no source */ }
+	inline	items_compatibility const&				get_items_compatibility				( u32 arg_0 ) const { /* no source */ return m_items_compatibility[ arg_0 ]; }
 			bool									check_compatibility					( const u32 first_item_id, const u32 second_item_id );
 
 			bool									can_move_item						( const u32 item_category_id, const u32 target_slot_id );
@@ -129,10 +109,12 @@ public:
 														const bool		use_premium_money
 													);
 
-			void									set_player_skills					( vectora< player_skill >& skills, vectora< u8 >& perks );
+			// the player_skill( u8 ) getter above hides the type name from here
+			// on - qualify (mangling-neutral)
+			void									set_player_skills					( vectora< survarium::player_skill >& skills, vectora< u8 >& perks );
 			void									reroll_player_skills				( );
 
-	inline	vectora< inventory_item_instance >&		inventory_item_instances			( ) { /* no source */ }
+	inline	vectora< inventory_item_instance >&		inventory_item_instances			( ) { /* no source */ return m_inventory_item_instances; }
 
 	inline	void									add_inventory_item					( inventory_item_instance arg_0 ) { /* no source */ }
 
@@ -150,26 +132,31 @@ public:
 			bool									read_service_prices					( network_core::packet_reader& reader );
 			bool									read_ping_server_answer				( network_core::packet_reader& reader );
 
-	inline	server_connection_info&					connection_info						( ) { /* no source */ }
+	inline	server_connection_info&					connection_info						( ) { /* no source */ return m_connection_info; }
 
-	inline	account_money const&					get_account_money					( ) { /* no source */ }
-	inline	player_leveling_info const&				get_player_leveling					( ) { /* no source */ }
-	inline	service_prices const&					get_service_prices					( ) { /* no source */ }
+	inline	account_money const&					get_account_money					( ) { /* no source */ return m_account_money; }
+	inline	player_leveling_info const&				get_player_leveling					( ) { /* no source */ return m_player_leveling_info; }
+	inline	service_prices const&					get_service_prices					( ) { /* no source */ return m_service_prices; }
 
-	inline	configs::binary_config_ptr&				skills_tree_config					( ) { /* no source */ }
+	inline	configs::binary_config_ptr&				skills_tree_config					( ) { /* no source */ return m_skills_tree_config; }
 
-	inline	u32										get_player_faction_reputation		( u8 arg_0 ) { /* no source */ }
-	inline	player_reputation const&				get_player_reputation				( u8 arg_0 ) { /* no source */ }
-	inline	u8										get_player_reputations_count		( ) { /* no source */ }
-	inline	fixed_string< 32 > const&				get_player_name						( ) const { /* no source */ }
+	inline	u32										get_player_faction_reputation		( u8 arg_0 ) { /* no source */ return 0; }
+	inline	player_reputation const&				get_player_reputation				( u8 arg_0 ) { /* no source */ return m_player_reputations[ arg_0 ]; }
+	inline	u8										get_player_reputations_count		( ) { /* no source */ return m_player_reputations_count; }
+	inline	fixed_string< 32 > const&				get_player_name						( ) const { /* no source */ return m_player_name; }
 
 			void									ping_server							( );
 
+	// claude@MATCH: private from here - the on_*/sign_in_on_packet_received/
+	// clear_* symbols mangle AAE (the dump prints them public)
+private:
 			void									on_connected						( );
 			void									on_disconnected						( );
+			// PDB: both params __formal (genuinely unused); two would collide -
+			// left unnamed
 			void									on_error							(
-														network_core::client_error_codes_enum	__formal,
-														boost::system::error_code		__formal
+														network_core::client_error_codes_enum,
+														boost::system::error_code
 													);
 
 			void									sign_in_on_packet_received			( network_core::packet_reader& reader );
@@ -196,7 +183,7 @@ private:
 	/* 0x025c */	u8										m_profiles_count;
 	/* 0x0260 */	player_profile							m_profiles[3];
 	/* 0x0788 */	vectora< inventory_item_instance >		m_inventory_item_instances;
-	/* 0x0798 */	player_skill*							m_player_skills;
+	/* 0x0798 */	survarium::player_skill*				m_player_skills;
 	/* 0x079c */	u8										m_player_skills_count;
 	/* 0x07a0 */	player_reputation*						m_player_reputations;
 	/* 0x07a4 */	u8										m_player_reputations_count;

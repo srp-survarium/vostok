@@ -2,13 +2,21 @@
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef VOSTOK\GAME\SOURCES\NETWORK_STATS_H_INCLUDED
-#define VOSTOK\GAME\SOURCES\NETWORK_STATS_H_INCLUDED
+#ifndef NETWORK_STATS_H_INCLUDED
+#define NETWORK_STATS_H_INCLUDED
+
+// the original network_stats.h defined stats_stream/stats_row themselves (the
+// addressed inline carcasses carry its line numbers); batch 6 landed them as
+// split headers - this header keeps the compiland's include surface plus the
+// helpers below
+#include "stats_row.h"
+#include "stats_stream.h"
 
 namespace survarium {
 
 // STATE[STUB]
-inline void sprintf_big_number( char[256]& text, const u32 value, pcstr const postfix )
+// PDB spells the first param char[256]&
+inline void sprintf_big_number( char ( &text )[256], const u32 value, pcstr const postfix )
 {
 	// FUNCTION BODY[0xa7440]: 8
 	// <0xa7440>|0x000|+0x008:'116'	{
@@ -29,7 +37,7 @@ inline void sprintf_big_number( char[256]& text, const u32 value, pcstr const po
 
 // STATE[STUB]
 inline void sprintf_big_number(
-	char[256]&		text,
+	char ( &text )[256],
 	const u32		value,
 	const u32		divider,
 	pcstr const		simple_postfix,
@@ -57,4 +65,4 @@ inline void sprintf_big_number(
 
 } // namespace survarium
 
-#endif // #ifndef VOSTOK\GAME\SOURCES\NETWORK_STATS_H_INCLUDED
+#endif // #ifndef NETWORK_STATS_H_INCLUDED

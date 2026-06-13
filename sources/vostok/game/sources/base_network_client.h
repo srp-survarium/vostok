@@ -5,26 +5,36 @@
 #ifndef BASE_NETWORK_CLIENT_H_INCLUDED
 #define BASE_NETWORK_CLIENT_H_INCLUDED
 
-/* INCLUDES */
-class survarium::game;
-class survarium::player_input_handler;
-class survarium::stats_graph;
-class survarium::game_team_id;
-typedef vostok::resources::resource_ptr<survarium::player,vostok::resources::unmanaged_intrusive_base>
-	survarium::player_ptr;
-class survarium::player;
+#include <boost/function.hpp>
+#include <vostok/resources_unmanaged_resource.h>
+#include <vostok/game_core/game_team_id.h>
 
-/* FORWARD REFS */
-class vostok::network::login_client;
-class survarium::camera_director;
-class survarium::hit_info;
-class survarium::lobby_client;
-class survarium::match_client;
-class survarium::match_options;
-class survarium::messaging_client;
-class survarium::player_input;
+namespace vostok {
+namespace network {
+	class login_client;
+} // namespace network
+} // namespace vostok
 
 namespace survarium {
+
+class camera_director;
+class game;
+struct hit_info;
+class lobby_client;
+class match_client;
+struct match_options;
+class messaging_client;
+class player;
+class player_input;
+class player_input_handler;
+class stats_graph;
+
+// canonical UDT alias - player itself lives in player.h (batch 6), only the
+// resource_ptr is held here
+typedef resources::resource_ptr<
+	player,
+	resources::unmanaged_intrusive_base
+> player_ptr;
 
 class base_network_client : public boost::noncopyable {
 public:

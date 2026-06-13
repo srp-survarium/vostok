@@ -33,6 +33,31 @@ enum friendship_actions_enum
 {
 };
 
+// canonical: headers/others/enums/messaging__client_state_enum.h
+// (messaging_client's m_connection_state member)
+enum client_state_enum
+{
+	client_disconnecting	= 0x0,
+	client_disconnected		= 0x1,
+	client_connecting		= 0x2,
+	client_connected		= 0x3,
+};
+
+// canonical: headers/others/enums/messaging__client_type_enum.h
+// (messaging_client::accept_message_from's sender_type parameter)
+enum client_type_enum
+{
+	unknown_client_type						= 0x0,
+	login_server_client_type				= 0x1,
+	lobby_server_client_type				= 0x2,
+	match_server_client_type				= 0x3,
+	message_server_client_type				= 0x4,
+	account_client_type						= 0x5,
+	administrative_client_type				= 0x6,
+	match_maker_server_client_type			= 0x7,
+	stats_processor_server_client_type		= 0x8,
+};
+
 } // namespace messaging
 
 #endif // #ifndef MESSAGING_ENUMS_H_INCLUDED

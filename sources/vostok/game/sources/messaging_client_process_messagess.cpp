@@ -2,8 +2,11 @@
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
+// the original compiland really is messaging_client_process_messagess.cpp
+// (sic, PDB-attested typo) - keep the filename
+
 #include "pch.h"
-#include "vostok\game\sources\messaging_client_process_messagess.h"
+#include "messaging_client.h"
 
 namespace survarium {
 
@@ -98,6 +101,9 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 // STATE[STUB]
 messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_t const* w_receiver_name, const bool in_match )
 {
+	// buildability return
+	return messaging::server_message_channel;
+
 	// FUNCTION BODY[0x5c8d50]: 16
 	// <0x5c8d50>|0x000|+0x000:'101'	{
 	// <0>
@@ -462,32 +468,5 @@ void messaging_client::process_incoming_text_message( network_core::packet_reade
 	// <0x5c976f>|0x19f|      :'350'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	char[32]
-	// 	account_name_type;
-
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::inventory_item_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace survarium

@@ -3,12 +3,15 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\base_network_client.h"
+#include "base_network_client.h"
 
 namespace survarium {
 
 // STATE[STUB]
-explicit base_network_client::base_network_client( game& game )
+ base_network_client::base_network_client( game& game ) :
+	// ref member; the same-named param is the obvious source - a matcher
+	// confirms when this TU is enabled
+	m_game( game )
 {
 	// STATICS
 	// static console_commands::cc_delegate s_use_physics_controller_for_current_command = <0x4c2b3e8>;
@@ -62,6 +65,8 @@ game_team_id base_network_client::current_player_team( ) const
 	// <0x74094c> -> game_team_id < unknown >() const
 	// ******
 
+	return team_invalid;
+
 	// FUNCTION BODY[0x740940]: 1
 	// <0x740940>|0x000|+0x013:'46'
 	// ******
@@ -70,6 +75,8 @@ game_team_id base_network_client::current_player_team( ) const
 // STATE[STUB]
 player_ptr base_network_client::get_current_player( )
 {
+	return m_current_player;
+
 	// FUNCTION BODY[0x740d40]: 1
 	// <0x740d41>|0x001|+0x02d:'51'
 	// ******
@@ -78,7 +85,7 @@ player_ptr base_network_client::get_current_player( )
 // STATE[STUB]
 float3 base_network_client::get_current_player_position( ) const
 {
-	return vostok::math::float3(1., 1., 1.);
+	return vostok::math::float3( 1., 1., 1. );
 
 	// FUNCTION BODY[0x7408f0]: 1
 	// <0x7408f0>|0x000|+0x03b:'56'
@@ -99,6 +106,9 @@ void base_network_client::fill_current_player_stats( boost::function< void( u32,
 	// ******
 }
 
+// TU static console command (compiler-generated atexit destructor); a matcher
+// recovers it together with the ctor's cc_delegate static when this TU is enabled.
+/*
 // STATE[STUB]
 void `survarium::base_network_client::base_network_client'::`2'::`dynamic atexit destructor for 's_use_physics_controller_for_current_command''( )
 {
@@ -117,6 +127,7 @@ void `survarium::base_network_client::base_network_client'::`2'::`dynamic atexit
 	// <0x741050>|0x040|+0x013:'78'
 	// ******
 }
+*/
 
 // STATE[STUB]
 void base_network_client::attach_to_player( player_ptr player )
@@ -189,28 +200,5 @@ void base_network_client::use_physics_controller_for_current( pcstr const argume
 	// <0x740c03>|0x213|      :'133'	}
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	survarium::base_project::resolve_link_object*
-	// 	iterator_type;
-
-	// typedef
-	// 	survarium::scheduler::record*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data const*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::collision::bone_collision_data*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_vector< std::pair< enum survarium::game_action_id, enum survarium::player_input_handler::action_state_enum >, 32 >
-	// 	actions_type;
-
-	// ******
 
 } // namespace survarium

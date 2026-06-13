@@ -3,7 +3,9 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "vostok\game\sources\network_stats.h"
+#include "network_stats.h"
+
+#include <vostok/network_core/udp_match_stats.h>
 
 namespace survarium {
 

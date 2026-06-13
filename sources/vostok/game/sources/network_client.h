@@ -5,56 +5,61 @@
 #ifndef NETWORK_CLIENT_H_INCLUDED
 #define NETWORK_CLIENT_H_INCLUDED
 
-/* INCLUDES */
-class boost::array<survarium::player_desc,20>;
-enum const vostok::connection_error_types_enum;
-enum const vostok::handshaking_error_types_enum;
-enum const vostok::lobby_server_message_types_enum;
-enum const vostok::login_server_message_types_enum;
-enum const vostok::socket_error_types_enum;
-class vostok::fixed_vector<survarium::client_player_update,32>;
-class vostok::network::http_client;
-class vostok::network::login_client;
-class survarium::base_network_client;
-class survarium::lobby_client;
-class survarium::match_client;
-class survarium::messaging_client;
-struct vostok::network_core::udp_match_stats;
-struct survarium::flash_text;
-struct survarium::stats_row;
-enum vostok::network_core::disconnect_event_types_enum;
-class survarium::game_team_id;
-typedef vostok::resources::resource_ptr<survarium::player,vostok::resources::unmanaged_intrusive_base>
-	survarium::player_ptr;
-class survarium::player;
+#include <boost/array.hpp>
+#include <boost/system/error_code.hpp>
+#include <vostok/login_server/message_types.h>	// connection/handshaking/socket/login/lobby_server error enums
+#include <vostok/network/http_client.h>
+#include <vostok/network/login_client.h>
+#include <vostok/network_core/disconnect_event_types_enum.h>
+#include <vostok/network_core/udp_match_stats.h>
+#include <vostok/game_core/client_player_update.h>
 
-/* FORWARD REFS */
-class vostok::network_core::packet_reader;
-class vostok::resources::queries_result;
-class survarium::camera_director;
-class survarium::game;
-class survarium::game_world;
-class survarium::hit_info;
-class survarium::match_options;
-class survarium::player_input;
+#include "base_network_client.h"
+#include "flash_text.h"
+#include "game_status.h"
+#include "lobby_client.h"
+#include "match_client.h"
+#include "messaging_client.h"
+#include "network_stats.h"	// stats_row value members
+#include "player_desc.h"
+
+namespace vostok {
+namespace network_core {
+	class packet_reader;
+} // namespace network_core
+namespace resources {
+	class queries_result;
+} // namespace resources
+} // namespace vostok
 
 namespace survarium {
 
-enum survarium::game_status
-{
-	game_status_inactive				= 0x0,
-	game_status_waiting_for_first_player	= 0x1,
-	game_status_waiting_for_players		= 0x2,
-	game_status_final_countdown			= 0x3,
-	game_status_inprocess				= 0x4,
-};
+class camera_director;
+class game;
+class game_world;
+struct hit_info;
+struct match_options;
+class player_input;
+
+// void* network_client::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x921e0]: <0x921d0>|0x000|      :'74'	{
 
 class network_client : public base_network_client {
 public:
 										network_client						( game& g, const bool is_spectator );
 	virtual								~network_client						( );
 
-	virtual	void						load								( pcstr map_name, camera_director const& director ) override { /* no source */ }
+	// STATE[STUB]
+	virtual	void						load								( pcstr map_name, camera_director const& director ) override
+	{
+		// OTHER SYMBOLS
+		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x9da12 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
+		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x9da12 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
+		// ******
+
+		// FUNCTION BODY[0xaea00]
+		// <0xaea00>|0x000|      :'53'	{
+		// ******
+	}
 
 	virtual	void						connect_to_login					(
 											pcstr			host,
@@ -67,7 +72,15 @@ public:
 
 	virtual	void						tick								( u32 current_time_in_ms, const bool is_game_paused ) override;
 
-	virtual	bool						has_bandwidth						( ) const override { /* no source */ }
+	// STATE[STUB]
+	virtual	bool						has_bandwidth						( ) const override
+	{
+		return false;
+
+		// FUNCTION BODY[0x22700]
+		// <0x22700>|0x000|      :'57'	{
+		// ******
+	}
 
 	virtual	void						send_local_player_input				(
 											player_input const&		input,
@@ -77,28 +90,87 @@ public:
 										) override;
 
 	virtual	void						initiate_kill_current_player		( ) override;
-	virtual	void						initiate_respawn_current_player		( ) override { /* no source */ }
+
+	// STATE[STUB]
+	virtual	void						initiate_respawn_current_player		( ) override
+	{
+		// FUNCTION BODY[0x4f210]
+		// <0x4f210>|0x000|      :'65'	{
+		// ******
+	}
 
 	virtual	bool						is_player_local						( const u8 player_id ) const override;
 
 	virtual	void						unload								( ) override;
 
-	virtual	network::login_client&		login_client						( ) override { /* no source */ }
-	virtual	lobby_client&				lobby_client						( ) override { /* no source */ }
-	virtual	match_client&				match_client						( ) override { /* no source */ }
-	virtual	messaging_client&			messaging_client					( ) override { /* no source */ }
+	// STATE[STUB]
+	virtual	network::login_client&		login_client						( ) override
+	{
+		// FUNCTION BODY[0x92190]
+		// <0x92190>|0x000|      :'69'	{
+		// ******
+		return m_login_client;
+	}
 
-	virtual	match_options&				match_options						( ) override { /* no source */ }
+	// STATE[STUB]
+	virtual	class lobby_client&			lobby_client						( ) override
+	{
+		// FUNCTION BODY[0x921a0]
+		// <0x921a0>|0x000|      :'70'	{
+		// ******
+		return m_lobby_client;
+	}
 
-	virtual	void						on_player_hit_received				( hit_info const& info ) override { /* no source */ }
+	// STATE[STUB]
+	virtual	class match_client&			match_client						( ) override
+	{
+		// FUNCTION BODY[0x921b0]
+		// <0x921b0>|0x000|      :'71'	{
+		// ******
+		return m_match_client;
+	}
+
+	// STATE[STUB]
+	virtual	class messaging_client&		messaging_client					( ) override
+	{
+		// FUNCTION BODY[0x921c0]
+		// <0x921c0>|0x000|      :'72'	{
+		// ******
+		return m_messaging_client;
+	}
+
+	// the obvious source (m_match_client's options); a matcher confirms
+	virtual	struct match_options&			match_options						( ) override { /* no source */ return m_match_client.get_match_options( ); }
+
+	// STATE[STUB]
+	virtual	void						on_player_hit_received				( hit_info const& info ) override
+	{
+		// FUNCTION BODY[0x22c50]
+		// <0x22c50>|0x000|      :'76'	{
+		// ******
+	}
 
 	virtual	player_ptr					get_player							( const u8 id ) const override;
 			game_world&					get_game_world						( );
-	inline	player_ptr					get_local_player					( ) { /* no source */ }
+
+	// STATE[STUB]
+	inline	player_ptr					get_local_player					( )
+	{
+		// FUNCTION BODY[0x91910]
+		// <0x91910>|0x000|      :'82'	{
+		// ******
+		return m_local_player;
+	}
+
 			game_team_id				get_player_team						( pcstr player_profile_name );
 
-	inline	bool						is_player_connected					( u32 arg_0 ) { /* no source */ }
+	inline	bool						is_player_connected					( u32 arg_0 ) { /* no source */ return false; }
 
+	// claude@MATCH: private from here - the process_*/on_*/draw_stats/query_players/
+	// send_*/setup_camera_for_warmup/http_* symbols mangle AAE, and
+	// apply_use_physics_controller_for_current/close_current_match mangle EAE
+	// (private virtual); the dump prints everything public
+private:
 	virtual	void						apply_use_physics_controller_for_current( ) override;
 
 	inline	void						on_player_death						( network_core::packet_reader& arg_0 ) { /* no source */ }
@@ -169,6 +241,9 @@ public:
 
 			void						send_sync_request					( );
 
+	// the primary header dump prints an inline no-arg process_sync_response();
+	// the _2/_3 variants and the mangled symbol (AAEXAAVpacket_reader) agree on
+	// this shape - symbol wins
 			void						process_sync_response				( network_core::packet_reader& packet );
 
 			void						send_player_inputs					( );
@@ -184,9 +259,9 @@ public:
 private:
 	/* 0x0000 */	/* base_network_client */
 	/* 0x0020 */	network::login_client				m_login_client;
-	/* 0x0218 */	lobby_client						m_lobby_client;
-	/* 0x0a88 */	match_client						m_match_client;
-	/* 0x2e28 */	messaging_client					m_messaging_client;
+	/* 0x0218 */	class lobby_client					m_lobby_client;
+	/* 0x0a88 */	class match_client					m_match_client;
+	/* 0x2e28 */	class messaging_client				m_messaging_client;
 	/* 0x2fa0 */	network::http_client				m_http_client;
 	/* 0x3010 */	network_core::udp_match_stats		m_previous_stats;
 	/* 0x3090 */	fixed_vector< client_player_update, 32 >	m_player_inputs;

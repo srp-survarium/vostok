@@ -25,6 +25,7 @@
 #include "animations_selector.h"
 #include "base_animation_controller.h"
 #include "base_game_scene.h"
+#include "base_network_client.h"
 #include "base_point_stats.h"
 #include "camera_director.h"
 #include "chat_handler.h"
@@ -68,6 +69,7 @@
 #include "keyboard_key_descr.h"
 #include "levelmap_camera.h"
 #include "lobby_camera.h"
+#include "lobby_client.h"
 #include "lobby_enums.h"
 #include "lobby_menu.h"
 #include "lobby_menu_external_handler.h"
@@ -77,7 +79,11 @@
 #include "main_menu.h"
 #include "main_menu_button_name_to_action.h"
 #include "main_menu_external_handler.h"
+#include "match_client.h"
+#include "messaging_client.h"
 #include "messaging_enums.h"
+#include "network_client.h"
+#include "network_stats.h"
 #include "npc_stats.h"
 #include "object_ambient_volume.h"
 #include "object_decal.h"
@@ -130,6 +136,7 @@
 #include "scaleform_render_command.h"
 #include "scaleform_render_command_queue.h"
 #include "scaleform_render_command_queue_impl.h"
+#include "server_connection_info.h"
 #include "service_prices.h"
 #include "shotgun_weapon_reload_state.h"
 #include "shotgun_weapon_reload_state_cook.h"
@@ -2553,6 +2560,14 @@ namespace vostok
 		ai::navigation::destroy_world( ai_navigation_world );
 		ai::navigation::set_memory_allocator( *( ai::navigation::allocator_type* )NULL );
 	}
+
+	// tcp_packet.h is now read EARLY (asio-free, via the batch-10 game network
+	// clients) so its #ifdef BOOST_ASIO_HPP buffer decls never appear in this
+	// TU - redeclare them for the anchor below (decls emit no bytes)
+	namespace network_core {
+		boost::asio::const_buffers_1	buffer_to_send			( tcp_packet& packet );
+		boost::asio::mutable_buffers_1	buffer_to_receive_into	( tcp_packet& packet );
+	} // namespace network_core
 
 	void use_network_core_tcp_packet()
 	{

@@ -1517,6 +1517,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\game_mode_type.h"
+					>
+				</File>
+				<File
 					RelativePath="..\game_scene.h"
 					>
 				</File>

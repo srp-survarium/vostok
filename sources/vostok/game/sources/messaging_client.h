@@ -5,37 +5,26 @@
 #ifndef MESSAGING_CLIENT_H_INCLUDED
 #define MESSAGING_CLIENT_H_INCLUDED
 
-/* INCLUDES */
-class const survarium::game_team_id;
-class vostok::network::tcp_packet_client;
-class vostok::vectora<survarium::account_list_item>;
-class survarium::chat_handler;
-class survarium::game;
-struct vostok::server_connection_info;
-struct survarium::scheduler::identifier;
-enum vostok::network_core::client_error_codes_enum;
-class survarium::game_team_id;
+#include <boost/system/error_code.hpp>
+#include <vostok/network/tcp_packet_client.h>
+#include <vostok/network_core/client_error_codes_enum.h>
+#include <vostok/game_core/game_team_id.h>
+#include <vostok/game_core/scheduler.h>	// scheduler::identifier value member
 
-/* FORWARD REFS */
-class vostok::network_core::packet_reader;
+#include "account_list_item.h"
+#include "messaging_enums.h"
+#include "server_connection_info.h"
+
+namespace vostok {
+namespace network_core {
+	class packet_reader;
+} // namespace network_core
+} // namespace vostok
 
 namespace survarium {
 
-enum survarium::game_team_id
-{
-	team_1				= 0x00,
-	team_2				= 0x01,
-	team_neutral		= 0x02,
-	team_undefined		= 0x03,
-	team_invalid		= 0xff,
-};
-enum messaging::client_state_enum
-{
-	client_disconnecting	= 0x0,
-	client_disconnected		= 0x1,
-	client_connecting		= 0x2,
-	client_connected		= 0x3,
-};
+class chat_handler;
+class game;
 
 class messaging_client : public boost::noncopyable {
 public:
@@ -65,17 +54,22 @@ public:
 
 			void									find_players_by_name			( pcstr player_name );
 
-	inline	server_connection_info&					connection_info					( ) { /* no source */ }
+	inline	server_connection_info&					connection_info					( ) { /* no source */ return m_connection_info; }
 
-	inline	vectora< account_list_item > const&		get_friend_list					( ) { /* no source */ }
-	inline	vectora< account_list_item > const&		get_ignore_list					( ) { /* no source */ }
-	inline	vectora< account_list_item > const&		get_found_players_list			( ) { /* no source */ }
+	inline	vectora< account_list_item > const&		get_friend_list					( ) { /* no source */ return m_friend_list; }
+	inline	vectora< account_list_item > const&		get_ignore_list					( ) { /* no source */ return m_ignore_list; }
+	inline	vectora< account_list_item > const&		get_found_players_list			( ) { /* no source */ return m_found_players_list; }
 
-	inline	bool									connected						( ) const { /* no source */ }
+	inline	bool									connected						( ) const { /* no source */ return false; }
 
-	inline	pcstr									local_user_name					( ) { /* no source */ }
-	inline	game_team_id							local_player_team				( ) { /* no source */ }
+	inline	pcstr									local_user_name					( ) { /* no source */ return m_local_name; }
+	inline	game_team_id							local_player_team				( ) { /* no source */ return m_game_team_id; }
 
+	// claude@MATCH: private from here - the sign_in_on_packet_received/on_*/
+	// read_*/accept_message_from/process_incoming_text_message/
+	// update_channel_subscriptions/parse_receiver_channel symbols mangle AAE
+	// (the dump prints them public)
+private:
 			void									sign_in_on_packet_received		( network_core::packet_reader& reader );
 			void									on_packet_received				( network_core::packet_reader& reader );
 			void									on_connected					( );
