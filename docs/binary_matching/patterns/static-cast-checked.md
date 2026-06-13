@@ -20,4 +20,4 @@ static_cast_checked< pcstr >( value[ i ]["key"] );   // also the config-string a
 ; config-string variant: target spills eax to a deep temp and reloads (+0xc) before the copy call;
 ;   downstream rel8->rel32 rows (+-0x3..0x6) close themselves
 ```
-Evidence: weapon_user_animations_selector::get_current_state_id 71.5->100, current_state 70.26->80.2; serialize/deserialize +0x6 temps -> byte-match; medkit::load all 6 rows closed (0x55c both sides); sushi@TODO in game_material_manager_cook.cpp suspected it.
+Evidence: weapon_user_animations_selector::get_current_state_id 71.5->100, current_state 70.26->80.2; serialize/deserialize +0x6 temps -> byte-match; medkit::load all 6 rows closed (0x55c both sides); sushi@TODO in game_material_manager_cook.cpp suspected it. breath_vibration_calculator (2026-06-13): tick `static_cast<breath_state*>(m_logic.current_state())` 94.2->100, set_breath_holding_params for-body+multiplier casts 84.5->96.6 (residual = front() knob, not the cast) - the t1[->t2] temp chain off the cast was the tell.
