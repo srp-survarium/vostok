@@ -2282,6 +2282,7 @@ namespace vostok
 		float ( self::*p19 )( float, float, u32, u32, u32, float ) const = &self::look_time_factor_calculator;
 		void ( self::*p20 )( animation::reserved_channel_ids_enum, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
 		void ( self::*p21 )( pcstr, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
+		void ( self::*p22 )( survarium::base_player&, boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::activate;
 		example_callback( reinterpret_cast< pcstr >( &p7 ) );
 		example_callback( reinterpret_cast< pcstr >( &p8 ) );
 		example_callback( reinterpret_cast< pcstr >( &p9 ) );
@@ -2297,6 +2298,7 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p19 ) );
 		example_callback( reinterpret_cast< pcstr >( &p20 ) );
 		example_callback( reinterpret_cast< pcstr >( &p21 ) );
+		example_callback( reinterpret_cast< pcstr >( &p22 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public
