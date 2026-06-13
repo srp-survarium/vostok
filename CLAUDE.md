@@ -78,15 +78,18 @@ run `rebuild.py` first if sources moved) - it does NOT rebuild.
 ## Match score (README regression tracker)
 
 `scripts/match_score.py` rolls `report.json` up into the overall fuzzy % plus a
-per-module functions/code-matched table, and `--write-readme` refreshes the
-`<!-- match-score -->` block at the top of README.md. The numbers come straight
-from objdiff's measures (the source carries no status markers; per-function
+per-module functions/code-matched table in the `<!-- match-score -->` block at the
+top of README.md. **`rebuild.py` refreshes that block at the end of every build**
+(alongside the `match.db` regen), so it stays current with `report.json` on its
+own - you do not run `match_score.py` by hand. The numbers come straight from
+objdiff's measures (the source carries no status markers; per-function
 status/queues live in `docs/binary_matching/match.db` via `scripts/match_db.py`
 - refresh / list / report / queue / flag; design in
-`docs/binary_matching/match_db_design.md`), so the
-README is an honest, no-run regression tracker - diff the block across commits. Re-run `python3 scripts/match_score.py --write-readme`
-whenever `report.json` moves (after a re-delink, or a toolchain/delinker change
-that shifts many symbols).
+`docs/binary_matching/match_db_design.md`), so the README is an honest, no-run
+regression tracker - diff the block across commits. If the block ever conflicts on
+a merge/cherry-pick, don't hand-resolve it: take either side and rerun `rebuild.py`
+(or, if the artifacts are already built, `match_score.py --write-readme`) to
+reconcile it deterministically - same as `match.db`.
 
 ### Header edits trigger rebuilds (vcproj2ninja tracks `#include`s)
 
