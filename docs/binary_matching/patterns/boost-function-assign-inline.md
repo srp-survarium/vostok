@@ -10,7 +10,19 @@ inline the body: construct a 0x20-byte temp copy, `call function1::swap`, then T
 `call clear` - growing the frame and freeing esi/edi (missing prologue pushes are the
 TELL). Per-call-site whole-program inline-vs-call; `m_fn = value;` is correct, mark PARTIAL.
 
+The decision is symmetric per call site: the TARGET may instead be the one that inlines
+while our BASE emits the folded `call operator=`. Then the structure-diff is a single
+`SIZE -0xNN` statement (base too SMALL), and the asm shows base `call
+function<...>::operator=<bind_t<...>>` against target function-ctor (default-ctor +
+`assign_to<bind_t>`) + `swap` + `clear`(temp dtor) = the partial-spec `self_type(f).swap(*this)`
+body inlined. Either way `m_fn = boost::bind(...);` is correct; it is not source-steerable
+from the assigning TU - leave it at the inline-vs-call %.
+
 ```cpp
-m_on_disconnect = value;
+m_on_disconnect = value;                                        // target calls, base inlines
+m_stamina_subscriber.subscription_callback = boost::bind(...);  // target inlines, base calls
 ```
-Evidence: network_core/udp_match_client::udp_match_client (set_on_disconnect inlined; stmt 0x73 vs target 0x59, 79.20% PARTIAL).
+Evidence: network_core/udp_match_client::udp_match_client (set_on_disconnect inlined; stmt
+0x73 vs target 0x59, 79.20% PARTIAL). game_core/player_logic_sprint_state ctor (function0<void>
+operator= inlined in TARGET; single-stmt structure-diff SIZE -0x2e, base out-of-line
+`call operator=`, 66.70%).
