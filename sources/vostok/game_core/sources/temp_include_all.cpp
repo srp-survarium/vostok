@@ -2008,11 +2008,11 @@ namespace vostok
 	void use_game_core_jump_logic( )
 	{
 		survarium::jump_logic&	jl	= *reinterpret_cast< survarium::jump_logic* >( NULL );
-		bool	lp	= jl.landing_predicate( );
+		// landing_predicate is private (target mangling ABE); it is ODR-used through
+		// initialize_logic's boost::bind, anchored by the jump_logic construction below.
 		jl.tick( );
 		float	lt	= jl.look_time_factor( );
 		bool	jf	= jl.is_jump_finished( );
-		example_callback( reinterpret_cast< pcstr >( &lp ) );
 		example_callback( reinterpret_cast< pcstr >( &lt ) );
 		example_callback( reinterpret_cast< pcstr >( &jf ) );
 
@@ -2038,11 +2038,9 @@ namespace vostok
 		survarium::jump_logic anchored_jump_logic( sel_owner );
 		example_callback( reinterpret_cast< pcstr >( &anchored_jump_logic ) );
 
-		survarium::player_input const& input = *reinterpret_cast< survarium::player_input const* >( NULL );
-		survarium::move_direction_enum d = survarium::get_move_direction( input );
-		example_callback( reinterpret_cast< pcstr >( &d ) );
-
-		u32 idx = survarium::get_jump_animation_index( d, true, survarium::jump_animations_part_start );
+		// get_move_direction is a file static in jump_logic.cpp (plain-name target
+		// symbol); it is kept alive by its real callers activate/does_need_land_and_run.
+		u32 idx = survarium::get_jump_animation_index( survarium::move_direction_on_site, true, survarium::jump_animations_part_start );
 		example_callback( reinterpret_cast< pcstr >( &idx ) );
 
 		// Address-of non-virtual members to ODR-use their bodies WITHOUT constructing a
@@ -2053,6 +2051,15 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &su ) );
 		example_callback( reinterpret_cast< pcstr >( &de ) );
 		example_callback( reinterpret_cast< pcstr >( &dn ) );
+
+		pcstr ( survarium::jump_logic::*gac )( const survarium::jump_animation_parts ) const = &survarium::jump_logic::get_animation_caption;
+		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*gma )( const bool ) const  = &survarium::jump_logic::get_move_animation;
+		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*gmla )( const bool ) const = &survarium::jump_logic::get_move_look_animation;
+		pcstr ( survarium::jump_logic::*gmlc )( ) const = &survarium::jump_logic::get_move_look_caption;
+		example_callback( reinterpret_cast< pcstr >( &gac ) );
+		example_callback( reinterpret_cast< pcstr >( &gma ) );
+		example_callback( reinterpret_cast< pcstr >( &gmla ) );
+		example_callback( reinterpret_cast< pcstr >( &gmlc ) );
 	}
 
 	struct ghost_predicate : physics::contact_test_predicate {
