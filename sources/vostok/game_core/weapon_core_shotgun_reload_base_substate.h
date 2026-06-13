@@ -57,7 +57,7 @@ public:
 						animation::mixing::animation_lexeme&	weight_driving_animation
 					) const;
 
-	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* arg_0 ) { m_animation_playback_state = arg_0; }
+	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* animation_playback_state ) { m_animation_playback_state = animation_playback_state; }
 
 	inline	bool	deserializing						( ) const { /* no source */ }
 

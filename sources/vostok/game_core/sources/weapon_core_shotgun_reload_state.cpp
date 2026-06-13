@@ -97,10 +97,15 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// claude@MATCH: state + cast + return live on ONE source line (line 89) - the PDB
-	// records the whole body as a single statement (2 temps); splitting onto three lines
-	// keeps the bytes but trips the per-line statement-count quantity check, so collapse it.
-	ai::fsm_state* state = m_logic->current_state( ); weapon_core_shotgun_reload_base_substate* current = static_cast< weapon_core_shotgun_reload_base_substate* >( state ); return current->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
+	// claude@MATCH: chained cast-forward matches the target's SOURCE STRUCTURE - 1 statement,
+	// ZERO named locals (`--view structure`: target has no locals block). The byte-100% variant
+	// `T* state = ...; U* current = ...; return current->...` is rejected: it fabricates two
+	// locals (state/current) the target never records. Residual SIZE -0x6 (~90%) is the target
+	// materializing 2 stack temps our build elides - non-steerable, and preferred over phantom locals.
+	// sushi@TODO: recover the exact temp shape via vostok-versions; the structure verdict does not
+	// yet compare locals (a follow-up PR adds locals name+count to the tool + worker).
+	// See patterns/current-state-cast-forward-materialized-locals.md.
+	return static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) )->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
 // bool survarium::true_predicate()
