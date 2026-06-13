@@ -390,7 +390,7 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 	// ******
 }
 
-void weapon_core::update_recoil( u32 current_time_in_ms, float time_scale )
+void weapon_core::update_recoil( u32 current_time_in_ms, const float time_scale )
 {
 	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
 }

@@ -338,7 +338,7 @@ public:
 
 private:
 	// claude@MATCH: target mangles these AAE/ABE (private), not QAE/QBE.
-			void								update_recoil					( u32 current_time_in_ms, float time_scale );
+			void								update_recoil					( u32 current_time_in_ms, const float time_scale );
 			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
 			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
 
