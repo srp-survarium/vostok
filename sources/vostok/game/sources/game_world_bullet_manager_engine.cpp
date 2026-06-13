@@ -8,7 +8,7 @@
 namespace survarium {
 
 // STATE[STUB]
-bool game_world::attach_tracer( bullet* bullet )
+bool game_world::attach_tracer( ::survarium::bullet* bullet )
 {
 	// STATICS
 	// static float4x4 					initial_tracer_matrix = <0x4c2b5c8>;
@@ -34,7 +34,7 @@ bool game_world::attach_tracer( bullet* bullet )
 }
 
 // STATE[STUB]
-bool game_world::detach_tracer( bullet* bullet )
+bool game_world::detach_tracer( ::survarium::bullet* bullet )
 {
 	return false;
 

@@ -192,7 +192,7 @@ float stats_graph::average_value( ) const
 // STATE[STUB]
 void stats_graph::render(
 	render::ui::renderer&					renderer,
-	render::base_scene_view_ptr const&		scene_view,
+	render::scene_view_ptr const&			scene_view,
 	const u32								top_margin,
 	const u32								height,
 	u32										arg_4,

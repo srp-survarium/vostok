@@ -61,7 +61,17 @@ namespace render {
 		resources::unmanaged_intrusive_base
 	> tracer_model_instance_ptr;
 	namespace culling {
-		class portal_sector_structure;
+		// render-pool type parked here (tracer_model_instance pattern above):
+		// the portal_sector_structure_ptr's resource_ptr dtor needs it COMPLETE
+		// to ->destroy(); the render carcass has not emitted the header yet. Only
+		// a pointer member, so the layout doesn't affect game_world - minimal stub.
+		// Canonical: binaries/structure/target/headers/vostok/render/culling/portal_sector_structure.h
+		class portal_sector_structure : public resources::unmanaged_resource {
+		public:
+			inline			portal_sector_structure		( ) { /* no source */ }
+			virtual			~portal_sector_structure	( ) { /* no source */ }
+		}; // class portal_sector_structure
+
 		typedef resources::resource_ptr<
 			portal_sector_structure,
 			resources::unmanaged_intrusive_base
@@ -185,8 +195,11 @@ public:
 		// ******
 	}
 
-	virtual	bool								attach_tracer					( bullet* bullet ) override;
-	virtual	bool								detach_tracer					( bullet* bullet ) override;
+	// the nested bullet_tracer member `bullet` shadows type `bullet` in
+	// game_world scope, so an unqualified `bullet*` here would not match the
+	// base bullet_manager_engine pure virtual (C3668) - qualify it.
+	virtual	bool								attach_tracer					( ::survarium::bullet* bullet ) override;
+	virtual	bool								detach_tracer					( ::survarium::bullet* bullet ) override;
 	virtual	void								update_tracer					(
 													const u16			tracer_idx,
 													float3 const&		position,

@@ -8,9 +8,10 @@
 namespace survarium {
 
 // STATE[STUB]
-// no init-list yet (ref + const members); a matcher supplies the real values
-// when this TU is enabled
- stats::stats( ui::world& ui_world )
+ stats::stats( ui::world& ui_world ) :
+	m_ui_world( ui_world ),			// ref member - owner is the obvious source
+	m_odd_row_color( 0 ),			// buildability: matcher supplies real value
+	m_even_row_color( 0 )			// buildability: matcher supplies real value
 {
 	// FUNCTION BODY[0x5daf20]: 1
 	// <0x5daf3b>|0x01b|+0x005:'22'
@@ -30,7 +31,7 @@ namespace survarium {
 }
 
 // STATE[STUB]
-void stats::draw( render::ui::renderer& w, render::base_scene_view_ptr const& scene_view )
+void stats::draw( render::ui::renderer& w, render::scene_view_ptr const& scene_view )
 {
 	// CALL SITE INFO
 	// <0x5da2fe> -> void < unknown >( render::ui::renderer&, render::base_scene_view_ptr const& )
