@@ -83,7 +83,7 @@ public:
 
 			bool								is_ready_to_shoot				( ) const;
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
-	inline	bool								is_toggling						( ) const { return m_is_toggling; /* no source */ }
+	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
 			// claude@NOTE: out-of-line (target symbol @0x0ac370) so callers emit `call ready_to_reload`
 			// instead of inlining the stub; matches can_and_must_reload_predicate's `call ready_to_reload`.
@@ -152,11 +152,9 @@ public:
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const { return m_aimed; }				// STATE[STUB]
-	// claude@MATCH: is_idle must return a value - is_weapon_user_animations_selector::
-	// is_weapon_in_idle is its first real consumer and a bodyless value-returning inline
-	// fails LTCG codegen (LNK1257). Minimal `return m_is_idle;` (mirrors is_firing/is_toggling);
-	// weapon_core owner can refine the predicate later.
-	inline	bool								is_idle							( ) const { return m_is_idle; }
+	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
+	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
+	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
 
 			void								unload_chambered_round			( );
 			void								unload_ammo						( );
