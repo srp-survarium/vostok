@@ -9,6 +9,18 @@
 
 namespace survarium {
 
+inline usable_object_user_data::usable_object_user_data( ) :
+		owner								( 0 ),
+		current_object						( 0 ),
+		start_using_time_ms					( 0 ),
+		current_time_ms						( 0 ),
+		current_progress					( u32(-1) ),
+		booster_artcont_time_factor			( 1.0f ),
+		booster_engineer_use_time_factor	( 1.0f ),
+		next								( 0 )
+{
+}
+
 class ladder;
 class victory_item_core;
 class victory_items_container_core;

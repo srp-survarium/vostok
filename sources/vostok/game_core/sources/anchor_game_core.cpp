@@ -21,6 +21,7 @@
 #include "breath_holding_states.h"
 #include "breath_holding_states_inline.h"
 #include <vostok/game_core/usable_object_user_data.h>
+#include <vostok/game_core/collision_user.h>
 #include <vostok/game_core/normal_random.h>
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>

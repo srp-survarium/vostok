@@ -1406,7 +1406,7 @@
 						>
 					</File>
 					<File
-						RelativePath="..\weapon_core_inactive_state.h"
+						RelativePath=".\weapon_core_inactive_state.h"
 						>
 					</File>
 					<File
