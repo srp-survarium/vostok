@@ -103,9 +103,9 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         START,
         "## Match status",
         "",
-        "_Auto-generated from `binaries/objdiff/report.json` by "
-        "`scripts/match_score.py` - re-run after every re-delink; do not "
-        "hand-edit. Diff this block across commits to spot regressions._",
+        "_Auto-generated from `binaries/objdiff/report.json` - refreshed by "
+        "`rebuild.py` at the end of every build; do not hand-edit. Diff this block "
+        "across commits to spot regressions._",
         "",
         f"**Overall: {fuzzy:.2f}% fuzzy &middot; "
         f"{funcs:,} / {tfuncs:,} functions exact "
@@ -152,19 +152,33 @@ def write_readme(block: str) -> None:
         README.write_text(text[:i] + "\n" + block + "\n" + text[i:])
 
 
+def regen_readme() -> str:
+    """Refresh README.md's score block from the current report.json and return the
+    rendered block (callable with no args). rebuild.py calls this at the end of every
+    build so the README regression tracker stays current alongside match.db;
+    `--write-readme` is the same path from the CLI."""
+    report = json.loads(REPORT.read_text())
+    overall, mods = collect(report)
+    block = render(overall, mods, _delinker_rev())
+    write_readme(block)
+    return block
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write-readme", action="store_true",
                     help="refresh the score block in README.md")
     args = ap.parse_args()
 
-    report = json.loads(REPORT.read_text())
-    overall, mods = collect(report)
-    block = render(overall, mods, _delinker_rev())
-    print(block)
     if args.write_readme:
-        write_readme(block)
+        block = regen_readme()
+        print(block)
         print(f"\n[match_score] wrote score block to {README}")
+    else:
+        report = json.loads(REPORT.read_text())
+        overall, mods = collect(report)
+        block = render(overall, mods, _delinker_rev())
+        print(block)
 
 
 if __name__ == "__main__":

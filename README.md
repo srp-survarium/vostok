@@ -11,7 +11,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 <!-- match-score:start -->
 ## Match status
 
-_Auto-generated from `binaries/objdiff/report.json` by `scripts/match_score.py` - re-run after every re-delink; do not hand-edit. Diff this block across commits to spot regressions._
+_Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
 **Overall: 52.43% fuzzy &middot; 9,655 / 25,372 functions exact (38.05%).**
 
@@ -183,7 +183,8 @@ below); the only hand-set status is a **PARK** (an `out_of_scope` flag with a
 cause) - so a low % is "still open", never silently "done".
 
 ```sh
-# headline + per-module table (overall fuzzy %, functions-exact)
+# headline + per-module table (overall fuzzy %, functions-exact) - READ-ONLY print;
+# the README score block itself is refreshed by rebuild.py at the end of every build.
 python3 scripts/match_score.py
 
 # per-UNIT rollup for a module, sorted 100%->0% (a header inline shows its .h file,
