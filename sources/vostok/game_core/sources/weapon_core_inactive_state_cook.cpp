@@ -5,7 +5,7 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_inactive_state_cook.h>
 
-#include <vostok/game_core/weapon_core_inactive_state.h>
+#include "weapon_core_inactive_state.h"
 #include <vostok/game_core/weapon_state_creation_params.h>
 #include "game_core_memory.h"
 

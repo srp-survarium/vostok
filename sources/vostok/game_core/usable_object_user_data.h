@@ -12,15 +12,10 @@ class usable_object;
 struct usable_object_user_data;
 
 struct usable_object_user_data {
-	inline	explicit	usable_object_user_data	( ) :
-							owner								( 0 ),
-							current_object						( 0 ),
-							start_using_time_ms					( 0 ),
-							current_time_ms						( 0 ),
-							current_progress					( u32(-1) ),
-							booster_artcont_time_factor			( 1.0f ),
-							booster_engineer_use_time_factor	( 1.0f ),
-							next								( 0 ) { /* <0xbaa80> */ }
+	// body in collision_user.h: the target attributes the ctor's COMDAT to
+	// collision_user.h (the struct lived there in the original), so defining it
+	// here would put the base COMDAT in the wrong objdiff unit and never pair.
+	inline	explicit	usable_object_user_data	( );
 
 	/* 0x0000 */	collision_user*				owner;
 	/* 0x0004 */	usable_object*				current_object;
