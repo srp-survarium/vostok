@@ -801,15 +801,7 @@ void weapon_core::reset_fire_queue( )
 			++m_bullets_in_queue;
 	}
 	else
-	{
-		// claude@NOTE: target records ZERO named locals (debug-elided), but bullets_in_queue is
-		// byte-required: the embedded assignment stores the addition into a u16 lvalue read 3x by
-		// min_integral, producing the [ebp-2]->[ebp-6] double-store and the extra slot (sub esp,0Ch).
-		// Any zero-local spelling (inline cast / direct member) drops a slot and the double-store,
-		// re-ordering the whole min expansion (100% -> 23%). Kept for the exact bytes.
-		u16 bullets_in_queue;
-		m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 ) );
-	}
+		m_bullets_in_queue = math::min( fire_queue_length( ), u16( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) );
 }
 
 void weapon_core::set_next_fire_queue_type( )
@@ -915,14 +907,7 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@NOTE: target records ZERO named locals (debug-elided), but the named local is
-	// kept because it is byte-required: it constructs the managed_resource_ptr(NULL) temp at
-	// [ebp-4] FIRST (push 0; ctor before any arg push), matching the target's instruction
-	// order. Passing the temporary inline as arg_3 re-schedules the ctor to its right-to-left
-	// arg slot (after the this push), re-ordering the whole call (100% -> 46%) - an unrecoverable
-	// byte change, not a residual. The local has a slot in the target codegen, just no PDB name.
-	resources::managed_resource_ptr tmp( NULL );
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), 0xff, this );
 }
 
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
@@ -932,11 +917,7 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@NOTE: see the pcstr overload above - same case. Target records ZERO named locals
-	// (debug-elided), but the named local is byte-required to construct the resource_ptr temp
-	// at [ebp-4] first; inlining the temporary re-orders the call. Kept for the exact bytes.
-	resources::managed_resource_ptr tmp( NULL );
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), this );
 }
 
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )

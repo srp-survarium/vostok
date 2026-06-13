@@ -273,12 +273,7 @@ static void call_item_remove( inventory_slot& slot )
 
 void inventory::remove( )
 {
-	// claude@NOTE: target records ZERO named locals (the for-loop iterator is debug-elided from
-	// the PDB), but the iterator is byte-required and irreducible: it owns the [ebp-4] slot and
-	// drives the pointer walk that is 100% byte-identical to the target. No C++ spelling walks a
-	// pointer range without a named iterator (only recursion / re-evaluation, which changes bytes).
-	for ( inventory_slot* slot = m_slots; slot != m_slots + max_slots_count; ++slot )
-		call_item_remove( *slot );
+	std::for_each( m_slots, m_slots + max_slots_count, call_item_remove );
 	m_active_slot = max_slots_count;
 }
 
