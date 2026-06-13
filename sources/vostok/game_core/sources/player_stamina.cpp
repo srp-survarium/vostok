@@ -46,6 +46,13 @@ player_stamina& player_stamina::operator=( player_stamina const& other )
 	return *this;
 }
 
+// claude@NOTE: structure is correct (one read per member, offsets 0x34/0x54/0x58/0x5c,
+// types float/u32/u32/bool, order matches target asm). Residual is the inline-vs-call
+// wall: target out-lines packet_reader::r<T>() as self-contained COMDATs and CALLs them
+// (r<float> rva 0x7e960 reads m_pointer directly, no r(void*,u32,u32) delegation); under
+// game_core's /Od /Ob2 /GL our header's r<T>() (which delegates to r(void*,..)) is inlined
+// into every caller instead. Not forceable from this caller - the fix lives in
+// network_core/packet_reader_inline.h (different unit). See patterns/inline-vs-call-template-comdat.md.
 void player_stamina::deserialize( network_core::packet_reader& packet )
 {
 	m_value							= packet.r< float >( );
