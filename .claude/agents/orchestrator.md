@@ -311,10 +311,15 @@ unit: **match -> land -> audit (structure-verifier verifies AND fixes ∥ review
 act on any out-of-scope / reviewer finding -> re-audit -> done.**
 
 ## Dispatch hygiene
-- Hand each worker its TU plus the open-function list with a locating hint
-  (`file:line` or `rva`) for each. The worker does the matching: target asm,
-  write the bodies, wire reachability, build, diff, iterate, and **commit + push its
-  branch** (NO PR).
+- Hand each worker its TU plus the open-function list FROM `match_db.py queue` with a
+  locating hint (`file:line` or `rva`) for each - and ONLY that list. The queue already
+  drops the effectively-done functions: anything `>=95%` whose structure matches
+  (`MATCH`/`SIZE`/`SPLIT`) - the residual there is non-steerable LTCG, so a matcher would
+  just re-confirm it. Do NOT add already-matched / 100%-or-close functions to the worker's
+  task (it may touch one as a side effect of a header change - that's fine - but never
+  TELL it to). The queue keeps what has real work: low-% fns and high-% `QUANTITY` (wrong
+  statement count - the trap). The worker does the matching: target asm, write the bodies,
+  wire reachability, build, diff, iterate, and **commit + push its branch** (NO PR).
 - **YOU open and maintain the PR** for each unit (step 4b) and dispatch the
   structure-verifier onto its branch (step 4c). You sequence the units, resolve same-top
   sibling conflicts, and read back each worker's one-line result.
