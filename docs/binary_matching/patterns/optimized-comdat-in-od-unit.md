@@ -15,3 +15,15 @@ emission, do not chase the %.
 ; tells: no `push ebp`; `this` in eax; 32 flat dword zero-stores; movq xmm pairs
 ```
 Evidence: udp_match_stats::udp_match_stats() (0x62 bytes flat stores), udp_match_stats operator- (xmm pairs, args promoted to edi/esi; 10 statements at L212-224 in the PDB), udp_match_packet::header_size (8-byte mov/sub/sub/ret).
+
+Milder variant - dead-guard fold (same frame both sides): a VOSTOK_UNREFERENCED_PARAMETERS /
+VOSTOK_EMPTY_EXPRESSION body is `if ( ::vostok::identity(false) ) { eater(...); } else (void)0`.
+The optimized COMDAT keeps the `identity(false)` lvalue-materialization (mov byte[ebp-1],0; lea;
+call empty_stub) AND the eater call, but FOLDS the dead branch test (drops movzx[eax]/test/je),
+so the eater runs unconditional. Our /Od build keeps the full movzx/test/je guard - an unavoidable
+~7-byte residual. Do NOT mistake the single leading empty_stub for a recoverable ASSERT: a real
+ASSERT would add a SECOND empty_stub call; here there is exactly one (the identity call). Verified
+systemic across every survarium::weapon_*_state::weapon_and_hands_expression / on_specific_event /
+on_animation_end override (64-88%, none 100% unless the kept COMDAT was the /Od one). A by-reference
+param (animation_lexeme&) promoted through the variadic eater adds a second /Od-only artifact: copied
+by value (sub esp,84h; rep movsd) in /Od vs passed as a pointer in the optimized emission.
