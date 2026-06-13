@@ -203,7 +203,8 @@ python3 scripts/match_db.py report --unit medkit --per-function
 python3 scripts/match_db.py report --function 'medkit::'
 
 # (the fn column is the mangled-derived scope::name - no return type, template args, or
-#  parameter list, so even a boost/asio handler reads cleanly; --json gives full demangled.)
+#  parameter list, so even a boost/asio handler reads cleanly. --verbose shows the
+#  demangled signature instead; --json gives the full untruncated name. Works on diff too.)
 
 # TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
 # WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-

@@ -826,44 +826,65 @@ _MANGLED_OPS = {
 
 
 def _scope_tokens(s):
-    """`@`-separated scope identifiers up to the terminating `@@`; a templated
-    scope token (`?$name@...`) degrades to its base name (best effort)."""
+    """`@`-separated scope identifiers up to the terminating `@@`."""
     toks = []
     for t in s.split("@"):
         if t == "":
             break
-        toks.append(t[2:] if t.startswith("?$") else t)
+        toks.append(t)
     return toks
 
 
-def _qual_before_template(dem):
-    """The qualified name in a demangled signature, cut at the earliest '<' or '('
-    (so a function template's args and the parameter list are dropped)."""
+def _name_from_demangled(dem):
+    """Clean 'scope::name' from a demangled signature: drop the return type, every
+    <template-arg> block (any depth), and the parameter list. Robust where the
+    mangled name has templated scopes the lightweight parser can't walk."""
+    if not dem:
+        return ""
     _, rest = _split_return(dem)
-    cut = len(rest)
-    for ch in "<(":
-        i = rest.find(ch)
-        if 0 <= i < cut:
-            cut = i
-    return rest[:cut].strip()
+    out, depth = [], 0
+    for ch in rest:                          # strip balanced <...>
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            out.append(ch)
+    s = "".join(out)
+    rp = s.rfind(")")                         # cut the parameter list
+    if rp != -1:
+        depth = 0
+        for i in range(rp, -1, -1):
+            if s[i] == ")":
+                depth += 1
+            elif s[i] == "(":
+                depth -= 1
+                if depth == 0:
+                    s = s[:i]
+                    break
+    return s.strip()
+
+
+def _looks_clean(name):
+    """A parsed qualified name with no leftover mangling artifacts."""
+    return bool(name) and not any(c in name for c in "?$@")
 
 
 def fn_from_mangled(mangled, demangled=""):
-    """A short 'scope::name' read from the MSVC mangled name - no template args, no
-    parameter list, so it reads far easier than the demangled signature. Falls back
-    to the capped demangled when it can't parse."""
+    """A short 'scope::name' that reads far easier than the demangled signature.
+    Parsed straight from the MSVC mangled name for the simple cases; for a template
+    function or a templated scope (a '?$' - nested type encodings the lightweight
+    parser can't skip) it falls back to stripping <...>+params off the demangled."""
     try:
         m = mangled
         if not m.startswith("?"):
             return m  # already a plain qualified name (free functions, etc.)
         body = m[1:]
-        if body.startswith("?"):            # ctor / dtor / operator / template
+        if "?$" in body:                      # template fn / templated scope
+            return _name_from_demangled(demangled) or body
+        if body.startswith("?"):              # ctor / dtor / operator
             body = body[1:]
-            if body.startswith("$"):        # template function: drop its <args>
-                base = body[1:].split("@", 1)[0]
-                qual = _qual_before_template(demangled)
-                return qual if qual.endswith(base) else base
-            code = body[:2] if body[0] == "_" else body[:1]
+            code = body[:2] if body[:1] == "_" else body[:1]
             toks = _scope_tokens(body[len(code):].lstrip("@"))
             if not toks:
                 raise ValueError
@@ -871,12 +892,14 @@ def fn_from_mangled(mangled, demangled=""):
             leaf = (cls if code == "0"
                     else "~" + cls if code in ("1", "_G", "_E")
                     else _MANGLED_OPS.get(code, "operator" + code))
-            return "::".join(reversed(toks)) + "::" + leaf
-        name, _, rest = body.partition("@")  # normal function
-        toks = _scope_tokens(rest)
-        return ("::".join(reversed(toks)) + "::" + name) if toks else name
+            name = "::".join(reversed(toks)) + "::" + leaf
+        else:                                 # normal function
+            base, _, rest = body.partition("@")
+            toks = _scope_tokens(rest)
+            name = ("::".join(reversed(toks)) + "::" + base) if toks else base
+        return name if _looks_clean(name) else (_name_from_demangled(demangled) or name)
     except Exception:
-        return shorten_fn(demangled)
+        return _name_from_demangled(demangled) or shorten_fn(demangled)
 
 
 def resolve_units(con, partial, module=None):
@@ -945,7 +968,8 @@ def cmd_report(args):
         for r in rows:
             m = r.pop("m")
             if not args.json:
-                r["fn"] = fn_from_mangled(m, r["fn"])
+                r["fn"] = (shorten_fn(r["fn"]) if args.verbose
+                           else fn_from_mangled(m, r["fn"]))
         emit(rows, args.json)
         return
 
@@ -1004,7 +1028,8 @@ def cmd_report(args):
         for r in rows:
             m = r.pop("m")
             if not args.json:
-                r["fn"] = fn_from_mangled(m, r["fn"])
+                r["fn"] = (shorten_fn(r["fn"]) if args.verbose
+                           else fn_from_mangled(m, r["fn"]))
         emit(rows, args.json)
         return
 
@@ -1200,23 +1225,26 @@ def cmd_diff(args):
     for d, ap, bp, ac, bc, dem, loc, m in sorted(regressed):
         rows.append({"kind": "REGRESS", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
                      "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc), "fn": fn_from_mangled(m, dem)})
+                     "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
     for ap, ac, dem, loc, m in sorted(lost, reverse=True):
         rows.append({"kind": "LOST", "d": "gone", "from": f"{ap:.1f}", "to": "-",
                      "cls": clsfmt(ac, None), "file": strip(loc),
-                     "fn": fn_from_mangled(m, dem)})
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
     for bp, bc, dem, loc, m in sorted(matched, reverse=True):
         rows.append({"kind": "NEW", "d": "new", "from": "-", "to": f"{bp:.1f}",
                      "cls": clsfmt(None, bc), "file": strip(loc),
-                     "fn": fn_from_mangled(m, dem)})
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
     for d, ap, bp, ac, bc, dem, loc, m in sorted(improved, reverse=True):
         rows.append({"kind": "IMPROVE", "d": f"{d:+.2f}", "from": f"{ap:.1f}",
                      "to": f"{bp:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc), "fn": fn_from_mangled(m, dem)})
+                     "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
     for ap, ac, bc, dem, loc, m in sorted(reclass, reverse=True):
         rows.append({"kind": "RECLASS", "d": "~", "from": f"{ap:.1f}",
                      "to": f"{ap:.1f}", "cls": clsfmt(ac, bc),
-                     "file": strip(loc), "fn": fn_from_mangled(m, dem)})
+                     "file": strip(loc),
+                     "fn": shorten_fn(dem) if args.verbose else fn_from_mangled(m, dem)})
     if not rows:
         print("  (no function-level differences)")
     else:
@@ -1602,6 +1630,12 @@ def main():
         help="lean view: drop any '(no unit)' catch-all row and the custom_conv/"
         "out_of_scope/suspicious columns",
     )
+    p.add_argument(
+        "--verbose",
+        action="store_true",
+        help="fn column = the full (capped) demangled signature instead of the "
+        "mangled-derived scope::name",
+    )
     p.add_argument("--json", action="store_true")
 
     p = sub.add_parser("queue", help="one batch per TU (all its open functions), small-first")
@@ -1646,6 +1680,11 @@ def main():
         "diff", help="function-level diff between two committed match.db revisions")
     p.add_argument("spec", help="<hash> (vs working tree) or <hash>..<hash>")
     p.add_argument("--module")
+    p.add_argument(
+        "--verbose",
+        action="store_true",
+        help="fn column = the full (capped) demangled signature instead of scope::name",
+    )
     p.add_argument("--json", action="store_true")
 
     args = ap.parse_args()
