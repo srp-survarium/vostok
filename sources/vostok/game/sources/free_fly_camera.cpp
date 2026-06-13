@@ -4,6 +4,13 @@
 
 #include "pch.h"
 #include "free_fly_camera.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include "camera_director.h"
+#include <vostok/input/gamepad.h>
+#include <vostok/input/keyboard.h>
+#include <vostok/input/mouse.h>
+#include <vostok/input/world.h>
 
 namespace survarium {
 
@@ -12,6 +19,9 @@ namespace survarium {
 	// ref member; the same-named param is the obvious source - a matcher
 	// confirms when this TU is enabled
 	game_camera( w ),
+	m_prev_time_ms( 0 ),
+	m_prev_delta_sec( -1.0f ),
+	m_mouse_move( 0, 0, 0 ),
 	m_camera_director( cd )
 {
 	// FUNCTION BODY[0x5cf320]: 0
@@ -27,11 +37,16 @@ bool free_fly_camera::on_keyboard_action(
 	input::enum_keyboard_action		action
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
+
+	if ( action == input::kb_key_hold )
+		m_keyb_events.push_back	( key );
+
+	return false;
+
 	// LOCALS
 	// toggle_action_enum 				actions_mask_type
 	// ******
-
-	return false;
 
 	// FUNCTION BODY[0x5cf880]: 31
 	// <0x5cf880>|0x000|+0x00c:'37'	{
@@ -93,7 +108,18 @@ bool free_fly_camera::on_gamepad_action(
 	// <0x5cef63> -> void < unknown >( input::gamepad_vibrators, float )
 	// ******
 
-	return false;
+	VOSTOK_UNREFERENCED_PARAMETER		( action );
+
+	if ( button == input::gamepad_x ) {
+		input_world->get_gamepad()->set_vibration	( input::gamepad_vibrator_left, input_world->get_gamepad()->get_vibration( input::gamepad_vibrator_left ) + 0.01f );
+		return					true;
+	}
+
+	if ( button == input::gamepad_b ) {
+		input_world->get_gamepad()->set_vibration	( input::gamepad_vibrator_right, input_world->get_gamepad()->get_vibration( input::gamepad_vibrator_right ) + 0.01f );
+		return					true;
+	}
+	return	false;
 
 	// FUNCTION BODY[0x5ceed0]: 14
 	// <0x5ceed0>|0x000|+0x000:'72'	{
@@ -124,6 +150,11 @@ bool free_fly_camera::on_mouse_key_action(
 	input::enum_mouse_key_action	action
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
+
+	if ( action == input::ms_key_hold )
+		m_mouse_events.push_back	( button );
+
 	return false;
 
 	// FUNCTION BODY[0x5cf2e0]: 6
@@ -149,6 +180,11 @@ bool free_fly_camera::on_mouse_move(
 	s32					z
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
+
+	m_mouse_move.x += x;
+	m_mouse_move.y += y;
+	m_mouse_move.z += z;
 	return false;
 
 	// FUNCTION BODY[0x5cefe0]: 7
@@ -165,7 +201,7 @@ bool free_fly_camera::on_mouse_move(
 // STATE[STUB]
 bool free_fly_camera::keyb_event_present( s32 e )
 {
-	return false;
+	return std::find( m_keyb_events.begin(), m_keyb_events.end(), e ) != m_keyb_events.end();
 
 	// FUNCTION BODY[0x5ceeb0]: 1
 	// <0x5ceeb1>|0x001|+0x01b:'112'
@@ -175,7 +211,7 @@ bool free_fly_camera::keyb_event_present( s32 e )
 // STATE[STUB]
 bool free_fly_camera::mouse_event_present( s32 e )
 {
-	return false;
+	return std::find( m_mouse_events.begin(), m_mouse_events.end(), e ) != m_mouse_events.end();
 
 	// FUNCTION BODY[0x5cee90]: 1
 	// <0x5cee91>|0x001|+0x01b:'117'
@@ -228,6 +264,15 @@ void free_fly_camera::on_focus( bool b_focus_enter )
 	// <0x5cefd4> -> void < unknown >( input::handler& )
 	// ******
 
+	// base m_game_scene is private in canonical game_camera -> get_game_scene()
+	game_camera::on_focus ( b_focus_enter );
+	if ( b_focus_enter )
+	{
+		get_game_scene().get_game().input_world().add_handler						( *this );
+	}
+	else
+		get_game_scene().get_game().input_world().remove_handler( *this );
+
 	// FUNCTION BODY[0x5cef80]: 6
 	// <0x5cef80>|0x000|+0x000:'140'	{
 	// <0>
@@ -271,6 +316,74 @@ void free_fly_camera::tick( )
 	// STATICS
 	// static u32 						counter = <0x4c26614>;
 	// ******
+
+#if VOSTOK_PLATFORM_WINDOWS
+	// legacy m_game_scene private + time_ms() -> get_game_scene() + game_time_ms()
+	u32 const game_time_ms		= get_game_scene().get_game().game_time_ms( );
+
+	ASSERT						( game_time_ms >= m_prev_time_ms );
+	float const current_time_delta	= float( game_time_ms - m_prev_time_ms );
+
+	if ( m_prev_delta_sec < 0.0f )
+		m_prev_delta_sec		= current_time_delta;
+	else
+		m_prev_delta_sec		= current_time_delta * 0.1f + m_prev_delta_sec * 0.9f;
+
+	float factor				= 60.f * 0.001f * m_prev_delta_sec;
+	float angle_factor			= 0.5f;
+
+	m_prev_time_ms				= game_time_ms;
+
+	static u32 counter = 0;
+	if ( keyb_event_present( input::key_q ) )
+		LOG_INFO( "[%d] %f", counter++, current_time_delta );
+
+	if ( m_keyb_events.empty() &&
+		m_mouse_events.empty() &&
+		math::is_zero( m_mouse_move.x ) && math::is_zero( m_mouse_move.y ) && math::is_zero( m_mouse_move.z ) )
+		return;
+
+	if ( keyb_event_present( input::key_lcontrol ) || keyb_event_present( input::key_rcontrol ) )
+		factor					*= 20.f;
+
+	if ( keyb_event_present( input::key_lshift ) || keyb_event_present( input::key_rshift ) )
+		factor					*= .1f;
+
+	if ( keyb_event_present( input::key_lalt ) || keyb_event_present( input::key_ralt ) )
+		angle_factor			*= .1f;
+
+	float						forward = 0.f;
+	float						right	= 0.f;
+	float						up		= 0.f;
+
+	if ( mouse_event_present( input::mouse_button_left ) )
+		forward					+= factor * .1f;
+
+	if ( mouse_event_present( input::mouse_button_right ) )
+		forward					-= factor * .1f;
+
+	if ( keyb_event_present( input::key_d ) )
+		right				+= factor * .1f;
+
+	if ( keyb_event_present( input::key_a ) )
+		right				-= factor * .1f;
+
+	if ( keyb_event_present( input::key_w ) )
+		up					+= factor * .1f;
+
+	if ( keyb_event_present( input::key_s ) )
+		up					-= factor * .1f;
+
+	float const	angle_x			= angle_factor * math::deg2rad( m_mouse_move.y );
+	float const	angle_y			= angle_factor * math::deg2rad( m_mouse_move.x ) * 0.75f;
+	build_view_matrix			( float2( angle_x, angle_y ), forward, right, up );
+
+	m_keyb_events.clear();
+	m_mouse_events.clear();
+	m_mouse_move.x = 0.0f;
+	m_mouse_move.y = 0.0f;
+	m_mouse_move.z = 0.0f;
+#endif
 
 	// FUNCTION BODY[0x5cf3a0]: 87
 	// <0>
