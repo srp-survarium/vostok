@@ -231,6 +231,17 @@ def main() -> None:
             log(f"WARNING: match.db NOT regenerated ({e}); "
                 "re-derive it with `python3 scripts/match_db.py refresh`")
 
+        # ...and the README score block, the other report.json-derived artifact, so a
+        # build keeps both current in one shot. Separately guarded: a score-write
+        # failure warns but never fails the build (the report.json is already good).
+        try:
+            import match_score
+            match_score.regen_readme()
+            log("README score block refreshed.")
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the README
+            log(f"WARNING: README score block NOT refreshed ({e}); "
+                "re-derive it with `python3 scripts/match_score.py --write-readme`")
+
         log("All done - base diff inputs refreshed.")
     finally:
         _append_log(time.monotonic() - start, modules)

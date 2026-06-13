@@ -14,8 +14,8 @@ processes the WHOLE queue regardless.
 
 Full rules: `.claude/agents/orchestrator.md`. In short:
 1. **Build the queue:** `rg -n "STATE\[STUB\]" sources/vostok/$1/sources` (+ any
-   `PARTIAL`/`SKIPPED` to retry). Order leaf/small-first. Refresh the README score block as
-   a baseline (`python3 scripts/match_score.py --write-readme`).
+   `PARTIAL`/`SKIPPED` to retry). Order leaf/small-first. (`rebuild.py` keeps the README
+   score block current on its own - no manual refresh step.)
 2. **Stacked PRs:** track the **stack tip** (the latest match branch, or
    `feature/agentic-matching-loop-2` to root a fresh stack). Matchers branch off the TOP so
    percentages compound; you review the stack BOTTOM-UP and merge one PR at a time.
