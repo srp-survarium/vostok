@@ -43,7 +43,7 @@ match/verify here — that's the next phase, once everything is in.
 | 3 | camera | free_fly_camera, game_camera, camera_director (21) | DONE |
 | 4 | cooks/stats | animated_model_instance_cook, sound_player_cook, stats, stats_graph (26) | DONE |
 | 5 | menus/input | key_binder, main_menu(+_input), lobby_menu(+_input) (34) | DONE |
-| 6 | objects | object, object_{decal,environment,light,sky,solid_visual,volumetric_sound,weapon,wire} (31) | |
+| 6 | objects | object, object_{decal,environment,light,sky,solid_visual,volumetric_sound,weapon,wire} (31) | DONE |
 | 7 | misc + anim | project_cooker_simple, weapon, weapon_cook (9) + animations_selector, simple/single_position_animation_controller | |
 
 Renamed/split layer (after the direct passes, simple cases only): legacy

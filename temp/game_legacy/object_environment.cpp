@@ -12,15 +12,6 @@
 
 namespace survarium{
 
-object_environment::object_environment( game_scene& w )
-:super			( w )
-{
-}
-
-object_environment::~object_environment( )
-{
-}
-
 void object_environment::load( configs::binary_config_value const& t )
 {
 	super::load					(t);

@@ -17,13 +17,6 @@
 
 namespace survarium{
 
-object_sky::object_sky( game_scene& w )
-:super		( w )
-{}
-
-object_sky::~object_sky( )
-{}
-
 void object_sky::load( configs::binary_config_value const& t )
 {
 	super::load					(t);
