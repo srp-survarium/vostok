@@ -17,25 +17,29 @@ commits (match, then verify+fix). PRs are **stacked**: the human reviews them
 
 ## The loop - this is your whole plan
 
-Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). Repeat:
+Keep ONE worktree parked ON THE TOP of the stack (e.g. `vostok_1`). `match_db.py
+refresh` is your build+DB step in one - it rebuilds the worktree incrementally
+(~2-3 min/unit) AND regens `match.db`, so you NEVER call `rebuild.py` separately and
+NEVER build the integration branch (it lacks the matches -> full rebuild).
 
 1. **Switch to the top + refresh** - checkout the newest match branch, then ALWAYS run
-   `python3 scripts/match_db.py refresh`. It rebuilds the worktree incrementally
-   (~2-3 min/unit) AND regens `match.db` - so this single command is your build + DB +
-   freshness check, catching any staleness from a prior session. Never call `rebuild.py`
-   separately; never build the integration branch (it lacks the matches -> full rebuild).
+   `python3 scripts/match_db.py refresh` (catches any staleness from a prior session
+   before you spawn anything).
 2. **Spawn matcher agent(s)** - ONE TU each, branched off the top.
-3. **Get their work** - each returns ONE commit.
+3. **Get their work** - each returns ONE commit (the top advances).
 4. **Handle conflicts** if siblings clash - `temp_include_all.cpp` / module `.vcproj` /
    `match.db`; stack them in dependency order.
-5. **Mark functions** - retries (`match_db.py tried <fn>`) + comments/flags
-   (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue` a stale SKIP).
-6. **Loop** -> back to step 1 (the just-landed unit's branch is now the top, so step 1
-   re-checks it out, rebuilds it incrementally, and regens the DB).
+5. **Go to the new top** - the just-landed unit's branch is the new tip.
+6. **Refresh** - `python3 scripts/match_db.py refresh` (builds the new top incrementally
+   + regens the DB). MUST run before you mark, so marking reads the MEASURED state.
+7. **Mark functions** - from the refreshed DB: retries (`match_db.py tried <fn>`) +
+   comments/flags (`flag <fn> --flag OUT_OF_SCOPE --cause "..."` for a park; `--requeue`
+   a stale SKIP); upgrade any banked LTCG residual the rebuild lifted to 100%.
+8. **Loop** -> back to step 2.
 
 Set `WINEPREFIX=<worktree>/binaries/.wineprefix` before refreshing - a bare `cd` keeps
 the parent shell's prefix, so parallel builds collide on one `mspdbsrv`. Everything below
-is reference detail for these six steps.
+is reference detail for these eight steps.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
 > if you were yourself dispatched as a nested subagent you may be unable to launch
