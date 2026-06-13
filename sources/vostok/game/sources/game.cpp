@@ -6,9 +6,17 @@
 #include "game.h"
 
 #include <vostok/console_command.h>	// cc_float (max_angular_velocity_command)
+#include <vostok/console_command_processor.h>	// console_commands::save (cfg_save_*)
+#include <vostok/memory_extensions.h>	// memory::g_mt_allocator (cfg_save_*)
 #include <vostok/render/world.h>	// game_renderer() (ctor init)
+#include <vostok/render/facade/game_renderer.h>	// renderer().ui() (draw_debug_window)
+#include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
+#include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
+#include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
 
 #include "scaleform_movie_cook.h"	// its out-of-line bodies live here per the PDB
+#include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
+#include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
 
 namespace survarium {
 
@@ -133,6 +141,8 @@ void `dynamic initializer for 's_max_angular_velocity_command''( )
 // STATE[STUB]
 void cfg_save_user( )
 {
+	vostok::console_commands::save( NULL, vostok::console_commands::command_type_user_specific, memory::g_mt_allocator );
+
 	// FUNCTION BODY[0x5e5e30]: 1
 	// <0x5e5e30>|0x000|+0x01a:'118'
 	// ******
@@ -141,6 +151,8 @@ void cfg_save_user( )
 // STATE[STUB]
 void cfg_save_system( )
 {
+	vostok::console_commands::save( NULL, vostok::console_commands::command_type_engine_internal, memory::g_mt_allocator );
+
 	// FUNCTION BODY[0x5e5e20]: 1
 	// <0x5e5e20>|0x000|+0x000:'122'	{
 	// <0>
@@ -839,6 +851,14 @@ void game::register_console_commands( )
 // STATE[STUB]
 void game::switch_to_scene( base_game_scene* scene )
 {
+	R_ASSERT						( scene );
+
+	if( m_active_scene )
+		m_active_scene->on_deactivate( );
+
+	m_active_scene	= scene;
+	m_active_scene->on_activate		( );
+
 	// CALL SITE INFO
 	// <0x5e57b3> -> void < unknown >()
 	// <0x5e57c1> -> void < unknown >()
@@ -865,6 +885,11 @@ void game::switch_to_scene( base_game_scene* scene )
 // STATE[STUB]
 void game::toggle_console( )
 {
+	if ( m_console->get_active( ) )
+		m_console->on_deactivate	( );
+	else
+		m_console->on_activate		( );
+
 	// CALL SITE INFO
 	// <0x5e5668> -> bool < unknown >() const
 	// <0x5e5676> -> void < unknown >()
@@ -881,6 +906,13 @@ void game::toggle_console( )
 // STATE[STUB]
 void game::exit( pcstr str )
 {
+	unload							( str, true );
+
+	if ( m_engine.command_line_editor( ) )
+		m_engine.enter_editor_mode	( );
+	else
+		m_engine.exit				( 0 );
+
 	// CALL SITE INFO
 	// <0x5e5631> -> void < unknown >( pcstr, bool )
 	// <0x5e563b> -> bool < unknown >()
@@ -1167,6 +1199,8 @@ void game::clear_resources( )
 // STATE[STUB]
 void game::load_cmd( pcstr project_name )
 {
+	load							( project_name );
+
 	// CALL SITE INFO
 	// <0x5e5615> -> void < unknown >( pcstr )
 	// ******
@@ -1180,6 +1214,8 @@ void game::load_cmd( pcstr project_name )
 // STATE[STUB]
 void game::unload_cmd( pcstr s )
 {
+	unload							( s, false );
+
 	// CALL SITE INFO
 	// <0x5e55fc> -> void < unknown >( pcstr, bool )
 	// ******
@@ -1269,6 +1305,8 @@ void game::switch_to_main_menu( )
 // STATE[STUB]
 void game::switch_to_lobby( )
 {
+	switch_to_scene					( m_lobby_menu );
+
 	// CALL SITE INFO
 	// <0x5e57db> -> bool < unknown >() const
 	// <0x5e57fb> -> void < unknown >()
@@ -1340,6 +1378,15 @@ void game::register_cooks( )
 // STATE[STUB]
 void game::on_application_activate( )
 {
+	threading::mutex_raii guard			( m_application_activation );
+
+	R_ASSERT							( !m_is_active );
+
+	if ( m_input_world )
+		m_input_world->on_activate		( );
+
+	m_is_active							= true;
+
 	// CALL SITE INFO
 	// <0x5e5ea7> -> HWND__* < unknown >() const
 	// <0x5e5eaa> -> int < unknown >( HWND__*, pcstr )
@@ -1365,6 +1412,14 @@ void game::on_application_activate( )
 // STATE[STUB]
 void game::on_application_deactivate( )
 {
+	if ( !m_input_world )
+		return;
+
+	threading::mutex_raii guard			( m_application_activation );
+
+	m_input_world->on_deactivate		( );
+	m_is_active							= false;
+
 	// CALL SITE INFO
 	// <0x5e5e78> -> void < unknown >()
 	// ******
@@ -1422,6 +1477,12 @@ void game::draw_debug_window( )
 // STATE[STUB]
 void game::create_debug_window( )
 {
+	R_ASSERT							(!m_debug_window);
+	m_debug_window						= m_ui_world->create_window( );
+	m_debug_window->set_visible			( true );
+	m_debug_window->set_position		( float2( 0.f, 120.f ) );
+	m_debug_window->set_size			( float2( 2024.f, 768.f ) );
+
 	// CALL SITE INFO
 	// <0x5e570e> -> ui::window* < unknown >()
 	// <0x5e571f> -> void < unknown >( bool )
@@ -1441,6 +1502,10 @@ void game::create_debug_window( )
 // STATE[STUB]
 void game::destroy_debug_window( )
 {
+	R_ASSERT							( m_debug_window );
+	m_ui_world->destroy_window			( m_debug_window );
+	m_debug_window						= 0;
+
 	// CALL SITE INFO
 	// <0x5e56f2> -> void < unknown >( ui::window* )
 	// ******

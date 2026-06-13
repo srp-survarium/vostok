@@ -5,11 +5,22 @@
 #include "pch.h"
 #include "game.h"
 
+#include <vostok/input/api.h>	// input::create_world / destroy_world
+#include <vostok/ui/api.h>	// ui::create_world / destroy_world
+#include <vostok/render/facade/game_renderer.h>	// m_renderer.ui() (initialize_ui)
+#include "game_memory.h"	// g_allocator (initialize_ui)
+
 namespace survarium {
 
 // STATE[STUB]
 void game::initialize_input( )
 {
+	ASSERT							( !m_initialized );
+
+	ASSERT							( !m_input_world );
+	m_input_world					= input::create_world( *this, m_engine.get_main_window_handle() );
+	ASSERT							( m_input_world );
+
 	// CALL SITE INFO
 	// <0x705694> -> HWND__* < unknown >() const
 	// ******
@@ -26,6 +37,12 @@ void game::initialize_input( )
 // STATE[STUB]
 void game::initialize_ui( )
 {
+	ASSERT							( !m_initialized );
+
+	ASSERT							( !m_ui_world );
+	m_ui_world						= ui::create_world( *this, m_renderer.ui(), *g_allocator );
+	ASSERT							( m_ui_world );
+
 	// FUNCTION BODY[0x705610]: 5
 	// <0x705610>|0x000|+0x003:'49'	{
 	// <0>
@@ -42,6 +59,11 @@ void game::initialize_ui( )
 // STATE[STUB]
 void game::initialize_modules( )
 {
+	// legacy also called initialize_animation() between these two; no canonical
+	// m_animation_world member - that removed-subsystem call is dropped
+	initialize_input				( );
+	initialize_ui					( );
+
 	// CALL SITE INFO
 	// <0x7056c8> -> HWND__* < unknown >() const
 	// ******
@@ -58,6 +80,11 @@ void game::initialize_modules( )
 // STATE[STUB]
 void game::deinitialize_modules( )
 {
+	// legacy destroyed animation world between ui and input; no canonical
+	// m_animation_world member - that removed-subsystem call is dropped
+	ui::destroy_world				( m_ui_world );
+	input::destroy_world			( m_input_world );
+
 	// FUNCTION BODY[0x7055b0]: 4
 	// <0>
 	// <1>
