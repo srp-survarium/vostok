@@ -49,15 +49,13 @@ void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 	parent->finish_query( result_success );
 }
 
-// claude@NOTE: parked - the source idiom is already the one proven right
-// elsewhere (inventory_cook etc); the residual is cross-TU LTCG: the target
-// inlines strip_pointer into this caller and calls the 2-arg delete_helper
-// wrapper with plain stack args, while our base keeps strip_pointer as a
-// custom-convention call and passes the wrapper its pointer-ref in edi.
-// Not steerable from this TU.
 void victory_item_core_cook::delete_resource( resources::resource_base* resource )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, resource );
+	// Direct form (no VOSTOK_DELETE_IMPL): the target has NO strip_pointer call -
+	// the *g_allocator deref is inline. Residual is the shared delete_helper COMDAT's
+	// custom EDI convention vs the target's two-stack-arg cdecl (an argument-passing
+	// LTCG boundary).
+	memory::delete_helper( *g_allocator, resource );
 }
 
 } // namespace survarium
