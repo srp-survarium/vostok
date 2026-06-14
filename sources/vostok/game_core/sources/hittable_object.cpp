@@ -10,6 +10,12 @@
 
 namespace survarium {
 
+// claude@NOTE: STRUCTURE MATCH. Residual is the base-ctor call-vs-inline wall: target CALLs
+// survarium::hit_receiver::hit_receiver (its user-declared inline ctor survives as an
+// ICF-folded out-of-line COMDAT - 3 copies in the target index, ZERO in our base), so our
+// build inlines hit_receiver's body (game_object vtable store + loose_ptr_base ctor call) and
+// uses a different frame. Decided by whether the implicit/inline base ctor is emitted as a
+// COMDAT globally - not steerable from this TU. See patterns/base-ctor-call-vs-inlined-init.md.
 hittable_object::hittable_object( ) :
 	m_rigid_body	( NULL ),
 	m_physics_world	( NULL ),
@@ -18,6 +24,10 @@ hittable_object::hittable_object( ) :
 {
 }
 
+// claude@NOTE: STRUCTURE MATCH. Same wall as the ctor, on the dtor side: target CALLs
+// survarium::hit_receiver::~hit_receiver (out-of-line in target, absent from our base), so our
+// build inlines the base dtor (hit_receiver vtable store + loose_ptr_base::~loose_ptr_base)
+// and grows the frame to 0x38 (vs target 0x0C). Not steerable from this TU.
 hittable_object::~hittable_object( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
