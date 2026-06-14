@@ -553,6 +553,12 @@ void	btCollisionWorld::rayTestSingle(const btTransform& rayFromTrans,const btTra
 	}
 }
 
+// claude@NOTE: compound branch is vostok's btDbvt-traversal rewrite (input_params /
+// LocalInfoAdder / VolumeTester + collideTV<VolumeTester>, mirrors RayTester). All 11
+// function-local-class symbols match 100%. Body residual: the target's LTCG dead-
+// eliminates the dbvt==NULL else loop (keeping only its __l57 LocalInfoAdder COMDAT,
+// which our live loop reproduces) and inlines the swept-volume math deeper than ours,
+// so objdiff leaves the objectQuerySingle body itself unpaired.
 void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const btTransform& convexFromTrans,const btTransform& convexToTrans,
 											btCollisionObject* collisionObject,
 											const btCollisionShape* collisionShape,
@@ -766,8 +772,130 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 			///@todo : use AABB tree or other BVH acceleration structure!
 			if (collisionShape->isCompound())
 			{
-				BT_PROFILE("convexSweepCompound");
+				BT_PROFILE("bvh convexSweepCompound");
+
+				struct input_params
+				{
+					const btConvexShape*		m_castShape;
+					const btTransform&		m_convexFromTrans;
+					const btTransform&		m_convexToTrans;
+					btCollisionObject*		m_collisionObject;
+					const btCollisionShape*		m_collisionShape;
+					const btTransform&		m_colObjWorldTransform;
+					ConvexResultCallback&		m_resultCallback;
+					btScalar			m_allowedPenetration;
+
+					input_params(const btConvexShape* castShape, const btTransform& convexFromTrans, const btTransform& convexToTrans,
+						btCollisionObject* collisionObject, const btCollisionShape* collisionShape, const btTransform& colObjWorldTransform,
+						ConvexResultCallback& resultCallback, btScalar allowedPenetration)
+						: m_castShape(castShape),
+						m_convexFromTrans(convexFromTrans),
+						m_convexToTrans(convexToTrans),
+						m_collisionObject(collisionObject),
+						m_collisionShape(collisionShape),
+						m_colObjWorldTransform(colObjWorldTransform),
+						m_resultCallback(resultCallback),
+						m_allowedPenetration(allowedPenetration)
+					{
+					}
+				};
+
+				struct LocalInfoAdder : public ConvexResultCallback
+				{
+					ConvexResultCallback* m_userCallback;
+					int m_i;
+
+					LocalInfoAdder (int i, ConvexResultCallback *user)
+						: m_userCallback(user), m_i(i)
+					{
+						m_closestHitFraction = m_userCallback->m_closestHitFraction;
+					}
+					virtual bool needsCollision(btBroadphaseProxy* p) const
+					{
+						return m_userCallback->needsCollision(p);
+					}
+					virtual btScalar addSingleResult (btCollisionWorld::LocalConvexResult& r, bool b)
+					{
+						btCollisionWorld::LocalShapeInfo shapeInfo;
+						shapeInfo.m_shapePart = -1;
+						shapeInfo.m_triangleIndex = m_i;
+						shapeInfo.m_is_shape_index = true;
+						if (r.m_localShapeInfo == NULL)
+							r.m_localShapeInfo = &shapeInfo;
+						const btScalar result = m_userCallback->addSingleResult(r, b);
+						m_closestHitFraction = m_userCallback->m_closestHitFraction;
+						return result;
+					}
+				};
+
+				struct VolumeTester : btDbvt::ICollide
+				{
+					input_params& m_params;
+					const btCompoundShape* m_compoundShape;
+
+					VolumeTester(input_params& params, const btCompoundShape* compoundShape)
+						: m_params(params), m_compoundShape(compoundShape)
+					{
+					}
+
+					void Process(int i)
+					{
+						const btCollisionShape* childCollisionShape = m_compoundShape->getChildShape(i);
+						const btTransform& childTrans = m_compoundShape->getChildTransform(i);
+						btTransform childWorldTrans = m_params.m_colObjWorldTransform * childTrans;
+
+						// replace collision shape so that callback can determine the triangle
+						btCollisionShape* saveCollisionShape = m_params.m_collisionObject->getCollisionShape();
+						m_params.m_collisionObject->internalSetTemporaryCollisionShape((btCollisionShape*)childCollisionShape);
+
+						LocalInfoAdder my_cb(i, &m_params.m_resultCallback);
+
+						objectQuerySingle(m_params.m_castShape, m_params.m_convexFromTrans, m_params.m_convexToTrans,
+							m_params.m_collisionObject,
+							childCollisionShape,
+							childWorldTrans,
+							my_cb, m_params.m_allowedPenetration);
+
+						// restore
+						m_params.m_collisionObject->internalSetTemporaryCollisionShape(saveCollisionShape);
+					}
+
+					void Process(const btDbvtNode* leaf)
+					{
+						Process(leaf->dataAsInt);
+					}
+				};
+
 				const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(collisionShape);
+				btDbvt* dbvt = (btDbvt*)compoundShape->getDynamicAabbTree();
+
+				input_params in_params(castShape, convexFromTrans, convexToTrans, collisionObject, collisionShape, colObjWorldTransform, resultCallback, allowedPenetration);
+				VolumeTester rayCB(in_params, compoundShape);
+
+				btTransform worldTocollisionObject = colObjWorldTransform.inverse();
+				btVector3 convexFromLocal = worldTocollisionObject * convexFromTrans.getOrigin();
+				btVector3 convexToLocal = worldTocollisionObject * convexToTrans.getOrigin();
+				// rotation of box in local mesh space = MeshRotation^-1 * ConvexToRotation
+				btTransform rotationXform = btTransform(worldTocollisionObject.getBasis() * convexToTrans.getBasis());
+
+				btVector3 shapeMinLocal, shapeMaxLocal;
+				castShape->getAabb(rotationXform, shapeMinLocal, shapeMaxLocal);
+
+				btVector3 volAabbMinLocal = convexFromLocal;
+				volAabbMinLocal.setMin(convexToLocal);
+				btVector3 volAabbMaxLocal = convexFromLocal;
+				volAabbMaxLocal.setMax(convexToLocal);
+				volAabbMinLocal += shapeMinLocal;
+				volAabbMaxLocal += shapeMaxLocal;
+
+				if (dbvt)
+				{
+					btDbvtVolume volume = btDbvtVolume::FromMM(volAabbMinLocal, volAabbMaxLocal);
+					if (dbvt->m_root)
+						dbvt->collideTV(dbvt->m_root, volume, rayCB);
+				}
+				else
+				{
 				int i=0;
 				for (i=0;i<compoundShape->getNumChildShapes();i++)
 				{
@@ -815,6 +943,7 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 						my_cb, allowedPenetration);
 					// restore
 					collisionObject->internalSetTemporaryCollisionShape(saveCollisionShape);
+				}
 				}
 			}
 		}
