@@ -23,6 +23,8 @@ namespace tasks {
 
 namespace survarium {
 
+extern float s_bm_bullet_time_factor;
+
 class weapon_core;
 
 class bullet_manager_engine;
@@ -90,7 +92,7 @@ public:
 	inline	game_material_manager const&	get_material_manager		( ) const { return *m_game_material_manager; }
 	inline	physics::world&					get_physics_world			( ) const { return *m_physics_world; }
 	inline	float3 const&					get_gravity					( ) const { return m_gravity; }
-			float							get_bullet_time_factor		( ) const;
+	inline	float							get_bullet_time_factor		( ) const { return s_bm_bullet_time_factor; }
 
 private:
 	struct bullet_functor {

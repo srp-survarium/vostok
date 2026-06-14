@@ -101,7 +101,7 @@ void bullet::tick( u32 current_time_in_ms )
 	float3			zero_velocity		= float3( 0, 0, 0 );	// sushi@MATCH: <0x592a3b> Arguments are built slightly differently. claude@MATCH: target PDB records it NON-const.
 	u16 const		invalid_tracer_idx	= u16(-1);
 	float			low_time			= m_life_time;
-	float			high_time			= ( current_time_in_ms - m_born_time_in_ms ) / 1000.0f * m_bullet_manager->get_bullet_time_factor( ); // sushi@MATCH: <0x592a6e> target inlined `get_bullet_time_factor`.
+	float			high_time			= ( current_time_in_ms - m_born_time_in_ms ) / 1000.0f * m_bullet_manager->get_bullet_time_factor( );
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	float3 const&	gravity				= m_bullet_manager->get_gravity( );
@@ -484,12 +484,12 @@ void bullet::fix_collision_point_and_time(
 	float3		new_collide_point	= compute_trajectory_position( collision_time, gravity );
 	float		delta				= ( ( new_collide_point - collide_point ) | triangle_normal );
 
-	if( !math::is_zero( delta ) )
+	if( !math::is_zero( delta, math::epsilon_3 ) )
 	{
 		float		low_time		= start_time;
 		float		high_time		= current_time;
 
-		while ( !math::is_zero( delta ) )
+		while ( !math::is_zero( delta, math::epsilon_3 ) )
 		{
 			if (	( orientation == triangle_orientation_front_face && delta < 0 ) ||
 					( orientation == triangle_orientation_back_face && delta > 0 ) )
@@ -615,7 +615,7 @@ void bullet::change_trajectory( float3 const& new_position, float3 const& new_ve
 	m_position				= m_start_position;
 	m_velocity				= m_start_velocity;
 	m_current_resistance	= m_air_resistance;
-	m_born_time_in_ms		+= math::floor( 1000.f * collision_time / m_bullet_manager->get_bullet_time_factor( ) ); // sushi@MATCH: <0x590ffb> Different for many things
+	m_born_time_in_ms		+= math::floor( 1000.f * collision_time / m_bullet_manager->get_bullet_time_factor( ) );
 	m_life_time				= 0;
 }
 
