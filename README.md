@@ -13,18 +13,18 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 53.18% fuzzy &middot; 9,762 / 25,372 functions exact (38.48%).**
+**Overall: 53.25% fuzzy &middot; 9,800 / 25,372 functions exact (38.63%).**
 
 _`Fuzzy` = code-weighted partial-credit match (how close); `Code matched` = byte-exact only. `scripts/match_score.py --max-code` adds the best-ever max of each (ICF-churn-immune)._
 
 | Module          | Units |     Functions exact | Fuzzy | Code matched |
 | :-------------- | ----: | ------------------: | ----: | -----------: |
-| `render`        |   351 | 384 / 2,805 (13.7%) | 29.3% |         3.5% |
-| `shared`        |   112 | 858 / 2,255 (38.0%) | 51.1% |        37.1% |
-| `game`          |   141 |   21 / 1,634 (1.3%) |  3.6% |         0.1% |
-| `game_core`     |   189 | 620 / 1,429 (43.4%) | 82.1% |        26.3% |
+| `render`        |   351 | 386 / 2,805 (13.8%) | 29.4% |         3.5% |
+| `shared`        |   112 | 850 / 2,255 (37.7%) | 51.1% |        36.9% |
+| `game`          |   141 |   20 / 1,634 (1.2%) |  3.6% |         0.1% |
+| `game_core`     |   189 | 621 / 1,429 (43.5%) | 82.3% |        26.4% |
 | `core`          |   136 | 658 / 1,331 (49.4%) | 75.4% |        34.2% |
-| `animation`     |   102 |   162 / 880 (18.4%) | 12.4% |         5.4% |
+| `animation`     |   102 |   162 / 880 (18.4%) | 12.5% |         5.4% |
 | `ai`            |   124 |   418 / 759 (55.1%) | 83.8% |        37.5% |
 | `sound`         |    69 |   212 / 517 (41.0%) | 48.9% |        16.6% |
 | `collision`     |    52 |   371 / 516 (71.9%) | 76.0% |        31.0% |
@@ -32,7 +32,7 @@ _`Fuzzy` = code-weighted partial-credit match (how close); `Code matched` = byte
 | `vfs`           |    71 |   190 / 412 (46.1%) | 83.6% |        16.3% |
 | `scaleform`     |    15 |      0 / 280 (0.0%) |  0.0% |         0.0% |
 | `ui`            |    27 |   175 / 255 (68.6%) | 82.0% |        42.7% |
-| `physics`       |    14 |    98 / 203 (48.3%) | 74.1% |        24.4% |
+| `physics`       |    14 |   100 / 203 (49.3%) | 74.3% |        24.5% |
 | `fs`            |    25 |    71 / 189 (37.6%) | 73.7% |        27.8% |
 | `engine`        |    22 |    52 / 165 (31.5%) | 80.6% |        11.1% |
 | `network`       |    25 |      7 / 163 (4.3%) |  4.5% |         0.5% |
