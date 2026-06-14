@@ -307,13 +307,29 @@ u32   get_file_hash						(base_node<T> const * node)
 }
 
 template <platform_pointer_enum T>
-u32   get_raw_file_size					(base_node<T> const * node) 
+u32   get_raw_file_size_impl			(base_node<T> const * node);
+
+// claude@NOTE: target out-of-lines the body as get_raw_file_size_impl<1> and keeps an
+// inline get_raw_file_size<1> wrapper (no standalone wrapper symbol). The IMPL link branch
+// (L404) is one statement: a fast-path `(flags & 0x51) | (flags & 0x4) == 0x4`
+// (non-folder/non-compressed/non-inlined archive) reading archive_file_node->size_in_db via
+// an inline cast (-0x18), else get_raw_file_size_impl(referenced). The exact fast-path
+// source idiom is unconfirmed - this plain forwarding wrapper pairs the IMPL's 12 non-link
+// statements; the L404 byte residual is the unreproduced fast-path.
+template <platform_pointer_enum T>
+u32   get_raw_file_size					(base_node<T> const * node)
+{
+	return									get_raw_file_size_impl(node);
+}
+
+template <platform_pointer_enum T>
+u32   get_raw_file_size_impl			(base_node<T> const * node)
 {
 	if ( node->is_link() )
 	{
 		base_node<T> * const referenced	=	find_referenced_link_node(node);
 		R_ASSERT							(referenced);
-		return								get_raw_file_size(referenced);					
+		return								get_raw_file_size(referenced);
 	}
 
 	if ( node->is_universal_file() )
@@ -382,17 +398,21 @@ u32   get_compressed_file_size			(base_node<T> const * node)
 }
 
 template <platform_pointer_enum T>
-u32   calculate_count_of_nodes			(base_node<T> const * node)
+u32   calculate_count_of_nodes			(base_node<T> const * node, const bool skip_erased = false, const bool count_link_targets = true)
 {
+	if ( skip_erased && node->is_erased() )
+		return								0;
+
 	if ( node->is_link() )
 	{
 		base_node<> * const target		=	find_referenced_link_node(node);
-		return								calculate_count_of_nodes(target);
+		return								count_link_targets ?
+											calculate_count_of_nodes(target, skip_erased, count_link_targets) + 1 : 1;
 	}
 
 	if ( !node->is_folder() )
-		return								1;	
-	
+		return								1;
+
 	base_folder_node<T> const * folder	=	node_cast<base_folder_node>(node);
 	u32	out_count						=	1;
 
@@ -400,9 +420,9 @@ u32   calculate_count_of_nodes			(base_node<T> const * node)
 								it_child;
 								it_child	=	it_child->get_next() )
 	{
-		out_count						+=	calculate_count_of_nodes(it_child);
+		out_count						+=	calculate_count_of_nodes(it_child, skip_erased, count_link_targets);
 	}
-	
+
 	return									out_count;
 }
 

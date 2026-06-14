@@ -30,7 +30,7 @@ struct node_to_expand
 											: type(type), node(node), node_parent(node_parent), increment(increment) {}
 };
 
-typedef intrusive_list< node_to_expand, node_to_expand *, & node_to_expand::next, threading::single_threading_policy, size_policy >		
+typedef intrusive_list< node_to_expand, node_to_expand *, & node_to_expand::next, threading::single_threading_policy, size_policy, no_debug_policy >
 										node_to_expand_list;
 
 struct	async_callbacks_data

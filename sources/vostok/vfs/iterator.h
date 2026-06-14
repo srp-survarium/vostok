@@ -37,7 +37,7 @@ public:
 	fs_new::native_path_string		get_physical_path	() const;
 	
 	u32					get_children_count	() const;	// O(n)
-	u32					get_nodes_count	() const;		// O(n)
+	u32					get_nodes_count	(bool skip_erased = false, bool count_link_targets = true) const;		// O(n)
 	
 	bool				is_file			() const;
 	bool				is_folder		() const;
