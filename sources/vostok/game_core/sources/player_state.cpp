@@ -12,7 +12,7 @@ namespace survarium {
 void player_state::deserialize( network_core::packet_reader& packet )
 {
 	float3 const&	position	= packet.r< math::float3 >( );
-	float			yaw			= packet.r< float >( );
+	float const		yaw			= packet.r< float >( );
 	look_pitch					= packet.r< float >( );
 	transform					= math::create_rotation_y( yaw );
 	transform.c.xyz( )			= position;
