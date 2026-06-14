@@ -801,10 +801,13 @@ void weapon_core::reset_fire_queue( )
 			++m_bullets_in_queue;
 	}
 	else
-	{
-		u16 bullets_in_queue = m_ammo_in_magazine + ( m_is_round_chambered != 0 );
-		m_bullets_in_queue = math::min( fire_queue_length( ), bullets_in_queue );
-	}
+		// sushi@TODO: the min's 2nd operand is an INLINE ACCESSOR, proven by experiment - a
+		// helper returning `m_ammo_in_magazine + ( m_is_round_chambered != 0 )` lands 99.81%
+		// MATCH (0xbc==0xbc; the return-temp double-store is byte-required) vs 85.8% for this
+		// direct expression. Its real name/signature is unknown (inline, no standalone symbol),
+		// so we do NOT fabricate the function here; restore the accessor call once it is
+		// identified (a consumer's asm, a standalone symbol, or another build version).
+		m_bullets_in_queue = math::min( fire_queue_length( ), u16( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) );
 }
 
 void weapon_core::set_next_fire_queue_type( )
@@ -910,10 +913,7 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
-	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
-	resources::managed_resource_ptr tmp( NULL );
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), 0xff, this );
 }
 
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
@@ -923,10 +923,7 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
-	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
-	resources::managed_resource_ptr tmp( NULL );
-	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), this );
 }
 
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
