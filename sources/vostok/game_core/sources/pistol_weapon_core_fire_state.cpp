@@ -49,14 +49,19 @@ pistol_weapon_core_fire_state::pistol_weapon_core_fire_state(
 	ASSERT_CMP_U( animations_count, ==, 12 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
+			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state ) {
 				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+			}
+		}
+	}
 
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
 			m_user_animations[view][user_state] = animations[animation_index++];
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
@@ -94,7 +99,11 @@ animation::mixing::expression pistol_weapon_core_fire_state::weapon_and_hands_ex
 
 weapon_lexeme_pair pistol_weapon_core_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
-	pcstr weapon_animation_captions[2] = { "pistol-shot", "pistol-shot_last" };
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-shot",
+		"pistol-shot_last"
+	};
 
 	pcstr animation_identifier = weapon_animation_captions[m_weapon_animation_index];
 

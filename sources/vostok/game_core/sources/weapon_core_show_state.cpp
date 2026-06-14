@@ -36,20 +36,23 @@ weapon_core_show_state::weapon_core_show_state(
 	resources::managed_resource_ptr const*	animations,
 	u32										animations_count,
 	bool&									is_shown
-) : weapon_core_show_state_base( weapon, is_shown )
+) : weapon_core_show_state_base( weapon, is_shown ),
+	m_time_scale( animation_timescale )
 {
-	m_time_scale = animation_timescale;
-
 	ASSERT_CMP_U( animations_count, ==, 8 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
 			m_weapon_animations[view][user_state] = animations[animation_index++];
+		}
+	}
 
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
 			m_user_animations[view][user_state] = animations[animation_index++];
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
