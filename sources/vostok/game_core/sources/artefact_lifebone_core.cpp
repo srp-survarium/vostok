@@ -49,6 +49,11 @@ void artefact_lifebone_core::holder_removed( )
 		switch_passive_mode_impl( false );
 }
 
+// claude@NOTE: walled by inventory::holder() LTCG inlining - the target keeps holder()
+// out-of-line (call survarium::inventory::holder) so dm is a real intrusive_ptr and the
+// loop derefs it via operator*. Our /GL inlines holder() at every call site (m_holder
+// read inline), which cascades and inlines the whole intrusive_ptr machinery. Fixable
+// only by out-lining holder() in inventory.cpp (another unit). Source kept faithful (*dm).
 void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 {
 	damage_model_ptr dm = m_inventory->holder( ).damage_model( );
@@ -56,22 +61,23 @@ void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 	if ( switch_on )
 		for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
 		{
-			dm->cancel_affect( protected_body_patrs[i], protected_affects[i] );
-			dm->register_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
+			( *dm ).cancel_affect( protected_body_patrs[i], protected_affects[i] );
+			( *dm ).register_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
 		}
 	else
 		for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
-			dm->unregister_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
+			( *dm ).unregister_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
 
 	m_passive_mode = switch_on;
 }
 
+// claude@NOTE: same inventory::holder() LTCG-inline wall as switch_passive_mode_impl.
 void artefact_lifebone_core::activate_impl( )
 {
 	damage_model_ptr dm = m_inventory->holder( ).damage_model( );
 	for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
 	{
-		body_part_parameters* bp = dm->get_body_part( protected_body_patrs[i] );
+		body_part_parameters* bp = ( *dm ).get_body_part( protected_body_patrs[i] );
 		bp->reset( );
 	}
 }
