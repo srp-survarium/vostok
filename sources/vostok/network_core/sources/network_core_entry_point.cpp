@@ -41,8 +41,9 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_addr
 	}
 
 	return "unknown";
-
-	// verdict was wrong). sushi@TODO: source/flag lever for the dead anchor - see review_todos.md.
+	// sushi@TODO: residual is the dead loop closing-brace `jmp short` anchor MSVC emits so
+	// the `}` is breakpointable (0x216, unreachable) - our build omits it, shifting later
+	// offsets by 2. Find the source/flag lever for it - see review_todos.md.
 }
 
 bool get_connection_info_from_string( pcstr buffer, char* const dest_host, u16& dest_port )
