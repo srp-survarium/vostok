@@ -11,9 +11,9 @@
 namespace survarium {
 
 weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base( weapon_core& weapon, float animation_time_scale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+	weapon_core_animation_end_aware_state( weapon, true ),
+	m_animation_timescale( animation_time_scale )
 {
-	m_animation_timescale = animation_time_scale;
 	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 }
 
