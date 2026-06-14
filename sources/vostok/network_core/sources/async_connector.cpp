@@ -99,11 +99,16 @@ void async_connector::connect(
 	m_socket			= &socket;
 	m_connection_state	= host_name_is_unresolved;
 	m_on_connected		= on_connected;
+	// claude@NOTE: structure + local set (3, resolver now * const) match. m_on_error = on_error
+	// residual is the boost::function operator= form: the target binds a direct in-place assign,
+	// our boost headers expand the copy-construct-temp + swap + clear idiom (+0x26). boost::function
+	// header-version wall; the resolver/query line-attribution + async_resolve boost::bind are the
+	// usual completion-handler inline-vs-call.
 	m_on_error			= on_error;
 	LOG_INFO( "host name is being resolved..." );
 	ASSERT( UNKNOWN_EXPRESSION_T( host ) );
 	m_connection_state	= host_name_is_being_resolved;
-	boost::asio::ip::tcp::resolver*	resolver	= NEW( boost::asio::ip::tcp::resolver )( m_socket->get_io_service( ) );
+	boost::asio::ip::tcp::resolver* const	resolver	= NEW( boost::asio::ip::tcp::resolver )( m_socket->get_io_service( ) );
 	char	port[ 6 ];
 	_itoa_s( host_port, port, 10 );
 	boost::asio::ip::tcp::resolver::query	query( host, port );
