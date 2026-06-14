@@ -96,10 +96,6 @@ public:
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
-	// claude@NOTE: inline (no standalone symbol) - NAME reconstructed. The shape is
-	// byte-confirmed: reset_fire_queue's min uses this return value, and the return-temp
-	// materialization is byte-required (direct expr 85.8% -> this helper 99.81% MATCH, 0xbc==0xbc).
-	inline	u16									total_ammo						( ) const { return m_ammo_in_magazine + ( m_is_round_chambered != 0 ); }
 			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }

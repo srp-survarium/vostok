@@ -801,7 +801,13 @@ void weapon_core::reset_fire_queue( )
 			++m_bullets_in_queue;
 	}
 	else
-		m_bullets_in_queue = math::min( fire_queue_length( ), total_ammo( ) );
+		// sushi@TODO: the min's 2nd operand is an INLINE ACCESSOR, proven by experiment - a
+		// helper returning `m_ammo_in_magazine + ( m_is_round_chambered != 0 )` lands 99.81%
+		// MATCH (0xbc==0xbc; the return-temp double-store is byte-required) vs 85.8% for this
+		// direct expression. Its real name/signature is unknown (inline, no standalone symbol),
+		// so we do NOT fabricate the function here; restore the accessor call once it is
+		// identified (a consumer's asm, a standalone symbol, or another build version).
+		m_bullets_in_queue = math::min( fire_queue_length( ), u16( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) );
 }
 
 void weapon_core::set_next_fire_queue_type( )
