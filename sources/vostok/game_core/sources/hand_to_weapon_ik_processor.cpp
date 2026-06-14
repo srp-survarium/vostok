@@ -95,16 +95,6 @@ void hand_to_weapon_ik_processor::process( u32 const current_time_in_ms, float4x
 	}
 }
 
-float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms ) const
-{
-	ASSERT( UNKNOWN_EXPRESSION_T( true ) );
-
-	float const	interpolation_coeff		= ( current_time_in_ms - h.start_transition_time_in_ms ) / 1000.0f;
-
-	float const	hand_coefficient		= h.is_active ? 1.0f - m_interpolator.interpolated_value( interpolation_coeff ) : m_interpolator.interpolated_value( interpolation_coeff );
-	return hand_coefficient;
-}
-
 void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::hand const& h, float4x4 const& target_hand_obj_space_transform, float4x4* matrices ) const
 {
 	animation::skeleton_bone const&	hand_bone				= m_skeleton->get_bone( h.hand_bone_index );
@@ -154,6 +144,16 @@ void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::han
 
 	matrices[forearm_matrix_index]	= math::get_relative_matrix( forearm_obj_matrix, arm_obj_matrix );
 	matrices[arm_matrix_index]		= math::get_relative_matrix( get_bone_matrix_in_object_space( *arm_bone.parent( ), *m_skeleton, matrices ), arm_obj_matrix );
+}
+
+float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms ) const
+{
+	ASSERT( UNKNOWN_EXPRESSION_T( true ) );
+
+	float const	interpolation_coeff		= ( current_time_in_ms - h.start_transition_time_in_ms ) / 1000.0f;
+
+	float const	hand_coefficient		= h.is_active ? 1.0f - m_interpolator.interpolated_value( interpolation_coeff ) : m_interpolator.interpolated_value( interpolation_coeff );
+	return hand_coefficient;
 }
 
 void hand_to_weapon_ik_processor::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const

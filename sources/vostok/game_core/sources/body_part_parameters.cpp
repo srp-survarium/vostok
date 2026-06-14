@@ -105,6 +105,26 @@ public:
 
 STATIC_SIZE_ASSERT(protect_damage_predicate, 0x10);
 
+struct protect_affect_predicate : boost::noncopyable {
+public:
+	explicit				protect_affect_predicate	( pcstr body_type_name, hit_affects_type_enum affect_type ) :
+								m_body_type_name	( body_type_name ),
+								m_affect_type		( affect_type ),
+								m_result			( false ) { }
+
+	inline		void		operator()					( damage_protector* const protector ) {
+		if ( !m_result && protector->protect_affect_functor )
+			m_result = protector->protect_affect_functor( m_body_type_name, m_affect_type );
+	}
+
+public:
+	/* 0x0000 */	pcstr						m_body_type_name;
+	/* 0x0004 */	hit_affects_type_enum		m_affect_type;
+	/* 0x0008 */	bool						m_result;
+}; // struct protect_affect_predicate
+
+STATIC_SIZE_ASSERT(protect_affect_predicate, 0xC);
+
 static float g_arp_arm_coeff = 1.0;
 
 void body_part_parameters::hit_by_type(
@@ -240,27 +260,6 @@ bool body_part_parameters::is_affect_applied( hit_affects_type_enum	affect )
 
 	return false;
 }
-
-struct protect_affect_predicate : boost::noncopyable {
-public:
-	explicit				protect_affect_predicate	( pcstr body_type_name, hit_affects_type_enum affect_type ) :
-								m_body_type_name	( body_type_name ),
-								m_affect_type		( affect_type ),
-								m_result			( false ) { }
-
-	inline		void		operator()					( damage_protector* const protector ) {
-		if ( !m_result && protector->protect_affect_functor )
-			m_result = protector->protect_affect_functor( m_body_type_name, m_affect_type );
-	}
-
-public:
-	/* 0x0000 */	pcstr						m_body_type_name;
-	/* 0x0004 */	hit_affects_type_enum		m_affect_type;
-	/* 0x0008 */	bool						m_result;
-}; // struct protect_affect_predicate
-
-STATIC_SIZE_ASSERT(protect_affect_predicate, 0xC);
-
 
 bool body_part_parameters::has_affect_protector( hit_affects_type_enum affect )
 {
