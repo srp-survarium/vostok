@@ -402,3 +402,31 @@ act on any out-of-scope / reviewer finding -> re-audit -> done.**
 - **YOU open and maintain the PR** for each unit (step 4b) and dispatch the
   structure-verifier onto its branch (step 4c). You sequence the units, resolve same-top
   sibling conflicts, and read back each worker's one-line result.
+
+## Stack stats on request ("give me stats" / "stack stats" / "diffs for the stack")
+When the human asks for stats/diffs, emit the WHOLE stack as copy-pasteable diff
+commands - bottom->top, ONE block per PR, plus a whole-stack footer. This is the
+human's review entrypoint, so **every block carries its PR number AND GitHub URL**.
+
+Gather: PR numbers + URLs from `gh pr list --state open --json number,headRefName,url`;
+the SHA chain from the branches - each PR's `<tip>` is its branch tip, its `<base>` is
+the tip of the PR BELOW it, and the BOTTOM PR's base is the integration branch
+(`feature/agentic-matching-loop-2`). Then per PR, bottom->top:
+
+    # PR #<num>  <unit>   <github url>      [note any reconciliation/overlap]
+    python3 scripts/match_db.py diff <base>..<tip> --module <m>   # one line per MODULE the PR touched (e.g. game_core, animation)
+    git diff <base>..<tip>
+
+`match_db.py diff` is OUR function-level diff tool (reads the per-step `match.db`
+snapshots; the whole reason every stack commit carries a measured DB - see the diff
+payoff section); `git diff` is the raw source. After the per-PR blocks, a footer:
+
+    # whole stack
+    python3 scripts/match_db.py diff <integration-base>..<top-tip> --module <m>   # per touched module
+    git diff <integration-base>..<top-tip>
+
+and a one-line headline: overall fuzzy %, the module's `weighted_pct` + `locals_mism`,
+and the new/improve/regress/lost counts. Mention `--verbose`/`--json` for per-fn
+`from->to`/`max`/`tries`, and the `':(exclude)docs/binary_matching/match.db' ':(exclude)README.md'`
+pathspec for source-only `git diff`. If branch tips are pushed, `origin/<branch>` works
+in place of a SHA (the human may be on another worktree - tell them to `git fetch` first).
