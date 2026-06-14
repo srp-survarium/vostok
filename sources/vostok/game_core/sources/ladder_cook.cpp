@@ -17,6 +17,14 @@ ladder_cook::ladder_cook( ) : resources::translate_query_cook( resources::ladder
 ladder_cook::~ladder_cook( )
 {
 }
+// claude@NOTE: STRUCTURE MATCH (30 stmts in order). Residual is the inline-vs-call COMDAT
+// wall on STL/container helpers: target CALLs vostok::vectora<request>::vectora (4 ICF-folded
+// copies in the target index, ZERO in our base -> we inline the whole _Impl_vector ctor +
+// g_allocator load, ~0x35 bytes bigger), and CALLs requests.begin()/requests.size()
+// out-of-line in the query_resources arg list (target: call buffer_vector<request>::size +
+// begin; base: inlines the (end-begin)/8 pointer math). Decided by whether those template
+// helpers are emitted out-of-line globally - not steerable from this caller. The LOG_* size
+// deltas are the format-string append inline-fold (logging module).
 void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	variant<32>* user_data = parent.user_data( );
@@ -74,6 +82,13 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 		&parent
 	);
 }
+// claude@NOTE: STRUCTURE MATCH (33 stmts in order). Residuals are inline-vs-call walls plus a
+// 4-byte frame-slot cascade (base sub esp,4D0h vs target 4CCh shifts every [ebp-N]): target
+// INLINES survarium::landing_point::landing_point (its inline-defined ctor is emitted
+// out-of-line + CALLed in OUR base - 1 symbol, ZERO in target), and the new_ladder VOSTOK_NEW
+// tracks two destructible temporaries in the EH state var (or [ebp-260h],1 / or ...,2) where
+// our build tracks one ("missing or 2"). begin/size/c_ptr and operator[] also fold
+// inline-vs-call. Decided by global template/inline emission - not steerable from this caller.
 void ladder_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_value const& config )
 {
 	resources::query_result_for_cook* const	parent = data.get_parent_query();
