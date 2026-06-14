@@ -5,6 +5,26 @@
 RayResultCallback::getShapeId"). Read [bullet_local_changes.md](bullet_local_changes.md)
 first — it is the structural map this builds on.
 
+## STATUS (2026-06-14) — the genuine vostok source changes are recovered
+
+All of A–D plus C's one real edit are landed (commits on `match/bullet-local-changes`,
+after `815dd337`). The remaining sub-100% bullet functions are **toolchain residuals
+(SSE-vs-scalar drift on byte-identical `btDbvt.h` / LTCG inline+constant-prop), NOT
+source-fixable** — do not chase them.
+
+| Task | Result |
+|---|---|
+| **A** `objectQuerySingle` BVH rewrite | DONE — all 11 function-local symbols (`input_params`, `LocalInfoAdder` __l46/__l57, `VolumeTester`) 100% / STRUCTURE MATCH. The `objectQuerySingle` body itself stays objdiff-UNPAIRED: target LTCG dead-eliminates the `dbvt==NULL` else loop (keeping only its __l57 `LocalInfoAdder` COMDAT, which our live loop reproduces) and inlines the swept-volume math deeper. Not steerable. |
+| **B** `btAllocDefault`/`btFreeDefault` | Source CORRECT (route through `g_crt_allocator->malloc_impl/free_impl` + lazy `initialize_crt_allocator`). Residual is an inline-vs-call wall: target keeps `initialize_crt_allocator` out-of-line, our LTCG inlines it (preinitialize + bind_pointer_to_buffer_mt_safe). ~2% but faithful. |
+| **C** `btDbvtBroadphase::rayTest` | DONE — added `BT_PROFILE("btDbvtBroadphase::rayTest")` (the missing stmt). 58%→100%. The TU is checksum-DIFF only because of this edit. |
+| **C** getBroadphaseAabb/setAabb/collide/performDeferredRemoval | SSE-vs-scalar toolchain drift on the byte-identical `btDbvt.h` volume ops (Merge/Intersect/min-max → minps/maxps/cmpltps in target, scalar in ours). performDeferredRemoval's "extra OR statement" is just the inlined SSE `Intersect` mask reduction, NOT a logic change. Leave. |
+| **D** `integrateTransforms` | DONE — vostok ships the CCD velocity-clamp branch ENABLED (our `#if 0` → `#if 1`): linVel clamp + re-predict + `printf("sm2=%f\n")`, NO `resolveSingleCollision`. 75%→99% STRUCTURE MATCH (4-byte LTCG residual). |
+| **E** `btSoftRigidDynamicsWorld::rayTestSingle` | 92%, statement-grouping/SSE residual in the normal computation; left as low-value. |
+| **F** `btBvhTriangleMeshShape` 3-arg ctor | ~99.7% LTCG constant-prop: target proves `useQuantizedAabbCompression=true` / `buildBvh=false` whole-program and drops the `if(buildBvh) buildOptimizedBvh()` branch. Not steerable. |
+
+Net: overall fuzzy 52.43%→52.48%, bullet module weighted 96.30%→96.41%. (Cross-module
+exact-count wobble across these commits is ICF fold-rep churn, not regression.)
+
 **Mission:** bring the remaining Bullet function *bodies* to a byte match with the
 target — but ONLY where the source is genuinely Survarium-modified. A large share
 of Bullet's sub-100% functions sit in source files that are **byte-identical to the
