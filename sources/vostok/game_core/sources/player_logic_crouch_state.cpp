@@ -177,17 +177,20 @@ animation::mixing::expression player_logic_crouch_state::look_expression(
 
 	if ( weapon_parameters.recoil_backward != 0 )
 	{
-		result = result + get_recoil_animation_lexeme( recoil_back_anim, is_aimed, weapon_parameters.recoil_backward, interpolator, buffer, is_third_view, 2, weapon.backward_recoil_time_calculator( ) );
+		animation::mixing::expression	expression	= get_recoil_animation_lexeme( recoil_back_anim, is_aimed, weapon_parameters.recoil_backward, interpolator, buffer, is_third_view, 2, weapon.backward_recoil_time_calculator( ) );
+		result	= result + expression;
 	}
 
 	if ( weapon_parameters.recoil_horizontal != 0 )
 	{
-		result = result + get_recoil_animation_lexeme( recoil_horizontal, is_aimed, weapon_parameters.recoil_horizontal, interpolator, buffer, is_third_view, 3, weapon.horizontal_recoil_time_calculator( ) );
+		animation::mixing::expression	expression	= get_recoil_animation_lexeme( recoil_horizontal, is_aimed, weapon_parameters.recoil_horizontal, interpolator, buffer, is_third_view, 3, weapon.horizontal_recoil_time_calculator( ) );
+		result	= result + expression;
 	}
 
 	if ( weapon_parameters.recoil_vertical != 0 )
 	{
-		result = result + get_recoil_animation_lexeme( recoil_vertical, is_aimed, weapon_parameters.recoil_vertical, interpolator, buffer, is_third_view, 3, weapon.vertical_recoil_time_calculator( ) );
+		animation::mixing::expression	expression	= get_recoil_animation_lexeme( recoil_vertical, is_aimed, weapon_parameters.recoil_vertical, interpolator, buffer, is_third_view, 3, weapon.vertical_recoil_time_calculator( ) );
+		result	= result + expression;
 	}
 
 	return result;
