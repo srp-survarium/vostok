@@ -74,15 +74,9 @@ CREATE TABLE pairs(
   target_rva INTEGER REFERENCES target_functions(rva),
   base_rva   INTEGER REFERENCES base_functions(rva),
   fuzzy_pct REAL,
-  struct_class TEXT,   -- MATCH | LOCALS | SIZE | SPLIT | QUANTITY
-                       -- LOCALS = statements align but the named-locals set diverges
-                       -- (a would-be MATCH demoted: not a clean structural match).
+  struct_class TEXT,   -- MATCH | SIZE | SPLIT | QUANTITY
   t_stmts INTEGER, b_stmts INTEGER,
-  n_size_rows INTEGER, n_trgt_only INTEGER, n_base_only INTEGER,
-  -- PDB locals (name+type) comparison: a byte/statement MATCH can still carry
-  -- phantom/missing named locals (the trap weapon_and_hands_expression hit -
-  -- target 0 locals, reconstruction 2). locals_match=0 flags that divergence.
-  n_locals_t INTEGER, n_locals_b INTEGER, locals_match INTEGER) WITHOUT ROWID;
+  n_size_rows INTEGER, n_trgt_only INTEGER, n_base_only INTEGER) WITHOUT ROWID;
 
 -- BASE_ONLY taxonomy (derived at refresh; design: declaration-grounded)
 CREATE TABLE base_only_status(
@@ -197,20 +191,6 @@ def classify(t_rec, b_rec):
     else:
         cls = "SIZE"
     return cls, t_n, b_n, n_size, n_trgt_only, n_base_only
-
-
-def locals_cmp(t_rec, b_rec):
-    """Compare PDB named locals (name+type) target vs base. The statement diff in
-    classify() is blind to locals: a byte-100% / statement-MATCH function can still
-    carry phantom or missing named locals (e.g. a cast-forward written with explicit
-    `T* x = current_state(); ...` locals the target never recorded - the names live in
-    .debug$S, not .text, so objdiff scores it 100%). Returns (n_t, n_b, match) where
-    match=1 iff the sorted (name, type) lists are identical."""
-    t_loc = t_rec.get("locals") or []
-    b_loc = b_rec.get("locals") or []
-    t_key = sorted((loc.get("name"), loc.get("ty")) for loc in t_loc)
-    b_key = sorted((loc.get("name"), loc.get("ty")) for loc in b_loc)
-    return len(t_loc), len(b_loc), int(t_key == b_key)
 
 
 _OPERATOR_PLACEHOLDERS = [
@@ -529,14 +509,6 @@ def regen():
     pair_rows = []
     for mangled in sorted(set(target) & set(base)):
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[mangled], base[mangled])
-        n_lt, n_lb, lmatch = locals_cmp(target[mangled], base[mangled])
-        # A locals COUNT mismatch DEMOTES a would-be MATCH: the statements align but a
-        # named local is phantom or missing (the trap a byte-100% / statement-MATCH hides,
-        # e.g. weapon_and_hands_expression - target 0 vs base 2). Count is the structural
-        # signal; a same-count name/type-only diff is a softer fidelity flag - it stays in
-        # locals_match but does NOT demote, else benign STL/boost template name diffs swamp it.
-        if cls == "MATCH" and n_lt != n_lb:
-            cls = "LOCALS"
         pair_rows.append(
             (
                 sym_id[mangled],
@@ -549,9 +521,6 @@ def regen():
                 n_size,
                 n_tonly,
                 n_bonly,
-                n_lt,
-                n_lb,
-                lmatch,
             )
         )
     pair_rows.sort()
@@ -708,7 +677,7 @@ def regen():
     con.executemany("INSERT INTO target_functions VALUES (?,?,?,?,?,?,?,?,?)", side_rows(target))
     con.executemany("INSERT INTO base_functions VALUES (?,?,?,?,?,?,?,?,?)", side_rows(base))
     con.executemany("INSERT INTO unit_functions VALUES (?,?,?)", unit_rows)
-    con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", pair_rows)
+    con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?)", pair_rows)
     con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
     con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", history_rows)
     con.executemany("INSERT INTO flags VALUES (?,?,?,?)", old_flags)
@@ -775,24 +744,28 @@ def cmd_list(args):
           LEFT JOIN units u ON u.id = t.unit"""
         size_col = "t.size"
         name_col = "s.mangled"
+        # module/unit exist on t, b AND u here - qualify or SQLite errors "ambiguous"
+        module_col, unit_col = "u.module", "u.name"
     elif args.presence == "TARGET_ONLY":
         base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM target_only"
         size_col = "size"
         name_col = "mangled"
+        module_col, unit_col = "module", "unit"
     elif args.presence == "BASE_ONLY":
         base = """SELECT b.demangled, b.mangled, b.unit, b.module, b.size, b.n_stmts,
                          st.status, st.detail
                   FROM base_only b LEFT JOIN base_only_status st ON st.mangled = b.mangled"""
         size_col = "b.size"
         name_col = "b.mangled"
+        module_col, unit_col = "b.module", "b.unit"
     else:
         sys.exit(f"[match_db] unknown --presence {args.presence}")
 
     if args.module:
-        where.append("module = ?")
+        where.append(f"{module_col} = ?")
         params.append(args.module)
     if args.unit:
-        where.append("unit = ?")
+        where.append(f"{unit_col} = ?")
         params.append(args.unit)
     if args.max_size is not None:
         where.append(f"{size_col} <= ?")
@@ -1094,7 +1067,6 @@ def cmd_report(args):
              coalesce(sum(p.sym IS NOT NULL), 0)                 AS paired,
              coalesce(sum(p.fuzzy_pct >= 100), 0)                AS fuzzy_100,
              coalesce(sum(p.struct_class = 'MATCH'), 0)          AS struct_match,
-             coalesce(sum(p.struct_class = 'LOCALS'), 0)         AS locals_mism,
              coalesce(sum(p.sym IS NULL), 0)                     AS target_only,
              coalesce(sum(tf.frameless), 0)                      AS custom_conv,
              printf('%.2f', sum(coalesce(p.fuzzy_pct, 0) * tf.size) /
@@ -1184,16 +1156,9 @@ def _fn_state(db_path, module):
     hist = "LEFT JOIN history h ON h.mangled = s.mangled" if "history" in have else ""
     att = "LEFT JOIN attempts a ON a.mangled = s.mangled" if "attempts" in have else ""
     where = "WHERE t.module = ?" if module else ""
-    # older DB blobs predate the locals columns - degrade to NULL so a diff across
-    # the schema boundary still works (those rows just carry no locals signal).
-    have_loc = "locals_match" in {r[1] for r in con.execute("PRAGMA table_info(pairs)")}
-    lt = "p.n_locals_t" if have_loc else "NULL"
-    lb = "p.n_locals_b" if have_loc else "NULL"
-    lm = "p.locals_match" if have_loc else "NULL"
     rows = con.execute(
         f"""SELECT s.mangled AS m, s.demangled AS dem, p.fuzzy_pct AS pct,
                    p.struct_class AS cls, {best} AS best, {tries} AS tries,
-                   {lt} AS lt, {lb} AS lb, {lm} AS lm,
                    coalesce(fl.path, un.name, '(no unit)') AS loc
             FROM symbols s
             JOIN target_functions t ON t.sym = s.id
@@ -1236,11 +1201,9 @@ def cmd_diff(args):
         ac, bc = (a["cls"] if a else None), (b["cls"] if b else None)
         at, bt = (a["tries"] if a else 0), (b["tries"] if b else 0)
         amx, bmx = (a["best"] if a else None), (b["best"] if b else None)
-        blm = b["lm"] if b else None
         rec = {"m": m, "dem": (b or a)["dem"], "loc": (b or a)["loc"],
                "ap": ap, "bp": bp, "ac": ac, "bc": bc, "amx": amx, "bmx": bmx,
-               "at": at, "bt": bt,
-               "blt": (b or a)["lt"], "blb": (b or a)["lb"], "blm": blm}
+               "at": at, "bt": bt}
         if ap is None and bp is None:
             kind, srt = ("TOUCHED", bt - at) if bt > at else (None, 0)
         elif ap is None:
@@ -1251,13 +1214,6 @@ def cmd_diff(args):
             kind, srt = "IMPROVE", bp - ap
         elif ap - bp > eps:
             kind, srt = "REGRESS", bp - ap
-        elif bc == "LOCALS" and ac != "LOCALS":
-            # % flat, but cls demoted to LOCALS: a phantom/missing named local appeared
-            # (locals COUNT diverged from the target). A structural-fidelity REGRESSION the
-            # byte/statement verdict misses - ranked among the regressions, not a soft category.
-            kind, srt = "REGRESS", (bp - ap)
-        elif ac == "LOCALS" and bc != "LOCALS":
-            kind, srt = "IMPROVE", (bp - ap)    # locals count divergence resolved
         elif ac != bc:
             kind, srt = "RECLASS", ap or 0
         elif bt > at:                       # worked but % + structure unchanged
@@ -1277,7 +1233,6 @@ def cmd_diff(args):
                     "max_from": r["amx"], "max_to": r["bmx"],
                     "from_cls": r["ac"], "to_cls": r["bc"],
                     "tries_from": r["at"], "tries_to": r["bt"],
-                    "locals_t": r["blt"], "locals_b": r["blb"], "locals_match": r["blm"],
                     "fn": r["dem"], "file": r["loc"]}
         print(json.dumps({"a": a_rev, "b": b_label, "module": args.module,
                           **{k.lower(): [js(r) for r in cats[k]] for k in ORDER}},
@@ -1298,28 +1253,11 @@ def cmd_diff(args):
     print("  " + "  ".join(f"{k.lower()} {len(cats[k])}" for k in ORDER))
 
     DTAG = {"LOST": "gone", "NEW": "new", "TOUCHED": "~tries", "RECLASS": "~cls"}
-
-    def locfmt(r):
-        # b-side ("to" rev) locals: target/base COUNTS when they diverge (the structural
-        # signal that drives the LOCALS class), "~" when counts agree but a name/type
-        # differs (soft fidelity), "·" clean, "?" a rev predating the locals columns.
-        if r["blt"] is None:
-            return "?"
-        if r["blt"] != r["blb"]:
-            return f"{r['blt']}/{r['blb']}"
-        return "~" if r["blm"] == 0 else "·"
-
     rows = []
     for k in ORDER:
         for r in cats[k]:
-            if k in ("REGRESS", "IMPROVE") and abs(r["bp"] - r["ap"]) > eps:
-                d = f"{r['bp'] - r['ap']:+.2f}"          # %-driven
-            elif k == "REGRESS":                          # locals-driven (% flat): phantom appeared
-                d = "loc-"
-            elif k == "IMPROVE":                          # locals-driven (% flat): phantom cleaned
-                d = "loc+"
-            else:
-                d = DTAG[k]
+            d = (f"{r['bp'] - r['ap']:+.2f}" if k in ("REGRESS", "IMPROVE")
+                 else DTAG[k])
             tries = (f"{r['at']}->{r['bt']}" if r["bt"] != r["at"] else str(r["bt"]))
             # max DROP (amx > bmx) = the fn was RE-WORKED (best reset to current); show
             # it as from->to so a re-match is unmistakable vs a non-steerable LTO drop.
@@ -1329,7 +1267,6 @@ def cmd_diff(args):
             rows.append({
                 "kind": k, "d": d, "from": pf(r["ap"]), "to": pf(r["bp"]),
                 "max": mx, "cls": clsfmt(r["ac"], r["bc"]), "tries": tries,
-                "locals": locfmt(r),
                 "file": strip(r["loc"]),
                 "fn": (shorten_fn(r["dem"]) if args.verbose
                        else fn_from_mangled(r["m"], r["dem"])),
@@ -1427,9 +1364,8 @@ def cmd_queue(args):
         -- non-steerable, so a fn that ONCE reached >=95 structure-matched stays skipped -
         -- UNLESS its source was edited, which resets best to current (refresh), re-queuing
         -- it. QUANTITY (wrong statement count, incl. the high-%-over-wrong-structure trap)
-        -- and LOCALS (statements align but the named-locals set diverges - the
-        -- byte-100% phantom-locals trap) STAY at any %, as do all fns whose max < 95%.
-        WHERE NOT (coalesce(h.best_fuzzy_pct, p.fuzzy_pct, 0) >= 95 AND coalesce(p.struct_class, '') NOT IN ('QUANTITY', 'LOCALS'))
+        -- STAYS at any %, as do all fns whose max is below 95%.
+        WHERE NOT (coalesce(h.best_fuzzy_pct, p.fuzzy_pct, 0) >= 95 AND coalesce(p.struct_class, '') != 'QUANTITY')
           AND s.mangled NOT IN (SELECT mangled FROM flags WHERE flag IN ('SKIP','OUT_OF_SCOPE'))
           -- compiler-generated machinery is not source-steerable standalone:
           -- deleting dtors / dynamic initializers (backtick names), thunks,
@@ -1705,7 +1641,7 @@ def main():
     p.add_argument("--module")
     p.add_argument("--unit", help="TU path, e.g. vostok/game_core/sources/weapon_core.cpp")
     p.add_argument("--max-size", type=parse_size, help="max target size (0x.. ok)")
-    p.add_argument("--class", dest="struct_class", help="csv of MATCH,LOCALS,SIZE,SPLIT,QUANTITY")
+    p.add_argument("--class", dest="struct_class", help="csv of MATCH,SIZE,SPLIT,QUANTITY")
     p.add_argument(
         "--presence",
         choices=["PAIRED", "TARGET_ONLY", "BASE_ONLY"],
