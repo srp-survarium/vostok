@@ -297,10 +297,7 @@ void damage_zone_core::tick( u32 frame_delta, u32 current_time )
 	}
 }
 
-static bool remove_null_receivers_predicate( hit_receiver_info const& info )
-{
-	return info.m_receiver == NULL;
-}
+static bool remove_null_receivers_predicate( hit_receiver_info const& info ) { return info.m_receiver == NULL; }
 
 bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) const
 {
