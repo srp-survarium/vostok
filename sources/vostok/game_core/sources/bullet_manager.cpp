@@ -13,7 +13,7 @@
 namespace survarium {
 
 static float s_bm_current_air_resistance = 1.0f; // sushi@TODO: Move somewhere?
-static float s_bm_bullet_time_factor	 = 1.0f; // sushi@TODO: Move somewhere?
+float s_bm_bullet_time_factor			 = 1.0f; // sushi@TODO: Move somewhere?
 
 bullet_manager::bullet_manager(
 	game_material_manager*	material_manager,
@@ -64,11 +64,6 @@ void bullet_manager::register_console_commands( )
 	static vostok::console_commands::cc_delegate	set_max_bullets_cc		( "bullets_manager_set_max_bullets",		boost::bind( &bullet_manager::set_max_bullets, this, _1 ),		true, console_commands::command_type_engine_internal );
 }
 
-
-float bullet_manager::get_bullet_time_factor( ) const
-{
-	return s_bm_bullet_time_factor;
-}
 
 struct redundant_bullet_predicate {
 	inline	explicit	redundant_bullet_predicate	( bullet_manager& bullet_manager ) : bullet_manager( &bullet_manager ) { }
@@ -399,7 +394,7 @@ void bullet_manager::bullets_memory_allocated( resources::queries_result& querie
 		}
 
 		pointer								+= m_max_bullets_count * sizeof( bullet* );
-		bullet_manager::bullet_functor_mt_allocator new_mt_allocator( pointer, sizeof( bullet_functor ) * CALLBACKS_PER_BULLET * m_max_bullets_count );
+		bullet_manager::bullet_functor_mt_allocator new_mt_allocator( pointer, m_max_bullets_count * CALLBACKS_PER_BULLET * sizeof( bullet_functor ) );
 		m_mt_stack_allocator.swap			( new_mt_allocator );
 	}
 

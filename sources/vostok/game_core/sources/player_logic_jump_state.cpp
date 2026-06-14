@@ -37,18 +37,9 @@ void player_logic_jump_state::finalize( )
 	m_logic.deactivate( );
 }
 
-// claude@TODO: body is `return m_logic.selected_animations( buffer, weapon_parameters,
-// is_third_view );` (single delegation, asm @0x6e9420 below). BLOCKED: jump_logic::
-// selected_animations is still a STUB with no return value, so linking the real
-// delegation triggers C4716 -> LNK1257 during LTCG. Match jump_logic::selected_animations
-// first (separate unit), then drop in the one-line delegation here.
-// std::pair<...> survarium::player_logic_jump_state::selected_animations(mutable_buffer&, weapon_animation_parameters const&, const bool) const
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_jump_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
 {
-	// claude@TODO: real body is the one-line delegation below; placeholder keeps the
-	// pair-returning override compilable (C4716) until jump_logic::selected_animations
-	// is matched.
-	VOSTOK_UNREACHABLE_CODE( );
+	return m_logic.selected_animations( buffer, weapon_parameters, is_third_view );
 }
 
 void player_logic_jump_state::set_user( base_player& user )
