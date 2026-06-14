@@ -1333,7 +1333,7 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 		ASSERT( UNKNOWN_EXPRESSION_T( found ) );
 
 		packet.append( state_id );
-		static_cast< weapon_core_base_state const* >( m_logic->current_state( ) )->serialize( packet );
+		static_cast_checked< weapon_core_base_state const* >( m_logic->current_state( ) )->serialize( packet );
 		m_user_animations_selector.serialize( packet );
 	}
 }
@@ -1381,7 +1381,7 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 		ASSERT( UNKNOWN_EXPRESSION_T( current ) );
 
 		m_logic->set_initial_state( current );
-		static_cast< weapon_core_base_state* >( m_logic->current_state( ) )->deserialize( reader );
+		static_cast_checked< weapon_core_base_state* >( m_logic->current_state( ) )->deserialize( reader );
 		m_user_animations_selector.deserialize( reader );
 
 		m_user->force_animation_selection( );
@@ -1395,6 +1395,9 @@ bool weapon_core::instant_idle_predicate( ) const
 	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
+// claude@NOTE: ceiling is intrusive_ptr::operator* inline-vs-call (target out-of-lines it,
+// carrying the embedded ASSERT; our /GL inlines it + the debug_render eater). could_be_used
+// also has is_double_handed() inlined target-side vs our out-of-line call. Both LTCG-decided.
 bool weapon_core::could_be_used( base_player const& user ) const
 {
 	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
