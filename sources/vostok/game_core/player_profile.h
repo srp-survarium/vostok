@@ -18,7 +18,10 @@ public:
 				account_id	( 0 ),
 				profile_id	( 0 ),
 				team		( team_undefined ),
-				is_local	( false ) {}
+				is_local	( false )
+			{
+				memory::zero( boosters );
+			}
 
 	inline	void		serialize		( network_core::udp_match_packet& packet ) const { /* no source */ }
 			void		deserialize		( network_core::packet_reader& reader );
