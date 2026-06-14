@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// STATE[STUB]
 weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
 	m_one_shoot_dispersion_amount	( 0.0f ),
 	m_reload_dispersion_amount		( 0.0f ),
@@ -20,6 +19,10 @@ weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
 {
 }
 
+// claude@NOTE: target emits the outer braced block's exit as its own line-42 record
+//   (.3: two jmp short .6, 14 stmts); base /Od folds the && short-circuit's first-false
+//   jump straight into the if-condition statement (13 stmts). The Allman braces are
+//   present in source - this is a /Od jump-fold difference, not source-steerable.
 void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 {
 	if ( !m_current_time )
