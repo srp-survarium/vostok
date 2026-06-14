@@ -59,6 +59,9 @@ weapon_core_fire_state::weapon_core_fire_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
+// claude@NOTE: structure matches; residual is the systemic /Od inline-vs-call ceiling on
+// animation::mixing::expression's operator+/ctor (base inlines what the target calls out of
+// line). Shared with get_user_hands_expression and all 6 fire-state siblings.
 animation::mixing::expression weapon_core_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool								is_third_view,
