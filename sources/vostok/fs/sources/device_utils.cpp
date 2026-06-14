@@ -9,9 +9,14 @@
 #include <vostok/fs/path_string_utils.h>
 #include <vostok/fs/native_path_string.h>
 #include <vostok/fs/physical_path_iterator.h>
+#include <vostok/fs/file_type_pointer.h>
 
 namespace vostok {
 namespace fs_new {
+
+open_file_cache				g_open_file_cache	[2];
+u32							g_open_file_counter	=	0;
+bool						g_use_open_file_cache	=	false;
 
 signalling_bool   calculate_file_size	(synchronous_device_interface const &	device, 
 										 file_size_type * const					out_file_size, 
