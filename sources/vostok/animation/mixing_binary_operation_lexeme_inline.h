@@ -32,6 +32,11 @@ inline binary_tree_base_node* binary_operation_lexeme::cloned_in_buffer	( expres
 	return	&value.node();
 }
 
+inline binary_tree_base_node* binary_operation_lexeme::cloned_in_buffer	( expression const& value )
+{
+	return	&value.node();
+}
+
 } // namespace mixing
 } // namespace animation
 } // namespace vostok
