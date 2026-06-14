@@ -198,7 +198,7 @@ animation::mixing::expression player_logic_crouch_state::look_expression(
 
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_crouch_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool const is_third_view ) const
 {
-	u32 const							movement_animation_index	= player_logic_base_state::movement_animation_index( m_user->input( ) );
+	u32 const							movement_animation_index	= ( *m_user->damage_model( ) ).broken_legs_count( ) > 1 ? 0 : player_logic_base_state::movement_animation_index( m_user->input( ) );
 
 	animation::mixing::animation_lexeme	main_lexeme	= movement_lexeme(
 		buffer,
