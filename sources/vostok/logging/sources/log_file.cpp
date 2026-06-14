@@ -205,6 +205,9 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
+// claude@NOTE: STRUCTURE MATCH + locals match (2: last_pos, current_char). Residual is the
+// math::min(u32,u32) call: target keeps it out-of-line (call vostok::math::min), base inlines
+// min_integral's branchless sbb/neg/and/add. Inline-vs-call decision, not source-steerable. PARK.
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {
