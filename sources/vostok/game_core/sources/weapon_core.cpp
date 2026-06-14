@@ -801,7 +801,7 @@ void weapon_core::reset_fire_queue( )
 			++m_bullets_in_queue;
 	}
 	else
-		m_bullets_in_queue = math::min( fire_queue_length( ), u16( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) );
+		m_bullets_in_queue = math::min( fire_queue_length( ), total_ammo( ) );
 }
 
 void weapon_core::set_next_fire_queue_type( )
