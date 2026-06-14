@@ -40,11 +40,8 @@ float dispersion_calculator::get_dispersion( ) const
 		return 0.0f;
 
 	weapon_dispersion_params const& weapon_params = m_weapon->get_dispersion_params( );
-	float aim_or_hip_multiplier = m_weapon->is_aimed( )
-		? weapon_params.aim_multiplier
-		: weapon_params.from_the_hip_multiplier;
-
-	return weapon_params.base_dispersion * m_weapon->ammunition( )->dispersion( ) * aim_or_hip_multiplier
+	return weapon_params.base_dispersion * m_weapon->ammunition( )->dispersion( )
+		* ( m_weapon->is_aimed( ) ? weapon_params.aim_multiplier : weapon_params.from_the_hip_multiplier )
 		+ ( m_weapon_calculator.get_value( ) + m_character_calculator.get_value( ) ) * m_shooting_skill_coeff;
 }
 

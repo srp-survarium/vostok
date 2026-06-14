@@ -576,6 +576,9 @@ namespace vostok
 		survarium::dispersion_calculator calc;
 		calc.get_dispersion( );
 		calc.set_weapon( NULL );
+		calc.tick( survarium::type_stand, true, false, 0, false, 0 );
+		calc.fire( );
+		calc.reload( );
 
 		// Escape &calc so LTCG observes the ctor's constant member stores
 		// (m_weapon=NULL, m_shooting_skill_coeff=1.0f, m_aiming_speed_coeff=1.0f);
