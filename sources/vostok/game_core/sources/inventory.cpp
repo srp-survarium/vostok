@@ -273,8 +273,7 @@ static void call_item_remove( inventory_slot& slot )
 
 void inventory::remove( )
 {
-	for ( inventory_slot* slot = m_slots; slot != m_slots + max_slots_count; ++slot )
-		call_item_remove( *slot );
+	std::for_each( m_slots, m_slots + max_slots_count, call_item_remove );
 	m_active_slot = max_slots_count;
 }
 
