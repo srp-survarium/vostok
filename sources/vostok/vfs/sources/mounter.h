@@ -27,7 +27,7 @@ public:
 	bool	try_mount_from_history	();
 protected:
 	enum create_mount_root_bool			{ create_mount_root_false, create_mount_root_true };
-	typedef	intrusive_list< base_node<>, base_node<>::node_pointer, & base_node<>::m_next, threading::single_threading_policy >
+	typedef	intrusive_list< base_node<>, base_node<>::node_pointer, & base_node<>::m_next, threading::single_threading_policy, size_policy, no_debug_policy >
 		node_list;
 
 	void  add_mount_branch				(buffer_vector< mount_helper_node<> * > & helper_nodes,

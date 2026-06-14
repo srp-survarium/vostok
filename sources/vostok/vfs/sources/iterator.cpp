@@ -76,10 +76,10 @@ native_path_string   vfs_iterator::get_physical_path () const
 	return									get_node_physical_path(m_node);
 }
 
-u32   vfs_iterator::get_nodes_count		() const
+u32   vfs_iterator::get_nodes_count		(bool skip_erased, bool count_link_targets) const
 {
 	R_ASSERT								(m_type != type_not_scanned);
-	return									calculate_count_of_nodes(data_node());
+	return									calculate_count_of_nodes(data_node(), skip_erased, count_link_targets);
 }
 
 u32   vfs_iterator::get_children_count	() const

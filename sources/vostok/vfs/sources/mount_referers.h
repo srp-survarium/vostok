@@ -22,7 +22,7 @@ struct mount_referer_base
 	mount_referer *				next;
 };
 
-typedef intrusive_list<mount_referer_base, mount_referer *, & mount_referer_base::next, threading::mutex>	
+typedef intrusive_list<mount_referer_base, mount_referer *, & mount_referer_base::next, threading::mutex, size_policy, no_debug_policy>
 	ready_referers_list;
 
 struct mount_referer : mount_referer_base
