@@ -54,6 +54,12 @@ void udp_match_connection::on_error( client_error_codes_enum, boost::system::err
 {
 }
 
+// claude@NOTE: PARKED on an inline-vs-call wall. Statement count + the named-local
+// set (reader, bits) match the target. The LTCG target keeps packet_reader::r<u16>()
+// out-of-line (a `call` returning the value in ax); the single-TU base inlines the
+// `inline`-marked template into the r(void*,u32,u32) form (push 2; push 2; lea slot;
+// push; call). That byte divergence is why objdiff reports this unpaired. Not
+// source-steerable without de-inlining the template at every other call site.
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
 	packet_reader	reader( packet );
@@ -467,6 +473,12 @@ STATIC_SIZE_ASSERT(sequence_id_predicate, 0xC);
 namespace vostok {
 namespace network_core {
 
+// claude@NOTE: residual is an inline-vs-call wall. Statement count + the 8 named
+// locals match the target. The target keeps the free template operator-< u16 >( ) and
+// the implicit sequence_number assignment out-of-line (single `call`); the single-TU
+// base inlines the operator-'s first level (the operator<= branch) and the address
+// temps for the reference-arg serialize/operator= sites. Same root cause as
+// is_low_level_packet - not source-steerable here.
 void udp_match_connection::update_acknowledgements(
 	sequence_number< u16 >		remote_sequence_id,
 	sequence_number< u16 >		local_sequence_id,
