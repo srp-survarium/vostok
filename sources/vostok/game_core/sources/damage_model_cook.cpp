@@ -119,7 +119,7 @@ static hit_type_parameters* create_hit_type_parameters(
 	memory::stack_allocator*				allocator,
 	configs::binary_config_value const&		type_value
 ){
-	const u32 bdb_coeffs_count = type_value["bdb_coeff"];
+	const u32 bdb_coeffs_count = type_value["bdb_coeff"].size( );
 
 	hit_type_parameters* new_hit_type = VOSTOK_NEW_IMPL( allocator, hit_type_parameters )(
 		type_value.key( ),
