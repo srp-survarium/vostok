@@ -38,14 +38,24 @@ double_barreled_weapon_core_idle_state::double_barreled_weapon_core_idle_state( 
 	ASSERT_CMP_U( animations_count, ==, 12 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 3 ; ++weapon_state )
-				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
+	{
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
+		{
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 3 ; ++weapon_state_index )
+			{
+				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+			}
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
+// claude@NOTE: systemic ceiling shared by every weapon_*_state weapon_and_hands_expression
+// override. Structure is a 3-statement MATCH; only the return statement diverges - the target
+// inlines mixing::operator+ where our build emits `call operator+<...>`. Inline-vs-call codegen;
+// not source-steerable. Left at the faithful `+` form.
 animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
@@ -60,6 +70,9 @@ animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 }
 
+// claude@NOTE: STRUCTURE MATCH and byte-size identical; residual is a single /Od register-coloring
+// nibble at the out-of-line m_weapon.ammo_in_magazine() thiscall (target loads the weapon ptr into
+// eax, our build into ecx). Same quirk caps the pistol idle/reload getters; not source-steerable.
 weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -71,7 +84,7 @@ weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pai
 		"idle_two_barrels_loaded"
 	};
 
-	u32 animation_index = m_weapon.ammo_in_magazine( );
+	u32 const animation_index = m_weapon.ammo_in_magazine( );
 	pcstr animation_identifier = weapon_animation_captions[animation_index];
 
 	resources::managed_resource_ptr const& selected_animation =
