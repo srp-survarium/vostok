@@ -14,16 +14,15 @@ weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_cor
 {
 }
 
-// claude@NOTE: paired (@@MAE) but body short of 100%. structure-diff: target folds
-// *m_is_firing_ptr=true into the first ASSERT statement (target ASSERT is 0x1b bytes,
-// not an empty 0xc stub) and the two set_animation_callback/boost::bind blocks emit
-// 0x41/0x6 bytes more than base. Needs ASSERT-condition recovery + bind shape work,
-// beyond the access-mangling fix.
+// claude@NOTE: paired (@@MAE), structure matches (6/6 stmts after folding ASSERT +
+// *m_is_firing_ptr into one statement). Residual is a boost::function inlining divergence
+// on the SECOND set_animation_callback: the target inlines function1<>::assign_to (exposing
+// basic_vtable1::assign_to + the conditional flag path, like the first bind) but MSVC here
+// emits an out-of-line function1<>::assign_to for the second, shifting the frame by 8 bytes.
+// /Od inline-heuristic ceiling on the shared boost::function machinery, not steerable.
 void weapon_core_aimed_fire_state_base::initialize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION );
-
-	*m_is_firing_ptr = true;
+	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
 
 	weapon_core_animation_end_aware_state::initialize( );
 
@@ -44,12 +43,10 @@ void weapon_core_aimed_fire_state_base::initialize( )
 	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
 }
 
-// claude@NOTE: paired (@@MAE) but walled by a cross-unit inline-vs-call boundary.
-// target emits a `call weapon_core_base_state::execute` (that base method is an
-// out-of-line 0x16-byte function there); here it is an inline `{}` in
-// weapon_core_base_state.h so MSVC inlines it away, dropping the call statement.
-// Out-lining it belongs to weapon_core_base_state.cpp's match (see its sushi@TODO),
-// not this unit.
+// claude@NOTE: paired (@@MAE), walled by a cross-unit inline-vs-call boundary. The target
+// emits a `call weapon_core_base_state::execute` (out-of-line 0x16-byte function there); here
+// that base method is an inline `{}` in weapon_core_base_state.h, so MSVC inlines it away and
+// drops the call statement. Out-lining it belongs to weapon_core_base_state.cpp's match.
 void weapon_core_aimed_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );
@@ -66,14 +63,13 @@ void weapon_core_aimed_fire_state_base::finalize( )
 
 	m_weapon.remove_animation_callback( "aiming", this );
 
-	ASSERT( UNKNOWN_EXPRESSION );
-
-	*m_is_firing_ptr = false;
+	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
 }
 
-// claude@NOTE: paired (@@MAE), structure matches (10/10 stmts); sole residual is a
-// 3-byte size diff in the LOG_WARNING statement - the macro bakes __LINE__ / string
-// offsets that depend on this file's line layout differing from the original's.
+// claude@NOTE: paired (@@MAE), structure matches (10/10 stmts); sole residual is a 3-byte
+// size diff in the LOG_WARNING statement - the macro bakes __LINE__ into the pushed string
+// length (target pushes 0x53, base 0x56) and that depends on this file's line layout matching
+// the original's, which is not faithfully reconstructable.
 animation::callback_return_type_enum weapon_core_aimed_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = true;
