@@ -29,6 +29,10 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 {
 }
 
+// claude@NOTE: the deserializing/chamber_a_round/round_is_chambered/unload guard chain is
+// structure-correct; residual is boost::function's assign_to - target inlines this
+// instantiation, /Od out-of-lines it (per-instantiation inliner decision; one_round::initialize,
+// the same boost::bind without the guard, is 100%). Non-steerable from source.
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
 	m_animation_ended = false;
@@ -45,6 +49,9 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 	}
 }
 
+// claude@NOTE: structure-correct; residual is animation_playback_state::reset() - target
+// keeps it out-of-line (its COMDAT in animation_playback_state.h.obj) while /Od inlines the
+// trivial in-class body here. Cross-unit: only fixable by noinline'ing the shared header.
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
@@ -56,6 +63,9 @@ bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 	return m_animation_ended;
 }
 
+// claude@NOTE: structure matches the matched weapon_core_animation_end_aware_state::on_animation_end
+// (90.9%); residual is the intrusive_ptr operator== operand-evaluation order (target computes
+// the `this` address before the arg, /Od emits the reverse). Non-steerable from source.
 animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;

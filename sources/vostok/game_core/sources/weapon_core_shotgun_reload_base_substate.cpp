@@ -27,56 +27,44 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-// STATE[STUB]
-// survarium::weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int, const vostok::animation::mixing::playback_enum, const unsigned int, char const*, char const*, char const*, char const*)
 weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	float const								animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count,
-	animation::mixing::playback_enum		playback_type,
-	u32										time_synchronization_group,
+	u32 const								animations_count,
+	animation::mixing::playback_enum const	playback_type,
+	u32 const								time_synchronization_group,
 	pcstr									animation_id,
 	pcstr									hands_stand_animation_id,
 	pcstr									hands_crouch_animation_id,
 	pcstr									hands_jump_animation_id
-) : m_weapon( weapon )
+) :
+	m_weapon( weapon ),
+	m_animation_playback_state( 0 ),
+	m_animation_timescale( animation_time_scale ),
+	m_playback_type( playback_type ),
+	m_time_synchronization_group( time_synchronization_group ),
+	m_animation_id( animation_id )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	m_hand_animation_captions[0] = hands_stand_animation_id;
+	m_hand_animation_captions[1] = hands_crouch_animation_id;
+	m_hand_animation_captions[2] = hands_jump_animation_id;
 
-	// SKIPPED BLOCKS
-	// <0x7a86c0><2>
-	// <0x7a8725><3>
-	// ******
+	ASSERT_CMP_U( animations_count, ==, 8 );
 
-	// FUNCTION BODY
-	// <0x7a865c>|0x0bc|+0x00c:'36'
-	// <0x7a8668>|0x0c8|+0x00c:'37'
-	// <0x7a8674>|0x0d4|+0x00c:'38'
-	// <0>
-	// <0x7a8680>|0x0e0|+0x023:'40'
-	// <0x7a86a3>|0x103|+0x007:'41'
-	// <0x7a86aa>|0x10a|+0x018|[1]:'42'
-	// <0x7a86c2>|0x122|+0x018:'43'
-	// <0x7a86da>|0x13a|+0x031:'44'
-	// <0x7a870b>|0x16b|+0x002:'45'
-	// <0x7a870d>|0x16d|+0x002:'46'
-	// <0x7a870f>|0x16f|+0x018|[2]:'47'
-	// <0x7a8727>|0x187|+0x018:'48'
-	// <0x7a873f>|0x19f|+0x031:'49'
-	// <0x7a8770>|0x1d0|+0x002:'50'
-	// <0x7a8772>|0x1d2|+0x002:'51'
-	// <0x7a8774>|0x1d4|+0x00c:'52'
-	// ******
+	u32 animation_index = 0;
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
+			m_weapon_animations[view_index][user_state_index] = animations[animation_index++];
+
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
+			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
 	m_animation_to_wait_for = m_weapon_animations[is_third_view != false][user_state_id == type_crouch];
 
@@ -93,6 +81,10 @@ weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_p
 	);
 }
 
+// claude@NOTE: structure-correct; residual is the shared mixing builder family - target
+// out-of-lines the animation_lexeme_parameters fluent setters and uses
+// addition_lexeme/cloned_in_buffer where /Od inlines the free operator+. Same wall as the
+// chamber weapon_and_hands_expression; only fixable in the shared mixing_addition_lexeme API.
 animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,

@@ -27,14 +27,14 @@ namespace survarium {
 class weapon_core;
 
 class weapon_core_shotgun_reload_base_substate : public ai::fsm_state , public resources::unmanaged_resource {
-public:
+protected:
 	explicit			weapon_core_shotgun_reload_base_substate(
 							weapon_core&							weapon,
-							float									animation_time_scale,
+							float const								animation_time_scale,
 							resources::managed_resource_ptr const*	animations,
-							u32										animations_count,
-							animation::mixing::playback_enum		playback_type,
-							u32										time_synchronization_group,
+							u32 const								animations_count,
+							animation::mixing::playback_enum const	playback_type,
+							u32 const								time_synchronization_group,
 							pcstr									animation_id,
 							pcstr									hands_stand_animation_id,
 							pcstr									hands_crouch_animation_id,
@@ -61,9 +61,9 @@ public:
 
 	inline	bool	deserializing						( ) const { /* no source */ }
 
-public:
+private:
 			weapon_lexeme_pair
-					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
+					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const;
 
 protected:
 	/* 0x0000 */	/* ai::fsm_state */
