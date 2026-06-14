@@ -244,7 +244,9 @@ void game_material_manager_cook::on_decals_loaded( resources::queries_result& da
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );
 		}
 		else if ( it->type == query_ext_data::sound )
+		{
 			it->pair->set_sound( data[idx].get_unmanaged_resource( ) );
+		}
 		else // if ( it->type == query_ext_data::particle )
 			it->pair->add_particle( data[idx].get_unmanaged_resource( ) );
 	}
