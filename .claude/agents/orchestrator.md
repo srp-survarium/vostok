@@ -42,14 +42,18 @@ the DB from an already-built `report.json`, no build). NEVER build the integrati
    commit onto the tip (a parallel sibling may have landed first, so it branched off an
    OLDER tip - never merge-in). Resolve the stack conflicts in `temp_include_all.cpp` /
    module `.vcproj`. That commit is the NEW top.
-4. **Rebuild + snapshot the DB** - `python3 scripts/rebuild.py` (builds the new top
-   incrementally + regenerates the DB at the end), then COMMIT the updated `match.db` onto
-   the tip. EVERY stack commit must carry a measured DB snapshot - that is what makes the
-   per-step `diff` work. Rebuild BEFORE you mark, so marking reads the MEASURED state.
-5. **Mark functions** - from the regenerated DB: `match_db.py tried --unit <tu>` (marks the
-   WHOLE TU, even ones already at 100%, so the diff shows the whole TU was touched); flag
-   parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP); upgrade
-   any banked LTCG residual the rebuild lifted to 100%.
+4. **Rebuild the DB** - `python3 scripts/rebuild.py` (builds the new top incrementally +
+   regenerates the DB at the end). Rebuild BEFORE you mark, so marking reads the MEASURED state.
+5. **Mark functions, THEN commit the snapshot** (order matters - the marks must be IN the
+   committed snapshot or the diff won't show them):
+   - `match_db.py tried --unit <tu>` - marks the WHOLE TU, even ones already at 100%, so the
+     per-step `diff` shows **`tries +1` on EVERY function the agent matched** (the human's
+     "what did the agent work with this step" signal - MANDATORY, every worked unit, re-stacks too).
+   - flag parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP);
+     upgrade any banked LTCG residual the rebuild lifted to 100%.
+   - ONLY THEN `git add docs/binary_matching/match.db` + commit it onto the tip. EVERY stack
+     commit must carry this measured+marked snapshot - that (the `+1` and flags) is what makes
+     the per-step `diff` show what each step did.
 6. **Loop** - take finishers ONE AT A TIME (each rebased onto the advancing tip +
    snapshotted); the next matchers branch off the NEW top.
 
@@ -268,10 +272,19 @@ residual" as done - it is NOT done, it stays OPEN so the next rebuild can lift i
 genuinely BLOCKED (won't compile/link/reachable until another unit's symbol lands).
 
 Per worker:
-- **On dispatch:** `match_db.py tried <mangled> [--note "..."]` for every function in
-  the batch. `queue` demotes tried work, so this stops the next wave re-offering
-  what is in flight. (`sql "SELECT sum(n) FROM attempts ..."` returning 0 over a unit
-  you worked means you forgot this step.)
+- **`tries += 1` on EVERY function you touch - this is the human's diff signal, and it is
+  MANDATORY.** The human reads `tries` rising by exactly `+1` in `match_db.py diff` to see
+  EXACTLY what the agent worked with this step, so every matching pass MUST stamp it:
+  - **On dispatch:** `match_db.py tried <mangled> [--note "..."]` for every function in the
+    batch - `queue` demotes tried work, stopping the next wave re-offering what is in flight.
+  - **At completion, BEFORE you commit the unit's per-step `match.db` snapshot:**
+    `match_db.py tried --unit <tu>` - marks the WHOLE TU (even fns already at 100%), so the
+    unit's `diff <base>..<tip>` shows `+1` on every function the agent matched. NOT optional,
+    and it applies to RE-STACKS too (re-creating a unit re-touches it -> the re-stacked
+    snapshot must still carry the `+1`). Do this for EVERY worked unit - a snapshot whose
+    diff shows `tries` unchanged on a function you matched is a booktracking bug.
+  - Audit: `sql "SELECT sum(n) FROM attempts ..."` returning 0 over a unit you worked, or a
+    `diff` with no `tries +1` on a touched fn, means you skipped this - go back and stamp it.
 - **Rebuild after EVERY worker** (step 4e) - `rebuild.py` regenerates the DB at the end
   of its run, so a rebuild both scores this unit AND can LIFT LTCG/LTO walls in OTHER
   units (a banked 95% residual flips to 100% once this unit changes the whole-program
