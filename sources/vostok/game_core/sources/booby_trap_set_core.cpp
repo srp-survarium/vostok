@@ -182,6 +182,7 @@ static float4x4 create_place_matrix_for_looking_point(
 	} else {
 		float3 const& head_right		= head_transform.i.xyz( );
 		float3 const& forward_candidate	= head_right ^ normal;
+		ASSERT( UNKNOWN_EXPRESSION_T( forward_candidate.length( ) > math::epsilon_3 ) );
 		float3 const& forward			= math::normalize( forward_candidate );
 		float3 const& up				= normal;
 		float3 const& right				= math::normalize( up ^ forward );

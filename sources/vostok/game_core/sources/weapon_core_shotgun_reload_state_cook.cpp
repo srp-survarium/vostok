@@ -20,11 +20,17 @@ weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
 }
 
+// claude@NOTE: line 35 is the VOSTOK_UNREFERENCED_PARAMETERS dead-guard, NOT an ASSERT
+//   (patterns/optimized-comdat-in-od-unit.md, dead-guard-fold variant): the leading
+//   empty_stub is the identity(false) lvalue materialization, the 0x96-dword rep-movsd
+//   is the by-reference in_query promoted-by-value through the variadic eater. Structure
+//   now matches (2 stmts, 0 locals - malloc folded into the return at line 36). Residual:
+//   the optimized COMDAT folds the dead-branch movzx/test/je guard that our /Od build
+//   keeps (~7 bytes) + the by-value query copy - the known dead-guard ceiling.
 mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( in_query, raw_file_data, file_exist );
-	pvoid const	buffer	= VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_shotgun_reload_state ), "weapon_core_shotgun_reload_state" );
-	return mutable_buffer( buffer, sizeof( weapon_core_shotgun_reload_state ) );
+	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_shotgun_reload_state ), "weapon_core_shotgun_reload_state" ), sizeof( weapon_core_shotgun_reload_state ) );
 }
 
 void weapon_core_shotgun_reload_state_cook::deallocate_resource( void* buffer )
