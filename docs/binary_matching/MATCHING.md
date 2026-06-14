@@ -373,14 +373,18 @@ a would-be MATCH to the `LOCALS` struct_class (kept in the queue), and `diff` re
 MATCH->LOCALS flip as a REGRESS. Precedent: `weapon_and_hands_expression` - the chained
 0-local form (90%) is correct over the 2-named-local 100% form.
 
-The **one exception is genuine debug-elision**: the target PDB records locals for only ~44%
-of functions, so sometimes the local is real and only its NAME is elided - provable when 0
-locals is *impossible* (a `for`/`while` iterator the language requires) or when the 0-local
-spelling BREAKS OTHER structure (re-orders a ctor temp, drops a read-twice slot) and craters
-the bytes (->23/46%). There the load-bearing local IS the faithful structure (the name is
-the only divergence): keep it, `claude@NOTE` the obstacle, and let the `LOCALS` flag track it
-for a later pass rather than cratering other structure to drop a name. (Proof the PDB elides:
-`inventory::remove` byte-matches our with-iterator loop at 100% yet records 0 locals.)
+**Names are NOT elided in this build** - the recorded local set is ground truth, so 0 target
+locals means the SOURCE had 0 named locals. A 0-target-local where your base has one is
+almost always an **INLINE HELPER or inline temp**: the local belongs to an inlined callee,
+not this function's scope. Don't reach for an ugly hack (a raw for-loop, an embedded
+assignment inside a call, a collapsed decl) to reproduce the bytes - find the helper the
+target used and write it normally. An array walk is usually `std::for_each(begin, end, fn)`
+(grep the SIBLING functions in the same .cpp - e.g. `inventory::remove` is a `std::for_each`
+over `m_slots`, exactly like `inventory::serialize`/`deserialize` beside it, NOT a raw loop
+with a named iterator); a clamp is `math::min(a, b)` with the temp inline; a constructed
+argument is the temporary spelled inline (`T(NULL)`). If the inline spelling can't reproduce
+the exact bytes (a ctor re-schedule), the 1-statement / 0-local STRUCTURE is still correct -
+take the % hit, the byte residual is the recoverable part.
 
 **Reading the STUB carcass (before you delete it)** - its markers are shape clues you
 need for the match. A `<N>` (no address) line is a statement/sub-expression
