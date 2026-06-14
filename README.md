@@ -13,19 +13,19 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 53.25% fuzzy &middot; 9,800 / 25,372 functions exact (38.63%).**
+**Overall: 53.23% fuzzy &middot; 9,825 / 25,372 functions exact (38.72%).**
 
 _`Fuzzy` = code-weighted partial-credit match (how close); `Code matched` = byte-exact only. `scripts/match_score.py --max-code` adds the best-ever max of each (ICF-churn-immune)._
 
 | Module          | Units |     Functions exact | Fuzzy | Code matched |
 | :-------------- | ----: | ------------------: | ----: | -----------: |
-| `render`        |   351 | 386 / 2,805 (13.8%) | 29.4% |         3.5% |
-| `shared`        |   112 | 850 / 2,255 (37.7%) | 51.1% |        36.9% |
-| `game`          |   141 |   20 / 1,634 (1.2%) |  3.6% |         0.1% |
-| `game_core`     |   189 | 621 / 1,429 (43.5%) | 82.3% |        26.4% |
-| `core`          |   136 | 658 / 1,331 (49.4%) | 75.4% |        34.2% |
+| `render`        |   351 | 386 / 2,805 (13.8%) | 29.3% |         3.5% |
+| `shared`        |   112 | 862 / 2,255 (38.2%) | 51.2% |        37.1% |
+| `game`          |   141 |   21 / 1,634 (1.3%) |  3.6% |         0.1% |
+| `game_core`     |   189 | 624 / 1,429 (43.7%) | 82.3% |        26.4% |
+| `core`          |   136 | 665 / 1,331 (50.0%) | 75.6% |        34.4% |
 | `animation`     |   102 |   162 / 880 (18.4%) | 12.5% |         5.4% |
-| `ai`            |   124 |   418 / 759 (55.1%) | 83.8% |        37.5% |
+| `ai`            |   124 |   416 / 759 (54.8%) | 83.7% |        37.5% |
 | `sound`         |    69 |   212 / 517 (41.0%) | 48.9% |        16.6% |
 | `collision`     |    52 |   371 / 516 (71.9%) | 76.0% |        31.0% |
 | `particle`      |    25 |   263 / 485 (54.2%) | 76.8% |        26.1% |
