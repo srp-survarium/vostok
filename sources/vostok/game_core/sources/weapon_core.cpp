@@ -531,36 +531,23 @@ void weapon_core::instant_aim_end( )
 	m_aiming_state_transition = true;
 }
 
-// STATE[STUB]
-// vostok::math::float3 survarium::weapon_core::get_dispersed_bullet_dir()
+// claude@NOTE: 6/6 STRUCTURE MATCH, 5/5 locals (90.7%). Residual SIZE -0x2 on the last statement is a
+// non-steerable arg-evaluation/register-scheduling artifact: the target evaluates create_rotation's
+// first arg (m_fire_bullet_transform.k.xyz()) before deg2rad(dispersion_amount); MSVC here reverses
+// them, costing 2 bytes of mov ordering. Not a source-shape fix.
 float3 weapon_core::get_dispersed_bullet_dir( )
 {
-	// LOCALS
-	// float 						dispersion_angle
-	// float 						dispersion_amount
-	// float3 const& 				rot_axis
-	// float 						random_k
-	// float3 						bullet_direction
-	// ******
+	float const dispersion_angle	= math::clamp_r( m_normal_random.rand_n( 1.f ), -1.f, 1.f );
 
-	return vostok::math::float3(1., 1., 1.);
+	float const dispersion_amount	= m_dispersion_calculator.get_dispersion( ) * dispersion_angle;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x5a4792>|0x012|+0x040:'527'
-	// <0x5a47d2>|0x052|+0x017:'528'
-	// <0x5a47e9>|0x069|+0x01e:'529'
-	// <0x5a4807>|0x087|+0x047:'530'
-	// <0x5a484e>|0x0ce|+0x03e:'531'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5a488c>|0x10c|+0x017:'539'
-	// ******
+	float const random_k			= m_random.random_f( math::pi_x2 );
+
+	float3 const& rot_axis			= math::create_rotation( m_fire_bullet_transform.k.xyz( ), random_k ).transform_direction( m_fire_bullet_transform.i.xyz( ) );
+
+	float3 bullet_direction			= math::create_rotation( m_fire_bullet_transform.k.xyz( ), math::deg2rad( dispersion_amount ) ).transform_direction( rot_axis );
+
+	return bullet_direction;
 }
 
 float weapon_core::get_dispersion( ) const
@@ -614,9 +601,10 @@ animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( ani
 	return animation::callback_return_type_dont_call_me_anymore;
 }
 
-// claude@NOTE: 26/27 stmts (one short: the target splits the `&& is_sprinting()` operand of the
-// sprint-transition guard into its own line-647/648 statement; our `&&` continuation folds them).
-// % also walled by the two subscribe_animation_player sites (boost::bind/function machinery inlined).
+// claude@NOTE: 27/27 STRUCTURE MATCH. The sprint guard is split into a nested `if` (not a folded
+// `&&`) because the target gives `is_sprinting()` its own line-table statement - reproduced here.
+// % (~70%) is walled by the two subscribe_animation_player sites: the target out-lines a chunk of the
+// boost::bind/function machinery this build inlines (inline-vs-call ceiling), a non-steerable residual.
 void weapon_core::set_target( weapon_targets target )
 {
 	if ( target == weapon_target_fire || target == weapon_target_aim_fire )
@@ -632,8 +620,8 @@ void weapon_core::set_target( weapon_targets target )
 		}
 	}
 
-	if ( !m_is_in_sprint_transition
-		&& is_sprinting( ) )
+	if ( !m_is_in_sprint_transition )
+		if ( is_sprinting( ) )
 	{
 		m_is_in_sprint_transition = true;
 
