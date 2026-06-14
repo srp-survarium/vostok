@@ -13,14 +13,14 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.91% fuzzy &middot; 9,712 / 25,372 functions exact (38.28%).**
+**Overall: 52.93% fuzzy &middot; 9,714 / 25,372 functions exact (38.29%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
 | `render` | 351 | 385 / 2,805 (13.7%) | 3.5% |
 | `shared` | 112 | 843 / 2,255 (37.4%) | 36.9% |
 | `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
-| `game_core` | 189 | 604 / 1,429 (42.3%) | 25.7% |
+| `game_core` | 189 | 606 / 1,429 (42.4%) | 26.0% |
 | `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
 | `animation` | 102 | 161 / 880 (18.3%) | 5.4% |
 | `ai` | 124 | 416 / 759 (54.8%) | 37.5% |
