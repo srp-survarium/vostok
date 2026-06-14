@@ -6,6 +6,7 @@
 #include <vostok/game_core/weapon_core.h>
 
 #include <vostok/animation/sources/mixing_base_lexeme.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
 
 #include <vostok/ai/fsm.h>
 #include <boost/bind.hpp>
@@ -14,45 +15,34 @@
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/weapon_ammo_info.h>
+#include <vostok/game_core/weapon_animation_parameters.h>
+#include <vostok/game_core/bullet_manager.h>
+#include <vostok/game_core/ik_utils.h>
+#include <vostok/physics/api.h>
+#include <vostok/physics/character_controller.h>
+#include <vostok/console_command.h>
+
+extern bool g_is_server;
+
+namespace vostok { namespace animation {
+math::float4x4 calculated_head_matrix( math::float4x4 const& weapon_transform, math::float4x4 const& head_matrix );
+} } // namespace vostok::animation
 
 namespace survarium {
-/*
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_use_cc''()
-void `dynamic initializer for 's_ik_use_cc''( )
-{
-}
 
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_ik_use_on_legs_cc''()
-void `dynamic initializer for 's_ik_use_on_legs_cc''( )
-{
-}
+static bool s_ik_enable_on_hands_value		= true;
+static console_commands::cc_bool s_ik_use_cc				( "ik_enable_on_hands", s_ik_enable_on_hands_value, true, console_commands::command_type_engine_internal );
+static bool s_ik_enable_on_legs_value		= true;
+static console_commands::cc_bool s_ik_use_on_legs_cc		( "ik_enable_on_legs", s_ik_enable_on_legs_value, true, console_commands::command_type_engine_internal );
+static bool s_recoil_vertical_enable_value	= true;
+static console_commands::cc_bool s_recoil_vertical_eanble_cc	( "recoil_vertical_enable", s_recoil_vertical_enable_value, false, console_commands::command_type_user_specific );
+static bool s_recoil_horizontal_enable_value	= true;
+static console_commands::cc_bool s_recoil_horizontal_eanble_cc	( "recoil_horizontal_enable", s_recoil_horizontal_enable_value, false, console_commands::command_type_user_specific );
+static bool s_recoil_back_enable_value		= true;
+static console_commands::cc_bool s_recoil_back_eanble_cc		( "recoil_back_enable", s_recoil_back_enable_value, false, console_commands::command_type_user_specific );
+static bool s_recoil_enable_value			= true;
+static console_commands::cc_bool s_recoil_enable_cc			( "recoil_enable", s_recoil_enable_value, true, console_commands::command_type_user_specific );
 
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_recoil_vertical_eanble_cc''()
-void `dynamic initializer for 's_recoil_vertical_eanble_cc''( )
-{
-}
-
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_recoil_horizontal_eanble_cc''()
-void `dynamic initializer for 's_recoil_horizontal_eanble_cc''( )
-{
-}
-
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_recoil_back_eanble_cc''()
-void `dynamic initializer for 's_recoil_back_eanble_cc''( )
-{
-}
-
-// STATE[STUB]
-// void survarium::`dynamic initializer for 's_recoil_enable_cc''()
-void `dynamic initializer for 's_recoil_enable_cc''( )
-{
-}
-*/
 weapon_core::weapon_core( ) :
 	inventory_item						( inventory_item::inventory_active_item ),
 	m_initiator_holder					( NULL ),
@@ -339,6 +329,8 @@ animation::body_part_masks_enum weapon_core::get_body_part_mask_for_user( ) cons
 
 static float const	c_anim_center	= 0.5f;
 static float		epsilon			= math::epsilon_7;
+static float const	clear_value		= 1.0f;
+static float const	offset			= c_anim_center;
 
 float weapon_core::horizontal_recoil_value( ) const
 {
@@ -354,41 +346,29 @@ float weapon_core::vertical_recoil_value( ) const
 	return result;
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::weapon_core::selected_animations(vostok::mutable_buffer&, const bool) const
+// claude@NOTE: 4/4 stmts. % walled by the inline-vs-call ceiling (mixing operator+, the
+// recoil-value getters, weapon_user_animations_selector::selected_animations all inlined here
+// vs out-of-line target-side). The recoil cc_bool reads (s_recoil_*_enable_value) are compiled
+// IN here (gating the coeffs), unlike the parked computed_*_recoil_time trio where they fold out.
 animation::mixing::expression weapon_core::selected_animations( mutable_buffer& buffer, bool is_third_view ) const
 {
+	m_is_third_view = is_third_view;
 
-	VOSTOK_UNREACHABLE_CODE( );
+	std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> result = m_user_animations_selector.selected_animations(
+		buffer,
+		weapon_animation_parameters(
+			s_recoil_enable_value && s_recoil_horizontal_enable_value	? horizontal_recoil_value( )	: offset,
+			s_recoil_enable_value && s_recoil_vertical_enable_value		? vertical_recoil_value( )		: offset,
+			s_recoil_enable_value && s_recoil_back_enable_value			? math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon ) : offset,
+			get_body_part_mask_for_user( ),
+			is_aimed( ),
+			m_is_firing
+		),
+		is_third_view
+	);
 
-	// LOCALS
-	// animation::mixing::expression const& expression_for_weapon_and_hands
-	// std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> result
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a3a50>|0x010|+0x00f:'332'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x5a3a5f>|0x01f|+0x1bd:'346'
-	// <0>
-	// <0x5a3c1c>|0x1dc|+0x040:'348'
-	// <0x5a3c5c>|0x21c|+0x033:'349'
-	// ******
+	animation::mixing::expression const& expression_for_weapon_and_hands = get_weapon_and_hands_animation_expression( buffer, is_third_view, m_user_animations_selector.get_current_state_id( ), result.second );
+	return result.first + expression_for_weapon_and_hands;
 }
 
 void weapon_core::update_recoil( u32 current_time_in_ms, const float time_scale )
@@ -396,25 +376,12 @@ void weapon_core::update_recoil( u32 current_time_in_ms, const float time_scale 
 	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_dispersion(const bool, unsigned int)
+// claude@NOTE: callee of update_bones_matrices. % walled by intrusive_ptr operator* + dispersion_calculator::tick
+// inline-vs-call (target out-of-lines the resource_ptr deref; inlined here).
 void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
 {
-	// CALL SITE INFO
-	// <0x5a33dc> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x5a33b9>|0x009|+0x00c:'359'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5a33c5>|0x015|+0x07c:'367'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) );
+	m_dispersion_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_moving, is_aimed( ), ( *m_user->damage_model( ) ).broken_hands_count( ), m_is_double_handed, current_time_in_ms );
 }
 
 void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_time_in_ms, float time_scale )
@@ -424,69 +391,45 @@ void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_t
 	m_breath_vibration_calculator.tick( current_time_in_ms, time_scale );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::tick()
+// claude@NOTE: 25/25 stmts. % walled by inline-vs-call (intrusive_ptr ctor/dtor for
+// target_active_object, user_animations_selector getter). Named locals input/target_active_object match.
 void weapon_core::tick( )
 {
-	// LOCALS
-	// player_input const& 			input
-	// resources::resource_ptr<interactive_object,resources::unmanaged_intrusive_base> target_active_object
-	// ******
+	player_input const&																		input					= m_user->input( );
+	resources::resource_ptr<interactive_object,resources::unmanaged_intrusive_base>		target_active_object	= m_user->target_active_object( );
 
-	// CALL SITE INFO
-	// <0x5a58c2> -> player_input const& <unknown>() const
-	// <0x5a5978> -> void <unknown>()
-	// <0x5a5998> -> void <unknown>()
-	// <0x5a59d6> -> void <unknown>(const weapon_targets)
-	// <0x5a5a05> -> void <unknown>(const weapon_targets)
-	// <0x5a5a38> -> void <unknown>(const weapon_targets)
-	// <0x5a5a57> -> void <unknown>(const weapon_targets)
-	// <0x5a5a7c> -> void <unknown>(const weapon_targets)
-	// ******
+	user_animations_selector( ).tick( );
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x5a58a9>|0x009|+0x01e:'381'
-	// <0x5a58c7>|0x027|+0x01a:'382'
-	// <0>
-	// <0x5a58e1>|0x041|+0x00f:'384'
-	// <0>
-	// <0x5a58f0>|0x050|+0x070:'386'
-	// <0>
-	// <0x5a5960>|0x0c0|+0x00d:'388'
-	// <0x5a596d>|0x0cd|+0x00f:'389'
-	// <0x5a597c>|0x0dc|+0x00e:'390'
-	// <0x5a598a>|0x0ea|+0x010:'391'
-	// <0x5a599a>|0x0fa|+0x002:'392'
-	// <0x5a599c>|0x0fc|+0x008:'393'
-	// <0>
-	// <1>
-	// <0x5a59a4>|0x104|+0x022:'396'
-	// <0>
-	// <0x5a59c6>|0x126|+0x017:'398'
-	// <0x5a59dd>|0x13d|+0x018:'399'
-	// <0x5a59f5>|0x155|+0x014:'400'
-	// <0x5a5a09>|0x169|+0x00b:'401'
-	// <0x5a5a14>|0x174|+0x028:'402'
-	// <0x5a5a3c>|0x19c|+0x00b:'403'
-	// <0x5a5a47>|0x1a7|+0x012:'404'
-	// <0x5a5a59>|0x1b9|+0x002:'405'
-	// <0x5a5a5b>|0x1bb|+0x023:'406'
-	// <0>
-	// <1>
-	// <0x5a5a7e>|0x1de|+0x00e:'409'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a5a8c>|0x1ec|+0x00e:'413'
-	// <0>
-	// <0x5a5a9a>|0x1fa|+0x00f:'415'
-	// <0x5a5aa9>|0x209|+0x00a:'416'
-	// <0>
-	// <1>
-	// <0x5a5ab3>|0x213|+0x00f:'419'
-	// ******
+	if ( m_logic->current_state( ) && is_idle( ) && !( input.actions_mask & 0x20 ) )
+	{
+		if ( input.actions_mask & 0x400 )
+			set_next_fire_queue_type( );
+		else if ( input.actions_mask & 0x800 )
+			set_next_ammo_type( );
+		else
+			reset_fire_queue( );
+	}
+
+	if ( target_active_object.c_ptr( ) == this && m_user_animations_selector.is_ready_to_be_deactivated( ) )
+		set_target( weapon_target_inactive );
+	else if ( !could_be_used( *get_user( ) ) )
+		set_target( weapon_target_idle );
+	else if ( input.actions_mask & 0x20 )
+		set_target( is_trying_to_aim( ) ? weapon_target_aim_fire : weapon_target_fire );
+	else if ( input.actions_mask & 0x40 )
+		set_target( weapon_target_reload );
+	else
+		set_target( is_trying_to_aim( ) ? weapon_target_aim : weapon_target_idle );
+
+	m_logic->tick( );
+
+	if ( m_aiming_state_transition )
+	{
+		user_animations_selector( ).tick( );
+		m_aiming_state_transition = false;
+	}
+
+	m_old_actions_mask = input.actions_mask;
 }
 
 void weapon_core::instant_show( )
@@ -625,62 +568,33 @@ float weapon_core::get_dispersion( ) const
 	return m_dispersion_calculator.get_dispersion( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::instant_fire(const unsigned int)
 void weapon_core::instant_fire( u32 current_time_in_ms )
 {
-	// LOCALS
-	// s32 							i<1>
-	// float3 const& 				velocity<2>
-	// float3 const& 				bullet_direction<2>
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_bullets_in_queue ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammunition ) );
+	--m_bullets_in_queue;
 
-	// SKIPPED BLOCKS
-	// <0x5a56e4><2>
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( m_ammunition ) );
+	for ( s32 i = 0; i < ( *m_ammunition ).buck_shot( ); ++i )
+	{
+		float3 const& bullet_direction	= get_dispersed_bullet_dir( );
 
-	// CALL SITE INFO
-	// <0x5a57f9> -> void <unknown>()
-	// <0x5a582e> -> void <unknown>()
-	// ******
+		float3 const& velocity			= bullet_direction * ( *m_ammunition ).muzzle_speed( );
 
-	// FUNCTION BODY
-	// <0x5a5669>|0x009|+0x00c:'549'
-	// <0x5a5675>|0x015|+0x00c:'550'
-	// <0x5a5681>|0x021|+0x018:'551'
-	// <0>
-	// <0x5a5699>|0x039|+0x00c:'553'
-	// <0x5a56a5>|0x045|+0x045|[1]:'554'
-	// <0x5a56ea>|0x08a|+0x012:'555'
-	// <0>
-	// <0x5a56fc>|0x09c|+0x04a:'557'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5a5746>|0x0e6|+0x06e:'568'
-	// <0x5a57b4>|0x154|+0x005:'569'
-	// <0>
-	// <0x5a57b9>|0x159|+0x00e:'571'
-	// <0x5a57c7>|0x167|+0x00a:'572'
-	// <0x5a57d1>|0x171|+0x002:'573'
-	// <0x5a57d3>|0x173|+0x018:'574'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a57eb>|0x18b|+0x010:'578'
-	// <0>
-	// <0x5a57fb>|0x19b|+0x00e:'580'
-	// <0x5a5809>|0x1a9|+0x00e:'581'
-	// <0>
-	// <0x5a5817>|0x1b7|+0x019:'583'
-	// ******
+		m_bullet_manager->fire( m_fire_bullet_transform.c.xyz( ), velocity, m_ammunition, *this, current_time_in_ms, m_initiator_holder, m_receiver_holder, ( *m_ammunition ).tracer( ) );
+	}
+
+	if ( m_is_there_chamber_a_round_state )
+		m_is_round_chambered = false;
+	else
+		--m_ammo_in_magazine;
+
+	on_after_fire( );
+
+	m_recoil_calculator.fire( );
+	m_dispersion_calculator.fire( );
+
+	m_initiator_holder->on_fire( );
 }
 
 void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transform )
@@ -689,111 +603,67 @@ void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transfo
 	m_fire_bullet_transform = fire_bullet_transform;
 }
 
-// STATE[STUB]
-// claude@NOTE: PARK. Shape: params.interrupt_animation_player_tick = true; two
-// get_user()->unsubscribe_animation_player(channel_id_max/*3*/, <uid>) calls; m_is_in_sprint_transition
-// = false; return callback_return_type_dont_call_me_anymore. Stuck on the two callback UIDs: first is
-// `this`, second is `<finalize_impl(this) result>+1` - the middle `finalize_impl` (empty_stub) returns a
-// value used as uid2, an idiom I couldn't pin (likely a per-callback uid derived from this). Needs the
-// matching subscribe sites in activate() decoded first.
-// vostok::animation::callback_return_type_enum survarium::weapon_core::on_sprint_animation_ended(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( animation::animation_callback_params& params )
 {
-	// CALL SITE INFO
-	// <0x5a302c> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// <0x5a3052> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
+	params.interrupt_animation_player_tick = true;
 
-	// FUNCTION BODY
-	// <0x5a3009>|0x009|+0x007:'594'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5a3010>|0x010|+0x01e:'599'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a302e>|0x02e|+0x026:'603'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a3054>|0x054|+0x00a:'607'
-	// <0>
-	// <0x5a305e>|0x05e|+0x005:'609'
-	// ******
+	get_user( )->unsubscribe_animation_player( animation::channel_id_max, this );
+	get_user( )->unsubscribe_animation_player( animation::channel_id_max, (pcvoid)( (pcbyte)this + 1 ) );
+
+	m_is_in_sprint_transition = false;
+	return animation::callback_return_type_dont_call_me_anymore;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_target(const survarium::weapon_targets)
+// claude@NOTE: 26/27 stmts (one short: the target splits the `&& is_sprinting()` operand of the
+// sprint-transition guard into its own line-647/648 statement; our `&&` continuation folds them).
+// % also walled by the two subscribe_animation_player sites (boost::bind/function machinery inlined).
 void weapon_core::set_target( weapon_targets target )
 {
-	// CALL SITE INFO
-	// <0x5a521c> -> bool <unknown>() const
-	// <0x5a5350> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, pcvoid const)
-	// <0x5a5487> -> void <unknown>(animation::reserved_channel_ids_enum, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, pcvoid const)
-	// <0x5a560e> -> void <unknown>()
-	// ******
+	if ( target == weapon_target_fire || target == weapon_target_aim_fire )
+	{
+		if ( ( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) == 0 )
+			target = weapon_target_reload;
+		else if ( !is_ready_to_shoot( ) )
+		{
+			if ( target == weapon_target_fire )
+				target = weapon_target_idle;
+			else if ( target == weapon_target_aim_fire )
+				target = weapon_target_aim;
+		}
+	}
 
-	// FUNCTION BODY
-	// <0x5a518a>|0x01a|+0x00c:'614'
-	// <0>
-	// <0x5a5196>|0x026|+0x029:'616'
-	// <0x5a51bf>|0x04f|+0x009:'617'
-	// <0x5a51c8>|0x058|+0x012:'618'
-	// <0>
-	// <0x5a51da>|0x06a|+0x006:'620'
-	// <0x5a51e0>|0x070|+0x009:'621'
-	// <0x5a51e9>|0x079|+0x006:'622'
-	// <0x5a51ef>|0x07f|+0x007:'623'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a51f6>|0x086|+0x015:'627'
-	// <0x5a520b>|0x09b|+0x01e:'628'
-	// <0x5a5229>|0x0b9|+0x00d:'629'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5a5236>|0x0c6|+0x12c:'636'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5a5362>|0x1f2|+0x137:'643'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5a5499>|0x329|+0x029:'649'
-	// <0x5a54c2>|0x352|+0x006:'650'
-	// <0x5a54c8>|0x358|+0x009:'651'
-	// <0x5a54d1>|0x361|+0x006:'652'
-	// <0x5a54d7>|0x367|+0x007:'653'
-	// <0>
-	// <1>
-	// <0x5a54de>|0x36e|+0x00a:'656'
-	// <0>
-	// <0x5a54e8>|0x378|+0x016:'658'
-	// <0>
-	// <0x5a54fe>|0x38e|+0x0fc:'660'
-	// <0x5a55fa>|0x48a|+0x016:'661'
-	// <0>
-	// <0x5a5610>|0x4a0|+0x01e:'663'
-	// <0x5a562e>|0x4be|+0x007:'664'
-	// <0x5a5635>|0x4c5|+0x002:'665'
-	// <0x5a5637>|0x4c7|+0x007:'666'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a563e>|0x4ce|+0x00f:'670'
-	// ******
+	if ( !m_is_in_sprint_transition
+		&& is_sprinting( ) )
+	{
+		m_is_in_sprint_transition = true;
+
+		get_user( )->subscribe_animation_player( animation::channel_id_max, boost::bind( &weapon_core::on_sprint_animation_ended, this, _1 ), get_user( ), resources::managed_resource_ptr( NULL ), this );
+		get_user( )->subscribe_animation_player( animation::channel_id_max, boost::bind( &weapon_core::on_sprint_animation_ended, this, _1 ), get_user( ), resources::managed_resource_ptr( NULL ), (pcvoid)( (pcbyte)this + 1 ) );
+	}
+
+	if ( m_is_in_sprint_transition || m_user_animations_selector.is_in_jump( ) )
+	{
+		if ( target == weapon_target_fire )
+			target = weapon_target_idle;
+		else if ( target == weapon_target_aim_fire )
+			target = weapon_target_aim;
+	}
+
+	if ( target == weapon_target_reload )
+	{
+		if ( !ready_to_reload( ) )
+		{
+			if ( !m_ammunition || ( *m_ammunition ).amount( ) == 0 )
+				on_reload_started( );
+
+			if ( m_target == weapon_target_aim_fire || m_target == weapon_target_aim )
+				target = weapon_target_aim;
+			else
+				target = weapon_target_idle;
+		}
+	}
+
+	m_target = target;
 }
 
 void weapon_core::reset_fire_queue( )
@@ -823,40 +693,24 @@ void weapon_core::set_next_fire_queue_type( )
 		++m_fire_queue_type;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::set_next_ammo_type()
 void weapon_core::set_next_ammo_type( )
 {
-	// LOCALS
-	// profile_slot_enum 			next_slot
-	// ******
+	profile_slot_enum next_slot = invalid_slot;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a5089>|0x009|+0x007:'702'
-	// <0>
-	// <0x5a5090>|0x010|+0x015:'704'
-	// <0>
-	// <0x5a50a5>|0x025|+0x00f:'706'
-	// <0>
-	// <0x5a50b4>|0x034|+0x015:'708'
-	// <0>
-	// <0x5a50c9>|0x049|+0x00d:'710'
-	// <0>
-	// <0x5a50d6>|0x056|+0x002:'712'
-	// <0x5a50d8>|0x058|+0x005:'713'
-	// <0>
-	// <0x5a50dd>|0x05d|+0x020:'715'
-	// <0x5a50fd>|0x07d|+0x002:'716'
-	// <0>
-	// <0x5a50ff>|0x07f|+0x008:'718'
-	// <0>
-	// <0x5a5107>|0x087|+0x00c:'720'
-	// <0x5a5113>|0x093|+0x045:'721'
-	// <0x5a5158>|0x0d8|+0x00d:'722'
-	// ******
+	if ( get_ammo_slot( first_ammo ) == m_ammo_slot )
+		next_slot = get_ammo_slot( second_ammo );
+	else if ( get_ammo_slot( second_ammo ) == m_ammo_slot )
+		next_slot = get_ammo_slot( first_ammo );
+	else
+		return;
+
+	if ( !get_inventory( ).item_in_slot( next_slot ) )
+		return;
+
+	unload_ammo( );
+	m_ammo_slot		= next_slot;
+	m_ammunition	= static_cast< weapon_ammunition* >( get_inventory( ).item_in_slot( m_ammo_slot ).c_ptr( ) );
+	m_target		= weapon_target_reload;
 }
 
 void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,resources::unmanaged_intrusive_base> const& ammunition_to_set )
@@ -880,9 +734,7 @@ void weapon_core::load_ammo( )
 			{
 				m_is_round_chambered = true;
 				( *m_ammunition ).set_amount( ( *m_ammunition ).amount( ) - 1 );
-			}
-		}
-		else if ( m_ammo_in_magazine != 0 )
+			} } else if ( m_ammo_in_magazine != 0 )
 		{
 			m_is_round_chambered = true;
 			--m_ammo_in_magazine;
@@ -939,174 +791,120 @@ void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enu
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::activate(survarium::base_player&, survarium::engine&)
+// claude@NOTE: 50/50 stmts. % walled by inline-vs-call: the 6 subscribe_animation_player sites
+// (boost::bind + function ctors), intrusive_ptr operator*/set/dec, and the folded LOG are inlined
+// here vs out-of-line target-side. Statement structure + named locals (ammo1/ammo2/ammo1_slot/
+// ammo2_slot) match.
 void weapon_core::activate( base_player& user, engine& engine )
 {
-	// LOCALS
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo1
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo2
-	// profile_slot_enum 			ammo1_slot
-	// profile_slot_enum 			ammo2_slot
-	// ******
+	m_dispersion_calculator.set_character_dispersion_params( &user.get_dispersion_params( ) );
+	m_recoil_calculator.set_character_recoil_params( &user.get_recoil_params( ) );
+	m_breath_vibration_calculator.set_user( &user );
+	m_breath_vibration_calculator.set_breath_holding_params( &user.get_breath_holding_params( ) );
+	m_is_shown = false;
+	m_bullet_manager = &engine.get_bullet_manager( );
+	m_ready_for_fire = false;
+	m_is_in_sprint_transition = false;
+	m_initiator_holder = &user;
+	m_receiver_holder = &user;
+	m_is_firing = false;
 
-	// CALL SITE INFO
-	// <0x5a5fe1> -> bullet_manager& <unknown>() const
-	// <0x5a60b5> -> float4x4 const& <unknown>() const
-	// <0x5a60db> -> float4x4 const& <unknown>() const
-	// <0x5a60f2> -> void <unknown>(float4x4 const&)
-	// <0x5a61cb> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a62aa> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a63a1> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a649e> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a65a0> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a66a2> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a66d6> -> animation::skeleton const& <unknown>() const
-	// <0x5a66f5> -> animation::skeleton const& <unknown>() const
-	// <0x5a6726> -> physics::bt_character_controller& <unknown>()
-	// <0x5a6ce3> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a6dec> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a6ef5> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// <0x5a6ffe> -> void <unknown>(pcstr, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const&, pcvoid, resources::resource_ptr<resources::managed_resource,resources::managed_intrusive_base> const&, const u8, pcvoid const)
-	// ******
+	m_dispersion_calculator.set_weapon( this );
+	m_recoil_calculator.set_weapon( this );
 
-	// FUNCTION BODY
-	// <0x5a5f6b>|0x01b|+0x01a:'800'
-	// <0x5a5f85>|0x035|+0x01b:'801'
-	// <0x5a5fa0>|0x050|+0x00f:'802'
-	// <0x5a5faf>|0x05f|+0x01b:'803'
-	// <0x5a5fca>|0x07a|+0x00d:'804'
-	// <0x5a5fd7>|0x087|+0x018:'805'
-	// <0x5a5fef>|0x09f|+0x00d:'806'
-	// <0x5a5ffc>|0x0ac|+0x00d:'807'
-	// <0x5a6009>|0x0b9|+0x030:'808'
-	// <0x5a6039>|0x0e9|+0x030:'809'
-	// <0x5a6069>|0x119|+0x00d:'810'
-	// <0>
-	// <0x5a6076>|0x126|+0x018:'812'
-	// <0x5a608e>|0x13e|+0x018:'813'
-	// <0>
-	// <1>
-	// <0x5a60a6>|0x156|+0x026:'816'
-	// <0x5a60cc>|0x17c|+0x028:'817'
-	// <0>
-	// <0x5a60f4>|0x1a4|+0x00f:'819'
-	// <0>
-	// <0x5a6103>|0x1b3|+0x0da:'821'
-	// <0x5a61dd>|0x28d|+0x0df:'822'
-	// <0x5a62bc>|0x36c|+0x0fd:'823'
-	// <0x5a63b9>|0x469|+0x0fd:'824'
-	// <0x5a64b6>|0x566|+0x102:'825'
-	// <0x5a65b8>|0x668|+0x102:'826'
-	// <0x5a66ba>|0x76a|+0x030:'827'
-	// <0x5a66ea>|0x79a|+0x01f:'828'
-	// <0>
-	// <0x5a6709>|0x7b9|+0x037:'830'
-	// <0>
-	// <1>
-	// <0x5a6740>|0x7f0|+0x16f:'833'
-	// <0>
-	// <1>
-	// <0x5a68af>|0x95f|+0x028:'836'
-	// <0x5a68d7>|0x987|+0x011:'837'
-	// <0>
-	// <1>
-	// <0x5a68e8>|0x998|+0x010:'840'
-	// <0x5a68f8>|0x9a8|+0x010:'841'
-	// <0>
-	// <0x5a6908>|0x9b8|+0x017:'843'
-	// <0x5a691f>|0x9cf|+0x017:'844'
-	// <0x5a6936>|0x9e6|+0x00c:'845'
-	// <0x5a6942>|0x9f2|+0x053:'846'
-	// <0>
-	// <0x5a6995>|0xa45|+0x011:'848'
-	// <0x5a69a6>|0xa56|+0x053:'849'
-	// <0>
-	// <0x5a69f9>|0xaa9|+0x005:'851'
-	// <0x5a69fe>|0xaae|+0x08e:'852'
-	// <0x5a6a8c>|0xb3c|+0x092:'853'
-	// <0>
-	// <1>
-	// <0x5a6b1e>|0xbce|+0x081:'856'
-	// <0>
-	// <0x5a6b9f>|0xc4f|+0x011:'858'
-	// <0>
-	// <0x5a6bb0>|0xc60|+0x00b:'860'
-	// <0x5a6bbb>|0xc6b|+0x00d:'861'
-	// <0>
-	// <1>
-	// <0x5a6bc8>|0xc78|+0x00b:'864'
-	// <0x5a6bd3>|0xc83|+0x00b:'865'
-	// <0>
-	// <0x5a6bde>|0xc8e|+0x00f:'867'
-	// <0>
-	// <0x5a6bed>|0xc9d|+0x10e:'869'
-	// <0x5a6cfb>|0xdab|+0x109:'870'
-	// <0x5a6e04>|0xeb4|+0x109:'871'
-	// <0x5a6f0d>|0xfbd|+0x109:'872'
-	// <0>
-	// ******
+	set_transform( user.get_transform( ) );
+	set_fire_bullet_transform( user.get_transform( ) );
+
+	m_user = &user;
+
+	m_user->subscribe_animation_player( "Left toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	m_user->subscribe_animation_player( "Left heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	m_user->subscribe_animation_player( "Right toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	m_user->subscribe_animation_player( "Right heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	get_user( )->subscribe_animation_player( "left_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::left ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	get_user( )->subscribe_animation_player( "right_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::right ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+
+	m_hand_ik_processor.activate( user.skeleton( ), *m_skeleton );
+	m_legs_ik_processor.activate( user.skeleton( ) );
+
+	m_legs_ik_processor.set_character_controller( &get_user( )->physics_controller( ) );
+
+	m_user_animations_selector.activate( user, boost::bind( &weapon_core::on_user_sprint, this, false ), boost::bind( &weapon_core::on_user_sprint, this, true ) );
+
+	m_logic->set_initial_state( m_logic->states( ).front( ) );
+	m_logic->tick( );
+
+	profile_slot_enum ammo1_slot = get_ammo_slot( first_ammo );
+	profile_slot_enum ammo2_slot = get_ammo_slot( second_ammo );
+
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo1 = get_inventory( ).item_in_slot( ammo1_slot );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo2 = get_inventory( ).item_in_slot( ammo2_slot );
+
+	if ( ammo1 )
+		set_ammunition( static_cast< weapon_ammunition* >( ammo1.c_ptr( ) ) );
+	else if ( ammo2 )
+		set_ammunition( static_cast< weapon_ammunition* >( ammo2.c_ptr( ) ) );
+	else
+	{
+		set_ammunition( NULL );
+		LOG_INFO( "There is no ammo in both slots (%s)", request_path( ) );
+	}
+
+	m_ammo_slot = m_ammunition ? ( *m_ammunition ).profile_slot_id( ) : invalid_slot;
+
+	if ( m_load_ammo_on_next_activate )
+	{
+		load_ammo( );
+		m_load_ammo_on_next_activate = false;
+	}
+
+	reset_fire_queue( );
+	instant_show( );
+
+	if ( g_is_server )
+	{
+		set_animation_callback( "sound_events", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
+		set_animation_callback( "shell_extraction", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
+		set_animation_callback( "left_hand_corrector", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
+		set_animation_callback( "right_hand_corrector", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
+	}
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::deactivate()
+
+// claude@NOTE: 21/21 stmts. % walled by inline-vs-call (unsubscribe sites, get_user). g_is_server
+// is a global defined in the application module (link-only def in anchor_game_core.cpp).
 void weapon_core::deactivate( )
 {
-	// CALL SITE INFO
-	// <0x5a404c> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a406d> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a408e> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a40af> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a4116> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a4138> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a415a> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a417c> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a419e> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a41c0> -> void <unknown>(pcstr, pcvoid)
-	// <0x5a41ec> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// <0x5a4212> -> void <unknown>(animation::reserved_channel_ids_enum, pcvoid)
-	// ******
+	if ( g_is_server )
+	{
+		get_user( )->unsubscribe_animation_player( "sound_events", get_user( ) );
+		get_user( )->unsubscribe_animation_player( "shell_extraction", get_user( ) );
+		get_user( )->unsubscribe_animation_player( "left_hand_corrector", get_user( ) );
+		get_user( )->unsubscribe_animation_player( "right_hand_corrector", get_user( ) );
+	}
 
-	// FUNCTION BODY
-	// <0x5a4019>|0x009|+0x00f:'878'
-	// <0>
-	// <0x5a4028>|0x018|+0x026:'880'
-	// <0x5a404e>|0x03e|+0x021:'881'
-	// <0x5a406f>|0x05f|+0x021:'882'
-	// <0x5a4090>|0x080|+0x021:'883'
-	// <0>
-	// <1>
-	// <0x5a40b1>|0x0a1|+0x010:'886'
-	// <0x5a40c1>|0x0b1|+0x010:'887'
-	// <0x5a40d1>|0x0c1|+0x00d:'888'
-	// <0x5a40de>|0x0ce|+0x010:'889'
-	// <0>
-	// <0x5a40ee>|0x0de|+0x008:'891'
-	// <0>
-	// <0x5a40f6>|0x0e6|+0x022:'893'
-	// <0x5a4118>|0x108|+0x022:'894'
-	// <0x5a413a>|0x12a|+0x022:'895'
-	// <0x5a415c>|0x14c|+0x022:'896'
-	// <0x5a417e>|0x16e|+0x022:'897'
-	// <0x5a41a0>|0x190|+0x022:'898'
-	// <0>
-	// <0x5a41c2>|0x1b2|+0x00e:'900'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a41d0>|0x1c0|+0x01e:'904'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a41ee>|0x1de|+0x026:'908'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5a4214>|0x204|+0x00e:'913'
-	// <0>
-	// <0x5a4222>|0x212|+0x010:'915'
-	// ******
+	m_dispersion_calculator.set_character_dispersion_params( NULL );
+	m_recoil_calculator.set_character_recoil_params( NULL );
+	m_breath_vibration_calculator.set_user( NULL );
+	m_breath_vibration_calculator.set_breath_holding_params( NULL );
+
+	instant_hide( );
+
+	m_user->unsubscribe_animation_player( "Right heel", this );
+	m_user->unsubscribe_animation_player( "Right toe", this );
+	m_user->unsubscribe_animation_player( "Left heel", this );
+	m_user->unsubscribe_animation_player( "Left toe", this );
+	m_user->unsubscribe_animation_player( "left_hand_ik", this );
+	m_user->unsubscribe_animation_player( "right_hand_ik", this );
+
+	if ( m_is_in_sprint_transition )
+	{
+		get_user( )->unsubscribe_animation_player( animation::channel_id_max, this );
+		get_user( )->unsubscribe_animation_player( animation::channel_id_max, (pcvoid)( (pcbyte)this + 1 ) );
+	}
+
+	m_user_animations_selector.deactivate( );
+	m_logic->set_initial_state( NULL );
 }
 
 bool weapon_core::is_ready_to_be_deactivated( ) const
@@ -1124,8 +922,10 @@ void weapon_core::on_player_model_removed( )
 	instant_hide( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core::update_bones_matrices(vostok::resources::resource_ptr<vostok::animation::skeleton,vostok::resources::unmanaged_intrusive_base> const&, vostok::math::float4x4* const, const unsigned int, const unsigned int, vostok::math::float4x4&, vostok::math::float4x4&, vostok::animation::animation_player const&)
+// claude@NOTE: structure recovered (29/29 stmts). % walled by intrusive_ptr operator* + animation
+// inline-vs-call (compute_bones_matrices/convert_to_object_matrices/skeleton accessors out-of-line
+// target-side, inlined here). calculated_head_matrix is an animation-module helper not in our tree
+// (link-only stub in anchor_game_core.cpp).
 void weapon_core::update_bones_matrices(
 	resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const&	user_skeleton,
 	float4x4* const						user_matrices,
@@ -1136,127 +936,58 @@ void weapon_core::update_bones_matrices(
 	animation::animation_player const&	user_animation_player
 )
 {
-	// LOCALS
-	// u32 							weapon_bone_index
-	// u32 							head_bone_index
-	// float4x4* 					weapon_matrices
-	// u32 							weapon_matrices_count
-	// u32 							root_bone_index
-	// float4x4 const& 				weapon_transform
-	// float4x4 const& 				user_transform
-	// float4x4* 					e<2>
-	// float4x4* 					i<2>
-	// u32 							j<3>
-	// ******
+	static bool draw_bones_matrices = false;
 
-	// STATICS
-	// static bool 					draw_bones_matrices = <0x4c26664>;
-	// ******
+	m_last_tick_time_in_ms = current_time_in_ms;
 
-	// SKIPPED BLOCKS
-	// <0x5a2a10><1>
-	// <0x5a5dbb><2>
-	// <0x5a5de0><3>
-	// ******
+	update_dispersion( ( m_user->input( ).actions_mask & 0x1 ) != ( m_user->input( ).actions_mask & 0x2 ) || ( m_user->input( ).actions_mask & 0x8 ) != ( m_user->input( ).actions_mask & 0x4 ), current_time_in_ms );
 
-	// CALL SITE INFO
-	// <0x5a5b6d> -> player_input const& <unknown>() const
-	// <0x5a5bfb> -> float4x4 const& <unknown>() const
-	// <0x5a5d3d> -> physics::bt_character_controller& <unknown>()
-	// <0x5a5d95> -> void <unknown>(const u32, float4x4* const)
-	// <0x5a5e33> -> void <unknown>(float4x4 const&)
-	// <0x5a5e7b> -> void <unknown>(const u32, float4x4 const&, float4x4 const* const, float4x4 const* const, float4x4 const&, float4x4* const, float4x4* const, float4x4 const&)
-	// <0x5a5ee3> -> void <unknown>(float4x4 const&)
-	// ******
+	float4x4 const&	weapon_transform		= m_user->get_transform( );
 
-	// FUNCTION BODY
-	// <0x5a5b41>|0x011|+0x00f:'943'
-	// <0x5a5b50>|0x020|+0x08a:'944'
-	// <0>
-	// <0x5a5bda>|0x0aa|+0x026:'946'
-	// <0>
-	// <0x5a5c00>|0x0d0|+0x01a:'948'
-	// <0x5a5c1a>|0x0ea|+0x01f:'949'
-	// <0>
-	// <0x5a5c39>|0x109|+0x029:'951'
-	// <0>
-	// <0x5a5c62>|0x132|+0x026:'953'
-	// <0>
-	// <0x5a5c88>|0x158|+0x024:'955'
-	// <0x5a5cac>|0x17c|+0x03f:'956'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5a5ceb>|0x1bb|+0x00b:'961'
-	// <0x5a5cf6>|0x1c6|+0x01d:'962'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5a5d13>|0x1e3|+0x038:'966'
-	// <0>
-	// <0x5a5d4b>|0x21b|+0x015:'968'
-	// <0x5a5d60>|0x230|+0x019:'969'
-	// <0>
-	// <1>
-	// <0x5a5d79>|0x249|+0x01e:'972'
-	// <0x5a5d97>|0x267|+0x01b:'973'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <0x5a5db2>|0x282|+0x00b:'993'
-	// <0>
-	// <0x5a5dbd>|0x28d|+0x025:'995'
-	// <0>
-	// <1>
-	// <0x5a5de2>|0x2b2|+0x018:'998'
-	// <0x5a5dfa>|0x2ca|+0x002:'999'
-	// <0x5a5dfc>|0x2cc|+0x002:'1000'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5a5dfe>|0x2ce|+0x020:'1005'
-	// <0x5a5e1e>|0x2ee|+0x017:'1006'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5a5e35>|0x305|+0x048:'1017'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5a5e7d>|0x34d|+0x026:'1023'
-	// <0x5a5ea3>|0x373|+0x028:'1024'
-	// <0x5a5ecb>|0x39b|+0x01a:'1025'
-	// <0>
-	// <0x5a5ee5>|0x3b5|+0x026:'1027'
-	// <0x5a5f0b>|0x3db|+0x029:'1028'
-	// ******
+	u32 const		weapon_matrices_count	= ( *m_skeleton ).get_non_root_bones_count( );
+	float4x4* const	weapon_matrices			= (float4x4*)alloca( weapon_matrices_count * sizeof( float4x4 ) );
+
+	user_animation_player.compute_bones_matrices( *m_skeleton, weapon_matrices, weapon_matrices + weapon_matrices_count, this, NULL );
+
+	u32 const		weapon_bone_index		= ( *user_skeleton ).get_bone_index( "Weapon" ) - ( *user_skeleton ).get_root_bones_count( );
+
+	user_animation_player.compute_bones_local_matrices( *user_skeleton, user_matrices, user_matrices + weapon_matrices_count, m_user, NULL );
+	change_matrix_orientation( math::create_rotation( float3( math::pi, 0.0f, 0.0f ) ), user_matrices[weapon_bone_index] );
+
+	if ( s_ik_enable_on_hands_value )
+		m_hand_ik_processor.process( current_time_in_ms, weapon_matrices, user_matrices );
+
+	if ( s_ik_enable_on_legs_value && m_user->physics_controller( ).on_ground( ) )
+	{
+		m_legs_ik_processor.tick( current_time_in_ms );
+		m_legs_ik_processor.process( user_matrices, weapon_transform );
+	}
+
+	process_finger_correction( current_time_in_ms, user_matrices );
+
+	user_animation_player.convert_to_object_matrices( *user_skeleton, user_matrices, user_matrices + user_matrices_count, m_user );
+
+	if ( draw_bones_matrices )
+	{
+		for ( float4x4* i = user_matrices, *e = user_matrices + user_matrices_count; i != e; ++i )
+		{
+			for ( u32 j = 0; j < 4; ++j )
+			{
+			}
+		}
+	}
+
+	float4x4 const&	user_transform			= weapon_transform * user_matrices[weapon_bone_index];
+	set_transform( user_transform );
+
+	on_skeleton_matrices_changed( current_time_in_ms, weapon_transform, weapon_matrices, weapon_matrices + weapon_matrices_count, user_transform, user_matrices, user_matrices + user_matrices_count, weapon_transform );
+
+	u32 const		head_bone_index			= ( *user_skeleton ).get_bone_index( "Head" ) - ( *user_skeleton ).get_root_bones_count( );
+	character_head_transform = animation::calculated_head_matrix( weapon_transform, user_matrices[head_bone_index] );
+	set_fire_bullet_transform( character_head_transform );
+
+	u32 const		root_bone_index			= ( *user_skeleton ).get_bone_index( "Root" ) - ( *user_skeleton ).get_root_bones_count( );
+	character_transform = weapon_transform * user_matrices[root_bone_index];
 }
 
 bool weapon_core::is_sprinting( ) const

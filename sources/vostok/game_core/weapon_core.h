@@ -402,7 +402,7 @@ private:
 	/* 0x0480 */	profile_slot_enum					m_ammo_slot;
 	/* 0x0484 */	u8									m_weapon_id;
 	/* 0x0485 */	u8									m_weapon_fire_queue_types_count;
-	/* 0x0486 */	bool								m_is_third_view;
+	/* 0x0486 */	mutable bool						m_is_third_view;
 	/* 0x0487 */	bool								m_is_shown;
 	/* 0x0488 */	bool								m_aimed;
 	/* 0x0489 */	bool								m_ready_for_fire;
