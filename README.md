@@ -13,16 +13,16 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.66% fuzzy &middot; 9,683 / 25,372 functions exact (38.16%).**
+**Overall: 52.65% fuzzy &middot; 9,684 / 25,372 functions exact (38.17%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 387 / 2,805 (13.8%) | 3.5% |
-| `shared` | 112 | 836 / 2,255 (37.1%) | 36.7% |
+| `render` | 351 | 384 / 2,805 (13.7%) | 3.5% |
+| `shared` | 112 | 837 / 2,255 (37.1%) | 36.6% |
 | `game` | 141 | 20 / 1,634 (1.2%) | 0.1% |
-| `game_core` | 189 | 603 / 1,429 (42.2%) | 25.5% |
+| `game_core` | 189 | 597 / 1,429 (41.8%) | 25.5% |
 | `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
-| `animation` | 102 | 162 / 880 (18.4%) | 5.4% |
+| `animation` | 102 | 161 / 880 (18.3%) | 5.4% |
 | `ai` | 124 | 416 / 759 (54.8%) | 37.5% |
 | `sound` | 69 | 212 / 517 (41.0%) | 16.6% |
 | `collision` | 52 | 371 / 516 (71.9%) | 31.0% |
@@ -41,7 +41,7 @@ _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` 
 | `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
 | `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
 
-_Updated 2026-06-13 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-14 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
