@@ -13,6 +13,12 @@
 #include <vostok/construction.h>
 #include <vostok/memory_doug_lea_mt_allocator.h>
 
+namespace vostok {
+namespace core {
+	void logging_preinitialize	( );
+} // namespace core
+} // namespace vostok
+
 #if 0//def VOSTOK_STATIC_LIBRARIES
 
 pvoid __cdecl operator new		( size_t buffer_size )
@@ -104,12 +110,12 @@ struct inplace_constructor {
 	}
 }; // struct inplace_constructor
 
-void initialize_crt_allocator			( )
+__declspec( noinline ) void initialize_crt_allocator			( )
 {
 	R_ASSERT					( g_crt_allocations_are_enabled );
 	if ( !g_crt_allocator ) {
 		vostok::debug::preinitialize	( );
-		// sushi@TODO: vostok::logging::preinitialize	( );
+		vostok::core::logging_preinitialize	( );
 		vostok::bind_pointer_to_buffer_mt_safe	(
 			(vostok::memory::doug_lea_mt_allocator*&)g_crt_allocator,
 			s_crt_allocator_buffer,
@@ -269,17 +275,26 @@ void vostok_ogg_free				( pvoid pointer )
 #else // #ifndef MASTER_GOLD
 pvoid vostok_ogg_malloc			( size_t size )
 {
-	return						malloc( size );
+	if ( !vostok::memory::g_crt_allocator )
+		vostok::memory::initialize_crt_allocator	( );
+
+	return						vostok::memory::g_crt_allocator->malloc_impl( size );
 }
 
 pvoid vostok_ogg_realloc			( pvoid pointer, size_t size )
 {
-	return						realloc( pointer, size );
+	if ( !vostok::memory::g_crt_allocator )
+		vostok::memory::initialize_crt_allocator	( );
+
+	return						vostok::memory::g_crt_allocator->realloc_impl( pointer, size );
 }
 
 void vostok_ogg_free				( pvoid pointer )
 {
-	free						( pointer );
+	if ( !vostok::memory::g_crt_allocator )
+		vostok::memory::initialize_crt_allocator	( );
+
+	vostok::memory::g_crt_allocator->free_impl( pointer );
 }
 #endif // #ifndef MASTER_GOLD
 
