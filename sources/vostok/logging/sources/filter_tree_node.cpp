@@ -130,6 +130,9 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
     }
 }
 
+// claude@NOTE: STRUCTURE MATCH (1 return stmt). Residual: target inlines buffer_string::operator<
+// (c_str + strcmp_s + ==-1), base keeps it as a call to vostok::operator<. Inlining depth, PARK.
+// The boost-intrusive find/iterator/destructor inlining depth is the same wall in set/get_verbosity/~node.
 bool   compare_nodes::operator ()		(node_base const & left, node_base const & right) const
 {
 	return									left.name < right.name;
