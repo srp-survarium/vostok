@@ -13,23 +13,23 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.81% fuzzy &middot; 9,725 / 25,372 functions exact (38.33%).**
+**Overall: 52.84% fuzzy &middot; 9,734 / 25,372 functions exact (38.37%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
-| `render` | 351 | 386 / 2,805 (13.8%) | 3.5% |
-| `shared` | 112 | 842 / 2,255 (37.3%) | 36.7% |
+| `render` | 351 | 383 / 2,805 (13.7%) | 3.5% |
+| `shared` | 112 | 871 / 2,255 (38.6%) | 36.9% |
 | `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
-| `game_core` | 189 | 601 / 1,429 (42.1%) | 25.5% |
+| `game_core` | 189 | 608 / 1,429 (42.5%) | 25.6% |
 | `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
 | `animation` | 102 | 161 / 880 (18.3%) | 5.4% |
 | `ai` | 124 | 416 / 759 (54.8%) | 37.5% |
-| `sound` | 69 | 211 / 517 (40.8%) | 16.6% |
+| `sound` | 69 | 212 / 517 (41.0%) | 16.6% |
 | `collision` | 52 | 371 / 516 (71.9%) | 31.0% |
-| `particle` | 25 | 276 / 485 (56.9%) | 27.6% |
+| `particle` | 25 | 269 / 485 (55.5%) | 26.5% |
 | `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
 | `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
-| `ui` | 27 | 179 / 255 (70.2%) | 42.9% |
+| `ui` | 27 | 175 / 255 (68.6%) | 42.7% |
 | `physics` | 14 | 98 / 203 (48.3%) | 24.4% |
 | `fs` | 25 | 70 / 189 (37.0%) | 27.8% |
 | `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
