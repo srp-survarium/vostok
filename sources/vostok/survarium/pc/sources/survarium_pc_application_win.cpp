@@ -15,11 +15,14 @@
 #undef NOWINMESSAGES
 #undef NOCTLMGR
 #undef NOGDI
+#undef NOMB
 #include <vostok/os_include.h>
 
 using survarium::application;
 
 static HWND	s_splash_screen			= 0;
+
+static HANDLE	s_presence_mutex		= 0;
 
 static vostok::fixed_string512		s_finger_print;
 
@@ -250,4 +253,27 @@ void application::preinitialize					( )
 void application::postinitialize				( )
 {
 	PostMessage						( s_splash_screen, WM_DESTROY, 0, 0 );
+}
+
+// claude@NOTE: optimized-target wall - structure MATCHes (8/8 stmts). Byte residual
+// is the `return s_presence_mutex != 0;` codegen: target does setne al on the live
+// CreateMutexA result (eax) right after storing, base materialises the bool via
+// xor ecx/setne cl/mov al,cl. Not source-steerable from /Od source.
+bool check_presence_mutex						( )
+{
+	s_presence_mutex				= OpenMutexA( READ_CONTROL, FALSE, "survarium_already_running" );
+	if ( !s_presence_mutex ) {
+		s_presence_mutex			= CreateMutexA( 0, FALSE, "survarium_already_running" );
+		return						s_presence_mutex != 0;
+	}
+
+	CloseHandle						( s_presence_mutex );
+	MessageBoxA						( 0, "Survarium application already running", "Survarium", MB_ICONERROR );
+	TerminateProcess				( GetCurrentProcess(), 1 );
+	return							false;
+}
+
+void destroy_presence_mutex						( )
+{
+	CloseHandle						( s_presence_mutex );
 }

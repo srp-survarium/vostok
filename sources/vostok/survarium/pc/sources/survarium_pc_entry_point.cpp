@@ -43,6 +43,9 @@ static void	main_protected				( pvoid )
 struct HINSTANCE__;
 typedef HINSTANCE__* HINSTANCE;
 
+bool	check_presence_mutex			( );
+void	destroy_presence_mutex			( );
+
 int __stdcall WinMain					(
 		HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
@@ -52,6 +55,11 @@ int __stdcall WinMain					(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS		( hInstance, hPrevInstance, nCmdShow, lpCmdLine );
 
+	if ( !check_presence_mutex( ) )
+		return							( 0 );
+
 	vostok::debug::protected_call			( &main_protected, 0 );
+
+	destroy_presence_mutex				( );
 	return								( s_exit_code );
 }

@@ -481,7 +481,7 @@ void game::tick( u32 const current_frame_id )
 
 	if ( m_active_scene )
 	{
- 		m_input_world->tick			( );
+ 		m_input_world->tick			( current_frame_id );
 		m_active_scene->tick		( );
 	}
 
