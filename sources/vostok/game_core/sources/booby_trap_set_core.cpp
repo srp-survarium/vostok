@@ -332,7 +332,7 @@ u8 booby_trap_set_core::trap_index( booby_trap_core const& trap ) const
 	booby_trap_core_ptr const* trap_iter = std::find( m_traps.begin( ), m_traps.end( ), &trap );
 	ASSERT( UNKNOWN_EXPRESSION_T( trap_iter != m_traps.end( ) ) );
 
-	return u8(trap_iter - m_traps.begin( ));
+	return u8( std::distance( m_traps.begin( ), trap_iter ) );
 }
 
 void booby_trap_set_core::remove_trap_impl( booby_trap_core& trap )
