@@ -58,6 +58,9 @@ double_barreled_weapon_core_show_state::double_barreled_weapon_core_show_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
+// claude@NOTE: systemic ceiling shared by every weapon_*_state weapon_and_hands_expression.
+// Structure is a 3-statement MATCH; only the return diverges - the target inlines
+// mixing::operator+ where our build emits a call. Inline-vs-call codegen; not source-steerable.
 animation::mixing::expression double_barreled_weapon_core_show_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool const							is_third_view,
@@ -72,6 +75,8 @@ animation::mixing::expression double_barreled_weapon_core_show_state::weapon_and
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
+// claude@NOTE: STRUCTURE MATCH; residual is the /Od register-coloring nibble at the out-of-line
+// m_weapon.ammo_in_magazine() thiscall (target loads the weapon ptr into eax, our build into ecx).
 weapon_lexeme_pair double_barreled_weapon_core_show_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -104,6 +109,11 @@ weapon_lexeme_pair double_barreled_weapon_core_show_state::get_weapon_lexeme_pai
 	);
 }
 
+// claude@NOTE: systemic inline-vs-call ceiling shared by every weapon_*_state
+// get_user_hands_expression (matched weapon_core_show/hide_state siblings sit at the same %).
+// 6-statement STRUCTURE MATCH; the target leaves the lexeme_parameters setters +
+// ~animation_lexeme_parameters out-of-line and inlines the expression ctor (early return) to a
+// bare simple_lock, where our build inlines the setters and calls the ctor. Not source-steerable.
 animation::mixing::expression double_barreled_weapon_core_show_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
