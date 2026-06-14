@@ -17,3 +17,4 @@ if ( a )
 }
 ```
 Evidence: weapon_core_shotgun_reload_start_substate::initialize (4 -> 5 stmts, 5/5; 0x1a + 0x2f records summing to the single if row).
+Evidence: weapon_core_reload_state_base::initialize - target split `!deserializing()` (@29) from `chamber_a_round_on_reload() && round_is_chambered()` (@31) with a line-30 gap (the `{`); a flat `if (!deserializing() && chamber && round)` folds to ONE record (3 stmts) no matter the blank-line/multi-line spelling, while `if(!deserializing()){ if(chamber && round) body; }` emits 4 stmts byte-identical (0x61 both) -> STRUCTURE MATCH. The leftover 99.83% is only `round_is_chambered`'s `this`-load reg (eax target / ecx base), a /Od scratch-reg choice.

@@ -139,6 +139,10 @@ animation::mixing::expression pistol_weapon_core_reload_state::get_user_hands_ex
 	return override_lexeme;
 }
 
+// claude@NOTE: blocked on computed_reload_animation_time_scale being a STATE[STUB] in
+// weapon_animations_timescale_inline.h (returns 0.0f -> base folds to fldz); the target
+// calls it out-of-line. Will reach ~100% once that inline helper's real body is matched in
+// its own TU. Structure already matches (1 stmt).
 pistol_weapon_core_reload_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_reload_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
