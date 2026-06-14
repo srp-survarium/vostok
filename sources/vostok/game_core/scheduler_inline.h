@@ -28,6 +28,14 @@ inline void	scheduler::change_status( scheduler::identifier* identifier, schedul
 
 }
 
+// claude@NOTE: optimized-context COMDAT, not a pure /Od leaf - the survived target
+//   body has its vectora ops LTCG-inlined optimized (records.size() via the
+//   imul 92492493h/sar5 magic division of sizeof(record)=0x38, the records/record
+//   references register-allocated into edi/esi so PDB records 0 locals) and a
+//   collapsed line table (4 entries: m_active@60, records-decl+m_id+push_back@63,
+//   back()@65, m_id+m_callback+return@67). /Od source reproduces the readable
+//   statement structure but not the optimizer's collapsed line table or idiv->magic
+//   codegen; byte residual is the /Od-vs-optimized leaf ceiling, not source-steerable.
 inline scheduler::record& scheduler::register_object( scheduler::identifier* identifier, scheduler::callback const& callback, bool active )
 {
 	identifier->m_active = active;

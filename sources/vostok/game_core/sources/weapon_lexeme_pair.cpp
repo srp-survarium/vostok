@@ -38,6 +38,14 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	main_lexeme_parameters.time_scale							( time_scale );
 	main_lexeme_parameters.time_synchronization_group_id		( time_synchronization_group );
 	// sushi@TODO: target line 40 here is a lone 4-byte `mov byte[ebp-5],0` (<0x4> at 0x72, no lea/call, no PDB local) - a compiler-materialized bool temp; do not fabricate a local. trail: patterns/lone-byte-store-zero.md
+	// claude@NOTE: structural root cause - target records NO `main_lexeme` local (3 locals:
+	//   main_lexeme_parameters, offset_lexeme, offset_lexeme_parameters), base records 4
+	//   (adds main_lexeme). main_lexeme is a TEMPORARY in the target, yet it is referenced at
+	//   line 48 (`group != -1 ? &main_lexeme : NULL`) and line 61 (weapon_lexeme_pair(...)) -
+	//   the line-40 `mov byte[ebp-5],0` is the bool of an animation_lexeme(animation_lexeme&,
+	//   bool) lifetime/clone idiom that keeps the unnamed temporary alive. Reproducing 0
+	//   main_lexeme locals + the line-40 byte needs that exact idiom (unrecovered); rest of
+	//   the byte residual is the animation-module inline builder-call expansions.
 	animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
 
 

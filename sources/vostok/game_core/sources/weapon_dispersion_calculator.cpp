@@ -19,10 +19,6 @@ weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
 {
 }
 
-// claude@NOTE: target emits the outer braced block's exit as its own line-42 record
-//   (.3: two jmp short .6, 14 stmts); base /Od folds the && short-circuit's first-false
-//   jump straight into the if-condition statement (13 stmts). The Allman braces are
-//   present in source - this is a /Od jump-fold difference, not source-steerable.
 void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 {
 	if ( !m_current_time )
@@ -40,6 +36,13 @@ void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 
 	m_target_coeff = math::max( m_target_coeff - m_aiming_speed * dt, 0.0f );
 
+	// claude@NOTE: target has an extra statement at line 42 - the outer if-body's
+	//   scope exit emitted as two adjacent `jmp short .6` at label .3 (the && short-
+	//   circuit-false skip and the inner else-if fall-through, /Od keeps them separate;
+	//   14 stmts). Base /Od merges both into the if-condition's `jnp .4` (13 stmts).
+	//   Byte content is identical; tried brace-less and Allman inner if/else-if (both
+	//   byte-neutral, neither splits the jmp). /Od jump-fold quirk on the && + braced
+	//   body, not steerable by brace placement here.
 	if ( dt != 0.0f && m_current_coeff != m_target_coeff )
 	{
 		if ( m_current_coeff > m_target_coeff )
