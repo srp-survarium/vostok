@@ -151,7 +151,13 @@ its single writer).
     the same container), a `min`/clamp is `math::min(a, b)` with the temp passed inline, a
     constructed argument is the temporary spelled inline (`T(NULL)`). If the inline spelling
     can't reproduce the exact bytes (a ctor re-schedule), the 1-statement / 0-local STRUCTURE
-    is still correct - take the % hit and move on.
+    is still correct - take the % hit and move on. **Use KNOWN functions freely** (`std::for_each`,
+    `math::min`, EXISTING accessors). **But if the helper would be a NEW accessor whose name you
+    can't confirm from a symbol or a consumer, do NOT fabricate it** - inventing a class member
+    is changing structure ("we do not change structure", sushi), even when an experiment proves
+    a helper byte-matches (e.g. reset_fire_queue: a guessed `total_ammo()` hit 99.81% vs 85.8%,
+    but was reverted - name unknown). Keep the faithful direct form and record the proven finding
+    as a `sushi@TODO` + review_todos row; restore the real accessor once its name is identified.
   - **Never modify ANOTHER unit's source to win THIS match.** Out-lining a *different*
     unit's empty method so your call site emits `call` instead of inlining `{}` is off-limits
     - that out-line, if the target really keeps it standalone, belongs to THAT unit's own PR.
