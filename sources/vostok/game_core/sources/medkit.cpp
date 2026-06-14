@@ -87,6 +87,10 @@ void medkit::load( configs::binary_config_value config )
 	}
 }
 
+// claude@NOTE: walled by inventory::holder()/inventory_holder::scheduler() LTCG inlining
+// (both kept out-of-line in the target, always inlined by our /GL build). remove_affects /
+// active_tick share the same wall (active_tick additionally needs math::min out-of-line).
+// Source kept faithful: (*holder().damage_model()) via operator*, matching the target.
 void medkit::set_active( bool bactive )
 {
 	m_active = bactive;
@@ -117,12 +121,12 @@ void medkit::set_active( bool bactive )
 	{
 		damage_protection& dmgp = m_damage_protect[i];
 		if ( m_active )
-			m_inventory->holder( ).damage_model( )->register_body_part_damage_protector(
+			( *m_inventory->holder( ).damage_model( ) ).register_body_part_damage_protector(
 				dmgp.body_part_name,
 				&dmgp.protector
 			);
 		else
-			m_inventory->holder( ).damage_model( )->unregister_body_part_damage_protector(
+			( *m_inventory->holder( ).damage_model( ) ).unregister_body_part_damage_protector(
 				dmgp.body_part_name,
 				&dmgp.protector
 			);
@@ -178,7 +182,7 @@ void medkit::active_tick( const u32 frame_time_ms )
 	{
 		item_influence const& infl = m_influences[i];
 		const float health_amount = medkit_time / 1000.0f * infl.health_amount;
-		m_inventory->holder( ).damage_model( )->apply_med_kit(
+		( *m_inventory->holder( ).damage_model( ) ).apply_med_kit(
 			infl.body_part_name,
 			health_amount
 		);
@@ -193,7 +197,7 @@ void medkit::remove_affects( )
 	for ( u32 i = 0 ; i < m_affects_count; ++i )
 	{
 		medkit::affect const& affct = m_affects[i];
-		m_inventory->holder( ).damage_model( )->cancel_affect( affct.body_part_name, affct.type ); // sushi@MATCH: Target pushed those two args before calling damage_model
+		( *m_inventory->holder( ).damage_model( ) ).cancel_affect( affct.body_part_name, affct.type );
 	}
 }
 
