@@ -41,7 +41,7 @@ public:
 			void		activate				( animation::skeleton const& skeleton );
 
 	inline	void		set_drawer				( legs_ik_drawer* drawer ) { /* no source */ }
-	inline	void		set_character_controller( physics::bt_character_controller* controller ) { /* no source */ }
+	inline	void		set_character_controller( physics::bt_character_controller* controller ) { m_character_controller = controller; }
 
 			void		process					( float4x4* matrices, float4x4 const& transform );
 

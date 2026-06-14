@@ -26,7 +26,7 @@ public:
 
 	inline	void		set_max_breath_delay_time	( float arg_0 ) { /* no source */ }
 
-	inline	void		set_user					( base_player const* arg_0 ) { /* no source */ }
+	inline	void		set_user					( base_player const* arg_0 ) { m_user = arg_0; }
 
 	inline	float		get_horizontal_value		( ) const { return m_horizontal_value; }
 	inline	float		get_vertical_value			( ) const { return m_vertical_value; }

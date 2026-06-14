@@ -18,7 +18,7 @@ class dispersion_calculator {
 public:
 	explicit			dispersion_calculator			( );
 
-	inline	void		set_character_dispersion_params	( character_dispersion_params const* arg_0 ) { /* no source */ }
+	inline	void		set_character_dispersion_params	( character_dispersion_params const* arg_0 ) { m_character_calculator.set_character_dispersion_params( arg_0 ); }
 
 			void		tick							(
 							weapon_user_state_enum		character_state,
