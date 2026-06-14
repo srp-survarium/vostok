@@ -21,6 +21,22 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 {
 }
 
+// claude@NOTE: in the target these two live inline in the header (.h source
+// attribution) and emit as COMDATs from an OPTIMIZED TU - execute(0x97f80) is a
+// frame-less leaf with reset() inlined, finalize(0xc40c0) calls reset() out of
+// line. Defined here out-of-line so the /Od game_core callers (fire/aimed_fire
+// execute) emit `call weapon_core_base_state::execute` and pair (99%); these two
+// own bodies stay at the /Od-vs-optimized leaf residual.
+void weapon_core_base_state::finalize( )
+{
+	m_animation_playback_state.reset( );
+}
+
+void weapon_core_base_state::execute( )
+{
+	m_animation_playback_state.reset( );
+}
+
 bool weapon_core_base_state::deserializing( ) const
 {
 	return m_weapon.deserializing( );
