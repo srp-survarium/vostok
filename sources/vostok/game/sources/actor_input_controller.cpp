@@ -105,9 +105,9 @@ void frame_events::reset( )
 	m_onframe_jump			= false;
 }
 
-void actor_input_controller::on_before_processing( input::world* input_world )
+void actor_input_controller::on_before_processing( input::world* input_world, u32 current_time_in_ms )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
+	VOSTOK_UNREFERENCED_PARAMETERS	( input_world, current_time_in_ms );
 	m_frame_events.reset	( );
 }
 

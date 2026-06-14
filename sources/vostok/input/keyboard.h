@@ -192,6 +192,7 @@ struct VOSTOK_NOVTABLE keyboard {
 public:
 	virtual	bool	is_key_down	( enum_keyboard key ) const = 0;
 	virtual	bool	get_dik_name( int dik, pstr dest_str, int dest_sz ) const = 0;
+	virtual	bool	get_dik_unicode( int dik, wchar_t* buff, u32 buff_size ) const = 0;
 
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( keyboard )

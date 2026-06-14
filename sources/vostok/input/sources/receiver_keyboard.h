@@ -30,6 +30,7 @@ public:
 	virtual			~keyboard		( );
 	virtual	bool	is_key_down		( enum_keyboard key ) const;
 	virtual	bool	get_dik_name	( int dik, pstr dest_str, int dest_sz ) const;
+	virtual	bool	get_dik_unicode	( int dik, wchar_t* buff, u32 buff_size ) const;
 			void	on_activate		( );
 			void	on_deactivate	( );
 			void	execute			( );

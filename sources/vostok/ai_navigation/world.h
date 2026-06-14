@@ -32,7 +32,7 @@ struct VOSTOK_NOVTABLE world {
 #endif // #ifdef DEBUG
 
 
-	virtual u32		get_node_id_at		( float3 const& position ) = 0;
+	virtual u32		get_node_id_at		( float3 const& position ) const = 0;
 	virtual u32		get_node_id_after_move	( u32 old_node_id, float3 const& old_position, float3 const& new_position ) = 0;
 	virtual bool	find_path (
 						u32 start_node,
@@ -41,7 +41,7 @@ struct VOSTOK_NOVTABLE world {
 						vostok::math::float3 const& goal_position,
 						float agent_radius,
 						vostok::ai::navigation::path_type& path
-					) = 0;
+					) const = 0;
 	virtual	bool	can_stand( 
 						float3 const& vertex,
 						u32 triangle_id,
