@@ -11,6 +11,12 @@ using boost::asio::ip::tcp;
 namespace vostok {
 namespace network_core {
 
+// claude@NOTE: structure matches (5 stmts / 2 locals). Residual is the ASSERT: the target's
+// plain ASSERT emits a single-arg expression_eater( prefix ) guarded block, but our MASTER_GOLD
+// ASSERT_T -> VOSTOK_EMPTY_EXPRESSION_VA_ARGS emits no eater (just the identity(false) guard).
+// The original game's VOSTOK_EMPTY_EXPRESSION_VA_ARGS expanded to expression_eater(__VA_ARGS__);
+// recovering it is a shared debug_macros.h change affecting every plain-ASSERT site, out of
+// scope for this TU. ASSERT_U( prefix ) overshoots (pushes prefix AND assert_untyped).
 void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 {
 	ASSERT( prefix );
@@ -113,6 +119,12 @@ void http_client::handle_write_request( boost::system::error_code const& err )
 		on_error( err );
 }
 
+// claude@NOTE: structure + local set (3) match. Residual is StlPort basic_string::find overload
+// resolution: status_message.find( "HTTP/" ) / "200" - the target binds the 2-arg
+// find( const char* s, size_type pos ) which computes traits::length internally, our StlPort
+// headers bind the path that pre-computes char_traits::length( s ) before the call (+0xd each).
+// Library/header version wall, not steerable from this source. The async_read( ... ) tail is the
+// usual boost::bind / read_streambuf_op completion-handler inline-vs-call.
 void http_client::handle_read_status_line( boost::system::error_code const& err )
 {
 	if ( !err )
