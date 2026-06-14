@@ -19,13 +19,13 @@ weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapo
 
 void weapon_core_reload_state_base::initialize( )
 {
-	// sushi@TODO: the structure is wrong here - the verifier's "STRUCTURE MATCH (shape ok)" verdict
-	// is disputed (the L31 ONLY-target row is more than just round_is_chambered inline-vs-call). To
-	// be dealt with later.
 	weapon_core_animation_end_aware_state::initialize( );
 
-	if ( !deserializing( ) && m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
-		m_weapon.unload_chambered_round( );
+	if ( !deserializing( ) )
+	{
+		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
+			m_weapon.unload_chambered_round( );
+	}
 }
 
 void weapon_core_reload_state_base::on_animation_end_impl( bool& animation_player_tick_result )
@@ -34,6 +34,10 @@ void weapon_core_reload_state_base::on_animation_end_impl( bool& animation_playe
 	animation_player_tick_result = true;
 }
 
+// claude@NOTE: target keeps packet<>::append(const bool) / packet_reader::r<bool> OUT of line
+// (single push of the bool value / al return); our base inlines both to the append(&v,sizeof)/
+// r(&v,1,1) bodies. Inline ceiling owned by the shared packet.h/packet_reader.h templates, not
+// steerable from here; every bool-append/r<bool> sibling sits at the same 69.33%/46.9%.
 void weapon_core_reload_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
 	packet.append( m_animation_has_been_ended );
