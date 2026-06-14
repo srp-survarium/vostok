@@ -911,7 +911,10 @@ void	btDiscreteDynamicsWorld::integrateTransforms(btScalar timeStep)
 						body->setHitFraction(0.f);
 						body->proceedToTransform( predictedTrans);
 
-#if 0
+// claude@NOTE: vostok ships the CCD velocity-clamp branch ENABLED (target compiles
+// the linVel.normalize()/setLinearVelocity/predictIntegratedTransform + printf("sm2=%f")
+// block, NOT the resolveSingleCollision #else) - reproduce, do not "fix" the debug printf.
+#if 1
 						btVector3 linVel = body->getLinearVelocity();
 
 						btScalar maxSpeed = body->getCcdMotionThreshold()/getSolverInfo().m_timeStep;
