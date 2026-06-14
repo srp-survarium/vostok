@@ -10,6 +10,12 @@
 
 namespace survarium {
 
+// claude@NOTE: STRUCTURE MATCH (0 body stmts; all init-list). Residual is the base-ctor
+// call-vs-inline artifact: target CALLs survarium::link_resolver::link_resolver (its implicit
+// ctor survives as an out-of-line ICF-folded COMDAT - 3 copies in the target index), while our
+// base has NO link_resolver::link_resolver symbol so MSVC inlines the vtable store + needs one
+// extra frame slot (sub esp,10h vs 0Ch). Not steerable from this ctor - depends on whether the
+// implicit ctor is emitted out-of-line globally. See patterns/base-ctor-call-vs-inlined-init.md.
 usable_object::usable_object( ) :
 	m_collision_geometries		( NULL ),
 	m_collision_geometries_count( 0 )
