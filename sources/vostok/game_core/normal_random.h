@@ -43,15 +43,12 @@ STATIC_SIZE_ASSERT(normal_random, 0x4);
 inline float normal_random::rand_n( float sigma )
 {
 	const float c_one_over_sigma_exp = 1.2539185f;
-
 	if ( sigma == 0.0f )
 		return 0.0f;
-
 	float y;
 	do {
 		y = -logf( randF( ) );
 	} while ( randF( ) > expf( -math::sqr( y - 1.0f ) * 0.5f ) );
-
 	if ( randI( ) & 1 )
 		return y * sigma * c_one_over_sigma_exp;
 	else

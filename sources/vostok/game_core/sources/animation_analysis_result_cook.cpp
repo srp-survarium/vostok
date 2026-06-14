@@ -18,7 +18,9 @@ animation_analysis_result_cook::animation_analysis_result_cook( )
 
 void animation_analysis_result_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// claude@MATCH: line layout matches the target so LOG_ERROR's __LINE__ (ud=L24 .. LOG=L27) is byte-identical.
+	// claude@MATCH: line layout matches the target so LOG_ERROR's __LINE__
+	// (ud=L24 .. LOG=L27) is byte-identical - do NOT collapse these lines.
+
 	animation_analysis_result_cook_user_data ud;
 	if ( !parent.user_data( ) || !parent.user_data( )->try_get( ud ) )
 	{
