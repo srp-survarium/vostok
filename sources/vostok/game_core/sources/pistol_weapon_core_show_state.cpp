@@ -34,21 +34,25 @@ pistol_weapon_core_show_state::pistol_weapon_core_show_state(
 	resources::managed_resource_ptr const*	animations,
 	u32										animations_count,
 	bool&									is_shown
-) : weapon_core_show_state_base( weapon, is_shown )
+) : weapon_core_show_state_base( weapon, is_shown ),
+	m_time_scale( animation_timescale )
 {
-	m_time_scale = animation_timescale;
-
 	ASSERT_CMP_U( animations_count, ==, 12 );
 
 	u32 animation_index = 0;
-	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
-		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
-			for ( u32 weapon_state_index = 0 ; weapon_state_index != 2 ; ++weapon_state_index )
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 2 ; ++weapon_state_index ) {
 				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+			}
+		}
+	}
 
-	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index )
-		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index )
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
 			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
 }

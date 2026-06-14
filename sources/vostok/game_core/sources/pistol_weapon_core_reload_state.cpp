@@ -40,15 +40,21 @@ pistol_weapon_core_reload_state::pistol_weapon_core_reload_state(
 	ASSERT_CMP_U( animations_count, ==, 16 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
+			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state ) {
 				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+			}
+		}
+	}
 
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
+	for ( u32 view = 0 ; view != 2 ; ++view ) {
+		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state ) {
+			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state ) {
 				m_user_animations[view][user_state][weapon_state] = animations[animation_index++];
+			}
+		}
+	}
 
 	ASSERT( UNKNOWN_EXPRESSION );
 }

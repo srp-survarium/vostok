@@ -95,7 +95,11 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::weap
 
 weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
-	pcstr weapon_animation_captions[2] = { "aimed_shot_first_barrel", "aimed_shot_second_barrel" };
+	pcstr weapon_animation_captions[2] =
+	{
+		"aimed_shot_first_barrel",
+		"aimed_shot_second_barrel"
+	};
 
 	pcstr animation_identifier = weapon_animation_captions[m_weapon_animation_index];
 
