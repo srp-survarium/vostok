@@ -63,6 +63,7 @@ void boost::throw_exception			( std::exception const& exception )
 void vostok::debug::initialize		( debug::engine * engine )
 {
 	s_debug_engine					=	engine;
+	g_disable_output_to_debugger	=	!engine->output_to_debugger();
 }
 
 void vostok::debug::finalize			( )
@@ -129,11 +130,12 @@ static void process						( bool* do_debug_break, vostok::process_error_enum proc
 	{
 		++s_process_lock_count;
 	}
-	else 
+	else
 	{
-		while ( interlocked_compare_exchange(s_process_lock_thread_id, current_thread_id(), 0) != 0 )
-			yield							(10);
-		s_process_lock_count			=	0;
+		u32 const thread_id				=	current_thread_id();
+		while ( interlocked_compare_exchange(s_process_lock_thread_id, thread_id, 0) != 0 )
+			yield							(0);
+		s_process_lock_count			=	1;
 	}
 
 	u32 size_for_call_stack					= 0;
@@ -185,7 +187,10 @@ void vostok::debug::on_error		( bool* do_debug_break, vostok::process_error_enum
 	va_start				( mark, format );
 
 	string4096				description;
-	vsnprintf				( description, sizeof(description), sizeof(description) - 1, format, mark );
+	// claude@NOTE: structure matches (3/3); only byte residual is the vsnprintf
+	// wrapper - target calls vostok::vsnprintf out-of-line, our /Ob2 build inlines
+	// it to __vsnprintf_s (inline-vs-call heuristic, not source-steerable).
+	vsnprintf				( description, sizeof(description) - 1, format, mark );
 
 	process					( do_debug_break, process_error, ignore_always, assert_type, reason, expression, description, file, function, line );
 }

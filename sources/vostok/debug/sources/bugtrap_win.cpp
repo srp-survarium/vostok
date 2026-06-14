@@ -62,6 +62,9 @@ static BT_SetActivityType_type						*s_BT_SetActivityType = 0;
 typedef void APIENTRY BT_AddLogFile_type			(LPCTSTR pszLogFile);
 static BT_AddLogFile_type							*s_BT_AddLogFile = 0;
 
+typedef void APIENTRY BT_SetReportFilePath_type		(LPCTSTR pszReportFilePath);
+static BT_SetReportFilePath_type					*s_BT_SetReportFilePath = 0;
+
 template < typename T >
 static void load_function							( T*& result, HMODULE const module, pcstr const function_id )
 {
@@ -102,6 +105,7 @@ static void load_library							( )
 	load_function					( s_BT_SetSupportEMail	, s_bugtrap_handle, "BT_SetSupportEMail");
 	load_function					( s_BT_SetActivityType	, s_bugtrap_handle, "BT_SetActivityType");
 	load_function					( s_BT_AddLogFile		, s_bugtrap_handle, "BT_AddLogFile");
+	load_function					( s_BT_SetReportFilePath, s_bugtrap_handle, "BT_SetReportFilePath");
 }
 
 static pcstr convert_to_unicode_if_needed			( pcstr const message, WCHAR* const output, u32 const max_count )
@@ -166,6 +170,9 @@ void vostok::debug::bugtrap::change_usage		( error_mode error_mode, bugtrap_usag
 
 void vostok::debug::bugtrap::initialize		( )
 {
+	if ( s_initialized )
+		return;
+
 	R_ASSERT						( !s_initialized, "you are trying to initialize bugtrap twice" );
 
 	if ( s_bugtrap_usage != no_bugtrap ) {
@@ -239,4 +246,12 @@ void vostok::debug::on_error					( pcstr message )
 	}
 
 	set_show_dialog_for_unhandled_exceptions	( false );
+}
+
+void vostok::debug::bugtrap::restart_application_on_crash	( bool value )
+{
+	if ( value )
+		s_BT_SetFlags				( BTF_DETAILEDMODE | BTF_ATTACHREPORT | BTF_RESTARTAPP );
+	else
+		s_BT_SetFlags				( BTF_DETAILEDMODE | BTF_ATTACHREPORT );
 }
