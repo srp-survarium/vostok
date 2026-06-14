@@ -44,6 +44,9 @@ private:
 
 STATIC_SIZE_ASSERT(base_project, 0x30);
 
+// free helper used by project_cooker_simple::create_game_objects.
+void read_transform( configs::binary_config_value const& cfg, float4x4& result );
+
 } // namespace survarium
 
 #endif // #ifndef BASE_PROJECT_H_INCLUDED

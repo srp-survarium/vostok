@@ -42,6 +42,8 @@
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/weapon_user_animations_container_cook.h>
 #include <vostok/game_core/base_project.h>
+#include <vostok/game_core/static_collision.h>
+#include <vostok/game_core/base_player_creation_params.h>
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
@@ -2245,19 +2247,74 @@ namespace vostok
 		holder.touch( );
 	}
 
-	// claude@MATCH: anchor for base_player non-virtual leaf functions. base_player is
-	// abstract, but these are non-virtual so a qualified call on a null ref ODR-uses
-	// each standalone body without needing a full concrete stub. on_player_death also
-	// pulls in the free helper call_player_death_subscriber_callback (taken as a
-	// function ref by intrusive_list::for_each).
+	// claude@MATCH: base_player is abstract; a concrete derived stub (overriding every
+	// pure virtual + the unoverridden inventory_holder pures) gives a constructible
+	// instance so the ctor body is ODR-used and scorable.
+	struct concrete_base_player : survarium::base_player
+	{
+		concrete_base_player( survarium::base_player_creation_params const& params, survarium::scheduler& s )
+			: survarium::base_player( params, s ) { }
+
+		// inventory_holder pure virtuals not overridden by base_player
+		virtual bool							set_new_active_item	( survarium::inventory_item_ptr const& ) override { return false; }
+		virtual void							take_inventory_item	( survarium::inventory_item_ptr const& ) override { }
+		virtual physics::world*					get_physics_world	( ) override { return NULL; }
+
+		// collision_user pure virtuals
+		virtual float4x4 const&					get_transform		( ) const override { return *reinterpret_cast< float4x4* >( NULL ); }
+		virtual void							use_ladder			( survarium::ladder* ) override { }
+
+		// hit_receiver pure virtuals
+		virtual void							hit					( survarium::hit_initiator const* const, u32 const, pcstr, float const, float const, survarium::bullet* const ) override { }
+		virtual void							hit					( survarium::hit_initiator const* const, collision::bone_collision_data const&, pcstr, float const, float const, survarium::bullet* const ) override { }
+		virtual float							get_speed			( ) const override { return 0.0f; }
+
+		// base_player pure virtuals
+		virtual animation::skeleton const&		skeleton			( ) const override { return *reinterpret_cast< animation::skeleton* >( NULL ); }
+		virtual survarium::player_input const&	input				( ) const override { return *reinterpret_cast< survarium::player_input* >( NULL ); }
+		virtual float3 const&					position			( ) const override { return *reinterpret_cast< float3* >( NULL ); }
+		virtual float							get_look_pitch		( ) const override { return 0.0f; }
+		virtual physics::bt_character_controller&	physics_controller	( ) override { return *reinterpret_cast< physics::bt_character_controller* >( NULL ); }
+		virtual survarium::player_stamina&		stamina				( ) override { return *reinterpret_cast< survarium::player_stamina* >( NULL ); }
+		virtual void							jump				( ) override { }
+		virtual void							end_jump			( ) override { }
+		virtual void							crouch				( ) override { }
+		virtual void							stand_up			( ) override { }
+		virtual survarium::game_team_id			team				( ) const override { return survarium::game_team_id( ); }
+		virtual void							subscribe_animation_player	( pcstr, animation_callback const&, pcvoid, resources::managed_resource_ptr const&, u8, pcvoid ) override { }
+		virtual void							subscribe_animation_player	( animation::reserved_channel_ids_enum, animation_callback const&, pcvoid, resources::managed_resource_ptr const&, pcvoid ) override { }
+		virtual void							unsubscribe_animation_player( pcstr, pcvoid ) override { }
+		virtual void							unsubscribe_animation_player( animation::reserved_channel_ids_enum, pcvoid ) override { }
+		virtual bool							is_replaying_history	( ) const override { return false; }
+		virtual u32								local_time			( u32 ) const override { return 0; }
+		virtual survarium::engine&				get_engine			( ) override { return *reinterpret_cast< survarium::engine* >( NULL ); }
+		virtual animation::animation_player const&	animation_player	( ) const override { return *reinterpret_cast< animation::animation_player* >( NULL ); }
+		virtual animation::animation_player&	animation_player	( ) override { return *reinterpret_cast< animation::animation_player* >( NULL ); }
+	};
+
+	// claude@MATCH: anchor for base_player non-virtual leaf functions. The non-virtual
+	// leaves are ODR-used by qualified calls on a null ref; the ctor needs the concrete
+	// stub above. on_player_death also pulls in the free helper
+	// call_player_death_subscriber_callback (taken as a function ref by for_each).
 	void use_game_core_base_player( )
 	{
+		// base_player_creation_params has no compiled default ctor; pass a null ref (the
+		// anchor is never run, only ODR-uses the base_player ctor body).
+		survarium::base_player_creation_params&	cp	= *reinterpret_cast< survarium::base_player_creation_params* >( NULL );
+		survarium::scheduler					sched( NULL );
+		concrete_base_player					cbp( cp, sched );
+		example_callback( reinterpret_cast< pcstr >( &cbp ) );
+
 		survarium::base_player&	p	= *reinterpret_cast< survarium::base_player* >( NULL );
 		p.subscribe_on_player_death( NULL );
 		p.unsubscribe_from_player_death( NULL );
 		p.on_player_death( );
 		p.tick_active_object( );
 		p.deserialize_game_world_object( *reinterpret_cast< vostok::network_core::packet_reader* >( NULL ) );
+		p.send_game_world_object(
+			reinterpret_cast< survarium::game_world_object const* >( NULL ),
+			*reinterpret_cast< boost::function< vostok::network_core::udp_match_packet& ( ) >* >( NULL ),
+			*reinterpret_cast< boost::function< void ( vostok::network_core::udp_match_packet& ) >* >( NULL ) );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
 	}
 
@@ -2342,6 +2399,18 @@ namespace vostok
 		concrete_base_project	p;
 		p.touch( );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
+
+		// static_collision insert/remove are public non-virtual leaves on a null ref.
+		survarium::static_collision&	sc	= *reinterpret_cast< survarium::static_collision* >( NULL );
+		sc.insert( reinterpret_cast< vostok::physics::world* >( NULL ) );
+		sc.remove( reinterpret_cast< vostok::physics::world* >( NULL ) );
+		example_callback( reinterpret_cast< pcstr >( &sc ) );
+
+		// read_transform is a free helper with external linkage used only by
+		// project_cooker_simple::create_game_objects; ODR-use it to keep its body.
+		survarium::read_transform(
+			*reinterpret_cast< vostok::configs::binary_config_value const* >( NULL ),
+			*reinterpret_cast< vostok::math::float4x4* >( NULL ) );
 	}
 
 	void use_game_core_weapon_user_animations_container_cook( )

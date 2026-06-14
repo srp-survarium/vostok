@@ -167,12 +167,14 @@ public:
 
 protected:
 			void								on_player_death					( );
-public:
+private:
+	// target mangles ABE (private const) - ?send_game_world_object@..@@ABE..
 			void								send_game_world_object			(
 													game_world_object const*											object,
 													boost::function< network_core::udp_match_packet& ( ) > const&		reciver_packet_allocator,
 													boost::function< void( network_core::udp_match_packet& ) > const&	reciver_enqueuer
 												) const;
+public:
 
 	virtual	animation::animation_player const&	animation_player				( ) const = 0;
 	virtual	animation::animation_player&		animation_player				( ) = 0;
