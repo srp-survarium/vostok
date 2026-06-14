@@ -8,6 +8,21 @@
 namespace vostok {
 namespace network_core {
 
+// claude@NOTE: the packet< tcp_packet > / packet< udp_match_packet > append/resize/
+// ctor instantiations below are unpaired in the objdiff report (target COMDAT present,
+// base absent). Cause: in the shipped exe the linker kept the OPTIMIZED instances of
+// these primitives (e.g. tcp append(void*,u32) at 0xa72f0 = 0x78B, register-allocated,
+// no ebp frame; udp append(float2)/header_size likewise) - they came from /Ot consumer
+// TUs and survived /OPT:ICF. Our base compiles network_core /Od and inlines every
+// primitive at its (also /Od) call sites, so it emits no standalone COMDAT to pair with
+// the target's optimized one - a uniform-/Od build cannot reproduce a mixed-optimization
+// exe. The bodies here are the faithful deliverable; the missing pairing is the
+// optimization-level wall, NOT a structure defect. (The earlier synthetic address-of
+// anchors were dropped in 587b3077 because a single /Ot anchor TU still cannot mirror
+// the target's whole-program inlining.) A handful (e.g. resize(tcp) at 0x134ee0) stayed
+// /Od in the target but is reachable only via call sites our /Od build inlines, so it too
+// emits no standalone base COMDAT.
+
 template < typename T >
 inline packet< T >::packet( )
 {
