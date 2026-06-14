@@ -36,7 +36,7 @@ public:
 	virtual	void	clear_resources				( );
 
 	virtual void	load_navmesh				( pcstr project_name );
-	virtual u32		get_node_id_at				( float3 const& position );
+	virtual u32		get_node_id_at				( float3 const& position ) const;
 	virtual u32		get_node_id_after_move		( u32 old_node_id, float3 const& old_position, float3 const& new_position );
 	virtual bool	find_path					(
 						u32 start_node,
@@ -45,7 +45,7 @@ public:
 						math::float3 const& goal_position,
 						float agent_radius,
 						path_type& path
-					);
+					) const;
 	virtual	bool	can_stand( 
 						float3 const& vertex,
 						u32 triangle_id,

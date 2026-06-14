@@ -14,6 +14,7 @@ IncludeAll::IncludeAll()
 	vostok::anchor_physics( );
 	vostok::anchor_collision( );
 	vostok::anchor_logging( );
+	vostok::anchor_ai_navigation( );
 
 	Callback1 cb1;
 	Callback2 cb2;

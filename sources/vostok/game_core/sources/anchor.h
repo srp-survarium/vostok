@@ -21,6 +21,7 @@ namespace vostok
 	void anchor_physics( );
 	void anchor_collision( );
 	void anchor_logging( );
+	void anchor_ai_navigation( );
 
 	// shared opaque sink: escapes addresses so LTCG observes member stores.
 	// Defined once in anchor_network_core.cpp; used by every anchor TU.

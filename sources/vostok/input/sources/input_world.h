@@ -31,7 +31,7 @@ class input_world :
 public:
 							input_world		( input::engine& engine, HWND window_handle );
 	virtual					~input_world	( );
-	virtual	void			tick			( );
+	virtual	void			tick			( u32 current_time_in_ms );
 	virtual	void			clear_resources	( );
 	virtual	void			on_activate		( );
 	virtual	void			on_deactivate	( );
