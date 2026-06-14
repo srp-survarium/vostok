@@ -33,16 +33,18 @@ inventory_cook::inventory_cook( ) :
 
 void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 {
+
 	inventory_cooker_data* cooker_data;
 	parent.user_data( )->try_get( cooker_data ); // sushi@TODO
 	ASSERT( UNKNOWN_EXPRESSION_T( cooker_data ) );
-
 	buffer_vector< resources::request > requests	( ALLOCA( max_slots_count * sizeof( resources::request ) ), max_slots_count );
+
 	buffer_vector< variant<32> const* > user_data	( ALLOCA( max_slots_count * sizeof( variant<32> const* ) ), max_slots_count );
 	variant<32> 						v[max_slots_count];
 
 	pcstr				resource_name;
 	profile_slot*		slot;
+
 
 	for ( u32 i = 0 ; i < WEAPON_COUNT ; ++i )
 	{
@@ -91,9 +93,9 @@ void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 					booby_trap_set_cook_data	booby_trap_set_data;
 					booby_trap_set_data.is_local_player = cooker_data->profile->is_local;
 					booby_trap_set_data.stack_size		= (u8)slot->item.condition_or_stack;
+
 					v[current].set( booby_trap_set_data );
 					user_data.push_back( &v[current] );
-
 					break;
 				}
 				case item_type_foo:

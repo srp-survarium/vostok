@@ -49,27 +49,26 @@ void weapon_core_cook::load_weapon_parameters( configs::binary_config_ptr config
 
 	configs::binary_config_value const& parameters	= cfg_root["parameters"];
 
-	u16 magazine_capacity			= parameters["magazine_capacity"];
+	u16 const magazine_capacity		= parameters["magazine_capacity"];
 	object_to_cook->set_magazine_capacity( magazine_capacity );
 
-	float bullet_damage				= parameters["bullet_damage"];
+	float const bullet_damage		= parameters["bullet_damage"];
 	object_to_cook->set_bullet_damage( bullet_damage );
 
-	float bullet_pierce				= parameters["bullet_pierce"];
+	float const bullet_pierce		= parameters["bullet_pierce"];
 	object_to_cook->set_bullet_pierce( bullet_pierce );
 
-	float aim_fov_factor			= 1.f / (float)parameters["aim_zoom_factor"];
+	float const aim_fov_factor		= 1.f / (float)parameters["aim_zoom_factor"];
 	object_to_cook->set_aim_fov_factor( aim_fov_factor );
 
-	float aim_near_plane_factor		= parameters["aim_near_plane_factor"];
+	float const aim_near_plane_factor	= parameters["aim_near_plane_factor"];
 	object_to_cook->set_aim_near_plane_factor( aim_near_plane_factor );
 
 	object_to_cook->set_double_handed( parameters.value_exists( "double_handed" ) ? (bool)parameters["double_handed"] : true );
 
 	object_to_cook->set_chamber_a_round_on_reload( parameters.value_exists( "chamber_a_round_on_reload" ) ? (bool)parameters["chamber_a_round_on_reload"] : false );
 
-	// claude@MATCH: target recomputes cfg_root["parameters"] here instead of reusing the `parameters` local.
-	configs::binary_config_value const& weapon_fire_queue_types_cfg = cfg_root["parameters"]["fire_queue_types"];
+	configs::binary_config_value const& weapon_fire_queue_types_cfg = cfg_root["parameters"]["fire_queue_types"];	// claude@MATCH: target recomputes cfg_root["parameters"] here instead of reusing `parameters`
 
 	pbyte weapon_fire_queue_types	= VOSTOK_NEW_ARRAY_IMPL( g_allocator, u8, weapon_fire_queue_types_cfg.size( ) );
 	u8 queue_types_count			= 0;
@@ -129,10 +128,11 @@ void weapon_core_cook::delete_resource( resources::resource_base* resource )
 
 void weapon_core_cook::query_weapon_states( resources::query_result_for_cook* const parent, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
-	float rounds_per_second	= (float)config_ptr->get_root( )["parameters"]["rounds_per_minute"] / 60.f;
-	float reload_time		= config_ptr->get_root( )["parameters"]["reload_time"];
+	float const rounds_per_second	= (float)config_ptr->get_root( )["parameters"]["rounds_per_minute"] / 60.f;
+	float const reload_time			= config_ptr->get_root( )["parameters"]["reload_time"];
 	weapon_state_creation_params const* params = VOSTOK_NEW_IMPL( g_allocator, weapon_state_creation_params )( config_ptr, *object_to_cook, rounds_per_second, reload_time, object_to_cook->is_shown( ) );
 	const_buffer params_buffer( (pcvoid)params, sizeof( weapon_state_creation_params ) );
+
 
 	configs::binary_config_value states_cfg = config_ptr->get_root( )["states"];
 	fixed_vector< resources::creation_request, 10 > requests;
@@ -154,12 +154,11 @@ void weapon_core_cook::query_weapon_states( resources::query_result_for_cook* co
 		requests.push_back( resources::creation_request( "chamber_a_round_aimed", params_buffer, ( resources::class_id_enum )( u32 )states_cfg["chamber_a_round_aimed"]["state_type"] ) );
 	}
 
-	u32 requests_count = requests.size( );
+	u32 const requests_count = requests.size( );
 	buffer_vector< variant<32> >		user_data		( ALLOCA( requests_count * sizeof( variant<32> ) ), requests_count, requests_count, variant<32>( ) );
 	buffer_vector< variant<32> const* >	user_data_ptrs	( ALLOCA( requests_count * sizeof( variant<32> const* ) ), requests_count, requests_count, NULL );
 
-	for ( u32 i = 1; i != requests_count; ++i )
-	{
+	for ( u32 i = 1; i != requests_count; ++i ) {
 		user_data[ i ].set( states_cfg[ requests[ i ].get_name( ) ] );
 		user_data_ptrs[ i ] = &user_data[ i ];
 	}

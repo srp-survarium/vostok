@@ -26,9 +26,10 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 	ASSERT( UNKNOWN_EXPRESSION );
 	pcstr model = (pcstr)config->get_root( )["data"]["model_armed"];
 
+
+
 	fixed_string< 260 > aabb_path;
 	aabb_path.assignf( "resources/models/%s.model/render/export_properties", model );
-
 	resources::request requests[1] = {
 		{ aabb_path.c_str( ), resources::binary_config_class_impl },
 	};
