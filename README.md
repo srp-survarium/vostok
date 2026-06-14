@@ -212,6 +212,16 @@ python3 scripts/match_db.py report --function 'medkit::'
 #  parameter list, so even a boost/asio handler reads cleanly. --verbose shows the
 #  demangled signature instead; --json gives the full untruncated name. Works on diff too.)
 
+# list EVERY function in a module/unit + its raw diff columns (fuzzy_pct, struct_class,
+# t_stmts/b_stmts, sizes, target VA hint). The most direct per-function dump; filter by
+# --class to pull just the steerable QUANTITY traps, or --presence for the unpaired set.
+# Needs a FRESH DB - `list` bails on a stale report.json (run rebuild.py/refresh first),
+# unlike report/sql which warn-and-proceed. --json gives full names; pipe wide output to `less -S`.
+python3 scripts/match_db.py list --module game_core                  # all game_core functions
+python3 scripts/match_db.py list --module game_core --class QUANTITY  # just the wrong-stmt-count traps
+python3 scripts/match_db.py list --unit vostok/game_core/sources/weapon_core.cpp
+python3 scripts/match_db.py list --module game_core --presence TARGET_ONLY  # unpaired (no base symbol yet)
+
 # TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
 # WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-
 # verifier (`pdb_fetch --view structure-diff`); a 100%/QUANTITY is the classic false win.
@@ -236,6 +246,14 @@ python3 scripts/match_db.py diff <hash>..<hash> --module game_core   # --json fo
 # bank the done set: stamp every fn that ever reached 100% with tries=1, so the queue
 # (which ranks/excludes by best-ever %, not current %) drops them until real work is gone.
 python3 scripts/match_db.py tried --done
+
+# AUTHORITATIVE per-function structure diff (the `cls` column above is only an approximation).
+# Prints each diverging statement tagged SIZE +/-N / BASE_ONLY / TRGT_ONLY, the target-vs-base
+# statement counts, and `; STRUCTURE MATCH` when the shape is clean. --function is a substring of
+# the signature; --view also takes target,base,structure,diff. This is how you confirm a
+# QUANTITY is real (recoverable statements) vs a stale label (0/0 STRUCTURE MATCH) vs blocked.
+pdb_fetch --target-index binaries/rich/target/index.jsonl --base-index binaries/rich/base/index.jsonl \
+  --function 'weapon_core::tick' --view structure-diff
 ```
 
 **`cls` (structure class)** is the DB's *approximate* shape verdict (the

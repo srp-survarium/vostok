@@ -744,24 +744,28 @@ def cmd_list(args):
           LEFT JOIN units u ON u.id = t.unit"""
         size_col = "t.size"
         name_col = "s.mangled"
+        # module/unit exist on t, b AND u here - qualify or SQLite errors "ambiguous"
+        module_col, unit_col = "u.module", "u.name"
     elif args.presence == "TARGET_ONLY":
         base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM target_only"
         size_col = "size"
         name_col = "mangled"
+        module_col, unit_col = "module", "unit"
     elif args.presence == "BASE_ONLY":
         base = """SELECT b.demangled, b.mangled, b.unit, b.module, b.size, b.n_stmts,
                          st.status, st.detail
                   FROM base_only b LEFT JOIN base_only_status st ON st.mangled = b.mangled"""
         size_col = "b.size"
         name_col = "b.mangled"
+        module_col, unit_col = "b.module", "b.unit"
     else:
         sys.exit(f"[match_db] unknown --presence {args.presence}")
 
     if args.module:
-        where.append("module = ?")
+        where.append(f"{module_col} = ?")
         params.append(args.module)
     if args.unit:
-        where.append("unit = ?")
+        where.append(f"{unit_col} = ?")
         params.append(args.unit)
     if args.max_size is not None:
         where.append(f"{size_col} <= ?")
