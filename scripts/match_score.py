@@ -16,9 +16,17 @@ regressions):
 The headline also shows objdiff's overall ``fuzzy_match_percent`` (partial
 credit included), taken verbatim from the report's top-level measures.
 
+A third, on-demand view (``--max-code``) reads match.db instead of the report:
+per module, code-match on BOTH rulers - ``fuzzy`` (partial credit, ~82% - "how
+close") and ``exact`` (byte-perfect, ~26% - the README "Code matched") - each with
+a best-ever ``max`` column from ``history.best_fuzzy_pct`` (churn-immune). Weighted
+over ALL target code, so TRGT_ONLY/unpaired functions count as 0% dead weight.
+
 Usage:
-    python3 scripts/match_score.py                 # print to stdout
-    python3 scripts/match_score.py --write-readme   # refresh README.md block
+    python3 scripts/match_score.py                  # print to stdout
+    python3 scripts/match_score.py --write-readme    # refresh README.md block
+    python3 scripts/match_score.py --max-code        # code matched vs best-ever
+    python3 scripts/match_score.py --max-code --module game_core
 """
 
 from __future__ import annotations
@@ -26,11 +34,13 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import sqlite3
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 REPORT = REPO / "binaries" / "objdiff" / "report.json"
 README = REPO / "README.md"
+MATCH_DB = REPO / "docs" / "binary_matching" / "match.db"
 
 START = "<!-- match-score:start -->"
 END = "<!-- match-score:end -->"
@@ -93,11 +103,50 @@ def collect(report: dict) -> tuple[dict, dict]:
     return overall, mods
 
 
+def _md_table(headers: list[str], aligns: str, rows: list[list[str]]) -> list[str]:
+    """Render a GitHub markdown table with pipes aligned to column widths, so the
+    raw source reads cleanly in an editor (GitHub renders it identically). `aligns`
+    is one char per column: 'l' left, 'r' right."""
+    widths = [len(h) for h in headers]
+    for r in rows:
+        for i, c in enumerate(r):
+            widths[i] = max(widths[i], len(c))
+
+    def cell(text: str, i: int) -> str:
+        return text.rjust(widths[i]) if aligns[i] == "r" else text.ljust(widths[i])
+
+    def row(cells: list[str]) -> str:
+        return "| " + " | ".join(cell(c, i) for i, c in enumerate(cells)) + " |"
+
+    sep = []
+    for w, a in zip(widths, aligns):
+        sep.append("-" * (w - 1) + ":" if a == "r" else ":" + "-" * (w - 1))
+    return [row(headers), "| " + " | ".join(sep) + " |", *(row(r) for r in rows)]
+
+
 def render(overall: dict, mods: dict, delinker_rev: str) -> str:
     funcs = _int(overall.get("matched_functions"))
     tfuncs = _int(overall.get("total_functions"))
     fuzzy = overall.get("fuzzy_match_percent") or 0.0
     today = datetime.date.today().isoformat()
+
+    rows = []
+    for mod in sorted(mods, key=lambda k: -mods[k]["total_functions"]):
+        a = mods[mod]
+        rows.append([
+            f"`{mod}`",
+            f"{a['units']}",
+            f"{a['matched_functions']:,} / {a['total_functions']:,} "
+            f"({_pct(a['matched_functions'], a['total_functions']):.1f}%)",
+            # fuzzy_weighted is already sum(percent * bytes), so divide - don't _pct
+            f"{(a['fuzzy_weighted'] / a['total_code'] if a['total_code'] else 0):.1f}%",
+            f"{_pct(a['matched_code'], a['total_code']):.1f}%",
+        ])
+    table = _md_table(
+        ["Module", "Units", "Functions exact", "Fuzzy", "Code matched"],
+        "lrrrr",
+        rows,
+    )
 
     lines = [
         START,
@@ -111,21 +160,99 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         f"{funcs:,} / {tfuncs:,} functions exact "
         f"({_pct(funcs, tfuncs):.2f}%).**",
         "",
-        "| Module | Units | Functions exact | Code matched |",
-        "|---|--:|--:|--:|",
+        "_`Fuzzy` = code-weighted partial-credit match (how close); `Code matched` "
+        "= byte-exact only. `scripts/match_score.py --max-code` adds the best-ever "
+        "max of each (ICF-churn-immune)._",
+        "",
+        *table,
     ]
-    for mod in sorted(mods, key=lambda k: -mods[k]["total_functions"]):
-        a = mods[mod]
-        fe = f"{a['matched_functions']:,} / {a['total_functions']:,} " \
-             f"({_pct(a['matched_functions'], a['total_functions']):.1f}%)"
-        cm = f"{_pct(a['matched_code'], a['total_code']):.1f}%"
-        lines.append(f"| `{mod}` | {a['units']} | {fe} | {cm} |")
     lines += [
         "",
         f"_Updated {today} &middot; delinker `{delinker_rev}` "
         f"(folded-symbol reconciliation)._",
         END,
     ]
+    return "\n".join(lines)
+
+
+# a function is byte-exact when objdiff scores it at 100%; allow float slop
+_EXACT = 99.995
+
+
+def code_max(module: str | None = None) -> list[tuple]:
+    """Per-module code match on BOTH rulers, each current vs best-ever max.
+
+    Code-weighted over ALL target code: each target function contributes its
+    target_size to the denominator, so a TRGT_ONLY/unpaired function is 0%-matched
+    dead weight (exactly like objdiff's total_code). Two rulers:
+      - fuzzy  : partial credit - a function adds (fuzzy% * size). The "how close"
+                 number (~82% for game_core; objdiff's weighted match).
+      - exact  : byte-perfect only - a function adds its full size iff fuzzy==100,
+                 else 0. The README's "Code matched" (~26%).
+    The max columns use history.best_fuzzy_pct (best-ever per function), so a
+    transient ICF fold-rep regression can't lower them.
+
+    Everything is already in match.db (paired.target_size + target_only.size +
+    history.best_fuzzy_pct). Returns rows of
+    (module, total_code, fuzzy_cur, fuzzy_max, exact_cur, exact_max) sorted by
+    code size, with a trailing OVERALL row.
+    """
+    con = sqlite3.connect(MATCH_DB)
+    # module -> [total, fuzzy_cur_num, fuzzy_max_num, exact_cur, exact_max]
+    agg: dict[str, list[float]] = {}
+
+    def add(mod: str | None, size: int, cur_fz: float, best_fz: float) -> None:
+        if mod is None:
+            return
+        a = agg.setdefault(mod, [0.0, 0.0, 0.0, 0.0, 0.0])
+        a[0] += size
+        a[1] += cur_fz * size
+        a[2] += best_fz * size
+        a[3] += size if cur_fz >= _EXACT else 0
+        a[4] += size if best_fz >= _EXACT else 0
+
+    for mod, size, fuzzy, best in con.execute(
+        "SELECT p.module, p.target_size, p.fuzzy_pct, h.best_fuzzy_pct "
+        "FROM paired p LEFT JOIN history h ON h.mangled = p.mangled"
+    ):
+        fp = fuzzy or 0.0
+        add(mod, size or 0, fp, max(fp, best or 0.0))
+    # target-only (no base symbol): 0% now, full size as weight; the max credits
+    # it only if history shows it was matched before it folded away
+    for mod, size, best in con.execute(
+        "SELECT t.module, t.size, h.best_fuzzy_pct "
+        "FROM target_only t LEFT JOIN history h ON h.mangled = t.mangled"
+    ):
+        add(mod, size or 0, 0.0, best or 0.0)
+    con.close()
+
+    if module:
+        agg = {m: v for m, v in agg.items() if m == module}
+    out, tot = [], [0.0, 0.0, 0.0, 0.0, 0.0]
+    for mod, a in agg.items():
+        t = a[0]
+        out.append((mod, int(t), a[1] / t if t else 0, a[2] / t if t else 0,
+                    _pct(a[3], t), _pct(a[4], t)))
+        tot = [x + y for x, y in zip(tot, a)]
+    out.sort(key=lambda r: -r[1])
+    t = tot[0]
+    out.append(("OVERALL", int(t), tot[1] / t if t else 0, tot[2] / t if t else 0,
+                _pct(tot[3], t), _pct(tot[4], t)))
+    return out
+
+
+def render_code_max(rows: list[tuple]) -> str:
+    lines = [
+        "Code match  (match.db, code-weighted over ALL target code incl. "
+        "TRGT_ONLY@0%; max = best-ever per fn, ICF-churn-immune)",
+        "  fuzzy = partial credit (how close) | exact = byte-perfect "
+        "(README 'Code matched')",
+        f"{'module':<14}{'code bytes':>12}{'fuzzy':>9}{'fuzzy-max':>11}"
+        f"{'exact':>9}{'exact-max':>11}",
+    ]
+    for mod, tc, fz, fzm, ex, exm in rows:
+        lines.append(f"{mod:<14}{tc:>12,}{fz:>8.1f}%{fzm:>10.1f}%"
+                     f"{ex:>8.1f}%{exm:>10.1f}%")
     return "\n".join(lines)
 
 
@@ -168,7 +295,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write-readme", action="store_true",
                     help="refresh the score block in README.md")
+    ap.add_argument("--max-code", action="store_true",
+                    help="print per-module 'code matched' vs 'max code matched' "
+                         "(best-ever, churn-immune) from match.db")
+    ap.add_argument("--module", help="restrict --max-code to one module")
     args = ap.parse_args()
+
+    if args.max_code:
+        print(render_code_max(code_max(args.module)))
+        return
 
     if args.write_readme:
         block = regen_readme()
