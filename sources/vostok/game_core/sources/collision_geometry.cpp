@@ -29,6 +29,9 @@ void collision_geometry::destroy_ghost_object( )
 	physics::destroy_ghost_object( m_ghost_object );
 }
 
+
+
+
 void collision_geometry::load( configs::binary_config_value const& cfg_val )
 {
 	m_name					= cfg_val["full_name"];
@@ -42,7 +45,6 @@ void collision_geometry::load( configs::binary_config_value const& cfg_val )
 		LOG_WARNING( "invalid collision_geometry" );
 		return;
 	}
-	
 
 	m_mode									= (collision_geometry::collision_geometry_mode)(u32)cfg_val["mode"];
 	configs::binary_config_value meshes		= cfg_val["meshes"];
