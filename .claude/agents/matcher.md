@@ -132,6 +132,32 @@ its single writer).
     that is the source of truth; existing `const` almost always traces back to it. Remove
     one only when the structure itself proves the value is non-const there (e.g. the PDB
     deliberately records it mutable) - never as cleanup, never to chase a %.
+  - **Named LOCALS are structure - match the target's local SET, even at a byte cost.**
+    The PDB records the source's named locals (`pdb_fetch --view structure` shows a
+    `locals (N):` block, or none). **Names are NOT elided in this build - the recorded set is
+    GROUND TRUTH**: if the target records 0 named locals and your base records 1, your source
+    had an extra named local it did not - a real structural divergence. Fix it: write the
+    NORMAL human code that has 0 named locals, EVEN WHEN it drops the % (e.g. 100% -> 90%) -
+    "locals don't lie" (sushi); the byte residual is recoverable later, structure > %. NEVER
+    keep a load-bearing temp just to hold a high %, and NEVER "fix" a QUANTITY by collapsing
+    decl+use onto one line while keeping the local. Precedent: weapon_and_hands_expression -
+    the 0-local form (90%) is correct over the 2-local 100% form. `match_db` flags every
+    count mismatch as the `LOCALS` struct_class.
+    **The cause of a 0-target-local is almost always an INLINE HELPER or inline temp** - the
+    local belongs to an inlined callee, not this function's scope. Don't reach for an ugly
+    hack (a raw for-loop, an embedded assignment, a collapsed decl); find the helper the
+    target used and write it the normal way: an array walk is usually `std::for_each(begin,
+    end, fn)` (grep the SIBLING functions in the same .cpp - they often already use it over
+    the same container), a `min`/clamp is `math::min(a, b)` with the temp passed inline, a
+    constructed argument is the temporary spelled inline (`T(NULL)`). If the inline spelling
+    can't reproduce the exact bytes (a ctor re-schedule), the 1-statement / 0-local STRUCTURE
+    is still correct - take the % hit and move on. **Use KNOWN functions freely** (`std::for_each`,
+    `math::min`, EXISTING accessors). **But if the helper would be a NEW accessor whose name you
+    can't confirm from a symbol or a consumer, do NOT fabricate it** - inventing a class member
+    is changing structure ("we do not change structure", sushi), even when an experiment proves
+    a helper byte-matches (e.g. reset_fire_queue: a guessed `total_ammo()` hit 99.81% vs 85.8%,
+    but was reverted - name unknown). Keep the faithful direct form and record the proven finding
+    as a `sushi@TODO` + review_todos row; restore the real accessor once its name is identified.
   - **Never modify ANOTHER unit's source to win THIS match.** Out-lining a *different*
     unit's empty method so your call site emits `call` instead of inlining `{}` is off-limits
     - that out-line, if the target really keeps it standalone, belongs to THAT unit's own PR.
