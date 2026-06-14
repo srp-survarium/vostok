@@ -14,6 +14,9 @@ struct _SYSTEMTIME;
 namespace vostok {
 namespace debug {
 
+extern bool			g_disable_output_to_debugger;
+extern string4096	g_assertion_message;
+
 void set_thread_stack_guarantee				( );
 void postinitialize							( );
 vostok::debug::engine *	debug_engine		( );
