@@ -44,6 +44,9 @@ void weapon_core_shotgun_reload_finish_substate::initialize( )
 	);
 }
 
+// claude@NOTE: the deserializing/chamber_a_round/ammo_in_magazine/instant_chamber_a_round guard
+// chain is structure-correct (clean structure-diff); residual is animation_playback_state::reset()
+// inlined by /Od where the target keeps it out-of-line (shared-header noinline only; cross-unit).
 void weapon_core_shotgun_reload_finish_substate::finalize( )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
@@ -57,6 +60,8 @@ void weapon_core_shotgun_reload_finish_substate::finalize( )
 	}
 }
 
+// claude@NOTE: structure-correct; residual is the intrusive_ptr operator== operand-evaluation
+// order (target loads `this` before the arg; /Od reverses it). Non-steerable from source.
 animation::callback_return_type_enum weapon_core_shotgun_reload_finish_substate::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;
