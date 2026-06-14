@@ -38,8 +38,6 @@ void weapon_ammunition::update_bones_matrices(
 	float4x4&								character_transform,
 	animation::animation_player const&		animation_player
 )
-{
-	VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, &animation_player );
-}
+{ VOSTOK_UNREFERENCED_PARAMETERS( &user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, &animation_player ); }
 
 } // namespace survarium

@@ -160,10 +160,10 @@ legs_ik_processor::legs_ik_processor( ) :
 	m_drawer				( NULL ),
 	m_character_controller	( NULL ),
 	m_heel_interpolator		( 0.1f ),
-	m_toe_interpolator		( 0.1f )
+	m_toe_interpolator		( 0.1f ),
+	m_heel_transition_time	( m_heel_interpolator.transition_time( ) ),
+	m_toe_transition_time	( m_toe_interpolator.transition_time( ) )
 {
-	m_heel_transition_time	= m_heel_interpolator.transition_time( );
-	m_toe_transition_time	= m_toe_interpolator.transition_time( );
 }
 
 void legs_ik_processor::activate( animation::skeleton const& skeleton )
