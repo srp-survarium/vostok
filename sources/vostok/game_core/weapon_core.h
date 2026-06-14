@@ -287,7 +287,7 @@ private:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
-	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast< weapon_core_base_state* >( m_logic->current_state( ) ); }
+	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast_checked< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
 													float		animation_length,
