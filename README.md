@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 53.17% fuzzy &middot; 9,766 / 25,372 functions exact (38.49%).**
+**Overall: 53.18% fuzzy &middot; 9,766 / 25,372 functions exact (38.49%).**
 
 | Module | Units | Functions exact | Code matched |
 |---|--:|--:|--:|
