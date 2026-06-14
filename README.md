@@ -15,31 +15,33 @@ _Auto-generated from `binaries/objdiff/report.json` - refreshed by `rebuild.py` 
 
 **Overall: 53.18% fuzzy &middot; 9,762 / 25,372 functions exact (38.48%).**
 
-| Module | Units | Functions exact | Code matched |
-|---|--:|--:|--:|
-| `render` | 351 | 384 / 2,805 (13.7%) | 3.5% |
-| `shared` | 112 | 858 / 2,255 (38.0%) | 37.1% |
-| `game` | 141 | 21 / 1,634 (1.3%) | 0.1% |
-| `game_core` | 189 | 620 / 1,429 (43.4%) | 26.3% |
-| `core` | 136 | 658 / 1,331 (49.4%) | 34.2% |
-| `animation` | 102 | 162 / 880 (18.4%) | 5.4% |
-| `ai` | 124 | 418 / 759 (55.1%) | 37.5% |
-| `sound` | 69 | 212 / 517 (41.0%) | 16.6% |
-| `collision` | 52 | 371 / 516 (71.9%) | 31.0% |
-| `particle` | 25 | 263 / 485 (54.2%) | 26.1% |
-| `vfs` | 71 | 190 / 412 (46.1%) | 16.3% |
-| `scaleform` | 15 | 0 / 280 (0.0%) | 0.0% |
-| `ui` | 27 | 175 / 255 (68.6%) | 42.7% |
-| `physics` | 14 | 98 / 203 (48.3%) | 24.4% |
-| `fs` | 25 | 71 / 189 (37.6%) | 27.8% |
-| `engine` | 22 | 52 / 165 (31.5%) | 11.1% |
-| `network` | 25 | 7 / 163 (4.3%) | 0.5% |
-| `network_core` | 22 | 31 / 140 (22.1%) | 12.8% |
-| `debug` | 16 | 96 / 127 (75.6%) | 65.5% |
-| `logging` | 10 | 32 / 73 (43.8%) | 33.0% |
-| `input` | 9 | 31 / 56 (55.4%) | 27.7% |
-| `survarium` | 5 | 10 / 22 (45.5%) | 13.1% |
-| `ai_navigation` | 3 | 7 / 14 (50.0%) | 19.4% |
+_`Fuzzy` = code-weighted partial-credit match (how close); `Code matched` = byte-exact only. `scripts/match_score.py --max-code` adds the best-ever max of each (ICF-churn-immune)._
+
+| Module          | Units |     Functions exact | Fuzzy | Code matched |
+| :-------------- | ----: | ------------------: | ----: | -----------: |
+| `render`        |   351 | 384 / 2,805 (13.7%) | 29.3% |         3.5% |
+| `shared`        |   112 | 858 / 2,255 (38.0%) | 51.1% |        37.1% |
+| `game`          |   141 |   21 / 1,634 (1.3%) |  3.6% |         0.1% |
+| `game_core`     |   189 | 620 / 1,429 (43.4%) | 82.1% |        26.3% |
+| `core`          |   136 | 658 / 1,331 (49.4%) | 75.4% |        34.2% |
+| `animation`     |   102 |   162 / 880 (18.4%) | 12.4% |         5.4% |
+| `ai`            |   124 |   418 / 759 (55.1%) | 83.8% |        37.5% |
+| `sound`         |    69 |   212 / 517 (41.0%) | 48.9% |        16.6% |
+| `collision`     |    52 |   371 / 516 (71.9%) | 76.0% |        31.0% |
+| `particle`      |    25 |   263 / 485 (54.2%) | 76.8% |        26.1% |
+| `vfs`           |    71 |   190 / 412 (46.1%) | 83.6% |        16.3% |
+| `scaleform`     |    15 |      0 / 280 (0.0%) |  0.0% |         0.0% |
+| `ui`            |    27 |   175 / 255 (68.6%) | 82.0% |        42.7% |
+| `physics`       |    14 |    98 / 203 (48.3%) | 74.1% |        24.4% |
+| `fs`            |    25 |    71 / 189 (37.6%) | 73.7% |        27.8% |
+| `engine`        |    22 |    52 / 165 (31.5%) | 80.6% |        11.1% |
+| `network`       |    25 |      7 / 163 (4.3%) |  4.5% |         0.5% |
+| `network_core`  |    22 |    31 / 140 (22.1%) | 80.5% |        12.8% |
+| `debug`         |    16 |    96 / 127 (75.6%) | 90.1% |        65.5% |
+| `logging`       |    10 |     32 / 73 (43.8%) | 89.7% |        33.0% |
+| `input`         |     9 |     31 / 56 (55.4%) | 65.2% |        27.7% |
+| `survarium`     |     5 |     10 / 22 (45.5%) | 79.8% |        13.1% |
+| `ai_navigation` |     3 |      7 / 14 (50.0%) | 60.5% |        19.4% |
 
 _Updated 2026-06-14 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
 <!-- match-score:end -->
@@ -210,6 +212,16 @@ python3 scripts/match_db.py report --function 'medkit::'
 #  parameter list, so even a boost/asio handler reads cleanly. --verbose shows the
 #  demangled signature instead; --json gives the full untruncated name. Works on diff too.)
 
+# list EVERY function in a module/unit + its raw diff columns (fuzzy_pct, struct_class,
+# t_stmts/b_stmts, sizes, target VA hint). The most direct per-function dump; filter by
+# --class to pull just the steerable QUANTITY traps, or --presence for the unpaired set.
+# Needs a FRESH DB - `list` bails on a stale report.json (run rebuild.py/refresh first),
+# unlike report/sql which warn-and-proceed. --json gives full names; pipe wide output to `less -S`.
+python3 scripts/match_db.py list --module game_core                  # all game_core functions
+python3 scripts/match_db.py list --module game_core --class QUANTITY  # just the wrong-stmt-count traps
+python3 scripts/match_db.py list --unit vostok/game_core/sources/weapon_core.cpp
+python3 scripts/match_db.py list --module game_core --presence TARGET_ONLY  # unpaired (no base symbol yet)
+
 # TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
 # WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-
 # verifier (`pdb_fetch --view structure-diff`); a 100%/QUANTITY is the classic false win.
@@ -234,6 +246,14 @@ python3 scripts/match_db.py diff <hash>..<hash> --module game_core   # --json fo
 # bank the done set: stamp every fn that ever reached 100% with tries=1, so the queue
 # (which ranks/excludes by best-ever %, not current %) drops them until real work is gone.
 python3 scripts/match_db.py tried --done
+
+# AUTHORITATIVE per-function structure diff (the `cls` column above is only an approximation).
+# Prints each diverging statement tagged SIZE +/-N / BASE_ONLY / TRGT_ONLY, the target-vs-base
+# statement counts, and `; STRUCTURE MATCH` when the shape is clean. --function is a substring of
+# the signature; --view also takes target,base,structure,diff. This is how you confirm a
+# QUANTITY is real (recoverable statements) vs a stale label (0/0 STRUCTURE MATCH) vs blocked.
+pdb_fetch --target-index binaries/rich/target/index.jsonl --base-index binaries/rich/base/index.jsonl \
+  --function 'weapon_core::tick' --view structure-diff
 ```
 
 **`cls` (structure class)** is the DB's *approximate* shape verdict (the
