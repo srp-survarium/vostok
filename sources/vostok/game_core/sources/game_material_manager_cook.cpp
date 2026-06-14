@@ -93,6 +93,10 @@ void game_material_manager_cook::create_game_materials(
 	physics::setup_game_material_groups( g_material_physics_group, sizeof( g_material_physics_group ) /  sizeof( u16 ) );
 }
 
+// claude@NOTE: structure matches (60/60 stmts, decl order verified via PDB-local set), but base
+// inlines the three vector ctors, create_request, material_effects_instance_cook_data new, and the
+// query_resources bind that the target keeps out-of-line. That inline-vs-call shift moves nearly
+// every register/offset, so the byte % stays low even though the shape is right - non-steerable.
 void game_material_manager_cook::create_game_material_pairs(
 	resources::query_result_for_cook&		parent_query,
 	game_material_manager* const			manager,
@@ -208,6 +212,9 @@ void game_material_manager_cook::create_game_material_pairs(
 	}
 }
 
+// claude@NOTE: target has one extra statement - a bare `jmp` (5 bytes) closing the decal1 block in
+// the if/else-if chain; base folds that jump into the decal2 else-if. Same source shape; a codegen
+// quirk of the first else-if arm, not steerable. Rest is LOG_ERROR / VOSTOK_DELETE inline residual.
 void game_material_manager_cook::on_decals_loaded( resources::queries_result& data, vector< query_ext_data >* ext_data )
 {
 	if ( !data.is_successful( ) ) // sushi@TODO: I think this is the first place where multiple queries are processed?
