@@ -34,14 +34,21 @@ pistol_weapon_core_aimed_idle_state::pistol_weapon_core_aimed_idle_state( weapon
 	ASSERT_CMP_U( animations_count, ==, 8 );
 
 	u32 animation_index = 0;
-	for ( u32 view = 0 ; view != 2 ; ++view )
-		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
-			for ( u32 weapon_state = 0 ; weapon_state != 2 ; ++weapon_state )
-				m_weapon_animations[view][user_state][weapon_state] = animations[animation_index++];
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 2 ; ++weapon_state_index ) {
+				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+			}
+		}
+	}
 
-	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION_T( animation_index == animations_count ) );
 }
 
+// claude@NOTE: systemic /Od ceiling - the expression() return materializes
+// addition_lexeme via cloned_in_buffer (target) vs operator+ (base); identical
+// residual to the matched weapon_core_aimed_state::weapon_and_hands_expression.
+// Not source-steerable; structure matches (3/3 stmts).
 animation::mixing::expression pistol_weapon_core_aimed_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
@@ -64,7 +71,7 @@ weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( 
 		"pistol-empty_aimed_idle"
 	};
 
-	u32 animation_index = m_weapon.ammo_in_magazine( ) == 0;
+	u32 const animation_index = m_weapon.ammo_in_magazine( ) == 0;
 	pcstr animation_identifier = weapon_animation_captions[animation_index];
 
 	resources::managed_resource_ptr const& selected_animation =
