@@ -16,6 +16,7 @@ subject to the following restrictions:
 ///btDbvtBroadphase implementation by Nathanael Presson
 
 #include "btDbvtBroadphase.h"
+#include "LinearMath/btQuickprof.h"
 
 //
 // Profiling
@@ -226,6 +227,7 @@ struct	BroadphaseRayTester : btDbvt::ICollide
 
 void	btDbvtBroadphase::rayTest(const btVector3& rayFrom,const btVector3& rayTo, btBroadphaseRayCallback& rayCallback,const btVector3& aabbMin,const btVector3& aabbMax)
 {
+	BT_PROFILE("btDbvtBroadphase::rayTest");
 	BroadphaseRayTester callback(rayCallback);
 
 	m_sets[0].rayTestInternal(	m_sets[0].m_root,
