@@ -20,6 +20,7 @@ struct VOSTOK_NOVTABLE engine {
 
 	virtual			~engine						() {}
 	virtual bool	terminate_on_error			() const = 0;
+	virtual bool	output_to_debugger			() const = 0;
 	virtual void	on_terminate				() const = 0;
 	virtual int  	get_exit_code				() const = 0;
 	virtual bool	core_initialized			() const = 0;

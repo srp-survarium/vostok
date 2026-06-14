@@ -11,9 +11,8 @@
 #include "utils.h"
 #include <stdio.h>
 #include <vostok/memory_extensions.h>
-#include <vostok/command_line_extensions.h>
 
-static vostok::command_line::key s_disable_output_to_debugger( "disable_output_to_debugger", "disable_output_to_debugger", "debug", "disables output to debugger output window", "" );
+bool vostok::debug::g_disable_output_to_debugger	= false;
 
 #if VOSTOK_PLATFORM_XBOX_360
 #	include <xtl.h>
@@ -116,9 +115,8 @@ int vostok::debug::on_math_error		( struct ::_exception *exception )
 
 void vostok::debug::output								( pcstr message )
 {
-	if ( s_disable_output_to_debugger.is_set() )
+	if ( g_disable_output_to_debugger )
 		return;
 
-	VOSTOK_UNREFERENCED_PARAMETER	( message );
 	OUTPUT_DEBUG_STRING			( message );
 }

@@ -25,6 +25,8 @@ bool on_thread_spawn	( );
 
 void add_file			( pcstr full_path_file_name );
 
+void restart_application_on_crash	( bool value );
+
 } // namespace bugtrap
 } // namespace debug
 } // namespace vostok
