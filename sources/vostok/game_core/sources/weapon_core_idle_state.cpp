@@ -35,10 +35,20 @@ weapon_core_idle_state::weapon_core_idle_state( weapon_core& weapon, resources::
 
 	u32 animation_index = 0;
 	for ( u32 view = 0 ; view != 2 ; ++view )
+	{
 		for ( u32 user_state = 0 ; user_state != 2 ; ++user_state )
+		{
 			m_weapon_animations[view][user_state] = animations[animation_index++];
+		}
+	}
 }
 
+// claude@NOTE: systemic ceiling shared by every weapon_*_state weapon_and_hands_expression
+// override (incl. the matched aimed_state template). Structure is a 3-statement MATCH; only the
+// return statement diverges - the target inlines mixing::operator+ (build addition_lexeme ->
+// cloned_in_buffer -> ~addition_lexeme) where our build emits `call operator+<...>`. An
+// inline-vs-call codegen decision; not source-steerable without hand-inlining operator+ (which
+// the author did not write). Left at the faithful `+` form.
 animation::mixing::expression weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
