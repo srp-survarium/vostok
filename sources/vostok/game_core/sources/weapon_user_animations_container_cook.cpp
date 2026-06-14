@@ -15,6 +15,10 @@ weapon_user_animations_container_cook::weapon_user_animations_container_cook( )
 {
 }
 
+// claude@NOTE: 0-local target (matches this source). Base differs only in how the two delete_helper
+// args are marshalled (target pushes &resource then strip_pointer(g_allocator); base defers the
+// pointer into edi, push edi/pop edi, add esp,4 vs 8). strip_pointer/delete_helper arg-eval-order
+// + register ceiling - same VOSTOK_DELETE_IMPL source, not steerable.
 void weapon_user_animations_container_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
