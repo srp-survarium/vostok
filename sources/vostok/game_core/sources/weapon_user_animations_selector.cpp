@@ -110,16 +110,19 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> wea
 void weapon_user_animations_selector::activate( base_player& user, boost::function<void()> const& sprint_start_callback, boost::function<void()> const& sprint_end_callback )
 {
 	m_user = &user;
-
 	for ( ai::fsm_state* i = m_logic.states( ).front( ); i; i = i->next )
-		static_cast< player_logic_base_state* >( i )->set_user( user );
-
+		static_cast_checked< player_logic_base_state* >( i )->set_user( user );
 	m_logic.set_initial_state( m_player_logic_initial_state );
 
-	set_animation_callback( animation::channel_id_on_animation_interval_end, this, boost::bind( &weapon_user_animations_selector::on_interval_ended, this, _1 ) );
+	m_user->subscribe_animation_player(
+		animation::channel_id_on_animation_interval_end,
+		boost::bind( &weapon_user_animations_selector::on_interval_ended, this, _1 ),
+		this,
+		resources::managed_resource_ptr( ),
+		m_user
+	);
 
 	( *m_user->damage_model( ) ).subscribe_on_affect( affects_type_leg_damage, &m_leg_damaged_subscriber );
-
 	set_sprint_callbacks( sprint_start_callback, sprint_end_callback );
 }
 
@@ -335,7 +338,7 @@ void weapon_user_animations_selector::set_sprint_callbacks( boost::function<void
 	while ( state )
 	{
 		if ( state->id( ) == type_sprint )
-			static_cast< player_logic_sprint_state* >( state )->set_callbacks( start_callback, end_callback );
+			static_cast_checked< player_logic_sprint_state* >( state )->set_callbacks( start_callback, end_callback );
 
 		state = static_cast_checked< player_logic_base_state* >( state->next );
 	}
