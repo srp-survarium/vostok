@@ -60,6 +60,10 @@ extern pcstr  editor_project_ext;
 extern pcstr  resources_converted_path;
 extern pcstr  resources_path;
 
+// game-module network-client carcass /OPT:REF anchor (anchor_game_clients.cpp)
+class game;
+void anchor_game_network_clients( game& g );
+
 
 game_world::game_world( game& game )
 :super					( game ),
@@ -98,6 +102,13 @@ m_local_actor			( NULL )
 //	m_client.connect				( "localhost", port );
 
 	IncludeAll all;
+
+	// game-module /OPT:REF reachability anchor for the survarium network-client
+	// carcass (anchor_game_clients.cpp); keeps the network_client/lobby_client/
+	// match_client/messaging_client/network_stats objects in the base EXE. The
+	// anchor self-guards and never runs - retire once game::create_network_client
+	// (the matched-target owner of m_network_client) reaches these.
+	anchor_game_network_clients( get_game() );
 }
 
 
