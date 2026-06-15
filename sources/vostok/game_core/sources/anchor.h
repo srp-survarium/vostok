@@ -18,6 +18,7 @@ namespace vostok
 	// (instantiated in game/sources/game_world.cpp) dispatches to all of them.
 	void anchor_game_core( );
 	void anchor_network_core( );
+	void anchor_network( );
 	void anchor_physics( );
 	void anchor_collision( );
 	void anchor_logging( );
