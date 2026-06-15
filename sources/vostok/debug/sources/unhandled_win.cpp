@@ -23,9 +23,12 @@ static void save_minidump						( pcstr const output_file_name, _EXCEPTION_POINTE
 	string_path					file_name;
 	strcpy_s					( file_name, vostok::debug::debug_engine()->current_directory() );
 	// claude@NOTE: structure matches (20/20); only byte residual is this strcat_s -
-	// target resolves it to the CRT array template strcat_s<260>, our build emits the
-	// 3-arg _strcat_s (CRT secure-overload codegen difference, not source-steerable;
-	// the sibling strcpy_s above matches).
+	// target CALLS the out-of-line strcat_s<260> template-instance COMDAT (the same
+	// instance __delayLoadHelper2 emits, reused via /OPT:ICF), our /Ob2 build INLINES
+	// the template body to a 3-arg _strcat_s. Both sides spell the array form
+	// strcat_s(file_name, library_id); the inline-vs-call choice on that COMDAT is a
+	// cross-TU /Ob2+ICF decision (the adjacent strcpy_s, identically spelled, is inlined
+	// in BOTH and matches) - not source-steerable from this TU.
 	strcat_s					( file_name, library_id );
 	library_handle				= LoadLibrary ( file_name );
 

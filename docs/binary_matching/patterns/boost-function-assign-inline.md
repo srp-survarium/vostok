@@ -26,3 +26,23 @@ Evidence: network_core/udp_match_client::udp_match_client (set_on_disconnect inl
 0x73 vs target 0x59, 79.20% PARTIAL). game_core/player_logic_sprint_state ctor (function0<void>
 operator= inlined in TARGET; single-stmt structure-diff SIZE -0x2e, base out-of-line
 `call operator=`, 66.70%).
+
+Variant - `assign_to` inside a `boost::bind(...)` ARGUMENT (temp function constructed at the
+call site, not an `operator=`): the same inline-vs-call choice falls on
+`function7<...>::assign_to<bind_t<...>>`. The TARGET keeps the outer `call
+function7::assign_to` out-of-line; our /Ob2 BASE inlines it ONE LEVEL deeper to `call
+basic_vtable1::assign_to` plus the inline vtable-tag manipulation (`movzx eax,al` / `stored_vtable`
+/ `or edx,1`), growing the statement (`SIZE +0x3b..+0x41`). The driver is the CALLER's /Ob2
+inline budget, not the bind type: a tiny single-bind function (debug_win.cpp dump_call_stack)
+inlines on BOTH sides and matches 100%, while a large function with two bind/iterate sites
+(debug_win.cpp platform::on_error) has the target out-line BOTH. Not source-steerable - the
+body is a full structural match; leave it at the inline-vs-call %. Evidence:
+debug/platform::on_error 85.11% (2 residual iterate stmts), sibling dump_call_stack 100%.
+
+Sibling walls in the same family (header-inline wrapper / CRT secure-template the target keeps
+out-of-line, our /Ob2 inlines, no operator= involved): debug/save_minidump - target `call
+strcat_s<260>` (the template-instance COMDAT __delayLoadHelper2 also emits, ICF-reused) vs base
+inlined 3-arg `_strcat_s`, 93.11%; debug/on_error(va) - target `call vostok::vsnprintf` (the
+shared `inline` in stdlib_extensions.h) vs base inlined `__vsnprintf_s`, 79.44%. Both need a
+cross-unit linkage change to force the out-of-line emission (off-limits); PARK at the
+inline-vs-call %.
