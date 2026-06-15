@@ -21,6 +21,7 @@
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/game_net_defines.h>
+#include <vostok/resources_queries_result.h>
 
 #include "network_client.h"
 #include "base_network_client.h"
@@ -89,6 +90,41 @@ void anchor_game_network_clients( game& g )
 		client.unload( );
 		client.get_player( runtime_id );
 		client.get_player_team( "name" );
+
+		// private message handlers - reached only from the (still-stub) dispatch,
+		// so reference them here directly (friend access) to keep them linked
+		network_core::packet_reader& reader = *( network_core::packet_reader* )NULL;
+		client.process_match_info( reader );
+		client.process_player_profile( reader );
+		client.process_team_bases( reader );
+		client.query_players( );
+		client.destroy_player_impl( 0 );
+		client.process_player_action( reader, 0 );
+		client.process_player_hit( reader );
+		client.on_players_ready( *( resources::queries_result* )NULL, 0 );
+		client.process_player_kill( reader );
+		client.process_player_respawn( reader );
+		client.process_initialize_victory_items( reader );
+		client.process_base_capture_progress( reader );
+		client.process_match_time( reader );
+		client.process_respawn_timer( reader );
+		client.process_match_wait_timer( reader );
+		client.process_game_status( reader );
+		client.process_player_kd_stats( reader );
+		client.process_victory_item_take_or_put( reader );
+		client.process_affect_damage_model( reader );
+		client.player_visibility_change( reader );
+		client.on_trap_placed( reader );
+		client.on_trap_removed( reader );
+		client.on_trap_fired( reader );
+		client.on_trap_disarmed( reader );
+		client.game_world_object_state_arrived( reader );
+		client.on_world_sync_request( );
+		client.damage_model_state_arrived( reader );
+		client.send_sync_request( );
+		client.process_sync_response( reader );
+		client.send_player_inputs( );
+		client.setup_camera_for_warmup( );
 	}
 
 	{
