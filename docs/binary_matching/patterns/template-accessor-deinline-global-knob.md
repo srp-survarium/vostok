@@ -46,3 +46,20 @@ them = removing `inline` from the template decls in the already-matched
 packet_reader_inline.h - a global cross-unit flip touching every read site engine-wide,
 off-limits from a single consumer TU. The bigger base frame (sub esp 98h vs 58h) and each
 statement's +0xN size all follow from the inlining; not steerable from hit_initiator.cpp.
+
+Same knob, boost::function::operator(): the login-auth flow (network/login_client_impl_
+sign_in/up/out.cpp) invokes a `boost::function4`/`function5` callback once per error/answer
+arm (`callback( a, b, c, d )`). The TARGET keeps `function4<...>::operator()` OUT-OF-LINE -
+a 5-byte `call` (real COMDAT symbols ??R?$function4@... present in the target index for the
+login/lobby instantiations); the BASE INLINES the `if(empty()) throw; get_vtable()->invoker`
+body at every site (function_template.hpp:761, no symbol of the kind in the base index).
+Each inlined site is base +0x3d (4-arg) / +0x49 (5-arg) bigger, dragging the small handler
+functions to 47-90% even though the structure is byte-shape-identical (t_stmts==b_stmts, zero
+TRGT_ONLY/BASE_ONLY). De-inlining = strip the implicit-inline from `operator()` in boost
+function_template.hpp - a global flip hitting every boost::function call in the engine,
+off-limits from these three consumer TUs. Two companion residuals at the same wall: the
+LOG_* macro's boost::function1 log-callback ctor scheduling (log-callback-ctor-schedule.md,
+±a few bytes/LOG) and the bind-copy lowering at each async_write/handshake `)` (the function5
+copy + boost::ref slot vs the target's folded-ctor schedule, +0x15/0x20). Evidence:
+network/login_client_impl_sign_in.cpp on_user_name_answer_received 47.1% (4 callback sites),
+26/27..16/16 STRUCTURE MATCH across all 19 handlers (2026-06-15).
