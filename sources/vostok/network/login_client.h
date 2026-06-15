@@ -52,8 +52,8 @@ public:
 									boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 								);
 
-	// STATE[INLINED]: no standalone symbols and no matched consumer; bodies are
-	// the canonical state-compare one-liners (values pinned by the matched ctor/
+	// claude@NOTE: no standalone symbols and no matched consumer; bodies are the
+	// canonical state-compare one-liners (values pinned by the matched ctor/
 	// on_signed_* stores)
 	inline	bool				is_signed_in					( ) const { return m_client_state == signed_in; }
 	inline	bool				is_signed_out					( ) const { return m_client_state == signed_out; }
@@ -67,7 +67,7 @@ public:
 			pcstr				server_browser_address			( ) const;
 			pcstr				server_browser_initial_query	( ) const;
 
-	// STATE[INLINED]: no standalone symbol and no matched consumer; the member it
+	// claude@NOTE: no standalone symbol and no matched consumer; the member it
 	// returns is pinned by create_client's strings::copy( m_local_host_ip, ... )
 	inline	pcstr				local_ip_address				( ) const { return m_local_host_ip; }
 			pcstr				host_ip_address					( ) const;

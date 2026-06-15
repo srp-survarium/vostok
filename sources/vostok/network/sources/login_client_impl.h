@@ -63,7 +63,7 @@ public:
 							boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 						);
 
-	// STATE[INLINED]: no standalone symbols; session_id/host_ip/server_browser_*
+	// claude@NOTE: no standalone symbols; session_id/host_ip/server_browser_*
 	// expansions byte-verified via login_client::{session_id,host_ip_address,
 	// server_browser_address,server_browser_initial_query} (all 100%); the
 	// is_signed_* pair has no matched consumer yet (state values consistent with
@@ -109,8 +109,8 @@ private:
 							boost::function< void ( enum connection_error_types_enum ) > const&	functor
 						);
 
-	// STATE[INLINED]: no target symbol and no call site in any matched target
-	// body (the connect/handshake chain never binds it) - dead inline source
+	// claude@NOTE: no target symbol and no call site in any matched target body
+	// (the connect/handshake chain never binds it) - dead inline source
 	inline	void		on_handshake_connected				(
 							const connection_error_types_enum		connection_result,
 							boost::function< void ( enum handshaking_error_types_enum ) > const&	functor,

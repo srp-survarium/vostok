@@ -8,7 +8,9 @@
 namespace vostok {
 namespace network {
 
-// STATE[92.60%|PARTIAL]: structure clean; residual = LOG-helper ctor scheduling x4 + the function1 copy lowering at the connect( ) retry call
+// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
+// schedule x4 (log-callback-ctor-schedule.md) + the function1 copy lowering at
+// the connect( ) retry call
 void login_client_impl::on_connected(
 		const u32								retry_count,
 		boost::function< void ( connection_error_types_enum ) > const&	functor,
@@ -42,7 +44,8 @@ void login_client_impl::on_connected(
 	functor			( successfully_connected );
 }
 
-// STATE[94.71%|PARTIAL]: structure clean; residual = LOG-helper ctor scheduling x2 + the functor bind-copy lowering in the async_connect bind
+// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
+// schedule x2 + the functor bind-copy lowering in the async_connect bind
 void login_client_impl::connect(
 		resolve_error_types_enum	error,
 		boost::asio::ip::tcp::resolver::iterator	iterator,

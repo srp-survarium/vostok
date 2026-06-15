@@ -15,10 +15,10 @@ class string_response :
 	public boost::noncopyable
 {
 public:
-	// STATE[99.70%|PARTIAL]: standalone target symbol at rva 0x49340 (NOT
-	// inlined-only); all statements byte-equal - sole residual is one extra dead
-	// frame dword in the target (this at -0x18 vs -0x14), LTCG slot slack with no
-	// source statement mapping to it
+	// claude@NOTE: standalone target symbol at rva 0x49340 (NOT inlined-only); all
+	// statements byte-equal - sole residual is one extra dead frame dword in the
+	// target (this at -0x18 vs -0x14), LTCG slot slack with no source statement
+	// mapping to it
 	inline			string_response	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr ) > const&	functor,
@@ -70,7 +70,6 @@ public:
 	{
 	}
 
-	// STATE[100%|DONE]
 	virtual			~string_response( )
 	{
 		pstr temp			= m_string0;
@@ -83,7 +82,6 @@ public:
 		VOSTOK_FREE_IMPL	( m_allocator, temp );
 	}
 
-	// STATE[100%|DONE]
 	// claude@NOTE: the target's ICF survivor lives in string_order.h's unit (rva
 	// 0x49490), so this unit's objdiff score reads None; verified by-name with
 	// --view diff - zero divergent rows
