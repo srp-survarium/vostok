@@ -3,7 +3,8 @@
 - Namespace: `vostok::logging`.
 - Build: `/Od` (optimization off) + LTCG, `Master Gold` - see [../MATCHING.md](../MATCHING.md).
 - Sources: `sources/vostok/logging/sources/` (low-level); high-level API in `vostok/core/logging_extensions`.
-- Reachability anchor: `use_log` in `game_core/sources/temp_include_all.cpp`.
+- Reachability anchor: `use_log` in `game/sources/temp_include_all.cpp`
+  (lived in game_core until the game carcass rebuild).
 - Status: nearly complete (1 `STUB` left).
 
 ### Matching dept
