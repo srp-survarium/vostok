@@ -2,7 +2,11 @@
 
 - Namespace: `vostok::network` (+ one GLOBAL-namespace TU-local: `client_destroyer`
   in `match_client.cpp`).
-- Build: `/Od` (optimization off) + LTCG, `Master Gold` - see [../MATCHING.md](../MATCHING.md).
+- Build: `/Ob2 /Oi /Ot /Oy` + `/GL` (full optimization + whole-program LTCG),
+  `Master Gold` - see [../MATCHING.md](../MATCHING.md). NB: the recurring
+  inline-vs-call residuals (boost::function::operator=, intrusive_ptr
+  operator*/operator=/copy-ctor, boost::array operator[], packet_reader::pointer)
+  are whole-program inline-budget decisions, NOT source-steerable from a single TU.
 - Sources: `sources/vostok/network/` (public headers at module root,
   orders/responses/impls under `sources/`).
 - Reachability anchor: `use_network_clients()` in `game_core`'s

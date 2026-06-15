@@ -14,10 +14,9 @@ namespace network {
 
 class send_queued_order : public order {
 public:
-	// STATE[INLINED]: no standalone symbol; init list verified against the inline
-	// expansion in match_client::send_queued_packets (target rva 0x74d740,
-	// +0x108..+0x15f): m_copied_stats rep-movsd copy FROM target_stats, functor
-	// function0 copy-ctor, target_stats/client reference stores
+	// no standalone symbol; init list recovered from the inline expansion in
+	// match_client::send_queued_packets: m_copied_stats rep-movsd copy FROM
+	// target_stats, functor function0 copy-ctor, target_stats/client reference stores
 	inline			send_queued_order	(
 			boost::function< void ( ) > const& functor,
 			match_client_impl*& client,
@@ -30,14 +29,12 @@ public:
 	{
 	}
 
-	// STATE[100%|DONE]
 	virtual			~send_queued_order	( )
 	{
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats	= m_copied_stats;
 	}
 
-	// STATE[100%|DONE]
 	virtual	void	execute				( )
 	{
 		m_functor			( );

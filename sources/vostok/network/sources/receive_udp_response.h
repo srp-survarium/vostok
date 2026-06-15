@@ -19,10 +19,10 @@ class receive_udp_response :
 	public boost::noncopyable
 {
 public:
-	// STATE[INLINED]: no standalone symbol on either side; init list verified
-	// against the inline expansion in match_client::on_packet_received (target rva
-	// 0x74cdb0): copied_stats rep-movsd copy, receiver function1 copy-ctor,
-	// allocator intrusive_ptr copy-ctor, packet address, target_stats reference
+	// no standalone symbol on either side; init list recovered from the inline
+	// expansion in match_client::on_packet_received: copied_stats rep-movsd copy,
+	// receiver function1 copy-ctor, allocator intrusive_ptr copy-ctor, packet
+	// address, target_stats reference
 	inline			receive_udp_response	(
 			boost::function< void ( network_core::packet_reader& ) > const& receiver,
 			network_core::udp_match_packets_allocator_ptr const& allocator,
@@ -38,23 +38,18 @@ public:
 	{
 	}
 
-	// STATE[37.91%|PARTIAL]: statements correct; base INLINES
-	// intrusive_ptr::operator* (with its ASSERT eater) and ~intrusive_ptr where
-	// the target CALLS both out-of-line - whole-program LTCG inline-vs-call,
-	// should flip as real consumers (match_client_impl) get matched
+	// claude@NOTE: structure matches 2/2; residual is intrusive_ptr::operator*
+	// (with its ASSERT eater) and the member ~intrusive_ptr (base inlines both,
+	// target calls them out-of-line) - the inline-vs-call wall, not steerable.
 	virtual			~receive_udp_response	( )
 	{
 		network_core::udp_match_packet* temp	= &m_packet;
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
-
-		// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-		// SIZE +0xe | 48 | network_core::delete_udp_match_packet	( *m_allocator, temp );
-		// VERDICT: STRUCTURE MATCH - sole SIZE is intrusive_ptr::operator* inlined in base (target calls COMDAT); rest of byte delta is the compiler-emitted member ~intrusive_ptr tail (non-statement); LTCG wall.
 	}
 
-	// STATE[88.51%|PARTIAL]: base inlines base_packet::buffer() inside the
-	// packet_reader-ctor expansion where the target calls the COMDAT (same LTCG
-	// wall as receive_response::execute); if/copy stats tail byte-equal
+	// claude@NOTE: structure matches 4/4; residual is base_packet::buffer() inlined
+	// inside the packet_reader-ctor expansion where the target calls the COMDAT
+	// (same wall as receive_response::execute); the if/copy stats tail is byte-equal.
 	virtual	void	execute					( )
 	{
 		network_core::packet_reader	reader( m_packet );
@@ -62,9 +57,6 @@ public:
 
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats		= m_copied_stats;
-
-		// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
-		// VERDICT: STRUCTURE MATCH - base_packet::buffer() inlined in the packet_reader-ctor expansion; non-steerable LTCG.
 	}
 
 private:

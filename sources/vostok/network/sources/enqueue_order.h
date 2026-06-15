@@ -15,11 +15,11 @@ namespace network {
 
 class enqueue_order : public order {
 public:
-	// STATE[INLINED]: no standalone symbol; init list verified against the inline
-	// expansion in match_client::enqueue (target rva 0x74cf90, +0xeb..+0x166):
-	// m_copied_stats rep-movsd copy FROM target_stats (this+8 of the caller, the
-	// same address stored to m_target_stats), enqueuer function1 copy, packet
-	// address, allocator intrusive_ptr copy-ctor, source/target reference stores
+	// no standalone symbol; init list recovered from the inline expansion in
+	// match_client::enqueue: m_copied_stats rep-movsd copy FROM target_stats (this+8
+	// of the caller, the same address stored to m_target_stats), enqueuer function1
+	// copy, packet address, allocator intrusive_ptr copy-ctor, source/target
+	// reference stores
 	inline			enqueue_order	(
 			boost::function< void ( network_core::udp_match_packet& ) > const& enqueuer,
 			network_core::udp_match_packet& packet,
@@ -36,12 +36,11 @@ public:
 	{
 	}
 
-	// STATE[63.83%|PARTIAL]: statements/slots verified (temp local [ebp-4], same
-	// 0x50 frame); residual = base INLINES
+	// claude@NOTE: statements/slots verified (temp local [ebp-4], same 0x50 frame);
+	// structure matches 4/4. Residual is base inlining
 	// intrusive_ptr<udp_match_packets_allocator>::operator* and the member
-	// ~intrusive_ptr where the target keeps out-of-line calls (per-call-site
-	// whole-program LTCG inline-vs-call, same wall as ~connect_order; the inlined
-	// operator* body carries intrusive_ptr_inline.h's compiled-out ASSERT byte)
+	// ~intrusive_ptr where the target keeps out-of-line calls - same per-call-site
+	// inline-vs-call wall as ~connect_order, not source-steerable.
 	virtual			~enqueue_order	( )
 	{
 		network_core::udp_match_packet* temp	= &m_packet;
@@ -50,12 +49,8 @@ public:
 
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats	= m_copied_stats;
-
-		// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
-		// VERDICT: STRUCTURE MATCH - same intrusive_ptr operator*/~intrusive_ptr inline-vs-call as ~connect_order; non-steerable LTCG.
 	}
 
-	// STATE[100%|DONE]
 	virtual	void	execute			( )
 	{
 		m_enqueuer			( m_packet );
