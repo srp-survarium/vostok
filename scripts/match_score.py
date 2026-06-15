@@ -140,25 +140,39 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         cm = {}
     overall_fuzzy_max = cm.get("OVERALL")
 
+    # best-ever COUNT of byte-exact functions per module (history.best_fuzzy_pct),
+    # the churn-immune counterpart to report.json's current matched_functions.
+    efm = exact_func_counts()
+    # overall best-ever = sum of the per-module bests the table shows (so the
+    # headline and the column agree), floored at the current overall count
+    overall_exact_max = max(
+        funcs,
+        sum(max(a['matched_functions'], efm.get(m, 0)) for m, a in mods.items()),
+    ) if efm else funcs
+
     rows = []
     for mod in sorted(mods, key=lambda k: -mods[k]["total_functions"]):
         a = mods[mod]
+        tot = a['total_functions']
         # fuzzy_weighted is already sum(percent * bytes), so divide - don't _pct
         cur_fuzzy = a['fuzzy_weighted'] / a['total_code'] if a['total_code'] else 0
+        # best-ever exact count is never below the current exact count
+        exact_max = max(a['matched_functions'], efm.get(mod, 0))
         rows.append([
             f"`{mod}`",
             f"{a['units']}",
-            f"{a['matched_functions']:,} / {a['total_functions']:,} "
-            f"({_pct(a['matched_functions'], a['total_functions']):.1f}%)",
+            f"{a['matched_functions']:,} / {tot:,} "
+            f"({_pct(a['matched_functions'], tot):.1f}%)",
+            f"{exact_max:,} ({_pct(exact_max, tot):.1f}%)",
             f"{cur_fuzzy:.1f}%",
             # best-ever >= current always: current is achievable now, history adds
             # the churn-immune peak above it (the two come from different denominators
             # - report.json vs match.db - so guard with max, never read below current)
             f"{max(cur_fuzzy, cm.get(mod, 0.0)):.1f}%",
-            f"{_pct(a['matched_code'], a['total_code']):.1f}%",
         ])
     table = _md_table(
-        ["Module", "Units", "Functions exact", "Fuzzy", "Fuzzy max", "Code matched"],
+        ["Module", "Units", "Functions exact", "Functions exact max",
+         "Fuzzy", "Fuzzy max"],
         "lrrrrr",
         rows,
     )
@@ -175,12 +189,14 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         + (f" (max {max(fuzzy, overall_fuzzy_max):.2f}%)"
            if overall_fuzzy_max is not None else "")
         + f" &middot; {funcs:,} / {tfuncs:,} functions exact "
-        f"({_pct(funcs, tfuncs):.2f}%).**",
+        f"({_pct(funcs, tfuncs):.2f}%"
+        + (f", max {_pct(overall_exact_max, tfuncs):.2f}%" if efm else "")
+        + ").**",
         "",
-        "_`Fuzzy` = code-weighted partial-credit match (how close); `Fuzzy max` = "
-        "best-ever fuzzy per function (ICF-churn-immune, from `match.db` history); "
-        "`Code matched` = byte-exact only. `scripts/match_score.py --max-code` adds "
-        "the exact-match max too._",
+        "_`Functions exact` = byte-perfect now; `Fuzzy` = code-weighted partial-credit "
+        "match (how close). The `max` columns are best-ever per function (ICF-churn-"
+        "immune, from `match.db` history) and never read below current. "
+        "`scripts/match_score.py --max-code` shows the code-weighted exact/fuzzy view._",
         "",
         *table,
     ]
@@ -257,6 +273,40 @@ def code_max(module: str | None = None) -> list[tuple]:
     out.append(("OVERALL", int(t), tot[1] / t if t else 0, tot[2] / t if t else 0,
                 _pct(tot[3], t), _pct(tot[4], t)))
     return out
+
+
+def exact_func_counts() -> dict[str, int]:
+    """Per-module best-ever COUNT of byte-exact functions (history.best_fuzzy_pct,
+    falling back to current fuzzy_pct when a function has no history row yet). The
+    ICF-churn-immune counterpart to report.json's current matched_functions: a
+    function that folded below 100% this build still counts if it was ever exact.
+    Includes target_only functions that were exact before they folded away.
+    Tolerates a missing/empty match.db (returns {})."""
+    try:
+        con = sqlite3.connect(MATCH_DB)
+    except Exception:
+        return {}
+    counts: dict[str, int] = {}
+    try:
+        for mod, n in con.execute(
+            "SELECT p.module, COUNT(*) FROM paired p "
+            "LEFT JOIN history h ON h.mangled = p.mangled "
+            "WHERE COALESCE(h.best_fuzzy_pct, p.fuzzy_pct) >= ? GROUP BY p.module",
+            (_EXACT,),
+        ):
+            counts[mod] = counts.get(mod, 0) + (n or 0)
+        for mod, n in con.execute(
+            "SELECT t.module, COUNT(*) FROM target_only t "
+            "JOIN history h ON h.mangled = t.mangled "
+            "WHERE h.best_fuzzy_pct >= ? GROUP BY t.module",
+            (_EXACT,),
+        ):
+            counts[mod] = counts.get(mod, 0) + (n or 0)
+    except Exception:
+        return {}
+    finally:
+        con.close()
+    return counts
 
 
 def render_code_max(rows: list[tuple]) -> str:
