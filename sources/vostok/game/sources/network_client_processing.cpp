@@ -9,18 +9,17 @@
 // resource_ptr<player> dtors here, needing the complete player type
 #include "player.h"
 
+#include <vostok/network_core/packet_reader.h>
+#include <vostok/game_core/hit_info.h>
+#include <vostok/game_core/damage_model.h>
+#include <vostok/game_core/client_player_update.h>
+#include <vostok/network_core/udp_match_packet.h>
+
 namespace survarium {
 
-// STATE[STUB]
 player_ptr network_client::get_player( const u8 id ) const
 {
-	// buildability return; the real body indexes m_net_players
-	return player_ptr( );
-
-	// FUNCTION BODY[0x5c51c0]: 2
-	// <0>
-	// <0x5c51c0>|0x000|+0x046:'62'
-	// ******
+	return player_ptr( static_cast< player* >( m_net_players[ id ].player.c_ptr( ) ) );
 }
 
 // STATE[STUB]
@@ -202,10 +201,6 @@ void on_signed_out(
 	login_server_message_types_enum
 )
 {
-	// FUNCTION BODY[0x5c4210]: 0
-	// <0x5c4210>|0x000|+0x000:'189'	{
-	// <0x5c4210>|0x000|      :'190'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -265,49 +260,28 @@ void network_client::process_player_kill( network_core::packet_reader& packet )
 	// ******
 }
 
+// claude@NOTE: parked - body recovered (hit_info info; info.deserialize(packet);
+// player=get_player(info.being_hit); if(player) player->apply_hit_directly(info,
+// m_last_tick_time_in_ms);) but player::apply_hit_directly has no definition in
+// source (player.cpp does not exist - the whole player class is header-only), so
+// calling it is an unresolved external that fails the EXE link. Unblocks once
+// player.cpp lands.
 // STATE[STUB]
 void network_client::process_player_hit( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// hit_info 						info
-	// player_ptr 						player
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c4dbb> -> player_ptr < unknown >( const u8 ) const
-	// ******
-
-	// FUNCTION BODY[0x5c4d90]: 5
-	// <0x5c4d93>|0x003|+0x009:'233'
-	// <0x5c4d9c>|0x00c|+0x00e:'234'
-	// <0x5c4daa>|0x01a|+0x013:'235'
-	// <0x5c4dbd>|0x02d|+0x011:'236'
-	// <0x5c4dce>|0x03e|+0x016:'237'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( packet );
 }
 
+// claude@NOTE: parked - body recovered (player=get_player(r<u8>); r_string(body_part_name);
+// affect=r<hit_affects_type_enum>; event=r<affect_event_type_enum>;
+// if(player) player->apply_damage_model_affect(body_part_name,affect,event)) but
+// player::apply_damage_model_affect has no source definition (header-only player),
+// so the call is an unresolved external that fails the EXE link. Unblocks once
+// player.cpp lands.
 // STATE[STUB]
 void network_client::process_affect_damage_model( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// char[16] 						body_part_name
-	// player_ptr 						player
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c4954> -> player_ptr < unknown >( const u8 ) const
-	// ******
-
-	// FUNCTION BODY[0x5c4930]: 8
-	// <0x5c4937>|0x007|+0x009:'242'
-	// <0x5c4940>|0x010|+0x016:'243'
-	// <0>
-	// <0x5c4956>|0x026|+0x01d:'245'
-	// <0x5c4973>|0x043|+0x00d:'246'
-	// <0x5c4980>|0x050|+0x008:'247'
-	// <0x5c4988>|0x058|+0x014:'248'
-	// <0x5c499c>|0x06c|+0x010:'249'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( packet );
 }
 
 // STATE[STUB]
@@ -664,7 +638,6 @@ void network_client::process_sync_response( network_core::packet_reader& packet 
 	// ******
 }
 
-// STATE[STUB]
 void network_client::send_local_player_input(
 	player_input const&		input,
 	const u32				time_in_ms,
@@ -672,20 +645,15 @@ void network_client::send_local_player_input(
 	const float				look_pitch
 )
 {
-	// FUNCTION BODY[0x5c4250]: 12
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c4257>|0x007|+0x02c:'509'
-	// <0x5c4283>|0x033|+0x01d:'510'
-	// <0>
-	// <0x5c42a0>|0x050|+0x05b:'512'
-	// <0x5c42fb>|0x0ab|+0x006:'513'
-	// <0x5c4301>|0x0b1|+0x008:'514'
-	// <0x5c4309>|0x0b9|+0x007:'515'
-	// <0>
-	// <0x5c4310>|0x0c0|+0x03a:'517'
-	// ******
+	if ( m_player_inputs.size( ) == m_player_inputs.max_size( ) )
+		m_player_inputs.erase( m_player_inputs.begin( ) );
+
+	client_player_update update;
+	update.input				= input;
+	update.state.transform		= transform;
+	update.state.look_pitch		= look_pitch;
+	update.time_in_ms			= time_in_ms;
+	m_player_inputs.push_back( update );
 }
 
 // STATE[STUB]
@@ -764,20 +732,15 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 	// ******
 }
 
-// STATE[STUB]
 void network_client::send_player_inputs( )
 {
-	// FUNCTION BODY[0x5c47e0]: 9
-	// <0x5c47e3>|0x003|+0x01d:'582'
-	// <0>
-	// <0x5c4800>|0x020|+0x00b:'584'
-	// <0x5c480b>|0x02b|+0x008:'585'
-	// <0>
-	// <0x5c4813>|0x033|+0x01b:'587'
-	// <0>
-	// <1>
-	// <0x5c482e>|0x04e|+0x00f:'590'
-	// ******
+	for ( client_player_update* update = m_player_inputs.begin( ); update != m_player_inputs.end( ); ++update )
+	{
+		network_core::udp_match_packet* packet = m_match_client.new_packet( ( match_client_message_types_enum )0x43 );
+		update->serialize( *packet );
+		m_match_client.enqueue( packet );
+	}
+	m_player_inputs.clear( );
 }
 
 // STATE[STUB]
@@ -943,89 +906,36 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 	// ******
 }
 
-// STATE[STUB]
 void network_client::initiate_kill_current_player( )
 {
-	// FUNCTION BODY[0x5c47b0]: 6
-	// <0x5c47b0>|0x000|+0x010:'721'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5c47c0>|0x010|+0x01f:'726'
-	// ******
+	if ( m_local_player && get_current_player( ) )
+		m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x44 ) );
 }
 
-// STATE[STUB]
 void network_client::unload( )
 {
-	// LOCALS
-	// u8 								id
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c6174> -> player_ptr < unknown >( const u8 ) const
-	// ******
-
-	// FUNCTION BODY[0x5c6150]: 8
-	// <0x5c615e>|0x00e|+0x005:'731'
-	// <0x5c6163>|0x013|+0x059:'732'
-	// <0x5c61bc>|0x06c|+0x016:'733'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// ******
+	for ( u8 id = 0; id < 20; ++id )
+		if ( get_player( id ) )
+			destroy_player_impl( id );
 }
 
-// STATE[STUB]
 bool network_client::is_player_local( const u8 player_id ) const
 {
+	if ( m_local_player && m_local_player->id == player_id )
+		return true;
 	return false;
-
-	// FUNCTION BODY[0x5c4220]: 1
-	// <0x5c4220>|0x000|+0x000:'742'	{
-	// <0x5c4220>|0x000|+0x024:'743'
-	// <0x5c4244>|0x024|-0x003:'743'
-	// <0x5c4241>|0x021|+0x005:'744'
-	// <0x5c4246>|0x026|      :'744'	}
-	// ******
 }
 
+// claude@NOTE: parked - body recovered (id=r<u8>; is_visible=r<bool>; player=get_player(id);
+// if(m_local_player && player) if(player->has_been_inserted() && is_visible !=
+// player->is_visible()) is_visible ? player->show() : player->hide();) but
+// player::show / player::hide have no source definition (header-only player), so
+// the calls are unresolved externals that fail the EXE link. Unblocks once
+// player.cpp lands.
 // STATE[STUB]
 void network_client::player_visibility_change( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// player_ptr 						player
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c5f68> -> player_ptr < unknown >( const u8 ) const
-	// ******
-
-	// FUNCTION BODY[0x5c5f40]: 14
-	// <0x5c5f40>|0x000|+0x003:'917'	{
-	// <0x5c5f43>|0x003|+0x00e:'918'
-	// <0x5c5f51>|0x011|+0x006:'919'
-	// <0>
-	// <0x5c5f57>|0x017|+0x013:'921'
-	// <0x5c5f6a>|0x02a|+0x04c:'922'
-	// <0x5c5fb6>|0x076|+0x031:'923'
-	// <0x5c5fe7>|0x0a7|-0x06c:'923'
-	// <0>
-	// <1>
-	// <0x5c5f7b>|0x03b|+0x011:'926'
-	// <0x5c5f8c>|0x04c|+0x004:'927'
-	// <0x5c5f90>|0x050|+0x013:'928'
-	// <0>
-	// <0x5c5fa3>|0x063|-0x00e:'930'
-	// <0>
-	// <0x5c5f95>|0x055|+0x013:'932'
-	// <0x5c5fa8>|0x068|+0x03a:'932'
-	// <0x5c5fe2>|0x0a2|+0x013:'932'
-	// <0x5c5ff5>|0x0b5|      :'932'	}
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( packet );
 }
 
 // STATE[STUB]
@@ -1124,23 +1034,10 @@ void network_client::on_trap_disarmed( network_core::packet_reader& packet )
 	// ******
 }
 
-// STATE[STUB]
 void network_client::game_world_object_state_arrived( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// player_ptr 						player
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c4b1b> -> player_ptr < unknown >( const u8 ) const
-	// ******
-
-	// FUNCTION BODY[0x5c4b00]: 4
-	// <0x5c4b01>|0x001|+0x008:'986'
-	// <0x5c4b09>|0x009|+0x014:'987'
-	// <0>
-	// <0x5c4b1d>|0x01d|+0x009:'989'
-	// ******
+	player_ptr player = get_player( reader.r< u8 >( ) );
+	player->deserialize_game_world_object( reader );
 }
 
 // STATE[STUB]
@@ -1191,24 +1088,10 @@ void network_client::on_world_sync_request( )
 	// ******
 }
 
-// STATE[STUB]
 void network_client::damage_model_state_arrived( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// player_ptr 						player
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c48db> -> player_ptr < unknown >( const u8 ) const
-	// <0x5c48e5> -> damage_model_ptr const& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x5c48c0]: 4
-	// <0x5c48c1>|0x001|+0x008:'1028'
-	// <0x5c48c9>|0x009|+0x014:'1029'
-	// <0>
-	// <0x5c48dd>|0x01d|+0x012:'1031'
-	// ******
+	player_ptr player = get_player( packet.r< u8 >( ) );
+	player->damage_model( )->deserialize( packet );
 }
 
 } // namespace survarium
