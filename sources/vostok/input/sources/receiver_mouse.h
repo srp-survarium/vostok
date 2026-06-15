@@ -32,6 +32,7 @@ public:
 			void			on_activate		( );
 			void			on_deactivate	( );
 			void			execute			( );
+			mouse_button	convert_to_binder_mouse_button	( s32 receiver_button );
 			void			process			( handlers_type& handlers );
 private:
 	state					m_current_state;

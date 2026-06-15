@@ -13,21 +13,30 @@ using vostok::input::receiver::mouse;
 using vostok::input::handler;
 using vostok::input::world;
 
-mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& input_world ) 
+namespace vostok {
+namespace command_line {
+	bool key_is_set			( pcstr key_raw );
+} // namespace command_line
+} // namespace vostok
+
+mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& input_world )
 :	m_window_handle		( window_handle ),
 	m_device			( 0 ),
 	m_world				( input_world )
 {
-	HRESULT	result		= direct_input.CreateDevice(GUID_SysMouse, &m_device, 0); 
+	HRESULT	result		= direct_input.CreateDevice(GUID_SysMouse, &m_device, 0);
 	R_ASSERT			( !FAILED( result ) );
 
 	result				= m_device->SetDataFormat( &c_dfDIMouse2 );
 	R_ASSERT			( !FAILED( result ) );
 
-    result				= 
+    result				=
 		m_device->SetCooperativeLevel(
-			window_handle, 
-			DISCL_FOREGROUND  /*| DISCL_EXCLUSIVE */| DISCL_NONEXCLUSIVE
+			window_handle,
+			DISCL_FOREGROUND |
+				( ( !debug::is_debugger_present( ) || command_line::key_is_set( "mouse_lock" ) ) &&
+				  !command_line::key_is_set( "mouse_unlock" ) ?
+					DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE )
 		);
 	R_ASSERT			( !FAILED( result ) );
 
@@ -69,6 +78,12 @@ static void fill_state	( mouse::state& result, DIMOUSESTATE2& state )
 	result.z			= state.lZ;
 }
 
+// claude@NOTE: structure is a clean match (13/13 statements); residual is the
+// non-steerable LOG-machinery wall on the single LOG_INFO - the target builds the
+// log-callback boost::function INLINE (stored_vtable + g_log_callback,
+// boost::function1::clear) while our /Ox build emits a boost::function<>::function<>
+// ctor CALL + ~function. Same wall caps keyboard::execute (which has FIVE LOGs).
+// See docs/binary_matching/patterns/log-callback-ctor-schedule.md.
 void mouse::execute		( )
 {
 	memory::copy		( &m_previous_state, sizeof(m_previous_state), &m_current_state, sizeof( m_current_state ) );
