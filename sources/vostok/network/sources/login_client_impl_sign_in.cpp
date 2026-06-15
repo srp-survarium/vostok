@@ -8,13 +8,12 @@
 namespace vostok {
 namespace network {
 
-// STATE[82.14%|PARTIAL]: structure 39/39 - the answer dispatch is a SWITCH over
-// *buffer (one case + default), NOT if/else: the target spills the byte to a temp
-// slot and emits cmp-mem + je-case/jmp-default (the /Od switch signature), the
-// braced case carries the locals and `break;` merges the scope dtors + exit jmp
-// into one line-74 statement (the old if/else split an extra `else {` stmt off);
-// residual = the boost::function4::operator() inline-vs-call wall (~+0x3d/0x49
-// per callback site, function0 safe-bool precedent) + LOG-helper scheduling x2
+// claude@NOTE: STRUCTURE MATCH (39/39). The answer dispatch is a SWITCH over *buffer (one
+// case + default), not if/else: the target spills the byte and emits cmp-mem + je-case/
+// jmp-default; the braced case carries the locals and `break;` merges the scope dtors + exit
+// jmp into the case statement. Residual = the function4::operator() inline-vs-call wall
+// (+0x3d/0x49 per callback site) + LOG ctor scheduling; global boost-header knob.
+// See template-accessor-deinline-global-knob.md.
 void login_client_impl::on_sign_in_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -84,18 +83,10 @@ void login_client_impl::on_sign_in_answer_received(
 			if ( !m_in_destructor )
 				callback		( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )*buffer );
 	}
-
-	// STRUCTURE DIFF: target 39 stmts / base 39 stmts
-	// SIZE -0x6  | 26 | LOG_ERROR ( "[LOGIN] error during reading sign in answer: %s", ... );
-	// SIZE +0x3d | 29 | callback ( ..., sign_in_attempt_interval_violated_message_type );
-	// SIZE -0x6  | 33 | LOG_INFO ( "[LOGIN] answer has been received!\r\n" );
-	// SIZE +0x3d | 71 | callback ( ..., servers_connection_info_message_type );
-	// SIZE +0x1  | 73 | m_ping_timer.async_wait ( ... );
-	// SIZE +0x49 | 79 | callback ( ..., ( login_server_message_types_enum )*buffer );
-	// VERDICT: STRUCTURE MATCH - quantity fixed (if/else -> switch); rows are the function4::operator() wall + LOG-helper scheduling; non-steerable LTCG.
 }
 
-// STATE[74.46%|PARTIAL]: structure clean; residual = the boost::function4::operator() inline-vs-call wall (target calls the out-of-line COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d per callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x2 + LOG-helper scheduling x3
+// claude@NOTE: STRUCTURE MATCH (17/17). Residual = function4::operator() inline-vs-call wall
+// x2 + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::on_sign_in_password_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -136,11 +127,9 @@ void login_client_impl::on_sign_in_password_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-
-	// STRUCTURE DIFF: target 17 stmts / base 17 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling x3; non-steerable LTCG.
 }
-// STATE[78.58%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x1 + the callback by-value bind copy lowering in the async_write bind
+// claude@NOTE: STRUCTURE MATCH (13/13). Residual = function4::operator() inline-vs-call wall
+// x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
 void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
 {
 	if ( error == cannot_handshake ) {
@@ -169,16 +158,12 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-
-	// STRUCTURE DIFF: target 13 stmts / base 13 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback by-value bind copy in the async_write bind; non-steerable LTCG.
 }
-// STATE[47.08%|PARTIAL]: structure 27/27 (default-case `return` restored - the
-// target's 2-byte jmp goes to the EPILOGUE, skipping handshake; the old `break;`
-// fell through and called handshake on unknown message types); residual = the
-// boost::function4::operator() inline-vs-call wall (target calls the out-of-line
-// COMDAT, base inlines the safe-bool/throw/get_vtable body, ~+0x3d/0x49 per
-// callback site; per-instantiation LTCG choice, function0 safe-bool precedent) x4
+// claude@NOTE: STRUCTURE MATCH (27/27). default-case `return` is load-bearing: the target's
+// 2-byte jmp goes to the EPILOGUE, skipping handshake (a `break;` would fall through to
+// handshake on unknown message types). Residual = the function4::operator() inline-vs-call
+// wall x4 (the dominant 47% cost: 4 callback sites, each base +0x3d/0x49) + jmp-distance
+// bloat; global boost-header knob (see note above).
 void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
@@ -228,20 +213,9 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 		login_handshake_retry_count,
 		false
 	);
-
-	// STRUCTURE DIFF: target 27 stmts / base 27 stmts
-	// SIZE +0x3d | 164 | callback ( ..., login_server_invalid_message_type );
-	// SIZE -0x4  | 165 | LOG_ERROR ( "[LOGIN] SIGN_IN: error during writing to socket: %s", ... );
-	// SIZE +0x4  | 169 | if ( !bytes_transferred ) {
-	// SIZE +0x3d | 173 | callback ( ..., login_server_invalid_message_type );
-	// SIZE +0x7  | 177 | switch ( m_data[0] ) {
-	// SIZE +0x49 | 182 | callback ( ..., ( login_server_message_types_enum )m_data[0] );
-	// SIZE +0x3  | 185 | case valid_user_name_message_type :	break;
-	// SIZE +0x49 | 190 | callback ( ..., ( login_server_message_types_enum )m_data[0] );
-	// SIZE +0x20 | 204 | );
-	// VERDICT: STRUCTURE MATCH - quantity fixed (default-case return); all rows are the function4::operator() inline-vs-call wall + derived jmp-near/short distance bloat; non-steerable LTCG.
 }
-// STATE[66.52%|PARTIAL]: structure clean; residual = the function4::operator() inline-vs-call wall x2 + LOG-helper scheduling
+// claude@NOTE: STRUCTURE MATCH (15/15). Residual = function4::operator() inline-vs-call wall
+// x2 + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
@@ -274,11 +248,9 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-
-	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - function4::operator() wall x2 + LOG-helper scheduling; non-steerable LTCG.
 }
-// STATE[77.65%|PARTIAL]: structure clean (sign_in_message_type byte + "0.100b" version block verified); residual = the function4::operator() inline-vs-call wall x1 + the callback bind-copy lowering
+// claude@NOTE: STRUCTURE MATCH (18/18). Residual = function4::operator() inline-vs-call wall
+// x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
 void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 {
 	if ( connection_result ) {
@@ -317,11 +289,9 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-
-	// STRUCTURE DIFF: target 18 stmts / base 18 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - function4::operator() wall x1 + the callback bind-copy lowering; non-steerable LTCG.
 }
-// STATE[90.34%|PARTIAL]: structure clean (strncpy_s triple + const& functor local + if/else-if/else tail verified); residual = the function1(bind_t) conversion lowering + LOG-helper scheduling x3
+// claude@NOTE: STRUCTURE MATCH (18/18). Residual = the function1(bind_t) conversion lowering
+// at the establish_connection boundary + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 {
 	LOG_INFO				( "signing in to LOGIN Server: host[%s], port[%d], account[%s], password[%s]", host, port, account_name, password );
