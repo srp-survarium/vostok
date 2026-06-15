@@ -14,7 +14,6 @@
 namespace vostok {
 namespace network {
 
-// STATE[100%|DONE]
 http_client::http_client( world& world ) :
 	m_world		( static_cast_checked<network_world&>(world) ),
 	m_client	( 0 ),
@@ -27,9 +26,11 @@ http_client::http_client( world& world ) :
 	);
 }
 
-// STATE[90.83%|PARTIAL]: target inlines the strip_pointer fold (no call before
-// delete_helper) where our base keeps the LTCG-promoted call - per-site
-// inline-vs-call, byte-identical for either allocator spelling (both tested)
+// claude@NOTE: STRUCTURE MATCH (1 stmt). Wall: target inlines strip_pointer
+// (passes the g_allocator pointer value direct to delete_helper) where our base
+// keeps a strip_pointer call before delete_helper - per-site inline-vs-call,
+// byte-identical for either allocator spelling (sibling destroy_client documents
+// the same wall). Not steerable from this TU.
 // claude@MATCH: static - the target symbol is the unmangled PDB-private name
 // `vostok::network::destroy_http_client` (internal linkage), not a mangled export
 static void destroy_http_client( network_core::http_client* client_to_destroy )
@@ -37,7 +38,6 @@ static void destroy_http_client( network_core::http_client* client_to_destroy )
 	VOSTOK_DELETE_IMPL	( g_allocator, client_to_destroy );
 }
 
-// STATE[100%|DONE]
 http_client::~http_client( )
 {
 	m_busy	= true;
@@ -49,7 +49,6 @@ http_client::~http_client( )
 	);
 }
 
-// STATE[100%|DONE]
 void http_client::create_client_impl( )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( !m_client ) );
@@ -58,7 +57,6 @@ void http_client::create_client_impl( )
 	m_busy					= false;
 }
 
-// STATE[100%|DONE]
 void http_client::get( pcstr const server, pcstr const path, boost::function< void ( pcstr ) > const& callback )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( !m_busy ) );
@@ -77,7 +75,6 @@ void http_client::get( pcstr const server, pcstr const path, boost::function< vo
 	);
 }
 
-// STATE[100%|DONE]
 void http_client::on_content_downloaded_impl( pcstr const content )
 {
 	if ( m_on_content_downloaded )
@@ -86,8 +83,9 @@ void http_client::on_content_downloaded_impl( pcstr const content )
 	m_busy	= false;
 }
 
-// STATE[99.90%|PARTIAL]: one dead frame dword (target 0x70 vs base 0x6C) + the
-// home-slot rename riding on it - the string_order-ctor ghost-dword LTCG class
+// claude@NOTE: STRUCTURE MATCH (1 stmt). Wall: one dead frame dword (target 0x70
+// vs base 0x6C) plus the home-slot rename riding on it - the string_order-ctor
+// ghost-dword LTCG class. Not steerable from this TU.
 void http_client::on_content_downloaded( )
 {
 	m_world.add_response	(
@@ -99,13 +97,11 @@ void http_client::on_content_downloaded( )
 	);
 }
 
-// STATE[100%|DONE]
 void http_client::get_impl( pcstr const server, pcstr const path )
 {
 	m_client->get	( server, path, boost::bind( &http_client::on_content_downloaded, this ) );
 }
 
-// STATE[100%|DONE]
 void http_client::on_error_impl( boost::system::error_code const error_code )
 {
 	m_busy	= false;
@@ -114,7 +110,6 @@ void http_client::on_error_impl( boost::system::error_code const error_code )
 		m_on_error	( error_code );
 }
 
-// STATE[100%|DONE]
 void http_client::on_error( boost::system::error_code const error_code )
 {
 	if ( !m_on_error )
