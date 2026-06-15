@@ -147,8 +147,9 @@ inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 	tcp_packet*	cloned_packet	= new_packet( );
 	cloned_packet->clone( packet );
 
-	boost::system::error_code	error_code;
-	boost::asio::write( m_socket, buffer_to_send( *cloned_packet ), boost::asio::transfer_all( ), error_code );
+	boost::asio::const_buffers_1 const&	buffer	= buffer_to_send( *cloned_packet );
+	boost::system::error_code			error_code;
+	boost::asio::write( m_socket, buffer, boost::asio::transfer_all( ), error_code );
 
 	on_packet_has_been_sent( cloned_packet, error_code, cloned_packet->buffer_size( ) );
 }

@@ -201,6 +201,9 @@ static void splash_screen_main		( )
 	if ( previous_bitmap )
 		DeleteObject				( previous_bitmap );
 
+	RECT							screen_rectangle;
+	GetWindowRect					( GetDesktopWindow( ), &screen_rectangle );
+
 	SetWindowPos					(
 		s_splash_screen,
 #ifndef MASTER_GOLD
@@ -208,11 +211,11 @@ static void splash_screen_main		( )
 #else // #ifndef MASTER_GOLD
 		HWND_TOPMOST,
 #endif // #ifndef MASTER_GOLD
-		0,
-		0,
+		(screen_rectangle.right - screen_rectangle.left - info_header->biWidth)/2,
+		(screen_rectangle.bottom - screen_rectangle.top - info_header->biHeight)/2,
 		info_header->biWidth,
 		info_header->biHeight,
-		SWP_NOMOVE | SWP_SHOWWINDOW
+		SWP_SHOWWINDOW
 	);
 
 	SetActiveWindow					( s_splash_screen );

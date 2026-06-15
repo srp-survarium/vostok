@@ -18,6 +18,11 @@ struct guard {
 	{
 //		R_ASSERT						( vostok::memory::g_crt_allocations_are_enabled );
 //		vostok::memory::g_crt_allocations_are_enabled	= false;
+		// claude@NOTE: QUANTITY divergence (target 2 stmts / base 1). Target's first stmt is
+		// vostok::debug::set_support_email( "game_crash_reports@survarium.com" ); we can't add
+		// it - the symbol exists in the target exe but is NOT implemented/linked in our build
+		// (0 occurrences in base index), so calling it is an unresolved external. Recover once
+		// vostok::debug::set_support_email is provided by the debug module. Do not fabricate it.
 		VOSTOK_CONSTRUCT_REFERENCE		( s_application, survarium::application );
 		s_application->initialize		( );
 	}

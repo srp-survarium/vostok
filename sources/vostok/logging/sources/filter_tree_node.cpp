@@ -120,7 +120,9 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
         	if ( is_terminal_character(*s2) )
             	return false;
 		    else
-            	return true;					// sushi@NOTE: While assembly matches, this structure doesn't
+		    {
+            	return true;
+		    }
         else if ( is_terminal_character(*s2) )
 			return false;
 
