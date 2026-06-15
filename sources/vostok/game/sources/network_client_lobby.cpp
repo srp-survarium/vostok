@@ -326,16 +326,13 @@ void network_client::close_current_match( bool user_initiate )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: body recovered from target asm 0x5c69e0 (a single virtual call
+// close_current_match(false)). Private + only reached via the packet-dispatch
+// table, which is not wired in this carcass, so /OPT:REF strips it and it stays
+// unpaired until network_client's message dispatch is built / anchored.
 void network_client::process_match_finished( network_core::packet_reader& __formal )
 {
-	// CALL SITE INFO
-	// <0x5c69e7> -> void < unknown >( bool )
-	// ******
-
-	// FUNCTION BODY[0x5c69e0]: 1
-	// <0x5c69e0>|0x000|+0x009:'340'
-	// ******
+	close_current_match	( false );
 }
 
 } // namespace survarium

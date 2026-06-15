@@ -19,6 +19,8 @@
 
 #include <vostok/network/world.h>
 #include <vostok/network_core/udp_match_stats.h>
+#include <vostok/network_core/packet_reader.h>
+#include <vostok/game_core/game_net_defines.h>
 
 #include "network_client.h"
 #include "base_network_client.h"
@@ -90,11 +92,61 @@ void anchor_game_network_clients( game& g )
 	}
 
 	{
+		// launder the packet_reader pointer through a volatile so the compiler can
+		// not see it is NULL and const-fold &reader (a NULL ref turns reader.m_*
+		// field loads into absolute [4]/[8] accesses, scoring read_*() against
+		// garbage codegen).
+		static network_core::packet_reader* volatile reader_ptr = 0;
+		network_core::packet_reader& reader = *reader_ptr;
+
+		static server_connection_info* volatile conn_ptr = 0;
+		static vector< relocate_item_descr >* volatile items_ptr = 0;
+		static vectora< survarium::player_skill >* volatile skills_ptr = 0;
+		static vectora< u8 >* volatile perks_ptr = 0;
+
 		lobby_client lobby( g );
 		lobby.session_id( );
-		lobby.connect( *( server_connection_info* )NULL );
+		lobby.connect( *conn_ptr );
 		lobby.disconnect( );
 		lobby.ping_server( );
+
+		// route every scalar arg through a volatile so the compiler can NOT const-
+		// fold it into the callee (a literal 0 would make price()/query_*() etc.
+		// score against folded codegen, not the real body).
+		static volatile u32 v = 0;
+		u32 const arg = v;
+
+		lobby.set_status_ready_for_match( arg );
+		lobby.query_client_status( ( lobby::query_info_types )arg );
+		lobby.query_prices( arg );
+		lobby.query_profile_contents( arg );
+		lobby.discard_playing_order( );
+		lobby.discard_playing_order_on_connected( );
+
+		fixed_string< 128 > status_dest;
+		lobby.status( status_dest );
+
+		lobby.check_compatibility( arg, arg );
+		lobby.can_move_item( arg, arg );
+		lobby.move_item( *items_ptr );
+		lobby.price( (u8)arg );
+		lobby.buy_item( (u16)arg, arg, (u8)arg, arg != 0 );
+		lobby.set_player_skills( *skills_ptr, *perks_ptr );
+		lobby.reroll_player_skills( );
+
+		lobby.read_status_info( reader );
+		lobby.read_enumerate_profiles_info( reader );
+		lobby.read_profile_content_info( reader );
+		lobby.read_enumerate_inventory_info( reader );
+		lobby.read_price_items( reader );
+		lobby.read_profile_slots_restrictions( reader );
+		lobby.read_items_compatibility( reader );
+		lobby.read_account_money( reader );
+		lobby.read_player_skills( reader );
+		lobby.read_player_reputations( reader );
+		lobby.read_player_skills_tree( reader );
+		lobby.read_service_prices( reader );
+		lobby.read_ping_server_answer( reader );
 	}
 
 	{
