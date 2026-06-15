@@ -60,6 +60,8 @@ class stats_graph;
 //class composite_building;
 class flash_factory;
 class key_binder;
+class base_network_client;
+class scheduler;
 
 //enum human_npc_behaviour_type_enum
 //{
@@ -131,6 +133,19 @@ public:
 	vostok::sound::world&		get_sound_world			( ) const	{ return m_sound_world; }
 //	vostok::collision::space_partitioning_tree&		get_spatial_tree		( ) const	{ return *m_spatial_tree; }
 	vostok::network::world&	get_network_world		( ) const	{ return m_network_world; }
+
+	// claude@NOTE: the original game owns a base_network_client* (target member at
+	// game+0x3b8) reached by messaging_client's on_connected/sign_in/on_packet_
+	// received and on_message_typed via login_client(). The buildability game.h
+	// here is trimmed and does NOT reproduce that member's offset, so the single
+	// statements that read login_client()/session_id() through this accessor
+	// diverge on the member offset (a game-layout wall, not a body error).
+	base_network_client&	network_client			( ) const	{ return *m_active_network_client; }
+
+	// claude@NOTE: the original game owns a scheduler (target member at game+0x380)
+	// reached by messaging_client::connect to unregister its retry timer; same
+	// game-layout wall as network_client() - the trimmed header offset diverges.
+	::survarium::scheduler&	scheduler				( ) const	{ return *m_scheduler; }
 
 
 	inline	engine_user::engine&	engine			( ) const	{ return m_engine; }
@@ -267,6 +282,12 @@ private:
 	game_scene*								m_active_scene;
 
 	flash_factory*							m_flash_factory;
+
+	// claude@NOTE: buildability backing for network_client()/scheduler() - the real
+	// game's active-client member is at game+0x3b8 and scheduler at game+0x380
+	// (offsets not reproduced by this trimmed header); see the accessors above.
+	base_network_client*					m_active_network_client;
+	::survarium::scheduler*					m_scheduler;
 
 #ifndef MASTER_GOLD
 //	vostok::sound::sound_debug_stats*			m_sound_stats;

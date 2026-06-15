@@ -27,10 +27,19 @@ enum message_channel_enum
 };
 
 // no PDB record (only referenced, as a parameter type, by survarium::lobby_menu /
-// chat_handler / messaging_client) - enumerators unknown, a matcher recovers
-// them from the consuming asm
+// chat_handler / messaging_client); enumerator values recovered from
+// messaging_client's friends/ignore request asm (the action byte appended after
+// the 0xC4 message type) - names inferred from the emitting method
 enum friendship_actions_enum
 {
+	add_friend_action			= 0x0,
+	remove_friend_action		= 0x1,
+	add_to_ignore_action		= 0x2,
+	remove_from_ignore_action	= 0x3,
+	find_players_action			= 0x4,
+	query_friend_list_action	= 0x5,
+	query_ignore_list_action	= 0x6,
+	query_friends_status_action	= 0x7,
 };
 
 // canonical: headers/others/enums/messaging__client_state_enum.h
