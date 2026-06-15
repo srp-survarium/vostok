@@ -7,6 +7,7 @@
 #ifndef RECEIVER_KEYBOARD_H_INCLUDED
 #define RECEIVER_KEYBOARD_H_INCLUDED
 
+#include "direct_input_include.h"
 #include <vostok/input/world.h>
 #include <vostok/input/keyboard.h>
 
@@ -35,14 +36,16 @@ public:
 			void	on_deactivate	( );
 			void	execute			( );
 			void	process			( handlers_type& handlers );
-	
+
 
 private:
 			bool	is_key_down		( char value ) const;
+			void	reset_current_state	( );
 
 private:
-	string256				m_current_key_buffer;
-	string256				m_previous_key_buffer;
+	s32						m_current_key_state[256];
+	u32						m_current_events_count;
+	DIDEVICEOBJECTDATA		m_current_events[64];
 	HWND					m_window_handle;
 	IDirectInputDevice8A*	m_device;
 	vostok::input::world&		m_world;

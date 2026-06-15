@@ -14,39 +14,30 @@ using vostok::input::receiver::keyboard;
 
 void keyboard::process		( handlers_type& handlers )
 {
-	handlers_type::iterator it;
-	handlers_type::iterator it_e = handlers.end();
-
-	pcstr					i = m_current_key_buffer, b = i;
-	pcstr					e = m_current_key_buffer + sizeof(m_current_key_buffer);
-	pcstr					j = m_previous_key_buffer;
-	for ( ; i != e; ++i, ++j ) {
-		if ( is_key_down( *i ) && is_key_down( *j ) ) {
-			for(it=handlers.begin(); it!=it_e; ++it)
-				if( (*it)->on_keyboard_action	( &m_world, enum_keyboard( i - b ), kb_key_hold ) )
+	for ( u32 i = 0; i < m_current_events_count; ++i ) {
+		enum_keyboard const		key = enum_keyboard( m_current_events[ i ].dwOfs );
+		bool const				down = is_key_down( (char)m_current_events[ i ].dwData );
+		if ( down ) {
+			for ( handlers_type::iterator it = handlers.begin(), it_e = handlers.end(); it != it_e; ++it )
+				if ( (*it)->on_keyboard_action	( &m_world, key, kb_key_down ) )
 					break;
-
-			continue;
 		}
-
-		it_e = handlers.end();
-		if ( is_key_down( *i ) ) {
-			for(it=handlers.begin(); it!=it_e; ++it)
-				if( (*it)->on_keyboard_action	( &m_world, enum_keyboard( i - b ), kb_key_down ) )
+		else {
+			for ( handlers_type::iterator it = handlers.begin(), it_e = handlers.end(); it != it_e; ++it )
+				if ( (*it)->on_keyboard_action	( &m_world, key, kb_key_up ) )
 					break;
-
-			continue;
-		}
-
-		it_e = handlers.end();
-		if ( is_key_down( *j ) ) {
-			for(it=handlers.begin(); it!=it_e; ++it)
-				if( (*it)->on_keyboard_action	( &m_world, enum_keyboard( i - b ), kb_key_up ) )
-					break;
-
-			continue;
 		}
 	}
+
+	for ( u32 i = 0; i < 256; ++i ) {
+		if ( m_current_key_state[ i ] ) {
+			for ( handlers_type::iterator it = handlers.begin(), it_e = handlers.end(); it != it_e; ++it )
+				if ( (*it)->on_keyboard_action	( &m_world, enum_keyboard( i ), kb_key_hold ) )
+					break;
+		}
+	}
+
+	m_current_events_count	= 0;
 }
 
 
@@ -75,11 +66,6 @@ bool keyboard::get_dik_name(  int dik, pstr dest_str, int dest_sz ) const
 	return						true;
 }
 
-// claude@NOTE: structure-match; sole byte residual is the m_device member offset
-// (base 0x208 vs target 0x90c) - the target receiver::keyboard layout is
-// m_current_key_state[256] + m_current_events_count + m_current_events[64]
-// (DIDEVICEOBJECTDATA), not the string256 buffers this header still carries.
-// Fixing the layout is a whole-keyboard-TU rewrite (process/is_key_down/execute).
 bool keyboard::get_dik_unicode( int dik, wchar_t* buff, u32 buff_size ) const
 {
 	DIPROPSTRING keyname;

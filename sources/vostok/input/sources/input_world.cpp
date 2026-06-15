@@ -6,8 +6,8 @@
 
 #include "pch.h"
 #include "input_world.h"
-#include "receiver_gamepad.h"
 #include "receiver_keyboard.h"
+#include "receiver_gamepad.h"
 #include "receiver_mouse.h"
 #include <vostok/input/handler.h>
 
