@@ -9,7 +9,6 @@
 namespace vostok {
 namespace network {
 
-// STATE[100%|DONE]
 login_client_impl::login_client_impl( boost::asio::io_service& io_service ) :
 	m_socket			( io_service ),
 	m_ssl_context		( boost::asio::ssl::context::sslv23 ),
@@ -46,7 +45,9 @@ login_client_impl::login_client_impl( boost::asio::io_service& io_service ) :
 	m_host_ip[0]	= 0;
 }
 
-// STATE[94.95%|PARTIAL]: structure 19/19 (do/switch with the folded case-breaks verified); residual = +0x3 at each sign_out( boost::function<...>( ) ) temp - the folded function4-default-ctor takes `this` via a reg the base reloads
+// claude@NOTE: structure + locals match (do/switch with the folded case-breaks
+// verified); residual = +0x3 at each sign_out( boost::function<...>( ) ) temp -
+// the folded function4 default-ctor takes `this` via a reg the base reloads
 login_client_impl::~login_client_impl( )
 {
 	m_in_destructor		= true;
@@ -90,7 +91,6 @@ login_client_impl::~login_client_impl( )
 	} while ( m_connection_state != unresolved );
 }
 
-// STATE[100%|DONE]
 bool login_client_impl::verify_ssl_certificate( const bool preverified, boost::asio::ssl::verify_context& verify_context )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( verify_context );
@@ -110,7 +110,6 @@ bool login_client_impl::verify_ssl_certificate( const bool preverified, boost::a
 	return preverified;
 }
 
-// STATE[100%|DONE]
 void login_client_impl::establish_connection( boost::function< void ( connection_error_types_enum ) > const& functor, const u32 resolve_retry_count, const u32 reconnect_retry_count )
 {
 	if ( m_connection_state == unresolved )
@@ -127,7 +126,9 @@ void login_client_impl::establish_connection( boost::function< void ( connection
 		);
 }
 
-// STATE[95.43%|PARTIAL]: structure 8/8; residual = the LOG-helper function-ctor COMDAT scheduling (base calls it at the append, target at block entry - http_client precedent) inside the LOG_INFO statement
+// claude@NOTE: structure + locals match; residual = the LOG-helper callback-ctor
+// schedule (base emits it at the append site, target at block entry - see
+// log-callback-ctor-schedule.md) inside the LOG_INFO statement
 void login_client_impl::close_connection( const bool stop_ping_timer )
 {
 	LOG_INFO				( "[LOGIN] closed connection\r\n" );

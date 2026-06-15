@@ -8,7 +8,10 @@
 namespace vostok {
 namespace network {
 
-// STATE[84.13%|PARTIAL]: structure clean (else-if ladder + iterator end checks verified); residuals = LOG-helper ctor scheduling x5 + the functor/function2 bind-copy lowering at the resolve/async_resolve retry sites
+// claude@NOTE: structure + locals match (else-if ladder + iterator end checks
+// verified); residual = LOG-helper callback-ctor schedule x6
+// (log-callback-ctor-schedule.md) + the functor/function2 bind-copy lowering at
+// the resolve/async_resolve retry sites
 void login_client_impl::on_resolved(
 		boost::asio::ip::tcp::resolver* const	resolver,
 		const u32								retry_count,
@@ -67,11 +70,11 @@ void login_client_impl::on_resolved(
 
 	m_connection_state	= resolved;
 	functor			( successfully_resolved, iterator );
-
-	// STRUCTURE DIFF: target 25 stmts / base 25 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - LOG-helper ctor scheduling x5 + functor/function2 bind-copy lowering at the retry sites; non-steerable LTCG.
 }
-// STATE[93.07%|PARTIAL]: structure clean; residual = LOG-helper ctor scheduling + the functor bind-copy lowering in the async_resolve bind
+// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
+// schedule + the functor bind-copy lowering in the async_resolve bind; the
+// _itoa_s line also hoists m_host_port to an unnamed temp slot the base loads
+// inline (compiler temp-scheduling, not a source local)
 void login_client_impl::resolve( boost::function< void ( resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const& functor, const u32 retry_count )
 {
 	LOG_INFO		( "[LOGIN] resolving...\r\n" );
