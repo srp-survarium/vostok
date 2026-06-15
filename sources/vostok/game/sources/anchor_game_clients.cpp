@@ -44,6 +44,24 @@ void anchor_game_network_clients( game& g )
 
 	network::world& world = *( network::world* )NULL;
 
+	// a runtime (non-constant) player id: the anchor is the only caller of the
+	// matched out-of-line bodies, so a literal arg lets LTCG constant-propagate it
+	// into them (e.g. is_player_current( 0 ) specialises `id` to 0 and drops the
+	// stack param). Reading the volatile flag yields a value the compiler can't fold.
+	const u8 runtime_id = (u8)s_run;
+
+	// being the sole caller also lets LTCG give the matched bodies a custom register
+	// calling convention (param in a reg, no `ret 4`) instead of the standard __thiscall
+	// the real game emits. Take the member-function addresses through a volatile sink so
+	// the linker must keep them callable via the normal ABI, pinning the convention.
+	{
+		bool ( base_network_client::* const is_cur )( const u8 ) const = &base_network_client::is_player_current;
+		game_team_id ( network_client::* const team )( pcstr ) = &network_client::get_player_team;
+		static pcvoid volatile s_sink = 0;
+		s_sink = *( pcvoid const* )&is_cur;
+		s_sink = *( pcvoid const* )&team;
+	}
+
 	{
 		// network_client transitively constructs base_network_client, lobby_client,
 		// match_client, messaging_client and the network_stats stats_row members,
@@ -53,7 +71,7 @@ void anchor_game_network_clients( game& g )
 		base_network_client& base = client;
 		base.get_current_player_position( );
 		base.fill_current_player_stats( boost::function< void( u32, float, float, pcstr ) >( ) );
-		base.is_player_current( 0 );
+		base.is_player_current( runtime_id );
 		base.current_player_team( );
 		base.get_current_player( );
 		base.use_physics_controller_for_current( "" );
@@ -65,9 +83,9 @@ void anchor_game_network_clients( game& g )
 		client.tick( 0, false );
 		client.send_local_player_input( *( player_input* )NULL, 0, float4x4( ), 0.f );
 		client.initiate_kill_current_player( );
-		client.is_player_local( 0 );
+		client.is_player_local( runtime_id );
 		client.unload( );
-		client.get_player( 0 );
+		client.get_player( runtime_id );
 		client.get_player_team( "name" );
 	}
 
