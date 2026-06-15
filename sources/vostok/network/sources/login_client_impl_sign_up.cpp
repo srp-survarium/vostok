@@ -9,7 +9,9 @@
 namespace vostok {
 namespace network {
 
-// STATE[89.93%|PARTIAL]: structure clean (function5::operator() INLINED in BOTH - target matches the base inline here); residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG-helper scheduling
+// claude@NOTE: STRUCTURE MATCH (17/17). Residual = the callback/info bind-copy lowering
+// (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG ctor scheduling;
+// global boost-header knob. See template-accessor-deinline-global-knob.md.
 void login_client_impl::on_sign_up_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -39,12 +41,11 @@ void login_client_impl::on_sign_up_answer_received(
 	close_connection		( false );
 	if ( !m_in_destructor )
 		callback			( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )m_data[0], sign_up_info );
-
-	// STRUCTURE DIFF: target 17 stmts / base 17 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - callback/info bind-copy lowering + LOG-helper scheduling; non-steerable LTCG.
 }
 
-// STATE[89.71%|PARTIAL]: structure clean; residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG-helper scheduling
+// claude@NOTE: STRUCTURE MATCH (15/15). Residual = the callback/info bind-copy lowering
+// (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG ctor scheduling;
+// global boost-header knob (see note above).
 void login_client_impl::on_sign_up_info_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -81,12 +82,11 @@ void login_client_impl::on_sign_up_info_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-
-	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - callback/info bind-copy lowering + LOG-helper scheduling; non-steerable LTCG.
 }
 
-// STATE[91.78%|PARTIAL]: structure clean (password/email length-prefixed writes + both ASSERT eaters verified); residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule
+// claude@NOTE: STRUCTURE MATCH (20/20). Residual = the callback/info bind-copy lowering
+// (function5 copy + boost::ref slot) vs the target folded-ctor schedule; global boost-header
+// knob (see note above).
 void login_client_impl::sign_up_on_handshaked(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -128,11 +128,10 @@ void login_client_impl::sign_up_on_handshaked(
 	);
 }
 
-// STATE[88.75%|PARTIAL]: structure 26/26 (default-case `return` restored - the
-// target's 2-byte jmp goes to the epilogue, skipping handshake, same shape as
-// on_user_name_answer_received); residual = the callback/info bind-copy lowering
-// (function5 copy + boost::ref slot) vs the target folded-ctor schedule +
-// LOG-helper scheduling
+// claude@NOTE: STRUCTURE MATCH (26/26). default-case `return` is load-bearing (target's
+// 2-byte jmp goes to the epilogue, skipping handshake, same shape as on_user_name_answer_received).
+// Residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the
+// target folded-ctor schedule + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::on_sign_up_account_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -187,15 +186,11 @@ void login_client_impl::on_sign_up_account_answer_received(
 		login_handshake_retry_count,
 		false
 	);
-
-	// STRUCTURE DIFF: target 26 stmts / base 26 stmts
-	// SIZE -0x4 | 137 | LOG_ERROR ( "[LOGIN] on_SIGN_UP_answer_received: ...", ... );
-	// SIZE +0x3 | 165 | return;
-	// SIZE +0x20| 179 | );
-	// VERDICT: STRUCTURE MATCH - quantity fixed (default-case return); residuals are the function5 bind-copy lowering + jmp-near/short distance bloat; non-steerable LTCG.
 }
 
-// STATE[89.66%|PARTIAL]: structure clean; residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG-helper scheduling
+// claude@NOTE: STRUCTURE MATCH (15/15). Residual = the callback/info bind-copy lowering
+// (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG ctor scheduling;
+// global boost-header knob (see note above).
 void login_client_impl::on_sign_up_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -232,12 +227,11 @@ void login_client_impl::on_sign_up_written(
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-
-	// STRUCTURE DIFF: target 15 stmts / base 15 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - callback/info bind-copy lowering + LOG-helper scheduling; non-steerable LTCG.
 }
 
-// STATE[90.66%|PARTIAL]: structure clean (sign_up_message_type byte + account_name length-prefixed write verified); residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the target folded-ctor schedule
+// claude@NOTE: STRUCTURE MATCH (16/16). Residual = the callback/info bind-copy lowering
+// (function5 copy + boost::ref slot) vs the target folded-ctor schedule; global boost-header
+// knob (see note above).
 void login_client_impl::sign_up_on_connected(
 		const connection_error_types_enum	connection_result,
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
@@ -275,7 +269,9 @@ void login_client_impl::sign_up_on_connected(
 		)
 	);
 }
-// STATE[84.39%|PARTIAL]: structure 4/4; residual = the function1(bind_t) conversion lowering at the establish_connection boundary (bind carries the function5 copy + ref slot)
+// claude@NOTE: STRUCTURE MATCH (6/6). Residual = the function1(bind_t) conversion lowering at
+// the establish_connection boundary (the bind carries the function5 copy + boost::ref slot);
+// global boost-header knob (see note above).
 void login_client_impl::sign_up( pcstr host, u16 port, sign_up_info const& sign_up_info, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const& callback )
 {
 	m_host_port				= port;
@@ -293,9 +289,6 @@ void login_client_impl::sign_up( pcstr host, u16 port, sign_up_info const& sign_
 		login_resolve_retry_count,
 		login_connect_retry_count
 	);
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only, rva-pinned 0x7947f0)
-	// VERDICT: STRUCTURE MATCH - function1(bind_t) conversion lowering at the establish_connection boundary; non-steerable LTCG.
 }
 
 } // namespace network
