@@ -9,6 +9,9 @@
 // (gained its first real includer with game's match_client.h)
 #include <vostok/network_core/tcp_packet.h>
 #include <vostok/game_core/player_profile.h>
+// game_mode_type was extracted to its own header (the port's canonical home,
+// also pulled by game's game_world_ui.h) - include it, don't redefine.
+#include <vostok/game_core/game_mode_type.h>
 
 namespace vostok {
 namespace network_core {
@@ -26,13 +29,6 @@ void `dynamic initializer for 'player_templates_count''( )
 {
 }
 */
-
-enum game_mode_type {
-	capture_enemy_base		= 0x0000,
-	capture_neutral_base	= 0x0001,
-	gather_victory_items	= 0x0002,
-	invalid_game_mode		= 0x00ff,
-};
 
 /* sushi@TODO: Those are in their own corresponding headers (move?)
 player_profile::player_profile( )

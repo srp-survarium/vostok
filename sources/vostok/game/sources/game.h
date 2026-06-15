@@ -212,6 +212,12 @@ public:
 
 	inline	base_network_client*				get_network_client				( ) { /* no source */ return m_network_client; }
 
+	// claude@NOTE: integration accessor the matched network clients call as
+	// m_game.network_client().login_client().session_id() - returns the same
+	// base_network_client* member by reference (login_client() is virtual on the
+	// base, so concrete network_client need not be exposed here).
+	inline	base_network_client&				network_client					( ) const { /* no source */ return *m_network_client; }
+
 	inline	pcstr								project_resource_name			( ) { /* no source */ return m_project_resource_name.c_str( ); }
 
 			void								set_network_client				(
