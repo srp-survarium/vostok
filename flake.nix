@@ -12,7 +12,11 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      url = "github:srp-survarium/vostok-pdb-parser";
+      # fix/scaleform-carcass-dump: anchors the SDK-exclusion glob to
+      # **/scaleform/src/** so the engine's own vostok/scaleform/sources/
+      # compilands are emitted (the old hardcoded `\scaleform\` ate both).
+      # Pinned to the branch until it merges to master.
+      url = "github:srp-survarium/vostok-pdb-parser/fix/scaleform-carcass-dump";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -64,7 +68,7 @@
         pname = "vostok-pdb-parser";
         version = "0.1.0";
         src = vostok-pdb-parser-src;
-        cargoHash = "sha256-VRRjM4FtwwXyeQqO1NOYeDRxsiBpOKW3+Bqj5dKjNCc=";
+        cargoHash = "sha256-FyGSJLFMTTkKIhHI9YtEeMeCRr26V5cxaZuDk0K9H74=";
       };
 
       # ---------------------------------------------------------------------------

@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 25.11.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef SIMPLE_ANIMATION_CONTROLLER_H_INCLUDED
@@ -12,21 +10,34 @@
 
 namespace survarium {
 
-class simple_animation_controller : public base_animation_controller
-{
-public:
-								simple_animation_controller			( );
-								~simple_animation_controller		( );
+class human_npc;
 
-	virtual	void								initialize			( );
-// 	virtual	vostok::animation::mixing::expression	finalize			( base_animation_controller& next_controller );
-// 	virtual vostok::animation::mixing::expression	selected_animations	( );
-	virtual	void								set_target			( animation_controller_parameters const& target );
+class simple_animation_controller : public base_animation_controller {
+public:
+			explicit							simple_animation_controller	( human_npc& owner );
+	virtual										~simple_animation_controller( );
+
+	virtual	void								initialize					( ) override;
+
+	virtual	animation::mixing::expression		try_finalize				( base_animation_controller& next_controller, mutable_buffer& buffer ) override;
+
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer ) override;
+
+	virtual	void								set_target					( animation_controller_parameters const& target ) override;
+
+	virtual	void								query_new_target_if_needed	( ) override;
+
+	virtual	void								debug_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const override;
 
 private:
-	simple_animation_controller_parameters		m_current_parameters;
-	simple_animation_controller_parameters		m_target_parameters;
+	/* 0x0000 */	/* base_animation_controller */
+	/* 0x0004 */	simple_animation_controller_parameters	m_current_parameters;
+	/* 0x000c */	simple_animation_controller_parameters	m_target_parameters;
+	/* 0x0014 */	human_npc&		m_owner;
+	/* 0x0018 */	bool			m_last_animation_emitted;
 }; // class simple_animation_controller
+
+STATIC_SIZE_ASSERT(simple_animation_controller, 0x1C);
 
 } // namespace survarium
 

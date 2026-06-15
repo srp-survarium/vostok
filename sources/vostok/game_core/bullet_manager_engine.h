@@ -7,6 +7,11 @@
 
 namespace survarium {
 
+// the tracer pure virtuals take bullet* - without this decl an includer that
+// hasn't seen bullet yet (game_world.h) parses the param away to (void), so the
+// override never matches (C3668 -> abstract game_world).
+class bullet;
+
 class bullet_manager_engine {
 public:
 	virtual	void	play_sound				(

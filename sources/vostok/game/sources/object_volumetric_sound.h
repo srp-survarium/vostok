@@ -1,46 +1,42 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 13.10.2011
-//	Author		: Dmitry Kulikov
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef VOLUMETRIC_SOUND_H_INCLUDED
-#define VOLUMETRIC_SOUND_H_INCLUDED
+#ifndef OBJECT_VOLUMETRIC_SOUND_H_INCLUDED
+#define OBJECT_VOLUMETRIC_SOUND_H_INCLUDED
 
-#include "object.h"
-#include <vostok/sound/sound_emitter.h>
-
-namespace vostok {
-namespace collision {
-	class geometry_instance;
-} // namespace collision
-} // namespace vostok
+#include "object_sound.h"
+#include <vostok/game_core/link_resolver.h>
 
 namespace survarium {
 
-class object_volumetric_sound : public game_object_
-{
-	typedef game_object_				super;
+class base_project;
+class collision_geometry;
+
+class object_volumetric_sound : public object_sound , public link_resolver {
 public:
-					object_volumetric_sound	( game_scene& w );
-	virtual			~object_volumetric_sound( );
-	virtual void	load					( configs::binary_config_value const& t );
-	virtual void	load_contents			( );
-	virtual void	unload_contents			( );
+			explicit	object_volumetric_sound	( base_game_scene& w );
+	virtual				~object_volumetric_sound( );
+
+	virtual	void		load					(
+							configs::binary_config_value const&		t,
+							pcstr									project_resources_path,
+							boost::function< void( game_object_& ) >&	cb
+						) override;
+
+	virtual	void		insert					( ) override;
+
+	virtual	void		resolve_links			( base_project* p, configs::binary_config_value config ) override;
+
 private:
-			void	on_collision_object_loaded	( game_object_ptr_ const& object );
-			void	on_config_loaded			( resources::queries_result& data );
-			void	on_sound_loaded				( resources::queries_result& data );
-private:
-	fs::path_string							m_sound_name;
-	vostok::sound::sound_emitter_ptr			m_emitter;
-	vostok::sound::sound_instance_proxy_ptr	m_proxy;
-	vostok::sound::sound_scene_ptr			m_sound_scene;
-	vostok::sound::world_user&				m_world_user;
-	vostok::collision::geometry_instance*		m_collision_geometry;
-	float									m_radius;
-}; // class volumetric_sound
+	/* 0x0000 */	/* object_sound */
+	/* 0x0160 */	/* link_resolver */
+	/* 0x0164 */	collision_geometry*		m_collision_geometry;
+	/* 0x0168 */	float					m_radius;
+}; // class object_volumetric_sound
+
+STATIC_SIZE_ASSERT(object_volumetric_sound, 0x170);
 
 } // namespace survarium
 
-#endif // #ifndef VOLUMETRIC_SOUND_H_INCLUDED
+#endif // #ifndef OBJECT_VOLUMETRIC_SOUND_H_INCLUDED

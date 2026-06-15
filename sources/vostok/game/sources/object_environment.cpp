@@ -1,49 +1,69 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 10.05.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "object_environment.h"
-#include "game_world.h"
-#include <vostok/render/world.h>
-#include <vostok/render/facade/scene_renderer.h>
 
-namespace survarium{
+namespace survarium {
 
-object_environment::object_environment( game_scene& w )
-:super			( w )
+// STATE[STUB]
+ object_environment::object_environment( base_game_scene& w ) :
+	game_object_( w )
 {
+	// FUNCTION BODY[0x5c3a00]: 0
+	// <0x5c3a00>|0x000|+0x023:'17'	{
+	// <0x5c3a23>|0x023|      :'18'	}
+	// ******
 }
 
-object_environment::~object_environment( )
+// STATE[STUB]
+ object_environment::~object_environment( )
 {
+	// FUNCTION BODY[0x5c39c0]: 0
+	// <0x5c39c0>|0x000|+0x009:'21'	{
+	// <0x5c39c9>|0x009|      :'22'	}
+	// ******
 }
 
-void object_environment::load( configs::binary_config_value const& t )
+// STATE[STUB]
+void object_environment::load(
+	configs::binary_config_value const&		t,
+	pcstr									__formal,
+	boost::function< void( game_object_& ) >&	cb
+)
 {
-	super::load					(t);
-	pcstr post_effect_name		= pcstr(t["post_effect"]);
-	
-	resources::query_resource	( post_effect_name, resources::material_class, boost::bind(&object_environment::material_ready, this, _1), g_allocator );
+	// FUNCTION BODY[0x5c3a30]: 3
+	// <0x5c3a3e>|0x00e|+0x00f:'26'
+	// <0>
+	// <0x5c3a4d>|0x01d|+0x098:'28'
+	// ******
 }
 
-void object_environment::material_ready( resources::queries_result& data )
+// STATE[STUB]
+void object_environment::material_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
-	if(data.is_successful())
-	{
-		m_game_scene.renderer().scene().set_post_process(m_game_scene.get_render_scene_view(), data[0].get_unmanaged_resource());
-	}
+	// FUNCTION BODY[0x5c3920]: 2
+	// <0x5c3921>|0x001|+0x07f:'33'
+	// <0x5c39a0>|0x080|+0x00a:'34'
+	// ******
 }
 
-void object_environment::unload_contents( )
-{	
+// STATE[STUB]
+void object_environment::remove( )
+{
+	// FUNCTION BODY[0x5c3910]: 0
+	// <0x5c3910>|0x000|+0x000:'38'	{
+	// <0x5c3910>|0x000|      :'39'	}
+	// ******
 }
 
-void object_environment::load_contents( )
-{	
+// STATE[STUB]
+void object_environment::insert( )
+{
+	// FUNCTION BODY[0x5c3af0]: 1
+	// <0x5c3af0>|0x000|+0x026:'43'
+	// ******
 }
-
 
 } // namespace survarium

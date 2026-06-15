@@ -4,8 +4,10 @@
 - Build: `/Od` (optimization off) + LTCG, `Master Gold` - see [../MATCHING.md](../MATCHING.md).
 - Sources: `sources/vostok/game_core/sources/`.
 - Reachability anchor: every matched function must be referenced from
-  `temp_include_all.cpp` (a `use_*` driven by `IncludeAll`, instantiated in
-  `game/sources/game_world.cpp`) or it is dead-stripped - see
+  `game/sources/temp_include_all.cpp` (a `use_*` driven by `IncludeAll`,
+  instantiated in `game/sources/game_entry_point.cpp::create_world`; the TU
+  moved out of game_core during the game carcass rebuild) or it is
+  dead-stripped - see
   [../agentic_loop.md](../agentic_loop.md) section 3.
 - Best reversed references: `player_stamina.cpp`, `collision_sensor.cpp`,
   `damage_model.cpp`, `bullet.cpp`.

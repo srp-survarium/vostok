@@ -15,7 +15,7 @@
 
 #include "client_player_state.h"
 #include "client_player_history_item.h"
-#include "flash_text.h"
+#include <vostok/scaleform/sources/flash_text.h>
 
 namespace vostok {
 namespace collision {

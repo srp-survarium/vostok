@@ -1,271 +1,134 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 24.03.2010
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2010
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-
 #include "main_menu.h"
-#include "game.h"
-#include "game_world.h"
-
-#ifdef VOSTOK_STATIC_LIBRARIES
-#include "flash_factory.h"
-#include "GFx.h"
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
-
-#include <vostok/ui/world.h>
-#include <vostok/input/keyboard.h>
-#include <vostok/input/world.h>
-#include <vostok/render/facade/game_renderer.h>
-#include <vostok/render/facade/scene_renderer.h>
-
-
 
 namespace survarium {
 
-
-#ifdef VOSTOK_STATIC_LIBRARIES
-//--------------------------------------------------------------------------------------
-// FSCommand Handler
-//--------------------------------------------------------------------------------------
-
-class main_menu_fs_command_handler : public Scaleform::GFx::FSCommandHandler
+// STATE[STUB]
+ main_menu::main_menu( game& g )
+	: base_game_scene( g ) // buildability: base has no default ctor
 {
-public:
-	virtual void Callback(Scaleform::GFx::Movie* /*pmovie*/,
-		const char* /*pcommand*/, const char* /*parg*/)
-	{
-
-	}
-};
-
-//--------------------------------------------------------------------------------------
-// ExternalInterface Handler
-//--------------------------------------------------------------------------------------
-
-class main_menu_external_handler : public Scaleform::GFx::ExternalInterface, private boost::noncopyable
-{
-private:
-	game& m_game;
-	game_world& m_game_world;
-public:
-	main_menu_external_handler( game& game, game_world& w ):m_game(game),m_game_world(w){}
-	virtual void Callback(Scaleform::GFx::Movie* /*pmovieView*/,
-		const char* methodName,
-		const Scaleform::GFx::Value* args,
-		unsigned /*argCount*/)
-	{
-		if (strcmp( methodName, "MenuButtonClicked" ) == 0){
-			m_game.scene_close_query( );
-			const char* command = args[0].GetString();
-			if (strcmp( command, "FreeFly" ) == 0)
-			{
-				m_game_world.switch_to_free_fly_camera();
-			}
-			else if (strcmp( command, "Physics" ) == 0)
-			{
-//				m_game.get_game_world().test_physics1();
-//				m_game.scene_close_query( );
-			}
-			else if (strcmp( command, "Hud" ) == 0)
-			{
-				m_game_world.switch_to_hud_camera();
-			}
-			else if (strcmp( command, "Quit" ) == 0)
-			{
-				m_game.exit			( "quit" );
-			}		
-		}
-
-	}
-};
-
-void main_menu::create_main_menu_ui( )
-{
-	m_main_menu_ui = get_game().get_flash_factory().create_movie("../../resources/sources/flash_movies/test.swf");
-	m_main_menu_ui->m_movie->SetBackgroundAlpha(0.0f);
-
-	// Register our FSCommand handler
-	Scaleform::Ptr<Scaleform::GFx::FSCommandHandler> pcommandHandler = *new main_menu_fs_command_handler;
-	m_main_menu_ui->m_movie->SetFSCommandHandler(pcommandHandler);
-
-	// Register our ExternalInterface handler
-	Scaleform::Ptr<Scaleform::GFx::ExternalInterface> pEIHandler = *new main_menu_external_handler(get_game(), m_game_world);
-	m_main_menu_ui->m_movie->SetExternalInterface(pEIHandler);
-
-
+	// FUNCTION BODY[0x5d9cb0]: 1
+	// <0x5d9cb8>|0x008|+0x01d:'43'
+	// ******
 }
 
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
-
-
-
-struct main_menu_ui :public boost::noncopyable
+// STATE[STUB]
+ main_menu::~main_menu( )
 {
-main_menu_ui(vostok::ui::world& ui_world)
-:m_ui_world(ui_world)
-{
-	m_ui_dialog						= m_ui_world.create_dialog( );
-	m_ui_dialog->w()->set_position	( float2(100, 100) );
-	m_ui_dialog->w()->set_size		( float2(500,500) );
-
-	ui::image* img					= m_ui_world.create_image( );
-	img->init_texture				( "ui_rect" );
-	img->set_color					( 0xff409040 );
-	img->w()->set_size				( m_ui_dialog->w()->get_size() );
-	img->w()->set_position			( float2(0, 0) );
-	img->w()->set_visible			( true );
-	m_ui_dialog->w()->add_child		( img->w(), true );
-
-	ui::text* text					= m_ui_world.create_text( );
-	text->set_font					( ui::fnt_arial );
-	text->set_text					( "Main menu" );
-	text->w()->set_size				( float2(200, 40) );
-	text->w()->set_position			( float2(20, 120) );
-	text->w()->set_visible			( true );
-	m_ui_dialog->w()->add_child		( text->w(), true );
-
-	text							= m_ui_world.create_text( );
-	text->set_font					( ui::fnt_arial );
-	text->set_text					( "ESC - switch to Game" );
-	text->w()->set_size				( float2(200, 40) );
-	text->w()->set_position			( float2(20, 140) );
-	text->w()->set_visible			( true );
-	m_ui_dialog->w()->add_child		( text->w(), true );
-
-	text							= m_ui_world.create_text( );
-	text->set_font					( ui::fnt_arial );
-	text->set_text					( "Q - quit" );
-	text->w()->set_size				( float2(200, 40) );
-	text->w()->set_position			( float2(20, 160) );
-	text->w()->set_visible			( true );
-	m_ui_dialog->w()->add_child		( text->w(), true );
-
-	text							= m_ui_world.create_text( );
-	text->set_font					( ui::fnt_arial );
-	text->set_text					( "H/J- attach/detach hud camera" );
-	text->w()->set_size				( float2(200, 40) );
-	text->w()->set_position			( float2(20, 180) );
-	text->w()->set_visible			( true );
-	m_ui_dialog->w()->add_child		( text->w(), true );
-}
-	~main_menu_ui()
-	{
-		m_ui_world.destroy_window(m_ui_dialog->w());
-	}
-	vostok::ui::world&		m_ui_world;
-	ui::dialog*				m_ui_dialog;
-};
-
-
-main_menu::main_menu( game& g, game_world& w ) 
-:super			( g ),
-m_game_world	( w )
-{
-#ifndef MASTER_GOLD
-	m_dbg_name							= "Main Menu";
-#endif //#ifndef MASTER_GOLD
-
-	query_resources					( );
-
-#ifdef VOSTOK_STATIC_LIBRARIES
-	create_main_menu_ui		();
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
-
+	// FUNCTION BODY[0x5d9aa0]: 0
+	// <0x5d9aa0>|0x000|+0x017:'48'	{
+	// <0x5d9ab7>|0x017|      :'49'	}
+	// ******
 }
 
-
-main_menu::~main_menu( )
-{
-#ifdef VOSTOK_STATIC_LIBRARIES
-	DELETE( m_main_menu_ui );
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
-}
-
+// STATE[STUB]
 void main_menu::on_deactivate( )
 {
-	super::on_deactivate				( );
-	get_game().input_world().remove_handler	( *this );
-#ifdef VOSTOK_STATIC_LIBRARIES
-	renderer().hide_movie( get_game().render_output_window(), m_main_menu_ui );	
-#else	
-	DELETE	(m_ui);
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+	// CALL SITE INFO
+	// <0x5d9a8b> -> input::world& < unknown >()
+	// <0x5d9a95> -> void < unknown >( input::handler& )
+	// ******
+
+	// FUNCTION BODY[0x5d9a60]: 2
+	// <0x5d9a63>|0x003|+0x017:'53'
+	// <0x5d9a7a>|0x01a|+0x01f:'54'
+	// ******
 }
 
-#ifndef VOSTOK_STATIC_LIBRARIES
-input::handler*	main_menu::dialog_input_handler	()
+// STATE[STUB]
+void main_menu::clear_resources( )
 {
-	return m_ui->m_ui_dialog->input_handler();
+	// FUNCTION BODY[0x5d99c0]: 1
+	// <0x5d99c0>|0x000|+0x000:'58'	{
+	// <0>
+	// <0x5d99c0>|0x000|      :'60'	}
+	// ******
 }
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
 
-
+// STATE[STUB]
 void main_menu::on_activate( )
 {
-	super::on_activate					( );
-	get_game().input_world().add_handler	( *this );
+	// CALL SITE INFO
+	// <0x5d9a42> -> input::world& < unknown >()
+	// <0x5d9a4c> -> void < unknown >( input::handler& )
+	// ******
 
-#ifdef VOSTOK_STATIC_LIBRARIES
-	m_window_size = renderer().scene().window_client_size(get_game().render_output_window());
-	m_main_menu_ui->m_movie->SetViewport(m_window_size.width, m_window_size.height, 0, 0, m_window_size.width, m_window_size.height, 0);
-	renderer().show_movie( get_game().render_output_window(), m_main_menu_ui );
-	m_main_menu_ui_last_time = m_timer.get_elapsed_msec();	
-#else
-	m_ui	= NEW(main_menu_ui)(m_game.ui_world());
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+	// FUNCTION BODY[0x5d9a20]: 2
+	// <0x5d9a24>|0x004|+0x005:'64'
+	// <0x5d9a29>|0x009|+0x027:'65'
+	// ******
 }
 
-
-void main_menu::tick( )
+// STATE[STUB]
+void main_menu::tick(
+	const u32		frame_delta_in_ms,
+	const u32		current_time_in_ms,
+	const bool		is_game_paused
+)
 {
-#ifdef VOSTOK_STATIC_LIBRARIES
-	if (m_main_menu_ui){
-
-		u32 current_time = m_timer.get_elapsed_msec();
-		
-		float deltaTime = ((float)(current_time - m_main_menu_ui_last_time)) / 1000.0f;
-		//LOG_INFO("TIME_DELTA: [%f] --- [%d]:[%d]", deltaTime, current_time, m_main_menu_ui_last_time );
-		m_main_menu_ui_last_time = current_time;
-		
-		m_main_menu_ui->m_movie->Advance( deltaTime, 0 );		
-	}
-#else
-	m_ui->m_ui_dialog->w()->tick( );
-	m_ui->m_ui_dialog->w()->draw( m_game.ui_world().get_renderer(), get_render_scene_view() );
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+	// FUNCTION BODY[0x5d99d0]: 4
+	// <0x5d99d3>|0x003|+0x041:'70'
+	// <0>
+	// <1>
+	// <2>
+	// ******
 }
 
+// STATE[STUB]
 void main_menu::query_resources( )
 {
-	vostok::render::scene_configuration				render_configuration;
-	render_configuration.m_create_terrain			= false;
-	render_configuration.m_create_particle_world	= false;
-	
-	resources::user_data_variant temp_data;
-	temp_data.set				( render_configuration );
-	
-	vostok::resources::user_data_variant const* data[] = { &temp_data, 0 };
-	
-	vostok::const_buffer			temp_buffer( "", 1 );
-	vostok::resources::creation_request requests[] = 
-	{
-		vostok::resources::creation_request( "game_scene", temp_buffer, resources::scene_class ),
-		vostok::resources::creation_request( "game_scene_view", temp_buffer, resources::scene_view_class ),
-	};
- 	vostok::resources::query_create_resources(
- 		requests,
-		boost::bind( &main_menu::on_resources_ready, this, _1 ),
- 		survarium::g_allocator,
- 		data
- 	);
+	// LOCALS
+	// variant< 32 > const*[3] 			data
+	// variant< 32 > 					temp_data
+	// resources::request[2] 			requests
+	// render::scene_configuration 		render_configuration
+	// ******
+
+	// FUNCTION BODY[0x5d9bc0]: 24
+	// <0>
+	// <1>
+	// <0x5d9bc7>|0x007|+0x004:'80'
+	// <0>
+	// <0x5d9bcb>|0x00b|+0x00c:'82'
+	// <0x5d9bd7>|0x017|+0x005:'83'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <0x5d9bdc>|0x01c|+0x0ae:'100'
+	// <0>
+	// ******
 }
 
-void main_menu::on_resources_ready( vostok::resources::queries_result& data )
+// STATE[STUB]
+void main_menu::on_resources_ready( resources::queries_result& data )
 {
-	m_scene						= static_cast_resource_ptr< vostok::render::scene_ptr >( data[0].get_unmanaged_resource() );
-	m_scene_view				= static_cast_resource_ptr< vostok::render::scene_view_ptr >( data[1].get_unmanaged_resource() );
+	// FUNCTION BODY[0x5d9ac0]: 8
+	// <0x5d9ac4>|0x004|+0x07a:'106'
+	// <0x5d9b3e>|0x07e|+0x06d:'107'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// ******
 }
+
 } // namespace survarium

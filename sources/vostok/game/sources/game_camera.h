@@ -1,48 +1,68 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 28.04.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef GAME_CAMERA_H_INCLUDED
 #define GAME_CAMERA_H_INCLUDED
 
-#include "object.h"
-#include "object_behaviour.h"
-#include "camera_director.h"
-
 namespace survarium {
 
-enum e_type_camera{
-	type_camera_free_fly,
-	type_camera_terrain_along_fly,
-};
-
+class base_game_scene;
 class camera_director;
 
-class game_camera : public object_controlled, private boost::noncopyable 
-{
+// pulled ahead by batch 6 (a base of its player_input_handler); out-of-line
+// bodies in the game_camera.cpp compiland (batch 9)
+class game_camera : public boost::noncopyable {
 public:
-								game_camera					( game_scene& w );
-	math::float4x4				get_projection_matrix		( float2 const& window_size ) const;
-	math::float4x4 const&		get_inverted_view_matrix	( ) const			{ return m_inverted_view_matrix; }
-	math::float4x4&				inverted_view_matrix		( )					{ return m_inverted_view_matrix; }
-	void						set_position_direction		( math::float3 const& p, math::float3 const& d );
-	virtual void				on_activate					( camera_director* cd );
-	virtual void				on_deactivate				( )					{ };
-	virtual void				on_focus					( bool /*b_focus_enter*/) {};
-	virtual void				tick						( ) {};
+			explicit			game_camera				( base_game_scene& w );
 
-	game_scene&					get_game_scene			( ) {return m_game_scene;}
+	virtual	float4x4			get_projection_matrix	( float2 const& window_size ) const;
+	inline	float4x4 const&		get_inverted_view_matrix( ) const { /* no source */ return m_inverted_view_matrix; }
 
-protected:
-	float4x4		m_inverted_view_matrix;
-	float			m_vertical_fov;
-	float			m_near_plane;
-	float			m_far_plane;
-	game_scene&		m_game_scene;
+			void				set_position_direction	( float3 const& p, float3 const& d );
+	inline	void				set_fov_factor			( const float arg_0 ) { /* no source */ }
+	inline	float				get_fov_factor			( ) const { /* no source */ return m_fov_factor; }
 
-}; //class game_camera
+	inline	void				set_near_plane			( const float arg_0 ) { /* no source */ }
+	inline	float				get_near_plane			( ) const { /* no source */ return m_near_plane; }
+	inline	float				get_far_plane			( ) const { /* no source */ return m_far_plane; }
+
+	virtual	void				on_activate				( camera_director* cd );
+
+	// STATE[STUB]
+	virtual	void				on_deactivate			( )
+	{
+		// FUNCTION BODY[0x4f210]
+		// <0x4f210>|0x000|      :'38'	{
+		// ******
+	}
+
+	// STATE[STUB]
+	virtual	void				on_focus				( bool __formal )
+	{
+		// FUNCTION BODY[0x22c50]
+		// <0x22c50>|0x000|      :'39'	{
+		// ******
+	}
+
+	virtual	void				tick					( );
+
+	inline	base_game_scene&	get_game_scene			( ) { /* no source */ return m_game_scene; }
+			float				get_vertical_fov		( ) const;
+
+	inline						~game_camera			( ) { /* no source */ }
+
+private:
+	/* 0x0004 */	/* boost::noncopyable */
+	/* 0x0004 */	float4x4			m_inverted_view_matrix;
+	/* 0x0044 */	base_game_scene&	m_game_scene;
+	/* 0x0048 */	float				m_near_plane;
+	/* 0x004c */	float				m_far_plane;
+	/* 0x0050 */	float				m_fov_factor;
+}; // class game_camera
+
+STATIC_SIZE_ASSERT(game_camera, 0x54);
 
 } // namespace survarium
+
 #endif // #ifndef GAME_CAMERA_H_INCLUDED

@@ -1,45 +1,40 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 10.02.2010
-//	Author		: Armen Abroyan
-//	Copyright (C) GSC Game World - 2010
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef OBJECT_LIGHT_H_INCLUDED
 #define OBJECT_LIGHT_H_INCLUDED
 
-#include "object.h"
-#include "object_behaviour.h"
-#include <vostok/render/facade/game_renderer.h>
+#include "game_object_static.h"
 #include <vostok/render/facade/light_props.h>
 
 namespace survarium {
 
-class object_light : public game_object_static, public object_controlled
-{
-	typedef game_object_static		super;
+class object_light : public game_object_static {
 public:
-					object_light			( game_scene& w );
-	virtual			~object_light			( );
-	virtual void	load					( configs::binary_config_value const& t );
-	virtual void	load_contents			( );
-	virtual void	unload_contents			( );
-			void	update_props			( );
+			explicit				object_light	( base_game_scene& w );
+	virtual							~object_light	( );
 
-			inline 	render::light_props& props		( ) { return m_props; }
-	inline bool		current_state			( ) const { return m_current_state;}
-			void	add_to_scene			( );
-			void	remove_from_scene		( );
-protected:
-	render::light_props m_props;
-	u32					m_light_id;
-	bool				m_current_state;
+	virtual	void					load			(
+										configs::binary_config_value const&		t,
+										pcstr									__formal,
+										boost::function< void( game_object_& ) >&	cb
+									) override;
+
+	inline	void					update_props	( ) { /* no source */ }
+
+	inline	render::light_props&	props			( ) { /* no source */ return m_props; }
+
+	virtual	void					insert			( ) override;
+	virtual	void					remove			( ) override;
+
+private:
+	/* 0x0000 */	/* game_object_static */
+	/* 0x0150 */	render::light_props		m_props;
+	/* 0x0240 */	u32						m_light_id;
 }; // class object_light
 
-typedef	intrusive_ptr<
-			object_light,
-			resources::unmanaged_intrusive_base,
-			threading::single_threading_policy
-		> object_light_ptr;
+STATIC_SIZE_ASSERT(object_light, 0x248);
 
 } // namespace survarium
 
