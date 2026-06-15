@@ -188,8 +188,13 @@ void vostok::debug::on_error		( bool* do_debug_break, vostok::process_error_enum
 
 	string4096				description;
 	// claude@NOTE: structure matches (3/3); only byte residual is the vsnprintf
-	// wrapper - target calls vostok::vsnprintf out-of-line, our /Ob2 build inlines
-	// it to __vsnprintf_s (inline-vs-call heuristic, not source-steerable).
+	// wrapper - target inlines the 4-arg array template then CALLS the 5-arg
+	// vostok::vsnprintf(pstr,size,max,fmt,args) out-of-line; our /Ob2 build inlines that
+	// 5-arg wrapper too, calling __vsnprintf_s directly (and spilling one extra slot ->
+	// 0x1008 vs target 0x1004 frame). To match, the shared `inline vostok::vsnprintf`
+	// (stdlib_extensions.h, used across logger/strings_stream/buffer_string/... TUs) would
+	// have to be emitted out-of-line - a cross-unit linkage change to a header inline that
+	// would ripple to every consumer. Off-limits from debug; PARKED with that cause.
 	vsnprintf				( description, sizeof(description) - 1, format, mark );
 
 	process					( do_debug_break, process_error, ignore_always, assert_type, reason, expression, description, file, function, line );
