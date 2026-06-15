@@ -448,3 +448,45 @@ the child has exited and the pipe stays silent for 2s - so any future leaked fd-
 of which ~60s is the LTCG link and ~5s the parallel structure/COFF/rich regeneration. If rebuilds
 ever creep back to a constant ~10-min overhead, compare `.ninja_log` edge spans against the
 rebuild.log wall-clock and look for a new pipe-holder via `/proc/<pid>/environ` WINEPREFIX matches.
+
+## The exe LINK rsp goes stale in worktrees: regen_ninja never compares it (OpenSSL LNK2001 trap)
+A fresh worktree branched after a `.vcproj` LINKER change (e.g. PR-stack commit be4e9a5e adding
+`libeay32/ssleay32` + the openssl LIBPATH to the exe's VCLinkerTool) can fail its first rebuild with
+38 unresolved `_SSL_*`/`_BIO_*` externals even though `regen_ninja.py` reports "ninja graph already
+matches the .vcprojs". Cause: regen compares only each module's *compile-source union*
+(`<module>_cl_*.rsp`) and exact-compares the top-level `.ninja` files - the link flags live in
+`rsp/<exe>_link.rsp`, which is NEVER diffed, so a stale link rsp survives regen. Fix: diff the
+worktree's `<exe>_link.rsp` against a known-good worktree's (path-normalized) and hand-patch the
+missing `/LIBPATH:`/libs into the flags line (or delete the rsp dir + force a full vcproj2ninja
+regen). Symptom signature to remember: linker UNRESOLVED EXTERNALS for symbols a vcproj
+`AdditionalDependencies` should provide + a no-op regen_ninja.
+## An include ADDED to temp_include_all.cpp after the graph regen is dep-invisible - `touch` the TU when you edit that header
+vcproj2ninja computes header deps at regen time. If your unit's flow is (regen) ->
+(add `#include <vostok/<module>/sources/<x>.h>` to `temp_include_all.cpp`) -> build ->
+(edit `<x>.h`) -> rebuild, the second rebuild recompiles the module TUs that always
+included `<x>.h` but NOT `temp_include_all.cpp` (its dep list predates your include) -
+and when the anchor TU holds the ONLY instantiation of the class, the linked COMDAT is
+the STALE one and your header edit silently "does not take" (score frozen). `touch
+sources/vostok/game_core/sources/temp_include_all.cpp` before the rebuild (do NOT
+re-run the regen mid-run - it rewrites the rsp files and loses hand patches like the
+OpenSSL exe-link libs). Cost one relink on string_response::~string_response.
+
+## A stale incrementally-linked base PDB can crash pdb_parser ("Enums cannot be of different length")
+The base link UPDATES `survarium-dx11-win32-gold.pdb` incrementally, so a TYPE record from an
+earlier build of the same worktree (e.g. an enum whose enumerators a later commit changed) can
+survive in the exe PDB even after every obj that defined it was recompiled - and
+`pdb_parser`'s header generation then panics merging the old and new same-name enums
+(gen_headers.rs `Data::add`). Symptom: `[rebuild] base structure: FAILED ... Enums cannot be
+of different length` while report.json/rich index still regenerate fine. FIX: move aside
+`binaries/Win32/survarium-dx11-win32-gold.{exe,pdb}` and relink - the fresh PDB carries only
+current types. (Hit on the login-stack match after the #303 lobby-enum values changed; the
+4-entry `connection_allowed` era record lingered through every clean module rebuild.)
+Diagnosis trick: build a scratch copy of vostok-pdb-parser with the `unreachable!` swapped for
+an `eprintln!` of `e.name` + both lengths - it names the colliding enum immediately.
+
+## Header edits to vostok/network or vostok/login_server headers do NOT recompile temp_include_all
+The game_core ninja dep list for `temp_include_all.cpp` misses cross-module headers (the
+regen-ninja-blind-to-include-changes trap): after flipping access specifiers or signatures in
+`network/login_client.h`, the link fails with stale-anchor LNK2001/LNK2005 (the obj still holds
+the OLD manglings/COMDATs). `touch sources/vostok/game_core/sources/temp_include_all.cpp`
+before the rebuild whenever a network public header changes.

@@ -13,13 +13,15 @@ namespace network {
 struct VOSTOK_NOVTABLE world {
 	virtual	void	initialize			( ) = 0;
 	virtual	void	finalize			( ) = 0;
-	virtual	void	tick				( ) = 0;
+	virtual	void	tick				( bool single_threaded ) = 0;
 	virtual	void	clear_resources		( ) = 0;
 	virtual	void	dispatch_callbacks	( ) = 0;
 
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( world );
-}; // class world
+}; // struct world
+
+STATIC_SIZE_ASSERT(world, 0x4);
 
 } // namespace network
 } // namespace vostok
