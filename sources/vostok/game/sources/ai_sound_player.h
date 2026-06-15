@@ -1,137 +1,104 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 21.02.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef AI_SOUND_PLAYER_H_INCLUDED
 #define AI_SOUND_PLAYER_H_INCLUDED
 
-#include <vostok/ai/sound_player.h>
-#include <vostok/sound/sound.h>
-#include <vostok/math_randoms_generator.h>
+#include <vostok/ai/sound_player.h>	// brings ai/sound_collection_types.h (the enum the dump inlines here)
+#include <vostok/sound/sound.h>	// sound::command_result_enum
+#include <vostok/sound/sound_emitter.h>	// sound_emitter_ptr / sound_instance_proxy_ptr
+#include <vostok/resources_unmanaged_resource.h>
 
 namespace vostok {
-
-namespace input{
-struct world;
-} //namespace input
-
+namespace memory {
+	class reader;
+	class writer;
+} // namespace memory
 namespace sound {
-
-	class world_user;
-	class sound_emitter;
-	class sound_instance_proxy;
 	class sound_producer;
 	class sound_receiver;
-
-	typedef	resources::child_resource_ptr < sound_emitter, resources::unmanaged_intrusive_base > sound_emitter_child_ptr;
-	typedef resources::resource_ptr < sound_emitter, resources::unmanaged_intrusive_base > sound_emitter_ptr;
-	typedef intrusive_ptr <	sound_instance_proxy,
-							sound_instance_proxy,
-							threading::single_threading_policy > sound_instance_proxy_ptr;
+	class world_user;
 } // namespace sound
 } // namespace vostok
 
 namespace survarium {
 
-class ai_sound_player :
-	public ai::sound_player,
-	private boost::noncopyable
-{
+class ai_sound_player : public ai::sound_player , public boost::noncopyable {
 public:
-
-#pragma message( VOSTOK_TODO("dimetcm 2 dimetcm: input::world only needed to test, remove this constructor after test") )
-
-			ai_sound_player	(
-				sound::sound_scene_ptr& scene,
-				u32 sounds_count,
-				sound::world_user& user,
-				input::world* input_world,
-				sound::sound_producer const* const producer = 0,
-				sound::sound_receiver const* const ignorable_receiver = 0
-			);
-
-			ai_sound_player	(
-				sound::sound_scene_ptr& scene,
-				u32 sounds_count,
-				sound::world_user& user,
-				sound::sound_producer const* const producer = 0,
-				sound::sound_receiver const* const ignorable_receiver = 0
-			);
-
-	virtual	~ai_sound_player( );
-	
-	virtual	void	play	(
-						ai::sound_collection_types sound_type,
-						bool sound_is_positioned = false,
-						float3 const& position = float3( 0.f, 0.f, 0.f )
+	// canonical dump prints the nested type standalone
+	// (ai_sound_player__sounds_collection_type.h)
+	struct sounds_collection_type {
+					sounds_collection_type	(
+						ai_sound_player*				parent,
+						ai::sound_collection_types		collection_type,
+						sound::sound_emitter_ptr		emitter_ptr,
+						u32								collection_priority
 					);
-	virtual	void	play	(
-						resources::unmanaged_resource_ptr sound_to_be_played,
-						ai::finish_playing_callback const& finish_callback,
-						float3 const& position
-					);
-	virtual	void	play_once	(
-						ai::sound_collection_types sound_type,
-						bool sound_is_positioned = false,
-						float3 const& position = float3( 0.f, 0.f, 0.f )
-					);
-	virtual	void	tick			( );
-	virtual void	clear_resources	( );
+		inline		~sounds_collection_type	( ) { /* no source */ }
 
-			void	on_active_sound_serialized	( memory::writer* sound_thread_writer, memory::writer* current_thread_writer );
-			void	on_active_sound_deserialized( memory::reader* reader, pvoid buf );
-public:
+	public:
+		/* 0x0000 */	ai::sound_collection_types		type;
+		/* 0x0004 */	resources::child_resource_ptr< sound::sound_emitter, resources::unmanaged_intrusive_base >	emitter;
+		/* 0x000c */	u32								priority;
+	}; // struct sounds_collection_type
 
-	struct sounds_collection_type
-	{
-		sounds_collection_type	(	ai_sound_player* parent,
-									ai::sound_collection_types collection_type,
-									sound::sound_emitter_ptr emitter_ptr,
-									u32 collection_priority );
-		
-		ai::sound_collection_types		type;
-		sound::sound_emitter_child_ptr	emitter;
-		u32								priority;
-	};
+											ai_sound_player				(
+												resources::unmanaged_resource_ptr&		scene,
+												u32										sounds_count,
+												sound::world_user&						user,
+												sound::sound_producer const* const		producer,
+												sound::sound_receiver const* const		ignorable_receiver
+											);
+	virtual									~ai_sound_player			( );
+
+	virtual	void							play						(
+												ai::sound_collection_types		sound_type,
+												bool							sound_is_positioned,
+												float3 const&					position
+											) override;
+	virtual	void							play						(
+												resources::unmanaged_resource_ptr		sound_to_be_played,
+												boost::function< void() > const&		finish_callback,
+												float3 const&							position
+											) override;
+
+	virtual	void							play_once					(
+												ai::sound_collection_types		sound_type,
+												bool							sound_is_positioned,
+												float3 const&					position
+											) override;
+
+	virtual	void							tick						( ) override;
+
+	virtual	void							clear_resources				( ) override;
+
+			void							on_active_sound_serialized	( memory::writer* sound_thread_writer, memory::writer* current_thread_writer );
+			void							on_active_sound_deserialized( memory::reader* reader, void* buf );
+
+			sounds_collection_type const*	find						( ai::sound_collection_types sound_type ) const;
+
+			sound::command_result_enum		on_finish_playing			( );
+
+	// the sounds array trails the object (m_sounds_count entries)
+	inline	sounds_collection_type const*	sounds						( ) const { /* no source */ return NULL; }
+
+	inline	void							serialize					( ) { /* no source */ }
+	inline	void							deserialize					( ) { /* no source */ }
 
 private:
-	sounds_collection_type const*	find				( ai::sound_collection_types sound_type ) const;
-	sound::command_result_enum		on_finish_playing	( );
-	inline sounds_collection_type const* sounds			( ) const
-	{
-		return pointer_cast<sounds_collection_type const*>( pointer_cast<pcbyte>( this ) + sizeof( *this ) );
-	}
-
-#pragma message( VOSTOK_TODO("dimetcm 2 dimetcm: process_input only needed to test, remove this functio after test") )
-#ifndef MASTER_GOLD
-	void							process_input		( );
-#endif // #ifndef MASTER_GOLD
-	void					on_dbg_sound_scene_created	( resources::queries_result& data );
-
-	void							serialize			( );
-	void							deserialize			( );
-
-private:
-	sound::sound_instance_proxy_ptr		m_active_sound;
-	sound::sound_scene_ptr&				m_scene;
-	sound::world_user&					m_user;
-	sound::sound_producer const*		m_sound_producer;
-	sound::sound_receiver const* const	m_ignorable_receiver;
-	u32	const							m_sounds_count;
-
-#pragma message( VOSTOK_TODO("dimetcm 2 dimetcm: input::world only needed to test, remove this pointer after test") )
-	input::world*						m_dbg_input_world;
-	math::random32						m_dbg_random;
-	timing::timer						m_dbg_timer;
-	u32									m_dbg_last_current_time_in_ms;
-	u32									m_dbg_time_from_last_playing;
-	u32									m_dbg_time_to_play_new_sound;
-	sound::sound_scene_ptr				m_dbg_scene;
-	sound::sound_instance_proxy_ptr		m_dbg_active_sound;
-
+	/* 0x0000 */	/* ai::sound_player */
+	/* 0x0190 */	/* boost::noncopyable */
+	/* 0x0190 */	sound::sound_instance_proxy_ptr			m_active_sound;
+	/* 0x0194 */	resources::unmanaged_resource_ptr&		m_scene;
+	/* 0x0198 */	sound::world_user&						m_user;
+	/* 0x019c */	sound::sound_producer const*			m_sound_producer;
+	/* 0x01a0 */	sound::sound_receiver const* const		m_ignorable_receiver;
+	/* 0x01a4 */	const u32								m_sounds_count;
 }; // class ai_sound_player
+
+STATIC_SIZE_ASSERT(ai_sound_player, 0x1A8);
+STATIC_SIZE_ASSERT(ai_sound_player::sounds_collection_type, 0x10);
 
 } // namespace survarium
 

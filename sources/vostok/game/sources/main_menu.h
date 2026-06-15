@@ -1,78 +1,94 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 24.03.2010
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2010
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef MAIN_MENU_H_INCLUDED
 #define MAIN_MENU_H_INCLUDED
 
 #include <vostok/input/handler.h>
-#include "game_scene.h"
 
-struct sc_support;
+#include "base_game_scene.h"
+
+namespace vostok {
+namespace resources {
+	class queries_result;
+} // namespace resources
+} // namespace vostok
+
 namespace survarium {
 
-struct main_menu_ui;
+class bullet_manager;
 class game;
 
-#ifdef VOSTOK_STATIC_LIBRARIES
-struct flash_movie;
-struct ui_mouse_position
-{
+// void* main_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x91bf0]: <0x427c0>|0x000|      :'43'	{
+
+class main_menu : public base_game_scene , public input::handler {
 public:
-	ui_mouse_position( u32 init_x = 0, u32 init_y = 0 ): x(init_x), y(init_y){}
-	int x;
-	int y;
-};
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+			explicit			main_menu			( game& g );
+	virtual						~main_menu			( );
 
+	virtual	void				on_activate			( ) override;
+	virtual	void				on_deactivate		( ) override;
 
-class main_menu :
-	public game_scene,
-	public vostok::input::handler
-{
-	typedef			game_scene					super;
+	virtual	void				tick				(
+									const u32		frame_delta_in_ms,
+									const u32		current_time_in_ms,
+									const bool		is_game_paused
+								) override;
 
-public:
-					main_menu				( game& g, game_world& w );
-	virtual			~main_menu				( );
-public:
-	virtual void	on_activate				( );
-	virtual void	on_deactivate			( );
-	virtual void	tick					( );
-	virtual	vostok::input::handler& input_handler	( ) { return *this; }
+	virtual	void				clear_resources		( ) override;
 
-	virtual	bool	on_keyboard_action		( input::world* input_world, input::enum_keyboard key, input::enum_keyboard_action action );
-	virtual	bool	on_gamepad_action		( input::world* input_world, input::gamepad_button button, input::enum_gamepad_action action );
-	virtual	bool	on_mouse_key_action		( input::world* input_world, input::mouse_button button, input::enum_mouse_key_action action );
-	virtual	bool	on_mouse_move			( input::world* input_world, int x, int y, int z );
-	virtual int		input_priority			( ) { return 100; }
-	
-private:
-#ifdef VOSTOK_STATIC_LIBRARIES
-	void			create_main_menu_ui		();
-#else	
-	input::handler*	dialog_input_handler	();
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+	// STATE[STUB]
+	virtual	input::handler&		input_handler		( )
+	{
+		return *this;
 
-private:
-			void	query_resources			( );
-			void	on_resources_ready		( vostok::resources::queries_result& data );
+		// FUNCTION BODY[0x92e90]
+		// <0x92e90>|0x000|      :'35'	{
+		// ******
+	}
 
-#ifdef VOSTOK_STATIC_LIBRARIES
-	flash_movie*	m_main_menu_ui;
-	timing::timer	m_timer;
-	u32				m_main_menu_ui_last_time;
-	ui_mouse_position m_mouse_pos;
-	math::uint2		m_window_size;
-#else
-	main_menu_ui*	m_ui;
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+	virtual	bool				on_keyboard_action	(
+									input::world*					input_world,
+									input::enum_keyboard			key,
+									input::enum_keyboard_action		action
+								) override;
+	virtual	bool				on_gamepad_action	(
+									input::world*					input_world,
+									input::gamepad_button			button,
+									input::enum_gamepad_action		action
+								) override;
+	virtual	bool				on_mouse_key_action	(
+									input::world*					input_world,
+									input::mouse_button				button,
+									input::enum_mouse_key_action	action
+								) override;
+	virtual	bool				on_mouse_move		(
+									input::world*		input_world,
+									s32					x,
+									s32					y,
+									s32					z
+								) override;
 
-	game_world&		m_game_world;
+	// STATE[STUB]
+	virtual	s32					input_priority		( ) override
+	{
+		return 0;
 
+		// FUNCTION BODY[0x92ea0]
+		// <0x92ea0>|0x000|      :'41'	{
+		// ******
+	}
+
+	// buildability return; the real body reaches the manager through m_game
+	virtual	bullet_manager&		get_bullet_manager	( ) const override { /* no source */ return *( bullet_manager* )NULL; }
+
+			void				query_resources		( );
+
+			void				on_resources_ready	( resources::queries_result& data );
 }; // class main_menu
+
+STATIC_SIZE_ASSERT(main_menu, 0xC0);
 
 } // namespace survarium
 

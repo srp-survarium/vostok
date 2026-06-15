@@ -1,29 +1,31 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 23.03.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-
 #include "human_npc_cook.h"
-#include "human_npc.h"
-#include "game.h"
+#include <vostok/resources.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
-human_npc_cook::human_npc_cook	( game& game ) :
-	translate_query_cook		( resources::human_npc_class, reuse_true, use_current_thread_id ),
-	m_game						( game )
+// STATE[STUB]
+ human_npc_cook::human_npc_cook( game_world& world ) :
+	// base args are the legacy prior (translate_query_cook has no default ctor);
+	// a matcher confirms when this TU is enabled
+	translate_query_cook( resources::human_npc_class, reuse_true, use_any_thread_id ),
+	m_game_world( world )
 {
+	// FUNCTION BODY[0x7681a0]: 0
+	// <0x7681a0>|0x000|+0x06c:'19'	{
+	// <0x76820c>|0x06c|      :'20'	}
+	// ******
 }
 
-//  void human_npc_cook::translate_request_path	( pcstr request, fs_new::virtual_path_string& new_request ) const
-//  {
-//  	new_request.assignf			( "resources/npc/human/%s.npc", request );
-//  }
-
-void human_npc_cook::translate_query	( resources::query_result_for_cook& parent )
+// STATE[STUB]
+void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	configs::binary_config_value* t_object	= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
 
@@ -40,7 +42,6 @@ void human_npc_cook::translate_query	( resources::query_result_for_cook& parent 
 		);
 		return;
 	}
-		
 
 	resources::query_resource			(
 		parent.get_requested_path(),
@@ -50,19 +51,51 @@ void human_npc_cook::translate_query	( resources::query_result_for_cook& parent 
 		parent.user_data(),
 		&parent
 	);
+
+	// FUNCTION BODY[0x7688a0]: 23
+	// <0x7688ab>|0x00b|+0x023:'24'
+	// <0>
+	// <0x7688ce>|0x02e|+0x004:'26'
+	// <0>
+	// <0x7688d2>|0x032|+0x00e:'28'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x7688e0>|0x040|+0x044:'36'
+	// <0x768924>|0x084|+0x002:'37'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x768926>|0x086|+0x0a3:'46'
+	// ******
 }
 
-void human_npc_cook::delete_resource	( resources::resource_base* resource )
+// STATE[STUB]
+void human_npc_cook::delete_resource( resources::resource_base* resource )
 {
- 	VOSTOK_DELETE_IMPL					( g_allocator, resource );
+	VOSTOK_DELETE_IMPL					( g_allocator, resource );
+
+	// FUNCTION BODY[0x768220]: 1
+	// <0x768220>|0x000|+0x045:'51'
+	// ******
 }
 
-void human_npc_cook::on_queried_data_received			( resources::queries_result& data )
+// STATE[STUB]
+void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
 	if ( !data.is_successful() )
 	{
- 		R_ASSERT										( data.is_successful(), "couldn't retrieve npc config options" );
+		R_ASSERT										( data.is_successful(), "couldn't retrieve npc config options" );
 		parent->finish_query							( result_error );
 		return;
 	}
@@ -70,110 +103,153 @@ void human_npc_cook::on_queried_data_received			( resources::queries_result& dat
 	configs::binary_config_ptr config					= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource() );
 
 	on_npc_options_received								( config->get_root(), *parent );
+
+	// LOCALS
+	// configs::binary_config_ptr 		config
+	// ******
+
+	// FUNCTION BODY[0x768800]: 10
+	// <0x768800>|0x000|+0x001:'55'	{
+	// <0x768801>|0x001|+0x007:'56'
+	// <0x768808>|0x008|+0x00d:'57'
+	// <0>
+	// <1>
+	// <0x768815>|0x015|+0x012:'60'
+	// <0>
+	// <1>
+	// <2>
+	// <0x768827>|0x027|+0x048:'64'
+	// <0x76886f>|0x06f|-0x04f:'65'
+	// <0x768820>|0x020|+0x061:'66'
+	// <0x768881>|0x081|      :'66'	}
+	// ******
 }
 
-void human_npc_cook::on_npc_options_received			( configs::binary_config_value const& config_value , resources::query_result_for_cook& parent )
+// STATE[STUB]
+void human_npc_cook::on_npc_options_received(
+	configs::binary_config_value const&		config_value,
+	resources::query_result_for_cook&		parent
+)
 {
-	configs::binary_config_value const& attributes		= config_value["attributes"];
-	configs::binary_config_value* project_config		= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
+	// LOCALS
+	// pcstr 							brain_unit_path
+	// pcstr 							space_graph_path
+	// pcstr 							model_path
+	// ai::brain_unit_cook_params 		cook_brain_unit_params
+	// variant< 32 > 					brain_unit_params
+	// variant< 32 > const*[4] 			params
+	// configs::binary_config_value* 	project_config
+	// variant< 32 > 					physics_world
+	// resources::request[4] 			requests
+	// human_npc* const 				human
+	// ******
 
-	human_npc* const human					= VOSTOK_NEW_IMPL( g_allocator, human_npc )(
-												m_game.get_ai_world( ),
-												m_game.get_sound_world( ),
-												m_game.get_sound_scene( ),
-												m_game.get_spatial_tree( ),
-												m_game.get_render_scene( ),
-												m_game.renderer( ),
-												m_game.get_game_world( )
-											);
-	
-	R_ASSERT								( attributes.value_exists( "brain_unit" ) );
-	pcstr brain_unit_path					= attributes["brain_unit"];
+	// CALL SITE INFO
+	// <0x768621> -> sound::world_user& < unknown >() const
+	// ******
 
-	//R_ASSERT								( attributes.value_exists( "model" ) );
-	//pcstr model_path						= attributes["model"];
-	R_ASSERT								( project_config->value_exists( "model" ) );
-	pcstr model_path						= (*project_config)["model"];
-
-	ai::brain_unit_cook_params				cook_brain_unit_params;
-	cook_brain_unit_params.world_user_type	= resources::sound_player_logic_class;
-
-	cook_brain_unit_params.npc				= human;
-	resources::user_data_variant			brain_unit_params;
-	brain_unit_params.set					( cook_brain_unit_params );
-	
-	resources::user_data_variant			physics_world;
-	physics_world.set						( &m_game.physics() );
-
-	resources::request requests[] =
-	{
-		{ brain_unit_path, resources::brain_unit_class },
-		{ model_path, resources::game_animated_model_instance_class },
-		{ "resources/animations/single/human/common_anim_slot_3/free/on_site_still_aim_1", resources::animation_class },
-		{ "resources/animations/single/human/common_anim_slot_3/free/walk_move_fwd_aim_1", resources::animation_class },
-		{ "resources/animations/single/human/common_anim_slot_3/free/walk_arc_fwd_left_aim_1", resources::animation_class },
-		{ "resources/animations/single/human/common_anim_slot_3/free/walk_arc_fwd_right_aim_1", resources::animation_class }
-	};
-
-	resources::user_data_variant const* params[] =
-	{
-		&brain_unit_params,
-		&physics_world,
-		0,
-		0,
-		0,
-		0
-	};
-
-	query_resources							(
-		requests,
-		array_size( requests ),
-		boost::bind( &human_npc_cook::on_subresources_loaded, this, _1, human ), 
-		g_allocator,
-		params,
-		&parent
-	);
+	// FUNCTION BODY[0x768560]: 50
+	// <0x76856f>|0x00f|+0x00e:'70'
+	// <0x76857d>|0x01d|+0x024:'71'
+	// <0>
+	// <0x7685a1>|0x041|+0x034:'73'
+	// <0>
+	// <1>
+	// <0x7685d5>|0x075|+0x00e:'76'
+	// <0>
+	// <1>
+	// <0x7685e3>|0x083|+0x014:'79'
+	// <0>
+	// <1>
+	// <0x7685f7>|0x097|+0x012:'82'
+	// <0>
+	// <1>
+	// <0x768609>|0x0a9|+0x01a:'85'
+	// <0x768623>|0x0c3|+0x01f:'86'
+	// <0>
+	// <0x768642>|0x0e2|+0x004:'88'
+	// <0>
+	// <1>
+	// <0x768646>|0x0e6|+0x027:'91'
+	// <0>
+	// <1>
+	// <0x76866d>|0x10d|+0x01c:'94'
+	// <0>
+	// <1>
+	// <2>
+	// <0x768689>|0x129|+0x004:'98'
+	// <0x76868d>|0x12d|+0x016:'99'
+	// <0>
+	// <0x7686a3>|0x143|+0x008:'101'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <0x7686ab>|0x14b|+0x0e6:'119'
+	// ******
 }
 
-void human_npc_cook::on_subresources_loaded	( resources::queries_result& data, human_npc* const human )
+// STATE[STUB]
+void human_npc_cook::on_subresources_loaded( resources::queries_result& data, human_npc* const human )
 {
-	resources::query_result_for_cook* const	parent	= data.get_parent_query();
+	// LOCALS
+	// resources::unmanaged_resource_ptr brain_unit_ptr
+	// animated_model_instance_ptr 		model_ptr
+	// animation_space_graph_ptr 		new_graph
+	// resources::query_result_for_cook* const parent
+	// resources::managed_resource_ptr 	default_animation
+	// configs::binary_config_value 	human_attributes_config
+	// ******
 
-	configs::binary_config_value* human_config = (configs::binary_config_value*)( parent->creation_data_from_user().c_ptr() );
-	configs::binary_config_value human_attributes_config = (*human_config)["attributes"];
-
-	if ( !data.is_successful() )
-	{
-		R_ASSERT							( data.is_successful(), "couldn't create some of npc subresources" );
-		parent->finish_query				( result_error );
-		return;
-	}
-
-	ai::brain_unit_res_ptr brain_unit_ptr	= static_cast_resource_ptr< ai::brain_unit_res_ptr >( data[0].get_unmanaged_resource() );
-	human->set_brain_unit					( brain_unit_ptr );
-
-	animated_model_instance_ptr model_ptr	= static_cast_resource_ptr< animated_model_instance_ptr >( data[1].get_unmanaged_resource() );
-	human->set_model						( model_ptr );
-
-	animation::skeleton_animation_ptr idle_animation		= static_cast_resource_ptr< animation::skeleton_animation_ptr >( data[2].get_managed_resource() );
-	human->set_idle_animation				( idle_animation );
-
-	animation::skeleton_animation_ptr forward_animation		= static_cast_resource_ptr< animation::skeleton_animation_ptr >( data[3].get_managed_resource() );
-	human->set_walk_forward_animation		( forward_animation );
-
-	animation::skeleton_animation_ptr arc_left_animation	= static_cast_resource_ptr< animation::skeleton_animation_ptr >( data[4].get_managed_resource() );
-	human->set_arc_left_animation			( arc_left_animation );
-
-	animation::skeleton_animation_ptr arc_right_animation	= static_cast_resource_ptr< animation::skeleton_animation_ptr >( data[5].get_managed_resource() );
-	human->set_arc_right_animation			( arc_right_animation );
-
-	parent->set_unmanaged_resource			(
-				human, 
-				resources::memory_usage_type( resources::nocache_memory, sizeof( human_npc ) )
-			);
-	parent->finish_query					( result_success );
-
-	m_game.on_npc_attributes_received		( human_attributes_config, human );
+	// FUNCTION BODY[0x768270]: 31
+	// <0x768270>|0x000|+0x00a:'123'	{
+	// <0x76827a>|0x00a|+0x00e:'124'
+	// <0>
+	// <0x768288>|0x018|+0x025:'126'
+	// <0x7682ad>|0x03d|+0x010:'127'
+	// <0>
+	// <0x7682bd>|0x04d|+0x024:'129'
+	// <0>
+	// <1>
+	// <0x7682e1>|0x071|+0x016:'132'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7682f7>|0x087|+0x041:'136'
+	// <0x768338>|0x0c8|+0x049:'137'
+	// <0>
+	// <0x768381>|0x111|+0x046:'139'
+	// <0x7683c7>|0x157|+0x009:'140'
+	// <0>
+	// <0x7683d0>|0x160|+0x02f:'142'
+	// <0x7683ff>|0x18f|+0x034:'143'
+	// <0>
+	// <0x768433>|0x1c3|+0x04a:'145'
+	// <0x76847d>|0x20d|+0x00b:'146'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x768488>|0x218|+0x03a:'151'
+	// <0x7684c2>|0x252|+0x00f:'152'
+	// <0>
+	// <0x7684d1>|0x261|-0x1e3:'154'
+	// <0x7682ee>|0x07e|+0x202:'155'
+	// <0x7684f0>|0x280|      :'155'	}
+	// ******
 }
 
 } // namespace survarium

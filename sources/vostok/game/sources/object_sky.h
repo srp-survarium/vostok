@@ -1,35 +1,50 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 22.09.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef SURVARIUM_OBJECT_SKY_H_INCLUDED
-#define SURVARIUM_OBJECT_SKY_H_INCLUDED
+#ifndef OBJECT_SKY_H_INCLUDED
+#define OBJECT_SKY_H_INCLUDED
 
-#include "object.h"
-#include <vostok/render/facade/game_renderer.h>
+#include "game_object_.h"
 
 namespace vostok {
-	namespace render {
-		struct material_effects_instance_cook_data;
-	} // namespace render
+namespace render {
+	class material_effects_instance_cook_data;
+} // namespace render
+namespace resources {
+	class queries_result;
+} // namespace resources
 } // namespace vostok
 
-namespace survarium{
+namespace survarium {
 
-class object_sky :public game_object_
-{
-	typedef game_object_				super;
+class object_sky : public game_object_ {
 public:
-					object_sky				( game_scene& w );
-	virtual			~object_sky				( );
-	virtual void	load					( configs::binary_config_value const& t );
-	virtual void	load_contents			( );
-	virtual void	unload_contents			( );
-			void	material_ready			( resources::queries_result& data, vostok::render::material_effects_instance_cook_data* cook_data );
+			explicit	object_sky		( base_game_scene& w );
+	virtual				~object_sky		( );
+
+	virtual	void		load			(
+							configs::binary_config_value const&		t,
+							pcstr									__formal,
+							boost::function< void( game_object_& ) >&	cb
+						) override;
+
+	virtual	void		insert			( ) override;
+	virtual	void		remove			( ) override;
+
+			void		material_ready	(
+							resources::queries_result&		data,
+							render::material_effects_instance_cook_data*	cook_data,
+							boost::function< void( game_object_& ) >&	cb
+						);
+
+private:
+	/* 0x0000 */	/* game_object_ */
+	/* 0x0110 */	resources::unmanaged_resource_ptr		m_sky_material;
 }; // class object_sky
+
+STATIC_SIZE_ASSERT(object_sky, 0x118);
 
 } // namespace survarium
 
-#endif // #ifndef SURVARIUM_OBJECT_SKY_H_INCLUDED
+#endif // #ifndef OBJECT_SKY_H_INCLUDED

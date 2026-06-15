@@ -1,487 +1,569 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
+#include "key_binder.h"
+#include "game.h"
+#include "game_action_descr.h"
+#include "keyboard_key_descr.h"
+#include <vostok/console_command.h>
 #include <vostok/input/world.h>
 #include <vostok/input/keyboard.h>
 #include <vostok/input/mouse.h>
-#include "key_binder.h"
-#include "game.h"
-#include <vostok/console_command.h>
-
-
-using namespace vostok::input;
 
 namespace survarium {
 
-class console_command_bind: private vostok::console_commands::cc_delegate
-{
+// TU-local key-name table (lineage-preserved from the legacy module); the
+// ctor wires it into the per-action bindings (a matcher recovers the actions[]
+// side - reshaped to the canonical 5-field game_action_descr - when enabled)
+keyboard_key_descr keyboards[] = {
+	{ "kESCAPE",		input::key_escape		},	{ "k1",				input::key_1			},
+	{ "k2",				input::key_2			},	{ "k3",				input::key_3			},
+	{ "k4",				input::key_4			},	{ "k5",				input::key_5			},
+	{ "k6",				input::key_6			},	{ "k7",				input::key_7			},
+	{ "k8",				input::key_8			},	{ "k9",				input::key_9			},
+	{ "k0",				input::key_0			},	{ "kMINUS",			input::key_minus		},
+	{ "kEQUALS",		input::key_equals		},	{ "kBACK",			input::key_back			},
+	{ "kTAB",			input::key_tab			},	{ "kQ",				input::key_q			},
+	{ "kW",				input::key_w			},	{ "kE",				input::key_e			},
+	{ "kR",				input::key_r			},	{ "kT",				input::key_t			},
+	{ "kY",				input::key_y			},	{ "kU",				input::key_u			},
+	{ "kI",				input::key_i			},	{ "kO",				input::key_o			},
+	{ "kP",				input::key_p			},	{ "kLBRACKET",		input::key_lbracket		},
+	{ "kRBRACKET",		input::key_rbracket		},	{ "kRETURN",		input::key_return		},
+	{ "kLCONTROL",		input::key_lcontrol		},	{ "kA",				input::key_a			},
+	{ "kS",				input::key_s			},	{ "kD",				input::key_d			},
+	{ "kF",				input::key_f			},	{ "kG",				input::key_g			},
+	{ "kH",				input::key_h			},	{ "kJ",				input::key_j			},
+	{ "kK",				input::key_k			},	{ "kL",				input::key_l			},
+	{ "kSEMICOLON",		input::key_semicolon	},	{ "kAPOSTROPHE",	input::key_apostrophe	},
+	{ "kGRAVE",			input::key_grave		},	{ "kLSHIFT",		input::key_lshift		},
+	{ "kBACKSLASH",		input::key_backslash	},	{ "kZ",				input::key_z			},
+	{ "kX",				input::key_x			},	{ "kC",				input::key_c			},
+	{ "kV",				input::key_v			},	{ "kB",				input::key_b			},
+	{ "kN",				input::key_n			},	{ "kM",				input::key_m			},
+	{ "kCOMMA",			input::key_comma		},	{ "kPERIOD",		input::key_period		},
+	{ "kSLASH",			input::key_slash		},	{ "kRSHIFT",		input::key_rshift		},
+	{ "kMULTIPLY",		input::key_multiply		},	{ "kLMENU",			input::key_lmenu		},
+	{ "kSPACE",			input::key_space		},	{ "kCAPITAL",		input::key_capital		},
+	{ "kF1",			input::key_f1			},	{ "kF2",			input::key_f2			},
+	{ "kF3",			input::key_f3			},	{ "kF4",			input::key_f4			},
+	{ "kF5",			input::key_f5			},	{ "kF6",			input::key_f6			},
+	{ "kF7",			input::key_f7			},	{ "kF8",			input::key_f8			},
+	{ "kF9",			input::key_f9			},	{ "kF10",			input::key_f10			},
+	{ "kNUMLOCK",		input::key_numlock		},	{ "kSCROLL",		input::key_scroll		},
+	{ "kNUMPAD7",		input::key_numpad7		},	{ "kNUMPAD8",		input::key_numpad8		},
+	{ "kNUMPAD9",		input::key_numpad9		},	{ "kSUBTRACT",		input::key_subtract		},
+	{ "kNUMPAD4",		input::key_numpad4		},	{ "kNUMPAD5",		input::key_numpad5		},
+	{ "kNUMPAD6",		input::key_numpad6		},	{ "kADD",			input::key_add			},
+	{ "kNUMPAD1",		input::key_numpad1		},	{ "kNUMPAD2",		input::key_numpad2		},
+	{ "kNUMPAD3",		input::key_numpad3		},	{ "kNUMPAD0",		input::key_numpad0		},
+	{ "kDECIMAL",		input::key_decimal		},	{ "kF11",			input::key_f11			},
+	{ "kF12",			input::key_f12			},	{ "kF13",			input::key_f13			},
+	{ "kF14",			input::key_f14			},	{ "kF15",			input::key_f15			},
+	{ "kKANA",			input::key_kana			},	{ "kCONVERT",		input::key_convert		},
+	{ "kNOCONVERT",		input::key_noconvert	},	{ "kYEN",			input::key_yen			},
+	{ "kNUMPADEQUALS",	input::key_numpadequals	},	{ "kCIRCUMFLEX",	input::key_circumflex	},
+	{ "kAT",			input::key_at			},	{ "kCOLON",			input::key_colon		},
+	{ "kUNDERLINE",		input::key_underline	},	{ "kKANJI",			input::key_kanji		},
+	{ "kSTOP",			input::key_stop			},	{ "kAX",			input::key_ax			},
+	{ "kUNLABELED",		input::key_unlabeled	},	{ "kNUMPADENTER",	input::key_numpadenter	},
+	{ "kRCONTROL",		input::key_rcontrol		},	{ "kNUMPADCOMMA",	input::key_numpadcomma	},
+	{ "kDIVIDE",		input::key_divide		},	{ "kSYSRQ",			input::key_sysrq		},
+	{ "kRMENU",			input::key_rmenu		},	{ "kHOME",			input::key_home			},
+	{ "kUP",			input::key_up			},	{ "kPRIOR",			input::key_prior		},
+	{ "kLEFT",			input::key_left			},	{ "kRIGHT",			input::key_right		},
+	{ "kEND",			input::key_end			},	{ "kDOWN",			input::key_down			},
+	{ "kNEXT",			input::key_next			},	{ "kINSERT",		input::key_insert		},
+	{ "kDELETE",		input::key_delete		},	{ "kLWIN",			input::key_lwin			},
+	{ "kRWIN",			input::key_rwin			},	{ "kAPPS",			input::key_apps			},
+	{ "kPAUSE",			input::key_pause		},
+	{ "mouse1",			input::mouse_button_left		},
+	{ "mouse2",			input::mouse_button_right		},
+	{ "mouse3",			input::mouse_button_middle		},
+	{ "mouse4",			input::mouse_button_extended0	},
+	{ "mouse5",			input::mouse_button_extended1	},
+	{ "mouse6",			input::mouse_button_extended2	},
+	{ "mouse7",			input::mouse_button_extended3	},
+	{ "mouse8",			input::mouse_button_extended4	},
+	{ NULL,				0						}
+};
+
+// TU-local (canonical headers/console_command_bind.h; owner mapping in
+// temp/triage_log.md) - the type of the ctor's s_bind_*_command statics
+class console_command_bind : public console_commands::cc_delegate {
 public:
-	console_command_bind( key_binder* binder, int type )
-		: vostok::console_commands::cc_delegate(
-		(type == 0 )?"bind":"bind_sec", 
+					console_command_bind	( key_binder* binder, s32 type );
+
+	virtual	void	save_to					( console_commands::save_storage& f, memory::base_allocator* a ) const override;
+
+	virtual			~console_command_bind	( ) { /* no source */ }
+
+private:
+	/* 0x0000 */	/* console_commands::cc_delegate */
+	/* 0x0060 */	s32				m_type;
+	/* 0x0064 */	key_binder*		m_binder;
+}; // class console_command_bind
+
+STATIC_SIZE_ASSERT(console_command_bind, 0x68);
+
+// STATE[STUB]
+ console_command_bind::console_command_bind( key_binder* binder, s32 type )
+	: console_commands::cc_delegate(
+		( type == 0 ) ? "bind" : "bind_sec",
 		boost::bind( &key_binder::bind_key, binder, _1, type ),
 		true
-		),
-		m_type(type)
-	{
-
-	}
-private:
-	int m_type;
-public:
-	virtual void		save_to					( console_commands::save_storage& f, memory::base_allocator* a)	const
-	{
-		VOSTOK_UNREFERENCED_PARAMETERS	( a );
-		for(int idx=0; idx<bindings_count; ++idx)
-		{
-			key_binding*	binding = &g_key_bindings[idx];	
-			if ( binding->m_keyboard[m_type] == NULL )
-				continue;
-			pcstr out_str	= NULL;
-			STR_JOINA		( out_str, m_name, " ", binding->m_action->action_name, " ", binding->m_keyboard[m_type]->key_name );
-			f.add_line		( out_str );
-			//	f.w_stringZ_CRLF( out_str );
-		}
-	};
-
-};
-
-key_binding	g_key_bindings		[bindings_count]; 
-keyboard_key_group	g_current_keygroup	= _sp;
-
-game_action_descr  actions[]		= {
-	{ "left",				kLEFT					,_both, "kLEFT"},	
-	{ "right",				kRIGHT					,_both, "kRIGHT"},	
-	{ "up",					kUP						,_both, "kUP"},	
-	{ "down",				kDOWN					,_both, "kDOWN"},	
-	{ "jump",				kJUMP					,_both, "kSPACE"},	
-	{ "crouch",				kCROUCH					,_both, "kC"},	
-	{ "accel",				kACCEL					,_both, "kLSHIFT"},	
-	{ "sprint_toggle",  	kSPRINT_TOGGLE  		,_both, "kX"},	
-																
-	{ "forward",			kFWD					,_both, "kW"},	
-	{ "back",				kBACK					,_both, "kS"},	
-	{ "lstrafe",			kL_STRAFE				,_both, "kA"},	
-	{ "rstrafe",			kR_STRAFE				,_both, "kD"},	
- 																
- 	{ "llookout",			kL_LOOKOUT				,_both, "kQ" },	
- 	{ "rlookout",			kR_LOOKOUT				,_both, "kE" },	
- 																
- 	{ "cam_1",				kCAM_1					,_both},	
- 	{ "cam_2",				kCAM_2					,_both},	
- 	{ "cam_3",				kCAM_3					,_both},	
- 	{ "cam_zoom_in",		kCAM_ZOOM_IN			,_both},	
- 	{ "cam_zoom_out",		kCAM_ZOOM_OUT			,_both},	
- 															
- 	{ "torch",				kTORCH					,_both},	
- 	{ "night_vision",		kNIGHT_VISION			,_both},	
- 	{ "show_detector",		kDETECTOR				,_sp},		
- 
- 	{ "wpn_1",				kWPN_1					,_both},	
- 	{ "wpn_2",				kWPN_2					,_both},	
- 	{ "wpn_3",				kWPN_3					,_both},	
- 	{ "wpn_4",				kWPN_4					,_both},	
- 	{ "wpn_5",				kWPN_5					,_both},	
- 	{ "wpn_6",				kWPN_6					,_both},	
- 	{ "artefact",			kARTEFACT				,_both/*_mp*/},		
- 	{ "wpn_next",			kWPN_NEXT				,_both},	// means next ammo type
- 	{ "wpn_fire",			kWPN_FIRE				,_both, "mouse1"},	
-// 	{ "wpn_zoom",			kWPN_ZOOM				,_both},	
-// 	{ "wpn_zoom_inc",		kWPN_ZOOM_INC			,_both},	
-// 	{ "wpn_zoom_dec",		kWPN_ZOOM_DEC			,_both},	
-// 	{ "wpn_reload",			kWPN_RELOAD				,_both},	
-// 	{ "wpn_func",			kWPN_FUNC				,_both},	
-// 	{ "wpn_firemode_prev",	kWPN_FIREMODE_PREV		,_both},	
-// 	{ "wpn_firemode_next",	kWPN_FIREMODE_NEXT		,_both},	
-// 															
-// 	{ "pause",				kPAUSE					,_both},	
-// 	{ "drop",				kDROP					,_both},	
-// 	{ "use",				kUSE					,_both},	
-// 	{ "scores",				kSCORES					,_both},	
-// 	{ "chat",				kCHAT					,_mp},		
-// 	{ "chat_team",			kCHAT_TEAM				,_mp},		
-// 	{ "screenshot",			kSCREENSHOT				,_both},	
-// 	{ "quit",				kQUIT					,_both},	
-// 	{ "console",			kCONSOLE				,_both},	
-// 	{ "inventory",			kINVENTORY				,_both},	
-// 	{ "buy_menu",			kBUY					,_mp},		
-// 	{ "skin_menu",			kSKIN					,_mp},		
-// 	{ "team_menu",			kTEAM					,_mp},		
-// 																
-// 	{ "vote_begin",			kVOTE_BEGIN				,_mp},		
-// 	{ "vote",				kVOTE					,_mp},		
-// 	{ "vote_yes",			kVOTEYES				,_mp},		
-// 	{ "vote_no",			kVOTENO					,_mp},		
-// 																
-// 	{ "next_slot",			kNEXT_SLOT				,_both},	
-// 	{ "prev_slot",			kPREV_SLOT				,_both},	
-// 															
-// 	{ "speech_menu_0",		kSPEECH_MENU_0			,_mp},		
-// 	{ "speech_menu_1",		kSPEECH_MENU_1			,_mp},		
-// 																
-// 	{ "quick_use_1",		kQUICK_USE_1			,_both},		
-// 	{ "quick_use_2",		kQUICK_USE_2			,_both},
-// 	{ "quick_use_3",		kQUICK_USE_3			,_both},
-// 	{ "quick_use_4",		kQUICK_USE_4			,_both},
-
-																
-	{ NULL, 				kLASTACTION				,_both}		
-};															
-
-keyboard_key_descr keyboards[] = {
-	{ "kESCAPE",	 	key_escape		},	{ "k1",				key_1			},
-	{ "k2",				key_2			},	{ "k3",				key_3			},
-	{ "k4",				key_4			},	{ "k5",				key_5			},
-	{ "k6",				key_6			},	{ "k7",				key_7			},
-	{ "k8",				key_8			},	{ "k9",				key_9			},
-	{ "k0",				key_0			},	{ "kMINUS",			key_minus		},
-	{ "kEQUALS",		key_equals		},	{ "kBACK",			key_back		},
-	{ "kTAB",			key_tab 		},	{ "kQ",				key_q			},
-	{ "kW",				key_w			},	{ "kE",				key_e			},
-	{ "kR",				key_r			},	{ "kT",				key_t			},
-	{ "kY",				key_y			},	{ "kU",				key_u			},
-	{ "kI",				key_i			},	{ "kO",				key_o			},
-	{ "kP",				key_p			},	{ "kLBRACKET",		key_lbracket	},
-	{ "kRBRACKET",		key_rbracket	},	{ "kRETURN",		key_return		},
-	{ "kLCONTROL",		key_lcontrol	},	{ "kA",				key_a			},
-	{ "kS",				key_s			},	{ "kD",				key_d			},
-	{ "kF",				key_f			},	{ "kG",				key_g			},
-	{ "kH",				key_h			},	{ "kJ",				key_j			},
-	{ "kK",				key_k			},	{ "kL",				key_l			},
-	{ "kSEMICOLON",		key_semicolon	},	{ "kAPOSTROPHE",	key_apostrophe	},
-	{ "kGRAVE",			key_grave		},	{ "kLSHIFT",	 	key_lshift		},
-	{ "kBACKSLASH",		key_backslash	},	{ "kZ",				key_z			},
-	{ "kX",				key_x			},	{ "kC",				key_c			},
-	{ "kV",				key_v			},	{ "kB",				key_b			},
-	{ "kN",				key_n			},	{ "kM",				key_m			},
-	{ "kCOMMA",			key_comma		},	{ "kPERIOD",		key_period		},
-	{ "kSLASH",			key_slash		},	{ "kRSHIFT",		key_rshift		},
-	{ "kMULTIPLY",		key_multiply	},	{ "kLMENU",			key_lmenu		},
-	{ "kSPACE",			key_space		},	{ "kCAPITAL",		key_capital		},
-	{ "kF1",			key_f1			},	{ "kF2",			key_f2			},
-	{ "kF3",			key_f3			},	{ "kF4",			key_f4			},
-	{ "kF5",			key_f5			},	{ "kF6",			key_f6			},
-	{ "kF7",			key_f7			},	{ "kF8",			key_f8			},
-	{ "kF9",			key_f9			},	{ "kF10",			key_f10			},
-	{ "kNUMLOCK",		key_numlock		},	{ "kSCROLL",		key_scroll		},
-	{ "kNUMPAD7",		key_numpad7		},	{ "kNUMPAD8",		key_numpad8		},
-	{ "kNUMPAD9",		key_numpad9		},	{ "kSUBTRACT",		key_subtract	},
-	{ "kNUMPAD4",		key_numpad4		},	{ "kNUMPAD5",		key_numpad5		},
-	{ "kNUMPAD6",		key_numpad6		},	{ "kADD",			key_add			},
-	{ "kNUMPAD1",		key_numpad1		},	{ "kNUMPAD2",		key_numpad2		},
-	{ "kNUMPAD3",		key_numpad3		},	{ "kNUMPAD0",		key_numpad0		},
-	{ "kDECIMAL",		key_decimal		},	{ "kF11",			key_f11			},
-	{ "kF12",			key_f12			},	{ "kF13",			key_f13			},
-	{ "kF14",			key_f14			},	{ "kF15",			key_f15			},
-	{ "kKANA",			key_kana		},	{ "kCONVERT",		key_convert		},
-	{ "kNOCONVERT",		key_noconvert	},	{ "kYEN",			key_yen			},
-	{ "kNUMPADEQUALS",	key_numpadequals},	{ "kCIRCUMFLEX",	key_circumflex	},
-	{ "kAT",			key_at			},	{ "kCOLON",			key_colon		},
-	{ "kUNDERLINE",		key_underline	},	{ "kKANJI",			key_kanji		},
-	{ "kSTOP",			key_stop		},	{ "kAX",			key_ax			},
-	{ "kUNLABELED",		key_unlabeled	},	{ "kNUMPADENTER",	key_numpadenter	},
-	{ "kRCONTROL",		key_rcontrol	},	{ "kNUMPADCOMMA",	key_numpadcomma	},
-	{ "kDIVIDE",		key_divide		},	{ "kSYSRQ",			key_sysrq		},
-	{ "kRMENU",			key_rmenu		},	{ "kHOME",			key_home		},
-	{ "kUP",			key_up			},	{ "kPRIOR",			key_prior		},
-	{ "kLEFT",			key_left		},	{ "kRIGHT",			key_right		},
-	{ "kEND",			key_end			},	{ "kDOWN",			key_down		},
-	{ "kNEXT",			key_next		},	{ "kINSERT",		key_insert		},
-	{ "kDELETE",		key_delete		},	{ "kLWIN",			key_lwin		},
-	{ "kRWIN",			key_rwin		},	{ "kAPPS",			key_apps		},
-	{ "kPAUSE",			key_pause		},
-	{ "mouse1",			mouse_button_left},
-	{ "mouse2",			mouse_button_right},
-	{ "mouse3",			mouse_button_middle},
-	{ "mouse4",			mouse_button_extended0	},
-	{ "mouse5",			mouse_button_extended1	},
-	{ "mouse6",			mouse_button_extended2	},
-	{ "mouse7",			mouse_button_extended3	},
-	{ "mouse8",			mouse_button_extended4	},
-	{ NULL, 			0				}
-};
-
-key_binder::key_binder	( game& game ):m_game( game )
+	),
+	m_type		( type ),
+	m_binder	( binder )
 {
-	for(int idx=0; idx<bindings_count; ++idx)
-		g_key_bindings[idx].m_action = &actions[idx];
-	
-	static console_command_bind s_bind_key_command( this , 0); // conmmand bind
-	static console_command_bind s_bind_sec_key_command( this , 1); // conmmand bind_sec
-	
-	static vostok::console_commands::cc_delegate s_unbind_key_command(
-		"unbind",
-		boost::bind( &key_binder::unbind_key, this, _1, 0 ),
-		console_commands::command_type_user_specific
-	);
-	static vostok::console_commands::cc_delegate s_unbind_second_key_command(
-		"unbind_sec",
-		boost::bind( &key_binder::unbind_key, this, _1, 1 ),
-		console_commands::command_type_user_specific
-	);
-
-	set_default_controls( );
+	// FUNCTION BODY[0x91980]: 1
+	// <0x91980>|0x000|+0x0ab:'32'	{
+	// <0>
+	// <0x91a2b>|0x0ab|      :'34'	}
+	// ******
 }
 
+// STATE[STUB]
+void console_command_bind::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
+{
+	// LOCALS
+	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
+	// ******
+
+	// FUNCTION BODY[0x91a40]: 11
+	// <0>
+	// <0x91a4b>|0x00b|+0x002:'42'
+	// <0>
+	// <0x91a4d>|0x00d|+0x003:'44'
+	// <0x91a50>|0x010|+0x017:'45'
+	// <0>
+	// <1>
+	// <0x91a67>|0x027|+0x042:'48'
+	// <0x91aa9>|0x069|+0x014:'49'
+	// <0>
+	// <1>
+	// ******
+}
+
+// TU static 'set_mouse_sensitivity_cc' (compiler-generated dynamic
+// initializer + atexit destructor); a matcher recovers its type/initializer
+// from the asm.
+/*
+// STATE[STUB]
+void `dynamic initializer for 'set_mouse_sensitivity_cc''( )
+{
+	// FUNCTION BODY[0x7d8400]
+	// <0x7d8400>|0x000|      :'218'	{
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic atexit destructor for 'set_mouse_sensitivity_cc''( )
+{
+	// FUNCTION BODY[0x7f01d0]
+	// <0x7d8470>|0x000|      :'220'	{
+	// ******
+}
+*/
+
+// STATE[STUB]
+ key_binder::key_binder( game& g )
+	: m_game( g ) // buildability: ref member must be init'd
+{
+	// STATICS
+	// static console_commands::cc_delegate s_unbind_key_command = <0x4c2b208>;
+	// static console_command_bind 		s_bind_key_command = <0x4c2b2d0>;
+	// static console_command_bind 		s_bind_sec_key_command = <0x4c2b268>;
+	// static console_commands::cc_delegate s_unbind_second_key_command = <0x4c2b1a8>;
+	// ******
+
+	// FUNCTION BODY[0x5db6e0]: 16
+	// <0x5db6e5>|0x005|+0x017:'225'
+	// <0>
+	// <1>
+	// <0x5db6fc>|0x01c|+0x005:'228'
+	// <0>
+	// <1>
+	// <0x5db701>|0x021|+0x013:'231'
+	// <0>
+	// <1>
+	// <0x5db714>|0x034|+0x02c:'234'
+	// <0x5db740>|0x060|+0x029:'235'
+	// <0>
+	// <0x5db769>|0x089|+0x153:'237'
+	// <0x5db8bc>|0x1dc|+0x153:'238'
+	// <0>
+	// <0x5dba0f>|0x32f|+0x006:'240'
+	// ******
+}
+
+// STATE[STUB]
 void key_binder::set_default_controls( )
 {
-	int idx				= 0;
-	while( actions[idx].action_name )
-	{
-		if ( actions[idx].default_key ){
-			pcstr arg = NULL;
-			STR_JOINA(arg, actions[idx].action_name, " ", actions[idx].default_key );
-			bind_key( arg, 0 );
-		}
-		idx++;
-	}
+	// LOCALS
+	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
+	// ******
+
+	// FUNCTION BODY[0x5db670]: 10
+	// <0>
+	// <0x5db679>|0x009|+0x002:'246'
+	// <0>
+	// <0x5db67b>|0x00b|+0x00a:'248'
+	// <0>
+	// <1>
+	// <0x5db685>|0x015|+0x035:'251'
+	// <0x5db6ba>|0x04a|+0x016:'252'
+	// <0>
+	// <1>
+	// ******
 }
 
-void key_binder::remap_keys()
- {
- 	int idx				= 0;
- 	string128			buff;
- 	while(keyboards[idx].key_name)
- 	{
- 		buff[0]				= 0;
- 		keyboard_key_descr&	kb		= keyboards[idx];
-		bool res			= m_game.input_world().get_keyboard()->get_dik_name(kb.dik, buff, sizeof(buff) );
- 		if(res)
-			strings::copy( kb.key_local_name, buff ) ;
- 		else
- 			strings::copy( kb.key_local_name, kb.key_name );/*kb.key_local_name	= kb.key_name;*/
- 
- //.		Msg("[%s]-[%s]",kb.key_name, kb.key_local_name.c_str());
- 		++idx;
- 	}
- }
-
-pcstr key_binder::id_to_action_name(game_action_id _id)
+// STATE[STUB]
+void key_binder::remap_keys( )
 {
-	int idx				= 0;
-	while( actions[idx].action_name )
-	{
-		if(_id==actions[idx].id )
-			return actions[idx].action_name;
+	s32			idx = 0;
+	string128	buff;
+	while ( keyboards[idx].key_name ) {
+		buff[0]						= 0;
+		keyboard_key_descr&	kb		= keyboards[idx];
+		bool res					= m_game.input_world().get_keyboard()->get_dik_name( kb.dik, buff, sizeof( buff ) );
+		if ( res )
+			strings::copy	( kb.key_local_name, buff );
+		else
+			strings::copy	( kb.key_local_name, kb.key_name );
 		++idx;
 	}
-	LOG_INFO				("! cant find corresponding [action_name] for id");
-	return			NULL;
+
+	// LOCALS
+	// char[128] 						buff
+	// ******
+
+	// CALL SITE INFO
+	// <0x5db020> -> input::world& < unknown >()
+	// <0x5db029> -> input::keyboard const* < unknown >()
+	// <0x5db040> -> bool < unknown >( int, char*, int ) const
+	// ******
+
+	// FUNCTION BODY[0x5daff0]: 10
+	// <0x5dafff>|0x00f|+0x002:'259'
+	// <0>
+	// <0x5db001>|0x011|+0x00f:'261'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5db010>|0x020|+0x032:'265'
+	// <0x5db042>|0x052|+0x019:'266'
+	// <0x5db05b>|0x06b|+0x01a:'267'
+	// <0>
+	// ******
 }
 
-game_action_id key_binder::action_name_to_id(pcstr _name)
+// STATE[STUB]
+pcstr key_binder::id_to_action_name( game_action_id _id ) const
 {
-	game_action_descr* action = action_name_to_ptr(_name);
-	if(action)
-		return action->id;
-	else
-		return	kNOTBINDED;
+	return NULL;
+
+	// FUNCTION BODY[0x5db350]: 8
+	// <0x5db350>|0x000|+0x00c:'272'	{
+	// <0>
+	// <0x5db35c>|0x00c|+0x009:'274'
+	// <0>
+	// <0x5db365>|0x015|+0x06c:'276'
+	// <0x5db3d1>|0x081|-0x059:'277'
+	// <0>
+	// <0x5db378>|0x028|+0x069:'279'
+	// <0x5db3e1>|0x091|-0x006:'279'
+	// <0>
+	// <0x5db3db>|0x08b|+0x06c:'281'
+	// <0x5db447>|0x0f7|      :'281'	}
+	// ******
 }
 
-game_action_descr* key_binder::action_name_to_ptr(pcstr _name)
+// STATE[STUB]
+game_action_id key_binder::action_name_to_id( pcstr _name )
 {
-	int idx				= 0;
-	while( actions[idx].action_name )
-	{
-		if( !_stricmp(_name,actions[idx].action_name) )
-			return &actions[idx];
-		++idx;
-	}
-	LOG_INFO				("! cant find corresponding [id] for action_name", _name);
-	return			NULL;
+	// FUNCTION BODY[0x5db330]: 5
+	// <0x5db330>|0x000|+0x000:'284'	{
+	// <0x5db330>|0x000|+0x006:'285'
+	// <0x5db336>|0x006|+0x004:'286'
+	// <0x5db33a>|0x00a|+0x004:'287'
+	// <0>
+	// <0x5db33e>|0x00e|-0x001:'289'
+	// <0x5db33d>|0x00d|+0x006:'290'
+	// <0x5db343>|0x013|      :'290'	}
+	// ******
 }
 
-pcstr	key_binder::dik_to_keyname			(int _dik)
+// STATE[STUB]
+game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 {
-	keyboard_key_descr* kb = key_binder::dik_to_ptr(_dik, true);
-	if(kb)
+	return NULL;
+
+	// FUNCTION BODY[0x5db210]: 8
+	// <0x5db210>|0x000|+0x00e:'293'	{
+	// <0>
+	// <0x5db21e>|0x00e|+0x008:'295'
+	// <0>
+	// <0x5db226>|0x016|+0x07e:'297'
+	// <0x5db2a4>|0x094|-0x05b:'298'
+	// <0>
+	// <0x5db249>|0x039|+0x06e:'300'
+	// <0x5db2b7>|0x0a7|-0x009:'300'
+	// <0>
+	// <0x5db2ae>|0x09e|+0x073:'302'
+	// <0x5db321>|0x111|      :'302'	}
+	// ******
+}
+
+// STATE[STUB]
+pcstr key_binder::dik_to_keyname( s32 _dik )
+{
+	keyboard_key_descr* kb = key_binder::dik_to_ptr( _dik, true );
+	if ( kb )
 		return kb->key_name;
 	else
 		return NULL;
+
+	// FUNCTION BODY[0x5db1f0]: 5
+	// <0x5db1f0>|0x000|+0x001:'305'	{
+	// <0x5db1f1>|0x001|+0x005:'306'
+	// <0x5db1f6>|0x006|+0x004:'307'
+	// <0x5db1fa>|0x00a|+0x004:'308'
+	// <0>
+	// <0x5db1fe>|0x00e|-0x001:'310'
+	// <0x5db1fd>|0x00d|+0x004:'311'
+	// <0x5db201>|0x011|      :'311'	}
+	// ******
 }
 
-keyboard_key_descr* key_binder::dik_to_ptr(int _dik, bool bSafe)
+// STATE[STUB]
+keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 {
-	int idx =0;
-	while(keyboards[idx].key_name)
-	{
-		keyboard_key_descr&	kb		= keyboards[idx];
-		if(kb.dik==_dik)
+	s32 idx = 0;
+	while ( keyboards[idx].key_name ) {
+		keyboard_key_descr& kb = keyboards[idx];
+		if ( kb.dik == _dik )
 			return &keyboards[idx];
 		++idx;
-	}	
-	if (!bSafe)
-		LOG_INFO			("! cant find corresponding [keyboard_key_descr] for dik");
-	return			NULL;
-}
-
-int	key_binder::keyname_to_dik (LPCSTR _name)
-{
-	keyboard_key_descr* _kb = keyname_to_ptr(_name);
-	return _kb->dik;
-}
-
-keyboard_key_descr*	key_binder::keyname_to_ptr(LPCSTR _name)
-{
-	int idx =0;
-	while(keyboards[idx].key_name)
-	{
-		keyboard_key_descr&	kb		= keyboards[idx];
-		if( !_stricmp(_name, kb.key_name) )
-			return &keyboards[idx];
-		++idx;
-	}	
-
-	LOG_INFO				("! cant find corresponding [keyboard_key_descr*] for keyname %s", _name);
-	return			NULL;
-}
-
-bool is_group_not_conflicted(keyboard_key_group g1, keyboard_key_group g2)
-{
-	return ((g1==_sp && g2==_mp) || (g1==_mp && g2==_sp));
-}
-
-bool is_group_matching(keyboard_key_group g1, keyboard_key_group g2)
-{
-	return ( (g1==g2) || (g1==_both) || (g2==_both) );
-}
-
-bool key_binder::is_binded(game_action_id _action_id, int _dik)
-{
-	key_binding* pbinding = &g_key_bindings[_action_id];
-	if(pbinding->m_keyboard[0] && pbinding->m_keyboard[0]->dik==_dik)
-		return true;
-
-	if(pbinding->m_keyboard[1] && pbinding->m_keyboard[1]->dik==_dik)
-		return true;
-	
-	return false;
-}
-
-int key_binder::get_action_dik(game_action_id _action_id, int idx)
-{
-	key_binding* pbinding = &g_key_bindings[_action_id];
-	
-	if(idx==-1)
-	{
-	if(pbinding->m_keyboard[0])
-		return pbinding->m_keyboard[0]->dik;
-
-	if(pbinding->m_keyboard[1])
-		return pbinding->m_keyboard[1]->dik;
-	}else
-	{
-	if(pbinding->m_keyboard[idx])
-		return pbinding->m_keyboard[idx]->dik;
 	}
+	if ( !bSafe )
+		LOG_INFO	( "! cant find corresponding [keyboard_key_descr] for dik" );
+	return NULL;
+
+	// FUNCTION BODY[0x5db1b0]: 11
+	// <0x5db1b0>|0x000|+0x001:'314'	{
+	// <0x5db1b1>|0x001|+0x009:'315'
+	// <0x5db1ba>|0x00a|+0x00a:'316'
+	// <0>
+	// <1>
+	// <0x5db1c4>|0x014|+0x01e:'319'
+	// <0x5db1e2>|0x032|-0x016:'320'
+	// <0x5db1cc>|0x01c|+0x012:'321'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5db1de>|0x02e|+0x002:'325'
+	// <0x5db1e0>|0x030|+0x00d:'326'
+	// <0x5db1ed>|0x03d|      :'326'	}
+	// ******
+}
+
+// STATE[STUB]
+keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
+{
+	s32 idx = 0;
+	while ( keyboards[idx].key_name ) {
+		keyboard_key_descr& kb = keyboards[idx];
+		if ( !_stricmp( _name, kb.key_name ) )
+			return &keyboards[idx];
+		++idx;
+	}
+
+	LOG_INFO	( "! cant find corresponding [keyboard_key_descr*] for keyname %s", _name );
+	return NULL;
+
+	// FUNCTION BODY[0x5db080]: 11
+	// <0x5db080>|0x000|+0x007:'335'	{
+	// <0x5db087>|0x007|+0x006:'336'
+	// <0x5db08d>|0x00d|+0x013:'337'
+	// <0>
+	// <1>
+	// <0x5db0a0>|0x020|+0x080:'340'
+	// <0x5db120>|0x0a0|-0x070:'341'
+	// <0x5db0b0>|0x030|+0x017:'342'
+	// <0>
+	// <1>
+	// <0x5db0c7>|0x047|+0x06c:'345'
+	// <0x5db133>|0x0b3|-0x006:'345'
+	// <0>
+	// <0x5db12d>|0x0ad|+0x06c:'347'
+	// <0x5db199>|0x119|      :'347'	}
+	// ******
+}
+
+// STATE[STUB]
+s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
+{
 	return 0;
+
+	// FUNCTION BODY[0x5dafd0]: 15
+	// <0x5dafd0>|0x000|+0x000:'367'	{
+	// <0x5dafd0>|0x000|+0x006:'368'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5dafd6>|0x006|+0x007:'372'
+	// <0x5dafdd>|0x00d|+0x004:'373'
+	// <0>
+	// <0x5dafe1>|0x011|+0x007:'375'
+	// <0x5dafe8>|0x018|+0x004:'376'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5dafec>|0x01c|-0x00c:'382'
+	// <0x5dafe0>|0x010|+0x00b:'383'
+	// <0x5dafeb>|0x01b|+0x003:'383'
+	// <0x5dafee>|0x01e|      :'383'	}
+	// ******
 }
 
-game_action_id key_binder::get_binded_action(int _dik)
+// STATE[STUB]
+game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& actions_mask_type, s32 key_group_mask ) const
 {
-	for(int idx=0; idx<bindings_count; ++idx)
-	{
-		key_binding*	binding = &g_key_bindings[idx];
-
-		bool b_is_group_matching	= is_group_matching(binding->m_action->key_group,g_current_keygroup);
-		
-		if(!b_is_group_matching)	continue;
-
-		if(binding->m_keyboard[0] && binding->m_keyboard[0]->dik==_dik && b_is_group_matching)
-			return binding->m_action->id;
-		
-		if(binding->m_keyboard[1] && binding->m_keyboard[1]->dik==_dik && b_is_group_matching)
-			return binding->m_action->id;
-	}
-	return kNOTBINDED;
+	// FUNCTION BODY[0x5daf60]: 20
+	// <0x5daf60>|0x000|+0x005:'386'	{
+	// <0x5daf65>|0x005|+0x02e:'387'
+	// <0x5daf93>|0x033|-0x023:'387'
+	// <0>
+	// <1>
+	// <0x5daf70>|0x010|+0x00a:'390'
+	// <0>
+	// <0x5daf7a>|0x01a|+0x002:'392'
+	// <0>
+	// <1>
+	// <0x5daf7c>|0x01c|+0x029:'395'
+	// <0x5dafa5>|0x045|+0x006:'396'
+	// <0x5dafab>|0x04b|-0x023:'397'
+	// <0>
+	// <1>
+	// <0x5daf88>|0x028|+0x02c:'400'
+	// <0x5dafb4>|0x054|+0x006:'401'
+	// <0x5dafba>|0x05a|-0x01e:'402'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5daf9c>|0x03c|+0x006:'406'
+	// <0x5dafa2>|0x042|+0x00f:'407'
+	// <0x5dafb1>|0x051|+0x00f:'407'
+	// <0x5dafc0>|0x060|      :'407'	}
+	// ******
 }
 
-// void GetActionAllBinding		(LPCSTR _action, char* dst_buff, int dst_buff_sz)
-// {
-// 	int			action_id	= action_name_to_id(_action);
-// 	key_binding*	pbinding	= &g_key_bindings[action_id];
-// 
-// 	string128	prim;
-// 	string128	sec;
-// 	prim[0]		= 0;
-// 	sec[0]		= 0;
-// 
-// 	if(pbinding->m_keyboard[0])
-// 	{
-// 		strings::copy(prim, pbinding->m_keyboard[0]->key_local_name);
-// 	}
-// 	if(pbinding->m_keyboard[1])
-// 	{
-// 		strings::copy(sec, pbinding->m_keyboard[1]->key_local_name);
-// 	}
-// // 	if(NULL==pbinding->m_keyboard[0] && NULL==pbinding->m_keyboard[1])
-// // 	{
-// // 		xr_sprintf		(dst_buff, dst_buff_sz, "%s", CStringTable().translate("st_key_notbinded").c_str());
-// // 	}else
-// // 		xr_sprintf		(dst_buff, dst_buff_sz, "%s%s%s", prim[0]?prim:"", (sec[0]&&prim[0])?" , ":"", sec[0]?sec:"");
-// // 					
-// }
-
-BOOL bRemapped = FALSE;
-
-void key_binder::bind_key(pcstr args, int bind_number) 
+// STATE[STUB]
+void key_binder::bind_key( pcstr args, s32 bind_number )
 {
-	string256							action;
-	string256							key;
-	*action								= 0;
-	*key								= 0;
+	// LOCALS
+	// char[256] 						action
+	// char[256] 						key
+	// ******
 
-	sscanf_s							(args,"%255s %255s", action,sizeof(action), key, sizeof(key));
-	if (!*action)
-		return;
-
-	if (!*key)
-		return;
-
-	if(!bRemapped) {
-		remap_keys	();
-		bRemapped	= TRUE;
-	}
-
-	if (!action_name_to_ptr(action))
-		return;
-
-	int action_id						= action_name_to_id			(action);
-	if (action_id==kNOTBINDED)
-		return;
-
-	keyboard_key_descr*	pkeyboard				= keyname_to_ptr(key);
-	if (!pkeyboard)
-		return;
-
-	key_binding*	curr_pbinding			= &g_key_bindings[action_id];
-
-	curr_pbinding->m_keyboard[bind_number]= pkeyboard;
-		
-	{
-		for(int idx=0; idx<bindings_count; ++idx)
-		{
-			key_binding*	binding			= &g_key_bindings[idx];
-			if(binding==curr_pbinding)	continue;
-
-			bool b_conflict = !is_group_not_conflicted(binding->m_action->key_group, curr_pbinding->m_action->key_group);
-
-			if(binding->m_keyboard[0]==pkeyboard && b_conflict)
-				binding->m_keyboard[0]=NULL;
-			
-			if(binding->m_keyboard[1]==pkeyboard && b_conflict)
-				binding->m_keyboard[1]=NULL;
-		}
-	}
-
-
-/*CStringTable::ReparseKeyBindings();*/
+	// FUNCTION BODY[0x5db4a0]: 47
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5db4ac>|0x00c|+0x03a:'444'
+	// <0x5db4e6>|0x046|+0x00b:'445'
+	// <0>
+	// <1>
+	// <0x5db4f1>|0x051|+0x00e:'448'
+	// <0>
+	// <1>
+	// <0x5db4ff>|0x05f|+0x009:'451'
+	// <0x5db508>|0x068|+0x006:'452'
+	// <0x5db50e>|0x06e|+0x00a:'453'
+	// <0>
+	// <1>
+	// <0x5db518>|0x078|+0x012:'456'
+	// <0>
+	// <1>
+	// <0x5db52a>|0x08a|+0x015:'459'
+	// <0x5db53f>|0x09f|+0x009:'460'
+	// <0>
+	// <1>
+	// <0x5db548>|0x0a8|+0x00c:'463'
+	// <0x5db554>|0x0b4|+0x0f6:'464'
+	// <0>
+	// <1>
+	// <0x5db64a>|0x1aa|-0x0ec:'467'
+	// <0>
+	// <0x5db55e>|0x0be|+0x0ef:'469'
+	// <0>
+	// <1>
+	// <0x5db64d>|0x1ad|-0x0d7:'472'
+	// <0>
+	// <1>
+	// <0x5db576>|0x0d6|+0x036:'475'
+	// <0x5db5ac>|0x10c|+0x034:'475'
+	// <0x5db5e0>|0x140|+0x035:'475'
+	// <0x5db615>|0x175|-0x098:'475'
+	// <0>
+	// <0x5db57d>|0x0dd|+0x036:'477'
+	// <0x5db5b3>|0x113|+0x034:'477'
+	// <0x5db5e7>|0x147|+0x035:'477'
+	// <0x5db61c>|0x17c|-0x088:'477'
+	// <0>
+	// <0x5db594>|0x0f4|+0x036:'479'
+	// <0x5db5ca>|0x12a|+0x033:'479'
+	// <0x5db5fd>|0x15d|+0x035:'479'
+	// <0x5db632>|0x192|-0x095:'479'
+	// <0x5db59d>|0x0fd|+0x036:'480'
+	// <0x5db5d3>|0x133|+0x033:'480'
+	// <0x5db606>|0x166|+0x035:'480'
+	// <0x5db63b>|0x19b|-0x09b:'480'
+	// <0>
+	// <0x5db5a0>|0x100|+0x036:'482'
+	// <0x5db5d6>|0x136|+0x033:'482'
+	// <0x5db609>|0x169|+0x035:'482'
+	// <0x5db63e>|0x19e|-0x095:'482'
+	// <0x5db5a9>|0x109|+0x035:'483'
+	// <0x5db5de>|0x13e|+0x034:'483'
+	// <0x5db612>|0x172|+0x035:'483'
+	// <0x5db647>|0x1a7|+0x011:'483'
+	// <0>
+	// <1>
+	// ******
 }
- 
-void key_binder::unbind_key( LPCSTR args, int bind_number )
-{
-	int action_id						= action_name_to_id			(args);
-	key_binding*	pbinding				= &g_key_bindings[action_id];
-	pbinding->m_keyboard[bind_number]	= NULL;
 
-	/*CStringTable::ReparseKeyBindings();*/
-} 
-}; //namespace survarium
+// STATE[STUB]
+void key_binder::unbind_key( pcstr args, s32 bind_number )
+{
+	// FUNCTION BODY[0x5db450]: 3
+	// <0x5db450>|0x000|+0x000:'489'	{
+	// <0x5db450>|0x000|+0x014:'490'
+	// <0>
+	// <0x5db464>|0x014|+0x015:'492'
+	// <0x5db479>|0x029|-0x004:'492'
+	// <0x5db475>|0x025|+0x01a:'493'
+	// <0x5db48f>|0x03f|      :'493'	}
+	// ******
+}
+
+// STATE[STUB]
+s32 key_binder::get_binding_group( game_action_id _id )
+{
+	return 0;
+
+	// FUNCTION BODY[0x5daf50]: 3
+	// <0x5daf50>|0x000|+0x003:'497'
+	// <0>
+	// <0x5daf53>|0x003|+0x006:'499'
+	// ******
+}
+
+} // namespace survarium

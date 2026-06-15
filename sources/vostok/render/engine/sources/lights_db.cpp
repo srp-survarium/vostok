@@ -74,7 +74,7 @@ static math::float3 get_sun_direction(light_props const& props)
 	c_time.iDay			= props.m_day;//s_v2_value;//31;
 	c_time.dHours		= props.m_hours - 2;//s_v3_value - 2;//12.0;
 	c_time.dMinutes		= props.m_minutes;//s_v4_value;//0.00;
-	c_time.dSeconds		= props.m_seconds;//s_v5_value;//0.00;
+	c_time.dSeconds		= 0;//props.m_seconds (no m_seconds in the shipped light_props - see facade/light_props.h sushi@TODO)
 	
 	/*
 		ส่ๅโ
@@ -98,7 +98,7 @@ static math::float3 get_sun_direction(light_props const& props)
 	moon_time_parameters.day		= props.m_day;
 	moon_time_parameters.hours		= props.m_hours - 2;
 	moon_time_parameters.minutes	= props.m_minutes;
-	moon_time_parameters.seconds	= props.m_seconds;
+	moon_time_parameters.seconds	= 0;//props.m_seconds (no m_seconds in the shipped light_props)
 	
 	double azimuth = 0.0, zenith = 0.0;
 	

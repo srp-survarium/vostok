@@ -1,72 +1,66 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 10.08.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef NPC_STATS_H_INCLUDED
 #define NPC_STATS_H_INCLUDED
 
-#include <vostok/render/facade/game_renderer.h>
+// PDB spells the draw param vostok::render::base_scene_view_ptr - the same
+// resource_ptr type our render tree typedefs as scene_view_ptr
+#include <vostok/render/engine/base_classes.h>
 
 namespace vostok {
-
-namespace render {
-namespace ui { 
-	class renderer; 
-} // namespace ui
-} // namespace render
-
 namespace ui {
 	struct text;
 	struct window;
 	struct world;
 } // namespace ui
-
+namespace render {
+namespace ui {
+	class renderer;
+} // namespace ui
+} // namespace render
 } // namespace vostok
 
 namespace survarium {
 
 class human_npc;
 
-class npc_stats : private boost::noncopyable
-{
+class npc_stats : public boost::noncopyable {
 public:
-					npc_stats					( vostok::ui::world& ui_world );
-					~npc_stats					( );
-
-	void			draw						(
-						vostok::render::ui::renderer& ui_renderer,
-						vostok::render::scene_view_ptr const& scene_view
-					);
-	void			set_stats					( human_npc const* const );
-
-private:
-	enum column_types_enum
-	{
-		column_1,
-		column_2,
-		column_3
+	// nested enum has no PDB type record (referenced only as a param type);
+	// a matcher recovers the enumerators from the consuming asm
+	enum column_types_enum {
 	};
 
-private:
-	ui::text*		create_new_group			(
-						column_types_enum column_number,
-						u32 font_color,
-						pcstr text,
-						ui::window* upper_window = 0
+public:
+	explicit		npc_stats		( ui::world& ui_world );
+					~npc_stats		( );
+
+	void			draw			( render::ui::renderer& ui_renderer, render::scene_view_ptr const& scene_view );
+
+	void			set_stats		( human_npc const* const owner );
+
+	ui::text*		create_new_group(
+						const column_types_enum		arg_0 /* npc_stats::column_types_enum column_number */,
+						const u32					font_color,
+						pcstr						text,
+						ui::window const*			upper_window
 					);
 
 private:
-	ui::world&		m_ui_world;
-	ui::window*		m_main_window;
-	
-	u32 const		m_caption_color;
-	u32 const		m_text_color;
-	float const		m_line_height;
-	float const		m_column_width;
+	/* 0x0000 */	/* boost::noncopyable */
+	/* 0x0000 */	ui::world&		m_ui_world;
+	/* 0x0004 */	ui::window*		m_main_window;
+	/* 0x0008 */	const u32		m_caption_color;
+	/* 0x000c */	const u32		m_text_color;
+	/* 0x0010 */	const float		m_line_height;
+	/* 0x0014 */	const float		m_medium_column_width;
+	/* 0x0018 */	const float		m_wide_column_width;
 }; // class npc_stats
 
-} //namespace survarium
+STATIC_SIZE_ASSERT(npc_stats, 0x1C);
+
+} // namespace survarium
 
 #endif // #ifndef NPC_STATS_H_INCLUDED

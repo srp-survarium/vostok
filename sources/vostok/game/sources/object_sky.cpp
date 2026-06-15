@@ -1,69 +1,95 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 22.09.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "object_sky.h"
-#include "game_world.h"
 
-#include <vostok/render/world.h>
+namespace survarium {
 
-#include <vostok/render/facade/scene_renderer.h>
-#include <vostok/render/facade/decal_properties.h>
-#include <vostok/render/facade/material_effects_instance_cook_data.h>
-#include <vostok/render/facade/vertex_input_type.h>
-
-namespace survarium{
-
-object_sky::object_sky( game_scene& w )
-:super		( w )
-{}
-
-object_sky::~object_sky( )
-{}
-
-void object_sky::load( configs::binary_config_value const& t )
+// STATE[STUB]
+ object_sky::object_sky( base_game_scene& w ) :
+	game_object_( w )
 {
-	super::load					(t);
-	pcstr sky_material_name		= pcstr(t["material_name"]);
-	
-	vostok::render::material_effects_instance_cook_data* cook_data = 
-		NEW(vostok::render::material_effects_instance_cook_data)(vostok::render::post_process_vertex_input_type, NULL, false);
-	
-	resources::user_data_variant		user_data;
-	user_data.set						(cook_data);
-	
-	resources::query_resource			(
-		sky_material_name, 
-		resources::material_effects_instance_class, 
-		boost::bind(
-			&object_sky::material_ready, 
-			this, 
-			_1,
-			cook_data
-		),
-		g_allocator,
-		&user_data
-	);
+	// FUNCTION BODY[0x78f860]
+	// <0x78f860>|0x000|      :'22'	{
+	// ******
 }
 
-void object_sky::material_ready( resources::queries_result& data, vostok::render::material_effects_instance_cook_data* cook_data )
+// STATE[STUB]
+ object_sky::~object_sky( )
 {
-	DELETE (cook_data);
-	
-	if(data.is_successful())
-	{
-		m_game_scene.renderer().scene().set_sky_material(m_game_scene.get_render_scene(), data[0].get_unmanaged_resource());
-	}
+	// FUNCTION BODY[0x78f820]
+	// <0x78f820>|0x000|      :'25'	{
+	// ******
 }
 
-void object_sky::unload_contents( )
-{}
+// STATE[STUB]
+void object_sky::load(
+	configs::binary_config_value const&		t,
+	pcstr									__formal,
+	boost::function< void( game_object_& ) >&	cb
+)
+{
+	// LOCALS
+	// variant< 32 > 					user_data
+	// pcstr 							sky_material_name
+	// ******
 
-void object_sky::load_contents( )
-{}
+	// FUNCTION BODY[0x78f8f0]: 21
+	// <0x78f900>|0x010|+0x00f:'29'
+	// <0>
+	// <1>
+	// <0x78f90f>|0x01f|+0x02f:'32'
+	// <0>
+	// <0x78f93e>|0x04e|+0x008:'34'
+	// <0x78f946>|0x056|+0x005:'35'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <0x78f94b>|0x05b|+0x0c5:'49'
+	// ******
+}
 
+// STATE[STUB]
+void object_sky::material_ready(
+	resources::queries_result&		data,
+	render::material_effects_instance_cook_data*	cook_data,
+	boost::function< void( game_object_& ) >&	cb
+)
+{
+	// FUNCTION BODY[0x78f770]: 4
+	// <0x78f773>|0x003|+0x012:'54'
+	// <0>
+	// <0x78f785>|0x015|+0x07e:'56'
+	// <0x78f803>|0x093|+0x00a:'57'
+	// ******
+}
+
+// STATE[STUB]
+void object_sky::insert( )
+{
+	// FUNCTION BODY[0x78f8c0]: 1
+	// <0x78f8c0>|0x000|+0x026:'62'
+	// ******
+}
+
+// STATE[STUB]
+void object_sky::remove( )
+{
+	// FUNCTION BODY[0x78f890]: 1
+	// <0x78f891>|0x001|+0x02b:'67'
+	// ******
+}
 
 } // namespace survarium

@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 11.08.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef GAME_MATERIAL_VISIBILITY_PARAMETERS_H_INCLUDED
@@ -9,19 +7,18 @@
 
 namespace survarium {
 
-class game_material_visibility_parameters
-{
-public:	
-	inline			game_material_visibility_parameters	( float transparency ) :
-						m_transparency					( transparency )
-	{
-	}
-	
-	inline	float	get_transparency_value				( ) const { return m_transparency; }
+// pulled ahead of batch 11 (a value member of this batch's human_npc)
+class game_material_visibility_parameters {
+public:
+	inline	explicit	game_material_visibility_parameters	( float arg_0 ) { /* no source */ }
+
+	inline	float		get_transparency_value				( ) const { /* no source */ return m_transparency; }
 
 private:
-	float			m_transparency;
-};
+	/* 0x0000 */	float		m_transparency;
+}; // class game_material_visibility_parameters
+
+STATIC_SIZE_ASSERT(game_material_visibility_parameters, 0x4);
 
 } // namespace survarium
 
