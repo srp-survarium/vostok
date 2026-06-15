@@ -12,10 +12,8 @@
 
 using vostok::network::network_world;
 
-// STATE[100%|DONE]
 static void empty_function ( ) { }
 
-// STATE[100%|DONE]
 network_world::network_world					( vostok::network::engine& engine, vostok::memory::base_allocator& orders_allocator ) :
 	m_io_service						( NEW( boost::asio::io_service ) ( ) ),
 	m_channel							( *vostok::network::g_allocator, orders_allocator ),
@@ -25,27 +23,23 @@ network_world::network_world					( vostok::network::engine& engine, vostok::memo
 	m_channel.responses.owner_initialize( NEW(functor_response)( &empty_function ), NEW(functor_response)( &empty_function ) );
 }
 
-// STATE[100%|DONE]
 // claude@NOTE: the target never deletes m_io_service - a faithful leak, do not "fix"
 network_world::~network_world					( )
 {
 	m_channel.responses.owner_finalize	( );
 }
 
-// STATE[100%|DONE]
 void network_world::initialize					( )
 {
 	m_channel.orders.owner_initialize	( VOSTOK_NEW_IMPL(orders_allocator(), functor_order)( &empty_function ), VOSTOK_NEW_IMPL(orders_allocator(), functor_order)( &empty_function ) );
 	m_channel.responses.user_initialize	( );
 }
 
-// STATE[100%|DONE]
 void network_world::finalize					( )
 {
 	m_channel.orders.owner_finalize		( );
 }
 
-// STATE[100%|DONE]
 void network_world::tick						( bool single_threaded )
 {
 	process_orders						( );
@@ -56,19 +50,16 @@ void network_world::tick						( bool single_threaded )
 		m_io_service->poll				( );
 }
 
-// STATE[100%|DONE]
 void network_world::add_order					( vostok::network::order* order )
 {
 	m_channel.orders.owner_push_back	( order );
 }
 
-// STATE[100%|DONE]
 void network_world::add_response				( vostok::network::response* response )
 {
 	m_channel.responses.owner_push_back	( response );
 }
 
-// STATE[100%|DONE]
 void network_world::process_orders				( )
 {
 	m_channel.responses.owner_delete_processed_items	( );
@@ -76,7 +67,6 @@ void network_world::process_orders				( )
 		order->execute					( );
 }
 
-// STATE[100%|DONE]
 void network_world::process_responses			( )
 {
 	m_channel.orders.owner_delete_processed_items	( );
@@ -88,7 +78,6 @@ void network_world::process_responses			( )
 	}
 }
 
-// STATE[100%|DONE]
 void network_world::clear_resources				( )
 {
 	m_channel.orders.owner_delete_processed_items	( );
@@ -97,13 +86,11 @@ void network_world::clear_resources				( )
 	}
 }
 
-// STATE[100%|DONE]
 void network_world::dispatch_callbacks			( )
 {
 	process_responses					( );
 }
 
-// STATE[100%|DONE]
 vostok::network_core::tcp_packet* network_world::new_packet( )
 {
 	return								NEW( network_core::tcp_packet ) ( *g_allocator );
