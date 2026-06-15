@@ -15,8 +15,6 @@
 
 #include <boost/asio.hpp>
 
-namespace vostok { void use_network_core_udp_match_client( ); }
-
 namespace vostok {
 namespace network_core {
 
@@ -26,7 +24,6 @@ class udp_network_flow_emulator;
 class process_packet_predicate;
 
 class udp_match_client : public boost::noncopyable {
-	friend	void						::vostok::use_network_core_udp_match_client	( );
 	// the predicate's operator() invokes the private m_on_packet_received directly.
 	friend	class						process_packet_predicate;
 
@@ -53,7 +50,9 @@ public:
 
 			void								check_consistency			( ) const;
 
-	inline	void								set_on_disconnect			( boost::function< void( disconnect_event_types_enum ) > const& value ) { /* no source */ }
+	// STATE[INLINED]: body from match_client_impl ctor 0x766240 +0x1f7 (folded
+	// function1::operator= into this+0x558 = m_on_disconnect)
+	inline	void								set_on_disconnect			( boost::function< void( disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
 	inline	udp_match_packet*					new_packet					( u8 message_type ) { return NULL; }
 	inline	void								delete_packet				( udp_match_packet*& packet ) { /* no source */ }
@@ -65,13 +64,19 @@ public:
 	inline	boost::asio::ip::udp::endpoint		endpoint					( ) const { return m_server_endpoint; }
 
 	inline	u32									last_send_time_in_ms		( ) const { return 0; }
-	inline	u32									last_receive_time_in_ms		( ) const { return 0; }
+	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
+	// (single load of impl+0x258134 = m_connection+0xfc)
+	inline	u32									last_receive_time_in_ms		( ) const { return m_connection.last_receive_time_in_ms( ); }
 	inline	u32									last_activity_time_in_ms	( ) const { return 0; }
 
-	inline	bool								is_connected				( ) const { return false; }
-	inline	bool								is_disconnected				( ) const { return false; }
+	// STATE[INLINED]: bodies from match_client::is_connected/is_disconnected
+	// 0x74c670/0x74c620 (cmp impl+0x258154 = m_connection.m_state vs 0/3)
+	inline	bool								is_connected				( ) const { return m_connection.is_connected( ); }
+	inline	bool								is_disconnected				( ) const { return m_connection.is_disconnected( ); }
 
-	inline	void								set_on_packet_received		( boost::function< void( u8, packet_reader& ) > const& value ) { /* no source */ }
+	// STATE[INLINED]: body from match_client_impl 0x765d90 +0x73 / 0x765d30 +0x33
+	// (folded function2::operator= into this+0x538 = m_on_packet_received)
+	inline	void								set_on_packet_received		( boost::function< void( u8, packet_reader& ) > const& value ) { m_on_packet_received = value; }
 
 private:
 			void								start_receiving				( );

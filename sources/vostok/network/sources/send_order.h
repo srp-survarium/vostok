@@ -8,23 +8,20 @@
 #define SEND_ORDER_H_INCLUDED
 
 #include "order.h"
-#include <vostok/network/packet.h>
+#include <vostok/network_core/tcp_packet.h>
 
 namespace vostok {
 namespace network {
 
-class packet;
-
-class send_order :
-	public order,
-	private boost::noncopyable
-{
+class send_order : public order {
 public:
-	typedef boost::function< void ( packet const& ) >	send_type;
+	typedef boost::function< void ( network_core::tcp_packet const& ) >	send_type;
 
+	// STATE[INLINED]: no standalone target symbol (pdb_rich_query lists only
+	// dtor/execute/??_G); the only construction site is tcp_packet_client::send
 	inline				send_order	(
 			send_type const& sender,
-			packet const& packet,
+			network_core::tcp_packet const& packet,
 			memory::base_allocator& allocator
 		) :
 		m_sender			( sender ),
@@ -33,12 +30,14 @@ public:
 	{
 	}
 
+	// STATE[100%|DONE]
 	virtual				~send_order	( )
 	{
-		packet const* temp	= &m_packet;
+		network_core::tcp_packet const* temp	= &m_packet;
 		VOSTOK_DELETE_IMPL	( m_allocator, temp );
 	}
 
+	// STATE[100%|DONE]
 	virtual	void		execute		( )
 	{
 		m_sender			( m_packet );
@@ -46,9 +45,11 @@ public:
 
 private:
 	send_type				m_sender;
-	packet const&			m_packet;
+	network_core::tcp_packet const&		m_packet;
 	memory::base_allocator&	m_allocator;
-}; // send_order
+}; // class send_order
+
+STATIC_SIZE_ASSERT(send_order, 0x30);
 
 } // namespace network
 } // namespace vostok

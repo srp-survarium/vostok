@@ -132,7 +132,9 @@ public:
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }
 
 	inline	u32							last_send_time_in_ms			( ) const { return 0; /* no source */ }
-	inline	u32							last_receive_time_in_ms			( ) const { return 0; /* no source */ }
+	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
+	// (single volatile load of m_last_receive_time_in_ms @+0xfc)
+	inline	u32							last_receive_time_in_ms			( ) const { return m_last_receive_time_in_ms; }
 	inline	u32							last_activity_time_in_ms		( ) const { return 0; /* no source */ }
 
 	inline	u32							pending_operations_count		( ) const { return 0; /* no source */ }

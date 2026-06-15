@@ -15,20 +15,22 @@
 namespace vostok {
 namespace network {
 
-typedef intrusive_spsc_queue< order, order, &order::next_for_orders >				orders_queue_type;
-typedef intrusive_spsc_queue< response, response, &response::next_for_responses >	responses_queue_type;
+struct two_way_threads_channel : public boost::noncopyable {
+	// member typedefs: the next_for_* member pointers are formed here, in the
+	// friend's context (the members are private in order/response)
+	typedef intrusive_spsc_queue< order, order, &order::next_for_orders >				orders_queue_type;
+	typedef intrusive_spsc_queue< response, response, &response::next_for_responses >	responses_queue_type;
 
-typedef one_way_threads_channel<
-	responses_queue_type,
-	responses_queue_type
->	responses_channel_type;
+	typedef one_way_threads_channel<
+		responses_queue_type,
+		responses_queue_type
+	>	responses_channel_type;
 
-typedef one_way_threads_channel<
-	orders_queue_type,
-	orders_queue_type
->	orders_channel_type;
+	typedef one_way_threads_channel<
+		orders_queue_type,
+		orders_queue_type
+	>	orders_channel_type;
 
-struct two_way_threads_channel : private boost::noncopyable {
 	inline two_way_threads_channel	(
 			memory::doug_lea_allocator& responses_allocator,
 			memory::base_allocator& orders_allocator
@@ -38,9 +40,13 @@ struct two_way_threads_channel : private boost::noncopyable {
 	{
 	}
 
+	inline ~two_way_threads_channel	( ) { }
+
 	responses_channel_type	responses;
 	orders_channel_type		orders;
 }; // struct two_way_threads_channel
+
+STATIC_SIZE_ASSERT(two_way_threads_channel, 0x118);
 
 } // namespace network
 } // namespace vostok

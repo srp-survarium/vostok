@@ -17,12 +17,15 @@ public:
 	typedef boost::function< void ( ) >	functor_type;
 
 public:
-	inline			functor_order	( functor_type const& functor ) : m_functor( functor ) { }
-	virtual	void	execute			( ) { m_functor( ); }
+	inline	explicit	functor_order	( functor_type const& functor ) : m_functor( functor ) { }
+	virtual	void		execute			( ) { m_functor( ); }
+	virtual				~functor_order	( ) { }
 
 private:
-	functor_type	m_functor;
+	functor_type		m_functor;
 }; // class functor_order
+
+STATIC_SIZE_ASSERT(functor_order, 0x28);
 
 } // namespace network
 } // namespace vostok

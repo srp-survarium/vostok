@@ -10,14 +10,21 @@
 namespace vostok {
 namespace network {
 
-class order {
+class order : public boost::noncopyable {
 public:
 	virtual			~order	( ) { }
 	virtual	void	execute	( ) = 0;
 
-public:
+	inline			order	( ) { }
+
+private:
+	// the channel's intrusive_spsc_queue typedefs take &order::next_for_orders
+	friend struct two_way_threads_channel;
+
 	order*			next_for_orders;
 }; // class order
+
+STATIC_SIZE_ASSERT(order, 0x8);
 
 } // namespace network
 } // namespace vostok
