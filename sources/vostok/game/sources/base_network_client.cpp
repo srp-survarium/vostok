@@ -11,6 +11,14 @@
 
 namespace survarium {
 
+// claude@NOTE: ctor/dtor and attach_to_player/detach_from_player are PARKED on missing
+// game-module carcass: the ctor NEWs a player_input_handler (0x1A4 bytes, push 1A4h) whose
+// type is not in the carcass sources (only canonical headers/player_input_handler.h), and it
+// passes m_game.get_game_world() (an inline game_world member at game+0x98) which the
+// simplified carcass game.h declares as a pointer, not the canonical inline member. attach/
+// detach reach m_game.get_game_world().game_ui() (a game_world_ui at game+0x26C, also absent
+// from the carcass). Recoverable once player_input_handler + the canonical game/game_world/
+// game_world_ui layout are pulled into the game-module carcass.
 // STATE[STUB]
  base_network_client::base_network_client( game& game ) :
 	// ref member; the same-named param is the obvious source - a matcher
@@ -48,66 +56,37 @@ namespace survarium {
 	// ******
 }
 
-// STATE[STUB]
 bool base_network_client::is_player_current( const u8 id ) const
 {
-	return false;
-
-	// FUNCTION BODY[0x740960]: 1
-	// <0x740960>|0x000|+0x000:'40'	{
-	// <0x740960>|0x000|+0x021:'41'
-	// <0x740981>|0x021|-0x003:'41'
-	// <0x74097e>|0x01e|+0x005:'42'
-	// <0x740983>|0x023|      :'42'	}
-	// ******
+	return m_current_player && m_current_player->id == id;
 }
 
-// STATE[STUB]
 game_team_id base_network_client::current_player_team( ) const
 {
-	// CALL SITE INFO
-	// <0x74094c> -> game_team_id < unknown >() const
-	// ******
+	if ( m_current_player.c_ptr( ) )
+		return m_current_player.c_ptr( )->team( );
 
-	return team_invalid;
-
-	// FUNCTION BODY[0x740940]: 1
-	// <0x740940>|0x000|+0x013:'46'
-	// ******
+	return team_neutral;
 }
 
-// STATE[STUB]
 player_ptr base_network_client::get_current_player( )
 {
 	return m_current_player;
-
-	// FUNCTION BODY[0x740d40]: 1
-	// <0x740d41>|0x001|+0x02d:'51'
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches the target (ternary, shared float3 copy/merge). Residual
+// is player.h's inline position() body: the carcass returns m_last_frame_position (0x10ec4)
+// but the target reads the member at player+0x87A0 and devirtualises+inlines it; the carcass
+// stub instead emits a virtual call. Reaches 100% once player.h's position() is the real body.
 float3 base_network_client::get_current_player_position( ) const
 {
-	return vostok::math::float3( 1., 1., 1. );
-
-	// FUNCTION BODY[0x7408f0]: 1
-	// <0x7408f0>|0x000|+0x03b:'56'
-	// ******
+	return m_current_player ? m_current_player->position( ) : float3( 0.f, 0.f, 0.f );
 }
 
-// STATE[STUB]
 void base_network_client::fill_current_player_stats( boost::function< void( u32, float, float, pcstr ) > callback )
 {
-	// CALL SITE INFO
-	// <0x7409b7> -> damage_model_ptr const& < unknown >() const
-	// <0x7409df> -> < unknown >
-	// ******
-
-	// FUNCTION BODY[0x740990]: 2
-	// <0x740992>|0x002|+0x010:'61'
-	// <0x7409a2>|0x012|+0x01e:'62'
-	// ******
+	if ( m_current_player )
+		m_current_player->damage_model( )->dump_stats( callback );
 }
 
 // TU static console command (compiler-generated atexit destructor); a matcher
@@ -161,48 +140,33 @@ void base_network_client::detach_from_player( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: statement structure matches the target. Residual: the compiler hoists the two
+// apply_use_physics_controller_for_current() arms to the function tail (rarely-taken branch
+// layout) and the LOG_WARNING boost::function temporaries are destructed in a different order
+// than the carcass's single-caller build produces - both are layout/LTCG artifacts, not source.
 void base_network_client::use_physics_controller_for_current( pcstr const arguments )
 {
-	// CALL SITE INFO
-	// <0x740be7> -> void < unknown >()
-	// <0x740c01> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x7409f0]: 28
-	// <0x7409f0>|0x000|+0x00c:'104'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7409fc>|0x00c|+0x1f6:'109'
-	// <0x740bf2>|0x202|+0x005:'110'
-	// <0>
-	// <1>
-	// <2>
-	// <0x740bf7>|0x207|-0x1ae:'114'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x740a49>|0x059|+0x18e:'122'
-	// <0x740bd7>|0x1e7|+0x00c:'123'
-	// <0>
-	// <1>
-	// <0x740be3>|0x1f3|-0x158:'126'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x740a8b>|0x09b|+0x0a5:'131'
-	// <0x740b30>|0x140|+0x09e:'132'
-	// <0x740bce>|0x1de|+0x01b:'133'
-	// <0x740be9>|0x1f9|+0x01a:'133'
-	// <0x740c03>|0x213|      :'133'	}
-	// ******
+	if ( !_stricmp( arguments, "0" ) || !_stricmp( arguments, "off" ) || !_stricmp( arguments, "false" ) )
+	{
+		if ( m_use_physics_controller_for_current )
+		{
+			m_use_physics_controller_for_current = false;
+			apply_use_physics_controller_for_current( );
+		}
+	}
+	else if ( !_stricmp( arguments, "1" ) || !_stricmp( arguments, "on" ) || !_stricmp( arguments, "true" ) )
+	{
+		if ( !m_use_physics_controller_for_current )
+		{
+			m_use_physics_controller_for_current = true;
+			apply_use_physics_controller_for_current( );
+		}
+	}
+	else
+	{
+		LOG_WARNING( "invalid argument has been passed" );
+		LOG_WARNING( "expected: 1/0, on/off, true/false" );
+	}
 }
 
 } // namespace survarium

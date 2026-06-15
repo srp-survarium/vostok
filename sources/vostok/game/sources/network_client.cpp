@@ -84,15 +84,16 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 	// ******
 }
 
+// claude@NOTE: body recovered (loop over m_net_players, cast each player_desc::player
+// to player_ptr, player->set_use_physics_controller_for_current(m_use_physics_controller_for_current)).
+// PARKED: player::set_use_physics_controller_for_current(bool) is declared in player.h
+// but its definition is not linked (player .cpp stub) -> LNK2001. Restore the body once
+// that player method is implemented.
 // STATE[STUB]
 void network_client::apply_use_physics_controller_for_current( )
 {
 	// FUNCTION BODY[0x7048f0]: 4
-	// <0x7048fc>|0x00c|+0x00b:'92'
-	// <0x704907>|0x017|+0x00f:'93'
-	// <0x704916>|0x026|+0x04e:'94'
-	// <0>
-	// ******
+	// loop m_net_players -> player->set_use_physics_controller_for_current( m_use_physics_controller_for_current )
 }
 
 // STATE[STUB]
@@ -491,12 +492,13 @@ void network_client::on_http_result_ready( pcstr content, u8 type )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: body recovered (single LOG_ERROR). Unpaired only because /OPT:REF strips it:
+// on_http_error is bound as an http callback inside the http-client setup path (e.g.
+// connect_to_login / http_query_server_connection_info), and those bind sites are still stubs,
+// so nothing references it. Pairs once a binder that captures &on_http_error emits.
 void network_client::on_http_error( boost::system::error_code __formal )
 {
-	// FUNCTION BODY[0x702f50]: 1
-	// <0x702f59>|0x009|+0x0c3:'402'
-	// ******
+	LOG_ERROR( "http client error!" );
 }
 
 // STATE[STUB]
