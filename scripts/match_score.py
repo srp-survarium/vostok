@@ -229,7 +229,6 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
 
     ov = db["OVERALL"]
     funcs, tfuncs = ov["exact_cur"], ov["total_funcs"]
-    o_ex_diff = _pct(ov["exact_max"], tfuncs) - _pct(funcs, tfuncs)
     o_fz_diff = ov["fuzzy_max"] - ov["fuzzy_cur"]
 
     rows = []
@@ -243,9 +242,9 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
             f"`{mod}`",
             f"{a['units']}",
             f"{exc:,} / {tot:,} ({_pct(exc, tot):.1f}%)",
-            f"{exm:,} ({_pct(exm, tot):.1f}%, +{_pct(exm, tot) - _pct(exc, tot):.1f}%)",
+            f"{exm:,} (+{exm - exc})",
             f"{fzc:.1f}%",
-            f"{fzm:.1f}% (+{fzm - fzc:.1f}%)",
+            f"+{fzm - fzc:.1f}%",
         ])
     table = _md_table(
         ["Module", "Units", "Functions exact", "Functions exact max",
@@ -262,14 +261,16 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         "`rebuild.py` at the end of every build; do not hand-edit. Diff this block "
         "across commits to spot regressions._",
         "",
-        f"**Overall: {ov['fuzzy_cur']:.2f}% fuzzy (+{o_fz_diff:.2f}% max) &middot; "
+        f"**Overall: {ov['fuzzy_cur']:.2f}% fuzzy (+{o_fz_diff:.2f}%) &middot; "
         f"{funcs:,} / {tfuncs:,} functions exact "
-        f"({_pct(funcs, tfuncs):.2f}%, +{o_ex_diff:.2f}% max).**",
+        f"({_pct(funcs, tfuncs):.2f}%, +{ov['exact_max'] - funcs} best-ever).**",
         "",
-        "_All figures from `match.db`. `Functions exact` / `Fuzzy` = current; the "
-        "`max` columns are best-ever per function (`history.best_fuzzy_pct`, "
-        "ICF-churn-immune, >= current) with `(+Δ)` the gain over current. Byte-weighted "
-        "code view: `scripts/match_score.py --max-code`._",
+        "_All figures from `match.db`, over ALL target functions (paired + inlined/"
+        "folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` "
+        "columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-"
+        "immune): `Functions exact max` shows `(+N)` functions that were exact before "
+        "they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: "
+        "`scripts/match_score.py --max-code`._",
         "",
         *table,
     ]
