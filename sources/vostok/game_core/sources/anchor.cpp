@@ -11,6 +11,7 @@ IncludeAll::IncludeAll()
 	// per engine module (anchor_game_core.cpp, anchor_network_core.cpp, ...).
 	vostok::anchor_game_core( );
 	vostok::anchor_network_core( );
+	vostok::anchor_network( );
 	vostok::anchor_physics( );
 	vostok::anchor_collision( );
 	vostok::anchor_logging( );
