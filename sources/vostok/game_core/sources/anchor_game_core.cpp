@@ -199,18 +199,10 @@ namespace vostok
 	// taken, or volatile global pointer were all tried). Body is correct; the
 	// gap is purely linker ICF visibility, not a source mismatch.
 
-	void use_game_core_breath_vibration_calculator( )
-	{
-		survarium::breath_vibration_calculator	calc;
-		survarium::breath_holding_params		params;
-
-		calc.set_breath_holding_params( &params );
-		calc.tick( 0, 0.0f );
-
-		// Escape &calc so LTCG observes the ctor's member stores
-		// (otherwise the constant-only stores are dead-store-eliminated).
-		example_callback( reinterpret_cast< pcstr >( &calc ) );
-	}
+	// claude@MATCH: use_game_core_breath_vibration_calculator removed - redundant.
+	// set_breath_holding_params/set_user/tick now have real callers in the matched
+	// weapon_core (weapon_core.cpp:790-791,877), and the calculator is a weapon_core
+	// member so its ctor is reached there too.
 
 	void use_game_core_breath_holding_states( )
 	{
@@ -250,12 +242,8 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &data ) );
 	}
 
-	void use_game_core_normal_random( )
-	{
-		survarium::normal_random rnd;
-		float n = rnd.rand_n( 1.0f );
-		example_callback( reinterpret_cast< pcstr >( &n ) );
-	}
+	// claude@MATCH: use_game_core_normal_random removed - rand_n now has a real
+	// caller (weapon_core.cpp:540); normal_random is a weapon_core member.
 
 	void use_game_core_initialize( )
 	{
@@ -380,20 +368,10 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &set_animations_fn ) );
 	}
 
-	void use_material_pair( )
-	{
-		// material_pair.h trivial accessors: address-taken to keep standalone
-		// COMDATs (target keeps LTCG custom-convention copies).
-		resources::unmanaged_resource_ptr const& ( survarium::material_pair::*decal1_fn )( ) const
-			= &survarium::material_pair::decal1;
-		float ( survarium::material_pair::*decal1_size_fn )( ) const
-			= &survarium::material_pair::decal1_size;
-		bool ( survarium::material_pair::*has_particle_fn )( ) const
-			= &survarium::material_pair::has_particle;
-		example_callback( reinterpret_cast< pcstr >( &decal1_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &decal1_size_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &has_particle_fn ) );
-	}
+	// claude@MATCH: use_material_pair removed - decal1/decal1_size/has_particle now
+	// have real callers in matched bullet.cpp (530-533). The address-take here kept a
+	// standard out-of-line COMDAT; with the real call site present, dropping it lets
+	// the sole-caller convention resolve as in the shipped binary (sole-caller lift).
 
 	void use_victory_items_container_core( survarium::victory_items_container_core* victory_items_container_core )
 	{
@@ -1621,13 +1599,14 @@ namespace vostok
 		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_finish_substate >( );
 	}
 
+	// claude@MATCH: use_bullet's fire() anchor removed - bullet_manager::fire (8-arg)
+	// now has a real caller (weapon_core.cpp:571). bullet_manager's ctor is reached by
+	// game_world.cpp's NEW(bullet_manager); but its DTOR is anchor-only (game_world
+	// never deletes it - sushi@TODO), so keep a stack instance to anchor ~bullet_manager.
 	void use_bullet( )
 	{
-		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
-		survarium::weapon_ammunition_ptr	wa( NULL );
-		survarium::weapon_core				wc;
-
-		bullet_manager.fire( float3(), float3(), wa, wc, 10, NULL, NULL, true );
+		survarium::bullet_manager bullet_manager( NULL, NULL, NULL );
+		example_callback( reinterpret_cast< pcstr >( &bullet_manager ) );
 	}
 
 	void use_game_core_weapon_core_initialize_weapon_logic( )
@@ -1714,20 +1693,6 @@ namespace vostok
 		wc.instant_fire( 0 );
 	}
 
-
-	void use_inventory( )
-	{
-	/*
-		survarium::medkit item;
-
-		survarium::inventory_item_props props;
-		item.get_item_props( props );
-
-		item.remove( );
-
-		item.reduce_damage( NULL, NULL, 0.0f, 0.0f );
-	*/
-	}
 
 	void use_damage_model_cook( )
 	{
@@ -2164,66 +2129,42 @@ namespace vostok
 	};
 
 
+	// claude@MATCH: use_game_core_collision_sensor trimmed - is_filter_passed /
+	// get_collision_geometry / get_overlapping_objects_count / load / resolve_links / tick
+	// now have real callers (collision_sensor is a base subobject of damage_zone_core /
+	// booby_trap_core). Only the two-arg contact_test( base_physics_object*, predicate& )
+	// has no real caller yet, so keep just that anchor.
 	void use_game_core_collision_sensor()
 	{
-		survarium::collision_sensor sensor;
-		configs::binary_config_value cfg;
-		sensor.load( cfg );
-		sensor.resolve_links( NULL, cfg );
-		sensor.tick( 0, 0 );
-		sensor.is_filter_passed( NULL );
-
+		survarium::collision_sensor& sensor = *reinterpret_cast< survarium::collision_sensor* >( NULL );
 		ghost_predicate gp;
 		sensor.contact_test( NULL, gp );
-		sensor.contact_test( NULL );
-		sensor.insert( NULL );
-		sensor.remove( );
-		sensor.get_collision_geometry( 10 );
-		// claude@NOTE: the four protected on_* overrides are trivial empty bodies
-		// that /OPT:ICF-fold (on_inside/on_leave/on_objetcs_loosed -> `ret 4`
-		// @0x12c50, on_enter -> @0xd2070); no anchor can make a folded body scorable,
-		// so they are proven byte-correct and marked None|DONE, not anchored here.
 	}
 
 
+	// claude@MATCH: use_game_core_collision_geometry trimmed - ctor + load are reached by
+	// booby_trap_core.cpp:45, and get_overlapping_objects_count / get_overlapping_objects /
+	// destroy_ghost_object / subscribe / set_transform / get_transform now have real callers
+	// in matched collision_sensor.cpp / collision_geometry.cpp. Only the two-arg contact_test
+	// and get_shapes_centers (which cascade into physics bt_ghost_object) lack a real caller.
 	void use_game_core_collision_geometry()
 	{
-		survarium::collision_geometry gm;
-		gm.destroy_ghost_object( );
-
-		configs::binary_config_value cfg;
-		gm.load( cfg );
-
-		gm.get_overlapping_objects_count( );
-
-		physics::base_physics_objects_type physics_objects( NULL, 10 );
-		gm.get_overlapping_objects( physics_objects );
-
+		survarium::collision_geometry& gm = *reinterpret_cast< survarium::collision_geometry* >( NULL );
 		ghost_predicate predicate;
 		gm.contact_test( NULL, predicate );
-		gm.contact_test( );
 
 		vostok::vectora<float3> centers_results( NULL );
 		gm.get_shapes_centers( centers_results );
-
-		gm.subscribe( NULL, NULL );
-		gm.unsubscribe( NULL );
-
-		gm.set_transform( float4x4() );
-		gm.get_transform( );
-		// claude@NOTE: cast_to_collision_geometry is `return this;` which /OPT:ICF
-		// folds to the empty-frame fold @0x17600; unscorable None but byte-correct,
-		// marked None|DONE (a folded body cannot be made scorable by anchoring).
 	}
 
+	// claude@MATCH: use_game_core_scheduler trimmed - register_on_frame / register_for_update
+	// have real callers in matched damage_zone_core.cpp / booby_trap_core.cpp /
+	// generic_anomaly_core.cpp / medkit.cpp / oxygen_tank.cpp. Only on_frame (the public
+	// dispatcher + its private record overload) has no real caller yet, so keep just it.
 	void use_game_core_scheduler()
 	{
-		survarium::scheduler sc( NULL );
-		survarium::scheduler::callback callback;
-		sc.register_on_frame( NULL, callback, true );
-		sc.register_for_update( NULL, callback, true, 10, 10, 10 );
+		survarium::scheduler& sc = *reinterpret_cast< survarium::scheduler* >( NULL );
 		sc.on_frame( 10, 10 );
-		sc.unregister( NULL );
 	}
 
 	// claude@NOTE: interactive_object::assign_game_ui (`ret 4` empty @0x12c50) and
@@ -2463,13 +2404,11 @@ namespace vostok
 	void anchor_game_core( )
 	{
 		use_game_core_initialize( );
-		use_game_core_breath_vibration_calculator( );
 		use_game_core_legs_ik_processor( );
 		use_game_core_ik_processor( NULL, NULL, NULL );
 		use_game_core_hand_to_weapon_ik_processor( );
 		use_medkit( );
 		use_inventory_2( );
-		use_material_pair( );
 		use_victory_items_container_core( NULL );
 		use_booby_trap_cook( );
 		use_booby_trap_set_internals( NULL );
@@ -2493,7 +2432,6 @@ namespace vostok
 		use_dispersion_calculator( );
 		use_game_core_breath_holding_states( );
 		use_game_core_usable_object_user_data( );
-		use_game_core_normal_random( );
 		use_character_dispersion_calculator( );
 		use_game_material_manager( );
 		use_weapon_dispersion_calculator( );
@@ -2543,7 +2481,6 @@ namespace vostok
 		use_game_core_weapon_core_initialize_weapon_logic( );
 		use_game_core_weapon_core_small_setters( );
 		use_bullet( );
-		use_inventory( );
 		use_damage_model_cook( );
 		use_ladder( NULL );
 		use_game_core_affects_threshold();

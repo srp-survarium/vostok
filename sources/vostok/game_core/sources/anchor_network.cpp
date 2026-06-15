@@ -142,10 +142,9 @@ namespace vostok
 			boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, lobby_server_message_types_enum ) > match_callback;
 
 			network::match_client client( *world, packets_orderer, NULL );
-			client.connect( "host", 80, 10, NULL, match_callback );
-			client.disconnect( );
-			client.enqueue( NULL );
-			client.send_queued_packets( 10 );
+			// connect/disconnect/enqueue/send_queued_packets now have real callers in
+			// the matched game-side match_client (game/sources/match_client.cpp wraps
+			// this via m_client), so they no longer need anchoring here.
 			network_core::udp_match_packet* packet = client.new_packet( 0 );
 			client.delete_packet( packet );
 			client.set_on_packet_received( boost::function< void ( u8, network_core::packet_reader& ) >() );

@@ -18,22 +18,11 @@ namespace animation {
 }
 }
 
-namespace vostok {
-	void use_game_core_legs_ik_processor_get_foot_fixed_transform( );
-	void use_game_core_legs_ik_processor_process_leg( );
-}
-
 namespace survarium {
 
 class legs_ik_drawer;
 
 class legs_ik_processor : public ik_processor {
-	// claude@NOTE: friend so temp_include_all can anchor the private
-	// get_foot_fixed_transform (its real callers process/process_leg are still STUB).
-	// A friend decl emits no bytes.
-	friend void vostok::use_game_core_legs_ik_processor_get_foot_fixed_transform( );
-	friend void vostok::use_game_core_legs_ik_processor_process_leg( );
-
 public:
 			explicit	legs_ik_processor		( );
 						~legs_ik_processor		( );
