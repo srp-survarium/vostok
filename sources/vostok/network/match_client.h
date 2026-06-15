@@ -55,19 +55,17 @@ public:
 
 			network_core::udp_match_packet*	new_packet				( u8 message_type );
 
-	// STATE[STUB]
+	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	void				delete_packet						( network_core::udp_match_packet*& packet )
 	{
 		VOSTOK_UNREFERENCED_PARAMETER	( packet );
 	}
 
-	// STATE[STUB]
 	inline	void				set_on_packet_received				( boost::function< void ( u8, network_core::packet_reader& ) > const& on_packet_received )
 	{
 		m_on_packet_received	= on_packet_received;
 	}
 
-	// STATE[STUB]
 	inline	void				set_on_disconnect					(
 									boost::function< void ( enum network_core::disconnect_event_types_enum ) > const&	on_disconnect
 								)
@@ -75,7 +73,6 @@ public:
 		m_on_disconnected		= on_disconnect;
 	}
 
-	// STATE[STUB]: trivial getter (buildability return)
 	inline	network_core::udp_match_stats const&	get_stats		( ) const { return m_stats; }
 
 			bool				is_connected						( ) const;
@@ -83,13 +80,13 @@ public:
 
 			u32					last_receive_time_in_ms				( ) const;
 
-	// STATE[STUB]
+	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	network_core::udp_match_packet*	new_response_packet		( )
 	{
 		return NULL;
 	}
 
-	// STATE[STUB]
+	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	void				delete_response_packet				( network_core::udp_match_packet*& packet )
 	{
 		VOSTOK_UNREFERENCED_PARAMETER	( packet );

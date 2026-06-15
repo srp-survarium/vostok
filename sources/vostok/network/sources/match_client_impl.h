@@ -53,14 +53,13 @@ public:
 
 			void				disconnect				( );
 
-	// STATE[INLINED]: body from the enqueue_impl expansion (target 0x74ca40: the
-	// inline param slot pair + `add ecx, 258038h; call udp_match_client::enqueue`)
+	// no standalone symbol; body recovered from the enqueue_impl expansion
+	// (inline param slot pair + `add ecx, 258038h; call udp_match_client::enqueue`)
 	inline	void				enqueue					( network_core::udp_match_packet* packet )
 	{
 		m_client.enqueue	( packet );
 	}
 
-	// STATE[100%|DONE]
 	// claude@MATCH: positive guard, no early return - the target's single `jne`
 	// over the call (an `if ( x ) return;` shape emits je + jmp instead)
 	inline	void				send_queued_packets		( const u32 current_time_in_ms )
@@ -69,13 +68,13 @@ public:
 			m_client.send_queued_packets	( current_time_in_ms );
 	}
 
-	// STATE[INLINED]: forwarders verified against the match_client::is_connected/
-	// is_disconnected expansions (0x74c670/0x74c620: cmp impl+0x258154 vs 0/3)
+	// forwarders recovered from the match_client::is_connected/is_disconnected
+	// expansions (cmp impl+0x258154 vs 0/3)
 	inline	bool				is_connected			( ) const { return m_client.is_connected( ); }
 	inline	bool				is_disconnected			( ) const { return m_client.is_disconnected( ); }
 
-	// STATE[INLINED]: verified against match_client::create_client 0x74d140 +0x1a0
-	// (folded function1::operator= into impl+0x258010)
+	// recovered from match_client::create_client (folded function1::operator= into
+	// impl+0x258010)
 	inline	void				set_on_disconnect		(
 									boost::function< void ( enum network_core::disconnect_event_types_enum ) > const&	on_disconnect
 								)
@@ -89,8 +88,8 @@ public:
 
 			network_core::udp_match_packet*	clone_packet	( network_core::udp_match_packet const& packet );
 
-	// STATE[INLINED]: forwarders verified against match_client::enqueue/
-	// on_packet_received (impl+0x258038 = &m_client = its m_stats reference) and
+	// forwarders recovered from match_client::enqueue/on_packet_received
+	// (impl+0x258038 = &m_client = its m_stats reference) and
 	// match_client::last_receive_time_in_ms (load of impl+0x258134)
 	inline	network_core::udp_match_stats const&	get_stats				( ) const { return m_client.get_stats( ); }
 	inline	u32					last_receive_time_in_ms	( ) const { return m_client.last_receive_time_in_ms( ); }
@@ -101,8 +100,8 @@ private:
 			void				on_disconnect			( const network_core::disconnect_event_types_enum disconnect_type );
 
 public:
-	// STATE[INLINED]: body from the match_client::new_packet expansion (target
-	// 0x74c8b0: orderer materialized to the inline param slot, then a direct
+	// no standalone symbol; body recovered from the match_client::new_packet
+	// expansion (orderer materialized to the inline param slot, then a direct
 	// `call udp_match_connection::construct_packet`)
 	static inline	void		construct_packet		(
 									network_core::udp_match_packets_orderer&	packets_orderer,

@@ -11,10 +11,10 @@
 namespace vostok {
 namespace network {
 
-// STATE[76.81%|PARTIAL]: init list byte-aligned, structure 2/2; residual = the two
-// body statements' udp_match_client set_on_* expansions (base lowers the bind ->
-// function temp + operator= with extra slots where the target's folds are tighter)
-// - the boost::function-assign inline-vs-call wall
+// claude@NOTE: init list byte-aligned, structure matches 2/2; residual is the two
+// body statements' udp_match_client set_on_* expansions (base lowers bind ->
+// function temp + operator= with extra slots, target's folds are tighter) - the
+// boost-function-assign inline-vs-call wall, not source-steerable.
  match_client_impl::match_client_impl(
 	boost::asio::io_service&	io_service,
 	network_core::udp_match_packets_orderer&	packets_orderer,
@@ -27,29 +27,23 @@ namespace network {
 {
 	m_client.set_on_packet_received	( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	m_client.set_on_disconnect		( boost::bind( &match_client_impl::on_disconnect, this, _1 ) );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - both rows are the udp_match_client set_on_* bind/function-assign lowering; non-steerable LTCG.
 }
 
-// STATE[85.43%|PARTIAL]: structure 1/1 (the g_allocator strip_pointer call is kept
-// by BOTH sides - the pointer-allocator spelling); residual = the compiler-emitted
-// member clears' folded-COMDAT this-convention (esi in target vs ecx in base, the
-// receive_response-dtor class)
+// claude@NOTE: structure matches 1/1 (the g_allocator strip_pointer call is kept
+// by BOTH sides); residual is the compiler-emitted member clears' folded-COMDAT
+// this-convention (esi in target vs ecx in base) - an LTCG artifact, not steerable.
 match_client_impl::~match_client_impl( )
 {
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
-
-	// STRUCTURE DIFF: target 1 stmts / base 1 stmts (aligner: STRUCTURE MATCH)
-	// VERDICT: STRUCTURE MATCH - residual is the folded member-clear COMDATs' this-convention (esi vs ecx); LTCG artifact.
 }
 
-// STATE[27.18%|PARTIAL]: structure 11/11; residuals all per-call-site
+// claude@NOTE: structure matches 11/11; residuals are all per-call-site
 // inline-vs-call: base inlines packet_reader::eof inside the ASSERT_U eater,
-// inlines function2::operator= (set_on_packet_received) and function4::operator()
-// (both m_on_connected calls, +0x4f each) where the target calls the COMDATs, and
-// picks the and-form safe-bool at L52 where the target uses the operator!+test form
-// (per-site, its L57 twin IS the and-form)
+// function2::operator= (set_on_packet_received) and function4::operator() (both
+// m_on_connected calls) where the target calls the COMDATs, and picks the and-form
+// safe-bool at the first `if(m_on_connected)` where the target uses operator!+test
+// (a per-site compiler choice - the second site IS the and-form on both). Not
+// source-steerable.
 // claude@NOTE: previous_state has no PDB local record (LTCG dropped the unused
 // symbol once the asserts that read it compiled out), but its line-45 init store
 // survives in the target ([ebp-2B4h] temp-region slot there vs our named slot)
@@ -79,21 +73,12 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 			no_socket_error,
 			invalid_session_id
 		);
-
-	// STRUCTURE DIFF: target 11 stmts / base 11 stmts
-	// SIZE -0x3  | 55 | state const previous_state	= m_state;
-	// SIZE +0x24 | 58 | ASSERT_U			( reader.eof( ) );
-	// SIZE +0x1b | 60 | m_client.set_on_packet_received( m_on_packet_received );
-	// SIZE +0xa  | 62 | if ( m_on_connected )
-	// SIZE +0x4f | 63 | m_on_connected	( successfully_connected, ... );
-	// SIZE -0x2  | 68 | LOG_ERROR				( "connection forbidden" );
-	// SIZE +0x4f | 75 | );
-	// VERDICT: STRUCTURE MATCH - all rows are per-call-site inline-vs-call (function4::operator() x2 verified in asm: target calls COMDAT, base inlines safe-bool/throw/get_vtable); non-steerable LTCG.
 }
 
-// STATE[59.58%|PARTIAL]: structure 2/2, the clone/connect statement byte-aligned;
-// residual = `m_on_connected = on_connected` inlined as copy-swap-clear (target
-// calls the folded operator=, edi-promoted) - the boost::function-assign wall
+// claude@NOTE: structure matches 2/2, the clone/connect statement byte-aligned;
+// residual is `m_on_connected = on_connected` (base inlines copy-swap-clear,
+// target calls the folded edi-promoted operator=) - the boost-function-assign
+// inline-vs-call wall, not source-steerable.
 void match_client_impl::connect(
 	pcstr const	host,
 	const u16	port,
@@ -104,15 +89,11 @@ void match_client_impl::connect(
 {
 	m_on_connected			= on_connected;
 	m_client.connect		( host, port, packet ? clone_packet( *packet ) : 0, current_time_in_ms );
-
-	// STRUCTURE DIFF: target 2 stmts / base 2 stmts
-	// SIZE +0x22 | 89 | m_on_connected			= on_connected;
-	// VERDICT: STRUCTURE MATCH - sole SIZE is function4::operator= inline-vs-call (copy-swap-clear inlined in base); non-steerable LTCG.
 }
 
-// STATE[31.05%|PARTIAL]: structure 3/3; residual = both function2 assigns inlined
-// as copy-swap-clear in base where the target calls the folded operator= (edi
-// dest) - the boost::function-assign inline-vs-call wall
+// claude@NOTE: structure matches 3/3; residual is both function2 assigns (base
+// inlines copy-swap-clear, target calls the folded edi-dest operator=) - the
+// boost-function-assign inline-vs-call wall, not source-steerable.
 void match_client_impl::set_on_packet_received(
 	boost::function< void ( u8, network_core::packet_reader& ) > const&	on_packet_received
 )
@@ -120,17 +101,12 @@ void match_client_impl::set_on_packet_received(
 	m_on_packet_received	= on_packet_received;
 	if ( m_state == handshaked )
 		m_client.set_on_packet_received( m_on_packet_received );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts
-	// SIZE +0x22 | 100 | m_on_packet_received	= on_packet_received;
-	// SIZE +0x1  | 102 | m_client.set_on_packet_received( m_on_packet_received );
-	// VERDICT: STRUCTURE MATCH - sole real SIZE is function2::operator= inline-vs-call (copy-swap-clear inlined in base); non-steerable LTCG.
 }
 
-// STATE[68.83%|PARTIAL]: structure 9/9 (field copies byte-aligned); residuals =
-// base inlines packet_reader::pointer() at the append site and m_buffer[0]'s
-// operator[] on the source side (target keeps one folded call) - per-call-site
-// inline-vs-call, plus append's LTCG arg convention at the call boundary
+// claude@NOTE: structure matches 9/9 (field copies byte-aligned); residuals are
+// base inlining packet_reader::pointer() at the append site and m_buffer[0]'s
+// boost::array operator[] on the source side (target keeps both as folded calls),
+// plus append's LTCG arg convention at the call boundary - inline-vs-call wall.
 network_core::udp_match_packet* match_client_impl::clone_packet( network_core::udp_match_packet const& packet )
 {
 	network_core::udp_match_packet* const result	= network_core::new_udp_match_packet( m_packets_allocator );
@@ -142,26 +118,21 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 	result->m_buffer[ 0 ]	= packet.m_buffer[ 0 ];
 	result->append			( reader.pointer( ), reader.size_to_eof( ) );
 	return					result;
-
-	// STRUCTURE DIFF: target 9 stmts / base 9 stmts (SIZE-only, field copies byte-aligned)
-	// VERDICT: STRUCTURE MATCH - pointer()/operator[] per-call-site inline-vs-call + append's LTCG arg convention; non-steerable.
 }
 
-// STATE[88.16%|PARTIAL]: structure 3/3, stmt sizes within +0x1; residual is
-// register/slot renames inside the set_on_packet_received bind expansion
+// claude@NOTE: structure matches 3/3, stmt sizes within +0x1; residual is
+// register/slot renames inside the set_on_packet_received bind expansion - an
+// LTCG artifact, not source-steerable.
 void match_client_impl::disconnect( )
 {
 	m_state					= waiting_for_permission;
 	m_client.set_on_packet_received( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	m_client.disconnect		( );
-
-	// STRUCTURE DIFF: target 3 stmts / base 3 stmts (sizes within +0x1)
-	// VERDICT: STRUCTURE MATCH - register/slot renames inside the bind expansion only; LTCG artifact.
 }
 
-// STATE[81.63%|PARTIAL]: structure 4/4; residual = +0x1b on the
-// set_on_packet_received expansion (function temp lowering slots) - the
-// boost::function inline-vs-call wall
+// claude@NOTE: structure matches 4/4; residual is the set_on_packet_received bind/
+// function-temp lowering slots - the boost-function inline-vs-call wall, not
+// source-steerable.
 void match_client_impl::on_disconnect(
 	const network_core::disconnect_event_types_enum	disconnect_type
 )
@@ -170,9 +141,6 @@ void match_client_impl::on_disconnect(
 	m_client.set_on_packet_received( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	if ( m_on_disconnect )
 		m_on_disconnect		( disconnect_type );
-
-	// STRUCTURE DIFF: target 4 stmts / base 4 stmts (SIZE-only)
-	// VERDICT: STRUCTURE MATCH - the set_on_packet_received bind/function-temp lowering (+0x1b); non-steerable LTCG.
 }
 
 } // namespace network
