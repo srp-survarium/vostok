@@ -46,3 +46,29 @@ inlined 3-arg `_strcat_s`, 93.11%; debug/on_error(va) - target `call vostok::vsn
 shared `inline` in stdlib_extensions.h) vs base inlined `__vsnprintf_s`, 79.44%. Both need a
 cross-unit linkage change to force the out-of-line emission (off-limits); PARK at the
 inline-vs-call %.
+
+EXTREME-low-% tell (do NOT mistake for a structural stub): a one-statement setter
+`m_fn = arg;` can score 7-9% fuzzy while being a perfect STRUCTURE MATCH (1 stmt, 0
+TRGT_ONLY/BASE_ONLY). The target makes ONE `call operator=`; our base inlines the
+full copy-swap-clear (function1 ctor + `assign_to_own` + `swap` + `clear` = 4 calls),
+so almost every byte differs. Run `--view structure-diff` FIRST - a single `SIZE +0xNN`
+on the assignment statement confirms it is this wall, not a wrong-shape stub. The
+discriminator is per-INSTANTIATION whole-program COMDAT emission: in the same TU,
+`function0<void>::operator=` (referenced ~70x program-wide -> kept out-of-line ->
+base CALLS it -> 100%) coexists with `function1<T&>::operator=` / `function2<...>::operator=`
+(only used here -> never emitted out-of-line in our partial build -> base INLINES ->
+7-8%). The target ICF-folds function1/function2 operator= into `function<char const*>
+::operator=` with a custom edi=this/ecx=arg convention. The 100% function0 sibling in
+the SAME file proves `m_x = arg;` is the correct spelling; not source-steerable.
+
+Companion split - `if ( m_fn )` safe-bool test lowers per-instantiation too: the target
+emits `call operator!` + the `neg/sbb/not/and` double-negate idiom (operator! folded to
+`intrusive_ptr::operator!`), while our base for the SAME `if (m_fn)` picks the `operator
+safe_bool` member-pointer conversion + `test eax,eax` when that instantiation's operator!
+isn't kept out-of-line. function1/function2 emit the operator! idiom on BOTH sides (100%);
+only function0 splits (75%). Same whole-program ICF driver, structure-faithful, PARK.
+Evidence: network/tcp_packet_client - set_on_packet_received 7.25% / set_on_error 8.54%
+(function1/function2 operator= inlined in base), on_connected_impl/on_disconnected_impl
+75.26% (function0 safe-bool split), set_on_connected/set_on_disconnected 100% (function0
+operator= out-of-line call). Sibling destroy_http_client/destroy_client 90.83% = the
+strip_pointer inline-vs-call in the same TU.
