@@ -6,6 +6,7 @@
 #include "match_client.h"
 
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
+#include <vostok/network_core/udp_match_packet.h>
 
 namespace survarium {
 
@@ -46,53 +47,25 @@ void `dynamic initializer for 's_max_ping''( )
 }
 */
 
-// STATE[STUB]
+// the flow-emulator console vars (s_flow_emulator/s_lost_packets/s_min_ping/
+// s_max_ping) and the options assembled from them are compiled out in
+// MASTER_GOLD; the function collapses to returning no options
 network_core::udp_network_flow_emulator_options const* network_flow_emulator_options( )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x5c73d0]: 15
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c73d0>|0x000|+0x002:'23'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// ******
 }
 
-// STATE[STUB]
  match_client::match_client( network::world& world ) :
-	// network::match_client has no default ctor; the same-named param, the
-	// orderer member and the TU's options getter are the obvious sources - a
-	// matcher confirms when this TU is enabled
-	m_client( world, m_packets_orderer, network_flow_emulator_options( ) )
+	m_client( world, m_packets_orderer, network_flow_emulator_options( ) ),
+	m_last_send_queed_packets_time_in_ms( 0 ),
+	m_are_there_any_packets_to_send( false )
 {
-	// FUNCTION BODY[0x5c7410]: 0
-	// <0x5c7410>|0x000|+0x034:'41'	{
-	// <0x5c7444>|0x034|      :'42'	}
-	// ******
 }
 
-// STATE[STUB]
  match_client::~match_client( )
 {
-	// FUNCTION BODY[0x5c73e0]: 0
-	// <0x5c73e0>|0x000|+0x000:'45'	{
-	// <0x5c73e0>|0x000|      :'46'	}
-	// ******
 }
 
-// STATE[STUB]
 void match_client::connect(
 	pcstr		host,
 	u16			port,
@@ -101,40 +74,27 @@ void match_client::connect(
 	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) > const&	callback
 )
 {
-	// FUNCTION BODY[0x5c7470]: 3
-	// <0x5c7477>|0x007|+0x009:'50'
-	// <0x5c7480>|0x010|+0x01a:'51'
-	// <0x5c749a>|0x02a|+0x01f:'52'
-	// ******
+	network_core::udp_match_packet* const	packet	= m_client.new_packet( ( u8 )0x40 );
+	packet->append			( &session_id, ( u32 )4 );
+	m_client.connect		( host, port, current_time_in_ms, packet, callback );
 }
 
-// STATE[STUB]
 void match_client::disconnect( )
 {
-	// FUNCTION BODY[0x5c73f0]: 1
-	// <0x5c73f0>|0x000|+0x000:'64'	{
-	// <0>
-	// <0x5c73f0>|0x000|      :'66'	}
-	// ******
+	m_client.disconnect		( );
 }
 
-// STATE[STUB]
 void match_client::enqueue( network_core::udp_match_packet* const packet )
 {
-	// FUNCTION BODY[0x5c7400]: 2
-	// <0x5c7400>|0x000|+0x008:'81'
-	// <0x5c7408>|0x008|+0x007:'82'
-	// ******
+	m_client.enqueue		( packet );
+	m_are_there_any_packets_to_send	= true;
 }
 
-// STATE[STUB]
 void match_client::send_queued_packets( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x5c7450]: 3
-	// <0>
-	// <1>
-	// <0x5c7450>|0x000|+0x013:'89'
-	// ******
+	m_last_send_queed_packets_time_in_ms	= current_time_in_ms;
+	m_are_there_any_packets_to_send			= false;
+	m_client.send_queued_packets			( current_time_in_ms );
 }
 
 } // namespace survarium
