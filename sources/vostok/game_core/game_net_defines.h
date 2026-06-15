@@ -5,6 +5,18 @@
 #ifndef GAME_NET_DEFINES_H_INCLUDED
 #define GAME_NET_DEFINES_H_INCLUDED
 
+// the inline serialize bodies / value members below need the complete types
+// (gained its first real includer with game's match_client.h)
+#include <vostok/network_core/tcp_packet.h>
+#include <vostok/game_core/player_profile.h>
+
+namespace vostok {
+namespace network_core {
+	class packet_reader;
+	class udp_match_packet;
+} // namespace network_core
+} // namespace vostok
+
 namespace survarium {
 
 /*
