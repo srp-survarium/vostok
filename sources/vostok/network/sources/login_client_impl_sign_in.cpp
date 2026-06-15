@@ -11,7 +11,9 @@ namespace network {
 // claude@NOTE: STRUCTURE MATCH (39/39). The answer dispatch is a SWITCH over *buffer (one
 // case + default), not if/else: the target spills the byte and emits cmp-mem + je-case/
 // jmp-default; the braced case carries the locals and `break;` merges the scope dtors + exit
-// jmp into the case statement. Residual = the function4::operator() inline-vs-call wall
+// jmp into the case statement. length1/length2 are plain `u8` (NOT const) to match the
+// target's recorded locals (locals are structure - target records u8, base had const u8).
+// Residual = the function4::operator() inline-vs-call wall
 // (+0x3d/0x49 per callback site) + LOG ctor scheduling; global boost-header knob.
 // See template-accessor-deinline-global-knob.md.
 void login_client_impl::on_sign_in_answer_received(
@@ -41,7 +43,7 @@ void login_client_impl::on_sign_in_answer_received(
 		case servers_connection_info_message_type : {
 			++buffer;
 
-			const u8 length1	= *buffer++;
+			u8 length1			= *buffer++;
 			m_server_browser_address[0]			= 0;
 			m_server_browser_initial_query[0]	= 0;
 
@@ -50,7 +52,7 @@ void login_client_impl::on_sign_in_answer_received(
 			buffer				+= length1;
 			m_server_browser_address[length1]	= 0;
 
-			const u8 length2	= *buffer++;
+			u8 length2			= *buffer++;
 			memcpy				( m_server_browser_initial_query, buffer, length2 );
 			buffer				+= length2;
 			m_server_browser_initial_query[length2]	= 0;
