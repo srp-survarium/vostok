@@ -22,6 +22,8 @@
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/game_net_defines.h>
 #include <vostok/resources_queries_result.h>
+#include <vostok/network_core/client_error_codes_enum.h>
+#include <boost/system/error_code.hpp>
 
 #include "network_client.h"
 #include "base_network_client.h"
@@ -44,6 +46,11 @@ void anchor_game_network_clients( game& g )
 	static volatile bool s_run = false;
 	if( !s_run )
 		return;
+
+	// volatile-sourced argument values so LTCG cannot const-propagate the anchor's
+	// literals into the carcass bodies (a constant arg folds the match away)
+	static volatile u32 s_u32 = 0;
+	const u32 any_u32 = s_u32;
 
 	network::world& world = *( network::world* )NULL;
 
@@ -189,14 +196,42 @@ void anchor_game_network_clients( game& g )
 		messaging_client messaging( g );
 		messaging.connect( *( server_connection_info* )NULL );
 		messaging.disconnect( );
+		messaging.on_message_typed( L"text", ( messaging::message_channel_enum )any_u32 );
+		messaging.assign_match_channel_order( any_u32, ( game_team_id )any_u32 );
 		messaging.query_for_friend_list( );
+		messaging.query_for_friends_status( );
+		messaging.query_for_ignore_list( );
+		messaging.add_to_friend_list( any_u32 );
+		messaging.remove_from_friend_list( any_u32 );
+		messaging.add_to_ignore_list( any_u32 );
+		messaging.remove_from_ignore_list( any_u32 );
 		messaging.find_players_by_name( "name" );
+
+		// the private packet-handling / read surface has no public caller until the
+		// full login flow is wired - reference it directly (the anchor is a friend
+		// of messaging_client) so /OPT:REF keeps the carcass objects
+		network_core::packet_reader& reader = *( network_core::packet_reader* )NULL;
+		messaging.sign_in_on_packet_received( reader );
+		messaging.on_packet_received( reader );
+		messaging.on_connected( );
+		messaging.on_disconnected( );
+		messaging.on_error( ( network_core::client_error_codes_enum )0, boost::system::error_code( ) );
+		messaging.read_friend_list( reader );
+		messaging.read_friend_status( reader );
+		messaging.read_ignore_list( reader );
+		messaging.read_found_players( reader );
+		messaging.process_incoming_text_message( reader );
+		messaging.accept_message_from( any_u32, ( messaging::client_type_enum )any_u32 );
+		messaging.update_channel_subscriptions( );
+		messaging.parse_receiver_channel( L"name", any_u32 != 0 );
 	}
 
 	{
 		match_client match( world );
+		match.connect( "host", ( u16 )any_u32, any_u32, any_u32, boost::function< void( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, lobby_server_message_types_enum ) >( ) );
 		match.disconnect( );
-		match.send_queued_packets( 0 );
+		match.enqueue( NULL );
+		match.send_queued_packets( any_u32 );
 	}
 
 	{
