@@ -12,10 +12,9 @@ namespace network {
 
 class string_order : public order {
 public:
-	// STATE[99.70%|PARTIAL]: only diff is `sub esp` - target reserves one untouched
-	// ghost temp dword per strings::duplicate call; zero PDB locals on either side,
-	// whole-program LTCG inline-consideration context (see assembly_patterns.md);
-	// revisit when the real login/match callers stop being stubs
+	// claude@NOTE: only diff is `sub esp` - target reserves one untouched ghost
+	// temp dword per strings::duplicate call; zero PDB locals on either side,
+	// whole-program LTCG inline-consideration context (assembly_patterns.md)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr ) > const&	functor,
@@ -31,7 +30,7 @@ public:
 	{
 	}
 
-	// STATE[99.75%|PARTIAL]: same ghost-frame-dword residual as the 1-string ctor (x2)
+	// claude@NOTE: same ghost-frame-dword residual as the 1-string ctor (x2)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr, pcstr ) > const&	functor,
@@ -48,7 +47,7 @@ public:
 	{
 	}
 
-	// STATE[99.77%|PARTIAL]: same ghost-frame-dword residual as the 1-string ctor (x3)
+	// claude@NOTE: same ghost-frame-dword residual as the 1-string ctor (x3)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			boost::function< void ( pcstr, pcstr, pcstr ) > const&	functor,
@@ -66,7 +65,6 @@ public:
 	{
 	}
 
-	// STATE[100%|DONE]
 	virtual			~string_order	( )
 	{
 		pstr temp			= m_string0;
@@ -79,7 +77,6 @@ public:
 		VOSTOK_FREE_IMPL	( m_allocator, temp );
 	}
 
-	// STATE[100%|DONE]
 	virtual	void	execute			( )
 	{
 		if ( m_string1 )

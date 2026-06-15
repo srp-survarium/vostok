@@ -8,7 +8,8 @@
 namespace vostok {
 namespace network {
 
-// STATE[94.78%|PARTIAL]: structure 9/9; residual = the LOG-helper function-ctor scheduling inside the two LOG_ERROR blocks (http_client precedent)
+// claude@NOTE: structure + locals match; residual = the LOG-helper callback-ctor
+// schedule inside the two LOG_ERROR blocks (log-callback-ctor-schedule.md)
 void login_client_impl::on_ping_sent(
 		const u32							try_count,
 		boost::system::error_code const&	error_code,
@@ -29,7 +30,7 @@ void login_client_impl::on_ping_sent(
 	m_ping_timer.expires_from_now	( boost::posix_time::seconds( 1 ) );
 	m_ping_timer.async_wait			( boost::bind( &login_client_impl::ping, this, ping_retry_count ) );
 }
-// STATE[100%|DONE]
+
 void login_client_impl::ping( const u32 retry_count )
 {
 	if ( m_client_state != signed_in )

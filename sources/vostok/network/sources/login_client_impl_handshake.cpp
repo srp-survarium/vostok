@@ -27,7 +27,9 @@ namespace network {
 // caller via the functor; the handshake is then retried
 // retry_count times before giving up
 
-// STATE[91.78%|PARTIAL]: structure clean; residual = LOG-helper ctor scheduling in the three LOG blocks + the function1 copy lowering in the handshake( functor, ... ) retry call
+// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
+// schedule in the three LOG blocks + the function1 copy lowering in the
+// handshake( functor, ... ) retry call
 void login_client_impl::on_handshaked(
 		boost::system::error_code const&	error_code,
 		boost::function< void ( handshaking_error_types_enum ) > const&	functor,
@@ -53,7 +55,8 @@ void login_client_impl::on_handshaked(
 	m_connection_state	= handshaked;
 	functor			( successfully_handshaked );
 }
-// STATE[95.29%|PARTIAL]: structure clean; residual = LOG-helper ctor scheduling + the functor by-value bind copy lowering in the async_handshake bind
+// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
+// schedule + the functor by-value bind copy lowering in the async_handshake bind
 void login_client_impl::handshake( boost::function< void ( handshaking_error_types_enum ) > const& functor, const u32 retry_count, const bool stop_timer )
 {
 	if ( m_connection_state == handshaked ) {
