@@ -21,7 +21,8 @@
 #include <vostok/sound/world_user.h>
 #include <vostok/console_command.h>
 
-#include <vostok/network/packet_reader.h>
+// sushi@TODO: legacy network::client test wiring disabled (the legacy module is
+// parked in temp/network_legacy); redo against the canonical login/match clients
 
 #include <vostok/render/facade/scene_renderer.h>
 
@@ -35,22 +36,22 @@
 //	server.send							( client, answer_packet );
 //}
 //
-static void client_on_packet_received	( vostok::network::client& client, vostok::network::packet_reader& packet )
-{
-	string256 message;
-	packet.r_string						( message );
-
-	vostok::network::packet* const answer_packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
-	answer_packet->append				( "the second message" );
-	client.send							( answer_packet );
-}
-
-static void client_on_connected			( vostok::network::client& client )
-{
-	vostok::network::packet* const packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
-	packet->append						( "Hello, world!" );
-	client.send							( packet );
-}
+//static void client_on_packet_received	( vostok::network::client& client, vostok::network::packet_reader& packet )
+//{
+//	string256 message;
+//	packet.r_string						( message );
+//
+//	vostok::network::packet* const answer_packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
+//	answer_packet->append				( "the second message" );
+//	client.send							( answer_packet );
+//}
+//
+//static void client_on_connected			( vostok::network::client& client )
+//{
+//	vostok::network::packet* const packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
+//	packet->append						( "Hello, world!" );
+//	client.send							( packet );
+//}
 
 namespace survarium {
 
@@ -69,9 +70,9 @@ m_last_frame_time_ms	( 0 ),
 m_last_frame_time_sec	( 0 ),
 //m_test_anim_object	( NULL ),
 m_bullet_manager		( 0 ),
-m_local_actor			( NULL ),
+m_local_actor			( NULL )
 //m_server				( game.get_network_world() ),
-m_client				( game.get_network_world() )
+//m_client				( game.get_network_world() )
 {
 	init_physics						( );
 
@@ -87,14 +88,14 @@ m_client				( game.get_network_world() )
 //	m_test_anim_object					= NEW(test_anim_object)(*this);
 	query_resources			( );
 
-	u16 const port					= 2510;
+//	u16 const port					= 2510;
 
 //	m_server.set_on_packet_received	( boost::bind( &server_on_packet_received, boost::ref(m_server), _1, _2) );
 //	m_server.start_accepting		( port, 16 );
 
-	m_client.set_on_packet_received	( boost::bind( &client_on_packet_received, boost::ref(m_client), _1) );
-	m_client.set_on_connected		( boost::bind( &client_on_connected, boost::ref(m_client)) );
-	m_client.connect				( "localhost", port );
+//	m_client.set_on_packet_received	( boost::bind( &client_on_packet_received, boost::ref(m_client), _1) );
+//	m_client.set_on_connected		( boost::bind( &client_on_connected, boost::ref(m_client)) );
+//	m_client.connect				( "localhost", port );
 
 	IncludeAll all;
 }

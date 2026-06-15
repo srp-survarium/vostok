@@ -20,6 +20,11 @@ class packets_in_list_predicate;
 class delayed_packets_predicate;
 
 namespace vostok {
+
+namespace network {
+	class match_client_impl;
+} // namespace network
+
 namespace network_core {
 
 class udp_match_client_session;
@@ -99,6 +104,8 @@ public:
 	friend	class		::sequence_id_predicate;
 	friend	class		::remove_all_predicate;
 	friend	class		::packets_in_list_predicate;
+	// match_client_impl::clone_packet copies the wire-header fields directly
+	friend	class		vostok::network::match_client_impl;
 	friend	udp_match_packet*	new_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >& );
 	friend	void				delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 

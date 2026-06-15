@@ -17,9 +17,10 @@
 Each matched module has its own folder under `binary_matching/` (module notes in `README.md`).
 * [game_core](binary_matching/game_core/README.md)
 * [network_core](binary_matching/network_core/README.md)
+* [network](binary_matching/network/README.md)
 * [logging](binary_matching/logging/README.md)
 
-Matchable (`/Od` in the target) but not started — no folder yet: `sound`, `network`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
+Matchable (`/Od` in the target) but not started — no folder yet: `sound`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
 
 Parked — optimized, not 1:1-matchable (under `next_binary_matching/`):
 * [physics](next_binary_matching/physics.md)

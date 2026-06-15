@@ -14,8 +14,9 @@
 
 // IMPORTANT!!!
 // for test purposes only
-//#include <vostok/network/server.h>
-#include <vostok/network/client.h>
+// sushi@TODO: legacy network::client/server test wiring disabled (module parked
+// in temp/network_legacy; the include-scanner picks up even commented includes,
+// so the lines are gone entirely)
 
 namespace vostok{
 
@@ -102,7 +103,7 @@ private:
 //	scenes_list								m_active_scenes;
 private:
 //	network::server		m_server;
-	network::client		m_client;
+//	network::client		m_client;
 }; // class game_world
 
 } // namespace survarium

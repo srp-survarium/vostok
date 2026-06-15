@@ -11,7 +11,9 @@ namespace vostok {
 namespace network {
 
 struct VOSTOK_NOVTABLE engine {
-}; // class engine
+}; // struct engine
+
+STATIC_SIZE_ASSERT(engine, 0x1);
 
 } // namespace network
 } // namespace vostok
