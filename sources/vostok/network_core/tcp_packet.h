@@ -32,8 +32,13 @@ private:
 
 STATIC_SIZE_ASSERT(tcp_packet, 0x10);
 
+// only visible under asio (their network_core consumers always include it);
+// lets asio-free TUs (game's match_options/relocate_item_descr serialize bodies)
+// use tcp_packet::append without dragging asio under a 0x0500 pch
+#ifdef BOOST_ASIO_HPP
 boost::asio::const_buffers_1	buffer_to_send			( tcp_packet& packet );
 boost::asio::mutable_buffers_1	buffer_to_receive_into	( tcp_packet& packet );
+#endif // #ifdef BOOST_ASIO_HPP
 
 } // namespace network_core
 } // namespace vostok
