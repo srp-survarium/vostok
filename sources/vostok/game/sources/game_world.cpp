@@ -11,6 +11,12 @@
 
 namespace survarium {
 
+// game-module network-client carcass /OPT:REF anchor (anchor_game_clients.cpp);
+// game_world's ctor is the canonical startup root that owns a game&, so it wires
+// the one call that keeps the matched network_client/lobby_client/match_client/
+// messaging_client/network_stats objects in the base EXE for the delinker.
+void anchor_game_network_clients( game& g );
+
 // TU statics 'draw_respawn_debug_cc' / 'draw_match_stats_cc' (compiler-
 // generated dynamic initializers + atexit destructor); a matcher recovers
 // their types/initializers from the init asm.
@@ -48,6 +54,11 @@ game_world::game_world( game& game ) :
 	game_ui( *this ),
 	m_victory_items( g_allocator )	// allocator-taking vectora (no default ctor)
 {
+	// game-module /OPT:REF reachability anchor for the matched network-client
+	// carcass (anchor_game_clients.cpp); the anchor self-guards and never runs.
+	// Retire once game::create_network_client reaches these (matching phase).
+	anchor_game_network_clients( game );
+
 	// STATICS
 	// static console_commands::cc_delegate clear_player_spawn_cc = <0x4c2b450>;
 	// static console_commands::cc_delegate clear_enemies_position_cc = <0x4c2b4b0>;
