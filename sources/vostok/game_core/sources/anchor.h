@@ -15,7 +15,8 @@ namespace vostok
 	// /OPT:REF reachability anchor entry points, one per engine module. Each
 	// instantiates its module's classes and calls their methods so the linker
 	// keeps them in the base EXE for the delinker to score. IncludeAll::IncludeAll()
-	// (instantiated in game/sources/game_world.cpp) dispatches to all of them.
+	// (instantiated in game/sources/game_entry_point.cpp::create_world - the real
+	// engine entry point) dispatches to all of them.
 	void anchor_game_core( );
 	void anchor_network_core( );
 	void anchor_network( );
@@ -23,6 +24,11 @@ namespace vostok
 	void anchor_collision( );
 	void anchor_logging( );
 	void anchor_ai_navigation( );
+
+	// game module's own per-module anchor (the engine_user world cone, the game/menu/
+	// camera/stats skeleton, and the network-client carcass) - defined in
+	// game/sources/anchor_game.cpp, not game_core.
+	void anchor_game( );
 
 	// shared opaque sink: escapes addresses so LTCG observes member stores.
 	// Defined once in anchor_network_core.cpp; used by every anchor TU.

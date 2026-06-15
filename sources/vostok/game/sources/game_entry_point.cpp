@@ -18,11 +18,13 @@ namespace render {
 } // namespace vostok
 
 #include <vostok/game/api.h>
-// temp anchor: keeps game_core (and through it the whole engine_user world
-// cone) reachable for /OPT:REF while the rebuilt game module is still stubs;
-// the legacy game_world.cpp used to instantiate this (must move out before
-// this TU is matched)
-#include "temp_include_all.h"
+// /OPT:REF reachability dispatcher: survarium::IncludeAll's ctor fans out to every
+// per-module anchor (anchor_game_core / anchor_network{,_core} / anchor_physics /
+// anchor_collision / anchor_logging / anchor_ai_navigation / anchor_game), keeping
+// the whole carcass cone in the base EXE for the delinker. create_world is the real
+// engine entry point (the game_world ctor is a never-instantiated stub, so an anchor
+// there gets /OPT:REF-stripped). Replaces the old monolithic temp_include_all anchor.
+#include "../../game_core/sources/anchor.h"
 
 // Canonical statics (game_entry_point.cpp lines 46-55): s_input_allocator,
 // s_ui_allocator, s_ai_navigation_allocator, s_ai_allocator, s_game_allocator,
@@ -52,7 +54,7 @@ vostok::engine_user::world* game_module::create_world	(
 	VOSTOK_UNREFERENCED_PARAMETER	( sound );
 	VOSTOK_UNREFERENCED_PARAMETER	( network );
 
-	IncludeAll	temp_anchor;
+	survarium::IncludeAll	include_all_anchor;
 
 	return NULL;
 

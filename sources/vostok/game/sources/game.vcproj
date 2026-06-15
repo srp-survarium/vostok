@@ -1001,6 +1001,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\anchor_game_clients.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\animated_model_instance.h"
 				>
 			</File>
@@ -9368,14 +9376,6 @@
 			</File>
 			<File
 				RelativePath=".\swf_input_translator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\temp_include_all.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\temp_include_all.h"
 				>
 			</File>
 			<File
