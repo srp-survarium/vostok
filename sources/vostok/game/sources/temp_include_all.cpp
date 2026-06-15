@@ -4,9 +4,6 @@
 // every rebuilt game header that no real TU includes yet is #included below so
 // the compiler validates it (see docs/binary_matching/library_carcass_rebuild.md).
 #include "pch.h"
-<<<<<<<< HEAD:sources/vostok/game_core/sources/anchor_game_core.cpp
-#include "anchor.h"
-========
 #include "temp_include_all.h"
 
 // game carcass headers under validation (no real including TU yet)
@@ -191,34 +188,11 @@
 #include "weapon_user_dead_state.h"
 
 #include <vostok/physics/sources/bullet_include.h>
->>>>>>>> worktree-game-scaleform:sources/vostok/game/sources/temp_include_all.cpp
 
 #include "../../collision/sources/loose_oct_tree.h"
 
-// claude@NOTE: g_is_server is a global bool read by weapon_core::activate/deactivate; the
-// real definition lives in the application/engine module (outside this build's scope), so
-// provide it here in the anchor TU to satisfy the link (weapon_core.obj only references it).
-bool g_is_server = false;
-
-// claude@NOTE: calculated_head_matrix is an animation-module helper (target @0x763c80) not yet
-// implemented in our source tree; weapon_core::update_bones_matrices references it. Provide a
-// link-only stub here in the anchor TU so the structure of update_bones_matrices compiles+links;
-// the real body belongs to the animation module's PR.
-namespace vostok { namespace animation {
-math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 const& ) { return math::float4x4( ); }
-} }
-
-// This file's only collision anchors are collision_geometry / collision_sensor,
-// which never reference animated_object or bone_collision_data - so it does NOT
-// include animated_object.h. That keeps its dllexport explicit instantiation
-// (template class buffer_vector<bone_collision_data>) owned by a single anchor TU,
-// anchor_collision.cpp (via use_animated_object).
-
 #include <vostok/ai/npc_statistics.h>
 
-<<<<<<<< HEAD:sources/vostok/game_core/sources/anchor_game_core.cpp
-#include <vostok/configs_binary_config_value.h>
-========
 // for use_engine_user_world_cone (the temp game-cone anchor)
 #include <vostok/ai/api.h>
 #include <vostok/ai_navigation/api.h>
@@ -270,27 +244,17 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/network_core/udp_network_flow_emulator.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
->>>>>>>> worktree-game-scaleform:sources/vostok/game/sources/temp_include_all.cpp
 
 #define calloc(...)						VOSTOK_UNREACHABLE_CODE( "CRT calloc detected!" );
 #define free(...)						VOSTOK_UNREACHABLE_CODE( "CRT free detected!" );
 
 #include <vostok/animation/skeleton.h>
-#include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_holding_params.h>
-<<<<<<<< HEAD:sources/vostok/game_core/sources/anchor_game_core.cpp
-#include "breath_holding_states.h"
-#include "breath_holding_states_inline.h"
-#include <vostok/game_core/usable_object_user_data.h>
-#include <vostok/game_core/collision_user.h>
-#include <vostok/game_core/normal_random.h>
-========
 #include <vostok/game_core/sources/breath_holding_states.h>
 #include <vostok/game_core/sources/breath_holding_states_inline.h>
->>>>>>>> worktree-game-scaleform:sources/vostok/game/sources/temp_include_all.cpp
 #include <vostok/game_core/bullet.h>
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/game_core/client_player_update.h>
@@ -303,14 +267,11 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/game_core/inventory_item_props.h>
 #include <vostok/game_core/interactive_object.h>
 #include <vostok/game_core/usable_object.h>
-#include <vostok/game_core/material_pair.h>
 #include <vostok/game_core/hand_to_weapon_ik_processor.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/weapon_user_animations_container_cook.h>
 #include <vostok/game_core/base_project.h>
-#include <vostok/game_core/static_collision.h>
-#include <vostok/game_core/base_player_creation_params.h>
 #include <vostok/game_core/ladder.h>
 #include <vostok/game_core/medkit.h>
 #include <vostok/game_core/player_input.h>
@@ -331,7 +292,6 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/game_core/player_stealth.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/weapon_core.h>
-#include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/game_core/weapon_state.h>
 #include <vostok/game_core/weapon_core_base_state.h>
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
@@ -380,7 +340,6 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/game_core/weapon_recoil_params.h>
 #include <vostok/game_core/character_dispersion_params.h>
 #include <vostok/game_core/weapon_dispersion_params.h>
-#include <vostok/game_core/character_recoil_params.h>
 
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
@@ -404,14 +363,6 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/player_parameters_modifyer.h>
-
-// physics/collision headers needed by collision_sensor / collision_geometry anchors
-// (contact_test_predicate, ghost_object's base_physics_objects_type) - over-inclusion
-// is fine in this non-target TU.
-#include <vostok/physics/contact_test_predicate.h>
-#include <vostok/physics/ghost_object.h>
-#include <vostok/physics/api.h>
-#include <vostok/collision/api.h>
 
 namespace survarium
 {
@@ -439,8 +390,6 @@ namespace vostok { namespace ai {
 namespace survarium
 {
 	player_logic_base_state::~player_logic_base_state( ) { }
-
-	void bpp_dump_stats(u32, float, float, pcstr) { }
 }
 
 namespace vostok
@@ -452,53 +401,26 @@ namespace vostok
 	// dummy.obj base regardless of how it is referenced (direct call, address
 	// taken, or volatile global pointer were all tried). Body is correct; the
 	// gap is purely linker ICF visibility, not a source mismatch.
+	void example_callback( const char* name );
 
-	// claude@MATCH: use_game_core_breath_vibration_calculator removed - redundant.
-	// set_breath_holding_params/set_user/tick now have real callers in the matched
-	// weapon_core (weapon_core.cpp:790-791,877), and the calculator is a weapon_core
-	// member so its ctor is reached there too.
-
-	void use_game_core_breath_holding_states( )
+	void use_game_core_breath_vibration_calculator( )
 	{
-		float reserve = 0.0f;
-		survarium::breath_holding_params params;
-		survarium::breath_state_normal		st_normal( reserve );
-		survarium::breath_state_holding		st_holding( reserve );
-		survarium::breath_state_shortbreathing	st_short( reserve );
+		survarium::breath_vibration_calculator	calc;
+		survarium::breath_holding_params		params;
 
-		// the overrides are private virtuals; dispatch through the base
-		// interface so each is reachable and instantiated.
-		survarium::breath_state& base_normal = st_normal;
-		survarium::breath_state& base_holding = st_holding;
-		survarium::breath_state& base_short = st_short;
+		calc.set_breath_holding_params( &params );
+		calc.tick( 0, 0.0f );
 
-		base_normal.set_breath_holding_params( &params );
-		base_normal.initialize( );
-		base_normal.tick( 0.0f );
-		base_normal.is_ready_for_transition( );
-
-		base_holding.set_breath_holding_params( &params );
-		base_holding.tick( 0.0f );
-		base_holding.is_ready_for_transition( );
-
-		base_short.set_breath_holding_params( &params );
-		base_short.tick( 0.0f );
-		base_short.is_ready_for_transition( );
-
-		example_callback( reinterpret_cast< pcstr >( &st_normal ) );
-		example_callback( reinterpret_cast< pcstr >( &st_holding ) );
-		example_callback( reinterpret_cast< pcstr >( &st_short ) );
+		// Escape &calc so LTCG observes the ctor's member stores
+		// (otherwise the constant-only stores are dead-store-eliminated).
+		example_callback( reinterpret_cast< pcstr >( &calc ) );
 	}
 
-	void use_game_core_usable_object_user_data( )
-	{
-		survarium::usable_object_user_data data;
-		example_callback( reinterpret_cast< pcstr >( &data ) );
-	}
-
-	// claude@MATCH: use_game_core_normal_random removed - rand_n now has a real
-	// caller (weapon_core.cpp:540); normal_random is a weapon_core member.
-
+	// claude@NOTE(port-integration): use_game_core_breath_holding_states removed -
+	// breath_holding_states is anchored by the stack's game_core/anchor_game_core.cpp
+	// (use_game_core_breath_holding_states there), which calls the now-private virtual
+	// overrides correctly. This port copy used pre-match direct calls (C2248 on the
+	// tightened matched header).
 	void use_game_core_initialize( )
 	{
 		survarium::game_core_initialize( );
@@ -601,31 +523,7 @@ namespace vostok
 
 		inventory.remove( );
 		inventory.set_victory_item( NULL );
-
-		// inventory.h trivial accessors: a plain anchor call is inlined by /GL, so
-		// take their addresses instead - an address-taken member keeps a standard
-		// out-of-line COMDAT (target keeps LTCG custom-convention copies).
-		survarium::profile_slot_enum ( survarium::inventory::*get_active_slot_fn )( ) const
-			= &survarium::inventory::get_active_slot;
-		survarium::inventory_holder& ( survarium::inventory::*holder_fn )( )
-			= &survarium::inventory::holder;
-		survarium::inventory_item_ptr& ( survarium::inventory::*item_in_slot_fn )( survarium::profile_slot_enum )
-			= &survarium::inventory::item_in_slot;
-		example_callback( reinterpret_cast< pcstr >( &get_active_slot_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &holder_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &item_in_slot_fn ) );
-
-		// weapon_user_animations_selector::set_animations: same device; its target
-		// copy keeps the plain /Od thiscall shape, so the emitted COMDAT can match.
-		void ( survarium::weapon_user_animations_selector::*set_animations_fn )( survarium::weapon_user_animations_container_ptr const& )
-			= &survarium::weapon_user_animations_selector::set_animations;
-		example_callback( reinterpret_cast< pcstr >( &set_animations_fn ) );
 	}
-
-	// claude@MATCH: use_material_pair removed - decal1/decal1_size/has_particle now
-	// have real callers in matched bullet.cpp (530-533). The address-take here kept a
-	// standard out-of-line COMDAT; with the real call site present, dropping it lets
-	// the sole-caller convention resolve as in the shipped binary (sole-caller lift).
 
 	void use_victory_items_container_core( survarium::victory_items_container_core* victory_items_container_core )
 	{
@@ -639,12 +537,6 @@ namespace vostok
 
 		victory_items_container_core->put_item( NULL );
 		victory_items_container_core->take_item( );
-
-		// The virtual calls above never odr-use the out-of-line definitions; a
-		// constructed local references the ctor (and through its vtable every
-		// override, plus the header-inline virtual dtor) so /OPT:REF keeps them.
-		survarium::victory_items_container_core container;
-		example_callback( reinterpret_cast< pcstr >( &container ) );
 	}
 
 	void use_booby_trap_cook( )
@@ -671,30 +563,6 @@ namespace vostok
 		vostok::resources::register_cook( &s_booby_trap_set_cook );
 		vostok::resources::register_cook( &s_booby_trap_cook );
 
-	}
-
-	// booby_trap_set_core's ctor / get_visible_place_transform / try_place_trap /
-	// trap_index are protected non-virtuals: the cook vtable does not odr-use them.
-	// A concrete derived helper that calls them keeps the out-of-line bodies under
-	// /OPT:REF. The free predicates trap_is_active / find_free_trap_predicate are
-	// taken by address.
-	void use_booby_trap_set_internals( ::survarium::booby_trap_core* trap )
-	{
-		struct concrete_booby_trap_set : survarium::booby_trap_set_core
-		{
-			virtual	survarium::game_material_manager const&	get_game_material_manager	( ) { return *reinterpret_cast< survarium::game_material_manager const* >( NULL ); }
-
-			void poke( survarium::booby_trap_core* trap )
-			{
-				vostok::math::float4x4 m;
-				get_visible_place_transform( m );
-				try_place_trap( );
-				trap_index( *trap );
-			}
-		};
-
-		static concrete_booby_trap_set	s_set;
-		s_set.poke( trap );
 	}
 
 	void use_hittable_object( survarium::hittable_object* hittable_object )
@@ -824,9 +692,6 @@ namespace vostok
 		survarium::dispersion_calculator calc;
 		calc.get_dispersion( );
 		calc.set_weapon( NULL );
-		calc.tick( survarium::type_stand, true, false, 0, false, 0 );
-		calc.fire( );
-		calc.reload( );
 
 		// Escape &calc so LTCG observes the ctor's constant member stores
 		// (m_weapon=NULL, m_shooting_skill_coeff=1.0f, m_aiming_speed_coeff=1.0f);
@@ -891,18 +756,6 @@ namespace vostok
 		// Escape &params so the constant-only ctor stores are OBSERVED (else
 		// LTCG dead-store-eliminates them and the ctor compiles empty).
 		survarium::character_dispersion_params params;
-
-		configs::binary_config_value cfg;
-		params.load( cfg );
-
-		example_callback( reinterpret_cast< pcstr >( &params ) );
-	}
-
-	void use_game_core_character_recoil_params( )
-	{
-		// Escape &params so the constant-only ctor stores are OBSERVED (else
-		// LTCG dead-store-eliminates them and the ctor compiles empty).
-		survarium::character_recoil_params params;
 
 		configs::binary_config_value cfg;
 		params.load( cfg );
@@ -1180,15 +1033,6 @@ namespace vostok
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::weapon_core_aimed_state*			object	= cook->cook_type::new_object( buffer, params, animations, 4 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
-
-		// ODR-use the cook's allocate_resource / create_resource / on_subresources_ready via
-		// qualified calls on the null cook (no construction -> no vtable / STUB-virtual codegen).
-		vostok::resources::query_result_for_cook&	cook_query	= *reinterpret_cast< vostok::resources::query_result_for_cook* >( NULL );
-		vostok::resources::queries_result&			cook_results	= *reinterpret_cast< vostok::resources::queries_result* >( NULL );
-		mutable_buffer								allocated	= cook->cook_type::allocate_resource( cook_query, vostok::const_buffer( ), false );
-		cook->cook_type::create_resource( cook_query, vostok::const_buffer( ), buffer );
-		cook->cook_type::on_subresources_ready( cook_results, buffer, params );
-		example_callback( reinterpret_cast< pcstr >( allocated.c_ptr( ) ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
@@ -1856,14 +1700,13 @@ namespace vostok
 		use_game_core_shotgun_reload_substate_impl< survarium::weapon_core_shotgun_reload_finish_substate >( );
 	}
 
-	// claude@MATCH: use_bullet's fire() anchor removed - bullet_manager::fire (8-arg)
-	// now has a real caller (weapon_core.cpp:571). bullet_manager's ctor is reached by
-	// game_world.cpp's NEW(bullet_manager); but its DTOR is anchor-only (game_world
-	// never deletes it - sushi@TODO), so keep a stack instance to anchor ~bullet_manager.
 	void use_bullet( )
 	{
-		survarium::bullet_manager bullet_manager( NULL, NULL, NULL );
-		example_callback( reinterpret_cast< pcstr >( &bullet_manager ) );
+		survarium::bullet_manager			bullet_manager( NULL, NULL, NULL );
+		survarium::weapon_ammunition_ptr	wa( NULL );
+		survarium::weapon_core				wc;
+
+		bullet_manager.fire( float3(), float3(), wa, wc, 10, NULL, NULL, true );
 	}
 
 	void use_game_core_weapon_core_initialize_weapon_logic( )
@@ -1934,22 +1777,22 @@ namespace vostok
 
 		wc.get_ammo_slot( survarium::first_ammo );
 		wc.ready_to_reload( );
-
-		// recoil values + ammo info getters defined in weapon_core.cpp
-		float ( survarium::weapon_core::*pvr )( ) const = &survarium::weapon_core::vertical_recoil_value;
-		float ( survarium::weapon_core::*phr )( ) const = &survarium::weapon_core::horizontal_recoil_value;
-		example_callback( reinterpret_cast< pcstr >( &pvr ) );
-		example_callback( reinterpret_cast< pcstr >( &phr ) );
-		survarium::weapon_ammo_info ai;
-		wc.get_ammo_info( ai );
-		wc.ammo_slot( );
-
-		void ( survarium::weapon_core::*pla )( ) = &survarium::weapon_core::load_ammo;
-		example_callback( reinterpret_cast< pcstr >( &pla ) );
-
-		wc.instant_fire( 0 );
 	}
 
+
+	void use_inventory( )
+	{
+	/*
+		survarium::medkit item;
+
+		survarium::inventory_item_props props;
+		item.get_item_props( props );
+
+		item.remove( );
+
+		item.reduce_damage( NULL, NULL, 0.0f, 0.0f );
+	*/
+	}
 
 	void use_damage_model_cook( )
 	{
@@ -2043,13 +1886,6 @@ namespace vostok
 
 		survarium::hit_info				hit;
 		hit.deserialize	( *reader );
-
-		// The parameterized hit_info ctor is otherwise DCE'd ( /OPT:REF ) - its real
-		// call site (hit_initiator) is not yet in the image; anchor it explicitly.
-		survarium::hit_info				hit_constructed(
-			0, 0, NULL, NULL, 0.f, 0.f, NULL
-		);
-		hit_constructed.deserialize( *reader );
 
 		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
 		survarium::player_stamina		stamina;
@@ -2316,62 +2152,12 @@ namespace vostok
 	// tick, look_time_factor, is_jump_finished). Qualified calls on a fabricated
 	// reference ODR-use the bodies without constructing an instance (the dtor/vtable
 	// of derived states stays untouched). The anchor never runs.
-	void use_game_core_jump_logic( )
-	{
-		survarium::jump_logic&	jl	= *reinterpret_cast< survarium::jump_logic* >( NULL );
-		// landing_predicate is private (target mangling ABE); it is ODR-used through
-		// initialize_logic's boost::bind, anchored by the jump_logic construction below.
-		jl.tick( );
-		float	lt	= jl.look_time_factor( );
-		bool	jf	= jl.is_jump_finished( );
-		example_callback( reinterpret_cast< pcstr >( &lt ) );
-		example_callback( reinterpret_cast< pcstr >( &jf ) );
-
-		// ODR-use the out-of-line jump_logic method bodies via member-fn pointers so
-		// the linker keeps them (no instance constructed -> no vtable/STUB codegen).
-		std::pair< vostok::animation::mixing::expression, vostok::animation::mixing::animation_lexeme >
-			( survarium::jump_logic::*sel )( vostok::mutable_buffer&, survarium::weapon_animation_parameters const&, bool ) const
-				= &survarium::jump_logic::selected_animations;
-		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*get_anim )( survarium::jump_animation_parts, bool ) const
-			= &survarium::jump_logic::get_animation;
-		void ( survarium::jump_logic::*act )( ) = &survarium::jump_logic::activate;
-		example_callback( reinterpret_cast< pcstr >( &sel ) );
-		example_callback( reinterpret_cast< pcstr >( &get_anim ) );
-		example_callback( reinterpret_cast< pcstr >( &act ) );
-
-		// claude@MATCH: the C4716 state-vtable trap is gone (jump_logic_state_*
-		// selected_animations now return on the common ground), so constructing a
-		// jump_logic anchors the ctor -> initialize_logic + the dtor without LNK1257.
-		// The anchor never runs (the reference is NULL); construction only ODR-uses
-		// the bodies for the linker.
-		survarium::weapon_user_animations_selector& sel_owner =
-			*reinterpret_cast< survarium::weapon_user_animations_selector* >( NULL );
-		survarium::jump_logic anchored_jump_logic( sel_owner );
-		example_callback( reinterpret_cast< pcstr >( &anchored_jump_logic ) );
-
-		// get_move_direction is a file static in jump_logic.cpp (plain-name target
-		// symbol); it is kept alive by its real callers activate/does_need_land_and_run.
-		u32 idx = survarium::get_jump_animation_index( survarium::move_direction_on_site, true, survarium::jump_animations_part_start );
-		example_callback( reinterpret_cast< pcstr >( &idx ) );
-
-		// Address-of non-virtual members to ODR-use their bodies WITHOUT constructing a
-		// jump_logic (which would emit the vtable and force still-STUB members to codegen).
-		void ( survarium::jump_logic::*su )( survarium::base_player& ) = &survarium::jump_logic::set_user;
-		void ( survarium::jump_logic::*de )( )                         = &survarium::jump_logic::deactivate;
-		bool ( survarium::jump_logic::*dn )( ) const                   = &survarium::jump_logic::does_need_land_and_run;
-		example_callback( reinterpret_cast< pcstr >( &su ) );
-		example_callback( reinterpret_cast< pcstr >( &de ) );
-		example_callback( reinterpret_cast< pcstr >( &dn ) );
-
-		pcstr ( survarium::jump_logic::*gac )( const survarium::jump_animation_parts ) const = &survarium::jump_logic::get_animation_caption;
-		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*gma )( const bool ) const  = &survarium::jump_logic::get_move_animation;
-		vostok::resources::managed_resource_ptr ( survarium::jump_logic::*gmla )( const bool ) const = &survarium::jump_logic::get_move_look_animation;
-		pcstr ( survarium::jump_logic::*gmlc )( ) const = &survarium::jump_logic::get_move_look_caption;
-		example_callback( reinterpret_cast< pcstr >( &gac ) );
-		example_callback( reinterpret_cast< pcstr >( &gma ) );
-		example_callback( reinterpret_cast< pcstr >( &gmla ) );
-		example_callback( reinterpret_cast< pcstr >( &gmlc ) );
-	}
+	// claude@NOTE(port-integration): use_game_core_jump_logic removed - jump_logic is
+	// anchored by the stack's game_core/anchor_game_core.cpp (use_game_core_jump_logic
+	// there), which reaches landing_predicate (now private) and the file-static
+	// get_move_direction through the correct in-module pattern. This port copy called
+	// jump_logic::landing_predicate directly (C2248) and referenced get_move_direction
+	// as survarium:: free fn (C2039 - it is a jump_logic.cpp file static).
 
 	struct ghost_predicate : physics::contact_test_predicate {
 	virtual	float		add_single_result		(
@@ -2386,42 +2172,66 @@ namespace vostok
 	};
 
 
-	// claude@MATCH: use_game_core_collision_sensor trimmed - is_filter_passed /
-	// get_collision_geometry / get_overlapping_objects_count / load / resolve_links / tick
-	// now have real callers (collision_sensor is a base subobject of damage_zone_core /
-	// booby_trap_core). Only the two-arg contact_test( base_physics_object*, predicate& )
-	// has no real caller yet, so keep just that anchor.
 	void use_game_core_collision_sensor()
 	{
-		survarium::collision_sensor& sensor = *reinterpret_cast< survarium::collision_sensor* >( NULL );
+		survarium::collision_sensor sensor;
+		configs::binary_config_value cfg;
+		sensor.load( cfg );
+		sensor.resolve_links( NULL, cfg );
+		sensor.tick( 0, 0 );
+		sensor.is_filter_passed( NULL );
+
 		ghost_predicate gp;
 		sensor.contact_test( NULL, gp );
+		sensor.contact_test( NULL );
+		sensor.insert( NULL );
+		sensor.remove( );
+		sensor.get_collision_geometry( 10 );
+		// claude@NOTE: the four protected on_* overrides are trivial empty bodies
+		// that /OPT:ICF-fold (on_inside/on_leave/on_objetcs_loosed -> `ret 4`
+		// @0x12c50, on_enter -> @0xd2070); no anchor can make a folded body scorable,
+		// so they are proven byte-correct and marked None|DONE, not anchored here.
 	}
 
 
-	// claude@MATCH: use_game_core_collision_geometry trimmed - ctor + load are reached by
-	// booby_trap_core.cpp:45, and get_overlapping_objects_count / get_overlapping_objects /
-	// destroy_ghost_object / subscribe / set_transform / get_transform now have real callers
-	// in matched collision_sensor.cpp / collision_geometry.cpp. Only the two-arg contact_test
-	// and get_shapes_centers (which cascade into physics bt_ghost_object) lack a real caller.
 	void use_game_core_collision_geometry()
 	{
-		survarium::collision_geometry& gm = *reinterpret_cast< survarium::collision_geometry* >( NULL );
+		survarium::collision_geometry gm;
+		gm.destroy_ghost_object( );
+
+		configs::binary_config_value cfg;
+		gm.load( cfg );
+
+		gm.get_overlapping_objects_count( );
+
+		physics::base_physics_objects_type physics_objects( NULL, 10 );
+		gm.get_overlapping_objects( physics_objects );
+
 		ghost_predicate predicate;
 		gm.contact_test( NULL, predicate );
+		gm.contact_test( );
 
 		vostok::vectora<float3> centers_results( NULL );
 		gm.get_shapes_centers( centers_results );
+
+		gm.subscribe( NULL, NULL );
+		gm.unsubscribe( NULL );
+
+		gm.set_transform( float4x4() );
+		gm.get_transform( );
+		// claude@NOTE: cast_to_collision_geometry is `return this;` which /OPT:ICF
+		// folds to the empty-frame fold @0x17600; unscorable None but byte-correct,
+		// marked None|DONE (a folded body cannot be made scorable by anchoring).
 	}
 
-	// claude@MATCH: use_game_core_scheduler trimmed - register_on_frame / register_for_update
-	// have real callers in matched damage_zone_core.cpp / booby_trap_core.cpp /
-	// generic_anomaly_core.cpp / medkit.cpp / oxygen_tank.cpp. Only on_frame (the public
-	// dispatcher + its private record overload) has no real caller yet, so keep just it.
 	void use_game_core_scheduler()
 	{
-		survarium::scheduler& sc = *reinterpret_cast< survarium::scheduler* >( NULL );
+		survarium::scheduler sc( NULL );
+		survarium::scheduler::callback callback;
+		sc.register_on_frame( NULL, callback, true );
+		sc.register_for_update( NULL, callback, true, 10, 10, 10 );
 		sc.on_frame( 10, 10 );
+		sc.unregister( NULL );
 	}
 
 	// claude@NOTE: interactive_object::assign_game_ui (`ret 4` empty @0x12c50) and
@@ -2463,74 +2273,19 @@ namespace vostok
 		holder.touch( );
 	}
 
-	// claude@MATCH: base_player is abstract; a concrete derived stub (overriding every
-	// pure virtual + the unoverridden inventory_holder pures) gives a constructible
-	// instance so the ctor body is ODR-used and scorable.
-	struct concrete_base_player : survarium::base_player
-	{
-		concrete_base_player( survarium::base_player_creation_params const& params, survarium::scheduler& s )
-			: survarium::base_player( params, s ) { }
-
-		// inventory_holder pure virtuals not overridden by base_player
-		virtual bool							set_new_active_item	( survarium::inventory_item_ptr const& ) override { return false; }
-		virtual void							take_inventory_item	( survarium::inventory_item_ptr const& ) override { }
-		virtual physics::world*					get_physics_world	( ) override { return NULL; }
-
-		// collision_user pure virtuals
-		virtual float4x4 const&					get_transform		( ) const override { return *reinterpret_cast< float4x4* >( NULL ); }
-		virtual void							use_ladder			( survarium::ladder* ) override { }
-
-		// hit_receiver pure virtuals
-		virtual void							hit					( survarium::hit_initiator const* const, u32 const, pcstr, float const, float const, survarium::bullet* const ) override { }
-		virtual void							hit					( survarium::hit_initiator const* const, collision::bone_collision_data const&, pcstr, float const, float const, survarium::bullet* const ) override { }
-		virtual float							get_speed			( ) const override { return 0.0f; }
-
-		// base_player pure virtuals
-		virtual animation::skeleton const&		skeleton			( ) const override { return *reinterpret_cast< animation::skeleton* >( NULL ); }
-		virtual survarium::player_input const&	input				( ) const override { return *reinterpret_cast< survarium::player_input* >( NULL ); }
-		virtual float3 const&					position			( ) const override { return *reinterpret_cast< float3* >( NULL ); }
-		virtual float							get_look_pitch		( ) const override { return 0.0f; }
-		virtual physics::bt_character_controller&	physics_controller	( ) override { return *reinterpret_cast< physics::bt_character_controller* >( NULL ); }
-		virtual survarium::player_stamina&		stamina				( ) override { return *reinterpret_cast< survarium::player_stamina* >( NULL ); }
-		virtual void							jump				( ) override { }
-		virtual void							end_jump			( ) override { }
-		virtual void							crouch				( ) override { }
-		virtual void							stand_up			( ) override { }
-		virtual survarium::game_team_id			team				( ) const override { return survarium::game_team_id( ); }
-		virtual void							subscribe_animation_player	( pcstr, animation_callback const&, pcvoid, resources::managed_resource_ptr const&, u8, pcvoid ) override { }
-		virtual void							subscribe_animation_player	( animation::reserved_channel_ids_enum, animation_callback const&, pcvoid, resources::managed_resource_ptr const&, pcvoid ) override { }
-		virtual void							unsubscribe_animation_player( pcstr, pcvoid ) override { }
-		virtual void							unsubscribe_animation_player( animation::reserved_channel_ids_enum, pcvoid ) override { }
-		virtual bool							is_replaying_history	( ) const override { return false; }
-		virtual u32								local_time			( u32 ) const override { return 0; }
-		virtual survarium::engine&				get_engine			( ) override { return *reinterpret_cast< survarium::engine* >( NULL ); }
-		virtual animation::animation_player const&	animation_player	( ) const override { return *reinterpret_cast< animation::animation_player* >( NULL ); }
-		virtual animation::animation_player&	animation_player	( ) override { return *reinterpret_cast< animation::animation_player* >( NULL ); }
-	};
-
-	// claude@MATCH: anchor for base_player non-virtual leaf functions. The non-virtual
-	// leaves are ODR-used by qualified calls on a null ref; the ctor needs the concrete
-	// stub above. on_player_death also pulls in the free helper
-	// call_player_death_subscriber_callback (taken as a function ref by for_each).
+	// claude@MATCH: anchor for base_player non-virtual leaf functions. base_player is
+	// abstract, but these are non-virtual so a qualified call on a null ref ODR-uses
+	// each standalone body without needing a full concrete stub. on_player_death also
+	// pulls in the free helper call_player_death_subscriber_callback (taken as a
+	// function ref by intrusive_list::for_each).
 	void use_game_core_base_player( )
 	{
-		// base_player_creation_params has no compiled default ctor; pass a null ref (the
-		// anchor is never run, only ODR-uses the base_player ctor body).
-		survarium::base_player_creation_params&	cp	= *reinterpret_cast< survarium::base_player_creation_params* >( NULL );
-		survarium::scheduler					sched( NULL );
-		concrete_base_player					cbp( cp, sched );
-		example_callback( reinterpret_cast< pcstr >( &cbp ) );
-
 		survarium::base_player&	p	= *reinterpret_cast< survarium::base_player* >( NULL );
 		p.subscribe_on_player_death( NULL );
 		p.unsubscribe_from_player_death( NULL );
 		p.on_player_death( );
 		p.tick_active_object( );
 		p.deserialize_game_world_object( *reinterpret_cast< vostok::network_core::packet_reader* >( NULL ) );
-		p.send_game_world_object(
-			reinterpret_cast< survarium::game_world_object const* >( NULL ),
-			*reinterpret_cast< boost::function< vostok::network_core::udp_match_packet& ( ) >* >( NULL ),
-			*reinterpret_cast< boost::function< void ( vostok::network_core::udp_match_packet& ) >* >( NULL ) );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
 	}
 
@@ -2579,7 +2334,6 @@ namespace vostok
 		float ( self::*p19 )( float, float, u32, u32, u32, float ) const = &self::look_time_factor_calculator;
 		void ( self::*p20 )( animation::reserved_channel_ids_enum, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
 		void ( self::*p21 )( pcstr, pcvoid, self::animation_functor const& ) = &self::set_animation_callback;
-		void ( self::*p22 )( survarium::base_player&, boost::function< void( ) > const&, boost::function< void( ) > const& ) = &self::activate;
 		example_callback( reinterpret_cast< pcstr >( &p7 ) );
 		example_callback( reinterpret_cast< pcstr >( &p8 ) );
 		example_callback( reinterpret_cast< pcstr >( &p9 ) );
@@ -2595,7 +2349,6 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p19 ) );
 		example_callback( reinterpret_cast< pcstr >( &p20 ) );
 		example_callback( reinterpret_cast< pcstr >( &p21 ) );
-		example_callback( reinterpret_cast< pcstr >( &p22 ) );
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public
@@ -2615,18 +2368,6 @@ namespace vostok
 		concrete_base_project	p;
 		p.touch( );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
-
-		// static_collision insert/remove are public non-virtual leaves on a null ref.
-		survarium::static_collision&	sc	= *reinterpret_cast< survarium::static_collision* >( NULL );
-		sc.insert( reinterpret_cast< vostok::physics::world* >( NULL ) );
-		sc.remove( reinterpret_cast< vostok::physics::world* >( NULL ) );
-		example_callback( reinterpret_cast< pcstr >( &sc ) );
-
-		// read_transform is a free helper with external linkage used only by
-		// project_cooker_simple::create_game_objects; ODR-use it to keep its body.
-		survarium::read_transform(
-			*reinterpret_cast< vostok::configs::binary_config_value const* >( NULL ),
-			*reinterpret_cast< vostok::math::float4x4* >( NULL ) );
 	}
 
 	void use_game_core_weapon_user_animations_container_cook( )
@@ -2654,8 +2395,6 @@ namespace vostok
 		float speed = trap.survarium::booby_trap_core::get_speed( );
 		example_callback( reinterpret_cast< pcstr >( &speed ) );
 	}
-<<<<<<<< HEAD:sources/vostok/game_core/sources/anchor_game_core.cpp
-========
 
 	void use_physics_api()
 	{
@@ -2903,29 +2642,11 @@ namespace vostok
 		emulator.on_packet_received( NULL, 10, boost::asio::ip::udp::endpoint( ), 10, 10 );
 	}
 
-	void use_network_core_udp_match_client()
-	{
-		boost::asio::io_service io_service( 10 );
-		memory::single_size_buffer_allocator< 300, threading::single_threading_policy > packets_allocator( NULL, 0 );
-		test_udp_match_packets_orderer packets_orderer;
-
-		network_core::udp_match_client client( io_service, packets_allocator, packets_orderer, NULL );
-
-		client.connect( "host", 80, NULL, 10 );
-		client.start_receiving( );
-		client.enqueue( NULL );
-		client.send_queued_packets( 10 );
-		client.disconnect( );
-		client.check_consistency( );
-
-		// private on_error is called by handle_receive; the address-take also keeps it standalone
-		void ( network_core::udp_match_client::*on_error_ptr )( network_core::client_error_codes_enum, boost::system::error_code ) = &network_core::udp_match_client::on_error;
-		example_callback( ( pcstr )&on_error_ptr );
-
-		// private handle_receive's real caller (start_receiving's async_receive_from bind) is still STUB; address-take keeps it
-		void ( network_core::udp_match_client::*handle_receive_ptr )( boost::system::error_code const&, u32 ) = &network_core::udp_match_client::handle_receive;
-		example_callback( ( pcstr )&handle_receive_ptr );
-	}
+	// claude@NOTE(port-integration): use_network_core_udp_match_client removed - the
+	// stack pruned udp_match_client's standalone anchor (cf. #316 / game_core's
+	// anchor_network_core.cpp note): it is now reached through the network module's
+	// real call graph (match_client_impl in anchor_network.cpp). start_receiving /
+	// on_error / handle_receive are private in the matched header (C2248 here).
 
 	void use_static_rigid_body()
 	{
@@ -3047,133 +2768,91 @@ namespace vostok
 
 	}
 
->>>>>>>> worktree-game-scaleform:sources/vostok/game/sources/temp_include_all.cpp
 }
 
-namespace vostok
+
+
+namespace survarium
 {
-	void anchor_game_core( )
-	{
-		use_game_core_initialize( );
-		use_game_core_legs_ik_processor( );
-		use_game_core_ik_processor( NULL, NULL, NULL );
-		use_game_core_hand_to_weapon_ik_processor( );
-		use_medkit( );
-		use_inventory_2( );
-		use_victory_items_container_core( NULL );
-		use_booby_trap_cook( );
-		use_booby_trap_set_internals( NULL );
-		use_hittable_object( NULL );
-		use_usable_object( NULL );
-		use_respawn_point_core( );
-		use_damage_zone_core( );
-		use_generic_anomaly_core( );
-		use_artefact_container_core( );
-		use_artefact_lifebone_core( );
-		use_victory_item_core( );
-		use_weapon_core_cook( );
-		use_weapon_core_shotgun_reload_state_cook( );
-		use_weapon_core_inactive_state_cook( );
-		use_game_core_weapon_recoil_params( );
-		use_game_core_weapon_recoil_calculator( );
-		use_game_core_character_dispersion_params( );
-		use_game_core_character_recoil_params( );
-		use_game_core_weapon_dispersion_params( );
-		use_recoil_calculator( );
-		use_dispersion_calculator( );
-		use_game_core_breath_holding_states( );
-		use_game_core_usable_object_user_data( );
-		use_character_dispersion_calculator( );
-		use_game_material_manager( );
-		use_weapon_dispersion_calculator( );
-		use_game_core_weapon_core_base_state( );
-		use_game_core_weapon_core_ik_callbacks( );
-		use_game_core_weapon_core_animation_end_aware_state( );
-		use_game_core_weapon_core_idle_state_base( );
-		use_game_core_weapon_core_aimed_state_base( );
-		use_game_core_weapon_core_idle_state( );
-		use_game_core_weapon_core_aimed_state( );
-		use_game_core_pistol_weapon_core_idle_state( );
-		use_game_core_double_barreled_weapon_core_idle_state( );
-		use_game_core_pistol_weapon_core_aimed_idle_state( );
-		use_game_core_weapon_core_reload_state( );
-		use_game_core_pistol_weapon_core_idle_state( );
-		use_game_core_pistol_weapon_core_show_state( );
-		use_game_core_weapon_core_show_state( );
-		use_game_core_double_barreled_weapon_core_show_state( );
-		use_game_core_double_barreled_weapon_core_hide_state( );
-		use_game_core_pistol_weapon_core_hide_state( );
-		use_game_core_weapon_core_hide_state( );
-		use_game_core_double_barreled_weapon_core_idle_state( );
-		use_game_core_pistol_weapon_core_aimed_idle_state( );
-		use_game_core_pistol_weapon_core_aimed_fire_state( );
-		use_game_core_double_barreled_weapon_core_aimed_idle_state( );
-		use_game_core_weapon_core_show_state_base( );
-		use_game_core_weapon_core_hide_state_base( );
-		use_game_core_weapon_core_reload_state_base( );
-		use_game_core_weapon_core_chamber_a_round_state_base( );
-		use_game_core_weapon_core_fire_state_base( );
-		use_game_core_weapon_core_initialize_weapon_logic( );
-		use_game_core_weapon_core_chamber_a_round_state( );
-		use_game_core_weapon_core_chamber_a_round_aimed_state( );
-		use_game_core_weapon_core_fire_state_base( );
-		use_game_core_weapon_core_shotgun_reload_state( );
-		use_game_core_weapon_core_shotgun_reload_start_substate( );
-		use_game_core_weapon_core_shotgun_reload_one_round_substate( );
-		use_game_core_weapon_core_shotgun_reload_finish_substate( );
-		use_game_core_pistol_weapon_core_fire_state( );
-		use_game_core_pistol_weapon_core_reload_state( );
-		use_game_core_double_barreled_weapon_core_fire_state( );
-		use_game_core_double_barreled_weapon_core_aimed_fire_state( );
-		use_game_core_double_barreled_weapon_core_reload_state( );
 
-		use_game_core_weapon_core_fire_state( );
-		use_game_core_weapon_core_aimed_fire_state( );
-		use_game_core_weapon_core_initialize_weapon_logic( );
-		use_game_core_weapon_core_small_setters( );
-		use_bullet( );
-		use_damage_model_cook( );
-		use_ladder( NULL );
-		use_game_core_affects_threshold();
-		use_game_core_player_stamina();
-		use_game_core_player_stealth();
-		use_game_core_player_input();
-		use_client_player_update( NULL );
-		use_game_core_serialization( NULL, NULL );
-		use_game_core_weapon_state();
-		use_game_core_player_logic_base_state();
-		use_game_core_player_logic_jump_state();
-		use_game_core_player_logic_crouch_state();
-		use_game_core_player_logic_stand_state();
-		use_game_core_player_logic_sprint_state();
-		use_game_core_jump_logic_state_inactive();
-		use_game_core_jump_logic_state_landing();
-		use_game_core_jump_logic_state_start();
-		use_game_core_jump_logic();
-		use_game_core_collision_sensor();
-		use_game_core_collision_geometry();
-		use_game_core_scheduler();
-		use_game_core_inventory_holder();
-		use_game_core_weapon_user_animations_selector();
-		use_game_core_base_player();
-		use_game_core_weapon_user_animations_selector();
-		use_game_core_weapon_user_animations_container_cook();
-		use_game_core_base_project();
-		use_game_core_booby_trap_core_get_speed();
+void bpp_dump_stats(u32, float, float, pcstr) { }
 
-		//
-		// YEEET
-		//
-		survarium::hit_type_parameters* htp = new survarium::hit_type_parameters("hand", 1., 1., 1., 0);
-		htp->apply_damage(10., 100);
-		htp->set_parameters(10., 20., 30.);
 
-		survarium::booster_damage_protector* bdp = new survarium::booster_damage_protector("hand", 0.5, 1.);
-		bdp->reduce_damage("__whatever", "hand", 100, 10);
+IncludeAll::IncludeAll()
+{
+	//
+	//
+	//
+	vostok::use_game_core_initialize( );
+	vostok::use_game_core_breath_vibration_calculator( );
+	vostok::use_game_core_legs_ik_processor( );
+	vostok::use_game_core_ik_processor( NULL, NULL, NULL );
+	vostok::use_game_core_hand_to_weapon_ik_processor( );
+	vostok::use_medkit( );
+	vostok::use_inventory_2( );
+	vostok::use_victory_items_container_core( NULL );
+	vostok::use_booby_trap_cook( );
+	vostok::use_hittable_object( NULL );
+	vostok::use_usable_object( NULL );
+	vostok::use_respawn_point_core( );
+	vostok::use_damage_zone_core( );
+	vostok::use_generic_anomaly_core( );
+	vostok::use_artefact_container_core( );
+	vostok::use_artefact_lifebone_core( );
+	vostok::use_victory_item_core( );
+	vostok::use_weapon_core_cook( );
+	vostok::use_weapon_core_shotgun_reload_state_cook( );
+	vostok::use_weapon_core_inactive_state_cook( );
+	vostok::use_game_core_weapon_recoil_params( );
+	vostok::use_game_core_weapon_recoil_calculator( );
+	vostok::use_game_core_character_dispersion_params( );
+	vostok::use_game_core_weapon_dispersion_params( );
+	vostok::use_recoil_calculator( );
+	vostok::use_dispersion_calculator( );
+	vostok::use_character_dispersion_calculator( );
+	vostok::use_game_material_manager( );
+	vostok::use_weapon_dispersion_calculator( );
+	vostok::use_game_core_weapon_core_base_state( );
+	vostok::use_game_core_weapon_core_ik_callbacks( );
+	vostok::use_game_core_weapon_core_animation_end_aware_state( );
+	vostok::use_game_core_weapon_core_idle_state_base( );
+	vostok::use_game_core_weapon_core_aimed_state_base( );
+	vostok::use_game_core_weapon_core_idle_state( );
+	vostok::use_game_core_weapon_core_aimed_state( );
+	vostok::use_game_core_pistol_weapon_core_idle_state( );
+	vostok::use_game_core_double_barreled_weapon_core_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_aimed_idle_state( );
+	vostok::use_game_core_weapon_core_reload_state( );
+	vostok::use_game_core_pistol_weapon_core_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_show_state( );
+	vostok::use_game_core_weapon_core_show_state( );
+	vostok::use_game_core_double_barreled_weapon_core_show_state( );
+	vostok::use_game_core_double_barreled_weapon_core_hide_state( );
+	vostok::use_game_core_pistol_weapon_core_hide_state( );
+	vostok::use_game_core_weapon_core_hide_state( );
+	vostok::use_game_core_double_barreled_weapon_core_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_aimed_idle_state( );
+	vostok::use_game_core_pistol_weapon_core_aimed_fire_state( );
+	vostok::use_game_core_double_barreled_weapon_core_aimed_idle_state( );
+	vostok::use_game_core_weapon_core_show_state_base( );
+	vostok::use_game_core_weapon_core_hide_state_base( );
+	vostok::use_game_core_weapon_core_reload_state_base( );
+	vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
+	vostok::use_game_core_weapon_core_fire_state_base( );
+	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	vostok::use_game_core_weapon_core_chamber_a_round_state( );
+	vostok::use_game_core_weapon_core_chamber_a_round_aimed_state( );
+	vostok::use_game_core_weapon_core_fire_state_base( );
+	vostok::use_game_core_weapon_core_shotgun_reload_state( );
+	vostok::use_game_core_weapon_core_shotgun_reload_start_substate( );
+	vostok::use_game_core_weapon_core_shotgun_reload_one_round_substate( );
+	vostok::use_game_core_weapon_core_shotgun_reload_finish_substate( );
+	vostok::use_game_core_pistol_weapon_core_fire_state( );
+	vostok::use_game_core_pistol_weapon_core_reload_state( );
+	vostok::use_game_core_double_barreled_weapon_core_fire_state( );
+	vostok::use_game_core_double_barreled_weapon_core_aimed_fire_state( );
+	vostok::use_game_core_double_barreled_weapon_core_reload_state( );
 
-<<<<<<<< HEAD:sources/vostok/game_core/sources/anchor_game_core.cpp
-		vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
-========
 	vostok::use_game_core_weapon_core_fire_state( );
 	vostok::use_game_core_weapon_core_aimed_fire_state( );
 	vostok::use_game_core_weapon_core_initialize_weapon_logic( );
@@ -3197,7 +2876,6 @@ namespace vostok
 	vostok::use_game_core_jump_logic_state_inactive();
 	vostok::use_game_core_jump_logic_state_landing();
 	vostok::use_game_core_jump_logic_state_start();
-	vostok::use_game_core_jump_logic();
 	vostok::use_game_core_collision_sensor();
 	vostok::use_game_core_collision_geometry();
 	vostok::use_game_core_scheduler();
@@ -3217,7 +2895,6 @@ namespace vostok
 	vostok::use_network_core_tcp_packet_client();
 	vostok::use_network_core_udp_match_connection();
 	vostok::use_network_core_udp_network_flow_emulator();
-	vostok::use_network_core_udp_match_client();
 	vostok::use_engine_user_world_cone();
 	vostok::use_static_rigid_body();
 	vostok::use_animated_object();
@@ -3225,70 +2902,123 @@ namespace vostok
 	vostok::use_aabb_object();
 	vostok::use_collision_shape();
 	vostok::use_bullet_character_controller();
->>>>>>>> worktree-game-scaleform:sources/vostok/game/sources/temp_include_all.cpp
 
-		//
-		// DAMAGE MODEL
-		//
-		survarium::damage_model dm = survarium::damage_model(survarium::type_apply_directly);
+	//
+	// YEEET
+	//
+	hit_type_parameters* htp = new hit_type_parameters("hand", 1., 1., 1., 0);
+	htp->apply_damage(10., 100);
+	htp->set_parameters(10., 20., 30.);
 
-		dm.add_body_part(NULL);
-		dm.hit_body_part(1, "part_name", "damage_type", 10., 20., 30, NULL);
-		dm.apply_med_kit("head", 1000);
-		dm.tick(10, 20);
-		dm.fill_stats(stats, 20);
-		dm.dump_stats(&survarium::bpp_dump_stats);
-		dm.reset();
-		dm.apply_affect("part_name", survarium::affects_type_bleeding, survarium::affect_canceling);
-		dm.cancel_affect("part_name", survarium::affects_type_bleeding);
-		dm.subscribe_on_affect(survarium::affects_type_bleeding, NULL);
-		dm.unsubscribe_from_affect(survarium::affects_type_bleeding, NULL);
-		dm.notify_on_affect_event("body_part_name", survarium::affects_type_bleeding, survarium::affect_canceling);
-		dm.add_damage_protector("damage_type", 1000., 10000.);
-		dm.register_body_part_damage_protector("part_name", NULL);
-		dm.unregister_body_part_damage_protector("part_name", NULL);
-		dm.get_affects_applying_type();
-		dm.get_body_part("part_name");
-		dm.pop_body_part();
-		dm.get_total_health();
-		// dm.on_broken_limb_affect("bodypart", affects_type_bleeding, affect_canceling);
+	booster_damage_protector* bdp = new booster_damage_protector("hand", 0.5, 1.);
+	bdp->reduce_damage("__whatever", "hand", 100, 10);
 
-		//
-		// BODY PART PARAMETERS
-		//
-		survarium::body_part_parameters* bpp = new survarium::body_part_parameters(
-			"name",
-			10.f,
-			10.f,
-			10.f,
-			true,
-			dm,
-			1);
+	vostok::ai::npc_statistics stats = vostok::ai::npc_statistics();
+
+	//
+	// DAMAGE MODEL
+	//
+	damage_model dm = damage_model(type_apply_directly);
+
+	dm.add_body_part(NULL);
+	dm.hit_body_part(1, "part_name", "damage_type", 10., 20., 30, NULL);
+	dm.apply_med_kit("head", 1000);
+	dm.tick(10, 20);
+	dm.fill_stats(stats, 20);
+	dm.dump_stats(&bpp_dump_stats);
+	dm.reset();
+	dm.apply_affect("part_name", affects_type_bleeding, affect_canceling);
+	dm.cancel_affect("part_name", affects_type_bleeding);
+	dm.subscribe_on_affect(affects_type_bleeding, NULL);
+	dm.unsubscribe_from_affect(affects_type_bleeding, NULL);
+	dm.notify_on_affect_event("body_part_name", affects_type_bleeding, affect_canceling);
+	dm.add_damage_protector("damage_type", 1000., 10000.);
+	dm.register_body_part_damage_protector("part_name", NULL);
+	dm.unregister_body_part_damage_protector("part_name", NULL);
+	dm.get_affects_applying_type();
+	dm.get_body_part("part_name");
+	dm.pop_body_part();
+	dm.get_total_health();
+	// dm.on_broken_limb_affect("bodypart", affects_type_bleeding, affect_canceling);
+
+	//
+	// BODY PART PARAMETERS
+	//
+	body_part_parameters* bpp = new body_part_parameters(
+		"name",
+		10.f,
+		10.f,
+		10.f,
+		true,
+		dm,
+		1);
 
 
 
-		bpp->add_hit_type(NULL);
-		bpp->add_threshold(NULL);
-		bpp->hit_by_type("hit_type", 10, 10., 10., false, NULL);
-		bpp->increase_health(10);
-		bpp->decrease_health(20);
-		bpp->regenerate(10, 20);
-		bpp->dump_state(&survarium::bpp_dump_stats, 0);
-		bpp->dump_state(stats, 10);
-		bpp->reset();
+	bpp->add_hit_type(NULL);
+	bpp->add_threshold(NULL);
+	bpp->hit_by_type("hit_type", 10, 10., 10., false, NULL);
+	bpp->increase_health(10);
+	bpp->decrease_health(20);
+	bpp->regenerate(10, 20);
+	bpp->dump_state(&bpp_dump_stats, 0);
+	bpp->dump_state(stats, 10);
+	bpp->reset();
 
-		bpp->apply_affect_by_force(survarium::affects_type_blindness, survarium::affect_canceling, 20);
-		bpp->can_affect_death();
-		bpp->has_affect_protector(survarium::affects_type_blindness);
-		bpp->get_health_in_percentage();
-		bpp->cancel_affect_by_force(survarium::affects_type_blindness);
-		bpp->add_damage_protector(NULL);
-		bpp->remove_damage_protector(NULL);
-		bpp->pop_hit_type();
-		bpp->pop_threshold();
+	bpp->apply_affect_by_force(affects_type_blindness, affect_canceling, 20);
+	bpp->can_affect_death();
+	bpp->has_affect_protector(affects_type_blindness);
+	bpp->get_health_in_percentage();
+	bpp->cancel_affect_by_force(affects_type_blindness);
+	bpp->add_damage_protector(NULL);
+	bpp->remove_damage_protector(NULL);
+	bpp->pop_hit_type();
+	bpp->pop_threshold();
 
-		bpp->is_affect_applied(survarium::affects_type_blindness);
-		bpp->get_hit_parameters("hit_params");
-		bpp->set_parameters(10.f, 20.f);
-	}
+	bpp->is_affect_applied(affects_type_blindness);
+	bpp->get_hit_parameters("hit_params");
+	bpp->set_parameters(10.f, 20.f);
+
+	Callback1 cb1;
+	Callback2 cb2;
+}
+
+
+Callback1::Callback1()
+{
+	m_complete = boost::bind(&Callback1::complete, this, _1);
+	m_partial  = boost::bind(&Callback1::partial , this, _1, 10);
+}
+
+
+
+void Callback1::complete(const char *name)
+{
+	m_complete = boost::bind(&Callback1::complete, this, _1);
+}
+
+void Callback1::partial(const char *name, int value)
+{
+	m_partial  = boost::bind(&Callback1::partial , this, _1, 10);
+}
+
+
+
+Callback2::Callback2()
+{
+	m_complete = boost::bind(&Callback2::complete, this, _1, _2);
+	m_partial  = boost::bind(&Callback2::partial , this, _1, _2, 10.f);
+}
+
+void Callback2::complete(const char *name, int value)
+{
+	m_complete = boost::bind(&Callback2::complete, this, _1, _2);
+}
+
+void Callback2::partial(const char *name, int value, float precision)
+{
+	m_partial  = boost::bind(&Callback2::partial , this, _1, _2, 10.f);
+}
+
+
 }
