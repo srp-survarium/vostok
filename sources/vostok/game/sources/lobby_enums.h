@@ -12,9 +12,11 @@ namespace lobby {
 
 // no PDB record (only referenced, as a parameter type, by survarium::lobby_menu /
 // lobby_client) - enumerators unknown, a matcher recovers them from the
-// consuming asm
+// consuming asm (query_prices/query_profile_contents pass the literal sub-id)
 enum query_info_types
 {
+	query_profile_info		= 0x2,
+	query_prices_info		= 0x6,
 };
 
 // canonical: headers/others/enums/lobby__client_state_enum.h (lobby_client's
