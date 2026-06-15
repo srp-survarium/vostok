@@ -130,21 +130,36 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
     fuzzy = overall.get("fuzzy_match_percent") or 0.0
     today = datetime.date.today().isoformat()
 
+    # best-ever fuzzy per module (ICF-churn-immune), from match.db history.
+    # code_max() rows are (module, total_code, fuzzy_cur, fuzzy_max, ...); a
+    # transient ICF fold-rep regression can't lower fuzzy_max, so it is the honest
+    # "how close have we ever gotten" ceiling. Tolerate a missing/empty DB.
+    try:
+        cm = {r[0]: r[3] for r in code_max()}
+    except Exception:
+        cm = {}
+    overall_fuzzy_max = cm.get("OVERALL")
+
     rows = []
     for mod in sorted(mods, key=lambda k: -mods[k]["total_functions"]):
         a = mods[mod]
+        # fuzzy_weighted is already sum(percent * bytes), so divide - don't _pct
+        cur_fuzzy = a['fuzzy_weighted'] / a['total_code'] if a['total_code'] else 0
         rows.append([
             f"`{mod}`",
             f"{a['units']}",
             f"{a['matched_functions']:,} / {a['total_functions']:,} "
             f"({_pct(a['matched_functions'], a['total_functions']):.1f}%)",
-            # fuzzy_weighted is already sum(percent * bytes), so divide - don't _pct
-            f"{(a['fuzzy_weighted'] / a['total_code'] if a['total_code'] else 0):.1f}%",
+            f"{cur_fuzzy:.1f}%",
+            # best-ever >= current always: current is achievable now, history adds
+            # the churn-immune peak above it (the two come from different denominators
+            # - report.json vs match.db - so guard with max, never read below current)
+            f"{max(cur_fuzzy, cm.get(mod, 0.0)):.1f}%",
             f"{_pct(a['matched_code'], a['total_code']):.1f}%",
         ])
     table = _md_table(
-        ["Module", "Units", "Functions exact", "Fuzzy", "Code matched"],
-        "lrrrr",
+        ["Module", "Units", "Functions exact", "Fuzzy", "Fuzzy max", "Code matched"],
+        "lrrrrr",
         rows,
     )
 
@@ -156,13 +171,16 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         "`rebuild.py` at the end of every build; do not hand-edit. Diff this block "
         "across commits to spot regressions._",
         "",
-        f"**Overall: {fuzzy:.2f}% fuzzy &middot; "
-        f"{funcs:,} / {tfuncs:,} functions exact "
+        f"**Overall: {fuzzy:.2f}% fuzzy"
+        + (f" (max {max(fuzzy, overall_fuzzy_max):.2f}%)"
+           if overall_fuzzy_max is not None else "")
+        + f" &middot; {funcs:,} / {tfuncs:,} functions exact "
         f"({_pct(funcs, tfuncs):.2f}%).**",
         "",
-        "_`Fuzzy` = code-weighted partial-credit match (how close); `Code matched` "
-        "= byte-exact only. `scripts/match_score.py --max-code` adds the best-ever "
-        "max of each (ICF-churn-immune)._",
+        "_`Fuzzy` = code-weighted partial-credit match (how close); `Fuzzy max` = "
+        "best-ever fuzzy per function (ICF-churn-immune, from `match.db` history); "
+        "`Code matched` = byte-exact only. `scripts/match_score.py --max-code` adds "
+        "the exact-match max too._",
         "",
         *table,
     ]
