@@ -13,6 +13,7 @@
 #include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
 #include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
 #include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
+#include <vostok/resources.h>	// query_resources / request (query_base_resources)
 
 // SetWindowTextA (USER32) is stripped from os_include.h by NOUSER; declare the import
 // directly for on_application_activate's title-bar update.
@@ -495,29 +496,25 @@ void game::on_configs_loaded( resources::queries_result& result )
 	// ******
 }
 
-// STATE[STUB]
 void game::on_render_output_window_created( resources::queries_result& data )
 {
-	// LOCALS
-	// resources::request[2] 			requests
-	// ******
+	m_render_output_window			= static_cast_resource_ptr< render::render_output_window_ptr >( data[0].get_unmanaged_resource( ) );
 
-	// FUNCTION BODY[0x5e7640]: 14
-	// <0x5e7649>|0x009|+0x076:'381'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x5e76bf>|0x07f|+0x098:'394'
-	// ******
+	resources::request requests[]	=
+	{
+		resources::create_request	( "items_dictionary", resources::items_dictionary_class ),
+		resources::create_request	( "resources/flash_movies/chat.swf", resources::flash_movie_class ),
+	};
+
+	resources::query_resources		(
+		requests,
+		2,
+		boost::bind					( &game::on_base_resources_created, this, _1 ),
+		g_allocator,
+		NULL,
+		NULL,
+		assert_on_fail_true
+	);
 }
 
 // STATE[STUB]
@@ -694,28 +691,25 @@ void game::create_login_menu( )
 	m_login_menu					= NEW( class login_menu )( *this );
 }
 
-// STATE[STUB]
 void game::query_base_resources( )
 {
-	// LOCALS
-	// resources::request[2] 			requests
-	// ******
+	register_console_commands		( );
 
-	// FUNCTION BODY[0x5e79c0]: 13
-	// <0x5e79c7>|0x007|+0x005:'551'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e79cc>|0x00c|+0x009:'555'
-	// <0x5e79d5>|0x015|+0x004:'556'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e79d9>|0x019|+0x088:'563'
-	// ******
+	resources::request requests[]	=
+	{
+		resources::create_request	( "resources/startup.cfg", resources::raw_data_class ),
+		resources::create_request	( "user_data/user.cfg", resources::raw_data_class ),
+	};
+
+	resources::query_resources		(
+		requests,
+		2,
+		boost::bind					( &game::on_configs_loaded, this, _1 ),
+		g_allocator,
+		NULL,
+		NULL,
+		assert_on_fail_true
+	);
 }
 
 // STATE[STUB]
@@ -1150,33 +1144,18 @@ void game::load(
 	// ******
 }
 
-// STATE[STUB]
 void game::load( pcstr const project_resource_name )
 {
-	// CALL SITE INFO
-	// <0x5e5799> -> void < unknown >( pcstr, camera_director const& )
-	// ******
-
-	// FUNCTION BODY[0x5e5780]: 1
-	// <0x5e5782>|0x002|+0x019:'927'
-	// ******
+	m_network_client->load			( project_resource_name, m_game_world.get_camera_director( ) );
 }
 
-// STATE[STUB]
 void game::unload( pcstr __formal, bool destroying )
 {
-	// CALL SITE INFO
-	// <0x5e67a9> -> void < unknown >()
-	// <0x5e67b7> -> void < unknown >()
-	// ******
+	if ( !m_game_world.empty( ) )
+		m_game_world.unload			( );
 
-	// FUNCTION BODY[0x5e6770]: 5
-	// <0x5e6773>|0x003|+0x009:'932'
-	// <0x5e677c>|0x00c|+0x00c:'933'
-	// <0>
-	// <0x5e6788>|0x018|+0x007:'935'
-	// <0x5e678f>|0x01f|+0x02c:'936'
-	// ******
+	if ( !destroying )
+		switch_to_scene				( m_main_menu );
 }
 
 void game::switch_to_game_world( )
