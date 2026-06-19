@@ -97,6 +97,11 @@ void anchor_game_network_clients( game& g )
 		client.unload( );
 		client.get_player( runtime_id );
 		client.get_player_team( "name" );
+		client.get_game_world( );
+		client.apply_use_physics_controller_for_current( );
+		client.on_connected_to_lobby( );
+		client.on_disconnected_from_lobby( );
+		client.on_match_disconnected( ( network_core::disconnect_event_types_enum )runtime_id );
 
 		// private message handlers - reached only from the (still-stub) dispatch,
 		// so reference them here directly (friend access) to keep them linked
@@ -132,6 +137,24 @@ void anchor_game_network_clients( game& g )
 		client.process_sync_response( reader );
 		client.send_player_inputs( );
 		client.setup_camera_for_warmup( );
+
+		// network-client core dispatch / lobby / http surface (still reached only
+		// from stub callers, so reference directly to keep them linked for scoring)
+		client.on_match_packet_received( runtime_id, reader );
+		client.on_lobby_packet_received( reader );
+		client.process_shop_action( reader );
+		client.process_match_finished( reader );
+		client.close_current_match( runtime_id != 0 );
+		client.draw_stats( any_u32 );
+		client.on_connected_to_match(
+			( connection_error_types_enum )any_u32, ( handshaking_error_types_enum )any_u32,
+			( socket_error_types_enum )any_u32, ( lobby_server_message_types_enum )any_u32 );
+		client.on_connected_to_login(
+			( connection_error_types_enum )any_u32, ( handshaking_error_types_enum )any_u32,
+			( socket_error_types_enum )any_u32, ( login_server_message_types_enum )any_u32 );
+		client.on_http_error( boost::system::error_code( ) );
+		client.on_http_result_ready( "", runtime_id );
+		client.http_query_server_connection_info( runtime_id );
 	}
 
 	{

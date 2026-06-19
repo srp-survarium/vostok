@@ -47,6 +47,8 @@ class lobby_menu : public base_game_scene , public input::handler {
 	// codegen-neutral: lets the /OPT:REF reachability anchor (anchor_game_menus.cpp)
 	// address-take the private menu methods until the real menu call graph reaches them
 	friend void ::vostok::use_game_menus( );
+	// network_client toggles m_is_connected_to_lobby directly on (dis)connect
+	friend class network_client;
 public:
 			explicit					lobby_menu							( game& g );
 	virtual								~lobby_menu							( );
