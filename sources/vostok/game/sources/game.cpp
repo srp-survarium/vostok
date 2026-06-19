@@ -827,23 +827,12 @@ void game::load_config_query( pcstr cfg_name, bool create_renderer )
 	// ******
 }
 
-// STATE[STUB]
 void game::register_console_commands( )
 {
-	// STATICS
-	// static console_commands::cc_delegate cfg_unload_level = <0x4c2b8f0>;
-	// static console_commands::cc_delegate cfg_load_cc = <0x4c2b9b0>;
-	// static console_commands::cc_delegate game_exit_cc = <0x4c2ba10>;
-	// static console_commands::cc_delegate cfg_load_level = <0x4c2b950>;
-	// ******
-
-	// FUNCTION BODY[0x5e6d10]: 5
-	// <0x5e6d13>|0x003|+0x092:'647'
-	// <0x5e6da5>|0x095|+0x09d:'648'
-	// <0>
-	// <0x5e6e42>|0x132|+0x094:'650'
-	// <0x5e6ed6>|0x1c6|+0x094:'651'
-	// ******
+	static console_commands::cc_delegate	game_exit_cc( "quit", boost::bind( &game::exit, this, _1 ), false );
+	static console_commands::cc_delegate	cfg_load_cc( "cfg_load", boost::bind( &game::load_config_query, this, _1, false ), true );
+	static console_commands::cc_delegate	cfg_load_level( "level_load", boost::bind( &game::load_cmd, this, _1 ), true );
+	static console_commands::cc_delegate	cfg_unload_level( "level_unload", boost::bind( &game::unload_cmd, this, _1 ), false );
 }
 
 void game::switch_to_scene( base_game_scene* scene )
@@ -1217,40 +1206,24 @@ void game::switch_to_login( login_menu_status_enum status )
 	switch_to_scene					( m_login_menu );
 }
 
+// claude@NOTE: BLOCKED on sibling cook TUs not enabled. Target body (structure
+// recovered from the $S9-guarded function-static cook block + atexit dtors):
+//   static animated_model_instance_cook          s_animated_model_instance_cook;
+//   static game_material_manager_cook            s_material_manager_cook( false );
+//   static project_cooker_simple                 s_simple_project_cook( engine( ).command_line_editor( ) );
+//   static animation_analysis_result_cook        s_animation_analysis_result_cook;
+//   resources::register_cook( &s_animation_analysis_result_cook );
+//   static ladder_cook                           s_ladder_cook;
+//   resources::register_cook( &s_ladder_cook );
+//   static weapon_user_animations_container_cook  s_animation_container_cook;
+//   resources::register_cook( &s_animation_container_cook );
+//   static victory_item_cook                     s_victory_item_cook( m_game_world );
+// Constructing s_simple_project_cook needs project_cooker_simple's vtable, whose
+// delete_resource() body lives in the (still-excluded) project_cooker_simple.cpp
+// sibling TU -> LNK2001. Re-enable + match once that cook cluster is built.
 // STATE[STUB]
 void game::register_cooks( )
 {
-	// STATICS
-	// static animation_analysis_result_cook s_animation_analysis_result_cook = <0x4c2789c>;
-	// static game_material_manager_cook s_material_manager_cook = <0x4c278bc>;
-	// static animated_model_instance_cook s_animated_model_instance_cook = <0x4c277b0>;
-	// static ladder_cook 				s_ladder_cook = <0x4c2787c>;
-	// static weapon_user_animations_container_cook s_animation_container_cook = <0x4c2785c>;
-	// static project_cooker_simple 	s_simple_project_cook = <0x4c2778c>;
-	// static victory_item_cook 		s_victory_item_cook = <0x4c27768>;
-	// ******
-
-	// CALL SITE INFO
-	// <0x5e59af> -> bool < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e5940]: 15
-	// <0x5e5943>|0x003|+0x025:'968'
-	// <0x5e5968>|0x028|+0x02c:'969'
-	// <0>
-	// <0x5e5994>|0x054|+0x033:'971'
-	// <0>
-	// <0x5e59c7>|0x087|+0x02a:'973'
-	// <0x5e59f1>|0x0b1|+0x00a:'974'
-	// <0>
-	// <0x5e59fb>|0x0bb|+0x02a:'976'
-	// <0x5e5a25>|0x0e5|+0x00a:'977'
-	// <0>
-	// <0x5e5a2f>|0x0ef|+0x02a:'979'
-	// <0x5e5a59>|0x119|+0x00a:'980'
-	// <0>
-	// <0x5e5a63>|0x123|+0x041:'982'
-	// ******
 }
 
 void game::on_application_activate( )
