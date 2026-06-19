@@ -69,6 +69,12 @@ struct light_props {
 
 STATIC_SIZE_ASSERT(light_props, 0xF0);
 
+// reads a light_props out of a config value; out-of-line in
+// render/facade/sources/scene_renderer.cpp (the cook entry called by
+// object_light::load). Templated over the config-value type.
+template < typename config_t >
+void load_props_impl( light_props& props, config_t const& cfg );
+
 } // namespace render
 } // namespace vostok
 

@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "base_game_scene.h"
+#include "game.h"
+#include <vostok/render/facade/game_renderer.h>
 
 namespace survarium {
 
@@ -164,14 +166,9 @@ void base_game_scene::tick( const u32 __formal, const u32 current_time_in_ms, co
 	// ******
 }
 
-// STATE[STUB]
 render::game::renderer& base_game_scene::renderer( ) const
 {
-	return *( render::game::renderer* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5d6da0]: 1
-	// <0x5d6da0>|0x000|+0x00c:'147'
-	// ******
+	return m_game.renderer( );
 }
 
 // STATE[STUB]
