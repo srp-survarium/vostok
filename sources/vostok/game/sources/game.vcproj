@@ -1009,6 +1009,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_menus.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\animated_model_instance.h"
 				>
 			</File>

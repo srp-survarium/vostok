@@ -282,12 +282,16 @@ namespace vostok
 		volumetric_sound.resolve_links( static_cast< survarium::base_project* >( NULL ), cfg );
 	}
 
+	// menu non-virtual method reachability anchor (anchor_game_menus.cpp)
+	void use_game_menus( );
+
 	void anchor_game( )
 	{
 		use_inventory( );
 		use_engine_user_world_cone( );
 		use_game_skeleton( );
 		use_object_skeleton( );
+		use_game_menus( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).

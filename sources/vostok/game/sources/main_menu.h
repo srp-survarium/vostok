@@ -13,6 +13,7 @@ namespace vostok {
 namespace resources {
 	class queries_result;
 } // namespace resources
+	void use_game_menus( );	// /OPT:REF reachability anchor (anchor_game_menus.cpp)
 } // namespace vostok
 
 namespace survarium {
@@ -23,6 +24,10 @@ class game;
 // void* main_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x91bf0]: <0x427c0>|0x000|      :'43'	{
 
 class main_menu : public base_game_scene , public input::handler {
+	// codegen-neutral: lets the /OPT:REF reachability anchor (anchor_game_menus.cpp)
+	// address-take the private query_resources / on_resources_ready until the real
+	// menu call graph reaches them
+	friend void ::vostok::use_game_menus( );
 public:
 			explicit			main_menu			( game& g );
 	virtual						~main_menu			( );
@@ -38,14 +43,9 @@ public:
 
 	virtual	void				clear_resources		( ) override;
 
-	// STATE[STUB]
 	virtual	input::handler&		input_handler		( )
 	{
 		return *this;
-
-		// FUNCTION BODY[0x92e90]
-		// <0x92e90>|0x000|      :'35'	{
-		// ******
 	}
 
 	virtual	bool				on_keyboard_action	(
@@ -70,19 +70,15 @@ public:
 									s32					z
 								) override;
 
-	// STATE[STUB]
 	virtual	s32					input_priority		( ) override
 	{
-		return 0;
-
-		// FUNCTION BODY[0x92ea0]
-		// <0x92ea0>|0x000|      :'41'	{
-		// ******
+		return 100;
 	}
 
 	// buildability return; the real body reaches the manager through m_game
 	virtual	bullet_manager&		get_bullet_manager	( ) const override { /* no source */ return *( bullet_manager* )NULL; }
 
+private:
 			void				query_resources		( );
 
 			void				on_resources_ready	( resources::queries_result& data );
