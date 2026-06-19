@@ -1462,6 +1462,10 @@ void game::activate_main_menu( )
 	m_game_options.activate			( m_active_scene );
 }
 
+// claude@NOTE: structure is faithful but the byte residual is capped by the SIBLING
+// game_options.cpp: game_options::activate/deactivate are still STUBs there, so the
+// target's inlined activate/deactivate bodies (game_ui hide_movie + member resets)
+// collapse to nothing here. Lifts once game_options.cpp is matched.
 void game::deactivate_main_menu( )
 {
 	m_game_options.deactivate		( );
