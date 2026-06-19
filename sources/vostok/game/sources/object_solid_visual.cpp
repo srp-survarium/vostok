@@ -4,6 +4,15 @@
 
 #include "pch.h"
 #include "object_particle_visual.h"
+#include "base_game_scene.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/particle/world.h>
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
 
 // the compiland keeps its legacy name: the 2011/12 TU defined the whole
 // object_*_visual family (see temp/game_legacy/object_solid_visual.h), but
@@ -12,70 +21,62 @@
 
 namespace survarium {
 
-// STATE[STUB]
- object_particle_visual::object_particle_visual( base_game_scene& w ) :
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
+
+object_particle_visual::object_particle_visual( base_game_scene& w ) :
 	game_object_static( w )
 {
-	// FUNCTION BODY[0x78e270]
-	// <0x78e270>|0x000|      :'455'	{
-	// ******
 }
 
-// STATE[STUB]
 void object_particle_visual::load(
 	configs::binary_config_value const&		t,
 	pcstr									project_resources_path,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// LOCALS
-	// variant< 32 > 					ud
-	// ******
+	load_transform( t, m_transform );
 
-	// FUNCTION BODY[0x78e310]: 15
-	// <0x78e31a>|0x00a|+0x015:'459'
-	// <0>
-	// <1>
-	// <0x78e32f>|0x01f|+0x04b:'462'
-	// <0x78e37a>|0x06a|+0x029:'463'
-	// <0>
-	// <0x78e3a3>|0x093|+0x01e:'465'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x78e3c1>|0x0b1|+0x098:'473'
-	// ******
+	resources::user_data_variant ud;
+	ud.set( &get_game_scene().renderer().scene().particle_world( get_game_scene().render_scene() ) );
+
+	pcstr lib_name = pcstr( t["lib_name"] );
+
+	resources::request r[] =
+	{
+		{ lib_name, resources::particle_system_instance_class },
+	};
+
+	resources::user_data_variant const* user_data[] = { &ud };
+
+	resources::query_resources(
+		r,
+		1,
+		boost::bind( &object_particle_visual::on_visual_ready, this, _1, cb ),
+		g_allocator,
+		user_data
+	);
 }
 
-// STATE[STUB]
 void object_particle_visual::on_visual_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
-	// FUNCTION BODY[0x78e1b0]: 4
-	// <0>
-	// <1>
-	// <0x78e1b1>|0x001|+0x0ab:'480'
-	// <0x78e25c>|0x0ac|+0x00a:'481'
-	// ******
+	m_particle_system_instance_ptr = data[0].get_unmanaged_resource();
+
+	cb( *this );
 }
 
-// STATE[STUB]
+// claude@NOTE: insert byte-residual is a render-facade signature gap, not a source
+// shape issue - the PDB (and render::engine::world_pc) take play_particle_system's
+// in_instance BY VALUE, but scene_renderer.h's facade declaration spells it const&,
+// so the base elides the temp intrusive_ptr copy the target builds. Recovers when
+// the render-facade play_particle_system signature is corrected (its own match phase).
 void object_particle_visual::insert( )
 {
-	// FUNCTION BODY[0x78e2d0]: 1
-	// <0x78e2d3>|0x003|+0x03a:'486'
-	// ******
+	get_game_scene().renderer().scene().play_particle_system( get_game_scene().render_scene(), m_particle_system_instance_ptr, m_transform );
 }
 
-// STATE[STUB]
 void object_particle_visual::remove( )
 {
-	// FUNCTION BODY[0x78e2a0]: 1
-	// <0x78e2a0>|0x000|+0x026:'491'
-	// ******
+	get_game_scene().renderer().scene().remove_particle_system_instance( get_game_scene().render_scene(), m_particle_system_instance_ptr );
 }
 
 } // namespace survarium
