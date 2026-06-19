@@ -64,6 +64,8 @@
 #include "object_wire.h"
 #include "object_sky.h"
 #include "object_environment.h"
+#include "object_particle_visual.h"
+#include "object_volumetric_sound.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
 
@@ -266,6 +268,18 @@ namespace vostok
 		environment.load( cfg, "", cb );
 		environment.insert( );
 		environment.remove( );
+
+		survarium::object_particle_visual	particle( scene );
+		particle.load( cfg, "", cb );
+		particle.insert( );
+		particle.remove( );
+
+		// object_volumetric_sound derives object_sound + link_resolver; reference
+		// its load / insert / resolve_links (the link_resolver virtual) too.
+		survarium::object_volumetric_sound	volumetric_sound( scene );
+		volumetric_sound.load( cfg, "", cb );
+		volumetric_sound.insert( );
+		volumetric_sound.resolve_links( static_cast< survarium::base_project* >( NULL ), cfg );
 	}
 
 	void anchor_game( )
