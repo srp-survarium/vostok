@@ -48,6 +48,7 @@
 #include "game.h"
 #include "key_binder.h"
 #include "lobby_menu.h"
+#include "login_menu.h"
 #include "main_menu.h"
 #include "free_fly_camera.h"
 #include "camera_director.h"
@@ -164,6 +165,11 @@ namespace vostok
 		survarium::game_world			scene( g );
 		survarium::key_binder			binder( g );
 		survarium::lobby_menu			lobby( g );
+		survarium::login_menu			login( g );
+		// volatile source so set_status's status arg is not constant-folded (it would
+		// collapse the matched m_status = status store into m_status = <const>)
+		static volatile int s_login_status = survarium::login_menu_status_connected;
+		login.set_status				( (survarium::login_menu_status_enum)s_login_status );
 		survarium::main_menu			main( g );
 		survarium::camera_director		director( scene );
 		survarium::game_camera			camera( scene );
