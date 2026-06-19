@@ -69,9 +69,10 @@ void simple_animation_controller::query_new_target_if_needed( )
 // STATE[STUB]
 animation::mixing::expression simple_animation_controller::selected_animations( mutable_buffer& buffer )
 {
-	// CALL SITE INFO
-	// <0x5bc06d> -> animation::mixing::expression < unknown >( mutable_buffer&, bool& ) const
-	// ******
+	// claude@NOTE: buildability return only - force-codegen'd by anchor_game_npc.cpp
+	// (the animations_selector ctor embeds this controller). Body is the lexeme wall;
+	// a matcher recovers it. expression has no default ctor, so deref-null + copy-ctor.
+	return *( animation::mixing::expression* )0;
 
 	// FUNCTION BODY[0x5bc020]: 11
 	// <0x5bc020>|0x000|+0x004:'49'	{
@@ -94,6 +95,9 @@ animation::mixing::expression simple_animation_controller::selected_animations( 
 // STATE[STUB]
 animation::mixing::expression simple_animation_controller::try_finalize( base_animation_controller& next_controller, mutable_buffer& buffer )
 {
+	// claude@NOTE: buildability return only - force-codegen'd by anchor_game_npc.cpp.
+	return *( animation::mixing::expression* )0;
+
 	// FUNCTION BODY[0x5bbef0]: 2
 	// <0>
 	// <0x5bbef0>|0x000|+0x011:'66'

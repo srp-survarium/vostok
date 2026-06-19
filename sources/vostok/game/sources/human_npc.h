@@ -213,6 +213,13 @@ public:
 	virtual	bool								is_target_in_melee_range	( ai::npc const* const target ) const override;
 	virtual	bool								is_at_node					( ai::game_object const* const node ) const override;
 
+	// inline ai::npc / ai::game_object pure-virtual overrides absent from the
+	// canonical dump (no out-of-line symbol; inlined at the call sites)
+	virtual	bool								is_playing_animation		( ) const override { /* no source */ return false; }
+	virtual	bool								is_moving					( ) const override { /* no source */ return false; }
+	virtual	void								stop_animation_playing		( ) override { /* no source */ }
+	virtual	ai::collision_object*				get_collision_object		( ) const override { /* no source */ return NULL; }
+
 	virtual	void								prepare_to_attack			( ai::npc const* const target, ai::weapon const* const gun ) override;
 
 	virtual	void								attack						( ai::npc const* const target, ai::weapon const* const gun ) override;

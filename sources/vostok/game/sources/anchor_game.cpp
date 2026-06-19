@@ -84,6 +84,9 @@ namespace survarium {
 
 namespace vostok
 {
+	// NPC / animation cluster reachability anchor (anchor_game_npc.cpp).
+	void use_game_npc( );
+
 	void use_inventory( )
 	{
 	/*
@@ -292,6 +295,7 @@ namespace vostok
 		use_game_skeleton( );
 		use_object_skeleton( );
 		use_game_menus( );
+		use_game_npc( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
