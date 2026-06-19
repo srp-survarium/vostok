@@ -11,20 +11,12 @@
 
 namespace survarium {
 
-// STATE[STUB]
  sound_player_cook::sound_player_cook( sound::world* world, resources::class_id_enum class_id ) :
-	// class_id comes through the ctor; reuse/thread args are buildability
-	// placeholders (the game_core cook convention) - a matcher confirms
 	resources::translate_query_cook( class_id, reuse_false, use_current_thread_id ),
 	m_world( world )
 {
-	// FUNCTION BODY[0x7689e0]: 0
-	// <0x7689e0>|0x000|+0x060:'22'	{
-	// <0x768a40>|0x060|      :'23'	}
-	// ******
 }
 
-// STATE[STUB]
 void sound_player_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	resources::query_resource	(
@@ -35,36 +27,18 @@ void sound_player_cook::translate_query( resources::query_result_for_cook& paren
 		0,
 		&parent
 	);
-
-	// FUNCTION BODY[0x768f20]: 8
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x768f2a>|0x00a|+0x0a4:'34'
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: 53% - the dtor call is a distinct target statement but the free
+// path differs: target emits strip_pointer<doug_lea_allocator> + inline
+// vostok_mspace_free, base resolves VOSTOK_FREE_IMPL to get_pointer + free_helper
+// (g_allocator pass-by-pointer idiom mismatch). Structure (2 stmts) is faithful.
 void sound_player_cook::delete_resource( resources::resource_base* resource )
 {
 	resource->~resource_base			( );
 	VOSTOK_FREE_IMPL						( g_allocator, resource );
-
-	// CALL SITE INFO
-	// <0x768a5d> -> void* < unknown >( u32 )
-	// ******
-
-	// FUNCTION BODY[0x768a50]: 2
-	// <0x768a51>|0x001|+0x00e:'39'
-	// <0x768a5f>|0x00f|+0x01f:'40'
-	// ******
 }
 
-// STATE[STUB]
 void sound_player_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
@@ -101,55 +75,6 @@ void sound_player_cook::on_config_loaded( resources::queries_result& data )
 		parent
 	);
 
-	// LOCALS
-	// resources::query_result_for_cook* const parent
-	// configs::binary_config_value const* it_end
-	// configs::binary_config_ptr 		config
-	// ******
-
-	// FUNCTION BODY[0x768d80]: 38
-	// <0x768d80>|0x000|+0x006:'44'	{
-	// <0x768d86>|0x006|+0x008:'45'
-	// <0x768d8e>|0x00e|+0x00f:'46'
-	// <0>
-	// <1>
-	// <0x768d9d>|0x01d|+0x017:'49'
-	// <0>
-	// <1>
-	// <2>
-	// <0x768db4>|0x034|+0x03d:'53'
-	// <0x768df1>|0x071|+0x013:'54'
-	// <0>
-	// <0x768e04>|0x084|+0x002:'56'
-	// <0x768e06>|0x086|+0x013:'57'
-	// <0>
-	// <0x768e19>|0x099|+0x021:'59'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x768e3a>|0x0ba|+0x006:'65'
-	// <0>
-	// <1>
-	// <2>
-	// <0x768e40>|0x0c0|+0x00e:'69'
-	// <0>
-	// <0x768e4e>|0x0ce|+0x019:'71'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x768e67>|0x0e7|-0x0bf:'82'
-	// <0x768da8>|0x028|+0x145:'83'
-	// <0x768eed>|0x16d|      :'83'	}
-	// ******
 }
 
 // STATE[STUB]
