@@ -5,195 +5,139 @@
 #include "pch.h"
 #include "chat_handler.h"
 #include "chat_tab.h"
+#include "game.h"
+#include "base_game_scene.h"
+#include "base_network_client.h"
+#include "network_client.h"
+#include "messaging_client.h"
+#include "lobby_menu.h"
+#include "key_binder.h"
+#include "swf_input_translator.h"
+#include "text_translator.h"
+#include "game_action_id.h"
+#include <vostok/input/world.h>
+#include <vostok/input/keyboard.h>
+#include <vostok/scaleform/sources/flash_value.h>
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_function_handler_params.h>
 
 namespace survarium {
 
-// STATE[STUB]
- chat_handler::chat_handler( game& game )
-	: m_game( game ) // buildability: ref member must be init'd
+// claude@NOTE: the flash-heavy methods here are structurally faithful but %-capped
+// by unmatched cross-module stubs that do NOT inline the way the shipped build did:
+//   - scaleform flash_value ctor/dtor/Set*/flash_movie::Invoke (value.cpp/movie.cpp)
+//     are empty stubs, so each flash_value temp / Invoke stays an out-of-line CALL
+//     here instead of inlining to the GFx::Value / GFx::Movie ops the target emits;
+//   - base_game_scene::show_movie / hide_movie are empty stubs, so show()/hide()
+//     inline them to nothing (the scene call vanishes);
+//   - key_binder::get_binded_action is a stub returning a constant, so LTCG folds
+//     on_keyboard_action's binded-action branches.
+// Match lifts once those siblings/scaleform are matched - structure here is correct.
+
+chat_handler::chat_handler( game& game )
+	: m_focused( false )
+	, m_active( false )
+	, m_game_ui_mode( false )
+	, m_game( game )
 {
-	// FUNCTION BODY[0x5dc4f0]: 0
-	// <0x5dc4f0>|0x000|+0x070:'34'	{
-	// <0x5dc560>|0x070|      :'35'	}
-	// ******
 }
 
-// STATE[STUB]
 void chat_handler::initialize( resources::unmanaged_resource_ptr const& ui )
 {
-	// LOCALS
-	// flash_value 						func
-	// flash_value 						proxy
-	// ******
+	m_chat_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( ui );
 
-	// FUNCTION BODY[0x5dc570]: 18
-	// <0x5dc570>|0x000|+0x075:'39'
-	// <0>
-	// <0x5dc5e5>|0x075|+0x01c:'41'
-	// <0x5dc601>|0x091|+0x015:'42'
-	// <0x5dc616>|0x0a6|+0x014:'43'
-	// <0>
-	// <0x5dc62a>|0x0ba|+0x00d:'45'
-	// <0>
-	// <1>
-	// <0x5dc637>|0x0c7|+0x01d:'48'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5dc654>|0x0e4|+0x023:'52'
-	// <0>
-	// <1>
-	// <0x5dc677>|0x107|+0x023:'55'
-	// <0x5dc69a>|0x12a|+0x02c:'56'
-	// ******
+	get_movie( )->movie->SetBackgroundAlpha( 0.f );
+	get_movie( )->movie->SetViewAlignment( flash_movie::Align_TopRight );
+	get_movie( )->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+	get_movie( )->movie->SetPriority( 30 );
+
+	get_movie( )->movie->SetExternalInterface( this );
+
+	flash_value func;
+	get_movie( )->movie->GetVariable( &func, "root.chat" );
+
+	flash_value proxy;
+	get_movie( )->movie->CreateFunction( &proxy, this );
+	func.SetMember( "send_function", proxy );
 }
 
-// STATE[STUB]
- chat_handler::~chat_handler( )
+chat_handler::~chat_handler( )
 {
-	// FUNCTION BODY[0x5dc480]: 0
-	// <0x5dc480>|0x000|+0x017:'60'	{
-	// <0x5dc497>|0x017|      :'61'	}
-	// ******
 }
 
-// STATE[STUB]
 void chat_handler::call( flash_function_handler_params& params )
 {
-	// LOCALS
-	// flash_value 						w_text
-	// ******
+	flash_value w_text;
+	params.pArgs[ 0 ].GetMember( "text", &w_text );
 
-	// CALL SITE INFO
-	// <0x5dcb06> -> bool < unknown >() const
-	// <0x5dcb1b> -> messaging_client& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5dcaa0]: 8
-	// <0>
-	// <1>
-	// <0x5dcaac>|0x00c|+0x042:'67'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5dcaee>|0x04e|+0x037:'72'
-	// ******
+	if( m_game.network_client( ).has_bandwidth( ) )
+		m_game.network_client( ).messaging_client( ).on_message_typed( w_text.GetStringW( ), messaging::player_general_channel );
 }
 
-// STATE[STUB]
 void chat_handler::callback(
 	flash_movie*			__formal,
 	pcstr					methodName,
 	flash_value const*		args,
-	u32						__formal2 /* PDB: __formal too (two would collide) */
+	u32						__formal2
 )
 {
-	// CALL SITE INFO
-	// <0x5dbce4> -> bool < unknown >() const
-	// <0x5dbd5f> -> input::world& < unknown >()
-	// <0x5dbd69> -> void < unknown >( input::handler& )
-	// ******
-
-	// FUNCTION BODY[0x5dbc90]: 12
-	// <0x5dbc90>|0x000|+0x00c:'76'	{
-	// <0x5dbc9c>|0x00c|+0x037:'77'
-	// <0>
-	// <0x5dbcd3>|0x043|+0x0a1:'79'
-	// <0>
-	// <0x5dbd74>|0x0e4|+0x035:'81'
-	// <0>
-	// <0x5dbda9>|0x119|+0x012:'83'
-	// <0>
-	// <0x5dbdbb>|0x12b|+0x035:'85'
-	// <0>
-	// <0x5dbdf0>|0x160|-0x085:'87'
-	// <0>
-	// <0x5dbd6b>|0x0db|+0x047:'89'
-	// <0x5dbdb2>|0x122|+0x052:'89'
-	// <0x5dbe04>|0x174|      :'89'	}
-	// ******
+	if( strcmp( methodName, "chat_enter_start" ) == 0 )
+		focus( true );
+	else if( strcmp( methodName, "chat_enter_cancel" ) == 0 )
+		focus( false );
+	else if( strcmp( methodName, "set_mouse_cursor" ) == 0 && !m_focused )
+		m_game.lobby_menu( ).set_cursor( const_cast< flash_value& >( args[ 0 ] ).GetBool( ) );
 }
 
-// STATE[STUB]
 bool chat_handler::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
 	input::enum_keyboard_action		action
 )
 {
-	// LOCALS
-	// toggle_action_enum 				action_type
-	// ******
+	toggle_action_enum action_type;
+	game_action_id binded_action = m_game.get_key_binder( ).get_binded_action( key, action_type, 8 );
 
-	return false;
+	if( action == input::kb_key_down )
+	{
+		if( binded_action == kSEND_MESSAGE || key == input::key_numpadenter )
+		{
+			get_movie( )->movie->Invoke( "root.finish_typing_message", NULL, NULL, 0 );
+			focus( false );
+		}
+		else if( key == input::key_escape )
+			focus( false );
+		else if( binded_action == kSELECT_SEND_TO )
+		{
+			get_movie( )->movie->Invoke( "root.tab_channel", NULL, NULL, 0 );
+			return true;
+		}
+	}
 
-	// FUNCTION BODY[0x5dbe10]: 28
-	// <0x5dbe10>|0x000|+0x009:'96'	{
-	// <0>
-	// <1>
-	// <0x5dbe19>|0x009|+0x01b:'99'
-	// <0>
-	// <1>
-	// <0x5dbe34>|0x024|+0x006:'102'
-	// <0>
-	// <0x5dbe3a>|0x02a|+0x03e:'104'
-	// <0>
-	// <0x5dbe78>|0x068|+0x01c:'106'
-	// <0x5dbe94>|0x084|-0x04d:'107'
-	// <0>
-	// <0x5dbe47>|0x037|+0x003:'109'
-	// <0>
-	// <0x5dbe4a>|0x03a|+0x002:'111'
-	// <0>
-	// <0x5dbe4c>|0x03c|+0x005:'113'
-	// <0>
-	// <0x5dbe51>|0x041|+0x04c:'115'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5dbe9d>|0x08d|+0x010:'120'
-	// <0>
-	// <0x5dbead>|0x09d|-0x040:'122'
-	// <0>
-	// <0x5dbe6d>|0x05d|+0x002:'124'
-	// <0x5dbe6f>|0x05f|+0x065:'125'
-	// <0x5dbed4>|0x0c4|      :'125'	}
-	// ******
+	if( m_chat_ui && m_chat_ui->movie )
+		m_game.input_translator( ).process_keyboard( input_world, key, action, get_movie( )->movie, m_game.game_time_ms( ) );
+
+	return true;
 }
 
-// STATE[STUB]
 bool chat_handler::on_gamepad_action(
 	input::world*					input_world,
 	input::gamepad_button			button,
 	input::enum_gamepad_action		action
 )
 {
-	return false;
-
-	// FUNCTION BODY[0x5dba60]: 2
-	// <0>
-	// <0x5dba60>|0x000|+0x003:'130'
-	// ******
+	return m_game_ui_mode;
 }
 
-// STATE[STUB]
 bool chat_handler::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
 	input::enum_mouse_key_action	action
 )
 {
-	return false;
-
-	// FUNCTION BODY[0x5dba50]: 2
-	// <0>
-	// <0x5dba50>|0x000|+0x003:'136'
-	// ******
+	return m_game_ui_mode;
 }
 
-// STATE[STUB]
 bool chat_handler::on_mouse_move(
 	input::world*		input_world,
 	s32					x,
@@ -201,322 +145,202 @@ bool chat_handler::on_mouse_move(
 	s32					z
 )
 {
-	return false;
-
-	// FUNCTION BODY[0x5dba40]: 2
-	// <0>
-	// <0x5dba40>|0x000|+0x003:'142'
-	// ******
+	return m_game_ui_mode;
 }
 
-// STATE[STUB]
 void chat_handler::on_message_typed( wchar_t const* text, messaging::message_channel_enum message_chanel )
 {
-	// CALL SITE INFO
-	// <0x5dca6f> -> bool < unknown >() const
-	// <0x5dca88> -> messaging_client& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5dca60]: 2
-	// <0x5dca61>|0x001|+0x014:'147'
-	// <0x5dca75>|0x015|+0x020:'148'
-	// ******
+	if( m_game.network_client( ).has_bandwidth( ) )
+		m_game.network_client( ).messaging_client( ).on_message_typed( text, message_chanel );
 }
 
-// STATE[STUB]
 void chat_handler::add_message(
-	const messaging::message_channel_enum	arg_0 /* messaging::message_channel_enum channel */,
+	const messaging::message_channel_enum	channel,
 	wchar_t const*		w_text,
 	wchar_t const*		w_sender_name
 )
 {
-	// LOCALS
-	// flash_value 						obj
-	// flash_value 						ret_args
-	// wchar_t[512] 					text_to_send
-	// char[32] 						sender_name
-	// network_client* 					net_client
-	// game_team_id 					sender_team
-	// wchar_t[512] 					to_all_localized
-	// ******
+	flash_value obj;
+	get_movie( )->movie->CreateObject( &obj );
 
-	// CALL SITE INFO
-	// <0x5dc8a2> -> game_team_id < unknown >() const
-	// ******
+	flash_value ret_args;
+	ret_args.SetStringW( w_sender_name );
+	obj.SetMember( "name", ret_args );
 
-	// FUNCTION BODY[0x5dc720]: 47
-	// <0>
-	// <0x5dc72f>|0x00f|+0x029:'156'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5dc758>|0x038|+0x018:'160'
-	// <0x5dc770>|0x050|+0x02c:'161'
-	// <0>
-	// <0x5dc79c>|0x07c|+0x00a:'163'
-	// <0x5dc7a6>|0x086|+0x02a:'164'
-	// <0>
-	// <0x5dc7d0>|0x0b0|+0x022:'166'
-	// <0x5dc7f2>|0x0d2|+0x041:'167'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5dc833>|0x113|+0x012:'171'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5dc845>|0x125|+0x02f:'177'
-	// <0>
-	// <0x5dc874>|0x154|+0x00d:'179'
-	// <0>
-	// <0x5dc881>|0x161|+0x04c:'181'
-	// <0>
-	// <0x5dc8cd>|0x1ad|+0x00e:'183'
-	// <0x5dc8db>|0x1bb|+0x0d8:'184'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5dc9b3>|0x293|+0x01a:'190'
-	// <0>
-	// <0x5dc9cd>|0x2ad|+0x027:'192'
-	// <0>
-	// <1>
-	// <0x5dc9f4>|0x2d4|-0x108:'195'
-	// <0x5dc8ec>|0x1cc|+0x01f:'196'
-	// <0>
-	// <0x5dc90b>|0x1eb|+0x00d:'198'
-	// <0x5dc918>|0x1f8|+0x02a:'199'
-	// <0>
-	// <0x5dc942>|0x222|+0x01e:'201'
-	// ******
+	ret_args.SetString( "(12:12:12)" );
+	obj.SetMember( "time", ret_args );
+
+	ret_args.SetUInt( channel );
+	obj.SetMember( "type", ret_args );
+
+	wchar_t text_to_send[ 512 ];
+
+	if( m_game_ui_mode && channel == messaging::player_match_channel )
+	{
+		char sender_name[ 32 ];
+		wcstombs_s( NULL, sender_name, w_sender_name, -1 );
+
+		network_client* net_client = static_cast< network_client* >( &m_game.network_client( ) );
+		game_team_id sender_team = net_client->get_player_team( sender_name );
+
+		bool same_team = false;
+		if( sender_team != team_undefined )
+			same_team = net_client->get_local_player( )->team( ) == sender_team;
+
+		if( same_team )
+		{
+			ret_args.SetString( "Red" );
+			obj.SetMember( "color", ret_args );
+
+			swprintf( text_to_send, 512, L"%s", w_text );
+		}
+		else
+		{
+			wchar_t to_all_localized[ 512 ];
+			m_game.text_translator( ).translate_text( "st_to_all", to_all_localized );
+
+			swprintf( text_to_send, 512, L"[%s] %s", to_all_localized, w_text );
+		}
+	}
+	else
+		swprintf( text_to_send, 512, L"%s", w_text );
+
+	ret_args.SetStringW( text_to_send );
+	obj.SetMember( "text", ret_args );
+
+	get_movie( )->movie->Invoke( "root.add_chat_message", NULL, &obj, 1 );
 }
 
-// STATE[STUB]
 void chat_handler::add_to_recent_list( wchar_t const* name )
 {
-	// LOCALS
-	// flash_value 						obj
-	// ******
+	if( m_game_ui_mode )
+		return;
 
-	// FUNCTION BODY[0x5dbc20]: 7
-	// <0x5dbc28>|0x008|+0x007:'206'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5dbc2f>|0x00f|+0x019:'210'
-	// <0>
-	// <0x5dbc48>|0x028|+0x01d:'212'
-	// ******
+	flash_value obj;
+	obj.SetStringW( name );
+	get_movie( )->movie->Invoke( "root.add_chat_recent", NULL, &obj, 1 );
 }
 
-// STATE[STUB]
 void chat_handler::set_mode( bool is_game_mode )
 {
-	// LOCALS
-	// chat_tab[5] 						lobby_menu_tabs
-	// chat_tab[2] 						game_menu_tabs
-	// flash_value 						channels_array
-	// flash_value 						is_heavy_mode
-	// chat_tab* 						current_tabs
-	// wchar_t[512] 					channel_name_txt
-	// flash_value 						chat_tab_member
-	// flash_value 						chat_tab_value
-	// ******
+	chat_tab lobby_menu_tabs[ 5 ] =
+	{
+		{ "st_chat_channel_general",	"White",	1,	"/general" },
+		{ "st_chat_channel_private",	"Pink",		4,	"" },
+		{ "st_chat_channel_clan",		"Blue",		3,	"/clan" },
+		{ "st_chat_channel_squad",		"Green",	8,	"/squad" },
+		{ "st_chat_channel_system",		"Red",		2,	"" },
+	};
 
-	// CALL SITE INFO
-	// <0x5dbfd7> -> messaging_client& < unknown >()
-	// ******
+	chat_tab game_menu_tabs[ 2 ] =
+	{
+		{ "st_chat_channel_team",	"White",	is_game_mode ? ( m_game.network_client( ).messaging_client( ).local_player_team( ) != team_1 ? 7 : 6 ) : 6,	"/team" },
+		{ "st_chat_channel_match",	"White",	5,	"/all" },
+	};
 
-	// FUNCTION BODY[0x5dbee0]: 88
-	// <0>
-	// <1>
-	// <0x5dbef0>|0x010|+0x00c:'227'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5dbefc>|0x01c|+0x0f6:'236'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5dbff2>|0x112|+0x024:'243'
-	// <0x5dc016>|0x136|+0x025:'244'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5dc03b>|0x15b|+0x003:'251'
-	// <0>
-	// <0x5dc03e>|0x15e|+0x004:'253'
-	// <0>
-	// <0x5dc042>|0x162|+0x00b:'255'
-	// <0x5dc04d>|0x16d|+0x002:'256'
-	// <0>
-	// <0x5dc04f>|0x16f|+0x002:'258'
-	// <0>
-	// <0x5dc051>|0x171|+0x00b:'260'
-	// <0x5dc05c>|0x17c|+0x002:'261'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5dc05e>|0x17e|+0x01e:'265'
-	// <0>
-	// <0x5dc07c>|0x19c|+0x024:'267'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5dc0a0>|0x1c0|+0x021:'272'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5dc0c1>|0x1e1|+0x024:'277'
-	// <0>
-	// <0x5dc0e5>|0x205|+0x06e:'279'
-	// <0x5dc153>|0x273|+0x02e:'280'
-	// <0>
-	// <0x5dc181>|0x2a1|+0x069:'282'
-	// <0x5dc1ea>|0x30a|+0x02c:'283'
-	// <0>
-	// <0x5dc216>|0x336|+0x027:'285'
-	// <0x5dc23d>|0x35d|+0x03b:'286'
-	// <0>
-	// <0x5dc278>|0x398|+0x029:'288'
-	// <0x5dc2a1>|0x3c1|+0x036:'289'
-	// <0>
-	// <0x5dc2d7>|0x3f7|+0x033:'291'
-	// <0>
-	// <0x5dc30a>|0x42a|+0x009:'293'
-	// <0x5dc313>|0x433|+0x02a:'294'
-	// <0>
-	// <1>
-	// <0x5dc33d>|0x45d|+0x01d:'297'
-	// <0x5dc35a>|0x47a|+0x070:'298'
-	// <0>
-	// <0x5dc3ca>|0x4ea|+0x01e:'300'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5dc3e8>|0x508|+0x004:'311'
-	// <0x5dc3ec>|0x50c|+0x031:'312'
-	// ******
+	m_game_ui_mode = is_game_mode;
+
+	chat_tab* current_tabs;
+	u8 count;
+	if( is_game_mode )
+	{
+		current_tabs = game_menu_tabs;
+		count = 2;
+	}
+	else
+	{
+		current_tabs = lobby_menu_tabs;
+		count = 5;
+	}
+
+	flash_value channels_array;
+	get_movie( )->movie->CreateArray( &channels_array );
+
+	for( u8 i = 0; i < count; ++i )
+	{
+		flash_value chat_tab_value;
+		get_movie( )->movie->CreateObject( &chat_tab_value );
+
+		wchar_t channel_name_txt[ 512 ];
+		m_game.text_translator( ).translate_text( current_tabs[ i ].name, channel_name_txt );
+
+		flash_value chat_tab_member;
+		chat_tab_member.SetStringW( channel_name_txt );
+		chat_tab_value.SetMember( "name", chat_tab_member );
+
+		chat_tab_member.SetString( current_tabs[ i ].color );
+		chat_tab_value.SetMember( "color", chat_tab_member );
+
+		chat_tab_member.SetInt( current_tabs[ i ].id );
+		chat_tab_value.SetMember( "id", chat_tab_member );
+
+		chat_tab_member.SetInt( current_tabs[ i ].id );
+		chat_tab_value.SetMember( "icon", chat_tab_member );
+
+		if( strcmp( current_tabs[ i ].key, "" ) != 0 )
+		{
+			chat_tab_member.SetString( current_tabs[ i ].key );
+			chat_tab_value.SetMember( "key", chat_tab_member );
+		}
+
+		channels_array.PushBack( chat_tab_value );
+	}
+
+	get_movie( )->movie->Invoke( "root.set_channels", NULL, &channels_array, 1 );
+
+	flash_value is_heavy_mode;
+	is_heavy_mode.SetBoolean( !m_game_ui_mode );
+	get_movie( )->movie->Invoke( "root.set_heavy", NULL, &is_heavy_mode, 1 );
 }
 
-// STATE[STUB]
 void chat_handler::set_local_player_name( pcstr account_name )
 {
-	// LOCALS
-	// flash_value 						local_player_name
-	// wchar_t[256] 					an
-	// ******
+	wchar_t an[ 256 ];
+	mbstowcs_s( NULL, an, account_name, -1 );
 
-	// FUNCTION BODY[0x5dbb80]: 7
-	// <0>
-	// <0x5dbb88>|0x008|+0x022:'318'
-	// <0>
-	// <1>
-	// <0x5dbbaa>|0x02a|+0x01d:'321'
-	// <0>
-	// <0x5dbbc7>|0x047|+0x024:'323'
-	// ******
+	flash_value local_player_name;
+	local_player_name.SetStringW( an );
+	get_movie( )->movie->Invoke( "root.set_local_player_name", NULL, &local_player_name, 1 );
 }
 
-// STATE[STUB]
 void chat_handler::focus( bool b_focused )
 {
-	// LOCALS
-	// flash_value 						argument
-	// ******
+	if( !m_game.network_client( ).has_bandwidth( ) )
+		return;
 
-	// CALL SITE INFO
-	// <0x5dbac7> -> bool < unknown >() const
-	// <0x5dbb49> -> input::world& < unknown >()
-	// <0x5dbb5b> -> void < unknown >( input::handler& )
-	// <0x5dbb62> -> input::world& < unknown >()
-	// <0x5dbb74> -> void < unknown >( input::handler& )
-	// ******
+	if( m_focused == b_focused )
+		return;
 
-	// FUNCTION BODY[0x5dbab0]: 19
-	// <0x5dbab0>|0x000|+0x000:'327'	{
-	// <0x5dbab0>|0x000|+0x021:'328'
-	// <0>
-	// <1>
-	// <0x5dbad1>|0x021|+0x009:'331'
-	// <0>
-	// <1>
-	// <0x5dbada>|0x02a|+0x00a:'334'
-	// <0>
-	// <1>
-	// <0x5dbae4>|0x034|+0x01a:'337'
-	// <0x5dbafe>|0x04e|+0x01d:'338'
-	// <0x5dbb1b>|0x06b|+0x01f:'339'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5dbb3a>|0x08a|+0x018:'344'
-	// <0x5dbb52>|0x0a2|+0x00b:'344'
-	// <0>
-	// <0x5dbb5d>|0x0ad|+0x00e:'346'
-	// <0x5dbb6b>|0x0bb|-0x01e:'346'
-	// <0x5dbb4d>|0x09d|+0x019:'347'
-	// <0x5dbb66>|0x0b6|+0x010:'347'
-	// <0x5dbb76>|0x0c6|      :'347'	}
-	// ******
+	if( m_game_ui_mode || b_focused )
+	{
+		flash_value argument;
+		argument.SetBoolean( b_focused );
+		get_movie( )->movie->Invoke( "root.focus_chat", NULL, &argument, 1 );
+	}
+
+	m_focused = b_focused;
+
+	if( b_focused )
+		m_game.input_world( ).add_handler( *this );
+	else
+		m_game.input_world( ).remove_handler( *this );
 }
 
-// STATE[STUB]
 void chat_handler::show( base_game_scene* scene )
 {
-	// FUNCTION BODY[0x5dca50]: 4
-	// <0>
-	// <1>
-	// <0x5dca51>|0x001|+0x009:'353'
-	// <0x5dca5a>|0x00a|+0x004:'354'
-	// ******
+	scene->show_movie( m_chat_ui );
+	m_active = true;
 }
 
-// STATE[STUB]
 void chat_handler::hide( base_game_scene* scene )
 {
-	// FUNCTION BODY[0x5dca00]: 4
-	// <0>
-	// <1>
-	// <0x5dca01>|0x001|+0x03c:'360'
-	// <0x5dca3d>|0x03d|+0x005:'361'
-	// ******
+	scene->hide_movie( m_chat_ui );
+	m_active = false;
 }
 
-// STATE[STUB]
 void chat_handler::tick( u32 delta )
 {
-	// FUNCTION BODY[0x5dba70]: 3
-	// <0x5dba94>|0x024|-0x024:'366'
-	// <0>
-	// <0x5dba70>|0x000|+0x02a:'368'
-	// <0x5dba9a>|0x02a|+0x00b:'368'
-	// ******
+	get_movie( )->movie->Advance( delta * math::epsilon_3, 1 );
 }
 
 } // namespace survarium
