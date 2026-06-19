@@ -28,8 +28,9 @@ class human_npc;
 
 class npc_stats : public boost::noncopyable {
 public:
-	// nested enum has no PDB type record (referenced only as a param type);
-	// a matcher recovers the enumerators from the consuming asm
+	// target PDB records this nested enum with NO enumerators (forward-decl
+	// only) - keep it empty so the base PDB matches; columns are referenced by
+	// integer cast at the call sites (see npc_stats.cpp)
 	enum column_types_enum {
 	};
 
