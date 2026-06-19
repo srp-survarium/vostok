@@ -27,6 +27,7 @@ namespace collision {
 namespace survarium {
 
 class base_game_scene;
+class base_network_client;
 class game;
 class game_world_ui;
 struct hit_info;
@@ -38,6 +39,8 @@ struct server_player_update;
 class stats_graph;
 struct engine;
 
+void anchor_game_player( );
+
 // the canonical dump re-prints game_team_id here; the enum lives in game_core
 // (base_player.h already includes it)
 
@@ -48,6 +51,11 @@ class player : public base_player , public resources::unmanaged_resource {
 	// (player.cpp owner TU is still a stub); references the private members. Retire
 	// with the anchor once the real call graph reaches them.
 	friend void use_game_player_input( );
+	// base_network_client reaches the private virtual overrides (position /
+	// damage_model) directly on a player_ptr; the /OPT:REF anchor reaches every
+	// private out-of-line body. friend grants are codegen-neutral.
+	friend class base_network_client;
+	friend void anchor_game_player( );
 public:
 			explicit								player								( player_creation_params const& params );
 	virtual											~player								( );
@@ -132,6 +140,7 @@ public:
 	inline	float4x4 const&							get_target_character_transform		( ) const { /* no source */ return m_target.transform; }
 	inline	float									get_player_max_carried_weight		( ) const { /* no source */ return 0.0f; }
 
+private:
 	// STATE[STUB]
 	virtual	float4x4 const&							get_transform						( ) const override
 	{
