@@ -82,6 +82,7 @@ namespace vostok {
 
 namespace survarium {
 	void anchor_game_network_clients( game& g );
+	void use_game_world( );	// anchor_game_world.cpp (game-class public methods)
 
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
@@ -328,6 +329,7 @@ namespace vostok
 		use_game_npc( );
 		use_game_stats( );
 		survarium::use_game_base( );
+		survarium::use_game_world( );	// anchor_game_world.cpp (game-class public methods)
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).

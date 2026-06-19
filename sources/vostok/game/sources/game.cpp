@@ -14,9 +14,16 @@
 #include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
 #include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
 
+// SetWindowTextA (USER32) is stripped from os_include.h by NOUSER; declare the import
+// directly for on_application_activate's title-bar update.
+extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, char const* lpString );
+
 #include "scaleform_movie_cook.h"	// its out-of-line bodies live here per the PDB
 #include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
+#include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
+#include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
+#include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
 
 namespace survarium {
 
@@ -321,6 +328,11 @@ void `dynamic atexit destructor for 's_max_angular_velocity_command''( )
 }
 
 // STATE[STUB]
+// claude@NOTE: target body is m_renderer.execute_scaleform_command( command );
+// but render::game::renderer::execute_scaleform_command is NOT declared in our
+// sources/vostok/render/facade/game_renderer.h (it IS in the target structure).
+// That header is the render cluster's; cannot add the decl here. Keep the stub
+// buildable; restore the real call once render declares execute_scaleform_command.
 void game::execute_scaleform_command( scaleform_render_command command )
 {
 	// FUNCTION BODY[0x5e5e00]: 1
@@ -329,6 +341,12 @@ void game::execute_scaleform_command( scaleform_render_command command )
 }
 
 // STATE[STUB]
+// claude@NOTE: target body is
+//   m_renderer.scene( ).build_lpv_geometry( m_game_world.render_scene( ) );
+// but render::scene_renderer::build_lpv_geometry( base_scene_ptr const& ) is NOT
+// declared in our sources/vostok/render/facade/scene_renderer.h (it IS in the target
+// structure). That header is the render cluster's; cannot add the decl here. Keep
+// the stub buildable; restore the real call once render declares build_lpv_geometry.
 void game::build_lpv_geometry( )
 {
 	// FUNCTION BODY[0x5e6750]: 1
@@ -666,28 +684,14 @@ void game::create_network_client( const bool is_spectator )
 	// ******
 }
 
-// STATE[STUB]
 void game::create_lobby_menu( )
 {
-	// FUNCTION BODY[0x5e7110]: 1
-	// <0x5e7110>|0x000|+0x001:'524'	{
-	// <0x5e7111>|0x001|+0x025:'525'
-	// <0x5e7136>|0x026|-0x001:'525'
-	// <0x5e7135>|0x025|+0x00a:'526'
-	// <0x5e713f>|0x02f|      :'526'	}
-	// ******
+	m_lobby_menu					= NEW( class lobby_menu )( *this );
 }
 
-// STATE[STUB]
 void game::create_login_menu( )
 {
-	// FUNCTION BODY[0x5e70e0]: 1
-	// <0x5e70e0>|0x000|+0x001:'529'	{
-	// <0x5e70e1>|0x001|+0x025:'530'
-	// <0x5e7106>|0x026|-0x001:'530'
-	// <0x5e7105>|0x025|+0x00a:'531'
-	// <0x5e710f>|0x02f|      :'531'	}
-	// ******
+	m_login_menu					= NEW( class login_menu )( *this );
 }
 
 // STATE[STUB]
@@ -750,14 +754,8 @@ void game::enable( bool value )
 	// ******
 }
 
-// STATE[STUB]
 void game::on_renderer_created( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x5e5870]: 1
-	// <0x5e5870>|0x000|+0x000:'591'	{
-	// <0>
-	// <0x5e5870>|0x000|      :'593'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -848,62 +846,26 @@ void game::register_console_commands( )
 	// ******
 }
 
-// STATE[STUB]
 void game::switch_to_scene( base_game_scene* scene )
 {
-	R_ASSERT						( scene );
+	if ( m_active_scene == scene )
+		return;
 
-	if( m_active_scene )
+	if ( m_active_scene )
 		m_active_scene->on_deactivate( );
 
 	m_active_scene	= scene;
 	m_active_scene->on_activate		( );
-
-	// CALL SITE INFO
-	// <0x5e57b3> -> void < unknown >()
-	// <0x5e57c1> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e57a0]: 14
-	// <0>
-	// <1>
-	// <0x5e57a0>|0x000|+0x00a:'658'
-	// <0>
-	// <1>
-	// <0x5e57aa>|0x00a|+0x004:'661'
-	// <0x5e57ae>|0x00e|+0x007:'662'
-	// <0>
-	// <0x5e57b5>|0x015|+0x006:'664'
-	// <0x5e57bb>|0x01b|+0x008:'665'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
 }
 
-// STATE[STUB]
 void game::toggle_console( )
 {
 	if ( m_console->get_active( ) )
 		m_console->on_deactivate	( );
 	else
 		m_console->on_activate		( );
-
-	// CALL SITE INFO
-	// <0x5e5668> -> bool < unknown >() const
-	// <0x5e5676> -> void < unknown >()
-	// <0x5e567b> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e5660]: 3
-	// <0x5e5660>|0x000|+0x00a:'674'
-	// <0x5e566a>|0x00a|+0x00e:'675'
-	// <0>
-	// ******
 }
 
-// STATE[STUB]
 void game::exit( pcstr str )
 {
 	unload							( str, true );
@@ -912,22 +874,6 @@ void game::exit( pcstr str )
 		m_engine.enter_editor_mode	( );
 	else
 		m_engine.exit				( 0 );
-
-	// CALL SITE INFO
-	// <0x5e5631> -> void < unknown >( pcstr, bool )
-	// <0x5e563b> -> bool < unknown >()
-	// <0x5e5649> -> void < unknown >()
-	// <0x5e565a> -> void < unknown >( int )
-	// ******
-
-	// FUNCTION BODY[0x5e5620]: 6
-	// <0x5e5623>|0x003|+0x010:'682'
-	// <0>
-	// <0x5e5633>|0x013|+0x00a:'684'
-	// <0x5e563d>|0x01d|+0x012:'685'
-	// <0>
-	// <0x5e564f>|0x02f|-0x003:'687'
-	// ******
 }
 
 // STATE[STUB]
@@ -1152,77 +1098,45 @@ void game::update_stats( const u32 current_frame_id )
 	// ******
 }
 
-// STATE[STUB]
 void game::clear_resources( )
 {
-	// CALL SITE INFO
-	// <0x5e67d5> -> void < unknown >( ui::window* )
-	// <0x5e67ec> -> void < unknown >()
-	// <0x5e67fd> -> void < unknown >()
-	// <0x5e680e> -> void < unknown >()
-	// <0x5e681f> -> void < unknown >()
-	// <0x5e6831> -> void < unknown >()
-	// <0x5e685b> -> void* < unknown >( u32 )
-	// <0x5e6886> -> void < unknown >()
-	// <0x5e6893> -> void < unknown >()
-	// <0x5e68ba> -> void < unknown >()
-	// ******
+	destroy_debug_window			( );
 
-	// FUNCTION BODY[0x5e67c0]: 24
-	// <0x5e67c3>|0x003|+0x014:'869'
-	// <0>
-	// <0x5e67d7>|0x017|+0x017:'871'
-	// <0>
-	// <0x5e67ee>|0x02e|+0x00a:'873'
-	// <0x5e67f8>|0x038|+0x007:'874'
-	// <0x5e67ff>|0x03f|+0x00a:'875'
-	// <0x5e6809>|0x049|+0x007:'876'
-	// <0>
-	// <0x5e6810>|0x050|+0x00a:'878'
-	// <0x5e681a>|0x05a|+0x007:'879'
-	// <0>
-	// <0x5e6821>|0x061|+0x00a:'881'
-	// <0>
-	// <0x5e682b>|0x06b|+0x008:'883'
-	// <0x5e6833>|0x073|+0x048:'884'
-	// <0>
-	// <1>
-	// <0x5e687b>|0x0bb|+0x00d:'887'
-	// <0x5e6888>|0x0c8|+0x00d:'888'
-	// <0>
-	// <0x5e6895>|0x0d5|+0x009:'890'
-	// <0x5e689e>|0x0de|+0x00c:'891'
-	// <0>
-	// ******
+	m_main_menu->clear_resources	( );
+
+	if ( m_lobby_menu )
+		m_lobby_menu->clear_resources( );
+
+	if ( m_login_menu )
+		m_login_menu->clear_resources( );
+
+	if ( m_active_scene )
+		m_active_scene->on_deactivate( );
+
+	if ( m_network_client )
+	{
+		m_network_client->unload	( );
+		DELETE						( m_network_client );
+		m_network_client			= 0;
+	}
+
+	m_input_world->clear_resources	( );
+	m_ui_world->clear_resources		( );
+
+	if ( !m_game_world.empty( ) )
+		m_game_world.unload			( );
+
+	m_game_world.clear_resources	( );
 }
 
-// STATE[STUB]
 void game::load_cmd( pcstr project_name )
 {
 	load							( project_name );
-
-	// CALL SITE INFO
-	// <0x5e5615> -> void < unknown >( pcstr )
-	// ******
-
-	// FUNCTION BODY[0x5e5610]: 0
-	// <0x5e5610>|0x000|+0x000:'897'	{
-	// <0x5e5610>|0x000|      :'898'	}
-	// ******
 }
 
-// STATE[STUB]
 void game::unload_cmd( pcstr s )
 {
 	unload							( s, false );
-
-	// CALL SITE INFO
-	// <0x5e55fc> -> void < unknown >( pcstr, bool )
-	// ******
-
-	// FUNCTION BODY[0x5e55f0]: 1
-	// <0x5e55f0>|0x000|+0x00e:'903'
-	// ******
 }
 
 // STATE[STUB]
@@ -1276,67 +1190,31 @@ void game::unload( pcstr __formal, bool destroying )
 	// ******
 }
 
-// STATE[STUB]
 void game::switch_to_game_world( )
 {
-	// CALL SITE INFO
-	// <0x5e585a> -> void < unknown >()
-	// <0x5e5869> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e5840]: 1
-	// <0x5e5840>|0x000|+0x02c:'941'
-	// ******
+	switch_to_scene					( &m_game_world );
 }
 
-// STATE[STUB]
 void game::switch_to_main_menu( )
 {
-	// CALL SITE INFO
-	// <0x5e582a> -> void < unknown >()
-	// <0x5e5839> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e5810]: 1
-	// <0x5e5810>|0x000|+0x02c:'946'
-	// ******
+	switch_to_scene					( m_main_menu );
 }
 
-// STATE[STUB]
 void game::switch_to_lobby( )
 {
+	if ( !m_network_client->has_bandwidth( ) )
+		return;
+
 	switch_to_scene					( m_lobby_menu );
-
-	// CALL SITE INFO
-	// <0x5e57db> -> bool < unknown >() const
-	// <0x5e57fb> -> void < unknown >()
-	// <0x5e580a> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e57d0]: 4
-	// <0x5e57d0>|0x000|+0x011:'951'
-	// <0>
-	// <1>
-	// <0x5e57e1>|0x011|+0x02c:'954'
-	// ******
 }
 
-// STATE[STUB]
 void game::switch_to_login( login_menu_status_enum status )
 {
-	// CALL SITE INFO
-	// <0x5e5abd> -> bool < unknown >() const
-	// <0x5e5aeb> -> void < unknown >()
-	// <0x5e5af9> -> void < unknown >()
-	// ******
+	if ( !m_network_client->has_bandwidth( ) )
+		return;
 
-	// FUNCTION BODY[0x5e5ab0]: 5
-	// <0x5e5ab1>|0x001|+0x012:'959'
-	// <0>
-	// <1>
-	// <0x5e5ac3>|0x013|+0x00f:'962'
-	// <0x5e5ad2>|0x022|+0x029:'963'
-	// ******
+	m_login_menu->set_status		( status );
+	switch_to_scene					( m_login_menu );
 }
 
 // STATE[STUB]
@@ -1375,68 +1253,34 @@ void game::register_cooks( )
 	// ******
 }
 
-// STATE[STUB]
 void game::on_application_activate( )
 {
-	threading::mutex_raii guard			( m_application_activation );
+	::SetWindowTextA					( m_engine.get_main_window_handle( ), "Survarium\x99 v0.1 - Copyright\xA9 Vostok Games\xAE" );
 
-	R_ASSERT							( !m_is_active );
+	threading::mutex_raii guard			( m_application_activation );
 
 	if ( m_input_world )
 		m_input_world->on_activate		( );
 
 	m_is_active							= true;
-
-	// CALL SITE INFO
-	// <0x5e5ea7> -> HWND__* < unknown >() const
-	// <0x5e5eaa> -> int < unknown >( HWND__*, pcstr )
-	// <0x5e5ec9> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e5e90]: 12
-	// <0>
-	// <0x5e5e99>|0x009|+0x017:'1098'
-	// <0>
-	// <1>
-	// <0x5e5eb0>|0x020|+0x00a:'1101'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e5eba>|0x02a|+0x00a:'1105'
-	// <0x5e5ec4>|0x034|+0x007:'1106'
-	// <0>
-	// <1>
-	// ******
 }
 
-// STATE[STUB]
 void game::on_application_deactivate( )
 {
-	if ( !m_input_world )
-		return;
+	if ( m_input_world )
+	{
+		threading::mutex_raii guard		( m_application_activation );
 
-	threading::mutex_raii guard			( m_application_activation );
-
-	m_input_world->on_deactivate		( );
-	m_is_active							= false;
-
-	// CALL SITE INFO
-	// <0x5e5e78> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e5e50]: 8
-	// <0x5e5e59>|0x009|+0x00a:'1113'
-	// <0>
-	// <1>
-	// <0x5e5e63>|0x013|+0x00a:'1116'
-	// <0>
-	// <1>
-	// <0x5e5e6d>|0x01d|+0x00d:'1119'
-	// <0>
-	// ******
+		m_input_world->on_deactivate	( );
+		m_is_active						= false;
+	}
 }
 
 // STATE[STUB]
+// claude@NOTE: target body resolves m_render_output_window -> res_render_output and
+// calls render::res_render_output::goto_fullscreen, which is NOT declared in our
+// sources/vostok/render/core/dx11/res_render_output.h (it IS in the target structure).
+// That header is the render cluster's; cannot add the decl here. Keep stub buildable.
 void game::on_fullscreen_alttab( bool first )
 {
 	// FUNCTION BODY[0x5e5f80]: 2
@@ -1474,60 +1318,33 @@ void game::draw_debug_window( )
 	// ******
 }
 
-// STATE[STUB]
 void game::create_debug_window( )
 {
-	R_ASSERT							(!m_debug_window);
 	m_debug_window						= m_ui_world->create_window( );
 	m_debug_window->set_visible			( true );
 	m_debug_window->set_position		( float2( 0.f, 120.f ) );
 	m_debug_window->set_size			( float2( 2024.f, 768.f ) );
-
-	// CALL SITE INFO
-	// <0x5e570e> -> ui::window* < unknown >()
-	// <0x5e571f> -> void < unknown >( bool )
-	// <0x5e5745> -> void < unknown >( float2 const& )
-	// <0x5e5771> -> void < unknown >( float2 const& )
-	// ******
-
-	// FUNCTION BODY[0x5e5700]: 5
-	// <0>
-	// <0x5e5703>|0x003|+0x013:'1150'
-	// <0x5e5716>|0x016|+0x00b:'1151'
-	// <0x5e5721>|0x021|+0x026:'1152'
-	// <0x5e5747>|0x047|+0x02c:'1153'
-	// ******
 }
 
-// STATE[STUB]
 void game::destroy_debug_window( )
 {
-	R_ASSERT							( m_debug_window );
 	m_ui_world->destroy_window			( m_debug_window );
 	m_debug_window						= 0;
-
-	// CALL SITE INFO
-	// <0x5e56f2> -> void < unknown >( ui::window* )
-	// ******
-
-	// FUNCTION BODY[0x5e56e0]: 3
-	// <0>
-	// <0x5e56e0>|0x000|+0x014:'1159'
-	// <0x5e56f4>|0x014|+0x00a:'1160'
-	// ******
 }
 
-// STATE[STUB]
 flash_factory& game::get_flash_factory( )
 {
-	return *m_flash_factory;	// buildability return
-
-	// FUNCTION BODY[0x5e55e0]: 1
-	// <0x5e55e0>|0x000|+0x006:'1175'
-	// ******
+	return *m_flash_factory;
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on cross-module timing::timer header. Target body:
+//   m_is_paused = !m_is_paused;
+//   if ( m_is_paused )  pause( );
+//   else {  m_timer.resume( );  m_sound_world.get_logic_world_user().set_time_scale_factor( m_last_sound_timescale_factor );  }
+// but timing::timer::resume()/pause()/is_paused() are NOT declared in our
+// sources/vostok/timing_timer.h (they ARE inline in the target timing/timer.h).
+// That header is the core/timing module's; cannot add them here. Keep stub buildable.
 void game::toggle_pause( )
 {
 	// CALL SITE INFO
@@ -1544,6 +1361,11 @@ void game::toggle_pause( )
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on cross-module timing::timer header (see toggle_pause). Target:
+//   m_is_paused = true;  m_timer.pause( );
+//   m_last_sound_timescale_factor = m_sound_world.get_logic_world_user().get_time_scale_factor( );
+//   m_sound_world.get_logic_world_user().set_time_scale_factor( 0.f );
+// timing::timer::pause() not in our sources/vostok/timing_timer.h. Keep stub buildable.
 void game::pause( )
 {
 	// CALL SITE INFO
@@ -1560,6 +1382,10 @@ void game::pause( )
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on cross-module timing::timer header (see toggle_pause). Target:
+//   m_is_paused = false;  m_timer.resume( );
+//   m_sound_world.get_logic_world_user().set_time_scale_factor( m_last_sound_timescale_factor );
+// timing::timer::resume() not in our sources/vostok/timing_timer.h. Keep stub buildable.
 void game::resume( )
 {
 	// CALL SITE INFO
@@ -1619,43 +1445,19 @@ void game::set_network_client(
 	// ******
 }
 
-// STATE[STUB]
 void game::commit_suicide( )
 {
-	// CALL SITE INFO
-	// <0x5e56db> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e56d0]: 0
-	// <0x5e56d0>|0x000|+0x000:'1232'	{
-	// <0x5e56d0>|0x000|      :'1233'	}
-	// ******
+	m_network_client->initiate_kill_current_player( );
 }
 
-// STATE[STUB]
 void game::respawn_local_player( )
 {
-	// CALL SITE INFO
-	// <0x5e56cb> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e56c0]: 0
-	// <0x5e56c0>|0x000|+0x000:'1237'	{
-	// <0x5e56c0>|0x000|      :'1238'	}
-	// ******
+	m_network_client->initiate_respawn_current_player( );
 }
 
-// STATE[STUB]
 bool game::is_loading( ) const
 {
-	return false;
-
-	// FUNCTION BODY[0x5e56b0]: 4
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e56b0>|0x000|+0x006:'1254'
-	// ******
+	return m_game_world.is_loading( );
 }
 
 // STATE[STUB]
@@ -1722,42 +1524,21 @@ void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, 
 	// ******
 }
 
-// STATE[STUB]
 void game::activate_main_menu( )
 {
-	// CALL SITE INFO
-	// <0x5e6730> -> void < unknown >( bool )
-	// ******
-
-	// FUNCTION BODY[0x5e6720]: 2
-	// <0x5e6723>|0x003|+0x00f:'1299'
-	// <0x5e6732>|0x012|+0x012:'1300'
-	// ******
+	m_active_scene->show_ui			( false );
+	m_game_options.activate			( m_active_scene );
 }
 
-// STATE[STUB]
 void game::deactivate_main_menu( )
 {
-	// CALL SITE INFO
-	// <0x5e6712> -> void < unknown >( bool )
-	// ******
-
-	// FUNCTION BODY[0x5e66c0]: 2
-	// <0x5e66c0>|0x000|+0x045:'1305'
-	// <0x5e6705>|0x045|+0x010:'1306'
-	// ******
+	m_game_options.deactivate		( );
+	m_active_scene->show_ui			( true );
 }
 
-// STATE[STUB]
 void game::discard_current_match( )
 {
-	// CALL SITE INFO
-	// <0x5e55dd> -> void < unknown >( bool )
-	// ******
-
-	// FUNCTION BODY[0x5e55d0]: 1
-	// <0x5e55d0>|0x000|+0x00f:'1311'
-	// ******
+	m_network_client->close_current_match( true );
 }
 
 
