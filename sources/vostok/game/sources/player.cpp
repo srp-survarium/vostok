@@ -1208,6 +1208,20 @@ void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
 	);
 }
 
+// claude@NOTE: fully reversed, parked on the 0-iterator-local loop shape -
+//   const float movement = math::length( m_current.transform.c.xyz() - m_last_frame_position );  // 1108
+//   <loop over m_player_actions_subscribers>                                                       // 1110/1111/1113 (x3)
+//     if ( math::abs( movement ) >= math::epsilon_3 )                                               // 1115 (braced)
+//       if ( m_input.is_trying_to_sprint() )                                                        // 1117 (m_input.actions_mask & 0x200)
+//         subscriber->on_player_action( this, player_actions_subscriber::run, movement );           // 1118 (this upcasts to hit_receiver*, lea [+0x38])
+//       else                                                                                        // 1119
+//         subscriber->on_player_action( this, player_actions_subscriber::walk, movement );          // 1120
+// run/walk match the header enum values (1/0). The loop records NO named iterator
+// local (only `movement`) -> it is std::for_each with an inlined functor, not a
+// raw `for` with a named iterator. Needs the functor-struct form to match the
+// 0-local structure. (NB: on_fire/jump pass action 3/2 via the SAME enum, which
+// under the current header = jump/sprint - the real enum is walk0/run1/jump2/
+// shoot3/character_hit4; the header's sprint=2 is mis-positioned, a game_core fix.)
 // STATE[STUB]
 void player::notify_actions_subscribers( )
 {
