@@ -46,8 +46,13 @@ class stats_graph;
 enum login_menu_status_enum;
 
 // param of on_queried_by_network_client_scene_ready (mangling W4scene_ready_type@2@);
-// the PDB carries no full record for it - enumerators unknown
-enum scene_ready_type { };
+// the PDB carries no full record for it - enumerator names are a guess from the
+// switch (case 0 sets m_login_scene_ready, case 1 sets m_lobby_scene_ready)
+enum scene_ready_type
+{
+	scene_ready_login	= 0,
+	scene_ready_lobby	= 1,
+};
 
 typedef resources::resource_ptr<
 	items_dictionary,
