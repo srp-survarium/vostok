@@ -303,6 +303,7 @@ public:
 
 	inline	vectora< victory_item_ptr >&		get_victory_items				( ) { /* no source */ return m_victory_items; }
 
+protected:
 			void								on_project_loaded				(
 													resources::queries_result&		data,
 													u32								results_offset,
@@ -312,6 +313,7 @@ public:
 
 			void								tick_bullet_manager_engine		( bool is_game_paused );
 
+private:
 			void								register_cooks					( );
 
 	inline	void								initialize_physics				( ) { /* no source */ }
@@ -340,6 +342,7 @@ public:
 
 			void								update_npc_stats				( );
 
+public:
 	// STATE[STUB]
 	virtual	void								set_navmesh_info				( pcstr __formal ) const override
 	{
@@ -348,6 +351,7 @@ public:
 		// ******
 	}
 
+private:
 			void								add_enemy_position_for_team		( pcstr team_name );
 			void								clear_enemies_positions_for_team( pcstr team_name );
 
