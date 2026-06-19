@@ -4,69 +4,45 @@
 
 #include "pch.h"
 #include "object_volumetric_sound.h"
+#include "base_game_scene.h"
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
-// STATE[STUB]
- object_volumetric_sound::object_volumetric_sound( base_game_scene& w ) :
-	object_sound( w )
+// claude@NOTE: ctor/dtor/load byte-residual is a cross-TU wall - the object_sound
+// base ctor/dtor/load are STUBs on this branch (object_sound.cpp unmatched), so the
+// inlined base ctor + the base load call + the dtor tail-call line up differently
+// than the target. The link_resolver implicit ctor is also emitted out-of-line here
+// (target inlines the [+160h] vtable store). Structure is correct (ctor/dtor/insert/
+// resolve_links STRUCTURE MATCH); recovers once object_sound.cpp is matched.
+object_volumetric_sound::object_volumetric_sound( base_game_scene& w ) :
+	object_sound			( w ),
+	m_collision_geometry	( 0 ),
+	m_radius				( 10.0f )	// target ctor loads a non-zero float constant (movss, not xorps)
 {
-	// FUNCTION BODY[0x5c36c0]: 0
-	// <0x5c36c0>|0x000|+0x051:'19'	{
-	// <0x5c3711>|0x051|      :'20'	}
-	// ******
 }
 
-// STATE[STUB]
- object_volumetric_sound::~object_volumetric_sound( )
+object_volumetric_sound::~object_volumetric_sound( )
 {
-	// FUNCTION BODY[0x5c36a0]: 0
-	// <0x5c36a0>|0x000|+0x010:'23'	{
-	// <0x5c36b0>|0x010|      :'24'	}
-	// ******
 }
 
-// STATE[STUB]
 void object_volumetric_sound::load(
 	configs::binary_config_value const&		t,
 	pcstr									project_resources_path,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// FUNCTION BODY[0x5c3720]: 2
-	// <0x5c3720>|0x000|+0x000:'27'	{
-	// <0x5c3720>|0x000|+0x01a:'28'
-	// <0x5c373a>|0x01a|+0x024:'29'
-	// <0x5c375e>|0x03e|-0x003:'29'
-	// <0x5c375b>|0x03b|+0x011:'30'
-	// <0x5c376c>|0x04c|      :'30'	}
-	// ******
+	object_sound::load( t, project_resources_path, cb );
+
+	m_radius = t["radius"];
 }
 
-// STATE[STUB]
-void object_volumetric_sound::resolve_links( base_project* p, configs::binary_config_value config )
-{
-	// FUNCTION BODY[0x5c3690]: 2
-	// <0x5c3690>|0x000|+0x000:'33'	{
-	// <0>
-	// <1>
-	// <0x5c3690>|0x000|      :'36'	}
-	// ******
-}
-
-// STATE[STUB]
 void object_volumetric_sound::insert( )
 {
-	// FUNCTION BODY[0x5c3680]: 6
-	// <0x5c3680>|0x000|+0x000:'39'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5c3680>|0x000|      :'46'	}
-	// ******
+}
+
+void object_volumetric_sound::resolve_links( base_project* p, configs::binary_config_value config )
+{
 }
 
 } // namespace survarium
