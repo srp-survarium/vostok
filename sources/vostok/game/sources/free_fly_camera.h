@@ -14,8 +14,6 @@ namespace survarium {
 class base_game_scene;
 class camera_director;
 
-// void* free_fly_camera::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x96df0]: <0x968f0>|0x000|      :'31'	{
-
 class free_fly_camera : public game_camera , public input::handler {
 public:
 					free_fly_camera		( base_game_scene& w, camera_director& cd );

@@ -29,21 +29,8 @@ public:
 
 	virtual	void				on_activate				( camera_director* cd );
 
-	// STATE[STUB]
-	virtual	void				on_deactivate			( )
-	{
-		// FUNCTION BODY[0x4f210]
-		// <0x4f210>|0x000|      :'38'	{
-		// ******
-	}
-
-	// STATE[STUB]
-	virtual	void				on_focus				( bool __formal )
-	{
-		// FUNCTION BODY[0x22c50]
-		// <0x22c50>|0x000|      :'39'	{
-		// ******
-	}
+	virtual	void				on_deactivate			( ) { /* no source */ }
+	virtual	void				on_focus				( bool __formal ) { /* no source */ }
 
 	virtual	void				tick					( );
 
@@ -52,7 +39,7 @@ public:
 
 	inline						~game_camera			( ) { /* no source */ }
 
-private:
+protected:
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	float4x4			m_inverted_view_matrix;
 	/* 0x0044 */	base_game_scene&	m_game_scene;

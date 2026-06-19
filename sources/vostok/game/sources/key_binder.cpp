@@ -434,6 +434,15 @@ s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
 // STATE[STUB]
 game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& actions_mask_type, s32 key_group_mask ) const
 {
+	// claude@NOTE: buildability return for the still-STUB body (free_fly_camera
+	// forces this to codegen under LTCG). Sourced through volatiles so LTCG cannot
+	// constant-fold the value into free_fly_camera::on_keyboard_action's switch.
+	// A matcher recovers the real lookup.
+	static volatile s32 s_action = kNOTBINDED;
+	static volatile s32 s_mask	= hold_action;
+	actions_mask_type = (toggle_action_enum)s_mask;
+	return (game_action_id)s_action;
+
 	// FUNCTION BODY[0x5daf60]: 20
 	// <0x5daf60>|0x000|+0x005:'386'	{
 	// <0x5daf65>|0x005|+0x02e:'387'

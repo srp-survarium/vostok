@@ -20,13 +20,7 @@ class camera_director : public boost::noncopyable {
 public:
 			explicit			camera_director			( base_game_scene& w );
 
-	// STATE[STUB]
-	virtual	void				load					( configs::binary_config_value const& __formal )
-	{
-		// FUNCTION BODY[0x22c50]
-		// <0x22c50>|0x000|      :'27'	{
-		// ******
-	}
+	virtual	void				load					( configs::binary_config_value const& __formal ) { /* no source */ }
 
 			void				switch_to_camera		( game_camera* c, pcstr camera_name );
 	inline	game_camera const*	get_active_camera		( ) const { /* no source */ return m_active_camera; }
