@@ -89,6 +89,7 @@ namespace survarium {
 	// player out-of-line bodies so /OPT:REF keeps them for the delinker.
 	void anchor_game_player( );
 	void anchor_game_world_ui( );
+	void anchor_game_chat( game& g );
 
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
@@ -360,5 +361,7 @@ namespace vostok
 		survarium::anchor_game_player( );
 		// keep the matched game_world_ui methods (no reachable caller yet).
 		survarium::anchor_game_world_ui( );
+		// drive the self-guarded chat-handler anchor (same self-guard contract).
+		survarium::anchor_game_chat( *( survarium::game* )NULL );
 	}
 }
