@@ -111,6 +111,10 @@ protected:
 			void									create_text_manager	( );
 
 private:
+	// game_world reads the inherited m_inverted_view_matrix directly
+	// (on_after_tick / on_activate); PDB does not record friendship, codegen-neutral
+	friend class game_world;
+
 	/* 0x0000 */	/* game_scene */
 	/* 0x000c */	/* engine */
 	/* 0x0010 */	/* physics::engine */

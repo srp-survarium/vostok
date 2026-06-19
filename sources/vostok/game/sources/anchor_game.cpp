@@ -169,8 +169,29 @@ namespace vostok
 		render::scene_view_ptr const&	scene_view	= *( render::scene_view_ptr const* )NULL;
 		float3 const&					vec			= *( float3 const* )NULL;
 
+		// source the scalar args through volatile sinks so LTCG cannot prove this
+		// anchor is the sole caller with a constant arg and constant-propagate it
+		// into the body (folding the switch / dropping the param store).
+		static survarium::input_mode_type_enum volatile	s_mode	= survarium::first_person_mode;
+		static survarium::player_input_handler* volatile	s_cam	= 0;
+		static u8 volatile									s_item	= 0;
+		static float4x4 const* volatile						s_xform	= 0;
+
+		static survarium::player_ptr* volatile	s_player	= 0;
+
 		scene.unload( );
 		scene.empty( );
+		scene.switch_camera_mode( s_mode );
+		scene.set_local_player_camera( s_cam );
+		scene.put_victory_item( s_item, *s_xform );
+		scene.get_current_time_in_ms( );
+		scene.on_player_killed( *s_player, s_item, s_item );
+
+		// get_sound_world returns sound::world& - reference the address (the
+		// header forward-declares sound::world incompletely)
+		static pcvoid volatile s_gw_sink = 0;
+		sound::world& ( survarium::game_world::* const m_gsw )( ) const = &survarium::game_world::get_sound_world;
+		s_gw_sink = *( pcvoid const* )&m_gsw;
 
 		binder.set_default_controls( );
 		binder.unbind_key( "", 0 );
