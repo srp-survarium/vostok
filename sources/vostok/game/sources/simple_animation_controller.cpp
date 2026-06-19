@@ -6,112 +6,63 @@
 #include "simple_animation_controller.h"
 // mixing::expression returned by value -> needs the complete type at the definition
 #include <vostok/animation/mixing_expression.h>
+// m_owner.on_animation_end() needs the complete human_npc
+#include "human_npc.h"
 
 namespace survarium {
 
-// STATE[STUB]
- simple_animation_controller::simple_animation_controller( human_npc& owner ) :
-	// ref member; the same-named param is the obvious source - a matcher confirms
-	m_owner( owner )
+simple_animation_controller::simple_animation_controller( human_npc& owner ) :
+	m_owner( owner ),
+	m_last_animation_emitted( false )
 {
-	// FUNCTION BODY[0x5bbff0]: 0
-	// <0x5bbff0>|0x000|+0x023:'22'	{
-	// <0x5bc013>|0x023|      :'23'	}
-	// ******
 }
 
-// STATE[STUB]
- simple_animation_controller::~simple_animation_controller( )
+simple_animation_controller::~simple_animation_controller( )
 {
-	// FUNCTION BODY[0x5bbf90]: 0
-	// <0x5bbf90>|0x000|+0x009:'26'	{
-	// <0x5bbf99>|0x009|      :'27'	}
-	// ******
 }
 
-// STATE[STUB]
 void simple_animation_controller::initialize( )
 {
-	// FUNCTION BODY[0x5bbed0]: 0
-	// <0x5bbed0>|0x000|+0x000:'30'	{
-	// <0x5bbed0>|0x000|      :'31'	}
-	// ******
 }
 
-// STATE[STUB]
 void simple_animation_controller::set_target( animation_controller_parameters const& target )
 {
 	m_target_parameters										= static_cast_checked< simple_animation_controller_parameters const& >( target );
-
-	// FUNCTION BODY[0x5bbf40]: 1
-	// <0x5bbf40>|0x000|+0x045:'35'
-	// ******
 }
 
-// STATE[STUB]
 void simple_animation_controller::query_new_target_if_needed( )
 {
-	// CALL SITE INFO
-	// <0x5bbf2a> -> void < unknown >()
-	// <0x5bbf35> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5bbf10]: 6
-	// <0x5bbf13>|0x003|+0x006:'40'
-	// <0>
-	// <0x5bbf19>|0x009|+0x009:'42'
-	// <0x5bbf22>|0x012|+0x00a:'43'
-	// <0x5bbf2c>|0x01c|+0x00c:'44'
-	// <0>
-	// ******
+	if ( m_last_animation_emitted ) {
+		// claude@NOTE: target emits a real `call human_npc::on_animation_end`; our base
+		// inlines it to nothing because human_npc::on_animation_end is still an empty STUB
+		// (human_npc.cpp - a different unit). The call statement is correct; the missing
+		// instruction is the empty-stub callee, recovered when human_npc.cpp is matched.
+		m_owner.on_animation_end( );
+		m_current_parameters.reset( );
+		m_target_parameters.reset( );
+	}
 }
 
-// STATE[STUB]
 animation::mixing::expression simple_animation_controller::selected_animations( mutable_buffer& buffer )
 {
-	// claude@NOTE: buildability return only - force-codegen'd by anchor_game_npc.cpp
-	// (the animations_selector ctor embeds this controller). Body is the lexeme wall;
-	// a matcher recovers it. expression has no default ctor, so deref-null + copy-ctor.
-	return *( animation::mixing::expression* )0;
+	if ( m_current_parameters.emitter != m_target_parameters.emitter ) {
+		m_current_parameters								= m_target_parameters;
+		m_last_animation_emitted							= false;
+	}
 
-	// FUNCTION BODY[0x5bc020]: 11
-	// <0x5bc020>|0x000|+0x004:'49'	{
-	// <0>
-	// <0x5bc024>|0x004|+0x008:'51'
-	// <0>
-	// <1>
-	// <0x5bc02c>|0x00c|+0x00f:'54'
-	// <0>
-	// <1>
-	// <0x5bc03b>|0x01b|+0x009:'57'
-	// <0x5bc044>|0x024|+0x016:'58'
-	// <0>
-	// <0x5bc05a>|0x03a|-0x003:'60'
-	// <0x5bc057>|0x037|+0x01c:'61'
-	// <0x5bc073>|0x053|      :'61'	}
-	// ******
+	if ( m_last_animation_emitted )
+		return												animation::mixing::expression( );
+
+	return													m_current_parameters.emitter->emit( buffer, m_last_animation_emitted );
 }
 
-// STATE[STUB]
 animation::mixing::expression simple_animation_controller::try_finalize( base_animation_controller& next_controller, mutable_buffer& buffer )
 {
-	// claude@NOTE: buildability return only - force-codegen'd by anchor_game_npc.cpp.
-	return *( animation::mixing::expression* )0;
-
-	// FUNCTION BODY[0x5bbef0]: 2
-	// <0>
-	// <0x5bbef0>|0x000|+0x011:'66'
-	// ******
+	return													animation::mixing::expression( );
 }
 
-// STATE[STUB]
 void simple_animation_controller::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
-	// FUNCTION BODY[0x5bbee0]: 1
-	// <0x5bbee0>|0x000|+0x000:'70'	{
-	// <0>
-	// <0x5bbee0>|0x000|      :'72'	}
-	// ******
 }
 
 } // namespace survarium
