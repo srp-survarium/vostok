@@ -4,33 +4,19 @@
 
 #include "pch.h"
 #include "lobby_menu.h"
+#include "game.h"
+#include "base_network_client.h"
 
 namespace survarium {
 
-// STATE[STUB]
 lobby_client& lobby_menu::lobby_client( )
 {
-	// CALL SITE INFO
-	// <0x701e81> -> lobby_client& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x701e70]: 0
-	// <0x701e70>|0x000|+0x000:'21'	{
-	// <0x701e70>|0x000|      :'22'	}
-	// ******
+	return get_game( ).network_client( ).lobby_client( );
 }
 
-// STATE[STUB]
 messaging_client& lobby_menu::messaging_client( )
 {
-	// CALL SITE INFO
-	// <0x701e61> -> messaging_client& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x701e50]: 0
-	// <0x701e50>|0x000|+0x000:'31'	{
-	// <0x701e50>|0x000|      :'32'	}
-	// ******
+	return get_game( ).network_client( ).messaging_client( );
 }
 
 // STATE[STUB]
@@ -121,19 +107,14 @@ bool lobby_menu::on_keyboard_action(
 	// ******
 }
 
-// STATE[STUB]
 bool lobby_menu::on_gamepad_action(
 	input::world*					input_world,
 	input::gamepad_button			button,
 	input::enum_gamepad_action		action
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( input_world, button, action );
 	return false;
-
-	// FUNCTION BODY[0x701e40]: 2
-	// <0>
-	// <0x701e40>|0x000|+0x002:'105'
-	// ******
 }
 
 // STATE[STUB]
