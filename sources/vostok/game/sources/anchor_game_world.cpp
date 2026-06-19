@@ -41,6 +41,8 @@ namespace survarium {
 		void ( survarium::game::* const m_reg_cook )( )			= &survarium::game::register_cooks;
 		void ( survarium::game::* const m_upd_stats )( const u32 )	= &survarium::game::update_stats;
 		void ( survarium::game::* const m_on_rend )( resources::queries_result& )	= &survarium::game::on_renderer_created;
+		void ( survarium::game::* const m_qbr )( )				= &survarium::game::query_base_resources;
+		void ( survarium::game::* const m_orowc )( resources::queries_result& )	= &survarium::game::on_render_output_window_created;
 
 		s_sink = *( pcvoid const* )&m_commit;
 		s_sink = *( pcvoid const* )&m_respawn;
@@ -58,6 +60,8 @@ namespace survarium {
 		s_sink = *( pcvoid const* )&m_reg_cook;
 		s_sink = *( pcvoid const* )&m_upd_stats;
 		s_sink = *( pcvoid const* )&m_on_rend;
+		s_sink = *( pcvoid const* )&m_qbr;
+		s_sink = *( pcvoid const* )&m_orowc;
 	}
 
 } // namespace survarium
