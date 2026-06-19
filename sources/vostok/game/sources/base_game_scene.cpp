@@ -5,7 +5,16 @@
 #include "pch.h"
 #include "base_game_scene.h"
 #include "game.h"
+#include "game_memory.h"	// NEW / DELETE (survarium::g_allocator)
+#include "camera_director.h"
+#include "game_camera.h"
 #include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
+#include <vostok/physics/api.h>
+#include <vostok/physics/world.h>
+#include <vostok/sound/world.h>
+#include <vostok/sound/world_user.h>
+#include <vostok/memory_extensions.h>
 
 namespace survarium {
 
@@ -21,149 +30,141 @@ void `dynamic atexit destructor for 's_freeze_culling''( )
 }
 */
 
-// STATE[STUB]
- base_game_scene::base_game_scene( game& g ) :
-	// ref member; the same-named param is the obvious source - a matcher
-	// confirms when this TU is enabled
-	m_game( g )
+// claude@NOTE: init-list structure is correct (members + the NEW(camera_director)),
+// residual is /Od scheduling: the target hoists every scalar member store before the
+// camera_director malloc and keeps two full epilogues (the alloc-success / alloc-fail
+// branches), my base shares one epilogue and stores the trailing members after the
+// malloc. Also the engine-base vtable at +0x0C is written once in the target but twice
+// in base (engine base ctor then base_game_scene). Both are codegen-scheduling, not a
+// source-structure error.
+base_game_scene::base_game_scene( game& g ) :
+	m_mouse_pos			( 0, 0 ),
+	m_camera_director	( NEW( camera_director )( *this ) ),
+	m_text_manager		( NULL ),
+	m_game				( g ),
+	m_is_ui_shown		( false ),
+	m_physics_world		( NULL ),
+	m_is_active			( false )
 {
-	// FUNCTION BODY[0x5d6ea0]: 1
-	// <0x5d6ea0>|0x000|+0x000:'37'	{
-	// <0x5d6ea0>|0x000|+0x06c:'38'
-	// <0x5d6f0c>|0x06c|-0x004:'38'
-	// <0x5d6f08>|0x068|+0x00a:'39'
-	// <0x5d6f12>|0x072|      :'39'	}
-	// ******
+}
+
+// claude@NOTE: body is correct (DELETE m_camera_director; the m_sound_scene release +
+// game_scene base destruction are implicit). Residual: (1) the game_scene base dtor in the
+// shipped engine is a boost::_bi::storage3<one_way_render_channel*, base_scene_ptr,
+// base_scene_view_ptr>::~storage3 - our game_core/game_scene.h holds only 2 scene ptrs, no
+// render-channel/storage3 (a game_core base-class structure gap, not editable here); (2) my
+// DELETE inlines ~camera_director which rewrites the camera_director vtable, the target's
+// does not. Both are other-class concerns.
+base_game_scene::~base_game_scene( )
+{
+	DELETE( m_camera_director );
 }
 
 // STATE[STUB]
- base_game_scene::~base_game_scene( )
-{
-	// FUNCTION BODY[0x5d6f20]: 1
-	// <0x5d6f22>|0x002|+0x043:'59'
-	// ******
-}
-
-// STATE[STUB]
+// claude@NOTE: target body is `return m_game.render_output_window( )->output_window_size( );`
+// - it reads m_game.render_output_window() (resource_ptr by value, addref/release temp)
+// then a uint2 const& member at +0x108 of the concrete render_output_window. That
+// accessor does not exist on base_output_window / render_output_window (render module,
+// not editable here): render_output_window only exposes get_window_client_size() (by
+// VALUE, returns HWND-queried size), no `uint2 const& output_window_size()` returning the
+// m_current_size member by ref. BLOCKED on a render-module accessor; also walls
+// point_to_screen + the movie/text methods (all call this).
 math::uint2 const& base_game_scene::output_window_size( ) const
 {
 	return *( math::uint2 const* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5d6fa0]: 1
-	// <0x5d6fa1>|0x001|+0x045:'64'
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on the render facade. Target body:
+//   movie->movie->SetViewport( output_window_size( ).x, output_window_size( ).y );
+//   renderer( ).show_movie( render_scene_view( ), movie );
+// render::game::renderer::show_movie has the SHIPPED signature
+// show_movie(scene_view_ptr const&, flash_movie_resource_ptr); the facade
+// game_renderer.h declares the OLD show_movie(render_output_window_ptr const&,
+// flash_movie*) and game_renderer.cpp defines that - changing the facade is a
+// render-module match, not editable here. Also needs output_window_size() (blocked).
 void base_game_scene::show_movie( flash_movie_resource_ptr& movie )
 {
-	// FUNCTION BODY[0x5d7240]: 6
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d724b>|0x00b|+0x00c:'72'
-	// <0x5d7257>|0x017|+0x00f:'73'
-	// <0x5d7266>|0x026|+0x035:'74'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( movie );	// buildability stub
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on the render facade (see show_movie). Target body:
+//   if ( movie ) renderer( ).hide_movie( render_scene_view( ), movie );
+// needs render::game::renderer::hide_movie(scene_view_ptr const&, flash_movie_resource_ptr).
 void base_game_scene::hide_movie( flash_movie_resource_ptr& movie )
 {
-	// FUNCTION BODY[0x5d7200]: 5
-	// <0x5d7201>|0x001|+0x005:'79'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d7206>|0x006|+0x036:'83'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( movie );	// buildability stub
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on the render facade. Target body:
+//   tm->set_viewport( output_window_size( ).x, output_window_size( ).y );
+//   renderer( ).show_text_manager( render_scene_view( ), tm );
+// render::game::renderer::show_text_manager(scene_view_ptr const&, flash_text_manager*)
+// does NOT exist in the facade (game_renderer.h) at all - a render-module add. Also
+// needs output_window_size() (blocked).
 void base_game_scene::show_text_manager( flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x5d73b0]: 6
-	// <0>
-	// <1>
-	// <0x5d73b3>|0x003|+0x009:'90'
-	// <0>
-	// <0x5d73bc>|0x00c|+0x008:'92'
-	// <0x5d73c4>|0x014|+0x017:'93'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( tm );	// buildability stub
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on the render facade (see show_text_manager). Target body:
+//   renderer( ).hide_text_manager( render_scene_view( ), tm );
+// needs render::game::renderer::hide_text_manager(scene_view_ptr const&, flash_text_manager*).
 void base_game_scene::hide_text_manager( flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x5d7390]: 2
-	// <0>
-	// <0x5d7390>|0x000|+0x017:'99'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( tm );	// buildability stub
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (1 stmt: alloc bullet_physics_world via g_mt_allocator
+// then tail-call initialize()). Residual: my base routes through create_world_bt's
+// base_allocator* param so VOSTOK_NEW_IMPL emits a strip_pointer( g_mt_allocator ) call;
+// the target inlines strip_pointer to nothing and allocates straight through
+// g_mt_allocator's vtable (so it likely NEWs bullet_physics_world directly with the
+// g_mt_allocator OBJECT, needing the physics-private bullet_physics_world.h). The dropped
+// allocator& ctor arg (target pushes only engine&) is an LTCG constant-arg elision.
 void base_game_scene::init_physics( )
 {
-	// CALL SITE INFO
-	// <0x5d6e99> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5d6e60]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d6e61>|0x001|+0x030:'108'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	( m_physics_world = physics::create_world_bt( &memory::g_mt_allocator, *this ) )->initialize( );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (1 stmt: destroy_world = w->destroy() + delete via
+// g_mt_allocator). Same allocator-path residual as init_physics (strip_pointer vs direct
+// g_mt_allocator vtable).
 void base_game_scene::destroy_physics( )
 {
-	// FUNCTION BODY[0x5d6e20]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d6e21>|0x001|+0x038:'122'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	physics::destroy_world( &memory::g_mt_allocator, m_physics_world );
 }
 
-// STATE[STUB]
+// claude@NOTE: scheduler / input_translator / scene_renderer are body-correct; the only
+// residual is the entry register for `this` - the target keeps these tiny ref-returning
+// accessors out-of-line with `this` in EAX (the LTCG eax-this convention, like the matched
+// renderer() above), my base gets canonical thiscall ECX. Per patterns/eax-this-convention.md
+// this is caused BY the anchor's member-fn-ptr address-take (it forces __thiscall ECX) and
+// is verified non-steerable - base_game_scene is abstract so a real EAX-this CALL site
+// cannot be created here. Structurally 100%; residual is the address-escape penalty.
 scheduler& base_game_scene::scheduler( )
 {
-	return *( survarium::scheduler* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5d6e00]: 1
-	// <0x5d6e00>|0x000|+0x00b:'130'
-	// ******
+	return m_game.scheduler( );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (3 stmts). Residual: the target re-reads m_active_camera
+// for the call (`cmp [+84],0` / reload), my base CSEs it through one local because the
+// const_cast caches the get_active_camera() result. The target calls a NON-const
+// game_camera::tick() on the active camera, but camera_director only exposes a const
+// get_active_camera() (returns game_camera const*) - so the shipped source had a non-const
+// get_active_camera() overload (camera_director.h, another worker's file). const_cast here
+// is the buildable stand-in; -7 byte residual is that CSE.
 void base_game_scene::tick( const u32 __formal, const u32 current_time_in_ms, const bool is_game_paused )
 {
-	// CALL SITE INFO
-	// <0x5d6df1> -> void < unknown >( const u32 )
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 
-	// FUNCTION BODY[0x5d6db0]: 8
-	// <0x5d6db3>|0x003|+0x01e:'135'
-	// <0>
-	// <0x5d6dd1>|0x021|+0x010:'137'
-	// <0>
-	// <1>
-	// <0x5d6de1>|0x031|+0x013:'140'
-	// <0>
-	// <1>
-	// ******
+	if ( m_camera_director->get_active_camera( ) ) const_cast< game_camera* >( m_camera_director->get_active_camera( ) )->tick( );
+
+	if ( !is_game_paused && m_physics_world )
+		m_physics_world->tick( current_time_in_ms );
 }
 
 render::game::renderer& base_game_scene::renderer( ) const
@@ -171,125 +172,75 @@ render::game::renderer& base_game_scene::renderer( ) const
 	return m_game.renderer( );
 }
 
-// STATE[STUB]
 render::scene_renderer& base_game_scene::scene_renderer( ) const
 {
-	return *( render::scene_renderer* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5d6e10]: 1
-	// <0x5d6e10>|0x000|+0x00f:'151'
-	// ******
+	return m_game.renderer( ).scene( );
 }
 
-// STATE[STUB]
 void base_game_scene::on_activate( )
 {
-	// CALL SITE INFO
-	// <0x5d6d66> -> sound::world_user& < unknown >() const
-	// <0x5d6d7c> -> void < unknown >( bool )
-	// ******
-
-	// FUNCTION BODY[0x5d6d40]: 7
-	// <0>
-	// <0x5d6d43>|0x003|+0x02c:'157'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d6d6f>|0x02f|+0x00f:'161'
-	// <0x5d6d7e>|0x03e|+0x012:'162'
-	// ******
+	m_is_active = true;
+	m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( m_sound_scene, 0, 0 );
+	m_camera_director->on_focus( true );
+	m_mouse_pos.set( 50, 50 );
 }
 
-// STATE[STUB]
 void base_game_scene::on_deactivate( )
 {
-	// CALL SITE INFO
-	// <0x5d6d24> -> void < unknown >( bool )
-	// ******
-
-	// FUNCTION BODY[0x5d6d10]: 5
-	// <0x5d6d10>|0x000|+0x007:'167'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d6d17>|0x007|+0x00f:'171'
-	// ******
+	m_is_active = false;
+	m_camera_director->on_focus( false );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (4 stmts, 1 local cd). Residual: my base builds an ebp
+// stack frame with 8-byte alignment (and esp,~8) for the invert4x3 temp, so it can't reuse
+// ebp as a scratch register; the target has no aligned frame (sub esp,40h) and caches
+// &m_projection_matrix in ebp across both set_*_matrix calls. Frame-layout/register-alloc
+// only - the source shape is faithful.
 void base_game_scene::apply_camera( camera_director& cd )
 {
-	// FUNCTION BODY[0x5d72b0]: 11
-	// <0x5d72b8>|0x008|+0x012:'176'
-	// <0x5d72ca>|0x01a|+0x00f:'177'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5d72d9>|0x029|+0x092:'184'
-	// <0>
-	// <0x5d736b>|0x0bb|+0x017:'186'
-	// ******
+	m_inverted_view_matrix			= cd.get_inverted_view_matrix( );
+	m_projection_matrix				= cd.get_projection_matrix( );
+
+	scene_renderer( ).set_view_matrix		( render_scene_view( ), math::invert4x3( m_inverted_view_matrix ) );
+	scene_renderer( ).set_projection_matrix	( render_scene_view( ), m_projection_matrix );
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on output_window_size() (render-module accessor, see above).
+// Target structure (10 stmts, 3 named locals: float3 pos, float4x4 vp, float4x4 view):
+// reads output_window_size() into a uint2, halves x/y (shr 1), float4x4::try_invert on
+// the camera view, math::mul4x4 to build vp, projects p through vp into screen coords
+// (the SSE/x87 perspective-divide block at 197), writes result, then returns whether the
+// point lands in the [0..size) screen rect. The math is recoverable once
+// output_window_size() is matched - it is the only missing dependency.
 bool base_game_scene::point_to_screen( float3 const& p, float2& result )
 {
-	// LOCALS
-	// float3 							pos
-	// float4x4 						vp
-	// float4x4 						view
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( p );			// buildability stub
+	VOSTOK_UNREFERENCED_PARAMETER( result );
 
 	return false;
-
-	// FUNCTION BODY[0x5d6ff0]: 12
-	// <0x5d6ff0>|0x000|+0x006:'190'	{
-	// <0x5d6ff6>|0x006|+0x019:'191'
-	// <0x5d700f>|0x01f|+0x00c:'192'
-	// <0>
-	// <1>
-	// <0x5d701b>|0x02b|+0x018:'195'
-	// <0x5d7033>|0x043|+0x018:'196'
-	// <0x5d704b>|0x05b|+0x0db:'197'
-	// <0>
-	// <0x5d7126>|0x136|+0x039:'199'
-	// <0x5d715f>|0x16f|+0x01e:'200'
-	// <0>
-	// <0x5d717d>|0x18d|+0x065:'202'
-	// <0x5d71e2>|0x1f2|-0x00d:'202'
-	// <0x5d71d5>|0x1e5|+0x011:'203'
-	// <0x5d71e6>|0x1f6|      :'203'	}
-	// ******
 }
 
-// STATE[STUB]
 swf_input_translator& base_game_scene::input_translator( )
 {
-	return *( swf_input_translator* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5d6d30]: 1
-	// <0x5d6d30>|0x000|+0x00b:'206'
-	// ******
+	return m_game.input_translator( );
 }
 
 // STATE[STUB]
+// claude@NOTE: BLOCKED on the render facade (renderer::show_text_manager) + the
+// flash_text_manager(Scaleform::GFx::Loader*) ctor. Target body:
+//   m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory()...loader );
+//   m_text_manager->set_viewport( output_window_size( ).x, output_window_size( ).y );
+//   renderer( ).show_text_manager( render_scene_view( ), m_text_manager );
+// (the 2 structure stmts are the alloc+set_viewport and the renderer call). Needs the
+// render facade show_text_manager + output_window_size() (both blocked).
 void base_game_scene::create_text_manager( )
 {
-	// FUNCTION BODY[0x5d73f0]: 2
-	// <0x5d73f1>|0x001|+0x02b:'211'
-	// <0x5d741c>|0x02c|+0x02e:'212'
-	// ******
 }
 
-// STATE[STUB]
 void base_game_scene::on_after_tick( )
 {
-	// FUNCTION BODY[0x5d73e0]: 1
-	// <0x5d73e0>|0x000|+0x00c:'217'
-	// ******
+	m_camera_director->apply( );
 }
 
 } // namespace survarium
