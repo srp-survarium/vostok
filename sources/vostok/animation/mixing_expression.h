@@ -17,6 +17,7 @@ class base_lexeme;
 
 class VOSTOK_ANIMATION_API expression {
 public:
+	inline						expression		( );
 	template < typename T >
 	inline	IMPLICIT			expression		( T& lexeme );
 	inline	mutable_buffer&		buffer			( ) const;

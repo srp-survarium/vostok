@@ -1029,6 +1029,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_animation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\anchor_game_world.cpp"
 				>
 			</File>

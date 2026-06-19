@@ -14,6 +14,11 @@ namespace animation {
 namespace mixing {
 
 
+inline expression::expression					( ) :
+	m_lexeme	( 0 )
+{
+}
+
 template < typename T >
 inline expression::expression					( T& lexeme )
 {
