@@ -1044,15 +1044,15 @@ void player::reset_fov_factor( )
 	m_current_fov_factor	= 0.0f;
 }
 
-// STATE[STUB]
+// claude@NOTE: transition_time is dropped (ret 4 = 1 arg): the sole caller passes
+// a constant 0.3f, LTCG const-propagates it into m_fov_factor_transition_time
+// (the [s_aim_transition_time]=0.3f memload). Allowed LTCG arg-drop.
 void player::set_target_fov_factor( const float target_fov_factor, const float transition_time )
 {
-	// FUNCTION BODY[0x5e2280]: 4
-	// <0x5e2280>|0x000|+0x008:'1006'
-	// <0>
-	// <0x5e2288>|0x008|+0x01a:'1008'
-	// <0x5e22a2>|0x022|+0x014:'1009'
-	// ******
+	m_start_fov_factor						= m_current_fov_factor;
+	m_fov_factor_transition_time			= transition_time;
+	m_start_fov_factor_change_time_in_ms	= m_current_time_in_ms;
+	m_target_fov_factor						= target_fov_factor;
 }
 
 // STATE[STUB]
