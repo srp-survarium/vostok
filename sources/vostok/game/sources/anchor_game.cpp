@@ -100,6 +100,10 @@ namespace survarium {
 	// player_tick.cpp / player_input_handler.cpp reachability anchor
 	// (anchor_game_player_input.cpp).
 	void use_game_player_input( );
+	// the game_options menu-input carcass anchor (anchor_game_options.cpp); keeps
+	// every out-of-line game_options body + swf_input_translator::process_keyboard
+	// past /OPT:REF until game::activate_main_menu's input path is matched.
+	void use_game_options( );
 }
 
 namespace vostok
@@ -350,6 +354,7 @@ namespace vostok
 		survarium::use_game_world( );	// anchor_game_world.cpp (game-class public methods)
 		use_game_weapons( );
 		use_game_animation( );
+		survarium::use_game_options( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
