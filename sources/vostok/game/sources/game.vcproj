@@ -1045,6 +1045,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_chat.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\anchor_game_world_ui.cpp"
 				>
 			</File>

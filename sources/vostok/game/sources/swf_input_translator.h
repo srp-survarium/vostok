@@ -10,7 +10,10 @@
 
 namespace vostok {
 namespace input {
-	class world;
+	struct world;	// world is a struct in <vostok/input/world.h>; the class
+					// forward-decl mangled process_keyboard's param as PAV not the
+					// target's PAU, breaking the link the moment a consumer pulls
+					// in the real (struct) world.h
 } // namespace input
 } // namespace vostok
 
