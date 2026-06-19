@@ -74,6 +74,12 @@
 // reachable anchor_game() keeps the matched network_client / lobby_client /
 // match_client / messaging_client / network_stats objects AND the game/menu/
 // camera/cook/stats skeleton they reference through game& in the base EXE.
+namespace vostok {
+	// defined in anchor_game_stats.cpp: keeps the debug-HUD stats cone
+	// (stats / stats_graph / npc_stats) past /OPT:REF.
+	void use_game_stats( );
+}
+
 namespace survarium {
 	void anchor_game_network_clients( game& g );
 
@@ -296,6 +302,7 @@ namespace vostok
 		use_object_skeleton( );
 		use_game_menus( );
 		use_game_npc( );
+		use_game_stats( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
