@@ -81,11 +81,11 @@
     "vostok-pdb-parser-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1781332323,
-        "narHash": "sha256-I7je/xyqhFjS2qEFSB6prgYBjpeQKTXMlnt6hV19kCE=",
+        "lastModified": 1781883807,
+        "narHash": "sha256-7eIy9TUg56VKO1I02JFOOGkW0GjfwtyhBpTV51Dw970=",
         "owner": "srp-survarium",
         "repo": "vostok-pdb-parser",
-        "rev": "8ae0c4a25fd0249b4f9c63fe68d0f6ff0badd720",
+        "rev": "2353a34d2203b27a5808478c01691130e8053294",
         "type": "github"
       },
       "original": {
