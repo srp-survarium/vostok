@@ -6,6 +6,15 @@
 #include "lobby_menu.h"
 #include "game_project.h" // complete simple_game_project for the resource_ptr dtor
 
+#include <vostok/input/world.h>
+#include <vostok/scaleform/sources/flash_movie.h>
+
+#include "game.h"
+#include "base_network_client.h"
+#include "lobby_client.h"
+#include "messaging_client.h"
+#include "chat_handler.h"
+
 namespace survarium {
 
 // STATE[STUB]
@@ -50,27 +59,13 @@ namespace survarium {
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::on_activate( )
 {
-	// CALL SITE INFO
-	// <0x79b082> -> input::world& < unknown >()
-	// <0x79b08c> -> void < unknown >( input::handler& )
-	// ******
-
-	// FUNCTION BODY[0x79b060]: 11
-	// <0x79b064>|0x004|+0x005:'69'
-	// <0>
-	// <0x79b069>|0x009|+0x025:'71'
-	// <0>
-	// <0x79b08e>|0x02e|+0x01c:'73'
-	// <0x79b0aa>|0x04a|+0x005:'74'
-	// <0>
-	// <0x79b0af>|0x04f|+0x016:'76'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	base_game_scene::on_activate( );
+	get_game( ).input_world( ).add_handler( *this );
+	if ( lobby_client( ).net_connected( ) )
+		query_lobby_info( );
+	get_game( ).get_chat_handler( ).set_mode( false );
 }
 
 // STATE[STUB]
@@ -93,30 +88,23 @@ void lobby_menu::on_deactivate( )
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::on_disconnected_from_lobby( )
 {
-	// FUNCTION BODY[0x79b040]: 5
-	// <0x79b040>|0x000|+0x009:'97'
-	// <0>
-	// <1>
-	// <2>
-	// <0x79b049>|0x009|+0x00f:'101'
-	// ******
+	if ( m_is_connected_to_lobby )
+	{
+		m_is_connected_to_lobby = false;
+		show_disconnected_message( true );
+	}
 }
 
-// STATE[STUB]
 void lobby_menu::on_connected_to_lobby( )
 {
-	// FUNCTION BODY[0x79b010]: 7
-	// <0x79b013>|0x003|+0x005:'106'
-	// <0>
-	// <0x79b018>|0x008|+0x009:'108'
-	// <0>
-	// <1>
-	// <2>
-	// <0x79b021>|0x011|+0x00f:'112'
-	// ******
+	query_lobby_info( );
+	if ( !m_is_connected_to_lobby )
+	{
+		m_is_connected_to_lobby = true;
+		show_disconnected_message( false );
+	}
 }
 
 // STATE[STUB]
@@ -174,46 +162,32 @@ void lobby_menu::tick(
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::query_lobby_info( )
 {
-	// FUNCTION BODY[0x79af30]: 15
-	// <0x79af36>|0x006|+0x00f:'158'
-	// <0x79af45>|0x015|+0x01b:'159'
-	// <0x79af60>|0x030|+0x01b:'160'
-	// <0x79af7b>|0x04b|+0x01b:'161'
-	// <0x79af96>|0x066|+0x02a:'162'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x79afc0>|0x090|+0x020:'167'
-	// <0>
-	// <1>
-	// <0x79afe0>|0x0b0|+0x007:'170'
-	// <0>
-	// <0x79afe7>|0x0b7|+0x01b:'172'
-	// ******
+	if ( m_ui_static_info_initialized )
+		return;
+
+	lobby_client( ).query_client_status( (lobby::query_info_types)4 );	// sushi@TODO: enumerator names for query_info_types 3..0xB unknown
+	lobby_client( ).query_client_status( (lobby::query_info_types)5 );
+	lobby_client( ).query_client_status( (lobby::query_info_types)9 );
+	lobby_client( ).query_client_status( (lobby::query_info_types)0xA );
+
+	for ( u32 i = 1 ; i < 4 ; ++i )
+		lobby_client( ).query_prices( i );
 }
 
-// STATE[STUB]
 void lobby_menu::query_account_data( )
 {
-	// FUNCTION BODY[0x79aec0]: 4
-	// <0x79aec1>|0x001|+0x01b:'177'
-	// <0x79aedc>|0x01c|+0x01b:'178'
-	// <0x79aef7>|0x037|+0x01b:'179'
-	// <0x79af12>|0x052|+0x01c:'180'
-	// ******
+	lobby_client( ).query_client_status( (lobby::query_info_types)3 );	// sushi@TODO: enumerator names for query_info_types unknown
+	lobby_client( ).query_client_status( (lobby::query_info_types)7 );
+	lobby_client( ).query_client_status( (lobby::query_info_types)8 );
+	lobby_client( ).query_client_status( (lobby::query_info_types)0xB );
 }
 
-// STATE[STUB]
 void lobby_menu::switch_to_level_loading( )
 {
-	// FUNCTION BODY[0x79beb0]: 2
-	// <0x79beb0>|0x000|+0x014:'185'
-	// <0x79bec4>|0x014|+0x01f:'186'
-	// ******
+	get_game( ).lobby_menu( ).show_match_making( true );
+	m_match_making_ui->movie->Invoke( "root.switch_to_loading", NULL, NULL, 0 );
 }
 
 // STATE[STUB]
@@ -558,16 +532,12 @@ void lobby_menu::request_status_from_server( u32 delay_ms )
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::request_status_from_server_impl( const u32 frame_delta_ms, const u32 current_time_ms )
 {
-	// FUNCTION BODY[0x79a680]: 5
-	// <0>
-	// <1>
-	// <0x79a68d>|0x00d|+0x01e:'423'
-	// <0x79a6ab>|0x02b|+0x01a:'424'
-	// <0x79a6c5>|0x045|+0x0bb:'425'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta_ms, current_time_ms );
+	scheduler( ).unregister( &m_update_status_handler );
+	lobby_client( ).query_client_status( (lobby::query_info_types)0 );
+	LOG_INFO( "request_status_from_server_impl" );
 }
 
 // STATE[STUB]
@@ -586,14 +556,11 @@ void lobby_menu::request_friends_status_from_server( u32 delay_ms )
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::request_friends_status_from_server_impl( const u32 frame_delta_ms, const u32 current_time_ms )
 {
-	// FUNCTION BODY[0x79a590]: 3
-	// <0>
-	// <0x79a593>|0x003|+0x018:'444'
-	// <0x79a5ab>|0x01b|+0x01a:'445'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta_ms, current_time_ms );
+	scheduler( ).unregister( &m_update_friends_status_handler );
+	messaging_client( ).query_for_friends_status( );
 }
 
 } // namespace survarium

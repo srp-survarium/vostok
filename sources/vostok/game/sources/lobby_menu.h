@@ -20,6 +20,7 @@ namespace network {
 namespace resources {
 	class queries_result;
 } // namespace resources
+	void use_game_menus( );	// /OPT:REF reachability anchor (anchor_game_menus.cpp)
 } // namespace vostok
 
 namespace survarium {
@@ -43,6 +44,9 @@ typedef resources::resource_ptr<
 // void* lobby_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x92eb0]: <0x92ea0>|0x000|      :'63'	{
 
 class lobby_menu : public base_game_scene , public input::handler {
+	// codegen-neutral: lets the /OPT:REF reachability anchor (anchor_game_menus.cpp)
+	// address-take the private menu methods until the real menu call graph reaches them
+	friend void ::vostok::use_game_menus( );
 public:
 			explicit					lobby_menu							( game& g );
 	virtual								~lobby_menu							( );
@@ -59,25 +63,15 @@ public:
 											const bool		is_game_paused
 										) override;
 
-	// STATE[STUB]
 	virtual	input::handler&				input_handler						( )
 	{
 		return *this;
-
-		// FUNCTION BODY[0x92e90]
-		// <0x92e90>|0x000|      :'55'	{
-		// ******
 	}
 
-	// STATE[STUB]
 	// buildability return; the real body reaches the manager through m_game
 	virtual	bullet_manager&				get_bullet_manager					( ) const override
 	{
 		return *( bullet_manager* )NULL;
-
-		// FUNCTION BODY[0x427c0]
-		// <0x427c0>|0x000|      :'57'	{
-		// ******
 	}
 
 	virtual	bool						on_keyboard_action					(
@@ -102,7 +96,7 @@ public:
 											s32					z
 										) override;
 
-	virtual	s32							input_priority						( ) override { /* no source */ return 0; }
+	virtual	s32							input_priority						( ) override { return 100; }
 
 	virtual	void						clear_resources						( ) override;
 
@@ -130,14 +124,17 @@ public:
 
 			void						reset_account_money					( );
 
+private:
 			void						query_scene_resources				( );
 
 			void						on_render_scenes_ready				( resources::queries_result& data );
 			void						player_parameters_ready				( resources::queries_result& data, player_parameters_cooker_data* cook_data );
 
 			lobby_client&				lobby_client						( );
+public:
 	// buildability return; the real body reaches the client through m_game
 	inline	network::login_client&		login_client						( ) { /* no source */ return *( network::login_client* )NULL; }
+private:
 			messaging_client&			messaging_client					( );
 
 			void						query_lobby_info					( );
@@ -151,6 +148,7 @@ public:
 			void						on_items_compatibility_arrived		( );
 			void						on_slot_restrictions_arrived		( );
 
+public:
 			void						fill_character_data					( );
 			void						fill_inventory_contents				( );
 
@@ -180,6 +178,7 @@ public:
 											float		arg_3
 										) { /* no source */ return false; }
 
+private:
 			void						update_status						( );
 
 			void						request_status_from_server			( u32 delay_ms );
