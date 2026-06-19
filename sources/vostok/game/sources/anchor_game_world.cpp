@@ -15,9 +15,19 @@
 
 namespace survarium {
 
+	// file-local free function in game.cpp (no public header)
+	math::uint2 parse_resolution( pcstr in_str );
+
 	void use_game_world( )
 	{
 		static pcvoid volatile s_sink = 0;
+
+		// keep the file-local parse_resolution free function past /OPT:REF (its only
+		// real caller, on_configs_loaded, is still a stub)
+		static pcstr volatile s_res = 0;
+		static volatile bool s_run_pr = false;
+		if ( s_run_pr )
+			parse_resolution( s_res );
 
 		void ( survarium::game::* const m_commit )( )			= &survarium::game::commit_suicide;
 		void ( survarium::game::* const m_respawn )( )			= &survarium::game::respawn_local_player;
@@ -29,6 +39,9 @@ namespace survarium {
 		void ( survarium::game::* const m_act_menu )( )			= &survarium::game::activate_main_menu;
 		void ( survarium::game::* const m_deact_menu )( )		= &survarium::game::deactivate_main_menu;
 		survarium::flash_factory& ( survarium::game::* const m_flash )( )		= &survarium::game::get_flash_factory;
+		void ( survarium::game::* const m_caanc )( vostok::fixed_string< 512 >, const bool )	= &survarium::game::create_and_assign_network_client;
+		void ( survarium::game::* const m_oqbncsr )( survarium::scene_ready_type )	= &survarium::game::on_queried_by_network_client_scene_ready;
+		void ( survarium::game::* const m_cnc )( const bool )	= &survarium::game::create_network_client;
 
 		// private AAE helpers (reachable via the friend declaration in game.h).
 		// NOTE: switch_to_scene is deliberately NOT address-taken - the target's
@@ -54,6 +67,9 @@ namespace survarium {
 		s_sink = *( pcvoid const* )&m_act_menu;
 		s_sink = *( pcvoid const* )&m_deact_menu;
 		s_sink = *( pcvoid const* )&m_flash;
+		s_sink = *( pcvoid const* )&m_caanc;
+		s_sink = *( pcvoid const* )&m_oqbncsr;
+		s_sink = *( pcvoid const* )&m_cnc;
 		s_sink = *( pcvoid const* )&m_load_cmd;
 		s_sink = *( pcvoid const* )&m_unload_cmd;
 		s_sink = *( pcvoid const* )&m_reg_cc;

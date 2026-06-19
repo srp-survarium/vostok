@@ -392,39 +392,23 @@ void game::build_lpv_geometry( )
 	// ******
 }
 
-// STATE[STUB]
 math::uint2 parse_resolution( pcstr in_str )
 {
-	// LOCALS
-	// char[16] 						xy_str
-	// ******
+	char xy_str[16];
 
-	return vostok::math::uint2(1, 1);
+	if ( in_str && in_str[0] )
+	{
+		pcstr const height_str	= vostok::strings::get_token( in_str, xy_str, vostok::strings::length( in_str ), 'x' );
+		if ( height_str )
+		{
+			u32 const width		= atoi( xy_str );
+			u32 const height	= atoi( height_str );
+			if ( width && height )
+				return vostok::math::uint2( width, height );
+		}
+	}
 
-	// FUNCTION BODY[0x5e5b00]: 22
-	// <0>
-	// <1>
-	// <0x5e5b0a>|0x00a|+0x009:'306'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e5b13>|0x013|+0x021:'312'
-	// <0>
-	// <0x5e5b34>|0x034|+0x004:'314'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e5b38>|0x038|+0x00a:'319'
-	// <0x5e5b42>|0x042|+0x00b:'320'
-	// <0>
-	// <0x5e5b4d>|0x04d|+0x008:'322'
-	// <0>
-	// <1>
-	// <0x5e5b55>|0x055|+0x007:'325'
-	// ******
+	return vostok::math::uint2( 1280, 720 );
 }
 
 // STATE[STUB]
@@ -622,42 +606,38 @@ void game::on_base_resources_created( resources::queries_result& data )
 	// ******
 }
 
-// STATE[STUB]
 void game::create_and_assign_network_client( fixed_string< 512 > client_options, const bool is_spectator )
 {
-	// FUNCTION BODY[0x5e7140]: 7
-	// <0x5e7140>|0x000|+0x007:'481'	{
-	// <0x5e7147>|0x007|+0x038:'482'
-	// <0x5e717f>|0x03f|+0x00a:'483'
-	// <0x5e7189>|0x049|+0x00f:'484'
-	// <0>
-	// <1>
-	// <0x5e7198>|0x058|+0x021:'487'
-	// <0x5e71b9>|0x079|-0x028:'488'
-	// <0x5e7191>|0x051|+0x051:'489'
-	// <0x5e71e2>|0x0a2|      :'489'	}
-	// ******
+	m_network_client_options		= client_options;
+
+	if ( is_spectator )
+	{
+		create_network_client		( true );
+		return;
+	}
+
+	create_lobby_menu				( );
+	create_login_menu				( );
 }
 
-// STATE[STUB]
 void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_ready )
 {
-	// FUNCTION BODY[0x5e70a0]: 14
-	// <0x5e70a1>|0x001|+0x013:'493'
-	// <0>
-	// <1>
-	// <0x5e70b4>|0x014|-0x009:'496'
-	// <0>
-	// <1>
-	// <0x5e70ab>|0x00b|+0x007:'499'
-	// <0x5e70b2>|0x012|+0x009:'500'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e70bb>|0x01b|+0x012:'505'
-	// <0x5e70cd>|0x02d|+0x009:'506'
-	// ******
+	switch ( scene_ready )
+	{
+		case scene_ready_login:
+		{
+			m_login_scene_ready		= true;
+			break;
+		}
+		case scene_ready_lobby:
+		{
+			m_lobby_scene_ready		= true;
+			break;
+		}
+	}
+
+	if ( m_lobby_scene_ready && m_login_scene_ready )
+		create_network_client		( false );
 }
 
 // STATE[STUB]
