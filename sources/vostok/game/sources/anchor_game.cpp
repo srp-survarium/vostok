@@ -90,6 +90,9 @@ namespace survarium {
 
 	// out-of-line base_game_scene base methods (anchor_game_base.cpp)
 	void use_game_base( );
+	// player_tick.cpp / player_input_handler.cpp reachability anchor
+	// (anchor_game_player_input.cpp).
+	void use_game_player_input( );
 }
 
 namespace vostok
@@ -339,5 +342,8 @@ namespace vostok
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
 		survarium::anchor_game_network_clients( *( survarium::game* )NULL );
+
+		// keep the player tick/history + input-handler carcass objects linked.
+		survarium::use_game_player_input( );
 	}
 }
