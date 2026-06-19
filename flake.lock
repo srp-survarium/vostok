@@ -49,11 +49,11 @@
     "vcproj2ninja-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1781287274,
-        "narHash": "sha256-edD4ZoydummQz6O5/U2oMTq9thz2fqezVsqSmmaXfKI=",
+        "lastModified": 1780074888,
+        "narHash": "sha256-3loFS+ODa2MMMC2zWeUgWjTVyReiprfAhc81grKw43U=",
         "owner": "srp-survarium",
         "repo": "vcproj2ninja",
-        "rev": "9ef43afc5767c8a46d8b9ecf16b9860f2b1d5f44",
+        "rev": "5578683d8018fcb037249fd9e49e3fd8f0e8e4d2",
         "type": "github"
       },
       "original": {
@@ -65,11 +65,11 @@
     "vostok-delinker-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1780395660,
-        "narHash": "sha256-dkFseT2Y5FtiwGdTFViz3N6etZylgahAXqYogGNo6CA=",
+        "lastModified": 1775596111,
+        "narHash": "sha256-eCiEMORayi8+2hv2w+fx4TMOyo3CTwiaqVPJFCMY21w=",
         "owner": "srp-survarium",
         "repo": "vostok-delinker",
-        "rev": "5118e2a36d9ab3797094259db8311cae11e0770d",
+        "rev": "935d8c53066aabe0d23d7d249e564ecc817aac11",
         "type": "github"
       },
       "original": {
@@ -81,17 +81,17 @@
     "vostok-pdb-parser-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1781883807,
-        "narHash": "sha256-7eIy9TUg56VKO1I02JFOOGkW0GjfwtyhBpTV51Dw970=",
+        "lastModified": 1781900536,
+        "narHash": "sha256-UqzkITdVYdg4M9EjFTGI8weWJi3KECOgI9QoBXnZmq8=",
         "owner": "srp-survarium",
         "repo": "vostok-pdb-parser",
-        "rev": "2353a34d2203b27a5808478c01691130e8053294",
+        "rev": "4c3ed5b6d0afc1022b23ec36c006f16d129389b4",
         "type": "github"
       },
       "original": {
         "owner": "srp-survarium",
-        "ref": "fix/scaleform-carcass-dump",
         "repo": "vostok-pdb-parser",
+        "rev": "4c3ed5b6d0afc1022b23ec36c006f16d129389b4",
         "type": "github"
       }
     },
