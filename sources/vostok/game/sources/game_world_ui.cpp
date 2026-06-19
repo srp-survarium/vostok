@@ -5,8 +5,10 @@
 #include "pch.h"
 #include "game_world_ui.h"
 #include "game_world.h"	// m_game_world.get_game()
-#include "game.h"		// game::text_translator()
+#include "game.h"		// game::text_translator() / get_network_client()
+#include "base_network_client.h"	// match_options() / get_player() / current_player_team()
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
+#include <vostok/game_core/game_net_defines.h>	// complete match_options / player_profile
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_value.h>
 
@@ -42,20 +44,13 @@ game_world_ui::game_world_ui( game_world& w ) :
 	m_victory_points[0] = m_victory_points[1] = 0;
 }
 
-// STATE[STUB]
 void game_world_ui::initialize_resources( resources::unmanaged_resource_ptr const& game_hud )
 {
-	// FUNCTION BODY[0x5d2a70]: 9
-	// <0x5d2a71>|0x001|+0x06f:'56'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5d2ae0>|0x070|+0x01c:'62'
-	// <0x5d2afc>|0x08c|+0x015:'63'
-	// <0x5d2b11>|0x0a1|+0x015:'64'
-	// ******
+	m_game_hud_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( game_hud );
+
+	m_game_hud_ui->movie->SetBackgroundAlpha( 0.0f );
+	m_game_hud_ui->movie->SetViewAlignment( flash_movie::Align_TopLeft );
+	m_game_hud_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
 }
 
 // STATE[STUB]
@@ -186,62 +181,36 @@ void game_world_ui::initialize_base_points( network_core::packet_reader& packet 
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::add_victory_points( s8 team_1_points, s8 team_2_points )
 {
-	// LOCALS
-	// flash_value[2] 					args
-	// ******
+	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->current_player_team( );
 
-	// CALL SITE INFO
-	// <0x5d4f4f> -> game_team_id < unknown >() const
-	// ******
+	m_victory_points[0] += team_1_points;
+	flash_value args[2];
+	args[0].SetBoolean( local_player_team != team_1 );
+	args[1].SetUInt( m_victory_points[0] );
+	get_ui( )->movie->Invoke( "root.set_artifacts_progress", NULL, args, 2 );
 
-	// FUNCTION BODY[0x5d4f10]: 15
-	// <0x5d4f18>|0x008|+0x058:'180'
-	// <0>
-	// <0x5d4f70>|0x060|+0x007:'182'
-	// <0>
-	// <0x5d4f77>|0x067|+0x01a:'184'
-	// <0x5d4f91>|0x081|+0x025:'185'
-	// <0x5d4fb6>|0x0a6|+0x041:'186'
-	// <0x5d4ff7>|0x0e7|+0x027:'187'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d501e>|0x10e|+0x030:'191'
-	// <0x5d504e>|0x13e|+0x03d:'192'
-	// <0x5d508b>|0x17b|+0x027:'193'
-	// <0>
-	// ******
+	m_victory_points[1] += team_2_points;
+	args[0].SetBoolean( local_player_team != team_2 );
+	args[1].SetUInt( m_victory_points[1] );
+	get_ui( )->movie->Invoke( "root.set_artifacts_progress", NULL, args, 2 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_victory_points( s8 team_1_points, s8 team_2_points )
 {
-	// LOCALS
-	// flash_value[2] 					args
-	// game_team_id 					local_player_team
-	// ******
+	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->current_player_team( );
 
-	// CALL SITE INFO
-	// <0x5d4d83> -> game_team_id < unknown >() const
-	// ******
+	m_victory_points[0] = team_1_points;
+	flash_value args[2];
+	args[0].SetBoolean( local_player_team != team_1 );
+	args[1].SetUInt( team_1_points );
+	get_ui( )->movie->Invoke( "root.set_artifacts_progress", NULL, args, 2 );
 
-	// FUNCTION BODY[0x5d4d40]: 12
-	// <0x5d4d4d>|0x00d|+0x059:'199'
-	// <0>
-	// <0x5d4da6>|0x066|+0x003:'201'
-	// <0x5d4da9>|0x069|+0x01a:'202'
-	// <0x5d4dc3>|0x083|+0x024:'203'
-	// <0x5d4de7>|0x0a7|+0x03b:'204'
-	// <0x5d4e22>|0x0e2|+0x029:'205'
-	// <0>
-	// <1>
-	// <0x5d4e4b>|0x10b|+0x02c:'208'
-	// <0x5d4e77>|0x137|+0x037:'209'
-	// <0x5d4eae>|0x16e|+0x029:'210'
-	// ******
+	m_victory_points[1] = team_2_points;
+	args[0].SetBoolean( local_player_team != team_2 );
+	args[1].SetUInt( team_2_points );
+	get_ui( )->movie->Invoke( "root.set_artifacts_progress", NULL, args, 2 );
 }
 
 game_world_ui::~game_world_ui( )
@@ -741,39 +710,29 @@ void game_world_ui::show_players_list( bool b_show )
 	m_players_list_visible = b_show;
 }
 
-// STATE[STUB]
 void game_world_ui::on_damage_affect_applying(
 	pcstr							bodypart,
-	const hit_affects_type_enum		arg_1 /* hit_affects_type_enum affect */,
-	const affect_event_type_enum	arg_2 /* affect_event_type_enum event_type */
+	const hit_affects_type_enum		affect,
+	const affect_event_type_enum	event_type
 )
 {
-	// LOCALS
-	// flash_value 						value
-	// ******
+	u8 body_part_index = 0;
+	if ( affect == affects_type_hand_damage )
+		body_part_index = ( strcmp( bodypart, "left_hand" ) == 0 ) ? 1 : 2;
+	else if ( affect == affects_type_leg_damage )
+		body_part_index = ( strcmp( bodypart, "left_leg" ) == 0 ) ? 3 : 4;
 
-	// FUNCTION BODY[0x5d1400]: 20
-	// <0>
-	// <1>
-	// <0x5d1403>|0x003|+0x005:'688'
-	// <0x5d1408>|0x008|+0x03d:'689'
-	// <0x5d1445>|0x045|+0x009:'690'
-	// <0x5d144e>|0x04e|+0x031:'691'
-	// <0>
-	// <1>
-	// <0x5d147f>|0x07f|+0x009:'694'
-	// <0x5d1488>|0x088|+0x004:'695'
-	// <0>
-	// <0x5d148c>|0x08c|+0x003:'697'
-	// <0x5d148f>|0x08f|+0x027:'698'
-	// <0>
-	// <0x5d14b6>|0x0b6|+0x00a:'700'
-	// <0>
-	// <0x5d14c0>|0x0c0|+0x003:'702'
-	// <0x5d14c3>|0x0c3|+0x02a:'703'
-	// <0>
-	// <1>
-	// ******
+	flash_value value;
+	if ( event_type == affect_applying )
+	{
+		value.SetUInt( body_part_index );
+		get_ui( )->movie->Invoke( "root.crit_player_body_part", NULL, &value, 1 );
+	}
+	else if ( event_type == affect_recalling || event_type == affect_canceling )
+	{
+		value.SetUInt( body_part_index );
+		get_ui( )->movie->Invoke( "root.heal_player_body_part", NULL, &value, 1 );
+	}
 }
 
 // STATE[STUB]
@@ -1377,32 +1336,21 @@ void game_world_ui::hide_item_container( )
 	get_ui( )->movie->Invoke( "root.hide_container_icon", NULL, NULL, 0 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_player_online_status( u32 player_id, bool is_online )
 {
-	// LOCALS
-	// wchar_t[512] 					w_player_name
-	// flash_value[2] 					player_online_value
-	// ******
+	wchar_t w_player_name[512];
+	mbstowcs_s(
+		NULL,
+		w_player_name,
+		512,
+		m_game_world.get_game( ).get_network_client( )->match_options( ).player_profiles[player_id].profile_name,
+		_TRUNCATE
+	);
 
-	// CALL SITE INFO
-	// <0x5d07c7> -> match_options& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5d07a0]: 12
-	// <0x5d07b2>|0x012|+0x01d:'1173'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d07cf>|0x02f|+0x024:'1177'
-	// <0>
-	// <0x5d07f3>|0x053|+0x01e:'1179'
-	// <0>
-	// <0x5d0811>|0x071|+0x00d:'1181'
-	// <0x5d081e>|0x07e|+0x02b:'1182'
-	// <0>
-	// <0x5d0849>|0x0a9|+0x02a:'1184'
-	// ******
+	flash_value player_online_value[2];
+	player_online_value[0].SetStringW( w_player_name );
+	player_online_value[1].SetBoolean( is_online );
+	get_ui( )->movie->Invoke( "root.set_online_player", NULL, player_online_value, 2 );
 }
 
 } // namespace survarium
