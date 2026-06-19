@@ -4,7 +4,11 @@
 
 #include "pch.h"
 #include "game_world_ui.h"
+#include "game_world.h"	// m_game_world.get_game()
+#include "game.h"		// game::text_translator()
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_value.h>
 
 namespace survarium {
 
@@ -29,15 +33,13 @@ void `dynamic atexit destructor for 's_is_ui_minimap_rotable''( )
 }
 */
 
-// STATE[STUB]
- game_world_ui::game_world_ui( game_world& w ) :
-	// ref member; the same-named param is the obvious source - a matcher
-	// confirms when this TU is enabled
-	m_game_world( w )
+game_world_ui::game_world_ui( game_world& w ) :
+	m_game_world( w ),
+	m_players_list_visible( false ),
+	m_game_mode( capture_enemy_base ),
+	m_match_time( 0 )
 {
-	// FUNCTION BODY[0x5d2a10]: 1
-	// <0x5d2a5a>|0x04a|+0x005:'51'
-	// ******
+	m_victory_points[0] = m_victory_points[1] = 0;
 }
 
 // STATE[STUB]
@@ -242,16 +244,8 @@ void game_world_ui::set_victory_points( s8 team_1_points, s8 team_2_points )
 	// ******
 }
 
-// STATE[STUB]
- game_world_ui::~game_world_ui( )
+game_world_ui::~game_world_ui( )
 {
-	// FUNCTION BODY[0x5d2990]: 3
-	// <0x5d2990>|0x000|+0x00b:'214'	{
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d299b>|0x00b|      :'218'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -294,97 +288,54 @@ void game_world_ui::set_base_capture_progress( u32 progress, u32 point_id )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::set_match_time( u32 time_left_ms )
 {
-	// LOCALS
-	// flash_value 						match_time_str
-	// char[64] 						buff
-	// ******
+	char buff[64];
+	if ( time_left_ms == 0 )
+		vostok::sprintf( buff, "MATCH TIME IS UP!!!!" );
+	else
+		vostok::sprintf(
+			buff,
+			"MATCH TIME: %02d : %02d",
+			math::floor( time_left_ms * ( 1.0f / 60000.0f ) ),
+			math::floor( ( time_left_ms - math::floor( time_left_ms * ( 1.0f / 60000.0f ) ) * 60000 ) * 0.001f )
+		);
 
-	// FUNCTION BODY[0x5d12f0]: 15
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d12f5>|0x005|+0x004:'256'
-	// <0x5d12f9>|0x009|+0x011:'257'
-	// <0x5d130a>|0x01a|+0x002:'258'
-	// <0>
-	// <0x5d130c>|0x01c|+0x027:'260'
-	// <0x5d1333>|0x043|+0x018:'261'
-	// <0x5d134b>|0x05b|-0x012:'261'
-	// <0x5d1339>|0x049|+0x027:'262'
-	// <0x5d1360>|0x070|+0x013:'262'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d1373>|0x083|+0x01d:'266'
-	// <0x5d1390>|0x0a0|+0x021:'267'
-	// ******
+	flash_value match_time_str;
+	match_time_str.SetString( buff );
+	get_ui( )->movie->Invoke( "root.set_match_time", NULL, &match_time_str, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::show_pregame( bool b_show )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
-
-	// FUNCTION BODY[0x5d1290]: 3
-	// <0>
-	// <1>
-	// <0x5d1293>|0x003|+0x033:'274'
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_pregame", NULL, &b_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_pregame( pcstr str, u32 time_left )
 {
-	// LOCALS
-	// wchar_t[512] 					message
-	// flash_value 						message_val
-	// wchar_t[512] 					buff
-	// ******
+	wchar_t message[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( str, message );
 
-	// FUNCTION BODY[0x5d2240]: 12
-	// <0x5d224e>|0x00e|+0x00f:'279'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d225d>|0x01d|+0x033:'283'
-	// <0>
-	// <1>
-	// <0x5d2290>|0x050|+0x01e:'286'
-	// <0>
-	// <0x5d22ae>|0x06e|+0x005:'288'
-	// <0x5d22b3>|0x073|+0x018:'289'
-	// <0x5d22cb>|0x08b|+0x01c:'290'
-	// ******
+	flash_value message_val;
+	wchar_t buff[512];
+	swprintf( buff, 512, L"%s %02d : %02d", message, time_left / 60, time_left % 60 );
+
+	message_val.SetStringW( buff );
+	get_ui( )->movie->Invoke( "root.set_pregame", NULL, &message_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_respawn_time( u32 time_left )
 {
-	// LOCALS
-	// char[64] 						buff
-	// flash_value 						respawn_time_str
-	// ******
+	char buff[64];
+	if ( time_left == 0 )
+		vostok::sprintf( buff, "" );
+	else
+		vostok::sprintf( buff, "WILL RESPAWN IN  %02d : %02d", time_left / 60, time_left % 60 );
 
-	// FUNCTION BODY[0x5d11e0]: 13
-	// <0x5d11e0>|0x000|+0x026:'295'
-	// <0x5d1206>|0x026|-0x017:'296'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d11ef>|0x00f|+0x004:'300'
-	// <0x5d11f3>|0x013|+0x011:'301'
-	// <0x5d1204>|0x024|+0x00f:'302'
-	// <0x5d1213>|0x033|+0x013:'303'
-	// <0>
-	// <1>
-	// <0x5d1226>|0x046|+0x01d:'306'
-	// <0x5d1243>|0x063|+0x021:'307'
-	// ******
+	flash_value respawn_time_str;
+	respawn_time_str.SetString( buff );
+	get_ui( )->movie->Invoke( "root.set_respawn_time", NULL, &respawn_time_str, 1 );
 }
 
 // STATE[STUB]
@@ -483,39 +434,21 @@ void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::on_unload( )
 {
-	// FUNCTION BODY[0x5d0eb0]: 7
-	// <0x5d0eb0>|0x000|+0x000:'387'	{
-	// <0x5d0eb0>|0x000|+0x010:'388'
-	// <0x5d0ec0>|0x010|+0x012:'389'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d0ed2>|0x022|+0x007:'394'
-	// <0x5d0ed9>|0x029|+0x007:'394'
-	// <0x5d0ee0>|0x030|-0x008:'394'
-	// <0x5d0ed8>|0x028|+0x007:'395'
-	// <0x5d0edf>|0x02f|+0x007:'395'
-	// <0x5d0ee6>|0x036|      :'395'	}
-	// ******
+	// claude@NOTE: capped by scaleform flash_movie - the inlined movie reset at
+	// vtable+0x58 forwards to a GFx::Movie virtual our flash_movie wrapper stubs out.
+	if ( m_game_hud_ui && m_game_hud_ui->movie )
+		m_game_hud_ui->movie->Restart( );
+
+	m_victory_points[0] = m_victory_points[1] = 0;
 }
 
-// STATE[STUB]
 void game_world_ui::set_health( u8 health_in_percentage )
 {
-	// LOCALS
-	// flash_value 						value
-	// ******
-
-	// FUNCTION BODY[0x5d0e50]: 4
-	// <0>
-	// <0x5d0e53>|0x003|+0x003:'400'
-	// <0x5d0e56>|0x006|+0x033:'401'
-	// <0>
-	// ******
+	flash_value value;
+	value.SetUInt( health_in_percentage );
+	get_ui( )->movie->Invoke( "root.set_player_hp", NULL, &value, 1 );
 }
 
 // STATE[STUB]
@@ -548,7 +481,6 @@ void game_world_ui::on_hit_from_pos( float3 position )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::show_parametrized_message(
 	pcstr		message_id,
 	u8			font_size,
@@ -556,23 +488,15 @@ void game_world_ui::show_parametrized_message(
 	u32			timeout_in_ms
 )
 {
-	// LOCALS
-	// wchar_t[512] 					message
-	// flash_value[4] 					message_val
-	// ******
+	wchar_t message[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( message_id, message );
 
-	// FUNCTION BODY[0x5d20f0]: 10
-	// <0>
-	// <0x5d20ff>|0x00f|+0x01c:'427'
-	// <0>
-	// <0x5d211b>|0x02b|+0x01c:'429'
-	// <0x5d2137>|0x047|+0x00d:'430'
-	// <0x5d2144>|0x054|+0x025:'431'
-	// <0x5d2169>|0x079|+0x036:'432'
-	// <0x5d219f>|0x0af|+0x030:'433'
-	// <0>
-	// <0x5d21cf>|0x0df|+0x029:'435'
-	// ******
+	flash_value message_val[4];
+	message_val[0].SetStringW( message );
+	message_val[1].SetUInt( 25 );
+	message_val[2].SetUInt( 20 );
+	message_val[3].SetUInt( 3000 );
+	get_ui( )->movie->Invoke( "root.set_parameterized_message", NULL, message_val, 4 );
 }
 
 // STATE[STUB]
@@ -759,132 +683,62 @@ void game_world_ui::on_player_killed(
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::set_crosshair_size( float size )
 {
-	// LOCALS
-	// flash_value 						value
-	// ******
-
-	// FUNCTION BODY[0x5d0de0]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d0de9>|0x009|+0x039:'621'
-	// ******
+	flash_value value;
+	value.SetNumber( size );	get_ui( )->movie->Invoke( "root.set_crosshair_size", NULL, &value, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::on_enemy_hitted( )
 {
-	// FUNCTION BODY[0x5d0dc0]: 1
-	// <0x5d0dc0>|0x000|+0x01c:'626'
-	// ******
+	get_ui( )->movie->Invoke( "root.crosshair_enemy_hit", NULL, NULL, 0 );
 }
 
-// STATE[STUB]
 void game_world_ui::show_crosshair( bool b_show )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
-
-	// FUNCTION BODY[0x5d0d60]: 3
-	// <0>
-	// <1>
-	// <0x5d0d63>|0x003|+0x033:'633'
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_crosshair", NULL, &b_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::show_ammo_indicator( bool b_show )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
-
-	// FUNCTION BODY[0x5d0d00]: 3
-	// <0>
-	// <1>
-	// <0x5d0d03>|0x003|+0x033:'640'
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_ammo", NULL, &b_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::show_capture_progress( bool b_show )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
-
-	// FUNCTION BODY[0x5d0ca0]: 3
-	// <0>
-	// <1>
-	// <0x5d0ca3>|0x003|+0x034:'647'
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_capture_progress", NULL, &b_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_fire_queue_size( const u32 fire_queue_size )
 {
-	// LOCALS
-	// flash_value 						value
-	// ******
-
-	// FUNCTION BODY[0x5d0c40]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d0c49>|0x009|+0x033:'655'
-	// <0>
-	// ******
+	flash_value value;
+	value.SetUInt( fire_queue_size );	get_ui( )->movie->Invoke( "root.set_weapon_fire_queue_size", NULL, &value, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_ammo_in_magazine( const u32 count )
 {
-	// LOCALS
-	// flash_value 						value
-	// ******
-
-	// FUNCTION BODY[0x5d0be0]: 3
-	// <0>
-	// <1>
-	// <0x5d0be9>|0x009|+0x033:'662'
-	// ******
+	flash_value value;
+	value.SetUInt( count );	get_ui( )->movie->Invoke( "root.set_weapon_ammo_size", NULL, &value, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_ammo_type( const u8 ammo_type )
 {
-	// LOCALS
-	// flash_value 						value
-	// ******
-
-	// FUNCTION BODY[0x5d0b70]: 3
-	// <0>
-	// <0x5d0b79>|0x009|+0x003:'668'
-	// <0x5d0b7c>|0x00c|+0x033:'669'
-	// ******
+	flash_value value;
+	value.SetUInt( ammo_type );
+	get_ui( )->movie->Invoke( "root.set_weapon_ammo_type", NULL, &value, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::show_players_list( bool b_show )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
+	if ( m_players_list_visible == b_show )
+		return;
 
-	// FUNCTION BODY[0x5d0b00]: 7
-	// <0x5d0b08>|0x008|+0x005:'675'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d0b0d>|0x00d|+0x033:'680'
-	// <0>
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_player_list", NULL, &b_val, 1 );
+	m_players_list_visible = b_show;
 }
 
 // STATE[STUB]
@@ -1191,38 +1045,19 @@ void game_world_ui::reset_map_rotatable( )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::set_ammo_total_count( u32 first_type_count, u32 second_type_count )
 {
-	// LOCALS
-	// flash_value 						count
-	// ******
-
-	// FUNCTION BODY[0x5d09d0]: 6
-	// <0>
-	// <1>
-	// <0x5d09d9>|0x009|+0x033:'896'
-	// <0>
-	// <0x5d0a0c>|0x03c|+0x02a:'898'
-	// <0x5d0a36>|0x066|+0x02b:'899'
-	// ******
+	flash_value count;
+	count.SetUInt( first_type_count );	get_ui( )->movie->Invoke( "root.set_primary_ammo", NULL, &count, 1 );
+	count.SetUInt( second_type_count );
+	get_ui( )->movie->Invoke( "root.set_secondary_ammo", NULL, &count, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::show_quick_slots( bool b_show )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
-
-	// FUNCTION BODY[0x5d0940]: 6
-	// <0>
-	// <1>
-	// <0x5d0943>|0x003|+0x039:'906'
-	// <0>
-	// <0x5d097c>|0x03c|+0x004:'908'
-	// <0x5d0980>|0x040|+0x027:'909'
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_slots", NULL, &b_val, 1 );
+	m_slots_to_update.clear( );
 }
 
 // STATE[STUB]
@@ -1410,120 +1245,73 @@ void game_world_ui::update_quick_slot( profile_slot_enum slot )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::show_screen_message( pcstr message_id )
 {
-	// LOCALS
-	// wchar_t[512] 					message
-	// flash_value 						message_val
-	// ******
+	wchar_t message[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( message_id, message );
 
-	// FUNCTION BODY[0x5d1d90]: 5
-	// <0>
-	// <0x5d1da0>|0x010|+0x01c:'1039'
-	// <0x5d1dbc>|0x02c|+0x002:'1040'
-	// <0x5d1dbe>|0x02e|+0x015:'1041'
-	// <0x5d1dd3>|0x043|+0x01d:'1042'
-	// ******
+	flash_value message_val;
+	message_val.SetStringW( message );
+	get_ui( )->movie->Invoke( "root.set_context_message", NULL, &message_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_using_progress_message( u32 progress_value )
 {
-	// LOCALS
-	// wchar_t[512] 					message
-	// flash_value[3] 					message_val
-	// ******
+	wchar_t message[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( "st_using_progress_message", message );
 
-	// FUNCTION BODY[0x5d1c60]: 7
-	// <0>
-	// <0x5d1c6f>|0x00f|+0x01f:'1048'
-	// <0x5d1c8e>|0x02e|+0x023:'1049'
-	// <0x5d1cb1>|0x051|+0x00d:'1050'
-	// <0x5d1cbe>|0x05e|+0x025:'1051'
-	// <0x5d1ce3>|0x083|+0x039:'1052'
-	// <0x5d1d1c>|0x0bc|+0x029:'1053'
-	// ******
+	flash_value message_val[3];
+	message_val[0].SetStringW( message );
+	message_val[1].SetUInt( progress_value );
+	message_val[2].SetUInt( 20 );
+	get_ui( )->movie->Invoke( "root.set_context", NULL, message_val, 3 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_using_info_message( pcstr str )
 {
-	// LOCALS
-	// wchar_t[512] 					message
-	// flash_value[3] 					message_val
-	// ******
+	wchar_t message[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( str, message );
 
-	// FUNCTION BODY[0x5d1b40]: 7
-	// <0>
-	// <0x5d1b4f>|0x00f|+0x01c:'1059'
-	// <0x5d1b6b>|0x02b|+0x01c:'1060'
-	// <0x5d1b87>|0x047|+0x00d:'1061'
-	// <0x5d1b94>|0x054|+0x025:'1062'
-	// <0x5d1bb9>|0x079|+0x032:'1063'
-	// <0x5d1beb>|0x0ab|+0x029:'1064'
-	// ******
+	flash_value message_val[3];
+	message_val[0].SetStringW( message );
+	message_val[1].SetUInt( 0 );
+	message_val[2].SetUInt( 1000 );
+	get_ui( )->movie->Invoke( "root.set_context", NULL, message_val, 3 );
 }
 
-// STATE[STUB]
 void game_world_ui::add_quick_slot_to_update( profile_slot_enum slot )
 {
-	// FUNCTION BODY[0x5d17d0]: 1
-	// <0x5d17d0>|0x000|+0x001:'1068'	{
-	// <0x5d17d1>|0x001|+0x01f:'1069'
-	// <0x5d17f0>|0x020|-0x003:'1069'
-	// <0x5d17ed>|0x01d|+0x00e:'1070'
-	// <0x5d17fb>|0x02b|      :'1070'	}
-	// ******
+	m_slots_to_update.push_back( slot );
 }
 
-// STATE[STUB]
 void game_world_ui::disactivate_quick_slot( profile_slot_enum slot )
 {
-	// FUNCTION BODY[0x5d0740]: 8
-	// <0x5d0740>|0x000|+0x004:'1074'
-	// <0x5d0744>|0x004|+0x003:'1075'
-	// <0>
-	// <0x5d0747>|0x007|+0x03a:'1077'
-	// <0x5d0781>|0x041|-0x031:'1077'
-	// <0>
-	// <0x5d0750>|0x010|+0x008:'1079'
-	// <0x5d0758>|0x018|+0x036:'1080'
-	// <0>
-	// ******
+	vector< profile_slot_enum >::iterator it	= m_slots_to_update.begin( );
+	vector< profile_slot_enum >::iterator end	= m_slots_to_update.end( );
+	for ( ; it != end; ++it )
+		if ( *it == slot )
+			m_slots_to_update.erase( it );
 }
 
-// STATE[STUB]
 void game_world_ui::show_chat( bool b_show )
 {
-	// FUNCTION BODY[0x5d0730]: 3
-	// <0x5d0730>|0x000|+0x000:'1104'	{
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d0730>|0x000|      :'1108'	}
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( b_show );
 }
 
-// STATE[STUB]
 void game_world_ui::set_broken_connection_message( pcstr str )
 {
-	// LOCALS
-	// wchar_t[512] 					w_message
-	// flash_value[2] 					message_val
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( str );
 
-	// FUNCTION BODY[0x5d1a70]: 9
-	// <0x5d1a7e>|0x00e|+0x00c:'1112'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d1a8a>|0x01a|+0x01d:'1116'
-	// <0x5d1aa7>|0x037|+0x013:'1117'
-	// <0x5d1aba>|0x04a|+0x00d:'1118'
-	// <0x5d1ac7>|0x057|+0x028:'1119'
-	// <0x5d1aef>|0x07f|+0x02f:'1120'
-	// ******
+	if ( !get_ui( ) )
+		return;
+
+	wchar_t w_message[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( "match server connection lost", w_message );
+
+	flash_value message_val[2];
+	message_val[0].SetStringW( w_message );
+	message_val[1].SetUInt( 1000 );
+	get_ui( )->movie->Invoke( "root.set_warning_message", NULL, message_val, 2 );
 }
 
 // STATE[STUB]
@@ -1572,35 +1360,21 @@ void game_world_ui::on_attached_to_player( player_ptr player )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::on_detached_from_player( )
 {
-	// FUNCTION BODY[0x5d13e0]: 2
-	// <0x5d13ea>|0x00a|+0x009:'1156'
-	// <0x5d13f3>|0x013|+0x007:'1157'
-	// ******
+	show_ammo_indicator( false );
+	show_quick_slots( false );
 }
 
-// STATE[STUB]
 void game_world_ui::show_item_container( u8 visual_id )
 {
-	// LOCALS
-	// flash_value 						visual_id_val
-	// ******
-
-	// FUNCTION BODY[0x5d08e0]: 3
-	// <0>
-	// <1>
-	// <0x5d08e3>|0x003|+0x030:'1164'
-	// ******
+	flash_value visual_id_val;
+	visual_id_val.SetUInt( visual_id );	get_ui( )->movie->Invoke( "root.show_container_icon", NULL, &visual_id_val, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::hide_item_container( )
 {
-	// FUNCTION BODY[0x5d08c0]: 1
-	// <0x5d08c0>|0x000|+0x01c:'1168'
-	// ******
+	get_ui( )->movie->Invoke( "root.hide_container_icon", NULL, NULL, 0 );
 }
 
 // STATE[STUB]

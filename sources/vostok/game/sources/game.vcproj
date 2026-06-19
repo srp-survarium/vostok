@@ -1045,6 +1045,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_world_ui.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\animated_model_instance.h"
 				>
 			</File>
