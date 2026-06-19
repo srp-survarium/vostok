@@ -404,3 +404,27 @@ void scene_renderer::draw_render_statistics( vostok::ui::world& ui_world, vostok
 	);
 }
 #endif // #ifndef MASTER_GOLD
+
+// claude@NOTE: load_props_impl is a real render-facade cook (RVA 0x45344, ~1664
+// bytes, this compiland in the target) called out-of-line by object_light::load.
+// Not yet matched here - stubbed + explicitly instantiated only so the game-module
+// object_light link resolves. Recover its real body in a render-facade batch.
+namespace vostok {
+namespace configs {
+	class binary_config_value;
+} // namespace configs
+namespace render {
+
+template < typename config_t >
+__declspec( noinline ) void load_props_impl( light_props& props, config_t const& )
+{
+	// touch props through a volatile sink so LTCG cannot prove the call is a no-op
+	// and elide it at the object_light::load call site (the real body is unmatched).
+	static light_props* volatile s_sink = 0;
+	s_sink = &props;
+}
+
+template void load_props_impl< vostok::configs::binary_config_value >( light_props&, vostok::configs::binary_config_value const& );
+
+} // namespace render
+} // namespace vostok

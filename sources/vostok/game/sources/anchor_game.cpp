@@ -59,6 +59,9 @@
 // load_transform free function in object.cpp); the object_* visual family derives
 // from game_object_static, but its base ctors/load live out-of-line in object.cpp.
 #include "game_object_static.h"
+#include "object_light.h"
+#include "object_decal.h"
+#include "object_wire.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
 
@@ -234,6 +237,23 @@ namespace vostok
 		static_obj.load( cfg, "", cb );
 
 		survarium::load_transform( cfg, xf );
+
+		// the concrete object_* visual family derived from game_object_static; each
+		// is constructed (ctor/dtor/vtable) and its load/insert/remove referenced.
+		survarium::object_light			light( scene );
+		light.load( cfg, "", cb );
+		light.insert( );
+		light.remove( );
+
+		survarium::object_decal			decal( scene );
+		decal.load( cfg, "", cb );
+		decal.insert( );
+		decal.remove( );
+
+		survarium::object_wire			wire( scene );
+		wire.load( cfg, "", cb );
+		wire.insert( );
+		wire.remove( );
 	}
 
 	void anchor_game( )
