@@ -1039,9 +1039,9 @@ void player::apply_hit_directly( hit_info const& info, const u32 current_time_in
 
 void player::reset_fov_factor( )
 {
-	m_start_fov_factor		= 0.0f;
-	m_target_fov_factor		= 0.0f;
-	m_current_fov_factor	= 0.0f;
+	m_start_fov_factor		= 1.0f;
+	m_target_fov_factor		= 1.0f;
+	m_current_fov_factor	= 1.0f;
 }
 
 // claude@NOTE: transition_time is dropped (ret 4 = 1 arg): the sole caller passes
