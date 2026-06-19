@@ -62,6 +62,8 @@
 #include "object_light.h"
 #include "object_decal.h"
 #include "object_wire.h"
+#include "object_sky.h"
+#include "object_environment.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
 
@@ -254,6 +256,16 @@ namespace vostok
 		wire.load( cfg, "", cb );
 		wire.insert( );
 		wire.remove( );
+
+		survarium::object_sky			sky( scene );
+		sky.load( cfg, "", cb );
+		sky.insert( );
+		sky.remove( );
+
+		survarium::object_environment	environment( scene );
+		environment.load( cfg, "", cb );
+		environment.insert( );
+		environment.remove( );
 	}
 
 	void anchor_game( )
