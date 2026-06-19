@@ -30,9 +30,10 @@ public:
 	virtual	void		insert					( ) override;
 	virtual	void		remove					( ) override;
 
-			void		on_visual_ready			( resources::queries_result& data, boost::function< void( game_object_& ) >& cb );
-
 	virtual				~object_particle_visual	( ) { /* no source */ }
+
+protected:
+			void		on_visual_ready			( resources::queries_result& data, boost::function< void( game_object_& ) >& cb );
 
 private:
 	/* 0x0000 */	/* game_object_static */
