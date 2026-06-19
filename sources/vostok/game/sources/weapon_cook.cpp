@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "weapon_cook.h"
+#include "weapon.h"
+#include "game.h"
 
 namespace survarium {
 
@@ -292,19 +294,9 @@ void weapon_cook::delete_resource( resources::resource_base* const resource )
 	// ******
 }
 
-// STATE[STUB]
 u32 weapon_cook::cooked_object_size( weapon_core& object_to_cook ) const
 {
-	return 0;
-
-	// FUNCTION BODY[0x5cd300]: 6
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5cd300>|0x000|+0x01d:'260'
-	// ******
+	return sizeof( weapon ) + ( static_cast< weapon& >( object_to_cook ).first_view_death_animations_count( ) + static_cast< weapon& >( object_to_cook ).third_view_death_animations_count( ) + static_cast< weapon& >( object_to_cook ).preview_animations_count( ) ) * sizeof( float4x4* );
 }
 
 } // namespace survarium

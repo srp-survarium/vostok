@@ -318,6 +318,7 @@ namespace vostok
 
 	// menu non-virtual method reachability anchor (anchor_game_menus.cpp)
 	void use_game_menus( );
+	void use_game_weapons( );
 
 	void anchor_game( )
 	{
@@ -330,6 +331,7 @@ namespace vostok
 		use_game_stats( );
 		survarium::use_game_base( );
 		survarium::use_game_world( );	// anchor_game_world.cpp (game-class public methods)
+		use_game_weapons( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
