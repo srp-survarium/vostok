@@ -57,6 +57,9 @@ typedef resources::resource_ptr<
 // void* game::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x8da10]: 8, <0x8d9a6>|0x006|+0x00f:'100' ...
 
 class game : public engine_user::world , public input::engine , public ui::engine , public physics::engine , public scaleform_game_engine , public boost::noncopyable {
+	// codegen-neutral: lets the game-module /OPT:REF anchor (anchor_game_world.cpp)
+	// address-take game's private AAE helpers; PDB does not record friendship
+	friend void use_game_world( );
 public:
 	enum debug_window_enum
 	{

@@ -30,6 +30,18 @@ namespace survarium {
 		void ( survarium::game::* const m_deact_menu )( )		= &survarium::game::deactivate_main_menu;
 		survarium::flash_factory& ( survarium::game::* const m_flash )( )		= &survarium::game::get_flash_factory;
 
+		// private AAE helpers (reachable via the friend declaration in game.h).
+		// NOTE: switch_to_scene is deliberately NOT address-taken - the target's
+		// standalone copy uses an edi/esi tail-call convention (it is only ever
+		// reached inlined into switch_to_*); address-taking forces a push-prologue
+		// __thiscall copy that mismatches. It stays reached via the inlined callers.
+		void ( survarium::game::* const m_load_cmd )( pcstr )	= &survarium::game::load_cmd;
+		void ( survarium::game::* const m_unload_cmd )( pcstr )	= &survarium::game::unload_cmd;
+		void ( survarium::game::* const m_reg_cc )( )			= &survarium::game::register_console_commands;
+		void ( survarium::game::* const m_reg_cook )( )			= &survarium::game::register_cooks;
+		void ( survarium::game::* const m_upd_stats )( const u32 )	= &survarium::game::update_stats;
+		void ( survarium::game::* const m_on_rend )( resources::queries_result& )	= &survarium::game::on_renderer_created;
+
 		s_sink = *( pcvoid const* )&m_commit;
 		s_sink = *( pcvoid const* )&m_respawn;
 		s_sink = *( pcvoid const* )&m_discard;
@@ -40,6 +52,12 @@ namespace survarium {
 		s_sink = *( pcvoid const* )&m_act_menu;
 		s_sink = *( pcvoid const* )&m_deact_menu;
 		s_sink = *( pcvoid const* )&m_flash;
+		s_sink = *( pcvoid const* )&m_load_cmd;
+		s_sink = *( pcvoid const* )&m_unload_cmd;
+		s_sink = *( pcvoid const* )&m_reg_cc;
+		s_sink = *( pcvoid const* )&m_reg_cook;
+		s_sink = *( pcvoid const* )&m_upd_stats;
+		s_sink = *( pcvoid const* )&m_on_rend;
 	}
 
 } // namespace survarium
