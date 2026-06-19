@@ -12,14 +12,48 @@
 // real game call graph (game_module::create_world) reaches these for itself.
 
 #include "game.h"
+#include "game_project.h"
+#include "render_visual.h"
+#include "base_game_scene.h"
+#include <vostok/game_core/scheduler.h>
 
 namespace survarium {
 
 	// file-local free function in game.cpp (no public header)
 	math::uint2 parse_resolution( pcstr in_str );
 
+	// Keep the simple_game_project + render_visual public methods past /OPT:REF.
+	// simple_game_project is concrete (no pure virtuals), so constructing one keeps
+	// its ctor/dtor/vtable; the public methods are then called. Args are sourced
+	// through volatile sinks so LTCG cannot prove the constant null this anchor is
+	// the sole caller with. The real caller is project_cooker_simple (still a stub).
+	void use_game_project( )
+	{
+		static volatile bool s_run = false;
+		if ( !s_run )
+			return;
+
+		static survarium::base_game_scene* volatile	s_scene	= 0;
+		static survarium::scheduler* volatile			s_sched	= 0;
+		static vostok::resources::queries_result* volatile	s_data	= 0;
+		static u8 volatile								s_id	= 0;
+
+		survarium::simple_game_project	project( *s_scene );
+		project.insert( *s_sched );
+		project.remove( );
+		project.on_npc_loaded( *s_data );
+		project.all_loaded( );
+		project.get_items_container( s_id );
+
+		survarium::render_visual		visual;
+		visual.insert( *s_scene );
+		visual.remove( *s_scene );
+	}
+
 	void use_game_world( )
 	{
+		use_game_project( );
+
 		static pcvoid volatile s_sink = 0;
 
 		// keep the file-local parse_resolution free function past /OPT:REF (its only

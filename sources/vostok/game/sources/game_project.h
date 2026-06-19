@@ -44,7 +44,12 @@ typedef resources::resource_ptr<
 class simple_game_project : public resources::unmanaged_resource , public base_project {
 public:
 	struct loading {
-		inline		loading	( ) { /* no source */ }
+		inline		loading	( ) :
+			loaded_count( 0 ),
+			all_queried( false ),
+			visuals_loaded( false ),
+			collision_loaded( false )
+		{ }
 
 	public:
 		/* 0x0000 */	u32		loaded_count;
