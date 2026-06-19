@@ -55,6 +55,13 @@
 #include "stats.h"
 #include "stats_graph.h"
 
+// the object-skeleton base cone (game_object_ / game_object_static + the file-local
+// load_transform free function in object.cpp); the object_* visual family derives
+// from game_object_static, but its base ctors/load live out-of-line in object.cpp.
+#include "game_object_static.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
+
 // the network-client carcass anchor (anchor_game_clients.cpp); it self-guards and
 // never runs, so the placeholder game& is never dereferenced. Driving it from the
 // reachable anchor_game() keeps the matched network_client / lobby_client /
@@ -62,6 +69,10 @@
 // camera/cook/stats skeleton they reference through game& in the base EXE.
 namespace survarium {
 	void anchor_game_network_clients( game& g );
+
+	// file-local free function defined in object.cpp (no public header); the
+	// game_object_static::load impl calls it.
+	void load_transform( configs::binary_config_value const& t, float4x4& dest );
 }
 
 namespace vostok
@@ -183,11 +194,54 @@ namespace vostok
 		s_sink = *( pcvoid const* )&m_clogin;
 	}
 
+	// Keep the object-skeleton base cone past /OPT:REF. game_object_static is
+	// concrete (it overrides the pure game_object_::load), so constructing one keeps
+	// its ctor + vtable + out-of-line load; reference load_transform directly. The
+	// out-of-line game_object_::game_object_ base ctor is kept by a direct-derived
+	// subclass whose ctor forwards to it (game_object_static inlines the base ctor, so
+	// a separate direct subclass is needed to emit the out-of-line reference).
+	struct anchor_game_object : survarium::game_object_
+	{
+		anchor_game_object( survarium::base_game_scene& s ) : survarium::game_object_( s ) { }
+		virtual void load(
+			configs::binary_config_value const&,
+			pcstr,
+			boost::function< void( survarium::game_object_& ) >& ) { }
+	};
+
+	void use_object_skeleton( )
+	{
+		static volatile bool s_run = false;
+		if( !s_run )
+			return;
+
+		// source the placeholders through volatile pointers so LTCG cannot prove the
+		// scene/config args are the constant null this anchor is the sole caller with
+		// (a constant arg gets propagated into the ctor, dropping the m_game_scene =
+		// s store and the s parameter - see object.cpp ctors).
+		static survarium::base_game_scene* volatile			s_scene	= 0;
+		static configs::binary_config_value const* volatile	s_cfg	= 0;
+		static boost::function< void( survarium::game_object_& ) >* volatile	s_cb = 0;
+		static float4x4* volatile							s_xf	= 0;
+
+		survarium::base_game_scene&					scene	= *s_scene;
+		configs::binary_config_value const&			cfg		= *s_cfg;
+		boost::function< void( survarium::game_object_& ) >&	cb	= *s_cb;
+		float4x4&									xf		= *s_xf;
+
+		anchor_game_object				base_obj( scene );
+		survarium::game_object_static	static_obj( scene );
+		static_obj.load( cfg, "", cb );
+
+		survarium::load_transform( cfg, xf );
+	}
+
 	void anchor_game( )
 	{
 		use_inventory( );
 		use_engine_user_world_cone( );
 		use_game_skeleton( );
+		use_object_skeleton( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
