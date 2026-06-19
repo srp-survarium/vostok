@@ -100,7 +100,7 @@ public:
 
 	virtual	void						apply_use_physics_controller_for_current( ) = 0;
 
-private:
+protected:
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	bool						m_use_physics_controller_for_current;
 	/* 0x0008 */	player_ptr					m_current_player;
