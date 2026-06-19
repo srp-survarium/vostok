@@ -86,6 +86,9 @@ namespace survarium {
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
 	void load_transform( configs::binary_config_value const& t, float4x4& dest );
+
+	// out-of-line base_game_scene base methods (anchor_game_base.cpp)
+	void use_game_base( );
 }
 
 namespace vostok
@@ -303,6 +306,7 @@ namespace vostok
 		use_game_menus( );
 		use_game_npc( );
 		use_game_stats( );
+		survarium::use_game_base( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).

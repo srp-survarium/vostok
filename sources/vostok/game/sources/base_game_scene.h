@@ -105,6 +105,9 @@ public:
 	inline	flash_text_manager&						text_manager		( ) { /* no source */ return *m_text_manager; }
 			void									show_text_manager	( flash_text_manager* tm );
 			void									hide_text_manager	( flash_text_manager* tm );
+
+protected:
+			// PDB mangles this IAE (protected), unlike the public methods above
 			void									create_text_manager	( );
 
 private:

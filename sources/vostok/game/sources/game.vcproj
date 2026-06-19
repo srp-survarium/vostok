@@ -1005,6 +1005,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_base.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\anchor_game_clients.cpp"
 				>
 			</File>
