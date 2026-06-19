@@ -21,8 +21,6 @@ namespace survarium {
 class bullet_manager;
 class game;
 
-// void* login_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x93230]: <0x92ea0>|0x000|      :'39'	{
-
 class login_menu : public base_game_scene , public input::handler {
 public:
 			explicit			login_menu			( game& g );
@@ -71,17 +69,13 @@ public:
 
 	inline	bool				action_blocked		( ) const { /* no source */ return false; }
 
-	// STATE[STUB]
-	// buildability return; the real body reaches the manager through m_game
+	// the menu has no bullet manager; the override returns a null reference
 	virtual	bullet_manager&		get_bullet_manager	( ) const override
 	{
 		return *( bullet_manager* )NULL;
-
-		// FUNCTION BODY[0x427c0]
-		// <0x427c0>|0x000|      :'43'	{
-		// ******
 	}
 
+private:
 			void				query_resources		( );
 
 			void				on_resources_ready	( resources::queries_result& data );
