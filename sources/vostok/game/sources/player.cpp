@@ -1783,26 +1783,19 @@ void player::subscribe_animation_player(
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: capped on animation::animation_player::unsubscribe being a stub
+// (carcass, no body) in the animation module - both calls inline to nothing in
+// our base (0 stmts). Re-score once animation_player::unsubscribe has its body.
 void player::unsubscribe_animation_player( pcstr channel_id, pcvoid callback_uid )
 {
-	// FUNCTION BODY[0x5e3800]: 4
-	// <0x5e3808>|0x008|+0x019:'1611'
-	// <0>
-	// <0x5e3821>|0x021|+0x00f:'1613'
-	// <0>
-	// ******
+	m_current.animation_player.unsubscribe( channel_id, callback_uid );
+	m_target.animation_player.unsubscribe( channel_id, callback_uid );
 }
 
-// STATE[STUB]
 void player::unsubscribe_animation_player( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
 {
-	// FUNCTION BODY[0x5e3bf0]: 4
-	// <0x5e3bf1>|0x001|+0x026:'1619'
-	// <0>
-	// <0x5e3c17>|0x027|+0x01d:'1621'
-	// <0>
-	// ******
+	m_current.animation_player.unsubscribe( channel_id, callback_uid );
+	m_target.animation_player.unsubscribe( channel_id, callback_uid );
 }
 
 // STATE[STUB]
