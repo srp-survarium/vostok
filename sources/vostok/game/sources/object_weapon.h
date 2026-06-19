@@ -52,6 +52,11 @@ public:
 	virtual	float						get_velocity			( ) const override { /* no source */ return 0.0f; }
 
 	virtual	float						get_luminosity			( ) const override { /* no source */ return 0.0f; }
+
+	// inline override the canonical PDB did not emit (never out-of-lined); the
+	// concrete object_weapon needs it (it is constructed in on_npc_attributes_received)
+	virtual	ai::collision_object*		get_collision_object	( ) const override { /* no source */ return NULL; }
+
 	virtual	float3						get_random_surface_point( const u32 current_time ) const override;
 
 	virtual	float4x4					local_to_cell			( float3 const& requester ) const override;

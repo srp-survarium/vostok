@@ -65,6 +65,9 @@ class game : public engine_user::world , public input::engine , public ui::engin
 	// codegen-neutral: lets the game-module /OPT:REF anchor (anchor_game_world.cpp)
 	// address-take game's private AAE helpers; PDB does not record friendship
 	friend void use_game_world( );
+	// game_world reaches game's private hide_game_stats directly (game_world::
+	// update_npc_stats writes it) - the original befriends its game_world scene.
+	friend class game_world;
 public:
 	enum debug_window_enum
 	{

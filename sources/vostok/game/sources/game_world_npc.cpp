@@ -4,68 +4,45 @@
 
 #include "pch.h"
 #include "game_world.h"
+#include "game_memory.h"	// DELETE (delete_weapons)
 
+#include "game.h"	// get_game().hide_game_stats / ui_world() (update_npc_stats)
+#include "npc_stats.h"	// npc_stats::set_stats / draw (update_npc_stats)
+
+#include <vostok/ai/api.h>	// ai::create_world (initialize_ai)
+#include <vostok/ai/world.h>	// ai::world::get_weapon_name_by_id (on_npc_attributes_received)
+#include <vostok/ai_navigation/api.h>	// ai::navigation::create_world (initialize_ai_navigation)
+#include <vostok/configs_binary_config_value.h>	// config value [] / iterator (on_npc_attributes_received)
+#include <vostok/physics/world.h>	// physics::world::ray_query (ray_query)
+#include <vostok/render/facade/game_renderer.h>	// renderer().debug() (draw_ray / draw_frustum)
+#include <vostok/render/facade/debug_renderer.h>	// debug::renderer::draw_arrow / draw_frustum
+#include <vostok/resources_queries_result.h>	// queries_result [] (on_behaviour_created)
+#include <vostok/resources_query_result.h>	// query_result get_unmanaged_resource (on_behaviour_created)
+#include <vostok/ui/world.h>	// ui::world::get_renderer (update_npc_stats)
 #include <vostok/collision/common_types.h>	// ray_triangle_result (ray_query_predicate)
 #include <vostok/physics/ray_result.h>	// closest_ray_result (get_first_npc... predicate)
 
 namespace survarium {
 
-// STATE[STUB]
 void game_world::initialize_ai( )
 {
-	// FUNCTION BODY[0x5ce850]: 5
-	// <0x5ce850>|0x000|+0x000:'26'	{
-	// <0>
-	// <1>
-	// <2>
-	// <0x5ce850>|0x000|+0x01a:'30'
-	// <0x5ce86a>|0x01a|-0x001:'30'
-	// <0>
-	// <0x5ce869>|0x019|+0x012:'32'
-	// <0x5ce87b>|0x02b|      :'32'	}
-	// ******
+	m_ai_world = ai::create_world( *this );
 }
 
-// STATE[STUB]
 void game_world::initialize_ai_navigation( )
 {
-	// FUNCTION BODY[0x5ce580]: 3
-	// <0>
-	// <0x5ce580>|0x000|+0x031:'37'
-	// <0>
-	// ******
+	m_ai_navigation_world = ai::navigation::create_world( *this, render_scene(), renderer().debug() );
 }
 
-// STATE[STUB]
 void game_world::get_colliding_objects( math::aabb const& query_aabb, vectora< ai::game_object const* >& results )
 {
-	// FUNCTION BODY[0x5ce4f0]: 8
-	// <0x5ce4f0>|0x000|+0x000:'42'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5ce4f0>|0x000|      :'51'	}
-	// ******
 }
 
-// STATE[STUB]
 void game_world::get_visible_objects(
 	math::cuboid const&		cuboid,
 	boost::function< void( ai::game_object const& ) > const&	update_callback
 )
 {
-	// FUNCTION BODY[0x5ce4e0]: 3
-	// <0x5ce4e0>|0x000|+0x000:'54'	{
-	// <0>
-	// <1>
-	// <2>
-	// <0x5ce4e0>|0x000|      :'58'	}
-	// ******
 }
 
 // TU-local (canonical headers/get_first_npc_in_camera_direction_predicate.h;
@@ -115,7 +92,9 @@ public:
 
 STATIC_SIZE_ASSERT(ray_query_predicate, 0x14);
 
-// STATE[STUB]
+// claude@NOTE: structure matches (3 stmts). Byte residual is LTCG: the target
+// inlines the vectora_allocator<void*> ctor at the game_objects init site (base
+// keeps it out-of-line as a call) plus this-in-register; both are call-boundary.
 bool game_world::ray_query(
 	ai::collision_object const* const		object_to_pick,
 	ai::collision_object const* const		object_to_ignore,
@@ -126,39 +105,11 @@ bool game_world::ray_query(
 	float&									visibility_value
 ) const
 {
-	// LOCALS
-	// vectora< physics::closest_ray_result > game_objects
-	// ******
-
-	// CALL SITE INFO
-	// <0x5ce55a> -> void < unknown >( float3 const&, float3 const&, const float, vectora< physics::closest_ray_result >&, u16, u16 )
-	// ******
-
+	vectora< physics::closest_ray_result > game_objects( g_allocator );
+	get_physics_world( )->ray_query( origin, direction, max_distance, game_objects, 0xffff, 0x40 );
 	return false;
-
-	// FUNCTION BODY[0x5ce510]: 18
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5ce513>|0x003|+0x005:'128'
-	// <0x5ce518>|0x008|+0x044:'129'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5ce55c>|0x04c|+0x015:'138'
-	// ******
 }
 
-// STATE[STUB]
 void game_world::draw_frustum(
 	float				fov_in_radians,
 	float				far_plane_distance,
@@ -168,206 +119,135 @@ void game_world::draw_frustum(
 	math::color			color
 ) const
 {
-	// FUNCTION BODY[0x5ce880]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5ce883>|0x003|+0x075:'160'
-	// ******
+	renderer( ).debug( ).draw_frustum(
+		render_scene( ),
+		fov_in_radians,
+		0.f,
+		far_plane_distance,
+		aspect_ratio,
+		position,
+		direction,
+		float3( 0.f, 1.f, 0.f ),
+		color
+	);
 }
 
-// STATE[STUB]
 void game_world::draw_ray( float3 const& start_point, float3 const& end_point, bool sees_something ) const
 {
-	// FUNCTION BODY[0x5ce900]: 1
-	// <0x5ce900>|0x000|+0x040:'165'
-	// ******
+	renderer().debug().draw_arrow( render_scene(), start_point, end_point, sees_something ? math::color( 0, 0, 255 ) : math::color( 255, 255, 0 ) );
 }
 
-// STATE[STUB]
 void game_world::get_available_weapons( ai::npc* owner, vectora< ai::weapon* >& list_to_be_filled ) const
 {
-	// FUNCTION BODY[0x5ce500]: 2
-	// <0>
-	// <0x5ce500>|0x000|+0x00d:'171'
-	// ******
+	static_cast_checked< human_npc* >( owner )->get_available_weapons( list_to_be_filled );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (1 stmt). Byte residual is the repo-wide
+// logging-not-gold-stubbed wall: target ICF-folds has_passed_filters/append onto
+// empty_stub, base emits the real logging bodies. Verbosity/format from the asm.
 u32 game_world::get_node_by_name( pcstr node_name ) const
 {
-	return 0;
-
-	// FUNCTION BODY[0x5ce770]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5ce779>|0x009|+0x0c7:'183'
-	// <0>
-	// ******
+	LOG_ERROR						( "node with name %s wasn't found", node_name );
+	return u32( -1 );
 }
 
-// STATE[STUB]
 void delete_weapons( human_npc_ptr& owner )
 {
-	// CALL SITE INFO
-	// <0x5ce729> -> void* < unknown >( u32 )
-	// ******
-
-	// FUNCTION BODY[0x5ce6c0]: 2
-	// <0x5ce6d0>|0x010|+0x06f:'286'
-	// <0x5ce73f>|0x07f|-0x030:'286'
-	// <0x5ce70f>|0x04f|+0x037:'287'
-	// ******
+	while ( object_weapon* weapon = owner->pop_weapon( ) )
+		DELETE						( weapon );
 }
 
-// STATE[STUB]
+// claude@NOTE: cross-module cap - human_npc::clear_resources is still a stub in
+// base ({ret}), so the target's call inlines to nothing here; matches once that
+// sibling (human_npc.cpp) is bodied. Residual otherwise is LTCG this-in-register.
 void game_world::kill_npc( human_npc_ptr& condemned )
 {
-	// CALL SITE INFO
-	// <0x5ce760> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5ce750]: 1
-	// <0x5ce750>|0x000|+0x006:'292'
-	// ******
+	delete_weapons					( condemned );
+	condemned->clear_resources		( );
 }
 
-// STATE[STUB]
 void game_world::on_behaviour_created( resources::queries_result& data )
 {
-	// LOCALS
-	// resources::unmanaged_resource_ptr new_behaviour
-	// ******
-
-	// FUNCTION BODY[0x5ce640]: 6
-	// <0>
-	// <1>
-	// <0x5ce641>|0x001|+0x01e:'330'
-	// <0>
-	// <0x5ce65f>|0x01f|+0x012:'332'
-	// <0x5ce671>|0x031|+0x01e:'333'
-	// ******
+	resources::unmanaged_resource_ptr new_behaviour = data[ 0 ].get_unmanaged_resource( );
+	if ( m_selected_npc )
+		m_selected_npc->set_behaviour	( new_behaviour );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure (23 stmts) matches. The trailing finish_npc_creation is
+// inlined here, so the same human_npc::enable stub cap applies (TRGT_ONLY tail);
+// otherwise byte residual is the config operator[] / float-conversion codegen.
 void game_world::on_npc_attributes_received( configs::binary_config_value const& attributes_config, human_npc_ptr owner )
 {
-	// LOCALS
-	// human_npc::npc_game_attributes 	attributes
-	// configs::binary_config_value const* it_end
-	// float3 							color
-	// ******
+	human_npc::npc_game_attributes		attributes;
+	attributes.group_id					= attributes_config[ "group_id" ];
+	attributes.class_id					= attributes_config[ "class_id" ];
+	attributes.outfit_id				= attributes_config[ "outfit_id" ];
+	float3 color						= ( float3 )attributes_config[ "debug_draw_color" ];
+	attributes.debug_draw_color			= math::color( ( u32 )color.x, ( u32 )color.y, ( u32 )color.z );
+	attributes.initial_velocity			= attributes_config[ "initial_velocity" ];
+	attributes.initial_luminosity		= attributes_config[ "initial_luminosity" ];
+	attributes.description				= attributes_config[ "description" ];
+	attributes.initial_position			= ( float3 )attributes_config[ "initial_position" ];
+	attributes.initial_rotation			= ( float3 )attributes_config[ "initial_rotation" ];
+	attributes.initial_scale			= ( float3 )attributes_config[ "initial_scale" ];
+	attributes.name						= attributes_config[ "name" ];
+	attributes.id						= attributes_config[ "id" ];
+	configs::binary_config_value const& weapons = attributes_config[ "weapons" ];
 
-	// CALL SITE INFO
-	// <0x5ced82> -> pcstr < unknown >( const u32, const u32 ) const
-	// ******
+	configs::binary_config_value::const_iterator it		= weapons.begin( );
+	configs::binary_config_value::const_iterator it_end	= weapons.end( );
 
-	// FUNCTION BODY[0x5ceaa0]: 29
-	// <0x5ceaaa>|0x00a|+0x00b:'338'
-	// <0x5ceab5>|0x015|+0x00e:'339'
-	// <0x5ceac3>|0x023|+0x01c:'340'
-	// <0x5ceadf>|0x03f|+0x00e:'341'
-	// <0x5ceaed>|0x04d|+0x013:'342'
-	// <0x5ceb00>|0x060|+0x029:'343'
-	// <0x5ceb29>|0x089|+0x09f:'344'
-	// <0x5cebc8>|0x128|+0x025:'345'
-	// <0x5cebed>|0x14d|+0x05d:'346'
-	// <0x5cec4a>|0x1aa|+0x01b:'347'
-	// <0x5cec65>|0x1c5|+0x026:'348'
-	// <0x5cec8b>|0x1eb|+0x01b:'349'
-	// <0x5ceca6>|0x206|+0x05f:'350'
-	// <0x5ced05>|0x265|+0x00e:'351'
-	// <0x5ced13>|0x273|+0x013:'352'
-	// <0>
-	// <0x5ced26>|0x286|+0x002:'354'
-	// <0x5ced28>|0x288|+0x00e:'355'
-	// <0>
-	// <0x5ced36>|0x296|+0x008:'357'
-	// <0>
-	// <1>
-	// <0x5ced3e>|0x29e|+0x00c:'360'
-	// <0x5ced4a>|0x2aa|+0x002:'361'
-	// <0x5ced4c>|0x2ac|+0x00c:'362'
-	// <0x5ced58>|0x2b8|+0x082:'363'
-	// <0>
-	// <1>
-	// <0x5cedda>|0x33a|+0x05e:'366'
-	// ******
+	for ( ; it != it_end; ++it )
+	{
+		configs::binary_config_value const& gun		= *it;
+		u32 const type								= gun[ "type" ];
+		ai::weapon_types_enum const weapon_type		= ( ai::weapon_types_enum )type;
+		u32 const weapon_id							= gun[ "id" ];
+		attributes.weapons.push_back				( NEW( object_weapon )( weapon_type, m_ai_world->get_weapon_name_by_id( weapon_type, weapon_id ), weapon_id, weapon_id ) );
+	}
+
+	finish_npc_creation					( owner, attributes );
 }
 
-// STATE[STUB]
+// claude@NOTE: cross-module cap - human_npc::enable is still a stub in base
+// ({ret}), so the target's enable() call inlines to nothing (a TRGT_ONLY
+// statement); structure (3 stmts) is correct, byte-matches once human_npc.cpp's
+// enable is bodied. Residual otherwise is LTCG this-in-register.
 void game_world::finish_npc_creation( human_npc_ptr& new_npc, human_npc::npc_game_attributes& attributes )
 {
-	// FUNCTION BODY[0x5cea60]: 3
-	// <0x5cea64>|0x004|+0x007:'371'
-	// <0x5cea6b>|0x00b|+0x007:'372'
-	// <0x5cea72>|0x012|+0x01d:'373'
-	// ******
+	new_npc->set_attributes			( attributes );
+	new_npc->enable					( );
+	m_npcs.push_back				( new_npc );
 }
 
-// STATE[STUB]
 void game_world::query_npc_dictionary( )
 {
-	// FUNCTION BODY[0x5ce4d0]: 6
-	// <0x5ce4d0>|0x000|+0x000:'377'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5ce4d0>|0x000|      :'384'	}
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: cross-module cap - human_npc::tick is still a stub in base ({ret}),
+// so the target's per-npc tick() call inlines away (the loop-body resource_ptr
+// ref-count statements show as TRGT_ONLY); matches once human_npc.cpp's tick is
+// bodied.
 void game_world::tick_npcs( const u32 current_frame_id, const bool is_game_paused )
 {
-	// LOCALS
-	// human_npc_ptr 					it_npc
-	// ******
-
-	// FUNCTION BODY[0x5ce950]: 2
-	// <0x5ce958>|0x008|+0x0b9:'403'
-	// <0x5cea11>|0x0c1|-0x087:'403'
-	// <0x5ce98a>|0x03a|+0x0b2:'404'
-	// <0x5cea3c>|0x0ec|+0x01e:'404'
-	// ******
+	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
+		it_npc->tick				( current_frame_id, is_game_paused );
 }
 
-// STATE[STUB]
+// claude@NOTE: cross-module cap - npc_stats::set_stats is still a stub in base
+// ({ret}) so its call inlines to nothing (a TRGT_ONLY statement); also the
+// game/ui::world vtable layouts differ in base (ui_world()/get_renderer() land at
+// different vtable slots), shifting two call offsets. Structure is correct.
 void game_world::update_npc_stats( )
 {
-	// CALL SITE INFO
-	// <0x5ce604> -> ui::world& < unknown >()
-	// <0x5ce60d> -> render::ui::renderer& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5ce5c0]: 8
-	// <0x5ce5c0>|0x000|+0x003:'408'	{
-	// <0x5ce5c3>|0x003|+0x01b:'409'
-	// <0>
-	// <0x5ce5de>|0x01e|+0x00a:'411'
-	// <0x5ce5e8>|0x028|+0x011:'412'
-	// <0x5ce5f9>|0x039|+0x02d:'413'
-	// <0>
-	// <1>
-	// <0x5ce626>|0x066|-0x001:'416'
-	// <0x5ce625>|0x065|+0x00c:'417'
-	// <0x5ce631>|0x071|      :'417'	}
-	// ******
+	if ( m_active_npc_set && m_selected_npc )
+	{
+		get_game( ).hide_game_stats	= true;
+		m_active_npc_stats->set_stats	( m_selected_npc.c_ptr( ) );
+		m_active_npc_stats->draw		( get_game( ).ui_world( ).get_renderer( ), render_scene_view( ) );
+	}
+	else
+		get_game( ).hide_game_stats	= false;
 }
 
 
