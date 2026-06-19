@@ -87,6 +87,7 @@ namespace survarium {
 	// the survarium::player carcass anchor (anchor_game_player.cpp); pins the
 	// player out-of-line bodies so /OPT:REF keeps them for the delinker.
 	void anchor_game_player( );
+	void anchor_game_world_ui( );
 
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
@@ -351,5 +352,7 @@ namespace vostok
 		survarium::use_game_player_input( );
 		// pin the survarium::player carcass symbols.
 		survarium::anchor_game_player( );
+		// keep the matched game_world_ui methods (no reachable caller yet).
+		survarium::anchor_game_world_ui( );
 	}
 }
