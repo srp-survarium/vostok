@@ -5,130 +5,77 @@
 #include "pch.h"
 #include "main_menu.h"
 
+#include <vostok/input/world.h>
+#include <vostok/resources.h>
+#include <vostok/render/facade/common_types.h>
+
+#include "game.h"
+
 namespace survarium {
 
-// STATE[STUB]
- main_menu::main_menu( game& g )
-	: base_game_scene( g ) // buildability: base has no default ctor
+main_menu::main_menu( game& g )
+	: base_game_scene( g )
 {
-	// FUNCTION BODY[0x5d9cb0]: 1
-	// <0x5d9cb8>|0x008|+0x01d:'43'
-	// ******
+	query_resources( );
 }
 
-// STATE[STUB]
- main_menu::~main_menu( )
+main_menu::~main_menu( )
 {
-	// FUNCTION BODY[0x5d9aa0]: 0
-	// <0x5d9aa0>|0x000|+0x017:'48'	{
-	// <0x5d9ab7>|0x017|      :'49'	}
-	// ******
 }
 
-// STATE[STUB]
 void main_menu::on_deactivate( )
 {
-	// CALL SITE INFO
-	// <0x5d9a8b> -> input::world& < unknown >()
-	// <0x5d9a95> -> void < unknown >( input::handler& )
-	// ******
-
-	// FUNCTION BODY[0x5d9a60]: 2
-	// <0x5d9a63>|0x003|+0x017:'53'
-	// <0x5d9a7a>|0x01a|+0x01f:'54'
-	// ******
+	base_game_scene::on_deactivate( );
+	get_game( ).input_world( ).remove_handler( *this );
 }
 
-// STATE[STUB]
 void main_menu::clear_resources( )
 {
-	// FUNCTION BODY[0x5d99c0]: 1
-	// <0x5d99c0>|0x000|+0x000:'58'	{
-	// <0>
-	// <0x5d99c0>|0x000|      :'60'	}
-	// ******
 }
 
-// STATE[STUB]
 void main_menu::on_activate( )
 {
-	// CALL SITE INFO
-	// <0x5d9a42> -> input::world& < unknown >()
-	// <0x5d9a4c> -> void < unknown >( input::handler& )
-	// ******
-
-	// FUNCTION BODY[0x5d9a20]: 2
-	// <0x5d9a24>|0x004|+0x005:'64'
-	// <0x5d9a29>|0x009|+0x027:'65'
-	// ******
+	base_game_scene::on_activate( );
+	get_game( ).input_world( ).add_handler( *this );
 }
 
-// STATE[STUB]
 void main_menu::tick(
 	const u32		frame_delta_in_ms,
 	const u32		current_time_in_ms,
 	const bool		is_game_paused
 )
 {
-	// FUNCTION BODY[0x5d99d0]: 4
-	// <0x5d99d3>|0x003|+0x041:'70'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	base_game_scene::tick( frame_delta_in_ms, current_time_in_ms, is_game_paused );
 }
 
-// STATE[STUB]
 void main_menu::query_resources( )
 {
-	// LOCALS
-	// variant< 32 > const*[3] 			data
-	// variant< 32 > 					temp_data
-	// resources::request[2] 			requests
-	// render::scene_configuration 		render_configuration
-	// ******
+	render::scene_configuration				render_configuration;
+	render_configuration.m_create_terrain			= false;
+	render_configuration.m_create_particle_world	= false;
 
-	// FUNCTION BODY[0x5d9bc0]: 24
-	// <0>
-	// <1>
-	// <0x5d9bc7>|0x007|+0x004:'80'
-	// <0>
-	// <0x5d9bcb>|0x00b|+0x00c:'82'
-	// <0x5d9bd7>|0x017|+0x005:'83'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x5d9bdc>|0x01c|+0x0ae:'100'
-	// <0>
-	// ******
+	resources::user_data_variant temp_data;
+	temp_data.set( render_configuration );
+
+	resources::user_data_variant const* data[] = { &temp_data, 0 };
+
+	resources::request requests[] =
+	{
+		{ "game_scene", resources::scene_class },
+		{ "game_scene_view", resources::scene_view_class },
+	};
+	resources::query_resources(
+		requests,
+		boost::bind( &main_menu::on_resources_ready, this, _1 ),
+		g_allocator,
+		data
+	);
 }
 
-// STATE[STUB]
 void main_menu::on_resources_ready( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x5d9ac0]: 8
-	// <0x5d9ac4>|0x004|+0x07a:'106'
-	// <0x5d9b3e>|0x07e|+0x06d:'107'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// ******
+	m_render_scene		= static_cast_resource_ptr< render::scene_ptr >( data[0].get_unmanaged_resource( ) );
+	m_render_scene_view	= static_cast_resource_ptr< render::scene_view_ptr >( data[1].get_unmanaged_resource( ) );
 }
 
 } // namespace survarium
