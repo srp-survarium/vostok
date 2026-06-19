@@ -67,13 +67,6 @@ void npc_stats::draw( render::ui::renderer& ui_renderer, render::scene_view_ptr 
 	m_main_window->draw					( ui_renderer, scene_view );
 }
 
-// claude@NOTE: cross-module ceiling (~29%). The body/structure are faithful, but
-// sources/vostok/ai/npc_statistics.h (the in-tree 2011 prior) is missing the
-// canonical `body_state` member (fixed_vector<statistics_item<46,16>,12> at 0x2798),
-// so sizeof(npc_statistics) is 0x48C8 here vs the target's 0x7840. That wrong size
-// changes _chkstk's reservation and every stack offset, cascading through the whole
-// function. Fixing it needs the vostok/ai struct updated to the canonical layout
-// (out of this TU's scope) - then set_stats should lift to ~100%.
 void npc_stats::set_stats( human_npc const* const owner )
 {
 	m_main_window->remove_all_childs	( );
@@ -177,6 +170,26 @@ void npc_stats::set_stats( human_npc const* const owner )
 											stats.general_state.content[j].c_str(),
 											last_item ? last_item->w() : 0
 										);
+	}
+
+	// 4th column: body state
+	for ( u32 i = 0; i < stats.body_state.size(); ++i )
+	{
+		last_item						= create_new_group(
+											column_types_enum(3),
+											m_caption_color,
+											stats.body_state[i].caption.c_str(),
+											last_item ? last_item->w() : 0
+										);
+		for ( u32 j = 0; j < stats.body_state[i].content.size(); ++j )
+		{
+			last_item					= create_new_group(
+											column_types_enum(3),
+											m_text_color,
+											stats.body_state[i].content[j].c_str(),
+											last_item ? last_item->w() : 0
+										);
+		}
 	}
 }
 
