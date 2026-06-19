@@ -640,25 +640,21 @@ void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_read
 		create_network_client		( false );
 }
 
+// claude@NOTE: structure recovered (6 stmts), target body:
+//   pcstr const separator = strchr( m_network_client_options.c_str( ), ':' );
+//   if ( !separator )  return;
+//   const u32 offset = separator - m_network_client_options.c_str( );
+//   fixed_string< 512 > host;  m_network_client_options.substr( 0, offset, &host );
+//   const u16 port = atoi( m_network_client_options.c_str( ) + offset + 1 );
+//   base_network_client* const client = NEW( class network_client )( *this, is_spectator );
+//   set_network_client( client, host.c_str( ), port, is_spectator );
+// Parked: constructing network_client here pulls its vtable into game.obj and
+// re-folds the whole network-client ICF family (messaging/lobby/base_network_client
+// ctors + buffer_string::operator=), a net -37/-0.05% regression in that sibling
+// cluster. Restore once the network-client cluster owns + stabilizes those objects.
 // STATE[STUB]
 void game::create_network_client( const bool is_spectator )
 {
-	// LOCALS
-	// fixed_string< 512 > 				host
-	// ******
-
-	// FUNCTION BODY[0x5e6f70]: 10
-	// <0x5e6f81>|0x011|+0x00a:'511'
-	// <0x5e6f8b>|0x01b|+0x037:'512'
-	// <0x5e6fc2>|0x052|+0x009:'513'
-	// <0>
-	// <0x5e6fcb>|0x05b|+0x072:'515'
-	// <0x5e703d>|0x0cd|+0x00f:'516'
-	// <0x5e704c>|0x0dc|+0x042:'517'
-	// <0>
-	// <1>
-	// <2>
-	// ******
 }
 
 void game::create_lobby_menu( )
@@ -692,40 +688,17 @@ void game::query_base_resources( )
 	);
 }
 
-// STATE[STUB]
 void game::enable( bool value )
 {
-	// CALL SITE INFO
-	// <0x5e569f> -> void < unknown >()
-	// <0x5e56a7> -> void < unknown >()
-	// ******
+	m_enabled						= value;
 
-	// FUNCTION BODY[0x5e5680]: 20
-	// <0x5e5680>|0x000|+0x000:'567'	{
-	// <0>
-	// <1>
-	// <0x5e5680>|0x000|+0x010:'570'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e5690>|0x010|+0x00f:'575'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5e569f>|0x01f|+0x005:'586'
-	// <0x5e56a4>|0x024|-0x003:'586'
-	// <0>
-	// <0x5e56a1>|0x021|+0x008:'588'
-	// <0x5e56a9>|0x029|      :'588'	}
-	// ******
+	if ( !m_render_output_window )
+		return;
+
+	if ( value )
+		m_input_world->acquire		( );
+	else
+		m_input_world->unacquire	( );
 }
 
 void game::on_renderer_created( resources::queries_result& data )
