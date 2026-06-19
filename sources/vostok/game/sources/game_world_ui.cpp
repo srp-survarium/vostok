@@ -9,6 +9,8 @@
 #include "base_network_client.h"	// match_options() / get_player() / current_player_team()
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 #include <vostok/game_core/game_net_defines.h>	// complete match_options / player_profile
+#include <vostok/game_core/weapon_core.h>		// get_ammo_info() / cast_weapon_core()
+#include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_value.h>
 
@@ -307,43 +309,27 @@ void game_world_ui::set_respawn_time( u32 time_left )
 	get_ui( )->movie->Invoke( "root.set_respawn_time", NULL, &respawn_time_str, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths )
 {
-	// LOCALS
-	// flash_value 						out_event
-	// flash_value 						out_event_property
-	// ******
+	flash_value out_event;
+	get_ui( )->movie->CreateObject( &out_event );
+	flash_value out_event_property;
+	get_ui( )->movie->CreateObject( &out_event_property );
 
-	// FUNCTION BODY[0x5d0ef0]: 27
-	// <0>
-	// <1>
-	// <0x5d0ef8>|0x008|+0x025:'317'
-	// <0>
-	// <1>
-	// <0x5d0f1d>|0x02d|+0x021:'320'
-	// <0>
-	// <0x5d0f3e>|0x04e|+0x029:'322'
-	// <0x5d0f67>|0x077|+0x039:'323'
-	// <0>
-	// <0x5d0fa0>|0x0b0|+0x028:'325'
-	// <0x5d0fc8>|0x0d8|+0x034:'326'
-	// <0>
-	// <0x5d0ffc>|0x10c|+0x028:'328'
-	// <0x5d1024>|0x134|+0x034:'329'
-	// <0>
-	// <0x5d1058>|0x168|+0x024:'331'
-	// <0x5d107c>|0x18c|+0x03a:'332'
-	// <0>
-	// <0x5d10b6>|0x1c6|+0x025:'334'
-	// <0x5d10db>|0x1eb|+0x036:'335'
-	// <0>
-	// <0x5d1111>|0x221|+0x025:'337'
-	// <0x5d1136>|0x246|+0x036:'338'
-	// <0>
-	// <0x5d116c>|0x27c|+0x01e:'340'
-	// <0>
-	// ******
+	out_event_property.SetUInt( player_id );
+	out_event.SetMember( "id", out_event_property );
+	out_event_property.SetUInt( kills );
+	out_event.SetMember( "kills", out_event_property );
+	out_event_property.SetUInt( deaths );
+	out_event.SetMember( "deaths", out_event_property );
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "ping", out_event_property );
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "rank", out_event_property );
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "artifacts", out_event_property );
+
+	get_ui( )->movie->Invoke( "root.list_update_player", NULL, &out_event, 1 );
 }
 
 // STATE[STUB]
@@ -1273,50 +1259,32 @@ void game_world_ui::set_broken_connection_message( pcstr str )
 	get_ui( )->movie->Invoke( "root.set_warning_message", NULL, message_val, 2 );
 }
 
-// STATE[STUB]
 void game_world_ui::on_attached_to_player( player_ptr player )
 {
-	// LOCALS
-	// weapon_ammo_info 				info
-	// ******
+	if ( !player->is_alive( ) )
+	{
+		show_ammo_indicator( false );
+		show_quick_slots( false );
+		return;
+	}
 
-	// CALL SITE INFO
-	// <0x5d51b5> -> weapon_core* < unknown >()
-	// ******
+	show_quick_slots( true );
+	fill_quick_slots( );
 
-	// FUNCTION BODY[0x5d5100]: 27
-	// <0x5d5100>|0x000|+0x00d:'1124'	{
-	// <0x5d510d>|0x00d|+0x00d:'1125'
-	// <0>
-	// <0x5d511a>|0x01a|+0x009:'1127'
-	// <0x5d5123>|0x023|+0x018:'1128'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d513b>|0x03b|+0x052:'1132'
-	// <0x5d518d>|0x08d|+0x006:'1133'
-	// <0>
-	// <0x5d5193>|0x093|+0x03d:'1135'
-	// <0>
-	// <0x5d51d0>|0x0d0|+0x004:'1137'
-	// <0>
-	// <0x5d51d4>|0x0d4|+0x01a:'1139'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d51ee>|0x0ee|+0x00c:'1144'
-	// <0>
-	// <0x5d51fa>|0x0fa|+0x009:'1146'
-	// <0>
-	// <0x5d5203>|0x103|+0x00e:'1148'
-	// <0x5d5211>|0x111|+0x014:'1149'
-	// <0x5d5225>|0x125|+0x00c:'1150'
-	// <0x5d5231>|0x131|-0x107:'1151'
-	// <0x5d512a>|0x02a|+0x0b3:'1152'
-	// <0x5d51dd>|0x0dd|+0x05f:'1152'
-	// <0x5d523c>|0x13c|      :'1152'	}
-	// ******
+	weapon_core* const weapon = player->get_current_active_object( )->cast_weapon_core( );
+	if ( !weapon )
+	{
+		show_ammo_indicator( false );
+		return;
+	}
+
+	weapon_ammo_info info;
+	weapon->get_ammo_info( info );
+	show_ammo_indicator( true );
+	set_ammo_total_count( info.ammo1_total, info.ammo2_total );
+	set_ammo_in_magazine( info.ammo_in_magazine + ( info.round_is_chambered ? 1 : 0 ) );
+	set_fire_queue_size( info.fire_queue_size );
+	set_ammo_type( info.current_ammo_type );
 }
 
 void game_world_ui::on_detached_from_player( )
