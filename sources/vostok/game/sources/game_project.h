@@ -71,6 +71,10 @@ public:
 			bool							all_loaded			( );
 
 private:
+	// game_world walks m_respawn_points directly (clear_player_spawn_info);
+	// PDB does not record friendship, codegen-neutral
+	friend class game_world;
+
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* base_project */
 	/* 0x0138 */	base_game_scene&						m_game_scene;
