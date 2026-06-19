@@ -96,6 +96,9 @@ namespace survarium {
 	// self-guards and never runs, so the placeholder game_world& is never touched.
 	void anchor_game_world_npc( game_world& w );
 
+	// the player_cook carcass anchor (anchor_game_player_cook.cpp); self-guarded.
+	void use_game_player_cook( );
+
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
 	void load_transform( configs::binary_config_value const& t, float4x4& dest );
@@ -346,6 +349,7 @@ namespace vostok
 	void use_game_menus( );
 	void use_game_weapons( );
 
+	// the player_cook carcass anchor (anchor_game_player_cook.cpp); self-guarded.
 	void anchor_game( )
 	{
 		use_inventory( );
@@ -360,6 +364,7 @@ namespace vostok
 		use_game_weapons( );
 		use_game_animation( );
 		survarium::use_game_options( );
+		survarium::use_game_player_cook( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).

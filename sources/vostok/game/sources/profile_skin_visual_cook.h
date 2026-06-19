@@ -26,6 +26,9 @@ public:
 
 	virtual	void		delete_resource				( resources::resource_base* __formal ) override;
 
+	virtual				~profile_skin_visual_cook	( ) { /* no source */ }
+
+private:
 			void		on_configs_loaded			(
 							resources::queries_result&				data,
 							resources::query_result_for_cook*		parent,
@@ -36,8 +39,6 @@ public:
 							resources::query_result_for_cook*		parent,
 							render::skeleton_combined_cook_data*	cook_data
 						);
-
-	virtual				~profile_skin_visual_cook	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::translate_query_cook */
