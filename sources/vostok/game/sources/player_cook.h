@@ -9,9 +9,9 @@
 
 namespace survarium {
 
-class inventory_cooker_data;
-class player_creation_params;
-class player_parameters_cooker_data;
+struct inventory_cooker_data;
+struct player_creation_params;
+struct player_parameters_cooker_data;
 
 class player_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
@@ -21,6 +21,7 @@ public:
 
 	virtual	void	delete_resource			( resources::resource_base* resource ) override;
 
+private:
 			void	on_config_loaded		( resources::queries_result& data );
 			void	on_hit_params_loaded	( resources::queries_result& data, player_creation_params* params );
 			void	on_subresources_loaded	(
@@ -30,7 +31,12 @@ public:
 						player_parameters_cooker_data*		player_parameters_cook_data
 					);
 
+public:
 	virtual			~player_cook			( ) { /* no source */ }
+
+	// codegen-neutral: lets the /OPT:REF reachability anchor address-take the
+	// private on_* callbacks while on_config_loaded is cross-module-stubbed.
+	friend	void	use_game_player_cook	( );
 }; // class player_cook
 
 STATIC_SIZE_ASSERT(player_cook, 0x20);
