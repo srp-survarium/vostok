@@ -8,6 +8,8 @@
 #include "base_game_scene.h"			// game_scene supplies game / scheduler
 #include "player_input_handler.h"		// m_local_input_controller->set_near_plane
 #include "game_memory.h"				// g_allocator for circular_buffer member
+#include <vostok/render/facade/scene_renderer.h>	// add/remove_model
+#include <vostok/physics/character_controller.h>	// physics_controller->set_crouch / jump
 
 namespace survarium {
 
@@ -141,52 +143,29 @@ void `dynamic initializer for 's_show_client_player_command''( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: scene_renderer() cap - base_game_scene::scene_renderer() is a
+// stub returning NULL (sibling unit), so our base emits a call where the target
+// inlines m_game.renderer().scene(). Re-score once scene_renderer() has its body.
 void player::add_models_to_scene( )
 {
-	// LOCALS
-	// render::base_scene_ptr 			scene
-	// ******
+	render::scene_ptr scene = m_game_scene.render_scene( );
 
-	// FUNCTION BODY[0x5e4910]: 12
-	// <0>
-	// <1>
-	// <0x5e4911>|0x001|+0x02c:'169'
-	// <0>
-	// <1>
-	// <0x5e493d>|0x02d|+0x01b:'172'
-	// <0x5e4958>|0x048|+0x021:'173'
-	// <0>
-	// <0x5e4979>|0x069|+0x009:'175'
-	// <0x5e4982>|0x072|+0x021:'176'
-	// <0>
-	// <1>
-	// ******
+	if ( m_show_client_player )
+		m_game_scene.scene_renderer( ).add_model( scene, m_current.model->m_render_model, m_current.transform );
+	if ( m_show_server_player )
+		m_game_scene.scene_renderer( ).add_model( scene, m_target.model->m_render_model, m_target.transform );
 }
 
-// STATE[STUB]
+// claude@NOTE: scene_renderer() cap - base_game_scene::scene_renderer() is a
+// stub returning NULL (sibling unit); see add_models_to_scene.
 void player::remove_models_from_scene( )
 {
-	// LOCALS
-	// render::base_scene_ptr 			scene
-	// ******
+	render::scene_ptr scene = m_game_scene.render_scene( );
 
-	// FUNCTION BODY[0x5e4eb0]: 14
-	// <0>
-	// <1>
-	// <0x5e4eb9>|0x009|+0x02c:'185'
-	// <0>
-	// <1>
-	// <0x5e4ee5>|0x035|+0x01b:'188'
-	// <0>
-	// <0x5e4f00>|0x050|+0x01b:'190'
-	// <0>
-	// <1>
-	// <0x5e4f1b>|0x06b|+0x009:'193'
-	// <0x5e4f24>|0x074|+0x01b:'194'
-	// <0>
-	// <1>
-	// ******
+	if ( m_show_client_player )
+		m_game_scene.scene_renderer( ).remove_model( scene, m_current.model->m_render_model );
+	if ( m_show_server_player )
+		m_game_scene.scene_renderer( ).remove_model( scene, m_target.model->m_render_model );
 }
 
 // STATE[STUB]
@@ -1295,51 +1274,25 @@ void player::jump( )
 	// ******
 }
 
-// STATE[STUB]
 void player::end_jump( )
 {
-	// FUNCTION BODY[0x5e2250]: 6
-	// <0>
-	// <0x5e2250>|0x000|+0x010:'1152'
-	// <0x5e2260>|0x010|+0x008:'1153'
-	// <0x5e2268>|0x018|+0x00e:'1154'
-	// <0>
-	// <1>
-	// ******
+	m_target.physics_controller->end_jump( );
+	if ( m_use_physics_controller_for_current )
+		m_current.physics_controller->end_jump( );
 }
 
-// STATE[STUB]
 void player::crouch( )
 {
-	// FUNCTION BODY[0x5e2990]: 10
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e299c>|0x00c|+0x03e:'1165'
-	// <0x5e29da>|0x04a|+0x009:'1166'
-	// <0>
-	// <0x5e29e3>|0x053|+0x045:'1168'
-	// <0>
-	// <1>
-	// ******
+	m_target.physics_controller->set_crouch( true );
+	if ( m_use_physics_controller_for_current )
+		m_current.physics_controller->set_crouch( true );
 }
 
-// STATE[STUB]
 void player::stand_up( )
 {
-	// FUNCTION BODY[0x5e28f0]: 10
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e28fa>|0x00a|+0x040:'1179'
-	// <0x5e293a>|0x04a|+0x009:'1180'
-	// <0>
-	// <0x5e2943>|0x053|+0x045:'1182'
-	// <0>
-	// <1>
-	// ******
+	m_target.physics_controller->set_crouch( false );
+	if ( m_use_physics_controller_for_current )
+		m_current.physics_controller->set_crouch( false );
 }
 
 // STATE[STUB]
