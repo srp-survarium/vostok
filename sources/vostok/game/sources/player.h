@@ -44,6 +44,10 @@ struct engine;
 //  resource_ptr<survarium::player,vostok::resources::unmanaged_intrusive_base>::~resource_ptr() // FUNCTION BODY[0x8e7e0]: <0x8e7d0>|0x000|      :'262'	{
 
 class player : public base_player , public resources::unmanaged_resource {
+	// codegen-neutral: /OPT:REF reachability anchor for the player_tick.cpp helpers
+	// (player.cpp owner TU is still a stub); references the private members. Retire
+	// with the anchor once the real call graph reaches them.
+	friend void use_game_player_input( );
 public:
 			explicit								player								( player_creation_params const& params );
 	virtual											~player								( );
@@ -270,6 +274,11 @@ public:
 		// ******
 	}
 
+	// the canonical dump prints this tail block public; the mangled symbols say
+	// private (?smooth@...@@AAE..., ?history_lower_bound_index@...@@ABE..., etc.).
+	// The exact public/private boundary of the inline accessors here is player.cpp's
+	// call when that owner TU is matched; this keeps the addressed helpers' access.
+private:
 			void									add_models_to_scene					( );
 			void									remove_models_from_scene			( );
 

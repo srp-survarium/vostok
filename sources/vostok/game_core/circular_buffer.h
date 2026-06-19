@@ -26,26 +26,26 @@ public:
 
 	inline	T&			new_item			( );
 	inline	T&			insert				( u32 arg_0 ) { /* no source */ }
-	inline	void		pop_tail			( ) { /* no source */ }
+	inline	void		pop_tail			( ) { /* no source */ m_tail = next( m_tail ); }
 
-	inline	T const&	oldest				( ) const { /* no source */ }
-	inline	T&			oldest				( ) { /* no source */ }
+	inline	T const&	oldest				( ) const { /* no source */ return m_history[ m_tail ]; }
+	inline	T&			oldest				( ) { /* no source */ return m_history[ m_tail ]; }
 
 	inline	T const&	newest				( ) const { /* no source */ }
 	inline	T&			newest				( ) { /* no source */ }
 
-	inline	bool		empty				( ) const { /* no source */ }
+	inline	bool		empty				( ) const { /* no source */ return m_head == m_tail; }
 	inline	bool		full				( ) const { /* no source */ }
 
-	inline	u32			next				( u32 arg_0 ) const { /* no source */ }
-	inline	u32			previous			( u32 arg_0 ) const { /* no source */ }
+	inline	u32			next				( u32 arg_0 ) const { /* no source */ return ( arg_0 + 1 ) % m_max_count; }
+	inline	u32			previous			( u32 arg_0 ) const { /* no source */ return ( arg_0 + m_max_count - 1 ) % m_max_count; }
 
-	inline	T const&	operator[]			( u32 arg_0 ) const { /* no source */ }
-	inline	T&			operator[]			( u32 arg_0 ) { /* no source */ }
+	inline	T const&	operator[]			( u32 arg_0 ) const { /* no source */ return m_history[ arg_0 ]; }
+	inline	T&			operator[]			( u32 arg_0 ) { /* no source */ return m_history[ arg_0 ]; }
 
-	inline	u32			head				( ) const { /* no source */ }
-	inline	u32			tail				( ) const { /* no source */ }
-	inline	u32			max_count			( ) const { /* no source */ }
+	inline	u32			head				( ) const { /* no source */ return m_head; }
+	inline	u32			tail				( ) const { /* no source */ return m_tail; }
+	inline	u32			max_count			( ) const { /* no source */ return m_max_count; }
 	inline	u32			index				( T const& arg_0 ) const { /* no source */ }
 	inline	bool		is_valid			( T const& arg_0 ) const { /* no source */ }
 
