@@ -6,6 +6,7 @@
 #include "player.h"
 #include "player_creation_params.h"	// params.game_scene field
 #include "base_game_scene.h"			// game_scene supplies game / scheduler
+#include "player_input_handler.h"		// m_local_input_controller->set_near_plane
 #include "game_memory.h"				// g_allocator for circular_buffer member
 
 namespace survarium {
@@ -1057,14 +1058,11 @@ void player::apply_hit_directly( hit_info const& info, const u32 current_time_in
 	// ******
 }
 
-// STATE[STUB]
 void player::reset_fov_factor( )
 {
-	// FUNCTION BODY[0x5e22c0]: 3
-	// <0x5e22c0>|0x000|+0x010:'999'
-	// <0x5e22d0>|0x010|+0x008:'1000'
-	// <0x5e22d8>|0x018|+0x008:'1001'
-	// ******
+	m_start_fov_factor		= 0.0f;
+	m_target_fov_factor		= 0.0f;
+	m_current_fov_factor	= 0.0f;
 }
 
 // STATE[STUB]
@@ -1102,13 +1100,14 @@ float player::fov_factor( const u32 current_time_in_ms ) const
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: inline-vs-store cap - the [controller+0x4C] store is game_camera::
+// set_near_plane( near_plane_factor * 0.05f ), inlined; game_camera::set_near_plane
+// is an empty stub in game_camera.h (render cone, another unit), so our base omits
+// the store. Re-score once game_camera::set_near_plane has a body.
 void player::set_near_plane_factor( const float near_plane_factor )
 {
-	// FUNCTION BODY[0x5e2590]: 2
-	// <0x5e2590>|0x000|+0x00a:'1021'
-	// <0x5e259a>|0x00a|+0x00d:'1022'
-	// ******
+	if ( m_local_input_controller )
+		m_local_input_controller->set_near_plane( near_plane_factor * 0.05f );
 }
 
 // STATE[STUB]
@@ -1167,14 +1166,9 @@ void player::update_camera( )
 	// ******
 }
 
-// STATE[STUB]
 player_input player::local_input( ) const
 {
-	return m_input;	// buildability return
-
-	// FUNCTION BODY[0x5e2370]: 1
-	// <0x5e2370>|0x000|+0x03a:'1066'
-	// ******
+	return m_local_input_controller ? m_local_input_controller->get_input( ) : player_input( );
 }
 
 // STATE[STUB]
@@ -1201,47 +1195,29 @@ float player::get_speed( ) const
 	// ******
 }
 
-// STATE[STUB]
 void player::hide( )
 {
-	// FUNCTION BODY[0x5e5130]: 4
-	// <0>
-	// <1>
-	// <0x5e5133>|0x003|+0x007:'1083'
-	// <0x5e513a>|0x00a|+0x005:'1084'
-	// ******
+	m_is_visible = false;
+	remove_models_from_scene( );
 }
 
-// STATE[STUB]
 void player::show( )
 {
-	// FUNCTION BODY[0x5e49d0]: 3
-	// <0>
-	// <0x5e49d3>|0x003|+0x007:'1090'
-	// <0x5e49da>|0x00a|+0x005:'1091'
-	// ******
+	m_is_visible = true;
+	add_models_to_scene( );
 }
 
-// STATE[STUB]
 void player::subscribe_on_actions( player_actions_subscriber* subscriber )
 {
-	// FUNCTION BODY[0x5e2e40]: 2
-	// <0x5e2e40>|0x000|+0x000:'1095'	{
-	// <0>
-	// <0x5e2e40>|0x000|+0x023:'1097'
-	// <0x5e2e63>|0x023|-0x003:'1097'
-	// <0x5e2e60>|0x020|+0x013:'1098'
-	// <0x5e2e73>|0x033|      :'1098'	}
-	// ******
+	m_player_actions_subscribers.push_back( subscriber );
 }
 
-// STATE[STUB]
 void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
 {
-	// FUNCTION BODY[0x5e24b0]: 2
-	// <0>
-	// <0x5e24b4>|0x004|+0x06c:'1103'
-	// ******
+	m_player_actions_subscribers.erase(
+		std::remove( m_player_actions_subscribers.begin( ), m_player_actions_subscribers.end( ), subscriber ),
+		m_player_actions_subscribers.end( )
+	);
 }
 
 // STATE[STUB]
@@ -1402,14 +1378,9 @@ void player::take_inventory_item( inventory_item_ptr const& item )
 	// ******
 }
 
-// STATE[STUB]
 animation::skeleton const& player::skeleton( ) const
 {
-	return *( animation::skeleton const* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5e2310]: 1
-	// <0x5e2310>|0x000|+0x00c:'1244'
-	// ******
+	return *m_current.model->m_skeleton.c_ptr( );
 }
 
 // STATE[STUB]
@@ -1432,18 +1403,9 @@ void player::set_use_physics_controller_for_current( const bool value )
 	// ******
 }
 
-// STATE[STUB]
 engine& player::get_engine( )
 {
-	return *( engine* )NULL;	// buildability return
-
-	// FUNCTION BODY[0x5e2230]: 1
-	// <0x5e2230>|0x000|+0x000:'1308'	{
-	// <0x5e2230>|0x000|+0x00e:'1309'
-	// <0x5e223e>|0x00e|-0x001:'1309'
-	// <0x5e223d>|0x00d|+0x003:'1310'
-	// <0x5e2240>|0x010|      :'1310'	}
-	// ******
+	return m_game_scene;
 }
 
 // STATE[STUB]
@@ -1617,14 +1579,9 @@ void player::process_quick_slots_for_current_player( )
 	// ******
 }
 
-// STATE[STUB]
 physics::world* player::get_physics_world( )
 {
-	return NULL;
-
-	// FUNCTION BODY[0x5e2300]: 1
-	// <0x5e2300>|0x000|+0x00c:'1432'
-	// ******
+	return m_game_scene.get_physics_world( );
 }
 
 // STATE[STUB]

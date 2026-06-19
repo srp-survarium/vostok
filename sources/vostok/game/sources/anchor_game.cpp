@@ -84,6 +84,10 @@ namespace survarium {
 	void anchor_game_network_clients( game& g );
 	void use_game_world( );	// anchor_game_world.cpp (game-class public methods)
 
+	// the survarium::player carcass anchor (anchor_game_player.cpp); pins the
+	// player out-of-line bodies so /OPT:REF keeps them for the delinker.
+	void anchor_game_player( );
+
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
 	void load_transform( configs::binary_config_value const& t, float4x4& dest );
@@ -345,5 +349,7 @@ namespace vostok
 
 		// keep the player tick/history + input-handler carcass objects linked.
 		survarium::use_game_player_input( );
+		// pin the survarium::player carcass symbols.
+		survarium::anchor_game_player( );
 	}
 }
