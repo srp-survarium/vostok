@@ -4,66 +4,61 @@
 
 #include "pch.h"
 #include "object_environment.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/configs_binary_config_value.h>
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
 
 namespace survarium {
 
-// STATE[STUB]
- object_environment::object_environment( base_game_scene& w ) :
+object_environment::object_environment( base_game_scene& w ) :
 	game_object_( w )
 {
-	// FUNCTION BODY[0x5c3a00]: 0
-	// <0x5c3a00>|0x000|+0x023:'17'	{
-	// <0x5c3a23>|0x023|      :'18'	}
-	// ******
 }
 
-// STATE[STUB]
- object_environment::~object_environment( )
+object_environment::~object_environment( )
 {
-	// FUNCTION BODY[0x5c39c0]: 0
-	// <0x5c39c0>|0x000|+0x009:'21'	{
-	// <0x5c39c9>|0x009|      :'22'	}
-	// ******
 }
 
-// STATE[STUB]
 void object_environment::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// FUNCTION BODY[0x5c3a30]: 3
-	// <0x5c3a3e>|0x00e|+0x00f:'26'
-	// <0>
-	// <0x5c3a4d>|0x01d|+0x098:'28'
-	// ******
+	pcstr post_effect_name = pcstr( t["post_effect"] );
+
+	resources::request r[] =
+	{
+		{ post_effect_name, resources::material_class },
+	};
+
+	resources::query_resources(
+		r,
+		1,
+		boost::bind( &object_environment::material_ready, this, _1, cb ),
+		g_allocator
+	);
 }
 
-// STATE[STUB]
 void object_environment::material_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
-	// FUNCTION BODY[0x5c3920]: 2
-	// <0x5c3921>|0x001|+0x07f:'33'
-	// <0x5c39a0>|0x080|+0x00a:'34'
-	// ******
+	m_postprocess = data[0].get_unmanaged_resource();
+
+	cb( *this );
 }
 
-// STATE[STUB]
-void object_environment::remove( )
-{
-	// FUNCTION BODY[0x5c3910]: 0
-	// <0x5c3910>|0x000|+0x000:'38'	{
-	// <0x5c3910>|0x000|      :'39'	}
-	// ******
-}
-
-// STATE[STUB]
 void object_environment::insert( )
 {
-	// FUNCTION BODY[0x5c3af0]: 1
-	// <0x5c3af0>|0x000|+0x026:'43'
-	// ******
+	get_game_scene().renderer().scene().set_post_process( get_game_scene().render_scene_view(), m_postprocess );
+}
+
+void object_environment::remove( )
+{
 }
 
 } // namespace survarium
