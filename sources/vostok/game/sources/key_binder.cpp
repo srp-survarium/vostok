@@ -220,7 +220,6 @@ void key_binder::set_default_controls( )
 	// ******
 }
 
-// STATE[STUB]
 void key_binder::remap_keys( )
 {
 	s32			idx = 0;
@@ -236,28 +235,6 @@ void key_binder::remap_keys( )
 		++idx;
 	}
 
-	// LOCALS
-	// char[128] 						buff
-	// ******
-
-	// CALL SITE INFO
-	// <0x5db020> -> input::world& < unknown >()
-	// <0x5db029> -> input::keyboard const* < unknown >()
-	// <0x5db040> -> bool < unknown >( int, char*, int ) const
-	// ******
-
-	// FUNCTION BODY[0x5daff0]: 10
-	// <0x5dafff>|0x00f|+0x002:'259'
-	// <0>
-	// <0x5db001>|0x011|+0x00f:'261'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5db010>|0x020|+0x032:'265'
-	// <0x5db042>|0x052|+0x019:'266'
-	// <0x5db05b>|0x06b|+0x01a:'267'
-	// <0>
-	// ******
 }
 
 // STATE[STUB]
@@ -281,19 +258,13 @@ pcstr key_binder::id_to_action_name( game_action_id _id ) const
 	// ******
 }
 
-// STATE[STUB]
 game_action_id key_binder::action_name_to_id( pcstr _name )
 {
-	// FUNCTION BODY[0x5db330]: 5
-	// <0x5db330>|0x000|+0x000:'284'	{
-	// <0x5db330>|0x000|+0x006:'285'
-	// <0x5db336>|0x006|+0x004:'286'
-	// <0x5db33a>|0x00a|+0x004:'287'
-	// <0>
-	// <0x5db33e>|0x00e|-0x001:'289'
-	// <0x5db33d>|0x00d|+0x006:'290'
-	// <0x5db343>|0x013|      :'290'	}
-	// ******
+	game_action_descr* descr = action_name_to_ptr( _name );
+	if ( descr )
+		return descr->id;
+	else
+		return kNOTBINDED;
 }
 
 // STATE[STUB]
@@ -317,7 +288,6 @@ game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 	// ******
 }
 
-// STATE[STUB]
 pcstr key_binder::dik_to_keyname( s32 _dik )
 {
 	keyboard_key_descr* kb = key_binder::dik_to_ptr( _dik, true );
@@ -325,82 +295,32 @@ pcstr key_binder::dik_to_keyname( s32 _dik )
 		return kb->key_name;
 	else
 		return NULL;
-
-	// FUNCTION BODY[0x5db1f0]: 5
-	// <0x5db1f0>|0x000|+0x001:'305'	{
-	// <0x5db1f1>|0x001|+0x005:'306'
-	// <0x5db1f6>|0x006|+0x004:'307'
-	// <0x5db1fa>|0x00a|+0x004:'308'
-	// <0>
-	// <0x5db1fe>|0x00e|-0x001:'310'
-	// <0x5db1fd>|0x00d|+0x004:'311'
-	// <0x5db201>|0x011|      :'311'	}
-	// ******
 }
 
-// STATE[STUB]
 keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 {
 	s32 idx = 0;
 	while ( keyboards[idx].key_name ) {
-		keyboard_key_descr& kb = keyboards[idx];
-		if ( kb.dik == _dik )
+		if ( keyboards[idx].dik == _dik )
 			return &keyboards[idx];
 		++idx;
 	}
 	if ( !bSafe )
 		LOG_INFO	( "! cant find corresponding [keyboard_key_descr] for dik" );
 	return NULL;
-
-	// FUNCTION BODY[0x5db1b0]: 11
-	// <0x5db1b0>|0x000|+0x001:'314'	{
-	// <0x5db1b1>|0x001|+0x009:'315'
-	// <0x5db1ba>|0x00a|+0x00a:'316'
-	// <0>
-	// <1>
-	// <0x5db1c4>|0x014|+0x01e:'319'
-	// <0x5db1e2>|0x032|-0x016:'320'
-	// <0x5db1cc>|0x01c|+0x012:'321'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5db1de>|0x02e|+0x002:'325'
-	// <0x5db1e0>|0x030|+0x00d:'326'
-	// <0x5db1ed>|0x03d|      :'326'	}
-	// ******
 }
 
-// STATE[STUB]
 keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 {
 	s32 idx = 0;
 	while ( keyboards[idx].key_name ) {
-		keyboard_key_descr& kb = keyboards[idx];
-		if ( !_stricmp( _name, kb.key_name ) )
+		if ( !_stricmp( _name, keyboards[idx].key_name ) )
 			return &keyboards[idx];
 		++idx;
 	}
 
 	LOG_INFO	( "! cant find corresponding [keyboard_key_descr*] for keyname %s", _name );
 	return NULL;
-
-	// FUNCTION BODY[0x5db080]: 11
-	// <0x5db080>|0x000|+0x007:'335'	{
-	// <0x5db087>|0x007|+0x006:'336'
-	// <0x5db08d>|0x00d|+0x013:'337'
-	// <0>
-	// <1>
-	// <0x5db0a0>|0x020|+0x080:'340'
-	// <0x5db120>|0x0a0|-0x070:'341'
-	// <0x5db0b0>|0x030|+0x017:'342'
-	// <0>
-	// <1>
-	// <0x5db0c7>|0x047|+0x06c:'345'
-	// <0x5db133>|0x0b3|-0x006:'345'
-	// <0>
-	// <0x5db12d>|0x0ad|+0x06c:'347'
-	// <0x5db199>|0x119|      :'347'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -431,45 +351,26 @@ s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
 	// ******
 }
 
-// STATE[STUB]
 game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& actions_mask_type, s32 key_group_mask ) const
 {
-	// claude@NOTE: buildability return for the still-STUB body (free_fly_camera
-	// forces this to codegen under LTCG). Sourced through volatiles so LTCG cannot
-	// constant-fold the value into free_fly_camera::on_keyboard_action's switch.
-	// A matcher recovers the real lookup.
-	static volatile s32 s_action = kNOTBINDED;
-	static volatile s32 s_mask	= hold_action;
-	actions_mask_type = (toggle_action_enum)s_mask;
-	return (game_action_id)s_action;
+	for ( s32 i = 0; i < 64; ++i )
+	{
+		key_binding const& binding	= m_key_bindings[i];
+		if ( !binding.m_action || !( binding.m_action->key_group & key_group_mask ) )
+			continue;
 
-	// FUNCTION BODY[0x5daf60]: 20
-	// <0x5daf60>|0x000|+0x005:'386'	{
-	// <0x5daf65>|0x005|+0x02e:'387'
-	// <0x5daf93>|0x033|-0x023:'387'
-	// <0>
-	// <1>
-	// <0x5daf70>|0x010|+0x00a:'390'
-	// <0>
-	// <0x5daf7a>|0x01a|+0x002:'392'
-	// <0>
-	// <1>
-	// <0x5daf7c>|0x01c|+0x029:'395'
-	// <0x5dafa5>|0x045|+0x006:'396'
-	// <0x5dafab>|0x04b|-0x023:'397'
-	// <0>
-	// <1>
-	// <0x5daf88>|0x028|+0x02c:'400'
-	// <0x5dafb4>|0x054|+0x006:'401'
-	// <0x5dafba>|0x05a|-0x01e:'402'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5daf9c>|0x03c|+0x006:'406'
-	// <0x5dafa2>|0x042|+0x00f:'407'
-	// <0x5dafb1>|0x051|+0x00f:'407'
-	// <0x5dafc0>|0x060|      :'407'	}
-	// ******
+		if ( binding.m_keyboard[0] && binding.m_keyboard[0]->dik == _dik )
+		{
+			actions_mask_type	= binding.m_action->actions_mask_type;
+			return binding.m_action->id;
+		}
+		if ( binding.m_keyboard[1] && binding.m_keyboard[1]->dik == _dik )
+		{
+			actions_mask_type	= binding.m_action->actions_mask_type;
+			return binding.m_action->id;
+		}
+	}
+	return kNOTBINDED;
 }
 
 // STATE[STUB]
@@ -563,16 +464,9 @@ void key_binder::unbind_key( pcstr args, s32 bind_number )
 	// ******
 }
 
-// STATE[STUB]
 s32 key_binder::get_binding_group( game_action_id _id )
 {
-	return 0;
-
-	// FUNCTION BODY[0x5daf50]: 3
-	// <0x5daf50>|0x000|+0x003:'497'
-	// <0>
-	// <0x5daf53>|0x003|+0x006:'499'
-	// ******
+	return m_key_bindings[_id].m_action->key_group;
 }
 
 } // namespace survarium

@@ -1,0 +1,159 @@
+#include "pch.h"
+
+// Game-module /OPT:REF reachability anchor for the WEAPONS/COOKS cluster:
+//   weapon, weapon_cook, object_weapon, sound_player_cook, project_cooker_simple,
+//   key_binder.
+//
+// These carcass TUs compile into game.lib but no reachable engine call graph
+// touches them, so /OPT:REF strips them from the EXE (objdiff then reports their
+// target symbols as "unpaired"). use_game_weapons() address-takes each public/
+// virtual/private method through a volatile sink so the linker keeps the symbol.
+// Address-of-member is an UNCONDITIONAL reference that survives /OPT:REF (a method
+// CALL inside the never-taken self-guard branch does NOT - the optimizer elides it),
+// so everything here is a member-pointer take rather than a constructed call.
+//
+// Dispatched from anchor_game() (anchor_game.cpp) via a single call line. Retire
+// once the real game call graph (the cook registry + human_npc weapon spawning)
+// reaches these for itself.
+
+#include "weapon.h"
+#include "weapon_cook.h"
+#include "object_weapon.h"
+#include "sound_player_cook.h"
+#include "project_cooker_simple.h"
+#include "key_binder.h"
+#include "game.h"
+
+#include <vostok/math_float4x4.h>
+#include <vostok/resources_query_result.h>
+
+namespace survarium {
+	class game_object_;
+	class simple_game_project;
+	struct base_player;
+	// file-local free helpers in weapon.cpp (no public header)
+	bool is_dead( base_player*& user );
+	bool is_alive( base_player*& user );
+} // namespace survarium
+
+namespace vostok
+{
+	static pcvoid volatile s_weapon_sink = 0;
+
+	template < typename T >
+	static void keep( T m ) { s_weapon_sink = *( pcvoid const* )&m; }
+
+	void use_game_weapons( )
+	{
+		// guarded construction keeps the out-of-line ctors/dtors (a method CALL here
+		// would be stripped, but the full-object construction reference survives).
+		// object_weapon is abstract in our engine headers (ai::game_object::
+		// get_collision_object is pure here but absent from the shipped base) so it
+		// cannot be constructed - its ctor/dtor stay unreachable until that resolves.
+		static volatile bool s_run = false;
+		if( s_run )
+		{
+			static survarium::game* volatile			s_game	= 0;
+			static sound::world* volatile				s_snd	= 0;
+			survarium::weapon					wpn( 0u, 0u, 0u );
+			survarium::weapon_cook				wcook( *s_game );
+			survarium::sound_player_cook		scook( s_snd, resources::class_id_enum( 0 ) );
+			survarium::project_cooker_simple	pcook( false );
+		}
+
+		// ---- weapon ----------------------------------------------------------
+		typedef survarium::weapon w;
+		keep( &w::play_weapon_shell_pfx );
+		keep( &w::update_dispersion_visual_representation );
+		keep( &w::load_weapon );
+		keep( &w::set_fire_bullet_transform );
+		keep( &w::tick );
+		keep( &w::set_transform );
+		keep( &w::set_target );
+		keep( &w::set_next_fire_queue_type );
+		keep( &w::set_next_ammo_type );
+		keep( &w::on_ammo_empty );
+		keep( &w::show_crosshair );
+		keep( &w::hide_crosshair );
+		keep( &w::update_pfx_transform );
+		keep( &w::play_weapon_fire_pfx );
+		keep( &w::show_laser_pointer );
+		keep( &w::set_ui_ammo );
+		keep( &w::activate );
+		keep( &w::deactivate );
+		keep( &w::on_before_fire );
+		keep( &w::on_after_fire );
+		keep( &w::on_reload );
+		keep( &w::on_chamber_a_round );
+		keep( &w::on_reload_started );
+		keep( &w::on_show );
+		keep( &w::on_hide );
+		keep( &w::on_unload_chambered_round );
+		keep( &w::instant_aim_start );
+		keep( &w::instant_aim_end );
+		keep( &w::on_skeleton_matrices_changed );
+		keep( &w::process_finger_correction );
+		keep( &w::on_foot_step );
+		keep( &w::on_shell_extraction_event );
+		keep( &w::calculate_locator );
+		keep( &w::on_hand_correction_event );
+		keep( &w::on_user_sprint );
+
+		// ---- weapon_cook -----------------------------------------------------
+		typedef survarium::weapon_cook wc;
+		keep( &wc::on_weapon_subresources_ready );
+		keep( &wc::on_weapon_config_loaded );
+		keep( &wc::delete_resource );
+		keep( &wc::cooked_object_size );
+		survarium::weapon_cook::register_cooks_for_logic_states( );
+
+		// ---- object_weapon ---------------------------------------------------
+		typedef survarium::object_weapon ow;
+		keep( &ow::cast_game_object );
+		keep( &ow::get_type );
+		keep( &ow::is_loaded );
+		keep( &ow::get_name );
+		keep( &ow::get_id );
+		keep( static_cast< vostok::ai::npc* ( ow::* )( ) >( &ow::cast_npc ) );
+		keep( static_cast< vostok::ai::weapon* ( ow::* )( ) >( &ow::cast_weapon ) );
+		keep( &ow::get_velocity );
+		keep( &ow::get_luminosity );
+		keep( &ow::get_random_surface_point );
+		keep( &ow::local_to_cell );
+
+		// ---- sound_player_cook ----------------------------------------------
+		typedef survarium::sound_player_cook spc;
+		keep( &spc::translate_query );
+		keep( &spc::delete_resource );
+		keep( &spc::on_sounds_loaded );
+		keep( &spc::on_config_loaded );
+
+		// ---- project_cooker_simple ------------------------------------------
+		typedef survarium::project_cooker_simple pcs;
+		keep( &pcs::translate_query );
+		keep( &pcs::delete_resource );
+		keep( &pcs::on_game_project_loaded );
+		keep( &pcs::on_object_loaded );
+		keep( &pcs::create_game_objects );
+
+		// ---- key_binder ------------------------------------------------------
+		typedef survarium::key_binder kb;
+		keep( &kb::bind_key );
+		keep( &kb::unbind_key );
+		keep( &kb::set_default_controls );
+		keep( &kb::dik_to_ptr );
+		keep( &kb::get_binded_action );
+		keep( &kb::id_to_action_name );
+		keep( &kb::dik_to_keyname );
+		keep( &kb::get_binding_group );
+		keep( &kb::get_action_dik );
+		keep( &kb::keyname_to_ptr );
+		keep( &kb::action_name_to_id );
+		keep( &kb::action_name_to_ptr );
+		keep( &kb::remap_keys );
+
+		// weapon.cpp file-local free helpers
+		keep( &survarium::is_dead );
+		keep( &survarium::is_alive );
+	}
+}

@@ -21,6 +21,21 @@ namespace survarium {
 	// ******
 }
 
+// claude@NOTE: STUB body to provide the vtable symbol (the cook ctor emits the
+// vtable, which references delete_resource). The real target inlines the whole
+// simple_game_project destructor here: it walks the project's pointer vectors
+// (collision+render, ladders, damage-zones, victory-items) and the base_point_stats
+// rb-tree, freeing each element + the virtual_path_string vector + the project
+// itself via the resource vtable. Match requires the full simple_game_project
+// layout/dtor (game_project.h). Parked - buildability stub only.
+// STATE[STUB]
+void project_cooker_simple::delete_resource( resources::resource_base* resource )
+{
+	DELETE( resource );
+
+	// FUNCTION BODY[0x5d7540]
+}
+
 // STATE[STUB]
 void project_cooker_simple::translate_query( resources::query_result_for_cook& parent )
 {
