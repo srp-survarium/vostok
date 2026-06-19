@@ -6,6 +6,9 @@
 #include "player.h"
 #include "player_creation_params.h"	// params.game_scene field
 #include "base_game_scene.h"			// game_scene supplies game / scheduler
+#include "game.h"						// m_game.network_client()
+#include "base_network_client.h"		// network_client().is_player_current
+#include "game_world_ui.h"				// m_game_ui->fill_quick_slots
 #include "player_input_handler.h"		// m_local_input_controller->set_near_plane
 #include "game_memory.h"				// g_allocator for circular_buffer member
 #include <vostok/render/facade/scene_renderer.h>	// add/remove_model
@@ -1315,20 +1318,33 @@ bool player::set_new_active_item( inventory_item_ptr const& item )
 	return true;
 }
 
-// claude@NOTE: parked - structure understood (loop over a 6-elem static
-// accept_slots[] = quick_slot1..6, set_item into first empty, then the local-
-// player UI guard m_game.network_client().get_current_player() && ->id == id
-// -> game_world_ui::fill_quick_slots). The shared UI guard's exact resource_ptr
-// temp/addref shape and the accept_slots static placement need a build pass.
-// STATE[STUB]
+static const profile_slot_enum accept_slots[] = {
+	quick_slot1, quick_slot2, quick_slot3, quick_slot4, quick_slot5, quick_slot6
+};
+
+// claude@NOTE: structure mostly matches (for/if-occupied/set_item aligned to
+// target lines 1227/1229/1231). The local-player UI guard (target line 1231) is
+// m_game.network_client().is_player_current( id ) [== the standalone
+// base_network_client::is_player_current, 99.6%: reads m_current_player, c_ptr,
+// cmp id at +0x34] and the call (1232) is m_game_ui->fill_quick_slots(). BUT the
+// guard + UI call + trailing return are NOT being emitted by our compile (base
+// ends at set_item; ret) - the if-block vanishes with no /Od reason found yet.
+// Loop check item_in_slot is also intrusive_ptr inline-vs-call capped. Park: find
+// why the post-set_item guard block is dropped before banking. STATE[STUB]
 void player::take_inventory_item( inventory_item_ptr const& item )
 {
-	// FUNCTION BODY[0x5e4430]: 13
-	// <0x5e4436>|0x006|+0x00a:'1227'
-	// <0x5e4440>|0x010|+0x01b:'1229'
-	// <0x5e445b>|0x02b|+0x012:'1231'
-	// <0x5e446d>|0x03d|+0x02f:'1232'
-	// ******
+	for ( u32 i = 0; i < array_size( accept_slots ); ++i )
+	{
+		if ( inventory( ).item_in_slot( accept_slots[ i ] ) )
+			continue;
+
+		inventory( ).set_item( accept_slots[ i ], item );
+
+		if ( m_game_ui && m_game.network_client( ).is_player_current( id ) )
+			m_game_ui->fill_quick_slots( );
+
+		return;
+	}
 }
 
 animation::skeleton const& player::skeleton( ) const
