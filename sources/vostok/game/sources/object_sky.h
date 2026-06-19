@@ -32,6 +32,7 @@ public:
 	virtual	void		insert			( ) override;
 	virtual	void		remove			( ) override;
 
+protected:
 			void		material_ready	(
 							resources::queries_result&		data,
 							render::material_effects_instance_cook_data*	cook_data,
