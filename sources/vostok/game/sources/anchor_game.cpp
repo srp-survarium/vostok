@@ -46,6 +46,7 @@
 // their ctors/dtors/vtables, and (b) address-takes game's own public methods through
 // a volatile sink to keep the game vtable + members past /OPT:REF.
 #include "game.h"
+#include "game_world.h"
 #include "key_binder.h"
 #include "lobby_menu.h"
 #include "login_menu.h"
@@ -90,6 +91,10 @@ namespace survarium {
 	void anchor_game_player( );
 	void anchor_game_world_ui( );
 	void anchor_game_chat( game& g );
+
+	// game_world NPC-management reachability anchor (anchor_game_world_npc.cpp); it
+	// self-guards and never runs, so the placeholder game_world& is never touched.
+	void anchor_game_world_npc( game_world& w );
 
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
@@ -368,5 +373,8 @@ namespace vostok
 		survarium::anchor_game_world_ui( );
 		// drive the self-guarded chat-handler anchor (same self-guard contract).
 		survarium::anchor_game_chat( *( survarium::game* )NULL );
+		// drive the self-guarded game_world NPC-management anchor; the placeholder
+		// game_world& is never dereferenced (the anchor returns before touching it).
+		survarium::anchor_game_world_npc( *( survarium::game_world* )NULL );
 	}
 }

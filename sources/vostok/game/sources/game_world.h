@@ -106,6 +106,10 @@ typedef resources::resource_ptr<
 
 // the canonical game_world_1.h variant is byte-identical - no union needed
 class game_world : public base_game_scene , public ai::engine , public ai::navigation::engine , public bullet_manager_engine , public resources::unmanaged_resource , public input::handler {
+	// /OPT:REF reachability anchor for the private/static game_world_npc.cpp methods
+	// the real game call graph does not yet reach (anchor_game_world_npc.cpp);
+	// codegen-neutral. Retire once tick/load/unload bodies reach these for real.
+	friend void anchor_game_world_npc( game_world& w );
 public:
 	// canonical dump prints the nested type standalone (game_world__bullet_tracer.h)
 	struct bullet_tracer {
@@ -344,6 +348,7 @@ private:
 
 public:
 	// STATE[STUB]
+public:
 	virtual	void								set_navmesh_info				( pcstr __formal ) const override
 	{
 		// FUNCTION BODY[0x22c50]
