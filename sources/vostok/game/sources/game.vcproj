@@ -1013,6 +1013,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_npc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\animated_model_instance.h"
 				>
 			</File>
