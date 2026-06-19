@@ -220,6 +220,7 @@ public:
 
 	inline	pcstr								project_resource_name			( ) { /* no source */ return m_project_resource_name.c_str( ); }
 
+private:
 			void								set_network_client				(
 													base_network_client* const		network_client,
 													pcstr							host,
