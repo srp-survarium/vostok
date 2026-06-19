@@ -9,6 +9,8 @@
 // instantiate resource_ptr<player> dtors here, needing the complete player type
 #include "player.h"
 
+#include "game.h"			// m_game.get_game_world() / m_game.lobby_menu()
+
 namespace survarium {
 
 // TU static console command (compiler-generated atexit destructor); a matcher
@@ -84,16 +86,18 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 	// ******
 }
 
-// claude@NOTE: body recovered (loop over m_net_players, cast each player_desc::player
-// to player_ptr, player->set_use_physics_controller_for_current(m_use_physics_controller_for_current)).
-// PARKED: player::set_use_physics_controller_for_current(bool) is declared in player.h
-// but its definition is not linked (player .cpp stub) -> LNK2001. Restore the body once
-// that player method is implemented.
-// STATE[STUB]
+// claude@NOTE: structure is a loop over m_net_players that builds a player_ptr per
+// entry and calls set_use_physics_controller_for_current. The target records 0 named
+// locals and walks the array by pointer (no index/temp local), so the real source is
+// likely a 0-local array-walk idiom (std::for_each / pointer loop) rather than this
+// indexed get_player(i) form; the if-init scopes the player_ptr release into the if
+// (target line 94) but still introduces a named local. Faithful loop shape is here;
+// the 0-local exact spelling is the residual.
 void network_client::apply_use_physics_controller_for_current( )
 {
-	// FUNCTION BODY[0x7048f0]: 4
-	// loop m_net_players -> player->set_use_physics_controller_for_current( m_use_physics_controller_for_current )
+	for ( u8 i = 0; i < 20; ++i )
+		if ( player_ptr player = get_player( i ) )
+			player->set_use_physics_controller_for_current( m_use_physics_controller_for_current );
 }
 
 // STATE[STUB]
@@ -492,41 +496,25 @@ void network_client::on_http_result_ready( pcstr content, u8 type )
 	// ******
 }
 
-// claude@NOTE: body recovered (single LOG_ERROR). Unpaired only because /OPT:REF strips it:
-// on_http_error is bound as an http callback inside the http-client setup path (e.g.
-// connect_to_login / http_query_server_connection_info), and those bind sites are still stubs,
-// so nothing references it. Pairs once a binder that captures &on_http_error emits.
 void network_client::on_http_error( boost::system::error_code __formal )
 {
 	LOG_ERROR( "http client error!" );
 }
 
-// STATE[STUB]
+// claude@NOTE: line 407 clears a boost::function<void(char const*)> callback inside
+// m_match_client.m_client (network::match_client + 0xC8) - that low-level member + its
+// clearing path live in the still-stub vostok::network module, so the assign won't
+// byte-match until network_core's match_client is built. The close_current_match dispatch
+// (the rest) is local.
 void network_client::on_match_disconnected( network_core::disconnect_event_types_enum disconnect_event_type )
 {
-	// CALL SITE INFO
-	// <0x702f13> -> < unknown >
-	// <0x702f2f> -> void < unknown >( bool )
-	// <0x702f42> -> void < unknown >( bool )
-	// ******
+	m_match_client.set_on_disconnect( boost::function< void( network_core::disconnect_event_types_enum ) >( ) );
 
-	// FUNCTION BODY[0x702ed0]: 11
-	// <0x702ed0>|0x000|+0x00d:'406'	{
-	// <0x702edd>|0x00d|+0x03b:'407'
-	// <0x702f18>|0x048|+0x00e:'408'
-	// <0>
-	// <1>
-	// <0x702f26>|0x056|+0x013:'411'
-	// <0x702f39>|0x069|-0x00e:'411'
-	// <0>
-	// <1>
-	// <2>
-	// <0x702f2b>|0x05b|+0x006:'415'
-	// <0>
-	// <1>
-	// <0x702f31>|0x061|+0x013:'418'
-	// <0x702f44>|0x074|      :'418'	}
-	// ******
+	if ( disconnect_event_type == network_core::disconnected_by_timeout )
+		close_current_match( false );
+	else if ( disconnect_event_type == network_core::disconnected_by_connection_lost ||
+			  disconnect_event_type == network_core::disconnected_by_initiator )
+		close_current_match( true );
 }
 
 // STATE[STUB]
@@ -575,15 +563,9 @@ void network_client::connect_to_login(
 	// ******
 }
 
-// STATE[STUB]
 game_world& network_client::get_game_world( )
 {
-	// buildability return; the real body reaches the world through m_game
-	return *( game_world* )NULL;
-
-	// FUNCTION BODY[0x702e50]: 1
-	// <0x702e50>|0x000|+0x008:'453'
-	// ******
+	return m_game.get_game_world( );
 }
 
 // STATE[STUB]
@@ -679,23 +661,17 @@ void network_client::draw_stats( const u32 current_time_in_ms )
 	// ******
 }
 
+// claude@NOTE: body is a 20-entry strcmp loop over m_match_client.get_match_options()
+// .player_profiles[i].name returning .team (else team_invalid). PARKED on the game carcass:
+// struct match_options and struct player_profile are only forward-declared in the game module
+// (canonical match_options.h / player_profile not yet rebuilt as carcass headers), so the
+// player_profiles[20] array (stride 0x1B8, name +0x8, team +0x1B0) can't be indexed. Restore
+// once those structs are pulled into the game carcass.
 // STATE[STUB]
 game_team_id network_client::get_player_team( pcstr player_profile_name )
 {
 	// buildability return
 	return team_invalid;
-
-	// FUNCTION BODY[0x702e60]: 6
-	// <0x702e60>|0x000|+0x001:'538'	{
-	// <0x702e61>|0x001|+0x00f:'539'
-	// <0>
-	// <0x702e70>|0x010|+0x049:'541'
-	// <0x702eb9>|0x059|-0x007:'542'
-	// <0>
-	// <0x702eb2>|0x052|+0x006:'544'
-	// <0x702eb8>|0x058|+0x012:'545'
-	// <0x702eca>|0x06a|      :'545'	}
-	// ******
 }
 
 } // namespace survarium
