@@ -11,20 +11,12 @@
 
 namespace survarium {
 
-// STATE[STUB]
  human_npc_cook::human_npc_cook( game_world& world ) :
-	// base args are the legacy prior (translate_query_cook has no default ctor);
-	// a matcher confirms when this TU is enabled
 	translate_query_cook( resources::human_npc_class, reuse_true, use_any_thread_id ),
 	m_game_world( world )
 {
-	// FUNCTION BODY[0x7681a0]: 0
-	// <0x7681a0>|0x000|+0x06c:'19'	{
-	// <0x76820c>|0x06c|      :'20'	}
-	// ******
 }
 
-// STATE[STUB]
 void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	configs::binary_config_value* t_object	= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
@@ -51,45 +43,13 @@ void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 		parent.user_data(),
 		&parent
 	);
-
-	// FUNCTION BODY[0x7688a0]: 23
-	// <0x7688ab>|0x00b|+0x023:'24'
-	// <0>
-	// <0x7688ce>|0x02e|+0x004:'26'
-	// <0>
-	// <0x7688d2>|0x032|+0x00e:'28'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x7688e0>|0x040|+0x044:'36'
-	// <0x768924>|0x084|+0x002:'37'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x768926>|0x086|+0x0a3:'46'
-	// ******
 }
 
-// STATE[STUB]
 void human_npc_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL					( g_allocator, resource );
-
-	// FUNCTION BODY[0x768220]: 1
-	// <0x768220>|0x000|+0x045:'51'
-	// ******
 }
 
-// STATE[STUB]
 void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
@@ -103,26 +63,6 @@ void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 	configs::binary_config_ptr config					= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource() );
 
 	on_npc_options_received								( config->get_root(), *parent );
-
-	// LOCALS
-	// configs::binary_config_ptr 		config
-	// ******
-
-	// FUNCTION BODY[0x768800]: 10
-	// <0x768800>|0x000|+0x001:'55'	{
-	// <0x768801>|0x001|+0x007:'56'
-	// <0x768808>|0x008|+0x00d:'57'
-	// <0>
-	// <1>
-	// <0x768815>|0x015|+0x012:'60'
-	// <0>
-	// <1>
-	// <2>
-	// <0x768827>|0x027|+0x048:'64'
-	// <0x76886f>|0x06f|-0x04f:'65'
-	// <0x768820>|0x020|+0x061:'66'
-	// <0x768881>|0x081|      :'66'	}
-	// ******
 }
 
 // STATE[STUB]

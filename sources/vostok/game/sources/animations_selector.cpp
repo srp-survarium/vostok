@@ -4,6 +4,8 @@
 
 #include "pch.h"
 #include "animations_selector.h"
+#include "game_world.h"				// m_game_world.get_game() ...
+#include "game.h"					// ... .game_time_ms() inlines the game clock
 #include <vostok/ai/animation_item.h>
 #include <vostok/ai/movement_target.h>
 
@@ -103,31 +105,20 @@ void animations_selector::reset_animation_controller( const u32 time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
 animation::callback_return_type_enum animations_selector::on_animation_interval_end( animation::animation_callback_params& params )
 {
-	// CALL SITE INFO
-	// <0x5bc377> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5bc360]: 4
-	// <0x5bc362>|0x002|+0x00a:'90'
-	// <0x5bc36c>|0x00c|+0x00d:'91'
-	// <0x5bc379>|0x019|+0x008:'92'
-	// <0>
-	// ******
+	params.interrupt_animation_player_tick	= true;
+	m_current_controller->query_new_target_if_needed( );
+	reset_animation_controller( params.callback_time_in_ms );
+	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[STUB]
 void animations_selector::on_set_target( )
 {
-	// FUNCTION BODY[0x5bc330]: 2
-	// <0x5bc334>|0x004|+0x00a:'98'
-	// <0x5bc33e>|0x00e|+0x017:'99'
-	// ******
+	if ( !m_current_controller )
+		reset_animation_controller( m_game_world.get_game().game_time_ms() );
 }
 
-// STATE[STUB]
 void animations_selector::set_target( ai::animation_item const& animation_emitter )
 {
 	m_simple_animation_parameters.emitter	= static_cast_resource_ptr< animation::animation_expression_emitter_ptr >( animation_emitter.animation );
@@ -135,17 +126,10 @@ void animations_selector::set_target( ai::animation_item const& animation_emitte
 	m_target_controller						= &m_simple_animation_controller;
 	m_target_controller_parameters			= &m_simple_animation_parameters;
 
-	// FUNCTION BODY[0x5bc5b0]: 6
-	// <0x5bc5b0>|0x000|+0x078:'104'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5bc628>|0x078|+0x038:'109'
-	// ******
+	if ( !m_current_controller )
+		reset_animation_controller( m_game_world.get_game().game_time_ms() );
 }
 
-// STATE[STUB]
 void animations_selector::set_target( ai::movement_target const& target_position )
 {
 	m_movement_animation_parameters.position		= target_position.target_position;
@@ -156,30 +140,14 @@ void animations_selector::set_target( ai::movement_target const& target_position
 	m_target_controller								= &m_single_position_animation_controller;
 	m_target_controller_parameters					= &m_movement_animation_parameters;
 
-	// FUNCTION BODY[0x5bc4b0]: 9
-	// <0x5bc4b0>|0x000|+0x019:'114'
-	// <0x5bc4c9>|0x019|+0x016:'115'
-	// <0x5bc4df>|0x02f|+0x016:'116'
-	// <0x5bc4f5>|0x045|+0x077:'117'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5bc56c>|0x0bc|+0x032:'122'
-	// ******
+	if ( !m_current_controller )
+		reset_animation_controller( m_game_world.get_game().game_time_ms() );
 }
 
-// STATE[STUB]
 void animations_selector::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
-	// CALL SITE INFO
-	// <0x5bc09a> -> void < unknown >( render::game::renderer&, render::base_scene_ptr const& ) const
-	// ******
-
-	// FUNCTION BODY[0x5bc080]: 2
-	// <0x5bc080>|0x000|+0x009:'127'
-	// <0x5bc089>|0x009|+0x013:'128'
-	// ******
+	if ( m_current_controller )
+		m_current_controller->debug_draw( render, scene );
 }
 
 } // namespace survarium

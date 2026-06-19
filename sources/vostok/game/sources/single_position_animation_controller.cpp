@@ -55,6 +55,9 @@ void single_position_animation_controller::initialize( )
 // STATE[STUB]
 animation::mixing::expression single_position_animation_controller::try_finalize( base_animation_controller& next_controller, mutable_buffer& buffer )
 {
+	// claude@NOTE: buildability return only - force-codegen'd by anchor_game_npc.cpp.
+	return *( animation::mixing::expression* )0;
+
 	// FUNCTION BODY[0x776860]: 2
 	// <0>
 	// <0x776860>|0x000|+0x011:'55'
@@ -82,6 +85,10 @@ void single_position_animation_controller::query_new_target_if_needed( )
 // STATE[STUB]
 animation::mixing::expression single_position_animation_controller::selected_animations( mutable_buffer& buffer )
 {
+	// claude@NOTE: buildability return only - force-codegen'd by anchor_game_npc.cpp;
+	// body is the create_animation_interval lexeme wall (a matcher recovers it).
+	return *( animation::mixing::expression* )0;
+
 	// LOCALS
 	// float3 							target_position
 	// float3 const& 					movement_position
