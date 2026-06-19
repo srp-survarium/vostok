@@ -23,20 +23,24 @@ struct npc_statistics
 {
 	typedef	statistics_item< 46, 16 >			sensor_info_type;
 	typedef fixed_vector< sensor_info_type, 5 >	input_info_type;
+	typedef fixed_vector< sensor_info_type, 12 >	body_info_type;
 	typedef statistics_item< 32, 128 >			memory_info_type;
 	typedef statistics_item< 64, 8 >			blackboard_info_type;
 	typedef statistics_item< 64, 1 >			goal_info_type;
 	typedef statistics_item< 32, 16 >			plan_info_type;
 	typedef statistics_item< 64, 16 >			general_info_type;
 
-	input_info_type			sensors_state;
-	input_info_type			selectors_state;
-	memory_info_type		working_memory_state;
-	blackboard_info_type	blackboard_state;
-	goal_info_type			goal_selector_state;
-	plan_info_type			plan_tracker_state;
-	general_info_type		general_state;
+	/* 0x0000 */	input_info_type			sensors_state;
+	/* 0x13cc */	input_info_type			selectors_state;
+	/* 0x2798 */	body_info_type			body_state;
+	/* 0x5710 */	memory_info_type		working_memory_state;
+	/* 0x6d44 */	blackboard_info_type	blackboard_state;
+	/* 0x6fd8 */	goal_info_type			goal_selector_state;
+	/* 0x7058 */	plan_info_type			plan_tracker_state;
+	/* 0x734c */	general_info_type		general_state;
 }; // struct npc_statistics
+
+STATIC_SIZE_ASSERT(npc_statistics, 0x7840);
 
 } // namespace ai
 } // namespace vostok
