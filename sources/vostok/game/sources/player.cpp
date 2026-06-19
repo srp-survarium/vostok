@@ -540,6 +540,17 @@ void player::apply_input(
 	// ******
 }
 
+// claude@NOTE: parked on the 0-named-local constraint. Fully reversed: a single
+// new_item() result (eax, no named local) is filled across 5 stores -
+//   item.action.input            = m_input                       (line 521, 0x00, 0x14 bytes)
+//   item.action.state.transform  = m_target.transform            (line 522, 0x14, rep movsd 0x40)
+//   item.action.state.look_pitch = m_target.look_pitch           (line 523, 0x54)
+//   item.action.weapon_state.slot_id = inventory().get_active_slot()  (line 524, 0x58, byte from inventory@0x154)
+//   item.time_in_ms              = current_time_in_ms            (line 520, 0x5C)
+// The natural form binds `client_player_history_item& item = m_history.new_item()`
+// (1 named local) but the PDB records 0 locals -> the original used an inline
+// helper/0-local construct over new_item() that I couldn't pin. Needs the helper
+// name (search base_player/history serialize siblings) before writing.
 // STATE[STUB]
 void player::serialize_current_state( const u32 current_time_in_ms )
 {
@@ -902,28 +913,23 @@ void player::detect_usable_objects( const u32 current_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
 void player::use_ladder( ladder* __formal )
 {
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5d12f0 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// ******
-
-	// FUNCTION BODY[0x5e22f0]
-	// <0x5e22f0>|0x000|      :'795'	{
-	// ******
+	NOT_IMPLEMENTED( __formal );
 }
 
+// claude@NOTE: line 868 (damage_model()->apply_affect) is confident; the line-869
+// guard around m_game_ui->on_damage_affect_applying reads m_game->[0x3B8]->[8]
+// (a sound_emitter c_ptr) and compares hit_initiator team bytes ([this+0x34] ==
+// [other+0x34]) - not yet reversed to a named expression. Parked for pass 3.
 // STATE[STUB]
 void player::apply_damage_model_affect(
 	pcstr							part_name,
-	const hit_affects_type_enum		arg_1 /* hit_affects_type_enum affect */,
-	const affect_event_type_enum	arg_2 /* affect_event_type_enum event_type */
+	const hit_affects_type_enum		affect,
+	const affect_event_type_enum	event_type
 )
 {
-	// CALL SITE INFO
-	// <0x5e31c5> -> damage_model_ptr const& < unknown >() const
-	// ******
+	damage_model( )->apply_affect( part_name, affect, event_type );
 
 	// FUNCTION BODY[0x5e31b0]: 3
 	// <0x5e31be>|0x00e|+0x017:'868'
@@ -1295,39 +1301,33 @@ void player::stand_up( )
 		m_current.physics_controller->set_crouch( false );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (4 stmts, lines 1190/1191/1194/1195) but capped
+// on intrusive_ptr<interactive_object> inline-vs-call: the target inlines c_ptr()
+// and operator=(object_type*) (addref/release as inline lock-xadd), our base
+// out-lines them (calls). That inlining is a core-module template-instantiation
+// decision not steerable from player.cpp. Byte residual only.
 bool player::set_new_active_item( inventory_item_ptr const& item )
 {
-	return false;
+	if ( m_target_active_object != item.c_ptr( ) )
+		force_animation_selection( );
 
-	// FUNCTION BODY[0x5e4180]: 7
-	// <0x5e4180>|0x000|+0x01d:'1189'
-	// <0x5e419d>|0x01d|+0x005:'1190'
-	// <0x5e41a2>|0x022|+0x007:'1191'
-	// <0>
-	// <1>
-	// <0x5e41a9>|0x029|+0x03c:'1194'
-	// <0x5e41e5>|0x065|+0x01e:'1195'
-	// ******
+	m_target_active_object = item.c_ptr( );
+	return true;
 }
 
+// claude@NOTE: parked - structure understood (loop over a 6-elem static
+// accept_slots[] = quick_slot1..6, set_item into first empty, then the local-
+// player UI guard m_game.network_client().get_current_player() && ->id == id
+// -> game_world_ui::fill_quick_slots). The shared UI guard's exact resource_ptr
+// temp/addref shape and the accept_slots static placement need a build pass.
 // STATE[STUB]
 void player::take_inventory_item( inventory_item_ptr const& item )
 {
 	// FUNCTION BODY[0x5e4430]: 13
 	// <0x5e4436>|0x006|+0x00a:'1227'
-	// <0>
 	// <0x5e4440>|0x010|+0x01b:'1229'
-	// <0>
 	// <0x5e445b>|0x02b|+0x012:'1231'
 	// <0x5e446d>|0x03d|+0x02f:'1232'
-	// <0>
-	// <0x5e449c>|0x06c|-0x044:'1234'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
 	// ******
 }
 

@@ -101,27 +101,11 @@ public:
 
 	inline	bool									is_visible							( ) const { /* no source */ return m_is_visible; }
 
-	// STATE[STUB]
-	virtual	game_team_id							team								( ) const override
-	{
-		return m_team_id;
-
-		// FUNCTION BODY[0x8e730]
-		// <0x8e730>|0x000|      :'105'	{
-		// ******
-	}
+	virtual	game_team_id							team								( ) const override			{ return m_team_id; }
 
 	inline	wchar_t const*							get_profile_name					( ) const { /* no source */ return profile_name; }
 
-	// STATE[STUB]
-	virtual	damage_model_ptr const&					damage_model						( ) const override
-	{
-		return base_player::damage_model( );
-
-		// FUNCTION BODY[0x8e740]
-		// <0x8e740>|0x000|      :'107'	{
-		// ******
-	}
+	virtual	damage_model_ptr const&					damage_model						( ) const override			{ return base_player::damage_model( ); }
 
 	virtual	void									deserialize							( network_core::packet_reader& reader ) override;
 
@@ -141,15 +125,7 @@ public:
 	inline	float									get_player_max_carried_weight		( ) const { /* no source */ return 0.0f; }
 
 private:
-	// STATE[STUB]
-	virtual	float4x4 const&							get_transform						( ) const override
-	{
-		return m_root_transform;
-
-		// FUNCTION BODY[0x8e750]
-		// <0x8e750>|0x000|      :'130'	{
-		// ******
-	}
+	virtual	float4x4 const&							get_transform						( ) const override			{ return m_root_transform; }
 
 	virtual	void									hit									(
 														hit_initiator const* const		initiator,
@@ -170,35 +146,11 @@ private:
 
 	virtual	float									get_speed							( ) const override;
 
-	// STATE[STUB]
-	virtual	player_input const&						input								( ) const override
-	{
-		return m_input;
+	virtual	player_input const&						input								( ) const override			{ return m_input; }
 
-		// FUNCTION BODY[0x8e760]
-		// <0x8e760>|0x000|      :'160'	{
-		// ******
-	}
+	virtual	float3 const&							position							( ) const override			{ return m_current.transform.c.xyz( ); }
 
-	// STATE[STUB]
-	virtual	float3 const&							position							( ) const override
-	{
-		return m_last_frame_position;
-
-		// FUNCTION BODY[0x8e770]
-		// <0x8e770>|0x000|      :'161'	{
-		// ******
-	}
-
-	// STATE[STUB]
-	virtual	float									get_look_pitch						( ) const override
-	{
-		return 0.0f;
-
-		// FUNCTION BODY[0x8e780]
-		// <0x8e780>|0x000|      :'162'	{
-		// ******
-	}
+	virtual	float									get_look_pitch						( ) const override			{ return m_current.look_pitch; }
 
 	virtual	void									use_ladder							( ladder* __formal ) override;
 
@@ -221,25 +173,9 @@ private:
 
 	virtual	bool									set_new_active_item					( inventory_item_ptr const& item ) override;
 
-	// STATE[STUB]
-	virtual	physics::bt_character_controller&		physics_controller					( ) override
-	{
-		return *m_current.physics_controller;
+	virtual	physics::bt_character_controller&		physics_controller					( ) override				{ return *m_target.physics_controller; }
 
-		// FUNCTION BODY[0x8e790]
-		// <0x8e790>|0x000|      :'180'	{
-		// ******
-	}
-
-	// STATE[STUB]
-	virtual	player_stamina&							stamina								( ) override
-	{
-		return m_stamina;
-
-		// FUNCTION BODY[0x8e7a0]
-		// <0x8e7a0>|0x000|      :'181'	{
-		// ******
-	}
+	virtual	player_stamina&							stamina								( ) override				{ return m_stamina; }
 
 	virtual	void									take_inventory_item					( inventory_item_ptr const& item ) override;
 
@@ -263,25 +199,9 @@ private:
 	virtual	void									unsubscribe_animation_player		( pcstr channel_id, pcvoid callback_uid ) override;
 	virtual	void									unsubscribe_animation_player		( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid ) override;
 
-	// STATE[STUB]
-	virtual	bool									is_replaying_history				( ) const override
-	{
-		return false;
+	virtual	bool									is_replaying_history				( ) const override			{ return m_is_replaying_history; }
 
-		// FUNCTION BODY[0x8e7b0]
-		// <0x8e7b0>|0x000|      :'201'	{
-		// ******
-	}
-
-	// STATE[STUB]
-	virtual	u32										local_time							( const u32 time_in_ms ) const override
-	{
-		return 0;
-
-		// FUNCTION BODY[0x8e7c0]
-		// <0x8e7c0>|0x000|      :'202'	{
-		// ******
-	}
+	virtual	u32										local_time							( const u32 time_in_ms ) const override	{ return time_in_ms; }
 
 	// the canonical dump prints this tail block public; the mangled symbols say
 	// private (?smooth@...@@AAE..., ?history_lower_bound_index@...@@ABE..., etc.).
