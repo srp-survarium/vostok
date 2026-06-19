@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "weapon.h"
+#include "game_world_ui.h"
 
 #include "weapon_user_dead_state.h"
 
@@ -114,18 +115,15 @@ void `dynamic atexit destructor for 'dispersion_magic_coef_cc''( )
 	// ******
 }
 
+// claude@NOTE: selects m_barrel_transform when third-view else the param, then
+// forwards to weapon_core::set_fire_bullet_transform. Blocked: the third-view
+// test reads m_is_third_view via weapon_core::is_third_view(), whose inline body
+// in weapon_core.h (owned by game_core) is an empty `/* no source */` stub -
+// calling it force-codegens the stub (C4716). Parked until that accessor lands.
 // STATE[STUB]
 void weapon::set_fire_bullet_transform( float4x4 const& transform )
 {
 	// FUNCTION BODY[0x5c1650]: 5
-	// <0x5c1650>|0x000|+0x000:'131'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5c1650>|0x000|      :'137'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -160,41 +158,24 @@ void weapon::instant_aim_end( )
 	// ******
 }
 
-// STATE[STUB]
 void weapon::tick( )
 {
-	// FUNCTION BODY[0x5c1f50]: 0
-	// <0x5c1f50>|0x000|+0x000:'169'	{
-	// <0x5c1f50>|0x000|      :'170'	}
-	// ******
+	weapon_core::tick( );
 }
 
-// STATE[STUB]
 void weapon::set_transform( float4x4 const& transform )
 {
-	// FUNCTION BODY[0x5c1630]: 1
-	// <0x5c1631>|0x001|+0x014:'187'
-	// ******
+	weapon_core::set_transform( transform );
 }
 
-// STATE[STUB]
 bool is_dead( base_player*& user )
 {
-	return false;
-
-	// FUNCTION BODY[0x5c1610]
-	// <0x5c1610>|0x000|      :'190'	{
-	// ******
+	return !user->is_alive( );
 }
 
-// STATE[STUB]
 bool is_alive( base_player*& user )
 {
-	return false;
-
-	// FUNCTION BODY[0x5c1600]
-	// <0x5c1600>|0x000|      :'191'	{
-	// ******
+	return user->is_alive( );
 }
 
 // STATE[STUB]
@@ -223,6 +204,11 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 	const bool								is_third_view
 ) const
 {
+	// claude@NOTE: parked - real body builds a death_lexeme + expression pair from
+	// the weapon animation parameters. VOSTOK_UNREACHABLE_CODE is the buildability
+	// device since the pair element types have no default ctor (empty_hands precedent).
+	VOSTOK_UNREACHABLE_CODE( );
+
 	// LOCALS
 	// animation::mixing::animation_lexeme death_lexeme
 	// ******
@@ -420,12 +406,9 @@ void weapon::set_ui_ammo( bool update_total_count )
 	// ******
 }
 
-// STATE[STUB]
 void weapon::on_reload( )
 {
-	// FUNCTION BODY[0x5c1f40]: 1
-	// <0x5c1f42>|0x002|+0x007:'365'
-	// ******
+	set_ui_ammo( true );
 }
 
 // STATE[STUB]
@@ -444,34 +427,28 @@ void weapon::on_unload_chambered_round( )
 	// ******
 }
 
-// STATE[STUB]
 void weapon::show_crosshair( )
 {
-	// FUNCTION BODY[0x5c1730]: 2
-	// <0x5c1731>|0x001|+0x00a:'380'
-	// <0x5c173b>|0x00b|+0x008:'381'
-	// ******
+	if ( m_game_ui )
+		m_game_ui->show_crosshair( true );
 }
 
-// STATE[STUB]
 void weapon::hide_crosshair( )
 {
-	// FUNCTION BODY[0x5c1710]: 2
-	// <0x5c1711>|0x001|+0x00a:'386'
-	// <0x5c171b>|0x00b|+0x008:'387'
-	// ******
+	if ( m_game_ui )
+		m_game_ui->show_crosshair( false );
 }
 
-// STATE[STUB]
 void weapon::on_before_fire( )
 {
-	// FUNCTION BODY[0x5c1520]: 0
-	// <0x5c1520>|0x000|+0x000:'391'	{
-	// <0x5c1520>|0x000|      :'392'	}
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: the second UI update needs weapon_core inline reads of
+// m_ammo_in_magazine (0x47A) + m_is_round_chambered (0x48E); both are private to
+// weapon_core (no inline getter in weapon_core.h, owned by game_core), so the
+// (is_round_chambered() + ammo_in_magazine()) chambered-count and the [esi+10C]
+// guard cannot be spelled here. Parked - structure recoverable once those inline
+// accessors land in weapon_core.h.
 void weapon::on_after_fire( )
 {
 	// FUNCTION BODY[0x5c2410]: 6
@@ -543,19 +520,12 @@ void weapon::play_weapon_shell_pfx( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: target structure records 6 statements that all compile away in
+// MASTER_GOLD (asm is a bare `ret`) - likely debug-render / LOG calls that are
+// no-ops in gold; their exact form is unrecoverable from the carcass. Empty body
+// byte-matches but is structurally short by 6 statements.
 void weapon::show_laser_pointer( )
 {
-	// FUNCTION BODY[0x5c1510]: 6
-	// <0x5c1510>|0x000|+0x000:'450'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5c1510>|0x000|      :'457'	}
-	// ******
 }
 
 // STATE[STUB]
@@ -606,22 +576,14 @@ void weapon::set_next_ammo_type( )
 	// ******
 }
 
-// STATE[STUB]
 void weapon::on_reload_started( )
 {
-	// FUNCTION BODY[0x5c1500]: 0
-	// <0x5c1500>|0x000|+0x000:'499'	{
-	// <0x5c1500>|0x000|      :'500'	}
-	// ******
 }
 
-// STATE[STUB]
 void weapon::on_ammo_empty( )
 {
-	// FUNCTION BODY[0x5c1990]: 2
-	// <0x5c1990>|0x000|+0x00a:'504'
-	// <0x5c199a>|0x00a|+0x00b:'505'
-	// ******
+	if ( m_game_ui )
+		m_game_ui->show_screen_message( "st_empty_ammo_message" );
 }
 
 // STATE[STUB]
@@ -825,13 +787,12 @@ animation::callback_return_type_enum weapon::on_hand_correction_event(
 	const fingers_to_weapon_corrector::hands_enum	hand
 )
 {
+	// claude@NOTE: parked - updates the per-hand block of m_fingers_corrector
+	// (stride 0x404 from base 0x6A0) when the event-type flag changes; needs the
+	// fingers_to_weapon_corrector per-hand layout/accessor (0x6A0/0xAA0 offsets).
+	return animation::callback_return_type_call_me_again;
+
 	// FUNCTION BODY[0x5c15c0]: 5
-	// <0>
-	// <1>
-	// <0x5c15c0>|0x000|+0x009:'666'
-	// <0x5c15c9>|0x009|+0x02c:'667'
-	// <0x5c15f5>|0x035|+0x003:'668'
-	// ******
 }
 
 // STATE[STUB]
