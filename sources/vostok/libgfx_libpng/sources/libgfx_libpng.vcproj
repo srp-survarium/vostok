@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="libgfx_libpng"
+	ProjectGUID="{C1A2B3D4-7777-4A18-9C56-2D8F1B3E6407}"
+	RootNamespace="libgfx_libpng"
+	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
+	>
+	<Platforms>
+		<Platform Name="Win32" />
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Master Gold|Win32"
+			OutputDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			
+			>
+			<Tool Name="VCPreBuildEventTool" />
+			<Tool Name="VCCustomBuildTool" />
+			<Tool Name="VCXMLDataGeneratorTool" />
+			<Tool Name="VCWebServiceProxyGeneratorTool" />
+			<Tool Name="VCMIDLTool" />
+		<Tool
+			Name="VCCLCompilerTool"
+			InlineFunctionExpansion="1"
+			AdditionalIncludeDirectories="$(SolutionDir)/scaleform_build/3rdParty/libpng-1.5.13;$(SolutionDir)/scaleform_build/3rdParty/zlib-1.2.7"
+			PreprocessorDefinitions="WIN32;NDEBUG"
+			StringPooling="true"
+			ExceptionHandling="0"
+			RuntimeLibrary="0"
+			RuntimeTypeInfo="false"
+			UsePrecompiledHeader="0"
+			WarningLevel="3"
+			DebugInformationFormat="1"
+		/>
+			<Tool Name="VCManagedResourceCompilerTool" />
+			<Tool Name="VCResourceCompilerTool" />
+			<Tool Name="VCPreLinkEventTool" />
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(SolutionDir)../binaries.prebuilt/Win32/libraries/shipping/libgfx_libpng.lib"
+			/>
+			<Tool Name="VCALinkTool" />
+			<Tool Name="VCXDCMakeTool" />
+			<Tool Name="VCBscMakeTool" />
+			<Tool Name="VCFxCopTool" />
+			<Tool Name="VCPostBuildEventTool" />
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter Name="core">
+		</Filter>
+		<Filter Name="source">
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\png.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngerror.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngget.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngmem.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngpread.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngread.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngrio.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngrtran.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngrutil.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngset.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngtrans.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngwio.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngwrite.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngwtran.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\libpng-1.5.13\pngwutil.c"
+				>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

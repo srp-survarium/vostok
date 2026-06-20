@@ -451,6 +451,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game_core", "vostok\game_co
 		{25A7363B-1DAF-48D3-AEDE-4B7186FA29D6} = {25A7363B-1DAF-48D3-AEDE-4B7186FA29D6}
 		{7E0C9A48-3D5B-4E92-A1F4-58A6C2B91D37} = {7E0C9A48-3D5B-4E92-A1F4-58A6C2B91D37}
 		{B9F3A1C2-7E4D-4A18-9C56-2D8F1B3E64A0} = {B9F3A1C2-7E4D-4A18-9C56-2D8F1B3E64A0}
+		{C1A2B3D4-1111-4A18-9C56-2D8F1B3E6401} = {C1A2B3D4-1111-4A18-9C56-2D8F1B3E6401}
+		{C1A2B3D4-2222-4A18-9C56-2D8F1B3E6402} = {C1A2B3D4-2222-4A18-9C56-2D8F1B3E6402}
+		{C1A2B3D4-3333-4A18-9C56-2D8F1B3E6403} = {C1A2B3D4-3333-4A18-9C56-2D8F1B3E6403}
+		{C1A2B3D4-4444-4A18-9C56-2D8F1B3E6404} = {C1A2B3D4-4444-4A18-9C56-2D8F1B3E6404}
+		{C1A2B3D4-5555-4A18-9C56-2D8F1B3E6405} = {C1A2B3D4-5555-4A18-9C56-2D8F1B3E6405}
+		{C1A2B3D4-6666-4A18-9C56-2D8F1B3E6406} = {C1A2B3D4-6666-4A18-9C56-2D8F1B3E6406}
+		{C1A2B3D4-7777-4A18-9C56-2D8F1B3E6407} = {C1A2B3D4-7777-4A18-9C56-2D8F1B3E6407}
+		{C1A2B3D4-8888-4A18-9C56-2D8F1B3E6408} = {C1A2B3D4-8888-4A18-9C56-2D8F1B3E6408}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "network_core", "vostok\network_core\sources\network_core.vcproj", "{25A7363B-1DAF-48D3-AEDE-4B7186FA29D6}"
@@ -458,6 +466,22 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scaleform", "vostok\scaleform\sources\scaleform.vcproj", "{7E0C9A48-3D5B-4E92-A1F4-58A6C2B91D37}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx", "vostok\libgfx\sources\libgfx.vcproj", "{B9F3A1C2-7E4D-4A18-9C56-2D8F1B3E64A0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx_as2", "vostok\libgfx_as2\sources\libgfx_as2.vcproj", "{C1A2B3D4-1111-4A18-9C56-2D8F1B3E6401}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx_as3", "vostok\libgfx_as3\sources\libgfx_as3.vcproj", "{C1A2B3D4-2222-4A18-9C56-2D8F1B3E6402}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx_air", "vostok\libgfx_air\sources\libgfx_air.vcproj", "{C1A2B3D4-3333-4A18-9C56-2D8F1B3E6403}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfxexpat", "vostok\libgfxexpat\sources\libgfxexpat.vcproj", "{C1A2B3D4-4444-4A18-9C56-2D8F1B3E6404}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfxsound_fmod", "vostok\libgfxsound_fmod\sources\libgfxsound_fmod.vcproj", "{C1A2B3D4-5555-4A18-9C56-2D8F1B3E6405}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx_zlib", "vostok\libgfx_zlib\sources\libgfx_zlib.vcproj", "{C1A2B3D4-6666-4A18-9C56-2D8F1B3E6406}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx_libpng", "vostok\libgfx_libpng\sources\libgfx_libpng.vcproj", "{C1A2B3D4-7777-4A18-9C56-2D8F1B3E6407}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgfx_libjpeg", "vostok\libgfx_libjpeg\sources\libgfx_libjpeg.vcproj", "{C1A2B3D4-8888-4A18-9C56-2D8F1B3E6408}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder1", "NewFolder1", "{22E7D60C-D75C-46E4-8CCB-1D395D5FC54D}"
 EndProject
@@ -626,6 +650,22 @@ Global
 		{7E0C9A48-3D5B-4E92-A1F4-58A6C2B91D37}.Master Gold|Win32.Build.0 = Master Gold|Win32
 		{B9F3A1C2-7E4D-4A18-9C56-2D8F1B3E64A0}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
 		{B9F3A1C2-7E4D-4A18-9C56-2D8F1B3E64A0}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-1111-4A18-9C56-2D8F1B3E6401}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-1111-4A18-9C56-2D8F1B3E6401}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-2222-4A18-9C56-2D8F1B3E6402}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-2222-4A18-9C56-2D8F1B3E6402}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-3333-4A18-9C56-2D8F1B3E6403}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-3333-4A18-9C56-2D8F1B3E6403}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-4444-4A18-9C56-2D8F1B3E6404}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-4444-4A18-9C56-2D8F1B3E6404}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-5555-4A18-9C56-2D8F1B3E6405}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-5555-4A18-9C56-2D8F1B3E6405}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-6666-4A18-9C56-2D8F1B3E6406}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-6666-4A18-9C56-2D8F1B3E6406}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-7777-4A18-9C56-2D8F1B3E6407}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-7777-4A18-9C56-2D8F1B3E6407}.Master Gold|Win32.Build.0 = Master Gold|Win32
+		{C1A2B3D4-8888-4A18-9C56-2D8F1B3E6408}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
+		{C1A2B3D4-8888-4A18-9C56-2D8F1B3E6408}.Master Gold|Win32.Build.0 = Master Gold|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

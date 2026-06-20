@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="libgfx_zlib"
+	ProjectGUID="{C1A2B3D4-6666-4A18-9C56-2D8F1B3E6406}"
+	RootNamespace="libgfx_zlib"
+	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
+	>
+	<Platforms>
+		<Platform Name="Win32" />
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Master Gold|Win32"
+			OutputDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)../binaries/$(PlatformName)/intermediates/$(ConfigurationName)/$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			
+			>
+			<Tool Name="VCPreBuildEventTool" />
+			<Tool Name="VCCustomBuildTool" />
+			<Tool Name="VCXMLDataGeneratorTool" />
+			<Tool Name="VCWebServiceProxyGeneratorTool" />
+			<Tool Name="VCMIDLTool" />
+		<Tool
+			Name="VCCLCompilerTool"
+			Optimization="2"
+			InlineFunctionExpansion="1"
+			AdditionalIncludeDirectories="$(SolutionDir)/scaleform_build/3rdParty/zlib-1.2.7"
+			PreprocessorDefinitions="WIN32;NDEBUG"
+			StringPooling="true"
+			ExceptionHandling="0"
+			RuntimeLibrary="0"
+			RuntimeTypeInfo="false"
+			UsePrecompiledHeader="0"
+			WarningLevel="3"
+			DebugInformationFormat="1"
+		/>
+			<Tool Name="VCManagedResourceCompilerTool" />
+			<Tool Name="VCResourceCompilerTool" />
+			<Tool Name="VCPreLinkEventTool" />
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(SolutionDir)../binaries.prebuilt/Win32/libraries/shipping/libgfx_zlib.lib"
+			/>
+			<Tool Name="VCALinkTool" />
+			<Tool Name="VCXDCMakeTool" />
+			<Tool Name="VCBscMakeTool" />
+			<Tool Name="VCFxCopTool" />
+			<Tool Name="VCPostBuildEventTool" />
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter Name="core">
+		</Filter>
+		<Filter Name="source">
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\adler32.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\compress.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\crc32.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\deflate.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\infback.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\inffast.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\inflate.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\inftrees.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\trees.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\uncompr.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\scaleform_build\3rdParty\zlib-1.2.7\zutil.c"
+				>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>
