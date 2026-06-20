@@ -186,6 +186,33 @@ deep, duplicate-symbol-prone reimplementation of that lib = real step-4+ work,
 deliberately NOT attempted here (assess-first). The header swap + build wiring
 is committed; the prebuilt-lib replacement is the open next step.
 
+### PDB source-checksum confirms 4.2.22 == shipped 4.2.21 (no drift)
+
+The game PDB records the GFx source under
+`C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21\Src\...` - the shipped exe
+was built from GFx **4.2.21**. `pdb_diff --source-dir` (per-compiland MD5) of our
+vendored 4.2.22 tree against the game PDB:
+
+    pdb_diff --target-pdb $SURVARIUM_BIN/survarium.pdb \
+      --target-engine-path 'C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21' \
+      --source-dir sources/scaleform
+    # matched=7  diff=0  base-only=0  target-only=197
+
+**`diff=0`**: every SDK file we vendor that the game compiled is byte-identical
+between 4.2.22 and the shipped 4.2.21 (the 7 explicit MATCHes are the
+`Render/ImageFiles/*.cpp`; the rest of our subset is headers, which carry no
+PDB checksum). So 4.2.22 is the correct source - no hidden point-release drift.
+
+**`target-only=197`** (88 gfx, 69 render, 40 kernel `.cpp`): the full SDK
+compiland set that the shipped binary built into `libgfx.lib` but our curated
+subset does not carry as compiled TUs - including exactly the base-render TUs the
+4.2.22 D3D1x HAL link needs (`render_hal.cpp`, `render_image.cpp`,
+`render_cxform.cpp`, `render_sync.cpp`, `render_buffergeneric.cpp`,
+`render_meshcache.cpp`). This 197-file set is the concrete inventory for the
+step-4+ "rebuild libgfx.lib at 4.2.22" decision: re-render the prebuilt lib from
+these (the SDK ships only its own Projects, no prebuilt `libgfx*.lib`), or pull
+the needed subset into the build as compiled TUs.
+
 ## What is stubbed / deferred
 
 - **The `d3d1x_*` render HAL is survarium's IN-TREE COPY of the vendored
