@@ -17,6 +17,12 @@
 #pragma comment( lib, "libgfx_libpng.lib" )
 #pragma comment ( lib,"libgfx_as2.lib")
 #pragma comment ( lib,"libgfx_as3.lib")
+// as3 is archived in 4 pieces: a single 272-obj /GL lib needs a contiguous ~2GB
+// block that Wine's wow64 can't grant (real Windows builds one lib). The linker
+// merges all four at LTCG, so the exe code is identical to a single archive.
+#pragma comment ( lib,"libgfx_as3_b.lib")
+#pragma comment ( lib,"libgfx_as3_c.lib")
+#pragma comment ( lib,"libgfx_as3_d.lib")
 #pragma comment ( lib,"libgfx_libjpeg.lib" )
 
 using Scaleform::UPInt;
