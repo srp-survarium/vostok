@@ -36,7 +36,7 @@
 			OmitFramePointers="true"
 			EnableFiberSafeOptimizations="true"
 			AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/vostok/libgfx/sources;$(SolutionDir)/scaleform_build/Include;$(SolutionDir)/scaleform_build/Src;$(SolutionDir)/scaleform_build/3rdParty/zlib-1.2.7;$(SolutionDir)/scaleform_build/3rdParty/jpeg-8d;$(SolutionDir)/scaleform_build/3rdParty/libpng-1.5.13;$(SolutionDir)/scaleform_build/3rdParty/expat-2.1.0/lib;$(SolutionDir)/scaleform_build/3rdParty/pcre;$(SolutionDir)/scaleform_build/3rdParty/glext;$(SolutionDir)/scaleform_build/3rdParty/PlatformSDK"
-			PreprocessorDefinitions="WIN32;_WINDOWS;SF_BUILD_STATICLIB;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD"
+			PreprocessorDefinitions="WIN32;_WINDOWS;SF_BUILD_STATICLIB;SF_BUILD_SHIPPING;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD"
 			StringPooling="true"
 			ExceptionHandling="0"
 			BasicRuntimeChecks="0"

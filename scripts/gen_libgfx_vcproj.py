@@ -31,6 +31,10 @@ OUTPUT = "$(SolutionDir)../binaries.prebuilt/Win32/libraries/shipping/libgfx.lib
 # (the survarium module flags that already compile GFx TUs): /Od + /GL + MASTER_GOLD,
 # GFx_Lib defines (WIN32/_WINDOWS/SF_BUILD_STATICLIB), force-include the engine
 # preamble pch.h (the SDK TUs are upstream source we don't edit).
+# SF_BUILD_SHIPPING: the shipped binary has ZERO AMP symbols (Scaleform::AMP::*,
+# AmpServer::*), so the GFx Shipping config (which undefines SF_AMP_SERVER, gutting
+# the Amp_*.cpp TUs) was used - without it the AMP socket TU pulls Winsock and the
+# exe link breaks. MASTER_GOLD (the patch gate) and SF_BUILD_SHIPPING coexist.
 CL_TOOL = f'''		<Tool
 			Name="VCCLCompilerTool"
 			Optimization="0"
@@ -40,7 +44,7 @@ CL_TOOL = f'''		<Tool
 			OmitFramePointers="true"
 			EnableFiberSafeOptimizations="true"
 			AdditionalIncludeDirectories="{INCLUDES}"
-			PreprocessorDefinitions="WIN32;_WINDOWS;SF_BUILD_STATICLIB;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD"
+			PreprocessorDefinitions="WIN32;_WINDOWS;SF_BUILD_STATICLIB;SF_BUILD_SHIPPING;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD"
 			StringPooling="true"
 			ExceptionHandling="0"
 			BasicRuntimeChecks="0"

@@ -70,6 +70,22 @@ def main():
             shutil.copyfile(f, dst)
             patched += 1
 
+    # 2b. HeapPT_SysAllocMalloc.cpp is NOT in the curated subset (only its .h is),
+    # so the malloc/free in SysAllocPagedMalloc::Alloc/Free hit the engine's
+    # void-trap #defines. Route them through the engine allocator, mirroring the
+    # HeapMH_SysAllocMalloc.h patch (this TU's SysAllocPagedMalloc is /OPT:REF-dead
+    # in the shipped exe - not separately addressed - so it is build-only).
+    heappt = BUILD_SDK / "Src/Kernel/HeapPT/HeapPT_SysAllocMalloc.cpp"
+    if heappt.is_file():
+        t = heappt.read_text(errors="surrogateescape")
+        t = t.replace(
+            "void* ptr = malloc(size);",
+            'void* ptr = VOSTOK_MALLOC_IMPL( vostok::memory::g_mt_allocator, size, "scaleform" );')
+        t = t.replace(
+            "    free(ptr);\n",
+            "    VOSTOK_FREE_IMPL( vostok::memory::g_mt_allocator, ptr );\n", 1)
+        heappt.write_text(t, errors="surrogateescape")
+
     # 3. Prepend the engine-memory preamble to each of the 212 build-tree TUs.
     for rel in tus:
         tu = BUILD_SDK / rel

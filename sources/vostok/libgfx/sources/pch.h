@@ -31,6 +31,16 @@
 #undef NOMSG
 #undef NOGDI
 #undef NOTEXTMETRIC
+// The engine os_preinclude lean config drops Win32 APIs the GFx Kernel TUs use
+// directly: SF_Locale.cpp needs LCTYPE / GetLocaleInfoW (NONLS guards winnls.h
+// out of windows.h), SF_Timer.cpp needs timeGetTime / timeBeginPeriod. winnls.h
+// is pulled by windows.h only when NONLS is undefined AT THE windows.h include
+// (os_include.h), so undef it here, before that include - undefining it after
+// is too late (winnls.h was already skipped).
+#undef NONLS
 #include <vostok/os_include.h>
+
+// mmsystem.h is not gated by a NO* macro; include it for the multimedia timer.
+#include <mmsystem.h>
 
 #endif // #ifndef VOSTOK_LIBGFX_PCH_H_INCLUDED
